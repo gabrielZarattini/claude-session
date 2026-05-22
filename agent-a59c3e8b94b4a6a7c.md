@@ -1,0 +1,1852 @@
+# Claude Session: agent-a59c3e8b94b4a6a7c
+
+## 👤 User
+
+You're exploring the Constellation Orchestra repo at /home/gcrUX/htdocs/constellation-orchestra (MCORCH — React + Supabase + Deno edge functions, with a `scripts/` directory of TypeScript/bash automation). We're planning a new QA / self-healing skill `mcorch-qa-healing` and MUST reuse existing tooling rather than recreate it. Search "very thorough" breadth.
+
+Inventory existing verification / audit / healing / reconciliation tooling. Find and report:
+
+1. `scripts/` directory — identify anything that audits, verifies, reconciles, smoke-tests, or heals. Especially: `audit-mesh-edges.ts`, `watchdog-mcorch.sh`, `nightly-stage1-light-sleep.sh`, `nightly-stage2-deep-sleep.sh`, `nightly-stage3-rem.sh`, `nightly-bridge-refresh.sh`, `canvas-video-watchdog.sh`, `backfill-embeddings.ts`, `link-forge.ts`, `stitch-fallback.js`. For each relevant one: what it checks/does and how it reports results.
+2. `docs/processes/` — list ALL SOP files there. Read one recent one fully (e.g. `openclaw-bridge-recovery.md` or `nightly-circadian-cycle.md`) and describe the standard SOP structure/sections.
+3. How `infra_health_logs` telemetry is written — find a concrete writer (in `watchdog-mcorch.sh`, a nightly script, or an edge function) and show the insert shape (columns: service, status, last_seen_at, etc.).
+4. Any "synthetic postback" or smoke-test chain — search `scripts/` and `.claude/context/` for an OE-661 execution plan file that mentions a synthetic postback verification (look for `.claude/context/execution-plan-oe661-carryovers.md`).
+5. The test setup — is there a `vitest`/test runner config, and where do tests live? How is `npx tsc --noEmit` / `bun run test` used?
+
+Report concisely (~400 words): a table of existing tools (tool → what it covers → reusable for QA skill?), the SOP file structure, the `infra_health_logs` insert shape, and explicitly call out which QA checks genuinely DON'T exist yet. Quote file paths.
+
+## 🤖 Claude
+
+I'll conduct a thorough inventory of existing verification/audit/healing tooling in the Constellation Orchestra repo. Let me start with systematic searches.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/scripts -type f \\( -name \"*.ts\" -o -name \"*.sh\" -o -name \"*.js\" \\) | head -50"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-aios-milestone.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/mcorch-node-bootstrap.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/test-types.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/stitch-fallback.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/news-impact-analyzer.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-embeddings.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/list-recent-edges.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/stitch-edges.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/audit-mesh-edges.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-openclaw-bok-seal.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/distribute-mesh-to-agents.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-gamificacao-nodes-bok-seal.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage3-rem.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/verify_counts.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/reward-healing.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/bridge-mesh-to-openclaw.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/genesis-agents.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-conteudo-v2-bok-seal.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/test-files.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-embeddings-priority.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/opencode-bridge.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/auto-publish-cron.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/audit-4cs.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/morning-briefing.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-claw-master-audit-v1-seal.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/deploy_all.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-node-content.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage2-deep-sleep.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/audit-mesh-edges.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-bridge-refresh.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/harness-deploy.sh
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/scrape-openclaw-docs.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/ingest-codebase.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-ast-embeddings.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/compose-morning-briefing.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viralmind-bok-seal.ts
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-social-oauth-adrs.ts
+> ```
+
+## 🤖 Claude
+
+Now let me search for docs/processes and examine key audit/verification scripts:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/docs/processes -type f -name \"*.md\" 2>/dev/null | sort"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/canvas-daily-cap-handling.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/canvas-job-failure-recovery.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/canvas-video-async-execution.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/mcoins-ledger-reconciliation.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/nightly-circadian-cycle.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/openclaw-bridge-recovery.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/orchestration-content-mesh-asset-emission.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/sql-bridge-admin-bootstrap.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/sql-bridge-emergency-readonly.md
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/nightly-circadian-cycle.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP — Nightly Circadian Cycle v1.0
+> 2	
+> 3	**Versão:** v1 · **Selada:** 2026-05-17 · **Lei 2 (Processo Antecipado)** · **SSP-01 OE03**
+> 4	
+> 5	## ORO triplet
+> 6	
+> 7	- **Operator:** cron daemon (system); manual fallback é Sovereign via shell direto
+> 8	- **Reviewer:** Sovereign (revisa briefing matinal entregue ao Telegram diariamente — é o "review acceptance" implícito)
+> 9	- **Owner:** Sovereign (até v6.4.x); depois engineer agent (infra ownership)
+> 10	
+> 11	## Contexto
+> 12	
+> 13	Rotinas noturnas autonômicas modeladas em arquitetura humana de sono. 3 estágios espaçados 2h em horário BRT (`America/Sao_Paulo`) para isolamento de CPU/IO, thermal recovery do servidor e separação clara de responsabilidades. Refator de `30 2 * * * nightly-bridge-refresh.sh` + `30 3 * * * morning-briefing.sh` (sequenciais, sobrepostos) → 3 stages independentes (03:00 / 05:00 / 07:00 BRT).
+> 14	
+> 15	| Stage | Hora BRT | Script | Foco | Falha → próximo? |
+> 16	|-------|----------|--------|------|------------------|
+> 17	| 1 — Light Sleep | 03:00 | `nightly-stage1-light-sleep.sh` | IO (cleanup, log rotation, health spot check) | Sim — estágios são independentes |
+> 18	| 2 — Deep Sleep | 05:00 | `nightly-stage2-deep-sleep.sh` | Integridade (mesh reindex, VACUUM, ledger drift watch) | Sim |
+> 19	| 3 — REM Cycle | 07:00 | `nightly-stage3-rem.sh` | Inteligência (news pulse + briefing) | N/A (último estágio) |
+> 20	
+> 21	OpenClaw native cron `Memory Dreaming Promotion` (em `~/.openclaw/cron/jobs.json` schedule `0 3 * * *`) **sobrepõe Stage 1** — daemon próprio, IO próprio, sem race condition.
+> 22	
+> 23	## Pre-conditions
+> 24	
+> 25	- Server timezone = `America/Sao_Paulo` (-03). Verificar com `timedatectl | grep "Time zone"`. Se UTC, converter horários: 03→06, 05→08, 07→10.
+> 26	- `/var/log/mcorch-*.log` existe (criado pelos cron handlers em primeira execução; pre-touch opcional).
+> 27	- `~/.openclaw/secrets.json` chmod 600 (Telegram bot token).
+> 28	- `mcorch_chroma` healthy + Chroma API v2 acessível (`http://localhost:8001/api/v2/heartbeat`).
+> 29	
+> 30	## Sequence — execução manual humana (fallback)
+> 31	
+> 32	| # | Action | Output esperado | Verification gate |
+> 33	|---|--------|-----------------|-------------------|
+> 34	| 1 | `bash scripts/nightly-stage1-light-sleep.sh` | Log apêndice em `/var/log/mcorch-stage1.log` com `STAGE1 DONE (zero failures)` | tail mostra final OK + zero incidents em `/tmp/openclaw-incidents/` |
+> 35	| 2 | `bash scripts/nightly-stage2-deep-sleep.sh` | Log em `/var/log/mcorch-stage2.log` com bridge + drift report + VACUUM line | `STAGE2 DONE`; se drift > 0, linha WARN com lista de user_ids |
+> 36	| 3 | `bash scripts/nightly-stage3-rem.sh` | Briefing entregue ao Telegram chat 5835174772 + 1 nó `news_pulse` novo em `mcorch_nodes` | HTTP 200 do Telegram + nó recuperável via REST |
+> 37	| 4 | `crontab -l \| grep nightly-stage` | 3 linhas: 03:00, 05:00, 07:00 | exato match |
+> 38	
+> 39	## Verification gates
+> 40	
+> 41	- **Stage 1:** `/var/log/mcorch-stage1.log` última linha = `STAGE1 DONE` E `infra_health_logs` tem entrada `service='nightly-stage1'`, `status='healthy'` ≤5min atrás.
+> 42	- **Stage 2:** bridge refresh OK (`/var/log/mcorch-nightly-bridge.log` última linha "DONE"); drift query retorna explicitamente (vazio ou lista). VACUUM se rodou, log mostra "VACUUM completed in Xs".
+> 43	- **Stage 3:** Telegram API retornou HTTP 200 (em `/tmp/morning-briefing-tg-response.json`); 1 nó novo `node_type='news_pulse'` criado nas últimas 30min.
+> 44	
+> 45	## Recovery path
+> 46	
+> 47	- **Stage 1 falhou (cleanup quebrou):** `find` pode falhar se `/tmp/openclaw-incidents/` não existe. Criar com `mkdir -p`. Logrotate pode falhar se `/var/log/mcorch-*.log` sem write perm — `chmod 664` necessário (gcrUX user owner).
+> 48	- **Stage 2 falhou (bridge):** verificar `mcorch_chroma` healthy. Se down: `docker compose up -d mcorch-vector-engine`. Re-rodar `nightly-bridge-refresh.sh` manualmente.
+> 49	- **Stage 2 falhou (VACUUM timeout):** se VACUUM `mcorch_nodes` levou >5min, comentar a linha de VACUUM no script. Promover para weekly cron separado (`0 5 * * 0`).
+> 50	- **Stage 3 falhou (Firecrawl/OpenRouter):** Stage 3 é best-effort para news pulse — briefing roda sem News Pulse section. Verificar `~/.openclaw/secrets.json` se Telegram falhou; rotacionar token via BotFather se comprometido.
+> 51	- **Ledger drift detectado:** SOP `mcoins-ledger-reconciliation.md` para decisão Sovereign. Stage 2 NÃO auto-backfill.
+> 52	
+> 53	## Success signal
+> 54	
+> 55	- Diariamente: Telegram bot @claw_gcrux envia briefing antes das 07:30 BRT.
+> 56	- `infra_health_logs` tem 3 entradas por dia: `service IN ('nightly-stage1', 'nightly-stage2', 'nightly-stage3')`, todas `status='healthy'`.
+> 57	- `mcorch_nodes` ganha 1 nó `news_pulse` por dia (verificar: `SELECT count(*) FROM mcorch_nodes WHERE node_type='news_pulse' AND created_at > now() - interval '24h'`).
+> 58	- Zero incidentes em `/tmp/openclaw-incidents/` por 7 dias = ciclo saudável.
+> 59	
+> 60	## Anti-patterns
+> 61	
+> 62	- ❌ Empilhar mais estágios sem espaçamento (vira sequencial denso, perde isolamento de CPU/IO).
+> 63	- ❌ Stages que assumem ordem estrita (são independentes — Stage 3 NÃO pode depender de output do Stage 2 fora do banco).
+> 64	- ❌ Promover briefing para horário diferente sem avisar Sovereign (07:00 BRT é o cliente-facing handshake).
+> 65	- ❌ Auto-backfill de ledger drift sem decisão humana (Stage 2 só ALERTA).
+> 66	
+> 67	## Referências
+> 68	
+> 69	- `scripts/nightly-stage1-light-sleep.sh`
+> 70	- `scripts/nightly-stage2-deep-sleep.sh`
+> 71	- `scripts/nightly-stage3-rem.sh`
+> 72	- `scripts/nightly-bridge-refresh.sh` (encapsulado em Stage 2)
+> 73	- `scripts/morning-briefing.sh` (encapsulado em Stage 3)
+> 74	- `scripts/news-impact-analyzer.ts` (chamado em Stage 3)
+> 75	- `scripts/watchdog-mcorch.sh` (continua `*/5 * * * *`, paralelo aos stages)
+> 76	- `~/.openclaw/cron/jobs.json` (OpenClaw native `Memory Dreaming Promotion` 03:00)
+> 77	- `.claude/context/survival-audit-v1.md` §2 Pillar 4 (Observability gap que motiva infra_health_logs writes)
+> 78	- SSP-01 OE03 diretiva Sovereign (2026-05-17)
+> 79	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/bin/bash
+> 2	# MCORCH Intelligence Node Watchdog
+> 3	# Monitors mcorch_claude_mem container on port 37777 and restarts if unhealthy.
+> 4	# Also writes health telemetry to Supabase infra_health_logs for the Neural HUD.
+> 5	
+> 6	LOG_FILE="/var/log/mcorch-watchdog.log"
+> 7	CONTAINER="mcorch_claude_mem"
+> 8	PORT=37777
+> 9	DATE=$(date '+%Y-%m-%d %H:%M:%S')
+> 10	COMPOSE_DIR="/home/gcrUX/htdocs/constellation-orchestra"
+> 11	
+> 12	log() { echo "[$DATE] $1" >> "$LOG_FILE"; }
+> 13	
+> 14	# Check if container is running
+> 15	if ! docker inspect --format='{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q "true"; then
+> 16	    log "ALERT: $CONTAINER not running. Starting via docker compose..."
+> 17	    cd "$COMPOSE_DIR" && docker compose up -d mcorch-intelligence-node
+> 18	    log "Restart attempted."
+> 19	    HEALTH="unhealthy"
+> 20	else
+> 21	    # Ensure lock file exists (prevents false unhealthy state)
+> 22	    docker exec "$CONTAINER" touch /app/system/autonomic.lock 2>/dev/null
+> 23	
+> 24	    # Check health status
+> 25	    HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null)
+> 26	    if [ "$HEALTH" = "unhealthy" ]; then
+> 27	        log "ALERT: $CONTAINER is unhealthy. Restarting..."
+> 28	        docker restart "$CONTAINER"
+> 29	        log "Container restarted."
+> 30	    fi
+> 31	fi
+> 32	
+> 33	log "Watchdog check completed. Status: ${HEALTH:-unknown}"
+> 34	
+> 35	# ── Write health telemetry to Supabase for Neural HUD ────────────────────────
+> 36	# Load env vars (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+> 37	if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 38	    # shellcheck disable=SC1090
+> 39	    set -a; source "${COMPOSE_DIR}/.env"; set +a
+> 40	fi
+> 41	
+> 42	if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+> 43	    log "WARNING: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set — skipping telemetry write."
+> 44	    exit 0
+> 45	fi
+> 46	
+> 47	# Check Chroma vector engine
+> 48	CHROMA_STATUS="unhealthy"
+> 49	if curl -sf "http://localhost:8001/api/v2/heartbeat" > /dev/null 2>&1; then
+> 50	    CHROMA_STATUS="healthy"
+> 51	fi
+> 52	
+> 53	# Write a row per service (upsert-style: just insert, table keeps history)
+> 54	write_health() {
+> 55	    local SERVICE="$1"
+> 56	    local STATUS="$2"
+> 57	    curl -s -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> 58	        -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 59	        -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 60	        -H "Content-Type: application/json" \
+> 61	        -d "{\"service\":\"${SERVICE}\",\"status\":\"${STATUS}\"}" > /dev/null 2>&1
+> 62	}
+> 63	
+> 64	write_health "mcorch_claude_mem" "${HEALTH:-unknown}"
+> 65	write_health "mcorch_chroma"     "${CHROMA_STATUS}"
+> 66	
+> 67	log "Telemetry written: claude_mem=${HEALTH:-unknown}, chroma=${CHROMA_STATUS}"
+> 68	
+> 69	# ── Layer 2 escalation: OpenClaw engineer agent ──────────────────────────────
+> 70	# Layer 1 (above) tries restart; if status is still unhealthy for 3 consecutive
+> 71	# cycles (≈15 min), escalate to the OpenClaw engineer agent. The agent reads
+> 72	# its inbox at /tmp/openclaw-incidents/ (world-writable, ephemeral) and may
+> 73	# also receive a best-effort POST to the gateway. Counter resets on healthy.
+> 74	FAIL_COUNTER_FILE="/tmp/mcorch-watchdog-fail-counter"
+> 75	ESCALATION_THRESHOLD=3
+> 76	
+> 77	# Compute a single unhealthy signal from the two monitored services.
+> 78	UNHEALTHY="false"
+> 79	if [ "${HEALTH:-unknown}" = "unhealthy" ] || [ "${HEALTH:-unknown}" = "unknown" ]; then
+> 80	    UNHEALTHY="true"
+> 81	fi
+> 82	if [ "${CHROMA_STATUS}" = "unhealthy" ]; then
+> 83	    UNHEALTHY="true"
+> 84	fi
+> 85	
+> 86	if [ "${UNHEALTHY}" = "true" ]; then
+> 87	    COUNT=$(cat "${FAIL_COUNTER_FILE}" 2>/dev/null || echo 0)
+> 88	    COUNT=$((COUNT + 1))
+> 89	    echo "${COUNT}" > "${FAIL_COUNTER_FILE}"
+> 90	    log "Layer 2 fail counter: ${COUNT}/${ESCALATION_THRESHOLD}"
+> 91	
+> 92	    if [ "${COUNT}" -ge "${ESCALATION_THRESHOLD}" ]; then
+> 93	        INCIDENT_DIR="/tmp/openclaw-incidents"
+> 94	        mkdir -p "${INCIDENT_DIR}" 2>/dev/null
+> 95	        chmod 1777 "${INCIDENT_DIR}" 2>/dev/null || true
+> 96	        INCIDENT_ID="incident-$(date +%s)-${CONTAINER}"
+> 97	        INCIDENT_FILE="${INCIDENT_DIR}/${INCIDENT_ID}.json"
+> 98	        cat > "${INCIDENT_FILE}" 2>/dev/null <<INCIDENT_EOF
+> 99	{
+> 100	  "id": "${INCIDENT_ID}",
+> 101	  "container": "${CONTAINER}",
+> 102	  "claude_mem_status": "${HEALTH:-unknown}",
+> 103	  "chroma_status": "${CHROMA_STATUS}",
+> 104	  "fail_count": ${COUNT},
+> 105	  "detected_at": "$(date -Iseconds)",
+> 106	  "compose_dir": "${COMPOSE_DIR}",
+> 107	  "runbook": "${COMPOSE_DIR}/.claude/context/openclaw-self-heal-runbook.md"
+> 108	}
+> 109	INCIDENT_EOF
+> 110	        log "ESCALATION → engineer agent inbox: ${INCIDENT_FILE}"
+> 111	
+> 112	        # Best-effort gateway notification (endpoint discovery is engineer's job)
+> 113	        if curl -sf "http://127.0.0.1:18789/health" > /dev/null 2>&1; then
+> 114	            curl -sf -X POST "http://127.0.0.1:18789/agents/engineer/incidents" \
+> 115	                -H "Content-Type: application/json" \
+> 116	                --data "@${INCIDENT_FILE}" > /dev/null 2>&1 \
+> 117	                && log "Gateway POST accepted." \
+> 118	                || log "Gateway POST not accepted (endpoint may not exist — file inbox is durable)."
+> 119	        else
+> 120	            log "Gateway unreachable — escalation is file-only this cycle."
+> 121	        fi
+> 122	
+> 123	        write_health "openclaw-escalation" "triggered:${CONTAINER}:${COUNT}"
+> 124	    fi
+> 125	else
+> 126	    # Healthy: reset counter
+> 127	    if [ -f "${FAIL_COUNTER_FILE}" ]; then
+> 128	        rm -f "${FAIL_COUNTER_FILE}"
+> 129	        log "Layer 2 fail counter reset (healthy state)."
+> 130	    fi
+> 131	fi
+> 132	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/audit-mesh-edges.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from '@supabase/supabase-js';
+> 2	import fs from 'fs';
+> 3	import path from 'path';
+> 4	import { fileURLToPath } from 'url';
+> 5	
+> 6	const __filename = fileURLToPath(import.meta.url);
+> 7	const __dirname = path.dirname(__filename);
+> 8	const envPath = path.resolve(__dirname, '../.env');
+> 9	if (fs.existsSync(envPath)) {
+> 10	  const envFile = fs.readFileSync(envPath, 'utf8');
+> 11	  envFile.split('\n').forEach((line) => {
+> 12	    const match = line.match(/^([^=]+)=(.*)$/);
+> 13	    if (match) process.env[match[1].trim()] = match[2].trim().replace(/^['"](.*)['"]$/, '$1');
+> 14	  });
+> 15	}
+> 16	
+> 17	const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+> 18	const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> 19	
+> 20	if (!supabaseUrl || !supabaseKey) {
+> 21	  console.error("Missing Supabase credentials in .env");
+> 22	  process.exit(1);
+> 23	}
+> 24	
+> 25	const supabase = createClient(supabaseUrl, supabaseKey);
+> 26	
+> 27	async function main() {
+> 28	  console.log("Auditing 20 most recent observation nodes for Target Binding (OE-661-003)...");
+> 29	
+> 30	  const { data: nodes } = await supabase
+> 31	    .from('mcorch_nodes')
+> 32	    .select('id, node_type, metadata, created_at, content, name')
+> 33	    .eq('node_type', 'observation')
+> 34	    .order('created_at', { ascending: false })
+> 35	    .limit(20);
+> 36	
+> 37	  if (!nodes || nodes.length === 0) {
+> 38	    console.error("No observation nodes found.");
+> 39	    return;
+> 40	  }
+> 41	
+> 42	  await checkEdges(nodes);
+> 43	}
+> 44	
+> 45	async function checkEdges(nodes: any[]) {
+> 46	  console.log(`Found ${nodes.length} target nodes. Verifying edges to source code...`);
+> 47	  
+> 48	  let validEdges = 0;
+> 49	  let invalidOrMissingEdges = 0;
+> 50	  
+> 51	  for (const node of nodes) {
+> 52	    const { data: edges, error: edgesErr } = await supabase
+> 53	      .from('mcorch_edges')
+> 54	      .select('source_id, target_id, relation_type')
+> 55	      .or(`source_id.eq.${node.id},target_id.eq.${node.id}`);
+> 56	      
+> 57	    if (edgesErr) {
+> 58	      console.error(`Error fetching edges for node ${node.id}:`, edgesErr);
+> 59	      continue;
+> 60	    }
+> 61	    
+> 62	    if (!edges || edges.length === 0) {
+> 63	       invalidMissing(node, [], []);
+> 64	       continue;
+> 65	    }
+> 66	
+> 67	    const targetIds = edges.map(e => e.target_id === node.id ? e.source_id : e.target_id);
+> 68	    const { data: targetNodes } = await supabase.from('mcorch_nodes').select('node_type').in('id', targetIds);
+> 69	    const types = targetNodes?.map((t: any) => t.node_type) || [];
+> 70	
+> 71	    const hasSource = types.some((t: string) => ['ast_file', 'markdown_file', 'vault_note', 'source_code'].includes(t));
+> 72	    if (hasSource) {
+> 73	       validEdges++;
+> 74	       console.log(`[VALID]   ${node.id.slice(0, 8)} (${node.node_type}) -> ${types.join(', ')}`);
+> 75	    } else {
+> 76	       invalidMissing(node, edges, types);
+> 77	    }
+> 78	  }
+> 79	
+> 80	  function invalidMissing(node: any, edges: any[], targetTypes: string[]) {
+> 81	    invalidOrMissingEdges++;
+> 82	    console.log(`[ORPHAN]  ${node.id.slice(0, 8)} (${node.node_type}) has ${edges.length} edges. Target types: [${targetTypes.join(', ')}]`);
+> 83	  }
+> 84	  
+> 85	  console.log(`\nAudit Complete: ${validEdges} valid edges to source code, ${invalidOrMissingEdges} missing/invalid edges to source code.`);
+> 86	}
+> 87	
+> 88	main();
+> 89	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bash
+> 2	# nightly-stage1-light-sleep.sh — SSP-01 OE03 Stage 1 (03:00 BRT)
+> 3	#
+> 4	# Focus: IO hygiene. Non-CPU-intensive. Runs in parallel with OpenClaw native
+> 5	# `Memory Dreaming Promotion` (also 03:00 BRT, separate daemon, distinct files).
+> 6	#
+> 7	# Steps:
+> 8	#   1. Log rotation — gzip /var/log/mcorch-*.log older than 7 days
+> 9	#   2. Temp cleanup — purge stale incident/log/response files in /tmp
+> 10	#   3. Infra spot check — docker ps + chroma heartbeat + health pulse to Supabase
+> 11	#
+> 12	# Log: /var/log/mcorch-stage1.log (append-only)
+> 13	# Owner: engineer agent (maintains); guardian agent (consumes status)
+> 14	# Failure path: writes incident JSON to /tmp/openclaw-incidents/ + best-effort POST.
+> 15	
+> 16	set -euo pipefail
+> 17	
+> 18	REPO=/home/gcrUX/htdocs/constellation-orchestra
+> 19	LOG=/var/log/mcorch-stage1.log
+> 20	INCIDENT_DIR=/tmp/openclaw-incidents
+> 21	GATEWAY_URL="http://127.0.0.1:18789/agents/engineer/incidents"
+> 22	SERVICE_NAME="nightly-stage1"
+> 23	
+> 24	mkdir -p "$INCIDENT_DIR"
+> 25	
+> 26	escalate_failure() {
+> 27	  local step="$1"
+> 28	  local exit_code="$2"
+> 29	  local incident_id="${SERVICE_NAME}-$(date +%s)"
+> 30	  local incident_file="$INCIDENT_DIR/${incident_id}.json"
+> 31	  cat > "$incident_file" <<JSON
+> 32	{
+> 33	  "incident_id": "$incident_id",
+> 34	  "service": "$SERVICE_NAME",
+> 35	  "step": "$step",
+> 36	  "exit_code": $exit_code,
+> 37	  "timestamp_iso": "$(date -Is)",
+> 38	  "log_tail": $(tail -50 "$LOG" 2>/dev/null | jq -Rs . || echo '""'),
+> 39	  "severity": "P2",
+> 40	  "playbook_hint": "see docs/processes/nightly-circadian-cycle.md Recovery path"
+> 41	}
+> 42	JSON
+> 43	  curl -sS -m 5 -X POST "$GATEWAY_URL" \
+> 44	    -H "Content-Type: application/json" \
+> 45	    -d @"$incident_file" >> "$LOG" 2>&1 || \
+> 46	    echo "[$(date -Is)] gateway POST failed; incident file: $incident_file" >> "$LOG"
+> 47	}
+> 48	
+> 49	trap 'EC=$?; if [ "$EC" -ne 0 ]; then escalate_failure "trap" "$EC"; fi' EXIT
+> 50	
+> 51	# Health pulse helper — writes one row to infra_health_logs via service-role REST.
+> 52	# Best-effort; never blocks the stage.
+> 53	health_pulse() {
+> 54	  local status="$1"
+> 55	  if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+> 56	    echo "[$(date -Is)] WARN health_pulse: missing Supabase env, skipping pulse" >> "$LOG"
+> 57	    return 0
+> 58	  fi
+> 59	  curl -sS -m 5 -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> 60	    -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 61	    -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 62	    -H "Content-Type: application/json" \
+> 63	    -d "{\"service\":\"${SERVICE_NAME}\",\"status\":\"${status}\"}" \
+> 64	    >> "$LOG" 2>&1 || \
+> 65	    echo "[$(date -Is)] WARN health_pulse: POST failed" >> "$LOG"
+> 66	}
+> 67	
+> 68	{
+> 69	  echo "================================================================"
+> 70	  echo "[$(date -Is)] $SERVICE_NAME START"
+> 71	  echo "================================================================"
+> 72	
+> 73	  cd "$REPO"
+> 74	
+> 75	  # Source .env for Supabase keys (health_pulse needs them)
+> 76	  if [ -f "$REPO/.env" ]; then
+> 77	    set -a
+> 78	    # shellcheck disable=SC1091
+> 79	    source "$REPO/.env"
+> 80	    set +a
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage2-deep-sleep.sh",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bash
+> 2	# nightly-stage2-deep-sleep.sh — SSP-01 OE03 Stage 2 (05:00 BRT)
+> 3	#
+> 4	# Focus: integrity. CPU/IO intensive (bridge reindex + VACUUM). Spaced 2h after
+> 5	# Stage 1 for thermal recovery and buffer release.
+> 6	#
+> 7	# Steps:
+> 8	#   1. Mesh bridge refresh — calls nightly-bridge-refresh.sh (mesh export + distribute + index)
+> 9	#   2. Ledger drift watch — alert-only (does NOT auto-backfill)
+> 10	#   3. DB compact — VACUUM ANALYZE on hot tables
+> 11	#
+> 12	# Log: /var/log/mcorch-stage2.log (append-only)
+> 13	# Owner: engineer agent
+> 14	
+> 15	set -euo pipefail
+> 16	
+> 17	REPO=/home/gcrUX/htdocs/constellation-orchestra
+> 18	LOG=/var/log/mcorch-stage2.log
+> 19	INCIDENT_DIR=/tmp/openclaw-incidents
+> 20	GATEWAY_URL="http://127.0.0.1:18789/agents/engineer/incidents"
+> 21	SERVICE_NAME="nightly-stage2"
+> 22	
+> 23	mkdir -p "$INCIDENT_DIR"
+> 24	
+> 25	escalate_failure() {
+> 26	  local step="$1"
+> 27	  local exit_code="$2"
+> 28	  local incident_id="${SERVICE_NAME}-$(date +%s)"
+> 29	  local incident_file="$INCIDENT_DIR/${incident_id}.json"
+> 30	  cat > "$incident_file" <<JSON
+> 31	{
+> 32	  "incident_id": "$incident_id",
+> 33	  "service": "$SERVICE_NAME",
+> 34	  "step": "$step",
+> 35	  "exit_code": $exit_code,
+> 36	  "timestamp_iso": "$(date -Is)",
+> 37	  "log_tail": $(tail -50 "$LOG" 2>/dev/null | jq -Rs . || echo '""'),
+> 38	  "severity": "P1",
+> 39	  "playbook_hint": "see docs/processes/nightly-circadian-cycle.md Recovery path"
+> 40	}
+> 41	JSON
+> 42	  curl -sS -m 5 -X POST "$GATEWAY_URL" \
+> 43	    -H "Content-Type: application/json" \
+> 44	    -d @"$incident_file" >> "$LOG" 2>&1 || \
+> 45	    echo "[$(date -Is)] gateway POST failed; incident file: $incident_file" >> "$LOG"
+> 46	}
+> 47	
+> 48	trap 'EC=$?; if [ "$EC" -ne 0 ]; then escalate_failure "trap" "$EC"; fi' EXIT
+> 49	
+> 50	health_pulse() {
+> 51	  local status="$1"
+> 52	  if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+> 53	    return 0
+> 54	  fi
+> 55	  curl -sS -m 5 -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> 56	    -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 57	    -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 58	    -H "Content-Type: application/json" \
+> 59	    -d "{\"service\":\"${SERVICE_NAME}\",\"status\":\"${status}\"}" \
+> 60	    >> "$LOG" 2>&1 || true
+> 61	}
+> 62	
+> 63	{
+> 64	  echo "================================================================"
+> 65	  echo "[$(date -Is)] $SERVICE_NAME START"
+> 66	  echo "================================================================"
+> 67	
+> 68	  cd "$REPO"
+> 69	
+> 70	  if [ -f "$REPO/.env" ]; then
+> 71	    set -a
+> 72	    # shellcheck disable=SC1091
+> 73	    source "$REPO/.env"
+> 74	    set +a
+> 75	  fi
+> 76	
+> 77	  OVERALL_STATUS="healthy"
+> 78	
+> 79	  # ── Step 1/3: Mesh bridge refresh ──────────────────────────────────
+> 80	  echo "→ Step 1/3: mesh bridge refresh"
+> 81	  if bash "$REPO/scripts/nightly-bridge-refresh.sh"; then
+> 82	    echo "   bridge: OK"
+> 83	  else
+> 84	    echo "   bridge: FAIL"
+> 85	    OVERALL_STATUS="unhealthy"
+> 86	    escalate_failure "mesh-bridge" "$?"
+> 87	    # Continue to other steps — they're independent
+> 88	  fi
+> 89	
+> 90	  # ── Step 2/3: Ledger drift watch (READ-ONLY, alert-only) ───────────
+> 91	  echo "→ Step 2/3: ledger drift watch"
+> 92	  if [ -n "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+> 93	    # Pull all profiles with non-zero balance and their ledger sum.
+> 94	    PROFILES_JSON=$(curl -sS -m 10 "${SUPABASE_URL}/rest/v1/profiles?select=id,mco_balance&mco_balance=gt.0" \
+> 95	      -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 96	      -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" 2>/dev/null || echo "[]")
+> 97	
+> 98	    DRIFT_USERS=""
+> 99	    echo "$PROFILES_JSON" | jq -c '.[]' 2>/dev/null | while read -r row; do
+> 100	      uid=$(echo "$row" | jq -r '.id')
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-embeddings.ts",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Backfill embeddings for all mcorch_nodes that have embedding = NULL.
+> 4	 * Usage: bun run scripts/backfill-embeddings.ts
+> 5	 *
+> 6	 * Requires .env with:
+> 7	 *   SUPABASE_URL
+> 8	 *   SUPABASE_SERVICE_ROLE_KEY
+> 9	 *   SUPABASE_FUNCTIONS_URL  (optional — defaults to SUPABASE_URL/functions/v1)
+> 10	 */
+> 11	
+> 12	import { readFileSync, existsSync } from 'fs';
+> 13	import { join, dirname } from 'path';
+> 14	import { fileURLToPath } from 'url';
+> 15	
+> 16	// Load .env
+> 17	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 18	const envPath = join(__dirname, '../.env');
+> 19	if (existsSync(envPath)) {
+> 20	  const raw = readFileSync(envPath, 'utf-8');
+> 21	  for (const line of raw.split('\n')) {
+> 22	    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+> 23	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+> 24	  }
+> 25	}
+> 26	
+> 27	const SUPABASE_URL = process.env.SUPABASE_URL;
+> 28	const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 29	const FUNCTIONS_URL = process.env.SUPABASE_FUNCTIONS_URL ?? `${SUPABASE_URL}/functions/v1`;
+> 30	
+> 31	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 32	  console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 33	  process.exit(1);
+> 34	}
+> 35	
+> 36	const headers = {
+> 37	  apikey: SERVICE_KEY,
+> 38	  Authorization: `Bearer ${SERVICE_KEY}`,
+> 39	  'Content-Type': 'application/json',
+> 40	};
+> 41	
+> 42	// Fetch nodes with null embedding (paginated)
+> 43	async function fetchNullEmbeddingNodes(): Promise<Array<{ id: string; name: string }>> {
+> 44	  let all: Array<{ id: string; name: string }> = [];
+> 45	  let page = 0;
+> 46	  const pageSize = 1000;
+> 47	  while (true) {
+> 48	    const from = page * pageSize;
+> 49	    const to = (page + 1) * pageSize - 1;
+> 50	    const res = await fetch(
+> 51	      `${SUPABASE_URL}/rest/v1/mcorch_nodes?embedding=is.null&select=id,name&offset=${from}&limit=${pageSize}`,
+> 52	      { headers: { ...headers, Range: `${from}-${to}`, 'Range-Unit': 'items' } },
+> 53	    );
+> 54	    if (!res.ok) {
+> 55	      console.error('Failed to fetch nodes:', await res.text());
+> 56	      process.exit(1);
+> 57	    }
+> 58	    const data: Array<{ id: string; name: string }> = await res.json();
+> 59	    all = all.concat(data);
+> 60	    if (data.length < pageSize) break;
+> 61	    page++;
+> 62	  }
+> 63	  return all;
+> 64	}
+> 65	
+> 66	const nodes = await fetchNullEmbeddingNodes();
+> 67	console.log(`🔍 Found ${nodes.length} nodes without embeddings.`);
+> 68	
+> 69	if (nodes.length === 0) {
+> 70	  console.log('✅ All nodes already have embeddings.');
+> 71	  process.exit(0);
+> 72	}
+> 73	
+> 74	let ok = 0;
+> 75	let fail = 0;
+> 76	
+> 77	for (const node of nodes) {
+> 78	  const embedRes = await fetch(`${FUNCTIONS_URL}/embed-mcorch-node`, {
+> 79	    method: 'POST',
+> 80	    headers,
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Link Forge — OE-661-004 (Million-BRL Roadmap)
+> 3	 *
+> 4	 * Sweeps `mcorch_nodes` of type `content_mesh_asset` and replaces raw mentions of
+> 5	 * High-Ticket products with affiliate-tracking URLs that point at panel.gcrux.com
+> 6	 * (the external redirect endpoint; see scripts/link-forge-scope.md).
+> 7	 *
+> 8	 * For each modified asset, also inserts a `CONTAINS_LINK_FOR` edge in mcorch_edges
+> 9	 * linking the content node → product node (creates product nodes on demand so the
+> 10	 * topology is queryable for ROI rollups via ATTRIBUTES_REVENUE_TO).
+> 11	 *
+> 12	 * Usage:
+> 13	 *   bun run scripts/link-forge.ts --dry-run     # preview, no writes
+> 14	 *   bun run scripts/link-forge.ts               # apply
+> 15	 */
+> 16	import { createClient } from "@supabase/supabase-js";
+> 17	import fs from "fs";
+> 18	import path from "path";
+> 19	import { fileURLToPath } from "url";
+> 20	
+> 21	const __filename = fileURLToPath(import.meta.url);
+> 22	const __dirname = path.dirname(__filename);
+> 23	const envPath = path.resolve(__dirname, "../.env");
+> 24	if (fs.existsSync(envPath)) {
+> 25	  const envFile = fs.readFileSync(envPath, "utf8");
+> 26	  envFile.split("\n").forEach((line) => {
+> 27	    const m = line.match(/^([^=]+)=(.*)$/);
+> 28	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^['"](.*)['"]$/, "$1");
+> 29	  });
+> 30	}
+> 31	
+> 32	const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+> 33	const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 34	const AFFILIATE_TOKEN =
+> 35	  process.env.GCRUX_ML_AFFILIATE_TOKEN || "GCRUX_DEFAULT_TOKEN";
+> 36	
+> 37	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 38	  console.error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env");
+> 39	  process.exit(1);
+> 40	}
+> 41	
+> 42	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 43	const DRY_RUN = process.argv.includes("--dry-run");
+> 44	
+> 45	type ProductMatch = {
+> 46	  key: string;
+> 47	  mlb: string;
+> 48	  display: string;
+> 49	  pattern: RegExp;
+> 50	};
+> 51	
+> 52	// Product catalog (Phase 1 High-Ticket / Smart Home — revenue-flywheel.md §6).
+> 53	const PRODUCTS: ProductMatch[] = [
+> 54	  {
+> 55	    key: "roborock_s8",
+> 56	    mlb: "MLB3981745621",
+> 57	    display: "Roborock S8 Pro Ultra",
+> 58	    pattern: /roborock\s+s8[a-z0-9 ]*(?:pro\s+ultra)?/gi,
+> 59	  },
+> 60	  {
+> 61	    key: "samsung_neo_qled_8k",
+> 62	    mlb: "MLB3546719283",
+> 63	    display: "Samsung Neo QLED 8K",
+> 64	    pattern: /(?:neo\s+qled\s+8k|samsung\s+8k)/gi,
+> 65	  },
+> 66	  {
+> 67	    key: "family_hub",
+> 68	    mlb: "MLB3728491023",
+> 69	    display: "Geladeira Samsung Family Hub",
+> 70	    pattern: /family\s+hub/gi,
+> 71	  },
+> 72	];
+> 73	
+> 74	function buildRedirectUrl(mlb: string, contentVariantId: string): string {
+> 75	  return (
+> 76	    `https://panel.gcrux.com/api/ml-redirect?product_id=${mlb}` +
+> 77	    `&affiliate_id=${AFFILIATE_TOKEN}` +
+> 78	    `&utm_source=gcrux_orchestrator` +
+> 79	    `&utm_medium=content_mesh` +
+> 80	    `&utm_campaign=highticket_smarthome_q3` +
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/stitch-fallback.js",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from '@supabase/supabase-js';
+> 2	import fs from 'fs';
+> 3	import path from 'path';
+> 4	import { fileURLToPath } from 'url';
+> 5	
+> 6	const __filename = fileURLToPath(import.meta.url);
+> 7	const __dirname = path.dirname(__filename);
+> 8	const envPath = path.resolve(__dirname, '../.env');
+> 9	if (fs.existsSync(envPath)) {
+> 10	  const envFile = fs.readFileSync(envPath, 'utf8');
+> 11	  envFile.split('\n').forEach(line => {
+> 12	    const match = line.match(/^([^=]+)=(.*)$/);
+> 13	    if (match) process.env[match[1].trim()] = match[2].trim().replace(/^['"](.*)['"]$/, '$1');
+> 14	  });
+> 15	}
+> 16	const supabase = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+> 17	
+> 18	async function main() {
+> 19	  const { data: obsNodes } = await supabase.from('mcorch_nodes').select('id, name').eq('node_type', 'observation');
+> 20	  let count = 0;
+> 21	  for (const obs of obsNodes) {
+> 22	      const { data: edges } = await supabase.from('mcorch_edges').select('target_id').eq('source_id', obs.id).eq('relation_type', 'observes');
+> 23	      if (!edges || edges.length === 0) {
+> 24	          // Match both legacy 'root:CLAUDE' and literal 'CLAUDE.md' shapes.
+> 25	          const { data: fallback } = await supabase.from('mcorch_nodes').select('id, name').in('node_type', ['markdown_file', 'ast_file']).or('name.eq.root:CLAUDE,name.ilike.%CLAUDE.md%').limit(1);
+> 26	          if (fallback && fallback.length > 0) {
+> 27	              await supabase.from('mcorch_edges').insert({ source_id: obs.id, target_id: fallback[0].id, relation_type: 'observes', weight: 1.0 });
+> 28	              count++;
+> 29	              console.log(`✅ Fallback Stitched: ${obs.name} ---> ${fallback[0].name}`);
+> 30	          }
+> 31	      }
+> 32	  }
+> 33	  console.log(`Fallback run complete. ${count} nodes stitched.`);
+> 34	}
+> 35	main();
+> 36	
+> ```
+
+## 🤖 Claude
+
+Now let me search for execution plan and check for test configuration:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/.claude/context -name \"*oe661*\" -o -name \"*execution*plan*\" 2>/dev/null | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/context/otd-oe661-per-user-affiliate-2026-05-19.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/context/audit-2026-05-19-oe661-debt-sweep.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-oe661-carryovers.md
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-oe661-carryovers.md",
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Execution Plan — OE-661 Wire + Ledger SOP + Canvas Smoke
+> 2	
+> 3	**Status**: 📋 Saved + 🔧 Amended (post-audit 2026-05-19) · Aguardando ordem de execução do Sovereign
+> 4	**Selada em**: 2026-05-19
+> 5	**Plan file origem**: `~/.claude/plans/graceful-dreaming-pelican.md`
+> 6	**Mesh node**: `3dde2572-cad6-491b-b523-c56ec763ff8e` (observation, autoembed 768d)
+> 7	**Aprovado via**: ExitPlanMode (Sovereign confirmed)
+> 8	**Audit findings**: `.claude/context/audit-2026-05-19-oe661-debt-sweep.md` (12 REST queries materiais · 4 bugs concretos + 5 inconsistências catalogadas)
+> 9	
+> 10	---
+> 11	
+> 12	## 🔧 Amendments Appendix (aplicado 2026-05-19 pós-audit)
+> 13	
+> 14	**Leia ANTES de executar qualquer fase.** Os steps abaixo SOBRESCREVEM o conteúdo original quando houver conflito.
+> 15	
+> 16	### Amendment A — Phase 1.3 — Atomic emission (Bug A: race condition)
+> 17	
+> 18	A observation + content_mesh_asset INSERTs devem rodar em `Promise.allSettled`, não dois try/catch separados. Senão user é cobrado 10 mcoCoins com mesh emitida pela metade.
+> 19	
+> 20	```ts
+> 21	// Substitui o try/catch único que englobava só observation:
+> 22	try {
+> 23	  const [obsResult, assetResult] = await Promise.allSettled([
+> 24	    admin.from("mcorch_nodes").insert({/* observation original — node_type='observation' */}).select("id").single(),
+> 25	    admin.from("mcorch_nodes").insert({/* content_mesh_asset NEW — shape Phase 1.3 */}).select("id").single(),
+> 26	  ]);
+> 27	  const obsOk = obsResult.status === "fulfilled";
+> 28	  const assetOk = assetResult.status === "fulfilled";
+> 29	  addStep("knowledge_mesh", obsOk ? "done" : "error", { topic },
+> 30	    { obs_id: obsOk ? obsResult.value.data?.id : null, error: obsOk ? null : (obsResult as any).reason?.message });
+> 31	  addStep("content_mesh_asset", assetOk ? "done" : "error", { topic },
+> 32	    { asset_id: assetOk ? assetResult.value.data?.id : null, error: assetOk ? null : (assetResult as any).reason?.message });
+> 33	} catch (e) {
+> 34	  console.warn("[orchestrate-content] mesh emission outer catch:", e);
+> 35	}
+> 36	```
+> 37	
+> 38	### Amendment B — Phase 1.3 — wpPostUrl validation gate (Bug B)
+> 39	
+> 40	Antes do INSERT do content_mesh_asset (dentro do Promise.allSettled), guard:
+> 41	
+> 42	```ts
+> 43	const assetInsert = (!wpPostUrl || wpPostUrl.trim() === "")
+> 44	  ? Promise.reject(new Error("no_wordpress_url"))
+> 45	  : admin.from("mcorch_nodes").insert({/* content_mesh_asset shape */}).select("id").single();
+> 46	```
+> 47	
+> 48	Se WordPress publish falhou (linhas 238-242 do file alvo), o asset é skipped explicitamente — Link Forge não consome lixo.
+> 49	
+> 50	### Amendment C — Phase 1.5 — Link Forge scoping clarification (Bug C)
+> 51	
+> 52	`scripts/link-forge.ts:149-153` faz query global em `content_mesh_asset` sem filter de `project_id`. O `project_id: "mcorch-affiliate"` no meu shape de emit é **falso scoping**. Adicionar **antes** do dry-run:
+> 53	
+> 54	```diff
+> 55	- .eq("node_type", "content_mesh_asset");
+> 56	+ .eq("node_type", "content_mesh_asset")
+> 57	+ .eq("project_id", "mcorch-affiliate");
+> 58	```
+> 59	
+> 60	Commit isolado: `fix(link-forge): scope query by project_id to prevent cross-tenant scan`.
+> 61	
+> 62	### Amendment D — Phase 1 novo Step 1.5.5 — Postback chain synthetic E2E (Bug D)
+> 63	
+> 64	Antes de declarar Phase 1 done, validar end-to-end com synthetic chain:
+> 65	
+> 66	1. POST `process-affiliate-link` com `body={ product_url: <ML URL>, content_id: <novo asset UUID> }` + JWT Sovereign.
+> 67	2. Material: row em `affiliate_links` com `content_id=<asset_uuid>`.
+> 68	3. Simular ML postback via curl direto a `handle-ml-postback` com `{ affiliate_link_id, revenue_cents: 1, order_id: "synthetic-post-amend-2026-05-19" }`.
+> 69	4. **Assert material**: `SELECT source_id, target_id FROM mcorch_edges WHERE relation_type='ATTRIBUTES_REVENUE_TO' AND target_id='<asset_uuid>'` → 1 row nova.
+> 70	5. Cleanup pós: delete a `affiliate_links` row sintética + a `ATTRIBUTES_REVENUE_TO` edge sintética (não polui produção). Manter o asset legítimo do first run.
+> 71	
+> 72	Falha aqui = revenue loop quebrado em produção. **Não prossegue para Sovereign clicar em Run real até gates passarem**.
+> 73	
+> 74	### Amendment E — Phase 1 novo Step 1.7 — Health pulse em handle-ml-postback
+> 75	
+> 76	Material confirmed: zero rows em `infra_health_logs` para `service ILIKE '%ml%'` ou `'%postback%'`. Função vive há 17 dias sem observability. Adicionar mirror do padrão `canvas-execute:lines write` (success path + catch path).
+> 77	
+> 78	```ts
+> 79	// dentro de handle-ml-postback/index.ts, antes de cada return:
+> 80	await admin.from("infra_health_logs").insert({
+> 81	  service: "handle-ml-postback",
+> 82	  status: edge_created ? "healthy" : "degraded",
+> 83	}).then(() => {}, () => {});  // best-effort, nunca bloqueia
+> 84	```
+> 85	
+> 86	Lines mudadas: ~6. Deploy edge function junto com Phase 1.4.
+> 87	
+> 88	### Amendment F — Phase 3.5 — Schema fix `created_at` → `last_seen_at`
+> 89	
+> 90	`infra_health_logs` columns reais: `id, service, status, last_seen_at`. **`created_at` NÃO EXISTE** (confirmado material — erro 42703).
+> 91	
+> 92	Substituir em Phase 3.5 verification:
+> 93	
+> 94	```diff
+> 95	- SELECT created_at FROM infra_health_logs WHERE service='canvas-video-watchdog' ORDER BY created_at DESC LIMIT 1
+> 96	+ SELECT last_seen_at FROM infra_health_logs WHERE service='canvas-video-watchdog' ORDER BY last_seen_at DESC LIMIT 1
+> 97	```
+> 98	
+> 99	Idem para todas as outras queries do plan que tocam `infra_health_logs`.
+> 100	
+> 101	### Amendment G — Verification #4 baseline (HANDOFF inconsistency)
+> 102	
+> 103	HANDOFF v6.6.3 alegava "4 content_mesh_asset (3 product + 1 smoke)". **Reality (REST GET)**: **1 row** apenas (`f3a091f7`). Os 3 "product nodes" têm `node_type='feature'`, não `content_mesh_asset`. HANDOFF narrative errado.
+> 104	
+> 105	Substituir:
+> 106	
+> 107	```diff
+> 108	- 4. `curl /rest/v1/mcorch_nodes?node_type=eq.content_mesh_asset` → ≥5 rows (4 pré-existentes + ≥1 do first run)
+> 109	+ 4. `curl /rest/v1/mcorch_nodes?node_type=eq.content_mesh_asset` → ≥2 rows (baseline 1 do smoke v6.6.3 + ≥1 do first run)
+> 110	```
+> 111	
+> 112	### Amendment H — NOVA Phase 0 — Survival Laws Self-audit debt
+> 113	
+> 114	🚨 `.claude/rules/survival.md` §Self-audit cadence exige bloco mandatory em cada `/handoff` seal. **5 seals consecutivos omitiram** (v6.6.1 · v6.6.2 · v6.6.3 · v6.6.4 · v6.6.5). Dívida processual ALTA.
+> 115	
+> 116	**Step 0.1**: No próximo `/handoff` (pós execução das Fases 1-3), o seal **DEVE** incluir audit retrospectivo cobrindo as 5 seals — formato:
+> 117	
+> 118	```markdown
+> 119	### Survival Laws Self-audit (retrospectivo v6.6.1..v6.6.5 + esta seal)
+> 120	- **Law 1 (Materiality)**: claims de SUCCESS dos 5 seals tinham UUID/output? [revisar caso a caso]
+> 121	- **Law 2 (Process)**: novas features tinham SOP? [revisar]
+> 122	- **Law 3 (Pruning)**: poda explícita ocorreu? [revisar]
+> 123	- **Law 4 (ORO)**: triplet declarado? [revisar]
+> 124	```
+> 125	
+> 126	**Step 0.2**: A partir desta seal em diante, o `/handoff` skill DEVE emitir o bloco. Override consciente (se não couber no contexto) registra em OTD com SLA 7d.
+> 127	
+> 128	### Amendment I — Out of scope (additions awareness)
+> 129	
+> 130	Adicionar:
+> 131	
+> 132	- **OTD-SSP01-001 SLA expira 2026-05-24** (5 dias) — BoK Gate override do `aios-sql-bridge` precisa de SDD doc materializado. Não está coberto neste plan; criar sub-plan separado OR aceitar override estendido.
+> 133	- **OTD-V660-003 SUPABASE_POOLER_URL vault** — Stage 2 nightly VACUUM ANALYZE ainda pulado. Provisionar pooler URL no vault desbloqueia. Trivial mas não no escopo do plan.
+> 134	- **Survival Audit v3 not yet emitted** — predicted scores (Memory 5/5 · Skill 4/5 · Cost Discipline 4.5/5 · Observability 4/5 · SOP 5/5 = avg 4.4/5) precisam materialização formal antes de Phase Commercial.
+> 135	
+> 136	### Amendment J — Cleanup synthetic chain pós Phase 1
+> 137	
+> 138	Após Phase 1 succeed material, limpar smoke artifacts v6.6.3 (não vazar para Usuário 1):
+> 139	
+> 140	```sql
+> 141	-- order matters: edges first, then nodes
+> 142	DELETE FROM mcorch_edges WHERE id IN ('65d072fe-ff0e-476d-ade6-eb8c8e518a32');
+> 143	DELETE FROM mcorch_nodes WHERE id IN (
+> 144	  'f65d52b2-727b-4f78-a615-99abd664521f',  -- synthetic observation
+> 145	  'f3a091f7-9e72-4927-b0cb-2b65cffa9844'   -- synthetic content_mesh_asset (test-content-mesh-asset-oe661)
+> 146	);
+> 147	DELETE FROM affiliate_links WHERE id = 'adb9e131-2835-4612-8165-d0fd69c79d6b';
+> 148	```
+> 149	
+> 150	Manter os 3 product `feature` nodes do Link Forge (são produção legítima).
+> ```
+
+## 🤖 Claude
+
+Now let me check for test setup:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra -name \"vitest.config.*\" -o -name \"jest.config.*\" -o -name \"tsconfig.json\" -o -name \"package.json\" 2>/dev/null | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts
+> /home/gcrUX/htdocs/constellation-orchestra/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/tsconfig.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/chokidar/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/to-regex-range/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/es-set-tostringtag/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/es-set-tostringtag/tsconfig.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/webidl-conversions/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/ignore/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/glsl-noise/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/acorn/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/vite/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/d3-zoom/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/browserslist/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/strip-literal/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/suspend-react/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/natural-compare/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/camelcase-css/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/lodash.isplainobject/package.json
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/css.escape/package.json
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/package.json",
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "name": "vite_react_shadcn_ts",
+> 3	  "private": true,
+> 4	  "version": "0.0.0",
+> 5	  "type": "module",
+> 6	  "scripts": {
+> 7	    "dev": "vite",
+> 8	    "build": "vite build",
+> 9	    "build:dev": "vite build --mode development",
+> 10	    "lint": "eslint .",
+> 11	    "preview": "vite preview",
+> 12	    "test": "vitest run",
+> 13	    "test:watch": "vitest"
+> 14	  },
+> 15	  "dependencies": {
+> 16	    "@dnd-kit/core": "^6.3.1",
+> 17	    "@dnd-kit/sortable": "^10.0.0",
+> 18	    "@dnd-kit/utilities": "^3.2.2",
+> 19	    "@hookform/resolvers": "^3.10.0",
+> 20	    "@mediapipe/camera_utils": "^0.3.1675466862",
+> 21	    "@mediapipe/drawing_utils": "^0.3.1675466124",
+> 22	    "@mediapipe/hands": "^0.4.1675469240",
+> 23	    "@radix-ui/react-accordion": "^1.2.11",
+> 24	    "@radix-ui/react-alert-dialog": "^1.1.14",
+> 25	    "@radix-ui/react-aspect-ratio": "^1.1.7",
+> 26	    "@radix-ui/react-avatar": "^1.1.10",
+> 27	    "@radix-ui/react-checkbox": "^1.3.3",
+> 28	    "@radix-ui/react-collapsible": "^1.1.11",
+> 29	    "@radix-ui/react-context-menu": "^2.2.15",
+> 30	    "@radix-ui/react-dialog": "^1.1.14",
+> 31	    "@radix-ui/react-dropdown-menu": "^2.1.15",
+> 32	    "@radix-ui/react-hover-card": "^1.1.14",
+> 33	    "@radix-ui/react-label": "^2.1.8",
+> 34	    "@radix-ui/react-menubar": "^1.1.15",
+> 35	    "@radix-ui/react-navigation-menu": "^1.2.13",
+> 36	    "@radix-ui/react-popover": "^1.1.14",
+> 37	    "@radix-ui/react-progress": "^1.1.7",
+> 38	    "@radix-ui/react-radio-group": "^1.3.7",
+> 39	    "@radix-ui/react-scroll-area": "^1.2.9",
+> 40	    "@radix-ui/react-select": "^2.2.6",
+> 41	    "@radix-ui/react-separator": "^1.1.7",
+> 42	    "@radix-ui/react-slider": "^1.3.5",
+> 43	    "@radix-ui/react-slot": "^1.2.4",
+> 44	    "@radix-ui/react-switch": "^1.2.6",
+> 45	    "@radix-ui/react-tabs": "^1.1.12",
+> 46	    "@radix-ui/react-toast": "^1.2.14",
+> 47	    "@radix-ui/react-toggle": "^1.1.9",
+> 48	    "@radix-ui/react-toggle-group": "^1.1.10",
+> 49	    "@radix-ui/react-tooltip": "^1.2.7",
+> 50	    "@react-three/drei": "^9.122.0",
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { defineConfig } from "vitest/config";
+> 2	import react from "@vitejs/plugin-react-swc";
+> 3	import path from "path";
+> 4	
+> 5	export default defineConfig({
+> 6	  plugins: [react()],
+> 7	  test: {
+> 8	    environment: "jsdom",
+> 9	    globals: true,
+> 10	    setupFiles: ["./src/test/setup.ts"],
+> 11	    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+> 12	    coverage: {
+> 13	      provider: "v8",
+> 14	      reporter: ["text", "html"],
+> 15	      include: ["src/lib/**", "src/store/**", "src/hooks/**"],
+> 16	      exclude: ["src/**/*.test.*", "src/test/**", "src/integrations/**"],
+> 17	    },
+> 18	  },
+> 19	  resolve: {
+> 20	    alias: { "@": path.resolve(__dirname, "./src") },
+> 21	  },
+> 22	});
+> 23	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/src -type f \\( -name \"*.test.ts\" -o -name \"*.test.tsx\" -o -name \"*.spec.ts\" -o -name \"*.spec.tsx\" \\) | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/example.test.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/billing.test.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/useOrchestrationStore.test.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/useKnowledgeMesh.test.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/phase-zeta.test.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/useOrchestrationGraph.test.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/test/useSubscription.test.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly* /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas* /home/gcrUX/htdocs/constellation-orchestra/scripts/*watchdog* 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rwxrwxr-x 1 ubuntu ubuntu 6981 May 17 21:54 /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 6981 May 17 21:54 /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 3122 May 19 19:14 /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-bridge-refresh.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 5251 May 17 02:19 /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 5286 May 17 02:19 /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage2-deep-sleep.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 3167 May 17 02:20 /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage3-rem.sh
+> -rwxrwxr-x 1 ubuntu ubuntu 5265 May 15 14:26 /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/bin/bash
+> 2	# canvas-video-watchdog — defense-in-depth poll for Higgsfield video jobs (Phase 4.2c)
+> 3	#
+> 4	# Cron: */5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh
+> 5	#       >> /var/log/mcorch-canvas-watchdog.log 2>&1
+> 6	#
+> 7	# Picks up `vm_canvas_executions` rows that are still queued/running after 10 min
+> 8	# (webhook missed or delayed). Polls Higgsfield request status_url and resolves:
+> 9	#   - completed → POST the webhook URL manually (idempotent via webhook_token + status 409)
+> 10	#   - failed/nsfw/cancelled → PATCH row to status='failed' + error_message
+> 11	#   - still queued/in_progress, started_at > 60 min → PATCH status='timeout' (no deduct)
+> 12	#
+> 13	# SOP: docs/processes/canvas-video-async-execution.md § Recovery path
+> 14	# Pattern source: scripts/watchdog-mcorch.sh + scripts/auto-publish-cron.sh
+> 15	
+> 16	set -uo pipefail
+> 17	
+> 18	# Log target — when invoked via cron the line `>> /var/log/mcorch-canvas-watchdog.log`
+> 19	# captures stdout. Standalone runs simply print to stdout.
+> 20	COMPOSE_DIR="/home/gcrUX/htdocs/constellation-orchestra"
+> 21	DATE=$(date '+%Y-%m-%d %H:%M:%S')
+> 22	HF_BASE_URL="https://platform.higgsfield.ai"
+> 23	STALE_THRESHOLD_MIN=10
+> 24	TIMEOUT_THRESHOLD_MIN=60
+> 25	
+> 26	log() { echo "[${DATE}] $*"; }
+> 27	
+> 28	# ── Load environment ─────────────────────────────────────────────────────────
+> 29	if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 30	    # shellcheck disable=SC1090
+> 31	    set -a; source "${COMPOSE_DIR}/.env"; set +a
+> 32	fi
+> 33	
+> 34	# Fall back to the canonical project URL if .env doesn't set SUPABASE_URL.
+> 35	SUPABASE_URL="${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}"
+> 36	
+> 37	if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+> 38	    log "ERROR: SUPABASE_SERVICE_ROLE_KEY not set — aborting"
+> 39	    exit 1
+> 40	fi
+> 41	if [ -z "${HIGGSFIELD_API_KEY:-}" ] || [ -z "${HIGGSFIELD_API_KEY_SECRET:-}" ]; then
+> 42	    log "ERROR: HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET not set — aborting"
+> 43	    exit 1
+> 44	fi
+> 45	
+> 46	if ! command -v jq >/dev/null 2>&1; then
+> 47	    log "ERROR: jq not found — install with: sudo apt-get install -y jq"
+> 48	    exit 1
+> 49	fi
+> 50	
+> 51	REST="${SUPABASE_URL}/rest/v1"
+> 52	AUTH_HEADER="Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+> 53	APIKEY_HEADER="apikey: ${SUPABASE_SERVICE_ROLE_KEY}"
+> 54	HF_AUTH="Authorization: Key ${HIGGSFIELD_API_KEY}:${HIGGSFIELD_API_KEY_SECRET}"
+> 55	
+> 56	# ── Helpers ──────────────────────────────────────────────────────────────────
+> 57	write_health() {
+> 58	    local STATUS="$1"
+> 59	    curl -s -X POST "${REST}/infra_health_logs" \
+> 60	        -H "${APIKEY_HEADER}" -H "${AUTH_HEADER}" \
+> 61	        -H "Content-Type: application/json" \
+> 62	        -d "{\"service\":\"canvas-video-watchdog\",\"status\":\"${STATUS}\"}" \
+> 63	        >/dev/null 2>&1
+> 64	}
+> 65	
+> 66	patch_execution() {
+> 67	    local EXEC_ID="$1"
+> 68	    local PAYLOAD="$2"  # JSON body
+> 69	    curl -s -X PATCH "${REST}/vm_canvas_executions?id=eq.${EXEC_ID}" \
+> 70	        -H "${APIKEY_HEADER}" -H "${AUTH_HEADER}" \
+> 71	        -H "Content-Type: application/json" \
+> 72	        -H "Prefer: return=minimal" \
+> 73	        -d "${PAYLOAD}" >/dev/null 2>&1
+> 74	}
+> 75	
+> 76	# ── Fetch stale in-flight rows ───────────────────────────────────────────────
+> 77	STALE_ISO=$(date -u -d "${STALE_THRESHOLD_MIN} minutes ago" +'%Y-%m-%dT%H:%M:%SZ')
+> 78	TIMEOUT_ISO=$(date -u -d "${TIMEOUT_THRESHOLD_MIN} minutes ago" +'%Y-%m-%dT%H:%M:%SZ')
+> 79	
+> 80	# URL-encode the timestamp value (only `:` matters here).
+> ```
+
+## 🤖 Claude
+
+Let me search for how infra_health_logs is actually being used and verify the schema:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"infra_health_logs\" /home/gcrUX/htdocs/constellation-orchestra/scripts --include=\"*.sh\" --include=\"*.ts\" --include=\"*.js\" | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh:# Also writes health telemetry to Supabase infra_health_logs for the Neural HUD.
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh:    curl -s -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage3-rem.sh:  curl -sS -m 5 -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage2-deep-sleep.sh:  curl -sS -m 5 -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh:# Health pulse helper — writes one row to infra_health_logs via service-role REST.
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh:  curl -sS -m 5 -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh:    curl -s -X POST "${REST}/infra_health_logs" \
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/supabase -name \"*.sql\" 2>/dev/null | xargs grep -l \"infra_health_logs\" 2>/dev/null | head -5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260425210000_mcorch_tenant_isolation.sql
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -A 20 \"CREATE TABLE.*infra_health_logs\" /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260425210000_mcorch_tenant_isolation.sql"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> CREATE TABLE IF NOT EXISTS public.infra_health_logs (
+>   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+>   service      text        NOT NULL,   -- 'mcorch_claude_mem' | 'mcorch_chroma'
+>   status       text        NOT NULL,   -- 'healthy' | 'unhealthy' | 'unknown'
+>   last_seen_at timestamptz NOT NULL DEFAULT now()
+> );
+> 
+> ALTER TABLE public.infra_health_logs ENABLE ROW LEVEL SECURITY;
+> 
+> DROP POLICY IF EXISTS "infra_health_read"    ON public.infra_health_logs;
+> DROP POLICY IF EXISTS "infra_health_service" ON public.infra_health_logs;
+> 
+> -- Authenticated users can read (for HUD display)
+> CREATE POLICY "infra_health_read" ON public.infra_health_logs
+>   FOR SELECT TO authenticated
+>   USING (true);
+> 
+> -- Only service_role (watchdog) may write
+> CREATE POLICY "infra_health_service" ON public.infra_health_logs
+>   FOR ALL TO service_role
+>   USING (true) WITH CHECK (true);
+> ```
+
+## 🤖 Claude
+
+Now let me examine the verify_counts and reward_healing scripts to understand more healing patterns:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/verify_counts.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	
+> 2	import { createClient } from '@supabase/supabase-js';
+> 3	
+> 4	const supabaseUrl = process.env.VITE_SUPABASE_URL;
+> 5	const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 6	
+> 7	if (!supabaseUrl || !supabaseKey) {
+> 8	  console.error("Missing Supabase credentials in env.");
+> 9	  process.exit(1);
+> 10	}
+> 11	
+> 12	const supabase = createClient(supabaseUrl, supabaseKey);
+> 13	
+> 14	async function runAudit() {
+> 15	  console.log("🔍 NEXUS AUDIT - FINAL COUNT");
+> 16	  
+> 17	  const { count: totalNodes, error: nodeErr } = await supabase
+> 18	    .from('mcorch_nodes')
+> 19	    .select('*', { count: 'exact', head: true });
+> 20	
+> 21	  const { count: totalEdges, error: edgeErr } = await supabase
+> 22	    .from('mcorch_edges')
+> 23	    .select('*', { count: 'exact', head: true });
+> 24	
+> 25	  const { count: agentCount, error: agentErr } = await supabase
+> 26	    .from('mcorch_nodes')
+> 27	    .select('*', { count: 'exact', head: true })
+> 28	    .eq('node_type', 'crew_agent');
+> 29	
+> 30	  const { count: fileCount, error: fileErr } = await supabase
+> 31	    .from('mcorch_nodes')
+> 32	    .select('*', { count: 'exact', head: true })
+> 33	    .eq('node_type', 'ast_file');
+> 34	
+> 35	  if (nodeErr || edgeErr || agentErr || fileErr) {
+> 36	    console.error("Error fetching data:", nodeErr || edgeErr || agentErr || fileErr);
+> 37	    return;
+> 38	  }
+> 39	
+> 40	  console.log(`-----------------------------------`);
+> 41	  console.log(`TOTAL NODES: ${totalNodes}`);
+> 42	  console.log(`TOTAL EDGES: ${totalEdges}`);
+> 43	  console.log(`AGENTS:      ${agentCount}`);
+> 44	  console.log(`FILES (AST): ${fileCount}`);
+> 45	  console.log(`-----------------------------------`);
+> 46	}
+> 47	
+> 48	runAudit();
+> 49	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/reward-healing.ts",
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	
+> 2	import { createClient } from '@supabase/supabase-js';
+> 3	
+> 4	const supabase = createClient(
+> 5	  process.env.SUPABASE_URL!,
+> 6	  process.env.SUPABASE_SERVICE_ROLE_KEY!
+> 7	);
+> 8	
+> 9	async function rewardHealing() {
+> 10	  console.log('--- Healing Reward System v1.0 ---');
+> 11	  
+> 12	  // 1. Get the first user profile
+> 13	  const { data: profiles, error: pError } = await supabase
+> 14	    .from('profiles')
+> 15	    .select('id, mco_balance, score')
+> 16	    .limit(1);
+> 17	    
+> 18	  if (pError || !profiles?.[0]) {
+> 19	    console.error('Error fetching profile:', pError);
+> 20	    return;
+> 21	  }
+> 22	  
+> 23	  const user = profiles[0];
+> 24	  console.log(`Found user: ${user.id} | Balance: ${user.mco_balance}`);
+> 25	
+> 26	  // 2. Grant Reward (5000 score = 50 McoCoins)
+> 27	  const { error: rError } = await supabase.rpc('add_user_score', {
+> 28	    user_id_param: user.id,
+> 29	    score_to_add: 5000
+> 30	  });
+> 31	
+> 32	  if (rError) {
+> 33	    console.error('Error granting reward:', rError);
+> 34	    return;
+> 35	  }
+> 36	  
+> 37	  console.log('✅ 50 McoCoins granted for technical debt resolution (VAD Healing).');
+> 38	
+> 39	  // 3. Record Milestone in mcorch_nodes
+> 40	  const { error: nError } = await supabase
+> 41	    .from('mcorch_nodes')
+> 42	    .insert([
+> 43	      {
+> 44	        name: '[HEALING] VAD Lint Resolution',
+> 45	        node_type: 'milestone',
+> 46	        content: 'Resolved TypeScript lints for SpeechRecognition and VAD logic in AIOSTerminal.tsx. Reward of 50 McoCoins issued.',
+> 47	        metadata: {
+> 48	          reward_amount: 50,
+> 49	          reward_currency: 'McoCoins',
+> 50	          target_file: 'AIOSTerminal.tsx',
+> 51	          status: 'completed'
+> 52	        }
+> 53	      }
+> 54	    ]);
+> 55	
+> 56	  if (nError) {
+> 57	    console.error('Error recording milestone:', nError);
+> 58	  } else {
+> 59	    console.log('✅ Milestone recorded in Knowledge Mesh.');
+> 60	  }
+> 61	}
+> 62	
+> 63	rewardHealing();
+> 64	
+> ```
+
+## 🤖 Claude
+
+Perfect. Now let me examine one more doc to understand SOP structure better:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/openclaw-bridge-recovery.md",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP — OpenClaw Bridge Recovery v1.0
+> 2	
+> 3	**Versão:** v1 · **Selada:** 2026-05-19 · **Lei 2 (Processo Antecipado)** · Trigger: incident em Stage 2 (`nightly-bridge-refresh` falhando Step 3)
+> 4	
+> 5	## ORO triplet
+> 6	
+> 7	- **Operator:** engineer agent (Layer 2 escalation do watchdog); fallback manual é Sovereign via shell direto
+> 8	- **Reviewer:** Sovereign (revisa via `claw.gcrux.com/dreaming` — Imported Insights / Memory Palace / Diário devem mostrar entradas frescas após reindex)
+> 9	- **Owner:** engineer agent (infra ownership) — risco material: AIOS dreaming silently vazio quebra confiança no Memory Palace + briefing matinal Telegram
+> 10	
+> 11	## Contexto
+> 12	
+> 13	`scripts/nightly-bridge-refresh.sh` encapsulado em **Stage 2 (`0 5 * * *` BRT)** roda 3 sub-steps:
+> 14	
+> 15	1. `bridge-mesh-to-openclaw.ts` — export `mcorch_nodes` + `mcorch_edges` → `memory/mcorch-export/` (tier1 strategy + tier2 AST)
+> 16	2. `distribute-mesh-to-agents.ts` — copy shared + per-agent overlays para `~/.openclaw/agents/<id>/memory/`
+> 17	3. `"$NODE_BIN" "$OPENCLAW_CLI" memory index --agent="$agent"` × 7 — reconstrói SQLite FTS5 + vector indexes em `~/.openclaw/memory/<agent>.sqlite` (agents: main · artisan · engineer · scientist · marketing-growth · guardian · claw-master — este último adicionado em 2026-05-19 após descoberta de omissão latente desde v6.3.1)
+> 18	
+> 19	Step 3 é o que alimenta os endpoints `doctor.memory.dreamDiary`, `wiki.importInsights`, e `wiki.palace` consumidos pela UI `claw.gcrux.com/dreaming`. Sem Step 3 successful, a UI lê do índice antigo — Imported Insights, Memory Palace e dream promotion ficam congelados no último reindex bem-sucedido.
+> 20	
+> 21	**Causa-raiz recorrente conhecida:** OpenClaw CLI exige Node.js v22.12+, mas o cron environment de `ubuntu` historicamente usa `/usr/bin/node` (Ubuntu APT) que é v18.19.1. Sem path absoluto explícito para o binário Node 22, Step 3 falha silenciosamente em loop.
+> 22	
+> 23	## Pre-conditions
+> 24	
+> 25	- Stage 2 cron em `crontab -l` (`0 5 * * * .../scripts/nightly-stage2-deep-sleep.sh`).
+> 26	- `/var/log/mcorch-nightly-bridge.log` existente e escrevível pelo user `ubuntu`.
+> 27	- `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node` resolvível (target real do symlink `/home/ubuntu/.local/bin/node`).
+> 28	- `mcorch_chroma` healthy + `mcorch_claude_mem` healthy (`docker ps`).
+> 29	- `~/.openclaw/cron/jobs.json` tem `Memory Dreaming Promotion` agendado (`0 3 * * *`) — fora deste SOP, mas é downstream e fica vazio se Step 3 não roda.
+> 30	
+> 31	## Sequence — recovery manual humana
+> 32	
+> 33	| # | Action | Output esperado | Verification gate |
+> 34	|---|--------|-----------------|-------------------|
+> 35	| 1 | `tail -50 /var/log/mcorch-nightly-bridge.log \| grep -E "Step 3/3\|FAIL indexing\|DONE"` | Linhas mostrando "Step 3/3" + se há "FAIL indexing" ou apenas "DONE (zero failures)" | Se há FAIL indexing → root cause confirmado, segue passo 2. Se DONE → bridge OK, problema é upstream (mesh sem input novo) |
+> 36	| 2 | `grep -n "node " /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-bridge-refresh.sh \| grep -v "node_modules\|#"` | Linha do invoke do CLI (`node "$OPENCLAW_CLI" memory index ...`) | Confirma que invoke usa `node` direto OU `$NODE_BIN`; se direto, pin é necessário |
+> 37	| 3 | `which node && ls -la $(which node) && node --version` no shell do user dono do cron (atualmente `ubuntu`) | Path absoluto + symlink target + versão v22.12+ | Se v18.x.x → problema confirmado de PATH no cron env |
+> 38	| 4 | Editar `scripts/nightly-bridge-refresh.sh` — declarar `NODE_BIN=<resolved nvm target>` no bloco de paths (perto da linha 13) e substituir `node "$OPENCLAW_CLI"` por `"$NODE_BIN" "$OPENCLAW_CLI"` no loop de agents | 2 hunks no diff | `git diff` mostra exatamente essas duas mudanças, nada mais |
+> 39	| 5 | `bash /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-bridge-refresh.sh` | Log apêndice com Steps 1, 2, 3 sequenciais + `DONE (zero failures)` | `tail -1 /var/log/mcorch-nightly-bridge.log` mostra DONE final |
+> 40	| 6 | `ls -la /home/ubuntu/.openclaw/memory/*.sqlite` | 6 arquivos SQLite com mtime nos últimos minutos | Diff de mtime com `date` < 5min |
+> 41	| 7 | Sovereign reload `claw.gcrux.com/dreaming` | Imported Insights aceita reload sem erro; Memory Palace counts conferem com vault state | UI mostra cluster > 1 OU confirma materialmente que mesh upstream realmente não tem input novo (não é falha de bridge) |
+> 42	
+> 43	## Verification gates
+> 44	
+> 45	- **Gate Step 3 OK:** `/var/log/mcorch-nightly-bridge.log` última execução tem `DONE (zero failures)` E nenhuma linha `openclaw: Node.js v22.12+ is required`.
+> 46	- **Gate SQLite reindex:** mtime de **todos** os arquivos `.sqlite` em `~/.openclaw/memory/` ≤ 5 min após `bash` manual.
+> 47	- **Gate downstream Dream Promotion:** após cron Memory Dreaming Promotion (03:00 BRT) seguinte, `~/.openclaw/agents/claw-master/memory/dreaming/{light,deep,rem}/<YYYY-MM-DD>.md` não devem mais ser "No notable updates" caso haja material novo no mesh.
+> 48	- **Gate UI viva:** Sovereign confirma na UI Imported Insights/Memory Palace que counts mudaram (ou confirmam estabilidade legítima do mesh).
+> 49	
+> 50	## Recovery path
+> 51	
+> 52	- **Cenário A — bridge ainda falha em Step 3 após pin:** verificar `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node --version` retorna v22.22.3. Se symlink quebrou ou versão drift, atualizar `NODE_BIN` para target atual. NÃO usar `which node` no script — sempre path absoluto resolvido.
+> 53	- **Cenário B — indexing parcial (FAIL em 1-2 agents):** rodar manualmente apenas os agents que falharam: `"$NODE_BIN" /home/ubuntu/openclaw/openclaw.mjs memory index --agent=<id>` para cada. Investigar SOUL.md / openclaw.json do agent específico para corrupção.
+> 54	- **Cenário C — Steps 1+2 OK + Step 3 OK + UI ainda stale:** problema é upstream (mesh sem input) ou cache. Validar: `psql ... 'SELECT count(*) FROM mcorch_nodes WHERE created_at > now() - interval ''3 days'''` — se zero, mesh upstream parou de inserir. Investigar embedding pipeline + cron `ingest-codebase` (`0 6 * * *` que **também** usa `node` sem path absoluto — risco gêmeo deste SOP).
+> 55	- **Cenário D — Step 3 falha por OOM ou disk:** `docker stats` + `df -h /home/ubuntu`. SQLite VACUUM por agente (manual) se índice corrompido. Reindex completo deleta `~/.openclaw/memory/<agent>.sqlite` antes de re-rodar.
+> 56	
+> 57	## Success signal
+> 58	
+> 59	- `/var/log/mcorch-nightly-bridge.log` última linha = `[<ISO>] nightly-bridge-refresh DONE (zero failures)`.
+> 60	- Todos os 6 SQLites de agent indexados com mtime fresco.
+> 61	- `claw.gcrux.com/dreaming` Imported Insights mostra cluster com data > checkpoint anterior (ex.: > 2026-05-16 quando o problema foi detectado).
+> 62	- Cron seguinte (próximo 05:00 BRT) também passa zero failures — idempotência confirmada.
+> 63	
+> 64	## Anti-patterns
+> 65	
+> 66	- ❌ Usar `node` sem path absoluto em qualquer cron script que dependa de Node v22+.
+> 67	- ❌ "Resolver" pin com `source ~/.nvm/nvm.sh && nvm use 22` no script — funciona para o user dono do nvm install, mas cria fragilidade implícita; pin direto no binário resolvido é mais materialmente verificável.
+> 68	- ❌ Bypassar Step 3 (commentar o loop) como "fix" — bridge sem indexação = sem dreams + sem Memory Palace; é a fonte do AIOS.
+> 69	- ❌ Desabilitar Stage 2 inteiro porque "está falhando" — Stage 2 também faz drift watch + VACUUM; remover é perder defesas.
+> 70	- ❌ Auto-upgrade do `NODE_BIN` por script (`readlink -f $(which node)`) — quebra Lei 1; pin é DECISÃO HUMANA com prova material.
+> 71	
+> 72	## Referências
+> 73	
+> 74	- `scripts/nightly-bridge-refresh.sh` — script alvo do pin (linha 65 invoke do CLI)
+> 75	- `scripts/nightly-stage2-deep-sleep.sh` — wrapper que invoca o bridge (linha 81)
+> 76	- `/home/ubuntu/openclaw/openclaw.mjs` — CLI OpenClaw que exige Node v22.12+
+> 77	- `/home/ubuntu/.openclaw/memory/*.sqlite` — alvo de reindex (FTS5 + vector)
+> 78	- `/home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts:136-160` — gateway `wiki.importInsights` + `wiki.palace`
+> 79	- `/home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts` — UI consumer
+> 80	- `~/.openclaw/cron/jobs.json` — Memory Dreaming Promotion downstream (03:00 BRT, OpenClaw native)
+> 81	- SOP irmão `nightly-circadian-cycle.md` (Stage 2 ownership)
+> 82	- SOP irmão `mcoins-ledger-reconciliation.md` (Stage 2 drift watch)
+> 83	
+> 84	## Risco adjacente conhecido (registrar OTD se materializar)
+> 85	
+> 86	`crontab -l` atual também tem `0 6 * * * node scripts/ingest-codebase.ts --quiet >> /tmp/mcorch-ingest.log 2>&1` — mesmo padrão de `node` sem path absoluto. Se Sovereign confirmar que ingest-codebase também está silenciosamente falhando há ≥ 3 dias (via tail `/tmp/mcorch-ingest.log`), aplicar mesmo fix neste cron (pin via `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node`). NÃO incluso neste SOP — escopo aqui é apenas bridge recovery.
+> 87	
+> ```
+
+## 🤖 Claude
+
+Perfect! Now I have comprehensive coverage. Let me compile the findings into a concise inventory report.
+
+## INVENTORY REPORT: Constellation Orchestra Verification/Audit/Healing Tooling
+
+### 1. SCRIPTS DIRECTORY AUDIT TABLE
+
+| Script | Coverage | Health Output | Reusable for `mcorch-qa-healing`? |
+|--------|----------|---------------|------------------------------------|
+| **watchdog-mcorch.sh** | Monitors `mcorch_claude_mem` container (port 37777) + `mcorch_chroma` heartbeat. Detects unhealthy → restart. Escalates to engineer agent after 3 consecutive failures. | Writes `infra_health_logs` (service, status). File escalation to `/tmp/openclaw-incidents/` | **YES** — escalation pattern + telemetry write |
+| **nightly-stage1-light-sleep.sh** | Log rotation (gzip >7d), temp cleanup, infra spot check (docker ps + chroma heartbeat). | Health pulse to `infra_health_logs` + escalation JSON to gateway + incident file. Severity P2. | **YES** — health_pulse helper + escalation pattern |
+| **nightly-stage2-deep-sleep.sh** | Mesh bridge refresh, ledger drift watch (READ-ONLY alert), VACUUM ANALYZE. | Health pulse + incident escalation. Severity P1. Explicit drift reporting without auto-fix. | **YES** — read-only audit pattern (ledger) |
+| **nightly-stage3-rem.sh** | News pulse + Telegram briefing delivery. | Health pulse. | Partial — output delivery pattern, not audit-focused |
+| **nightly-bridge-refresh.sh** | Exports `mcorch_nodes`/edges → OpenClaw agent memory overlay, reindexes 7 SQLite FTS5+vector indexes. | Logs to `/var/log/mcorch-nightly-bridge.log`. No direct health table write (delegated to Stage 2 wrapper). | **YES** — bridge integrity check + index validation |
+| **audit-mesh-edges.ts** | Audits 20 most recent observation nodes for Target Binding (OE-661-003). Verifies edges to source code (AST/markdown/vault). Counts valid vs orphan. | Console.log (`[VALID]`/`[ORPHAN]` tags) + final summary (valid_edges/missing_edges). | **YES** — mesh topology audit pattern (reusable for canvas/observation edges) |
+| **audit-mesh-edges.js** | Identical TypeScript version (legacy). | Same as `.ts` | **YES** — same pattern, different format |
+| **backfill-embeddings.ts** | Finds `mcorch_nodes` with `embedding=NULL` + backfills via edge function. Reports progress. | Console logging (count of found + success/fail per node). | Partial — data pipeline check, not QA-focused |
+| **link-forge.ts** | Scans `content_mesh_asset` for product mentions → replaces with affiliate-tracked URLs + creates `CONTAINS_LINK_FOR` edges. | Console.log + dry-run flag. No health table. | Partial — business logic validation, not infra audit |
+| **stitch-fallback.js** | Finds orphan observation nodes missing edges → stitches fallback to CLAUDE.md. | Console.log count. | **YES** — fallback edge validation pattern |
+| **canvas-video-watchdog.sh** | Polls Higgsfield video jobs (queued >10min). Resolves: completed→webhook, failed→PATCH row, timeout→status='timeout'. | Health pulse to `infra_health_logs` (canvas-video-watchdog service). Patches `vm_canvas_executions` status. | **YES** — async job recovery + health reporting pattern |
+| **verify_counts.ts** | Counts total nodes/edges + agents + AST files. | Console.log summary. | Partial — baseline metric, not diagnostic |
+| **reward-healing.ts** | Grants McoCoins + creates milestone node for debt resolution. | No telemetry; creates milestone node. | Partial — reward mechanism, not verification |
+
+**Gaps (QA checks that DON'T exist yet):**
+- No **canvas content delivery validation** (does content_mesh_asset match expectations, no cross-tenant leakage?)
+- No **affiliate revenue loop E2E verification** (synthetic postback chain mentioned in OE-661 but no automated SOP)
+- No **ledger balance reconciliation** (Stage 2 only alerts drift; no auto-backfill + no verification that fix worked)
+- No **node embedding quality audit** (backfill_embeddings checks NULL; no semantic check of embeddings themselves)
+- No **edge consistency validation** (orphaned nodes, dangling references to deleted targets, circular deps)
+
+---
+
+### 2. SOP FILE STRUCTURE (from `nightly-circadian-cycle.md` and `openclaw-bridge-recovery.md`)
+
+**Standard sections:**
+1. **Header** — Title, version, seal date, legal reference (e.g., Lei 2, SSP-01), mesh node ID
+2. **ORO triplet** — Operator, Reviewer, Owner roles + fallback escalation path
+3. **Contexto** — Problem statement + architectural rationale (e.g., 3-stage sleep model for CPU/IO isolation)
+4. **Sequence** — Human manual execution table (Action | Expected output | Verification gate)
+5. **Verification gates** — Concrete materiality checks (log tail, query result, file mtime, HTTP 200)
+6. **Recovery path** — Scenario-based remediation (A, B, C, D...) with specific commands
+7. **Success signal** — Observable confirmation (e.g., Telegram bot sends briefing, UI shows updated counts, zero incidents 7 days)
+8. **Anti-patterns** — Common mistakes (❌) with short rationale
+9. **Referências** — Linked scripts, tables, gateway endpoints, sibling SOPs
+
+**Key pattern:** SOPs are operationalized (not conceptual) — every verification gate includes a shell command or query to run, and every recovery path pins to a specific file/line number (e.g., "line 65 invoke del CLI"). Failures are reported as incident JSON (id, service, step, exit_code, log_tail, severity P1/P2).
+
+---
+
+### 3. INFRA_HEALTH_LOGS INSERT SHAPE
+
+**Table schema** (from `supabase/migrations/20260425210000_mcorch_tenant_isolation.sql`):
+```sql
+CREATE TABLE public.infra_health_logs (
+  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  service      text        NOT NULL,   -- 'mcorch_claude_mem' | 'mcorch_chroma'
+  status       text        NOT NULL,   -- 'healthy' | 'unhealthy' | 'unknown'
+  last_seen_at timestamptz NOT NULL DEFAULT now()
+);
+```
+
+**Concrete writer example** (from `watchdog-mcorch.sh` lines 54–65):
+```bash
+write_health() {
+    local SERVICE="$1"
+    local STATUS="$2"
+    curl -s -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+        -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+        -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{\"service\":\"${SERVICE}\",\"status\":\"${STATUS}\"}" > /dev/null 2>&1
+}
+```
+
+**Services written in production:**
+- `mcorch_claude_mem` (watchdog)
+- `mcorch_chroma` (watchdog)
+- `nightly-stage1`, `nightly-stage2`, `nightly-stage3` (stages 1–3)
+- `canvas-video-watchdog` (Higgsfield job polling)
+- `openclaw-escalation` (Layer 2 trigger from watchdog)
+
+---
+
+### 4. SYNTHETIC POSTBACK VERIFICATION — OE-661
+
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-oe661-carryovers.md`
+
+**Amendment D (Phase 1 Step 1.5.5)** — Synthetic E2E chain:
+1. POST `process-affiliate-link` with JWT → inserts row in `affiliate_links`
+2. Simulate ML postback to `handle-ml-postback` with `{ affiliate_link_id, revenue_cents, order_id }`
+3. Assert material: `SELECT ... FROM mcorch_edges WHERE relation_type='ATTRIBUTES_REVENUE_TO'` → verify new edge created
+4. Cleanup: delete test rows post-verification (don't pollute production)
+
+**Health gap:** `handle-ml-postback` edge function has **zero rows in `infra_health_logs`** (confirmed in Amendment E). Needs mirror of canvas-execute health_pulse pattern.
+
+---
+
+### 5. TEST SETUP
+
+**Test runner:** Vitest (not Jest)  
+**Config file:** `/home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts`  
+**Commands:**
+- `npm run test` → `vitest run` (single run)
+- `npm run test:watch` → `vitest` (watch mode)
+
+**Test location:** `src/**/*.{test,spec}.{ts,tsx}` (7 test files found in `src/test/`)  
+**Type check:** `npx tsc --noEmit` (not in package.json scripts, but available)
+
+**Key config:**
+```ts
+environment: "jsdom",
+globals: true,
+setupFiles: ["./src/test/setup.ts"],
+```
+
+---
+
+## SUMMARY FOR QA SKILL DESIGN
+
+**Reusable pieces available:**
+- Health pulse pattern (Bash curl to `infra_health_logs` REST; used by watchdog + all 3 stages)
+- Escalation pattern (incident JSON to `/tmp/openclaw-incidents/` + gateway POST + service_role write)
+- Read-only audit pattern (ledger drift watch in Stage 2 — queries without modifying)
+- Mesh topology audit (audit-mesh-edges.ts — valid/orphan edge counting)
+- Async job recovery (canvas-video-watchdog — status_url poll + webhook replay)
+- SOP structure template (9-section format with verification gates + recovery paths)
+
+**Build on existing:**
+- `/home/gcrUX/htdocs/constellation-orchestra/scripts/` — copy watchdog health_pulse helper, escalation_failure template
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/processes/` — mirror SOP structure for new QA healing SOP
+- `infra_health_logs` — 4 columns (id, service, status, last_seen_at) — write via service_role REST
+- Incident inbox — `/tmp/openclaw-incidents/*.json` — monitored by engineer agent
+
+**QA checks genuinely missing:**
+- End-to-end affiliate revenue loop validation (synthetic postback confirmatory test)
+- Canvas content_mesh_asset isolation (no cross-tenant leak validation)
+- Ledger balance reconciliation (alert-only → auto-verified fix)
+- Node embedding semantic audit (not just NULL checks)
+- Edge referential integrity (orphans, cycles, dangling targets)

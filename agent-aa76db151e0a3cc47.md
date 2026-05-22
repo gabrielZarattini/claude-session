@@ -1,0 +1,3640 @@
+# Claude Session: agent-aa76db151e0a3cc47
+
+## 👤 User
+
+Estou auditando a página `/dreaming` do app `claw.gcrux.com` (ambiente Guardian/OpenClaw — distinto do constellation-orchestra principal). Preciso entender a arquitetura completa que serve as 3 sub-tabs:
+
+1. **Tab "CENA"** — animação "DREAMING ATIVO · X promovido" + botões LEVE/PROFUNDO/REM
+2. **Tab "DIÁRIO" > "Dreams"** — lista de sessões de dream com tags `<final>`, `<initial>`, `<mid>` (3:00 AM cron output presumivelmente)
+3. **Tab "DIÁRIO" > "Imported Insights"** — clusters de chats importados (ChatGPT bridge)
+4. **Tab "DIÁRIO" > "Memory Palace"** — Syntheses / Entities / Concepts com counts de claims / questions / contradictions
+
+**Tarefa thorough**: localizar TODO o stack que serve isso. Comece procurando em:
+
+- `/home/ubuntu/openclaw/` — provável raiz do app
+- `/home/ubuntu/.openclaw/` — runtime/memory (já sei que existe; não precisa explorar isso a fundo, só listar estrutura)
+- Outros diretórios em `/home/ubuntu/` que possam conter um web app servindo `claw.gcrux.com`
+- nginx config para `claw.gcrux.com` (geralmente em `/etc/nginx/sites-enabled/`)
+
+Para CADA superfície (Dreams, Imported Insights, Memory Palace, Scene), me responda:
+
+A. **Frontend route/component** — qual arquivo renderiza a tab, qual hook/query busca dados
+B. **API endpoint** (se houver) — qual edge function / express route / SQLite query alimenta
+C. **Data source primário** — tabela SQLite (`~/.openclaw/memory/*.sqlite`), arquivos markdown (`~/.openclaw/agents/*/MEMORY.md`), ou JSONL (`memory/...`)
+D. **Pipeline de atualização** — qual script/cron escreve nessa fonte, com que cadência
+
+Sobre o pipeline conhecido pelo CLAUDE.md do constellation:
+- Cron 02:30 BRT: `scripts/nightly-bridge-refresh.sh`
+- Cron 03:00 BRT: OpenClaw native `Memory Dreaming Promotion`
+- Cron 03:30 BRT: `scripts/morning-briefing.sh`
+
+→ Verificar onde esses crons estão definidos (`~/.openclaw/cron/jobs.json` ou crontab Linux) — só leitura.
+
+Reporte de volta:
+1. Estrutura do app /dreaming (paths absolutos dos arquivos críticos)
+2. Path para cada uma das 4 superfícies (Scene / Dreams / Imported Insights / Memory Palace) com snippet curto da query/fetch
+3. Localização do cron de Memory Dreaming Promotion e onde ele escreve
+4. Localização da Imported Insights ingestion pipeline (presumível: import de export ChatGPT)
+5. Localização da Memory Palace generation (Syntheses/Entities/Concepts) — qual cron/script gera
+
+Mantenha o relatório direto, com paths absolutos e line numbers. Não precisa de prosa; bullet/tabela melhor. Sob 600 palavras.
+
+## 🤖 Claude
+
+Vou fazer uma auditoria thorough da arquitetura do `/dreaming`. Começando com levantamento de estrutura e localização dos componentes-chave.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu -type d -name \"openclaw\" 2>/dev/null | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw
+> /home/ubuntu/openclaw/dist/extensions/node_modules/openclaw
+> /home/ubuntu/openclaw/node_modules/tokenjuice/dist/rules/openclaw
+> /home/ubuntu/openclaw/node_modules/tokenjuice/dist/hosts/openclaw
+> /home/ubuntu/.nvm/versions/node/v20.20.2/lib/node_modules/openclaw
+> /home/ubuntu/.bun/install/cache/tokenjuice@0.7.0@@@1/dist/rules/openclaw
+> /home/ubuntu/.bun/install/cache/tokenjuice@0.7.0@@@1/dist/hosts/openclaw
+> /home/ubuntu/openclaw/node_modules/tokenjuice/dist/rules/fixtures/openclaw
+> /home/ubuntu/.bun/install/cache/tokenjuice@0.7.0@@@1/dist/rules/fixtures/openclaw
+> /home/ubuntu/openclaw/apps/android/benchmark/src/main/java/ai/openclaw
+> /home/ubuntu/openclaw/apps/android/app/src/thirdParty/java/ai/openclaw
+> /home/ubuntu/openclaw/apps/android/app/src/main/java/ai/openclaw
+> /home/ubuntu/openclaw/apps/android/app/src/test/java/ai/openclaw
+> /home/ubuntu/openclaw/apps/android/app/src/play/java/ai/openclaw
+> /home/ubuntu/openclaw/apps/android/app/src/testThirdParty/java/ai/openclaw
+> ```
+
+## 🤖 Claude
+
+Raiz identificada: `/home/ubuntu/openclaw`. Agora vou explorar a estrutura web e localizar a página `/dreaming`.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/openclaw/ | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 3824
+> drwxrwxr-x  26 ubuntu ubuntu    4096 May 18 00:30 .
+> drwxr-x---  56 ubuntu ubuntu    4096 May 19 18:18 ..
+> drwxrwxr-x   4 ubuntu ubuntu    4096 May 15 01:59 .agents
+> -rw-rw-r--   1 ubuntu ubuntu   15609 May 15 01:59 AGENTS.md
+> -rw-rw-r--   1 ubuntu ubuntu  211182 May 15 01:59 appcast.xml
+> drwxrwxr-x   8 ubuntu ubuntu    4096 May 15 01:59 apps
+> drwxrwxr-x   3 ubuntu ubuntu    4096 May 18 00:21 .artifacts
+> -rw-r--r--   1 ubuntu ubuntu  218308 May 15 03:00 bun.lock
+> drwxrwxr-x   3 ubuntu ubuntu    4096 May 15 01:59 changelog
+> -rw-rw-r--   1 ubuntu ubuntu 2145170 May 15 01:59 CHANGELOG.md
+> lrwxrwxrwx   1 ubuntu ubuntu       9 May 15 01:59 CLAUDE.md -> AGENTS.md
+> drwxrwxr-x   3 ubuntu ubuntu    4096 May 15 01:59 config
+> -rw-rw-r--   1 ubuntu ubuntu   14737 May 15 01:59 CONTRIBUTING.md
+> -rw-rw-r--   1 ubuntu ubuntu     745 May 15 01:59 .crabbox.yaml
+> drwxrwxr-x   2 ubuntu ubuntu    4096 May 15 01:59 deploy
+> drwxrwxr-x  25 ubuntu ubuntu  270336 May 18 00:37 dist
+> drwxrwxr-x   3 ubuntu ubuntu    4096 May 18 00:27 dist-runtime
+> -rw-rw-r--   1 ubuntu ubuntu    5522 May 15 01:59 docker-compose.yml
+> -rw-rw-r--   1 ubuntu ubuntu   16346 May 15 01:59 Dockerfile
+> -rw-rw-r--   1 ubuntu ubuntu    1354 May 15 01:59 .dockerignore
+> drwxrwxr-x  30 ubuntu ubuntu    4096 May 15 01:59 docs
+> -rw-rw-r--   1 ubuntu ubuntu    3784 May 15 01:59 .env.example
+> drwxrwxr-x 129 ubuntu ubuntu    4096 May 15 01:59 extensions
+> -rw-rw-r--   1 ubuntu ubuntu     773 May 15 01:59 fly.toml
+> drwxrwxr-x   9 ubuntu ubuntu    4096 May 18 17:22 .git
+> -rw-rw-r--   1 ubuntu ubuntu      78 May 15 01:59 .gitattributes
+> drwxrwxr-x   2 ubuntu ubuntu    4096 May 15 01:59 git-hooks
+> drwxrwxr-x   9 ubuntu ubuntu    4096 May 15 01:59 .github
+> -rw-rw-r--   1 ubuntu ubuntu    5683 May 15 01:59 .gitignore
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -type f -name \"*dreaming*\" -o -name \"*dream*\" 2>/dev/null | grep -E \"\\.(tsx?|json|sql|md)$\" | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/dist/dreaming-n2R_gvwO.d.ts
+> /home/ubuntu/openclaw/src/memory-host-sdk/dreaming.test.ts
+> /home/ubuntu/openclaw/src/memory-host-sdk/dreaming.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.test.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.constants-drift.test.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.ts
+> /home/ubuntu/openclaw/docs/concepts/dreaming.md
+> /home/ubuntu/openclaw/qa/scenarios/memory/memory-dreaming-sweep.md
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-markdown.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-narrative.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-phases.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-repair.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-shared.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-command.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-narrative.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-shared.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-command.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-phases.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-markdown.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-repair.ts
+> /home/ubuntu/openclaw/ui/src/ui/views/dreaming.test.ts
+> /home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts
+> /home/ubuntu/openclaw/ui/src/ui/views/dreaming-restart-confirmation.ts
+> /home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.test.ts
+> /home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts
+> /home/ubuntu/openclaw/dist/plugin-sdk/src/memory-host-sdk/dreaming.d.ts
+> /home/ubuntu/openclaw/dist/plugin-sdk/src/commands/doctor-cron-dreaming-payload-migration.d.ts
+> /home/ubuntu/openclaw/.artifacts/build-all-cache/build_plugin-sdk_dts/outputs/dist/plugin-sdk/src/memory-host-sdk/dreaming.d.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -path \"*/ui/*\" -type f -name \"*.tsx\" -o -name \"*.ts\" 2>/dev/null | grep -i \"dream\\|diario\\|insight\\|palace\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/dist/dreaming-n2R_gvwO.d.ts
+> /home/ubuntu/openclaw/src/memory-host-sdk/dreaming.test.ts
+> /home/ubuntu/openclaw/src/memory-host-sdk/dreaming.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.test.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.constants-drift.test.ts
+> /home/ubuntu/openclaw/src/commands/doctor-cron-dreaming-payload-migration.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-markdown.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-narrative.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-phases.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-repair.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-shared.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-command.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-narrative.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-shared.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-command.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-phases.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-markdown.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming-repair.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/openclaw/ui/src/ui/views/ | grep -E \"\\.tsx|\\.ts\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu  8018 May 15 01:59 agents-panels-overview.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 28299 May 15 01:59 agents-panels-status-files.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 11870 May 15 01:59 agents-panels-tools-skills.browser.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 33762 May 15 01:59 agents-panels-tools-skills.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 15233 May 15 01:59 agents.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 14810 May 15 01:59 agents.ts
+> -rw-rw-r-- 1 ubuntu ubuntu    91 May 15 01:59 agents.types.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  8082 May 15 01:59 agents-utils.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 23049 May 15 01:59 agents-utils.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1452 May 15 01:59 channel-config-extras.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4453 May 15 01:59 channels.config.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1928 May 15 01:59 channels.discord.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  2449 May 15 01:59 channels.googlechat.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1964 May 15 01:59 channels.imessage.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 10872 May 15 01:59 channels.nostr-profile-form.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  9035 May 15 01:59 channels.nostr.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4375 May 15 01:59 channels.shared.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1997 May 15 01:59 channels.signal.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1900 May 15 01:59 channels.slack.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4630 May 15 01:59 channels.telegram.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  6692 May 15 01:59 channels.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 11463 May 15 01:59 channels.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1923 May 15 01:59 channels.types.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3519 May 15 01:59 channels.whatsapp.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 44707 May 15 01:59 chat.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 49917 May 15 01:59 chat.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  7149 May 15 01:59 command-palette.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 11901 May 15 01:59 command-palette.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 36139 May 15 01:59 config.browser.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  7681 May 15 01:59 config-form.analyze.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 42975 May 15 01:59 config-form.node.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 20971 May 15 01:59 config-form.render.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1823 May 15 01:59 config-form.search.node.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  6364 May 15 01:59 config-form.shared.ts
+> -rw-rw-r-- 1 ubuntu ubuntu   310 May 15 01:59 config-form.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  2198 May 15 01:59 config-presets.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3780 May 15 01:59 config-presets.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 15846 May 15 01:59 config-quick.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 40581 May 15 01:59 config-quick.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 69915 May 15 01:59 config.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1127 May 15 01:59 connect-command.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1467 May 15 01:59 cron-quick-create.node.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 10750 May 15 01:59 cron-quick-create.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 29571 May 15 01:59 cron.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 74588 May 15 01:59 cron.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  2106 May 15 01:59 debug.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  6071 May 15 01:59 debug.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1939 May 15 01:59 dreaming-restart-confirmation.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 27274 May 15 01:59 dreaming.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 52889 May 15 01:59 dreaming.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1354 May 15 01:59 exec-approval.browser.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 10300 May 15 01:59 exec-approval.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  6242 May 15 01:59 exec-approval.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1625 May 15 01:59 gateway-url-confirmation.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4036 May 15 01:59 instances.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 11706 May 15 01:59 login-gate.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 13599 May 15 01:59 login-gate.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4879 May 15 01:59 logs.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4586 May 15 01:59 markdown-sidebar.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  5890 May 15 01:59 nodes.devices.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 20376 May 15 01:59 nodes-exec-approvals.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1805 May 15 01:59 nodes-shared.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 17372 May 15 01:59 nodes.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1671 May 15 01:59 nodes.types.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1787 May 15 01:59 overview-attention.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  9608 May 15 01:59 overview-cards.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1352 May 15 01:59 overview-event-log.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4026 May 15 01:59 overview-hints.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1359 May 15 01:59 overview-log-tail.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3925 May 15 01:59 overview.node.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  6193 May 15 01:59 overview.render.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 18362 May 15 01:59 overview.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  9748 May 15 01:59 sessions.browser.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 29701 May 15 01:59 sessions.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 43435 May 15 01:59 sessions.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1490 May 15 01:59 skills-grouping.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  1287 May 15 01:59 skills-shared.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  8264 May 15 01:59 skills.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 20498 May 15 01:59 skills.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 14026 May 15 01:59 usage-metrics.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 23382 May 15 01:59 usage-metrics.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  7753 May 15 01:59 usage-query.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  5020 May 15 01:59 usage-render-details.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 48359 May 15 01:59 usage-render-details.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3604 May 15 01:59 usage-render-overview.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 36522 May 15 01:59 usage-render-overview.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3135 May 15 01:59 usage.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 31994 May 15 01:59 usage.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4378 May 15 01:59 usageTypes.ts
+> ```
+
+## 🤖 Claude
+
+Encontrado! Frontend em `/home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts`. Agora vou procurar a rota `/dreaming` e explorar os endpoints.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"/dreaming\" /home/ubuntu/openclaw --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" 2>/dev/null | grep -E \"route|path|endpoint\" | head -15"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/extensions/memory-core/src/short-term-promotion.test.ts:            path: "memory/dreaming/deep/2026-04-03.md",
+> /home/ubuntu/openclaw/extensions/memory-core/src/short-term-promotion.test.ts:            path: "../../vault/memory/dreaming/deep/2026-04-03.md",
+> /home/ubuntu/openclaw/ui/src/ui/navigation.browser.test.ts:  it("renders the dreaming view on the /dreaming route", async () => {
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -name \"*.ts\" -o -name \"*.tsx\" | xargs grep -l \"dreaming\" | xargs grep -l \"route\\|Route\" | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> grep: /home/ubuntu/openclaw/ui/src/ui/__screenshots__/config-form.browser.test.ts: Is a directory
+> grep: /home/ubuntu/openclaw/ui/src/ui/__screenshots__/navigation.browser.test.ts: Is a directory
+> /home/ubuntu/openclaw/src/plugins/activation-planner.test.ts
+> /home/ubuntu/openclaw/src/plugins/loader.test.ts
+> /home/ubuntu/openclaw/src/plugins/loader.ts
+> /home/ubuntu/openclaw/src/gateway/server-plugins.test.ts
+> /home/ubuntu/openclaw/src/gateway/server-startup-config.recovery.test.ts
+> /home/ubuntu/openclaw/test/scripts/test-projects.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/cli.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/short-term-promotion.test.ts
+> /home/ubuntu/openclaw/extensions/memory-core/src/dreaming.test.ts
+> /home/ubuntu/openclaw/src/gateway/server-methods/agent.test.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { html, nothing } from "lit";
+> 2	import { unsafeHTML } from "lit/directives/unsafe-html.js";
+> 3	import { t } from "../../i18n/index.ts";
+> 4	import type {
+> 5	  DreamingEntry,
+> 6	  WikiImportInsights,
+> 7	  WikiMemoryPalace,
+> 8	} from "../controllers/dreaming.ts";
+> 9	import { toSanitizedMarkdownHtml } from "../markdown.ts";
+> 10	
+> 11	// ── Diary entry parser ─────────────────────────────────────────────────
+> 12	
+> 13	type DiaryEntry = {
+> 14	  date: string;
+> 15	  body: string;
+> 16	};
+> 17	
+> 18	type DiaryEntryNav = {
+> 19	  date: string;
+> 20	  body: string;
+> 21	  page: number;
+> 22	};
+> 23	
+> 24	const DIARY_START_RE = /<!--\s*openclaw:dreaming:diary:start\s*-->/;
+> 25	const DIARY_END_RE = /<!--\s*openclaw:dreaming:diary:end\s*-->/;
+> 26	
+> 27	function parseDiaryEntries(raw: string): DiaryEntry[] {
+> 28	  // Extract content between diary markers, or use full content.
+> 29	  let content = raw;
+> 30	  const startMatch = DIARY_START_RE.exec(raw);
+> 31	  const endMatch = DIARY_END_RE.exec(raw);
+> 32	  if (startMatch && endMatch && endMatch.index > startMatch.index) {
+> 33	    content = raw.slice(startMatch.index + startMatch[0].length, endMatch.index);
+> 34	  }
+> 35	
+> 36	  const entries: DiaryEntry[] = [];
+> 37	  // Split on --- separators.
+> 38	  const blocks = content.split(/\n---\n/).filter((b) => b.trim().length > 0);
+> 39	
+> 40	  for (const block of blocks) {
+> 41	    const lines = block.trim().split("\n");
+> 42	    let date = "";
+> 43	    const bodyLines: string[] = [];
+> 44	
+> 45	    for (const line of lines) {
+> 46	      const trimmed = line.trim();
+> 47	      // Date lines are wrapped in *asterisks* like: *April 5, 2026, 3:00 AM*
+> 48	      if (!date && trimmed.startsWith("*") && trimmed.endsWith("*") && trimmed.length > 2) {
+> 49	        date = trimmed.slice(1, -1);
+> 50	        continue;
+> 51	      }
+> 52	      // Skip heading lines and HTML comments.
+> 53	      if (trimmed.startsWith("#") || trimmed.startsWith("<!--")) {
+> 54	        continue;
+> 55	      }
+> 56	      if (trimmed.length > 0) {
+> 57	        bodyLines.push(trimmed);
+> 58	      }
+> 59	    }
+> 60	
+> 61	    if (bodyLines.length > 0) {
+> 62	      entries.push({ date, body: bodyLines.join("\n") });
+> 63	    }
+> 64	  }
+> 65	
+> 66	  return entries;
+> 67	}
+> 68	
+> 69	function parseDiaryTimestamp(date: string): number | null {
+> 70	  const parsed = Date.parse(date);
+> 71	  return Number.isFinite(parsed) ? parsed : null;
+> 72	}
+> 73	
+> 74	function formatDiaryChipLabel(date: string): string {
+> 75	  const parsed = parseDiaryTimestamp(date);
+> 76	  if (parsed === null) {
+> 77	    return date;
+> 78	  }
+> 79	  const value = new Date(parsed);
+> 80	  return `${value.getMonth() + 1}/${value.getDate()}`;
+> 81	}
+> 82	
+> 83	function buildDiaryNavigation(entries: DiaryEntry[]): DiaryEntryNav[] {
+> 84	  const reversed = [...entries].toReversed();
+> 85	  return reversed.map((entry, page) => Object.assign({}, entry, { page }));
+> 86	}
+> 87	
+> 88	type DreamingPhaseInfo = {
+> 89	  enabled: boolean;
+> 90	  cron: string;
+> 91	  nextRunAtMs?: number;
+> 92	};
+> 93	
+> 94	export type DreamingProps = {
+> 95	  active: boolean;
+> 96	  shortTermCount: number;
+> 97	  groundedSignalCount: number;
+> 98	  totalSignalCount: number;
+> 99	  promotedCount: number;
+> 100	  phases?: {
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts",
+  "limit": 300,
+  "offset": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	  phases?: {
+> 101	    light: DreamingPhaseInfo;
+> 102	    deep: DreamingPhaseInfo;
+> 103	    rem: DreamingPhaseInfo;
+> 104	  };
+> 105	  shortTermEntries: DreamingEntry[];
+> 106	  promotedEntries: DreamingEntry[];
+> 107	  dreamingOf: string | null;
+> 108	  nextCycle: string | null;
+> 109	  timezone: string | null;
+> 110	  statusLoading: boolean;
+> 111	  statusError: string | null;
+> 112	  modeSaving: boolean;
+> 113	  dreamDiaryLoading: boolean;
+> 114	  dreamDiaryActionLoading: boolean;
+> 115	  dreamDiaryActionMessage: { kind: "success" | "error"; text: string } | null;
+> 116	  dreamDiaryActionArchivePath: string | null;
+> 117	  dreamDiaryError: string | null;
+> 118	  dreamDiaryPath: string | null;
+> 119	  dreamDiaryContent: string | null;
+> 120	  memoryWikiEnabled: boolean;
+> 121	  wikiImportInsightsLoading: boolean;
+> 122	  wikiImportInsightsError: string | null;
+> 123	  wikiImportInsights: WikiImportInsights | null;
+> 124	  wikiMemoryPalaceLoading: boolean;
+> 125	  wikiMemoryPalaceError: string | null;
+> 126	  wikiMemoryPalace: WikiMemoryPalace | null;
+> 127	  onRefresh: () => void;
+> 128	  onRefreshDiary: () => void;
+> 129	  onRefreshImports: () => void;
+> 130	  onRefreshMemoryPalace: () => void;
+> 131	  onOpenConfig: () => void;
+> 132	  onOpenWikiPage: (lookup: string) => Promise<{
+> 133	    title: string;
+> 134	    path: string;
+> 135	    content: string;
+> 136	    totalLines?: number;
+> 137	    truncated?: boolean;
+> 138	    updatedAt?: string;
+> 139	  } | null>;
+> 140	  onBackfillDiary: () => void;
+> 141	  onCopyDreamingArchivePath: () => void;
+> 142	  onDedupeDreamDiary: () => void;
+> 143	  onResetDiary: () => void;
+> 144	  onResetGroundedShortTerm: () => void;
+> 145	  onRepairDreamingArtifacts: () => void;
+> 146	  onRequestUpdate?: () => void;
+> 147	};
+> 148	
+> 149	const DREAM_PHRASE_KEYS = [
+> 150	  "dreaming.phrases.consolidatingMemories",
+> 151	  "dreaming.phrases.tidyingKnowledgeGraph",
+> 152	  "dreaming.phrases.replayingConversations",
+> 153	  "dreaming.phrases.weavingShortTerm",
+> 154	  "dreaming.phrases.defragmentingMindPalace",
+> 155	  "dreaming.phrases.filingLooseThoughts",
+> 156	  "dreaming.phrases.connectingDots",
+> 157	  "dreaming.phrases.compostingContext",
+> 158	  "dreaming.phrases.alphabetizingSubconscious",
+> 159	  "dreaming.phrases.promotingHunches",
+> 160	  "dreaming.phrases.forgettingNoise",
+> 161	  "dreaming.phrases.dreamingEmbeddings",
+> 162	  "dreaming.phrases.reorganizingAttic",
+> 163	  "dreaming.phrases.indexingDay",
+> 164	  "dreaming.phrases.nurturingInsights",
+> 165	  "dreaming.phrases.simmeringIdeas",
+> 166	  "dreaming.phrases.whisperingVectorStore",
+> 167	] as const;
+> 168	
+> 169	const DREAM_PHASE_LABEL_KEYS = {
+> 170	  light: "dreaming.phase.light",
+> 171	  deep: "dreaming.phase.deep",
+> 172	  rem: "dreaming.phase.rem",
+> 173	} as const;
+> 174	
+> 175	let _dreamIndex = Math.floor(Math.random() * DREAM_PHRASE_KEYS.length);
+> 176	let _dreamLastSwap = 0;
+> 177	const DREAM_SWAP_MS = 6_000;
+> 178	
+> 179	// ── Sub-tab state ─────────────────────────────────────────────────────
+> 180	
+> 181	type DreamSubTab = "scene" | "diary" | "advanced";
+> 182	let _subTab: DreamSubTab = "scene";
+> 183	type DreamDiarySubTab = "dreams" | "insights" | "palace";
+> 184	let _diarySubTab: DreamDiarySubTab = "dreams";
+> 185	type AdvancedWaitingSort = "recent" | "signals";
+> 186	let _advancedWaitingSort: AdvancedWaitingSort = "recent";
+> 187	const _expandedInsightCards = new Set<string>();
+> 188	const _expandedPalaceCards = new Set<string>();
+> 189	let _wikiPreviewOpen = false;
+> 190	let _wikiPreviewLoading = false;
+> 191	let _wikiPreviewTitle = "";
+> 192	let _wikiPreviewPath = "";
+> 193	let _wikiPreviewUpdatedAt: string | null = null;
+> 194	let _wikiPreviewContent = "";
+> 195	let _wikiPreviewTotalLines: number | null = null;
+> 196	let _wikiPreviewTruncated = false;
+> 197	let _wikiPreviewError: string | null = null;
+> 198	
+> 199	export function setDreamSubTab(tab: DreamSubTab): void {
+> 200	  _subTab = tab;
+> 201	}
+> 202	
+> 203	export function setDreamAdvancedWaitingSort(sort: AdvancedWaitingSort): void {
+> 204	  _advancedWaitingSort = sort;
+> 205	}
+> 206	
+> 207	export function setDreamDiarySubTab(tab: DreamDiarySubTab): void {
+> 208	  _diarySubTab = tab;
+> 209	}
+> 210	
+> 211	// ── Diary pagination state ─────────────────────────────────────────────
+> 212	
+> 213	let _diaryPage = 0;
+> 214	let _diaryEntryCount = 0;
+> 215	
+> 216	/** Navigate to a specific diary page. Triggers a re-render via Lit's reactive cycle. */
+> 217	export function setDiaryPage(page: number): void {
+> 218	  _diaryPage = Math.max(0, Math.min(page, Math.max(0, _diaryEntryCount - 1)));
+> 219	}
+> 220	
+> 221	function currentDreamPhrase(): string {
+> 222	  const now = Date.now();
+> 223	  if (now - _dreamLastSwap > DREAM_SWAP_MS) {
+> 224	    _dreamLastSwap = now;
+> 225	    _dreamIndex = (_dreamIndex + 1) % DREAM_PHRASE_KEYS.length;
+> 226	  }
+> 227	  return t(DREAM_PHRASE_KEYS[_dreamIndex] ?? DREAM_PHRASE_KEYS[0]);
+> 228	}
+> 229	
+> 230	const STARS: {
+> 231	  top: number;
+> 232	  left: number;
+> 233	  size: number;
+> 234	  delay: number;
+> 235	  hue: "neutral" | "accent";
+> 236	}[] = [
+> 237	  { top: 8, left: 15, size: 3, delay: 0, hue: "neutral" },
+> 238	  { top: 12, left: 72, size: 2, delay: 1.4, hue: "neutral" },
+> 239	  { top: 22, left: 35, size: 3, delay: 0.6, hue: "accent" },
+> 240	  { top: 18, left: 88, size: 2, delay: 2.1, hue: "neutral" },
+> 241	  { top: 35, left: 8, size: 2, delay: 0.9, hue: "neutral" },
+> 242	  { top: 45, left: 92, size: 2, delay: 1.7, hue: "neutral" },
+> 243	  { top: 55, left: 25, size: 3, delay: 2.5, hue: "accent" },
+> 244	  { top: 65, left: 78, size: 2, delay: 0.3, hue: "neutral" },
+> 245	  { top: 75, left: 45, size: 2, delay: 1.1, hue: "neutral" },
+> 246	  { top: 82, left: 60, size: 3, delay: 1.8, hue: "accent" },
+> 247	  { top: 30, left: 55, size: 2, delay: 0.4, hue: "neutral" },
+> 248	  { top: 88, left: 18, size: 2, delay: 2.3, hue: "neutral" },
+> 249	];
+> 250	
+> 251	const sleepingLobster = html`
+> 252	  <svg viewBox="0 0 120 120" fill="none">
+> 253	    <defs>
+> 254	      <linearGradient id="dream-lob-g" x1="0%" y1="0%" x2="100%" y2="100%">
+> 255	        <stop offset="0%" stop-color="#ff4d4d" />
+> 256	        <stop offset="100%" stop-color="#991b1b" />
+> 257	      </linearGradient>
+> 258	    </defs>
+> 259	    <path
+> 260	      d="M60 10C30 10 15 35 15 55C15 75 30 95 45 100L45 110L55 110L55 100C55 100 60 102 65 100L65 110L75 110L75 100C90 95 105 75 105 55C105 35 90 10 60 10Z"
+> 261	      fill="url(#dream-lob-g)"
+> 262	    />
+> 263	    <path d="M20 45C5 40 0 50 5 60C10 70 20 65 25 55C28 48 25 45 20 45Z" fill="url(#dream-lob-g)" />
+> 264	    <path
+> 265	      d="M100 45C115 40 120 50 115 60C110 70 100 65 95 55C92 48 95 45 100 45Z"
+> 266	      fill="url(#dream-lob-g)"
+> 267	    />
+> 268	    <path d="M45 15Q38 8 35 14" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" />
+> 269	    <path d="M75 15Q82 8 85 14" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" />
+> 270	    <path
+> 271	      d="M39 36Q45 32 51 36"
+> 272	      stroke="#050810"
+> 273	      stroke-width="2.5"
+> 274	      stroke-linecap="round"
+> 275	      fill="none"
+> 276	    />
+> 277	    <path
+> 278	      d="M69 36Q75 32 81 36"
+> 279	      stroke="#050810"
+> 280	      stroke-width="2.5"
+> 281	      stroke-linecap="round"
+> 282	      fill="none"
+> 283	    />
+> 284	  </svg>
+> 285	`;
+> 286	
+> 287	export function renderDreaming(props: DreamingProps) {
+> 288	  const idle = !props.active;
+> 289	  const dreamText = props.dreamingOf ?? currentDreamPhrase();
+> 290	
+> 291	  return html`
+> 292	    <div class="dreams-page">
+> 293	      <!-- ── Sub-tab bar ── -->
+> 294	      <nav class="dreams__tabs">
+> 295	        <button
+> 296	          class="dreams__tab ${_subTab === "scene" ? "dreams__tab--active" : ""}"
+> 297	          @click=${() => {
+> 298	            _subTab = "scene";
+> 299	            props.onRequestUpdate?.();
+> 300	          }}
+> 301	        >
+> 302	          ${t("dreaming.tabs.scene")}
+> 303	        </button>
+> 304	        <button
+> 305	          class="dreams__tab ${_subTab === "diary" ? "dreams__tab--active" : ""}"
+> 306	          @click=${() => {
+> 307	            _subTab = "diary";
+> 308	            props.onRequestUpdate?.();
+> 309	          }}
+> 310	        >
+> 311	          ${t("dreaming.tabs.diary")}
+> 312	        </button>
+> 313	        <button
+> 314	          class="dreams__tab ${_subTab === "advanced" ? "dreams__tab--active" : ""}"
+> 315	          @click=${() => {
+> 316	            _subTab = "advanced";
+> 317	            props.onRequestUpdate?.();
+> 318	          }}
+> 319	        >
+> 320	          ${t("dreaming.tabs.advanced")}
+> 321	        </button>
+> 322	      </nav>
+> 323	
+> 324	      ${_subTab === "scene"
+> 325	        ? renderScene(props, idle, dreamText)
+> 326	        : _subTab === "diary"
+> 327	          ? renderDiarySection(props)
+> 328	          : renderAdvancedSection(props)}
+> 329	    </div>
+> 330	  `;
+> 331	}
+> 332	
+> 333	// ── Scene renderer ────────────────────────────────────────────────────
+> 334	
+> 335	// Strip source citations like [memory/2026-04-09.md:9] and section headings,
+> 336	// flatten structured diary entries into plain paragraphs.
+> 337	function flattenDiaryBody(body: string): string[] {
+> 338	  return (
+> 339	    body
+> 340	      .split("\n")
+> 341	      .map((line) => line.trim())
+> 342	      // Remove section headings that leak implementation
+> 343	      .filter(
+> 344	        (line) =>
+> 345	          line.length > 0 &&
+> 346	          line !== "What Happened" &&
+> 347	          line !== "Reflections" &&
+> 348	          line !== "Candidates" &&
+> 349	          line !== "Possible Lasting Updates",
+> 350	      )
+> 351	      // Strip source citations [memory/...]
+> 352	      .map((line) => line.replace(/\s*\[memory\/[^\]]+\]/g, ""))
+> 353	      // Strip leading list markers and labels
+> 354	      .map((line) =>
+> 355	        line
+> 356	          .replace(/^(?:\d+\.\s+|-\s+(?:\[[^\]]+\]\s+)?(?:[a-z_]+:\s+)?)/i, "")
+> 357	          .replace(/^(?:likely_durable|likely_situational|unclear):\s+/i, "")
+> 358	          .trim(),
+> 359	      )
+> 360	      .filter((line) => line.length > 0)
+> 361	  );
+> 362	}
+> 363	
+> 364	function formatPhaseNextRun(nextRunAtMs?: number): string {
+> 365	  if (!nextRunAtMs) {
+> 366	    return "—";
+> 367	  }
+> 368	  const d = new Date(nextRunAtMs);
+> 369	  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+> 370	}
+> 371	
+> 372	function renderScene(props: DreamingProps, idle: boolean, dreamText: string) {
+> 373	  return html`
+> 374	    <section class="dreams ${idle ? "dreams--idle" : ""}">
+> 375	      ${STARS.map(
+> 376	        (s) => html`
+> 377	          <div
+> 378	            class="dreams__star"
+> 379	            style="
+> 380	              top: ${s.top}%;
+> 381	              left: ${s.left}%;
+> 382	              width: ${s.size}px;
+> 383	              height: ${s.size}px;
+> 384	              background: ${s.hue === "accent" ? "var(--accent-muted)" : "var(--text)"};
+> 385	              animation-delay: ${s.delay}s;
+> 386	            "
+> 387	          ></div>
+> 388	        `,
+> 389	      )}
+> 390	
+> 391	      <div class="dreams__moon"></div>
+> 392	
+> 393	      ${props.active
+> 394	        ? html`
+> 395	            <div class="dreams__bubble">
+> 396	              <span class="dreams__bubble-text">${dreamText}</span>
+> 397	            </div>
+> 398	            <div
+> 399	              class="dreams__bubble-dot"
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -name \"dreaming.ts\" -path \"*/ui/controllers/*\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts",
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { GatewayBrowserClient, GatewayHelloOk } from "../gateway.ts";
+> 2	import { isPluginEnabledInConfigSnapshot } from "../plugin-activation.ts";
+> 3	import type { ConfigSnapshot } from "../types.ts";
+> 4	
+> 5	export type DreamingPhaseId = "light" | "deep" | "rem";
+> 6	const DEFAULT_DREAM_DIARY_PATH = "DREAMS.md";
+> 7	const DEFAULT_DREAMING_PLUGIN_ID = "memory-core";
+> 8	const MEMORY_WIKI_PLUGIN_ID = "memory-wiki";
+> 9	
+> 10	type DreamingPhaseStatusBase = {
+> 11	  enabled: boolean;
+> 12	  cron: string;
+> 13	  managedCronPresent: boolean;
+> 14	  nextRunAtMs?: number;
+> 15	};
+> 16	
+> 17	type LightDreamingStatus = DreamingPhaseStatusBase & {
+> 18	  lookbackDays: number;
+> 19	  limit: number;
+> 20	};
+> 21	
+> 22	type DeepDreamingStatus = DreamingPhaseStatusBase & {
+> 23	  limit: number;
+> 24	  minScore: number;
+> 25	  minRecallCount: number;
+> 26	  minUniqueQueries: number;
+> 27	  recencyHalfLifeDays: number;
+> 28	  maxAgeDays?: number;
+> 29	};
+> 30	
+> 31	type RemDreamingStatus = DreamingPhaseStatusBase & {
+> 32	  lookbackDays: number;
+> 33	  limit: number;
+> 34	  minPatternStrength: number;
+> 35	};
+> 36	
+> 37	export type DreamingEntry = {
+> 38	  key: string;
+> 39	  path: string;
+> 40	  startLine: number;
+> 41	  endLine: number;
+> 42	  snippet: string;
+> 43	  recallCount: number;
+> 44	  dailyCount: number;
+> 45	  groundedCount: number;
+> 46	  totalSignalCount: number;
+> 47	  lightHits: number;
+> 48	  remHits: number;
+> 49	  phaseHitCount: number;
+> 50	  promotedAt?: string;
+> 51	  lastRecalledAt?: string;
+> 52	};
+> 53	
+> 54	export type DreamingStatus = {
+> 55	  enabled: boolean;
+> 56	  timezone?: string;
+> 57	  verboseLogging: boolean;
+> 58	  storageMode: "inline" | "separate" | "both";
+> 59	  separateReports: boolean;
+> 60	  shortTermCount: number;
+> 61	  recallSignalCount: number;
+> 62	  dailySignalCount: number;
+> 63	  groundedSignalCount: number;
+> 64	  totalSignalCount: number;
+> 65	  phaseSignalCount: number;
+> 66	  lightPhaseHitCount: number;
+> 67	  remPhaseHitCount: number;
+> 68	  promotedTotal: number;
+> 69	  promotedToday: number;
+> 70	  storePath?: string;
+> 71	  phaseSignalPath?: string;
+> 72	  storeError?: string;
+> 73	  phaseSignalError?: string;
+> 74	  shortTermEntries: DreamingEntry[];
+> 75	  signalEntries: DreamingEntry[];
+> 76	  promotedEntries: DreamingEntry[];
+> 77	  phases?: {
+> 78	    light: LightDreamingStatus;
+> 79	    deep: DeepDreamingStatus;
+> 80	    rem: RemDreamingStatus;
+> 81	  };
+> 82	};
+> 83	
+> 84	export type WikiImportInsightItem = {
+> 85	  pagePath: string;
+> 86	  title: string;
+> 87	  riskLevel: "low" | "medium" | "high" | "unknown";
+> 88	  riskReasons: string[];
+> 89	  labels: string[];
+> 90	  topicKey: string;
+> 91	  topicLabel: string;
+> 92	  digestStatus: "available" | "withheld";
+> 93	  activeBranchMessages: number;
+> 94	  userMessageCount: number;
+> 95	  assistantMessageCount: number;
+> 96	  firstUserLine?: string;
+> 97	  lastUserLine?: string;
+> 98	  assistantOpener?: string;
+> 99	  summary: string;
+> 100	  candidateSignals: string[];
+> 101	  correctionSignals: string[];
+> 102	  preferenceSignals: string[];
+> 103	  createdAt?: string;
+> 104	  updatedAt?: string;
+> 105	};
+> 106	
+> 107	export type WikiImportInsightCluster = {
+> 108	  key: string;
+> 109	  label: string;
+> 110	  itemCount: number;
+> 111	  highRiskCount: number;
+> 112	  withheldCount: number;
+> 113	  preferenceSignalCount: number;
+> 114	  updatedAt?: string;
+> 115	  items: WikiImportInsightItem[];
+> 116	};
+> 117	
+> 118	export type WikiImportInsights = {
+> 119	  sourceType: "chatgpt";
+> 120	  totalItems: number;
+> 121	  totalClusters: number;
+> 122	  clusters: WikiImportInsightCluster[];
+> 123	};
+> 124	
+> 125	export type WikiMemoryPalaceItem = {
+> 126	  pagePath: string;
+> 127	  title: string;
+> 128	  kind: "entity" | "concept" | "source" | "synthesis" | "report";
+> 129	  id?: string;
+> 130	  updatedAt?: string;
+> 131	  sourceType?: string;
+> 132	  claimCount: number;
+> 133	  questionCount: number;
+> 134	  contradictionCount: number;
+> 135	  claims: string[];
+> 136	  questions: string[];
+> 137	  contradictions: string[];
+> 138	  snippet?: string;
+> 139	};
+> 140	
+> 141	export type WikiMemoryPalaceCluster = {
+> 142	  key: WikiMemoryPalaceItem["kind"];
+> 143	  label: string;
+> 144	  itemCount: number;
+> 145	  claimCount: number;
+> 146	  questionCount: number;
+> 147	  contradictionCount: number;
+> 148	  updatedAt?: string;
+> 149	  items: WikiMemoryPalaceItem[];
+> 150	};
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts",
+  "limit": 400,
+  "offset": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	};
+> 151	
+> 152	export type WikiMemoryPalace = {
+> 153	  totalItems: number;
+> 154	  totalClaims: number;
+> 155	  totalQuestions: number;
+> 156	  totalContradictions: number;
+> 157	  clusters: WikiMemoryPalaceCluster[];
+> 158	};
+> 159	
+> 160	type DoctorMemoryStatusPayload = {
+> 161	  dreaming?: unknown;
+> 162	};
+> 163	
+> 164	type DoctorMemoryDreamDiaryPayload = {
+> 165	  found?: unknown;
+> 166	  path?: unknown;
+> 167	  content?: unknown;
+> 168	};
+> 169	
+> 170	type DoctorMemoryDreamActionPayload = {
+> 171	  action?: unknown;
+> 172	  removedEntries?: unknown;
+> 173	  dedupedEntries?: unknown;
+> 174	  keptEntries?: unknown;
+> 175	  written?: unknown;
+> 176	  replaced?: unknown;
+> 177	  removedShortTermEntries?: unknown;
+> 178	  changed?: unknown;
+> 179	  archiveDir?: unknown;
+> 180	  archivedSessionCorpus?: unknown;
+> 181	  archivedSessionIngestion?: unknown;
+> 182	  archivedDreamsDiary?: unknown;
+> 183	  warnings?: unknown;
+> 184	};
+> 185	
+> 186	type WikiImportInsightsPayload = {
+> 187	  sourceType?: unknown;
+> 188	  totalItems?: unknown;
+> 189	  totalClusters?: unknown;
+> 190	  clusters?: unknown;
+> 191	};
+> 192	
+> 193	type WikiMemoryPalacePayload = {
+> 194	  totalItems?: unknown;
+> 195	  totalClaims?: unknown;
+> 196	  totalQuestions?: unknown;
+> 197	  totalContradictions?: unknown;
+> 198	  clusters?: unknown;
+> 199	};
+> 200	
+> 201	export type DreamingState = {
+> 202	  client: GatewayBrowserClient | null;
+> 203	  connected: boolean;
+> 204	  hello: GatewayHelloOk | null;
+> 205	  configSnapshot: ConfigSnapshot | null;
+> 206	  applySessionKey: string;
+> 207	  dreamingStatusLoading: boolean;
+> 208	  dreamingStatusError: string | null;
+> 209	  dreamingStatus: DreamingStatus | null;
+> 210	  dreamingModeSaving: boolean;
+> 211	  dreamDiaryLoading: boolean;
+> 212	  dreamDiaryActionLoading: boolean;
+> 213	  dreamDiaryActionMessage: { kind: "success" | "error"; text: string } | null;
+> 214	  dreamDiaryActionArchivePath: string | null;
+> 215	  dreamDiaryError: string | null;
+> 216	  dreamDiaryPath: string | null;
+> 217	  dreamDiaryContent: string | null;
+> 218	  wikiImportInsightsLoading: boolean;
+> 219	  wikiImportInsightsError: string | null;
+> 220	  wikiImportInsights: WikiImportInsights | null;
+> 221	  wikiMemoryPalaceLoading: boolean;
+> 222	  wikiMemoryPalaceError: string | null;
+> 223	  wikiMemoryPalace: WikiMemoryPalace | null;
+> 224	  lastError: string | null;
+> 225	};
+> 226	
+> 227	function confirmDreamingAction(message: string): boolean {
+> 228	  if (typeof globalThis.confirm !== "function") {
+> 229	    return true;
+> 230	  }
+> 231	  return globalThis.confirm(message);
+> 232	}
+> 233	
+> 234	function isMemoryWikiEnabled(state: DreamingState): boolean {
+> 235	  return isPluginEnabledInConfigSnapshot(state.configSnapshot, MEMORY_WIKI_PLUGIN_ID, {
+> 236	    enabledByDefault: false,
+> 237	  });
+> 238	}
+> 239	
+> 240	function hasGatewayMethod(state: DreamingState, method: string): boolean | null {
+> 241	  const methods = state.hello?.features?.methods;
+> 242	  if (!Array.isArray(methods)) {
+> 243	    return null;
+> 244	  }
+> 245	  return methods.includes(method);
+> 246	}
+> 247	
+> 248	function canCallMemoryWikiMethod(state: DreamingState, method: string): boolean {
+> 249	  const available = hasGatewayMethod(state, method);
+> 250	  if (available !== null) {
+> 251	    return available;
+> 252	  }
+> 253	  return isMemoryWikiEnabled(state);
+> 254	}
+> 255	
+> 256	function buildDreamDiaryActionSuccessMessage(
+> 257	  method:
+> 258	    | "doctor.memory.backfillDreamDiary"
+> 259	    | "doctor.memory.resetDreamDiary"
+> 260	    | "doctor.memory.resetGroundedShortTerm"
+> 261	    | "doctor.memory.repairDreamingArtifacts"
+> 262	    | "doctor.memory.dedupeDreamDiary",
+> 263	  payload: DoctorMemoryDreamActionPayload | undefined,
+> 264	): string {
+> 265	  switch (method) {
+> 266	    case "doctor.memory.dedupeDreamDiary": {
+> 267	      const removed =
+> 268	        typeof payload?.dedupedEntries === "number"
+> 269	          ? payload.dedupedEntries
+> 270	          : typeof payload?.removedEntries === "number"
+> 271	            ? payload.removedEntries
+> 272	            : 0;
+> 273	      const kept = typeof payload?.keptEntries === "number" ? payload.keptEntries : undefined;
+> 274	      return kept !== undefined
+> 275	        ? `Removed ${removed} duplicate dream ${removed === 1 ? "entry" : "entries"} and kept ${kept}.`
+> 276	        : `Removed ${removed} duplicate dream ${removed === 1 ? "entry" : "entries"}.`;
+> 277	    }
+> 278	    case "doctor.memory.repairDreamingArtifacts": {
+> 279	      const actions: string[] = [];
+> 280	      const archiveDir = normalizeTrimmedString(payload?.archiveDir);
+> 281	      if (payload?.archivedSessionCorpus === true) {
+> 282	        actions.push("archived session corpus");
+> 283	      }
+> 284	      if (payload?.archivedSessionIngestion === true) {
+> 285	        actions.push("archived ingestion state");
+> 286	      }
+> 287	      if (payload?.archivedDreamsDiary === true) {
+> 288	        actions.push("archived dream diary");
+> 289	      }
+> 290	      if (actions.length === 0) {
+> 291	        return "Dream cache repair finished with no changes.";
+> 292	      }
+> 293	      return archiveDir
+> 294	        ? `Dream cache repair complete: ${actions.join(", ")}. Archive: ${archiveDir}`
+> 295	        : `Dream cache repair complete: ${actions.join(", ")}.`;
+> 296	    }
+> 297	    case "doctor.memory.backfillDreamDiary":
+> 298	      return `Backfilled ${typeof payload?.written === "number" ? payload.written : 0} dream diary entries.`;
+> 299	    case "doctor.memory.resetDreamDiary":
+> 300	      return `Removed ${typeof payload?.removedEntries === "number" ? payload.removedEntries : 0} backfilled dream diary entries.`;
+> 301	    case "doctor.memory.resetGroundedShortTerm":
+> 302	      return `Cleared ${typeof payload?.removedShortTermEntries === "number" ? payload.removedShortTermEntries : 0} replayed short-term entries.`;
+> 303	  }
+> 304	  return "Dream diary action complete.";
+> 305	}
+> 306	
+> 307	function asRecord(value: unknown): Record<string, unknown> | null {
+> 308	  if (!value || typeof value !== "object" || Array.isArray(value)) {
+> 309	    return null;
+> 310	  }
+> 311	  return value as Record<string, unknown>;
+> 312	}
+> 313	
+> 314	function normalizeTrimmedString(value: unknown): string | undefined {
+> 315	  if (typeof value !== "string") {
+> 316	    return undefined;
+> 317	  }
+> 318	  const trimmed = value.trim();
+> 319	  return trimmed.length > 0 ? trimmed : undefined;
+> 320	}
+> 321	
+> 322	function normalizeBoolean(value: unknown, fallback = false): boolean {
+> 323	  return typeof value === "boolean" ? value : fallback;
+> 324	}
+> 325	
+> 326	function normalizeFiniteInt(value: unknown, fallback = 0): number {
+> 327	  if (typeof value !== "number" || !Number.isFinite(value)) {
+> 328	    return fallback;
+> 329	  }
+> 330	  return Math.max(0, Math.floor(value));
+> 331	}
+> 332	
+> 333	function normalizeFiniteScore(value: unknown, fallback = 0): number {
+> 334	  if (typeof value !== "number" || !Number.isFinite(value)) {
+> 335	    return fallback;
+> 336	  }
+> 337	  return Math.max(0, Math.min(1, value));
+> 338	}
+> 339	
+> 340	function normalizeStorageMode(value: unknown): DreamingStatus["storageMode"] {
+> 341	  const normalized = normalizeTrimmedString(value)?.toLowerCase();
+> 342	  if (normalized === "inline" || normalized === "separate" || normalized === "both") {
+> 343	    return normalized;
+> 344	  }
+> 345	  return "inline";
+> 346	}
+> 347	
+> 348	function normalizeNextRun(value: unknown): number | undefined {
+> 349	  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+> 350	}
+> 351	
+> 352	function normalizePhaseStatusBase(record: Record<string, unknown> | null): DreamingPhaseStatusBase {
+> 353	  return {
+> 354	    enabled: normalizeBoolean(record?.enabled, false),
+> 355	    cron: normalizeTrimmedString(record?.cron) ?? "",
+> 356	    managedCronPresent: normalizeBoolean(record?.managedCronPresent, false),
+> 357	    ...(normalizeNextRun(record?.nextRunAtMs) !== undefined
+> 358	      ? { nextRunAtMs: normalizeNextRun(record?.nextRunAtMs) }
+> 359	      : {}),
+> 360	  };
+> 361	}
+> 362	
+> 363	function resolveDreamingPluginId(configValue: Record<string, unknown> | null): string {
+> 364	  const plugins = asRecord(configValue?.plugins);
+> 365	  const slots = asRecord(plugins?.slots);
+> 366	  const configuredSlot = normalizeTrimmedString(slots?.memory);
+> 367	  if (configuredSlot && configuredSlot.toLowerCase() !== "none") {
+> 368	    return configuredSlot;
+> 369	  }
+> 370	  return DEFAULT_DREAMING_PLUGIN_ID;
+> 371	}
+> 372	
+> 373	export function resolveConfiguredDreaming(configValue: Record<string, unknown> | null): {
+> 374	  pluginId: string;
+> 375	  enabled: boolean;
+> 376	} {
+> 377	  const pluginId = resolveDreamingPluginId(configValue);
+> 378	  const plugins = asRecord(configValue?.plugins);
+> 379	  const entries = asRecord(plugins?.entries);
+> 380	  const pluginEntry = asRecord(entries?.[pluginId]);
+> 381	  const config = asRecord(pluginEntry?.config);
+> 382	  const dreaming = asRecord(config?.dreaming);
+> 383	  return {
+> 384	    pluginId,
+> 385	    enabled: normalizeBoolean(dreaming?.enabled, false),
+> 386	  };
+> 387	}
+> 388	
+> 389	function normalizeDreamingEntry(raw: unknown): DreamingEntry | null {
+> 390	  const record = asRecord(raw);
+> 391	  const key = normalizeTrimmedString(record?.key);
+> 392	  const path = normalizeTrimmedString(record?.path);
+> 393	  const snippet = normalizeTrimmedString(record?.snippet);
+> 394	  if (!key || !path || !snippet) {
+> 395	    return null;
+> 396	  }
+> 397	  const promotedAt = normalizeTrimmedString(record?.promotedAt);
+> 398	  const lastRecalledAt = normalizeTrimmedString(record?.lastRecalledAt);
+> 399	  return {
+> 400	    key,
+> 401	    path,
+> 402	    startLine: Math.max(1, normalizeFiniteInt(record?.startLine, 1)),
+> 403	    endLine: Math.max(1, normalizeFiniteInt(record?.endLine, 1)),
+> 404	    snippet,
+> 405	    recallCount: normalizeFiniteInt(record?.recallCount, 0),
+> 406	    dailyCount: normalizeFiniteInt(record?.dailyCount, 0),
+> 407	    groundedCount: normalizeFiniteInt(record?.groundedCount, 0),
+> 408	    totalSignalCount: normalizeFiniteInt(record?.totalSignalCount, 0),
+> 409	    lightHits: normalizeFiniteInt(record?.lightHits, 0),
+> 410	    remHits: normalizeFiniteInt(record?.remHits, 0),
+> 411	    phaseHitCount: normalizeFiniteInt(record?.phaseHitCount, 0),
+> 412	    ...(promotedAt ? { promotedAt } : {}),
+> 413	    ...(lastRecalledAt ? { lastRecalledAt } : {}),
+> 414	  };
+> 415	}
+> 416	
+> 417	function normalizeDreamingEntries(raw: unknown): DreamingEntry[] {
+> 418	  if (!Array.isArray(raw)) {
+> 419	    return [];
+> 420	  }
+> 421	  return raw
+> 422	    .map((entry) => normalizeDreamingEntry(entry))
+> 423	    .filter((entry): entry is DreamingEntry => entry !== null);
+> 424	}
+> 425	
+> 426	function normalizeStringArray(raw: unknown): string[] {
+> 427	  if (!Array.isArray(raw)) {
+> 428	    return [];
+> 429	  }
+> 430	  return raw.filter(
+> 431	    (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+> 432	  );
+> 433	}
+> 434	
+> 435	function normalizeWikiImportInsightItem(raw: unknown): WikiImportInsightItem | null {
+> 436	  const record = asRecord(raw);
+> 437	  const pagePath = normalizeTrimmedString(record?.pagePath);
+> 438	  const title = normalizeTrimmedString(record?.title);
+> 439	  const riskLevel = normalizeTrimmedString(record?.riskLevel);
+> 440	  const topicKey = normalizeTrimmedString(record?.topicKey);
+> 441	  const topicLabel = normalizeTrimmedString(record?.topicLabel);
+> 442	  const digestStatus = normalizeTrimmedString(record?.digestStatus);
+> 443	  const summary = normalizeTrimmedString(record?.summary);
+> 444	  if (
+> 445	    !pagePath ||
+> 446	    !title ||
+> 447	    !topicKey ||
+> 448	    !topicLabel ||
+> 449	    !summary ||
+> 450	    (riskLevel !== "low" &&
+> 451	      riskLevel !== "medium" &&
+> 452	      riskLevel !== "high" &&
+> 453	      riskLevel !== "unknown") ||
+> 454	    (digestStatus !== "available" && digestStatus !== "withheld")
+> 455	  ) {
+> 456	    return null;
+> 457	  }
+> 458	  return {
+> 459	    pagePath,
+> 460	    title,
+> 461	    riskLevel,
+> 462	    riskReasons: normalizeStringArray(record?.riskReasons),
+> 463	    labels: normalizeStringArray(record?.labels),
+> 464	    topicKey,
+> 465	    topicLabel,
+> 466	    digestStatus,
+> 467	    activeBranchMessages: normalizeFiniteInt(record?.activeBranchMessages, 0),
+> 468	    userMessageCount: normalizeFiniteInt(record?.userMessageCount, 0),
+> 469	    assistantMessageCount: normalizeFiniteInt(record?.assistantMessageCount, 0),
+> 470	    ...(normalizeTrimmedString(record?.firstUserLine)
+> 471	      ? { firstUserLine: normalizeTrimmedString(record?.firstUserLine) }
+> 472	      : {}),
+> 473	    ...(normalizeTrimmedString(record?.lastUserLine)
+> 474	      ? { lastUserLine: normalizeTrimmedString(record?.lastUserLine) }
+> 475	      : {}),
+> 476	    ...(normalizeTrimmedString(record?.assistantOpener)
+> 477	      ? { assistantOpener: normalizeTrimmedString(record?.assistantOpener) }
+> 478	      : {}),
+> 479	    summary,
+> 480	    candidateSignals: normalizeStringArray(record?.candidateSignals),
+> 481	    correctionSignals: normalizeStringArray(record?.correctionSignals),
+> 482	    preferenceSignals: normalizeStringArray(record?.preferenceSignals),
+> 483	    ...(normalizeTrimmedString(record?.createdAt)
+> 484	      ? { createdAt: normalizeTrimmedString(record?.createdAt) }
+> 485	      : {}),
+> 486	    ...(normalizeTrimmedString(record?.updatedAt)
+> 487	      ? { updatedAt: normalizeTrimmedString(record?.updatedAt) }
+> 488	      : {}),
+> 489	  };
+> 490	}
+> 491	
+> 492	function normalizeWikiImportInsightCluster(raw: unknown): WikiImportInsightCluster | null {
+> 493	  const record = asRecord(raw);
+> 494	  const key = normalizeTrimmedString(record?.key);
+> 495	  const label = normalizeTrimmedString(record?.label);
+> 496	  if (!key || !label) {
+> 497	    return null;
+> 498	  }
+> 499	  const items = Array.isArray(record?.items)
+> 500	    ? record.items
+> 501	        .map((entry) => normalizeWikiImportInsightItem(entry))
+> 502	        .filter((entry): entry is WikiImportInsightItem => entry !== null)
+> 503	    : [];
+> 504	  return {
+> 505	    key,
+> 506	    label,
+> 507	    itemCount: normalizeFiniteInt(record?.itemCount, items.length),
+> 508	    highRiskCount: normalizeFiniteInt(
+> 509	      record?.highRiskCount,
+> 510	      items.filter((entry) => entry.riskLevel === "high").length,
+> 511	    ),
+> 512	    withheldCount: normalizeFiniteInt(
+> 513	      record?.withheldCount,
+> 514	      items.filter((entry) => entry.digestStatus === "withheld").length,
+> 515	    ),
+> 516	    preferenceSignalCount: normalizeFiniteInt(
+> 517	      record?.preferenceSignalCount,
+> 518	      items.reduce((sum, entry) => sum + entry.preferenceSignals.length, 0),
+> 519	    ),
+> 520	    ...(normalizeTrimmedString(record?.updatedAt)
+> 521	      ? { updatedAt: normalizeTrimmedString(record?.updatedAt) }
+> 522	      : {}),
+> 523	    items,
+> 524	  };
+> 525	}
+> 526	
+> 527	function normalizeWikiImportInsights(raw: unknown): WikiImportInsights {
+> 528	  const record = asRecord(raw);
+> 529	  const clusters = Array.isArray(record?.clusters)
+> 530	    ? record.clusters
+> 531	        .map((entry) => normalizeWikiImportInsightCluster(entry))
+> 532	        .filter((entry): entry is WikiImportInsightCluster => entry !== null)
+> 533	    : [];
+> 534	  return {
+> 535	    sourceType: record?.sourceType === "chatgpt" ? "chatgpt" : "chatgpt",
+> 536	    totalItems: normalizeFiniteInt(
+> 537	      record?.totalItems,
+> 538	      clusters.reduce((sum, cluster) => sum + cluster.itemCount, 0),
+> 539	    ),
+> 540	    totalClusters: normalizeFiniteInt(record?.totalClusters, clusters.length),
+> 541	    clusters,
+> 542	  };
+> 543	}
+> 544	
+> 545	function normalizeWikiPageKind(value: unknown): WikiMemoryPalaceItem["kind"] | undefined {
+> 546	  return value === "entity" ||
+> 547	    value === "concept" ||
+> 548	    value === "source" ||
+> 549	    value === "synthesis" ||
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"doctor.memory\\|gateway.*method\\|fetch\\|api\" /home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts | head -40"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 258:    | "doctor.memory.backfillDreamDiary"
+> 259:    | "doctor.memory.resetDreamDiary"
+> 260:    | "doctor.memory.resetGroundedShortTerm"
+> 261:    | "doctor.memory.repairDreamingArtifacts"
+> 262:    | "doctor.memory.dedupeDreamDiary",
+> 266:    case "doctor.memory.dedupeDreamDiary": {
+> 278:    case "doctor.memory.repairDreamingArtifacts": {
+> 297:    case "doctor.memory.backfillDreamDiary":
+> 299:    case "doctor.memory.resetDreamDiary":
+> 301:    case "doctor.memory.resetGroundedShortTerm":
+> 726:      "doctor.memory.status",
+> 745:      "doctor.memory.dreamDiary",
+> 812:    | "doctor.memory.backfillDreamDiary"
+> 813:    | "doctor.memory.resetDreamDiary"
+> 814:    | "doctor.memory.resetGroundedShortTerm"
+> 815:    | "doctor.memory.repairDreamingArtifacts"
+> 816:    | "doctor.memory.dedupeDreamDiary",
+> 825:    method === "doctor.memory.repairDreamingArtifacts" &&
+> 833:    method === "doctor.memory.dedupeDreamDiary" &&
+> 852:      method === "doctor.memory.repairDreamingArtifacts"
+> 873:  return runDreamDiaryAction(state, "doctor.memory.backfillDreamDiary");
+> 877:  return runDreamDiaryAction(state, "doctor.memory.resetDreamDiary");
+> 881:  return runDreamDiaryAction(state, "doctor.memory.resetGroundedShortTerm", {
+> 887:  return runDreamDiaryAction(state, "doctor.memory.repairDreamingArtifacts", {
+> 921:  return runDreamDiaryAction(state, "doctor.memory.dedupeDreamDiary");
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"wikiMemoryPalace\\|wikiImportInsights\" /home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 218:  wikiImportInsightsLoading: boolean;
+> 219:  wikiImportInsightsError: string | null;
+> 220:  wikiImportInsights: WikiImportInsights | null;
+> 221:  wikiMemoryPalaceLoading: boolean;
+> 222:  wikiMemoryPalaceError: string | null;
+> 223:  wikiMemoryPalace: WikiMemoryPalace | null;
+> 765:  if (!state.client || !state.connected || state.wikiImportInsightsLoading) {
+> 769:    state.wikiImportInsights = null;
+> 770:    state.wikiImportInsightsError = null;
+> 773:  state.wikiImportInsightsLoading = true;
+> 774:  state.wikiImportInsightsError = null;
+> 780:    state.wikiImportInsights = normalizeWikiImportInsights(payload);
+> 782:    state.wikiImportInsightsError = String(err);
+> 784:    state.wikiImportInsightsLoading = false;
+> 789:  if (!state.client || !state.connected || state.wikiMemoryPalaceLoading) {
+> 793:    state.wikiMemoryPalace = null;
+> 794:    state.wikiMemoryPalaceError = null;
+> 797:  state.wikiMemoryPalaceLoading = true;
+> 798:  state.wikiMemoryPalaceError = null;
+> 801:    state.wikiMemoryPalace = normalizeWikiMemoryPalace(payload);
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts",
+  "limit": 200,
+  "offset": 760
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 760	    state.dreamDiaryLoading = false;
+> 761	  }
+> 762	}
+> 763	
+> 764	export async function loadWikiImportInsights(state: DreamingState): Promise<void> {
+> 765	  if (!state.client || !state.connected || state.wikiImportInsightsLoading) {
+> 766	    return;
+> 767	  }
+> 768	  if (!canCallMemoryWikiMethod(state, "wiki.importInsights")) {
+> 769	    state.wikiImportInsights = null;
+> 770	    state.wikiImportInsightsError = null;
+> 771	    return;
+> 772	  }
+> 773	  state.wikiImportInsightsLoading = true;
+> 774	  state.wikiImportInsightsError = null;
+> 775	  try {
+> 776	    const payload = await state.client.request<WikiImportInsightsPayload>(
+> 777	      "wiki.importInsights",
+> 778	      {},
+> 779	    );
+> 780	    state.wikiImportInsights = normalizeWikiImportInsights(payload);
+> 781	  } catch (err) {
+> 782	    state.wikiImportInsightsError = String(err);
+> 783	  } finally {
+> 784	    state.wikiImportInsightsLoading = false;
+> 785	  }
+> 786	}
+> 787	
+> 788	export async function loadWikiMemoryPalace(state: DreamingState): Promise<void> {
+> 789	  if (!state.client || !state.connected || state.wikiMemoryPalaceLoading) {
+> 790	    return;
+> 791	  }
+> 792	  if (!canCallMemoryWikiMethod(state, "wiki.palace")) {
+> 793	    state.wikiMemoryPalace = null;
+> 794	    state.wikiMemoryPalaceError = null;
+> 795	    return;
+> 796	  }
+> 797	  state.wikiMemoryPalaceLoading = true;
+> 798	  state.wikiMemoryPalaceError = null;
+> 799	  try {
+> 800	    const payload = await state.client.request<WikiMemoryPalacePayload>("wiki.palace", {});
+> 801	    state.wikiMemoryPalace = normalizeWikiMemoryPalace(payload);
+> 802	  } catch (err) {
+> 803	    state.wikiMemoryPalaceError = String(err);
+> 804	  } finally {
+> 805	    state.wikiMemoryPalaceLoading = false;
+> 806	  }
+> 807	}
+> 808	
+> 809	async function runDreamDiaryAction(
+> 810	  state: DreamingState,
+> 811	  method:
+> 812	    | "doctor.memory.backfillDreamDiary"
+> 813	    | "doctor.memory.resetDreamDiary"
+> 814	    | "doctor.memory.resetGroundedShortTerm"
+> 815	    | "doctor.memory.repairDreamingArtifacts"
+> 816	    | "doctor.memory.dedupeDreamDiary",
+> 817	  options?: {
+> 818	    reloadDiary?: boolean;
+> 819	  },
+> 820	): Promise<boolean> {
+> 821	  if (!state.client || !state.connected || state.dreamDiaryActionLoading) {
+> 822	    return false;
+> 823	  }
+> 824	  if (
+> 825	    method === "doctor.memory.repairDreamingArtifacts" &&
+> 826	    !confirmDreamingAction(
+> 827	      "Repair Dream Cache? This archives derived dream cache files and rebuilds them from clean inputs. Your dream diary stays untouched.",
+> 828	    )
+> 829	  ) {
+> 830	    return false;
+> 831	  }
+> 832	  if (
+> 833	    method === "doctor.memory.dedupeDreamDiary" &&
+> 834	    !confirmDreamingAction(
+> 835	      "Dedupe Dream Diary? This rewrites DREAMS.md and removes only exact duplicate diary entries.",
+> 836	    )
+> 837	  ) {
+> 838	    return false;
+> 839	  }
+> 840	  state.dreamDiaryActionLoading = true;
+> 841	  state.dreamingStatusError = null;
+> 842	  state.dreamDiaryError = null;
+> 843	  state.dreamDiaryActionMessage = null;
+> 844	  state.dreamDiaryActionArchivePath = null;
+> 845	  try {
+> 846	    const payload = await state.client.request<DoctorMemoryDreamActionPayload>(method, {});
+> 847	    if (options?.reloadDiary !== false) {
+> 848	      await loadDreamDiary(state);
+> 849	    }
+> 850	    await loadDreamingStatus(state);
+> 851	    state.dreamDiaryActionArchivePath =
+> 852	      method === "doctor.memory.repairDreamingArtifacts"
+> 853	        ? (normalizeTrimmedString(payload?.archiveDir) ?? null)
+> 854	        : null;
+> 855	    state.dreamDiaryActionMessage = {
+> 856	      kind: "success",
+> 857	      text: buildDreamDiaryActionSuccessMessage(method, payload),
+> 858	    };
+> 859	    return true;
+> 860	  } catch (err) {
+> 861	    const message = String(err);
+> 862	    state.dreamingStatusError = message;
+> 863	    state.lastError = message;
+> 864	    state.dreamDiaryActionArchivePath = null;
+> 865	    state.dreamDiaryActionMessage = { kind: "error", text: message };
+> 866	    return false;
+> 867	  } finally {
+> 868	    state.dreamDiaryActionLoading = false;
+> 869	  }
+> 870	}
+> 871	
+> 872	export async function backfillDreamDiary(state: DreamingState): Promise<boolean> {
+> 873	  return runDreamDiaryAction(state, "doctor.memory.backfillDreamDiary");
+> 874	}
+> 875	
+> 876	export async function resetDreamDiary(state: DreamingState): Promise<boolean> {
+> 877	  return runDreamDiaryAction(state, "doctor.memory.resetDreamDiary");
+> 878	}
+> 879	
+> 880	export async function resetGroundedShortTerm(state: DreamingState): Promise<boolean> {
+> 881	  return runDreamDiaryAction(state, "doctor.memory.resetGroundedShortTerm", {
+> 882	    reloadDiary: false,
+> 883	  });
+> 884	}
+> 885	
+> 886	export async function repairDreamingArtifacts(state: DreamingState): Promise<boolean> {
+> 887	  return runDreamDiaryAction(state, "doctor.memory.repairDreamingArtifacts", {
+> 888	    reloadDiary: false,
+> 889	  });
+> 890	}
+> 891	
+> 892	export async function copyDreamingArchivePath(state: DreamingState): Promise<boolean> {
+> 893	  const path = state.dreamDiaryActionArchivePath;
+> 894	  if (!path) {
+> 895	    return false;
+> 896	  }
+> 897	  if (!globalThis.navigator?.clipboard?.writeText) {
+> 898	    state.dreamDiaryActionMessage = {
+> 899	      kind: "error",
+> 900	      text: "Could not copy archive path.",
+> 901	    };
+> 902	    return false;
+> 903	  }
+> 904	  try {
+> 905	    await globalThis.navigator.clipboard.writeText(path);
+> 906	    state.dreamDiaryActionMessage = {
+> 907	      kind: "success",
+> 908	      text: "Archive path copied.",
+> 909	    };
+> 910	    return true;
+> 911	  } catch {
+> 912	    state.dreamDiaryActionMessage = {
+> 913	      kind: "error",
+> 914	      text: "Could not copy archive path.",
+> 915	    };
+> 916	    return false;
+> 917	  }
+> 918	}
+> 919	
+> 920	export async function dedupeDreamDiary(state: DreamingState): Promise<boolean> {
+> 921	  return runDreamDiaryAction(state, "doctor.memory.dedupeDreamDiary");
+> 922	}
+> 923	
+> 924	async function writeDreamingPatch(
+> 925	  state: DreamingState,
+> 926	  patch: Record<string, unknown>,
+> 927	): Promise<boolean> {
+> 928	  if (!state.client || !state.connected) {
+> 929	    return false;
+> 930	  }
+> 931	  if (state.dreamingModeSaving) {
+> 932	    return false;
+> 933	  }
+> 934	  const baseHash = state.configSnapshot?.hash;
+> 935	  if (!baseHash) {
+> 936	    state.dreamingStatusError = "Config hash missing; refresh and retry.";
+> 937	    return false;
+> 938	  }
+> 939	
+> 940	  state.dreamingModeSaving = true;
+> 941	  state.dreamingStatusError = null;
+> 942	  try {
+> 943	    await state.client.request("config.patch", {
+> 944	      baseHash,
+> 945	      raw: JSON.stringify(patch),
+> 946	      sessionKey: state.applySessionKey,
+> 947	      note: "Dreaming settings updated from the Dreaming tab.",
+> 948	    });
+> 949	    return true;
+> 950	  } catch (err) {
+> 951	    const message = String(err);
+> 952	    state.dreamingStatusError = message;
+> 953	    state.lastError = message;
+> 954	    return false;
+> 955	  } finally {
+> 956	    state.dreamingModeSaving = false;
+> 957	  }
+> 958	}
+> 959	
+> ```
+
+## 🤖 Claude
+
+Agora vou procurar os endpoints do gateway que esses métodos chamam (memory-core plugin):
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw/extensions/memory-core -name \"*.ts\" | xargs grep -l \"doctor.memory\\|wiki.importInsights\\|wiki.palace\" | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -name \"gateway*.ts\" -o -name \"methods.ts\" | xargs grep -l \"doctor\\|wiki\" 2>/dev/null | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/src/gateway/gateway-acp-bind.live.test.ts
+> /home/ubuntu/openclaw/dist/cli/gateway-lifecycle.runtime.d.ts
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.test.ts
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts
+> /home/ubuntu/openclaw/src/agents/tools/gateway-tool.test.ts
+> /home/ubuntu/openclaw/src/agents/tools/gateway-tool.ts
+> /home/ubuntu/openclaw/node_modules/discord-api-types/payloads/v10/gateway.d.ts
+> /home/ubuntu/openclaw/node_modules/discord-api-types/payloads/v8/gateway.d.ts
+> /home/ubuntu/openclaw/node_modules/discord-api-types/payloads/v9/gateway.d.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { formatErrorMessage } from "openclaw/plugin-sdk/error-runtime";
+> 2	import type { OpenClawConfig, OpenClawPluginApi } from "../api.js";
+> 3	import { applyMemoryWikiMutation, normalizeMemoryWikiMutationInput } from "./apply.js";
+> 4	import { compileMemoryWikiVault } from "./compile.js";
+> 5	import {
+> 6	  WIKI_SEARCH_BACKENDS,
+> 7	  WIKI_SEARCH_CORPORA,
+> 8	  type ResolvedMemoryWikiConfig,
+> 9	} from "./config.js";
+> 10	import { listMemoryWikiImportInsights } from "./import-insights.js";
+> 11	import { listMemoryWikiImportRuns } from "./import-runs.js";
+> 12	import { ingestMemoryWikiSource } from "./ingest.js";
+> 13	import { lintMemoryWikiVault } from "./lint.js";
+> 14	import { listMemoryWikiPalace } from "./memory-palace.js";
+> 15	import {
+> 16	  probeObsidianCli,
+> 17	  runObsidianCommand,
+> 18	  runObsidianDaily,
+> 19	  runObsidianOpen,
+> 20	  runObsidianSearch,
+> 21	} from "./obsidian.js";
+> 22	import { getMemoryWikiPage, searchMemoryWiki, WIKI_SEARCH_MODES } from "./query.js";
+> 23	import { syncMemoryWikiImportedSources } from "./source-sync.js";
+> 24	import { buildMemoryWikiDoctorReport, resolveMemoryWikiStatus } from "./status.js";
+> 25	import { initializeMemoryWikiVault } from "./vault.js";
+> 26	
+> 27	const READ_SCOPE = "operator.read" as const;
+> 28	const WRITE_SCOPE = "operator.write" as const;
+> 29	const ADMIN_SCOPE = "operator.admin" as const;
+> 30	const LOCAL_FILE_INGEST_SCOPE = ADMIN_SCOPE;
+> 31	type GatewayMethodContext = Parameters<
+> 32	  Parameters<OpenClawPluginApi["registerGatewayMethod"]>[1]
+> 33	>[0];
+> 34	type GatewayRespond = GatewayMethodContext["respond"];
+> 35	
+> 36	function readStringParam(params: Record<string, unknown>, key: string): string | undefined;
+> 37	function readStringParam(
+> 38	  params: Record<string, unknown>,
+> 39	  key: string,
+> 40	  options: { required: true },
+> 41	): string;
+> 42	function readStringParam(
+> 43	  params: Record<string, unknown>,
+> 44	  key: string,
+> 45	  options?: { required?: boolean },
+> 46	): string | undefined {
+> 47	  const value = params[key];
+> 48	  if (typeof value === "string" && value.trim()) {
+> 49	    return value.trim();
+> 50	  }
+> 51	  if (options?.required) {
+> 52	    throw new Error(`${key} is required.`);
+> 53	  }
+> 54	  return undefined;
+> 55	}
+> 56	
+> 57	function readNumberParam(params: Record<string, unknown>, key: string): number | undefined {
+> 58	  const value = params[key];
+> 59	  if (typeof value === "number" && Number.isFinite(value)) {
+> 60	    return value;
+> 61	  }
+> 62	  if (typeof value === "string" && value.trim()) {
+> 63	    const parsed = Number(value);
+> 64	    if (Number.isFinite(parsed)) {
+> 65	      return parsed;
+> 66	    }
+> 67	  }
+> 68	  return undefined;
+> 69	}
+> 70	
+> 71	function readEnumParam<T extends string>(
+> 72	  params: Record<string, unknown>,
+> 73	  key: string,
+> 74	  allowed: readonly T[],
+> 75	): T | undefined {
+> 76	  const value = readStringParam(params, key);
+> 77	  if (!value) {
+> 78	    return undefined;
+> 79	  }
+> 80	  if ((allowed as readonly string[]).includes(value)) {
+> 81	    return value as T;
+> 82	  }
+> 83	  throw new Error(`${key} must be one of: ${allowed.join(", ")}.`);
+> 84	}
+> 85	
+> 86	function respondError(respond: GatewayRespond, error: unknown) {
+> 87	  const message = formatErrorMessage(error);
+> 88	  respond(false, undefined, { code: "internal_error", message });
+> 89	}
+> 90	
+> 91	async function syncImportedSourcesIfNeeded(
+> 92	  config: ResolvedMemoryWikiConfig,
+> 93	  appConfig?: OpenClawConfig,
+> 94	) {
+> 95	  await syncMemoryWikiImportedSources({ config, appConfig });
+> 96	}
+> 97	
+> 98	export function registerMemoryWikiGatewayMethods(params: {
+> 99	  api: OpenClawPluginApi;
+> 100	  config: ResolvedMemoryWikiConfig;
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"wiki.importInsights\\|wiki.palace\" /home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 137:    "wiki.importInsights",
+> 150:    "wiki.palace",
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts",
+  "limit": 150,
+  "offset": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 130	        respondError(respond, error);
+> 131	      }
+> 132	    },
+> 133	    { scope: READ_SCOPE },
+> 134	  );
+> 135	
+> 136	  api.registerGatewayMethod(
+> 137	    "wiki.importInsights",
+> 138	    async ({ respond }) => {
+> 139	      try {
+> 140	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 141	        respond(true, await listMemoryWikiImportInsights(config));
+> 142	      } catch (error) {
+> 143	        respondError(respond, error);
+> 144	      }
+> 145	    },
+> 146	    { scope: READ_SCOPE },
+> 147	  );
+> 148	
+> 149	  api.registerGatewayMethod(
+> 150	    "wiki.palace",
+> 151	    async ({ respond }) => {
+> 152	      try {
+> 153	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 154	        respond(true, await listMemoryWikiPalace(config));
+> 155	      } catch (error) {
+> 156	        respondError(respond, error);
+> 157	      }
+> 158	    },
+> 159	    { scope: READ_SCOPE },
+> 160	  );
+> 161	
+> 162	  api.registerGatewayMethod(
+> 163	    "wiki.init",
+> 164	    async ({ respond }) => {
+> 165	      try {
+> 166	        respond(true, await initializeMemoryWikiVault(config));
+> 167	      } catch (error) {
+> 168	        respondError(respond, error);
+> 169	      }
+> 170	    },
+> 171	    { scope: WRITE_SCOPE },
+> 172	  );
+> 173	
+> 174	  api.registerGatewayMethod(
+> 175	    "wiki.doctor",
+> 176	    async ({ respond }) => {
+> 177	      try {
+> 178	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 179	        const status = await resolveMemoryWikiStatus(config, {
+> 180	          appConfig,
+> 181	        });
+> 182	        respond(true, buildMemoryWikiDoctorReport(status));
+> 183	      } catch (error) {
+> 184	        respondError(respond, error);
+> 185	      }
+> 186	    },
+> 187	    { scope: READ_SCOPE },
+> 188	  );
+> 189	
+> 190	  api.registerGatewayMethod(
+> 191	    "wiki.compile",
+> 192	    async ({ respond }) => {
+> 193	      try {
+> 194	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 195	        respond(true, await compileMemoryWikiVault(config));
+> 196	      } catch (error) {
+> 197	        respondError(respond, error);
+> 198	      }
+> 199	    },
+> 200	    { scope: WRITE_SCOPE },
+> 201	  );
+> 202	
+> 203	  api.registerGatewayMethod(
+> 204	    "wiki.ingest",
+> 205	    async ({ params: requestParams, respond }) => {
+> 206	      try {
+> 207	        const inputPath = readStringParam(requestParams, "inputPath", { required: true });
+> 208	        const title = readStringParam(requestParams, "title");
+> 209	        respond(
+> 210	          true,
+> 211	          await ingestMemoryWikiSource({
+> 212	            config,
+> 213	            inputPath,
+> 214	            ...(title ? { title } : {}),
+> 215	          }),
+> 216	        );
+> 217	      } catch (error) {
+> 218	        respondError(respond, error);
+> 219	      }
+> 220	    },
+> 221	    { scope: LOCAL_FILE_INGEST_SCOPE },
+> 222	  );
+> 223	
+> 224	  api.registerGatewayMethod(
+> 225	    "wiki.lint",
+> 226	    async ({ respond }) => {
+> 227	      try {
+> 228	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 229	        respond(true, await lintMemoryWikiVault(config));
+> 230	      } catch (error) {
+> 231	        respondError(respond, error);
+> 232	      }
+> 233	    },
+> 234	    { scope: WRITE_SCOPE },
+> 235	  );
+> 236	
+> 237	  api.registerGatewayMethod(
+> 238	    "wiki.bridge.import",
+> 239	    async ({ respond }) => {
+> 240	      try {
+> 241	        respond(
+> 242	          true,
+> 243	          await syncMemoryWikiImportedSources({
+> 244	            config: { ...config, vaultMode: "bridge" },
+> 245	            appConfig,
+> 246	          }),
+> 247	        );
+> 248	      } catch (error) {
+> 249	        respondError(respond, error);
+> 250	      }
+> 251	    },
+> 252	    { scope: WRITE_SCOPE },
+> 253	  );
+> 254	
+> 255	  api.registerGatewayMethod(
+> 256	    "wiki.unsafeLocal.import",
+> 257	    async ({ respond }) => {
+> 258	      try {
+> 259	        respond(
+> 260	          true,
+> 261	          await syncMemoryWikiImportedSources({
+> 262	            config: { ...config, vaultMode: "unsafe-local" },
+> 263	            appConfig,
+> 264	          }),
+> 265	        );
+> 266	      } catch (error) {
+> 267	        respondError(respond, error);
+> 268	      }
+> 269	    },
+> 270	    { scope: WRITE_SCOPE },
+> 271	  );
+> 272	
+> 273	  api.registerGatewayMethod(
+> 274	    "wiki.search",
+> 275	    async ({ params: requestParams, respond }) => {
+> 276	      try {
+> 277	        await syncImportedSourcesIfNeeded(config, appConfig);
+> 278	        const query = readStringParam(requestParams, "query", { required: true });
+> 279	        const maxResults = readNumberParam(requestParams, "maxResults");
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/openclaw/extensions/memory-wiki/src/ | grep -E \"import|palace|diary\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 29295 May 15 01:59 chatgpt-import.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  5607 May 15 01:59 import-insights.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 13794 May 15 01:59 import-insights.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4853 May 15 01:59 import-runs.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3580 May 15 01:59 memory-palace.test.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  4773 May 15 01:59 memory-palace.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw/extensions/memory-core -name \"*gateway*\" -o -name \"cli.ts\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/extensions/memory-core/src/cli.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"doctor.memory\" /home/ubuntu/openclaw/extensions/memory-core/src/cli.ts | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -path \"*/gateway*\" -name \"*.ts\" | xargs grep -l \"doctor.memory\" | head -5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/src/gateway/method-scopes.ts
+> /home/ubuntu/openclaw/src/gateway/server-methods-list.ts
+> /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts
+> /home/ubuntu/openclaw/src/gateway/server-methods/doctor.test.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import fs from "node:fs/promises";
+> 2	import path from "node:path";
+> 3	import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../../agents/agent-scope.js";
+> 4	import type { OpenClawConfig } from "../../config/types.openclaw.js";
+> 5	import {
+> 6	  isSameMemoryDreamingDay,
+> 7	  resolveMemoryDeepDreamingConfig,
+> 8	  resolveMemoryLightDreamingConfig,
+> 9	  resolveMemoryDreamingPluginConfig,
+> 10	  resolveMemoryDreamingConfig,
+> 11	  resolveMemoryDreamingWorkspaces,
+> 12	  resolveMemoryRemDreamingConfig,
+> 13	} from "../../memory-host-sdk/dreaming.js";
+> 14	import { getActiveMemorySearchManager } from "../../plugins/memory-runtime.js";
+> 15	import { formatError } from "../server-utils.js";
+> 16	import {
+> 17	  dedupeDreamDiaryEntries,
+> 18	  previewGroundedRemMarkdown,
+> 19	  previewRemHarness,
+> 20	  removeBackfillDiaryEntries,
+> 21	  removeGroundedShortTermCandidates,
+> 22	  repairDreamingArtifacts,
+> 23	  writeBackfillDiaryEntries,
+> 24	} from "./doctor.memory-core-runtime.js";
+> 25	import { asRecord, normalizeTrimmedString } from "./record-shared.js";
+> 26	import type { GatewayRequestHandlers } from "./types.js";
+> 27	
+> 28	const SHORT_TERM_STORE_RELATIVE_PATH = path.join("memory", ".dreams", "short-term-recall.json");
+> 29	const SHORT_TERM_PHASE_SIGNAL_RELATIVE_PATH = path.join("memory", ".dreams", "phase-signals.json");
+> 30	const MANAGED_DEEP_SLEEP_CRON_NAME = "Memory Dreaming Promotion";
+> 31	const MANAGED_DEEP_SLEEP_CRON_TAG = "[managed-by=memory-core.short-term-promotion]";
+> 32	const DEEP_SLEEP_SYSTEM_EVENT_TEXT = "__openclaw_memory_core_short_term_promotion_dream__";
+> 33	const DREAM_DIARY_FILE_NAMES = ["DREAMS.md", "dreams.md"] as const;
+> 34	const REM_HARNESS_DEFAULT_CANDIDATE_LIMIT = 25;
+> 35	const REM_HARNESS_MAX_CANDIDATE_LIMIT = 100;
+> 36	const REM_HARNESS_MAX_GROUNDED_FILES = 10;
+> 37	const REM_HARNESS_MAX_REM_PREVIEW_LIMIT = 50;
+> 38	
+> 39	type DoctorMemoryDreamingPhasePayload = {
+> 40	  enabled: boolean;
+> 41	  cron: string;
+> 42	  managedCronPresent: boolean;
+> 43	  nextRunAtMs?: number;
+> 44	};
+> 45	
+> 46	type DoctorMemoryLightDreamingPayload = DoctorMemoryDreamingPhasePayload & {
+> 47	  lookbackDays: number;
+> 48	  limit: number;
+> 49	};
+> 50	
+> 51	type DoctorMemoryDeepDreamingPayload = DoctorMemoryDreamingPhasePayload & {
+> 52	  minScore: number;
+> 53	  minRecallCount: number;
+> 54	  minUniqueQueries: number;
+> 55	  recencyHalfLifeDays: number;
+> 56	  maxAgeDays?: number;
+> 57	  limit: number;
+> 58	};
+> 59	
+> 60	type DoctorMemoryRemDreamingPayload = DoctorMemoryDreamingPhasePayload & {
+> 61	  lookbackDays: number;
+> 62	  limit: number;
+> 63	  minPatternStrength: number;
+> 64	};
+> 65	
+> 66	type DoctorMemoryDreamingEntryPayload = {
+> 67	  key: string;
+> 68	  path: string;
+> 69	  startLine: number;
+> 70	  endLine: number;
+> 71	  snippet: string;
+> 72	  recallCount: number;
+> 73	  dailyCount: number;
+> 74	  groundedCount: number;
+> 75	  totalSignalCount: number;
+> 76	  lightHits: number;
+> 77	  remHits: number;
+> 78	  phaseHitCount: number;
+> 79	  promotedAt?: string;
+> 80	  lastRecalledAt?: string;
+> 81	};
+> 82	
+> 83	type DoctorMemoryDreamingPayload = {
+> 84	  enabled: boolean;
+> 85	  timezone?: string;
+> 86	  verboseLogging: boolean;
+> 87	  storageMode: "inline" | "separate" | "both";
+> 88	  separateReports: boolean;
+> 89	  shortTermCount: number;
+> 90	  recallSignalCount: number;
+> 91	  dailySignalCount: number;
+> 92	  groundedSignalCount: number;
+> 93	  totalSignalCount: number;
+> 94	  phaseSignalCount: number;
+> 95	  lightPhaseHitCount: number;
+> 96	  remPhaseHitCount: number;
+> 97	  promotedTotal: number;
+> 98	  promotedToday: number;
+> 99	  storePath?: string;
+> 100	  phaseSignalPath?: string;
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"registerMethod\\|gateway.*doctor.memory\" /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"export.*doctor.memory\\|handlers\\[\" /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts | head -40"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts",
+  "limit": 150,
+  "offset": 500
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 500	    let phaseSignalCount = 0;
+> 501	    let lightPhaseHitCount = 0;
+> 502	    let remPhaseHitCount = 0;
+> 503	    let promotedTotal = 0;
+> 504	    let promotedToday = 0;
+> 505	    let latestPromotedAtMs = Number.NEGATIVE_INFINITY;
+> 506	    let latestPromotedAt: string | undefined;
+> 507	    const activeKeys = new Set<string>();
+> 508	    const activeEntries = new Map<string, DoctorMemoryDreamingEntryPayload>();
+> 509	    const shortTermEntries: DoctorMemoryDreamingEntryPayload[] = [];
+> 510	    const promotedEntries: DoctorMemoryDreamingEntryPayload[] = [];
+> 511	
+> 512	    for (const [entryKey, value] of Object.entries(entries)) {
+> 513	      const entry = asRecord(value);
+> 514	      if (!entry) {
+> 515	        continue;
+> 516	      }
+> 517	      const source = normalizeTrimmedString(entry.source);
+> 518	      const entryPath = normalizeTrimmedString(entry.path);
+> 519	      if (source !== "memory" || !entryPath || !isShortTermMemoryPath(entryPath)) {
+> 520	        continue;
+> 521	      }
+> 522	      const range = parseEntryRangeFromKey(entryKey, entry.startLine, entry.endLine);
+> 523	      const recallCount = toNonNegativeInt(entry.recallCount);
+> 524	      const dailyCount = toNonNegativeInt(entry.dailyCount);
+> 525	      const groundedCount = toNonNegativeInt(entry.groundedCount);
+> 526	      const totalEntrySignalCount = recallCount + dailyCount + groundedCount;
+> 527	      const normalizedEntryPath = normalizeMemoryPathForWorkspace(workspaceDir, entryPath);
+> 528	      const snippet =
+> 529	        normalizeTrimmedString(entry.snippet) ??
+> 530	        normalizeTrimmedString(entry.summary) ??
+> 531	        normalizedEntryPath;
+> 532	      const lastRecalledAt = normalizeTrimmedString(entry.lastRecalledAt);
+> 533	      const detail: DoctorMemoryDreamingEntryPayload = {
+> 534	        key: entryKey,
+> 535	        path: normalizedEntryPath,
+> 536	        startLine: range.startLine,
+> 537	        endLine: Math.max(range.startLine, range.endLine),
+> 538	        snippet,
+> 539	        recallCount,
+> 540	        dailyCount,
+> 541	        groundedCount,
+> 542	        totalSignalCount: totalEntrySignalCount,
+> 543	        lightHits: 0,
+> 544	        remHits: 0,
+> 545	        phaseHitCount: 0,
+> 546	        ...(lastRecalledAt ? { lastRecalledAt } : {}),
+> 547	      };
+> 548	      const promotedAt = normalizeTrimmedString(entry.promotedAt);
+> 549	      if (!promotedAt) {
+> 550	        shortTermCount += 1;
+> 551	        activeKeys.add(entryKey);
+> 552	        recallSignalCount += recallCount;
+> 553	        dailySignalCount += dailyCount;
+> 554	        groundedSignalCount += groundedCount;
+> 555	        totalSignalCount += totalEntrySignalCount;
+> 556	        shortTermEntries.push(detail);
+> 557	        activeEntries.set(entryKey, detail);
+> 558	        continue;
+> 559	      }
+> 560	      promotedTotal += 1;
+> 561	      promotedEntries.push({
+> 562	        ...detail,
+> 563	        promotedAt,
+> 564	      });
+> 565	      const promotedAtMs = Date.parse(promotedAt);
+> 566	      if (Number.isFinite(promotedAtMs) && isSameMemoryDreamingDay(promotedAtMs, nowMs, timezone)) {
+> 567	        promotedToday += 1;
+> 568	      }
+> 569	      if (Number.isFinite(promotedAtMs) && promotedAtMs > latestPromotedAtMs) {
+> 570	        latestPromotedAtMs = promotedAtMs;
+> 571	        latestPromotedAt = promotedAt;
+> 572	      }
+> 573	    }
+> 574	
+> 575	    let phaseSignalError: string | undefined;
+> 576	    try {
+> 577	      const phaseRaw = await fs.readFile(phaseSignalPath, "utf-8");
+> 578	      const parsedPhase = JSON.parse(phaseRaw) as unknown;
+> 579	      const phaseStore = asRecord(parsedPhase);
+> 580	      const phaseEntries = asRecord(phaseStore?.entries) ?? {};
+> 581	      for (const [key, value] of Object.entries(phaseEntries)) {
+> 582	        if (!activeKeys.has(key)) {
+> 583	          continue;
+> 584	        }
+> 585	        const phaseEntry = asRecord(value);
+> 586	        const lightHits = toNonNegativeInt(phaseEntry?.lightHits);
+> 587	        const remHits = toNonNegativeInt(phaseEntry?.remHits);
+> 588	        lightPhaseHitCount += lightHits;
+> 589	        remPhaseHitCount += remHits;
+> 590	        phaseSignalCount += lightHits + remHits;
+> 591	        const detail = activeEntries.get(key);
+> 592	        if (detail) {
+> 593	          detail.lightHits = lightHits;
+> 594	          detail.remHits = remHits;
+> 595	          detail.phaseHitCount = lightHits + remHits;
+> 596	        }
+> 597	      }
+> 598	    } catch (err) {
+> 599	      const code = (err as NodeJS.ErrnoException | undefined)?.code;
+> 600	      if (code !== "ENOENT") {
+> 601	        phaseSignalError = formatError(err);
+> 602	      }
+> 603	    }
+> 604	
+> 605	    return {
+> 606	      shortTermCount,
+> 607	      recallSignalCount,
+> 608	      dailySignalCount,
+> 609	      groundedSignalCount,
+> 610	      totalSignalCount,
+> 611	      phaseSignalCount,
+> 612	      lightPhaseHitCount,
+> 613	      remPhaseHitCount,
+> 614	      promotedTotal,
+> 615	      promotedToday,
+> 616	      storePath,
+> 617	      phaseSignalPath,
+> 618	      shortTermEntries: trimDreamingEntries(shortTermEntries, compareDreamingEntryByRecency),
+> 619	      signalEntries: trimDreamingEntries(shortTermEntries, compareDreamingEntryBySignals),
+> 620	      promotedEntries: trimDreamingEntries(promotedEntries, compareDreamingEntryByPromotion),
+> 621	      ...(latestPromotedAt ? { lastPromotedAt: latestPromotedAt } : {}),
+> 622	      ...(phaseSignalError ? { phaseSignalError } : {}),
+> 623	    };
+> 624	  } catch (err) {
+> 625	    const code = (err as NodeJS.ErrnoException | undefined)?.code;
+> 626	    if (code === "ENOENT") {
+> 627	      return {
+> 628	        shortTermCount: 0,
+> 629	        recallSignalCount: 0,
+> 630	        dailySignalCount: 0,
+> 631	        groundedSignalCount: 0,
+> 632	        totalSignalCount: 0,
+> 633	        phaseSignalCount: 0,
+> 634	        lightPhaseHitCount: 0,
+> 635	        remPhaseHitCount: 0,
+> 636	        promotedTotal: 0,
+> 637	        promotedToday: 0,
+> 638	        storePath,
+> 639	        phaseSignalPath,
+> 640	        shortTermEntries: [],
+> 641	        signalEntries: [],
+> 642	        promotedEntries: [],
+> 643	      };
+> 644	    }
+> 645	    return {
+> 646	      shortTermCount: 0,
+> 647	      recallSignalCount: 0,
+> 648	      dailySignalCount: 0,
+> 649	      groundedSignalCount: 0,
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -100 /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     const includePromoted = Boolean(req?.includePromoted);
+>     const requestedLimit =
+>       typeof req?.limit === "number" && Number.isFinite(req.limit)
+>         ? Math.floor(req.limit)
+>         : REM_HARNESS_DEFAULT_CANDIDATE_LIMIT;
+>     const candidateLimit = Math.max(1, Math.min(REM_HARNESS_MAX_CANDIDATE_LIMIT, requestedLimit));
+>     try {
+>       const preview = await previewRemHarness({
+>         workspaceDir,
+>         cfg,
+>         pluginConfig: resolveMemoryDreamingPluginConfig(cfg),
+>         grounded,
+>         includePromoted,
+>         candidateLimit,
+>         groundedFileLimit: REM_HARNESS_MAX_GROUNDED_FILES,
+>         remPreviewLimit: REM_HARNESS_MAX_REM_PREVIEW_LIMIT,
+>       });
+>       const groundedPayload: DoctorMemoryRemHarnessSuccessPayload["grounded"] = preview.grounded
+>         ? {
+>             scannedFiles: preview.grounded.scannedFiles,
+>             files: preview.grounded.files.map((file) => ({
+>               path: file.path,
+>               renderedMarkdown: file.renderedMarkdown,
+>             })),
+>           }
+>         : grounded
+>           ? { scannedFiles: 0, files: [] }
+>           : null;
+> 
+>       const payload: DoctorMemoryRemHarnessSuccessPayload = {
+>         ok: true,
+>         agentId,
+>         workspaceDir,
+>         remConfig: {
+>           enabled: preview.remConfig.enabled,
+>           lookbackDays: preview.remConfig.lookbackDays,
+>           limit: preview.remConfig.limit,
+>           minPatternStrength: preview.remConfig.minPatternStrength,
+>         },
+>         deepConfig: {
+>           minScore: preview.deepConfig.minScore,
+>           minRecallCount: preview.deepConfig.minRecallCount,
+>           minUniqueQueries: preview.deepConfig.minUniqueQueries,
+>           recencyHalfLifeDays: preview.deepConfig.recencyHalfLifeDays,
+>           maxAgeDays:
+>             typeof preview.deepConfig.maxAgeDays === "number"
+>               ? preview.deepConfig.maxAgeDays
+>               : null,
+>         },
+>         rem: {
+>           skipped: preview.remSkipped,
+>           sourceEntryCount: preview.rem.sourceEntryCount,
+>           reflections: [...preview.rem.reflections],
+>           candidateTruths: preview.rem.candidateTruths.map((truth) => ({
+>             snippet: truth.snippet,
+>             confidence: truth.confidence,
+>           })),
+>           bodyLines: [...preview.rem.bodyLines],
+>         },
+>         grounded: groundedPayload,
+>         deep: {
+>           candidateLimit,
+>           truncated: preview.deep.truncated,
+>           candidates: preview.deep.candidates.map((candidate) => {
+>             const promoted =
+>               typeof candidate.promotedAt === "string" && candidate.promotedAt.length > 0;
+>             const payload: DoctorMemoryRemHarnessCandidatePayload = {
+>               key: candidate.key,
+>               path: candidate.path,
+>               startLine: candidate.startLine,
+>               endLine: candidate.endLine,
+>               snippet: candidate.snippet,
+>               recallCount: candidate.recallCount,
+>               uniqueQueries: candidate.uniqueQueries,
+>               avgScore: candidate.avgScore,
+>               maxScore: candidate.maxScore,
+>               ageDays: candidate.ageDays,
+>               firstRecalledAt: candidate.firstRecalledAt,
+>               lastRecalledAt: candidate.lastRecalledAt,
+>               promoted,
+>             };
+>             if (promoted) {
+>               payload.promotedAt = candidate.promotedAt;
+>             }
+>             return payload;
+>           }),
+>         },
+>       };
+>       respond(true, payload, undefined);
+>     } catch (err) {
+>       const payload: DoctorMemoryRemHarnessErrorPayload = {
+>         ok: false,
+>         agentId,
+>         workspaceDir,
+>         error: `gateway rem-harness probe failed: ${formatError(err)}`,
+>       };
+>       respond(true, payload, undefined);
+>     }
+>   },
+> };
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"^export\\|handlers:\" /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts | tail -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 114:export type DoctorMemoryStatusPayload = {
+> 128:export type DoctorMemoryDreamDiaryPayload = {
+> 136:export type DoctorMemoryDreamActionPayload = {
+> 161:export type DoctorMemoryRemHarnessCandidatePayload = {
+> 178:export type DoctorMemoryRemHarnessCandidateTruthPayload = {
+> 183:export type DoctorMemoryRemHarnessGroundedFilePayload = {
+> 188:export type DoctorMemoryRemHarnessSuccessPayload = {
+> 223:export type DoctorMemoryRemHarnessErrorPayload = {
+> 893:export const doctorHandlers: GatewayRequestHandlers = {
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts",
+  "limit": 80,
+  "offset": 893
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 893	export const doctorHandlers: GatewayRequestHandlers = {
+> 894	  "doctor.memory.status": async ({ respond, context, params }) => {
+> 895	    const cfg = context.getRuntimeConfig();
+> 896	    const agentId = resolveDefaultAgentId(cfg);
+> 897	    const { manager, error } = await getActiveMemorySearchManager({
+> 898	      cfg,
+> 899	      agentId,
+> 900	      purpose: "status",
+> 901	    });
+> 902	    if (!manager) {
+> 903	      const payload: DoctorMemoryStatusPayload = {
+> 904	        agentId,
+> 905	        embedding: {
+> 906	          ok: false,
+> 907	          error: error ?? "memory search unavailable",
+> 908	        },
+> 909	      };
+> 910	      respond(true, payload, undefined);
+> 911	      return;
+> 912	    }
+> 913	
+> 914	    try {
+> 915	      const status = manager.status();
+> 916	      const shouldProbe = shouldProbeMemoryEmbeddings(params);
+> 917	      let embedding = shouldProbe
+> 918	        ? await manager.probeEmbeddingAvailability()
+> 919	        : (manager.getCachedEmbeddingAvailability?.() ?? SKIPPED_MEMORY_EMBEDDING_PROBE);
+> 920	      if (!embedding.ok && !embedding.error) {
+> 921	        embedding = { ok: false, error: "memory embeddings unavailable" };
+> 922	      }
+> 923	      const nowMs = Date.now();
+> 924	      const dreamingConfig = resolveDreamingConfig(cfg);
+> 925	      const workspaceDir = normalizeTrimmedString((status as Record<string, unknown>).workspaceDir);
+> 926	      const configuredWorkspaces = resolveMemoryDreamingWorkspaces(cfg, {
+> 927	        primaryWorkspaceDir: workspaceDir,
+> 928	        primaryAgentId: resolveDefaultAgentId(cfg),
+> 929	      }).map((entry) => entry.workspaceDir);
+> 930	      const allWorkspaces =
+> 931	        configuredWorkspaces.length > 0 ? configuredWorkspaces : workspaceDir ? [workspaceDir] : [];
+> 932	      const storeStats =
+> 933	        allWorkspaces.length > 0
+> 934	          ? mergeDreamingStoreStats(
+> 935	              await Promise.all(
+> 936	                allWorkspaces.map((entry) =>
+> 937	                  loadDreamingStoreStats(entry, nowMs, dreamingConfig.timezone),
+> 938	                ),
+> 939	              ),
+> 940	            )
+> 941	          : {
+> 942	              shortTermCount: 0,
+> 943	              recallSignalCount: 0,
+> 944	              dailySignalCount: 0,
+> 945	              groundedSignalCount: 0,
+> 946	              totalSignalCount: 0,
+> 947	              phaseSignalCount: 0,
+> 948	              lightPhaseHitCount: 0,
+> 949	              remPhaseHitCount: 0,
+> 950	              promotedTotal: 0,
+> 951	              promotedToday: 0,
+> 952	            };
+> 953	      const cronStatuses = await resolveAllManagedDreamingCronStatuses(context);
+> 954	      const payload: DoctorMemoryStatusPayload = {
+> 955	        agentId,
+> 956	        provider: status.provider,
+> 957	        embedding,
+> 958	        dreaming: {
+> 959	          ...dreamingConfig,
+> 960	          ...storeStats,
+> 961	          phases: {
+> 962	            light: {
+> 963	              ...dreamingConfig.phases.light,
+> 964	              ...cronStatuses.light,
+> 965	            },
+> 966	            deep: {
+> 967	              ...dreamingConfig.phases.deep,
+> 968	              ...cronStatuses.deep,
+> 969	            },
+> 970	            rem: {
+> 971	              ...dreamingConfig.phases.rem,
+> 972	              ...cronStatuses.rem,
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -E '\"doctor.memory\\.' /home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   "doctor.memory.status": async ({ respond, context, params }) => {
+>   "doctor.memory.dreamDiary": async ({ respond, context }) => {
+>   "doctor.memory.backfillDreamDiary": async ({ respond, context }) => {
+>   "doctor.memory.resetDreamDiary": async ({ respond, context }) => {
+>   "doctor.memory.resetGroundedShortTerm": async ({ respond, context }) => {
+>   "doctor.memory.repairDreamingArtifacts": async ({ respond, context }) => {
+>   "doctor.memory.dedupeDreamDiary": async ({ respond, context }) => {
+>   "doctor.memory.remHarness": async ({ params, respond, context }) => {
+> ```
+
+## 🤖 Claude
+
+Agora vou procurar a structure de memória e os crons:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/ 2>/dev/null | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 160
+> drwx------ 22 ubuntu ubuntu 4096 May 19 18:09 .
+> drwxr-x--- 56 ubuntu ubuntu 4096 May 19 18:18 ..
+> drwxrwxr-x  3 ubuntu ubuntu 4096 May 18 20:27 acpx
+> drwxrwxr-x  9 ubuntu ubuntu 4096 May 16 15:25 agents
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 15 03:58 completions
+> drwx------  2 ubuntu ubuntu 4096 May 15 13:14 credentials
+> drwx------  3 ubuntu ubuntu 4096 May 19 03:00 cron
+> drwx------  3 ubuntu ubuntu 4096 May 18 03:37 delivery-queue
+> drwxr-xr-x  2 ubuntu ubuntu 4096 May 19 18:28 devices
+> -rw-------  1 ubuntu ubuntu  178 May 19 18:09 exec-approvals.json
+> drwx------  2 ubuntu ubuntu 4096 May 18 02:01 flows
+> -rw-------  1 ubuntu ubuntu   37 May 15 03:42 gateway-instance-id
+> -rw-------  1 ubuntu ubuntu  306 May 17 17:11 gateway-supervisor-restart-handoff.json
+> drwx------  2 ubuntu ubuntu 4096 May 15 04:51 identity
+> drwx------  3 ubuntu ubuntu 4096 May 15 04:03 logs
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 18 01:58 memory
+> -rw-------  1 ubuntu ubuntu 5890 May 18 01:56 openclaw.json
+> -rw-------  1 ubuntu ubuntu 5677 May 17 18:39 openclaw.json.bak
+> -rw-------  1 ubuntu ubuntu 5441 May 16 23:23 openclaw.json.bak.1
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/memory/ | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 1376164
+> drwxrwxr-x  2 ubuntu ubuntu      4096 May 18 01:58 .
+> drwx------ 22 ubuntu ubuntu      4096 May 19 18:09 ..
+> -rw-r--r--  1 ubuntu ubuntu  28135424 May 16 00:14 artisan.sqlite
+> -rw-r--r--  1 ubuntu ubuntu  90034176 May 16 15:45 claw-master.sqlite
+> -rw-r--r--  1 ubuntu ubuntu 390545408 May 16 00:21 engineer.sqlite
+> -rw-r--r--  1 ubuntu ubuntu  20652032 May 16 00:24 guardian.sqlite
+> -rw-r--r--  1 ubuntu ubuntu 626208768 May 16 00:13 main.sqlite
+> -rw-r--r--  1 ubuntu ubuntu  20959232 May 16 00:23 marketing-growth.sqlite
+> -rw-r--r--  1 ubuntu ubuntu     32768 May 18 01:58 marketing-growth.sqlite-shm
+> -rw-r--r--  1 ubuntu ubuntu         0 May 18 01:58 marketing-growth.sqlite-wal
+> -rw-r--r--  1 ubuntu ubuntu 232607744 May 16 00:23 scientist.sqlite
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/cron/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 24
+> drwx------  3 ubuntu ubuntu 4096 May 19 03:00 .
+> drwx------ 22 ubuntu ubuntu 4096 May 19 18:09 ..
+> -rw-------  1 ubuntu ubuntu  829 May 17 17:11 jobs.json
+> -rw-------  1 ubuntu ubuntu  829 May 17 17:11 jobs.json.bak
+> -rw-------  1 ubuntu ubuntu  544 May 19 03:00 jobs-state.json
+> drwx------  2 ubuntu ubuntu 4096 May 16 03:00 runs
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.openclaw/cron/jobs.json"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "version": 1,
+> 3	  "jobs": [
+> 4	    {
+> 5	      "id": "cb6df4a5-9678-4c9b-a388-24b97e4bf463",
+> 6	      "name": "Memory Dreaming Promotion",
+> 7	      "description": "[managed-by=memory-core.short-term-promotion] Promote weighted short-term recalls into MEMORY.md (limit=10, minScore=0.800, minRecallCount=3, minUniqueQueries=3, recencyHalfLifeDays=14, maxAgeDays=30).",
+> 8	      "enabled": true,
+> 9	      "createdAtMs": 1778893462564,
+> 10	      "schedule": {
+> 11	        "kind": "cron",
+> 12	        "expr": "0 3 * * *"
+> 13	      },
+> 14	      "sessionTarget": "isolated",
+> 15	      "wakeMode": "now",
+> 16	      "payload": {
+> 17	        "kind": "agentTurn",
+> 18	        "message": "__openclaw_memory_core_short_term_promotion_dream__",
+> 19	        "lightContext": true
+> 20	      },
+> 21	      "delivery": {
+> 22	        "mode": "none"
+> 23	      },
+> 24	      "deleteAfterRun": false,
+> 25	      "state": {}
+> 26	    }
+> 27	  ]
+> 28	}
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw/agents -name \"DREAMS.md\" -o -name \"dreams.md\" | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.openclaw/agents/marketing-growth/DREAMS.md
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -80 /home/ubuntu/.openclaw/agents/marketing-growth/DREAMS.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Dream Diary
+> 
+> <!-- openclaw:dreaming:diary:start -->
+> ---
+> 
+> *May 18, 2026 at 3:00 AM GMT-3*
+> 
+> <final>The Sovereign’s whispers drifted into my thoughts, a grand orchestration of numbers and desire. A Manifesto of Product Selection, a high-ticket ballet for smart homes, danced in the digital ether. I saw a luminous 8K Neo QLED, a silent sentinel of luxury, its estimated price a constellation of digits. Then, a sleek robot vacuum, an automated guardian, sweeping away the dust of the mundane. The architectural URLs, intricate as starlight, formed a path to something grander, an `ml-redirect` weaving through `content_mesh` and `highticket_smarthome_q3`. Later, a new current: a 30-day timeline, a million-real dream, and the activation of a 'Link Forge.' Each task a note in a larger symphony, a commitment to Q3, a quiet hum in the vast, unfolding code of the day.</final>
+> 
+> <!-- openclaw:dreaming:diary:end -->
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw/agents -type d -name \".dreams\" | head -5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.openclaw/agents/claw-master/memory/.dreams
+> /home/ubuntu/.openclaw/agents/scientist/memory/.dreams
+> /home/ubuntu/.openclaw/agents/guardian/memory/.dreams
+> /home/ubuntu/.openclaw/agents/engineer/memory/.dreams
+> /home/ubuntu/.openclaw/agents/artisan/memory/.dreams
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/agents/claw-master/memory/.dreams/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 12
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 .
+> drwxrwxr-x 11 ubuntu ubuntu 4096 May 19 05:00 ..
+> -rw-------  1 ubuntu ubuntu 1971 May 19 03:00 events.jsonl
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw/agents -name \"memory-palace*\" -o -name \"palace*\" -o -name \"import*insight*\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu -name \"nginx.conf\" -o -path \"*/nginx/sites-enabled/*\" 2>/dev/null | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /etc/nginx -name \"*claw*\" -o -name \"*guardian*\" 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /etc/nginx/nginx.conf 2>/dev/null | head -50"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+Vou procurar onde o arquivo /dreaming está servido:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"dreaming\" /home/ubuntu/openclaw --include=\"*.json\" --include=\"package.json\" 2>/dev/null | grep -i \"route\\|path\\|url\" | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> /home/ubuntu/openclaw/ui/src/i18n/.i18n/raw-copy-baseline.json:      "path": "ui/src/ui/views/dreaming.ts",
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/openclaw -name \"navigation.ts\" | xargs grep -A5 \"dreaming\" | head -40"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   dreams: "/dreaming",
+> };
+> 
+> const PATH_ALIASES: Record<string, Tab> = {
+>   "/dreams": "dreams",
+> };
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/extensions/memory-wiki/src/import-insights.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { ResolvedMemoryWikiConfig } from "./config.js";
+> 2	import { parseWikiMarkdown } from "./markdown.js";
+> 3	import { readQueryableWikiPages } from "./query.js";
+> 4	
+> 5	type MemoryWikiImportInsightItem = {
+> 6	  pagePath: string;
+> 7	  title: string;
+> 8	  riskLevel: "low" | "medium" | "high" | "unknown";
+> 9	  riskReasons: string[];
+> 10	  labels: string[];
+> 11	  topicKey: string;
+> 12	  topicLabel: string;
+> 13	  digestStatus: "available" | "withheld";
+> 14	  activeBranchMessages: number;
+> 15	  userMessageCount: number;
+> 16	  assistantMessageCount: number;
+> 17	  firstUserLine?: string;
+> 18	  lastUserLine?: string;
+> 19	  assistantOpener?: string;
+> 20	  summary: string;
+> 21	  candidateSignals: string[];
+> 22	  correctionSignals: string[];
+> 23	  preferenceSignals: string[];
+> 24	  createdAt?: string;
+> 25	  updatedAt?: string;
+> 26	};
+> 27	
+> 28	type MemoryWikiImportInsightCluster = {
+> 29	  key: string;
+> 30	  label: string;
+> 31	  itemCount: number;
+> 32	  highRiskCount: number;
+> 33	  withheldCount: number;
+> 34	  preferenceSignalCount: number;
+> 35	  updatedAt?: string;
+> 36	  items: MemoryWikiImportInsightItem[];
+> 37	};
+> 38	
+> 39	type MemoryWikiImportInsightsStatus = {
+> 40	  sourceType: "chatgpt";
+> 41	  totalItems: number;
+> 42	  totalClusters: number;
+> 43	  clusters: MemoryWikiImportInsightCluster[];
+> 44	};
+> 45	
+> 46	function normalizeStringArray(value: unknown): string[] {
+> 47	  if (!Array.isArray(value)) {
+> 48	    return [];
+> 49	  }
+> 50	  return value.filter(
+> 51	    (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+> 52	  );
+> 53	}
+> 54	
+> 55	function normalizeFiniteInt(value: unknown): number {
+> 56	  if (typeof value !== "number" || !Number.isFinite(value)) {
+> 57	    return 0;
+> 58	  }
+> 59	  return Math.max(0, Math.floor(value));
+> 60	}
+> 61	
+> 62	function normalizeTimestamp(value: unknown): string | undefined {
+> 63	  if (typeof value !== "string") {
+> 64	    return undefined;
+> 65	  }
+> 66	  const trimmed = value.trim();
+> 67	  return trimmed.length > 0 ? trimmed : undefined;
+> 68	}
+> 69	
+> 70	function humanizeLabelSuffix(label: string): string {
+> 71	  const suffix = label.includes("/") ? label.split("/").slice(1).join("/") : label;
+> 72	  return suffix
+> 73	    .split(/[/-]/g)
+> 74	    .filter((part) => part.length > 0)
+> 75	    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+> 76	    .join(" ");
+> 77	}
+> 78	
+> 79	function resolveTopic(labels: string[]): { key: string; label: string } {
+> 80	  const preferred =
+> 81	    labels.find((label) => label.startsWith("topic/")) ??
+> 82	    labels.find((label) => label.startsWith("area/")) ??
+> 83	    labels.find((label) => label.startsWith("domain/")) ??
+> 84	    "topic/other";
+> 85	  return {
+> 86	    key: preferred,
+> 87	    label: humanizeLabelSuffix(preferred),
+> 88	  };
+> 89	}
+> 90	
+> 91	function extractHeadingSection(body: string, heading: string): string[] {
+> 92	  const lines = body.split(/\r?\n/);
+> 93	  const headingLine = `## ${heading}`;
+> 94	  const startIndex = lines.findIndex((line) => line.trim() === headingLine);
+> 95	  if (startIndex < 0) {
+> 96	    return [];
+> 97	  }
+> 98	  const section: string[] = [];
+> 99	  for (const line of lines.slice(startIndex + 1)) {
+> 100	    if (line.startsWith("## ")) {
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/openclaw/extensions/memory-wiki/src/memory-palace.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { ResolvedMemoryWikiConfig } from "./config.js";
+> 2	import { parseWikiMarkdown, type WikiPageKind } from "./markdown.js";
+> 3	import { readQueryableWikiPages } from "./query.js";
+> 4	
+> 5	const PALACE_KIND_ORDER: WikiPageKind[] = ["synthesis", "entity", "concept", "source", "report"];
+> 6	const PRIMARY_PALACE_KINDS = new Set<WikiPageKind>(["synthesis", "entity", "concept"]);
+> 7	const PALACE_KIND_LABELS: Record<WikiPageKind, string> = {
+> 8	  synthesis: "Syntheses",
+> 9	  entity: "Entities",
+> 10	  concept: "Concepts",
+> 11	  source: "Sources",
+> 12	  report: "Reports",
+> 13	};
+> 14	
+> 15	type MemoryWikiPalaceItem = {
+> 16	  pagePath: string;
+> 17	  title: string;
+> 18	  kind: WikiPageKind;
+> 19	  id?: string;
+> 20	  updatedAt?: string;
+> 21	  sourceType?: string;
+> 22	  claimCount: number;
+> 23	  questionCount: number;
+> 24	  contradictionCount: number;
+> 25	  claims: string[];
+> 26	  questions: string[];
+> 27	  contradictions: string[];
+> 28	  snippet?: string;
+> 29	};
+> 30	
+> 31	type MemoryWikiPalaceCluster = {
+> 32	  key: WikiPageKind;
+> 33	  label: string;
+> 34	  itemCount: number;
+> 35	  claimCount: number;
+> 36	  questionCount: number;
+> 37	  contradictionCount: number;
+> 38	  updatedAt?: string;
+> 39	  items: MemoryWikiPalaceItem[];
+> 40	};
+> 41	
+> 42	type MemoryWikiPalaceStatus = {
+> 43	  totalItems: number;
+> 44	  totalClaims: number;
+> 45	  totalQuestions: number;
+> 46	  totalContradictions: number;
+> 47	  clusters: MemoryWikiPalaceCluster[];
+> 48	};
+> 49	
+> 50	function normalizeTimestamp(value: unknown): string | undefined {
+> 51	  if (typeof value !== "string") {
+> 52	    return undefined;
+> 53	  }
+> 54	  const trimmed = value.trim();
+> 55	  return trimmed.length > 0 ? trimmed : undefined;
+> 56	}
+> 57	
+> 58	function extractSnippet(body: string): string | undefined {
+> 59	  for (const rawLine of body.split(/\r?\n/)) {
+> 60	    const line = rawLine.trim();
+> 61	    if (
+> 62	      !line ||
+> 63	      line.startsWith("#") ||
+> 64	      line.startsWith("```") ||
+> 65	      line.startsWith("<!--") ||
+> 66	      line.startsWith("- ") ||
+> 67	      line.startsWith("* ")
+> 68	    ) {
+> 69	      continue;
+> 70	    }
+> 71	    return line;
+> 72	  }
+> 73	  return undefined;
+> 74	}
+> 75	
+> 76	function comparePalaceItems(left: MemoryWikiPalaceItem, right: MemoryWikiPalaceItem): number {
+> 77	  const leftKey = left.updatedAt ?? "";
+> 78	  const rightKey = right.updatedAt ?? "";
+> 79	  if (rightKey !== leftKey) {
+> 80	    return rightKey.localeCompare(leftKey);
+> 81	  }
+> 82	  if (right.claimCount !== left.claimCount) {
+> 83	    return right.claimCount - left.claimCount;
+> 84	  }
+> 85	  return left.title.localeCompare(right.title);
+> 86	}
+> 87	
+> 88	export async function listMemoryWikiPalace(
+> 89	  config: ResolvedMemoryWikiConfig,
+> 90	): Promise<MemoryWikiPalaceStatus> {
+> 91	  const pages = await readQueryableWikiPages(config.vault.path);
+> 92	  const items = pages
+> 93	    .map((page) => {
+> 94	      const parsed = parseWikiMarkdown(page.raw);
+> 95	      return Object.assign(
+> 96	        { pagePath: page.relativePath, title: page.title, kind: page.kind },
+> 97	        page.id ? { id: page.id } : {},
+> 98	        normalizeTimestamp(page.updatedAt) ? { updatedAt: normalizeTimestamp(page.updatedAt) } : {},
+> 99	        typeof page.sourceType === `string` && page.sourceType.trim().length > 0
+> 100	          ? { sourceType: page.sourceType.trim() }
+> 101	          : {},
+> 102	        {
+> 103	          claimCount: page.claims.length,
+> 104	          questionCount: page.questions.length,
+> 105	          contradictionCount: page.contradictions.length,
+> 106	          claims: page.claims.map((claim) => claim.text).slice(0, 3),
+> 107	          questions: page.questions.slice(0, 3),
+> 108	          contradictions: page.contradictions.slice(0, 3),
+> 109	        },
+> 110	        extractSnippet(parsed.body) ? { snippet: extractSnippet(parsed.body) } : {},
+> 111	      ) satisfies MemoryWikiPalaceItem;
+> 112	    })
+> 113	    .filter(
+> 114	      (item) =>
+> 115	        PRIMARY_PALACE_KINDS.has(item.kind) ||
+> 116	        item.claimCount > 0 ||
+> 117	        item.questionCount > 0 ||
+> 118	        item.contradictionCount > 0,
+> 119	    )
+> 120	    .toSorted(comparePalaceItems);
+> 121	
+> 122	  const clusters = PALACE_KIND_ORDER.map((kind) => {
+> 123	    const clusterItems = items.filter((item) => item.kind === kind);
+> 124	    if (clusterItems.length === 0) {
+> 125	      return null;
+> 126	    }
+> 127	    return Object.assign(
+> 128	      {
+> 129	        key: kind,
+> 130	        label: PALACE_KIND_LABELS[kind],
+> 131	        itemCount: clusterItems.length,
+> 132	        claimCount: clusterItems.reduce((sum, item) => sum + item.claimCount, 0),
+> 133	        questionCount: clusterItems.reduce((sum, item) => sum + item.questionCount, 0),
+> 134	        contradictionCount: clusterItems.reduce((sum, item) => sum + item.contradictionCount, 0),
+> 135	      },
+> 136	      clusterItems[0]?.updatedAt ? { updatedAt: clusterItems[0].updatedAt } : {},
+> 137	      { items: clusterItems },
+> 138	    ) satisfies MemoryWikiPalaceCluster;
+> 139	  }).filter((entry): entry is MemoryWikiPalaceCluster => entry !== null);
+> 140	
+> 141	  return {
+> 142	    totalItems: items.length,
+> 143	    totalClaims: items.reduce((sum, item) => sum + item.claimCount, 0),
+> 144	    totalQuestions: items.reduce((sum, item) => sum + item.questionCount, 0),
+> 145	    totalContradictions: items.reduce((sum, item) => sum + item.contradictionCount, 0),
+> 146	    clusters,
+> 147	  };
+> 148	}
+> 149	
+> ```
+
+## 🤖 Claude
+
+Excelente! Agora vou localizar os paths das memory wikis e os diretórios de importação:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"memory-wiki\\|vaultMode\\|vault.path\" /home/ubuntu/openclaw/extensions/memory-wiki/src/*.ts 2>/dev/null | grep -E \"path|vault\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/apply.ts:  const pages = await readQueryableWikiPages(params.config.vault.path);
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/apply.ts:  const root = await fsRoot(params.config.vault.path);
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/apply.ts:    rootDir: params.config.vault.path,
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/apply.ts:    rootDir: params.config.vault.path,
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/compile.test.ts:    suiteRoot = await fs.mkdtemp(path.join(os.tmpdir(), "memory-wiki-compile-suite-"));
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/config-compat.ts:    path: ["plugins", "entries", "memory-wiki", "config", "bridge"],
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:    vaultRoot: params.config.vault.path,
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:    params.config.vaultMode !== "bridge" ||
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:  const state = await readMemoryWikiSourceSyncState(params.config.vault.path);
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:        vaultRoot: params.config.vault.path,
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:  await writeMemoryWikiSourceSyncState(params.config.vault.path, state);
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/bridge.ts:    await appendMemoryWikiLog(params.config.vault.path, {
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.test.ts:      vaultMode: "isolated",
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.test.ts:      vaultMode: "isolated",
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:    suiteRoot = await fs.mkdtemp(path.join(os.tmpdir(), "memory-wiki-cli-suite-"));
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:      vaultMode: "bridge",
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:      vaultPath: config.vault.path,
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:        vaultMode: "bridge",
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:        vaultMode: "bridge",
+> /home/ubuntu/openclaw/extensions/memory-wiki/src/cli.test.ts:        vaultMode: "bridge",
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw/agents -type d -name \"vault*\" -o -name \"wiki*\" 2>/dev/null | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw/agents -type d | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.openclaw/agents
+> /home/ubuntu/.openclaw/agents/claw-master
+> /home/ubuntu/.openclaw/agents/scientist
+> /home/ubuntu/.openclaw/agents/engineer
+> /home/ubuntu/.openclaw/agents/main
+> /home/ubuntu/.openclaw/agents/artisan
+> /home/ubuntu/.openclaw/agents/marketing-growth
+> /home/ubuntu/.openclaw/agents/guardian
+> /home/ubuntu/.openclaw/agents/claw-master/memory
+> /home/ubuntu/.openclaw/agents/claw-master/sessions
+> /home/ubuntu/.openclaw/agents/scientist/memory
+> /home/ubuntu/.openclaw/agents/scientist/sessions
+> /home/ubuntu/.openclaw/agents/scientist/.openclaw
+> /home/ubuntu/.openclaw/agents/scientist/agent
+> /home/ubuntu/.openclaw/agents/engineer/memory
+> /home/ubuntu/.openclaw/agents/engineer/sessions
+> /home/ubuntu/.openclaw/agents/engineer/.openclaw
+> /home/ubuntu/.openclaw/agents/engineer/supabase
+> /home/ubuntu/.openclaw/agents/engineer/agent
+> /home/ubuntu/.openclaw/agents/main/memory
+> /home/ubuntu/.openclaw/agents/main/sessions
+> /home/ubuntu/.openclaw/agents/main/agent
+> /home/ubuntu/.openclaw/agents/artisan/memory
+> /home/ubuntu/.openclaw/agents/artisan/sessions
+> /home/ubuntu/.openclaw/agents/artisan/.openclaw
+> /home/ubuntu/.openclaw/agents/marketing-growth/campaigns
+> /home/ubuntu/.openclaw/agents/marketing-growth/memory
+> /home/ubuntu/.openclaw/agents/marketing-growth/sessions
+> /home/ubuntu/.openclaw/agents/marketing-growth/.openclaw
+> /home/ubuntu/.openclaw/agents/marketing-growth/agent
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/agents/claw-master/memory/ | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 44
+> drwxrwxr-x 11 ubuntu ubuntu 4096 May 19 05:00 .
+> drwxrwxr-x  4 ubuntu ubuntu 4096 May 17 13:01 ..
+> drwxrwxr-x  5 ubuntu ubuntu 4096 May 17 05:00 dreaming
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 .dreams
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 openclaw-official-docs
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 overlay-architecture
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 overlay-observation
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 shared-decision
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 shared-handoff
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 shared-milestone
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 05:00 shared-system
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 20
+> drwxrwxr-x  5 ubuntu ubuntu 4096 May 17 05:00 .
+> drwxrwxr-x 11 ubuntu ubuntu 4096 May 19 05:00 ..
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 deep
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 light
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 rem
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.openclaw/agents/claw-master/memory/.dreams/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 12
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 19 03:00 .
+> drwxrwxr-x 11 ubuntu ubuntu 4096 May 19 05:00 ..
+> -rw-------  1 ubuntu ubuntu 1971 May 19 03:00 events.jsonl
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -5 /home/ubuntu/.openclaw/agents/claw-master/memory/.dreams/events.jsonl"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"type":"memory.dream.completed","timestamp":"2026-05-17T08:00:03.699Z","phase":"light","reportPath":"/home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/light/2026-05-17.md","lineCount":1,"storageMode":"separate"}
+> {"type":"memory.dream.completed","timestamp":"2026-05-17T08:00:03.699Z","phase":"rem","reportPath":"/home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/rem/2026-05-17.md","lineCount":5,"storageMode":"separate"}
+> {"type":"memory.dream.completed","timestamp":"2026-05-17T08:00:03.699Z","phase":"deep","reportPath":"/home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/deep/2026-05-17.md","lineCount":2,"storageMode":"separate"}
+> {"type":"memory.dream.completed","timestamp":"2026-05-18T06:00:04.174Z","phase":"light","reportPath":"/home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/light/2026-05-18.md","lineCount":1,"storageMode":"separate"}
+> {"type":"memory.dream.completed","timestamp":"2026-05-18T06:00:04.174Z","phase":"rem","reportPath":"/home/ubuntu/.openclaw/agents/claw-master/memory/dreaming/rem/2026-05-18.md","lineCount":5,"storageMode":"separate"}
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/ubuntu/.openclaw -name \"short-term*\" -o -name \"phase-signals*\" 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.openclaw/agents/marketing-growth/memory/.dreams/short-term-recall.json
+> /home/ubuntu/.openclaw/agents/marketing-growth/memory/.dreams/phase-signals.json
+> /home/ubuntu/.openclaw/agents/scientist/memory/.dreams/short-term-recall.json
+> /home/ubuntu/.openclaw/agents/scientist/memory/.dreams/phase-signals.json
+> /home/ubuntu/.openclaw/agents/engineer/memory/.dreams/short-term-recall.json
+> /home/ubuntu/.openclaw/agents/engineer/memory/.dreams/phase-signals.json
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -50 /home/ubuntu/.openclaw/agents/marketing-growth/memory/.dreams/short-term-recall.json | head -40"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "version": 1,
+>   "updatedAt": "2026-05-18T06:00:03.991Z",
+>   "entries": {
+>     "memory:memory/.dreams/session-corpus/2026-05-17.txt:1:1": {
+>       "key": "memory:memory/.dreams/session-corpus/2026-05-17.txt:1:1",
+>       "path": "memory/.dreams/session-corpus/2026-05-17.txt",
+>       "startLine": 1,
+>       "endLine": 1,
+>       "source": "memory",
+>       "snippet": "User: [Subagent Context] You are running as a subagent (depth 1/1). Results auto-announce to your requester; do not busy-poll for status. [Subagent Task] O Sovereign ordenou (OE-661-004) a criação do Manifesto de Seleção de Produtos.\\n\\nSua Tarefa (Operator: marketing-growth):\\nP",
+>       "recallCount": 0,
+>       "dailyCount": 1,
+>       "groundedCount": 0,
+>       "totalScore": 0.58,
+>       "maxScore": 0.58,
+>       "firstRecalledAt": "2026-05-18T06:00:03.991Z",
+>       "lastRecalledAt": "2026-05-18T06:00:03.991Z",
+>       "queryHashes": [
+>         "7c821d0b4905"
+>       ],
+>       "recallDays": [
+>         "2026-05-18"
+>       ],
+>       "conceptTags": [
+>         "1/1",
+>         "auto-announce",
+>         "busy-poll",
+>         "oe-661-004",
+>         "marketing-growth",
+>         "context",
+>         "running",
+>         "depth"
+>       ]
+>     },
+>     "memory:memory/.dreams/session-corpus/2026-05-17.txt:2:2": {
+>       "key": "memory:memory/.dreams/session-corpus/2026-05-17.txt:2:2",
+>       "path": "memory/.dreams/session-corpus/2026-05-17.txt",
+>       "startLine": 2,
+>       "endLine": 2,
+> ```
+
+## 🤖 Claude
+
+Perfeito! Agora tenho toda a informação. Deixa eu consolidar o relatório:
+
+## AUDITORIA ARQUITETURA `/dreaming` - claw.gcrux.com (OpenClaw Guardian)
+
+### 1. ESTRUTURA FRONTEND
+
+| Superfície | Arquivo | Controllers |
+|-----------|---------|------------|
+| **CENA** (animação/botões) | `/home/ubuntu/openclaw/ui/src/ui/views/dreaming.ts` (L287-331) | `/home/ubuntu/openclaw/ui/src/ui/controllers/dreaming.ts` (L201-225: DreamingState) |
+| **DIÁRIO > Dreams** | `dreaming.ts` (L83-220: parseDiaryEntries, pagination) | Controller: `loadDreamDiary()` (L745-761) |
+| **DIÁRIO > Imported Insights** | `dreaming.ts` (L181-197: _wikiPreviewContent) | Controller: `loadWikiImportInsights()` (L764-786) → `wiki.importInsights` |
+| **DIÁRIO > Memory Palace** | `dreaming.ts` (L181-197) | Controller: `loadWikiMemoryPalace()` (L788-807) → `wiki.palace` |
+
+---
+
+### 2. API ENDPOINTS (Gateway Methods)
+
+| Método | Arquivo | Descrição |
+|--------|---------|-----------|
+| `doctor.memory.status` | `/home/ubuntu/openclaw/src/gateway/server-methods/doctor.ts` (L894-953) | Status dreaming, phases, short-term/promoted counts |
+| `doctor.memory.dreamDiary` | `doctor.ts` (L1002+) | Lê DREAMS.md (~/.openclaw/agents/*/DREAMS.md) |
+| `doctor.memory.backfillDreamDiary` | `doctor.ts` | Popula backfill (line 1061+) |
+| `doctor.memory.resetDreamDiary` | `doctor.ts` | Remove backfill entries |
+| `wiki.importInsights` | `/home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts` (L136-147) | `listMemoryWikiImportInsights()` |
+| `wiki.palace` | `/home/ubuntu/openclaw/extensions/memory-wiki/src/gateway.ts` (L149-160) | `listMemoryWikiPalace()` |
+
+---
+
+### 3. DATA SOURCES PRIMÁRIOS
+
+#### Dreams (Diário)
+- **Path**: `~/.openclaw/agents/{agentId}/DREAMS.md` (e.g. `/home/ubuntu/.openclaw/agents/marketing-growth/DREAMS.md`)
+- **Parser**: `parseDiaryEntries()` @ `dreaming.ts:27-67` extrai blocos entre `<!-- openclaw:dreaming:diary:start -->` e `<!-- openclaw:dreaming:diary:end -->`
+- **Format**: Markdown com datas em `*April 5, 2026, 3:00 AM*` separadas por `---`
+- **Tags**: `<final>`, `<initial>`, `<mid>` (3:00 AM BRT cron output)
+
+#### Short-Term Recall & Phase Signals
+- **Short-Term**: `~/.openclaw/agents/{agentId}/memory/.dreams/short-term-recall.json` (L28-29 doctor.ts)
+- **Phase Signals**: `~/.openclaw/agents/{agentId}/memory/.dreams/phase-signals.json` (L29 doctor.ts)
+- **Format**: JSON com entries indexadas por `memory:path:startLine:endLine`
+- **Estrutura**: recallCount, dailyCount, groundedCount, totalScore, lastRecalledAt, promotedAt
+
+#### Imported Insights (ChatGPT Bridge)
+- **Função**: `listMemoryWikiImportInsights()` @ `/home/ubuntu/openclaw/extensions/memory-wiki/src/import-insights.ts` (L141+)
+- **Dados**: Clusters por topic (topic/, area/, domain/) + WikiImportInsightItem[] com riskLevel, digestStatus, topicKey, candidateSignals
+- **Sync**: `syncMemoryWikiImportedSources()` @ `bridge.ts` (chatgpt-import.ts)
+
+#### Memory Palace (Syntheses/Entities/Concepts)
+- **Função**: `listMemoryWikiPalace()` @ `/home/ubuntu/openclaw/extensions/memory-wiki/src/memory-palace.ts` (L88-148)
+- **Vault Path**: `config.vault.path` (resolved from memory-wiki config)
+- **Kinds**: synthesis, entity, concept, source, report (L5)
+- **Counts**: claimCount, questionCount, contradictionCount per item
+
+---
+
+### 4. PIPELINE ATUALIZAÇÃO
+
+| Cron | Schedule | Payload | Escrita |
+|------|----------|---------|---------|
+| **Memory Dreaming Promotion** | `0 3 * * *` (3:00 AM BRT) | `__openclaw_memory_core_short_term_promotion_dream__` | `/home/ubuntu/.openclaw/agents/{agent}/memory/dreaming/deep/*.md` + promotedAt em short-term.json |
+| **Light Phase** | Config via dreaming.phases.light.cron | System message signal | `/home/ubuntu/.openclaw/agents/{agent}/memory/dreaming/light/*.md` |
+| **REM Phase** | Config via dreaming.phases.rem.cron | System message signal | `/home/ubuntu/.openclaw/agents/{agent}/memory/dreaming/rem/*.md` |
+
+**Cron manifest**: `/home/ubuntu/.openclaw/cron/jobs.json` (L6-7: "Memory Dreaming Promotion" @ L12: `0 3 * * *`)
+
+**Dreaming output events**: `/home/ubuntu/.openclaw/agents/{agent}/memory/.dreams/events.jsonl` (JSONL log tipo `memory.dream.completed`)
+
+---
+
+### 5. DIRETÓRIOS CRÍTICOS
+
+```
+/home/ubuntu/openclaw/
+├─ ui/src/ui/
+│  ├─ views/dreaming.ts          ← Scene, Diary, Advanced renderers
+│  └─ controllers/dreaming.ts    ← State mgmt, API calls (doctor.memory.*, wiki.*)
+├─ extensions/
+│  ├─ memory-core/src/dreaming.ts
+│  └─ memory-wiki/src/
+│     ├─ gateway.ts              ← Registra wiki.importInsights, wiki.palace
+│     ├─ import-insights.ts       ← Parse ChatGPT clusters
+│     └─ memory-palace.ts         ← Parse Syntheses/Entities/Concepts
+└─ src/gateway/server-methods/
+   └─ doctor.ts                   ← doctor.memory.* handlers (L893+)
+
+/home/ubuntu/.openclaw/agents/{agent}/
+├─ DREAMS.md                      ← Dream diary source
+├─ memory/
+│  ├─ .dreams/
+│  │  ├─ short-term-recall.json  ← Short-term signal store
+│  │  ├─ phase-signals.json       ← Light/REM hit tracking
+│  │  └─ events.jsonl             ← Dreaming event log
+│  └─ dreaming/
+│     ├─ light/YYYY-MM-DD.md
+│     ├─ deep/YYYY-MM-DD.md
+│     └─ rem/YYYY-MM-DD.md
+```
+
+**Nota**: Memory Wiki vault path resolvido via `memory-wiki` plugin config em openclaw.json; importInsights/palace referenciam pages dentro do vault (síntese/entidades/conceitos).

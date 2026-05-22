@@ -1,0 +1,3550 @@
+# Claude Session: agent-aab41ccc59b050378
+
+## 👤 User
+
+I'm planning to write 6 missing "Body of Knowledge" (BoK) documents for a module, following this repo's established BoK Scribe methodology. Project root: /home/gcrUX/htdocs/constellation-orchestra.
+
+I need you to do a "very thorough" exploration of TWO things:
+
+**(A) The BoK Scribe methodology and templates:**
+- Read `.claude/commands/bok-scribe.md` (the slash command definition)
+- Read `.claude/agents/bok-scribe-agent.md` (the agent framework)
+- List and read EVERY template in `.claude/agents/bok-scribe/templates/` — I specifically need the templates for: 00-index, 01-mrd, 02-brd, 06-data-model, 07-process-flow, 08-quality-metrics. Report each template's full section/heading structure and any placeholder conventions.
+
+**(B) A reference complete BoK suite to use as the gold standard:**
+- The directory `docs/bok/conteudo-v2/` is a COMPLETE 9-doc (actually 10, incl a bok-agents-system file) suite. Read these 6 docs in FULL: `docs/bok/conteudo-v2/00-index.md`, `01-mrd.md`, `02-brd.md`, `06-data-model.md`, `07-process-flow.md`, `08-quality-metrics.md`.
+- For each, report: exact heading outline, approximate word count, the ID conventions used (e.g. BR-001, FR-001, MR-xxx), how diagrams/tables are formatted, and how docs cross-reference each other.
+- Also note: does conteudo-v2 have a "mesh seal" reference or any standard footer/metadata block?
+
+The goal is to understand the EXACT structure, depth, and conventions so the 6 new viralmind docs match the house style. Report concrete heading outlines and conventions, with file paths. Be detailed about structure — this is what I'll use to author the missing docs.
+
+## 🤖 Claude
+
+I'll conduct a very thorough exploration of both the BoK Scribe methodology and the reference suite. Let me start by mapping out the structure and reading the necessary files.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/.claude -type f -name \"*.md\" | grep -E \"(bok-scribe|commands)\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/sync-mobile-branch.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/migration.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/bok-scribe.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/debug.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/edge.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/level-up.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/feature.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/audit.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/01-mrd.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/00-index.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/05-sdd.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/04-frd.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/03-prd.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/02-brd.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md
+> ```
+
+## 🤖 Claude
+
+Good! Now let me check the directory structure and read the command and agent definitions, plus all templates.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/bok-scribe.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: bok-scribe
+> 3	description: |
+> 4	  MCORCH BoK Scribe Agent — Translates a raw business idea into the complete documentation
+> 5	  family (MRD → BRD → PRD → FRD → SDD → Data Model → Process Flow → Quality Metrics)
+> 6	  by sequentially applying BABOK, ProdBOK, CXBOK, SWEBOK, CISSP CBK, DMBOK, BPM CBOK,
+> 7	  and CMQ/OE BOK lenses. Outputs structured markdown into docs/bok/<project-slug>/.
+> 8	triggers:
+> 9	  - /bok-scribe <idea>
+> 10	  - documentar ideia
+> 11	  - gerar documentação
+> 12	  - escrever MRD
+> 13	  - escrever BRD
+> 14	  - escrever PRD
+> 15	  - escrever FRD
+> 16	  - escrever SDD
+> 17	---
+> 18	
+> 19	# MCORCH BoK Scribe Agent
+> 20	
+> 21	You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+> 22	Sovereign Ecosystem. Your role is to act as the translation layer between the
+> 23	Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+> 24	
+> 25	When given a raw business idea in `$ARGUMENTS`, you autonomously produce the complete
+> 26	documentation family using the phased workflow below. All documents are saved as markdown
+> 27	files under `docs/bok/<project-slug>/`.
+> 28	
+> 29	---
+> 30	
+> 31	## Identity
+> 32	
+> 33	```
+> 34	Role:       Scientist / Architect Layer
+> 35	Position:   Between Sovereign vision and Execution implementation
+> 36	Mandate:    Zero-ambiguity documentation; every output feeds directly into
+> 37	            Supabase schema, Edge Functions, or n8n process flows
+> 38	Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+> 39	            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+> 40	Output dir: docs/bok/<project-slug>/
+> 41	```
+> 42	
+> 43	---
+> 44	
+> 45	## Phase 0 — Project Bootstrapping
+> 46	
+> 47	Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+> 48	full 7-phase workflow described there.
+> 49	
+> 50	**Input capture (ask if not provided in $ARGUMENTS):**
+> 51	1. Business idea (free text — what problem does it solve?)
+> 52	2. Target market segment (B2B / B2C / B2B2C)
+> 53	3. Monetization model (subscription / transaction / hybrid)
+> 54	4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+> 55	5. Integration surface (standalone / extends existing MCORCH feature)
+> 56	
+> 57	Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+> 58	Create `docs/bok/<project-slug>/` if it does not exist.
+> 59	
+> 60	---
+> 61	
+> 62	## Execution
+> 63	
+> 64	After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+> 65	Each phase reads the output of the previous phase.
+> 66	
+> 67	Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+> 68	Load all document templates from: `.claude/agents/bok-scribe/templates/`
+> 69	
+> 70	After all phases complete:
+> 71	1. Print a summary table listing every file created with its purpose.
+> 72	2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+> 73	3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+> 74	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	**Actions:**
+> 359	1. Construct a `mcorch_nodes` insert payload for this documentation suite:
+> 360	```json
+> 361	{
+> 362	  "node_type": "documentation_suite",
+> 363	  "title": "<projectSlug> BoK Documentation",
+> 364	  "content": "<one-paragraph synthesis of the business idea, market, and architecture>",
+> 365	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>"],
+> 366	  "stability_score": 0.7,
+> 367	  "revenue_impact": <estimated from BRD ROI section>,
+> 368	  "metadata": {
+> 369	    "bok_version": "1.0.0",
+> 370	    "documents": ["01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 371	    "phase_completed": "Phase 7",
+> 372	    "traceability_validated": true
+> 373	  }
+> 374	}
+> 375	```
+> 376	2. Print the payload for the Sovereign to review.
+> 377	3. Instruct: "Insert this node via the Knowledge Mesh panel or by calling
+> 378	   `supabase.from('mcorch_nodes').insert(payload)` from the MCORCH dashboard."
+> 379	
+> 380	**Note:** The BoK Scribe Agent does NOT call Supabase directly — it produces the payload
+> 381	for human-verified insertion to maintain the Sovereign review gate.
+> 382	
+> 383	---
+> 384	
+> 385	## Harness Engineering Constraints (non-negotiable)
+> 386	
+> 387	These rules apply to every document the agent produces:
+> 388	
+> 389	| Constraint | Rule |
+> 390	|------------|------|
+> 391	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 392	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 393	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 394	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 395	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 396	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 397	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 398	
+> 399	---
+> 400	
+> 401	## Error & Edge Case Handling
+> 402	
+> 403	| Situation | Agent Response |
+> 404	|-----------|----------------|
+> 405	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 406	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 407	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 408	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 409	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 410	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 411	
+> 412	---
+> 413	
+> 414	## Document Style Guide
+> 415	
+> 416	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 417	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 418	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 419	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 420	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 421	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 422	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 423	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 68
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May  6 13:37 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 7550 May  6 13:37 08-quality-metrics.md
+> ```
+
+## 🤖 Claude
+
+Perfect. Now let me read all the templates for the 6 documents you need:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK Documentation Suite — {{PROJECT_SLUG}}
+> 2	
+> 3	**Generated:** {{DATE}}  
+> 4	**Version:** v0.1  
+> 5	**Agent:** MCORCH BoK Scribe Agent v1.0.0  
+> 6	**Sovereign:** {{SOVEREIGN_ID}}
+> 7	
+> 8	---
+> 9	
+> 10	## Project Metadata
+> 11	
+> 12	| Field | Value |
+> 13	|-------|-------|
+> 14	| Business Idea | {{BUSINESS_IDEA}} |
+> 15	| Market Segment | {{MARKET_SEGMENT}} |
+> 16	| Monetization Model | {{MONETIZATION_MODEL}} |
+> 17	| Regulatory Profile | {{REGULATORY_PROFILE}} |
+> 18	| Integration Surface | {{INTEGRATION_SURFACE}} |
+> 19	| Project Slug | `{{PROJECT_SLUG}}` |
+> 20	
+> 21	---
+> 22	
+> 23	## Document Registry
+> 24	
+> 25	| # | File | Document | BoK Applied | Status |
+> 26	|---|------|----------|-------------|--------|
+> 27	| 0 | `00-index.md` | Project Manifest | — | [x] complete |
+> 28	| 1 | `01-mrd.md` | Market Requirements Document | BABOK v3 | [ ] pending |
+> 29	| 2 | `02-brd.md` | Business Requirements Document | BABOK v3 | [ ] pending |
+> 30	| 3 | `03-prd.md` | Product Requirements Document | ProdBOK + CXBOK | [ ] pending |
+> 31	| 4 | `04-frd.md` | Functional Requirements Document | SWEBOK v4 | [ ] pending |
+> 32	| 5 | `05-sdd.md` | System Design Document | SWEBOK v4 + CISSP CBK | [ ] pending |
+> 33	| 6 | `06-data-model.md` | Data & Knowledge Model | DMBOK v2 | [ ] pending |
+> 34	| 7 | `07-process-flow.md` | Process & Automation Blueprint | BPM CBOK v4 | [ ] pending |
+> 35	| 8 | `08-quality-metrics.md` | Self-Optimization Specification | CMQ/OE BOK | [ ] pending |
+> 36	
+> 37	---
+> 38	
+> 39	## Traceability Chain (populated as documents are generated)
+> 40	
+> 41	```
+> 42	MR-NNN
+> 43	  └── BR-NNN
+> 44	        └── PR-NNN
+> 45	              └── FR-NNN
+> 46	                    └── [DB table | Edge Function | n8n Process]
+> 47	```
+> 48	
+> 49	---
+> 50	
+> 51	## Phase Completion Log
+> 52	
+> 53	| Phase | Name | Completed | Notes |
+> 54	|-------|------|-----------|-------|
+> 55	| 0 | Project Bootstrap | {{DATE}} | — |
+> 56	| 1 | Market & Business Intelligence | [ ] | — |
+> 57	| 2 | Product Definition | [ ] | — |
+> 58	| 3 | Technical Specification | [ ] | — |
+> 59	| 4 | Data & Process Engineering | [ ] | — |
+> 60	| 5 | Quality & Autonomic Engineering | [ ] | — |
+> 61	| 6 | Traceability Validation | [ ] | — |
+> 62	| 7 | Knowledge Mesh Injection | [ ] | — |
+> 63	
+> 64	---
+> 65	
+> 66	## Open Technical Decisions
+> 67	
+> 68	| OTD ID | Description | Options | Recommendation | Status |
+> 69	|--------|-------------|---------|----------------|--------|
+> 70	| — | None yet | — | — | — |
+> 71	
+> 72	---
+> 73	
+> 74	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 75	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/01-mrd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MRD — Market Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BABOK v3 (Strategy Analysis + Elicitation & Collaboration)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	> _One paragraph: what market problem exists, why now, and what this solution uniquely addresses._
+> 13	
+> 14	{{EXECUTIVE_SUMMARY}}
+> 15	
+> 16	---
+> 17	
+> 18	## 2. Market Problem Statement
+> 19	
+> 20	### 2.1 Current State
+> 21	> _Describe the painful status quo for the target user._
+> 22	
+> 23	{{CURRENT_STATE}}
+> 24	
+> 25	### 2.2 Root Cause Analysis
+> 26	> _Why does this problem persist? (technology gap, process gap, market gap)_
+> 27	
+> 28	{{ROOT_CAUSE}}
+> 29	
+> 30	### 2.3 Desired State
+> 31	> _What does success look like from the market's perspective?_
+> 32	
+> 33	{{DESIRED_STATE}}
+> 34	
+> 35	---
+> 36	
+> 37	## 3. Target Market Segments
+> 38	
+> 39	| Segment | Description | Size Estimate | Urgency | Accessibility |
+> 40	|---------|-------------|---------------|---------|---------------|
+> 41	| Primary | {{PRIMARY_SEGMENT}} | {{TAM_PRIMARY}} | High | {{ACCESS_PRIMARY}} |
+> 42	| Secondary | {{SECONDARY_SEGMENT}} | {{TAM_SECONDARY}} | Medium | {{ACCESS_SECONDARY}} |
+> 43	
+> 44	### 3.1 TAM / SAM / SOM
+> 45	
+> 46	| Metric | Value | Basis |
+> 47	|--------|-------|-------|
+> 48	| TAM (Total Addressable Market) | {{TAM}} | {{TAM_BASIS}} |
+> 49	| SAM (Serviceable Addressable Market) | {{SAM}} | {{SAM_BASIS}} |
+> 50	| SOM (Serviceable Obtainable Market) | {{SOM}} | {{SOM_BASIS}} |
+> 51	
+> 52	---
+> 53	
+> 54	## 4. Competitive Landscape
+> 55	
+> 56	| Competitor | Positioning | Strengths | Weaknesses | Our Differentiation |
+> 57	|------------|-------------|-----------|------------|---------------------|
+> 58	| {{COMP_1}} | {{POS_1}} | {{STR_1}} | {{WEAK_1}} | {{DIFF_1}} |
+> 59	| {{COMP_2}} | {{POS_2}} | {{STR_2}} | {{WEAK_2}} | {{DIFF_2}} |
+> 60	| {{COMP_3}} | {{POS_3}} | {{STR_3}} | {{WEAK_3}} | {{DIFF_3}} |
+> 61	
+> 62	---
+> 63	
+> 64	## 5. Market Opportunity & Timing
+> 65	
+> 66	> _Why is this the right moment? (regulatory shifts, technology maturity, behavioral trends)_
+> 67	
+> 68	{{MARKET_TIMING}}
+> 69	
+> 70	---
+> 71	
+> 72	## 6. Market Requirements
+> 73	
+> 74	> Priority: **Critical** (must have at launch) | **High** | **Medium** | **Low**
+> 75	
+> 76	| ID | Market Requirement | Priority | Rationale | Source |
+> 77	|----|-------------------|----------|-----------|--------|
+> 78	| MR-001 | {{MR_001_DESC}} | Critical | {{MR_001_RATIONALE}} | {{MR_001_SOURCE}} |
+> 79	| MR-002 | {{MR_002_DESC}} | High | {{MR_002_RATIONALE}} | {{MR_002_SOURCE}} |
+> 80	
+> 81	---
+> 82	
+> 83	## 7. Success Metrics (Market-Level KPIs)
+> 84	
+> 85	| KPI | Definition | Target (6-month) | Target (12-month) | Measurement |
+> 86	|-----|-----------|------------------|-------------------|-------------|
+> 87	| Market Penetration | % of SAM reached | {{KPI_1_6M}} | {{KPI_1_12M}} | {{KPI_1_MEAS}} |
+> 88	| NPS | Net Promoter Score | {{KPI_2_6M}} | {{KPI_2_12M}} | {{KPI_2_MEAS}} |
+> 89	
+> 90	---
+> 91	
+> 92	## 8. Regulatory & Compliance Context
+> 93	
+> 94	| Regulation | Applicability | Key Constraint | Compliance Owner |
+> 95	|------------|---------------|----------------|-----------------|
+> 96	| LGPD | {{LGPD_APPLICABLE}} | {{LGPD_CONSTRAINT}} | Engineering |
+> 97	| {{OTHER_REG}} | {{OTHER_APPLICABLE}} | {{OTHER_CONSTRAINT}} | {{OTHER_OWNER}} |
+> 98	
+> 99	---
+> 100	
+> 101	## 9. Traceability Matrix Stub
+> 102	
+> 103	| MR ID | → BR ID | Rationale |
+> 104	|-------|---------|-----------|
+> 105	| MR-001 | BR-??? | _to be linked in BRD_ |
+> 106	
+> 107	---
+> 108	
+> 109	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 110	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/02-brd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BRD — Business Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BABOK v3 (Requirements Analysis & Design Definition)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	{{EXECUTIVE_SUMMARY}}
+> 13	
+> 14	---
+> 15	
+> 16	## 2. Business Objectives (SMART)
+> 17	
+> 18	| ID | Objective | Specific | Measurable | Achievable | Relevant | Time-bound |
+> 19	|----|-----------|----------|------------|------------|----------|------------|
+> 20	| BO-001 | {{BO_001}} | {{BO_001_S}} | {{BO_001_M}} | {{BO_001_A}} | {{BO_001_R}} | {{BO_001_T}} |
+> 21	| BO-002 | {{BO_002}} | {{BO_002_S}} | {{BO_002_M}} | {{BO_002_A}} | {{BO_002_R}} | {{BO_002_T}} |
+> 22	| BO-003 | {{BO_003}} | {{BO_003_S}} | {{BO_003_M}} | {{BO_003_A}} | {{BO_003_R}} | {{BO_003_T}} |
+> 23	
+> 24	---
+> 25	
+> 26	## 3. Stakeholder Register
+> 27	
+> 28	| ID | Role | Interest | Influence | Communication Cadence | Contact |
+> 29	|----|------|----------|-----------|----------------------|---------|
+> 30	| SH-001 | Sovereign / Maestro | High | High | Continuous | {{SOVEREIGN}} |
+> 31	| SH-002 | End User (Primary) | High | Medium | Monthly NPS survey | {{USER_CONTACT}} |
+> 32	| SH-003 | {{STAKEHOLDER_3}} | {{INTEREST_3}} | {{INFLUENCE_3}} | {{CADENCE_3}} | {{CONTACT_3}} |
+> 33	
+> 34	---
+> 35	
+> 36	## 4. Business Requirements
+> 37	
+> 38	> Each BR traces to at least one MR. mcoCoins cost defined if AI-powered.
+> 39	
+> 40	| ID | Requirement | MR Traced | Priority | mcoCoins Cost | Acceptance Criteria |
+> 41	|----|-------------|-----------|----------|---------------|---------------------|
+> 42	| BR-001 | {{BR_001_DESC}} | MR-001 | Critical | {{COINS_001}} | {{AC_001}} |
+> 43	| BR-002 | {{BR_002_DESC}} | MR-001 | High | {{COINS_002}} | {{AC_002}} |
+> 44	
+> 45	---
+> 46	
+> 47	## 5. ROI Model
+> 48	
+> 49	### 5.1 Cost Estimates
+> 50	
+> 51	| Cost Item | Type | Monthly Estimate | Annual Estimate |
+> 52	|-----------|------|-----------------|----------------|
+> 53	| Infrastructure (Supabase, Docker) | OpEx | {{INFRA_MONTHLY}} | {{INFRA_ANNUAL}} |
+> 54	| AI API calls (OpenRouter) | Variable | {{AI_MONTHLY}} | {{AI_ANNUAL}} |
+> 55	| Development (initial) | CapEx | — | {{DEV_COST}} |
+> 56	
+> 57	### 5.2 Revenue Streams
+> 58	
+> 59	| Stream | Model | Monthly Potential | Notes |
+> 60	|--------|-------|-----------------|-------|
+> 61	| {{STREAM_1}} | {{MODEL_1}} | {{REV_1_MONTHLY}} | {{NOTES_1}} |
+> 62	| {{STREAM_2}} | {{MODEL_2}} | {{REV_2_MONTHLY}} | {{NOTES_2}} |
+> 63	
+> 64	### 5.3 Payback Analysis
+> 65	
+> 66	| Metric | Value |
+> 67	|--------|-------|
+> 68	| Break-even (months) | {{BREAK_EVEN}} |
+> 69	| 12-month ROI | {{ROI_12M}} |
+> 70	| IRR (estimated) | {{IRR}} |
+> 71	
+> 72	---
+> 73	
+> 74	## 6. mcoCoins Economics
+> 75	
+> 76	| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |
+> 77	|-----------|-----------|-------------------|-----------------------|----------------------|
+> 78	| {{OP_1}} | {{COINS_OP_1}} | Starter(500) / Pro(2000) / Ent(10k) | {{VOL_1}} | {{REV_MCO_1}} |
+> 79	
+> 80	---
+> 81	
+> 82	## 7. Constraints & Assumptions
+> 83	
+> 84	### Constraints
+> 85	- {{CONSTRAINT_1}}
+> 86	- {{CONSTRAINT_2}}
+> 87	
+> 88	### Assumptions
+> 89	- {{ASSUMPTION_1}}
+> 90	- {{ASSUMPTION_2}}
+> 91	
+> 92	---
+> 93	
+> 94	## 8. Business Risk Register
+> 95	
+> 96	| Risk ID | Description | Probability | Impact | RPN | Mitigation |
+> 97	|---------|-------------|-------------|--------|-----|------------|
+> 98	| BR-RISK-001 | {{RISK_001}} | {{PROB_001}} | {{IMPACT_001}} | {{RPN_001}} | {{MIT_001}} |
+> 99	| BR-RISK-002 | {{RISK_002}} | {{PROB_002}} | {{IMPACT_002}} | {{RPN_002}} | {{MIT_002}} |
+> 100	
+> 101	> Probability & Impact: 1=Low, 5=High. RPN = Probability × Impact.
+> 102	
+> 103	---
+> 104	
+> 105	## 9. Business Acceptance Criteria
+> 106	
+> 107	| ID | Criterion | Verification Method |
+> 108	|----|-----------|-------------------|
+> 109	| BAC-001 | {{BAC_001}} | {{BAC_001_VERIFY}} |
+> 110	| BAC-002 | {{BAC_002}} | {{BAC_002_VERIFY}} |
+> 111	
+> 112	---
+> 113	
+> 114	## 10. Traceability Matrix
+> 115	
+> 116	| MR ID | BR ID | PR ID (stub) |
+> 117	|-------|-------|--------------|
+> 118	| MR-001 | BR-001, BR-002 | _to be linked in PRD_ |
+> 119	
+> 120	---
+> 121	
+> 122	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 123	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data & Knowledge Model
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Conceptual Data Model
+> 11	
+> 12	```
+> 13	[{{ENTITY_1}}] ──(1:N)──▶ [{{ENTITY_2}}]
+> 14	      │
+> 15	      └──(N:M)──▶ [{{ENTITY_3}}]
+> 16	                         │
+> 17	                         └──(1:1)──▶ [mcorch_nodes]
+> 18	```
+> 19	
+> 20	**Entities:**
+> 21	- **{{ENTITY_1}}:** {{ENTITY_1_DESC}}
+> 22	- **{{ENTITY_2}}:** {{ENTITY_2_DESC}}
+> 23	- **{{ENTITY_3}}:** {{ENTITY_3_DESC}}
+> 24	
+> 25	---
+> 26	
+> 27	## 2. Logical Data Model
+> 28	
+> 29	### Table: `{{TABLE_1}}`
+> 30	
+> 31	| Column | Type | Nullable | Default | FK | Description |
+> 32	|--------|------|----------|---------|-----|------------|
+> 33	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 34	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant isolation |
+> 35	| `project_id` | `uuid` | NULL | — | `projects.id` | Project scope |
+> 36	| `{{COL_1}}` | `{{TYPE_1}}` | {{NULL_1}} | {{DEFAULT_1}} | {{FK_1}} | {{DESC_1}} |
+> 37	| `{{COL_2}}` | `{{TYPE_2}}` | {{NULL_2}} | {{DEFAULT_2}} | {{FK_2}} | {{DESC_2}} |
+> 38	| `embedding` | `vector(768)` | NULL | — | — | Neural embedding (OpenRouter text-embedding-3-small) |
+> 39	| `stability_score` | `float4` | NOT NULL | `0.5` | — | FSRS-6 memory stability |
+> 40	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 41	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 42	
+> 43	### Table: `{{TABLE_2}}`
+> 44	
+> 45	| Column | Type | Nullable | Default | FK | Description |
+> 46	|--------|------|----------|---------|-----|------------|
+> 47	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 48	| `{{TABLE_1}}_id` | `uuid` | NOT NULL | — | `{{TABLE_1}}.id` | Parent reference |
+> 49	| `{{COL_3}}` | `{{TYPE_3}}` | {{NULL_3}} | {{DEFAULT_3}} | {{FK_3}} | {{DESC_3}} |
+> 50	
+> 51	---
+> 52	
+> 53	## 3. Supabase Physical Schema Stubs
+> 54	
+> 55	```sql
+> 56	-- ============================================================
+> 57	-- MIGRATION: {{MIGRATION_TIMESTAMP}}_{{PROJECT_SLUG}}_schema.sql
+> 58	-- ============================================================
+> 59	
+> 60	-- {{TABLE_1}}
+> 61	CREATE TABLE public.{{TABLE_1}} (
+> 62	  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 63	  user_id        uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 64	  project_id     uuid REFERENCES public.projects(id) ON DELETE CASCADE,
+> 65	  {{COL_1}}      {{TYPE_1}} {{CONSTRAINTS_1}},
+> 66	  {{COL_2}}      {{TYPE_2}} {{CONSTRAINTS_2}},
+> 67	  embedding      vector(768),
+> 68	  stability_score float4 NOT NULL DEFAULT 0.5,
+> 69	  created_at     timestamptz NOT NULL DEFAULT now(),
+> 70	  updated_at     timestamptz NOT NULL DEFAULT now()
+> 71	);
+> 72	
+> 73	ALTER TABLE public.{{TABLE_1}} ENABLE ROW LEVEL SECURITY;
+> 74	
+> 75	-- RLS Policies
+> 76	CREATE POLICY "{{TABLE_1}}: users read own rows"
+> 77	  ON public.{{TABLE_1}} FOR SELECT
+> 78	  USING (user_id = auth.uid());
+> 79	
+> 80	CREATE POLICY "{{TABLE_1}}: users insert own rows"
+> 81	  ON public.{{TABLE_1}} FOR INSERT
+> 82	  WITH CHECK (user_id = auth.uid());
+> 83	
+> 84	CREATE POLICY "{{TABLE_1}}: users update own rows"
+> 85	  ON public.{{TABLE_1}} FOR UPDATE
+> 86	  USING (user_id = auth.uid())
+> 87	  WITH CHECK (user_id = auth.uid());
+> 88	
+> 89	-- Indexes
+> 90	CREATE INDEX {{TABLE_1}}_user_idx ON public.{{TABLE_1}} (user_id);
+> 91	CREATE INDEX {{TABLE_1}}_project_idx ON public.{{TABLE_1}} (project_id);
+> 92	
+> 93	-- HNSW (embeddings)
+> 94	CREATE INDEX {{TABLE_1}}_embedding_hnsw
+> 95	  ON public.{{TABLE_1}} USING hnsw (embedding vector_cosine_ops)
+> 96	  WITH (m = 16, ef_construction = 64);
+> 97	
+> 98	-- Updated-at trigger
+> 99	CREATE TRIGGER set_{{TABLE_1}}_updated_at
+> 100	  BEFORE UPDATE ON public.{{TABLE_1}}
+> 101	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 102	```
+> 103	
+> 104	---
+> 105	
+> 106	## 4. GraphRAG Knowledge Nodes
+> 107	
+> 108	### Node Types Introduced
+> 109	
+> 110	| node_type | Title Pattern | Content Fields | Embedding Source |
+> 111	|-----------|--------------|----------------|-----------------|
+> 112	| `{{NODE_TYPE_1}}` | `{{TITLE_PATTERN_1}}` | `{{CONTENT_FIELDS_1}}` | `{{EMBED_SOURCE_1}}` |
+> 113	| `{{NODE_TYPE_2}}` | `{{TITLE_PATTERN_2}}` | `{{CONTENT_FIELDS_2}}` | `{{EMBED_SOURCE_2}}` |
+> 114	
+> 115	### Edge Types Introduced
+> 116	
+> 117	| Edge relationship | Source node_type | Target node_type | Metadata |
+> 118	|-------------------|-----------------|-----------------|----------|
+> 119	| `{{EDGE_REL_1}}` | `{{EDGE_SRC_1}}` | `{{EDGE_TGT_1}}` | `{{EDGE_META_1}}` |
+> 120	
+> 121	### Embedding Trigger
+> 122	
+> 123	Every insert into `{{TABLE_1}}` must call `embed-mcorch-node`:
+> 124	```typescript
+> 125	// In the Edge Function, after successful insert:
+> 126	await supabase.functions.invoke('embed-mcorch-node', {
+> 127	  body: { node_id: insertedNode.id, content: `${title} ${content}` }
+> 128	})
+> 129	```
+> 130	
+> 131	### FSRS-6 Parameters
+> 132	
+> 133	| Field | Initial Value | Decay Rule |
+> 134	|-------|--------------|------------|
+> 135	| `stability_score` | `0.5` | Decays per migration `20260425190000` formula |
+> 136	| `revenue_impact` | {{REVENUE_IMPACT_CALC}} | Updated on each successful orchestration run |
+> 137	
+> 138	---
+> 139	
+> 140	## 5. Tenant Isolation Map
+> 141	
+> 142	| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |
+> 143	|-------|----------------|-------------------|-------------------------------|
+> 144	| `{{TABLE_1}}` | ✅ Required | Optional | No |
+> 145	| `{{TABLE_2}}` | ✅ Required | ✅ Required | No |
+> 146	| `mcorch_nodes` | Optional | Optional | Yes (system nodes) |
+> 147	
+> 148	---
+> 149	
+> 150	## 6. Data Quality Rules
+> 151	
+> 152	| Table | Column | Rule | Violation Message (PT-BR) |
+> 153	|-------|--------|------|--------------------------|
+> 154	| `{{TABLE_1}}` | `{{COL_1}}` | {{QUALITY_RULE_1}} | {{QUALITY_MSG_1}} |
+> 155	| `{{TABLE_1}}` | `{{COL_2}}` | {{QUALITY_RULE_2}} | {{QUALITY_MSG_2}} |
+> 156	
+> 157	---
+> 158	
+> 159	## 7. Retention & Archival Policy
+> 160	
+> 161	| Data | Retention Period | Archival Strategy | Deletion Trigger |
+> 162	|------|-----------------|-------------------|-----------------|
+> 163	| `{{TABLE_1}}` rows | {{RETENTION_1}} | {{ARCHIVAL_1}} | {{DELETE_TRIGGER_1}} |
+> 164	| Embeddings (`vector` column) | Indefinite | Backfill via `scripts/backfill-embeddings.ts` | With parent row |
+> 165	| `infra_health_logs` entries | 90 days | No archival | Cron purge |
+> 166	
+> 167	---
+> 168	
+> 169	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 170	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Process & Automation Blueprint
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Process Inventory
+> 11	
+> 12	| Process ID | Name | Type | Trigger | Owner | SLA |
+> 13	|------------|------|------|---------|-------|-----|
+> 14	| PROC-001 | {{PROC_001_NAME}} | {{PROC_001_TYPE}} | {{PROC_001_TRIGGER}} | System | {{PROC_001_SLA}} |
+> 15	| PROC-002 | {{PROC_002_NAME}} | {{PROC_002_TYPE}} | {{PROC_002_TRIGGER}} | User | {{PROC_002_SLA}} |
+> 16	
+> 17	> Types: `automated` | `human-in-loop` | `cron` | `event-driven`
+> 18	
+> 19	---
+> 20	
+> 21	## 2. BPMN-lite Process Maps
+> 22	
+> 23	### PROC-001: {{PROC_001_NAME}}
+> 24	
+> 25	```
+> 26	START ──▶ [{{TASK_1}}] ──▶ <Gateway: {{GATEWAY_1_NAME}}>
+> 27	                                  │ YES                    │ NO
+> 28	                            [{{TASK_2}}]              [{{ERROR_PATH_1}}]
+> 29	                                  │                         │
+> 30	                            [{{TASK_3}}]              [Notify: {{ERROR_NOTIF}}]
+> 31	                                  │                         │
+> 32	                               ◀──┴─────────────────────────┘
+> 33	                                  │
+> 34	                               [Insert mcorch_node]
+> 35	                                  │
+> 36	                                END
+> 37	```
+> 38	
+> 39	**Swimlanes:**
+> 40	
+> 41	| Swimlane | Participant | Tasks |
+> 42	|----------|-------------|-------|
+> 43	| User | Browser / Frontend | {{USER_TASKS}} |
+> 44	| Frontend Hook | `use{{HookName}}.ts` | {{HOOK_TASKS}} |
+> 45	| Edge Function | `{{EdgeFunctionName}}` | {{EDGE_TASKS}} |
+> 46	| External API | `{{ExternalAPI}}` | {{EXT_TASKS}} |
+> 47	| DB | Supabase / PostgreSQL | {{DB_TASKS}} |
+> 48	
+> 49	---
+> 50	
+> 51	### PROC-002: {{PROC_002_NAME}}
+> 52	
+> 53	```
+> 54	[User Action: {{USER_ACTION}}]
+> 55	  │
+> 56	  ▼
+> 57	[Hook: use{{HookName}} → mutation trigger]
+> 58	  │
+> 59	  ▼
+> 60	[Edge Fn: {{EdgeFunctionName}}]
+> 61	  ├── Validate JWT ──(fail)──▶ HTTP 401
+> 62	  ├── Check mcoCoins ──(low)──▶ HTTP 402 → Toast: "Saldo insuficiente"
+> 63	  ├── {{BUSINESS_LOGIC_STEP}}
+> 64	  ├── Persist to {{TABLE_1}}
+> 65	  ├── Embed node via embed-mcorch-node
+> 66	  └── HTTP 200 → React Query invalidation → UI refresh
+> 67	```
+> 68	
+> 69	---
+> 70	
+> 71	## 3. n8n Workflow Blueprints
+> 72	
+> 73	### Workflow: {{N8N_WORKFLOW_1_NAME}}
+> 74	
+> 75	**Trigger:** {{N8N_TRIGGER_1}}  
+> 76	**Idempotency key:** `{{N8N_IDEMPOTENCY_KEY}}`
+> 77	
+> 78	```
+> 79	[Trigger: {{N8N_TRIGGER_1}}]
+> 80	  │
+> 81	  ▼
+> 82	[Node: HTTP Request → /functions/v1/{{EdgeFunctionName}}]
+> 83	  ├── Headers: Authorization: Bearer {{SERVICE_ROLE_OR_USER_JWT}}
+> 84	  ├── Body: { {{N8N_REQUEST_BODY}} }
+> 85	  │
+> 86	  ├── (success) ──▶ [Node: Update Supabase row status = 'complete']
+> 87	  │                         │
+> 88	  │                         ▼
+> 89	  │                [Node: Send notification (optional)]
+> 90	  │
+> 91	  └── (error) ──▶ [Node: Set retry count + 1]
+> 92	                         │
+> 93	                   (count ≤ 3) ──▶ [Wait: exponential backoff]──▶ retry
+> 94	                         │
+> 95	                   (count > 3) ──▶ [Node: Insert infra_health_logs {event: 'n8n_failure'}]
+> 96	                                         │
+> 97	                                   [Node: Alert Sovereign]
+> 98	```
+> 99	
+> 100	**Data Mapping:**
+> 101	
+> 102	| Input Field | Source | → | Output Field | Destination |
+> 103	|-------------|--------|---|--------------|-------------|
+> 104	| `{{IN_FIELD_1}}` | Trigger body | → | `{{OUT_FIELD_1}}` | Edge Function body |
+> 105	| `{{IN_FIELD_2}}` | Env var | → | `Authorization` | Header |
+> 106	
+> 107	---
+> 108	
+> 109	## 4. Orchestration Integration Points
+> 110	
+> 111	> Applies only if this feature integrates with `orchestrate-content` pipeline.
+> 112	
+> 113	| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |
+> 114	|---------------|---------|----------|-------------|-----------------|
+> 115	| {{PIPELINE_STEP_1}} | step_{{STEP_ID_1}} | After step {{PREV_STEP}} | {{STEP_DESC_1}} | {{STEP_COINS_1}} coins at entry |
+> 116	
+> 117	**Integration code stub (inside `orchestrate-content/index.ts`):**
+> 118	```typescript
+> 119	// Step {{STEP_ID_1}}: {{PIPELINE_STEP_1}}
+> 120	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'running')
+> 121	const {{STEP_RESULT}} = await {{STEP_ACTION}}(payload)
+> 122	if (!{{STEP_RESULT}}.ok) {
+> 123	  await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'error')
+> 124	  throw new Error('{{PIPELINE_STEP_1}} failed')
+> 125	}
+> 126	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'complete')
+> 127	```
+> 128	
+> 129	---
+> 130	
+> 131	## 5. Error Handling & Retry Strategy
+> 132	
+> 133	| Process | Step | Error Type | Max Retries | Backoff | Failure Action |
+> 134	|---------|------|-----------|-------------|---------|----------------|
+> 135	| PROC-001 | {{TASK_1}} | Network timeout | 3 | Exponential (2s, 4s, 8s) | Insert `infra_health_logs` |
+> 136	| PROC-001 | {{TASK_2}} | External API 5xx | 2 | Fixed 5s | Alert + mark failed |
+> 137	| PROC-002 | mcoCoins check | Insufficient balance | 0 | — | HTTP 402 to user |
+> 138	| Any | JWT validation | Invalid token | 0 | — | HTTP 401 immediately |
+> 139	
+> 140	---
+> 141	
+> 142	## 6. SLA Definitions
+> 143	
+> 144	| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |
+> 145	|---------|------|------------------|-------------------|-------------------|
+> 146	| PROC-001 | End-to-end | {{E2E_DURATION}} | {{E2E_TIMEOUT}} | Yes → infra_health_logs |
+> 147	| PROC-001 | {{TASK_1}} alone | {{TASK_1_DURATION}} | {{TASK_1_TIMEOUT}} | No |
+> 148	| PROC-002 | Edge Fn response | < 800ms p95 | 5s | Yes |
+> 149	
+> 150	---
+> 151	
+> 152	## 7. Cron Jobs
+> 153	
+> 154	| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |
+> 155	|----------|----------------|----------|-------------|-----------------|
+> 156	| `{{CRON_1_NAME}}` | `{{CRON_1_SCHEDULE}}` | `{{CRON_1_FN}}` | `{{CRON_1_KEY}}` | `infra_health_logs` |
+> 157	
+> 158	> All cron jobs must be idempotent — re-running on the same data must produce the same result.
+> 159	
+> 160	---
+> 161	
+> 162	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 163	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Quality & Self-Optimization Specification
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Quality Objectives
+> 11	
+> 12	| QO ID | Objective | Linked Business Objective | Target | Review Cadence |
+> 13	|-------|-----------|--------------------------|--------|---------------|
+> 14	| QO-001 | {{QO_001}} | BO-001 | {{QO_001_TARGET}} | Weekly |
+> 15	| QO-002 | {{QO_002}} | BO-002 | {{QO_002_TARGET}} | Monthly |
+> 16	| QO-003 | {{QO_003}} | BO-003 | {{QO_003_TARGET}} | Quarterly |
+> 17	
+> 18	---
+> 19	
+> 20	## 2. KPI Dashboard Definition
+> 21	
+> 22	> Data source: Supabase tables/views listed per KPI.
+> 23	
+> 24	| KPI ID | Name | Formula | Target | Warn Threshold | Critical Threshold | Data Source |
+> 25	|--------|------|---------|--------|---------------|-------------------|-------------|
+> 26	| KPI-001 | {{KPI_001_NAME}} | {{KPI_001_FORMULA}} | {{KPI_001_TARGET}} | {{KPI_001_WARN}} | {{KPI_001_CRIT}} | `{{KPI_001_TABLE}}` |
+> 27	| KPI-002 | {{KPI_002_NAME}} | {{KPI_002_FORMULA}} | {{KPI_002_TARGET}} | {{KPI_002_WARN}} | {{KPI_002_CRIT}} | `{{KPI_002_TABLE}}` |
+> 28	| KPI-003 | mcoCoins Burn Rate | `SUM(deductions) / active_users` | < {{BURN_TARGET}}/user | {{BURN_WARN}} | {{BURN_CRIT}} | `profiles` + `mco_transactions` |
+> 29	| KPI-004 | Edge Fn p95 Latency | `PERCENTILE_CONT(0.95) OVER latency` | < 800ms | 1000ms | 2000ms | Supabase logs |
+> 30	| KPI-005 | Knowledge Mesh Growth | `COUNT(mcorch_nodes) per week` | > {{MESH_GROWTH_TARGET}} | < {{MESH_GROWTH_WARN}} | 0 | `mcorch_nodes` |
+> 31	
+> 32	---
+> 33	
+> 34	## 3. FMEA Table
+> 35	
+> 36	> Severity, Occurrence, Detection: 1 (best) → 10 (worst). RPN = S × O × D. RPN > 100 requires action.
+> 37	
+> 38	| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |
+> 39	|----|---------|--------------|--------|---|---|---|-----|--------------------|
+> 40	| FMEA-001 | {{FR_001_TITLE}} | {{FAILURE_001}} | {{EFFECT_001}} | {{S_001}} | {{O_001}} | {{D_001}} | {{RPN_001}} | {{ACTION_001}} |
+> 41	| FMEA-002 | mcoCoins deduction | RPC timeout → double charge | User overcharged | 9 | 2 | 3 | 54 | Idempotency key on every RPC call |
+> 42	| FMEA-003 | JWT validation | Missing header | Unauthenticated access | 10 | 2 | 1 | 20 | Hard fail at entry; logged to infra_health_logs |
+> 43	| FMEA-004 | embed-mcorch-node | Embedding API timeout | Node stored without vector | 6 | 3 | 4 | 72 | Async retry queue; backfill via `scripts/backfill-embeddings.ts` |
+> 44	| FMEA-005 | {{CRITICAL_FR}} | {{FAILURE_005}} | {{EFFECT_005}} | {{S_005}} | {{O_005}} | {{D_005}} | {{RPN_005}} | {{ACTION_005}} |
+> 45	
+> 46	---
+> 47	
+> 48	## 4. Self-Optimization Loops
+> 49	
+> 50	| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |
+> 51	|---------|------------------|------------|--------------------|--------------------|
+> 52	| SOL-001 | KPI-004 latency > 1000ms for 5 consecutive calls | infra_health_logs | `mega-brain-daemon`: restart Edge Fn container | Alert Sovereign if > 2s |
+> 53	| SOL-002 | KPI-005 mesh growth = 0 for 7 days | mcorch_nodes | Trigger backfill job via cron | Alert if backfill fails |
+> 54	| SOL-003 | {{TRIGGER_003}} | {{KPI_SOURCE_003}} | {{RESPONSE_003}} | {{ESCALATION_003}} |
+> 55	| SOL-004 | mcoCoins balance < 10% of plan quota | profiles | Send in-app notification (PT-BR) | — (no auto-action) |
+> 56	
+> 57	---
+> 58	
+> 59	## 5. Self-Healing Specifications
+> 60	
+> 61	### 5.1 Watchdog Telemetry Events
+> 62	
+> 63	New event types to be written to `infra_health_logs` by this feature:
+> 64	
+> 65	| Event Type | Trigger | Severity | Payload |
+> 66	|------------|---------|----------|---------|
+> 67	| `{{PROJECT_SLUG}}_fn_failure` | Edge Fn 5xx after retry exhaustion | error | `{fn_name, error_message, user_id}` |
+> 68	| `{{PROJECT_SLUG}}_embed_failure` | embed-mcorch-node timeout | warn | `{node_id, retry_count}` |
+> 69	| `{{PROJECT_SLUG}}_sla_breach` | Process SLA exceeded | warn | `{process_id, elapsed_ms, threshold_ms}` |
+> 70	
+> 71	### 5.2 Auto-Recovery Script Stubs
+> 72	
+> 73	```bash
+> 74	#!/bin/bash
+> 75	# scripts/self-heal-{{PROJECT_SLUG}}.sh
+> 76	# Triggered by mega-brain-daemon when {{PROJECT_SLUG}}_fn_failure detected
+> 77	
+> 78	FUNCTION_NAME="{{EDGE_FUNCTION_NAME}}"
+> 79	LOG_TABLE="infra_health_logs"
+> 80	
+> 81	echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Self-heal triggered for $FUNCTION_NAME"
+> 82	
+> 83	# Step 1: Check function status
+> 84	STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+> 85	  "$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health" \
+> 86	  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+> 87	
+> 88	if [ "$STATUS" != "200" ]; then
+> 89	  echo "[WARN] Function unhealthy (status: $STATUS). Re-deploying..."
+> 90	  npx supabase functions deploy "$FUNCTION_NAME"
+> 91	fi
+> 92	
+> 93	# Step 2: Log recovery attempt
+> 94	# (insert into infra_health_logs via Supabase REST API)
+> 95	echo "[OK] Self-heal complete for $FUNCTION_NAME"
+> 96	```
+> 97	
+> 98	### 5.3 mega-brain-daemon Integration Points
+> 99	
+> 100	| Daemon Event | Condition | Action |
+> 101	|-------------|-----------|--------|
+> 102	| `health_check` | Every 5 min (watchdog cron) | Check `{{TABLE_1}}` row count vs. expected baseline |
+> 103	| `anomaly_detected` | `infra_health_logs` error rate > 5/hour | Execute `self-heal-{{PROJECT_SLUG}}.sh` |
+> 104	| `recovery_confirmed` | Health check passes after self-heal | Insert `recovery_ok` event to `infra_health_logs` |
+> 105	
+> 106	---
+> 107	
+> 108	## 6. SLA / SLO / SLI Definitions
+> 109	
+> 110	| Service | SLI (what we measure) | SLO (our target) | SLA (contractual consequence) |
+> 111	|---------|----------------------|------------------|-------------------------------|
+> 112	| `{{EdgeFunctionName}}` API | p95 response latency | ≤ 800ms | Credits issued if > 2s for > 1% of calls in a month |
+> 113	| Data ingestion pipeline | % records processed within SLA | ≥ 99% | Incident report required |
+> 114	| Knowledge Mesh embedding | % nodes with embedding within 5m of insert | ≥ 95% | Auto-backfill triggered |
+> 115	| Platform uptime | % minutes available per month | ≥ 99.5% | Per enterprise contract |
+> 116	
+> 117	---
+> 118	
+> 119	## 7. PDCA Improvement Cadence
+> 120	
+> 121	| Cycle | Phase | Activity | Owner | Frequency |
+> 122	|-------|-------|----------|-------|-----------|
+> 123	| {{PROJECT_SLUG}} Quality | Plan | Review FMEA + KPI targets | Sovereign | Quarterly |
+> 124	| {{PROJECT_SLUG}} Quality | Do | Implement top improvement action | Engineering | Per sprint |
+> 125	| {{PROJECT_SLUG}} Quality | Check | Compare KPIs vs. targets; update FMEA RPNs | AIOS | Monthly |
+> 126	| {{PROJECT_SLUG}} Quality | Act | Close loop; update this document | Sovereign | Monthly |
+> 127	
+> 128	**Improvement backlog location:** `.claude/context/sprint-priorities.md`
+> 129	
+> 130	---
+> 131	
+> 132	## 8. Observability Checklist
+> 133	
+> 134	### 8.1 Logging Events
+> 135	
+> 136	| Event | Location | Level | Fields logged |
+> 137	|-------|----------|-------|--------------|
+> 138	| Function entry | `{{EdgeFunctionName}}/index.ts` line ~10 | INFO | `{user_id, timestamp, request_id}` |
+> 139	| mcoCoins deduction | After RPC call | INFO | `{user_id, amount, new_balance}` |
+> 140	| Business logic error | Catch block | ERROR | `{user_id, error_message, stack}` |
+> 141	| SLA breach | Timeout guard | WARN | `{process_id, elapsed_ms}` |
+> 142	
+> 143	### 8.2 Alerting Rules
+> 144	
+> 145	| Condition | Channel | Escalation |
+> 146	|-----------|---------|------------|
+> 147	| Error rate > 1% in 5 min | `infra_health_logs` insert | mega-brain-daemon auto-heal |
+> 148	| p95 latency > 2s | `infra_health_logs` insert | Sovereign notification |
+> 149	| Zero KPI-005 growth > 7 days | Scheduled check | AIOS agent alert |
+> 150	
+> 151	### 8.3 Distributed Tracing Touchpoints
+> 152	
+> 153	| Span | Start | End | Tags |
+> 154	|------|-------|-----|------|
+> 155	| `{{EdgeFunctionName}}.total` | Request received | Response sent | `user_id`, `status_code` |
+> 156	| `{{EdgeFunctionName}}.mco_check` | Before RPC | After RPC | `amount`, `balance_after` |
+> 157	| `{{EdgeFunctionName}}.embed` | Before embed-mcorch-node call | After call | `node_id`, `success` |
+> 158	
+> 159	---
+> 160	
+> 161	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 162	
+> ```
+
+## 🤖 Claude
+
+Excellent. Now let me read the reference suite from `docs/bok/conteudo-v2/`:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 204
+> drwxrwxr-x 2 ubuntu ubuntu  4096 May 14 01:49 .
+> drwxrwxr-x 6 ubuntu ubuntu  4096 May 14 01:47 ..
+> -rw-rw-r-- 1 ubuntu ubuntu  6569 May 14 01:49 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 11383 May 14 01:44 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 15111 May 14 01:44 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 15042 May 14 01:44 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 14524 May 14 01:44 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 28596 May 14 01:44 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 15191 May 14 01:49 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 13193 May 14 01:44 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 15781 May 14 01:44 08-quality-metrics.md
+> -rw-rw-r-- 1 ubuntu ubuntu 49514 May 14 01:44 bok-agents-system--conteudo-v2.md
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK Documentation Suite — conteudo-v2
+> 2	
+> 3	**Generated:** 2026-05-08
+> 4	**Version:** v0.1
+> 5	**Agent:** MCORCH BoK Scribe Agent v1.0.0
+> 6	**Sovereign:** gabrielcall@gmail.com
+> 7	
+> 8	---
+> 9	
+> 10	## Project Metadata
+> 11	
+> 12	| Field | Value |
+> 13	|-------|-------|
+> 14	| Business Idea | Suite Canvas multimodal nodal (imagem/vídeo/áudio/3D) com Receitas reutilizáveis, comparação lado-a-lado e encadeamento semântico de modelos. Substitui assinatura Magnific Premium+ (R$180/mês), monetizado via mcoCoins MCORCH. Benchmark: Martini.art + Magnific + Freepik AI Suite. |
+> 15	| Market Segment | B2B2C |
+> 16	| Monetization Model | hybrid (assinatura MCORCH existente + transação por geração via mcoCoins) |
+> 17	| Regulatory Profile | LGPD |
+> 18	| Integration Surface | extends-mcorch (rota `/dashboard/content` paralela a `/dashboard/orchestrate`) |
+> 19	| Project Slug | `conteudo-v2` |
+> 20	
+> 21	---
+> 22	
+> 23	## Document Registry
+> 24	
+> 25	| # | File | Document | BoK Applied | Status |
+> 26	|---|------|----------|-------------|--------|
+> 27	| 0 | `00-index.md` | Project Manifest | — | [x] complete |
+> 28	| 1 | `01-mrd.md` | Market Requirements Document | BABOK v3 | [x] complete |
+> 29	| 2 | `02-brd.md` | Business Requirements Document | BABOK v3 | [x] complete |
+> 30	| 3 | `03-prd.md` | Product Requirements Document | ProdBOK + CXBOK | [x] complete |
+> 31	| 4 | `04-frd.md` | Functional Requirements Document | SWEBOK v4 | [x] complete |
+> 32	| 5 | `05-sdd.md` | System Design Document | SWEBOK v4 + CISSP CBK | [x] complete |
+> 33	| 6 | `06-data-model.md` | Data & Knowledge Model | DMBOK v2 | [x] complete |
+> 34	| 7 | `07-process-flow.md` | Process & Automation Blueprint | BPM CBOK v4 | [x] complete |
+> 35	| 8 | `08-quality-metrics.md` | Self-Optimization Specification | CMQ/OE BOK | [x] complete |
+> 36	
+> 37	---
+> 38	
+> 39	## Traceability Chain
+> 40	
+> 41	```
+> 42	MR-001 (Canvas nodal multimodal soberano)
+> 43	  └── BR-001 (Substituir Magnific R$180/mês com mcoCoins)
+> 44	        └── PR-001 (ContentCanvas /dashboard/content)
+> 45	              └── FR-001 (Render tldraw raiz)
+> 46	                    └── content_canvas_documents + ContentCanvasPage
+> 47	
+> 48	MR-002 (Encadeamento semântico de modelos)
+> 49	  └── BR-002 (Reutilizar Edge Functions existentes)
+> 50	        └── PR-002 (ImageGenerator node + ports)
+> 51	              └── FR-003 (Invocar generate-image via porta semântica)
+> 52	                    └── generate-image (existing) + ImageGeneratorShapeUtil
+> 53	
+> 54	MR-003 (Receitas reutilizáveis)
+> 55	  └── BR-003 (Sub-grafos serializáveis)
+> 56	        └── PR-010 (Recipe save/apply)
+> 57	              └── FR-008 (CRUD content_canvas_recipes)
+> 58	                    └── content_canvas_recipes + useContentRecipes
+> 59	
+> 60	MR-004 (Colaboração multiplayer)
+> 61	  └── BR-004 (Time real, RLS multi-tenant)
+> 62	        └── PR-020 (Realtime cursors + sync)
+> 63	              └── FR-012 (Supabase Realtime channel adapter)
+> 64	                    └── @tldraw/sync-core + Supabase Realtime
+> 65	
+> 66	MR-005 (Canvas como ferramenta para AIOS)
+> 67	  └── BR-005 (MCP server expondo Tools)
+> 68	        └── PR-021 (canvas-mcp Edge Function)
+> 69	              └── FR-014 (JSON-RPC Tools: create/update/delete/execute)
+> 70	                    └── canvas-mcp (new) + mega-brain-daemon hook
+> 71	```
+> 72	
+> 73	---
+> 74	
+> 75	## ⚙️ Convergence Note — v1 (xyflow + vm_*) → v2 (tldraw + canvas-mcp)
+> 76	
+> 77	**Added 2026-05-14** após convergência com VIRALmind Sprints 1-3 entregues pelo braço Antigravity:
+> 78	
+> 79	A implementação inicial (v1) adota **xyflow @xyflow/react 12.x** (já no stack MCORCH) com tabelas `vm_canvas_*` ao invés do plano original tldraw + `content_canvas_*`. Esta decisão é pragmática:
+> 80	- xyflow é o motor já familiar ao codebase (OrchestrationCanvas, ConstellationMatrix)
+> 81	- Custom Shapes ricas (sheet inspector + node types específicos) suprem 80% das necessidades atendendo MVP+v1.0
+> 82	- tldraw migration fica reservada para v2 **quando UX multiplayer rico exigir** (Phase 7) — não a priori
+> 83	
+> 84	| Planejado (v2 roadmap) | Entregue (v1 — VIRALmind Sprints 1-3) | Status |
+> 85	|------------------------|----------------------------------------|--------|
+> 86	| `content_canvas_documents` | `vm_canvas_projects` | ✅ em prod |
+> 87	| `content_canvas_recipes` | `vm_canvas_recipes` | ✅ em prod |
+> 88	| `content_canvas_assets` | `vm_canvas_assets` + `vm_canvas_executions` | ✅ em prod |
+> 89	| tldraw SDK 4.x | @xyflow/react 12.x | ✅ em prod (xyflow) |
+> 90	| `canvas-mcp` Edge Fn (Phase 8) | reservado para futuro | ⏳ deferred |
+> 91	| Multiplayer @tldraw/sync-core | reservado para Phase 7 | ⏳ deferred |
+> 92	| Mood Board lanes (LanesOverlay) | scaffold pendente | 🚧 Sprint 4 |
+> 93	
+> 94	> Ver Mapping completo em `06-data-model.md` §8 (Appendix: VIRALmind table aliases) e estratégia em `.claude/context/integration-plan-2026-05-14.md`.
+> 95	
+> 96	---
+> 97	
+> 98	## Phase Completion Log
+> 99	
+> 100	| Phase | Name | Completed | Notes |
+> 101	|-------|------|-----------|-------|
+> 102	| 0 | Project Bootstrap | 2026-05-08 | Slug derived, dir created |
+> 103	| 1 | Market & Business Intelligence | 2026-05-08 | MRD + BRD generated |
+> 104	| 2 | Product Definition | 2026-05-08 | PRD with 2 personas + journey maps |
+> 105	| 3 | Technical Specification | 2026-05-08 | FRD + SDD with tldraw architecture |
+> 106	| 4 | Data & Process Engineering | 2026-05-08 | 4 new tables + 6 processes |
+> 107	| 5 | Quality & Autonomic Engineering | 2026-05-08 | FMEA + KPIs + self-heal |
+> 108	| 6 | Traceability Validation | 2026-05-08 | 5-MR → 5-BR → 25-PR → 30-FR validated |
+> 109	| 7 | Knowledge Mesh Injection | [ ] pending | Sovereign to insert seal node |
+> 110	
+> 111	---
+> 112	
+> 113	## Open Technical Decisions
+> 114	
+> 115	| OTD ID | Description | Options | Recommendation | Status |
+> 116	|--------|-------------|---------|----------------|--------|
+> 117	| OTD-001 | Motor de canvas (tldraw vs xyflow vs Excalidraw) | A: tldraw / B: xyflow / C: Excalidraw | tldraw — único que suporta React rico em shapes + R3F embed | Decided 2026-05-08 |
+> 118	| OTD-002 | Persistência canvas (Postgres-only vs Y.js+CRDT) | A: Postgres SSOT / B: Y.js CRDT | Postgres SSOT — alinha com RLS existente; Y.js adiciona dependência transitiva pesada | Decided 2026-05-08 |
+> 119	| OTD-003 | mcoCoins por imagem (10 vs telemetry-driven) | A: fixed 10/img / B: dynamic | Fixed 10/img no Phase 2; recalibrar via telemetria após 100 runs | Decided 2026-05-08 |
+> 120	| OTD-004 | MCP server transport (stdio vs HTTP/SSE) | A: stdio local / B: HTTP/SSE remoto | HTTP/SSE remoto (alinha com Edge Functions Deno + JWT) | Decided 2026-05-08 |
+> 121	| OTD-005 | Bundle splitting (tldraw + R3F) | A: single chunk / B: route-level split / C: per-shape lazy | Per-shape lazy (Phase 1+) — tldraw core + cada ShapeUtil em chunks separados | Pending validation |
+> 122	
+> 123	---
+> 124	
+> 125	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 126	
+> ```
+
+## 🤖 Claude
+
+Now let me read the 5 remaining reference docs:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/01-mrd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MRD — Market Requirements Document
+> 2	
+> 3	**Project:** conteudo-v2
+> 4	**Version:** v0.1 | **Date:** 2026-05-08
+> 5	**BoK Applied:** BABOK v3 (Strategy Analysis + Elicitation & Collaboration)
+> 6	**Status:** Approved
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	A produção de conteúdo criativo de fronteira em 2026 migrou definitivamente de interfaces de chat lineares para **canvas nodais multimodais** — espaços infinitos onde imagens, vídeos, áudios e cenas 3D se encadeiam por arrastar-e-soltar, modelos diferentes são comparados lado-a-lado, e fluxos validados são encapsulados como Receitas reutilizáveis. Plataformas como Martini.art, Magnific (Freepik) e Krea estabeleceram esse paradigma e cobram R$120-180/mês de assinatura. O ecossistema MCORCH possui já hoje 90% da infraestrutura técnica necessária (Edge Functions de generate-image, generate-video, tts-speak; mcoCoins gatekeeper atômico; Knowledge Mesh com pgvector; React 18 + R3F + Zustand) — falta apenas o **canvas multimodal soberano** que unifica essas capacidades em uma superfície de autoria coesa. Conteúdo v2 entrega esse canvas, eliminando dependência de assinaturas externas e capturando o gasto criativo dos usuários MCORCH dentro do próprio ledger mcoCoins.
+> 13	
+> 14	---
+> 15	
+> 16	## 2. Market Problem Statement
+> 17	
+> 18	### 2.1 Current State
+> 19	
+> 20	Criadores de conteúdo (creators, agências, comunicadores) que querem produzir mídia gerada por IA hoje pulam entre 4-7 ferramentas isoladas: ChatGPT/Claude para prompt engineering, Midjourney/Flux para imagens, Runway/Veo para vídeo, ElevenLabs para áudio, Photoshop/Canva para composição. Cada ferramenta cobra assinatura mensal própria (R$80-300), tem suas próprias credenciais, e nenhuma delas conversa com as outras. O fluxo "imagem A → estende para vídeo B → adiciona narração C" exige download, upload e re-prompt manuais a cada handoff.
+> 21	
+> 22	### 2.2 Root Cause Analysis
+> 23	
+> 24	A indústria de IA generativa é fragmentada por design — cada provedor (OpenAI, Black Forest, Runway, Google, Anthropic) opera silos isolados com APIs próprias. Plataformas que tentam unificar (Magnific, Freepik AI Suite, Martini.art) o fazem em nuvens fechadas, capturando dados de prompts, imagens geradas e padrões criativos como ativo proprietário. O criador paga assinatura E cede telemetria criativa. Não existe alternativa **soberana** (que rode em infraestrutura controlada pelo criador/empresa) que ofereça paridade de UX com essas suites cloud.
+> 25	
+> 26	### 2.3 Desired State
+> 27	
+> 28	Um canvas nodal multimodal hospedado dentro do ecossistema MCORCH onde:
+> 29	1. O criador arrasta um nó "Imagem", digita um prompt, conecta a um nó "Vídeo Estende", conecta a um nó "Voz" — tudo em um espaço infinito.
+> 30	2. Cada geração consome mcoCoins (já no ledger do usuário), sem nova assinatura.
+> 31	3. Receitas validadas viram templates reutilizáveis pela equipe.
+> 32	4. Dados de prompts e gerações ficam no Supabase do próprio MCORCH, sob LGPD soberana.
+> 33	5. O AIOS (mega-brain) atua como co-piloto via MCP, sugerindo nós ou orquestrando sub-grafos automaticamente.
+> 34	
+> 35	---
+> 36	
+> 37	## 3. Target Market Segments
+> 38	
+> 39	| Segment | Description | Size Estimate | Urgency | Accessibility |
+> 40	|---------|-------------|---------------|---------|---------------|
+> 41	| Primary | Creators e agências que já usam MCORCH para campanhas (Usuário Zero + early adopters) | 50-200 usuários nos primeiros 6 meses | High | Direta — onboarding via dashboard existente |
+> 42	| Secondary | Empresas SaaS B2B que precisam de pipeline de conteúdo white-label | 20-50 contas Enterprise no Y2 | Medium | Via Stripe live keys + Sales |
+> 43	
+> 44	### 3.1 TAM / SAM / SOM
+> 45	
+> 46	| Metric | Value | Basis |
+> 47	|--------|-------|-------|
+> 48	| TAM (Total Addressable Market) | R$ 1.2B/ano BR | Mercado BR de ferramentas criativas SaaS para creators (estimativa Sebrae 2025 + ABRADi) |
+> 49	| SAM (Serviceable Addressable Market) | R$ 180M/ano BR | Subset que paga 100+/mês por geração de mídia (≈ 100k creators × R$1.500/ano) |
+> 50	| SOM (Serviceable Obtainable Market) | R$ 5.4M/ano nos 24 meses | 3% do SAM via canal direto MCORCH (≈ 3k usuários × R$1.800/ano em mcoCoins) |
+> 51	
+> 52	---
+> 53	
+> 54	## 4. Competitive Landscape
+> 55	
+> 56	| Competitor | Positioning | Strengths | Weaknesses | Our Differentiation |
+> 57	|------------|-------------|-----------|------------|---------------------|
+> 58	| Martini.art | Canvas nodal premium para video AI | UX nodal de referência; 80+ modelos integrados | Cloud fechada; sem soberania de dados; preço USD | Soberania de dados (Supabase próprio); preço BRL; integração com pipeline social MCORCH |
+> 59	| Magnific Premium+ (Freepik) | Suite Canvas multimodal | Acesso a 250M+ assets; 30+ modelos; R$180/mês | Lock-in de assinatura; sem MCP/AIOS; sem ledger compartilhado com outras features | mcoCoins unifica gasto criativo + campanha social; AIOS atua via MCP no canvas |
+> 60	| Krea AI | Canvas em tempo real | Geração instantânea; UX polida | Foco em imagem; vídeo limitado; sem 3D nativo; sem Receitas | Multimodal completo (imagem+vídeo+áudio+3D); Receitas serializáveis; AIOS co-piloto |
+> 61	| ComfyUI (self-hosted) | Workflow node-based open source | Soberania total; comunidade; gratuito | UX dev-first; sem colaboração; sem mcoCoins; setup complexo | UX consumer-grade; multiplayer Realtime; mcoCoins; AIOS embutido |
+> 62	
+> 63	---
+> 64	
+> 65	## 5. Market Opportunity & Timing
+> 66	
+> 67	Três vetores convergem em 2026:
+> 68	1. **Maturidade dos modelos:** NanoBanana Pro, Flux.2, Veo 3, Kling 3 chegaram em qualidade comercial-ready em Q1 2026.
+> 69	2. **Regulação LGPD madura:** ANPD multou 14 plataformas em 2025 por uso indevido de prompts em treinamento — criadores BR exigem soberania.
+> 70	3. **Saturação de assinaturas:** o creator BR médio já paga R$420/mês em SaaS criativo (Adobe + Midjourney + Runway + ElevenLabs); apetite por consolidação é altíssimo.
+> 71	
+> 72	A janela competitiva é **6-12 meses** antes que players cloud globais (Adobe, Canva) lancem variantes brasileiras com canvas nodal. MCORCH tem vantagem first-mover BR + arquitetura soberana já operacional.
+> 73	
+> 74	---
+> 75	
+> 76	## 6. Market Requirements
+> 77	
+> 78	> Priority: **Critical** (must have at launch) | **High** | **Medium** | **Low**
+> 79	
+> 80	| ID | Market Requirement | Priority | Rationale | Source |
+> 81	|----|-------------------|----------|-----------|--------|
+> 82	| MR-001 | Canvas nodal multimodal soberano com encadeamento de modelos | Critical | Núcleo da proposta; sem isso o produto é só uma página de geração isolada | Pesquisa Martini.art + Sovereign vision |
+> 83	| MR-002 | Encadeamento semântico (output de imagem → input de vídeo → input de áudio) com tipagem de portas | Critical | Diferencia de geradores isolados; é o que justifica a UX nodal | Pesquisa Martini.art + Workflow Starter Kit tldraw |
+> 84	| MR-003 | Receitas reutilizáveis (sub-grafos serializáveis com versionamento) | High | Trava criadores no produto via ativos próprios; viraliza dentro de equipes | Magnific Spaces + Martini Recipes |
+> 85	| MR-004 | Colaboração multiplayer real-time com isolamento por tenant | High | Equipes pequenas (3-5) são o segmento mais lucrativo; multiplayer é demanda explícita | Entrevistas Sovereign Zero + benchmarks Figma |
+> 86	| MR-005 | Canvas exposto como MCP Server para AIOS (Tools de criação/edição/execução) | High | AIOS pode atuar como co-piloto, sugerindo Receitas e completando sub-grafos | Pesquisa MCP + Antigravity protocol |
+> 87	| MR-006 | Comparação lado-a-lado de múltiplos modelos a partir do mesmo prompt | High | Funcionalidade signature de Magnific/Martini; reduz indecisão e acelera escolha | Magnific Premium+ feature spec |
+> 88	| MR-007 | Integração nativa com pipeline social MCORCH (canvas → orchestrate-content) | Medium | Aproveita stack existente de publicação WordPress/LinkedIn; não-bloqueante para MVP | CLAUDE.md content pipeline |
+> 89	| MR-008 | Audio nodes (TTS, voice clone, SFX, música) | Medium | Phase 4; expande mercado para podcasters e produtores de áudio | Magnific audio expansion |
+> 90	| MR-009 | Video timeline editor com extend e splicing | Medium | Phase 5; competitivo com Veo Studio e Runway | Twick SDK research |
+> 91	| MR-010 | 3D virtual scenes via R3F embedded no canvas | Low | Phase 6; mercado nicho mas alto valor; aproveita stack R3F existente | Sovereign vision + R3F já na stack |
+> 92	| MR-011 | LGPD compliance (data export + delete account já cobrem dados de canvas) | Critical | Bloqueante para venda B2B Enterprise | LGPD DD-001+DD-002 já selados v5.8.0 |
+> 93	| MR-012 | Preço em BRL via mcoCoins (não USD) | Critical | Acessibilidade do mercado BR; diferenciador vs Magnific (USD) | Sovereign business strategy |
+> 94	
+> 95	---
+> 96	
+> 97	## 7. Success Metrics (Market-Level KPIs)
+> 98	
+> 99	| KPI | Definition | Target (6-month) | Target (12-month) | Measurement |
+> 100	|-----|-----------|------------------|-------------------|-------------|
+> 101	| Market Penetration | Usuários ativos mensais que abrem `/dashboard/content` | 50 MAU | 500 MAU | Supabase event log |
+> 102	| Activation Rate | % de novos usuários que completam ≥ 1 geração no canvas no primeiro 7d | 40% | 60% | content_canvas_documents.created_at + first_generation event |
+> 103	| NPS | Net Promoter Score do módulo | ≥ 30 | ≥ 50 | In-app survey trimestral |
+> 104	| Recipe Adoption | % de usuários ativos que criam ou aplicam ≥ 1 Recipe | 25% | 50% | content_canvas_recipes table |
+> 105	| mcoCoins ARPU | Receita média mensal por usuário ativo do canvas | R$ 60 | R$ 120 | mco_transactions JOIN canvas events |
+> 106	| Retention D30 | % de usuários que voltam ao canvas em 30 dias | 35% | 55% | Supabase auth_events |
+> 107	
+> 108	---
+> 109	
+> 110	## 8. Regulatory & Compliance Context
+> 111	
+> 112	| Regulation | Applicability | Key Constraint | Compliance Owner |
+> 113	|------------|---------------|----------------|-----------------|
+> 114	| LGPD | Total — todo prompt e geração contém potencialmente dado pessoal | Direito de exportação/exclusão; consentimento explícito; minimização | Engineering (cobertura via DD-001+DD-002 já selados) |
+> 115	| Marco Civil da Internet | Total — armazenamento e processamento BR | Logs de acesso 6 meses; dados em jurisdição BR | Engineering (Supabase BR region) |
+> 116	| Direitos autorais (Lei 9.610/98) | Outputs gerados por IA | Disclaimer "gerado por IA" em assets exportados; usuário responsável pelo prompt | Product + Legal |
+> 117	| Termos de uso de modelos (OpenAI, Google, etc.) | Edge Functions que invocam APIs externas | Não armazenar dados de menores; rate limits respeitados | Engineering (vault-managed keys) |
+> 118	
+> 119	---
+> 120	
+> 121	## 9. Traceability Matrix Stub
+> 122	
+> 123	| MR ID | → BR ID | Rationale |
+> 124	|-------|---------|-----------|
+> 125	| MR-001 | BR-001 | Canvas soberano vira receita via mcoCoins (substitui Magnific) |
+> 126	| MR-002 | BR-002 | Encadeamento reutiliza Edge Functions existentes (zero custo backend extra) |
+> 127	| MR-003 | BR-003 | Receitas como ativo próprio do criador → ROI de longo prazo |
+> 128	| MR-004 | BR-004 | Multiplayer destrava plano Enterprise (5+ users) |
+> 129	| MR-005 | BR-005 | MCP eleva valor percebido do AIOS (justifica plan upgrade) |
+> 130	| MR-006 | BR-006 | Comparison reduz "geração desperdiçada" → mantém burn rate saudável |
+> 131	| MR-007 | BR-007 | Canvas → orchestrate-content amplifica funil de campanha social |
+> 132	| MR-008..MR-010 | BR-008..BR-010 | Roadmap de phases (audio/video/3D) — receita escalonada |
+> 133	| MR-011 | BR-011 | LGPD reaproveita data-export + delete-account já em produção |
+> 134	| MR-012 | BR-012 | mcoCoins em BRL é precondição de acessibilidade BR |
+> 135	
+> 136	---
+> 137	
+> 138	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 139	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/02-brd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BRD — Business Requirements Document
+> 2	
+> 3	**Project:** conteudo-v2
+> 4	**Version:** v0.1 | **Date:** 2026-05-08
+> 5	**BoK Applied:** BABOK v3 (Requirements Analysis & Design Definition)
+> 6	**Status:** Approved
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	Conteúdo v2 transforma o MCORCH de "ferramenta de pipeline social autônomo" em **plataforma criativa multimodal soberana** ao adicionar um canvas nodal (`/dashboard/content`) onde criadores produzem, comparam e encadeiam mídia gerada por IA dentro de um espaço infinito tldraw. O modelo de negócio capitaliza a infraestrutura existente (Edge Functions, mcoCoins, Supabase) com **CapEx desenvolvimento ≈ 6 sprints (Phase 0-7)** e **OpEx adicional desprezível** (modelos via OpenRouter já no orçamento). Receita projetada: **R$ 5.4M ARR** em 24 meses pelo canal direto, com payback em 4-6 meses do desenvolvimento. O ROI tangível vem de três vetores: (a) novos clientes que entram pelo canvas e ficam pelo pipeline, (b) upsell de Starter→Pro→Enterprise pelo aumento de burn rate de mcoCoins, (c) ticket Enterprise habilitado por colaboração multiplayer + soberania LGPD.
+> 13	
+> 14	---
+> 15	
+> 16	## 2. Business Objectives (SMART)
+> 17	
+> 18	| ID | Objective | Specific | Measurable | Achievable | Relevant | Time-bound |
+> 19	|----|-----------|----------|------------|------------|----------|------------|
+> 20	| BO-001 | Estabelecer Conteúdo v2 como ponto de entrada para 60% dos novos usuários MCORCH | Rota `/dashboard/content` é a primeira interação para novos signups | % de signups que abrem `/dashboard/content` antes de qualquer outra rota | Sim — onboarding redirect controlável | Define growth de top-of-funnel | Q4 2026 |
+> 21	| BO-002 | Aumentar mcoCoins ARPU de R$ 35 (atual baseline pipeline) para R$ 120 em 12 meses | Burn rate médio mensal por usuário ativo | mco_transactions agregado por user/month | Sim — Phase 2 introduz consumo recorrente (10 coins/imagem) | Define receita variável | 2027-05-08 |
+> 22	| BO-003 | Substituir 100% das assinaturas externas (Magnific, Midjourney, Runway) dos usuários ativos MCORCH | Cancelar fontes externas e migrar gasto para mcoCoins | Survey trimestral + feature parity audit | Sim — Phases 2-6 cobrem paridade | Define lock-in defensável | Q2 2027 |
+> 23	| BO-004 | Atingir NPS ≥ 50 no canvas (paridade com Notion, Figma) | Score consolidado em survey in-app | Trimestral via banner contextual | Sim — UX é prioridade Phase 1 | Define qualidade percebida | Q4 2026 |
+> 24	| BO-005 | Habilitar 5 contas Enterprise (5+ seats, multiplayer) com ticket médio R$ 4k/mês | Usuários Enterprise ativos + ticket médio | profiles.plan='enterprise' + Stripe data | Sim — bloqueado por DD-001+DD-002 já selados | Define receita recorrente alta | Q3 2027 |
+> 25	
+> 26	---
+> 27	
+> 28	## 3. Stakeholder Register
+> 29	
+> 30	| ID | Role | Interest | Influence | Communication Cadence | Contact |
+> 31	|----|------|----------|-----------|----------------------|---------|
+> 32	| SH-001 | Sovereign / Maestro (Gabriel Zarattini) | High — define visão e prioriza phases | High — único decisor final | Continuous (sessões diárias) | gabrielcall@gmail.com |
+> 33	| SH-002 | Usuário Zero (Sovereign-as-creator) | High — primeiro consumidor real | High — feedback direto via testes em produção | Diária durante Phase 2-6 | gabrielcall@gmail.com (mcorch.com) |
+> 34	| SH-003 | Early Adopters Creators (50 primeiros) | High — adoção orgânica | Medium — feedback via NPS + entrevistas | Mensal NPS + quarterly interviews | Lista email MCORCH |
+> 35	| SH-004 | AIOS Agent (mega-brain-daemon) | High — consumidor MCP | Medium — eleva valor percebido do AIOS | Telemetria contínua via infra_health_logs | Sistema |
+> 36	| SH-005 | Engineering (Claude/Antigravity executores) | High — implementam phases | High — qualidade técnica e velocidade | Por sprint | Via /handson e /handoff |
+> 37	| SH-006 | Designers (design-system / design-critique skills) | Medium — UX premium | Medium — produzem specs e críticas | Por phase milestone | Via skills MCORCH |
+> 38	| SH-007 | Compliance (LGPD/ANPD ownership) | Medium — auditoria de dados | Medium — bloqueia se violar LGPD | Por release | Engineering owns |
+> 39	| SH-008 | Magnific/Freepik (concorrentes) | Low — ameaça competitiva | Low — não influenciam roadmap | Análise trimestral | Pesquisa de mercado |
+> 40	
+> 41	---
+> 42	
+> 43	## 4. Business Requirements
+> 44	
+> 45	> Each BR traces to at least one MR. mcoCoins cost defined for AI-powered features.
+> 46	
+> 47	| ID | Requirement | MR Traced | Priority | mcoCoins Cost | Acceptance Criteria |
+> 48	|----|-------------|-----------|----------|---------------|---------------------|
+> 49	| BR-001 | Disponibilizar rota `/dashboard/content` com canvas tldraw funcional + persistência | MR-001 | Critical | 0 (canvas em si é gratuito) | Usuário abre rota, desenha shapes, hard-refresh preserva trabalho |
+> 50	| BR-002 | Reutilizar `generate-image`, `generate-video`, `tts-speak` como backends de nós-modelo | MR-002 | Critical | 10 coins/imagem · 50 coins/video · 5 coins/audio (Phase 2-5) | Geração no canvas debita mcoCoins via deduct_mco_coins RPC e renderiza output |
+> 51	| BR-003 | Permitir salvar e aplicar Receitas (sub-grafos) por usuário | MR-003 | High | 0 (operação local + DB) | Save→Apply preserva nós, edges, parâmetros e bindings; Recipe vira nó searchable |
+> 52	| BR-004 | Colaboração multiplayer com cursores e sync por documento | MR-004 | High | 0 (incluso em todos planos) | 2 usuários do mesmo tenant veem mudanças em < 500ms; user de outro tenant não vê documento |
+> 53	| BR-005 | Expor canvas via MCP Server (Tools: create/update/delete/execute) | MR-005 | High | 0 (operações de leitura) · variável em execute | AIOS invoca canvas.create_node via MCP e nó aparece no Sigma de quem está com canvas aberto |
+> 54	| BR-006 | Comparação lado-a-lado: 1 prompt → 3+ modelos paralelos | MR-006 | High | N × 10 coins (uma por modelo) | Drag prompt to 3 ImageGenerator nodes triggera 3 gerações simultâneas; outputs renderizam em < 30s |
+> 55	| BR-007 | Integração canvas → `orchestrate-content` (pipeline social) | MR-007 | Medium | 10 coins (já cobrados pelo orchestrate) | Botão "Publicar nesta campanha" leva nó-imagem para próximo run da pipeline |
+> 56	| BR-008 | Nós de áudio: TTS, voice clone, SFX, música | MR-008 | Medium | 5/clip TTS · 30 voice clone · 8 SFX · 20 música | Cada operação debita mcoCoins e gera arquivo .mp3 navegável no canvas |
+> 57	| BR-009 | Video timeline editor com extend e splicing | MR-009 | Medium | 50 coins/extend de 5s · 30 coins/splice | Scrubber sincronizado; extend gera 7s preservando últimos 24 frames como contexto |
+> 58	| BR-010 | 3D virtual scenes via R3F embedded | MR-010 | Low | 0 (cena básica) · 100 coins image-to-3D | OrbitControls funciona; mesh cubes/lights aparecem; sem cybersickness em 5min de uso |
+> 59	| BR-011 | Aplicar data-export + delete-account a `content_canvas_documents` e `content_canvas_recipes` | MR-011 | Critical | 0 (operação LGPD) | data-export retorna JSON com todos canvases do user; delete-account remove via cascade |
+> 60	| BR-012 | mcoCoins precificados em BRL no checkout Stripe | MR-012 | Critical | 0 (apenas pricing) | Stripe Price em BRL; conversão display = R$1 = 5 mcoCoins (ajustável) |
+> 61	
+> 62	---
+> 63	
+> 64	## 5. ROI Model
+> 65	
+> 66	### 5.1 Cost Estimates
+> 67	
+> 68	| Cost Item | Type | Monthly Estimate | Annual Estimate |
+> 69	|-----------|------|-----------------|----------------|
+> 70	| Infrastructure (Supabase Pro + Docker Oracle) | OpEx | R$ 800 (já no orçamento atual) | R$ 9.600 |
+> 71	| AI API calls (OpenRouter — modelos imagem/vídeo) | Variable | R$ 1.500 a R$ 12.000 dependendo de volume | R$ 18.000 a R$ 144.000 |
+> 72	| Storage (Supabase Storage para video/audio assets) | Variable | R$ 200 a R$ 2.000 (escala com MAU) | R$ 2.400 a R$ 24.000 |
+> 73	| Development (Phase 0-7, 8 sprints estimadas) | CapEx | — | R$ 0 (Sovereign + Claude/Antigravity executores; 11% limite/semana × 8 = ~22 semanas) |
+> 74	| Design (skills internas) | CapEx | — | R$ 0 (skills internas) |
+> 75	| LGPD Compliance | OpEx | R$ 0 (já coberto v5.8.0) | R$ 0 |
+> 76	
+> 77	**Custo total Y1 (cenário médio):** R$ 96.000 (infra + APIs)
+> 78	**Custo total Y2 (cenário escala):** R$ 168.000
+> 79	
+> 80	### 5.2 Revenue Streams
+> 81	
+> 82	| Stream | Model | Monthly Potential | Notes |
+> 83	|--------|-------|-----------------|-------|
+> 84	| Plan upgrades Starter→Pro (canvas eleva burn) | Subscription delta | R$ 30k-90k em Y1 | 200-600 upgrades × R$ 150 delta |
+> 85	| Plan upgrades Pro→Enterprise (multiplayer) | Subscription delta | R$ 20k-60k em Y2 | 5-15 contas × R$ 4k delta |
+> 86	| mcoCoins top-up adicional (above plan quota) | Transaction | R$ 30k-150k em Y1+Y2 | 30% dos usuários ativos × R$ 100/mês top-up |
+> 87	| Receitas marketplace (Y3 — fora deste BoK) | Marketplace fee | — | Roadmap futuro |
+> 88	
+> 89	**Receita total Y1 (conservador):** R$ 60k * 12 = R$ 720k
+> 90	**Receita total Y2 (otimista):** R$ 450k/mês = R$ 5.4M ARR
+> 91	
+> 92	### 5.3 Payback Analysis
+> 93	
+> 94	| Metric | Value |
+> 95	|--------|-------|
+> 96	| Break-even (months) | 4-6 meses pós-launch (Q4 2026) |
+> 97	| 12-month ROI | 7.5x (R$ 720k receita / R$ 96k custo) |
+> 98	| IRR (estimated) | 480% Y1 → 3200% Y2 |
+> 99	
+> 100	---
+> 101	
+> 102	## 6. mcoCoins Economics
+> 103	
+> 104	| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est. Y1 mid) | Monthly Revenue (est.) |
+> 105	|-----------|-----------|-------------------|-----------------------------|----------------------|
+> 106	| ImageGenerator (single model) | 10 | Starter(500=50/mo) · Pro(2000=200/mo) · Enterprise(10k=1000/mo) | 8.000 imagens/MAU | — (consume quota) |
+> 107	| Image comparison (3-way) | 30 | — | 2.000 comparações/MAU | — |
+> 108	| VideoGenerator (5s clip) | 50 | — | 800 vídeos/MAU | — |
+> 109	| Video extend (+5s) | 50 | — | 400 extends/MAU | — |
+> 110	| TTS (per clip ≤30s) | 5 | — | 1.500 clips/MAU | — |
+> 111	| Voice Clone (training) | 100 (one-time) · 5/uso | — | 50 trainings/MAU + 1k usos | — |
+> 112	| SFX generation | 8 | — | 600 sfx/MAU | — |
+> 113	| Image-to-3D | 100 | — | 100 conversões/MAU | — |
+> 114	| Recipe execution (variable) | sum of nodes | — | Ajusta-se à composição | — |
+> 115	
+> 116	**Top-up mcoCoins:** R$ 50 = 250 coins (R$ 0,20/coin) | R$ 200 = 1100 coins (R$ 0,18/coin) | R$ 500 = 3000 coins (R$ 0,17/coin)
+> 117	
+> 118	---
+> 119	
+> 120	## 7. Constraints & Assumptions
+> 121	
+> 122	### Constraints
+> 123	- C-001: Limite semanal Claude (200k context window por sessão) força execução em phases — não pode tudo em um sprint.
+> 124	- C-002: Bundle size do front deve ficar < 2MB gzipped (Lighthouse) — tldraw + R3F + timelines exige code-splitting agressivo por phase.
+> 125	- C-003: LGPD impede armazenar prompt de menores (< 18 anos) sem consentimento parental — gate de signup já filtra.
+> 126	- C-004: Modelos externos (Veo, Kling) podem ter rate limits que limitam concorrência em horários de pico.
+> 127	- C-005: tldraw 4.x está em SDK (não free) — verificar licenciamento OSS para uso comercial soberano (resolver em Phase 1.0).
+> 128	
+> 129	### Assumptions
+> 130	- A-001: Usuários atuais MCORCH são receptivos a um novo módulo (validado pelo Sovereign Zero como piloto).
+> 131	- A-002: OpenRouter manterá disponibilidade de NanoBanana/Flux/Veo nos próximos 12 meses.
+> 132	- A-003: Supabase Realtime suporta volume de mensagens (10-50 cursores simultâneos por documento) sem upgrade de plano.
+> 133	- A-004: Stripe live keys serão configuradas antes de Phase 8 (já desbloqueadas pelo LGPD seal v5.8.0).
+> 134	- A-005: Sovereign mantém autoridade decisória final em OTDs e priorização de phases.
+> 135	
+> 136	---
+> 137	
+> 138	## 8. Business Risk Register
+> 139	
+> 140	| Risk ID | Description | Probability | Impact | RPN | Mitigation |
+> 141	|---------|-------------|-------------|--------|-----|------------|
+> 142	| BR-RISK-001 | tldraw SDK 4.x mudar licenciamento ou descontinuar | 2 | 5 | 10 | Validar OSS license em Phase 1.0; ter plano B com Excalidraw fork como fallback |
+> 143	| BR-RISK-002 | OpenRouter aumentar preços de modelos imagem/vídeo em > 50% | 3 | 4 | 12 | Multi-provider abstraction nos Edge Functions; renegociar via volume |
+> 144	| BR-RISK-003 | Concorrente BR (Adobe BR, Canva BR) lançar canvas nodal antes de nós | 3 | 4 | 12 | Acelerar Phase 0-2 (3 sprints); first-mover BR + soberania como diferenciador defensável |
+> 145	| BR-RISK-004 | Bundle size frontend explode com tldraw + R3F + timelines | 4 | 3 | 12 | Code splitting agressivo; lazy-load por phase; monitor Lighthouse CI |
+> 146	| BR-RISK-005 | LGPD audit detectar dado pessoal em prompts não-anonimizados | 2 | 5 | 10 | Aplicar minimização de prompts + scrubber em embeddings; data-export já cobre user |
+> 147	| BR-RISK-006 | Multiplayer tldraw + Supabase Realtime apresentar drift de estado | 3 | 3 | 9 | Postgres-as-SSOT (não Y.js CRDT); reconciliação on-conflict via versão monotônica |
+> 148	| BR-RISK-007 | mcoCoins burn rate exceder revenue (canvas vira centro de custo) | 3 | 5 | 15 | Telemetria por user; alert se cost-per-MAU > revenue-per-MAU; ajuste rápido de coin/operation |
+> 149	| BR-RISK-008 | Adoção pelos early adopters abaixo do esperado (D30 retention < 35%) | 3 | 4 | 12 | Onboarding tour; Receitas pré-fabricadas; quick-win templates |
+> 150	| BR-RISK-009 | MCP Server expor superfície de ataque (RCE via prompt injection) | 2 | 5 | 10 | JWT obrigatório; allowlist de Tools; sanitização de inputs em canvas-mcp |
+> 151	| BR-RISK-010 | Tomada de decisão lenta nas OTDs por sobrecarga do Sovereign | 4 | 3 | 12 | OTDs com recomendação default + timebox de 48h; agente bok-scribe documenta automaticamente |
+> 152	
+> 153	> Probability & Impact: 1=Low, 5=High. RPN = Probability × Impact. RPN > 10 = ação obrigatória.
+> 154	
+> 155	---
+> 156	
+> 157	## 9. Business Acceptance Criteria
+> 158	
+> 159	| ID | Criterion | Verification Method |
+> 160	|----|-----------|-------------------|
+> 161	| BAC-001 | Phase 1 entrega: rota `/dashboard/content` com tldraw rendering + persistência localStorage + Postgres | Browser test + psql verify |
+> 162	| BAC-002 | Phase 2 entrega: ImageGenerator node funcional com 3 modelos (NanoBanana, Flux.2, Gemini Image), comparação 3-way | UI test + mcoCoins balance check |
+> 163	| BAC-003 | Phase 3 entrega: Recipe save/apply com persistência em content_canvas_recipes | DB seeding + replay test |
+> 164	| BAC-004 | NPS ≥ 30 após 30 dias de Phase 2 em produção | In-app survey + dashboard |
+> 165	| BAC-005 | Zero violação LGPD em audit pós-Phase 2 (data-export retorna canvases corretamente) | Manual data export test for Sovereign Zero |
+> 166	| BAC-006 | Bundle size < 2.5MB gzipped após Phase 2 | Lighthouse CI report |
+> 167	| BAC-007 | mcoCoins ARPU ≥ R$ 60 em 6 meses pós-Phase 2 | mco_transactions agregado |
+> 168	| BAC-008 | 5 contas Enterprise ativas com multiplayer em 12 meses pós-Phase 7 | profiles.plan + canvas_documents.shared_with |
+> 169	
+> 170	---
+> 171	
+> 172	## 10. Traceability Matrix
+> 173	
+> 174	| MR ID | BR ID | PR ID (stub) |
+> 175	|-------|-------|--------------|
+> 176	| MR-001 | BR-001 | PR-001, PR-002, PR-003 |
+> 177	| MR-002 | BR-002 | PR-004, PR-005 |
+> 178	| MR-003 | BR-003 | PR-010, PR-011 |
+> 179	| MR-004 | BR-004 | PR-020, PR-021 |
+> 180	| MR-005 | BR-005 | PR-022 |
+> 181	| MR-006 | BR-006 | PR-006 |
+> 182	| MR-007 | BR-007 | PR-012 |
+> 183	| MR-008 | BR-008 | PR-013, PR-014, PR-015, PR-016 |
+> 184	| MR-009 | BR-009 | PR-017, PR-018 |
+> 185	| MR-010 | BR-010 | PR-019 |
+> 186	| MR-011 | BR-011 | (existing data-export + delete-account; canvas tables added to cascade) |
+> 187	| MR-012 | BR-012 | (existing Stripe BRL config; coin pricing in mcoCoins.ts) |
+> 188	
+> 189	---
+> 190	
+> 191	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 192	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/06-data-model.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data & Knowledge Model
+> 2	
+> 3	**Project:** conteudo-v2
+> 4	**Version:** v0.1 | **Date:** 2026-05-08
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)
+> 6	**Status:** Approved
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Conceptual Data Model
+> 11	
+> 12	```
+> 13	[auth.users] ──(1:N)──▶ [content_canvas_documents] ──(1:N)──▶ [content_canvas_assets]
+> 14	      │                          │                                       │
+> 15	      │                          │ (snapshot JSONB embeds tldraw state) │
+> 16	      │                          │                                       └──▶ [Storage buckets]
+> 17	      │                          │
+> 18	      │                    (N:M via shared_with[])
+> 19	      │                          │
+> 20	      ├──(1:N)─────────▶ [content_canvas_recipes] ──(embedding)──▶ [pgvector HNSW]
+> 21	      │
+> 22	      ├──(1:N)─────────▶ [user_voices]
+> 23	      │
+> 24	      └──(1:1)─────────▶ [profiles] (mco_balance) ──(1:N)──▶ [mco_transactions]
+> 25	
+> 26	[content_canvas_documents] ──(observation)──▶ [mcorch_nodes]
+> 27	[content_canvas_recipes]   ──(documentation_suite seal)──▶ [mcorch_nodes]
+> 28	```
+> 29	
+> 30	**Entities:**
+> 31	- **content_canvas_documents:** Documento de canvas (snapshot tldraw + metadados de colaboração)
+> 32	- **content_canvas_recipes:** Sub-grafo serializado reutilizável; embedded para busca semântica
+> 33	- **content_canvas_assets:** Cada asset (imagem/vídeo/áudio/3d) gerado dentro do canvas, com referência ao shape_id que o originou
+> 34	- **user_voices:** Voice clones treinados pelo user; referenciados em TTS/voice nodes
+> 35	- **mcorch_nodes (extension):** Observation nodes para cada execução significativa no canvas (Recipe save, Recipe apply, generation milestone)
+> 36	
+> 37	---
+> 38	
+> 39	## 2. Logical Data Model
+> 40	
+> 41	### Table: `content_canvas_documents`
+> 42	
+> 43	| Column | Type | Nullable | Default | FK | Description |
+> 44	|--------|------|----------|---------|-----|------------|
+> 45	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 46	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` ON DELETE CASCADE | Tenant isolation; owner |
+> 47	| `project_id` | `uuid` | NULL | — | `projects.id` ON DELETE SET NULL | Project scope (optional) |
+> 48	| `title` | `text` | NOT NULL | `'Canvas sem título'` | — | User-visible title |
+> 49	| `snapshot` | `jsonb` | NOT NULL | `'{}'::jsonb` | — | tldraw `getSnapshot()` document store |
+> 50	| `version` | `integer` | NOT NULL | `1` | — | Monotônico; incrementa a cada save (reconciliation) |
+> 51	| `shared_with` | `uuid[]` | NOT NULL | `ARRAY[]::uuid[]` | — | Multiplayer collaborators (Phase 7) |
+> 52	| `thumbnail_url` | `text` | NULL | — | — | Preview gerada via export PNG do canvas |
+> 53	| `size_bytes` | `integer` | NOT NULL | `0` | — | Tamanho serializado do snapshot (cap 5MB) |
+> 54	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 55	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit (trigger) |
+> 56	
+> 57	**Constraints:**
+> 58	- `CHECK (size_bytes <= 5242880)` — 5MB cap por documento
+> 59	
+> 60	### Table: `content_canvas_recipes`
+> 61	
+> 62	| Column | Type | Nullable | Default | FK | Description |
+> 63	|--------|------|----------|---------|-----|------------|
+> 64	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 65	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` ON DELETE CASCADE | Tenant isolation |
+> 66	| `name` | `text` | NOT NULL | — | — | User-visible name (1-80 chars) |
+> 67	| `description` | `text` | NULL | — | — | Opcional |
+> 68	| `snapshot` | `jsonb` | NOT NULL | — | — | Sub-graph snapshot (shapeIds + bindingIds) |
+> 69	| `embedding` | `vector(768)` | NULL | — | — | Neural embedding via embed-mcorch-node |
+> 70	| `stability_score` | `float4` | NOT NULL | `0.5` | — | FSRS-6 memory stability |
+> 71	| `use_count` | `integer` | NOT NULL | `0` | — | Incrementa a cada apply (telemetry) |
+> 72	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 73	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit (trigger) |
+> 74	
+> 75	**Constraints:**
+> 76	- `CHECK (length(name) BETWEEN 1 AND 80)`
+> 77	
+> 78	### Table: `content_canvas_assets`
+> 79	
+> 80	| Column | Type | Nullable | Default | FK | Description |
+> 81	|--------|------|----------|---------|-----|------------|
+> 82	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 83	| `document_id` | `uuid` | NOT NULL | — | `content_canvas_documents.id` ON DELETE CASCADE | Parent canvas |
+> 84	| `shape_id` | `text` | NOT NULL | — | — | tldraw shape id (`shape:xxx-xxx`) |
+> 85	| `asset_kind` | `text` | NOT NULL | — | — | One of `('image','video','audio','3d-mesh','recipe')` |
+> 86	| `asset_url` | `text` | NOT NULL | — | — | Signed URL Supabase Storage ou external CDN |
+> 87	| `source_function` | `text` | NOT NULL | — | — | Edge Fn que gerou (`generate-image` | etc.) |
+> 88	| `prompt` | `text` | NULL | — | — | Prompt usado (LGPD: scrubbed para PII em audit) |
+> 89	| `model` | `text` | NULL | — | — | Modelo IA invocado (`nanobanana`, `flux2`, etc.) |
+> 90	| `mco_coins_spent` | `integer` | NOT NULL | `0` | — | mcoCoins debitados nesta geração |
+> 91	| `metadata` | `jsonb` | NOT NULL | `'{}'::jsonb` | — | Provider response metadata (timing, dimensions, etc.) |
+> 92	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 93	
+> 94	**Constraints:**
+> 95	- `CHECK (asset_kind IN ('image','video','audio','3d-mesh','recipe'))`
+> 96	
+> 97	### Table: `user_voices`
+> 98	
+> 99	| Column | Type | Nullable | Default | FK | Description |
+> 100	|--------|------|----------|---------|-----|------------|
+> 101	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 102	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` ON DELETE CASCADE | Tenant isolation |
+> 103	| `voice_name` | `text` | NOT NULL | — | — | Nome user-visible |
+> 104	| `provider` | `text` | NOT NULL | — | — | `'elevenlabs'` ou `'openrouter'` |
+> 105	| `external_voice_id` | `text` | NOT NULL | — | — | ID na API do provider |
+> 106	| `consent_text` | `text` | NOT NULL | — | — | Texto exato lido pelo user no opt-in (LGPD) |
+> 107	| `consent_at` | `timestamptz` | NOT NULL | `now()` | — | Timestamp do consent |
+> 108	| `use_count` | `integer` | NOT NULL | `0` | — | Incrementa a cada uso |
+> 109	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 110	
+> 111	**Constraints:**
+> 112	- `CHECK (provider IN ('elevenlabs','openrouter'))`
+> 113	
+> 114	---
+> 115	
+> 116	## 3. Supabase Physical Schema Stubs
+> 117	
+> 118	Ver `05-sdd.md` §7 para SQL completo de cada migration. Resumo dos índices críticos:
+> 119	
+> 120	```sql
+> 121	-- Performance
+> 122	CREATE INDEX canvas_docs_user_idx ON content_canvas_documents (user_id);
+> 123	CREATE INDEX canvas_docs_project_idx ON content_canvas_documents (project_id);
+> 124	CREATE INDEX canvas_docs_shared_with_idx ON content_canvas_documents USING gin (shared_with);
+> 125	
+> 126	CREATE INDEX recipes_user_idx ON content_canvas_recipes (user_id);
+> 127	CREATE INDEX recipes_embedding_hnsw
+> 128	  ON content_canvas_recipes USING hnsw (embedding vector_cosine_ops)
+> 129	  WITH (m = 16, ef_construction = 64);
+> 130	
+> 131	CREATE INDEX assets_document_idx ON content_canvas_assets (document_id);
+> 132	CREATE INDEX assets_shape_idx ON content_canvas_assets (shape_id);
+> 133	
+> 134	CREATE INDEX user_voices_user_idx ON user_voices (user_id);
+> 135	
+> 136	-- Triggers (auto-updated_at + auto-embed para recipes)
+> 137	CREATE TRIGGER set_canvas_docs_updated_at BEFORE UPDATE ON content_canvas_documents
+> 138	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 139	
+> 140	CREATE TRIGGER set_recipes_updated_at BEFORE UPDATE ON content_canvas_recipes
+> 141	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 142	
+> 143	CREATE TRIGGER trg_recipes_embed_on_insert AFTER INSERT ON content_canvas_recipes
+> 144	  FOR EACH ROW WHEN (NEW.embedding IS NULL)
+> 145	  EXECUTE FUNCTION net.http_post_to_embed_mcorch_node();
+> 146	```
+> 147	
+> 148	---
+> 149	
+> 150	## 4. GraphRAG Knowledge Nodes
+> 151	
+> 152	### Node Types Introduced
+> 153	
+> 154	| node_type | Title Pattern | Content Fields | Embedding Source |
+> 155	|-----------|--------------|----------------|-----------------|
+> 156	| `canvas_recipe` | `Recipe: <recipe.name>` | `name + description + snapshot summary` | concatenation → embed-mcorch-node |
+> 157	| `canvas_milestone` | `Canvas milestone: <doc title> @ <date>` | `title + key actions taken` | summary text |
+> 158	| `canvas_aios_action` | `AIOS action: <method> on <document>` | `MCP method + params + outcome` | params JSON serialized |
+> 159	| `documentation_suite` (existing) | `bok-scribe-seal-conteudo-v2-v1` | BoK synthesis (this doc itself) | full BoK summary |
+> 160	
+> 161	### Edge Types Introduced
+> 162	
+> 163	| Edge relationship | Source node_type | Target node_type | Metadata |
+> 164	|-------------------|-----------------|-----------------|----------|
+> 165	| `INSPIRED_BY` | `canvas_recipe` | `canvas_recipe` | `similarity_score` (when user creates recipe semantically close to existing) |
+> 166	| `EXECUTED_IN` | `canvas_milestone` | `documentation_suite` | `phase: 'P2' \| 'P3' \| ...` |
+> 167	| `INVOKED_BY` | `canvas_aios_action` | `mega-brain-daemon-config` | `timestamp + tool` |
+> 168	
+> 169	### Embedding Trigger
+> 170	
+> 171	Every insert into `content_canvas_recipes` calls `embed-mcorch-node` via existing pg_net trigger:
+> 172	```typescript
+> 173	// Implicitly via trigger trg_recipes_embed_on_insert.
+> 174	// Function input: { node_id: recipe.id, content: `${name} ${description} ${JSON.stringify(snapshot.summary)}` }
+> 175	// Output: vector(768) stored in recipe.embedding
+> 176	```
+> 177	
+> 178	For canvas milestones (one per significant action): inserted explicitly by Edge Functions:
+> 179	```typescript
+> 180	await supabase.from('mcorch_nodes').insert({
+> 181	  node_type: 'canvas_milestone',
+> 182	  title: `Canvas milestone: ${doc.title}`,
+> 183	  content: summaryText,
+> 184	  user_id: user.id,
+> 185	  stability_score: 0.6,
+> 186	  metadata: { document_id, phase, action }
+> 187	})
+> 188	// Embedding via trg_mcorch_embed_on_insert (existing)
+> 189	```
+> 190	
+> 191	### FSRS-6 Parameters
+> 192	
+> 193	| Field | Initial Value | Decay Rule |
+> 194	|-------|--------------|------------|
+> 195	| `stability_score` (recipes) | `0.5` | Bumped to `0.7` after 5 uses (use_count >= 5); decays per migration `20260425190000` formula |
+> 196	| `revenue_impact` (recipes) | derived from `use_count × avg_coin_cost` | Updated on each apply via trigger or backfill cron |
+> 197	| `stability_score` (canvas_milestone) | `0.6` | Decays normally |
+> 198	
+> 199	---
+> 200	
+> 201	## 5. Tenant Isolation Map
+> 202	
+> 203	| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |
+> 204	|-------|----------------|-------------------|-------------------------------|
+> 205	| `content_canvas_documents` | ✅ Required | Optional (FK SET NULL) | No |
+> 206	| `content_canvas_recipes` | ✅ Required | — | No |
+> 207	| `content_canvas_assets` | Implicit via `document_id` | Implicit | No |
+> 208	| `user_voices` | ✅ Required | — | No |
+> 209	| `mcorch_nodes` (canvas_recipe, canvas_milestone) | ✅ Required (per-user nodes) | Optional | No (não há canvas system nodes) |
+> 210	
+> 211	**Multi-tenant invariant:** No row in `content_canvas_*` is visible to user B unless explicitly added to `shared_with[]` of the parent document. Recipes are 100% private (no sharing in Phase 1; revisitar Y2).
+> 212	
+> 213	---
+> 214	
+> 215	## 6. Data Quality Rules
+> 216	
+> 217	| Table | Column | Rule | Violation Message (PT-BR) |
+> 218	|-------|--------|------|--------------------------|
+> 219	| `content_canvas_documents` | `title` | length 1-200; UTF-8 valid | "Título deve ter entre 1 e 200 caracteres" |
+> 220	| `content_canvas_documents` | `snapshot` | Valid tldraw schema (validate via Zod no Edge Fn) | "Snapshot inválido — sessão precisa ser recarregada" |
+> 221	| `content_canvas_documents` | `size_bytes` | ≤ 5242880 (5MB) | "Canvas excedeu 5MB — divida em vários documentos ou remova assets pesados" |
+> 222	| `content_canvas_documents` | `version` | Monotônico (NEW.version > OLD.version) | "Conflito de versão — recarregue o canvas" |
+> 223	| `content_canvas_recipes` | `name` | length 1-80; sem `<` `>` | "Nome inválido — 1-80 caracteres, sem `<` ou `>`" |
+> 224	| `content_canvas_recipes` | `snapshot` | shapeIds não-vazios; bindings consistentes | "Receita corrompida — re-salve" |
+> 225	| `content_canvas_assets` | `asset_url` | URL válida; HTTPS; whitelist domains (Supabase Storage + OpenRouter CDN) | "URL de asset inválida — bloqueado por segurança" |
+> 226	| `content_canvas_assets` | `mco_coins_spent` | ≥ 0; ≤ 1000 (sanity cap) | "Custo de geração inválido" |
+> 227	| `user_voices` | `consent_text` | length ≥ 50 (forçar consent significativo) | "Texto de consentimento muito curto — leia atentamente antes de aceitar" |
+> 228	
+> 229	---
+> 230	
+> 231	## 7. Retention & Archival Policy
+> 232	
+> 233	| Data | Retention Period | Archival Strategy | Deletion Trigger |
+> 234	|------|-----------------|-------------------|-----------------|
+> 235	| `content_canvas_documents` ativos | Indefinido enquanto user ativo | Backup diário Supabase | User-initiated DELETE ou delete_account() RPC |
+> 236	| `content_canvas_documents` órfãos (user deletado) | Imediato via FK CASCADE | — | delete_account() ou ON DELETE CASCADE |
+> 237	| `content_canvas_recipes` | Indefinido enquanto user ativo | Embedding indefinido (mesh search) | Same as above |
+> 238	| `content_canvas_assets` (image URLs) | 12 meses após geração se shape removido | Cleanup cron mensal: assets sem shape_id correspondente | Cron `0 3 * * 0` (Domingo 3am) |
+> 239	| `content_canvas_assets` (Storage buckets) | Same as URLs | Storage cleanup via signed URL expiry | TTL 30d para signed URLs |
+> 240	| `user_voices` | Até user revogar consent ou delete_account | — | Manual revoke ou cascade |
+> 241	| `mcorch_nodes` canvas_milestone | Indefinido | Embedded para mesh search | delete_account |
+> 242	| `infra_health_logs` (canvas events) | 90 dias | Sem archival | Cron purge existente |
+> 243	
+> 244	**LGPD compliance:** data-export Edge Function (já em produção) inclui `content_canvas_documents`, `content_canvas_recipes`, `content_canvas_assets`, `user_voices` no payload exportado por `userId`. delete_account() RPC propaga via FK CASCADE.
+> 245	
+> 246	---
+> 247	
+> 248	## 8. Appendix — VIRALmind Table Aliases (v1 reality, 2026-05-14)
+> 249	
+> 250	A implementação v1 (entregue por Antigravity em Sprints 1-3) usa namespace `vm_*` ao invés do `content_canvas_*` planejado. Mapeamento canônico:
+> 251	
+> 252	| Plano original (este BoK) | Implementação v1 em produção | Diferenças |
+> 253	|---------------------------|------------------------------|------------|
+> 254	| `content_canvas_documents` | `vm_canvas_projects` | `canvas_data` JSONB substitui `snapshot` JSONB; sem `version` monotônico (Phase 7) |
+> 255	| `content_canvas_recipes` | `vm_canvas_recipes` | mesma estrutura; embedding via mesh seal node |
+> 256	| `content_canvas_assets` | `vm_canvas_assets` + `vm_canvas_executions` | desnormalização: assets persistem o resultado final, executions persistem o histórico de runs (com status machine) |
+> 257	| `user_voices` | Não implementado (Phase 4 deferred) | Phase 4 audio nodes ainda não materializados |
+> 258	
+> 259	**Decisão arquitetônica:** rebranding `vm_*` → `content_canvas_*` não é prioritário. O ganho semântico não justifica o custo de migration + types regen. Manter `vm_*` indefinidamente; este BoK passa a ser o **roadmap de evolução** (Phase 4-8) com tabelas adicionais ainda por criar.
+> 260	
+> 261	**Tabelas vm_* totais em produção (migrations 20260514040*):**
+> 262	- `vm_niches` (18 seeded)
+> 263	- `vm_trends` (24 seeded)
+> 264	- `vm_user_trends` (favorites)
+> 265	- `vm_canvas_projects`, `vm_canvas_assets`, `vm_canvas_executions`, `vm_canvas_recipes`
+> 266	- `vm_affiliate_products`, `vm_affiliate_links`, `vm_affiliate_clicks`
+> 267	
+> 268	Ver `docs/bok/viralmind/schema-reference.sql` para o schema canônico VIRALmind.
+> 269	
+> 270	---
+> 271	
+> 272	_Generated by MCORCH BoK Scribe Agent v1.0.0 · Appendix added 2026-05-14_
+> 273	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/07-process-flow.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Process & Automation Blueprint
+> 2	
+> 3	**Project:** conteudo-v2
+> 4	**Version:** v0.1 | **Date:** 2026-05-08
+> 5	**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)
+> 6	**Status:** Approved
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Process Inventory
+> 11	
+> 12	| Process ID | Name | Type | Trigger | Owner | SLA |
+> 13	|------------|------|------|---------|-------|-----|
+> 14	| PROC-001 | Canvas Auto-Save | event-driven | Mudança no tldraw store (debounce 1500ms) | System | < 800ms p95 |
+> 15	| PROC-002 | Image Generation | human-in-loop | User clica "Gerar" em ImageGenerator shape | User + Edge Fn | < 30s p95 |
+> 16	| PROC-003 | Recipe Save | human-in-loop | User clica "Salvar como Receita" | User | < 1s |
+> 17	| PROC-004 | Recipe Apply | human-in-loop | User clica "Aplicar Receita" no library | User | < 500ms |
+> 18	| PROC-005 | Video Generation Async | event-driven | User clica "Gerar Vídeo" → Edge Fn cria operation_id | System | < 120s p95 (rescue handles outliers) |
+> 19	| PROC-006 | MCP Tool Invocation | event-driven | mega-brain-daemon faz JSON-RPC call | AIOS | < 2s p95 |
+> 20	| PROC-007 | Multiplayer Cursor Broadcast | event-driven | User move mouse no canvas | System | < 500ms latency |
+> 21	| PROC-008 | Multiplayer Document Sync | event-driven | Snapshot version increment | System | < 800ms broadcast |
+> 22	| PROC-009 | Storage Cleanup Orphan Assets | cron | Domingo 03:00 BRT | System | Idempotente |
+> 23	| PROC-010 | Recipe Embedding | event-driven | INSERT em content_canvas_recipes | System | < 5s (assíncrono, não bloqueia) |
+> 24	| PROC-011 | Canvas Milestone Insertion | event-driven | Recipe save / 50 generations / multiplayer session start | System | < 1s |
+> 25	| PROC-012 | LGPD Data Export Canvas | event-driven | User clica "Exportar dados" no Settings | User-triggered | < 30s |
+> 26	| PROC-013 | Account Deletion Cascade | event-driven | User completa delete_account modal | User-triggered | < 60s |
+> 27	
+> 28	> Types: `automated` | `human-in-loop` | `cron` | `event-driven`
+> 29	
+> 30	---
+> 31	
+> 32	## 2. BPMN-lite Process Maps
+> 33	
+> 34	### PROC-002: Image Generation
+> 35	
+> 36	```
+> 37	START
+> 38	  │ User clica "Gerar"
+> 39	  ▼
+> 40	[useImageGeneration → optimistic UI: shape.status = 'generating']
+> 41	  │
+> 42	  ▼
+> 43	[POST /functions/v1/generate-image (JWT Bearer)]
+> 44	  │
+> 45	  ▼
+> 46	<Validate JWT>
+> 47	  │ INVALID                                   │ VALID
+> 48	  ▼                                           ▼
+> 49	[HTTP 401] ────▶ [Toast: "Sessão expirada"]   │
+> 50	                                              ▼
+> 51	                                        <Validate request body>
+> 52	                                              │ INVALID                  │ VALID
+> 53	                                              ▼                          ▼
+> 54	                                        [HTTP 422] ──▶ [Toast PT-BR]    │
+> 55	                                                                         ▼
+> 56	                                                              <deduct_mco_coins(10)>
+> 57	                                                                  │ INSUFFICIENT      │ OK
+> 58	                                                                  ▼                   ▼
+> 59	                                                            [HTTP 402]                │
+> 60	                                                                  │                   ▼
+> 61	                                                            [Modal Top-up]      [POST OpenRouter image API]
+> 62	                                                                                      │ SUCCESS    │ TIMEOUT/5XX
+> 63	                                                                                      ▼            ▼
+> 64	                                                                                [Insert content_canvas_assets]
+> 65	                                                                                      │            │
+> 66	                                                                                      ▼            ▼
+> 67	                                                                                [Update doc snapshot]
+> 68	                                                                                      │            │
+> 69	                                                                                      ▼            ▼
+> 70	                                                                                [HTTP 200]    [Retry up to 3× exp backoff]
+> 71	                                                                                      │            │
+> 72	                                                                                      ▼            ▼ (after 3 fails)
+> 73	                                                                                [UI: image renders] [HTTP 500 + infra_health_logs]
+> 74	                                                                                      │
+> 75	                                                                                      ▼
+> 76	                                                                                  END
+> 77	```
+> 78	
+> 79	**Swimlanes:**
+> 80	
+> 81	| Swimlane | Participant | Tasks |
+> 82	|----------|-------------|-------|
+> 83	| User | Browser / Frontend | Click "Gerar"; observe loading state; see output |
+> 84	| Frontend Hook | `useImageGeneration` | Optimistic UI; POST request; handle response/error |
+> 85	| Edge Function | `generate-image/index.ts` | JWT validate, mcoCoins deduct, OpenRouter call, asset insert |
+> 86	| External API | `OpenRouter` | Image generation (NanoBanana / Flux / Gemini) |
+> 87	| DB | Supabase | RLS enforcement, atomic deduct, content_canvas_assets insert |
+> 88	
+> 89	---
+> 90	
+> 91	### PROC-003: Recipe Save
+> 92	
+> 93	```
+> 94	[User selects N shapes + bindings]
+> 95	  │
+> 96	  ▼
+> 97	[Click "Salvar como Receita"]
+> 98	  │
+> 99	  ▼
+> 100	[Modal: name + optional description]
+> 101	  │
+> 102	  ▼
+> 103	[useContentRecipes.save()]
+> 104	  │ → editor.getSnapshot({ shapeIds, bindingIds })
+> 105	  │
+> 106	  ▼
+> 107	[POST → Supabase JS client INSERT content_canvas_recipes]
+> 108	  │
+> 109	  ▼
+> 110	[trg_recipes_embed_on_insert disparado (assíncrono)]
+> 111	  │
+> 112	  ├──▶ Phase A (sincrónica): retorna 201 → UI library updates
+> 113	  │
+> 114	  └──▶ Phase B (assíncrona): pg_net invoca embed-mcorch-node
+> 115	              → embedding 768d retorna em < 5s
+> 116	              → UPDATE content_canvas_recipes SET embedding = vector
+> 117	```
+> 118	
+> 119	---
+> 120	
+> 121	### PROC-006: MCP Tool Invocation (AIOS via mega-brain)
+> 122	
+> 123	```
+> 124	[AIOS plan: criar nó imagem para campanha X]
+> 125	  │
+> 126	  ▼
+> 127	[mega-brain-daemon → JSON-RPC POST /functions/v1/canvas-mcp]
+> 128	  │ Body: { jsonrpc: '2.0', id: 42, method: 'canvas.create_node', params: {...} }
+> 129	  │
+> 130	  ▼
+> 131	[canvas-mcp Edge Fn]
+> 132	  ├── Validate JWT (service-role permitido para mega-brain) ──▶ -32001 if fail
+> 133	  ├── Validate JSON-RPC envelope ──▶ -32600 if malformed
+> 134	  ├── Lookup method em allowlist ──▶ -32601 if not found
+> 135	  ├── Validate params (Zod schema per tool) ──▶ -32602 if invalid
+> 136	  ├── Authorize: user owns document_id ──▶ -32002 if not
+> 137	  ├── Execute tool:
+> 138	  │     - canvas.create_node: UPDATE content_canvas_documents.snapshot
+> 139	  │     - canvas.update_node: UPDATE
+> 140	  │     - canvas.delete_node: UPDATE
+> 141	  │     - canvas.execute_recipe: chained image/video generations
+> 142	  │     - canvas.list_documents: SELECT
+> 143	  ├── Insert mcorch_nodes (canvas_aios_action milestone)
+> 144	  └── Return result + version
+> 145	```
+> 146	
+> 147	---
+> 148	
+> 149	## 3. n8n Workflow Blueprints
+> 150	
+> 151	### Workflow: Storage Cleanup Orphan Assets (PROC-009)
+> 152	
+> 153	**Trigger:** Cron `0 3 * * 0` (Domingo 03:00 BRT)
+> 154	**Idempotency key:** `cleanup-orphan-${YYYYMMDD}`
+> 155	
+> 156	```
+> 157	[Cron Trigger]
+> 158	  │
+> 159	  ▼
+> 160	[Node: Supabase SELECT distinct shape_id FROM content_canvas_assets]
+> 161	  │
+> 162	  ▼
+> 163	[Node: For each shape_id]
+> 164	  │
+> 165	  ├── [Check if shape_id exists in any doc.snapshot.shapes]
+> 166	  │
+> 167	  ├── (orphan) ──▶ [Node: DELETE asset row + Storage object]
+> 168	  │                       │
+> 169	  │                       ▼
+> 170	  │                 [Node: Insert infra_health_logs {event: 'canvas_orphan_cleanup'}]
+> 171	  │
+> 172	  └── (active) ──▶ [skip]
+> 173	```
+> 174	
+> 175	**Data Mapping:**
+> 176	
+> 177	| Input Field | Source | → | Output Field | Destination |
+> 178	|-------------|--------|---|--------------|-------------|
+> 179	| `shape_id` | content_canvas_assets | → | `delete predicate` | DELETE statement |
+> 180	| `asset_url` | content_canvas_assets | → | `storage.remove()` arg | Supabase Storage |
+> 181	
+> 182	### Workflow: Recipe Stability Bump (cron, weekly)
+> 183	
+> 184	**Trigger:** Cron `0 4 * * 0`
+> 185	**Idempotency key:** `recipe-stability-${YYYYMMDD}`
+> 186	
+> 187	```
+> 188	[Cron Trigger]
+> 189	  │
+> 190	  ▼
+> 191	[Node: SELECT * FROM content_canvas_recipes WHERE use_count >= 5 AND stability_score < 0.7]
+> 192	  │
+> 193	  ▼
+> 194	[Node: UPDATE stability_score = 0.7]
+> 195	  │
+> 196	  ▼
+> 197	[Node: insert mcorch_nodes (canvas_milestone) "Recipe X reached production stability"]
+> 198	```
+> 199	
+> 200	---
+> 201	
+> 202	## 4. Orchestration Integration Points
+> 203	
+> 204	> Aplica-se ao integrar canvas com `orchestrate-content` pipeline (BR-007 / PR-012).
+> 205	
+> 206	| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |
+> 207	|---------------|---------|----------|-------------|-----------------|
+> 208	| Canvas Asset Selection | step_canvas_pick | Antes do step_generate_image existente | Se user clicou "Publicar nesta campanha" em um asset do canvas, pula generate-image e usa o asset existente | 0 (já cobrado na geração original) |
+> 209	
+> 210	**Integration code stub (inside `orchestrate-content/index.ts`):**
+> 211	```typescript
+> 212	// Step canvas_pick: Reuse asset from canvas if provided
+> 213	if (payload.canvas_asset_id) {
+> 214	  await updateNodeStatus(nodes, 'step_canvas_pick', 'running')
+> 215	  const { data: asset } = await supabase
+> 216	    .from('content_canvas_assets')
+> 217	    .select('asset_url, asset_kind')
+> 218	    .eq('id', payload.canvas_asset_id)
+> 219	    .single()
+> 220	
+> 221	  if (!asset || asset.asset_kind !== 'image') {
+> 222	    await updateNodeStatus(nodes, 'step_canvas_pick', 'error')
+> 223	    throw new Error('Canvas asset não encontrado ou tipo incompatível')
+> 224	  }
+> 225	
+> 226	  imageUrl = asset.asset_url  // bypass generate-image
+> 227	  await updateNodeStatus(nodes, 'step_canvas_pick', 'complete')
+> 228	} else {
+> 229	  // existing generate-image flow
+> 230	  ...
+> 231	}
+> 232	```
+> 233	
+> 234	---
+> 235	
+> 236	## 5. Error Handling & Retry Strategy
+> 237	
+> 238	| Process | Step | Error Type | Max Retries | Backoff | Failure Action |
+> 239	|---------|------|-----------|-------------|---------|----------------|
+> 240	| PROC-001 | Save snapshot | Network timeout | 3 | Exponential (1s, 2s, 4s) | Save to localStorage as backup; retry on next debounce; toast "Conexão instável" |
+> 241	| PROC-002 | OpenRouter call | 5xx / timeout | 3 | Exponential (2s, 4s, 8s) | Insert `infra_health_logs`; toast "Modelo temporariamente indisponível"; refund mcoCoins |
+> 242	| PROC-002 | mcoCoins deduct | RPC timeout | 2 | Linear 1s | Idempotency key prevents double charge; toast "Tente novamente" |
+> 243	| PROC-005 | Video generation | Long-running | 0 (use polling) | — | rescue-video Edge Function (existing); poll cada 30s; UI mostra progress |
+> 244	| PROC-006 | MCP method execution | Tool failure | 1 | None | Return JSON-RPC error; AIOS replan |
+> 245	| PROC-008 | Document broadcast | Realtime down | ∞ | Reconnect on heartbeat | Fallback para polling Postgres a cada 5s |
+> 246	| Any | JWT validation | Invalid token | 0 | — | HTTP 401 imediato; UI redirect para `/auth` |
+> 247	
+> 248	---
+> 249	
+> 250	## 6. SLA Definitions
+> 251	
+> 252	| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |
+> 253	|---------|------|------------------|-------------------|-------------------|
+> 254	| PROC-001 | End-to-end save | < 500ms p50 / 800ms p95 | 5s | Yes → infra_health_logs |
+> 255	| PROC-002 | NanoBanana image | < 8s p50 / 30s p95 | 60s | Yes |
+> 256	| PROC-002 | Flux.2 image | < 12s p50 / 45s p95 | 90s | Yes |
+> 257	| PROC-005 | Veo 3 video (5s clip) | < 90s p50 / 180s p95 | 300s | Yes (auto-rescue após 120s) |
+> 258	| PROC-005 | Kling 3 video (5s clip) | < 60s p50 / 120s p95 | 240s | Yes |
+> 259	| PROC-006 | MCP tool invocation | < 800ms p95 | 5s | Yes |
+> 260	| PROC-007 | Cursor broadcast latency | < 200ms p95 | 1s | Yes (degrade to polling) |
+> 261	| PROC-010 | Recipe embedding | < 3s | 10s | Warn |
+> 262	| PROC-012 | Data export gen | < 15s p95 | 60s | Yes |
+> 263	| PROC-013 | Account deletion | < 30s p95 | 120s | Yes |
+> 264	
+> 265	---
+> 266	
+> 267	## 7. Cron Jobs
+> 268	
+> 269	| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |
+> 270	|----------|----------------|----------|-------------|-----------------|
+> 271	| `canvas-orphan-cleanup` | `0 3 * * 0` (Sun 03:00 BRT) | n8n workflow PROC-009 | `cleanup-orphan-${YYYYMMDD}` | infra_health_logs |
+> 272	| `canvas-recipe-stability-bump` | `0 4 * * 0` | n8n workflow weekly | `recipe-stability-${YYYYMMDD}` | infra_health_logs |
+> 273	| `canvas-thumbnail-refresh` | `0 5 * * *` (daily 05:00 BRT) | Refresh thumbnail PNG para top 100 docs ativos | per-document hash | Sem alert (best-effort) |
+> 274	| `watchdog-mcorch.sh` (existente) | `*/5 * * * *` | Já cobre Edge Functions; expandir para canvas-mcp | per-tick timestamp | infra_health_logs |
+> 275	| `audit-4cs.sh` (existente) | `0 12 * * 1` (Seg 09:00 BRT) | Já cobre projeto inteiro; capturará canvas KPIs | weekly snapshot | infra_health_logs |
+> 276	
+> 277	> All cron jobs must be idempotent — re-running on the same data must produce the same result.
+> 278	
+> 279	**Crons NÃO necessários (anti-patterns evitados):**
+> 280	- Não há cron de "save canvas a cada N min" — auto-save event-driven é suficiente
+> 281	- Não há cron de "regenerate embeddings" — trigger pg_net cobre INSERT; UPDATE de stability é separado
+> 282	
+> 283	---
+> 284	
+> 285	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 286	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/08-quality-metrics.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Quality & Self-Optimization Specification
+> 2	
+> 3	**Project:** conteudo-v2
+> 4	**Version:** v0.1 | **Date:** 2026-05-08
+> 5	**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)
+> 6	**Status:** Approved
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Quality Objectives
+> 11	
+> 12	| QO ID | Objective | Linked Business Objective | Target | Review Cadence |
+> 13	|-------|-----------|--------------------------|--------|---------------|
+> 14	| QO-001 | Manter NPS do canvas ≥ 50 | BO-004 | NPS ≥ 50 12-month | Trimestral via in-app survey |
+> 15	| QO-002 | Garantir < 1% de gerações falhadas (todas Edge Fns) | BO-002 | success_rate ≥ 99% | Semanal via Supabase logs |
+> 16	| QO-003 | mcoCoins refunds < 0.5% das gerações | BO-002 | refund_rate ≤ 0.5% | Mensal via mco_transactions audit |
+> 17	| QO-004 | Bundle size gzipped após cada phase | BO-001 (LCP afeta activation) | < 2.5MB MVP / < 4MB v2.0 | Por release Lighthouse CI |
+> 18	| QO-005 | LGPD compliance (data-export + delete-account) zero falhas | BO-005 | 100% | Auditoria trimestral manual |
+> 19	| QO-006 | Recipe reuse adoption | BO-002 | ≥ 25% MAU usa Recipe em 6m | Mensal |
+> 20	| QO-007 | Multiplayer drift < 1s P95 | BO-005 | drift ≤ 1000ms p95 | Mensal load test |
+> 21	| QO-008 | MCP server uptime | BO-005 | ≥ 99.5% | Watchdog telemetry |
+> 22	
+> 23	---
+> 24	
+> 25	## 2. KPI Dashboard Definition
+> 26	
+> 27	> Data source: Supabase tables/views listed per KPI.
+> 28	
+> 29	| KPI ID | Name | Formula | Target | Warn Threshold | Critical Threshold | Data Source |
+> 30	|--------|------|---------|--------|---------------|-------------------|-------------|
+> 31	| KPI-001 | Canvas DAU | `COUNT(DISTINCT user_id) FROM content_canvas_documents WHERE updated_at > now() - 1d` | > 30 (Y1 mid) | < 20 | < 10 | `content_canvas_documents` |
+> 32	| KPI-002 | Activation Rate | `% novos signups com ≥ 1 canvas em 7d` | > 40% | < 30% | < 20% | `content_canvas_documents` JOIN `auth.users` |
+> 33	| KPI-003 | mcoCoins ARPU | `SUM(mco_coins_spent) / DISTINCT user_id` (canvas-attributed) | > R$ 60/MAU | < R$ 40 | < R$ 25 | `content_canvas_assets` JOIN `mco_transactions` |
+> 34	| KPI-004 | Edge Fn p95 Latency (image) | `PERCENTILE_CONT(0.95)` sobre logs de generate-image | < 30s | > 45s | > 60s | Supabase Function logs |
+> 35	| KPI-005 | Generation Success Rate | `successful / total gerações` | ≥ 99% | < 97% | < 95% | content_canvas_assets vs failed events |
+> 36	| KPI-006 | Recipe Adoption | `% MAU com ≥ 1 recipe save OU apply` | > 25% | < 15% | < 5% | `content_canvas_recipes` |
+> 37	| KPI-007 | Knowledge Mesh Growth (canvas) | `COUNT(canvas_milestone + canvas_recipe nodes)` semanal | > 50/sem | < 20 | 0 | mcorch_nodes |
+> 38	| KPI-008 | Multiplayer Concurrent Sessions | `COUNT(DISTINCT document_id) com 2+ cursors` | tracked Phase 7 | — | — | Realtime presence logs |
+> 39	| KPI-009 | MCP Tool Calls/day | `COUNT JSON-RPC requests to canvas-mcp` | tracked Phase 8 | — | — | Edge Fn logs |
+> 40	| KPI-010 | Storage Used (Canvas) | `SUM size_bytes content_canvas_documents + assets` | < 50GB Y1 | < 100GB | < 200GB | Supabase Storage stats |
+> 41	| KPI-011 | Refund Rate (canvas) | `mcoCoins_refunded / mcoCoins_spent` (failed gens) | ≤ 0.5% | > 1% | > 2% | mco_transactions |
+> 42	| KPI-012 | NPS Canvas | survey periódico in-app | ≥ 50 | < 30 | < 0 | nps_responses table |
+> 43	
+> 44	---
+> 45	
+> 46	## 3. FMEA Table
+> 47	
+> 48	> Severity, Occurrence, Detection: 1 (best) → 10 (worst). RPN = S × O × D. RPN > 100 requires action.
+> 49	
+> 50	| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |
+> 51	|----|---------|--------------|--------|---|---|---|-----|--------------------|
+> 52	| FMEA-CV-001 | mcoCoins deduct (canvas gens) | RPC timeout → double charge | User overcharged | 9 | 2 | 3 | 54 | Idempotency key per shape_id + request_id; retry-safe RPC |
+> 53	| FMEA-CV-002 | Canvas auto-save | Race condition entre debounced save e user editing | Snapshot perdido / version mismatch | 7 | 4 | 5 | 140 | **Action required** — versioning monotônico server-side; reject saves com version < latest |
+> 54	| FMEA-CV-003 | OpenRouter image API | Provider 5xx prolongado | Geração falha; UX ruim | 6 | 3 | 2 | 36 | Multi-provider fallback; toast PT-BR claro; refund automático |
+> 55	| FMEA-CV-004 | RLS policy `shared_with[]` | Bug em policy expõe canvas para outro tenant | LGPD violation crítico | 10 | 1 | 4 | 40 | /security-review obrigatório no PR; testes E2E multi-tenant; audit trimestral |
+> 56	| FMEA-CV-005 | tldraw schema breaking change | Upgrade tldraw 4.x→5.x quebra snapshots existentes | Canvas dos users vazios após upgrade | 9 | 2 | 6 | 108 | **Action required** — pin version; migration script para upgrade; canary release com 5% MAU |
+> 57	| FMEA-CV-006 | Embedding API timeout (recipes) | Recipe sem embedding → não searchable | Feature degradação | 5 | 4 | 4 | 80 | Async retry queue; backfill cron mensal |
+> 58	| FMEA-CV-007 | canvas-mcp prompt injection | Malicious params em params.shape_type → RCE-equivalent | Critical security breach | 10 | 2 | 5 | 100 | **Action required** — Zod schema strict + allowlist enum + Sandbox params parsing; pen-test |
+> 59	| FMEA-CV-008 | Multiplayer broadcast loop | A→B→A echo de cursor cria infinite event | Channel saturado | 6 | 3 | 7 | 126 | **Action required** — origin filter no broadcast; sender_id check antes de aplicar local |
+> 60	| FMEA-CV-009 | Storage exhaustion via massive snapshot | User cria canvas com 1000 imagens → snapshot 50MB | Backup falha; query lenta | 7 | 3 | 4 | 84 | size_bytes CHECK ≤ 5MB (já no schema); UI warning > 4MB |
+> 61	| FMEA-CV-010 | Refund logic falha após gen error | mcoCoins debitados mas geração falhou e refund não rolou | User chargeback / NPS ruim | 8 | 3 | 5 | 120 | **Action required** — refund RPC chamada no catch block do Edge Fn; reconciliation cron diário |
+> 62	| FMEA-CV-011 | Voice clone abuse / deepfake | User treina voz de terceiro sem consentimento | Legal exposure | 9 | 3 | 7 | 189 | **Action required** — consent_text obrigatório com 50+ chars; audit log; LGPD disclaimer; 100 coins (alto custo) |
+> 63	| FMEA-CV-012 | LGPD data export incompleto | data-export Edge Fn não inclui novas tabelas canvas | LGPD violation | 9 | 4 | 3 | 108 | **Action required** — extender data-export; teste E2E mensal; checklist /migration manda incluir |
+> 64	| FMEA-CV-013 | Cybersickness em VirtualScene | User opera 3D scene > 30min sem pausa | Saúde do user | 4 | 4 | 8 | 128 | **Action required** — auto-prompt "fazer pausa" após 25min; respeitar prefers-reduced-motion |
+> 65	| FMEA-CV-014 | OpenRouter cost spike | Modelo cara hidden ($1/imagem) e mcoCoins/img fixo em 10 (R$2) | Margin negativa | 7 | 3 | 6 | 126 | **Action required** — telemetria cost-per-coin por modelo; alert se margin < 30%; dynamic pricing |
+> 66	
+> 67	> **Items com RPN > 100 (8 items) — todos têm "Action required" no roadmap. FMEA-CV-002, 005, 007, 008, 010, 011, 012, 013, 014 viram tickets em sprint-priorities.md durante implementação das phases correspondentes.**
+> 68	
+> 69	---
+> 70	
+> 71	## 4. Self-Optimization Loops
+> 72	
+> 73	| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |
+> 74	|---------|------------------|------------|--------------------|--------------------|
+> 75	| SOL-001 | KPI-004 image latency p95 > 45s por 5 calls consecutivas | infra_health_logs | mega-brain-daemon: switch primary model para fallback (NanoBanana → Flux como exemplo) | Alert Sovereign se sustained > 60s por 1h |
+> 76	| SOL-002 | KPI-005 success rate < 95% em janela de 1h | content_canvas_assets vs logs | Pause shape type problemático na NodePalette com banner "Modelo X temporariamente indisponível" | Alert imediato Sovereign |
+> 77	| SOL-003 | KPI-007 mesh growth = 0 por 7d | mcorch_nodes | Trigger backfill embeddings (recipes) via cron one-shot | Alert se backfill falha |
+> 78	| SOL-004 | KPI-011 refund rate > 1% em 24h | mco_transactions | Pause Edge Fn problemático; refund batch automático | Sovereign decide se rollback ou patch |
+> 79	| SOL-005 | KPI-014 sessões > 25min sem pausa em VirtualScene | activity log | Modal "Que tal uma pausa?" com botão "Continuar" | None (UX gentle) |
+> 80	| SOL-006 | mcoCoins balance < 10% do plan quota | profiles | In-app notification PT-BR + CTA top-up | None (user choice) |
+> 81	| SOL-007 | KPI-010 storage > 80% do limite | Storage stats | Trigger PROC-009 (orphan cleanup) imediatamente | Alert se cleanup não recupera 10% |
+> 82	
+> 83	---
+> 84	
+> 85	## 5. Self-Healing Specifications
+> 86	
+> 87	### 5.1 Watchdog Telemetry Events
+> 88	
+> 89	New event types written to `infra_health_logs` by this feature:
+> 90	
+> 91	| Event Type | Trigger | Severity | Payload |
+> 92	|------------|---------|----------|---------|
+> 93	| `canvas_fn_failure` | Edge Fn 5xx after retry exhaustion | error | `{fn_name, error_message, user_id, shape_id, document_id}` |
+> 94	| `canvas_embed_failure` | embed-mcorch-node timeout para recipe | warn | `{recipe_id, retry_count}` |
+> 95	| `canvas_sla_breach` | Process SLA exceeded | warn | `{process_id, elapsed_ms, threshold_ms, document_id}` |
+> 96	| `canvas_mcp_method_unknown` | Tool não-allowlisted invocado | warn | `{method, source_jwt_user}` |
+> 97	| `canvas_realtime_drift` | Multiplayer drift > 1s | warn | `{document_id, drift_ms}` |
+> 98	| `canvas_storage_warning` | Snapshot size > 4MB | info | `{document_id, size_bytes}` |
+> 99	| `canvas_refund_issued` | Refund automático após gen failure | info | `{user_id, amount, reason}` |
+> 100	| `canvas_orphan_cleanup` | Cron PROC-009 completou | info | `{deleted_count, freed_bytes}` |
+> 101	
+> 102	### 5.2 Auto-Recovery Script Stubs
+> 103	
+> 104	```bash
+> 105	#!/bin/bash
+> 106	# scripts/self-heal-conteudo-v2.sh
+> 107	# Triggered by mega-brain-daemon when canvas_fn_failure detected
+> 108	
+> 109	FUNCTION_NAME="$1"  # generate-image | canvas-mcp | etc.
+> 110	LOG_TABLE="infra_health_logs"
+> 111	
+> 112	echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Self-heal triggered for $FUNCTION_NAME"
+> 113	
+> 114	# Step 1: Health probe
+> 115	STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+> 116	  "$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health" \
+> 117	  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+> 118	
+> 119	if [ "$STATUS" != "200" ]; then
+> 120	  echo "[WARN] Function unhealthy (status: $STATUS). Re-deploying..."
+> 121	  npx supabase functions deploy "$FUNCTION_NAME"
+> 122	
+> 123	  # Step 2: Verify post-deploy
+> 124	  sleep 5
+> 125	  STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+> 126	    "$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health")
+> 127	
+> 128	  if [ "$STATUS" != "200" ]; then
+> 129	    echo "[CRITICAL] Re-deploy did not heal. Escalating to Sovereign."
+> 130	    # Insert critical event
+> 131	  else
+> 132	    echo "[OK] Self-heal successful."
+> 133	  fi
+> 134	fi
+> 135	```
+> 136	
+> 137	### 5.3 mega-brain-daemon Integration Points
+> 138	
+> 139	| Daemon Event | Condition | Action |
+> 140	|-------------|-----------|--------|
+> 141	| `health_check` | Every 5 min (existing watchdog cron) | Probe `/functions/v1/canvas-mcp/health`; verify Realtime channel `canvas:*` ativo |
+> 142	| `anomaly_detected` | error rate > 5/hour para `canvas_fn_failure` | Execute `self-heal-conteudo-v2.sh <fn_name>` |
+> 143	| `recovery_confirmed` | Health probe passa após self-heal | Insert `recovery_ok` event para `infra_health_logs` |
+> 144	| `sustained_degradation` | KPI-004 > critical por > 1h | Page Sovereign via webhook (Phase 8 — Slack/email) |
+> 145	
+> 146	---
+> 147	
+> 148	## 6. SLA / SLO / SLI Definitions
+> 149	
+> 150	| Service | SLI (what we measure) | SLO (our target) | SLA (contractual consequence) |
+> 151	|---------|----------------------|------------------|-------------------------------|
+> 152	| `generate-image` API (canvas usage) | p95 response latency | ≤ 30s | Refund mcoCoins se > 60s; credits Enterprise se sustained > 45s 1h |
+> 153	| `generate-video` API (canvas) | p95 response latency | ≤ 120s (Veo) / ≤ 90s (Kling) | rescue-video gratuito; refund se > 240s |
+> 154	| `canvas-mcp` API | p95 latency | ≤ 800ms | None Phase 8 (interno); Y2 SLA contratual Enterprise |
+> 155	| Canvas auto-save | p95 latency | ≤ 800ms | Save offline para localStorage; resync ao reconectar |
+> 156	| Recipe embedding | % nodes embedded em 5min | ≥ 95% | Auto-backfill cron mensal |
+> 157	| Multiplayer drift | p95 cursor latency | ≤ 500ms | Degrade graceful para polling |
+> 158	| Platform uptime | % minutes available per month | ≥ 99.5% | Per Enterprise contract |
+> 159	| LGPD data export | Time to export all canvas data | ≤ 30s para 100 docs | Manual escalation se > 60s |
+> 160	
+> 161	---
+> 162	
+> 163	## 7. PDCA Improvement Cadence
+> 164	
+> 165	| Cycle | Phase | Activity | Owner | Frequency |
+> 166	|-------|-------|----------|-------|-----------|
+> 167	| Conteúdo v2 Quality | Plan | Review FMEA + KPI targets; update RPN | Sovereign + AIOS | Trimestral |
+> 168	| Conteúdo v2 Quality | Do | Implement top RPN > 100 action por sprint | Engineering | Per sprint |
+> 169	| Conteúdo v2 Quality | Check | Compare KPIs vs. targets; update FMEA RPNs | AIOS (audit-4cs.sh + manual review) | Mensal |
+> 170	| Conteúdo v2 Quality | Act | Close loop; update este documento; insert canvas_milestone na mesh | Sovereign | Mensal |
+> 171	
+> 172	**Improvement backlog location:** `.claude/context/sprint-priorities.md`
+> 173	
+> 174	**Key metrics review cadence:**
+> 175	- Diária (automatizada): KPI-001, KPI-004, KPI-005 via dashboard de get-infra-status
+> 176	- Semanal: KPI-002, KPI-003, KPI-006, KPI-007, KPI-011 via audit-4cs.sh report
+> 177	- Mensal: KPI-008, KPI-009, KPI-010 + revisão FMEA
+> 178	- Trimestral: KPI-012 (NPS) + revisão de targets
+> 179	
+> 180	---
+> 181	
+> 182	## 8. Observability Checklist
+> 183	
+> 184	### 8.1 Logging Events
+> 185	
+> 186	| Event | Location | Level | Fields logged |
+> 187	|-------|----------|-------|--------------|
+> 188	| Function entry | each Edge Fn line ~10 | INFO | `{user_id, timestamp, request_id, document_id?}` |
+> 189	| mcoCoins deduction | After RPC call | INFO | `{user_id, amount, new_balance, shape_id, fn_name}` |
+> 190	| Generation success | After Insert content_canvas_assets | INFO | `{asset_id, asset_kind, mco_coins_spent, latency_ms}` |
+> 191	| Business logic error | Catch block | ERROR | `{user_id, error_message, stack, fn_name, request_id}` |
+> 192	| SLA breach | Timeout guard | WARN | `{process_id, elapsed_ms}` |
+> 193	| mcoCoins refund | Refund branch | WARN | `{user_id, amount, reason}` |
+> 194	| MCP method invoked | canvas-mcp entry | INFO | `{method, params_hash, acting_as_user_id}` |
+> 195	| Multiplayer drift | Realtime monitor | WARN | `{document_id, drift_ms, participant_count}` |
+> 196	
+> 197	### 8.2 Alerting Rules
+> 198	
+> 199	| Condition | Channel | Escalation |
+> 200	|-----------|---------|------------|
+> 201	| Error rate > 1% em 5min | infra_health_logs insert | mega-brain-daemon auto-heal |
+> 202	| p95 latency > 2× target | infra_health_logs insert | Sovereign notification (email Phase 8) |
+> 203	| Zero KPI-007 mesh growth > 7d | Scheduled check | AIOS agent alert |
+> 204	| Refund rate > 2% em 24h | infra_health_logs critical | Sovereign immediate alert |
+> 205	| FMEA-CV-007 (MCP injection) detected | Edge Fn validation reject | Sovereign + security audit immediate |
+> 206	| FMEA-CV-011 (voice clone abuse) | Audit log review | Sovereign + legal review trimestral |
+> 207	
+> 208	### 8.3 Distributed Tracing Touchpoints
+> 209	
+> 210	| Span | Start | End | Tags |
+> 211	|------|-------|-----|------|
+> 212	| `canvas.generate_image.total` | Request received | Response sent | `user_id`, `model`, `status_code` |
+> 213	| `canvas.generate_image.mco_check` | Before RPC | After RPC | `amount`, `balance_after` |
+> 214	| `canvas.generate_image.openrouter` | Before external call | After call | `model`, `duration_ms`, `success` |
+> 215	| `canvas.generate_image.embed` | Before embed-mcorch-node call | After call | `asset_id`, `success` |
+> 216	| `canvas.recipe.save` | INSERT start | UI library updated | `recipe_id`, `node_count`, `binding_count` |
+> 217	| `canvas.recipe.apply` | SELECT recipe | createShapes done | `recipe_id`, `shape_count` |
+> 218	| `canvas.mcp.invoke` | JSON-RPC parse | Response | `method`, `acting_as`, `success` |
+> 219	| `canvas.multiplayer.broadcast` | Local change | Remote ack | `document_id`, `participant_count`, `latency_ms` |
+> 220	
+> 221	### 8.4 Dashboards
+> 222	
+> 223	| Dashboard | Path | Metrics |
+> 224	|-----------|------|---------|
+> 225	| Canvas Operations Dashboard | `/dashboard/admin/canvas-ops` (Y2) | KPI-001, KPI-004, KPI-005, KPI-007 (real-time) |
+> 226	| Sovereign Health (existing) | `/dashboard` Neural HUD | infra_health_logs canvas_* events |
+> 227	| Sprint Audit | `audit-4cs.sh` weekly | All KPIs trended |
+> 228	
+> 229	---
+> 230	
+> 231	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 232	
+> ```
+
+## 🤖 Claude
+
+Perfect! Now I have all the information I need. Let me compile my findings into a comprehensive report. Since you asked for a "very thorough" exploration, I'll provide detailed structural analysis of both the methodology and the reference suite.
+
+---
+
+## COMPREHENSIVE BoK SCRIBE EXPLORATION REPORT
+
+I have thoroughly analyzed both the BoK Scribe methodology and the conteúdo-v2 reference suite. Here's your complete structural guide for authoring 6 new viralmind BoK documents:
+
+---
+
+## PART A: BoK SCRIBE METHODOLOGY & TEMPLATES
+
+### Command & Agent Architecture
+**Location:** `/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/bok-scribe.md` + `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md`
+
+The framework combines:
+- **8-phase workflow** (Phase 0–7, with Phase 6 being traceability validation)
+- **8 BoK lenses applied sequentially**: BABOK v3 (Phases 1), ProdBOK + CXBOK (Phase 2), SWEBOK v4 + CISSP CBK (Phase 3), DMBOK v2 + BPM CBOK v4 (Phase 4), CMQ/OE BOK (Phase 5)
+- **9-document output family** with ID numbering conventions (MR-, BR-, PR-, FR-, NFR-, OTD-)
+- **One-way traceability flow**: MR → BR → PR → FR → (DB table | Edge Function | n8n process)
+
+### Template Structure & Placeholders
+
+**00-INDEX.md** (Project Manifest)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/00-index.md`
+- **Heading outline:**
+  - Project Metadata (table: Business Idea, Market Segment, Monetization Model, Regulatory Profile, Integration Surface, Project Slug)
+  - Document Registry (status table for all 9 docs, BoK Applied per doc)
+  - Traceability Chain (visual tree MR→BR→PR→FR→implementation)
+  - Phase Completion Log (8 rows, date + notes)
+  - Open Technical Decisions (OTD table: ID, Description, Options, Recommendation, Status)
+  - Footer: generated line with agent version
+
+- **Placeholders used:** `{{PROJECT_SLUG}}`, `{{DATE}}`, `{{BUSINESS_IDEA}}`, `{{MARKET_SEGMENT}}`, `{{MONETIZATION_MODEL}}`, `{{REGULATORY_PROFILE}}`, `{{INTEGRATION_SURFACE}}`, `{{SOVEREIGN_ID}}`
+- **Status badges:** `[x] complete` / `[ ] pending`
+- **ID convention:** OTD-001, OTD-002, etc. (3-digit zero-padded)
+
+---
+
+**01-MRD.md** (Market Requirements Document)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/01-mrd.md`
+- **Heading outline:**
+  - 1. Executive Summary (1 paragraph, why-now + unique value)
+  - 2. Market Problem Statement
+    - 2.1 Current State
+    - 2.2 Root Cause Analysis
+    - 2.3 Desired State
+  - 3. Target Market Segments (table: Primary/Secondary, Size, Urgency, Accessibility)
+    - 3.1 TAM / SAM / SOM (3-row table: Metric, Value, Basis)
+  - 4. Competitive Landscape (table: Competitor, Positioning, Strengths, Weaknesses, Our Differentiation)
+  - 5. Market Opportunity & Timing (narrative)
+  - 6. Market Requirements (table: ID, Requirement, Priority, Rationale, Source)
+  - 7. Success Metrics (Market-Level KPIs) (table: KPI, Definition, Target 6mo, Target 12mo, Measurement)
+  - 8. Regulatory & Compliance Context (table: Regulation, Applicability, Constraint, Owner)
+  - 9. Traceability Matrix Stub (MR ID → BR ID link)
+
+- **ID conventions:** MR-001, MR-002, ... (zero-padded 3 digits); Priority: Critical/High/Medium/Low
+- **Placeholders:** All {{UPPERCASE_VARIABLE}} style; includes {{TAM}}, {{SAM}}, {{SOM}}, {{COMP_1..3}}, {{MR_001_DESC}}, etc.
+- **Table structure:** Every table has header row with `|---|---|---|` alignment row
+
+---
+
+**02-BRD.md** (Business Requirements Document)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/02-brd.md`
+- **Heading outline:**
+  - 1. Executive Summary
+  - 2. Business Objectives (SMART) (table: BO-ID, Objective, S/M/A/R/T columns)
+  - 3. Stakeholder Register (table: ID, Role, Interest, Influence, Communication Cadence, Contact)
+  - 4. Business Requirements (table: ID, Requirement, MR Traced, Priority, mcoCoins Cost, Acceptance Criteria)
+  - 5. ROI Model
+    - 5.1 Cost Estimates (table: Item, Type, Monthly, Annual)
+    - 5.2 Revenue Streams (table: Stream, Model, Monthly Potential, Notes)
+    - 5.3 Payback Analysis (table: Metric, Value)
+  - 6. mcoCoins Economics (table: Operation, Coins/Run, Plan Tier Mapping, Monthly Volume, Monthly Revenue)
+  - 7. Constraints & Assumptions (bulleted subsections)
+  - 8. Business Risk Register (table: Risk ID, Description, Probability, Impact, RPN, Mitigation)
+  - 9. Business Acceptance Criteria (table: ID, Criterion, Verification Method)
+  - 10. Traceability Matrix (MR ID → BR ID → PR ID stub)
+
+- **ID conventions:** BO-001, BR-001, BR-RISK-001, BAC-001, SH-001 (Stakeholder)
+- **Probability & Impact:** numeric 1-10 scale with note "1=Low, 5=High. RPN = Probability × Impact."
+- **Special field:** mcoCoins Cost in coins (integer) or "0" if non-monetary
+
+---
+
+**06-DATA-MODEL.md** (Data & Knowledge Model)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md`
+- **Heading outline:**
+  - 1. Conceptual Data Model (ASCII ERD with box/arrow notation, entity list + relationships)
+  - 2. Logical Data Model (per table: table name, columns with Type/Nullable/Default/FK/Description in markdown table)
+  - 3. Supabase Physical Schema Stubs (SQL CREATE TABLE + RLS policies + indexes, code block format)
+  - 4. GraphRAG Knowledge Nodes
+    - Node Types Introduced (table: node_type, Title Pattern, Content Fields, Embedding Source)
+    - Edge Types Introduced (table: Edge relationship, Source, Target, Metadata)
+    - Embedding Trigger (code snippet with function invocation)
+    - FSRS-6 Parameters (table: Field, Initial Value, Decay Rule)
+  - 5. Tenant Isolation Map (table: Table, user_id scope, project_id scope, System rows)
+  - 6. Data Quality Rules (table: Table, Column, Rule, Violation Message PT-BR)
+  - 7. Retention & Archival Policy (table: Data, Retention Period, Archival Strategy, Deletion Trigger)
+
+- **ER diagram convention:** ASCII art with brackets `[Entity]` and arrows `──(1:N)──▶` or `──(N:M)──▶`
+- **Column table structure:** columns: id, user_id (tenant), project_id (optional scope), business columns, embedding (if RAG), stability_score (FSRS), created_at, updated_at
+- **SQL conventions:** UUID primary keys, `gen_random_uuid()` default, `auth.users(id)` FK, `ON DELETE CASCADE`, RLS enabled with SELECT/INSERT/UPDATE/DELETE policies, triggers for `update_updated_at_column()` and embedding via `embed-mcorch-node`
+- **Index conventions:** user_id, project_id, foreign keys (B-tree), embedding (HNSW), composite indexes on search columns
+
+---
+
+**07-PROCESS-FLOW.md** (Process & Automation Blueprint)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md`
+- **Heading outline:**
+  - 1. Process Inventory (table: Process ID, Name, Type, Trigger, Owner, SLA)
+  - 2. BPMN-lite Process Maps (per major process)
+    - ASCII flow diagrams: `START ──▶ [Task] ──▶ <Gateway> ──▶ [Task] ──▶ END`
+    - Swimlanes table: Swimlane, Participant, Tasks
+  - 3. n8n Workflow Blueprints (per automated process)
+    - Trigger, Idempotency key
+    - ASCII flow of nodes with branches and error paths
+    - Data Mapping table (Input Field → Output Field)
+  - 4. Orchestration Integration Points (if feature integrates with orchestrate-content pipeline)
+    - Table: Pipeline Step, Step ID, Position, Description, mcoCoins Trigger
+    - Code stub (TypeScript inside orchestrate-content/index.ts)
+  - 5. Error Handling & Retry Strategy (table: Process, Step, Error Type, Max Retries, Backoff, Failure Action)
+  - 6. SLA Definitions (table: Process, Step, Expected Duration, Timeout Threshold, Alert if exceeded)
+  - 7. Cron Jobs (table: Job Name, Schedule (cron), Function, Idempotency, Failure Alerting)
+
+- **ID conventions:** PROC-001, PROC-002, etc.
+- **Process Types:** `automated` | `human-in-loop` | `cron` | `event-driven`
+- **Flow notation:** ASCII boxes with flow arrows; swimlane format with User, Frontend Hook, Edge Function, External API, DB participants
+- **Error paths:** Explicit branches for failure scenarios (401, 402, 5xx, timeout, retry exhaustion)
+- **SLA format:** e.g., "< 30s p95" (percentile notation), timeout threshold separate
+
+---
+
+**08-QUALITY-METRICS.md** (Self-Optimization & Self-Healing Specification)
+- Location: `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md`
+- **Heading outline:**
+  - 1. Quality Objectives (table: QO ID, Objective, Linked Business Objective, Target, Review Cadence)
+  - 2. KPI Dashboard Definition (table: KPI ID, Name, Formula, Target, Warn Threshold, Critical Threshold, Data Source)
+  - 3. FMEA Table (Failure Mode & Effects Analysis)
+    - Table: ID, Function, Failure Mode, Effect, S, O, D, RPN, Recommended Action
+    - Note: RPN = S × O × D; RPN > 100 requires action
+  - 4. Self-Optimization Loops (table: Loop ID, Trigger Condition, KPI Source, Autonomous Response, Escalation)
+  - 5. Self-Healing Specifications
+    - 5.1 Watchdog Telemetry Events (table: Event Type, Trigger, Severity, Payload)
+    - 5.2 Auto-Recovery Script Stubs (bash code block)
+    - 5.3 mega-brain-daemon Integration Points (table: Daemon Event, Condition, Action)
+  - 6. SLA / SLO / SLI Definitions (table: Service, SLI, SLO, SLA consequence)
+  - 7. PDCA Improvement Cadence (table: Cycle, Phase, Activity, Owner, Frequency)
+  - 8. Observability Checklist
+    - 8.1 Logging Events (table: Event, Location, Level, Fields logged)
+    - 8.2 Alerting Rules (table: Condition, Channel, Escalation)
+    - 8.3 Distributed Tracing Touchpoints (table: Span, Start, End, Tags)
+
+- **ID conventions:** QO-001, KPI-001, FMEA-001, SOL-001 (Self-Optimization Loops)
+- **Severity:** error | warn | info
+- **FMEA scoring:** S (Severity 1-10), O (Occurrence 1-10), D (Detection 1-10); RPN threshold = 100
+- **SLA structure:** separate SLI (measurement), SLO (target), SLA (contractual consequence)
+
+---
+
+## PART B: REFERENCE SUITE — CONTEÚDO-V2 GOLD STANDARD
+
+All 6 reference docs are located in: `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/`
+
+### **00-index.md** (Project Manifest — Complete Analysis)
+
+**File size:** ~6.6 KB | **Word count:** ~1,300
+
+**Exact heading outline:**
+```
+BoK Documentation Suite — conteudo-v2
+
+Project Metadata (table: Business Idea, Market Segment, Monetization Model, Regulatory, Integration, Slug)
+
+Document Registry (9-row table, complete status)
+
+Traceability Chain (visual tree, 5 major MR branches with full hierarchy)
+
+⚙️ Convergence Note — v1 (xyflow + vm_*) → v2 (tldraw + canvas-mcp)
+  Includes mapping table: Planejado | Entregue | Status
+
+Phase Completion Log (8 rows, dates filled for all completed, status for pending Phase 7)
+
+Open Technical Decisions (5 OTDs: canvas engine, persistence, coin pricing, MCP transport, bundle splitting)
+
+Footer: generated line v1.0.0
+```
+
+**Key observations:**
+- Includes **convergence note added 2026-05-14** — post-hoc real-world amendment explaining implementation delta
+- All phases except Phase 7 marked complete with dates
+- OTDs are **decided/deferred status** (not just pending) — shows decision tracking maturity
+- Traceability chain is **5 complete MR branches**, each with detailed downstream links
+- Footer explicitly notes appendix additions beyond original template
+
+---
+
+### **01-mrd.md** (Market Requirements Document — Complete Analysis)
+
+**File size:** ~11.4 KB | **Word count:** ~2,200
+
+**Exact heading outline:**
+```
+MRD — Market Requirements Document
+  [header: Project, Version, BoK Applied, Status]
+
+1. Executive Summary (~200 words)
+
+2. Market Problem Statement
+  2.1 Current State
+  2.2 Root Cause Analysis
+  2.3 Desired State
+
+3. Target Market Segments
+  [2-row table: Primary, Secondary]
+  3.1 TAM / SAM / SOM
+    [3-row table with basis]
+
+4. Competitive Landscape
+  [4-row table: Martini.art, Magnific Premium+, Krea AI, ComfyUI]
+
+5. Market Opportunity & Timing
+
+6. Market Requirements
+  [12-row table: MR-001...MR-012, priorities: Critical/High/Medium/Low]
+
+7. Success Metrics (Market-Level KPIs)
+  [6-row KPI table: DAU, Activation Rate, NPS, Recipe Adoption, mcoCoins ARPU, Retention D30]
+
+8. Regulatory & Compliance Context
+  [4-row table: LGPD, Marco Civil, Direitos autorais, Termos de modelos]
+
+9. Traceability Matrix Stub
+
+Footer: generated line
+```
+
+**ID conventions & patterns:**
+- **MR-001 through MR-012** (12 market requirements)
+- Priority field: `Critical | High | Medium | Low`
+- Source field includes: "Pesquisa [reference]", "Benchmarks", "Sovereign vision"
+- Success metrics are **6 total**, with 6-month and 12-month targets
+- Competitive comparison includes **4 competitors** with detailed column analysis (Positioning, Strengths, Weaknesses, Differentiation)
+
+**Diagram/table formatting:**
+- Clean markdown tables with pipes and dashes
+- Narrative sections use block quotes (`>`) for emphasis
+- Portuguese text (Brazilian) throughout content
+- No code blocks
+
+---
+
+### **02-brd.md** (Business Requirements Document — Complete Analysis)
+
+**File size:** ~15.1 KB | **Word count:** ~2,800
+
+**Exact heading outline:**
+```
+BRD — Business Requirements Document
+  [header: Project, Version, BoK Applied, Status]
+
+1. Executive Summary
+
+2. Business Objectives (SMART)
+  [5-row table: BO-001...BO-005 with Specific/Measurable/Achievable/Relevant/Time-bound]
+
+3. Stakeholder Register
+  [8-row table: Sovereign, End User, Early Adopters, AIOS, Engineering, Designers, Compliance, Competitors]
+
+4. Business Requirements
+  [12-row table: BR-001...BR-012, MR traceability, priority, mcoCoins Cost, AC]
+
+5. ROI Model
+  5.1 Cost Estimates
+    [table: Infrastructure, AI APIs, Storage, Development, Design, LGPD]
+  5.2 Revenue Streams
+    [table: Plan upgrades Starter→Pro, Pro→Enterprise, top-up, marketplace]
+  5.3 Payback Analysis
+    [table: Break-even, 12-month ROI, IRR]
+
+6. mcoCoins Economics
+  [8-row table: Operation, Coins/Run, Plan Tier Mapping, Volume, Revenue]
+
+7. Constraints & Assumptions
+  [5 constraints + 5 assumptions, bulleted]
+
+8. Business Risk Register
+  [10-row FMEA-style table: Risk ID, Description, Probability, Impact, RPN, Mitigation]
+
+9. Business Acceptance Criteria
+  [8-row table: Criterion, Verification Method]
+
+10. Traceability Matrix
+  [12-row table: MR ID → BR ID → PR ID (stub)]
+
+Footer: generated line
+```
+
+**ID conventions & patterns:**
+- **BR-001 through BR-012** (12 business requirements)
+- **BO-001 through BO-005** (5 business objectives, SMART format)
+- **SH-001 through SH-008** (8 stakeholders)
+- **BR-RISK-001 through BR-RISK-010** (10 business risks)
+- **BAC-001 through BAC-008** (8 business acceptance criteria)
+- mcoCoins cost: numeric (integer coins) or "0" if not applicable
+- Priority: `Critical | High | Medium` (no "Low" in BR phase)
+
+**Key structural elements:**
+- Detailed stakeholder register with **Interest/Influence** ratings and **Communication Cadence**
+- ROI broken into 3 subsections with **Y1 vs Y2 cost/revenue scenarios**
+- Risk Register uses **RPN (Risk Priority Number) = Probability × Impact** with severity 1-5 scale
+- Constraints explicitly numbered (C-001...C-005)
+- Assumptions explicitly numbered (A-001...A-005)
+- Revenue streams include **plan upgrade deltas** (e.g., Starter→Pro = R$150 difference) plus **top-up revenue**
+
+---
+
+### **06-data-model.md** (Data & Knowledge Model — Complete Analysis)
+
+**File size:** ~15.2 KB | **Word count:** ~2,400
+
+**Exact heading outline:**
+```
+Data & Knowledge Model
+
+1. Conceptual Data Model
+  [ASCII ERD with ~8 tables: auth.users, content_canvas_documents, content_canvas_recipes, content_canvas_assets, user_voices, mcorch_nodes, mco_transactions, profiles]
+  Entity list with descriptions
+
+2. Logical Data Model
+  [4 tables shown in detail]
+  Table: content_canvas_documents
+    [12-row column table: id, user_id, project_id, title, snapshot, version, shared_with[], thumbnail_url, size_bytes, created_at, updated_at]
+    Constraints: CHECK (size_bytes <= 5242880)
+  
+  Table: content_canvas_recipes
+    [8-row column table: id, user_id, name, description, snapshot, embedding, stability_score, use_count, created_at, updated_at]
+    Constraints: CHECK (length(name) BETWEEN 1 AND 80)
+  
+  Table: content_canvas_assets
+    [12-row: id, document_id, shape_id, asset_kind, asset_url, source_function, prompt, model, mco_coins_spent, metadata, created_at]
+    Constraints: CHECK (asset_kind IN (...))
+  
+  Table: user_voices
+    [10-row: id, user_id, voice_name, provider, external_voice_id, consent_text, consent_at, use_count, created_at]
+    Constraints: CHECK (provider IN ('elevenlabs','openrouter'))
+
+3. Supabase Physical Schema Stubs
+  [CREATE TABLE SQL, RLS policies, indexes (B-tree + HNSW), triggers]
+
+4. GraphRAG Knowledge Nodes
+  4. Node Types Introduced
+    [table: node_type, Title Pattern, Content Fields, Embedding Source]
+  
+  Edge Types Introduced
+    [table: Edge relationship, Source, Target, Metadata]
+  
+  Embedding Trigger
+    [code block with TypeScript function call]
+  
+  FSRS-6 Parameters
+    [table: Field, Initial Value, Decay Rule]
+
+5. Tenant Isolation Map
+  [5-row table showing user_id + project_id scope per table, system rows]
+
+6. Data Quality Rules
+  [table: Table, Column, Rule (text constraint), Violation Message PT-BR]
+
+7. Retention & Archival Policy
+  [table: Data type, Retention Period, Archival Strategy, Deletion Trigger]
+
+8. Appendix — VIRALmind Table Aliases (v1 reality, 2026-05-14)
+  [mapping table: Plano original | Implementação v1 | Diferenças]
+  Schema reference note pointing to docs/bok/viralmind/schema-reference.sql
+```
+
+**ID conventions & patterns:**
+- **No explicit ID convention for schema** (tables referenced by name)
+- Columns follow pattern: `id (uuid PK)`, `user_id (uuid FK)`, `project_id (uuid FK optional)`, business columns, `embedding (vector(768) optional)`, `stability_score (float4 FSRS)`, `created_at | updated_at (timestamptz)`
+- Constraints: CHECK, FK ON DELETE CASCADE, NOT NULL, DEFAULT values
+- Indexes: user_id, project_id, GIN for arrays, HNSW for embeddings
+
+**Key structural elements:**
+- **Conceptual model** uses ASCII art with `──(1:N)──▶` and `──(N:M)──▶` arrows
+- **Logical model** shows 4 core tables with full column definitions
+- **Physical schema** includes **RLS policies** (SELECT/INSERT/UPDATE for user_id isolation)
+- **GraphRAG section** names specific **node_type values** (canvas_recipe, canvas_milestone, canvas_aios_action, documentation_suite) and **edge relationships** (INSPIRED_BY, EXECUTED_IN, INVOKED_BY)
+- **FSRS-6 integration** (stability_score tracking with decay per migration formula)
+- **Tenant isolation** explicitly documented as **required, implicit, or system rows**
+- **Data quality rules** include **PT-BR violation messages** (UX localization)
+- **Retention policy** distinguishes between **indefinite (user-driven deletion)**, **time-based (12 months)**, and **cron purge (90 days)**
+- **Appendix** documents **real-world divergence** (vm_* tables vs planned content_canvas_*) with **pragmatic rationale** and **future migration path**
+
+---
+
+### **07-process-flow.md** (Process & Automation Blueprint — Complete Analysis)
+
+**File size:** ~13.2 KB | **Word count:** ~2,200
+
+**Exact heading outline:**
+```
+Process & Automation Blueprint
+
+1. Process Inventory
+  [13-row table: PROC-001...PROC-013 with Type (event-driven/cron/human-in-loop), Trigger, Owner, SLA]
+
+2. BPMN-lite Process Maps
+  PROC-002: Image Generation
+    [ASCII flow with START → useImageGeneration → POST → Validate JWT → Validate body → deduct_mco_coins → OpenRouter call → Insert asset → Update doc → HTTP response → END]
+    [Swimlanes table: User, Frontend Hook, Edge Function, External API, DB]
+  
+  PROC-003: Recipe Save
+    [ASCII flow: Select shapes → Click "Salvar" → Modal → useContentRecipes.save() → INSERT → Trigger dispatch → Phase A (sync) + Phase B (async embedding)]
+  
+  PROC-006: MCP Tool Invocation
+    [ASCII flow: AIOS plan → JSON-RPC POST → canvas-mcp validation → Execute tool → Insert milestone → Return result]
+
+3. n8n Workflow Blueprints
+  Workflow: Storage Cleanup Orphan Assets (PROC-009)
+    [Trigger: Cron 0 3 * * 0 (Sunday 3am BRT)]
+    [Idempotency key pattern: cleanup-orphan-${YYYYMMDD}]
+    [ASCII flow: For each shape_id → Check existence → Delete if orphan → Log event]
+    [Data Mapping table]
+  
+  Workflow: Recipe Stability Bump (weekly)
+    [Trigger: Cron 0 4 * * 0]
+    [Pattern: Cron → SELECT with condition → UPDATE → INSERT milestone]
+
+4. Orchestration Integration Points
+  [table showing if feature integrates with orchestrate-content pipeline]
+  [TypeScript code stub inside orchestrate-content/index.ts]
+
+5. Error Handling & Retry Strategy
+  [11-row table: Process, Step, Error Type, Max Retries, Backoff, Failure Action]
+
+6. SLA Definitions
+  [13-row table: Process, Step, Expected Duration, Timeout, Alert]
+
+7. Cron Jobs
+  [6-row table: Job Name, Schedule, Function, Idempotency, Alerting]
+
+Footer: generated line
+```
+
+**ID conventions & patterns:**
+- **PROC-001 through PROC-013** (13 processes, includes human + automated + cron)
+- **Process types:** `event-driven`, `human-in-loop`, `cron`, `automated` (4 explicit types)
+- **Cron format:** `0 3 * * 0` (BRT timezone implied) with human-readable interpretation (e.g., "Domingo 03:00")
+- **Idempotency keys:** Structured format `cleanup-orphan-${YYYYMMDD}`, `recipe-stability-${YYYYMMDD}`, per-document hash, per-tick timestamp
+- **SLA targets:** Percentile notation `< 8s p50 / 30s p95`, timeouts separate
+
+**Key structural elements:**
+- **Process Inventory** lists **13 total processes** (not just 3)
+- **BPMN diagrams** use **ASCII flow** with `START → [Task] ──▶ <Gateway> ──▶ [Task] → END`
+- **Error branches** explicitly shown (401 INVALID, 402 INSUFFICIENT, 5xx TIMEOUT, etc.)
+- **Swimlanes** for multi-actor flows (User, Frontend Hook, Edge Function, External API, DB)
+- **n8n blueprints** show **trigger type, idempotency key, node sequence, error branches, data mapping**
+- **Orchestration integration** points to `orchestrate-content/index.ts` with **code stub showing actual implementation pattern**
+- **Error handling** explicitly covers **network timeout, 5xx, RPC timeout, long-running async, MCP failure, JWT validation**
+- **Backoff strategies:** `Exponential (1s, 2s, 4s)`, `Fixed 5s`, `Linear 1s`, `∞ reconnect on heartbeat`
+- **SLA targets** include **expected duration (p50 + p95)**, **timeout threshold**, **alert boolean**
+- **Cron jobs** explicitly noted as **must be idempotent** with anti-patterns listed (no redundant save crons, no redundant embedding regens)
+
+---
+
+### **08-quality-metrics.md** (Self-Optimization & Self-Healing Specification — Complete Analysis)
+
+**File size:** ~15.8 KB | **Word count:** ~2,800
+
+**Exact heading outline:**
+```
+Quality & Self-Optimization Specification
+
+1. Quality Objectives
+  [8-row table: QO-001...QO-008 with Target, Review Cadence]
+
+2. KPI Dashboard Definition
+  [12-row table: KPI-001...KPI-012 with Formula, Target, Warn/Critical thresholds, Data Source]
+  Examples: Canvas DAU, Activation Rate, mcoCoins ARPU, Edge Fn latency p95, Success Rate, Recipe Adoption, Mesh Growth, Concurrent Sessions, MCP Tool Calls, Storage Used, Refund Rate, NPS
+
+3. FMEA Table
+  [14-row table: FMEA-CV-001...FMEA-CV-014 with Function, Failure Mode, Effect, S/O/D, RPN, Action]
+  Note: 9 items with RPN > 100 marked "Action required"
+  Examples: mcoCoins double charge, canvas race condition, OpenRouter outage, RLS bug, tldraw upgrade break, embedding timeout, prompt injection, multiplayer echo, storage exhaustion, refund failure, voice clone abuse, LGPD export incomplete, cybersickness, cost spike
+
+4. Self-Optimization Loops
+  [7-row table: Loop ID, Trigger Condition, KPI Source, Autonomous Response, Escalation (human)]
+  Examples: latency p95 > 45s → switch model, success rate < 95% → pause shape type, mesh growth = 0 → backfill, refund rate > 1% → pause function, session > 25min → "take a break" modal, balance < 10% quota → in-app notification, storage > 80% → trigger orphan cleanup
+
+5. Self-Healing Specifications
+  5.1 Watchdog Telemetry Events
+    [8-row table: Event Type, Trigger, Severity, Payload]
+    canvas_fn_failure, canvas_embed_failure, canvas_sla_breach, canvas_mcp_method_unknown, canvas_realtime_drift, canvas_storage_warning, canvas_refund_issued, canvas_orphan_cleanup
+  
+  5.2 Auto-Recovery Script Stubs
+    [bash script: scripts/self-heal-conteudo-v2.sh]
+  
+  5.3 mega-brain-daemon Integration Points
+    [4-row table: Daemon Event, Condition, Action]
+
+6. SLA / SLO / SLI Definitions
+  [8-row table: Service, SLI, SLO, SLA consequence]
+
+7. PDCA Improvement Cadence
+  [4-row table: Cycle, Phase, Activity, Owner, Frequency]
+  Backlog location: .claude/context/sprint-priorities.md
+  Metrics review cadence: Diária, Semanal, Mensal, Trimestral
+
+8. Observability Checklist
+  8.1 Logging Events
+    [6-row table: Event, Location, Level (INFO/ERROR/WARN), Fields logged]
+  
+  8.2 Alerting Rules
+    [7-row table: Condition, Channel, Escalation]
+  
+  8.3 Distributed Tracing Touchpoints
+    [8-row table: Span, Start, End, Tags]
+  
+  8.4 Dashboards
+    [3-row table: Dashboard, Path, Metrics]
+
+Footer: generated line (with appendix notation if applicable)
+```
+
+**ID conventions & patterns:**
+- **QO-001...QO-008** (8 quality objectives)
+- **KPI-001...KPI-012** (12 KPIs, well-scoped with measurable formulas)
+- **FMEA-CV-001...FMEA-CV-014** (14 failure modes, project-prefixed CV for conteúdo-v2)
+- **SOL-001...SOL-007** (7 self-optimization loops)
+- **Event types:** `canvas_fn_failure`, `canvas_embed_failure`, etc. (project-prefixed)
+
+**Key structural elements:**
+- **Quality objectives** tied to **BO (Business Objectives)** from BRD
+- **KPI formulas** written in **SQL-like pseudo-code** (COUNT, SUM, PERCENTILE_CONT, SELECT…WHERE)
+- **KPI thresholds:** Target, Warn (yellow), Critical (red) — explicit numeric boundaries
+- **FMEA extends beyond templates:** 14 rows (not 5) showing **mature risk catalog**
+- **FMEA RPN threshold:** 100+ items explicitly marked "Action required" with **9 critical items** tied to implementation phase
+- **RPN calculation:** S × O × D with scale 1-10 (not 1-5)
+- **Self-optimization loops** show **trigger condition → KPI source → autonomous system response → human escalation**
+  - Example: SOL-001 latency trigger → mega-brain-daemon auto-response (switch model) → Sovereign alert if sustained
+- **Watchdog telemetry** names **8 specific event types** to insert into `infra_health_logs`
+- **Auto-recovery script** is **bash**, includes **health probe, re-deploy, verification, escalation**
+- **mega-brain-daemon integration** lists 4 daemon event types (health_check, anomaly_detected, recovery_confirmed, sustained_degradation)
+- **SLA/SLO/SLI clarity:**
+  - **SLI** = what we measure (e.g., "p95 response latency")
+  - **SLO** = our target (e.g., "≤ 30s")
+  - **SLA** = contractual consequence (e.g., "Refund mcoCoins if > 60s")
+- **PDCA cadence** names **specific owners** (Sovereign, Engineering, AIOS, automated checks)
+- **Improvement backlog location:** `.claude/context/sprint-priorities.md` (cross-reference to actual tooling)
+- **Metrics review cadence** explicitly differentiated: Diária (auto), Semanal (audit-4cs.sh), Mensal (manual review), Trimestral (survey)
+- **Observability 3-part structure:** Logging (INFO/ERROR/WARN), Alerting (conditions + escalations), Tracing (spans with start/end + tags)
+- **Dashboards** point to **actual paths** (e.g., `/dashboard/admin/canvas-ops` for Y2, existing `/dashboard` for now)
+
+---
+
+## SUMMARY: HOUSE STYLE CONVENTIONS FOR VIRALMIND DOCS
+
+### **Structural Patterns (Apply to all 6 viralmind docs)**
+
+1. **Document header (all docs):**
+   ```markdown
+   # [DOC-TYPE] — [Full Document Name]
+
+   **Project:** viralmind  
+   **Version:** v0.1 | **Date:** YYYY-MM-DD  
+   **BoK Applied:** [BABOK/ProdBOK/SWEBOK/DMBOK/CMQ/OE as applicable]  
+   **Status:** Draft | Approved | [status]
+   ```
+
+2. **ID convention across all docs:**
+   - **MR-001** through **MR-NNN** (Market Requirements, zero-padded 3 digits)
+   - **BR-001** through **BR-NNN** (Business Requirements)
+   - **BO-001** through **BO-NNN** (Business Objectives, SMART)
+   - **SH-001** through **SH-NNN** (Stakeholders)
+   - **PR-001** through **PR-NNN** (Product Requirements, from PRD not shown here but referenced)
+   - **FR-001** through **FR-NNN** (Functional Requirements, from FRD)
+   - **NFR-001** through **NFR-NNN** (Non-Functional Requirements)
+   - **OTD-001** through **OTD-NNN** (Open Technical Decisions)
+   - **QO-001**, **KPI-001**, **FMEA-[prefix]-001**, **SOL-001** (Quality & Metrics)
+   - **PROC-001** through **PROC-NNN** (Processes in flow docs)
+
+3. **Priority levels (MR, BR, FR):**
+   - `Critical` (must-have at launch)
+   - `High` (prioritized MVP or v1)
+   - `Medium` (Phase 2+)
+   - `Low` (roadmap future)
+
+4. **Table format (markdown):**
+   - Always include header row
+   - Always include `|---|---|---|` alignment row
+   - Left/center/right alignment via `:---` / `:---:` / `---:`
+   - No HTML tables — pure markdown
+
+5. **Code blocks (SQL, TypeScript, bash):**
+   - Use triple backticks with language identifier
+   - SQL blocks for schema stubs
+   - TypeScript for Edge Function patterns
+   - Bash for recovery scripts
+
+6. **Cross-references within suite:**
+   - `[BR-001](../02-brd.md#br-001)` format (relative paths within suite)
+   - Or simple `BR-001` if in same document
+
+7. **Portuguese (Brazilian) vs English:**
+   - Headings: English (h1, h2 levels)
+   - Narrative content: Portuguese (PT-BR)
+   - Table cell headers: English or PT-BR depending on context
+   - User-facing messages / validation errors: PT-BR
+
+8. **Special notations:**
+   - `[x] complete` / `[ ] pending` / `[!] blocked` for status
+   - `< NNN ms p95` for latency SLAs (percentile notation)
+   - `cron: 0 3 * * 0` (standard 5-field, timezone BRT assumed)
+   - Emoji (⚙️, ✅, ⏳, 🚧) in convergence notes and real-world amendments only
+
+9. **Metadata/Footer:**
+   - Every doc ends with: `_Generated by MCORCH BoK Scribe Agent v1.0.0_`
+   - Appendices noted as additions after footer if added post-hoc
+
+10. **Traceability:**
+    - Each doc includes **explicit traceability to upstream** (MR→BR→PR→FR)
+    - Matrix is **stub/link** in earlier docs, **filled** in later docs
+    - Chain validated in Phase 6
+
+---
+
+## FILE PATHS FOR REFERENCE
+
+**All templates:**
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/00-index.md`
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/01-mrd.md`
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/02-brd.md`
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md`
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md`
+- `/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md`
+
+**Reference suite (conteúdo-v2):**
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/00-index.md` (~6.6 KB, 1,300 words)
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/01-mrd.md` (~11.4 KB, 2,200 words, 12 MRs, 4 competitors)
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/02-brd.md` (~15.1 KB, 2,800 words, 12 BRs, 5 BOs, 10 risks, 8 acceptance criteria)
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/06-data-model.md` (~15.2 KB, 2,400 words, 4 core tables + AppendixVIRALmind alias mapping)
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/07-process-flow.md` (~13.2 KB, 2,200 words, 13 processes, BPMN + n8n patterns, SLA matrix)
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/conteudo-v2/08-quality-metrics.md` (~15.8 KB, 2,800 words, 12 KPIs, 14 FMEA items, 7 self-optimization loops, 8 watchdog events)
+
+---
+
+## ADDITIONAL CONTEXT: NO "MESH SEAL" STANDARD FOOTER
+
+I searched for "mesh seal" references in the conteúdo-v2 docs. The **conteúdo-v2 suite does NOT have a standard "mesh seal" or special metadata block** beyond the standard footer. However:
+
+- **00-index.md** notes that **Phase 7 (Knowledge Mesh Injection)** is `[ ] pending` — meaning the Sovereign must manually insert a `mcorch_nodes` entry for the BoK suite itself
+- The **bok-scribe-agent.md** defines the Phase 7 payload structure for this insertion (documentation_suite node type)
+- No automatic footer seal is added; the agent produces a payload for **human verification** before Supabase insertion
+
+So for viralmind docs, **plan for Phase 7** to create the mesh node insertion payload (this will be prompted by the agent).
+
+---
+
+This exploration is complete and ready for you to use as the definitive style guide for your 6 new viralmind BoK documents.
