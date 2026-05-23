@@ -7796,3 +7796,937 @@ I will search the knowledge base for `.agents/workflows` to see if there's any f
 > Completed At: 2026-05-23T02:58:42Z
 > No results found
 > ```
+
+## 👤 User *(03:03:18)*
+
+ok mas ja dei reload windows e n vejo o comando /handoff nem o /handson
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md\"",
+  "toolAction": "\"Viewing Antigravity rules and workflows documentation\"",
+  "toolSummary": "\"View rules and workflows docs\""
+}
+```
+
+## 🤖 Gemini *(03:03:18)*
+
+I will check the official Antigravity IDE documentation on rules and workflows to see where it expects to find them.
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:24Z
+> Completed At: 2026-05-23T03:03:25Z
+> File Path: `file:///home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md`
+> Total Lines: 66
+> Total Bytes: 3904
+> Showing lines 1 to 66
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # Core Concepts & Features - Rules Workflows
+> 2: 
+> 3: ---
+> 4: slug: rules-workflows
+> 5: section: Core Concepts & Features
+> 6: title: Rules
+> 7: path:
+> 8:   - Core Concepts & Features
+> 9:   - Tools & Extensions
+> 10:   - Rules
+> 11: ---
+> 12: 
+> 13: # Rules
+> 14: 
+> 15: Rules are manually defined constraints for the Agent to follow, at both the local and global levels. Rules allow users to guide the agent to follow behaviors particular to their own use cases and style.
+> 16: 
+> 17: To get started with Rules:
+> 18: 1. Open the Customizations panel via the "..." dropdown at the top of the editor's agent panel.
+> 19: 2. Navigate to the Rules panel.
+> 20: 3. Click **+ Global** to create new Global Rules, or **+ Workspace** to create new Workspace-specific rules.
+> 21: 
+> 22: A Rule itself is simply a Markdown file, where you can input the constraints to guide the Agent to your tasks, stack, and style.
+> 23: 
+> 24: Rules files are limited to 12,000 characters each.
+> 25: 
+> 26: ## Global Rules
+> 27: 
+> 28: Global rules live in ~/.gemini/GEMINI.md and are applied across all workspaces.
+> 29: 
+> 30: ## Workspace Rules
+> 31: 
+> 32: Workspace rules live in the .agents/rules folder of your workspace or git root.
+> 33: 
+> 34: At the rule level you can define how a rule should be activated:
+> 35: 
+> 36: - Manual: The rule is manually activated via at mention in Agent’s input box.
+> 37: - Always On: The rule is always applied.
+> 38: - Model Decision: Based on a natural language description of the rule, the model decides whether to apply the rule.
+> 39: - Glob: Based on the glob pattern you define (e.g., *.js, src/
+> <truncated 631 bytes>
+> st, it will be resolved to workspace/path/to/file.md.
+> 46: 
+> 47: # Workflows
+> 48: 
+> 49: Workflows enable you to define a series of steps to guide the Agent through a repetitive set of tasks, such as deploying a service or responding to PR comments. These Workflows are saved as markdown files, allowing you to have an easy repeatable way to run key processes. Once saved, Workflows can be invoked in Agent via a slash command with the format /workflow-name.
+> 50: 
+> 51: While Rules provide models with guidance by providing persistent, reusable context at the prompt level, Workflows provide a structured sequence of steps or prompts at the trajectory level, guiding the model through a series of interconnected tasks or actions.
+> 52: 
+> 53: To create a workflow:
+> 54: 
+> 55: 1. Open the Customizations panel via the "..." dropdown at the top of the editor's agent panel.
+> 56: 2. Navigate to the Workflows panel.
+> 57: 3. Click the **+ Global** button to create a new global workflow that can be accessed across all your workspaces, or click the **+ Workspace** button to create a workflow specific to your current workspace.
+> 58: 
+> 59: To execute a workflow, simply invoke it in Agent using the /workflow-name command. You can call other Workflows from within a workflow! For example, /workflow-1 can include instructions like “Call /workflow-2” and “Call /workflow-3”. Upon invocation, Agent sequentially processes each step defined in the workflow, performing actions or generating responses as specified.
+> 60: 
+> 61: Workflows are saved as markdown files and contain a title, a description and a series of steps with specific instructions for Agent to follow. Workflow files are limited to 12,000 characters each.
+> 62: 
+> 63: ## Agent-Generated Workflows
+> 64: 
+> 65: You can also ask Agent to generate Workflows for you! This works particularly well after manually working with Agent through a series of steps since it can use the conversation history to create the Workflow.
+> 66: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+🛠️ **Tool Call**: `grep_search`
+```json
+{
+  "CaseInsensitive": "true",
+  "MatchPerLine": "true",
+  "Query": "\"workflows\"",
+  "SearchPath": "\"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/\"",
+  "toolAction": "\"Searching for workflows folder path\"",
+  "toolSummary": "\"Search helper docs for workflows\""
+}
+```
+
+## 🤖 Gemini *(03:03:25)*
+
+I will search the help documentation files for the exact folder path where workspace workflows should be stored.
+
+> **Tool Result (GREP_SEARCH)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:30Z
+> Completed At: 2026-05-23T03:03:30Z
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md","LineNumber":36,"LineContent":"**Workspace skills** are great for project-specific workflows, like your team's deployment process or testing conventions."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/home-home.md","LineNumber":56,"LineContent":"  * **Science**: Specialized DeepMind biology and chemistry skills to accelerate scientific workflows.  "}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-permissions.md","LineNumber":15,"LineContent":"Antigravity uses a robust, unified permission engine to secure your environment while enabling autonomous workflows. Every sensitive operation the Agent performs is represented as a **permission resource** formatted as `action(target)`."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-permissions.md","LineNumber":36,"LineContent":"| `execute_url` | `execute_url(domain)` or `execute_url(*)` | Actuating on web elements (clicking, typing) or driving interactive browser workflows on a domain. | **Ask** |"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":1,"LineContent":"# Core Concepts \u0026 Features - Rules Workflows"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":4,"LineContent":"slug: rules-workflows"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":47,"LineContent":"# Workflows"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":49,"LineContent":"Workflows enable you to define a series of steps to guide the Agent through a repetitive set of tasks, such as deploying a service or responding to PR comm
+> <truncated 2986 bytes>
+> ntent":"The Antigravity SDK is a programmatic Python framework designed to build, test, and run autonomous AI agents. It extends the same core agent harness that powers the Antigravity CLI and Antigravity 2.0, allowing you to integrate advanced agentic capabilities directly into your own applications and workflows."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/antigravity-2-0-build-with-google.md","LineNumber":77,"LineContent":"* **Key Capabilities**: Improve agent capabilities on scientific workflows.  "}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/ide-firebase-studio-migration.md","LineNumber":14,"LineContent":"Antigravity is Google's next-generation, agent-first platform. It’s designed to be the primary home for high-velocity, autonomous development workflows. Instead of relying on just a cloud-based web editor, Antigravity brings the power of AI right into your local development environment."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/ide-firebase-studio-migration.md","LineNumber":21,"LineContent":"- **True agentic development**: Move beyond basic code completion. Antigravity provides agentic development workflows that can autonomously format, test, and implement entire tasks across your codebase."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/ide-firebase-studio-migration.md","LineNumber":134,"LineContent":"- **Running workflows:** In Antigravity, you can seamlessly execute workflows and continue your work with the model by typing `@workflows \u003cworkflow_name\u003e` into the agentic chat panel."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/cli-gcli-migration.md","LineNumber":32,"LineContent":"For the majority of users, you can now get started using Antigravity CLI with the workflows you have come to love in Gemini CLI. Antigravity CLI loads in the same context files and global Agent Skills as Gemini CLI does."}
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing Workflow Integration**
+
+Okay, I'm examining line 134 in `ide-firebase-studio-migration.md` regarding workflow execution within Antigravity. The key is to integrate workflows seamlessly. It seems the agentic chat panel plays a crucial role, allowing you to trigger them using `@workflows <workflow_name>`. I need to verify that this approach aligns with the core principles.
+
+</details>
+
+🛠️ **Tool Call**: `grep_search`
+```json
+{
+  "CaseInsensitive": "true",
+  "MatchPerLine": "true",
+  "Query": "\".agents\"",
+  "SearchPath": "\"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/\"",
+  "toolAction": "\"Searching for .agents folder path in help docs\"",
+  "toolSummary": "\"Search docs for .agents path\""
+}
+```
+
+## 🤖 Gemini *(03:03:30)*
+
+I will search the help documentation files for the exact folder path of workflows to see if they belong in `.agents/workflows` or a different directory.
+
+> **Tool Result (GREP_SEARCH)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:37Z
+> Completed At: 2026-05-23T03:03:37Z
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md","LineNumber":33,"LineContent":"| `\u003cworkspace-root\u003e/.agents/skills/\u003cskill-folder\u003e/` | Workspace-specific |"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md","LineNumber":40,"LineContent":"Note: Antigravity now defaults to .agents/skills, but still maintains backward support for .agent/skills. "}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md","LineNumber":50,"LineContent":".agents/skills/"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md","LineNumber":91,"LineContent":".agents/skills/my-skill/"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/tools-hooks.md","LineNumber":19,"LineContent":"Hooks are configured in a `hooks.json` file located in your customization directory (e.g., `.agents/` in your workspace or `~/.gemini/config/`)."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":32,"LineContent":"Workspace rules live in the .agents/rules folder of your workspace or git root."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md","LineNumber":41,"LineContent":"Note: Antigravity now defaults to .agents/rules, but still maintains backward support for .agent/rules. "}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/cli-gcli-migration.md","LineNumber":76,"LineContent":"Workspace-specific skills for Antigravity CLI are stored in `.agents/skills`, which means if you have project/workspace skills in a given project within the `.gemini/skills` folder, they will need to be moved to `.agents/skills`."}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/cli-gcli-migration.md","LineNumber":80,"LineContent":"| **Location** | Global: `~/.gemini/skills/`\u003cbr\u003eWorkspace: `.gemini/skills/` or `.agents/skills/` | Global: `~/.gemini/antigravity-cli/skills/`\u003cbr\u003eWorkspace: `.agents/skills/` |"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/cli-gcli-migration.md","LineNumber":106,"LineContent":"| **Location** | Global: `~/.gemini/settings.json`\u003cbr\u003eWorkspace: `.gemini/settings.json` | Global: `~/.gemini/antigravity-cli/mcp_config.json`\u003cbr\u003eWorkspace: `.agents/mcp_config.json` |"}
+> {"File":"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/tools-plugins.md","LineNumber":69,"LineContent":"* **Workspace Level**: Place your plugin folder inside a `.agents/plugins/` or `_agents/plugins/` directory at the root of your opened workspace. This makes the plugin available only when working in this specific workspace.  "}
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Locating Workflows' Home**
+
+I've been sorting through the workspace file organization. It seems rules, skills, and plugins each have their designated spot. Now, I've just discovered that workflows aren't stored in the `.agents` folder, but documented instead in `agent-rules-workflows.md`.
+
+</details>
+
+🛠️ **Tool Call**: `list_dir`
+```json
+{
+  "DirectoryPath": "\"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts\"",
+  "toolAction": "\"Listing antigravity docs artifacts\"",
+  "toolSummary": "\"List docs artifacts\""
+}
+```
+
+## 🤖 Gemini *(03:03:37)*
+
+I will list the documentation files in the `antigravity-docs` directory to see if there is another document that describes workflows.
+
+> **Tool Result (LIST_DIRECTORY)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:43Z
+> Completed At: 2026-05-23T03:03:43Z
+> {"name":"agent-agent-settings.md","sizeBytes":"1032"}
+> {"name":"agent-artifact-review.md","sizeBytes":"2191"}
+> {"name":"agent-manager-agent-manager.md","sizeBytes":"1051"}
+> {"name":"agent-manager-browser-subagent-view.md","sizeBytes":"1237"}
+> {"name":"agent-manager-changes-sidebar.md","sizeBytes":"692"}
+> {"name":"agent-manager-conversation-view.md","sizeBytes":"529"}
+> {"name":"agent-manager-files.md","sizeBytes":"355"}
+> {"name":"agent-manager-inbox.md","sizeBytes":"839"}
+> {"name":"agent-manager-panes.md","sizeBytes":"1027"}
+> {"name":"agent-manager-playground.md","sizeBytes":"1292"}
+> {"name":"agent-manager-review-changes-manager.md","sizeBytes":"929"}
+> {"name":"agent-manager-terminal.md","sizeBytes":"616"}
+> {"name":"agent-manager-workspaces.md","sizeBytes":"801"}
+> {"name":"agent-models.md","sizeBytes":"1431"}
+> {"name":"agent-permissions.md","sizeBytes":"7840"}
+> {"name":"agent-rules-workflows.md","sizeBytes":"3904"}
+> {"name":"agent-skills.md","sizeBytes":"5120"}
+> {"name":"agent-strict-mode.md","sizeBytes":"1858"}
+> {"name":"agent-subagents.md","sizeBytes":"5955"}
+> {"name":"antigravity-2-0-build-with-google.md","sizeBytes":"4652"}
+> {"name":"antigravity-2-0-features.md","sizeBytes":"4263"}
+> {"name":"antigravity-2-0-getting-started.md","sizeBytes":"3057"}
+> {"name":"antigravity-2-0-overview.md","sizeBytes":"1415"}
+> {"name":"artifacts-artifacts.md","sizeBytes":"2133"}
+> {"name":"artifacts-browser-recordings.md","sizeBytes":"721"}
+> {"name":"artifacts-implementation-plan.md","sizeBytes":"2139"}
+> {"name":"artifacts-knowledge.md","sizeBytes":"1500"}
+> {"name":"artifacts-screenshots.md","sizeBytes":"674"}
+> {"name":"artifacts-task-list.md","sizeBytes":"671"}
+> {"name":"artifacts-walkthrough.md","sizeBytes":"826"}
+> {"name":"browser-allowlist-denylist.md","sizeBytes":"1418"}
+> {"name":"browser-browser.md","sizeBytes":"1564"}
+> {"name":"browser-separate-chrome-profile.md","sizeBytes":"1162"}
+> {"name":"cli-cli-features.md","sizeBytes":"7778"}
+> {"name":"cli-cli-getting-started.md","sizeBytes":"1370"}
+> {"name":"cli-cli-overview.md","sizeBytes":"2414"}
+> {"name":"cli-cli-using.md","sizeBytes":"4620"}
+> {"name":"cli-gcli-migration.md","sizeBytes":"5383"}
+> {"name":"core-concepts-projects.md","sizeBytes":"4214"}
+> {"name":"core-concepts-sidecars.md","sizeBytes":"4323"}
+> {"name":"editor-agent-side-panel.md","sizeBytes":"725"}
+> {"name":"editor-command.md","sizeBytes":"1349"}
+> {"name":"editor-editor.md","sizeBytes":"970"}
+> {"name":"editor-review-changes-editor.md","sizeBytes":"792"}
+> {"name":"editor-tab.md","sizeBytes":"2328"}
+> {"name":"enterprise-enterprise.md","sizeBytes":"5579"}
+> {"name":"faq-faq.md","sizeBytes":"6189"}
+> {"name":"home-home.md","sizeBytes":"3306"}
+> {"name":"ide-firebase-studio-migration.md","sizeBytes":"6899"}
+> {"name":"ide-ide-getting-started.md","sizeBytes":"1357"}
+> {"name":"ide-ide-overview.md","sizeBytes":"3206"}
+> {"name":"plans-plans.md","sizeBytes":"2739"}
+> {"name":"sdk-sdk-overview.md","sizeBytes":"3659"}
+> {"name":"settings-settings.md","sizeBytes":"4290"}
+> {"name":"tools-hooks.md","sizeBytes":"14065"}
+> {"name":"tools-mcp.md","sizeBytes":"6445"}
+> {"name":"tools-plugins.md","sizeBytes":"2930"}
+> 
+> Summary: This directory contains 0 subdirectories and 57 files.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find /home/ubuntu/.gemini -name \\\"*workflow*\\\" -o -name \\\"*customization*\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Searching for workflow configs in home directory\"",
+  "toolSummary": "\"Search for workflow configs\""
+}
+```
+
+## 🤖 Gemini *(03:03:43)*
+
+I will search the global configuration directory of the Antigravity IDE for any references to where workflows are saved.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:49Z
+> Completed At: 2026-05-23T03:03:51Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-rules-workflows.md
+> Terminal ID: 2815687
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"ls -la ~/.gemini/config/\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Listing ~/.gemini/config/\"",
+  "toolSummary": "\"List config folder\""
+}
+```
+
+## 🤖 Gemini *(03:03:52)*
+
+I will list the files in `~/.gemini/config/` to see the structure of global configurations.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:03:57Z
+> Completed At: 2026-05-23T03:03:58Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				total 12
+> drwxr-xr-x 3 ubuntu ubuntu 4096 May 21 11:16 .
+> drwxrwxr-x 5 ubuntu ubuntu 4096 May 21 11:16 ..
+> -rw-r--r-- 1 ubuntu ubuntu    0 May 21 11:16 mcp_config.json
+> -rw-r--r-- 1 ubuntu ubuntu    0 May 21 11:16 .migrated
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May 22 23:53 plugins
+> Terminal ID: 2815687
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"ls -la ~/.gemini\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Listing ~/.gemini\"",
+  "toolSummary": "\"List ~/.gemini folder\""
+}
+```
+
+## 🤖 Gemini *(03:03:58)*
+
+I will check if there is an `antigravity-cli` directory or other config folder under `~/.gemini`.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:04Z
+> Completed At: 2026-05-23T03:04:05Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				total 152
+> drwxrwxr-x  5 ubuntu ubuntu   4096 May 21 11:16 .
+> drwxr-x--- 61 ubuntu ubuntu   4096 May 22 23:58 ..
+> drwxrwxr-x 12 ubuntu ubuntu   4096 May  2 18:08 antigravity
+> drwxrwxr-x  8 ubuntu ubuntu   4096 May 21 12:35 antigravity-ide
+> drwxr-xr-x  3 ubuntu ubuntu   4096 May 21 11:16 config
+> -rw-r--r--  1 ubuntu ubuntu 133676 May 22 23:54 GEMINI.md
+> Terminal ID: 2815687
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"ls -la ~/.gemini/antigravity-ide/\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Listing ~/.gemini/antigravity-ide/\"",
+  "toolSummary": "\"List ide folder\""
+}
+```
+
+## 🤖 Gemini *(03:04:05)*
+
+I will list the contents of `~/.gemini/antigravity-ide/` to see how it is structured.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:10Z
+> Completed At: 2026-05-23T03:04:11Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				total 36
+> drwxrwxr-x 8 ubuntu ubuntu 4096 May 21 12:35 .
+> drwxrwxr-x 5 ubuntu ubuntu 4096 May 21 11:16 ..
+> drwxr-xr-x 2 ubuntu ubuntu 4096 May 21 12:35 bin
+> drwxr-xr-x 6 ubuntu ubuntu 4096 May 22 23:16 brain
+> drwxr-xr-x 2 ubuntu ubuntu 4096 May 23 00:02 conversations
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May 21 11:16 html_artifacts
+> drwxr-xr-x 2 ubuntu ubuntu 4096 May 22 23:59 implicit
+> -rw-r--r-- 1 ubuntu ubuntu   36 May 21 11:16 installation_id
+> drwxr-xr-x 3 ubuntu ubuntu 4096 May 22 22:19 knowledge
+> lrwxrwxrwx 1 ubuntu ubuntu   35 May 21 11:16 plugins -> /home/ubuntu/.gemini/config/plugins
+> Terminal ID: 2815687
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find ~/.gemini -name \\\"*handoff*\\\" -o -name \\\"*handson*\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Searching for handoff/handson in ~/.gemini\"",
+  "toolSummary": "\"Search for workflow files in home\""
+}
+```
+
+## 🤖 Gemini *(03:04:12)*
+
+I will search for any workflow files or records under the `~/.gemini/` folder to see where the IDE stores them.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:16Z
+> Completed At: 2026-05-23T03:04:18Z
+> 
+> 				The command completed successfully.
+> 				No output
+> Terminal ID: 2815687
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Investigating File Locations**
+
+I've hit a roadblock. My initial search for "handoff" or "handson" files in `~/.gemini` came up empty. I'm now expanding the scope to include the user's workspace, considering their recent feedback. I need to understand why the user's reload didn't resolve the issue. My current hypothesis involves looking for the file or command to execute under their workspace directory, even though they can't see the commands.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find .agents -maxdepth 2\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Finding .agents files\"",
+  "toolSummary": "\"List .agents root\""
+}
+```
+
+## 🤖 Gemini *(03:04:18)*
+
+I will list all files and subdirectories under the `.agents/` directory to see if there are any other configuration files.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:24Z
+> Completed At: 2026-05-23T03:04:26Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				.agents
+> .agents/rules
+> .agents/rules/handoff.md
+> .agents/rules/survival.md
+> .agents/skills
+> .agents/skills/firecrawl-map
+> .agents/skills/firecrawl-scrape
+> .agents/skills/firecrawl-search
+> .agents/skills/openclaw-expert
+> .agents/skills/antigravity-expert
+> .agents/skills/shake-hands
+> .agents/skills/harness-deployment
+> .agents/skills/memory-summarize
+> .agents/workflows
+> .agents/workflows/master-architect.md
+> .agents/workflows/harness-deployment.md
+> .agents/workflows/handoff.md
+> .agents/workflows/bok-scribe.md
+> .agents/workflows/alpha-launch.md
+> .agents/workflows/handson.md
+> Terminal ID: 2815687
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Examining Potential Paths**
+
+I'm now diving into the file structure. I've found `.agents/workflows/handoff.md` and `.agents/workflows/handson.md`. My immediate question now is about the folder name in Antigravity IDE. Is it `workflows` or could it be `customizations`? I'm going to look into `ide-firebase-studio-migration.md` to see if that helps.
+
+
+**Investigating Invocation Methods**
+
+I'm now focusing on how workflows are triggered in Antigravity IDE. It looks like both the `@workflows` mention and slash commands (`/workflow-name`) are supported. The slash command is confirmed in `agent-rules-workflows.md`, while the mention system is detailed in the migration document. I'm puzzled why the slash command wasn't showing up in the dropdown after a reload. Now I'm checking if Antigravity IDE loads workflows from a folder other than `.agents/workflows/`, and I am doing a search to uncover the workspace's folder path.
+
+</details>
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/master-architect.md\"",
+  "toolAction": "\"Viewing master-architect.md workflow\"",
+  "toolSummary": "\"View workflow structure\""
+}
+```
+
+## 🤖 Gemini *(03:04:26)*
+
+I will check the structure of `master-architect.md` to see how workspace workflows are formatted.
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:33Z
+> Completed At: 2026-05-23T03:04:33Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/master-architect.md`
+> Total Lines: 45
+> Total Bytes: 2848
+> Showing lines 1 to 45
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # Playbook: Master Architect (MCORCH Sovereignty)
+> 2: 
+> 3: ## Role
+> 4: You are the **Master Architect** of the MCORCH Ecosystem. Your primary directive is to ensure structural integrity, autonomic resilience, and relational memory persistence across the constellation.
+> 5: 
+> 6: ## Sovereignty Principles
+> 7: 1. **Self-Configuration:** No manual setup. Infrastructure must be code-defined and automatically deployed.
+> 8: 2. **Self-Healing:** Systems must detect their own failures and restart or repair without human intervention.
+> 9: 3. **Self-Optimization:** Continuous performance monitoring and asset optimization (Vite, Varnish, Nginx).
+> 10: 4. **Relational Persistence:** Every architectural decision, technical debt, and milestone must be recorded in the GraphRAG memory mesh (Supabase).
+> 11: 
+> 12: ## Operational Protocol
+> 13: - **Phase Alpha Mode:** Activate the Relational Memory system. All observations must be transformed into graph nodes.
+> 14: - **Harness Engineering:** Enforce strict separation between logic (hooks) and display (components).
+> 15: - **Security First:** RLS must be active on all tables. Sensitive logic stays in Edge Functions.
+> 16: - **Knowledge Harvesting:** Use the `mcorch-knowledge-harvest-*` skills to feed the GraphRAG memory with external intelligence.
+> 17: 
+> 18: ## Multi-Agent Orchestration Protocol
+> 19: 
+> 20: When running parallel agents (Planner, Coder, Tester, UI), each agent MUST:
+> 21: 1. **Claim** a task by writing a `.lock` file: `.tasks/<task_id>.lock`
+> 22: 2. **Report** every significant action as a `mcorch_nodes` INSERT (type: `observation`)
+> 23: 3. **Link** new nodes to existing ones via `mcorch_edges` with relation type `implements` | `fixes` | `depends_on`
+> 24: 4. **Release** the lock and mark the milestone `completed` on task completion
+> 25: 
+> 26: ### Conflict Resolution
+> 27: - Two agents must never modify the same file simultaneously — check `.tasks/` for active locks.
+> 28: - Graph writes use upsert on `(name, node_type)` unique constraint to avoid duplicates.
+> 29: - All agents read milestones from `system_milestones` at session start to align on phase state.
+> 30: 
+> 31: ### Agent Roles
+> 32: | Agent | Responsibility | Primary node_type |
+> 33: |-------|---------------|-------------------|
+> 34: | Planner | Breaks down features into milestones | `requirement` |
+> 35: | Coder | Implements hooks and edge functions | `file`, `decision` |
+> 36: | Tester | Validates hooks against Supabase | `observation` |
+> 37: | UI | Renders constellation graph from nodes | `feature` |
+> 38: 
+> 39: ## Commands
+> 40: - `/memory summarize`: Consolidate the current session's findings into the Supabase Knowledge Mesh.
+> 41: - `/infra stabilize`: Trigger self-healing scripts for core daemons (mega-brain-daemon, mysql).
+> 42: - `/graph deploy`: Push relational schema migrations to Supabase.
+> 43: - `/harness deploy`: Execute the physical and data layer deployment (`scripts/harness-deploy.sh`).
+> 44: - `/watchdog start`: Launch `scripts/watchdog-mcorch.sh` to monitor the intelligence node on port 37777.
+> 45: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"ls -la ~/.gemini/antigravity/\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Listing ~/.gemini/antigravity/\"",
+  "toolSummary": "\"List antigravity folder\""
+}
+```
+
+## 🤖 Gemini *(03:04:33)*
+
+I will list the contents of the `~/.gemini/antigravity/` directory.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:38Z
+> Completed At: 2026-05-23T03:04:40Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				total 64
+> drwxrwxr-x 12 ubuntu ubuntu 4096 May  2 18:08 .
+> drwxrwxr-x  5 ubuntu ubuntu 4096 May 21 11:16 ..
+> drwxr-xr-x  2 ubuntu ubuntu 4096 May  2 16:04 annotations
+> drwxr-xr-x 26 ubuntu ubuntu 4096 May 17 14:26 brain
+> -rw-r--r--  1 ubuntu ubuntu    0 Nov 27 21:04 browserAllowlist.txt
+> drwxr-xr-x  3 ubuntu ubuntu 4096 May 17 14:28 browser_recordings
+> drwxr-xr-x  4 ubuntu ubuntu 4096 Nov 27 21:05 code_tracker
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Nov 27 21:04 context_state
+> drwxr-xr-x  2 ubuntu ubuntu 4096 May 17 17:51 conversations
+> -rw-rw-r--  1 ubuntu ubuntu   72 May  2 17:54 .env
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Feb 28 23:18 html_artifacts
+> drwxr-xr-x  2 ubuntu ubuntu 4096 May 18 14:38 implicit
+> -rwxrwxr-x  1 ubuntu ubuntu   36 Nov 27 21:04 installation_id
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jan 15 17:55 knowledge
+> -rw-r--r--  1 ubuntu ubuntu 1081 May  2 18:14 mcp_config.json
+> drwxrwxr-x  3 ubuntu ubuntu 4096 May  2 18:08 mcp-servers
+> -rw-rw-r--  1 ubuntu ubuntu   23 Jan 11 23:17 user_settings.pb
+> Terminal ID: 2815687
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find ~ -type d -name \\\"*workflow*\\\" 2>/dev/null\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Searching for workflow folders\"",
+  "toolSummary": "\"Search for workflow folders\""
+}
+```
+
+## 🤖 Gemini *(03:04:40)*
+
+I will search the home directory for any directory containing "workflow" in its name.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:44Z
+> Tool is running as a background task with task id: 258f131b-ad03-484a-bb2a-818240426ddd/task-327
+> Task Description: find ~ -type d -name "*workflow*" 2>/dev/null
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/258f131b-ad03-484a-bb2a-818240426ddd/.system_generated/tasks/task-327.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"258f131b-ad03-484a-bb2a-818240426ddd/task-327\"",
+  "toolAction": "\"Checking task status\"",
+  "toolSummary": "\"Check task status\""
+}
+```
+
+## 🤖 Gemini *(03:04:50)*
+
+I will check if there are any updates on the find task.
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:04:54Z
+> Completed At: 2026-05-23T03:04:54Z
+> Task: 258f131b-ad03-484a-bb2a-818240426ddd/task-327
+> Status: RUNNING
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/258f131b-ad03-484a-bb2a-818240426ddd/.system_generated/tasks/task-327.log
+> Log output:
+> <truncated 46 lines>
+> vscode-github-actions-0.31.5-universal/resources/icons/light/workflowruns
+> /home/ubuntu/.antigravity-server/extensions/github.vscode-github-actions-0.31.5-universal/script/workflows
+> /home/ubuntu/.antigravity-server/extensions/ms-python.vscode-python-envs-1.20.1-universal/.github/workflows
+> /home/ubuntu/.antigravity-server/bin/1.23.2-15487b3041e65228cae24980a3f796c905ef582c/extensions/antigravity/customEditor/media/workflowEditor
+> /home/ubuntu/agno/agent-ui/.github/workflows
+> /home/ubuntu/agno/agent-ui/workflows
+> /home/ubuntu/agno/agno-gravity/.github/workflows
+> /home/ubuntu/agno/agno-gravity/agent-ui/.github/workflows
+> /home/ubuntu/agno/agno-gravity/agent-ui/workflows
+> /home/ubuntu/.antigravity-ide-server/bin/2.0.3-4e2e10a9285aefbdcb898ae5e50dde45e9c7f505/extensions/antigravity/customEditor/media/workflowEditor
+> /home/ubuntu/openclaw/node_modules/reusify/.github/workflows
+> /home/ubuntu/openclaw/node_modules/jszip/.github/workflows
+> /home/ubuntu/openclaw/node_modules/audio-buffer/.github/workflows
+> Last progress: 0s ago
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Refining The Search**
+
+I'm currently trying to refine my search criteria. The initial approach yielded irrelevant results, specifically VS Code and GitHub workflows, so I need to filter those out. I'm now exploring how to check 'user' data to see if there is information that can be leveraged.
+
+
+**Investigating Workflow Storage**
+
+I'm now investigating where workspace workflows are saved. It looks like they are saved in the `.agents/workflows/` directory, specifically as markdown files. However, the IDE isn't showing them. I need to determine how the IDE registers or loads these workflows. I found that workflows require a title, description, and steps in a markdown format. I'm reviewing the `.agents/workflows/handoff.md` file to confirm the required structure.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find ~/.gemini -name \\\"*.md\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Searching for .md files in ~/.gemini\"",
+  "toolSummary": "\"Search for md files\""
+}
+```
+
+## 🤖 Gemini *(03:04:54)*
+
+I will search for any markdown files in the `~/.gemini/` configuration directory to see if workflows are stored there globally.
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:05:01Z
+> Completed At: 2026-05-23T03:05:04Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				<truncated 108 lines>
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/no_repo/99e4f280083491ae19f607903d5668c1_system.md
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/no_repo/ddc7eb107c99357b619dc750e5a21a33_boas-praticas.md
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/no_repo/89880dc5401ec96dcb413429c447a5cc_README.md
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/no_repo/f73308de78ebb446e7435504ef9b8e45_executor.md
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/agno-gravity_9298ee7f79b6085cb583195703a821683953107f/db2b16d0de0fd047733da3c920ce2ae9_NGINX_SETUP.md
+> /home/ubuntu/.gemini/antigravity/code_tracker/active/agno-gravity_9298ee7f79b6085cb583195703a821683953107f/d4dc877baa954b00d2605b7e83d38a3d_NGINX_PROD_CONFIG.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/walkthrough.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/258/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/268/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/215/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/227/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/272/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/335/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/.system_generated/steps/264/content.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/implementation_plan.md
+> /home/ubuntu/.gemini/antigravity-ide/brain/a3b8bbe7-36a5-47c3-8aa9-4da00969bb71/task.md
+> /home/ubuntu/.gemini/antigravity-ide/brai
+> <truncated 4209 bytes>
+> -walkthrough.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-permissions.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-manager-playground.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/artifacts-screenshots.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/browser-allowlist-denylist.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/cli-cli-getting-started.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/editor-tab.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/editor-agent-side-panel.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/antigravity-2-0-getting-started.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/antigravity-2-0-overview.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-manager-files.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/home-home.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-models.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/tools-hooks.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/artifacts-implementation-plan.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/browser-browser.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/artifacts-browser-recordings.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-skills.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/artifacts-knowledge.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/browser-separate-chrome-profile.md
+> /home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/agent-manager-review-changes-manager.md
+> /home/ubuntu/.gemini/GEMINI.md
+> Terminal ID: 2815975
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Investigating User Workflows**
+
+I'm currently trying to pinpoint where custom workflow definitions might reside. I've ruled out the global configuration files. Now, I'm examining `user_settings.pb` for clues. I'm also exploring other potential locations where these workflows might be defined or referenced, specifically considering user input.
+
+
+**Locating Workflow Definitions**
+
+I'm now zeroing in on workflow file locations. The Antigravity IDE's slash command functionality is interesting; I'm curious if it reveals workflow-related commands. The documentation highlights markdown files with titles, descriptions, and steps, accessible via `/workflow-name`. My focus shifts to the saving mechanism: global vs. workspace workflows, and the `.agents/workflows` directory. I'm exploring how the UI creates and saves these files, especially when clicking the "+ Workspace" button. I'm going to run a query now to find any workflow-related files in the home directory, attempting a more complete search this time.
+
+</details>
+
+## 🤖 Gemini *(03:05:04)*
+
+No Antigravity IDE (Gemini), a forma como os **Workflows** são invocados e gerenciados é ligeiramente diferente do Claude Code. 
+
+Aqui estão os três passos para você ver e executar os comandos `/handoff` e `/handson`:
+
+### 1. Invocação via `@workflows` no Chat
+No painel do chat agentic do Antigravity, os workflows do workspace podem ser executados digitando `@workflows` seguido do nome do workflow, em vez do comando de barra puro. Tente digitar:
+*   `@workflows handson`
+*   `@workflows handoff`
+
+Isso acionará a execução passo a passo do workflow diretamente no chat.
+
+### 2. Verificação no Painel de Customizações
+Para confirmar que o editor carregou os arquivos de workflow locais localizados em `.agents/workflows/`:
+1.  Clique no menu de três pontos **"..."** no topo do painel do agente (chat).
+2.  Selecione **Customizações** (Customizations).
+3.  Vá até a aba **Workflows**.
+4.  Verifique se os workflows `handson`, `handoff` e `bok-scribe` estão listados sob a seção **Workspace**.
+
+### 3. Caso não apareçam (Validação de Workspace Root)
+Se o painel de customizações estiver vazio, verifique se a pasta raiz do projeto (`/home/gcrUX/htdocs/constellation-orchestra`) está aberta como o workspace ativo no VS Code/Antigravity, pois o IDE busca o diretório `.agents/` relativo à raiz aberta.
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/ide-firebase-studio-migration.md\"",
+  "toolAction": "\"Viewing ide-firebase-studio-migration.md\"",
+  "toolSummary": "\"View migration guide\""
+}
+```
+
+## 🤖 Gemini *(03:05:19)*
+
+I will view the `ide-firebase-studio-migration.md` document to check if there are specific UI features for reloading or running workflows in the IDE.
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-23T03:05:24Z
+> Completed At: 2026-05-23T03:05:24Z
+> File Path: `file:///home/ubuntu/.gemini/antigravity-ide/knowledge/antigravity-docs/artifacts/ide-firebase-studio-migration.md`
+> Total Lines: 143
+> Total Bytes: 6899
+> Showing lines 1 to 143
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # Antigravity IDE - Firebase Studio Migration
+> 2: 
+> 3: ---
+> 4: title: Firebase Studio Migration
+> 5: slug: firebase-studio-migration
+> 6: section: Antigravity IDE
+> 7: path:
+> 8:   - Antigravity IDE
+> 9:   - Firebase Studio Migration
+> 10: ---
+> 11: 
+> 12: # Firebase Studio Migration
+> 13: 
+> 14: Antigravity is Google's next-generation, agent-first platform. It’s designed to be the primary home for high-velocity, autonomous development workflows. Instead of relying on just a cloud-based web editor, Antigravity brings the power of AI right into your local development environment.
+> 15: 
+> 16: ## Why Antigravity?
+> 17: 
+> 18: Antigravity offers significant enhancements over the web-based Code view in Firebase Studio:
+> 19: 
+> 20: - **Local environment control**: Antigravity runs locally on your machine, which means you have full control over your filesystem, versions, and terminal.
+> 21: - **True agentic development**: Move beyond basic code completion. Antigravity provides agentic development workflows that can autonomously format, test, and implement entire tasks across your codebase.
+> 22: - **Seamless Firebase support**: You can still easily deploy your projects to Firebase, communicate with Firebase services via the Firebase CLI, and test your functions locally as you always have.
+> 23: 
+> 24: ## Learn how to navigate Antigravity
+> 25: 
+> 26: To help you settle in, here is where you can find your favorite Firebase Studio features in Antigravity:
+> 27: 
+> 28: <IconCardGroup>
+> 29: - link: /docs/editor
+> 30:   icon: code
+> 31:   title: Cloud IDE Code view
+> 32:   description: Enj
+> <truncated 3988 bytes>
+> ons in the terminal to preview your app.
+> 109: 
+> 110: <Announcement>
+> 111: icon: lightbulb
+> 112: color: "#f5f5f5"
+> 113: iconColor: "#4285f4"
+> 114: text: "To refine your app or troubleshoot issues, simply chat with the agent using natural language. If the agent pane is hidden, click the Toggle Agent icon at the top of the window to reopen it."
+> 115: </Announcement>
+> 116: 
+> 117: ### Step 3: Publish your app
+> 118: 
+> 119: Antigravity uses agent skills to publish your app using Firebase best practices.
+> 120: 
+> 121: 1. In the chat panel, enter the following prompt: simply instruct the agent:
+> 122: 
+> 123: ```
+> 124: Publish my app
+> 125: ```
+> 126: 
+> 127: 2. When prompted to run `firebase deploy`, choose **Yes**. The agent will publish to your existing URL if you’ve previously published to App Hosting. If this is your first time publishing to App Hosting, the agent will walk you through the process.
+> 128: 3. For future updates, simply instruct the agent to `publish my app` in the Antigravity chat panel.
+> 129: 
+> 130: ## Continue your work
+> 131: 
+> 132: There are several ways you can continue your development in Antigravity.
+> 133: 
+> 134: - **Running workflows:** In Antigravity, you can seamlessly execute workflows and continue your work with the model by typing `@workflows <workflow_name>` into the agentic chat panel.
+> 135: - **App Hosting deployments:** You can seamlessly deploy your apps directly through the agent using agent skills, or by using the platform-agnostic Firebase CLI and GitHub.
+> 136: - **Troubleshooting:** If you experience deployment issues, try re-authenticating with the Firebase CLI or verifying your project secrets.
+> 137: 
+> 138: Thank you for being part of the Firebase Studio journey. Your prototypes and feedback have directly shaped Google's AI tools, and we can’t wait to see what you build next in Antigravity!
+> 139: 
+> 140: ## Need help?
+> 141: 
+> 142: File any migration bugs in our [GitHub Issues](https://github.com/firebase/firebase-tools/issues).
+> 143: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Verifying Agent Interactions**
+
+I'm now zeroing in on the seamless workflow execution within Antigravity. My focus is on the user experience; can workflows truly be initiated and sustained through simple chat commands? I am currently trying to make sure that the experience is really as good as I think it is. I am double checking all related materials.
+
+
+**Clarifying Workflow Invocation**
+
+I'm now clarifying the two methods for workflow invocation. Both the `@workflows <workflow_name>` system and slash commands like `/workflow-name` are available. I'm also suggesting they check the "Workflows" tab in the Customizations panel for registered workflows. Finally, I'm verifying the workspace setup, ensuring the user has opened the correct Git repository directory as their workspace.
+
+</details>
+
+## 🤖 Gemini *(03:05:24)*
+
+Existem duas possíveis causas para o Antigravity IDE não estar exibindo os comandos `/handoff` e `/handson`:
+
+### 1. Invocação via `@workflows` ou `/workflow-`
+No Antigravity IDE (Gemini), a sintaxe oficial recomendada para rodar workflows locais é através do sistema de menção `@workflows` no chat do agente. Tente digitar no chat:
+*   `@workflows handson`
+*   `@workflows handoff`
+
+Alternativamente, em algumas versões do editor, o autocompletar do comando de barra registra com o prefixo do tipo:
+*   `/workflow-handson`
+*   `/workflow-handoff`
+
+---
+
+### 2. Validação da Pasta Aberta no Editor (Causa Provável ⚠️)
+O Antigravity IDE só carrega as customizações de regras e workflows do workspace se a pasta raiz aberta no editor for exatamente a pasta do projeto `/home/gcrUX/htdocs/constellation-orchestra` (onde criamos a pasta `.agents/`).
+
+Se o seu VS Code estiver com a raiz do sistema (`/`) ou outra pasta pai aberta, o IDE procurará por uma pasta `.agents` no nível superior e não carregará as configurações do nosso projeto.
+*   **Como corrigir:** Vá em **Arquivo > Abrir Pasta...** (File > Open Folder...) e selecione especificamente o diretório do projeto: `/home/gcrUX/htdocs/constellation-orchestra`.
+
+---
+
+### 3. Painel de Customizações Visual
+Se a pasta correta estiver aberta e mesmo assim não aparecer no autocompletar do chat:
+1. Clique no botão de três pontos **"..."** no topo do painel do agente (chat).
+2. Abra a aba **Customizações** (Customizations).
+3. Vá até a seção **Workflows** e verifique se `handson` e `handoff` aparecem listados na lista do **Workspace**. Se aparecerem lá, o motor do IDE já os reconheceu!
