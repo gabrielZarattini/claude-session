@@ -1,5 +1,5 @@
 {
-  "remoteURL": "https://github.com/gabrielZarattini/claude-session.git",
+  "remoteURL": "git@github.com:gabrielZarattini/claude-session.git",
   "gitLocation": "",
   "syncinterval": 10,
   "isSyncOnLoad": true,
