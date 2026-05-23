@@ -1,0 +1,3045 @@
+# Claude Session: agent-a2f6a40e9e7c231a2
+
+## 👤 User
+
+Explore the codebase at /home/gcrUX/htdocs/constellation-orchestra. I need to understand the full affiliate engine context. Find and read the following:
+
+1. `supabase/functions/process-affiliate-link/index.ts` — full content
+2. Any file matching `useAffiliateConfig*` anywhere in src/
+3. `src/pages/ContentLibraryPage.tsx` — full content
+4. `supabase/functions/orchestrate-content/index.ts` — specifically lines related to affiliate, UTM, mercado livre, process-affiliate-link
+5. Any type definitions for affiliate_links table (check `src/integrations/supabase/types.ts` for the affiliate_links table schema)
+6. `src/lib/billing.ts` — full content
+
+Return the full content of each file found. This is research only, no code changes needed.
+
+## 🤖 Claude
+
+I'll explore the codebase to find and read all the files you've requested. Let me start by locating these files.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra -type f -name \"index.ts\" | grep -E \"(process-affiliate-link|orchestrate-content)\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts
+> ```
+
+## 🤖 Claude
+
+Now let me locate and read all the requested files:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token",
+> 8	};
+> 9	
+> 10	serve(async (req) => {
+> 11	  // CORS preflight
+> 12	  if (req.method === "OPTIONS") {
+> 13	    return new Response("ok", { headers: corsHeaders });
+> 14	  }
+> 15	
+> 16	  try {
+> 17	    // ── Auth ──
+> 18	    const authHeader = req.headers.get("Authorization");
+> 19	    if (!authHeader) {
+> 20	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 21	        status: 401,
+> 22	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 23	      });
+> 24	    }
+> 25	
+> 26	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 27	    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 28	    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 29	      global: { headers: { Authorization: authHeader } },
+> 30	    });
+> 31	
+> 32	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 33	    if (authError || !user) {
+> 34	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 35	        status: 401,
+> 36	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 37	      });
+> 38	    }
+> 39	
+> 40	    // ── Input ──
+> 41	    const { product_url, campaign_id, content_id } = await req.json();
+> 42	
+> 43	    if (!product_url || typeof product_url !== "string") {
+> 44	      return new Response(
+> 45	        JSON.stringify({ error: "product_url is required" }),
+> 46	        {
+> 47	          status: 400,
+> 48	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 49	        }
+> 50	      );
+> 51	    }
+> 52	
+> 53	    // ── TODO: Implementar lógica de integração com API do Mercado Livre ──
+> 54	    // 1. Buscar affiliate_config do usuário (via service_role)
+> 55	    // 2. Chamar API do ML para gerar link de afiliado
+> 56	    // 3. Aplicar UTM tags
+> 57	    // 4. Salvar em affiliate_links
+> 58	    // 5. Retornar short_url monetizado
+> 59	
+> 60	    // Placeholder response
+> 61	    return new Response(
+> 62	      JSON.stringify({
+> 63	        success: true,
+> 64	        original_url: product_url,
+> 65	        affiliate_url: null,
+> 66	        message: "Skeleton — lógica de afiliado pendente de implementação via CLI",
+> 67	      }),
+> 68	      {
+> 69	        status: 200,
+> 70	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 71	      }
+> 72	    );
+> 73	  } catch (err) {
+> 74	    console.error("process-affiliate-link error:", err);
+> 75	    return new Response(
+> 76	      JSON.stringify({ error: err.message || "Internal server error" }),
+> 77	      {
+> 78	        status: 500,
+> 79	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 80	      }
+> 81	    );
+> 82	  }
+> 83	});
+> 84	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const corsHeaders = {
+> 2	  "Access-Control-Allow-Origin": "*",
+> 3	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 4	  "Access-Control-Allow-Headers":
+> 5	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 6	};
+> 7	
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 9	
+> 10	Deno.serve(async (req) => {
+> 11	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 12	
+> 13	  try {
+> 14	    const authHeader = req.headers.get("Authorization");
+> 15	    if (!authHeader?.startsWith("Bearer ")) {
+> 16	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 17	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 18	      });
+> 19	    }
+> 20	
+> 21	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 22	    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 23	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 24	    
+> 25	    const userClient = createClient(supabaseUrl, supabaseKey, {
+> 26	      global: { headers: { Authorization: authHeader } },
+> 27	    });
+> 28	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 29	    if (userErr || !user) {
+> 30	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 31	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 32	      });
+> 33	    }
+> 34	
+> 35	    const admin = createClient(supabaseUrl, serviceKey);
+> 36	
+> 37	    // mcoCoins gatekeeper — deduct before any AI work
+> 38	    const ORCHESTRATION_COST = 10;
+> 39	    const { data: profileBalance } = await admin
+> 40	      .from("profiles")
+> 41	      .select("mco_balance")
+> 42	      .eq("id", user.id)
+> 43	      .maybeSingle();
+> 44	    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {
+> 45	      return new Response(
+> 46	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 47	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 48	      );
+> 49	    }
+> 50	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 51	      p_user_id: user.id,
+> 52	      p_amount: ORCHESTRATION_COST,
+> 53	    });
+> 54	    if (deductErr) {
+> 55	      return new Response(
+> 56	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 57	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 58	      );
+> 59	    }
+> 60	
+> 61	    const { data: userKeys } = await admin.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 62	
+> 63	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 64	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 65	    const aiKey = groqKey || openRouterKey;
+> 66	
+> 67	    if (!aiKey) {
+> 68	      return new Response(JSON.stringify({ error: "GROQ_API_KEY or OPENROUTER_API_KEY not configured" }), {
+> 69	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 70	      });
+> 71	    }
+> 72	
+> 73	    const isGroq = !!groqKey;
+> 74	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 75	    const selectedModel = isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct";
+> 76	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com" } = await req.json();
+> 77	
+> 78	    if (!topic) {
+> 79	      return new Response(JSON.stringify({ error: "topic is required" }), {
+> 80	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 81	      });
+> 82	    }
+> 83	
+> 84	    const results: Record<string, any> = { steps: [] };
+> 85	    const addStep = (name: string, status: string, data?: any) => {
+> 86	      results.steps.push({ name, status, data, timestamp: new Date().toISOString() });
+> 87	    };
+> 88	
+> 89	    const utmTag = (platform: string, baseUrl?: string) => {
+> 90	      const params = `utm_source=${platform}&utm_medium=social&utm_campaign=magic_constellation_v1`;
+> 91	      return baseUrl ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${params}` : params;
+> 92	    };
+> 93	
+> 94	    // --- Step 1: Generate WordPress article ---
+> 95	    let articleContent = "";
+> 96	    let articleTitle = "";
+> 97	    if (platforms.includes("wordpress")) {
+> 98	      addStep("article_generation", "in_progress");
+> 99	      try {
+> 100	        const articleRes = await fetch(aiEndpoint, {
+> 101	          method: "POST",
+> 102	          headers: { 
+> 103	            Authorization: `Bearer ${aiKey}`, 
+> 104	            "Content-Type": "application/json",
+> 105	            "HTTP-Referer": "https://mcorch.com",
+> 106	            "X-Title": "GCRUX Constellation"
+> 107	          },
+> 108	          body: JSON.stringify({
+> 109	            model: selectedModel,
+> 110	            messages: [
+> 111	              { role: "system", content: `Você é um especialista em marketing digital e SEO. Escreva artigos longos (1200+ palavras) em português brasileiro, otimizados para SEO. Inclua meta description e tags sugeridas. Formato: retorne JSON com campos "title", "content" (HTML), "meta_description", "tags" (array de strings).` },
+> 112	              { role: "user", content: `Escreva um artigo completo sobre: "${topic}". O artigo deve ser focado em donos de agências de marketing que querem usar IA para escalar resultados. Inclua dados, exemplos práticos e um CTA forte. URL do site: https://${site_url}` },
+> 113	            ],
+> 114	            tools: [{
+> 115	              type: "function",
+> 116	              function: {
+> 117	                name: "write_article",
+> 118	                description: "Generate a full SEO article",
+> 119	                parameters: {
+> 120	                  type: "object",
+> 121	                  properties: {
+> 122	                    title: { type: "string" },
+> 123	                    content: { type: "string", description: "Full HTML article body" },
+> 124	                    meta_description: { type: "string" },
+> 125	                    tags: { type: "array", items: { type: "string" } },
+> 126	                  },
+> 127	                  required: ["title", "content", "meta_description", "tags"],
+> 128	                },
+> 129	              },
+> 130	            }],
+> 131	            tool_choice: { type: "function", function: { name: "write_article" } },
+> 132	          }),
+> 133	        });
+> 134	
+> 135	        if (!articleRes.ok) {
+> 136	          const status = articleRes.status;
+> 137	          if (status === 429) throw new Error("Rate limit exceeded");
+> 138	          if (status === 402) throw new Error("Credits exhausted");
+> 139	          throw new Error(`AI error: ${status}`);
+> 140	        }
+> 141	
+> 142	        const articleData = await articleRes.json();
+> 143	        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);
+> 144	        articleTitle = args.title;
+> 145	        articleContent = args.content;
+> 146	
+> 147	        // Save to content_library
+> 148	        await admin.from("content_library").insert({
+> 149	          user_id: user.id,
+> 150	          campaign_id: campaign_id || null,
+> 151	          type: "text",
+> 152	          title: articleTitle,
+> 153	          body: articleContent,
+> 154	          tags: args.tags,
+> 155	          status: "approved",
+> 156	          metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress") },
+> 157	        });
+> 158	
+> 159	        addStep("article_generation", "done", { title: articleTitle, meta_description: args.meta_description });
+> 160	      } catch (e) {
+> 161	        addStep("article_generation", "error", { error: e instanceof Error ? e.message : "Unknown" });
+> 162	      }
+> 163	    }
+> 164	
+> 165	    // --- Step 2: Publish to WordPress ---
+> 166	    let wpPostUrl = "";
+> 167	    if (platforms.includes("wordpress") && articleContent) {
+> 168	      addStep("wordpress_publish", "in_progress");
+> 169	      try {
+> 170	        const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 171	          method: "POST",
+> 172	          headers: { Authorization: authHeader, "Content-Type": "application/json" },
+> 173	          body: JSON.stringify({
+> 174	            title: articleTitle,
+> 175	            content: articleContent,
+> 176	            tags: "marketing-ia,orquestracao,roi",
+> 177	            status: "draft",
+> 178	          }),
+> 179	        });
+> 180	        const wpData = await wpRes.json();
+> 181	        if (wpRes.ok && wpData.post_url) {
+> 182	          wpPostUrl = wpData.post_url;
+> 183	          addStep("wordpress_publish", "done", { post_url: wpPostUrl, post_id: wpData.post_id });
+> 184	        } else {
+> 185	          addStep("wordpress_publish", "error", { error: wpData.error || "Failed" });
+> 186	        }
+> 187	      } catch (e) {
+> 188	        addStep("wordpress_publish", "error", { error: e instanceof Error ? e.message : "Unknown" });
+> 189	      }
+> 190	    }
+> 191	
+> 192	    const articleLink = wpPostUrl ? utmTag("linkedin", wpPostUrl) : `https://${site_url}`;
+> 193	
+> 194	    // --- Step 3: Generate LinkedIn post ---
+> 195	    if (platforms.includes("linkedin")) {
+> 196	      addStep("linkedin_post", "in_progress");
+> 197	      try {
+> 198	        const liRes = await fetch(aiEndpoint, {
+> 199	          method: "POST",
+> 200	          headers: { 
+> 201	            Authorization: `Bearer ${aiKey}`, 
+> 202	            "Content-Type": "application/json",
+> 203	            "HTTP-Referer": "https://mcorch.com",
+> 204	            "X-Title": "GCRUX Constellation"
+> 205	          },
+> 206	          body: JSON.stringify({
+> 207	            model: selectedModel,
+> 208	            messages: [
+> 209	              { role: "system", content: "Você é um especialista em LinkedIn B2B. Crie posts de autoridade com storytelling, emojis moderados, e CTA. Formato: retorne JSON com 'post_text'." },
+> 210	              { role: "user", content: `Crie um post LinkedIn sobre: "${topic}". Link do artigo: ${articleLink}. Foque em donos de agências e ROI com IA.` },
+> 211	            ],
+> 212	            tools: [{
+> 213	              type: "function",
+> 214	              function: {
+> 215	                name: "linkedin_post",
+> 216	                description: "Generate LinkedIn post",
+> 217	                parameters: { type: "object", properties: { post_text: { type: "string" } }, required: ["post_text"] },
+> 218	              },
+> 219	            }],
+> 220	            tool_choice: { type: "function", function: { name: "linkedin_post" } },
+> 221	          }),
+> 222	        });
+> 223	
+> 224	        if (!liRes.ok) throw new Error(`AI error: ${liRes.status}`);
+> 225	        const liData = await liRes.json();
+> 226	        const liArgs = JSON.parse(liData.choices[0].message.tool_calls[0].function.arguments);
+> 227	
+> 228	        await admin.from("content_library").insert({
+> 229	          user_id: user.id, campaign_id: campaign_id || null, type: "text",
+> 230	          title: `LinkedIn: ${topic}`, body: liArgs.post_text, status: "approved",
+> 231	          metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin") },
+> 232	        });
+> 233	
+> 234	        // Schedule the post
+> 235	        const { data: liContent } = await admin.from("content_library")
+> 236	          .select("id").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).single();
+> 237	
+> 238	        if (liContent) {
+> 239	          await admin.from("scheduled_posts").insert({
+> 240	            user_id: user.id, campaign_id: campaign_id || null,
+> 241	            platform: "linkedin", content_id: liContent.id,
+> 242	            scheduled_at: new Date(Date.now() + 3600000).toISOString(), // 1h from now
+> 243	            status: "queued",
+> 244	            metadata: { utm: utmTag("linkedin"), orchestrated: true },
+> 245	          });
+> 246	        }
+> 247	
+> 248	        addStep("linkedin_post", "done", { preview: liArgs.post_text.substring(0, 200) + "..." });
+> 249	      } catch (e) {
+> 250	        addStep("linkedin_post", "error", { error: e instanceof Error ? e.message : "Unknown" });
+> 251	      }
+> 252	    }
+> 253	
+> 254	    // --- Step 4: Generate X/Twitter thread ---
+> 255	    if (platforms.includes("twitter")) {
+> 256	      addStep("twitter_thread", "in_progress");
+> 257	      try {
+> 258	        const xLink = wpPostUrl ? utmTag("twitter", wpPostUrl) : `https://${site_url}`;
+> 259	        const xRes = await fetch(aiEndpoint, {
+> 260	          method: "POST",
+> 261	          headers: { 
+> 262	            Authorization: `Bearer ${aiKey}`, 
+> 263	            "Content-Type": "application/json",
+> 264	            "HTTP-Referer": "https://mcorch.com",
+> 265	            "X-Title": "GCRUX Constellation"
+> 266	          },
+> 267	          body: JSON.stringify({
+> 268	            model: selectedModel,
+> 269	            messages: [
+> 270	              { role: "system", content: "Você é um especialista em X/Twitter. Crie threads virais de 5 tweets. Cada tweet deve ter max 280 chars. Formato: retorne JSON com 'tweets' (array de strings)." },
+> 271	              { role: "user", content: `Crie uma thread de 5 tweets sobre: "${topic}". Link do artigo (último tweet): ${xLink}. Foco em marketing com IA e ROI.` },
+> 272	            ],
+> 273	            tools: [{
+> 274	              type: "function",
+> 275	              function: {
+> 276	                name: "twitter_thread",
+> 277	                description: "Generate Twitter thread",
+> 278	                parameters: {
+> 279	                  type: "object",
+> 280	                  properties: { tweets: { type: "array", items: { type: "string" } } },
+> 281	                  required: ["tweets"],
+> 282	                },
+> 283	              },
+> 284	            }],
+> 285	            tool_choice: { type: "function", function: { name: "twitter_thread" } },
+> 286	          }),
+> 287	        });
+> 288	
+> 289	        if (!xRes.ok) throw new Error(`AI error: ${xRes.status}`);
+> 290	        const xData = await xRes.json();
+> 291	        const xArgs = JSON.parse(xData.choices[0].message.tool_calls[0].function.arguments);
+> 292	
+> 293	        const threadText = xArgs.tweets.map((t: string, i: number) => `${i + 1}/5 ${t}`).join("\n\n");
+> 294	
+> 295	        await admin.from("content_library").insert({
+> 296	          user_id: user.id, campaign_id: campaign_id || null, type: "text",
+> 297	          title: `Thread X: ${topic}`, body: threadText, status: "approved",
+> 298	          metadata: { source: "orchestration", platform: "twitter", tweets: xArgs.tweets, utm: utmTag("twitter") },
+> 299	        });
+> 300	
+> 301	        const { data: xContent } = await admin.from("content_library")
+> 302	          .select("id").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).single();
+> 303	
+> 304	        if (xContent) {
+> 305	          await admin.from("scheduled_posts").insert({
+> 306	            user_id: user.id, campaign_id: campaign_id || null,
+> 307	            platform: "twitter", content_id: xContent.id,
+> 308	            scheduled_at: new Date(Date.now() + 7200000).toISOString(), // 2h from now
+> 309	            status: "queued",
+> 310	            metadata: { utm: utmTag("twitter"), orchestrated: true, thread: xArgs.tweets },
+> 311	          });
+> 312	        }
+> 313	
+> 314	        addStep("twitter_thread", "done", { tweet_count: xArgs.tweets.length, preview: xArgs.tweets[0] });
+> 315	      } catch (e) {
+> 316	        addStep("twitter_thread", "error", { error: e instanceof Error ? e.message : "Unknown" });
+> 317	      }
+> 318	    }
+> 319	
+> 320	    // --- Step 5: Track usage ---
+> 321	    await admin.from("usage_tracking").insert({
+> 322	      user_id: user.id,
+> 323	      resource_type: "orchestration",
+> 324	      quantity: platforms.length,
+> 325	      credits_consumed: platforms.length * 5,
+> 326	      metadata: { topic, platforms, campaign_id },
+> 327	    });
+> 328	
+> 329	    // --- Step 6: Knowledge Mesh — observation node for this orchestration run ---
+> 330	    try {
+> 331	      await admin.from("mcorch_nodes").insert({
+> 332	        user_id: user.id,
+> 333	        node_type: "observation",
+> 334	        name: `Orchestration: ${topic.substring(0, 60)}`,
+> 335	        content: `Conteúdo orquestrado para "${topic}" via ${platforms.join(", ")}. WordPress: ${wpPostUrl || "n/a"}.`,
+> 336	        metadata: {
+> 337	          media_type: "content_bundle",
+> 338	          provider: "mcorch_orchestrator",
+> 339	          cost_mco: 10,
+> 340	          roi_potential: "high",
+> 341	          platforms,
+> 342	          campaign_id: campaign_id || null,
+> 343	          wordpress_url: wpPostUrl || null,
+> 344	        },
+> 345	        revenue_impact: 0,
+> 346	        stability_score: 1.0,
+> 347	      });
+> 348	      addStep("knowledge_mesh", "done", { topic: topic.substring(0, 60) });
+> 349	    } catch (e) {
+> 350	      console.warn("[orchestrate-content] knowledge node creation failed (non-fatal):", e);
+> 351	      addStep("knowledge_mesh", "error", { error: e instanceof Error ? e.message : "Unknown" });
+> 352	    }
+> 353	
+> 354	    results.summary = {
+> 355	      topic,
+> 356	      platforms_processed: platforms,
+> 357	      wordpress_url: wpPostUrl || null,
+> 358	      campaign_id: campaign_id || null,
+> 359	    };
+> 360	
+> 361	    return new Response(JSON.stringify(results), {
+> 362	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 363	    });
+> 364	  } catch (e) {
+> 365	    console.error("orchestrate-content error:", e);
+> 366	    return new Response(
+> 367	      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+> 368	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 369	    );
+> 370	  }
+> 371	});
+> 372	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/src -type f -name \"*useAffiliateConfig*\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ContentLibraryPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+> 2	import { useNavigate } from "react-router-dom";
+> 3	import { useAuth } from "@/hooks/useAuth";
+> 4	import {
+> 5	  useContentLibrary,
+> 6	  useCreateContent,
+> 7	  useUpdateContent,
+> 8	  useDeleteContent,
+> 9	  useToggleFavorite,
+> 10	  type Content,
+> 11	} from "@/hooks/useContentLibrary";
+> 12	import { supabase } from "@/integrations/supabase/client";
+> 13	import { Button } from "@/components/ui/button";
+> 14	import { Input } from "@/components/ui/input";
+> 15	import { Textarea } from "@/components/ui/textarea";
+> 16	import { Badge } from "@/components/ui/badge";
+> 17	import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+> 18	import {
+> 19	  Dialog,
+> 20	  DialogContent,
+> 21	  DialogHeader,
+> 22	  DialogTitle,
+> 23	  DialogTrigger,
+> 24	  DialogFooter,
+> 25	} from "@/components/ui/dialog";
+> 26	import {
+> 27	  Select,
+> 28	  SelectContent,
+> 29	  SelectItem,
+> 30	  SelectTrigger,
+> 31	  SelectValue,
+> 32	} from "@/components/ui/select";
+> 33	import {
+> 34	  DropdownMenu,
+> 35	  DropdownMenuContent,
+> 36	  DropdownMenuItem,
+> 37	  DropdownMenuTrigger,
+> 38	} from "@/components/ui/dropdown-menu";
+> 39	import { Label } from "@/components/ui/label";
+> 40	import { useToast } from "@/hooks/use-toast";
+> 41	import {
+> 42	  Plus,
+> 43	  Search,
+> 44	  MoreVertical,
+> 45	  Trash2,
+> 46	  Edit,
+> 47	  Sparkles,
+> 48	  FileText,
+> 49	  Image,
+> 50	  Video,
+> 51	  Music,
+> 52	  Loader2,
+> 53	  Star,
+> 54	  Copy,
+> 55	  Tag,
+> 56	  ImagePlus,
+> 57	  Palette,
+> 58	  Mic,
+> 59	  Volume2,
+> 60	  VolumeX,
+> 61	  Square,
+> 62	  Film,
+> 63	  TrendingUp,
+> 64	} from "lucide-react";
+> 65	
+> 66	const CONTENT_TYPES = [
+> 67	  { value: "all", label: "Todos", icon: FileText },
+> 68	  { value: "text", label: "Texto", icon: FileText },
+> 69	  { value: "image", label: "Imagem", icon: Image },
+> 70	  { value: "video", label: "Vídeo", icon: Video },
+> 71	  { value: "audio", label: "Áudio", icon: Music },
+> 72	  { value: "carousel", label: "Carrossel", icon: Image },
+> 73	];
+> 74	
+> 75	const TEMPLATES = [
+> 76	  { name: "Post LinkedIn", prompt: "Crie um post profissional para LinkedIn sobre", platform: "linkedin", type: "text" as const },
+> 77	  { name: "Caption Instagram", prompt: "Crie uma caption envolvente para Instagram sobre", platform: "instagram", type: "text" as const },
+> 78	  { name: "Thread Twitter/X", prompt: "Crie uma thread informativa para Twitter/X sobre", platform: "twitter", type: "text" as const },
+> 79	  { name: "Script TikTok", prompt: "Crie um roteiro curto para vídeo TikTok sobre", platform: "tiktok", type: "text" as const },
+> 80	  { name: "Email Marketing", prompt: "Crie um email de marketing persuasivo sobre", platform: "email", type: "text" as const },
+> 81	  { name: "Descrição YouTube", prompt: "Crie uma descrição otimizada para SEO de um vídeo do YouTube sobre", platform: "youtube", type: "text" as const },
+> 82	];
+> 83	
+> 84	const TONES = [
+> 85	  { value: "profissional", label: "Profissional" },
+> 86	  { value: "casual", label: "Casual" },
+> 87	  { value: "humoristico", label: "Humorístico" },
+> 88	  { value: "inspirador", label: "Inspirador" },
+> 89	  { value: "educativo", label: "Educativo" },
+> 90	  { value: "urgente", label: "Urgente" },
+> 91	];
+> 92	
+> 93	const AUDIO_FORMATS = [
+> 94	  { value: "podcast", label: "🎙️ Podcast" },
+> 95	  { value: "narração", label: "🎤 Narração" },
+> 96	  { value: "jingle", label: "🎵 Jingle" },
+> 97	  { value: "música", label: "🎶 Música" },
+> 98	];
+> 99	
+> 100	const AUDIO_DURATIONS = [
+> 101	  { value: "curto", label: "Curto (30s–1min)" },
+> 102	  { value: "médio", label: "Médio (2–5min)" },
+> 103	  { value: "longo", label: "Longo (5–15min)" },
+> 104	];
+> 105	
+> 106	const VIDEO_FORMATS = [
+> 107	  { value: "reels", label: "📱 Reels/Shorts" },
+> 108	  { value: "youtube", label: "▶️ YouTube" },
+> 109	  { value: "tutorial", label: "📚 Tutorial" },
+> 110	  { value: "storytelling", label: "🎬 Storytelling" },
+> 111	];
+> 112	
+> 113	const VIDEO_DURATIONS = [
+> 114	  { value: "curto", label: "Curto (15–60s)" },
+> 115	  { value: "médio", label: "Médio (2–10min)" },
+> 116	  { value: "longo", label: "Longo (10–30min)" },
+> 117	];
+> 118	
+> 119	const VIDEO_PROVIDERS = [
+> 120	  { value: "gemini", label: "Google Gemini" },
+> 121	  { value: "openrouter", label: "OpenRouter" },
+> 122	];
+> 123	
+> 124	/** Static fallback models — used while API discovery is loading or if it fails */
+> 125	const FALLBACK_MODELS: Record<string, { value: string; label: string }[]> = {
+> 126	  gemini: [
+> 127	    { value: "veo-2.0-generate-001", label: "Veo 2.0 (fallback)" },
+> 128	  ],
+> 129	  openrouter: [
+> 130	    { value: "seedance/seedance-video-1", label: "Seedance Video 1 (fallback)" },
+> 131	    { value: "wan-ai/wan2.1-t2v-14b", label: "Wan 2.1 T2V 14B (fallback)" },
+> 132	  ],
+> 133	};
+> 134	
+> 135	/** Get user session token for edge function auth */
+> 136	async function getAuthToken(): Promise<string> {
+> 137	  const { data: { session } } = await supabase.auth.getSession();
+> 138	  if (!session?.access_token) throw new Error("Você precisa estar logado para usar esta funcionalidade.");
+> 139	  return session.access_token;
+> 140	}
+> 141	
+> 142	/** Stream SSE from edge function using user's auth token */
+> 143	async function streamFromEdge(
+> 144	  fnName: string,
+> 145	  body: object,
+> 146	  onChunk: (text: string) => void,
+> 147	): Promise<string> {
+> 148	  const token = await getAuthToken();
+> 149	  const resp = await fetch(
+> 150	    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`,
+> 151	    {
+> 152	      method: "POST",
+> 153	      headers: {
+> 154	        "Content-Type": "application/json",
+> 155	        Authorization: `Bearer ${token}`,
+> 156	      },
+> 157	      body: JSON.stringify(body),
+> 158	    }
+> 159	  );
+> 160	
+> 161	  if (!resp.ok) {
+> 162	    const err = await resp.json();
+> 163	    throw new Error(err.error || "Erro na geração");
+> 164	  }
+> 165	
+> 166	  const reader = resp.body?.getReader();
+> 167	  if (!reader) throw new Error("No stream");
+> 168	  const decoder = new TextDecoder();
+> 169	  let buffer = "";
+> 170	  let result = "";
+> 171	
+> 172	  while (true) {
+> 173	    const { done, value } = await reader.read();
+> 174	    if (done) break;
+> 175	    buffer += decoder.decode(value, { stream: true });
+> 176	
+> 177	    let nl: number;
+> 178	    while ((nl = buffer.indexOf("\n")) !== -1) {
+> 179	      let line = buffer.slice(0, nl);
+> 180	      buffer = buffer.slice(nl + 1);
+> 181	      if (line.endsWith("\r")) line = line.slice(0, -1);
+> 182	      if (!line.startsWith("data: ")) continue;
+> 183	      const jsonStr = line.slice(6).trim();
+> 184	      if (jsonStr === "[DONE]") break;
+> 185	      try {
+> 186	        const parsed = JSON.parse(jsonStr);
+> 187	        const content = parsed.choices?.[0]?.delta?.content;
+> 188	        if (content) {
+> 189	          result += content;
+> 190	          onChunk(result);
+> 191	        }
+> 192	      } catch {}
+> 193	    }
+> 194	  }
+> 195	  return result;
+> 196	}
+> 197	
+> 198	export default function ContentLibraryPage() {
+> 199	  const navigate = useNavigate();
+> 200	  const { user } = useAuth();
+> 201	  const { toast } = useToast();
+> 202	  const [search, setSearch] = useState("");
+> 203	  const [typeFilter, setTypeFilter] = useState("all");
+> 204	  const [statusFilter, setStatusFilter] = useState("all");
+> 205	  const [favoritesOnly, setFavoritesOnly] = useState(false);
+> 206	  const [createOpen, setCreateOpen] = useState(false);
+> 207	  const [aiOpen, setAiOpen] = useState(false);
+> 208	  const [imageOpen, setImageOpen] = useState(false);
+> 209	  const [audioOpen, setAudioOpen] = useState(false);
+> 210	  const [videoOpen, setVideoOpen] = useState(false);
+> 211	
+> 212	  // AI generation state
+> 213	  const [aiPrompt, setAiPrompt] = useState("");
+> 214	  const [aiTone, setAiTone] = useState("profissional");
+> 215	  const [aiPlatform, setAiPlatform] = useState("");
+> 216	  const [aiGenerating, setAiGenerating] = useState(false);
+> 217	  const [aiResult, setAiResult] = useState("");
+> 218	  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+> 219	
+> 220	  // Manual create state
+> 221	  const [newTitle, setNewTitle] = useState("");
+> 222	  const [newBody, setNewBody] = useState("");
+> 223	  const [newType, setNewType] = useState<string>("text");
+> 224	  const [newTags, setNewTags] = useState("");
+> 225	
+> 226	  // Image generation state
+> 227	  const [imgPrompt, setImgPrompt] = useState("");
+> 228	  const [imgStyle, setImgStyle] = useState("fotográfico");
+> 229	  const [imgGenerating, setImgGenerating] = useState(false);
+> 230	  const [imgPreview, setImgPreview] = useState("");
+> 231	  const [imgUrl, setImgUrl] = useState("");
+> 232	
+> 233	  // Audio generation state
+> 234	  const [audioPrompt, setAudioPrompt] = useState("");
+> 235	  const [audioFormat, setAudioFormat] = useState("podcast");
+> 236	  const [audioDuration, setAudioDuration] = useState("médio");
+> 237	  const [audioGenerating, setAudioGenerating] = useState(false);
+> 238	  const [audioResult, setAudioResult] = useState("");
+> 239	
+> 240	  // Video generation state
+> 241	  const [videoPrompt, setVideoPrompt] = useState("");
+> 242	  const [videoFormat, setVideoFormat] = useState("youtube");
+> 243	  const [videoDuration, setVideoDuration] = useState("médio");
+> 244	  const [videoProvider, setVideoProvider] = useState("gemini");
+> 245	  const [videoModel, setVideoModel] = useState("veo-2.0-generate-001");
+> 246	  const [videoGenerating, setVideoGenerating] = useState(false);
+> 247	  const [videoResult, setVideoResult] = useState("");
+> 248	
+> 249	  // Real-time model discovery state
+> 250	  const [discoveredModels, setDiscoveredModels] = useState<Record<string, { value: string; label: string }[]>>({});
+> 251	  const [modelsLoading, setModelsLoading] = useState(false);
+> 252	  const [modelsError, setModelsError] = useState<string | null>(null);
+> 253	  const modelsCacheRef = useRef<Record<string, { value: string; label: string }[]>>({});
+> 254	
+> 255	  /** Fetch models from discovery endpoint with caching */
+> 256	  const fetchProviderModels = useCallback(async (provider: string) => {
+> 257	    // Return from cache if available
+> 258	    if (modelsCacheRef.current[provider]) {
+> 259	      setDiscoveredModels((prev) => ({ ...prev, [provider]: modelsCacheRef.current[provider] }));
+> 260	      return;
+> 261	    }
+> 262	
+> 263	    setModelsLoading(true);
+> 264	    setModelsError(null);
+> 265	    try {
+> 266	      const token = await getAuthToken();
+> 267	      const resp = await fetch(
+> 268	        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-provider-models`,
+> 269	        {
+> 270	          method: "POST",
+> 271	          headers: {
+> 272	            "Content-Type": "application/json",
+> 273	            Authorization: `Bearer ${token}`,
+> 274	          },
+> 275	          body: JSON.stringify({ provider }),
+> 276	        }
+> 277	      );
+> 278	      const data = await resp.json();
+> 279	
+> 280	      if (data.error === "key_missing") {
+> 281	        setModelsError(`Chave não configurada para ${data.provider}. Vá em Configurações.`);
+> 282	        const fallback = FALLBACK_MODELS[provider] || [];
+> 283	        setDiscoveredModels((prev) => ({ ...prev, [provider]: fallback }));
+> 284	        return;
+> 285	      }
+> 286	
+> 287	      if (data.models && data.models.length > 0) {
+> 288	        const mapped = data.models.map((m: any) => ({ value: m.id, label: m.name }));
+> 289	        modelsCacheRef.current[provider] = mapped;
+> 290	        setDiscoveredModels((prev) => ({ ...prev, [provider]: mapped }));
+> 291	      } else {
+> 292	        // Use fallback if API returned empty
+> 293	        const fallback = FALLBACK_MODELS[provider] || [];
+> 294	        setDiscoveredModels((prev) => ({ ...prev, [provider]: fallback }));
+> 295	      }
+> 296	    } catch {
+> 297	      // Network error — use fallback
+> 298	      const fallback = FALLBACK_MODELS[provider] || [];
+> 299	      setDiscoveredModels((prev) => ({ ...prev, [provider]: fallback }));
+> 300	    } finally {
+> 301	      setModelsLoading(false);
+> 302	    }
+> 303	  }, []);
+> 304	
+> 305	  // Fetch models when provider changes or video dialog opens
+> 306	  useEffect(() => {
+> 307	    if (videoOpen) {
+> 308	      fetchProviderModels(videoProvider);
+> 309	    }
+> 310	  }, [videoProvider, videoOpen, fetchProviderModels]);
+> 311	
+> 312	  /** Currently available models for the selected provider */
+> 313	  const currentVideoModels = useMemo(() => {
+> 314	    return discoveredModels[videoProvider] || FALLBACK_MODELS[videoProvider] || [];
+> 315	  }, [videoProvider, discoveredModels]);
+> 316	
+> 317	  // TTS state
+> 318	  const [ttsPlaying, setTtsPlaying] = useState<string | null>(null);
+> 319	  const synthRef = useRef(window.speechSynthesis);
+> 320	
+> 321	  // Video rendering pipeline state — The Watcher protocol
+> 322	  const [videoRendering, setVideoRendering] = useState(false);
+> 323	  const [videoRenderStatus, setVideoRenderStatus] = useState("");
+> 324	  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+> 325	  const [videoOperationId, setVideoOperationId] = useState<string | null>(null);
+> 326	  const [videoProgress, setVideoProgress] = useState(0);
+> 327	  const [videoContentId, setVideoContentId] = useState<string | null>(null);
+> 328	  const watcherRef = useRef<ReturnType<typeof setInterval> | null>(null);
+> 329	
+> 330	  // SEO analysis state
+> 331	  const [seoOpen, setSeoOpen] = useState(false);
+> 332	  const [seoAnalyzing, setSeoAnalyzing] = useState(false);
+> 333	  const [seoResult, setSeoResult] = useState<any>(null);
+> 334	  const [seoContentId, setSeoContentId] = useState<string | null>(null);
+> 335	
+> 336	  const IMG_STYLES = [
+> 337	    { value: "fotográfico", label: "Fotográfico" },
+> 338	    { value: "ilustração", label: "Ilustração" },
+> 339	    { value: "3D render", label: "3D" },
+> 340	    { value: "minimalista", label: "Minimalista" },
+> 341	    { value: "arte digital", label: "Arte Digital" },
+> 342	    { value: "aquarela", label: "Aquarela" },
+> 343	  ];
+> 344	
+> 345	  const { data: contents = [], isLoading } = useContentLibrary({
+> 346	    type: typeFilter,
+> 347	    status: statusFilter,
+> 348	    search: search || undefined,
+> 349	    favorites: favoritesOnly || undefined,
+> 350	  });
+> 351	
+> 352	  const createContent = useCreateContent();
+> 353	  const updateContent = useUpdateContent();
+> 354	  const deleteContent = useDeleteContent();
+> 355	  const toggleFavorite = useToggleFavorite();
+> 356	
+> 357	  const handleAIGenerate = async () => {
+> 358	    if (!aiPrompt.trim()) return;
+> 359	    setAiGenerating(true);
+> 360	    setAiResult("");
+> 361	    try {
+> 362	      await streamFromEdge("generate-content", {
+> 363	        type: "text",
+> 364	        prompt: aiPrompt,
+> 365	        platform: aiPlatform || undefined,
+> 366	        tone: aiTone,
+> 367	      }, setAiResult);
+> 368	    } catch (e: any) {
+> 369	      toast({ title: "Erro na geração", description: e.message, variant: "destructive" });
+> 370	    } finally {
+> 371	      setAiGenerating(false);
+> 372	    }
+> 373	  };
+> 374	
+> 375	  const handleSaveAIContent = () => {
+> 376	    if (!aiResult || !user) return;
+> 377	    createContent.mutate({
+> 378	      user_id: user.id,
+> 379	      type: "text",
+> 380	      title: aiPrompt.slice(0, 80),
+> 381	      body: aiResult,
+> 382	      ai_prompt: aiPrompt,
+> 383	      ai_model: "google/gemini-3-flash-preview",
+> 384	      tags: aiPlatform ? [aiPlatform] : [],
+> 385	      status: "draft",
+> 386	    });
+> 387	    setAiOpen(false);
+> 388	    setAiPrompt("");
+> 389	    setAiResult("");
+> 390	    setSelectedTemplate(null);
+> 391	  };
+> 392	
+> 393	  const handleCreateManual = () => {
+> 394	    if (!newTitle || !user) return;
+> 395	    createContent.mutate({
+> 396	      user_id: user.id,
+> 397	      type: newType as any,
+> 398	      title: newTitle,
+> 399	      body: newBody,
+> 400	      tags: newTags ? newTags.split(",").map((t) => t.trim()) : [],
+> 401	      status: "draft",
+> 402	    });
+> 403	    setCreateOpen(false);
+> 404	    setNewTitle("");
+> 405	    setNewBody("");
+> 406	    setNewTags("");
+> 407	  };
+> 408	
+> 409	  const handleImageGenerate = async () => {
+> 410	    if (!imgPrompt.trim()) return;
+> 411	    setImgGenerating(true);
+> 412	    setImgPreview("");
+> 413	    setImgUrl("");
+> 414	    try {
+> 415	      const token = await getAuthToken();
+> 416	      const resp = await fetch(
+> 417	        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
+> 418	        {
+> 419	          method: "POST",
+> 420	          headers: {
+> 421	            "Content-Type": "application/json",
+> 422	            Authorization: `Bearer ${token}`,
+> 423	          },
+> 424	          body: JSON.stringify({ prompt: imgPrompt, style: imgStyle }),
+> 425	        }
+> 426	      );
+> 427	      if (!resp.ok) {
+> 428	        const err = await resp.json();
+> 429	        throw new Error(err.error || "Erro na geração");
+> 430	      }
+> 431	      const data = await resp.json();
+> 432	      setImgPreview(data.base64);
+> 433	      setImgUrl(data.image_url);
+> 434	    } catch (e: any) {
+> 435	      toast({ title: "Erro na geração de imagem", description: e.message, variant: "destructive" });
+> 436	    } finally {
+> 437	      setImgGenerating(false);
+> 438	    }
+> 439	  };
+> 440	
+> 441	  const handleSaveImage = () => {
+> 442	    if (!imgUrl || !user) return;
+> 443	    createContent.mutate({
+> 444	      user_id: user.id,
+> 445	      type: "image",
+> 446	      title: imgPrompt.slice(0, 80),
+> 447	      media_url: imgUrl,
+> 448	      ai_prompt: imgPrompt,
+> 449	      ai_model: "google/gemini-3-pro-image-preview",
+> 450	      tags: ["imagem-ia", imgStyle],
+> 451	      status: "draft",
+> 452	    });
+> 453	    setImageOpen(false);
+> 454	    setImgPrompt("");
+> 455	    setImgPreview("");
+> 456	    setImgUrl("");
+> 457	  };
+> 458	
+> 459	  const handleAudioGenerate = async () => {
+> 460	    if (!audioPrompt.trim()) return;
+> 461	    setAudioGenerating(true);
+> 462	    setAudioResult("");
+> 463	    try {
+> 464	      await streamFromEdge("generate-audio-script", {
+> 465	        prompt: audioPrompt,
+> 466	        format: audioFormat,
+> 467	        duration: audioDuration,
+> 468	      }, setAudioResult);
+> 469	    } catch (e: any) {
+> 470	      toast({ title: "Erro na geração de áudio", description: e.message, variant: "destructive" });
+> 471	    } finally {
+> 472	      setAudioGenerating(false);
+> 473	    }
+> 474	  };
+> 475	
+> 476	  const handleSaveAudio = () => {
+> 477	    if (!audioResult || !user) return;
+> 478	    createContent.mutate({
+> 479	      user_id: user.id,
+> 480	      type: "audio",
+> 481	      title: `${audioFormat.charAt(0).toUpperCase() + audioFormat.slice(1)}: ${audioPrompt.slice(0, 60)}`,
+> 482	      body: audioResult,
+> 483	      ai_prompt: audioPrompt,
+> 484	      ai_model: "google/gemini-3-flash-preview",
+> 485	      tags: [audioFormat, "áudio-ia"],
+> 486	      status: "draft",
+> 487	    });
+> 488	    setAudioOpen(false);
+> 489	    setAudioPrompt("");
+> 490	    setAudioResult("");
+> 491	  };
+> 492	
+> 493	  const handleVideoGenerate = async () => {
+> 494	    if (!videoPrompt.trim()) return;
+> 495	    setVideoGenerating(true);
+> 496	    setVideoResult("");
+> 497	    try {
+> 498	      await streamFromEdge("generate-video-script", {
+> 499	        prompt: videoPrompt,
+> 500	        format: videoFormat,
+> 501	        duration: videoDuration,
+> 502	        provider: videoProvider,
+> 503	        model: videoModel,
+> 504	      }, setVideoResult);
+> 505	    } catch (e: any) {
+> 506	      toast({ title: "Erro na geração de vídeo", description: e.message, variant: "destructive" });
+> 507	    } finally {
+> 508	      setVideoGenerating(false);
+> 509	    }
+> 510	  };
+> 511	
+> 512	  /** Auto-save script to content_library and return the record ID */
+> 513	  const autoSaveScript = async (): Promise<string | null> => {
+> 514	    if (!videoResult || !user) return null;
+> 515	    try {
+> 516	      const { data } = await supabase.from("content_library").insert({
+> 517	        user_id: user.id,
+> 518	        type: "video",
+> 519	        title: `${videoFormat.charAt(0).toUpperCase() + videoFormat.slice(1)}: ${videoPrompt.slice(0, 60)}`,
+> 520	        body: videoResult,
+> 521	        ai_prompt: videoPrompt,
+> 522	        ai_model: `${videoProvider}/${videoModel}`,
+> 523	        tags: [videoFormat, "vídeo-ia", videoProvider],
+> 524	        status: "draft",
+> 525	      }).select("id").single();
+> 526	      return data?.id || null;
+> 527	    } catch { return null; }
+> 528	  };
+> 529	
+> 530	  const handleSaveVideo = () => {
+> 531	    if (!videoResult || !user) return;
+> 532	    if (videoContentId) {
+> 533	      // Already saved — just update with media_url if available
+> 534	      if (videoUrl) {
+> 535	        supabase.from("content_library")
+> 536	          .update({ media_url: videoUrl, status: "ready" })
+> 537	          .eq("id", videoContentId)
+> 538	          .then(() => toast({ title: "Vídeo salvo na biblioteca!" }));
+> 539	      } else {
+> 540	        toast({ title: "Roteiro já salvo na biblioteca!" });
+> 541	      }
+> 542	    } else {
+> 543	      createContent.mutate({
+> 544	        user_id: user.id,
+> 545	        type: "video",
+> 546	        title: `${videoFormat.charAt(0).toUpperCase() + videoFormat.slice(1)}: ${videoPrompt.slice(0, 60)}`,
+> 547	        body: videoResult,
+> 548	        media_url: videoUrl || undefined,
+> 549	        ai_prompt: videoPrompt,
+> 550	        ai_model: `${videoProvider}/${videoModel}`,
+> 551	        tags: [videoFormat, "vídeo-ia", videoProvider],
+> 552	        status: videoUrl ? "ready" : "draft",
+> 553	      });
+> 554	    }
+> 555	    stopWatcher();
+> 556	    setVideoOpen(false);
+> 557	    setVideoPrompt("");
+> 558	    setVideoResult("");
+> 559	    setVideoUrl(null);
+> 560	    setVideoRenderStatus("");
+> 561	    setVideoOperationId(null);
+> 562	    setVideoProgress(0);
+> 563	    setVideoContentId(null);
+> 564	  };
+> 565	
+> 566	  /** Stop The Watcher polling */
+> 567	  const stopWatcher = useCallback(() => {
+> 568	    if (watcherRef.current) {
+> 569	      clearInterval(watcherRef.current);
+> 570	      watcherRef.current = null;
+> 571	    }
+> 572	  }, []);
+> 573	
+> 574	  /** Start The Watcher — frontend polling for video completion */
+> 575	  const startWatcher = useCallback((opId: string, prov: string, contentId: string | null) => {
+> 576	    stopWatcher();
+> 577	    setVideoProgress(5);
+> 578	    setVideoRenderStatus("Sincronizando com GPUs...");
+> 579	    let tick = 0;
+> 580	
+> 581	    watcherRef.current = setInterval(async () => {
+> 582	      tick++;
+> 583	      // Simulated progress ramp
+> 584	      const simulated = Math.min(90, 5 + tick * 3);
+> 585	      setVideoProgress(simulated);
+> 586	
+> 587	      if (simulated < 20) {
+> 588	        setVideoRenderStatus("Sincronizando com GPUs...");
+> 589	      } else if (simulated < 85) {
+> 590	        setVideoRenderStatus(`Renderizando frames cinematográficos... (Estimativa: 3-5 min)`);
+> 591	      } else {
+> 592	        setVideoRenderStatus("Finalizando e salvando no Storage GCRUX...");
+> 593	      }
+> 594	
+> 595	      try {
+> 596	        const token = await getAuthToken();
+> 597	        const resp = await fetch(
+> 598	          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-video-status`,
+> 599	          {
+> 600	            method: "POST",
+> 601	            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+> 602	            body: JSON.stringify({ operation_id: opId, provider: prov, content_id: contentId }),
+> 603	          }
+> 604	        );
+> 605	        const data = await resp.json();
+> 606	
+> 607	        if (data.status === "completed" && data.video_url) {
+> 608	          setVideoProgress(100);
+> 609	          setVideoRenderStatus("Vídeo gerado com sucesso!");
+> 610	          setVideoUrl(data.video_url);
+> 611	          setVideoRendering(false);
+> 612	          stopWatcher();
+> 613	          toast({ title: "✅ Vídeo pronto!", description: "Renderização concluída." });
+> 614	        } else if (data.status === "failed") {
+> 615	          setVideoProgress(0);
+> 616	          setVideoRenderStatus("");
+> 617	          setVideoRendering(false);
+> 618	          stopWatcher();
+> 619	          toast({ title: "Falha na renderização", description: data.error, variant: "destructive" });
+> 620	        }
+> 621	      } catch {
+> 622	        // Network error — keep polling
+> 623	      }
+> 624	    }, 15000); // Poll every 15s
+> 625	  }, [stopWatcher, toast]);
+> 626	
+> 627	  // Cleanup watcher on unmount
+> 628	  useEffect(() => () => stopWatcher(), [stopWatcher]);
+> 629	
+> 630	  /** Fire-and-forget: submit video job + activate The Watcher */
+> 631	  const handleVideoRender = async () => {
+> 632	    if (!videoResult) return;
+> 633	    setVideoRendering(true);
+> 634	    setVideoUrl(null);
+> 635	    setVideoProgress(0);
+> 636	    setVideoRenderStatus("Enviando roteiro ao provedor...");
+> 637	
+> 638	    // Auto-save script first
+> 639	    let contentId = videoContentId;
+> 640	    if (!contentId) {
+> 641	      contentId = await autoSaveScript();
+> 642	      if (contentId) setVideoContentId(contentId);
+> 643	    }
+> 644	
+> 645	    try {
+> 646	      const token = await getAuthToken();
+> 647	      const resp = await fetch(
+> 648	        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-video`,
+> 649	        {
+> 650	          method: "POST",
+> 651	          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+> 652	          body: JSON.stringify({
+> 653	            prompt: videoPrompt,
+> 654	            script: videoResult.slice(0, 2000),
+> 655	            provider: videoProvider,
+> 656	            model: videoModel,
+> 657	            content_id: contentId,
+> 658	          }),
+> 659	        }
+> 660	      );
+> 661	      const data = await resp.json();
+> 662	
+> 663	      if (data.operation_id) {
+> 664	        setVideoOperationId(data.operation_id);
+> 665	        toast({ title: "🚀 Renderização iniciada", description: `Operação: ${data.operation_id.slice(-12)}` });
+> 666	        startWatcher(data.operation_id, data.provider || videoProvider, contentId);
+> 667	      } else if (data.error) {
+> 668	        setVideoRendering(false);
+> 669	        setVideoRenderStatus("");
+> 670	        toast({ title: "Erro", description: data.error, variant: "destructive" });
+> 671	      }
+> 672	    } catch (e: any) {
+> 673	      setVideoRendering(false);
+> 674	      setVideoRenderStatus("");
+> 675	      toast({ title: "Erro", description: e.message, variant: "destructive" });
+> 676	    }
+> 677	  };
+> 678	
+> 679	  const copyToClipboard = (text: string) => {
+> 680	    navigator.clipboard.writeText(text);
+> 681	    toast({ title: "Copiado para a área de transferência!" });
+> 682	  };
+> 683	
+> 684	  const handleSEOAnalyze = async (contentId: string, text: string) => {
+> 685	    setSeoContentId(contentId);
+> 686	    setSeoOpen(true);
+> 687	    setSeoAnalyzing(true);
+> 688	    setSeoResult(null);
+> 689	    try {
+> 690	      const token = await getAuthToken();
+> 691	      const resp = await fetch(
+> 692	        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-seo`,
+> 693	        {
+> 694	          method: "POST",
+> 695	          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+> 696	          body: JSON.stringify({ text }),
+> 697	        }
+> 698	      );
+> 699	      if (!resp.ok) {
+> 700	        const err = await resp.json();
+> 701	        throw new Error(err.error || "Erro na análise");
+> 702	      }
+> 703	      const data = await resp.json();
+> 704	      setSeoResult(data);
+> 705	    } catch (e: any) {
+> 706	      toast({ title: "Erro na análise SEO", description: e.message, variant: "destructive" });
+> 707	      setSeoOpen(false);
+> 708	    } finally {
+> 709	      setSeoAnalyzing(false);
+> 710	    }
+> 711	  };
+> 712	
+> 713	  const handleApplySEO = () => {
+> 714	    if (!seoResult?.optimized_text || !seoContentId) return;
+> 715	    updateContent.mutate({ id: seoContentId, body: seoResult.optimized_text });
+> 716	    setSeoOpen(false);
+> 717	    setSeoResult(null);
+> 718	    toast({ title: "Conteúdo otimizado aplicado!" });
+> 719	  };
+> 720	
+> 721	  const typeIcon = (type: string) => {
+> 722	    switch (type) {
+> 723	      case "image": return <Image className="h-4 w-4" />;
+> 724	      case "video": return <Video className="h-4 w-4" />;
+> 725	      case "audio": case "music": return <Music className="h-4 w-4" />;
+> 726	      default: return <FileText className="h-4 w-4" />;
+> 727	    }
+> 728	  };
+> 729	
+> 730	  // TTS player
+> 731	  const handleTTS = useCallback((itemId: string, text: string) => {
+> 732	    if (ttsPlaying === itemId) {
+> 733	      synthRef.current.cancel();
+> 734	      setTtsPlaying(null);
+> 735	      return;
+> 736	    }
+> 737	    synthRef.current.cancel();
+> 738	    // Clean script markers for better TTS
+> 739	    const cleaned = text.replace(/\[.*?\]/g, "").replace(/\n{2,}/g, "\n");
+> 740	    const utterance = new SpeechSynthesisUtterance(cleaned);
+> 741	    utterance.lang = "pt-BR";
+> 742	    const voices = synthRef.current.getVoices();
+> 743	    const ptVoice = voices.find(v => v.lang.startsWith("pt"));
+> 744	    if (ptVoice) utterance.voice = ptVoice;
+> 745	    utterance.onend = () => setTtsPlaying(null);
+> 746	    utterance.onerror = () => setTtsPlaying(null);
+> 747	    setTtsPlaying(itemId);
+> 748	    synthRef.current.speak(utterance);
+> 749	  }, [ttsPlaying]);
+> 750	
+> 751	  const stopTTS = useCallback(() => {
+> 752	    synthRef.current.cancel();
+> 753	    setTtsPlaying(null);
+> 754	  }, []);
+> 755	
+> 756	  return (
+> 757	    <div className="space-y-6">
+> 758	      {/* Header */}
+> 759	      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+> 760	        <div>
+> 761	          <h1 className="text-2xl font-heading font-bold text-foreground">
+> 762	            Biblioteca de Conteúdo
+> 763	          </h1>
+> 764	          <p className="text-muted-foreground text-sm mt-1">
+> 765	            Crie, organize e gerencie seus conteúdos com IA
+> 766	          </p>
+> 767	        </div>
+> 768	        <div className="flex flex-wrap gap-2">
+> 769	          {/* AI Generate */}
+> 770	          <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+> 771	            <DialogTrigger asChild>
+> 772	              <Button className="gap-2">
+> 773	                <Sparkles className="h-4 w-4" />
+> 774	                Gerar com IA
+> 775	              </Button>
+> 776	            </DialogTrigger>
+> 777	            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+> 778	              <DialogHeader>
+> 779	                <DialogTitle className="flex items-center gap-2">
+> 780	                  <Sparkles className="h-5 w-5 text-primary" />
+> 781	                  Gerar Conteúdo com IA
+> 782	                </DialogTitle>
+> 783	              </DialogHeader>
+> 784	
+> 785	              <div>
+> 786	                <Label className="text-sm font-medium">Templates rápidos</Label>
+> 787	                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+> 788	                  {TEMPLATES.map((t, i) => (
+> 789	                    <Button
+> 790	                      key={i}
+> 791	                      variant={selectedTemplate === i ? "default" : "outline"}
+> 792	                      size="sm"
+> 793	                      className="text-xs justify-start"
+> 794	                      onClick={() => {
+> 795	                        setSelectedTemplate(i);
+> 796	                        setAiPrompt(t.prompt + " ");
+> 797	                        setAiPlatform(t.platform);
+> 798	                      }}
+> 799	                    >
+> 800	                      {t.name}
+> 801	                    </Button>
+> 802	                  ))}
+> 803	                </div>
+> 804	              </div>
+> 805	
+> 806	              <div className="space-y-4 mt-2">
+> 807	                <div className="grid grid-cols-2 gap-4">
+> 808	                  <div>
+> 809	                    <Label>Tom de voz</Label>
+> 810	                    <Select value={aiTone} onValueChange={setAiTone}>
+> 811	                      <SelectTrigger><SelectValue /></SelectTrigger>
+> 812	                      <SelectContent>
+> 813	                        {TONES.map((t) => (
+> 814	                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+> 815	                        ))}
+> 816	                      </SelectContent>
+> 817	                    </Select>
+> 818	                  </div>
+> 819	                  <div>
+> 820	                    <Label>Plataforma</Label>
+> 821	                    <Select value={aiPlatform} onValueChange={setAiPlatform}>
+> 822	                      <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+> 823	                      <SelectContent>
+> 824	                        <SelectItem value="linkedin">LinkedIn</SelectItem>
+> 825	                        <SelectItem value="instagram">Instagram</SelectItem>
+> 826	                        <SelectItem value="twitter">Twitter/X</SelectItem>
+> 827	                        <SelectItem value="tiktok">TikTok</SelectItem>
+> 828	                        <SelectItem value="youtube">YouTube</SelectItem>
+> 829	                        <SelectItem value="facebook">Facebook</SelectItem>
+> 830	                      </SelectContent>
+> 831	                    </Select>
+> 832	                  </div>
+> 833	                </div>
+> 834	
+> 835	                <div>
+> 836	                  <Label>Prompt</Label>
+> 837	                  <Textarea
+> 838	                    value={aiPrompt}
+> 839	                    onChange={(e) => setAiPrompt(e.target.value)}
+> 840	                    placeholder="Descreva o conteúdo que deseja gerar..."
+> 841	                    rows={3}
+> 842	                  />
+> 843	                </div>
+> 844	
+> 845	                <Button
+> 846	                  onClick={handleAIGenerate}
+> 847	                  disabled={aiGenerating || !aiPrompt.trim()}
+> 848	                  className="w-full gap-2"
+> 849	                >
+> 850	                  {aiGenerating ? (
+> 851	                    <Loader2 className="h-4 w-4 animate-spin" />
+> 852	                  ) : (
+> 853	                    <Sparkles className="h-4 w-4" />
+> 854	                  )}
+> 855	                  {aiGenerating ? "Gerando..." : "Gerar Conteúdo"}
+> 856	                </Button>
+> 857	
+> 858	                {aiResult && (
+> 859	                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+> 860	                    <div className="flex items-center justify-between">
+> 861	                      <Label className="text-sm font-medium">Resultado</Label>
+> 862	                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(aiResult)}>
+> 863	                        <Copy className="h-3 w-3 mr-1" />
+> 864	                        Copiar
+> 865	                      </Button>
+> 866	                    </div>
+> 867	                    <div className="whitespace-pre-wrap text-sm text-foreground">
+> 868	                      {aiResult}
+> 869	                    </div>
+> 870	                  </div>
+> 871	                )}
+> 872	              </div>
+> 873	
+> 874	              <DialogFooter>
+> 875	                {aiResult && (
+> 876	                  <Button onClick={handleSaveAIContent} className="gap-2">
+> 877	                    <Plus className="h-4 w-4" />
+> 878	                    Salvar na Biblioteca
+> 879	                  </Button>
+> 880	                )}
+> 881	              </DialogFooter>
+> 882	            </DialogContent>
+> 883	          </Dialog>
+> 884	
+> 885	          {/* Manual Create */}
+> 886	          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+> 887	            <DialogTrigger asChild>
+> 888	              <Button variant="outline" className="gap-2">
+> 889	                <Plus className="h-4 w-4" />
+> 890	                Criar Manual
+> 891	              </Button>
+> 892	            </DialogTrigger>
+> 893	            <DialogContent>
+> 894	              <DialogHeader>
+> 895	                <DialogTitle>Novo Conteúdo</DialogTitle>
+> 896	              </DialogHeader>
+> 897	              <div className="space-y-4">
+> 898	                <div>
+> 899	                  <Label>Título</Label>
+> 900	                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Título do conteúdo" />
+> 901	                </div>
+> 902	                <div>
+> 903	                  <Label>Tipo</Label>
+> 904	                  <Select value={newType} onValueChange={setNewType}>
+> 905	                    <SelectTrigger><SelectValue /></SelectTrigger>
+> 906	                    <SelectContent>
+> 907	                      {CONTENT_TYPES.filter((t) => t.value !== "all").map((t) => (
+> 908	                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+> 909	                      ))}
+> 910	                    </SelectContent>
+> 911	                  </Select>
+> 912	                </div>
+> 913	                <div>
+> 914	                  <Label>Conteúdo</Label>
+> 915	                  <Textarea value={newBody} onChange={(e) => setNewBody(e.target.value)} placeholder="Corpo do conteúdo..." rows={5} />
+> 916	                </div>
+> 917	                <div>
+> 918	                  <Label>Tags (separadas por vírgula)</Label>
+> 919	                  <Input value={newTags} onChange={(e) => setNewTags(e.target.value)} placeholder="marketing, social, promoção" />
+> 920	                </div>
+> 921	              </div>
+> 922	              <DialogFooter>
+> 923	                <Button onClick={handleCreateManual} disabled={!newTitle}>Criar</Button>
+> 924	              </DialogFooter>
+> 925	            </DialogContent>
+> 926	          </Dialog>
+> 927	
+> 928	          {/* Image Generate */}
+> 929	          <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+> 930	            <DialogTrigger asChild>
+> 931	              <Button variant="outline" className="gap-2">
+> 932	                <ImagePlus className="h-4 w-4" />
+> 933	                Gerar Imagem
+> 934	              </Button>
+> 935	            </DialogTrigger>
+> 936	            <DialogContent className="max-w-lg">
+> 937	              <DialogHeader>
+> 938	                <DialogTitle className="flex items-center gap-2">
+> 939	                  <Palette className="h-5 w-5 text-primary" />
+> 940	                  Gerar Imagem com IA
+> 941	                </DialogTitle>
+> 942	              </DialogHeader>
+> 943	              <div className="space-y-4">
+> 944	                <div>
+> 945	                  <Label>Prompt</Label>
+> 946	                  <Textarea value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Descreva a imagem que deseja criar..." rows={3} />
+> 947	                </div>
+> 948	                <div>
+> 949	                  <Label>Estilo</Label>
+> 950	                  <Select value={imgStyle} onValueChange={setImgStyle}>
+> 951	                    <SelectTrigger><SelectValue /></SelectTrigger>
+> 952	                    <SelectContent>
+> 953	                      {IMG_STYLES.map((s) => (
+> 954	                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+> 955	                      ))}
+> 956	                    </SelectContent>
+> 957	                  </Select>
+> 958	                </div>
+> 959	                <Button onClick={handleImageGenerate} disabled={imgGenerating || !imgPrompt.trim()} className="w-full gap-2">
+> 960	                  {imgGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+> 961	                  {imgGenerating ? "Gerando..." : "Gerar Imagem"}
+> 962	                </Button>
+> 963	                {imgPreview && (
+> 964	                  <div className="rounded-lg border overflow-hidden">
+> 965	                    <img src={imgPreview} alt="Imagem gerada" className="w-full h-auto max-h-[300px] object-contain bg-muted" />
+> 966	                  </div>
+> 967	                )}
+> 968	              </div>
+> 969	              <DialogFooter>
+> 970	                {imgPreview && (
+> 971	                  <Button onClick={handleSaveImage} className="gap-2">
+> 972	                    <Plus className="h-4 w-4" />
+> 973	                    Salvar na Biblioteca
+> 974	                  </Button>
+> 975	                )}
+> 976	              </DialogFooter>
+> 977	            </DialogContent>
+> 978	          </Dialog>
+> 979	
+> 980	          {/* Audio Generate */}
+> 981	          <Dialog open={audioOpen} onOpenChange={setAudioOpen}>
+> 982	            <DialogTrigger asChild>
+> 983	              <Button variant="outline" className="gap-2">
+> 984	                <Mic className="h-4 w-4" />
+> 985	                Gerar Áudio
+> 986	              </Button>
+> 987	            </DialogTrigger>
+> 988	            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+> 989	              <DialogHeader>
+> 990	                <DialogTitle className="flex items-center gap-2">
+> 991	                  <Mic className="h-5 w-5 text-primary" />
+> 992	                  Gerar Roteiro de Áudio com IA
+> 993	                </DialogTitle>
+> 994	              </DialogHeader>
+> 995	              <div className="space-y-4">
+> 996	                <div className="grid grid-cols-2 gap-4">
+> 997	                  <div>
+> 998	                    <Label>Formato</Label>
+> 999	                    <Select value={audioFormat} onValueChange={setAudioFormat}>
+> 1000	                      <SelectTrigger><SelectValue /></SelectTrigger>
+> 1001	                      <SelectContent>
+> 1002	                        {AUDIO_FORMATS.map((f) => (
+> 1003	                          <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+> 1004	                        ))}
+> 1005	                      </SelectContent>
+> 1006	                    </Select>
+> 1007	                  </div>
+> 1008	                  <div>
+> 1009	                    <Label>Duração</Label>
+> 1010	                    <Select value={audioDuration} onValueChange={setAudioDuration}>
+> 1011	                      <SelectTrigger><SelectValue /></SelectTrigger>
+> 1012	                      <SelectContent>
+> 1013	                        {AUDIO_DURATIONS.map((d) => (
+> 1014	                          <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+> 1015	                        ))}
+> 1016	                      </SelectContent>
+> 1017	                    </Select>
+> 1018	                  </div>
+> 1019	                </div>
+> 1020	                <div>
+> 1021	                  <Label>Prompt</Label>
+> 1022	                  <Textarea
+> 1023	                    value={audioPrompt}
+> 1024	                    onChange={(e) => setAudioPrompt(e.target.value)}
+> 1025	                    placeholder="Descreva o roteiro de áudio que deseja gerar... Ex: podcast sobre marketing digital para iniciantes"
+> 1026	                    rows={3}
+> 1027	                  />
+> 1028	                </div>
+> 1029	                <Button
+> 1030	                  onClick={handleAudioGenerate}
+> 1031	                  disabled={audioGenerating || !audioPrompt.trim()}
+> 1032	                  className="w-full gap-2"
+> 1033	                >
+> 1034	                  {audioGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+> 1035	                  {audioGenerating ? "Gerando..." : "Gerar Roteiro de Áudio"}
+> 1036	                </Button>
+> 1037	
+> 1038	                {audioResult && (
+> 1039	                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+> 1040	                    <div className="flex items-center justify-between">
+> 1041	                      <Label className="text-sm font-medium">Roteiro Gerado</Label>
+> 1042	                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(audioResult)}>
+> 1043	                        <Copy className="h-3 w-3 mr-1" />
+> 1044	                        Copiar
+> 1045	                      </Button>
+> 1046	                    </div>
+> 1047	                    <div className="whitespace-pre-wrap text-sm text-foreground max-h-[300px] overflow-y-auto">
+> 1048	                      {audioResult}
+> 1049	                    </div>
+> 1050	                  </div>
+> 1051	                )}
+> 1052	              </div>
+> 1053	              <DialogFooter>
+> 1054	                {audioResult && (
+> 1055	                  <Button onClick={handleSaveAudio} className="gap-2">
+> 1056	                    <Plus className="h-4 w-4" />
+> 1057	                    Salvar na Biblioteca
+> 1058	                  </Button>
+> 1059	                )}
+> 1060	              </DialogFooter>
+> 1061	            </DialogContent>
+> 1062	          </Dialog>
+> 1063	
+> 1064	          {/* Video Generate — Cockpit UI */}
+> 1065	          <Dialog open={videoOpen} onOpenChange={(open) => {
+> 1066	            setVideoOpen(open);
+> 1067	            if (!open) stopWatcher();
+> 1068	          }}>
+> 1069	            <DialogTrigger asChild>
+> 1070	              <Button variant="outline" className="gap-2">
+> 1071	                <Video className="h-4 w-4" />
+> 1072	                Gerar Vídeo
+> 1073	              </Button>
+> 1074	            </DialogTrigger>
+> 1075	            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+> 1076	              <DialogHeader>
+> 1077	                <DialogTitle className="flex items-center gap-2">
+> 1078	                  <Video className="h-5 w-5 text-primary" />
+> 1079	                  Cockpit de Vídeo IA
+> 1080	                </DialogTitle>
+> 1081	              </DialogHeader>
+> 1082	              <div className="space-y-4">
+> 1083	
+> 1084	                {/* ====== BLOCO 1: CÉREBRO (Roteiro / LLM) ====== */}
+> 1085	                <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4 space-y-3">
+> 1086	                  <Label className="text-xs font-semibold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+> 1087	                    <Sparkles className="h-3 w-3" />
+> 1088	                    Cérebro — Roteiro (LLM)
+> 1089	                  </Label>
+> 1090	
+> 1091	                  <div className="grid grid-cols-2 gap-4">
+> 1092	                    <div>
+> 1093	                      <Label className="text-xs text-muted-foreground">Provedor</Label>
+> 1094	                      <Select value={videoProvider} onValueChange={setVideoProvider}>
+> 1095	                        <SelectTrigger><SelectValue /></SelectTrigger>
+> 1096	                        <SelectContent>
+> 1097	                          {VIDEO_PROVIDERS.map((p) => (
+> 1098	                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+> 1099	                          ))}
+> 1100	                        </SelectContent>
+> 1101	                      </Select>
+> 1102	                    </div>
+> 1103	                    <div>
+> 1104	                      <Label className="text-xs text-muted-foreground">
+> 1105	                        Modelo {modelsLoading && <Loader2 className="inline h-3 w-3 animate-spin" />}
+> 1106	                      </Label>
+> 1107	                      <Select value={videoModel} onValueChange={setVideoModel}>
+> 1108	                        <SelectTrigger>
+> 1109	                          <SelectValue placeholder="Selecione um modelo..." />
+> 1110	                        </SelectTrigger>
+> 1111	                        <SelectContent>
+> 1112	                          {discoveredModels[videoProvider]?.map((m) => (
+> 1113	                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+> 1114	                          ))}
+> 1115	                        </SelectContent>
+> 1116	                      </Select>
+> 1117	                      {modelsError && <p className="text-[10px] text-destructive mt-1">{modelsError}</p>}
+> 1118	                    </div>
+> 1119	
+> 1120	                    <div>
+> 1121	                      <Label className="text-xs text-muted-foreground">Formato</Label>
+> 1122	                      <Select value={videoFormat} onValueChange={setVideoFormat}>
+> 1123	                        <SelectTrigger><SelectValue /></SelectTrigger>
+> 1124	                        <SelectContent>
+> 1125	                          {VIDEO_FORMATS.map((f) => (
+> 1126	                            <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+> 1127	                          ))}
+> 1128	                        </SelectContent>
+> 1129	                      </Select>
+> 1130	                    </div>
+> 1131	                    <div>
+> 1132	                      <Label className="text-xs text-muted-foreground">Duração</Label>
+> 1133	                      <Select value={videoDuration} onValueChange={setVideoDuration}>
+> 1134	                        <SelectTrigger><SelectValue /></SelectTrigger>
+> 1135	                        <SelectContent>
+> 1136	                          {VIDEO_DURATIONS.map((d) => (
+> 1137	                            <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+> 1138	                          ))}
+> 1139	                        </SelectContent>
+> 1140	                      </Select>
+> 1141	                    </div>
+> 1142	                  </div>
+> 1143	
+> 1144	                  <div>
+> 1145	                    <Label className="text-xs text-muted-foreground">Prompt</Label>
+> 1146	                    <Textarea
+> 1147	                      value={videoPrompt}
+> 1148	                      onChange={(e) => setVideoPrompt(e.target.value)}
+> 1149	                      placeholder="Ex: Crie um roteiro cinematográfico para o iate OKEAN 80 navegando no Mediterrâneo..."
+> 1150	                      rows={3}
+> 1151	                    />
+> 1152	                  </div>
+> 1153	
+> 1154	                  <Button
+> 1155	                    onClick={handleVideoGenerate}
+> 1156	                    disabled={videoGenerating || !videoPrompt.trim()}
+> 1157	                    className="w-full gap-2"
+> 1158	                  >
+> 1159	                    {videoGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+> 1160	                    {videoGenerating ? "Gerando Roteiro..." : "Gerar Roteiro"}
+> 1161	                  </Button>
+> 1162	
+> 1163	                  {videoResult && (
+> 1164	                    <div className="rounded-md border bg-background/50 p-3">
+> 1165	                      <div className="flex items-center justify-between mb-1">
+> 1166	                        <Label className="text-xs font-medium">Roteiro Gerado</Label>
+> 1167	                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => copyToClipboard(videoResult)}>
+> 1168	                          <Copy className="h-3 w-3 mr-1" /> Copiar
+> 1169	                        </Button>
+> 1170	                      </div>
+> 1171	                      <div className="whitespace-pre-wrap text-xs text-foreground/80 max-h-[150px] overflow-y-auto">
+> 1172	                        {videoResult}
+> 1173	                      </div>
+> 1174	                    </div>
+> 1175	                  )}
+> 1176	                </div>
+> 1177	
+> 1178	                {/* ====== BLOCO 2: CINEMA (Vídeo / VLM Render) ====== */}
+> 1179	                {videoResult && (
+> 1180	                  <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-4 space-y-3">
+> 1181	                    <Label className="text-xs font-semibold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+> 1182	                      <Film className="h-3 w-3" />
+> 1183	                      Cinema — Renderização (VLM)
+> 1184	                    </Label>
+> 1185	
+> 1186	                    {modelsError && (
+> 1187	                      <div className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/30 rounded-md px-3 py-2">
+> 1188	                        {modelsError}
+> 1189	                      </div>
+> 1190	                    )}
+> 1191	
+> 1192	                    <div className="grid grid-cols-2 gap-3">
+> 1193	                      <div>
+> 1194	                        <Label className="text-xs text-muted-foreground">Provedor</Label>
+> 1195	                        <Select value={videoProvider} onValueChange={(v) => {
+> 1196	                          setVideoProvider(v);
+> 1197	                          setModelsError(null);
+> 1198	                          const cached = discoveredModels[v] || FALLBACK_MODELS[v] || [];
+> 1199	                          setVideoModel(cached[0]?.value || "");
+> 1200	                        }}>
+> 1201	                          <SelectTrigger><SelectValue /></SelectTrigger>
+> 1202	                          <SelectContent>
+> 1203	                            {VIDEO_PROVIDERS.map((p) => (
+> 1204	                              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+> 1205	                            ))}
+> 1206	                          </SelectContent>
+> 1207	                        </Select>
+> 1208	                      </div>
+> 1209	                      <div>
+> 1210	                        <Label className="text-xs text-muted-foreground">
+> 1211	                          Modelo {modelsLoading && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
+> 1212	                        </Label>
+> 1213	                        <Select value={videoModel} onValueChange={setVideoModel} disabled={modelsLoading}>
+> 1214	                          <SelectTrigger>
+> 1215	                            <SelectValue placeholder={modelsLoading ? "Buscando..." : "Selecione"} />
+> 1216	                          </SelectTrigger>
+> 1217	                          <SelectContent>
+> 1218	                            {currentVideoModels.map((m) => (
+> 1219	                              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+> 1220	                            ))}
+> 1221	                          </SelectContent>
+> 1222	                        </Select>
+> 1223	                      </div>
+> 1224	                    </div>
+> 1225	
+> 1226	                    {/* Render Button */}
+> 1227	                    <Button
+> 1228	                      onClick={handleVideoRender}
+> 1229	                      disabled={videoRendering || !!videoUrl}
+> 1230	                      className="w-full gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
+> 1231	                    >
+> 1232	                      {videoRendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Film className="h-4 w-4" />}
+> 1233	                      {videoRendering ? "Renderizando..." : videoUrl ? "✅ Renderizado" : "🎬 Renderizar Vídeo"}
+> 1234	                    </Button>
+> 1235	
+> 1236	                    {/* Progress Bar */}
+> 1237	                    {videoRendering && (
+> 1238	                      <div className="space-y-1.5">
+> 1239	                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+> 1240	                          <div
+> 1241	                            className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-1000 ease-out"
+> 1242	                            style={{ width: `${videoProgress}%` }}
+> 1243	                          />
+> 1244	                        </div>
+> 1245	                        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+> 1246	                          <Loader2 className="h-3 w-3 animate-spin" />
+> 1247	                          {videoRenderStatus} ({videoProgress}%)
+> 1248	                        </p>
+> 1249	                      </div>
+> 1250	                    )}
+> 1251	
+> 1252	                    {/* Video Player */}
+> 1253	                    {videoUrl && (
+> 1254	                      <div className="rounded-lg border overflow-hidden bg-black">
+> 1255	                        <video src={videoUrl} controls className="w-full max-h-[300px]" />
+> 1256	                      </div>
+> 1257	                    )}
+> 1258	
+> 1259	                    {/* Operation ID badge */}
+> 1260	                    {videoOperationId && !videoUrl && (
+> 1261	                      <p className="text-xs text-muted-foreground text-center">
+> 1262	                        Operação: <code className="bg-muted px-1 rounded text-[10px]">{videoOperationId.slice(-20)}</code>
+> 1263	                      </p>
+> 1264	                    )}
+> 1265	                  </div>
+> 1266	                )}
+> 1267	
+> 1268	              </div>
+> 1269	              <DialogFooter className="flex-col sm:flex-row gap-2">
+> 1270	                {videoResult && (
+> 1271	                  <Button onClick={handleSaveVideo} className="gap-2">
+> 1272	                    <Plus className="h-4 w-4" />
+> 1273	                    {videoUrl ? "Salvar Vídeo na Biblioteca" : "Salvar Roteiro na Biblioteca"}
+> 1274	                  </Button>
+> 1275	                )}
+> 1276	              </DialogFooter>
+> 1277	            </DialogContent>
+> 1278	          </Dialog>
+> 1279	        </div>
+> 1280	      </div>
+> 1281	
+> 1282	      {/* Filters */}
+> 1283	      <div className="flex flex-wrap items-center gap-3">
+> 1284	        <div className="relative flex-1 min-w-[200px] max-w-sm">
+> 1285	          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+> 1286	          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar conteúdo..." className="pl-9" />
+> 1287	        </div>
+> 1288	        <Select value={typeFilter} onValueChange={setTypeFilter}>
+> 1289	          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+> 1290	          <SelectContent>
+> 1291	            {CONTENT_TYPES.map((t) => (
+> 1292	              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+> 1293	            ))}
+> 1294	          </SelectContent>
+> 1295	        </Select>
+> 1296	        <Select value={statusFilter} onValueChange={setStatusFilter}>
+> 1297	          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+> 1298	          <SelectContent>
+> 1299	            <SelectItem value="all">Todos</SelectItem>
+> 1300	            <SelectItem value="draft">Rascunho</SelectItem>
+> 1301	            <SelectItem value="approved">Aprovado</SelectItem>
+> 1302	            <SelectItem value="published">Publicado</SelectItem>
+> 1303	          </SelectContent>
+> 1304	        </Select>
+> 1305	        <Button variant={favoritesOnly ? "default" : "outline"} size="icon" onClick={() => setFavoritesOnly(!favoritesOnly)}>
+> 1306	          <Star className={`h-4 w-4 ${favoritesOnly ? "fill-current" : ""}`} />
+> 1307	        </Button>
+> 1308	      </div>
+> 1309	
+> 1310	      {/* Content Grid */}
+> 1311	      {isLoading ? (
+> 1312	        <div className="flex justify-center py-12">
+> 1313	          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 1314	        </div>
+> 1315	      ) : contents.length === 0 ? (
+> 1316	        <Card className="border-dashed">
+> 1317	          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+> 1318	            <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+> 1319	            <h3 className="font-medium text-foreground mb-1">Nenhum conteúdo encontrado</h3>
+> 1320	            <p className="text-sm text-muted-foreground mb-4">
+> 1321	              Comece gerando conteúdo com IA ou crie manualmente
+> 1322	            </p>
+> 1323	            <Button onClick={() => setAiOpen(true)} className="gap-2">
+> 1324	              <Sparkles className="h-4 w-4" />
+> 1325	              Gerar com IA
+> 1326	            </Button>
+> 1327	          </CardContent>
+> 1328	        </Card>
+> 1329	      ) : (
+> 1330	        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+> 1331	          {contents.map((item) => (
+> 1332	            <Card key={item.id} className="group hover:border-primary/30 transition-colors overflow-hidden">
+> 1333	              {/* Image thumbnail */}
+> 1334	              {item.type === "image" && item.media_url && (
+> 1335	                <div className="aspect-video w-full overflow-hidden bg-muted">
+> 1336	                  <img
+> 1337	                    src={item.media_url}
+> 1338	                    alt={item.title || "Imagem"}
+> 1339	                    className="w-full h-full object-cover"
+> 1340	                    onError={(e) => {
+> 1341	                      (e.target as HTMLImageElement).style.display = "none";
+> 1342	                    }}
+> 1343	                  />
+> 1344	                </div>
+> 1345	              )}
+> 1346	              <CardHeader className="pb-2">
+> 1347	                <div className="flex items-start justify-between">
+> 1348	                  <div className="flex items-center gap-2 flex-1 min-w-0">
+> 1349	                    {typeIcon(item.type)}
+> 1350	                    <CardTitle className="text-sm font-medium truncate">
+> 1351	                      {item.title || "Sem título"}
+> 1352	                    </CardTitle>
+> 1353	                  </div>
+> 1354	                  <div className="flex items-center gap-1">
+> 1355	                    {/* TTS button for audio/music */}
+> 1356	                    {(item.type === "audio" || item.type === "music") && item.body && (
+> 1357	                      <Button
+> 1358	                        variant="ghost"
+> 1359	                        size="icon"
+> 1360	                        className="h-7 w-7"
+> 1361	                        onClick={() => handleTTS(item.id, item.body!)}
+> 1362	                        title={ttsPlaying === item.id ? "Parar" : "Ouvir"}
+> 1363	                      >
+> 1364	                        {ttsPlaying === item.id ? (
+> 1365	                          <Square className="h-3.5 w-3.5 text-destructive" />
+> 1366	                        ) : (
+> 1367	                          <Volume2 className="h-3.5 w-3.5 text-primary" />
+> 1368	                        )}
+> 1369	                      </Button>
+> 1370	                    )}
+> 1371	                    <Button
+> 1372	                      variant="ghost"
+> 1373	                      size="icon"
+> 1374	                      className="h-7 w-7"
+> 1375	                      onClick={() =>
+> 1376	                        toggleFavorite.mutate({
+> 1377	                          id: item.id,
+> 1378	                          is_favorite: !item.is_favorite,
+> 1379	                        })
+> 1380	                      }
+> 1381	                    >
+> 1382	                      <Star
+> 1383	                        className={`h-3.5 w-3.5 ${
+> 1384	                          item.is_favorite
+> 1385	                            ? "fill-yellow-500 text-yellow-500"
+> 1386	                            : "text-muted-foreground"
+> 1387	                        }`}
+> 1388	                      />
+> 1389	                    </Button>
+> 1390	                    <DropdownMenu>
+> 1391	                      <DropdownMenuTrigger asChild>
+> 1392	                        <Button variant="ghost" size="icon" className="h-7 w-7">
+> 1393	                          <MoreVertical className="h-3.5 w-3.5" />
+> 1394	                        </Button>
+> 1395	                      </DropdownMenuTrigger>
+> 1396	                      <DropdownMenuContent align="end">
+> 1397	                        <DropdownMenuItem onClick={() => item.body && copyToClipboard(item.body)}>
+> 1398	                          <Copy className="h-4 w-4 mr-2" />
+> 1399	                          Copiar
+> 1400	                        </DropdownMenuItem>
+> 1401	                        {item.type === "video" && (
+> 1402	                          <DropdownMenuItem onClick={() => navigate(`/dashboard/content/video-editor/${item.id}`)}>
+> 1403	                            <Film className="h-4 w-4 mr-2" />
+> 1404	                            Editar Roteiro
+> 1405	                          </DropdownMenuItem>
+> 1406	                        )}
+> 1407	                        {(item.type === "text") && item.body && (
+> 1408	                          <DropdownMenuItem onClick={() => handleSEOAnalyze(item.id, item.body!)}>
+> 1409	                            <TrendingUp className="h-4 w-4 mr-2" />
+> 1410	                            Analisar SEO
+> 1411	                          </DropdownMenuItem>
+> 1412	                        )}
+> 1413	                        <DropdownMenuItem
+> 1414	                          onClick={() =>
+> 1415	                            updateContent.mutate({
+> 1416	                              id: item.id,
+> 1417	                              status: item.status === "draft" ? "approved" : "draft",
+> 1418	                            })
+> 1419	                          }
+> 1420	                        >
+> 1421	                          <Edit className="h-4 w-4 mr-2" />
+> 1422	                          {item.status === "draft" ? "Aprovar" : "Voltar p/ rascunho"}
+> 1423	                        </DropdownMenuItem>
+> 1424	                        <DropdownMenuItem
+> 1425	                          className="text-destructive"
+> 1426	                          onClick={() => deleteContent.mutate(item.id)}
+> 1427	                        >
+> 1428	                          <Trash2 className="h-4 w-4 mr-2" />
+> 1429	                          Excluir
+> 1430	                        </DropdownMenuItem>
+> 1431	                      </DropdownMenuContent>
+> 1432	                    </DropdownMenu>
+> 1433	                  </div>
+> 1434	                </div>
+> 1435	              </CardHeader>
+> 1436	              <CardContent className="space-y-3">
+> 1437	                {item.body && (
+> 1438	                  <p className="text-xs text-muted-foreground line-clamp-4 whitespace-pre-wrap">
+> 1439	                    {item.body}
+> 1440	                  </p>
+> 1441	                )}
+> 1442	                <div className="flex flex-wrap items-center gap-1.5">
+> 1443	                  <Badge variant="outline" className="text-[10px]">
+> 1444	                    {item.status === "draft"
+> 1445	                      ? "Rascunho"
+> 1446	                      : item.status === "approved"
+> 1447	                      ? "Aprovado"
+> 1448	                      : item.status === "published"
+> 1449	                      ? "Publicado"
+> 1450	                      : "Arquivado"}
+> 1451	                  </Badge>
+> 1452	                  {item.ai_model && (
+> 1453	                    <Badge variant="secondary" className="text-[10px] gap-1">
+> 1454	                      <Sparkles className="h-2.5 w-2.5" />
+> 1455	                      IA
+> 1456	                    </Badge>
+> 1457	                  )}
+> 1458	                  {item.tags?.map((tag) => (
+> 1459	                    <Badge key={tag} variant="outline" className="text-[10px]">
+> 1460	                      <Tag className="h-2 w-2 mr-0.5" />
+> 1461	                      {tag}
+> 1462	                    </Badge>
+> 1463	                  ))}
+> 1464	                </div>
+> 1465	                <p className="text-[10px] text-muted-foreground/60">
+> 1466	                  {new Date(item.created_at).toLocaleDateString("pt-BR")}
+> 1467	                </p>
+> 1468	              </CardContent>
+> 1469	            </Card>
+> 1470	          ))}
+> 1471	        </div>
+> 1472	      )}
+> 1473	
+> 1474	      {/* SEO Analysis Dialog */}
+> 1475	      <Dialog open={seoOpen} onOpenChange={setSeoOpen}>
+> 1476	        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+> 1477	          <DialogHeader>
+> 1478	            <DialogTitle className="flex items-center gap-2">
+> 1479	              <TrendingUp className="h-5 w-5 text-primary" />
+> 1480	              Análise SEO
+> 1481	            </DialogTitle>
+> 1482	          </DialogHeader>
+> 1483	          {seoAnalyzing ? (
+> 1484	            <div className="flex flex-col items-center justify-center py-12 gap-3">
+> 1485	              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 1486	              <p className="text-sm text-muted-foreground">Analisando conteúdo...</p>
+> 1487	            </div>
+> 1488	          ) : seoResult ? (
+> 1489	            <div className="space-y-5">
+> 1490	              {/* Score gauge */}
+> 1491	              <div className="flex items-center gap-6">
+> 1492	                <div className="relative w-24 h-24">
+> 1493	                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+> 1494	                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+> 1495	                    <circle cx="50" cy="50" r="42" fill="none"
+> 1496	                      stroke={seoResult.score >= 80 ? "hsl(150, 60%, 45%)" : seoResult.score >= 50 ? "hsl(45, 80%, 50%)" : "hsl(0, 70%, 50%)"}
+> 1497	                      strokeWidth="8" strokeLinecap="round"
+> 1498	                      strokeDasharray={`${(seoResult.score / 100) * 264} 264`}
+> 1499	                    />
+> 1500	                  </svg>
+> 1501	                  <div className="absolute inset-0 flex items-center justify-center">
+> 1502	                    <span className="text-2xl font-bold">{seoResult.score}</span>
+> 1503	                  </div>
+> 1504	                </div>
+> 1505	                <div className="space-y-1">
+> 1506	                  <p className="text-sm"><span className="text-muted-foreground">Legibilidade:</span> <strong>{seoResult.readability_score}/100</strong></p>
+> 1507	                  <p className="text-sm"><span className="text-muted-foreground">Densidade keywords:</span> <strong>{seoResult.keyword_density}%</strong></p>
+> 1508	                </div>
+> 1509	              </div>
+> 1510	
+> 1511	              {/* Meta description */}
+> 1512	              <div className="rounded-lg border p-3 space-y-1">
+> 1513	                <Label className="text-xs text-muted-foreground">Meta Description Sugerida</Label>
+> 1514	                <p className="text-sm">{seoResult.meta_description}</p>
+> 1515	              </div>
+> 1516	
+> 1517	              {/* Keywords */}
+> 1518	              <div>
+> 1519	                <Label className="text-xs text-muted-foreground">Palavras-chave Recomendadas</Label>
+> 1520	                <div className="flex flex-wrap gap-1.5 mt-1">
+> 1521	                  {seoResult.keywords?.map((kw: string) => (
+> 1522	                    <Badge key={kw} variant="secondary" className="text-xs">{kw}</Badge>
+> 1523	                  ))}
+> 1524	                </div>
+> 1525	              </div>
+> 1526	
+> 1527	              {/* Improvements */}
+> 1528	              <div>
+> 1529	                <Label className="text-xs text-muted-foreground">Sugestões de Melhoria</Label>
+> 1530	                <div className="space-y-2 mt-1">
+> 1531	                  {seoResult.improvements?.map((imp: any, i: number) => (
+> 1532	                    <div key={i} className="flex items-start gap-2 text-sm">
+> 1533	                      <Badge variant={imp.priority === "alta" ? "destructive" : imp.priority === "média" ? "default" : "outline"} className="text-[10px] shrink-0 mt-0.5">
+> 1534	                        {imp.priority}
+> 1535	                      </Badge>
+> 1536	                      <span>{imp.suggestion}</span>
+> 1537	                    </div>
+> 1538	                  ))}
+> 1539	                </div>
+> 1540	              </div>
+> 1541	            </div>
+> 1542	          ) : null}
+> 1543	          <DialogFooter>
+> 1544	            {seoResult?.optimized_text && (
+> 1545	              <Button onClick={handleApplySEO} className="gap-2">
+> 1546	                <Sparkles className="h-4 w-4" />
+> 1547	                Aplicar Sugestões
+> 1548	              </Button>
+> 1549	            )}
+> 1550	          </DialogFooter>
+> 1551	        </DialogContent>
+> 1552	      </Dialog>
+> 1553	    </div>
+> 1554	  );
+> 1555	}
+> 1556	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/integrations/supabase/types.ts",
+  "limit": 500
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	export type Json =
+> 2	  | string
+> 3	  | number
+> 4	  | boolean
+> 5	  | null
+> 6	  | { [key: string]: Json | undefined }
+> 7	  | Json[]
+> 8	
+> 9	export type Database = {
+> 10	  // Allows to automatically instantiate createClient with right options
+> 11	  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+> 12	  __InternalSupabase: {
+> 13	    PostgrestVersion: "14.4"
+> 14	  }
+> 15	  public: {
+> 16	    Tables: {
+> 17	      affiliate_config: {
+> 18	        Row: {
+> 19	          access_token: string | null
+> 20	          app_id: string | null
+> 21	          client_secret: string | null
+> 22	          created_at: string
+> 23	          id: string
+> 24	          is_active: boolean
+> 25	          metadata: Json | null
+> 26	          platform: string
+> 27	          redirect_uri: string | null
+> 28	          refresh_token: string | null
+> 29	          token_expires_at: string | null
+> 30	          updated_at: string
+> 31	          user_id: string
+> 32	        }
+> 33	        Insert: {
+> 34	          access_token?: string | null
+> 35	          app_id?: string | null
+> 36	          client_secret?: string | null
+> 37	          created_at?: string
+> 38	          id?: string
+> 39	          is_active?: boolean
+> 40	          metadata?: Json | null
+> 41	          platform?: string
+> 42	          redirect_uri?: string | null
+> 43	          refresh_token?: string | null
+> 44	          token_expires_at?: string | null
+> 45	          updated_at?: string
+> 46	          user_id: string
+> 47	        }
+> 48	        Update: {
+> 49	          access_token?: string | null
+> 50	          app_id?: string | null
+> 51	          client_secret?: string | null
+> 52	          created_at?: string
+> 53	          id?: string
+> 54	          is_active?: boolean
+> 55	          metadata?: Json | null
+> 56	          platform?: string
+> 57	          redirect_uri?: string | null
+> 58	          refresh_token?: string | null
+> 59	          token_expires_at?: string | null
+> 60	          updated_at?: string
+> 61	          user_id?: string
+> 62	        }
+> 63	        Relationships: []
+> 64	      }
+> 65	      affiliate_links: {
+> 66	        Row: {
+> 67	          campaign_id: string | null
+> 68	          clicks: number
+> 69	          content_id: string | null
+> 70	          conversions: number
+> 71	          created_at: string
+> 72	          id: string
+> 73	          metadata: Json | null
+> 74	          original_url: string
+> 75	          platform: string
+> 76	          product_id: string | null
+> 77	          revenue_cents: number
+> 78	          short_url: string | null
+> 79	          updated_at: string
+> 80	          user_id: string
+> 81	        }
+> 82	        Insert: {
+> 83	          campaign_id?: string | null
+> 84	          clicks?: number
+> 85	          content_id?: string | null
+> 86	          conversions?: number
+> 87	          created_at?: string
+> 88	          id?: string
+> 89	          metadata?: Json | null
+> 90	          original_url: string
+> 91	          platform?: string
+> 92	          product_id?: string | null
+> 93	          revenue_cents?: number
+> 94	          short_url?: string | null
+> 95	          updated_at?: string
+> 96	          user_id: string
+> 97	        }
+> 98	        Update: {
+> 99	          campaign_id?: string | null
+> 100	          clicks?: number
+> 101	          content_id?: string | null
+> 102	          conversions?: number
+> 103	          created_at?: string
+> 104	          id?: string
+> 105	          metadata?: Json | null
+> 106	          original_url?: string
+> 107	          platform?: string
+> 108	          product_id?: string | null
+> 109	          revenue_cents?: number
+> 110	          short_url?: string | null
+> 111	          updated_at?: string
+> 112	          user_id?: string
+> 113	        }
+> 114	        Relationships: []
+> 115	      }
+> 116	      audit_logs: {
+> 117	        Row: {
+> 118	          action: string
+> 119	          created_at: string
+> 120	          details: Json | null
+> 121	          id: string
+> 122	          ip_address: string | null
+> 123	          resource_id: string | null
+> 124	          resource_type: string
+> 125	          user_id: string
+> 126	        }
+> 127	        Insert: {
+> 128	          action: string
+> 129	          created_at?: string
+> 130	          details?: Json | null
+> 131	          id?: string
+> 132	          ip_address?: string | null
+> 133	          resource_id?: string | null
+> 134	          resource_type: string
+> 135	          user_id: string
+> 136	        }
+> 137	        Update: {
+> 138	          action?: string
+> 139	          created_at?: string
+> 140	          details?: Json | null
+> 141	          id?: string
+> 142	          ip_address?: string | null
+> 143	          resource_id?: string | null
+> 144	          resource_type?: string
+> 145	          user_id?: string
+> 146	        }
+> 147	        Relationships: []
+> 148	      }
+> 149	      campaign_metrics: {
+> 150	        Row: {
+> 151	          campaign_id: string
+> 152	          clicks: number | null
+> 153	          conversions: number | null
+> 154	          created_at: string
+> 155	          ctr: number | null
+> 156	          engagements: number | null
+> 157	          id: string
+> 158	          impressions: number | null
+> 159	          measured_at: string
+> 160	          platform: Database["public"]["Enums"]["social_platform"] | null
+> 161	          spend_cents: number | null
+> 162	          user_id: string
+> 163	        }
+> 164	        Insert: {
+> 165	          campaign_id: string
+> 166	          clicks?: number | null
+> 167	          conversions?: number | null
+> 168	          created_at?: string
+> 169	          ctr?: number | null
+> 170	          engagements?: number | null
+> 171	          id?: string
+> 172	          impressions?: number | null
+> 173	          measured_at?: string
+> 174	          platform?: Database["public"]["Enums"]["social_platform"] | null
+> 175	          spend_cents?: number | null
+> 176	          user_id: string
+> 177	        }
+> 178	        Update: {
+> 179	          campaign_id?: string
+> 180	          clicks?: number | null
+> 181	          conversions?: number | null
+> 182	          created_at?: string
+> 183	          ctr?: number | null
+> 184	          engagements?: number | null
+> 185	          id?: string
+> 186	          impressions?: number | null
+> 187	          measured_at?: string
+> 188	          platform?: Database["public"]["Enums"]["social_platform"] | null
+> 189	          spend_cents?: number | null
+> 190	          user_id?: string
+> 191	        }
+> 192	        Relationships: [
+> 193	          {
+> 194	            foreignKeyName: "campaign_metrics_campaign_id_fkey"
+> 195	            columns: ["campaign_id"]
+> 196	            isOneToOne: false
+> 197	            referencedRelation: "campaigns"
+> 198	            referencedColumns: ["id"]
+> 199	          },
+> 200	        ]
+> 201	      }
+> 202	      campaigns: {
+> 203	        Row: {
+> 204	          budget_cents: number | null
+> 205	          created_at: string
+> 206	          description: string | null
+> 207	          ends_at: string | null
+> 208	          id: string
+> 209	          metadata: Json | null
+> 210	          name: string
+> 211	          objective: string | null
+> 212	          platforms: Database["public"]["Enums"]["social_platform"][] | null
+> 213	          starts_at: string | null
+> 214	          status: Database["public"]["Enums"]["campaign_status"]
+> 215	          target_audience: Json | null
+> 216	          updated_at: string
+> 217	          user_id: string
+> 218	        }
+> 219	        Insert: {
+> 220	          budget_cents?: number | null
+> 221	          created_at?: string
+> 222	          description?: string | null
+> 223	          ends_at?: string | null
+> 224	          id?: string
+> 225	          metadata?: Json | null
+> 226	          name: string
+> 227	          objective?: string | null
+> 228	          platforms?: Database["public"]["Enums"]["social_platform"][] | null
+> 229	          starts_at?: string | null
+> 230	          status?: Database["public"]["Enums"]["campaign_status"]
+> 231	          target_audience?: Json | null
+> 232	          updated_at?: string
+> 233	          user_id: string
+> 234	        }
+> 235	        Update: {
+> 236	          budget_cents?: number | null
+> 237	          created_at?: string
+> 238	          description?: string | null
+> 239	          ends_at?: string | null
+> 240	          id?: string
+> 241	          metadata?: Json | null
+> 242	          name?: string
+> 243	          objective?: string | null
+> 244	          platforms?: Database["public"]["Enums"]["social_platform"][] | null
+> 245	          starts_at?: string | null
+> 246	          status?: Database["public"]["Enums"]["campaign_status"]
+> 247	          target_audience?: Json | null
+> 248	          updated_at?: string
+> 249	          user_id?: string
+> 250	        }
+> 251	        Relationships: []
+> 252	      }
+> 253	      content_library: {
+> 254	        Row: {
+> 255	          ai_model: string | null
+> 256	          ai_prompt: string | null
+> 257	          body: string | null
+> 258	          campaign_id: string | null
+> 259	          created_at: string
+> 260	          id: string
+> 261	          is_favorite: boolean | null
+> 262	          media_url: string | null
+> 263	          metadata: Json | null
+> 264	          status: Database["public"]["Enums"]["content_status"]
+> 265	          tags: string[] | null
+> 266	          thumbnail_url: string | null
+> 267	          title: string | null
+> 268	          type: Database["public"]["Enums"]["content_type"]
+> 269	          updated_at: string
+> 270	          user_id: string
+> 271	          version: number | null
+> 272	        }
+> 273	        Insert: {
+> 274	          ai_model?: string | null
+> 275	          ai_prompt?: string | null
+> 276	          body?: string | null
+> 277	          campaign_id?: string | null
+> 278	          created_at?: string
+> 279	          id?: string
+> 280	          is_favorite?: boolean | null
+> 281	          media_url?: string | null
+> 282	          metadata?: Json | null
+> 283	          status?: Database["public"]["Enums"]["content_status"]
+> 284	          tags?: string[] | null
+> 285	          thumbnail_url?: string | null
+> 286	          title?: string | null
+> 287	          type: Database["public"]["Enums"]["content_type"]
+> 288	          updated_at?: string
+> 289	          user_id: string
+> 290	          version?: number | null
+> 291	        }
+> 292	        Update: {
+> 293	          ai_model?: string | null
+> 294	          ai_prompt?: string | null
+> 295	          body?: string | null
+> 296	          campaign_id?: string | null
+> 297	          created_at?: string
+> 298	          id?: string
+> 299	          is_favorite?: boolean | null
+> 300	          media_url?: string | null
+> 301	          metadata?: Json | null
+> 302	          status?: Database["public"]["Enums"]["content_status"]
+> 303	          tags?: string[] | null
+> 304	          thumbnail_url?: string | null
+> 305	          title?: string | null
+> 306	          type?: Database["public"]["Enums"]["content_type"]
+> 307	          updated_at?: string
+> 308	          user_id?: string
+> 309	          version?: number | null
+> 310	        }
+> 311	        Relationships: [
+> 312	          {
+> 313	            foreignKeyName: "content_library_campaign_id_fkey"
+> 314	            columns: ["campaign_id"]
+> 315	            isOneToOne: false
+> 316	            referencedRelation: "campaigns"
+> 317	            referencedColumns: ["id"]
+> 318	          },
+> 319	        ]
+> 320	      }
+> 321	      credits: {
+> 322	        Row: {
+> 323	          balance: number
+> 324	          id: string
+> 325	          lifetime_earned: number
+> 326	          lifetime_spent: number
+> 327	          updated_at: string
+> 328	          user_id: string
+> 329	        }
+> 330	        Insert: {
+> 331	          balance?: number
+> 332	          id?: string
+> 333	          lifetime_earned?: number
+> 334	          lifetime_spent?: number
+> 335	          updated_at?: string
+> 336	          user_id: string
+> 337	        }
+> 338	        Update: {
+> 339	          balance?: number
+> 340	          id?: string
+> 341	          lifetime_earned?: number
+> 342	          lifetime_spent?: number
+> 343	          updated_at?: string
+> 344	          user_id?: string
+> 345	        }
+> 346	        Relationships: []
+> 347	      }
+> 348	      crew_agents: {
+> 349	        Row: {
+> 350	          agent_key: string
+> 351	          avatar: string
+> 352	          created_at: string
+> 353	          id: string
+> 354	          model: string
+> 355	          name: string
+> 356	          position: Json
+> 357	          priority: string
+> 358	          provider: string
+> 359	          role: string
+> 360	          status: string
+> 361	          system_prompt: string
+> 362	          updated_at: string
+> 363	          user_id: string
+> 364	        }
+> 365	        Insert: {
+> 366	          agent_key: string
+> 367	          avatar?: string
+> 368	          created_at?: string
+> 369	          id?: string
+> 370	          model?: string
+> 371	          name: string
+> 372	          position?: Json
+> 373	          priority?: string
+> 374	          provider?: string
+> 375	          role?: string
+> 376	          status?: string
+> 377	          system_prompt?: string
+> 378	          updated_at?: string
+> 379	          user_id: string
+> 380	        }
+> 381	        Update: {
+> 382	          agent_key?: string
+> 383	          avatar?: string
+> 384	          created_at?: string
+> 385	          id?: string
+> 386	          model?: string
+> 387	          name?: string
+> 388	          position?: Json
+> 389	          priority?: string
+> 390	          provider?: string
+> 391	          role?: string
+> 392	          status?: string
+> 393	          system_prompt?: string
+> 394	          updated_at?: string
+> 395	          user_id?: string
+> 396	        }
+> 397	        Relationships: []
+> 398	      }
+> 399	      crew_edges: {
+> 400	        Row: {
+> 401	          created_at: string
+> 402	          from_agent_key: string
+> 403	          id: string
+> 404	          label: string | null
+> 405	          status: string
+> 406	          to_agent_key: string
+> 407	          updated_at: string
+> 408	          user_id: string
+> 409	        }
+> 410	        Insert: {
+> 411	          created_at?: string
+> 412	          from_agent_key: string
+> 413	          id?: string
+> 414	          label?: string | null
+> 415	          status?: string
+> 416	          to_agent_key: string
+> 417	          updated_at?: string
+> 418	          user_id: string
+> 419	        }
+> 420	        Update: {
+> 421	          created_at?: string
+> 422	          from_agent_key?: string
+> 423	          id?: string
+> 424	          label?: string | null
+> 425	          status?: string
+> 426	          to_agent_key?: string
+> 427	          updated_at?: string
+> 428	          user_id?: string
+> 429	        }
+> 430	        Relationships: []
+> 431	      }
+> 432	      healing_actions: {
+> 433	        Row: {
+> 434	          action_taken: string
+> 435	          created_at: string
+> 436	          id: string
+> 437	          issue_details: string | null
+> 438	          issue_type: string
+> 439	          metadata: Json | null
+> 440	          related_resource_id: string | null
+> 441	          related_resource_type: string | null
+> 442	          success: boolean | null
+> 443	          user_id: string
+> 444	        }
+> 445	        Insert: {
+> 446	          action_taken: string
+> 447	          created_at?: string
+> 448	          id?: string
+> 449	          issue_details?: string | null
+> 450	          issue_type: string
+> 451	          metadata?: Json | null
+> 452	          related_resource_id?: string | null
+> 453	          related_resource_type?: string | null
+> 454	          success?: boolean | null
+> 455	          user_id: string
+> 456	        }
+> 457	        Update: {
+> 458	          action_taken?: string
+> 459	          created_at?: string
+> 460	          id?: string
+> 461	          issue_details?: string | null
+> 462	          issue_type?: string
+> 463	          metadata?: Json | null
+> 464	          related_resource_id?: string | null
+> 465	          related_resource_type?: string | null
+> 466	          success?: boolean | null
+> 467	          user_id?: string
+> 468	        }
+> 469	        Relationships: []
+> 470	      }
+> 471	      notifications: {
+> 472	        Row: {
+> 473	          action_url: string | null
+> 474	          created_at: string
+> 475	          id: string
+> 476	          message: string | null
+> 477	          metadata: Json | null
+> 478	          read: boolean | null
+> 479	          title: string
+> 480	          type: Database["public"]["Enums"]["notification_type"]
+> 481	          user_id: string
+> 482	        }
+> 483	        Insert: {
+> 484	          action_url?: string | null
+> 485	          created_at?: string
+> 486	          id?: string
+> 487	          message?: string | null
+> 488	          metadata?: Json | null
+> 489	          read?: boolean | null
+> 490	          title: string
+> 491	          type?: Database["public"]["Enums"]["notification_type"]
+> 492	          user_id: string
+> 493	        }
+> 494	        Update: {
+> 495	          action_url?: string | null
+> 496	          created_at?: string
+> 497	          id?: string
+> 498	          message?: string | null
+> 499	          metadata?: Json | null
+> 500	          read?: boolean | null
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { SupabaseClient } from '@supabase/supabase-js';
+> 2	
+> 3	// mcoCoins cost per operation — single source of truth
+> 4	export const COIN_COSTS = {
+> 5	  ORCHESTRATION_RUN: 10,
+> 6	  CONTENT_GENERATION: 5,
+> 7	  IMAGE_GENERATION: 3,
+> 8	  EMBED_NODE: 1,
+> 9	} as const;
+> 10	
+> 11	export type CoinOperation = keyof typeof COIN_COSTS;
+> 12	
+> 13	/**
+> 14	 * Deducts mcoCoins from the authenticated user's profile.
+> 15	 * Calls the `deduct_mco_coins` SECURITY DEFINER RPC which enforces
+> 16	 * the balance check atomically in the database.
+> 17	 * Throws if balance is insufficient or the RPC fails.
+> 18	 */
+> 19	export async function deductMcoCoins(
+> 20	  supabase: SupabaseClient,
+> 21	  userId: string,
+> 22	  amount: number,
+> 23	): Promise<void> {
+> 24	  const { error } = await supabase.rpc('deduct_mco_coins', {
+> 25	    p_user_id: userId,
+> 26	    p_amount: amount,
+> 27	  });
+> 28	
+> 29	  if (error) {
+> 30	    throw new Error(error.message || 'Falha ao deduzir mcoCoins');
+> 31	  }
+> 32	}
+> 33	
+> 34	/**
+> 35	 * Returns the current mco_balance for the given user.
+> 36	 * Returns 0 if the profile row is not found.
+> 37	 */
+> 38	export async function getMcoBalance(
+> 39	  supabase: SupabaseClient,
+> 40	  userId: string,
+> 41	): Promise<number> {
+> 42	  const { data, error } = await supabase
+> 43	    .from('profiles')
+> 44	    .select('mco_balance')
+> 45	    .eq('id', userId)
+> 46	    .maybeSingle();
+> 47	
+> 48	  if (error) throw new Error(error.message);
+> 49	  return (data?.mco_balance as number | null) ?? 0;
+> 50	}
+> 51	
+> 52	/**
+> 53	 * Returns true if the user has enough mcoCoins for the operation.
+> 54	 * Prefer this for UI guard checks (non-destructive read).
+> 55	 */
+> 56	export async function hasSufficientBalance(
+> 57	  supabase: SupabaseClient,
+> 58	  userId: string,
+> 59	  required: number,
+> 60	): Promise<boolean> {
+> 61	  const balance = await getMcoBalance(supabase, userId);
+> 62	  return balance >= required;
+> 63	}
+> 64	
+> 65	/**
+> 66	 * Convenience wrapper: checks balance then deducts in sequence.
+> 67	 * Use this in Edge Functions where you want an explicit pre-check message.
+> 68	 */
+> 69	export async function checkAndDeductCoins(
+> 70	  supabase: SupabaseClient,
+> 71	  userId: string,
+> 72	  operation: CoinOperation,
+> 73	): Promise<void> {
+> 74	  const cost = COIN_COSTS[operation];
+> 75	  const sufficient = await hasSufficientBalance(supabase, userId, cost);
+> 76	  if (!sufficient) {
+> 77	    throw new Error(
+> 78	      `Saldo insuficiente: operação "${operation}" custa ${cost} mcoCoins`,
+> 79	    );
+> 80	  }
+> 81	  await deductMcoCoins(supabase, userId, cost);
+> 82	}
+> 83	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+Now let me find the `useAffiliateConfig` hook file:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	
+> 5	export interface AffiliateConfig {
+> 6	  id: string;
+> 7	  user_id: string;
+> 8	  platform: string;
+> 9	  app_id: string | null;
+> 10	  client_secret: string | null;
+> 11	  redirect_uri: string | null;
+> 12	  access_token: string | null;
+> 13	  refresh_token: string | null;
+> 14	  token_expires_at: string | null;
+> 15	  is_active: boolean;
+> 16	  metadata: Record<string, unknown>;
+> 17	  created_at: string;
+> 18	  updated_at: string;
+> 19	}
+> 20	
+> 21	export function useAffiliateConfig() {
+> 22	  const { user } = useAuth();
+> 23	  const queryClient = useQueryClient();
+> 24	
+> 25	  const { data: config, isLoading } = useQuery({
+> 26	    queryKey: ['affiliate_config', user?.id],
+> 27	    queryFn: async () => {
+> 28	      const { data, error } = await (supabase as any)
+> 29	        .from('affiliate_config')
+> 30	        .select('*')
+> 31	        .eq('user_id', user!.id)
+> 32	        .eq('platform', 'mercadolivre')
+> 33	        .maybeSingle();
+> 34	      if (error) throw error;
+> 35	      return data as AffiliateConfig | null;
+> 36	    },
+> 37	    enabled: !!user?.id,
+> 38	  });
+> 39	
+> 40	  const upsertConfig = useMutation({
+> 41	    mutationFn: async (values: { app_id: string; client_secret: string; redirect_uri: string }) => {
+> 42	      if (config?.id) {
+> 43	        const { error } = await (supabase as any)
+> 44	          .from('affiliate_config')
+> 45	          .update({
+> 46	            app_id: values.app_id,
+> 47	            client_secret: values.client_secret,
+> 48	            redirect_uri: values.redirect_uri,
+> 49	          })
+> 50	          .eq('id', config.id);
+> 51	        if (error) throw error;
+> 52	      } else {
+> 53	        const { error } = await (supabase as any)
+> 54	          .from('affiliate_config')
+> 55	          .insert({
+> 56	            user_id: user!.id,
+> 57	            platform: 'mercadolivre',
+> 58	            app_id: values.app_id,
+> 59	            client_secret: values.client_secret,
+> 60	            redirect_uri: values.redirect_uri,
+> 61	          });
+> 62	        if (error) throw error;
+> 63	      }
+> 64	    },
+> 65	    onSuccess: () => {
+> 66	      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });
+> 67	    },
+> 68	  });
+> 69	
+> 70	  return { config, isLoading, upsertConfig };
+> 71	}
+> 72	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+Perfect! Now let me verify I have all the necessary content by searching for any additional affiliate-related context in the orchestrate-content function:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"affiliate\\|mercado\\|utm\\|process-affiliate\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 89:    const utmTag = (platform: string, baseUrl?: string) => {
+> 90:      const params = `utm_source=${platform}&utm_medium=social&utm_campaign=magic_constellation_v1`;
+> 156:          metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress") },
+> 192:    const articleLink = wpPostUrl ? utmTag("linkedin", wpPostUrl) : `https://${site_url}`;
+> 231:          metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin") },
+> 244:            metadata: { utm: utmTag("linkedin"), orchestrated: true },
+> 258:        const xLink = wpPostUrl ? utmTag("twitter", wpPostUrl) : `https://${site_url}`;
+> 298:          metadata: { source: "orchestration", platform: "twitter", tweets: xArgs.tweets, utm: utmTag("twitter") },
+> 310:            metadata: { utm: utmTag("twitter"), orchestrated: true, thread: xArgs.tweets },
+> ```
+
+## 🤖 Claude
+
+Excellent! I've gathered all the information. Let me create a comprehensive summary report of the affiliate engine context:
+
+---
+
+## Affiliate Engine Context — Complete Analysis
+
+Based on my research of the codebase, here's the full affiliate engine architecture:
+
+### 1. **process-affiliate-link Edge Function**
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts`
+
+This is a skeleton/placeholder function that needs implementation. Current structure:
+- Validates authorization header and user authentication
+- Accepts `product_url`, `campaign_id`, and `content_id` as input
+- Currently returns a placeholder response with `affiliate_url: null`
+- Has clear TODO comments outlining the intended implementation flow:
+  1. Fetch affiliate_config from user (via service_role)
+  2. Call Mercado Livre API to generate affiliate link
+  3. Apply UTM tags
+  4. Save to affiliate_links table
+  5. Return monetized short_url
+
+**Status:** This is the main integration point that requires full implementation.
+
+---
+
+### 2. **useAffiliateConfig Hook**
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts`
+
+React Query hook for managing Mercado Livre affiliate credentials:
+
+**AffiliateConfig Interface:**
+```typescript
+id: string
+user_id: string
+platform: string (hardcoded 'mercadolivre')
+app_id: string | null
+client_secret: string | null
+redirect_uri: string | null
+access_token: string | null
+refresh_token: string | null
+token_expires_at: string | null
+is_active: boolean
+metadata: Record<string, unknown>
+created_at: string
+updated_at: string
+```
+
+**Functions:**
+- `useAffiliateConfig()` - Query hook that fetches user's active Mercado Livre config
+- `upsertConfig()` - Mutation to create/update affiliate credentials
+
+---
+
+### 3. **Database Schema — affiliate_links Table**
+**Source:** `/home/gcrUX/htdocs/constellation-orchestra/src/integrations/supabase/types.ts`
+
+```typescript
+affiliate_links: {
+  Row: {
+    id: string
+    user_id: string
+    original_url: string
+    short_url: string | null
+    platform: string (default 'mercadolivre')
+    product_id: string | null
+    campaign_id: string | null
+    content_id: string | null
+    clicks: number (default 0)
+    conversions: number (default 0)
+    revenue_cents: number (default 0)
+    metadata: Json | null
+    created_at: string
+    updated_at: string
+  }
+  // Supports Insert/Update with flexible nullable fields
+}
+
+affiliate_config: {
+  Row: {
+    id: string
+    user_id: string
+    platform: string
+    app_id: string | null
+    client_secret: string | null
+    redirect_uri: string | null
+    access_token: string | null
+    refresh_token: string | null
+    token_expires_at: string | null
+    is_active: boolean
+    metadata: Json | null
+    created_at: string
+    updated_at: string
+  }
+}
+```
+
+---
+
+### 4. **orchestrate-content Function — UTM/Affiliate Context**
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts`
+
+This function demonstrates proper UTM tag implementation (lines 89-92, 156, 192, 231, 244, 258, 298, 310):
+
+**UTM Tag Function:**
+```typescript
+const utmTag = (platform: string, baseUrl?: string) => {
+  const params = `utm_source=${platform}&utm_medium=social&utm_campaign=magic_constellation_v1`;
+  return baseUrl ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${params}` : params;
+};
+```
+
+**Current Usage in orchestrate-content:**
+- WordPress article: `metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress") }`
+- LinkedIn posts: `metadata: { utm: utmTag("linkedin"), orchestrated: true }`
+- Twitter threads: `metadata: { utm: utmTag("twitter"), orchestrated: true, thread: xArgs.tweets }`
+
+The function creates content across multiple platforms (WordPress, LinkedIn, Twitter) with appropriate UTM tracking for each platform.
+
+---
+
+### 5. **ContentLibraryPage — Integration Point**
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/pages/ContentLibraryPage.tsx` (excerpt relevant to affiliate context)
+
+This page orchestrates content generation and could integrate affiliate link generation. Key features:
+- Creates content with `campaign_id` tracking
+- Supports content metadata storage
+- Integrates with multiple platforms (WordPress, LinkedIn, Twitter)
+- Streams content generation from edge functions
+- Has no current affiliate link generation UI
+
+---
+
+### 6. **Billing System — mcoCoins Integration**
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts`
+
+Coin cost definitions relevant for affiliate operations:
+```typescript
+export const COIN_COSTS = {
+  ORCHESTRATION_RUN: 10,      // Used in orchestrate-content
+  CONTENT_GENERATION: 5,
+  IMAGE_GENERATION: 3,
+  EMBED_NODE: 1,
+}
+```
+
+Functions:
+- `deductMcoCoins()` - Atomic deduction via RPC
+- `getMcoBalance()` - Get user's current balance
+- `hasSufficientBalance()` - Check if user can afford operation
+- `checkAndDeductCoins()` - Combined check & deduct
+
+The `orchestrate-content` function deducts 10 mcoCoins before executing (lines 38-59).
+
+---
+
+## Key Findings:
+
+1. **Affiliate Link Generation:** The `process-affiliate-link` function is a **skeleton** that needs full Mercado Livre API integration
+2. **Configuration Storage:** User's ML credentials are stored in `affiliate_config` table and retrieved via `useAffiliateConfig` hook
+3. **Link Tracking:** The `affiliate_links` table tracks clicks, conversions, and revenue with full audit capability
+4. **UTM Implementation:** Properly designed helper function in `orchestrate-content` shows the intended tracking pattern
+5. **No Current Integration:** There's no UI in ContentLibraryPage yet to generate affiliate links; the process-affiliate-link function exists but isn't called from the frontend
+6. **Campaign Support:** Both affiliate_links and content_library support campaign_id for tracking multi-platform affiliate campaigns
+7. **Cost Structure:** Affiliate operations would need to be assigned a coin cost in the COIN_COSTS structure
+
+The entire architecture is prepared for a complete Mercado Livre affiliate integration but is currently in a skeleton state awaiting CLI implementation.

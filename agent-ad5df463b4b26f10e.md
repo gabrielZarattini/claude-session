@@ -1,0 +1,115 @@
+# Claude Session: agent-ad5df463b4b26f10e
+
+## 👤 User
+
+Save a project memory file at /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_phase_zeta_seal.md with this content:
+
+---
+name: Phase Zeta Social Consciousness + Core v3 Seal
+description: Phase Zeta sealed 2026-05-02 — aios_conversations, cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 nós embedded, 14 testes vitest
+type: project
+---
+
+Phase Zeta Social Consciousness + Core v3 sealed 2026-05-02.
+
+**Why:** AIOS (consultado no CorePage) recomendou: cursor infinito, DERIVES_FROM para todos os nós do contextString, fork imediato, metadados: title/summary/model_used/tokens/duration/quality_score/tags.
+
+**What shipped:**
+- `supabase/migrations/20260502120000_aios_conversations.sql` — tabela RLS, boost_aios_conversation() RPC atômico, cursor index
+- `src/hooks/useAIOSConversations.ts` — useInfiniteQuery cursor PAGE_SIZE=15, saveConversation (node + DERIVES_FROM + embed), fork, boost
+- `src/hooks/useKnowledgeMesh.ts` — exporta contextNodeIds
+- `src/hooks/useAIOSChat.ts` — auto-save quando streaming ends (≥2 turns), initialMessages/onInitialMessagesLoaded para restore/fork
+- `src/components/core/ConversationTimeline.tsx` — IntersectionObserver sentinel, Retomar/Fork/Boost, badge fork, empty state
+- `src/pages/CorePage.tsx` — botão "Memória" → painel slide-in 256px
+- `src/hooks/useGeminiLive.ts` — WebSocket BidiGenerateContent, PCM 16kHz mic, PCM 24kHz output, barge-in real
+- `src/components/core/AIOSTerminal.tsx` — Live toggle, mic Live Mode, barge-in roteado
+- `src/test/phase-zeta.test.tsx` — 14 testes vitest: persistência, DERIVES_FROM, UI
+- `GEMINI_API_KEY` provisionada no vault + `.env`
+
+**How to apply:** Quando continuar neste projeto, saber que aios_conversations precisa de `npx supabase db push` (migration 20260502120000) antes de funcionar em produção. Live Mode requer VITE_GEMINI_API_KEY no .env local.
+
+Then add a line to /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md:
+- [Phase Zeta Social Consciousness + Core v3 Seal](project_phase_zeta_seal.md) — aios_conversations cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 nós embedded, 14 testes
+
+Make sure the MEMORY.md line is added after the existing Phase Epsilon V8 + Delta V4 Seal line (or at the top of the list, before the Phase Epsilon entries).
+
+
+## 🤖 Claude
+
+I'll save the project memory file and update the MEMORY.md index.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Phase Epsilon V8 + Delta V4 Seal](project_epsilon_v8_delta_v4_seal.md) — CALLS counter tooltip (→N/←M), two-pass cross-file ingestion +259 edges, Usuário Zero 5003 coins
+> 4	- [Phase Epsilon V7 Seal](project_epsilon_v7_seal.md) — ownership tooltip badge, territory legend pills, CALLS edge glow, Delta v3b +110 edges
+> 5	- [Phase Epsilon V6 Seal](project_epsilon_v6_seal.md) — inferSquad export, ownership coloring (v6c), Delta v3 call-graph CALLS edges
+> 6	- [Phase Epsilon V5 Seal](project_epsilon_v5_seal.md) — MatrixPage full-screen, sidebar sub-menu, Edge Creator, Assign Agent, crew_module_ownership
+> 7	- [Phase Epsilon V4 Seal](project_epsilon_v4_seal.md) — Crew Overlay + Memory Mesh full-screen: useCrewOverlay, pulse animation, INHABITS edges, MemoryPage
+> 8	- [Phase Epsilon V3 Seal](project_epsilon_v3_seal.md) — Semantic Probe shipped: match_mcorch_nodes + search-constellation + useConstellationSearch
+> 9	- [Phase Beta Seal](project_phase_beta_seal.md) — What shipped in Phase Beta, deploy checklist, pending Commercial phase work
+> 10	- [Gabriel Zarattini — Lead Architect](user_profile.md) — User profile, technical depth, pt-BR UI preference, autonomous execution style
+> 11	- [Stripe & Monetização — Estratégia Usuário Zero](project_stripe_strategy.md) — Sandbox intencional; live keys somente após validação como piloto enterprise
+> 12	- [autonomic-action n8n — resolvido](project_autonomic_action.md) — +10pts por run via n8n é correto; próximo: campo manual de mcoCoins no painel de configurações
+> 13	- [Commit style](feedback_commits.md) — Nunca Co-Authored-By, corpo orientado a milestone não a diff técnico
+> 14	
+> ```
+
+## 🤖 Claude
+
+Now I'll write the memory file and update MEMORY.md in parallel.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_phase_zeta_seal.md",
+  "content": "---\nname: Phase Zeta Social Consciousness + Core v3 Seal\ndescription: Phase Zeta sealed 2026-05-02 \u2014 aios_conversations, cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 n\u00f3s embedded, 14 testes vitest\ntype: project\n---\n\nPhase Zeta Social Consciousness + Core v3 sealed 2026-05-02.\n\n**Why:** AIOS (consultado no CorePage) recomendou: cursor infinito, DERIVES_FROM para todos os n\u00f3s do contextString, fork imediato, metadados: title/summary/model_used/tokens/duration/quality_score/tags.\n\n**What shipped:**\n- `supabase/migrations/20260502120000_aios_conversations.sql` \u2014 tabela RLS, boost_aios_conversation() RPC at\u00f4mico, cursor index\n- `src/hooks/useAIOSConversations.ts` \u2014 useInfiniteQuery cursor PAGE_SIZE=15, saveConversation (node + DERIVES_FROM + embed), fork, boost\n- `src/hooks/useKnowledgeMesh.ts` \u2014 exporta contextNodeIds\n- `src/hooks/useAIOSChat.ts` \u2014 auto-save quando streaming ends (\u22652 turns), initialMessages/onInitialMessagesLoaded para restore/fork\n- `src/components/core/ConversationTimeline.tsx` \u2014 IntersectionObserver sentinel, Retomar/Fork/Boost, badge fork, empty state\n- `src/pages/CorePage.tsx` \u2014 bot\u00e3o \"Mem\u00f3ria\" \u2192 painel slide-in 256px\n- `src/hooks/useGeminiLive.ts` \u2014 WebSocket BidiGenerateContent, PCM 16kHz mic, PCM 24kHz output, barge-in real\n- `src/components/core/AIOSTerminal.tsx` \u2014 Live toggle, mic Live Mode, barge-in roteado\n- `src/test/phase-zeta.test.tsx` \u2014 14 testes vitest: persist\u00eancia, DERIVES_FROM, UI\n- `GEMINI_API_KEY` provisionada no vault + `.env`\n\n**How to apply:** Quando continuar neste projeto, saber que aios_conversations precisa de `npx supabase db push` (migration 20260502120000) antes de funcionar em produ\u00e7\u00e3o. Live Mode requer VITE_GEMINI_API_KEY no .env local.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_phase_zeta_seal.md
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Phase Epsilon V8 + Delta V4 Seal](project_epsilon_v8_delta_v4_seal.md) \u2014 CALLS counter tooltip (\u2192N/\u2190M), two-pass cross-file ingestion +259 edges, Usu\u00e1rio Zero 5003 coins",
+  "new_string": "- [Phase Zeta Social Consciousness + Core v3 Seal](project_phase_zeta_seal.md) \u2014 aios_conversations cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 n\u00f3s embedded, 14 testes\n- [Phase Epsilon V8 + Delta V4 Seal](project_epsilon_v8_delta_v4_seal.md) \u2014 CALLS counter tooltip (\u2192N/\u2190M), two-pass cross-file ingestion +259 edges, Usu\u00e1rio Zero 5003 coins"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully.
+> ```
+
+## 🤖 Claude
+
+Both files are saved. Here's a summary of what was done:
+
+- Created `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_phase_zeta_seal.md` with the full Phase Zeta seal content.
+- Updated `MEMORY.md` by inserting the Phase Zeta line at the top of the list, before the Phase Epsilon V8 entry, as requested.

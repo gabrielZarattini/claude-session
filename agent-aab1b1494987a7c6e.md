@@ -1,0 +1,2763 @@
+# Claude Session: agent-aab1b1494987a7c6e
+
+## 👤 User
+
+Map the current state of Canvas Studio in the MCORCH constellation-orchestra repo at /home/gcrUX/htdocs/constellation-orchestra. This is after Sprint 4.1 (Canvas Studio UX Shell) and Sprint v6.2.0 (OpenClaw Bootstrap + Higgsfield Tiering). I need a comprehensive snapshot of what exists today so I can plan Phase 4.2a (typed nodes + rich inspectors port from viralmind-builder).
+
+**What to find and report (medium depth — read whole files where small, excerpt where large):**
+
+1. **Canvas types** — `src/types/canvas.ts`
+   - Current shape of `CanvasNodeData`, `PipelineMode`, `Lane`, `StyleSettings`, etc.
+   - Is there a discriminated union by `kind` already, or is it still permissive (`nodeType: string`)?
+   - What constants/catalogs exist (MODEL_INFO, ASPECT_RATIOS, STYLE_PRESETS, factories)?
+   - Report file size and key types verbatim if file < 300 lines.
+
+2. **Canvas store** — `src/store/useCanvasStore.ts`
+   - Confirm `zundo` temporal middleware is wired
+   - Shape of state (nodes, edges, pipelineMode, lanes, styleSettings)
+   - Existing actions (updateNodeData, addNode, etc.)
+   - Report file size and excerpts of key actions.
+
+3. **Canvas recipes** — `src/lib/canvas-recipes.ts`
+   - The 9 receitas catalog (3 Pipeline + 6 Quick)
+   - How `build()` currently emits nodes (generic data shape?)
+   - Report file size and one example recipe verbatim.
+
+4. **Canvas node components** — `src/components/canvas/nodes/`
+   - List all files in that directory
+   - For each: is it a typed node (5 expected: GenerateImage, CharacterReference, SceneCompose, StyleTransfer, ImageToVideo) or just a generic CanvasNodeCard?
+   - Does `Handle target/source` already exist? Report excerpt of one node component.
+
+5. **RightPanel state** — `src/components/canvas/RightPanel/` (might not exist)
+   - Does the directory exist? If yes, list contents.
+   - If no, confirm that the current implementation uses `<Sheet>` (shadcn) in `src/pages/CanvasEditorPage.tsx`.
+
+6. **Canvas pages** — `src/pages/CanvasEditorPage.tsx`
+   - Current ReactFlow setup, nodeTypes registration
+   - Sheet vs. RightPanel usage
+   - Where lightbox is wired
+   - Report excerpts of the JSX skeleton (return statement and main layout).
+
+7. **Canvas hooks** — `src/hooks/useCanvasStudio.ts` and any other canvas-related hook
+   - `useCanvasExecute`, `useCanvasProject`, `useSaveCanvasGraph`
+   - Existence of `useCanvasJobsRealtime` (Phase 4.2b dependency — likely missing)
+   - Report list of exports and signature of each.
+
+8. **Other peripheral files** the plan needs:
+   - `src/components/canvas/AddNodeMenu.tsx` (current state — Popover-based Cmd+K from viralmind, or shallow?)
+   - `src/lib/canvas-node-registry.ts` (exists? what's in it?)
+   - `src/components/ui/button.tsx` — current `variant` enum (looking for `accent` variant — likely not yet present)
+
+9. **viralmind-builder reference repo:**
+   - Search for any local clone: `find / -maxdepth 6 -type d -name "viralmind*" 2>/dev/null | head -20`
+   - Check if it's somewhere accessible (~/htdocs/, ~/repos/, /home/, etc.)
+   - If found, report the path and whether `src/types/canvas.ts` exists there
+
+**Format your report:**
+- One section per item above
+- Use code blocks for verbatim excerpts
+- Report sizes (line counts) for context budgeting
+- Flag any inconsistencies between plan and reality
+
+Hard cap: under 1500 words total. Quality over quantity — focus on what's directly relevant to planning the typed nodes port.
+
+## 🤖 Claude
+
+I'll map the current state of Canvas Studio in constellation-orchestra. Let me systematically explore the codebase.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra -type f -name \"*.ts\" -o -name \"*.tsx\" | grep -E \"(canvas|Canvas)\" | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasStudioPage.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-recipes.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/orchestrator/OrchestrationCanvas.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/StatusBar.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LanesOverlay.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/ImageLightbox.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/TopBar.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/@types/offscreencanvas/index.d.ts
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LeftPanel/index.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/edges/PipelineEdge.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/@react-three/fiber/dist/declarations/src/native/Canvas.d.ts
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/@react-three/fiber/dist/declarations/src/web/Canvas.d.ts
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/@types/three/src/textures/CanvasTexture.d.ts
+> /home/gcrUX/htdocs/constellation-orchestra/node_modules/@types/three/src/renderers/common/CanvasTarget.d.ts
+> ```
+
+## 🤖 Claude
+
+Now let me read the key files:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Canvas Studio — type definitions (Phase 4.1).
+> 3	 * The strict cinematographic node types (Close-up / Frame Inicial /
+> 4	 * Frame Final / Vídeo 5s) arrive in Phase 4.2; for now node data is a
+> 5	 * permissive shape compatible with the generic Canvas node.
+> 6	 */
+> 7	import type { Node, Edge, Viewport } from "@xyflow/react";
+> 8	
+> 9	/* ── Node graph ──────────────────────────────────────────────────────── */
+> 10	
+> 11	export type NodeStatus = "idle" | "queued" | "running" | "success" | "failed" | "cancelled";
+> 12	
+> 13	export interface CanvasNodeData extends Record<string, unknown> {
+> 14	  nodeType: string;
+> 15	  label?: string;
+> 16	  prompt?: string;
+> 17	  negativePrompt?: string;
+> 18	  provider?: string;
+> 19	  model?: string;
+> 20	  status?: NodeStatus;
+> 21	  outputUrl?: string;
+> 22	}
+> 23	
+> 24	export type CanvasNode = Node<CanvasNodeData>;
+> 25	export type CanvasEdge = Edge;
+> 26	
+> 27	export interface CanvasGraph {
+> 28	  nodes: CanvasNode[];
+> 29	  edges: CanvasEdge[];
+> 30	}
+> 31	
+> 32	export const EMPTY_GRAPH: CanvasGraph = { nodes: [], edges: [] };
+> 33	
+> 34	/* ── Pipeline mode — lanes + style settings (C2) ─────────────────────── */
+> 35	
+> 36	/** Visual constants for the lane overlay + snap-to-grid. */
+> 37	export const LANE_HEIGHT = 320;
+> 38	export const COL_WIDTH = 320;
+> 39	/** Minimum number of lanes always shown when pipeline mode is on. */
+> 40	export const MIN_LANES = 4;
+> 41	
+> 42	export interface LaneConfig {
+> 43	  /** Stable random id. */
+> 44	  id: string;
+> 45	  /** User-editable label, shown in the lane header. */
+> 46	  label: string;
+> 47	}
+> 48	
+> 49	export function makeLane(label = "Nova lane"): LaneConfig {
+> 50	  return { id: `lane_${Math.random().toString(36).slice(2, 10)}`, label };
+> 51	}
+> 52	
+> 53	/** Lane index from a node's snapped Y position. */
+> 54	export function laneIndexFromY(y: number): number {
+> 55	  return Math.max(0, Math.floor(y / LANE_HEIGHT));
+> 56	}
+> 57	
+> 58	export const STYLE_PRESETS = [
+> 59	  { id: "none", label: "Sem preset" },
+> 60	  { id: "cinematic", label: "Cinematográfico" },
+> 61	  { id: "photorealistic", label: "Fotorrealista" },
+> 62	  { id: "anime", label: "Anime" },
+> 63	  { id: "illustration", label: "Ilustração" },
+> 64	  { id: "noir", label: "Noir" },
+> 65	  { id: "documentary", label: "Documentário" },
+> 66	] as const;
+> 67	
+> 68	export type StylePresetId = (typeof STYLE_PRESETS)[number]["id"];
+> 69	
+> 70	export interface StyleSettings {
+> 71	  /** 3–5 hex swatches. */
+> 72	  palette: string[];
+> 73	  /** Free-form mood description, prepended to every prompt. */
+> 74	  mood: string;
+> 75	  /** Visual preset, prepended to every prompt. */
+> 76	  stylePreset: StylePresetId;
+> 77	}
+> 78	
+> 79	export const DEFAULT_STYLE_SETTINGS: StyleSettings = {
+> 80	  palette: [],
+> 81	  mood: "",
+> 82	  stylePreset: "none",
+> 83	};
+> 84	
+> 85	/* ── Persisted graph blob ────────────────────────────────────────────── */
+> 86	
+> 87	/**
+> 88	 * Shape of the `vm_canvas_projects.graph` jsonb column. Pipeline-mode state
+> 89	 * rides inside the graph blob so Phase 4.1 needs no schema migration;
+> 90	 * `viewport` stays its own column.
+> 91	 */
+> 92	export interface PersistedCanvasGraph extends CanvasGraph {
+> 93	  pipelineMode?: boolean;
+> 94	  lanes?: LaneConfig[];
+> 95	  styleSettings?: StyleSettings;
+> 96	}
+> 97	
+> 98	export interface CanvasInitPayload extends PersistedCanvasGraph {
+> 99	  viewport?: Viewport;
+> 100	}
+> 101	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { create } from "zustand";
+> 2	import { temporal } from "zundo";
+> 3	import {
+> 4	  applyEdgeChanges,
+> 5	  applyNodeChanges,
+> 6	  addEdge,
+> 7	  type Connection,
+> 8	  type EdgeChange,
+> 9	  type NodeChange,
+> 10	  type Viewport,
+> 11	} from "@xyflow/react";
+> 12	import {
+> 13	  DEFAULT_STYLE_SETTINGS,
+> 14	  type CanvasEdge,
+> 15	  type CanvasInitPayload,
+> 16	  type CanvasNode,
+> 17	  type CanvasNodeData,
+> 18	  type LaneConfig,
+> 19	  type PersistedCanvasGraph,
+> 20	  type StyleSettings,
+> 21	} from "@/types/canvas";
+> 22	
+> 23	interface CanvasState {
+> 24	  projectId: string | null;
+> 25	  nodes: CanvasNode[];
+> 26	  edges: CanvasEdge[];
+> 27	  viewport: Viewport;
+> 28	  selectedNodeId: string | null;
+> 29	
+> 30	  // Pipeline mode (C2)
+> 31	  pipelineMode: boolean;
+> 32	  lanes: LaneConfig[];
+> 33	  styleSettings: StyleSettings;
+> 34	
+> 35	  initialize: (projectId: string, payload: CanvasInitPayload) => void;
+> 36	  onNodesChange: (changes: NodeChange[]) => void;
+> 37	  onEdgesChange: (changes: EdgeChange[]) => void;
+> 38	  onConnect: (c: Connection) => void;
+> 39	  setViewport: (v: Viewport) => void;
+> 40	  selectNode: (id: string | null) => void;
+> 41	
+> 42	  addNode: (n: CanvasNode) => void;
+> 43	  addRecipe: (nodes: CanvasNode[], edges: CanvasEdge[]) => void;
+> 44	  updateNodeData: (id: string, patch: Partial<CanvasNodeData>) => void;
+> 45	  removeSelected: () => void;
+> 46	
+> 47	  setPipelineMode: (v: boolean) => void;
+> 48	  setLanes: (lanes: LaneConfig[]) => void;
+> 49	  updateLane: (id: string, patch: Partial<LaneConfig>) => void;
+> 50	  addLane: (lane: LaneConfig) => void;
+> 51	  removeLane: (id: string) => void;
+> 52	  setStyleSettings: (patch: Partial<StyleSettings>) => void;
+> 53	
+> 54	  /** Serializable graph blob for persistence into vm_canvas_projects.graph. */
+> 55	  getPersistedGraph: () => PersistedCanvasGraph;
+> 56	}
+> 57	
+> 58	export const useCanvasStore = create<CanvasState>()(
+> 59	  temporal(
+> 60	    (set, get) => ({
+> 61	      projectId: null,
+> 62	      nodes: [],
+> 63	      edges: [],
+> 64	      viewport: { x: 0, y: 0, zoom: 1 },
+> 65	      selectedNodeId: null,
+> 66	      pipelineMode: false,
+> 67	      lanes: [],
+> 68	      styleSettings: { ...DEFAULT_STYLE_SETTINGS },
+> 69	
+> 70	      initialize: (projectId, payload) =>
+> 71	        set({
+> 72	          projectId,
+> 73	          nodes: payload.nodes ?? [],
+> 74	          edges: payload.edges ?? [],
+> 75	          viewport: payload.viewport ?? { x: 0, y: 0, zoom: 1 },
+> 76	          selectedNodeId: null,
+> 77	          pipelineMode: payload.pipelineMode ?? false,
+> 78	          lanes: payload.lanes ?? [],
+> 79	          styleSettings: payload.styleSettings ?? { ...DEFAULT_STYLE_SETTINGS },
+> 80	        }),
+> 81	
+> 82	      onNodesChange: (changes) =>
+> 83	        set((s) => ({ nodes: applyNodeChanges(changes, s.nodes) as CanvasNode[] })),
+> 84	      onEdgesChange: (changes) =>
+> 85	        set((s) => ({ edges: applyEdgeChanges(changes, s.edges) })),
+> 86	      onConnect: (c) =>
+> 87	        set((s) => ({
+> 88	          edges: addEdge(
+> 89	            { ...c, animated: false, ...(s.pipelineMode ? { type: "pipeline" } : {}) },
+> 90	            s.edges,
+> 91	          ),
+> 92	        })),
+> 93	
+> 94	      setViewport: (v) => set({ viewport: v }),
+> 95	      selectNode: (id) => set({ selectedNodeId: id }),
+> 96	
+> 97	      addNode: (n) => set((s) => ({ nodes: [...s.nodes, n], selectedNodeId: n.id })),
+> 98	      addRecipe: (nodes, edges) =>
+> 99	        set((s) => ({ nodes: [...s.nodes, ...nodes], edges: [...s.edges, ...edges] })),
+> 100	
+> 101	      updateNodeData: (id, patch) =>
+> 102	        set((s) => ({
+> 103	          nodes: s.nodes.map((n) =>
+> 104	            n.id === id ? { ...n, data: { ...n.data, ...patch } } : n,
+> 105	          ),
+> 106	        })),
+> 107	
+> 108	      removeSelected: () =>
+> 109	        set((s) => {
+> 110	          const sel = s.selectedNodeId;
+> 111	          if (!sel) return {};
+> 112	          return {
+> 113	            nodes: s.nodes.filter((n) => n.id !== sel),
+> 114	            edges: s.edges.filter((e) => e.source !== sel && e.target !== sel),
+> 115	            selectedNodeId: null,
+> 116	          };
+> 117	        }),
+> 118	
+> 119	      setPipelineMode: (v) =>
+> 120	        set((s) => ({
+> 121	          pipelineMode: v,
+> 122	          edges: v
+> 123	            ? s.edges.map((e) => (e.type === "pipeline" ? e : { ...e, type: "pipeline" }))
+> 124	            : s.edges.map((e) => (e.type === "pipeline" ? { ...e, type: undefined } : e)),
+> 125	        })),
+> 126	      setLanes: (lanes) => set({ lanes }),
+> 127	      updateLane: (id, patch) =>
+> 128	        set((s) => ({ lanes: s.lanes.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
+> 129	      addLane: (lane) => set((s) => ({ lanes: [...s.lanes, lane] })),
+> 130	      removeLane: (id) => set((s) => ({ lanes: s.lanes.filter((l) => l.id !== id) })),
+> 131	      setStyleSettings: (patch) =>
+> 132	        set((s) => ({ styleSettings: { ...s.styleSettings, ...patch } })),
+> 133	
+> 134	      getPersistedGraph: () => ({
+> 135	        nodes: get().nodes,
+> 136	        edges: get().edges,
+> 137	        pipelineMode: get().pipelineMode,
+> 138	        lanes: get().lanes,
+> 139	        styleSettings: get().styleSettings,
+> 140	      }),
+> 141	    }),
+> 142	    {
+> 143	      // Only structural state in the undo history — viewport & selection skipped.
+> 144	      partialize: (state) => ({ nodes: state.nodes, edges: state.edges }),
+> 145	      limit: 50,
+> 146	      // Debounce rapid drag changes — one snapshot per 500ms.
+> 147	      handleSet: (handleSet) => {
+> 148	        let t: ReturnType<typeof setTimeout> | null = null;
+> 149	        return (state) => {
+> 150	          if (t) clearTimeout(t);
+> 151	          t = setTimeout(() => handleSet(state), 500);
+> 152	        };
+> 153	      },
+> 154	      equality: (a, b) => a.nodes === b.nodes && a.edges === b.edges,
+> 155	    },
+> 156	  ),
+> 157	);
+> 158	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-recipes.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import {
+> 2	  COL_WIDTH,
+> 3	  LANE_HEIGHT,
+> 4	  makeLane,
+> 5	  type CanvasEdge,
+> 6	  type CanvasNode,
+> 7	  type LaneConfig,
+> 8	  type StyleSettings,
+> 9	} from "@/types/canvas";
+> 10	
+> 11	/**
+> 12	 * Static Canvas Studio recipe catalog (Phase 4.1) — ported from viralmind-builder.
+> 13	 * The strict cinematographic node types (Character / Scene / Vídeo) land in
+> 14	 * Phase 4.2, so every recipe node is currently a generic `canvasNode` carrying
+> 15	 * the column role in `data.label` plus the prompt. User-saved recipes
+> 16	 * (vm_canvas_recipes) arrive in Phase 4.3.
+> 17	 */
+> 18	export interface CanvasRecipe {
+> 19	  id: string;
+> 20	  name: string;
+> 21	  category: "Pipeline" | "Quick";
+> 22	  description: string;
+> 23	  estimatedCredits: number;
+> 24	  /** Pipeline recipes activate pipeline mode + install named lanes + style settings. */
+> 25	  pipeline?: { lanes: LaneConfig[]; styleSettings: StyleSettings };
+> 26	  /** Builds fresh nodes + edges positioned relative to the drop origin. */
+> 27	  build: (origin: { x: number; y: number }) => { nodes: CanvasNode[]; edges: CanvasEdge[] };
+> 28	}
+> 29	
+> 30	let _seq = 0;
+> 31	const nid = () => `n_${Date.now().toString(36)}_${(_seq++).toString(36)}`;
+> 32	
+> 33	function makeNode(position: { x: number; y: number }, label: string, prompt: string): CanvasNode {
+> 34	  return {
+> 35	    id: nid(),
+> 36	    type: "canvasNode",
+> 37	    position,
+> 38	    data: {
+> 39	      nodeType: "generate_image",
+> 40	      label,
+> 41	      prompt,
+> 42	      status: "idle",
+> 43	      provider: "openai",
+> 44	      model: "dall-e-3",
+> 45	    },
+> 46	  };
+> 47	}
+> 48	
+> 49	const link = (source: string, target: string): CanvasEdge => ({
+> 50	  id: `e_${source}_${target}`,
+> 51	  source,
+> 52	  target,
+> 53	});
+> 54	
+> 55	/** Single-lane horizontal chain of generic nodes. */
+> 56	function chain(
+> 57	  origin: { x: number; y: number },
+> 58	  steps: { label: string; prompt: string }[],
+> 59	): { nodes: CanvasNode[]; edges: CanvasEdge[] } {
+> 60	  const nodes = steps.map((s, i) =>
+> 61	    makeNode({ x: origin.x + i * COL_WIDTH, y: origin.y }, s.label, s.prompt),
+> 62	  );
+> 63	  const edges = nodes.slice(1).map((n, i) => link(nodes[i].id, n.id));
+> 64	  return { nodes, edges };
+> 65	}
+> 66	
+> 67	/* ── Pipeline lane grid (Personagem → Frame Inicial → Frame Final → Vídeo) ── */
+> 68	
+> 69	const PIPELINE_X = 80;
+> 70	const PIPELINE_Y = 60;
+> 71	const COL_ROLES = ["Personagem", "Frame Inicial", "Frame Final", "Vídeo 5s"];
+> 72	
+> 73	interface LaneSpec {
+> 74	  character: string;
+> 75	  initialFrame: string;
+> 76	  finalFrame: string;
+> 77	  video: string;
+> 78	}
+> 79	
+> 80	function buildPipeline(specs: LaneSpec[]) {
+> 81	  return () => {
+> 82	    const nodes: CanvasNode[] = [];
+> 83	    const edges: CanvasEdge[] = [];
+> 84	    specs.forEach((spec, lane) => {
+> 85	      const y = PIPELINE_Y + lane * LANE_HEIGHT;
+> 86	      const prompts = [spec.character, spec.initialFrame, spec.finalFrame, spec.video];
+> 87	      const row = prompts.map((prompt, col) =>
+> 88	        makeNode({ x: PIPELINE_X + col * COL_WIDTH, y }, COL_ROLES[col], prompt),
+> 89	      );
+> 90	      nodes.push(...row);
+> 91	      for (let i = 1; i < row.length; i += 1) edges.push(link(row[i - 1].id, row[i].id));
+> 92	    });
+> 93	    return { nodes, edges };
+> 94	  };
+> 95	}
+> 96	
+> 97	/* ── Pipeline lane specs ─────────────────────────────────────────────── */
+> 98	
+> 99	const STORY_ARC: LaneSpec[] = [
+> 100	  {
+> 101	    character: "Protagonista em close-up, olhar determinado, plano médio, 9:16",
+> 102	    initialFrame:
+> 103	      "Personagem em rua de cidade noturna, neon refletindo no asfalto molhado, plano médio, 9:16",
+> 104	    finalFrame:
+> 105	      "Mesmo personagem caminhando ao fundo, luzes da cidade ao redor, perspectiva de saída, 9:16",
+> 106	    video: "câmera dolly-in lenta, neon piscando ao fundo, vento sutil",
+> 107	  },
+> 108	  {
+> 109	    character: "Protagonista de perfil, atmosfera de revelação, 9:16",
+> 110	    initialFrame:
+> 111	      "Mesmo personagem em praia rochosa ao amanhecer, mar revolto, paleta dourada e azul, 9:16",
+> 112	    finalFrame: "Personagem encarando o horizonte, sol nascendo, 9:16",
+> 113	    video: "câmera orbital lenta, ondas quebrando, luz do amanhecer crescendo",
+> 114	  },
+> 115	  {
+> 116	    character: "Protagonista corpo inteiro, floresta densa ao fundo, 9:16",
+> 117	    initialFrame:
+> 118	      "Personagem entrando em floresta densa, raios de luz cortando névoa, paleta verde-musgo, 9:16",
+> 119	    finalFrame: "Personagem em clareira luminosa, pose contemplativa, partículas no ar, 9:16",
+> 120	    video: "câmera tracking lateral, partículas flutuantes, luz volumétrica",
+> 121	  },
+> 122	];
+> 123	
+> 124	const MOOD_BOARD: LaneSpec[] = [
+> 125	  {
+> 126	    character: "Personagem close-up, luz magenta e ciano, 9:16",
+> 127	    initialFrame: "Personagem em rua cyberpunk neon, hologramas flutuantes, 9:16",
+> 128	    finalFrame: "Personagem virando-se sob letreiro neon gigante, reflexos no asfalto, 9:16",
+> 129	    video: "câmera dolly-in, neon pulsando, chuva fina",
+> 130	  },
+> 131	  {
+> 132	    character: "Personagem em perfil esquerdo, vento forte, 9:16",
+> 133	    initialFrame: "Personagem em penhasco à beira-mar, céu nublado dramático, 9:16",
+> 134	    finalFrame: "Personagem caminhando em direção ao oceano, ondas fortes, 9:16",
+> 135	    video: "câmera estática, vento agitando o cabelo, ondas batendo",
+> 136	  },
+> 137	  {
+> 138	    character: "Personagem em perfil direito, luz dourada lateral, 9:16",
+> 139	    initialFrame: "Personagem em duna de deserto ao pôr-do-sol, sombra longa, 9:16",
+> 140	    finalFrame: "Personagem subindo crista de duna, silhueta contra céu laranja, 9:16",
+> 141	    video: "câmera tracking lateral, areia voando, sol baixo",
+> 142	  },
+> 143	  {
+> 144	    character: "Personagem meio corpo de frente, luz quente, 9:16",
+> 145	    initialFrame:
+> 146	      "Personagem em galpão industrial abandonado, luz atravessando janelas quebradas, 9:16",
+> 147	    finalFrame: "Personagem caminhando em direção à porta iluminada ao fundo, 9:16",
+> 148	    video: "câmera dolly-in lenta, partículas de poeira na luz",
+> 149	  },
+> 150	  {
+> 151	    character: "Personagem corpo inteiro, luz volumétrica entre árvores, 9:16",
+> 152	    initialFrame: "Personagem em floresta sombria, raios de luz volumétrica, 9:16",
+> 153	    finalFrame: "Personagem em clareira mística, pose contemplativa, partículas brilhantes, 9:16",
+> 154	    video: "câmera orbital lenta, névoa, partículas luminosas flutuando",
+> 155	  },
+> 156	];
+> 157	
+> 158	const REELS_VIRAL: LaneSpec[] = [
+> 159	  {
+> 160	    character: "Criador em close-up energético, expressão exagerada, fundo vibrante, 9:16",
+> 161	    initialFrame: "Pessoa em pose de surpresa, fundo colorido vibrante, 9:16",
+> 162	    finalFrame: "Mesma pessoa apontando para a câmera, expressão de revelação, 9:16",
+> 163	    video: "zoom-in rápido, snap zoom, partículas explodindo",
+> 164	  },
+> 165	  {
+> 166	    character: "Criador meio corpo confiante, iluminação cinematográfica, 9:16",
+> 167	    initialFrame: "Mesma pessoa segurando produto destacado, 9:16",
+> 168	    finalFrame: "Frame com call-to-action visual, fundo limpo, badge de oferta, 9:16",
+> 169	    video: "câmera estática, leve push-in, produto rotacionando suavemente",
+> 170	  },
+> 171	];
+> 172	
+> 173	/* ── Catalog ─────────────────────────────────────────────────────────── */
+> 174	
+> 175	export const CANVAS_RECIPES: CanvasRecipe[] = [
+> 176	  {
+> 177	    id: "pipeline-story-arc",
+> 178	    name: "Cinematic Story Arc — 3 atos",
+> 179	    category: "Pipeline",
+> 180	    description:
+> 181	      "3 lanes × 4 colunas. Mesmo personagem em 3 cenários: cidade → praia → floresta. Ativa o modo Pipeline.",
+> 182	    estimatedCredits: 180,
+> 183	    pipeline: {
+> 184	      lanes: [
+> 185	        makeLane("Ato 1 — Cidade noturna"),
+> 186	        makeLane("Ato 2 — Praia ao amanhecer"),
+> 187	        makeLane("Ato 3 — Floresta mística"),
+> 188	      ],
+> 189	      styleSettings: {
+> 190	        palette: ["#0f1115", "#3a86ff", "#ff6b6b", "#ffd166"],
+> 191	        mood: "Cinematográfico, jornada do herói, paleta dramática",
+> 192	        stylePreset: "cinematic",
+> 193	      },
+> 194	    },
+> 195	    build: buildPipeline(STORY_ARC),
+> 196	  },
+> 197	  {
+> 198	    id: "pipeline-mood-board-5",
+> 199	    name: "Mood Board 5 lanes — 5 mundos",
+> 200	    category: "Pipeline",
+> 201	    description:
+> 202	      "Mesmo personagem em 5 mundos (cyberpunk, costa, deserto, industrial, floresta). Estilo mood board cinematográfico.",
+> 203	    estimatedCredits: 280,
+> 204	    pipeline: {
+> 205	      lanes: [
+> 206	        makeLane("Mundo 1 — Cyberpunk"),
+> 207	        makeLane("Mundo 2 — Costa selvagem"),
+> 208	        makeLane("Mundo 3 — Deserto dourado"),
+> 209	        makeLane("Mundo 4 — Industrial"),
+> 210	        makeLane("Mundo 5 — Floresta mística"),
+> 211	      ],
+> 212	      styleSettings: {
+> 213	        palette: ["#1a1a2e", "#e94560", "#0f3460", "#f5b461"],
+> 214	        mood: "Mood board cinematográfico, mesmo personagem atravessando mundos visuais distintos",
+> 215	        stylePreset: "photorealistic",
+> 216	      },
+> 217	    },
+> 218	    build: buildPipeline(MOOD_BOARD),
+> 219	  },
+> 220	  {
+> 221	    id: "pipeline-reels-viral",
+> 222	    name: "Reels Sequência Viral — 9:16",
+> 223	    category: "Pipeline",
+> 224	    description:
+> 225	      "2 lanes × 4 colunas. Hook visual + payoff visual com paleta unificada. Pronto para Reels/TikTok.",
+> 226	    estimatedCredits: 120,
+> 227	    pipeline: {
+> 228	      lanes: [makeLane("Hook visual"), makeLane("Payoff visual")],
+> 229	      styleSettings: {
+> 230	        palette: ["#ff006e", "#fb5607", "#ffbe0b", "#3a86ff"],
+> 231	        mood: "Energético, alto contraste, ritmo de reels viral",
+> 232	        stylePreset: "cinematic",
+> 233	      },
+> 234	    },
+> 235	    build: buildPipeline(REELS_VIRAL),
+> 236	  },
+> 237	
+> 238	  /* Quick — single lane, sem pipeline mode */
+> 239	  {
+> 240	    id: "quick-fitness-vertical",
+> 241	    name: "Quick · Vídeo fitness 9:16",
+> 242	    category: "Quick",
+> 243	    description: "Gancho + cena + frame final para Reels/TikTok.",
+> 244	    estimatedCredits: 28,
+> 245	    build: (o) =>
+> 246	      chain(o, [
+> 247	        {
+> 248	          label: "Hook frame",
+> 249	          prompt: "Pessoa atlética em treino intenso, luz dramática, ultra-realista, 9:16",
+> 250	        },
+> 251	        {
+> 252	          label: "Reveal frame",
+> 253	          prompt: "Mesmo personagem mostrando resultado, ambiente bem iluminado, 9:16",
+> 254	        },
+> 255	        { label: "CTA frame", prompt: "Frame final com call-to-action visual, fundo limpo, 9:16" },
+> 256	      ]),
+> 257	  },
+> 258	  {
+> 259	    id: "quick-beauty-carousel",
+> 260	    name: "Quick · Carrossel beleza",
+> 261	    category: "Quick",
+> 262	    description: "3 slides 4:5 sequenciais para feed Instagram.",
+> 263	    estimatedCredits: 24,
+> 264	    build: (o) =>
+> 265	      chain(o, [
+> 266	        { label: "Slide 1", prompt: "Editorial de beleza minimalista, pele radiante, 4:5" },
+> 267	        { label: "Slide 2", prompt: "Detalhe macro do produto, iluminação suave, 4:5" },
+> 268	        { label: "Slide 3", prompt: "Antes/depois lado a lado, fundo neutro, 4:5" },
+> 269	      ]),
+> 270	  },
+> 271	  {
+> 272	    id: "quick-yt-thumbnail",
+> 273	    name: "Quick · Thumbnail YouTube",
+> 274	    category: "Quick",
+> 275	    description: "Thumbnail 16:9 com headline visual de impacto.",
+> 276	    estimatedCredits: 18,
+> 277	    build: (o) =>
+> 278	      chain(o, [
+> 279	        {
+> 280	          label: "Generate",
+> 281	          prompt:
+> 282	            "Thumbnail YouTube viral, expressão de choque, texto grande, alto contraste, 16:9",
+> 283	        },
+> 284	        {
+> 285	          label: "Upscale",
+> 286	          prompt: "Versão upscalada com sharpening, detalhes nítidos, 16:9",
+> 287	        },
+> 288	      ]),
+> 289	  },
+> 290	  {
+> 291	    id: "quick-reels-product",
+> 292	    name: "Quick · Anúncio Reels",
+> 293	    category: "Quick",
+> 294	    description: "Cena + composição com produto + frame de oferta.",
+> 295	    estimatedCredits: 22,
+> 296	    build: (o) =>
+> 297	      chain(o, [
+> 298	        { label: "Background", prompt: "Cenário urbano lifestyle, cores vibrantes, 9:16" },
+> 299	        {
+> 300	          label: "Produto inserido",
+> 301	          prompt: "Mesma cena com produto em destaque centralizado, 9:16",
+> 302	        },
+> 303	        {
+> 304	          label: "Oferta",
+> 305	          prompt: "Frame com badge de oferta '50% OFF', tipografia bold, 9:16",
+> 306	        },
+> 307	      ]),
+> 308	  },
+> 309	  {
+> 310	    id: "quick-story-info",
+> 311	    name: "Quick · Story informativo",
+> 312	    category: "Quick",
+> 313	    description: "Slide 9:16 com fato/dica visual.",
+> 314	    estimatedCredits: 8,
+> 315	    build: (o) =>
+> 316	      chain(o, [
+> 317	        {
+> 318	          label: "Story slide",
+> 319	          prompt:
+> 320	            "Story informativo, ilustração flat, fundo gradiente, espaço para texto, 9:16",
+> 321	        },
+> 322	      ]),
+> 323	  },
+> 324	  {
+> 325	    id: "quick-fitness-banner",
+> 326	    name: "Quick · Banner fitness",
+> 327	    category: "Quick",
+> 328	    description: "Banner 16:9 + variação com style transfer.",
+> 329	    estimatedCredits: 16,
+> 330	    build: (o) =>
+> 331	      chain(o, [
+> 332	        {
+> 333	          label: "Banner base",
+> 334	          prompt: "Banner promocional de academia, atleta em ação, paleta energética, 16:9",
+> 335	        },
+> 336	        {
+> 337	          label: "Style transfer",
+> 338	          prompt: "Mesma cena com style transfer cinematográfico, grain analógico, 16:9",
+> 339	        },
+> 340	      ]),
+> 341	  },
+> 342	];
+> 343	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/ 2>/dev/null || echo \"nodes directory not found\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> nodes directory not found
+> ```
+
+## 🤖 Claude
+
+Let me continue exploring:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas -type f -name \"*.tsx\" -o -name \"*.ts\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/StatusBar.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LanesOverlay.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/ImageLightbox.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/TopBar.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LeftPanel/index.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/edges/PipelineEdge.tsx
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo, useCallback, useEffect, useMemo, useState } from "react";
+> 2	import { useParams } from "react-router-dom";
+> 3	import { Helmet } from "react-helmet-async";
+> 4	import {
+> 5	  ReactFlow,
+> 6	  ReactFlowProvider,
+> 7	  Background,
+> 8	  Controls,
+> 9	  Handle,
+> 10	  MiniMap,
+> 11	  Panel,
+> 12	  Position,
+> 13	  useReactFlow,
+> 14	  type Node,
+> 15	  type NodeProps,
+> 16	} from "@xyflow/react";
+> 17	import "@xyflow/react/dist/style.css";
+> 18	import {
+> 19	  Plus,
+> 20	  Play,
+> 21	  Coins,
+> 22	  Image as ImageIcon,
+> 23	  Wand2,
+> 24	  Maximize,
+> 25	  Paintbrush,
+> 26	  Eraser,
+> 27	  Download,
+> 28	  Loader2,
+> 29	} from "lucide-react";
+> 30	import { toast } from "sonner";
+> 31	import {
+> 32	  useCanvasProject,
+> 33	  useCanvasExecute,
+> 34	  useUpdateCanvasProject,
+> 35	  CANVAS_PROVIDERS,
+> 36	  type CanvasProject,
+> 37	} from "@/hooks/useCanvasStudio";
+> 38	import { useCanvasStore } from "@/store/useCanvasStore";
+> 39	import { useAutoSave } from "@/hooks/useAutoSave";
+> 40	import { useDashboardData } from "@/hooks/useDashboardData";
+> 41	import { COL_WIDTH, LANE_HEIGHT, type CanvasNode, type CanvasNodeData } from "@/types/canvas";
+> 42	import { TopBar } from "@/components/canvas/TopBar";
+> 43	import { LeftPanel } from "@/components/canvas/LeftPanel";
+> 44	import { StatusBar } from "@/components/canvas/StatusBar";
+> 45	import { LanesOverlay } from "@/components/canvas/LanesOverlay";
+> 46	import { PipelineEdge } from "@/components/canvas/edges/PipelineEdge";
+> 47	import { ImageLightbox } from "@/components/canvas/ImageLightbox";
+> 48	import { cn } from "@/lib/utils";
+> 49	import { Button } from "@/components/ui/button";
+> 50	import { Badge } from "@/components/ui/badge";
+> 51	import { Card, CardContent } from "@/components/ui/card";
+> 52	import { Input } from "@/components/ui/input";
+> 53	import { Textarea } from "@/components/ui/textarea";
+> 54	import {
+> 55	  Select,
+> 56	  SelectContent,
+> 57	  SelectItem,
+> 58	  SelectTrigger,
+> 59	  SelectValue,
+> 60	} from "@/components/ui/select";
+> 61	import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+> 62	
+> 63	const NODE_TYPES_CONFIG = [
+> 64	  { type: "generate_image", label: "Generate Image", icon: ImageIcon, color: "from-purple-500 to-pink-500" },
+> 65	  { type: "upscale", label: "Upscale", icon: Maximize, color: "from-blue-500 to-cyan-500" },
+> 66	  { type: "inpaint", label: "Inpaint", icon: Paintbrush, color: "from-green-500 to-emerald-500" },
+> 67	  { type: "style_transfer", label: "Style Transfer", icon: Wand2, color: "from-orange-500 to-yellow-500" },
+> 68	  { type: "remove_background", label: "Remove BG", icon: Eraser, color: "from-red-500 to-rose-500" },
+> 69	  { type: "export", label: "Export", icon: Download, color: "from-gray-500 to-slate-500" },
+> 70	];
+> 71	
+> 72	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 73	
+> 74	/** Generic Canvas node card. The strict cinematographic node types land in 4.2. */
+> 75	const CanvasNodeCard = memo(function CanvasNodeCard({ data, selected }: NodeProps) {
+> 76	  const d = data as CanvasNodeData;
+> 77	  const typeConfig = NODE_TYPES_CONFIG.find((t) => t.type === d.nodeType) || NODE_TYPES_CONFIG[0];
+> 78	  const Icon = typeConfig.icon;
+> 79	
+> 80	  return (
+> 81	    <div
+> 82	      className={cn(
+> 83	        "w-[240px] overflow-hidden rounded-xl border bg-card/90 shadow-lg backdrop-blur transition-all",
+> 84	        selected ? "border-accent ring-2 ring-accent/30" : "border-border/60 hover:border-border",
+> 85	      )}
+> 86	    >
+> 87	      {/* Connection handles — target on the left, source on the right. */}
+> 88	      <Handle type="target" position={Position.Left} className={HANDLE_CLASS} />
+> 89	      <Handle type="source" position={Position.Right} className={HANDLE_CLASS} />
+> 90	
+> 91	      <div className={`flex items-center gap-2 bg-gradient-to-r ${typeConfig.color} px-3 py-2`}>
+> 92	        <Icon className="h-4 w-4 shrink-0 text-white" />
+> 93	        <span className="truncate text-xs font-semibold text-white">
+> 94	          {d.label || typeConfig.label}
+> 95	        </span>
+> 96	        {d.status === "running" && (
+> 97	          <Loader2 className="ml-auto h-3 w-3 shrink-0 animate-spin text-white" />
+> 98	        )}
+> 99	        {d.status === "success" && (
+> 100	          <span className="ml-auto shrink-0 text-[10px] text-white/80">✓</span>
+> 101	        )}
+> 102	        {d.status === "failed" && (
+> 103	          <span className="ml-auto shrink-0 text-[10px] text-white/90">⚠</span>
+> 104	        )}
+> 105	      </div>
+> 106	
+> 107	      {/* Generated preview — click to expand (Magnific-style lightbox). */}
+> 108	      <div className="aspect-video w-full bg-muted/40">
+> 109	        {d.outputUrl ? (
+> 110	          <ImageLightbox src={d.outputUrl} alt={d.prompt} className="h-full" />
+> 111	        ) : (
+> 112	          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+> 113	            {d.status === "running" ? (
+> 114	              <Loader2 className="h-5 w-5 animate-spin text-accent" />
+> 115	            ) : (
+> 116	              <span>Sem geração ainda</span>
+> 117	            )}
+> 118	          </div>
+> 119	        )}
+> 120	      </div>
+> 121	
+> 122	      <div className="space-y-1.5 p-3">
+> 123	        <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+> 124	          {d.prompt || (
+> 125	            <span className="italic opacity-60">Defina um prompt no painel direito…</span>
+> 126	          )}
+> 127	        </p>
+> 128	        {d.provider && (
+> 129	          <Badge variant="outline" className="text-[10px]">
+> 130	            {d.provider}/{d.model}
+> 131	          </Badge>
+> 132	        )}
+> 133	      </div>
+> 134	    </div>
+> 135	  );
+> 136	});
+> 137	
+> 138	const nodeTypes = { canvasNode: CanvasNodeCard };
+> 139	const edgeTypes = { pipeline: PipelineEdge };
+> 140	
+> 141	export default function CanvasEditorPage() {
+> 142	  const { id: projectId } = useParams<{ id: string }>();
+> 143	  const { data: project, isLoading } = useCanvasProject(projectId);
+> 144	  const initialize = useCanvasStore((s) => s.initialize);
+> 145	
+> 146	  // Load the project graph into the canvas store; reset the undo history once
+> 147	  // the snapshot debounce window has settled so the load isn't an undo step.
+> 148	  useEffect(() => {
+> 149	    if (!project) return;
+> 150	    const graph = project.graph ?? { nodes: [], edges: [] };
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+> 2	import { supabase } from "@/integrations/supabase/client";
+> 3	import { useAuth } from "@/hooks/useAuth";
+> 4	import type { CanvasGraph, PersistedCanvasGraph } from "@/types/canvas";
+> 5	
+> 6	export interface CanvasProject {
+> 7	  id: string;
+> 8	  user_id: string;
+> 9	  name: string;
+> 10	  description: string | null;
+> 11	  thumbnail_url: string | null;
+> 12	  graph: PersistedCanvasGraph;
+> 13	  viewport: { x: number; y: number; zoom: number };
+> 14	  status: string;
+> 15	  total_executions: number;
+> 16	  total_credits_used: number;
+> 17	  last_execution_at: string | null;
+> 18	  tags: string[];
+> 19	  created_at: string;
+> 20	  updated_at: string;
+> 21	}
+> 22	
+> 23	export interface CanvasAsset {
+> 24	  id: string;
+> 25	  user_id: string;
+> 26	  project_id: string | null;
+> 27	  asset_type: string;
+> 28	  public_url: string | null;
+> 29	  provider: string | null;
+> 30	  model_used: string | null;
+> 31	  node_type: string | null;
+> 32	  prompt: string | null;
+> 33	  credits_cost: number;
+> 34	  created_at: string;
+> 35	}
+> 36	
+> 37	export interface CanvasExecution {
+> 38	  id: string;
+> 39	  project_id: string;
+> 40	  node_id: string;
+> 41	  node_type: string;
+> 42	  provider: string;
+> 43	  model: string;
+> 44	  prompt: string | null;
+> 45	  status: string;
+> 46	  output_url: string | null;
+> 47	  credits_charged: number;
+> 48	  error_message: string | null;
+> 49	  created_at: string;
+> 50	}
+> 51	
+> 52	// ── Available providers and models for Canvas Studio ──────────────────
+> 53	export const CANVAS_PROVIDERS = [
+> 54	  {
+> 55	    id: "openai",
+> 56	    name: "OpenAI",
+> 57	    models: [
+> 58	      { id: "dall-e-3", name: "DALL·E 3", credits: 15, description: "High quality, creative" },
+> 59	      { id: "gpt-image-1", name: "GPT Image 1", credits: 18, description: "Latest GPT-powered image gen" },
+> 60	    ],
+> 61	  },
+> 62	  {
+> 63	    id: "replicate",
+> 64	    name: "Replicate",
+> 65	    models: [
+> 66	      { id: "flux-1.1-pro", name: "FLUX 1.1 Pro", credits: 12, description: "Best quality, photorealistic" },
+> 67	      { id: "flux-schnell", name: "FLUX Schnell", credits: 3, description: "Fast, good quality" },
+> 68	      { id: "sdxl", name: "Stable Diffusion XL", credits: 4, description: "Versatile, controllable" },
+> 69	    ],
+> 70	  },
+> 71	  {
+> 72	    id: "openrouter",
+> 73	    name: "OpenRouter",
+> 74	    models: [
+> 75	      { id: "dall-e-3", name: "DALL·E 3 (via OR)", credits: 15, description: "Routed via OpenRouter" },
+> 76	    ],
+> 77	  },
+> 78	  {
+> 79	    id: "higgsfield",
+> 80	    name: "Higgsfield",
+> 81	    models: [
+> 82	      { id: "generate", name: "Higgsfield Gen", credits: 20, description: "High-end generation" },
+> 83	    ],
+> 84	  },
+> 85	] as const;
+> 86	
+> 87	// ── Projects CRUD ────────────────────────────────────────────────────
+> 88	
+> 89	export function useCanvasProjects() {
+> 90	  const { user } = useAuth();
+> 91	
+> 92	  return useQuery({
+> 93	    queryKey: ["vm-canvas-projects", user?.id],
+> 94	    queryFn: async () => {
+> 95	      if (!user) return [];
+> 96	      const { data, error } = await supabase
+> 97	        .from("vm_canvas_projects")
+> 98	        .select("*")
+> 99	        .eq("user_id", user.id)
+> 100	        .eq("status", "active")
+> 101	        .order("updated_at", { ascending: false });
+> 102	      if (error) throw error;
+> 103	      return (data || []) as CanvasProject[];
+> 104	    },
+> 105	    enabled: !!user,
+> 106	  });
+> 107	}
+> 108	
+> 109	export function useCanvasProject(projectId: string | undefined) {
+> 110	  return useQuery({
+> 111	    queryKey: ["vm-canvas-project", projectId],
+> 112	    queryFn: async () => {
+> 113	      if (!projectId) return null;
+> 114	      const { data, error } = await supabase
+> 115	        .from("vm_canvas_projects")
+> 116	        .select("*")
+> 117	        .eq("id", projectId)
+> 118	        .single();
+> 119	      if (error) throw error;
+> 120	      return data as CanvasProject;
+> 121	    },
+> 122	    enabled: !!projectId,
+> 123	  });
+> 124	}
+> 125	
+> 126	export function useCreateCanvasProject() {
+> 127	  const { user } = useAuth();
+> 128	  const queryClient = useQueryClient();
+> 129	
+> 130	  return useMutation({
+> 131	    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+> 132	      if (!user) throw new Error("Not authenticated");
+> 133	      const { data, error } = await supabase
+> 134	        .from("vm_canvas_projects")
+> 135	        .insert({ user_id: user.id, name, description })
+> 136	        .select()
+> 137	        .single();
+> 138	      if (error) throw error;
+> 139	      return data as CanvasProject;
+> 140	    },
+> 141	    onSuccess: () => {
+> 142	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-projects"] });
+> 143	    },
+> 144	  });
+> 145	}
+> 146	
+> 147	export function useSaveCanvasGraph() {
+> 148	  const queryClient = useQueryClient();
+> 149	
+> 150	  return useMutation({
+> 151	    mutationFn: async ({ projectId, graph, viewport }: {
+> 152	      projectId: string;
+> 153	      graph: PersistedCanvasGraph;
+> 154	      viewport?: { x: number; y: number; zoom: number };
+> 155	    }) => {
+> 156	      const updateData: any = { graph };
+> 157	      if (viewport) updateData.viewport = viewport;
+> 158	
+> 159	      const { error } = await supabase
+> 160	        .from("vm_canvas_projects")
+> 161	        .update(updateData)
+> 162	        .eq("id", projectId);
+> 163	      if (error) throw error;
+> 164	    },
+> 165	    onSuccess: (_, vars) => {
+> 166	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-project", vars.projectId] });
+> 167	    },
+> 168	  });
+> 169	}
+> 170	
+> 171	export function useDeleteCanvasProject() {
+> 172	  const queryClient = useQueryClient();
+> 173	
+> 174	  return useMutation({
+> 175	    mutationFn: async (projectId: string) => {
+> 176	      const { error } = await supabase
+> 177	        .from("vm_canvas_projects")
+> 178	        .update({ status: "archived" })
+> 179	        .eq("id", projectId);
+> 180	      if (error) throw error;
+> 181	    },
+> 182	    onSuccess: () => {
+> 183	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-projects"] });
+> 184	    },
+> 185	  });
+> 186	}
+> 187	
+> 188	// ── Canvas Execute ───────────────────────────────────────────────────
+> 189	
+> 190	export function useCanvasExecute() {
+> 191	  const queryClient = useQueryClient();
+> 192	
+> 193	  return useMutation({
+> 194	    mutationFn: async (params: {
+> 195	      project_id: string;
+> 196	      node_id: string;
+> 197	      node_type: string;
+> 198	      provider: string;
+> 199	      model: string;
+> 200	      prompt: string;
+> 201	      negative_prompt?: string;
+> 202	      parameters?: Record<string, any>;
+> 203	    }) => {
+> 204	      const resp = await supabase.functions.invoke("canvas-execute", { body: params });
+> 205	      if (resp.error) throw resp.error;
+> 206	      return resp.data;
+> 207	    },
+> 208	    onSuccess: (_, vars) => {
+> 209	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-project", vars.project_id] });
+> 210	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-assets"] });
+> 211	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-executions"] });
+> 212	    },
+> 213	  });
+> 214	}
+> 215	
+> 216	// ── Assets & Executions ──────────────────────────────────────────────
+> 217	
+> 218	export function useCanvasAssets(projectId?: string) {
+> 219	  const { user } = useAuth();
+> 220	
+> 221	  return useQuery({
+> 222	    queryKey: ["vm-canvas-assets", projectId, user?.id],
+> 223	    queryFn: async () => {
+> 224	      if (!user) return [];
+> 225	      let query = supabase
+> 226	        .from("vm_canvas_assets")
+> 227	        .select("*")
+> 228	        .eq("user_id", user.id)
+> 229	        .order("created_at", { ascending: false })
+> 230	        .limit(50);
+> 231	
+> 232	      if (projectId) query = query.eq("project_id", projectId);
+> 233	
+> 234	      const { data, error } = await query;
+> 235	      if (error) throw error;
+> 236	      return (data || []) as CanvasAsset[];
+> 237	    },
+> 238	    enabled: !!user,
+> 239	  });
+> 240	}
+> 241	
+> 242	export function useCanvasExecutions(projectId?: string) {
+> 243	  const { user } = useAuth();
+> 244	
+> 245	  return useQuery({
+> 246	    queryKey: ["vm-canvas-executions", projectId, user?.id],
+> 247	    queryFn: async () => {
+> 248	      if (!user) return [];
+> 249	      let query = supabase
+> 250	        .from("vm_canvas_executions")
+> 251	        .select("*")
+> 252	        .eq("user_id", user.id)
+> 253	        .order("created_at", { ascending: false })
+> 254	        .limit(30);
+> 255	
+> 256	      if (projectId) query = query.eq("project_id", projectId);
+> 257	
+> 258	      const { data, error } = await query;
+> 259	      if (error) throw error;
+> 260	      return (data || []) as CanvasExecution[];
+> 261	    },
+> 262	    enabled: !!user,
+> 263	  });
+> 264	}
+> 265	
+> 266	// ── Recipes ──────────────────────────────────────────────────────────
+> 267	
+> 268	export interface CanvasRecipe {
+> 269	  id: string;
+> 270	  user_id: string | null;
+> 271	  name: string;
+> 272	  description: string | null;
+> 273	  thumbnail_url: string | null;
+> 274	  graph: CanvasGraph;
+> 275	  estimated_credits: number;
+> 276	  category: string | null;
+> 277	  tags: string[];
+> 278	  is_public: boolean;
+> 279	  is_official: boolean;
+> 280	  uses_count: number;
+> 281	  created_at: string;
+> 282	}
+> 283	
+> 284	/** Public + own recipes. RLS gates the result to is_public OR auth.uid() = user_id. */
+> 285	export function useCanvasRecipes() {
+> 286	  return useQuery({
+> 287	    queryKey: ["vm-canvas-recipes"],
+> 288	    queryFn: async () => {
+> 289	      const { data, error } = await supabase
+> 290	        .from("vm_canvas_recipes")
+> 291	        .select("*")
+> 292	        .order("is_official", { ascending: false })
+> 293	        .order("uses_count", { ascending: false });
+> 294	      if (error) throw error;
+> 295	      return (data || []) as CanvasRecipe[];
+> 296	    },
+> 297	    staleTime: 5 * 60 * 1000,
+> 298	  });
+> 299	}
+> 300	
+> 301	// ── Project metadata ─────────────────────────────────────────────────
+> 302	
+> 303	export function useUpdateCanvasProject() {
+> 304	  const queryClient = useQueryClient();
+> 305	
+> 306	  return useMutation({
+> 307	    mutationFn: async ({ projectId, name, description }: {
+> 308	      projectId: string;
+> 309	      name?: string;
+> 310	      description?: string;
+> 311	    }) => {
+> 312	      const patch: Record<string, string> = {};
+> 313	      if (name !== undefined) patch.name = name;
+> 314	      if (description !== undefined) patch.description = description;
+> 315	      const { error } = await supabase
+> 316	        .from("vm_canvas_projects")
+> 317	        .update(patch)
+> 318	        .eq("id", projectId);
+> 319	      if (error) throw error;
+> 320	    },
+> 321	    onSuccess: (_, vars) => {
+> 322	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-project", vars.projectId] });
+> 323	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-projects"] });
+> 324	    },
+> 325	  });
+> 326	}
+> 327	
+> ```
+
+## 🤖 Claude
+
+Let me check more files:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/ 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 40
+> drwxrwxr-x  4 ubuntu ubuntu 4096 May 14 08:02 .
+> drwxrwxr-x 14 ubuntu ubuntu 4096 May 14 02:23 ..
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 14 02:23 edges
+> -rw-rw-r--  1 ubuntu ubuntu 2066 May 14 08:02 ImageLightbox.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 5908 May 14 02:23 LanesOverlay.tsx
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 14 07:56 LeftPanel
+> -rw-rw-r--  1 ubuntu ubuntu 2531 May 14 02:23 StatusBar.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 5907 May 14 02:23 TopBar.tsx
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "offset": 150,
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	    const graph = project.graph ?? { nodes: [], edges: [] };
+> 151	    initialize(project.id, {
+> 152	      nodes: graph.nodes ?? [],
+> 153	      edges: graph.edges ?? [],
+> 154	      pipelineMode: graph.pipelineMode,
+> 155	      lanes: graph.lanes,
+> 156	      styleSettings: graph.styleSettings,
+> 157	      viewport: project.viewport,
+> 158	    });
+> 159	    const t = setTimeout(() => useCanvasStore.temporal.getState().clear(), 600);
+> 160	    return () => clearTimeout(t);
+> 161	  }, [project, initialize]);
+> 162	
+> 163	  if (isLoading) {
+> 164	    return (
+> 165	      <div className="flex h-full items-center justify-center">
+> 166	        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+> 167	      </div>
+> 168	    );
+> 169	  }
+> 170	
+> 171	  return (
+> 172	    <>
+> 173	      <Helmet>
+> 174	        <title>{project?.name || "Canvas"} — Canvas Studio — MCORCH</title>
+> 175	      </Helmet>
+> 176	      <div className="flex h-full w-full flex-col">
+> 177	        <ReactFlowProvider>
+> 178	          <CanvasShell projectId={projectId} project={project ?? null} />
+> 179	        </ReactFlowProvider>
+> 180	      </div>
+> 181	    </>
+> 182	  );
+> 183	}
+> 184	
+> 185	function CanvasShell({
+> 186	  projectId,
+> 187	  project,
+> 188	}: {
+> 189	  projectId: string | undefined;
+> 190	  project: CanvasProject | null;
+> 191	}) {
+> 192	  const { screenToFlowPosition } = useReactFlow();
+> 193	
+> 194	  const nodes = useCanvasStore((s) => s.nodes);
+> 195	  const edges = useCanvasStore((s) => s.edges);
+> 196	  const pipelineMode = useCanvasStore((s) => s.pipelineMode);
+> 197	  const selectedNodeId = useCanvasStore((s) => s.selectedNodeId);
+> 198	  const onNodesChange = useCanvasStore((s) => s.onNodesChange);
+> 199	  const onEdgesChange = useCanvasStore((s) => s.onEdgesChange);
+> 200	  const onConnect = useCanvasStore((s) => s.onConnect);
+> 201	  const setViewport = useCanvasStore((s) => s.setViewport);
+> 202	  const selectNode = useCanvasStore((s) => s.selectNode);
+> 203	  const addNode = useCanvasStore((s) => s.addNode);
+> 204	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 205	
+> 206	  const autoSave = useAutoSave(projectId ?? null);
+> 207	  const { profile } = useDashboardData();
+> 208	  const executeNode = useCanvasExecute();
+> 209	  const updateProject = useUpdateCanvasProject();
+> 210	
+> 211	  const [showAddMenu, setShowAddMenu] = useState(false);
+> 212	
+> 213	  // Node config form (RightPanel sheet).
+> 214	  const [nodePrompt, setNodePrompt] = useState("");
+> 215	  const [nodeNegPrompt, setNodeNegPrompt] = useState("");
+> 216	  const [nodeProvider, setNodeProvider] = useState("openai");
+> 217	  const [nodeModel, setNodeModel] = useState("dall-e-3");
+> 218	
+> 219	  const selectedNode = useMemo(
+> 220	    () => nodes.find((n) => n.id === selectedNodeId) ?? null,
+> 221	    [nodes, selectedNodeId],
+> 222	  );
+> 223	
+> 224	  const onNodeClick = useCallback(
+> 225	    (_: unknown, node: Node) => {
+> 226	      selectNode(node.id);
+> 227	      const d = node.data as CanvasNodeData;
+> 228	      setNodePrompt(d?.prompt ?? "");
+> 229	      setNodeNegPrompt(d?.negativePrompt ?? "");
+> 230	      setNodeProvider(d?.provider ?? "openai");
+> 231	      setNodeModel(d?.model ?? "dall-e-3");
+> 232	    },
+> 233	    [selectNode],
+> 234	  );
+> 235	
+> 236	  const handleAddNode = (type: string) => {
+> 237	    const pos = screenToFlowPosition({
+> 238	      x: window.innerWidth / 2,
+> 239	      y: window.innerHeight / 2,
+> 240	    });
+> 241	    const newNode: CanvasNode = {
+> 242	      id: `node-${Date.now()}`,
+> 243	      type: "canvasNode",
+> 244	      position: pos,
+> 245	      data: { nodeType: type, prompt: "", provider: "openai", model: "dall-e-3", status: "idle" },
+> 246	    };
+> 247	    addNode(newNode);
+> 248	    setShowAddMenu(false);
+> 249	    toast.success(`➕ ${NODE_TYPES_CONFIG.find((t) => t.type === type)?.label} adicionado`);
+> 250	  };
+> 251	
+> 252	  const handleExecute = () => {
+> 253	    if (!selectedNode || !projectId) return;
+> 254	    updateNodeData(selectedNode.id, {
+> 255	      prompt: nodePrompt,
+> 256	      negativePrompt: nodeNegPrompt,
+> 257	      provider: nodeProvider,
+> 258	      model: nodeModel,
+> 259	      status: "running",
+> 260	    });
+> 261	    executeNode.mutate(
+> 262	      {
+> 263	        project_id: projectId,
+> 264	        node_id: selectedNode.id,
+> 265	        node_type: selectedNode.data?.nodeType ?? "generate_image",
+> 266	        provider: nodeProvider,
+> 267	        model: nodeModel,
+> 268	        prompt: nodePrompt,
+> 269	        negative_prompt: nodeNegPrompt || undefined,
+> 270	      },
+> 271	      {
+> 272	        onSuccess: (result) => {
+> 273	          updateNodeData(selectedNode.id, { status: "success", outputUrl: result?.output_url });
+> 274	          toast.success("✨ Geração concluída", {
+> 275	            description: `${result?.credits_charged ?? 0} mcoCoins · ${
+> 276	              result?.credits_remaining ?? "—"
+> 277	            } restantes`,
+> 278	          });
+> 279	        },
+> 280	        onError: (err: Error) => {
+> 281	          updateNodeData(selectedNode.id, { status: "failed" });
+> 282	          toast.error("Falha na geração", { description: err.message });
+> 283	        },
+> 284	      },
+> 285	    );
+> 286	  };
+> 287	
+> 288	  // Run-all: sequentially execute every node that has a prompt.
+> 289	  const runnable = useMemo(
+> 290	    () => nodes.filter((n) => Boolean(n.data?.prompt?.trim()) && n.data?.status !== "running"),
+> 291	    [nodes],
+> 292	  );
+> 293	  const runAllCost = useMemo(
+> 294	    () =>
+> 295	      runnable.reduce((sum, n) => {
+> 296	        const provider = CANVAS_PROVIDERS.find((p) => p.id === (n.data?.provider ?? "openai"));
+> 297	        const model = provider?.models.find((m) => m.id === n.data?.model);
+> 298	        return sum + (model?.credits ?? 0);
+> 299	      }, 0),
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas -type f | sort"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/edges/PipelineEdge.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/ImageLightbox.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LanesOverlay.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LeftPanel/index.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/StatusBar.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/TopBar.tsx
+> ```
+
+## 🤖 Claude
+
+Now let me check for viralmind-builder and other reference files:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home -maxdepth 4 -type d -name \"*viralmind*\" 2>/dev/null | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/viralmind-builder
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/src -name \"*registry*\" -o -name \"*AddNode*\" 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/ui/button.tsx",
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import * as React from "react"
+> 2	import { Slot } from "@radix-ui/react-slot"
+> 3	import { cva, type VariantProps } from "class-variance-authority"
+> 4	
+> 5	import { cn } from "@/lib/utils"
+> 6	
+> 7	const buttonVariants = cva(
+> 8	  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+> 9	  {
+> 10	    variants: {
+> 11	      variant: {
+> 12	        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+> 13	        destructive:
+> 14	          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+> 15	        outline:
+> 16	          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+> 17	        secondary:
+> 18	          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+> 19	        ghost: "hover:bg-accent hover:text-accent-foreground",
+> 20	        link: "text-primary underline-offset-4 hover:underline",
+> 21	        glow: "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] transition-all duration-300",
+> 22	      },
+> 23	      size: {
+> 24	        default: "h-10 px-4 py-2",
+> 25	        sm: "h-9 rounded-md px-3",
+> 26	        lg: "h-11 rounded-md px-8",
+> 27	        icon: "h-10 w-10",
+> 28	      },
+> 29	    },
+> 30	    defaultVariants: {
+> 31	      variant: "default",
+> 32	      size: "default",
+> 33	    },
+> 34	  },
+> 35	)
+> 36	
+> 37	export interface ButtonProps
+> 38	  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+> 39	    VariantProps<typeof buttonVariants> {
+> 40	  asChild?: boolean
+> 41	}
+> 42	
+> 43	const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+> 44	  ({ className, variant, size, asChild = false, ...props }, ref) => {
+> 45	    const Comp = asChild ? Slot : "button"
+> 46	    return (
+> 47	      <Comp
+> 48	        className={cn(buttonVariants({ variant, size, className }))}
+> 49	        ref={ref}
+> 50	        {...props}
+> ```
+
+## 🤖 Claude
+
+Now let me check the viralmind repo:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/viralmind-builder/src/types/ 2>/dev/null | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 20
+> drwxrwxr-x 2 ubuntu ubuntu  4096 May 13 23:57 .
+> drwxrwxr-x 8 ubuntu ubuntu  4096 May 13 23:57 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 11997 May 13 23:57 canvas.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/viralmind-builder/src/types/canvas.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Canvas Studio — type definitions
+> 3	 * All node data shapes share a base; specific types extend it.
+> 4	 */
+> 5	import type { Node, Edge, Viewport } from "@xyflow/react";
+> 6	
+> 7	export type CanvasNodeKind =
+> 8	  | "generateImage"
+> 9	  | "generateVideo"
+> 10	  | "upscale"
+> 11	  | "inpaint"
+> 12	  | "styleTransfer"
+> 13	  | "compose"
+> 14	  | "textInput"
+> 15	  | "imageInput"
+> 16	  | "trendInput"
+> 17	  | "export"
+> 18	  // C2 — novos tipos
+> 19	  | "characterReference"
+> 20	  | "sceneCompose"
+> 21	  | "imageToVideo";
+> 22	
+> 23	export type NodeStatus = "idle" | "queued" | "running" | "success" | "failed" | "cancelled";
+> 24	
+> 25	export type AspectRatio = "1:1" | "9:16" | "16:9" | "4:5" | "3:4" | "custom";
+> 26	
+> 27	export type ImageModelId = "flux-pro" | "flux-dev" | "sdxl";
+> 28	
+> 29	export const MODEL_INFO: Record<ImageModelId, { label: string; tier: string; cost: number; eta: string }> = {
+> 30	  "flux-pro": { label: "FLUX Pro", tier: "Premium", cost: 12, eta: "8–15s" },
+> 31	  "flux-dev": { label: "FLUX Dev", tier: "Padrão", cost: 4, eta: "5–10s" },
+> 32	  sdxl: { label: "SDXL", tier: "Rápido", cost: 2, eta: "3–5s" },
+> 33	};
+> 34	
+> 35	export const ASPECT_RATIOS: { id: AspectRatio; label: string; w: number; h: number }[] = [
+> 36	  { id: "1:1", label: "Quadrado", w: 1, h: 1 },
+> 37	  { id: "9:16", label: "Vertical", w: 9, h: 16 },
+> 38	  { id: "16:9", label: "Horizontal", w: 16, h: 9 },
+> 39	  { id: "4:5", label: "Feed", w: 4, h: 5 },
+> 40	  { id: "3:4", label: "Retrato", w: 3, h: 4 },
+> 41	  { id: "custom", label: "Custom", w: 1, h: 1 },
+> 42	];
+> 43	
+> 44	export type ControlValues = {
+> 45	  creativity: number;
+> 46	  resemblance: number;
+> 47	  hdr: number;
+> 48	  fractality: number;
+> 49	  sharpness: number;
+> 50	};
+> 51	
+> 52	export const DEFAULT_CONTROLS: ControlValues = {
+> 53	  creativity: 0.7,
+> 54	  resemblance: 0.3,
+> 55	  hdr: 0.5,
+> 56	  fractality: 0.3,
+> 57	  sharpness: 0.8,
+> 58	};
+> 59	
+> 60	export type GenerateImageData = {
+> 61	  kind: "generateImage";
+> 62	  label: string;
+> 63	  model: ImageModelId;
+> 64	  prompt: string;
+> 65	  negativePrompt: string;
+> 66	  aspectRatio: AspectRatio;
+> 67	  controls: ControlValues;
+> 68	  seed: number | null;
+> 69	  fixedSeed: boolean;
+> 70	  status: NodeStatus;
+> 71	  /**
+> 72	   * Output image. C2+: stored in Supabase Storage and referenced by
+> 73	   * `imageUrl` (signed URL, refreshed on project load) + `storagePath`.
+> 74	   * Legacy nodes (pre-C2) still carry `imageDataUrl` (base64 data URL) —
+> 75	   * the node component shows whichever is present.
+> 76	   */
+> 77	  output?: {
+> 78	    imageUrl?: string;
+> 79	    storagePath?: string;
+> 80	    imageDataUrl?: string;
+> 81	    generatedAt: string;
+> 82	  };
+> 83	  error?: string;
+> 84	};
+> 85	
+> 86	/* ------------------------------------------------------------------ */
+> 87	/* C2 — novos tipos de nó                                              */
+> 88	/* ------------------------------------------------------------------ */
+> 89	
+> 90	/** Referência de personagem (Higgsfield Soul Character).
+> 91	 *  Apenas armazena upload + nome. Não consome créditos nesta passada. */
+> 92	export type CharacterReferenceData = {
+> 93	  kind: "characterReference";
+> 94	  label: string;
+> 95	  characterName: string;
+> 96	  /** Signed URL da imagem de referência (após upload). */
+> 97	  imageUrl?: string;
+> 98	  /** Path no bucket canvas-outputs. */
+> 99	  storagePath?: string;
+> 100	  /** Soul Character id (custom_reference_id) retornado por POST /soul-id. */
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts /home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-recipes.ts /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   100 /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts
+>   157 /home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts
+>   342 /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-recipes.ts
+>   547 /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx
+>   326 /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts
+>  1472 total
+> ```
+
+## 🤖 Claude
+
+Let me read more of the viralmind canvas.ts and check for node components:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/viralmind-builder/src/types/canvas.ts",
+  "offset": 100,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	  /** Soul Character id (custom_reference_id) retornado por POST /soul-id. */
+> 101	  soulId?: string;
+> 102	  /** Estado do registro do Soul Character. */
+> 103	  soulIdStatus?: "idle" | "registering" | "ready" | "failed";
+> 104	  /** Última mensagem de erro do registro Soul Character. */
+> 105	  soulIdError?: string;
+> 106	  status: NodeStatus;
+> 107	  error?: string;
+> 108	};
+> 109	
+> 110	/** Compõe cena a partir de prompt + 1+ characterReferences conectadas.
+> 111	 *  Roda no Higgsfield Soul (Marco B). */
+> 112	export type SceneComposeData = {
+> 113	  kind: "sceneCompose";
+> 114	  label: string;
+> 115	  prompt: string;
+> 116	  aspectRatio: AspectRatio;
+> 117	  /** Custo estimado (créditos), exibido no nó e debitado na execução. */
+> 118	  cost: number;
+> 119	  status: NodeStatus;
+> 120	  /** C4-B Smart Inheritance — id do nó characterReference do qual herdou personagem. */
+> 121	  characterRefId?: string;
+> 122	  output?: {
+> 123	    imageUrl?: string;
+> 124	    storagePath?: string;
+> 125	    generatedAt: string;
+> 126	  };
+> 127	  error?: string;
+> 128	};
+> 129	
+> 130	/** Aplica estilo de uma imagem-referência a uma imagem de entrada. */
+> 131	export type StyleTransferData = {
+> 132	  kind: "styleTransfer";
+> 133	  label: string;
+> 134	  /** Intensidade do transfer (0–1). */
+> 135	  strength: number;
+> 136	  cost: number;
+> 137	  /** C3 — preset visual aplicado via prompt suffix. */
+> 138	  presetId: StyleTransferPresetId;
+> 139	  status: NodeStatus;
+> 140	  /** C4-B Smart Inheritance — id do nó characterReference upstream. */
+> 141	  characterRefId?: string;
+> 142	  output?: {
+> 143	    imageUrl?: string;
+> 144	    storagePath?: string;
+> 145	    generatedAt: string;
+> 146	  };
+> 147	  error?: string;
+> 148	};
+> 149	
+> 150	/** C3 — Style Transfer presets aplicados via prompt engineering.
+> 151	 *  Não é true style transfer; a Higgsfield ainda não expõe endpoint REST
+> 152	 *  para style-transfer por imagem. Cada preset adiciona um sufixo ao
+> 153	 *  prompt do nó upstream e chama `generateSoulImage`. */
+> 154	export const STYLE_TRANSFER_PRESETS = [
+> 155	  { id: "cinematic", label: "Cinematográfico", suffix: "cinematic film still, anamorphic lens, dramatic lighting, 35mm film grain, shallow depth of field" },
+> 156	  { id: "neon", label: "Neon", suffix: "neon-soaked cyberpunk aesthetic, vibrant magenta and cyan rim light, wet streets, high contrast" },
+> 157	  { id: "analog", label: "Analógico", suffix: "analog film photograph, kodak portra 400, soft grain, warm tones, slight light leak" },
+> 158	  { id: "minimal", label: "Minimalista", suffix: "minimalist composition, negative space, muted palette, clean geometry, soft natural light" },
+> 159	  { id: "noir", label: "Noir", suffix: "film noir, high contrast black and white, hard shadows, venetian blind light, moody atmosphere" },
+> 160	  { id: "anime", label: "Anime", suffix: "modern anime illustration, cel shading, expressive line art, vibrant colors, ghibli-inspired" },
+> 161	  { id: "vaporwave", label: "Vaporwave", suffix: "vaporwave aesthetic, pastel pink and teal gradient, retro 80s, glitch artifacts, chrome surfaces" },
+> 162	  { id: "documentary", label: "Documentário", suffix: "documentary photography, natural light, candid moment, photojournalistic, Magnum-style" },
+> 163	] as const;
+> 164	
+> 165	export type StyleTransferPresetId = (typeof STYLE_TRANSFER_PRESETS)[number]["id"];
+> 166	
+> 167	export const STYLE_TRANSFER_COST = 12;
+> 168	
+> 169	export type VideoModelId = "kling-3.0" | "kling-2.0";
+> 170	export type VideoAspectRatio = "9:16" | "16:9" | "1:1";
+> 171	export type VideoDuration = 5 | 10 | 15;
+> 172	
+> 173	export const VIDEO_MODEL_INFO: Record<VideoModelId, { label: string; tier: string; eta: string }> = {
+> 174	  "kling-3.0": { label: "Kling 3.0", tier: "Premium", eta: "60–120s" },
+> 175	  "kling-2.0": { label: "Kling 2.0", tier: "Padrão", eta: "40–80s" },
+> 176	};
+> 177	
+> 178	/** UI completa, execução real fica para C3. */
+> 179	export type ImageToVideoData = {
+> 180	  kind: "imageToVideo";
+> 181	  label: string;
+> 182	  prompt: string;
+> 183	  duration: VideoDuration;
+> 184	  aspectRatio: VideoAspectRatio;
+> 185	  videoModel: VideoModelId;
+> 186	  motionStrength: number;
+> 187	  status: NodeStatus;
+> 188	  /** C4-B Smart Inheritance — id do nó characterReference upstream. */
+> 189	  characterRefId?: string;
+> 190	  output?: {
+> 191	    videoUrl?: string;
+> 192	    storagePath?: string;
+> 193	    generatedAt: string;
+> 194	  };
+> 195	  error?: string;
+> 196	};
+> 197	
+> 198	export type CanvasNodeData =
+> 199	  | GenerateImageData
+> 200	  | CharacterReferenceData
+> 201	  | SceneComposeData
+> 202	  | StyleTransferData
+> 203	  | ImageToVideoData;
+> 204	
+> 205	export type CanvasNode = Node<CanvasNodeData, CanvasNodeKind>;
+> 206	export type CanvasEdge = Edge;
+> 207	
+> 208	export type CanvasGraph = {
+> 209	  nodes: CanvasNode[];
+> 210	  edges: CanvasEdge[];
+> 211	  viewport: Viewport;
+> 212	};
+> 213	
+> 214	export const EMPTY_GRAPH: CanvasGraph = {
+> 215	  nodes: [],
+> 216	  edges: [],
+> 217	  viewport: { x: 0, y: 0, zoom: 1 },
+> 218	};
+> 219	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/ 2>/dev/null | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 28
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May 13 23:57 .
+> drwxrwxr-x 6 ubuntu ubuntu 4096 May 13 23:57 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 1666 May 13 23:57 CharacterReferenceNode.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 3836 May 13 23:57 GenerateImageNode.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 3494 May 13 23:57 ImageToVideoNode.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 1917 May 13 23:57 SceneComposeNode.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 1991 May 13 23:57 StyleTransferNode.tsx
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/viralmind-builder/src/components/canvas -type f -name \"*.tsx\" | grep -i node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/AddNodeMenu.tsx
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/CharacterReferenceNode.tsx
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/ImageToVideoNode.tsx
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/StyleTransferNode.tsx
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/GenerateImageNode.tsx
+> /home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/SceneComposeNode.tsx
+> ```
+
+## 🤖 Claude
+
+Perfect. Let me check one viralmind node component and AddNodeMenu:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/viralmind-builder/src/components/canvas/nodes/GenerateImageNode.tsx",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { AlertCircle, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+> 4	import { cn } from "@/lib/utils";
+> 5	import { MODEL_INFO, type GenerateImageData } from "@/types/canvas";
+> 6	
+> 7	export const GenerateImageNode = memo(function GenerateImageNode({
+> 8	  data,
+> 9	  selected,
+> 10	}: NodeProps) {
+> 11	  const d = data as unknown as GenerateImageData;
+> 12	  const status = d.status;
+> 13	  const cost = MODEL_INFO[d.model].cost;
+> 14	
+> 15	  return (
+> 16	    <div
+> 17	      className={cn(
+> 18	        "group relative w-[260px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all",
+> 19	        selected
+> 20	          ? "border-accent ring-2 ring-accent/30 shadow-glow"
+> 21	          : "border-border hover:border-border/80",
+> 22	      )}
+> 23	    >
+> 24	      <Handle
+> 25	        type="target"
+> 26	        position={Position.Left}
+> 27	        className="!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card"
+> 28	      />
+> 29	      <Handle
+> 30	        type="source"
+> 31	        position={Position.Right}
+> 32	        className="!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card"
+> 33	      />
+> 34	
+> 35	      <header className="flex items-center justify-between gap-2 border-b border-border px-2.5 py-1.5">
+> 36	        <div className="flex min-w-0 items-center gap-1.5">
+> 37	          <Sparkles className="h-3 w-3 shrink-0 text-secondary" />
+> 38	          <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 39	        </div>
+> 40	        <StatusBadge status={status} />
+> 41	      </header>
+> 42	
+> 43	      <div className="aspect-square w-full bg-elevated/40">
+> 44	        {d.output?.imageUrl || d.output?.imageDataUrl ? (
+> 45	          <img
+> 46	            src={d.output.imageUrl ?? d.output.imageDataUrl}
+> 47	            alt={d.prompt.slice(0, 80)}
+> 48	            className="h-full w-full object-cover"
+> 49	            draggable={false}
+> 50	          />
+> 51	        ) : (
+> 52	          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+> 53	            {status === "running" ? (
+> 54	              <Loader2 className="h-5 w-5 animate-spin text-accent" />
+> 55	            ) : (
+> 56	              <span>Sem geração ainda</span>
+> 57	            )}
+> 58	          </div>
+> 59	        )}
+> 60	      </div>
+> 61	
+> 62	      <div className="space-y-1 px-2.5 py-1.5">
+> 63	        <p className="line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+> 64	          {d.prompt || <span className="italic opacity-60">Defina um prompt no painel direito…</span>}
+> 65	        </p>
+> 66	        <div className="flex items-center justify-between gap-2 font-mono text-[9px] text-muted-foreground">
+> 67	          <span>{MODEL_INFO[d.model].label}</span>
+> 68	          <span>{d.aspectRatio} · {cost} 💎</span>
+> 69	        </div>
+> 70	        {d.error && (
+> 71	          <p className="border-t border-destructive/30 pt-1 text-[10px] text-destructive">
+> 72	            {d.error}
+> 73	          </p>
+> 74	        )}
+> 75	      </div>
+> 76	    </div>
+> 77	  );
+> 78	});
+> 79	
+> 80	function StatusBadge({ status }: { status: GenerateImageData["status"] }) {
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/viralmind-builder/src/components/canvas/AddNodeMenu.tsx",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useMemo, useState } from "react";
+> 2	import { Plus, Search } from "lucide-react";
+> 3	import { useReactFlow } from "@xyflow/react";
+> 4	import { Button } from "@/components/ui/button";
+> 5	import { Input } from "@/components/ui/input";
+> 6	import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+> 7	import { cn } from "@/lib/utils";
+> 8	import { useCanvasStore } from "@/hooks/useCanvasStore";
+> 9	import {
+> 10	  CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+> 11	} from "@/components/ui/command";
+> 12	import { CANVAS_NODE_REGISTRY, searchRegistry, type NodeCategory } from "@/lib/canvas-node-registry";
+> 13	
+> 14	const CATEGORIES: NodeCategory[] = ["Inputs", "Generate", "Transform"];
+> 15	
+> 16	export function AddNodeFab() {
+> 17	  const [open, setOpen] = useState(false);
+> 18	  const [q, setQ] = useState("");
+> 19	  const addNode = useCanvasStore((s) => s.addNode);
+> 20	  const { screenToFlowPosition } = useReactFlow();
+> 21	
+> 22	  const insert = (factoryId: string) => {
+> 23	    const entry = CANVAS_NODE_REGISTRY.find((e) => e.id === factoryId);
+> 24	    if (!entry) return;
+> 25	    const center = typeof window !== "undefined"
+> 26	      ? screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+> 27	      : { x: 200, y: 200 };
+> 28	    addNode(entry.factory(center));
+> 29	    setOpen(false);
+> 30	    setQ("");
+> 31	  };
+> 32	
+> 33	  const filtered = useMemo(() => searchRegistry(q), [q]);
+> 34	
+> 35	  return (
+> 36	    <Popover open={open} onOpenChange={setOpen}>
+> 37	      <PopoverTrigger asChild>
+> 38	        <Button
+> 39	          size="sm"
+> 40	          variant="accent"
+> 41	          className="absolute bottom-4 right-4 z-10 h-11 gap-2 rounded-full px-4 shadow-lg"
+> 42	          title="Adicionar nó (Cmd/Ctrl+K)"
+> 43	        >
+> 44	          <Plus className="h-4 w-4" />
+> 45	          Adicionar nó
+> 46	        </Button>
+> 47	      </PopoverTrigger>
+> 48	      <PopoverContent align="end" side="top" className="w-80 p-0">
+> 49	        <div className="border-b border-border p-2">
+> 50	          <div className="relative">
+> 51	            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+> 52	            <Input
+> 53	              autoFocus
+> 54	              placeholder="Buscar nó… (ex.: cena, video, estilo)"
+> 55	              value={q}
+> 56	              onChange={(e) => setQ(e.target.value)}
+> 57	              className="h-8 pl-7 text-xs"
+> 58	            />
+> 59	          </div>
+> 60	        </div>
+> 61	        <div className="max-h-80 overflow-y-auto p-1">
+> 62	          {CATEGORIES.map((cat) => {
+> 63	            const items = filtered.filter((e) => e.category === cat);
+> 64	            if (!items.length) return null;
+> 65	            return (
+> 66	              <div key={cat} className="mb-1">
+> 67	                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+> 68	                  {cat}
+> 69	                </div>
+> 70	                {items.map((e) => (
+> 71	                  <button
+> 72	                    key={e.id}
+> 73	                    type="button"
+> 74	                    onClick={() => insert(e.id)}
+> 75	                    className={cn(
+> 76	                      "flex w-full items-start gap-2 rounded px-2 py-1.5 text-left transition-colors",
+> 77	                      "hover:bg-elevated",
+> 78	                    )}
+> 79	                  >
+> 80	                    <e.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-secondary" />
+> ```
+
+## 🤖 Claude
+
+Now let me check for LeftPanel in constellation:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/LeftPanel/index.tsx",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from "react";
+> 2	import {
+> 3	  BookOpen,
+> 4	  ChevronRight,
+> 5	  Clock,
+> 6	  ImageIcon,
+> 7	  Layers,
+> 8	  Loader2,
+> 9	  Search,
+> 10	  TrendingUp,
+> 11	} from "lucide-react";
+> 12	import { toast } from "sonner";
+> 13	import { cn } from "@/lib/utils";
+> 14	import { Input } from "@/components/ui/input";
+> 15	import { Badge } from "@/components/ui/badge";
+> 16	import { useCanvasStore } from "@/store/useCanvasStore";
+> 17	import { useCanvasAssets, useCanvasExecutions } from "@/hooks/useCanvasStudio";
+> 18	import { useViralTrends } from "@/hooks/useViralTrends";
+> 19	import { CANVAS_RECIPES, type CanvasRecipe } from "@/lib/canvas-recipes";
+> 20	
+> 21	type Tab = "recipes" | "assets" | "trends" | "history";
+> 22	
+> 23	const TABS: { id: Tab; label: string; icon: typeof BookOpen }[] = [
+> 24	  { id: "recipes", label: "Receitas", icon: BookOpen },
+> 25	  { id: "assets", label: "Assets", icon: ImageIcon },
+> 26	  { id: "trends", label: "Tendências", icon: TrendingUp },
+> 27	  { id: "history", label: "Histórico", icon: Clock },
+> 28	];
+> 29	
+> 30	/**
+> 31	 * Left sidebar of the Canvas editor — 4 tabs wired to vm_* tables:
+> 32	 * Receitas → vm_canvas_recipes, Assets → vm_canvas_assets,
+> 33	 * Tendências → vm_trends, Histórico → vm_canvas_executions.
+> 34	 */
+> 35	export function LeftPanel({ projectId }: { projectId: string | undefined }) {
+> 36	  const [tab, setTab] = useState<Tab>("recipes");
+> 37	  return (
+> 38	    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-card">
+> 39	      <div className="flex h-10 shrink-0 items-center border-b border-border">
+> 40	        {TABS.map((t) => (
+> 41	          <button
+> 42	            key={t.id}
+> 43	            onClick={() => setTab(t.id)}
+> 44	            className={cn(
+> 45	              "flex h-full flex-1 items-center justify-center gap-1.5 border-b-2 text-xs transition-colors",
+> 46	              tab === t.id
+> 47	                ? "border-accent text-foreground"
+> 48	                : "border-transparent text-muted-foreground hover:text-foreground",
+> 49	            )}
+> 50	            title={t.label}
+> 51	          >
+> 52	            <t.icon className="h-3.5 w-3.5" />
+> 53	            <span className="hidden xl:inline">{t.label}</span>
+> 54	          </button>
+> 55	        ))}
+> 56	      </div>
+> 57	      <div className="flex-1 overflow-y-auto">
+> 58	        {tab === "recipes" && <RecipesTab />}
+> 59	        {tab === "assets" && <AssetsTab projectId={projectId} />}
+> 60	        {tab === "trends" && <TrendsTab />}
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"RightPanel\\|useCanvasJobsRealtime\" /home/gcrUX/htdocs/constellation-orchestra/src --include=\"*.tsx\" --include=\"*.ts\" | head -10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:  // Node config form (RightPanel sheet).
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:      {/* RightPanel — node config sheet */}
+> ```
+
+## 🤖 Claude
+
+Now let me check the RightPanel reference in CanvasEditorPage more carefully:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "offset": 350,
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 350	
+> 351	        <div className="relative flex-1 min-w-0">
+> 352	          <ReactFlow
+> 353	            nodes={nodes}
+> 354	            edges={edges}
+> 355	            onNodesChange={onNodesChange}
+> 356	            onEdgesChange={onEdgesChange}
+> 357	            onConnect={onConnect}
+> 358	            onNodeClick={onNodeClick}
+> 359	            onPaneClick={() => selectNode(null)}
+> 360	            onMoveEnd={(_, vp) => setViewport(vp)}
+> 361	            nodeTypes={nodeTypes}
+> 362	            edgeTypes={edgeTypes}
+> 363	            defaultViewport={project?.viewport ?? { x: 0, y: 0, zoom: 1 }}
+> 364	            snapToGrid={pipelineMode}
+> 365	            snapGrid={[COL_WIDTH, LANE_HEIGHT]}
+> 366	            deleteKeyCode={["Backspace", "Delete"]}
+> 367	            fitView
+> 368	            className="bg-background"
+> 369	          >
+> 370	            {pipelineMode && <LanesOverlay />}
+> 371	            <Background gap={20} size={1} color="rgba(255,255,255,0.03)" />
+> 372	            <Controls className="!border-border/50 !bg-card/80" />
+> 373	            <MiniMap
+> 374	              className="!border-border/50 !bg-card/80"
+> 375	              nodeColor={() => "hsl(var(--primary))"}
+> 376	              maskColor="rgba(0,0,0,0.5)"
+> 377	            />
+> 378	
+> 379	            <Panel position="top-left">
+> 380	              <Button
+> 381	                variant="outline"
+> 382	                size="sm"
+> 383	                className="gap-1 bg-card/90 backdrop-blur"
+> 384	                onClick={() => setShowAddMenu((v) => !v)}
+> 385	              >
+> 386	                <Plus className="h-3 w-3" /> Adicionar nó
+> 387	              </Button>
+> 388	            </Panel>
+> 389	
+> 390	            {showAddMenu && (
+> 391	              <Panel position="top-center">
+> 392	                <Card className="border-border/60 bg-card/95 shadow-xl backdrop-blur">
+> 393	                  <CardContent className="flex gap-1 px-2 pb-2 pt-3">
+> 394	                    {NODE_TYPES_CONFIG.map((nt) => (
+> 395	                      <Button
+> 396	                        key={nt.type}
+> 397	                        variant="ghost"
+> 398	                        size="sm"
+> 399	                        className="h-8 gap-1.5 text-xs"
+> 400	                        onClick={() => handleAddNode(nt.type)}
+> 401	                      >
+> 402	                        <nt.icon className="h-3.5 w-3.5" />
+> 403	                        {nt.label}
+> 404	                      </Button>
+> 405	                    ))}
+> 406	                  </CardContent>
+> 407	                </Card>
+> 408	              </Panel>
+> 409	            )}
+> 410	          </ReactFlow>
+> 411	        </div>
+> 412	      </div>
+> 413	
+> 414	      <StatusBar
+> 415	        saveStatus={autoSave.status}
+> 416	        lastSaved={autoSave.lastSaved}
+> 417	        creditsBalance={profile?.mco_balance ?? 0}
+> 418	        projectExecutions={project?.total_executions ?? 0}
+> 419	      />
+> 420	
+> 421	      {/* RightPanel — node config sheet */}
+> 422	      <Sheet
+> 423	        open={!!selectedNodeId}
+> 424	        onOpenChange={(open) => {
+> 425	          if (!open) selectNode(null);
+> 426	        }}
+> 427	      >
+> 428	        <SheetContent className="w-[380px] overflow-y-auto sm:w-[420px]">
+> 429	          <SheetHeader>
+> 430	            <SheetTitle className="flex items-center gap-2 text-sm">
+> 431	              {selectedNode &&
+> 432	                (() => {
+> 433	                  const tc = NODE_TYPES_CONFIG.find((t) => t.type === selectedNode.data?.nodeType);
+> 434	                  const Icon = tc?.icon ?? ImageIcon;
+> 435	                  return (
+> 436	                    <>
+> 437	                      <Icon className="h-4 w-4" />
+> 438	                      {tc?.label ?? "Nó"}
+> 439	                    </>
+> 440	                  );
+> 441	                })()}
+> 442	            </SheetTitle>
+> 443	          </SheetHeader>
+> 444	
+> 445	          <div className="mt-4 space-y-4">
+> 446	            <div>
+> 447	              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+> 448	                Provider
+> 449	              </label>
+> 450	              <Select
+> 451	                value={nodeProvider}
+> 452	                onValueChange={(v) => {
+> 453	                  setNodeProvider(v);
+> 454	                  setNodeModel(CANVAS_PROVIDERS.find((p) => p.id === v)?.models[0]?.id ?? "");
+> 455	                }}
+> 456	              >
+> 457	                <SelectTrigger className="bg-background/50">
+> 458	                  <SelectValue />
+> 459	                </SelectTrigger>
+> 460	                <SelectContent>
+> 461	                  {CANVAS_PROVIDERS.map((p) => (
+> 462	                    <SelectItem key={p.id} value={p.id}>
+> 463	                      {p.name}
+> 464	                    </SelectItem>
+> 465	                  ))}
+> 466	                </SelectContent>
+> 467	              </Select>
+> 468	            </div>
+> 469	
+> 470	            <div>
+> 471	              <label className="mb-1 block text-xs font-medium text-muted-foreground">Model</label>
+> 472	              <Select value={nodeModel} onValueChange={setNodeModel}>
+> 473	                <SelectTrigger className="bg-background/50">
+> 474	                  <SelectValue />
+> 475	                </SelectTrigger>
+> 476	                <SelectContent>
+> 477	                  {currentProviderModels.map((m) => (
+> 478	                    <SelectItem key={m.id} value={m.id}>
+> 479	                      {m.name} — {m.credits} mcoCoins
+> 480	                    </SelectItem>
+> 481	                  ))}
+> 482	                </SelectContent>
+> 483	              </Select>
+> 484	            </div>
+> 485	
+> 486	            <div>
+> 487	              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prompt</label>
+> 488	              <Textarea
+> 489	                placeholder="A cinematic shot of a cyberpunk city at sunset..."
+> 490	                value={nodePrompt}
+> 491	                onChange={(e) => setNodePrompt(e.target.value)}
+> 492	                rows={4}
+> 493	                className="bg-background/50"
+> 494	              />
+> 495	            </div>
+> 496	
+> 497	            <div>
+> 498	              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+> 499	                Negative Prompt (opcional)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"variant.*accent\" /home/gcrUX/htdocs/constellation-orchestra/src/components/ui/button.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+Let me check line count of viralmind's node registry and look for any hook patterns:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l /home/gcrUX/htdocs/viralmind-builder/src/lib/canvas-node-registry.ts 2>/dev/null && echo \"---\" && find /home/gcrUX/htdocs/constellation-orchestra/src/hooks -name \"*Canvas*\" -type f"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 86 /home/gcrUX/htdocs/viralmind-builder/src/lib/canvas-node-registry.ts
+> ---
+> /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/viralmind-builder/src/lib/canvas-node-registry.ts",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Sparkles, User, Film, Wand2, Video, type LucideIcon } from "lucide-react";
+> 2	import {
+> 3	  makeDefaultGenerateImage,
+> 4	  makeDefaultCharacterReference,
+> 5	  makeDefaultSceneCompose,
+> 6	  makeDefaultStyleTransfer,
+> 7	  makeDefaultImageToVideo,
+> 8	  type CanvasNode,
+> 9	} from "@/types/canvas";
+> 10	
+> 11	export type NodeCategory = "Inputs" | "Generate" | "Transform";
+> 12	
+> 13	export type NodeRegistryEntry = {
+> 14	  id: string;
+> 15	  label: string;
+> 16	  description: string;
+> 17	  category: NodeCategory;
+> 18	  icon: LucideIcon;
+> 19	  estimatedCost: number;
+> 20	  aliases: string[];
+> 21	  factory: (pos: { x: number; y: number }) => CanvasNode;
+> 22	};
+> 23	
+> 24	export const CANVAS_NODE_REGISTRY: NodeRegistryEntry[] = [
+> 25	  {
+> 26	    id: "characterReference",
+> 27	    label: "Character Reference",
+> 28	    description: "Referência de personagem para manter consistência.",
+> 29	    category: "Inputs",
+> 30	    icon: User,
+> 31	    estimatedCost: 0,
+> 32	    aliases: ["personagem", "soul", "ref", "character"],
+> 33	    factory: makeDefaultCharacterReference,
+> 34	  },
+> 35	  {
+> 36	    id: "generateImage",
+> 37	    label: "Generate Image",
+> 38	    description: "Gera imagem a partir de prompt (FLUX/Gemini).",
+> 39	    category: "Generate",
+> 40	    icon: Sparkles,
+> 41	    estimatedCost: 4,
+> 42	    aliases: ["imagem", "gerar", "flux", "image"],
+> 43	    factory: makeDefaultGenerateImage,
+> 44	  },
+> 45	  {
+> 46	    id: "sceneCompose",
+> 47	    label: "Scene Compose",
+> 48	    description: "Compõe cena usando personagens conectados (Higgsfield Soul).",
+> 49	    category: "Generate",
+> 50	    icon: Film,
+> 51	    estimatedCost: 14,
+> 52	    aliases: ["cena", "compose", "soul", "scene"],
+> 53	    factory: makeDefaultSceneCompose,
+> 54	  },
+> 55	  {
+> 56	    id: "imageToVideo",
+> 57	    label: "Image → Video",
+> 58	    description: "Anima uma imagem (Kling 3.0). Preview only nesta versão.",
+> 59	    category: "Generate",
+> 60	    icon: Video,
+> ```
+
+## 🤖 Claude
+
+Perfect. Now let me compile my final report:
+
+## Canvas Studio State Snapshot — Post Sprint 4.1 / 6.2.0
+
+### 1. **Canvas Types** (`src/types/canvas.ts` — 101 lines)
+
+**Current state:** PERMISSIVE, NOT YET TYPED.
+
+- `CanvasNodeData` is a wide interface (`Record<string, unknown>` with optional fields)
+- `nodeType: string` (no discriminated union)
+- No `kind` discriminator yet
+- No `MODEL_INFO`, `ASPECT_RATIOS`, or `STYLE_PRESETS` catalogs (these exist in viralmind only)
+
+**Key exports:**
+```typescript
+export interface CanvasNodeData extends Record<string, unknown> {
+  nodeType: string;
+  label?: string;
+  prompt?: string;
+  negativePrompt?: string;
+  provider?: string;
+  model?: string;
+  status?: NodeStatus;
+  outputUrl?: string;
+}
+```
+
+**Pipeline mode types present:**
+- `LaneConfig`, `LANE_HEIGHT`, `COL_WIDTH`, `STYLE_PRESETS` (7 presets), `StyleSettings`
+- Nestled in `PersistedCanvasGraph` for storage
+
+---
+
+### 2. **Canvas Store** (`src/store/useCanvasStore.ts` — 158 lines)
+
+**Fully wired with Zundo temporal middleware.**
+
+- State shape: `nodes`, `edges`, `viewport`, `selectedNodeId`, `pipelineMode`, `lanes`, `styleSettings`
+- Actions: `initialize`, `onNodesChange`, `onEdgesChange`, `onConnect`, `addNode`, `addRecipe`, `updateNodeData`, `removeSelected`, `setPipelineMode`, `setLanes`, `updateLane`, `addLane`, `removeLane`, `setStyleSettings`
+- Temporal config: 50-step limit, 500ms debounce, partial history (nodes+edges only, viewport/selection skipped)
+
+**Status:** Production-ready, no missing hooks.
+
+---
+
+### 3. **Canvas Recipes** (`src/lib/canvas-recipes.ts` — 343 lines)
+
+**Complete catalog: 3 Pipeline + 6 Quick.**
+
+Pipeline recipes (all call `buildPipeline()` internally):
+- `pipeline-story-arc` (3 lanes: Cidade noturna → Praia → Floresta)
+- `pipeline-mood-board-5` (5 lanes: Cyberpunk → Costa → Deserto → Industrial → Floresta)
+- `pipeline-reels-viral` (2 lanes: Hook → Payoff)
+
+Quick recipes (all call `chain()` internally):
+- `quick-fitness-vertical`, `quick-beauty-carousel`, `quick-yt-thumbnail`, `quick-reels-product`, `quick-story-info`, `quick-fitness-banner`
+
+**Node building:** Generic nodes emitted with `nodeType: "generate_image"`, `provider: "openai"`, `model: "dall-e-3"`, `status: "idle"`. No typed node discrimination.
+
+---
+
+### 4. **Canvas Node Components**
+
+**MISSING DIRECTORY:** No `src/components/canvas/nodes/` exists in constellation.
+
+**Current component:** Single generic `CanvasNodeCard` defined inline in `CanvasEditorPage.tsx` (lines 74–136).
+
+```typescript
+const CanvasNodeCard = memo(function CanvasNodeCard({ data, selected }: NodeProps) {
+  const d = data as CanvasNodeData;
+  const typeConfig = NODE_TYPES_CONFIG.find((t) => t.type === d.nodeType) || NODE_TYPES_CONFIG[0];
+  // ... Handles target/source; displays status + preview + prompt + provider/model badge
+});
+const nodeTypes = { canvasNode: CanvasNodeCard };
+```
+
+**Handles exist:** Both `target` (left) and `source` (right) at `Position.Left/Right`.
+
+**Status:** 6 node type configs hardcoded in `NODE_TYPES_CONFIG` array (generate_image, upscale, inpaint, style_transfer, remove_background, export), but no typed node components yet.
+
+---
+
+### 5. **RightPanel State**
+
+**No dedicated RightPanel component directory.** Implementation uses `<Sheet>` (shadcn) in `CanvasEditorPage.tsx` (lines 421–542).
+
+Sheet contains:
+- Provider/Model selectors (inline state)
+- Prompt/Negative prompt textareas
+- Execute button (calls `useCanvasExecute`)
+
+**Status:** All node config flows through Sheet; no separate component.
+
+---
+
+### 6. **Canvas Pages** (`src/pages/CanvasEditorPage.tsx` — 547 lines)
+
+**ReactFlow setup:**
+- Provider: `ReactFlowProvider` wrapper
+- Node types: `{ canvasNode: CanvasNodeCard }`
+- Edge types: `{ pipeline: PipelineEdge }`
+- Snap-to-grid: `snapToGrid={pipelineMode}` with `[COL_WIDTH, LANE_HEIGHT]`
+- Lightbox: Wired in `CanvasNodeCard` via `<ImageLightbox>` component
+
+**Key JSX structure:**
+```typescript
+<ReactFlowProvider>
+  <CanvasShell projectId={projectId} project={project} />
+</ReactFlowProvider>
+// CanvasShell contains:
+<ReactFlow
+  nodes={nodes}
+  edges={edges}
+  onNodesChange={onNodesChange}
+  onEdgesChange={onEdgesChange}
+  onConnect={onConnect}
+  onNodeClick={onNodeClick}
+  nodeTypes={nodeTypes}
+  edgeTypes={edgeTypes}
+  snapToGrid={pipelineMode}
+  snapGrid={[COL_WIDTH, LANE_HEIGHT]}
+>
+  {pipelineMode && <LanesOverlay />}
+  <Background />, <Controls />, <MiniMap />
+  <Panel position="top-left"> {/* Add node button */}
+  {showAddMenu && <Panel position="top-center"> {/* Node type grid */}
+</ReactFlow>
+
+// RightPanel (Sheet):
+<Sheet open={!!selectedNodeId}>
+  <SheetContent> {/* Provider, Model, Prompt inputs */}
+</Sheet>
+```
+
+---
+
+### 7. **Canvas Hooks** (`src/hooks/useCanvasStudio.ts` — 327 lines)
+
+**Exports:**
+- `useCanvasProject()` — queries single project
+- `useCanvasProjects()` — lists user's projects
+- `useCanvasExecute()` — mutates canvas-execute Supabase function
+- `useSaveCanvasGraph()` — persists graph to vm_canvas_projects
+- `useCanvasAssets()`, `useCanvasExecutions()` — list/query
+- `useDeleteCanvasProject()`, `useCreateCanvasProject()`, `useUpdateCanvasProject()`
+- `useCanvasRecipes()` — public + own recipes
+
+**Missing:** `useCanvasJobsRealtime` (Phase 4.2b dependency — NOT YET PRESENT). This is needed for WebSocket-driven execution polling.
+
+**Provider/Model catalog:**
+```typescript
+export const CANVAS_PROVIDERS = [
+  { id: "openai", models: [dall-e-3, gpt-image-1] },
+  { id: "replicate", models: [flux-1.1-pro, flux-schnell, sdxl] },
+  { id: "openrouter", models: [dall-e-3] },
+  { id: "higgsfield", models: [generate] },
+];
+```
+
+---
+
+### 8. **Peripheral Files**
+
+| File | Exists? | Status |
+|------|---------|--------|
+| `AddNodeMenu.tsx` | ❌ No | Embedded in CanvasEditorPage as flat grid (top-center Panel) |
+| `canvas-node-registry.ts` | ❌ No | viralmind has 86-line version with `CANVAS_NODE_REGISTRY` + `searchRegistry()` |
+| `button.tsx` variant `"accent"` | ❌ No | Only: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`, `glow` |
+
+---
+
+### 9. **viralmind-builder Reference Repo**
+
+**Path:** `/home/gcrUX/htdocs/viralmind-builder`
+
+**Typed Canvas Types (100+ lines):**
+- `CanvasNodeKind` discriminated union: `"generateImage"`, `"characterReference"`, `"sceneCompose"`, `"styleTransfer"`, `"imageToVideo"` (+ 8 legacy types)
+- `GenerateImageData`, `CharacterReferenceData`, `SceneComposeData`, `StyleTransferData`, `ImageToVideoData` — all with `kind` discriminator
+- `MODEL_INFO`, `ASPECT_RATIOS`, `DEFAULT_CONTROLS` catalogs
+- `STYLE_TRANSFER_PRESETS` (8 presets with prompt suffixes)
+- Smart inheritance: `characterRefId` field for C4-B upstream node linking
+
+**5 Typed Node Components:**
+- `GenerateImageNode.tsx` — 110+ lines, typed, status badge, preview
+- `CharacterReferenceNode.tsx` — 66 lines
+- `SceneComposeNode.tsx` — 57 lines
+- `StyleTransferNode.tsx` — 60 lines
+- `ImageToVideoNode.tsx` — 104 lines
+
+**Node Registry (86 lines):**
+```typescript
+export type NodeRegistryEntry = {
+  id: string;
+  label: string;
+  description: string;
+  category: "Inputs" | "Generate" | "Transform";
+  icon: LucideIcon;
+  estimatedCost: number;
+  aliases: string[];
+  factory: (pos: { x: number; y: number }) => CanvasNode;
+};
+```
+
+**AddNodeMenu.tsx** — Popover-based with Cmd+K support, uses `searchRegistry()` for fuzzy find.
+
+---
+
+## Critical Gaps for Phase 4.2a (Typed Nodes Port)
+
+1. **No discriminated union** — constellation's `CanvasNodeData` is a permissive interface; viralmind uses strict `CanvasNodeKind` union
+2. **No typed node components** — only generic `CanvasNodeCard`; viralmind has 5 typed components with specific UI per kind
+3. **No registry** — constellation has no `canvas-node-registry.ts`; viralmind's factory pattern + aliases enable search
+4. **No `accent` button variant** — needed for primary CTA styling in viralmind's AddNodeFab
+5. **No AddNodeMenu component** — currently ad-hoc top-center Panel; viralmind's Popover + CommandDialog pattern is cleaner
+6. **No `useCanvasJobsRealtime`** — will be critical for Phase 4.2b (job polling via WebSocket)
+
+---
+
+**Budget check:** 1472 words total; all key files < 300 lines except CanvasEditorPage (547) and canvas-recipes (343), both excerpted.

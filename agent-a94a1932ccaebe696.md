@@ -1,0 +1,1968 @@
+# Claude Session: agent-a94a1932ccaebe696
+
+## 👤 User
+
+Explore the Supabase Edge Functions at /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ to understand how API keys and preferences are resolved.
+
+For each of these functions, report: do they fetch user_api_keys? Do they respect pref_ columns? What keys do they use?
+- `orchestrate-content/index.ts`
+- `generate-content/index.ts`
+- `generate-image/index.ts`
+- `generate-audio-script/index.ts`
+- `generate-video/index.ts`
+- `aios-chat/index.ts`
+- `tts-speak/index.ts`
+- `publish-wordpress/index.ts`
+
+Also check:
+- Is there a shared utility function for key resolution that multiple functions import? (check `_shared/` folder or similar)
+- How does `orchestrate-content` call the sub-functions — does it pass the user's keys down, or do sub-functions re-fetch from user_api_keys independently?
+- Which functions do NOT currently read from `user_api_keys` at all (only use vault)?
+
+Report a table: function → reads user_api_keys? → respects pref_image/audio/video? → keys used.
+
+## 🤖 Claude
+
+I'll explore the Supabase Edge Functions directory to understand how API keys and preferences are resolved. Let me start by examining the structure and then dive into each function.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/supabase/functions -type f -name \"*.ts\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/sync-knowledge-mesh/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/list-provider-models/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/check-video-status/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/refresh-social-token/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autonomic-action/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/openrouter-swarm/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-node/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/create-checkout/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/trigger-embeddings/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tts-speak/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-heal/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat/index.ts
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/check-subscription/index.ts
+> ```
+
+## 🤖 Claude
+
+Now let me check for the _shared folder and examine the structure:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ | grep -E \"^d\""
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> drwxrwxr-x 40 ubuntu ubuntu 4096 May  4 13:03 .
+> drwxrwxr-x  5 ubuntu ubuntu 4096 May  2 01:14 ..
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  2 12:52 aios-chat
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  3 13:22 analyze-node
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 analyze-sem
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 analyze-seo
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 autonomic-action
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 09:24 auto-publish
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 check-subscription
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Apr 25 20:39 check-video-status
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 create-checkout
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 create-portal
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  3 14:27 embed-mcorch-node
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 generate-audio-script
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 generate-content
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 generate-image
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Apr 22 18:23 generate-video
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 generate-video-script
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 25 20:39 get-infra-status
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  1 18:38 handle-ml-postback
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 13:03 instagram-webhook
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Apr 22 18:10 list-provider-models
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 26 20:04 openrouter-swarm
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 optimize-schedule
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 00:21 orchestrate-content
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  1 18:38 process-affiliate-link
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 09:27 publish-social
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 00:31 publish-wordpress
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 09:28 refresh-social-token
+> drwxr-xr-x  2 ubuntu ubuntu 4096 May  2 19:39 rescue-video
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 26 16:56 search-constellation
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 self-heal
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 21 20:23 self-optimize
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 02:21 social-auth-callback
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  4 02:21 social-auth-init
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 25 20:39 stripe-webhook
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Apr 23 17:58 sync-knowledge-mesh
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  3 14:12 trigger-embeddings
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  3 14:12 trigger-ingest
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May  1 19:39 tts-speak
+> ```
+
+## 🤖 Claude
+
+No _shared folder visible. Let me check each function file in parallel. I'll read the target functions:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const corsHeaders = {
+> 2	  "Access-Control-Allow-Origin": "*",
+> 3	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 4	  "Access-Control-Allow-Headers":
+> 5	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 6	};
+> 7	
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 9	
+> 10	Deno.serve(async (req) => {
+> 11	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 12	
+> 13	  try {
+> 14	    const authHeader = req.headers.get("Authorization");
+> 15	    if (!authHeader?.startsWith("Bearer ")) {
+> 16	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 17	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 18	      });
+> 19	    }
+> 20	
+> 21	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 22	    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 23	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 24	    
+> 25	    const userClient = createClient(supabaseUrl, supabaseKey, {
+> 26	      global: { headers: { Authorization: authHeader } },
+> 27	    });
+> 28	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 29	    if (userErr || !user) {
+> 30	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 31	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 32	      });
+> 33	    }
+> 34	
+> 35	    const admin = createClient(supabaseUrl, serviceKey);
+> 36	
+> 37	    // mcoCoins gatekeeper — deduct before any AI work
+> 38	    const ORCHESTRATION_COST = 10;
+> 39	    const { data: profileBalance } = await admin
+> 40	      .from("profiles")
+> 41	      .select("mco_balance")
+> 42	      .eq("id", user.id)
+> 43	      .maybeSingle();
+> 44	    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {
+> 45	      return new Response(
+> 46	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 47	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 48	      );
+> 49	    }
+> 50	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 51	      p_user_id: user.id,
+> 52	      p_amount: ORCHESTRATION_COST,
+> 53	    });
+> 54	    if (deductErr) {
+> 55	      return new Response(
+> 56	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 57	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 58	      );
+> 59	    }
+> 60	
+> 61	    const { data: userKeys } = await admin.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 62	
+> 63	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 64	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 65	    const aiKey = groqKey || openRouterKey;
+> 66	
+> 67	    if (!aiKey) {
+> 68	      return new Response(JSON.stringify({ error: "GROQ_API_KEY or OPENROUTER_API_KEY not configured" }), {
+> 69	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 70	      });
+> 71	    }
+> 72	
+> 73	    const isGroq = !!groqKey;
+> 74	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 75	    const selectedModel = isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct";
+> 76	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft" } = await req.json();
+> 77	
+> 78	    if (!topic) {
+> 79	      return new Response(JSON.stringify({ error: "topic is required" }), {
+> 80	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 81	      });
+> 82	    }
+> 83	
+> 84	    // --- Create pipeline_run record ---
+> 85	    const runStarted = new Date().toISOString();
+> 86	    const { data: runRow } = await admin
+> 87	      .from("pipeline_runs")
+> 88	      .insert({ user_id: user.id, topic, platforms, status: "running", steps: [], started_at: runStarted })
+> 89	      .select("id")
+> 90	      .single();
+> 91	    const runId: string | null = runRow?.id ?? null;
+> 92	
+> 93	    const results: Record<string, any> = { steps: [], run_id: runId };
+> 94	    const addStep = (name: string, status: string, input?: any, output?: any) => {
+> 95	      const step = {
+> 96	        name,
+> 97	        status,
+> 98	        input: input ?? null,
+> 99	        output: output ?? null,
+> 100	        timestamp: new Date().toISOString(),
+> 101	      };
+> 102	      results.steps.push(step);
+> 103	      // Persist step incrementally (best-effort, non-blocking)
+> 104	      if (runId) {
+> 105	        admin.from("pipeline_runs").update({ steps: results.steps }).eq("id", runId).then(() => {});
+> 106	      }
+> 107	    };
+> 108	
+> 109	    // utm_campaign uses the campaign_id for per-campaign attribution; fallback to slug for unnamed runs
+> 110	    const utmCampaign = campaign_id
+> 111	      ? encodeURIComponent(campaign_id)
+> 112	      : `mcorch_${topic.slice(0, 24).replace(/\s+/g, "_").toLowerCase()}`;
+> 113	    const utmTag = (platform: string, baseUrl?: string) => {
+> 114	      const params = `utm_source=${platform}&utm_medium=social&utm_campaign=${utmCampaign}&utm_term=${encodeURIComponent(topic.slice(0, 50))}`;
+> 115	      return baseUrl ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${params}` : params;
+> 116	    };
+> 117	
+> 118	    // --- Step 1: Generate WordPress article ---
+> 119	    let articleContent = "";
+> 120	    let articleTitle = "";
+> 121	    if (platforms.includes("wordpress")) {
+> 122	      addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 123	      try {
+> 124	        const articleRes = await fetch(aiEndpoint, {
+> 125	          method: "POST",
+> 126	          headers: { 
+> 127	            Authorization: `Bearer ${aiKey}`, 
+> 128	            "Content-Type": "application/json",
+> 129	            "HTTP-Referer": "https://mcorch.com",
+> 130	            "X-Title": "GCRUX Constellation"
+> 131	          },
+> 132	          body: JSON.stringify({
+> 133	            model: selectedModel,
+> 134	            messages: [
+> 135	              { role: "system", content: `Você é um especialista em marketing digital e SEO. Escreva artigos longos (1200+ palavras) em português brasileiro, otimizados para SEO. Inclua meta description e tags sugeridas. Formato: retorne JSON com campos "title", "content" (HTML), "meta_description", "tags" (array de strings).` },
+> 136	              { role: "user", content: `Escreva um artigo completo sobre: "${topic}". O artigo deve ser focado em donos de agências de marketing que querem usar IA para escalar resultados. Inclua dados, exemplos práticos e um CTA forte. URL do site: https://${site_url}` },
+> 137	            ],
+> 138	            tools: [{
+> 139	              type: "function",
+> 140	              function: {
+> 141	                name: "write_article",
+> 142	                description: "Generate a full SEO article",
+> 143	                parameters: {
+> 144	                  type: "object",
+> 145	                  properties: {
+> 146	                    title: { type: "string" },
+> 147	                    content: { type: "string", description: "Full HTML article body" },
+> 148	                    meta_description: { type: "string" },
+> 149	                    tags: { type: "array", items: { type: "string" } },
+> 150	                  },
+> 151	                  required: ["title", "content", "meta_description", "tags"],
+> 152	                },
+> 153	              },
+> 154	            }],
+> 155	            tool_choice: { type: "function", function: { name: "write_article" } },
+> 156	          }),
+> 157	        });
+> 158	
+> 159	        if (!articleRes.ok) {
+> 160	          const status = articleRes.status;
+> 161	          if (status === 429) throw new Error("Rate limit exceeded");
+> 162	          if (status === 402) throw new Error("Credits exhausted");
+> 163	          throw new Error(`AI error: ${status}`);
+> 164	        }
+> 165	
+> 166	        const articleData = await articleRes.json();
+> 167	        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);
+> 168	        articleTitle = args.title;
+> 169	        articleContent = args.content;
+> 170	
+> 171	        // Save to content_library
+> 172	        await admin.from("content_library").insert({
+> 173	          user_id: user.id,
+> 174	          campaign_id: campaign_id || null,
+> 175	          type: "text",
+> 176	          title: articleTitle,
+> 177	          body: articleContent,
+> 178	          tags: args.tags,
+> 179	          status: "approved",
+> 180	          metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress") },
+> 181	        });
+> 182	
+> 183	        addStep("article_generation", "done",
+> 184	          { topic, model: selectedModel },
+> 185	          { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleContent.split(" ").length }
+> 186	        );
+> 187	      } catch (e) {
+> 188	        addStep("article_generation", "error", { topic }, { error: e instanceof Error ? e.message : "Unknown" });
+> 189	      }
+> 190	    }
+> 191	
+> 192	    // --- Step 2: Publish to WordPress ---
+> 193	    let wpPostUrl = "";
+> 194	    if (platforms.includes("wordpress") && articleContent) {
+> 195	      addStep("wordpress_publish", "in_progress",
+> 196	        { title: articleTitle, tags: "marketing-ia,orquestracao,roi", status: wp_status }
+> 197	      );
+> 198	      try {
+> 199	        const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 200	          method: "POST",
+> 201	          headers: { Authorization: authHeader, "Content-Type": "application/json" },
+> 202	          body: JSON.stringify({
+> 203	            title: articleTitle,
+> 204	            content: articleContent,
+> 205	            tags: "marketing-ia,orquestracao,roi",
+> 206	            status: wp_status,
+> 207	          }),
+> 208	        });
+> 209	        const wpData = await wpRes.json();
+> 210	        if (wpRes.ok && wpData.post_url) {
+> 211	          wpPostUrl = wpData.post_url;
+> 212	          addStep("wordpress_publish", "done",
+> 213	            { title: articleTitle, status: wp_status },
+> 214	            { post_url: wpPostUrl, post_id: wpData.post_id, status: wpData.status, slug: wpData.slug }
+> 215	          );
+> 216	        } else {
+> 217	          addStep("wordpress_publish", "error", { title: articleTitle }, { error: wpData.error || "Failed" });
+> 218	        }
+> 219	      } catch (e) {
+> 220	        addStep("wordpress_publish", "error", { title: articleTitle }, { error: e instanceof Error ? e.message : "Unknown" });
+> 221	      }
+> 222	    }
+> 223	
+> 224	    const articleLink = wpPostUrl ? utmTag("linkedin", wpPostUrl) : `https://${site_url}`;
+> 225	
+> 226	    // --- Step 3: Generate LinkedIn post ---
+> 227	    if (platforms.includes("linkedin")) {
+> 228	      addStep("linkedin_post", "in_progress", { topic, article_link: articleLink, model: selectedModel });
+> 229	      try {
+> 230	        const liRes = await fetch(aiEndpoint, {
+> 231	          method: "POST",
+> 232	          headers: { 
+> 233	            Authorization: `Bearer ${aiKey}`, 
+> 234	            "Content-Type": "application/json",
+> 235	            "HTTP-Referer": "https://mcorch.com",
+> 236	            "X-Title": "GCRUX Constellation"
+> 237	          },
+> 238	          body: JSON.stringify({
+> 239	            model: selectedModel,
+> 240	            messages: [
+> 241	              { role: "system", content: "Você é um especialista em LinkedIn B2B. Crie posts de autoridade com storytelling, emojis moderados, e CTA. Formato: retorne JSON com 'post_text'." },
+> 242	              { role: "user", content: `Crie um post LinkedIn sobre: "${topic}". Link do artigo: ${articleLink}. Foque em donos de agências e ROI com IA.` },
+> 243	            ],
+> 244	            tools: [{
+> 245	              type: "function",
+> 246	              function: {
+> 247	                name: "linkedin_post",
+> 248	                description: "Generate LinkedIn post",
+> 249	                parameters: { type: "object", properties: { post_text: { type: "string" } }, required: ["post_text"] },
+> 250	              },
+> 251	            }],
+> 252	            tool_choice: { type: "function", function: { name: "linkedin_post" } },
+> 253	          }),
+> 254	        });
+> 255	
+> 256	        if (!liRes.ok) throw new Error(`AI error: ${liRes.status}`);
+> 257	        const liData = await liRes.json();
+> 258	        const liArgs = JSON.parse(liData.choices[0].message.tool_calls[0].function.arguments);
+> 259	
+> 260	        await admin.from("content_library").insert({
+> 261	          user_id: user.id, campaign_id: campaign_id || null, type: "text",
+> 262	          title: `LinkedIn: ${topic}`, body: liArgs.post_text, status: "approved",
+> 263	          metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin") },
+> 264	        });
+> 265	
+> 266	        // Schedule the post
+> 267	        const { data: liContent } = await admin.from("content_library")
+> 268	          .select("id").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).single();
+> 269	
+> 270	        if (liContent) {
+> 271	          await admin.from("scheduled_posts").insert({
+> 272	            user_id: user.id, campaign_id: campaign_id || null,
+> 273	            platform: "linkedin", content_id: liContent.id,
+> 274	            scheduled_at: new Date(Date.now() + 3600000).toISOString(), // 1h from now
+> 275	            status: "queued",
+> 276	            metadata: { utm: utmTag("linkedin"), orchestrated: true },
+> 277	          });
+> 278	        }
+> 279	
+> 280	        addStep("linkedin_post", "done",
+> 281	          { topic, article_link: articleLink },
+> 282	          { preview: liArgs.post_text.substring(0, 300), char_count: liArgs.post_text.length, scheduled_at: new Date(Date.now() + 3600000).toISOString() }
+> 283	        );
+> 284	      } catch (e) {
+> 285	        addStep("linkedin_post", "error", { topic }, { error: e instanceof Error ? e.message : "Unknown" });
+> 286	      }
+> 287	    }
+> 288	
+> 289	    // --- Step 4: Generate X/Twitter thread ---
+> 290	    if (platforms.includes("twitter")) {
+> 291	      const xLink = wpPostUrl ? utmTag("twitter", wpPostUrl) : `https://${site_url}`;
+> 292	      addStep("twitter_thread", "in_progress", { topic, article_link: xLink, model: selectedModel });
+> 293	      try {
+> 294	        const xRes = await fetch(aiEndpoint, {
+> 295	          method: "POST",
+> 296	          headers: { 
+> 297	            Authorization: `Bearer ${aiKey}`, 
+> 298	            "Content-Type": "application/json",
+> 299	            "HTTP-Referer": "https://mcorch.com",
+> 300	            "X-Title": "GCRUX Constellation"
+> 301	          },
+> 302	          body: JSON.stringify({
+> 303	            model: selectedModel,
+> 304	            messages: [
+> 305	              { role: "system", content: "Você é um especialista em X/Twitter. Crie threads virais de 5 tweets. Cada tweet deve ter max 280 chars. Formato: retorne JSON com 'tweets' (array de strings)." },
+> 306	              { role: "user", content: `Crie uma thread de 5 tweets sobre: "${topic}". Link do artigo (último tweet): ${xLink}. Foco em marketing com IA e ROI.` },
+> 307	            ],
+> 308	            tools: [{
+> 309	              type: "function",
+> 310	              function: {
+> 311	                name: "twitter_thread",
+> 312	                description: "Generate Twitter thread",
+> 313	                parameters: {
+> 314	                  type: "object",
+> 315	                  properties: { tweets: { type: "array", items: { type: "string" } } },
+> 316	                  required: ["tweets"],
+> 317	                },
+> 318	              },
+> 319	            }],
+> 320	            tool_choice: { type: "function", function: { name: "twitter_thread" } },
+> 321	          }),
+> 322	        });
+> 323	
+> 324	        if (!xRes.ok) throw new Error(`AI error: ${xRes.status}`);
+> 325	        const xData = await xRes.json();
+> 326	        const xArgs = JSON.parse(xData.choices[0].message.tool_calls[0].function.arguments);
+> 327	
+> 328	        const threadText = xArgs.tweets.map((t: string, i: number) => `${i + 1}/5 ${t}`).join("\n\n");
+> 329	
+> 330	        await admin.from("content_library").insert({
+> 331	          user_id: user.id, campaign_id: campaign_id || null, type: "text",
+> 332	          title: `Thread X: ${topic}`, body: threadText, status: "approved",
+> 333	          metadata: { source: "orchestration", platform: "twitter", tweets: xArgs.tweets, utm: utmTag("twitter") },
+> 334	        });
+> 335	
+> 336	        const { data: xContent } = await admin.from("content_library")
+> 337	          .select("id").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).single();
+> 338	
+> 339	        if (xContent) {
+> 340	          await admin.from("scheduled_posts").insert({
+> 341	            user_id: user.id, campaign_id: campaign_id || null,
+> 342	            platform: "twitter", content_id: xContent.id,
+> 343	            scheduled_at: new Date(Date.now() + 7200000).toISOString(), // 2h from now
+> 344	            status: "queued",
+> 345	            metadata: { utm: utmTag("twitter"), orchestrated: true, thread: xArgs.tweets },
+> 346	          });
+> 347	        }
+> 348	
+> 349	        addStep("twitter_thread", "done",
+> 350	          { topic, article_link: xLink },
+> 351	          { tweet_count: xArgs.tweets.length, tweets: xArgs.tweets, scheduled_at: new Date(Date.now() + 7200000).toISOString() }
+> 352	        );
+> 353	      } catch (e) {
+> 354	        addStep("twitter_thread", "error", { topic }, { error: e instanceof Error ? e.message : "Unknown" });
+> 355	      }
+> 356	    }
+> 357	
+> 358	    // --- Step 5: Track usage ---
+> 359	    await admin.from("usage_tracking").insert({
+> 360	      user_id: user.id,
+> 361	      resource_type: "orchestration",
+> 362	      quantity: platforms.length,
+> 363	      credits_consumed: platforms.length * 5,
+> 364	      metadata: { topic, platforms, campaign_id },
+> 365	    });
+> 366	
+> 367	    // --- Step 6: Knowledge Mesh — observation node for this orchestration run ---
+> 368	    try {
+> 369	      await admin.from("mcorch_nodes").insert({
+> 370	        user_id: user.id,
+> 371	        node_type: "observation",
+> 372	        name: `Orchestration: ${topic.substring(0, 60)}`,
+> 373	        content: `Conteúdo orquestrado para "${topic}" via ${platforms.join(", ")}. WordPress: ${wpPostUrl || "n/a"}.`,
+> 374	        metadata: {
+> 375	          media_type: "content_bundle",
+> 376	          provider: "mcorch_orchestrator",
+> 377	          cost_mco: 10,
+> 378	          roi_potential: "high",
+> 379	          platforms,
+> 380	          campaign_id: campaign_id || null,
+> 381	          wordpress_url: wpPostUrl || null,
+> 382	        },
+> 383	        revenue_impact: 0,
+> 384	        stability_score: 1.0,
+> 385	      });
+> 386	      addStep("knowledge_mesh", "done",
+> 387	        { topic: topic.substring(0, 60), platforms },
+> 388	        { wordpress_url: wpPostUrl || null, node_type: "observation" }
+> 389	      );
+> 390	    } catch (e) {
+> 391	      console.warn("[orchestrate-content] knowledge node creation failed (non-fatal):", e);
+> 392	      addStep("knowledge_mesh", "error", { topic }, { error: e instanceof Error ? e.message : "Unknown" });
+> 393	    }
+> 394	
+> 395	    // --- Finalize pipeline_run ---
+> 396	    const hasErrors = results.steps.some((s: any) => s.status === "error");
+> 397	    if (runId) {
+> 398	      await admin.from("pipeline_runs").update({
+> 399	        status: hasErrors ? "error" : "done",
+> 400	        steps: results.steps,
+> 401	        wordpress_url: wpPostUrl || null,
+> 402	        completed_at: new Date().toISOString(),
+> 403	        metadata: { topic, platforms, campaign_id: campaign_id || null, model: selectedModel },
+> 404	      }).eq("id", runId);
+> 405	    }
+> 406	
+> 407	    results.summary = {
+> 408	      topic,
+> 409	      platforms_processed: platforms,
+> 410	      wordpress_url: wpPostUrl || null,
+> 411	      campaign_id: campaign_id || null,
+> 412	      run_id: runId,
+> 413	    };
+> 414	
+> 415	    return new Response(JSON.stringify(results), {
+> 416	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 417	    });
+> 418	  } catch (e) {
+> 419	    console.error("orchestrate-content error:", e);
+> 420	    return new Response(
+> 421	      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+> 422	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 423	    );
+> 424	  }
+> 425	});
+> 426	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-content/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 9	};
+> 10	
+> 11	serve(async (req) => {
+> 12	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 13	
+> 14	  try {
+> 15	    const authHeader = req.headers.get("Authorization");
+> 16	    if (!authHeader) {
+> 17	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 18	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 19	      });
+> 20	    }
+> 21	
+> 22	    const supabase = createClient(
+> 23	      Deno.env.get("SUPABASE_URL")!,
+> 24	      Deno.env.get("SUPABASE_ANON_KEY")!,
+> 25	      { global: { headers: { Authorization: authHeader } } }
+> 26	    );
+> 27	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 28	    if (authError || !user) {
+> 29	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 30	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 31	      });
+> 32	    }
+> 33	
+> 34	    const { type, prompt, platform, tone, language = "pt-BR" } = await req.json();
+> 35	    if (!type || !prompt) {
+> 36	      return new Response(JSON.stringify({ error: "type and prompt are required" }), {
+> 37	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 38	      });
+> 39	    }
+> 40	
+> 41	    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> 42	    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 43	    
+> 44	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 45	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 46	    const aiKey = groqKey || openRouterKey;
+> 47	
+> 48	    if (!aiKey) {
+> 49	      return new Response(JSON.stringify({ error: "AI not configured" }), {
+> 50	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 51	      });
+> 52	    }
+> 53	    
+> 54	    const isGroq = !!groqKey;
+> 55	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 56	    const selectedModel = isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct";
+> 57	
+> 58	    const systemPrompt = `Você é um especialista em marketing digital e criação de conteúdo para redes sociais.
+> 59	Idioma: ${language}
+> 60	${platform ? `Plataforma alvo: ${platform}` : ""}
+> 61	${tone ? `Tom de voz: ${tone}` : "Tom profissional e envolvente"}
+> 62	
+> 63	Regras:
+> 64	- Crie conteúdo pronto para publicar
+> 65	- Inclua hashtags relevantes quando apropriado
+> 66	- Respeite limites de caracteres da plataforma
+> 67	- Use emojis com moderação
+> 68	- Otimize para engajamento
+> 69	
+> 70	Responda APENAS com o conteúdo gerado, sem explicações adicionais.`;
+> 71	
+> 72	    // Agnostic AI Gateway Support
+> 73	    const aiResponse = await fetch(aiEndpoint, {
+> 74	      method: "POST",
+> 75	      headers: {
+> 76	        Authorization: `Bearer ${aiKey}`,
+> 77	        "Content-Type": "application/json",
+> 78	        "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 79	        "X-Title": "GCRUX Constellation" // For OpenRouter
+> 80	      },
+> 81	      body: JSON.stringify({
+> 82	        model: selectedModel,
+> 83	        messages: [
+> 84	          { role: "system", content: systemPrompt },
+> 85	          { role: "user", content: prompt },
+> 86	        ],
+> 87	        stream: true,
+> 88	      }),
+> 89	    });
+> 90	
+> 91	    if (!aiResponse.ok) {
+> 92	      if (aiResponse.status === 429) {
+> 93	        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+> 94	          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 95	        });
+> 96	      }
+> 97	      if (aiResponse.status === 402) {
+> 98	        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
+> 99	          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 100	        });
+> 101	      }
+> 102	      const errText = await aiResponse.text();
+> 103	      console.error("AI gateway error:", aiResponse.status, errText);
+> 104	      return new Response(JSON.stringify({ error: "AI generation failed" }), {
+> 105	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 106	      });
+> 107	    }
+> 108	
+> 109	    return new Response(aiResponse.body, {
+> 110	      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+> 111	    });
+> 112	  } catch (e) {
+> 113	    console.error("generate-content error:", e);
+> 114	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+> 115	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 116	    });
+> 117	  }
+> 118	});
+> 119	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 9	};
+> 10	
+> 11	serve(async (req) => {
+> 12	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 13	
+> 14	  try {
+> 15	    const authHeader = req.headers.get("Authorization");
+> 16	    if (!authHeader) {
+> 17	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 18	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 19	      });
+> 20	    }
+> 21	
+> 22	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 23	    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 24	    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 25	      global: { headers: { Authorization: authHeader } },
+> 26	    });
+> 27	
+> 28	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 29	    if (authError || !user) {
+> 30	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 31	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 32	      });
+> 33	    }
+> 34	
+> 35	    const { prompt, style } = await req.json();
+> 36	    if (!prompt) {
+> 37	      return new Response(JSON.stringify({ error: "Prompt is required" }), {
+> 38	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 39	      });
+> 40	    }
+> 41	
+> 42	    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> 43	    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 44	
+> 45	    const openaiKey = userKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY");
+> 46	    const nanobanaKey = userKeys?.nanobana_api_key || Deno.env.get("NANOBANA_API_KEY");
+> 47	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 48	    
+> 49	    const prefImage = userKeys?.pref_image_provider || "openai";
+> 50	    
+> 51	    let activeKey = "";
+> 52	    let endpoint = "";
+> 53	    let isNanoBana = false;
+> 54	
+> 55	    if (prefImage === "nanobana" && nanobanaKey) {
+> 56	      activeKey = nanobanaKey;
+> 57	      endpoint = "https://api.nanobana.com/v1/images/generations"; // Assuming standard proxy or mock
+> 58	      isNanoBana = true;
+> 59	    } else {
+> 60	      activeKey = openaiKey || openRouterKey || "";
+> 61	      endpoint = openaiKey ? "https://api.openai.com/v1/images/generations" : "https://openrouter.ai/api/v1/images/generations";
+> 62	    }
+> 63	
+> 64	    if (!activeKey) {
+> 65	      return new Response(JSON.stringify({ error: "API Key not configured for selected provider" }), {
+> 66	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 67	      });
+> 68	    }
+> 69	
+> 70	    const stylePrompt = style ? ` Style: ${style}.` : "";
+> 71	    const fullPrompt = `Generate a high-quality marketing image: ${prompt}.${stylePrompt} The image should be professional, visually appealing, and suitable for social media marketing.`;
+> 72	
+> 73	    const aiResponse = await fetch(endpoint, {
+> 74	      method: "POST",
+> 75	      headers: {
+> 76	        Authorization: `Bearer ${activeKey}`,
+> 77	        "Content-Type": "application/json",
+> 78	        "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 79	        "X-Title": "GCRUX Constellation" // For OpenRouter
+> 80	      },
+> 81	      body: JSON.stringify({
+> 82	        model: "dall-e-3",
+> 83	        prompt: fullPrompt,
+> 84	        n: 1,
+> 85	        size: "1024x1024",
+> 86	        response_format: "b64_json",
+> 87	      }),
+> 88	    });
+> 89	
+> 90	    if (!aiResponse.ok) {
+> 91	      const status = aiResponse.status;
+> 92	      if (status === 429) {
+> 93	        return new Response(JSON.stringify({ error: "Limite de requisições excedido, tente novamente em instantes." }), {
+> 94	          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 95	        });
+> 96	      }
+> 97	      if (status === 402) {
+> 98	        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos na sua conta." }), {
+> 99	          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 100	        });
+> 101	      }
+> 102	      const t = await aiResponse.text();
+> 103	      console.error("AI error:", status, t);
+> 104	      return new Response(JSON.stringify({ error: "Erro na geração de imagem" }), {
+> 105	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 106	      });
+> 107	    }
+> 108	
+> 109	    const data = await aiResponse.json();
+> 110	    // Expected response format for b64_json from standard OpenAI API
+> 111	    const imageB64 = data.data?.[0]?.b64_json;
+> 112	    const imageUrl = data.data?.[0]?.url;
+> 113	
+> 114	    if (!imageB64 && !imageUrl) {
+> 115	      return new Response(JSON.stringify({ error: "Nenhuma imagem foi gerada" }), {
+> 116	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 117	      });
+> 118	    }
+> 119	
+> 120	    const base64Data = imageB64 ? imageB64 : imageUrl.replace(/^data:image\/\w+;base64,/, "");
+> 121	    const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+> 122	    const fileName = `${user.id}/${crypto.randomUUID()}.png`;
+> 123	
+> 124	    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 125	
+> 126	    const { error: uploadError } = await adminClient.storage
+> 127	      .from("generated-images")
+> 128	      .upload(fileName, bytes, { contentType: "image/png" });
+> 129	
+> 130	    if (uploadError) {
+> 131	      console.error("Upload error:", uploadError);
+> 132	      return new Response(JSON.stringify({ error: "Erro ao salvar imagem" }), {
+> 133	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 134	      });
+> 135	    }
+> 136	
+> 137	    const { data: signedUrlData, error: signedUrlError } = await adminClient.storage
+> 138	      .from("generated-images")
+> 139	      .createSignedUrl(fileName, 3600); // 1 hour expiry
+> 140	
+> 141	    if (signedUrlError) {
+> 142	      console.error("Signed URL error:", signedUrlError);
+> 143	      return new Response(JSON.stringify({ error: "Erro ao gerar URL da imagem" }), {
+> 144	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 145	      });
+> 146	    }
+> 147	
+> 148	    return new Response(JSON.stringify({
+> 149	      image_url: signedUrlData.signedUrl,
+> 150	      base64: `data:image/png;base64,${base64Data}`,
+> 151	    }), {
+> 152	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 153	    });
+> 154	  } catch (e) {
+> 155	    console.error("generate-image error:", e);
+> 156	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+> 157	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 158	    });
+> 159	  }
+> 160	});
+> 161	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 9	};
+> 10	
+> 11	serve(async (req) => {
+> 12	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 13	
+> 14	  try {
+> 15	    const authHeader = req.headers.get("Authorization");
+> 16	    if (!authHeader) {
+> 17	      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+> 18	        status: 401,
+> 19	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 20	      });
+> 21	    }
+> 22	
+> 23	    const supabase = createClient(
+> 24	      Deno.env.get("SUPABASE_URL")!,
+> 25	      Deno.env.get("SUPABASE_ANON_KEY")!,
+> 26	      { global: { headers: { Authorization: authHeader } } }
+> 27	    );
+> 28	
+> 29	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 30	    if (authError || !user) {
+> 31	      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+> 32	        status: 401,
+> 33	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 34	      });
+> 35	    }
+> 36	
+> 37	    const { prompt, format, duration } = await req.json();
+> 38	    if (!prompt) {
+> 39	      return new Response(JSON.stringify({ error: "Prompt é obrigatório" }), {
+> 40	        status: 400,
+> 41	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 42	      });
+> 43	    }
+> 44	
+> 45	    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> 46	    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 47	    
+> 48	    const prefAudio = userKeys?.pref_audio_provider || "openai";
+> 49	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 50	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 51	    const elevenLabsKey = userKeys?.elevenlabs_api_key || Deno.env.get("ELEVENLABS_API_KEY");
+> 52	    const googleKey = userKeys?.google_api_key || Deno.env.get("GOOGLE_API_KEY");
+> 53	
+> 54	    let activeKey = "";
+> 55	    let aiEndpoint = "";
+> 56	    let selectedModel = "";
+> 57	    let isElevenLabs = false;
+> 58	
+> 59	    if (prefAudio === "elevenlabs" && elevenLabsKey) {
+> 60	      activeKey = elevenLabsKey;
+> 61	      aiEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM"; // default voice
+> 62	      isElevenLabs = true;
+> 63	    } else if (prefAudio === "gemini" && googleKey) {
+> 64	      activeKey = googleKey;
+> 65	      aiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${googleKey}`;
+> 66	    } else {
+> 67	      activeKey = groqKey || openRouterKey || "";
+> 68	      const isGroq = !!groqKey;
+> 69	      aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 70	      selectedModel = isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct";
+> 71	    }
+> 72	
+> 73	    if (!activeKey) {
+> 74	      return new Response(JSON.stringify({ error: "API Key not configured for selected audio provider" }), {
+> 75	        status: 500,
+> 76	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 77	      });
+> 78	    }
+> 79	
+> 80	    const formatGuide: Record<string, string> = {
+> 81	      podcast: "Crie um roteiro completo de podcast com introdução, desenvolvimento, pontos de discussão e conclusão. Inclua marcações [INTRO], [TRANSIÇÃO], [PONTO], [CONCLUSÃO].",
+> 82	      narração: "Crie um roteiro de narração profissional para vídeo ou audiobook. Inclua marcações de tom [CALMO], [ENFÁTICO], [PAUSAR].",
+> 83	      jingle: "Crie letra e estrutura de um jingle/música curta publicitária. Inclua [VERSO], [REFRÃO], [BRIDGE]. Sugira BPM e estilo musical.",
+> 84	      música: "Crie letra completa de uma música com estrutura profissional. Inclua [INTRO], [VERSO 1], [PRÉ-REFRÃO], [REFRÃO], [VERSO 2], [PONTE], [OUTRO]. Sugira gênero, BPM e instrumentação.",
+> 85	    };
+> 86	
+> 87	    const durationGuide: Record<string, string> = {
+> 88	      curto: "Mantenha o conteúdo breve (30 segundos a 1 minuto de áudio).",
+> 89	      médio: "Crie conteúdo de duração média (2 a 5 minutos de áudio).",
+> 90	      longo: "Crie conteúdo longo e detalhado (5 a 15 minutos de áudio).",
+> 91	    };
+> 92	
+> 93	    const systemPrompt = `Você é um roteirista profissional brasileiro especializado em produção de áudio e música para marketing.
+> 94	${formatGuide[format] || formatGuide.podcast}
+> 95	${durationGuide[duration] || durationGuide.médio}
+> 96	Responda sempre em português brasileiro. Seja criativo e profissional.`;
+> 97	
+> 98	    const headers: any = {
+> 99	      "Content-Type": "application/json",
+> 100	      "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 101	      "X-Title": "GCRUX Constellation" // For OpenRouter
+> 102	    };
+> 103	
+> 104	    if (isElevenLabs) {
+> 105	      headers["xi-api-key"] = activeKey;
+> 106	    } else if (prefAudio !== "gemini") {
+> 107	      headers["Authorization"] = `Bearer ${activeKey}`;
+> 108	    }
+> 109	
+> 110	    const aiResponse = await fetch(aiEndpoint, {
+> 111	      method: "POST",
+> 112	      headers,
+> 113	      body: JSON.stringify(
+> 114	        isElevenLabs ? { text: systemPrompt + "\n" + prompt } :
+> 115	        prefAudio === "gemini" ? { contents: [{ parts: [{ text: systemPrompt + "\n" + prompt }] }] } :
+> 116	        {
+> 117	          model: selectedModel,
+> 118	          messages: [
+> 119	            { role: "system", content: systemPrompt },
+> 120	            { role: "user", content: prompt },
+> 121	          ],
+> 122	          stream: true,
+> 123	        }
+> 124	      ),
+> 125	    });
+> 126	
+> 127	    if (!aiResponse.ok) {
+> 128	      if (aiResponse.status === 429) {
+> 129	        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
+> 130	          status: 429,
+> 131	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 132	        });
+> 133	      }
+> 134	      if (aiResponse.status === 402) {
+> 135	        return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), {
+> 136	          status: 402,
+> 137	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 138	        });
+> 139	      }
+> 140	      const errText = await aiResponse.text();
+> 141	      console.error("AI error:", aiResponse.status, errText);
+> 142	      return new Response(JSON.stringify({ error: "Erro no serviço de IA" }), {
+> 143	        status: 500,
+> 144	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 145	      });
+> 146	    }
+> 147	
+> 148	    return new Response(aiResponse.body, {
+> 149	      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+> 150	    });
+> 151	  } catch (e) {
+> 152	    console.error("generate-audio-script error:", e);
+> 153	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
+> 154	      status: 500,
+> 155	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 156	    });
+> 157	  }
+> 158	});
+> 159	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+Now let me read the remaining functions:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 9	};
+> 10	
+> 11	function extractUserIdFromJWT(token: string): string | null {
+> 12	  try {
+> 13	    const parts = token.replace("Bearer ", "").split(".");
+> 14	    if (parts.length !== 3) return null;
+> 15	    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+> 16	    return JSON.parse(atob(payload)).sub || null;
+> 17	  } catch { return null; }
+> 18	}
+> 19	
+> 20	function synthesizeVisualPrompt(text: string): string {
+> 21	  const cleaned = text
+> 22	    .replace(/\[.*?\]/g, "")
+> 23	    .replace(/#{1,6}\s*/g, "")
+> 24	    .replace(/\*{1,3}/g, "")
+> 25	    .replace(/\n{2,}/g, "\n")
+> 26	    .trim();
+> 27	  const lines = cleaned.split("\n").filter((l: string) => l.trim().length > 10);
+> 28	  return lines.slice(0, 5).join(". ").slice(0, 500);
+> 29	}
+> 30	
+> 31	serve(async (req) => {
+> 32	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 33	
+> 34	  try {
+> 35	    const authHeader = req.headers.get("Authorization");
+> 36	    if (!authHeader) {
+> 37	      return new Response(JSON.stringify({ error: "Token ausente" }), {
+> 38	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 39	      });
+> 40	    }
+> 41	
+> 42	    let userId: string | null = null;
+> 43	    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+> 44	      global: { headers: { Authorization: authHeader } },
+> 45	    });
+> 46	    const { data: { user } } = await supabase.auth.getUser();
+> 47	    userId = user?.id || extractUserIdFromJWT(authHeader);
+> 48	
+> 49	    if (!userId) {
+> 50	      return new Response(JSON.stringify({ error: "Token inválido" }), {
+> 51	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 52	      });
+> 53	    }
+> 54	
+> 55	    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> 56	    const { data: adminUser, error: adminError } = await adminClient.auth.admin.getUserById(userId);
+> 57	    if (adminError || !adminUser?.user) {
+> 58	      return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
+> 59	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 60	      });
+> 61	    }
+> 62	
+> 63	    const { prompt, provider, model, script, content_id } = await req.json();
+> 64	    const rawText = script || prompt;
+> 65	    if (!rawText) {
+> 66	      return new Response(JSON.stringify({ error: "Prompt ou roteiro é obrigatório" }), {
+> 67	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 68	      });
+> 69	    }
+> 70	
+> 71	    const visualPrompt = synthesizeVisualPrompt(rawText);
+> 72	    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> 73	
+> 74	    const selectedProvider = provider || userKeys?.pref_video_provider || "openrouter";
+> 75	    const selectedModel = model || "seedance/seedance-video-1";
+> 76	
+> 77	    console.log(`[generate-video] Fire-and-forget → Provider: ${selectedProvider} | Model: ${selectedModel}`);
+> 78	
+> 79	    // =====================================================
+> 80	    // ARCHITECTURE: Fire-and-forget with operation_id return
+> 81	    // The frontend polls check-video-status for completion
+> 82	    // =====================================================
+> 83	
+> 84	    if (selectedProvider === "openrouter") {
+> 85	      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 86	      if (!openRouterKey) {
+> 87	        return new Response(JSON.stringify({ error: "Configure sua chave do OpenRouter em Configurações" }), {
+> 88	          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 89	        });
+> 90	      }
+> 91	
+> 92	      const videoPayload = { model: selectedModel, prompt: visualPrompt };
+> 93	      console.log("[generate-video] OpenRouter payload:", JSON.stringify(videoPayload).slice(0, 200));
+> 94	
+> 95	      const submitResp = await fetch("https://openrouter.ai/api/v1/videos", {
+> 96	        method: "POST",
+> 97	        headers: {
+> 98	          "Authorization": `Bearer ${openRouterKey}`,
+> 99	          "Content-Type": "application/json",
+> 100	          "HTTP-Referer": "https://login.mcorch.com",
+> 101	          "X-Title": "MCORCH",
+> 102	        },
+> 103	        body: JSON.stringify(videoPayload),
+> 104	      });
+> 105	
+> 106	      if (!submitResp.ok) {
+> 107	        let errBody = "";
+> 108	        try { errBody = await submitResp.text(); } catch { errBody = "(unreadable)"; }
+> 109	        console.error(`[generate-video] OpenRouter error [${submitResp.status}]:`, errBody);
+> 110	        return new Response(JSON.stringify({
+> 111	          error: `OpenRouter (${submitResp.status}): ${errBody.slice(0, 200)}`,
+> 112	        }), {
+> 113	          status: submitResp.status >= 400 && submitResp.status < 500 ? submitResp.status : 500,
+> 114	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 115	        });
+> 116	      }
+> 117	
+> 118	      const submitData = await submitResp.json();
+> 119	      const jobId = submitData.id;
+> 120	      const pollingUrl = submitData.polling_url;
+> 121	
+> 122	      console.log(`[generate-video] OpenRouter job: ${jobId} → polling: ${pollingUrl}`);
+> 123	
+> 124	      // Persist operation_id to content_library
+> 125	      if (content_id) {
+> 126	        await adminClient.from("content_library")
+> 127	          .update({ operation_id: jobId, status: "processing" })
+> 128	          .eq("id", content_id);
+> 129	      }
+> 130	
+> 131	      // Return immediately — The Watcher protocol takes over
+> 132	      return new Response(JSON.stringify({
+> 133	        status: "submitted",
+> 134	        operation_id: jobId,
+> 135	        polling_url: pollingUrl,
+> 136	        provider: "openrouter",
+> 137	        model: selectedModel,
+> 138	      }), {
+> 139	        status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 140	      });
+> 141	
+> 142	    } else if (selectedProvider === "gemini") {
+> 143	      const googleKey = userKeys?.google_api_key || Deno.env.get("GOOGLE_API_KEY");
+> 144	      if (!googleKey) {
+> 145	        return new Response(JSON.stringify({ error: "Configure sua chave do Google Gemini em Configurações" }), {
+> 146	          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 147	        });
+> 148	      }
+> 149	
+> 150	      const veoModel = selectedModel || "veo-2.0-generate-001";
+> 151	      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${veoModel}:predictLongRunning?key=${googleKey}`;
+> 152	
+> 153	      const submitResp = await fetch(endpoint, {
+> 154	        method: "POST",
+> 155	        headers: { "Content-Type": "application/json" },
+> 156	        body: JSON.stringify({
+> 157	          instances: [{ prompt: visualPrompt }],
+> 158	          parameters: { aspectRatio: "16:9", personGeneration: "allow_all" },
+> 159	        }),
+> 160	      });
+> 161	
+> 162	      if (!submitResp.ok) {
+> 163	        const errText = await submitResp.text();
+> 164	        console.error(`[generate-video] Gemini error [${submitResp.status}]:`, errText);
+> 165	        return new Response(JSON.stringify({
+> 166	          error: `Gemini Veo (${submitResp.status}): ${errText.slice(0, 200)}`,
+> 167	          fallback_hint: submitResp.status === 404 ? "openrouter" : undefined,
+> 168	        }), {
+> 169	          status: submitResp.status >= 400 && submitResp.status < 500 ? submitResp.status : 500,
+> 170	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 171	        });
+> 172	      }
+> 173	
+> 174	      const submitData = await submitResp.json();
+> 175	      const operationName = submitData.name; // e.g. "models/veo-3.1.../operations/abc123"
+> 176	
+> 177	      console.log(`[generate-video] Gemini operation: ${operationName}`);
+> 178	
+> 179	      if (content_id) {
+> 180	        await adminClient.from("content_library")
+> 181	          .update({ operation_id: operationName, status: "processing" })
+> 182	          .eq("id", content_id);
+> 183	      }
+> 184	
+> 185	      return new Response(JSON.stringify({
+> 186	        status: "submitted",
+> 187	        operation_id: operationName,
+> 188	        provider: "gemini",
+> 189	        model: veoModel,
+> 190	      }), {
+> 191	        status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 192	      });
+> 193	
+> 194	    } else {
+> 195	      return new Response(JSON.stringify({ error: "Provedor não suportado" }), {
+> 196	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 197	      });
+> 198	    }
+> 199	  } catch (e) {
+> 200	    console.error("[generate-video] Fatal:", e);
+> 201	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
+> 202	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 203	    });
+> 204	  }
+> 205	});
+> 206	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers":
+> 7	    "authorization, x-client-info, apikey, content-type",
+> 8	};
+> 9	
+> 10	const SUPPORTED_GEMINI_MODELS = new Set([
+> 11	  "gemini-2.5-flash",
+> 12	  "gemini-2.5-pro",
+> 13	  "gemini-2.0-flash-001",
+> 14	  "gemini-2.0-flash",        // legacy alias — kept for rollback
+> 15	  "gemini-2.0-flash-exp",
+> 16	  "gemini-2.5-pro-preview-03-25",
+> 17	  "gemini-1.5-pro",
+> 18	  "gemini-1.5-flash",
+> 19	]);
+> 20	
+> 21	interface ChatMessage {
+> 22	  role: "user" | "assistant" | "system";
+> 23	  content: string;
+> 24	}
+> 25	
+> 26	Deno.serve(async (req) => {
+> 27	  if (req.method === "OPTIONS") {
+> 28	    return new Response("ok", { headers: corsHeaders });
+> 29	  }
+> 30	
+> 31	  const respond = (body: unknown, status = 200) =>
+> 32	    new Response(JSON.stringify(body), {
+> 33	      status,
+> 34	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 35	    });
+> 36	
+> 37	  // Zero-Trust: require valid JWT
+> 38	  const authHeader = req.headers.get("Authorization");
+> 39	  if (!authHeader?.startsWith("Bearer ")) {
+> 40	    return respond({ error: "Unauthorized" }, 401);
+> 41	  }
+> 42	
+> 43	  const supabase = createClient(
+> 44	    Deno.env.get("SUPABASE_URL")!,
+> 45	    Deno.env.get("SUPABASE_ANON_KEY")!,
+> 46	    { global: { headers: { Authorization: authHeader } } }
+> 47	  );
+> 48	
+> 49	  const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 50	  if (userError || !user) {
+> 51	    return respond({ error: "Unauthorized" }, 401);
+> 52	  }
+> 53	
+> 54	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> 55	  if (!geminiKey) {
+> 56	    return respond({ error: "GEMINI_API_KEY not configured" }, 500);
+> 57	  }
+> 58	
+> 59	  let messages: ChatMessage[];
+> 60	  let systemPrompt: string | undefined;
+> 61	  let geminiModel = "gemini-2.5-flash";
+> 62	
+> 63	  try {
+> 64	    const body = await req.json();
+> 65	    messages = body.messages;
+> 66	    systemPrompt = body.system;
+> 67	    const requestedModel = typeof body.model === "string" ? body.model : "gemini-2.5-flash";
+> 68	    // Only allow whitelisted Gemini models
+> 69	    geminiModel = SUPPORTED_GEMINI_MODELS.has(requestedModel) ? requestedModel : "gemini-2.5-flash";
+> 70	
+> 71	    if (!Array.isArray(messages) || messages.length === 0) {
+> 72	      return respond({ error: "messages array is required" }, 400);
+> 73	    }
+> 74	  } catch {
+> 75	    return respond({ error: "Invalid JSON body" }, 400);
+> 76	  }
+> 77	
+> 78	  const contents = messages
+> 79	    .filter((m) => m.role !== "system")
+> 80	    .map((m) => ({
+> 81	      role: m.role === "assistant" ? "model" : "user",
+> 82	      parts: [{ text: m.content }],
+> 83	    }));
+> 84	
+> 85	  const requestBody: Record<string, unknown> = { contents };
+> 86	
+> 87	  if (systemPrompt) {
+> 88	    requestBody.system_instruction = { parts: [{ text: systemPrompt }] };
+> 89	  }
+> 90	
+> 91	  requestBody.generationConfig = { maxOutputTokens: 2048 };
+> 92	
+> 93	  const geminiUrl =
+> 94	    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+> 95	
+> 96	  try {
+> 97	    const res = await fetch(geminiUrl, {
+> 98	      method: "POST",
+> 99	      headers: { "Content-Type": "application/json" },
+> 100	      body: JSON.stringify(requestBody),
+> 101	    });
+> 102	
+> 103	    if (!res.ok) {
+> 104	      const errText = await res.text();
+> 105	      return respond({ error: `Gemini API error: ${res.status}`, detail: errText }, res.status);
+> 106	    }
+> 107	
+> 108	    const json = await res.json();
+> 109	    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+> 110	
+> 111	    return respond({ output: text });
+> 112	  } catch (err) {
+> 113	    const msg = err instanceof Error ? err.message : String(err);
+> 114	    return respond({ error: msg }, 500);
+> 115	  }
+> 116	});
+> 117	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tts-speak/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 7	};
+> 8	
+> 9	// Gemini 2.5 Flash TTS — neural voices, same API key as chat
+> 10	const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+> 11	const TTS_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
+> 12	
+> 13	const VALID_VOICES = new Set([
+> 14	  "Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr",
+> 15	]);
+> 16	
+> 17	// Wrap raw PCM (16-bit signed LE, mono, 24kHz) in a WAV container
+> 18	function pcmToWav(pcm: Uint8Array, sampleRate = 24000): Uint8Array {
+> 19	  const numChannels = 1;
+> 20	  const bitsPerSample = 16;
+> 21	  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+> 22	  const blockAlign = (numChannels * bitsPerSample) / 8;
+> 23	  const dataSize = pcm.byteLength;
+> 24	  const header = new DataView(new ArrayBuffer(44));
+> 25	
+> 26	  const w = (off: number, val: number, len: 4 | 2 = 4) =>
+> 27	    len === 4 ? header.setUint32(off, val, true) : header.setUint16(off, val, true);
+> 28	
+> 29	  // RIFF chunk
+> 30	  [82, 73, 70, 70].forEach((b, i) => header.setUint8(i, b));         // "RIFF"
+> 31	  w(4, 36 + dataSize);
+> 32	  [87, 65, 86, 69].forEach((b, i) => header.setUint8(8 + i, b));     // "WAVE"
+> 33	  [102, 109, 116, 32].forEach((b, i) => header.setUint8(12 + i, b)); // "fmt "
+> 34	  w(16, 16); w(20, 1, 2); w(22, numChannels, 2);
+> 35	  w(24, sampleRate); w(28, byteRate); w(32, blockAlign, 2); w(34, bitsPerSample, 2);
+> 36	  [100, 97, 116, 97].forEach((b, i) => header.setUint8(36 + i, b)); // "data"
+> 37	  w(40, dataSize);
+> 38	
+> 39	  const wav = new Uint8Array(44 + dataSize);
+> 40	  wav.set(new Uint8Array(header.buffer), 0);
+> 41	  wav.set(pcm, 44);
+> 42	  return wav;
+> 43	}
+> 44	
+> 45	Deno.serve(async (req) => {
+> 46	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 47	
+> 48	  const respond = (body: unknown, status = 200) =>
+> 49	    new Response(JSON.stringify(body), {
+> 50	      status,
+> 51	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 52	    });
+> 53	
+> 54	  const authHeader = req.headers.get("Authorization");
+> 55	  if (!authHeader?.startsWith("Bearer ")) return respond({ error: "Unauthorized" }, 401);
+> 56	
+> 57	  const supabase = createClient(
+> 58	    Deno.env.get("SUPABASE_URL")!,
+> 59	    Deno.env.get("SUPABASE_ANON_KEY")!,
+> 60	    { global: { headers: { Authorization: authHeader } } },
+> 61	  );
+> 62	  const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 63	  if (userError || !user) return respond({ error: "Unauthorized" }, 401);
+> 64	
+> 65	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> 66	  if (!geminiKey) return respond({ error: "GEMINI_API_KEY not configured" }, 500);
+> 67	
+> 68	  let text: string;
+> 69	  let voiceName: string;
+> 70	
+> 71	  try {
+> 72	    const body = await req.json();
+> 73	    text = String(body.text ?? "").trim();
+> 74	    voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+> 75	    if (!text) return respond({ error: "text is required" }, 400);
+> 76	    if (text.length > 4000) text = text.slice(0, 4000);
+> 77	  } catch {
+> 78	    return respond({ error: "Invalid JSON" }, 400);
+> 79	  }
+> 80	
+> 81	  const payload = {
+> 82	    contents: [{ parts: [{ text }] }],
+> 83	    generationConfig: {
+> 84	      responseModalities: ["AUDIO"],
+> 85	      speechConfig: {
+> 86	        voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+> 87	      },
+> 88	    },
+> 89	  };
+> 90	
+> 91	  const geminiRes = await fetch(`${TTS_URL}?key=${geminiKey}`, {
+> 92	    method: "POST",
+> 93	    headers: { "Content-Type": "application/json" },
+> 94	    body: JSON.stringify(payload),
+> 95	  });
+> 96	
+> 97	  if (!geminiRes.ok) {
+> 98	    const detail = await geminiRes.text();
+> 99	    return respond({ error: `Gemini TTS error: ${geminiRes.status}`, detail }, geminiRes.status);
+> 100	  }
+> 101	
+> 102	  const json = await geminiRes.json();
+> 103	  const b64 = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+> 104	
+> 105	  if (!b64) return respond({ error: "No audio in response" }, 502);
+> 106	
+> 107	  // base64 → PCM → WAV
+> 108	  const binaryStr = atob(b64);
+> 109	  const pcm = new Uint8Array(binaryStr.length);
+> 110	  for (let i = 0; i < binaryStr.length; i++) pcm[i] = binaryStr.charCodeAt(i);
+> 111	  const wav = pcmToWav(pcm);
+> 112	
+> 113	  return new Response(wav.buffer, {
+> 114	    status: 200,
+> 115	    headers: {
+> 116	      ...corsHeaders,
+> 117	      "Content-Type": "audio/wav",
+> 118	      "Content-Length": String(wav.byteLength),
+> 119	    },
+> 120	  });
+> 121	});
+> 122	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const corsHeaders = {
+> 2	  "Access-Control-Allow-Origin": "*",
+> 3	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 4	  "Access-Control-Allow-Headers":
+> 5	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 6	};
+> 7	
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 9	
+> 10	Deno.serve(async (req) => {
+> 11	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 12	
+> 13	  try {
+> 14	    const authHeader = req.headers.get("Authorization");
+> 15	    if (!authHeader?.startsWith("Bearer ")) {
+> 16	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 17	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 18	      });
+> 19	    }
+> 20	
+> 21	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 22	    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 23	    const userClient = createClient(supabaseUrl, supabaseKey, {
+> 24	      global: { headers: { Authorization: authHeader } },
+> 25	    });
+> 26	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 27	    if (userErr || !user) {
+> 28	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 29	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 30	      });
+> 31	    }
+> 32	
+> 33	    // Self-hosted WordPress REST API credentials — user config first, server secrets as fallback
+> 34	    const serviceClient = createClient(
+> 35	      Deno.env.get("SUPABASE_URL")!,
+> 36	      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+> 37	    );
+> 38	    const { data: userKeys } = await serviceClient
+> 39	      .from("user_api_keys")
+> 40	      .select("wp_site_url, wp_username, wp_app_password")
+> 41	      .eq("user_id", user.id)
+> 42	      .maybeSingle();
+> 43	
+> 44	    const wpSiteUrl = userKeys?.wp_site_url || Deno.env.get("WP_SITE_URL");
+> 45	    const wpUsername = userKeys?.wp_username || Deno.env.get("WP_USERNAME");
+> 46	    const wpAppPassword = userKeys?.wp_app_password || Deno.env.get("WP_APP_PASSWORD");
+> 47	
+> 48	    if (!wpSiteUrl || !wpUsername || !wpAppPassword) {
+> 49	      return new Response(
+> 50	        JSON.stringify({ error: "WordPress não configurado. Acesse Configurações → WordPress para conectar seu site." }),
+> 51	        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 52	      );
+> 53	    }
+> 54	
+> 55	    const { title, content, tags, categories, status, excerpt } = await req.json();
+> 56	
+> 57	    if (!title || !content) {
+> 58	      return new Response(JSON.stringify({ error: "title and content são obrigatórios" }), {
+> 59	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 60	      });
+> 61	    }
+> 62	
+> 63	    // Basic Auth with Application Password (WP 5.6+)
+> 64	    const credentials = btoa(`${wpUsername}:${wpAppPassword}`);
+> 65	    const apiBase = wpSiteUrl.replace(/\/$/, "");
+> 66	
+> 67	    // Resolve tag IDs (create if they don't exist)
+> 68	    const tagIds: number[] = [];
+> 69	    if (tags) {
+> 70	      const tagSlugs: string[] = typeof tags === "string"
+> 71	        ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+> 72	        : tags;
+> 73	
+> 74	      for (const tagName of tagSlugs) {
+> 75	        try {
+> 76	          // Try to find existing tag
+> 77	          const searchRes = await fetch(`${apiBase}/wp-json/wp/v2/tags?search=${encodeURIComponent(tagName)}&per_page=1`, {
+> 78	            headers: { Authorization: `Basic ${credentials}` },
+> 79	          });
+> 80	          const found = await searchRes.json();
+> 81	          if (Array.isArray(found) && found.length > 0) {
+> 82	            tagIds.push(found[0].id);
+> 83	          } else {
+> 84	            // Create new tag
+> 85	            const createRes = await fetch(`${apiBase}/wp-json/wp/v2/tags`, {
+> 86	              method: "POST",
+> 87	              headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/json" },
+> 88	              body: JSON.stringify({ name: tagName }),
+> 89	            });
+> 90	            if (createRes.ok) {
+> 91	              const newTag = await createRes.json();
+> 92	              tagIds.push(newTag.id);
+> 93	            }
+> 94	          }
+> 95	        } catch {
+> 96	          // Non-fatal: skip tag
+> 97	        }
+> 98	      }
+> 99	    }
+> 100	
+> 101	    const body: Record<string, unknown> = {
+> 102	      title,
+> 103	      content,
+> 104	      status: status || "draft",
+> 105	      format: "standard",
+> 106	    };
+> 107	    if (tagIds.length > 0) body.tags = tagIds;
+> 108	    if (categories) body.categories = categories;
+> 109	    if (excerpt) body.excerpt = excerpt;
+> 110	
+> 111	    const wpRes = await fetch(`${apiBase}/wp-json/wp/v2/posts`, {
+> 112	      method: "POST",
+> 113	      headers: {
+> 114	        Authorization: `Basic ${credentials}`,
+> 115	        "Content-Type": "application/json",
+> 116	      },
+> 117	      body: JSON.stringify(body),
+> 118	    });
+> 119	
+> 120	    const wpData = await wpRes.json();
+> 121	
+> 122	    if (!wpRes.ok) {
+> 123	      console.error("WordPress REST API failed:", wpRes.status, JSON.stringify(wpData));
+> 124	      return new Response(
+> 125	        JSON.stringify({ error: wpData.message || "Falha ao publicar no WordPress", code: wpData.code }),
+> 126	        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 127	      );
+> 128	    }
+> 129	
+> 130	    return new Response(JSON.stringify({
+> 131	      success: true,
+> 132	      post_url: wpData.link,
+> 133	      post_id: wpData.id,
+> 134	      status: wpData.status,
+> 135	      slug: wpData.slug,
+> 136	    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 137	
+> 138	  } catch (e) {
+> 139	    console.error("publish-wordpress error:", e);
+> 140	    return new Response(
+> 141	      JSON.stringify({ error: "Falha ao publicar no WordPress. Verifique a conexão e tente novamente." }),
+> 142	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 143	    );
+> 144	  }
+> 145	});
+> 146	
+> 
+> <system-reminder>
+> Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+> </system-reminder>
+> 
+> ```
+
+## 🤖 Claude
+
+Now let me check if there are any shared utility files:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra/supabase/functions -name \"*shared*\" -o -name \"*util*\" -o -name \"*helper*\" 2>/dev/null"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"user_api_keys\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions --include=\"*.ts\" | head -30"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/check-video-status/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts:    const { data: userKeys } = await admin.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-optimize/index.ts:    const { data: userKeys } = await admin.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/rescue-video/index.ts:    const { data: keys } = await adminClient.from("user_api_keys").select("google_api_key").eq("user_id", userId).single();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-sem/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-content/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-seo/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts:      .from("user_api_keys")
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/list-provider-models/index.ts:    const { data: userKeys } = await adminClient.from("user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> ```
+
+## 🤖 Claude
+
+Perfect! Now let me check the orchestrate-content function more carefully to see how it calls sub-functions:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -A 5 \"supabaseUrl}/functions/v1/\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>         const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+>           method: "POST",
+>           headers: { Authorization: authHeader, "Content-Type": "application/json" },
+>           body: JSON.stringify({
+>             title: articleTitle,
+>             content: articleContent,
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"pref_\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions --include=\"*.ts\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts:    const prefAudio = userKeys?.pref_audio_provider || "openai";
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video/index.ts:    const selectedProvider = provider || userKeys?.pref_video_provider || "openrouter";
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts:    const prefImage = userKeys?.pref_image_provider || "openai";
+> /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts:    const selectedProvider = provider || userKeys?.pref_video_provider || "gemini";
+> ```
+
+## 🤖 Claude
+
+Excellent. Now let me check the aios-chat function more closely to understand its key resolution:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -E \"user_api_keys|pref_|Deno.env\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat/index.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     Deno.env.get("SUPABASE_URL")!,
+>     Deno.env.get("SUPABASE_ANON_KEY")!,
+>   const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> ```
+
+## 🤖 Claude
+
+Now let me check tts-speak more carefully:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -E \"user_api_keys|pref_|Deno.env\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tts-speak/index.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     Deno.env.get("SUPABASE_URL")!,
+>     Deno.env.get("SUPABASE_ANON_KEY")!,
+>   const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> ```
+
+## 🤖 Claude
+
+Perfect! Now let me compile the complete analysis. Based on my exploration, here's the comprehensive report:
+
+## Supabase Edge Functions: API Key & Preference Resolution Analysis
+
+### Summary Table
+
+| Function | Reads user_api_keys? | Respects pref_* columns? | Keys Used |
+|----------|:-------------------:|:------------------------:|-----------|
+| **orchestrate-content** | ✅ Yes | ❌ No | groq_api_key, openrouter_api_key |
+| **generate-content** | ✅ Yes | ❌ No | groq_api_key, openrouter_api_key |
+| **generate-image** | ✅ Yes | ✅ Yes (pref_image_provider) | openai_api_key, nanobana_api_key, openrouter_api_key |
+| **generate-audio-script** | ✅ Yes | ✅ Yes (pref_audio_provider) | groq_api_key, openrouter_api_key, elevenlabs_api_key, google_api_key |
+| **generate-video** | ✅ Yes | ✅ Yes (pref_video_provider) | openrouter_api_key, google_api_key |
+| **aios-chat** | ❌ No | ❌ No | GEMINI_API_KEY (vault only) |
+| **tts-speak** | ❌ No | ❌ No | GEMINI_API_KEY (vault only) |
+| **publish-wordpress** | ✅ Yes | ❌ No (WordPress config only) | wp_site_url, wp_username, wp_app_password |
+
+---
+
+### Detailed Findings
+
+#### Key Resolution Pattern
+Each function follows a consistent pattern when fetching from `user_api_keys`:
+```typescript
+const { data: userKeys } = await adminClient.from("user_api_keys")
+  .select("*")
+  .eq("user_id", user.id)
+  .maybeSingle();
+```
+
+They then fallback to vault environment variables:
+```typescript
+const keyX = userKeys?.key_field || Deno.env.get("ENV_VAR_NAME");
+```
+
+#### Shared Utility Functions
+**No shared utility module exists.** Each function independently:
+- Fetches from `user_api_keys` directly
+- Implements its own fallback logic
+- No DRY pattern for key resolution
+
+#### Orchestrate-Content Call Pattern
+**orchestrate-content → sub-functions:**
+- Calls `publish-wordpress` with: `Authorization: authHeader` (same user token)
+- **Does NOT pass API keys down** — each sub-function re-fetches `user_api_keys` independently
+- Sub-functions must have their own key access via the same JWT
+
+```typescript
+const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+  method: "POST",
+  headers: { Authorization: authHeader, "Content-Type": "application/json" },
+  body: JSON.stringify({ title, content, tags, status })
+});
+```
+
+#### Preference Column Usage
+
+**Functions that DO respect `pref_*` columns:**
+- **generate-image**: Reads `pref_image_provider` (default: "openai", fallback: nanobana → openai/openrouter)
+- **generate-audio-script**: Reads `pref_audio_provider` (default: "openai", supports: elevenlabs, gemini, groq, openrouter)
+- **generate-video**: Reads `pref_video_provider` (default: "openrouter", supports: gemini)
+
+**Functions that ignore preferences:**
+- orchestrate-content, generate-content, publish-wordpress
+- aios-chat, tts-speak (vault-only)
+
+#### Vault-Only Functions (No user_api_keys lookup)
+- **aios-chat**: Hardcoded to `GEMINI_API_KEY` only
+- **tts-speak**: Hardcoded to `GEMINI_API_KEY` only
+
+Both ignore user preferences and cannot be overridden per user.
+
+---
+
+### Key Observations
+
+1. **No centralized key resolution** — 13+ functions independently fetch and resolve keys (code smell for maintenance)
+
+2. **Inconsistent preference support** — image/audio/video have preferences, but text generation ignores them
+
+3. **orchestrate-content architecture** — Passes user JWT to sub-functions, relies on them to fetch keys independently. Efficient (no key leakage in logs), but no preference passing down the chain
+
+4. **Security note** — All functions use service role key to fetch from `user_api_keys`, correctly isolating user secrets
+
+5. **Missing WordPress preferences** — `publish-wordpress` hardcodes behavior; no pref_wordpress_provider column

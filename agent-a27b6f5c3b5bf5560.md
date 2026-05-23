@@ -1,0 +1,1808 @@
+# Claude Session: agent-a27b6f5c3b5bf5560
+
+## 👤 User
+
+Search the codebase at /home/gcrUX/htdocs/constellation-orchestra for:
+
+1. `src/components/dashboard/DashboardLayout.tsx` — full content, especially how it structures the sidebar + header + main content area, what CSS classes it uses
+2. `src/App.tsx` — routing section for /dashboard/constellation routes (MatrixPage, MemoryPage, ConstellationPage) — are they wrapped in DashboardLayout?
+3. `src/pages/ConstellationPage.tsx` or similar — for comparison as a "working" page
+
+Report:
+- The exact className on the main content wrapper in DashboardLayout (height, overflow, padding)
+- How /dashboard/constellation/matrix and /dashboard/constellation/memory routes are registered
+- Whether MatrixPage and MemoryPage are inside or outside DashboardLayout
+- The exact structure of the header section in DashboardLayout (the one with title + sidebar toggle icon)
+
+Include actual code snippets.
+
+## 🤖 Claude
+
+I'll search the codebase for these key files and analyze the routing structure and layout.
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "find /home/gcrUX/htdocs/constellation-orchestra -type f -name \"*.tsx\" | grep -E \"(DashboardLayout|App\\.tsx|ConstellationPage|MatrixPage|MemoryPage)\" | head -20"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/MemoryPage.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/MatrixPage.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardLayout.tsx
+> ```
+
+## 🤖 Claude
+
+Now let me read these files to analyze the structure:
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardLayout.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+> 2	import { DashboardSidebar } from './DashboardSidebar';
+> 3	import { Outlet, useLocation, Link } from 'react-router-dom';
+> 4	import { Bell, ChevronRight, Coins } from 'lucide-react';
+> 5	import { Button } from '@/components/ui/button';
+> 6	import { useAuth } from '@/hooks/useAuth';
+> 7	import { supabase } from '@/integrations/supabase/client';
+> 8	import { useEffect, useState } from 'react';
+> 9	
+> 10	const BREADCRUMB_MAP: Record<string, string> = {
+> 11	  dashboard: 'Dashboard',
+> 12	  constellation: 'Constelação',
+> 13	  memory:        'Memory Mesh',
+> 14	  matrix:        'Matrix',
+> 15	  orchestration: 'Orquestrador Visual',
+> 16	  campaigns: 'Campanhas',
+> 17	  new: 'Nova',
+> 18	  content: 'Conteúdo',
+> 19	  calendar: 'Calendário',
+> 20	  analytics: 'Analytics',
+> 21	  social: 'Redes Sociais',
+> 22	  blog: 'Blog',
+> 23	  admin: 'Administração',
+> 24	  'video-editor': 'Editor de Vídeo',
+> 25	  notifications: 'Notificações',
+> 26	  billing: 'Assinatura',
+> 27	  settings: 'Configurações',
+> 28	  arena: 'AI Arena',
+> 29	  'core-v2': 'Core',
+> 30	};
+> 31	
+> 32	export function DashboardLayout() {
+> 33	  const { user } = useAuth();
+> 34	  const location = useLocation();
+> 35	  const isConstellation = location.pathname.includes('/constellation');
+> 36	  const isOrchestration = location.pathname.includes('/orchestration');
+> 37	  const isCore = location.pathname.includes('/core');
+> 38	  const isFullCanvas = isConstellation || isOrchestration || isCore;
+> 39	  const [open, setOpen] = useState(!isConstellation && !isCore);
+> 40	  const [mcoBalance, setMcoBalance] = useState<number | null>(null);
+> 41	
+> 42	  useEffect(() => {
+> 43	    if (!user) return;
+> 44	    supabase
+> 45	      .from('profiles')
+> 46	      .select('mco_balance')
+> 47	      .eq('id', user.id)
+> 48	      .maybeSingle()
+> 49	      .then(({ data }) => setMcoBalance(data?.mco_balance ?? 0));
+> 50	
+> 51	    const channel = supabase
+> 52	      .channel('layout-profile-balance')
+> 53	      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+> 54	        (payload) => setMcoBalance((payload.new as any).mco_balance ?? 0))
+> 55	      .subscribe();
+> 56	
+> 57	    return () => { supabase.removeChannel(channel); };
+> 58	  }, [user]);
+> 59	
+> 60	  useEffect(() => {
+> 61	    if (isConstellation || isCore) setOpen(false);
+> 62	    else setOpen(true);
+> 63	  }, [isConstellation, isCore]);
+> 64	
+> 65	  // Build breadcrumbs
+> 66	  const segments = location.pathname.split('/').filter(Boolean);
+> 67	  const crumbs = segments.map((seg, i) => ({
+> 68	    label: BREADCRUMB_MAP[seg] || seg,
+> 69	    path: '/' + segments.slice(0, i + 1).join('/'),
+> 70	    isLast: i === segments.length - 1,
+> 71	  }));
+> 72	
+> 73	  return (
+> 74	    <SidebarProvider open={open} onOpenChange={setOpen}>
+> 75	      <div className="h-screen flex w-full bg-background overflow-hidden">
+> 76	        <DashboardSidebar />
+> 77	
+> 78	        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-hidden">
+> 79	          <header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0">
+> 80	            <div className="flex items-center gap-2">
+> 81	              <SidebarTrigger />
+> 82	              <nav className="hidden sm:flex items-center gap-1 text-sm">
+> 83	                {crumbs.map((c, i) => (
+> 84	                  <span key={c.path} className="flex items-center gap-1">
+> 85	                    {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+> 86	                    {c.isLast ? (
+> 87	                      <span className="font-semibold text-foreground">{c.label}</span>
+> 88	                    ) : (
+> 89	                      <Link to={c.path} className="text-muted-foreground hover:text-foreground transition-colors">{c.label}</Link>
+> 90	                    )}
+> 91	                  </span>
+> 92	                ))}
+> 93	              </nav>
+> 94	            </div>
+> 95	
+> 96	            <div className="flex items-center gap-3">
+> 97	              {mcoBalance !== null && (
+> 98	                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+> 99	                  <Coins className="h-3.5 w-3.5" />
+> 100	                  {mcoBalance} <span className="font-normal text-primary/70">mcoCoins</span>
+> 101	                </div>
+> 102	              )}
+> 103	              <Button variant="ghost" size="icon" className="relative">
+> 104	                <Bell className="h-4 w-4" />
+> 105	                <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 bg-destructive rounded-full text-[9px] font-bold flex items-center justify-center text-destructive-foreground">
+> 106	                  3
+> 107	                </span>
+> 108	              </Button>
+> 109	              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+> 110	                {user?.email?.charAt(0).toUpperCase() || 'U'}
+> 111	              </div>
+> 112	            </div>
+> 113	          </header>
+> 114	
+> 115	          <main className={`flex-1 min-h-0 ${isFullCanvas ? 'overflow-hidden p-0' : 'overflow-auto p-4 md:p-6'}`}>
+> 116	            <Outlet />
+> 117	          </main>
+> 118	        </div>
+> 119	      </div>
+> 120	    </SidebarProvider>
+> 121	  );
+> 122	}
+> 123	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+> 2	import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+> 3	import { Toaster as Sonner } from "@/components/ui/sonner";
+> 4	import { Toaster } from "@/components/ui/toaster";
+> 5	import { TooltipProvider } from "@/components/ui/tooltip";
+> 6	import { useAuth } from "@/hooks/useAuth";
+> 7	import { HelmetProvider } from "react-helmet-async";
+> 8	import { DashboardLayout } from "./components/dashboard/DashboardLayout.tsx";
+> 9	import { Loader2 } from "lucide-react";
+> 10	import { lazy, Suspense } from "react";
+> 11	
+> 12	// Lazy-loaded pages
+> 13	const Landing = lazy(() => import("./pages/Landing.tsx"));
+> 14	const Auth = lazy(() => import("./pages/Auth.tsx"));
+> 15	const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+> 16	const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+> 17	const DashboardHome = lazy(() => import("./pages/DashboardHome.tsx"));
+> 18	const ConstellationPage = lazy(() => import("./pages/ConstellationPage.tsx"));
+> 19	const VideoEditorPage = lazy(() => import("./pages/VideoEditorPage.tsx"));
+> 20	const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.tsx"));
+> 21	const CampaignsPage = lazy(() => import("./pages/CampaignsPage.tsx"));
+> 22	const CampaignWizard = lazy(() => import("./pages/CampaignWizard.tsx"));
+> 23	const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
+> 24	const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> 25	const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> 26	const ContentLibraryPage = lazy(() => import("./pages/ContentLibraryPage.tsx"));
+> 27	const CalendarPage = lazy(() => import("./pages/CalendarPage.tsx"));
+> 28	const BlogEditorPage = lazy(() => import("./pages/BlogEditorPage.tsx"));
+> 29	const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+> 30	const OrchestrationPage = lazy(() => import("./pages/OrchestrationPage.tsx"));
+> 31	const MemoryPage = lazy(() => import("./pages/MemoryPage.tsx"));
+> 32	const MatrixPage = lazy(() => import("./pages/MatrixPage.tsx"));
+> 33	const AffiliatesPage = lazy(() => import("./pages/AffiliatesPage.tsx"));
+> 34	const ModelArenaPage = lazy(() => import("./pages/ModelArenaPage.tsx"));
+> 35	const CoreV2Page = lazy(() => import("./pages/CoreV2Page.tsx"));
+> 36	const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+> 37	const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
+> 38	const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+> 39	const BillingPage = lazy(() => import("./pages/BillingPage.tsx"));
+> 40	const OnboardingPage = lazy(() => import("./pages/onboarding/OnboardingPage.tsx"));
+> 41	
+> 42	const queryClient = new QueryClient();
+> 43	
+> 44	function PageLoader() {
+> 45	  return (
+> 46	    <div className="min-h-screen bg-background flex items-center justify-center">
+> 47	      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 48	    </div>
+> 49	  );
+> 50	}
+> 51	
+> 52	function ProtectedRoute({ children }: { children: React.ReactNode }) {
+> 53	  const { user, loading } = useAuth();
+> 54	  if (loading) return <PageLoader />;
+> 55	  if (!user) return <Navigate to="/auth" replace />;
+> 56	  return <>{children}</>;
+> 57	}
+> 58	
+> 59	function PublicRoute({ children }: { children: React.ReactNode }) {
+> 60	  const { user, loading } = useAuth();
+> 61	  if (loading) return <PageLoader />;
+> 62	  if (user) return <Navigate to="/dashboard" replace />;
+> 63	  return <>{children}</>;
+> 64	}
+> 65	
+> 66	const App = () => (
+> 67	  <QueryClientProvider client={queryClient}>
+> 68	    <HelmetProvider>
+> 69	      <TooltipProvider>
+> 70	        <Toaster />
+> 71	        <Sonner />
+> 72	        <BrowserRouter>
+> 73	          <Suspense fallback={<PageLoader />}>
+> 74	            <Routes>
+> 75	              <Route path="/" element={<Landing />} />
+> 76	              <Route
+> 77	                path="/dashboard"
+> 78	                element={
+> 79	                  <ProtectedRoute>
+> 80	                    <DashboardLayout />
+> 81	                  </ProtectedRoute>
+> 82	                }
+> 83	              >
+> 84	                <Route index element={<DashboardHome />} />
+> 85	                <Route path="constellation" element={<ConstellationPage />} />
+> 86	                <Route path="constellation/memory" element={<MemoryPage />} />
+> 87	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 88	                <Route path="campaigns" element={<CampaignsPage />} />
+> 89	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 90	                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> 91	                <Route path="content" element={<ContentLibraryPage />} />
+> 92	                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 93	                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> 94	                <Route path="calendar" element={<CalendarPage />} />
+> 95	                <Route path="social" element={<SocialAccountsPage />} />
+> 96	                <Route path="analytics" element={<AnalyticsPage />} />
+> 97	                <Route path="blog" element={<BlogEditorPage />} />
+> 98	                <Route path="admin" element={<AdminPage />} />
+> 99	                <Route path="orchestration" element={<OrchestrationPage />} />
+> 100	                <Route path="affiliates" element={<AffiliatesPage />} />
+> 101	                <Route path="arena" element={<ModelArenaPage />} />
+> 102	                <Route path="core" element={<Navigate to="/dashboard/core-v2" replace />} />
+> 103	                <Route path="core-v2" element={<CoreV2Page />} />
+> 104	                <Route path="settings" element={<SettingsPage />} />
+> 105	                <Route path="billing" element={<BillingPage />} />
+> 106	              </Route>
+> 107	              <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+> 108	              <Route path="/social/callback" element={<SocialCallback />} />
+> 109	              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> 110	              <Route path="/reset-password" element={<ResetPassword />} />
+> 111	              <Route path="/privacy" element={<PrivacyPolicy />} />
+> 112	              <Route path="/terms" element={<TermsOfService />} />
+> 113	              <Route path="*" element={<NotFound />} />
+> 114	            </Routes>
+> 115	          </Suspense>
+> 116	        </BrowserRouter>
+> 117	      </TooltipProvider>
+> 118	    </HelmetProvider>
+> 119	  </QueryClientProvider>
+> 120	);
+> 121	
+> 122	export default App;
+> 123	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { CrewGraph } from '@/components/graph/CrewGraph';
+> 2	import { HUD } from '@/components/HUD';
+> 3	import { ConfigPanel } from '@/components/panels/ConfigPanel';
+> 4	import { LogsPanel } from '@/components/panels/LogsPanel';
+> 5	import { AgentDetail } from '@/components/panels/AgentDetail';
+> 6	import { Legend } from '@/components/Legend';
+> 7	import { useSimulation } from '@/hooks/useSimulation';
+> 8	import { useCrewData } from '@/hooks/useCrewData';
+> 9	import { useHandTracking } from '@/hooks/useHandTracking';
+> 10	import { useAuth } from '@/hooks/useAuth';
+> 11	import { GestureParticleOverlay } from '@/components/gestures/GestureParticles';
+> 12	import { GestureHUD } from '@/components/gestures/GestureHUD';
+> 13	import { GestureController } from '@/components/gestures/GestureController';
+> 14	import { AddAgentDialog } from '@/components/panels/AddAgentDialog';
+> 15	import { NewEdgeDialog } from '@/components/panels/NewEdgeDialog';
+> 16	import { Button } from '@/components/ui/button';
+> 17	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+> 18	import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network } from 'lucide-react';
+> 19	import { useNavigate } from 'react-router-dom';
+> 20	import { useState } from 'react';
+> 21	import { useCrewStore } from '@/store/useCrewStore';
+> 22	import { deployEnterpriseToSupabase } from '@/lib/enterprise-seed';
+> 23	
+> 24	export default function ConstellationPage() {
+> 25	  const { user } = useAuth();
+> 26	  const { isLoading: crewLoading } = useCrewData();
+> 27	  const loaded = useCrewStore((s) => s.loaded);
+> 28	  const connectionMode = useCrewStore((s) => s.connectionMode);
+> 29	  const setConnectionMode = useCrewStore((s) => s.setConnectionMode);
+> 30	  useSimulation();
+> 31	  const navigate = useNavigate();
+> 32	  const [gesturesEnabled, setGesturesEnabled] = useState(false);
+> 33	  const [addOpen, setAddOpen] = useState(false);
+> 34	  const [isDeploying, setIsDeploying] = useState(false);
+> 35	  const { handData, isLoading, error } = useHandTracking(gesturesEnabled);
+> 36	
+> 37	  if (crewLoading || !loaded) {
+> 38	    return (
+> 39	      <div className="relative w-full h-full flex items-center justify-center bg-background rounded-lg">
+> 40	        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 41	      </div>
+> 42	    );
+> 43	  }
+> 44	
+> 45	  return (
+> 46	    <TooltipProvider>
+> 47	      <div className="relative w-full h-full overflow-hidden bg-background rounded-lg">
+> 48	        <div className="crt-overlay" />
+> 49	        <div className="scanline" />
+> 50	        <CrewGraph />
+> 51	        {gesturesEnabled && <GestureParticleOverlay handData={handData} />}
+> 52	        <GestureController handData={handData} enabled={gesturesEnabled} />
+> 53	        <HUD>
+> 54	          <Tooltip>
+> 55	            <TooltipTrigger asChild>
+> 56	              <Button
+> 57	                variant={connectionMode ? 'default' : 'outline'}
+> 58	                size="sm"
+> 59	                className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 60	                onClick={() => setConnectionMode(!connectionMode)}
+> 61	              >
+> 62	                {connectionMode ? <Link2Off className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+> 63	                {connectionMode ? 'Sair' : 'Conectar'}
+> 64	              </Button>
+> 65	            </TooltipTrigger>
+> 66	            <TooltipContent>
+> 67	              {connectionMode ? 'Clique em dois agentes para conectá-los' : 'Ativar modo conexão'}
+> 68	            </TooltipContent>
+> 69	          </Tooltip>
+> 70	
+> 71	          <Button
+> 72	            variant="outline"
+> 73	            size="sm"
+> 74	            disabled={isDeploying}
+> 75	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9 bg-primary/10 text-primary hover:bg-primary/20"
+> 76	            onClick={async () => {
+> 77	              if (!user?.id) return;
+> 78	              setIsDeploying(true);
+> 79	              const res = await deployEnterpriseToSupabase(user.id);
+> 80	              if (res.success) {
+> 81	                window.location.reload();
+> 82	              }
+> 83	              setIsDeploying(false);
+> 84	            }}
+> 85	          >
+> 86	            {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Loader2 className="h-3.5 w-3.5" />}
+> 87	            {isDeploying ? 'Deploying...' : 'Deploy Enterprise'}
+> 88	          </Button>
+> 89	
+> 90	          <Button
+> 91	            variant="outline"
+> 92	            size="sm"
+> 93	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 94	            onClick={() => setAddOpen(true)}
+> 95	          >
+> 96	            <Plus className="h-3.5 w-3.5" />
+> 97	            Agente
+> 98	          </Button>
+> 99	
+> 100	          {/* Matrix — full-screen AST Constellation page */}
+> 101	          <Button
+> 102	            variant="outline"
+> 103	            size="sm"
+> 104	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 105	            onClick={() => navigate('/dashboard/constellation/matrix')}
+> 106	          >
+> 107	            <Network className="h-3.5 w-3.5" />
+> 108	            Matrix
+> 109	          </Button>
+> 110	
+> 111	          {/* Memory Mesh — full-screen isolated page */}
+> 112	          <Button
+> 113	            variant="outline"
+> 114	            size="sm"
+> 115	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 116	            onClick={() => navigate('/dashboard/constellation/memory')}
+> 117	          >
+> 118	            <Brain className="h-3.5 w-3.5" />
+> 119	            Memória
+> 120	          </Button>
+> 121	
+> 122	          <Button
+> 123	            variant="outline"
+> 124	            size="sm"
+> 125	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 126	            onClick={() => navigate('/dashboard')}
+> 127	          >
+> 128	            <Minimize2 className="h-3.5 w-3.5" />
+> 129	            Minimizar
+> 130	          </Button>
+> 131	        </HUD>
+> 132	        <AgentDetail />
+> 133	        <ConfigPanel />
+> 134	        <LogsPanel />
+> 135	        <Legend />
+> 136	        <GestureHUD
+> 137	          handData={handData}
+> 138	          isLoading={isLoading}
+> 139	          error={error}
+> 140	          enabled={gesturesEnabled}
+> 141	          onToggle={() => setGesturesEnabled(!gesturesEnabled)}
+> 142	        />
+> 143	
+> 144	        {connectionMode && (
+> 145	          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-4 py-2 text-sm text-primary animate-pulse shadow-lg shadow-primary/20 flex items-center gap-2">
+> 146	            <Link2 className="h-4 w-4" />
+> 147	            <span>Clique em um agente de origem, depois no destino</span>
+> 148	          </div>
+> 149	        )}
+> 150	
+> 151	        <AddAgentDialog open={addOpen} onOpenChange={setAddOpen} />
+> 152	        <NewEdgeDialog />
+> 153	      </div>
+> 154	    </TooltipProvider>
+> 155	  );
+> 156	}
+> 157	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MatrixPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { ConstellationMatrix } from '@/components/orchestrator/ConstellationMatrix';
+> 3	import { MeshControlPanel } from '@/components/orchestrator/MeshControlPanel';
+> 4	import { useConstellationSigma } from '@/hooks/useConstellationSigma';
+> 5	import { useNavigate } from 'react-router-dom';
+> 6	import { ChevronLeft } from 'lucide-react';
+> 7	
+> 8	function MatrixPageInner() {
+> 9	  const navigate = useNavigate();
+> 10	  const { neuralDensity, nodeCount } = useConstellationSigma();
+> 11	
+> 12	  return (
+> 13	    <div className="absolute inset-0 bg-[#050210] overflow-hidden">
+> 14	      <ConstellationMatrix className="w-full h-full" />
+> 15	
+> 16	      {/* Back button — bottom-left corner, above MeshControlPanel */}
+> 17	      <button
+> 18	        onClick={() => navigate('/dashboard/constellation')}
+> 19	        className="absolute bottom-14 left-3 z-50 flex items-center gap-1.5 text-violet-400/70 hover:text-violet-200 transition-colors text-xs font-mono bg-black/70 border border-violet-500/15 rounded-lg px-2.5 py-1.5 backdrop-blur-md"
+> 20	      >
+> 21	        <ChevronLeft className="h-3.5 w-3.5" />
+> 22	        Constelação
+> 23	      </button>
+> 24	
+> 25	      {/* Mesh Control Panel — bottom-left, above back button */}
+> 26	      <MeshControlPanel neuralDensity={neuralDensity} nodeCount={nodeCount} />
+> 27	    </div>
+> 28	  );
+> 29	}
+> 30	
+> 31	export default function MatrixPage() {
+> 32	  return <MatrixPageInner />;
+> 33	}
+> 34	
+> ```
+
+## 🤖 Claude
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MemoryPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+> 2	import {
+> 3	  forceSimulation,
+> 4	  forceManyBody,
+> 5	  forceLink,
+> 6	  forceCenter,
+> 7	  forceCollide,
+> 8	  forceX,
+> 9	  forceY,
+> 10	  SimulationNodeDatum,
+> 11	  SimulationLinkDatum,
+> 12	} from 'd3-force';
+> 13	import { motion, AnimatePresence } from 'framer-motion';
+> 14	import { useMcorchMemory, McorchNode, McorchEdge } from '@/hooks/useMcorchMemory';
+> 15	import { Badge } from '@/components/ui/badge';
+> 16	import { Button } from '@/components/ui/button';
+> 17	import { Input } from '@/components/ui/input';
+> 18	import { useNavigate } from 'react-router-dom';
+> 19	import { cn } from '@/lib/utils';
+> 20	import {
+> 21	  Brain, Loader2, ChevronLeft, Plus, X, Search,
+> 22	  GitBranch, Milestone, Eye, FlaskConical, Cpu, BookOpen,
+> 23	  ZoomIn, ZoomOut, Maximize2, Filter, Link2, UserCheck,
+> 24	} from 'lucide-react';
+> 25	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+> 26	import { Label } from '@/components/ui/label';
+> 27	import { Textarea } from '@/components/ui/textarea';
+> 28	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 29	import { supabase } from '@/integrations/supabase/client';
+> 30	import { useAuth } from '@/hooks/useAuth';
+> 31	import { inferSquad } from '@/hooks/useCrewOverlay';
+> 32	
+> 33	const NODE_TYPE_COLOR: Record<string, string> = {
+> 34	  requirement:  '#a855f7',
+> 35	  observation:  '#38bdf8',
+> 36	  decision:     '#f59e0b',
+> 37	  milestone:    '#22c55e',
+> 38	  architecture: '#ec4899',
+> 39	  system:       '#06b6d4',
+> 40	  crew_agent:   '#ff00ff',
+> 41	  default:      '#64748b',
+> 42	};
+> 43	
+> 44	const NODE_TYPE_ICON: Record<string, React.FC<{ className?: string }>> = {
+> 45	  milestone:    Milestone,
+> 46	  observation:  Eye,
+> 47	  decision:     FlaskConical,
+> 48	  architecture: Cpu,
+> 49	  requirement:  BookOpen,
+> 50	  system:       GitBranch,
+> 51	  default:      Brain,
+> 52	};
+> 53	
+> 54	const NODE_TYPE_LABEL: Record<string, string> = {
+> 55	  requirement:  'Requisito',
+> 56	  observation:  'Observação',
+> 57	  decision:     'Decisão',
+> 58	  milestone:    'Milestone',
+> 59	  architecture: 'Arquitetura',
+> 60	  system:       'Sistema',
+> 61	  crew_agent:   'Agente',
+> 62	  default:      'Nó',
+> 63	};
+> 64	
+> 65	const ALL_TYPES = ['milestone', 'observation', 'decision', 'architecture', 'requirement', 'system'];
+> 66	
+> 67	interface SimNode extends SimulationNodeDatum {
+> 68	  id: string;
+> 69	  node_type: string;
+> 70	  name: string;
+> 71	  content: string;
+> 72	  stability_score: number;
+> 73	}
+> 74	
+> 75	interface SimLink extends SimulationLinkDatum<SimNode> {
+> 76	  id: string;
+> 77	  relation_type: string;
+> 78	  weight: number;
+> 79	}
+> 80	
+> 81	interface DragState {
+> 82	  dragging: boolean;
+> 83	  startX: number;
+> 84	  startY: number;
+> 85	  startPanX: number;
+> 86	  startPanY: number;
+> 87	}
+> 88	
+> 89	interface NodeForm {
+> 90	  name: string;
+> 91	  node_type: string;
+> 92	  content: string;
+> 93	}
+> 94	
+> 95	interface EdgeForm {
+> 96	  source_id: string;
+> 97	  target_id: string;
+> 98	  relation_type: string;
+> 99	}
+> 100	
+> 101	const RELATION_TYPES = ['DEPENDS_ON', 'BLOCKS', 'INSPIRES', 'IMPLEMENTS', 'EXTENDS', 'REFERENCES', 'RELATES_TO'];
+> 102	
+> 103	export default function MemoryPage() {
+> 104	  const { user } = useAuth();
+> 105	  const navigate  = useNavigate();
+> 106	  const { nodes, edges, loading, error, createNode, createEdge } = useMcorchMemory();
+> 107	
+> 108	  const containerRef  = useRef<SVGSVGElement>(null);
+> 109	  const positionsRef  = useRef<Map<string, { x: number; y: number }>>(new Map());
+> 110	  const [renderTick, setRenderTick] = useState(0);
+> 111	  const rafRef        = useRef<number | null>(null);
+> 112	
+> 113	  // Viewport & zoom/pan state
+> 114	  const [size, setSize]     = useState({ w: 800, h: 600 });
+> 115	  const [pan, setPan]       = useState({ x: 0, y: 0 });
+> 116	  const [scale, setScale]   = useState(1);
+> 117	  const dragRef             = useRef<DragState>({ dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
+> 118	
+> 119	  // UI state
+> 120	  const [selectedNode, setSelectedNode]   = useState<McorchNode | null>(null);
+> 121	  const [activeTypes, setActiveTypes]     = useState<Set<string>>(new Set(ALL_TYPES));
+> 122	  const [searchQuery, setSearchQuery]     = useState('');
+> 123	  const [sidebarOpen, setSidebarOpen]     = useState(false);
+> 124	  const [addOpen, setAddOpen]             = useState(false);
+> 125	  const [saving, setSaving]               = useState(false);
+> 126	  const [nodeForm, setNodeForm]           = useState<NodeForm>({ name: '', node_type: 'observation', content: '' });
+> 127	
+> 128	  // Edge creator
+> 129	  const [addEdgeOpen, setAddEdgeOpen]     = useState(false);
+> 130	  const [edgeForm, setEdgeForm]           = useState<EdgeForm>({ source_id: '', target_id: '', relation_type: 'DEPENDS_ON' });
+> 131	  const [edgeSaving, setEdgeSaving]       = useState(false);
+> 132	
+> 133	  // Assign Agent
+> 134	  const [crewAgents, setCrewAgents]       = useState<{ id: string; name: string; role: string }[]>([]);
+> 135	  const [nodeOwnership, setNodeOwnership] = useState<{ agent_id: string } | null>(null);
+> 136	  const [assigningSaving, setAssigningSaving] = useState(false);
+> 137	
+> 138	  // Resize observer
+> 139	  useEffect(() => {
+> 140	    const el = containerRef.current?.parentElement;
+> 141	    if (!el) return;
+> 142	    const obs = new ResizeObserver(([entry]) => {
+> 143	      setSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+> 144	    });
+> 145	    obs.observe(el);
+> 146	    setSize({ w: el.clientWidth, h: el.clientHeight });
+> 147	    return () => obs.disconnect();
+> 148	  }, []);
+> 149	
+> 150	  // Filter nodes
+> 151	  const visibleNodes = useMemo(() =>
+> 152	    nodes.filter((n) => {
+> 153	      const typeOk = activeTypes.has(n.node_type) || activeTypes.has('default');
+> 154	      const nameOk = !searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase())
+> 155	                     || n.content.toLowerCase().includes(searchQuery.toLowerCase());
+> 156	      return typeOk && nameOk;
+> 157	    }),
+> 158	  [nodes, activeTypes, searchQuery]);
+> 159	
+> 160	  const visibleNodeIds = useMemo(() => new Set(visibleNodes.map((n) => n.id)), [visibleNodes]);
+> 161	
+> 162	  const visibleEdges = useMemo(() =>
+> 163	    edges.filter((e) => visibleNodeIds.has(e.source_id) && visibleNodeIds.has(e.target_id)),
+> 164	  [edges, visibleNodeIds]);
+> 165	
+> 166	  // d3-force simulation
+> 167	  useEffect(() => {
+> 168	    if (visibleNodes.length === 0 || size.w === 0) return;
+> 169	
+> 170	    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+> 171	
+> 172	    const W = size.w;
+> 173	    const H = size.h;
+> 174	
+> 175	    const simNodes: SimNode[] = visibleNodes.map((n) => ({
+> 176	      id: n.id,
+> 177	      node_type: n.node_type,
+> 178	      name: n.name,
+> 179	      content: n.content,
+> 180	      stability_score: n.stability_score ?? 1.0,
+> 181	      x: positionsRef.current.get(n.id)?.x ?? W / 2 + (Math.random() - 0.5) * 120,
+> 182	      y: positionsRef.current.get(n.id)?.y ?? H / 2 + (Math.random() - 0.5) * 120,
+> 183	    }));
+> 184	
+> 185	    const nodeById = new Map(simNodes.map((n) => [n.id, n]));
+> 186	
+> 187	    const simLinks: SimLink[] = visibleEdges
+> 188	      .map((e) => {
+> 189	        const source = nodeById.get(e.source_id);
+> 190	        const target = nodeById.get(e.target_id);
+> 191	        if (!source || !target) return null;
+> 192	        return { id: e.id, source, target, relation_type: e.relation_type, weight: e.weight } as SimLink;
+> 193	      })
+> 194	      .filter(Boolean) as SimLink[];
+> 195	
+> 196	    // Type-based cluster targets
+> 197	    const types = Array.from(new Set(simNodes.map((n) => n.node_type)));
+> 198	    const clusterCenters = new Map<string, { x: number; y: number }>();
+> 199	    types.forEach((t, i) => {
+> 200	      const angle = (i / types.length) * 2 * Math.PI - Math.PI / 2;
+> 201	      const r = Math.min(W, H) * 0.28;
+> 202	      clusterCenters.set(t, { x: W / 2 + Math.cos(angle) * r, y: H / 2 + Math.sin(angle) * r });
+> 203	    });
+> 204	
+> 205	    const simulation = forceSimulation<SimNode>(simNodes)
+> 206	      .force('center',   forceCenter(W / 2, H / 2).strength(0.03))
+> 207	      .force('charge',   forceManyBody<SimNode>().strength(-320).distanceMax(400))
+> 208	      .force('link',     forceLink<SimNode, SimLink>(simLinks).id((d) => d.id).distance(110).strength(0.5))
+> 209	      .force('collide',  forceCollide<SimNode>(30))
+> 210	      .force('clusterX', forceX<SimNode>((d) => clusterCenters.get(d.node_type)?.x ?? W / 2).strength(0.12))
+> 211	      .force('clusterY', forceY<SimNode>((d) => clusterCenters.get(d.node_type)?.y ?? H / 2).strength(0.12))
+> 212	      .alphaDecay(0.025)
+> 213	      .stop();
+> 214	
+> 215	    let tick = 0;
+> 216	
+> 217	    function step() {
+> 218	      simulation.tick();
+> 219	      tick++;
+> 220	
+> 221	      for (const n of simNodes) {
+> 222	        positionsRef.current.set(n.id, {
+> 223	          x: Math.max(32, Math.min(W - 32, n.x ?? W / 2)),
+> 224	          y: Math.max(32, Math.min(H - 32, n.y ?? H / 2)),
+> 225	        });
+> 226	      }
+> 227	
+> 228	      if (tick % 6 === 0) setRenderTick((t) => t + 1);
+> 229	
+> 230	      if (simulation.alpha() > simulation.alphaMin()) {
+> 231	        rafRef.current = requestAnimationFrame(step);
+> 232	      } else {
+> 233	        setRenderTick((t) => t + 1);
+> 234	      }
+> 235	    }
+> 236	
+> 237	    rafRef.current = requestAnimationFrame(step);
+> 238	
+> 239	    return () => {
+> 240	      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+> 241	      simulation.stop();
+> 242	    };
+> 243	  }, [visibleNodes, visibleEdges, size]);
+> 244	
+> 245	  // ── Zoom / Pan handlers ────────────────────────────────────────────────
+> 246	  const handleWheel = useCallback((e: React.WheelEvent) => {
+> 247	    e.preventDefault();
+> 248	    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+> 249	    setScale((s) => Math.max(0.15, Math.min(4, s * factor)));
+> 250	  }, []);
+> 251	
+> 252	  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+> 253	    if (e.button !== 0) return;
+> 254	    dragRef.current = {
+> 255	      dragging: true,
+> 256	      startX: e.clientX,
+> 257	      startY: e.clientY,
+> 258	      startPanX: pan.x,
+> 259	      startPanY: pan.y,
+> 260	    };
+> 261	  }, [pan]);
+> 262	
+> 263	  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+> 264	    const d = dragRef.current;
+> 265	    if (!d.dragging) return;
+> 266	    setPan({
+> 267	      x: d.startPanX + (e.clientX - d.startX),
+> 268	      y: d.startPanY + (e.clientY - d.startY),
+> 269	    });
+> 270	  }, []);
+> 271	
+> 272	  const handleMouseUp = useCallback(() => {
+> 273	    dragRef.current.dragging = false;
+> 274	  }, []);
+> 275	
+> 276	  const resetView = useCallback(() => {
+> 277	    setPan({ x: 0, y: 0 });
+> 278	    setScale(1);
+> 279	  }, []);
+> 280	
+> 281	  // ── Type filter toggle ─────────────────────────────────────────────────
+> 282	  const toggleType = (t: string) => {
+> 283	    setActiveTypes((prev) => {
+> 284	      const next = new Set(prev);
+> 285	      if (next.has(t)) {
+> 286	        if (next.size > 1) next.delete(t);
+> 287	      } else {
+> 288	        next.add(t);
+> 289	      }
+> 290	      return next;
+> 291	    });
+> 292	  };
+> 293	
+> 294	  // Load crew agents once
+> 295	  useEffect(() => {
+> 296	    if (!user) return;
+> 297	    supabase.from('crew_agents').select('id, name, role').eq('user_id', user.id)
+> 298	      .then(({ data }) => setCrewAgents(data ?? []));
+> 299	  }, [user]);
+> 300	
+> 301	  // Load ownership for selected node
+> 302	  useEffect(() => {
+> 303	    if (!selectedNode || !user) { setNodeOwnership(null); return; }
+> 304	    (supabase as any)
+> 305	      .from('crew_module_ownership')
+> 306	      .select('agent_id')
+> 307	      .eq('module_path', selectedNode.id)
+> 308	      .eq('user_id', user.id)
+> 309	      .maybeSingle()
+> 310	      .then(({ data }: { data: { agent_id: string } | null }) => setNodeOwnership(data));
+> 311	  }, [selectedNode, user]);
+> 312	
+> 313	  // ── Create edge ───────────────────────────────────────────────────────
+> 314	  const handleSaveEdge = async () => {
+> 315	    if (!edgeForm.source_id || !edgeForm.target_id) return;
+> 316	    setEdgeSaving(true);
+> 317	    try {
+> 318	      await createEdge({
+> 319	        source_id:     edgeForm.source_id,
+> 320	        target_id:     edgeForm.target_id,
+> 321	        relation_type: edgeForm.relation_type,
+> 322	      });
+> 323	      setAddEdgeOpen(false);
+> 324	      setEdgeForm({ source_id: '', target_id: '', relation_type: 'DEPENDS_ON' });
+> 325	    } catch (e) {
+> 326	      console.error('Failed to create edge:', e);
+> 327	    } finally {
+> 328	      setEdgeSaving(false);
+> 329	    }
+> 330	  };
+> 331	
+> 332	  // ── Assign Agent ──────────────────────────────────────────────────────
+> 333	  const assignAgent = async (agentId: string) => {
+> 334	    if (!selectedNode || !user) return;
+> 335	    setAssigningSaving(true);
+> 336	    try {
+> 337	      const agent = crewAgents.find((a) => a.id === agentId);
+> 338	      const squad_label = agent ? inferSquad(agent.name, agent.role) : 'default';
+> 339	      await (supabase as any).from('crew_module_ownership').upsert(
+> 340	        { agent_id: agentId, module_path: selectedNode.id, squad_label, user_id: user.id },
+> 341	        { onConflict: 'agent_id,module_path' },
+> 342	      );
+> 343	      setNodeOwnership({ agent_id: agentId });
+> 344	    } finally {
+> 345	      setAssigningSaving(false);
+> 346	    }
+> 347	  };
+> 348	
+> 349	  // ── Create node ───────────────────────────────────────────────────────
+> 350	  const handleSaveNode = async () => {
+> 351	    if (!nodeForm.name.trim() || !user) return;
+> 352	    setSaving(true);
+> 353	    try {
+> 354	      await createNode({
+> 355	        name:      nodeForm.name.trim(),
+> 356	        node_type: nodeForm.node_type,
+> 357	        content:   nodeForm.content.trim(),
+> 358	        metadata:  {},
+> 359	      });
+> 360	      setAddOpen(false);
+> 361	      setNodeForm({ name: '', node_type: 'observation', content: '' });
+> 362	    } catch (e) {
+> 363	      console.error('Failed to create node:', e);
+> 364	    } finally {
+> 365	      setSaving(false);
+> 366	    }
+> 367	  };
+> 368	
+> 369	  // Stats
+> 370	  const stats = useMemo(() => {
+> 371	    const typeCounts: Record<string, number> = {};
+> 372	    for (const n of nodes) {
+> 373	      typeCounts[n.node_type] = (typeCounts[n.node_type] ?? 0) + 1;
+> 374	    }
+> 375	    const avgStability = nodes.length
+> 376	      ? nodes.reduce((s, n) => s + (n.stability_score ?? 1), 0) / nodes.length
+> 377	      : 0;
+> 378	    return { typeCounts, avgStability };
+> 379	  }, [nodes]);
+> 380	
+> 381	  // ── Loading / Error ───────────────────────────────────────────────────
+> 382	  if (loading) {
+> 383	    return (
+> 384	      <div className="w-full h-full flex items-center justify-center bg-[#020108]">
+> 385	        <div className="flex flex-col items-center gap-3">
+> 386	          <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+> 387	          <p className="text-xs text-violet-400/60 font-mono">Carregando Knowledge Mesh…</p>
+> 388	        </div>
+> 389	      </div>
+> 390	    );
+> 391	  }
+> 392	
+> 393	  if (error) {
+> 394	    return (
+> 395	      <div className="w-full h-full flex items-center justify-center bg-[#020108]">
+> 396	        <p className="text-xs text-rose-400 font-mono">Erro ao carregar Memory Mesh</p>
+> 397	      </div>
+> 398	    );
+> 399	  }
+> 400	
+> 401	  return (
+> 402	    <div className="absolute inset-0 bg-[#020108] overflow-hidden">
+> 403	      {/* SVG glow filter definitions */}
+> 404	      <svg width="0" height="0" className="absolute">
+> 405	        <defs>
+> 406	          <filter id="mem-glow-sm">
+> 407	            <feGaussianBlur stdDeviation="2.5" result="blur" />
+> 408	            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+> 409	          </filter>
+> 410	          <filter id="mem-glow-lg">
+> 411	            <feGaussianBlur stdDeviation="5" result="blur" />
+> 412	            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+> 413	          </filter>
+> 414	          <radialGradient id="bg-radial" cx="50%" cy="50%" r="60%">
+> 415	            <stop offset="0%" stopColor="#0d0522" />
+> 416	            <stop offset="100%" stopColor="#020108" />
+> 417	          </radialGradient>
+> 418	          {ALL_TYPES.map((t) => (
+> 419	            <radialGradient key={t} id={`node-grad-${t}`} cx="50%" cy="50%" r="50%">
+> 420	              <stop offset="0%" stopColor={NODE_TYPE_COLOR[t] ?? NODE_TYPE_COLOR.default} stopOpacity="0.35" />
+> 421	              <stop offset="100%" stopColor={NODE_TYPE_COLOR[t] ?? NODE_TYPE_COLOR.default} stopOpacity="0.08" />
+> 422	            </radialGradient>
+> 423	          ))}
+> 424	        </defs>
+> 425	      </svg>
+> 426	
+> 427	      {/* Scanlines */}
+> 428	      <div
+> 429	        className="absolute inset-0 pointer-events-none z-0"
+> 430	        style={{
+> 431	          background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 6px)',
+> 432	        }}
+> 433	      />
+> 434	
+> 435	      {/* ── Top HUD bar ────────────────────────────────────────────────── */}
+> 436	      <div className="absolute top-0 left-0 right-0 h-12 z-30 flex items-center justify-between px-4 bg-black/60 border-b border-violet-500/10 backdrop-blur-md">
+> 437	        {/* Back button */}
+> 438	        <button
+> 439	          onClick={() => navigate('/dashboard/constellation')}
+> 440	          className="flex items-center gap-1.5 text-violet-400/70 hover:text-violet-200 transition-colors text-xs font-mono"
+> 441	        >
+> 442	          <ChevronLeft className="h-4 w-4" />
+> 443	          Constelação
+> 444	        </button>
+> 445	
+> 446	        {/* Center: title + stats */}
+> 447	        <div className="flex items-center gap-3">
+> 448	          <div className="flex items-center gap-2">
+> 449	            <Brain className="h-4 w-4 text-violet-400" style={{ filter: 'drop-shadow(0 0 4px #a855f7)' }} />
+> 450	            <span className="text-sm font-mono text-violet-200 font-semibold tracking-wide">Memory Mesh</span>
+> 451	          </div>
+> 452	
+> 453	          <div className="flex items-center gap-2">
+> 454	            <Badge variant="outline" className="border-violet-500/30 text-violet-300 bg-black/60 text-[10px] font-mono">
+> 455	              {nodes.length} nós · {edges.length} arestas
+> 456	            </Badge>
+> 457	            <Badge variant="outline" className="border-emerald-500/30 text-emerald-300 bg-black/60 text-[10px] font-mono">
+> 458	              ⬡ s̄={stats.avgStability.toFixed(2)}
+> 459	            </Badge>
+> 460	            {Object.entries(stats.typeCounts).slice(0, 3).map(([type, count]) => (
+> 461	              <Badge
+> 462	                key={type}
+> 463	                variant="outline"
+> 464	                className="text-[10px] font-mono bg-black/60"
+> 465	                style={{
+> 466	                  borderColor: (NODE_TYPE_COLOR[type] ?? NODE_TYPE_COLOR.default) + '50',
+> 467	                  color: NODE_TYPE_COLOR[type] ?? NODE_TYPE_COLOR.default,
+> 468	                }}
+> 469	              >
+> 470	                {count} {NODE_TYPE_LABEL[type] ?? type}
+> 471	              </Badge>
+> 472	            ))}
+> 473	          </div>
+> 474	        </div>
+> 475	
+> 476	        {/* Right: actions */}
+> 477	        <div className="flex items-center gap-2">
+> 478	          <div className="relative">
+> 479	            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-violet-500/50" />
+> 480	            <Input
+> 481	              value={searchQuery}
+> 482	              onChange={(e) => setSearchQuery(e.target.value)}
+> 483	              placeholder="Buscar nó…"
+> 484	              className="h-7 pl-7 pr-3 text-xs font-mono bg-black/60 border-violet-500/20 text-violet-200 placeholder:text-violet-500/30 w-36 focus-visible:ring-violet-500/30"
+> 485	            />
+> 486	            {searchQuery && (
+> 487	              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-violet-500/50 hover:text-violet-300">
+> 488	                <X className="h-2.5 w-2.5" />
+> 489	              </button>
+> 490	            )}
+> 491	          </div>
+> 492	
+> 493	          <Button
+> 494	            size="sm"
+> 495	            variant="outline"
+> 496	            className={cn(
+> 497	              'h-7 text-[10px] gap-1.5 border-violet-500/20 bg-black/60 text-violet-300 hover:border-violet-400/50 font-mono',
+> 498	              sidebarOpen && 'border-violet-400/50 bg-violet-900/30 text-violet-200',
+> 499	            )}
+> 500	            onClick={() => setSidebarOpen((v) => !v)}
+> 501	          >
+> 502	            <Filter className="h-3 w-3" />
+> 503	            Filtrar
+> 504	          </Button>
+> 505	
+> 506	          <Button
+> 507	            size="sm"
+> 508	            variant="outline"
+> 509	            className="h-7 text-[10px] gap-1.5 border-cyan-500/20 bg-black/60 text-cyan-300 hover:border-cyan-400/50 font-mono"
+> 510	            onClick={() => {
+> 511	              setEdgeForm({ source_id: selectedNode?.id ?? '', target_id: '', relation_type: 'DEPENDS_ON' });
+> 512	              setAddEdgeOpen(true);
+> 513	            }}
+> 514	          >
+> 515	            <Link2 className="h-3 w-3" />
+> 516	            Nova Aresta
+> 517	          </Button>
+> 518	
+> 519	          <Button
+> 520	            size="sm"
+> 521	            className="h-7 text-[10px] gap-1.5 bg-violet-700/80 hover:bg-violet-600/80 border-violet-500/30 font-mono"
+> 522	            onClick={() => setAddOpen(true)}
+> 523	          >
+> 524	            <Plus className="h-3 w-3" />
+> 525	            Novo Nó
+> 526	          </Button>
+> 527	        </div>
+> 528	      </div>
+> 529	
+> 530	
+> 531	      {/* ── Main SVG canvas ───────────────────────────────────────────── */}
+> 532	      <svg
+> 533	        ref={containerRef}
+> 534	        className="absolute inset-0 w-full h-full"
+> 535	        style={{ top: 48, height: 'calc(100% - 48px)', cursor: dragRef.current.dragging ? 'grabbing' : 'grab' }}
+> 536	        onWheel={handleWheel}
+> 537	        onMouseDown={handleMouseDown}
+> 538	        onMouseMove={handleMouseMove}
+> 539	        onMouseUp={handleMouseUp}
+> 540	        onMouseLeave={handleMouseUp}
+> 541	      >
+> 542	        <rect width="100%" height="100%" fill="url(#bg-radial)" />
+> 543	
+> 544	        <g transform={`translate(${pan.x},${pan.y}) scale(${scale})`}>
+> 545	          {/* Edge glow layer */}
+> 546	          {visibleEdges.map((edge) => {
+> 547	            const sp = positionsRef.current.get(edge.source_id);
+> 548	            const tp = positionsRef.current.get(edge.target_id);
+> 549	            if (!sp || !tp) return null;
+> 550	            const color = NODE_TYPE_COLOR.default;
+> 551	            return (
+> 552	              <g key={`glow-${edge.id}`}>
+> 553	                <line
+> 554	                  x1={sp.x} y1={sp.y} x2={tp.x} y2={tp.y}
+> 555	                  stroke="#7c3aed"
+> 556	                  strokeOpacity={0.06}
+> 557	                  strokeWidth={6}
+> 558	                />
+> 559	              </g>
+> 560	            );
+> 561	          })}
+> 562	
+> 563	          {/* Edges */}
+> 564	          {visibleEdges.map((edge) => {
+> 565	            const sp = positionsRef.current.get(edge.source_id);
+> 566	            const tp = positionsRef.current.get(edge.target_id);
+> 567	            if (!sp || !tp) return null;
+> 568	            const mx = (sp.x + tp.x) / 2;
+> 569	            const my = (sp.y + tp.y) / 2;
+> 570	            return (
+> 571	              <g key={edge.id}>
+> 572	                <line
+> 573	                  x1={sp.x} y1={sp.y} x2={tp.x} y2={tp.y}
+> 574	                  stroke="#38bdf8"
+> 575	                  strokeOpacity={0.18}
+> 576	                  strokeWidth={1.2}
+> 577	                  strokeDasharray="4 3"
+> 578	                  style={{
+> 579	                    animation: 'dash-flow 3s linear infinite',
+> 580	                  }}
+> 581	                />
+> 582	                <text
+> 583	                  x={mx} y={my - 5}
+> 584	                  textAnchor="middle"
+> 585	                  fontSize={6}
+> 586	                  fill="#38bdf8"
+> 587	                  fillOpacity={0.4}
+> 588	                  style={{ fontFamily: 'monospace', pointerEvents: 'none', userSelect: 'none' }}
+> 589	                >
+> 590	                  {edge.relation_type}
+> 591	                </text>
+> 592	              </g>
+> 593	            );
+> 594	          })}
+> 595	
+> 596	          {/* Nodes */}
+> 597	          {visibleNodes.map((node) => {
+> 598	            const pos = positionsRef.current.get(node.id) ?? { x: size.w / 2, y: size.h / 2 };
+> 599	            const color  = NODE_TYPE_COLOR[node.node_type] ?? NODE_TYPE_COLOR.default;
+> 600	            const stab   = Math.max(0.05, Math.min(1, node.stability_score ?? 1));
+> 601	            const radius = 14 + stab * 8;
+> 602	            const isSelected = selectedNode?.id === node.id;
+> 603	
+> 604	            return (
+> 605	              <g
+> 606	                key={node.id}
+> 607	                transform={`translate(${pos.x},${pos.y})`}
+> 608	                style={{ cursor: 'pointer' }}
+> 609	                onClick={(e) => {
+> 610	                  e.stopPropagation();
+> 611	                  if (isSelected) {
+> 612	                    setSelectedNode(null);
+> 613	                  } else {
+> 614	                    setSelectedNode(node);
+> 615	                    setSidebarOpen(true);
+> 616	                  }
+> 617	                }}
+> 618	              >
+> 619	                {/* Outer glow ring for selected */}
+> 620	                {isSelected && (
+> 621	                  <circle
+> 622	                    r={radius + 10}
+> 623	                    fill="none"
+> 624	                    stroke={color}
+> 625	                    strokeWidth={1.5}
+> 626	                    strokeOpacity={0.5}
+> 627	                    style={{ animation: 'pulse-ring 1.5s ease-in-out infinite' }}
+> 628	                  />
+> 629	                )}
+> 630	
+> 631	                {/* Node glow */}
+> 632	                <circle
+> 633	                  r={radius + 4}
+> 634	                  fill={color}
+> 635	                  fillOpacity={0.06}
+> 636	                  filter="url(#mem-glow-sm)"
+> 637	                />
+> 638	
+> 639	                {/* Node fill */}
+> 640	                <circle
+> 641	                  r={radius}
+> 642	                  fill={`url(#node-grad-${node.node_type})`}
+> 643	                  stroke={color}
+> 644	                  strokeWidth={isSelected ? 2 : 1.2}
+> 645	                  strokeOpacity={0.5 + stab * 0.5}
+> 646	                />
+> 647	
+> 648	                {/* Stability arc */}
+> 649	                <circle
+> 650	                  r={radius}
+> 651	                  fill="none"
+> 652	                  stroke={color}
+> 653	                  strokeWidth={2}
+> 654	                  strokeOpacity={0.8}
+> 655	                  strokeDasharray={`${2 * Math.PI * radius * stab} ${2 * Math.PI * radius}`}
+> 656	                  strokeLinecap="round"
+> 657	                  transform={`rotate(-90)`}
+> 658	                />
+> 659	
+> 660	                {/* Label */}
+> 661	                <text
+> 662	                  y={radius + 13}
+> 663	                  textAnchor="middle"
+> 664	                  fontSize={9}
+> 665	                  fill={color}
+> 666	                  fillOpacity={0.9}
+> 667	                  style={{ fontFamily: 'monospace', userSelect: 'none', pointerEvents: 'none' }}
+> 668	                >
+> 669	                  {node.name.length > 18 ? node.name.slice(0, 18) + '…' : node.name}
+> 670	                </text>
+> 671	
+> 672	                {/* Type badge */}
+> 673	                <text
+> 674	                  y={-radius - 5}
+> 675	                  textAnchor="middle"
+> 676	                  fontSize={7}
+> 677	                  fill={color}
+> 678	                  fillOpacity={0.55}
+> 679	                  style={{ fontFamily: 'monospace', userSelect: 'none', pointerEvents: 'none' }}
+> 680	                >
+> 681	                  {NODE_TYPE_LABEL[node.node_type] ?? node.node_type}
+> 682	                </text>
+> 683	              </g>
+> 684	            );
+> 685	          })}
+> 686	        </g>
+> 687	      </svg>
+> 688	
+> 689	      {/* Inline animation styles */}
+> 690	      <style>{`
+> 691	        @keyframes dash-flow {
+> 692	          from { stroke-dashoffset: 100; }
+> 693	          to   { stroke-dashoffset: 0; }
+> 694	        }
+> 695	        @keyframes pulse-ring {
+> 696	          0%, 100% { opacity: 0.5; transform: scale(1); }
+> 697	          50%       { opacity: 0.2; transform: scale(1.08); }
+> 698	        }
+> 699	      `}</style>
+> 700	
+> 701	      {/* ── Zoom controls ─────────────────────────────────────────────── */}
+> 702	      <div className="absolute bottom-5 right-5 z-30 flex flex-col gap-1.5">
+> 703	        <Button
+> 704	          size="icon"
+> 705	          variant="outline"
+> 706	          className="h-7 w-7 bg-black/70 border-violet-500/20 hover:border-violet-400/50 text-violet-300"
+> 707	          onClick={() => setScale((s) => Math.min(4, s * 1.3))}
+> 708	        >
+> 709	          <ZoomIn className="h-3.5 w-3.5" />
+> 710	        </Button>
+> 711	        <Button
+> 712	          size="icon"
+> 713	          variant="outline"
+> 714	          className="h-7 w-7 bg-black/70 border-violet-500/20 hover:border-violet-400/50 text-violet-300"
+> 715	          onClick={() => setScale((s) => Math.max(0.15, s / 1.3))}
+> 716	        >
+> 717	          <ZoomOut className="h-3.5 w-3.5" />
+> 718	        </Button>
+> 719	        <Button
+> 720	          size="icon"
+> 721	          variant="outline"
+> 722	          className="h-7 w-7 bg-black/70 border-violet-500/20 hover:border-violet-400/50 text-violet-300"
+> 723	          onClick={resetView}
+> 724	        >
+> 725	          <Maximize2 className="h-3.5 w-3.5" />
+> 726	        </Button>
+> 727	      </div>
+> 728	
+> 729	      {/* ── Right sidebar: Filters + Node detail ─────────────────────── */}
+> 730	      <AnimatePresence>
+> 731	        {(sidebarOpen || selectedNode) && (
+> 732	          <motion.div
+> 733	            initial={{ x: '100%', opacity: 0 }}
+> 734	            animate={{ x: 0, opacity: 1 }}
+> 735	            exit={{ x: '100%', opacity: 0 }}
+> 736	            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+> 737	            className="absolute top-12 right-0 bottom-0 w-72 z-40 border-l border-violet-500/15 bg-black/90 backdrop-blur-xl overflow-y-auto flex flex-col"
+> 738	          >
+> 739	            {/* ── Filter section (always visible when sidebar open) ──── */}
+> 740	            <div className="flex-shrink-0 border-b border-violet-500/10 p-3">
+> 741	              <div className="flex items-center justify-between mb-2">
+> 742	                <span className="text-[9px] font-mono text-violet-400/60 uppercase tracking-widest flex items-center gap-1.5">
+> 743	                  <Filter className="h-2.5 w-2.5" />
+> 744	                  Filtros de Tipo
+> 745	                </span>
+> 746	                <button
+> 747	                  onClick={() => { setSidebarOpen(false); setSelectedNode(null); }}
+> 748	                  className="text-violet-500/40 hover:text-violet-300 transition-colors"
+> 749	                >
+> 750	                  <X className="h-3.5 w-3.5" />
+> 751	                </button>
+> 752	              </div>
+> 753	              <div className="flex flex-wrap gap-1.5">
+> 754	                {ALL_TYPES.map((t) => (
+> 755	                  <button
+> 756	                    key={t}
+> 757	                    onClick={() => toggleType(t)}
+> 758	                    className={cn(
+> 759	                      'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border transition-all',
+> 760	                      activeTypes.has(t)
+> 761	                        ? 'border-current opacity-100'
+> 762	                        : 'border-transparent opacity-35 grayscale',
+> 763	                    )}
+> 764	                    style={{
+> 765	                      color: NODE_TYPE_COLOR[t] ?? NODE_TYPE_COLOR.default,
+> 766	                      background: activeTypes.has(t) ? (NODE_TYPE_COLOR[t] ?? NODE_TYPE_COLOR.default) + '18' : 'transparent',
+> 767	                    }}
+> 768	                  >
+> 769	                    <span className="inline-block h-1.5 w-1.5 rounded-full shrink-0" style={{ background: NODE_TYPE_COLOR[t] ?? NODE_TYPE_COLOR.default }} />
+> 770	                    {NODE_TYPE_LABEL[t] ?? t}
+> 771	                  </button>
+> 772	                ))}
+> 773	              </div>
+> 774	              {/* Quick-select all / none */}
+> 775	              <div className="flex gap-2 mt-2">
+> 776	                <button
+> 777	                  onClick={() => setActiveTypes(new Set(ALL_TYPES))}
+> 778	                  className="text-[9px] font-mono text-violet-400/50 hover:text-violet-300 transition-colors"
+> 779	                >
+> 780	                  todos
+> 781	                </button>
+> 782	                <span className="text-violet-500/20 text-[9px]">·</span>
+> 783	                <button
+> 784	                  onClick={() => setActiveTypes(new Set([ALL_TYPES[0]]))}
+> 785	                  className="text-[9px] font-mono text-violet-400/50 hover:text-violet-300 transition-colors"
+> 786	                >
+> 787	                  limpar
+> 788	                </button>
+> 789	              </div>
+> 790	            </div>
+> 791	
+> 792	            {/* ── Node detail (visible only when a node is selected) ─── */}
+> 793	            {selectedNode && (() => {
+> 794	              const n = selectedNode;
+> 795	              const color = NODE_TYPE_COLOR[n.node_type] ?? NODE_TYPE_COLOR.default;
+> 796	              const Icon  = NODE_TYPE_ICON[n.node_type] ?? NODE_TYPE_ICON.default;
+> 797	              const stab  = n.stability_score ?? 1;
+> 798	              const nodeEdges = edges.filter((e) => e.source_id === n.id || e.target_id === n.id);
+> 799	
+> 800	              return (
+> 801	                <div className="flex-1 p-4 flex flex-col gap-4 overflow-y-auto">
+> 802	                  {/* Header */}
+> 803	                  <div className="flex items-start justify-between gap-2">
+> 804	                    <div className="flex items-center gap-2 min-w-0">
+> 805	                      <div
+> 806	                        className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+> 807	                        style={{ background: color + '20', border: `1px solid ${color}40` }}
+> 808	                      >
+> 809	                        <Icon className="h-4 w-4" style={{ color }} />
+> 810	                      </div>
+> 811	                      <div className="min-w-0">
+> 812	                        <p className="font-semibold text-xs text-white truncate font-mono">{n.name}</p>
+> 813	                        <p className="text-[10px] font-mono" style={{ color }}>{NODE_TYPE_LABEL[n.node_type] ?? n.node_type}</p>
+> 814	                      </div>
+> 815	                    </div>
+> 816	                    <button
+> 817	                      onClick={() => setSelectedNode(null)}
+> 818	                      className="text-violet-500/50 hover:text-violet-300 transition-colors shrink-0"
+> 819	                      title="Fechar nó (mantém filtros)"
+> 820	                    >
+> 821	                      <X className="h-4 w-4" />
+> 822	                    </button>
+> 823	                  </div>
+> 824	
+> 825	                  {/* Stability bar */}
+> 826	                  <div>
+> 827	                    <div className="flex items-center justify-between mb-1">
+> 828	                      <span className="text-[10px] font-mono text-violet-400/60">Estabilidade</span>
+> 829	                      <span className="text-[10px] font-mono" style={{ color }}>{(stab * 100).toFixed(0)}%</span>
+> 830	                    </div>
+> 831	                    <div className="h-1 bg-black/40 rounded-full overflow-hidden">
+> 832	                      <div
+> 833	                        className="h-full rounded-full transition-all duration-500"
+> 834	                        style={{ width: `${stab * 100}%`, background: color, boxShadow: `0 0 6px ${color}` }}
+> 835	                      />
+> 836	                    </div>
+> 837	                  </div>
+> 838	
+> 839	                  {/* Content */}
+> 840	                  {n.content && (
+> 841	                    <div>
+> 842	                      <p className="text-[10px] font-mono text-violet-400/60 mb-1.5 uppercase tracking-widest">Conteúdo</p>
+> 843	                      <p className="text-[11px] text-violet-200/80 leading-relaxed">{n.content}</p>
+> 844	                    </div>
+> 845	                  )}
+> 846	
+> 847	                  {/* Metadata */}
+> 848	                  {n.metadata && Object.keys(n.metadata).length > 0 && (
+> 849	                    <div>
+> 850	                      <p className="text-[10px] font-mono text-violet-400/60 mb-1.5 uppercase tracking-widest">Metadata</p>
+> 851	                      <div className="rounded-lg bg-black/40 border border-violet-500/10 p-2">
+> 852	                        <pre className="text-[9px] text-violet-300/60 font-mono overflow-x-auto whitespace-pre-wrap break-all">
+> 853	                          {JSON.stringify(n.metadata, null, 2)}
+> 854	                        </pre>
+> 855	                      </div>
+> 856	                    </div>
+> 857	                  )}
+> 858	
+> 859	                  {/* Edges */}
+> 860	                  {nodeEdges.length > 0 && (
+> 861	                    <div>
+> 862	                      <p className="text-[10px] font-mono text-violet-400/60 mb-1.5 uppercase tracking-widest">
+> 863	                        Conexões ({nodeEdges.length})
+> 864	                      </p>
+> 865	                      <div className="flex flex-col gap-1">
+> 866	                        {nodeEdges.map((e) => {
+> 867	                          const isSource = e.source_id === n.id;
+> 868	                          const otherId  = isSource ? e.target_id : e.source_id;
+> 869	                          const other    = nodes.find((nd) => nd.id === otherId);
+> 870	                          const otherColor = NODE_TYPE_COLOR[other?.node_type ?? 'default'] ?? NODE_TYPE_COLOR.default;
+> 871	                          return (
+> 872	                            <button
+> 873	                              key={e.id}
+> 874	                              className="flex items-center gap-2 text-left rounded-lg px-2 py-1.5 hover:bg-violet-900/20 transition-colors"
+> 875	                              onClick={() => other && setSelectedNode(other)}
+> 876	                            >
+> 877	                              <span className="text-[9px] font-mono text-violet-500/50 w-12 shrink-0 text-right">
+> 878	                                {isSource ? '→' : '←'} {e.relation_type}
+> 879	                              </span>
+> 880	                              <span
+> 881	                                className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
+> 882	                                style={{ background: otherColor }}
+> 883	                              />
+> 884	                              <span className="text-[10px] font-mono text-violet-200/70 truncate">
+> 885	                                {other?.name ?? otherId.slice(0, 8)}
+> 886	                              </span>
+> 887	                            </button>
+> 888	                          );
+> 889	                        })}
+> 890	                      </div>
+> 891	                    </div>
+> 892	                  )}
+> 893	
+> 894	                  {/* Assign Agent */}
+> 895	                  <div>
+> 896	                    <p className="text-[10px] font-mono text-violet-400/60 mb-1.5 uppercase tracking-widest flex items-center gap-1.5">
+> 897	                      <UserCheck className="h-3 w-3" />
+> 898	                      Agente Responsável
+> 899	                    </p>
+> 900	                    {crewAgents.length > 0 ? (
+> 901	                      <>
+> 902	                        <Select
+> 903	                          value={nodeOwnership?.agent_id ?? ''}
+> 904	                          onValueChange={assignAgent}
+> 905	                          disabled={assigningSaving}
+> 906	                        >
+> 907	                          <SelectTrigger className="h-8 text-xs font-mono bg-black/40 border-violet-500/20 text-violet-100">
+> 908	                            <SelectValue placeholder="Selecionar agente…" />
+> 909	                          </SelectTrigger>
+> 910	                          <SelectContent className="bg-[#0a0518] border-violet-500/20">
+> 911	                            {crewAgents.map((a) => (
+> 912	                              <SelectItem key={a.id} value={a.id} className="font-mono text-xs text-violet-200">
+> 913	                                {a.name} · <span className="text-violet-400/60">{a.role}</span>
+> 914	                              </SelectItem>
+> 915	                            ))}
+> 916	                          </SelectContent>
+> 917	                        </Select>
+> 918	                        {assigningSaving && (
+> 919	                          <p className="text-[9px] text-violet-400/50 font-mono mt-1 flex items-center gap-1">
+> 920	                            <Loader2 className="h-2.5 w-2.5 animate-spin" /> Salvando…
+> 921	                          </p>
+> 922	                        )}
+> 923	                      </>
+> 924	                    ) : (
+> 925	                      <p className="text-[9px] font-mono text-violet-500/30">Nenhum agente cadastrado</p>
+> 926	                    )}
+> 927	                  </div>
+> 928	
+> 929	                  {/* Quick-add edge from this node */}
+> 930	                  <div>
+> 931	                    <button
+> 932	                      onClick={() => {
+> 933	                        setEdgeForm({ source_id: n.id, target_id: '', relation_type: 'DEPENDS_ON' });
+> 934	                        setAddEdgeOpen(true);
+> 935	                      }}
+> 936	                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-[10px] font-mono hover:border-cyan-400/40 hover:bg-cyan-500/10 transition-all"
+> 937	                    >
+> 938	                      <Link2 className="h-3 w-3" />
+> 939	                      Conectar a outro nó
+> 940	                    </button>
+> 941	                  </div>
+> 942	
+> 943	                  {/* Timestamps */}
+> 944	                  <div className="border-t border-violet-500/10 pt-3 flex flex-col gap-1">
+> 945	                    <p className="text-[9px] font-mono text-violet-500/30">
+> 946	                      Criado: {new Date(n.created_at).toLocaleString('pt-BR')}
+> 947	                    </p>
+> 948	                    {n.last_seen_at && (
+> 949	                      <p className="text-[9px] font-mono text-violet-500/30">
+> 950	                        Visto: {new Date(n.last_seen_at).toLocaleString('pt-BR')}
+> 951	                      </p>
+> 952	                    )}
+> 953	                  </div>
+> 954	                </div>
+> 955	              );
+> 956	            })()}
+> 957	          </motion.div>
+> 958	        )}
+> 959	      </AnimatePresence>
+> 960	
+> 961	      {/* Empty state */}
+> 962	      {!loading && nodes.length === 0 && (
+> 963	        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10" style={{ top: 48 }}>
+> 964	          <Brain className="h-10 w-10 text-violet-500/20" />
+> 965	          <p className="text-xs text-violet-500/40 font-mono">Knowledge Mesh vazio</p>
+> 966	          <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1.5 text-xs">
+> 967	            <Plus className="h-3 w-3" />
+> 968	            Criar primeiro nó
+> 969	          </Button>
+> 970	        </div>
+> 971	      )}
+> 972	
+> 973	      {/* ── Edge Creator Dialog ───────────────────────────────────────── */}
+> 974	      <Dialog open={addEdgeOpen} onOpenChange={setAddEdgeOpen}>
+> 975	        <DialogContent className="bg-[#0a0518] border-violet-500/20 text-violet-100">
+> 976	          <DialogHeader>
+> 977	            <DialogTitle className="font-mono text-violet-200 flex items-center gap-2">
+> 978	              <Link2 className="h-4 w-4 text-cyan-400" />
+> 979	              Nova Aresta — Knowledge Mesh
+> 980	            </DialogTitle>
+> 981	          </DialogHeader>
+> 982	
+> 983	          <div className="flex flex-col gap-4 py-2">
+> 984	            <div className="flex flex-col gap-1.5">
+> 985	              <Label className="text-xs font-mono text-violet-300/70">Nó Origem</Label>
+> 986	              <Select value={edgeForm.source_id} onValueChange={(v) => setEdgeForm({ ...edgeForm, source_id: v })}>
+> 987	                <SelectTrigger className="bg-black/40 border-violet-500/20 text-violet-100 font-mono text-xs">
+> 988	                  <SelectValue placeholder="Selecionar nó…" />
+> 989	                </SelectTrigger>
+> 990	                <SelectContent className="bg-[#0a0518] border-violet-500/20 max-h-52 overflow-y-auto">
+> 991	                  {nodes.map((n) => (
+> 992	                    <SelectItem key={n.id} value={n.id} className="font-mono text-xs text-violet-200">
+> 993	                      {n.name}
+> 994	                    </SelectItem>
+> 995	                  ))}
+> 996	                </SelectContent>
+> 997	              </Select>
+> 998	            </div>
+> 999	
+> 1000	            <div className="flex flex-col gap-1.5">
+> 1001	              <Label className="text-xs font-mono text-violet-300/70">Tipo de Relação</Label>
+> 1002	              <Select value={edgeForm.relation_type} onValueChange={(v) => setEdgeForm({ ...edgeForm, relation_type: v })}>
+> 1003	                <SelectTrigger className="bg-black/40 border-violet-500/20 text-violet-100 font-mono text-xs">
+> 1004	                  <SelectValue />
+> 1005	                </SelectTrigger>
+> 1006	                <SelectContent className="bg-[#0a0518] border-violet-500/20">
+> 1007	                  {RELATION_TYPES.map((rt) => (
+> 1008	                    <SelectItem key={rt} value={rt} className="font-mono text-xs text-cyan-200">{rt}</SelectItem>
+> 1009	                  ))}
+> 1010	                </SelectContent>
+> 1011	              </Select>
+> 1012	            </div>
+> 1013	
+> 1014	            <div className="flex flex-col gap-1.5">
+> 1015	              <Label className="text-xs font-mono text-violet-300/70">Nó Destino</Label>
+> 1016	              <Select value={edgeForm.target_id} onValueChange={(v) => setEdgeForm({ ...edgeForm, target_id: v })}>
+> 1017	                <SelectTrigger className="bg-black/40 border-violet-500/20 text-violet-100 font-mono text-xs">
+> 1018	                  <SelectValue placeholder="Selecionar nó…" />
+> 1019	                </SelectTrigger>
+> 1020	                <SelectContent className="bg-[#0a0518] border-violet-500/20 max-h-52 overflow-y-auto">
+> 1021	                  {nodes.filter((n) => n.id !== edgeForm.source_id).map((n) => (
+> 1022	                    <SelectItem key={n.id} value={n.id} className="font-mono text-xs text-violet-200">
+> 1023	                      {n.name}
+> 1024	                    </SelectItem>
+> 1025	                  ))}
+> 1026	                </SelectContent>
+> 1027	              </Select>
+> 1028	            </div>
+> 1029	          </div>
+> 1030	
+> 1031	          <DialogFooter>
+> 1032	            <Button variant="ghost" onClick={() => setAddEdgeOpen(false)} className="text-violet-400 font-mono text-xs">
+> 1033	              Cancelar
+> 1034	            </Button>
+> 1035	            <Button
+> 1036	              onClick={handleSaveEdge}
+> 1037	              disabled={edgeSaving || !edgeForm.source_id || !edgeForm.target_id}
+> 1038	              className="bg-cyan-700/80 hover:bg-cyan-600/80 font-mono text-xs gap-1.5"
+> 1039	            >
+> 1040	              {edgeSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+> 1041	              {edgeSaving ? 'Criando…' : 'Criar Aresta'}
+> 1042	            </Button>
+> 1043	          </DialogFooter>
+> 1044	        </DialogContent>
+> 1045	      </Dialog>
+> 1046	
+> 1047	      {/* ── Add Node Dialog ────────────────────────────────────────────── */}
+> 1048	      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+> 1049	        <DialogContent className="bg-[#0a0518] border-violet-500/20 text-violet-100">
+> 1050	          <DialogHeader>
+> 1051	            <DialogTitle className="font-mono text-violet-200 flex items-center gap-2">
+> 1052	              <Plus className="h-4 w-4 text-violet-400" />
+> 1053	              Novo Nó — Knowledge Mesh
+> 1054	            </DialogTitle>
+> 1055	          </DialogHeader>
+> 1056	
+> 1057	          <div className="flex flex-col gap-4 py-2">
+> 1058	            <div className="flex flex-col gap-1.5">
+> 1059	              <Label className="text-xs font-mono text-violet-300/70">Nome</Label>
+> 1060	              <Input
+> 1061	                value={nodeForm.name}
+> 1062	                onChange={(e) => setNodeForm({ ...nodeForm, name: e.target.value })}
+> 1063	                placeholder="ex: Epic refactor Q3"
+> 1064	                className="bg-black/40 border-violet-500/20 text-violet-100 placeholder:text-violet-500/30 font-mono text-xs"
+> 1065	              />
+> 1066	            </div>
+> 1067	
+> 1068	            <div className="flex flex-col gap-1.5">
+> 1069	              <Label className="text-xs font-mono text-violet-300/70">Tipo</Label>
+> 1070	              <Select
+> 1071	                value={nodeForm.node_type}
+> 1072	                onValueChange={(v) => setNodeForm({ ...nodeForm, node_type: v })}
+> 1073	              >
+> 1074	                <SelectTrigger className="bg-black/40 border-violet-500/20 text-violet-100 font-mono text-xs">
+> 1075	                  <SelectValue />
+> 1076	                </SelectTrigger>
+> 1077	                <SelectContent className="bg-[#0a0518] border-violet-500/20">
+> 1078	                  {ALL_TYPES.map((t) => (
+> 1079	                    <SelectItem key={t} value={t} className="font-mono text-xs text-violet-200">
+> 1080	                      <span
+> 1081	                        className="inline-block h-1.5 w-1.5 rounded-full mr-2"
+> 1082	                        style={{ background: NODE_TYPE_COLOR[t] }}
+> 1083	                      />
+> 1084	                      {NODE_TYPE_LABEL[t] ?? t}
+> 1085	                    </SelectItem>
+> 1086	                  ))}
+> 1087	                </SelectContent>
+> 1088	              </Select>
+> 1089	            </div>
+> 1090	
+> 1091	            <div className="flex flex-col gap-1.5">
+> 1092	              <Label className="text-xs font-mono text-violet-300/70">Conteúdo</Label>
+> 1093	              <Textarea
+> 1094	                value={nodeForm.content}
+> 1095	                onChange={(e) => setNodeForm({ ...nodeForm, content: e.target.value })}
+> 1096	                placeholder="Descreva o contexto, decisão ou observação…"
+> 1097	                rows={4}
+> 1098	                className="bg-black/40 border-violet-500/20 text-violet-100 placeholder:text-violet-500/30 font-mono text-xs resize-none"
+> 1099	              />
+> 1100	            </div>
+> 1101	          </div>
+> 1102	
+> 1103	          <DialogFooter>
+> 1104	            <Button variant="ghost" onClick={() => setAddOpen(false)} className="text-violet-400 font-mono text-xs">
+> 1105	              Cancelar
+> 1106	            </Button>
+> 1107	            <Button
+> 1108	              onClick={handleSaveNode}
+> 1109	              disabled={saving || !nodeForm.name.trim()}
+> 1110	              className="bg-violet-700/80 hover:bg-violet-600/80 font-mono text-xs gap-1.5"
+> 1111	            >
+> 1112	              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+> 1113	              {saving ? 'Salvando…' : 'Criar Nó'}
+> 1114	            </Button>
+> 1115	          </DialogFooter>
+> 1116	        </DialogContent>
+> 1117	      </Dialog>
+> 1118	    </div>
+> 1119	  );
+> 1120	}
+> 1121	
+> ```
+
+## 🤖 Claude
+
+Perfect! I have all the information needed. Let me compile the findings.
+
+## Search Results
+
+### 1. Main Content Wrapper className in DashboardLayout
+
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardLayout.tsx` (line 115)
+
+```tsx
+<main className={`flex-1 min-h-0 ${isFullCanvas ? 'overflow-hidden p-0' : 'overflow-auto p-4 md:p-6'}`}>
+  <Outlet />
+</main>
+```
+
+**Exact className behavior:**
+- When on `/constellation`, `/orchestration`, or `/core` routes: `flex-1 min-h-0 overflow-hidden p-0`
+- For all other dashboard routes: `flex-1 min-h-0 overflow-auto p-4 md:p-6`
+
+The key classes are:
+- `flex-1` — grows to fill available space
+- `min-h-0` — allows flex shrinking (critical for proper overflow)
+- Height is implicitly controlled via parent `flex flex-col` wrapper (line 78)
+- Padding is conditional based on `isFullCanvas` flag
+
+### 2. Routing for /dashboard/constellation routes
+
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx` (lines 85-87)
+
+```tsx
+<Route path="constellation" element={<ConstellationPage />} />
+<Route path="constellation/memory" element={<MemoryPage />} />
+<Route path="constellation/matrix" element={<MatrixPage />} />
+```
+
+All three routes are **child routes of `/dashboard`** which wraps them in `DashboardLayout` (line 80).
+
+### 3. Are MatrixPage and MemoryPage inside or outside DashboardLayout?
+
+**Answer: INSIDE DashboardLayout**
+
+The routing structure (lines 78-106 in App.tsx):
+```tsx
+<Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+  <Route path="constellation" element={<ConstellationPage />} />
+  <Route path="constellation/memory" element={<MemoryPage />} />
+  <Route path="constellation/matrix" element={<MatrixPage />} />
+  {/* ... more routes ... */}
+</Route>
+```
+
+These are child routes, so they render as `<Outlet />` inside DashboardLayout's main element. However, they are treated as "full canvas" pages (line 38):
+
+```tsx
+const isFullCanvas = isConstellation || isOrchestration || isCore;
+```
+
+The `isConstellation` check includes all `/constellation/*` routes, so MatrixPage and MemoryPage get `p-0 overflow-hidden` styling.
+
+### 4. Header section structure in DashboardLayout
+
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardLayout.tsx` (lines 79-113)
+
+```tsx
+<header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0">
+  <div className="flex items-center gap-2">
+    <SidebarTrigger />
+    <nav className="hidden sm:flex items-center gap-1 text-sm">
+      {crumbs.map((c, i) => (
+        <span key={c.path} className="flex items-center gap-1">
+          {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+          {c.isLast ? (
+            <span className="font-semibold text-foreground">{c.label}</span>
+          ) : (
+            <Link to={c.path} className="text-muted-foreground hover:text-foreground transition-colors">{c.label}</Link>
+          )}
+        </span>
+      ))}
+    </nav>
+  </div>
+
+  <div className="flex items-center gap-3">
+    {mcoBalance !== null && (
+      <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+        <Coins className="h-3.5 w-3.5" />
+        {mcoBalance} <span className="font-normal text-primary/70">mcoCoins</span>
+      </div>
+    )}
+    <Button variant="ghost" size="icon" className="relative">
+      <Bell className="h-4 w-4" />
+      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 bg-destructive rounded-full text-[9px] font-bold flex items-center justify-center text-destructive-foreground">
+        3
+      </span>
+    </Button>
+    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+      {user?.email?.charAt(0).toUpperCase() || 'U'}
+    </div>
+  </div>
+</header>
+```
+
+**Header structure:**
+- **Container:** `h-14 flex items-center justify-between border-b border-border px-4 shrink-0`
+- **Left side:** Sidebar trigger + breadcrumb navigation (hidden on mobile, shown on sm+ screens)
+- **Right side:** MCO balance display + notification bell (with "3" badge) + user avatar initial
+- All items are vertically centered with `items-center`
+- The breadcrumb nav uses `ChevronRight` icons as separators between segments
+
+### 5. Comparison: ConstellationPage as "working" page
+
+**File:** `/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx`
+
+The ConstellationPage is the parent container inside DashboardLayout. It uses:
+```tsx
+<div className="relative w-full h-full overflow-hidden bg-background rounded-lg">
+```
+
+This `w-full h-full overflow-hidden` fills the entire main content area (which has `flex-1 min-h-0 overflow-hidden p-0`).
+
+MatrixPage and MemoryPage follow the same pattern:
+- MatrixPage (line 13): `<div className="absolute inset-0 bg-[#050210] overflow-hidden">`
+- MemoryPage (line 402): `<div className="absolute inset-0 bg-[#020108] overflow-hidden">`
+
+They both use `absolute inset-0` to fill the parent, which is positioned relative (the main element in DashboardLayout).
+
+---
+
+**Key Takeaway:** MatrixPage and MemoryPage are nested inside DashboardLayout but receive special full-canvas treatment with `p-0 overflow-hidden`, making them full-screen visualization pages while still being part of the dashboard routing structure.
