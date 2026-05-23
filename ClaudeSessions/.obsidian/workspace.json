@@ -4,31 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "441518f95143fe7f",
+        "id": "37b6bb1c80e9a530",
         "type": "tabs",
         "children": [
           {
-            "id": "2d107c0103ff7876",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Bem-vindo.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Bem-vindo"
-            }
-          }
-        ]
-      },
-      {
-        "id": "adf0f57c0ac8d03c",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "7bdcec2a1fc1d31a",
+            "id": "8d43a2ccad29c539",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -94,7 +74,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 353.5
   },
   "right": {
     "id": "301b3a438a4e86b6",
@@ -197,8 +177,33 @@
       "github-sync:Sync with Remote": false
     }
   },
-  "active": "7bdcec2a1fc1d31a",
+  "active": "8d43a2ccad29c539",
   "lastOpenFiles": [
-    "Bem-vindo.md"
+    "2026-05-22.md",
+    "agent-ae6e3e752d6e85f6b.md",
+    "Bem-vindo.md",
+    "a3e801de-2231-4c22-92da-a64b728844da.md",
+    "README.md",
+    "latest_claude_session.md",
+    "ffc7407f-40e6-45ef-a261-ef73cd5bca92.md",
+    "ff001393-c426-4734-b836-2cdbeff63c0f.md",
+    "fddf5daa-838a-4421-b34c-32533a7b2f2c.md",
+    "fd944e5d-e018-4955-80af-6ec76cea823a.md",
+    "fa7d8d26-aab2-4b3d-b8e4-c661eef5dcfe.md",
+    "f1281316-becf-4452-837c-594bcb3c78ef.md",
+    "f8494d45-adfc-4e0e-a018-fa593777ddf5.md",
+    "f37edb27-b99a-4f2f-9d83-085fa5ecbafe.md",
+    "f9e4b50e-b0c8-44d8-a2e9-4b89bfec97ce.md",
+    "f8debabb-0938-480e-a79e-1dad6a19a3dc.md",
+    "f6f6895e-9dd4-417d-8977-8e81a0291ec7.md",
+    "f6ea6cf0-1b3b-4768-887e-f39093a352eb.md",
+    "ecaca5de-8a9c-4ea4-93f8-fdcd12a37f4a.md",
+    "e7d5cf09-3854-42b2-9dcb-db0effc5d77a.md",
+    "e3ab5dd1-2b95-48d7-ac80-36b4df160b02.md",
+    "dda253f9-69f2-475e-9707-44b863377647.md",
+    "dd137089-ef1a-45b4-828d-9f7d564aeecb.md",
+    "da9506b2-f353-44a4-a99b-7badd34c7a4f.md",
+    "d178eddb-27ad-4d03-9fdb-50f585d1fcea.md",
+    "d95b15b2-96c6-4300-ae6f-e3bf61697c69.md"
   ]
 }
