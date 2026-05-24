@@ -25514,3 +25514,237 @@ I've just added a milestone node for this session, `v6.7.9`, representing the "C
 > 
 > Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
 > ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/README.md\"",
+  "EndLine": "110",
+  "StartLine": "80",
+  "toolAction": "\"Viewing history list in README.md\"",
+  "toolSummary": "\"View history list in README.md\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:12Z
+> Completed At: 2026-05-24T18:00:12Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/README.md`
+> Total Lines: 1344
+> Total Bytes: 130514
+> Showing lines 80 to 110
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 80:          + handle-ml-postback → revenue_cents updated on every ML conversion
+> 81:          + ROI Dashboard with real BRL revenue
+> 82:          + GraphRAG Knowledge Node (observation inserted per run)
+> 83:          + Neural HUD telemetry
+> 84:          + Constellation Matrix WebGL (8582 nodes · 11885 edges — paginação completa)
+> 85:          + Visual Orchestration Canvas with Quality Gates
+> 86:          + AIOS — conversational AI consciousness with VAD + Barge-in
+> 87: ```
+> 88: 
+> 89: ### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+> 90: - **Mapeamento de Enums no Backend**: Resolvida a falha de submissão do canvas mapeando as strings `image_to_video` e `scene_compose` para seus enums Postgres equivalentes (`generate_video` e `compose`) nas escritas do banco de dados.
+> 91: - **Atualização de Preços do Canvas**: Estilização atualizada de 12 para **14 💎** e Composição de Cenas atualizada para **18 💎** no frontend e backend.
+> 92: - **Resolução Dinâmica**: Habilitada chave dinâmica de precificação de vídeo Higgsfield com o modelo `seedance-v1-pro-5s` (130 💎) incorporado.
+> 93: - **Material proofs**: `tsc --noEmit` zero erros · 176 testes passando · milestone node `20c09de6-f02a-4b16-925e-7568d3eef955` embedado na Supabase · mesh total **8582 nodes** (+2 desde v6.7.6) · **11885 edges**.
+> 94: 
+> 95: ### [v6.7.6] — Canvas Studio Video Tiers & Error Propagation (2026-05-24)
+> 96: - **Desbloqueio de Vídeo Higgsfield**: Habilitados DoP Lite, DoP Turbo, Kling 2.1 Pro e Seedance v1 Pro no frontend e mapeados dinamicamente os endpoints Hig
+> <truncated 803 bytes>
+> port (2026-05-24)
+> 102: - **Fila de Execução Sequencial (Take Pipeline)**: Refatorado o `handleRunAll` e adicionado agendador declarativo reativo via `useEffect` no [CanvasEditorPage.tsx](file:///home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx) para orquestrar nós `"queued"` dependentes à medida que as dependências upstream terminam.
+> 103: - **CRUD e Propriedades nos Inspetores**: Adicionada exibição de outputs gerados e botão "Limpar" para redefinir nós ao estado `"idle"`.
+> 104: - **Importação de Assets**: Adicionada funcionalidade para carregar imagens e vídeos diretamente da aba "Assets" para o nó selecionado, clonando todas as propriedades originais (prompt, seed, modelo, controles) e o resultado gerado.
+> 105: - **Material proofs**: `tsc --noEmit` zero erros · `mcorch_nodes` indexado e persistido · 5 commits granulares · milestone node `8ed3e83b-de19-4eec-9689-4229ef0832c1` embedado na Supabase · mesh total **8575 nodes** (+124 desde v6.7.3) · **11690 edges**.
+> 106: 
+> 107: ### [v6.7.3] — BoK aios-sql-bridge + OE-661 Flywheel + Canvas Design Submenu (2026-05-23)
+> 108: - **BoK aios-sql-bridge** — Completada e comitada a suíte de documentação BoK faltante (MRD, BRD, PRD, FRD, Data Model, Process Flow e Quality Metrics com tabelas FMEA e KPIs de latência/erros). Fechados os débitos técnicos de governança de forma integral.
+> 109: - **Integração de Postback ML** — Corrigida a busca por fallback no processamento de postback do Mercado Livre para vincular a conversão ao ID primário do `content_mesh_asset`, atualizando o `revenue_impact` do ativo no mesh de conhecimento de maneira adequada.
+> 110: - **Navegação do Canvas Design** — Integrada a rota de design no sidebar através de um grupo colapsável (Studio/Design) sob `/dashboard/canvas/design` com um placeholder visual moderno.
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Refining Implementation Strategy**
+
+Okay, I've decided to update `README.md`. I'll employ `multi_replace_file_content` for efficiency. I'm preparing chunks for the updates, starting with the version and neural mesh badges on lines 2-7. This seems manageable, and I'm ready to proceed with the specific edits.
+
+
+**Updating README with New Content**
+
+I'm now focused on updating the `README.md` file's badges and matrix node counts. The initial chunk (lines 2-7) is being replaced with updated version and neural mesh information. Following that, I'll address lines 84-93, incorporating the revised node counts and historical records, specifically for the v6.7.8 update with the Postgres enum and pricing adjustments. I'm employing string replacement for efficiency.
+
+</details>
+
+🛠️ **Tool Call**: `multi_replace_file_content`
+```json
+{
+  "Description": "\"Update version badge, node counts, and history in README.md for v6.7.9\"",
+  "Instruction": "\"Modify the badges at the top, update the node count in the value proposition, and prepend the v6.7.9 history record to the history list\"",
+  "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":6,\"ReplacementContent\":\"<p align=\\\"center\\\">\\n  <img src=\\\"https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge\\\" alt=\\\"Status\\\" />\\n  <img src=\\\"https://img.shields.io/badge/version-6.7.9--magic--prompt--integration-darkred?style=for-the-badge\\\" alt=\\\"Version\\\" />\\n  <img src=\\\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\\\" alt=\\\"License\\\" />\\n  <img src=\\\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\\\" alt=\\\"TypeScript\\\" />\\n  <img src=\\\"https://img.shields.io/badge/neural_mesh-8593_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\\\" alt=\\\"Neural Mesh\\\" />\",\"StartLine\":1,\"TargetContent\":\"<p align=\\\"center\\\">\\n  <img src=\\\"https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge\\\" alt=\\\"Status\\\" />\\n  <img src=\\\"https://img.shields.io/badge/version-6.7.8--enums--and--pricing-darkred?style=for-the-badge\\\" alt=\\\"Version\\\" />\\n  <img src=\\\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\\\" alt=\\\"License\\\" />\\n  <img src=\\\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\\\" alt=\\\"TypeScript\\\" />\\n  <img src=\\\"https://img.shields.io/badge/neural_mesh-8582_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\\\" alt=\\\"Neural Mesh\\\" />\"},{\"AllowMultiple\":false,\"EndLine\":93,\"ReplacementContent\":\"         + Constellation Matrix WebGL (8593 nodes \u00b7 11885 edges \u2014 pagina\u00e7\u00e3o completa)\\n         + Visual Orchestration Canvas with Quality Gates\\n         + AIOS \u2014 conversational AI consciousness with VAD + Barge-in\\n```\\n\\n### [v6.7.9] \u2014 Canvas Studio Magic Prompt & E2E Audit (2026-05-24)\\n- **Magic Prompt Interativo**: Implementada escolha de Magic Prompt interativo ajust\u00e1vel com custos diferenciados de mcoCoins por n\u00edvel (Curto: 1 \ud83d\udc8e, M\u00e9dio: 2 \ud83d\udc8e, Longo: 5 \ud83d\udc8e) nos inspetores de Imagem, Cena e V\u00eddeo.\\n- **Segrega\u00e7\u00e3o de Provedores**: Higgsfield isolado exclusivamente para gera\u00e7\u00e3o e proc\n<truncated 2336 bytes>",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/README.md\"",
+  "toolAction": "\"Updating README file\"",
+  "toolSummary": "\"Update README file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:20Z
+> Completed At: 2026-05-24T18:00:22Z
+> The following changes were made by the multi_replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/README.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -1,9 +1,9 @@
+>  <p align="center">
+>    <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> -  <img src="https://img.shields.io/badge/version-6.7.8--enums--and--pricing-darkred?style=for-the-badge" alt="Version" />
+> +  <img src="https://img.shields.io/badge/version-6.7.9--magic--prompt--integration-darkred?style=for-the-badge" alt="Version" />
+>    <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+>    <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> -  <img src="https://img.shields.io/badge/neural_mesh-8582_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> +  <img src="https://img.shields.io/badge/neural_mesh-8593_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+>    <img src="https://img.shields.io/badge/test_coverage-165_tests-success?style=for-the-badge" alt="Test Coverage" />
+>    <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+>    <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> @@ -80,7 +80,7 @@
+>           + ROI Dashboard with real BRL revenue
+>           + GraphRAG Knowledge Node (observation inserted per run)
+>           + Neural HUD telemetry
+> -         + Constellation Matrix WebGL (8582 nodes · 11885 edges — paginação completa)
+> +         + Constellation Matrix WebGL (8593 nodes · 11885 edges — paginação completa)
+>           + Visual Orchestration Canvas with Quality Gates
+>           + AIOS — conversational AI consciousness with VAD + Barge-in
+>  ```
+> @@ -87,3 +87,8 @@
+> +### [v6.7.9] — Canvas Studio Magic Prompt & E2E Audit (2026-05-24)
+> +- **Magic Prompt Interativo**: Implementada escolha de Magic Prompt interativo ajustável com custos diferenciados de mcoCoins por nível (Curto: 1 💎, Médio: 2 💎, Longo: 5 💎) nos inspetores de Imagem, Cena e Vídeo.
+> +- **Segregação de Provedores**: Higgsfield isolado exclusivamente para geração e processamento assíncrono de vídeo; Nano Banana 2 (Gemini Image via OpenRouter) definido como modelo de imagem padrão.
+> +- **Material proofs**: `tsc --noEmit` zero erros · build de produção concluído com sucesso · milestone node `30f1c196-2a12-48d7-84da-7db6a900d165` embedado na Supabase · mesh total **8593 nodes** (+11 desde v6.7.8) · **11885 edges**.
+> +
+>  ### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+>  - **Mapeamento de Enums no Backend**: Resolvida a falha de submissão do canvas mapeando as strings `image_to_video` e `scene_compose` para seus enums Postgres equivalentes (`generate_video` e `compose`) nas escritas do banco de dados.
+>  - **Atualização de Preços do Canvas**: Estilização atualizada de 12 para **14 💎** e Composição de Cenas atualizada para **18 💎** no frontend e backend.
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git status\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Checking git status for docs\"",
+  "toolSummary": "\"Check git status for docs\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:26Z
+> Completed At: 2026-05-24T18:00:28Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				On branch main
+> Your branch is up to date with 'origin/main'.
+> 
+> Changes not staged for commit:
+>   (use "git add <file>..." to update what will be committed)
+>   (use "git restore <file>..." to discard changes in working directory)
+>         modified:   HANDOFF.md
+>         modified:   README.md
+> 
+> no changes added to commit (use "git add" and/or "git commit -a")
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git add HANDOFF.md README.md\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Adding docs to git\"",
+  "toolSummary": "\"Add docs to git\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:33Z
+> Completed At: 2026-05-24T18:00:34Z
+> 
+> 				The command completed successfully.
+> 				No output
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git commit -m \\\"docs: update README.md and HANDOFF.md with version v6.7.9 and milestone proofs\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Commiting docs changes\"",
+  "toolSummary": "\"Commit docs changes\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:40Z
+> Completed At: 2026-05-24T18:00:41Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				[main cfbd4e4] docs: update README.md and HANDOFF.md with version v6.7.9 and milestone proofs
+>  2 files changed, 53 insertions(+), 3 deletions(-)
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git push origin main\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Pushing docs to remote repo\"",
+  "toolSummary": "\"Push docs to remote repo\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:45Z
+> Completed At: 2026-05-24T18:00:48Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Enumerating objects: 7, done.
+> Counting objects: 100% (7/7), done.
+> Delta compression using up to 4 threads
+> Compressing objects: 100% (4/4), done.
+> Writing objects: 100% (4/4), 2.72 KiB | 464.00 KiB/s, done.
+> Total 4 (delta 3), reused 0 (delta 0), pack-reused 0
+> remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    21584d4..cfbd4e4  main -> main
+> Terminal ID: 1983355
+> 
+> ```
