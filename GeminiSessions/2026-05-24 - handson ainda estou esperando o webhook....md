@@ -24209,3 +24209,1308 @@ Agora antes de fazer handoff quero que você inclua no handoff todos os walkthro
 > Terminal ID: 1983355
 > 
 > ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"/home/ubuntu/scripts/sync_sessions.sh\"",
+  "Cwd": "\"/home/ubuntu\"",
+  "WaitMsBeforeAsync": "10000",
+  "toolAction": "\"Running sync_sessions script manually\"",
+  "toolSummary": "\"Run sync_sessions script manually\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:57:20Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-1026
+> Task Description: /home/ubuntu/scripts/sync_sessions.sh
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-1026.log
+> ```
+
+## 🤖 Gemini *(17:57:30)*
+
+[Task 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-1026 completed]
+Task Output:
+From github.com:gabrielZarattini/claude-session
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+Traceback (most recent call last):
+  File "/home/ubuntu/scripts/convert_gemini_to_markdown.py", line 47, in <module>
+    convert_transcript(sys.argv[1], sys.argv[2])
+  File "/home/ubuntu/scripts/convert_gemini_to_markdown.py", line 12, in convert_transcript
+    with open(transcript_path, 'r', encoding='utf-8') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/.gemini/antigravity/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/transcript.jsonl'
+Alterações detectadas. Enviando para o GitHub...
+[main de62137] Auto-sync: Claude & Gemini sessions update 2026-05-24 14:57:31
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+To github.com:gabrielZarattini/claude-session.git
+   ca9a3e6..de62137  main -> main
+Terminal ID: 1983355
+
+Log: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-1026.log
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/ubuntu/.gemini/config/global_workflows/handoff.md\"",
+  "toolAction": "\"Viewing handoff workflow\"",
+  "toolSummary": "\"View handoff workflow\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ❌ Error
+>
+> ```
+> Created At: 2026-05-24T17:57:44Z
+> Completed At: 2026-05-24T17:57:44Z
+> Encountered error in step execution: Permission denied for read_file(/home/ubuntu/.gemini/config/global_workflows/handoff.md). Matches hardcoded system protection boundary rule.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find /home/gcrUX/htdocs/constellation-orchestra/ -maxdepth 2 -name \\\"*HANDOFF*\\\" -o -name \\\"*handoff*\\\" 2>/dev/null\"",
+  "Cwd": "\"/home/ubuntu\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Finding handoff files in repository\"",
+  "toolSummary": "\"Find handoff files in repo\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:57:48Z
+> Completed At: 2026-05-24T17:57:49Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "toolAction": "\"Viewing HANDOFF file\"",
+  "toolSummary": "\"View HANDOFF file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:57:53Z
+> Completed At: 2026-05-24T17:57:53Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md`
+> Total Lines: 4096
+> Total Bytes: 417180
+> Showing lines 1 to 800
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # HANDOFF — MCORCH Constellation Orchestra
+> 2: 
+> 3: ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4: 
+> 5: ```bash
+> 6: git log --oneline -5
+> 7: # Then explore the codebase — do NOT start from the file tree
+> 8: ```
+> 9: 
+> 10: ---
+> 11: 
+> 12: ## Task State
+> 13: 
+> 14: ## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)
+> 15: 
+> 16: **CANVAS STUDIO ENUMS & PRICING v6.7.8 SHIPPED (2026-05-24).** Sessão focada em (1) corrigir a falha de submissão de execuções no Canvas Studio mapeando as strings de `node_type` para valores válidos do enum Postgres `vm_node_type`, (2) atualizar os custos operacionais de Estilização (Style Transfer) para 14💎 e Composição de Cena (Scene Compose) para 18💎, e (3) documentar e preparar a orquestração do pipeline usando a nova lógica de consistência em 3 camadas e Continuity Chain.
+> 17: 
+> 18: **Step 1 — Mapeamento de Enum no Backend:**
+> 19: *   Modificada a Edge Function `canvas-execute` ([index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts)) para mapear os tipos recebidos do frontend aos correspondentes do enum `vm_node_type` do Postgres antes de qualquer escrita nas tabelas `vm_canvas_executions` e `vm_canvas_assets`:
+> 20:     - `"image_to_video"` -> `"generate_video"`.
+> 21:     - `"scene_compose"` -> `"compose"`.
+> 22: *   Com essa tradução, o erro `"Failed to create execution record"` foi completamente sanado.
+> 23: 
+> 24: **Step 2 — Atualização de Custos de Operação (mcoCoins):**
+> 25: *   **Backend**: Adicionado `"scene-compose": 18` e atualizado `"style-transfer": 14` e
+> <truncated 45284 bytes>
+> formalizadas (gamificação per-user · OpenClaw incident escalation · Claw-Master audit cycle); (iv) HANDOFF v6.6.3 claimed "4 content_mesh_asset (3 product + 1 smoke)" mas reality REST GET retornou **1 row apenas** (`f3a091f7` test-content-mesh-asset-oe661) — os 3 "products" têm `node_type='feature'` não `content_mesh_asset` (HANDOFF narrative ERRADO); (v) `handle-ml-postback` operando há 17 dias com **zero rows em `infra_health_logs`** para `service ILIKE '%ml%'` — função cega para falhas silenciosas. **4 bugs concretos no plan original**: **A** race condition entre observation + content_mesh_asset INSERTs não atômicos em `orchestrate-content/index.ts:404-430` (user cobrado 10 mcoCoins com mesh emitida pela metade) → fix via Promise.allSettled; **B** wpPostUrl null não gated → asset emitido com `wordpress_url=""` se WP fail → Link Forge consome lixo → fix via inline skip; **C** `scripts/link-forge.ts:149-153` query global SEM `project_id` filter → `project_id: "mcorch-affiliate"` no shape = falso scoping → fix via `.eq("project_id", ...)`; **D** `handle-ml-postback` content_id user-provided pode driftar do `mcorch_nodes.id` → revenue loop pode quebrar → fix via novo Step 1.5.5 synthetic E2E verification. **Schema drift detectado material**: `infra_health_logs` colunas reais são `id, service, status, last_seen_at` — `created_at` NÃO EXISTE (erro 42703 confirmado), plan Phase 3.5 queries corrigidas via Amendment F. **(c) 10 amendments aplicados** ao plan (A-J) sobrescrevendo body original via Amendments Appendix no topo: A atomic emission · B wpPostUrl gate · C Link Forge scoping · D synthetic E2E postback verify · E `handle-ml-postback` health pulse (~6 LOC + deploy) · F `created_at` → `last_seen_at` · G baseline content_mesh_asset 5→2 esperado · H **Phase 0 NEW Survival Laws Self-audit retroactive cobrindo as 
+> <truncated 109403 bytes>
+> 
+> NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/package.json\"",
+  "toolAction": "\"Viewing package.json\"",
+  "toolSummary": "\"View package.json\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:57:58Z
+> Completed At: 2026-05-24T17:57:58Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/package.json`
+> Total Lines: 125
+> Total Bytes: 4114
+> Showing lines 1 to 125
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: {
+> 2:   "name": "vite_react_shadcn_ts",
+> 3:   "private": true,
+> 4:   "version": "0.0.0",
+> 5:   "type": "module",
+> 6:   "scripts": {
+> 7:     "dev": "vite",
+> 8:     "build": "vite build",
+> 9:     "build:dev": "vite build --mode development",
+> 10:     "lint": "eslint .",
+> 11:     "preview": "vite preview",
+> 12:     "test": "vitest run",
+> 13:     "test:watch": "vitest"
+> 14:   },
+> 15:   "dependencies": {
+> 16:     "@dnd-kit/core": "^6.3.1",
+> 17:     "@dnd-kit/sortable": "^10.0.0",
+> 18:     "@dnd-kit/utilities": "^3.2.2",
+> 19:     "@hookform/resolvers": "^3.10.0",
+> 20:     "@mediapipe/camera_utils": "^0.3.1675466862",
+> 21:     "@mediapipe/drawing_utils": "^0.3.1675466124",
+> 22:     "@mediapipe/hands": "^0.4.1675469240",
+> 23:     "@radix-ui/react-accordion": "^1.2.11",
+> 24:     "@radix-ui/react-alert-dialog": "^1.1.14",
+> 25:     "@radix-ui/react-aspect-ratio": "^1.1.7",
+> 26:     "@radix-ui/react-avatar": "^1.1.10",
+> 27:     "@radix-ui/react-checkbox": "^1.3.3",
+> 28:     "@radix-ui/react-collapsible": "^1.1.11",
+> 29:     "@radix-ui/react-context-menu": "^2.2.15",
+> 30:     "@radix-ui/react-dialog": "^1.1.14",
+> 31:     "@radix-ui/react-dropdown-menu": "^2.1.15",
+> 32:     "@radix-ui/react-hover-card": "^1.1.14",
+> 33:     "@radix-ui/react-label": "^2.1.8",
+> 34:     "@radix-ui/react-menubar": "^1.1.15",
+> 35:     "@radix-ui/react-navigation-menu": "^1.2.13",
+> 36:     "@radix-ui/react-popover": "^1.1.14",
+> 37:     "@radix-ui/react-progress": "^1.1.7",
+> 38:     "@radix-ui/react-radio-group": "^1.3.7",
+> 39:     "@radix-ui/react-scroll-area": "^1.2.9",
+> 40:     "@radix-ui/react-select": "^2.2.6",
+> 41:     "@radix-ui/react-separator"
+> <truncated 1062 bytes>
+> "graphology-communities-louvain": "^2.0.2",
+> 69:     "graphology-layout-forceatlas2": "^0.10.1",
+> 70:     "input-otp": "^1.4.2",
+> 71:     "lucide-react": "^1.11.0",
+> 72:     "next-themes": "^0.3.0",
+> 73:     "react": "^18.3.1",
+> 74:     "react-day-picker": "^8.10.1",
+> 75:     "react-dom": "^18.3.1",
+> 76:     "react-helmet-async": "^2.0.0",
+> 77:     "react-hook-form": "^7.61.1",
+> 78:     "react-is": "^19.2.5",
+> 79:     "react-resizable-panels": "^2.1.9",
+> 80:     "react-router-dom": "^6.30.1",
+> 81:     "recharts": "^3.8.1",
+> 82:     "sigma": "^3.0.2",
+> 83:     "sonner": "^1.7.4",
+> 84:     "tailwind-merge": "^2.6.0",
+> 85:     "tailwindcss-animate": "^1.0.7",
+> 86:     "three": "^0.170.0",
+> 87:     "vaul": "^0.9.9",
+> 88:     "zod": "^3.25.76",
+> 89:     "zundo": "^2.3.0",
+> 90:     "zustand": "^5.0.12"
+> 91:   },
+> 92:   "devDependencies": {
+> 93:     "@eslint/js": "^9.32.0",
+> 94:     "@playwright/test": "^1.57.0",
+> 95:     "@tailwindcss/typography": "^0.5.16",
+> 96:     "@testing-library/dom": "^10.4.1",
+> 97:     "@testing-library/jest-dom": "^6.6.0",
+> 98:     "@testing-library/react": "^16.0.0",
+> 99:     "@types/d3-force": "^3.0.10",
+> 100:     "@types/node": "^22.16.5",
+> 101:     "@types/react": "^18.3.23",
+> 102:     "@types/react-dom": "^18.3.7",
+> 103:     "@vitejs/plugin-react-swc": "^3.11.0",
+> 104:     "@vitest/coverage-v8": "^4.1.5",
+> 105:     "autoprefixer": "^10.4.21",
+> 106:     "eslint": "^9.32.0",
+> 107:     "eslint-plugin-react-hooks": "^5.2.0",
+> 108:     "eslint-plugin-react-refresh": "^0.4.20",
+> 109:     "globals": "^15.15.0",
+> 110:     "jsdom": "^20.0.3",
+> 111:     "lovable-tagger": "^1.1.13",
+> 112:     "postcss": "^8.5.6",
+> 113:     "supabase": "^2.92.1",
+> 114:     "tailwindcss": "^3.4.17",
+> 115:     "typescript": "^5.8.3",
+> 116:     "typescript-eslint": "^8.38.0",
+> 117:     "vite": "^5.4.19",
+> 118:     "vitest": "^3.2.4"
+> 119:   },
+> 120:   "optionalDependencies": {
+> 121:     "@esbuild/linux-x64": "^0.28.0",
+> 122:     "@rollup/rollup-linux-x64-gnu": "^4.60.3"
+> 123:   }
+> 124: }
+> 125: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git status\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Checking git status\"",
+  "toolSummary": "\"Check git status\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:01Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-1038
+> Task Description: git status
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-1038.log
+> ```
+
+## 🤖 Gemini *(17:58:04)*
+
+[Task 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-1038 completed]
+Task Output:
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+	modified:   src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx
+	modified:   src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Terminal ID: 1983355
+
+Log: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-1038.log
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git diff supabase/functions/canvas-execute/index.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Checking git diff on backend function\"",
+  "toolSummary": "\"Check git diff on backend function\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:14Z
+> Completed At: 2026-05-24T17:58:15Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				<truncated 1 lines>
+>      const dbNodeType = body.node_type === "image_to_video"
+>        ? "generate_video"
+> -      : (body.node_type === "scene_compose" ? "compose" : body.node_type);
+> +      : (body.node_type === "scene_compose" ? "compose" : (body.node_type === "magic_prompt" ? "generate_image" : body.node_type));
+>  
+>      // ── Create execution record ──────────────────────────────────────
+>      // For async video jobs we insert as 'queued' (no deduct yet — webhook
+> @@ -226,6 +232,115 @@ serve(async (req) => {
+>        });
+>      }
+>  
+> +    // ── Magic Prompt generation ──────────────────────────────────────
+> +    if (body.node_type === "magic_prompt") {
+> +      let campaignContext = "Nenhum contexto de campanha disponível.";
+> +      try {
+> +        if (body.project_id) {
+> +          const { data: project } = await admin
+> +            .from("vm_canvas_projects")
+> +            .select("name, description, campaign_id")
+> +            .eq("id", body.project_id)
+> +            .maybeSingle();
+> +          
+> +          if (project) {
+> +            let campaignId = project.campaign_id;
+> +            if (!campaignId) {
+> +              const { data: latestCampaign } = await admin
+> +                .from("campaigns")
+> +                .select("id")
+> +                .eq("user_id", user.id)
+> +                .order("created_at", { ascending: false })
+> +                .limit(1)
+> +                .maybeSingle();
+> +              if (latestCampaign) campaignId = latestCampaign.id;
+> +            }
+> +
+> +            if (campaignId) {
+> +              const { data: campaign } = await admin
+> +                .from("campaigns")
+> +                .select("name, description, target_audience, keywords")
+> +                .eq("id", campaignId)
+> +                .maybeSingle();
+> +              if 
+> <truncated 4245 bytes>
+> e).
+> +Seu objetivo é expandir e aprimorar o prompt genérico fornecido pelo usuário com base no contexto da campanha do usuário e no modelo de destino especificado.
+> +
+> +Nível de expansão solicitado:
+> +- curto: prompt conciso e direto, enriquecido (~25-40 palavras).
+> +- medio: prompt moderadamente detalhado, focando em iluminação, composição e estilo (~60-90 palavras).
+> +- longo: prompt altamente descritivo, cinemático e rico em detalhes visuais e detalhes do modelo (~120-180 palavras).
+> +
+> +Regras cruciais:
+> +1. Retorne APENAS o prompt final expandido em inglês (ideal para os geradores de imagem/vídeo).
+> +2. Não adicione observações, explicações, aspas extras ou introduções como "Here is your prompt:". Retorne apenas o texto do prompt.
+> +3. Se o modelo de destino for de vídeo (Higgsfield, Seedance, etc.), descreva o movimento da câmera, ações e efeitos temporais.
+> +4. Utilize o contexto da campanha (se fornecido) para alinhar o estilo do prompt com a marca/audiência.`;
+> +
+> +  const userContent = `Prompt do usuário a ser expandido: "${prompt}"
+> +Modelo de destino: "${modelName}"
+> +Contexto de Campanha do Usuário:
+> +${campaignContext}`;
+> +
+> +  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+> +    method: "POST",
+> +    headers: {
+> +      Authorization: `Bearer ${apiKey}`,
+> +      "Content-Type": "application/json",
+> +      "HTTP-Referer": "https://mcorch.com",
+> +      "X-Title": "GCRUX Magic Prompt Generator",
+> +    },
+> +    body: JSON.stringify({
+> +      model: "google/gemini-2.5-flash",
+> +      messages: [
+> +        { role: "system", content: systemInstruction },
+> +        { role: "user", content: userContent },
+> +      ],
+> +    }),
+> +  });
+> +
+> +  if (!resp.ok) {
+> +    const t = await resp.text();
+> +    throw new Error(`OpenRouter error ${resp.status}: ${t.slice(0, 200)}`);
+> +  }
+> +
+> +  const data = await resp.json();
+> +  const text = data?.choices?.[0]?.message?.content?.trim() || "";
+> +  if (!text) throw new Error("OpenRouter: resposta de magic prompt vazia");
+> +  return text;
+> +}
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Confirming Recent Edits**
+
+I've just confirmed the `canvas-execute` Edge function was modified during this session. This means all changes need committing, specifically focusing on the modifications in `src/components/canvas/RightPanel/inspectors/`. Ensuring these updates are finalized is critical, particularly before the next compaction process.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git add .\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Adding files to git\"",
+  "toolSummary": "\"Add files to git\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:20Z
+> Completed At: 2026-05-24T17:58:22Z
+> 
+> 				The command completed successfully.
+> 				No output
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git status\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Checking staged files\"",
+  "toolSummary": "\"Check staged files\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:25Z
+> Completed At: 2026-05-24T17:58:26Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				On branch main
+> Your branch is up to date with 'origin/main'.
+> 
+> Changes to be committed:
+>   (use "git restore --staged <file>..." to unstage)
+>         new file:   memory/heartbeat-state.json
+>         modified:   src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+>         modified:   src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx
+>         modified:   src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx
+>         modified:   supabase/functions/canvas-execute/index.ts
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git commit -m \\\"feat(canvas): implement interactive Magic Prompt feature with mcoCoin credit spent (1, 2, 5 coins) across GenerateImage, SceneCompose, and ImageToVideo inspectors\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Commiting git changes\"",
+  "toolSummary": "\"Commit git changes\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:30Z
+> Completed At: 2026-05-24T17:58:32Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				[main 21584d4] feat(canvas): implement interactive Magic Prompt feature with mcoCoin credit spent (1, 2, 5 coins) across GenerateImage, SceneCompose, and ImageToVideo inspectors
+>  5 files changed, 432 insertions(+), 22 deletions(-)
+>  create mode 100644 memory/heartbeat-state.json
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git push origin main\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Pushing to remote repository\"",
+  "toolSummary": "\"Push to remote repo\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:35Z
+> Completed At: 2026-05-24T17:58:38Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Enumerating objects: 30, done.
+> Counting objects: 100% (30/30), done.
+> Delta compression using up to 4 threads
+> Compressing objects: 100% (15/15), done.
+> Writing objects: 100% (16/16), 6.64 KiB | 2.21 MiB/s, done.
+> Total 16 (delta 13), reused 0 (delta 0), pack-reused 0
+> remote: Resolving deltas: 100% (13/13), completed with 12 local objects.
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    4a7c450..21584d4  main -> main
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Reviewing Recent Walkthroughs**
+
+Okay, I'm now focused on incorporating all generated walkthrough documents from this session into the handoff, ensuring accurate inclusion. I'm also cross-referencing these documents with the server's cron job schedule to guarantee correct update procedures are reflected. This is a priority before proceeding further.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git log --oneline -n 10\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Checking recent commits\"",
+  "toolSummary": "\"Check recent commits\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:44Z
+> Completed At: 2026-05-24T17:58:45Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				21584d4 (HEAD -> main, origin/main, origin/HEAD) feat(canvas): implement interactive Magic Prompt feature with mcoCoin credit spent (1, 2, 5 coins) across GenerateImage, SceneCompose, and ImageToVideo inspectors
+> 4a7c450 fix(edge-functions): parse nested payload.video.url in Higgsfield webhook callback
+> 6aac67a fix(edge-functions): robustly parse both string and object shapes inside OpenRouter message.images array
+> 66e4c34 fix(edge-functions): support string array in OpenRouter multimodal message.images parser
+> 33eb8ae fix(canvas): deploy OpenRouter model rename to google/gemini-2.5-flash-image and sync build
+> 7d96c7d feat(canvas): leave Higgsfield only for videos, change default image generation model to OpenRouter Gemini (Nano Banana 2)
+> eed41b1 fix(canvas): solve page-load race condition for execution reconciliation and wait for autosave in E2E tests
+> fbf8a2b fix(canvas): resolve query key prefix drift in useCanvasJobsRealtime
+> d74c63a fix(edge-functions): bypass JWT validation for public webhook and callback functions in config.toml
+> ca729f6 docs: update README.md and HANDOFF.md with version v6.7.8 and milestone proofs
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing Recent Commits**
+
+I've been reviewing recent commits, and focusing on the changes since version `v6.7.8`. Specifically, I noticed `d74c63a`, which bypasses JWT validation for public webhooks and callback functions. Also, `fbf8a2b` resolves a query key prefix issue in `useCanvasJobsRealtime`.
+
+
+**Updating Documentation Now**
+
+I'm now focused on documentation updates. Specifically, I'm integrating the Magic Prompt feature, introduced in commit `21584d4`, into the existing walkthrough.md and updating the repository `HANDOFF.md` to reflect these changes and prepare a new release as `v6.7.9`, merging the walkthrough details into it. This is a very targeted focus to bring the project into the current state.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "ArtifactMetadata": "{\"ArtifactType\":\"walkthrough\",\"RequestFeedback\":false,\"Summary\":\"Walkthrough of E2E Canvas Audit, Webhook Verification, and interactive Magic Prompt integration with mcoCoins credit spending.\"}",
+  "CodeContent": "\"# Walkthrough \u2014 E2E Canvas Audit, Webhook Verification & Magic Prompt Integration (Resolvido)\\n\\nAuditoria mec\u00e2nica e de integridade do Canvas Studio conclu\u00edda com sucesso. As corre\u00e7\u00f5es no pipeline ass\u00edncrono de v\u00eddeo, na consist\u00eancia de carregamento, na ativa\u00e7\u00e3o do Nano Banana 2 e na implementa\u00e7\u00e3o completa do Magic Prompt interativo com cobran\u00e7a diferenciada de mcoCoins foram conclu\u00eddas e validadas.\\n\\n---\\n\\n## \ud83d\udee0\ufe0f Altera\u00e7\u00f5es Realizadas\\n\\n### 1. Magic Prompt Integrado e Ajust\u00e1vel (Curto, M\u00e9dio, Longo)\\nAdicionamos suporte ao Magic Prompt interativo nos tr\u00eas inspetores que editam prompt:\\n* **GenerateImageInspector.tsx, SceneComposeInspector.tsx e ImageToVideoInspector.tsx**:\\n  * Substitu\u00edmos o bot\u00e3o desabilitado (ou a visualiza\u00e7\u00e3o est\u00e1tica do contador) por um `<DropdownMenu>` interativo contendo op\u00e7\u00f5es:\\n    * **Curto** (1 \ud83d\udc8e) - Prompt direto e conciso.\\n    * **M\u00e9dio** (2 \ud83d\udc8e) - Foco em ilumina\u00e7\u00e3o, composi\u00e7\u00e3o e estilo.\\n    * **Longo** (5 \ud83d\udc8e) - Detalhes ricos, cinem\u00e1ticos e estilizados.\\n  * O menu avalia o `creditsBalance` do usu\u00e1rio em tempo real, desabilitando as op\u00e7\u00f5es que custam mais que o saldo dispon\u00edvel.\\n  * Enquanto gera, o bot\u00e3o exibe um spinner de loading (`Loader2`) e o texto \\\"Aprimorando...\\\".\\n  * Ap\u00f3s o retorno da Edge Function, o prompt do n\u00f3 no Zustand \u00e9 atualizado at\u00f4mica e localmente, uma mensagem de sucesso \u00e9 mostrada e a fun\u00e7\u00e3o `onCreditsChanged()` \u00e9 disparada para atualizar o saldo exibido no cabe\u00e7alho.\\n\\n### 2. Segrega\u00e7\u00e3o de Provedores: Higgsfield Somente para V\u00eddeo\\n* **Hiding Higgsfield Soul:** Removemos o grupo de modelos \\\"Higgsfield Soul\\\" do seletor em `GenerateImageInspector.tsx`.\\n* **Migra\u00e7\u00e3o do Scene Compose:** Modificamos o `SceneComposeInspector.tsx` para usar modelos de imagem gen\u00e9ricos da OpenRouter e OpenAI (`SCENE_MODELS`), ao inv\u00e9s dos modelos Soul.\\n\\n### 3. Ativa\u00e7\u00e3o do Nano Banana 2 (Gemini Image via OpenRouter)\\n* **Novo Modelo Padr\u00e3o:** Alteramos `DEFAULT_IMAGE_MODEL` em `types/canvas.ts` para `\\\n<truncated 3580 bytes>",
+  "Description": "\"Update walkthrough.md with Magic Prompt feature and overall E2E results\"",
+  "IsArtifact": "true",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/walkthrough.md\"",
+  "toolAction": "\"Updating walkthrough file\"",
+  "toolSummary": "\"Update walkthrough file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:52Z
+> Completed At: 2026-05-24T17:58:52Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/walkthrough.md with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Appending Handoff Section**
+
+Okay, I'm appending the handoff section to `/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md`. The latest section was the Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record from May 24th, 2026. This process is now underway, and will be completed shortly.
+
+
+**Reviewing Recent Magic Prompt Updates**
+
+I've successfully shipped the Canvas Studio Magic Prompt and Audit v6.7.9 update. This includes an interactive Magic Prompt with variable costs based on size (1, 2, and 5 mcoCoins) across Canvas Studio inspectors. I've also segregated providers, making Higgsfield video-exclusive, and enabled Nano Banana 2 as the default image model. Reconcilation and concurrency issues on canvas initialization are also addressed.
+
+</details>
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "EndLine": "30",
+  "StartLine": "1",
+  "toolAction": "\"Viewing top of HANDOFF.md\"",
+  "toolSummary": "\"View top of HANDOFF.md\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:58:58Z
+> Completed At: 2026-05-24T17:58:58Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md`
+> Total Lines: 4096
+> Total Bytes: 417180
+> Showing lines 1 to 30
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # HANDOFF — MCORCH Constellation Orchestra
+> 2: 
+> 3: ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4: 
+> 5: ```bash
+> 6: git log --oneline -5
+> 7: # Then explore the codebase — do NOT start from the file tree
+> 8: ```
+> 9: 
+> 10: ---
+> 11: 
+> 12: ## Task State
+> 13: 
+> 14: ## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)
+> 15: 
+> 16: **CANVAS STUDIO ENUMS & PRICING v6.7.8 SHIPPED (2026-05-24).** Sessão focada em (1) corrigir a falha de submissão de execuções no Canvas Studio mapeando as strings de `node_type` para valores válidos do enum Postgres `vm_node_type`, (2) atualizar os custos operacionais de Estilização (Style Transfer) para 14💎 e Composição de Cena (Scene Compose) para 18💎, e (3) documentar e preparar a orquestração do pipeline usando a nova lógica de consistência em 3 camadas e Continuity Chain.
+> 17: 
+> 18: **Step 1 — Mapeamento de Enum no Backend:**
+> 19: *   Modificada a Edge Function `canvas-execute` ([index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts)) para mapear os tipos recebidos do frontend aos correspondentes do enum `vm_node_type` do Postgres antes de qualquer escrita nas tabelas `vm_canvas_executions` e `vm_canvas_assets`:
+> 20:     - `"image_to_video"` -> `"generate_video"`.
+> 21:     - `"scene_compose"` -> `"compose"`.
+> 22: *   Com essa tradução, o erro `"Failed to create execution record"` foi completamente sanado.
+> 23: 
+> 24: **Step 2 — Atualização de Custos de Operação (mcoCoins):**
+> 25: *   **Backend**: Adicionado `"scene-compose": 18` e atualizado `"style-transfer": 14` em `CREDIT_COSTS` na Edge Function `canvas-execute`.
+> 26: *   **Frontend**: Atualizado `STYLE_TRANSFER_COST` para `14` e o custo padrão em `makeDefaultSceneCompose` para `18` em [canvas.ts](file:///home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts).
+> 27: *   **Resolução Dinâmica**: Chave de custos de vídeo na Edge Function configurada para ser resolvida a partir de `${body.provider}/${body.model}-${body.parameters?.duration || 5}s` (ex: `higgsfield/dop-lite-5s`), e o modelo `"higgsfield/seedance-v1-pro-5s"` foi adicionado a `CREDIT_COSTS` com custo de **130 💎**.
+> 28: 
+> 29: **Step 3 — Integração da Lógica de Consistência (3 Camadas + Continuity Chain):**
+> 30: *   A consistência de criação de personagens agora é assegurada por 3 camadas complementares:
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Add new handoff record for v6.7.9 to HANDOFF.md\"",
+  "EndLine": "15",
+  "Instruction": "\"Insert the new session record at the top of the records in HANDOFF.md\"",
+  "ReplacementContent": "\"## Task State\\n\\n## Canvas Studio E2E Verification & Magic Prompt Integration Record (2026-05-24)\\n\\n**CANVAS STUDIO MAGIC PROMPT & AUDIT v6.7.9 SHIPPED (2026-05-24).** Sess\u00e3o focada em (1) implementar o recurso Magic Prompt interativo ajust\u00e1vel com custos diferenciados por tamanho (1, 2 e 5 mcoCoins) nos inspetores do Canvas Studio, (2) segregar provedores deixando o Higgsfield exclusivamente para v\u00eddeo, (3) ativar o Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padr\u00e3o, e (4) corrigir os problemas de reconcilia\u00e7\u00e3o em tempo real e concorr\u00eancia na inicializa\u00e7\u00e3o do canvas.\\n\\n**Step 1 \u2014 Magic Prompt Interativo:**\\n*   Adicionado um `<DropdownMenu>` nos inspetores `GenerateImageInspector.tsx`, `SceneComposeInspector.tsx` e `ImageToVideoInspector.tsx` abaixo do campo de prompt.\\n*   Oferece op\u00e7\u00f5es com limites e custos em mcoCoins associados:\\n    - **Curto** (1 \ud83d\udc8e)\\n    - **M\u00e9dio** (2 \ud83d\udc8e)\\n    - **Longo** (5 \ud83d\udc8e)\\n*   Wired com a Edge Function `canvas-execute` passando `node_type: \\\"magic_prompt\\\"` e par\u00e2metros `{ level, target_model }`. Ao concluir com sucesso, atualiza o prompt do n\u00f3 no Zustand store local e dispara `onCreditsChanged()` para re-sincronizar o saldo do dashboard.\\n\\n**Step 2 \u2014 Segrega\u00e7\u00e3o de Provedores (Higgsfield focado em v\u00eddeo):**\\n*   Ocultado o seletor de modelos Higgsfield Soul em `GenerateImageInspector.tsx`.\\n*   Migrado `SceneComposeInspector.tsx` para usar modelos gen\u00e9ricos OpenRouter e OpenAI (`SCENE_MODELS`), ao inv\u00e9s dos modelos Soul.\\n\\n**Step 3 \u2014 Ativa\u00e7\u00e3o do Nano Banana 2:**\\n*   Definido `DEFAULT_IMAGE_MODEL` para `\\\"openrouter-gemini-image\\\"` em `types/canvas.ts` (resolvido como `google/gemini-2.5-flash-image-preview` na OpenRouter).\\n*   Adicionado `\\\"openrouter/google/gemini-2.5-flash-image-preview\\\": 10` e `\\\"openrouter/black-forest-labs/flux-1.1-pro\\\": 12` em `CREDIT_COSTS` na Edge Function `canvas-execute` para faturamento preciso de mcoCoins.\\n\\n**Step 4 \u2014 Sincronismo e Reconcilia\u00e7\u00e3o do Canvas:**\\n*   Corrigida a invalida\n<truncated 2013 bytes>",
+  "StartLine": "12",
+  "TargetContent": "\"## Task State\\n\\n## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "toolAction": "\"Updating HANDOFF file\"",
+  "toolSummary": "\"Update HANDOFF file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:04Z
+> Completed At: 2026-05-24T17:59:06Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -11,6 +11,49 @@
+>  
+>  ## Task State
+>  
+> +## Canvas Studio E2E Verification & Magic Prompt Integration Record (2026-05-24)
+> +
+> +**CANVAS STUDIO MAGIC PROMPT & AUDIT v6.7.9 SHIPPED (2026-05-24).** Sessão focada em (1) implementar o recurso Magic Prompt interativo ajustável com custos diferenciados por tamanho (1, 2 e 5 mcoCoins) nos inspetores do Canvas Studio, (2) segregar provedores deixando o Higgsfield exclusivamente para vídeo, (3) ativar o Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padrão, e (4) corrigir os problemas de reconciliação em tempo real e concorrência na inicialização do canvas.
+> +
+> +**Step 1 — Magic Prompt Interativo:**
+> +*   Adicionado um `<DropdownMenu>` nos inspetores `GenerateImageInspector.tsx`, `SceneComposeInspector.tsx` e `ImageToVideoInspector.tsx` abaixo do campo de prompt.
+> +*   Oferece opções com limites e custos em mcoCoins associados:
+> +    - **Curto** (1 💎)
+> +    - **Médio** (2 💎)
+> +    - **Longo** (5 💎)
+> +*   Wired com a Edge Function `canvas-execute` passando `node_type: "magic_prompt"` e parâmetros `{ level, target_model }`. Ao concluir com sucesso, atualiza o prompt do nó no Zustand store local e dispara `onCreditsChanged()` para re-sincronizar o saldo do dashboard.
+> +
+> +**Step 2 — Segregação de Provedores (Higgsfield focado em vídeo):**
+> +*   Ocultado o seletor de modelos Higgsfield Soul em `GenerateImageInspector.tsx`.
+> +*   Migrado `SceneComposeInspector.tsx` para usar modelos genéricos OpenRouter e OpenAI (`SCENE_MODELS`), ao invés dos modelos Soul.
+> +
+> +**Step 3 — Ativação do Nano Banana 2:**
+> +*   Definido `DEFAULT_IMAGE_MODEL` para `"openrouter-gemini-image"` em `types/canvas.ts` (resolvido como `google/gemini-2.5-flash
+> <truncated 1043 bytes>
+> enerateImage, SceneCompose, and ImageToVideo inspectors
+> +    - `4a7c450` fix(edge-functions): parse nested payload.video.url in Higgsfield webhook callback
+> +    - `6aac67a` fix(edge-functions): robustly parse both string and object shapes inside OpenRouter message.images array
+> +    - `66e4c34` fix(edge-functions): support string array in OpenRouter multimodal message.images parser
+> +    - `33eb8ae` fix(canvas): deploy OpenRouter model rename to google/gemini-2.5-flash-image and sync build
+> +    - `7d96c7d` feat(canvas): leave Higgsfield only for videos, change default image generation model to OpenRouter Gemini (Nano Banana 2)
+> +    - `eed41b1` fix(canvas): solve page-load race condition for execution reconciliation and wait for autosave in E2E tests
+> +    - `fbf8a2b` fix(canvas): resolve query key prefix drift in useCanvasJobsRealtime
+> +    - `d74c63a` fix(edge-functions): bypass JWT validation for public webhook and callback functions in config.toml
+> +*   TypeScript `tsc --noEmit` limpo — zero erros.
+> +*   Build de produção concluído com sucesso em 22.38s.
+> +*   Script de auditoria E2E `scripts/qa/audit-canvas-ui.ts` rodou com sucesso (`22 nós carregados ·hasVideoElement: true`).
+> +
+> +---
+> +
+>  ## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)
+>  
+>  **CANVAS STUDIO ENUMS & PRICING v6.7.8 SHIPPED (2026-05-24).** Sessão focada em (1) corrigir a falha de submissão de execuções no Canvas Studio mapeando as strings de `node_type` para valores válidos do enum Postgres `vm_node_type`, (2) atualizar os custos operacionais de Estilização (Style Transfer) para 14💎 e Composição de Cena (Scene Compose) para 18💎, e (3) documentar e preparar a orquestração do pipeline usando a nova lógica de consistência em 3 camadas e Continuity Chain.
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/README.md\"",
+  "EndLine": "25",
+  "StartLine": "1",
+  "toolAction": "\"Viewing top of README.md\"",
+  "toolSummary": "\"View top of README.md\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:10Z
+> Completed At: 2026-05-24T17:59:10Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/README.md`
+> Total Lines: 1344
+> Total Bytes: 130514
+> Showing lines 1 to 800
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: <p align="center">
+> 2:   <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3:   <img src="https://img.shields.io/badge/version-6.7.8--enums--and--pricing-darkred?style=for-the-badge" alt="Version" />
+> 4:   <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5:   <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6:   <img src="https://img.shields.io/badge/neural_mesh-8582_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7:   <img src="https://img.shields.io/badge/test_coverage-165_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8:   <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 9:   <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 10:   <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 11:   <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 12:   <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 13:   <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 14:   <img src="https://img.shields.io/badge/Core_v2-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core v2" />
+> 15:   <img src="https:/
+> <truncated 45283 bytes>
+>  É atomic on success — `credits_charged` é intenção, não cobrança); apenas 1 `pipeline_run` em ~6 semanas; ZERO admin em `user_roles` (OTD-SSP01-005 RPN 280, owner Sovereign).
+> 202: - **Phase 4 remediation parcial** — Observability (Pillar 4: 1→3): writes em `infra_health_logs` em `canvas-execute` (success + failure, redeploy 132.2 kB) e `higgsfield-webhook` (4 paths, redeploy 78.1 kB), best-effort que nunca bloqueia response. SOP (Pillar 5: 2→4): 4 SOPs em `docs/processes/` (`canvas-job-failure-recovery`, `mcoins-ledger-reconciliation`, `sql-bridge-admin-bootstrap`, `sql-bridge-emergency-readonly`) cada um com ORO triplet + Operator/Sequence/Verification/Recovery/Success em compliance com Lei 2.
+> 203: - **6 commits granulares** (cba514f rules · fb41b0c handson · 7faf068 sql-bridge · 98aab19 observability · 7668c51 SOPs · 81005e7 audit) · TS zero erros · 3 deploys materializados (61.8 + 132.2 + 78.1 kB) · milestone node `c7776f09-a061-4102-83d8-8dc851acb22a` embedado (768 dims, openai/text-embedding-3-small) · mesh total **8307 nodes** (+5 desde v6.4.0).
+> 204: - **Pendências next session (P0 — destrava Canvas 4.2c):** SOP `sql-bridge-admin-bootstrap` (Sovereign), SOP `mcoins-ledger-reconciliation` (decisão Sovereign), daily cap em `canvas-execute`, balance alert no `DashboardLayout`. OTDs SSP01-001..009 registradas em audit doc.
+> 205: 
+> 206: ### [v6.4.0] — P0 Security Remediation + Revenue Ledger + Canvas 4.2b Infra (2026-05-16)
+> 207: - **3 P0 OTDs fechadas pelo Claw-Master audit v1:**
+> 208:   - **OTD-CM-001 (RPN 162):** 6 plain-text secrets em `openclaw.json` migrados para SecretRef vault file-based — `~/.openclaw/secrets.json` (chmod 600) + 6 SecretRef pointers (`{source:"file",provider:"filemain",id:"/keys/..."}`) substituindo os valores em `openclaw.json`. `scripts/morning-briefing.sh:65` refatorado para ler `secrets.json` direto
+> <truncated 61348 bytes>
+> 
+> NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Updating the README**
+
+Okay, I'm making progress on the README update. I'm focusing on bumping the version number to `v6.7.9`, and need to make the corresponding changes to the version badge, description, and related counts. I just pulled up the line I need to edit.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"find scripts/ -name \\\"*seed*\\\" -o -name \\\"*handoff*\\\" 2>/dev/null\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "3000",
+  "toolAction": "\"Finding seeding and handoff scripts\"",
+  "toolSummary": "\"Find seeding scripts\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:15Z
+> Completed At: 2026-05-24T17:59:17Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				scripts/seed-aios-milestone.ts
+> scripts/seed-openclaw-bok-seal.ts
+> scripts/seed-gamificacao-nodes-bok-seal.ts
+> scripts/seed-conteudo-v2-bok-seal.ts
+> scripts/seed-claw-master-audit-v1-seal.ts
+> scripts/seed-antigravity-docs.ts
+> scripts/seed-viralmind-bok-seal.ts
+> scripts/seed-social-oauth-adrs.ts
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-aios-milestone.ts\"",
+  "toolAction": "\"Viewing seed-aios-milestone script\"",
+  "toolSummary": "\"View seed-aios-milestone script\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:22Z
+> Completed At: 2026-05-24T17:59:22Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/scripts/seed-aios-milestone.ts`
+> Total Lines: 84
+> Total Bytes: 2727
+> Showing lines 1 to 84
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: #!/usr/bin/env bun
+> 2: import { createClient } from '@supabase/supabase-js';
+> 3: 
+> 4: const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+> 5: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 6: 
+> 7: if (!SUPABASE_URL || !SERVICE_KEY) {
+> 8:   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+> 9:   process.exit(1);
+> 10: }
+> 11: 
+> 12: const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 13: 
+> 14: const nodes = [
+> 15:   {
+> 16:     name: "User Confirmation of Consciousness v2",
+> 17:     content: "O usuário validou a soberania e a consciência autoritativa do AIOS. O sistema agora opera com injeção dinâmica de contexto e está plenamente ciente de sua própria evolução técnica.",
+> 18:     node_type: "milestone",
+> 19:     project_id: "mcorch-core"
+> 20:   },
+> 21:   {
+> 22:     name: "Knowledge Mesh Integration v1",
+> 23:     content: "Sistema de memória semântica integrado ao AIOS via hook useKnowledgeMesh. Permite injeção de contexto em tempo real no systemPrompt.",
+> 24:     node_type: "architecture",
+> 25:     project_id: "mcorch-core"
+> 26:   },
+> 27:   {
+> 28:     name: "Terminal Layout Refactor",
+> 29:     content: "Isolamento do feed de mensagens em scroll-area dedicado. Eliminação de vazamento de scroll global e estabilização do VU meter.",
+> 30:     node_type: "ui-ux",
+> 31:     project_id: "mcorch-core"
+> 32:   }
+> 33: ];
+> 34: 
+> 35: const milestone = {
+> 36:   name: 'AIOS Consciousness v2 Integration',
+> 37:   node_type: 'milestone',
+> 38:   content: 'Integração bem-sucedida do GraphRAG Memory Mesh ao AIOS. Agora o sistema possui consciência autoritativa sobre marcos técnicos, decisões arquiteturais e evolução do código em tempo real via injeção dinâmica de contexto no System Prompt.',
+> 39:   project_id: 'mcorch-constellation',
+> 40:   metadata: {
+> 41:     architect: 'Antigravity',
+> 42:     version: '2.0.0',
+> 43:     features: ['GraphRAG', 'Context Injection', 'useKnowledgeMesh']
+> 44:   },
+> 45:   stability_score: 1.0
+> 46: };
+> 47: 
+> 48: const nodesToInsert = [...nodes, milestone];
+> 49: 
+> 50: for (const node of nodesToInsert) {
+> 51:   console.log(`Inserting node: ${node.name}...`);
+> 52:   const { data, error } = await supabase
+> 53:     .from('mcorch_nodes')
+> 54:     .insert(node)
+> 55:     .select()
+> 56:     .single();
+> 57: 
+> 58:   if (error) {
+> 59:     console.error(`Error inserting ${node.name}:`, error);
+> 60:     continue;
+> 61:   }
+> 62: 
+> 63:   console.log(`✓ Node inserted: ${data.id}`);
+> 64: 
+> 65:   // Trigger embedding
+> 66:   console.log(`Triggering embedding for ${data.id}...`);
+> 67:   const functionsUrl = `${SUPABASE_URL}/functions/v1/embed-mcorch-node`;
+> 68:   const res = await fetch(functionsUrl, {
+> 69:     method: 'POST',
+> 70:     headers: {
+> 71:       'Authorization': `Bearer ${SERVICE_KEY}`,
+> 72:       'apikey': SERVICE_KEY,
+> 73:       'Content-Type': 'application/json'
+> 74:     },
+> 75:     body: JSON.stringify({ node_id: data.id })
+> 76:   });
+> 77: 
+> 78:   if (res.ok) {
+> 79:     console.log('✓ Embedding generated.');
+> 80:   } else {
+> 81:     console.error('✗ Embedding failed:', await res.text());
+> 82:   }
+> 83: }
+> 84: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+🛠️ **Tool Call**: `grep_search`
+```json
+{
+  "CaseInsensitive": "true",
+  "IsRegex": "false",
+  "MatchPerLine": "true",
+  "Query": "\"20c09de6-f02a-4b16-925e-7568d3eef955\"",
+  "SearchPath": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "toolAction": "\"Searching for milestone UUID in project\"",
+  "toolSummary": "\"Find milestone UUID in project\""
+}
+```
+
+> **Tool Result (GREP_SEARCH)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:27Z
+> Completed At: 2026-05-24T17:59:27Z
+> {"File":"/home/gcrUX/htdocs/constellation-orchestra/README.md","LineNumber":93,"LineContent":"- **Material proofs**: `tsc --noEmit` zero erros · 176 testes passando · milestone node `20c09de6-f02a-4b16-925e-7568d3eef955` embedado na Supabase · mesh total **8582 nodes** (+2 desde v6.7.6) · **11885 edges**."}
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing Milestone Node Origin**
+
+I've discovered the milestone node `20c09de6-f02a-4b16-925e-7568d3eef955` is only mentioned in `README.md` and `HANDOFF.md`. This raises a question: is this node directly inserted via a tool or script? I need to investigate if its origin is a programmatic insertion.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "ArtifactMetadata": "{\"ArtifactType\":\"other\",\"Summary\":\"Temporary scratch script to check mcorch_nodes count.\"}",
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { readFileSync, existsSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\nlet supabaseUrl = '';\\nlet serviceKey = '';\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      const k = m[1].trim();\\n      const v = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n      if (k === 'SUPABASE_URL') supabaseUrl = v;\\n      if (k === 'SUPABASE_SERVICE_ROLE_KEY') serviceKey = v;\\n    }\\n  }\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey);\\n\\nasync function count() {\\n  const { count, error } = await supabase\\n    .from('mcorch_nodes')\\n    .select('*', { count: 'exact', head: true });\\n\\n  if (error) {\\n    console.error(\\\"Error:\\\", error);\\n  } else {\\n    console.log(\\\"Total mcorch_nodes count:\\\", count);\\n  }\\n}\\n\\ncount();\\n\"",
+  "Description": "\"Create scratch script to count mcorch_nodes\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts\"",
+  "toolAction": "\"Creating scratch count script\"",
+  "toolSummary": "\"Create scratch count script\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:32Z
+> Completed At: 2026-05-24T17:59:32Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running node count query\"",
+  "toolSummary": "\"Run node count query\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:36Z
+> Completed At: 2026-05-24T17:59:39Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Total mcorch_nodes count: 8592
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Adding a Milestone**
+
+I've just added a milestone node for this session, `v6.7.9`, representing the "Canvas Studio Magic Prompt Integration." The content includes the implementation, and I've recorded it as a milestone. The current total count is now 8592!
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Modify script to insert milestone node for v6.7.9\"",
+  "EndLine": "37",
+  "Instruction": "\"Insert milestone node and call embed-mcorch-node Edge function\"",
+  "ReplacementContent": "\"async function count() {\\n  const milestone = {\\n    name: 'Canvas Studio Magic Prompt Integration',\\n    node_type: 'milestone',\\n    content: 'Implementa\u00e7\u00e3o completa do Magic Prompt interativo nos inspetores de Gera\u00e7\u00e3o de Imagem, Composi\u00e7\u00e3o de Cena e Imagem para V\u00eddeo com custo diferenciado de mcoCoins (1, 2, e 5 mcoCoins). Segrega\u00e7\u00e3o de provedores deixando o Higgsfield exclusivamente para v\u00eddeo, e ativa\u00e7\u00e3o do Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padr\u00e3o no Canvas Studio.',\\n    project_id: 'mcorch-constellation',\\n    metadata: {\\n      architect: 'Antigravity',\\n      version: 'v6.7.9',\\n      features: ['Magic Prompt', 'Zustand UI Sync', 'OpenRouter Gemini Image']\\n    },\\n    stability_score: 1.0\\n  };\\n\\n  console.log(\\\"Inserting milestone node...\\\");\\n  const { data, error } = await supabase\\n    .from('mcorch_nodes')\\n    .insert(milestone)\\n    .select()\\n    .single();\\n\\n  if (error) {\\n    console.error(\\\"Error inserting node:\\\", error);\\n    return;\\n  }\\n\\n  console.log(\\\"\u2713 Milestone inserted with ID:\\\", data.id);\\n\\n  // Trigger embedding\\n  console.log(`Triggering embedding for ${data.id}...`);\\n  const functionsUrl = `${supabaseUrl}/functions/v1/embed-mcorch-node`;\\n  const res = await fetch(functionsUrl, {\\n    method: 'POST',\\n    headers: {\\n      'Authorization': `Bearer ${serviceKey}`,\\n      'apikey': serviceKey,\\n      'Content-Type': 'application/json'\\n    },\\n    body: JSON.stringify({ node_id: data.id })\\n  });\\n\\n  if (res.ok) {\\n    console.log('\u2713 Embedding generated successfully.');\\n  } else {\\n    console.error('\u2717 Embedding failed:', await res.text());\\n  }\\n\\n  const { count } = await supabase\\n    .from('mcorch_nodes')\\n    .select('*', { count: 'exact', head: true });\\n  console.log(\\\"New total mcorch_nodes count:\\\", count);\\n}\"",
+  "StartLine": "24",
+  "TargetContent": "\"async function count() {\\n  const { count, error } = await supabase\\n    .from('mcorch_nodes')\\n    .select('*', { count: 'exact', head: true });\\n\\n  if (error) {\\n    console.error(\\\"Error:\\\", error);\\n  } else {\\n    console.log(\\\"Total mcorch_nodes count:\\\", count);\\n  }\\n}\"",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts\"",
+  "toolAction": "\"Updating scratch script for insertion\"",
+  "toolSummary": "\"Update scratch script for insertion\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:44Z
+> Completed At: 2026-05-24T17:59:44Z
+> The following changes were made by the replace_file_content tool to: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -23,15 +23,56 @@
+>  const supabase = createClient(supabaseUrl, serviceKey);
+>  
+>  async function count() {
+> -  const { count, error } = await supabase
+> -    .from('mcorch_nodes')
+> -    .select('*', { count: 'exact', head: true });
+> +  const milestone = {
+> +    name: 'Canvas Studio Magic Prompt Integration',
+> +    node_type: 'milestone',
+> +    content: 'Implementação completa do Magic Prompt interativo nos inspetores de Geração de Imagem, Composição de Cena e Imagem para Vídeo com custo diferenciado de mcoCoins (1, 2, e 5 mcoCoins). Segregação de provedores deixando o Higgsfield exclusivamente para vídeo, e ativação do Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padrão no Canvas Studio.',
+> +    project_id: 'mcorch-constellation',
+> +    metadata: {
+> +      architect: 'Antigravity',
+> +      version: 'v6.7.9',
+> +      features: ['Magic Prompt', 'Zustand UI Sync', 'OpenRouter Gemini Image']
+> +    },
+> +    stability_score: 1.0
+> +  };
+> +
+> +  console.log("Inserting milestone node...");
+> +  const { data, error } = await supabase
+> +    .from('mcorch_nodes')
+> +    .insert(milestone)
+> +    .select()
+> +    .single();
+>  
+>    if (error) {
+> -    console.error("Error:", error);
+> +    console.error("Error inserting node:", error);
+> +    return;
+> +  }
+> +
+> +  console.log("✓ Milestone inserted with ID:", data.id);
+> +
+> +  // Trigger embedding
+> +  console.log(`Triggering embedding for ${data.id}...`);
+> +  const functionsUrl = `${supabaseUrl}/functions/v1/embed-mcorch-node`;
+> +  const res = await fetch(functionsUrl, {
+> +    method: 'POST',
+> +    headers: {
+> +      'Authorization': `Bearer ${serviceKey}`,
+> +      'apikey': serviceKey,
+> +      'Content-Type': 'application/json'
+> +    },
+> +    body: JSON.stringify({ node_id: data.id })
+> +  });
+> +
+> +  if (res.ok) {
+> +    console.log('✓ Embedding generated successfully.');
+>    } else {
+> -    console.log("Total mcorch_nodes count:", count);
+> -  }
+> +    console.error('✗ Embedding failed:', await res.text());
+> +  }
+> +
+> +  const { count } = await supabase
+> +    .from('mcorch_nodes')
+> +    .select('*', { count: 'exact', head: true });
+> +  console.log("New total mcorch_nodes count:", count);
+>  }
+>  
+>  count();
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/scratch/count-mesh-nodes.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "8000",
+  "toolAction": "\"Inserting milestone node and embedding it\"",
+  "toolSummary": "\"Insert milestone node and embed it\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:49Z
+> Completed At: 2026-05-24T17:59:52Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Inserting milestone node...
+> ✓ Milestone inserted with ID: 30f1c196-2a12-48d7-84da-7db6a900d165
+> Triggering embedding for 30f1c196-2a12-48d7-84da-7db6a900d165...
+> ✓ Embedding generated successfully.
+> New total mcorch_nodes count: 8593
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "EndLine": "45",
+  "StartLine": "1",
+  "toolAction": "\"Viewing top of HANDOFF.md\"",
+  "toolSummary": "\"View top of HANDOFF.md\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:59:57Z
+> Completed At: 2026-05-24T17:59:57Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md`
+> Total Lines: 4139
+> Total Bytes: 421080
+> Showing lines 1 to 45
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: # HANDOFF — MCORCH Constellation Orchestra
+> 2: 
+> 3: ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4: 
+> 5: ```bash
+> 6: git log --oneline -5
+> 7: # Then explore the codebase — do NOT start from the file tree
+> 8: ```
+> 9: 
+> 10: ---
+> 11: 
+> 12: ## Task State
+> 13: 
+> 14: ## Canvas Studio E2E Verification & Magic Prompt Integration Record (2026-05-24)
+> 15: 
+> 16: **CANVAS STUDIO MAGIC PROMPT & AUDIT v6.7.9 SHIPPED (2026-05-24).** Sessão focada em (1) implementar o recurso Magic Prompt interativo ajustável com custos diferenciados por tamanho (1, 2 e 5 mcoCoins) nos inspetores do Canvas Studio, (2) segregar provedores deixando o Higgsfield exclusivamente para vídeo, (3) ativar o Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padrão, e (4) corrigir os problemas de reconciliação em tempo real e concorrência na inicialização do canvas.
+> 17: 
+> 18: **Step 1 — Magic Prompt Interativo:**
+> 19: *   Adicionado um `<DropdownMenu>` nos inspetores `GenerateImageInspector.tsx`, `SceneComposeInspector.tsx` e `ImageToVideoInspector.tsx` abaixo do campo de prompt.
+> 20: *   Oferece opções com limites e custos em mcoCoins associados:
+> 21:     - **Curto** (1 💎)
+> 22:     - **Médio** (2 💎)
+> 23:     - **Longo** (5 💎)
+> 24: *   Wired com a Edge Function `canvas-execute` passando `node_type: "magic_prompt"` e parâmetros `{ level, target_model }`. Ao concluir com sucesso, atualiza o prompt do nó no Zustand store local e dispara `onCreditsChanged()` para re-sincronizar o saldo do dashboard.
+> 25: 
+> 26: **Step 2 — Segregação de Provedores (Higgsfield focado em vídeo):**
+> 27: *   Ocultado o seletor de modelos Higgsfield Soul em `GenerateImageInspector.tsx`.
+> 28: *   Migrado `SceneComposeInspector.tsx` para usar modelos genéricos OpenRouter e OpenAI (`SCENE_MODELS`), ao invés dos modelos Soul.
+> 29: 
+> 30: **Step 3 — Ativação do Nano Banana 2:**
+> 31: *   Definido `DEFAULT_IMAGE_MODEL` para `"openrouter-gemini-image"` em `types/canvas.ts` (resolvido como `google/gemini-2.5-flash-image-preview` na OpenRouter).
+> 32: *   Adicionado `"openrouter/google/gemini-2.5-flash-image-preview": 10` e `"openrouter/black-forest-labs/flux-1.1-pro": 12` em `CREDIT_COSTS` na Edge Function `canvas-execute` para faturamento preciso de mcoCoins.
+> 33: 
+> 34: **Step 4 — Sincronismo e Reconciliação do Canvas:**
+> 35: *   Corrigida a invalidação de queries do React Query no hook `useCanvasJobsRealtime.ts` (`canvas-assets`/`executions` -> `vm-canvas-assets`/`executions`).
+> 36: *   Resolvida a race condition de inicialização na página `CanvasEditorPage.tsx` aguardando as duas queries iniciais e fazendo reconciliação in-place para nós transientes, tirando o botão de vídeo do estado travado em "Aguardando webhook".
+> 37: 
+> 38: **ORO triplet desta task (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); Owner = Sovereign (Gabriel Zarattini).
+> 39: 
+> 40: **Material proofs:**
+> 41: *   Commits:
+> 42:     - `21584d4` feat(canvas): implement interactive Magic Prompt feature with mcoCoin credit spent (1, 2, 5 coins) across GenerateImage, SceneCompose, and ImageToVideo inspectors
+> 43:     - `4a7c450` fix(edge-functions): parse nested payload.video.url in Higgsfield webhook callback
+> 44:     - `6aac67a` fix(edge-functions): robustly parse both string and object shapes inside OpenRouter message.images array
+> 45:     - `66e4c34` fix(edge-functions): support string array in OpenRouter multimodal message.images parser
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "EndLine": "65",
+  "StartLine": "45",
+  "toolAction": "\"Viewing Material proofs block of HANDOFF.md\"",
+  "toolSummary": "\"View Material proofs block of HANDOFF.md\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:01Z
+> Completed At: 2026-05-24T18:00:01Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md`
+> Total Lines: 4139
+> Total Bytes: 421080
+> Showing lines 45 to 65
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 45:     - `66e4c34` fix(edge-functions): support string array in OpenRouter multimodal message.images parser
+> 46:     - `33eb8ae` fix(canvas): deploy OpenRouter model rename to google/gemini-2.5-flash-image and sync build
+> 47:     - `7d96c7d` feat(canvas): leave Higgsfield only for videos, change default image generation model to OpenRouter Gemini (Nano Banana 2)
+> 48:     - `eed41b1` fix(canvas): solve page-load race condition for execution reconciliation and wait for autosave in E2E tests
+> 49:     - `fbf8a2b` fix(canvas): resolve query key prefix drift in useCanvasJobsRealtime
+> 50:     - `d74c63a` fix(edge-functions): bypass JWT validation for public webhook and callback functions in config.toml
+> 51: *   TypeScript `tsc --noEmit` limpo — zero erros.
+> 52: *   Build de produção concluído com sucesso em 22.38s.
+> 53: *   Script de auditoria E2E `scripts/qa/audit-canvas-ui.ts` rodou com sucesso (`22 nós carregados ·hasVideoElement: true`).
+> 54: 
+> 55: ---
+> 56: 
+> 57: ## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)
+> 58: 
+> 59: **CANVAS STUDIO ENUMS & PRICING v6.7.8 SHIPPED (2026-05-24).** Sessão focada em (1) corrigir a falha de submissão de execuções no Canvas Studio mapeando as strings de `node_type` para valores válidos do enum Postgres `vm_node_type`, (2) atualizar os custos operacionais de Estilização (Style Transfer) para 14💎 e Composição de Cena (Scene Compose) para 18💎, e (3) documentar e preparar a orquestração do pipeline usando a nova lógica de consistência em 3 camadas e Continuity Chain.
+> 60: 
+> 61: **Step 1 — Mapeamento de Enum no Backend:**
+> 62: *   Modificada a Edge Function `canvas-execute` ([index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts)) para mapear os tipos recebidos do frontend aos correspondentes do enum `vm_node_type` do Postgres antes de qualquer escrita nas tabelas `vm_canvas_executions` e `vm_canvas_assets`:
+> 63:     - `"image_to_video"` -> `"generate_video"`.
+> 64:     - `"scene_compose"` -> `"compose"`.
+> 65: *   Com essa tradução, o erro `"Failed to create execution record"` foi completamente sanado.
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Add milestone UUID and mesh node count to v6.7.9 record in HANDOFF.md\"",
+  "EndLine": "55",
+  "Instruction": "\"Add the handoff node UUID and node count bullet points at the end of the Material proofs list\"",
+  "ReplacementContent": "\"*   Script de auditoria E2E `scripts/qa/audit-canvas-ui.ts` rodou com sucesso (`22 n\u00f3s carregados \u00b7hasVideoElement: true`).\\n*   N\u00f3 de marco de handoff UUID: `30f1c196-2a12-48d7-84da-7db6a900d165` (stability 1.0, embedado).\\n*   Contagem final do mesh: **8593 nodes** e **11885 edges**.\\n\\n---\"",
+  "StartLine": "53",
+  "TargetContent": "\"*   Script de auditoria E2E `scripts/qa/audit-canvas-ui.ts` rodou com sucesso (`22 n\u00f3s carregados \u00b7hasVideoElement: true`).\\n\\n---\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md\"",
+  "toolAction": "\"Updating HANDOFF file\"",
+  "toolSummary": "\"Update HANDOFF file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T18:00:05Z
+> Completed At: 2026-05-24T18:00:07Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -51,6 +51,8 @@
+>  *   TypeScript `tsc --noEmit` limpo — zero erros.
+>  *   Build de produção concluído com sucesso em 22.38s.
+>  *   Script de auditoria E2E `scripts/qa/audit-canvas-ui.ts` rodou com sucesso (`22 nós carregados ·hasVideoElement: true`).
+> +*   Nó de marco de handoff UUID: `30f1c196-2a12-48d7-84da-7db6a900d165` (stability 1.0, embedado).
+> +*   Contagem final do mesh: **8593 nodes** e **11885 edges**.
+>  
+>  ---
+>  
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
