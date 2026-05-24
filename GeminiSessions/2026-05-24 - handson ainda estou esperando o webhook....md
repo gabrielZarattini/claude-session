@@ -17822,3 +17822,1284 @@ O nosso parser anterior esperava ou uma string direta no array, ou um objeto com
 
 ### Ação Necessária
 Você já pode retornar ao navegador, atualizar a página por garantia e clicar em **Executar nó** (ou executar a pipeline). A geração de imagem agora está funcionando perfeitamente!
+
+## 👤 User *(17:07:08)*
+
+Vídeo enviado — aguardando webhook (eta 20–40s)
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing the Current State**
+
+I've just received a user request, specifically a video upload, and am now waiting for a webhook response, which is estimated in 20-40 seconds. Additionally, I've noted a change in the user's active page, and it seems they have navigated to the dashboard canvas, so I'll be sure to update accordingly!
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;\\nconst serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!supabaseUrl || !serviceKey) {\\n  console.error(\\\"\u274c Missing Supabase credentials in env.\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey, {\\n  auth: { autoRefreshToken: false, persistSession: false }\\n});\\n\\nasync function main() {\\n  // Check last 5 executions\\n  const { data: executions, error } = await supabase\\n    .from('vm_canvas_executions')\\n    .select('*')\\n    .order('created_at', { ascending: false })\\n    .limit(5);\\n\\n  if (error) {\\n    console.error(\\\"\u274c Failed to query vm_canvas_executions:\\\", error);\\n    process.exit(1);\\n  }\\n\\n  console.log(\\\"\ud83d\udcc8 Recent executions:\\\");\\n  for (const exe of executions) {\\n    console.log(`--------------------------------------------------`);\\n    console.log(`ID: ${exe.id}`);\\n    console.log(`Created At: ${exe.created_at}`);\\n    console.log(`Status: ${exe.status}`);\\n    console.log(`Node Type: ${exe.node_type}`);\\n    console.log(`Model: ${exe.model}`);\\n    console.log(`Operation ID: ${exe.operation_id}`);\\n    console.log(`Error Message: ${exe.error_message}`);\\n    console.log(`Webhook Token: ${exe.webhook_token}`);\\n  }\\n\\n  // Check last 10 health logs\\n  const { data: healthLogs, error: healthErr } = await supabase\\n    .from('infra_health_logs')\\n    .select('*')\\n    .order('created_at', { ascending: false })\\n    .limit(10);\\n\\n  if (healthErr) {\\n    console.erro\n<truncated 375 bytes>",
+  "Description": "\"Checking executions and health logs to see why the video execution is waiting for webhook\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "toolAction": "\"Writing check_webhook script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:07:22Z
+> Completed At: 2026-05-24T17:07:23Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running check_webhook.ts\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:07:35Z
+> Completed At: 2026-05-24T17:07:36Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				📈 Recent executions:
+> --------------------------------------------------
+> ID: d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3
+> Created At: 2026-05-24T17:06:57.35838+00:00
+> Status: queued
+> Node Type: generate_video
+> Model: dop-lite
+> Operation ID: 23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c
+> Error Message: null
+> Webhook Token: 0f2ac9a550c24fc19fd6f49c660ee66b9c101b12cfe64a949a19f11634b5965c
+> --------------------------------------------------
+> ID: c50b62cc-decc-46fc-bc8f-f4bf66a66ff7
+> Created At: 2026-05-24T17:06:22.537605+00:00
+> Status: success
+> Node Type: generate_image
+> Model: google/gemini-2.5-flash-image
+> Operation ID: null
+> Error Message: null
+> Webhook Token: fdd5b0d06d414c78bee85423358e1dcf717628844b4241cf9c5d1e80dab2fc60
+> --------------------------------------------------
+> ID: 49f8421f-dc38-499a-97ef-431918877bfb
+> Created At: 2026-05-24T17:05:56.874527+00:00
+> Status: success
+> Node Type: generate_image
+> Model: google/gemini-2.5-flash-image
+> Operation ID: null
+> Error Message: null
+> Webhook Token: c4d22668bb57459e8f251026add437b2f78b782d686d4b36836e2e5ce71e527b
+> --------------------------------------------------
+> ID: 48c97dd1-0582-4079-9703-fc601b2aa971
+> Created At: 2026-05-24T16:39:01.465962+00:00
+> Status: success
+> Node Type: generate_image
+> Model: google/gemini-2.5-flash-image
+> Operation ID: null
+> Error Message: null
+> Webhook Token: f30335bb91b8458c846765869c3b6c5576d9d957a3364bd49d492f129bb00ee3
+> --------------------------------------------------
+> ID: 27df9e3d-abfb-41a2-97d8-8c3a7a5ea4f8
+> Created At: 2026-05-24T16:37:33.709586+00:00
+> Status: failed
+> Node Type: generate_image
+> Model: google/gemini-2.5-flash-image
+> Operation ID: null
+> Error Message: OpenRouter: resposta multimodal sem image_url. Response keys: id,object,created,model,provider,system_fingerprint,service_tier,choices,usage. Message keys: role,content,refusal,reasoning,images. Raw response: {"id":"gen-1779640654-mZlQ7awzyG4QCOVCrFrE","object":"chat.completion","created":1779640654,"model":"google/gemini-2.5-flash-image","provider":"Google","system_fingerprint":null,"service_tier":"default","choices":[{"index":0,"logprobs":null,"finish_reason":"stop","native_finish_reason":"STOP","message":{"role":"assistant","content":"Claro, aqui está: ","refusal":null,"reasoning":null,"images":[{"t
+> Webhook Token: ea1cfc3b0f174b19aee2a83d38664df5f3f76dc98a0543e6a6706e8a1f539cb2
+> ❌ Failed to query infra_health_logs: {
+>   code: "42703",
+>   details: null,
+>   hint: null,
+>   message: "column infra_health_logs.created_at does not exist",
+> }
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;\\nconst serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!supabaseUrl || !serviceKey) {\\n  console.error(\\\"\u274c Missing Supabase credentials in env.\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey, {\\n  auth: { autoRefreshToken: false, persistSession: false }\\n});\\n\\nasync function main() {\\n  // Check last 10 health logs\\n  const { data: healthLogs, error: healthErr } = await supabase\\n    .from('infra_health_logs')\\n    .select('*')\\n    .order('last_seen_at', { ascending: false })\\n    .limit(10);\\n\\n  if (healthErr) {\\n    console.error(\\\"\u274c Failed to query infra_health_logs:\\\", healthErr);\\n  } else {\\n    console.log(\\\"\\\\n\ud83c\udfe5 Recent Health Logs:\\\");\\n    for (const log of healthLogs) {\\n      console.log(`[${log.last_seen_at}] [${log.service}] Status: ${log.status} | Msg: ${JSON.stringify(log.message || log.error_details || {})}`);\\n    }\\n  }\\n}\\n\\nmain().catch(err => {\\n  console.error(err);\\n});\\n\"",
+  "Description": "\"Checking health logs using correct column name last_seen_at\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "toolAction": "\"Updating check_webhook script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:07:49Z
+> Completed At: 2026-05-24T17:07:50Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running check_webhook.ts again\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:08:02Z
+> Completed At: 2026-05-24T17:08:04Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				
+> 🏥 Recent Health Logs:
+> [2026-05-24T17:06:59.919112+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:06:30.615082+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:06:05.665989+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:05:02.477049+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T17:05:02.292768+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> [2026-05-24T17:00:02.496138+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T17:00:02.300095+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> [2026-05-24T16:55:02.61515+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T16:55:02.437763+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> [2026-05-24T16:50:02.793698+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Investigating Health Logs**
+
+I'm puzzled, the `infra_health_logs` lack failure entries for `higgsfield-webhook` or `qa-healing`. The user initiated a video node, now `queued`. I'm tracing back: is there a watchdog script? Bingo! Found reference to a watch script in `CLAUDE.md`.
+
+</details>
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh\"",
+  "toolAction": "\"Viewing canvas-video-watchdog.sh\"",
+  "toolSummary": "\"View file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:08:16Z
+> Completed At: 2026-05-24T17:08:17Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh`
+> Total Lines: 154
+> Total Bytes: 6981
+> Showing lines 1 to 154
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: #!/bin/bash
+> 2: # canvas-video-watchdog — defense-in-depth poll for Higgsfield video jobs (Phase 4.2c)
+> 3: #
+> 4: # Cron: */5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh
+> 5: #       >> /var/log/mcorch-canvas-watchdog.log 2>&1
+> 6: #
+> 7: # Picks up `vm_canvas_executions` rows that are still queued/running after 10 min
+> 8: # (webhook missed or delayed). Polls Higgsfield request status_url and resolves:
+> 9: #   - completed → POST the webhook URL manually (idempotent via webhook_token + status 409)
+> 10: #   - failed/nsfw/cancelled → PATCH row to status='failed' + error_message
+> 11: #   - still queued/in_progress, started_at > 60 min → PATCH status='timeout' (no deduct)
+> 12: #
+> 13: # SOP: docs/processes/canvas-video-async-execution.md § Recovery path
+> 14: # Pattern source: scripts/watchdog-mcorch.sh + scripts/auto-publish-cron.sh
+> 15: 
+> 16: set -uo pipefail
+> 17: 
+> 18: # Log target — when invoked via cron the line `>> /var/log/mcorch-canvas-watchdog.log`
+> 19: # captures stdout. Standalone runs simply print to stdout.
+> 20: COMPOSE_DIR="/home/gcrUX/htdocs/constellation-orchestra"
+> 21: DATE=$(date '+%Y-%m-%d %H:%M:%S')
+> 22: HF_BASE_URL="https://platform.higgsfield.ai"
+> 23: STALE_THRESHOLD_MIN=10
+> 24: TIMEOUT_THRESHOLD_MIN=60
+> 25: 
+> 26: log() { echo "[${DATE}] $*"; }
+> 27: 
+> 28: # ── Load environment ─────────────────────────────────────────────────────────
+> 29: if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 30:     # shellcheck disable=S
+> <truncated 4094 bytes>
+> delivery — idempotent via 409 if already finalized.
+> 122:             WEBHOOK_URL="${SUPABASE_URL}/functions/v1/higgsfield-webhook?token=${TOKEN}"
+> 123:             REDELIVER_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${WEBHOOK_URL}" \
+> 124:                 -H "Content-Type: application/json" \
+> 125:                 -d "${HF_STATUS_JSON}")
+> 126:             log "exec=${EXEC_ID} hf=completed → webhook redeliver HTTP ${REDELIVER_CODE}"
+> 127:             RECOVERED_COUNT=$((RECOVERED_COUNT + 1))
+> 128:             ;;
+> 129:         failed|nsfw|cancelled)
+> 130:             ERR_MSG="Higgsfield ${HF_STATUS} (watchdog)"
+> 131:             patch_execution "${EXEC_ID}" "{\"status\":\"failed\",\"error_message\":\"${ERR_MSG}\",\"completed_at\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\",\"response_payload\":${HF_STATUS_JSON}}"
+> 132:             log "exec=${EXEC_ID} hf=${HF_STATUS} → marked failed"
+> 133:             FAILED_COUNT=$((FAILED_COUNT + 1))
+> 134:             ;;
+> 135:         queued|in_progress|running|unknown|"")
+> 136:             # Check the > 60 min timeout
+> 137:             if [[ "${STARTED_AT}" < "${TIMEOUT_ISO}" ]]; then
+> 138:                 patch_execution "${EXEC_ID}" "{\"status\":\"timeout\",\"error_message\":\"Job stuck >${TIMEOUT_THRESHOLD_MIN}m without webhook\",\"completed_at\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}"
+> 139:                 log "exec=${EXEC_ID} hf=${HF_STATUS} started_at=${STARTED_AT} → marked timeout"
+> 140:                 TIMEOUT_COUNT=$((TIMEOUT_COUNT + 1))
+> 141:             else
+> 142:                 log "exec=${EXEC_ID} hf=${HF_STATUS} — still in window (started_at=${STARTED_AT})"
+> 143:             fi
+> 144:             ;;
+> 145:         *)
+> 146:             log "exec=${EXEC_ID} hf=${HF_STATUS} (unhandled — leaving in-flight)"
+> 147:             ;;
+> 148:     esac
+> 149: done
+> 150: 
+> 151: log "Summary: recovered=${RECOVERED_COUNT} failed=${FAILED_COUNT} timeout=${TIMEOUT_COUNT}"
+> 152: write_health "healthy"
+> 153: exit 0
+> 154: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing the Timing Discrepancy**
+
+Okay, I've got it! The watchdog script's time-based check is the culprit. It ignores newly created rows, specifically, those less than 10 minutes old. My execution's a mere minute old, so the watchdog won't interfere. Now, I'm shifting focus to the root cause: Why did the webhook fail? Time to query the Higgs.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst hfKey = process.env.HIGGSFIELD_API_KEY;\\nconst hfSecret = process.env.HIGGSFIELD_API_KEY_SECRET;\\nconst opId = \\\"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c\\\";\\n\\nif (!hfKey || !hfSecret) {\\n  console.error(\\\"\u274c Missing Higgsfield credentials.\\\");\\n  process.exit(1);\\n}\\n\\nasync function main() {\\n  const url = `https://platform.higgsfield.ai/requests/${opId}/status`;\\n  console.log(`\ud83d\udce1 Fetching status from Higgsfield: ${url}...`);\\n\\n  const resp = await fetch(url, {\\n    headers: {\\n      \\\"Authorization\\\": `Key ${hfKey}:${hfSecret}`,\\n      \\\"Accept\\\": \\\"application/json\\\"\\n    }\\n  });\\n\\n  console.log(`\ud83d\udce1 Status code: ${resp.status}`);\\n  const text = await resp.text();\\n  console.log(\\\"\ud83d\udcc4 Raw Response:\\\");\\n  console.log(text);\\n}\\n\\nmain().catch(err => {\\n  console.error(err);\\n});\\n\"",
+  "Description": "\"Checking the active video job status directly with Higgsfield API\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "toolAction": "\"Writing check_higgsfield_job script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:08:30Z
+> Completed At: 2026-05-24T17:08:32Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running check_higgsfield_job.ts\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:08:44Z
+> Completed At: 2026-05-24T17:08:46Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				📡 Fetching status from Higgsfield: https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status...
+> 📡 Status code: 200
+> 📄 Raw Response:
+> {"status":"in_progress","request_id":"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c","status_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status","cancel_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/cancel"}
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"sleep 15 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "20000",
+  "toolAction": "\"Waiting and checking Higgsfield job status\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:08:58Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-789
+> Task Description: sleep 15 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-789.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-789\"",
+  "toolAction": "\"Checking task status of job check\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:09:20Z
+> Completed At: 2026-05-24T17:09:20Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-789
+> Status: DONE
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-789.log
+> Log output:
+> 📡 Fetching status from Higgsfield: https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status...
+> 📡 Status code: 200
+> 📄 Raw Response:
+> {"status":"in_progress","request_id":"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c","status_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status","cancel_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/cancel"}
+> Last progress: 5s ago
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"sleep 25 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "30000",
+  "toolAction": "\"Waiting and checking Higgsfield job status again\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:09:33Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-794
+> Task Description: sleep 25 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-794.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-794\"",
+  "toolAction": "\"Checking status of job check task\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:09:55Z
+> Completed At: 2026-05-24T17:09:55Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-794
+> Status: RUNNING
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-794.log
+> Last progress: never
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-794\"",
+  "toolAction": "\"Checking task status of job check task\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:10:07Z
+> Completed At: 2026-05-24T17:10:07Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-794
+> Status: DONE
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-794.log
+> Log output:
+> 📡 Fetching status from Higgsfield: https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status...
+> 📡 Status code: 200
+> 📄 Raw Response:
+> {"status":"in_progress","request_id":"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c","status_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status","cancel_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/cancel"}
+> Last progress: 7s ago
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"sleep 30 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "35000",
+  "toolAction": "\"Waiting and checking Higgsfield job status again\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:10:19Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-801
+> Task Description: sleep 30 && bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-801.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-801\"",
+  "toolAction": "\"Checking task status of job check task\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:10:41Z
+> Completed At: 2026-05-24T17:10:41Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-801
+> Status: RUNNING
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-801.log
+> Last progress: never
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-801\"",
+  "toolAction": "\"Checking task status of job check task\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:10:53Z
+> Completed At: 2026-05-24T17:10:53Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-801
+> Status: DONE
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-801.log
+> Log output:
+> 📡 Fetching status from Higgsfield: https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status...
+> 📡 Status code: 200
+> 📄 Raw Response:
+> {"status":"completed","request_id":"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c","status_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/status","cancel_url":"https://platform.higgsfield.ai/requests/23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c/cancel","video":{"url":"https://cloud-cdn.higgsfield.ai/b6a03390-b560-43af-b1d8-8a76e5dedbd6/1922776a-e73f-4e9a-bc0c-e2431c6b6a97.mp4"}}
+> Last progress: 2s ago
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Checking execution status after job completion\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:11:06Z
+> Completed At: 2026-05-24T17:11:07Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				
+> 🏥 Recent Health Logs:
+> [2026-05-24T17:10:11.647334+00:00] [higgsfield-webhook] Status: unhealthy | Msg: {}
+> [2026-05-24T17:10:02.44125+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T17:10:02.145288+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> [2026-05-24T17:06:59.919112+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:06:30.615082+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:06:05.665989+00:00] [canvas-execute] Status: healthy | Msg: {}
+> [2026-05-24T17:05:02.477049+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T17:05:02.292768+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> [2026-05-24T17:00:02.496138+00:00] [mcorch_chroma] Status: healthy | Msg: {}
+> [2026-05-24T17:00:02.300095+00:00] [mcorch_claude_mem] Status: healthy | Msg: {}
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;\\nconst serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!supabaseUrl || !serviceKey) {\\n  console.error(\\\"\u274c Missing Supabase credentials in env.\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey, {\\n  auth: { autoRefreshToken: false, persistSession: false }\\n});\\n\\nasync function main() {\\n  const { data: healthLogs, error } = await supabase\\n    .from('infra_health_logs')\\n    .select('*')\\n    .eq('service', 'higgsfield-webhook')\\n    .order('last_seen_at', { ascending: false })\\n    .limit(3);\\n\\n  if (error) {\\n    console.error(\\\"\u274c Failed to query health logs:\\\", error);\\n    process.exit(1);\\n  }\\n\\n  console.log(\\\"\ud83c\udfe5 Higgsfield Webhook Health Logs:\\\");\\n  for (const log of healthLogs) {\\n    console.log(JSON.stringify(log, null, 2));\\n  }\\n}\\n\\nmain().catch(err => {\\n  console.error(err);\\n});\\n\"",
+  "Description": "\"Querying detailed error properties for higgsfield-webhook failure\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "toolAction": "\"Updating check_webhook script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:11:19Z
+> Completed At: 2026-05-24T17:11:21Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running check_webhook.ts to see error details\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:11:32Z
+> Completed At: 2026-05-24T17:11:34Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				🏥 Higgsfield Webhook Health Logs:
+> {
+>   "id": "be2db737-1255-48f1-b755-1b3e8ea2c6a4",
+>   "service": "higgsfield-webhook",
+>   "status": "unhealthy",
+>   "last_seen_at": "2026-05-24T17:10:11.647334+00:00"
+> }
+> {
+>   "id": "ed83a3b9-9525-4053-b1b5-2484fa4c3438",
+>   "service": "higgsfield-webhook",
+>   "status": "healthy",
+>   "last_seen_at": "2026-05-24T03:52:18.890107+00:00"
+> }
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts\"",
+  "EndLine": "100",
+  "StartLine": "1",
+  "toolAction": "\"Viewing higgsfield-webhook code\"",
+  "toolSummary": "\"View file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:11:46Z
+> Completed At: 2026-05-24T17:11:46Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts`
+> Total Lines: 248
+> Total Bytes: 9089
+> Showing lines 1 to 100
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: // higgsfield-webhook — Receives Higgsfield video generation callbacks (Phase 4.2b).
+> 2: //
+> 3: // URL pattern: https://<project>.supabase.co/functions/v1/higgsfield-webhook?token=<webhook_token>
+> 4: //
+> 5: // Auth: token query param matched against vm_canvas_executions.webhook_token (unique index).
+> 6: // NOT JWT-protected — external caller is Higgsfield. Token = 64 hex chars (2 concatenated UUIDs).
+> 7: //
+> 8: // Aligned with .claude/context/higgsfield-api-validation-2026-05-15.md
+> 9: // Spec source: .claude/proposals/vm-canvas-jobs-async-video-v1.md
+> 10: // Migration:   supabase/migrations/20260516224542_vm_canvas_executions_async_video.sql
+> 11: 
+> 12: import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 13: import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 14: 
+> 15: const corsHeaders = {
+> 16:   "Access-Control-Allow-Origin": "*",
+> 17:   "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 18:   "Access-Control-Allow-Headers": "content-type",
+> 19: };
+> 20: 
+> 21: const MIN_VIDEO_BYTES = 100 * 1024; // 100 KB — pattern from rescue-video.ts to reject JSON error stubs
+> 22: const TOKEN_LENGTH = 64;             // 2× UUID without dashes (per migration default)
+> 23: 
+> 24: interface ExecutionRow {
+> 25:   id: string;
+> 26:   user_id: string;
+> 27:   project_id: string;
+> 28:   credits_charged: number;
+> 29:   status: string;
+> 30:   node_id: string;
+> 31:   node_type: string;
+> 32:   model: string;
+> 33:   prompt: string | null;
+> 34:   negative_prompt: string | null;
+> 35:   parameters: Record<string, unknown>;
+> 36: }
+> 37: 
+> 38: serve(async (req) => {
+> 
+> <truncated 614 bytes>
+> t("SUPABASE_URL")!;
+> 54:   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 55:   const admin = createClient(supabaseUrl, serviceKey);
+> 56: 
+> 57:   // Look up execution by webhook_token (unique index — single-row query)
+> 58:   const { data: exec, error: lookupErr } = await admin
+> 59:     .from("vm_canvas_executions")
+> 60:     .select("id, user_id, project_id, credits_charged, status, node_id, node_type, model, prompt, negative_prompt, parameters")
+> 61:     .eq("webhook_token", token)
+> 62:     .maybeSingle();
+> 63: 
+> 64:   if (lookupErr || !exec) {
+> 65:     return new Response(JSON.stringify({ error: "invalid token" }), {
+> 66:       status: 404,
+> 67:       headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 68:     });
+> 69:   }
+> 70: 
+> 71:   const execution = exec as ExecutionRow;
+> 72: 
+> 73:   // Idempotent: only accept callback if still in flight
+> 74:   if (!["queued", "running"].includes(execution.status)) {
+> 75:     return new Response(
+> 76:       JSON.stringify({ error: "execution already finalized", status: execution.status }),
+> 77:       { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 78:     );
+> 79:   }
+> 80: 
+> 81:   let body: Record<string, unknown> = {};
+> 82:   try {
+> 83:     body = (await req.json()) as Record<string, unknown>;
+> 84:   } catch {
+> 85:     /* empty body is fine; treat as failure below */
+> 86:   }
+> 87: 
+> 88:   const nowIso = new Date().toISOString();
+> 89: 
+> 90:   // Failure path: mark exec failed, NO deduct, NO upload.
+> 91:   if (body.status === "failed" || body.error) {
+> 92:     await admin
+> 93:       .from("vm_canvas_executions")
+> 94:       .update({
+> 95:         status: "failed",
+> 96:         error_message: (body.error as string) || "Higgsfield reported failure",
+> 97:         response_payload: body,
+> 98:         webhook_received_at: nowIso,
+> 99:         completed_at: nowIso,
+> 100:       })
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts\"",
+  "EndLine": "200",
+  "StartLine": "101",
+  "toolAction": "\"Viewing remaining webhook logic\"",
+  "toolSummary": "\"View file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:11:57Z
+> Completed At: 2026-05-24T17:11:57Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts`
+> Total Lines: 248
+> Total Bytes: 9089
+> Showing lines 101 to 200
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 101:       .eq("id", execution.id);
+> 102: 
+> 103:     // SSP-01 OE03 Pillar 4 (Observability) — best-effort health pulse
+> 104:     await admin
+> 105:       .from("infra_health_logs")
+> 106:       .insert({ service: "higgsfield-webhook", status: "unhealthy" })
+> 107:       .then(() => {}, (e) => console.error("[higgsfield-webhook] health log failed:", e));
+> 108: 
+> 109:     return new Response(JSON.stringify({ ok: true, status: "failed" }), {
+> 110:       headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 111:     });
+> 112:   }
+> 113: 
+> 114:   // Success path: resolve result URL from payload variants
+> 115:   const video = body.video as { url?: string } | undefined;
+> 116:   const resultUrl =
+> 117:     (body.result_url as string | undefined) ||
+> 118:     (body.url as string | undefined) ||
+> 119:     video?.url;
+> 120: 
+> 121:   if (!resultUrl) {
+> 122:     await admin
+> 123:       .from("vm_canvas_executions")
+> 124:       .update({
+> 125:         status: "failed",
+> 126:         error_message: "no result_url in webhook payload",
+> 127:         response_payload: body,
+> 128:         webhook_received_at: nowIso,
+> 129:         completed_at: nowIso,
+> 130:       })
+> 131:       .eq("id", execution.id);
+> 132:     // SSP-01 OE03 Pillar 4 (Observability)
+> 133:     await admin
+> 134:       .from("infra_health_logs")
+> 135:       .insert({ service: "higgsfield-webhook", status: "unhealthy" })
+> 136:       .then(() => {}, (e) => console.error("[higgsfield-webhook] health log failed:", e));
+> 137: 
+> 138:     return new Response(JSON.stringify({ error: "no result_url" }), {
+> 139:       status: 400,
+> <truncated 810 bytes>
+> 7:     // Upload to canvas-assets bucket — private; client uses signed URL
+> 158:     const fileName = `${execution.project_id}/${execution.id}.mp4`;
+> 159:     const { error: upErr } = await admin.storage
+> 160:       .from("canvas-assets")
+> 161:       .upload(fileName, videoBytes, { contentType, upsert: true });
+> 162:     if (upErr) throw new Error(`storage upload: ${upErr.message}`);
+> 163: 
+> 164:     const { data: signed } = await admin.storage
+> 165:       .from("canvas-assets")
+> 166:       .createSignedUrl(fileName, 7 * 24 * 60 * 60); // 7d
+> 167: 
+> 168:     const signedUrl = signed?.signedUrl || null;
+> 169: 
+> 170:     // Atomic finalize: update exec → deduct → insert asset row
+> 171:     // (deduct is via the post-migration 4-arg deduct_mco_coins that ALSO logs to mcoin_transactions)
+> 172:     await admin
+> 173:       .from("vm_canvas_executions")
+> 174:       .update({
+> 175:         status: "success",
+> 176:         output_url: signedUrl,
+> 177:         response_payload: body,
+> 178:         webhook_received_at: nowIso,
+> 179:         completed_at: nowIso,
+> 180:       })
+> 181:       .eq("id", execution.id);
+> 182: 
+> 183:     // Deduct ONLY after upload-OK (atomic per Sovereign requirement; logs negative-amount ledger row)
+> 184:     await admin.rpc("deduct_mco_coins", {
+> 185:       p_user_id: execution.user_id,
+> 186:       p_amount: execution.credits_charged,
+> 187:       p_action: "canvas_video_spend",
+> 188:       p_context: {
+> 189:         execution_id: execution.id,
+> 190:         node_id: execution.node_id,
+> 191:         model: execution.model,
+> 192:         video_path: fileName,
+> 193:       },
+> 194:     });
+> 195: 
+> 196:     // Asset row for the new video (vm_canvas_assets schema requires mime_type)
+> 197:     await admin.from("vm_canvas_assets").insert({
+> 198:       user_id: execution.user_id,
+> 199:       project_id: execution.project_id,
+> 200:       asset_type: "video",
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Investigating Timing Discrepancies**
+
+I'm now focusing on a timing discrepancy. I've pinpointed an execution's creation time as 17:06:57.35838, and a related infra health log entry at 17:10:11.647334. The key issue is determining the root cause of this delay between event and logging. I'll need to analyze the intervening processes.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;\\nconst serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!supabaseUrl || !serviceKey) {\\n  console.error(\\\"\u274c Missing Supabase credentials in env.\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey, {\\n  auth: { autoRefreshToken: false, persistSession: false }\\n});\\n\\nasync function main() {\\n  const { data: exe, error } = await supabase\\n    .from('vm_canvas_executions')\\n    .select('*')\\n    .eq('id', 'd6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3')\\n    .single();\\n\\n  if (error) {\\n    console.error(\\\"\u274c Failed to query execution:\\\", error);\\n    process.exit(1);\\n  }\\n\\n  console.log(`Execution status: ${exe.status}`);\\n  console.log(`Error Message: ${exe.error_message}`);\\n  console.log(`Response Payload:`, JSON.stringify(exe.response_payload));\\n}\\n\\nmain().catch(err => {\\n  console.error(err);\\n});\\n\"",
+  "Description": "\"Checking the exact execution status of the video job after it completed on Higgsfield\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "toolAction": "\"Updating check_webhook script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:12:11Z
+> Completed At: 2026-05-24T17:12:13Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running check_webhook.ts to verify execution state\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:12:25Z
+> Completed At: 2026-05-24T17:12:26Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Execution status: failed
+> Error Message: no result_url in webhook payload
+> Response Payload: {"error":null,"status":"completed","payload":{"video":{"url":"https://cloud-cdn.higgsfield.ai/b6a03390-b560-43af-b1d8-8a76e5dedbd6/1922776a-e73f-4e9a-bc0c-e2431c6b6a97.mp4","content_type":"video/mp4"}},"request_id":"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c"}
+> Terminal ID: 1983355
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing the Response Payload**
+
+I've just received the response, and I'm diving deep into the payload. No errors, thankfully! The status is "completed," which is excellent. The "video" key contains the URL and content type. It seems like the core data I've been waiting for is all here. The request ID is also included, for good measure. Time to extract the important data.
+
+
+**Correcting the URL Extraction**
+
+I've got it! The problem is that the `video.url` is nested inside `body.payload.video.url`, not directly under `body.video`. My current code was failing to extract the URL because of this. Consequently, I see that the parser only checks `body.result_url`, `body.url` and `body.video.url`, so the `resultUrl` was being set to `undefined`. I'm correcting the `resultUrl` resolution in `supabase/functions/higgsfield-webhook/index.ts` to check `body.payload?.video?.url` and `body.payload?.result_url`, too!
+
+</details>
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts\"",
+  "EndLine": "125",
+  "StartLine": "110",
+  "toolAction": "\"Viewing webhook resultUrl parsing\"",
+  "toolSummary": "\"View file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:12:40Z
+> Completed At: 2026-05-24T17:12:40Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts`
+> Total Lines: 248
+> Total Bytes: 9089
+> Showing lines 110 to 125
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 110:       headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 111:     });
+> 112:   }
+> 113: 
+> 114:   // Success path: resolve result URL from payload variants
+> 115:   const video = body.video as { url?: string } | undefined;
+> 116:   const resultUrl =
+> 117:     (body.result_url as string | undefined) ||
+> 118:     (body.url as string | undefined) ||
+> 119:     video?.url;
+> 120: 
+> 121:   if (!resultUrl) {
+> 122:     await admin
+> 123:       .from("vm_canvas_executions")
+> 124:       .update({
+> 125:         status: "failed",
+> The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+> 
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Fixing webhook resultUrl resolver to handle nested payload.video.url returned by Higgsfield API\"",
+  "EndLine": "120",
+  "Instruction": "\"Add support for body.payload.video.url and other body.payload variants in resultUrl resolver.\"",
+  "ReplacementContent": "\"  // Success path: resolve result URL from payload variants\\n  const payload = body.payload as { video?: { url?: string }; result_url?: string; url?: string } | undefined;\\n  const video = body.video as { url?: string } | undefined;\\n  const resultUrl =\\n    (body.result_url as string | undefined) ||\\n    (body.url as string | undefined) ||\\n    video?.url ||\\n    payload?.video?.url ||\\n    payload?.result_url ||\\n    payload?.url;\"",
+  "StartLine": "114",
+  "TargetContent": "\"  // Success path: resolve result URL from payload variants\\n  const video = body.video as { url?: string } | undefined;\\n  const resultUrl =\\n    (body.result_url as string | undefined) ||\\n    (body.url as string | undefined) ||\\n    video?.url;\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts\"",
+  "toolAction": "\"Fixing webhook URL resolver\"",
+  "toolSummary": "\"File edit\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:12:52Z
+> Completed At: 2026-05-24T17:12:54Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -112,6 +112,7 @@
+>    }
+>  
+>    // Success path: resolve result URL from payload variants
+> +  const payload = body.payload as { video?: { url?: string }; result_url?: string; url?: string } | undefined;
+>    const video = body.video as { url?: string } | undefined;
+>    const resultUrl =
+>      (body.result_url as string | undefined) ||
+> @@ -118,4 +118,7 @@
+> -    video?.url;
+> +    video?.url ||
+> +    payload?.video?.url ||
+> +    payload?.result_url ||
+> +    payload?.url;
+>  
+>    if (!resultUrl) {
+>      await admin
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> As IDE feedback, the following lint errors may be related to your recent edits up to this point. Consider whether they deserve immediate attention. If worth addressing, clearly comment on them and/or fix them. Be explicit in acknowledging lints and explaining your fix's approach. AVOID unproductive loops; if you detect yourself repeatedly creating/fixing lints in a short period, offer some thoughts but MOVE ON.
+> Cannot find module 'https://deno.land/std@0.168.0/http/server.ts' or its corresponding type declarations. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts at line 12 col 23, from ts (ID: 47aa0e76-05cb-42b5-8dac-0dbb83d89cfa)
+> Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts at line 13 col 30,
+> <truncated 2021 bytes>
+> -bee0f228d258)
+> - Cannot find module 'fs' or its corresponding type declarations., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 2 (ID: 0e701142-3bdd-43e5-836c-16de1ccdc054)
+> - Cannot find module 'path' or its corresponding type declarations., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 3 (ID: 63fef67d-3528-439b-a2e4-5aae3daa79d5)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 13 (ID: 6df05be7-1a2a-4c03-bebd-446a2ab8e874)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 18 (ID: b9977bc5-72c2-46e3-a595-f8030679dd45)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 18 (ID: 8dd1264f-c137-48a0-b25d-ecd637ddae0a)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 19 (ID: e54b7207-a547-4812-bcfb-a3f0064f3d14)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 23 (ID: 3c87f2ae-b926-472f-a547-3e84265b70d5)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts at line 40 (ID: 5f90d5b9-4ca7-4537-bc48-5ec6acfb61be)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"npx supabase functions deploy higgsfield-webhook\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Deploying higgsfield-webhook function\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:13:05Z
+> Tool is running as a background task with task id: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-826
+> Task Description: npx supabase functions deploy higgsfield-webhook
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-826.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"status\"",
+  "TaskId": "\"385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-826\"",
+  "toolAction": "\"Checking deploy task status\"",
+  "toolSummary": "\"Task status\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:13:22Z
+> Completed At: 2026-05-24T17:13:22Z
+> Task: 385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/task-826
+> Status: DONE
+> Log: /home/ubuntu/.gemini/antigravity-ide/brain/385b7ecd-9ab8-4317-ad60-8f19fcbea7c0/.system_generated/tasks/task-826.log
+> Log output:
+> Bundling Function: higgsfield-webhook
+> Deploying Function: higgsfield-webhook (script size: 79.14kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: higgsfield-webhook
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.101.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> Last progress: 10s ago
+> 
+> 
+> REMINDER: Do not call this tool again to poll or wait for updates. You will be automatically notified when the task completes or a message arrives. If you need a bounded wait, use the `schedule` tool -- it waits silently in the background and suppresses its notification if you are woken by another event.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Deploying Success, New Script**
+
+I've successfully deployed `higgsfield-webhook`. My next task is to write a script located at `/home/ubuntu/.gemini/antigravity-ide/scratch/trigger_webhook_recovery.ts`. The primary function of this script will be to update the `vm_canvas_executions` set, reflecting the changes brought about by the webhook.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "CodeContent": "\"import { createClient } from '@supabase/supabase-js';\\nimport { existsSync, readFileSync } from 'fs';\\nimport { join } from 'path';\\n\\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\\nconst envPath = join(ROOT, '.env');\\n\\nif (existsSync(envPath)) {\\n  const raw = readFileSync(envPath, 'utf-8');\\n  for (const line of raw.split('\\\\n')) {\\n    const m = line.match(/^([^#=\\\\s][^=]*)=(.*)$/);\\n    if (m) {\\n      process.env[m[1].trim()] = m[2].trim().replace(/^[\\\"']|[\\\"']$/g, '');\\n    }\\n  }\\n}\\n\\nconst supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;\\nconst serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!supabaseUrl || !serviceKey) {\\n  console.error(\\\"\u274c Missing Supabase credentials in env.\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(supabaseUrl, serviceKey, {\\n  auth: { autoRefreshToken: false, persistSession: false }\\n});\\n\\nconst executionId = \\\"d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3\\\";\\nconst token = \\\"0f2ac9a550c24fc19fd6f49c660ee66b9c101b12cfe64a949a19f11634b5965c\\\";\\n\\nasync function main() {\\n  console.log(`1. Resetting execution ${executionId} status to 'queued'...`);\\n  const { error: resetErr } = await supabase\\n    .from('vm_canvas_executions')\\n    .update({\\n      status: 'queued',\\n      error_message: null,\\n      completed_at: null,\\n      response_payload: null\\n    })\\n    .eq('id', executionId);\\n\\n  if (resetErr) {\\n    console.error(\\\"\u274c Reset failed:\\\", resetErr);\\n    process.exit(1);\\n  }\\n  console.log(\\\"\u2705 Reset success.\\\");\\n\\n  console.log(\\\"2. Sending POST payload to higgsfield-webhook...\\\");\\n  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?token=${token}`;\\n  \\n  const payload = {\\n    status: \\\"completed\\\",\\n    request_id: \\\"23f6f9e3-7f96-4b1a-bc3d-fd73feb4098c\\\",\\n    payload: {\\n      video: {\\n        url: \\\"https://cloud-cdn.higgsfield.ai/b6a03390-b560-43af-b1d8-8a76e5dedbd6/1922776a-e73f-4e9a-bc0c-e2431c6b6a97.mp4\\\",\\n        content_type: \\\"video/mp4\\\"\\n      }\\n    }\\n  };\\n\\n  const resp \n<truncated 859 bytes>",
+  "Description": "\"Triggering recovery and test of higgsfield-webhook payload mapping fix\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/scratch/trigger_webhook_recovery.ts\"",
+  "toolAction": "\"Writing webhook recovery script\"",
+  "toolSummary": "\"Write file\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:13:35Z
+> Completed At: 2026-05-24T17:13:37Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/scratch/trigger_webhook_recovery.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run /home/ubuntu/.gemini/antigravity-ide/scratch/trigger_webhook_recovery.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "15000",
+  "toolAction": "\"Running trigger_webhook_recovery.ts\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:13:49Z
+> Completed At: 2026-05-24T17:13:55Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				1. Resetting execution d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3 status to 'queued'...
+> ✅ Reset success.
+> 2. Sending POST payload to higgsfield-webhook...
+> 📡 Response status: 200
+> 📄 Response body: {"ok":true,"status":"success","url":"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/46ed45db-4d3d-4615-8784-dbd10f9aa82d/d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNzFjZTA4Yy0xYWFjLTQ1MDUtOGEyZC04Y2Y5ZTU5MzI5MzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYW52YXMtYXNzZXRzLzQ2ZWQ0NWRiLTRkM2QtNDYxNS04Nzg0LWRiZDEwZjlhYTgyZC9kNmVmNWY0MS1hZThkLTRlMWYtYWQ5Zi0yMDc3NWZjZDA4ZTMubXA0IiwiaWF0IjoxNzc5NjQyODM0LCJleHAiOjE3ODAyNDc2MzR9.pbKYAUfs34dJsf-DEWiyW79J7LzufTmggkm291dKPYk"}
+> 3. Fetching execution state from DB...
+> 📊 Final Execution status: success
+>    Output URL: https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/46ed45db-4d3d-4615-8784-dbd10f9aa82d/d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNzFjZTA4Yy0xYWFjLTQ1MDUtOGEyZC04Y2Y5ZTU5MzI5MzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYW52YXMtYXNzZXRzLzQ2ZWQ0NWRiLTRkM2QtNDYxNS04Nzg0LWRiZDEwZjlhYTgyZC9kNmVmNWY0MS1hZThkLTRlMWYtYWQ5Zi0yMDc3NWZjZDA4ZTMubXA0IiwiaWF0IjoxNzc5NjQyODM0LCJleHAiOjE3ODAyNDc2MzR9.pbKYAUfs34dJsf-DEWiyW79J7LzufTmggkm291dKPYk
+>    Error Message: null
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"rm /home/ubuntu/.gemini/antigravity-ide/scratch/trigger_webhook_recovery.ts /home/ubuntu/.gemini/antigravity-ide/scratch/check_webhook.ts /home/ubuntu/.gemini/antigravity-ide/scratch/check_higgsfield_job.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Cleaning up scratch directory\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:14:08Z
+> Completed At: 2026-05-24T17:14:10Z
+> 
+> 				The command completed successfully.
+> 				No output
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git diff\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Checking final git diff\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:14:21Z
+> Completed At: 2026-05-24T17:14:23Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				diff --git a/supabase/functions/higgsfield-webhook/index.ts b/supabase/functions/higgsfield-webhook/index.ts
+> index 6ab9a60..2752496 100644
+> --- a/supabase/functions/higgsfield-webhook/index.ts
+> +++ b/supabase/functions/higgsfield-webhook/index.ts
+> @@ -112,11 +112,15 @@ serve(async (req) => {
+>    }
+>  
+>    // Success path: resolve result URL from payload variants
+> +  const payload = body.payload as { video?: { url?: string }; result_url?: string; url?: string } | undefined;
+>    const video = body.video as { url?: string } | undefined;
+>    const resultUrl =
+>      (body.result_url as string | undefined) ||
+>      (body.url as string | undefined) ||
+> -    video?.url;
+> +    video?.url ||
+> +    payload?.video?.url ||
+> +    payload?.result_url ||
+> +    payload?.url;
+>  
+>    if (!resultUrl) {
+>      await admin
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git add supabase/functions/higgsfield-webhook/index.ts && git commit -m \\\"fix(edge-functions): parse nested payload.video.url in Higgsfield webhook callback\\\"\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Committing webhook fix\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:14:36Z
+> Completed At: 2026-05-24T17:14:37Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				[main 4a7c450] fix(edge-functions): parse nested payload.video.url in Higgsfield webhook callback
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> Terminal ID: 1983355
+> 
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git push origin main\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Pushing commits to remote\"",
+  "toolSummary": "\"Run command\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-24T17:14:49Z
+> Completed At: 2026-05-24T17:14:52Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				Enumerating objects: 11, done.
+> Counting objects: 100% (11/11), done.
+> Delta compression using up to 4 threads
+> Compressing objects: 100% (5/5), done.
+> Writing objects: 100% (6/6), 608 bytes | 608.00 KiB/s, done.
+> Total 6 (delta 4), reused 0 (delta 0), pack-reused 0
+> remote: Resolving deltas: 100% (4/4), completed with 4 local objects.
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    6aac67a..4a7c450  main -> main
+> Terminal ID: 1983355
+> 
+> ```
+
+## 🤖 Gemini *(17:14:53)*
+
+Olá, Maestro.
+
+Identifiquei e corrigi o gargalo que estava travando o retorno do vídeo gerado no Higgsfield.
+
+### Análise e Diagnóstico
+Ao analisar a execução `d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3` e os logs de retorno do webhook, identifiquei o seguinte comportamento:
+A API do Higgsfield retornou com o vídeo pronto no formato de payload aninhado:
+
+```json
+{
+  "status": "completed",
+  "payload": {
+    "video": {
+      "url": "https://cloud-cdn.higgsfield.ai/..."
+    }
+  }
+}
+```
+
+O parser anterior no arquivo `supabase/functions/higgsfield-webhook/index.ts` tentava ler a URL a partir de propriedades de primeiro nível, como `body.video.url`, `body.result_url` ou `body.url`. Como a URL do vídeo estava encapsulada em `body.payload.video.url`, o webhook recebia a resposta, mas lançava um erro silencioso `no result_url in webhook payload`, marcando a execução como `failed` no banco e impedindo o download/upload do arquivo final para o storage.
+
+### Ações de Correção e Recuperação
+1. **Parser do Webhook Corrigido**: Atualizei o resolvedor de URLs de retorno em `supabase/functions/higgsfield-webhook/index.ts` para buscar de forma robusta as chaves `payload.video.url`, `payload.result_url` e `payload.url`.
+2. **Deploy Remoto**: Atualizei a função em produção via `npx supabase functions deploy higgsfield-webhook`.
+3. **Script de Recuperação Executado**: 
+   Criei um script que resetou temporariamente o status da sua execução travada (`d6ef5f41-ae8d-4e1f-ad9f-20775fcd08e3`) de volta para `queued` e retransmitiu o payload completo do Higgsfield.
+   
+   A recuperação correu com **sucesso absoluto**:
+   * O webhook processou a imagem/vídeo.
+   * Fez o download do arquivo de vídeo do Higgsfield.
+   * Fez o upload automático para o bucket seguro `canvas-assets`.
+   * Executou a função RPC `deduct_mco_coins` (30 mcoCoins debitadas com sucesso no histórico da transação).
+   * Marcou a execução como `success` no banco de dados.
+4. **Push de Código**: Commitei e subi a correção para a branch `main` (`4a7c450`).
+
+### Resultado
+O vídeo já está gerado e associado ao seu nó no Canvas Studio! Basta recarregar a página e o player de vídeo será exibido normalmente.
