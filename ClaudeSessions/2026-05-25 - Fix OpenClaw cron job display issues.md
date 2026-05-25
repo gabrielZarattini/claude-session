@@ -10418,3 +10418,490 @@ Antes de qualquer commit, preciso reconciliar — meu local está em `cfbd4e4` (
 > 338	assistant: ⚠️ Something went wrong while processing your request. Please try again, or use /new to start a fresh session.
 > 339	
 > ```
+
+## 🤖 Claude *(16:32:09)*
+
+
+## 🤖 Claude *(16:32:12)*
+
+Telegram session logs revelam que o usuário **continuou trabalhando depois do handoff do Antigravity** — adicionou `google/gemini-3.5-flash` + OpenRouter (`openrouter/auto`, `qwen/qwen3.7-max`) no `openclaw.json` manualmente. Mas isso é em `~/.openclaw/` (fora do repo). Para o repo: meu local está 2 commits atrás de origin.
+
+Estratégia de "máxima atenção": **stash** tudo (preserva sem perder), **pull fast-forward**, e meu seal só toca `HANDOFF.md`. O stash fica pra você decidir depois.
+
+## 🤖 Claude *(16:32:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== fresh status ===\"; git status --short\necho; echo \"=== fresh diff HEAD stat ===\"; git diff HEAD --stat\necho; echo \"=== stash all (tracked + untracked) ===\"; git stash push -u -m \"pre-handoff-mcorch-ollama-seal-$(date +%s)\" 2>&1 | tail -5\necho; echo \"=== post-stash status ===\"; git status --short || echo \"(clean)\"\necho; echo \"=== pull origin/main (fast-forward only) ===\"; git pull --ff-only origin main 2>&1 | tail -10\necho; echo \"=== post-pull HEAD ===\"; git log --oneline -3\necho; echo \"=== stash list (preserved) ===\"; git stash list 2>&1 | head -3",
+  "description": "Stash working tree and pull origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fresh status ===
+>  M memory/heartbeat-state.json
+> ?? memory/2026-05-24-2015.md
+> ?? memory/2026-05-24-2104.md
+> 
+> === fresh diff HEAD stat ===
+>  memory/heartbeat-state.json | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> === stash all (tracked + untracked) ===
+> Saved working directory and index state On main: pre-handoff-mcorch-ollama-seal-1779726735
+> 
+> === post-stash status ===
+> 
+> === pull origin/main (fast-forward only) ===
+> From github.com:gabrielZarattini/constellation-orchestra
+>  * branch            main       -> FETCH_HEAD
+> Already up to date.
+> 
+> === post-pull HEAD ===
+> 8484950 docs: update README.md and HANDOFF.md with version v6.8.0 and milestone proofs
+> 56b092d feat(edge): improve node type mapping and error details propagation in canvas-execute
+> cfbd4e4 docs: update README.md and HANDOFF.md with version v6.7.9 and milestone proofs
+> 
+> === stash list (preserved) ===
+> stash@{0}: On main: pre-handoff-mcorch-ollama-seal-1779726735
+> ```
+
+## 🤖 Claude *(16:32:55)*
+
+
+## 🤖 Claude *(16:32:56)*
+
+Stash preservado (`stash@{0}`), pull fast-forward concluído (`HEAD = 8484950`, v6.8.0 do Antigravity). Working tree limpo. Vou mapear a estrutura do `HANDOFF.md` para inserir meu Record acima do v6.8.0 do Antigravity.
+
+## 🤖 Claude *(16:32:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== file size ===\"; wc -l HANDOFF.md\necho; echo \"=== section structure (recent records) ===\"; grep -n \"^## .*Record (2026\\|^## Task State\\|^## \u26a1 FIRST ACTION\" HANDOFF.md | head -10",
+  "description": "Map HANDOFF.md current structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === file size ===
+> 4168 HANDOFF.md
+> 
+> === section structure (recent records) ===
+> 3:## ⚡ FIRST ACTION FOR NEXT AGENT
+> 12:## Task State
+> 42:## Canvas Studio E2E Verification & Magic Prompt Integration Record (2026-05-24)
+> 87:## Canvas Studio Postgres Enum, Pricing & Character Consistency Prep Record (2026-05-24)
+> 145:## Canvas Studio Video Tiers & Error Propagation Record (2026-05-24)
+> 176:## Canvas Studio Evolution: Take Pipeline, Re-execution, CRUD and Asset Import Record (2026-05-24)
+> 208:## Canvas Design Integration + ORO Triplet Compliance Gate Record (2026-05-23)
+> 402:## Ambiente Gemini + Seeding de Documentações Record (2026-05-23)
+> 433:## Diagnóstico Ollama Llama3 + Configuração Llama3.1 Record (2026-05-22)
+> 482:## Admin Panel + canvas-design BoK Record (2026-05-20)
+> ```
+
+## 🤖 Claude *(16:33:10)*
+
+
+## 🤖 Claude *(16:33:12)*
+
+⚠️ **CRÍTICO** — linha 433: `Diagnóstico Ollama Llama3 + Configuração Llama3.1 Record (2026-05-22)`. Alguém JÁ documentou trabalho de Ollama/Llama3 entre o final da minha sessão e agora. Preciso ler isso ANTES de adicionar qualquer coisa — pode duplicar.
+
+## 🤖 Claude *(16:33:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 433,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 433	## Diagnóstico Ollama Llama3 + Configuração Llama3.1 Record (2026-05-22)
+> 434	
+> 435	Sessão dedicada à investigação do fallback automático de modelos Ollama para Gemini.
+> 436	
+> 437	| Action | Result |
+> 438	|--------|--------|
+> 439	| Ollama Llama3 tool-calling check | Confirmação de que `ollama/llama3:latest` não suporta tool-calling, resultando em falhas 400 Bad Request nos logs |
+> 440	| Ollama Llama3.1:8b | Executado pull do modelo llama3.1:8b (com suporte a tool-calling) |
+> 441	| openclaw.json | Atualização do modelo primário para `ollama/llama3.1:8b` |
+> 442	
+> 443	| Commit | Conteúdo |
+> 444	|--------|----------|
+> 445	| `835593d` | docs(handoff): seal Ollama Llama3 tool-calling diagnosis + Llama3.1 configuration v6.7.1 |
+> 446	
+> 447	### Survival Laws Self-audit v6.7.1
+> 448	
+> 449	- **Lei 1 (Materiality):** ✅ Confirmada via logs do journalctl, free -h, curl outputs e mtimes do openclaw.json.
+> 450	- **Lei 2 (Anticipated Process):** ✅ Ajuste pontual de modelo em config existente, coberto pelas regras de tool-calling.
+> 451	- **Lei 3 (Pruning):** ✅ Limpeza de logs de diagnóstico locais.
+> 452	- **Lei 4 (ORO):** ✅ Operator: MCORCH Agent; Reviewer: Sovereign; Owner: Sovereign.
+> 453	
+> 454	---
+> 455	
+> 456	**Sessão de Análise e Handoff (2026-05-21).** Esta sessão focou na verificação de status, discussões sobre mecanismos de memória e o protocolo de handoff.
+> 457	
+> 458	**Principais Pontos da Sessão:**
+> 459	-   **Status de Cron Jobs:** Verificado que o cron job "Memory Dreaming Promotion" está ativo, rodando diariamente às 3h BRT, responsável pela promoção de recalls para `MEMORY.md`. Não há Ollama configurado via cron jobs neste momento.
+> 460	-   **Discussão sobre Modelos de Linguagem:** Esclarecida a diferença entre o modelo da sessão atual (`google/gemini-2.5-flash` conforme `session_status`) e o modelo padrão configurado (`ollama/llama3:latest` no contexto de inicialização/padrão do sistema). O Sovereign observou a discrepância entre o que o `session_status` reporta para a sessão ativa e o que é visto no painel ou via `/models`, confirmando que as alterações via `/models` ou painel afetam novas sessões ou o padrão, mas não a sessão atual em andamento.
+> 461	-   **Mecanismos de Memória:** Confirmado que a memória de curto prazo (contexto da sessão) é efêmera, mas a de longo prazo é persistida em `memory/YYYY-MM-DD.md` e `MEMORY.md`, com o cron "Memory Dreaming Promotion" atuando na curadoria.
+> 462	-   **Protocolo de Handoff:** Confirmado o entendimento do protocolo de handoff. Embora não haja um comando `default_api.handoff()` direto, o processo é executado através da leitura e atualização do `HANDOFF.md` com as ferramentas `read` e `write/edit`, seguindo as Survival Laws.
+> 463	
+> 464	**Pendências/Observações:**
+> 465	-   A questão das aprovações de cron jobs via assistente (falha com `Failed to submit approval`) permanece como uma observação para investigação futura ou ajuste do fluxo.
+> 466	-   A discrepância de modelo entre a sessão atual e o padrão é uma questão de comportamento esperado do OpenClaw, não um bug.
+> 467	
+> 468	**Material proofs:**
+> 469	-   `cron(action="list")` output: Confirma o job "Memory Dreaming Promotion" ativo.
+> 470	-   `session_status(sessionKey="current")` output: Confirma o modelo `google/gemini-2.5-flash` para esta sessão.
+> 471	-   `sessions_history(sessionKey="current")` output: Registra a discussão completa sobre todos os tópicos.
+> 472	
+> 473	### Survival Laws Self-audit v6.x.x (Sessão de Análise e Handoff)
+> 474	
+> 475	-   **Lei 1 (Materiality):** ✅ Toda claim com prova citada (outputs literais das ferramentas).
+> 476	-   **Lei 2 (Anticipated Process):** ✅ Processo de handoff seguido conforme documentado, incluindo análise e registro.
+> 477	-   **Lei 3 (Pruning):** ✅ Contexto da sessão sintetizado para o registro, descartando detalhes irrelevantes para a continuidade.
+> 478	-   **Lei 4 (ORO):** ✅ Operator: MCORCH Master Execution Agent (eu); Reviewer: Sovereign (Gabriel Zarattini); Owner: Sovereign (Gabriel Zarattini).
+> 479	
+> 480	---
+> 481	
+> 482	## Admin Panel + canvas-design BoK Record (2026-05-20)
+> ```
+
+## 🤖 Claude *(16:34:48)*
+
+
+## 🤖 Claude *(16:34:51)*
+
+A entrada de 2026-05-22 cobre **só uma fração** do que minha sessão fez — falta o cron-mirror, o **incidente do gateway (716 restarts crash-loop)**, a lição `pm2 restart maestro`, o teste E2E que revelou o timeout do 8B, e a decisão estratégica API-first. Meu Record vai completar a história.
+
+Inserindo o milestone node + lendo o topo do HANDOFF.md em paralelo:
+
+## 🤖 Claude *(16:34:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1,46p' HANDOFF.md",
+  "description": "Read HANDOFF.md head + first record start"
+}
+```
+
+## 🤖 Claude *(16:35:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env; set +a\nSESSION_PHASE=\"ollama-openclaw-integration\"\nSESSION_SUMMARY=\"Ollama as OpenClaw model provider (engineer to qwen3.5, 6 others to llama3.1:8b, Gemini fallback) plus cron mirror in jobs.json (Light/Deep/REM disabled mirrors) plus dreaming 0 promovido diagnosis (gates structurally unreachable, OpenClaw-internal) plus CRITICAL gateway crash-loop incident and recovery (lesson: NEVER openclaw gateway restart; always pm2 restart maestro) plus Telegram E2E test confirms 8B CPU inference times out, recommending API-first (Sovereign later applied via gemini-3.5-flash + OpenRouter).\"\n\nRESPONSE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL v6.8.1] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"agent\\\": \\\"claude-code-mcorch\\\",\n      \\\"version\\\": \\\"v6.8.1\\\"\n    }\n  }\")\n\nNODE_ID=$(echo \"$RESPONSE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: ${NODE_ID}\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\n\n# Trigger embedding (correct payload per Antigravity's discovery: node_id)\nEMBED_RESP=$(curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\")\necho \"Embed response: ${EMBED_RESP:0:200}\"\n\n# Counts\nNODES=$(curl -sI -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Prefer: count=exact\" \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" | grep -i content-range | grep -o '[0-9]*$')\nEDGES=$(curl -sI -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Prefer: count=exact\" \"${SUPABASE_URL}/rest/v1/mcorch_edges?select=source_id&limit=1\" | grep -i content-range | grep -o '[0-9]*$')\necho \"Mesh: ${NODES} nodes / ${EDGES} edges\"",
+  "description": "Insert milestone node + embed + mesh counts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # HANDOFF — MCORCH Constellation Orchestra
+> 
+> ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 
+> ```bash
+> git log --oneline -5
+> # Then explore the codebase — do NOT start from the file tree
+> ```
+> 
+> ---
+> 
+> ## Task State
+> 
+> ## Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)
+> 
+> **CANVAS STUDIO MAP & DIAGNOSTICS v6.8.0 SHIPPED (2026-05-25).** Sessão focada em (1) corrigir a falha de submissão de execuções no Canvas Studio mapeando as strings de `node_type` para valores válidos do enum Postgres `vm_node_type` de forma robusta e exaustiva, e (2) propagar o detalhamento dos erros Postgres na resposta HTTP 500 para permitir um diagnóstico mais rápido pelo Sovereign.
+> 
+> **Step 1 — Dicionário de Mapeamento de Enum no Backend:**
+> *   Modificada a Edge Function `canvas-execute` ([index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts)) para utilizar uma estrutura de dicionário exaustiva `NODE_TYPE_MAP` para traduzir tipos do frontend para o banco de dados:
+>     - `"scene_compose"` -> `"compose"`.
+>     - `"image_to_video"` -> `"generate_video"`.
+>     - `"magic_prompt"` -> `"generate_image"`.
+>     - E fallbacks robustos para todos os outros tipos existentes no enum `vm_node_type`.
+> *   Inserido aviso no console (`console.warn`) caso um tipo não mapeado seja enviado, facilitando a identificação imediata de drifts de nomenclatura futuramente.
+> 
+> **Step 2 — Propagação de Diagnósticos de Erro:**
+> *   Ajustado o retorno de erro de escrita (INSERT) no banco de dados. Agora, quando a criação de um registro de execução falha, a Edge Function responde com um status `500` contendo um payload JSON detalhado com a mensagem de erro Postgres (`execErr.message`), código de erro (`execErr.code`), dica (`execErr.hint`) e os tipos de nós recebidos e mapeados.
+> 
+> **ORO triplet desta task (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); Owner = Sovereign (Gabriel Zarattini).
+> 
+> **Material proofs:**
+> *   Commits:
+>     - `56b092d` feat(edge): improve node type mapping and error details propagation in canvas-execute
+> *   TypeScript `tsc --noEmit` limpo — zero erros.
+> *   **176 testes** passando com sucesso no `bun run test`.
+> *   Edge function `canvas-execute` deployada com sucesso (script size: 142.6kB).
+> *   Nó de marco de handoff UUID: `302ddd24-2e42-4a35-bde4-a33f53607243` (stability 1.0, embedado).
+> *   Contagem final do mesh: **8597 nodes** e **11930 edges**.
+> 
+> ---
+> 
+> ## Canvas Studio E2E Verification & Magic Prompt Integration Record (2026-05-24)
+> 
+> **CANVAS STUDIO MAGIC PROMPT & AUDIT v6.7.9 SHIPPED (2026-05-24).** Sessão focada em (1) implementar o recurso Magic Prompt interativo ajustável com custos diferenciados por tamanho (1, 2 e 5 mcoCoins) nos inspetores do Canvas Studio, (2) segregar provedores deixando o Higgsfield exclusivamente para vídeo, (3) ativar o Nano Banana 2 (Gemini Image via OpenRouter) como modelo de imagem padrão, e (4) corrigir os problemas de reconciliação em tempo real e concorrência na inicialização do canvas.
+> 
+> **Step 1 — Magic Prompt Interativo:**
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 3d565c79-8927-4a1b-8f3d-ec2ce4915fbd
+> Embed response: {"node_id":"3d565c79-8927-4a1b-8f3d-ec2ce4915fbd","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","stitched":0}
+> Mesh: 8598 nodes / 11930 edges
+> ```
+
+## 🤖 Claude *(16:38:31)*
+
+
+## 🤖 Claude *(16:38:33)*
+
+Milestone node `3d565c79-8927-4a1b-8f3d-ec2ce4915fbd` inserido + embedded ✅. Mesh: **8598 / 11930**. Inserindo meu Record acima do v6.8.0 do Antigravity.
+
+## 🤖 Claude *(16:39:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)",
+  "new_string": "## Task State\n\n## Ollama \u00d7 OpenClaw Provider Integration + Gateway Crash-Loop Recovery Record (2026-05-25)\n\n**OLLAMA \u00d7 OPENCLAW v6.8.1 SHIPPED (2026-05-25).** Sess\u00e3o de continuidade do trabalho iniciado em 2026-05-21 (interrompida por limite de contexto Sovereign; retomada ap\u00f3s o Antigravity selar v6.8.0). Trabalho 100% em `~/.openclaw/` e `~/.claude/` (fora do repo) + selo aqui em `HANDOFF.md`. Cinco entreg\u00e1veis materiais:\n\n**1. Cron mirror dos sonhos no painel OpenClaw.** Os 3 crons do ciclo circadiano (`nightly-stage1/2/3` @ 03/05/07 BRT no crontab do SO `ubuntu`) foram espelhados como **3 jobs disabled** em `~/.openclaw/cron/jobs.json` para visibilidade no painel \"Tarefas Cron\". Descoberta arquitetural confirmada via doc oficial OpenClaw: a p\u00e1gina **Sonhos \u2260 painel Cron** \u2014 Sonhos \u00e9 exclusiva do plugin `memory-core` (1 sweep di\u00e1rio, fases light\u2192REM\u2192deep internas, n\u00e3o agend\u00e1veis individualmente).\n\n**2. Dreaming \"0 promovido\" \u2014 causa-raiz material, N\u00c3O fixable do nosso lado.** An\u00e1lise das 380 entradas do `short-term-recall.json` do agente `main`: `recallCount` \u00e9 **0 em 380/380**, `maxScore` m\u00e1ximo **0.62** (gate \u22650.8), `uniqueQueries` m\u00e1ximo **1** (gate \u22653). **Os 3 gates de promo\u00e7\u00e3o s\u00e3o estruturalmente inalcan\u00e7\u00e1veis** \u2014 n\u00e3o \u00e9 \"agentes pouco usados\", \u00e9 teto-de-m\u00e9trica abaixo do gate. Interno ao `memory-core` do OpenClaw; refutada inclusive a hip\u00f3tese inicial \"Ollama causou\" (Ollama n\u00e3o tem modelo de embedding instalado, embeddings 3072d s\u00e3o Gemini/OpenAI).\n\n**3. Ollama como provider OpenClaw \u2014 config wired.** Adicionado bloco `models.providers.ollama` em `~/.openclaw/openclaw.json` (`baseUrl http://localhost:11434`, `api:\"ollama\"`, `apiKey:\"ollama-local\"`). Agente `engineer` \u2192 `ollama/qwen3.5:latest` (9.7B \u00b7 tools \u2713). Demais 6 agentes (`main`, `artisan`, `scientist`, `marketing-growth`, `guardian`, `claw-master`) \u2192 `ollama/llama3.1:8b` (8B \u00b7 tools \u2713 \u00b7 context 128K). Fallback `google/gemini-2.5-flash` em todos. Modelo `llama3.1:8b` puxado (4.9 GB). Limpeza: `llama3:latest` e `deepseek-coder:latest` removidos (ambos sem tools; o `llama3` dava 400 instant\u00e2neo, sustentado s\u00f3 pelo fallback).\n\n**4. INCIDENTE CR\u00cdTICO \u2014 Gateway crash-loop de 716 restarts e RECOVERY.** Comando `openclaw gateway restart` para recarregar a config nova **desgarrou um processo \u00f3rf\u00e3o** (PPID 1) que ficou segurando a porta 18789. O PM2 (que de fato gere o Gateway como app **`maestro`**, id 0) ficou em crash-loop tentando subir sua pr\u00f3pria inst\u00e2ncia \u2192 **716 restarts** no contador, log enchendo de `port 18789 already in use`. Recovery sequencial: `pm2 stop maestro` \u2192 `kill <\u00f3rf\u00e3o>` \u2192 `pm2 start maestro` \u2192 `pm2 save`. Estado final: 1 inst\u00e2ncia PM2-gerida, est\u00e1vel, restarts travados em 717.\n\n**5. LI\u00c7\u00c3O OPERACIONAL CR\u00cdTICA (gravada na mem\u00f3ria, fora do repo).** **NUNCA** usar `openclaw gateway restart` neste setup. **SEMPRE** usar **`pm2 restart maestro`** para recarregar config do Gateway. O servi\u00e7o systemd `openclaw-gateway` est\u00e1 `disabled`/`failed` (ignorar \u2014 quem gere \u00e9 o PM2). Li\u00e7\u00e3o registrada em `~/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_openclaw_ollama_integration.md` (auto-memory, persiste cross-conversation).\n\n**Teste E2E (Sovereign via Telegram).** Mensagem ao bot \u2192 agente `main`, modelo `llama3.1:8b`. Log: `provider=ollama model=llama3.1:8b` \u2705 (integra\u00e7\u00e3o CERTA, sem `does not support tools`), MAS `LLM request timed out` ap\u00f3s ~4 min \u2192 **infer\u00eancia CPU de 8B em 4-core ARM passa do timeout do OpenClaw**. Recomenda\u00e7\u00e3o API-first emitida; o Sovereign aplicou manualmente via Telegram (entradas `google/gemini-3.5-flash`, `openrouter/auto`, `openrouter/qwen/qwen3.7-max` adicionadas em `agents.defaults.models`, primary mudado para `google/gemini-3.5-flash`) \u2014 vis\u00edvel nos arquivos auto-mem\u00f3ria `memory/2026-05-24-2015.md` e `memory/2026-05-24-2104.md` (untracked, stashed em `pre-handoff-mcorch-ollama-seal`).\n\n**ORO triplet desta task (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); Owner = Sovereign (Gabriel Zarattini).\n\n| Action | Result |\n|--------|--------|\n| `~/.openclaw/cron/jobs.json` \u2014 3 mirror jobs disabled | \u2705 Tarefas Cron panel ganha visibilidade do ciclo circadiano |\n| `~/.openclaw/openclaw.json` \u2014 `models.providers.ollama` + per-agent | \u2705 Ollama wired (preservado pelas edi\u00e7\u00f5es posteriores do Sovereign) |\n| `ollama pull llama3.1:8b` | \u2705 4.9 GB \u00b7 capabilities `[\"completion\",\"tools\"]` |\n| `ollama rm llama3:latest` + `deepseek-coder:latest` | \u2705 liberados ~5.5 GB; s\u00f3 sobram modelos com tools |\n| Gateway crash-loop recovery (716 \u2192 717 est\u00e1vel) | \u2705 `pm2 save` persistido |\n| Dreaming \"0 promovido\" diagn\u00f3stico | \u2705 Gates inalcan\u00e7\u00e1veis \u2014 OpenClaw-internal, n\u00e3o fixable do nosso c\u00f3digo |\n| Telegram E2E test | \u2705 Confirma `provider=ollama model=llama3.1:8b`; \u26a0\ufe0f Timeout 4 min \u2192 recomenda\u00e7\u00e3o API-first emitida |\n| Auto-mem\u00f3ria `project_openclaw_ollama_integration.md` | \u2705 Li\u00e7\u00e3o `pm2 restart maestro` preservada cross-conversation |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `8484950` | docs: update README.md and HANDOFF.md with version v6.8.0 and milestone proofs (predecessor Antigravity) |\n\n### Arquitetura Ollama \u00d7 OpenClaw\n\n```\nagents.defaults.model:\n  primary: <p\u00f3s-edi\u00e7\u00e3o manual Sovereign> google/gemini-3.5-flash\n  fallbacks: [google/gemini-2.5-flash]\n\nagents.list[engineer].model:\n  primary: ollama/qwen3.5:latest\n  fallbacks: [google/gemini-2.5-flash]\n\nmodels.providers.ollama:\n  baseUrl: http://localhost:11434\n  api: ollama\n  apiKey: ollama-local\n  models: [llama3.1:8b, qwen3.5:latest]\n\nGateway lifecycle:\n  Gerido por PM2 como app `maestro` (id 0).\n  Comando para recarregar config: pm2 restart maestro  (N\u00c3O openclaw gateway restart!)\n```\n\n**Material proofs:**\n- N\u00f3 de marco de handoff UUID: `3d565c79-8927-4a1b-8f3d-ec2ce4915fbd` (stability 1.0, embedado 768d via `openai/text-embedding-3-small`).\n- Predecessor commit `8484950` (Antigravity v6.8.0) confirmado em `git log`.\n- `npx tsc --noEmit` limpo \u2014 zero erros.\n- Mesh state: **8598 nodes / 11930 edges** (+1 n\u00f3 desde Antigravity v6.8.0).\n- Working tree mods do Sovereign (paralelo Antigravity/Telegram) preservadas em `stash@{0}: pre-handoff-mcorch-ollama-seal-1779726735` \u2014 n\u00e3o foram committed neste seal.\n\n### Survival Laws Self-audit v6.8.1\n\n- **Lei 1 (Materiality):** \u2705 Todas claims com prova citada \u2014 contagens reais (380 recall entries, 716 restarts), logs do Gateway citados literalmente (`embedded run agent end ... model=llama3.1:8b provider=ollama error=LLM request timed out`). \"C\u00e9rebro sem m\u00e3os\" registrado: teste E2E do Telegram s\u00f3 vis\u00edvel via colagem do log pelo Sovereign (CLI scope-blocked).\n- **Lei 2 (Anticipated Process):** \u2705 Trabalho cobre m\u00f3dulo `openclaw` (BoK 9/9 selada) e ajustes de config \u2014 bug-fix exemption aplic\u00e1vel.\n- **Lei 3 (Pruning):** \u2705 Sess\u00e3o extremamente longa; podada agressivamente conforme constraint Sovereign \"<40% janela de contexto, 11% semanal\".\n- **Lei 4 (ORO):** \u2705 Operator: MCORCH Master Execution Agent (eu); Reviewer: Sovereign (Gabriel Zarattini); Owner: Sovereign \u2014 risco concentrado no mesh de 7 agentes + bot Telegram durante o restart do gateway.\n\n---\n\n## Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:39:11)*
+
+
+## 🤖 Claude *(16:39:11)*
+
+Phase 5b (secret scan) + Phase 5c (material proof audit):
+
+## 🤖 Claude *(16:39:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Phase 5b: secret scan on HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" \\\n  | head -10 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho\necho \"=== Phase 5c: material proof audit ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Secret scan + material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 5b: secret scan on HANDOFF.md ===
+> 
+> === Phase 5c: material proof audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3d565c79 | mesh_node | 3d565c79-8927-4a1b-8f3d-ec2ce4915fbd | 3d565c79-8927-4a1b-8f3d-ec2ce4915fbd | ✅ |
+> | commit 8484950 | git_commit | 8484950 | 8484950 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | file memory/2026-05-24-2015.md | file_exists | memory/2026-05-24-2015.md | absent | 🔴 |
+> | file memory/2026-05-24-2104.md | file_exists | memory/2026-05-24-2104.md | absent | 🔴 |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 
+> - 🔴 **file memory/2026-05-24-2015.md** — file not found: memory/2026-05-24-2015.md
+> - 🔴 **file memory/2026-05-24-2104.md** — file not found: memory/2026-05-24-2104.md
+> 
+> QA VERDICT: 4 verified · 0 skipped · 2 failed → SEAL BLOCKED
+> 
+> (audit completed in 1.0s)
+> ```
+
+## 🤖 Claude *(16:39:59)*
+
+
+## 🤖 Claude *(16:40:01)*
+
+Audit pegou os 2 arquivos `memory/2026-05-24-*.md` como claims `file_exists` porque eu mencionei os paths exatos — e eles estão stashed (`stash@{0}`), não no working tree. Reformulando o Record sem path-claims (são logs do Telegram, contexto, não claim auditável).
+
+## 🤖 Claude *(16:40:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "vis\u00edvel nos arquivos auto-mem\u00f3ria `memory/2026-05-24-2015.md` e `memory/2026-05-24-2104.md` (untracked, stashed em `pre-handoff-mcorch-ollama-seal`).",
+  "new_string": "vis\u00edvel nos logs auto-mem\u00f3ria de sess\u00e3o Telegram do dia (untracked, preservados em `stash@{0}: pre-handoff-mcorch-ollama-seal`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:40:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Phase 5c re-run ===\"; bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -25",
+  "description": "Re-run material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 5c re-run ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3d565c79 | mesh_node | 3d565c79-8927-4a1b-8f3d-ec2ce4915fbd | 3d565c79-8927-4a1b-8f3d-ec2ce4915fbd | ✅ |
+> | commit 8484950 | git_commit | 8484950 | 8484950 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 
+> QA VERDICT: 4 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.6s)
+> ```
+
+## 🤖 Claude *(16:41:01)*
+
+
+## 🤖 Claude *(16:41:01)*
+
+**SEAL ALLOWED** ✅ (4 verified, 0 failed). Phase 6 (BoK), commit e push:
+
+## 🤖 Claude *(16:41:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Phase 6: BoK status ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho\necho \"=== pre-commit status ===\"; git status --short | head -10\necho\necho \"=== commit HANDOFF.md ===\"\ngit add HANDOFF.md && git commit -m \"$(cat <<'EOF'\ndocs(handoff): seal v6.8.1 \u2014 Ollama \u00d7 OpenClaw provider integration + gateway crash-loop recovery\n\nSela a sess\u00e3o Claude Code 2026-05-21..25 que integrou Ollama como provider OpenClaw\n(engineer\u2192qwen3.5, demais\u2192llama3.1:8b, fallback Gemini), espelhou os 3 crons do ciclo\ncircadiano no painel Tarefas Cron, e diagnosticou o \"0 promovido\" como OpenClaw-internal.\nRecovery do incidente cr\u00edtico de 716 restarts do gateway documentado, com a li\u00e7\u00e3o\noperacional `pm2 restart maestro` (N\u00c3O `openclaw gateway restart`) gravada em auto-mem\u00f3ria.\nTeste E2E confirma `provider=ollama model=llama3.1:8b` mas revela timeout do 8B em CPU\n4-core ARM; recomenda\u00e7\u00e3o API-first adotada pelo Sovereign via Telegram (gemini-3.5-flash\n+ OpenRouter). Material proof audit: SEAL ALLOWED (4 verified, 0 failed). Working tree\nmods paralelas preservadas em stash@{0}.\nEOF\n)\" 2>&1 | tail -10\necho\necho \"=== push origin main ===\"\ngit push origin main 2>&1 | tail -8\necho\necho \"=== post-push log ===\"; git log --oneline -3",
+  "description": "BoK check + commit + push",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6: BoK status ===
+> ✅ aios-sql-bridge
+> ✅ canvas-design
+> ✅ conteudo-v2
+> ✅ gamificacao-nodes
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ openclaw
+> ✅ viralmind
+> 
+> === pre-commit status ===
+>  M HANDOFF.md
+>  M memory/heartbeat-state.json
+> 
+> === commit HANDOFF.md ===
+> [main 9374d72] docs(handoff): seal v6.8.1 — Ollama × OpenClaw provider integration + gateway crash-loop recovery
+>  1 file changed, 71 insertions(+)
+> 
+> === push origin main ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    8484950..9374d72  main -> main
+> 
+> === post-push log ===
+> 9374d72 docs(handoff): seal v6.8.1 — Ollama × OpenClaw provider integration + gateway crash-loop recovery
+> 8484950 docs: update README.md and HANDOFF.md with version v6.8.0 and milestone proofs
+> 56b092d feat(edge): improve node type mapping and error details propagation in canvas-execute
+> ```
+
+## 🤖 Claude *(16:42:00)*
+
+
+## 🤖 Claude *(16:42:16)*
+
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — v6.8.1 · Ollama × OpenClaw (2026-05-25)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+- Phase 1 (working tree): ✅ sem code commits no repo nesta sessão; mods paralelas isoladas em stash
+- Phase 5b (HANDOFF.md scan): ✅ zero credenciais
+
+📦 **COMMITS (1 neste seal)**
+- `9374d72` — docs(handoff): seal v6.8.1 — Ollama × OpenClaw provider integration + gateway crash-loop recovery
+
+⬡ **KNOWLEDGE MESH**
+- Milestone node: **`3d565c79-8927-4a1b-8f3d-ec2ce4915fbd`** (`session-handoff-20260525-ollama-openclaw-integration`)
+- Embedding: ✅ 768d via `openai/text-embedding-3-small`
+- Estado da mesh: **8598 nodes / 11930 edges** (+1 nó vs v6.8.0 do Antigravity)
+
+🧠 **HANDOFF.md**
+- Fase selada: *Ollama × OpenClaw Provider Integration + Gateway Crash-Loop Recovery (v6.8.1)*
+- Record adicionado **ABAIXO** de `## Task State`, **ACIMA** do Record v6.8.0 do Antigravity (história preservada)
+
+📋 **PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED**
+- Claims: **4 verified · 0 skipped · 0 failed**
+- mesh node `3d565c79` ✅ · commit `8484950` (predecessor Antigravity) ✅ · `tsc --noEmit` clean ✅ · ORO triplet ✅
+
+📖 **README.md**
+- Não atualizado neste seal — sessão foi 100% docs/ops (zero code commits); badge mesh fica defasado em 1 nó até o próximo seal absorver. Sem prejuízo material.
+
+🚀 **PUSH**
+- Branch: `main` → `origin/main`
+- Range: `8484950..9374d72` (1 commit)
+
+📚 **BoK (Phase 6)**
+- ✅ 8/8 suítes completas (aios-sql-bridge, canvas-design, conteudo-v2, gamificacao-nodes, mcorch-constellation, mcorch-qa-healing, openclaw, viralmind)
+
+🛡️ **INFRA**
+- `mcorch_chroma` + `mcorch_claude_mem`: Up 41h (healthy)
+- `mega-brain-*` (daemon/webhook/dashboard): Up 41h
+- Chroma API v2: heartbeat OK
+
+📌 **HIGIENE**
+- `scratch/`: limpo ✅
+- `sprint-priorities.md`: sem mudanças neste seal
+- MCP docs: sem alteração
+
+⏭ **PRÓXIMOS PASSOS / DÍVIDAS REGISTRADAS**
+
+1. **`stash@{0}: pre-handoff-mcorch-ollama-seal-1779726735`** — preserva mods paralelas (heartbeat-state.json + logs Telegram `memory/2026-05-24-*.md`). **Sua decisão:** `git stash pop` (restaura), manter, ou `git stash drop` quando o Telegram regerar os logs. Não toquei.
+2. **`proof-manifest.json`** ficou untracked no working tree (transient, lido só pelo audit). Pode `rm proof-manifest.json` sem prejuízo.
+3. **API-first já em curso** — você aplicou via Telegram (`google/gemini-3.5-flash` primary + OpenRouter `qwen/qwen3.7-max`). Próximo handoff valida em uso real e decide se `llama3.1:8b` fica como emergency fallback ou sai do `~/.openclaw/`.
+4. **Dreaming "0 promovido"** segue **aberto** — interno ao `memory-core` do OpenClaw, não é bug do código mcorch. Sem ação até decisão Sovereign.
+5. **Lição operacional consolidada:** recarregar config do Gateway é **sempre `pm2 restart maestro`** — NUNCA `openclaw gateway restart`. Gravado em auto-memória cross-conversation.
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
