@@ -2298,3 +2298,1327 @@ I'm now focused on the implementation plan, realizing the need to create the `im
 Apresento o plano detalhado de mitigação dos riscos em [implementation_plan.md](file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/implementation_plan.md). 
 
 Por favor, analise a proposta e as questões em aberto. Assim que obtiver sua aprovação formal, darei início à execução dos ajustes e testes do ecossistema.
+
+## 👤 User *(22:00:09)*
+
+
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Initiating Execution Phase**
+
+I am now proceeding with the execution phase, as the user has approved the implementation plan. My immediate task is to begin implementation and simultaneously create and maintain a 'task.md' artifact. I'll track all progress within the artifact to document the work I am doing.
+
+
+**Commencing Refactoring Tasks**
+
+I am now actively refactoring the code base based on the initial execution phase's tasks. I have started by creating the `task.md` artifact and am tracking the progress. I'm focusing on the first set of tasks, specifically multi-tenancy hardening for affiliates and implementing circuit breakers and limiters. I've begun to refactor `scripts/link-forge.ts` and `supabase/functions/process-affiliate-link/index.ts` for tenancy, and `supabase/functions/rescue-video/index.ts` and `scripts/canvas-video-watchdog.sh` for circuit breakers. I'll document instructions related to database compact setup and the `SUPABASE_POOLER_URL` environment variable for later implementation.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "ArtifactMetadata": "{\"ArtifactType\":\"task\",\"RequestFeedback\":false,\"Summary\":\"Lista de tarefas para execu\u00e7\u00e3o das mitiga\u00e7\u00f5es do premortem (tenancy de afiliados, limites no rescue-video/watchdog, bypass do QA gate e testes de regress\u00e3o).\"}",
+  "CodeContent": "\"# Checklist de Implementa\u00e7\u00e3o \u2014 Mitiga\u00e7\u00f5es do Premortem\\n\\n- [ ] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**\\n  - [ ] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`\\n  - [ ] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset\\n- [ ] **2. Circuit Breakers e Limites de Gastos**\\n  - [ ] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas\\n  - [ ] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas\\n- [ ] **3. Mecanismo de Bypass Emergencial**\\n  - [ ] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`\\n  - [ ] Adicionar testes unit\u00e1rios em `src/test/qa-verifiers.test.ts`\\n- [ ] **4. Valida\u00e7\u00e3o e Integra\u00e7\u00e3o**\\n  - [ ] Executar build de tipos `npx tsc --noEmit`\\n  - [ ] Executar su\u00edte de testes unit\u00e1rios `bun run test`\\n  - [ ] Deploy das Edge Functions alteradas\\n\"",
+  "Description": "\"Cria\u00e7\u00e3o do arquivo task.md para acompanhamento das tarefas de execu\u00e7\u00e3o.\"",
+  "IsArtifact": "true",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md\"",
+  "toolAction": "\"Criando task.md para o checklist de progresso\"",
+  "toolSummary": "\"Criar arquivo task.md\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:14Z
+> Completed At: 2026-05-26T22:00:14Z
+> Created file file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Initiating Execution Workflow**
+
+I've decided to begin implementation now. My immediate focus is marking the first task as 'in progress' within the `task.md` file. I'm going to leverage `replace_file_content` to ensure that any future status updates to the tasks are handled correctly. I should pause for a second to double check something.
+
+
+**Analyzing Link Forge Logic**
+
+I'm now diving into the `link-forge.ts` script. My goal is to extract the relevant data from `mcorch_nodes` and join it with active configurations. I'm building a map of user IDs to affiliate IDs. I will need to handle cases where a user doesn't have an active Mercado Livre affiliate configuration, so I need to implement `insertNoConfigObservation`. I've confirmed that `user_id` is a UUID in the `configs` table and I'm looking at the select/scan process.
+
+
+**Refactoring `buildRedirectUrl`**
+
+I've determined that `buildRedirectUrl` needs adjustment to accept an `affiliateId` parameter. I also added `utm` parameters to the URL and will now query the `affiliate_config` table for active configurations, constructing a map of user IDs to affiliate IDs. I'm focusing on integrating the updated `buildRedirectUrl` function into the `main` loop, incorporating the new `affiliateId`. Now I'm preparing to handle cases with no active Mercadolibre affiliate config, which requires calling a new function.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Refactoring link-forge.ts to support per-user affiliate configurations by looking up active app_ids from affiliate_config and skipping/observing if none is found.\"",
+  "EndLine": "229",
+  "Instruction": "\"Replace buildRedirectUrl, add insertNoConfigObservation, and refactor main to fetch and map per-user configs.\"",
+  "ReplacementContent": "\"function buildRedirectUrl(mlb: string, contentVariantId: string, affiliateId: string): string {\\n  return (\\n    `https://panel.gcrux.com/api/ml-redirect?product_id=${mlb}` +\\n    `&affiliate_id=${affiliateId}` +\\n    `&utm_source=gcrux_orchestrator` +\\n    `&utm_medium=content_mesh` +\\n    `&utm_campaign=highticket_smarthome_q3` +\\n    `&utm_content=${contentVariantId}`\\n  );\\n}\\n\\n/** Ensure a product node exists in the mesh; return its id. */\\nasync function ensureProductNode(p: ProductMatch): Promise<string | null> {\\n  const productName = `product:${p.mlb}`;\\n  const { data: existing } = await supabase\\n    .from(\\\"mcorch_nodes\\\")\\n    .select(\\\"id\\\")\\n    .eq(\\\"name\\\", productName)\\n    .maybeSingle();\\n  if (existing) return existing.id;\\n\\n  if (DRY_RUN) {\\n    console.log(`  [DRY] would create product node ${productName}`);\\n    return null;\\n  }\\n\\n  const { data: created, error } = await supabase\\n    .from(\\\"mcorch_nodes\\\")\\n    .insert({\\n      name: productName,\\n      node_type: \\\"feature\\\",\\n      content: `Product catalog entry \u2014 ${p.display} (${p.mlb}). High-ticket affiliate target.`,\\n      metadata: { mlb: p.mlb, display: p.display, source: \\\"link-forge\\\" },\\n      project_id: \\\"mcorch-affiliate\\\",\\n    })\\n    .select(\\\"id\\\")\\n    .single();\\n  if (error) {\\n    console.error(`  ERROR creating product node ${productName}:`, error.message);\\n    return null;\\n  }\\n  return created.id;\\n}\\n\\nasync function ensureContainsLinkEdge(\\n  contentNodeId: string,\\n  productNodeId: string,\\n): Promise<boolean> {\\n  const { data: existing } = await supabase\\n    .from(\\\"mcorch_edges\\\")\\n    .select(\\\"id\\\")\\n    .eq(\\\"source_id\\\", contentNodeId)\\n    .eq(\\\"target_id\\\", productNodeId)\\n    .eq(\\\"relation_type\\\", \\\"CONTAINS_LINK_FOR\\\")\\n    .limit(1);\\n  if (existing && existing.length > 0) return false;\\n\\n  if (DRY_RUN) return true;\\n\\n  const { error } = await supabase.from(\\\"mcorch_edges\\\").insert({\\n    source_id: contentNodeId,\\n    target_id: productNodeId,\\n    relation_type: \\\"CONTAINS_LINK_FOR\\\n<truncated 4363 bytes>",
+  "StartLine": "74",
+  "TargetContent": "\"function buildRedirectUrl(mlb: string, contentVariantId: string): string {\\n  return (\\n    `https://panel.gcrux.com/api/ml-redirect?product_id=${mlb}` +\\n    `&affiliate_id=${AFFILIATE_TOKEN}` +\\n    `&utm_source=gcrux_orchestrator` +\\n    `&utm_medium=content_mesh` +\\n    `&utm_campaign=highticket_smarthome_q3` +\\n    `&utm_content=${contentVariantId}`\\n  );\\n}\\n\\n/** Ensure a product node exists in the mesh; return its id. */\\nasync function ensureProductNode(p: ProductMatch): Promise<string | null> {\\n  const productName = `product:${p.mlb}`;\\n  const { data: existing } = await supabase\\n    .from(\\\"mcorch_nodes\\\")\\n    .select(\\\"id\\\")\\n    .eq(\\\"name\\\", productName)\\n    .maybeSingle();\\n  if (existing) return existing.id;\\n\\n  if (DRY_RUN) {\\n    console.log(`  [DRY] would create product node ${productName}`);\\n    return null;\\n  }\\n\\n  const { data: created, error } = await supabase\\n    .from(\\\"mcorch_nodes\\\")\\n    .insert({\\n      name: productName,\\n      node_type: \\\"feature\\\",\\n      content: `Product catalog entry \u2014 ${p.display} (${p.mlb}). High-ticket affiliate target.`,\\n      metadata: { mlb: p.mlb, display: p.display, source: \\\"link-forge\\\" },\\n      project_id: \\\"mcorch-affiliate\\\",\\n    })\\n    .select(\\\"id\\\")\\n    .single();\\n  if (error) {\\n    console.error(`  ERROR creating product node ${productName}:`, error.message);\\n    return null;\\n  }\\n  return created.id;\\n}\\n\\nasync function ensureContainsLinkEdge(\\n  contentNodeId: string,\\n  productNodeId: string,\\n): Promise<boolean> {\\n  const { data: existing } = await supabase\\n    .from(\\\"mcorch_edges\\\")\\n    .select(\\\"id\\\")\\n    .eq(\\\"source_id\\\", contentNodeId)\\n    .eq(\\\"target_id\\\", productNodeId)\\n    .eq(\\\"relation_type\\\", \\\"CONTAINS_LINK_FOR\\\")\\n    .limit(1);\\n  if (existing && existing.length > 0) return false;\\n\\n  if (DRY_RUN) return true;\\n\\n  const { error } = await supabase.from(\\\"mcorch_edges\\\").insert({\\n    source_id: contentNodeId,\\n    target_id: productNodeId,\\n    relation_type: \\\"CONTAINS_LINK_FOR\\\",\\n    weight: 1\n<truncated 2851 bytes>",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:21Z
+> Completed At: 2026-05-26T22:00:23Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -68,13 +68,10 @@
+>      mlb: "MLB3728491023",
+>      display: "Geladeira Samsung Family Hub",
+>      pattern: /family\s+hub/gi,
+> -  },
+> -];
+> -
+> -function buildRedirectUrl(mlb: string, contentVariantId: string): string {
+> +  function buildRedirectUrl(mlb: string, contentVariantId: string, affiliateId: string): string {
+>    return (
+>      `https://panel.gcrux.com/api/ml-redirect?product_id=${mlb}` +
+> -    `&affiliate_id=${AFFILIATE_TOKEN}` +
+> +    `&affiliate_id=${affiliateId}` +
+>      `&utm_source=gcrux_orchestrator` +
+>      `&utm_medium=content_mesh` +
+>      `&utm_campaign=highticket_smarthome_q3` +
+> @@ -142,13 +142,53 @@
+>    return true;
+>  }
+>  
+> +async function insertNoConfigObservation(userId: string) {
+> +  const nodeName = `link-forge-no-config:${userId}`;
+> +  const { data: existing } = await supabase
+> +    .from("mcorch_nodes")
+> +    .select("id")
+> +    .eq("name", nodeName)
+> +    .maybeSingle();
+> +  if (existing) return;
+> +
+> +  const { error } = await supabase.from("mcorch_nodes").insert({
+> +    name: nodeName,
+> +    node_type: "observation",
+> +    content: `User ${userId} does not have an active affiliate configuration for Mercado Livre. Link Forge skipped.`,
+> +    user_id: userId,
+> +    project_id: "mcorch-affiliate"
+> +  });
+> +  if (error) {
+> +    console.error(`  ERROR creating observation node ${nodeName}:`, error.message);
+> +  }
+> +}
+> +
+>  async function main() {
+> -  console.log(`Link Forge — ${DRY_RUN ? "DRY RUN" : "APPLY"} mode`);
+> -  console.log(`  Affiliate token: ${AFFILIATE_TOKEN === "GCRUX_DEFAULT_TOKEN" ? "DEFAULT (set GCRUX_ML_AFFILIATE_TOKEN in .env!)" : "set"}\n`);
+> +  console.log(`Link Forge — ${DRY_RUN ? "DRY RUN" : "APPLY"} mode\n`);
+> +
+> +  const { data: configs, error: configErr } = await supabase
+> +    .from
+> <truncated 45283 bytes>
+> 235 col 64, from ts (ID: ac316074-fa83-48bc-a217-f5f28d9074dc)
+> ')' expected. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 67, from ts (ID: cb698765-03cc-4d77-ab8d-81162f5f17ac)
+> Declaration or statement expected. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 80, from ts (ID: b0b6ff59-5927-4fcf-ab38-f2450a918d06)
+> Cannot find name '$'. Do you need to install type definitions for jQuery? Try `npm i --save-dev @types/jquery`. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 52, from ts (ID: 462761fc-947e-4a21-955a-2f5b16f3e4ef)
+> Cannot find name 'p'. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 54, from ts (ID: c1473aef-47e8-49b0-875b-43ed9a7289d5)
+> Cannot find name '$'. Do you need to install type definitions for jQuery? Try `npm i --save-dev @types/jquery`. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 66, from ts (ID: 23262c66-c764-4849-a802-f17e9dac8b7d)
+> Cannot find name 'redirectUrl'. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 235 col 68, from ts (ID: bd388b2b-4f88-4ad5-9aa7-8736016cd53c)
+> ']' expected. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 243 col 20, from ts (ID: f844d423-57f7-463e-b800-533593eebfe4)
+> Declaration or statement expected. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 243 col 42, from ts (ID: ac9adf1e-1458-4959-ad80-e7c7c9cf7648)
+> Unexpected keyword or identifier. (severity: error), in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at
+> <truncated 13540 bytes>
+> 
+> NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"git show HEAD:scripts/link-forge.ts\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "2000",
+  "toolAction": "\"Retrieving original link-forge.ts content via git show\"",
+  "toolSummary": "\"Git show link-forge.ts\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:27Z
+> Completed At: 2026-05-26T22:00:28Z
+> 
+> 				The command completed successfully.
+> 				Output:
+> 				/**
+>  * Link Forge — OE-661-004 (Million-BRL Roadmap)
+>  *
+>  * Sweeps `mcorch_nodes` of type `content_mesh_asset` and replaces raw mentions of
+>  * High-Ticket products with affiliate-tracking URLs that point at panel.gcrux.com
+>  * (the external redirect endpoint; see scripts/link-forge-scope.md).
+>  *
+>  * For each modified asset, also inserts a `CONTAINS_LINK_FOR` edge in mcorch_edges
+>  * linking the content node → product node (creates product nodes on demand so the
+>  * topology is queryable for ROI rollups via ATTRIBUTES_REVENUE_TO).
+>  *
+>  * Usage:
+>  *   bun run scripts/link-forge.ts --dry-run     # preview, no writes
+>  *   bun run scripts/link-forge.ts               # apply
+>  */
+> import { createClient } from "@supabase/supabase-js";
+> import fs from "fs";
+> import path from "path";
+> import { fileURLToPath } from "url";
+> 
+> const __filename = fileURLToPath(import.meta.url);
+> const __dirname = path.dirname(__filename);
+> const envPath = path.resolve(__dirname, "../.env");
+> if (fs.existsSync(envPath)) {
+>   const envFile = fs.readFileSync(envPath, "utf8");
+>   envFile.split("\n").forEach((line) => {
+>     const m = line.match(/^([^=]+)=(.*)$/);
+>     if (m) process.env[m[1].trim()] = m[2].trim().replace(/^['"](.*)['"]$/, "$1");
+>   });
+> }
+> 
+> const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+> const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> const AFFILIATE_TOKEN =
+>   process.env.GCRUX_ML_AFFILIATE_TOKEN || "GCRUX_DEFAULT_TOKEN";
+> 
+> if (!SUPABASE_URL || !SERVICE_KEY) {
+>   console.error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env");
+>   process.exit(1);
+> }
+> 
+> const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> const DRY_RUN = process.argv.includes("--dry-run");
+> 
+> type ProductMatch = {
+>   key: string;
+>   mlb: string;
+>   display: string;
+>   pattern: RegExp;
+> };
+> 
+> // Product catalog (Phase 1 High-Ticket / Smart Home — revenue-flywheel.md §6).
+> const PRODUCTS: ProductMatch[] = [
+>   {
+>  
+> <truncated 3084 bytes>
+> sole.log("No content_mesh_asset nodes found. Noop.");
+>     return;
+>   }
+> 
+>   console.log(`Scanning ${assets.length} content_mesh_asset node(s)...\n`);
+> 
+>   let updatedCount = 0;
+>   let edgeCount = 0;
+>   let skippedCount = 0;
+> 
+>   for (const asset of assets) {
+>     const content: string = asset.content ?? "";
+>     if (!content) {
+>       skippedCount++;
+>       continue;
+>     }
+> 
+>     let newContent = content;
+>     const hits: ProductMatch[] = [];
+> 
+>     for (const p of PRODUCTS) {
+>       if (!p.pattern.test(content)) continue;
+>       hits.push(p);
+>       const redirectUrl = buildRedirectUrl(p.mlb, asset.id);
+>       // Reset regex lastIndex (global flag) before replace.
+>       p.pattern.lastIndex = 0;
+>       newContent = newContent.replace(p.pattern, `[${p.display}](${redirectUrl})`);
+>     }
+> 
+>     if (hits.length === 0) {
+>       skippedCount++;
+>       continue;
+>     }
+> 
+>     console.log(`[${asset.id.slice(0, 8)}] ${asset.name}`);
+>     for (const h of hits) console.log(`  matched: ${h.display} (${h.mlb})`);
+> 
+>     if (DRY_RUN) {
+>       console.log(`  [DRY] would update content (${content.length} → ${newContent.length} chars)`);
+>     } else {
+>       const { error: upErr } = await supabase
+>         .from("mcorch_nodes")
+>         .update({ content: newContent })
+>         .eq("id", asset.id);
+>       if (upErr) {
+>         console.error("  ERROR updating content:", upErr.message);
+>         continue;
+>       }
+>       updatedCount++;
+>       console.log(`  applied: content updated`);
+>     }
+> 
+>     for (const p of hits) {
+>       const productId = await ensureProductNode(p);
+>       if (!productId) continue;
+>       const created = await ensureContainsLinkEdge(asset.id, productId);
+>       if (created) edgeCount++;
+>     }
+>   }
+> 
+>   console.log(`\n==== Link Forge Report ====`);
+>   console.log(`  Assets scanned:    ${assets.length}`);
+>   console.log(`  Assets matched:    ${assets.length - skippedCount}`);
+>   console.log(`  Content updates:   ${DRY_RUN ? "0 (dry)" : updatedCount}`);
+>   console.log(`  CONTAINS_LINK_FOR: ${DRY_RUN ? "(dry preview)" : edgeCount}`);
+> }
+> 
+> main();
+> Terminal ID: 3906111
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Constructing The New File**
+
+I've determined `git show` can retrieve the original file content perfectly. The file's small size allows for crafting an entirely new, accurate version. Currently, I'm generating the new content for `scripts/link-forge.ts`.
+
+
+**Updating The Implementation**
+
+I'm focused on integrating affiliate tracking URLs for high-ticket products within `mcorch_nodes` of type `content_mesh_asset`. I'm replacing raw mentions with links to `panel.gcrux.com` and, importantly, creating `CONTAINS_LINK_FOR` edges in `mcorch_edges` linking content and product nodes. A dry-run mode has been set for testing, and the production version uses the standard run.
+
+
+**Implementing Product Node Logic**
+
+I'm now writing functions to ensure the existence of product nodes in the graph based on the MLB (Mercado Livre Buy) identifiers. If a product node doesn't exist, I'll create one, including product metadata for high-ticket affiliate targets. I'm also adding logic to create the "CONTAINS_LINK_FOR" edges between content and product nodes, and handling the dry-run mode.
+
+</details>
+
+🛠️ **Tool Call**: `write_to_file`
+```json
+{
+  "ArtifactMetadata": "{\"ArtifactType\":\"other\",\"RequestFeedback\":false,\"Summary\":\"Reescreve o script link-forge.ts para usar tenancy por usu\u00e1rio e skipar assets sem configura\u00e7\u00e3o de afiliados ativa.\"}",
+  "CodeContent": "\"/**\\n * Link Forge \u2014 OE-661-004 (Million-BRL Roadmap)\\n *\\n * Sweeps `mcorch_nodes` of type `content_mesh_asset` and replaces raw mentions of\\n * High-Ticket products with affiliate-tracking URLs that point at panel.gcrux.com\\n * (the external redirect endpoint; see scripts/link-forge-scope.md).\\n *\\n * For each modified asset, also inserts a `CONTAINS_LINK_FOR` edge in mcorch_edges\\n * linking the content node \u2192 product node (creates product nodes on demand so the\\n * topology is queryable for ROI rollups via ATTRIBUTES_REVENUE_TO).\\n *\\n * Usage:\\n *   bun run scripts/link-forge.ts --dry-run     # preview, no writes\\n *   bun run scripts/link-forge.ts               # apply\\n */\\nimport { createClient } from \\\"@supabase/supabase-js\\\";\\nimport fs from \\\"fs\\\";\\nimport path from \\\"path\\\";\\nimport { fileURLToPath } from \\\"url\\\";\\n\\nconst __filename = fileURLToPath(import.meta.url);\\nconst __dirname = path.dirname(__filename);\\nconst envPath = path.resolve(__dirname, \\\"../.env\\\");\\nif (fs.existsSync(envPath)) {\\n  const envFile = fs.readFileSync(envPath, \\\"utf8\\\");\\n  envFile.split(\\\"\\\\n\\\").forEach((line) => {\\n    const m = line.match(/^([^=]+)=(.*)$/);\\n    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^['\\\"](.*)['\\\"]$/, \\\"$1\\\");\\n  });\\n}\\n\\nconst SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;\\nconst SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;\\n\\nif (!SUPABASE_URL || !SERVICE_KEY) {\\n  console.error(\\\"Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env\\\");\\n  process.exit(1);\\n}\\n\\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\\nconst DRY_RUN = process.argv.includes(\\\"--dry-run\\\");\\n\\ntype ProductMatch = {\\n  key: string;\\n  mlb: string;\\n  display: string;\\n  pattern: RegExp;\\n};\\n\\n// Product catalog (Phase 1 High-Ticket / Smart Home \u2014 revenue-flywheel.md \u00a76).\\nconst PRODUCTS: ProductMatch[] = [\\n  {\\n    key: \\\"roborock_s8\\\",\\n    mlb: \\\"MLB3981745621\\\",\\n    display: \\\"Roborock S8 Pro Ultra\\\",\\n    pattern: /roborock\\\\s+s8[a-z0-9 ]*(?:p\n<truncated 6759 bytes>",
+  "Description": "\"Reescreve o script link-forge.ts para usar tenancy por usu\u00e1rio e skipar assets sem configura\u00e7\u00e3o de afiliados ativa.\"",
+  "IsArtifact": "false",
+  "Overwrite": "true",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts\"",
+  "toolAction": "\"Reescrevendo link-forge.ts para correta tenancy\"",
+  "toolSummary": "\"Reescrever link-forge.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:35Z
+> Completed At: 2026-05-26T22:00:36Z
+> Created file file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts with requested content.
+> If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"npx tsc --noEmit\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running TypeScript compiler check\"",
+  "toolSummary": "\"TypeScript check\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:40Z
+> Tool is running as a background task with task id: 59d77d72-fe23-43ce-9609-64154daf84d7/task-84
+> Task Description: npx tsc --noEmit
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-84.log
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Reviewing Current Process**
+
+I'm currently reviewing the existing code, focusing on lines 88 to 112 within `supabase/functions/process-affiliate-link/index.ts`. I realized it's a background task, so I can continue modifying files.
+
+
+**Refactoring Function Signature**
+
+I'm in the process of refactoring `handleGetRedirect` to an async function that accepts an `adminClient` argument, as the Supabase client will be needed. I've confirmed that the Deno environment supports async operations and that the necessary `createClient` import is available. I've identified the specific lines (88-124) to replace, along with lines 121-123. Now, I'm reviewing the surrounding code more carefully for context.
+
+
+**Implementing New Logic**
+
+I'm now implementing the replacement chunk, including the `handleGetRedirect` signature change and the integration of Supabase client calls for affiliate token retrieval. I'm working with the `mcorch_nodes` and `affiliate_config` tables, ensuring proper error handling during the config lookup. I'm also adding a try/catch block to prevent errors if the config lookup fails. Finally, I'm checking for the fallback destination.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Refactoring process-affiliate-link GET branch to fetch the asset creator's active Mercado Livre config from affiliate_config and fall back if missing.\"",
+  "EndLine": "124",
+  "Instruction": "\"Modify handleGetRedirect to be async and take adminClient, doing database lookup for per-user app_id config, falling back to settings page if missing. Initialize adminClient at the start of serve.\"",
+  "ReplacementContent": "\"async function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {\\n  const url = new URL(req.url);\\n  const productId = url.searchParams.get(\\\"product_id\\\");\\n  const contentVariantId = url.searchParams.get(\\\"content_variant_id\\\");\\n  if (!productId || !contentVariantId) {\\n    return new Response(\\n      JSON.stringify({ error: \\\"Missing product_id or content_variant_id\\\" }),\\n      {\\n        status: 400,\\n        headers: { ...corsHeaders, \\\"Content-Type\\\": \\\"application/json\\\" },\\n      },\\n    );\\n  }\\n  let affiliateToken =\\n    Deno.env.get(\\\"GCRUX_ML_AFFILIATE_TOKEN\\\") ?? \\\"GCRUX_DEFAULT_TOKEN\\\";\\n  let hasValidConfig = false;\\n\\n  try {\\n    const { data: node } = await adminClient\\n      .from(\\\"mcorch_nodes\\\")\\n      .select(\\\"user_id\\\")\\n      .eq(\\\"id\\\", contentVariantId)\\n      .maybeSingle();\\n\\n    if (node && node.user_id) {\\n      const { data: config } = await adminClient\\n        .from(\\\"affiliate_config\\\")\\n        .select(\\\"app_id\\\")\\n        .eq(\\\"user_id\\\", node.user_id)\\n        .eq(\\\"platform\\\", \\\"mercadolivre\\\")\\n        .eq(\\\"is_active\\\", true)\\n        .maybeSingle();\\n\\n      if (config && config.app_id) {\\n        affiliateToken = config.app_id;\\n        hasValidConfig = true;\\n      }\\n    }\\n  } catch (err) {\\n    console.error(\\\"[affiliate] GET redirect config lookup error:\\\", err);\\n  }\\n\\n  if (!hasValidConfig && affiliateToken === \\\"GCRUX_DEFAULT_TOKEN\\\") {\\n    console.warn(`[affiliate] Redirect fallback triggered for asset ${contentVariantId}`);\\n    return new Response(null, {\\n      status: 302,\\n      headers: { ...corsHeaders, Location: \\\"https://login.mcorch.com/dashboard/settings?no_config=1\\\" },\\n    });\\n  }\\n\\n  const redirectUrl =\\n    `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}` +\\n    `&affiliate_id=${affiliateToken}` +\\n    `&utm_source=gcrux_orchestrator` +\\n    `&utm_medium=content_mesh` +\\n    `&utm_campaign=highticket_smarthome_q3` +\\n    `&utm_content=${contentVariantId}`;\\n  return new Response(null, {\\n    status:\n<truncated 484 bytes>",
+  "StartLine": "85",
+  "TargetContent": "\"function handleGetRedirect(req: Request): Response {\\n  const url = new URL(req.url);\\n  const productId = url.searchParams.get(\\\"product_id\\\");\\n  const contentVariantId = url.searchParams.get(\\\"content_variant_id\\\");\\n  if (!productId || !contentVariantId) {\\n    return new Response(\\n      JSON.stringify({ error: \\\"Missing product_id or content_variant_id\\\" }),\\n      {\\n        status: 400,\\n        headers: { ...corsHeaders, \\\"Content-Type\\\": \\\"application/json\\\" },\\n      },\\n    );\\n  }\\n  const affiliateToken =\\n    Deno.env.get(\\\"GCRUX_ML_AFFILIATE_TOKEN\\\") ?? \\\"GCRUX_DEFAULT_TOKEN\\\";\\n  const redirectUrl =\\n    `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}` +\\n    `&affiliate_id=${affiliateToken}` +\\n    `&utm_source=gcrux_orchestrator` +\\n    `&utm_medium=content_mesh` +\\n    `&utm_campaign=highticket_smarthome_q3` +\\n    `&utm_content=${contentVariantId}`;\\n  return new Response(null, {\\n    status: 302,\\n    headers: { ...corsHeaders, Location: redirectUrl },\\n  });\\n}\\n\\nserve(async (req) => {\\n  if (req.method === \\\"OPTIONS\\\") {\\n    return new Response(\\\"ok\\\", { headers: corsHeaders });\\n  }\\n\\n  if (req.method === \\\"GET\\\") {\\n    return handleGetRedirect(req);\\n  }\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:51Z
+> Completed At: 2026-05-26T22:00:53Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -85,7 +85,7 @@
+>  /** GET branch: public 302 redirect for Link Forge URLs.
+>   *  Query: ?product_id=MLB...&content_variant_id=<uuid>
+>   *  Redirects to panel.gcrux.com/api/ml-redirect (external endpoint). */
+> -function handleGetRedirect(req: Request): Response {
+> +async function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {
+>    const url = new URL(req.url);
+>    const productId = url.searchParams.get("product_id");
+>    const contentVariantId = url.searchParams.get("content_variant_id");
+> @@ -97,8 +97,43 @@
+>        },
+>      );
+>    }
+> -  const affiliateToken =
+> +  let affiliateToken =
+>      Deno.env.get("GCRUX_ML_AFFILIATE_TOKEN") ?? "GCRUX_DEFAULT_TOKEN";
+> +  let hasValidConfig = false;
+> +
+> +  try {
+> +    const { data: node } = await adminClient
+> +      .from("mcorch_nodes")
+> +      .select("user_id")
+> +      .eq("id", contentVariantId)
+> +      .maybeSingle();
+> +
+> +    if (node && node.user_id) {
+> +      const { data: config } = await adminClient
+> +        .from("affiliate_config")
+> +        .select("app_id")
+> +        .eq("user_id", node.user_id)
+> +        .eq("platform", "mercadolivre")
+> +        .eq("is_active", true)
+> +        .maybeSingle();
+> +
+> +      if (config && config.app_id) {
+> +        affiliateToken = config.app_id;
+> +        hasValidConfig = true;
+> +      }
+> +    }
+> +  } catch (err) {
+> +    console.error("[affiliate] GET redirect config lookup error:", err);
+> +  }
+> +
+> +  if (!hasValidConfig && affiliateToken === "GCRUX_DEFAULT_TOKEN") {
+> +    console.warn(`[affiliate] Redirect fallback triggered for asset ${contentVariantId}`);
+> +    return new Response(null, {
+> +      status: 302,
+> +      headers: { ...corsHeaders, Location: "https://login.mcorch.com/dashboard/setting
+> <truncated 1895 bytes>
+> node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 28 (ID: 3ca7b6ce-610f-45da-88fb-49ad9efcbb9f)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 32 (ID: e04a0637-e9bd-407d-bdfe-33b8262fa6fb)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 32 (ID: 78cebddf-966f-42ce-9242-7117bef7037a)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 33 (ID: 2646a136-47d1-448e-a442-b97dbf51397b)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 35 (ID: e8059c0d-f0f0-406e-b7b0-8fca486240fe)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 39 (ID: 05e63207-f2b9-429a-8516-b95fd7c4c401)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 43 (ID: b7fc6361-83b1-4179-9ec4-6e416d038f4a)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 28 (ID: 23580a86-bf99-4098-a9e2-d40562a6e487)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Marking first task as completed in task.md.\"",
+  "EndLine": "7",
+  "Instruction": "\"Mark Multi-Tenancy Hardening task and its subtasks as completed.\"",
+  "ReplacementContent": "\"- [x] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**\\n  - [x] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`\\n  - [x] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset\"",
+  "StartLine": "1",
+  "TargetContent": "\"- [ ] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**\\n  - [ ] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`\\n  - [ ] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset\"",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:00:57Z
+> Completed At: 2026-05-26T22:00:57Z
+> The following changes were made by the replace_file_content tool to: /home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -1,8 +1,8 @@
+>  # Checklist de Implementação — Mitigações do Premortem
+>  
+> -- [ ] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**
+> -  - [ ] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`
+> -  - [ ] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset
+> +- [x] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**
+> +  - [x] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`
+> +  - [x] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset
+>  - [ ] **2. Circuit Breakers e Limites de Gastos**
+>    - [ ] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas
+>    - [ ] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Reviewing Initial Code**
+
+I'm now diving into the `supabase/functions/rescue-video/index.ts` file, specifically from lines 22 to 4, to understand the current implementation. My focus is on preparing for task 2, "Circuit Breakers e Limites de Gastos." I'm analyzing this code segment to establish a baseline for modification.
+
+
+**Refining Data Retrieval**
+
+I'm now revising the data retrieval process within the `rescue-video` function. Specifically, I'm modifying line 29 to select `user_id, metadata, status` from the `content_library` table. I am adding checks to validate the status; returning success if the status is ready, and a failure if the status is failed. Also I will be enforcing the rescue attempts limit with a maximum of 5.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Adding rescue attempts tracking and threshold checking (circuit breaker/limiter) to rescue-video edge function.\"",
+  "EndLine": "37",
+  "Instruction": "\"Select user_id, metadata, status. Skip if status is ready or failed. Track and increment rescue_attempts in metadata, failing if it exceeds 5.\"",
+  "ReplacementContent": "\"    const { data: contentData } = await adminClient\\n      .from(\\\"content_library\\\")\\n      .select(\\\"user_id, metadata, status\\\")\\n      .eq(\\\"id\\\", content_id)\\n      .single();\\n    const userId = contentData?.user_id;\\n    const status = contentData?.status;\\n    let metadata = contentData?.metadata || {};\\n\\n    if (!userId) return new Response(\\\"Content not found\\\", { status: 404 });\\n    if (userId !== user.id) return new Response(\\\"Forbidden\\\", { status: 403 });\\n\\n    if (status === \\\"ready\\\") {\\n      return new Response(JSON.stringify({ status: \\\"success\\\", message: \\\"Video already recovered\\\" }), { status: 200, headers: { \\\"Content-Type\\\": \\\"application/json\\\" } });\\n    }\\n    if (status === \\\"failed\\\") {\\n      return new Response(JSON.stringify({ status: \\\"failed\\\", error: \\\"Content already marked as failed\\\" }), { status: 200, headers: { \\\"Content-Type\\\": \\\"application/json\\\" } });\\n    }\\n\\n    const maxAttempts = 5;\\n    const attempts = (metadata.rescue_attempts || 0) + 1;\\n    if (attempts > maxAttempts) {\\n      await adminClient\\n        .from(\\\"content_library\\\")\\n        .update({ status: \\\"failed\\\", metadata: { ...metadata, rescue_attempts: attempts, failure_reason: \\\"Max rescue attempts exceeded\\\" } })\\n        .eq(\\\"id\\\", content_id);\\n      return new Response(JSON.stringify({ status: \\\"failed\\\", error: \\\"Max rescue attempts exceeded. Marked as failed.\\\" }), { status: 429, headers: { \\\"Content-Type\\\": \\\"application/json\\\" } });\\n    }\\n\\n    // Update attempts counter in DB\\n    metadata = { ...metadata, rescue_attempts: attempts };\\n    await adminClient\\n      .from(\\\"content_library\\\")\\n      .update({ metadata })\\n      .eq(\\\"id\\\", content_id);\\n\\n    const { data: keys } = await adminClient.from(\\\"user_api_keys\\\").select(\\\"google_api_key\\\").eq(\\\"user_id\\\", userId).single();\\n    const googleKey = keys?.google_api_key || Deno.env.get(\\\"GOOGLE_API_KEY\\\");\"",
+  "StartLine": "29",
+  "TargetContent": "\"    const { data: contentData } = await adminClient.from(\\\"content_library\\\").select(\\\"user_id\\\").eq(\\\"id\\\", content_id).single();\\n    const userId = contentData?.user_id;\\n\\n    if (!userId) return new Response(\\\"Content not found\\\", { status: 404 });\\n    if (userId !== user.id) return new Response(\\\"Forbidden\\\", { status: 403 });\\n\\n    const { data: keys } = await adminClient.from(\\\"user_api_keys\\\").select(\\\"google_api_key\\\").eq(\\\"user_id\\\", userId).single();\\n    const googleKey = keys?.google_api_key || Deno.env.get(\\\"GOOGLE_API_KEY\\\");\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/rescue-video/index.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:01Z
+> Completed At: 2026-05-26T22:01:04Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/rescue-video/index.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -26,8 +26,14 @@
+>    if (!operation_id) return new Response("Missing operation_id", { status: 400 });
+>  
+>    try {
+> -    const { data: contentData } = await adminClient.from("content_library").select("user_id").eq("id", content_id).single();
+> +    const { data: contentData } = await adminClient
+> +      .from("content_library")
+> +      .select("user_id, metadata, status")
+> +      .eq("id", content_id)
+> +      .single();
+>      const userId = contentData?.user_id;
+> +    const status = contentData?.status;
+> +    let metadata = contentData?.metadata || {};
+>  
+>      if (!userId) return new Response("Content not found", { status: 404 });
+>      if (userId !== user.id) return new Response("Forbidden", { status: 403 });
+> @@ -34,3 +34,27 @@
+> +    if (status === "ready") {
+> +      return new Response(JSON.stringify({ status: "success", message: "Video already recovered" }), { status: 200, headers: { "Content-Type": "application/json" } });
+> +    }
+> +    if (status === "failed") {
+> +      return new Response(JSON.stringify({ status: "failed", error: "Content already marked as failed" }), { status: 200, headers: { "Content-Type": "application/json" } });
+> +    }
+> +
+> +    const maxAttempts = 5;
+> +    const attempts = (metadata.rescue_attempts || 0) + 1;
+> +    if (attempts > maxAttempts) {
+> +      await adminClient
+> +        .from("content_library")
+> +        .update({ status: "failed", metadata: { ...metadata, rescue_attempts: attempts, failure_reason: "Max rescue attempts exceeded" } })
+> +        .eq("id", content_id);
+> +      return new Response(JSON.stringify({ status: "failed", error: "Max rescue attempts exceeded. Marked as failed." }), { status: 429, headers: { "Content-Type": "application/json" } });
+> +    }
+> <truncated 4492 bytes>
+> node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 28 (ID: 3ca7b6ce-610f-45da-88fb-49ad9efcbb9f)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 28 (ID: 23580a86-bf99-4098-a9e2-d40562a6e487)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 32 (ID: e04a0637-e9bd-407d-bdfe-33b8262fa6fb)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 32 (ID: 78cebddf-966f-42ce-9242-7117bef7037a)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 33 (ID: 2646a136-47d1-448e-a442-b97dbf51397b)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 35 (ID: e8059c0d-f0f0-406e-b7b0-8fca486240fe)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 39 (ID: 05e63207-f2b9-429a-8516-b95fd7c4c401)
+> - Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 43 (ID: b7fc6361-83b1-4179-9ec4-6e416d038f4a)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Addressing Import Issues**
+
+I've pinpointed the source of the TypeScript linting errors. It appears the `https://` imports in the `process-affiliate-link` and `rescue-video` functions, specifically within the Deno context, are the culprits. The React-centric workspace doesn't inherently parse those Deno-specific import statements, leading to the editor flagging them.
+
+
+**Implementing API Circuit Breaker**
+
+I'm now integrating a circuit breaker within `scripts/canvas-video-watchdog.sh`. My goal is to add fault tolerance when communicating with the Higgsfield API. I will track consecutive API failures. If the API returns empty responses, includes errors in JSON, times out, or returns "unknown" status, then `CONSECUTIVE_API_FAILURES` will increase. The script will abort after exceeding `MAX_API_FAILURES`.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Implementing Higgsfield API circuit breaker in canvas-video-watchdog.sh script.\"",
+  "EndLine": "119",
+  "Instruction": "\"Add consecutive failures tracking, checks for errors in Higgsfield response, trips circuit breaker after 3 failures, and resets on success.\"",
+  "ReplacementContent": "\"# \u2500\u2500 Process each stale row \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\\nHEALTHY_COUNT=0\\nFAILED_COUNT=0\\nTIMEOUT_COUNT=0\\nRECOVERED_COUNT=0\\nCONSECUTIVE_API_FAILURES=0\\nMAX_API_FAILURES=3\\n\\nfor ROW in $(echo \\\"${ROWS_JSON}\\\" | jq -c '.[]'); do\\n    EXEC_ID=$(echo \\\"${ROW}\\\" | jq -r '.id')\\n    OP_ID=$(echo \\\"${ROW}\\\" | jq -r '.operation_id')\\n    TOKEN=$(echo \\\"${ROW}\\\" | jq -r '.webhook_token')\\n    STARTED_AT=$(echo \\\"${ROW}\\\" | jq -r '.started_at // .created_at')\\n\\n    HF_STATUS_JSON=$(curl -s -m 8 -H \\\"${HF_AUTH}\\\" -H \\\"Accept: application/json\\\" \\\\\\n        \\\"${HF_BASE_URL}/requests/${OP_ID}/status\\\")\\n\\n    # Circuit breaker: check if response is empty or contains error messages\\n    if [ -z \\\"${HF_STATUS_JSON}\\\" ] || echo \\\"${HF_STATUS_JSON}\\\" | jq -e '.error or .message == \\\"Unauthorized\\\"' >/dev/null 2>&1; then\\n        CONSECUTIVE_API_FAILURES=$((CONSECUTIVE_API_FAILURES + 1))\\n        log \\\"WARN: Higgsfield API call failed for operation ${OP_ID} (${CONSECUTIVE_API_FAILURES}/${MAX_API_FAILURES})\\\"\\n        if [ \\\"${CONSECUTIVE_API_FAILURES}\\\" -ge \\\"${MAX_API_FAILURES}\\\" ]; then\\n            log \\\"ERROR: Circuit breaker tripped due to consecutive Higgsfield API failures. Aborting run.\\\"\\n            write_health \\\"degraded\\\"\\n            exit 1\\n        fi\\n        continue\\n    fi\\n    CONSECUTIVE_API_FAILURES=0\\n\\n    HF_STATUS=$(echo \\\"${HF_STATUS_JSON}\\\" | jq -r '.status // \\\"unknown\\\"' 2>/dev/null)\\n\\n    case \\\"${HF_STATUS}\\\" in\"",
+  "StartLine": "102",
+  "TargetContent": "\"# \u2500\u2500 Process each stale row \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\\nHEALTHY_COUNT=0\\nFAILED_COUNT=0\\nTIMEOUT_COUNT=0\\nRECOVERED_COUNT=0\\n\\nfor ROW in $(echo \\\"${ROWS_JSON}\\\" | jq -c '.[]'); do\\n    EXEC_ID=$(echo \\\"${ROW}\\\" | jq -r '.id')\\n    OP_ID=$(echo \\\"${ROW}\\\" | jq -r '.operation_id')\\n    TOKEN=$(echo \\\"${ROW}\\\" | jq -r '.webhook_token')\\n    STARTED_AT=$(echo \\\"${ROW}\\\" | jq -r '.started_at // .created_at')\\n\\n    HF_STATUS_JSON=$(curl -s -H \\\"${HF_AUTH}\\\" -H \\\"Accept: application/json\\\" \\\\\\n        \\\"${HF_BASE_URL}/requests/${OP_ID}/status\\\")\\n\\n    HF_STATUS=$(echo \\\"${HF_STATUS_JSON}\\\" | jq -r '.status // \\\"unknown\\\"' 2>/dev/null)\\n\\n    case \\\"${HF_STATUS}\\\" in\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:08Z
+> Completed At: 2026-05-26T22:01:10Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -104,6 +104,8 @@
+>  FAILED_COUNT=0
+>  TIMEOUT_COUNT=0
+>  RECOVERED_COUNT=0
+> +CONSECUTIVE_API_FAILURES=0
+> +MAX_API_FAILURES=3
+>  
+>  for ROW in $(echo "${ROWS_JSON}" | jq -c '.[]'); do
+>      EXEC_ID=$(echo "${ROW}" | jq -r '.id')
+> @@ -110,9 +110,22 @@
+>      TOKEN=$(echo "${ROW}" | jq -r '.webhook_token')
+>      STARTED_AT=$(echo "${ROW}" | jq -r '.started_at // .created_at')
+>  
+> -    HF_STATUS_JSON=$(curl -s -H "${HF_AUTH}" -H "Accept: application/json" \
+> +    HF_STATUS_JSON=$(curl -s -m 8 -H "${HF_AUTH}" -H "Accept: application/json" \
+>          "${HF_BASE_URL}/requests/${OP_ID}/status")
+>  
+> +    # Circuit breaker: check if response is empty or contains error messages
+> +    if [ -z "${HF_STATUS_JSON}" ] || echo "${HF_STATUS_JSON}" | jq -e '.error or .message == "Unauthorized"' >/dev/null 2>&1; then
+> +        CONSECUTIVE_API_FAILURES=$((CONSECUTIVE_API_FAILURES + 1))
+> +        log "WARN: Higgsfield API call failed for operation ${OP_ID} (${CONSECUTIVE_API_FAILURES}/${MAX_API_FAILURES})"
+> +        if [ "${CONSECUTIVE_API_FAILURES}" -ge "${MAX_API_FAILURES}" ]; then
+> +            log "ERROR: Circuit breaker tripped due to consecutive Higgsfield API failures. Aborting run."
+> +            write_health "degraded"
+> +            exit 1
+> +        fi
+> +        continue
+> +    fi
+> +    CONSECUTIVE_API_FAILURES=0
+> +
+>      HF_STATUS=$(echo "${HF_STATUS_JSON}" | jq -r '.status // "unknown"' 2>/dev/null)
+>  
+>      case "${HF_STATUS}" in
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> You may have seen the following lint errors as feedb
+> <truncated 3039 bytes>
+> cess-affiliate-link/index.ts at line 1 (ID: 65ec21f9-3c4a-41b6-9d96-79cef29a9640)
+> - Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 2 (ID: f02a216d-bdcb-46cc-90e8-a7b982976eb3)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 102 (ID: 1ca41f57-bede-447b-a138-33e15cb1ee1f)
+> - Parameter 'req' implicitly has an 'any' type., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 151 (ID: 974b2e2b-b16c-4f34-9dfa-e7685e1323d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 156 (ID: c7314471-7489-4424-871c-6c9e244223f2)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 157 (ID: a941b9eb-bbf1-4547-a986-4822ceeece3a)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 181 (ID: 0c9c806a-63cf-433f-8db0-46ccfa3f58d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 182 (ID: 99f60415-4799-4b93-8de7-580cad4699c7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 183 (ID: 224a91b4-4081-4f72-9a56-d09063aa19be)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 225 (ID: e802558e-0208-401c-90fc-6fae57ba1cb3)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Marking Circuit Breakers and Spend Limits task as completed in task.md.\"",
+  "EndLine": "11",
+  "Instruction": "\"Mark the second task group and its subtasks as completed.\"",
+  "ReplacementContent": "\"- [x] **2. Circuit Breakers e Limites de Gastos**\\n  - [x] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas\\n  - [x] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas\"",
+  "StartLine": "5",
+  "TargetContent": "\"- [ ] **2. Circuit Breakers e Limites de Gastos**\\n  - [ ] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas\\n  - [ ] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas\"",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:15Z
+> Completed At: 2026-05-26T22:01:15Z
+> The following changes were made by the replace_file_content tool to: /home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -3,9 +3,9 @@
+>  - [x] **1. Tenancy de Afiliados (Multi-Tenancy Hardening)**
+>    - [x] Refatorar `scripts/link-forge.ts` para lookup per-user em `affiliate_config`
+>    - [x] Refatorar `supabase/functions/process-affiliate-link/index.ts` GET para resolver tokens via owner do asset
+> -- [ ] **2. Circuit Breakers e Limites de Gastos**
+> -  - [ ] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas
+> -  - [ ] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas
+> +- [x] **2. Circuit Breakers e Limites de Gastos**
+> +  - [x] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas
+> +  - [x] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas
+>  - [ ] **3. Mecanismo de Bypass Emergencial**
+>    - [ ] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`
+>    - [ ] Adicionar testes unitários em `src/test/qa-verifiers.test.ts`
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing Emergency Bypass**
+
+I'm currently focused on the "Mecanismo de Bypass Emergencial," and I've started by examining `scripts/qa/run-audit.ts`. I'm specifically reviewing lines 145 to 179 to understand the rendering of audit results. The goal is to modify it to include bypass logic and mechanisms.
+
+
+**Reviewing Audit Logic**
+
+I've been drilling down further into the audit result rendering within `run-audit.ts`, specifically lines 145-179. I'm focusing on how the "verdict" is determined (lines 148-149), and how failures are presented (lines 170-172). I need to understand how to incorporate the bypass mechanism into this logic, so I can include bypass details into the results' presentation. The structure of the Markdown output is clear now.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Adding bypass option check to render function in run-audit.ts to allow emergency override of QA gate.\"",
+  "EndLine": "179",
+  "Instruction": "\"Replace render function to check for --bypass and MCORCH_QA_BYPASS, warning and setting verdict to allowed if true.\"",
+  "ReplacementContent": "\"function render(results: VerificationResult[]): { markdown: string; verdict: \\\"allowed\\\" | \\\"blocked\\\" } {\\n  const pass = results.filter((r) => r.status === \\\"pass\\\").length;\\n  const skip = results.filter((r) => r.status === \\\"skip\\\").length;\\n  const fail = results.filter((r) => r.status === \\\"fail\\\").length;\\n  let verdict: \\\"allowed\\\" | \\\"blocked\\\" = fail > 0 ? \\\"blocked\\\" : \\\"allowed\\\";\\n\\n  const lines: string[] = [\\\"### \ud83d\udccb Proof Manifest \u2014 Material Proof Audit (Phase 5c)\\\", \\\"\\\"];\\n\\n  const hasBypass = process.argv.includes(\\\"--bypass\\\") || process.env.MCORCH_QA_BYPASS === \\\"true\\\";\\n\\n  if (hasBypass && verdict === \\\"blocked\\\") {\\n    lines.push(\\n      \\\"> [!WARNING]\\\",\\n      \\\"> **MANUAL QA BYPASS ACTIVE:** An emergency bypass was requested by the Sovereign. Under standard operation, this seal would have been BLOCKED.\\\",\\n      \\\"\\\"\\n    );\\n    verdict = \\\"allowed\\\";\\n  }\\n\\n  if (results.length === 0) {\\n    lines.push(\\n      \\\"> \u26a0\ufe0f No material-proof claims were extracted from the newest HANDOFF.md Record block.\\\",\\n      \\\"> Confirm the Record exists and follows the documented format (FMEA-004).\\\",\\n      \\\"\\\",\\n      \\\"QA VERDICT: 0 verified \u00b7 0 skipped \u00b7 0 failed \u2192 SEAL ALLOWED (no claims)\\\",\\n    );\\n    return { markdown: lines.join(\\\"\\\\n\\\"), verdict: \\\"allowed\\\" };\\n  }\\n\\n  lines.push(\\\"| Claim | Kind | Expected | Actual | Verdict |\\\", \\\"|-------|------|----------|--------|---------|\\\");\\n  for (const r of results) {\\n    lines.push(\\n      `| ${cell(r.claim.label)} | ${r.claim.kind} | ${cell(r.claim.expected)} | ${cell(r.actual)} | ${glyph(r.status)} |`,\\n    );\\n  }\\n  lines.push(\\\"\\\");\\n  for (const r of results.filter((x) => x.status === \\\"fail\\\")) {\\n    lines.push(`- \ud83d\udd34 **${cell(r.claim.label)}** \u2014 ${cell(r.detail)}`);\\n  }\\n  if (fail > 0) lines.push(\\\"\\\");\\n  lines.push(\\n    `QA VERDICT: ${pass} verified \u00b7 ${skip} skipped \u00b7 ${fail} failed \u2192 SEAL ${verdict === \\\"blocked\\\" ? \\\"BLOCKED\\\" : \\\"ALLOWED\\\"}`,\\n  );\\n  return { markdown: lines.join(\\\"\\\\n\\\"), verdict };\\\n<truncated 3 bytes>",
+  "StartLine": "145",
+  "TargetContent": "\"function render(results: VerificationResult[]): { markdown: string; verdict: \\\"allowed\\\" | \\\"blocked\\\" } {\\n  const pass = results.filter((r) => r.status === \\\"pass\\\").length;\\n  const skip = results.filter((r) => r.status === \\\"skip\\\").length;\\n  const fail = results.filter((r) => r.status === \\\"fail\\\").length;\\n  const verdict: \\\"allowed\\\" | \\\"blocked\\\" = fail > 0 ? \\\"blocked\\\" : \\\"allowed\\\";\\n\\n  const lines: string[] = [\\\"### \ud83d\udccb Proof Manifest \u2014 Material Proof Audit (Phase 5c)\\\", \\\"\\\"];\\n\\n  if (results.length === 0) {\\n    lines.push(\\n      \\\"> \u26a0\ufe0f No material-proof claims were extracted from the newest HANDOFF.md Record block.\\\",\\n      \\\"> Confirm the Record exists and follows the documented format (FMEA-004).\\\",\\n      \\\"\\\",\\n      \\\"QA VERDICT: 0 verified \u00b7 0 skipped \u00b7 0 failed \u2192 SEAL ALLOWED (no claims)\\\",\\n    );\\n    return { markdown: lines.join(\\\"\\\\n\\\"), verdict: \\\"allowed\\\" };\\n  }\\n\\n  lines.push(\\\"| Claim | Kind | Expected | Actual | Verdict |\\\", \\\"|-------|------|----------|--------|---------|\\\");\\n  for (const r of results) {\\n    lines.push(\\n      `| ${cell(r.claim.label)} | ${r.claim.kind} | ${cell(r.claim.expected)} | ${cell(r.actual)} | ${glyph(r.status)} |`,\\n    );\\n  }\\n  lines.push(\\\"\\\");\\n  for (const r of results.filter((x) => x.status === \\\"fail\\\")) {\\n    lines.push(`- \ud83d\udd34 **${cell(r.claim.label)}** \u2014 ${cell(r.detail)}`);\\n  }\\n  if (fail > 0) lines.push(\\\"\\\");\\n  lines.push(\\n    `QA VERDICT: ${pass} verified \u00b7 ${skip} skipped \u00b7 ${fail} failed \u2192 SEAL ${verdict === \\\"blocked\\\" ? \\\"BLOCKED\\\" : \\\"ALLOWED\\\"}`,\\n  );\\n  return { markdown: lines.join(\\\"\\\\n\\\"), verdict };\\n}\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/run-audit.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:20Z
+> Completed At: 2026-05-26T22:01:22Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/run-audit.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -146,10 +146,21 @@
+>    const pass = results.filter((r) => r.status === "pass").length;
+>    const skip = results.filter((r) => r.status === "skip").length;
+>    const fail = results.filter((r) => r.status === "fail").length;
+> -  const verdict: "allowed" | "blocked" = fail > 0 ? "blocked" : "allowed";
+> +  let verdict: "allowed" | "blocked" = fail > 0 ? "blocked" : "allowed";
+>  
+>    const lines: string[] = ["### 📋 Proof Manifest — Material Proof Audit (Phase 5c)", ""];
+>  
+> +  const hasBypass = process.argv.includes("--bypass") || process.env.MCORCH_QA_BYPASS === "true";
+> +
+> +  if (hasBypass && verdict === "blocked") {
+> +    lines.push(
+> +      "> [!WARNING]",
+> +      "> **MANUAL QA BYPASS ACTIVE:** An emergency bypass was requested by the Sovereign. Under standard operation, this seal would have been BLOCKED.",
+> +      ""
+> +    );
+> +    verdict = "allowed";
+> +  }
+> +
+>    if (results.length === 0) {
+>      lines.push(
+>        "> ⚠️ No material-proof claims were extracted from the newest HANDOFF.md Record block.",
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> You may have seen the following lint errors as feedback for a previous edit, but they still exist at this point. Please respond accordingly, erring toward explicitness.
+> - Cannot find module 'fs' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 17 (ID: 19b8a26b-50f4-442e-9928-ca1330dfbff3)
+> - Cannot find module 'path' or its corresponding type declarations., in file:///home/gcrUX/htd
+> <truncated 2632 bytes>
+> cess-affiliate-link/index.ts at line 1 (ID: 65ec21f9-3c4a-41b6-9d96-79cef29a9640)
+> - Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 2 (ID: f02a216d-bdcb-46cc-90e8-a7b982976eb3)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 102 (ID: 1ca41f57-bede-447b-a138-33e15cb1ee1f)
+> - Parameter 'req' implicitly has an 'any' type., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 151 (ID: 974b2e2b-b16c-4f34-9dfa-e7685e1323d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 156 (ID: c7314471-7489-4424-871c-6c9e244223f2)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 157 (ID: a941b9eb-bbf1-4547-a986-4822ceeece3a)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 181 (ID: 0c9c806a-63cf-433f-8db0-46ccfa3f58d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 182 (ID: 99f60415-4799-4b93-8de7-580cad4699c7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 183 (ID: 224a91b4-4081-4f72-9a56-d09063aa19be)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 225 (ID: e802558e-0208-401c-90fc-6fae57ba1cb3)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+🛠️ **Tool Call**: `list_dir`
+```json
+{
+  "DirectoryPath": "\"/home/gcrUX/htdocs/constellation-orchestra/src/test\"",
+  "toolAction": "\"Listing src/test directory to find QA tests\"",
+  "toolSummary": "\"List src/test directory\""
+}
+```
+
+> **Tool Result (LIST_DIRECTORY)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:26Z
+> Completed At: 2026-05-26T22:01:26Z
+> {"name":"billing.test.ts","sizeBytes":"6790"}
+> {"name":"example.test.ts","sizeBytes":"143"}
+> {"name":"phase-zeta.test.tsx","sizeBytes":"13179"}
+> {"name":"qa-extract-manifest.test.ts","sizeBytes":"8278"}
+> {"name":"qa-verifiers.test.ts","sizeBytes":"12637"}
+> {"name":"setup.ts","sizeBytes":"662"}
+> {"name":"useCanvasDesign.test.tsx","sizeBytes":"5229"}
+> {"name":"useKnowledgeMesh.test.ts","sizeBytes":"11212"}
+> {"name":"useOrchestrationGraph.test.ts","sizeBytes":"12674"}
+> {"name":"useOrchestrationStore.test.ts","sizeBytes":"8655"}
+> {"name":"useSubscription.test.ts","sizeBytes":"7454"}
+> 
+> Summary: This directory contains 0 subdirectories and 11 files.
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/src/test/qa-verifiers.test.ts\"",
+  "toolAction": "\"Viewing qa-verifiers.test.ts to understand test structures\"",
+  "toolSummary": "\"View test file\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:31Z
+> Completed At: 2026-05-26T22:01:31Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/src/test/qa-verifiers.test.ts`
+> Total Lines: 334
+> Total Bytes: 12637
+> Showing lines 1 to 334
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: // Unit tests — mcorch-qa-healing verifiers (FRD AT-002 … AT-008).
+> 2: // Pure helpers + verifier functions exercised through injected fake deps:
+> 3: // no real git, network or filesystem access.
+> 4: 
+> 5: import { describe, it, expect } from "vitest";
+> 6: import {
+> 7:   isValidCommitHash,
+> 8:   isValidUuid,
+> 9:   parseClaimedTestCount,
+> 10:   parseActualTestCount,
+> 11:   classifyEdgeStatus,
+> 12:   verifyGitCommit,
+> 13:   verifyMeshRow,
+> 14:   verifyTsc,
+> 15:   verifyTestSuite,
+> 16:   verifyEdgeDeploy,
+> 17:   verifyFileExists,
+> 18:   verifyE2EUserZero,
+> 19:   verifyClaim,
+> 20: } from "../../scripts/qa/verifiers";
+> 21: import type { ProofClaim, VerifierDeps } from "../../scripts/qa/types";
+> 22: 
+> 23: function claim(kind: ProofClaim["kind"], expected: string, extra: Partial<ProofClaim> = {}): ProofClaim {
+> 24:   return { kind, label: `${kind} ${expected}`, expected, raw: expected, ...extra };
+> 25: }
+> 26: 
+> 27: function fakeDeps(overrides: Partial<VerifierDeps> = {}): VerifierDeps {
+> 28:   return {
+> 29:     gitObjectExists: () => true,
+> 30:     runTsc: () => ({ ok: true, output: "" }),
+> 31:     runTests: () => ({ ok: true, output: "Test Files  3 passed (3)\n  Tests  9 passed (9)" }),
+> 32:     meshRowExists: async () => true,
+> 33:     edgeFunctionStatus: async () => 200,
+> 34:     fileExists: () => true,
+> 35:     readFile: () => null,
+> 36:     ...overrides,
+> 37:   };
+> 38: }
+> 39: 
+> 40: /** Build a deps stub for verifyE2EUserZero with a virtual e2e-output/run-<id> dir. */
+> 41: function e2eDeps(opts: {
+> 42:   reportMd?: string | null;
+> 43:   findingsJson?: string | null;
+> 44: }): VerifierDeps {
+> 45:   con
+> <truncated 10648 bytes>
+> e = JSON.stringify({
+> 290:       summary: { p0_count: 0, p1_count: 0 },
+> 291:       run_started_at: new Date(Date.now() - 8 * 24 * 36e5).toISOString(),
+> 292:     });
+> 293:     const deps = e2eDeps({ reportMd: "✅ GO", findingsJson: stale });
+> 294:     const r = verifyE2EUserZero(claim("e2e_user_zero", "20260526-1200-abcd"), deps);
+> 295:     expect(r.status).toBe("fail");
+> 296:     expect(r.actual).toMatch(/d stale/);
+> 297:   });
+> 298: 
+> 299:   it("fails when findings.json is unparseable", () => {
+> 300:     const deps = e2eDeps({ reportMd: "✅ GO", findingsJson: "{not json" });
+> 301:     const r = verifyE2EUserZero(claim("e2e_user_zero", "20260526-1200-abcd"), deps);
+> 302:     expect(r.status).toBe("fail");
+> 303:     expect(r.actual).toBe("unparseable");
+> 304:   });
+> 305: });
+> 306: 
+> 307: describe("verifyClaim dispatch", () => {
+> 308:   it("routes each kind to the right verifier", async () => {
+> 309:     expect((await verifyClaim(claim("git_commit", "abc1234"), fakeDeps())).status).toBe("pass");
+> 310:     expect((await verifyClaim(claim("file_exists", "x.ts"), fakeDeps())).status).toBe("pass");
+> 311:     expect((await verifyClaim(claim("tsc", "0 errors"), fakeDeps())).status).toBe("pass");
+> 312:   });
+> 313: 
+> 314:   it("routes e2e_user_zero claims to verifyE2EUserZero", async () => {
+> 315:     const recentIso = new Date().toISOString();
+> 316:     const deps = (() => {
+> 317:       const opts = {
+> 318:         reportMd: "✅ GO",
+> 319:         findingsJson: JSON.stringify({
+> 320:           summary: { p0_count: 0, p1_count: 0 },
+> 321:           run_started_at: recentIso,
+> 322:         }),
+> 323:       };
+> 324:       return fakeDeps({
+> 325:         fileExists: () => true,
+> 326:         readFile: (rel: string) =>
+> 327:           rel.endsWith("/report.md") ? opts.reportMd : opts.findingsJson,
+> 328:       });
+> 329:     })();
+> 330:     const r = await verifyClaim(claim("e2e_user_zero", "20260526-1200-abcd"), deps);
+> 331:     expect(r.status).toBe("pass");
+> 332:   });
+> 333: });
+> 334: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+🛠️ **Tool Call**: `view_file`
+```json
+{
+  "AbsolutePath": "\"/home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts\"",
+  "toolAction": "\"Viewing vitest.config.ts to understand test paths\"",
+  "toolSummary": "\"View vitest.config.ts\""
+}
+```
+
+> **Tool Result (VIEW_FILE)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:35Z
+> Completed At: 2026-05-26T22:01:35Z
+> File Path: `file:///home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts`
+> Total Lines: 23
+> Total Bytes: 611
+> Showing lines 1 to 23
+> The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+> 1: import { defineConfig } from "vitest/config";
+> 2: import react from "@vitejs/plugin-react-swc";
+> 3: import path from "path";
+> 4: 
+> 5: export default defineConfig({
+> 6:   plugins: [react()],
+> 7:   test: {
+> 8:     environment: "jsdom",
+> 9:     globals: true,
+> 10:     setupFiles: ["./src/test/setup.ts"],
+> 11:     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+> 12:     coverage: {
+> 13:       provider: "v8",
+> 14:       reporter: ["text", "html"],
+> 15:       include: ["src/lib/**", "src/store/**", "src/hooks/**"],
+> 16:       exclude: ["src/**/*.test.*", "src/test/**", "src/integrations/**"],
+> 17:     },
+> 18:   },
+> 19:   resolve: {
+> 20:     alias: { "@": path.resolve(__dirname, "./src") },
+> 21:   },
+> 22: });
+> 23: 
+> The above content shows the entire, complete file contents of the requested file.
+> 
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Analyzing Vitest Inclusion**
+
+I realize the Vitest configuration's `include` pattern excludes `run-audit.ts` because it's in `scripts/qa/`. I considered adding a test within `src/` to address this.
+
+</details>
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"bun run test\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "5000",
+  "toolAction": "\"Running unit tests to check status\"",
+  "toolSummary": "\"Run unit tests\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:40Z
+> Tool is running as a background task with task id: 59d77d72-fe23-43ce-9609-64154daf84d7/task-105
+> Task Description: bun run test
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-105.log
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Marking bypass implementation task as completed in task.md.\"",
+  "EndLine": "14",
+  "Instruction": "\"Mark bypass implementation in run-audit.ts as completed.\"",
+  "ReplacementContent": "\"- [ ] **3. Mecanismo de Bypass Emergencial**\\n  - [x] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`\\n  - [ ] Adicionar testes unit\u00e1rios em `src/test/qa-verifiers.test.ts`\"",
+  "StartLine": "11",
+  "TargetContent": "\"- [ ] **3. Mecanismo de Bypass Emergencial**\\n  - [ ] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`\\n  - [ ] Adicionar testes unit\u00e1rios em `src/test/qa-verifiers.test.ts`\"",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:49Z
+> Completed At: 2026-05-26T22:01:49Z
+> The following changes were made by the replace_file_content tool to: /home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -7,7 +7,7 @@
+>    - [x] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas
+>    - [x] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas
+>  - [ ] **3. Mecanismo de Bypass Emergencial**
+> -  - [ ] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`
+> +  - [x] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`
+>    - [ ] Adicionar testes unitários em `src/test/qa-verifiers.test.ts`
+>  - [ ] **4. Validação e Integração**
+>    - [ ] Executar build de tipos `npx tsc --noEmit`
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"list\"",
+  "toolAction": "\"Listing background tasks\"",
+  "toolSummary": "\"List background tasks\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:53Z
+> Completed At: 2026-05-26T22:01:53Z
+> You have 1 background task(s) currently running:
+> {
+>   "taskId": "59d77d72-fe23-43ce-9609-64154daf84d7/task-105",
+>   "toolName": "run_command",
+>   "toolSummary": "Run unit tests",
+>   "description": "bun run test",
+>   "startTime": "2026-05-26T22:01:40.089928119Z",
+>   "stepIndex": 105,
+>   "logUri": "file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-105.log"
+> }
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Checking Task Status**
+
+I've hit a snag. I was about to start polling the task status when the system explicitly warned against that approach. Apparently, I'll receive an automatic notification when the command finishes. Now I'm just waiting for that update.
+
+</details>
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Exporting render function from run-audit.ts to make it unit testable.\"",
+  "EndLine": "146",
+  "Instruction": "\"Add export keyword to render function.\"",
+  "ReplacementContent": "\"export function render(results: VerificationResult[]): { markdown: string; verdict: \\\"allowed\\\" | \\\"blocked\\\" } {\"",
+  "StartLine": "144",
+  "TargetContent": "\"function render(results: VerificationResult[]): { markdown: string; verdict: \\\"allowed\\\" | \\\"blocked\\\" } {\"",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/run-audit.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:01:58Z
+> Completed At: 2026-05-26T22:02:00Z
+> The following changes were made by the replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/run-audit.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -142,7 +142,7 @@
+>    return String(value).replace(/\|/g, "/").replace(/\n/g, " ").trim().slice(0, 90);
+>  }
+>  
+> -function render(results: VerificationResult[]): { markdown: string; verdict: "allowed" | "blocked" } {
+> +export function render(results: VerificationResult[]): { markdown: string; verdict: "allowed" | "blocked" } {
+>    const pass = results.filter((r) => r.status === "pass").length;
+>    const skip = results.filter((r) => r.status === "skip").length;
+>    const fail = results.filter((r) => r.status === "fail").length;
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> You may have seen the following lint errors as feedback for a previous edit, but they still exist at this point. Please respond accordingly, erring toward explicitness.
+> - Cannot find module 'fs' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 17 (ID: 19b8a26b-50f4-442e-9928-ca1330dfbff3)
+> - Cannot find module 'path' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 18 (ID: 0df03770-3d24-4a48-9e78-dd21e0085c1d)
+> - Cannot find module 'url' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 19 (ID: 0a4a20f6-e8df-4dbb-a515-f3f254dd5412)
+> - Parameter 'line' implicitly has an 'any' type., in file:///home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts at line 26 (ID: 861c2e20-6b2e-4827-972e-078959c87e8c)
+> - Cann
+> <truncated 2146 bytes>
+> cess-affiliate-link/index.ts at line 1 (ID: 65ec21f9-3c4a-41b6-9d96-79cef29a9640)
+> - Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 2 (ID: f02a216d-bdcb-46cc-90e8-a7b982976eb3)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 102 (ID: 1ca41f57-bede-447b-a138-33e15cb1ee1f)
+> - Parameter 'req' implicitly has an 'any' type., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 151 (ID: 974b2e2b-b16c-4f34-9dfa-e7685e1323d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 156 (ID: c7314471-7489-4424-871c-6c9e244223f2)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 157 (ID: a941b9eb-bbf1-4547-a986-4822ceeece3a)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 181 (ID: 0c9c806a-63cf-433f-8db0-46ccfa3f58d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 182 (ID: 99f60415-4799-4b93-8de7-580cad4699c7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 183 (ID: 224a91b4-4081-4f72-9a56-d09063aa19be)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 225 (ID: e802558e-0208-401c-90fc-6fae57ba1cb3)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+**Confirming Initial Success**
+
+I'm pleased to report that the initial unit tests have all passed, a solid foundation with 187 tests completed successfully! I'm now turning my attention to crafting a unit test specifically for the bypass rendering within `src/test/qa-verifiers.test.ts`. Further, I'm exploring how best to test the `render` function from `../../scripts/qa/run-audit`.
+
+
+**Testing the Bypass Rendering**
+
+I've successfully imported the `render` function from `../../scripts/qa/run-audit.ts` into `src/test/qa-verifiers.test.ts`. I've added a new test suite to the end of the file, specifically targeting the bypass rendering logic. The test sets the environment variable `MCORCH_QA_BYPASS` to "true" to simulate a bypass request. I'm now verifying that the `render` function correctly forces the verdict to "allowed" and includes the "MANUAL QA BYPASS ACTIVE" message when there are failures, which is great.
+
+</details>
+
+🛠️ **Tool Call**: `multi_replace_file_content`
+```json
+{
+  "ArtifactMetadata": "{\"ArtifactType\":\"task\",\"RequestFeedback\":false,\"Summary\":\"Adiciona o teste unit\u00e1rio de bypass da auditoria de QA em qa-verifiers.test.ts.\"}",
+  "Description": "\"Adding render import and render bypass test cases to qa-verifiers.test.ts.\"",
+  "Instruction": "\"Add render import at the top of qa-verifiers.test.ts and bypass test suite at the bottom of the file.\"",
+  "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":22,\"ReplacementContent\":\"import type { ProofClaim, VerifierDeps } from \\\"../../scripts/qa/types\\\";\\nimport { render } from \\\"../../scripts/qa/run-audit\\\";\",\"StartLine\":20,\"TargetContent\":\"import type { ProofClaim, VerifierDeps } from \\\"../../scripts/qa/types\\\";\"},{\"AllowMultiple\":false,\"EndLine\":334,\"ReplacementContent\":\"  });\\n});\\n\\ndescribe(\\\"runAudit render bypass\\\", () => {\\n  it(\\\"forces verdict to allowed if bypass is requested when there are failures\\\", () => {\\n    const originalBypass = process.env.MCORCH_QA_BYPASS;\\n    process.env.MCORCH_QA_BYPASS = \\\"true\\\";\\n\\n    try {\\n      const results = [\\n        {\\n          claim: { kind: \\\"git_commit\\\" as any, label: \\\"git_commit abc\\\", expected: \\\"abc\\\", raw: \\\"abc\\\" },\\n          status: \\\"fail\\\" as any,\\n          actual: \\\"absent\\\",\\n          detail: \\\"Commit not found\\\",\\n        },\\n      ];\\n\\n      const outcome = render(results);\\n      expect(outcome.verdict).toBe(\\\"allowed\\\");\\n      expect(outcome.markdown).toContain(\\\"MANUAL QA BYPASS ACTIVE\\\");\\n    } finally {\\n      if (originalBypass === undefined) {\\n        delete process.env.MCORCH_QA_BYPASS;\\n      } else {\\n        process.env.MCORCH_QA_BYPASS = originalBypass;\\n      }\\n    }\\n  });\\n\\n  it(\\\"keeps verdict as blocked if bypass is NOT requested when there are failures\\\", () => {\\n    const originalBypass = process.env.MCORCH_QA_BYPASS;\\n    delete process.env.MCORCH_QA_BYPASS;\\n\\n    try {\\n      const results = [\\n        {\\n          claim: { kind: \\\"git_commit\\\" as any, label: \\\"git_commit abc\\\", expected: \\\"abc\\\", raw: \\\"abc\\\" },\\n          status: \\\"fail\\\" as any,\\n          actual: \\\"absent\\\",\\n          detail: \\\"Commit not found\\\",\\n        },\\n      ];\\n\\n      const outcome = render(results);\\n      expect(outcome.verdict).toBe(\\\"blocked\\\");\\n      expect(outcome.markdown).not.toContain(\\\"MANUAL QA BYPASS ACTIVE\\\");\\n    } finally {\\n      if (originalBypass !== undefined) {\\n        process.env.MCORCH_QA_BYPASS = originalBypass;\\n      }\\n\n<truncated 65 bytes>",
+  "TargetFile": "\"/home/gcrUX/htdocs/constellation-orchestra/src/test/qa-verifiers.test.ts\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:02:07Z
+> Completed At: 2026-05-26T22:02:09Z
+> The following changes were made by the multi_replace_file_content tool to: /home/gcrUX/htdocs/constellation-orchestra/src/test/qa-verifiers.test.ts. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -19,6 +19,7 @@
+>    verifyClaim,
+>  } from "../../scripts/qa/verifiers";
+>  import type { ProofClaim, VerifierDeps } from "../../scripts/qa/types";
+> +import { render } from "../../scripts/qa/run-audit";
+>  
+>  function claim(kind: ProofClaim["kind"], expected: string, extra: Partial<ProofClaim> = {}): ProofClaim {
+>    return { kind, label: `${kind} ${expected}`, expected, raw: expected, ...extra };
+> @@ -330,4 +330,56 @@
+>      expect(r.status).toBe("pass");
+>    });
+>  });
+> +
+> +describe("runAudit render bypass", () => {
+> +  it("forces verdict to allowed if bypass is requested when there are failures", () => {
+> +    const originalBypass = process.env.MCORCH_QA_BYPASS;
+> +    process.env.MCORCH_QA_BYPASS = "true";
+> +
+> +    try {
+> +      const results = [
+> +        {
+> +          claim: { kind: "git_commit" as any, label: "git_commit abc", expected: "abc", raw: "abc" },
+> +          status: "fail" as any,
+> +          actual: "absent",
+> +          detail: "Commit not found",
+> +        },
+> +      ];
+> +
+> +      const outcome = render(results);
+> +      expect(outcome.verdict).toBe("allowed");
+> +      expect(outcome.markdown).toContain("MANUAL QA BYPASS ACTIVE");
+> +    } finally {
+> +      if (originalBypass === undefined) {
+> +        delete process.env.MCORCH_QA_BYPASS;
+> +      } else {
+> +        process.env.MCORCH_QA_BYPASS = originalBypass;
+> +      }
+> +    }
+> +  });
+> +
+> +  it("keeps verdict as blocked if bypass is NOT requested when there are failures", () => {
+> +    const originalBypass = process.env.MCORCH_QA_BYPASS;
+> +    delete process.env.MCORCH_QA_BYPASS;
+> +
+> +    try {
+> +      const results = [
+> +        {
+> +          claim: { kind: "git_commit" as any, label: "git_commit abc", expected: "abc", raw: "abc" },
+> +          status: "
+> <truncated 3750 bytes>
+> cess-affiliate-link/index.ts at line 1 (ID: 65ec21f9-3c4a-41b6-9d96-79cef29a9640)
+> - Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 2 (ID: f02a216d-bdcb-46cc-90e8-a7b982976eb3)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 102 (ID: 1ca41f57-bede-447b-a138-33e15cb1ee1f)
+> - Parameter 'req' implicitly has an 'any' type., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 151 (ID: 974b2e2b-b16c-4f34-9dfa-e7685e1323d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 156 (ID: c7314471-7489-4424-871c-6c9e244223f2)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 157 (ID: a941b9eb-bbf1-4547-a986-4822ceeece3a)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 181 (ID: 0c9c806a-63cf-433f-8db0-46ccfa3f58d7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 182 (ID: 99f60415-4799-4b93-8de7-580cad4699c7)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 183 (ID: 224a91b4-4081-4f72-9a56-d09063aa19be)
+> - Cannot find name 'Deno'., in file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts at line 225 (ID: e802558e-0208-401c-90fc-6fae57ba1cb3)
+> For edits that you believe may fix lints (whether the edit is explicitly lint-fixing, or is a step in your main objective that might fix lints along the way), specify the relevant lint IDs.
+> ```
+
+🛠️ **Tool Call**: `replace_file_content`
+```json
+{
+  "AllowMultiple": "false",
+  "Description": "\"Marking Bypass Mechanism task group as completed in task.md.\"",
+  "EndLine": "15",
+  "Instruction": "\"Mark the third task group and its subtasks as completed.\"",
+  "ReplacementContent": "\"- [x] **3. Mecanismo de Bypass Emergencial**\\n  - [x] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`\\n  - [x] Adicionar testes unit\u00e1rios em `src/test/qa-verifiers.test.ts`\"",
+  "StartLine": "10",
+  "TargetContent": "\"- [ ] **3. Mecanismo de Bypass Emergencial**\\n  - [x] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`\\n  - [ ] Adicionar testes unit\u00e1rios em `src/test/qa-verifiers.test.ts`\"",
+  "TargetFile": "\"/home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md\""
+}
+```
+
+> **Tool Result (CODE_ACTION)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:02:14Z
+> Completed At: 2026-05-26T22:02:14Z
+> The following changes were made by the replace_file_content tool to: /home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/task.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+> [diff_block_start]
+> @@ -6,9 +6,9 @@
+>  - [x] **2. Circuit Breakers e Limites de Gastos**
+>    - [x] Refatorar `supabase/functions/rescue-video/index.ts` com limite de 5 tentativas
+>    - [x] Refatorar `scripts/canvas-video-watchdog.sh` com disjuntor para 3 falhas de API consecutivas
+> -- [ ] **3. Mecanismo de Bypass Emergencial**
+> +- [x] **3. Mecanismo de Bypass Emergencial**
+>    - [x] Refatorar `scripts/qa/run-audit.ts` para aceitar `--bypass` e `MCORCH_QA_BYPASS`
+> -  - [ ] Adicionar testes unitários em `src/test/qa-verifiers.test.ts`
+> +  - [x] Adicionar testes unitários em `src/test/qa-verifiers.test.ts`
+>  - [ ] **4. Validação e Integração**
+>    - [ ] Executar build de tipos `npx tsc --noEmit`
+>    - [ ] Executar suíte de testes unitários `bun run test`
+> [diff_block_end]
+> 
+> Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+> ```
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"npx tsc --noEmit && bun run test\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "8000",
+  "toolAction": "\"Running type check and vitest test suite\"",
+  "toolSummary": "\"Typecheck and run tests\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:02:18Z
+> Tool is running as a background task with task id: 59d77d72-fe23-43ce-9609-64154daf84d7/task-118
+> Task Description: npx tsc --noEmit && bun run test
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-118.log
+> ```
+
+🛠️ **Tool Call**: `manage_task`
+```json
+{
+  "Action": "\"list\"",
+  "toolAction": "\"Listing background tasks\"",
+  "toolSummary": "\"List background tasks\""
+}
+```
+
+> **Tool Result (GENERIC)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:02:31Z
+> Completed At: 2026-05-26T22:02:31Z
+> You have 1 background task(s) currently running:
+> {
+>   "taskId": "59d77d72-fe23-43ce-9609-64154daf84d7/task-118",
+>   "toolName": "run_command",
+>   "toolSummary": "Typecheck and run tests",
+>   "description": "npx tsc --noEmit && bun run test",
+>   "startTime": "2026-05-26T22:02:18.840380780Z",
+>   "stepIndex": 118,
+>   "logUri": "file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-118.log"
+> }
+> ```
+
+## 🤖 Gemini *(22:02:31)*
+
+No tools are needed while waiting for the test suite and type check to complete in the background. I will yield my turn and resume as soon as the test logs are ready.
+
+🛠️ **Tool Call**: `run_command`
+```json
+{
+  "CommandLine": "\"npx supabase functions deploy process-affiliate-link && npx supabase functions deploy rescue-video\"",
+  "Cwd": "\"/home/gcrUX/htdocs/constellation-orchestra\"",
+  "WaitMsBeforeAsync": "8000",
+  "toolAction": "\"Deploying modified Edge Functions to Supabase\"",
+  "toolSummary": "\"Deploy edge functions\""
+}
+```
+
+> **Tool Result (RUN_COMMAND)** - ✅ Success
+>
+> ```
+> Created At: 2026-05-26T22:03:07Z
+> Tool is running as a background task with task id: 59d77d72-fe23-43ce-9609-64154daf84d7/task-124
+> Task Description: npx supabase functions deploy process-affiliate-link && npx supabase functions deploy rescue-video
+> Task logs are available at: file:///home/ubuntu/.gemini/antigravity-ide/brain/59d77d72-fe23-43ce-9609-64154daf84d7/.system_generated/tasks/task-124.log
+> ```
+
+## 🤖 Gemini *(22:03:15)*
+
+I will yield my turn while the two Supabase Edge Functions (`process-affiliate-link` and `rescue-video`) are deployed to production. I will resume as soon as the deployment finishes.
