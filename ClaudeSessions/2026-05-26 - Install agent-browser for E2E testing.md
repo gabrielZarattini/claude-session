@@ -8157,3 +8157,526 @@ Phase 4 ✅ README v6.8.4 committed. Phase 5 — HANDOFF.md update (Record + Gra
   "limit": 15
 }
 ```
+
+## 🤖 Claude *(13:01:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening Record (2026-05-25)",
+  "new_string": "## Task State\n\n## e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern Record (2026-05-26)\n\n**E2E USER ZERO BoK SEALED v6.8.4 SHIPPED (2026-05-26).** Sess\u00e3o dedicada que entrega a **9\u00aa BoK suite do projeto** \u2014 `e2e-user-zero`, framework de QA End-to-End que testa MCORCH como **Usu\u00e1rio Zero real de interface** (n\u00e3o API tests program\u00e1ticos) usando `agent-browser` CLI v0.27.0+ como primitiva t\u00e9cnica. Motivada diretamente pelo incidente PGRST203 v6.8.2 (10 dias de regress\u00e3o silenciosa no flywheel OE-661 entre 2026-05-16 e 2026-05-25 \u2014 ningu\u00e9m detectou porque ningu\u00e9m executou a aplica\u00e7\u00e3o como usu\u00e1rio real durante a janela). Phase Commercial Gate enabler \u2014 pr\u00e9-requisito declarado para an\u00fancio de Usu\u00e1rio 1+. Cinco entreg\u00e1veis materiais + auditoria pr\u00e9-seal de 20 checks (A1-A20) + corre\u00e7\u00e3o de schema drift descoberta na auditoria.\n\n**ORO triplet desta task (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); Owner = Sovereign \u2014 carga Phase Commercial Gate + perene rule impact + ROI medido em silent-regression-prevented (alvo MTTD \u2264 24h).\n\n**1. SOP operacional `docs/processes/agent-browser-install.md` (168 LOC).** Lei 2 (Anticipated Process) anchor pr\u00e9-c\u00f3digo. Documenta Operator/Sequence/7 Verification Gates/7 Recovery Paths/Success Signal para o framework `vercel-labs/agent-browser` CLI j\u00e1 instalada (binary native ARM64 em `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/agent-browser`). Smoke test material executado pr\u00e9-seal: `agent-browser batch open https://login.mcorch.com \u2192 wait networkidle \u2192 wait 2000 \u2192 screenshot` \u2192 PNG 116 KB (1280\u00d7633 RGB) com hero copy \"O futuro opera sozinho. Para que voc\u00ea volte a viver.\" renderizado. Skill `agent-browser` listada nas available-skills do Claude Code (system-level).\n\n**2. BoK suite `docs/bok/e2e-user-zero/` 9 docs (2761 LOC totais).** Via `/bok-scribe` Skill aut\u00f4noma \u2014 `01-mrd` (BABOK Strategy + Elicitation 165 LOC) com PGRST203 retrospective + competitive landscape (Playwright/Cypress/Manual/Synthetic/Vitest) + 12 MR-E2E priorizados + LGPD context; `02-brd` (BABOK Requirements Analysis 177 LOC) com 4 BO-E2E SMART + 6 SH-E2E + 12 BR-E2E + 8 BR-RISK-E2E + zero-coin economics; `03-prd` (ProdBOK + CXBOK 312 LOC) com 2 personas (P1 Master Agent aut\u00f4nomo + P2 Sovereign on-demand) + 3 user journeys + 12 Must + 7 Could MoSCoW + CLI-first Luxury UX + 7 Gherkin scenarios; `04-frd` (SWEBOK v4 351 LOC) com 20 FR-E2E + 17 NFR-E2E + CLI contract com exit codes + Driver/Classifier interfaces TypeScript + Phase 5c gate extension; `05-sdd` (SWEBOK + CISSP CBK 512 LOC) com architecture overview (Harness Engineering adaptada para Bun script) + Component catalog (~1820 LOC estimadas) + STRIDE threat model 12 threats (4 critical) + 4-layer LGPD defense + Secrets inventory + 10 OTD-E2E; `06-data-model` (DMBOK v2 355 LOC) com reuso de `mcorch_nodes`/`mcorch_edges`/`infra_health_logs` (zero novas migrations) + Findings JSON Schema v1.0.0 + tenant isolation + retention 30d; `07-process-flow` (BPM CBOK v4 480 LOC) com 10 PROC-E2E em BPMN-lite swimlanes + 3 cron jobs + decision matrix Phase 5c gate; `08-quality-metrics` (CMQ/OE BOK 302 LOC) com 10 KPI-E2E + 12 FMEA-E2E (4 RPN > 100 todos com Recommended Action) + 6 SOL-E2E + watchdog telemetry events + observability checklist; `00-index` (107 LOC) com Document Registry + Traceability Chain + Phase Completion Log + 5 OTD-E2E preliminares.\n\n**3. Regra perene canonical para Phase 7 BoK seal.** `.claude/agents/bok-scribe-agent.md` Phase 7 atualizado (Sovereign directive 2026-05-26 \"manter o padr\u00e3o para sempre\"): pattern obrigat\u00f3rio `scripts/seed-<slug>-bok-seal.ts` Bun-native + service role + INSERT RETURNING UUID + DERIVES_FROM edge ao parent seal. Melhoria sobre precedent (openclaw v6.6.5 + gamificacao-nodes v6.6.4 n\u00e3o inseriam edge \u2014 apenas metadata reference). Documenta\u00e7\u00e3o inclui precedent inventory + script template + idempotency guidance. Substituiu instru\u00e7\u00e3o pr\u00e9via \"print payload, Sovereign insere via REST\".\n\n**4. Seed script + execu\u00e7\u00e3o material `scripts/seed-e2e-user-zero-bok-seal.ts` (243 LOC).** Primeira implementa\u00e7\u00e3o da perene rule. Mirror 1:1 do `seed-openclaw-bok-seal.ts` + melhoria (insere DERIVES_FROM edge automaticamente). Idempotent: skip se seal j\u00e1 existe. Executado material via `bun run`:\n- documentation_suite node UUID: **`5271964b-1736-4a0b-9a6b-072cb8be3697`** (stability 0.85, name `bok-scribe-seal-e2e-user-zero-v1`)\n- DERIVES_FROM edge UUID: **`4254225d-a666-4363-a4bd-98947efc434f`** (source = seal, target = parent)\n- Parent seal confirmado existente: **`b00e938a-717b-4f62-b936-f4934845ec52`** (mcorch-qa-healing v1, embedding NOT NULL)\n- Embedding cascade: **NOT NULL confirmed** 5s post-insert (`openai/text-embedding-3-small`, 768d, chunks=1, stitched=0) via REST verify\n\n**5. Schema drift descoberto e corrigido pr\u00e9-seal.** Auditoria pr\u00e9-execu\u00e7\u00e3o do seed script revelou que docs do BoK (04-frd, 05-sdd, 06-data-model, 02-brd) usavam nomes errados de colunas `mcorch_edges.source/target/relationship`. Survey production via REST query exp\u00f4s schema real: `source_id/target_id/relation_type`. Distinct relation_types existentes: `defines` (678), `calls` (286), `DERIVES_FROM` (28, uppercase), `references` (4), `supersedes` (2), `depends_on` (1), `implements` (1). Quatro docs corrigidos antes do seal \u2014 script j\u00e1 saiu com schema correto.\n\n**6. Handoff milestone node + proof-manifest.** Phase 3 do seal protocol inseriu `session-handoff-20260526-e2e-user-zero-bok-v684` UUID **`8e6462a9-33ed-49f1-9403-780846d1f41f`** (stability 1.0, embedded 768d). Phase 5c material proof audit valida claims acima.\n\n| Action | Result |\n|--------|--------|\n| `agent-browser` CLI v0.27.0 verified + smoke test 116 KB PNG | \u2705 `/home/ubuntu/.nvm/.../bin/agent-browser` ARM64 native; `login.mcorch.com` hidratado |\n| SOP `docs/processes/agent-browser-install.md` autorado | \u2705 168 LOC com 7 verification gates + 7 recovery paths |\n| BoK suite `docs/bok/e2e-user-zero/` 9 docs | \u2705 2761 LOC totais via `/bok-scribe` Skill + audit fixes |\n| Traceability validation Phase 6 cross-doc | \u2705 12 MR \u00b7 12 BR \u00b7 12 PR \u00b7 20 FR zero orphans (grep material) |\n| Schema drift corrigido nos 4 docs afetados | \u2705 source_id/target_id/relation_type can\u00f4nicos pr\u00e9-seal |\n| `.claude/agents/bok-scribe-agent.md` Phase 7 perene rule | \u2705 canonical pattern documentado + precedent inventory |\n| `scripts/seed-e2e-user-zero-bok-seal.ts` 243 LOC + execu\u00e7\u00e3o | \u2705 doc_suite UUID + DERIVES_FROM edge + embedding NOT NULL |\n| Handoff milestone node + proof-manifest.json | \u2705 `8e6462a9-33ed-49f1-9403-780846d1f41f` embedded 768d |\n| TS zero erros + 177/177 tests passing | \u2705 `npx tsc --noEmit` clean \u00b7 4.53s test run |\n| BoK Gate validator 9/9 suites complete | \u2705 aios-sql-bridge \u00b7 canvas-design \u00b7 conteudo-v2 \u00b7 **e2e-user-zero** \u00b7 gamificacao-nodes \u00b7 mcorch-constellation \u00b7 mcorch-qa-healing \u00b7 openclaw \u00b7 viralmind |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `522f53d` | docs(processes): add agent-browser install SOP \u2014 Lei 2 anchor for E2E framework |\n| `33db876` | docs(bok): seal e2e-user-zero BoK 9/9 \u2014 E2E QA framework as Usu\u00e1rio Zero (Phase Commercial Gate enabler) |\n| `989417b` | docs(agents): bok-scribe Phase 7 canonical seed-script pattern (perene rule) |\n| `480b466` | chore(scripts): seed e2e-user-zero documentation_suite + DERIVES_FROM edge (canonical Phase 7 pattern) |\n| `f11581a` | docs(readme): v6.8.4 \u2014 e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern |\n\n### Arquitetura \u2014 e2e-user-zero framework (CLI-first, Bun-native)\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  CLI LAYER (Phase 5c gate dispatch)                           \u2502\n\u2502  scripts/qa/e2e-user-zero/runner.ts (~250 LOC futuras)        \u2502\n\u2502  --mode dogfood|focused|regression \u00b7 --flow \u00b7 --state \u00b7 --json\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                       \u2502 calls\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  FLOW LAYER (declarative jornadas user-zero)                  \u2502\n\u2502  flows/{trigger-orchestration, auth-login, dashboard-tour,    \u2502\n\u2502         canvas-overview, content-library, billing-flow,       \u2502\n\u2502         settings-tour, orchestrate-pipeline-view}.ts          \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                       \u2502 uses\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  DRIVER LAYER (abstra\u00e7\u00e3o sobre agent-browser CLI v0.27.0+)    \u2502\n\u2502  lib/browser-driver.ts \u00b7 snapshot/click/fill/HAR/console/...  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n       \u2502 spawn                \u2502\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 agent-browser CLI \u2502  \u2502  CAPTURE LAYER                          \u2502\n\u2502 Chromium headless \u2502  \u2502  \u00b7 LGPD redactor (HAR + screenshots)    \u2502\n\u2502 (subprocess)      \u2502  \u2502  \u00b7 classifier (heuristic, determinist)  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2502  \u00b7 finding schema v1.0.0                \u2502\n                       \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                                      \u2502 persists via\n                       \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                       \u2502  PERSISTENCE LAYER (service role)       \u2502\n                       \u2502  \u00b7 mcorch_nodes (observation)           \u2502\n                       \u2502  \u00b7 mcorch_edges (relation_type=OBSERVES)\u2502\n                       \u2502  \u00b7 infra_health_logs (telemetry)        \u2502\n                       \u2502  \u00b7 Filesystem e2e-output/run-<ts>/      \u2502\n                       \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n                       \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                       \u2502  GATE INTEGRATION (Phase 5c extension)  \u2502\n                       \u2502  extract-manifest.ts + ClaimKind        \u2502\n                       \u2502    'e2e_user_zero'                      \u2502\n                       \u2502  verifiers.ts + verifyE2EUserZero()     \u2502\n                       \u2502  Blocks SEAL on UI-touching change      \u2502\n                       \u2502    without green E2E run                \u2502\n                       \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n### Survival Laws Self-audit (esta seal)\n\n#### Law 1 (Materiality)\n- [x] Toda claim de SUCCESS tem prova citada acima (5 UUIDs literais + commit hashes + test counts + smoke test PNG bytes).\n- [x] Nenhum \"C\u00e9rebro sem m\u00e3os\" disclosure necess\u00e1rio \u2014 tudo executado via tools nativas (Read/Write/Edit/Bash + service role REST).\n- [x] Fase 5c (Material Proof Audit) ser\u00e1 executada via skill `mcorch-qa-healing` no `/handoff` flow logo abaixo \u2014 particularmente verifica os 5 UUIDs citados.\n- [x] Gate de E2E (`audit-canvas-ui.ts`): n\u00e3o aplic\u00e1vel \u2014 esta sess\u00e3o n\u00e3o tocou Canvas Studio UI.\n\n#### Law 2 (Process)\n- [x] Feature nova `e2e-user-zero` recebeu SOP `docs/processes/agent-browser-install.md` **antes** do c\u00f3digo do framework (que ser\u00e1 sess\u00e3o seguinte). Lei 2 satisfeita pelo BoK suite + SOP operacional j\u00e1 no lugar.\n- [x] Override consciente: nenhum.\n- [x] SOPs j\u00e1 existentes utilizadas: `handoff-material-proof-audit.md` (Phase 5c).\n\n#### Law 3 (Pruning)\n- [x] Podas executadas: payload JSON intermedi\u00e1rio em `/tmp/`, n\u00e3o em context; auditoria executada com material proofs sem re-leitura de docs ap\u00f3s write; pre-existing docs n\u00e3o relidos (CLAUDE.md/survival.md uma vez no in\u00edcio).\n- [x] Context window status: ~75% p\u00f3s-9 docs + audit + perene rule + seed script + execution. Pruning suficiente para selar.\n\n#### Law 4 (ORO)\n- [x] ORO triplet declarado no in\u00edcio da task: Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign \u00b7 Owner=Sovereign.\n\n---\n\n## mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening Record (2026-05-25)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:01:21)*
+
+
+## 🤖 Claude *(13:01:22)*
+
+Atualizando GraphRAG State counts no tail do HANDOFF.md.
+
+## 🤖 Claude *(13:01:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'GraphRAG State' HANDOFF.md | head -3",
+  "description": "Find GraphRAG State section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1225:**1) Phase 0 — HANDOFF.md read-from-end.** O `/handson` da própria sessão falhou imediatamente: HANDOFF.md cresceu para 113922 tokens (3167 linhas, 48 sprint seals newest-first) e estourou o limite de 25k do Read tool. Decisão Sovereign (Option B): mantém arquivo monolítico, modifica `.claude/commands/handson.md` linhas 11-26 para ler em duas fatias — `head -71` (Task State header + FIRST ACTION) + `tail -400` (últimas 1-2 seals + Pending Actions + GraphRAG State + Infrastructure + Key Files). Token usage por sessão futura: 5-8k. Auditoria histórica via Read com offset arbitrário fora do fluxo padrão. Outras opções (A: split por sprint; C: híbrido) descartadas por exigirem migração estrutural + atualização de `/handoff` em paralelo.
+> 4294:## GraphRAG State
+> ```
+
+## 🤖 Claude *(13:01:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 4294,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 4294	## GraphRAG State
+> 4295	
+> 4296	- **8599 total nodes** (v6.8.2: handoff milestone `1d26885f-bb8a-4cb0-8704-350d357d5df5` embedded 768d; +2 desde v6.8.0 base — handoff node + autoembed cascade) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> 4297	- **11650 total edges** (+33 desde v6.6.6: pg_net cascade autoembed dos commits da sessão) — DEFINES · CALLS · INHABITS · DERIVES_FROM · REQUIRES · observes (OE-661-003) · ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) · CONTAINS_LINK_FOR (OE-661-004)
+> 4298	- Neural density: **100%** — trigger INSERT autônomo garante embedding imediato
+> 4299	- Paginação completa na Matrix (fetchAll() 1000 rows/page)
+> 4300	- AIOS grounding: 26+ nós por sessão via multi-bucket + semantic search (pgvector HNSW cosine 768d)
+> 4301	- Phase Zeta: node_type `conversation` persistido — cada sessão AIOS vira nó + DERIVES_FROM edges
+> 4302	- `useKnowledgeMesh` exporta `meshStats` com totalNodes/totalEdges/dominantTypes — `contextString` e `contextNodeIds` memoizados
+> 4303	- HNSW cosine index operational
+> ```
+
+## 🤖 Claude *(13:01:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8599 total nodes** (v6.8.2: handoff milestone `1d26885f-bb8a-4cb0-8704-350d357d5df5` embedded 768d; +2 desde v6.8.0 base \u2014 handoff node + autoembed cascade) \u2014 **100% embedded** (768d HNSW cosine) \u2014 handoff \u00b7 milestone \u00b7 architecture \u00b7 decision \u00b7 system \u00b7 observation \u00b7 requirement \u00b7 conversation \u00b7 documentation_suite (BoK seal) \u00b7 crew_agent \u00b7 markdown_file \u00b7 vault_note \u00b7 feature \u00b7 ui-ux \u00b7 content_mesh_asset + AST (file \u00b7 function \u00b7 arrow_function \u00b7 interface \u00b7 type_alias \u00b7 class)\n- **11650 total edges** (+33 desde v6.6.6: pg_net cascade autoembed dos commits da sess\u00e3o) \u2014 DEFINES \u00b7 CALLS \u00b7 INHABITS \u00b7 DERIVES_FROM \u00b7 REQUIRES \u00b7 observes (OE-661-003) \u00b7 ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) \u00b7 CONTAINS_LINK_FOR (OE-661-004)",
+  "new_string": "- **8603 total nodes** (v6.8.4: documentation_suite seal `5271964b-1736-4a0b-9a6b-072cb8be3697` + handoff milestone `8e6462a9-33ed-49f1-9403-780846d1f41f` both embedded 768d; +3 desde v6.8.3 \u2014 seal + handoff + autoembed cascade) \u2014 **100% embedded** (768d HNSW cosine) \u2014 handoff \u00b7 milestone \u00b7 architecture \u00b7 decision \u00b7 system \u00b7 observation \u00b7 requirement \u00b7 conversation \u00b7 documentation_suite (BoK seal) \u00b7 crew_agent \u00b7 markdown_file \u00b7 vault_note \u00b7 feature \u00b7 ui-ux \u00b7 content_mesh_asset + AST (file \u00b7 function \u00b7 arrow_function \u00b7 interface \u00b7 type_alias \u00b7 class)\n- **11925 total edges** (+1 nesta seal: DERIVES_FROM edge `4254225d-a666-4363-a4bd-98947efc434f` \u2192 mcorch-qa-healing parent) \u2014 defines \u00b7 calls \u00b7 INHABITS \u00b7 DERIVES_FROM \u00b7 REQUIRES \u00b7 observes (OE-661-003) \u00b7 ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) \u00b7 CONTAINS_LINK_FOR (OE-661-004) \u00b7 OBSERVES (e2e-user-zero finding observations \u2014 when runner.ts lands)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:01:44)*
+
+
+## 🤖 Claude *(13:01:44)*
+
+GraphRAG state atualizado. Phase 5b — secret scan no HANDOFF.md ANTES do commit.
+
+## 🤖 Claude *(13:01:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 5b-1. Scan HANDOFF.md for real credentials ===\" && \\\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\\s*['\\\"]?[A-Za-z0-9+/]{40,})\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" \\\n  | head -20 || echo \"  \u2705 HANDOFF.md: NO CREDENTIALS FOUND\" && \\\necho \"\" && echo \"=== 5b-2. Google API keys (AIza prefix) ===\" && \\\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -10 || echo \"  \u2705 NO GOOGLE API KEYS\" && \\\necho \"\" && echo \"=== 5b-3. Inline = 'value' assignments ===\" && \\\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|id.*[0-9a-f-]\\{36\\}\" \\\n  | head -10 || echo \"  \u2705 NO INLINE ASSIGNMENTS\"",
+  "description": "Phase 5b \u2014 Secret scan HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. Scan HANDOFF.md for real credentials ===
+> 
+> === 5b-2. Google API keys (AIza prefix) ===
+> 
+> === 5b-3. Inline = 'value' assignments ===
+> 1087:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 1120:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 3823:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 3825:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 3826:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 3868:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 3870:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(13:02:04)*
+
+
+## 🤖 Claude *(13:02:05)*
+
+Phase 5b ✅ — matches são UUIDs/project_ids existentes em seals anteriores, todas falsos positivos benignos. Committing HANDOFF.md.
+
+## 🤖 Claude *(13:02:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md && \\\ngit commit -m \"docs(handoff): seal v6.8.4 \u2014 e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern\" -m \"9th BoK suite sealed material (2761 LOC), SOP operacional agent-browser anchor for Lei 2 (168 LOC), perene rule for Phase 7 BoK seal pattern in .claude/agents/bok-scribe-agent.md, and first canonical seed-script execution with documentation_suite UUID 5271964b-1736-4a0b-9a6b-072cb8be3697 + DERIVES_FROM edge 4254225d-a666-4363-a4bd-98947efc434f \u2192 mcorch-qa-healing parent b00e938a-717b-4f62-b936-f4934845ec52. Schema drift in BoK docs corrected pre-seal via production survey. Handoff milestone 8e6462a9-33ed-49f1-9403-780846d1f41f embedded 768d. Survival Laws self-audit 4/4.\" && \\\necho \"---\" && git log -1 --format='%h %s'",
+  "description": "Commit HANDOFF.md seal v6.8.4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main a4f953e] docs(handoff): seal v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+>  1 file changed, 113 insertions(+), 2 deletions(-)
+> ---
+> a4f953e docs(handoff): seal v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+> ```
+
+## 🤖 Claude *(13:02:17)*
+
+
+## 🤖 Claude *(13:02:18)*
+
+Phase 5c — Material Proof Audit (mcorch-qa-healing).
+
+## 🤖 Claude *(13:02:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a; \\\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -60",
+  "description": "Phase 5c material proof audit",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 5271964b | mesh_node | 5271964b-1736-4a0b-9a6b-072cb8be3697 | 5271964b-1736-4a0b-9a6b-072cb8be3697 | ✅ |
+> | mesh edge 4254225d | mesh_edge | 4254225d-a666-4363-a4bd-98947efc434f | 4254225d-a666-4363-a4bd-98947efc434f | ✅ |
+> | mesh node b00e938a | mesh_node | b00e938a-717b-4f62-b936-f4934845ec52 | b00e938a-717b-4f62-b936-f4934845ec52 | ✅ |
+> | mesh node 8e6462a9 | mesh_node | 8e6462a9-33ed-49f1-9403-780846d1f41f | 8e6462a9-33ed-49f1-9403-780846d1f41f | ✅ |
+> | commit 522f53d | git_commit | 522f53d | 522f53d | ✅ |
+> | commit 33db876 | git_commit | 33db876 | 33db876 | ✅ |
+> | commit 989417b | git_commit | 989417b | 989417b | ✅ |
+> | commit 480b466 | git_commit | 480b466 | 480b466 | ✅ |
+> | commit f11581a | git_commit | f11581a | f11581a | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 177 passing | test_suite | 177 | 177 passed | ✅ |
+> | file docs/processes/agent-browser-install.md | file_exists | docs/processes/agent-browser-install.md | docs/processes/agent-browser-install.md | ✅ |
+> | file .claude/agents/bok-scribe-agent.md | file_exists | .claude/agents/bok-scribe-agent.md | .claude/agents/bok-scribe-agent.md | ✅ |
+> | file scripts/seed-e2e-user-zero-bok-seal.ts | file_exists | scripts/seed-e2e-user-zero-bok-seal.ts | scripts/seed-e2e-user-zero-bok-seal.ts | ✅ |
+> | deploy size 116kB | edge_deploy | 116kB | 116kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 
+> QA VERDICT: 15 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 6.4s)
+> ```
+
+## 🤖 Claude *(13:02:31)*
+
+
+## 🤖 Claude *(13:02:32)*
+
+**`SEAL ALLOWED`** — 15 claims verificadas, 0 falhas. Phase 6 — BoK Seal Status check.
+
+## 🤖 Claude *(13:02:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 6-1. BoK suites completeness ===\" && \\\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] \\\n    && echo \"  \u2705 $slug \u2014 BoK complete (9 docs)\" \\\n    || echo \"  \u26a0\ufe0f $slug \u2014 incomplete (missing: ${missing[*]})\"\ndone && \\\necho \"\" && echo \"=== 6-2. Session touched modules ===\" && \\\ngit diff --name-only HEAD~5..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | sort -u | head -10 || echo \"  (none \u2014 only docs/scripts changes this session)\" && \\\necho \"\" && echo \"=== 6-3. Mesh seal nodes for sealed BoK suites ===\" && \\\nset -a; source .env 2>/dev/null; set +a; \\\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at&order=created_at.desc\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint(f'  Total seals: {len(d)}')\nfor n in d:\n    print(f'  \ud83c\udf10 {n[\\\"created_at\\\"][:10]} \u00b7 {n[\\\"name\\\"]} (stab={n[\\\"stability_score\\\"]})')\n\"",
+  "description": "Phase 6 \u2014 BoK seal status verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-1. BoK suites completeness ===
+>   ✅ aios-sql-bridge — BoK complete (9 docs)
+>   ✅ canvas-design — BoK complete (9 docs)
+>   ✅ conteudo-v2 — BoK complete (9 docs)
+>   ✅ e2e-user-zero — BoK complete (9 docs)
+>   ✅ gamificacao-nodes — BoK complete (9 docs)
+>   ✅ mcorch-constellation — BoK complete (9 docs)
+>   ✅ mcorch-qa-healing — BoK complete (9 docs)
+>   ✅ openclaw — BoK complete (9 docs)
+>   ✅ viralmind — BoK complete (9 docs)
+> 
+> === 6-2. Session touched modules ===
+> 
+> === 6-3. Mesh seal nodes for sealed BoK suites ===
+>   Total seals: 113
+>   🌐 2026-05-26 · bok-scribe-seal-e2e-user-zero-v1 (stab=0.85)
+>   🌐 2026-05-23 · Skills (2) (stab=0.489215202705875)
+>   🌐 2026-05-23 · Overview (2) (stab=0.489215438253992)
+>   🌐 2026-05-23 · Getting Started (2) (stab=0.48921526838755)
+>   🌐 2026-05-23 · Tab (1) (stab=0.489211098751111)
+>   🌐 2026-05-23 · Getting Started (1) (stab=0.489211116870041)
+>   🌐 2026-05-23 · Features (1) (stab=0.48921131164858)
+>   🌐 2026-05-23 · Overview (1) (stab=0.489209234769781)
+>   🌐 2026-05-23 · Review Changes + Source Control (stab=0.48917856050058)
+>   🌐 2026-05-23 · Separate Chrome Profile (stab=0.489178306852503)
+>   🌐 2026-05-23 · Knowledge Items (stab=0.48918000539124)
+>   🌐 2026-05-23 · Browser Recordings (stab=0.489178309117218)
+>   🌐 2026-05-23 · Browser (stab=0.489178338558506)
+>   🌐 2026-05-23 · Plan (stab=0.489178354411508)
+>   🌐 2026-05-23 · Hooks (stab=0.489178666942223)
+>   🌐 2026-05-23 · Models (stab=0.489178438205955)
+>   🌐 2026-05-23 · Home (stab=0.489178469911966)
+>   🌐 2026-05-23 · Files (stab=0.489178395176372)
+>   🌐 2026-05-23 · Side Panel (stab=0.489173664210048)
+>   🌐 2026-05-23 · Allowlist / Denylist (stab=0.48917398353185)
+>   🌐 2026-05-23 · Screenshots (stab=0.489174087707802)
+>   🌐 2026-05-23 · Playground (stab=0.4891738499149)
+>   🌐 2026-05-23 · Permissions (stab=0.489173655151277)
+>   🌐 2026-05-23 · Walkthrough (stab=0.489174126207616)
+>   🌐 2026-05-23 · Projects (stab=0.489173990325933)
+>   🌐 2026-05-23 · Editor (stab=0.489174103560666)
+>   🌐 2026-05-23 · Conversation View (stab=0.489173700445136)
+>   🌐 2026-05-23 · Rules (stab=0.489174130737006)
+>   🌐 2026-05-23 · FAQ (stab=0.489173974473072)
+>   🌐 2026-05-23 · Task List (stab=0.489173933708576)
+>   🌐 2026-05-23 · Panes (stab=0.489174212266034)
+>   🌐 2026-05-23 · Changes Sidebar (stab=0.489173580416418)
+>   🌐 2026-05-23 · MCP (stab=0.489173684592284)
+>   🌐 2026-05-23 · Workspaces (stab=0.489173786503479)
+>   🌐 2026-05-23 · Enterprise (stab=0.489174083178412)
+>   🌐 2026-05-23 · Sidecars (stab=0.489168163301948)
+>   🌐 2026-05-23 · Getting Started (stab=0.489168181419288)
+>   🌐 2026-05-23 · Features (stab=0.489168104420599)
+>   🌐 2026-05-23 · Command (stab=0.489168980847571)
+>   🌐 2026-05-23 · Review Changes (stab=0.489168238035979)
+>   🌐 2026-05-23 · Agent Manager (stab=0.489167780573304)
+>   🌐 2026-05-23 · Browser Subagent View (stab=0.489168287858673)
+>   🌐 2026-05-23 · Overview + Quick Start (stab=0.489168353534049)
+>   🌐 2026-05-23 · Build with Google (stab=0.489167771514641)
+>   🌐 2026-05-23 · Artifacts (stab=0.48916832635803)
+>   🌐 2026-05-23 · Artifact Review (stab=0.489169177874006)
+>   🌐 2026-05-23 · Settings (stab=0.489168185948623)
+>   🌐 2026-05-23 · Inbox (stab=0.489168369386727)
+>   🌐 2026-05-23 · Using AGY CLI (stab=0.489168242565315)
+>   🌐 2026-05-23 · Plugins (stab=0.489169778012486)
+>   🌐 2026-05-23 · Terminal (stab=0.489168038745256)
+>   🌐 2026-05-23 · Subagents (stab=0.489163609076962)
+>   🌐 2026-05-23 · Overview (stab=0.489163328260896)
+>   🌐 2026-05-23 · Agent Settings (stab=0.489163393935607)
+>   🌐 2026-05-23 · Strict Mode (stab=0.489163389406316)
+>   🌐 2026-05-23 · Firebase Studio Migration (stab=0.48916343696387)
+>   🌐 2026-05-23 · Plans (stab=0.489163457345681)
+>   🌐 2026-05-23 · Migration (stab=0.489161382934677)
+>   🌐 2026-05-23 · Skill format (1) (stab=0.489128755146935)
+>   🌐 2026-05-23 · Skills (1) (stab=0.48912922389555)
+>   🌐 2026-05-23 · Dreaming (1) (stab=0.48912469041329)
+>   🌐 2026-05-23 · Configuração (1) (stab=0.489122545968538)
+>   🌐 2026-05-23 · Modelo de ameaças (MITRE ATLAS) (stab=0.489076312486415)
+>   🌐 2026-05-23 · Verificações de auditoria de segurança (stab=0.489075848316987)
+>   🌐 2026-05-23 · Arquitetura do Gateway (stab=0.489076452869451)
+>   🌐 2026-05-23 · Guia de personalidade do SOUL.md (stab=0.489075590193691)
+>   🌐 2026-05-23 · Subagentes (stab=0.489071392312891)
+>   🌐 2026-05-23 · Criando Skills (stab=0.489071220232246)
+>   🌐 2026-05-23 · Wiki de memória (stab=0.489066130295293)
+>   🌐 2026-05-23 · Referência de configuração de memória (stab=0.489066420112345)
+>   🌐 2026-05-23 · Busca na memória (stab=0.489065969537471)
+>   🌐 2026-05-23 · Active Memory (stab=0.489067006539561)
+>   🌐 2026-05-23 · Mecanismo de memória integrado (stab=0.489061010977083)
+>   🌐 2026-05-23 · Visão geral da memória (stab=0.489060635124784)
+>   🌐 2026-05-23 · Configuração — ferramentas e provedores personalizados (stab=0.489061173997447)
+>   🌐 2026-05-23 · Configuração — canais (stab=0.489061692493134)
+>   🌐 2026-05-23 · Configuração — agentes (stab=0.489056697749687)
+>   🌐 2026-05-23 · Exemplos de configuração (stab=0.489055995863263)
+>   🌐 2026-05-23 · Referência de configuração (stab=0.489056410202547)
+>   🌐 2026-05-23 · Configuração do assistente pessoal (stab=0.489051347589245)
+>   🌐 2026-05-23 · Configuração (stab=0.489051306834968)
+>   🌐 2026-05-23 · Primeiros passos (stab=0.489048270650863)
+>   🌐 2026-05-20 · bok-scribe-seal-mcorch-qa-healing-v1 (stab=0.125407436590674)
+>   🌐 2026-05-19 · bok-scribe-seal-aios-sql-bridge-sdd-only-v1 (stab=0.109389383725416)
+>   🌐 2026-05-18 · bok-scribe-seal-openclaw-v1 (stab=0.0414790677148452)
+>   🌐 2026-05-18 · bok-scribe-seal-gamificacao-nodes-v1 (stab=0.03198402932466)
+>   🌐 2026-05-16 · Threat model (MITRE ATLAS) (stab=0.00703970772388881)
+>   🌐 2026-05-16 · Security audit checks (stab=0.00703972255291839)
+>   🌐 2026-05-16 · Gateway architecture (stab=0.00703971790865851)
+>   🌐 2026-05-16 · SOUL.md personality guide (stab=0.0070397101682322)
+>   🌐 2026-05-16 · Skill format (stab=0.00703971750126745)
+>   🌐 2026-05-16 · Sub-agents (stab=0.00703974536687104)
+>   🌐 2026-05-16 · Creating skills (stab=0.00703955731692548)
+>   🌐 2026-05-16 · Skills (stab=0.00703945685729309)
+>   🌐 2026-05-16 · Dreaming (stab=0.00703950313535603)
+>   🌐 2026-05-16 · Memory wiki (stab=0.00703950769799843)
+>   🌐 2026-05-16 · Memory configuration reference (stab=0.00703946353826226)
+>   🌐 2026-05-16 · Memory search (stab=0.00703951160883713)
+>   🌐 2026-05-16 · Active memory (stab=0.00703946256055906)
+>   🌐 2026-05-16 · Builtin memory engine (stab=0.00703946076810355)
+>   🌐 2026-05-16 · Memory overview (stab=0.00703943762917331)
+>   🌐 2026-05-16 · Configuration — tools and custom providers (stab=0.00703945824237155)
+>   🌐 2026-05-16 · Configuration — channels (stab=0.00703919402322055)
+>   🌐 2026-05-16 · Configuration — agents (stab=0.00703931166999266)
+>   🌐 2026-05-16 · Configuration examples (stab=0.00703918465392919)
+>   🌐 2026-05-16 · Configuration reference (stab=0.00703918497981737)
+>   🌐 2026-05-16 · Configuration (stab=0.00703918986814197)
+>   🌐 2026-05-16 · Personal assistant setup (stab=0.00703920241485731)
+>   🌐 2026-05-16 · Setup (stab=0.00703905706986357)
+>   🌐 2026-05-16 · Getting started (stab=0.0070390629357469)
+>   🌐 2026-05-15 · bok-scribe-seal-viralmind-v1 (stab=0.00908641515125481)
+>   🌐 2026-05-08 · bok-scribe-seal-conteudo-v2-v1 (stab=0.00892829445375137)
+>   🌐 2026-05-08 · bok-scribe-seal-mcorch-constellation-v1 (stab=0.00922152542363481)
+> ```
+
+## 🤖 Claude *(13:02:46)*
+
+
+## 🤖 Claude *(13:02:46)*
+
+Phase 6 ✅ — 9/9 BoK suites complete, zero src/ changes this session (docs-only). Phase 7 — push.
+
+## 🤖 Claude *(13:02:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline origin/main..HEAD && \\\necho \"---\" && \\\ngit push origin main 2>&1 | tail -10",
+  "description": "Phase 7 \u2014 push to origin/main",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> a4f953e docs(handoff): seal v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+> f11581a docs(readme): v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+> 480b466 chore(scripts): seed e2e-user-zero documentation_suite + DERIVES_FROM edge (canonical Phase 7 pattern)
+> 989417b docs(agents): bok-scribe Phase 7 canonical seed-script pattern (perene rule)
+> 33db876 docs(bok): seal e2e-user-zero BoK 9/9 — E2E QA framework as Usuário Zero (Phase Commercial Gate enabler)
+> 522f53d docs(processes): add agent-browser install SOP — Lei 2 anchor for E2E framework
+> ---
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    a734180..a4f953e  main -> main
+> ```
+
+## 🤖 Claude *(13:02:54)*
+
+
+## 🤖 Claude *(13:02:54)*
+
+**PUSHED** — 6 commits → origin/main. Phase 7b — sprint hygiene + scratch + MCP.
+
+## 🤖 Claude *(13:03:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Sprint priorities current state ===\" && \\\nls -la .claude/context/sprint-priorities.md 2>&1 | head -2 && \\\necho \"\" && echo \"=== Scratch cleanup ===\" && \\\nls scratch/ 2>/dev/null && echo \"\u26a0\ufe0f files present\" || echo \"  \u2705 scratch/ clean\" && \\\necho \"\" && echo \"=== MCP docs check ===\" && \\\ncat .mcp.json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(f'  - {name}') for name in d.get('mcpServers', {}).keys()]\" 2>/dev/null || echo \"  (no .mcp.json)\" && \\\necho \"\" && echo \"=== Final mesh state ===\" && \\\nset -a; source .env 2>/dev/null; set +a; \\\ncurl -s -I \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Prefer: count=exact\" -H \"Range: 0-0\" 2>&1 | grep -i 'content-range' && \\\ncurl -s -I \"${SUPABASE_URL}/rest/v1/mcorch_edges?select=id\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Prefer: count=exact\" -H \"Range: 0-0\" 2>&1 | grep -i 'content-range'",
+  "description": "Phase 7b hygiene + final mesh state"
+}
+```
+
+## 🤖 Claude *(13:03:01)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "18",
+  "status": "completed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Sprint priorities current state ===
+> -rw-rw-r-- 1 ubuntu ubuntu 61478 May 20 07:29 .claude/context/sprint-priorities.md
+> 
+> === Scratch cleanup ===
+>   ✅ scratch/ clean
+> 
+> === MCP docs check ===
+>   - gitnexus
+>   - obsidian
+>   - playwright
+> 
+> === Final mesh state ===
+> content-range: 0-999/8603
+> content-range: 0-999/11925
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #18 status
+> ```
+
+## 🤖 Claude *(13:03:06)*
+
+
+## 🤖 Claude *(13:03:45)*
+
+Phase 8 — relatório final.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern (2026-05-26)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA (Phase 1 + Phase 5b)
+  ✅ 1a Secret leak scan (diff + untracked) — NO SECRETS
+  ⚠️ 1b 4 webhooks sem JWT — pre-existing (autonomic-action/handle-ml-postback/instagram-webhook/stripe-webhook), padrão do projeto, não introduzidos nesta sessão
+  ✅ 1c Client-side coin deduction guard — NO VIOLATIONS
+  ✅ 1d RLS bypass risk — NO VIOLATIONS
+  ✅ 1e Sensitive data in console.log — NO SENSITIVE LOGS
+  ✅ 5b HANDOFF.md secret scan — apenas UUIDs/project_ids benignos (sem credenciais reais)
+
+📦 COMMITS (6 total — todos pushed para origin/main)
+  522f53d — docs(processes): add agent-browser install SOP — Lei 2 anchor for E2E framework
+  33db876 — docs(bok): seal e2e-user-zero BoK 9/9 — E2E QA framework as Usuário Zero (Phase Commercial Gate enabler)
+  989417b — docs(agents): bok-scribe Phase 7 canonical seed-script pattern (perene rule)
+  480b466 — chore(scripts): seed e2e-user-zero documentation_suite + DERIVES_FROM edge (canonical Phase 7 pattern)
+  f11581a — docs(readme): v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+  a4f953e — docs(handoff): seal v6.8.4 — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+
+⬡ KNOWLEDGE MESH
+  documentation_suite seal:  5271964b-1736-4a0b-9a6b-072cb8be3697 (bok-scribe-seal-e2e-user-zero-v1, stab 0.85)
+  DERIVES_FROM edge:         4254225d-a666-4363-a4bd-98947efc434f → mcorch-qa-healing parent
+  Handoff milestone node:    8e6462a9-33ed-49f1-9403-780846d1f41f (stab 1.0)
+  Embedding:                 ✅ NOT NULL confirmed via REST 5s post-insert (openai/text-embedding-3-small, 768d, chunks=1)
+  Mesh delta:                8600 → 8603 nodes (+3) · 11924 → 11925 edges (+1)
+  proof-manifest.json:       ✅ saved with handoffNodeId
+
+📖 README.md
+  Versão: v6.8.3 → v6.8.4
+  Badge neural_mesh: 8600 → 8603 nodes (100% embedded)
+  Badges adicionadas: BoK_e2e--user--zero-9_of_9_sealed · agent--browser-v0.27.0_validated
+  Seção adicionada: [v6.8.4] entry prepended under What's New (6 bullets material)
+
+🧠 HANDOFF.md
+  Fase selada: e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern
+  Seções atualizadas: novo Record (113 linhas), GraphRAG State counts (8603/11925), Survival Laws Self-audit 4/4 ✓
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED ✅
+  Claims: 15 verificadas · 1 skipped (edge_deploy size — info, não-bloqueante) · 0 falhas
+  Cobertura: 4 mesh UUIDs (3 novos + 1 parent) · 5 commits · TS clean · 177/177 tests · 3 file_exists · ORO compliance ✅
+
+📚 BoK GATE (Phase 6)
+  ✅ 9/9 suites complete — aios-sql-bridge · canvas-design · conteudo-v2 · **e2e-user-zero (NOVA)** · gamificacao-nodes · mcorch-constellation · mcorch-qa-healing · openclaw · viralmind
+  Session touched modules: 0 src/ paths (docs+scripts only) — gate exempt
+  Mesh seal nodes: 113 documentation_suite nodes (incluindo seal nova v6.8.4)
+
+🚀 PUSH (Phase 7)
+  Branch: main → origin/main
+  Commits enviados: 6
+  Remote: github.com:gabrielZarattini/constellation-orchestra.git
+  Range: a734180..a4f953e
+
+📌 SPRINT (Phase 7b)
+  sprint-priorities.md: sem mudanças (sessão tooling/BoK, não tocou superfícies de produto)
+  scratch/ cleanup: ✅ scratch/ clean
+  MCP docs: ✅ 3 servers registered (gitnexus · obsidian · playwright)
+
+⏭ PRÓXIMOS PASSOS
+  1. **Implementar `scripts/qa/e2e-user-zero/runner.ts`** — primeira sessão dedicada do framework. ~8h agent work estimated. Foco MVP: 3 flows iniciais (auth-login, trigger-orchestration, dashboard-tour) + Phase 5c gate wire em extract-manifest.ts + verifiers.ts + 5 Vitest cases. PR-E2E-001..008 (Must do BoK).
+  2. **Phase 3 do plano OE-661 (Canvas paid smoke $0.56)** — DEFERRED desde v6.8.2 por decisão Sovereign. Pre-flight ainda OK; mco_balance ≥ 125 confirmado.
+  3. **OTD-OE661-PER-USER refactor** (SLA 2026-06-02 — 7 dias restantes) — eliminar `GCRUX_ML_AFFILIATE_TOKEN` global em link-forge.ts + process-affiliate-link GET branch antes de Usuário 1.
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Sequência completada na ordem 3→1→2→4 que você pediu invertendo levemente:**
+- **3 (auditoria)** primeiro → identificou 4 gaps (Phase Completion dates, FMEA count em 00-index, KPI count, schema drift)
+- **2 (gaps em docs)** → todos corrigidos pré-seal (4 docs editados para schema canônico, 00-index counts atualizados)
+- **1 (regra perene Opção A)** → `.claude/agents/bok-scribe-agent.md` Phase 7 atualizado com canonical pattern + improvement (DERIVES_FROM edge inserido pelo próprio script)
+- **4 (handoff)** → 8 phases do protocol v4 executadas, SEAL ALLOWED material, 6 commits pushed
+
+**Próxima sessão dedicada:** implementação do `scripts/qa/e2e-user-zero/runner.ts` + flows MVP (PR-E2E-001..008). BoK está pronto; código pode nascer agora porque a Lei 2 e o BoK Gate estão satisfeitos.
