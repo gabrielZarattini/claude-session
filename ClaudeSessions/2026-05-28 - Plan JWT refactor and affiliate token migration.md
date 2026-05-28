@@ -9154,3 +9154,43 @@ Mesh artifacts criados. Vou update HANDOFF.md com seção C audit findings.
 ```
 
 Tudo selado e pushado. Boa noite (ou madrugada — são 22h+ BRT). 🌙
+
+## 👤 User *(02:08:22)*
+
+qual versao desse handoff?
+
+## 🤖 Claude *(02:08:30)*
+
+
+## 🤖 Claude *(02:08:38)*
+
+Não tem versão nova — esta sessão fechou **audit-only, sem bump de versão**.
+
+```
+Última versão selada: v6.11.1 (Seal B — Per-User API Tenancy OE661)
+Audit C de hoje:      sem versão (documental, zero código de produção)
+```
+
+**Razão:** versão sobe quando há código mergeado. O audit C só:
+- Investigou (3 Explore agents + 1 Plan agent)
+- Documentou (HANDOFF section + plan file + memory)
+- Registrou OTD-CANVAS-PIPELINE-001 no mesh
+- Não tocou nenhum arquivo de código de produção
+
+As próximas versões surgirão conforme C1-C5 executam:
+
+| Próximas sessões | Versão |
+|------------------|--------|
+| C1 Foundation + C2 DAG Runner | **v6.11.2 / v6.11.3** |
+| C3 Asset Lineage + C4 Tier Enforcement | **v6.11.4 / v6.11.5** |
+| C5 Paid Smoke (Sovereign UI) | **v6.12.0** |
+
+Estado atual do branch `claude/bold-visvesvaraya-4a95b9`:
+```
+e007e05 docs(handoff): canvas pipeline audit + OTD-CANVAS-PIPELINE-001  ← audit (sem ver)
+5127395 docs(handoff): seal v6.11.1 — per-user API tenancy OE661 closed
+fd21a31 docs(claude): register _shared/auth + _shared/user-keys + 2 SOPs
+5390b33 fix(affiliate): remove GCRUX_DEFAULT_TOKEN magic-string fallback
+9e1eb5f fix(canvas): Higgsfield per-user enforcement (OTD-OE661-PER-USER)
+...
+```
