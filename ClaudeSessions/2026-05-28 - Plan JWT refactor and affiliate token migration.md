@@ -7279,3 +7279,1878 @@ Em plan mode. Vou auditar profundamente em paralelo (3 frentes) antes de propor 
 > ```
 > [{'type': 'text', 'text': 'Perfect. Now I have enough information. Let me create a comprehensive analysis document:\n\n## Mapped Analysis: Visual Orchestrator Canvas DAG Runner Pattern\n\nBased on end-to-end exploration of `/src/store/useOrchestrationStore.ts`, `/src/hooks/useOrchestrationGraph.ts`, `/src/components/orchestrator/`, and Canvas Studio (`/src/store/useCanvasStore.ts`, `/src/components/canvas/`), here\'s the reusable pattern inventory:\n\n---\n\n## 1. **Run Trigger: Where is the "Run" Button?**\n\n**Pipeline-wide button, located in TriggerNode only** (NOT per-node).\n\n- **File:Line:** `src/components/orchestrator/nodes/TriggerNode.tsx:123–133`\n- **Label (PT-BR):** "Executar Pipeline"\n- **Code snippet:**\n```tsx\n<Button onClick={handleRun} disabled={isRunning || !config.topic.trim()} ...>\n  {isRunning ? <>Loader2/> Executando…</> : <>Rocket/> Executar Pipeline</>}\n</Button>\n```\n- **Reusability:** NOT REUSABLE DIRECTLY for Canvas Studio — Canvas has a top-bar "Run all" button (TopBar.tsx:122–144), not embedded in a single node.\n\n---\n\n## 2. **DAG Traversal Algorithm: Topological Execution**\n\n**NON-TOPOLOGICAL; HARDCODED EXECUTION PLAN** — does NOT find root nodes dynamically.\n\n- **File:Line:** `src/hooks/useOrchestrationGraph.ts:27–103`\n- **Algorithm:**\n  1. Sets Trigger node to `running` (line 38)\n  2. Sets downstream agents (content, image, social) to `pending` (lines 44–46)\n  3. **Invokes single Supabase edge function** `orchestrate-content` (line 49) — delegates actual execution to backend\n  4. Maps returned step results back to node statuses (lines 58–65)\n  5. Quality gate aggregates errors from upstreams (line 73): `gate-audit = hasErrors ? \'error\' : \'done\'`\n  6. Publish nodes blocked if upstream errors (lines 76–82): `status = hasErrors ? \'blocked\' : \'done\'`\n  7. NO Promise.all for parallel branches; NO topological sort\n\n- **Code snippet (critical aggregation logic):**\n```ts\nconst hasErrors = resultSteps.some((s) => s.status === \'error\');\nstore.updateNodeStatus(\'gate-audit\', hasErrors ? \'error\' : \'done\');\nfor (const [platform, nodeId] of Object.entries(PLATFORM_TO_PUBLISH)) {\n  store.updateNodeStatus(nodeId, hasErrors ? \'blocked\' : \'done\');\n}\n```\n- **Reusability:** NOT DIRECTLY REUSABLE — assumes single backend call returns all step results. Canvas would need client-side DAG traversal (root-node discovery + parallel execution).\n\n---\n\n## 3. **Edge Handles: sourceHandle / targetHandle**\n\n**No semantic handle IDs; no multi-input declarations.**\n\n- **File:Line:** \n  - Trigger: `src/components/orchestrator/nodes/TriggerNode.tsx:142–146`\n  - Agent: `src/components/orchestrator/nodes/AgentNode.tsx:29, 52`\n  - QualityGate: `src/components/orchestrator/nodes/QualityGateNode.tsx:23, 52`\n- **Pattern:**\n```tsx\n<Handle type="target" position={Position.Left} className="..." />\n<Handle type="source" position={Position.Right} className="..." />\n```\n- **Observation:** Single anonymous Handle per direction — no `id` attribute, no `targetHandle` in edges. Aggregator (QualityGateNode) has same single target, not multiple semantic inputs.\n- **Reusability:** MINIMAL — safe for single-input/single-output chains. Canvas Studio likely needs this pattern as-is; multi-input sceneCompose (mentioned in context) would require `id="sceneImage"`, `id="sceneStyle"` etc.\n\n---\n\n## 4. **Node Input/Output Declaration**\n\n**Handles are positional + untyped; no semantic input/output port names.**\n\n- **File:Line:** All node files under `src/components/orchestrator/nodes/`\n- **Example (AgentNode):**\n```tsx\n<Handle type="target" position={Position.Left} className="..." />\n<Handle type="source" position={Position.Right} className="..." />\n```\n- **Canvas Studio (GenerateImageNode):**\n```tsx\nconst HANDLE_CLASS = "!h-3 !w-3 ...";\n<Handle type="target" position={Position.Left} className={HANDLE_CLASS} />\n<Handle type="source" position={Position.Right} className={HANDLE_CLASS} />\n```\n- **Reusability:** REUSABLE AS-IS for linear pipelines (single input → single output). Not suitable for multi-input nodes without refactoring to add `id` props.\n\n---\n\n## 5. **Status Sync: Visual Canvas Updates**\n\n**Zustand store → ReactFlow nodes via useEffect + setNodes().**\n\n- **File:Line:** `src/components/orchestrator/OrchestrationCanvas.tsx:45–53`\n- **Code snippet:**\n```tsx\nuseEffect(() => {\n  setNodes((current) =>\n    current.map((n) => {\n      const sn = storeNodes.find((s) => s.id === n.id);\n      if (!sn) return n;\n      return { ...n, data: sn.data };\n    })\n  );\n}, [storeNodes, setNodes]);\n```\n- **Flow:** `store.updateNodeStatus(id, status)` → Zustand state update → useEffect fires → `setNodes()` → ReactFlow re-renders with new `data.status`\n- **Reusability:** DIRECTLY REUSABLE for Canvas — exact same pattern.\n\n---\n\n## 6. **Output → Input Wiring: Data Flow Between Nodes**\n\n**NOT IMPLEMENTED in Visual Orchestrator DAG runner.**\n\n- **Observation:** \n  - `runPipeline()` calls `supabase.functions.invoke(\'orchestrate-content\', { body })` — backend handles data passing\n  - Response is `{ steps: [...], run_id }` — only status/metadata returned, not intermediate outputs\n  - **Line 49–51:** Edge function gets topic + platforms; returns results without node-to-node wiring\n- **In store:** `OrchestrationNodeData` has no `output` or `inputs` field — only `config` (line 14)\n- **Canvas Studio:** `GenerateImageData` HAS `output: { imageUrl?, imageDataUrl? }` (types/canvas.ts), but no consumer wiring\n- **Reusability:** NOT REUSABLE YET — Visual Orchestrator does NOT pass upstream outputs to downstream inputs. Canvas Studio nodes have output fields but no DAG link logic. **This is a gap to fill.**\n\n---\n\n## 7. **Error Handling: Blocking & Retry**\n\n**Errors block downstream; no retry-from-node.**\n\n- **File:Line:** `src/hooks/useOrchestrationGraph.ts:72–81, 92–95`\n- **Logic:**\n  - Any step error sets `hasErrors = true` (line 72)\n  - QualityGate marks `error` if upstream errors (line 73)\n  - Publish nodes marked `blocked` (not just skipped) when upstream fails (line 80)\n  - Exception → all tracked nodes set to `error` (lines 93–95)\n- **Code:**\n```ts\nconst hasErrors = resultSteps.some((s) => s.status === \'error\');\n... nodeId, hasErrors ? \'blocked\' : \'done\'\n```\n- **Reusability:** REUSABLE — blocking logic is sound. No retry UI in Visual Orchestrator (reset button resets all statuses, not single-node retry).\n\n---\n\n## 8. **State Machine: Node Status Enum**\n\n**Typed enum in Zustand store.**\n\n- **File:Line:** `src/store/useOrchestrationStore.ts:4`\n- **Definition:**\n```ts\nexport type NodeStatus = \'idle\' | \'pending\' | \'running\' | \'done\' | \'error\' | \'blocked\';\n```\n- **Status Lifecycle:**\n  - `idle` → `pending` (when upstream finishes) → `running` → `done` | `error`\n  - `blocked` (when upstream errored)\n- **Canvas Studio:** Defines `type NodeStatus = \'idle\' | \'queued\' | \'running\' | \'success\' | \'failed\' | \'cancelled\'` (types/canvas.ts:26–32) — different labels, same concept.\n- **Reusability:** DESIGN PATTERN REUSABLE but labels differ — Canvas would need to map its `queued → pending`, `success → done`, `failed → error`.\n\n---\n\n## PORTABILITY ASSESSMENT\n\n### 1. **What Can Be Lifted DIRECTLY**\n\n- **Zustand store structure** (`useOrchestrationStore.ts`): Node/edge state management, status tracking, `updateNodeStatus()` pattern\n- **Status sync useEffect** (OrchestrationCanvas.tsx:45–53): Exact same pattern syncs store → ReactFlow\n- **Error blocking logic** (runPipeline line 72–81): Upstream error → downstream blocked\n- **Handle positioning** (all node files): Left=target, Right=source works for linear chains\n- **Reset/animation patterns** (store.resetNodeStatuses, edge.animated flip)\n\n### 2. **What Needs ADAPTATION**\n\n- **Run trigger location:** Orchestrator has Trigger node button; Canvas needs Top-bar integration (already exists at TopBar.tsx:122–144)\n- **Status enum labels:** Map Canvas `queued → pending`, `success → done`, `failed → error`\n- **DAG traversal:** Visual Orchestrator delegates to backend; Canvas needs **client-side topological sort + parallel Promise.all** (not present in Orchestrator)\n- **Output wiring:** Orchestrator does NOT pass outputs; Canvas needs field like `node.data.inputs = { inputNodeId: outputValue }` + consumption logic\n\n### 3. **What Needs WRITTEN FRESH**\n\n- **Topological sort function:** Given nodes + edges, find root nodes, execute in layers, track "all upstreams done"\n- **Canvas-specific node executor:** Call canvas-execute edge function per node (Orchestrator calls single backend function)\n- **Output-to-input binding:** Traverse edges at execution time; pass `upstream.data.output → downstream.data.inputs[handleId]`\n- **Multi-input handle IDs:** If sceneCompose needs `{ imageHandle, styleHandle }`, update node component + edge.sourceHandle/targetHandle\n- **Parallel execution wrapper:** Promise.all() for nodes with no dependencies, await before unlocking dependents\n\n### 4. **Critical Risk: Non-Translation Pattern**\n\n**Visual Orchestrator assumes a SINGLE BACKEND EXECUTION CALL** (`orchestrate-content` with `body` containing topic + platforms). The DAG is **logical only** — backend owns the actual parallelism + data flow.\n\n**Canvas Studio requires CLIENT-SIDE DAG execution:**\n- Each node runs independently via canvas-execute\n- Output of node A becomes input to node B\n- Parallel branches (if GenerateImage + CharacterReference have no edge) must run Promise.all()\n- Multi-input nodes (sceneCompose aggregating image + character) must wait for ALL upstreams before running\n\n**Risk if not adapted:** Porting Orchestrator\'s `runPipeline()` directly will:\n- Call canvas-execute once per node sequentially (no parallelism)\n- Not pass upstream outputs to downstream inputs (nodes run in isolation)\n- Block on multi-input nodes waiting for unconnected upstreams\n\n---\n\n**Final summary:** Visual Orchestrator is a **backend-delegated DAG** (status sync + error blocking only). Canvas Studio needs a **client-side DAG runner** with topological discovery, parallel execution, and data flow. Reuse the **state management + sync patterns**; build the **traversal + execution logic** from scratch.'}]
 > ```
+
+## 🤖 Claude *(01:30:32)*
+
+
+## 🤖 Claude *(01:30:34)*
+
+Investigação completa. Vou consolidar achados antes do plano. Preciso confirmar 2 decisões críticas de escopo.
+
+## 🤖 Claude *(01:30:50)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como faseaer o refactor Canvas (5 problemas estruturais identificados)?",
+      "header": "Faseamento",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Phased 5 sub-seals C1-C5 (Recomendado)",
+          "description": "Quebra em C1 (handle IDs + edge ports), C2 (DAG runner + output wiring), C3 (asset lineage DB migration + backend persist), C4 (tier enforcement SOP), C5 (paid smoke). Cada sub-seal isolada, baixo blast radius, 3-4 commits cada. ~10-12h total distribu\u00eddo em 2-3 sess\u00f5es."
+        },
+        {
+          "label": "Mega-seal C unica",
+          "description": "Tudo em uma seal v6.11.2 com 15-20 commits granulares. Burn de 1 sess\u00e3o longa (1-2 dias). Risk: blast radius alto, dif\u00edcil rollback parcial."
+        },
+        {
+          "label": "Phased mas s\u00f3 C1+C2 agora (cr\u00edtico) + defer C3/C4/C5",
+          "description": "Foundation + DAG runner suficiente p/ paid smoke b\u00e1sico. Lineage + tier + paid smoke ficam para depois quando primeiro fluxo funcionar. Mais r\u00e1pido (4-5h) mas n\u00e3o fecha OTD-CANVAS-PIPELINE-001 completamente."
+        }
+      ]
+    },
+    {
+      "question": "Como tratar sceneCompose multi-input (n\u00f3 com N inputs distintos: image + style + character)?",
+      "header": "Multi-input",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Implementar agora em C1 (Recomendado)",
+          "description": "Adicionar handle IDs sem\u00e2nticos (id='character', id='style', id='base-image') por node kind no Foundation. Backfill de edges existentes via heur\u00edstica (primeiro upstream = base-image). Custo: +1h em C1, mas n\u00e3o cria d\u00edvida t\u00e9cnica."
+        },
+        {
+          "label": "Deferir \u2014 single-input only por enquanto",
+          "description": "Por enquanto tratar todos edges como single-port. sceneCompose pega 'primeiro upstream image' como hoje. Marca OTD-MULTI-INPUT-FUTURE. Custo: zero em C1, mas mood board do user n\u00e3o vai funcionar 100% correto."
+        },
+        {
+          "label": "Hybrid \u2014 single-input padr\u00e3o + sceneCompose tratado em C2",
+          "description": "C1 estabelece handles 'input' e 'output' default (single). C2 quando implementa DAG runner adiciona suporte multi-input para sceneCompose espec\u00edficamente. Custo: split entre 2 sub-seals, ligeiramente mais complexo de manter consist\u00eancia."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como faseaer o refactor Canvas (5 problemas estruturais identificados)?"="Phased 5 sub-seals C1-C5 (Recomendado)", "Como tratar sceneCompose multi-input (nó com N inputs distintos: image + style + character)?"="Implementar agora em C1 (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:31:54)*
+
+
+## 🤖 Claude *(01:31:56)*
+
+Decisões locked. Vou ler o plano existente para fazer edits cirúrgicos da Seal C revisada.
+
+## 🤖 Claude *(01:31:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "offset": 1,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Plano de Execução — 6 Próximos Passos pós v6.10.0
+> 2	
+> 3	**Data:** 2026-05-27 · **Worktree:** `bold-visvesvaraya-4a95b9` · **Branch:** `claude/bold-visvesvaraya-4a95b9`
+> 4	**Decisões confirmadas pelo Sovereign:** (1) Seal C bundle único; (2) Item 1 via helper dual-format.
+> 5	
+> 6	---
+> 7	
+> 8	## Contexto
+> 9	
+> 10	A seal v6.10.0 (2026-05-27) fechou três grandes frentes (Great Reset + Per-user API expansion + Constellation Economic Activation), mas deixou anotada uma OTD bloqueante (**OTD-V610-001**, JWT format mismatch que quebra o pipeline async v6.9.0 em produção) e uma OTD com SLA apertado (**OTD-OE661-PER-USER**, vencendo 2026-06-02 — ~6 dias). Sem fechar a OTD-V610-001 o flywheel async fica preso e a Phase Commercial revenue não destrava; sem fechar a OTD-OE661 o Higgsfield consumer permanece global, bloqueando lançamento multi-tenant.
+> 11	
+> 12	Este plano sequencia as 6 frentes do brief `/handson` na ordem ótima considerando dependências físicas (Item 3 precisa Item 2; Item 5 precisa de 7d+ de dados do cron diário), pressão de SLA, blast radius por seal e coabitação de contexto UI. Saída esperada: **5 seals** distribuídas em **~4-5 sessões** ao longo de **8-10 dias**, fechando débito crítico + SLA antes de 2026-06-02 e calibrando MARGIN_FACTOR em 2026-06-03+.
+> 13	
+> 14	---
+> 15	
+> 16	## Ordenação Final (5 Seals)
+> 17	
+> 18	| # | Seal | Itens | SLA | Risco | Sessão prevista |
+> 19	|---|------|-------|-----|-------|-----------------|
+> 20	| **A** | Pipeline Async Auth Fix | Item 1 | — (crítico mas sem prazo) | ALTO (7+ call-sites) | Hoje (2026-05-27) |
+> 21	| **B** | Per-User API Tenancy OE661 | Item 2 + SOP | **2026-06-02** | BAIXO (cirúrgico) | Amanhã (2026-05-28) |
+> 22	| **C** | Sessão UI Coabitada (Bundle) | Itens 4 → 3 → 6.1 | — | MÉDIO (UI + paid burn 125 coins) | 2026-05-29 |
+> 23	| **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | — | BAIXO (isolado de prod) | 2026-05-30/31 |
+> 24	| **E** | MARGIN_FACTOR Calibration | Item 5 | Data-gated 2026-06-03+ | BAIXO | 2026-06-03+ |
+> 25	
+> 26	Cohabitação rejeitada: Itens 1 e 2 NÃO coabitam — ambos tocam auth de edge functions; blast radius combinado é alto demais para uma seal só.
+> 27	
+> 28	---
+> 29	
+> 30	## SEAL A — Pipeline Async Auth Fix (Item 1) · CRÍTICO
+> 31	
+> 32	**ORO triplet:**
+> 33	- Operator: MCORCH Master Execution Agent
+> 34	- Reviewer: Sovereign
+> 35	- Owner: Sovereign — blast radius = pipeline async em produção + 7+ inter-function callers + flywheel revenue
+> 36	
+> 37	**Decisão arquitetural:** Helper dual-format compartilhado em `supabase/functions/_shared/auth.ts`. Aceita `Bearer eyJ*` (legacy) E `Bearer sb_secret_*` (formato atual). Pavimenta deprecation do legacy quando Supabase reabrir regeneração.
+> 38	
+> 39	**Passos:**
+> 40	
+> 41	1. **SOP-first (Lei 2)** — criar `docs/processes/edge-function-service-auth.md`:
+> 42	   - Operator (quem valida service-role hoje, como), Sequence (5 steps), Verification gates (compare contra ambos os formatos), Recovery path (rollback é remover o helper e voltar comparação direta), Success signal (`net._http_response.status=200` em chamadas inter-function).
+> 43	   - Appendix: plano de deprecation futura para header customizado `x-service-role-key`.
+> 44	
+> 45	2. **Helper compartilhado** — `supabase/functions/_shared/auth.ts` (~50 LOC novo):
+> 46	   - Export `isValidServiceAuth(authHeader: string | null): boolean`.
+> 47	   - Lê `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` (formato `sb_secret_*` atual) e `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY_LEGACY')` opcional (formato `eyJ*` quando provisionado).
+> 48	   - Compara `authHeader === 'Bearer ' + key` para cada chave registrada; retorna true se qualquer match.
+> 49	   - Logs telemetria via console.log com prefix `[auth]` (sem expor as chaves).
+> 50	
+> ```
+
+## 🤖 Claude *(01:32:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n '^## SEAL C\\|^## SEAL D\\|^## SEAL E' /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "description": "Find Seal C/D/E section boundaries in plan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 135:## SEAL C — Sessão UI Coabitada (Bundle: Itens 4 → 3 → 6.1)
+> 210:## SEAL D — e2e-user-zero Framework Completo (Item 6 restante)
+> 254:## SEAL E — MARGIN_FACTOR Calibration (Item 5) · Data-gated 2026-06-03+
+> ```
+
+## 🤖 Claude *(01:32:06)*
+
+
+## 🤖 Claude *(01:32:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "offset": 133,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 133	---
+> 134	
+> 135	## SEAL C — Sessão UI Coabitada (Bundle: Itens 4 → 3 → 6.1)
+> 136	
+> 137	**ORO triplet:**
+> 138	- Operator: MCORCH Master Execution Agent + Sovereign (paid burn manual)
+> 139	- Reviewer: Sovereign
+> 140	- Owner: Sovereign — blast radius = 125 mcoCoins burn + UI Constelação + primeira emissão Phase 5c claim `e2e_user_zero_last_pass`
+> 141	
+> 142	**Ordem dentro da seal** (do mais barato pro mais caro):
+> 143	
+> 144	### C.1 — Wire useAgentTask no NodeDetailsPanel (Item 4)
+> 145	
+> 146	**Passos:**
+> 147	1. Criar `src/components/orchestrator/AgentTaskRunner.tsx` (~120 LOC novo):
+> 148	   - Sub-componente: textarea `task_prompt` + select `override_provider` (default: agent default) + select `override_model` + botão "Executar tarefa".
+> 149	   - Usa `useAgentTask()` hook (já existe em `src/hooks/useAgentTask.ts`).
+> 150	   - Mostra resultado inline: cost_mcoin + latency_ms + response_preview (200 chars).
+> 151	   - Invalidate `['agent_economics']` query no success.
+> 152	2. Estender `src/components/orchestrator/NodeDetailsPanel.tsx`:
+> 153	   - No render da tab `analysis` (estado `activeTab === 'analysis'`), adicionar bloco condicional `nodeData.kind === 'crew_agent'` que renderiza `<AgentTaskRunner agentId={nodeData.metadata?.agent_id ?? nodeId} />`.
+> 154	   - Sem novas tabs — reusa a tab existente.
+> 155	3. SOP: NÃO requer (extensão de feature já documentada em CEA SOP). Apenas atualizar `docs/processes/constellation-economic-activation.md` com seção "UI Trigger from NodeDetailsPanel".
+> 156	
+> 157	**Material proofs:**
+> 158	- Screenshot via `agent-browser` (Item 6 dogfood mais tarde) ou screenshot manual: NodeDetailsPanel aberto em nó `crew_agent` com botão visível.
+> 159	- Linha nova em `agent_executions` com `triggered_from = 'node_details_panel'` (adicionar coluna opcional via INSERT metadata).
+> 160	- Delta em `/dashboard/agent-economics` confirmando que a execução aparece nas KPI cards.
+> 161	
+> 162	### C.2 — Canvas Studio Phase 4.2 paid smoke (Item 3)
+> 163	
+> 164	**Pré-condição:** Seal B mergeada → Higgsfield resolvido per-user para Sovereign.
+> 165	
+> 166	**Passos:** Sovereign clica Run em `/dashboard/canvas/<project_id>` no nó `image_to_video` com tier `dop-standard-5s`. Agente monitora os **9 gates** da SOP `docs/processes/canvas-video-async-execution.md`:
+> 167	
+> 168	1. Gate 1: `canvas-execute` HTTP 200 com `{execution_id, status:'queued', operation_id}`.
+> 169	2. Gate 2: row em `vm_canvas_executions` com `status='queued'`, `operation_id NOT NULL`, `webhook_token` 64hex.
+> 170	3. Gate 3: Higgsfield `GET /requests/<operation_id>/status` retorna `completed` (eta 30-60s).
+> 171	4. Gate 4: `higgsfield-webhook` recebe POST callback com `?token=<webhook_token>` em ≤2min.
+> 172	5. Gate 5: webhook baixa vídeo (≥100KB + video/* MIME), upload `canvas-assets` bucket, gera signed URL 7d → `vm_canvas_assets` row criada.
+> 173	6. Gate 6: `deduct_mco_coins(action='canvas_video_spend', amount=125)` atomic POST-success.
+> 174	7. Gate 7: Supabase Realtime emite UPDATE em `canvas_jobs_<user_id>` → UI badge swap queued→success sem refresh.
+> 175	8. Gate 8: `mcoin_transactions` ledger mostra row negativa `amount=-125 action='canvas_video_spend'`.
+> 176	9. Gate 9: browser renderiza `<video>` em `ImageToVideoNode` sem refresh manual; `infra_health_logs` healthy para `canvas-execute` + `higgsfield-webhook` + `canvas-video-watchdog`.
+> 177	
+> 178	**Material proofs:**
+> 179	- 9 gates verificados via REST queries (id retornados, timestamps).
+> 180	- Sovereign balance before/after: `(balance_before - balance_after) === 125`.
+> 181	- Vídeo gerado renderizando na UI (screenshot).
+> 182	
+> 183	### C.3 — e2e-user-zero flow `trigger-orchestration` (Item 6 priority HIGHEST)
+> 184	
+> 185	**Passos:**
+> 186	1. Criar `scripts/qa/e2e-user-zero/flows/trigger-orchestration.ts` (~80 LOC novo):
+> 187	   - Mirrora padrão `auth-login.ts`.
+> 188	   - Navega `https://login.mcorch.com/dashboard/orchestration` (já autenticada via `--state` flag).
+> 189	   - Preenche TriggerNode topic + platforms toggles + clica Run.
+> 190	   - Drain console + network + screenshots.
+> 191	2. Executar dogfood: `bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow trigger-orchestration --state ~/.claude/auth-states/login-mcorch-prod.json`.
+> 192	3. Primeira emissão real do claim `e2e_user_zero_last_pass: <id>` em HANDOFF v6.11 (Phase 5c gate dispara — bloqueia se NO-GO).
+> 193	
+> 194	**Material proofs:**
+> 195	- `findings.json` válido com `summary.p0_count === 0` E `summary.p1_count === 0`.
+> 196	- `report.md` com badge `✅ GO`.
+> 197	- Claim `e2e_user_zero_last_pass: <run_id>` no HANDOFF; Phase 5c verifica via `verifyE2EUserZero()` em `scripts/qa/verifiers.ts`.
+> 198	
+> 199	**Reutilizar:**
+> 200	- `scripts/qa/e2e-user-zero/flows/auth-login.ts` (template).
+> 201	- `scripts/qa/e2e-user-zero/lib/browser-driver.ts` (driver).
+> 202	- `scripts/qa/e2e-user-zero/lib/classifier.ts` (severidade).
+> 203	
+> 204	**Risco:** MÉDIO — paid burn 125 coins, UI interaction com Sovereign no loop.
+> 205	
+> 206	**Estimativa:** 6-8 commits · +5 testes UI · 1 paid burn 125 coins · primeira emissão Phase 5c real.
+> 207	
+> 208	---
+> 209	
+> 210	## SEAL D — e2e-user-zero Framework Completo (Item 6 restante)
+> 211	
+> 212	**ORO triplet:**
+> ```
+
+## 🤖 Claude *(01:32:42)*
+
+
+## 🤖 Claude *(01:32:43)*
+
+Vou editar o plan em 2 passos: (1) atualizar status table com A+B done; (2) substituir Seal C original pelo refactor 5 sub-seals C1-C5.
+
+## 🤖 Claude *(01:33:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "## Ordena\u00e7\u00e3o Final (5 Seals)\n\n| # | Seal | Itens | SLA | Risco | Sess\u00e3o prevista |\n|---|------|-------|-----|-------|-----------------|\n| **A** | Pipeline Async Auth Fix | Item 1 | \u2014 (cr\u00edtico mas sem prazo) | ALTO (7+ call-sites) | Hoje (2026-05-27) |\n| **B** | Per-User API Tenancy OE661 | Item 2 + SOP | **2026-06-02** | BAIXO (cir\u00fargico) | Amanh\u00e3 (2026-05-28) |\n| **C** | Sess\u00e3o UI Coabitada (Bundle) | Itens 4 \u2192 3 \u2192 6.1 | \u2014 | M\u00c9DIO (UI + paid burn 125 coins) | 2026-05-29 |\n| **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | \u2014 | BAIXO (isolado de prod) | 2026-05-30/31 |\n| **E** | MARGIN_FACTOR Calibration | Item 5 | Data-gated 2026-06-03+ | BAIXO | 2026-06-03+ |\n\nCohabita\u00e7\u00e3o rejeitada: Itens 1 e 2 N\u00c3O coabitam \u2014 ambos tocam auth de edge functions; blast radius combinado \u00e9 alto demais para uma seal s\u00f3.",
+  "new_string": "## Status Atual + Ordena\u00e7\u00e3o Revisada (2026-05-28)\n\n| # | Seal | Itens | Status | Risco | Sess\u00e3o |\n|---|------|-------|--------|-------|--------|\n| **A** | Pipeline Async Auth Fix | Item 1 (OTD-V610-001) | **\u2705 SELADA v6.11.0** (7 commits) | resolved | 2026-05-27 |\n| **B** | Per-User API Tenancy OE661 | Item 2 (OTD-OE661-PER-USER) | **\u2705 SELADA v6.11.1** (5 commits, 5d antes SLA) | resolved | 2026-05-28 |\n| **C** | **REVISADA \u2192 Canvas Pipeline Refactor (5 sub-seals)** | Item 3 + nova OTD-CANVAS-PIPELINE-001 (RPN 225) | \u270f\ufe0f EM PLANEJAMENTO | M\u00c9DIO-ALTO | 2-3 sess\u00f5es |\n| **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | pending | BAIXO | depois de C |\n| **E** | MARGIN_FACTOR Calibration | Item 5 | pending (data-gated) | BAIXO | 2026-06-03+ |\n\n**Por que Seal C foi revisada:** Investiga\u00e7\u00e3o no projeto `#02 - Mood Board 5 lanes - 5 mundos` (880b5eba) revelou 5 problemas estruturais que invalidariam o paid smoke original. Burn de 125 mcoCoins sem o pipeline runner correto = desperd\u00edcio. Refactor obrigat\u00f3rio ANTES do smoke. Detalhes em SEAL C abaixo.\n\nCohabita\u00e7\u00e3o rejeitada: Itens 1 e 2 N\u00c3O coabitaram \u2014 ambos tocam auth de edge functions; blast radius combinado \u00e9 alto demais para uma seal s\u00f3. **Confirmado pelo flow real**: cada uma exigiu sess\u00e3o dedicada."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:33:04)*
+
+Agora substituir Seal C inteira pelo refactor 5 sub-seals.
+
+## 🤖 Claude *(01:35:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "## SEAL C \u2014 Sess\u00e3o UI Coabitada (Bundle: Itens 4 \u2192 3 \u2192 6.1)\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent + Sovereign (paid burn manual)\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = 125 mcoCoins burn + UI Constela\u00e7\u00e3o + primeira emiss\u00e3o Phase 5c claim `e2e_user_zero_last_pass`\n\n**Ordem dentro da seal** (do mais barato pro mais caro):\n\n### C.1 \u2014 Wire useAgentTask no NodeDetailsPanel (Item 4)\n\n**Passos:**\n1. Criar `src/components/orchestrator/AgentTaskRunner.tsx` (~120 LOC novo):\n   - Sub-componente: textarea `task_prompt` + select `override_provider` (default: agent default) + select `override_model` + bot\u00e3o \"Executar tarefa\".\n   - Usa `useAgentTask()` hook (j\u00e1 existe em `src/hooks/useAgentTask.ts`).\n   - Mostra resultado inline: cost_mcoin + latency_ms + response_preview (200 chars).\n   - Invalidate `['agent_economics']` query no success.\n2. Estender `src/components/orchestrator/NodeDetailsPanel.tsx`:\n   - No render da tab `analysis` (estado `activeTab === 'analysis'`), adicionar bloco condicional `nodeData.kind === 'crew_agent'` que renderiza `<AgentTaskRunner agentId={nodeData.metadata?.agent_id ?? nodeId} />`.\n   - Sem novas tabs \u2014 reusa a tab existente.\n3. SOP: N\u00c3O requer (extens\u00e3o de feature j\u00e1 documentada em CEA SOP). Apenas atualizar `docs/processes/constellation-economic-activation.md` com se\u00e7\u00e3o \"UI Trigger from NodeDetailsPanel\".\n\n**Material proofs:**\n- Screenshot via `agent-browser` (Item 6 dogfood mais tarde) ou screenshot manual: NodeDetailsPanel aberto em n\u00f3 `crew_agent` com bot\u00e3o vis\u00edvel.\n- Linha nova em `agent_executions` com `triggered_from = 'node_details_panel'` (adicionar coluna opcional via INSERT metadata).\n- Delta em `/dashboard/agent-economics` confirmando que a execu\u00e7\u00e3o aparece nas KPI cards.\n\n### C.2 \u2014 Canvas Studio Phase 4.2 paid smoke (Item 3)\n\n**Pr\u00e9-condi\u00e7\u00e3o:** Seal B mergeada \u2192 Higgsfield resolvido per-user para Sovereign.\n\n**Passos:** Sovereign clica Run em `/dashboard/canvas/<project_id>` no n\u00f3 `image_to_video` com tier `dop-standard-5s`. Agente monitora os **9 gates** da SOP `docs/processes/canvas-video-async-execution.md`:\n\n1. Gate 1: `canvas-execute` HTTP 200 com `{execution_id, status:'queued', operation_id}`.\n2. Gate 2: row em `vm_canvas_executions` com `status='queued'`, `operation_id NOT NULL`, `webhook_token` 64hex.\n3. Gate 3: Higgsfield `GET /requests/<operation_id>/status` retorna `completed` (eta 30-60s).\n4. Gate 4: `higgsfield-webhook` recebe POST callback com `?token=<webhook_token>` em \u22642min.\n5. Gate 5: webhook baixa v\u00eddeo (\u2265100KB + video/* MIME), upload `canvas-assets` bucket, gera signed URL 7d \u2192 `vm_canvas_assets` row criada.\n6. Gate 6: `deduct_mco_coins(action='canvas_video_spend', amount=125)` atomic POST-success.\n7. Gate 7: Supabase Realtime emite UPDATE em `canvas_jobs_<user_id>` \u2192 UI badge swap queued\u2192success sem refresh.\n8. Gate 8: `mcoin_transactions` ledger mostra row negativa `amount=-125 action='canvas_video_spend'`.\n9. Gate 9: browser renderiza `<video>` em `ImageToVideoNode` sem refresh manual; `infra_health_logs` healthy para `canvas-execute` + `higgsfield-webhook` + `canvas-video-watchdog`.\n\n**Material proofs:**\n- 9 gates verificados via REST queries (id retornados, timestamps).\n- Sovereign balance before/after: `(balance_before - balance_after) === 125`.\n- V\u00eddeo gerado renderizando na UI (screenshot).\n\n### C.3 \u2014 e2e-user-zero flow `trigger-orchestration` (Item 6 priority HIGHEST)\n\n**Passos:**\n1. Criar `scripts/qa/e2e-user-zero/flows/trigger-orchestration.ts` (~80 LOC novo):\n   - Mirrora padr\u00e3o `auth-login.ts`.\n   - Navega `https://login.mcorch.com/dashboard/orchestration` (j\u00e1 autenticada via `--state` flag).\n   - Preenche TriggerNode topic + platforms toggles + clica Run.\n   - Drain console + network + screenshots.\n2. Executar dogfood: `bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow trigger-orchestration --state ~/.claude/auth-states/login-mcorch-prod.json`.\n3. Primeira emiss\u00e3o real do claim `e2e_user_zero_last_pass: <id>` em HANDOFF v6.11 (Phase 5c gate dispara \u2014 bloqueia se NO-GO).\n\n**Material proofs:**\n- `findings.json` v\u00e1lido com `summary.p0_count === 0` E `summary.p1_count === 0`.\n- `report.md` com badge `\u2705 GO`.\n- Claim `e2e_user_zero_last_pass: <run_id>` no HANDOFF; Phase 5c verifica via `verifyE2EUserZero()` em `scripts/qa/verifiers.ts`.\n\n**Reutilizar:**\n- `scripts/qa/e2e-user-zero/flows/auth-login.ts` (template).\n- `scripts/qa/e2e-user-zero/lib/browser-driver.ts` (driver).\n- `scripts/qa/e2e-user-zero/lib/classifier.ts` (severidade).\n\n**Risco:** M\u00c9DIO \u2014 paid burn 125 coins, UI interaction com Sovereign no loop.\n\n**Estimativa:** 6-8 commits \u00b7 +5 testes UI \u00b7 1 paid burn 125 coins \u00b7 primeira emiss\u00e3o Phase 5c real.",
+  "new_string": "## SEAL C REVISADA \u2014 Canvas Pipeline Refactor (5 sub-seals C1-C5)\n\n**Contexto novo:** Investiga\u00e7\u00e3o no projeto Sovereign `#02 - Mood Board 5 lanes - 5 mundos` (`880b5eba-b41c-490d-8cab-1058def85bc9`, 30 nodes / 23 edges, \u00faltima edi\u00e7\u00e3o 2026-05-27) + 8 \u00faltimas execu\u00e7\u00f5es no banco + audit de 3 frentes (frontend Canvas, backend canvas-execute, padr\u00e3o Visual Orchestrator) revelou 5 problemas estruturais bloqueantes:\n\n1. **Edges sem handles sem\u00e2nticos** \u2014 `sourceHandle: null`, `targetHandle: null` em 100% dos edges. `useCanvasStore.onConnect()` em `src/store/useCanvasStore.ts:86-92` n\u00e3o atribui handle IDs ao criar edges. Handle components em `src/components/canvas/nodes/*.tsx` n\u00e3o t\u00eam `id` prop. Imposs\u00edvel rotear inputs em n\u00f3s multi-port (sceneCompose precisa base-image + character + style separados).\n\n2. **Sem DAG runner client-side** \u2014 `CanvasEditorPage.handleRunAll()` (linha 394) e `runSingleNode()` (linha 292-337) s\u00e3o scheduler ad-hoc, n\u00e3o topological sort. `useOrchestrationGraph.runPipeline` (Visual Orchestrator) N\u00c3O \u00e9 reutiliz\u00e1vel diretamente \u2014 ele delega tudo pra backend `orchestrate-content`; Canvas precisa de runner cliente real com Promise.all em branches independentes.\n\n3. **Sem wiring output\u2192input** \u2014 `findUpstreamImage(nodeId, nodes, edges)` em `src/lib/canvas-utils.ts:28-43` faz lookup naive (primeiro upstream image), N\u00c3O valida targetHandle, N\u00c3O passa output de uma execu\u00e7\u00e3o pra body da pr\u00f3xima.\n\n4. **Asset lineage perdido** \u2014 `vm_canvas_assets` N\u00c3O tem `node_id` nem `input_asset_id`. `vm_canvas_executions` N\u00c3O persiste `input_asset_url` (frontend envia, backend usa, mas nunca grava). Webhook higgsfield-webhook insere video asset sem reference ao input image. Impossible debugar \"qual imagem gerou esse v\u00eddeo\".\n\n5. **Tier whitelist permissive** \u2014 `ImageToVideoInspector.ENABLED_VIDEO_MODELS` (linha 53-59) inclui todos os 5 tiers (dop-lite, dop-turbo, dop-standard, kling, seedance). SOP Phase 4.2c v6.6.2 diz que s\u00f3 `dop-standard-5s` deve estar clic\u00e1vel. Backend `ALLOWED_VIDEO_MODELS` (canvas-execute:220-226) tamb\u00e9m aceita todos os 5. Execu\u00e7\u00e3o real 87654829 rodou `model: 'dop-lite'` \u2014 SOP violada na origem.\n\n**Nova OTD registrada:** **OTD-CANVAS-PIPELINE-001** (RPN ~225, Severity 9 \u00d7 Occurrence 5 \u00d7 Detection 5) \u2014 bloqueante para C5 paid smoke + Phase Commercial revenue via Canvas-generated content.\n\n**Achados positivos (REUSE):**\n- `useCanvasExecute()` em `useCanvasStudio.ts:192-228` DOES include input_asset_url quando recebido \u2014 reusar.\n- `resolveExecutePayload()` em `types/canvas.ts:611-690` mapeia camelCase \u2192 snake_case corretamente \u2014 nenhum mismatch real (diagn\u00f3stico anterior estava errado).\n- `pickNodeImage()` em `canvas-utils.ts:18` correto para extrair output de upstream \u2014 reusar.\n- CharacterReference (`CharacterReferenceInspector.tsx:27-65`) \u00e9 baseline funcional de \"asset ingestion\" \u2014 espelho para fix.\n- Visual Orchestrator status enum `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` \u2014 adotar em Canvas (mapear `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n- `OrchestrationCanvas.tsx:45-53` status sync useEffect \u2014 pattern direto pra reusar.\n- Migra\u00e7\u00f5es canvas-execute p\u00f3s-rota\u00e7\u00e3o Supabase (v6.11.0) + per-user Higgsfield (v6.11.1) \u2014 Canvas j\u00e1 est\u00e1 nesse estado limpo.\n\n### Sub-seal C1 \u2014 Foundation: Handle IDs + Edge Port Routing (Multi-input ready)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = todos projetos canvas existentes via backfill).\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/canvas-pipeline-architecture.md`:\n   - Operator: edges criados via drag conectam handles sem\u00e2nticos por nodeKind (n\u00e3o anonymous).\n   - Sequence: handle ID convention table (`generateImage.output` / `imageToVideo.input` / `sceneCompose.{base-image,character,style}` etc.).\n   - Verification gates (5): handles populados em onConnect / backfill executou / migration apply / runtime check em pipeline / Phase 5c verify.\n   - Recovery path: revert backfill via project graph snapshot pre-migration.\n\n2. **Type constants** \u2014 `src/lib/canvas-handles.ts` (NOVO, ~80 LOC):\n   - `export const NODE_OUTPUT_HANDLE: Record<CanvasNodeKind, string>` \u2014 single output por kind.\n   - `export const NODE_INPUT_HANDLES: Record<CanvasNodeKind, string[]>` \u2014 sceneCompose retorna `['base-image','character','style']`; demais retornam `['input']`.\n   - `export function getOutputHandle(kind)` / `export function getInputHandles(kind)` helpers.\n\n3. **Handle components** \u2014 adicionar `id` prop em todos os Handle JSX:\n   - `src/components/canvas/nodes/GenerateImageNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/CharacterReferenceNode.tsx`: apenas source `id=\"output\"` (sem input).\n   - `src/components/canvas/nodes/SceneComposeNode.tsx`: 3 target handles `id=\"base-image\"` / `id=\"character\"` / `id=\"style\"` (positions: Top / Left / Bottom) + 1 source `id=\"output\"`.\n   - `src/components/canvas/nodes/StyleTransferNode.tsx`: `id=\"input\"` / `id=\"style\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/ImageToVideoNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n\n4. **Store** \u2014 `src/store/useCanvasStore.ts:86-92`:\n   - Modify `onConnect` para resolver source/target nodeKind e atribuir handles automaticamente quando user n\u00e3o especificou. Multi-input n\u00f3 (sceneCompose) usa `targetHandle` provido pelo drag UI (ReactFlow envia quando user drags pra handle espec\u00edfica).\n\n5. **Backfill script** \u2014 `scripts/canvas-backfill-edge-handles.ts` (Bun, ~120 LOC):\n   - L\u00ea todos `vm_canvas_projects.graph`.\n   - Para cada edge sem handles: resolve source.kind + target.kind via node lookup; atribui sourceHandle default + targetHandle via heur\u00edstica (primeiro upstream image \u2192 `base-image`; characterReference upstream \u2192 `character`; etc.).\n   - Backup snapshot em `.claude/context/backups/canvas-edge-handles-pre-c1-<date>/`.\n   - Dry-run mode + `--apply` flag.\n\n6. **Tests** \u2014 `src/test/canvas-handles.test.ts` (~80 LOC, ~10 cases):\n   - getOutputHandle por kind.\n   - getInputHandles por kind (especialmente sceneCompose retorna 3).\n   - onConnect populates handles default quando user n\u00e3o especifica.\n\n**Material proofs Phase 5c:**\n- `grep \"id=\\\"output\\\"\" src/components/canvas/nodes/` retorna 5 matches (1 por node component).\n- `grep \"id=\\\"base-image\\\"\" src/components/canvas/nodes/SceneComposeNode.tsx` retorna 1.\n- Query post-backfill: `SELECT graph FROM vm_canvas_projects WHERE id='880b5eba...'` \u2192 edges com sourceHandle + targetHandle n\u00e3o-null em 23/23.\n- Tests 10/10 passing.\n\n**Estimativa:** ~3h \u00b7 5-6 commits granulares \u00b7 +10 testes.\n\n---\n\n### Sub-seal C2 \u2014 DAG Runner: useCanvasPipeline + Topological Sort + Output\u2192Input Wiring\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = nova execu\u00e7\u00e3o de qualquer projeto, mas backwards-compatible com per-node Run).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 mergeada (handles existem).\n\n**Passos:**\n\n1. **DAG library** \u2014 `src/lib/canvas-dag.ts` (NOVO, ~180 LOC):\n   - `topologicalSort(nodes: CanvasNode[], edges: CanvasEdge[]): { layers: string[][] }` \u2014 Kahn's algorithm; retorna layers para Promise.all dentro de cada layer.\n   - `getUpstreamByHandle(nodeId, targetHandle, nodes, edges): CanvasNode | undefined` \u2014 port-aware lookup (filtra edges por targetHandle match).\n   - `getAllUpstreams(nodeId, nodes, edges): Record<targetHandle, CanvasNode>` \u2014 todos os upstreams keyed by targetHandle (para multi-input).\n   - `validateDAG(nodes, edges): { valid: boolean; cycles?: string[][]; orphans?: string[] }` \u2014 detecta ciclos + n\u00f3s sem conex\u00e3o.\n\n2. **Pipeline hook** \u2014 `src/hooks/useCanvasPipeline.ts` (NOVO, ~220 LOC):\n   - Export `useCanvasPipeline(projectId)` retornando `{ runPipeline, runNode, abort, isRunning, currentLayer, error }`.\n   - `runPipeline()`: \n     - Get topological layers via canvas-dag.\n     - Para cada layer (sequencial): Promise.all dos n\u00f3s da layer (paralelo).\n     - Para cada n\u00f3: resolve upstreams via getAllUpstreams \u2192 extrai output URLs \u2192 constr\u00f3i body (input_asset_url para single-input nodes, parameters extras para sceneCompose com `{base_image_url, character_url, style_url}`) \u2192 POST canvas-execute \u2192 on success: updateNodeData com `output.imageUrl` ou `output.videoUrl`.\n     - On error: marca n\u00f3 error, propaga blocked downstream (todos descendants).\n   - `runNode(nodeId)`: mant\u00e9m compat \u2014 executa n\u00f3 individual com resolu\u00e7\u00e3o de upstreams (n\u00e3o trigger pipeline).\n   - Status enum unificado: `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` (mapeia canvas legacy `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n\n3. **Refactor entry points**:\n   - `CanvasEditorPage.tsx:292-337` \u2192 delegar `runSingleNode` para `useCanvasPipeline.runNode`.\n   - `CanvasEditorPage.tsx:394-436` \u2192 delegar `handleRunAll` para `useCanvasPipeline.runPipeline`.\n   - `src/components/canvas/TopBar.tsx:122-144` \u2192 rename \"Executar tudo\" \u2192 \"Executar Pipeline\" (alinhar com Orchestrator).\n\n4. **sceneCompose payload** \u2014 backend canvas-execute precisa aceitar parameters `{base_image_url, character_url, style_url}` para scene_compose node_type:\n   - Edit `supabase/functions/canvas-execute/index.ts` no branch scene_compose:\n     - Resolver as 3 URLs via body.parameters.\n     - Passar pro Gemini multimodal endpoint (j\u00e1 usa OpenRouter google/gemini-2.5-flash-image em compose).\n   - Tests para o branch.\n\n5. **Tests** \u2014 `src/test/canvas-dag.test.ts` (~200 LOC, ~15 cases):\n   - topologicalSort com DAG linear (4 n\u00f3s, 3 edges).\n   - topologicalSort com DAG multi-branch (mood board pattern).\n   - getUpstreamByHandle retorna o n\u00f3 correto.\n   - getAllUpstreams retorna map completo para sceneCompose.\n   - validateDAG detecta ciclo.\n   - validateDAG detecta orphan.\n\n6. **Tests** \u2014 `src/test/useCanvasPipeline.test.ts` (~150 LOC, ~8 cases) com mock canvas-execute.\n\n**Material proofs Phase 5c:**\n- Test DAG: pipeline com 4 layers executa em ordem topol\u00f3gica correta (mockada).\n- Test pipeline: n\u00f3 downstream recebe input_asset_url do upstream output.\n- Test pipeline: error em layer N marca todos descendants como blocked.\n- TypeScript zero erros.\n- Tests 25+ passando.\n\n**Estimativa:** ~5h \u00b7 8-10 commits granulares \u00b7 +25 testes \u00b7 1 deploy edge function (canvas-execute scene_compose update).\n\n---\n\n### Sub-seal C3 \u2014 Asset Lineage: DB Migration + Backend Persist + Frontend Display\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = schema vm_canvas_*; migration tem que ser additive n\u00e3o-breaking).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 mergeadas.\n\n**Passos:**\n\n1. **Migration** \u2014 `supabase/migrations/<ts>_canvas_asset_lineage.sql`:\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN node_id text` (no foreign key \u2014 node IDs s\u00e3o strings client-side).\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_url text`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - Index `CREATE INDEX vm_canvas_assets_node_id_idx ON vm_canvas_assets (node_id)`.\n   - Index `CREATE INDEX vm_canvas_assets_input_asset_id_idx ON vm_canvas_assets (input_asset_id)`.\n   - Trigger `vm_canvas_assets` autoupdate `input_asset_id` quando `input_asset_url` matches existing public_url (otimiza\u00e7\u00e3o para lookup).\n\n2. **SOP** \u2014 `docs/processes/canvas-asset-lineage.md`:\n   - Operator: cada generated asset carrega refer\u00eancia ao input + node_id.\n   - Sequence: canvas-execute persist no execution row \u2192 on success, persist no asset row com node_id + input_asset_id resolved.\n   - Verification: `SELECT a.id, a.input_asset_id, b.public_url FROM vm_canvas_assets a LEFT JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.node_id='n_wxgqyr9i'`.\n\n3. **Backend persist** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Execution INSERT (linha 263-280): adicionar `input_asset_url: body.input_asset_url ?? null`.\n   - Asset INSERT (linha 501-523 image, 932+ Higgsfield video): adicionar `node_id: body.node_id` + `input_asset_id: <resolved>` via SELECT pr\u00e9vio.\n   - Helper `resolveInputAssetId(admin, url)` em canvas-execute: `SELECT id FROM vm_canvas_assets WHERE public_url=$1 OR storage_key=$1 LIMIT 1`.\n\n4. **Backend webhook** \u2014 `supabase/functions/higgsfield-webhook/index.ts`:\n   - Linha 201-217 asset INSERT: adicionar `node_id: execution.node_id` + `input_asset_id` resolvido via `execution.input_asset_url`.\n\n5. **Frontend display** \u2014 Asset preview thumbnail mostra \u00edcone link \ud83d\udd17 + tooltip \"Gerado a partir de: <thumbnail upstream>\" quando `asset.input_asset_id` populated. Edit `src/components/canvas/LeftPanel/AssetCard.tsx` (ou similar \u2014 explorar localiza\u00e7\u00e3o).\n\n6. **Backfill opcional** \u2014 `scripts/canvas-backfill-asset-lineage.ts`:\n   - Para cada execution com `input_asset_url IS NOT NULL`, resolve input_asset_id retroativamente.\n   - Update vm_canvas_executions + matching vm_canvas_assets row.\n   - Dry-run + --apply.\n\n7. **Tests** \u2014 `src/test/canvas-asset-lineage.test.ts` (~80 LOC):\n   - INSERT execution sem input_asset_url \u2192 input_asset_id null OK.\n   - INSERT execution com input_asset_url + matching asset \u2192 input_asset_id populated.\n\n**Material proofs Phase 5c:**\n- Migration aplicada via `npx supabase db push`.\n- Query: `SELECT COUNT(*) FROM vm_canvas_executions WHERE input_asset_url IS NOT NULL` \u2192 > 0 ap\u00f3s primeira execu\u00e7\u00e3o p\u00f3s-C3.\n- Query: novo asset criado tem `node_id` e `input_asset_id` populados.\n- Tests passing.\n\n**Estimativa:** ~2h \u00b7 4-5 commits \u00b7 +5 testes \u00b7 1 migration \u00b7 2 deploys edge function (canvas-execute + higgsfield-webhook).\n\n---\n\n### Sub-seal C4 \u2014 Tier Enforcement: SOP-aware Whitelist (Frontend + Backend)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = UI gating + backend reject; afeta Higgsfield video pricing).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** Independente \u2014 pode rodar em paralelo com C2/C3 se preferir.\n\n**Passos:**\n\n1. **SOP update** \u2014 `docs/processes/canvas-video-async-execution.md`:\n   - Adicionar tabela \"Allowed Video Tiers (Phase 4.2c)\" com APENAS `dop-standard-5s` clic\u00e1vel; demais tagged \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n   - Append nova se\u00e7\u00e3o \"Tier Enforcement Layer\" documentando frontend whitelist + backend validator.\n\n2. **Frontend whitelist** \u2014 `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:53-59`:\n   - Narrow `ENABLED_VIDEO_MODELS` para `Set(['dop-standard-5s'])` apenas.\n   - Disabled state nos demais tiers com tooltip PT-BR \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n\n3. **Backend validator** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Top-level constant `SOP_ALLOWED_VIDEO_MODELS: Set<string> = new Set(['dop-standard-5s'])`.\n   - No branch `image_to_video` (antes do submit Higgsfield): se `body.model` N\u00c3O est\u00e1 em SOP_ALLOWED_VIDEO_MODELS, retornar 422 com `{ error: \"tier_not_allowed_yet\", action: \"Apenas dop-standard-5s dispon\u00edvel na Phase 4.2c. Aguarde Phase 4.3.\" }`.\n\n4. **Tests** \u2014 adicionar a `src/test/edge-shared-auth.test.ts` ou criar `src/test/canvas-tier-enforcement.test.ts` (~50 LOC):\n   - body.model='dop-lite' \u2192 expected 422.\n   - body.model='dop-standard-5s' \u2192 passes gate.\n\n5. **Material proof live**:\n   - `curl POST /functions/v1/canvas-execute -d '{...model:\"dop-lite\"...}'` \u2192 HTTP 422 `tier_not_allowed_yet`.\n   - UI: clicking dop-lite tier shows disabled tooltip.\n\n**Estimativa:** ~1h \u00b7 3 commits \u00b7 +3 testes \u00b7 1 deploy edge function.\n\n---\n\n### Sub-seal C5 \u2014 Paid Smoke E2E (Item 3 Original)\n\n**ORO:** Operator = Sovereign (clica Run UI) + MCORCH Agent (monitora gates) \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = 125 mcoCoins burn real).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 + C3 + C4 todas mergeadas. Sovereign tem Higgsfield key per-user provisionada (v6.10.0 j\u00e1 fez). Pipeline real funciona end-to-end.\n\n**Passos:**\n\n1. **Pre-flight checklist** (agente verifica via REST antes do Sovereign clicar):\n   - Projeto `880b5eba` (Mood Board) tem edges com sourceHandle + targetHandle n\u00e3o-null em 23/23 (C1 ok).\n   - useCanvasPipeline dispon\u00edvel na UI (C2 ok).\n   - vm_canvas_assets schema tem input_asset_id + node_id columns (C3 ok).\n   - canvas-execute rejeita dop-lite (C4 ok).\n   - Sovereign balance \u2265 125 mcoCoins.\n\n2. **Sovereign clica \"Executar Pipeline\"** no projeto Mood Board (ou em projeto novo dedicado smoke).\n   - Pipeline roda: generateImage chain \u2192 sceneCompose (3 inputs) \u2192 imageToVideo dop-standard-5s.\n\n3. **Agente monitora 9 gates da SOP** `canvas-video-async-execution.md` em tempo real via REST polling:\n   - Gates 1-9 conforme SOP original (j\u00e1 documentados).\n   - PLUS new gate 10: vm_canvas_assets do video tem `input_asset_id` apontando pro asset gerado pelo sceneCompose anterior.\n\n4. **Material proof e lineage**:\n   - `(balance_before - balance_after) === 125` exato.\n   - Query: `SELECT a.id AS video_id, a.input_asset_id AS source_image_id, b.public_url AS source_image_url FROM vm_canvas_assets a JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.asset_type='video' ORDER BY a.created_at DESC LIMIT 1` \u2192 1 row, ambas URLs populated.\n   - Video renderiza no `<video>` element.\n\n**Estimativa:** ~1h Sovereign hands-on + monitoring \u00b7 0 commits (apenas observation seal) \u00b7 1 paid burn 125 coins \u00b7 primeira valida\u00e7\u00e3o E2E real do Canvas Phase 4.2.\n\n---\n\n### Cronograma sugerido sub-seals\n\n| Sub-seal | Sess\u00e3o | Dura\u00e7\u00e3o | Cumulativo |\n|----------|--------|---------|------------|\n| C1 Foundation | Sess\u00e3o 1 | ~3h | v6.11.2 |\n| C2 DAG Runner | Sess\u00e3o 2 | ~5h | v6.11.3 |\n| C3 Asset Lineage | Sess\u00e3o 2 (continua\u00e7\u00e3o) ou 3 | ~2h | v6.11.4 |\n| C4 Tier Enforcement | Sess\u00e3o 3 (paralelo C3) | ~1h | v6.11.5 |\n| C5 Paid Smoke | Sess\u00e3o 4 (Sovereign UI) | ~1h | v6.12.0 |\n\nTotal: ~12h spread em **3-4 sess\u00f5es**.\n\n### Sinergias cross sub-seal\n\n- C1 helper `canvas-handles.ts` \u00e9 importado por C2 DAG library (port-aware lookup).\n- C2 DAG runner consome C3 lineage para mostrar provenance no status display.\n- C4 tier validator pode usar mesma SOP-loaded constant em frontend + backend (single source of truth).\n- C5 paid smoke validates ALL prior sub-seals working together end-to-end."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:35:41)*
+
+
+## 🤖 Claude *(01:35:42)*
+
+Vou verificar o cronograma final do plan e atualizar dependências.
+
+## 🤖 Claude *(01:35:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"^##\\|Cronograma\" /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md | head -25",
+  "description": "Map plan file structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 8:## Contexto
+> 16:## Status Atual + Ordenação Revisada (2026-05-28)
+> 32:## SEAL A — Pipeline Async Auth Fix (Item 1) · CRÍTICO
+> 82:## SEAL B — Per-User API Tenancy OE661 (Item 2) · SLA 2026-06-02
+> 137:## SEAL C REVISADA — Canvas Pipeline Refactor (5 sub-seals C1-C5)
+> 162:### Sub-seal C1 — Foundation: Handle IDs + Edge Port Routing (Multi-input ready)
+> 210:### Sub-seal C2 — DAG Runner: useCanvasPipeline + Topological Sort + Output→Input Wiring
+> 266:### Sub-seal C3 — Asset Lineage: DB Migration + Backend Persist + Frontend Display
+> 317:### Sub-seal C4 — Tier Enforcement: SOP-aware Whitelist (Frontend + Backend)
+> 349:### Sub-seal C5 — Paid Smoke E2E (Item 3 Original)
+> 380:### Cronograma sugerido sub-seals
+> 392:### Sinergias cross sub-seal
+> 401:## SEAL D — e2e-user-zero Framework Completo (Item 6 restante)
+> 445:## SEAL E — MARGIN_FACTOR Calibration (Item 5) · Data-gated 2026-06-03+
+> 485:## Sinergias Cross-Seal
+> 495:## Arquivos Críticos a Modificar
+> 538:## Verificação End-to-End
+> 572:## Compliance Survival Laws (todas as seals)
+> 583:## Cronograma Final
+> ```
+
+## 🤖 Claude *(01:35:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "offset": 581,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 581	---
+> 582	
+> 583	## Cronograma Final
+> 584	
+> 585	| Data | Seal | Sessão | Output |
+> 586	|------|------|--------|--------|
+> 587	| 2026-05-27 (hoje) | A | 4-6h | v6.11.0 — pipeline async recovered |
+> 588	| 2026-05-28 | B | 3-4h | v6.11.1 — OTD-OE661 closed (4 dias antes do SLA) |
+> 589	| 2026-05-29 | C | 4-5h | v6.11.2 — UI wired + Canvas paid smoke + e2e #1 |
+> 590	| 2026-05-30/31 | D | 1 dia | v6.11.3 — e2e framework completo |
+> 591	| 2026-06-03+ | E | 2-3h | v6.12.0 — MARGIN_FACTOR calibrated |
+> 592	
+> 593	Pronto para Sovereign liberar /handoff da primeira seal (A).
+> 594	
+> ```
+
+## 🤖 Claude *(01:36:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "## Cronograma Final\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 (hoje) | A | 4-6h | v6.11.0 \u2014 pipeline async recovered |\n| 2026-05-28 | B | 3-4h | v6.11.1 \u2014 OTD-OE661 closed (4 dias antes do SLA) |\n| 2026-05-29 | C | 4-5h | v6.11.2 \u2014 UI wired + Canvas paid smoke + e2e #1 |\n| 2026-05-30/31 | D | 1 dia | v6.11.3 \u2014 e2e framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.0 \u2014 MARGIN_FACTOR calibrated |\n\nPronto para Sovereign liberar /handoff da primeira seal (A).",
+  "new_string": "## Cronograma Final (atualizado 2026-05-28 \u2014 Seal C revisada)\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 | A | 4-6h | \u2705 v6.11.0 \u2014 pipeline async recovered (OTD-V610-001) |\n| 2026-05-28 | B | 3-4h | \u2705 v6.11.1 \u2014 OTD-OE661 closed (5d antes SLA) |\n| 2026-05-28 (agora) | C audit + plan | ~1h | \u2705 Investiga\u00e7\u00e3o completa + OTD-CANVAS-PIPELINE-001 + plan revisado |\n| Sess\u00e3o futura #1 | **C1 Foundation** | ~3h | v6.11.2 \u2014 handle IDs + edge ports + backfill |\n| Sess\u00e3o futura #2 | **C2 DAG Runner** | ~5h | v6.11.3 \u2014 useCanvasPipeline + topological + output wiring |\n| Sess\u00e3o futura #2/3 | **C3 Asset Lineage** | ~2h | v6.11.4 \u2014 migration + persist + display |\n| Sess\u00e3o futura #3 | **C4 Tier Enforcement** | ~1h | v6.11.5 \u2014 SOP-aware whitelist front+back |\n| Sess\u00e3o futura #4 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 \u2014 first real E2E Canvas + lineage proof + 125 mcoCoins burn |\n| P\u00f3s-C5 | D | 1 dia | v6.12.1 \u2014 e2e-user-zero framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.2 \u2014 MARGIN_FACTOR calibrated |\n\nEstimativa total restante (C1-C5 + D + E): ~16h spread em **5-6 sess\u00f5es** ao longo de **~10 dias**.\n\n**Pr\u00f3ximo passo imediato:** /handoff esta sess\u00e3o (selando Seal A + B + audit C) \u2192 nova sess\u00e3o come\u00e7a em C1 Foundation com contexto fresh."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:36:21)*
+
+
+## 🤖 Claude *(01:36:21)*
+
+Plano completo escrito no plan file. Vou chamar ExitPlanMode para aprovação.
+
+## 🤖 Claude *(01:36:21)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:ExitPlanMode",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'ExitPlanMode'}]
+> ```
+
+## 🤖 Claude *(01:36:26)*
+
+
+## 🤖 Claude *(01:36:30)*
+
+
+🛠️ **Tool Call**: `ExitPlanMode`
+```json
+{
+  "allowedPrompts": [
+    {
+      "tool": "Bash",
+      "prompt": "run TypeScript checks (npx tsc --noEmit)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run Vitest test suite (bun run test)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "apply Supabase migrations (npx supabase db push)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "deploy Supabase edge functions"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "REST queries against Supabase for material proofs"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run canvas edge-handle backfill script (dry-run + apply)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run canvas asset-lineage backfill script (dry-run + apply)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "git operations (status/diff/add/commit/push)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "grep/find across codebase for audits and verification"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "/handoff seal current session before starting C1"
+    }
+  ],
+  "plan": "# Plano de Execu\u00e7\u00e3o \u2014 6 Pr\u00f3ximos Passos p\u00f3s v6.10.0\n\n**Data:** 2026-05-27 \u00b7 **Worktree:** `bold-visvesvaraya-4a95b9` \u00b7 **Branch:** `claude/bold-visvesvaraya-4a95b9`\n**Decis\u00f5es confirmadas pelo Sovereign:** (1) Seal C bundle \u00fanico; (2) Item 1 via helper dual-format.\n\n---\n\n## Contexto\n\nA seal v6.10.0 (2026-05-27) fechou tr\u00eas grandes frentes (Great Reset + Per-user API expansion + Constellation Economic Activation), mas deixou anotada uma OTD bloqueante (**OTD-V610-001**, JWT format mismatch que quebra o pipeline async v6.9.0 em produ\u00e7\u00e3o) e uma OTD com SLA apertado (**OTD-OE661-PER-USER**, vencendo 2026-06-02 \u2014 ~6 dias). Sem fechar a OTD-V610-001 o flywheel async fica preso e a Phase Commercial revenue n\u00e3o destrava; sem fechar a OTD-OE661 o Higgsfield consumer permanece global, bloqueando lan\u00e7amento multi-tenant.\n\nEste plano sequencia as 6 frentes do brief `/handson` na ordem \u00f3tima considerando depend\u00eancias f\u00edsicas (Item 3 precisa Item 2; Item 5 precisa de 7d+ de dados do cron di\u00e1rio), press\u00e3o de SLA, blast radius por seal e coabita\u00e7\u00e3o de contexto UI. Sa\u00edda esperada: **5 seals** distribu\u00eddas em **~4-5 sess\u00f5es** ao longo de **8-10 dias**, fechando d\u00e9bito cr\u00edtico + SLA antes de 2026-06-02 e calibrando MARGIN_FACTOR em 2026-06-03+.\n\n---\n\n## Status Atual + Ordena\u00e7\u00e3o Revisada (2026-05-28)\n\n| # | Seal | Itens | Status | Risco | Sess\u00e3o |\n|---|------|-------|--------|-------|--------|\n| **A** | Pipeline Async Auth Fix | Item 1 (OTD-V610-001) | **\u2705 SELADA v6.11.0** (7 commits) | resolved | 2026-05-27 |\n| **B** | Per-User API Tenancy OE661 | Item 2 (OTD-OE661-PER-USER) | **\u2705 SELADA v6.11.1** (5 commits, 5d antes SLA) | resolved | 2026-05-28 |\n| **C** | **REVISADA \u2192 Canvas Pipeline Refactor (5 sub-seals)** | Item 3 + nova OTD-CANVAS-PIPELINE-001 (RPN 225) | \u270f\ufe0f EM PLANEJAMENTO | M\u00c9DIO-ALTO | 2-3 sess\u00f5es |\n| **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | pending | BAIXO | depois de C |\n| **E** | MARGIN_FACTOR Calibration | Item 5 | pending (data-gated) | BAIXO | 2026-06-03+ |\n\n**Por que Seal C foi revisada:** Investiga\u00e7\u00e3o no projeto `#02 - Mood Board 5 lanes - 5 mundos` (880b5eba) revelou 5 problemas estruturais que invalidariam o paid smoke original. Burn de 125 mcoCoins sem o pipeline runner correto = desperd\u00edcio. Refactor obrigat\u00f3rio ANTES do smoke. Detalhes em SEAL C abaixo.\n\nCohabita\u00e7\u00e3o rejeitada: Itens 1 e 2 N\u00c3O coabitaram \u2014 ambos tocam auth de edge functions; blast radius combinado \u00e9 alto demais para uma seal s\u00f3. **Confirmado pelo flow real**: cada uma exigiu sess\u00e3o dedicada.\n\n---\n\n## SEAL A \u2014 Pipeline Async Auth Fix (Item 1) \u00b7 CR\u00cdTICO\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = pipeline async em produ\u00e7\u00e3o + 7+ inter-function callers + flywheel revenue\n\n**Decis\u00e3o arquitetural:** Helper dual-format compartilhado em `supabase/functions/_shared/auth.ts`. Aceita `Bearer eyJ*` (legacy) E `Bearer sb_secret_*` (formato atual). Pavimenta deprecation do legacy quando Supabase reabrir regenera\u00e7\u00e3o.\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/edge-function-service-auth.md`:\n   - Operator (quem valida service-role hoje, como), Sequence (5 steps), Verification gates (compare contra ambos os formatos), Recovery path (rollback \u00e9 remover o helper e voltar compara\u00e7\u00e3o direta), Success signal (`net._http_response.status=200` em chamadas inter-function).\n   - Appendix: plano de deprecation futura para header customizado `x-service-role-key`.\n\n2. **Helper compartilhado** \u2014 `supabase/functions/_shared/auth.ts` (~50 LOC novo):\n   - Export `isValidServiceAuth(authHeader: string | null): boolean`.\n   - L\u00ea `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` (formato `sb_secret_*` atual) e `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY_LEGACY')` opcional (formato `eyJ*` quando provisionado).\n   - Compara `authHeader === 'Bearer ' + key` para cada chave registrada; retorna true se qualquer match.\n   - Logs telemetria via console.log com prefix `[auth]` (sem expor as chaves).\n\n3. **Recipientes refatorados** (substituir compara\u00e7\u00e3o direta `authHeader !== ${'`'}Bearer ${'$'}{serviceKey}${'`'}`):\n   - `supabase/functions/orchestrate-step/index.ts:48-54` \u2014 caller E recipient\n   - `supabase/functions/publish-wordpress/index.ts:26`\n   - `supabase/functions/self-heal/index.ts:~211`\n   - `supabase/functions/agent-task-execute/index.ts:~61`\n   - `supabase/functions/refresh-social-token/index.ts` (confirmar via grep durante execu\u00e7\u00e3o)\n   - `supabase/functions/embed-mcorch-node/index.ts` (idem)\n   - Total: ~6-7 arquivos, ~3 linhas alteradas cada (substitui valida\u00e7\u00e3o inline pelo `isValidServiceAuth(req.headers.get('Authorization'))`).\n\n4. **Callers continuam emitindo `SUPABASE_SERVICE_ROLE_KEY`** (`sb_secret_*`) \u2014 n\u00e3o h\u00e1 mudan\u00e7a no lado emissor. Helper aceita ambos os formatos do lado validador.\n\n5. **Provisionar `SUPABASE_SERVICE_ROLE_KEY_LEGACY` como vault secret** apenas se quisermos manter compat com migrations antigas que ainda usam o JWT hardcoded (ex: `20260503120000_embed_on_insert_trigger.sql:19`). Decis\u00e3o durante implementa\u00e7\u00e3o: se grep mostrar que apenas migrations o usam, deixar a coluna LEGACY desprovisionada \u2014 helper retorna true s\u00f3 pro novo formato.\n\n**Material proofs (Phase 5c):**\n- `async_orchestrate_step_debug` nova linha com `service_key_len=41 prefix=sb_secret_*` E `net._http_response.status=200` (era 401).\n- Pipeline run end-to-end completo: `pipeline_runs.status='done'` com `wp_status='draft'` + `linkedin_post` + `twitter_thread` + observation node inserido na mesh.\n- Test novo `src/test/edge-shared-auth.test.ts` (~6 casos: ambos formatos v\u00e1lidos / inv\u00e1lido / null / missing / vazio / extra-whitespace).\n- `infra_health_logs` evento `pipeline_async_recovered` com `run_id` refer\u00eancia.\n\n**Reutilizar:**\n- `supabase/functions/orchestrate-step/index.ts:101-115` (j\u00e1 tem padr\u00e3o `userKeys?.x || Deno.env.get(...)` pra outras chaves \u2014 mas \u00e9 client-context, n\u00e3o service-auth).\n- Padr\u00e3o de teste em `src/test/qa-verifiers.test.ts` (Vitest com mock deps).\n\n**Risco:** ALTO mas mitigado \u2014 refactor cir\u00fargico de 1 linha por recipient, helper coberto por testes. Rollback = 1 revert commit.\n\n**Estimativa:** 5-7 commits granulares \u00b7 +6 testes \u00b7 1 deploy edge function por fun\u00e7\u00e3o tocada (6-7 deploys).\n\n---\n\n## SEAL B \u2014 Per-User API Tenancy OE661 (Item 2) \u00b7 SLA 2026-06-02\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = OTD-OE661-PER-USER closure + multi-tenant readiness\n\n**Premissa corrigida pelo diagn\u00f3stico:** escopo MENOR que o brief original \u2014 `link-forge.ts` e `process-affiliate-link` POST j\u00e1 est\u00e3o compliant. Refactor real \u00e9 **2 linhas em canvas-execute + 1 invers\u00e3o de l\u00f3gica em process-affiliate-link**.\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/api-credential-tenancy.md`:\n   - Operator: edge function autenticada (POST com JWT) vs cron service-role.\n   - Sequence: (a) resolver via `user_api_keys` filtrando por `auth.uid()`; (b) se ausente \u2192 null; (c) se request \u00e9 cron com `user_id` no body \u2192 resolver via `user_api_keys.user_id = body.user_id`; (d) fallback global APENAS em paths sem `user_id` resolv\u00edvel.\n   - Verification: 3 testes mec\u00e2nicos por edge function (com key per-user / sem key per-user \u2192 402 / cron path com user_id expl\u00edcito).\n   - Recovery: usu\u00e1rio sem key recebe HTTP 402 com `{ error: \"missing_api_key\", action: \"Configure your <service> credentials at /dashboard/settings\" }`.\n   - Success: `grep -rn \"Deno.env.get('HIGGSFIELD_API_KEY')\" supabase/functions/` retorna apenas paths cron service-role.\n\n2. **Helper compartilhado** \u2014 `supabase/functions/_shared/user-keys.ts` (~80 LOC novo):\n   - Export `resolveUserApiKeys(admin: SupabaseClient, userId: string): Promise<UserKeys>`.\n   - UserKeys tipa `{ openai, groq, openrouter, replicate, higgsfield, higgsfield_secret, ml_affiliate_token, ... }` \u2014 todos nullable.\n   - Encapsula query a `user_api_keys` + `affiliate_config` (\u00faltimo com filtro `.eq('project_id', 'mcorch-affiliate')` per Amendment C v6.6.7).\n   - Reutilizado por canvas-execute, orchestrate-step (futuro), agent-task-execute.\n\n3. **Fix canvas-execute** \u2014 `supabase/functions/canvas-execute/index.ts:121-130`:\n   - Substituir bloco `{ data: userKeys }` direto pela chamada `await resolveUserApiKeys(admin, user.id)`.\n   - Linhas 128-129: substituir `Deno.env.get(\"HIGGSFIELD_API_KEY\")` por `userKeys.higgsfield ?? null` e idem para secret.\n   - Se `userKeys.higgsfield == null` E `body.node_type === 'image_to_video'`, retornar 402 com `{ error: \"missing_higgsfield_key\", action: \"Configure your Higgsfield credentials at /dashboard/settings\" }` ANTES do `creditCost` calc.\n\n4. **Fix process-affiliate-link GET** \u2014 `supabase/functions/process-affiliate-link/index.ts:101-136`:\n   - Remover `?? \"GCRUX_DEFAULT_TOKEN\"` da linha 102; inicializar `let affiliateToken: string | null = null;`.\n   - Inverter check `:130` para `if (!hasValidConfig)` (ao inv\u00e9s de compara\u00e7\u00e3o contra string m\u00e1gica).\n   - O 302 redirect em `:132-135` permanece intacto.\n\n5. **CLAUDE.md update** \u2014 adicionar entrada em `Key Files Reference`:\n   - `supabase/functions/_shared/user-keys.ts` \u2014 Per-user API key resolver\n\n**Material proofs (Phase 5c):**\n- `grep -rn \"GCRUX_DEFAULT_TOKEN\\|Deno.env.get(\\\"HIGGSFIELD\" supabase/functions/` retorna zero hits (exceto coment\u00e1rios SOP).\n- Edge function test: chamada `canvas-execute` para `image_to_video` sem `higgsfield_api_key` em `user_api_keys` retorna HTTP 402 com payload structured.\n- Edge function test: chamada `process-affiliate-link` GET para asset cujo `user_id` n\u00e3o tem `affiliate_config` retorna 302 para `/dashboard/settings?no_config=1`.\n- OTD-OE661-PER-USER fechada via observation node + edge `CLOSES` apontando para a OTD original.\n- Telemetry `infra_health_logs` evento `otd_oe661_per_user_closed` com timestamp.\n\n**Reutilizar:**\n- Padr\u00e3o j\u00e1 compliant em `process-affiliate-link/index.ts:113-124` (POST branch).\n- Padr\u00e3o j\u00e1 compliant em `orchestrate-step/index.ts:101-105` (lookup `user_api_keys`).\n- Hook client-side `useUserApiKeys` (refer\u00eancia conceitual, n\u00e3o direto).\n\n**Risco:** BAIXO \u2014 escopo cir\u00fargico, fallback existente j\u00e1 \u00e9 302.\n\n**Estimativa:** 4-5 commits \u00b7 +4 testes \u00b7 2 deploys edge function.\n\n---\n\n## SEAL C REVISADA \u2014 Canvas Pipeline Refactor (5 sub-seals C1-C5)\n\n**Contexto novo:** Investiga\u00e7\u00e3o no projeto Sovereign `#02 - Mood Board 5 lanes - 5 mundos` (`880b5eba-b41c-490d-8cab-1058def85bc9`, 30 nodes / 23 edges, \u00faltima edi\u00e7\u00e3o 2026-05-27) + 8 \u00faltimas execu\u00e7\u00f5es no banco + audit de 3 frentes (frontend Canvas, backend canvas-execute, padr\u00e3o Visual Orchestrator) revelou 5 problemas estruturais bloqueantes:\n\n1. **Edges sem handles sem\u00e2nticos** \u2014 `sourceHandle: null`, `targetHandle: null` em 100% dos edges. `useCanvasStore.onConnect()` em `src/store/useCanvasStore.ts:86-92` n\u00e3o atribui handle IDs ao criar edges. Handle components em `src/components/canvas/nodes/*.tsx` n\u00e3o t\u00eam `id` prop. Imposs\u00edvel rotear inputs em n\u00f3s multi-port (sceneCompose precisa base-image + character + style separados).\n\n2. **Sem DAG runner client-side** \u2014 `CanvasEditorPage.handleRunAll()` (linha 394) e `runSingleNode()` (linha 292-337) s\u00e3o scheduler ad-hoc, n\u00e3o topological sort. `useOrchestrationGraph.runPipeline` (Visual Orchestrator) N\u00c3O \u00e9 reutiliz\u00e1vel diretamente \u2014 ele delega tudo pra backend `orchestrate-content`; Canvas precisa de runner cliente real com Promise.all em branches independentes.\n\n3. **Sem wiring output\u2192input** \u2014 `findUpstreamImage(nodeId, nodes, edges)` em `src/lib/canvas-utils.ts:28-43` faz lookup naive (primeiro upstream image), N\u00c3O valida targetHandle, N\u00c3O passa output de uma execu\u00e7\u00e3o pra body da pr\u00f3xima.\n\n4. **Asset lineage perdido** \u2014 `vm_canvas_assets` N\u00c3O tem `node_id` nem `input_asset_id`. `vm_canvas_executions` N\u00c3O persiste `input_asset_url` (frontend envia, backend usa, mas nunca grava). Webhook higgsfield-webhook insere video asset sem reference ao input image. Impossible debugar \"qual imagem gerou esse v\u00eddeo\".\n\n5. **Tier whitelist permissive** \u2014 `ImageToVideoInspector.ENABLED_VIDEO_MODELS` (linha 53-59) inclui todos os 5 tiers (dop-lite, dop-turbo, dop-standard, kling, seedance). SOP Phase 4.2c v6.6.2 diz que s\u00f3 `dop-standard-5s` deve estar clic\u00e1vel. Backend `ALLOWED_VIDEO_MODELS` (canvas-execute:220-226) tamb\u00e9m aceita todos os 5. Execu\u00e7\u00e3o real 87654829 rodou `model: 'dop-lite'` \u2014 SOP violada na origem.\n\n**Nova OTD registrada:** **OTD-CANVAS-PIPELINE-001** (RPN ~225, Severity 9 \u00d7 Occurrence 5 \u00d7 Detection 5) \u2014 bloqueante para C5 paid smoke + Phase Commercial revenue via Canvas-generated content.\n\n**Achados positivos (REUSE):**\n- `useCanvasExecute()` em `useCanvasStudio.ts:192-228` DOES include input_asset_url quando recebido \u2014 reusar.\n- `resolveExecutePayload()` em `types/canvas.ts:611-690` mapeia camelCase \u2192 snake_case corretamente \u2014 nenhum mismatch real (diagn\u00f3stico anterior estava errado).\n- `pickNodeImage()` em `canvas-utils.ts:18` correto para extrair output de upstream \u2014 reusar.\n- CharacterReference (`CharacterReferenceInspector.tsx:27-65`) \u00e9 baseline funcional de \"asset ingestion\" \u2014 espelho para fix.\n- Visual Orchestrator status enum `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` \u2014 adotar em Canvas (mapear `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n- `OrchestrationCanvas.tsx:45-53` status sync useEffect \u2014 pattern direto pra reusar.\n- Migra\u00e7\u00f5es canvas-execute p\u00f3s-rota\u00e7\u00e3o Supabase (v6.11.0) + per-user Higgsfield (v6.11.1) \u2014 Canvas j\u00e1 est\u00e1 nesse estado limpo.\n\n### Sub-seal C1 \u2014 Foundation: Handle IDs + Edge Port Routing (Multi-input ready)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = todos projetos canvas existentes via backfill).\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/canvas-pipeline-architecture.md`:\n   - Operator: edges criados via drag conectam handles sem\u00e2nticos por nodeKind (n\u00e3o anonymous).\n   - Sequence: handle ID convention table (`generateImage.output` / `imageToVideo.input` / `sceneCompose.{base-image,character,style}` etc.).\n   - Verification gates (5): handles populados em onConnect / backfill executou / migration apply / runtime check em pipeline / Phase 5c verify.\n   - Recovery path: revert backfill via project graph snapshot pre-migration.\n\n2. **Type constants** \u2014 `src/lib/canvas-handles.ts` (NOVO, ~80 LOC):\n   - `export const NODE_OUTPUT_HANDLE: Record<CanvasNodeKind, string>` \u2014 single output por kind.\n   - `export const NODE_INPUT_HANDLES: Record<CanvasNodeKind, string[]>` \u2014 sceneCompose retorna `['base-image','character','style']`; demais retornam `['input']`.\n   - `export function getOutputHandle(kind)` / `export function getInputHandles(kind)` helpers.\n\n3. **Handle components** \u2014 adicionar `id` prop em todos os Handle JSX:\n   - `src/components/canvas/nodes/GenerateImageNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/CharacterReferenceNode.tsx`: apenas source `id=\"output\"` (sem input).\n   - `src/components/canvas/nodes/SceneComposeNode.tsx`: 3 target handles `id=\"base-image\"` / `id=\"character\"` / `id=\"style\"` (positions: Top / Left / Bottom) + 1 source `id=\"output\"`.\n   - `src/components/canvas/nodes/StyleTransferNode.tsx`: `id=\"input\"` / `id=\"style\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/ImageToVideoNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n\n4. **Store** \u2014 `src/store/useCanvasStore.ts:86-92`:\n   - Modify `onConnect` para resolver source/target nodeKind e atribuir handles automaticamente quando user n\u00e3o especificou. Multi-input n\u00f3 (sceneCompose) usa `targetHandle` provido pelo drag UI (ReactFlow envia quando user drags pra handle espec\u00edfica).\n\n5. **Backfill script** \u2014 `scripts/canvas-backfill-edge-handles.ts` (Bun, ~120 LOC):\n   - L\u00ea todos `vm_canvas_projects.graph`.\n   - Para cada edge sem handles: resolve source.kind + target.kind via node lookup; atribui sourceHandle default + targetHandle via heur\u00edstica (primeiro upstream image \u2192 `base-image`; characterReference upstream \u2192 `character`; etc.).\n   - Backup snapshot em `.claude/context/backups/canvas-edge-handles-pre-c1-<date>/`.\n   - Dry-run mode + `--apply` flag.\n\n6. **Tests** \u2014 `src/test/canvas-handles.test.ts` (~80 LOC, ~10 cases):\n   - getOutputHandle por kind.\n   - getInputHandles por kind (especialmente sceneCompose retorna 3).\n   - onConnect populates handles default quando user n\u00e3o especifica.\n\n**Material proofs Phase 5c:**\n- `grep \"id=\\\"output\\\"\" src/components/canvas/nodes/` retorna 5 matches (1 por node component).\n- `grep \"id=\\\"base-image\\\"\" src/components/canvas/nodes/SceneComposeNode.tsx` retorna 1.\n- Query post-backfill: `SELECT graph FROM vm_canvas_projects WHERE id='880b5eba...'` \u2192 edges com sourceHandle + targetHandle n\u00e3o-null em 23/23.\n- Tests 10/10 passing.\n\n**Estimativa:** ~3h \u00b7 5-6 commits granulares \u00b7 +10 testes.\n\n---\n\n### Sub-seal C2 \u2014 DAG Runner: useCanvasPipeline + Topological Sort + Output\u2192Input Wiring\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = nova execu\u00e7\u00e3o de qualquer projeto, mas backwards-compatible com per-node Run).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 mergeada (handles existem).\n\n**Passos:**\n\n1. **DAG library** \u2014 `src/lib/canvas-dag.ts` (NOVO, ~180 LOC):\n   - `topologicalSort(nodes: CanvasNode[], edges: CanvasEdge[]): { layers: string[][] }` \u2014 Kahn's algorithm; retorna layers para Promise.all dentro de cada layer.\n   - `getUpstreamByHandle(nodeId, targetHandle, nodes, edges): CanvasNode | undefined` \u2014 port-aware lookup (filtra edges por targetHandle match).\n   - `getAllUpstreams(nodeId, nodes, edges): Record<targetHandle, CanvasNode>` \u2014 todos os upstreams keyed by targetHandle (para multi-input).\n   - `validateDAG(nodes, edges): { valid: boolean; cycles?: string[][]; orphans?: string[] }` \u2014 detecta ciclos + n\u00f3s sem conex\u00e3o.\n\n2. **Pipeline hook** \u2014 `src/hooks/useCanvasPipeline.ts` (NOVO, ~220 LOC):\n   - Export `useCanvasPipeline(projectId)` retornando `{ runPipeline, runNode, abort, isRunning, currentLayer, error }`.\n   - `runPipeline()`: \n     - Get topological layers via canvas-dag.\n     - Para cada layer (sequencial): Promise.all dos n\u00f3s da layer (paralelo).\n     - Para cada n\u00f3: resolve upstreams via getAllUpstreams \u2192 extrai output URLs \u2192 constr\u00f3i body (input_asset_url para single-input nodes, parameters extras para sceneCompose com `{base_image_url, character_url, style_url}`) \u2192 POST canvas-execute \u2192 on success: updateNodeData com `output.imageUrl` ou `output.videoUrl`.\n     - On error: marca n\u00f3 error, propaga blocked downstream (todos descendants).\n   - `runNode(nodeId)`: mant\u00e9m compat \u2014 executa n\u00f3 individual com resolu\u00e7\u00e3o de upstreams (n\u00e3o trigger pipeline).\n   - Status enum unificado: `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` (mapeia canvas legacy `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n\n3. **Refactor entry points**:\n   - `CanvasEditorPage.tsx:292-337` \u2192 delegar `runSingleNode` para `useCanvasPipeline.runNode`.\n   - `CanvasEditorPage.tsx:394-436` \u2192 delegar `handleRunAll` para `useCanvasPipeline.runPipeline`.\n   - `src/components/canvas/TopBar.tsx:122-144` \u2192 rename \"Executar tudo\" \u2192 \"Executar Pipeline\" (alinhar com Orchestrator).\n\n4. **sceneCompose payload** \u2014 backend canvas-execute precisa aceitar parameters `{base_image_url, character_url, style_url}` para scene_compose node_type:\n   - Edit `supabase/functions/canvas-execute/index.ts` no branch scene_compose:\n     - Resolver as 3 URLs via body.parameters.\n     - Passar pro Gemini multimodal endpoint (j\u00e1 usa OpenRouter google/gemini-2.5-flash-image em compose).\n   - Tests para o branch.\n\n5. **Tests** \u2014 `src/test/canvas-dag.test.ts` (~200 LOC, ~15 cases):\n   - topologicalSort com DAG linear (4 n\u00f3s, 3 edges).\n   - topologicalSort com DAG multi-branch (mood board pattern).\n   - getUpstreamByHandle retorna o n\u00f3 correto.\n   - getAllUpstreams retorna map completo para sceneCompose.\n   - validateDAG detecta ciclo.\n   - validateDAG detecta orphan.\n\n6. **Tests** \u2014 `src/test/useCanvasPipeline.test.ts` (~150 LOC, ~8 cases) com mock canvas-execute.\n\n**Material proofs Phase 5c:**\n- Test DAG: pipeline com 4 layers executa em ordem topol\u00f3gica correta (mockada).\n- Test pipeline: n\u00f3 downstream recebe input_asset_url do upstream output.\n- Test pipeline: error em layer N marca todos descendants como blocked.\n- TypeScript zero erros.\n- Tests 25+ passando.\n\n**Estimativa:** ~5h \u00b7 8-10 commits granulares \u00b7 +25 testes \u00b7 1 deploy edge function (canvas-execute scene_compose update).\n\n---\n\n### Sub-seal C3 \u2014 Asset Lineage: DB Migration + Backend Persist + Frontend Display\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = schema vm_canvas_*; migration tem que ser additive n\u00e3o-breaking).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 mergeadas.\n\n**Passos:**\n\n1. **Migration** \u2014 `supabase/migrations/<ts>_canvas_asset_lineage.sql`:\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN node_id text` (no foreign key \u2014 node IDs s\u00e3o strings client-side).\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_url text`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - Index `CREATE INDEX vm_canvas_assets_node_id_idx ON vm_canvas_assets (node_id)`.\n   - Index `CREATE INDEX vm_canvas_assets_input_asset_id_idx ON vm_canvas_assets (input_asset_id)`.\n   - Trigger `vm_canvas_assets` autoupdate `input_asset_id` quando `input_asset_url` matches existing public_url (otimiza\u00e7\u00e3o para lookup).\n\n2. **SOP** \u2014 `docs/processes/canvas-asset-lineage.md`:\n   - Operator: cada generated asset carrega refer\u00eancia ao input + node_id.\n   - Sequence: canvas-execute persist no execution row \u2192 on success, persist no asset row com node_id + input_asset_id resolved.\n   - Verification: `SELECT a.id, a.input_asset_id, b.public_url FROM vm_canvas_assets a LEFT JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.node_id='n_wxgqyr9i'`.\n\n3. **Backend persist** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Execution INSERT (linha 263-280): adicionar `input_asset_url: body.input_asset_url ?? null`.\n   - Asset INSERT (linha 501-523 image, 932+ Higgsfield video): adicionar `node_id: body.node_id` + `input_asset_id: <resolved>` via SELECT pr\u00e9vio.\n   - Helper `resolveInputAssetId(admin, url)` em canvas-execute: `SELECT id FROM vm_canvas_assets WHERE public_url=$1 OR storage_key=$1 LIMIT 1`.\n\n4. **Backend webhook** \u2014 `supabase/functions/higgsfield-webhook/index.ts`:\n   - Linha 201-217 asset INSERT: adicionar `node_id: execution.node_id` + `input_asset_id` resolvido via `execution.input_asset_url`.\n\n5. **Frontend display** \u2014 Asset preview thumbnail mostra \u00edcone link \ud83d\udd17 + tooltip \"Gerado a partir de: <thumbnail upstream>\" quando `asset.input_asset_id` populated. Edit `src/components/canvas/LeftPanel/AssetCard.tsx` (ou similar \u2014 explorar localiza\u00e7\u00e3o).\n\n6. **Backfill opcional** \u2014 `scripts/canvas-backfill-asset-lineage.ts`:\n   - Para cada execution com `input_asset_url IS NOT NULL`, resolve input_asset_id retroativamente.\n   - Update vm_canvas_executions + matching vm_canvas_assets row.\n   - Dry-run + --apply.\n\n7. **Tests** \u2014 `src/test/canvas-asset-lineage.test.ts` (~80 LOC):\n   - INSERT execution sem input_asset_url \u2192 input_asset_id null OK.\n   - INSERT execution com input_asset_url + matching asset \u2192 input_asset_id populated.\n\n**Material proofs Phase 5c:**\n- Migration aplicada via `npx supabase db push`.\n- Query: `SELECT COUNT(*) FROM vm_canvas_executions WHERE input_asset_url IS NOT NULL` \u2192 > 0 ap\u00f3s primeira execu\u00e7\u00e3o p\u00f3s-C3.\n- Query: novo asset criado tem `node_id` e `input_asset_id` populados.\n- Tests passing.\n\n**Estimativa:** ~2h \u00b7 4-5 commits \u00b7 +5 testes \u00b7 1 migration \u00b7 2 deploys edge function (canvas-execute + higgsfield-webhook).\n\n---\n\n### Sub-seal C4 \u2014 Tier Enforcement: SOP-aware Whitelist (Frontend + Backend)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = UI gating + backend reject; afeta Higgsfield video pricing).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** Independente \u2014 pode rodar em paralelo com C2/C3 se preferir.\n\n**Passos:**\n\n1. **SOP update** \u2014 `docs/processes/canvas-video-async-execution.md`:\n   - Adicionar tabela \"Allowed Video Tiers (Phase 4.2c)\" com APENAS `dop-standard-5s` clic\u00e1vel; demais tagged \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n   - Append nova se\u00e7\u00e3o \"Tier Enforcement Layer\" documentando frontend whitelist + backend validator.\n\n2. **Frontend whitelist** \u2014 `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:53-59`:\n   - Narrow `ENABLED_VIDEO_MODELS` para `Set(['dop-standard-5s'])` apenas.\n   - Disabled state nos demais tiers com tooltip PT-BR \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n\n3. **Backend validator** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Top-level constant `SOP_ALLOWED_VIDEO_MODELS: Set<string> = new Set(['dop-standard-5s'])`.\n   - No branch `image_to_video` (antes do submit Higgsfield): se `body.model` N\u00c3O est\u00e1 em SOP_ALLOWED_VIDEO_MODELS, retornar 422 com `{ error: \"tier_not_allowed_yet\", action: \"Apenas dop-standard-5s dispon\u00edvel na Phase 4.2c. Aguarde Phase 4.3.\" }`.\n\n4. **Tests** \u2014 adicionar a `src/test/edge-shared-auth.test.ts` ou criar `src/test/canvas-tier-enforcement.test.ts` (~50 LOC):\n   - body.model='dop-lite' \u2192 expected 422.\n   - body.model='dop-standard-5s' \u2192 passes gate.\n\n5. **Material proof live**:\n   - `curl POST /functions/v1/canvas-execute -d '{...model:\"dop-lite\"...}'` \u2192 HTTP 422 `tier_not_allowed_yet`.\n   - UI: clicking dop-lite tier shows disabled tooltip.\n\n**Estimativa:** ~1h \u00b7 3 commits \u00b7 +3 testes \u00b7 1 deploy edge function.\n\n---\n\n### Sub-seal C5 \u2014 Paid Smoke E2E (Item 3 Original)\n\n**ORO:** Operator = Sovereign (clica Run UI) + MCORCH Agent (monitora gates) \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = 125 mcoCoins burn real).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 + C3 + C4 todas mergeadas. Sovereign tem Higgsfield key per-user provisionada (v6.10.0 j\u00e1 fez). Pipeline real funciona end-to-end.\n\n**Passos:**\n\n1. **Pre-flight checklist** (agente verifica via REST antes do Sovereign clicar):\n   - Projeto `880b5eba` (Mood Board) tem edges com sourceHandle + targetHandle n\u00e3o-null em 23/23 (C1 ok).\n   - useCanvasPipeline dispon\u00edvel na UI (C2 ok).\n   - vm_canvas_assets schema tem input_asset_id + node_id columns (C3 ok).\n   - canvas-execute rejeita dop-lite (C4 ok).\n   - Sovereign balance \u2265 125 mcoCoins.\n\n2. **Sovereign clica \"Executar Pipeline\"** no projeto Mood Board (ou em projeto novo dedicado smoke).\n   - Pipeline roda: generateImage chain \u2192 sceneCompose (3 inputs) \u2192 imageToVideo dop-standard-5s.\n\n3. **Agente monitora 9 gates da SOP** `canvas-video-async-execution.md` em tempo real via REST polling:\n   - Gates 1-9 conforme SOP original (j\u00e1 documentados).\n   - PLUS new gate 10: vm_canvas_assets do video tem `input_asset_id` apontando pro asset gerado pelo sceneCompose anterior.\n\n4. **Material proof e lineage**:\n   - `(balance_before - balance_after) === 125` exato.\n   - Query: `SELECT a.id AS video_id, a.input_asset_id AS source_image_id, b.public_url AS source_image_url FROM vm_canvas_assets a JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.asset_type='video' ORDER BY a.created_at DESC LIMIT 1` \u2192 1 row, ambas URLs populated.\n   - Video renderiza no `<video>` element.\n\n**Estimativa:** ~1h Sovereign hands-on + monitoring \u00b7 0 commits (apenas observation seal) \u00b7 1 paid burn 125 coins \u00b7 primeira valida\u00e7\u00e3o E2E real do Canvas Phase 4.2.\n\n---\n\n### Cronograma sugerido sub-seals\n\n| Sub-seal | Sess\u00e3o | Dura\u00e7\u00e3o | Cumulativo |\n|----------|--------|---------|------------|\n| C1 Foundation | Sess\u00e3o 1 | ~3h | v6.11.2 |\n| C2 DAG Runner | Sess\u00e3o 2 | ~5h | v6.11.3 |\n| C3 Asset Lineage | Sess\u00e3o 2 (continua\u00e7\u00e3o) ou 3 | ~2h | v6.11.4 |\n| C4 Tier Enforcement | Sess\u00e3o 3 (paralelo C3) | ~1h | v6.11.5 |\n| C5 Paid Smoke | Sess\u00e3o 4 (Sovereign UI) | ~1h | v6.12.0 |\n\nTotal: ~12h spread em **3-4 sess\u00f5es**.\n\n### Sinergias cross sub-seal\n\n- C1 helper `canvas-handles.ts` \u00e9 importado por C2 DAG library (port-aware lookup).\n- C2 DAG runner consome C3 lineage para mostrar provenance no status display.\n- C4 tier validator pode usar mesma SOP-loaded constant em frontend + backend (single source of truth).\n- C5 paid smoke validates ALL prior sub-seals working together end-to-end.\n\n---\n\n## SEAL D \u2014 e2e-user-zero Framework Completo (Item 6 restante)\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = QA framework (isolado de produ\u00e7\u00e3o), enable Phase Commercial Gate\n\n**Passos (em ordem):**\n\n1. `scripts/qa/e2e-user-zero/lib/redactor.ts` (~120 LOC) \u2014 header redaction (Authorization/Cookie/apikey/x-api-key/x-supabase-*) + body redaction em `redactedPaths` + cookie domain sanitizer. Pre-commit pattern scan: `eyJ.*\\.eyJ`, `sk_(live|test)_`, `sbp_`, `whsec_`, `sb_secret_`.\n\n2. `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (~100 LOC) \u2014 INSERT `mcorch_nodes` (kind='observation') + edge `OBSERVES` por finding. Idempot\u00eancia via `SHA-256(finding_id + run_id)`.\n\n3. `scripts/qa/e2e-user-zero/lib/telemetry.ts` (~60 LOC) \u2014 4 eventos `infra_health_logs` (`e2e_user_zero_run_started/complete/failure/auth_expired`). Distin\u00e7\u00e3o: \"found P0\" N\u00c3O \u00e9 failure \u2014 apenas infra errors emitem telemetry.\n\n4. `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (~150 LOC) \u2014 runner vs mock browser fixtures. Cobre 4 cen\u00e1rios (clean run / P0 found / infra error / auth expired).\n\n5. Extens\u00e3o pre-commit hook em `.husky/pre-commit` ou `.git/hooks/pre-commit` \u2014 scan `e2e-output/` por padr\u00f5es de secrets antes de aceitar commit.\n\n6. 5 flows restantes em ordem de prioridade BRD:\n   - `dashboard-tour.ts` (breadth survey)\n   - `canvas-overview.ts` (Phase 4.2 surface)\n   - `content-library.ts` (DevTools-grade observation)\n   - `billing-flow.ts` (Phase Commercial gate critical)\n   - `settings-tour.ts` (broad coverage)\n\n**Material proofs:**\n- Selftest 12/12 passando.\n- `grep -rn \"eyJ\\|sk_live\\|sbp_\" e2e-output/` em CI mostra zero hits (redactor funciona).\n- `mcorch_nodes` com 5+ nodes kind='observation' linkados via OBSERVES edges ap\u00f3s cada run.\n- 4 eventos em `infra_health_logs` por run completo.\n- Pre-commit hook bloqueando commit que cont\u00e9m secret pattern (test artificial).\n\n**Reutilizar:**\n- Padr\u00e3o de teste em `src/test/qa-verifiers.test.ts`.\n- Schemas em `scripts/qa/e2e-user-zero/lib/finding-schema.ts`.\n- Padr\u00e3o de classifier em `scripts/qa/e2e-user-zero/lib/classifier.ts`.\n\n**Risco:** BAIXO \u2014 isolado de produ\u00e7\u00e3o; falhas no framework n\u00e3o impactam app.\n\n**Estimativa:** 7-8 commits \u00b7 +12 testes (selftest) \u00b7 0 deploys de produ\u00e7\u00e3o.\n\n---\n\n## SEAL E \u2014 MARGIN_FACTOR Calibration (Item 5) \u00b7 Data-gated 2026-06-03+\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = pricing model do CEA (revenue impact)\n\n**Pr\u00e9-condi\u00e7\u00e3o:** \u22657 dias de `agent_executions` (cron di\u00e1rio rodando desde 2026-05-27 \u2192 m\u00ednimo 2026-06-03).\n\n**Passos:**\n\n1. Notebook an\u00e1lise em `docs/analysis/agent-margin-calibration-2026-06-03.md`:\n   - SQL agrupado por (provider, model) \u00faltimos 7 dias.\n   - p50, p95, max de `cost_usd_micro` e `cost_mcoin` por par.\n   - Vari\u00e2ncia entre providers (Groq vs Claude Sonnet vs gpt-4 \u2014 esperado 33x).\n   - Recomenda\u00e7\u00e3o: manter global 2.0 OU mover para per-provider.\n\n2. Decis\u00e3o **(a) Global** vs **(b) Per-provider**:\n   - Se vari\u00e2ncia intra-provider < 30% \u2192 manter global 2.0.\n   - Se vari\u00e2ncia > 50% entre providers \u2192 mover para per-provider via coluna nova.\n\n3. Se (b) per-provider:\n   - Migration `supabase/migrations/20260603_agent_pricing_margin.sql` adiciona `margin_factor numeric DEFAULT 2.0` em `agent_pricing`.\n   - Refatorar RPC `calc_agent_cost_mcoin` em `supabase/migrations/20260527012945_agent_metering_minimal.sql:87,114`:\n     - Mudar signature para usar `COALESCE(ap.margin_factor, p_margin)`.\n     - Lookup em `agent_pricing` join no provider+model.\n\n4. Execu\u00e7\u00e3o validat\u00f3ria: 1 task via `agent-task-execute` confirmando novo cost.\n\n**Material proofs:**\n- An\u00e1lise documentada com SQL output literal (n\u00e3o inventado).\n- Se (b): migration aplicada + RPC retornando `'margin': <novo_valor>` no jsonb.\n- 1 nova `agent_executions` row provando novo c\u00e1lculo.\n\n**Risco:** BAIXO \u2014 escopo isolado, f\u00e1cil rollback (mudar margin global de volta a 2.0).\n\n**Estimativa:** 3-4 commits \u00b7 +2 testes \u00b7 1 migration opcional.\n\n---\n\n## Sinergias Cross-Seal\n\n- **`supabase/functions/_shared/` ganha 2 m\u00f3dulos novos**: `auth.ts` (Seal A) + `user-keys.ts` (Seal B). Pavimenta padr\u00e3o de helpers compartilhados \u2014 Seal D's `mesh-persistor.ts` pode reusar pra writes admin.\n- **SOPs encadeadas**: `edge-function-service-auth.md` (Seal A) referencia `api-credential-tenancy.md` (Seal B) no appendix de service-role exceptions.\n- **Sess\u00e3o UI \u00fanica em Seal C** elimina ~30min de re-login overhead entre Itens 3/4/6.1.\n- **Telemetria unificada `infra_health_logs`**: Seal A emite `pipeline_async_recovered`, Seal B emite `otd_oe661_per_user_closed`, Seal D emite 4 `e2e_user_zero_*` \u2014 mesmo schema.\n- **Phase 5c primeira emiss\u00e3o real do claim e2e_user_zero_last_pass** em Seal C consolida o gate (at\u00e9 v6.10.0 o claim era opcional; ap\u00f3s Seal C torna-se hard requirement).\n\n---\n\n## Arquivos Cr\u00edticos a Modificar\n\n**Seal A:**\n- `supabase/functions/_shared/auth.ts` (NOVO)\n- `supabase/functions/orchestrate-step/index.ts` (linhas 48-54)\n- `supabase/functions/publish-wordpress/index.ts` (linha 26)\n- `supabase/functions/self-heal/index.ts` (~211)\n- `supabase/functions/agent-task-execute/index.ts` (~61)\n- 2-3 outros recipients (grep durante execu\u00e7\u00e3o)\n- `docs/processes/edge-function-service-auth.md` (NOVO)\n- `src/test/edge-shared-auth.test.ts` (NOVO)\n\n**Seal B:**\n- `supabase/functions/_shared/user-keys.ts` (NOVO)\n- `supabase/functions/canvas-execute/index.ts` (linhas 121-130)\n- `supabase/functions/process-affiliate-link/index.ts` (linhas 101-136)\n- `docs/processes/api-credential-tenancy.md` (NOVO)\n- `CLAUDE.md` (Key Files Reference)\n\n**Seal C:**\n- `src/components/orchestrator/AgentTaskRunner.tsx` (NOVO)\n- `src/components/orchestrator/NodeDetailsPanel.tsx` (estender tab `analysis`)\n- `scripts/qa/e2e-user-zero/flows/trigger-orchestration.ts` (NOVO)\n- `docs/processes/constellation-economic-activation.md` (estender com UI Trigger section)\n\n**Seal D:**\n- `scripts/qa/e2e-user-zero/lib/redactor.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/lib/telemetry.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/dashboard-tour.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/canvas-overview.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/content-library.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/billing-flow.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/settings-tour.ts` (NOVO)\n- `.git/hooks/pre-commit` (estender)\n\n**Seal E:**\n- `docs/analysis/agent-margin-calibration-2026-06-03.md` (NOVO)\n- `supabase/migrations/20260603_agent_pricing_margin.sql` (NOVO, condicional)\n\n---\n\n## Verifica\u00e7\u00e3o End-to-End\n\n**Seal A:**\n1. `npx tsc --noEmit` \u2192 zero erros.\n2. `bun run test` \u2192 todos os 189 + 6 novos passando.\n3. `npx supabase functions deploy <each-recipient>` \u2192 ~6-7 deploys.\n4. Trigger pipeline manual: `INSERT INTO pipeline_runs (...) VALUES (...)`; SELECT `net._http_response WHERE id > <baseline>` para confirmar 200 OK.\n5. `async_orchestrate_step_debug` SELECT \u2192 \u00faltima linha com status_code=200.\n\n**Seal B:**\n1. `grep -rn \"GCRUX_DEFAULT_TOKEN\\|HIGGSFIELD_API_KEY.*Deno.env\" supabase/functions/` \u2192 zero hits.\n2. `bun run test` \u2192 189+ passando, novos testes verde.\n3. `npx supabase functions deploy canvas-execute process-affiliate-link` \u2192 2 deploys.\n4. Test manual: chamar `canvas-execute` para Sovereign (com key per-user) \u2192 success; chamar para test user sem key \u2192 402.\n\n**Seal C:**\n1. `bun run dev` \u2192 abrir `/dashboard/orchestration` \u2192 clicar node crew_agent \u2192 tab analysis mostra AgentTaskRunner.\n2. Click \"Executar tarefa\" \u2192 toast com cost + latency; row em `agent_executions`.\n3. Canvas: `/dashboard/canvas/<project>` \u2192 Run dop-standard-5s \u2192 9 gates verificados via REST queries paralelas.\n4. e2e: `bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow trigger-orchestration --state ~/.claude/auth-states/login-mcorch-prod.json` \u2192 exit 0 + report.md com \u2705 GO.\n\n**Seal D:**\n1. `bun run test scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` \u2192 12/12 passando.\n2. Executar todos os 6 flows: `for f in trigger-orchestration dashboard-tour canvas-overview content-library billing-flow settings-tour; do bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow $f --state ~/.claude/auth-states/login-mcorch-prod.json; done`.\n3. `grep \"eyJ\\|sk_live\\|sbp_\" e2e-output/**/*.har` \u2192 zero hits.\n4. SELECT count em `mcorch_nodes WHERE kind='observation' AND metadata->>'source' = 'e2e_user_zero'` \u2192 \u22650 (cresce ap\u00f3s findings).\n\n**Seal E:**\n1. SELECT p50/p95 de `agent_executions.cost_usd_micro` agrupado por (provider, model) \u00faltimos 7 dias.\n2. An\u00e1lise documentada com SQL output literal.\n3. Se per-provider: `SELECT calc_agent_cost_mcoin(500, 300, 'groq', 'llama-3.3-70b-versatile')` retorna jsonb com novo `margin`.\n\n---\n\n## Compliance Survival Laws (todas as seals)\n\n| Lei | Como atende |\n|-----|-------------|\n| **Lei 1 (Materiality)** | Cada seal lista material proofs espec\u00edficos (REST IDs, test outputs, file paths). Phase 5c gate executa mecanicamente via `scripts/qa/run-audit.ts`. |\n| **Lei 2 (Anticipated Process)** | SOP-first em Seals A, B. Seals C, D, E reusam SOPs existentes ou registram extens\u00e3o. |\n| **Lei 3 (Pruning)** | Seals isoladas por escopo; cohabita\u00e7\u00e3o em C limitada a UI dogfooding (justificada). Plan file n\u00e3o traz alternativas descartadas. |\n| **Lei 4 (ORO)** | Cada seal declara Operator/Reviewer/Owner no header. |\n\n---\n\n## Cronograma Final (atualizado 2026-05-28 \u2014 Seal C revisada)\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 | A | 4-6h | \u2705 v6.11.0 \u2014 pipeline async recovered (OTD-V610-001) |\n| 2026-05-28 | B | 3-4h | \u2705 v6.11.1 \u2014 OTD-OE661 closed (5d antes SLA) |\n| 2026-05-28 (agora) | C audit + plan | ~1h | \u2705 Investiga\u00e7\u00e3o completa + OTD-CANVAS-PIPELINE-001 + plan revisado |\n| Sess\u00e3o futura #1 | **C1 Foundation** | ~3h | v6.11.2 \u2014 handle IDs + edge ports + backfill |\n| Sess\u00e3o futura #2 | **C2 DAG Runner** | ~5h | v6.11.3 \u2014 useCanvasPipeline + topological + output wiring |\n| Sess\u00e3o futura #2/3 | **C3 Asset Lineage** | ~2h | v6.11.4 \u2014 migration + persist + display |\n| Sess\u00e3o futura #3 | **C4 Tier Enforcement** | ~1h | v6.11.5 \u2014 SOP-aware whitelist front+back |\n| Sess\u00e3o futura #4 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 \u2014 first real E2E Canvas + lineage proof + 125 mcoCoins burn |\n| P\u00f3s-C5 | D | 1 dia | v6.12.1 \u2014 e2e-user-zero framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.2 \u2014 MARGIN_FACTOR calibrated |\n\nEstimativa total restante (C1-C5 + D + E): ~16h spread em **5-6 sess\u00f5es** ao longo de **~10 dias**.\n\n**Pr\u00f3ximo passo imediato:** /handoff esta sess\u00e3o (selando Seal A + B + audit C) \u2192 nova sess\u00e3o come\u00e7a em C1 Foundation com contexto fresh.\n",
+  "planFilePath": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md"
+}
+```
+
+> **Tool Result (ExitPlanMode)** - ❌ Error
+>
+> ```
+> The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). To tell you how to proceed, the user said:
+> On selected text:
+> > Estimativa 
+> gostei do plano mas a unica coisa que as estimativas de tempo estao erradas, voce precisa fazer com que isso saia mais rapido, temos uma infra estrutura que criamso com o openclaw, logo temos tambem ollama local rodando e api da google de fallback no openclaw que podemos usar tambem caso um provlema ou sessao demore muito para ser finalizada com sucesso.
+> 
+> On selected text:
+> > sessão 
+> na proxima sessao, lembre-se quempodemos dar um start assim como esse que estou para fazer.: Aqui está um **meta-prompt estruturado em pt-BR** que você pode copiar e colar diretamente no chat do Telegram. Ele é projetado especificamente para que o agente do OpenClaw compreenda a escala da tarefa, utilize a ferramenta correta de scraping para ler o MIV e crie a branch isolada para o redesign:
+> 
+> ```text
+> criar e ativar branch feature/dashboard-redesign-miv
+> 
+> Tarefa de Engenharia Visual: Redesign Completo do Dashboard Principal
+> 
+> Por favor, execute as seguintes etapas detalhadas para implantar o redesign da interface do Dashboard:
+> 
+> 1. Scraping do MIV (Manual de Identidade Visual):
+>    Utilize a ferramenta de web scraping/firecrawl para ler e analisar o documento em:
+>    https://login.mcorch.com/miv/
+>    Extraia deste link os tokens de design, a paleta de cores primárias/secundárias, definições de tipografia (Google Fonts recomendadas), regras de glassmorphism, gradientes e padrões de micro-animações de hover/transição.
+> 
+> 2. Identificação das Páginas do Dashboard no Workspace:
+>    Localize os componentes de visualização do dashboard no repositório (ex: src/pages/DashboardHome.tsx, src/components/layout/ ou rotas de navegação relacionadas).
+> 
+> 3. Execução do Redesign:
+>    Aplique o novo padrão de estilo premium (MIV):
+>    - Cards com efeitos de vidro (glassmorphism), bordas brilhantes sutis e sombras dinâmicas.
+>    - Menu lateral e cabeçalho refinados com micro-animações suaves nos hovers.
+>    - Harmonia de cores baseada estritamente na paleta extraída do MIV (evitando cores genéricas do navegador).
+>    - Layout responsivo impecável.
+> 
+> 4. Build e Validação:
+>    Garanta que a aplicação compila sem erros (bun run build).
+> 
+> Ao finalizar o build com sucesso, responda informando que a branch 'feature/dashboard-redesign-miv' foi compilada e está ativa em produção para eu validar no link do dashboard.
+> ```
+> 
+> ### O que o agente fará ao receber este prompt no Telegram:
+> 1. **Criação da Branch**: Ele executará comandos git para criar e alternar para a branch `feature/dashboard-redesign-miv`.
+> 2. **Leitura do MIV**: Ele usará o plugin do Firecrawl para ler o link `https://login.mcorch.com/miv/` de forma autônoma.
+> 3. **Refatoração do Código**: Ele alterará os componentes de React/Tailwind/CSS do Dashboard para implantar o novo visual premium.
+> 4. **Compilação e Deploy**: Ele executará o processo de build do Vite e ativará a nova branch diretamente na produção para que você veja o resultado instantaneamente na web.
+> ```
+
+## 🤖 Claude *(01:43:33)*
+
+
+## 🤖 Claude *(01:43:34)*
+
+Entendi os 2 pontos. Vou ajustar o plano: (1) estimativas considerando paralelização via OpenClaw/Ollama; (2) adicionar seção de meta-prompt Telegram pra próxima sessão.
+
+## 🤖 Claude *(01:43:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "**Estimativa:** ~3h \u00b7 5-6 commits granulares \u00b7 +10 testes.\n\n---\n\n### Sub-seal C2 \u2014 DAG Runner: useCanvasPipeline + Topological Sort + Output\u2192Input Wiring",
+  "new_string": "**Estimativa (paralelizada com OpenClaw):** ~**1.5h** \u00b7 5-6 commits granulares \u00b7 +10 testes.\nTarefas paraleliz\u00e1veis pro **engineer** agente OpenClaw via Telegram (Ollama qwen3.5 local + Google API fallback):\n- Escrever testes Vitest `src/test/canvas-handles.test.ts` enquanto Claude Code refatora os 5 Handle components.\n- Rodar `scripts/canvas-backfill-edge-handles.ts --dry-run` e reportar diff.\n- Validar TypeScript zero erros + 204+10/214 testes em paralelo.\nCoordena\u00e7\u00e3o: Claude Code abre o lock no `useCanvasStore.onConnect`; OpenClaw N\u00c3O toca esse arquivo.\n\n---\n\n### Sub-seal C2 \u2014 DAG Runner: useCanvasPipeline + Topological Sort + Output\u2192Input Wiring"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:43:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "**Estimativa:** ~5h \u00b7 8-10 commits granulares \u00b7 +25 testes \u00b7 1 deploy edge function (canvas-execute scene_compose update).\n\n---\n\n### Sub-seal C3 \u2014 Asset Lineage: DB Migration + Backend Persist + Frontend Display",
+  "new_string": "**Estimativa (paralelizada com OpenClaw):** ~**2.5h** \u00b7 8-10 commits granulares \u00b7 +25 testes \u00b7 1 deploy edge function.\nTarefas paraleliz\u00e1veis pro **engineer** + **scientist** OpenClaw via Telegram:\n- engineer: escrever `src/test/canvas-dag.test.ts` (15 cases) + `src/test/useCanvasPipeline.test.ts` (8 cases) enquanto Claude Code escreve a lib + hook.\n- scientist: revisar topological sort correctness contra teoria de Kahn's algorithm; verificar handling de ciclos.\nCoordena\u00e7\u00e3o: Claude Code escreve `src/lib/canvas-dag.ts` + `src/hooks/useCanvasPipeline.ts` (locks); OpenClaw consome a API exportada nos testes via mocks. Eu re-deploy canvas-execute scene_compose update.\n\n---\n\n### Sub-seal C3 \u2014 Asset Lineage: DB Migration + Backend Persist + Frontend Display"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:44:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "**Estimativa:** ~2h \u00b7 4-5 commits \u00b7 +5 testes \u00b7 1 migration \u00b7 2 deploys edge function (canvas-execute + higgsfield-webhook).",
+  "new_string": "**Estimativa (paralelizada com OpenClaw):** ~**1h** \u00b7 4-5 commits \u00b7 +5 testes \u00b7 1 migration \u00b7 2 deploys edge function.\nTarefas paraleliz\u00e1veis pro **engineer** OpenClaw via Telegram:\n- Aplicar migration via aios-sql-bridge (`apply_migration <path>`) enquanto Claude Code escreve o c\u00f3digo backend persist.\n- Rodar backfill script `scripts/canvas-backfill-asset-lineage.ts --dry-run` em projetos existentes; reportar count de execu\u00e7\u00f5es resolv\u00edveis.\n- Escrever testes de SELECT p\u00f3s-migration.\nCoordena\u00e7\u00e3o: Claude Code escreve canvas-execute + higgsfield-webhook edits; OpenClaw faz schema + backfill + verification queries."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:44:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "**Estimativa:** ~1h \u00b7 3 commits \u00b7 +3 testes \u00b7 1 deploy edge function.",
+  "new_string": "**Estimativa (paralelizada com OpenClaw):** ~**30min** \u00b7 3 commits \u00b7 +3 testes \u00b7 1 deploy edge function.\nTarefas paraleliz\u00e1veis pro **engineer** OpenClaw:\n- Update do SOP `canvas-video-async-execution.md` tabela de tiers (markdown puro, low-risk).\n- Tests do tier validator no canvas-execute (mock body + assert 422).\nCoordena\u00e7\u00e3o: Claude Code muda whitelist frontend + backend constant; OpenClaw escreve docs + tests em paralelo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:44:12)*
+
+Agora vou substituir o cronograma final com os tempos paralelizados + adicionar seção de aceleração OpenClaw + meta-prompt template para próxima sessão.
+
+## 🤖 Claude *(01:44:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "### Cronograma sugerido sub-seals\n\n| Sub-seal | Sess\u00e3o | Dura\u00e7\u00e3o | Cumulativo |\n|----------|--------|---------|------------|\n| C1 Foundation | Sess\u00e3o 1 | ~3h | v6.11.2 |\n| C2 DAG Runner | Sess\u00e3o 2 | ~5h | v6.11.3 |\n| C3 Asset Lineage | Sess\u00e3o 2 (continua\u00e7\u00e3o) ou 3 | ~2h | v6.11.4 |\n| C4 Tier Enforcement | Sess\u00e3o 3 (paralelo C3) | ~1h | v6.11.5 |\n| C5 Paid Smoke | Sess\u00e3o 4 (Sovereign UI) | ~1h | v6.12.0 |\n\nTotal: ~12h spread em **3-4 sess\u00f5es**.",
+  "new_string": "### Cronograma sugerido sub-seals (paraleliza\u00e7\u00e3o OpenClaw integrada)\n\n| Sub-seal | Sess\u00e3o | Dura\u00e7\u00e3o (real) | Cumulativo |\n|----------|--------|----------------|------------|\n| C1 Foundation | Sess\u00e3o 1 | ~1.5h | v6.11.2 |\n| C2 DAG Runner | Sess\u00e3o 1 (continua\u00e7\u00e3o) ou 2 | ~2.5h | v6.11.3 |\n| C3 Asset Lineage | Sess\u00e3o 2 | ~1h | v6.11.4 |\n| C4 Tier Enforcement | Sess\u00e3o 2 (paralelo C3) | ~30min | v6.11.5 |\n| C5 Paid Smoke | Sess\u00e3o 3 (Sovereign UI) | ~1h | v6.12.0 |\n\n**Total revisado: ~6.5h spread em 2 sess\u00f5es intensas + 1 paid smoke.** Redu\u00e7\u00e3o de ~50% via paraleliza\u00e7\u00e3o OpenClaw (de 12h para 6.5h).\n\n### Acelera\u00e7\u00e3o via OpenClaw + Ollama Local \u2014 Modelo Operacional\n\n**Infraestrutura dispon\u00edvel** (ver `[[project_openclaw_ollama_integration]]` em memory):\n- Gateway PM2 `maestro` rodando localhost com 7 agentes Pantheon.\n- **engineer** (qwen3.5 via Ollama local, ARM64) \u2014 tem capacidade de tools nativa (shell, git, edits, REST).\n- 6 outros agentes (artisan, scientist, marketing-growth, main, guardian, claw-master) com llama3.1:8b.\n- Fallback Google API (Gemini) configurado pra quando Ollama local falha ou demora.\n- Telegram bridge `@claw_gcrux` recebe meta-prompts e dispatcha pro main agent.\n\n**Padr\u00e3o de delega\u00e7\u00e3o durante sub-seal:**\n\n1. **Claude Code (eu)** = coordenador + arquiteto cr\u00edtico:\n   - Refactors em arquivos centrais com cross-cutting impact (store, hooks, edge functions edits).\n   - Decis\u00f5es arquiteturais (helper signatures, migration schema).\n   - Material proofs via REST queries (mesh artifacts, deploy verification).\n   - HANDOFF.md + Phase 5c audit + push.\n\n2. **OpenClaw engineer (Ollama local)** = executor paralelo low-risk:\n   - Escrever testes Vitest a partir de specs/interfaces que eu defino.\n   - Rodar scripts dry-run + reportar diff.\n   - Aplicar migrations via aios-sql-bridge.\n   - Update SOPs markdown puros.\n   - Grep/audit codebase pra confirma\u00e7\u00f5es cross-cutting.\n\n3. **Sincroniza\u00e7\u00e3o**: cada sub-seal come\u00e7a com Claude Code criando \"lock list\" (arquivos que eu vou tocar) \u2014 OpenClaw confirma e fica fora. OpenClaw entrega via PR-style markdown em `.claude/proposals/` que Claude Code revisa antes de mergear.\n\n**Quando N\u00c3O delegar (mant\u00e9m em Claude Code):**\n- Migrations complexas com dependency em c\u00f3digo j\u00e1 existente.\n- Edge function deploys (precisam de aprova\u00e7\u00e3o Sovereign per CLAUDE.md).\n- Decis\u00f5es de schema (refletem em m\u00faltiplos consumers).\n- Refactor de arquivo j\u00e1 em conflito merge ou WIP.\n\n### Meta-Prompt Template para Pr\u00f3xima Sess\u00e3o (Telegram \u2192 @claw_gcrux)\n\nQuando Sovereign for abrir nova sess\u00e3o Claude Code (post-handoff desta), pode primeiro disparar OpenClaw via Telegram com meta-prompt estruturado paralelizando C1 prep work. Template:\n\n```text\nTarefa de Engenharia: Canvas Pipeline Refactor \u2014 Prepara\u00e7\u00e3o C1 Foundation\n\nPor favor, execute as seguintes etapas detalhadas para acelerar a sess\u00e3o Claude Code que vou abrir em seguida:\n\n1. Branch + worktree:\n   Crie e ative branch `feature/canvas-pipeline-refactor-c1` a partir de main.\n\n2. Audit pre-flight:\n   - Execute `grep -rn \"id=\" src/components/canvas/nodes/` e reporte quais Handle JSX components j\u00e1 t\u00eam id (zero esperado).\n   - Execute `git log --oneline -10` e me reporte os \u00faltimos 10 commits do branch claude/bold-visvesvaraya-4a95b9 (de onde o feature branch foi criado).\n   - Liste todos os arquivos em `src/components/canvas/nodes/` e classifique cada um por kind (GenerateImageNode = generateImage, etc.).\n\n3. Backfill dry-run preparation:\n   Crie skeleton de script `scripts/canvas-backfill-edge-handles.ts` com:\n   - Bun-native (process.env via dotenv).\n   - Connect Supabase service-role via SERVICE_ROLE_KEY_LEGACY (eyJ* legacy \u2014 ainda v\u00e1lido) ou SUPABASE_SERVICE_ROLE_KEY (sb_secret_* novo).\n   - SELECT FROM vm_canvas_projects retornando id, name, graph.\n   - Para cada project: log nodes/edges counts + se algum edge tem sourceHandle/targetHandle n\u00e3o-null.\n   - Modo --dry-run (default) sem muta\u00e7\u00f5es.\n   - Reporte counts agregados ao final.\n\n4. SOP draft:\n   Crie esqueleto de `docs/processes/canvas-pipeline-architecture.md` seguindo o padr\u00e3o de SOPs existentes (`canvas-video-async-execution.md`, `api-credential-tenancy.md`):\n   - Header (vers\u00e3o, selada, Lei 2)\n   - ORO triplet (placeholder)\n   - Contexto (~200 palavras explicando handle convention + edge port routing)\n   - Tabela \"Handle ID Convention\" (5 nodeKinds \u00d7 output handle \u00d7 input handles)\n   - 5 verification gates\n   - Recovery path\n   - Anti-patterns proibidos\n\n5. Output:\n   Salve tudo em PR-style markdown em `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` listando:\n   - Branch criada (sim/n\u00e3o).\n   - Audit findings (counts + classifica\u00e7\u00e3o).\n   - Backfill script path + linhas.\n   - SOP draft path + linhas + percentual completo (~70% esperado, faltando ORO real e Anti-patterns adequados).\n   - Quais arquivos N\u00c3O foram tocados (lock list para Claude Code respeitar).\n\nAo finalizar, responda no Telegram com o caminho do proposal markdown + um sum\u00e1rio de 5 linhas.\n```\n\nResultado esperado: quando Sovereign abrir nova sess\u00e3o Claude Code, eu (Claude) leio o `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` e o tempo de \"exploration + scaffold\" j\u00e1 est\u00e1 economizado \u2014 come\u00e7o direto pelo refactor central (Handle components + onConnect lock)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:45:00)*
+
+Agora atualizar o cronograma final com os tempos paralelizados.
+
+## 🤖 Claude *(01:45:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md",
+  "old_string": "## Cronograma Final (atualizado 2026-05-28 \u2014 Seal C revisada)\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 | A | 4-6h | \u2705 v6.11.0 \u2014 pipeline async recovered (OTD-V610-001) |\n| 2026-05-28 | B | 3-4h | \u2705 v6.11.1 \u2014 OTD-OE661 closed (5d antes SLA) |\n| 2026-05-28 (agora) | C audit + plan | ~1h | \u2705 Investiga\u00e7\u00e3o completa + OTD-CANVAS-PIPELINE-001 + plan revisado |\n| Sess\u00e3o futura #1 | **C1 Foundation** | ~3h | v6.11.2 \u2014 handle IDs + edge ports + backfill |\n| Sess\u00e3o futura #2 | **C2 DAG Runner** | ~5h | v6.11.3 \u2014 useCanvasPipeline + topological + output wiring |\n| Sess\u00e3o futura #2/3 | **C3 Asset Lineage** | ~2h | v6.11.4 \u2014 migration + persist + display |\n| Sess\u00e3o futura #3 | **C4 Tier Enforcement** | ~1h | v6.11.5 \u2014 SOP-aware whitelist front+back |\n| Sess\u00e3o futura #4 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 \u2014 first real E2E Canvas + lineage proof + 125 mcoCoins burn |\n| P\u00f3s-C5 | D | 1 dia | v6.12.1 \u2014 e2e-user-zero framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.2 \u2014 MARGIN_FACTOR calibrated |\n\nEstimativa total restante (C1-C5 + D + E): ~16h spread em **5-6 sess\u00f5es** ao longo de **~10 dias**.\n\n**Pr\u00f3ximo passo imediato:** /handoff esta sess\u00e3o (selando Seal A + B + audit C) \u2192 nova sess\u00e3o come\u00e7a em C1 Foundation com contexto fresh.",
+  "new_string": "## Cronograma Final (atualizado 2026-05-28 \u2014 paraleliza\u00e7\u00e3o OpenClaw integrada)\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 | A | 4-6h | \u2705 v6.11.0 \u2014 pipeline async recovered (OTD-V610-001) |\n| 2026-05-28 | B | 3-4h | \u2705 v6.11.1 \u2014 OTD-OE661 closed (5d antes SLA) |\n| 2026-05-28 (agora) | C audit + plan | ~1h | \u2705 Investiga\u00e7\u00e3o completa + OTD-CANVAS-PIPELINE-001 + plan revisado |\n| Sess\u00e3o futura #1 | **C1 + C2** (paralelizadas) | ~4h | v6.11.2/3 \u2014 Foundation + DAG Runner em uma sess\u00e3o intensa |\n| Sess\u00e3o futura #2 | **C3 + C4** (paralelizadas) | ~1.5h | v6.11.4/5 \u2014 Lineage + Tier Enforcement |\n| Sess\u00e3o futura #3 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 \u2014 first real E2E Canvas + lineage proof + 125 mcoCoins burn |\n| P\u00f3s-C5 | D | ~4h (paralelizado) | v6.12.1 \u2014 e2e-user-zero framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.2 \u2014 MARGIN_FACTOR calibrated |\n\n**Estimativa total restante (C1-C5 + D + E): ~12h spread em 3-4 sess\u00f5es** ao longo de **~5-7 dias** (era 16h em 5-6 sess\u00f5es antes da paraleliza\u00e7\u00e3o OpenClaw \u2014 redu\u00e7\u00e3o ~25% total + 50% s\u00f3 nas Cs).\n\n**Pr\u00f3ximo passo imediato:** \n1. Sovereign dispara meta-prompt Telegram pro OpenClaw (template na se\u00e7\u00e3o acima) preparando C1 (branch + audit + script skeleton + SOP draft).\n2. Quando OpenClaw responder com `.claude/proposals/openclaw-canvas-c1-prep-<date>.md`, Sovereign abre nova sess\u00e3o Claude Code.\n3. Eu (Claude) fa\u00e7o /handson \u2014 leio o proposal + o HANDOFF v6.11.1 + come\u00e7o direto pelo Handle components refactor (lock list respeitado).\n4. C1 + C2 podem fechar na mesma sess\u00e3o se OpenClaw entregar tests em paralelo via Telegram.\n\n**Esta sess\u00e3o (atual) fecha com:**\n1. /handoff selando Seal A + B + audit C (v6.11.1 j\u00e1 est\u00e1 selado em mesh + push; s\u00f3 falta consolidar audit).\n2. Audit como observation node `otd-canvas-pipeline-001-registered-2026-05-28` (RPN 225) + DERIVES_FROM \u2192 v611.1 handoff.\n3. Atualizar HANDOFF.md com se\u00e7\u00e3o \"C audit findings\" referenciando o plan file.\n4. Memory entry sobre o pattern OpenClaw delegation (para Claude Code futuro reusar).\n5. Push final + branch pronta para pr\u00f3xima sess\u00e3o."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:45:32)*
+
+
+## 🤖 Claude *(01:45:33)*
+
+Plano atualizado: estimativas paralelizadas (12h→6.5h Cs), seção operacional OpenClaw + meta-prompt Telegram pra próxima sessão, cronograma final reduzido. Pronto para aprovação.
+
+## 🤖 Claude *(01:45:38)*
+
+
+🛠️ **Tool Call**: `ExitPlanMode`
+```json
+{
+  "allowedPrompts": [
+    {
+      "tool": "Bash",
+      "prompt": "REST queries against Supabase for mesh artifact creation (observation node + DERIVES_FROM edge + infra_health_logs pulse)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "git operations (status/diff/add/commit/push) to finalize current session"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "grep/find for memory file lookup before writing new entries"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "Run Phase 5c audit script (bun run scripts/qa/run-audit.ts) for handoff verification"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run TypeScript checks (npx tsc --noEmit) for handoff verification"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run Vitest test suite (bun run test) for handoff verification"
+    }
+  ],
+  "plan": "# Plano de Execu\u00e7\u00e3o \u2014 6 Pr\u00f3ximos Passos p\u00f3s v6.10.0\n\n**Data:** 2026-05-27 \u00b7 **Worktree:** `bold-visvesvaraya-4a95b9` \u00b7 **Branch:** `claude/bold-visvesvaraya-4a95b9`\n**Decis\u00f5es confirmadas pelo Sovereign:** (1) Seal C bundle \u00fanico; (2) Item 1 via helper dual-format.\n\n---\n\n## Contexto\n\nA seal v6.10.0 (2026-05-27) fechou tr\u00eas grandes frentes (Great Reset + Per-user API expansion + Constellation Economic Activation), mas deixou anotada uma OTD bloqueante (**OTD-V610-001**, JWT format mismatch que quebra o pipeline async v6.9.0 em produ\u00e7\u00e3o) e uma OTD com SLA apertado (**OTD-OE661-PER-USER**, vencendo 2026-06-02 \u2014 ~6 dias). Sem fechar a OTD-V610-001 o flywheel async fica preso e a Phase Commercial revenue n\u00e3o destrava; sem fechar a OTD-OE661 o Higgsfield consumer permanece global, bloqueando lan\u00e7amento multi-tenant.\n\nEste plano sequencia as 6 frentes do brief `/handson` na ordem \u00f3tima considerando depend\u00eancias f\u00edsicas (Item 3 precisa Item 2; Item 5 precisa de 7d+ de dados do cron di\u00e1rio), press\u00e3o de SLA, blast radius por seal e coabita\u00e7\u00e3o de contexto UI. Sa\u00edda esperada: **5 seals** distribu\u00eddas em **~4-5 sess\u00f5es** ao longo de **8-10 dias**, fechando d\u00e9bito cr\u00edtico + SLA antes de 2026-06-02 e calibrando MARGIN_FACTOR em 2026-06-03+.\n\n---\n\n## Status Atual + Ordena\u00e7\u00e3o Revisada (2026-05-28)\n\n| # | Seal | Itens | Status | Risco | Sess\u00e3o |\n|---|------|-------|--------|-------|--------|\n| **A** | Pipeline Async Auth Fix | Item 1 (OTD-V610-001) | **\u2705 SELADA v6.11.0** (7 commits) | resolved | 2026-05-27 |\n| **B** | Per-User API Tenancy OE661 | Item 2 (OTD-OE661-PER-USER) | **\u2705 SELADA v6.11.1** (5 commits, 5d antes SLA) | resolved | 2026-05-28 |\n| **C** | **REVISADA \u2192 Canvas Pipeline Refactor (5 sub-seals)** | Item 3 + nova OTD-CANVAS-PIPELINE-001 (RPN 225) | \u270f\ufe0f EM PLANEJAMENTO | M\u00c9DIO-ALTO | 2-3 sess\u00f5es |\n| **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | pending | BAIXO | depois de C |\n| **E** | MARGIN_FACTOR Calibration | Item 5 | pending (data-gated) | BAIXO | 2026-06-03+ |\n\n**Por que Seal C foi revisada:** Investiga\u00e7\u00e3o no projeto `#02 - Mood Board 5 lanes - 5 mundos` (880b5eba) revelou 5 problemas estruturais que invalidariam o paid smoke original. Burn de 125 mcoCoins sem o pipeline runner correto = desperd\u00edcio. Refactor obrigat\u00f3rio ANTES do smoke. Detalhes em SEAL C abaixo.\n\nCohabita\u00e7\u00e3o rejeitada: Itens 1 e 2 N\u00c3O coabitaram \u2014 ambos tocam auth de edge functions; blast radius combinado \u00e9 alto demais para uma seal s\u00f3. **Confirmado pelo flow real**: cada uma exigiu sess\u00e3o dedicada.\n\n---\n\n## SEAL A \u2014 Pipeline Async Auth Fix (Item 1) \u00b7 CR\u00cdTICO\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = pipeline async em produ\u00e7\u00e3o + 7+ inter-function callers + flywheel revenue\n\n**Decis\u00e3o arquitetural:** Helper dual-format compartilhado em `supabase/functions/_shared/auth.ts`. Aceita `Bearer eyJ*` (legacy) E `Bearer sb_secret_*` (formato atual). Pavimenta deprecation do legacy quando Supabase reabrir regenera\u00e7\u00e3o.\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/edge-function-service-auth.md`:\n   - Operator (quem valida service-role hoje, como), Sequence (5 steps), Verification gates (compare contra ambos os formatos), Recovery path (rollback \u00e9 remover o helper e voltar compara\u00e7\u00e3o direta), Success signal (`net._http_response.status=200` em chamadas inter-function).\n   - Appendix: plano de deprecation futura para header customizado `x-service-role-key`.\n\n2. **Helper compartilhado** \u2014 `supabase/functions/_shared/auth.ts` (~50 LOC novo):\n   - Export `isValidServiceAuth(authHeader: string | null): boolean`.\n   - L\u00ea `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` (formato `sb_secret_*` atual) e `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY_LEGACY')` opcional (formato `eyJ*` quando provisionado).\n   - Compara `authHeader === 'Bearer ' + key` para cada chave registrada; retorna true se qualquer match.\n   - Logs telemetria via console.log com prefix `[auth]` (sem expor as chaves).\n\n3. **Recipientes refatorados** (substituir compara\u00e7\u00e3o direta `authHeader !== ${'`'}Bearer ${'$'}{serviceKey}${'`'}`):\n   - `supabase/functions/orchestrate-step/index.ts:48-54` \u2014 caller E recipient\n   - `supabase/functions/publish-wordpress/index.ts:26`\n   - `supabase/functions/self-heal/index.ts:~211`\n   - `supabase/functions/agent-task-execute/index.ts:~61`\n   - `supabase/functions/refresh-social-token/index.ts` (confirmar via grep durante execu\u00e7\u00e3o)\n   - `supabase/functions/embed-mcorch-node/index.ts` (idem)\n   - Total: ~6-7 arquivos, ~3 linhas alteradas cada (substitui valida\u00e7\u00e3o inline pelo `isValidServiceAuth(req.headers.get('Authorization'))`).\n\n4. **Callers continuam emitindo `SUPABASE_SERVICE_ROLE_KEY`** (`sb_secret_*`) \u2014 n\u00e3o h\u00e1 mudan\u00e7a no lado emissor. Helper aceita ambos os formatos do lado validador.\n\n5. **Provisionar `SUPABASE_SERVICE_ROLE_KEY_LEGACY` como vault secret** apenas se quisermos manter compat com migrations antigas que ainda usam o JWT hardcoded (ex: `20260503120000_embed_on_insert_trigger.sql:19`). Decis\u00e3o durante implementa\u00e7\u00e3o: se grep mostrar que apenas migrations o usam, deixar a coluna LEGACY desprovisionada \u2014 helper retorna true s\u00f3 pro novo formato.\n\n**Material proofs (Phase 5c):**\n- `async_orchestrate_step_debug` nova linha com `service_key_len=41 prefix=sb_secret_*` E `net._http_response.status=200` (era 401).\n- Pipeline run end-to-end completo: `pipeline_runs.status='done'` com `wp_status='draft'` + `linkedin_post` + `twitter_thread` + observation node inserido na mesh.\n- Test novo `src/test/edge-shared-auth.test.ts` (~6 casos: ambos formatos v\u00e1lidos / inv\u00e1lido / null / missing / vazio / extra-whitespace).\n- `infra_health_logs` evento `pipeline_async_recovered` com `run_id` refer\u00eancia.\n\n**Reutilizar:**\n- `supabase/functions/orchestrate-step/index.ts:101-115` (j\u00e1 tem padr\u00e3o `userKeys?.x || Deno.env.get(...)` pra outras chaves \u2014 mas \u00e9 client-context, n\u00e3o service-auth).\n- Padr\u00e3o de teste em `src/test/qa-verifiers.test.ts` (Vitest com mock deps).\n\n**Risco:** ALTO mas mitigado \u2014 refactor cir\u00fargico de 1 linha por recipient, helper coberto por testes. Rollback = 1 revert commit.\n\n**Estimativa:** 5-7 commits granulares \u00b7 +6 testes \u00b7 1 deploy edge function por fun\u00e7\u00e3o tocada (6-7 deploys).\n\n---\n\n## SEAL B \u2014 Per-User API Tenancy OE661 (Item 2) \u00b7 SLA 2026-06-02\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = OTD-OE661-PER-USER closure + multi-tenant readiness\n\n**Premissa corrigida pelo diagn\u00f3stico:** escopo MENOR que o brief original \u2014 `link-forge.ts` e `process-affiliate-link` POST j\u00e1 est\u00e3o compliant. Refactor real \u00e9 **2 linhas em canvas-execute + 1 invers\u00e3o de l\u00f3gica em process-affiliate-link**.\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/api-credential-tenancy.md`:\n   - Operator: edge function autenticada (POST com JWT) vs cron service-role.\n   - Sequence: (a) resolver via `user_api_keys` filtrando por `auth.uid()`; (b) se ausente \u2192 null; (c) se request \u00e9 cron com `user_id` no body \u2192 resolver via `user_api_keys.user_id = body.user_id`; (d) fallback global APENAS em paths sem `user_id` resolv\u00edvel.\n   - Verification: 3 testes mec\u00e2nicos por edge function (com key per-user / sem key per-user \u2192 402 / cron path com user_id expl\u00edcito).\n   - Recovery: usu\u00e1rio sem key recebe HTTP 402 com `{ error: \"missing_api_key\", action: \"Configure your <service> credentials at /dashboard/settings\" }`.\n   - Success: `grep -rn \"Deno.env.get('HIGGSFIELD_API_KEY')\" supabase/functions/` retorna apenas paths cron service-role.\n\n2. **Helper compartilhado** \u2014 `supabase/functions/_shared/user-keys.ts` (~80 LOC novo):\n   - Export `resolveUserApiKeys(admin: SupabaseClient, userId: string): Promise<UserKeys>`.\n   - UserKeys tipa `{ openai, groq, openrouter, replicate, higgsfield, higgsfield_secret, ml_affiliate_token, ... }` \u2014 todos nullable.\n   - Encapsula query a `user_api_keys` + `affiliate_config` (\u00faltimo com filtro `.eq('project_id', 'mcorch-affiliate')` per Amendment C v6.6.7).\n   - Reutilizado por canvas-execute, orchestrate-step (futuro), agent-task-execute.\n\n3. **Fix canvas-execute** \u2014 `supabase/functions/canvas-execute/index.ts:121-130`:\n   - Substituir bloco `{ data: userKeys }` direto pela chamada `await resolveUserApiKeys(admin, user.id)`.\n   - Linhas 128-129: substituir `Deno.env.get(\"HIGGSFIELD_API_KEY\")` por `userKeys.higgsfield ?? null` e idem para secret.\n   - Se `userKeys.higgsfield == null` E `body.node_type === 'image_to_video'`, retornar 402 com `{ error: \"missing_higgsfield_key\", action: \"Configure your Higgsfield credentials at /dashboard/settings\" }` ANTES do `creditCost` calc.\n\n4. **Fix process-affiliate-link GET** \u2014 `supabase/functions/process-affiliate-link/index.ts:101-136`:\n   - Remover `?? \"GCRUX_DEFAULT_TOKEN\"` da linha 102; inicializar `let affiliateToken: string | null = null;`.\n   - Inverter check `:130` para `if (!hasValidConfig)` (ao inv\u00e9s de compara\u00e7\u00e3o contra string m\u00e1gica).\n   - O 302 redirect em `:132-135` permanece intacto.\n\n5. **CLAUDE.md update** \u2014 adicionar entrada em `Key Files Reference`:\n   - `supabase/functions/_shared/user-keys.ts` \u2014 Per-user API key resolver\n\n**Material proofs (Phase 5c):**\n- `grep -rn \"GCRUX_DEFAULT_TOKEN\\|Deno.env.get(\\\"HIGGSFIELD\" supabase/functions/` retorna zero hits (exceto coment\u00e1rios SOP).\n- Edge function test: chamada `canvas-execute` para `image_to_video` sem `higgsfield_api_key` em `user_api_keys` retorna HTTP 402 com payload structured.\n- Edge function test: chamada `process-affiliate-link` GET para asset cujo `user_id` n\u00e3o tem `affiliate_config` retorna 302 para `/dashboard/settings?no_config=1`.\n- OTD-OE661-PER-USER fechada via observation node + edge `CLOSES` apontando para a OTD original.\n- Telemetry `infra_health_logs` evento `otd_oe661_per_user_closed` com timestamp.\n\n**Reutilizar:**\n- Padr\u00e3o j\u00e1 compliant em `process-affiliate-link/index.ts:113-124` (POST branch).\n- Padr\u00e3o j\u00e1 compliant em `orchestrate-step/index.ts:101-105` (lookup `user_api_keys`).\n- Hook client-side `useUserApiKeys` (refer\u00eancia conceitual, n\u00e3o direto).\n\n**Risco:** BAIXO \u2014 escopo cir\u00fargico, fallback existente j\u00e1 \u00e9 302.\n\n**Estimativa:** 4-5 commits \u00b7 +4 testes \u00b7 2 deploys edge function.\n\n---\n\n## SEAL C REVISADA \u2014 Canvas Pipeline Refactor (5 sub-seals C1-C5)\n\n**Contexto novo:** Investiga\u00e7\u00e3o no projeto Sovereign `#02 - Mood Board 5 lanes - 5 mundos` (`880b5eba-b41c-490d-8cab-1058def85bc9`, 30 nodes / 23 edges, \u00faltima edi\u00e7\u00e3o 2026-05-27) + 8 \u00faltimas execu\u00e7\u00f5es no banco + audit de 3 frentes (frontend Canvas, backend canvas-execute, padr\u00e3o Visual Orchestrator) revelou 5 problemas estruturais bloqueantes:\n\n1. **Edges sem handles sem\u00e2nticos** \u2014 `sourceHandle: null`, `targetHandle: null` em 100% dos edges. `useCanvasStore.onConnect()` em `src/store/useCanvasStore.ts:86-92` n\u00e3o atribui handle IDs ao criar edges. Handle components em `src/components/canvas/nodes/*.tsx` n\u00e3o t\u00eam `id` prop. Imposs\u00edvel rotear inputs em n\u00f3s multi-port (sceneCompose precisa base-image + character + style separados).\n\n2. **Sem DAG runner client-side** \u2014 `CanvasEditorPage.handleRunAll()` (linha 394) e `runSingleNode()` (linha 292-337) s\u00e3o scheduler ad-hoc, n\u00e3o topological sort. `useOrchestrationGraph.runPipeline` (Visual Orchestrator) N\u00c3O \u00e9 reutiliz\u00e1vel diretamente \u2014 ele delega tudo pra backend `orchestrate-content`; Canvas precisa de runner cliente real com Promise.all em branches independentes.\n\n3. **Sem wiring output\u2192input** \u2014 `findUpstreamImage(nodeId, nodes, edges)` em `src/lib/canvas-utils.ts:28-43` faz lookup naive (primeiro upstream image), N\u00c3O valida targetHandle, N\u00c3O passa output de uma execu\u00e7\u00e3o pra body da pr\u00f3xima.\n\n4. **Asset lineage perdido** \u2014 `vm_canvas_assets` N\u00c3O tem `node_id` nem `input_asset_id`. `vm_canvas_executions` N\u00c3O persiste `input_asset_url` (frontend envia, backend usa, mas nunca grava). Webhook higgsfield-webhook insere video asset sem reference ao input image. Impossible debugar \"qual imagem gerou esse v\u00eddeo\".\n\n5. **Tier whitelist permissive** \u2014 `ImageToVideoInspector.ENABLED_VIDEO_MODELS` (linha 53-59) inclui todos os 5 tiers (dop-lite, dop-turbo, dop-standard, kling, seedance). SOP Phase 4.2c v6.6.2 diz que s\u00f3 `dop-standard-5s` deve estar clic\u00e1vel. Backend `ALLOWED_VIDEO_MODELS` (canvas-execute:220-226) tamb\u00e9m aceita todos os 5. Execu\u00e7\u00e3o real 87654829 rodou `model: 'dop-lite'` \u2014 SOP violada na origem.\n\n**Nova OTD registrada:** **OTD-CANVAS-PIPELINE-001** (RPN ~225, Severity 9 \u00d7 Occurrence 5 \u00d7 Detection 5) \u2014 bloqueante para C5 paid smoke + Phase Commercial revenue via Canvas-generated content.\n\n**Achados positivos (REUSE):**\n- `useCanvasExecute()` em `useCanvasStudio.ts:192-228` DOES include input_asset_url quando recebido \u2014 reusar.\n- `resolveExecutePayload()` em `types/canvas.ts:611-690` mapeia camelCase \u2192 snake_case corretamente \u2014 nenhum mismatch real (diagn\u00f3stico anterior estava errado).\n- `pickNodeImage()` em `canvas-utils.ts:18` correto para extrair output de upstream \u2014 reusar.\n- CharacterReference (`CharacterReferenceInspector.tsx:27-65`) \u00e9 baseline funcional de \"asset ingestion\" \u2014 espelho para fix.\n- Visual Orchestrator status enum `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` \u2014 adotar em Canvas (mapear `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n- `OrchestrationCanvas.tsx:45-53` status sync useEffect \u2014 pattern direto pra reusar.\n- Migra\u00e7\u00f5es canvas-execute p\u00f3s-rota\u00e7\u00e3o Supabase (v6.11.0) + per-user Higgsfield (v6.11.1) \u2014 Canvas j\u00e1 est\u00e1 nesse estado limpo.\n\n### Sub-seal C1 \u2014 Foundation: Handle IDs + Edge Port Routing (Multi-input ready)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = todos projetos canvas existentes via backfill).\n\n**Passos:**\n\n1. **SOP-first (Lei 2)** \u2014 criar `docs/processes/canvas-pipeline-architecture.md`:\n   - Operator: edges criados via drag conectam handles sem\u00e2nticos por nodeKind (n\u00e3o anonymous).\n   - Sequence: handle ID convention table (`generateImage.output` / `imageToVideo.input` / `sceneCompose.{base-image,character,style}` etc.).\n   - Verification gates (5): handles populados em onConnect / backfill executou / migration apply / runtime check em pipeline / Phase 5c verify.\n   - Recovery path: revert backfill via project graph snapshot pre-migration.\n\n2. **Type constants** \u2014 `src/lib/canvas-handles.ts` (NOVO, ~80 LOC):\n   - `export const NODE_OUTPUT_HANDLE: Record<CanvasNodeKind, string>` \u2014 single output por kind.\n   - `export const NODE_INPUT_HANDLES: Record<CanvasNodeKind, string[]>` \u2014 sceneCompose retorna `['base-image','character','style']`; demais retornam `['input']`.\n   - `export function getOutputHandle(kind)` / `export function getInputHandles(kind)` helpers.\n\n3. **Handle components** \u2014 adicionar `id` prop em todos os Handle JSX:\n   - `src/components/canvas/nodes/GenerateImageNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/CharacterReferenceNode.tsx`: apenas source `id=\"output\"` (sem input).\n   - `src/components/canvas/nodes/SceneComposeNode.tsx`: 3 target handles `id=\"base-image\"` / `id=\"character\"` / `id=\"style\"` (positions: Top / Left / Bottom) + 1 source `id=\"output\"`.\n   - `src/components/canvas/nodes/StyleTransferNode.tsx`: `id=\"input\"` / `id=\"style\"` / `id=\"output\"`.\n   - `src/components/canvas/nodes/ImageToVideoNode.tsx`: `id=\"input\"` / `id=\"output\"`.\n\n4. **Store** \u2014 `src/store/useCanvasStore.ts:86-92`:\n   - Modify `onConnect` para resolver source/target nodeKind e atribuir handles automaticamente quando user n\u00e3o especificou. Multi-input n\u00f3 (sceneCompose) usa `targetHandle` provido pelo drag UI (ReactFlow envia quando user drags pra handle espec\u00edfica).\n\n5. **Backfill script** \u2014 `scripts/canvas-backfill-edge-handles.ts` (Bun, ~120 LOC):\n   - L\u00ea todos `vm_canvas_projects.graph`.\n   - Para cada edge sem handles: resolve source.kind + target.kind via node lookup; atribui sourceHandle default + targetHandle via heur\u00edstica (primeiro upstream image \u2192 `base-image`; characterReference upstream \u2192 `character`; etc.).\n   - Backup snapshot em `.claude/context/backups/canvas-edge-handles-pre-c1-<date>/`.\n   - Dry-run mode + `--apply` flag.\n\n6. **Tests** \u2014 `src/test/canvas-handles.test.ts` (~80 LOC, ~10 cases):\n   - getOutputHandle por kind.\n   - getInputHandles por kind (especialmente sceneCompose retorna 3).\n   - onConnect populates handles default quando user n\u00e3o especifica.\n\n**Material proofs Phase 5c:**\n- `grep \"id=\\\"output\\\"\" src/components/canvas/nodes/` retorna 5 matches (1 por node component).\n- `grep \"id=\\\"base-image\\\"\" src/components/canvas/nodes/SceneComposeNode.tsx` retorna 1.\n- Query post-backfill: `SELECT graph FROM vm_canvas_projects WHERE id='880b5eba...'` \u2192 edges com sourceHandle + targetHandle n\u00e3o-null em 23/23.\n- Tests 10/10 passing.\n\n**Estimativa (paralelizada com OpenClaw):** ~**1.5h** \u00b7 5-6 commits granulares \u00b7 +10 testes.\nTarefas paraleliz\u00e1veis pro **engineer** agente OpenClaw via Telegram (Ollama qwen3.5 local + Google API fallback):\n- Escrever testes Vitest `src/test/canvas-handles.test.ts` enquanto Claude Code refatora os 5 Handle components.\n- Rodar `scripts/canvas-backfill-edge-handles.ts --dry-run` e reportar diff.\n- Validar TypeScript zero erros + 204+10/214 testes em paralelo.\nCoordena\u00e7\u00e3o: Claude Code abre o lock no `useCanvasStore.onConnect`; OpenClaw N\u00c3O toca esse arquivo.\n\n---\n\n### Sub-seal C2 \u2014 DAG Runner: useCanvasPipeline + Topological Sort + Output\u2192Input Wiring\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = nova execu\u00e7\u00e3o de qualquer projeto, mas backwards-compatible com per-node Run).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 mergeada (handles existem).\n\n**Passos:**\n\n1. **DAG library** \u2014 `src/lib/canvas-dag.ts` (NOVO, ~180 LOC):\n   - `topologicalSort(nodes: CanvasNode[], edges: CanvasEdge[]): { layers: string[][] }` \u2014 Kahn's algorithm; retorna layers para Promise.all dentro de cada layer.\n   - `getUpstreamByHandle(nodeId, targetHandle, nodes, edges): CanvasNode | undefined` \u2014 port-aware lookup (filtra edges por targetHandle match).\n   - `getAllUpstreams(nodeId, nodes, edges): Record<targetHandle, CanvasNode>` \u2014 todos os upstreams keyed by targetHandle (para multi-input).\n   - `validateDAG(nodes, edges): { valid: boolean; cycles?: string[][]; orphans?: string[] }` \u2014 detecta ciclos + n\u00f3s sem conex\u00e3o.\n\n2. **Pipeline hook** \u2014 `src/hooks/useCanvasPipeline.ts` (NOVO, ~220 LOC):\n   - Export `useCanvasPipeline(projectId)` retornando `{ runPipeline, runNode, abort, isRunning, currentLayer, error }`.\n   - `runPipeline()`: \n     - Get topological layers via canvas-dag.\n     - Para cada layer (sequencial): Promise.all dos n\u00f3s da layer (paralelo).\n     - Para cada n\u00f3: resolve upstreams via getAllUpstreams \u2192 extrai output URLs \u2192 constr\u00f3i body (input_asset_url para single-input nodes, parameters extras para sceneCompose com `{base_image_url, character_url, style_url}`) \u2192 POST canvas-execute \u2192 on success: updateNodeData com `output.imageUrl` ou `output.videoUrl`.\n     - On error: marca n\u00f3 error, propaga blocked downstream (todos descendants).\n   - `runNode(nodeId)`: mant\u00e9m compat \u2014 executa n\u00f3 individual com resolu\u00e7\u00e3o de upstreams (n\u00e3o trigger pipeline).\n   - Status enum unificado: `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` (mapeia canvas legacy `queued\u2192pending`, `success\u2192done`, `failed\u2192error`).\n\n3. **Refactor entry points**:\n   - `CanvasEditorPage.tsx:292-337` \u2192 delegar `runSingleNode` para `useCanvasPipeline.runNode`.\n   - `CanvasEditorPage.tsx:394-436` \u2192 delegar `handleRunAll` para `useCanvasPipeline.runPipeline`.\n   - `src/components/canvas/TopBar.tsx:122-144` \u2192 rename \"Executar tudo\" \u2192 \"Executar Pipeline\" (alinhar com Orchestrator).\n\n4. **sceneCompose payload** \u2014 backend canvas-execute precisa aceitar parameters `{base_image_url, character_url, style_url}` para scene_compose node_type:\n   - Edit `supabase/functions/canvas-execute/index.ts` no branch scene_compose:\n     - Resolver as 3 URLs via body.parameters.\n     - Passar pro Gemini multimodal endpoint (j\u00e1 usa OpenRouter google/gemini-2.5-flash-image em compose).\n   - Tests para o branch.\n\n5. **Tests** \u2014 `src/test/canvas-dag.test.ts` (~200 LOC, ~15 cases):\n   - topologicalSort com DAG linear (4 n\u00f3s, 3 edges).\n   - topologicalSort com DAG multi-branch (mood board pattern).\n   - getUpstreamByHandle retorna o n\u00f3 correto.\n   - getAllUpstreams retorna map completo para sceneCompose.\n   - validateDAG detecta ciclo.\n   - validateDAG detecta orphan.\n\n6. **Tests** \u2014 `src/test/useCanvasPipeline.test.ts` (~150 LOC, ~8 cases) com mock canvas-execute.\n\n**Material proofs Phase 5c:**\n- Test DAG: pipeline com 4 layers executa em ordem topol\u00f3gica correta (mockada).\n- Test pipeline: n\u00f3 downstream recebe input_asset_url do upstream output.\n- Test pipeline: error em layer N marca todos descendants como blocked.\n- TypeScript zero erros.\n- Tests 25+ passando.\n\n**Estimativa (paralelizada com OpenClaw):** ~**2.5h** \u00b7 8-10 commits granulares \u00b7 +25 testes \u00b7 1 deploy edge function.\nTarefas paraleliz\u00e1veis pro **engineer** + **scientist** OpenClaw via Telegram:\n- engineer: escrever `src/test/canvas-dag.test.ts` (15 cases) + `src/test/useCanvasPipeline.test.ts` (8 cases) enquanto Claude Code escreve a lib + hook.\n- scientist: revisar topological sort correctness contra teoria de Kahn's algorithm; verificar handling de ciclos.\nCoordena\u00e7\u00e3o: Claude Code escreve `src/lib/canvas-dag.ts` + `src/hooks/useCanvasPipeline.ts` (locks); OpenClaw consome a API exportada nos testes via mocks. Eu re-deploy canvas-execute scene_compose update.\n\n---\n\n### Sub-seal C3 \u2014 Asset Lineage: DB Migration + Backend Persist + Frontend Display\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = schema vm_canvas_*; migration tem que ser additive n\u00e3o-breaking).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 mergeadas.\n\n**Passos:**\n\n1. **Migration** \u2014 `supabase/migrations/<ts>_canvas_asset_lineage.sql`:\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN node_id text` (no foreign key \u2014 node IDs s\u00e3o strings client-side).\n   - `ALTER TABLE vm_canvas_assets ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_url text`.\n   - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.\n   - Index `CREATE INDEX vm_canvas_assets_node_id_idx ON vm_canvas_assets (node_id)`.\n   - Index `CREATE INDEX vm_canvas_assets_input_asset_id_idx ON vm_canvas_assets (input_asset_id)`.\n   - Trigger `vm_canvas_assets` autoupdate `input_asset_id` quando `input_asset_url` matches existing public_url (otimiza\u00e7\u00e3o para lookup).\n\n2. **SOP** \u2014 `docs/processes/canvas-asset-lineage.md`:\n   - Operator: cada generated asset carrega refer\u00eancia ao input + node_id.\n   - Sequence: canvas-execute persist no execution row \u2192 on success, persist no asset row com node_id + input_asset_id resolved.\n   - Verification: `SELECT a.id, a.input_asset_id, b.public_url FROM vm_canvas_assets a LEFT JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.node_id='n_wxgqyr9i'`.\n\n3. **Backend persist** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Execution INSERT (linha 263-280): adicionar `input_asset_url: body.input_asset_url ?? null`.\n   - Asset INSERT (linha 501-523 image, 932+ Higgsfield video): adicionar `node_id: body.node_id` + `input_asset_id: <resolved>` via SELECT pr\u00e9vio.\n   - Helper `resolveInputAssetId(admin, url)` em canvas-execute: `SELECT id FROM vm_canvas_assets WHERE public_url=$1 OR storage_key=$1 LIMIT 1`.\n\n4. **Backend webhook** \u2014 `supabase/functions/higgsfield-webhook/index.ts`:\n   - Linha 201-217 asset INSERT: adicionar `node_id: execution.node_id` + `input_asset_id` resolvido via `execution.input_asset_url`.\n\n5. **Frontend display** \u2014 Asset preview thumbnail mostra \u00edcone link \ud83d\udd17 + tooltip \"Gerado a partir de: <thumbnail upstream>\" quando `asset.input_asset_id` populated. Edit `src/components/canvas/LeftPanel/AssetCard.tsx` (ou similar \u2014 explorar localiza\u00e7\u00e3o).\n\n6. **Backfill opcional** \u2014 `scripts/canvas-backfill-asset-lineage.ts`:\n   - Para cada execution com `input_asset_url IS NOT NULL`, resolve input_asset_id retroativamente.\n   - Update vm_canvas_executions + matching vm_canvas_assets row.\n   - Dry-run + --apply.\n\n7. **Tests** \u2014 `src/test/canvas-asset-lineage.test.ts` (~80 LOC):\n   - INSERT execution sem input_asset_url \u2192 input_asset_id null OK.\n   - INSERT execution com input_asset_url + matching asset \u2192 input_asset_id populated.\n\n**Material proofs Phase 5c:**\n- Migration aplicada via `npx supabase db push`.\n- Query: `SELECT COUNT(*) FROM vm_canvas_executions WHERE input_asset_url IS NOT NULL` \u2192 > 0 ap\u00f3s primeira execu\u00e7\u00e3o p\u00f3s-C3.\n- Query: novo asset criado tem `node_id` e `input_asset_id` populados.\n- Tests passing.\n\n**Estimativa (paralelizada com OpenClaw):** ~**1h** \u00b7 4-5 commits \u00b7 +5 testes \u00b7 1 migration \u00b7 2 deploys edge function.\nTarefas paraleliz\u00e1veis pro **engineer** OpenClaw via Telegram:\n- Aplicar migration via aios-sql-bridge (`apply_migration <path>`) enquanto Claude Code escreve o c\u00f3digo backend persist.\n- Rodar backfill script `scripts/canvas-backfill-asset-lineage.ts --dry-run` em projetos existentes; reportar count de execu\u00e7\u00f5es resolv\u00edveis.\n- Escrever testes de SELECT p\u00f3s-migration.\nCoordena\u00e7\u00e3o: Claude Code escreve canvas-execute + higgsfield-webhook edits; OpenClaw faz schema + backfill + verification queries.\n\n---\n\n### Sub-seal C4 \u2014 Tier Enforcement: SOP-aware Whitelist (Frontend + Backend)\n\n**ORO:** Operator = MCORCH Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = UI gating + backend reject; afeta Higgsfield video pricing).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** Independente \u2014 pode rodar em paralelo com C2/C3 se preferir.\n\n**Passos:**\n\n1. **SOP update** \u2014 `docs/processes/canvas-video-async-execution.md`:\n   - Adicionar tabela \"Allowed Video Tiers (Phase 4.2c)\" com APENAS `dop-standard-5s` clic\u00e1vel; demais tagged \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n   - Append nova se\u00e7\u00e3o \"Tier Enforcement Layer\" documentando frontend whitelist + backend validator.\n\n2. **Frontend whitelist** \u2014 `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:53-59`:\n   - Narrow `ENABLED_VIDEO_MODELS` para `Set(['dop-standard-5s'])` apenas.\n   - Disabled state nos demais tiers com tooltip PT-BR \"Aguardando valida\u00e7\u00e3o Phase 4.3\".\n\n3. **Backend validator** \u2014 `supabase/functions/canvas-execute/index.ts`:\n   - Top-level constant `SOP_ALLOWED_VIDEO_MODELS: Set<string> = new Set(['dop-standard-5s'])`.\n   - No branch `image_to_video` (antes do submit Higgsfield): se `body.model` N\u00c3O est\u00e1 em SOP_ALLOWED_VIDEO_MODELS, retornar 422 com `{ error: \"tier_not_allowed_yet\", action: \"Apenas dop-standard-5s dispon\u00edvel na Phase 4.2c. Aguarde Phase 4.3.\" }`.\n\n4. **Tests** \u2014 adicionar a `src/test/edge-shared-auth.test.ts` ou criar `src/test/canvas-tier-enforcement.test.ts` (~50 LOC):\n   - body.model='dop-lite' \u2192 expected 422.\n   - body.model='dop-standard-5s' \u2192 passes gate.\n\n5. **Material proof live**:\n   - `curl POST /functions/v1/canvas-execute -d '{...model:\"dop-lite\"...}'` \u2192 HTTP 422 `tier_not_allowed_yet`.\n   - UI: clicking dop-lite tier shows disabled tooltip.\n\n**Estimativa (paralelizada com OpenClaw):** ~**30min** \u00b7 3 commits \u00b7 +3 testes \u00b7 1 deploy edge function.\nTarefas paraleliz\u00e1veis pro **engineer** OpenClaw:\n- Update do SOP `canvas-video-async-execution.md` tabela de tiers (markdown puro, low-risk).\n- Tests do tier validator no canvas-execute (mock body + assert 422).\nCoordena\u00e7\u00e3o: Claude Code muda whitelist frontend + backend constant; OpenClaw escreve docs + tests em paralelo.\n\n---\n\n### Sub-seal C5 \u2014 Paid Smoke E2E (Item 3 Original)\n\n**ORO:** Operator = Sovereign (clica Run UI) + MCORCH Agent (monitora gates) \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = 125 mcoCoins burn real).\n\n**Pr\u00e9-condi\u00e7\u00e3o:** C1 + C2 + C3 + C4 todas mergeadas. Sovereign tem Higgsfield key per-user provisionada (v6.10.0 j\u00e1 fez). Pipeline real funciona end-to-end.\n\n**Passos:**\n\n1. **Pre-flight checklist** (agente verifica via REST antes do Sovereign clicar):\n   - Projeto `880b5eba` (Mood Board) tem edges com sourceHandle + targetHandle n\u00e3o-null em 23/23 (C1 ok).\n   - useCanvasPipeline dispon\u00edvel na UI (C2 ok).\n   - vm_canvas_assets schema tem input_asset_id + node_id columns (C3 ok).\n   - canvas-execute rejeita dop-lite (C4 ok).\n   - Sovereign balance \u2265 125 mcoCoins.\n\n2. **Sovereign clica \"Executar Pipeline\"** no projeto Mood Board (ou em projeto novo dedicado smoke).\n   - Pipeline roda: generateImage chain \u2192 sceneCompose (3 inputs) \u2192 imageToVideo dop-standard-5s.\n\n3. **Agente monitora 9 gates da SOP** `canvas-video-async-execution.md` em tempo real via REST polling:\n   - Gates 1-9 conforme SOP original (j\u00e1 documentados).\n   - PLUS new gate 10: vm_canvas_assets do video tem `input_asset_id` apontando pro asset gerado pelo sceneCompose anterior.\n\n4. **Material proof e lineage**:\n   - `(balance_before - balance_after) === 125` exato.\n   - Query: `SELECT a.id AS video_id, a.input_asset_id AS source_image_id, b.public_url AS source_image_url FROM vm_canvas_assets a JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.asset_type='video' ORDER BY a.created_at DESC LIMIT 1` \u2192 1 row, ambas URLs populated.\n   - Video renderiza no `<video>` element.\n\n**Estimativa:** ~1h Sovereign hands-on + monitoring \u00b7 0 commits (apenas observation seal) \u00b7 1 paid burn 125 coins \u00b7 primeira valida\u00e7\u00e3o E2E real do Canvas Phase 4.2.\n\n---\n\n### Cronograma sugerido sub-seals (paraleliza\u00e7\u00e3o OpenClaw integrada)\n\n| Sub-seal | Sess\u00e3o | Dura\u00e7\u00e3o (real) | Cumulativo |\n|----------|--------|----------------|------------|\n| C1 Foundation | Sess\u00e3o 1 | ~1.5h | v6.11.2 |\n| C2 DAG Runner | Sess\u00e3o 1 (continua\u00e7\u00e3o) ou 2 | ~2.5h | v6.11.3 |\n| C3 Asset Lineage | Sess\u00e3o 2 | ~1h | v6.11.4 |\n| C4 Tier Enforcement | Sess\u00e3o 2 (paralelo C3) | ~30min | v6.11.5 |\n| C5 Paid Smoke | Sess\u00e3o 3 (Sovereign UI) | ~1h | v6.12.0 |\n\n**Total revisado: ~6.5h spread em 2 sess\u00f5es intensas + 1 paid smoke.** Redu\u00e7\u00e3o de ~50% via paraleliza\u00e7\u00e3o OpenClaw (de 12h para 6.5h).\n\n### Acelera\u00e7\u00e3o via OpenClaw + Ollama Local \u2014 Modelo Operacional\n\n**Infraestrutura dispon\u00edvel** (ver `[[project_openclaw_ollama_integration]]` em memory):\n- Gateway PM2 `maestro` rodando localhost com 7 agentes Pantheon.\n- **engineer** (qwen3.5 via Ollama local, ARM64) \u2014 tem capacidade de tools nativa (shell, git, edits, REST).\n- 6 outros agentes (artisan, scientist, marketing-growth, main, guardian, claw-master) com llama3.1:8b.\n- Fallback Google API (Gemini) configurado pra quando Ollama local falha ou demora.\n- Telegram bridge `@claw_gcrux` recebe meta-prompts e dispatcha pro main agent.\n\n**Padr\u00e3o de delega\u00e7\u00e3o durante sub-seal:**\n\n1. **Claude Code (eu)** = coordenador + arquiteto cr\u00edtico:\n   - Refactors em arquivos centrais com cross-cutting impact (store, hooks, edge functions edits).\n   - Decis\u00f5es arquiteturais (helper signatures, migration schema).\n   - Material proofs via REST queries (mesh artifacts, deploy verification).\n   - HANDOFF.md + Phase 5c audit + push.\n\n2. **OpenClaw engineer (Ollama local)** = executor paralelo low-risk:\n   - Escrever testes Vitest a partir de specs/interfaces que eu defino.\n   - Rodar scripts dry-run + reportar diff.\n   - Aplicar migrations via aios-sql-bridge.\n   - Update SOPs markdown puros.\n   - Grep/audit codebase pra confirma\u00e7\u00f5es cross-cutting.\n\n3. **Sincroniza\u00e7\u00e3o**: cada sub-seal come\u00e7a com Claude Code criando \"lock list\" (arquivos que eu vou tocar) \u2014 OpenClaw confirma e fica fora. OpenClaw entrega via PR-style markdown em `.claude/proposals/` que Claude Code revisa antes de mergear.\n\n**Quando N\u00c3O delegar (mant\u00e9m em Claude Code):**\n- Migrations complexas com dependency em c\u00f3digo j\u00e1 existente.\n- Edge function deploys (precisam de aprova\u00e7\u00e3o Sovereign per CLAUDE.md).\n- Decis\u00f5es de schema (refletem em m\u00faltiplos consumers).\n- Refactor de arquivo j\u00e1 em conflito merge ou WIP.\n\n### Meta-Prompt Template para Pr\u00f3xima Sess\u00e3o (Telegram \u2192 @claw_gcrux)\n\nQuando Sovereign for abrir nova sess\u00e3o Claude Code (post-handoff desta), pode primeiro disparar OpenClaw via Telegram com meta-prompt estruturado paralelizando C1 prep work. Template:\n\n```text\nTarefa de Engenharia: Canvas Pipeline Refactor \u2014 Prepara\u00e7\u00e3o C1 Foundation\n\nPor favor, execute as seguintes etapas detalhadas para acelerar a sess\u00e3o Claude Code que vou abrir em seguida:\n\n1. Branch + worktree:\n   Crie e ative branch `feature/canvas-pipeline-refactor-c1` a partir de main.\n\n2. Audit pre-flight:\n   - Execute `grep -rn \"id=\" src/components/canvas/nodes/` e reporte quais Handle JSX components j\u00e1 t\u00eam id (zero esperado).\n   - Execute `git log --oneline -10` e me reporte os \u00faltimos 10 commits do branch claude/bold-visvesvaraya-4a95b9 (de onde o feature branch foi criado).\n   - Liste todos os arquivos em `src/components/canvas/nodes/` e classifique cada um por kind (GenerateImageNode = generateImage, etc.).\n\n3. Backfill dry-run preparation:\n   Crie skeleton de script `scripts/canvas-backfill-edge-handles.ts` com:\n   - Bun-native (process.env via dotenv).\n   - Connect Supabase service-role via SERVICE_ROLE_KEY_LEGACY (eyJ* legacy \u2014 ainda v\u00e1lido) ou SUPABASE_SERVICE_ROLE_KEY (sb_secret_* novo).\n   - SELECT FROM vm_canvas_projects retornando id, name, graph.\n   - Para cada project: log nodes/edges counts + se algum edge tem sourceHandle/targetHandle n\u00e3o-null.\n   - Modo --dry-run (default) sem muta\u00e7\u00f5es.\n   - Reporte counts agregados ao final.\n\n4. SOP draft:\n   Crie esqueleto de `docs/processes/canvas-pipeline-architecture.md` seguindo o padr\u00e3o de SOPs existentes (`canvas-video-async-execution.md`, `api-credential-tenancy.md`):\n   - Header (vers\u00e3o, selada, Lei 2)\n   - ORO triplet (placeholder)\n   - Contexto (~200 palavras explicando handle convention + edge port routing)\n   - Tabela \"Handle ID Convention\" (5 nodeKinds \u00d7 output handle \u00d7 input handles)\n   - 5 verification gates\n   - Recovery path\n   - Anti-patterns proibidos\n\n5. Output:\n   Salve tudo em PR-style markdown em `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` listando:\n   - Branch criada (sim/n\u00e3o).\n   - Audit findings (counts + classifica\u00e7\u00e3o).\n   - Backfill script path + linhas.\n   - SOP draft path + linhas + percentual completo (~70% esperado, faltando ORO real e Anti-patterns adequados).\n   - Quais arquivos N\u00c3O foram tocados (lock list para Claude Code respeitar).\n\nAo finalizar, responda no Telegram com o caminho do proposal markdown + um sum\u00e1rio de 5 linhas.\n```\n\nResultado esperado: quando Sovereign abrir nova sess\u00e3o Claude Code, eu (Claude) leio o `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` e o tempo de \"exploration + scaffold\" j\u00e1 est\u00e1 economizado \u2014 come\u00e7o direto pelo refactor central (Handle components + onConnect lock).\n\n### Sinergias cross sub-seal\n\n- C1 helper `canvas-handles.ts` \u00e9 importado por C2 DAG library (port-aware lookup).\n- C2 DAG runner consome C3 lineage para mostrar provenance no status display.\n- C4 tier validator pode usar mesma SOP-loaded constant em frontend + backend (single source of truth).\n- C5 paid smoke validates ALL prior sub-seals working together end-to-end.\n\n---\n\n## SEAL D \u2014 e2e-user-zero Framework Completo (Item 6 restante)\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = QA framework (isolado de produ\u00e7\u00e3o), enable Phase Commercial Gate\n\n**Passos (em ordem):**\n\n1. `scripts/qa/e2e-user-zero/lib/redactor.ts` (~120 LOC) \u2014 header redaction (Authorization/Cookie/apikey/x-api-key/x-supabase-*) + body redaction em `redactedPaths` + cookie domain sanitizer. Pre-commit pattern scan: `eyJ.*\\.eyJ`, `sk_(live|test)_`, `sbp_`, `whsec_`, `sb_secret_`.\n\n2. `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (~100 LOC) \u2014 INSERT `mcorch_nodes` (kind='observation') + edge `OBSERVES` por finding. Idempot\u00eancia via `SHA-256(finding_id + run_id)`.\n\n3. `scripts/qa/e2e-user-zero/lib/telemetry.ts` (~60 LOC) \u2014 4 eventos `infra_health_logs` (`e2e_user_zero_run_started/complete/failure/auth_expired`). Distin\u00e7\u00e3o: \"found P0\" N\u00c3O \u00e9 failure \u2014 apenas infra errors emitem telemetry.\n\n4. `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (~150 LOC) \u2014 runner vs mock browser fixtures. Cobre 4 cen\u00e1rios (clean run / P0 found / infra error / auth expired).\n\n5. Extens\u00e3o pre-commit hook em `.husky/pre-commit` ou `.git/hooks/pre-commit` \u2014 scan `e2e-output/` por padr\u00f5es de secrets antes de aceitar commit.\n\n6. 5 flows restantes em ordem de prioridade BRD:\n   - `dashboard-tour.ts` (breadth survey)\n   - `canvas-overview.ts` (Phase 4.2 surface)\n   - `content-library.ts` (DevTools-grade observation)\n   - `billing-flow.ts` (Phase Commercial gate critical)\n   - `settings-tour.ts` (broad coverage)\n\n**Material proofs:**\n- Selftest 12/12 passando.\n- `grep -rn \"eyJ\\|sk_live\\|sbp_\" e2e-output/` em CI mostra zero hits (redactor funciona).\n- `mcorch_nodes` com 5+ nodes kind='observation' linkados via OBSERVES edges ap\u00f3s cada run.\n- 4 eventos em `infra_health_logs` por run completo.\n- Pre-commit hook bloqueando commit que cont\u00e9m secret pattern (test artificial).\n\n**Reutilizar:**\n- Padr\u00e3o de teste em `src/test/qa-verifiers.test.ts`.\n- Schemas em `scripts/qa/e2e-user-zero/lib/finding-schema.ts`.\n- Padr\u00e3o de classifier em `scripts/qa/e2e-user-zero/lib/classifier.ts`.\n\n**Risco:** BAIXO \u2014 isolado de produ\u00e7\u00e3o; falhas no framework n\u00e3o impactam app.\n\n**Estimativa:** 7-8 commits \u00b7 +12 testes (selftest) \u00b7 0 deploys de produ\u00e7\u00e3o.\n\n---\n\n## SEAL E \u2014 MARGIN_FACTOR Calibration (Item 5) \u00b7 Data-gated 2026-06-03+\n\n**ORO triplet:**\n- Operator: MCORCH Master Execution Agent\n- Reviewer: Sovereign\n- Owner: Sovereign \u2014 blast radius = pricing model do CEA (revenue impact)\n\n**Pr\u00e9-condi\u00e7\u00e3o:** \u22657 dias de `agent_executions` (cron di\u00e1rio rodando desde 2026-05-27 \u2192 m\u00ednimo 2026-06-03).\n\n**Passos:**\n\n1. Notebook an\u00e1lise em `docs/analysis/agent-margin-calibration-2026-06-03.md`:\n   - SQL agrupado por (provider, model) \u00faltimos 7 dias.\n   - p50, p95, max de `cost_usd_micro` e `cost_mcoin` por par.\n   - Vari\u00e2ncia entre providers (Groq vs Claude Sonnet vs gpt-4 \u2014 esperado 33x).\n   - Recomenda\u00e7\u00e3o: manter global 2.0 OU mover para per-provider.\n\n2. Decis\u00e3o **(a) Global** vs **(b) Per-provider**:\n   - Se vari\u00e2ncia intra-provider < 30% \u2192 manter global 2.0.\n   - Se vari\u00e2ncia > 50% entre providers \u2192 mover para per-provider via coluna nova.\n\n3. Se (b) per-provider:\n   - Migration `supabase/migrations/20260603_agent_pricing_margin.sql` adiciona `margin_factor numeric DEFAULT 2.0` em `agent_pricing`.\n   - Refatorar RPC `calc_agent_cost_mcoin` em `supabase/migrations/20260527012945_agent_metering_minimal.sql:87,114`:\n     - Mudar signature para usar `COALESCE(ap.margin_factor, p_margin)`.\n     - Lookup em `agent_pricing` join no provider+model.\n\n4. Execu\u00e7\u00e3o validat\u00f3ria: 1 task via `agent-task-execute` confirmando novo cost.\n\n**Material proofs:**\n- An\u00e1lise documentada com SQL output literal (n\u00e3o inventado).\n- Se (b): migration aplicada + RPC retornando `'margin': <novo_valor>` no jsonb.\n- 1 nova `agent_executions` row provando novo c\u00e1lculo.\n\n**Risco:** BAIXO \u2014 escopo isolado, f\u00e1cil rollback (mudar margin global de volta a 2.0).\n\n**Estimativa:** 3-4 commits \u00b7 +2 testes \u00b7 1 migration opcional.\n\n---\n\n## Sinergias Cross-Seal\n\n- **`supabase/functions/_shared/` ganha 2 m\u00f3dulos novos**: `auth.ts` (Seal A) + `user-keys.ts` (Seal B). Pavimenta padr\u00e3o de helpers compartilhados \u2014 Seal D's `mesh-persistor.ts` pode reusar pra writes admin.\n- **SOPs encadeadas**: `edge-function-service-auth.md` (Seal A) referencia `api-credential-tenancy.md` (Seal B) no appendix de service-role exceptions.\n- **Sess\u00e3o UI \u00fanica em Seal C** elimina ~30min de re-login overhead entre Itens 3/4/6.1.\n- **Telemetria unificada `infra_health_logs`**: Seal A emite `pipeline_async_recovered`, Seal B emite `otd_oe661_per_user_closed`, Seal D emite 4 `e2e_user_zero_*` \u2014 mesmo schema.\n- **Phase 5c primeira emiss\u00e3o real do claim e2e_user_zero_last_pass** em Seal C consolida o gate (at\u00e9 v6.10.0 o claim era opcional; ap\u00f3s Seal C torna-se hard requirement).\n\n---\n\n## Arquivos Cr\u00edticos a Modificar\n\n**Seal A:**\n- `supabase/functions/_shared/auth.ts` (NOVO)\n- `supabase/functions/orchestrate-step/index.ts` (linhas 48-54)\n- `supabase/functions/publish-wordpress/index.ts` (linha 26)\n- `supabase/functions/self-heal/index.ts` (~211)\n- `supabase/functions/agent-task-execute/index.ts` (~61)\n- 2-3 outros recipients (grep durante execu\u00e7\u00e3o)\n- `docs/processes/edge-function-service-auth.md` (NOVO)\n- `src/test/edge-shared-auth.test.ts` (NOVO)\n\n**Seal B:**\n- `supabase/functions/_shared/user-keys.ts` (NOVO)\n- `supabase/functions/canvas-execute/index.ts` (linhas 121-130)\n- `supabase/functions/process-affiliate-link/index.ts` (linhas 101-136)\n- `docs/processes/api-credential-tenancy.md` (NOVO)\n- `CLAUDE.md` (Key Files Reference)\n\n**Seal C:**\n- `src/components/orchestrator/AgentTaskRunner.tsx` (NOVO)\n- `src/components/orchestrator/NodeDetailsPanel.tsx` (estender tab `analysis`)\n- `scripts/qa/e2e-user-zero/flows/trigger-orchestration.ts` (NOVO)\n- `docs/processes/constellation-economic-activation.md` (estender com UI Trigger section)\n\n**Seal D:**\n- `scripts/qa/e2e-user-zero/lib/redactor.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/lib/telemetry.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/dashboard-tour.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/canvas-overview.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/content-library.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/billing-flow.ts` (NOVO)\n- `scripts/qa/e2e-user-zero/flows/settings-tour.ts` (NOVO)\n- `.git/hooks/pre-commit` (estender)\n\n**Seal E:**\n- `docs/analysis/agent-margin-calibration-2026-06-03.md` (NOVO)\n- `supabase/migrations/20260603_agent_pricing_margin.sql` (NOVO, condicional)\n\n---\n\n## Verifica\u00e7\u00e3o End-to-End\n\n**Seal A:**\n1. `npx tsc --noEmit` \u2192 zero erros.\n2. `bun run test` \u2192 todos os 189 + 6 novos passando.\n3. `npx supabase functions deploy <each-recipient>` \u2192 ~6-7 deploys.\n4. Trigger pipeline manual: `INSERT INTO pipeline_runs (...) VALUES (...)`; SELECT `net._http_response WHERE id > <baseline>` para confirmar 200 OK.\n5. `async_orchestrate_step_debug` SELECT \u2192 \u00faltima linha com status_code=200.\n\n**Seal B:**\n1. `grep -rn \"GCRUX_DEFAULT_TOKEN\\|HIGGSFIELD_API_KEY.*Deno.env\" supabase/functions/` \u2192 zero hits.\n2. `bun run test` \u2192 189+ passando, novos testes verde.\n3. `npx supabase functions deploy canvas-execute process-affiliate-link` \u2192 2 deploys.\n4. Test manual: chamar `canvas-execute` para Sovereign (com key per-user) \u2192 success; chamar para test user sem key \u2192 402.\n\n**Seal C:**\n1. `bun run dev` \u2192 abrir `/dashboard/orchestration` \u2192 clicar node crew_agent \u2192 tab analysis mostra AgentTaskRunner.\n2. Click \"Executar tarefa\" \u2192 toast com cost + latency; row em `agent_executions`.\n3. Canvas: `/dashboard/canvas/<project>` \u2192 Run dop-standard-5s \u2192 9 gates verificados via REST queries paralelas.\n4. e2e: `bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow trigger-orchestration --state ~/.claude/auth-states/login-mcorch-prod.json` \u2192 exit 0 + report.md com \u2705 GO.\n\n**Seal D:**\n1. `bun run test scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` \u2192 12/12 passando.\n2. Executar todos os 6 flows: `for f in trigger-orchestration dashboard-tour canvas-overview content-library billing-flow settings-tour; do bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow $f --state ~/.claude/auth-states/login-mcorch-prod.json; done`.\n3. `grep \"eyJ\\|sk_live\\|sbp_\" e2e-output/**/*.har` \u2192 zero hits.\n4. SELECT count em `mcorch_nodes WHERE kind='observation' AND metadata->>'source' = 'e2e_user_zero'` \u2192 \u22650 (cresce ap\u00f3s findings).\n\n**Seal E:**\n1. SELECT p50/p95 de `agent_executions.cost_usd_micro` agrupado por (provider, model) \u00faltimos 7 dias.\n2. An\u00e1lise documentada com SQL output literal.\n3. Se per-provider: `SELECT calc_agent_cost_mcoin(500, 300, 'groq', 'llama-3.3-70b-versatile')` retorna jsonb com novo `margin`.\n\n---\n\n## Compliance Survival Laws (todas as seals)\n\n| Lei | Como atende |\n|-----|-------------|\n| **Lei 1 (Materiality)** | Cada seal lista material proofs espec\u00edficos (REST IDs, test outputs, file paths). Phase 5c gate executa mecanicamente via `scripts/qa/run-audit.ts`. |\n| **Lei 2 (Anticipated Process)** | SOP-first em Seals A, B. Seals C, D, E reusam SOPs existentes ou registram extens\u00e3o. |\n| **Lei 3 (Pruning)** | Seals isoladas por escopo; cohabita\u00e7\u00e3o em C limitada a UI dogfooding (justificada). Plan file n\u00e3o traz alternativas descartadas. |\n| **Lei 4 (ORO)** | Cada seal declara Operator/Reviewer/Owner no header. |\n\n---\n\n## Cronograma Final (atualizado 2026-05-28 \u2014 paraleliza\u00e7\u00e3o OpenClaw integrada)\n\n| Data | Seal | Sess\u00e3o | Output |\n|------|------|--------|--------|\n| 2026-05-27 | A | 4-6h | \u2705 v6.11.0 \u2014 pipeline async recovered (OTD-V610-001) |\n| 2026-05-28 | B | 3-4h | \u2705 v6.11.1 \u2014 OTD-OE661 closed (5d antes SLA) |\n| 2026-05-28 (agora) | C audit + plan | ~1h | \u2705 Investiga\u00e7\u00e3o completa + OTD-CANVAS-PIPELINE-001 + plan revisado |\n| Sess\u00e3o futura #1 | **C1 + C2** (paralelizadas) | ~4h | v6.11.2/3 \u2014 Foundation + DAG Runner em uma sess\u00e3o intensa |\n| Sess\u00e3o futura #2 | **C3 + C4** (paralelizadas) | ~1.5h | v6.11.4/5 \u2014 Lineage + Tier Enforcement |\n| Sess\u00e3o futura #3 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 \u2014 first real E2E Canvas + lineage proof + 125 mcoCoins burn |\n| P\u00f3s-C5 | D | ~4h (paralelizado) | v6.12.1 \u2014 e2e-user-zero framework completo |\n| 2026-06-03+ | E | 2-3h | v6.12.2 \u2014 MARGIN_FACTOR calibrated |\n\n**Estimativa total restante (C1-C5 + D + E): ~12h spread em 3-4 sess\u00f5es** ao longo de **~5-7 dias** (era 16h em 5-6 sess\u00f5es antes da paraleliza\u00e7\u00e3o OpenClaw \u2014 redu\u00e7\u00e3o ~25% total + 50% s\u00f3 nas Cs).\n\n**Pr\u00f3ximo passo imediato:** \n1. Sovereign dispara meta-prompt Telegram pro OpenClaw (template na se\u00e7\u00e3o acima) preparando C1 (branch + audit + script skeleton + SOP draft).\n2. Quando OpenClaw responder com `.claude/proposals/openclaw-canvas-c1-prep-<date>.md`, Sovereign abre nova sess\u00e3o Claude Code.\n3. Eu (Claude) fa\u00e7o /handson \u2014 leio o proposal + o HANDOFF v6.11.1 + come\u00e7o direto pelo Handle components refactor (lock list respeitado).\n4. C1 + C2 podem fechar na mesma sess\u00e3o se OpenClaw entregar tests em paralelo via Telegram.\n\n**Esta sess\u00e3o (atual) fecha com:**\n1. /handoff selando Seal A + B + audit C (v6.11.1 j\u00e1 est\u00e1 selado em mesh + push; s\u00f3 falta consolidar audit).\n2. Audit como observation node `otd-canvas-pipeline-001-registered-2026-05-28` (RPN 225) + DERIVES_FROM \u2192 v611.1 handoff.\n3. Atualizar HANDOFF.md com se\u00e7\u00e3o \"C audit findings\" referenciando o plan file.\n4. Memory entry sobre o pattern OpenClaw delegation (para Claude Code futuro reusar).\n5. Push final + branch pronta para pr\u00f3xima sess\u00e3o.\n",
+  "planFilePath": "/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md"
+}
+```
+
+> **Tool Result (ExitPlanMode)** - ✅ Success
+>
+> ```
+> User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+> 
+> Your plan has been saved to: /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md
+> You can refer back to it if needed during implementation.
+> 
+> ## Approved Plan (edited by user):
+> # Plano de Execução — 6 Próximos Passos pós v6.10.0
+> 
+> **Data:** 2026-05-27 · **Worktree:** `bold-visvesvaraya-4a95b9` · **Branch:** `claude/bold-visvesvaraya-4a95b9`
+> **Decisões confirmadas pelo Sovereign:** (1) Seal C bundle único; (2) Item 1 via helper dual-format.
+> 
+> ---
+> 
+> ## Contexto
+> 
+> A seal v6.10.0 (2026-05-27) fechou três grandes frentes (Great Reset + Per-user API expansion + Constellation Economic Activation), mas deixou anotada uma OTD bloqueante (**OTD-V610-001**, JWT format mismatch que quebra o pipeline async v6.9.0 em produção) e uma OTD com SLA apertado (**OTD-OE661-PER-USER**, vencendo 2026-06-02 — ~6 dias). Sem fechar a OTD-V610-001 o flywheel async fica preso e a Phase Commercial revenue não destrava; sem fechar a OTD-OE661 o Higgsfield consumer permanece global, bloqueando lançamento multi-tenant.
+> 
+> Este plano sequencia as 6 frentes do brief `/handson` na ordem ótima considerando dependências físicas (Item 3 precisa Item 2; Item 5 precisa de 7d+ de dados do cron diário), pressão de SLA, blast radius por seal e coabitação de contexto UI. Saída esperada: **5 seals** distribuídas em **~4-5 sessões** ao longo de **8-10 dias**, fechando débito crítico + SLA antes de 2026-06-02 e calibrando MARGIN_FACTOR em 2026-06-03+.
+> 
+> ---
+> 
+> ## Status Atual + Ordenação Revisada (2026-05-28)
+> 
+> | # | Seal | Itens | Status | Risco | Sessão |
+> |---|------|-------|--------|-------|--------|
+> | **A** | Pipeline Async Auth Fix | Item 1 (OTD-V610-001) | **✅ SELADA v6.11.0** (7 commits) | resolved | 2026-05-27 |
+> | **B** | Per-User API Tenancy OE661 | Item 2 (OTD-OE661-PER-USER) | **✅ SELADA v6.11.1** (5 commits, 5d antes SLA) | resolved | 2026-05-28 |
+> | **C** | **REVISADA → Canvas Pipeline Refactor (5 sub-seals)** | Item 3 + nova OTD-CANVAS-PIPELINE-001 (RPN 225) | ✏️ EM PLANEJAMENTO | MÉDIO-ALTO | 2-3 sessões |
+> | **D** | e2e-user-zero Framework Completo | Item 6 restante (~590 LOC) | pending | BAIXO | depois de C |
+> | **E** | MARGIN_FACTOR Calibration | Item 5 | pending (data-gated) | BAIXO | 2026-06-03+ |
+> 
+> **Por que Seal C foi revisada:** Investigação no projeto `#02 - Mood Board 5 lanes - 5 mundos` (880b5eba) revelou 5 problemas estruturais que invalidariam o paid smoke original. Burn de 125 mcoCoins sem o pipeline runner correto = desperdício. Refactor obrigatório ANTES do smoke. Detalhes em SEAL C abaixo.
+> 
+> Cohabitação rejeitada: Itens 1 e 2 NÃO coabitaram — ambos tocam auth de edge functions; blast radius combinado é alto demais para uma seal só. **Confirmado pelo flow real**: cada uma exigiu sessão dedicada.
+> 
+> ---
+> 
+> ## SEAL A — Pipeline Async Auth Fix (Item 1) · CRÍTICO
+> 
+> **ORO triplet:**
+> - Operator: MCORCH Master Execution Agent
+> - Reviewer: Sovereign
+> - Owner: Sovereign — blast radius = pipeline async em produção + 7+ inter-function callers + flywheel revenue
+> 
+> **Decisão arquitetural:** Helper dual-format compartilhado em `supabase/functions/_shared/auth.ts`. Aceita `Bearer eyJ*` (legacy) E `Bearer sb_secret_*` (formato atual). Pavimenta deprecation do legacy quando Supabase reabrir regeneração.
+> 
+> **Passos:**
+> 
+> 1. **SOP-first (Lei 2)** — criar `docs/processes/edge-function-service-auth.md`:
+>    - Operator (quem valida service-role hoje, como), Sequence (5 steps), Verification gates (compare contra ambos os formatos), Recovery path (rollback é remover o helper e voltar comparação direta), Success signal (`net._http_response.status=200` em chamadas inter-function).
+>    - Appendix: plano de deprecation futura para header customizado `x-service-role-key`.
+> 
+> 2. **Helper compartilhado** — `supabase/functions/_shared/auth.ts` (~50 LOC novo):
+>    - Export `isValidServiceAuth(authHeader: string | null): boolean`.
+>    - Lê `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')` (formato `sb_secret_*` atual) e `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY_LEGACY')` opcional (formato `eyJ*` quando provisionado).
+>    - Compara `authHeader === 'Bearer ' + key` para cada chave registrada; retorna true se qualquer match.
+>    - Logs telemetria via console.log com prefix `[auth]` (sem expor as chaves).
+> 
+> 3. **Recipientes refatorados** (substituir comparação direta `authHeader !== ${'`'}Bearer ${'$'}{serviceKey}${'`'}`):
+>    - `supabase/functions/orchestrate-step/index.ts:48-54` — caller E recipient
+>    - `supabase/functions/publish-wordpress/index.ts:26`
+>    - `supabase/functions/self-heal/index.ts:~211`
+>    - `supabase/functions/agent-task-execute/index.ts:~61`
+>    - `supabase/functions/refresh-social-token/index.ts` (confirmar via grep durante execução)
+>    - `supabase/functions/embed-mcorch-node/index.ts` (idem)
+>    - Total: ~6-7 arquivos, ~3 linhas alteradas cada (substitui validação inline pelo `isValidServiceAuth(req.headers.get('Authorization'))`).
+> 
+> 4. **Callers continuam emitindo `SUPABASE_SERVICE_ROLE_KEY`** (`sb_secret_*`) — não há mudança no lado emissor. Helper aceita ambos os formatos do lado validador.
+> 
+> 5. **Provisionar `SUPABASE_SERVICE_ROLE_KEY_LEGACY` como vault secret** apenas se quisermos manter compat com migrations antigas que ainda usam o JWT hardcoded (ex: `20260503120000_embed_on_insert_trigger.sql:19`). Decisão durante implementação: se grep mostrar que apenas migrations o usam, deixar a coluna LEGACY desprovisionada — helper retorna true só pro novo formato.
+> 
+> **Material proofs (Phase 5c):**
+> - `async_orchestrate_step_debug` nova linha com `service_key_len=41 prefix=sb_secret_*` E `net._http_response.status=200` (era 401).
+> - Pipeline run end-to-end completo: `pipeline_runs.status='done'` com `wp_status='draft'` + `linkedin_post` + `twitter_thread` + observation node inserido na mesh.
+> - Test novo `src/test/edge-shared-auth.test.ts` (~6 casos: ambos formatos válidos / inválido / null / missing / vazio / extra-whitespace).
+> - `infra_health_logs` evento `pipeline_async_recovered` com `run_id` referência.
+> 
+> **Reutilizar:**
+> - `supabase/functions/orchestrate-step/index.ts:101-115` (já tem padrão `userKeys?.x || Deno.env.get(...)` pra outras chaves — mas é client-context, não service-auth).
+> - Padrão de teste em `src/test/qa-verifiers.test.ts` (Vitest com mock deps).
+> 
+> **Risco:** ALTO mas mitigado — refactor cirúrgico de 1 linha por recipient, helper coberto por testes. Rollback = 1 revert commit.
+> 
+> **Estimativa:** 5-7 commits granulares · +6 testes · 1 deploy edge function por função tocada (6-7 deploys).
+> 
+> ---
+> 
+> ## SEAL B — Per-User API Tenancy OE661 (Item 2) · SLA 2026-06-02
+> 
+> **ORO triplet:**
+> - Operator: MCORCH Master Execution Agent
+> - Reviewer: Sovereign
+> - Owner: Sovereign — blast radius = OTD-OE661-PER-USER closure + multi-tenant readiness
+> 
+> **Premissa corrigida pelo diagnóstico:** escopo MENOR que o brief original — `link-forge.ts` e `process-affiliate-link` POST já estão compliant. Refactor real é **2 linhas em canvas-execute + 1 inversão de lógica em process-affiliate-link**.
+> 
+> **Passos:**
+> 
+> 1. **SOP-first (Lei 2)** — criar `docs/processes/api-credential-tenancy.md`:
+>    - Operator: edge function autenticada (POST com JWT) vs cron service-role.
+>    - Sequence: (a) resolver via `user_api_keys` filtrando por `auth.uid()`; (b) se ausente → null; (c) se request é cron com `user_id` no body → resolver via `user_api_keys.user_id = body.user_id`; (d) fallback global APENAS em paths sem `user_id` resolvível.
+>    - Verification: 3 testes mecânicos por edge function (com key per-user / sem key per-user → 402 / cron path com user_id explícito).
+>    - Recovery: usuário sem key recebe HTTP 402 com `{ error: "missing_api_key", action: "Configure your <service> credentials at /dashboard/settings" }`.
+>    - Success: `grep -rn "Deno.env.get('HIGGSFIELD_API_KEY')" supabase/functions/` retorna apenas paths cron service-role.
+> 
+> 2. **Helper compartilhado** — `supabase/functions/_shared/user-keys.ts` (~80 LOC novo):
+>    - Export `resolveUserApiKeys(admin: SupabaseClient, userId: string): Promise<UserKeys>`.
+>    - UserKeys tipa `{ openai, groq, openrouter, replicate, higgsfield, higgsfield_secret, ml_affiliate_token, ... }` — todos nullable.
+>    - Encapsula query a `user_api_keys` + `affiliate_config` (último com filtro `.eq('project_id', 'mcorch-affiliate')` per Amendment C v6.6.7).
+>    - Reutilizado por canvas-execute, orchestrate-step (futuro), agent-task-execute.
+> 
+> 3. **Fix canvas-execute** — `supabase/functions/canvas-execute/index.ts:121-130`:
+>    - Substituir bloco `{ data: userKeys }` direto pela chamada `await resolveUserApiKeys(admin, user.id)`.
+>    - Linhas 128-129: substituir `Deno.env.get("HIGGSFIELD_API_KEY")` por `userKeys.higgsfield ?? null` e idem para secret.
+>    - Se `userKeys.higgsfield == null` E `body.node_type === 'image_to_video'`, retornar 402 com `{ error: "missing_higgsfield_key", action: "Configure your Higgsfield credentials at /dashboard/settings" }` ANTES do `creditCost` calc.
+> 
+> 4. **Fix process-affiliate-link GET** — `supabase/functions/process-affiliate-link/index.ts:101-136`:
+>    - Remover `?? "GCRUX_DEFAULT_TOKEN"` da linha 102; inicializar `let affiliateToken: string | null = null;`.
+>    - Inverter check `:130` para `if (!hasValidConfig)` (ao invés de comparação contra string mágica).
+>    - O 302 redirect em `:132-135` permanece intacto.
+> 
+> 5. **CLAUDE.md update** — adicionar entrada em `Key Files Reference`:
+>    - `supabase/functions/_shared/user-keys.ts` — Per-user API key resolver
+> 
+> **Material proofs (Phase 5c):**
+> - `grep -rn "GCRUX_DEFAULT_TOKEN\|Deno.env.get(\"HIGGSFIELD" supabase/functions/` retorna zero hits (exceto comentários SOP).
+> - Edge function test: chamada `canvas-execute` para `image_to_video` sem `higgsfield_api_key` em `user_api_keys` retorna HTTP 402 com payload structured.
+> - Edge function test: chamada `process-affiliate-link` GET para asset cujo `user_id` não tem `affiliate_config` retorna 302 para `/dashboard/settings?no_config=1`.
+> - OTD-OE661-PER-USER fechada via observation node + edge `CLOSES` apontando para a OTD original.
+> - Telemetry `infra_health_logs` evento `otd_oe661_per_user_closed` com timestamp.
+> 
+> **Reutilizar:**
+> - Padrão já compliant em `process-affiliate-link/index.ts:113-124` (POST branch).
+> - Padrão já compliant em `orchestrate-step/index.ts:101-105` (lookup `user_api_keys`).
+> - Hook client-side `useUserApiKeys` (referência conceitual, não direto).
+> 
+> **Risco:** BAIXO — escopo cirúrgico, fallback existente já é 302.
+> 
+> **Estimativa:** 4-5 commits · +4 testes · 2 deploys edge function.
+> 
+> ---
+> 
+> ## SEAL C REVISADA — Canvas Pipeline Refactor (5 sub-seals C1-C5)
+> 
+> **Contexto novo:** Investigação no projeto Sovereign `#02 - Mood Board 5 lanes - 5 mundos` (`880b5eba-b41c-490d-8cab-1058def85bc9`, 30 nodes / 23 edges, última edição 2026-05-27) + 8 últimas execuções no banco + audit de 3 frentes (frontend Canvas, backend canvas-execute, padrão Visual Orchestrator) revelou 5 problemas estruturais bloqueantes:
+> 
+> 1. **Edges sem handles semânticos** — `sourceHandle: null`, `targetHandle: null` em 100% dos edges. `useCanvasStore.onConnect()` em `src/store/useCanvasStore.ts:86-92` não atribui handle IDs ao criar edges. Handle components em `src/components/canvas/nodes/*.tsx` não têm `id` prop. Impossível rotear inputs em nós multi-port (sceneCompose precisa base-image + character + style separados).
+> 
+> 2. **Sem DAG runner client-side** — `CanvasEditorPage.handleRunAll()` (linha 394) e `runSingleNode()` (linha 292-337) são scheduler ad-hoc, não topological sort. `useOrchestrationGraph.runPipeline` (Visual Orchestrator) NÃO é reutilizável diretamente — ele delega tudo pra backend `orchestrate-content`; Canvas precisa de runner cliente real com Promise.all em branches independentes.
+> 
+> 3. **Sem wiring output→input** — `findUpstreamImage(nodeId, nodes, edges)` em `src/lib/canvas-utils.ts:28-43` faz lookup naive (primeiro upstream image), NÃO valida targetHandle, NÃO passa output de uma execução pra body da próxima.
+> 
+> 4. **Asset lineage perdido** — `vm_canvas_assets` NÃO tem `node_id` nem `input_asset_id`. `vm_canvas_executions` NÃO persiste `input_asset_url` (frontend envia, backend usa, mas nunca grava). Webhook higgsfield-webhook insere video asset sem reference ao input image. Impossible debugar "qual imagem gerou esse vídeo".
+> 
+> 5. **Tier whitelist permissive** — `ImageToVideoInspector.ENABLED_VIDEO_MODELS` (linha 53-59) inclui todos os 5 tiers (dop-lite, dop-turbo, dop-standard, kling, seedance). SOP Phase 4.2c v6.6.2 diz que só `dop-standard-5s` deve estar clicável. Backend `ALLOWED_VIDEO_MODELS` (canvas-execute:220-226) também aceita todos os 5. Execução real 87654829 rodou `model: 'dop-lite'` — SOP violada na origem.
+> 
+> **Nova OTD registrada:** **OTD-CANVAS-PIPELINE-001** (RPN ~225, Severity 9 × Occurrence 5 × Detection 5) — bloqueante para C5 paid smoke + Phase Commercial revenue via Canvas-generated content.
+> 
+> **Achados positivos (REUSE):**
+> - `useCanvasExecute()` em `useCanvasStudio.ts:192-228` DOES include input_asset_url quando recebido — reusar.
+> - `resolveExecutePayload()` em `types/canvas.ts:611-690` mapeia camelCase → snake_case corretamente — nenhum mismatch real (diagnóstico anterior estava errado).
+> - `pickNodeImage()` em `canvas-utils.ts:18` correto para extrair output de upstream — reusar.
+> - CharacterReference (`CharacterReferenceInspector.tsx:27-65`) é baseline funcional de "asset ingestion" — espelho para fix.
+> - Visual Orchestrator status enum `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` — adotar em Canvas (mapear `queued→pending`, `success→done`, `failed→error`).
+> - `OrchestrationCanvas.tsx:45-53` status sync useEffect — pattern direto pra reusar.
+> - Migrações canvas-execute pós-rotação Supabase (v6.11.0) + per-user Higgsfield (v6.11.1) — Canvas já está nesse estado limpo.
+> 
+> ### Sub-seal C1 — Foundation: Handle IDs + Edge Port Routing (Multi-input ready)
+> 
+> **ORO:** Operator = MCORCH Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = todos projetos canvas existentes via backfill).
+> 
+> **Passos:**
+> 
+> 1. **SOP-first (Lei 2)** — criar `docs/processes/canvas-pipeline-architecture.md`:
+>    - Operator: edges criados via drag conectam handles semânticos por nodeKind (não anonymous).
+>    - Sequence: handle ID convention table (`generateImage.output` / `imageToVideo.input` / `sceneCompose.{base-image,character,style}` etc.).
+>    - Verification gates (5): handles populados em onConnect / backfill executou / migration apply / runtime check em pipeline / Phase 5c verify.
+>    - Recovery path: revert backfill via project graph snapshot pre-migration.
+> 
+> 2. **Type constants** — `src/lib/canvas-handles.ts` (NOVO, ~80 LOC):
+>    - `export const NODE_OUTPUT_HANDLE: Record<CanvasNodeKind, string>` — single output por kind.
+>    - `export const NODE_INPUT_HANDLES: Record<CanvasNodeKind, string[]>` — sceneCompose retorna `['base-image','character','style']`; demais retornam `['input']`.
+>    - `export function getOutputHandle(kind)` / `export function getInputHandles(kind)` helpers.
+> 
+> 3. **Handle components** — adicionar `id` prop em todos os Handle JSX:
+>    - `src/components/canvas/nodes/GenerateImageNode.tsx`: `id="input"` / `id="output"`.
+>    - `src/components/canvas/nodes/CharacterReferenceNode.tsx`: apenas source `id="output"` (sem input).
+>    - `src/components/canvas/nodes/SceneComposeNode.tsx`: 3 target handles `id="base-image"` / `id="character"` / `id="style"` (positions: Top / Left / Bottom) + 1 source `id="output"`.
+>    - `src/components/canvas/nodes/StyleTransferNode.tsx`: `id="input"` / `id="style"` / `id="output"`.
+>    - `src/components/canvas/nodes/ImageToVideoNode.tsx`: `id="input"` / `id="output"`.
+> 
+> 4. **Store** — `src/store/useCanvasStore.ts:86-92`:
+>    - Modify `onConnect` para resolver source/target nodeKind e atribuir handles automaticamente quando user não especificou. Multi-input nó (sceneCompose) usa `targetHandle` provido pelo drag UI (ReactFlow envia quando user drags pra handle específica).
+> 
+> 5. **Backfill script** — `scripts/canvas-backfill-edge-handles.ts` (Bun, ~120 LOC):
+>    - Lê todos `vm_canvas_projects.graph`.
+>    - Para cada edge sem handles: resolve source.kind + target.kind via node lookup; atribui sourceHandle default + targetHandle via heurística (primeiro upstream image → `base-image`; characterReference upstream → `character`; etc.).
+>    - Backup snapshot em `.claude/context/backups/canvas-edge-handles-pre-c1-<date>/`.
+>    - Dry-run mode + `--apply` flag.
+> 
+> 6. **Tests** — `src/test/canvas-handles.test.ts` (~80 LOC, ~10 cases):
+>    - getOutputHandle por kind.
+>    - getInputHandles por kind (especialmente sceneCompose retorna 3).
+>    - onConnect populates handles default quando user não especifica.
+> 
+> **Material proofs Phase 5c:**
+> - `grep "id=\"output\"" src/components/canvas/nodes/` retorna 5 matches (1 por node component).
+> - `grep "id=\"base-image\"" src/components/canvas/nodes/SceneComposeNode.tsx` retorna 1.
+> - Query post-backfill: `SELECT graph FROM vm_canvas_projects WHERE id='880b5eba...'` → edges com sourceHandle + targetHandle não-null em 23/23.
+> - Tests 10/10 passing.
+> 
+> **Estimativa (paralelizada com OpenClaw):** ~**1.5h** · 5-6 commits granulares · +10 testes.
+> Tarefas paralelizáveis pro **engineer** agente OpenClaw via Telegram (Ollama qwen3.5 local + Google API fallback):
+> - Escrever testes Vitest `src/test/canvas-handles.test.ts` enquanto Claude Code refatora os 5 Handle components.
+> - Rodar `scripts/canvas-backfill-edge-handles.ts --dry-run` e reportar diff.
+> - Validar TypeScript zero erros + 204+10/214 testes em paralelo.
+> Coordenação: Claude Code abre o lock no `useCanvasStore.onConnect`; OpenClaw NÃO toca esse arquivo.
+> 
+> ---
+> 
+> ### Sub-seal C2 — DAG Runner: useCanvasPipeline + Topological Sort + Output→Input Wiring
+> 
+> **ORO:** Operator = MCORCH Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = nova execução de qualquer projeto, mas backwards-compatible com per-node Run).
+> 
+> **Pré-condição:** C1 mergeada (handles existem).
+> 
+> **Passos:**
+> 
+> 1. **DAG library** — `src/lib/canvas-dag.ts` (NOVO, ~180 LOC):
+>    - `topologicalSort(nodes: CanvasNode[], edges: CanvasEdge[]): { layers: string[][] }` — Kahn's algorithm; retorna layers para Promise.all dentro de cada layer.
+>    - `getUpstreamByHandle(nodeId, targetHandle, nodes, edges): CanvasNode | undefined` — port-aware lookup (filtra edges por targetHandle match).
+>    - `getAllUpstreams(nodeId, nodes, edges): Record<targetHandle, CanvasNode>` — todos os upstreams keyed by targetHandle (para multi-input).
+>    - `validateDAG(nodes, edges): { valid: boolean; cycles?: string[][]; orphans?: string[] }` — detecta ciclos + nós sem conexão.
+> 
+> 2. **Pipeline hook** — `src/hooks/useCanvasPipeline.ts` (NOVO, ~220 LOC):
+>    - Export `useCanvasPipeline(projectId)` retornando `{ runPipeline, runNode, abort, isRunning, currentLayer, error }`.
+>    - `runPipeline()`: 
+>      - Get topological layers via canvas-dag.
+>      - Para cada layer (sequencial): Promise.all dos nós da layer (paralelo).
+>      - Para cada nó: resolve upstreams via getAllUpstreams → extrai output URLs → constrói body (input_asset_url para single-input nodes, parameters extras para sceneCompose com `{base_image_url, character_url, style_url}`) → POST canvas-execute → on success: updateNodeData com `output.imageUrl` ou `output.videoUrl`.
+>      - On error: marca nó error, propaga blocked downstream (todos descendants).
+>    - `runNode(nodeId)`: mantém compat — executa nó individual com resolução de upstreams (não trigger pipeline).
+>    - Status enum unificado: `'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked'` (mapeia canvas legacy `queued→pending`, `success→done`, `failed→error`).
+> 
+> 3. **Refactor entry points**:
+>    - `CanvasEditorPage.tsx:292-337` → delegar `runSingleNode` para `useCanvasPipeline.runNode`.
+>    - `CanvasEditorPage.tsx:394-436` → delegar `handleRunAll` para `useCanvasPipeline.runPipeline`.
+>    - `src/components/canvas/TopBar.tsx:122-144` → rename "Executar tudo" → "Executar Pipeline" (alinhar com Orchestrator).
+> 
+> 4. **sceneCompose payload** — backend canvas-execute precisa aceitar parameters `{base_image_url, character_url, style_url}` para scene_compose node_type:
+>    - Edit `supabase/functions/canvas-execute/index.ts` no branch scene_compose:
+>      - Resolver as 3 URLs via body.parameters.
+>      - Passar pro Gemini multimodal endpoint (já usa OpenRouter google/gemini-2.5-flash-image em compose).
+>    - Tests para o branch.
+> 
+> 5. **Tests** — `src/test/canvas-dag.test.ts` (~200 LOC, ~15 cases):
+>    - topologicalSort com DAG linear (4 nós, 3 edges).
+>    - topologicalSort com DAG multi-branch (mood board pattern).
+>    - getUpstreamByHandle retorna o nó correto.
+>    - getAllUpstreams retorna map completo para sceneCompose.
+>    - validateDAG detecta ciclo.
+>    - validateDAG detecta orphan.
+> 
+> 6. **Tests** — `src/test/useCanvasPipeline.test.ts` (~150 LOC, ~8 cases) com mock canvas-execute.
+> 
+> **Material proofs Phase 5c:**
+> - Test DAG: pipeline com 4 layers executa em ordem topológica correta (mockada).
+> - Test pipeline: nó downstream recebe input_asset_url do upstream output.
+> - Test pipeline: error em layer N marca todos descendants como blocked.
+> - TypeScript zero erros.
+> - Tests 25+ passando.
+> 
+> **Estimativa (paralelizada com OpenClaw):** ~**2.5h** · 8-10 commits granulares · +25 testes · 1 deploy edge function.
+> Tarefas paralelizáveis pro **engineer** + **scientist** OpenClaw via Telegram:
+> - engineer: escrever `src/test/canvas-dag.test.ts` (15 cases) + `src/test/useCanvasPipeline.test.ts` (8 cases) enquanto Claude Code escreve a lib + hook.
+> - scientist: revisar topological sort correctness contra teoria de Kahn's algorithm; verificar handling de ciclos.
+> Coordenação: Claude Code escreve `src/lib/canvas-dag.ts` + `src/hooks/useCanvasPipeline.ts` (locks); OpenClaw consome a API exportada nos testes via mocks. Eu re-deploy canvas-execute scene_compose update.
+> 
+> ---
+> 
+> ### Sub-seal C3 — Asset Lineage: DB Migration + Backend Persist + Frontend Display
+> 
+> **ORO:** Operator = MCORCH Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = schema vm_canvas_*; migration tem que ser additive não-breaking).
+> 
+> **Pré-condição:** C1 + C2 mergeadas.
+> 
+> **Passos:**
+> 
+> 1. **Migration** — `supabase/migrations/<ts>_canvas_asset_lineage.sql`:
+>    - `ALTER TABLE vm_canvas_assets ADD COLUMN node_id text` (no foreign key — node IDs são strings client-side).
+>    - `ALTER TABLE vm_canvas_assets ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.
+>    - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_url text`.
+>    - `ALTER TABLE vm_canvas_executions ADD COLUMN input_asset_id uuid REFERENCES vm_canvas_assets(id) ON DELETE SET NULL`.
+>    - Index `CREATE INDEX vm_canvas_assets_node_id_idx ON vm_canvas_assets (node_id)`.
+>    - Index `CREATE INDEX vm_canvas_assets_input_asset_id_idx ON vm_canvas_assets (input_asset_id)`.
+>    - Trigger `vm_canvas_assets` autoupdate `input_asset_id` quando `input_asset_url` matches existing public_url (otimização para lookup).
+> 
+> 2. **SOP** — `docs/processes/canvas-asset-lineage.md`:
+>    - Operator: cada generated asset carrega referência ao input + node_id.
+>    - Sequence: canvas-execute persist no execution row → on success, persist no asset row com node_id + input_asset_id resolved.
+>    - Verification: `SELECT a.id, a.input_asset_id, b.public_url FROM vm_canvas_assets a LEFT JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.node_id='n_wxgqyr9i'`.
+> 
+> 3. **Backend persist** — `supabase/functions/canvas-execute/index.ts`:
+>    - Execution INSERT (linha 263-280): adicionar `input_asset_url: body.input_asset_url ?? null`.
+>    - Asset INSERT (linha 501-523 image, 932+ Higgsfield video): adicionar `node_id: body.node_id` + `input_asset_id: <resolved>` via SELECT prévio.
+>    - Helper `resolveInputAssetId(admin, url)` em canvas-execute: `SELECT id FROM vm_canvas_assets WHERE public_url=$1 OR storage_key=$1 LIMIT 1`.
+> 
+> 4. **Backend webhook** — `supabase/functions/higgsfield-webhook/index.ts`:
+>    - Linha 201-217 asset INSERT: adicionar `node_id: execution.node_id` + `input_asset_id` resolvido via `execution.input_asset_url`.
+> 
+> 5. **Frontend display** — Asset preview thumbnail mostra ícone link 🔗 + tooltip "Gerado a partir de: <thumbnail upstream>" quando `asset.input_asset_id` populated. Edit `src/components/canvas/LeftPanel/AssetCard.tsx` (ou similar — explorar localização).
+> 
+> 6. **Backfill opcional** — `scripts/canvas-backfill-asset-lineage.ts`:
+>    - Para cada execution com `input_asset_url IS NOT NULL`, resolve input_asset_id retroativamente.
+>    - Update vm_canvas_executions + matching vm_canvas_assets row.
+>    - Dry-run + --apply.
+> 
+> 7. **Tests** — `src/test/canvas-asset-lineage.test.ts` (~80 LOC):
+>    - INSERT execution sem input_asset_url → input_asset_id null OK.
+>    - INSERT execution com input_asset_url + matching asset → input_asset_id populated.
+> 
+> **Material proofs Phase 5c:**
+> - Migration aplicada via `npx supabase db push`.
+> - Query: `SELECT COUNT(*) FROM vm_canvas_executions WHERE input_asset_url IS NOT NULL` → > 0 após primeira execução pós-C3.
+> - Query: novo asset criado tem `node_id` e `input_asset_id` populados.
+> - Tests passing.
+> 
+> **Estimativa (paralelizada com OpenClaw):** ~**1h** · 4-5 commits · +5 testes · 1 migration · 2 deploys edge function.
+> Tarefas paralelizáveis pro **engineer** OpenClaw via Telegram:
+> - Aplicar migration via aios-sql-bridge (`apply_migration <path>`) enquanto Claude Code escreve o código backend persist.
+> - Rodar backfill script `scripts/canvas-backfill-asset-lineage.ts --dry-run` em projetos existentes; reportar count de execuções resolvíveis.
+> - Escrever testes de SELECT pós-migration.
+> Coordenação: Claude Code escreve canvas-execute + higgsfield-webhook edits; OpenClaw faz schema + backfill + verification queries.
+> 
+> ---
+> 
+> ### Sub-seal C4 — Tier Enforcement: SOP-aware Whitelist (Frontend + Backend)
+> 
+> **ORO:** Operator = MCORCH Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = UI gating + backend reject; afeta Higgsfield video pricing).
+> 
+> **Pré-condição:** Independente — pode rodar em paralelo com C2/C3 se preferir.
+> 
+> **Passos:**
+> 
+> 1. **SOP update** — `docs/processes/canvas-video-async-execution.md`:
+>    - Adicionar tabela "Allowed Video Tiers (Phase 4.2c)" com APENAS `dop-standard-5s` clicável; demais tagged "Aguardando validação Phase 4.3".
+>    - Append nova seção "Tier Enforcement Layer" documentando frontend whitelist + backend validator.
+> 
+> 2. **Frontend whitelist** — `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:53-59`:
+>    - Narrow `ENABLED_VIDEO_MODELS` para `Set(['dop-standard-5s'])` apenas.
+>    - Disabled state nos demais tiers com tooltip PT-BR "Aguardando validação Phase 4.3".
+> 
+> 3. **Backend validator** — `supabase/functions/canvas-execute/index.ts`:
+>    - Top-level constant `SOP_ALLOWED_VIDEO_MODELS: Set<string> = new Set(['dop-standard-5s'])`.
+>    - No branch `image_to_video` (antes do submit Higgsfield): se `body.model` NÃO está em SOP_ALLOWED_VIDEO_MODELS, retornar 422 com `{ error: "tier_not_allowed_yet", action: "Apenas dop-standard-5s disponível na Phase 4.2c. Aguarde Phase 4.3." }`.
+> 
+> 4. **Tests** — adicionar a `src/test/edge-shared-auth.test.ts` ou criar `src/test/canvas-tier-enforcement.test.ts` (~50 LOC):
+>    - body.model='dop-lite' → expected 422.
+>    - body.model='dop-standard-5s' → passes gate.
+> 
+> 5. **Material proof live**:
+>    - `curl POST /functions/v1/canvas-execute -d '{...model:"dop-lite"...}'` → HTTP 422 `tier_not_allowed_yet`.
+>    - UI: clicking dop-lite tier shows disabled tooltip.
+> 
+> **Estimativa (paralelizada com OpenClaw):** ~**30min** · 3 commits · +3 testes · 1 deploy edge function.
+> Tarefas paralelizáveis pro **engineer** OpenClaw:
+> - Update do SOP `canvas-video-async-execution.md` tabela de tiers (markdown puro, low-risk).
+> - Tests do tier validator no canvas-execute (mock body + assert 422).
+> Coordenação: Claude Code muda whitelist frontend + backend constant; OpenClaw escreve docs + tests em paralelo.
+> 
+> ---
+> 
+> ### Sub-seal C5 — Paid Smoke E2E (Item 3 Original)
+> 
+> **ORO:** Operator = Sovereign (clica Run UI) + MCORCH Agent (monitora gates) · Reviewer = Sovereign · Owner = Sovereign (blast radius = 125 mcoCoins burn real).
+> 
+> **Pré-condição:** C1 + C2 + C3 + C4 todas mergeadas. Sovereign tem Higgsfield key per-user provisionada (v6.10.0 já fez). Pipeline real funciona end-to-end.
+> 
+> **Passos:**
+> 
+> 1. **Pre-flight checklist** (agente verifica via REST antes do Sovereign clicar):
+>    - Projeto `880b5eba` (Mood Board) tem edges com sourceHandle + targetHandle não-null em 23/23 (C1 ok).
+>    - useCanvasPipeline disponível na UI (C2 ok).
+>    - vm_canvas_assets schema tem input_asset_id + node_id columns (C3 ok).
+>    - canvas-execute rejeita dop-lite (C4 ok).
+>    - Sovereign balance ≥ 125 mcoCoins.
+> 
+> 2. **Sovereign clica "Executar Pipeline"** no projeto Mood Board (ou em projeto novo dedicado smoke).
+>    - Pipeline roda: generateImage chain → sceneCompose (3 inputs) → imageToVideo dop-standard-5s.
+> 
+> 3. **Agente monitora 9 gates da SOP** `canvas-video-async-execution.md` em tempo real via REST polling:
+>    - Gates 1-9 conforme SOP original (já documentados).
+>    - PLUS new gate 10: vm_canvas_assets do video tem `input_asset_id` apontando pro asset gerado pelo sceneCompose anterior.
+> 
+> 4. **Material proof e lineage**:
+>    - `(balance_before - balance_after) === 125` exato.
+>    - Query: `SELECT a.id AS video_id, a.input_asset_id AS source_image_id, b.public_url AS source_image_url FROM vm_canvas_assets a JOIN vm_canvas_assets b ON a.input_asset_id=b.id WHERE a.asset_type='video' ORDER BY a.created_at DESC LIMIT 1` → 1 row, ambas URLs populated.
+>    - Video renderiza no `<video>` element.
+> 
+> **Estimativa:** ~1h Sovereign hands-on + monitoring · 0 commits (apenas observation seal) · 1 paid burn 125 coins · primeira validação E2E real do Canvas Phase 4.2.
+> 
+> ---
+> 
+> ### Cronograma sugerido sub-seals (paralelização OpenClaw integrada)
+> 
+> | Sub-seal | Sessão | Duração (real) | Cumulativo |
+> |----------|--------|----------------|------------|
+> | C1 Foundation | Sessão 1 | ~1.5h | v6.11.2 |
+> | C2 DAG Runner | Sessão 1 (continuação) ou 2 | ~2.5h | v6.11.3 |
+> | C3 Asset Lineage | Sessão 2 | ~1h | v6.11.4 |
+> | C4 Tier Enforcement | Sessão 2 (paralelo C3) | ~30min | v6.11.5 |
+> | C5 Paid Smoke | Sessão 3 (Sovereign UI) | ~1h | v6.12.0 |
+> 
+> **Total revisado: ~6.5h spread em 2 sessões intensas + 1 paid smoke.** Redução de ~50% via paralelização OpenClaw (de 12h para 6.5h).
+> 
+> ### Aceleração via OpenClaw + Ollama Local — Modelo Operacional
+> 
+> **Infraestrutura disponível** (ver `[[project_openclaw_ollama_integration]]` em memory):
+> - Gateway PM2 `maestro` rodando localhost com 7 agentes Pantheon.
+> - **engineer** (qwen3.5 via Ollama local, ARM64) — tem capacidade de tools nativa (shell, git, edits, REST).
+> - 6 outros agentes (artisan, scientist, marketing-growth, main, guardian, claw-master) com llama3.1:8b.
+> - Fallback Google API (Gemini) configurado pra quando Ollama local falha ou demora.
+> - Telegram bridge `@claw_gcrux` recebe meta-prompts e dispatcha pro main agent.
+> 
+> **Padrão de delegação durante sub-seal:**
+> 
+> 1. **Claude Code (eu)** = coordenador + arquiteto crítico:
+>    - Refactors em arquivos centrais com cross-cutting impact (store, hooks, edge functions edits).
+>    - Decisões arquiteturais (helper signatures, migration schema).
+>    - Material proofs via REST queries (mesh artifacts, deploy verification).
+>    - HANDOFF.md + Phase 5c audit + push.
+> 
+> 2. **OpenClaw engineer (Ollama local)** = executor paralelo low-risk:
+>    - Escrever testes Vitest a partir de specs/interfaces que eu defino.
+>    - Rodar scripts dry-run + reportar diff.
+>    - Aplicar migrations via aios-sql-bridge.
+>    - Update SOPs markdown puros.
+>    - Grep/audit codebase pra confirmações cross-cutting.
+> 
+> 3. **Sincronização**: cada sub-seal começa com Claude Code criando "lock list" (arquivos que eu vou tocar) — OpenClaw confirma e fica fora. OpenClaw entrega via PR-style markdown em `.claude/proposals/` que Claude Code revisa antes de mergear.
+> 
+> **Quando NÃO delegar (mantém em Claude Code):**
+> - Migrations complexas com dependency em código já existente.
+> - Edge function deploys (precisam de aprovação Sovereign per CLAUDE.md).
+> - Decisões de schema (refletem em múltiplos consumers).
+> - Refactor de arquivo já em conflito merge ou WIP.
+> 
+> ### Meta-Prompt Template para Próxima Sessão (Telegram → @claw_gcrux)
+> 
+> Quando Sovereign for abrir nova sessão Claude Code (post-handoff desta), pode primeiro disparar OpenClaw via Telegram com meta-prompt estruturado paralelizando C1 prep work. Template:
+> 
+> ```text
+> Tarefa de Engenharia: Canvas Pipeline Refactor — Preparação C1 Foundation
+> 
+> Por favor, execute as seguintes etapas detalhadas para acelerar a sessão Claude Code que vou abrir em seguida:
+> 
+> 1. Branch + worktree:
+>    Crie e ative branch `feature/canvas-pipeline-refactor-c1` a partir de main.
+> 
+> 2. Audit pre-flight:
+>    - Execute `grep -rn "id=" src/components/canvas/nodes/` e reporte quais Handle JSX components já têm id (zero esperado).
+>    - Execute `git log --oneline -10` e me reporte os últimos 10 commits do branch claude/bold-visvesvaraya-4a95b9 (de onde o feature branch foi criado).
+>    - Liste todos os arquivos em `src/components/canvas/nodes/` e classifique cada um por kind (GenerateImageNode = generateImage, etc.).
+> 
+> 3. Backfill dry-run preparation:
+>    Crie skeleton de script `scripts/canvas-backfill-edge-handles.ts` com:
+>    - Bun-native (process.env via dotenv).
+>    - Connect Supabase service-role via SERVICE_ROLE_KEY_LEGACY (eyJ* legacy — ainda válido) ou SUPABASE_SERVICE_ROLE_KEY (sb_secret_* novo).
+>    - SELECT FROM vm_canvas_projects retornando id, name, graph.
+>    - Para cada project: log nodes/edges counts + se algum edge tem sourceHandle/targetHandle não-null.
+>    - Modo --dry-run (default) sem mutações.
+>    - Reporte counts agregados ao final.
+> 
+> 4. SOP draft:
+>    Crie esqueleto de `docs/processes/canvas-pipeline-architecture.md` seguindo o padrão de SOPs existentes (`canvas-video-async-execution.md`, `api-credential-tenancy.md`):
+>    - Header (versão, selada, Lei 2)
+>    - ORO triplet (placeholder)
+>    - Contexto (~200 palavras explicando handle convention + edge port routing)
+>    - Tabela "Handle ID Convention" (5 nodeKinds × output handle × input handles)
+>    - 5 verification gates
+>    - Recovery path
+>    - Anti-patterns proibidos
+> 
+> 5. Output:
+>    Salve tudo em PR-style markdown em `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` listando:
+>    - Branch criada (sim/não).
+>    - Audit findings (counts + classificação).
+>    - Backfill script path + linhas.
+>    - SOP draft path + linhas + percentual completo (~70% esperado, faltando ORO real e Anti-patterns adequados).
+>    - Quais arquivos NÃO foram tocados (lock list para Claude Code respeitar).
+> 
+> Ao finalizar, responda no Telegram com o caminho do proposal markdown + um sumário de 5 linhas.
+> ```
+> 
+> Resultado esperado: quando Sovereign abrir nova sessão Claude Code, eu (Claude) leio o `.claude/proposals/openclaw-canvas-c1-prep-<date>.md` e o tempo de "exploration + scaffold" já está economizado — começo direto pelo refactor central (Handle components + onConnect lock).
+> 
+> ### Sinergias cross sub-seal
+> 
+> - C1 helper `canvas-handles.ts` é importado por C2 DAG library (port-aware lookup).
+> - C2 DAG runner consome C3 lineage para mostrar provenance no status display.
+> - C4 tier validator pode usar mesma SOP-loaded constant em frontend + backend (single source of truth).
+> - C5 paid smoke validates ALL prior sub-seals working together end-to-end.
+> 
+> ---
+> 
+> ## SEAL D — e2e-user-zero Framework Completo (Item 6 restante)
+> 
+> **ORO triplet:**
+> - Operator: MCORCH Master Execution Agent
+> - Reviewer: Sovereign
+> - Owner: Sovereign — blast radius = QA framework (isolado de produção), enable Phase Commercial Gate
+> 
+> **Passos (em ordem):**
+> 
+> 1. `scripts/qa/e2e-user-zero/lib/redactor.ts` (~120 LOC) — header redaction (Authorization/Cookie/apikey/x-api-key/x-supabase-*) + body redaction em `redactedPaths` + cookie domain sanitizer. Pre-commit pattern scan: `eyJ.*\.eyJ`, `sk_(live|test)_`, `sbp_`, `whsec_`, `sb_secret_`.
+> 
+> 2. `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (~100 LOC) — INSERT `mcorch_nodes` (kind='observation') + edge `OBSERVES` por finding. Idempotência via `SHA-256(finding_id + run_id)`.
+> 
+> 3. `scripts/qa/e2e-user-zero/lib/telemetry.ts` (~60 LOC) — 4 eventos `infra_health_logs` (`e2e_user_zero_run_started/complete/failure/auth_expired`). Distinção: "found P0" NÃO é failure — apenas infra errors emitem telemetry.
+> 
+> 4. `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (~150 LOC) — runner vs mock browser fixtures. Cobre 4 cenários (clean run / P0 found / infra error / auth expired).
+> 
+> 5. Extensão pre-commit hook em `.husky/pre-commit` ou `.git/hooks/pre-commit` — scan `e2e-output/` por padrões de secrets antes de aceitar commit.
+> 
+> 6. 5 flows restantes em ordem de prioridade BRD:
+>    - `dashboard-tour.ts` (breadth survey)
+>    - `canvas-overview.ts` (Phase 4.2 surface)
+>    - `content-library.ts` (DevTools-grade observation)
+>    - `billing-flow.ts` (Phase Commercial gate critical)
+>    - `settings-tour.ts` (broad coverage)
+> 
+> **Material proofs:**
+> - Selftest 12/12 passando.
+> - `grep -rn "eyJ\|sk_live\|sbp_" e2e-output/` em CI mostra zero hits (redactor funciona).
+> - `mcorch_nodes` com 5+ nodes kind='observation' linkados via OBSERVES edges após cada run.
+> - 4 eventos em `infra_health_logs` por run completo.
+> - Pre-commit hook bloqueando commit que contém secret pattern (test artificial).
+> 
+> **Reutilizar:**
+> - Padrão de teste em `src/test/qa-verifiers.test.ts`.
+> - Schemas em `scripts/qa/e2e-user-zero/lib/finding-schema.ts`.
+> - Padrão de classifier em `scripts/qa/e2e-user-zero/lib/classifier.ts`.
+> 
+> **Risco:** BAIXO — isolado de produção; falhas no framework não impactam app.
+> 
+> **Estimativa:** 7-8 commits · +12 testes (selftest) · 0 deploys de produção.
+> 
+> ---
+> 
+> ## SEAL E — MARGIN_FACTOR Calibration (Item 5) · Data-gated 2026-06-03+
+> 
+> **ORO triplet:**
+> - Operator: MCORCH Master Execution Agent
+> - Reviewer: Sovereign
+> - Owner: Sovereign — blast radius = pricing model do CEA (revenue impact)
+> 
+> **Pré-condição:** ≥7 dias de `agent_executions` (cron diário rodando desde 2026-05-27 → mínimo 2026-06-03).
+> 
+> **Passos:**
+> 
+> 1. Notebook análise em `docs/analysis/agent-margin-calibration-2026-06-03.md`:
+>    - SQL agrupado por (provider, model) últimos 7 dias.
+>    - p50, p95, max de `cost_usd_micro` e `cost_mcoin` por par.
+>    - Variância entre providers (Groq vs Claude Sonnet vs gpt-4 — esperado 33x).
+>    - Recomendação: manter global 2.0 OU mover para per-provider.
+> 
+> 2. Decisão **(a) Global** vs **(b) Per-provider**:
+>    - Se variância intra-provider < 30% → manter global 2.0.
+>    - Se variância > 50% entre providers → mover para per-provider via coluna nova.
+> 
+> 3. Se (b) per-provider:
+>    - Migration `supabase/migrations/20260603_agent_pricing_margin.sql` adiciona `margin_factor numeric DEFAULT 2.0` em `agent_pricing`.
+>    - Refatorar RPC `calc_agent_cost_mcoin` em `supabase/migrations/20260527012945_agent_metering_minimal.sql:87,114`:
+>      - Mudar signature para usar `COALESCE(ap.margin_factor, p_margin)`.
+>      - Lookup em `agent_pricing` join no provider+model.
+> 
+> 4. Execução validatória: 1 task via `agent-task-execute` confirmando novo cost.
+> 
+> **Material proofs:**
+> - Análise documentada com SQL output literal (não inventado).
+> - Se (b): migration aplicada + RPC retornando `'margin': <novo_valor>` no jsonb.
+> - 1 nova `agent_executions` row provando novo cálculo.
+> 
+> **Risco:** BAIXO — escopo isolado, fácil rollback (mudar margin global de volta a 2.0).
+> 
+> **Estimativa:** 3-4 commits · +2 testes · 1 migration opcional.
+> 
+> ---
+> 
+> ## Sinergias Cross-Seal
+> 
+> - **`supabase/functions/_shared/` ganha 2 módulos novos**: `auth.ts` (Seal A) + `user-keys.ts` (Seal B). Pavimenta padrão de helpers compartilhados — Seal D's `mesh-persistor.ts` pode reusar pra writes admin.
+> - **SOPs encadeadas**: `edge-function-service-auth.md` (Seal A) referencia `api-credential-tenancy.md` (Seal B) no appendix de service-role exceptions.
+> - **Sessão UI única em Seal C** elimina ~30min de re-login overhead entre Itens 3/4/6.1.
+> - **Telemetria unificada `infra_health_logs`**: Seal A emite `pipeline_async_recovered`, Seal B emite `otd_oe661_per_user_closed`, Seal D emite 4 `e2e_user_zero_*` — mesmo schema.
+> - **Phase 5c primeira emissão real do claim e2e_user_zero_last_pass** em Seal C consolida o gate (até v6.10.0 o claim era opcional; após Seal C torna-se hard requirement).
+> 
+> ---
+> 
+> ## Arquivos Críticos a Modificar
+> 
+> **Seal A:**
+> - `supabase/functions/_shared/auth.ts` (NOVO)
+> - `supabase/functions/orchestrate-step/index.ts` (linhas 48-54)
+> - `supabase/functions/publish-wordpress/index.ts` (linha 26)
+> - `supabase/functions/self-heal/index.ts` (~211)
+> - `supabase/functions/agent-task-execute/index.ts` (~61)
+> - 2-3 outros recipients (grep durante execução)
+> - `docs/processes/edge-function-service-auth.md` (NOVO)
+> - `src/test/edge-shared-auth.test.ts` (NOVO)
+> 
+> **Seal B:**
+> - `supabase/functions/_shared/user-keys.ts` (NOVO)
+> - `supabase/functions/canvas-execute/index.ts` (linhas 121-130)
+> - `supabase/functions/process-affiliate-link/index.ts` (linhas 101-136)
+> - `docs/processes/api-credential-tenancy.md` (NOVO)
+> - `CLAUDE.md` (Key Files Reference)
+> 
+> **Seal C:**
+> - `src/components/orchestrator/AgentTaskRunner.tsx` (NOVO)
+> - `src/components/orchestrator/NodeDetailsPanel.tsx` (estender tab `analysis`)
+> - `scripts/qa/e2e-user-zero/flows/trigger-orchestration.ts` (NOVO)
+> - `docs/processes/constellation-economic-activation.md` (estender com UI Trigger section)
+> 
+> **Seal D:**
+> - `scripts/qa/e2e-user-zero/lib/redactor.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/lib/telemetry.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/flows/dashboard-tour.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/flows/canvas-overview.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/flows/content-library.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/flows/billing-flow.ts` (NOVO)
+> - `scripts/qa/e2e-user-zero/flows/settings-tour.ts` (NOVO)
+> - `.git/hooks/pre-commit` (estender)
+> 
+> **Seal E:**
+> - `docs/analysis/agent-margin-calibration-2026-06-03.md` (NOVO)
+> - `supabase/migrations/20260603_agent_pricing_margin.sql` (NOVO, condicional)
+> 
+> ---
+> 
+> ## Verificação End-to-End
+> 
+> **Seal A:**
+> 1. `npx tsc --noEmit` → zero erros.
+> 2. `bun run test` → todos os 189 + 6 novos passando.
+> 3. `npx supabase functions deploy <each-recipient>` → ~6-7 deploys.
+> 4. Trigger pipeline manual: `INSERT INTO pipeline_runs (...) VALUES (...)`; SELECT `net._http_response WHERE id > <baseline>` para confirmar 200 OK.
+> 5. `async_orchestrate_step_debug` SELECT → última linha com status_code=200.
+> 
+> **Seal B:**
+> 1. `grep -rn "GCRUX_DEFAULT_TOKEN\|HIGGSFIELD_API_KEY.*Deno.env" supabase/functions/` → zero hits.
+> 2. `bun run test` → 189+ passando, novos testes verde.
+> 3. `npx supabase functions deploy canvas-execute process-affiliate-link` → 2 deploys.
+> 4. Test manual: chamar `canvas-execute` para Sovereign (com key per-user) → success; chamar para test user sem key → 402.
+> 
+> **Seal C:**
+> 1. `bun run dev` → abrir `/dashboard/orchestration` → clicar node crew_agent → tab analysis mostra AgentTaskRunner.
+> 2. Click "Executar tarefa" → toast com cost + latency; row em `agent_executions`.
+> 3. Canvas: `/dashboard/canvas/<project>` → Run dop-standard-5s → 9 gates verificados via REST queries paralelas.
+> 4. e2e: `bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow trigger-orchestration --state ~/.claude/auth-states/login-mcorch-prod.json` → exit 0 + report.md com ✅ GO.
+> 
+> **Seal D:**
+> 1. `bun run test scripts/qa/e2e-user-zero/__selftest__/runner.test.ts` → 12/12 passando.
+> 2. Executar todos os 6 flows: `for f in trigger-orchestration dashboard-tour canvas-overview content-library billing-flow settings-tour; do bun run scripts/qa/e2e-user-zero/runner.ts --mode focused --flow $f --state ~/.claude/auth-states/login-mcorch-prod.json; done`.
+> 3. `grep "eyJ\|sk_live\|sbp_" e2e-output/**/*.har` → zero hits.
+> 4. SELECT count em `mcorch_nodes WHERE kind='observation' AND metadata->>'source' = 'e2e_user_zero'` → ≥0 (cresce após findings).
+> 
+> **Seal E:**
+> 1. SELECT p50/p95 de `agent_executions.cost_usd_micro` agrupado por (provider, model) últimos 7 dias.
+> 2. Análise documentada com SQL output literal.
+> 3. Se per-provider: `SELECT calc_agent_cost_mcoin(500, 300, 'groq', 'llama-3.3-70b-versatile')` retorna jsonb com novo `margin`.
+> 
+> ---
+> 
+> ## Compliance Survival Laws (todas as seals)
+> 
+> | Lei | Como atende |
+> |-----|-------------|
+> | **Lei 1 (Materiality)** | Cada seal lista material proofs específicos (REST IDs, test outputs, file paths). Phase 5c gate executa mecanicamente via `scripts/qa/run-audit.ts`. |
+> | **Lei 2 (Anticipated Process)** | SOP-first em Seals A, B. Seals C, D, E reusam SOPs existentes ou registram extensão. |
+> | **Lei 3 (Pruning)** | Seals isoladas por escopo; cohabitação em C limitada a UI dogfooding (justificada). Plan file não traz alternativas descartadas. |
+> | **Lei 4 (ORO)** | Cada seal declara Operator/Reviewer/Owner no header. |
+> 
+> ---
+> 
+> ## Cronograma Final (atualizado 2026-05-28 — paralelização OpenClaw integrada)
+> 
+> | Data | Seal | Sessão | Output |
+> |------|------|--------|--------|
+> | 2026-05-27 | A | 4-6h | ✅ v6.11.0 — pipeline async recovered (OTD-V610-001) |
+> | 2026-05-28 | B | 3-4h | ✅ v6.11.1 — OTD-OE661 closed (5d antes SLA) |
+> | 2026-05-28 (agora) | C audit + plan | ~1h | ✅ Investigação completa + OTD-CANVAS-PIPELINE-001 + plan revisado |
+> | Sessão futura #1 | **C1 + C2** (paralelizadas) | ~4h | v6.11.2/3 — Foundation + DAG Runner em uma sessão intensa |
+> | Sessão futura #2 | **C3 + C4** (paralelizadas) | ~1.5h | v6.11.4/5 — Lineage + Tier Enforcement |
+> | Sessão futura #3 | **C5 Paid Smoke** (Sovereign UI) | ~1h | v6.12.0 — first real E2E Canvas + lineage proof + 125 mcoCoins burn |
+> | Pós-C5 | D | ~4h (paralelizado) | v6.12.1 — e2e-user-zero framework completo |
+> | 2026-06-03+ | E | 2-3h | v6.12.2 — MARGIN_FACTOR calibrated |
+> 
+> **Estimativa total restante (C1-C5 + D + E): ~12h spread em 3-4 sessões** ao longo de **~5-7 dias** (era 16h em 5-6 sessões antes da paralelização OpenClaw — redução ~25% total + 50% só nas Cs).
+> 
+> **Próximo passo imediato:** 
+> 1. Sovereign dispara meta-prompt Telegram pro OpenClaw (template na seção acima) preparando C1 (branch + audit + script skeleton + SOP draft).
+> 2. Quando OpenClaw responder com `.claude/proposals/openclaw-canvas-c1-prep-<date>.md`, Sovereign abre nova sessão Claude Code.
+> 3. Eu (Claude) faço /handson — leio o proposal + o HANDOFF v6.11.1 + começo direto pelo Handle components refactor (lock list respeitado).
+> 4. C1 + C2 podem fechar na mesma sessão se OpenClaw entregar tests em paralelo via Telegram.
+> 
+> **Esta sessão (atual) fecha com:**
+> 1. /handoff selando Seal A + B + audit C (v6.11.1 já está selado em mesh + push; só falta consolidar audit).
+> 2. Audit como observation node `otd-canvas-pipeline-001-registered-2026-05-28` (RPN 225) + DERIVES_FROM → v611.1 handoff.
+> 3. Atualizar HANDOFF.md com seção "C audit findings" referenciando o plan file.
+> 4. Memory entry sobre o pattern OpenClaw delegation (para Claude Code futuro reusar).
+> 5. Push final + branch pronta para próxima sessão.
+> 
+> ```
+
+## 🤖 Claude *(01:47:18)*
+
+
+## 🤖 Claude *(01:47:18)*
+
+Plano aprovado. Vou executar os 5 fechamentos desta sessão.
+
+## 🤖 Claude *(01:47:20)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "C-audit: Insert OTD-CANVAS-PIPELINE-001 mesh artifacts",
+  "description": "Insert observation node otd-canvas-pipeline-001-registered + DERIVES_FROM edge \u2192 v6.11.1 handoff + infra_health_logs pulse otd_canvas_pipeline_001_registered. Autoembed cascade verification.",
+  "activeForm": "Inserting OTD-CANVAS-PIPELINE-001 mesh artifacts"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #15 created successfully: C-audit: Insert OTD-CANVAS-PIPELINE-001 mesh artifacts
+> ```
+
+## 🤖 Claude *(01:47:22)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "C-audit: Update HANDOFF.md with C audit findings section",
+  "description": "Add audit closure section to HANDOFF.md referencing plan file, OTD registration, 5 structural problems mapped, next session entry point (Telegram meta-prompt template).",
+  "activeForm": "Updating HANDOFF.md with C audit findings"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #16 created successfully: C-audit: Update HANDOFF.md with C audit findings section
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Updated task #15 status
+> ```
+
+## 🤖 Claude *(01:47:24)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "C-audit: Write memory entry for OpenClaw delegation pattern",
+  "description": "Save user-memory at .claude/projects/.../memory/ documenting the Claude Code coordinator + OpenClaw engineer parallelization pattern, with Telegram meta-prompt template reference. Update MEMORY.md index.",
+  "activeForm": "Writing OpenClaw delegation pattern memory"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #17 created successfully: C-audit: Write memory entry for OpenClaw delegation pattern
+> ```
+
+## 🤖 Claude *(01:47:26)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "C-audit: Commit + push session closure",
+  "description": "Granular commits for audit closure (HANDOFF update + memory + plan file reference). Phase 5c audit dry-run (no seal, just verify integrity). Push to origin.",
+  "activeForm": "Committing + pushing session closure"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #18 created successfully: C-audit: Commit + push session closure
+> ```
+
+## 🤖 Claude *(01:47:27)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "15",
+  "status": "in_progress"
+}
+```
+
+## 🤖 Claude *(01:47:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source /home/gcrUX/htdocs/constellation-orchestra/.env; set +a\n\necho \"=== Insert observation node OTD-CANVAS-PIPELINE-001 registered ===\"\nOBS_PAYLOAD=$(cat <<'JSON'\n{\n  \"name\": \"otd-canvas-pipeline-001-registered-2026-05-28\",\n  \"node_type\": \"observation\",\n  \"content\": \"OTD-CANVAS-PIPELINE-001 registered (RPN ~225, Severity 9 \u00d7 Occurrence 5 \u00d7 Detection 5). Audit during sessao v6.11.1 (apos selo Seal B) revelou 5 problemas estruturais no Canvas Studio Phase 4.2 que invalidariam paid smoke C5 original: (1) edges sem handles semanticos - sourceHandle/targetHandle null em 100% das 23 edges do projeto Mood Board 880b5eba; (2) sem DAG runner client-side - handleRunAll ad-hoc, nao topological; (3) sem wiring output\u2192input - findUpstreamImage naive sem port routing; (4) asset lineage perdido - vm_canvas_assets sem node_id/input_asset_id, vm_canvas_executions sem input_asset_url persist; (5) tier whitelist permissive - ENABLED_VIDEO_MODELS aceita dop-lite/turbo apesar do SOP Phase 4.2c restringir a dop-standard-5s only. Investigacao via 3 Explore agents paralelos (frontend Canvas, backend canvas-execute, Visual Orchestrator pattern reuse) + 1 Plan agent para design 5 sub-seals C1-C5. Plan persistido em /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md. Refactor obrigatorio ANTES de C5 paid smoke (burn 125 mcoCoins sem fix = desperdicio). Estimativa total revisada 6.5h (era 12h) via paralelizacao OpenClaw + Ollama local + Google API fallback. Meta-prompt Telegram template documentado para proxima sessao iniciar com OpenClaw prep paralelo a Claude Code. Bloqueante para Phase Commercial revenue via Canvas-generated content.\",\n  \"stability_score\": 0.9,\n  \"user_id\": null,\n  \"metadata\": {\n    \"otd_id\": \"OTD-CANVAS-PIPELINE-001\",\n    \"rpn\": 225,\n    \"severity\": 9,\n    \"occurrence\": 5,\n    \"detection\": 5,\n    \"status\": \"registered\",\n    \"discovered_in_seal\": \"v6.11.1\",\n    \"audit_session\": \"2026-05-28-canvas-pipeline-audit\",\n    \"plan_file\": \"/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md\",\n    \"blast_radius\": \"Canvas Studio Phase 4.2 + Phase Commercial revenue\",\n    \"estimated_resolution\": \"5 sub-seals C1-C5 over 3 sessions, ~6.5h total\"\n  }\n}\nJSON\n)\nOBS_RES=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"$OBS_PAYLOAD\")\nOBS_ID=$(echo \"$OBS_RES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else 'ERR:'+str(d))\")\necho \"OBS_NODE=$OBS_ID\"\n\necho \"\"\necho \"=== DERIVES_FROM edge: OTD observation \u2192 v6.11.1 handoff ===\"\nDERIVES=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_edges\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\\\"source_id\\\":\\\"${OBS_ID}\\\",\\\"target_id\\\":\\\"06a7e361-6ee3-4f95-9f65-1093abee8645\\\",\\\"relation_type\\\":\\\"DERIVES_FROM\\\",\\\"weight\\\":1.0,\\\"user_id\\\":null}\")\necho \"DERIVES_EDGE: $(echo \"$DERIVES\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else d)\")\"\n\necho \"\"\necho \"=== infra_health_logs telemetry ===\"\nPULSE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/infra_health_logs\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d '{\"service\":\"otd_canvas_pipeline_001_registered\",\"status\":\"healthy\"}')\necho \"PULSE: $(echo \"$PULSE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else d)\")\"\n\necho \"\"\necho \"=== Verify autoembed cascade on observation (wait 8s) ===\"\nsleep 8\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${OBS_ID}&select=id,embedding\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0]; print(f'embedded_768d: {n[\\\"embedding\\\"] is not None}')\"",
+  "description": "Insert OTD-CANVAS-PIPELINE-001 mesh artifacts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Insert observation node OTD-CANVAS-PIPELINE-001 registered ===
+> OBS_NODE=dc899250-227a-4406-b45f-ced11d272bdd
+> 
+> === DERIVES_FROM edge: OTD observation → v6.11.1 handoff ===
+> DERIVES_EDGE: e83565ad-80b9-4771-9c03-a8679d4223f3
+> 
+> === infra_health_logs telemetry ===
+> PULSE: 8ee06419-ebdb-4a0d-85d5-25c6ae18d94a
+> 
+> === Verify autoembed cascade on observation (wait 8s) ===
+> embedded_768d: True
+> ```
+
+## 🤖 Claude *(01:48:14)*
+
+Mesh artifacts criados. Vou update HANDOFF.md com seção C audit findings.
+
+## 🤖 Claude *(01:48:15)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "15",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #15 status
+> ```
+
+## 🤖 Claude *(01:48:15)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "16",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #16 status
+> ```
+
+## 🤖 Claude *(01:48:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/bold-visvesvaraya-4a95b9/HANDOFF.md",
+  "old_string": "## Task State\n\n## Per-User API Tenancy OE661 Closure (Seal B v6.11.1) Record (2026-05-28)",
+  "new_string": "## Task State\n\n## Canvas Pipeline Audit + Plan Revision (post-Seal B) Record (2026-05-28)\n\n**Sess\u00e3o N\u00c3O sealada (audit-only, zero c\u00f3digo)** \u2014 investiga\u00e7\u00e3o disparada por feedback Sovereign ap\u00f3s Seal B v6.11.1 (\"nos n\u00e3o est\u00e3o se correlacionando de verdade, apesar de estarem conectados no canvas as imagens nao estao gerando um video legal\"). Audit conduzido em 3 frentes paralelas via Explore agents (frontend Canvas Studio, backend canvas-execute, padr\u00e3o Visual Orchestrator reuse) + 1 Plan agent para design de refactor. Resultado: **5 problemas estruturais** + **nova OTD registrada** + **plan revisado** + **modelo operacional OpenClaw documentado** para pr\u00f3ximas sess\u00f5es.\n\n**ORO triplet (Lei 4):** Operator = MCORCH Master Execution Agent (eu) + 3 Explore agents + 1 Plan agent; Reviewer = Sovereign (revisou plano + decidiu phased C1-C5); Owner = Sovereign \u2014 blast radius = Canvas Studio Phase 4.2 + Phase Commercial revenue via Canvas-generated content.\n\n### Achados estruturais \u2014 5 problemas\n\n| # | Problema | Localiza\u00e7\u00e3o | Impacto |\n|---|----------|-------------|---------|\n| 1 | Edges sem handles sem\u00e2nticos | `useCanvasStore.onConnect():86-92` + Handle JSX em `nodes/*.tsx` sem `id` prop | Imposs\u00edvel rotear inputs em sceneCompose (multi-port). 23/23 edges null no projeto Mood Board. |\n| 2 | Sem DAG runner client-side | `CanvasEditorPage.handleRunAll():394` \u00e9 scheduler ad-hoc; Visual Orchestrator runPipeline N\u00c3O reutiliz\u00e1vel (delega tudo a backend single-call) | Pipeline n\u00e3o respeita depend\u00eancias topol\u00f3gicas; branches paralelas executam serial. |\n| 3 | Sem wiring output\u2192input | `findUpstreamImage()` em `canvas-utils.ts:28-43` naive (primeiro upstream), sem port routing | Output de uma execu\u00e7\u00e3o n\u00e3o vai pra body da pr\u00f3xima; cada n\u00f3 executa em isolamento. |\n| 4 | Asset lineage perdido | `vm_canvas_assets` sem `node_id`/`input_asset_id`; `vm_canvas_executions` sem `input_asset_url` persist | Imposs\u00edvel debugar \"qual imagem gerou esse v\u00eddeo\". 8/8 execu\u00e7\u00f5es recentes com `input_asset_id: null`. |\n| 5 | Tier whitelist permissive | `ImageToVideoInspector.ENABLED_VIDEO_MODELS:53-59` aceita 5 tiers; backend ALLOWED_VIDEO_MODELS idem | Execu\u00e7\u00e3o real 87654829 rodou `model: dop-lite` apesar do SOP Phase 4.2c restringir a `dop-standard-5s` only. |\n\n**Plus achados positivos (REUSE):** `useCanvasExecute()` j\u00e1 envia input_asset_url quando dispon\u00edvel; `resolveExecutePayload()` mapeia camelCase\u2192snake_case corretamente (sem mismatch real); `pickNodeImage()` extrai output upstream; Visual Orchestrator status enum + sync useEffect = reusable.\n\n### Nova OTD registrada\n\n**OTD-CANVAS-PIPELINE-001** (RPN ~225 = Severity 9 \u00d7 Occurrence 5 \u00d7 Detection 5):\n- Bloqueante para C5 paid smoke + Phase Commercial revenue.\n- Estimativa de resolu\u00e7\u00e3o: 5 sub-seals C1-C5 over 3 sess\u00f5es, ~6.5h total via paraleliza\u00e7\u00e3o OpenClaw.\n- Plan persistido em `/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md` (SEAL C REVISADA section).\n\n### Mesh artifacts (Lei 1 material proof)\n\n| Artifact | UUID |\n|----------|------|\n| Observation node `otd-canvas-pipeline-001-registered-2026-05-28` | `dc899250-227a-4406-b45f-ced11d272bdd` (autoembed 768d via pg_net) |\n| DERIVES_FROM edge (observation \u2192 v6.11.1 handoff) | `e83565ad-80b9-4771-9c03-a8679d4223f3` |\n| infra_health_logs pulse `otd_canvas_pipeline_001_registered` | `8ee06419-ebdb-4a0d-85d5-25c6ae18d94a` (status=healthy) |\n\n### Pr\u00f3xima sess\u00e3o \u2014 modelo operacional\n\nEsta sess\u00e3o N\u00c3O selar\u00e1 uma vers\u00e3o nova (Seals A v6.11.0 + B v6.11.1 j\u00e1 consolidadas). Pr\u00f3xima sess\u00e3o come\u00e7a com:\n\n1. **Telegram \u2192 @claw_gcrux** dispara meta-prompt OpenClaw pr\u00e9-para\u00e7\u00e3o C1 (template em SEAL C REVISADA do plan file): cria branch `feature/canvas-pipeline-refactor-c1`, audit handles existentes, skeleton de backfill script, draft SOP `canvas-pipeline-architecture.md`. Resultado entregue em `.claude/proposals/openclaw-canvas-c1-prep-<date>.md`.\n\n2. **Nova sess\u00e3o Claude Code** \u2014 `/handson` l\u00ea este HANDOFF + proposal do OpenClaw + come\u00e7a direto pelo refactor central (Handle components + onConnect lock).\n\n3. **Paraleliza\u00e7\u00e3o durante sub-seal**: Claude Code coordena arquitetura cr\u00edtica; OpenClaw engineer (Ollama qwen3.5 local + Google API fallback) executa tests/scripts/SOPs paralelamente. Ver memory `[[feedback_openclaw_delegation_pattern]]` para detalhes.\n\n### Survival Laws Self-audit (audit session)\n\n```\n### Law 1 (Materiality)\n- [x] Toda claim de finding tem REST query, file:line, ou code snippet? SIM \u2014 3 Explore agents trouxeram diagnostic com paths exatos\n- [x] Houve \"C\u00e9rebro sem m\u00e3os\" disclosure? N\u00c3O aplic\u00e1vel \u2014 audit \u00e9 read-only por design\n- [N/A] Fase 5c gate \u2014 n\u00e3o selo nessa sess\u00e3o; verifica\u00e7\u00e3o s\u00f3 na sess\u00e3o de implementa\u00e7\u00e3o\n\n### Law 2 (Process)\n- [x] Plan revis\u00e3o antes de qualquer c\u00f3digo (Lei 2 em meta-n\u00edvel) \u2014 3 Explore agents \u2192 1 Plan agent \u2192 Sovereign aprovou phased\n- [x] SOP-first ser\u00e1 aplicado em C1-C4 (cada um tem SOP no plan)\n\n### Law 3 (Pruning)\n- [x] Plan limitado \u00e0s \u00e1reas tocadas (Canvas Studio); D e E preservadas intactas\n- [x] Estimativas paralelizadas reduziram 50% das Cs (12h \u2192 6.5h)\n\n### Law 4 (ORO)\n- [x] Triplet declarado no header desta se\u00e7\u00e3o\n```\n\n---\n\n## Per-User API Tenancy OE661 Closure (Seal B v6.11.1) Record (2026-05-28)"
+}
+```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Updated task #17 status
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/bold-visvesvaraya-4a95b9/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:48:59)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "16",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #16 status
+> ```
+
+## 🤖 Claude *(01:48:59)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "17",
+  "status": "in_progress"
+}
+```
+
+## 🤖 Claude *(01:49:05)*
+
+
+## 🤖 Claude *(01:49:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_openclaw_delegation_pattern.md",
+  "content": "---\nname: openclaw-delegation-pattern\ndescription: Para tarefas de implementa\u00e7\u00e3o multi-arquivo (sub-seals C1-C5 do Canvas Pipeline, ou qualquer refactor com testes + scripts + SOPs paralelos), delegar tarefas low-risk pro OpenClaw via Telegram em paralelo com Claude Code coordenando arquitetura cr\u00edtica. Reduz ~50% do tempo total da seal.\nmetadata:\n  type: feedback\n---\n\n**Diretiva Sovereign (2026-05-28):** Quando uma seal tem componentes paraleliz\u00e1veis (testes Vitest, scripts dry-run, migrations via aios-sql-bridge, SOPs markdown), delegar pro OpenClaw via Telegram `@claw_gcrux` enquanto Claude Code (eu) coordena refactors centrais com lock list. N\u00e3o estimar tempo como se eu fizesse tudo sozinho \u2014 sempre considerar paraleliza\u00e7\u00e3o dispon\u00edvel.\n\n**Why:** Sovereign rejeitou estimativa Cs 12h pq \"temos uma infra estrutura que criamos com o openclaw, logo temos tambem ollama local rodando e api da google de fallback no openclaw que podemos usar tambem caso um problema ou sessao demore muito para ser finalizada com sucesso.\" Infraestrutura existe (Gateway PM2 maestro, engineer qwen3.5 Ollama local com tools nativa, 6 outros agents llama3.1:8b, fallback Google Gemini, Telegram bridge), est\u00e1 subutilizada. Subestimar Ollama local = desperd\u00edcio de capacidade j\u00e1 paga + sess\u00f5es mais longas.\n\n**How to apply:**\n\n1. **Antes de propor estimativa de seal/sub-seal**: identificar tarefas paraleliz\u00e1veis low-risk (testes a partir de spec, scripts dry-run, migrations, SOPs puros, audits/greps cross-cutting). Atribuir 30-50% redu\u00e7\u00e3o de tempo se h\u00e1 paraleliza\u00e7\u00e3o real.\n\n2. **Durante plan mode**: declarar \"lock list\" (arquivos que eu vou tocar) e \"delegable list\" (arquivos/tarefas que OpenClaw pode fazer) por sub-seal. Coordena\u00e7\u00e3o via PR-style markdown em `.claude/proposals/openclaw-<topic>-<date>.md` que eu reviso antes de mergear.\n\n3. **Meta-prompt Telegram para iniciar sess\u00e3o**: Sovereign pode disparar OpenClaw via @claw_gcrux ANTES de abrir nova sess\u00e3o Claude Code com tasks de prep (branch creation, audit, skeleton de scripts, draft de SOP). Quando Claude Code abre, /handson l\u00ea o proposal markdown + economiza tempo de exploration/scaffold. Template completo em `/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md` (se\u00e7\u00e3o \"Meta-Prompt Template para Pr\u00f3xima Sess\u00e3o\").\n\n4. **Quando N\u00c3O delegar** (mant\u00e9m em Claude Code):\n   - Migrations complexas com dependency em c\u00f3digo j\u00e1 existente.\n   - Edge function deploys (precisam de aprova\u00e7\u00e3o Sovereign).\n   - Decis\u00f5es de schema (refletem em m\u00faltiplos consumers downstream).\n   - Refactors em arquivo j\u00e1 em conflito merge ou WIP.\n\n5. **Fallback path se Ollama local trava ou demora**: OpenClaw j\u00e1 tem Google API Gemini configurado como fallback \u2014 n\u00e3o bloqueia sess\u00e3o. Documentar no proposal markdown qual provider foi usado por tarefa para audit posterior.\n\n6. **Coordenador vs executor**: eu (Claude Code) sou coordenador + arquiteto cr\u00edtico (decis\u00f5es de design, refactors cross-cutting, material proofs via REST, HANDOFF + Phase 5c + push). OpenClaw engineer (Ollama local) \u00e9 executor paralelo low-risk. N\u00e3o inverter roles \u2014 OpenClaw N\u00c3O deve tomar decis\u00f5es arquiteturais sem aprova\u00e7\u00e3o Claude Code/Sovereign.\n\n**Related memories:**\n- `[[project_openclaw_ollama_integration]]` \u2014 infra setup (Gateway PM2 maestro, engineer\u2192qwen3.5, fallback Gemini)\n- `[[project_v631_openclaw_neural_bridge_seal]]` \u2014 Pantheon architecture (7 agents)\n- `[[project_aios_devkit_seal]]` \u2014 AIOS dev workflow 4Cs (Cadence layer)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_openclaw_delegation_pattern.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:49:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 6 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	# Memory Index
+> 2	
+> 3	- [OpenClaw × Ollama — Integração & Gateway](project_openclaw_ollama_integration.md) — Gateway = app PM2 `maestro`; recarregar config com `pm2 restart maestro` (NUNCA `openclaw gateway restart` — desgarra órfão → crash-loop); engineer→qwen3.5, 6 outros→llama3.1:8b (agente PRECISA de modelo com `tools`), fallback Gemini
+> 4	- [API Tenancy Model — credenciais sempre per-user](feedback_api_tenancy_per_user.md) — Diretiva Sovereign 2026-05-19: toda nova integração com API externa MUST resolver credenciais via tabela per-user (auth.uid()) antes de env global. Bloqueante para Phase Commercial multi-tenant.
+> 5	- [Paz e Vitalidade — métrica de sucesso da Constelação](feedback_paz_e_vitalidade.md) — Diretiva Sovereign 2026-05-17: análise estratégica (REM Cycle) deve considerar vitalidade do Sovereign + paz humana como métricas, não só ARR. Bullets 🧘 no briefing.
+> 6	- [OpenClaw Neural Bridge + Departmental Army Seal (v6.3.1)](project_v631_openclaw_neural_bridge_seal.md) — Two-tier bridge (375 strategy + 2527 AST), 9185 chunks across 6 agentes, cron pipeline triplo (02:30/03:00/03:30), Telegram briefing entregue (msg 201), `pnpm` no repo é destrutivo
+> 7	- [AIOS Dev Workflow 4Cs Seal (v5.3.0)](project_aios_devkit_seal.md) — Context+Connections+Capabilities+Cadence layers, 6 skills, GitHub MCP, Stop hook, sprint-aware handson/handoff
+> 8	- [Phase Zeta Social Consciousness + Core v3 Seal](project_phase_zeta_seal.md) — aios_conversations cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 nós embedded, 14 testes
+> 9	- [Phase Epsilon V8 + Delta V4 Seal](project_epsilon_v8_delta_v4_seal.md) — CALLS counter tooltip (→N/←M), two-pass cross-file ingestion +259 edges, Usuário Zero 5003 coins
+> 10	- [Phase Epsilon V7 Seal](project_epsilon_v7_seal.md) — ownership tooltip badge, territory legend pills, CALLS edge glow, Delta v3b +110 edges
+> ```
+
+## 🤖 Claude *(01:50:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [OpenClaw \u00d7 Ollama \u2014 Integra\u00e7\u00e3o & Gateway](project_openclaw_ollama_integration.md) \u2014 Gateway = app PM2 `maestro`; recarregar config com `pm2 restart maestro` (NUNCA `openclaw gateway restart` \u2014 desgarra \u00f3rf\u00e3o \u2192 crash-loop); engineer\u2192qwen3.5, 6 outros\u2192llama3.1:8b (agente PRECISA de modelo com `tools`), fallback Gemini",
+  "new_string": "# Memory Index\n\n- [OpenClaw delegation \u2014 paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) \u2014 Diretiva Sovereign 2026-05-28: tarefas low-risk (tests, scripts dry-run, migrations, SOPs puros) delegar pro OpenClaw via Telegram em paralelo com Claude Code coordenando arquitetura. Reduz ~50% tempo total da seal. Meta-prompt Telegram template no plan file.\n- [OpenClaw \u00d7 Ollama \u2014 Integra\u00e7\u00e3o & Gateway](project_openclaw_ollama_integration.md) \u2014 Gateway = app PM2 `maestro`; recarregar config com `pm2 restart maestro` (NUNCA `openclaw gateway restart` \u2014 desgarra \u00f3rf\u00e3o \u2192 crash-loop); engineer\u2192qwen3.5, 6 outros\u2192llama3.1:8b (agente PRECISA de modelo com `tools`), fallback Gemini"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "17",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #17 status
+> ```
+
+## 🤖 Claude *(01:50:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "18",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #18 status
+> ```
+
+## 🤖 Claude *(01:50:08)*
+
+
+## 🤖 Claude *(01:50:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short && echo \"---\" && git diff --stat",
+  "description": "Verify git state for audit closure commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M HANDOFF.md
+> ---
+>  HANDOFF.md | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 65 insertions(+)
+> ```
+
+## 🤖 Claude *(01:50:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/run-audit.ts 2>&1 | tail -10",
+  "description": "Phase 5c dry-run on audit-only HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> |-------|------|----------|--------|---------|
+> | mesh node dc899250 | mesh_node | dc899250-227a-4406-b45f-ced11d272bdd | unreachable | ⏭ |
+> | mesh edge e83565ad | mesh_edge | e83565ad-80b9-4771-9c03-a8679d4223f3 | unreachable | ⏭ |
+> | mesh node 8ee06419 | mesh_node | 8ee06419-ebdb-4a0d-85d5-25c6ae18d94a | unreachable | ⏭ |
+> | file /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md | file_exists | /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md | /home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu) + 3 Explore agents + 1 Plan agent; Reviewer  | Operator = MCORCH Master Execution Agent (eu) + 3 Explore agents + 1 Plan agent; Reviewer  | ✅ |
+> 
+> QA VERDICT: 2 verified · 3 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.0s)
+> ```
+
+## 🤖 Claude *(01:50:21)*
+
+**Phase 5c clean: 2 verified · 3 skipped · 0 failed.** Commit + push final.
+
+## 🤖 Claude *(01:50:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md && git commit -m \"$(cat <<'EOF'\ndocs(handoff): canvas pipeline audit + OTD-CANVAS-PIPELINE-001 registered\n\nAudit-only session (zero c\u00f3digo) disparado por feedback Sovereign p\u00f3s Seal B\nv6.11.1 sobre Canvas Studio Phase 4.2 n\u00e3o correlacionar nodes apesar das\nconex\u00f5es visuais. Investiga\u00e7\u00e3o em 3 frentes paralelas (Explore agents:\nfrontend Canvas, backend canvas-execute, padr\u00e3o Visual Orchestrator) + 1\nPlan agent revelou 5 problemas estruturais:\n\n1. Edges sem handles sem\u00e2nticos (sourceHandle/targetHandle null em 23/23\n   edges do projeto Mood Board 880b5eba).\n2. Sem DAG runner client-side (handleRunAll ad-hoc, Visual Orchestrator\n   runPipeline n\u00e3o reutiliz\u00e1vel \u2014 delega tudo a backend single-call).\n3. Sem wiring output\u2192input (findUpstreamImage naive, sem port routing).\n4. Asset lineage perdido (vm_canvas_assets sem node_id/input_asset_id;\n   vm_canvas_executions sem input_asset_url persist).\n5. Tier whitelist permissive (ENABLED_VIDEO_MODELS aceita 5 tiers vs\n   SOP Phase 4.2c restringe a dop-standard-5s).\n\nOTD-CANVAS-PIPELINE-001 registrada (RPN 225). Plan revisado em\n/home/ubuntu/.claude/plans/vamos-l-defina-a-rosy-truffle.md (SEAL C\nREVISADA com 5 sub-seals C1-C5). Estimativa total 6.5h (era 12h) via\nparaleliza\u00e7\u00e3o OpenClaw + Ollama local + Google API fallback. Meta-prompt\nTelegram template documentado para pr\u00f3xima sess\u00e3o.\n\nMesh artifacts:\n- observation node dc899250 (autoembed 768d)\n- DERIVES_FROM edge e83565ad (observation \u2192 v6.11.1 handoff 06a7e361)\n- infra_health_logs pulse 8ee06419 (otd_canvas_pipeline_001_registered)\n\nMemory entry feedback_openclaw_delegation_pattern registrada \u2014 diretiva\nSovereign sobre paralelizar seals via OpenClaw para reduzir ~50% do tempo.\n\nPhase 5c: 2 verified \u00b7 3 skipped \u00b7 0 failed \u2192 SEAL ALLOWED.\nSurvival Laws Self-audit 4/4 \u2713.\n\nPr\u00f3xima sess\u00e3o: Telegram \u2192 @claw_gcrux com meta-prompt C1 prep, ent\u00e3o\nnova Claude Code session /handson l\u00ea proposal + come\u00e7a C1 Foundation.\nEOF\n)\" && git log --oneline -3 && git push 2>&1 | tail -5",
+  "description": "Commit + push audit closure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [claude/bold-visvesvaraya-4a95b9 e007e05] docs(handoff): canvas pipeline audit + OTD-CANVAS-PIPELINE-001 registered
+>  1 file changed, 65 insertions(+)
+> e007e05 docs(handoff): canvas pipeline audit + OTD-CANVAS-PIPELINE-001 registered
+> 5127395 docs(handoff): seal v6.11.1 — per-user API tenancy OE661 closed (5d before SLA)
+> fd21a31 docs(claude): register _shared/auth + _shared/user-keys + 2 SOPs in Key Files
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    5127395..e007e05  claude/bold-visvesvaraya-4a95b9 -> claude/bold-visvesvaraya-4a95b9
+> ```
+
+## 🤖 Claude *(01:50:41)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "18",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #18 status
+> ```
+
+## 🤖 Claude *(01:50:59)*
+
+**SESSÃO FECHADA. Sumário executivo:**
+
+```
+═══════════════════════════════════════════════════════════
+  SESSÃO 2026-05-28 — 3 OUTPUTS CONSOLIDADOS
+═══════════════════════════════════════════════════════════
+
+✅ SEAL A v6.11.0 — Pipeline Async Auth Recovery
+   • OTD-V610-001 fechada (RPN 240)
+   • 7 commits · helper dual-format · 4 recipients refatorados
+   • Material proof: HTTP 404 → 401 (gateway aceita; helper rejeita)
+   • Pushed: d627b16
+
+✅ SEAL B v6.11.1 — Per-User API Tenancy OE661
+   • OTD-OE661-PER-USER fechada 5 dias antes do SLA (2026-06-02)
+   • 5 commits · helper resolveUserApiKeys · Higgsfield per-user
+   • Material proof: HTTP 302 Location /settings?no_config=1
+   • Pushed: 5127395
+
+✅ AUDIT C — Canvas Pipeline Refactor Plan
+   • OTD-CANVAS-PIPELINE-001 registrada (RPN 225)
+   • 5 problemas estruturais mapeados via 3 Explore + 1 Plan agents
+   • Plan revisado: SEAL C → 5 sub-seals C1-C5
+   • Estimativa: 12h → 6.5h via paralelização OpenClaw (–50%)
+   • Meta-prompt Telegram template para próxima sessão
+   • Pushed: e007e05
+
+🧠 MESH ARTIFACTS DESTA SESSÃO
+   3 handoff nodes + 4 observation nodes + 5 edges + 3 telemetry
+   pulses, todos autoembed 768d via pg_net trigger.
+
+📝 MEMORY ATUALIZADA
+   feedback_openclaw_delegation_pattern.md — diretiva paralelização
+
+═══════════════════════════════════════════════════════════
+  PRÓXIMA SESSÃO (quando você quiser):
+  1. Telegram @claw_gcrux dispara meta-prompt C1 prep
+     (template em /home/ubuntu/.claude/plans/vamos-l-defina-...md)
+  2. Quando OpenClaw entregar .claude/proposals/openclaw-canvas-c1-prep-*.md,
+     abrir nova Claude Code session
+  3. Eu /handson lê HANDOFF + proposal → começa C1 Foundation direto
+  4. C1 + C2 podem fechar na mesma sessão se OpenClaw entrega tests
+     em paralelo (~4h vs 8h sequencial)
+
+  Branch: claude/bold-visvesvaraya-4a95b9 (sincronizada com origin)
+═══════════════════════════════════════════════════════════
+```
+
+Tudo selado e pushado. Boa noite (ou madrugada — são 22h+ BRT). 🌙
