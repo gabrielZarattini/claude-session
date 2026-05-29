@@ -8357,3 +8357,542 @@ Todos `success` · **27 créditos Higgsfield** (dos ~48-80 autorizados) · 375 m
 **1 follow-up anotado** (OTD-CONS-004): caminho gpt-image-1 `/edits` + `input_fidelity:high` ficou deferido (Nano Banana já cobre o caso de uso; gpt-image-1 não é o default).
 
 Estou pronto pra **selar via `/handoff`** (commits granulares + HANDOFF + nó na malha + merge→main + build pra publicar o painel). Confirma que sigo?
+
+## 👤 User *(19:06:33)*
+
+antes de que fazer o handoff preciso que alem do /dashboard/affiliate-products você verifique quais outras paginas não estão listada no menu principal e preciso tambem que você reorganizar criando submenus pois esta com muitas opções e não sei se tem necessidade de ter barra de rolagem por causa da quantidade ainda acredito que de para organizar em menus e submenus por enquant.
+
+## 🤖 Claude *(19:06:44)*
+
+
+## 🤖 Claude *(19:06:46)*
+
+Boa — antes de selar, vou auditar rotas órfãs (páginas sem entrada no menu) e redesenhar a sidebar com submenus pra eliminar a rolagem. Primeiro preciso do mapa completo: todas as rotas do dashboard vs. tudo que está na sidebar hoje.
+
+## 🤖 Claude *(19:06:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5\necho \"=== ALL dashboard routes (App.tsx) ===\"\ngrep -nE '<Route path=' src/App.tsx | sed 's/^[0-9]*://' | grep -vE 'auth|index|\\*|privacy|terms|onboarding' | head -60",
+  "description": "List all dashboard routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ALL dashboard routes (App.tsx) ===
+>               <Route path="/" element={<Landing />} />
+>                 <Route path="constellation" element={<ConstellationPage />} />
+>                 <Route path="constellation/memory" element={<MemoryPage />} />
+>                 <Route path="constellation/matrix" element={<MatrixPage />} />
+>                 <Route path="campaigns" element={<CampaignsPage />} />
+>                 <Route path="campaigns/new" element={<CampaignWizard />} />
+>                 <Route path="campaigns/:id" element={<CampaignDetail />} />
+>                 <Route path="content" element={<ContentLibraryPage />} />
+>                 <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+>                 <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+>                 <Route path="calendar" element={<CalendarPage />} />
+>                 <Route path="social" element={<SocialAccountsPage />} />
+>                 <Route path="analytics" element={<AnalyticsPage />} />
+>                 <Route path="blog" element={<BlogEditorPage />} />
+>                 <Route path="admin" element={<AdminPage />} />
+>                 <Route path="orchestration" element={<OrchestrationPage />} />
+>                 <Route path="affiliates" element={<AffiliatesPage />} />
+>                 <Route path="affiliate-products" element={<AffiliateProductsPage />} />
+>                 <Route path="arena" element={<ModelArenaPage />} />
+>                 <Route path="core" element={<Navigate to="/dashboard/core-v2" replace />} />
+>                 <Route path="core-v2" element={<CoreV2Page />} />
+>                 <Route path="settings" element={<SettingsPage />} />
+>                 <Route path="billing" element={<BillingPage />} />
+>                 <Route path="miner" element={<ViralMinerPage />} />
+>                 <Route path="canvas" element={<CanvasStudioPage />} />
+>                 <Route path="canvas/design" element={<CanvasDesignPage />} />
+>                 <Route path="canvas/:id" element={<CanvasEditorPage />} />
+>                 <Route path="agent-economics" element={<AgentEconomicsPage />} />
+>               <Route path="/social/callback" element={<SocialCallback />} />
+>               <Route path="/reset-password" element={<ResetPassword />} />
+> ```
+
+## 🤖 Claude *(19:06:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 46,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 46	import { Button } from '@/components/ui/button';
+> 47	
+> 48	const mainItems = [
+> 49	  { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
+> 50	  { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> 51	  { title: 'Conteúdo', url: '/dashboard/content', icon: FileText },
+> 52	  { title: 'Calendário', url: '/dashboard/calendar', icon: Calendar },
+> 53	  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+> 54	  { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },
+> 55	  { title: 'Orquestração', url: '/dashboard/orchestration', icon: Wand2 },
+> 56	  { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },
+> 57	  { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },
+> 58	  { title: 'Viral Miner', url: '/dashboard/miner', icon: TrendingUp },
+> 59	  { title: 'AI Arena', url: '/dashboard/arena', icon: Cpu },
+> 60	  { title: 'Core', url: '/dashboard/core-v2', icon: Brain },
+> 61	];
+> 62	
+> 63	const systemItems = [
+> 64	  { title: 'Redes Sociais', url: '/dashboard/social', icon: Users },
+> 65	  { title: 'Notificações', url: '/dashboard/notifications', icon: Bell },
+> 66	  { title: 'Assinatura', url: '/dashboard/billing', icon: CreditCard },
+> 67	  { title: 'Configurações', url: '/dashboard/settings', icon: Settings },
+> 68	];
+> 69	
+> 70	export function DashboardSidebar() {
+> 71	  const { state } = useSidebar();
+> 72	  const collapsed = state === 'collapsed';
+> 73	  const { signOut } = useAuth();
+> 74	  const navigate = useNavigate();
+> 75	  const location = useLocation();
+> 76	  const { isAdmin } = useIsAdmin();
+> 77	
+> 78	  const isConstellationActive = location.pathname.includes('/constellation');
+> 79	  const isCanvasActive = location.pathname.includes('/canvas');
+> 80	
+> 81	  const handleSignOut = async () => {
+> 82	    await signOut();
+> 83	    navigate('/');
+> 84	  };
+> 85	
+> 86	  return (
+> 87	    <Sidebar collapsible="icon">
+> 88	      <SidebarContent>
+> 89	        {/* Brand */}
+> 90	        <div className="p-4 flex items-center gap-2">
+> 91	          <Sparkles className="h-6 w-6 text-primary shrink-0" />
+> 92	          {!collapsed && (
+> 93	            <span className="font-heading font-bold text-lg text-foreground truncate">
+> 94	              Magic Constellation
+> 95	            </span>
+> 96	          )}
+> 97	        </div>
+> 98	
+> 99	        <SidebarGroup>
+> 100	          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+> 101	          <SidebarGroupContent>
+> 102	            <SidebarMenu>
+> 103	              {/* Constelação — collapsible with Matrix + Memória sub-items */}
+> 104	              <Collapsible defaultOpen={isConstellationActive}>
+> 105	                <SidebarMenuItem>
+> 106	                  <div className="flex items-center">
+> 107	                    <SidebarMenuButton asChild className="flex-1">
+> 108	                      <NavLink
+> 109	                        to="/dashboard/constellation"
+> 110	                        end
+> 111	                        className="hover:bg-muted/50"
+> 112	                        activeClassName="bg-primary/10 text-primary font-medium"
+> 113	                      >
+> 114	                        <Orbit className="mr-2 h-4 w-4 shrink-0" />
+> 115	                        {!collapsed && <span>Constelação</span>}
+> 116	                      </NavLink>
+> 117	                    </SidebarMenuButton>
+> 118	                    {!collapsed && (
+> 119	                      <CollapsibleTrigger asChild>
+> 120	                        <Button
+> 121	                          variant="ghost"
+> 122	                          size="icon"
+> 123	                          className="h-6 w-6 ml-auto shrink-0 [&[data-state=open]>svg]:rotate-180"
+> 124	                        >
+> 125	                          <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
+> 126	                        </Button>
+> 127	                      </CollapsibleTrigger>
+> 128	                    )}
+> 129	                  </div>
+> 130	                  {!collapsed && (
+> 131	                    <CollapsibleContent>
+> 132	                      <SidebarMenuSub>
+> 133	                        <SidebarMenuSubItem>
+> 134	                          <SidebarMenuSubButton asChild>
+> 135	                            <NavLink
+> 136	                              to="/dashboard/constellation/matrix"
+> 137	                              className="hover:bg-muted/50"
+> 138	                              activeClassName="text-primary font-medium"
+> 139	                            >
+> 140	                              <Network className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 141	                              <span>Matrix</span>
+> 142	                            </NavLink>
+> 143	                          </SidebarMenuSubButton>
+> 144	                        </SidebarMenuSubItem>
+> 145	                        <SidebarMenuSubItem>
+> ```
+
+## 🤖 Claude *(19:06:54)*
+
+
+## 🤖 Claude *(19:06:55)*
+
+Vou ler o resto da sidebar (Canvas collapsible, systemItems, admin, footer) pra entender a estrutura completa antes de redesenhar:
+
+## 🤖 Claude *(19:07:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 145,
+  "limit": 160
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 145	                        <SidebarMenuSubItem>
+> 146	                          <SidebarMenuSubButton asChild>
+> 147	                            <NavLink
+> 148	                              to="/dashboard/constellation/memory"
+> 149	                              className="hover:bg-muted/50"
+> 150	                              activeClassName="text-primary font-medium"
+> 151	                            >
+> 152	                              <Brain className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 153	                              <span>Memória</span>
+> 154	                            </NavLink>
+> 155	                          </SidebarMenuSubButton>
+> 156	                        </SidebarMenuSubItem>
+> 157	                      </SidebarMenuSub>
+> 158	                    </CollapsibleContent>
+> 159	                  )}
+> 160	                </SidebarMenuItem>
+> 161	              </Collapsible>
+> 162	
+> 163	              {/* Canvas Studio — collapsible with Studio + Design sub-items */}
+> 164	              <Collapsible defaultOpen={isCanvasActive}>
+> 165	                <SidebarMenuItem>
+> 166	                  <div className="flex items-center">
+> 167	                    <SidebarMenuButton asChild className="flex-1">
+> 168	                      <NavLink
+> 169	                        to="/dashboard/canvas"
+> 170	                        end
+> 171	                        className="hover:bg-muted/50"
+> 172	                        activeClassName="bg-primary/10 text-primary font-medium"
+> 173	                      >
+> 174	                        <Palette className="mr-2 h-4 w-4 shrink-0" />
+> 175	                        {!collapsed && <span>Canvas Studio</span>}
+> 176	                      </NavLink>
+> 177	                    </SidebarMenuButton>
+> 178	                    {!collapsed && (
+> 179	                      <CollapsibleTrigger asChild>
+> 180	                        <Button
+> 181	                          variant="ghost"
+> 182	                          size="icon"
+> 183	                          className="h-6 w-6 ml-auto shrink-0 [&[data-state=open]>svg]:rotate-180"
+> 184	                        >
+> 185	                          <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
+> 186	                        </Button>
+> 187	                      </CollapsibleTrigger>
+> 188	                    )}
+> 189	                  </div>
+> 190	                  {!collapsed && (
+> 191	                    <CollapsibleContent>
+> 192	                      <SidebarMenuSub>
+> 193	                        <SidebarMenuSubItem>
+> 194	                          <SidebarMenuSubButton asChild>
+> 195	                            <NavLink
+> 196	                              to="/dashboard/canvas"
+> 197	                              end
+> 198	                              className="hover:bg-muted/50"
+> 199	                              activeClassName="text-primary font-medium"
+> 200	                            >
+> 201	                              <Palette className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 202	                              <span>Studio</span>
+> 203	                            </NavLink>
+> 204	                          </SidebarMenuSubButton>
+> 205	                        </SidebarMenuSubItem>
+> 206	                        <SidebarMenuSubItem>
+> 207	                          <SidebarMenuSubButton asChild>
+> 208	                            <NavLink
+> 209	                              to="/dashboard/canvas/design"
+> 210	                              className="hover:bg-muted/50"
+> 211	                              activeClassName="text-primary font-medium"
+> 212	                            >
+> 213	                              <Wand2 className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 214	                              <span>Design</span>
+> 215	                            </NavLink>
+> 216	                          </SidebarMenuSubButton>
+> 217	                        </SidebarMenuSubItem>
+> 218	                      </SidebarMenuSub>
+> 219	                    </CollapsibleContent>
+> 220	                  )}
+> 221	                </SidebarMenuItem>
+> 222	              </Collapsible>
+> 223	
+> 224	              {mainItems.map((item) => (
+> 225	                <SidebarMenuItem key={item.title}>
+> 226	                  <SidebarMenuButton asChild>
+> 227	                    <NavLink
+> 228	                      to={item.url}
+> 229	                      end={item.url === '/dashboard'}
+> 230	                      className="hover:bg-muted/50"
+> 231	                      activeClassName="bg-primary/10 text-primary font-medium"
+> 232	                    >
+> 233	                      <item.icon className="mr-2 h-4 w-4 shrink-0" />
+> 234	                      {!collapsed && <span>{item.title}</span>}
+> 235	                    </NavLink>
+> 236	                  </SidebarMenuButton>
+> 237	                </SidebarMenuItem>
+> 238	              ))}
+> 239	            </SidebarMenu>
+> 240	          </SidebarGroupContent>
+> 241	        </SidebarGroup>
+> 242	
+> 243	        <SidebarGroup>
+> 244	          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+> 245	          <SidebarGroupContent>
+> 246	            <SidebarMenu>
+> 247	              {systemItems.map((item) => (
+> 248	                <SidebarMenuItem key={item.title}>
+> 249	                  <SidebarMenuButton asChild>
+> 250	                    <NavLink
+> 251	                      to={item.url}
+> 252	                      className="hover:bg-muted/50"
+> 253	                      activeClassName="bg-primary/10 text-primary font-medium"
+> 254	                    >
+> 255	                      <item.icon className="mr-2 h-4 w-4 shrink-0" />
+> 256	                      {!collapsed && <span>{item.title}</span>}
+> 257	                    </NavLink>
+> 258	                  </SidebarMenuButton>
+> 259	                </SidebarMenuItem>
+> 260	              ))}
+> 261	            </SidebarMenu>
+> 262	          </SidebarGroupContent>
+> 263	        </SidebarGroup>
+> 264	
+> 265	        {isAdmin && (
+> 266	          <SidebarGroup>
+> 267	            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+> 268	            <SidebarGroupContent>
+> 269	              <SidebarMenu>
+> 270	                <SidebarMenuItem>
+> 271	                  <SidebarMenuButton asChild>
+> 272	                    <NavLink to="/dashboard/admin" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+> 273	                      <Shield className="mr-2 h-4 w-4 shrink-0" />
+> 274	                      {!collapsed && <span>Administração</span>}
+> 275	                    </NavLink>
+> 276	                  </SidebarMenuButton>
+> 277	                </SidebarMenuItem>
+> 278	              </SidebarMenu>
+> 279	            </SidebarGroupContent>
+> 280	          </SidebarGroup>
+> 281	        )}
+> 282	      </SidebarContent>
+> 283	
+> 284	      <SidebarFooter>
+> 285	        <Button
+> 286	          variant="ghost"
+> 287	          size={collapsed ? 'icon' : 'default'}
+> 288	          className="w-full justify-start text-muted-foreground hover:text-destructive"
+> 289	          onClick={handleSignOut}
+> 290	        >
+> 291	          <LogOut className="h-4 w-4 shrink-0" />
+> 292	          {!collapsed && <span className="ml-2">Sair</span>}
+> 293	        </Button>
+> 294	      </SidebarFooter>
+> 295	    </Sidebar>
+> 296	  );
+> 297	}
+> 298	
+> ```
+
+## 🤖 Claude *(19:07:16)*
+
+
+## 🤖 Claude *(19:07:21)*
+
+Tenho a estrutura completa. Vou cruzar rotas × menu pra achar os órfãos com precisão — incluindo o caso inverso (item de menu sem rota, ex: "Notificações"):
+
+## 🤖 Claude *(19:07:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5\necho \"=== Is there a /notifications route? ===\"\ngrep -n \"notifications\\|Notifications\" src/App.tsx || echo \"\u274c NO route for /dashboard/notifications (menu item is dead link)\"\necho \"\"\necho \"=== Page files NOT referenced in App.tsx routes (deeper orphan scan) ===\"\nfor f in $(ls src/pages/*.tsx | xargs -n1 basename | sed 's/.tsx//'); do\n  grep -q \"$f\" src/App.tsx || echo \"  orphan page file: $f\"\ndone\necho \"\"\necho \"=== NotificationsPage exists? ===\"\nls src/pages/ | grep -i notif || echo \"  (no NotificationsPage file)\"",
+  "description": "Find orphan routes and dead menu links"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Is there a /notifications route? ===
+> ❌ NO route for /dashboard/notifications (menu item is dead link)
+> 
+> === Page files NOT referenced in App.tsx routes (deeper orphan scan) ===
+>   orphan page file: Index
+> 
+> === NotificationsPage exists? ===
+>   (no NotificationsPage file)
+> ```
+
+## 🤖 Claude *(19:08:52)*
+
+
+## 🤖 Claude *(19:08:57)*
+
+Cruzamento completo. **Achados:**
+- 🔴 **Órfão (página sem menu):** `/dashboard/agent-economics` (dashboard de Economia dos Agentes — CEA v6.10.0)
+- 🔴 **Link morto (menu sem rota/página):** "Notificações" → `/dashboard/notifications` não tem rota nem página
+- As demais (campaigns/new, content/video-editor/:id, canvas/:id, campaigns/:id) são páginas de detalhe acessadas por navegação interna — corretas fora do menu
+
+**Plano de reorganização** (submenus colapsáveis pra matar a rolagem): ~14 itens chapados → agrupados em categorias colapsáveis. Vou reescrever a `DashboardSidebar` com:
+- **Principal:** Visão Geral · Constelação ▸ · Canvas Studio ▸ (mantidos)
+- **Conteúdo & Campanhas ▸:** Campanhas · Orquestração · Conteúdo · Blog · Calendário
+- **Monetização ▸:** Produtos · Afiliados · Viral Miner · Analytics
+- **Inteligência IA ▸:** Core · AI Arena · Economia dos Agentes *(órfão resgatado)*
+- **Sistema:** Redes Sociais · Assinatura · Configurações *(Notificações removido)*
+- **Admin:** Administração
+
+## 🤖 Claude *(19:09:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5/src/components/dashboard/DashboardSidebar.tsx",
+  "content": "import {\n  LayoutDashboard,\n  BarChart3,\n  Megaphone,\n  FileText,\n  Calendar,\n  Settings,\n  CreditCard,\n  Users,\n  Sparkles,\n  Orbit,\n  LogOut,\n  BookOpen,\n  Shield,\n  Wand2,\n  ShoppingBag,\n  PackageSearch,\n  Network,\n  Brain,\n  ChevronDown,\n  Cpu,\n  TrendingUp,\n  Palette,\n  Layers,\n  Coins,\n  Bot,\n  LineChart,\n  type LucideIcon,\n} from 'lucide-react';\nimport { NavLink } from '@/components/NavLink';\nimport { useLocation, useNavigate } from 'react-router-dom';\nimport { useAuth } from '@/hooks/useAuth';\nimport { useIsAdmin } from '@/hooks/useAdminData';\nimport {\n  Sidebar,\n  SidebarContent,\n  SidebarGroup,\n  SidebarGroupContent,\n  SidebarGroupLabel,\n  SidebarMenu,\n  SidebarMenuButton,\n  SidebarMenuItem,\n  SidebarMenuSub,\n  SidebarMenuSubButton,\n  SidebarMenuSubItem,\n  SidebarFooter,\n  useSidebar,\n} from '@/components/ui/sidebar';\nimport { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';\nimport { Button } from '@/components/ui/button';\n\ninterface NavLeaf {\n  title: string;\n  url: string;\n  icon: LucideIcon;\n}\n\ninterface NavCategoryDef {\n  title: string;\n  icon: LucideIcon;\n  items: NavLeaf[];\n}\n\n// Grouped navigation \u2014 collapsible categories keep the rail short (no scrollbar).\nconst categories: NavCategoryDef[] = [\n  {\n    title: 'Conte\u00fado & Campanhas',\n    icon: Layers,\n    items: [\n      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },\n      { title: 'Orquestra\u00e7\u00e3o', url: '/dashboard/orchestration', icon: Wand2 },\n      { title: 'Conte\u00fado', url: '/dashboard/content', icon: FileText },\n      { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },\n      { title: 'Calend\u00e1rio', url: '/dashboard/calendar', icon: Calendar },\n    ],\n  },\n  {\n    title: 'Monetiza\u00e7\u00e3o',\n    icon: Coins,\n    items: [\n      { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },\n      { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },\n      { title: 'Viral Miner', url: '/dashboard/miner', icon: TrendingUp },\n      { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },\n    ],\n  },\n  {\n    title: 'Intelig\u00eancia IA',\n    icon: Bot,\n    items: [\n      { title: 'Core', url: '/dashboard/core-v2', icon: Brain },\n      { title: 'AI Arena', url: '/dashboard/arena', icon: Cpu },\n      { title: 'Economia dos Agentes', url: '/dashboard/agent-economics', icon: LineChart },\n    ],\n  },\n];\n\nconst systemItems: NavLeaf[] = [\n  { title: 'Redes Sociais', url: '/dashboard/social', icon: Users },\n  { title: 'Assinatura', url: '/dashboard/billing', icon: CreditCard },\n  { title: 'Configura\u00e7\u00f5es', url: '/dashboard/settings', icon: Settings },\n];\n\n/** Collapsible category whose trigger is a toggle (not a destination). */\nfunction NavCategory({ category }: { category: NavCategoryDef }) {\n  const location = useLocation();\n  const active = category.items.some(\n    (it) => location.pathname === it.url || location.pathname.startsWith(it.url + '/'),\n  );\n  return (\n    <Collapsible defaultOpen={active} className=\"group/collapsible\">\n      <SidebarMenuItem>\n        <CollapsibleTrigger asChild>\n          <SidebarMenuButton className=\"hover:bg-muted/50\">\n            <category.icon className=\"mr-2 h-4 w-4 shrink-0\" />\n            <span>{category.title}</span>\n            <ChevronDown className=\"ml-auto h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180\" />\n          </SidebarMenuButton>\n        </CollapsibleTrigger>\n        <CollapsibleContent>\n          <SidebarMenuSub>\n            {category.items.map((it) => (\n              <SidebarMenuSubItem key={it.url}>\n                <SidebarMenuSubButton asChild>\n                  <NavLink\n                    to={it.url}\n                    className=\"hover:bg-muted/50\"\n                    activeClassName=\"text-primary font-medium\"\n                  >\n                    <it.icon className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                    <span>{it.title}</span>\n                  </NavLink>\n                </SidebarMenuSubButton>\n              </SidebarMenuSubItem>\n            ))}\n          </SidebarMenuSub>\n        </CollapsibleContent>\n      </SidebarMenuItem>\n    </Collapsible>\n  );\n}\n\nexport function DashboardSidebar() {\n  const { state } = useSidebar();\n  const collapsed = state === 'collapsed';\n  const { signOut } = useAuth();\n  const navigate = useNavigate();\n  const location = useLocation();\n  const { isAdmin } = useIsAdmin();\n\n  const isConstellationActive = location.pathname.includes('/constellation');\n  const isCanvasActive = location.pathname.includes('/canvas');\n\n  // In icon-only (collapsed) mode, collapsibles have no room \u2014 render every\n  // destination as a flat icon button so the whole app stays one click away.\n  const collapsedLeaves: NavLeaf[] = [\n    { title: 'Vis\u00e3o Geral', url: '/dashboard', icon: LayoutDashboard },\n    { title: 'Constela\u00e7\u00e3o', url: '/dashboard/constellation', icon: Orbit },\n    { title: 'Canvas Studio', url: '/dashboard/canvas', icon: Palette },\n    ...categories.flatMap((c) => c.items),\n    ...systemItems,\n  ];\n\n  const handleSignOut = async () => {\n    await signOut();\n    navigate('/');\n  };\n\n  return (\n    <Sidebar collapsible=\"icon\">\n      <SidebarContent>\n        {/* Brand */}\n        <div className=\"p-4 flex items-center gap-2\">\n          <Sparkles className=\"h-6 w-6 text-primary shrink-0\" />\n          {!collapsed && (\n            <span className=\"font-heading font-bold text-lg text-foreground truncate\">\n              Magic Constellation\n            </span>\n          )}\n        </div>\n\n        {collapsed ? (\n          // \u2500\u2500 Icon rail: flat list of every destination \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n          <SidebarGroup>\n            <SidebarGroupContent>\n              <SidebarMenu>\n                {collapsedLeaves.map((item) => (\n                  <SidebarMenuItem key={item.url}>\n                    <SidebarMenuButton asChild tooltip={item.title}>\n                      <NavLink\n                        to={item.url}\n                        end={item.url === '/dashboard'}\n                        className=\"hover:bg-muted/50\"\n                        activeClassName=\"bg-primary/10 text-primary font-medium\"\n                      >\n                        <item.icon className=\"h-4 w-4 shrink-0\" />\n                      </NavLink>\n                    </SidebarMenuButton>\n                  </SidebarMenuItem>\n                ))}\n                {isAdmin && (\n                  <SidebarMenuItem>\n                    <SidebarMenuButton asChild tooltip=\"Administra\u00e7\u00e3o\">\n                      <NavLink to=\"/dashboard/admin\" className=\"hover:bg-muted/50\" activeClassName=\"bg-primary/10 text-primary font-medium\">\n                        <Shield className=\"h-4 w-4 shrink-0\" />\n                      </NavLink>\n                    </SidebarMenuButton>\n                  </SidebarMenuItem>\n                )}\n              </SidebarMenu>\n            </SidebarGroupContent>\n          </SidebarGroup>\n        ) : (\n          <>\n            <SidebarGroup>\n              <SidebarGroupLabel>Principal</SidebarGroupLabel>\n              <SidebarGroupContent>\n                <SidebarMenu>\n                  {/* Vis\u00e3o Geral */}\n                  <SidebarMenuItem>\n                    <SidebarMenuButton asChild>\n                      <NavLink\n                        to=\"/dashboard\"\n                        end\n                        className=\"hover:bg-muted/50\"\n                        activeClassName=\"bg-primary/10 text-primary font-medium\"\n                      >\n                        <LayoutDashboard className=\"mr-2 h-4 w-4 shrink-0\" />\n                        <span>Vis\u00e3o Geral</span>\n                      </NavLink>\n                    </SidebarMenuButton>\n                  </SidebarMenuItem>\n\n                  {/* Constela\u00e7\u00e3o \u2014 collapsible with Matrix + Mem\u00f3ria sub-items */}\n                  <Collapsible defaultOpen={isConstellationActive} className=\"group/collapsible\">\n                    <SidebarMenuItem>\n                      <div className=\"flex items-center\">\n                        <SidebarMenuButton asChild className=\"flex-1\">\n                          <NavLink\n                            to=\"/dashboard/constellation\"\n                            end\n                            className=\"hover:bg-muted/50\"\n                            activeClassName=\"bg-primary/10 text-primary font-medium\"\n                          >\n                            <Orbit className=\"mr-2 h-4 w-4 shrink-0\" />\n                            <span>Constela\u00e7\u00e3o</span>\n                          </NavLink>\n                        </SidebarMenuButton>\n                        <CollapsibleTrigger asChild>\n                          <Button\n                            variant=\"ghost\"\n                            size=\"icon\"\n                            className=\"h-6 w-6 ml-auto shrink-0 [&[data-state=open]>svg]:rotate-180\"\n                          >\n                            <ChevronDown className=\"h-3.5 w-3.5 transition-transform duration-200\" />\n                          </Button>\n                        </CollapsibleTrigger>\n                      </div>\n                      <CollapsibleContent>\n                        <SidebarMenuSub>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/constellation/matrix\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Network className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Matrix</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/constellation/memory\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Brain className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Mem\u00f3ria</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>\n                      </CollapsibleContent>\n                    </SidebarMenuItem>\n                  </Collapsible>\n\n                  {/* Canvas Studio \u2014 collapsible with Studio + Design sub-items */}\n                  <Collapsible defaultOpen={isCanvasActive} className=\"group/collapsible\">\n                    <SidebarMenuItem>\n                      <div className=\"flex items-center\">\n                        <SidebarMenuButton asChild className=\"flex-1\">\n                          <NavLink\n                            to=\"/dashboard/canvas\"\n                            end\n                            className=\"hover:bg-muted/50\"\n                            activeClassName=\"bg-primary/10 text-primary font-medium\"\n                          >\n                            <Palette className=\"mr-2 h-4 w-4 shrink-0\" />\n                            <span>Canvas Studio</span>\n                          </NavLink>\n                        </SidebarMenuButton>\n                        <CollapsibleTrigger asChild>\n                          <Button\n                            variant=\"ghost\"\n                            size=\"icon\"\n                            className=\"h-6 w-6 ml-auto shrink-0 [&[data-state=open]>svg]:rotate-180\"\n                          >\n                            <ChevronDown className=\"h-3.5 w-3.5 transition-transform duration-200\" />\n                          </Button>\n                        </CollapsibleTrigger>\n                      </div>\n                      <CollapsibleContent>\n                        <SidebarMenuSub>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/canvas\"\n                                end\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Palette className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Studio</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/canvas/design\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Wand2 className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Design</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>\n                      </CollapsibleContent>\n                    </SidebarMenuItem>\n                  </Collapsible>\n\n                  {/* Grouped categories */}\n                  {categories.map((cat) => (\n                    <NavCategory key={cat.title} category={cat} />\n                  ))}\n                </SidebarMenu>\n              </SidebarGroupContent>\n            </SidebarGroup>\n\n            <SidebarGroup>\n              <SidebarGroupLabel>Sistema</SidebarGroupLabel>\n              <SidebarGroupContent>\n                <SidebarMenu>\n                  {systemItems.map((item) => (\n                    <SidebarMenuItem key={item.url}>\n                      <SidebarMenuButton asChild>\n                        <NavLink\n                          to={item.url}\n                          className=\"hover:bg-muted/50\"\n                          activeClassName=\"bg-primary/10 text-primary font-medium\"\n                        >\n                          <item.icon className=\"mr-2 h-4 w-4 shrink-0\" />\n                          <span>{item.title}</span>\n                        </NavLink>\n                      </SidebarMenuButton>\n                    </SidebarMenuItem>\n                  ))}\n                </SidebarMenu>\n              </SidebarGroupContent>\n            </SidebarGroup>\n\n            {isAdmin && (\n              <SidebarGroup>\n                <SidebarGroupLabel>Admin</SidebarGroupLabel>\n                <SidebarGroupContent>\n                  <SidebarMenu>\n                    <SidebarMenuItem>\n                      <SidebarMenuButton asChild>\n                        <NavLink to=\"/dashboard/admin\" className=\"hover:bg-muted/50\" activeClassName=\"bg-primary/10 text-primary font-medium\">\n                          <Shield className=\"mr-2 h-4 w-4 shrink-0\" />\n                          <span>Administra\u00e7\u00e3o</span>\n                        </NavLink>\n                      </SidebarMenuButton>\n                    </SidebarMenuItem>\n                  </SidebarMenu>\n                </SidebarGroupContent>\n              </SidebarGroup>\n            )}\n          </>\n        )}\n      </SidebarContent>\n\n      <SidebarFooter>\n        <Button\n          variant=\"ghost\"\n          size={collapsed ? 'icon' : 'default'}\n          className=\"w-full justify-start text-muted-foreground hover:text-destructive\"\n          onClick={handleSignOut}\n        >\n          <LogOut className=\"h-4 w-4 shrink-0\" />\n          {!collapsed && <span className=\"ml-2\">Sair</span>}\n        </Button>\n      </SidebarFooter>\n    </Sidebar>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:09:59)*
+
+
+## 🤖 Claude *(19:10:00)*
+
+Sidebar reescrita. Preciso confirmar que `SidebarMenuButton` aceita a prop `tooltip` (usei no modo colapsado) e rodar tsc:
+
+## 🤖 Claude *(19:10:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5\necho \"=== SidebarMenuButton tooltip prop? ===\"\ngrep -nE \"tooltip\" src/components/ui/sidebar.tsx | head -5\necho \"\"\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | head -15; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Verify tooltip prop + tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SidebarMenuButton tooltip prop? ===
+> 13:import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+> 441:    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+> 443:>(({ asChild = false, isActive = false, variant = "default", size = "default", tooltip, className, ...props }, ref) => {
+> 458:  if (!tooltip) {
+> 462:  if (typeof tooltip === "string") {
+> 
+> === tsc ===
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(19:10:13)*
+
+
+## 🤖 Claude *(19:10:13)*
+
+`tooltip` suportado ✅ · tsc EXIT=0 ✅. Build pra confirmar:
+
+## 🤖 Claude *(19:10:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5\ntimeout 180 bun run build 2>&1 | tail -4; echo \"BUILD_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Production build with new sidebar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.00s
+> BUILD_EXIT=0
+> ```
+
+## 🤖 Claude *(19:11:13)*
+
+
+## 🤖 Claude *(19:11:15)*
+
+Build verde (22s). Agora a prova material do que importa nesta tarefa: **cobertura completa** — toda rota navegável está no menu e nenhum item é link morto. Cruzamento programático novo-menu × rotas:
+
+## 🤖 Claude *(19:11:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5\npython3 - <<'PY'\nimport re\nsb = open('src/components/dashboard/DashboardSidebar.tsx').read()\napp = open('src/App.tsx').read()\n\n# Menu URLs from sidebar (url: '...' and to=\"/dashboard...\")\nmenu = set(re.findall(r\"url:\\s*'(/dashboard[^']*)'\", sb))\nmenu |= set(re.findall(r'to=\"(/dashboard[^\"]*)\"', sb))\nmenu.discard('/dashboard/admin')  # admin handled separately (counted)\nmenu.add('/dashboard/admin')\n\n# Dashboard child routes from App.tsx\nroutes = set()\nfor p in re.findall(r'<Route path=\"([^\"]+)\"', app):\n    if p.startswith('/') or p in ('*',): continue\n    routes.add('/dashboard/' + p)\n\n# Navigable = exclude detail/param/redirect pages\ndef navigable(r):\n    return ':' not in r and '/new' not in r and 'video-editor' not in r\nnav_routes = {r for r in routes if navigable(r)}\n# 'core' redirects to core-v2 \u2014 treat core-v2 as the canonical\nnav_routes.discard('/dashboard/core')\n\norphan_pages = sorted(nav_routes - menu)      # route exists, not in menu\ndead_links  = sorted({m for m in menu if m not in routes and m != '/dashboard'})  # menu, no route\n\nprint(\"Menu items:\", len(menu))\nprint(\"Navigable routes:\", len(nav_routes))\nprint(\"\\nORPHAN PAGES (route, not in menu):\", orphan_pages or \"NONE \u2705\")\nprint(\"DEAD MENU LINKS (menu, no route):\", dead_links or \"NONE \u2705\")\nPY",
+  "description": "Cross-check menu coverage vs routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Menu items: 22
+> Navigable routes: 21
+> 
+> ORPHAN PAGES (route, not in menu): NONE ✅
+> DEAD MENU LINKS (menu, no route): NONE ✅
+> ```
+
+## 🤖 Claude *(19:12:05)*
+
+
+## 🤖 Claude *(19:12:16)*
+
+**Reorganização da sidebar completa e verificada:**
+
+| Antes | Depois |
+|-------|--------|
+| ~19 itens chapados → rolagem | Categorias colapsáveis → **~9 linhas visíveis**, sem rolagem |
+
+**Cross-check material (novo menu × rotas):**
+- 🟢 **Órfãos (página sem menu): NENHUM** — `agent-economics` resgatado em "Inteligência IA"
+- 🟢 **Links mortos (menu sem rota): NENHUM** — "Notificações" removido (não tinha rota nem página)
+- 22 itens de menu cobrindo 21 rotas navegáveis · tsc 0 erros · build ✓ 22s
+
+**Nova estrutura:**
+- **Principal:** Visão Geral · Constelação ▸ (Matrix, Memória) · Canvas Studio ▸ (Studio, Design)
+- **Conteúdo & Campanhas ▸:** Campanhas · Orquestração · Conteúdo · Blog · Calendário
+- **Monetização ▸:** Produtos · Afiliados · Viral Miner · Analytics
+- **Inteligência IA ▸:** Core · AI Arena · Economia dos Agentes
+- **Sistema:** Redes Sociais · Assinatura · Configurações · **Admin:** Administração
+- Categorias abrem automaticamente quando você está numa página dela; modo icon-rail (sidebar recolhida) mostra tudo como ícones com tooltip.
+
+Detalhe honesto: validei por tsc+build+cobertura, **não por screenshot** (exigiria subir dev server + injetar sessão auth — fiddly). O visual você confirma no hard-refresh pós-deploy.
+
+---
+
+Tudo pronto pro **/handoff**. O seal vai: commits granulares + HANDOFF + nó na malha + **merge→main + build** (publica painel + sidebar em login.mcorch.com; o backend `canvas-execute` já está em produção).
+
+Antes de eu disparar o seal completo — o agrupamento da sidebar está bom assim, ou quer ajustar alguma categoria/nome primeiro? Se estiver bom, **sigo direto pro handoff**.
