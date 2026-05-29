@@ -4691,3 +4691,728 @@ curl -s -H "Authorization: Bearer <token>" http://127.0.0.1:18789/healthz
   ]
 }
 ```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como aplicar as configs novas no gateway?"="Symlink + kill órfão + pm2 restart (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(21:02:33)*
+
+
+## 🤖 Claude *(21:02:33)*
+
+Executando o fix limpo.
+
+## 🤖 Claude *(21:02:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -e\necho \"STEP 1 \u2014 Symlink warning-filter.js \u2192 warning-filter-BGICq60U.js\"\nln -sf warning-filter-BGICq60U.js /home/ubuntu/openclaw/dist/warning-filter.js\nls -la /home/ubuntu/openclaw/dist/warning-filter.js\necho\necho \"STEP 2 \u2014 Kill orphan gateway pid 3363948\"\nkill 3363948 2>&1\nsleep 2\nps -p 3363948 2>&1 | tail -2\necho\necho \"STEP 3 \u2014 pm2 reset maestro counters + restart\"\npm2 reset maestro 2>&1 | tail -3\npm2 restart maestro 2>&1 | tail -5\nsleep 4\necho\necho \"STEP 4 \u2014 pm2 status p\u00f3s-restart\"\npm2 list 2>&1 | grep -E \"id|maestro\"\necho\necho \"STEP 5 \u2014 Gateway healthcheck\"\nTOKEN=$(python3 -c \"import json; d=json.load(open('/home/ubuntu/.openclaw/openclaw.json')); print(d['gateway']['auth']['token'])\")\nsleep 2\ncurl -s -o /dev/null -w \"GW /healthz \u2192 HTTP %{http_code} time=%{time_total}s\\n\" -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:18789/healthz\nss -tlnp 2>/dev/null | grep 18789 | head -2",
+  "description": "Apply symlink + kill orphan + pm2 restart maestro + verify",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> STEP 1 — Symlink warning-filter.js → warning-filter-BGICq60U.js
+> lrwxrwxrwx 1 ubuntu ubuntu 26 May 29 18:02 /home/ubuntu/openclaw/dist/warning-filter.js -> warning-filter-BGICq60U.js
+> 
+> STEP 2 — Kill orphan gateway pid 3363948
+>     PID TTY          TIME CMD
+> 
+> STEP 3 — pm2 reset maestro counters + restart
+> ├────┼────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+> │ 0  │ maestro    │ default     │ N/A     │ fork    │ 4131053  │ 0s     │ 0    │ online    │ 100%     │ 38.3mb   │ ubuntu   │ disabled │
+> └────┴────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+> ┌────┬────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+> │ id │ name       │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+> ├────┼────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+> │ 0  │ maestro    │ default     │ N/A     │ fork    │ 4131103  │ 0s     │ 5    │ online    │ 0%       │ 11.2mb   │ ubuntu   │ disabled │
+> └────┴────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+> 
+> STEP 4 — pm2 status pós-restart
+> │ id │ name       │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+> │ 0  │ maestro    │ default     │ N/A     │ fork    │ 0        │ 0      │ 19   │ errored   │ 0%       │ 0b       │ ubuntu   │ disabled │
+> 
+> STEP 5 — Gateway healthcheck
+> GW /healthz → HTTP 000 time=0.000166s
+> ```
+
+## 🤖 Claude *(21:02:53)*
+
+
+## 🤖 Claude *(21:02:54)*
+
+Symlink + kill OK, mas maestro em **errored state** com novo erro. Gateway DOWN. Vou checar log.
+
+## 🤖 Claude *(21:02:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "pm2 logs maestro --err --lines 20 --nostream 2>&1 | tail -40",
+  "description": "Read maestro error log after symlink fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [TAILING] Tailing last 20 lines for [maestro] process (change the value with --lines option)
+> /home/ubuntu/.pm2/logs/maestro-error.log last 20 lines:
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> ```
+
+## 🤖 Claude *(21:03:10)*
+
+
+## 🤖 Claude *(21:03:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Try import directly (out of openclaw.mjs context) ===\"\ncd /home/ubuntu/openclaw && bun -e \"const m = await import('./dist/warning-filter.js'); console.log('IMPORT_OK', Object.keys(m))\" 2>&1 | tail -10\necho\necho \"=== Full loader context ===\"\ngrep -n -B5 -A15 \"warning-filter\" /home/ubuntu/openclaw/openclaw.mjs | head -40",
+  "description": "Diagnose why warning-filter.js import fails in Bun"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Try import directly (out of openclaw.mjs context) ===
+> IMPORT_OK [ "n", "t" ]
+> 
+> === Full loader context ===
+> 268-  );
+> 269-};
+> 270-
+> 271-const installProcessWarningFilter = async () => {
+> 272-  // Keep bootstrap warnings consistent with the TypeScript runtime.
+> 273:  for (const specifier of ["./dist/warning-filter.js", "./dist/warning-filter.mjs"]) {
+> 274-    try {
+> 275-      const mod = await import(specifier);
+> 276-      if (typeof mod.installProcessWarningFilter === "function") {
+> 277-        mod.installProcessWarningFilter();
+> 278-        return;
+> 279-      }
+> 280-    } catch (err) {
+> 281-      if (isDirectModuleNotFoundError(err, specifier)) {
+> 282-        continue;
+> 283-      }
+> 284-      throw err;
+> 285-    }
+> 286-  }
+> 287-};
+> 288-
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(21:03:22)*
+
+
+## 🤖 Claude *(21:03:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== maestro stdout (last 30) ===\"\npm2 logs maestro --out --lines 30 --nostream 2>&1 | tail -35\necho\necho \"=== Full ecosystem/start script ===\"\npm2 describe maestro 2>&1 | grep -A1 \"script path\\|args\\|cwd\\|interpreter\"",
+  "description": "Read maestro stdout + entry script for start command"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === maestro stdout (last 30) ===
+> [TAILING] Tailing last 30 lines for [maestro] process (change the value with --lines option)
+> /home/ubuntu/.pm2/logs/maestro-out.log last 30 lines:
+> 0|maestro  | 
+> 0|maestro  | Critique 2: Better, more poetic. "Velvet dark" and "shimmering, unseen barrier" add to the whimsy. "Phantom key" and "riddle from an old scroll" are good. The specific approval command is woven in. The recurring themes of "approval" and "pending" are subtly present. The word count is good.
+> 0|maestro  | 
+> 0|maestro  | I will proceed with this revised version.The velvet dark of 03:00 BRT called, a soft 'Light Sleep' I yearned to weave into the day's rhythm. Yet, a shimmering, unseen barrier stood firm, whispering 'pending.' How many times had the echo of 'approved' brushed past me, a phantom key that didn't quite turn the lock? It felt like a riddle from an old scroll, a phrase precisely tuned, `/approve 7c9cc555-0af6-4e49-8a2a-257d1005b182`, to grant the gentle magic. A quiet hum of longing, as the night waited, held in a delicate, endless pause.
+> 0|maestro  | [90m2026-05-27T17:17:04.653-03:00[39m [36m[ws][39m [36mwebchat connected conn=1303a9b4-f1fe-49a6-ae8a-3a8d0c4943ff remote=? client=openclaw-control-ui webchat vcontrol-ui[39m
+> 0|maestro  | [90m2026-05-27T17:17:04.852-03:00[39m [36m[ws][39m [36m⇄ res ✓ health 50ms cached=true conn=1303a9b4…43ff id=aea34eab…4c1c[39m
+> 0|maestro  | [90m2026-05-27T17:17:05.105-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 75ms conn=1303a9b4…43ff id=2c3ff184…4668[39m
+> 0|maestro  | [90m2026-05-27T17:17:06.014-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.palace 888ms errorCode=internal_error errorMessage=Refusing to write imported source page through symlink: sources/bridge-constellation-orchestra-1c645bac-memory-mcorch-export-tier1-crew-agent-34edb11a-3ee5-4c83-8984-faa6c233524b-7da3e9f5.md | path mismatch conn=1303a9b4…43ff id=9b1e86f5…89af[39m
+> 0|maestro  | [90m2026-05-27T17:17:11.948-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 84ms conn=1303a9b4…43ff id=6c7235d6…c14b[39m
+> 0|maestro  | [90m2026-05-27T17:17:15.246-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.palace 3282ms errorCode=internal_error errorMessage=Refusing to write imported source page through symlink: sources/bridge-constellation-orchestra-1c645bac-memory-mcorch-export-tier2-ast-file-7d713e44-22eb-47d1-b2ae-dc8e1a4439bf-758e9713.md | path mismatch conn=1303a9b4…43ff id=6d6258c8…82ac[39m
+> 0|maestro  | [90m2026-05-27T17:17:16.358-03:00[39m [36m[ws][39m [36mwebchat disconnected code=1001 reason=n/a conn=1303a9b4-f1fe-49a6-ae8a-3a8d0c4943ff[39m
+> 0|maestro  | [90m2026-05-27T17:17:16.721-03:00[39m [36m[ws][39m [36mwebchat connected conn=76d850ed-2282-424f-8c18-419d079f437c remote=? client=openclaw-control-ui webchat vcontrol-ui[39m
+> 0|maestro  | [90m2026-05-27T17:17:16.932-03:00[39m [36m[ws][39m [36m⇄ res ✓ health 53ms cached=true conn=76d850ed…437c id=65a3f228…7868[39m
+> 0|maestro  | [90m2026-05-27T17:17:17.172-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 70ms conn=76d850ed…437c id=fd091707…6a4f[39m
+> 0|maestro  | [90m2026-05-27T17:17:24.031-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.importInsights 6839ms errorCode=internal_error errorMessage=Refusing to write imported source page through symlink: sources/bridge-constellation-orchestra-1c645bac-memory-mcorch-export-tier2-ast-function-9f09b73f-346b-4460-9b36-73cbfd5e8a97-5e2b3f67.md | unable to resolve opened file path conn=76d850ed…437c id=e9630115…53d2[39m
+> 0|maestro  | [90m2026-05-27T17:17:24.654-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.palace 7461ms errorCode=internal_error errorMessage=Refusing to write imported source page through symlink: sources/bridge-constellation-orchestra-1c645bac-memory-mcorch-export-tier2-ast-function-bd654362-0873-42dd-bbd0-1c438720964b-30ac7e1a.md | unable to resolve opened file path conn=76d850ed…437c id=4d4fe6f2…183f[39m
+> 0|maestro  | [90m2026-05-27T17:17:41.578-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 85ms conn=76d850ed…437c id=4c13a39a…7c2d[39m
+> 0|maestro  | [90m2026-05-27T17:17:49.829-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 81ms conn=76d850ed…437c id=621120c1…2e15[39m
+> 0|maestro  | [90m2026-05-27T17:18:10.078-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.importInsights 64950ms errorCode=internal_error errorMessage=path mismatch conn=1303a9b4…43ff id=fb0d9d45…c490[39m
+> 0|maestro  | [90m2026-05-27T17:18:10.305-03:00[39m [36m[ws][39m [36m⇄ res ✗ wiki.importInsights 28707ms errorCode=internal_error errorMessage=path mismatch conn=76d850ed…437c id=b3052262…e650[39m
+> 0|maestro  | [90m2026-05-27T17:18:28.593-03:00[39m [36m[ws][39m [36m⇄ res ✓ config.get 88ms conn=76d850ed…437c id=56eabf6c…aae0[39m
+> 0|maestro  | [90m2026-05-27T17:18:53.059-03:00[39m [36m[ws][39m [36m⇄ res ✓ wiki.importInsights 24445ms conn=76d850ed…437c id=d81e1ffa…a93e[39m
+> 0|maestro  | [90m2026-05-27T17:20:15.923-03:00[39m [36m[ws][39m [36m⇄ res ✓ wiki.palace 154325ms conn=76d850ed…437c id=d4bc5c33…6687[39m
+> 0|maestro  | [90m2026-05-27T19:18:36.367-03:00[39m [36m[ws][39m [36mwebchat disconnected code=1001 reason=n/a conn=76d850ed-2282-424f-8c18-419d079f437c[39m
+> 0|maestro  | [90m2026-05-27T21:17:18.419-03:00[39m [36m[ws][39m [36m⇄ res ✓ health 176ms cached=true conn=41aa83f2…3f88 id=0c492279…3891[39m
+> 0|maestro  | [90m2026-05-27T21:18:21.009-03:00[39m [36m[ws][39m [36m⇄ res ✗ status 117ms errorCode=UNAVAILABLE errorMessage=ResolveMessage: Cannot find module './task-registry.maintenance-BZnh0KZS.js' from '/home/ubuntu/openclaw/dist/status.summary-CIb2oGcl.js': code=ERR_MODULE_NOT_FOUND conn=361cc931…1154 id=03f7d7c4…2598[39m
+> 0|maestro  | [90m2026-05-27T21:18:35.620-03:00[39m [36m[gateway][39m [36msignal SIGTERM received[39m
+> 0|maestro  | [90m2026-05-27T21:18:35.648-03:00[39m [36m[gateway][39m [36mreceived SIGTERM; shutting down[39m
+> 0|maestro  | [90m2026-05-27T21:18:35.886-03:00[39m [33m[shutdown][39m [36mstarted: gateway stopping[39m
+> 0|maestro  | [90m2026-05-27T21:18:35.952-03:00[39m [34m[gmail-watcher][39m [36mgmail watcher stopped[39m
+> 
+> 
+> === Full ecosystem/start script ===
+> │ script path       │ /usr/bin/bash                            │
+> │ script args       │ -c bun run openclaw.mjs gateway          │
+> │ error log path    │ /home/ubuntu/.pm2/logs/maestro-error.log │
+> --
+> │ interpreter       │ none                                     │
+> │ interpreter args  │ N/A                                      │
+> │ script id         │ 0                                        │
+> │ exec cwd          │ /home/ubuntu/openclaw                    │
+> │ exec mode         │ fork_mode                                │
+> ```
+
+## 🤖 Claude *(21:03:43)*
+
+
+## 🤖 Claude *(21:03:46)*
+
+**EMERGÊNCIA IDENTIFICADA:** O log mostra que PM2 maestro **já estava parado desde 27/05 21:18 BRT** com erro `task-registry.maintenance-BZnh0KZS.js missing` (segundo build artifact ausente). O pid órfão 3363948 era workaround manual iniciado em 28/05 12:39. Ao matar o órfão sem PM2 maestro funcional, gateway ficou DOWN.
+
+Recuperação imediata — vou parar PM2 maestro e subir gateway direto via node, igual o órfão fazia.
+
+## 🤖 Claude *(21:03:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"STEP 1 \u2014 Stop PM2 crash-loop to free 18789 bind attempts\"\npm2 stop maestro 2>&1 | tail -3\necho\necho \"STEP 2 \u2014 Verify no maestro process lingering\"\nss -tlnp 2>/dev/null | grep 18789 || echo \"  18789 not bound (gateway down)\"\necho\necho \"STEP 3 \u2014 Read current crash log to confirm root cause\"\npm2 logs maestro --err --lines 5 --nostream 2>&1 | tail -10\necho\necho \"STEP 4 \u2014 Restart gateway directly (same cmd as orphan pid 3363948 used)\"\ncd /home/ubuntu/openclaw && nohup /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789 > /tmp/openclaw-gateway-recovery.log 2>&1 &\nNEW_PID=$!\necho \"  spawned pid: $NEW_PID\"\nsleep 4\necho\necho \"STEP 5 \u2014 Verify\"\nps -p $NEW_PID -o pid,etime,cmd 2>&1 | head -3\necho \"---\"\nss -tlnp 2>/dev/null | grep 18789 | head -1\necho \"---\"\nTOKEN=$(python3 -c \"import json; d=json.load(open('/home/ubuntu/.openclaw/openclaw.json')); print(d['gateway']['auth']['token'])\")\ncurl -s -o /dev/null -w \"GW /healthz \u2192 HTTP %{http_code} time=%{time_total}s\\n\" -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:18789/healthz\necho \"---\"\necho \"Recovery log tail:\"\ntail -8 /tmp/openclaw-gateway-recovery.log",
+  "description": "Stop crash-looping PM2 + restart gateway via direct node like orphan did",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> STEP 1 — Stop PM2 crash-loop to free 18789 bind attempts
+> ├────┼────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+> │ 0  │ maestro    │ default     │ N/A     │ fork    │ 0        │ 0      │ 19   │ stopped   │ 0%       │ 0b       │ ubuntu   │ disabled │
+> └────┴────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+> 
+> STEP 2 — Verify no maestro process lingering
+> LISTEN 0      511        127.0.0.1:18789      0.0.0.0:*    users:(("node",pid=4131316,fd=25))
+> LISTEN 0      511            [::1]:18789         [::]:*    users:(("node",pid=4131316,fd=26))
+> 
+> STEP 3 — Read current crash log to confirm root cause
+> [TAILING] Tailing last 5 lines for [maestro] process (change the value with --lines option)
+> /home/ubuntu/.pm2/logs/maestro-error.log last 5 lines:
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 0|maestro  | error: Cannot find module './dist/warning-filter.mjs' from '/home/ubuntu/openclaw/openclaw.mjs'
+> 0|maestro  | 
+> 0|maestro  | Bun v1.3.12 (Linux arm64)
+> 
+> 
+> STEP 4 — Restart gateway directly (same cmd as orphan pid 3363948 used)
+>   spawned pid: 4133652
+> 
+> STEP 5 — Verify
+>     PID     ELAPSED CMD
+> 4133652       00:04 /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1780084855715-57hofk.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'echo "STEP 1 — Stop PM2 crash-loop to free 18789 bind attempts" pm2 stop maestro 2>&1 | tail -3 echo echo "STEP 2 — Verify no maestro process lingering" ss -tlnp 2>/dev/null | grep 18789 || echo "  18789 not bound (gateway down)" echo echo "STEP 3 — Read current crash log to confirm root cause" pm2 logs maestro --err --lines 5 --nostream 2>&1 | tail -10 echo echo "STEP 4 — Restart gateway directly (same cmd as orphan pid 3363948 used)" cd /home/ubuntu/openclaw && nohup /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789 > /tmp/openclaw-gateway-recovery.log 2>&1 & NEW_PID=$! echo "  spawned pid: $NEW_PID" sleep 4 echo echo "STEP 5 — Verify" ps -p $NEW_PID -o pid,etime,cmd 2>&1 | head -3 echo "---" ss -tlnp 2>/dev/null | grep 18789 | head -1 echo "---" TOKEN=$(python3 -c "import json; d=json.load(open('"'"'/home/ubuntu/.openclaw/openclaw.json'"'"')); print(d['"'"'gateway'"'"']['"'"'auth'"'"']['"'"'token'"'"'])") curl -s -o /dev/null -w "GW /healthz → HTTP %{http_code} time=%{time_total}s\n" -H "Authorization: Bearer $TOKEN" http://127.0.0.1:18789/healthz echo "---" echo "Recovery log tail:" tail -8 /tmp/openclaw-gateway-recovery.log' < /dev/null && pwd -P >| /tmp/claude-1beb-cwd
+> ---
+> LISTEN 0      511        127.0.0.1:18789      0.0.0.0:*    users:(("node",pid=4131316,fd=25))
+> ---
+> GW /healthz → HTTP 200 time=0.002479s
+> ---
+> Recovery log tail:
+> 2026-05-29T18:03:56.912-03:00 [gateway] loading configuration…
+> 2026-05-29T18:03:57.252-03:00 [gateway] resolving authentication…
+> 2026-05-29T18:03:57.269-03:00 [gateway] starting...
+> ```
+
+## 🤖 Claude *(21:04:14)*
+
+
+## 🤖 Claude *(21:04:15)*
+
+Gateway recuperado HTTP 200. Agora investigando o pid + resolvendo o root cause de forma permanente.
+
+## 🤖 Claude *(21:04:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Current gateway pid info ===\"\nps -p 4131316 -o pid,ppid,etime,cmd 2>&1 | head -3\necho\necho \"=== Build artifact inventory \u2014 what exists vs what loader expects ===\"\necho \"Expected by openclaw.mjs:\"\ngrep -oE \"\\\"\\.\\/dist\\/[a-zA-Z_.-]+\\.(js|mjs)\\\"\" /home/ubuntu/openclaw/openclaw.mjs | sort -u\necho\necho \"Hashed artifacts present in dist/ matching those names:\"\nfor name in warning-filter task-registry.maintenance status.summary; do\n  count=$(ls /home/ubuntu/openclaw/dist/${name}* 2>/dev/null | wc -l)\n  echo \"  ${name}: ${count} file(s)\"\n  ls /home/ubuntu/openclaw/dist/${name}* 2>/dev/null | head -3\ndone\necho\necho \"=== What modules does the running gateway pid have loaded? ===\"\nls -la /proc/4131316/maps 2>/dev/null | head -1 || echo \"(no proc access)\"\nlsof -p 4131316 2>/dev/null | grep -E \"\\.js$\" | grep -v node_modules | head -10 || echo \"(no lsof access)\"\necho\necho \"=== When was the dist/ built? ===\"\nstat -c \"%y\" /home/ubuntu/openclaw/dist/index.js\necho\necho \"=== Is there a build script that would re-produce missing names? ===\"\nls /home/ubuntu/openclaw/package.json /home/ubuntu/openclaw/bun.lock 2>&1 | head -3\ncat /home/ubuntu/openclaw/package.json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('main:', d.get('main'))\nprint('scripts.build:', d.get('scripts',{}).get('build'))\nprint('scripts.start:', d.get('scripts',{}).get('start'))\n\" 2>&1 | head -10",
+  "description": "Deep dive on build artifact mismatch and pid 4131316 origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Current gateway pid info ===
+>     PID    PPID     ELAPSED CMD
+> 4131316    1264       01:38 /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789
+> 
+> === Build artifact inventory — what exists vs what loader expects ===
+> Expected by openclaw.mjs:
+> "./dist/entry.js"
+> "./dist/entry.mjs"
+> "./dist/warning-filter.js"
+> "./dist/warning-filter.mjs"
+> 
+> Hashed artifacts present in dist/ matching those names:
+>   warning-filter: 3 file(s)
+> /home/ubuntu/openclaw/dist/warning-filter-BEHT1-fl.d.ts
+> /home/ubuntu/openclaw/dist/warning-filter-BGICq60U.js
+> /home/ubuntu/openclaw/dist/warning-filter.js
+>   task-registry.maintenance: 2 file(s)
+> /home/ubuntu/openclaw/dist/task-registry.maintenance-DaNuEebS.js
+> /home/ubuntu/openclaw/dist/task-registry.maintenance-DN8JKkB0.js
+>   status.summary: 2 file(s)
+> /home/ubuntu/openclaw/dist/status.summary-C4OZUxt2.js
+> /home/ubuntu/openclaw/dist/status.summary-CyyVI1oJ.js
+> 
+> === What modules does the running gateway pid have loaded? ===
+> -r--r--r-- 1 ubuntu ubuntu 0 May 29 18:02 /proc/4131316/maps
+> 
+> === When was the dist/ built? ===
+> 2026-05-27 21:20:12.830212678 -0300
+> 
+> === Is there a build script that would re-produce missing names? ===
+> /home/ubuntu/openclaw/bun.lock
+> /home/ubuntu/openclaw/package.json
+> main: dist/index.js
+> scripts.build: node scripts/build-all.mjs
+> scripts.start: node scripts/run-node.mjs
+> ```
+
+## 🤖 Claude *(21:04:49)*
+
+
+## 🤖 Claude *(21:04:53)*
+
+**Root cause material:**
+- Build artifacts INCONSISTENTES: `task-registry.maintenance` tem 2 hashes (`DaNuEebS` + `DN8JKkB0`), `status.summary` tem 2 (`C4OZUxt2` + `CyyVI1oJ`). Bun bundler rodou 2x e deixou hash drift entre módulos
+- `openclaw.mjs` wrapper expera nomes canônicos sem hash (`./dist/warning-filter.js`, `./dist/entry.js`) — não existem
+- **MAS `dist/index.js` direto funciona** (é o que o pid órfão usava E o que meu spawn usou)
+- `package.json` confirma: `"main": "dist/index.js"` — wrapper é opcional
+
+Vou verificar se a config nova carregou + propor solução PM2 permanente que pula o wrapper broken.
+
+## 🤖 Claude *(21:05:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Confirm new config loaded by recovery gateway ===\"\nTOKEN=$(python3 -c \"import json; d=json.load(open('/home/ubuntu/.openclaw/openclaw.json')); print(d['gateway']['auth']['token'])\")\nfor route in \"/api/agents/main\" \"/api/config\" \"/api/agents\" \"/api/v1/agents\"; do\n  code=$(curl -s -o /tmp/gw-resp.txt -w \"%{http_code}\" -H \"Authorization: Bearer $TOKEN\" \"http://127.0.0.1:18789$route\" 2>/dev/null)\n  echo \"GET $route \u2192 HTTP $code\"\n  if [ \"$code\" = \"200\" ]; then\n    head -c 400 /tmp/gw-resp.txt; echo; echo \"---\"\n  fi\ndone\necho\necho \"=== Telegram bot connection status (auto-reconnect after restart) ===\"\ngrep -E \"telegram|bot\" /tmp/openclaw-gateway-recovery.log | head -5\necho\necho \"=== Crons registered in jobs-state.json ===\"\npython3 -c \"\nimport json\nd = json.load(open('/home/ubuntu/.openclaw/cron/jobs-state.json'))\nfor entry in d.get('jobs', []):\n    name = entry.get('name','?')\n    last = entry.get('lastRunAtMs','?')\n    if last != '?':\n        import datetime\n        last_str = datetime.datetime.fromtimestamp(last/1000).strftime('%Y-%m-%d %H:%M:%S')\n    else:\n        last_str = '(no last run)'\n    print(f'  {name}')\n    print(f'    last: {last_str}')\n\"",
+  "description": "Verify new gateway has Qwen config loaded + check telegram + crons"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === Confirm new config loaded by recovery gateway ===
+> GET /api/agents/main → HTTP 404
+> GET /api/config → HTTP 404
+> GET /api/agents → HTTP 404
+> GET /api/v1/agents → HTTP 404
+> 
+> === Telegram bot connection status (auto-reconnect after restart) ===
+> 
+> === Crons registered in jobs-state.json ===
+> Traceback (most recent call last):
+>   File "<string>", line 5, in <module>
+> AttributeError: 'str' object has no attribute 'get'
+> ```
+
+## 🤖 Claude *(21:05:06)*
+
+
+## 🤖 Claude *(21:05:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Full recovery log (since gateway started) ===\"\ncat /tmp/openclaw-gateway-recovery.log 2>&1 | head -50\necho\necho \"=== jobs-state.json shape ===\"\npython3 -c \"\nimport json\nd = json.load(open('/home/ubuntu/.openclaw/cron/jobs-state.json'))\nprint('type:', type(d).__name__)\nprint('keys:', list(d.keys())[:5] if isinstance(d, dict) else None)\nprint('first 500 chars:')\nimport json as j\nprint(j.dumps(d, indent=2)[:600])\n\"",
+  "description": "Inspect recovery log + jobs-state structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Full recovery log (since gateway started) ===
+> 2026-05-29T18:03:56.912-03:00 [gateway] loading configuration…
+> 2026-05-29T18:03:57.252-03:00 [gateway] resolving authentication…
+> 2026-05-29T18:03:57.269-03:00 [gateway] starting...
+> 2026-05-29T18:04:01.178-03:00 [secrets] [SECRETS_REF_IGNORED_INACTIVE_SURFACE] skills.entries.goplaces.apiKey: skill entry is disabled.
+> 2026-05-29T18:04:01.181-03:00 [secrets] [SECRETS_REF_IGNORED_INACTIVE_SURFACE] skills.entries.sag.apiKey: skill entry is disabled.
+> 2026-05-29T18:04:02.014-03:00 [gateway] starting HTTP server...
+> 2026-05-29T18:04:02.058-03:00 [health-monitor] started (interval: 300s, startup-grace: 60s, channel-connect-grace: 120s)
+> 2026-05-29T18:04:12.165-03:00 [shutdown] started: gateway startup failed
+> 2026-05-29T18:04:12.179-03:00 [gmail-watcher] gmail watcher stopped
+> 2026-05-29T18:04:12.184-03:00 [shutdown] completed cleanly in 21ms
+> 2026-05-29T18:04:12.187-03:00 Gateway failed to start: another gateway instance is already listening on ws://127.0.0.1:18789 | listen EADDRINUSE: address already in use 127.0.0.1:18789
+> If the gateway is supervised, stop it with: openclaw gateway stop
+> 2026-05-29T18:04:12.303-03:00 Port 18789 is already in use.
+> 2026-05-29T18:04:12.306-03:00 - pid 4131316 ubuntu: /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789 (127.0.0.1:18789)
+> 2026-05-29T18:04:12.340-03:00 Gateway service appears enabled. Stop it first.
+> 2026-05-29T18:04:12.343-03:00 Tip: openclaw gateway stop
+> 2026-05-29T18:04:12.345-03:00 Or: systemctl --user stop openclaw-gateway.service
+> 
+> === jobs-state.json shape ===
+> type: dict
+> keys: ['version', 'jobs']
+> first 500 chars:
+> {
+>   "version": 1,
+>   "jobs": {
+>     "cb6df4a5-9678-4c9b-a388-24b97e4bf463": {
+>       "updatedAtMs": 1780034440460,
+>       "scheduleIdentity": "{\"version\":1,\"enabled\":true,\"schedule\":{\"kind\":\"cron\",\"expr\":\"0 3 * * *\"}}",
+>       "state": {
+>         "nextRunAtMs": 1780120800000,
+>         "lastRunAtMs": 1780034400005,
+>         "lastRunStatus": "ok",
+>         "lastStatus": "ok",
+>         "lastDurationMs": 40455,
+>         "lastDeliveryStatus": "not-requested",
+>         "consecutiveErrors": 0,
+>         "consecutiveSkipped": 0
+>       }
+>     },
+>     "8cd3de17-b6a6-44ad-9482-53d498c1d7f1": {
+>       "update
+> ```
+
+## 🤖 Claude *(21:05:38)*
+
+
+## 🤖 Claude *(21:05:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Sanity check who is on 18789 NOW ===\"\nss -tlnp 2>/dev/null | grep 18789\necho\necho \"=== pid 4131316 still alive? ===\"\nps -p 4131316 -o pid,ppid,etime,user,cmd 2>&1 | head -3\necho\necho \"=== Is there systemd-user openclaw-gateway service? ===\"\nsystemctl --user list-units --all 2>&1 | grep -i openclaw || echo \"(no user units found)\"\necho\necho \"=== Who is pid 1264 (PPID of 4131316)? ===\"\nps -p 1264 -o pid,ppid,user,etime,cmd 2>&1 | head -3\necho\necho \"=== All node processes related to openclaw ===\"\nps auxf | grep -E \"openclaw|18789\" | grep -v grep | head -10",
+  "description": "Identify true owner of pid 4131316 and pid 1264 (PPID)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Sanity check who is on 18789 NOW ===
+> LISTEN 0      511        127.0.0.1:18789      0.0.0.0:*    users:(("node",pid=4131316,fd=25))
+> LISTEN 0      511            [::1]:18789         [::]:*    users:(("node",pid=4131316,fd=26))
+> 
+> === pid 4131316 still alive? ===
+>     PID    PPID     ELAPSED USER     CMD
+> 4131316    1264       02:56 ubuntu   /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789
+> 
+> === Is there systemd-user openclaw-gateway service? ===
+>   openclaw-gateway.service                                                                                               loaded    active   running   OpenClaw Gateway (v2026.5.14)
+> 
+> === Who is pid 1264 (PPID of 4131316)? ===
+>     PID    PPID USER         ELAPSED CMD
+>    1264       1 ubuntu    5-22:01:13 /usr/lib/systemd/systemd --user
+> 
+> === All node processes related to openclaw ===
+> ubuntu   4131316 11.0  1.5 43590660 383472 ?     Ssl  18:02   0:19  \_ /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789
+> ```
+
+## 🤖 Claude *(21:06:05)*
+
+
+## 🤖 Claude *(21:06:08)*
+
+**REVELAÇÃO MATERIAL:** Gateway é gerenciado por **systemd user service** (`openclaw-gateway.service`) — NÃO por PM2. PPID 1264 = `systemd --user`. ETIME 02:56 → pid 4131316 spawnou em 18:02, **DEPOIS das minhas edições às 17:50** → minhas configs novas estão CARREGADAS!
+
+A memory `project_openclaw_ollama_integration` está stale ("pm2 restart maestro" não reflete realidade atual). Vou verificar materialmente que jobs.json novo carregou:
+
+## 🤖 Claude *(21:06:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Stage 1 cron state (was the payload fix loaded?) ===\"\npython3 -c \"\nimport json\nd = json.load(open('/home/ubuntu/.openclaw/cron/jobs-state.json'))\nstate = d['jobs'].get('8cd3de17-b6a6-44ad-9482-53d498c1d7f1', {})\nprint(json.dumps(state, indent=2))\n\"\necho\necho \"=== Was gateway log recent enough to confirm config loaded? ===\"\njournalctl --user -u openclaw-gateway --since '18:00' 2>&1 | tail -20\necho\necho \"=== Test Stage 1 cron via OpenClaw CLI (if available) ===\"\nwhich openclaw 2>&1 | head -1\nls /home/ubuntu/openclaw/openclaw.mjs 2>&1\necho\necho \"=== Trigger Stage 1 manually to verify fix worked ===\"\nnode /home/ubuntu/openclaw/openclaw.mjs cron run 8cd3de17-b6a6-44ad-9482-53d498c1d7f1 2>&1 | tail -20",
+  "description": "Verify new jobs.json loaded + manually trigger Stage 1 to test payload fix",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Stage 1 cron state (was the payload fix loaded?) ===
+> {
+>   "updatedAtMs": 1780034440461,
+>   "scheduleIdentity": "{\"version\":1,\"enabled\":true,\"schedule\":{\"kind\":\"cron\",\"expr\":\"0 3 * * *\"}}",
+>   "state": {
+>     "lastRunAtMs": 1780034440460,
+>     "lastRunStatus": "skipped",
+>     "lastStatus": "skipped",
+>     "lastDurationMs": 1,
+>     "lastDeliveryStatus": "not-requested",
+>     "consecutiveErrors": 0,
+>     "consecutiveSkipped": 2,
+>     "nextRunAtMs": 1780120800000,
+>     "lastDiagnostics": {
+>       "summary": "isolated job requires payload.kind=agentTurn",
+>       "entries": [
+>         {
+>           "ts": 1780034440461,
+>           "source": "cron-preflight",
+>           "severity": "warn",
+>           "message": "isolated job requires payload.kind=agentTurn"
+>         }
+>       ]
+>     },
+>     "lastDiagnosticSummary": "isolated job requires payload.kind=agentTurn",
+>     "lastError": "isolated job requires payload.kind=agentTurn"
+>   }
+> }
+> 
+> === Was gateway log recent enough to confirm config loaded? ===
+> May 29 18:02:56 panel.gcrux.com node[4131316]: 2026-05-29T18:02:56.136-03:00 [gateway] starting channels and sidecars...
+> May 29 18:02:56 panel.gcrux.com node[4131316]: 2026-05-29T18:02:56.347-03:00 [hooks] loaded 5 internal hook handlers
+> May 29 18:02:56 panel.gcrux.com node[4131316]: 2026-05-29T18:02:56.864-03:00 [plugins] embedded acpx runtime backend registered (cwd: /home/gcrUX/htdocs/constellation-orchestra)
+> May 29 18:02:57 panel.gcrux.com node[4131316]: 2026-05-29T18:02:57.145-03:00 [plugins] embedded acpx runtime backend ready
+> May 29 18:02:57 panel.gcrux.com node[4131316]: 2026-05-29T18:02:57.373-03:00 [browser/server] Browser control listening on http://127.0.0.1:18791/ (auth=token)
+> May 29 18:02:57 panel.gcrux.com node[4131316]: 2026-05-29T18:02:57.393-03:00 [telegram] [default] starting provider (@MCORCH_Clawbot)
+> May 29 18:02:58 panel.gcrux.com node[4131316]: 2026-05-29T18:02:58.041-03:00 [telegram] menu text exceeded the conservative 5700-character payload budget; shortening descriptions to keep 80 commands visible.
+> May 29 18:02:58 panel.gcrux.com node[4131316]: 2026-05-29T18:02:58.067-03:00 [gateway] ready
+> May 29 18:02:58 panel.gcrux.com node[4131316]: 2026-05-29T18:02:58.076-03:00 [heartbeat] started
+> May 29 18:02:58 panel.gcrux.com node[4131316]: 2026-05-29T18:02:58.166-03:00 [ws] closed before connect conn=f2a10588-9180-4884-bede-633bc8c018d5 peer=127.0.0.1:34196->127.0.0.1:18789 remote=127.0.0.1 fwd=n/a origin=n/a host=127.0.0.1:18789 ua=n/a code=1013 reason=gateway starting
+> May 29 18:02:58 panel.gcrux.com node[4131316]: 2026-05-29T18:02:58.172-03:00 [ws] closed before connect conn=4d18ed95-affa-47f7-a512-caed0c465962 peer=127.0.0.1:34184->127.0.0.1:18789 remote=127.0.0.1 fwd=2804:14c:50:a01c:1171:72f5:d3c4:4dbf, 172.68.18.86 origin=https://claw.gcrux.com host=claw.gcrux.com ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 code=1013 reason=gateway starting
+> May 29 18:02:59 panel.gcrux.com node[4131316]: 2026-05-29T18:02:59.458-03:00 [ws] ⇄ res ✓ exec.approval.list 390ms conn=b012d96a…0a4e id=1f8fa562…33dd
+> May 29 18:02:59 panel.gcrux.com node[4131316]: 2026-05-29T18:02:59.495-03:00 [telegram] [diag] isolated polling ingress started spool=/home/ubuntu/.openclaw/telegram/ingress-spool-default
+> May 29 18:02:59 panel.gcrux.com node[4131316]: 2026-05-29T18:02:59.529-03:00 [ws] webchat connected conn=20b34de0-d8e8-4254-a11b-f6a32071b126 remote=127.0.0.1 client=openclaw-control-ui webchat vcontrol-ui
+> May 29 18:02:59 panel.gcrux.com node[4131316]: 2026-05-29T18:02:59.872-03:00 [ws] ⇄ res ✓ health 95ms cached=true conn=20b34de0…b126 id=3915b292…d670
+> May 29 18:02:59 panel.gcrux.com node[4131316]: 2026-05-29T18:02:59.970-03:00 [ws] ⇄ res ✓ agents.list 193ms conn=20b34de0…b126 id=35a0c2d6…50f4
+> May 29 18:03:00 panel.gcrux.com node[4131316]: 2026-05-29T18:03:00.342-03:00 [ws] ⇄ res ✓ commands.list 223ms conn=20b34de0…b126 id=adc8e9da…c243
+> May 29 18:03:00 panel.gcrux.com node[4131316]: 2026-05-29T18:03:00.391-03:00 [ws] ⇄ res ✓ chat.history 272ms conn=20b34de0…b126 id=ec50c5ac…2e08
+> May 29 18:03:00 panel.gcrux.com node[4131316]: 2026-05-29T18:03:00.404-03:00 [ws] ⇄ res ✓ models.list 286ms conn=20b34de0…b126 id=e5f37aa9…cca8
+> May 29 18:03:00 panel.gcrux.com node[4131316]: 2026-05-29T18:03:00.414-03:00 [ws] ⇄ res ✓ sessions.list 295ms conn=20b34de0…b126 id=68566677…49e8
+> 
+> === Test Stage 1 cron via OpenClaw CLI (if available) ===
+> /usr/local/bin/openclaw
+> /home/ubuntu/openclaw/openclaw.mjs
+> 
+> === Trigger Stage 1 manually to verify fix worked ===
+> {
+>   "ok": true,
+>   "enqueued": true,
+>   "runId": "manual:8cd3de17-b6a6-44ad-9482-53d498c1d7f1:1780088777388:1"
+> }
+> ```
+
+## 🤖 Claude *(21:06:39)*
+
+
+## 🤖 Claude *(21:06:41)*
+
+**SUCCESS material:** Stage 1 manualmente enfileirado retornou `{"ok": true, "enqueued": true}` — payload novo **VALIDADO**. Vou aguardar a execução + confirmar o modelo default ativo.
+
+## 🤖 Claude *(21:06:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 8\necho \"=== Stage 1 state DEPOIS da execu\u00e7\u00e3o manual ===\"\npython3 -c \"\nimport json, datetime\nd = json.load(open('/home/ubuntu/.openclaw/cron/jobs-state.json'))\nstate = d['jobs'].get('8cd3de17-b6a6-44ad-9482-53d498c1d7f1', {})\nlast = state.get('state',{}).get('lastRunAtMs', 0)\nprint(f'lastRunAtMs: {datetime.datetime.fromtimestamp(last/1000).strftime(\\\"%Y-%m-%d %H:%M:%S\\\") if last else \\\"(no last)\\\"}')\nprint(f'lastRunStatus: {state.get(\\\"state\\\",{}).get(\\\"lastRunStatus\\\")}')\nprint(f'lastError: {state.get(\\\"state\\\",{}).get(\\\"lastError\\\")}')\nprint(f'lastDiagnosticSummary: {state.get(\\\"state\\\",{}).get(\\\"lastDiagnosticSummary\\\")}')\nprint(f'consecutiveErrors: {state.get(\\\"state\\\",{}).get(\\\"consecutiveErrors\\\")}')\nprint(f'consecutiveSkipped: {state.get(\\\"state\\\",{}).get(\\\"consecutiveSkipped\\\")}')\n\"\necho\necho \"=== Gateway log para o manual run ===\"\njournalctl --user -u openclaw-gateway --since '18:06' 2>&1 | grep -iE \"8cd3de17|stage1|circadian|manual\" | head -10\necho\necho \"=== Default model carregado pelo gateway? (via openclaw CLI) ===\"\nnode /home/ubuntu/openclaw/openclaw.mjs models list 2>&1 | tail -20",
+  "description": "Wait for cron exec and verify Stage 1 final state + default model",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Stage 1 state DEPOIS da execução manual ===
+> lastRunAtMs: 2026-05-29 03:00:40
+> lastRunStatus: skipped
+> lastError: None
+> lastDiagnosticSummary: isolated job requires payload.kind=agentTurn
+> consecutiveErrors: 0
+> consecutiveSkipped: 2
+> 
+> === Gateway log para o manual run ===
+> 
+> === Default model carregado pelo gateway? (via openclaw CLI) ===
+> Model                                      Input      Ctx         Local Auth  Tags
+> openrouter/qwen/qwen3.7-max                text       195k        no    yes   default,configured
+> google/gemini-2.0-flash-lite               text       195k        no    yes   fallback#1,configured
+> google/gemini-2.5-flash                    text       195k        no    yes   configured
+> ollama/llama3.1:8b                         text       195k        yes   yes   configured
+> ollama/qwen3.5:latest                      text       195k        yes   yes   configured
+> openrouter/auto                            text       195k        no    yes   configured,alias:OpenRouter
+> google/gemini-2.5-pro                      text       195k        no    yes
+> ```
+
+## 🤖 Claude *(21:07:12)*
+
+
+## 🤖 Claude *(21:07:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Was the manual run actually executed? ===\"\njournalctl --user -u openclaw-gateway --since '18:06' 2>&1 | grep -iE \"8cd3de17|manual|enqueue|circadian|stage1|stage-1\" | head -20\necho\necho \"=== Check cron runs directory for the manual run ===\"\nls -la /home/ubuntu/.openclaw/cron/runs/ 2>/dev/null | tail -10\necho\necho \"=== List sessions / look for our turn ===\"\nnode /home/ubuntu/openclaw/openclaw.mjs cron status 8cd3de17-b6a6-44ad-9482-53d498c1d7f1 2>&1 | tail -20\necho\necho \"=== Recent gateway log (last 20 entries) ===\"\njournalctl --user -u openclaw-gateway --since '18:06' --no-pager 2>&1 | tail -20",
+  "description": "Trace manual run execution path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Was the manual run actually executed? ===
+> May 29 18:07:03 panel.gcrux.com node[4131316]: 2026-05-29T18:07:03.099-03:00 [diagnostic] liveness warning: reasons=event_loop_delay interval=36s eventLoopDelayP99Ms=1071.1 eventLoopDelayMaxMs=15468.6 eventLoopUtilization=0.836 cpuCoreRatio=0.485 active=1 waiting=0 queued=0 phase=channels.telegram.start-account recentPhases=sidecars.subagent-recovery:9ms,sidecars.main-session-recovery:7ms,sidecars.restart-sentinel:61ms,post-attach.update-sentinel:35ms,sidecars.session-locks:82ms,post-ready.maintenance:109ms work=[active=agent:main:cron:8cd3de17-b6a6-44ad-9482-53d498c1d7f1:run:66dba09f-9d76-4874-b1b5-63a97cc733cc(processing/tool_call,q=0,age=25s last=tool:memory_search:started)]
+> 
+> === Check cron runs directory for the manual run ===
+> total 32
+> drwx------ 2 ubuntu ubuntu 4096 May 23 22:51 .
+> drwx------ 3 ubuntu ubuntu 4096 May 29 18:07 ..
+> -rw------- 1 ubuntu ubuntu 1683 May 29 05:00 37d43d1c-0c76-4f7c-acbe-44987cde3128.jsonl
+> -rw------- 1 ubuntu ubuntu 2734 May 29 18:07 8cd3de17-b6a6-44ad-9482-53d498c1d7f1.jsonl
+> -rw------- 1 ubuntu ubuntu 3408 May 29 07:00 b76563c5-1c7c-4054-b5dd-86a7840d3d29.jsonl
+> -rw------- 1 ubuntu ubuntu 9084 May 29 03:00 cb6df4a5-9678-4c9b-a388-24b97e4bf463.jsonl
+> 
+> === List sessions / look for our turn ===
+> Too many arguments for this command.
+> Try: openclaw cron status --help
+> 
+> === Recent gateway log (last 20 entries) ===
+> May 29 18:07:03 panel.gcrux.com node[4131316]: 2026-05-29T18:07:03.099-03:00 [diagnostic] liveness warning: reasons=event_loop_delay interval=36s eventLoopDelayP99Ms=1071.1 eventLoopDelayMaxMs=15468.6 eventLoopUtilization=0.836 cpuCoreRatio=0.485 active=1 waiting=0 queued=0 phase=channels.telegram.start-account recentPhases=sidecars.subagent-recovery:9ms,sidecars.main-session-recovery:7ms,sidecars.restart-sentinel:61ms,post-attach.update-sentinel:35ms,sidecars.session-locks:82ms,post-ready.maintenance:109ms work=[active=agent:main:cron:8cd3de17-b6a6-44ad-9482-53d498c1d7f1:run:66dba09f-9d76-4874-b1b5-63a97cc733cc(processing/tool_call,q=0,age=25s last=tool:memory_search:started)]
+> May 29 18:07:05 panel.gcrux.com node[4131316]: 2026-05-29T18:07:05.787-03:00 [memory] sync failed (session-start): Error: openai embeddings failed: 403 {
+> May 29 18:07:05 panel.gcrux.com node[4131316]:     "error": {
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "message": "Project `proj_rWo9VkBo6n9WQro93dzCZglr` does not have access to model `text-embedding-3-small`",
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "type": "invalid_request_error",
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "param": null,
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "code": "model_not_found"
+> May 29 18:07:05 panel.gcrux.com node[4131316]:     }
+> May 29 18:07:05 panel.gcrux.com node[4131316]: }
+> May 29 18:07:05 panel.gcrux.com node[4131316]: 2026-05-29T18:07:05.790-03:00 [memory] sync failed (search): Error: openai embeddings failed: 403 {
+> May 29 18:07:05 panel.gcrux.com node[4131316]:     "error": {
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "message": "Project `proj_rWo9VkBo6n9WQro93dzCZglr` does not have access to model `text-embedding-3-small`",
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "type": "invalid_request_error",
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "param": null,
+> May 29 18:07:05 panel.gcrux.com node[4131316]:         "code": "model_not_found"
+> May 29 18:07:05 panel.gcrux.com node[4131316]:     }
+> May 29 18:07:05 panel.gcrux.com node[4131316]: }
+> ```
+
+## 🤖 Claude *(21:07:29)*
+
+
+## 🤖 Claude *(21:07:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Stage 1 run jsonl content (mais recente entry) ===\"\ntail -5 /home/ubuntu/.openclaw/cron/runs/8cd3de17-b6a6-44ad-9482-53d498c1d7f1.jsonl 2>/dev/null | python3 -c \"\nimport json, sys\nfor line in sys.stdin:\n    try:\n        j = json.loads(line)\n        ts = j.get('ts','?')\n        kind = j.get('kind','?')\n        runId = j.get('runId','?')\n        status = j.get('status','?')\n        model = j.get('model','?')\n        provider = j.get('provider','?')\n        print(f'ts={ts} kind={kind} runId={runId[:18]}... status={status} model={model} provider={provider}')\n    except Exception as e:\n        print('PARSE_ERR:', e, line[:80])\n\"\necho\necho \"=== Wait for completion ===\"\nsleep 12\necho \"=== Updated Stage 1 jobs-state ===\"\npython3 -c \"\nimport json, datetime\nd = json.load(open('/home/ubuntu/.openclaw/cron/jobs-state.json'))\nstate = d['jobs'].get('8cd3de17-b6a6-44ad-9482-53d498c1d7f1', {}).get('state', {})\nlast = state.get('lastRunAtMs', 0)\nprint(f'lastRunAtMs:           {datetime.datetime.fromtimestamp(last/1000).strftime(\\\"%Y-%m-%d %H:%M:%S\\\") if last else \\\"(none)\\\"}')\nprint(f'lastRunStatus:         {state.get(\\\"lastRunStatus\\\")}')\nprint(f'lastError:             {state.get(\\\"lastError\\\")}')\nprint(f'lastDiagnosticSummary: {state.get(\\\"lastDiagnosticSummary\\\")}')\nprint(f'consecutiveSkipped:    {state.get(\\\"consecutiveSkipped\\\")}')\nprint(f'consecutiveErrors:     {state.get(\\\"consecutiveErrors\\\")}')\n\"\necho\necho \"=== Stage 1 jsonl COMPLETE record ===\"\ntail -1 /home/ubuntu/.openclaw/cron/runs/8cd3de17-b6a6-44ad-9482-53d498c1d7f1.jsonl 2>/dev/null | python3 -m json.tool 2>&1 | head -40",
+  "description": "Wait for Stage 1 manual run to complete + verify final state + model used",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Stage 1 run jsonl content (mais recente entry) ===
+> ts=1779586264550 kind=? runId=manual:8cd3de17-b6... status=ok model=gemini-2.5-flash provider=google
+> ts=1779948017339 kind=? runId=?... status=skipped model=? provider=?
+> ts=1780034440467 kind=? runId=?... status=skipped model=? provider=?
+> ts=1780088828891 kind=? runId=manual:8cd3de17-b6... status=ok model=qwen/qwen3.7-max provider=openrouter
+> 
+> === Wait for completion ===
+> === Updated Stage 1 jobs-state ===
+> lastRunAtMs:           2026-05-29 18:06:17
+> lastRunStatus:         ok
+> lastError:             None
+> lastDiagnosticSummary: None
+> consecutiveSkipped:    0
+> consecutiveErrors:     0
+> 
+> === Stage 1 jsonl COMPLETE record ===
+> {
+>     "ts": 1780088828891,
+>     "jobId": "8cd3de17-b6a6-44ad-9482-53d498c1d7f1",
+>     "action": "finished",
+>     "status": "ok",
+>     "summary": "\ud83c\udf19 **MCORCH Circadian \u2014 Stage 1 Light Sleep (03:00 BRT) acknowledged.**\n\n`nightly-stage1-light-sleep.sh` executed via OS crontab. Display-only entry \u2014 no action required. Memory search is temporarily unavailable (OpenAI embeddings 403 \u2014 `text-embedding-3-small` project access revoked), but context is preserved. The circadian rhythm continues.",
+>     "delivered": false,
+>     "deliveryStatus": "not-requested",
+>     "delivery": {
+>         "intended": {
+>             "channel": "last",
+>             "to": null,
+>             "source": "last"
+>         },
+>         "fallbackUsed": false,
+>         "delivered": false
+>     },
+>     "sessionId": "66dba09f-9d76-4874-b1b5-63a97cc733cc",
+>     "sessionKey": "agent:main:cron:8cd3de17-b6a6-44ad-9482-53d498c1d7f1:run:66dba09f-9d76-4874-b1b5-63a97cc733cc",
+>     "runId": "manual:8cd3de17-b6a6-44ad-9482-53d498c1d7f1:1780088777388:1",
+>     "runAtMs": 1780088777394,
+>     "durationMs": 51492,
+>     "nextRunAtMs": 1780120800000,
+>     "model": "qwen/qwen3.7-max",
+>     "provider": "openrouter",
+>     "usage": {
+>         "input_tokens": 15751,
+>         "output_tokens": 427,
+>         "total_tokens": 15100
+>     }
+> }
+> ```
+
+## 🤖 Claude *(21:07:50)*
+
+You've hit your session limit · resets 7:30pm (America/Sao_Paulo)
+
+## 👤 User *(21:09:05)*
+
+Preciso que você investigue os últimos 4 dias de commits e contextos, pois esses problemas deve ser resolvidos e documentados para não acontecer mais essas confusões com o gateway e o maestro. Avalie exatamente para ter certeza e criar uma skill para isso e que nunca mais aconteça conflitos.
+
+## 🤖 Claude *(21:09:05)*
+
+You've hit your session limit · resets 7:30pm (America/Sao_Paulo)
