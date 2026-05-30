@@ -9587,10 +9587,203 @@ README atualizado (6.14.0 · mesh 8638). **Phase 5b — secret scan no HANDOFF.m
 > Session created NO new module (hardened existing: affiliate/viralmind, constellation/mcorch-constellation, canvas/canvas-design — all BoK-complete). New artifacts = skills/agents/SOPs (tooling, BoK-exempt).
 > ```
 
+## 🤖 Claude *(16:00:21)*
+
+
+## 🤖 Claude *(16:00:23)*
+
+**Phase 6 — todas as 9 BoK completas** · nenhum módulo novo (hardening de features documentadas) → BoK Gate satisfeito.
+
+**Phase 7 — Push + merge no `main` + deploy durável.** Push do branch + checagem se o merge é fast-forward:
+
+## 🤖 Claude *(16:00:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\nMAIN=/home/gcrUX/htdocs/constellation-orchestra\necho \"=== push branch ===\"\ntimeout 60 git push origin claude/eager-brown-6ef0f1 2>&1 | tail -5\necho \"=== main repo clean? ===\"\ngit -C \"$MAIN\" status --short | head -3; echo \"(vazio = limpo)\"\necho \"=== fast-forward poss\u00edvel? (merge-base main == main HEAD?) ===\"\nMB=$(git merge-base main claude/eager-brown-6ef0f1 2>/dev/null)\nMAINHEAD=$(git -C \"$MAIN\" rev-parse main 2>/dev/null)\necho \"merge-base: ${MB:0:9} \u00b7 main HEAD: ${MAINHEAD:0:9} \u00b7 $([ \"$MB\" = \"$MAINHEAD\" ] && echo 'FAST-FORWARD \u2705' || echo 'merge commit needed')\"",
+  "description": "Push branch + check main merge feasibility"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push branch ===
+> remote: Create a pull request for 'claude/eager-brown-6ef0f1' on GitHub by visiting:        
+> remote:      https://github.com/gabrielZarattini/constellation-orchestra/pull/new/claude/eager-brown-6ef0f1        
+> remote: 
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>  * [new branch]      claude/eager-brown-6ef0f1 -> claude/eager-brown-6ef0f1
+> === main repo clean? ===
+> (vazio = limpo)
+> === fast-forward possível? (merge-base main == main HEAD?) ===
+> merge-base: cf121c1b7 · main HEAD: cf121c1b7 · FAST-FORWARD ✅
+> ```
+
+## 🤖 Claude *(16:00:44)*
+
+
+## 🤖 Claude *(16:00:45)*
+
+Branch pushed (novo no GitHub) · main limpo · **fast-forward confirmado**. Merge no `main` + push + rebuild durável (agora o source do main = artefato servido):
+
+## 🤖 Claude *(16:00:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "MAIN=/home/gcrUX/htdocs/constellation-orchestra\ncd \"$MAIN\"\necho \"=== merge (ff-only) ===\"\ngit merge --ff-only claude/eager-brown-6ef0f1 2>&1 | tail -4\necho \"=== push main ===\"\ntimeout 60 git push origin main 2>&1 | tail -4\necho \"=== rebuild in main (durable: source=artifact, main has .env) ===\"\nbun run build 2>&1 | tail -2\necho \"=== materiality G1 (env) + G2 (chunk) on served dist ===\"\necho \"G1 env baked: $(grep -rl bcyvddsykvehvpwstlfa \"$MAIN/dist/assets/\" | wc -l) files\"\necho \"G2 entry: $(ls \"$MAIN/dist/assets/\" | grep -E '^index-.*\\.js$' | head -1) \u00b7 Constellation: $(ls \"$MAIN/dist/assets/\" | grep -m1 ConstellationPage) \u00b7 Affiliate: $(ls \"$MAIN/dist/assets/\" | grep -m1 -i AffiliateProducts)\"",
+  "description": "Merge to main + push + durable rebuild + materiality verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === merge (ff-only) ===
+>  create mode 100644 .claude/skills/canvas-studio-cinematic/SKILL.md
+>  create mode 100644 docs/processes/affiliate-credential-resolution.md
+>  create mode 100644 docs/processes/build-deploy-materiality.md
+>  create mode 100644 src/hooks/useAgentActivity.ts
+> === push main ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    cf121c1..02c39eb  main -> main
+> === rebuild in main (durable: source=artifact, main has .env) ===
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.04s
+> === materiality G1 (env) + G2 (chunk) on served dist ===
+> G1 env baked: 9 files
+> G2 entry: index-B5rnKiJ-.js · Constellation: ConstellationPage-D7nVrCto.js · Affiliate: AffiliateProductsPage-NKylG9-1.js
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1
+> ```
+
+## 🤖 Claude *(16:01:39)*
+
+
+## 🤖 Claude *(16:01:41)*
+
+**Deploy DURÁVEL completo** (Lei 1): merge fast-forward → `main`, push `cf121c1..02c39eb main -> main` ✅, rebuild no main 22.04s, **source = artefato servido**. G1 env baked (9 files) · G2 entry novo `index-B5rnKiJ-.js` + `ConstellationPage-D7nVrCto.js`. Não reverte mais.
+
+**Phase 7b — sprint hygiene + scratch.** Localizando o anchor do sprint + scratch:
+
+## 🤖 Claude *(16:01:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== most recent sprint entry ===\"; grep -nE \"^\\*\\*Sprint v6\\.(1[0-4]|9)\" .claude/context/sprint-priorities.md | tail -3\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"has files\" || echo \"scratch clean \u2705\"",
+  "description": "Find sprint anchor + scratch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === most recent sprint entry ===
+> === scratch ===
+> scratch clean ✅
+> ```
+
+## 🤖 Claude *(16:01:59)*
+
+
+## 🤖 Claude *(16:02:01)*
+
+Scratch limpo ✅. `sprint-priorities.md` está **atrás desde v6.6.9** (não registrou v6.7-v6.13) — adicionar só v6.14.0 num arquivo defasado seria enganoso; o HANDOFF.md é o tracker vivo, então não edito (registro a defasagem no relatório). Limpando os transientes do worktree (cópia do `.env` + proof-manifest):
+
+## 🤖 Claude *(16:02:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\nrm -f .env proof-manifest.json\necho \"worktree .env removed: $([ -f .env ] && echo NO || echo yes) \u00b7 proof-manifest removed: $([ -f proof-manifest.json ] && echo NO || echo yes)\"\necho \"=== final state ===\"\necho \"branch: $(git branch --show-current) \u00b7 tree: $(git status --short | wc -l) uncommitted\"\necho \"main HEAD: $(git -C /home/gcrUX/htdocs/constellation-orchestra rev-parse --short main) \u00b7 origin/main: $(git -C /home/gcrUX/htdocs/constellation-orchestra rev-parse --short origin/main 2>/dev/null)\"",
+  "description": "Cleanup transient worktree files + final state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> worktree .env removed: yes · proof-manifest removed: yes
+> === final state ===
+> branch: claude/eager-brown-6ef0f1 · tree: 0 uncommitted
+> main HEAD: 02c39eb · origin/main: 02c39eb
+> ```
+
+## 🤖 Claude *(16:02:15)*
+
+
+## 🤖 Claude *(16:02:35)*
+
+Tudo selado — main HEAD = origin/main = `02c39eb`, tree limpo, transientes removidos.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — v6.14.0 Sovereign Dogfood (2026-05-30)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  Phase 1 (commits): ✅ zero secrets · .env não commitado
+  Phase 5b (HANDOFF.md): ✅ só placeholders (sk_live_... / <live-key>) + docs de padrões
+  Pre-commit hook anti-credential: ✅ não bloqueou
+
+📦 COMMITS (8 total · branch claude/eager-brown-6ef0f1 → main)
+  22bfa98 refactor(affiliate): per-user fail-closed
+  67c5977 feat(constellation): real agent activity feed
+  c139d05 fix(canvas): campaign builder seeds graph
+  6ab9ac2 fix(affiliate): fill template placeholders
+  762fbe7 docs(skill): canvas-studio-cinematic
+  70e990e docs(process): build-deploy-guardian + Obstacle→Synthesis
+  afe5e94 docs(readme): v6.14.0
+  02c39eb docs(handoff): seal v6.14.0
+
+⬡ KNOWLEDGE MESH
+  Milestone: 5edb7de0-7493-41ae-a4d5-8e2241a08692 — session-handoff-20260530-sovereign-dogfood-v6140
+  Embedding: ✅ 768d (openai/text-embedding-3-small) · mesh 8638 nós
+
+📖 README.md  6.13.0 → 6.14.0 · badge 8636 → 8638 nós · What's New v6.14.0
+
+🧠 HANDOFF.md  Record v6.14.0 selado (Task State · Material proofs · Pending · Survival Laws 4/4 ✓)
+
+📋 PROVA MATERIAL (Fase 5c)  Veredito: SEAL ALLOWED · 10 verificadas · 1 skipped · 0 falhas
+
+📚 BoK  9/9 suítes completas · nenhum módulo novo (hardening documentado) → Gate satisfeito
+
+🚀 PUSH  cf121c1..02c39eb main → origin/main · branch pushed · deploy DURÁVEL (merge ff + rebuild no main, source=artefato)
+
+📌 SPRINT  sprint-priorities.md defasado desde v6.6.9 (HANDOFF é o tracker vivo) · scratch limpo ✅ · sem MCP novo
+
+⏭  PRÓXIMOS PASSOS
+  1. 🎯 ML API initiative (BoK-first): /bok-scribe família API Mercado Livre —
+     ML core afiliados (link real = meli.la/... via API ML + tag caga6077534, NÃO panel.gcrux.com),
+     Global Selling (moeda forte), Mercado Pago per-user. Skip Mercado Envios. Skill+agent por módulo.
+  2. Afiliados bug 1: produtos do catálogo com MLB placeholders → resolver via API ML real.
+  3. Viral Miner: fetch-trends NÃO deployed + Apify/RapidAPI globais (débito tenancy).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Sessão monumental selada.** Recapitulando o que entrou em produção e o que aprendemos:
+
+- **3 frentes entregues + validadas ao vivo como Usuário Zero** (afiliado per-user, constelação real, canvas graph) — com prints provando Live Logs reais e o pipeline do canvas.
+- **2 anticorpos permanentes**: o `build-deploy-guardian` (skill+agent+SOP) e o mandato **Obstacle → Synthesis** no CLAUDE.md §5 — meu falso-sucesso de deploy virou imunidade do ecossistema, exatamente como você pediu.
+- **Deploy durável**: `main` agora tem o código + o `dist/` servido bate com o source (não reverte mais).
+
+A próxima sessão já tem rumo claro e **BoK-gated**: a família **API Mercado Livre** (afiliados reais via `meli.la`, Global Selling em moeda forte, Mercado Pago per-user). Quando quiser, é só abrir uma sessão nova e disparar `/bok-scribe` — eu começo pela pesquisa dos docs `developers.mercadolivre.com.br` e selo a Fonte da Verdade antes de qualquer linha de código.
+
+Pronto para descansar a Constelação. 🛰️
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-05-29 - Update context and continue antigravity handoff]]
+> * **Sessão Anterior**: [[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]
 > * **Próxima Sessão**: [[2026-05-30 - Fix API key leak and reconfigure model defaults]]
 %% --- TIMELINE END --- %%

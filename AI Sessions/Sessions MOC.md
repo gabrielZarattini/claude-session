@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 218
-> * **Sessões do Claude**: 190
+> * **Total de Sessões Registradas**: 219
+> * **Sessões do Claude**: 191
 > * **Sessões do Gemini**: 28
 
 ---
@@ -51,6 +51,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-05-30 - Você se lembra que criamos um...]]` - *2026-05-30*
+*   `[[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]` - *2026-05-30*
 *   `[[2026-05-29 - Update context and continue antigravity handoff]]` - *2026-05-29*
 *   `[[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]` - *2026-05-29*
 *   `[[2026-05-28 - handson]]` - *2026-05-28*
@@ -61,8 +62,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-28 - 9bb9165f-6ffc-42a6-a6e7-d5311c647700]]` - *2026-05-28*
 *   `[[2026-05-27 - handson]]` - *2026-05-27*
 *   `[[2026-05-27 - agent-ade944ade9598b6d3]]` - *2026-05-27*
-*   `[[2026-05-27 - agent-a851a36446f2fc5ae]]` - *2026-05-27*
-*   *... e mais 187 sessões nessa categoria.*
+*   *... e mais 188 sessões nessa categoria.*
 
 ---
 
@@ -72,6 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-30 - Você se lembra que criamos um...]]` (GeminiSessions)
 *   `[[2026-05-30 - Fix API key leak and reconfigure model defaults]]` (ClaudeSessions)
 *   `[[2026-05-30 - Configure canvas nodes and validate enterprise deploy]]` (ClaudeSessions)
+*   `[[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]` (ClaudeSessions)
 *   `[[2026-05-29 - Update context and continue antigravity handoff]]` (ClaudeSessions)
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` (ClaudeSessions)
 *   `[[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]` (ClaudeSessions)
