@@ -14316,3 +14316,74 @@ O full handoff seria **cerimônia desnecessária** (Lei 3 — anti-hoarding) pra
 **Única imperfeição menor:** o Record selado (`abd73fd`) não cita a skill `openclaw-dreaming` (criada depois). Se você quiser o registro 100% fiel, eu faço um **adendo de 1 linha** no HANDOFF Record + commit rápido (~30s, sem re-rodar o protocolo todo). Senão, está tudo seguro e sincronizado como está.
 
 Quer o adendo de 1 linha, ou encerramos aqui?
+
+## 👤 User *(01:26:08)*
+
+sim faça o adendo de uma linha só isso que falta ne? ai vou para uma nova sessão com handson
+
+## 🤖 Claude *(01:26:21)*
+
+
+## 🤖 Claude *(01:26:21)*
+
+Sim, é só isso. Adicionando o adendo de 1 linha no Record:
+
+## 🤖 Claude *(01:26:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md",
+  "old_string": "| `README.md` v6.13.0 + What's New | \u2705 commit `f54798e` |",
+  "new_string": "| `README.md` v6.13.0 + What's New | \u2705 commit `f54798e` |\n| `.claude/skills/openclaw-dreaming/SKILL.md` + CLAUDE.md Key Files (adendo p\u00f3s-selo) | \u2705 playbook dreaming/mem\u00f3ria extra\u00eddo como skill dedicada (sibling de openclaw-gateway-ops); commit `2300997` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:26:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): addendum \u2014 record openclaw-dreaming skill (post-seal commit 2300997)\" && echo \"commit \u2713\"\ncd /home/gcrUX/htdocs/constellation-orchestra\ngit merge claude/wizardly-allen-2a03a9 --no-edit 2>&1 | tail -2\ngit push origin main 2>&1 | tail -3\necho \"sync: $(git rev-list --count origin/main..main) commits \u00e0 frente \u00b7 HEAD $(git log --oneline -1 | cut -c1-50)\"",
+  "description": "Commit HANDOFF addendum + merge + push",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit ✓
+>  HANDOFF.md | 1 +
+>  1 file changed, 1 insertion(+)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2300997..cf121c1  main -> main
+> sync: 0 commits à frente · HEAD cf121c1 docs(handoff): addendum — record opencla
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(01:26:37)*
+
+
+## 🤖 Claude *(01:26:41)*
+
+Selado. ✅
+
+- Adendo commitado (`cf121c1`), merged, pushed — **0 commits à frente de origin**
+- O HANDOFF Record v6.13.0 agora reflete **tudo**, incluindo a skill `openclaw-dreaming`
+
+Está 100% fechado e fiel. Pode abrir a nova sessão e rodar **/handson** — ele vai pegar o estado selado em v6.13.0 com:
+- 9 commits da sessão no `origin/main`
+- Memória, 2 skills OpenClaw (gateway-ops + dreaming), SOP e CLAUDE.md Key Files atualizados
+- Único pendente visual: confirmar o Palace/Insights no sweep das 03:00 BRT (blocker já removido)
+
+Boa virada de sessão, Maestro. 🤝
