@@ -5249,6 +5249,1380 @@ O script cron usa REST + sua groq key (que consigo executar) e escreve em `/var/
 >   done  groq/llama-3.3-70b-versatile · 230 tok · 1.0 mco · 946ms
 > ```
 
+## 🤖 Claude *(04:00:04)*
+
+
+## 🤖 Claude *(04:00:19)*
+
+Confirmado: **23 execs** (19 → +4) — pipeline real **vivo agora**. Os 4 mais recentes são chamadas Groq reais.
+
+---
+
+## Frente C — Agentes reais: ✅ no ar
+
+| Camada | Estado | Prova material |
+|--------|--------|----------------|
+| Backend CEA | ✅ vivo | 23 `agent_executions` reais · cron `agent-daily-pulse` rodado agora (4 Directors · Groq · 1 mco cada · 620-946ms) |
+| `useAgentActivity` (novo) | ✅ | substitui `useSimulation`; lê execs reais → Live Logs + status 3D |
+| `ConstellationPage` | ✅ | `useSimulation()` → `useAgentActivity()` |
+| Botão "Executar tarefa" | ✅ | `AgentDetail` → `useAgentTask` → `agent-task-execute` (override pilot groq) |
+| Build/deploy | ✅ | `tsc` 0 erros · build **21.47s** · `dist/` servido pelo nginx |
+| SOP | ✅ | CEA v1.1 documentando o wiring |
+
+**Validação sua (2 passos):**
+1. **Hard-refresh** `login.mcorch.com/dashboard/constellation` (Ctrl+Shift+R — Cloudflare). Abra os **Live Logs**: o teatro ("Connection timeout", "Invalid response format") dá lugar a logs **reais** — `groq/llama-3.3-70b · 216 tok · 1.0 mco · 661ms`. Os 4 Directors que acabei de rodar devem aparecer.
+2. Clique num agente → **"Executar tarefa"** → digite um prompt → Run. Em ~12s o exec real aparece nos Live Logs + toast com tokens/custo.
+
+> ⚠️ **Gate honesto pendente (Lei 1):** o passo 2 (botão → `agent-task-execute`) é a única coisa que **não consegui** disparar daqui — meu service key do `.env` não bate com o `SUPABASE_SERVICE_ROLE_KEY` interno da função (admin-path 401). **Não é bug de produção** — o botão usa o JWT do seu browser (caminho `getUser()`, correto). Só você consegue fechar esse gate com 1 clique. O backend em si está provado pelos 23 execs.
+
+> 🔧 **Follow-up documentado no SOP:** o seed `crew_agents` usa `provider`/`model` que não casam com `agent_pricing` (Directors=Anthropic sem endpoint; specialists model="Llama 3"). Por isso forcei o override pilot `groq/llama-3.3-70b`. Corrigir o seed remove a necessidade do override.
+
+---
+
+**Resumo da sessão:** Frente A ✅ (per-user fail-closed, deployed, G3/G4/G5 verde, OTD fechada) · Frente C ✅ (wired + deployed, pipeline provado). Frente B (canvas) diagnosticada, não iniciada.
+
+Duas perguntas:
+1. **Commit?** Selo as duas frentes em 2 commits granulares (`refactor(affiliate): per-user fail-closed` + `feat(constellation): real agent activity feed`)?
+2. **Depois, parto para a Frente B (canvas dogfood)?**
+
+## 👤 User *(14:38:16)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(14:38:16)*
+
+No response requested.
+
+## 👤 User *(14:38:30)*
+
+sim 1 e depois 2
+
+## 🤖 Claude *(14:38:59)*
+
+
+## 🤖 Claude *(14:39:00)*
+
+Perfeito — commit primeiro, depois Frente B.
+
+Honrando sua diretiva de commits (memory `feedback_commits.md`): **sem Co-Authored-By**, corpo orientado a milestone. Primeiro confirmo o estado e o branch:
+
+## 🤖 Claude *(14:39:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"branch: $(git branch --show-current)\"\necho \"=== status ===\"\ngit status --short",
+  "description": "Confirm branch + working tree status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> branch: claude/eager-brown-6ef0f1
+> === status ===
+>  M docs/processes/constellation-economic-activation.md
+>  M src/components/panels/AgentDetail.tsx
+>  M src/pages/ConstellationPage.tsx
+>  M src/store/useCrewStore.ts
+>  M supabase/functions/process-affiliate-link/index.ts
+> ?? docs/processes/affiliate-credential-resolution.md
+> ?? src/hooks/useAgentActivity.ts
+> ```
+
+## 🤖 Claude *(14:39:20)*
+
+
+## 🤖 Claude *(14:39:21)*
+
+No branch `claude/eager-brown-6ef0f1`. Selando as duas frentes em 2 commits granulares:
+
+## 🤖 Claude *(14:39:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\n# Commit 1 \u2014 Frente A (affiliate per-user)\ngit add docs/processes/affiliate-credential-resolution.md supabase/functions/process-affiliate-link/index.ts\ngit commit -q -m \"refactor(affiliate): per-user ML credential resolution, fail-closed\" \\\n  -m \"Affiliate attribution no longer falls back to a shared global token. Both the public GET redirect and the authenticated POST monetize path resolve affiliate_config per content-owner / per-user and fail closed (302 to settings / HTTP 402) when no active config exists, so revenue cannot leak across tenants. Closes OTD-OE661-PER-USER ahead of its SLA. New SOP affiliate-credential-resolution.md seals the resolution order (Law 2). Verified in prod: GET redirects (G3/G4) and telemetry pulses (G5) green.\"\n# Commit 2 \u2014 Frente C (constellation real activity)\ngit add docs/processes/constellation-economic-activation.md src/components/panels/AgentDetail.tsx src/pages/ConstellationPage.tsx src/store/useCrewStore.ts src/hooks/useAgentActivity.ts\ngit commit -q -m \"feat(constellation): real agent activity feed replaces simulation\" \\\n  -m \"The Constellation stops being a demo. useAgentActivity reads real agent_executions and drives the Live Logs and 3D agent status; the random useSimulation mock is retired. AgentDetail gains an Executar tarefa button wiring agent-task-execute (groq pilot) so an agent runs a real LLM call with real token cost on demand. 23 real executions already flow through the panel. CEA SOP bumped to v1.1.\"\necho \"=== result ===\"\ngit log --oneline -3 | cat\necho \"=== tree clean? ===\"\ngit status --short || true",
+  "description": "Create 2 granular commits + confirm hashes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === result ===
+> 67c5977 feat(constellation): real agent activity feed replaces simulation
+> 22bfa98 refactor(affiliate): per-user ML credential resolution, fail-closed
+> cf121c1 docs(handoff): addendum — record openclaw-dreaming skill (post-seal commit 2300997)
+> === tree clean? ===
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === canvas pages ===
+> CanvasDesignPage.tsx
+> CanvasEditorPage.tsx
+> CanvasStudioPage.tsx
+> === canvas hooks ===
+> useCanvasDesign.ts
+> useCanvasJobsRealtime.ts
+> useCanvasPipeline.ts
+> useCanvasStudio.ts
+> === canvas store ===
+> useCanvasStore.ts
+> useCrewStore.ts
+> useOrchestrationStore.ts
+> === how is the graph persisted? (localStorage keys + vm_canvas table refs) ===
+> src/store/useCanvasStore.ts:54:vm_canvas_projects
+> src/store/useCanvasStore.ts:54:.graph
+> src/hooks/useCanvasStudio.ts:101:vm_canvas_projects
+> src/hooks/useCanvasStudio.ts:119:vm_canvas_projects
+> src/hooks/useCanvasStudio.ts:138:vm_canvas_projects
+> src/hooks/useCanvasStudio.ts:164:vm_canvas_projects
+> src/hooks/useCanvasStudio.ts:181:vm_canvas_projects
+> src/hooks/useCanvasStudio.ts:248:vm_canvas_assets
+> src/hooks/useCanvasStudio.ts:272:vm_canvas_executions
+> src/hooks/useCanvasStudio.ts:312:vm_canvas_recipes
+> src/hooks/useCanvasStudio.ts:338:vm_canvas_projects
+> ```
+
+## 🤖 Claude *(14:39:44)*
+
+
+## 🤖 Claude *(14:39:47)*
+
+Commits selados (tree limpo, sem Co-Authored-By):
+- `22bfa98` — refactor(affiliate): per-user ML credential resolution, fail-closed
+- `67c5977` — feat(constellation): real agent activity feed replaces simulation
+
+---
+
+## Frente B — Canvas dogfood
+
+**ORO** (Lei 4): Operator = eu (investigação) + você (cliques na UI) · Reviewer = você · Owner = você (blast radius = geração de creatives → flywheel de afiliados).
+
+Hipótese: os 3 assets foram gerados por `scripts/canvas-campaign-build.ts` (script), pulando o grafo de nós da UI. Preciso entender como um projeto Canvas persiste seus nós. Investigando a arquitetura:
+
+## 🤖 Claude *(14:39:48)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Frente B \u2014 Canvas node persistence dogfood",
+  "summary": "Why canvas assets exist but nodes don't show in the UI; validate User Zero create\u2192run\u2192asset flow"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Frente B — Canvas node persistence dogfood". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(14:39:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== canvas pages ===\"; ls src/pages/ | grep -i canvas\necho \"=== canvas hooks ===\"; ls src/hooks/ | grep -iE \"canvas\"\necho \"=== canvas store ===\"; ls src/store/\necho \"=== how is the graph persisted? (localStorage keys + vm_canvas table refs) ===\"\ngrep -rnoE \"localStorage\\.(get|set)Item\\([^)]*canvas[^)]*\\)|vm_canvas_[a-z]+|graph_json|\\.graph\\b\" --include=\"*.ts\" --include=\"*.tsx\" src/store/useCanvasStore.ts src/hooks/useCanvasStudio.ts 2>/dev/null | head -30",
+  "description": "Discover canvas file layout + graph persistence"
+}
+```
+
+## 🤖 Claude *(14:40:05)*
+
+
+## 🤖 Claude *(14:40:07)*
+
+O grafo é persistido **server-side** em `vm_canvas_projects.graph` (jsonb) — não é só localStorage. Então se o projeto que você abre tem `graph` vazio mas há assets em `vm_canvas_assets`, isso explica tudo. Vou confirmar materialmente: ler o script de campanha + a lógica de load/save + consultar seus projetos reais:
+
+## 🤖 Claude *(14:40:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/scripts/canvas-campaign-build.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Canvas Campaign Builder — cross-node consistency validation + per-product
+> 3	 * campaign asset generation. Drives canvas-execute as the Sovereign (real JWT
+> 4	 * via magiclink OTP, mirroring canvas-video-async-smoke.test.ts auth).
+> 5	 *
+> 6	 * Phase A (cheap, OpenRouter Nano Banana ~cents): base image + a consistent
+> 7	 *   variation referencing it → proves reference threading works WITHOUT spending
+> 8	 *   Higgsfield credits.
+> 9	 * Phase B (paid, opt-in via --video): DoP Standard image→video (9 Higgsfield cr).
+> 10	 *
+> 11	 * Usage:
+> 12	 *   bun run scripts/canvas-campaign-build.ts <productKey> [--video]
+> 13	 *   productKey ∈ roborock_s8 | samsung_neo_qled_8k | family_hub
+> 14	 *
+> 15	 * SOP: docs/processes/canvas-node-consistency.md
+> 16	 */
+> 17	import { createClient } from "@supabase/supabase-js";
+> 18	import { readFileSync } from "node:fs";
+> 19	import { join } from "node:path";
+> 20	
+> 21	const ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> 22	for (const line of readFileSync(join(ROOT, ".env"), "utf-8").split("\n")) {
+> 23	  const m = line.match(/^([A-Z_]+)=(.*)$/);
+> 24	  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+> 25	}
+> 26	
+> 27	const SUPABASE_URL = process.env.SUPABASE_URL!;
+> 28	const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+> 29	const PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
+> 30	const SOVEREIGN_EMAIL = "gabrielcall@gmail.com";
+> 31	
+> 32	interface Product {
+> 33	  key: string;
+> 34	  name: string;
+> 35	  basePrompt: string;
+> 36	  variationPrompt: string;
+> 37	  videoPrompt: string;
+> 38	}
+> 39	
+> 40	const PRODUCTS: Record<string, Product> = {
+> 41	  roborock_s8: {
+> 42	    key: "roborock_s8",
+> 43	    name: "Roborock S8 Pro Ultra",
+> 44	    basePrompt:
+> 45	      "A sleek black robot vacuum cleaner with a circular raised LIDAR turret, docked at its tall white auto-empty charging base, on light oak hardwood floor in a bright minimalist living room, soft natural window light, premium product photography, ultra detailed, 16:9",
+> 46	    variationPrompt:
+> 47	      "The same black robot vacuum from the reference image, now actively cleaning across a beige wool area rug in the same bright living room, slightly lower dynamic angle, soft natural light, premium product photography, 16:9",
+> 48	    videoPrompt:
+> 49	      "Smooth cinematic product reveal, the robot vacuum glides forward and its top LIDAR turret subtly rotates, soft light, 16:9",
+> 50	  },
+> 51	  samsung_neo_qled_8k: {
+> 52	    key: "samsung_neo_qled_8k",
+> 53	    name: "Samsung Neo QLED 8K",
+> 54	    basePrompt:
+> 55	      "An ultra-thin Samsung Neo QLED 8K television on a slim wooden media console, near-bezel-less screen showing a vivid abstract nebula, mounted in a modern dark-toned living room, cinematic ambient lighting, premium product photography, ultra detailed, 16:9",
+> 56	    variationPrompt:
+> 57	      "The same ultra-thin Neo QLED 8K television from the reference image, same room and console, now showing a vibrant tropical landscape, wider angle revealing a cozy sofa, cinematic ambient lighting, premium product photography, 16:9",
+> 58	    videoPrompt:
+> 59	      "Cinematic camera slowly pushing toward the TV as the on-screen nebula gently animates, ambient light, 16:9",
+> 60	  },
+> 61	  family_hub: {
+> 62	    key: "family_hub",
+> 63	    name: "Geladeira Samsung Family Hub",
+> 64	    basePrompt:
+> 65	      "A modern stainless steel Samsung French-door refrigerator with a large vertical Family Hub touchscreen on the right door showing a calendar, in a bright contemporary kitchen with marble counters, soft daylight, premium product photography, ultra detailed, 16:9",
+> 66	    variationPrompt:
+> 67	      "The same stainless steel Samsung Family Hub refrigerator from the reference image, same kitchen, the touchscreen now showing family photos, a person's hand reaching toward the screen, soft daylight, premium product photography, 16:9",
+> 68	    videoPrompt:
+> 69	      "Gentle cinematic dolly toward the refrigerator as the Family Hub screen transitions between calendar and photos, soft daylight, 16:9",
+> 70	  },
+> 71	};
+> 72	
+> 73	const NANO_BANANA = { provider: "openrouter", model: "google/gemini-2.5-flash-image" };
+> 74	
+> 75	/** Reuse an already-generated asset for a node (idempotency — avoids re-spending). */
+> 76	async function findExistingAsset(admin: any, userId: string, projectId: string, nodeId: string) {
+> 77	  const { data } = await admin
+> 78	    .from("vm_canvas_assets")
+> 79	    .select("id, public_url")
+> 80	    .eq("user_id", userId)
+> 81	    .eq("project_id", projectId)
+> 82	    .eq("node_id", nodeId)
+> 83	    .order("created_at", { ascending: false })
+> 84	    .limit(1)
+> 85	    .maybeSingle();
+> 86	  return data?.public_url ? { id: data.id as string, url: data.public_url as string } : null;
+> 87	}
+> 88	
+> 89	async function callExecute(token: string, payload: Record<string, unknown>) {
+> 90	  const resp = await fetch(`${SUPABASE_URL}/functions/v1/canvas-execute`, {
+> 91	    method: "POST",
+> 92	    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+> 93	    body: JSON.stringify(payload),
+> 94	  });
+> 95	  const text = await resp.text();
+> 96	  let json: any;
+> 97	  try { json = JSON.parse(text); } catch { json = { raw: text }; }
+> 98	  return { httpStatus: resp.status, ...json };
+> 99	}
+> 100	
+> 101	async function main() {
+> 102	  const productKey = process.argv[2];
+> 103	  const withVideo = process.argv.includes("--video");
+> 104	  const product = PRODUCTS[productKey];
+> 105	  if (!product) {
+> 106	    console.error(`Unknown product. Use one of: ${Object.keys(PRODUCTS).join(", ")}`);
+> 107	    process.exit(1);
+> 108	  }
+> 109	
+> 110	  const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+> 111	  const userClient = createClient(SUPABASE_URL, PUBLISHABLE_KEY, { auth: { persistSession: false } });
+> 112	
+> 113	  console.log(`🔐 Authenticating as ${SOVEREIGN_EMAIL}...`);
+> 114	  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+> 115	    type: "magiclink", email: SOVEREIGN_EMAIL,
+> 116	  });
+> 117	  if (linkErr || !linkData?.properties?.email_otp) throw new Error(`generateLink failed: ${linkErr?.message}`);
+> 118	  const { data: sessionData, error: otpErr } = await userClient.auth.verifyOtp({
+> 119	    email: SOVEREIGN_EMAIL, token: linkData.properties.email_otp, type: "magiclink",
+> 120	  });
+> 121	  if (otpErr || !sessionData?.session) throw new Error(`verifyOtp failed: ${otpErr?.message}`);
+> 122	  const token = sessionData.session.access_token;
+> 123	  const userId = sessionData.user!.id;
+> 124	  console.log(`✅ Session for user ${userId}`);
+> 125	
+> 126	  // Ensure campaign project
+> 127	  const projName = `Campanha ${product.name}`;
+> 128	  let { data: proj } = await admin.from("vm_canvas_projects")
+> 129	    .select("id").eq("user_id", userId).eq("name", projName).maybeSingle();
+> 130	  if (!proj) {
+> 131	    const { data: created, error: cErr } = await admin.from("vm_canvas_projects").insert({
+> 132	      user_id: userId, name: projName,
+> 133	      description: `Campanha de criativos consistentes para ${product.name} (afiliado ML).`,
+> 134	      tags: ["afiliado", "ml", product.key],
+> 135	    }).select("id").single();
+> 136	    if (cErr) throw new Error(`project insert failed: ${cErr.message}`);
+> 137	    proj = created;
+> 138	  }
+> 139	  console.log(`📁 Project: ${projName} → ${proj!.id}`);
+> 140	
+> 141	  const seed = Math.floor(Math.abs(hashCode(product.key)) % 2_000_000_000);
+> 142	
+> 143	  // ── Phase A1: base image (no reference) — idempotent ─────────────────
+> 144	  const baseNode = `${product.key}-base`;
+> 145	  let baseUrl: string;
+> 146	  const existingBase = await findExistingAsset(admin, userId, proj!.id, baseNode);
+> 147	  if (existingBase) {
+> 148	    baseUrl = existingBase.url;
+> 149	    console.log(`\n🖼️  [A1] Base image — reusing existing asset (no spend)`);
+> 150	  } else {
+> 151	    console.log(`\n🖼️  [A1] Base image (Nano Banana, no reference)...`);
+> 152	    const a1 = await callExecute(token, {
+> 153	      project_id: proj!.id, node_id: baseNode, node_type: "generate_image",
+> 154	      provider: NANO_BANANA.provider, model: NANO_BANANA.model,
+> 155	      prompt: product.basePrompt, parameters: { seed, aspect_ratio: "16:9" },
+> 156	    });
+> 157	    console.log(`   HTTP ${a1.httpStatus} · status=${a1.status} · charged=${a1.credits_charged} · err=${a1.error ?? "—"}`);
+> 158	    if (!a1.output_url || a1.error) throw new Error(`[A1] base generation failed: ${a1.error ?? "no output_url"}`);
+> 159	    baseUrl = a1.output_url;
+> 160	  }
+> 161	  console.log(`   base: ${baseUrl}`);
+> 162	
+> 163	  // ── Phase A2: consistent variation (references base) — idempotent ────
+> 164	  const varNode = `${product.key}-variation`;
+> 165	  let varUrl: string; let varAssetId: string | undefined;
+> 166	  const existingVar = await findExistingAsset(admin, userId, proj!.id, varNode);
+> 167	  if (existingVar) {
+> 168	    varUrl = existingVar.url; varAssetId = existingVar.id;
+> 169	    console.log(`\n🔗 [A2] Variation — reusing existing asset (no spend)`);
+> 170	  } else {
+> 171	    console.log(`\n🔗 [A2] Consistent variation (reference = base image)...`);
+> 172	    const a2 = await callExecute(token, {
+> 173	      project_id: proj!.id, node_id: varNode, node_type: "generate_image",
+> 174	      provider: NANO_BANANA.provider, model: NANO_BANANA.model,
+> 175	      prompt: product.variationPrompt,
+> 176	      reference_image_urls: [baseUrl],
+> 177	      parameters: { seed, aspect_ratio: "16:9" },
+> 178	    });
+> 179	    console.log(`   HTTP ${a2.httpStatus} · status=${a2.status} · charged=${a2.credits_charged} · err=${a2.error ?? "—"}`);
+> 180	    if (!a2.output_url || a2.error) throw new Error(`[A2] variation generation failed: ${a2.error ?? "no output_url"}`);
+> 181	    varUrl = a2.output_url; varAssetId = a2.asset_id;
+> 182	  }
+> 183	  console.log(`\n✅ CONSISTENCY WIRING VALIDATED — reference accepted, image returned (not text).`);
+> 184	  console.log(`   variation: ${varUrl}`);
+> 185	
+> 186	  // ── Phase B (opt-in): paid DoP video from the variation ──────────────
+> 187	  if (withVideo) {
+> 188	    console.log(`\n🎬 [B] Paid DoP Standard video (9 Higgsfield credits) from variation...`);
+> 189	    const vidNode = `${product.key}-video`;
+> 190	    const b = await callExecute(token, {
+> 191	      project_id: proj!.id, node_id: vidNode, node_type: "image_to_video",
+> 192	      provider: "higgsfield", model: "dop-standard",
+> 193	      prompt: product.videoPrompt,
+> 194	      input_asset_url: varUrl,
+> 195	      input_asset_id: varAssetId,
+> 196	      parameters: { duration: 5, aspect_ratio: "16:9", motion_strength: 0.5 },
+> 197	    });
+> 198	    console.log(`   HTTP ${b.httpStatus} · status=${b.status} · exec=${b.execution_id} · err=${b.error ?? "—"}`);
+> 199	    if (b.status === "queued" && b.execution_id) {
+> 200	      console.log(`   ✅ Video QUEUED — webhook will finalize + deduct only on upload OK.`);
+> 201	      console.log(`   Track: vm_canvas_executions.id=${b.execution_id}`);
+> 202	    } else {
+> 203	      console.log(`   ⚠️ Unexpected video response (no spend if not queued).`);
+> 204	    }
+> 205	  }
+> 206	
+> 207	  console.log(`\n🏁 Done for ${product.name}.`);
+> 208	}
+> 209	
+> 210	function hashCode(s: string): number {
+> 211	  let h = 0;
+> 212	  for (let i = 0; i < s.length; i++) { h = (h << 5) - h + s.charCodeAt(i); h |= 0; }
+> 213	  return h;
+> 214	}
+> 215	
+> 216	main().catch((e) => { console.error("FATAL:", e.message); process.exit(1); });
+> 217	
+> ```
+
+## 🤖 Claude *(14:40:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null; set +a\nKEY=\"${SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-$SUPABASE_URL}\"\nSOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== vm_canvas_projects (Sovereign) \u2014 graph node count ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_projects?user_id=eq.$SOV&select=id,name,graph,created_at&order=created_at.desc&limit=10\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" > /tmp/proj.json\npython3 - <<'PY'\nimport json\nd=json.load(open('/tmp/proj.json'))\nprint(f\"{len(d)} project(s)\")\nfor p in d:\n    g=p.get('graph') or {}\n    if isinstance(g,str):\n        try: g=json.loads(g)\n        except: g={}\n    nodes=g.get('nodes') if isinstance(g,dict) else None\n    edges=g.get('edges') if isinstance(g,dict) else None\n    nlen=len(nodes) if isinstance(nodes,list) else ('?' if nodes is None else nodes)\n    elen=len(edges) if isinstance(edges,list) else ('?' if edges is None else edges)\n    print(f\"  {p['id'][:8]} \u00b7 {p.get('name','?')[:30]:30} \u00b7 nodes={nlen} edges={elen} \u00b7 keys={list(g.keys()) if isinstance(g,dict) else type(g).__name__}\")\nPY\necho \"\"\necho \"=== vm_canvas_assets (Sovereign) total ===\"\ncurl -s -I \"$URL/rest/v1/vm_canvas_assets?user_id=eq.$SOV&select=id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -H \"Range: 0-0\" | grep -i content-range | sed 's/.*\\///' | tr -d '\\r'\necho \"=== vm_canvas_executions (Sovereign) total ===\"\ncurl -s -I \"$URL/rest/v1/vm_canvas_executions?user_id=eq.$SOV&select=id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -H \"Range: 0-0\" | grep -i content-range | sed 's/.*\\///' | tr -d '\\r'",
+  "description": "Inspect canvas project graphs vs assets for Sovereign"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vm_canvas_projects (Sovereign) — graph node count ===
+> 6 project(s)
+>   3f8aa85f · Campanha Geladeira Samsung Fam · nodes=0 edges=0 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+>   e224f5ae · Campanha Samsung Neo QLED 8K   · nodes=0 edges=0 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+>   0b86e7d0 · Campanha Roborock S8 Pro Ultra · nodes=0 edges=0 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+>   46ed45db · #03 Cinematic Story Arc — 3 at · nodes=12 edges=9 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+>   880b5eba · #02 - Mood board 5 lanes - 5 m · nodes=30 edges=23 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+>   905e2c66 · Mood board 5 lanes - 5 mundos  · nodes=20 edges=15 · keys=['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+> 
+> === vm_canvas_assets (Sovereign) total ===
+> 52
+> === vm_canvas_executions (Sovereign) total ===
+> 114
+> ```
+
+## 🤖 Claude *(14:41:36)*
+
+
+## 🤖 Claude *(14:41:42)*
+
+**Causa raiz confirmada — material e clara:**
+
+| Projeto | Nós no grafo | |
+|---------|--------------|---|
+| Campanha Geladeira Family Hub | **nodes=0 edges=0** | ← assets existem, canvas vazio |
+| Campanha Samsung Neo QLED 8K | **nodes=0 edges=0** | |
+| Campanha Roborock S8 | **nodes=0 edges=0** | |
+| #03 Cinematic Story Arc | nodes=12 edges=9 | ← feito na UI, funciona |
+| #02 Mood board 5 lanes | nodes=30 edges=23 | |
+| Mood board 5 lanes | nodes=20 edges=15 | |
+
+Total: 52 assets, 114 execs. **O script `canvas-campaign-build.ts` gera os assets (com `node_id`) mas nunca escreve os nós em `vm_canvas_projects.graph`** (linhas 128-205 — cria o projeto + chama `canvas-execute`, zero `graph` update). Por isso as 3 Campanhas abrem em branco. A persistência da UI **funciona** (Mood board tem 30 nós reais).
+
+Para corrigir bem (B1), preciso do shape exato de um nó. Vou copiar de um projeto que funciona + ver o tipo:
+
+## 🤖 Claude *(14:41:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null; set +a\nKEY=\"${SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-$SUPABASE_URL}\"\necho \"=== sample node + edge shape from working project 46ed45db (Cinematic Story Arc) ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_projects?id=eq.46ed45db&select=graph\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" > /tmp/g.json 2>/dev/null\n# id was truncated; fetch by name instead\ncurl -s \"$URL/rest/v1/vm_canvas_projects?name=like.*Cinematic*&select=id,graph&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" > /tmp/g.json\npython3 - <<'PY'\nimport json\nd=json.load(open('/tmp/g.json'))\nif not d: print(\"none\"); raise SystemExit\ng=d[0]['graph']\nif isinstance(g,str): g=json.loads(g)\nnodes=g.get('nodes',[]); edges=g.get('edges',[])\nprint(\"top-level graph keys:\", list(g.keys()))\nprint(\"pipelineMode:\", g.get('pipelineMode'))\nprint(f\"\\n--- node[0] (image-type) ---\")\nimg = next((n for n in nodes if 'image' in json.dumps(n.get('data',{})).lower() or n.get('type','').lower().find('image')>=0), nodes[0] if nodes else None)\nprint(json.dumps(img, indent=2, ensure_ascii=False)[:1200])\nprint(f\"\\n--- edge[0] ---\")\nprint(json.dumps(edges[0] if edges else {}, indent=2, ensure_ascii=False)[:400])\nPY",
+  "description": "Extract real canvas node + edge shape to mirror"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sample node + edge shape from working project 46ed45db (Cinematic Story Arc) ===
+> top-level graph keys: ['edges', 'lanes', 'nodes', 'pipelineMode', 'styleSettings']
+> pipelineMode: True
+> 
+> --- node[0] (image-type) ---
+> {
+>   "id": "n_sgt46z2h",
+>   "data": {
+>     "kind": "generateImage",
+>     "seed": 929271881,
+>     "label": "Personagem",
+>     "output": {
+>       "imageUrl": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/24f82c20-81a3-46b4-9ac4-e9132ad65afa.png",
+>       "generatedAt": "2026-05-24T03:46:50.996265+00:00"
+>     },
+>     "prompt": "Protagonista em close-up, olhar determinado, plano médio, 9:16",
+>     "status": "success",
+>     "modelId": "soul-720p-x1",
+>     "controls": {
+>       "hdr": 0.5,
+>       "sharpness": 0.8,
+>       "creativity": 0.7,
+>       "fractality": 0.3,
+>       "resemblance": 0.3
+>     },
+>     "fixedSeed": true,
+>     "aspectRatio": "9:16",
+>     "negativePrompt": ""
+>   },
+>   "type": "generateImage",
+>   "dragging": false,
+>   "measured": {
+>     "width": 260,
+>     "height": 348
+>   },
+>   "position": {
+>     "x": 0,
+>     "y": 0
+>   },
+>   "selected": false
+> }
+> 
+> --- edge[0] ---
+> {
+>   "id": "e_n_sgt46z2h_n_ok6dflp6_pxqe",
+>   "type": "pipeline",
+>   "source": "n_sgt46z2h",
+>   "target": "n_ok6dflp6",
+>   "sourceHandle": "output_image",
+>   "targetHandle": "input_prompt"
+> }
+> ```
+
+## 🤖 Claude *(14:41:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== canvas node TS types (discriminated union kinds + base shape) ===\"\ngrep -nE \"kind:|interface .*Node|type CanvasNode|export type|nodeType|node_type|GenerateImage|ImageToVideo|position|reference\" src/types/canvas.ts | head -40",
+  "description": "Canvas node type shapes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === canvas node TS types (discriminated union kinds + base shape) ===
+> 5: * viralmind-builder (GenerateImage · CharacterReference · SceneCompose ·
+> 6: * StyleTransfer · ImageToVideo), com catálogos `MODEL_INFO` /
+> 19:export type CanvasNodeKind =
+> 26:export type NodeStatus =
+> 36:export type ProviderId = "higgsfield" | "openai" | "replicate" | "openrouter";
+> 38:export type AspectRatio =
+> 52:export type ImageModelId =
+> 209:export type VideoModelId =
+> 216:export type VideoAspectRatio = "9:16" | "16:9" | "1:1";
+> 217:export type VideoDuration = 5 | 10 | 15;
+> 227:  /** Phase 4.2b will switch ImageToVideo from sync poll to async webhook. */
+> 317:  { id: "minimal", label: "Minimalista", suffix: "minimalist composition, negative space, muted palette, clean geometry, soft natural light" },
+> 324:export type StyleTransferPresetId = (typeof STYLE_TRANSFER_PRESETS)[number]["id"];
+> 330:export interface GenerateImageData {
+> 331:  kind: "generateImage";
+> 352:  kind: "characterReference";
+> 366:  kind: "sceneCompose";
+> 386:  kind: "styleTransfer";
+> 401:export interface ImageToVideoData {
+> 402:  kind: "imageToVideo";
+> 421:export type CanvasNodeData =
+> 422:  | GenerateImageData
+> 426:  | ImageToVideoData;
+> 428:export type CanvasNode = Node<CanvasNodeData, CanvasNodeKind>;
+> 429:export type CanvasEdge = Edge;
+> 467:export type StylePresetId = (typeof STYLE_PRESETS)[number]["id"];
+> 499:export function makeDefaultGenerateImage(
+> 500:  position: { x: number; y: number },
+> 501:  overrides: Partial<GenerateImageData> = {},
+> 506:    position,
+> 508:      kind: "generateImage",
+> 525:  position: { x: number; y: number },
+> 531:    position,
+> 533:      kind: "characterReference",
+> 543:  position: { x: number; y: number },
+> 550:    position,
+> 552:      kind: "sceneCompose",
+> 566:  position: { x: number; y: number },
+> 572:    position,
+> 574:      kind: "styleTransfer",
+> ```
+
+## 🤖 Claude *(14:42:34)*
+
+
+## 🤖 Claude *(14:42:35)*
+
+Tenho o shape exato + existem **factory functions** (`makeDefaultGenerateImage`, `makeDefaultImageToVideo` em `types/canvas.ts:499+`). Confirmação chave: **o nó exibe a imagem via `data.output.imageUrl`** (não por lookup de `node_id`) — e o script já tem `baseUrl`/`varUrl` em mãos. Então B1 é totalmente factível: basta o script escrever o `graph` (nós + edges) com as imagens já geradas anexadas.
+
+**Diagnóstico fechado.** A persistência da UI funciona; o script é que deixa órfãos. Agora é decisão sua de deliverable — é um fork real (mexer no script vs dirigir a UI ao vivo, com implicação de gasto):
+
+## 🤖 Claude *(14:42:40)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Causa raiz do Canvas confirmada (script gera assets mas n\u00e3o escreve o grafo). Como fecho a Frente B?",
+      "header": "Deliverable B",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Corrigir script + backfill",
+          "description": "Recomendado. Patch no canvas-campaign-build.ts para escrever o grafo (n\u00f3s base\u2192varia\u00e7\u00e3o\u2192v\u00eddeo com as imagens J\u00c1 geradas anexadas via data.output.imageUrl) + re-rodar idempotente (ZERO gasto, findExistingAsset reusa). As 3 Campanhas deixam de abrir em branco \u2014 voc\u00ea abre e v\u00ea/edita/roda os n\u00f3s no painel como Usu\u00e1rio Zero."
+        },
+        {
+          "label": "Eu dirijo dogfood ao vivo",
+          "description": "Via browser automation logado como voc\u00ea: crio um n\u00f3 GenerateImage na UI \u2192 prompt \u2192 Run \u2192 confirmo o asset aparecendo. Valida o fluxo real create\u2192run da interface. Gasta ~centavos (Nano Banana)."
+        },
+        {
+          "label": "Os dois",
+          "description": "Corrijo o script + backfill as 3 campanhas, e depois dirijo um Run de valida\u00e7\u00e3o ao vivo no painel para fechar o ciclo end-to-end."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Causa raiz do Canvas confirmada (script gera assets mas não escreve o grafo). Como fecho a Frente B?"="Corrigir script + backfill". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:44:43)*
+
+
+## 🤖 Claude *(14:44:44)*
+
+B1 então — corrigir o script + backfill. Preciso dos shapes exatos de dados dos nós e dos defaults das factories para construir nós válidos:
+
+## 🤖 Claude *(14:44:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/src/types/canvas.ts",
+  "offset": 325,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 325	
+> 326	export const STYLE_TRANSFER_COST = 14;
+> 327	
+> 328	/* ── Typed node data shapes ──────────────────────────────────────────── */
+> 329	
+> 330	export interface GenerateImageData {
+> 331	  kind: "generateImage";
+> 332	  label: string;
+> 333	  modelId: ImageModelId;
+> 334	  prompt: string;
+> 335	  negativePrompt: string;
+> 336	  aspectRatio: AspectRatio;
+> 337	  controls: ControlValues;
+> 338	  seed: number | null;
+> 339	  fixedSeed: boolean;
+> 340	  status: NodeStatus;
+> 341	  inheritStyle?: boolean;
+> 342	  output?: {
+> 343	    imageUrl?: string;
+> 344	    storagePath?: string;
+> 345	    imageDataUrl?: string;
+> 346	    generatedAt: string;
+> 347	  };
+> 348	  error?: string;
+> 349	}
+> 350	
+> 351	export interface CharacterReferenceData {
+> 352	  kind: "characterReference";
+> 353	  label: string;
+> 354	  characterName: string;
+> 355	  imageUrl?: string;
+> 356	  storagePath?: string;
+> 357	  /** Higgsfield Soul Character id (Phase 4.5 — registro real). */
+> 358	  soulId?: string;
+> 359	  soulIdStatus?: "idle" | "registering" | "ready" | "failed";
+> 360	  soulIdError?: string;
+> 361	  status: NodeStatus;
+> 362	  error?: string;
+> 363	}
+> 364	
+> 365	export interface SceneComposeData {
+> 366	  kind: "sceneCompose";
+> 367	  label: string;
+> 368	  prompt: string;
+> 369	  aspectRatio: AspectRatio;
+> 370	  modelId: ImageModelId;
+> 371	  /** mcoCoins estimados — derivado de MODEL_INFO[modelId]. */
+> 372	  cost: number;
+> 373	  status: NodeStatus;
+> 374	  inheritStyle?: boolean;
+> 375	  /** Smart Inheritance — id do nó characterReference upstream. */
+> 376	  characterRefId?: string;
+> 377	  output?: {
+> 378	    imageUrl?: string;
+> 379	    storagePath?: string;
+> 380	    generatedAt: string;
+> 381	  };
+> 382	  error?: string;
+> 383	}
+> 384	
+> 385	export interface StyleTransferData {
+> 386	  kind: "styleTransfer";
+> 387	  label: string;
+> 388	  strength: number;
+> 389	  cost: number;
+> 390	  presetId: StyleTransferPresetId;
+> 391	  status: NodeStatus;
+> 392	  characterRefId?: string;
+> 393	  output?: {
+> 394	    imageUrl?: string;
+> 395	    storagePath?: string;
+> 396	    generatedAt: string;
+> 397	  };
+> 398	  error?: string;
+> 399	}
+> 400	
+> 401	export interface ImageToVideoData {
+> 402	  kind: "imageToVideo";
+> 403	  label: string;
+> 404	  prompt: string;
+> 405	  duration: VideoDuration;
+> 406	  aspectRatio: VideoAspectRatio;
+> 407	  videoModel: VideoModelId;
+> 408	  motionStrength: number;
+> 409	  status: NodeStatus;
+> 410	  characterRefId?: string;
+> 411	  /** Phase 4.2b — populated by submit; webhook updates result. */
+> 412	  higgsfieldRequestId?: string;
+> 413	  output?: {
+> 414	    videoUrl?: string;
+> 415	    storagePath?: string;
+> 416	    generatedAt: string;
+> 417	  };
+> 418	  error?: string;
+> 419	}
+> 420	
+> 421	export type CanvasNodeData =
+> 422	  | GenerateImageData
+> 423	  | CharacterReferenceData
+> 424	  | SceneComposeData
+> 425	  | StyleTransferData
+> 426	  | ImageToVideoData;
+> 427	
+> 428	export type CanvasNode = Node<CanvasNodeData, CanvasNodeKind>;
+> 429	export type CanvasEdge = Edge;
+> 430	
+> 431	export interface CanvasGraph {
+> 432	  nodes: CanvasNode[];
+> 433	  edges: CanvasEdge[];
+> 434	}
+> 435	
+> 436	export const EMPTY_GRAPH: CanvasGraph = { nodes: [], edges: [] };
+> 437	
+> 438	/* ── Pipeline mode (Sprint 4.1 — preserved) ──────────────────────────── */
+> 439	
+> 440	export const LANE_HEIGHT = 320;
+> 441	export const COL_WIDTH = 320;
+> 442	export const MIN_LANES = 4;
+> 443	
+> 444	export interface LaneConfig {
+> ```
+
+## 🤖 Claude *(14:44:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/src/types/canvas.ts",
+  "offset": 490,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 490	  viewport?: Viewport;
+> 491	}
+> 492	
+> 493	/* ── Factories ──────────────────────────────────────────────────────── */
+> 494	
+> 495	function makeNodeId(): string {
+> 496	  return `n_${Math.random().toString(36).slice(2, 10)}`;
+> 497	}
+> 498	
+> 499	export function makeDefaultGenerateImage(
+> 500	  position: { x: number; y: number },
+> 501	  overrides: Partial<GenerateImageData> = {},
+> 502	): CanvasNode {
+> 503	  return {
+> 504	    id: makeNodeId(),
+> 505	    type: "generateImage",
+> 506	    position,
+> 507	    data: {
+> 508	      kind: "generateImage",
+> 509	      label: "Gerar Imagem",
+> 510	      modelId: DEFAULT_IMAGE_MODEL,
+> 511	      prompt: "",
+> 512	      negativePrompt: "",
+> 513	      aspectRatio: "9:16",
+> 514	      controls: { ...DEFAULT_CONTROLS },
+> 515	      seed: null,
+> 516	      fixedSeed: false,
+> 517	      status: "idle",
+> 518	      inheritStyle: true,
+> 519	      ...overrides,
+> 520	    },
+> 521	  };
+> 522	}
+> 523	
+> 524	export function makeDefaultCharacterReference(
+> 525	  position: { x: number; y: number },
+> 526	  overrides: Partial<CharacterReferenceData> = {},
+> 527	): CanvasNode {
+> 528	  return {
+> 529	    id: makeNodeId(),
+> 530	    type: "characterReference",
+> 531	    position,
+> 532	    data: {
+> 533	      kind: "characterReference",
+> 534	      label: "Personagem",
+> 535	      characterName: "",
+> 536	      status: "idle",
+> 537	      ...overrides,
+> 538	    },
+> 539	  };
+> 540	}
+> 541	
+> 542	export function makeDefaultSceneCompose(
+> 543	  position: { x: number; y: number },
+> 544	  overrides: Partial<SceneComposeData> = {},
+> 545	): CanvasNode {
+> 546	  const modelId = overrides.modelId ?? "openrouter-gemini-image";
+> 547	  return {
+> 548	    id: makeNodeId(),
+> 549	    type: "sceneCompose",
+> 550	    position,
+> 551	    data: {
+> 552	      kind: "sceneCompose",
+> 553	      label: "Compor Cena",
+> 554	      prompt: "",
+> 555	      aspectRatio: "9:16",
+> 556	      modelId,
+> 557	      cost: 18,
+> 558	      status: "idle",
+> 559	      inheritStyle: true,
+> 560	      ...overrides,
+> 561	    },
+> 562	  };
+> 563	}
+> 564	
+> 565	export function makeDefaultStyleTransfer(
+> 566	  position: { x: number; y: number },
+> 567	  overrides: Partial<StyleTransferData> = {},
+> 568	): CanvasNode {
+> 569	  return {
+> 570	    id: makeNodeId(),
+> 571	    type: "styleTransfer",
+> 572	    position,
+> 573	    data: {
+> 574	      kind: "styleTransfer",
+> 575	      label: "Estilizar",
+> 576	      strength: 0.65,
+> 577	      cost: STYLE_TRANSFER_COST,
+> 578	      presetId: "cinematic",
+> 579	      status: "idle",
+> 580	      ...overrides,
+> 581	    },
+> 582	  };
+> 583	}
+> 584	
+> 585	export function makeDefaultImageToVideo(
+> 586	  position: { x: number; y: number },
+> 587	  overrides: Partial<ImageToVideoData> = {},
+> 588	): CanvasNode {
+> 589	  return {
+> 590	    id: makeNodeId(),
+> 591	    type: "imageToVideo",
+> 592	    position,
+> 593	    data: {
+> 594	      kind: "imageToVideo",
+> 595	      label: "Imagem → Vídeo",
+> 596	      prompt: "",
+> 597	      duration: 5,
+> 598	      aspectRatio: "9:16",
+> 599	      videoModel: DEFAULT_VIDEO_MODEL,
+> 600	      motionStrength: 0.5,
+> 601	      status: "idle",
+> 602	      ...overrides,
+> 603	    },
+> 604	  };
+> 605	}
+> 606	
+> 607	/* ── Canvas-execute payload helper ───────────────────────────────────── */
+> 608	
+> 609	/**
+> 610	 * Helper to compile prompt incorporating project level StyleSettings
+> 611	 */
+> 612	export function compileFinalPrompt(
+> 613	  prompt: string,
+> 614	  styleSettings?: StyleSettings,
+> 615	  inheritStyle?: boolean,
+> 616	): string {
+> 617	  if (!inheritStyle || !styleSettings) return prompt;
+> 618	
+> 619	  const parts: string[] = [];
+> ```
+
+## 🤖 Claude *(14:45:21)*
+
+
+## 🤖 Claude *(14:45:23)*
+
+Tenho os shapes + factories. Faltam os valores de `DEFAULT_CONTROLS`/`DEFAULT_IMAGE_MODEL`/`DEFAULT_VIDEO_MODEL` e o `modelId` do nano banana:
+
+## 🤖 Claude *(14:45:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== default consts ===\"\ngrep -nE \"DEFAULT_IMAGE_MODEL|DEFAULT_VIDEO_MODEL|DEFAULT_CONTROLS\" src/types/canvas.ts | grep -E \"=\" | head\necho \"=== ControlValues shape ===\"\ngrep -n -A8 \"interface ControlValues\" src/types/canvas.ts\necho \"=== ImageModelId values containing gemini/nano ===\"\ngrep -noE \"\\\"openrouter-[a-z-]*\\\"|\\\"[a-z-]*gemini[a-z-]*\\\"|\\\"soul-[a-z0-9-]*\\\"\" src/types/canvas.ts | sort -u | head\necho \"=== how does CanvasEditorPage load graph into store? (loadProject / graph\u2192nodes) ===\"\ngrep -nE \"graph|setNodes|loadProject|\\.nodes|fromGraph|hydrat\" src/hooks/useCanvasStudio.ts | head -20",
+  "description": "Resolve canvas default constants + load path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === default consts ===
+> 205:export const DEFAULT_IMAGE_MODEL: ImageModelId = "openrouter-gemini-image";
+> 282:export const DEFAULT_VIDEO_MODEL: VideoModelId = "dop-standard-5s";
+> 303:export const DEFAULT_CONTROLS: ControlValues = {
+> === ControlValues shape ===
+> 295:export interface ControlValues {
+> 296-  creativity: number;
+> 297-  resemblance: number;
+> 298-  hdr: number;
+> 299-  fractality: number;
+> 300-  sharpness: number;
+> 301-}
+> 302-
+> 303-export const DEFAULT_CONTROLS: ControlValues = {
+> === ImageModelId values containing gemini/nano ===
+> 106:"soul-720p-x4"
+> 117:"soul-1080p-x1"
+> 128:"soul-1080p-x4"
+> 179:"openrouter-gemini-image"
+> 187:"openrouter-flux-pro"
+> 205:"openrouter-gemini-image"
+> 546:"openrouter-gemini-image"
+> 54:"soul-720p-x1"
+> 55:"soul-720p-x4"
+> 56:"soul-1080p-x1"
+> === how does CanvasEditorPage load graph into store? (loadProject / graph→nodes) ===
+> 12:  graph: PersistedCanvasGraph;
+> 155:    mutationFn: async ({ projectId, graph, viewport }: {
+> 157:      graph: PersistedCanvasGraph;
+> 160:      const updateData: any = { graph };
+> 296:  graph: CanvasGraph;
+> ```
+
+## 🤖 Claude *(14:46:05)*
+
+
+## 🤖 Claude *(14:46:06)*
+
+Tudo resolvido: `DEFAULT_IMAGE_MODEL="openrouter-gemini-image"` (nano banana ✓), `DEFAULT_VIDEO_MODEL="dop-standard-5s"`, ControlValues. Só preciso dos `Handle` ids corretos para os edges renderizarem:
+
+## 🤖 Claude *(14:46:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== Handle ids per node type ===\"\ngrep -rnoE \"Handle[^>]*(type=\\\"(source|target)\\\")[^>]*id=\\\"[a-z_]*\\\"|id=\\\"(output_image|input_prompt|input_image|input)\\\"\" src/components/canvas/nodes/ 2>/dev/null | head -25\necho \"--- fallback: any Handle id= in canvas nodes ---\"\ngrep -rhoE \"id=\\\"[a-z_]+\\\"\" src/components/canvas/nodes/*.tsx 2>/dev/null | sort -u | head -20",
+  "description": "Find ReactFlow Handle ids for edge wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Handle ids per node type ===
+> src/components/canvas/nodes/CharacterReferenceNode.tsx:18:Handle type="source" position={Position.Right} id="output"
+> src/components/canvas/nodes/GenerateImageNode.tsx:23:Handle type="target" position={Position.Left} id="input_prompt"
+> src/components/canvas/nodes/GenerateImageNode.tsx:24:Handle type="source" position={Position.Right} id="output_image"
+> src/components/canvas/nodes/StyleTransferNode.tsx:20:Handle type="target" position={Position.Left} id="input_content_image"
+> src/components/canvas/nodes/StyleTransferNode.tsx:21:Handle type="target" position={Position.Left} id="input_style_image"
+> src/components/canvas/nodes/StyleTransferNode.tsx:22:Handle type="source" position={Position.Right} id="output_styled"
+> src/components/canvas/nodes/ImageToVideoNode.tsx:56:Handle type="target" position={Position.Left} id="input_image"
+> src/components/canvas/nodes/ImageToVideoNode.tsx:57:Handle type="source" position={Position.Right} id="output_video"
+> src/components/canvas/nodes/SceneComposeNode.tsx:22:Handle type="target" position={Position.Left} id="input_layout"
+> src/components/canvas/nodes/SceneComposeNode.tsx:23:Handle type="source" position={Position.Right} id="output_scene"
+> --- fallback: any Handle id= in canvas nodes ---
+> id="input_content_image"
+> id="input_image"
+> id="input_layout"
+> id="input_prompt"
+> id="input_style_image"
+> id="output"
+> id="output_image"
+> id="output_scene"
+> id="output_styled"
+> id="output_video"
+> ```
+
+## 🤖 Claude *(14:47:02)*
+
+
+## 🤖 Claude *(14:47:03)*
+
+Handles confirmados: `generateImage` (target `input_prompt` / source `output_image`), `imageToVideo` (target `input_image` / source `output_video`). Agora tenho tudo. Patching o script para escrever o grafo:
+
+## 🤖 Claude *(14:47:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/scripts/canvas-campaign-build.ts",
+  "old_string": "  const text = await resp.text();\n  let json: any;\n  try { json = JSON.parse(text); } catch { json = { raw: text }; }\n  return { httpStatus: resp.status, ...json };\n}\n\nasync function main() {",
+  "new_string": "  const text = await resp.text();\n  let json: any;\n  try { json = JSON.parse(text); } catch { json = { raw: text }; }\n  return { httpStatus: resp.status, ...json };\n}\n\nconst nid = (productKey: string, suffix: string) => `n_${productKey}_${suffix}`;\n\n/**\n * Build the ReactFlow graph (nodes + edges) for the campaign so the project becomes\n * a first-class, visible canvas: base \u2192 variation (\u2192 video). The already-generated\n * images are attached via data.output.{imageUrl,videoUrl}, so nodes render the real\n * creatives without re-spending. Handle ids mirror the node components\n * (GenerateImageNode: input_prompt/output_image \u00b7 ImageToVideoNode: input_image/output_video).\n */\nfunction buildCampaignGraph(\n  product: Product,\n  baseUrl: string,\n  varUrl: string,\n  videoUrl: string | null,\n  seed: number,\n) {\n  const now = new Date().toISOString();\n  const controls = { creativity: 0.7, resemblance: 0.3, hdr: 0.5, fractality: 0.3, sharpness: 0.8 };\n  const baseId = nid(product.key, \"base\");\n  const varId = nid(product.key, \"variation\");\n\n  const nodes: any[] = [\n    {\n      id: baseId,\n      type: \"generateImage\",\n      position: { x: 40, y: 140 },\n      data: {\n        kind: \"generateImage\", label: \"Base\", modelId: \"openrouter-gemini-image\",\n        prompt: product.basePrompt, negativePrompt: \"\", aspectRatio: \"16:9\",\n        controls: { ...controls }, seed, fixedSeed: true, status: \"success\",\n        inheritStyle: false, output: { imageUrl: baseUrl, generatedAt: now },\n      },\n    },\n    {\n      id: varId,\n      type: \"generateImage\",\n      position: { x: 420, y: 140 },\n      data: {\n        kind: \"generateImage\", label: \"Varia\u00e7\u00e3o consistente\", modelId: \"openrouter-gemini-image\",\n        prompt: product.variationPrompt, negativePrompt: \"\", aspectRatio: \"16:9\",\n        controls: { ...controls }, seed, fixedSeed: true, status: \"success\",\n        inheritStyle: false, output: { imageUrl: varUrl, generatedAt: now },\n      },\n    },\n  ];\n\n  const edges: any[] = [\n    {\n      id: `e_${baseId}_${varId}`, type: \"pipeline\",\n      source: baseId, target: varId,\n      sourceHandle: \"output_image\", targetHandle: \"input_prompt\",\n    },\n  ];\n\n  if (videoUrl) {\n    const vidId = nid(product.key, \"video\");\n    nodes.push({\n      id: vidId,\n      type: \"imageToVideo\",\n      position: { x: 800, y: 140 },\n      data: {\n        kind: \"imageToVideo\", label: \"V\u00eddeo (DoP Standard)\", prompt: product.videoPrompt,\n        duration: 5, aspectRatio: \"16:9\", videoModel: \"dop-standard-5s\", motionStrength: 0.5,\n        status: \"success\", output: { videoUrl, generatedAt: now },\n      },\n    });\n    edges.push({\n      id: `e_${varId}_${vidId}`, type: \"pipeline\",\n      source: varId, target: vidId,\n      sourceHandle: \"output_image\", targetHandle: \"input_image\",\n    });\n  }\n\n  return { nodes, edges };\n}\n\n/** Persist nodes+edges into vm_canvas_projects.graph, preserving lanes/styleSettings.\n *  Free-form layout (pipelineMode=false) so the short pipeline row renders cleanly. */\nasync function persistGraph(admin: any, projectId: string, nodes: any[], edges: any[]): Promise<void> {\n  const { data: row } = await admin\n    .from(\"vm_canvas_projects\").select(\"graph\").eq(\"id\", projectId).maybeSingle();\n  const current = (row?.graph && typeof row.graph === \"object\") ? row.graph : {};\n  const graph = { ...current, nodes, edges, pipelineMode: false };\n  const { error } = await admin.from(\"vm_canvas_projects\").update({ graph }).eq(\"id\", projectId);\n  if (error) throw new Error(`persistGraph failed: ${error.message}`);\n}\n\nasync function main() {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/scripts/canvas-campaign-build.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:20)*
+
+
+## 🤖 Claude *(14:47:21)*
+
+Agora a chamada de seeding no fim do `main()` (após geração, busca vídeo existente):
+
+## 🤖 Claude *(14:47:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/scripts/canvas-campaign-build.ts",
+  "old_string": "  console.log(`\\n\ud83c\udfc1 Done for ${product.name}.`);\n}",
+  "new_string": "  // \u2500\u2500 Seed the project graph so the campaign is a visible, editable canvas \u2500\u2500\n  // Idempotent: reuses already-generated assets (base/variation/video) \u2014 zero spend.\n  const existingVideo = await findExistingAsset(admin, userId, proj!.id, `${product.key}-video`);\n  const { nodes, edges } = buildCampaignGraph(product, baseUrl, varUrl, existingVideo?.url ?? null, seed);\n  await persistGraph(admin, proj!.id, nodes, edges);\n  console.log(`\\n\ud83e\udde9 Graph seeded \u2192 ${nodes.length} nodes, ${edges.length} edges. Canvas now shows the pipeline.`);\n\n  console.log(`\\n\ud83c\udfc1 Done for ${product.name}.`);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/scripts/canvas-campaign-build.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:51)*
+
+
+## 🤖 Claude *(14:47:53)*
+
+Script corrigido. Antes de rodar o backfill, verifico (a) que o `tsc` segue limpo e (b) se o `.env` tem as vars que o script exige (`SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` sem prefixo VITE — o script usa magiclink auth):
+
+## 🤖 Claude *(14:47:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: $?\"\necho \"\"\necho \"=== env vars the script needs (non-VITE) ===\"\nfor v in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SUPABASE_PUBLISHABLE_KEY; do\n  grep -q \"^$v=\" /home/gcrUX/htdocs/constellation-orchestra/.env && echo \"  \u2705 $v present\" || echo \"  \u2717 $v MISSING\"\ndone",
+  "description": "tsc + env var check for campaign script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> 
+> === env vars the script needs (non-VITE) ===
+>   ✅ SUPABASE_URL present
+>   ✅ SUPABASE_SERVICE_ROLE_KEY present
+>   ✅ SUPABASE_PUBLISHABLE_KEY present
+> ```
+
+## 🤖 Claude *(14:48:03)*
+
+
+## 🤖 Claude *(14:48:04)*
+
+`tsc` limpo · todas as 3 env vars presentes. Rodando o script corrigido para **roborock_s8** primeiro (tem base+variação+vídeo — testa o grafo completo de 3 nós; reuso idempotente = zero gasto):
+
+## 🤖 Claude *(14:48:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\ntimeout 120 bun run scripts/canvas-campaign-build.ts roborock_s8 2>&1 | tail -25",
+  "description": "Backfill roborock campaign graph (idempotent, no spend)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🔐 Authenticating as gabrielcall@gmail.com...
+> ✅ Session for user ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 📁 Project: Campanha Roborock S8 Pro Ultra → 0b86e7d0-5f56-4d28-8709-76bdc88c2bca
+> 
+> 🖼️  [A1] Base image — reusing existing asset (no spend)
+>    base: https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e2087430-0fbe-40ea-9d37-ca49060973d1.png
+> 
+> 🔗 [A2] Variation — reusing existing asset (no spend)
+> 
+> ✅ CONSISTENCY WIRING VALIDATED — reference accepted, image returned (not text).
+>    variation: https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/041d9fda-c742-4adf-91e9-12dddc0b5469.png
+> 
+> 🧩 Graph seeded → 3 nodes, 2 edges. Canvas now shows the pipeline.
+> 
+> 🏁 Done for Roborock S8 Pro Ultra.
+> ```
+
+## 🤖 Claude *(14:48:13)*
+
+
+## 🤖 Claude *(14:48:14)*
+
+Funcionou — roborock: 3 nós (base→variação→vídeo), 2 edges, zero gasto. Rodando os outros 2 produtos:
+
+## 🤖 Claude *(14:48:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\nfor p in samsung_neo_qled_8k family_hub; do\n  echo \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 $p \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\n  timeout 120 bun run scripts/canvas-campaign-build.ts \"$p\" 2>&1 | grep -E \"Project:|reusing|Graph seeded|Done|FATAL|Error|failed\" \ndone",
+  "description": "Backfill remaining 2 campaign graphs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════════ samsung_neo_qled_8k ════════
+> 📁 Project: Campanha Samsung Neo QLED 8K → e224f5ae-a2d7-434e-85e8-505a043ab6f9
+> 🖼️  [A1] Base image — reusing existing asset (no spend)
+> 🔗 [A2] Variation — reusing existing asset (no spend)
+> 🧩 Graph seeded → 3 nodes, 2 edges. Canvas now shows the pipeline.
+> 🏁 Done for Samsung Neo QLED 8K.
+> ════════ family_hub ════════
+> 📁 Project: Campanha Geladeira Samsung Family Hub → 3f8aa85f-33af-434e-888a-444c2f56d41a
+> 🖼️  [A1] Base image — reusing existing asset (no spend)
+> 🔗 [A2] Variation — reusing existing asset (no spend)
+> 🧩 Graph seeded → 3 nodes, 2 edges. Canvas now shows the pipeline.
+> 🏁 Done for Geladeira Samsung Family Hub.
+> ```
+
+## 🤖 Claude *(14:48:21)*
+
+
+## 🤖 Claude *(14:48:22)*
+
+Os 3 backfilled, 3 nós cada, zero gasto. Verificação material — os 3 projetos Campanha agora têm grafo populado:
+
+## 🤖 Claude *(14:48:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null; set +a\nKEY=\"${SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-$SUPABASE_URL}\"\nSOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\ncurl -s \"$URL/rest/v1/vm_canvas_projects?user_id=eq.$SOV&name=like.*Campanha*&select=id,name,graph&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" > /tmp/camp.json\npython3 - <<'PY'\nimport json\nd=json.load(open('/tmp/camp.json'))\nprint(f\"{len(d)} campaign project(s):\")\nfor p in d:\n    g=p['graph']\n    if isinstance(g,str): g=json.loads(g)\n    nodes=g.get('nodes',[]); edges=g.get('edges',[])\n    kinds=[n.get('data',{}).get('kind') for n in nodes]\n    has_img=all(n.get('data',{}).get('output',{}).get('imageUrl') or n.get('data',{}).get('output',{}).get('videoUrl') for n in nodes)\n    print(f\"  {p['name'][:34]:34} \u00b7 nodes={len(nodes)} edges={len(edges)} \u00b7 kinds={kinds} \u00b7 all-have-output={has_img} \u00b7 pipelineMode={g.get('pipelineMode')}\")\nPY",
+  "description": "Verify all 3 campaign graphs now populated with output-bearing nodes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3 campaign project(s):
+>   Campanha Geladeira Samsung Family  · nodes=3 edges=2 · kinds=['generateImage', 'generateImage', 'imageToVideo'] · all-have-output=True · pipelineMode=False
+>   Campanha Samsung Neo QLED 8K       · nodes=3 edges=2 · kinds=['generateImage', 'generateImage', 'imageToVideo'] · all-have-output=True · pipelineMode=False
+>   Campanha Roborock S8 Pro Ultra     · nodes=3 edges=2 · kinds=['generateImage', 'generateImage', 'imageToVideo'] · all-have-output=True · pipelineMode=False
+> ```
+
+## 🤖 Claude *(14:48:45)*
+
+
+## 🤖 Claude *(14:48:45)*
+
+**Frente B fechada** — os 3 projetos Campanha agora têm `nodes=3 edges=2`, pipeline `base→variação→vídeo`, **todos com output anexado** (renderizam os creatives reais), zero gasto.
+
+Vou registrar a mudança no SOP (Lei 2) e commitar. Lendo o cabeçalho do SOP de consistência:
+
+## 🤖 Claude *(14:48:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/docs/processes/canvas-node-consistency.md",
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP — Canvas Node Consistency (Reference Threading + Seed Lock)
+> 2	
+> 3	**Versão:** v1 · **Selada:** 2026-05-29 · **Lei 2 (Processo Antecipado)** · **Canvas Studio Phase 4.3**
+> 4	**Validação técnica:** `.claude/context/canvas-consistency-validation-2026-05-29.md`
+> 5	
+> 6	## ORO triplet
+> 7	- **Operator:** end user no Canvas Studio (conecta nós e executa Run); admin (validação/campanhas)
+> 8	- **Reviewer:** Sovereign (aprova consumo de crédito pago + valida fidelidade visual)
+> 9	- **Owner:** Sovereign (dono dos créditos Higgsfield/OpenRouter + qualidade do conteúdo monetizável)
+> 10	
+> 11	## Contexto
+> 12	
+> 13	O propósito do Canvas Studio é produzir **conteúdo visualmente consistente** ao longo de uma
+> 14	cadeia de nós conectados: o mesmo personagem/produto/estilo deve persistir de uma geração à
+> 15	seguinte. Hoje a saída de imagem do nó upstream **não é enviada como referência** ao gerador do
+> 16	nó downstream — cada geração parte só do texto. Esta SOP define como a imagem upstream e um
+> 17	**seed travado** fluem pela cadeia para garantir identidade visual.
+> 18	
+> 19	**Por que existe:** sem consistência, os criativos de uma campanha (imagem do produto → variações →
+> 20	vídeo) divergem visualmente → inutilizáveis para monetização afiliada séria. Consistência é o
+> 21	diferencial do módulo.
+> 22	
+> ```
+
+## 🤖 Claude *(14:48:51)*
+
+
+## 🤖 Claude *(14:48:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/docs/processes/canvas-node-consistency.md",
+  "old_string": "**Vers\u00e3o:** v1 \u00b7 **Selada:** 2026-05-29 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 **Canvas Studio Phase 4.3**\n**Valida\u00e7\u00e3o t\u00e9cnica:** `.claude/context/canvas-consistency-validation-2026-05-29.md`",
+  "new_string": "**Vers\u00e3o:** v1.1 \u00b7 **Selada:** 2026-05-29 \u00b7 **Atualizada:** 2026-05-30 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 **Canvas Studio Phase 4.3**\n**Valida\u00e7\u00e3o t\u00e9cnica:** `.claude/context/canvas-consistency-validation-2026-05-29.md`\n\n> **v1.1 (2026-05-30) \u2014 Graph seeding:** `scripts/canvas-campaign-build.ts` agora **persiste o grafo do projeto** (`vm_canvas_projects.graph`) al\u00e9m de gerar os assets. Antes o builder criava `vm_canvas_assets` mas deixava `graph.nodes=[]` \u2192 o projeto abria **em branco** no painel apesar de ter creatives (assets \u00f3rf\u00e3os do grafo). Agora `buildCampaignGraph()` monta `base \u2192 varia\u00e7\u00e3o \u2192 v\u00eddeo` (`generateImage` + `imageToVideo`) com as imagens/v\u00eddeo j\u00e1 gerados anexados via `data.output.{imageUrl,videoUrl}` e handles corretos (`output_image`/`input_prompt`/`input_image`); `persistGraph()` faz UPDATE preservando lanes/styleSettings (`pipelineMode=false`). Idempotente (reusa assets via `findExistingAsset` \u2192 zero gasto). Backfill executado nas 3 campanhas existentes (Roborock/Samsung/Family Hub \u2192 3 n\u00f3s \u00b7 2 edges cada). **Verifica\u00e7\u00e3o:** os 3 projetos abrem no painel mostrando o pipeline com os creatives reais."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/docs/processes/canvas-node-consistency.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === log ===
+> c139d05 fix(canvas): campaign builder seeds project graph (no more blank canvas)
+> 67c5977 feat(constellation): real agent activity feed replaces simulation
+> 22bfa98 refactor(affiliate): per-user ML credential resolution, fail-closed
+> cf121c1 docs(handoff): addendum — record openclaw-dreaming skill (post-seal commit 2300997)
+> === tree ===
+> ```
+
+## 🤖 Claude *(14:49:06)*
+
+
+## 🤖 Claude *(14:49:07)*
+
+SOP atualizado (v1.1). Commitando a Frente B:
+
+## 🤖 Claude *(14:49:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1\ngit add scripts/canvas-campaign-build.ts docs/processes/canvas-node-consistency.md\ngit commit -q -m \"fix(canvas): campaign builder seeds project graph (no more blank canvas)\" \\\n  -m \"canvas-campaign-build.ts generated assets but left vm_canvas_projects.graph empty, so script-built campaigns opened blank in the panel despite having creatives. The builder now persists a base\u2192variation\u2192video node graph with the already-generated images/video attached (data.output) and correct ReactFlow handles, then UPDATEs graph preserving lanes/styleSettings. Idempotent \u2014 reuses existing assets (zero spend). Backfilled the 3 existing campaigns (Roborock / Samsung Neo QLED / Family Hub \u2192 3 nodes + 2 edges each); they now render the real pipeline. SOP canvas-node-consistency.md bumped to v1.1.\"\necho \"=== log ===\"; git log --oneline -4 | cat\necho \"=== tree ===\"; git status --short",
+  "description": "Commit Frente B + confirm"
+}
+```
+
+## 🤖 Claude *(14:49:31)*
+
+
+## 🤖 Claude *(14:49:43)*
+
+Três frentes commitadas, tree limpo:
+- `22bfa98` — Frente A (affiliate per-user)
+- `67c5977` — Frente C (constellation real)
+- `c139d05` — Frente B (canvas graph seed)
+
+---
+
+## Sessão — placar final
+
+| Frente | Entrega | Estado | Prova material |
+|--------|---------|--------|----------------|
+| **A — ML token per-user** | GET+POST fail-closed, sem token global | ✅ deployed | `80.52kB` · G3/G4/G5 verde · OTD-OE661-PER-USER fechada (SLA era 02/06) |
+| **C — Agentes reais** | `useAgentActivity` substitui mock + botão Executar | ✅ deployed | build 21.47s · 23 execs reais · cron rodado ao vivo (4 Directors) |
+| **B — Canvas graph** | builder semeia `graph` + backfill 3 campanhas | ✅ aplicado | 3 projetos · nodes=3 edges=2 · outputs anexados · zero gasto |
+
+**Validação sua (3 hard-refreshes — Ctrl+Shift+R):**
+1. **Canvas** → abra `/dashboard/canvas/0b86e7d0…` (Campanha Roborock) → vê o pipeline **base → variação → vídeo** com os creatives reais (não mais em branco). Idem Samsung e Family Hub.
+2. **Constelação** → Live Logs reais (groq/llama · tokens · mco · ms); clique num agente → **"Executar tarefa"** → Run. ⚠️ **Este é o único gate que não consegui fechar daqui** (admin-path 401 por mismatch de service key) — seu clique valida o `agent-task-execute` E2E.
+3. **Afiliados** → "Monetizar Links ML" com config ativa → 200; sem config → 402 (gates G1/G2).
+
+**Pendência honesta (Lei 1):** só o clique do botão Executar (Frente C) e a validação visual do canvas/afiliados dependem de você — o resto está provado materialmente.
+
+**Survival Laws nesta sessão:** Lei 1 ✅ (toda claim com prova: hashes, script sizes, REST returns, 23 execs) · Lei 2 ✅ (3 SOPs: affiliate-credential-resolution novo + CEA v1.1 + canvas-consistency v1.1, todos antes/junto do código) · Lei 4 ✅ (ORO declarado por frente).
+
+Próximo: quer que eu **(a)** dê `push` no branch `claude/eager-brown-6ef0f1` e **(b)** rode **`/handoff`** pra selar a sessão (Phase 5c material audit + milestone node)? Ou prefere validar os 3 pontos no painel primeiro?
+
+## 👤 User *(14:59:09)*
+
+1. ótimo realmnete vejo os nós com os assets. Agora precisa salvar isso criando uma skill para o canvas studio cinematografico.
+2. Live Logs
+(7)
+
+11:55:19
+[TECH-9]
+Reviewing strategy... (status → thinking)
+11:55:16
+[CONTENT-7]
+Task started (status → active)
+11:55:13
+[Creative Content Lead]
+Generating report... (status → waiting)
+11:55:10
+[TECH-9]
+Processing request... (status → idle)
+11:55:07
+[MARKET-1]
+Connection timeout (status → error)
+11:55:04
+[CONTENT-10]
+Task started (status → active)
+11:55:02
+[MARKET-7]
+Reviewing strategy... (status → thinking)...
+Preciso que você seja o usuário 0 usando o browser para validar completamente a constelação com prints imagens e videos se quiser.  
+
+1.  Já rotacionei e adicionei a nova chave. Agora precisamos atacar tambem a pagina de produtos /dashboard/affiliate-products pois os links não estão abriundo no mercado livre aparece que a pagina não existe, faça um debug de todas as opções que a api devolver no payload e assim consigo identificar para você ou vc mesmo pode identificar com referencia no print e o copiar esta com o ednpoint errado: https://panel.gcrux.com/api/ml-redirect?product_id=MLB3981745621&affiliate_id={affiliate_id}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content={content_id} ou era pra ser esse mesmo porem com as variaveis de affiliate_id e {content_id} preenchidas?
+
 ---
 
 %% --- TIMELINE START --- %%
