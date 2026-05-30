@@ -431,18 +431,18 @@ Al Sessions/ClaudeSessions/2026-05-25 -
 Fix COMMIT_RE false positive on decimal
 strings.md
 Al Sessions/ClaudeSessions/2026-05-25 -
-Fix OpenClaw cron job display issues.md
+[[2026-05-21 - Fix OpenClaw cron job display issues|Fix OpenClaw cron job display issues]].md
 Al Sessions/ClaudeSessions/2026-05-25 -
-Install agent-browser for E2E testing.md
+[[2026-05-25 - Install agent-browser for E2E testing|Install agent-browser for E2E testing]].md
 Al Sessions/ClaudeSessions/2026-05-25 -
-Resolve alerts and execute OE-661 plan.md
+[[2026-05-25 - Resolve alerts and execute OE-661 plan|Resolve alerts and execute OE-661 plan]].md
 Al Sessions/ClaudeSessions/2026-05-26 -
 00ee75f5-bf3c-4cfe-81b8-c6cbdbb0b2d7.md
 Al Sessions/ClaudeSessions/2026-05-26 -
 Fix OpenRouter multimodal error and token
 limits.md
 Al Sessions/ClaudeSessions/2026-05-26 -
-Install agent-browser for E2E testing.md
+[[2026-05-25 - Install agent-browser for E2E testing|Install agent-browser for E2E testing]].md
 Al Sessions/ClaudeSessions/2026-05-27 -
 98202356-feef-4f6b-9631-acfe0d7e685d.md
 Al Sessions/ClaudeSessions/2026-05-27 -
@@ -1339,3 +1339,10 @@ fi
 A execução de teste em segundo plano foi finalizada com sucesso! O script do servidor rodou a rotina completa, emitiu o aviso amigável de que o script de linkagem não foi encontrado no momento e prosseguiu convertendo as novas conversações e enviando-as para o GitHub sem qualquer problema.
 
 O repositório está atualizado no commit `392d780`. Deseja mais alguma ajuda com a sincronização ou outro ajuste no cron/git?
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-28 - handson]]
+%% --- TIMELINE END --- %%
