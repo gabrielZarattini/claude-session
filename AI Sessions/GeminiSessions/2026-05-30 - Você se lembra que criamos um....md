@@ -1345,4 +1345,5 @@ O repositório está atualizado no commit `392d780`. Deseja mais alguma ajuda co
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-28 - handson]]
+> * **Próxima Sessão**: [[2026-05-30 - handson]]
 %% --- TIMELINE END --- %%
