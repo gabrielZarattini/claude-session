@@ -310,9 +310,10 @@ def generate_moc(note_catalog, dry_run=True):
     # Notes without a valid date prefix will go to the end
     def get_sort_key(note):
         date_val = note["date"]
+        title_val = note["note_title"]
         if date_val:
-            return (1, date_val)
-        return (0, "")
+            return (1, date_val, title_val)
+        return (0, "", title_val)
         
     sorted_notes = sorted(note_catalog, key=get_sort_key, reverse=True)
     
