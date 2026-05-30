@@ -8747,6 +8747,10 @@ A interrupção aconteceu *depois* do push completar. Nada se perdeu — o `/han
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-08 - Deploy LGPD compliance and fix chunking alerts]]

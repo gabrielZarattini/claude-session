@@ -590,6 +590,10 @@ Vá de **Opção 1**. Ela é a melhor para repositórios de sessões/logs, pois 
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-28 - handson]]

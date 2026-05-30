@@ -7416,6 +7416,10 @@ Phase 5 — milestone node (novo formato `handoff`):
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-02 - Deploy Phase Zeta with database migrations]]

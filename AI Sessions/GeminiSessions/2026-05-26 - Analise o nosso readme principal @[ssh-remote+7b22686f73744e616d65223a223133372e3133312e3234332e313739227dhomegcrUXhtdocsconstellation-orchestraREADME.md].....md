@@ -629,6 +629,10 @@ O projeto fracassou porque priorizou a **estética da autonomia da IA** sobre a 
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-25 - handson]]

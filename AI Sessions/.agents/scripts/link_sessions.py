@@ -5,7 +5,8 @@ import sys
 from datetime import datetime
 
 # Directories configuration
-VAULT_DIR = r"c:\Users\gabri\Documents\dev\MCORCH_CLAUDE\AI Sessions"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VAULT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 CLAUDE_DIR = os.path.join(VAULT_DIR, "ClaudeSessions")
 GEMINI_DIR = os.path.join(VAULT_DIR, "GeminiSessions")
 MOC_PATH = os.path.join(VAULT_DIR, "Sessions MOC.md")

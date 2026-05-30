@@ -9123,6 +9123,10 @@ Embedded ✅. Now push to origin:
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-04 - Fix message options overflow in Core V2]]

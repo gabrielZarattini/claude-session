@@ -4178,6 +4178,10 @@ Eu gerei e tentei aplicar a migration `20260421000001_add_multimodal_prefs.sql` 
 
 ---
 
+---
+
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-17 - Você é o Lead Systems Architect...]]
