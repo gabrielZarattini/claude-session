@@ -8549,3 +8549,11 @@ Volta pro ponto exato antes da reconciliação git desta sessão.
 ---
 
 **Resumo executivo:** `/handson` é tudo que você precisa. O sistema já sabe o que fazer.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-08 - agent-ae7410c00bb860c8b]]
+> * **Próxima Sessão**: [[2026-05-14 - Sprint 4 — Canvas Studio UX Completion]]
+%% --- TIMELINE END --- %%

@@ -15227,3 +15227,11 @@ Agora o Knowledge Mesh milestone e o push em paralelo.
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Fix TTS bridge and resolve critical production issues]]
+> * **Próxima Sessão**: [[2026-05-02 - Set up priorities and AIOS system prompt]]
+%% --- TIMELINE END --- %%

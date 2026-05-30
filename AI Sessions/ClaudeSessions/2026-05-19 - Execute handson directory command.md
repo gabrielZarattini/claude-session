@@ -8874,3 +8874,11 @@ Adicionando entrada v6.6.8 ao sprint-priorities (newest-first).
 ```
 
 **Sessão v6.6.8 selada com Survival Laws 4/4 ✓ pela primeira vez consecutiva desde v6.6.0.** Worktree limpo (única dirt: `memory/heartbeat-state.json` é mutável via cron, esperado). 8 commits pushed. Mesh 8359 nodes embedded. Aguardando direção.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-19 - Document current plan before implementation]]
+> * **Próxima Sessão**: [[2026-05-19 - Provision ML affiliate token before E2E tests]]
+%% --- TIMELINE END --- %%

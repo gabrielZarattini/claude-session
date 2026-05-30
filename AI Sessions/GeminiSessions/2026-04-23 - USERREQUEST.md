@@ -3469,3 +3469,11 @@ Agora, ao clicar em "Gerar Vídeo" na listagem de conteúdos, o modal carregará
 A build foi executada (sem erros), e as alterações já estão no repositório. O Cockpit de Geração na Content Library agora é idêntico em capacidade de Soberania (Multi-Provedor) ao Cockpit do Video Editor.
 
 <truncated 155 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-22 - USERREQUEST]]
+> * **Próxima Sessão**: [[2026-04-25 - TU lembra qual é o token...]]
+%% --- TIMELINE END --- %%

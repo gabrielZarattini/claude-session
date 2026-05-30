@@ -2444,7 +2444,7 @@ The following is a <SYSTEM_MESSAGE> not actually sent by the user. It is provide
 				Output:
 				<truncated 226 lines>
 Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9087ebce-bf2f-4770-8b20-b55e0a7240cb.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-21 - Fix heartbeat validation and cleanup routing.md
-Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9b35297a-7383-43a7-97d8-76e2e5a5f90a.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-20 - Fix OpenClaw cron job display issues.md
+Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9b35297a-7383-43a7-97d8-76e2e5a5f90a.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-20 - [[2026-05-21 - Fix OpenClaw cron job display issues|Fix OpenClaw cron job display issues]].md
 Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d95b15b2-96c6-4300-ae6f-e3bf61697c69.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-19 - Fix dashboard cron UI & sync logic.md
 Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/003e1f91-e019-4567-a2c7-bf6a29da5b0c/subagents/agent-a53d34f0d084b0f74.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-19 - agent-a53d34f0d084b0f74.md
 Successfully converted /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/003e1f91-e019-4567-a2c7-bf6a29da5b0c/subagents/agent-a59c3e8b94b4a6a7c.jsonl to /home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-19 - agent-a59c3e8b94b4a6a7c.md
@@ -13399,3 +13399,11 @@ HEAD is now at ac74a04 Auto-sync: Claude & Gemini sessions update 2026-05-23 18:
 Perfeito! Agora sua máquina local está 100% sincronizada com o GitHub. 
 
 Todas as novas sessões históricas do Gemini (antigo e novo) e do Claude já estão salvas fisicamente na pasta local do seu Vault. O seu Obsidian deve atualizar a árvore de arquivos e exibir as conversações imediatamente!
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-23 - Aprenda como funciona o protocolo shakehands...]]
+> * **Próxima Sessão**: [[2026-05-23 - handson]]
+%% --- TIMELINE END --- %%

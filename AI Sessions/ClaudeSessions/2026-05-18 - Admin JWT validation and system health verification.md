@@ -8597,3 +8597,11 @@ Você acha que precisa rodar o handoff oficial?
 ## 🤖 Claude *(13:20:20)*
 
 You're out of extra usage · resets 2pm (America/Sao_Paulo)
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-18 - 61196372-3107-4946-853f-7ae279804c91]]
+> * **Próxima Sessão**: [[2026-05-18 - Continue paying existing debts handson]]
+%% --- TIMELINE END --- %%

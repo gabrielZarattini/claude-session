@@ -1,4 +1,4 @@
-# Fix OpenClaw cron job display issues
+# [[2026-05-21 - Fix OpenClaw cron job display issues|Fix OpenClaw cron job display issues]]
 **Date:** 2026-05-25 | **Session ID:** `8477b8a9-d74a-4cd6-a162-df26d9acc0c3`
 
 ---
@@ -10905,3 +10905,11 @@ Audit pegou os 2 arquivos `memory/2026-05-24-*.md` como claims `file_exists` por
 ═══════════════════════════════════════════════════════════
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-25 - Fix COMMIT_RE false positive on decimal strings]]
+> * **Próxima Sessão**: [[2026-05-25 - Install agent-browser for E2E testing]]
+%% --- TIMELINE END --- %%

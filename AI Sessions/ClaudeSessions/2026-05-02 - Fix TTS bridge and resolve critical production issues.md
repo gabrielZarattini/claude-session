@@ -7413,3 +7413,11 @@ Phase 5 — milestone node (novo formato `handoff`):
 ---
 
 **Respondendo à sua pergunta:** Sim — a partir de agora, toda vez que você rodar `/handoff`, o protocolo executa automaticamente todas as 7 fases em sequência: pré-voo → auditoria de segurança → commits granulares → README → HANDOFF.md → milestone node na Knowledge Mesh → push. O skill `.claude/commands/handoff.md` é o arquivo que controla o protocolo, e o editamos nessa sessão para que o nó inserido no passo 5 use `node_type: "handoff"` e nome `session-handoff-{date}-{phase}` — garantindo que o AIOS os encontre na próxima sessão via o bucket prioritário que adicionamos no `useKnowledgeMesh`.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Deploy Phase Zeta with database migrations]]
+> * **Próxima Sessão**: [[2026-05-02 - Fix incomplete API responses across all models]]
+%% --- TIMELINE END --- %%

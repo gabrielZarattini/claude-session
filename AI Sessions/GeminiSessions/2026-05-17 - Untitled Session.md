@@ -1552,3 +1552,11 @@ Para seguir à risca a diretriz autonômica do GCRUX (**Self-configuration / Inf
 ```bash
 git add nginx/www.mcorch.com.conf miv/Landing.html
 <truncated 452 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-17 - Queria saber de você por que...]]
+> * **Próxima Sessão**: [[2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8...]]
+%% --- TIMELINE END --- %%

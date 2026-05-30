@@ -626,3 +626,11 @@ Para que o Constellation Orchestra deixe de ser apenas um "sandbox de pesquisa a
 4.  **Forçar a Validação Comercial:** Conectar as chaves de produção do Stripe, colocar o app no ar sob um domínio público e trazer os primeiros 5 usuários beta reais. O feedback de usuários reais é o único "watchdog" que importa.
 
 O projeto fracassou porque priorizou a **estética da autonomia da IA** sobre a **realidade da validação do produto**. A tecnologia construída é impressionante, mas ela serve a si mesma, e não a um cliente.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-25 - handson]]
+> * **Próxima Sessão**: [[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]
+%% --- TIMELINE END --- %%

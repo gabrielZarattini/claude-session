@@ -1538,3 +1538,11 @@ Este arquivo serve como um "manual de instruções" para o agente quando ele ini
 1.  **Pre-flight (Checklist de Voo)**: O agente executa automaticamente uma bateria de comandos (Git, Docker, TypeScript, Health Checks) para ver a "realidade" do servidor, além de ler o que foi deixado no `HANDOFF.md`.
 2.  **Estrutura do Brief**: Ele obriga o agente a responder em um formato visual específico (com aquelas bordas de ═), garantindo que informações críticas como **Infra**, **Mudanças Pendentes** e **Knowledge Mesh** não sejam ignoradas.
 <truncated 1062 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-26 - Você é especialista em UX UI...]]
+> * **Próxima Sessão**: [[2026-05-03 - USERREQUEST]]
+%% --- TIMELINE END --- %%

@@ -1,4 +1,4 @@
-# Plan JWT refactor and affiliate token migration
+# [[2026-05-28 - Plan JWT refactor and affiliate token migration|Plan JWT refactor and affiliate token migration]]
 **Date:** 2026-05-27 | **Session ID:** `cf433bf4-1fe3-4e97-93c9-a8cd46e57779`
 
 ---
@@ -5490,3 +5490,11 @@ Iniciando Seal B — Per-User API Tenancy OE661.
 ## 🤖 Claude *(20:46:40)*
 
 You've hit your session limit · resets 9:40pm (America/Sao_Paulo)
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-27 - 98202356-feef-4f6b-9631-acfe0d7e685d]]
+> * **Próxima Sessão**: [[2026-05-27 - Plan alerts remediation and version migration]]
+%% --- TIMELINE END --- %%

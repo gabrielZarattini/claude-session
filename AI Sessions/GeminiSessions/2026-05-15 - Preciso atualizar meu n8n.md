@@ -1234,3 +1234,11 @@ Como o build anterior com `--no-cache` estava demorando demais e parecia congela
 O Docker está extraindo as camadas da versão **2.20.7** agora mesmo. Como já temos parte dos arquivos em cache, este processo deve ser muito mais rápido do que o anterior.
 
 Vou aguardar a conclusão e te confirmar assim que o n8n estiver online na versão correta.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-14 - Tenho o projeto homegcrUXhtdocsviralmind-builder rodando no...]]
+> * **Próxima Sessão**: [[2026-05-17 - Queria saber de você por que...]]
+%% --- TIMELINE END --- %%

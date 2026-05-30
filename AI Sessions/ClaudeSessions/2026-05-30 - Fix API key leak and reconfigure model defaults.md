@@ -1,4 +1,4 @@
-# Fix API key leak and reconfigure model defaults
+# [[2026-05-29 - Fix API key leak and reconfigure model defaults|Fix API key leak and reconfigure model defaults]]
 **Date:** 2026-05-30 | **Session ID:** `1307a9dd-bac8-4f84-b1e9-b5c4b53726bc`
 
 ---
@@ -14316,3 +14316,10 @@ O full handoff seria **cerimônia desnecessária** (Lei 3 — anti-hoarding) pra
 **Única imperfeição menor:** o Record selado (`abd73fd`) não cita a skill `openclaw-dreaming` (criada depois). Se você quiser o registro 100% fiel, eu faço um **adendo de 1 linha** no HANDOFF Record + commit rápido (~30s, sem re-rodar o protocolo todo). Senão, está tudo seguro e sincronizado como está.
 
 Quer o adendo de 1 linha, ou encerramos aqui?
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-29 - Update context and continue antigravity handoff]]
+%% --- TIMELINE END --- %%

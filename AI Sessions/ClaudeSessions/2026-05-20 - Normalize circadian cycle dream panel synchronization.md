@@ -930,3 +930,11 @@ Identifiquei dois bloqueios materiais. Vou aprofundar antes de qualquer ação d
 ## 👤 User *(02:36:35)*
 
 [Request interrupted by user]
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-20 - Identify Authentication Configuration or Scripts]]
+> * **Próxima Sessão**: [[2026-05-20 - Prioritize circadian cycle setup and Ollama configuration]]
+%% --- TIMELINE END --- %%

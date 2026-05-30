@@ -20630,7 +20630,7 @@ I'm currently double-checking the directory listing for `constellation-orchestra
 > ```
 > Created At: 2026-05-24T17:48:48Z
 > Completed At: 2026-05-24T17:49:07Z
-> {"File":"/home/ubuntu/claude-sessions-repo/ClaudeSessions/2026-05-19 - Provision ML affiliate token before E2E tests.md","LineNumber":6807,"LineContent":"\u003e 22\t**CANVAS STUDIO PHASE 4.2c — ASYNC VIDEO PIPELINE LIVE v6.6.2 SHIPPED (2026-05-17).** Sessão entregou o backbone async de geração de vídeo Higgsfield no Canvas Studio destravado pelo OE04 (v6.6.0), mais 3 rounds de hotfixes nos providers de imagem que travavam a validação end-to-end do flywheel. (Round 1 — Wiring Phase 4.2c) `supabase/functions/canvas-execute/index.ts` ganhou branch dedicada para `body.node_type === 'image_to_video'`: tier gate conservador (apenas `dop-standard` aceito; outros tiers HTTP 400 com `unlocks_at: Phase 4.3`), INSERT em `vm_canvas_executions` com `status='queued'` (não-`running` como sync path), `submitHiggsfieldVideo()` constrói webhook URL `${SUPABASE_URL}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}` (64-hex unique idx) + POST ao `https://platform.higgsfield.ai/higgsfield-ai/dop/standard` com `?hf_webhook=\u003cencoded\u003e` + body `{image_url, prompt, duration, motion_strength}`, captura `request_id` → UPDATE `operation_id`, retorna 200 com `{execution_id, status: 'queued', webhook_token, operation_id}`. **Sem deduct no submit** — débito atômico só no webhook após upload-OK (`deduct_mco_coins` com `action='canvas_video_spend'`). `src/hooks/useCanvasJobsRealtime.ts` extendido com callback `onUpdate(row: CanvasExecutionRow)` que reconcilia Zustand store. `src/pages/CanvasEditorPage.tsx` monta o hook + reconcilia status (`success → output.videoUrl` · `failed/timeout/cancelled → status=failed` · `queued/running → status=running`), `isRunnable()` libera `imageToVideo` quando há upstream image resolvable via `findUpstreamImage()` (novo util em `src/lib/canvas-utils.ts`), Run-All BFS fire-and-forget para video (status='running' pós-mutate, Realtime finaliza). `ImageToVideoInspector` ganha Run button real (mirr
+> {"File":"/home/ubuntu/claude-sessions-repo/ClaudeSessions/[[2026-05-19 - Provision ML affiliate token before E2E tests|2026-05-19 - Provision ML affiliate token before E2E tests]].md","LineNumber":6807,"LineContent":"\u003e 22\t**CANVAS STUDIO PHASE 4.2c — ASYNC VIDEO PIPELINE LIVE v6.6.2 SHIPPED (2026-05-17).** Sessão entregou o backbone async de geração de vídeo Higgsfield no Canvas Studio destravado pelo OE04 (v6.6.0), mais 3 rounds de hotfixes nos providers de imagem que travavam a validação end-to-end do flywheel. (Round 1 — Wiring Phase 4.2c) `supabase/functions/canvas-execute/index.ts` ganhou branch dedicada para `body.node_type === 'image_to_video'`: tier gate conservador (apenas `dop-standard` aceito; outros tiers HTTP 400 com `unlocks_at: Phase 4.3`), INSERT em `vm_canvas_executions` com `status='queued'` (não-`running` como sync path), `submitHiggsfieldVideo()` constrói webhook URL `${SUPABASE_URL}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}` (64-hex unique idx) + POST ao `https://platform.higgsfield.ai/higgsfield-ai/dop/standard` com `?hf_webhook=\u003cencoded\u003e` + body `{image_url, prompt, duration, motion_strength}`, captura `request_id` → UPDATE `operation_id`, retorna 200 com `{execution_id, status: 'queued', webhook_token, operation_id}`. **Sem deduct no submit** — débito atômico só no webhook após upload-OK (`deduct_mco_coins` com `action='canvas_video_spend'`). `src/hooks/useCanvasJobsRealtime.ts` extendido com callback `onUpdate(row: CanvasExecutionRow)` que reconcilia Zustand store. `src/pages/CanvasEditorPage.tsx` monta o hook + reconcilia status (`success → output.videoUrl` · `failed/timeout/cancelled → status=failed` · `queued/running → status=running`), `isRunnable()` libera `imageToVideo` quando há upstream image resolvable via `findUpstreamImage()` (novo util em `src/lib/canvas-utils.ts`), Run-All BFS fire-and-forget para video (status='running' pós-mutate, Realtime finaliza). `ImageToVideoInspector` ganha Run button real (mirr
 > <truncated 45284 bytes>
 > racterReferenceNode.tsx` (~66 LOC)\\n- `SceneComposeNode.tsx` (~57 LOC)\\n- `StyleTransferNode.tsx` (~60 LOC)\\n- `ImageToVideoNode.tsx` (~104 LOC)\\n\\nAdapta\\u00e7\\u00f5es de tokens (viralmind \\u2192 MCORCH):\\n- `bg-elevated` \\u2192 `bg-muted`\\n- `shadow-glow` \\u2192 `ring-1 ring-primary/40`\\n- `text-on-secondary` \\u2192 `text-secondary-foreground`\\n- imports `@/components/...` paths consistentes\\n- `Handle target/source` (j\\u00e1 validado em `CanvasNodeCard`)\\n- `ImageLightbox` wired no preview\\n\\n### 4.2a-4 \\u00b7 Canvas recipes rebuild\\n\\n- **`src/lib/canvas-recipes.ts`:** reescrever `buildPipeline()` e `chain()` para emitir **n\\u00f3s tipados** (`kind: \\\"generateImage\\\"` + factory `makeDefaultGenerateImage()`)\\n- Receitas Pipeline (3) e Quick (6) mant\\u00eam IDs e descriptions, s\\u00f3 o emit muda\\n- Garantir que receitas com character reference (futuro) emitem `kind: \\\"characterReference\\\"` antes do `generateImage` na cadeia\\n\\n### 4.2a-5 \\u00b7 RightPanel + Inspectors\\n\\nCriar `src/components/canvas/RightPanel/`:\\n- `index.tsx` \\u2014 roteia por `node.data.kind` \\u2192 inspector espec\\u00edfico OU `StyleSettingsPanel` quando nada selecionado\\n- `shared.tsx` \\u2014 `Section`, `CostPreview` (exibe `coinCost` + `higgsfieldCost`), `InspectorHeader`, `InheritanceBadge`, `ApplyInheritanceButton`, `useUpstreamCharacterCandidate`\\n- `StyleSettingsPanel.tsx` \\u2014 paleta + mood + style preset (edita `styleSettings` do store)\\n- `inspectors/GenerateImageInspector.tsx`\\n- `inspectors/CharacterReferenceInspector.tsx`\\n- `inspectors/SceneComposeInspector.tsx`\\n- `inspectors/StyleTransferInspector.tsx`\\n- `inspectors/ImageToVideoInspector.tsx`\\n\\nAdapta\\u00e7\\u00f5es do port viralmind:\\n- `useServerFn(...)` \\u2192 `useCanvasExecute()` (hook MCORCH existente)\\n- `useMe()`/`creditsBalance` \\u2192 `useDashbo
 > <truncated 169819 bytes>
@@ -24064,27 +24064,27 @@ Agora antes de fazer handoff quero que você inclua no handoff todos os walkthro
 > 				total 4184
 > drwxrwxr-x 2 ubuntu ubuntu    4096 May 24 01:00  .
 > drwxrwxr-x 5 ubuntu ubuntu   12288 May 22 22:17  ..
-> -rw-rw-r-- 1 ubuntu ubuntu   25962 May 23 18:49 '2026-04-17 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu   58107 May 23 18:49 '2026-04-17 - Você é o Lead Systems Architect....md'
-> -rw-rw-r-- 1 ubuntu ubuntu  163206 May 23 18:49 '2026-04-22 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu  133450 May 23 18:49 '2026-04-23 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu  247558 May 23 18:49 '2026-04-25 - meu banco de dados dos wordpress....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   10305 May 23 18:49 '2026-04-25 - TU lembra qual é o token....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   74553 May 23 18:48 '2026-04-25 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu    6377 May 23 18:49 '2026-04-26 - Você é especialista em UX UI....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   57206 May 23 18:49 '2026-05-02 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu   82281 May 23 18:49 '2026-05-03 - USERREQUEST.md'
-> -rw-rw-r-- 1 ubuntu ubuntu   34504 May 23 18:49 '2026-05-07 - Preciso de ajuda com a minha....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   64218 May 23 18:49 '2026-05-14 - Tenho o projeto homegcrUXhtdocsviralmind-builder rodando no....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   38134 May 23 18:49 '2026-05-15 - Preciso atualizar meu n8n.md'
-> -rw-rw-r-- 1 ubuntu ubuntu   39860 May 23 18:49 '2026-05-17 - Queria saber de você por que....md'
-> -rw-rw-r-- 1 ubuntu ubuntu   49512 May 23 18:49 '2026-05-17 - Untitled Session.md'
-> -rw-rw-r-- 1 ubuntu ubuntu   18921 May 22 22:18 '2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8....md'
-> -rw-rw-r-- 1 ubuntu ubuntu  618831 May 23 14:30 '2026-05-23 - Aprenda como funciona o protocolo shakehands....md'
-> -rw-rw-r-- 1 ubuntu ubuntu  697619 May 23 19:30 '2026-05-23 - Consegue me ajudar identificar qual o....md'
-> -rw-rw-r-- 1 ubuntu ubuntu  353100 May 23 20:30 '2026-05-23 - handson.md'
-> -rw-rw-r-- 1 ubuntu ubuntu 1006884 May 24 14:30 '2026-05-24 - handson ainda estou esperando o webhook....md'
-> -rw-rw-r-- 1 ubuntu ubuntu  441509 May 24 01:00 '2026-05-24 - handson.md'
+> -rw-rw-r-- 1 ubuntu ubuntu   25962 May 23 18:49 '[[2026-04-17 - USERREQUEST|2026-04-17 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   58107 May 23 18:49 '[[2026-04-17 - Você é o Lead Systems Architect...|2026-04-17 - Você é o Lead Systems Architect...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  163206 May 23 18:49 '[[2026-04-22 - USERREQUEST|2026-04-22 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  133450 May 23 18:49 '[[2026-04-23 - USERREQUEST|2026-04-23 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  247558 May 23 18:49 '[[2026-04-25 - meu banco de dados dos wordpress...|2026-04-25 - meu banco de dados dos wordpress...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   10305 May 23 18:49 '[[2026-04-25 - TU lembra qual é o token...|2026-04-25 - TU lembra qual é o token...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   74553 May 23 18:48 '[[2026-04-25 - USERREQUEST|2026-04-25 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu    6377 May 23 18:49 '[[2026-04-26 - Você é especialista em UX UI...|2026-04-26 - Você é especialista em UX UI...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   57206 May 23 18:49 '[[2026-05-02 - USERREQUEST|2026-05-02 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   82281 May 23 18:49 '[[2026-05-03 - USERREQUEST|2026-05-03 - USERREQUEST]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   34504 May 23 18:49 '[[2026-05-07 - Preciso de ajuda com a minha...|2026-05-07 - Preciso de ajuda com a minha...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   64218 May 23 18:49 '[[2026-05-14 - Tenho o projeto homegcrUXhtdocsviralmind-builder rodando no...|2026-05-14 - Tenho o projeto homegcrUXhtdocsviralmind-builder rodando no...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   38134 May 23 18:49 '[[2026-05-15 - Preciso atualizar meu n8n|2026-05-15 - Preciso atualizar meu n8n]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   39860 May 23 18:49 '[[2026-05-17 - Queria saber de você por que...|2026-05-17 - Queria saber de você por que...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   49512 May 23 18:49 '[[2026-05-17 - Untitled Session|2026-05-17 - Untitled Session]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu   18921 May 22 22:18 '[[2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8...|2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  618831 May 23 14:30 '[[2026-05-23 - Aprenda como funciona o protocolo shakehands...|2026-05-23 - Aprenda como funciona o protocolo shakehands...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  697619 May 23 19:30 '[[2026-05-23 - Consegue me ajudar identificar qual o...|2026-05-23 - Consegue me ajudar identificar qual o...]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu  353100 May 23 20:30 '[[2026-05-23 - handson|2026-05-23 - handson]].md'
+> -rw-rw-r-- 1 ubuntu ubuntu 1006884 May 24 14:30 '[[2026-05-24 - handson|2026-05-24 - handson]] ainda estou esperando o webhook....md'
+> -rw-rw-r-- 1 ubuntu ubuntu  441509 May 24 01:00 '[[2026-05-24 - handson|2026-05-24 - handson]].md'
 > Terminal ID: 1983355
 > 
 > ```
@@ -26363,3 +26363,11 @@ Worktree limpa, nada a commitar ou a enviar ao remoto. HEAD já sincronizado com
 | 🟢 Contínua | Canvas Studio — melhorias UX e novos providers |
 
 Sessão selada. Nenhum código foi alterado — apenas revisão de estado e inserção do nó de rastreabilidade no mesh. ✅
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-23 - handson]]
+> * **Próxima Sessão**: [[2026-05-24 - handson]]
+%% --- TIMELINE END --- %%

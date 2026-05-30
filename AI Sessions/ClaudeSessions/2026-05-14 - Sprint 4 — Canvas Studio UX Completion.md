@@ -14009,3 +14009,11 @@ Live: **7456 nós**. README está em v5.9.0 (o seal v6.0.0 não bumpou — corri
 Sessão selada, Maestro. Tudo em `origin/main`, mesh com o milestone, plano da Phase 4.2 pronto em `~/.claude/plans/floating-sleeping-sparrow.md`.
 
 Na próxima sessão, comece pela **documentação oficial da Higgsfield** (`platform.higgsfield.ai`) — o plano já aponta os endpoints que mapeei do `viralmind-builder` (`/higgsfield-ai/soul/standard`, `/higgsfield-ai/dop/standard`, `/kling-video/v2.1/pro/image-to-video`), mas confirmar contra a doc oficial vai dar os parâmetros avançados de vídeo exatos sem queimar crédito. Bom descanso do orçamento — reseta em ~2h.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-14 - Build content v2 AI canvas platform]]
+> * **Próxima Sessão**: [[2026-05-14 - agent-a39fc769c2dd846b0]]
+%% --- TIMELINE END --- %%

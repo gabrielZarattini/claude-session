@@ -8547,3 +8547,11 @@ Push ✅ — `fc22db3..0d06171 main -> main`, 10 commits. Selo completo.
 **Selo v6.6.9 completo.** O módulo `mcorch-qa-healing` está em produção e — pela primeira vez na história do projeto — um selo `/handoff` foi **verificado mecanicamente pela própria Fase 5c** em vez de auto-declarado. O gate auditou este selo: 13 provas materiais confrontadas com artefatos reais, zero contradições.
 
 Duas observações honestas que não escondi no relatório: (a) descobri um bug trivial pré-existente no `handoff.md` Fase 3 (chamada de embed com shape errado — contornei com retry, registrei como pendência); (b) o agente Qwen3.5 do OpenClaw operou no mesmo diretório — isolei via `.gitignore`, sem dano. Próxima iniciativa quando você quiser: **Canvas Design**, começando por `/bok-scribe canvas-design`.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-20 - 6c352002-f529-4eb5-8f8a-ad5fb941cf40]]
+> * **Próxima Sessão**: [[2026-05-20 - Identify Authentication Configuration or Scripts]]
+%% --- TIMELINE END --- %%

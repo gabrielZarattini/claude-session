@@ -1,4 +1,4 @@
-# Update context and continue antigravity handoff
+# [[2026-05-28 - Update context and continue antigravity handoff|Update context and continue antigravity handoff]]
 **Date:** 2026-05-29 | **Session ID:** `9bb9165f-6ffc-42a6-a6e7-d5311c647700`
 
 ---
@@ -10278,3 +10278,11 @@ Selo completo, Maestro. Tudo que você pediu nesta sessão entregou e está **ma
 4. **Sidebar reorganizada** — submenus colapsáveis, órfão resgatado, link morto removido, sem rolagem
 
 Hard-refresh em login.mcorch.com pra ver o menu novo e o painel de Produtos. Quando quiser, partimos pra monetização real do pipeline validado com os ~133 créditos Higgsfield restantes.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-29 - Fix API key leak and reconfigure model defaults]]
+> * **Próxima Sessão**: [[2026-05-30 - Fix API key leak and reconfigure model defaults]]
+%% --- TIMELINE END --- %%

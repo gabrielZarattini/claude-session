@@ -12,7 +12,7 @@ Fase 1: Implementação do Repository Scaffold e AI Ruleset
 
 Crie a estrutura de diretórios docs/architecture/ e adicione um ficheiro system_architecture.md que descreva a nossa stack (React/Vite, Bun, Supabase, Nginx na VPS) e o objetivo de monetização híbrida.
 
-Crie ou atualize o ficheiro de regras globais da IA (ex: .cursorrules, CLAUDE.md ou atualize o GEMINI.md no .gemini/antigravity/). Este ficheiro deve conter o Master System Prompt que o define como o Lead Architect focado em Autonomic Computing (Self-healing, Self-optimization).
+Crie ou atualize o ficheiro de regras globais da IA (ex: .cursorrules, [[[[CLAUDE]]|[[CLAU]]DE|[[CLAU]]DE|[[CLAU]]DE|[[CLAU]]DE|[[CLAU]]DE]].md ou atualize o GEMINI.md no .gemini/antigravity/). Este ficheiro deve conter o Master System Prompt que o define como o Lead Architect focado em Autonomic Computing (Self-healing, Self-optimization).
 
 Fase 2: Automated Data Ingestion (n8n -> Supabase)
 Guiado pelo nosso novo Spec-Driven Framework, inicie a integração de dados:
@@ -37,7 +37,7 @@ Guiado pelo nosso novo Spec-Driven Framework, inicie a integração de dados:
 }
 ```
 
-🛠️ **Tool Call**: `run_command`
+🛠️ **Tool Call**: `run_co[[CLAUDE|mmand`]]
 ```json
 {
   "CommandLine": "\"ls -a .cursorrules CLAUDE.md .gemini/antigravity/GEMINI.md\"",
@@ -735,3 +735,10 @@ y
   "WaitDurationSeconds": "30"
 }
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Próxima Sessão**: [[2026-04-17 - Você é o Lead Systems Architect...]]
+%% --- TIMELINE END --- %%

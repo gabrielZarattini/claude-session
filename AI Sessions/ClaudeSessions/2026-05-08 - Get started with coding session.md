@@ -8744,3 +8744,11 @@ Tudo certo. **`sprint-priorities.md` foi salvo, commitado (`8d53bbc`) e pushado*
 | Working tree | ✅ apenas `supabase/.temp/cli-latest` (auto-gerenciado pelo Supabase CLI, não commitar) |
 
 A interrupção aconteceu *depois* do push completar. Nada se perdeu — o `/handoff` está 100% selado.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-08 - Deploy LGPD compliance and fix chunking alerts]]
+> * **Próxima Sessão**: [[2026-05-08 - Próximos passos e prioridades do projeto]]
+%% --- TIMELINE END --- %%

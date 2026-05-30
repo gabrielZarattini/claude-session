@@ -1714,3 +1714,11 @@ Vou verificar o screenshot para confirmar:
 **Bug corrigido:** Radix Select crash por `value=""` — resolvido com sentinel values.
 
 **Próximo passo (Sprint 4):** Affiliate Radar multi-network + widget MCOPM no Dashboard. Quer que eu continue?
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-07 - Preciso de ajuda com a minha...]]
+> * **Próxima Sessão**: [[2026-05-15 - Preciso atualizar meu n8n]]
+%% --- TIMELINE END --- %%

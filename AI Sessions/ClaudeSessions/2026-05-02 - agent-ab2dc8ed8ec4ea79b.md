@@ -1652,3 +1652,11 @@ Excellent! Now I have all the information needed. Let me compile my findings:
 - useKnowledgeMesh: Count exact query on mcorch_edges
 - useConstellationSigma: Fetch with `EDGE_COLS` for mcorch-constellation project
 - useAIOSConversations: Insert and update operations on the edges table
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - agent-a60431b677a734352]]
+> * **Próxima Sessão**: [[2026-05-02 - agent-ad5df463b4b26f10e]]
+%% --- TIMELINE END --- %%

@@ -6011,3 +6011,11 @@ Milestone embedado ✅. Phase 6 — push.
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-05 - agent-ab52cb481cf529706]]
+> * **Próxima Sessão**: [[2026-05-06 - Fix layout issues and synchronize mesh node data]]
+%% --- TIMELINE END --- %%

@@ -1,4 +1,4 @@
-# Install agent-browser for E2E testing
+# [[2026-05-25 - Install agent-browser for E2E testing|Install agent-browser for E2E testing]]
 **Date:** 2026-05-26 | **Session ID:** `516091c3-851b-4aee-99cf-94d4940c0249`
 
 ---
@@ -8680,3 +8680,11 @@ Phase 8 — relatório final.
 - **4 (handoff)** → 8 phases do protocol v4 executadas, SEAL ALLOWED material, 6 commits pushed
 
 **Próxima sessão dedicada:** implementação do `scripts/qa/e2e-user-zero/runner.ts` + flows MVP (PR-E2E-001..008). BoK está pronto; código pode nascer agora porque a Lei 2 e o BoK Gate estão satisfeitos.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-26 - Fix OpenRouter multimodal error and token limits]]
+> * **Próxima Sessão**: [[2026-05-27 - 98202356-feef-4f6b-9631-acfe0d7e685d]]
+%% --- TIMELINE END --- %%

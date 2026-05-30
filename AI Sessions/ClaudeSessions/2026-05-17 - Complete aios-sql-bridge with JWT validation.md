@@ -11744,3 +11744,11 @@ Push ✅ — `9d8f8ed..bc27355` (3 commits: proposal + readme + handoff).
 ```
 
 Sessão selada. Pode descansar — Memory Palace está vivo, ledger está em zero drift selado materialmente, e os 7 agentes do Pantheon agora têm continuidade real entre sessões via MEMORY.md. 🏛️🧘
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-16 - d2adff1b-1ea7-4a21-8dce-8865770158fc]]
+> * **Próxima Sessão**: [[2026-05-17 - agent-a0a5835171d126fc4]]
+%% --- TIMELINE END --- %%

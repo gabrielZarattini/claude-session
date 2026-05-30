@@ -490,3 +490,11 @@ bbf0e10 chore(sprint): update sprint-priorities — Settings Sovereignty v5.5.5 
 - Hardening do protocolo de handoff com 3 camadas de proteção contra vazamento de credentials
 - Impacto: +55 linhas em `.claude/commands/handoff.md` + novo arquivo de pre-commit hook
 - Status: Security fix preventivo
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-06 - agent-af1aaa5672d76fe49]]
+> * **Próxima Sessão**: [[2026-05-08 - Deploy LGPD compliance and fix chunking alerts]]
+%% --- TIMELINE END --- %%

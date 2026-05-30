@@ -11395,3 +11395,11 @@ git push origin main # [main ea34ce7]
 #### Como você deseja proceder agora?
 1.  **Ajuste no OpenClaw:** Quer que eu trace o local exato no código do OpenClaw onde as chamadas de API são despachadas para montarmos a infraestrutura de roteamento de Tier 2 (DeepSeek/OpenRouter) para tarefas assíncronas?
 2.  **Context Caching:** Prefere que verifiquemos a implementação do Context Caching no wrapper da API do Gemini?
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8...]]
+> * **Próxima Sessão**: [[2026-05-23 - Consegue me ajudar identificar qual o...]]
+%% --- TIMELINE END --- %%

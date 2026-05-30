@@ -1,4 +1,4 @@
-# Plan JWT refactor and affiliate token migration
+# [[2026-05-27 - Plan JWT refactor and affiliate token migration|Plan JWT refactor and affiliate token migration]]
 **Date:** 2026-05-28 | **Session ID:** `cf433bf4-1fe3-4e97-93c9-a8cd46e57779`
 
 ---
@@ -9194,3 +9194,11 @@ fd21a31 docs(claude): register _shared/auth + _shared/user-keys + 2 SOPs
 9e1eb5f fix(canvas): Higgsfield per-user enforcement (OTD-OE661-PER-USER)
 ...
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-28 - 9bb9165f-6ffc-42a6-a6e7-d5311c647700]]
+> * **Próxima Sessão**: [[2026-05-28 - Update context and continue antigravity handoff]]
+%% --- TIMELINE END --- %%

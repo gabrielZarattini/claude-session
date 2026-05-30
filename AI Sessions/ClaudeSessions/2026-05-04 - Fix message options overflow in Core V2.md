@@ -4502,3 +4502,11 @@ Scratch vazio (só o diretório). MCP gitnexus e github estão documentados no C
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-04 - Delete conversation with confirmation]]
+> * **Próxima Sessão**: [[2026-05-04 - Plan next priority steps]]
+%% --- TIMELINE END --- %%

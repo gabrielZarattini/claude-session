@@ -6655,3 +6655,11 @@ scratch ✅ limpo · MCP OK · sprint-priorities sem mudanças necessárias. Pha
 - **Lei 2 (Anticipated Process):** ✓ SOPs preexistentes (`mcoins-ledger-reconciliation.md` para Phase 2, `canvas-video-async-execution.md` para Phase 3.5) — fix é exemption por ser bug fix em feature documentada.
 - **Lei 3 (Pruning):** ✓ Scope contido por escolha do Sovereign — Phase 3.2-3.4 paid smoke deferida explicitamente; cleanup synthetic chain executado em mesmo turn que validação.
 - **Lei 4 (ORO):** ✓ Triplet declarado no início da sessão e no Record do HANDOFF.md.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-26 - 00ee75f5-bf3c-4cfe-81b8-c6cbdbb0b2d7]]
+> * **Próxima Sessão**: [[2026-05-26 - Install agent-browser for E2E testing]]
+%% --- TIMELINE END --- %%

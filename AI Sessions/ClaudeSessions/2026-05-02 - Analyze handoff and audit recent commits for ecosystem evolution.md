@@ -9266,3 +9266,11 @@ Com 29% restante você corre dois riscos concretos se continuar:
 Iniciando uma nova sessão com `/handson`, o agente executa os 7 checks em paralelo e entrega o brief em segundos — com o estado exato da Phase Zeta como item #1 dos próximos passos, TypeScript limpo confirmado, e infra verde. É um custo de ~3k tokens para ter 100% de janela disponível para construir.
 
 **Inicie a nova sessão e rode `/handson` — o protocolo faz o resto.**
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - 815f4d1e-ada4-445c-a0ff-7d13a567be7d]]
+> * **Próxima Sessão**: [[2026-05-02 - Deploy Phase Zeta with database migrations]]
+%% --- TIMELINE END --- %%

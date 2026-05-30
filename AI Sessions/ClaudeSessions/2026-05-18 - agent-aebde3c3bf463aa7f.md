@@ -3794,3 +3794,11 @@ async function resolveAllManagedDreamingCronStatuses(context: {...}): Promise<Re
 **Solução:** Remover a função `resolveAllManagedDreamingCronStatuses` e usar apenas `dreamingConfig.phases` (já vem do backend com cron info completa). Ou, alternativamente, procurar por 3 crons distintos com tags para cada fase light/deep/rem (se forem registradas como crons OpenClaw nativas).
 
 **Uma frase:** "Na linha 961-973 do doctor.ts, o backend já merges `dreamingConfig.phases` com cronStatus, mas cronStatus retorna o mesmo para 3 fases; remover `resolveAllManagedDreamingCronStatuses` e usar apenas `dreamingConfig.phases` que já contém cron+nextRunAtMs corretos de cada fase."
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-18 - agent-ae8a83dca2c283076]]
+> * **Próxima Sessão**: [[2026-05-18 - agent-aee05e24b4551d4ec]]
+%% --- TIMELINE END --- %%

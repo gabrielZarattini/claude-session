@@ -1814,3 +1814,11 @@ Queria saber de você por que você acha que o meu agent do openclaw no telegram
   "TargetFile": "\"/home/ubuntu/openclaw/extensions/telegram/src/bot-native-commands.ts\""
 }
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-15 - Preciso atualizar meu n8n]]
+> * **Próxima Sessão**: [[2026-05-17 - Untitled Session]]
+%% --- TIMELINE END --- %%

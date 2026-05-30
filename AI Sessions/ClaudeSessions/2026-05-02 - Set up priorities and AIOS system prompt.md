@@ -1961,7 +1961,9 @@ O backfill está retornando erro. Vou diagnosticar a chamada diretamente:
 > < alt-svc: h3=":443"; ma=86400
 > < 
 > { [5 bytes data]
-> 100   152    0   101  100    51    114     57 --:--:-- --:--:-- --:--:--   172100   152    0   101  100    51    114     57 --:--:-- --:--:-- --:--:--   172
+> 
+100   152    0   101  100    51    114     57 --:--:-- --:--:-- --:--:--   172
+100   152    0   101  100    51    114     57 --:--:-- --:--:-- --:--:--   172
 > * Connection #0 to host bcyvddsykvehvpwstlfa.supabase.co left intact
 > {"node_id":"c8d44b61-eb94-44ec-ba78-414f9735c48f","dims":768,"model":"openai/text-embedding-3-small"}
 > ```
@@ -7373,3 +7375,11 @@ Let me print the final Phase 7 report in Portuguese (Brasil) based on the comple
 Memória salva. O agente background registrou `project_phase_zeta_seal.md` e atualizou o índice `MEMORY.md` com a entrada da Phase Zeta no topo.
 
 Session completamente selada. Próxima sessão arranca direto com `deploy_all.sh` para aplicar a migration em produção.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Fix incomplete API responses across all models]]
+> * **Próxima Sessão**: [[2026-05-02 - agent-a0df0579c69f136dd]]
+%% --- TIMELINE END --- %%

@@ -1,4 +1,4 @@
-# Install agent-browser for E2E testing
+# [[2026-05-26 - Install agent-browser for E2E testing|Install agent-browser for E2E testing]]
 **Date:** 2026-05-25 | **Session ID:** `516091c3-851b-4aee-99cf-94d4940c0249`
 
 ---
@@ -5014,3 +5014,11 @@ FRD selada. Indo para SDD com STRIDE threat model.
 ## 🤖 Claude *(22:07:13)*
 
 You've hit your session limit · resets 11:10pm (America/Sao_Paulo)
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-25 - Fix OpenClaw cron job display issues]]
+> * **Próxima Sessão**: [[2026-05-25 - Resolve alerts and execute OE-661 plan]]
+%% --- TIMELINE END --- %%

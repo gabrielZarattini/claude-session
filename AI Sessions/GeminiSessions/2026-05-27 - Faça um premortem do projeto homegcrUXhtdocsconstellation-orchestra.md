@@ -8738,3 +8738,11 @@ Todos os 9 módulos contam com a documentação da suíte completa de governanç
 2. **Paid Smoke Test no Vídeo Higgsfield:** Em momento oportuno, validar o pipeline assíncrono de vídeo (custo real de 125 mcoCoins) contra os 9 critérios da SOP de vídeo.
 
 **Sessão fechada com sucesso! Paz e Vitalidade.**
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]
+> * **Próxima Sessão**: [[2026-05-27 - handson]]
+%% --- TIMELINE END --- %%

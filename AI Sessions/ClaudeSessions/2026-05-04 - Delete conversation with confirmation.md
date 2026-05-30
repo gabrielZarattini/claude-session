@@ -11442,3 +11442,11 @@ Scratch vazio (diretório existe mas sem arquivos). Tudo limpo.
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-03 - agent-aee7b770ebe40a65e]]
+> * **Próxima Sessão**: [[2026-05-04 - Fix message options overflow in Core V2]]
+%% --- TIMELINE END --- %%

@@ -3441,3 +3441,11 @@ Embedded ✅ 768 dims. **Phase 6 — Push**
   v5.2.5 sealed · 4 commits · 1 handoff node embedded
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-03 - List configured agents in project]]
+> * **Próxima Sessão**: [[2026-05-03 - agent-a0258e519f6a524ab]]
+%% --- TIMELINE END --- %%

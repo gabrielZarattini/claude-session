@@ -9120,3 +9120,11 @@ Embedded ✅. Now push to origin:
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-04 - Fix message options overflow in Core V2]]
+> * **Próxima Sessão**: [[2026-05-05 - Prepare production setup and complete graph embeddings]]
+%% --- TIMELINE END --- %%

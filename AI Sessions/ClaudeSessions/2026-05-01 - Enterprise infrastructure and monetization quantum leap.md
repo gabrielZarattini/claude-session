@@ -7202,3 +7202,11 @@ Próximos passos conforme HANDOFF.md:
 1. **Primeiro run end-to-end como Usuário Zero** — criar campanha real → ML link → conversão → `handle-ml-postback` → ver BRL real no ROIWidget
 2. **VITE_GEMINI_API_KEY** — provisionar para streaming direto no Core AIOS (OpenRouter fallback funciona enquanto isso)
 3. **`npx supabase functions deploy orchestrate-content`** — já feito agora ✅
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-01 - Deploy Gemini API and Supabase functions]]
+> * **Próxima Sessão**: [[2026-05-02 - 815f4d1e-ada4-445c-a0ff-7d13a567be7d]]
+%% --- TIMELINE END --- %%

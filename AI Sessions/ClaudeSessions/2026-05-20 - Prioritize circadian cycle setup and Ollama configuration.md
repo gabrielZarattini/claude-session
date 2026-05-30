@@ -10177,3 +10177,11 @@ GraphRAG State atualizado (8363 nós). **Fase 5b — secret scan no `HANDOFF.md`
 Sessão selada, Sovereign. Os dois entregáveis — a suíte BoK `canvas-design` e o painel de gestão de usuários do admin — estão commitados, no `origin/main`, e em produção. O `/handoff` passou em todas as 8 fases, com a Fase 5c (Material Proof Audit) confirmando mecanicamente cada claim do Record: **SEAL ALLOWED**.
 
 Um lembrete honesto: tudo foi deployado e verificado *materialmente* (migration aplicada, Edge Function no ar, build feito), mas a verificação de *runtime* — você logar como admin e exercitar as ações — é o seu passo de QA. Se algo na UI não se comportar, é só me chamar.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-20 - Normalize circadian cycle dream panel synchronization]]
+> * **Próxima Sessão**: [[2026-05-20 - aaeb4aec-b724-4375-ba08-f69000e8a879]]
+%% --- TIMELINE END --- %%

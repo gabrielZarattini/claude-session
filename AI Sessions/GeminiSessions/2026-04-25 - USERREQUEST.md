@@ -2284,3 +2284,11 @@ Assuma a identidade de **Lead Systems Architect**. Você deve finalizar o bootst
 
 1. **Soberania em `.agent/`**:
 <truncated 2403 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-25 - TU lembra qual é o token...]]
+> * **Próxima Sessão**: [[2026-04-25 - meu banco de dados dos wordpress...]]
+%% --- TIMELINE END --- %%

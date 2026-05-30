@@ -8018,7 +8018,47 @@ Dry-run perfeito — extrai código real das linhas. Executando o backfill real 
 > ```
 > 📦 Fetched 1970 AST nodes
 > 🎯 1958 nodes need backfill (out of 1970 total)
->   ✅ 50 updated, 0 skipped, 0 errors  ✅ 100 updated, 0 skipped, 0 errors  ✅ 150 updated, 0 skipped, 0 errors  ✅ 199 updated, 1 skipped, 0 errors  ✅ 248 updated, 2 skipped, 0 errors  ✅ 293 updated, 7 skipped, 0 errors  ✅ 343 updated, 7 skipped, 0 errors  ✅ 392 updated, 8 skipped, 0 errors  ✅ 441 updated, 9 skipped, 0 errors  ✅ 491 updated, 9 skipped, 0 errors  ✅ 541 updated, 9 skipped, 0 errors  ✅ 588 updated, 12 skipped, 0 errors  ✅ 638 updated, 12 skipped, 0 errors  ✅ 686 updated, 14 skipped, 0 errors  ✅ 735 updated, 15 skipped, 0 errors  ✅ 779 updated, 21 skipped, 0 errors  ✅ 827 updated, 23 skipped, 0 errors  ✅ 876 updated, 24 skipped, 0 errors  ✅ 926 updated, 24 skipped, 0 errors  ✅ 975 updated, 25 skipped, 0 errors  ✅ 1022 updated, 28 skipped, 0 errors  ✅ 1071 updated, 29 skipped, 0 errors  ✅ 1121 updated, 29 skipped, 0 errors  ✅ 1168 updated, 32 skipped, 0 errors  ✅ 1218 updated, 32 skipped, 0 errors  ✅ 1268 updated, 32 skipped, 0 errors  ✅ 1316 updated, 34 skipped, 0 errors  ✅ 1363 updated, 37 skipped, 0 errors  ✅ 1408 updated, 42 skipped, 0 errors  ✅ 1457 updated, 43 skipped, 0 errors  ✅ 1475 updated, 75 skipped, 0 errors  ✅ 1485 updated, 115 skipped, 0 errors  ✅ 1488 updated, 162 skipped, 0 errors  ✅ 1519 updated, 181 skipped, 0 errors  ✅ 1566 updated, 184 skipped, 0 errors  ✅ 1612 updated, 188 skipped, 0 errors  ✅ 1656 updated, 194 skipped, 0 errors  ✅ 1700 updated, 200 skipped, 0 errors  ✅ 1750 updated, 200 skipped, 0 errors  ✅ 1758 updated, 200 skipped, 0 errors
+> 
+  ✅ 50 updated, 0 skipped, 0 errors
+  ✅ 100 updated, 0 skipped, 0 errors
+  ✅ 150 updated, 0 skipped, 0 errors
+  ✅ 199 updated, 1 skipped, 0 errors
+  ✅ 248 updated, 2 skipped, 0 errors
+  ✅ 293 updated, 7 skipped, 0 errors
+  ✅ 343 updated, 7 skipped, 0 errors
+  ✅ 392 updated, 8 skipped, 0 errors
+  ✅ 441 updated, 9 skipped, 0 errors
+  ✅ 491 updated, 9 skipped, 0 errors
+  ✅ 541 updated, 9 skipped, 0 errors
+  ✅ 588 updated, 12 skipped, 0 errors
+  ✅ 638 updated, 12 skipped, 0 errors
+  ✅ 686 updated, 14 skipped, 0 errors
+  ✅ 735 updated, 15 skipped, 0 errors
+  ✅ 779 updated, 21 skipped, 0 errors
+  ✅ 827 updated, 23 skipped, 0 errors
+  ✅ 876 updated, 24 skipped, 0 errors
+  ✅ 926 updated, 24 skipped, 0 errors
+  ✅ 975 updated, 25 skipped, 0 errors
+  ✅ 1022 updated, 28 skipped, 0 errors
+  ✅ 1071 updated, 29 skipped, 0 errors
+  ✅ 1121 updated, 29 skipped, 0 errors
+  ✅ 1168 updated, 32 skipped, 0 errors
+  ✅ 1218 updated, 32 skipped, 0 errors
+  ✅ 1268 updated, 32 skipped, 0 errors
+  ✅ 1316 updated, 34 skipped, 0 errors
+  ✅ 1363 updated, 37 skipped, 0 errors
+  ✅ 1408 updated, 42 skipped, 0 errors
+  ✅ 1457 updated, 43 skipped, 0 errors
+  ✅ 1475 updated, 75 skipped, 0 errors
+  ✅ 1485 updated, 115 skipped, 0 errors
+  ✅ 1488 updated, 162 skipped, 0 errors
+  ✅ 1519 updated, 181 skipped, 0 errors
+  ✅ 1566 updated, 184 skipped, 0 errors
+  ✅ 1612 updated, 188 skipped, 0 errors
+  ✅ 1656 updated, 194 skipped, 0 errors
+  ✅ 1700 updated, 200 skipped, 0 errors
+  ✅ 1750 updated, 200 skipped, 0 errors
+  ✅ 1758 updated, 200 skipped, 0 errors
 > 
 > 🏁 Done: 1758 updated · 200 skipped · 0 errors
 > ```
@@ -8269,7 +8309,97 @@ Reescrevo o script para Bun (elimina `Deno.*`, carrega `.env` manualmente, mant�
 >
 > ```
 > 🔍 Found 1472 nodes without embeddings.
->   ✅ 1/1472 embedded — last: NavigationMenuLink  ✅ 2/1472 embedded — last: Popover  ✅ 3/1472 embedded — last: PaginationContent  ✅ 4/1472 embedded — last: PaginationLinkProps  ✅ 5/1472 embedded — last: PopoverTrigger  ✅ 6/1472 embedded — last: PaginationItem  ✅ 7/1472 embedded — last: content  ✅ 8/1472 embedded — last: line  ✅ 9/1472 embedded — last: lines  ✅ 10/1472 embedded — last: chunk  ✅ 11/1472 embedded — last: decoder  ✅ 12/1472 embedded — last: data  ✅ 13/1472 embedded — last: parsed  ✅ 14/1472 embedded — last: sensors  ✅ 15/1472 embedded — last: STATUS_VARIANT  ✅ 16/1472 embedded — last: PLATFORM_LABELS  ✅ 17/1472 embedded — last: PLATFORM_COLORS  ✅ 18/1472 embedded — last: rangeStart  ✅ 19/1472 embedded — last: SocialPlatform  ✅ 20/1472 embedded — last: style  ✅ 21/1472 embedded — last: RadioGroupItem  ✅ 22/1472 embedded — last: createPost  ✅ 23/1472 embedded — last: rangeEnd  ✅ 24/1472 embedded — last: ResizablePanel  ✅ 25/1472 embedded — last: ScrollArea  ✅ 26/1472 embedded — last: Progress  ✅ 27/1472 embedded — last: SelectTrigger  ✅ 28/1472 embedded — last: SelectValue  ✅ 29/1472 embedded — last: SelectGroup  ✅ 30/1472 embedded — last: SelectScrollUpButton  ✅ 31/1472 embedded — last: SheetPortal  ✅ 32/1472 embedded — last: SheetClose  ✅ 33/1472 embedded — last: SelectLabel  ✅ 34/1472 embedded — last: Sheet  ✅ 35/1472 embedded — last: SheetTrigger  ✅ 36/1472 embedded — last: SelectSeparator  ✅ 37/1472 embedded — last: SheetTitle  ✅ 38/1472 embedded — last: SheetOverlay  ✅ 39/1472 embedded — last: SIDEBAR_COOKIE_MAX_AGE  ✅ 40/1472 embedded — last: SheetDescription  ✅ 41/1472 embedded — last: SIDEBAR_COOKIE_NAME  ✅ 42/1472 embedded — last: SIDEBAR_WIDTH  ✅ 43/1472 embedded — last: SidebarContext  ✅ 44/1472 embedded — last: pos  ✅ 45/1472 embedded — last: SIDEBAR_WIDTH_ICON  ✅ 46/1472 embedded — last: SIDEBAR_WIDTH_MOBILE  ✅ 47/1472 embedded — last: SIDEBAR_KEYBOARD_SHORTCUT  ✅ 48/1472 embedded — last: open  ✅ 49/1472 embedded — last: openState  ✅ 50/1472 embedded — last: isMobile  ✅ 51/1472 embedded — last: setOpen  ✅ 52/1472 embedded — last: SidebarInset  ✅ 53/1472 embedded — last: filtered  ✅ 54/1472 embedded — last: SidebarHeader  ✅ 55/1472 embedded — last: SidebarFooter  ✅ 56/1472 embedded — last: contextValue  ✅ 57/1472 embedded — last: loaded  ✅ 58/1472 embedded — last: toggleSidebar  ✅ 59/1472 embedded — last: state  ✅ 60/1472 embedded — last: res  ✅ 61/1472 embedded — last: connectionMode  ✅ 62/1472 embedded — last: AUDIO_FORMATS  ✅ 63/1472 embedded — last: TONES  ✅ 64/1472 embedded — last: navigate  ✅ 65/1472 embedded — last: setConnectionMode  ✅ 66/1472 embedded — last: VIDEO_DURATIONS  ✅ 67/1472 embedded — last: FALLBACK_MODELS  ✅ 68/1472 embedded — last: SidebarSeparator  ✅ 69/1472 embedded — last: VIDEO_FORMATS  ✅ 70/1472 embedded — last: SidebarContent  ✅ 71/1472 embedded — last: SidebarGroup  ✅ 72/1472 embedded — last: SidebarGroupLabel  ✅ 73/1472 embedded — last: SidebarGroupContent  ✅ 74/1472 embedded — last: Comp  ✅ 75/1472 embedded — last: SidebarMenuItem  ✅ 76/1472 embedded — last: SidebarMenuBadge  ✅ 77/1472 embedded — last: width  ✅ 78/1472 embedded — last: SidebarMenuAction  ✅ 79/1472 embedded — last: button  ✅ 80/1472 embedded — last: SidebarMenuSkeleton  ✅ 81/1472 embedded — last: TableFooter  ✅ 82/1472 embedded — last: TableRow  ✅ 83/1472 embedded — last: Table  ✅ 84/1472 embedded — last: TableHeader  ✅ 85/1472 embedded — last: TableHead  ✅ 86/1472 embedded — last: ToasterProps  ✅ 87/1472 embedded — last: TableCaption  ✅ 88/1472 embedded — last: TableBody  ✅ 89/1472 embedded — last: ToastProps  ✅ 90/1472
+> 
+  ✅ 1/1472 embedded — last: NavigationMenuLink
+  ✅ 2/1472 embedded — last: Popover
+  ✅ 3/1472 embedded — last: PaginationContent
+  ✅ 4/1472 embedded — last: PaginationLinkProps
+  ✅ 5/1472 embedded — last: PopoverTrigger
+  ✅ 6/1472 embedded — last: PaginationItem
+  ✅ 7/1472 embedded — last: content
+  ✅ 8/1472 embedded — last: line
+  ✅ 9/1472 embedded — last: lines
+  ✅ 10/1472 embedded — last: chunk
+  ✅ 11/1472 embedded — last: decoder
+  ✅ 12/1472 embedded — last: data
+  ✅ 13/1472 embedded — last: parsed
+  ✅ 14/1472 embedded — last: sensors
+  ✅ 15/1472 embedded — last: STATUS_VARIANT
+  ✅ 16/1472 embedded — last: PLATFORM_LABELS
+  ✅ 17/1472 embedded — last: PLATFORM_COLORS
+  ✅ 18/1472 embedded — last: rangeStart
+  ✅ 19/1472 embedded — last: SocialPlatform
+  ✅ 20/1472 embedded — last: style
+  ✅ 21/1472 embedded — last: RadioGroupItem
+  ✅ 22/1472 embedded — last: createPost
+  ✅ 23/1472 embedded — last: rangeEnd
+  ✅ 24/1472 embedded — last: ResizablePanel
+  ✅ 25/1472 embedded — last: ScrollArea
+  ✅ 26/1472 embedded — last: Progress
+  ✅ 27/1472 embedded — last: SelectTrigger
+  ✅ 28/1472 embedded — last: SelectValue
+  ✅ 29/1472 embedded — last: SelectGroup
+  ✅ 30/1472 embedded — last: SelectScrollUpButton
+  ✅ 31/1472 embedded — last: SheetPortal
+  ✅ 32/1472 embedded — last: SheetClose
+  ✅ 33/1472 embedded — last: SelectLabel
+  ✅ 34/1472 embedded — last: Sheet
+  ✅ 35/1472 embedded — last: SheetTrigger
+  ✅ 36/1472 embedded — last: SelectSeparator
+  ✅ 37/1472 embedded — last: SheetTitle
+  ✅ 38/1472 embedded — last: SheetOverlay
+  ✅ 39/1472 embedded — last: SIDEBAR_COOKIE_MAX_AGE
+  ✅ 40/1472 embedded — last: SheetDescription
+  ✅ 41/1472 embedded — last: SIDEBAR_COOKIE_NAME
+  ✅ 42/1472 embedded — last: SIDEBAR_WIDTH
+  ✅ 43/1472 embedded — last: SidebarContext
+  ✅ 44/1472 embedded — last: pos
+  ✅ 45/1472 embedded — last: SIDEBAR_WIDTH_ICON
+  ✅ 46/1472 embedded — last: SIDEBAR_WIDTH_MOBILE
+  ✅ 47/1472 embedded — last: SIDEBAR_KEYBOARD_SHORTCUT
+  ✅ 48/1472 embedded — last: open
+  ✅ 49/1472 embedded — last: openState
+  ✅ 50/1472 embedded — last: isMobile
+  ✅ 51/1472 embedded — last: setOpen
+  ✅ 52/1472 embedded — last: SidebarInset
+  ✅ 53/1472 embedded — last: filtered
+  ✅ 54/1472 embedded — last: SidebarHeader
+  ✅ 55/1472 embedded — last: SidebarFooter
+  ✅ 56/1472 embedded — last: contextValue
+  ✅ 57/1472 embedded — last: loaded
+  ✅ 58/1472 embedded — last: toggleSidebar
+  ✅ 59/1472 embedded — last: state
+  ✅ 60/1472 embedded — last: res
+  ✅ 61/1472 embedded — last: connectionMode
+  ✅ 62/1472 embedded — last: AUDIO_FORMATS
+  ✅ 63/1472 embedded — last: TONES
+  ✅ 64/1472 embedded — last: navigate
+  ✅ 65/1472 embedded — last: setConnectionMode
+  ✅ 66/1472 embedded — last: VIDEO_DURATIONS
+  ✅ 67/1472 embedded — last: FALLBACK_MODELS
+  ✅ 68/1472 embedded — last: SidebarSeparator
+  ✅ 69/1472 embedded — last: VIDEO_FORMATS
+  ✅ 70/1472 embedded — last: SidebarContent
+  ✅ 71/1472 embedded — last: SidebarGroup
+  ✅ 72/1472 embedded — last: SidebarGroupLabel
+  ✅ 73/1472 embedded — last: SidebarGroupContent
+  ✅ 74/1472 embedded — last: Comp
+  ✅ 75/1472 embedded — last: SidebarMenuItem
+  ✅ 76/1472 embedded — last: SidebarMenuBadge
+  ✅ 77/1472 embedded — last: width
+  ✅ 78/1472 embedded — last: SidebarMenuAction
+  ✅ 79/1472 embedded — last: button
+  ✅ 80/1472 embedded — last: SidebarMenuSkeleton
+  ✅ 81/1472 embedded — last: TableFooter
+  ✅ 82/1472 embedded — last: TableRow
+  ✅ 83/1472 embedded — last: Table
+  ✅ 84/1472 embedded — last: TableHeader
+  ✅ 85/1472 embedded — last: TableHead
+  ✅ 86/1472 embedded — last: ToasterProps
+  ✅ 87/1472 embedded — last: TableCaption
+  ✅ 88/1472 embedded — last: TableBody
+  ✅ 89/1472 embedded — last: ToastProps
+  ✅ 90/1472
 > ```
 
 ## 🤖 Claude *(16:49:35)*
@@ -9606,7 +9736,54 @@ node scripts/ingest-codebase.ts
 > 
 > Preview (first 2KB):
 > 🔍 Found 1472 nodes without embeddings.
->   ✅ 1/1472 embedded — last: NavigationMenuLink  ✅ 2/1472 embedded — last: Popover  ✅ 3/1472 embedded — last: PaginationContent  ✅ 4/1472 embedded — last: PaginationLinkProps  ✅ 5/1472 embedded — last: PopoverTrigger  ✅ 6/1472 embedded — last: PaginationItem  ✅ 7/1472 embedded — last: content  ✅ 8/1472 embedded — last: line  ✅ 9/1472 embedded — last: lines  ✅ 10/1472 embedded — last: chunk  ✅ 11/1472 embedded — last: decoder  ✅ 12/1472 embedded — last: data  ✅ 13/1472 embedded — last: parsed  ✅ 14/1472 embedded — last: sensors  ✅ 15/1472 embedded — last: STATUS_VARIANT  ✅ 16/1472 embedded — last: PLATFORM_LABELS  ✅ 17/1472 embedded — last: PLATFORM_COLORS  ✅ 18/1472 embedded — last: rangeStart  ✅ 19/1472 embedded — last: SocialPlatform  ✅ 20/1472 embedded — last: style  ✅ 21/1472 embedded — last: RadioGroupItem  ✅ 22/1472 embedded — last: createPost  ✅ 23/1472 embedded — last: rangeEnd  ✅ 24/1472 embedded — last: ResizablePanel  ✅ 25/1472 embedded — last: ScrollArea  ✅ 26/1472 embedded — last: Progress  ✅ 27/1472 embedded — last: SelectTrigger  ✅ 28/1472 embedded — last: SelectValue  ✅ 29/1472 embedded — last: SelectGroup  ✅ 30/1472 embedded — last: SelectScrollUpButton  ✅ 31/1472 embedded — last: SheetPortal  ✅ 32/1472 embedded — last: SheetClose  ✅ 33/1472 embedded — last: SelectLabel  ✅ 34/1472 embedded — last: Sheet  ✅ 35/1472 embedded — last: SheetTrigger  ✅ 36/1472 embedded — last: SelectSeparator  ✅ 37/1472 embedded — last: SheetTitle  ✅ 38/1472 embedded — last: SheetOverlay  ✅ 39/1472 embedded — last: SIDEBAR_COOKIE_MAX_AGE  ✅ 40/1472 embedded — last: SheetDescription  ✅ 41/1472 embedded — last: SIDEBAR_COOKIE_NAME  ✅ 42/1472 embedded — last: SIDEBAR_WIDTH  ✅ 43/1472 embedded — last: SidebarContext  ✅ 44/1472 embedded — last: pos  ✅ 45/1472 embedded — last: SIDEBAR_WIDTH_ICON  ✅ 46/1472 embedded — last: SIDEBAR_WIDTH_MOBILE  ✅ 47/1472 embedded — last: SIDEBAR_KEYBOARD_SHORT
+> 
+  ✅ 1/1472 embedded — last: NavigationMenuLink
+  ✅ 2/1472 embedded — last: Popover
+  ✅ 3/1472 embedded — last: PaginationContent
+  ✅ 4/1472 embedded — last: PaginationLinkProps
+  ✅ 5/1472 embedded — last: PopoverTrigger
+  ✅ 6/1472 embedded — last: PaginationItem
+  ✅ 7/1472 embedded — last: content
+  ✅ 8/1472 embedded — last: line
+  ✅ 9/1472 embedded — last: lines
+  ✅ 10/1472 embedded — last: chunk
+  ✅ 11/1472 embedded — last: decoder
+  ✅ 12/1472 embedded — last: data
+  ✅ 13/1472 embedded — last: parsed
+  ✅ 14/1472 embedded — last: sensors
+  ✅ 15/1472 embedded — last: STATUS_VARIANT
+  ✅ 16/1472 embedded — last: PLATFORM_LABELS
+  ✅ 17/1472 embedded — last: PLATFORM_COLORS
+  ✅ 18/1472 embedded — last: rangeStart
+  ✅ 19/1472 embedded — last: SocialPlatform
+  ✅ 20/1472 embedded — last: style
+  ✅ 21/1472 embedded — last: RadioGroupItem
+  ✅ 22/1472 embedded — last: createPost
+  ✅ 23/1472 embedded — last: rangeEnd
+  ✅ 24/1472 embedded — last: ResizablePanel
+  ✅ 25/1472 embedded — last: ScrollArea
+  ✅ 26/1472 embedded — last: Progress
+  ✅ 27/1472 embedded — last: SelectTrigger
+  ✅ 28/1472 embedded — last: SelectValue
+  ✅ 29/1472 embedded — last: SelectGroup
+  ✅ 30/1472 embedded — last: SelectScrollUpButton
+  ✅ 31/1472 embedded — last: SheetPortal
+  ✅ 32/1472 embedded — last: SheetClose
+  ✅ 33/1472 embedded — last: SelectLabel
+  ✅ 34/1472 embedded — last: Sheet
+  ✅ 35/1472 embedded — last: SheetTrigger
+  ✅ 36/1472 embedded — last: SelectSeparator
+  ✅ 37/1472 embedded — last: SheetTitle
+  ✅ 38/1472 embedded — last: SheetOverlay
+  ✅ 39/1472 embedded — last: SIDEBAR_COOKIE_MAX_AGE
+  ✅ 40/1472 embedded — last: SheetDescription
+  ✅ 41/1472 embedded — last: SIDEBAR_COOKIE_NAME
+  ✅ 42/1472 embedded — last: SIDEBAR_WIDTH
+  ✅ 43/1472 embedded — last: SidebarContext
+  ✅ 44/1472 embedded — last: pos
+  ✅ 45/1472 embedded — last: SIDEBAR_WIDTH_ICON
+  ✅ 46/1472 embedded — last: SIDEBAR_WIDTH_MOBILE
+  ✅ 47/1472 embedded — last: SIDEBAR_KEYBOARD_SHORT
 > ...
 > </persisted-output>
 > ```
@@ -9630,7 +9807,53 @@ node scripts/ingest-codebase.ts
 > 
 > Preview (first 2KB):
 >   ✗ MemoryPage (a7005251) — {"error":"Unexpected embedding dimensions"}
->   ✅ 694/1472 embedded — last: /home/gcrUX/htdocs/constellati  ✅ 695/1472 embedded — last: seedDefaultPipeline  ✅ 696/1472 embedded — last: id  ✅ 697/1472 embedded — last: alpha  ✅ 698/1472 embedded — last: PALETTE  ✅ 699/1472 embedded — last: setNodes  ✅ 700/1472 embedded — last: newNode  ✅ 701/1472 embedded — last: isTop  ✅ 702/1472 embedded — last: edgeTypes  ✅ 703/1472 embedded — last: HoverCard  ✅ 704/1472 embedded — last: FormMessage  ✅ 705/1472 embedded — last: HoverCardTrigger  ✅ 706/1472 embedded — last: glowVariants  ✅ 707/1472 embedded — last: InputOTP  ✅ 708/1472 embedded — last: DropdownMenuRadioGroup  ✅ 709/1472 embedded — last: inputOTPContext  ✅ 710/1472 embedded — last: orKey  ✅ 711/1472 embedded — last: InputOTPSeparator  ✅ 712/1472 embedded — last: Menubar  ✅ 713/1472 embedded — last: MenubarMenu  ✅ 714/1472 embedded — last: Label  ✅ 715/1472 embedded — last: MenubarSubTrigger  ✅ 716/1472 embedded — last: MenubarRadioItem  ✅ 717/1472 embedded — last: MenubarItem  ✅ 718/1472 embedded — last: next  ✅ 719/1472 embedded — last: MenubarLabel  ✅ 720/1472 embedded — last: VIDEO_PROVIDERS  ✅ 721/1472 embedded — last: SidebarMenuSub  ✅ 722/1472 embedded — last: ToastActionElement  ✅ 723/1472 embedded — last: storeNodes  ✅ 724/1472 embedded — last: MenubarSeparator  ✅ 725/1472 embedded — last: jsonLd  ✅ 726/1472 embedded — last: SidebarMenu  ✅ 727/1472 embedded — last: Slider  ✅ 728/1472 embedded — last: Toggle  ✅ 729/1472 embedded — last: TabsList  ✅ 730/1472 embedded — last: memoryState  ✅ 731/1472 embedded — last: statusBadge  ✅ 732/1472 embedded — last: friendly  ✅ 733/1472 embedded — last: allNodes  ✅ 734/1472 embedded — last: center  ✅ 735/1472 embedded — last: matchedFileIds  ✅ 736/1472 embedded — last: setEdges  ✅ 737/1472 embedded — last: AUDIO_DURATIONS  ✅ 738/1472 embedded — last: SidebarMenuSubButton  ✅ 739/1472 embedded — last: T
+> 
+  ✅ 694/1472 embedded — last: /home/gcrUX/htdocs/constellati
+  ✅ 695/1472 embedded — last: seedDefaultPipeline
+  ✅ 696/1472 embedded — last: id
+  ✅ 697/1472 embedded — last: alpha
+  ✅ 698/1472 embedded — last: PALETTE
+  ✅ 699/1472 embedded — last: setNodes
+  ✅ 700/1472 embedded — last: newNode
+  ✅ 701/1472 embedded — last: isTop
+  ✅ 702/1472 embedded — last: edgeTypes
+  ✅ 703/1472 embedded — last: HoverCard
+  ✅ 704/1472 embedded — last: FormMessage
+  ✅ 705/1472 embedded — last: HoverCardTrigger
+  ✅ 706/1472 embedded — last: glowVariants
+  ✅ 707/1472 embedded — last: InputOTP
+  ✅ 708/1472 embedded — last: DropdownMenuRadioGroup
+  ✅ 709/1472 embedded — last: inputOTPContext
+  ✅ 710/1472 embedded — last: orKey
+  ✅ 711/1472 embedded — last: InputOTPSeparator
+  ✅ 712/1472 embedded — last: Menubar
+  ✅ 713/1472 embedded — last: MenubarMenu
+  ✅ 714/1472 embedded — last: Label
+  ✅ 715/1472 embedded — last: MenubarSubTrigger
+  ✅ 716/1472 embedded — last: MenubarRadioItem
+  ✅ 717/1472 embedded — last: MenubarItem
+  ✅ 718/1472 embedded — last: next
+  ✅ 719/1472 embedded — last: MenubarLabel
+  ✅ 720/1472 embedded — last: VIDEO_PROVIDERS
+  ✅ 721/1472 embedded — last: SidebarMenuSub
+  ✅ 722/1472 embedded — last: ToastActionElement
+  ✅ 723/1472 embedded — last: storeNodes
+  ✅ 724/1472 embedded — last: MenubarSeparator
+  ✅ 725/1472 embedded — last: jsonLd
+  ✅ 726/1472 embedded — last: SidebarMenu
+  ✅ 727/1472 embedded — last: Slider
+  ✅ 728/1472 embedded — last: Toggle
+  ✅ 729/1472 embedded — last: TabsList
+  ✅ 730/1472 embedded — last: memoryState
+  ✅ 731/1472 embedded — last: statusBadge
+  ✅ 732/1472 embedded — last: friendly
+  ✅ 733/1472 embedded — last: allNodes
+  ✅ 734/1472 embedded — last: center
+  ✅ 735/1472 embedded — last: matchedFileIds
+  ✅ 736/1472 embedded — last: setEdges
+  ✅ 737/1472 embedded — last: AUDIO_DURATIONS
+  ✅ 738/1472 embedded — last: SidebarMenuSubButton
+  ✅ 739/1472 embedded — last: T
 > ...
 > </persisted-output>
 > ```
@@ -10239,7 +10462,8 @@ Let me deploy the updated `embed-mcorch-node` function and then run the backfill
 >
 > ```
 > 🔍 Found 1 nodes without embeddings.
->   ✅ 1/1 embedded — last: MemoryPage
+> 
+  ✅ 1/1 embedded — last: MemoryPage
 > 
 > 🏁 Done: 1 embedded · 0 failed
 > ```
@@ -26814,7 +27038,127 @@ Milestone embedded. Agora re-ingesta o AST (o post-commit hook não rodou no amb
 >
 > ```
 > 🔍 Found 120 nodes without embeddings.
->   ✅ 1/120 embedded — last: analyser  ✅ 2/120 embedded — last: conversionNodes  ✅ 3/120 embedded — last: /home/gcrUX/htdocs/constellati  ✅ 4/120 embedded — last: LIVE_MODEL  ✅ 5/120 embedded — last: MIC_SAMPLE_RATE  ✅ 6/120 embedded — last: OUT_SAMPLE_RATE  ✅ 7/120 embedded — last: PCM_CHUNK_MS  ✅ 8/120 embedded — last: GeminiLiveState  ✅ 9/120 embedded — last: GeminiLiveActions  ✅ 10/120 embedded — last: float32ToBase64Pcm  ✅ 11/120 embedded — last: int16  ✅ 12/120 embedded — last: i  ✅ 13/120 embedded — last: s  ✅ 14/120 embedded — last: bytes  ✅ 15/120 embedded — last: bin  ✅ 16/120 embedded — last: base64ToPcm  ✅ 17/120 embedded — last: buf  ✅ 18/120 embedded — last: view  ✅ 19/120 embedded — last: pcmToAudioBuffer  ✅ 20/120 embedded — last: channel  ✅ 21/120 embedded — last: useGeminiLive  ✅ 22/120 embedded — last: wsRef  ✅ 23/120 embedded — last: audioCtxRef  ✅ 24/120 embedded — last: analyserRef  ✅ 25/120 embedded — last: micStreamRef  ✅ 26/120 embedded — last: micSourceRef  ✅ 27/120 embedded — last: micProcessorRef  ✅ 28/120 embedded — last: pendingPcmRef  ✅ 29/120 embedded — last: playbackQueueRef  ✅ 30/120 embedded — last: currentSourceRef  ✅ 31/120 embedded — last: rafRef  ✅ 32/120 embedded — last: assistantIdRef  ✅ 33/120 embedded — last: tick  ✅ 34/120 embedded — last: data  ✅ 35/120 embedded — last: slice  ✅ 36/120 embedded — last: avg  ✅ 37/120 embedded — last: appendAssistant  ✅ 38/120 embedded — last: id  ✅ 39/120 embedded — last: last  ✅ 40/120 embedded — last: sealAssistant  ✅ 41/120 embedded — last: handleServerMessage  ✅ 42/120 embedded — last: msg  ✅ 43/120 embedded — last: sc  ✅ 44/120 embedded — last: modelTurn  ✅ 45/120 embedded — last: parts  ✅ 46/120 embedded — last: part  ✅ 47/120 embedded — last: inlineData  ✅ 48/120 embedded — last: pcm  ✅ 49/120 embedded — last: ctx  ✅ 50/120 embedded — last: audioBuf  ✅ 51/120 embedded — last: src  ✅ 52/120 embedded — last: connect  ✅ 53/120 embedded — last: apiKey  ✅ 54/120 embedded — last: ws  ✅ 55/120 embedded — last: disconnect  ✅ 56/120 embedded — last: sendText  ✅ 57/120 embedded — last: userMsg  ✅ 58/120 embedded — last: startListening  ✅ 59/120 embedded — last: stream  ✅ 60/120 embedded — last: source  ✅ 61/120 embedded — last: processor  ✅ 62/120 embedded — last: chunkBuffer  ✅ 63/120 embedded — last: chunkSamples  ✅ 64/120 embedded — last: samplesPerChunk  ✅ 65/120 embedded — last: input  ✅ 66/120 embedded — last: merged  ✅ 67/120 embedded — last: offset  ✅ 68/120 embedded — last: f  ✅ 69/120 embedded — last: b64  ✅ 70/120 embedded — last: stopListening  ✅ 71/120 embedded — last: interruptSpeech  ✅ 72/120 embedded — last: MeshStats  ✅ 73/120 embedded — last: PRIORITY_BUCKETS  ✅ 74/120 embedded — last: dedup  ✅ 75/120 embedded — last: seen  ✅ 76/120 embedded — last: fetchLatestContext  ✅ 77/120 embedded — last: bucketPromises  ✅ 78/120 embedded — last: bucketResults  ✅ 79/120 embedded — last: all  ✅ 80/120 embedded — last: merged  ✅ 81/120 embedded — last: searchContext  ✅ 82/120 embedded — last: token  ✅ 83/120 embedded — last: res  ✅ 84/120 embedded — last: ids  ✅ 85/120 embedded — last: fetchMeshStats  ✅ 86/120 embedded — last: totalNodes  ✅ 87/120 embedded — last: totalEdges  ✅ 88/120 embedded — last: typeCounts  ✅ 89/120 embedded — last: dominantTypes  ✅ 90/120 embedded — last: contextNodeIds  ✅ 91/120 embedded — last: /home/gcrUX/htdocs/constellati  ✅ 92/120 embedded — last: NodeIntelligence  ✅ 93/120 embedded — last: useNodeIntelligence  ✅ 94/120 embedded — last: fetchNodeContent  ✅ 95/120 embedded — last: analyzeNode  ✅ 96/120 embedded — last: res  ✅ 97/120 embedded — last: clear  ✅ 98/120 embedded — last: /home/gcrUX/htdocs/constellati  ✅ 99/120 embedded — last: PLANS  ✅ 100/120 embedded — last: SubscriptionInfo  ✅ 101/120 embedded — last: BillingPage  ✅ 102/120 embedded — last: load  ✅ 103/120 embedded — last: formatDate  ✅ 104/120 embedded — last: handleRestore  ✅ 105/120 embedded — last: handleFork  ✅ 106/120 embedded — last: forked  ✅ 107/120 embedded — last: /home/gcrUX/htdocs/constellati  ✅ 108/120 embedded — last: MetricPill  ✅ 109/120 embedded — last: getDefaultModel  ✅ 110/120 embedded — last: geminiKey  ✅ 111/120 embedded — last: orKey  ✅ 112/120 embedded — last: CoreV2Page  ✅ 113/120 embedded — last: handleActivity  ✅ 114/120 embedded — last: alpha  ✅ 115/120 embedded — last: handleRestore  ✅ 116/120 embedded — last: handleFork  ✅ 117/120 embedded — last: forked  ✅ 118/120 embedded — last: isActive  ✅ 119/120 embedded — last: brainPercent  ✅ 120/120 embedded — last: MatrixPageInner
+> 
+  ✅ 1/120 embedded — last: analyser
+  ✅ 2/120 embedded — last: conversionNodes
+  ✅ 3/120 embedded — last: /home/gcrUX/htdocs/constellati
+  ✅ 4/120 embedded — last: LIVE_MODEL
+  ✅ 5/120 embedded — last: MIC_SAMPLE_RATE
+  ✅ 6/120 embedded — last: OUT_SAMPLE_RATE
+  ✅ 7/120 embedded — last: PCM_CHUNK_MS
+  ✅ 8/120 embedded — last: GeminiLiveState
+  ✅ 9/120 embedded — last: GeminiLiveActions
+  ✅ 10/120 embedded — last: float32ToBase64Pcm
+  ✅ 11/120 embedded — last: int16
+  ✅ 12/120 embedded — last: i
+  ✅ 13/120 embedded — last: s
+  ✅ 14/120 embedded — last: bytes
+  ✅ 15/120 embedded — last: bin
+  ✅ 16/120 embedded — last: base64ToPcm
+  ✅ 17/120 embedded — last: buf
+  ✅ 18/120 embedded — last: view
+  ✅ 19/120 embedded — last: pcmToAudioBuffer
+  ✅ 20/120 embedded — last: channel
+  ✅ 21/120 embedded — last: useGeminiLive
+  ✅ 22/120 embedded — last: wsRef
+  ✅ 23/120 embedded — last: audioCtxRef
+  ✅ 24/120 embedded — last: analyserRef
+  ✅ 25/120 embedded — last: micStreamRef
+  ✅ 26/120 embedded — last: micSourceRef
+  ✅ 27/120 embedded — last: micProcessorRef
+  ✅ 28/120 embedded — last: pendingPcmRef
+  ✅ 29/120 embedded — last: playbackQueueRef
+  ✅ 30/120 embedded — last: currentSourceRef
+  ✅ 31/120 embedded — last: rafRef
+  ✅ 32/120 embedded — last: assistantIdRef
+  ✅ 33/120 embedded — last: tick
+  ✅ 34/120 embedded — last: data
+  ✅ 35/120 embedded — last: slice
+  ✅ 36/120 embedded — last: avg
+  ✅ 37/120 embedded — last: appendAssistant
+  ✅ 38/120 embedded — last: id
+  ✅ 39/120 embedded — last: last
+  ✅ 40/120 embedded — last: sealAssistant
+  ✅ 41/120 embedded — last: handleServerMessage
+  ✅ 42/120 embedded — last: msg
+  ✅ 43/120 embedded — last: sc
+  ✅ 44/120 embedded — last: modelTurn
+  ✅ 45/120 embedded — last: parts
+  ✅ 46/120 embedded — last: part
+  ✅ 47/120 embedded — last: inlineData
+  ✅ 48/120 embedded — last: pcm
+  ✅ 49/120 embedded — last: ctx
+  ✅ 50/120 embedded — last: audioBuf
+  ✅ 51/120 embedded — last: src
+  ✅ 52/120 embedded — last: connect
+  ✅ 53/120 embedded — last: apiKey
+  ✅ 54/120 embedded — last: ws
+  ✅ 55/120 embedded — last: disconnect
+  ✅ 56/120 embedded — last: sendText
+  ✅ 57/120 embedded — last: userMsg
+  ✅ 58/120 embedded — last: startListening
+  ✅ 59/120 embedded — last: stream
+  ✅ 60/120 embedded — last: source
+  ✅ 61/120 embedded — last: processor
+  ✅ 62/120 embedded — last: chunkBuffer
+  ✅ 63/120 embedded — last: chunkSamples
+  ✅ 64/120 embedded — last: samplesPerChunk
+  ✅ 65/120 embedded — last: input
+  ✅ 66/120 embedded — last: merged
+  ✅ 67/120 embedded — last: offset
+  ✅ 68/120 embedded — last: f
+  ✅ 69/120 embedded — last: b64
+  ✅ 70/120 embedded — last: stopListening
+  ✅ 71/120 embedded — last: interruptSpeech
+  ✅ 72/120 embedded — last: MeshStats
+  ✅ 73/120 embedded — last: PRIORITY_BUCKETS
+  ✅ 74/120 embedded — last: dedup
+  ✅ 75/120 embedded — last: seen
+  ✅ 76/120 embedded — last: fetchLatestContext
+  ✅ 77/120 embedded — last: bucketPromises
+  ✅ 78/120 embedded — last: bucketResults
+  ✅ 79/120 embedded — last: all
+  ✅ 80/120 embedded — last: merged
+  ✅ 81/120 embedded — last: searchContext
+  ✅ 82/120 embedded — last: token
+  ✅ 83/120 embedded — last: res
+  ✅ 84/120 embedded — last: ids
+  ✅ 85/120 embedded — last: fetchMeshStats
+  ✅ 86/120 embedded — last: totalNodes
+  ✅ 87/120 embedded — last: totalEdges
+  ✅ 88/120 embedded — last: typeCounts
+  ✅ 89/120 embedded — last: dominantTypes
+  ✅ 90/120 embedded — last: contextNodeIds
+  ✅ 91/120 embedded — last: /home/gcrUX/htdocs/constellati
+  ✅ 92/120 embedded — last: NodeIntelligence
+  ✅ 93/120 embedded — last: useNodeIntelligence
+  ✅ 94/120 embedded — last: fetchNodeContent
+  ✅ 95/120 embedded — last: analyzeNode
+  ✅ 96/120 embedded — last: res
+  ✅ 97/120 embedded — last: clear
+  ✅ 98/120 embedded — last: /home/gcrUX/htdocs/constellati
+  ✅ 99/120 embedded — last: PLANS
+  ✅ 100/120 embedded — last: SubscriptionInfo
+  ✅ 101/120 embedded — last: BillingPage
+  ✅ 102/120 embedded — last: load
+  ✅ 103/120 embedded — last: formatDate
+  ✅ 104/120 embedded — last: handleRestore
+  ✅ 105/120 embedded — last: handleFork
+  ✅ 106/120 embedded — last: forked
+  ✅ 107/120 embedded — last: /home/gcrUX/htdocs/constellati
+  ✅ 108/120 embedded — last: MetricPill
+  ✅ 109/120 embedded — last: getDefaultModel
+  ✅ 110/120 embedded — last: geminiKey
+  ✅ 111/120 embedded — last: orKey
+  ✅ 112/120 embedded — last: CoreV2Page
+  ✅ 113/120 embedded — last: handleActivity
+  ✅ 114/120 embedded — last: alpha
+  ✅ 115/120 embedded — last: handleRestore
+  ✅ 116/120 embedded — last: handleFork
+  ✅ 117/120 embedded — last: forked
+  ✅ 118/120 embedded — last: isActive
+  ✅ 119/120 embedded — last: brainPercent
+  ✅ 120/120 embedded — last: MatrixPageInner
 > 
 > 🏁 Done: 120 embedded · 0 failed
 > ```
@@ -27901,3 +28245,11 @@ Você deve ver:
 - **Direita (28%)** — CymaticsLayer em modo **α ALFA** (anéis lentos, azul profundo) enquanto em repouso
 
 Conforme você conversar, a intensidade sobe e o modo muda: **γ GAMA** (grade hexagonal cyan) acima de 30%, **Ω ESCALAR** (espiral Fibonacci fuchsia) acima de 70%.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-03 - AIOS Constelação MCORCH system updates]]
+> * **Próxima Sessão**: [[2026-05-03 - List configured agents in project]]
+%% --- TIMELINE END --- %%

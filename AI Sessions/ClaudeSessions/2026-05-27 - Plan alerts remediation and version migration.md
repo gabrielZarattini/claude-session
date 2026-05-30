@@ -5458,3 +5458,11 @@ Final report:
   Pipeline async destravado. Multi-tenant credentials closure.
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-27 - Plan JWT refactor and affiliate token migration]]
+> * **Próxima Sessão**: [[2026-05-27 - ab2023b0-60af-44c6-9667-a2028a514d98]]
+%% --- TIMELINE END --- %%

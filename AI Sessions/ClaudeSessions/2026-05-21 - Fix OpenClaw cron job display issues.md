@@ -1,4 +1,4 @@
-# Fix OpenClaw cron job display issues
+# [[2026-05-25 - Fix OpenClaw cron job display issues|Fix OpenClaw cron job display issues]]
 **Date:** 2026-05-21 | **Session ID:** `8477b8a9-d74a-4cd6-a162-df26d9acc0c3`
 
 ---
@@ -8786,3 +8786,11 @@ Diretor — este segundo parecer é **sólido**, diferente do primeiro. Ele larg
 - Higiene de custo: investigar o R$168 + truncagem/cap.
 
 **Confirma o mínimo viável** — Gemini Flash como `primary` dos 7 — que eu executo agora (`openclaw.json` + `pm2 restart maestro`)? Os follow-ups encadeamos em seguida.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-20 - agent-aa78631336c942439]]
+> * **Próxima Sessão**: [[2026-05-25 - 47e741a8-523d-4500-9797-99b2fa4494c2]]
+%% --- TIMELINE END --- %%

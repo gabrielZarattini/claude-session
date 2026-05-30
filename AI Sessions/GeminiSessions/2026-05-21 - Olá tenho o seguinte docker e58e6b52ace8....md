@@ -531,3 +531,11 @@ Esta opção **para e remove** o container da memória e do disco, liberando tod
 ---
 
 Se você quiser que eu mesmo execute algum desses comandos para parar o container agora, me avise qual das opções prefere!
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-17 - Untitled Session]]
+> * **Próxima Sessão**: [[2026-05-23 - Aprenda como funciona o protocolo shakehands...]]
+%% --- TIMELINE END --- %%

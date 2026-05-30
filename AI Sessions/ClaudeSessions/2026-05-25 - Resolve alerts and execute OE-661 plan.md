@@ -6318,3 +6318,11 @@ COMMIT_RE casa pura-decimal 14 dígitos como hash. False positive em linha 37 (t
 ═══════════════════════════════════════════════════════════
 
 **Lei 3 (Pruning) — poda final:** Plan OE-661 content já materializado em código + HANDOFF + mesh (não recarregar); orchestrate-content/index.ts source já mapeado (refs preservadas por linha); PipelineHistoryPanel.tsx + AgentNode.tsx mapeados para próximo sprint UX (não recarregar); handle-ml-postback source mapeado para próximo work (FAQ Phase 3+). Próxima sessão começa do brief `/handson` com contexto fresh.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-25 - Install agent-browser for E2E testing]]
+> * **Próxima Sessão**: [[2026-05-26 - 00ee75f5-bf3c-4cfe-81b8-c6cbdbb0b2d7]]
+%% --- TIMELINE END --- %%

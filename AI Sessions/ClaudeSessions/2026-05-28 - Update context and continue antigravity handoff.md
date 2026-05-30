@@ -1,4 +1,4 @@
-# Update context and continue antigravity handoff
+# [[2026-05-29 - Update context and continue antigravity handoff|Update context and continue antigravity handoff]]
 **Date:** 2026-05-28 | **Session ID:** `9bb9165f-6ffc-42a6-a6e7-d5311c647700`
 
 ---
@@ -3054,3 +3054,11 @@ Entendido. Pausa registrada.
 - Decisão pendente: opções A/B/C/D pra próximo passo
 
 Quando voltar, me chame com "retomar" ou "continuar" e eu pego daqui.
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-28 - Plan JWT refactor and affiliate token migration]]
+> * **Próxima Sessão**: [[2026-05-28 - agent-aa1459d42eabe569b]]
+%% --- TIMELINE END --- %%

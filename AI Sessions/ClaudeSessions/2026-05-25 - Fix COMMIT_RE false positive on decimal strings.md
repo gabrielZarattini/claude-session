@@ -2806,3 +2806,11 @@ Nada a atualizar em sprint-priorities (v6.8.3 é regression patch em módulo já
   Assinado: Claude Code — Braço de Engenharia do AIOS
 ═══════════════════════════════════════════════════════════
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-25 - 47e741a8-523d-4500-9797-99b2fa4494c2]]
+> * **Próxima Sessão**: [[2026-05-25 - Fix OpenClaw cron job display issues]]
+%% --- TIMELINE END --- %%

@@ -4175,3 +4175,11 @@ No entanto, para que a integração esteja 100% funcional para um teste real, h�
 Eu gerei e tentei aplicar a migration `20260421000001_add_multimodal_prefs.sql` (que cria as colunas `pref_audio_provider`, `pref_image_provider`, `pref_video_provider`, e as chaves da `elevenlabs`, `gemini`, `nanobana` e `seedance`). No entanto, os meus logs de sistema indicam que você possui instâncias do comando `npx supabase db push` rodando no seu terminal em background (uma há 15 minutos e outra há 4 minutos). 
 
 <truncated 875 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-17 - Você é o Lead Systems Architect...]]
+> * **Próxima Sessão**: [[2026-04-23 - USERREQUEST]]
+%% --- TIMELINE END --- %%

@@ -1496,3 +1496,11 @@ Você precisa atualizar as configurações de autenticação no seu painel do Su
     *   `https://login.mcorch.com/auth`
 
 <truncated 761 bytes>
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-17 - USERREQUEST]]
+> * **Próxima Sessão**: [[2026-04-22 - USERREQUEST]]
+%% --- TIMELINE END --- %%

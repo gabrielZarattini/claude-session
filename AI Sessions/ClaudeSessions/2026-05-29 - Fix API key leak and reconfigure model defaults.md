@@ -1,4 +1,4 @@
-# Fix API key leak and reconfigure model defaults
+# [[2026-05-30 - Fix API key leak and reconfigure model defaults|Fix API key leak and reconfigure model defaults]]
 **Date:** 2026-05-29 | **Session ID:** `1307a9dd-bac8-4f84-b1e9-b5c4b53726bc`
 
 ---
@@ -10654,3 +10654,11 @@ Re-index voando (~10s cada — incremental): artisan, scientist, marketing-growt
   "timeout": 90000
 }
 ```
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]
+> * **Próxima Sessão**: [[2026-05-29 - Update context and continue antigravity handoff]]
+%% --- TIMELINE END --- %%

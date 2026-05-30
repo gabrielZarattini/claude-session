@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "e8163bc924b8ad6e",
+        "id": "ebc9b64318aefdde",
         "type": "tabs",
         "children": [
           {
-            "id": "a3852472036a6826",
+            "id": "bc6a42ef35de2f2b",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -96,7 +96,7 @@
                 "showSearch": false,
                 "searchQuery": "",
                 "backlinkCollapsed": false,
-                "unlinkedCollapsed": true
+                "unlinkedCollapsed": false
               },
               "icon": "links-coming-in",
               "title": "Links inversos"
@@ -157,13 +157,22 @@
               "icon": "lucide-list",
               "title": "Sumário"
             }
+          },
+          {
+            "id": "d93d4d38f39f9309",
+            "type": "leaf",
+            "state": {
+              "type": "file-properties",
+              "state": {},
+              "icon": "lucide-info",
+              "title": "Propriedades dos arquivos"
+            }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -177,9 +186,18 @@
       "github-sync:Sync with Remote": false
     }
   },
-  "active": "a3852472036a6826",
+  "active": "bc6a42ef35de2f2b",
   "lastOpenFiles": [
+    "Sessions MOC.md",
+    "GeminiSessions/2026-05-24 - handson ainda estou esperando o webhook....md",
+    "GeminiSessions/2026-04-26 - Você é especialista em UX UI....md",
+    "ClaudeSessions/2026-05-18 - agent-aee05e24b4551d4ec.md",
+    "GeminiSessions/2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra.md",
+    "ClaudeSessions/2026-04-25 - 2c3b9502-2b34-4fec-922c-9b831453fba8.md",
     "CLAUDE.md",
+    "GeminiSessions/2026-05-28 - handson.md",
+    "GeminiSessions/2026-05-27 - handson.md",
+    "ClaudeSessions/image.png",
     "skills-lock.json"
   ]
 }
