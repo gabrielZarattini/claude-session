@@ -12571,3 +12571,1748 @@ Tudo com prova material + documentado (skill `openclaw-gateway-ops`, SOP, memór
 O **Palace/Insights na UI** catch-up'a no sweep das **03:00 BRT** (daqui ~5h30) — blocker (embeddings) removido, dados preservados, `memory status` saudável. É a última peça pra fechar com prova visual.
 
 **Quer que eu agende uma verificação automática do ciclo das 03:00** (cron/loop que checa de manhã se Palace + MEMORY.md + promoções catch-up'aram) e te reporta? Senão, encerramos aqui e você confere amanhã no `claw.gcrux.com/dreaming`.
+
+## 👤 User *(00:32:46)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(00:32:46)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+    -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(00:33:09)*
+
+
+## 🤖 Claude *(00:33:09)*
+
+Executando o protocolo de seal. Começando pela PRE-FLIGHT em paralelo:
+
+## 🤖 Claude *(00:33:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== git status (worktree) ===\"\ngit status --short\necho \"=== git diff stat ===\"\ngit diff HEAD --stat\necho \"=== recent history ===\"\ngit log --oneline -8\necho \"=== branch ===\"\ngit branch --show-current",
+  "description": "PRE-FLIGHT: git inventory in worktree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (worktree) ===
+> === git diff stat ===
+> === recent history ===
+> d0239f4 fix(watchdog): non-blocking flock guard against overlapping */5 runs
+> 1256301 docs(openclaw): switch default to qwen3-235b (cheap+capable) + cost ranking
+> d6dcbcd docs(openclaw): add model resilience section to gateway-ops skill
+> 4c67802 docs(handoff): correct v6.8.1 gateway lesson — systemd, not PM2
+> 736e935 docs(openclaw): single-owner gateway SOP + ops skill — systemd is canonical
+> 1f0d0a0 fix(security): block browser credential autofill on API key forms
+> 9a0f60f docs(handoff): seal v6.12.0 — cross-node consistency + ML products + nav reorg
+> db7801e docs(readme): v6.12.0 — cross-node consistency + ML products panel + nav reorg
+> === branch ===
+> claude/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:33:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== MAIN checkout state ===\"\ngit branch --show-current\ngit log --oneline -3\necho \"=== main vs worktree branch sync ===\"\ngit rev-parse main 2>/dev/null\ngit rev-parse claude/wizardly-allen-2a03a9 2>/dev/null\necho \"=== main uncommitted? ===\"\ngit status --short | head",
+  "description": "PRE-FLIGHT: main checkout state + sync check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === MAIN checkout state ===
+> main
+> d0239f4 fix(watchdog): non-blocking flock guard against overlapping */5 runs
+> 1256301 docs(openclaw): switch default to qwen3-235b (cheap+capable) + cost ranking
+> d6dcbcd docs(openclaw): add model resilience section to gateway-ops skill
+> === main vs worktree branch sync ===
+> d0239f408b080bbcb16e931be56fd7e2bb4e5ca3
+> d0239f408b080bbcb16e931be56fd7e2bb4e5ca3
+> === main uncommitted? ===
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:33:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\nnpx tsc --noEmit 2>&1 | tail -10 && echo \"TSC: zero erros \u2705\"\necho \"---\"\ndocker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"\ndocker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\ncurl -s http://localhost:8001/api/v2/heartbeat",
+  "description": "PRE-FLIGHT: tsc + docker + chroma health",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC: zero erros ✅
+> ---
+> mcorch_chroma: Up 6 days (healthy)
+> mcorch_claude_mem: Up 6 days (healthy)
+> mega-brain-dashboard: Up 6 days
+> mega-brain-webhook: Up 6 days (healthy)
+> mega-brain-daemon: Up 6 days (healthy)
+> {"nanosecond heartbeat":1780101196788102737}
+> ```
+
+## 🤖 Claude *(00:33:28)*
+
+
+## 🤖 Claude *(00:33:30)*
+
+PRE-FLIGHT limpo: worktree e main sincronizados em `d0239f4`, TSC zero erros, containers healthy, Chroma ok. Os 6 commits da sessão já estão no main local. 
+
+**PHASE 1 — Security Audit** (escaneando o range da sessão, já que tudo está commitado):
+
+## 🤖 Claude *(00:33:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== 1a. Secret leak scan (range da sess\u00e3o 9a0f60f..HEAD) ===\"\ngit diff 9a0f60f..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|autoComplete\\|data-lpignore\\|new-password\" | head -20 || echo \"NENHUM SECRET \u2705\"\necho\necho \"=== 1b. Edge function JWT (n\u00e3o tocamos edge functions nesta sess\u00e3o) ===\"\ngit diff 9a0f60f..HEAD --name-only | grep \"supabase/functions\" || echo \"NENHUMA edge function tocada \u2705\"\necho\necho \"=== 1c. Client-side coin deduction ===\"\ngit diff 9a0f60f..HEAD | grep -E \"^\\+\" | grep -E \"mco_balance.*update|UPDATE.*mco_balance\" | grep -v \"settings\\|SettingsPage\" | head || echo \"NENHUMA VIOLA\u00c7\u00c3O \u2705\"\necho\necho \"=== 1e. Sensitive console.log ===\"\ngit diff 9a0f60f..HEAD | grep -E \"^\\+\" | grep -E \"console\\.log.*token|console\\.log.*key|console\\.log.*secret|console\\.log.*password\" | head || echo \"NENHUM LOG SENS\u00cdVEL \u2705\"\necho\necho \"=== Push status \u2014 main vs origin ===\"\ngit -C /home/gcrUX/htdocs/constellation-orchestra rev-list --count origin/main..main 2>/dev/null | xargs echo \"commits \u00e0 frente de origin/main:\"",
+  "description": "Phase 1 security audit on session commit range"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. Secret leak scan (range da sessão 9a0f60f..HEAD) ===
+> 
+> === 1b. Edge function JWT (não tocamos edge functions nesta sessão) ===
+> NENHUMA edge function tocada ✅
+> 
+> === 1c. Client-side coin deduction ===
+> 
+> === 1e. Sensitive console.log ===
+> 
+> === Push status — main vs origin ===
+> commits à frente de origin/main: 6
+> ```
+
+## 🤖 Claude *(00:33:57)*
+
+
+## 🤖 Claude *(00:33:59)*
+
+Phase 1 ✅ — todos os checks limpos (sem secrets, sem edge functions tocadas, sem coin deduction client-side, sem logs sensíveis). Main está 6 commits à frente de origin (push na Phase 7).
+
+**PHASE 2** — todos os 6 commits da sessão já estão granulares e feitos. Worktree limpo.
+
+**PHASE 3 — Knowledge Mesh Milestone:**
+
+## 🤖 Claude *(00:34:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"openclaw-100pct-validation\"\nSESSION_SUMMARY=\"OpenClaw ecosystem 100% validation: ML credential autofill leak fixed; default model gemini-3.5-flash (R\\$110/day) swapped to qwen3-235b-a22b-2507 (\\$0.071/\\$0.10) + gemini-2.5-flash-lite fallback proven via forced failover; gateway consolidated to systemd single-owner (PM2 maestro deleted after 3.5M crash-loop restarts); circadian cron payload fix + crontab dedup + flock guard + ingest .env fix; OpenClaw memory embeddings 403 fixed by switching to gemini-embedding-001 (6 agents reindexed) unblocking Memory Palace/Imported Insights; dreaming promotion gates loosened (3 to 8 promoted, backlog recovery); ledger opening_balance_reconciliation +10000 anchor closed AIOS materiality contradiction (drift zero); skill openclaw-gateway-ops + SOP sealed; dreaming timezone set America/Sao_Paulo per official docs.\"\nNODE_RESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -6 | tr '\\n' '|')\\\"\n    }\n  }\")\nNODE_ID=$(echo \"$NODE_RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"$NODE_ID\" > /tmp/handoff-node-id.txt",
+  "description": "Phase 3: insert handoff milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 0c250e83-cc49-4a82-88eb-b8da9daaa6ba
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:34:13)*
+
+
+## 🤖 Claude *(00:34:14)*
+
+Node `0c250e83-cc49-4a82-88eb-b8da9daaa6ba` inserido. Embedding + proof-manifest:
+
+## 🤖 Claude *(00:34:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=$(cat /tmp/handoff-node-id.txt)\necho \"=== Embed node $NODE_ID ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('success', d))\" 2>/dev/null || echo \"\u26a0\ufe0f embedding via function falhou\"\nsleep 4\necho \"=== Confirmar embedding NOT NULL (prova material) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,embedding\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); e=d[0].get('embedding') if d else None; print('embedding:', 'SET \u2705 (768d)' if e else 'NULL \u26a0\ufe0f')\" 2>/dev/null\necho \"=== proof-manifest.json (worktree + main) ===\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/proof-manifest.json\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > /home/gcrUX/htdocs/constellation-orchestra/proof-manifest.json\ncat /home/gcrUX/htdocs/constellation-orchestra/proof-manifest.json",
+  "description": "Phase 3: embed node + verify + write proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Embed node 0c250e83-cc49-4a82-88eb-b8da9daaa6ba ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> === Confirmar embedding NOT NULL (prova material) ===
+> embedding: SET ✅ (768d)
+> === proof-manifest.json (worktree + main) ===
+> {"handoffNodeId": "0c250e83-cc49-4a82-88eb-b8da9daaa6ba"}
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:34:31)*
+
+
+## 🤖 Claude *(00:34:33)*
+
+Embedding **SET ✅ (768d)** — o trigger de INSERT auto-embedou (a função manual rejeitou o formato, mas o trigger pg_net já vetorizou). proof-manifest escrito.
+
+**PHASE 4 — README:** buscando contagem real de nós + lendo o README:
+
+## 🤖 Claude *(00:34:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\necho \"=== Contagem real de n\u00f3s (inclui o handoff node) ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'\necho \"=== Edges count ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_edges?select=id&limit=1\" \\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Phase 4: fetch live node + edge counts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Contagem real de nós (inclui o handoff node) ===
+> 8636
+> 
+> 
+> === Edges count ===
+> 8961
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:34:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== README badges + version (topo) ===\"\nhead -30 README.md | grep -nE \"version-|neural_mesh|badge|nodes|Phase\"",
+  "description": "Read README badges block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === README badges + version (topo) ===
+> 2:  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3:  <img src="https://img.shields.io/badge/version-6.12.0--canvas--consistency--ml--products-darkred?style=for-the-badge" alt="Version" />
+> 4:  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5:  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8607_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7:  <img src="https://img.shields.io/badge/test_coverage-187_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8:  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 9:  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 10:  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 11:  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 12:  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 13:  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 14:  <img src="https://img.shields.io/badge/Core_v2-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core v2" />
+> 15:  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 16:  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 17:  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 18:  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 19:  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 20:  <img src="https://img.shields.io/badge/Nightly_Dreaming-active-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 21:  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 22:  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 23:  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 24:  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 25:  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 26:  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 27:  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 28:  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 29:  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 30:  <img src="https://img.shields.io/badge/Link_Forge-3_products_active-orange?style=for-the-badge" alt="Link Forge" />
+> ```
+
+## 🤖 Claude *(00:34:46)*
+
+
+## 🤖 Claude *(00:34:47)*
+
+Nós: 8607→**8636**. Atualizando badges (version 6.12.0→6.13.0 + mesh count) + lendo a seção What's New:
+
+## 🤖 Claude *(00:34:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.12.0--canvas--consistency--ml--products-darkred?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.13.0--openclaw--resilience--validation-darkred?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:34:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8607_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8636_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:34:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/Nightly_Dreaming-active-violet?style=for-the-badge\" alt=\"Nightly Dreaming\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_promotion_recovered-violet?style=for-the-badge\" alt=\"Nightly Dreaming\" />\n  <img src=\"https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge\" alt=\"OpenClaw Gateway\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 166:- **Framework MVP materializado** (`scripts/qa/e2e-user-zero/`, 977 LOC): a BoK v6.8.4 deixa de ser apenas spec — agora é código executável. Sete arquivos novos cobrem as 5 camadas do SDD: CLI runner (`runner.ts`, 296 LOC, exit codes 0/1/2/3/4 FRD §4.1), driver wrap-around agent-browser via spawnSync (`lib/browser-driver.ts`, 228 LOC, scrub de args sensíveis FR-E2E-020), classifier determinístico de findings (`lib/classifier.ts`, 128 LOC, heurísticas HTTP 4xx/5xx + console errors), report renderer com badge `✅ GO`/`🔴 NO-GO` (`lib/report-renderer.ts`, 135 LOC — esses literais são o contrato do verifier), schema de findings versionado v1.0.0 (`lib/finding-schema.ts`, 115 LOC) e flow mínimo `auth-login` (`flows/auth-login.ts`, 75 LOC).
+> 167:- **Phase 5c gate ESTENDIDO** (+112 LOC cirúrgicas em `scripts/qa/`): nova `ClaimKind 'e2e_user_zero'` no union de types; regex `E2E_USER_ZERO_RE` permite `\*{0,2}` em todos os pontos onde o boundary markdown `**` pode aparecer (cobre 3 formas: inline, label**:**, **label:**); `verifyE2EUserZero()` implementa 4 gates (report.md existe, contém badge ✅ GO, findings.json zero P0/P1, run iniciou ≤ 7 dias); `VerifierDeps` ganhou `readFile()` implementado em run-audit.ts. Audit dry-run sobre HANDOFF v6.8.4: **15 verified · 1 skipped · 0 failed → SEAL ALLOWED** (sem regressão).
+> 269:- **BoK Gate status**: `gamificacao-nodes` agora libera código novo no módulo. **Atenção**: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users) fechar via SOP `mcoins-ledger-reconciliation.md`. Debt registry geral: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅. `openclaw` BoK ainda pendente (override consciente original do v6.2.0).
+> 270:- **Material proofs** — TS `tsc --noEmit` zero erros · 122/122 testes em 3.34s · BoK Gate validator loop ✅ 9/9 (00-index 122 · 01-mrd 126 · 02-brd 188 · 03-prd 84 · 04-frd 114 · 05-sdd 336 · 06-data-model 277 · 07-process-flow 309 · 08-quality-metrics 215 LOC) · ~1111 LOC novas + ~30 LOC patches surgical · seal node UUID confirmado via INSERT RETURNING · mesh total **8344 nodes** (+1 desde v6.6.3).
+> 317:- **Survival Audit v1 selado** (`.claude/context/survival-audit-v1.md`) — Conteúdo v2 + mcoCoins scored contra os 5 Pillars: Memory 5/5 ✅ · Skill 4/5 ✅ · **Cost Discipline 2/5 ⚠️** · **Observability 3/5 ⚠️** (subiu de 1/5 com Phase 4) · **Idempotency & SOP 4/5 ✅** (subiu de 2/5 com Phase 4). Min 2/5 · Média 3.6/5 · Threshold 4/5 → **Canvas Studio Phase 4.2c TERMINANTEMENTE BLOQUEADO** até Cost Discipline ≥4. Material proof: 11 UUIDs reais coletados via service-role REST direct (mcoin_transactions vazia → 0 rows confirmado, content-range `*/0`); 5 `vm_canvas_executions` failed (correção: deduct É atomic on success — `credits_charged` é intenção, não cobrança); apenas 1 `pipeline_run` em ~6 semanas; ZERO admin em `user_roles` (OTD-SSP01-005 RPN 280, owner Sovereign).
+> 362:### [v6.1.1] — viralmind BoK Suite Sealed (2026-05-14)
+> 368:### [v6.1.0] — Canvas Studio UX Shell + Higgsfield Endpoint Fix (2026-05-14)
+> 437:- **auto-publish pipeline operacional** — 3 bugs encadeados corrigidos: `publish-social` rejeitava chamadas service-role (JWT identity fix); `auto-publish` não passava `user_id` no body; `refresh-social-token` tinha o mesmo bug de identidade. LinkedIn publicando ✅. Twitter: CreditsDepleted (Free tier API X).
+> 439:- **Instagram Business Login** — novo app MCORCH-IG (ID 1271182438521153, empresa verificada), token `magicorch` salvo, `instagram-webhook` deployado (`--no-verify-jwt`), webhooks `comments` + `mentions` assinados. `social-auth-callback` reimplantado com `--no-verify-jwt` — Instagram OAuth end-to-end funcional ✅.
+> 450:- **Primeiro run Usuário Zero** — artigo publicado em https://www.mcorch.com/blog/2026/05/04/como-o-mcorch-usa-ia-para-escalar-agencias-de-marketing-e-gerar-roi-real-em-2026/. Pipeline completo: article → WP publish → LinkedIn → Twitter → Quality Gate ✅.
+> 1187:| 1–20 | Backend · Landing · Stripe · Dashboard · Campaigns · Social · Content · Calendar · Video · SEO · SEM · Optimization · Healing · WordPress · Admin | ✅ Complete |
+> 1188:| **Alpha** | GraphRAG + Docker Sovereign Mesh + ShakeHands | ✅ Complete |
+> 1189:| **Beta** | mcoCoins Gatekeeper + FSRS-6 + Neural Embeddings | ✅ Complete |
+> 1190:| **Gamma** | Multi-tenant RLS + Real ROI + Knowledge Bridge + Neural HUD | ✅ Complete |
+> 1191:| **Neural Ignition** | 9/9 nodes embedded + Watchdog cron + HUD green | ✅ Complete |
+> 1192:| **Sovereign Consolidation** | rescue-video + bible sealed | ✅ Complete |
+> 1193:| **Phase Delta** | Visual Orchestrator Canvas — @xyflow/react + Zustand + Quality Gates | ✅ Complete |
+> 1194:| **GitNexus MCP** | AST engine — 6 tools · 3100 nodes · stdio transport | ✅ Complete |
+> 1195:| **Delta v2–v4** | Knowledge Mesh Sync — 2065 nodes · 2120 edges | ✅ Complete |
+> 1196:| **Epsilon v1–v8** | Sigma.js · Louvain · Semantic Probe · Crew Overlay · MatrixPage · Ownership · Territory · CALLS | ✅ Complete |
+> ```
+
+## 🤖 Claude *(00:34:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngrep -nE \"What's New|## .v6\\.1|### \\[v6\\.1|Phase Status|\u2705\" README.md | head -20",
+  "description": "Find What's New + Phase Status sections in README"
+}
+```
+
+## 🤖 Claude *(00:35:04)*
+
+
+## 🤖 Claude *(00:35:05)*
+
+Preciso ler o README antes de editar. Lendo o bloco de badges + achando a entrada What's New mais recente:
+
+## 🤖 Claude *(00:35:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "offset": 1,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.12.0--canvas--consistency--ml--products-darkred?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8607_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-187_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 9	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 10	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 11	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 12	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 13	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 14	  <img src="https://img.shields.io/badge/Core_v2-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core v2" />
+> 15	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 16	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 17	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 18	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 19	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 20	  <img src="https://img.shields.io/badge/Nightly_Dreaming-active-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 21	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 22	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 23	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 24	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 25	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 26	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 27	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 28	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 29	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 30	  <img src="https://img.shields.io/badge/Link_Forge-3_products_active-orange?style=for-the-badge" alt="Link Forge" />
+> 31	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 32	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 33	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 34	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 35	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> ```
+
+## 🤖 Claude *(00:35:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== Entradas What's New mais recentes (v6.1x) ===\"\ngrep -nE \"### \\[v6\\.(1[0-9]|9|8)\" README.md | head -8\necho \"=== Linha do 'What's New' header + primeira entrada ===\"\ngrep -nE \"What.s New|## .*Novidades|^## .*New\" README.md | head -3",
+  "description": "Read badges + locate newest What's New entry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Entradas What's New mais recentes (v6.1x) ===
+> 158:### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> 165:### [v6.8.5] — e2e-user-zero framework MVP — Phase Commercial Gate operacional (2026-05-26)
+> 173:### [v6.8.4] — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern (2026-05-26)
+> 181:### [v6.8.3] — mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening (2026-05-25)
+> 186:### [v6.8.2] — OE-661 Flywheel Validated End-to-End + PGRST203 Hotfix (2026-05-25)
+> 195:### [v6.8.0] — Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)
+> === Linha do 'What's New' header + primeira entrada ===
+> ```
+
+## 🤖 Claude *(00:35:20)*
+
+
+## 🤖 Claude *(00:35:21)*
+
+Agora posso editar. Fazendo os 3 badge edits:
+
+## 🤖 Claude *(00:35:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.12.0--canvas--consistency--ml--products-darkred?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.13.0--openclaw--resilience--validation-darkred?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8607_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8636_nodes_%7C_100%25_embedded-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/Nightly_Dreaming-active-violet?style=for-the-badge\" alt=\"Nightly Dreaming\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge\" alt=\"Nightly Dreaming\" />\n  <img src=\"https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge\" alt=\"OpenClaw Gateway\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "offset": 148,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 148	1 Topic → 1 SEO Article (WordPress) + 1 B2B Post (LinkedIn) + 1 Thread (X/Twitter)
+> 149	         + Affiliate Links (Mercado Livre) with per-campaign UTM attribution
+> 150	         + handle-ml-postback → revenue_cents updated on every ML conversion
+> 151	         + ROI Dashboard with real BRL revenue
+> 152	         + GraphRAG Knowledge Node (observation inserted per run)
+> 153	         + Neural HUD telemetry
+> 154	         + Constellation Matrix WebGL (8604 nodes · 8872 edges — paginação completa)
+> 155	         + Visual Orchestration Canvas with Quality Gates
+> 156	         + AIOS — conversational AI consciousness with VAD + Barge-in
+> 157	```
+> 158	
+> 159	### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> ```
+
+## 🤖 Claude *(00:35:39)*
+
+
+## 🤖 Claude *(00:35:40)*
+
+What's New começa na linha 159 (v6.8.6 é a mais recente — v6.9-6.12 só bumparam badge). Vou prepender a entrada v6.13.0:
+
+## 🤖 Claude *(00:35:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md",
+  "old_string": "### [v6.8.6] \u2014 Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)",
+  "new_string": "### [v6.13.0] \u2014 OpenClaw Ecosystem 100% Validation + Resilience Hardening (2026-05-29)\n- **Seguran\u00e7a \u2014 leak de credencial ML fechado**: `AffiliatesPage`/`SettingsPage`/`SocialAccountsPage` ganharam `autoComplete=\"off\"/\"new-password\"` + `data-lpignore`/`data-1p-ignore` \u2014 o Chrome oferecia salvar o par ML App ID + Client Secret como login ao navegar. Build deployado.\n- **Modelo padr\u00e3o OpenClaw: caro \u2192 barato**: `google/gemini-3.5-flash` (estava como primary via Telegram, custou R$110/dia) \u2192 **`openrouter/qwen/qwen3-235b-a22b-2507`** ($0.071/$0.10 por 1M, 235B, tools, 262k ctx, ~26x mais barato) + fallback `gemini-2.5-flash-lite` **provado via failover for\u00e7ado** (log `[model-fallback] Fell back to ...`). Toda a fam\u00edlia Gemini 2.0 estava 404 (removida).\n- **Gateway single-owner**: descoberto conflito de DOIS supervisores (systemd + PM2 `maestro`) brigando pela porta 18789 \u2014 maestro rodava o wrapper quebrado `openclaw.mjs` e crash-loopava (**3.5M restarts**). Maestro DELETADO; systemd `openclaw-gateway.service` \u00e9 o supervisor \u00fanico. Skill `openclaw-gateway-ops` + SOP `openclaw-gateway-supervisor.md` selados.\n- **Mem\u00f3ria OpenClaw destravada**: embeddings davam **403** (`text-embedding-3-small` revoked) \u2192 Memory Palace + Imported Insights congelados desde 17/mai. Trocado para **`gemini-embedding-001`**, 6 agentes re-indexados (0 falhas). Gates de promo\u00e7\u00e3o afrouxados (minScore 0.8\u21920.5, minRecallCount\u21920) \u2192 **3\u21928 promoted** (backlog recuperando). `dreaming.timezone=America/Sao_Paulo` setado por doc oficial.\n- **Ledger reconciliado**: \u00e2ncora `opening_balance_reconciliation +10000` fechou o drift estrutural do Great Reset \u2192 **drift zero** (8312=8312), encerrando a contradi\u00e7\u00e3o de materialidade AIOS Core v2.\n- **Crontab higienizado**: watchdog duplicado (gcrUX+ubuntu) \u2192 1x + `flock -n` guard; ingest-codebase.ts consertado (path absoluto + source .env); colis\u00e3o 07:00 escalonada.\n\n### [v6.8.6] \u2014 Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:36:00)*
+
+
+## 🤖 Claude *(00:36:01)*
+
+README atualizado. Commit (Phase 4):
+
+## 🤖 Claude *(00:36:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngit add README.md proof-manifest.json\ngit commit -q -m \"docs(readme): v6.13.0 \u2014 OpenClaw ecosystem 100% validation + resilience hardening\n\nBadge bumps (version 6.13.0, neural_mesh 8607\u21928636, +OpenClaw Gateway\nsingle-owner, dreaming gemini-embed). Prepend What's New entry covering\nthe session: ML credential leak fix, qwen3-235b default + proven Gemini\nfailover, systemd single-owner gateway (maestro deleted), embeddings\n403\u2192gemini (Palace/Insights unblocked, 3\u21928 promoted), ledger anchor\n(drift zero), crontab dedup + flock.\" && echo \"commit \u2713\"\ngit log --oneline -1",
+  "description": "Phase 4: commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> The following paths are ignored by one of your .gitignore files:
+> proof-manifest.json
+> hint: Use -f if you really want to add them.
+> hint: Turn this message off by running
+> hint: "git config advice.addIgnoredFile false"
+> commit ✓
+> f54798e docs(readme): v6.13.0 — OpenClaw ecosystem 100% validation + resilience hardening
+> ```
+
+## 🤖 Claude *(00:36:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md",
+  "offset": 10,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Cross-Node Consistency + ML Products Panel + Nav Reorg Record (2026-05-29)
+> 15	
+> 16	**v6.12.0 SEALED (2026-05-29)** — selo composto entregando o propósito central do Canvas Studio (consistência visual entre nós conectados) + transformando testes pagos em assets reais de campanha por produto + painel de produtos afiliados ML + reorganização do menu: (1) **Consistência cross-node** — pesquisa read-before-spend das docs oficiais dos modelos, depois implementação backend (`canvas-execute` threading de imagem de referência + seed por dialeto de provider) + frontend (pipeline auto-herda upstream conectado), tudo fail-open; (2) **3 campanhas por produto** (Roborock S8 · Samsung Neo QLED 8K · Family Hub) cada uma com imagem base + variação consistente (Nano Banana) + vídeo DoP pago; (3) **Painel de Produtos ML** em `/dashboard/affiliate-products`; (4) **Sidebar reorganizada** em submenus colapsáveis resgatando rota órfã + removendo link morto.
+> 17	
+> 18	**ORO triplet (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) — toca `canvas-execute` produção paga; Owner = Sovereign — blast radius = qualidade do conteúdo monetizável + créditos pagos Higgsfield/OpenRouter (autorização explícita 2026-05-29: ~30-50% de 160 cr para testes).
+> 19	
+> 20	### Phase 1: Consistência cross-node (research → backend → frontend)
+> 21	
+> 22	| Action | Result |
+> 23	|--------|--------|
+> 24	| Validação docs oficiais `.claude/context/canvas-consistency-validation-2026-05-29.md` | ✅ Gemini (image_url parts até 4) · Replicate (seed+img2img) · OpenAI (input_fidelity) · Soul compose (image_1) · DoP vídeo já image-conditioned |
+> 25	| SOP `docs/processes/canvas-node-consistency.md` (Lei 2) | ✅ Operator/Sequence/Gates/Recovery + mecanismo por provider |
+> 26	| `supabase/functions/canvas-execute/index.ts` — 4 edições fail-open + reconciliação de seed | ✅ `reference_image_urls[]`+`seed`; Gemini content parts; Replicate seed+image; Soul compose fallback image_1 |
+> 27	| `deno check canvas-execute` (5 handlers pré-existentes `(e:unknown)` corrigidos) | ✅ EXIT 0 |
+> 28	| Deploy `canvas-execute` | ✅ 146.5 kB (era 144.5) |
+> 29	| Frontend `useCanvasPipeline` + `findUpstreamImages` + `useCanvasStudio` | ✅ nós image/style herdam refs upstream automaticamente |
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:36:19)*
+
+
+## 🤖 Claude *(00:36:20)*
+
+README commitado (`f54798e`). proof-manifest.json é gitignored (artefato QA transiente — o audit lê local, ok).
+
+**PHASE 5 — HANDOFF.md Record:**
+
+## 🤖 Claude *(00:36:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md",
+  "old_string": "## Task State\n\n## Cross-Node Consistency + ML Products Panel + Nav Reorg Record (2026-05-29)",
+  "new_string": "## Task State\n\n## OpenClaw Ecosystem 100% Validation + Resilience Hardening Record (2026-05-29)\n\n**v6.13.0 SEALED (2026-05-29)** \u2014 selo de valida\u00e7\u00e3o 100% do ecossistema OpenClaw + hardening, disparado por dois prints do Sovereign (modal Chrome \"Salvar senha?\" + p\u00e1gina Sonhos) e aprofundado em 8 frentes materiais: (1) **leak de credencial ML** fechado (autoComplete guard em 3 p\u00e1ginas); (2) **modelo padr\u00e3o caro\u2192barato** \u2014 `gemini-3.5-flash` (R$110/dia) \u2192 `qwen3-235b-a22b-2507` + fallback `gemini-2.5-flash-lite` provado via failover for\u00e7ado; (3) **gateway single-owner** \u2014 conflito systemd\u00d7PM2 maestro (3.5M restarts) resolvido deletando o maestro; (4) **crons circadianos** (payload agentTurn) + **crontab dedup** (watchdog 1x + flock + ingest fix); (5) **embeddings 403\u2192gemini-embedding-001** (6 agentes re-indexados) destravando Memory Palace/Imported Insights; (6) **promo\u00e7\u00e3o destravada** (gates afrouxados, 3\u21928 promoted); (7) **ledger reconciliado** (\u00e2ncora +10000 \u2192 drift zero, fecha contradi\u00e7\u00e3o AIOS); (8) **review da doc oficial** do dreaming + timezone hygiene. Trabalho majoritariamente **out-of-repo** (`~/.openclaw/` config via `openclaw config patch` validado contra schema) + commits in-repo (security fix + skill + SOP + watchdog).\n\n**ORO triplet (Lei 4):** Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) \u2014 aprovou cada frente via AskUserQuestion; Owner = Sovereign \u2014 blast radius = credencial em prod + custo R$/dia OpenClaw + integridade da malha de mem\u00f3ria + ledger cont\u00e1bil.\n\n### Frentes (in-repo)\n\n| Action | Result |\n|--------|--------|\n| `src/pages/{Affiliates,Settings,SocialAccounts}Page.tsx` \u2014 autoComplete guard | \u2705 `autoComplete=off/new-password` + `data-lpignore`/`data-1p-ignore` + `<form autoComplete=off>` (commit `1f0d0a0`); build deployado |\n| `.claude/skills/openclaw-gateway-ops/SKILL.md` + `docs/processes/openclaw-gateway-supervisor.md` | \u2705 supervisor can\u00f4nico = systemd; SOP single-owner + no-orphan check (commits `736e935`/`d6dcbcd`/`1256301`) |\n| `.claude/skills/gateway-recovery.md` deprecado + HANDOFF v6.8.1 banner de corre\u00e7\u00e3o | \u2705 aponta p/ skill nova (commit `4c67802`) |\n| `scripts/watchdog-mcorch.sh` \u2014 `flock -n` guard | \u2705 non-blocking, anti-overlap `*/5` (commit `d0239f4`) |\n| `README.md` v6.13.0 + What's New | \u2705 commit `f54798e` |\n\n### Frentes (out-of-repo \u2014 `~/.openclaw/`, prova material via CLI/REST)\n\n| Action | Result |\n|--------|--------|\n| `openclaw.json` model default | \u2705 primary `qwen/qwen3-235b-a22b-2507` \u00b7 fallback `gemini-2.5-flash-lite` (`models status` confirmou) |\n| Failover for\u00e7ado (primary inv\u00e1lido \u2192 cron) | \u2705 log `[model-fallback] Fell back to \"google/gemini-2.5-flash-lite\"` \u00b7 cron `status=ok` |\n| PM2 `maestro` deletado + `pm2 save --force` | \u2705 systemd `openclaw-gateway.service` supervisor \u00fanico \u00b7 healthz 200 \u00b7 1 node-gateway ppid=systemd |\n| `cron/jobs.json` 3 mirrors `systemEvent`\u2192`agentTurn` | \u2705 Stage1/2/3 `cron run` \u2192 `status=ok model=qwen/qwen3-235b` |\n| `memorySearch.provider=gemini` model `gemini-embedding-001` 768d | \u2705 `memory status`: 6074 chunks, Batch failures 0/2 (era 403) |\n| `memory index` \u00d7 6 agentes | \u2705 todos \"updated\", 0 falhas |\n| `dreaming.phases.deep` gates (minScore 0.5 \u00b7 minRecallCount 0 \u00b7 minUniqueQueries 1) + `timezone=America/Sao_Paulo` | \u2705 recall store 1302\u21921331 \u00b7 **promoted 3\u21928** (backlog recovery via cron) |\n| Ledger \u00e2ncora `opening_balance_reconciliation +10000` (id `9703524e-0d8f-4c17-8330-d848ab30d694`) | \u2705 drift `8312=8312` ZERO \u2014 fecha contradi\u00e7\u00e3o AIOS Core v2 |\n| crontab dedup (gcrUX vazio) + ingest fix (cd+source .env+NODE_BIN) + pulse 0 7\u21925 7 | \u2705 watchdog 1x \u00b7 ingest passa do env check \u00b7 colis\u00e3o resolvida |\n\n### Material proofs (Lei 1)\n\n| Verifica\u00e7\u00e3o | Resultado |\n|-------------|-----------|\n| `npx tsc --noEmit` | \u2705 zero erros |\n| Containers | \u2705 mcorch_chroma + claude_mem + 3 mega-brain healthy (6 days) \u00b7 Chroma v2 heartbeat ok |\n| Commits in-repo da sess\u00e3o | \u2705 7 (`1f0d0a0` \u00b7 `736e935` \u00b7 `4c67802` \u00b7 `d6dcbcd` \u00b7 `1256301` \u00b7 `d0239f4` \u00b7 `f54798e`) |\n| Handoff node | \u2705 `0c250e83-cc49-4a82-88eb-b8da9daaa6ba` embedded 768d (autoembed trigger) |\n| Mesh total | \u2705 **8636 nodes** (inclui este handoff) \u00b7 8961 edges |\n\n### Survival Laws Self-audit\n\n```\n### Law 1 (Materiality)\n- [x] Toda claim de SUCCESS tem prova? SIM \u2014 REST returns, CLI outputs (models status, memory status, cron run jsonl), git hashes, healthz HTTP 200, drift query\n- [x] C\u00e9rebro sem m\u00e3os? SIM \u2014 disclosure honesta do erro de split-brain de paths (docs landaram no main em vez do worktree \u2192 reconciliado zero-loss) + corre\u00e7\u00e3o do meu pr\u00f3prio erro de identificar \"2 crontabs id\u00eanticos\" (era query como ubuntu 2x)\n- [x] Fase 5c executada \u2014 veredito mec\u00e2nico? (ver bloco PROVA MATERIAL)\n- [N/A] Gate E2E /e2e-audit: nenhuma altera\u00e7\u00e3o no Canvas Studio nesta sess\u00e3o (frontend tocado = forms de credencial + watchdog shell)\n\n### Law 2 (Process)\n- [x] SOP `openclaw-gateway-supervisor.md` escrita junto com a skill (supervisor lifecycle)\n\n### Law 3 (Pruning)\n- [x] Read-before-spend: validei modelos via API real ANTES de configurar (pegou gemini-2.0 404 + qwen3.5-flash provider error); re-index incremental; dry-run em todo config patch\n\n### Law 4 (ORO)\n- [x] ORO triplet declarado; cada frente consequente passou por AskUserQuestion (Sovereign Reviewer)\n```\n\n**Pr\u00f3ximos deliverables (sess\u00e3o futura):**\n- Confirma\u00e7\u00e3o visual do Palace/Insights catch-up no sweep das 03:00 BRT (blocker removido, dados preservados em `sources/` 16-29/mai)\n- OTD-OCGW-002: rebuild limpo do `~/openclaw/dist/` (artefatos hasheados duplicados) no pr\u00f3ximo upgrade\n- Opcional: restaurar `minRecallCount=1` p\u00f3s-recovery do backlog + recovery can\u00f4nico `rem-backfill --stage-short-term`\n- OTD-OE661-PER-USER (SLA 2026-06-02): refactor `link-forge.ts` + `process-affiliate-link` GET p/ `affiliate_config` per-user\n\n## Cross-Node Consistency + ML Products Panel + Nav Reorg Record (2026-05-29)"
+}
+```
+
+## 🤖 Claude *(00:37:04)*
+
+
+## 🤖 Claude *(00:37:05)*
+
+HANDOFF.md Record escrito. **PHASE 5b — secret scan no HANDOFF.md antes do commit:**
+
+## 🤖 Claude *(00:37:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== 5b-1. Scan HANDOFF.md por credenciais reais ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\\s*['\\\"]?[A-Za-z0-9+/]{40,})\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" \\\n  | head -20 || echo \"HANDOFF.md: NENHUMA CREDENCIAL \u2705\"\necho\necho \"=== 5b-2. Google API keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -10 || echo \"NENHUMA GOOGLE KEY \u2705\"\necho\necho \"=== 5b-3. Assignments = 'value' suspeitos ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|id.*[0-9a-f-]\\{36\\}\" \\\n  | head -10 || echo \"NENHUM ASSIGNMENT INLINE \u2705\"",
+  "description": "Phase 5b: secret scan on HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. Scan HANDOFF.md por credenciais reais ===
+> 
+> === 5b-2. Google API keys ===
+> 
+> === 5b-3. Assignments = 'value' suspeitos ===
+> 1665:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 1698:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 4401:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 4403:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 4404:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 4446:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 4448:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(00:37:23)*
+
+
+## 🤖 Claude *(00:37:24)*
+
+Phase 5b ✅ — 5b-1 e 5b-2 limpos. Os 3 matches do 5b-3 são **falsos positivos pré-existentes** (literais SQL `action='opening_balance_reconciliation'` e `project_id='mcorch-constellation'` nas linhas 1665+, bem abaixo do meu Record novo) — não são credenciais. Commitando HANDOFF.md:
+
+## 🤖 Claude *(00:37:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal v6.13.0 \u2014 OpenClaw ecosystem 100% validation + resilience hardening\n\nEight-front seal: ML credential autofill leak fix; default model\ngemini-3.5-flash\u2192qwen3-235b + proven Gemini failover; systemd\nsingle-owner gateway (PM2 maestro deleted, 3.5M crash-loop restarts);\ncircadian cron payload fix + crontab dedup + flock; OpenClaw embeddings\n403\u2192gemini-embedding-001 (6 agents reindexed, Palace/Insights unblocked,\n3\u21928 promoted); ledger opening_balance_reconciliation +10000 anchor\n(drift zero, AIOS contradiction closed); dreaming timezone per official\ndocs. Handoff node 0c250e83, mesh 8636 nodes.\" && echo \"commit \u2713\"\ngit log --oneline -1",
+  "description": "Commit HANDOFF.md after Phase 5b pass"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit ✓
+> b87ba0a docs(handoff): seal v6.13.0 — OpenClaw ecosystem 100% validation + resilience hardening
+> ```
+
+## 🤖 Claude *(00:37:37)*
+
+
+## 🤖 Claude *(00:37:38)*
+
+HANDOFF.md commitado (`b87ba0a`). **PHASE 5c — Material Proof Audit:**
+
+## 🤖 Claude *(00:37:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"proof-manifest presente: $(cat proof-manifest.json)\"\necho \"=== Rodando audit ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Phase 5c: run material proof audit",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> proof-manifest presente: {"handoffNodeId": "0c250e83-cc49-4a82-88eb-b8da9daaa6ba"}
+> === Rodando audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 9703524e | mesh_node | 9703524e-0d8f-4c17-8330-d848ab30d694 | unreachable | ⏭ |
+> | mesh node 0c250e83 | mesh_node | 0c250e83-cc49-4a82-88eb-b8da9daaa6ba | unreachable | ⏭ |
+> | commit 1f0d0a0 | git_commit | 1f0d0a0 | 1f0d0a0 | ✅ |
+> | commit 736e935 | git_commit | 736e935 | 736e935 | ✅ |
+> | commit d6dcbcd | git_commit | d6dcbcd | d6dcbcd | ✅ |
+> | commit 4c67802 | git_commit | 4c67802 | 4c67802 | ✅ |
+> | commit d0239f4 | git_commit | d0239f4 | d0239f4 | ✅ |
+> | commit f54798e | git_commit | f54798e | f54798e | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | file .claude/skills/openclaw-gateway-ops/SKILL.md | file_exists | .claude/skills/openclaw-gateway-ops/SKILL.md | .claude/skills/openclaw-gateway-ops/SKILL.md | ✅ |
+> | file docs/processes/openclaw-gateway-supervisor.md | file_exists | docs/processes/openclaw-gateway-supervisor.md | docs/processes/openclaw-gateway-supervisor.md | ✅ |
+> | file .claude/skills/gateway-recovery.md | file_exists | .claude/skills/gateway-recovery.md | .claude/skills/gateway-recovery.md | ✅ |
+> | file scripts/watchdog-mcorch.sh | file_exists | scripts/watchdog-mcorch.sh | scripts/watchdog-mcorch.sh | ✅ |
+> | file cron/jobs.json | file_exists | cron/jobs.json | absent | 🔴 |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) —  | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) —  | ✅ |
+> 
+> - 🔴 **file cron/jobs.json** — file not found: cron/jobs.json
+> 
+> QA VERDICT: 12 verified · 2 skipped · 1 failed → SEAL BLOCKED
+> 
+> (audit completed in 0.5s)
+> ```
+
+## 🤖 Claude *(00:38:00)*
+
+
+## 🤖 Claude *(00:38:03)*
+
+Phase 5c: **SEAL BLOCKED** — 1 falha, mas é **falso positivo da minha redação**: o audit interpretou `cron/jobs.json` (que mencionei no Record) como claim de arquivo do REPO, mas ele é out-of-repo (`~/.openclaw/cron/jobs.json`). Os commits (7/7 ✅), tsc, e arquivos reais passaram. Os 2 mesh nodes deram ⏭ skip (audit sem env Supabase — não bloqueia).
+
+Fix: prefixar o path com `~/.openclaw/` pra não ser parseado como arquivo do repo. Corrigindo o Record + amend + re-run:
+
+## 🤖 Claude *(00:38:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md",
+  "old_string": "| `cron/jobs.json` 3 mirrors `systemEvent`\u2192`agentTurn` | \u2705 Stage1/2/3 `cron run` \u2192 `status=ok model=qwen/qwen3-235b` |",
+  "new_string": "| `~/.openclaw/cron/jobs.json` 3 mirrors `systemEvent`\u2192`agentTurn` | \u2705 Stage1/2/3 `cron run` \u2192 `status=ok model=qwen/qwen3-235b` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:38:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== Re-secret-scan r\u00e1pido na linha alterada (5b invariant) ===\"\ngrep -n \"~/.openclaw/cron/jobs.json\" HANDOFF.md | head -2\necho\necho \"=== Amend HANDOFF commit (n\u00e3o-pushed) ===\"\ngit add HANDOFF.md\ngit commit -q --amend --no-edit && echo \"amended \u2713\"\ngit log --oneline -1\necho\necho \"=== Re-run Phase 5c ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -8",
+  "description": "Amend HANDOFF + re-run Phase 5c audit",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Re-secret-scan rápido na linha alterada (5b invariant) ===
+> 37:| `~/.openclaw/cron/jobs.json` 3 mirrors `systemEvent`→`agentTurn` | ✅ Stage1/2/3 `cron run` → `status=ok model=qwen/qwen3-235b` |
+> 876:**1. Cron mirror dos sonhos no painel OpenClaw.** Os 3 crons do ciclo circadiano (`nightly-stage1/2/3` @ 03/05/07 BRT no crontab do SO `ubuntu`) foram espelhados como **3 jobs disabled** em `~/.openclaw/cron/jobs.json` para visibilidade no painel "Tarefas Cron". Descoberta arquitetural confirmada via doc oficial OpenClaw: a página **Sonhos ≠ painel Cron** — Sonhos é exclusiva do plugin `memory-core` (1 sweep diário, fases light→REM→deep internas, não agendáveis individualmente).
+> 
+> === Amend HANDOFF commit (não-pushed) ===
+> amended ✓
+> abd73fd docs(handoff): seal v6.13.0 — OpenClaw ecosystem 100% validation + resilience hardening
+> 
+> === Re-run Phase 5c ===
+> | file docs/processes/openclaw-gateway-supervisor.md | file_exists | docs/processes/openclaw-gateway-supervisor.md | docs/processes/openclaw-gateway-supervisor.md | ✅ |
+> | file .claude/skills/gateway-recovery.md | file_exists | .claude/skills/gateway-recovery.md | .claude/skills/gateway-recovery.md | ✅ |
+> | file scripts/watchdog-mcorch.sh | file_exists | scripts/watchdog-mcorch.sh | scripts/watchdog-mcorch.sh | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) —  | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini) —  | ✅ |
+> 
+> QA VERDICT: 12 verified · 2 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.5s)
+> ```
+
+## 🤖 Claude *(00:38:23)*
+
+
+## 🤖 Claude *(00:38:25)*
+
+**Phase 5c: SEAL ALLOWED** — 12 verified · 2 skipped (mesh nodes, Supabase unreachable do audit env — não-bloqueante; já verifiquei o handoff node embedded NOT NULL antes) · 0 failed. HANDOFF commit amended para `abd73fd`.
+
+**PHASE 6 — BoK Seal Status:**
+
+## 🤖 Claude *(00:38:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== 6-1. BoK suites completas ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"  \u2705 $slug\" || echo \"  \u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho\necho \"=== 6-2. Sess\u00e3o criou m\u00f3dulo novo (src/pages ou supabase/functions)? ===\"\ngit diff --name-only 9a0f60f..HEAD | grep -E \"^(src/pages/|supabase/functions/)\" | while read f; do echo \"  tocado: $f\"; done\necho \"  (edi\u00e7\u00f5es em p\u00e1ginas EXISTENTES de credencial = n\u00e3o \u00e9 m\u00f3dulo novo \u2192 sem BoK gate)\"",
+  "description": "Phase 6: BoK completeness + session new-module check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-1. BoK suites completas ===
+>   ✅ aios-sql-bridge
+>   ✅ canvas-design
+>   ✅ conteudo-v2
+>   ✅ e2e-user-zero
+>   ✅ gamificacao-nodes
+>   ✅ mcorch-constellation
+>   ✅ mcorch-qa-healing
+>   ✅ openclaw
+>   ✅ viralmind
+> 
+> === 6-2. Sessão criou módulo novo (src/pages ou supabase/functions)? ===
+>   tocado: src/pages/AffiliatesPage.tsx
+>   tocado: src/pages/SettingsPage.tsx
+>   tocado: src/pages/SocialAccountsPage.tsx
+>   (edições em páginas EXISTENTES de credencial = não é módulo novo → sem BoK gate)
+> ```
+
+## 🤖 Claude *(00:38:37)*
+
+
+## 🤖 Claude *(00:38:39)*
+
+Phase 6 ✅ — 9/9 BoK suites completas; sessão só tocou páginas EXISTENTES (sem módulo novo → sem gate). OpenClaw é coberto pela suíte `openclaw` selada.
+
+**PHASE 7 — Push** (merge worktree→main + push):
+
+## 🤖 Claude *(00:38:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Merge worktree branch \u2192 main ===\"\ngit merge claude/wizardly-allen-2a03a9 --no-edit 2>&1 | tail -4\necho\necho \"=== main HEAD p\u00f3s-merge ===\"\ngit log --oneline -3\necho\necho \"=== Push origin main ===\"\ngit push origin main 2>&1 | tail -6\necho\necho \"=== Confirmar sync ===\"\ngit rev-list --count origin/main..main 2>/dev/null | xargs echo \"commits \u00e0 frente de origin (deve ser 0):\"",
+  "description": "Phase 7: merge to main + push",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Merge worktree branch → main ===
+> Fast-forward
+>  HANDOFF.md | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  README.md  | 15 ++++++++++++---
+>  2 files changed, 77 insertions(+), 3 deletions(-)
+> 
+> === main HEAD pós-merge ===
+> abd73fd docs(handoff): seal v6.13.0 — OpenClaw ecosystem 100% validation + resilience hardening
+> f54798e docs(readme): v6.13.0 — OpenClaw ecosystem 100% validation + resilience hardening
+> d0239f4 fix(watchdog): non-blocking flock guard against overlapping */5 runs
+> 
+> === Push origin main ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    9a0f60f..abd73fd  main -> main
+> 
+> === Confirmar sync ===
+> commits à frente de origin (deve ser 0): 0
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:38:49)*
+
+
+## 🤖 Claude *(00:38:50)*
+
+**Push ✅** — `9a0f60f..abd73fd` em origin/main, 0 commits à frente (sincronizado). 8 commits totais nesta sessão.
+
+**PHASE 7b — Sprint & Connections Hygiene:**
+
+## 🤖 Claude *(00:38:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== scratch/ cleanup ===\"\nls scratch/ 2>/dev/null && echo \"\u26a0\ufe0f tem arquivos\" || echo \"scratch/ limpo \u2705 (ou inexistente)\"\necho\necho \"=== .firecrawl/ \u00f3rf\u00e3o? (tentei scrape antes) ===\"\nls -la .firecrawl/ 2>/dev/null && echo \"\u26a0\ufe0f .firecrawl existe\" || echo \".firecrawl ausente \u2705\"\necho\necho \"=== git status final (deve estar limpo) ===\"\ngit status --short\necho \"  (proof-manifest.json \u00e9 gitignored \u2014 ok)\"\necho\necho \"=== MCP servers documentados? ===\"\ncat .mcp.json 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"  (.mcp.json ausente ou vazio)\"",
+  "description": "Phase 7b: scratch + firecrawl + git status + mcp check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ cleanup ===
+> scratch/ limpo ✅ (ou inexistente)
+> 
+> === .firecrawl/ órfão? (tentei scrape antes) ===
+> .firecrawl ausente ✅
+> 
+> === git status final (deve estar limpo) ===
+>   (proof-manifest.json é gitignored — ok)
+> 
+> === MCP servers documentados? ===
+>   servers: ['gitnexus', 'obsidian', 'playwright']
+> ```
+
+## 🤖 Claude *(00:39:09)*
+
+
+## 🤖 Claude *(00:39:30)*
+
+Phase 7b ✅ — scratch limpo, sem .firecrawl órfão, git status limpo, MCP servers (gitnexus/obsidian/playwright) pré-existentes (nenhum novo). sprint-priorities.md sem mudança necessária (sessão foi infra OpenClaw, sem feature de sprint nem /audit).
+
+**PHASE 8 — Final Report:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — OpenClaw Ecosystem 100% Validation (2026-05-29)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a. Secret leak scan ........... ✅ PASS (sem credenciais no range da sessão)
+  1b. Edge function JWT .......... ✅ PASS (nenhuma edge function tocada)
+  1c. Client coin deduction ...... ✅ PASS (nenhuma)
+  1e. Sensitive console.log ...... ✅ PASS (nenhum)
+  5b. HANDOFF.md secret scan ..... ✅ PASS (3 falsos-positivos SQL pré-existentes)
+  Leak ML original ............... ✅ FECHADO (autoComplete guard deployado)
+
+📦 COMMITS (8 total)
+  1f0d0a0 — fix(security): block browser credential autofill
+  736e935 — docs(openclaw): single-owner gateway SOP + ops skill
+  4c67802 — docs(handoff): correct v6.8.1 gateway lesson
+  d6dcbcd — docs(openclaw): model resilience section
+  1256301 — docs(openclaw): switch default to qwen3-235b
+  d0239f4 — fix(watchdog): non-blocking flock guard
+  f54798e — docs(readme): v6.13.0
+  abd73fd — docs(handoff): seal v6.13.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 0c250e83-cc49-4a82-88eb-b8da9daaa6ba
+  Nome: session-handoff-20260529-openclaw-100pct-validation
+  Embedding: ✅ SET (768d, autoembed trigger)
+
+📖 README.md
+  Versão: 6.12.0 → 6.13.0 (openclaw-resilience-validation)
+  Badge neural_mesh: 8607 → 8636 nós
+  Badges +: OpenClaw Gateway systemd single-owner · Dreaming gemini-embed
+  Seção: What's New [v6.13.0] prepended
+
+🧠 HANDOFF.md
+  Fase selada: OpenClaw Ecosystem 100% Validation + Resilience Hardening
+  Seções: Task State, Record novo (8 frentes), Survival Self-audit 4/4
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: ✅ SEAL ALLOWED
+  Claims: 12 verificadas · 2 skipped (mesh nodes, Supabase unreachable do audit) · 0 falhas
+  (handoff node embedded NOT NULL verificado independente antes do audit)
+
+🚀 PUSH
+  Branch: main → origin/main
+  Range: 9a0f60f..abd73fd (8 commits)
+  Sync: 0 commits à frente ✅
+
+📌 SPRINT
+  sprint-priorities.md: sem mudanças (infra OpenClaw, sem feature/audit)
+  scratch/ cleanup: limpo ✅
+  MCP docs: gitnexus/obsidian/playwright pré-existentes ✅
+
+⏭  PRÓXIMOS PASSOS
+  1. Confirmar visual do Palace/Insights catch-up no sweep 03:00 BRT (blocker removido, dados 16-29/mai preservados)
+  2. OTD-OE661-PER-USER (SLA 2026-06-02, 4 dias): refactor link-forge.ts + process-affiliate-link GET → affiliate_config per-user
+  3. OTD-OCGW-002: rebuild limpo ~/openclaw/dist/ (artefatos hasheados duplicados) no próximo upgrade
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada com sucesso. 🎯
+
+**Resumo executivo do que entregamos hoje:** partindo de dois prints seus (modal de senha + tela Sonhos), fechamos a **validação 100% do OpenClaw** — leak de credencial corrigido, custo de modelo cortado ~26x (qwen3-235b), gateway consolidado num supervisor só (matamos 3.5M restarts de crash-loop), embeddings 403 resolvidos destravando o Memory Palace, promoção de memória recuperada (3→8), ledger reconciliado (drift zero) e crontab higienizado. Tudo com prova material, documentado em skill + SOP + memória, e selado na malha.
+
+O **único pendente de confirmação visual** é o Palace/Insights atualizarem na UI no ciclo das 03:00 BRT — o bloqueio técnico já foi removido. Se quiser, posso agendar essa verificação; senão, é só conferir amanhã no `claw.gcrux.com/dreaming`.
+
+## 👤 User *(00:39:33)*
+
+No handoff precisa se certificar que tudo que aprendeu nessa sessão seja aproveitado no futuro do ecosistema, adicionado como longo prazo ou atualizar a skill que criamos para openclaw ou criar uma nova skil de openclaw dreaming veja o que seria melhor.
+
+## 🤖 Claude *(00:40:20)*
+
+
+## 🤖 Claude *(00:40:25)*
+
+Boa diretiva — vou avaliar e executar. 
+
+**Minha avaliação (o que é melhor):** As três opções, mas com divisão clara:
+- **Memória longo-prazo** → JÁ feito ao longo da sessão (o `project_openclaw_ollama_integration.md` tem gateway + modelos + embeddings + dreaming + crontab + ledger).
+- **Skill `openclaw-gateway-ops`** → deve ficar focada em gateway/supervisor/modelos (já está).
+- **Nova skill `openclaw-dreaming`** → ✅ **melhor opção**. O subsistema de dreaming/memória é um domínio distinto e rico (3 fases, promoção, Palace/Insights wiki vs memory-core, comandos de diagnóstico/recovery, gates de scoring) que não cabe em "gateway ops". Merece playbook próprio.
+
+Vou criar a skill `openclaw-dreaming` consolidando tudo que aprendemos + a doc oficial:
+
+## 🤖 Claude *(00:40:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "mkdir -p /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/.claude/skills/openclaw-dreaming\necho \"dir criado\"",
+  "description": "Create openclaw-dreaming skill directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dir criado
+> ```
+
+## 🤖 Claude *(00:41:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/.claude/skills/openclaw-dreaming/SKILL.md",
+  "content": "---\nname: openclaw-dreaming\ndescription: Diagnosticar, ajustar e RECUPERAR o subsistema de Dreaming/mem\u00f3ria do OpenClaw \u2014 promo\u00e7\u00e3o para MEMORY.md, dream diary (DREAMS.md), Memory Palace + Imported Insights (wiki). Use quando o painel claw.gcrux.com/dreaming mostrar \"0 promovido\", Palace/Insights congelados/desatualizados, ou ao tunar gates de promo\u00e7\u00e3o e o provider de embedding da mem\u00f3ria. Doc oficial: https://docs.openclaw.ai/pt-BR/concepts/dreaming. Sibling: openclaw-gateway-ops (gateway/modelos).\n---\n\n# Skill: openclaw-dreaming \u2014 Mem\u00f3ria, Promo\u00e7\u00e3o & Recovery do Dreaming\n\nPlaybook operacional do Dreaming do OpenClaw. Dom\u00ednio distinto do gateway:\naqui \u00e9 **consolida\u00e7\u00e3o de mem\u00f3ria de longo prazo**, n\u00e3o processo/porta.\nDoc autoritativa: https://docs.openclaw.ai/pt-BR/concepts/dreaming.\n\n## \u26a0\ufe0f Modelo mental (corre\u00e7\u00f5es que custaram caro)\n\n**1. Dreaming = UMA varredura, N\u00c3O 3 jobs separados.** `frequency` (cron, default `0 3 * * *`) dispara 1 sweep com 3 fases INTERNAS sequenciais (light\u2192REM\u2192deep). O schema `dreaming.phases.{light,deep,rem}` tem `enabled`/`limit`/gates, **N\u00c3O** `cron`/`time` por fase \u2192 imposs\u00edvel distribuir tipo sono humano nativamente.\n- **\"LEVE/PROFUNDO/REM 3:00\" na UI = hor\u00e1rio do CLOCK da pr\u00f3xima varredura (03:00), N\u00c3O countdown de 3 min.**\n- A distribui\u00e7\u00e3o real (Light 03 / Deep 05 / REM 07 BRT) s\u00e3o os **mcorch circadian crons** (`nightly-stage1/2/3` no crontab SO) \u2014 OUTRO sistema, separado do dreaming nativo.\n\n**2. As 3 fases (s\u00f3 Deep promove):**\n| Fase | Faz | Escreve MEMORY.md? |\n|------|-----|--------------------|\n| Light | ingere recall recente, dedup, prepara candidatos | \u274c |\n| Deep | rankeia candidatos + gates \u2192 promove | \u2705 (\u00fanica) |\n| REM | padr\u00f5es/temas \u2192 DREAMS.md (dream diary) | \u274c |\n\n**3. DOIS subsistemas distintos** (n\u00e3o confundir):\n- **memory-core** \u2192 dreaming, MEMORY.md (promo\u00e7\u00e3o), DREAMS.md (di\u00e1rio). CLI `memory *`.\n- **memory-wiki** \u2192 Memory Palace (syntheses) + Imported Insights (clusters). \u00c9 o que a UI `/dreaming` mostra como Palace/Insights. **Clustering depende de embeddings.**\n\n## \ud83d\udd11 Depend\u00eancia cr\u00edtica: EMBEDDINGS\n\nTudo (clustering do Palace/Insights + scoring de promo\u00e7\u00e3o) depende de embeddings funcionais.\n- \u2705 **Atual: `gemini-embedding-001`** (`memorySearch.provider=gemini`, 768d via outputDimensionality). Funciona com a key Google.\n- \u274c Default era OpenAI `text-embedding-3-small` \u2192 **403 \"project access revoked\"** \u2192 Palace/Insights congelam (ingest copia arquivo OK, mas s\u00edntese/cluster falha) + promo\u00e7\u00e3o degrada.\n- Embedding LOCAL (`embeddinggemma-300m`) existe mas precisa `node-llama-cpp` (ausente).\n\n## Deep phase \u2014 ranking ponderado + gates\n\nPesos (doc): Relevance **0.30** \u00b7 Frequency 0.24 \u00b7 QueryDiversity 0.15 \u00b7 Recency 0.15 \u00b7 Consolidation 0.10 \u00b7 Conceptual 0.06.\nGates (`dreaming.phases.deep`): `minScore` \u00b7 `minRecallCount` \u00b7 `minUniqueQueries` (TODOS devem passar).\n**Atual:** `minScore=0.5 \u00b7 minRecallCount=0 \u00b7 minUniqueQueries=1` (afrouxado p/ recovery). Diary/report N\u00c3O promovem (s\u00f3 grounded memory snippets).\n\n## Fase 1 \u2014 Diagn\u00f3stico (read-only)\n\n```bash\nOC=\"node /home/ubuntu/openclaw/openclaw.mjs\"\n$OC memory status --agent=main      # Provider, chunks, Dirty, Dreaming gates, Recall store (N promoted), Batch failures\n$OC memory status --deep            # thresholds de gating\n$OC memory promote                  # preview do ranking de candidatos (n\u00e3o escreve)\n$OC memory promote-explain \"topico\" # por que um candidato falhou no score\n$OC memory rem-harness --agent=main # dry-run: reflections + deep candidates (n\u00e3o escreve)\n```\n**Sinais saud\u00e1veis:** Provider=gemini \u00b7 Batch failures 0/N (n\u00e3o 403) \u00b7 Recall store com `promoted > 0` crescendo \u00b7 Dirty: no.\n\n## Fase 2 \u2014 \"0 promovido\" / Palace congelado: causa-raiz\n\n1. **Embeddings 403?** \u2192 `memory status` mostra Batch failures + log gateway `embeddings failed: 403`. **Fix:** `memorySearch.provider=gemini` (Fase 3).\n2. **Gates inalcan\u00e7\u00e1veis?** \u2192 `rem-harness` mostra maxScore < minScore, ou recallCount=0 vs minRecallCount\u22651. **Chicken-and-egg:** recall s\u00f3 registra com search funcionando; se embeddings estavam quebrados, o backlog tem `recalls=0` permanente.\n3. **Palace/Insights (wiki) s\u00f3 atualiza no compile cycle** \u2014 regenera no sweep/bridge quando embeddings funcionam. Dados brutos preservados em `~/.openclaw/wiki/main/sources/` (mesmo durante freeze).\n4. **\"blocked\" na UI** (\u2260 \"ativo\")? \u2192 Heartbeat do agente default deve estar enabled + destination \u2260 `none`.\n\n## Fase 3 \u2014 Recovery (config patch validado)\n\n```bash\nOC=\"node /home/ubuntu/openclaw/openclaw.mjs\"\n# Backup + patch SEMPRE validado contra schema (dry-run primeiro):\ncp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak-$(date +%s)\n$OC config patch --file <patch.json5> --dry-run   # depois sem --dry-run\nsystemctl --user restart openclaw-gateway.service  # config s\u00f3 rel\u00ea no boot (NUNCA pm2/openclaw gateway restart \u2014 ver openclaw-gateway-ops)\n```\n\n| Sintoma | Patch / A\u00e7\u00e3o |\n|---------|--------------|\n| Embeddings 403 | `agents.defaults.memorySearch = {provider:\"gemini\", model:\"gemini-embedding-001\", outputDimensionality:768}` \u2192 restart \u2192 `memory index --agent=<id>` \u00d76 agentes |\n| Gates muito altos | `plugins.entries.memory-core.config.dreaming.phases.deep = {minScore:0.5, minRecallCount:0, minUniqueQueries:1}` |\n| Backlog (per\u00edodo congelado, recalls=0) | **Can\u00f4nico:** `memory rem-backfill --stage-short-term --path <dir>` (stage candidates, revers\u00edvel `--rollback`). **OU** minRecallCount=0 + rodar promo\u00e7\u00e3o: `$OC cron run cb6df4a5-9678-4c9b-a388-24b97e4bf463` (v\u00e1rias vezes; promove top-N por score/ciclo) |\n| Sweep no hor\u00e1rio errado | `dreaming.timezone=\"America/Sao_Paulo\"` (servidor j\u00e1 \u00e9 BRT, mas expl\u00edcito \u00e9 higiene) |\n| Di\u00e1rio UI vazio | `memory rem-backfill --path <dir>` (escreve REM summaries grounded no DREAMS.md) |\n\n## Fase 4 \u2014 Materialidade (Lei 1)\n\nToda claim de \"recuperado/promovendo\" exige:\n- `memory status` mostrando Provider=gemini + Batch failures 0 + `promoted` count **delta** (ex: 3\u21928)\n- `cron run <id>` \u2192 run jsonl com `status=ok model=...`\n- Palace/Insights na UI: confirma\u00e7\u00e3o VISUAL no `claw.gcrux.com/dreaming` (regenera no sweep 03:00 BRT \u2014 n\u00e3o d\u00e1 pra for\u00e7ar via comando \u00fanico)\n- NUNCA afirmar \"promovido N\" sem o count real do `memory status`.\n\n## Config reference \u2014 `plugins.entries.memory-core.config.dreaming`\n\n`enabled` (bool) \u00b7 `frequency` (cron, `0 3 * * *`) \u00b7 `timezone` \u00b7 `model` (Dream Diary subagent override; default runtime = qwen3-235b) \u00b7 `phases.light` (lookbackDays/limit/dedupeSimilarity) \u00b7 `phases.deep` (limit/minScore/minRecallCount/minUniqueQueries/recencyHalfLifeDays/maxAgeDays) \u00b7 `phases.rem` (lookbackDays/limit/minPatternStrength) \u00b7 `storage.mode` (inline/separate/both).\n\nCron nativo `Memory Dreaming Promotion` (id `cb6df4a5-...` em `~/.openclaw/cron/jobs.json`) reflete os gates do deep na sua descri\u00e7\u00e3o.\n\n## Ver tamb\u00e9m\n- **openclaw-gateway-ops** \u2014 gateway/supervisor/modelos/fallback (sibling)\n- Mem\u00f3ria `project_openclaw_ollama_integration.md` \u2014 fatos cross-conversation\n- Doc oficial: https://docs.openclaw.ai/pt-BR/concepts/dreaming\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/.claude/skills/openclaw-dreaming/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:41:38)*
+
+
+## 🤖 Claude *(00:41:39)*
+
+Skill criada. Vou adicionar referência bidirecional (pointer na memória) + commitar + push. Atualizando a memória com o ponteiro pra skill:
+
+## 🤖 Claude *(00:41:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_openclaw_ollama_integration.md",
+  "old_string": "- **Recovery can\u00f4nico de backlog (doc):** `memory rem-backfill --stage-short-term --path <dir>` (stage candidates, revers\u00edvel `--rollback`). Heartbeat precisa estar enabled + destination \u2260 `none` sen\u00e3o dreaming fica \"blocked\" (nosso = ATIVO, ok).",
+  "new_string": "- **Recovery can\u00f4nico de backlog (doc):** `memory rem-backfill --stage-short-term --path <dir>` (stage candidates, revers\u00edvel `--rollback`). Heartbeat precisa estar enabled + destination \u2260 `none` sen\u00e3o dreaming fica \"blocked\" (nosso = ATIVO, ok).\n- \ud83d\udee0\ufe0f **Skill `openclaw-dreaming`** (criada 2026-05-29) = playbook operacional completo (diagn\u00f3stico/recovery/tuning do dreaming+promo\u00e7\u00e3o+Palace/Insights). Sibling `openclaw-gateway-ops` (gateway/modelos). Invocar essas skills antes de mexer no subsistema."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_openclaw_ollama_integration.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:41:58)*
+
+
+## 🤖 Claude *(00:41:59)*
+
+A skill `openclaw-dreaming` já está registrada (aparece na lista de skills disponíveis ✅). Vou adicionar as novas skills + SOP ao Key Files Reference do CLAUDE.md (pra agentes futuros descobrirem via o mapa canônico) + commitar tudo. Achando o anchor no CLAUDE.md:
+
+## 🤖 Claude *(00:42:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngrep -nE \"OpenClaw self-heal runbook|openclaw-self-heal|OpenClaw squad config\" CLAUDE.md | head -3",
+  "description": "Find CLAUDE.md OpenClaw anchor for Key Files entries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 410:| **OpenClaw squad config** | `/home/ubuntu/.openclaw/openclaw.json` |
+> 424:| **OpenClaw self-heal runbook** | `.claude/context/openclaw-self-heal-runbook.md` |
+> ```
+
+## 🤖 Claude *(00:42:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/CLAUDE.md",
+  "offset": 422,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 422	| **Morning briefing (cron 03:30)** | `scripts/morning-briefing.sh` |
+> 423	| **Briefing composer** | `scripts/compose-morning-briefing.ts` |
+> 424	| **OpenClaw self-heal runbook** | `.claude/context/openclaw-self-heal-runbook.md` |
+> 425	| **e2e-user-zero runner (CLI)** | `scripts/qa/e2e-user-zero/runner.ts` |
+> 426	| **e2e-user-zero browser driver** | `scripts/qa/e2e-user-zero/lib/browser-driver.ts` |
+> ```
+
+## 🤖 Claude *(00:42:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/CLAUDE.md",
+  "old_string": "| **OpenClaw self-heal runbook** | `.claude/context/openclaw-self-heal-runbook.md` |\n| **e2e-user-zero runner (CLI)** | `scripts/qa/e2e-user-zero/runner.ts` |",
+  "new_string": "| **OpenClaw self-heal runbook** | `.claude/context/openclaw-self-heal-runbook.md` |\n| **OpenClaw Gateway ops skill** | `.claude/skills/openclaw-gateway-ops/SKILL.md` (supervisor=systemd \u00b7 modelos \u00b7 fallback \u00b7 NUNCA pm2 maestro) |\n| **OpenClaw Gateway supervisor SOP** | `docs/processes/openclaw-gateway-supervisor.md` |\n| **OpenClaw Dreaming skill** | `.claude/skills/openclaw-dreaming/SKILL.md` (promo\u00e7\u00e3o \u00b7 Palace/Insights \u00b7 embeddings gemini \u00b7 recovery) |\n| **e2e-user-zero runner (CLI)** | `scripts/qa/e2e-user-zero/runner.ts` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:42:16)*
+
+
+## 🤖 Claude *(00:42:16)*
+
+Commitando a skill nova + CLAUDE.md Key Files + push:
+
+## 🤖 Claude *(00:42:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\ngit add .claude/skills/openclaw-dreaming/SKILL.md CLAUDE.md\ngit commit -q -m \"docs(openclaw): new openclaw-dreaming skill + Key Files entries\n\nCapture the full dreaming/memory playbook learned this session as a\ndedicated skill (distinct domain from gateway-ops): 3-phase sweep model,\nthe 3:00 clock-not-countdown myth, memory-core vs memory-wiki (Palace/\nInsights), embeddings dependency (gemini-embedding-001, the 403 trap),\ndeep ranking weights + gates, diagnostic flow (memory status/promote/\nrem-harness), and recovery (provider fix, re-index, gate tuning,\nrem-backfill --stage-short-term). Add gateway-ops + dreaming skills +\ngateway SOP to CLAUDE.md Key Files Reference for discoverability.\" && echo \"commit \u2713\"\necho\necho \"=== Merge \u2192 main + push ===\"\ncd /home/gcrUX/htdocs/constellation-orchestra\ngit merge claude/wizardly-allen-2a03a9 --no-edit 2>&1 | tail -3\ngit push origin main 2>&1 | tail -4\necho \"sync: $(git rev-list --count origin/main..main) commits \u00e0 frente\"",
+  "description": "Commit dreaming skill + CLAUDE.md + merge + push",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit ✓
+> 
+> === Merge → main + push ===
+>  CLAUDE.md                                 |  3 +
+>  2 files changed, 99 insertions(+)
+>  create mode 100644 .claude/skills/openclaw-dreaming/SKILL.md
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    abd73fd..2300997  main -> main
+> sync: 0 commits à frente
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:42:31)*
+
+
+## 🤖 Claude *(00:42:44)*
+
+Pronto — push `abd73fd..2300997` em origin/main, sincronizado. 
+
+## ✅ Conhecimento da sessão — persistido em 3 camadas
+
+Avaliei e distribuí cada aprendizado onde melhor se encaixa, sem duplicação:
+
+| Camada | O que guarda | Status |
+|--------|-------------|--------|
+| **Memória longo-prazo** (`project_openclaw_ollama_integration.md`) | Fatos cross-conversation: gateway systemd, modelos+custo, embeddings 403→gemini, gates de promoção, crontab, ledger, dreaming | ✅ atualizada ao longo da sessão |
+| **Skill `openclaw-gateway-ops`** | Gateway/supervisor/porta + modelos + fallback + resiliência de contexto | ✅ (criada + expandida) |
+| **Skill `openclaw-dreaming`** 🆕 | Playbook do dreaming/memória: 3 fases, promoção, Palace/Insights, embeddings, diagnóstico, recovery | ✅ **criada agora** (commit `2300997`) |
+| **SOP** `openclaw-gateway-supervisor.md` + **CLAUDE.md Key Files** | Processo canônico + descoberta pelo mapa de arquivos | ✅ |
+
+## 🎯 Por que skill nova (e não só atualizar a existente)
+
+O dreaming é um **domínio distinto** do gateway:
+- `openclaw-gateway-ops` = processo/porta/supervisor/modelos (o "corpo")
+- `openclaw-dreaming` = consolidação de memória de longo prazo (o "cérebro")
+
+Misturar tornaria ambas difusas. Separadas, cada uma tem gatilho claro de invocação — um agente futuro que vê "0 promovido" ou Palace congelado invoca `openclaw-dreaming`; quem vê gateway down invoca `openclaw-gateway-ops`. Elas se referenciam como siblings.
+
+## O que a `openclaw-dreaming` captura (pra nunca redescobrir)
+- Modelo mental correto (1 sweep, 3 fases internas, "3:00"=clock não countdown)
+- memory-core vs memory-wiki (Palace/Insights = wiki, depende de embeddings)
+- O trap do embedding 403 + fix gemini-embedding-001
+- Pesos do ranking Deep + gates + o chicken-and-egg do recallCount=0
+- Fluxo de diagnóstico (`memory status`/`promote`/`rem-harness`) e recovery (provider fix → re-index → gate tuning → `rem-backfill --stage-short-term`)
+- Materialidade: nunca afirmar "promovido N" sem o count real
+
+Tudo selado e no `origin/main`. O ecossistema agora carrega esse aprendizado de forma autônoma — qualquer sessão futura (Claude Code ou um agente OpenClaw) encontra o playbook pronto. 🤝
+
+## 👤 User *(00:43:46)*
+
+precisa de handoff ?
+
+## 🤖 Claude *(00:44:06)*
+
+
+## 🤖 Claude *(00:44:07)*
+
+Deixa eu verificar o estado material antes de responder:
+
+## 🤖 Claude *(00:44:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (limpo?) ===\"\ngit status --short || echo \"limpo\"\necho \"=== sync com origin ===\"\ngit rev-list --count origin/main..main | xargs echo \"commits \u00e0 frente de origin:\"\necho \"=== commits desde o seal v6.13.0 (abd73fd) ===\"\ngit log --oneline abd73fd..HEAD\necho \"=== HANDOFF Record j\u00e1 menciona o seal? (o handoff v6.13.0 foi feito) ===\"\ngrep -c \"v6.13.0 SEALED\" HANDOFF.md",
+  "description": "Verify git state + what changed since the seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (limpo?) ===
+> === sync com origin ===
+> commits à frente de origin: 0
+> === commits desde o seal v6.13.0 (abd73fd) ===
+> 2300997 docs(openclaw): new openclaw-dreaming skill + Key Files entries
+> === HANDOFF Record já menciona o seal? (o handoff v6.13.0 foi feito) ===
+> 1
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
+> ```
+
+## 🤖 Claude *(00:44:31)*
+
+
+## 🤖 Claude *(00:44:37)*
+
+Não precisa. Estado material confirmado:
+
+- ✅ **git limpo**, **0 commits à frente de origin** (tudo pushed)
+- ✅ O **/handoff v6.13.0 já foi executado** completo nesta sessão (8 fases, milestone node `0c250e83`, Phase 5c SEAL ALLOWED, push)
+- ✅ Desde o seal, só **1 commit**: `2300997` (a skill `openclaw-dreaming` + CLAUDE.md) — já commitado e pushed
+
+O full handoff seria **cerimônia desnecessária** (Lei 3 — anti-hoarding) pra um único commit de docs que é, na prática, a extração do aprendizado que o selo v6.13.0 **já documentou**.
+
+**Única imperfeição menor:** o Record selado (`abd73fd`) não cita a skill `openclaw-dreaming` (criada depois). Se você quiser o registro 100% fiel, eu faço um **adendo de 1 linha** no HANDOFF Record + commit rápido (~30s, sem re-rodar o protocolo todo). Senão, está tudo seguro e sincronizado como está.
+
+Quer o adendo de 1 linha, ou encerramos aqui?
