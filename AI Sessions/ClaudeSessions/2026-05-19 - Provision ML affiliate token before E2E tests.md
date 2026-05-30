@@ -8272,10 +8272,6 @@ Sessão fechada material. Aguardando seu retorno em ~3h para o first run real. �
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-19 - Execute handson directory command]]

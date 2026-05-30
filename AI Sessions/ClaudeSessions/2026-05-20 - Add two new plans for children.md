@@ -8550,10 +8550,6 @@ Duas observações honestas que não escondi no relatório: (a) descobri um bug 
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-20 - 6c352002-f529-4eb5-8f8a-ad5fb941cf40]]

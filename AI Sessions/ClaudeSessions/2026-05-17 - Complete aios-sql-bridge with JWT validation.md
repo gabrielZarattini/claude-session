@@ -11747,10 +11747,6 @@ Sessão selada. Pode descansar — Memory Palace está vivo, ledger está em zer
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-16 - d2adff1b-1ea7-4a21-8dce-8865770158fc]]

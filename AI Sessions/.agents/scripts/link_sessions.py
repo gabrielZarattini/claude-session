@@ -235,6 +235,10 @@ def run_linking(note_catalog, dry_run=True):
         # Strip existing timeline block
         stripped_content = timeline_re.sub('', content).strip()
         
+        # Clean up any trailing horizontal rules (---) to prevent stacking
+        while stripped_content.endswith("---"):
+            stripped_content = stripped_content[:-3].strip()
+        
         # Build and append new timeline block
         prev_title, next_title = timeline_map.get(file_path, (None, None))
         timeline_block = ""

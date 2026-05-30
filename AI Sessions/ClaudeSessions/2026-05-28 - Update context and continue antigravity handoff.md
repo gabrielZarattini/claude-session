@@ -3061,6 +3061,8 @@ Quando voltar, me chame com "retomar" ou "continuar" e eu pego daqui.
 
 ---
 
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-28 - Plan JWT refactor and affiliate token migration]]

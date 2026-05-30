@@ -8877,10 +8877,6 @@ Adicionando entrada v6.6.8 ao sprint-priorities (newest-first).
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-19 - Document current plan before implementation]]

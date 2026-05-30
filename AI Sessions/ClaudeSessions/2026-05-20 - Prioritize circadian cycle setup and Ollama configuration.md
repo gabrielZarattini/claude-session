@@ -10180,10 +10180,6 @@ Um lembrete honesto: tudo foi deployado e verificado *materialmente* (migration 
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-20 - Normalize circadian cycle dream panel synchronization]]

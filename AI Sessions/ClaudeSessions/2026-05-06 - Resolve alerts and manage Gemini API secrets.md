@@ -3058,10 +3058,6 @@ scratch/ está vazio (false positive do check). Atualizo sprint-priorities:
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-06 - Fix layout issues and synchronize mesh node data]]

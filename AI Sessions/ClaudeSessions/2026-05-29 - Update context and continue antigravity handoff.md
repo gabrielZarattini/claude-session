@@ -10285,6 +10285,8 @@ Hard-refresh em login.mcorch.com pra ver o menu novo e o painel de Produtos. Qua
 
 ---
 
+---
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-29 - Fix API key leak and reconfigure model defaults]]

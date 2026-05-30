@@ -9,10 +9,6 @@ Estou no diretório . Identifique um arquivo de configuração ou script relacio
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-20 - Add two new plans for children]]

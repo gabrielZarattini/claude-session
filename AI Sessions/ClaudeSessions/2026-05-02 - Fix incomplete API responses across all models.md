@@ -15230,10 +15230,6 @@ Agora o Knowledge Mesh milestone e o push em paralelo.
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-02 - Fix TTS bridge and resolve critical production issues]]

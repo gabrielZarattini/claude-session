@@ -10908,10 +10908,6 @@ Audit pegou os 2 arquivos `memory/2026-05-24-*.md` como claims `file_exists` por
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-25 - Fix COMMIT_RE false positive on decimal strings]]

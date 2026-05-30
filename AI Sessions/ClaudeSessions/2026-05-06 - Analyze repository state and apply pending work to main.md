@@ -6014,10 +6014,6 @@ Milestone embedado ✅. Phase 6 — push.
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-05 - agent-ab52cb481cf529706]]

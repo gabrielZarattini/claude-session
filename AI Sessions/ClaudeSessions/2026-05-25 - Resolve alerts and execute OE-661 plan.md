@@ -6321,10 +6321,6 @@ COMMIT_RE casa pura-decimal 14 dígitos como hash. False positive em linha 37 (t
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-25 - Install agent-browser for E2E testing]]

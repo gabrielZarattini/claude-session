@@ -7378,10 +7378,6 @@ Session completamente selada. Próxima sessão arranca direto com `deploy_all.sh
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-02 - Fix incomplete API responses across all models]]

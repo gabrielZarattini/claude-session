@@ -14012,10 +14012,6 @@ Na próxima sessão, comece pela **documentação oficial da Higgsfield** (`plat
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-14 - Build content v2 AI canvas platform]]

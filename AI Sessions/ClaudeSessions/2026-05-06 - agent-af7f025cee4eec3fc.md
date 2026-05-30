@@ -493,10 +493,6 @@ bbf0e10 chore(sprint): update sprint-priorities — Settings Sovereignty v5.5.5 
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-06 - agent-af1aaa5672d76fe49]]

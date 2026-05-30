@@ -4505,10 +4505,6 @@ Scratch vazio (só o diretório). MCP gitnexus e github estão documentados no C
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-04 - Delete conversation with confirmation]]

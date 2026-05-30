@@ -47,10 +47,6 @@ Avalie o **Módulo de Conteúdo v2** e o sistema de **mcoCoins** contra os 5 Pil
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-15 - agent-aab1b1494987a7c6e]]

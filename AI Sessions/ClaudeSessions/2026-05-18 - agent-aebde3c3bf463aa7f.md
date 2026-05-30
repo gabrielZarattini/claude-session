@@ -3797,10 +3797,6 @@ async function resolveAllManagedDreamingCronStatuses(context: {...}): Promise<Re
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-18 - agent-ae8a83dca2c283076]]
