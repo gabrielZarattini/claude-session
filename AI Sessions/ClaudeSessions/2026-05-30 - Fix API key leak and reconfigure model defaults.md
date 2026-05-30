@@ -14322,5 +14322,5 @@ Quer o adendo de 1 linha, ou encerramos aqui?
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-30 - Configure canvas nodes and validate enterprise deploy]]
-> * **Próxima Sessão**: [[2026-05-30 - Fix tenant isolation in edge functions]]
+> * **Próxima Sessão**: [[2026-05-30 - Fix cross-tenant JWT impersonation vulnerability]]
 %% --- TIMELINE END --- %%
