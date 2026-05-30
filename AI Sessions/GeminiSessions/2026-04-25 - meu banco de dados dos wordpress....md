@@ -6846,10 +6846,6 @@ continue
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-25 - USERREQUEST]]

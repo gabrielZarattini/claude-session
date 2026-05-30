@@ -10657,12 +10657,6 @@ Re-index voando (~10s cada — incremental): artisan, scientist, marketing-growt
 
 ---
 
----
-
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]

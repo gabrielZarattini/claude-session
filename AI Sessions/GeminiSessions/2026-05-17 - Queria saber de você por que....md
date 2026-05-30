@@ -1817,10 +1817,6 @@ Queria saber de você por que você acha que o meu agent do openclaw no telegram
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-15 - Preciso atualizar meu n8n]]

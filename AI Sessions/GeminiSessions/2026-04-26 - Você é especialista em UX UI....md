@@ -158,10 +158,6 @@ Relatório de auditoria e diagnóstico concluído com sucesso. Identifiquei um e
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-25 - meu banco de dados dos wordpress...]]

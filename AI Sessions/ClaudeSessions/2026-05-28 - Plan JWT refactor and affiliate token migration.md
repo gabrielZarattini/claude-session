@@ -9197,12 +9197,6 @@ fd21a31 docs(claude): register _shared/auth + _shared/user-keys + 2 SOPs
 
 ---
 
----
-
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-28 - 9bb9165f-6ffc-42a6-a6e7-d5311c647700]]

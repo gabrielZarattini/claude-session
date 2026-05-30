@@ -8683,12 +8683,6 @@ Phase 8 — relatório final.
 
 ---
 
----
-
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-26 - Fix OpenRouter multimodal error and token limits]]

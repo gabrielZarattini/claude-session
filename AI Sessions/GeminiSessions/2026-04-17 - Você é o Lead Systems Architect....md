@@ -1499,10 +1499,6 @@ Você precisa atualizar as configurações de autenticação no seu painel do Su
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-17 - USERREQUEST]]

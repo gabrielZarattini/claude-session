@@ -1555,10 +1555,6 @@ git add nginx/www.mcorch.com.conf miv/Landing.html
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-17 - Queria saber de você por que...]]

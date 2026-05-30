@@ -738,10 +738,6 @@ y
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Próxima Sessão**: [[2026-04-17 - Você é o Lead Systems Architect...]]

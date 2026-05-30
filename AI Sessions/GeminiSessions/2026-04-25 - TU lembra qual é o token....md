@@ -345,10 +345,6 @@ TU lembra qual é o token do openrouter uqe te mandei em alguma conversa para o 
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-23 - USERREQUEST]]

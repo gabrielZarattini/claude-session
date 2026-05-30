@@ -3472,10 +3472,6 @@ A build foi executada (sem erros), e as alterações já estão no repositório.
 
 ---
 
----
-
----
-
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-22 - USERREQUEST]]
