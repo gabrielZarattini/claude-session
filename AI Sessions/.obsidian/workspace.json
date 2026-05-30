@@ -173,9 +173,12 @@
       "daily-notes:Abrir a nota de hoje": false,
       "templates:Inserir modelo": false,
       "command-palette:Abrir paleta de comandos": false,
-      "bases:Criar nova base": false
+      "bases:Criar nova base": false,
+      "github-sync:Sync with Remote": false
     }
   },
   "active": "a3852472036a6826",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "skills-lock.json"
+  ]
 }
