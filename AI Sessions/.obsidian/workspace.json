@@ -172,7 +172,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -188,6 +189,7 @@
   },
   "active": "bc6a42ef35de2f2b",
   "lastOpenFiles": [
+    "ClaudeSessions/2026-05-31 - Fix tenant isolation in edge functions.md",
     "GeminiSessions/2026-05-31 - handson.md",
     "ClaudeSessions/2026-05-31 - Seal meta-api BoK suite and test robustness.md",
     "ClaudeSessions/2026-05-31 - Fix cross-tenant JWT impersonation vulnerability.md",
