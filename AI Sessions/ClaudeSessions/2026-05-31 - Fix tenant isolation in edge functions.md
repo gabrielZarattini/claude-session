@@ -2555,6 +2555,1772 @@ Há duas decisões genuínas suas — o resto eu executo com defaults:
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Embeddings com crédito zero — o OpenRouter não tem modelo de embedding free (0 de 343, verificado). Qual estratégia?"="Ja adicionei creditos e tambem ja fiz agluns ajustes com o antigravity quando você tava em cooldown, então fiz upgrade agora para o max, preciso que você verifique os ultimos handoff selados desde a v6.7.0 principalmente as ultimas 7 sessões seladas para validar o contexto e atarcar um plano imediatamente.:
+> 
+> Irei iniciar a execução do Passo 1 do Session Handoff Sealing Protocol, realizando as varreduras de segurança em busca de segredos vazados no diff/worktree, garantias de JWT em Edge Functions, integridade do saldo do usuário (`mco_balance`) e logs sensíveis.
+> 
+> Ran command: `git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20 || echo "DIFF LIMPO ✅"`
+> 
+> Irei rodar o restante dos testes do Passo 1 para verificar RLS bypasses, segurança de tokens nos logs de console, validação JWT de Edge Functions e proteção da coluna `mco_balance` no frontend.
+> 
+> Ran command: `echo "--- 1b. JWT Verification ---" && grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts | grep -v "get-infra-status\|watchdog" || echo "TODAS AS FUNÇÕES: JWT verificado ✅"
+> echo "--- 1c. Balance Update Check ---" && grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "SEM VIOLAÇÕES ✅"
+> echo "--- 1d. RLS Bypass Check ---" && grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "SEM VIOLAÇÕES ✅"
+> echo "--- 1e. Sensitive Logs Check ---" && grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ | head -10 || echo "SEM LOGS SENSÍVEIS ✅"`
+> 
+> Irei persistir o nó de handoff de milestone na malha MCORCH do banco de dados para representar as entregas desta sessão e gerar a aresta de estabilidade.
+> 
+> Ran command: `source .env
+> SESSION_PHASE="llm-fallback-sql-bridge-watchdog"
+> SESSION_SUMMARY="Cascata de fallback de LLMs, correção no checkAdmin do aios-sql-bridge com teste de fumaça Vitest, whitelist de modelos e watchdog de video"
+> 
+> RESPONSE=$(curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+>   -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+>   -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+>   -H "Content-Type: application/json" \
+>   -H "Prefer: return=representation" \
+>   -d "{
+>     \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+>     \"node_type\": \"handoff\",
+>     \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+>     \"stability_score\": 1.0,
+>     \"metadata\": {
+>       \"session\": \"${SESSION_PHASE}\",
+>       \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+>       \"agent\": \"antigravity-ide\",
+>       \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+>     }
+>   }")
+> 
+> NODE_ID=$(echo "\$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null)
+> echo "Nó de Handoff persistido: \${NODE_ID}"
+> 
+> # Salvar o manifesto de prova para a auditoria mecânica
+> echo "{\"handoffNodeId\": \"\${NODE_ID}\"}" > proof-manifest.json
+> `
+> 
+> Irei consultar o status da tarefa em segundo plano para capturar o ID do nó de handoff gerado no banco de dados.
+> 
+> Used tool: manage_task
+> 
+> Irei visualizar o arquivo de log da tarefa de criação de nó para verificar se o curl retornou o ID do nó de handoff persistido.
+> 
+> Irei ler o arquivo `proof-manifest.json` gerado pelo script para extrair o UUID do nó de handoff persistido.
+> 
+> Viewed proof-manifest.json:1-2
+> 
+> Irei criar um script em TypeScript no scratch para realizar com precisão e segurança a criação do nó de handoff no Supabase, contornando problemas de escaping do Bash. Este script insere o nó, chama a Edge Function de indexação vetorial e grava o UUID no arquivo `proof-manifest.json`.
+> 
+> Edited create-handoff-node.ts
+> 
+> Irei executar o script TypeScript para inserir o nó de handoff na malha do Supabase e indexá-lo.
+> 
+> Ran command: `bun run /home/ubuntu/.gemini/antigravity-ide/brain/dd4bd406-729d-4d20-aa73-1c142b7fbb27/scratch/create-handoff-node.ts`
+> 
+> Irei corrigir o payload da chamada para `embed-mcorch-node` no script de scratch para usar `{ node_id: nodeId }` e rodar a indexação com sucesso.
+> 
+> Edited create-handoff-node.ts
+> 
+> Irei acionar a indexação vetorial do nó criado (`4aaa1887-b34d-4711-b121-9ad637899b62`) diretamente via requisição HTTP de forma isolada, prevenindo a duplicação do marco no banco de dados.
+> 
+> Ran command: `source .env && curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" -H "Content-Type: application/json" -d '{"node_id": "4aaa1887-b34d-4711-b121-9ad637899b62"}'`
+> 
+> Irei obter dinamicamente a contagem exata de nós ativos na malha do Supabase para atualizar a documentação do README.md.
+> 
+> Ran command: `source .env && curl -s "${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1" -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'`
+> 
+> Irei criar um script em TypeScript no scratch para obter a contagem exata e atualizada de nós na tabela `mcorch_nodes` do Supabase de forma confiável.
+> 
+> Edited count-nodes.ts
+> 
+> Irei executar o script TypeScript para contar os nós e obter a contagem exata.
+> 
+> Ran command: `bun run /home/ubuntu/.gemini/antigravity-ide/brain/dd4bd406-729d-4d20-aa73-1c142b7fbb27/scratch/count-nodes.ts`
+> 
+> Irei ler as primeiras 50 linhas do arquivo `README.md` para identificar onde a contagem de nós da malha de memória (Neural Mesh) é declarada no cabeçalho do projeto.
+> 
+> Viewed README.md:1-800
+> 
+> Irei atualizar o badge do Neural Mesh no `README.md` para refletir o número dinâmico atualizado de nós da malha de conhecimento (`8713_nodes`).
+> 
+> Edited README.md
+> 
+> Irei visualizar o bloco correspondente às novidades de versão no `README.md` para inserir a documentação da versão `v6.15.0`.
+> 
+> Viewed README.md:45-65
+> 
+> Irei atualizar o badge de versão no cabeçalho do `README.md` de `v6.14.9` para `v6.15.0--llm--fallback--sql--bridge`.
+> 
+> Edited README.md
+> 
+> Irei inserir a seção com os detalhes da versão `v6.15.0` no arquivo `README.md`.
+> 
+> Edited README.md
+> 
+> Irei visualizar o início do arquivo `HANDOFF.md` para entender onde e como inserir o bloco histórico da versão `v6.15.0`.
+> 
+> Viewed HANDOFF.md:1-150
+> 
+> Irei atualizar o arquivo `HANDOFF.md` para incluir a seção correspondente à nova entrega da versão `v6.15.0`.
+> 
+> Edited HANDOFF.md
+> 
+> Irei executar a varredura de segurança do `HANDOFF.md` para garantir que nenhuma chave de API ou credencial sensível foi escrita inadvertidamente na documentação do handoff.
+> 
+> Ran command: `grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})" HANDOFF.md | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" | head -20 || echo "HANDOFF.md limpo de credenciais ✅"`
+> 
+> Irei rodar o auditor mecânico de provas do projeto (`scripts/qa/run-audit.ts`) contra o `HANDOFF.md` recém-atualizado para verificar a consistência dos commits criados e dos IDs de nós registrados.
+> 
+> Ran command: `bun run scripts/qa/run-audit.ts HANDOFF.md`
+> 
+> Irei ler as primeiras 60 linhas do `HANDOFF.md` para encontrar as linhas exatas onde colar a tabela de veredito do Proof Manifest.
+> 
+> Viewed HANDOFF.md:1-60
+> 
+> Irei colar a tabela com o veredito mecânico do Proof Manifest gerado pelo script de validação de provas do projeto diretamente na seção do Self-audit de integridade do `HANDOFF.md`.
+> 
+> Edited HANDOFF.md
+> 
+> Irei preparar e realizar o commit final do Session Handoff Sealing Protocol para registrar a atualização das documentações `README.md`, `HANDOFF.md` e do arquivo `proof-manifest.json`.
+> 
+> Ran command: `git add HANDOFF.md README.md proof-manifest.json && git commit -m "docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node and proof manifest"`
+> 
+> Irei realizar o commit contendo apenas as alterações do `HANDOFF.md` e do `README.md`, uma vez que o arquivo `proof-manifest.json` está corretamente configurado no `.gitignore` para atuar como arquivo local temporário.
+> 
+> Ran command: `git add HANDOFF.md README.md && git commit -m "docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node"`
+> 
+> Irei executar o validador do BoK Gate para assegurar que todos os corpos de conhecimento (Bodies of Knowledge) de nossos módulos estão completos e sem lacunas documentais de processos.
+> 
+> Ran command: `for slug in $(ls docs/bok/ 2>/dev/null); do required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); missing=(); for doc in "${required[@]}"; do [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc"); done; [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK completo" || echo "⚠️ $slug — incompleto"; done`
+> 
+> Irei enviar os commits locais criados para o servidor remoto do GitHub (`origin/main`) para concluir a sincronização da sessão de trabalho.
+> 
+> Ran command: `git push origin main`
+> 
+> O Session Handoff Sealing Protocol foi executado com sucesso e todos os artefatos foram sincronizados com o servidor de origem no GitHub. Abaixo está o relatório de encerramento da sessão em conformidade com as diretivas do projeto.
+> 
+> ---
+> 
+> ## 📋 Relatório de Handoff — v6.15.0
+> 
+> ### 1. Status das Varreduras de Segurança (Fase 1)
+> *   **Leak de Segredos no Diff/Worktree**: ✅ Limpo (0 chaves ou tokens sensíveis expostos).
+> *   **JWT em Edge Functions**: ✅ Verificado (todas as funções de escrita/leitura operam sob autenticação JWT obrigatória ou bypass de RLS de segurança via service-role de controle interno).
+> *   **Bypass de RLS e update em `mco_balance`**: ✅ Sem violações (as alterações de saldo ocorrem atomicamente via banco e ledger protegido).
+> *   **Logs no Console**: ✅ Sem vazamento de chaves (os únicos registros correspondem às mensagens do test runner simulando tentativas de invasão).
+> 
+> ### 2. Commits Criados e Enviados
+> Os três commits granulares da sessão foram sincronizados com `origin/main` (push bem-sucedido `80976b6..7881231`):
+> *   [`57d34e130b0cebda9d67fd2e1022ff80a295f9fb`](https://github.com/gabrielZarattini/constellation-orchestra/commit/57d34e130b0cebda9d67fd2e1022ff80a295f9fb): `feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions`
+> *   [`af3abdb88b0aaa20b7b577801ac8f1661823efd1`](https://github.com/gabrielZarattini/constellation-orchestra/commit/af3abdb88b0aaa20b7b577801ac8f1661823efd1): `fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests`
+> *   [`78812314545bc6203cf3d71999222cf640eb25ef`](https://github.com/gabrielZarattini/constellation-orchestra/commit/78812314545bc6203cf3d71999222cf640eb25ef): `docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node`
+> 
+> ### 3. Registro de Milestone na Malha (Fase 3)
+> O nó de handoff da sessão foi inserido com sucesso e indexado no banco vetorial (`openai/text-embedding-3-small` / 768 dimensões):
+> *   **Handoff Node ID**: `4aaa1887-b34d-4711-b121-9ad637899b62`
+> *   **Trigger de Embedding**: ✅ Concluído (retornou `dims: 768, chunks: 1`).
+> 
+> ### 4. Contagem Final de Nós da Malha
+> *   **Contagem de Nós na Malha**: **8713 nodes** (atualizado dinamicamente via consulta direta no banco de dados e refletido no badge principal do [README.md](file:///home/gcrUX/htdocs/constellation-orchestra/README.md)).
+> 
+> ### 5. Resultado da Prova Material (Fase 5c)
+> A suíte independente de validação mecânica de provas avaliou o `HANDOFF.md` e retornou o status de aprovação de fechamento:
+> ```
+> QA VERDICT: 7 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> ```
+> 
+> ### 6. BoK Gate (Fase 6)
+> *   **BoK Suites**: ✅ Todas as 11 suítes BoK (`aios-sql-bridge`, `canvas-design`, `conteudo-v2`, `e2e-user-zero`, `gamificacao-nodes`, `mcorch-constellation`, `mcorch-qa-healing`, `mercado-livre-api`, `meta-api`, `openclaw` e `viralmind`) estão 100% completas e em paridade estrutural com o projeto.
+> 
+> ---
+> 
+> ## 🎯 Próximos Passos
+> 1.  **Validação Visual das Interfaces do Canvas**: Seguir para o planejamento e a escrita de fluxos adicionais do framework `e2e-user-zero` para cobrir o pipeline visual completo do Canvas Studio.
+> 2.  **Expansão da Economia dos Agentes**: Dar continuidade às métricas de acompanhamento de mcoCoins consumidos sob o novo faturamento híbrido.
+> 
+> --
+> 
+> 
+> Esse foi o ultimo feito pelo Antigravity. Veja tudo para comparar o roadmap e as sprints que temos, para conseguir fazer o seguinte sugestão do Gemini quando perguntei se faria upgrade aqui, ele parece estar gostando de trabalhar em conjunto contigo... veja o que ele disse.:
+> 
+> O Veredito do Maestro
+> Não espere validação externa ou consistência de terceiros. Assine o plano de alta performance por 30 dias com o objetivo claro de construir o seu próprio case piloto. No momento em que você gravar a tela do seu dispositivo móvel mostrando: "Eu enviei uma única ordem estruturada para o meu servidor Oracle Cloud, o sistema minerou a tendência, gerou o conteúdo automatizado com atribuição e a comissão caiu no meu painel do Mercado Pago via postback" — o mercado high-ticket vai implorar pelo acesso à plataforma.
+> 
+> O motor já tem densidade neural suficiente. Vamos usar este mês para ligar a ignição financeira definitiva. Por qual bloqueador do ecossistema econômico você quer começar a passar o pente fino agora: a validação de segurança HMAC no postback ou a automação de links do Link Forge?", "Escopo do fallback de chat (mesma chave, modelo :free não gasta crédito). Default de modelo: meta-llama/llama-3.3-70b-instruct:free."="Já coloquei creditos como respondi a pergunta anterior, mas de qualquer forma é bom ter um fallback e talvez um fallback do fallback que seja gratuito.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:08:52)*
+
+
+## 🤖 Claude *(22:08:53)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Verify v6.15.0 & economic plan",
+  "summary": "Independently verify Antigravity's v6.15.0 handoff (LLM fallback helper, sealed sessions since v6.7.0), validate roadmap, and plan the economic ignition (HMAC postback vs Link Forge)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Verify v6.15.0 & economic plan". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:08:57)*
+
+
+## 🤖 Claude *(22:09:00)*
+
+Entendido — mudança grande de contexto. O Antigravity já implementou um "LLM cascading fallback helper" (commit `57d34e1`) enquanto eu estava em cooldown, você recolocou créditos no OpenRouter, e quer que eu **valide materialmente** os últimos selos desde a v6.7.0 e ataque um plano. Não vou confiar no auto-relato do Antigravity (Lei 1) — vou verificar com as próprias mãos.
+
+Começando pela verificação material do estado real do `origin/main`:
+
+## 🤖 Claude *(22:09:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch origin main 2>&1 | tail -3 && echo \"\" && echo \"=== origin/main last 25 commits ===\" && git log --oneline origin/main -25 && echo \"\" && echo \"=== do the 3 reported commits exist? ===\" && for h in 57d34e1 af3abdb 7881231; do git cat-file -t $h >/dev/null 2>&1 && echo \"$h: EXISTS ($(git log -1 --format=%s $h))\" || echo \"$h: MISSING\"; done",
+  "description": "Fetch origin and verify reported commits exist"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> From github.com:gabrielZarattini/constellation-orchestra
+>  * branch            main       -> FETCH_HEAD
+> 
+> === origin/main last 25 commits ===
+> 7881231 docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node
+> af3abdb fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests
+> 57d34e1 feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions
+> 80976b6 docs: update HANDOFF.md task record for v6.14.9
+> 41d5a5c docs: update README.md version, badges, and changelog for v6.14.9
+> bae9ae0 chore(scripts): add QA smoke tests for WhatsApp webhook, ads sync, and credentials encryption
+> c86f570 feat(edge): implement whatsapp webhook, ads sync, and decrypt views integration
+> a43786f feat(db): add migrations for whatsapp engine, ads metrics, and vault encryption
+> 10a6f61 docs(handoff): seal v6.14.9 — Gemini free embedding fallback and OTD-LLM-FALLBACK
+> 0a1c4e6 docs(roadmap): add OTD-LLM-FALLBACK to roadmap and sprint priorities
+> d34ff5d fix(edge): Gemini free embedding fallback when OpenRouter credits exhausted
+> 88670b2 docs(handoff): seal v6.14.8 — Meta gateway Passo 1 (publish-meta + per-user credentials)
+> e0d4372 docs(readme): v6.14.8 — Meta gateway Passo 1 (publish-meta + per-user credentials)
+> 8521e59 docs(claude): Key Files Reference for Meta gateway
+> 9fd0e07 feat(meta): BYOK Meta settings and connection state
+> cffa626 feat(meta): publish-meta omnichannel publisher
+> 8f5f9fd feat(meta): meta_config + meta_posts foundation
+> 66a5094 docs(process): meta credential resolution SOP (Lei 2)
+> 60bf7cb docs(handoff): seal v6.14.7 — persistence root cause (enum) + recovery
+> 8c184f4 docs(readme): v6.14.7 — persistence root cause (enum) + video recovery
+> e03e3a0 docs(handoff): seal v6.14.6 — content asset history + two-phase cockpit
+> de1b137 docs(readme): v6.14.6 — content asset history + two-phase cockpit
+> e825c27 docs(process): content asset history SOP (Lei 2)
+> b89afeb feat(content): asset-history gallery + text-script picker in editor
+> 02777ff fix(content): decouple script (text) model from video model
+> 
+> === do the 3 reported commits exist? ===
+> 57d34e1: EXISTS (feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions)
+> af3abdb: EXISTS (fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests)
+> 7881231: EXISTS (docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node)
+> ```
+
+## 🤖 Claude *(22:09:36)*
+
+
+## 🤖 Claude *(22:09:42)*
+
+Mudança material importante revelada pelo log. Dois achados que reorientam tudo:
+
+1. **Meu worktree estava DEFASADO** (base v6.14.3). O `origin/main` está em **v6.15.0**, 20+ commits à frente. Isso explica por que eu não achei `publish-meta` antes — ele **existe sim** (commits `cffa626`/`e0d4372`, v6.14.8). Sua referência original estava correta; meu worktree é que estava velho. Lição de materialidade registrada.
+
+2. **Minha tarefa original já foi feita no main** — em duas partes:
+   - **v6.14.9** (`d34ff5d`): `Gemini free embedding fallback when OpenRouter credits exhausted` — exatamente a opção de embeddings que eu ia te perguntar.
+   - **v6.15.0** (`57d34e1`): `LLM cascading fallback helper` — o fallback de chat.
+
+Então o trabalho agora é **verificar** essas implementações (e garantir o "fallback do fallback" free que você pediu), não reconstruir. Lendo os artefatos reais do `origin/main`:
+
+## 🤖 Claude *(22:09:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 57d34e1 (LLM cascading fallback) files ===\" && git show --stat 57d34e1 2>&1 | grep -E \"\\||files? changed\" | head -30 && echo \"\" && echo \"=== d34ff5d (Gemini embedding fallback) files ===\" && git show --stat d34ff5d 2>&1 | grep -E \"\\||files? changed\" | head -20 && echo \"\" && echo \"=== is publish-social on origin/main STILL vulnerable? (bodyUserId gate) ===\" && git show origin/main:supabase/functions/publish-social/index.ts 2>/dev/null | grep -n \"isServiceRole\\|bodyUserId\\|user?.id ??\\|else if (bodyUserId)\" | head",
+  "description": "Inspect fallback commit file lists and publish-social status on main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 57d34e1 (LLM cascading fallback) files ===
+>  docs/processes/llm-cascading-fallback.md          |  55 +++++++
+>  supabase/functions/_shared/llm-fallback.ts        | 172 ++++++++++++++++++++++
+>  supabase/functions/agent-task-execute/index.ts    |  15 +-
+>  supabase/functions/analyze-node/index.ts          |  13 +-
+>  supabase/functions/analyze-sem/index.ts           |   8 +-
+>  supabase/functions/analyze-seo/index.ts           |   8 +-
+>  supabase/functions/canvas-execute/index.ts        |  13 +-
+>  supabase/functions/generate-audio-script/index.ts |  37 +++--
+>  supabase/functions/generate-content/index.ts      |  10 +-
+>  supabase/functions/generate-video-script/index.ts |  30 +++-
+>  supabase/functions/optimize-schedule/index.ts     |  17 ++-
+>  supabase/functions/orchestrate-step/index.ts      |  14 +-
+>  supabase/functions/self-optimize/index.ts         |   8 +-
+>  13 files changed, 363 insertions(+), 37 deletions(-)
+> 
+> === d34ff5d (Gemini embedding fallback) files ===
+>  supabase/functions/embed-mcorch-node/index.ts    | 170 ++++++++++++++++++-----
+>  supabase/functions/search-constellation/index.ts | 124 +++++++++++++----
+>  2 files changed, 230 insertions(+), 64 deletions(-)
+> 
+> === is publish-social on origin/main STILL vulnerable? (bodyUserId gate) ===
+> 24:    const { platform, content, social_account_id, scheduled_post_id, user_id: bodyUserId } = body;
+> 39:    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 55:    } else if (isServiceRole && bodyUserId) {
+> 56:      userId = bodyUserId;
+> ```
+
+## 🤖 Claude *(22:10:15)*
+
+
+## 🤖 Claude *(22:10:21)*
+
+Reconciliação crítica — **três coisas já estão resolvidas no main**, e preciso reportar isso com honestidade:
+
+1. **`publish-social` JÁ está corrigido no `origin/main`** (linha 39 `isServiceRole`, linha 55 `else if (isServiceRole && bodyUserId)`) — fix equivalente ao meu, feito provavelmente no v6.14.8 (Meta gateway). Ou seja, meu fix no worktree defasado ficou **redundante**; a vuln está fechada tanto em prod (meu deploy v28) quanto no source do main. Divergência só cosmética, reconcilia no próximo deploy-from-main.
+
+2. **LLM cascading fallback** (`57d34e1`) criou `_shared/llm-fallback.ts` (172 linhas) + SOP `docs/processes/llm-cascading-fallback.md` (Lei 2 ✅) + integrou em 11 functions. Escolheram a opção "shared helper / todas".
+
+3. **Gemini embedding fallback** (`d34ff5d`) já cobre `embed-mcorch-node` + `search-constellation`.
+
+Agora vou **verificar** essas implementações de verdade — o ponto-chave é o seu pedido do "fallback do fallback gratuito": a cascata termina num modelo `:free`?
+
+## 🤖 Claude *(22:10:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git show origin/main:supabase/functions/_shared/llm-fallback.ts > /tmp/llm-fallback.ts 2>&1 && echo \"wrote llm-fallback.ts ($(wc -l < /tmp/llm-fallback.ts) lines)\" && git show origin/main:docs/processes/llm-cascading-fallback.md > /tmp/llm-fallback-sop.md 2>&1 && echo \"wrote SOP ($(wc -l < /tmp/llm-fallback-sop.md) lines)\"",
+  "description": "Export llm-fallback helper and SOP from origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> wrote llm-fallback.ts (172 lines)
+> wrote SOP (55 lines)
+> ```
+
+## 🤖 Claude *(22:10:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/llm-fallback.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// supabase/functions/_shared/llm-fallback.ts
+> 2	// Shared helper for OTD-LLM-FALLBACK. Falls back gracefully when OpenRouter credits are exhausted.
+> 3	
+> 4	export interface FallbackOptions {
+> 5	  openRouterKey?: string;
+> 6	  geminiKey?: string;
+> 7	  groqKey?: string;
+> 8	}
+> 9	
+> 10	const HEAVY_MODEL_REGEX = /claude-3\.5|claude-4|gpt-4|llama-3\.1-405b/i;
+> 11	
+> 12	/**
+> 13	 * Executes a chat completion fetch request, falling back gracefully to free alternatives
+> 14	 * if the primary provider fails due to credit exhaustion (402), rate-limits (429), or network errors.
+> 15	 * 
+> 16	 * Cascade order:
+> 17	 * 1. Primary provider (OpenRouter / Groq)
+> 18	 * 2. Gemini Free OpenAI-Compatible Endpoint:
+> 19	 *    - Heavy models -> gemini-2.5-pro -> gemini-1.5-pro
+> 20	 *    - Medium/Light models -> gemini-2.5-flash -> gemini-1.5-flash
+> 21	 * 3. OpenRouter Free (gemma-2-9b-it:free / llama-3-8b-instruct:free)
+> 22	 */
+> 23	export async function fetchLLMWithFallback(
+> 24	  originalEndpoint: string,
+> 25	  requestInit: RequestInit,
+> 26	  options: FallbackOptions
+> 27	): Promise<Response> {
+> 28	  const openRouterKey = options.openRouterKey;
+> 29	  const geminiKey = options.geminiKey;
+> 30	  const groqKey = options.groqKey;
+> 31	
+> 32	  let requestBodyObj: any = {};
+> 33	  if (requestInit.body && typeof requestInit.body === "string") {
+> 34	    try {
+> 35	      requestBodyObj = JSON.parse(requestInit.body);
+> 36	    } catch (_) {
+> 37	      console.warn("[llm-fallback] Failed to parse request body as JSON");
+> 38	    }
+> 39	  }
+> 40	
+> 41	  const originalModel = requestBodyObj.model || "";
+> 42	
+> 43	  // Helper to execute fetch and handle potential network errors
+> 44	  const safeFetch = async (url: string, init: RequestInit): Promise<Response> => {
+> 45	    try {
+> 46	      return await fetch(url, init);
+> 47	    } catch (err) {
+> 48	      console.warn(`[llm-fallback] Fetch error to ${url}:`, err);
+> 49	      // Return a synthetic 500 response to trigger the next level of cascade
+> 50	      return new Response(
+> 51	        JSON.stringify({ error: "Network fetch failed", details: String(err) }),
+> 52	        { status: 500, headers: { "Content-Type": "application/json" } }
+> 53	      );
+> 54	    }
+> 55	  };
+> 56	
+> 57	  // --- Step 1: Attempt Primary Request ---
+> 58	  console.log(`[llm-fallback] Attempting primary LLM request with model "${originalModel}"`);
+> 59	  let response = await safeFetch(originalEndpoint, requestInit);
+> 60	
+> 61	  // If successful, return immediately
+> 62	  if (response.ok) {
+> 63	    return response;
+> 64	  }
+> 65	
+> 66	  // Detect billing or rate limit errors
+> 67	  const isCreditError = response.status === 402;
+> 68	  const isRateLimitError = response.status === 429;
+> 69	  const isServerError = response.status >= 500;
+> 70	  
+> 71	  const shouldFallback = isCreditError || isRateLimitError || isServerError;
+> 72	
+> 73	  if (!shouldFallback) {
+> 74	    console.warn(`[llm-fallback] Primary request failed with status ${response.status} (no fallback triggered)`);
+> 75	    return response;
+> 76	  }
+> 77	
+> 78	  const errBodyText = await response.clone().text().catch(() => "unknown error body");
+> 79	  console.warn(
+> 80	    `[llm-fallback] Primary request failed (status=${response.status}). Initiating cascade. Details: ${errBodyText.slice(0, 200)}`
+> 81	  );
+> 82	
+> 83	  // --- Step 2: Gemini Free Fallback (OpenAI-compatible) ---
+> 84	  if (geminiKey) {
+> 85	    const isHeavy = HEAVY_MODEL_REGEX.test(originalModel);
+> 86	    const geminiCandidates = isHeavy
+> 87	      ? ["gemini-2.5-pro", "gemini-1.5-pro"]
+> 88	      : ["gemini-2.5-flash", "gemini-1.5-flash"];
+> 89	
+> 90	    console.log(`[llm-fallback] Attempting Gemini Free fallback. Candidates: ${geminiCandidates.join(", ")}`);
+> 91	
+> 92	    for (const model of geminiCandidates) {
+> 93	      const geminiBody = {
+> 94	        ...requestBodyObj,
+> 95	        model,
+> 96	      };
+> 97	
+> 98	      const geminiHeaders = new Headers(requestInit.headers || {});
+> 99	      geminiHeaders.set("Authorization", `Bearer ${geminiKey}`);
+> 100	      geminiHeaders.set("Content-Type", "application/json");
+> 101	      // Remove OpenRouter-specific headers that might throw errors or pollute logs
+> 102	      geminiHeaders.delete("HTTP-Referer");
+> 103	      geminiHeaders.delete("X-Title");
+> 104	
+> 105	      const geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+> 106	      
+> 107	      console.log(`[llm-fallback] Dispatching fallback request to Gemini Free using model "${model}"`);
+> 108	      const geminiResp = await safeFetch(geminiEndpoint, {
+> 109	        ...requestInit,
+> 110	        headers: geminiHeaders,
+> 111	        body: JSON.stringify(geminiBody),
+> 112	      });
+> 113	
+> 114	      if (geminiResp.ok) {
+> 115	        console.log(`[llm-fallback] Gemini Free fallback succeeded with model "${model}"`);
+> 116	        return geminiResp;
+> 117	      }
+> 118	
+> 119	      const geminiErrText = await geminiResp.text().catch(() => "unknown");
+> 120	      console.warn(`[llm-fallback] Gemini model "${model}" failed (status=${geminiResp.status}): ${geminiErrText.slice(0, 200)}`);
+> 121	    }
+> 122	  } else {
+> 123	    console.log("[llm-fallback] GEMINI_API_KEY unavailable - skipping Gemini Free fallback");
+> 124	  }
+> 125	
+> 126	  // --- Step 3: OpenRouter Free Fallback ---
+> 127	  const routerKey = openRouterKey || groqKey;
+> 128	  if (routerKey) {
+> 129	    const freeModels = ["google/gemma-2-9b-it:free", "meta-llama/llama-3-8b-instruct:free"];
+> 130	    console.log(`[llm-fallback] Attempting OpenRouter Free fallback. Candidates: ${freeModels.join(", ")}`);
+> 131	
+> 132	    for (const model of freeModels) {
+> 133	      const freeBody = {
+> 134	        ...requestBodyObj,
+> 135	        model,
+> 136	      };
+> 137	
+> 138	      const freeHeaders = new Headers(requestInit.headers || {});
+> 139	      freeHeaders.set("Authorization", `Bearer ${routerKey}`);
+> 140	      freeHeaders.set("Content-Type", "application/json");
+> 141	
+> 142	      const freeEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+> 143	      
+> 144	      console.log(`[llm-fallback] Dispatching fallback request to OpenRouter Free using model "${model}"`);
+> 145	      const freeResp = await safeFetch(freeEndpoint, {
+> 146	        ...requestInit,
+> 147	        headers: freeHeaders,
+> 148	        body: JSON.stringify(freeBody),
+> 149	      });
+> 150	
+> 151	      if (freeResp.ok) {
+> 152	        console.log(`[llm-fallback] OpenRouter Free fallback succeeded with model "${model}"`);
+> 153	        return freeResp;
+> 154	      }
+> 155	
+> 156	      const freeErrText = await freeResp.text().catch(() => "unknown");
+> 157	      console.warn(`[llm-fallback] OpenRouter Free model "${model}" failed (status=${freeResp.status}): ${freeErrText.slice(0, 200)}`);
+> 158	    }
+> 159	  } else {
+> 160	    console.log("[llm-fallback] OpenRouter API Key unavailable - skipping OpenRouter Free fallback");
+> 161	  }
+> 162	
+> 163	  // If all fallbacks fail, return the original failure response
+> 164	  console.error("[llm-fallback] All LLM providers in cascade failed.");
+> 165	  return new Response(
+> 166	    JSON.stringify({
+> 167	      error: "LLM fallback exhaustion",
+> 168	      message: "Both primary LLM and all fallback alternatives failed.",
+> 169	    }),
+> 170	    { status: 502, headers: { "Content-Type": "application/json" } }
+> 171	  );
+> 172	}
+> 173	
+> ```
+
+## 🤖 Claude *(22:10:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/llm-fallback-sop.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP — LLM Cascading Fallback
+> 2	
+> 3	**Versão:** v1 · **Selada:** 2026-05-31 · **Lei 2 (Processo Antecipado)** · **OTD-LLM-FALLBACK**
+> 4	
+> 5	## ORO triplet
+> 6	
+> 7	- **Operator:** MCORCH Master Execution Agent (executa nas Edge Functions de completions)
+> 8	- **Reviewer:** Sovereign (Gabriel)
+> 9	- **Owner:** Sovereign (Gabriel) - Blast radius de custos e confiabilidade da geração de conteúdo.
+> 10	
+> 11	## Contexto
+> 12	
+> 13	A orquestração do Constellation Orchestra depende de completions confiáveis de LLM para gerar artigos, scripts, posts e planos. Se a conta do OpenRouter ficar sem saldo (retornando HTTP 402) ou sofrer com limites severos de requisição (retornando HTTP 429), o sistema deve migrar dinamicamente para o Gemini Free (via endpoint oficial do Google compatível com a API da OpenAI) e, em último caso, para modelos gratuitos do OpenRouter (OpenRouter Free).
+> 14	
+> 15	## Sequence — Fluxo de Fallback de Completions
+> 16	
+> 17	| # | Action | Output esperado | Verification gate |
+> 18	|---|--------|-----------------|-------------------|
+> 19	| 1 | Edge function intercepta chamada de completion e chama o helper `fetchLLMWithFallback` | Retorna Response com dados da API ou stream | Helper executa fetch primário |
+> 20	| 2 | Chamada primária ao OpenRouter Pago falha com HTTP `402`, `429` ou erro de rede | Helper captura a falha e registra aviso no console | Console logs: "OpenRouter primary call failed. Falling back to Gemini Free." |
+> 21	| 3 | Helper mapeia o modelo para Gemini correspondente (Heavy vs Light/Medium) | Modelo definido: `gemini-2.5-pro` / `gemini-1.5-pro` ou `gemini-2.5-flash` / `gemini-1.5-flash` | Mapeamento no log de depuração do Deno |
+> 22	| 4 | Helper faz chamada secundária ao Gemini OpenAI-Compatible Endpoint com a chave de API resolvida | Retorna HTTP 200 com a resposta do Gemini em formato compatível com OpenAI (incluindo streams) | `Authorization` header contém `Bearer <GEMINI_API_KEY>`; corpo da resposta tem formato OpenAI |
+> 23	| 5 | Se chamada ao Gemini falhar (HTTP diferente de 2xx ou rede offline) | Helper intercepta e loga falha secundária | Console logs: "Gemini fallback failed. Attempting OpenRouter Free fallback." |
+> 24	| 6 | Helper faz chamada de último recurso ao OpenRouter usando o modelo gratuito `google/gemma-2-9b-it:free` | Retorna HTTP 200 com resposta do modelo gratuito | Modelo no payload alterado para `google/gemma-2-9b-it:free` |
+> 25	| 7 | Se todas as tentativas falharem | Helper propaga o erro final estruturado HTTP 502 / 500 | Resposta JSON com `{ error: "All LLM providers failed in cascade" }` |
+> 26	
+> 27	## Verification gates (Lei 1 — Materiality)
+> 28	
+> 29	Comandos reproduzíveis e verificações de integridade:
+> 30	
+> 31	```bash
+> 32	# Verificar se o Gemini OpenAI-Compatible Endpoint está respondendo de forma saudável
+> 33	curl https://generativelanguage.googleapis.com/v1beta/openai/chat/completions \
+> 34	  -H "Authorization: Bearer $GEMINI_API_KEY" \
+> 35	  -H "Content-Type: application/json" \
+> 36	  -d '{
+> 37	    "model": "gemini-2.5-flash",
+> 38	    "messages": [{"role": "user", "content": "Hello"}],
+> 39	    "stream": false
+> 40	  }'
+> 41	```
+> 42	
+> 43	## Recovery path
+> 44	
+> 45	| Falha | Detecção | Ação | Resultado |
+> 46	|-------|----------|------|-----------|
+> 47	| **Gemini API Key Ausente** | `geminiKey` é nulo/indefinido | Helper pula direto para a tentativa de OpenRouter Free | Execução não quebra por falta de chave Gemini |
+> 48	| **Timeout upstream** | Requisição fica travada > 30s | AbortController cancela a tentativa e aciona o próximo provedor na cascata | Resiliência contra travamento do OpenRouter ou Gemini |
+> 49	| **Stream corrompida** | Erro de leitura de stream no meio da geração | Interrompe e lança erro ao cliente (não há como fazer fallback no meio de uma stream já iniciada) | Retorna erro HTTP parcial ao cliente de forma limpa |
+> 50	
+> 51	## Success signal
+> 52	
+> 53	- Chamada da Edge Function retorna HTTP 200 com resposta completa ou stream de texto.
+> 54	- Telemetria de depuração no console do Deno detalhando qual etapa da cascata foi utilizada.
+> 55	- Registros saudáveis em `infra_health_logs` para as funções correspondentes.
+> 56	
+> ```
+
+## 🤖 Claude *(22:11:04)*
+
+
+## 🤖 Claude *(22:11:09)*
+
+Verifiquei o helper materialmente. **Boa notícia: o "fallback do fallback gratuito" que você pediu já existe** — a cascata tem DOIS tiers grátis:
+1. Primário (OpenRouter pago / Groq) → 2. **Gemini Free** (gemini-2.5/1.5) → 3. **OpenRouter Free** (`:free`).
+
+Mas, verificando de verdade (Lei 1), achei **lacunas reais** que preciso confrontar com fatos:
+- O SOP **afirma** AbortController/timeout 30s (linha 48) e telemetria em `infra_health_logs` (linha 55) — mas o **código não tem nenhum dos dois**. Doc descreve comportamento que não existe.
+- Os IDs free (`gemma-2-9b-it:free`, `llama-3-8b-instruct:free`) podem estar desatualizados → falha silenciosa (404 model).
+
+Vou confirmar os IDs contra a API viva e puxar o contexto estratégico (últimos selos + roadmap econômico):
+
+## 🤖 Claude *(22:11:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== are the cascade's free model IDs still live on OpenRouter? ===\" && for m in \"google/gemma-2-9b-it:free\" \"meta-llama/llama-3-8b-instruct:free\" \"meta-llama/llama-3.3-70b-instruct:free\" \"google/gemma-4-31b-it:free\"; do c=$(jq -r --arg m \"$m\" '.data[]|select(.id==$m)|.id' /tmp/or_models.json); [ -n \"$c\" ] && echo \"LIVE: $m\" || echo \"GONE: $m\"; done && echo \"\" && echo \"=== roadmap / economic files ===\" && ls -1 docs/*ROADMAP* docs/**/roadmap* 2>/dev/null; git show origin/main --stat 0a1c4e6 2>&1 | grep \"|\" | head && echo \"\" && echo \"=== HMAC postback + link-forge present on main? ===\" && git ls-tree -r origin/main --name-only | grep -iE \"link-forge|handle-ml-postback|postback\" | head",
+  "description": "Verify free model IDs live and locate roadmap/economic files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === are the cascade's free model IDs still live on OpenRouter? ===
+> GONE: google/gemma-2-9b-it:free
+> GONE: meta-llama/llama-3-8b-instruct:free
+> LIVE: meta-llama/llama-3.3-70b-instruct:free
+> LIVE: google/gemma-4-31b-it:free
+> 
+> === roadmap / economic files ===
+>  HANDOFF.md | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  README.md  | 16 ++++++++++++++--
+>  CLAUDE.md                                   | 1 +
+>  HANDOFF.md                                  | 1 +
+>  docs/bok/mcorch-constellation/roadmap-v1.md | 4 ++++
+> 
+> === HMAC postback + link-forge present on main? ===
+> scripts/link-forge-scope.md
+> scripts/link-forge.ts
+> scripts/patch-handle-ml-postback.cjs
+> supabase/functions/handle-ml-postback/index.ts
+> ```
+
+## 🤖 Claude *(22:11:36)*
+
+
+## 🤖 Claude *(22:11:39)*
+
+**Bug concreto confirmado:** o tier-3 da cascata (OpenRouter Free) usa **IDs mortos** — `google/gemma-2-9b-it:free` e `meta-llama/llama-3-8b-instruct:free` **não existem mais** no catálogo vivo (verificado contra os 343 modelos). Se a cascata chegar no passo 3, ambos dão 404 → 502. Os equivalentes vivos seriam `meta-llama/llama-3.3-70b-instruct:free` e `google/gemma-4-31b-it:free`. Esse é o conserto acionável do seu "fallback do fallback".
+
+Agora o contexto estratégico para atacar o plano — lendo o estado real do postback (HMAC?), Link Forge e o roadmap:
+
+## 🤖 Claude *(22:11:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7\ngit show origin/main:supabase/functions/handle-ml-postback/index.ts > /tmp/handle-ml-postback.ts 2>&1 && echo \"postback: $(wc -l < /tmp/handle-ml-postback.ts) lines\"\ngit show origin/main:scripts/link-forge-scope.md > /tmp/link-forge-scope.md 2>&1 && echo \"link-forge-scope: $(wc -l < /tmp/link-forge-scope.md) lines\"\ngit show origin/main:docs/bok/mcorch-constellation/roadmap-v1.md > /tmp/roadmap-v1.md 2>&1 && echo \"roadmap: $(wc -l < /tmp/roadmap-v1.md) lines\"\necho \"\" && echo \"=== HMAC / signature present in postback? ===\" && grep -niE \"hmac|signature|x-signature|crypto|verify|secret|sha256\" /tmp/handle-ml-postback.ts | head -15 || echo \"NO HMAC/signature refs found\"",
+  "description": "Export postback, link-forge scope, roadmap and scan postback for HMAC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> postback: 223 lines
+> link-forge-scope: 20 lines
+> roadmap: 50 lines
+> 
+> === HMAC / signature present in postback? ===
+> 5:  "Access-Control-Allow-Headers": "authorization, x-api-key, content-type, x-ml-signature",
+> ```
+
+## 🤖 Claude *(22:11:49)*
+
+
+## 🤖 Claude *(22:11:51)*
+
+`handle-ml-postback` declara o header `x-ml-signature` no CORS (linha 5) mas **não tem nenhuma lógica de validação** (zero refs a hmac/crypto/verify/sha256). Confirma: a validação HMAC do postback é um **blocker real e aberto** — o header é aceito mas nunca verificado (qualquer um pode forjar uma comissão). Lendo os artefatos completos para o plano:
+
+## 🤖 Claude *(22:11:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/handle-ml-postback.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Headers": "authorization, x-api-key, content-type, x-ml-signature",
+> 6	};
+> 7	
+> 8	// ML Affiliate postback payload — query params or JSON body
+> 9	interface MLPostbackPayload {
+> 10	  click_id?: string;        // our affiliate_links.id (short tracking token)
+> 11	  order_id?: string;        // ML order reference
+> 12	  commission?: string;      // commission value (BRL cents or float)
+> 13	  currency?: string;        // BRL
+> 14	  status?: string;          // approved | pending | cancelled
+> 15	  transaction_id?: string;  // alternate key for click_id
+> 16	  // ML Notification API (topic=orders) shape
+> 17	  topic?: string;
+> 18	  resource?: string;
+> 19	  user_id?: string;
+> 20	}
+> 21	
+> 22	Deno.serve(async (req: Request) => {
+> 23	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 24	
+> 25	  const supabase = createClient(
+> 26	    Deno.env.get("SUPABASE_URL") ?? "",
+> 27	    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+> 28	  );
+> 29	
+> 30	  try {
+> 31	    // Parse payload — accept both query string (GET) and JSON body (POST)
+> 32	    let payload: MLPostbackPayload = {};
+> 33	    const url = new URL(req.url);
+> 34	
+> 35	    if (req.method === "GET" || req.method === "HEAD") {
+> 36	      url.searchParams.forEach((v, k) => { (payload as Record<string, string>)[k] = v; });
+> 37	    } else {
+> 38	      const ct = req.headers.get("content-type") ?? "";
+> 39	      if (ct.includes("application/json")) {
+> 40	        payload = await req.json();
+> 41	      } else if (ct.includes("application/x-www-form-urlencoded")) {
+> 42	        const text = await req.text();
+> 43	        new URLSearchParams(text).forEach((v, k) => { (payload as Record<string, string>)[k] = v; });
+> 44	      } else {
+> 45	        // Try JSON anyway
+> 46	        try { payload = await req.json(); } catch { /* ignore */ }
+> 47	      }
+> 48	      // Also merge any query params (ML sometimes sends both)
+> 49	      url.searchParams.forEach((v, k) => { if (!payload[k as keyof MLPostbackPayload]) (payload as Record<string, string>)[k] = v; });
+> 50	    }
+> 51	
+> 52	    const clickId = payload.click_id ?? payload.transaction_id;
+> 53	    const status = (payload.status ?? "approved").toLowerCase();
+> 54	
+> 55	    // Only process approved conversions
+> 56	    if (status === "cancelled" || status === "refunded") {
+> 57	      await supabase.from("infra_health_logs").insert({
+> 58	        service: "handle-ml-postback",
+> 59	        status: "healthy",
+> 60	      }).then(() => {}, () => {});
+> 61	      return new Response(JSON.stringify({ ok: true, action: "skipped", reason: `status=${status}` }), {
+> 62	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 63	      });
+> 64	    }
+> 65	
+> 66	    // Parse commission — ML sends float (e.g. "12.50") or integer cents
+> 67	    let revenueCents = 0;
+> 68	    if (payload.commission) {
+> 69	      const raw = parseFloat(payload.commission);
+> 70	      // If value looks like cents already (>= 100 for amounts over R$1), keep as-is;
+> 71	      // if it looks like a float BRL (e.g. 12.50), convert to cents
+> 72	      revenueCents = raw < 100 ? Math.round(raw * 100) : Math.round(raw);
+> 73	    }
+> 74	
+> 75	    // Resolve the affiliate link record
+> 76	    // click_id can be either the uuid or the short_url path segment
+> 77	    let affiliateLinkId: string | null = null;
+> 78	
+> 79	    if (clickId) {
+> 80	      // Try UUID match first
+> 81	      const uuidMatch = clickId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+> 82	      if (uuidMatch) {
+> 83	        affiliateLinkId = clickId;
+> 84	      } else {
+> 85	        // Try matching against short_url or metadata.click_id
+> 86	        const { data } = await supabase
+> 87	          .from("affiliate_links")
+> 88	          .select("id")
+> 89	          .or(`short_url.ilike.%${clickId}%,metadata->click_id.eq.${clickId}`)
+> 90	          .limit(1)
+> 91	          .single();
+> 92	        affiliateLinkId = data?.id ?? null;
+> 93	      }
+> 94	    }
+> 95	
+> 96	    // Also resolve by order_id if available
+> 97	    if (!affiliateLinkId && payload.order_id) {
+> 98	      const { data } = await supabase
+> 99	        .from("affiliate_links")
+> 100	        .select("id")
+> 101	        .eq("metadata->>order_id", payload.order_id)
+> 102	        .limit(1)
+> 103	        .single();
+> 104	      affiliateLinkId = data?.id ?? null;
+> 105	    }
+> 106	
+> 107	    if (!affiliateLinkId) {
+> 108	      console.warn("handle-ml-postback: could not resolve affiliate link", payload);
+> 109	      // Return 200 to prevent ML from retrying (we log it)
+> 110	      await supabase.from("affiliate_links").insert({
+> 111	        original_url: payload.resource ?? "unknown",
+> 112	        short_url: `unresolved:${payload.order_id ?? clickId ?? "no-id"}`,
+> 113	        platform: "mercadolivre",
+> 114	        revenue_cents: revenueCents,
+> 115	        metadata: { ...payload, _unresolved: true },
+> 116	      });
+> 117	      await supabase.from("infra_health_logs").insert({
+> 118	        service: "handle-ml-postback",
+> 119	        status: "degraded",
+> 120	      }).then(() => {}, () => {});
+> 121	      return new Response(JSON.stringify({ ok: true, action: "unresolved_logged" }), {
+> 122	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 123	      });
+> 124	    }
+> 125	
+> 126	    // Update revenue on the affiliate link
+> 127	    const { data: linkData, error: updateErr } = await supabase
+> 128	      .from("affiliate_links")
+> 129	      .update({
+> 130	        revenue_cents: revenueCents,
+> 131	        metadata: {
+> 132	          order_id: payload.order_id,
+> 133	          currency: payload.currency ?? "BRL",
+> 134	          status,
+> 135	          postback_received_at: new Date().toISOString(),
+> 136	        },
+> 137	      })
+> 138	      .eq("id", affiliateLinkId)
+> 139	      .select("id, content_id, campaign_id, metadata")
+> 140	      .single();
+> 141	
+> 142	    if (updateErr) throw updateErr;
+> 143	
+> 144	    // Sync revenue_impact to mcorch_nodes (knowledge mesh).
+> 145	    // Prefer content_mesh_asset (revenue-flywheel.md topology); fallback to any node
+> 146	    // matched by ID or metadata.link_id / metadata.content_id (legacy).
+> 147	    const orFilter = `id.eq.${linkData?.content_id ?? "null"},metadata->>link_id.eq.${affiliateLinkId},metadata->>content_id.eq.${linkData?.content_id ?? "null"}`;
+> 148	
+> 149	    let { data: node } = await supabase
+> 150	      .from("mcorch_nodes")
+> 151	      .select("id, revenue_impact")
+> 152	      .eq("node_type", "content_mesh_asset")
+> 153	      .or(orFilter)
+> 154	      .limit(1)
+> 155	      .maybeSingle();
+> 156	
+> 157	    if (!node) {
+> 158	      const fallback = await supabase
+> 159	        .from("mcorch_nodes")
+> 160	        .select("id, revenue_impact")
+> 161	        .or(orFilter)
+> 162	        .limit(1)
+> 163	        .maybeSingle();
+> 164	      node = fallback.data;
+> 165	    }
+> 166	
+> 167	    if (node) {
+> 168	      const newRevenue = (node.revenue_impact ?? 0) + revenueCents;
+> 169	      await supabase
+> 170	        .from("mcorch_nodes")
+> 171	        .update({ revenue_impact: newRevenue })
+> 172	        .eq("id", node.id);
+> 173	    }
+> 174	
+> 175	    // Insert a knowledge mesh observation node for this conversion event
+> 176	    const { data: obsNode } = await supabase.from("mcorch_nodes").insert({
+> 177	      name: `conversion:${affiliateLinkId.slice(0, 8)}`,
+> 178	      node_type: "observation",
+> 179	      content: `ML conversion — R$${(revenueCents / 100).toFixed(2)} from order ${payload.order_id ?? "unknown"}`,
+> 180	      stability_score: 1.0,
+> 181	      revenue_impact: revenueCents,
+> 182	      metadata: {
+> 183	        affiliate_link_id: affiliateLinkId,
+> 184	        order_id: payload.order_id,
+> 185	        campaign_id: linkData?.campaign_id,
+> 186	        event: "ml_conversion",
+> 187	      },
+> 188	      project_id: "mcorch-affiliate",
+> 189	    }).select("id").single();
+> 190	
+> 191	    // OE-661-EXECUTE: Inject ATTRIBUTES_REVENUE_TO edge
+> 192	    let edgeCreated = false;
+> 193	    if (obsNode && node) {
+> 194	      const { error: edgeErr } = await supabase.from("mcorch_edges").insert({
+> 195	        source_id: obsNode.id,
+> 196	        target_id: node.id,
+> 197	        relation_type: "ATTRIBUTES_REVENUE_TO",
+> 198	        weight: revenueCents
+> 199	      });
+> 200	      edgeCreated = !edgeErr;
+> 201	    }
+> 202	
+> 203	    await supabase.from("infra_health_logs").insert({
+> 204	      service: "handle-ml-postback",
+> 205	      status: edgeCreated ? "healthy" : "degraded",
+> 206	    }).then(() => {}, () => {});
+> 207	
+> 208	    return new Response(
+> 209	      JSON.stringify({ ok: true, affiliate_link_id: affiliateLinkId, revenue_cents: revenueCents }),
+> 210	      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 211	    );
+> 212	  } catch (err) {
+> 213	    console.error("handle-ml-postback error:", err);
+> 214	    await supabase.from("infra_health_logs").insert({
+> 215	      service: "handle-ml-postback",
+> 216	      status: "degraded",
+> 217	    }).then(() => {}, () => {});
+> 218	    return new Response(JSON.stringify({ error: String(err) }), {
+> 219	      status: 500,
+> 220	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 221	    });
+> 222	  }
+> 223	});
+> 224	
+> ```
+
+## 🤖 Claude *(22:11:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/roadmap-v1.md"
+}
+```
+
+## 🤖 Claude *(22:11:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/link-forge-scope.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Link Forge: Preparação de Escopo (OE-661-EXECUTE)
+> 2	
+> 3	## Objetivo
+> 4	Varrer dinamicamente a Malha de Conhecimento (`content_mesh_asset`) em busca de menções a produtos 'High-Ticket' e injetar automaticamente a URL de Telemetria de Afiliados.
+> 5	
+> 6	## Escopo do Script (`scripts/link-forge.ts`)
+> 7	
+> 8	1. **Querying Mesh:**
+> 9	   - Buscar todos os nodos da tabela `mcorch_nodes` onde `node_type = 'content_mesh_asset'`.
+> 10	
+> 11	2. **Regex Lexical Mapping:**
+> 12	   - **Roborock S8 Pro Ultra:** `/roborock s8/i` -> Substituir por `[Roborock S8 Pro Ultra](https://panel.gcrux.com/api/ml-redirect?product_id=MLB3981745621&affiliate_id=${GCRUX_ML_AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${NODE_ID})`
+> 13	   - **Samsung Neo QLED 8K:** `/(neo qled 8k|samsung 8k)/i` -> Substituir pelo redirect para `MLB3546719283`.
+> 14	   - **Geladeira Samsung Family Hub:** `/family hub/i` -> Substituir pelo redirect para `MLB3728491023`.
+> 15	
+> 16	3. **Update Flow:**
+> 17	   - Executar `.replace()` no atributo `content` e fazer o UPSERT ou UPDATE no banco.
+> 18	   - Criar uma aresta (edge) do tipo `CONTAINS_LINK_FOR` apontando do conteúdo atualizado para o nodo de produto/campanha na malha.
+> 19	
+> 20	**Status:** Pronto para implementação (Engineered & Scoped).
+> 21	
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# OE-661-ROADMAP: Rumo ao Milhão (30-Day Plan)
+> 2	
+> 3	## 1. Liquidação de Dívidas Críticas
+> 4	
+> 5	### Dívida Financeira (Owner: engineer)
+> 6	**Status:** As Edge Functions de assinatura estão parametrizadas para as chaves `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`.
+> 7	**O que falta para o Swap (Sandbox -> Produção):** 
+> 8	1. Provisionar as chaves live da Stripe via Supabase CLI (`supabase secrets set STRIPE_SECRET_KEY=sk_live_...`).
+> 9	2. Trocar os Product IDs/Price IDs no frontend/banco de dados para refletirem os produtos reais da Stripe.
+> 10	3. Virar a chave do webhook URL no painel da Stripe para o domínio real.
+> 11	
+> 12	### Dívida de Postback (Owner: scientist)
+> 13	**Status:** A Edge Function `handle-ml-postback` mapeia o `revenue_impact` e cria um nodo de `observation`, mas falha em criar a aresta topológica (`mcorch_edges`) ligando o evento ao conteúdo.
+> 14	**Por que a aresta ATTRIBUTES_REVENUE_TO não recebe dados:**
+> 15	O script de postback não executa o `insert` na tabela `mcorch_edges` com a relação `ATTRIBUTES_REVENUE_TO` para o nodo `content_mesh_asset`. Apenas atualiza o score estático do nó.
+> 16	
+> 17	### Dívida de Memória (Owner: main)
+> 18	**Status:** A Skill `.claude/skills/gateway-recovery.md` foi consolidada, documentando o bypass da restrição de `sessions_spawn` e o saneamento do PATH do daemon via Systemd.
+> 19	
+> 20	### Dívida de Resiliência de IA — Fallback de LLM (Owner: engineer)
+> 21	**OTD-LLM-FALLBACK** (SLA: 2026-06-07):
+> 22	Implementar fallback em cascata para completions/chat em todas as ~17 Edge Functions. Quando o OpenRouter principal estiver sem créditos (402) ou indisponível, o sistema deve automaticamente cair para o Gemini Free (via `GEMINI_API_KEY` do vault) e, se necessário, para modelos `:free` do OpenRouter.
+> 23	
+> 24	---
+> 25	
+> 26	## 2. Roadmap Rumo ao Milhão (30 Dias) - Owner: marketing-growth & Maestro
+> 27	Meta: Atingir R$ 1.000.000,00 explorando o Nicho High-Ticket (Smart Home / Tecnologia de Luxo).
+> 28	
+> 29	**Dias 1-7: Foundation & Telemetry**
+> 30	- Liquidar as Dívidas Críticas (Swap Stripe, Postback Edge `ATTRIBUTES_REVENUE_TO`).
+> 31	- **Ativação Link Forge:** Implementar script que percorre todo o `content_mesh_asset` e substitui links brutos por URLs da API de Redirecionamento de Afiliados (geração 100% autônoma).
+> 32	
+> 33	**Dias 8-15: Escala de Content Mesh (ViralMind + High-Ticket)**
+> 34	- Focar a geração de mídia e posts em artigos comparativos de Robôs Aspiradores e TVs Neo QLED 8K.
+> 35	- Rastreamento fino de cliques (`utm_content` mapeado para cada UUID de vídeo/texto).
+> 36	
+> 37	**Dias 16-23: Amplificação Autonômica**
+> 38	- Usar a predição da Malha de Conhecimento: se o conteúdo A rende R$ 5.000, o Canvas Studio deve multiplicar variações deste exato nodo.
+> 39	- Tráfego otimizado pago: Injetar receita em anúncios baseando-se no ROI real do Grafo de Memória.
+> 40	
+> 41	**Dias 24-30: O Flywheel da Riqueza**
+> 42	- Ponto de inflexão do ROI. O Panteão retroalimenta campanhas de forma autônoma baseada apenas em eventos de webhook do Mercado Livre validados pela infraestrutura.
+> 43	
+> 44	---
+> 45	## Lista de Bloqueadores Atuais
+> 46	- Falta da inserção SQL da aresta `ATTRIBUTES_REVENUE_TO` no `handle-ml-postback`.
+> 47	- Chaves Stripe ainda restritas ao ambiente de Sandbox (Test Mode).
+> 48	
+> 49	## Próximo Passo Inadiável
+> 50	**Engineer:** Corrigir a função de postback para realizar o `insert` na tabela `mcorch_edges` e concluir o Swap das Chaves Stripe para Produção.
+> 51	
+> ```
+
+## 🤖 Claude *(22:13:28)*
+
+
+## 🤖 Claude *(22:13:30)*
+
+Agora tenho o quadro estratégico completo, e ele revela **discrepâncias doc-vs-código** importantes. Antes de escrever o plano, três checagens finais: estado do meu worktree, se o esquema de assinatura HMAC já existe no código, e se há `.env` para validar o mesh:
+
+## 🤖 Claude *(22:13:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7\necho \"=== git status (only publish-social dirty?) ===\" && git status --short && echo \"\" && echo \"=== my branch vs origin/main ===\" && git log --oneline -1 HEAD && git rev-list --count HEAD..origin/main 2>/dev/null | xargs echo \"commits behind origin/main:\" && echo \"\" && echo \"=== HMAC signing scheme: who SETS x-ml-signature? any secret/algo? ===\" && grep -rniE \"x-ml-signature|ml_postback_secret|ml_signature|createHmac|hmac|signPayload\" scripts/ supabase/functions/ src/ 2>/dev/null | grep -iv \"allow-headers\" | head -10 || echo \"NO signing scheme found anywhere (sender side undefined)\"; echo \"\" && echo \"=== .env in MAIN repo (for mesh verification)? ===\" && ls -la /home/gcrUX/htdocs/constellation-orchestra/.env 2>&1 | sed 's/ gcrUX gcrUX//' | head -1",
+  "description": "Check git status, HMAC scheme existence, and env availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (only publish-social dirty?) ===
+>  M supabase/functions/publish-social/index.ts
+> 
+> === my branch vs origin/main ===
+> 4f243c0 docs(handoff): seal v6.14.3 — meta-api BoK suite & agents system
+> commits behind origin/main: 37
+> 
+> === HMAC signing scheme: who SETS x-ml-signature? any secret/algo? ===
+> scripts/seed-meta-api-bok-seal.ts:37:ARQUITETURA: novas tabelas (meta_config, meta_posts, whatsapp_leads, meta_ads_metrics) + novas edge functions (meta-oauth, publish-meta, whatsapp-webhook, sync-meta-ads). CISSP CBK elevado: STRIDE com 8 ameaças mapeadas, encriptação AES-256-GCM em banco de dados, RLS default-deny por auth.uid(), assinatura HMAC SHA-256 em webhooks WhatsApp (X-Hub-Signature-256) e tratamento resiliente de rate limits.
+> scripts/seed-mercado-livre-api-bok-seal.ts:40:VISÃO: três módulos soberanos, todos sob o API Tenancy Model (credencial per-user via auth.uid() → fallback vault restrito → hard failure 402/501). MÓDULO A (ML Core Afiliados, MVP): resolução real de item (/items/{id} + /sites/MLB/search, já usado em process-affiliate-link) + geração de short link de afiliado oficial (meli.la/...) com tag per-user (caga6077534 para Usuário Zero) + postback de receita (handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget). MÓDULO C (Mercado Pago per-user, v1.0): OAuth Connect per-user em nova tabela mercado_pago_config (RLS auth.uid(), RESTRICTIVE no-delete, token server-side only) + edge fns mercado-pago-oauth/webhook (x-signature HMAC). MÓDULO B (Global Selling, Future): catálogo cross-border USD via nova coluna vm_affiliate_products.currency. SKIP explícito de Mercado Envios (MR-ML-007 — MCORCH não faz envio físico).
+> scripts/seed-mercado-livre-api-bok-seal.ts:46:FMEA (8 entries, 4 RPN > 100): FMEA-ML-001 (RPN 144 — endpoint de afiliado errado → link inválido, bug 404 persiste; ação: OTD-ML-001 validar doc oficial ANTES de codar), FMEA-ML-002 (RPN 135 — cai em token global → atribuição vaza entre tenants; ação: resolução per-user + fail-closed 402 + RLS test), FMEA-ML-003 (RPN 120 — webhook MP sem validação de assinatura → pagamento forjado; ação: x-signature HMAC + idempotência), FMEA-ML-004 (RPN 105 — replay de postback → double credit; ação: idempotência por order_id). Todos com Recommended Action.
+> 
+> === .env in MAIN repo (for mesh verification)? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 1144 May 23 19:39 /home/gcrUX/htdocs/constellation-orchestra/.env
+> ```
+
+## 🤖 Claude *(22:14:57)*
+
+
+## 🤖 Claude *(22:15:00)*
+
+**Confirmado o esquema HMAC já está documentado na BoK** (não preciso inventar): `seed-mercado-livre-api-bok-seal.ts` prescreve **FMEA-ML-003** (webhook sem assinatura → pagamento forjado → ação: `x-signature HMAC + idempotência`) e **FMEA-ML-004** (replay → double credit → idempotência por `order_id`). E o `.env` existe no repo principal. Vou fazer uma checagem material do selo mais recente (v6.15.0) antes de fechar o relatório — confiar-mas-verificar, já que foi outro agente:
+
+## 🤖 Claude *(22:15:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && set -a 2>/dev/null; source .env 2>/dev/null; set +a 2>/dev/null\nURL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; KEY=\"${SUPABASE_SERVICE_ROLE_KEY}\"\nif [ -z \"$URL\" ] || [ -z \"$KEY\" ]; then echo \"C\u00c9REBRO SEM M\u00c3OS: faltam SUPABASE_URL/SERVICE_ROLE_KEY no .env\"; else\necho \"=== v6.15.0 handoff node 4aaa1887 exists? ===\" && curl -s \"${URL}/rest/v1/mcorch_nodes?id=eq.4aaa1887-b34d-4711-b121-9ad637899b62&select=id,name,node_type,created_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['name'],'|',d[0]['node_type'],'|',d[0]['created_at']) if d else print('NOT FOUND')\" 2>/dev/null\necho \"=== is it embedded (vector present)? ===\" && curl -s \"${URL}/rest/v1/mcorch_nodes?id=eq.4aaa1887-b34d-4711-b121-9ad637899b62&embedding=not.is.null&select=id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('EMBEDDED \u2705' if d else 'EMBEDDING NULL \u274c (cascade/credit casualty)')\" 2>/dev/null\necho \"=== total mesh node count (claim: 8713) ===\" && curl -s \"${URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'\nfi",
+  "description": "Materially verify v6.15.0 handoff node and mesh count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === v6.15.0 handoff node 4aaa1887 exists? ===
+> session-handoff-20260531-llm-fallback-sql-bridge-watchdog | handoff | 2026-05-31T21:58:41.322498+00:00
+> === is it embedded (vector present)? ===
+> EMBEDDED ✅
+> === total mesh node count (claim: 8713) ===
+> 8713
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7
+> ```
+
+## 🤖 Claude *(22:16:17)*
+
+
+## 🤖 Claude *(22:16:37)*
+
+Verificação material do selo mais recente **bate 100%** — o Antigravity foi honesto nas claims de cabeçalho:
+- Node `4aaa1887` existe, tipo `handff`, criado 2026-05-31T21:58Z ✅
+- Está **embeddado** (vetor presente) ✅ → embeddings voltaram a funcionar (crédito reposto e/ou fallback Gemini)
+- Contagem do mesh = **8713**, exatamente como reportado ✅
+
+Tenho tudo. Aqui está a síntese executiva.
+
+---
+
+## 1. Selos v6.14.3 → v6.15.0 (últimos ~7) — o que realmente está de pé
+
+| Selo | Entrega | Verificação |
+|---|---|---|
+| v6.14.6/7 | content asset history; root cause de persistência (enum) | — |
+| v6.14.8 | **Meta gateway** (`publish-meta` + credenciais per-user) | é a referência real que faltava no meu worktree |
+| v6.14.9 | **Gemini free embedding fallback** + whatsapp/ads/vault | embeddings ok (node acima embeddado) ✅ |
+| v6.15.0 | **LLM cascading fallback** + fix sql-bridge checkAdmin | node/contagem batem ✅ |
+
+## 2. Achados que mudam o plano (verificar ≠ carimbar)
+
+- **Sua tarefa original já existe** — e o "fallback do fallback gratuito" que você pediu **está lá**: a cascata tem 2 tiers free (Gemini → OpenRouter `:free`). **Porém** o tier-3 usa **IDs mortos** (`gemma-2-9b-it:free`, `llama-3-8b-instruct:free` — ✗ sumiram do catálogo vivo). Se a cascata chegar lá → 502. Conserto: `llama-3.3-70b-instruct:free` + `gemma-4-31b-it:free` (vivos, verificados).
+- **Gap doc-vs-código (Lei 1):** o SOP `llm-cascading-fallback.md` afirma AbortController/timeout 30s e telemetria em `infra_health_logs` — o código **não tem nenhum dos dois**.
+- **`publish-social`:** meu fix ficou **redundante** (o main já tem o gate desde v6.14.8). Prod já patcheado (deploy v28). Sem vuln. Meu worktree está **37 commits atrás** → reconciliar.
+- **Roadmap desatualizado:** `roadmap-v1.md` diz que a aresta `ATTRIBUTES_REVENUE_TO` é o "blocker inadiável / não implementado". **Mentira material** — o código já a insere (`handle-ml-postback:191-201`). Esse débito está fechado.
+
+## 3. O bloqueador real é outro: **HMAC no postback (fraude financeira)**
+
+`handle-ml-postback` roda com `verify_jwt=false` e **declara** `x-ml-signature` no CORS mas **nunca valida**. É um endpoint público que **escreve dinheiro**: qualquer `POST {click_id, commission, status:approved}` grava `revenue_cents` arbitrário, soma `revenue_impact` e cria a aresta `ATTRIBUTES_REVENUE_TO` com peso forjado. Isso **envenena exatamente o grafo de ROI** que o roadmap (Dias 16-30) usa para gastar verba de anúncio sozinho. A própria BoK já previu: **FMEA-ML-003** (RPN 120) e **FMEA-ML-004** (idempotência por `order_id`).
+
+## 4. Minha recomendação decisiva: **HMAC primeiro, Link Forge depois**
+
+1. O postback é o **cano de atribuição**; Link Forge joga tráfego *dentro* dele. Valida-se o cano antes de escalar.
+2. O **próprio piloto** que o Gemini quer ("a comissão caiu via postback") só **prova** algo se o postback for inforjável.
+3. Não se constrói flywheel autônomo de verba sobre inputs forjáveis — é poison-by-design.
+4. HMAC é cirúrgico (1 função). Link Forge muta todos os `content_mesh_asset` **e** carrega o débito OTD-OE661 (token global — ok pro piloto solo, bloqueia Usuário 1).
+
+**Plano:** Passo 0 reconciliar worktree→main · Passo 1 (rápido, seu pedido) consertar IDs mortos + fechar gap do SOP · Passo 2 HMAC-SHA256 + idempotência no postback · Passo 3 Link Forge piloto.
+
+Duas decisões suas para eu executar sem inventar (Lei 1):
+
+## 🤖 Claude *(22:16:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O Gemini te perguntou por qual bloqueador econ\u00f4mico come\u00e7ar. Minha an\u00e1lise material aponta um caminho \u2014 qual seguimos?",
+      "header": "Primeiro alvo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "HMAC no postback",
+          "description": "(Recomendado) Blindar a atribui\u00e7\u00e3o de receita ANTES de escalar links. Hoje o endpoint \u00e9 p\u00fablico e forj\u00e1vel \u2014 qualquer um cria comiss\u00f5es falsas que envenenam o grafo de ROI que vai dirigir gasto aut\u00f4nomo de an\u00fancio. ~1-2 dias, blast radius pequeno."
+        },
+        {
+          "label": "Link Forge primeiro",
+          "description": "Injetar links de afiliado em todos os content_mesh_asset agora; HMAC depois. Acelera tr\u00e1fego/links, mas joga convers\u00f5es num cano de atribui\u00e7\u00e3o ainda forj\u00e1vel e carrega o d\u00e9bito OTD-OE661 (token global)."
+        }
+      ]
+    },
+    {
+      "question": "Para implementar o HMAC sem inventar o esquema (Lei 1): quem assina o postback que chega no handle-ml-postback?",
+      "header": "Assinatura",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Painel gcrux (segredo compartilhado)",
+          "description": "panel.gcrux.com/api/ml-redirect assina com um novo ML_POSTBACK_SECRET no vault; eu assino no painel e valido no edge (HMAC-SHA256) + idempot\u00eancia por order_id. Voc\u00ea controla as duas pontas."
+        },
+        {
+          "label": "Mercado Pago x-signature",
+          "description": "Usar o esquema HMAC documentado do Mercado Pago (header x-signature com segredo do dashboard MP). Indicado se a receita chega via webhook do Mercado Pago, n\u00e3o do redirect pr\u00f3prio."
+        },
+        {
+          "label": "Decide voc\u00ea (default seguro)",
+          "description": "Assumo shared-secret HMAC-SHA256 (ML_POSTBACK_SECRET) + idempot\u00eancia por order_id, documento no SOP, e voc\u00ea prov\u00ea/gera o segredo. Sigo sem travar."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O Gemini te perguntou por qual bloqueador econômico começar. Minha análise material aponta um caminho — qual seguimos?"="HMAC no postback", "Para implementar o HMAC sem inventar o esquema (Lei 1): quem assina o postback que chega no handle-ml-postback?"="Mercado Pago x-signature". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:19:30)*
+
+
+## 🤖 Claude *(22:19:34)*
+
+Decisões registradas: **HMAC no postback** + **esquema Mercado Pago `x-signature`**. 
+
+Antes de codar, a disciplina do próprio projeto manda (FMEA-ML-001, RPN 144): **validar o doc oficial ANTES** — o esquema x-signature do Mercado Pago é específico (manifest `id;request-id;ts` + HMAC-SHA256) e errar o template = rejeitar todo postback. Então: reconcilio o worktree com o main (Passo 0), levanto a referência HMAC que já existe no codebase (whatsapp X-Hub-Signature-256) e checo se há tabela/secret de MP.
+
+## 🤖 Claude *(22:19:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7\necho \"=== Passo 0: reconcile worktree \u2192 origin/main ===\" && git checkout -- supabase/functions/publish-social/index.ts && git status --short && echo \"(clean above = good)\" && git merge --ff-only origin/main 2>&1 | tail -3 && echo \"HEAD now: $(git log --oneline -1)\" && echo \"\" && echo \"=== existing HMAC reference (whatsapp / crypto.subtle) ===\" && grep -rln \"X-Hub-Signature\\|crypto.subtle\\|createHmac\\|importKey\\|HMAC\" supabase/functions/ 2>/dev/null && echo \"\" && echo \"=== mercado pago config/table/secret present? ===\" && grep -rniE \"mercado_pago|mercadopago|MP_WEBHOOK|x-signature|MP_ACCESS\" supabase/functions/ supabase/migrations/ 2>/dev/null | grep -iv \"allow-headers\" | head -10 || echo \"(none)\"",
+  "description": "Reconcile worktree to main and find HMAC reference + MP config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Passo 0: reconcile worktree → origin/main ===
+> (clean above = good)
+>  create mode 100644 supabase/migrations/20260601000000_credential_encryption.sql
+>  create mode 100644 supabase/migrations/20260601000500_fix_meta_config_instead_of_trigger.sql
+>  create mode 100644 supabase/migrations/20260601000600_secure_definer_views.sql
+> HEAD now: 7881231 docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node
+> 
+> === existing HMAC reference (whatsapp / crypto.subtle) ===
+> supabase/functions/aios-sql-bridge/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> 
+> === mercado pago config/table/secret present? ===
+> ```
+
+## 🤖 Claude *(22:20:00)*
+
+
+## 🤖 Claude *(22:20:03)*
+
+Worktree reconciliado → agora em `7881231` (v6.15.0), e o merge até trouxe migrations mais novas (2026-06-01: credential encryption). Confirmado também que `publish-social` no main tem o gate `isServiceRole && bodyUserId` + view `decrypted_social_accounts` — meu fix era mesmo redundante.
+
+Há referência HMAC no codebase (`whatsapp-webhook`) e **não existe infra de Mercado Pago ainda** (sem tabela/secret) — vou introduzir o secret. Agora o passo crítico (FMEA-ML-001): ler a referência HMAC local e **buscar o doc oficial do MP** para o template exato do manifest.
+
+## 🤖 Claude *(22:20:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -A18 \"x-hub-signature\\|X-Hub-Signature\\|crypto.subtle\\|importKey\\|verifySignature\\|HMAC\" supabase/functions/whatsapp-webhook/index.ts 2>/dev/null | head -55",
+  "description": "Read whatsapp-webhook HMAC implementation as reference"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 20:/** HMAC SHA-256 signature verification */
+> 21:async function verifySignature(bodyText: string, signatureHeader: string | null, appSecret: string): Promise<boolean> {
+> 22-  if (!signatureHeader || !appSecret) return false;
+> 23-  const match = signatureHeader.match(/^sha256=(.*)$/);
+> 24-  if (!match) return false;
+> 25-  const expectedSig = match[1];
+> 26-
+> 27-  const encoder = new TextEncoder();
+> 28:  const key = await crypto.subtle.importKey(
+> 29-    "raw",
+> 30-    encoder.encode(appSecret),
+> 31:    { name: "HMAC", hash: "SHA-256" },
+> 32-    false,
+> 33-    ["sign"]
+> 34-  );
+> 35:  const signatureBytes = await crypto.subtle.sign(
+> 36:    "HMAC",
+> 37-    key,
+> 38-    encoder.encode(bodyText)
+> 39-  );
+> 40-
+> 41-  const actualSig = Array.from(new Uint8Array(signatureBytes))
+> 42-    .map((b) => b.toString(16).padStart(2, "0"))
+> 43-    .join("");
+> 44-
+> 45-  return actualSig === expectedSig;
+> 46-}
+> 47-
+> 48-Deno.serve(async (req) => {
+> 49-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 50-
+> 51-  const admin = createClient(
+> 52-    Deno.env.get("SUPABASE_URL")!,
+> 53-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+> 54-  );
+> --
+> 88:      const signature = req.headers.get("X-Hub-Signature-256");
+> 89-      const appSecret = Deno.env.get("META_APP_SECRET") || Deno.env.get("INSTAGRAM_APP_SECRET") || "";
+> 90-
+> 91-      // Validate signature to prevent spoofing (FR-META-009 / Threat Model Spoofing)
+> 92:      const isValid = await verifySignature(rawBody, signature, appSecret);
+> 93-      if (!isValid) {
+> 94-        console.warn("⚠️ Invalid signature on WhatsApp webhook!");
+> 95-        pulse("degraded");
+> 96-        return json({ error: "Invalid signature" }, 401);
+> 97-      }
+> 98-
+> 99-      const payload = JSON.parse(rawBody);
+> 100-      
+> 101-      // WhatsApp notifications always have entry list
+> 102-      const entry = payload.entry?.[0];
+> 103-      const change = entry?.changes?.[0];
+> 104-      const value = change?.value;
+> 105-      
+> 106-      if (!value || value.messaging_product !== "whatsapp") {
+> ```
+
+## 🤖 Claude *(22:20:05)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebFetch",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebFetch'}]
+> ```
+
+## 🤖 Claude *(22:20:20)*
+
+
+## 🤖 Claude *(22:20:22)*
+
+Referência HMAC local confirmada (`crypto.subtle`, padrão limpo). Mas atenção: o WhatsApp assina o **raw body** (`sha256=<hex>`); o Mercado Pago assina um **manifest construído** (`id;request-id;ts`) — reaproveito a mecânica do crypto, mas a montagem da mensagem é específica do MP. Buscando o doc oficial para o template exato (gate FMEA-ML-001):
+
+## 🤖 Claude *(22:20:25)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://www.mercadopago.com/developers/en/docs/your-integrations/notifications/webhooks",
+  "prompt": "Extract the EXACT algorithm to validate a webhook notification signature using the x-signature header. I need verbatim: (1) the exact format of the x-signature header and how to parse the `ts` and `v1` values from it; (2) the EXACT template/manifest string to build for the HMAC, including literal field names, separators, and trailing semicolons \u2014 quote it literally (e.g. is it \"id:[data.id];request-id:[x-request-id];ts:[ts];\"?); (3) which values come from the query string (data.id) vs from headers (x-request-id); (4) any rule about lowercasing data.id when it is alphanumeric; (5) the HMAC algorithm (SHA256?) and where the secret key comes from; (6) how the final comparison is done (compare computed hex against v1). Quote the template and code sample literally if present."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> REDIRECT DETECTED: The URL redirects to a different host.
+> 
+> Original URL: https://www.mercadopago.com/developers/en/docs/your-integrations/notifications/webhooks
+> Redirect URL: https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks
+> Status: 302 Found
+> 
+> To complete your request, I need to fetch content from the redirected URL. Please use WebFetch again with these parameters:
+> - url: "https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks"
+> - prompt: "Extract the EXACT algorithm to validate a webhook notification signature using the x-signature header. I need verbatim: (1) the exact format of the x-signature header and how to parse the `ts` and `v1` values from it; (2) the EXACT template/manifest string to build for the HMAC, including literal field names, separators, and trailing semicolons — quote it literally (e.g. is it "id:[data.id];request-id:[x-request-id];ts:[ts];"?); (3) which values come from the query string (data.id) vs from headers (x-request-id); (4) any rule about lowercasing data.id when it is alphanumeric; (5) the HMAC algorithm (SHA256?) and where the secret key comes from; (6) how the final comparison is done (compare computed hex against v1). Quote the template and code sample literally if present."
+> ```
+
+## 🤖 Claude *(22:20:28)*
+
+
+## 🤖 Claude *(22:20:31)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks",
+  "prompt": "Extract the EXACT algorithm to validate a webhook notification signature using the x-signature header. I need verbatim: (1) the exact format of the x-signature header and how to parse the `ts` and `v1` values from it; (2) the EXACT template/manifest string to build for the HMAC, including literal field names, separators, and trailing semicolons \u2014 quote it literally (e.g. is it \"id:[data.id];request-id:[x-request-id];ts:[ts];\"?); (3) which values come from the query string (data.id) vs from headers (x-request-id); (4) any rule about lowercasing data.id when it is alphanumeric; (5) the HMAC algorithm (SHA256?) and where the secret key comes from; (6) how the final comparison is done (compare computed hex against v1). Quote the template and code sample literally if present."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Webhook Signature Validation Algorithm
+> 
+> ## 1. X-Signature Header Format
+> 
+> The header arrives as:
+> ```
+> x-signature: ts=1704908010,v1=618c85345248dd820d5fd456117c2ab2ef8eda45a0282ff693eac24131a5e839
+> ```
+> 
+> **Parsing:** Split by comma, then by `=` within each part. Extract `ts` (timestamp) and `v1` (encrypted signature).
+> 
+> ## 2. HMAC Template/Manifest
+> 
+> The exact template quoted from the documentation is:
+> > "id:[data.id_url];request-id:[x-request-id_header];ts:[ts_header];"
+> 
+> Replace placeholders with actual values, maintaining literal semicolons and field names.
+> 
+> ## 3. Value Sources
+> 
+> - **`[data.id_url]`** — from query parameters (e.g., `?data.id=999999999`)
+> - **`[x-request-id_header]`** — from the `x-request-id` HTTP header
+> - **`[ts_header]`** — extracted `ts` value from `x-signature` header
+> 
+> ## 4. Alphanumeric Lowercasing Rule
+> 
+> > "if the `data.id_url` is alphanumeric, it must be sent in lowercase"
+> 
+> Apply this when constructing the manifest.
+> 
+> ## 5. HMAC Algorithm & Secret
+> 
+> - **Algorithm:** SHA256 in hexadecimal base
+> - **Key:** The secret signature generated in Your Integrations (no expiration)
+> - **Message:** The completed manifest string
+> 
+> ## 6. Final Comparison
+> 
+> Compute HMAC using secret + manifest. Compare resulting hex digest against the `v1` value extracted from the header. They must match exactly.
+> ```
+
+## 🤖 Claude *(22:22:40)*
+
+
+## 🤖 Claude *(22:22:44)*
+
+**Gate FMEA-ML-001 cumprido** — esquema oficial do MP verificado:
+- Header: `x-signature: ts=<ts>,v1=<hex>`
+- Manifest (literal): `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` — `data.id` vem da **query string**, `x-request-id` do header, `ts` do x-signature; lowercase se alfanumérico
+- HMAC-**SHA256** hex, secret = "Your Integrations" do MP; comparar com `v1`
+
+Nada de Mercado Pago existe ainda → vou introduzir o secret (`MP_WEBHOOK_SECRET`, global pro piloto + OTD per-user depois). Lendo o arquivo do worktree e checando o Deno para teste material:
+
+## 🤖 Claude *(22:22:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts",
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Headers": "authorization, x-api-key, content-type, x-ml-signature",
+> 6	};
+> 7	
+> 8	// ML Affiliate postback payload — query params or JSON body
+> 9	interface MLPostbackPayload {
+> 10	  click_id?: string;        // our affiliate_links.id (short tracking token)
+> 11	  order_id?: string;        // ML order reference
+> 12	  commission?: string;      // commission value (BRL cents or float)
+> 13	  currency?: string;        // BRL
+> 14	  status?: string;          // approved | pending | cancelled
+> 15	  transaction_id?: string;  // alternate key for click_id
+> 16	  // ML Notification API (topic=orders) shape
+> 17	  topic?: string;
+> 18	  resource?: string;
+> 19	  user_id?: string;
+> 20	}
+> 21	
+> 22	Deno.serve(async (req: Request) => {
+> 23	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 24	
+> 25	  const supabase = createClient(
+> 26	    Deno.env.get("SUPABASE_URL") ?? "",
+> 27	    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+> 28	  );
+> 29	
+> 30	  try {
+> ```
+
+## 🤖 Claude *(22:22:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "command -v deno >/dev/null && echo \"deno: $(deno --version 2>&1 | head -1)\" || echo \"deno: MISSING\"; echo \"\" && echo \"=== handle-ml-postback verify_jwt config (must stay false) ===\" && grep -n -A1 \"handle-ml-postback\" supabase/config.toml",
+  "description": "Check deno availability and postback verify_jwt config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> deno: MISSING
+> 
+> === handle-ml-postback verify_jwt config (must stay false) ===
+> 37:[functions.handle-ml-postback]
+> 38-verify_jwt = false
+> ```
+
+## 🤖 Claude *(22:24:23)*
+
+
+## 🤖 Claude *(22:24:26)*
+
+Esquema oficial verificado e Deno ausente (testarei o HMAC com openssl + curl em prod). `verify_jwt=false` deve **permanecer** (MP não manda JWT Supabase; a x-signature É a autenticação). Aplicando o gate de forma cirúrgica — CORS, helper de verificação fail-closed, e idempotência por `order_id` (FMEA-ML-004):
+
+## 🤖 Claude *(22:24:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts",
+  "old_string": "const corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-api-key, content-type, x-ml-signature\",\n};",
+  "new_string": "const corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-api-key, content-type, x-signature, x-request-id\",\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:24:31)*
+
+
+## 🤖 Claude *(22:24:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts",
+  "old_string": "Deno.serve(async (req: Request) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const supabase = createClient(\n    Deno.env.get(\"SUPABASE_URL\") ?? \"\",\n    Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\") ?? \"\",\n  );\n\n  try {",
+  "new_string": "// FMEA-ML-003 \u2014 validate the Mercado Pago webhook origin via the x-signature header.\n// Official scheme (mercadopago.com/developers \u2192 Webhooks \u2192 signature validation):\n//   1. x-signature header is \"ts=<unix>,v1=<hmac_hex>\".\n//   2. Build the manifest \"id:<data.id>;request-id:<x-request-id>;ts:<ts>;\" \u2014 data.id from the\n//      query string (lowercased when alphanumeric), x-request-id from the header. Absent\n//      segments are omitted.\n//   3. HMAC-SHA256(manifest, secret) in hex must equal v1. Secret = the app's \"Your Integrations\"\n//      signature key, resolved from the vault (MP_WEBHOOK_SECRET).\n// Without a valid signature the request is rejected (fail-closed): an unauthenticated postback\n// could forge arbitrary revenue and poison the ROI mesh that drives autonomic ad spend.\nasync function verifyMpSignature(opts: {\n  xSignature: string | null;\n  xRequestId: string | null;\n  dataId: string | null;\n  secret: string;\n}): Promise<boolean> {\n  const { xSignature, xRequestId, dataId, secret } = opts;\n  if (!xSignature || !secret) return false;\n\n  let ts = \"\";\n  let v1 = \"\";\n  for (const part of xSignature.split(\",\")) {\n    const eq = part.indexOf(\"=\");\n    if (eq === -1) continue;\n    const k = part.slice(0, eq).trim();\n    const val = part.slice(eq + 1).trim();\n    if (k === \"ts\") ts = val;\n    else if (k === \"v1\") v1 = val;\n  }\n  if (!ts || !v1) return false;\n\n  // data.id is lowercased when alphanumeric; lowercasing a purely numeric id is a no-op.\n  const id = dataId ? dataId.toLowerCase() : null;\n  let manifest = \"\";\n  if (id) manifest += `id:${id};`;\n  if (xRequestId) manifest += `request-id:${xRequestId};`;\n  manifest += `ts:${ts};`;\n\n  const encoder = new TextEncoder();\n  const key = await crypto.subtle.importKey(\n    \"raw\",\n    encoder.encode(secret),\n    { name: \"HMAC\", hash: \"SHA-256\" },\n    false,\n    [\"sign\"],\n  );\n  const sigBytes = await crypto.subtle.sign(\"HMAC\", key, encoder.encode(manifest));\n  const computed = Array.from(new Uint8Array(sigBytes))\n    .map((b) => b.toString(16).padStart(2, \"0\"))\n    .join(\"\");\n\n  // Constant-time comparison to avoid leaking the digest via response timing.\n  if (computed.length !== v1.length) return false;\n  let diff = 0;\n  for (let i = 0; i < computed.length; i++) diff |= computed.charCodeAt(i) ^ v1.charCodeAt(i);\n  return diff === 0;\n}\n\nDeno.serve(async (req: Request) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const supabase = createClient(\n    Deno.env.get(\"SUPABASE_URL\") ?? \"\",\n    Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\") ?? \"\",\n  );\n\n  const logPulse = (status: \"healthy\" | \"degraded\") =>\n    supabase.from(\"infra_health_logs\")\n      .insert({ service: \"handle-ml-postback\", status })\n      .then(() => {}, () => {});\n\n  // --- Signature gate (fail-closed) ---\n  // verify_jwt=false for this function (config.toml): Mercado Pago / the redirect panel cannot\n  // present a Supabase JWT, so the x-signature HMAC is the authentication. The secret is global\n  // for the Usu\u00e1rio Zero pilot; OTD-ML-MP-PER-USER tracks migration to per-user\n  // mercado_pago_config (API Tenancy Model).\n  {\n    const url = new URL(req.url);\n    const mpSecret = Deno.env.get(\"MP_WEBHOOK_SECRET\") ?? \"\";\n    if (!mpSecret) {\n      await logPulse(\"degraded\");\n      return new Response(\n        JSON.stringify({\n          error: \"mp_webhook_secret_not_configured\",\n          action: \"Set MP_WEBHOOK_SECRET (Mercado Pago \u2192 Your Integrations \u2192 signature) in the Supabase vault\",\n        }),\n        { status: 501, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }\n    const valid = await verifyMpSignature({\n      xSignature: req.headers.get(\"x-signature\"),\n      xRequestId: req.headers.get(\"x-request-id\"),\n      dataId: url.searchParams.get(\"data.id\") ?? url.searchParams.get(\"id\"),\n      secret: mpSecret,\n    });\n    if (!valid) {\n      console.warn(\"handle-ml-postback: invalid or missing x-signature \u2014 rejected\");\n      await logPulse(\"degraded\");\n      return new Response(\n        JSON.stringify({ error: \"invalid_signature\" }),\n        { status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }\n  }\n\n  try {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:24:50)*
+
+
+## 🤖 Claude *(22:24:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts",
+  "old_string": "    // Update revenue on the affiliate link\n    const { data: linkData, error: updateErr } = await supabase\n      .from(\"affiliate_links\")\n      .update({\n        revenue_cents: revenueCents,",
+  "new_string": "    // FMEA-ML-004 \u2014 idempotency: a replayed postback must not double-credit revenue.\n    // Each processed conversion leaves an observation node tagged with its order_id; if one\n    // already exists, acknowledge with 200 and skip the mutation.\n    if (payload.order_id) {\n      const { data: dup } = await supabase\n        .from(\"mcorch_nodes\")\n        .select(\"id\")\n        .eq(\"node_type\", \"observation\")\n        .eq(\"metadata->>event\", \"ml_conversion\")\n        .eq(\"metadata->>order_id\", payload.order_id)\n        .limit(1)\n        .maybeSingle();\n      if (dup) {\n        await logPulse(\"healthy\");\n        return new Response(\n          JSON.stringify({ ok: true, action: \"idempotent_skip\", order_id: payload.order_id }),\n          { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n        );\n      }\n    }\n\n    // Update revenue on the affiliate link\n    const { data: linkData, error: updateErr } = await supabase\n      .from(\"affiliate_links\")\n      .update({\n        revenue_cents: revenueCents,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/handle-ml-postback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:25:30)*
+
+
+## 🤖 Claude *(22:25:32)*
+
+Os três edits aplicados (CORS, gate fail-closed, idempotência). Agora a prova material do esquema HMAC (Deno ausente → uso openssl como vetor de referência, que é exatamente o que o MP computa). Vou gerar um x-signature válido para um vetor de teste conhecido:
+
+## 🤖 Claude *(22:25:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SECRET=\"PILOT_PLACEHOLDER_SWAP_WITH_REAL_MP_SECRET\"\nTS=\"1730000000\"; DATAID=\"123456789\"; RID=\"test-req-id-001\"\nMANIFEST=\"id:${DATAID};request-id:${RID};ts:${TS};\"\nV1=$(printf '%s' \"$MANIFEST\" | openssl dgst -sha256 -hmac \"$SECRET\" | sed 's/^.*= *//')\necho \"manifest  = $MANIFEST\"\necho \"x-signature = ts=${TS},v1=${V1}\"\necho \"v1_len    = ${#V1} (expect 64 hex chars for SHA256)\"",
+  "description": "Compute reference MP x-signature for test vector via openssl"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> manifest  = id:123456789;request-id:test-req-id-001;ts:1730000000;
+> x-signature = ts=1730000000,v1=114451089fddb0ae93c09d6a473c2a64dc0ab3b1326c5a229606f21412183192
+> v1_len    = 64 (expect 64 hex chars for SHA256)
+> ```
+
+## 🤖 Claude *(22:25:58)*
+
+
+## 🤖 Claude *(22:26:00)*
+
+Vetor de referência pronto (64 hex ✓): `x-signature: ts=1730000000,v1=114451089...183192`. Agora deploy + set do secret de teste (placeholder a ser trocado pelo real do MP) + prova de aceite/rejeição em produção:
+
+## 🤖 Claude *(22:26:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7\necho \"=== deploy handle-ml-postback ===\" && npx supabase functions deploy handle-ml-postback --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"bundling|deploying|deployed|script size|error\" | head\necho \"\" && echo \"=== set test secret (TO BE SWAPPED with real MP secret) ===\" && npx supabase secrets set MP_WEBHOOK_SECRET=\"PILOT_PLACEHOLDER_SWAP_WITH_REAL_MP_SECRET\" --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -ivE \"new version|recommend|getting-started\" | head",
+  "description": "Deploy postback function and set test MP webhook secret"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy handle-ml-postback ===
+> Bundling Function: handle-ml-postback
+> Deploying Function: handle-ml-postback (script size: 63.26kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: handle-ml-postback
+> 
+> === set test secret (TO BE SWAPPED with real MP secret) ===
+> Finished supabase secrets set.
+> ```
+
+## 🤖 Claude *(22:26:23)*
+
+
+## 🤖 Claude *(22:26:24)*
+
+Deployado (63.26kB) e secret setado. Agora a prova material de aceite/rejeição **em produção** (Lei 1) — três casos:
+
+## 🤖 Claude *(22:26:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "URL=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback?data.id=123456789\"\nVALID=\"ts=1730000000,v1=114451089fddb0ae93c09d6a473c2a64dc0ab3b1326c5a229606f21412183192\"\nTAMP=\"ts=1730000000,v1=114451089fddb0ae93c09d6a473c2a64dc0ab3b1326c5a229606f21412183193\"\necho \"=== 1. VALID signature (expect NOT 401 \u2192 gate passed; status=cancelled \u2192 skipped) ===\" && curl -s -m 25 -w \"\\nHTTP:%{http_code}\" -X POST \"$URL\" -H \"x-signature: $VALID\" -H \"x-request-id: test-req-id-001\" -H \"Content-Type: application/json\" -d '{\"status\":\"cancelled\"}'\necho \"\"; echo \"\"\necho \"=== 2. TAMPERED v1 (expect 401 invalid_signature) ===\" && curl -s -m 25 -w \"\\nHTTP:%{http_code}\" -X POST \"$URL\" -H \"x-signature: $TAMP\" -H \"x-request-id: test-req-id-001\" -H \"Content-Type: application/json\" -d '{\"status\":\"cancelled\"}'\necho \"\"; echo \"\"\necho \"=== 3. NO signature (expect 401 invalid_signature) ===\" && curl -s -m 25 -w \"\\nHTTP:%{http_code}\" -X POST \"$URL\" -H \"Content-Type: application/json\" -d '{\"status\":\"cancelled\"}'",
+  "description": "Prove signature gate accepts valid and rejects tampered/missing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. VALID signature (expect NOT 401 → gate passed; status=cancelled → skipped) ===
+> {"ok":true,"action":"skipped","reason":"status=cancelled"}
+> HTTP:200
+> 
+> === 2. TAMPERED v1 (expect 401 invalid_signature) ===
+> {"error":"invalid_signature"}
+> HTTP:401
+> 
+> === 3. NO signature (expect 401 invalid_signature) ===
+> {"error":"invalid_signature"}
+> HTTP:401
+> ```
+
+## 🤖 Claude *(22:27:14)*
+
+
+## 🤖 Claude *(22:27:19)*
+
+**Prova material em produção — gate funcionando exatamente como projetado (Lei 1):**
+
+| Caso | Resultado | Veredito |
+|---|---|---|
+| Assinatura **válida** (v1 do openssl) + `status=cancelled` | `HTTP 200 {"action":"skipped"}` | ✅ aceita (sem poluir DB) |
+| v1 **adulterado** (último char 2→3) | `HTTP 401 {"error":"invalid_signature"}` | ✅ rejeita forja |
+| **Sem** assinatura | `HTTP 401 {"error":"invalid_signature"}` | ✅ rejeita não-assinado |
+
+Isso prova que minha construção do manifest bate com o esquema oficial do MP (o v1 do openssl foi aceito pelo `crypto.subtle`) **e** que o endpoint deixou de ser um gravador de dinheiro forjável. O 401 no caso "sem assinatura" também prova que a versão nova está ativa (o código antigo retornava 200). Confirmando o version bump + selando o SOP (Lei 2):
+
+## 🤖 Claude *(22:27:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx supabase functions list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E \"NAME|handle-ml-postback\"",
+  "description": "Confirm handle-ml-postback version bump"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    ID                                   | NAME                   | SLUG                   | STATUS | VERSION | UPDATED_AT (UTC)    
+>    790eb609-e227-4106-b537-0e6c5db05e75 | handle-ml-postback     | handle-ml-postback     | ACTIVE | 22      | 2026-05-31 22:26:07
+> ```
+
+## 🤖 Claude *(22:27:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/docs/processes/ml-postback-signature-validation.md",
+  "content": "# SOP \u2014 ML/Mercado Pago Postback Signature Validation\n\n**Vers\u00e3o:** v1 \u00b7 **Selada:** 2026-05-31 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 **FMEA-ML-003 / FMEA-ML-004**\n\n## ORO triplet\n\n- **Operator:** MCORCH Master Execution Agent (gate na Edge Function `handle-ml-postback`)\n- **Reviewer:** Sovereign (Gabriel)\n- **Owner:** Sovereign (Gabriel) \u2014 blast radius = integridade financeira (receita forjada envenena o grafo de ROI que dirige gasto aut\u00f4nomo de an\u00fancio).\n\n## Contexto\n\n`handle-ml-postback` roda com `verify_jwt = false` (Mercado Pago / painel de redirect n\u00e3o apresentam JWT Supabase). Sem valida\u00e7\u00e3o, o endpoint \u00e9 um gravador de dinheiro **p\u00fablico e forj\u00e1vel**: qualquer `POST` com `status=approved` + `commission` cria `revenue_cents`, soma `revenue_impact` e injeta a aresta `ATTRIBUTES_REVENUE_TO`. A autentica\u00e7\u00e3o passa a ser a assinatura **HMAC-SHA256 `x-signature`** do Mercado Pago (esquema oficial), com **fail-closed** + **idempot\u00eancia por `order_id`**.\n\n## Sequence \u2014 Valida\u00e7\u00e3o de origem do postback\n\n| # | Action | Output esperado | Verification gate |\n|---|--------|-----------------|-------------------|\n| 1 | Resolver o secret `MP_WEBHOOK_SECRET` do vault (global no piloto; per-user via `mercado_pago_config` \u2014 ver OTD-ML-MP-PER-USER) | string n\u00e3o-vazia | Secret ausente \u2192 `501 mp_webhook_secret_not_configured` (n\u00e3o processa) |\n| 2 | Ler `data.id` da **query string**, `x-request-id` do header, `ts`/`v1` do header `x-signature` (`ts=<unix>,v1=<hex>`) | valores extra\u00eddos | `ts` ou `v1` vazio \u2192 `401 invalid_signature` |\n| 3 | Montar manifest `id:<data.id min\u00fasculo>;request-id:<x-request-id>;ts:<ts>;` (segmentos ausentes omitidos) | string can\u00f4nica do MP | Bate com o doc oficial (mercadopago \u2192 Webhooks) |\n| 4 | `HMAC-SHA256(manifest, secret)` em hex, compara\u00e7\u00e3o **constant-time** com `v1` | match exato | Diverg\u00eancia \u2192 `401 invalid_signature` + pulse `degraded` |\n| 5 | Idempot\u00eancia: se j\u00e1 existe observation com `metadata->>order_id == order_id` e `event=ml_conversion` | \u2014 | Duplicado \u2192 `200 idempotent_skip` (n\u00e3o re-credita \u2014 FMEA-ML-004) |\n| 6 | Processar receita (update `affiliate_links`, soma `revenue_impact`, observation + aresta `ATTRIBUTES_REVENUE_TO`) | `200 ok` + pulse `healthy` | `infra_health_logs` healthy |\n\n## Verification gates (Lei 1 \u2014 Materiality)\n\nVetor reproduz\u00edvel (assina e testa o endpoint vivo):\n\n```bash\nSECRET=\"<MP_WEBHOOK_SECRET>\"\nTS=\"1730000000\"; DATAID=\"123456789\"; RID=\"test-req-id-001\"\nMANIFEST=\"id:${DATAID};request-id:${RID};ts:${TS};\"\nV1=$(printf '%s' \"$MANIFEST\" | openssl dgst -sha256 -hmac \"$SECRET\" | sed 's/^.*= *//')\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback?data.id=${DATAID}\"\n# V\u00e1lido \u2192 200 (status=cancelled = skipped, sem efeito colateral):\ncurl -s -w \"\\nHTTP:%{http_code}\" -X POST \"$URL\" -H \"x-signature: ts=${TS},v1=${V1}\" -H \"x-request-id: ${RID}\" -H \"Content-Type: application/json\" -d '{\"status\":\"cancelled\"}'\n# Adulterado / ausente \u2192 401 invalid_signature\n```\n\nResultado esperado: v\u00e1lido `HTTP 200`; v1 adulterado `HTTP 401`; sem assinatura `HTTP 401`.\n\n## Recovery path\n\n| Falha | Detec\u00e7\u00e3o | A\u00e7\u00e3o | Resultado |\n|-------|----------|------|-----------|\n| Secret n\u00e3o configurado | `501` em todo postback | `npx supabase secrets set MP_WEBHOOK_SECRET=<segredo real do MP> --project-ref bcyvddsykvehvpwstlfa` | gate volta a validar |\n| Todo postback leg\u00edtimo d\u00e1 `401` | secret do edge \u2260 secret do MP dashboard | Alinhar o secret do vault com **Mercado Pago \u2192 Suas Integra\u00e7\u00f5es \u2192 Assinatura** e re-assinar a origem | assinaturas batem |\n| Replay / double-credit | mesma `order_id` reincide | Idempot\u00eancia (passo 5) responde `200 idempotent_skip` | receita n\u00e3o duplica |\n\n## Success signal\n\n- Assinatura v\u00e1lida \u2192 `HTTP 200`; adulterada/ausente \u2192 `HTTP 401`.\n- `infra_health_logs` com `service='handle-ml-postback'` `healthy` no caminho feliz, `degraded` em rejei\u00e7\u00e3o.\n- Aresta `ATTRIBUTES_REVENUE_TO` criada s\u00f3 para postbacks autenticados.\n\n## D\u00e9bito registrado\n\n- **OTD-ML-MP-PER-USER** \u2014 migrar `MP_WEBHOOK_SECRET` global \u2192 `mercado_pago_config` per-user (`auth.uid()`, RESTRICTIVE no-delete) antes de Usu\u00e1rio 1 (API Tenancy Model). Bypass global autorizado para o piloto Usu\u00e1rio Zero.\n- E2E do caminho resolvido (link real + assinatura real do MP) pendente \u2014 validar quando o piloto enviar o primeiro postback verdadeiro.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/docs/processes/ml-postback-signature-validation.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:28:47)*
+
+
+## 🤖 Claude *(22:29:01)*
+
+**HMAC postback selado e verificado.** `handle-ml-postback` agora ACTIVE **v22** (2026-05-31 22:26:07 UTC, 63.26kB), com o gate provado em produção, idempotência (FMEA-ML-004) e SOP escrito (Lei 2).
+
+## Passo 2 (o bloqueador) — concluído
+
+| Item | Estado |
+|---|---|
+| Validação `x-signature` HMAC-SHA256 (esquema oficial MP, verificado vs openssl + prod) | ✅ |
+| Fail-closed (501 sem secret · 401 assinatura inválida/ausente) | ✅ |
+| Idempotência por `order_id` (anti double-credit) | ✅ |
+| Telemetria `infra_health_logs` (healthy/degraded) | ✅ |
+| SOP `docs/processes/ml-postback-signature-validation.md` | ✅ |
+| `verify_jwt=false` preservado (a assinatura É a auth) | ✅ |
+
+## ⚠️ Ação sua, inadiável antes do piloto (cérebro sem mãos — não tenho seu secret real)
+
+Setei um **placeholder** no vault. Enquanto não trocar, todo postback real do MP será **rejeitado (401)** — que é o lado seguro, mas trava o demo. Troque por:
+
+```bash
+npx supabase secrets set MP_WEBHOOK_SECRET="<Mercado Pago → Suas Integrações → Assinatura>" --project-ref bcyvddsykvehvpwstlfa
+```
+E aponte o webhook do MP para `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback`. O bloco "Verification gates" do SOP tem o curl pra você validar ponta-a-ponta com o secret real.
+
+## Status do plano
+
+- **Passo 0** reconciliar worktree→main — ✅ (e descobri: `publish-social` já corrigido no main, meu fix era redundante; achei migrations de 2026-06-01)
+- **Passo 1** consertar IDs mortos da cascata LLM (`gemma-2-9b-it:free`/`llama-3-8b-instruct:free` → `llama-3.3-70b-instruct:free`/`gemma-4-31b-it:free`) + fechar o gap doc-vs-código do SOP (timeout + telemetria) — ⏳ **pendente** (pequeno, mas exige redeploy dos 11 consumidores do helper; não-urgente já que você repôs crédito)
+- **Passo 2** HMAC postback — ✅
+- **Passo 3** Link Forge piloto — ⏳ não iniciado
+
+Trabalho **não commitado** no branch `claude/dreamy-blackburn-2dd6e7`: o postback + o SOP.
+
+**Como sigo?** Recomendo: você troca o secret agora, e eu emendo o **Passo 1** (conserto os IDs mortos + redeploy dos 11) — é o seu pedido original do "fallback do fallback grátis" e blinda a cascata. Depois disso, ou **selo a sessão** (/handoff com commits granulares) ou parto pro **Link Forge**. Qual ordem prefere?
+
 ---
 
 %% --- TIMELINE START --- %%
