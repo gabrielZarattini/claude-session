@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 224
-> * **Sessões do Claude**: 194
+> * **Total de Sessões Registradas**: 225
+> * **Sessões do Claude**: 195
 > * **Sessões do Gemini**: 30
 
 ---
@@ -22,6 +22,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` - *2026-05-01*
 
 ### JWT & Authentication
+*   `[[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]` - *2026-05-31*
 *   `[[2026-05-30 - Fix cross-tenant JWT impersonation vulnerability]]` - *2026-05-30*
 *   `[[2026-05-28 - Plan JWT refactor and affiliate token migration]]` - *2026-05-28*
 *   `[[2026-05-27 - Plan JWT refactor and affiliate token migration]]` - *2026-05-27*
@@ -71,6 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Maio 2026
 *   `[[2026-05-31 - handson]]` (GeminiSessions)
+*   `[[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]` (ClaudeSessions)
 *   `[[2026-05-30 - handson]]` (GeminiSessions)
 *   `[[2026-05-30 - Você se lembra que criamos um...]]` (GeminiSessions)
 *   `[[2026-05-30 - Seal meta-api BoK suite and test robustness]]` (ClaudeSessions)

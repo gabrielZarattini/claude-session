@@ -4245,4 +4245,5 @@ Como prefere seguir?
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-30 - Fix tenant isolation in edge functions]]
+> * **Próxima Sessão**: [[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]
 %% --- TIMELINE END --- %%
