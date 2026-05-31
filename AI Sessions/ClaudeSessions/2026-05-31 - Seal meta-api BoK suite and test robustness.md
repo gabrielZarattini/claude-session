@@ -1,5 +1,5 @@
-# [[2026-05-31 - Seal meta-api BoK suite and test robustness|Seal meta-api BoK suite and test robustness]]
-**Date:** 2026-05-30 | **Session ID:** `d5a18d1e-e61e-43ea-ac57-2f21f4706303`
+# [[2026-05-30 - Seal meta-api BoK suite and test robustness|Seal meta-api BoK suite and test robustness]]
+**Date:** 2026-05-31 | **Session ID:** `d5a18d1e-e61e-43ea-ac57-2f21f4706303`
 
 ---
 
@@ -4240,10 +4240,43 @@ CLAUDE.md Key Files Reference atualizado.
 
 Como prefere seguir?
 
+## 👤 User *(01:37:34)*
+
+verifique se precisa fazer o handoff ou continuar nessa sessão...
+
+## 🤖 Claude *(01:38:19)*
+
+
+## 🤖 Claude *(01:38:33)*
+
+Verifiquei o estado material e o contexto. Minha leitura:
+
+## Veredito: **selar agora (`/handoff`)** — é o ponto de corte natural.
+
+**Por quê (4 razões materiais):**
+
+1. **Fase coerente terminou.** Passo 1 (`publish-meta` + fundação `meta_config`) está completo e **verificado**: `tsc` 0 erros · `vitest` 217/217 · `eslint` limpo nos arquivos novos · `/security-review` rodado (1 MEDIUM achado **e corrigido**). Tenho as provas em mão agora — selar captura isso fresco (Lei 1).
+
+2. **O trabalho está descommitado.** 9 arquivos no worktree, nenhum commit. Se a sessão virar sem selo, isso fica sem materialização. O `/handoff` faz os commits granulares + nó milestone no mesh + atualiza README/HANDOFF. **Não selar = risco de perda.**
+
+3. **Passo 2 e 3 são fatias distintas, não continuação.** `whatsapp-webhook` (endpoint público + validação HMAC + `whatsapp_leads`) e `ROIWidget × meta_ads_metrics` têm cada um **seu próprio SOP (Lei 2) e sua própria superfície de segurança**. Continuar agora misturaria 3 features num selo só — review mais sujo, foco diluído (Lei 3).
+
+4. **Higiene de contexto (Lei 3).** A sessão já carregou: handson + leitura do BoK + 9 arquivos + security review + suíte completa de 5min. Selar reseta o foco para a próxima fatia.
+
+## A única sub-decisão aberta: **deploy antes ou depois do selo**
+
+| Opção | O que acontece | Quando faz sentido |
+|-------|----------------|--------------------|
+| **A — Deploy → depois selo** | `build-deploy-guardian`: `db push` (migration) + `functions deploy publish-meta` com prova `ACTIVE` + smoke dos 7 gates → selo carrega **prova material de deploy** | Se você quer o Passo 1 **vivo** já (e topa migration em prod agora) |
+| **B — Selo agora, deploy depois** | Selo do estado "especificado + construído + verificado local, deploy pendente" → deploy vira primeira ação da próxima sessão | Se prefere revisar o diff/segurança antes de tocar prod |
+
+Como o deploy é **outward-facing e irreversível** (migration em produção), não disparo sem seu "vai". Minha recomendação: **Opção A** se você quiser validar o gateway hoje (eu deployo com materialidade e selo com a prova); **Opção B** se quiser revisar antes.
+
+**Quer que eu rode o `/handoff` agora?** Se sim, me diz A ou B que eu conduzo.
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-05-30 - Fix tenant isolation in edge functions]]
-> * **Próxima Sessão**: [[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]
+> * **Sessão Anterior**: [[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]
 %% --- TIMELINE END --- %%
