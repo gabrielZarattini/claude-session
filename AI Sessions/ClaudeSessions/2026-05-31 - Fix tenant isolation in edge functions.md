@@ -1,5 +1,5 @@
-# [[2026-05-31 - Fix tenant isolation in edge functions|Fix tenant isolation in edge functions]]
-**Date:** 2026-05-30 | **Session ID:** `9dfbd984-e929-4692-9617-6d369414f2f2`
+# [[2026-05-30 - Fix tenant isolation in edge functions|Fix tenant isolation in edge functions]]
+**Date:** 2026-05-31 | **Session ID:** `9dfbd984-e929-4692-9617-6d369414f2f2`
 
 ---
 
@@ -1820,10 +1820,474 @@ Encontrei uma **classe distinta e provavelmente mais grave**: `check-video-statu
 1. **Lei 2 / Anticorpo Permanente:** sintetizar este obstáculo num SOP (`docs/processes/edge-function-service-role-identity.md`) + skill, já que o Padrão B prova que a mesma classe de erro recorre. Posso draftar agora.
 2. **Commit:** ainda não commitei (regra: só quando você pedir). O diff está pronto em `supabase/functions/publish-social/index.ts`. Quer que eu sele com `fix(security): gate publish-social body.user_id behind service-role`?
 
+## 👤 User *(15:15:04)*
+
+antes de fazer o handoff aqui precisamos de um fallback para o openrouter, usar ele mesmo mas com o melhor free que ele tem disponivel pois acabou o credito e os ultimos handoffs não conseguiu seguir com essa dependencia, como por exemplo os embeddings
+
+## 🤖 Claude *(15:15:35)*
+
+
+## 🤖 Claude *(15:15:39)*
+
+Entendido. O problema: o crédito do OpenRouter acabou e isso trava handoffs (ex.: o `embed-mcorch-node` que roda ao inserir o milestone node). Você quer um fallback que continue no OpenRouter, mas usando o melhor modelo `:free` quando o pago retornar "sem crédito".
+
+Antes de desenhar qualquer coisa, preciso de fatos materiais: quem chama o OpenRouter, como, e — crítico — se o OpenRouter sequer oferece **embeddings free** (senão o fallback "usar ele mesmo" não se aplica a embeddings e eu teria que te dizer isso, não inventar). Investigando:
+
+## 🤖 Claude *(15:15:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== functions referencing openrouter ===\" && grep -rln -i \"openrouter\" supabase/functions/ 2>/dev/null | sort && echo \"\" && echo \"=== embedding model strings ===\" && grep -rn -i \"text-embedding\\|/embeddings\\|embedding-3\\|dimensions\" supabase/functions/ 2>/dev/null | head -30 && echo \"\" && echo \"=== :free model usage already present? ===\" && grep -rn \":free\" supabase/functions/ src/ 2>/dev/null | head -20",
+  "description": "Map OpenRouter and embedding usage across functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === functions referencing openrouter ===
+> supabase/functions/agent-task-execute/index.ts
+> supabase/functions/analyze-node/index.ts
+> supabase/functions/analyze-sem/index.ts
+> supabase/functions/analyze-seo/index.ts
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/check-video-status/index.ts
+> supabase/functions/embed-mcorch-node/index.ts
+> supabase/functions/generate-audio-script/index.ts
+> supabase/functions/generate-content/index.ts
+> supabase/functions/generate-image/index.ts
+> supabase/functions/generate-video/index.ts
+> supabase/functions/generate-video-script/index.ts
+> supabase/functions/list-provider-models/index.ts
+> supabase/functions/openrouter-swarm/index.ts
+> supabase/functions/optimize-schedule/index.ts
+> supabase/functions/orchestrate-content/index.ts
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/search-constellation/index.ts
+> supabase/functions/self-optimize/index.ts
+> 
+> === embedding model strings ===
+> supabase/functions/embed-mcorch-node/index.ts:86:  // Batch call: input is an array of strings — supported by text-embedding-3-small.
+> supabase/functions/embed-mcorch-node/index.ts:88:  const embeddingRes = await fetch("https://openrouter.ai/api/v1/embeddings", {
+> supabase/functions/embed-mcorch-node/index.ts:97:      model: "openai/text-embedding-3-small",
+> supabase/functions/embed-mcorch-node/index.ts:99:      dimensions: 768,
+> supabase/functions/embed-mcorch-node/index.ts:119:      JSON.stringify({ error: "Unexpected embedding dimensions", dims: chunkVectors?.[0]?.length }),
+> supabase/functions/embed-mcorch-node/index.ts:152:    JSON.stringify({ node_id, dims: 768, chunks: chunks.length, model: "openai/text-embedding-3-small", stitched }),
+> supabase/functions/search-constellation/index.ts:45:  const embRes = await fetch("https://openrouter.ai/api/v1/embeddings", {
+> supabase/functions/search-constellation/index.ts:54:      model: "openai/text-embedding-3-small",
+> supabase/functions/search-constellation/index.ts:56:      dimensions: 768,
+> supabase/functions/search-constellation/index.ts:70:    return err(502, `Invalid embedding dimensions: ${vector?.length}`);
+> 
+> === :free model usage already present? ===
+> supabase/functions/openrouter-swarm/index.ts:12:  "meta-llama/llama-3-8b-instruct:free",
+> supabase/functions/openrouter-swarm/index.ts:13:  "google/gemma-7b-it:free",
+> supabase/functions/openrouter-swarm/index.ts:14:  "mistralai/mistral-7b-instruct:free",
+> src/components/core/AIOSTerminal.tsx:42:  { id: "meta-llama/llama-3.3-70b-instruct:free", label: "Llama 3.3 70B ✦free", provider: "openrouter" },
+> src/pages/ModelArenaPage.tsx:312:                      {run.fastest_model.split('/').pop()?.replace(':free', '')}
+> src/hooks/useSwarmArena.ts:34:  { id: 'meta-llama/llama-3-8b-instruct:free', label: 'Llama 3 8B', provider: 'Meta', color: '#7c3aed', enabled: true },
+> src/hooks/useSwarmArena.ts:35:  { id: 'google/gemma-7b-it:free', label: 'Gemma 7B', provider: 'Google', color: '#06b6d4', enabled: true },
+> src/hooks/useSwarmArena.ts:36:  { id: 'mistralai/mistral-7b-instruct:free', label: 'Mistral 7B', provider: 'Mistral AI', color: '#d946ef', enabled: true },
+> ```
+
+## 🤖 Claude *(15:15:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/embed-mcorch-node/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 7	};
+> 8	
+> 9	// FMEA-005: chunk at semantic boundaries so nodes > 8 192 tokens are fully embedded
+> 10	// via vector averaging rather than silently truncated by the API.
+> 11	const CHUNK_CHARS = 20_000; // ≈5 000 tokens — safe margin below the 8 192-token API limit
+> 12	
+> 13	function splitChunks(text: string): string[] {
+> 14	  if (text.length <= CHUNK_CHARS) return [text];
+> 15	  const chunks: string[] = [];
+> 16	  let pos = 0;
+> 17	  while (pos < text.length) {
+> 18	    let end = Math.min(pos + CHUNK_CHARS, text.length);
+> 19	    if (end < text.length) {
+> 20	      const boundary = text.lastIndexOf("\n\n", end);
+> 21	      if (boundary > pos + CHUNK_CHARS / 2) end = boundary;
+> 22	    }
+> 23	    chunks.push(text.slice(pos, end));
+> 24	    pos = end;
+> 25	  }
+> 26	  return chunks;
+> 27	}
+> 28	
+> 29	function averageVectors(vectors: number[][]): number[] {
+> 30	  const dims = vectors[0].length;
+> 31	  const avg = new Array<number>(dims).fill(0);
+> 32	  for (const v of vectors) for (let i = 0; i < dims; i++) avg[i] += v[i];
+> 33	  return avg.map((x) => x / vectors.length);
+> 34	}
+> 35	
+> 36	Deno.serve(async (req) => {
+> 37	  if (req.method === "OPTIONS") {
+> 38	    return new Response("ok", { headers: corsHeaders });
+> 39	  }
+> 40	
+> 41	  const supabase = createClient(
+> 42	    Deno.env.get("SUPABASE_URL")!,
+> 43	    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+> 44	  );
+> 45	
+> 46	  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> 47	  if (!openRouterKey) {
+> 48	    return new Response(
+> 49	      JSON.stringify({ error: "OPENROUTER_API_KEY not configured" }),
+> 50	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 51	    );
+> 52	  }
+> 53	
+> 54	  let node_id: string;
+> 55	  try {
+> 56	    ({ node_id } = await req.json());
+> 57	    if (!node_id) throw new Error("missing node_id");
+> 58	  } catch {
+> 59	    return new Response(
+> 60	      JSON.stringify({ error: "Request body must contain { node_id: string }" }),
+> 61	      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 62	    );
+> 63	  }
+> 64	
+> 65	  // Fetch node content
+> 66	  const { data: node, error: fetchErr } = await supabase
+> 67	    .from("mcorch_nodes")
+> 68	    .select("id, name, content, node_type")
+> 69	    .eq("id", node_id)
+> 70	    .maybeSingle();
+> 71	
+> 72	  if (fetchErr || !node) {
+> 73	    return new Response(
+> 74	      JSON.stringify({ error: "Node not found", node_id }),
+> 75	      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 76	    );
+> 77	  }
+> 78	
+> 79	  // Split content into semantic chunks; prepend name only to chunk 0 for semantic anchoring.
+> 80	  const rawContent = (node.content ?? "").trimEnd();
+> 81	  const chunks = splitChunks(rawContent);
+> 82	  const inputs = chunks.map((chunk, i) =>
+> 83	    i === 0 ? [node.name, chunk].filter(Boolean).join("\n\n") : chunk
+> 84	  );
+> 85	
+> 86	  // Batch call: input is an array of strings — supported by text-embedding-3-small.
+> 87	  // Single-chunk nodes follow the same code path with inputs.length === 1.
+> 88	  const embeddingRes = await fetch("https://openrouter.ai/api/v1/embeddings", {
+> 89	    method: "POST",
+> 90	    headers: {
+> 91	      "Authorization": `Bearer ${openRouterKey}`,
+> 92	      "Content-Type": "application/json",
+> 93	      "HTTP-Referer": "https://mcorch.com",
+> 94	      "X-Title": "MCORCH Knowledge Mesh",
+> 95	    },
+> 96	    body: JSON.stringify({
+> 97	      model: "openai/text-embedding-3-small",
+> 98	      input: inputs,
+> 99	      dimensions: 768,
+> 100	    }),
+> 101	  });
+> 102	
+> 103	  if (!embeddingRes.ok) {
+> 104	    const errText = await embeddingRes.text();
+> 105	    console.error("OpenRouter embedding error:", errText);
+> 106	    return new Response(
+> 107	      JSON.stringify({ error: "Embedding generation failed", upstream: errText }),
+> 108	      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 109	    );
+> 110	  }
+> 111	
+> 112	  const embeddingData = await embeddingRes.json();
+> 113	  const chunkVectors: number[][] = embeddingData?.data?.map(
+> 114	    (d: { embedding: number[] }) => d.embedding,
+> 115	  );
+> 116	
+> 117	  if (!Array.isArray(chunkVectors) || chunkVectors.length === 0 || chunkVectors[0]?.length !== 768) {
+> 118	    return new Response(
+> 119	      JSON.stringify({ error: "Unexpected embedding dimensions", dims: chunkVectors?.[0]?.length }),
+> 120	      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 121	    );
+> 122	  }
+> 123	
+> 124	  const vector = chunkVectors.length === 1 ? chunkVectors[0] : averageVectors(chunkVectors);
+> 125	
+> 126	  // Store embedding and touch last_seen_at
+> 127	  const { error: updateErr } = await supabase
+> 128	    .from("mcorch_nodes")
+> 129	    .update({ embedding: vector, last_seen_at: new Date().toISOString() })
+> 130	    .eq("id", node_id);
+> 131	
+> 132	  if (updateErr) {
+> 133	    console.error("DB update error:", updateErr);
+> 134	    return new Response(
+> 135	      JSON.stringify({ error: "Failed to store embedding", detail: updateErr.message }),
+> 136	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 137	    );
+> 138	  }
+> 139	
+> 140	  // OE-661-003 Target Binding: observation nodes must be stitched to a source artifact.
+> 141	  // Best-effort — never blocks the response.
+> 142	  let stitched = 0;
+> 143	  if (node.node_type === "observation") {
+> 144	    try {
+> 145	      stitched = await autoStitchObservation(supabase, node.id, node.name, rawContent);
+> 146	    } catch (err) {
+> 147	      console.error("auto-stitch error:", err);
+> 148	    }
+> 149	  }
+> 150	
+> 151	  return new Response(
+> 152	    JSON.stringify({ node_id, dims: 768, chunks: chunks.length, model: "openai/text-embedding-3-small", stitched }),
+> 153	    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 154	  );
+> 155	});
+> 156	
+> 157	// Extracts file path candidates (path/to/file.ext) from text using a conservative regex.
+> 158	const FILE_PATH_RE = /[a-zA-Z0-9_./-]+\.(?:ts|tsx|js|jsx|cjs|mjs|md|sql|sh|json|toml|yml|yaml)\b/g;
+> 159	
+> 160	async function autoStitchObservation(
+> 161	  supabase: ReturnType<typeof createClient>,
+> 162	  observationId: string,
+> 163	  observationName: string,
+> 164	  content: string,
+> 165	): Promise<number> {
+> 166	  const haystack = `${observationName}\n${content}`;
+> 167	  const candidates = Array.from(new Set(haystack.match(FILE_PATH_RE) ?? []));
+> 168	
+> 169	  // Track distinct target node ids to dedupe regex hits referring to the same file.
+> 170	  const targetIds = new Set<string>();
+> 171	
+> 172	  for (const raw of candidates) {
+> 173	    const path = raw.replace(/^\.\//, "");
+> 174	    const { data: matches } = await supabase
+> 175	      .from("mcorch_nodes")
+> 176	      .select("id")
+> 177	      .in("node_type", ["ast_file", "markdown_file", "vault_note"])
+> 178	      .ilike("name", `%${path}%`)
+> 179	      .limit(1);
+> 180	    if (matches && matches.length > 0) targetIds.add(matches[0].id);
+> 181	  }
+> 182	
+> 183	  // Fallback: anchor the observation to CLAUDE.md if no specific file matched.
+> 184	  // Mesh stores CLAUDE.md as 'root:CLAUDE' (legacy ingest convention) but new
+> 185	  // ingests may use 'CLAUDE.md' literally — match both shapes.
+> 186	  if (targetIds.size === 0) {
+> 187	    const { data: claudeMd } = await supabase
+> 188	      .from("mcorch_nodes")
+> 189	      .select("id")
+> 190	      .in("node_type", ["markdown_file", "ast_file"])
+> 191	      .or("name.eq.root:CLAUDE,name.ilike.%CLAUDE.md%")
+> 192	      .limit(1);
+> 193	    if (claudeMd && claudeMd.length > 0) targetIds.add(claudeMd[0].id);
+> 194	  }
+> 195	
+> 196	  let inserted = 0;
+> 197	  for (const targetId of targetIds) {
+> 198	    const { data: existing } = await supabase
+> 199	      .from("mcorch_edges")
+> 200	      .select("id")
+> 201	      .eq("source_id", observationId)
+> 202	      .eq("target_id", targetId)
+> 203	      .eq("relation_type", "observes")
+> 204	      .limit(1);
+> 205	    if (existing && existing.length > 0) continue;
+> 206	    const { error } = await supabase
+> 207	      .from("mcorch_edges")
+> 208	      .insert({
+> 209	        source_id: observationId,
+> 210	        target_id: targetId,
+> 211	        relation_type: "observes",
+> 212	        weight: 1.0,
+> 213	      });
+> 214	    if (!error) inserted++;
+> 215	  }
+> 216	  return inserted;
+> 217	}
+> 218	
+> ```
+
+## 🤖 Claude *(15:16:10)*
+
+
+## 🤖 Claude *(15:16:14)*
+
+Fatos materiais capturados:
+
+- **Embeddings** batem em `openrouter.ai/api/v1/embeddings` com `openai/text-embedding-3-small` (768 dims) em **dois** lugares: `embed-mcorch-node` (o que roda no insert do milestone, travando o handoff) e `search-constellation`.
+- ~17 outras functions usam OpenRouter para chat/completion.
+- Já existe um padrão de modelos `:free` em `openrouter-swarm`.
+
+O ponto crítico que **não posso inventar** (Lei 1): o OpenRouter oferece um modelo de **embedding** free? `text-embedding-3-small` é um modelo pago da OpenAI. Vou consultar a API pública de modelos do OpenRouter para verificar materialmente o que é free — chat e embeddings:
+
+## 🤖 Claude *(15:16:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s --max-time 30 https://openrouter.ai/api/v1/models -o /tmp/or_models.json && echo \"HTTP fetch ok, bytes: $(wc -c < /tmp/or_models.json)\" && command -v jq >/dev/null && echo \"jq: available\" || echo \"jq: MISSING\"",
+  "description": "Fetch OpenRouter public models list"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP fetch ok, bytes: 409226
+> jq: available
+> ```
+
+## 🤖 Claude *(15:16:18)*
+
+
+## 🤖 Claude *(15:16:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== total models ===\" && jq '.data | length' /tmp/or_models.json && echo \"\" && echo \"=== EMBEDDING models (id ~ embed) + pricing ===\" && jq -r '.data[] | select(.id|test(\"embed\";\"i\")) | \"\\(.id)\\tprompt=\\(.pricing.prompt)\"' /tmp/or_models.json && echo \"(end embeddings)\" && echo \"\" && echo \"=== any model with an embeddings/output modality hint ===\" && jq -r '.data[] | select((.architecture.output_modalities//[]|index(\"embedding\")) or (.architecture.modality//\"\"|test(\"embed\";\"i\"))) | .id' /tmp/or_models.json 2>/dev/null | head; echo \"(end modality scan)\"",
+  "description": "Analyze embedding models and pricing in OpenRouter list"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === total models ===
+> 343
+> 
+> === EMBEDDING models (id ~ embed) + pricing ===
+> (end embeddings)
+> 
+> === any model with an embeddings/output modality hint ===
+> (end modality scan)
+> ```
+
+## 🤖 Claude *(15:17:01)*
+
+
+## 🤖 Claude *(15:17:04)*
+
+**Achado material decisivo:** dos **343 modelos** no catálogo público do OpenRouter, **ZERO são de embedding** (nenhum id com "embed", nenhuma modalidade de embedding). O endpoint `/embeddings` funciona porque faz passthrough pago da OpenAI — **não existe embedding `:free` no OpenRouter.** Então "usar ele mesmo com modelo free" é viável para **chat**, mas **impossível para embeddings**. Não vou fabricar uma capacidade que não existe.
+
+Preciso de mais 3 fatos antes de propor: (1) os melhores modelos de chat free, (2) como o `embed-mcorch-node` é disparado — se bloqueia o handoff de fato, (3) como a chave OpenRouter é resolvida.
+
+## 🤖 Claude *(15:17:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== FREE chat models (prompt price == 0), sorted by context length ===\" && jq -r '.data[] | select(.pricing.prompt==\"0\" and .pricing.completion==\"0\") | \"\\(.context_length)\\t\\(.id)\"' /tmp/or_models.json | sort -rn | head -25 && echo \"(end free models)\"",
+  "description": "List best free OpenRouter chat models by context length"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FREE chat models (prompt price == 0), sorted by context length ===
+> 1048756	openrouter/owl-alpha
+> 1048576	qwen/qwen3-coder:free
+> 1048576	google/lyria-3-pro-preview
+> 1048576	google/lyria-3-clip-preview
+> 1000000	nvidia/nemotron-3-super-120b-a12b:free
+> 262144	qwen/qwen3-next-80b-a3b-instruct:free
+> 262144	poolside/laguna-xs.2:free
+> 262144	poolside/laguna-m.1:free
+> 262144	moonshotai/kimi-k2.6:free
+> 262144	google/gemma-4-31b-it:free
+> 262144	google/gemma-4-26b-a4b-it:free
+> 256000	nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+> 256000	nvidia/nemotron-3-nano-30b-a3b:free
+> 200000	openrouter/free
+> 131072	z-ai/glm-4.5-air:free
+> 131072	openai/gpt-oss-20b:free
+> 131072	openai/gpt-oss-120b:free
+> 131072	nousresearch/hermes-3-llama-3.1-405b:free
+> 131072	meta-llama/llama-3.3-70b-instruct:free
+> 131072	meta-llama/llama-3.2-3b-instruct:free
+> 128000	nvidia/nemotron-nano-9b-v2:free
+> 128000	nvidia/nemotron-nano-12b-v2-vl:free
+> 32768	liquid/lfm-2.5-1.2b-thinking:free
+> 32768	liquid/lfm-2.5-1.2b-instruct:free
+> 32768	cognitivecomputations/dolphin-mistral-24b-venice-edition:free
+> (end free models)
+> ```
+
+## 🤖 Claude *(15:17:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== who calls embed-mcorch-node ===\" && grep -rln \"embed-mcorch-node\" supabase/ scripts/ src/ .claude/ 2>/dev/null && echo \"\" && echo \"=== DB triggers / pg_net invoking embed (migrations) ===\" && grep -rln \"embed-mcorch-node\\|embed_mcorch\\|pg_net\\|net.http_post\" supabase/migrations/ 2>/dev/null | tail -8 && echo \"\" && echo \"=== gemini embedding already used anywhere? ===\" && grep -rn -i \"text-embedding-004\\|gemini.*embed\\|embedContent\\|generativelanguage.*embed\" supabase/ scripts/ 2>/dev/null | head",
+  "description": "Find embed-mcorch-node callers and gemini embedding usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === who calls embed-mcorch-node ===
+> supabase/migrations/20260503120000_embed_on_insert_trigger.sql
+> supabase/functions/trigger-embeddings/index.ts
+> scripts/seed-aios-milestone.ts
+> scripts/backfill-embeddings.ts
+> scripts/backfill-embeddings-priority.sh
+> scripts/backfill-ast-embeddings.ts
+> scripts/seed-social-oauth-adrs.ts
+> src/hooks/useMcorchMemory.ts
+> src/hooks/useAIOSConversations.ts
+> .claude/commands/handoff.md
+> .claude/agents/bok-scribe-agent.md
+> .claude/agents/bok-scribe/templates/07-process-flow.md
+> .claude/agents/bok-scribe/templates/08-quality-metrics.md
+> .claude/agents/bok-scribe/templates/06-data-model.md
+> .claude/references/supabase-edge-functions.md
+> .claude/references/mcorch-schema.md
+> .claude/context/developer-profile.md
+> .claude/context/sprint-priorities.md
+> .claude/context/openclaw-self-heal-runbook.md
+> 
+> === DB triggers / pg_net invoking embed (migrations) ===
+> supabase/migrations/20260503120000_embed_on_insert_trigger.sql
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql
+> supabase/migrations/20260526202000_async_orchestrate_step.sql
+> supabase/migrations/20260412160641_fc830fbc-13c7-4eaa-a088-c5ccf8f01d35.sql
+> supabase/migrations/20260423205725_knowledge_mesh_init.sql
+> supabase/migrations/20260412152836_910f2467-54e0-44ef-951d-749fb142b618.sql
+> 
+> === gemini embedding already used anywhere? ===
+> ```
+
+## 🤖 Claude *(15:17:10)*
+
+You've hit your weekly limit · resets 11am (America/Sao_Paulo)
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-05-30 - Fix cross-tenant JWT impersonation vulnerability]]
-> * **Próxima Sessão**: [[2026-05-30 - Seal meta-api BoK suite and test robustness]]
+> * **Sessão Anterior**: [[2026-05-31 - Fix cross-tenant JWT impersonation vulnerability]]
+> * **Próxima Sessão**: [[2026-05-31 - Seal meta-api BoK suite and test robustness]]
 %% --- TIMELINE END --- %%
