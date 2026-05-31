@@ -2284,6 +2284,277 @@ Preciso de mais 3 fatos antes de propor: (1) os melhores modelos de chat free, (
 
 You've hit your weekly limit · resets 11am (America/Sao_Paulo)
 
+## 👤 User *(21:53:06)*
+
+antes de fazer o handoff aqui precisamos de um fallback para o openrouter, usar ele mesmo mas com o melhor free que ele tem disponivel pois acabou o credito e os ultimos handoffs não conseguiu seguir com essa dependencia, como por exemplo os embeddings
+
+## 🤖 Claude *(21:53:27)*
+
+
+## 🤖 Claude *(21:53:29)*
+
+(Mensagem reenviada — sigo no mesmo fluxo.)
+
+Os modelos de **chat free** existem em abundância — incluindo `meta-llama/llama-3.3-70b-instruct:free` (já usado no projeto) e o roteador `openrouter/free`. E confirmei que **nenhum embedding Gemini** é usado hoje. Falta entender o mecanismo exato que trava o handoff: o embedding é disparado por trigger assíncrono (não-bloqueante) ou por chamada explícita que checa o resultado?
+
+## 🤖 Claude *(21:53:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/supabase/migrations/20260503120000_embed_on_insert_trigger.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Auto-embed trigger: fires embed-mcorch-node on every INSERT into mcorch_nodes.
+> 2	-- Async via pg_net — never blocks the INSERT. Safe to fail (EXCEPTION handler).
+> 3	
+> 4	CREATE OR REPLACE FUNCTION mcorch_embed_on_insert()
+> 5	RETURNS TRIGGER
+> 6	LANGUAGE plpgsql
+> 7	SECURITY DEFINER
+> 8	SET search_path = public
+> 9	AS $$
+> 10	BEGIN
+> 11	  IF NEW.embedding IS NOT NULL THEN
+> 12	    RETURN NEW;
+> 13	  END IF;
+> 14	
+> 15	  PERFORM net.http_post(
+> 16	    url     := 'https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node',
+> 17	    headers := jsonb_build_object(
+> 18	      'Content-Type',  'application/json',
+> 19	      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjeXZkZHN5a3ZlaHZwd3N0bGZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjI5MjA5MiwiZXhwIjoyMDkxODY4MDkyfQ.RLtcgAKJjXjbTS52-kzEmEk8V11IrOFSoDzAzWM-QfE'
+> 20	    ),
+> 21	    body    := jsonb_build_object('node_id', NEW.id::text)
+> 22	  );
+> 23	
+> 24	  RETURN NEW;
+> 25	EXCEPTION WHEN OTHERS THEN
+> 26	  RAISE WARNING '[mcorch] embed_on_insert skipped for %: %', NEW.id, SQLERRM;
+> 27	  RETURN NEW;
+> 28	END;
+> 29	$$;
+> 30	
+> 31	DROP TRIGGER IF EXISTS trg_mcorch_embed_on_insert ON mcorch_nodes;
+> 32	CREATE TRIGGER trg_mcorch_embed_on_insert
+> 33	  AFTER INSERT ON mcorch_nodes
+> 34	  FOR EACH ROW
+> 35	  EXECUTE FUNCTION mcorch_embed_on_insert();
+> 36	
+> 37	COMMENT ON FUNCTION mcorch_embed_on_insert() IS
+> 38	  'Auto-embeds new mcorch_nodes via edge function. Fire-and-forget, async.';
+> 39	
+> ```
+
+## 🤖 Claude *(21:53:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== handoff.md references to embed-mcorch-node (with context) ===\" && grep -n -B2 -A4 \"embed-mcorch-node\" .claude/commands/handoff.md 2>/dev/null | head -50",
+  "description": "Read embed trigger migration and handoff embed usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === handoff.md references to embed-mcorch-node (with context) ===
+> 133-```bash
+> 134-NODE_ID="<id-from-above>"
+> 135:curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+> 136-  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 137-  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 138-  -H "Content-Type: application/json" \
+> 139-  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+> ```
+
+## 🤖 Claude *(21:54:33)*
+
+
+## 🤖 Claude *(21:54:37)*
+
+Mecanismo esclarecido: o trigger `trg_mcorch_embed_on_insert` dispara o embedding **async via pg_net, fire-and-forget** (linha 2, 38) — o INSERT do node nunca bloqueia. Mas o `handoff.md:135` faz uma chamada **explícita** ao `embed-mcorch-node` e parece checar o resultado. Preciso ver se há um gate de verificação ali (e se o que trava o handoff é o embed ou um passo de chat), além de checar se existe `_shared/` e como a chave é resolvida.
+
+## 🤖 Claude *(21:54:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/.claude/commands/handoff.md",
+  "offset": 118,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 118	    \"node_type\": \"handoff\",
+> 119	    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+> 120	    \"stability_score\": 1.0,
+> 121	    \"project_id\": null,
+> 122	    \"user_id\": null,
+> 123	    \"metadata\": {
+> 124	      \"session\": \"${SESSION_PHASE}\",
+> 125	      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+> 126	      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+> 127	    }
+> 128	  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+> 129	  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+> 130	```
+> 131	
+> 132	Then trigger embedding for the new node:
+> 133	```bash
+> 134	NODE_ID="<id-from-above>"
+> 135	curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+> 136	  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 137	  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 138	  -H "Content-Type: application/json" \
+> 139	  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+> 140	  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+> 141	```
+> 142	
+> 143	Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+> 144	```bash
+> 145	echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+> 146	```
+> 147	
+> 148	---
+> 149	
+> 150	## PHASE 4 — README.md UPDATE
+> 151	
+> 152	> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+> 153	
+> 154	Update `/README.md` to reflect the current session's work.
+> 155	
+> 156	**Required updates:**
+> 157	1. **Badges block** (top of file) — update dynamic values:
+> 158	   - `neural_mesh-XXX_nodes` badge → fetch real count:
+> 159	     ```bash
+> 160	     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+> 161	       -H "apikey: $(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d'"' -f2)" \
+> 162	       -H "Authorization: Bearer $(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d'"' -f2)" \
+> 163	       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+> 164	     ```
+> 165	   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+> 166	   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+> 167	
+> 168	2. **Phase Status table** — add new row for this session's phase:
+> 169	   ```
+> 170	   | Phase Zeta — <Name> | ✅ <one-line summary> |
+> 171	   ```
+> 172	
+> 173	3. **What's New section** — prepend a new entry under the most recent one:
+> 174	   ```markdown
+> 175	   ### [v5.X.X] — <Phase Name> (<date>)
+> 176	   - <bullet: major feature 1>
+> 177	   - <bullet: major feature 2>
+> 178	   ```
+> 179	
+> 180	4. **Core metrics** (if present in README) — update node/edge counts.
+> 181	
+> 182	Commit README separately:
+> 183	```
+> 184	docs(readme): vX.X.X — <phase name> — <one-line change summary>
+> 185	```
+> 186	
+> 187	---
+> ```
+
+## 🤖 Claude *(21:54:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== _shared folder? ===\" && ls -la supabase/functions/_shared/ 2>&1 | head || echo \"(no _shared)\"; echo \"\" && echo \"=== OpenRouter key resolution in chat functions (per-user vs global) ===\" && grep -rn \"OPENROUTER_API_KEY\\|openrouter_api_key\" supabase/functions/orchestrate-content/index.ts supabase/functions/generate-content/index.ts supabase/functions/agent-task-execute/index.ts 2>/dev/null | head -20",
+  "description": "Check shared folder and OpenRouter key resolution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === _shared folder? ===
+> ls: cannot access 'supabase/functions/_shared/': No such file or directory
+> 
+> === OpenRouter key resolution in chat functions (per-user vs global) ===
+> supabase/functions/generate-content/index.ts:45:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> supabase/functions/orchestrate-content/index.ts:50:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> supabase/functions/orchestrate-content/index.ts:57:      return new Response(JSON.stringify({ error: "GROQ_API_KEY or OPENROUTER_API_KEY not configured" }), {
+> supabase/functions/agent-task-execute/index.ts:10://   - openrouter → https://openrouter.ai/api/v1/chat/completions (user_api_keys.openrouter_api_key)
+> supabase/functions/agent-task-execute/index.ts:132:      .select("groq_api_key, openrouter_api_key, openai_api_key, google_api_key")
+> supabase/functions/agent-task-execute/index.ts:138:      provider === "openrouter" ? keys?.openrouter_api_key :
+> ```
+
+## 🤖 Claude *(21:56:07)*
+
+
+## 🤖 Claude *(21:56:20)*
+
+Investigação completa. Tenho o quadro material inteiro — e ele contém um fato que **contradiz a premissa** do pedido, então preciso te alinhar antes de codar.
+
+## O que encontrei (provas materiais)
+
+**1. Chat/completion free no OpenRouter: existe e sobra.** 343 modelos no catálogo, dezenas `:free`. O elegante: o fallback usa **a mesma chave** (`userKeys?.openrouter_api_key || env`), só troca para um modelo `:free` — que **não consome crédito**. Então "usar ele mesmo com o melhor free" é literal e viável aqui. Default sólido: `meta-llama/llama-3.3-70b-instruct:free` (já usado no projeto) ou o auto-roteador `openrouter/free`.
+
+**2. Embeddings free no OpenRouter: NÃO EXISTE.** Dos 343 modelos, **zero** são de embedding (verifiquei: nenhum id com "embed", nenhuma modalidade). O `/embeddings` funciona só por passthrough **pago** da OpenAI (`openai/text-embedding-3-small`). Não há `:free`. Logo, "usar OpenRouter free para embeddings" é impossível — não vou fabricar isso.
+
+**3. O que realmente trava o handoff:** o embedding é fire-and-forget (trigger `pg_net`, não bloqueia o INSERT) e o `handoff.md:140` até tem `|| echo "falhou"`. O bloqueio real é a **Fase 5c (Material Proof Audit)** que verifica estritamente se o handoff node foi vetorizado (`proof-manifest.json`, linha 143-145) — com crédito zero, o embedding falha (402) e o gate de prova reprova o selo.
+
+**4. Mesh atual:** 8239 nós embeddados com `text-embedding-3-small` @ 768d. Importante: vetores de modelos diferentes **não vivem no mesmo espaço** — misturar Gemini por-nó num corpus OpenAI quebra a busca silenciosamente (resultado errado, não erro). Por isso Gemini só faz sentido como **troca total** (re-embeddar tudo), não como fallback por-nó.
+
+Há duas decisões genuínas suas — o resto eu executo com defaults:
+
+## 🤖 Claude *(21:56:27)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Embeddings com cr\u00e9dito zero \u2014 o OpenRouter n\u00e3o tem modelo de embedding free (0 de 343, verificado). Qual estrat\u00e9gia?",
+      "header": "Embeddings",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Degradar com eleg\u00e2ncia",
+          "description": "Em 402, o embed-mcorch-node grava o n\u00f3 SEM embedding, loga telemetria 'degraded' em infra_health_logs e retorna 200 (n\u00e3o 502) \u2014 o handoff/Fase 5c passa. Backfill via scripts/backfill-embeddings.ts quando o cr\u00e9dito voltar. Zero depend\u00eancia nova, espa\u00e7o vetorial intacto. R\u00e1pido."
+        },
+        {
+          "label": "Trocar tudo para Gemini free",
+          "description": "Migrar embed-mcorch-node + search-constellation para Gemini text-embedding-004 (768d, free tier generoso) e re-embeddar os 8239 n\u00f3s. Mesh fica independente de cr\u00e9dito permanentemente, mas \u00e9 migra\u00e7\u00e3o (rodar re-embed) e muda o modelo can\u00f4nico. Projeto j\u00e1 tem gemini_api_key."
+        }
+      ]
+    },
+    {
+      "question": "Escopo do fallback de chat (mesma chave, modelo :free n\u00e3o gasta cr\u00e9dito). Default de modelo: meta-llama/llama-3.3-70b-instruct:free.",
+      "header": "Escopo chat",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "S\u00f3 caminho cr\u00edtico",
+          "description": "Aplico nas nucleares + handoff: orchestrate-content, generate-content, agent-task-execute, analyze-node, optimize-schedule. Foco, blast radius pequeno, poucos redeploys. Estendo o resto depois."
+        },
+        {
+          "label": "Todas via helper _shared",
+          "description": "Crio supabase/functions/_shared/openrouter.ts com o fallback e ligo nas ~17 functions que usam OpenRouter. DRY e completo, mas muda e redeploya muitas functions de uma vez (mais risco/tempo agora)."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
