@@ -4420,6 +4420,98 @@ Aqui está o ponto que muda tudo: o esquema `x-signature` HMAC **só existe no M
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "De onde vem, de verdade, o postback de receita que o handle-ml-postback recebe? Isso define qual segredo usar (e se x-signature é o esquema certo)."="Webhook do Mercado Pago". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:06:46)*
+
+
+## 🤖 Claude *(23:06:48)*
+
+Perfeito — então o `x-signature` que implementei **é o esquema certo**. ✅ Confirmado: o segredo **não** é a "Chave secreta" daquela tela do ML (aquilo é o Client Secret do OAuth). É a **"Assinatura secreta" gerada no painel do Mercado Pago**.
+
+Deixe-me confirmar o caminho exato no painel (pra não te mandar caçar no lugar errado) no doc oficial:
+
+## 🤖 Claude *(23:06:53)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks",
+  "prompt": "Quero o passo a passo EXATO de onde, no painel de desenvolvedores do Mercado Pago, eu encontro ou gero a \"assinatura secreta\" (secret signature / chave secreta) usada para validar o header x-signature dos webhooks. Especificamente: (1) qual o caminho de menu (ex: \"Suas integra\u00e7\u00f5es\" \u2192 selecionar aplica\u00e7\u00e3o \u2192 \"Webhooks\" ou \"Notifica\u00e7\u00f5es\")? (2) qual o nome exato do campo/bot\u00e3o onde a assinatura secreta aparece e como revel\u00e1-la/copi\u00e1-la? (3) preciso configurar a URL de notifica\u00e7\u00e3o e selecionar t\u00f3picos (ex: pagamentos) antes do segredo aparecer? (4) a assinatura secreta \u00e9 diferente do Client Secret/Access Token da aplica\u00e7\u00e3o? Cite os r\u00f3tulos literais da interface se o doc os mostrar."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Localização da Assinatura Secreta no Mercado Pago
+> 
+> Com base na documentação, aqui está o processo exato:
+> 
+> ## Caminho de Menu
+> **Suas integrações** → selecione sua aplicação → **Webhooks** → **Configurar notificações**
+> 
+> ## Quando a Assinatura Aparece
+> A assinatura secreta é gerada **após** você:
+> 1. Indicar as URLs (teste e produção)
+> 2. Selecionar os eventos/tópicos desejados
+> 3. Clicar em **Salvar**
+> 
+> A documentação afirma: *"clique e **Salvar** para gerar uma **assinatura secreta** exclusiva para a sua aplicação"*
+> 
+> ## Campo Específico
+> A chave aparece na seção de Webhooks após salvar. Há um botão de **redefinição** ao lado da assinatura para renová-la. A interface permite copiar/revelar a chave nessa localização.
+> 
+> ## É Diferente de Credenciais?
+> **Sim.** A assinatura secreta é exclusiva para validar webhooks e é gerada especificamente para sua aplicação. É **diferente** do Client Secret e Access Token, que são credenciais gerais da aplicação.
+> 
+> ## Nota Importante
+> Para integrações com **QR Code**, a assinatura secreta não pode ser usada para validação – a documentação recomenda contatar suporte nesse caso.
+> ```
+
+## 🤖 Claude *(23:07:33)*
+
+
+## 🤖 Claude *(23:07:47)*
+
+Caminho oficial confirmado. A "Assinatura secreta" é **gerada só depois** que você salva a config do webhook — e é diferente do Client Secret. Aqui está o passo a passo exato:
+
+## Como obter e setar o segredo certo
+
+1. **Mercado Pago** (não o painel do ML) → **Suas integrações** → selecione sua aplicação
+2. Menu **Webhooks** → **Configurar notificações**
+3. Em **URL de produção**, cole:
+   ```
+   https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback
+   ```
+4. Selecione o evento **Pagamentos** (é o "a comissão caiu no MP")
+5. Clique **Salvar** → o MP gera a **Assinatura secreta** exclusiva (com botão de revelar/copiar e um de redefinir ao lado)
+6. Copie e sete no vault:
+   ```bash
+   npx supabase secrets set MP_WEBHOOK_SECRET="<assinatura secreta do MP>" --project-ref bcyvddsykvehvpwstlfa
+   ```
+
+Depois disso, o gate valida assinatura real (o curl do SOP confirma ponta-a-ponta).
+
+## ⚠️ Gap honesto que falta pro demo creditar de verdade (Lei 1)
+
+A trava de segurança está pronta, **mas** ainda há uma peça: o webhook de **Pagamento** do MP manda só `{ type:"payment", data:{ id } }` — **não** traz valor nem o `click_id`. O `handle-ml-postback` hoje espera o formato antigo (`commission`, `click_id`, `order_id`). Então um postback real do MP vai: passar a assinatura ✅ → mas cair em "unresolved" e **não creditar receita**.
+
+Para fechar o ciclo do piloto falta o mapeamento **MÓDULO C**: ao receber o webhook, chamar `GET /v1/payments/{data.id}` (com o **access token do MP**), ler `transaction_amount` + `external_reference` (que carrega o vínculo com o `affiliate_link`) e então creditar. Isso precisa do **MP access token** (per-user em `mercado_pago_config`, ou global no piloto).
+
+## Onde estamos
+
+- Gate de segurança HMAC: ✅ feito, deployado (v22), provado.
+- Falta seu lado: setar o segredo real (passos acima).
+- Falta código: o mapeamento MP-payment→receita (MÓDULO C) — **posso construir agora** se você me der como resolver o MP access token (per-user ou global pro piloto).
+
+Quer que eu já emende o **MÓDULO C** (buscar o pagamento + creditar), ou prefere primeiro setar o segredo e testar a assinatura, e aí seguimos?
+
 ---
 
 %% --- TIMELINE START --- %%
