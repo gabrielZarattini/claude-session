@@ -8653,6 +8653,6 @@ Memória registrada. Selo completo — relatório final:
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-01 - Fix tenant isolation in edge functions]]
+> * **Sessão Anterior**: [[2026-06-01 - Resolve priority alerts]]
 > * **Próxima Sessão**: [[2026-06-01 - Review GitGuardian alert on password string]]
 %% --- TIMELINE END --- %%

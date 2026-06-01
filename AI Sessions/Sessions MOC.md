@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 235
-> * **Sessões do Claude**: 205
+> * **Total de Sessões Registradas**: 236
+> * **Sessões do Claude**: 206
 > * **Sessões do Gemini**: 30
 
 ---
@@ -56,6 +56,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - agent-aa306815868636459]]` - *2026-06-01*
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
+*   `[[2026-06-01 - Resolve priority alerts]]` - *2026-06-01*
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` - *2026-06-01*
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` - *2026-06-01*
@@ -63,8 +64,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-31 - handson]]` - *2026-05-31*
 *   `[[2026-05-31 - Seal meta-api BoK suite and test robustness]]` - *2026-05-31*
 *   `[[2026-05-31 - Fix tenant isolation in edge functions]]` - *2026-05-31*
-*   `[[2026-05-30 - handson]]` - *2026-05-30*
-*   *... e mais 202 sessões nessa categoria.*
+*   *... e mais 203 sessões nessa categoria.*
 
 ---
 
@@ -256,6 +256,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - agent-aa306815868636459]]` (ClaudeSessions)
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` (ClaudeSessions)
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` (ClaudeSessions)
+*   `[[2026-06-01 - Resolve priority alerts]]` (ClaudeSessions)
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` (ClaudeSessions)
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` (ClaudeSessions)
