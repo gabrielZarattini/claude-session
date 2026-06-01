@@ -6515,6 +6515,604 @@ Gates: `tsc` 0 · audit limpo · `built in 21.07s` · `dist/` servido verificado
 2. **Push dos 3 commits** pra `origin/main`? (ainda locais)
 3. Seguir pra **Fase 0** (reset destrutivo: arquiva 31 → wipa 717+689+31, com seu GO) e **Fase 4** (E2E: criar crew → executar capability real → medir mcoCoins)?
 
+## 👤 User *(15:35:29)*
+
+promnto login configmado...
+
+## 🤖 Claude *(15:36:21)*
+
+
+## 🤖 Claude *(15:36:24)*
+
+P0 fechado ✅ — login confirmado, produção restaurada. 
+
+Resumo do que entrou no ar num só deploy: **fix do login** (chave registrada assada) + **Fase 3** (cockpit per-user) + **unblock do build de produção** (lucide) que estava quebrado há tempos. Tudo provado materialmente.
+
+Os 3 commits ainda estão **locais** e a **Fase 0 é destrutiva** (apaga 717 crew_agents + 689 edges) — então não avanço nenhum dos dois sem seu sinal. Como seguimos?
+
+## 🤖 Claude *(15:36:30)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Login restaurado. Qual o pr\u00f3ximo passo?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Push + pausar p/ review",
+          "description": "Push dos 3 commits pra origin/main e paro. Voc\u00ea abre o cockpit da Fase 3 ao vivo (bot\u00e3o 'Criar crew' / wizard) e revisa antes de qualquer passo destrutivo. Recomendado \u2014 evita reset destrutivo logo ap\u00f3s um P0."
+        },
+        {
+          "label": "Push + Fase 0 (reset) agora",
+          "description": "Push + executo o reset destrutivo: dry-run de confirma\u00e7\u00e3o (717/689/31) \u2192 archive 31 execs \u2192 wipe 717 crew_agents + 689 edges + 31 execs (profiles preservado), gate crew_agents=0. Depois sigo pra Fase 4 (E2E). Irrevers\u00edvel na pr\u00e1tica."
+        },
+        {
+          "label": "S\u00f3 deixar local",
+          "description": "N\u00e3o faz push ainda \u2014 os 3 commits ficam locais. Paro e aguardo. (O deploy do dist/ j\u00e1 est\u00e1 vivo independente do push.)"
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Login restaurado. Qual o próximo passo?"="Push + pausar p/ review". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(15:36:54)*
+
+
+## 🤖 Claude *(15:36:55)*
+
+Feito — **push + pausa**. Empurrando os 3 commits pra `origin/main`:
+
+## 🤖 Claude *(15:36:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -8\necho \"--- verify origin/main moved to HEAD ---\"\ngit rev-parse --short HEAD; git rev-parse --short origin/main\ngit status -sb | head -1",
+  "description": "Push 3 commits to origin/main + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    c833cdb..8ed3f78  main -> main
+> --- verify origin/main moved to HEAD ---
+> 8ed3f78
+> 8ed3f78
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(15:37:13)*
+
+
+## 🤖 Claude *(15:37:23)*
+
+**Push confirmado** — `c833cdb..8ed3f78 main -> main`, `HEAD == origin/main == 8ed3f78`, tree limpo. Trabalho preservado no remoto. **Pausando aqui pro seu review**, como combinado.
+
+---
+
+### 👀 O que dá pra revisar agora (cockpit ao vivo)
+
+Abra `/dashboard/constellation` (hard-refresh). Calibrando expectativa — **a Fase 0 ainda não rodou**, então:
+
+- A crew atual (**717 agentes**) continua renderizando — o **empty-state limpo só aparece pós-reset**.
+- O botão **"Criar crew"** (substituiu o "Deploy Enterprise") abre o **wizard 2-portas**.
+- **Teste de valor sem risco:** porta B → crie 1 subagente em **ops → `watchdog_infra`** (a capability provada no smoke, custo 0). No `AgentDetail` dele aparece o badge da capability + **"Executar capability"** + o **AccessConfigCard** (BYOK + limite diário). Clicar executa o **módulo real** (`get-infra-status`) e pinga no Live Log.
+  - ⚠️ A porta A ("mapa 4×4 pronto") *funciona*, mas empilharia ~18 nós sobre os 717 (idempotente, sem clobber) — a experiência limpa do 4×4 é melhor vista **depois** do reset.
+
+### ⏸️ Aguardando seu GO
+
+- **Fase 0** — reset destrutivo (archive 31 → wipe 717+689+31, `profiles` intacto). Só com seu sinal explícito; faço com dry-run de confirmação + prova `crew_agents=0`.
+- **Fase 4** — E2E (vazio → criar crew → executar capability → medir mcoCoins) + audit visual 1920×1080.
+
+Me diz quando quiser disparar a Fase 0, ou se algo no cockpit precisar de ajuste.
+
+## 👤 User *(15:40:12)*
+
+veja como esta no rpint e pode continuar
+
+## 🤖 Claude *(15:42:06)*
+
+
+## 🤖 Claude *(15:42:11)*
+
+O print confirma a Fase 3 viva e — melhor ainda — **mostra o cap ≤21 funcionando na prática**: dos 717 agentes, só ~21 renderizam (Núcleo + 2 Leads + TECH-1..6 + CONTENT-1..12). O botão **"Criar crew"** está lá (substituiu o "Deploy Enterprise"), as hulls/edges/z-index estão limpos. E os nomes decorativos (`TECH-1`, `CONTENT-1`, "GCRUX Core") confirmam que é a **crew antiga** — exatamente o que a Fase 0 troca pelo 4×4 limpo.
+
+Vou continuar para a **Fase 0**. Como é destrutivo, faço com rigor: leio o script primeiro (saber exatamente o que ele apaga), depois dry-run, e só então o `--execute` com prova material.
+
+**ORO triplet (Fase 0):** Operator=MCORCH Agent · Reviewer/Owner=Sovereign (blast radius: 717 crew_agents decorativos + 689 edges apagados; 31 execs **arquivadas** antes; `profiles`/billing preservados).
+
+Lendo o script destrutivo antes de tocá-lo:
+
+## 🤖 Claude *(15:42:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/reset-constellation-v2.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Constellation v2 — Fase 0 reset (PROC-CV2-005).
+> 4	 * Empty-start: archive all agent_executions → wipe crew_agents/crew_edges (everyone) → clean exec log.
+> 5	 * Only 1 real profile (Sovereign) + 26 orphan owners exist, so the end state is "everyone empty";
+> 6	 * crews are rebuilt on-demand by the v2 wizard.
+> 7	 *
+> 8	 * SAFE BY DEFAULT — dry-run unless invoked with `--execute`.
+> 9	 * Pre-req: auto-seed already removed from useCrewData + deployed (else page reload re-seeds).
+> 10	 *
+> 11	 * Usage:
+> 12	 *   bun run scripts/reset-constellation-v2.ts              # dry-run (counts only)
+> 13	 *   bun run scripts/reset-constellation-v2.ts --execute    # perform archive + wipe
+> 14	 */
+> 15	import { createClient } from '@supabase/supabase-js';
+> 16	
+> 17	const EXECUTE = process.argv.includes('--execute');
+> 18	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 19	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 20	if (!SUPABASE_URL || !SERVICE_KEY) { console.error('Missing SUPABASE_URL/SERVICE key'); process.exit(1); }
+> 21	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 22	
+> 23	const ALL = (q: any) => q.not('id', 'is', null); // match every row (supabase-js requires a filter on delete)
+> 24	
+> 25	async function count(table: string): Promise<number> {
+> 26	  const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true });
+> 27	  if (error) { console.error(`count(${table}) failed:`, error.message); return -1; }
+> 28	  return count ?? -1;
+> 29	}
+> 30	
+> 31	console.log(`\n═══ Constellation v2 — Fase 0 reset · mode=${EXECUTE ? 'EXECUTE ⚠️' : 'DRY-RUN'} ═══\n`);
+> 32	
+> 33	const before = {
+> 34	  profiles: await count('profiles'),
+> 35	  crew_agents: await count('crew_agents'),
+> 36	  crew_edges: await count('crew_edges'),
+> 37	  agent_executions: await count('agent_executions'),
+> 38	  archive: await count('agent_executions_archive'),
+> 39	};
+> 40	console.log('BEFORE:', JSON.stringify(before, null, 0));
+> 41	console.log(`\nWould archive: ${before.agent_executions} agent_executions → agent_executions_archive`);
+> 42	console.log(`Would DELETE:  ${before.crew_agents} crew_agents · ${before.crew_edges} crew_edges · ${before.agent_executions} agent_executions`);
+> 43	console.log(`Profiles (real users) preserved: ${before.profiles} (untouched)\n`);
+> 44	
+> 45	if (!EXECUTE) {
+> 46	  console.log('🟡 DRY-RUN — nothing mutated. Re-run with --execute to perform (after auto-seed removal is DEPLOYED).');
+> 47	  process.exit(0);
+> 48	}
+> 49	
+> 50	// 1. Archive execs (snapshot before wipe) — idempotent-ish: only if live execs exist
+> 51	if (before.agent_executions > 0) {
+> 52	  const { data: execs, error: selErr } = await supabase.from('agent_executions').select('*');
+> 53	  if (selErr) { console.error('❌ select execs failed:', selErr.message); process.exit(1); }
+> 54	  const { error: insErr } = await supabase.from('agent_executions_archive').insert(execs ?? []);
+> 55	  if (insErr) { console.error('❌ archive insert failed:', insErr.message); process.exit(1); }
+> 56	  console.log(`✅ Archived ${execs?.length} execs → agent_executions_archive`);
+> 57	}
+> 58	
+> 59	// 2. Wipe (order: execs → edges → agents)
+> 60	for (const table of ['agent_executions', 'crew_edges', 'crew_agents']) {
+> 61	  const { error } = await ALL(supabase.from(table).delete());
+> 62	  if (error) { console.error(`❌ delete ${table} failed:`, error.message); process.exit(1); }
+> 63	  console.log(`✅ Deleted all rows from ${table}`);
+> 64	}
+> 65	
+> 66	// 3. Verify
+> 67	const after = {
+> 68	  crew_agents: await count('crew_agents'),
+> 69	  crew_edges: await count('crew_edges'),
+> 70	  agent_executions: await count('agent_executions'),
+> 71	  archive: await count('agent_executions_archive'),
+> 72	  profiles: await count('profiles'),
+> 73	};
+> 74	console.log('\nAFTER:', JSON.stringify(after, null, 0));
+> 75	const ok = after.crew_agents === 0 && after.crew_edges === 0 && after.agent_executions === 0
+> 76	  && after.archive >= before.agent_executions && after.profiles === before.profiles;
+> 77	console.log(ok ? '\n✅ RESET VERIFIED — crew empty, execs archived, profiles intact.' : '\n❌ RESET VERIFICATION FAILED — inspect above.');
+> 78	process.exit(ok ? 0 : 1);
+> 79	
+> ```
+
+## 🤖 Claude *(15:42:26)*
+
+
+## 🤖 Claude *(15:42:29)*
+
+Script é **seguro e correto**: dry-run por padrão (linha 17), usa `SB_SECRET_KEY` primeiro (linha 19 — não toca na chave morta), **arquiva antes de apagar** (e aborta se o archive falhar, linha 55), e tem **gate de verificação** (linha 75: crew=0 + archive≥execs + profiles intacto). 
+
+Rodando o **dry-run** primeiro (não muta nada) — confirma as contagens atuais ao vivo:
+
+## 🤖 Claude *(15:42:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/reset-constellation-v2.ts 2>&1 | head -20; echo \"DRYRUN_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Fase 0 dry-run \u2014 confirm live counts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ Constellation v2 — Fase 0 reset · mode=DRY-RUN ═══
+> 
+> BEFORE: {"profiles":1,"crew_agents":746,"crew_edges":717,"agent_executions":35,"archive":0}
+> 
+> Would archive: 35 agent_executions → agent_executions_archive
+> Would DELETE:  746 crew_agents · 717 crew_edges · 35 agent_executions
+> Profiles (real users) preserved: 1 (untouched)
+> 
+> 🟡 DRY-RUN — nothing mutated. Re-run with --execute to perform (after auto-seed removal is DEPLOYED).
+> DRYRUN_EXIT=0
+> ```
+
+## 🤖 Claude *(15:43:16)*
+
+
+## 🤖 Claude *(15:43:20)*
+
+Dry-run **sane** — o guard crítico está verde: `profiles: 1` (preservado). Uma observação material de transparência: as contagens **cresceram** desde o registro do plano (717→**746** agents · 689→**717** edges · 31→**35** execs). O delta +29 agents/+28 edges = exatamente a estrutura do **"Deploy Enterprise"** antigo (1 CEO + 4 leads + 24 membros + 28 edges) — alguém clicou o botão legado durante o P0, no bundle antigo. É tudo decorativo e vai junto no wipe; não muda a decisão.
+
+Executando o reset (arquiva 35 → wipa 746+717+35, profiles intacto):
+
+## 🤖 Claude *(15:43:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/reset-constellation-v2.ts --execute 2>&1 | head -30; echo \"EXEC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Fase 0 \u2014 execute destructive reset (archive + wipe)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ Constellation v2 — Fase 0 reset · mode=EXECUTE ⚠️ ═══
+> 
+> BEFORE: {"profiles":1,"crew_agents":746,"crew_edges":717,"agent_executions":35,"archive":0}
+> 
+> Would archive: 35 agent_executions → agent_executions_archive
+> Would DELETE:  746 crew_agents · 717 crew_edges · 35 agent_executions
+> Profiles (real users) preserved: 1 (untouched)
+> 
+> ✅ Archived 35 execs → agent_executions_archive
+> ✅ Deleted all rows from agent_executions
+> ✅ Deleted all rows from crew_edges
+> ✅ Deleted all rows from crew_agents
+> 
+> AFTER: {"crew_agents":0,"crew_edges":0,"agent_executions":0,"archive":35,"profiles":1}
+> 
+> ✅ RESET VERIFIED — crew empty, execs archived, profiles intact.
+> EXEC_EXIT=0
+> ```
+
+## 🤖 Claude *(15:44:12)*
+
+
+## 🤖 Claude *(15:44:14)*
+
+**Fase 0 executada e auto-verificada** (`✅ RESET VERIFIED`, EXEC_EXIT=0): archive 35 ✅ · crew_agents/edges/execs → 0 · profiles=1 intacto. Agora a **prova material independente** (Lei 1 — não confio só no self-report do script; query REST por outro caminho):
+
+## 🤖 Claude *(15:44:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SB=$(grep -E '^SB_SECRET_KEY=' .env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\")\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\necho \"=== independent REST count (Prefer: count=exact) ===\"\nfor t in crew_agents crew_edges agent_executions agent_executions_archive profiles; do\n  total=$(curl -s -D - -o /dev/null \"$URL/$t?select=id&limit=1\" -H \"apikey: $SB\" -H \"Authorization: Bearer $SB\" -H \"Prefer: count=exact\" 2>/dev/null | grep -i '^content-range:' | tr -d '\\r' | sed 's#.*/##')\n  echo \"  $t: ${total}\"\ndone\necho\necho \"=== GATE (plan Fase 0): crew_agents=0 \u00b7 archive>=31 \u00b7 profiles=1 ===\"",
+  "description": "Independent REST verification of reset"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === independent REST count (Prefer: count=exact) ===
+>   crew_agents: 0
+>   crew_edges: 0
+>   agent_executions: 0
+>   agent_executions_archive: 35
+>   profiles: 1
+> 
+> === GATE (plan Fase 0): crew_agents=0 · archive>=31 · profiles=1 ===
+> ```
+
+## 🤖 Claude *(15:44:57)*
+
+
+## 🤖 Claude *(15:45:05)*
+
+**Fase 0 completa e provada independentemente** (REST, caminho diferente do script):
+
+```
+crew_agents               : 0      ✅
+crew_edges                : 0      ✅
+agent_executions          : 0      ✅
+agent_executions_archive  : 35     ✅ (execs preservadas; ≥31)
+profiles                  : 1      ✅ (Sovereign intacto)
+```
+
+Todos os gates do plano verdes. A malha (`mcorch_nodes`) não foi tocada — só as tabelas de crew. E como o frontend deployado já está **sem auto-seed** (FR-CV2-030), o crew **permanece 0** ao reabrir — sem re-seed.
+
+---
+
+### 🎬 Recarregue o cockpit agora — é o momento de pagamento
+
+`/dashboard/constellation` (hard-refresh) vai mostrar pela primeira vez a **constelação vazia → `EmptyConstellation` com as 2 portas**. Sugestão de E2E (Fase 4), e eu verifico cada passo materialmente:
+
+1. **"Usar mapa pronto"** → nasce o 4×4 limpo: **Núcleo GCRUX + 4 Leads + 13 subagentes** módulo-bound (content/tech/market/ops, todos os 4 squads desta vez).
+2. Clique num subagente → o `AgentDetail` mostra o badge da capability + **"Executar capability"** + o `AccessConfigCard`.
+3. **Execute** (ex.: um subagente de `ops`/`watchdog_infra`, custo 0) → roda o **módulo real** e pinga no Live Log.
+
+Assim que você rodar, eu confirmo via REST: a row em `agent_executions` (status `done`, `capability_key`, `result_summary`) e o débito de mcoCoins. Validado isso, fecho com **Fase 5c (auditoria de prova material)** + **`/handoff`** (selo + milestone node).
+
+Pode recarregar e disparar — fico de prontidão pra verificar.
+
+## 👤 User *(15:54:58)*
+
+ótimo aparece as duas opções iniciais para começar do zero ou criar como esta no print. Preciso de um botão para zerar tambem a constelação assim como você fez o hard reset para os usuários conseguirem começar do zero ou usar o mapa pronto tambem quando bem quiserem. Na segunda iamgem print uqe estou enviando mostra quando cliquei em um subagent do Lead... ja o terceiro print é quando cliquei no LEAD Technical Engine.
+
+Quando cliquei em Lead Operation Ops.:
+
+Lead Operational Ops
+lead
+
+
+
+
+idle
+groq
+System Prompt
+
+Conexões (5)
+
+← Núcleo GCRUX — Directive
+→ Afiliados — Reporting
+→ Calendário — Reporting
+→ Orquestração — Reporting
+→ Publicação Social — Reporting
+
+
+Mas não entendi como eu poderia testar o execute (ex.: um subagente de ops/watchdog_infra, custo0) ....
+
+## 🤖 Claude *(15:57:42)*
+
+
+## 🤖 Claude *(15:57:49)*
+
+O 4×4 ficou **lindo e correto** — os 4 squads (Market/Tech/Creative/Ops), o Núcleo com 4 arestas **Directive** pros Leads, os subagentes **Reporting**, e os prints 2/3 provam tudo vivo: subagente com badge de capability + **"Executar capability"** (cyan) + o **AccessConfigCard** ("Chave configurada" · "0 mco" · limite diário); Lead com o caminho LLM **"Executar (Groq)"**. Fase 3 validada na prática. 🎯
+
+**Sobre testar o execute (sua dúvida):** a diferença é o **tipo de nó**:
+- **Núcleo e Leads** → botão **"Executar (Groq · ~1 mco)"** = caminho LLM (raciocínio), não capability.
+- **Subagentes** (specialist, com o badge cyan) → botão **"Executar capability"** = invoca o **módulo real**.
+
+Então pra testar: clique no subagente **Watchdog/Infra** (squad Technical Engine) → ele tem o botão cyan **"Executar capability"** → clique (pode deixar o contexto vazio). Ele roda o `get-infra-status` real, **custo 0, sem efeito colateral**. Assim que clicar, eu confirmo via REST a row em `agent_executions` (status `done`, `capability_key`, custo 0).
+
+Agora o **botão "Zerar"** que você pediv — construindo (per-user, RLS-scoped, com confirmação):
+
+## 🤖 Claude *(15:57:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useResetCrew.ts",
+  "content": "import { useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { toast } from 'sonner';\n\n// constellation-v2: user-facing crew reset. Clears THIS user's constellation graph so they can\n// start from zero or re-seed the 4x4 whenever they want \u2014 the self-service mirror of the admin\n// Fase 0 reset (scripts/reset-constellation-v2.ts), but per-user and WITHOUT the service role.\n//\n// Deletes edges first (they reference agents by key), then agents. RLS double-guards every delete\n// to auth.uid(), so a user can only ever wipe their own crew. agent_executions (activity/economic\n// history) and profiles.mco_balance are intentionally left untouched \u2014 \"zerar a constela\u00e7\u00e3o\"\n// resets the graph, not the ledger.\nexport function useResetCrew() {\n  const { user } = useAuth();\n  const qc = useQueryClient();\n\n  return useMutation({\n    mutationFn: async () => {\n      if (!user?.id) throw new Error('Usu\u00e1rio n\u00e3o autenticado');\n\n      const { error: edgeErr } = await supabase.from('crew_edges').delete().eq('user_id', user.id);\n      if (edgeErr) throw edgeErr;\n\n      const { error: agentErr } = await supabase.from('crew_agents').delete().eq('user_id', user.id);\n      if (agentErr) throw agentErr;\n    },\n    onSuccess: () => {\n      qc.invalidateQueries({ queryKey: ['crew_agents'] });\n      qc.invalidateQueries({ queryKey: ['crew_edges'] });\n      toast.success('Constela\u00e7\u00e3o zerada \u2014 comece do zero ou use o mapa pronto');\n    },\n    onError: (e: Error) => toast.error(`Falha ao zerar constela\u00e7\u00e3o: ${e.message}`),\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useResetCrew.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:58:20)*
+
+
+## 🤖 Claude *(15:58:20)*
+
+Agora ligo o botão na `ConstellationPage` (HUD, com `AlertDialog` de confirmação):
+
+## 🤖 Claude *(15:58:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "import { EmptyConstellation } from '@/components/graph/EmptyConstellation';\nimport { CrewWizard } from '@/components/graph/CrewWizard';",
+  "new_string": "import { EmptyConstellation } from '@/components/graph/EmptyConstellation';\nimport { CrewWizard } from '@/components/graph/CrewWizard';\nimport { useResetCrew } from '@/hooks/useResetCrew';\nimport {\n  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,\n  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,\n} from '@/components/ui/alert-dialog';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:58:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network, Sparkles } from 'lucide-react';",
+  "new_string": "import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network, Sparkles, RotateCcw } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:58:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "  useAgentActivity(); // real agent_executions feed (replaces the useSimulation mock)",
+  "new_string": "  useAgentActivity(); // real agent_executions feed (replaces the useSimulation mock)\n  const resetCrew = useResetCrew();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:58:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "            <Sparkles className=\"h-3.5 w-3.5\" />\n            Criar crew\n          </Button>",
+  "new_string": "            <Sparkles className=\"h-3.5 w-3.5\" />\n            Criar crew\n          </Button>\n\n          <AlertDialog>\n            <AlertDialogTrigger asChild>\n              <Button\n                variant=\"outline\"\n                size=\"sm\"\n                disabled={isEmpty || resetCrew.isPending}\n                className=\"glass-panel border-border/50 gap-1.5 h-8 sm:h-9 text-destructive hover:text-destructive\"\n              >\n                {resetCrew.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <RotateCcw className=\"h-3.5 w-3.5\" />}\n                Zerar\n              </Button>\n            </AlertDialogTrigger>\n            <AlertDialogContent>\n              <AlertDialogHeader>\n                <AlertDialogTitle>Zerar constela\u00e7\u00e3o?</AlertDialogTitle>\n                <AlertDialogDescription>\n                  Apaga todos os seus agentes e conex\u00f5es. Depois voc\u00ea pode come\u00e7ar do zero ou usar o\n                  mapa 4\u00d74 pronto. N\u00e3o afeta seu saldo de mcoCoins nem o hist\u00f3rico de execu\u00e7\u00f5es.\n                </AlertDialogDescription>\n              </AlertDialogHeader>\n              <AlertDialogFooter>\n                <AlertDialogCancel>Cancelar</AlertDialogCancel>\n                <AlertDialogAction\n                  onClick={() => resetCrew.mutate()}\n                  className=\"bg-destructive text-destructive-foreground hover:bg-destructive/90\"\n                >\n                  Zerar\n                </AlertDialogAction>\n              </AlertDialogFooter>\n            </AlertDialogContent>\n          </AlertDialog>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:58:37)*
+
+
+## 🤖 Claude *(15:58:39)*
+
+Botão "Zerar" ligado. Gates — audit (pega ícone removido) + `tsc`:
+
+## 🤖 Claude *(15:58:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== lucide audit (RotateCcw must resolve) ===\"; bun run scripts/qa/audit-lucide-imports.ts 2>&1 | head -5; echo \"AUDIT_EXIT=${PIPESTATUS[0]}\"\necho; echo \"=== tsc ===\"; npx tsc --noEmit 2>&1 | head -15; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Audit + tsc for reset button"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === lucide audit (RotateCcw must resolve) ===
+> ✅ lucide import guard: all imports resolve against lucide-react (5835 exports)
+> AUDIT_EXIT=0
+> 
+> === tsc ===
+> npm notice
+> npm notice New major version of npm available! 10.9.8 -> 11.16.0
+> npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.16.0
+> npm notice To update run: npm install -g npm@11.16.0
+> npm notice
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(15:59:01)*
+
+
+## 🤖 Claude *(15:59:03)*
+
+Audit ✅ + `tsc` 0. O botão é pra ficar vivo (os usuários precisam dele), então commito + deployo. **Passo 1: commit + build:**
+
+## 🤖 Claude *(15:59:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -e\ngit add src/hooks/useResetCrew.ts src/pages/ConstellationPage.tsx\ngit commit -q -m \"feat(constellation-v2): bot\u00e3o 'Zerar constela\u00e7\u00e3o' per-user no cockpit\" -m \"Self-service reset: limpa o grafo de crew do pr\u00f3prio usu\u00e1rio (crew_edges + crew_agents, RLS-scoped a auth.uid()) com AlertDialog de confirma\u00e7\u00e3o, espelhando o Fase 0 admin mas sem service-role. Preserva mco_balance e hist\u00f3rico de execu\u00e7\u00f5es. Habilita come\u00e7ar do zero ou re-semear o 4x4 quando quiser.\"\necho \"=== committed ===\"; git log --oneline -1\necho \"=== build (deploy) ===\"\nbun run build 2>&1 | tail -4; echo \"BUILD_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Commit reset button + build/deploy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === committed ===
+> 9a13545 feat(constellation-v2): botão 'Zerar constelação' per-user no cockpit
+> === build (deploy) ===
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.69s
+> BUILD_EXIT=0
+> ```
+
+## 🤖 Claude *(15:59:36)*
+
+
+## 🤖 Claude *(15:59:37)*
+
+`✓ built in 22.69s`. Verifico material (o botão "Zerar" no bundle servido) + push:
+
+## 🤖 Claude *(15:59:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 'Zerar' string present in served ConstellationPage chunk? (proof the button shipped) ===\"\ngrep -rl 'Zerar constela' dist/assets/*.js 2>/dev/null | sed 's#dist/assets/##' || echo \"NOT FOUND\"\necho \"=== served entry + registered key still baked ===\"\ngrep -oE 'assets/index-[A-Za-z0-9_-]+\\.js' dist/index.html | head -1\ngrep -rl 'sb_publishable_FkE' dist/assets/*.js 2>/dev/null | head -1 | sed 's#dist/assets/##' && echo \"(registered key still present \u2705)\"\necho \"=== dist mtime ===\"; ls -lad dist | awk '{print $6,$7,$8}'\necho \"=== push to origin ===\"\ngit push origin main 2>&1 | tail -3\ngit rev-parse --short HEAD; git rev-parse --short origin/main",
+  "description": "Verify Zerar button shipped + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 'Zerar' string present in served ConstellationPage chunk? (proof the button shipped) ===
+> ConstellationPage-B-c9EWBA.js
+> === served entry + registered key still baked ===
+> assets/index-pCl0RXbB.js
+> index-BPulovQh.js
+> (registered key still present ✅)
+> === dist mtime ===
+> Jun 1 12:59
+> === push to origin ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    8ed3f78..9a13545  main -> main
+> 9a13545
+> 9a13545
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
