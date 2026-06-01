@@ -3891,6 +3891,717 @@ Excelente — agora eu vejo a anatomia real do link cravado. Deixa eu fazer a co
 > ✓ Closed session: default
 > ```
 
+## 🤖 Claude *(21:00:22)*
+
+
+## 🤖 Claude *(21:00:22)*
+
+Headless is bot-blocked again (same wall — expected). But you already proved the cravado works in your real browser, and the expanded URL tells me everything. Let me decode the `ref` to show what it actually is:
+
+## 🤖 Claude *(21:00:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "REF='BDKNlMHg2FSILlZMjtVq+4uC/6rOC3EXz0VxQk0/bh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy/wygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L+5orCUnsiygLrQ=='\necho \"=== ref length (base64 chars) ===\"; echo -n \"$REF\" | wc -c\necho \"=== decoded bytes (is it readable text or encrypted blob?) ===\"\necho \"$REF\" | base64 -d 2>/dev/null | wc -c | sed 's/^/decoded byte length: /'\necho \"first bytes as hex (entropy check):\"\necho \"$REF\" | base64 -d 2>/dev/null | xxd | head -4\necho \"readable strings inside? (expect none if encrypted):\"\necho \"$REF\" | base64 -d 2>/dev/null | strings | head -5 || echo \"(no printable strings \u2014 opaque/encrypted)\"",
+  "description": "Decode the ref token to assess if reconstructable"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ref length (base64 chars) ===
+> 200
+> === decoded bytes (is it readable text or encrypted blob?) ===
+> decoded byte length: 148
+> first bytes as hex (entropy check):
+> 00000000: 0432 8d94 c1e0 d854 882e 564c 8ed5 6afb  .2.....T..VL..j.
+> 00000010: 8b82 ffaa ce0b 7117 cf45 7142 4d3f 6e1f  ......q..EqBM?n.
+> 00000020: 6698 9ed1 5826 a85f bd5d 71c2 9f01 8b3d  f...X&._.]q....=
+> 00000030: 5ab6 65f5 1c1a 3f73 9232 1071 c0bc 7c2e  Z.e...?s.2.q..|.
+> readable strings inside? (expect none if encrypted):
+> EqBM?n
+> |.-Si
+> ```
+
+## 🤖 Claude *(21:00:58)*
+
+
+## 🤖 Claude *(21:01:16)*
+
+**Decodei o `ref` — e isso responde sua pergunta de forma definitiva.** São **148 bytes de binário cifrado** (entropia alta, zero estrutura legível): um token **assinado pelo ML no servidor** no momento em que você gerou o link. Não é derivável de nada — é a prova material de que **não dá para reconstruir programaticamente**.
+
+## Comparação componente a componente
+
+| Componente | Ver no ML | Meu automático (`matt_word`) | Cravado (`meli.la` expandido) | Reproduzível por código? |
+|---|---|---|---|---|
+| **Path** | `/p/MLB27834876` | `/p/MLB27834876` | `/social/uxmarket` (seu **canal**) | — |
+| **Produto** | no path | no path | **dentro do `ref`** — nem aparece no URL | — |
+| `matt_word` | — | `caga6077534` ✅ | `caga6077534` | ✅ já tenho |
+| `matt_tool` | — | ❌ faltava | `43641843` | ✅ tenho **agora** (per-user) |
+| `forceInApp` | — | — | `true` | ✅ trivial |
+| **`ref` (assinado)** | — | ❌ | **148 bytes cifrados** | ❌ **impossível** |
+
+## Veredito honesto
+São **dois objetos diferentes**:
+- **O meu** = a *página do produto* + rótulos de tracking (`matt_word`).
+- **O cravado** = um *landing do seu canal* (`/social/uxmarket`) + um **token assinado** que codifica produto+canal+conta. O ML decodifica esse `ref` no servidor para **creditar a comissão** — e o MLB nem está no URL, está dentro do `ref`.
+
+Logo:
+- **Abrir o produto:** equivalente (você confirmou). 
+- **Atribuir a comissão:** **NÃO posso garantir que sejam iguais.** A estrutura grita que o `ref`/fluxo `/social/` é o que credita; o `matt_word` solto é *best-effort* — e adicionar `matt_tool` ajuda no tracking mas **não fabrica o `ref`**, então não fecha a lacuna.
+
+## O que isso confirma
+O Mercado Livre **deliberadamente** torna o link garantido não-reconstruível (token assinado) — exatamente para te obrigar a gerar no painel. Ou seja: **não existe atalho automático para o link cravado.** Isso valida o **híbrido** que montamos como a resposta certa dentro das regras do ML:
+- **`meli.la` manual (cravado)** = único caminho de atribuição **garantida** → use nos 3 high-ticket (cole no 🔗, uma vez cada).
+- **`matt_word` automático** = fallback navegável + tracking best-effort → cobre a cauda longa de conteúdo gerado.
+
+## A única prova que falta (e só você consegue)
+Clique no seu link `matt_word` (de um celular/anônimo) e veja em **Afiliados → Métricas** se registra um **clique** atribuído a `caga6077534`/`matt_tool 43641843`. 
+- Se registrar → o `matt_word` atribui, e aí vale eu reforçar o automático com `matt_tool` + `forceInApp`. 
+- Se não registrar → só o `meli.la` credita, e o automático fica só como "link não-quebrado".
+
+---
+**Recomendação:** mantenha o híbrido como está; cole os `meli.la` dos 3 produtos (Roborock já está) e faça o teste de clique acima para decidir sobre o `matt_tool`. 
+
+Posso (a) **adicionar `matt_tool`+`forceInApp` ao builder automático** agora (reforço best-effort, ~10 min, guardo per-user), ou (b) **selar com `/handoff`** o fix que já está live e deixar o `matt_tool` pendente do seu teste de clique. Qual prefere?
+
+## 👤 User *(21:09:20)*
+
+ok ajuste rapido para ter certeza quando tiver produtos na pagina https://login.mcorch.com/dashboard/affiliate-products não estão com as fotos, e deveria ter pelo menos o básico como o preço tambem do produto, talvez seria no lugar do "--" que esta na mesma linha da porcentagem. E não deve listar produtos quie não funciona ou não estão disponíveis para compra precisamos dessa verificação antes de listar como oportunidade e tambem continuar verificando caso o produto acabe do estoque, ou o anuncio seja desativado.
+
+## 🤖 Claude *(21:09:54)*
+
+
+## 🤖 Claude *(21:09:56)*
+
+Mudança de frente — agora é **qualidade de dados + verificação de disponibilidade** do catálogo. Antes de desenhar qualquer coisa, preciso saber materialmente (Lei 1) **o que o ML me deixa buscar** (foto, preço, status de estoque) e o que os 3 rows têm hoje. Deixa eu sondar.
+
+## 🤖 Claude *(21:10:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\necho \"=== current catalog data (image/price/status) ===\"\ncurl -s \"$URL/rest/v1/vm_affiliate_products?select=external_id,name,price,currency,image_url,is_active,metadata\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool 2>/dev/null\necho \"\"\necho \"=== ML items API (direct) \u2014 MLB27834876 ===\"\ncurl -s -o /dev/null -w \"items/{id}: HTTP %{http_code}\\n\" \"https://api.mercadolibre.com/items/MLB27834876\"\necho \"--- body sample ---\"; curl -s \"https://api.mercadolibre.com/items/MLB27834876\" | head -c 400; echo",
+  "description": "Probe catalog data and ML items API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === current catalog data (image/price/status) ===
+> [
+>     {
+>         "external_id": "MLB27834876",
+>         "name": "Roborock S8 Pro Ultra",
+>         "price": null,
+>         "currency": "BRL",
+>         "image_url": null,
+>         "is_active": true,
+>         "metadata": {
+>             "key": "roborock_s8",
+>             "source": "link-forge",
+>             "metrics_pending": true
+>         }
+>     },
+>     {
+>         "external_id": "MLB36263268",
+>         "name": "Samsung Neo QLED 8K",
+>         "price": null,
+>         "currency": "BRL",
+>         "image_url": null,
+>         "is_active": true,
+>         "metadata": {
+>             "key": "samsung_neo_qled_8k",
+>             "source": "link-forge",
+>             "metrics_pending": true
+>         }
+>     },
+>     {
+>         "external_id": "MLB37674259",
+>         "name": "Geladeira Samsung Family Hub",
+>         "price": null,
+>         "currency": "BRL",
+>         "image_url": null,
+>         "is_active": true,
+>         "metadata": {
+>             "key": "family_hub",
+>             "source": "link-forge",
+>             "metrics_pending": true
+>         }
+>     }
+> ]
+> 
+> === ML items API (direct) — MLB27834876 ===
+> items/{id}: HTTP 403
+> --- body sample ---
+> {"status":403,"message":"At least one policy returned UNAUTHORIZED.","blocked_by":"PolicyAgent","code":"PA_UNAUTHORIZED_RESULT_FROM_POLICIES"}
+> ```
+
+## 🤖 Claude *(21:10:13)*
+
+
+## 🤖 Claude *(21:10:14)*
+
+Material reality: all 3 rows have `price=null`, `image_url=null`, `metrics_pending=true` (link-forge seeded only id+name+url). And `/items/{id}` → **403** (PolicyAgent), as the SOP warned. But `MLB27834876` is a `/p/` URL = a **catalog product**, not an item listing. Let me probe the catalog `products` API + the search API (the edge fn already uses search unauthenticated):
+
+## 🤖 Claude *(21:10:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== catalog products API (matches /p/ URLs) \u2014 MLB27834876 ===\"\ncurl -s -o /dev/null -w \"products/{id}: HTTP %{http_code}\\n\" \"https://api.mercadolibre.com/products/MLB27834876\"\ncurl -s \"https://api.mercadolibre.com/products/MLB27834876\" | head -c 600; echo; echo\necho \"=== search API (unauth, used by edge fn) ===\"\ncurl -s -o /dev/null -w \"search: HTTP %{http_code}\\n\" \"https://api.mercadolibre.com/sites/MLB/search?q=roborock%20s8%20pro%20ultra&limit=2\"\ncurl -s \"https://api.mercadolibre.com/sites/MLB/search?q=roborock%20s8%20pro%20ultra&limit=2\" | head -c 500; echo\necho \"\"\necho \"=== highlights/products search alt ===\"\ncurl -s -o /dev/null -w \"products/search: HTTP %{http_code}\\n\" \"https://api.mercadolibre.com/products/search?site_id=MLB&q=roborock%20s8%20pro%20ultra&limit=2\"",
+  "description": "Probe ML catalog products and search APIs unauthenticated"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === catalog products API (matches /p/ URLs) — MLB27834876 ===
+> products/{id}: HTTP 401
+> {"code":"unauthorized","message":"authorization value not present"}
+> 
+> === search API (unauth, used by edge fn) ===
+> search: HTTP 403
+> {"message":"forbidden","error":"forbidden","status":403,"cause":[]}
+> 
+> === highlights/products search alt ===
+> products/search: HTTP 403
+> ```
+
+## 🤖 Claude *(21:10:54)*
+
+
+## 🤖 Claude *(21:10:56)*
+
+All ML endpoints are locked for my IP: `/items`→403 (PolicyAgent), `/products`→401, `/sites/MLB/search`→403. So there's **no unauthenticated ML API path** to image/price/availability — and the product page is bot-blocked from this server. The data simply was never fetched (`metrics_pending:true`). 
+
+The one realistic auto-fetch path is a scraper that bypasses ML's bot-block. Let me test whether **Firecrawl** can pull the Roborock page (image/price/stock):
+
+## 🤖 Claude *(21:10:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== firecrawl available? ===\"\ncommand -v firecrawl >/dev/null 2>&1 && echo \"firecrawl CLI: $(firecrawl --version 2>&1 | head -1)\" || echo \"no firecrawl CLI\"\nset -a; source .env 2>/dev/null; set +a\necho \"FIRECRAWL_API_KEY present: $([ -n \"$FIRECRAWL_API_KEY\" ] && echo yes || echo NO)\"\nls ~/.firecrawl* 2>/dev/null; ls .firecrawl* 2>/dev/null\necho \"--- check global config ---\"\ncat ~/.config/firecrawl/* 2>/dev/null | head -c 200 || echo \"(no global config)\"",
+  "description": "Check Firecrawl availability and credentials"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === firecrawl available? ===
+> no firecrawl CLI
+> FIRECRAWL_API_KEY present: NO
+> --- check global config ---
+> ```
+
+## 🤖 Claude *(21:11:35)*
+
+
+## 🤖 Claude *(21:11:36)*
+
+No Firecrawl CLI/key either. Before I conclude what's possible, one more material test — the bot-block might be triggered by missing browser headers, not pure IP. Let me try the product page with a realistic browser User-Agent and look for the OG image/price in the HTML:
+
+## 🤖 Claude *(21:11:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nUA=\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36\"\necho \"=== product page with browser UA \u2014 status + size ===\"\ncurl -s -o /tmp/ml.html -w \"HTTP %{http_code}  size=%{size_download}B\\n\" \\\n  -H \"User-Agent: $UA\" \\\n  -H \"Accept: text/html,application/xhtml+xml\" \\\n  -H \"Accept-Language: pt-BR,pt;q=0.9\" \\\n  \"https://www.mercadolivre.com.br/p/MLB27834876\"\necho \"=== does the HTML carry og:image / price / availability meta? ===\"\nrg -o '<meta property=\"og:image\"[^>]*>' /tmp/ml.html 2>/dev/null | head -1 || echo \"no og:image\"\nrg -o '\"price\":[0-9.]+' /tmp/ml.html 2>/dev/null | head -2 || echo \"no price json\"\nrg -oi 'hubo un error|robot|captcha|newrelic' /tmp/ml.html 2>/dev/null | sort -u | head\necho \"first 200 chars:\"; head -c 200 /tmp/ml.html; echo",
+  "description": "Test product page fetch with browser UA for OG meta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === product page with browser UA — status + size ===
+> HTTP 302  size=188B
+> === does the HTML carry og:image / price / availability meta? ===
+> first 200 chars:
+> <p>Found. Redirecting to https://www.mercadolivre.com.br/gz/account-verification?go=https%3A%2F%2Fwww.mercadolivre.com.br%2Fp%2FMLB27834876&amp;tid=f3338451-454d-4a75-aa8d-cc455e96de97</p>
+> ```
+
+## 🤖 Claude *(21:12:43)*
+
+
+## 🤖 Claude *(21:12:46)*
+
+Conclusive (Law 1): ML blocks **every** server-side door — `/items`→403, `/products`→401, search→403, and the page with a real browser UA → **302 to `/gz/account-verification`** (anti-bot wall). Headless browser got the same "Hubo un error". So **no server can auto-fetch ML photo/price/stock** without either an external residential-proxy scraper (Firecrawl) or ML OAuth. Let me check if your affiliate OAuth token exists (would make the official API an option) before I lay out the choices:
+
+## 🤖 Claude *(21:12:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== Sovereign affiliate OAuth token state (presence only, not value) ===\"\ncurl -s \"$URL/rest/v1/affiliate_config?user_id=eq.$UID_SOV&platform=eq.mercadolivre&select=access_token,refresh_token,token_expires_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nr=json.load(sys.stdin)[0]\nat=r.get('access_token'); rt=r.get('refresh_token')\nprint('access_token:', 'PRESENT (len %d)'%len(at) if at else 'absent')\nprint('refresh_token:', 'present' if rt else 'absent')\nprint('expires_at:', r.get('token_expires_at'))\n\"\necho \"\"\necho \"=== if a token existed, would /items even work from this IP? test generic public-ish endpoint ===\"\ncurl -s -o /dev/null -w \"categories (no-auth public): HTTP %{http_code}\\n\" \"https://api.mercadolibre.com/sites/MLB/categories\"",
+  "description": "Check Sovereign OAuth token presence and a public ML endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Sovereign affiliate OAuth token state (presence only, not value) ===
+> access_token: absent
+> refresh_token: absent
+> expires_at: None
+> 
+> === if a token existed, would /items even work from this IP? test generic public-ish endpoint ===
+> categories (no-auth public): HTTP 403
+> ```
+
+## 🤖 Claude *(21:14:43)*
+
+
+## 🤖 Claude *(21:14:45)*
+
+Decisive findings: no OAuth token exists, **and** even `/sites/MLB/categories` (normally public) → **403** — so it's an **IP-level block on this server**; OAuth wouldn't bypass it either. The only automated path would be from a *different* IP. 
+
+Crucial untested hypothesis: **Supabase Edge Functions run on a different IP pool** than this box — ML might not block *them*. If true, I can enrich photo/price/stock server-side for free (no Firecrawl). Let me prove it with a throwaway probe function:
+
+## 🤖 Claude *(21:14:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ml-probe/index.ts",
+  "content": "import { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\n\n// DIAGNOSTIC ONLY \u2014 probes whether the Supabase Edge IP can reach Mercado Livre's API\n// (this server's datacenter IP is fully blocked: 403/401 on every endpoint). Delete after use.\nserve(async () => {\n  const targets: Record<string, string> = {\n    items: \"https://api.mercadolibre.com/items/MLB27834876\",\n    products: \"https://api.mercadolibre.com/products/MLB27834876\",\n    search: \"https://api.mercadolibre.com/sites/MLB/search?q=roborock%20s8%20pro%20ultra&limit=1\",\n    categories: \"https://api.mercadolibre.com/sites/MLB/categories\",\n  };\n  const out: Record<string, unknown> = {};\n  for (const [k, url] of Object.entries(targets)) {\n    try {\n      const r = await fetch(url, { headers: { Accept: \"application/json\" } });\n      const text = await r.text();\n      out[k] = { status: r.status, sample: text.slice(0, 240) };\n    } catch (e) {\n      out[k] = { error: (e as Error).message };\n    }\n  }\n  return new Response(JSON.stringify(out, null, 2), {\n    headers: { \"Content-Type\": \"application/json\" },\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ml-probe/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:14:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy ml-probe --no-verify-jwt 2>&1 | grep -iE \"deploy|script size|error\" | head -5\nset -a; source .env 2>/dev/null; set +a\nPUB=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\necho \"=== probe result (ML reachability from Supabase Edge IP) ===\"\ncurl -s \"$URL/functions/v1/ml-probe\" -H \"apikey: $PUB\" 2>&1 | head -40",
+  "description": "Deploy and run ML reachability probe from Supabase edge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: ml-probe (script size: 19.61kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: ml-probe
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> === probe result (ML reachability from Supabase Edge IP) ===
+> {
+>   "items": {
+>     "status": 403,
+>     "sample": "{\"blocked_by\":\"PolicyAgent\",\"message\":\"At least one policy returned UNAUTHORIZED.\",\"status\":403,\"code\":\"PA_UNAUTHORIZED_RESULT_FROM_POLICIES\"}\n"
+>   },
+>   "products": {
+>     "status": 401,
+>     "sample": "{\"code\":\"unauthorized\",\"message\":\"authorization value not present\"}"
+>   },
+>   "search": {
+>     "status": 403,
+>     "sample": "{\"message\":\"forbidden\",\"error\":\"forbidden\",\"status\":403,\"cause\":[]}"
+>   },
+>   "categories": {
+>     "status": 403,
+>     "sample": "{\"code\":\"PA_UNAUTHORIZED_RESULT_FROM_POLICIES\",\"message\":\"At least one policy returned UNAUTHORIZED.\",\"status\":403,\"blocked_by\":\"PolicyAgent\"}\n"
+>   }
+> }
+> ```
+
+## 🤖 Claude *(21:15:55)*
+
+
+## 🤖 Claude *(21:15:57)*
+
+Conclusive: **even from Supabase's Edge IP, ML returns 403 on everything** — including the normally-public `categories` endpoint. So ML now gates *all* API access behind app credentials/anti-bot, and blocks cloud IPs broadly. **No server we control can auto-fetch ML data.** Let me clean up the throwaway probe:
+
+## 🤖 Claude *(21:16:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"y\" | npx supabase functions delete ml-probe 2>&1 | grep -iE \"delet|error|removed\" | head -3\nrm -f supabase/functions/ml-probe/index.ts && rmdir supabase/functions/ml-probe 2>/dev/null\necho \"probe file removed: $([ ! -f supabase/functions/ml-probe/index.ts ] && echo yes)\"\necho \"=== confirm it's gone (curl should 404) ===\"\nset -a; source .env 2>/dev/null; set +a\nPUB=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\ncurl -s -o /dev/null -w \"ml-probe now: HTTP %{http_code}\\n\" \"$URL/functions/v1/ml-probe\" -H \"apikey: $PUB\"",
+  "description": "Delete throwaway probe function and confirm removal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deleted Function ml-probe from project bcyvddsykvehvpwstlfa.
+> probe file removed: yes
+> === confirm it's gone (curl should 404) ===
+> ml-probe now: HTTP 404
+> ```
+
+## 🤖 Claude *(21:16:31)*
+
+
+## 🤖 Claude *(21:16:41)*
+
+Probe deleted, confirmed gone (404). Now the picture is **complete and material**:
+
+## Verdade material — o ML fechou todas as portas automáticas
+
+| Tentativa | Resultado |
+|---|---|
+| `api/items/{id}` (deste servidor) | **403** PolicyAgent |
+| `api/products/{id}` | **401** |
+| `api/sites/MLB/search` | **403** |
+| `api/sites/MLB/categories` (endpoint público!) | **403** PolicyAgent |
+| Página do produto (curl + UA de browser) | **302 → `/gz/account-verification`** (muro anti-bot) |
+| Página (browser headless) | "Hubo un error" |
+| **Tudo de novo, da IP da Supabase Edge** | **403 em todos** (incl. categories) |
+| Token OAuth do afiliado | **ausente** (e a IP é bloqueada, então OAuth também não furaria) |
+
+**Conclusão:** nenhum servidor nosso consegue buscar foto/preço/estoque do ML automaticamente — o `metrics_pending: true` dos 3 produtos é por isso (o link-forge nunca conseguiu preencher). Foto/preço **têm que ser curados**, e monitoramento de estoque automático e confiável **não é viável** sem um scraper externo com proxy residencial (Firecrawl) — e mesmo ele esbarra no muro de account-verification do ML (sem garantia).
+
+## O que eu faço de qualquer jeito (responde seu requisito)
+O **gate de verificação**: a página passa a listar **só** produtos `is_active` **E** com preço **E** marcados `disponível`. Produto sem dados ou indisponível **não aparece como oportunidade** — exatamente o que você pediu. Estado vazio vira "aguardando verificação" em vez de sumir mudo. Isso é código puro, faço agora.
+
+A parte que precisa da sua decisão é **de onde vêm os dados** (foto/preço/disponibilidade) e como mantê-los:
+
+## 🤖 Claude *(21:16:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O ML bloqueia busca autom\u00e1tica de foto/pre\u00e7o/estoque de qualquer servidor nosso (provado acima). Como popular e manter esses dados do cat\u00e1logo?",
+      "header": "Fonte de dados",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Editor admin na p\u00e1gina (Recomendado)",
+          "description": "Construo um painel (s\u00f3 admin/has_role) na pr\u00f3pria /affiliate-products para voc\u00ea adicionar/editar foto + pre\u00e7o + disponibilidade e marcar esgotado/desativado em segundos. Voc\u00ea mant\u00e9m sozinho, sem scraper, sem depender de mim. Inclui o gate de verifica\u00e7\u00e3o. \u00c9 a solu\u00e7\u00e3o sustent\u00e1vel (~1-2h)."
+        },
+        {
+          "label": "Curado agora (mais r\u00e1pido)",
+          "description": "Voc\u00ea me passa pre\u00e7o + URL da imagem dos 3 produtos (est\u00e3o no seu browser \u2014 ex: Roborock R$17.770). Eu populo o cat\u00e1logo via service-role + implemento o gate agora. Funciona hoje; manuten\u00e7\u00e3o futura via editor ou me pedindo."
+        },
+        {
+          "label": "Firecrawl (autom\u00e1tico, fr\u00e1gil)",
+          "description": "Voc\u00ea provisiona uma API key Firecrawl (scraper com proxy residencial). Eu tento auto-enriquecer foto/pre\u00e7o/estoque + cron de monitoramento \u2014 ciente de que o anti-bot/account-verification do ML pode furar e quebrar sem aviso. Sem garantia de atribui\u00e7\u00e3o/dados."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O ML bloqueia busca automática de foto/preço/estoque de qualquer servidor nosso (provado acima). Como popular e manter esses dados do catálogo?"="Firecrawl (automático, frágil)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(21:24:36)*
+
+
+## 🤖 Claude *(21:24:38)*
+
+Você escolheu **Firecrawl**. Antes de construir qualquer pipeline, a regra é materialidade (Lei 1): **o primeiro uso da key será um teste de make-or-break** — se o Firecrawl também apanhar do muro de account-verification do ML, eu te aviso e não queimo esforço. Deixa eu carregar a doc do Firecrawl para preparar o probe corretamente.
+
+## 🤖 Claude *(21:24:38)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "firecrawl-build-scrape"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: firecrawl-build-scrape
+> ```
+
+## 👤 User *(21:24:38)*
+
+Base directory for this skill: /home/ubuntu/.claude/skills/firecrawl-build-scrape
+
+# Firecrawl Build Scrape
+
+Use this when the application already has the URL and needs content from one page.
+
+## Use This When
+
+- the feature starts from a known URL
+- you need page content for retrieval, summarization, enrichment, or monitoring
+- you want the default extraction primitive before considering `/interact`
+
+## Default Recommendations
+
+- Return `markdown` unless the feature truly needs another format.
+- Use `onlyMainContent` for article-like pages where nav and chrome add noise.
+- Add waits or other rendering options only when the page needs them.
+
+## Common Product Patterns
+
+- knowledge ingestion from known URLs
+- enrichment from a company, product, or docs page
+- pricing, changelog, and documentation extraction
+- page-level quality checks or monitoring
+
+## Escalation Rules
+
+- If you do not have the URL yet, start with [firecrawl-build-search](../firecrawl-build-search/SKILL.md).
+- If content requires clicks, typing, or multi-step navigation, escalate to [firecrawl-build-interact](../firecrawl-build-interact/SKILL.md).
+
+## Implementation Notes
+
+- Keep the integration narrow: one feature, one URL, one extraction contract.
+- Treat `/scrape` as the default primitive for downstream LLM or indexing pipelines.
+- Request richer formats only when the consumer needs them, such as links, screenshots, or branding data.
+
+## Docs (Source of Truth)
+
+Read the source-of-truth page for your project language before writing integration code:
+
+- **Node / TypeScript**: [docs.firecrawl.dev/agent-source-of-truth/node](https://docs.firecrawl.dev/agent-source-of-truth/node)
+- **Python**: [docs.firecrawl.dev/agent-source-of-truth/python](https://docs.firecrawl.dev/agent-source-of-truth/python)
+- **Rust**: [docs.firecrawl.dev/agent-source-of-truth/rust](https://docs.firecrawl.dev/agent-source-of-truth/rust)
+- **Java**: [docs.firecrawl.dev/agent-source-of-truth/java](https://docs.firecrawl.dev/agent-source-of-truth/java)
+- **Elixir**: [docs.firecrawl.dev/agent-source-of-truth/elixir](https://docs.firecrawl.dev/agent-source-of-truth/elixir)
+- **cURL / REST**: [docs.firecrawl.dev/agent-source-of-truth/curl](https://docs.firecrawl.dev/agent-source-of-truth/curl)
+
+## See Also
+
+- [firecrawl-build](../firecrawl-build/SKILL.md)
+- [firecrawl-build-search](../firecrawl-build-search/SKILL.md)
+- [firecrawl-build-interact](../firecrawl-build-interact/SKILL.md)
+
+
+## 🤖 Claude *(21:24:47)*
+
+
+## 🤖 Claude *(21:24:48)*
+
+The source-of-truth is the REST doc. Let me fetch it to get the exact `/scrape` shape (esp. structured JSON extraction for product fields) so the probe is correct, not guessed.
+
+## 🤖 Claude *(21:24:51)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebFetch",
+  "max_results": 3
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebFetch'}]
+> ```
+
+## 🤖 Claude *(21:24:57)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://docs.firecrawl.dev/agent-source-of-truth/curl",
+  "prompt": "Give the exact REST API for a single-page scrape that returns structured JSON: the full endpoint URL (including version like v1/v2), required headers, and a complete request body example using a JSON/extract format with a schema (fields like price, image url, availability). Also show how to request markdown+html formats, and any option to wait for JS rendering or use proxy/stealth mode for bot-protected pages. Include the response shape (where the extracted json and metadata/og fields appear)."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Firecrawl Single-Page Scrape API
+> 
+> ## Endpoint & Headers
+> 
+> **URL:** `POST https://api.firecrawl.dev/v2/scrape`
+> 
+> **Required Headers:**
+> ```
+> Authorization: Bearer $FIRECRAWL_API_KEY
+> Content-Type: application/json
+> ```
+> 
+> ## Complete Request Example
+> 
+> ```json
+> {
+>   "url": "https://example.com/product",
+>   "formats": [
+>     "markdown",
+>     "html",
+>     {
+>       "type": "json",
+>       "schema": {
+>         "type": "object",
+>         "properties": {
+>           "price": { "type": "string" },
+>           "imageUrl": { "type": "string" },
+>           "availability": { "type": "string" }
+>         }
+>       }
+>     }
+>   ],
+>   "waitFor": 1000,
+>   "proxy": "auto",
+>   "blockAds": true,
+>   "onlyMainContent": true
+> }
+> ```
+> 
+> ## Response Structure
+> 
+> The successful response includes `success` and `data` containing:
+> 
+> - **`markdown`** and **`html`**: formatted page content
+> - **Extracted JSON**: your schema-validated structured data
+> - **`metadata`**: includes `title`, `sourceURL`, `statusCode`, and other fields
+> 
+> Per the documentation, the extracted JSON appears within `data` alongside other format outputs, with metadata fields accessible via the `metadata` object.
+> 
+> ## Key Options for Bot Protection
+> 
+> - `"waitFor": milliseconds` – waits for JavaScript rendering
+> - `"proxy": "auto"` – enables proxy rotation
+> - `"blockAds": true` – blocks ads and popups
+> ```
+
+## 🤖 Claude *(21:25:26)*
+
+
+## 🤖 Claude *(21:25:27)*
+
+Got the exact Firecrawl v2 shape (`POST /v2/scrape`, `proxy:"auto"` + `waitFor` for bot-protected pages, JSON schema extraction). Let me write the make-or-break probe now so it runs the instant your key lands — it scrapes the 3 real product pages and reports whether Firecrawl beats ML's wall and extracts photo/price/stock:
+
+## 🤖 Claude *(21:25:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/firecrawl-ml-probe.ts",
+  "content": "/**\n * Firecrawl \u00d7 Mercado Livre \u2014 make-or-break materiality probe (OTD-ML-001 follow-up).\n *\n * ML blocks every server-side door from our IPs (API 403/401, page \u2192 /gz/account-verification).\n * This probe checks whether Firecrawl's residential-proxy scrape gets PAST that wall and extracts\n * the product photo / price / availability. It WRITES NOTHING \u2014 it only reports go/no-go so we\n * don't build an enrichment pipeline on a foundation that doesn't hold (Lei 1).\n *\n * Run:  FIRECRAWL_API_KEY=fc-... bun run scripts/qa/firecrawl-ml-probe.ts\n *       (Supabase creds read from .env to pull the live product URLs.)\n */\n\nconst FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;\nconst SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? \"https://bcyvddsykvehvpwstlfa.supabase.co\";\nconst SB_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\n\nif (!FIRECRAWL_API_KEY) {\n  console.error(\"\u2717 Missing FIRECRAWL_API_KEY. Get one at https://firecrawl.dev (free tier is enough) and re-run.\");\n  process.exit(2);\n}\nif (!SB_KEY) {\n  console.error(\"\u2717 Missing SB_SECRET_KEY in .env.\");\n  process.exit(2);\n}\n\nconst PRODUCT_SCHEMA = {\n  type: \"object\",\n  properties: {\n    title: { type: \"string\", description: \"product title\" },\n    price: { type: \"number\", description: \"current price as a number (no currency symbol)\" },\n    currency: { type: \"string\", description: \"ISO currency, e.g. BRL\" },\n    imageUrl: { type: \"string\", description: \"absolute URL of the main product image\" },\n    inStock: { type: \"boolean\", description: \"true if the product can be purchased right now\" },\n    availability: {\n      type: \"string\",\n      description: \"raw availability text, e.g. '\u00daltima em estoque', 'Sem estoque', 'An\u00fancio pausado'\",\n    },\n    soldQuantity: { type: \"number\", description: \"units sold, if shown\" },\n  },\n} as const;\n\nconst BOT_WALL = /hubo un error|account-verification|verifica(c|\u00e7)[\u00e3a]o de conta|robot|captcha/i;\n\nasync function probe(externalId: string, name: string, url: string) {\n  const t0 = Date.now();\n  const res = await fetch(\"https://api.firecrawl.dev/v2/scrape\", {\n    method: \"POST\",\n    headers: {\n      Authorization: `Bearer ${FIRECRAWL_API_KEY}`,\n      \"Content-Type\": \"application/json\",\n    },\n    body: JSON.stringify({\n      url,\n      formats: [\"markdown\", { type: \"json\", schema: PRODUCT_SCHEMA }],\n      proxy: \"auto\",\n      waitFor: 2500,\n      blockAds: true,\n      onlyMainContent: true,\n    }),\n  });\n\n  const elapsed = Date.now() - t0;\n  const body = await res.json().catch(() => ({}));\n  const data = body?.data ?? {};\n  const md: string = data?.markdown ?? \"\";\n  const json = data?.json ?? null;\n  const meta = data?.metadata ?? {};\n  const hitWall = BOT_WALL.test(md) || BOT_WALL.test(meta?.title ?? \"\");\n\n  console.log(`\\n\u2500\u2500 ${externalId}  ${name}`);\n  console.log(`   HTTP ${res.status} \u00b7 firecrawl ok=${body?.success === true} \u00b7 ${elapsed}ms \u00b7 md=${md.length}B`);\n  console.log(`   page meta: status=${meta?.statusCode} title=${JSON.stringify((meta?.title ?? \"\").slice(0, 60))}`);\n  console.log(`   bot-wall hit: ${hitWall ? \"YES \u274c (Firecrawl did NOT beat ML)\" : \"no \u2705\"}`);\n  console.log(`   extracted json: ${JSON.stringify(json)}`);\n\n  const usable =\n    body?.success === true &&\n    !hitWall &&\n    json &&\n    typeof json.price === \"number\" &&\n    typeof json.imageUrl === \"string\" &&\n    json.imageUrl.startsWith(\"http\");\n  console.log(`   \u2192 VERDICT: ${usable ? \"USABLE \u2705 (price+image extracted)\" : \"NOT usable \u2717\"}`);\n  return usable;\n}\n\nconst resp = await fetch(\n  `${SUPABASE_URL}/rest/v1/vm_affiliate_products?network=eq.mercadolivre&is_active=eq.true&select=external_id,name,product_url&order=detected_at.desc`,\n  { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } },\n);\nconst products: Array<{ external_id: string; name: string; product_url: string }> = await resp.json();\nconsole.log(`Probing ${products.length} active ML products via Firecrawl (proxy=auto)\u2026`);\n\nlet usableCount = 0;\nfor (const p of products) {\n  if (!p.product_url) {\n    console.log(`\\n\u2500\u2500 ${p.external_id}  ${p.name}\\n   \u2717 no product_url`);\n    continue;\n  }\n  try {\n    if (await probe(p.external_id, p.name, p.product_url)) usableCount++;\n  } catch (e) {\n    console.log(`\\n\u2500\u2500 ${p.external_id}  ${p.name}\\n   \u2717 probe error: ${(e as Error).message}`);\n  }\n}\n\nconsole.log(`\\n\u2550\u2550\u2550 RESULT: ${usableCount}/${products.length} products fully extractable via Firecrawl \u2550\u2550\u2550`);\nconsole.log(\n  usableCount === products.length\n    ? \"GO \u2014 build the enrichment edge fn + monitoring cron on this.\"\n    : usableCount > 0\n    ? \"PARTIAL \u2014 Firecrawl works for some; decide per-product manual fallback for the rest.\"\n    : \"NO-GO \u2014 Firecrawl did not beat ML's wall. Fall back to curated/manual entry.\",\n);\nprocess.exit(0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/firecrawl-ml-probe.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:15)*
+
+
+## 🤖 Claude *(21:26:28)*
+
+Probe pronto e versionado: `scripts/qa/firecrawl-ml-probe.ts`. Ele scrapa as 3 páginas reais via Firecrawl (`proxy: auto` + `waitFor`), extrai foto/preço/estoque por schema, detecta o muro de account-verification, e cospe um veredito **GO / NO-GO** — **sem escrever nada no banco** (é só a prova).
+
+**Estou travado num item só: a API key do Firecrawl.** Eu não tenho como provisionar (é a sua conta/créditos).
+
+### O que preciso de você
+1. Crie a key em **firecrawl.dev** (free tier tem créditos de sobra para o probe de 3 produtos).
+2. Me entregue por **uma** das vias:
+   - Adicione ao `.env`: `FIRECRAWL_API_KEY=fc-...` (preferível — não fica no histórico do chat), **ou**
+   - Cole aqui (eu uso e gravo no `.env`/vault, sem ecoar).
+
+### O que acontece no instante em que a key chegar
+```
+bun run scripts/qa/firecrawl-ml-probe.ts
+```
+- **GO** (Firecrawl fura o muro e extrai preço+foto): eu construo o pacote completo —
+  1. **edge function `enrich-affiliate-products`** (Firecrawl → `UPDATE vm_affiliate_products` com `image_url`, `price`, `currency`, `metadata.availability`, `last_checked_at`),
+  2. **gate de verificação** na página (só lista `is_active` + com preço + `disponível` — produto não-verificado/indisponível não aparece como oportunidade),
+  3. **cron de monitoramento** (re-check periódico → marca esgotado/desativado e tira da listagem),
+  4. SOP + BoK do enriquecimento.
+- **NO-GO** (o anti-bot do ML também derruba o Firecrawl): eu te reporto com a prova e caímos no curado/manual — sem gastar seus créditos à toa além do teste.
+
+### Heads-up honesto
+Scraping do ML é cat-and-mouse (ToS + anti-bot); por isso o probe vem **antes** do build. E lembrando: isso resolve **foto/preço/disponibilidade**; a **atribuição de comissão** continua dependendo do `meli.la` cravado (manual) que discutimos — são problemas separados.
+
+Me manda a key quando tiver e eu disparo o probe na hora. (O fix dos links de afiliado de antes segue live e pendente de `/handoff` quando você quiser selar.)
+
+## 👤 User *(21:28:33)*
+
+ok vamos lá qual seria a melhor opção economicamente para esse trabalho de crawling/webscraping? Pois isso tambem deve ser per user. Logo acredito que eut erique adicionar nas configurações tambem
+
+## 🤖 Claude *(21:29:58)*
+
+
+## 🤖 Claude *(21:30:00)*
+
+Ótimas duas perguntas — e a segunda (per-user) está **arquiteturalmente certa** pelo próprio API Tenancy Model do projeto. Antes de recomendar, deixa eu checar o que o projeto **já tem** (vi no histórico que o `fetch-trends` já usa Apify) — reusar uma integração existente muda o cálculo econômico.
+
+## 🤖 Claude *(21:30:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== existing scraping integrations in code (apify/scraperapi/brightdata/firecrawl/rapidapi) ===\"\nrg -in \"apify|scraperapi|scrapingbee|brightdata|bright_data|firecrawl|zyte|rapidapi\" -g '!*.md' -g '!HANDOFF.md' -g '!dist/**' -l 2>/dev/null | head -20\necho \"\"\necho \"=== how fetch-trends resolves its scraping key (per-user or global env?) ===\"\nrg -n \"apify|rapidapi|Deno.env.get|user_api_keys|RAPIDAPI|APIFY\" supabase/functions/fetch-trends/index.ts 2>/dev/null | head -30",
+  "description": "Find existing scraping integrations and key resolution pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === existing scraping integrations in code (apify/scraperapi/brightdata/firecrawl/rapidapi) ===
+> scripts/seed-viralmind-bok-seal.ts
+> scripts/nightly-stage3-rem.sh
+> scripts/qa/firecrawl-ml-probe.ts
+> miv/index.html
+> miv/Landing.html
+> supabase/functions/fetch-trends/index.ts
+> miv/MCORCH Landing.html
+> src/pages/ViralMinerPage.tsx
+> miv/MCORCH-MIV.html
+> 
+> === how fetch-trends resolves its scraping key (per-user or global env?) ===
+> 15:  source?: "apify" | "rapidapi" | "mock";
+> 29:    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 30:    const supabaseAnonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 46:    const source = body.source || "apify";
+> 48:    const adminClient = createClient(supabaseUrl, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 53:    if (source === "apify") {
+> 54:      const apifyToken = Deno.env.get("APIFY_TOKENS");
+> 55:      if (!apifyToken) {
+> 56:        return new Response(JSON.stringify({ error: "APIFY_TOKENS not configured" }), {
+> 64:        : "apify~instagram-hashtag-scraper";
+> 72:          `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${apifyToken}`,
+> 98:            metadata: { source: "apify", raw_id: item.id, actor: actorId },
+> 101:      } catch (apifyErr) {
+> 102:        console.error("Apify error:", apifyErr);
+> 108:    if (source === "rapidapi" || (source === "apify" && trends.length === 0)) {
+> 109:      const rapidKey = Deno.env.get("RAPIDAPI_KEY");
+> 113:            `https://tiktok-scraper7.p.rapidapi.com/feed/list?region=BR&count=${limit}`,
+> 117:                "X-RapidAPI-Host": "tiktok-scraper7.p.rapidapi.com",
+> 136:              metadata: { source: "rapidapi" },
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
