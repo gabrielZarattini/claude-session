@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 237
-> * **Sessões do Claude**: 207
+> * **Total de Sessões Registradas**: 239
+> * **Sessões do Claude**: 209
 > * **Sessões do Gemini**: 30
 
 ---
@@ -54,7 +54,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
+*   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-aa306815868636459]]` - *2026-06-01*
+*   `[[2026-06-01 - agent-a86068c8c8bc3d3e1]]` - *2026-06-01*
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
 *   `[[2026-06-01 - Resolve priority alerts]]` - *2026-06-01*
@@ -63,9 +65,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` - *2026-06-01*
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` - *2026-06-01*
 *   `[[2026-05-31 - handson]]` - *2026-05-31*
-*   `[[2026-05-31 - Seal meta-api BoK suite and test robustness]]` - *2026-05-31*
-*   `[[2026-05-31 - Fix tenant isolation in edge functions]]` - *2026-05-31*
-*   *... e mais 203 sessões nessa categoria.*
+*   *... e mais 205 sessões nessa categoria.*
 
 ---
 
@@ -254,7 +254,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-aa306815868636459]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-a86068c8c8bc3d3e1]]` (ClaudeSessions)
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` (ClaudeSessions)
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` (ClaudeSessions)
 *   `[[2026-06-01 - Resolve priority alerts]]` (ClaudeSessions)
