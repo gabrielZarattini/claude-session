@@ -2490,6 +2490,3164 @@ Antes de tocar em qualquer linha, preciso de 3 decisões suas (mudam blast radiu
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A topologia limpa (4 subagentes/depto) deve atingir só a sua conta ou também os seeders? (Há 26 outros tenants com crews próprias.)"="Não existe outro usuário, esses agentes devem ser per user, e todos deve ser calibrados para o consumo de mcoCoins e tambem deve ter controle de consulmo das suas apis BYOK. Não entendi o que seria os outros 26 tenants. E sim todos os novos usuários devem vir vazios para serem criados do zero. Talvez seria melhor limpar o nosso tambem, fazendo um E2E completo desse módulo de constalattion. Além disso em algum momento pode ter acontecido uma confusão de colocar esses agentes para trabalhar dentro do sistema assim como você esta fazendo isso não pode acontecer, os agentes deve trabahar e ter acesso configurado previamente somente per usar full account per users.", "Quão 'real' é o trabalho dos subagentes neste primeiro corte?"="Acredito que invocação real de módulos já, seria o melhor  caminho, pois esse módulo nasceu junto com a casca logo no inicio quando criado pelo lovable, acredito que agora estamos muito mais avançados e robustos no desenvolvimento então tome os caminhos de refatoramento completo e talvez se necessário criando de fato um v2 de tudo.", "Confirma o mapeamento dos 16 subagentes módulo→departamento que propus?"="Aceito o proposto" selected preview:
+> 🎨 Creative Content → Conteúdo · Blog · Canvas Studio · Canvas Design
+> 📈 Market Intelligence → Viral Miner · Analytics · Produtos · Campanhas
+> ⚡ Operational Ops → Afiliados · Calendário · Orquestração · Publicação Social
+> ⚙️ Technical Engine → Core/AIOS · IA Arena · agent-economics · Watchdog/Infra
+> 
+> (Todos os 4 Leads → GCRUX Core). You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(02:36:55)*
+
+
+## 🤖 Claude *(02:37:06)*
+
+Captei o reframe — e ele é grande. Deixa eu refletir o que mudou e tomar a atitude que o protocolo exige.
+
+**O que entendi da sua direção:**
+- **Agentes per-user, escopados à conta completa do usuário** (conteúdo, canvas, campanhas, BYOK, mcoCoins dele). São **agentes de produto voltados ao tenant** — **NUNCA** agentes que operam o sistema/dev do MCORCH (o que **eu**, Claude Code, faço no repo). Essa separação tem que ser barreira arquitetural, não convenção. Entendido e será requisito de segurança central.
+- **Novos usuários nascem vazios** — removo o auto-seed (`seed_crew_template`); o usuário cria a crew do zero.
+- **mcoCoins calibrado + controle de consumo das APIs BYOK por usuário** (resolução per-user de chaves + caps de consumo).
+- **4×4 aceito** · Leads → GCRUX Core.
+- **Refatoramento completo / v2 de tudo** — o módulo nasceu como casca do Lovable; reconstruir direito.
+
+**Atitude obrigatória agora — Closed-Loop Protocol (BoK Gate):**
+Você escolheu **"invocação real de módulos + v2 de tudo"** — exatamente o que sinalizei como gatilho do Gate. Isso é uma **mudança arquitetural complexa**, então pelo MCORCH Master Execution Protocol eu **não inicio o código do v2 sem selar a família BoK primeiro** (MRD→BRD→PRD→FRD→SDD…). A BoK atual de `mcorch-constellation` documenta a **casca**, não o v2 com invocação real + tenancy/economia/acesso novos. Pular isso é a dívida exponencial que a Lei 2 blinda — e já temos prova: a CEA v1.1 foi bloqueada na Fase 5c do v6.10.0 justamente por falta de SOP antecipada.
+
+**Sobre os "26 tenants" que você não reconheceu:** são 26 `user_id` distintos (além do seu) que existem na tabela `crew_agents` — quase certo que são contas de teste/preview, porque a RPC antiga **auto-semeava 29 agentes para qualquer conta** que abrisse a página. Não devem ser clientes reais. Vou confirmar materialmente agora (perfis reais vs. linhas órfãs) pra te dar o número exato e definir a limpeza do reset:
+
+## 🤖 Claude *(02:37:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\n\necho \"\u2550\u2550\u2550 profiles (contas reais) \u2550\u2550\u2550\"\ncurl -s \"$BASE/profiles?select=id,created_at,mco_balance&order=created_at.asc\" \"${HK[@]}\" > /tmp/prof.json\nif jq -e . /tmp/prof.json >/dev/null 2>&1; then\n  echo \"TOTAL profiles: $(jq 'length' /tmp/prof.json)\"\n  echo \"\u2500\u2500 created_at span \u2500\u2500\"; jq -r '[.[].created_at]|\"first: \\(min)  last: \\(max)\"' /tmp/prof.json\n  echo \"\u2500\u2500 mco_balance distrib \u2500\u2500\"; jq -r 'group_by(.mco_balance)[]|\"balance \\(.[0].mco_balance): \\(length) contas\"' /tmp/prof.json\nelse\n  echo \"profiles query error:\"; cat /tmp/prof.json\nfi\n\necho \"\"; echo \"\u2550\u2550\u2550 crew owners (distinct) \u2550\u2550\u2550\"\ncurl -s \"$BASE/crew_agents?select=user_id\" \"${HK[@]}\" | jq -r '[.[].user_id]|unique|length' | xargs echo \"distinct crew owners:\"\n\necho \"\"; echo \"\u2550\u2550\u2550 agent_executions (hist\u00f3rico real CEA) \u2550\u2550\u2550\"\ncurl -s -I \"$BASE/agent_executions?select=id\" \"${HK[@]}\" -H \"Prefer: count=exact\" 2>/dev/null | grep -i content-range || echo \"(sem header)\"\n\necho \"\"; echo \"\u2550\u2550\u2550 SOVEREIGN_USER_ID (confirmar qual owner \u00e9 o seu) \u2550\u2550\u2550\"\ngrep -rhn \"SOVEREIGN_USER_ID\\s*=\" .env scripts/ 2>/dev/null | sed 's/\\(SOVEREIGN_USER_ID=\\)\\(........\\).*/\\1\\2\u2026(redacted tail)/' | head -3\ngrep -rhn \"SOVEREIGN_USER_ID\" supabase/functions/ 2>/dev/null | grep -i \"default\\|===\\|==\" | head -3",
+  "description": "Characterize profiles vs crew owners + CEA history + sovereign id"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ profiles (contas reais) ═══
+> TOTAL profiles: 1
+> ── created_at span ──
+> first: 2026-04-17T05:57:46.249257+00:00  last: 2026-04-17T05:57:46.249257+00:00
+> ── mco_balance distrib ──
+> balance 5351.00: 1 contas
+> 
+> ═══ crew owners (distinct) ═══
+> distinct crew owners: 27
+> 
+> ═══ agent_executions (histórico real CEA) ═══
+> content-range: 0-30/31
+> 
+> ═══ SOVEREIGN_USER_ID (confirmar qual owner é o seu) ═══
+> 270:    if (user.id !== SOVEREIGN_USER_ID && costMcoin > 0) {
+> 296:      sovereign_freebie: user.id === SOVEREIGN_USER_ID,
+> ```
+
+## 🤖 Claude *(02:38:59)*
+
+
+## 🤖 Claude *(02:39:21)*
+
+Material confirmado — e fecha a questão das contas exatamente como você intuiu:
+
+## 🔍 Verdito das contas
+- **`profiles` = 1 conta** (você, criada 2026-04-17, saldo 5351 mco).
+- **`crew_agents` = 27 owners distintos** → **26 são órfãos sem perfil**. Não são usuários: são restos de contas deletadas/testes que a RPC antiga auto-semeou. Você está certo: **não existe outro usuário real.**
+- Tradução: ~**688 das 717 linhas** de `crew_agents` (+ arestas) são **lixo a purgar**. Sua crew real = os 53 nós inchados (clique no "Deploy Enterprise").
+- Bônus material: **31 execs reais** em `agent_executions` (histórico econômico da CEA) — vão orfanar no reset; decido preservar/arquivar na BoK.
+
+## ⚖️ BoK Gate — EM VIGOR (não codo o v2 sem selar a Fonte da Verdade)
+Você pediu o caminho que **dispara o Closed-Loop Protocol**. A BoK de `mcorch-constellation` documenta a **casca Lovable**, não este v2. Então o próximo passo material **não é código — é selar a família BoK** do `constellation-v2` como SSOT, e só então refatorar. (A própria CEA provou o custo de pular isso: barrada na Fase 5c por falta de SOP.)
+
+**Brief que eu passaria ao `/bok-scribe constellation-v2`:**
+> Cockpit operacional de agentes **per-user**. (1) Agentes escopados 100% à conta do tenant, **sem acesso ao sistema/dev MCORCH** — barreira de segurança dura (≠ do que eu, Claude Code, faço no repo). (2) Novos users nascem **vazios** (remover auto-seed), criação on-demand. (3) Topologia 4 deptos × (1 Lead + 4 subagentes módulo-bound) → Leads → GCRUX Core (mapa 4×4 aprovado). (4) Cada subagente **invoca a função real do módulo** reusando as edge functions robustas que já temos (fetch-trends, canvas-execute, orchestrate-content, link-forge, publish-*…) via camada de roteamento de capability. (5) Economia: toda ação medida em mcoCoins (`calc_agent_cost_mcoin`+`deduct_mco_coins`, freebie Sovereign) + resolução **BYOK per-user** + **caps de consumo** por user/API. (6) Acesso **pré-configurado por subagente** (UI: habilita módulo + binda chave BYOK + define caps). Fundação = CEA v1.1. Reset: purgar 26 órfãos + wipe da crew Sovereign + **E2E completo** vazio→criar→trabalhar→medir.
+
+**Forks de arquitetura que decidi por engenharia** (você delegou "tome os caminhos" — sinalizo para veto):
+- **A1 — reusar edge functions existentes** como ferramentas dos subagentes (camada fina de roteamento), **não** reescrever os módulos. Menor risco, aproveita o que já é robusto. *(Alternativa A2 = runtime LLM tool-calling — fica para camada posterior.)*
+- **B — config de acesso por subagente** (settings: módulo + BYOK + caps) = o "acesso pré-configurado" que você exigiu.
+- **C — refatorar v2 in-place** (só 1 user real + é casca), atrás de um reset limpo de dados. Sem rota paralela.
+
+**Roadmap que a BoK vai formalizar (depois do selo):**
+1. **Fase 0** — purge dos 26 órfãos + wipe da sua crew + remover auto-seed (empty-start).
+2. **Fase 1** — seed on-demand 4×4 (provider/model válidos, agent_keys estáveis) + reporte ao Core.
+3. **Fase 2** — camada de capability: subagente → função real do módulo (BYOK + mcoCoins + caps).
+4. **Fase 3** — UI de config de acesso + fix de perf/z-index do 3D.
+5. **Fase 4** — E2E completo do módulo + Fase 5c (prova material).
+
+**ORO:** Operator=eu · Reviewer/Owner=você (blast radius expandido: gasto LLM real por tenant + manuseio de chaves BYOK = security-sensitive).
+
+**Poda (Lei 3):** já extraí o modelo — solto da atenção ativa o dump gigante dos leaders e os conteúdos completos dos arquivos lidos; referência preservada em `src/lib/enterprise-seed.ts`, `supabase/migrations/20260425000000_enterprise_hierarchy.sql`, `docs/processes/constellation-economic-activation.md`.
+
+Recomendo selar via `/bok-scribe constellation-v2` com esse brief. **Me dá o OK (ou corrige um fork) que eu disparo agora** — nenhuma linha de código do v2 antes do selo.
+
+## 👤 User *(02:40:17)*
+
+Ok vai em frente com o /bok-scribe  e tambem use o /bok-agents-generator  para efetivar tudo oficialmente
+
+## 🤖 Claude *(02:41:23)*
+
+
+## 🤖 Claude *(02:41:24)*
+
+Selado o OK. Sequência correta: **`/bok-scribe constellation-v2` primeiro** (sela a Fonte da Verdade — MRD→…→SDD+Data Model+Process+Quality), e **na sequência `/bok-agents-generator`** (formaliza o sistema de agentes oficial sobre essa BoK). Disparando o primeiro agora:
+
+## 🤖 Claude *(02:41:37)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "constellation-v2\n\nRefatora\u00e7\u00e3o v2 completa do m\u00f3dulo /dashboard/constellation (hoje casca Lovable) \u2014 cockpit operacional de agentes de produto PER-USER.\n\nVIS\u00c3O: cada usu\u00e1rio tem sua pr\u00f3pria constela\u00e7\u00e3o de agentes que executam trabalho real DENTRO DA CONTA DELE, acionando os m\u00f3dulos do ecossistema. Substitui a casca decorativa atual (717 crew_agents, 26 owners \u00f3rf\u00e3os) por uma topologia enxuta e funcional.\n\nTOPOLOGIA: 4 departamentos \u00d7 (1 Lead + 4 subagentes m\u00f3dulo-bound) + GCRUX Core central; Leads reportam ao GCRUX Core. Mapa 4\u00d74 aprovado pelo Sovereign:\n- Creative Content (\ud83c\udfa8): Conte\u00fado \u00b7 Blog \u00b7 Canvas Studio \u00b7 Canvas Design\n- Market Intelligence (\ud83d\udcc8): Viral Miner \u00b7 Analytics \u00b7 Produtos \u00b7 Campanhas\n- Operational Ops (\u26a1): Afiliados \u00b7 Calend\u00e1rio \u00b7 Orquestra\u00e7\u00e3o \u00b7 Publica\u00e7\u00e3o Social\n- Technical Engine (\u2699\ufe0f): Core/AIOS \u00b7 IA Arena \u00b7 agent-economics \u00b7 Watchdog/Infra\n\nREQUISITOS CR\u00cdTICOS:\n1. Isolamento de tenant DURO: agentes escopados 100% \u00e0 conta do user via auth.uid(); ZERO acesso ao sistema/dev MCORCH ou a outros tenants (barreira de seguran\u00e7a, n\u00e3o conven\u00e7\u00e3o).\n2. Empty-start: novos usu\u00e1rios nascem com constela\u00e7\u00e3o vazia (remover auto-seed seed_crew_template); cria\u00e7\u00e3o on-demand pelo user.\n3. Invoca\u00e7\u00e3o real de m\u00f3dulos: cada subagente chama a fun\u00e7\u00e3o real do seu m\u00f3dulo reusando edge functions existentes (fetch-trends, canvas-execute, orchestrate-content, link-forge, publish-meta/social/wordpress, analytics) via camada fina de roteamento de capability \u2014 N\u00c3O reescrever os m\u00f3dulos.\n4. Economia per-user: toda a\u00e7\u00e3o medida em mcoCoins (RPC calc_agent_cost_mcoin + deduct_mco_coins at\u00f4mico; Sovereign = admin freebie) + resolu\u00e7\u00e3o BYOK per-user de chaves (user_api_keys) + caps de consumo por user/API.\n5. Acesso pr\u00e9-configurado por subagente (UI de settings: habilitar m\u00f3dulo + bindar chave BYOK + definir caps de mcoCoins/API).\n\nFUNDA\u00c7\u00c3O EXISTENTE (reusar, n\u00e3o recriar): CEA v1.1 \u2014 tabela agent_executions, edge function agent-task-execute, cron agent-daily-pulse, tabela agent_pricing, hook useAgentActivity, dashboard /dashboard/agent-economics. SOP existente docs/processes/constellation-economic-activation.md. Tabelas atuais crew_agents/crew_edges (a migrar/limpar). API Tenancy Model (per-user credentials) j\u00e1 em CLAUDE.md.\n\nRESET/MIGRA\u00c7\u00c3O: purgar 26 owners \u00f3rf\u00e3os (sem profile) de crew_agents/crew_edges (~688 linhas lixo) + wipe da crew Sovereign (53 n\u00f3s) + preservar/arquivar 31 agent_executions reais + E2E completo (vazio\u2192criar\u2192trabalhar\u2192medir).\n\nDECIS\u00d5ES DE ARQUITETURA (Sovereign delegou \"tome os caminhos\"): A1 reusar edge functions como tools via roteamento fino \u00b7 B config de acesso por subagente \u00b7 C refatorar in-place atr\u00e1s de um reset limpo de dados.\n\nM\u00f3dulo \u00e9 mcorch-constellation v2; BoK atual documenta a casca Lovable e deve ser superada por esta su\u00edte. Tooling interno parcial (campos de mercado/monetiza\u00e7\u00e3o podem ser N/A onde fizer sentido), mas a economia per-user (mcoCoins/BYOK) \u00e9 central e deve ter m\u00e9tricas reais."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(02:41:37)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `constellation-v2
+
+Refatoração v2 completa do módulo /dashboard/constellation (hoje casca Lovable) — cockpit operacional de agentes de produto PER-USER.
+
+VISÃO: cada usuário tem sua própria constelação de agentes que executam trabalho real DENTRO DA CONTA DELE, acionando os módulos do ecossistema. Substitui a casca decorativa atual (717 crew_agents, 26 owners órfãos) por uma topologia enxuta e funcional.
+
+TOPOLOGIA: 4 departamentos × (1 Lead + 4 subagentes módulo-bound) + GCRUX Core central; Leads reportam ao GCRUX Core. Mapa 4×4 aprovado pelo Sovereign:
+- Creative Content (🎨): Conteúdo · Blog · Canvas Studio · Canvas Design
+- Market Intelligence (📈): Viral Miner · Analytics · Produtos · Campanhas
+- Operational Ops (⚡): Afiliados · Calendário · Orquestração · Publicação Social
+- Technical Engine (⚙️): Core/AIOS · IA Arena · agent-economics · Watchdog/Infra
+
+REQUISITOS CRÍTICOS:
+1. Isolamento de tenant DURO: agentes escopados 100% à conta do user via auth.uid(); ZERO acesso ao sistema/dev MCORCH ou a outros tenants (barreira de segurança, não convenção).
+2. Empty-start: novos usuários nascem com constelação vazia (remover auto-seed seed_crew_template); criação on-demand pelo user.
+3. Invocação real de módulos: cada subagente chama a função real do seu módulo reusando edge functions existentes (fetch-trends, canvas-execute, orchestrate-content, link-forge, publish-meta/social/wordpress, analytics) via camada fina de roteamento de capability — NÃO reescrever os módulos.
+4. Economia per-user: toda ação medida em mcoCoins (RPC calc_agent_cost_mcoin + deduct_mco_coins atômico; Sovereign = admin freebie) + resolução BYOK per-user de chaves (user_api_keys) + caps de consumo por user/API.
+5. Acesso pré-configurado por subagente (UI de settings: habilitar módulo + bindar chave BYOK + definir caps de mcoCoins/API).
+
+FUNDAÇÃO EXISTENTE (reusar, não recriar): CEA v1.1 — tabela agent_executions, edge function agent-task-execute, cron agent-daily-pulse, tabela agent_pricing, hook useAgentActivity, dashboard /dashboard/agent-economics. SOP existente docs/processes/constellation-economic-activation.md. Tabelas atuais crew_agents/crew_edges (a migrar/limpar). API Tenancy Model (per-user credentials) já em CLAUDE.md.
+
+RESET/MIGRAÇÃO: purgar 26 owners órfãos (sem profile) de crew_agents/crew_edges (~688 linhas lixo) + wipe da crew Sovereign (53 nós) + preservar/arquivar 31 agent_executions reais + E2E completo (vazio→criar→trabalhar→medir).
+
+DECISÕES DE ARQUITETURA (Sovereign delegou "tome os caminhos"): A1 reusar edge functions como tools via roteamento fino · B config de acesso por subagente · C refatorar in-place atrás de um reset limpo de dados.
+
+Módulo é mcorch-constellation v2; BoK atual documenta a casca Lovable e deve ser superada por esta suíte. Tooling interno parcial (campos de mercado/monetização podem ser N/A onde fizer sentido), mas a economia per-user (mcoCoins/BYOK) é central e deve ter métricas reais.`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in constellation-v2
+
+Refatoração v2 completa do módulo /dashboard/constellation (hoje casca Lovable) — cockpit operacional de agentes de produto PER-USER.
+
+VISÃO: cada usuário tem sua própria constelação de agentes que executam trabalho real DENTRO DA CONTA DELE, acionando os módulos do ecossistema. Substitui a casca decorativa atual (717 crew_agents, 26 owners órfãos) por uma topologia enxuta e funcional.
+
+TOPOLOGIA: 4 departamentos × (1 Lead + 4 subagentes módulo-bound) + GCRUX Core central; Leads reportam ao GCRUX Core. Mapa 4×4 aprovado pelo Sovereign:
+- Creative Content (🎨): Conteúdo · Blog · Canvas Studio · Canvas Design
+- Market Intelligence (📈): Viral Miner · Analytics · Produtos · Campanhas
+- Operational Ops (⚡): Afiliados · Calendário · Orquestração · Publicação Social
+- Technical Engine (⚙️): Core/AIOS · IA Arena · agent-economics · Watchdog/Infra
+
+REQUISITOS CRÍTICOS:
+1. Isolamento de tenant DURO: agentes escopados 100% à conta do user via auth.uid(); ZERO acesso ao sistema/dev MCORCH ou a outros tenants (barreira de segurança, não convenção).
+2. Empty-start: novos usuários nascem com constelação vazia (remover auto-seed seed_crew_template); criação on-demand pelo user.
+3. Invocação real de módulos: cada subagente chama a função real do seu módulo reusando edge functions existentes (fetch-trends, canvas-execute, orchestrate-content, link-forge, publish-meta/social/wordpress, analytics) via camada fina de roteamento de capability — NÃO reescrever os módulos.
+4. Economia per-user: toda ação medida em mcoCoins (RPC calc_agent_cost_mcoin + deduct_mco_coins atômico; Sovereign = admin freebie) + resolução BYOK per-user de chaves (user_api_keys) + caps de consumo por user/API.
+5. Acesso pré-configurado por subagente (UI de settings: habilitar módulo + bindar chave BYOK + definir caps de mcoCoins/API).
+
+FUNDAÇÃO EXISTENTE (reusar, não recriar): CEA v1.1 — tabela agent_executions, edge function agent-task-execute, cron agent-daily-pulse, tabela agent_pricing, hook useAgentActivity, dashboard /dashboard/agent-economics. SOP existente docs/processes/constellation-economic-activation.md. Tabelas atuais crew_agents/crew_edges (a migrar/limpar). API Tenancy Model (per-user credentials) já em CLAUDE.md.
+
+RESET/MIGRAÇÃO: purgar 26 owners órfãos (sem profile) de crew_agents/crew_edges (~688 linhas lixo) + wipe da crew Sovereign (53 nós) + preservar/arquivar 31 agent_executions reais + E2E completo (vazio→criar→trabalhar→medir).
+
+DECISÕES DE ARQUITETURA (Sovereign delegou "tome os caminhos"): A1 reusar edge functions como tools via roteamento fino · B config de acesso por subagente · C refatorar in-place atrás de um reset limpo de dados.
+
+Módulo é mcorch-constellation v2; BoK atual documenta a casca Lovable e deve ser superada por esta suíte. Tooling interno parcial (campos de mercado/monetização podem ser N/A onde fizer sentido), mas a economia per-user (mcoCoins/BYOK) é central e deve ter métricas reais.):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(02:41:53)*
+
+
+## 🤖 Claude *(02:42:00)*
+
+O skill carregou o workflow de 7 fases. Vou carregar a definição do agente + os templates antes de autorar (a BoK precisa seguir o formato canônico exato — as 5 suítes anteriores foram seladas por esses templates).
+
+**Inputs capturados** (do brief): idea = cockpit de agentes per-user · segmento **B2B2C** · monetização **híbrida** (planos + mcoCoins) · regulatório **LGPD** (dados + credenciais BYOK per-user) · surface = **extends** (refactor v2 do `mcorch-constellation`) · slug = **`constellation-v2`**.
+
+## 🤖 Claude *(02:42:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(02:42:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2500\u2500\u2500 templates \u2500\u2500\u2500\"; ls -la .claude/agents/bok-scribe/templates/ 2>/dev/null\necho \"\u2500\u2500\u2500 existing constellation-v2 dir? \u2500\u2500\u2500\"; ls -la docs/bok/constellation-v2/ 2>/dev/null || echo \"(n\u00e3o existe \u2014 vou criar)\"\necho \"\u2500\u2500\u2500 existing mcorch-constellation BoK (a ser superada) \u2500\u2500\u2500\"; ls docs/bok/mcorch-constellation/ 2>/dev/null\necho \"\u2500\u2500\u2500 template line counts (escopo) \u2500\u2500\u2500\"; wc -l .claude/agents/bok-scribe/templates/* 2>/dev/null",
+  "description": "Load bok-scribe templates + check existing dirs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ─── templates ───
+> total 68
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May  6 13:37 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 7550 May  6 13:37 08-quality-metrics.md
+> ─── existing constellation-v2 dir? ───
+> (não existe — vou criar)
+> ─── existing mcorch-constellation BoK (a ser superada) ───
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> bok-agents-system--mcorch-constellation.md
+> revenue-flywheel.md
+> roadmap-v1.md
+> ─── template line counts (escopo) ───
+>    74 .claude/agents/bok-scribe/templates/00-index.md
+>   109 .claude/agents/bok-scribe/templates/01-mrd.md
+>   122 .claude/agents/bok-scribe/templates/02-brd.md
+>   177 .claude/agents/bok-scribe/templates/03-prd.md
+>   121 .claude/agents/bok-scribe/templates/04-frd.md
+>   219 .claude/agents/bok-scribe/templates/05-sdd.md
+>   169 .claude/agents/bok-scribe/templates/06-data-model.md
+>   162 .claude/agents/bok-scribe/templates/07-process-flow.md
+>   161 .claude/agents/bok-scribe/templates/08-quality-metrics.md
+>  1314 total
+> ```
+
+## 🤖 Claude *(02:42:27)*
+
+
+## 🤖 Claude *(02:42:28)*
+
+Framework carregado. Vou ler os 9 templates canônicos (o `00-index.md` serve de tracker de progresso com badges `[ ]/[x]`, então dispenso task list externa) e então autorar a suíte na sequência estrita de fases.
+
+## 🤖 Claude *(02:42:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK Documentation Suite — {{PROJECT_SLUG}}
+> 2	
+> 3	**Generated:** {{DATE}}  
+> 4	**Version:** v0.1  
+> 5	**Agent:** MCORCH BoK Scribe Agent v1.0.0  
+> 6	**Sovereign:** {{SOVEREIGN_ID}}
+> 7	
+> 8	---
+> 9	
+> 10	## Project Metadata
+> 11	
+> 12	| Field | Value |
+> 13	|-------|-------|
+> 14	| Business Idea | {{BUSINESS_IDEA}} |
+> 15	| Market Segment | {{MARKET_SEGMENT}} |
+> 16	| Monetization Model | {{MONETIZATION_MODEL}} |
+> 17	| Regulatory Profile | {{REGULATORY_PROFILE}} |
+> 18	| Integration Surface | {{INTEGRATION_SURFACE}} |
+> 19	| Project Slug | `{{PROJECT_SLUG}}` |
+> 20	
+> 21	---
+> 22	
+> 23	## Document Registry
+> 24	
+> 25	| # | File | Document | BoK Applied | Status |
+> 26	|---|------|----------|-------------|--------|
+> 27	| 0 | `00-index.md` | Project Manifest | — | [x] complete |
+> 28	| 1 | `01-mrd.md` | Market Requirements Document | BABOK v3 | [ ] pending |
+> 29	| 2 | `02-brd.md` | Business Requirements Document | BABOK v3 | [ ] pending |
+> 30	| 3 | `03-prd.md` | Product Requirements Document | ProdBOK + CXBOK | [ ] pending |
+> 31	| 4 | `04-frd.md` | Functional Requirements Document | SWEBOK v4 | [ ] pending |
+> 32	| 5 | `05-sdd.md` | System Design Document | SWEBOK v4 + CISSP CBK | [ ] pending |
+> 33	| 6 | `06-data-model.md` | Data & Knowledge Model | DMBOK v2 | [ ] pending |
+> 34	| 7 | `07-process-flow.md` | Process & Automation Blueprint | BPM CBOK v4 | [ ] pending |
+> 35	| 8 | `08-quality-metrics.md` | Self-Optimization Specification | CMQ/OE BOK | [ ] pending |
+> 36	
+> 37	---
+> 38	
+> 39	## Traceability Chain (populated as documents are generated)
+> 40	
+> 41	```
+> 42	MR-NNN
+> 43	  └── BR-NNN
+> 44	        └── PR-NNN
+> 45	              └── FR-NNN
+> 46	                    └── [DB table | Edge Function | n8n Process]
+> 47	```
+> 48	
+> 49	---
+> 50	
+> 51	## Phase Completion Log
+> 52	
+> 53	| Phase | Name | Completed | Notes |
+> 54	|-------|------|-----------|-------|
+> 55	| 0 | Project Bootstrap | {{DATE}} | — |
+> 56	| 1 | Market & Business Intelligence | [ ] | — |
+> 57	| 2 | Product Definition | [ ] | — |
+> 58	| 3 | Technical Specification | [ ] | — |
+> 59	| 4 | Data & Process Engineering | [ ] | — |
+> 60	| 5 | Quality & Autonomic Engineering | [ ] | — |
+> 61	| 6 | Traceability Validation | [ ] | — |
+> 62	| 7 | Knowledge Mesh Injection | [ ] | — |
+> 63	
+> 64	---
+> 65	
+> 66	## Open Technical Decisions
+> 67	
+> 68	| OTD ID | Description | Options | Recommendation | Status |
+> 69	|--------|-------------|---------|----------------|--------|
+> 70	| — | None yet | — | — | — |
+> 71	
+> 72	---
+> 73	
+> 74	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 75	
+> ```
+
+## 🤖 Claude *(02:42:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/01-mrd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MRD — Market Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BABOK v3 (Strategy Analysis + Elicitation & Collaboration)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	> _One paragraph: what market problem exists, why now, and what this solution uniquely addresses._
+> 13	
+> 14	{{EXECUTIVE_SUMMARY}}
+> 15	
+> 16	---
+> 17	
+> 18	## 2. Market Problem Statement
+> 19	
+> 20	### 2.1 Current State
+> 21	> _Describe the painful status quo for the target user._
+> 22	
+> 23	{{CURRENT_STATE}}
+> 24	
+> 25	### 2.2 Root Cause Analysis
+> 26	> _Why does this problem persist? (technology gap, process gap, market gap)_
+> 27	
+> 28	{{ROOT_CAUSE}}
+> 29	
+> 30	### 2.3 Desired State
+> 31	> _What does success look like from the market's perspective?_
+> 32	
+> 33	{{DESIRED_STATE}}
+> 34	
+> 35	---
+> 36	
+> 37	## 3. Target Market Segments
+> 38	
+> 39	| Segment | Description | Size Estimate | Urgency | Accessibility |
+> 40	|---------|-------------|---------------|---------|---------------|
+> 41	| Primary | {{PRIMARY_SEGMENT}} | {{TAM_PRIMARY}} | High | {{ACCESS_PRIMARY}} |
+> 42	| Secondary | {{SECONDARY_SEGMENT}} | {{TAM_SECONDARY}} | Medium | {{ACCESS_SECONDARY}} |
+> 43	
+> 44	### 3.1 TAM / SAM / SOM
+> 45	
+> 46	| Metric | Value | Basis |
+> 47	|--------|-------|-------|
+> 48	| TAM (Total Addressable Market) | {{TAM}} | {{TAM_BASIS}} |
+> 49	| SAM (Serviceable Addressable Market) | {{SAM}} | {{SAM_BASIS}} |
+> 50	| SOM (Serviceable Obtainable Market) | {{SOM}} | {{SOM_BASIS}} |
+> 51	
+> 52	---
+> 53	
+> 54	## 4. Competitive Landscape
+> 55	
+> 56	| Competitor | Positioning | Strengths | Weaknesses | Our Differentiation |
+> 57	|------------|-------------|-----------|------------|---------------------|
+> 58	| {{COMP_1}} | {{POS_1}} | {{STR_1}} | {{WEAK_1}} | {{DIFF_1}} |
+> 59	| {{COMP_2}} | {{POS_2}} | {{STR_2}} | {{WEAK_2}} | {{DIFF_2}} |
+> 60	| {{COMP_3}} | {{POS_3}} | {{STR_3}} | {{WEAK_3}} | {{DIFF_3}} |
+> 61	
+> 62	---
+> 63	
+> 64	## 5. Market Opportunity & Timing
+> 65	
+> 66	> _Why is this the right moment? (regulatory shifts, technology maturity, behavioral trends)_
+> 67	
+> 68	{{MARKET_TIMING}}
+> 69	
+> 70	---
+> 71	
+> 72	## 6. Market Requirements
+> 73	
+> 74	> Priority: **Critical** (must have at launch) | **High** | **Medium** | **Low**
+> 75	
+> 76	| ID | Market Requirement | Priority | Rationale | Source |
+> 77	|----|-------------------|----------|-----------|--------|
+> 78	| MR-001 | {{MR_001_DESC}} | Critical | {{MR_001_RATIONALE}} | {{MR_001_SOURCE}} |
+> 79	| MR-002 | {{MR_002_DESC}} | High | {{MR_002_RATIONALE}} | {{MR_002_SOURCE}} |
+> 80	
+> 81	---
+> 82	
+> 83	## 7. Success Metrics (Market-Level KPIs)
+> 84	
+> 85	| KPI | Definition | Target (6-month) | Target (12-month) | Measurement |
+> 86	|-----|-----------|------------------|-------------------|-------------|
+> 87	| Market Penetration | % of SAM reached | {{KPI_1_6M}} | {{KPI_1_12M}} | {{KPI_1_MEAS}} |
+> 88	| NPS | Net Promoter Score | {{KPI_2_6M}} | {{KPI_2_12M}} | {{KPI_2_MEAS}} |
+> 89	
+> 90	---
+> 91	
+> 92	## 8. Regulatory & Compliance Context
+> 93	
+> 94	| Regulation | Applicability | Key Constraint | Compliance Owner |
+> 95	|------------|---------------|----------------|-----------------|
+> 96	| LGPD | {{LGPD_APPLICABLE}} | {{LGPD_CONSTRAINT}} | Engineering |
+> 97	| {{OTHER_REG}} | {{OTHER_APPLICABLE}} | {{OTHER_CONSTRAINT}} | {{OTHER_OWNER}} |
+> 98	
+> 99	---
+> 100	
+> 101	## 9. Traceability Matrix Stub
+> 102	
+> 103	| MR ID | → BR ID | Rationale |
+> 104	|-------|---------|-----------|
+> 105	| MR-001 | BR-??? | _to be linked in BRD_ |
+> 106	
+> 107	---
+> 108	
+> 109	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 110	
+> ```
+
+## 🤖 Claude *(02:42:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/02-brd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BRD — Business Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BABOK v3 (Requirements Analysis & Design Definition)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Executive Summary
+> 11	
+> 12	{{EXECUTIVE_SUMMARY}}
+> 13	
+> 14	---
+> 15	
+> 16	## 2. Business Objectives (SMART)
+> 17	
+> 18	| ID | Objective | Specific | Measurable | Achievable | Relevant | Time-bound |
+> 19	|----|-----------|----------|------------|------------|----------|------------|
+> 20	| BO-001 | {{BO_001}} | {{BO_001_S}} | {{BO_001_M}} | {{BO_001_A}} | {{BO_001_R}} | {{BO_001_T}} |
+> 21	| BO-002 | {{BO_002}} | {{BO_002_S}} | {{BO_002_M}} | {{BO_002_A}} | {{BO_002_R}} | {{BO_002_T}} |
+> 22	| BO-003 | {{BO_003}} | {{BO_003_S}} | {{BO_003_M}} | {{BO_003_A}} | {{BO_003_R}} | {{BO_003_T}} |
+> 23	
+> 24	---
+> 25	
+> 26	## 3. Stakeholder Register
+> 27	
+> 28	| ID | Role | Interest | Influence | Communication Cadence | Contact |
+> 29	|----|------|----------|-----------|----------------------|---------|
+> 30	| SH-001 | Sovereign / Maestro | High | High | Continuous | {{SOVEREIGN}} |
+> 31	| SH-002 | End User (Primary) | High | Medium | Monthly NPS survey | {{USER_CONTACT}} |
+> 32	| SH-003 | {{STAKEHOLDER_3}} | {{INTEREST_3}} | {{INFLUENCE_3}} | {{CADENCE_3}} | {{CONTACT_3}} |
+> 33	
+> 34	---
+> 35	
+> 36	## 4. Business Requirements
+> 37	
+> 38	> Each BR traces to at least one MR. mcoCoins cost defined if AI-powered.
+> 39	
+> 40	| ID | Requirement | MR Traced | Priority | mcoCoins Cost | Acceptance Criteria |
+> 41	|----|-------------|-----------|----------|---------------|---------------------|
+> 42	| BR-001 | {{BR_001_DESC}} | MR-001 | Critical | {{COINS_001}} | {{AC_001}} |
+> 43	| BR-002 | {{BR_002_DESC}} | MR-001 | High | {{COINS_002}} | {{AC_002}} |
+> 44	
+> 45	---
+> 46	
+> 47	## 5. ROI Model
+> 48	
+> 49	### 5.1 Cost Estimates
+> 50	
+> 51	| Cost Item | Type | Monthly Estimate | Annual Estimate |
+> 52	|-----------|------|-----------------|----------------|
+> 53	| Infrastructure (Supabase, Docker) | OpEx | {{INFRA_MONTHLY}} | {{INFRA_ANNUAL}} |
+> 54	| AI API calls (OpenRouter) | Variable | {{AI_MONTHLY}} | {{AI_ANNUAL}} |
+> 55	| Development (initial) | CapEx | — | {{DEV_COST}} |
+> 56	
+> 57	### 5.2 Revenue Streams
+> 58	
+> 59	| Stream | Model | Monthly Potential | Notes |
+> 60	|--------|-------|-----------------|-------|
+> 61	| {{STREAM_1}} | {{MODEL_1}} | {{REV_1_MONTHLY}} | {{NOTES_1}} |
+> 62	| {{STREAM_2}} | {{MODEL_2}} | {{REV_2_MONTHLY}} | {{NOTES_2}} |
+> 63	
+> 64	### 5.3 Payback Analysis
+> 65	
+> 66	| Metric | Value |
+> 67	|--------|-------|
+> 68	| Break-even (months) | {{BREAK_EVEN}} |
+> 69	| 12-month ROI | {{ROI_12M}} |
+> 70	| IRR (estimated) | {{IRR}} |
+> 71	
+> 72	---
+> 73	
+> 74	## 6. mcoCoins Economics
+> 75	
+> 76	| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |
+> 77	|-----------|-----------|-------------------|-----------------------|----------------------|
+> 78	| {{OP_1}} | {{COINS_OP_1}} | Starter(500) / Pro(2000) / Ent(10k) | {{VOL_1}} | {{REV_MCO_1}} |
+> 79	
+> 80	---
+> 81	
+> 82	## 7. Constraints & Assumptions
+> 83	
+> 84	### Constraints
+> 85	- {{CONSTRAINT_1}}
+> 86	- {{CONSTRAINT_2}}
+> 87	
+> 88	### Assumptions
+> 89	- {{ASSUMPTION_1}}
+> 90	- {{ASSUMPTION_2}}
+> 91	
+> 92	---
+> 93	
+> 94	## 8. Business Risk Register
+> 95	
+> 96	| Risk ID | Description | Probability | Impact | RPN | Mitigation |
+> 97	|---------|-------------|-------------|--------|-----|------------|
+> 98	| BR-RISK-001 | {{RISK_001}} | {{PROB_001}} | {{IMPACT_001}} | {{RPN_001}} | {{MIT_001}} |
+> 99	| BR-RISK-002 | {{RISK_002}} | {{PROB_002}} | {{IMPACT_002}} | {{RPN_002}} | {{MIT_002}} |
+> 100	
+> 101	> Probability & Impact: 1=Low, 5=High. RPN = Probability × Impact.
+> 102	
+> 103	---
+> 104	
+> 105	## 9. Business Acceptance Criteria
+> 106	
+> 107	| ID | Criterion | Verification Method |
+> 108	|----|-----------|-------------------|
+> 109	| BAC-001 | {{BAC_001}} | {{BAC_001_VERIFY}} |
+> 110	| BAC-002 | {{BAC_002}} | {{BAC_002_VERIFY}} |
+> 111	
+> 112	---
+> 113	
+> 114	## 10. Traceability Matrix
+> 115	
+> 116	| MR ID | BR ID | PR ID (stub) |
+> 117	|-------|-------|--------------|
+> 118	| MR-001 | BR-001, BR-002 | _to be linked in PRD_ |
+> 119	
+> 120	---
+> 121	
+> 122	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 123	
+> ```
+
+## 🤖 Claude *(02:42:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/03-prd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# PRD — Product Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** ProdBOK + CXBOK  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Product Vision Statement
+> 11	
+> 12	> _One sentence. Format: "For [target user] who [need], [Product Name] is a [category] that [key benefit]. Unlike [alternative], our product [differentiator]."_
+> 13	
+> 14	{{PRODUCT_VISION}}
+> 15	
+> 16	---
+> 17	
+> 18	## 2. User Personas
+> 19	
+> 20	### Persona 1 — {{PERSONA_1_NAME}} (Primary)
+> 21	
+> 22	| Attribute | Detail |
+> 23	|-----------|--------|
+> 24	| Role | {{P1_ROLE}} |
+> 25	| Goals | {{P1_GOALS}} |
+> 26	| Frustrations | {{P1_FRUSTRATIONS}} |
+> 27	| Tech-savviness | {{P1_TECH}} (1=novice, 5=expert) |
+> 28	| MCORCH usage pattern | {{P1_MCORCH_PATTERN}} |
+> 29	| Quote | _"{{P1_QUOTE}}"_ |
+> 30	
+> 31	### Persona 2 — {{PERSONA_2_NAME}} (Secondary)
+> 32	
+> 33	| Attribute | Detail |
+> 34	|-----------|--------|
+> 35	| Role | {{P2_ROLE}} |
+> 36	| Goals | {{P2_GOALS}} |
+> 37	| Frustrations | {{P2_FRUSTRATIONS}} |
+> 38	| Tech-savviness | {{P2_TECH}} |
+> 39	| MCORCH usage pattern | {{P2_MCORCH_PATTERN}} |
+> 40	| Quote | _"{{P2_QUOTE}}"_ |
+> 41	
+> 42	---
+> 43	
+> 44	## 3. User Journey Maps
+> 45	
+> 46	### Journey: {{JOURNEY_1_NAME}} ({{PERSONA_1_NAME}}, Happy Path)
+> 47	
+> 48	| Stage | Action | Touchpoint | Emotion | Opportunity |
+> 49	|-------|--------|-----------|---------|-------------|
+> 50	| Awareness | {{STAGE_1_ACTION}} | {{STAGE_1_TOUCH}} | 😐 Neutral | {{STAGE_1_OPP}} |
+> 51	| Consideration | {{STAGE_2_ACTION}} | {{STAGE_2_TOUCH}} | 🤔 Curious | {{STAGE_2_OPP}} |
+> 52	| Activation | {{STAGE_3_ACTION}} | {{STAGE_3_TOUCH}} | 😊 Excited | {{STAGE_3_OPP}} |
+> 53	| Value | {{STAGE_4_ACTION}} | {{STAGE_4_TOUCH}} | 🚀 Delighted | {{STAGE_4_OPP}} |
+> 54	| Retention | {{STAGE_5_ACTION}} | {{STAGE_5_TOUCH}} | ❤️ Loyal | {{STAGE_5_OPP}} |
+> 55	
+> 56	#### Edge Case 1: {{EDGE_CASE_1_NAME}}
+> 57	> {{EDGE_CASE_1_DESC}}
+> 58	
+> 59	#### Edge Case 2: {{EDGE_CASE_2_NAME}}
+> 60	> {{EDGE_CASE_2_DESC}}
+> 61	
+> 62	---
+> 63	
+> 64	## 4. Feature Inventory (MoSCoW)
+> 65	
+> 66	> Effort: S=hours, M=days, L=week, XL=sprint
+> 67	
+> 68	### Must Have (MVP)
+> 69	
+> 70	| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 71	|----|---------|---------|-----------|--------|-------------|-------|
+> 72	| PR-001 | {{PR_001_NAME}} | P1 | BR-001 | {{PR_001_EFFORT}} | {{PR_001_COINS}} | {{PR_001_NOTES}} |
+> 73	| PR-002 | {{PR_002_NAME}} | P1, P2 | BR-002 | {{PR_002_EFFORT}} | {{PR_002_COINS}} | {{PR_002_NOTES}} |
+> 74	
+> 75	### Should Have (v1.0)
+> 76	
+> 77	| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 78	|----|---------|---------|-----------|--------|-------------|-------|
+> 79	| PR-010 | {{PR_010_NAME}} | P2 | BR-003 | {{PR_010_EFFORT}} | {{PR_010_COINS}} | {{PR_010_NOTES}} |
+> 80	
+> 81	### Could Have (Future)
+> 82	
+> 83	| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 84	|----|---------|---------|-----------|--------|-------------|-------|
+> 85	| PR-020 | {{PR_020_NAME}} | P1 | BR-004 | {{PR_020_EFFORT}} | {{PR_020_COINS}} | {{PR_020_NOTES}} |
+> 86	
+> 87	### Won't Have (This Cycle)
+> 88	
+> 89	- {{WONT_HAVE_1}}
+> 90	- {{WONT_HAVE_2}}
+> 91	
+> 92	---
+> 93	
+> 94	## 5. Release Phasing
+> 95	
+> 96	### MVP Scope
+> 97	**Target date:** {{MVP_DATE}}  
+> 98	**Included:** PR-001, PR-002  
+> 99	**Success gate:** {{MVP_SUCCESS_GATE}}
+> 100	
+> 101	### v1.0 Scope
+> 102	**Target date:** {{V1_DATE}}  
+> 103	**Adds:** PR-010, PR-011  
+> 104	**Success gate:** {{V1_SUCCESS_GATE}}
+> 105	
+> 106	### Future Scope
+> 107	**Items:** PR-020+  
+> 108	**Condition:** {{FUTURE_CONDITION}}
+> 109	
+> 110	---
+> 111	
+> 112	## 6. Luxury UX Specifications
+> 113	
+> 114	### 6.1 Color & Visual Identity
+> 115	
+> 116	| Token | Value | Usage |
+> 117	|-------|-------|-------|
+> 118	| `--bg-deep` | `#0A0A0F` | Canvas background |
+> 119	| `--accent-violet` | `#7C3AED` | Primary CTA, active states |
+> 120	| `--accent-cyan` | `#06B6D4` | Data highlights, graphs |
+> 121	| `--glass-surface` | `rgba(255,255,255,0.04)` | Card backgrounds |
+> 122	| `--border-subtle` | `rgba(255,255,255,0.08)` | Card borders |
+> 123	
+> 124	### 6.2 Animation Guidelines
+> 125	
+> 126	| Element | Library | Duration | Easing |
+> 127	|---------|---------|----------|--------|
+> 128	| Page transitions | Framer Motion | 300ms | `easeInOut` |
+> 129	| Node entrance (3D) | R3F / drei | 500ms | `spring(stiffness:80)` |
+> 130	| Status pulse | CSS keyframes | 2s | `ease-in-out infinite` |
+> 131	| Micro-interactions | Framer Motion | 150ms | `easeOut` |
+> 132	
+> 133	### 6.3 Interaction Patterns
+> 134	
+> 135	- **Cards:** Glass morphism — `backdrop-blur-sm`, subtle border, shadow `0 4px 24px rgba(0,0,0,0.4)`.
+> 136	- **Buttons:** Gradient border on hover; never flat fill for primary CTAs.
+> 137	- **Loading states:** Skeleton shimmer (never spinners for content areas).
+> 138	- **Toasts:** `sonner` library; success = violet, error = red, info = cyan.
+> 139	
+> 140	### 6.4 Accessibility (WCAG 2.1 AA)
+> 141	
+> 142	- Contrast ratio ≥ 4.5:1 for all text on glass surfaces.
+> 143	- All interactive elements keyboard-navigable.
+> 144	- ARIA labels on all icon-only buttons.
+> 145	- Focus indicators visible at ≥ 2px.
+> 146	
+> 147	---
+> 148	
+> 149	## 7. Acceptance Criteria (Gherkin)
+> 150	
+> 151	```gherkin
+> 152	Feature: {{FEATURE_NAME}}
+> 153	
+> 154	  Scenario: {{SCENARIO_1_TITLE}} (PR-001)
+> 155	    Given {{GIVEN_1}}
+> 156	    When {{WHEN_1}}
+> 157	    Then {{THEN_1}}
+> 158	    And {{AND_1}}
+> 159	
+> 160	  Scenario: {{SCENARIO_2_TITLE}} (PR-002)
+> 161	    Given {{GIVEN_2}}
+> 162	    When {{WHEN_2}}
+> 163	    Then {{THEN_2}}
+> 164	```
+> 165	
+> 166	---
+> 167	
+> 168	## 8. Traceability Matrix
+> 169	
+> 170	| MR ID | BR ID | PR ID |
+> 171	|-------|-------|-------|
+> 172	| MR-001 | BR-001 | PR-001, PR-002 |
+> 173	| MR-002 | BR-002 | PR-010 |
+> 174	
+> 175	---
+> 176	
+> 177	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 178	
+> ```
+
+## 🤖 Claude *(02:42:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/04-frd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# FRD — Functional Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** SWEBOK v4 (Software Requirements)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Scope Statement
+> 11	
+> 12	This document specifies the functional and non-functional requirements for `{{PROJECT_SLUG}}`.
+> 13	It is derived from PRD `03-prd.md` and feeds directly into SDD `05-sdd.md`.
+> 14	
+> 15	**In scope:** {{SCOPE_IN}}  
+> 16	**Out of scope:** {{SCOPE_OUT}}
+> 17	
+> 18	---
+> 19	
+> 20	## 2. Functional Requirements
+> 21	
+> 22	> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron`
+> 23	
+> 24	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 25	|----|-------|-------------|----------|-----------|----------|---------|
+> 26	| FR-001 | {{FR_001_TITLE}} | {{FR_001_DESC}} | Critical | PR-001 | {{FR_001_CAT}} | AT-001 |
+> 27	| FR-002 | {{FR_002_TITLE}} | {{FR_002_DESC}} | High | PR-001 | {{FR_002_CAT}} | AT-002 |
+> 28	| FR-003 | {{FR_003_TITLE}} | {{FR_003_DESC}} | High | PR-002 | {{FR_003_CAT}} | AT-003 |
+> 29	
+> 30	---
+> 31	
+> 32	## 3. Non-Functional Requirements
+> 33	
+> 34	| ID | Category | Requirement | Target | Measurement |
+> 35	|----|----------|-------------|--------|-------------|
+> 36	| NFR-001 | Performance | Page load (LCP) | < 2.5s | Lighthouse CI |
+> 37	| NFR-002 | Performance | Edge Function p95 latency | < 800ms | Supabase logs |
+> 38	| NFR-003 | Scalability | Concurrent users without degradation | {{SCALE_TARGET}} | Load test |
+> 39	| NFR-004 | Availability | Uptime SLO | 99.5%/month | Watchdog telemetry |
+> 40	| NFR-005 | Maintainability | Cyclomatic complexity per hook | ≤ 10 | ESLint |
+> 41	| NFR-006 | Security | All endpoints require valid JWT | 100% | Security review |
+> 42	
+> 43	---
+> 44	
+> 45	## 4. Interface Requirements
+> 46	
+> 47	### 4.1 UI → Hook → Edge Function Contract
+> 48	
+> 49	```
+> 50	[Component: {{COMPONENT_NAME}}]
+> 51	  ↓ calls
+> 52	[Hook: use{{HOOK_NAME}}]
+> 53	  ↓ calls (for sensitive ops)
+> 54	[Edge Function: {{EDGE_FUNCTION_NAME}}]
+> 55	  ↓ reads/writes
+> 56	[Supabase Table: {{TABLE_NAME}}]
+> 57	```
+> 58	
+> 59	### 4.2 External API Contracts
+> 60	
+> 61	#### `POST /functions/v1/{{EDGE_FUNCTION_NAME}}`
+> 62	
+> 63	**Auth:** Bearer JWT (user scope)  
+> 64	**Request:**
+> 65	```typescript
+> 66	{
+> 67	  {{REQUEST_FIELD_1}}: {{REQUEST_TYPE_1}},  // {{REQUEST_DESC_1}}
+> 68	  {{REQUEST_FIELD_2}}: {{REQUEST_TYPE_2}},  // {{REQUEST_DESC_2}}
+> 69	}
+> 70	```
+> 71	**Response (200):**
+> 72	```typescript
+> 73	{
+> 74	  {{RESPONSE_FIELD_1}}: {{RESPONSE_TYPE_1}},
+> 75	  {{RESPONSE_FIELD_2}}: {{RESPONSE_TYPE_2}},
+> 76	}
+> 77	```
+> 78	**Error codes:**
+> 79	| Code | Condition |
+> 80	|------|-----------|
+> 81	| 401 | Missing or invalid JWT |
+> 82	| 402 | Insufficient mcoCoins balance |
+> 83	| 422 | Validation failure (field + message in body) |
+> 84	| 500 | Internal error (logged to infra_health_logs) |
+> 85	
+> 86	---
+> 87	
+> 88	## 5. Data Requirements
+> 89	
+> 90	| Field | Type | Nullable | Validation Rule | Error Message (PT-BR) |
+> 91	|-------|------|----------|-----------------|----------------------|
+> 92	| {{FIELD_1}} | {{TYPE_1}} | {{NULL_1}} | {{VALIDATION_1}} | {{ERROR_PT_1}} |
+> 93	| {{FIELD_2}} | {{TYPE_2}} | {{NULL_2}} | {{VALIDATION_2}} | {{ERROR_PT_2}} |
+> 94	
+> 95	---
+> 96	
+> 97	## 6. Test Strategy Matrix
+> 98	
+> 99	| FR ID | Unit Test | Integration Test | E2E Test | Notes |
+> 100	|-------|-----------|-----------------|----------|-------|
+> 101	| FR-001 | ✅ Required | ✅ Required | ✅ Required | {{TEST_NOTES_001}} |
+> 102	| FR-002 | ✅ Required | ✅ Required | — | {{TEST_NOTES_002}} |
+> 103	| FR-003 | ✅ Required | — | — | {{TEST_NOTES_003}} |
+> 104	
+> 105	**Test files location:**
+> 106	- Unit: `src/hooks/__tests__/use{{HOOK_NAME}}.test.ts`
+> 107	- Integration: `src/__tests__/integration/{{FEATURE_NAME}}.test.ts`
+> 108	- E2E: `e2e/{{FEATURE_NAME}}.spec.ts`
+> 109	
+> 110	---
+> 111	
+> 112	## 7. Traceability Matrix
+> 113	
+> 114	| PR ID | FR ID | NFR ID |
+> 115	|-------|-------|--------|
+> 116	| PR-001 | FR-001, FR-002 | NFR-001, NFR-006 |
+> 117	| PR-002 | FR-003 | NFR-002 |
+> 118	
+> 119	---
+> 120	
+> 121	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 122	
+> ```
+
+## 🤖 Claude *(02:42:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/05-sdd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SDD — System Design Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** SWEBOK v4 (Software Design) + CISSP CBK 2024 (Software Development Security)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Architecture Overview
+> 11	
+> 12	```
+> 13	┌─────────────────────────────────────────────────────────┐
+> 14	│  PRESENTATION LAYER (display-only)                       │
+> 15	│  src/components/{{FEATURE_AREA}}/{{COMPONENT_NAME}}.tsx  │
+> 16	└──────────────────────┬──────────────────────────────────┘
+> 17	                       │ calls
+> 18	┌──────────────────────▼──────────────────────────────────┐
+> 19	│  LOGIC LAYER (Harness Engineering)                       │
+> 20	│  src/hooks/use{{HOOK_NAME}}.ts                           │
+> 21	│  src/store/{{STORE_SLICE}}.ts (Zustand, if needed)       │
+> 22	└──────────────────────┬──────────────────────────────────┘
+> 23	                       │ HTTP + JWT
+> 24	┌──────────────────────▼──────────────────────────────────┐
+> 25	│  EDGE LAYER (Deno / Supabase Functions)                  │
+> 26	│  supabase/functions/{{EDGE_FUNCTION_NAME}}/index.ts      │
+> 27	└──────────┬───────────────────────────┬──────────────────┘
+> 28	           │ Supabase RLS              │ External APIs
+> 29	┌──────────▼──────────┐  ┌────────────▼──────────────────┐
+> 30	│  DB LAYER           │  │  EXTERNAL SERVICES             │
+> 31	│  {{TABLE_1}}        │  │  OpenRouter (embeddings)        │
+> 32	│  {{TABLE_2}}        │  │  {{EXTERNAL_API_1}}            │
+> 33	│  mcorch_nodes       │  │  {{EXTERNAL_API_2}}            │
+> 34	└─────────────────────┘  └────────────────────────────────┘
+> 35	```
+> 36	
+> 37	---
+> 38	
+> 39	## 2. Component Catalog
+> 40	
+> 41	### 2.1 New Custom Hooks (`src/hooks/`)
+> 42	
+> 43	| Hook | File | Responsibility | TanStack Query keys |
+> 44	|------|------|---------------|---------------------|
+> 45	| `use{{Hook1}}` | `use{{Hook1}}.ts` | {{HOOK1_RESP}} | `['{{KEY_1}}']` |
+> 46	| `use{{Hook2}}` | `use{{Hook2}}.ts` | {{HOOK2_RESP}} | `['{{KEY_2}}']` |
+> 47	
+> 48	### 2.2 New Display Components (`src/components/`)
+> 49	
+> 50	| Component | File | Props | Hook consumed |
+> 51	|-----------|------|-------|--------------|
+> 52	| `{{Component1}}` | `{{PATH_1}}` | `{{PROPS_1}}` | `use{{Hook1}}` |
+> 53	| `{{Component2}}` | `{{PATH_2}}` | `{{PROPS_2}}` | `use{{Hook2}}` |
+> 54	
+> 55	### 2.3 New Edge Functions (`supabase/functions/`)
+> 56	
+> 57	| Function | Path | Auth | mcoCoins | Secrets needed |
+> 58	|----------|------|------|----------|----------------|
+> 59	| `{{EdgeFn1}}` | `supabase/functions/{{EdgeFn1}}/index.ts` | JWT (user) | {{COINS_1}} | `{{SECRETS_1}}` |
+> 60	
+> 61	### 2.4 Zustand Store Slices (if applicable)
+> 62	
+> 63	| Slice | Store file | State shape | Actions |
+> 64	|-------|------------|-------------|---------|
+> 65	| `{{SLICE_1}}` | `src/store/use{{StoreName}}.ts` | `{{STATE_1}}` | `{{ACTIONS_1}}` |
+> 66	
+> 67	### 2.5 New DB Objects
+> 68	
+> 69	| Object | Type | Purpose | Migration file |
+> 70	|--------|------|---------|---------------|
+> 71	| `{{TABLE_1}}` | Table | {{TABLE_1_PURPOSE}} | `{{MIGRATION_1}}` |
+> 72	| `{{VIEW_1}}` | View | {{VIEW_1_PURPOSE}} | `{{MIGRATION_2}}` |
+> 73	
+> 74	---
+> 75	
+> 76	## 3. Data Flow Diagrams
+> 77	
+> 78	### Use Case: {{USE_CASE_1}}
+> 79	
+> 80	```
+> 81	User                Hook              Edge Fn            DB
+> 82	 │                   │                   │                │
+> 83	 │──[action]────────▶│                   │                │
+> 84	 │                   │──[POST JWT]───────▶│                │
+> 85	 │                   │                   │──[check mco]──▶│ deduct_mco_coins RPC
+> 86	 │                   │                   │◀──[ok]─────────│
+> 87	 │                   │                   │──[AI call]──▶  │ (OpenRouter/external)
+> 88	 │                   │                   │◀──[result]──   │
+> 89	 │                   │                   │──[insert]─────▶│ {{TABLE_1}}
+> 90	 │                   │                   │──[embed node]──▶│ mcorch_nodes
+> 91	 │                   │◀──[200 response]──│                │
+> 92	 │◀──[UI update]─────│                   │                │
+> 93	```
+> 94	
+> 95	---
+> 96	
+> 97	## 4. API Contract Definitions
+> 98	
+> 99	> All Edge Functions must validate JWT before any business logic.
+> 100	
+> 101	### `POST /functions/v1/{{EdgeFn1}}`
+> 102	
+> 103	```typescript
+> 104	// Request
+> 105	interface {{EdgeFn1}}Request {
+> 106	  {{REQ_FIELD_1}}: {{REQ_TYPE_1}}
+> 107	  {{REQ_FIELD_2}}: {{REQ_TYPE_2}}
+> 108	}
+> 109	
+> 110	// Response (HTTP 200)
+> 111	interface {{EdgeFn1}}Response {
+> 112	  status: 'ok'
+> 113	  {{RESP_FIELD_1}}: {{RESP_TYPE_1}}
+> 114	}
+> 115	
+> 116	// mcoCoins deduction point:
+> 117	// → Line ~40: await supabase.rpc('deduct_mco_coins', { p_user_id, p_amount: {{COIN_AMOUNT}} })
+> 118	// → HTTP 402 if insufficient balance
+> 119	```
+> 120	
+> 121	---
+> 122	
+> 123	## 5. Security Design
+> 124	
+> 125	### 5.1 Threat Model (STRIDE)
+> 126	
+> 127	| Component | Threat | Type | Severity | Mitigation |
+> 128	|-----------|--------|------|----------|------------|
+> 129	| `{{EdgeFn1}}` | Unauthenticated access | Spoofing | High | JWT validation at entry point |
+> 130	| `{{TABLE_1}}` | Cross-tenant data read | Information Disclosure | Critical | RLS `user_id = auth.uid()` |
+> 131	| mcoCoins deduction | Client-side bypass | Tampering | Critical | Server-side RPC only |
+> 132	| {{THREAT_4}} | {{THREAT_4_DESC}} | {{THREAT_4_TYPE}} | {{THREAT_4_SEV}} | {{THREAT_4_MIT}} |
+> 133	
+> 134	### 5.2 RLS Policy Definitions
+> 135	
+> 136	```sql
+> 137	-- {{TABLE_1}} RLS
+> 138	ALTER TABLE {{TABLE_1}} ENABLE ROW LEVEL SECURITY;
+> 139	
+> 140	CREATE POLICY "{{TABLE_1}}_select_own"
+> 141	  ON {{TABLE_1}} FOR SELECT
+> 142	  USING (user_id = auth.uid());
+> 143	
+> 144	CREATE POLICY "{{TABLE_1}}_insert_own"
+> 145	  ON {{TABLE_1}} FOR INSERT
+> 146	  WITH CHECK (user_id = auth.uid());
+> 147	```
+> 148	
+> 149	### 5.3 JWT Validation Points
+> 150	
+> 151	All Edge Functions follow this pattern:
+> 152	```typescript
+> 153	const authHeader = req.headers.get('Authorization')
+> 154	if (!authHeader) return new Response('Unauthorized', { status: 401 })
+> 155	const { data: { user }, error } = await supabase.auth.getUser(
+> 156	  authHeader.replace('Bearer ', '')
+> 157	)
+> 158	if (error || !user) return new Response('Unauthorized', { status: 401 })
+> 159	```
+> 160	
+> 161	### 5.4 Secrets Inventory
+> 162	
+> 163	| Secret Name | Used In | Vault Location | Rotation Policy |
+> 164	|-------------|---------|----------------|----------------|
+> 165	| `{{SECRET_1}}` | `{{EdgeFn1}}` | Supabase Vault | {{ROTATION_1}} |
+> 166	
+> 167	> ⚠️ NEVER commit secret values. Only key names appear in documentation.
+> 168	
+> 169	---
+> 170	
+> 171	## 6. Infrastructure Touchpoints
+> 172	
+> 173	| Infrastructure | Usage | Impact |
+> 174	|----------------|-------|--------|
+> 175	| `mcorch_chroma` (ChromaDB port 8001) | {{CHROMA_USAGE}} | {{CHROMA_IMPACT}} |
+> 176	| `mega-brain-daemon` | {{DAEMON_USAGE}} | {{DAEMON_IMPACT}} |
+> 177	| `infra_health_logs` | New event type: `{{NEW_EVENT_TYPE}}` | Watchdog telemetry |
+> 178	
+> 179	---
+> 180	
+> 181	## 7. Migration Stubs
+> 182	
+> 183	```sql
+> 184	-- Migration: {{MIGRATION_TIMESTAMP}}_{{PROJECT_SLUG}}_initial.sql
+> 185	
+> 186	CREATE TABLE {{TABLE_1}} (
+> 187	  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 188	  user_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 189	  project_id  uuid REFERENCES projects(id) ON DELETE CASCADE,
+> 190	  -- feature-specific columns:
+> 191	  {{COLUMN_1}} {{COL_TYPE_1}} {{COL_CONSTRAINTS_1}},
+> 192	  {{COLUMN_2}} {{COL_TYPE_2}} {{COL_CONSTRAINTS_2}},
+> 193	  -- embeddings (if applicable):
+> 194	  embedding   vector(768),
+> 195	  -- audit:
+> 196	  created_at  timestamptz DEFAULT now() NOT NULL,
+> 197	  updated_at  timestamptz DEFAULT now() NOT NULL
+> 198	);
+> 199	
+> 200	ALTER TABLE {{TABLE_1}} ENABLE ROW LEVEL SECURITY;
+> 201	-- (paste RLS policies from §5.2)
+> 202	
+> 203	-- HNSW index (only if embedding column present):
+> 204	CREATE INDEX {{TABLE_1}}_embedding_idx
+> 205	  ON {{TABLE_1}} USING hnsw (embedding vector_cosine_ops)
+> 206	  WITH (m = 16, ef_construction = 64);
+> 207	```
+> 208	
+> 209	---
+> 210	
+> 211	## 8. Open Technical Decisions
+> 212	
+> 213	| ID | Description | Option A | Option B | Recommendation | Owner |
+> 214	|----|-------------|----------|----------|----------------|-------|
+> 215	| OTD-001 | {{OTD_001_DESC}} | {{OTD_001_A}} | {{OTD_001_B}} | {{OTD_001_REC}} | Sovereign |
+> 216	
+> 217	---
+> 218	
+> 219	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 220	
+> ```
+
+## 🤖 Claude *(02:42:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data & Knowledge Model
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Conceptual Data Model
+> 11	
+> 12	```
+> 13	[{{ENTITY_1}}] ──(1:N)──▶ [{{ENTITY_2}}]
+> 14	      │
+> 15	      └──(N:M)──▶ [{{ENTITY_3}}]
+> 16	                         │
+> 17	                         └──(1:1)──▶ [mcorch_nodes]
+> 18	```
+> 19	
+> 20	**Entities:**
+> 21	- **{{ENTITY_1}}:** {{ENTITY_1_DESC}}
+> 22	- **{{ENTITY_2}}:** {{ENTITY_2_DESC}}
+> 23	- **{{ENTITY_3}}:** {{ENTITY_3_DESC}}
+> 24	
+> 25	---
+> 26	
+> 27	## 2. Logical Data Model
+> 28	
+> 29	### Table: `{{TABLE_1}}`
+> 30	
+> 31	| Column | Type | Nullable | Default | FK | Description |
+> 32	|--------|------|----------|---------|-----|------------|
+> 33	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 34	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant isolation |
+> 35	| `project_id` | `uuid` | NULL | — | `projects.id` | Project scope |
+> 36	| `{{COL_1}}` | `{{TYPE_1}}` | {{NULL_1}} | {{DEFAULT_1}} | {{FK_1}} | {{DESC_1}} |
+> 37	| `{{COL_2}}` | `{{TYPE_2}}` | {{NULL_2}} | {{DEFAULT_2}} | {{FK_2}} | {{DESC_2}} |
+> 38	| `embedding` | `vector(768)` | NULL | — | — | Neural embedding (OpenRouter text-embedding-3-small) |
+> 39	| `stability_score` | `float4` | NOT NULL | `0.5` | — | FSRS-6 memory stability |
+> 40	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 41	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 42	
+> 43	### Table: `{{TABLE_2}}`
+> 44	
+> 45	| Column | Type | Nullable | Default | FK | Description |
+> 46	|--------|------|----------|---------|-----|------------|
+> 47	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 48	| `{{TABLE_1}}_id` | `uuid` | NOT NULL | — | `{{TABLE_1}}.id` | Parent reference |
+> 49	| `{{COL_3}}` | `{{TYPE_3}}` | {{NULL_3}} | {{DEFAULT_3}} | {{FK_3}} | {{DESC_3}} |
+> 50	
+> 51	---
+> 52	
+> 53	## 3. Supabase Physical Schema Stubs
+> 54	
+> 55	```sql
+> 56	-- ============================================================
+> 57	-- MIGRATION: {{MIGRATION_TIMESTAMP}}_{{PROJECT_SLUG}}_schema.sql
+> 58	-- ============================================================
+> 59	
+> 60	-- {{TABLE_1}}
+> 61	CREATE TABLE public.{{TABLE_1}} (
+> 62	  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 63	  user_id        uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 64	  project_id     uuid REFERENCES public.projects(id) ON DELETE CASCADE,
+> 65	  {{COL_1}}      {{TYPE_1}} {{CONSTRAINTS_1}},
+> 66	  {{COL_2}}      {{TYPE_2}} {{CONSTRAINTS_2}},
+> 67	  embedding      vector(768),
+> 68	  stability_score float4 NOT NULL DEFAULT 0.5,
+> 69	  created_at     timestamptz NOT NULL DEFAULT now(),
+> 70	  updated_at     timestamptz NOT NULL DEFAULT now()
+> 71	);
+> 72	
+> 73	ALTER TABLE public.{{TABLE_1}} ENABLE ROW LEVEL SECURITY;
+> 74	
+> 75	-- RLS Policies
+> 76	CREATE POLICY "{{TABLE_1}}: users read own rows"
+> 77	  ON public.{{TABLE_1}} FOR SELECT
+> 78	  USING (user_id = auth.uid());
+> 79	
+> 80	CREATE POLICY "{{TABLE_1}}: users insert own rows"
+> 81	  ON public.{{TABLE_1}} FOR INSERT
+> 82	  WITH CHECK (user_id = auth.uid());
+> 83	
+> 84	CREATE POLICY "{{TABLE_1}}: users update own rows"
+> 85	  ON public.{{TABLE_1}} FOR UPDATE
+> 86	  USING (user_id = auth.uid())
+> 87	  WITH CHECK (user_id = auth.uid());
+> 88	
+> 89	-- Indexes
+> 90	CREATE INDEX {{TABLE_1}}_user_idx ON public.{{TABLE_1}} (user_id);
+> 91	CREATE INDEX {{TABLE_1}}_project_idx ON public.{{TABLE_1}} (project_id);
+> 92	
+> 93	-- HNSW (embeddings)
+> 94	CREATE INDEX {{TABLE_1}}_embedding_hnsw
+> 95	  ON public.{{TABLE_1}} USING hnsw (embedding vector_cosine_ops)
+> 96	  WITH (m = 16, ef_construction = 64);
+> 97	
+> 98	-- Updated-at trigger
+> 99	CREATE TRIGGER set_{{TABLE_1}}_updated_at
+> 100	  BEFORE UPDATE ON public.{{TABLE_1}}
+> 101	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 102	```
+> 103	
+> 104	---
+> 105	
+> 106	## 4. GraphRAG Knowledge Nodes
+> 107	
+> 108	### Node Types Introduced
+> 109	
+> 110	| node_type | Title Pattern | Content Fields | Embedding Source |
+> 111	|-----------|--------------|----------------|-----------------|
+> 112	| `{{NODE_TYPE_1}}` | `{{TITLE_PATTERN_1}}` | `{{CONTENT_FIELDS_1}}` | `{{EMBED_SOURCE_1}}` |
+> 113	| `{{NODE_TYPE_2}}` | `{{TITLE_PATTERN_2}}` | `{{CONTENT_FIELDS_2}}` | `{{EMBED_SOURCE_2}}` |
+> 114	
+> 115	### Edge Types Introduced
+> 116	
+> 117	| Edge relationship | Source node_type | Target node_type | Metadata |
+> 118	|-------------------|-----------------|-----------------|----------|
+> 119	| `{{EDGE_REL_1}}` | `{{EDGE_SRC_1}}` | `{{EDGE_TGT_1}}` | `{{EDGE_META_1}}` |
+> 120	
+> 121	### Embedding Trigger
+> 122	
+> 123	Every insert into `{{TABLE_1}}` must call `embed-mcorch-node`:
+> 124	```typescript
+> 125	// In the Edge Function, after successful insert:
+> 126	await supabase.functions.invoke('embed-mcorch-node', {
+> 127	  body: { node_id: insertedNode.id, content: `${title} ${content}` }
+> 128	})
+> 129	```
+> 130	
+> 131	### FSRS-6 Parameters
+> 132	
+> 133	| Field | Initial Value | Decay Rule |
+> 134	|-------|--------------|------------|
+> 135	| `stability_score` | `0.5` | Decays per migration `20260425190000` formula |
+> 136	| `revenue_impact` | {{REVENUE_IMPACT_CALC}} | Updated on each successful orchestration run |
+> 137	
+> 138	---
+> 139	
+> 140	## 5. Tenant Isolation Map
+> 141	
+> 142	| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |
+> 143	|-------|----------------|-------------------|-------------------------------|
+> 144	| `{{TABLE_1}}` | ✅ Required | Optional | No |
+> 145	| `{{TABLE_2}}` | ✅ Required | ✅ Required | No |
+> 146	| `mcorch_nodes` | Optional | Optional | Yes (system nodes) |
+> 147	
+> 148	---
+> 149	
+> 150	## 6. Data Quality Rules
+> 151	
+> 152	| Table | Column | Rule | Violation Message (PT-BR) |
+> 153	|-------|--------|------|--------------------------|
+> 154	| `{{TABLE_1}}` | `{{COL_1}}` | {{QUALITY_RULE_1}} | {{QUALITY_MSG_1}} |
+> 155	| `{{TABLE_1}}` | `{{COL_2}}` | {{QUALITY_RULE_2}} | {{QUALITY_MSG_2}} |
+> 156	
+> 157	---
+> 158	
+> 159	## 7. Retention & Archival Policy
+> 160	
+> 161	| Data | Retention Period | Archival Strategy | Deletion Trigger |
+> 162	|------|-----------------|-------------------|-----------------|
+> 163	| `{{TABLE_1}}` rows | {{RETENTION_1}} | {{ARCHIVAL_1}} | {{DELETE_TRIGGER_1}} |
+> 164	| Embeddings (`vector` column) | Indefinite | Backfill via `scripts/backfill-embeddings.ts` | With parent row |
+> 165	| `infra_health_logs` entries | 90 days | No archival | Cron purge |
+> 166	
+> 167	---
+> 168	
+> 169	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 170	
+> ```
+
+## 🤖 Claude *(02:42:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Process & Automation Blueprint
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Process Inventory
+> 11	
+> 12	| Process ID | Name | Type | Trigger | Owner | SLA |
+> 13	|------------|------|------|---------|-------|-----|
+> 14	| PROC-001 | {{PROC_001_NAME}} | {{PROC_001_TYPE}} | {{PROC_001_TRIGGER}} | System | {{PROC_001_SLA}} |
+> 15	| PROC-002 | {{PROC_002_NAME}} | {{PROC_002_TYPE}} | {{PROC_002_TRIGGER}} | User | {{PROC_002_SLA}} |
+> 16	
+> 17	> Types: `automated` | `human-in-loop` | `cron` | `event-driven`
+> 18	
+> 19	---
+> 20	
+> 21	## 2. BPMN-lite Process Maps
+> 22	
+> 23	### PROC-001: {{PROC_001_NAME}}
+> 24	
+> 25	```
+> 26	START ──▶ [{{TASK_1}}] ──▶ <Gateway: {{GATEWAY_1_NAME}}>
+> 27	                                  │ YES                    │ NO
+> 28	                            [{{TASK_2}}]              [{{ERROR_PATH_1}}]
+> 29	                                  │                         │
+> 30	                            [{{TASK_3}}]              [Notify: {{ERROR_NOTIF}}]
+> 31	                                  │                         │
+> 32	                               ◀──┴─────────────────────────┘
+> 33	                                  │
+> 34	                               [Insert mcorch_node]
+> 35	                                  │
+> 36	                                END
+> 37	```
+> 38	
+> 39	**Swimlanes:**
+> 40	
+> 41	| Swimlane | Participant | Tasks |
+> 42	|----------|-------------|-------|
+> 43	| User | Browser / Frontend | {{USER_TASKS}} |
+> 44	| Frontend Hook | `use{{HookName}}.ts` | {{HOOK_TASKS}} |
+> 45	| Edge Function | `{{EdgeFunctionName}}` | {{EDGE_TASKS}} |
+> 46	| External API | `{{ExternalAPI}}` | {{EXT_TASKS}} |
+> 47	| DB | Supabase / PostgreSQL | {{DB_TASKS}} |
+> 48	
+> 49	---
+> 50	
+> 51	### PROC-002: {{PROC_002_NAME}}
+> 52	
+> 53	```
+> 54	[User Action: {{USER_ACTION}}]
+> 55	  │
+> 56	  ▼
+> 57	[Hook: use{{HookName}} → mutation trigger]
+> 58	  │
+> 59	  ▼
+> 60	[Edge Fn: {{EdgeFunctionName}}]
+> 61	  ├── Validate JWT ──(fail)──▶ HTTP 401
+> 62	  ├── Check mcoCoins ──(low)──▶ HTTP 402 → Toast: "Saldo insuficiente"
+> 63	  ├── {{BUSINESS_LOGIC_STEP}}
+> 64	  ├── Persist to {{TABLE_1}}
+> 65	  ├── Embed node via embed-mcorch-node
+> 66	  └── HTTP 200 → React Query invalidation → UI refresh
+> 67	```
+> 68	
+> 69	---
+> 70	
+> 71	## 3. n8n Workflow Blueprints
+> 72	
+> 73	### Workflow: {{N8N_WORKFLOW_1_NAME}}
+> 74	
+> 75	**Trigger:** {{N8N_TRIGGER_1}}  
+> 76	**Idempotency key:** `{{N8N_IDEMPOTENCY_KEY}}`
+> 77	
+> 78	```
+> 79	[Trigger: {{N8N_TRIGGER_1}}]
+> 80	  │
+> 81	  ▼
+> 82	[Node: HTTP Request → /functions/v1/{{EdgeFunctionName}}]
+> 83	  ├── Headers: Authorization: Bearer {{SERVICE_ROLE_OR_USER_JWT}}
+> 84	  ├── Body: { {{N8N_REQUEST_BODY}} }
+> 85	  │
+> 86	  ├── (success) ──▶ [Node: Update Supabase row status = 'complete']
+> 87	  │                         │
+> 88	  │                         ▼
+> 89	  │                [Node: Send notification (optional)]
+> 90	  │
+> 91	  └── (error) ──▶ [Node: Set retry count + 1]
+> 92	                         │
+> 93	                   (count ≤ 3) ──▶ [Wait: exponential backoff]──▶ retry
+> 94	                         │
+> 95	                   (count > 3) ──▶ [Node: Insert infra_health_logs {event: 'n8n_failure'}]
+> 96	                                         │
+> 97	                                   [Node: Alert Sovereign]
+> 98	```
+> 99	
+> 100	**Data Mapping:**
+> 101	
+> 102	| Input Field | Source | → | Output Field | Destination |
+> 103	|-------------|--------|---|--------------|-------------|
+> 104	| `{{IN_FIELD_1}}` | Trigger body | → | `{{OUT_FIELD_1}}` | Edge Function body |
+> 105	| `{{IN_FIELD_2}}` | Env var | → | `Authorization` | Header |
+> 106	
+> 107	---
+> 108	
+> 109	## 4. Orchestration Integration Points
+> 110	
+> 111	> Applies only if this feature integrates with `orchestrate-content` pipeline.
+> 112	
+> 113	| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |
+> 114	|---------------|---------|----------|-------------|-----------------|
+> 115	| {{PIPELINE_STEP_1}} | step_{{STEP_ID_1}} | After step {{PREV_STEP}} | {{STEP_DESC_1}} | {{STEP_COINS_1}} coins at entry |
+> 116	
+> 117	**Integration code stub (inside `orchestrate-content/index.ts`):**
+> 118	```typescript
+> 119	// Step {{STEP_ID_1}}: {{PIPELINE_STEP_1}}
+> 120	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'running')
+> 121	const {{STEP_RESULT}} = await {{STEP_ACTION}}(payload)
+> 122	if (!{{STEP_RESULT}}.ok) {
+> 123	  await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'error')
+> 124	  throw new Error('{{PIPELINE_STEP_1}} failed')
+> 125	}
+> 126	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'complete')
+> 127	```
+> 128	
+> 129	---
+> 130	
+> 131	## 5. Error Handling & Retry Strategy
+> 132	
+> 133	| Process | Step | Error Type | Max Retries | Backoff | Failure Action |
+> 134	|---------|------|-----------|-------------|---------|----------------|
+> 135	| PROC-001 | {{TASK_1}} | Network timeout | 3 | Exponential (2s, 4s, 8s) | Insert `infra_health_logs` |
+> 136	| PROC-001 | {{TASK_2}} | External API 5xx | 2 | Fixed 5s | Alert + mark failed |
+> 137	| PROC-002 | mcoCoins check | Insufficient balance | 0 | — | HTTP 402 to user |
+> 138	| Any | JWT validation | Invalid token | 0 | — | HTTP 401 immediately |
+> 139	
+> 140	---
+> 141	
+> 142	## 6. SLA Definitions
+> 143	
+> 144	| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |
+> 145	|---------|------|------------------|-------------------|-------------------|
+> 146	| PROC-001 | End-to-end | {{E2E_DURATION}} | {{E2E_TIMEOUT}} | Yes → infra_health_logs |
+> 147	| PROC-001 | {{TASK_1}} alone | {{TASK_1_DURATION}} | {{TASK_1_TIMEOUT}} | No |
+> 148	| PROC-002 | Edge Fn response | < 800ms p95 | 5s | Yes |
+> 149	
+> 150	---
+> 151	
+> 152	## 7. Cron Jobs
+> 153	
+> 154	| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |
+> 155	|----------|----------------|----------|-------------|-----------------|
+> 156	| `{{CRON_1_NAME}}` | `{{CRON_1_SCHEDULE}}` | `{{CRON_1_FN}}` | `{{CRON_1_KEY}}` | `infra_health_logs` |
+> 157	
+> 158	> All cron jobs must be idempotent — re-running on the same data must produce the same result.
+> 159	
+> 160	---
+> 161	
+> 162	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 163	
+> ```
+
+## 🤖 Claude *(02:42:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Quality & Self-Optimization Specification
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Quality Objectives
+> 11	
+> 12	| QO ID | Objective | Linked Business Objective | Target | Review Cadence |
+> 13	|-------|-----------|--------------------------|--------|---------------|
+> 14	| QO-001 | {{QO_001}} | BO-001 | {{QO_001_TARGET}} | Weekly |
+> 15	| QO-002 | {{QO_002}} | BO-002 | {{QO_002_TARGET}} | Monthly |
+> 16	| QO-003 | {{QO_003}} | BO-003 | {{QO_003_TARGET}} | Quarterly |
+> 17	
+> 18	---
+> 19	
+> 20	## 2. KPI Dashboard Definition
+> 21	
+> 22	> Data source: Supabase tables/views listed per KPI.
+> 23	
+> 24	| KPI ID | Name | Formula | Target | Warn Threshold | Critical Threshold | Data Source |
+> 25	|--------|------|---------|--------|---------------|-------------------|-------------|
+> 26	| KPI-001 | {{KPI_001_NAME}} | {{KPI_001_FORMULA}} | {{KPI_001_TARGET}} | {{KPI_001_WARN}} | {{KPI_001_CRIT}} | `{{KPI_001_TABLE}}` |
+> 27	| KPI-002 | {{KPI_002_NAME}} | {{KPI_002_FORMULA}} | {{KPI_002_TARGET}} | {{KPI_002_WARN}} | {{KPI_002_CRIT}} | `{{KPI_002_TABLE}}` |
+> 28	| KPI-003 | mcoCoins Burn Rate | `SUM(deductions) / active_users` | < {{BURN_TARGET}}/user | {{BURN_WARN}} | {{BURN_CRIT}} | `profiles` + `mco_transactions` |
+> 29	| KPI-004 | Edge Fn p95 Latency | `PERCENTILE_CONT(0.95) OVER latency` | < 800ms | 1000ms | 2000ms | Supabase logs |
+> 30	| KPI-005 | Knowledge Mesh Growth | `COUNT(mcorch_nodes) per week` | > {{MESH_GROWTH_TARGET}} | < {{MESH_GROWTH_WARN}} | 0 | `mcorch_nodes` |
+> 31	
+> 32	---
+> 33	
+> 34	## 3. FMEA Table
+> 35	
+> 36	> Severity, Occurrence, Detection: 1 (best) → 10 (worst). RPN = S × O × D. RPN > 100 requires action.
+> 37	
+> 38	| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |
+> 39	|----|---------|--------------|--------|---|---|---|-----|--------------------|
+> 40	| FMEA-001 | {{FR_001_TITLE}} | {{FAILURE_001}} | {{EFFECT_001}} | {{S_001}} | {{O_001}} | {{D_001}} | {{RPN_001}} | {{ACTION_001}} |
+> 41	| FMEA-002 | mcoCoins deduction | RPC timeout → double charge | User overcharged | 9 | 2 | 3 | 54 | Idempotency key on every RPC call |
+> 42	| FMEA-003 | JWT validation | Missing header | Unauthenticated access | 10 | 2 | 1 | 20 | Hard fail at entry; logged to infra_health_logs |
+> 43	| FMEA-004 | embed-mcorch-node | Embedding API timeout | Node stored without vector | 6 | 3 | 4 | 72 | Async retry queue; backfill via `scripts/backfill-embeddings.ts` |
+> 44	| FMEA-005 | {{CRITICAL_FR}} | {{FAILURE_005}} | {{EFFECT_005}} | {{S_005}} | {{O_005}} | {{D_005}} | {{RPN_005}} | {{ACTION_005}} |
+> 45	
+> 46	---
+> 47	
+> 48	## 4. Self-Optimization Loops
+> 49	
+> 50	| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |
+> 51	|---------|------------------|------------|--------------------|--------------------|
+> 52	| SOL-001 | KPI-004 latency > 1000ms for 5 consecutive calls | infra_health_logs | `mega-brain-daemon`: restart Edge Fn container | Alert Sovereign if > 2s |
+> 53	| SOL-002 | KPI-005 mesh growth = 0 for 7 days | mcorch_nodes | Trigger backfill job via cron | Alert if backfill fails |
+> 54	| SOL-003 | {{TRIGGER_003}} | {{KPI_SOURCE_003}} | {{RESPONSE_003}} | {{ESCALATION_003}} |
+> 55	| SOL-004 | mcoCoins balance < 10% of plan quota | profiles | Send in-app notification (PT-BR) | — (no auto-action) |
+> 56	
+> 57	---
+> 58	
+> 59	## 5. Self-Healing Specifications
+> 60	
+> 61	### 5.1 Watchdog Telemetry Events
+> 62	
+> 63	New event types to be written to `infra_health_logs` by this feature:
+> 64	
+> 65	| Event Type | Trigger | Severity | Payload |
+> 66	|------------|---------|----------|---------|
+> 67	| `{{PROJECT_SLUG}}_fn_failure` | Edge Fn 5xx after retry exhaustion | error | `{fn_name, error_message, user_id}` |
+> 68	| `{{PROJECT_SLUG}}_embed_failure` | embed-mcorch-node timeout | warn | `{node_id, retry_count}` |
+> 69	| `{{PROJECT_SLUG}}_sla_breach` | Process SLA exceeded | warn | `{process_id, elapsed_ms, threshold_ms}` |
+> 70	
+> 71	### 5.2 Auto-Recovery Script Stubs
+> 72	
+> 73	```bash
+> 74	#!/bin/bash
+> 75	# scripts/self-heal-{{PROJECT_SLUG}}.sh
+> 76	# Triggered by mega-brain-daemon when {{PROJECT_SLUG}}_fn_failure detected
+> 77	
+> 78	FUNCTION_NAME="{{EDGE_FUNCTION_NAME}}"
+> 79	LOG_TABLE="infra_health_logs"
+> 80	
+> 81	echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Self-heal triggered for $FUNCTION_NAME"
+> 82	
+> 83	# Step 1: Check function status
+> 84	STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+> 85	  "$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health" \
+> 86	  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+> 87	
+> 88	if [ "$STATUS" != "200" ]; then
+> 89	  echo "[WARN] Function unhealthy (status: $STATUS). Re-deploying..."
+> 90	  npx supabase functions deploy "$FUNCTION_NAME"
+> 91	fi
+> 92	
+> 93	# Step 2: Log recovery attempt
+> 94	# (insert into infra_health_logs via Supabase REST API)
+> 95	echo "[OK] Self-heal complete for $FUNCTION_NAME"
+> 96	```
+> 97	
+> 98	### 5.3 mega-brain-daemon Integration Points
+> 99	
+> 100	| Daemon Event | Condition | Action |
+> 101	|-------------|-----------|--------|
+> 102	| `health_check` | Every 5 min (watchdog cron) | Check `{{TABLE_1}}` row count vs. expected baseline |
+> 103	| `anomaly_detected` | `infra_health_logs` error rate > 5/hour | Execute `self-heal-{{PROJECT_SLUG}}.sh` |
+> 104	| `recovery_confirmed` | Health check passes after self-heal | Insert `recovery_ok` event to `infra_health_logs` |
+> 105	
+> 106	---
+> 107	
+> 108	## 6. SLA / SLO / SLI Definitions
+> 109	
+> 110	| Service | SLI (what we measure) | SLO (our target) | SLA (contractual consequence) |
+> 111	|---------|----------------------|------------------|-------------------------------|
+> 112	| `{{EdgeFunctionName}}` API | p95 response latency | ≤ 800ms | Credits issued if > 2s for > 1% of calls in a month |
+> 113	| Data ingestion pipeline | % records processed within SLA | ≥ 99% | Incident report required |
+> 114	| Knowledge Mesh embedding | % nodes with embedding within 5m of insert | ≥ 95% | Auto-backfill triggered |
+> 115	| Platform uptime | % minutes available per month | ≥ 99.5% | Per enterprise contract |
+> 116	
+> 117	---
+> 118	
+> 119	## 7. PDCA Improvement Cadence
+> 120	
+> 121	| Cycle | Phase | Activity | Owner | Frequency |
+> 122	|-------|-------|----------|-------|-----------|
+> 123	| {{PROJECT_SLUG}} Quality | Plan | Review FMEA + KPI targets | Sovereign | Quarterly |
+> 124	| {{PROJECT_SLUG}} Quality | Do | Implement top improvement action | Engineering | Per sprint |
+> 125	| {{PROJECT_SLUG}} Quality | Check | Compare KPIs vs. targets; update FMEA RPNs | AIOS | Monthly |
+> 126	| {{PROJECT_SLUG}} Quality | Act | Close loop; update this document | Sovereign | Monthly |
+> 127	
+> 128	**Improvement backlog location:** `.claude/context/sprint-priorities.md`
+> 129	
+> 130	---
+> 131	
+> 132	## 8. Observability Checklist
+> 133	
+> 134	### 8.1 Logging Events
+> 135	
+> 136	| Event | Location | Level | Fields logged |
+> 137	|-------|----------|-------|--------------|
+> 138	| Function entry | `{{EdgeFunctionName}}/index.ts` line ~10 | INFO | `{user_id, timestamp, request_id}` |
+> 139	| mcoCoins deduction | After RPC call | INFO | `{user_id, amount, new_balance}` |
+> 140	| Business logic error | Catch block | ERROR | `{user_id, error_message, stack}` |
+> 141	| SLA breach | Timeout guard | WARN | `{process_id, elapsed_ms}` |
+> 142	
+> 143	### 8.2 Alerting Rules
+> 144	
+> 145	| Condition | Channel | Escalation |
+> 146	|-----------|---------|------------|
+> 147	| Error rate > 1% in 5 min | `infra_health_logs` insert | mega-brain-daemon auto-heal |
+> 148	| p95 latency > 2s | `infra_health_logs` insert | Sovereign notification |
+> 149	| Zero KPI-005 growth > 7 days | Scheduled check | AIOS agent alert |
+> 150	
+> 151	### 8.3 Distributed Tracing Touchpoints
+> 152	
+> 153	| Span | Start | End | Tags |
+> 154	|------|-------|-----|------|
+> 155	| `{{EdgeFunctionName}}.total` | Request received | Response sent | `user_id`, `status_code` |
+> 156	| `{{EdgeFunctionName}}.mco_check` | Before RPC | After RPC | `amount`, `balance_after` |
+> 157	| `{{EdgeFunctionName}}.embed` | Before embed-mcorch-node call | After call | `node_id`, `success` |
+> 158	
+> 159	---
+> 160	
+> 161	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 162	
+> ```
+
+## 🤖 Claude *(02:44:06)*
+
+
+## 🤖 Claude *(02:44:07)*
+
+Templates carregados — formato canônico claro. ID space desta suíte = sufixo **`-CV2`** (mirror de -GN/-OC/-VM/-E2E das suítes anteriores). Criando o diretório e autorando a suíte na sequência de fases.
+
+## 🤖 Claude *(02:44:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "mkdir -p docs/bok/constellation-v2 && echo \"criado:\" && ls -la docs/bok/constellation-v2/",
+  "description": "Create constellation-v2 BoK directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> criado:
+> total 8
+> drwxrwxr-x  2 ubuntu ubuntu 4096 May 31 23:44 .
+> drwxrwxr-x 14 ubuntu ubuntu 4096 May 31 23:44 ..
+> ```
+
+## 🤖 Claude *(02:44:13)*
+
+
+## 🤖 Claude *(02:44:13)*
+
+Diretório pronto. Autorando **Fase 0 + Fase 1** (00-index + MRD + BRD):
+
+## 🤖 Claude *(02:44:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/00-index.md",
+  "content": "# BoK Documentation Suite \u2014 constellation-v2\n\n**Generated:** 2026-05-31\n**Version:** v0.1\n**Agent:** MCORCH BoK Scribe Agent v1.0.0\n**Sovereign:** Gabriel Zarattini\n\n---\n\n## Project Metadata\n\n| Field | Value |\n|-------|-------|\n| Business Idea | Cockpit operacional de agentes de produto **per-user** \u2014 refatora\u00e7\u00e3o v2 do `/dashboard/constellation` (hoje casca Lovable decorativa). Cada usu\u00e1rio tem sua constela\u00e7\u00e3o de agentes que executam trabalho REAL dentro da conta dele, acionando os m\u00f3dulos do ecossistema, com isolamento de tenant duro, economia mcoCoins e credenciais BYOK per-user. |\n| Market Segment | B2B2C |\n| Monetization Model | hybrid (planos de assinatura + consumo mcoCoins por execu\u00e7\u00e3o de agente) |\n| Regulatory Profile | LGPD |\n| Integration Surface | extends-mcorch (supera a BoK `mcorch-constellation` v1 que documenta a casca) |\n| Project Slug | `constellation-v2` |\n\n---\n\n## Document Registry\n\n| # | File | Document | BoK Applied | Status |\n|---|------|----------|-------------|--------|\n| 0 | `00-index.md` | Project Manifest | \u2014 | [x] complete |\n| 1 | `01-mrd.md` | Market Requirements Document | BABOK v3 | [x] complete |\n| 2 | `02-brd.md` | Business Requirements Document | BABOK v3 | [x] complete |\n| 3 | `03-prd.md` | Product Requirements Document | ProdBOK + CXBOK | [x] complete |\n| 4 | `04-frd.md` | Functional Requirements Document | SWEBOK v4 | [x] complete |\n| 5 | `05-sdd.md` | System Design Document | SWEBOK v4 + CISSP CBK | [x] complete |\n| 6 | `06-data-model.md` | Data & Knowledge Model | DMBOK v2 | [x] complete |\n| 7 | `07-process-flow.md` | Process & Automation Blueprint | BPM CBOK v4 | [x] complete |\n| 8 | `08-quality-metrics.md` | Self-Optimization Specification | CMQ/OE BOK | [x] complete |\n\n---\n\n## Traceability Chain\n\n```\nMR-CV2-001 (agentes executam trabalho real)\n  \u2514\u2500\u2500 BR-CV2-001\n        \u2514\u2500\u2500 PR-CV2-001 (capability invocation) \u00b7 PR-CV2-002 (crew on-demand)\n              \u2514\u2500\u2500 FR-CV2-001..006 (capability router, agent-task-execute v2, RLS)\n                    \u2514\u2500\u2500 [agent_capabilities \u00b7 agent_executions \u00b7 capability-router edge \u00b7 PROC-CV2-002]\n\nMR-CV2-002 (isolamento de tenant duro)\n  \u2514\u2500\u2500 BR-CV2-002 \u2192 PR-CV2-003 \u2192 FR-CV2-010..012 \u2192 [RLS auth.uid() + capability allowlist + system-access denylist]\n\nMR-CV2-003 (cost control: mcoCoins + BYOK + caps)\n  \u2514\u2500\u2500 BR-CV2-003 \u2192 PR-CV2-004 \u2192 FR-CV2-020..023 \u2192 [agent_consumption_caps \u00b7 user_api_keys \u00b7 deduct_mco_coins \u00b7 PROC-CV2-003]\n\nMR-CV2-004 (empty-start)\n  \u2514\u2500\u2500 BR-CV2-004 \u2192 PR-CV2-005 \u2192 FR-CV2-030..031 \u2192 [drop seed_crew_template auto-call \u00b7 onboarding wizard]\n\nMR-CV2-005 (cockpit unificado 16 capabilities)\n  \u2514\u2500\u2500 BR-CV2-005 \u2192 PR-CV2-006/007 \u2192 FR-CV2-040..043 \u2192 [capability registry \u00b7 4\u00d74 map \u00b7 Leads\u2192Core edges]\n\nMR-CV2-006 (observabilidade)\n  \u2514\u2500\u2500 BR-CV2-006 \u2192 PR-CV2-010 \u2192 FR-CV2-050 \u2192 [useAgentActivity v2 \u00b7 /dashboard/agent-economics]\n\nMR-CV2-007 (performance do 3D)\n  \u2514\u2500\u2500 BR-CV2-007 \u2192 PR-CV2-011 \u2192 FR-CV2-060..061 \u2192 [render budget \u00b7 z-index layering \u00b7 LOD]\n```\n\n---\n\n## Phase Completion Log\n\n| Phase | Name | Completed | Notes |\n|-------|------|-----------|-------|\n| 0 | Project Bootstrap | 2026-05-31 | slug `constellation-v2`; supersedes `mcorch-constellation` v1 BoK |\n| 1 | Market & Business Intelligence | 2026-05-31 | 7 MR-CV2 \u00b7 7 BR-CV2 \u00b7 3 BO-CV2 |\n| 2 | Product Definition | 2026-05-31 | 2 personas \u00b7 13 PR-CV2 (MoSCoW) |\n| 3 | Technical Specification | 2026-05-31 | 30+ FR-CV2 \u00b7 12 NFR-CV2 \u00b7 STRIDE \u00b7 8 OTD-CV2 |\n| 4 | Data & Process Engineering | 2026-05-31 | 4 new tables \u00b7 9 PROC-CV2 |\n| 5 | Quality & Autonomic Engineering | 2026-05-31 | 10 KPI-CV2 \u00b7 12 FMEA-CV2 \u00b7 SOL/SLA |\n| 6 | Traceability Validation | 2026-05-31 | 0 orphans (see \u00a7below) |\n| 7 | Knowledge Mesh Injection | 2026-05-31 | seal node via `scripts/seed-constellation-v2-bok-seal.ts` |\n\n---\n\n## Material Context Snapshot (verified 2026-05-31 via REST service-role)\n\n> This BoK was authored against a **materially verified** current state, not assumptions.\n\n| Fact | Value | Source |\n|------|-------|--------|\n| Real user profiles | **1** (Sovereign) | `profiles` count=exact |\n| `crew_agents` rows | **717** across **27** distinct owners | REST jq group_by |\n| Orphan owners (no profile) | **26** (~688 garbage rows) | profiles \u2229 crew owners |\n| Sovereign crew size | **53** (1 Core + 4 Leads + 4\u00d712 via \"Deploy Enterprise\") | enterprise-seed.ts memberCount=12 |\n| `crew_edges` rows | **689** (Directive 92 \u00b7 Reporting 576 \u00b7 semantic 21) | REST jq |\n| `agent_executions` (real CEA history) | **31** | count=exact |\n| Existing seeders (drift) | RPC `seed_crew_template` (6/squad) \u00b7 `seedEnterpriseStructure()` store (6) \u00b7 `deployEnterpriseToSupabase()` (12) | code read |\n| Existing real-work plumbing | CEA v1.1 \u2014 `agent_executions`, `agent-task-execute`, `agent-daily-pulse`, `agent_pricing`, `useAgentActivity`, `/dashboard/agent-economics` | docs/processes/constellation-economic-activation.md |\n\n---\n\n## Architecture Decisions (Sovereign-delegated \"tome os caminhos\")\n\n| Fork | Decision | Rationale |\n|------|----------|-----------|\n| A \u2014 invoca\u00e7\u00e3o real | **A1**: reusar edge functions existentes como tools via camada fina de roteamento | m\u00f3dulos j\u00e1 robustos; n\u00e3o reescrever |\n| B \u2014 modelo de acesso | **B**: config de acesso pr\u00e9-configurada por subagente (m\u00f3dulo + BYOK + caps) | \"acesso configurado previamente\" (diretiva Sovereign) |\n| C \u2014 escopo do v2 | **C**: refatorar in-place atr\u00e1s de um reset limpo de dados | 1 user real + \u00e9 casca; rota paralela \u00e9 overhead |\n\n---\n\n## Open Technical Decisions (consolidated from 05-sdd.md)\n\n| OTD ID | Description | Recommendation | Status |\n|--------|-------------|----------------|--------|\n| OTD-CV2-001 | Reuso de `crew_agents`/`crew_edges` vs. tabelas v2 novas | Estender `crew_agents` + nova `agent_capabilities` (migra\u00e7\u00e3o in-place) | Open \u2192 Sovereign |\n| OTD-CV2-002 | Planejamento LLM (tool-calling) vs. binding direto 1-capability-1-fun\u00e7\u00e3o | Fase 1 = binding direto; Fase 2 = tool-calling LLM | Open |\n| OTD-CV2-003 | Caps de consumo: por-agente vs. por-capability vs. por-API | H\u00edbrido: cap di\u00e1rio por-user/API (estende canvas-daily-cap) + cap por-agente | Open |\n| OTD-CV2-004 | Destino dos 31 `agent_executions` \u00f3rf\u00e3os no reset | Arquivar em `agent_executions_archive` antes do wipe | Open |\n| OTD-CV2-005 | `provider/model` default dos subagentes | `groq/llama-3.3-70b-versatile` (v\u00e1lido em `agent_pricing`) | Recommended |\n| OTD-CV2-006 | Publica\u00e7\u00e3o Social: 1 subagente multi-rede vs. N | 1 subagente roteando p/ publish-meta/social/wordpress | Open |\n| OTD-CV2-007 | Render 3D: manter R3F vs. degradar p/ 2D em baixa perf | Manter R3F + LOD + cap de n\u00f3s por tenant (\u226421) | Recommended |\n| OTD-CV2-008 | Watchdog/Infra subagente: read-only ou pode acionar self-heal | Read-only no tenant (sem acesso a system) \u2014 s\u00f3 l\u00ea `infra_health_logs` do pr\u00f3prio escopo | Open |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/00-index.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:44:58)*
+
+
+## 🤖 Claude *(02:45:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/01-mrd.md",
+  "content": "# MRD \u2014 Market Requirements Document\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** BABOK v3 (Strategy Analysis + Elicitation & Collaboration)\n**Status:** Draft\n\n---\n\n## 1. Executive Summary\n\nCriadores de conte\u00fado e pequenos neg\u00f3cios que monetizam via afiliados operam hoje 10+ ferramentas desconexas (descoberta de tend\u00eancias, gera\u00e7\u00e3o de conte\u00fado, design, publica\u00e7\u00e3o, links de afiliado, analytics). O MCORCH j\u00e1 possui esses m\u00f3dulos \u2014 e robustos \u2014 mas eles s\u00e3o acionados **manualmente, um a um**. A Constela\u00e7\u00e3o 3D (`/dashboard/constellation`) prometia um ex\u00e9rcito de agentes, mas nasceu como **casca decorativa do Lovable**: 717 agentes-fantasma (26 donos \u00f3rf\u00e3os, sem perfil) que apenas piscavam status. A `constellation-v2` converte essa casca no que ela deveria ser: um **cockpit operacional per-user** onde uma crew de agentes executa o trabalho real dos m\u00f3dulos em nome do usu\u00e1rio \u2014 com isolamento de tenant duro, economia mcoCoins medida e credenciais BYOK do pr\u00f3prio usu\u00e1rio. O momento \u00e9 agora: os m\u00f3dulos existem, o tool-calling de LLMs amadureceu, e a funda\u00e7\u00e3o econ\u00f4mica (CEA v1.1 \u2014 `agent_executions` + `agent-task-execute` + `agent_pricing`) j\u00e1 est\u00e1 viva em produ\u00e7\u00e3o.\n\n---\n\n## 2. Market Problem Statement\n\n### 2.1 Current State\nO criador/afiliado solo gasta a maior parte do tempo em **troca de contexto**: abre o minerador de tend\u00eancias, copia para a ferramenta de conte\u00fado, gera arte em outra, publica em tr\u00eas redes manualmente, encurta links de afiliado num quarto servi\u00e7o, e tenta ler analytics num quinto. N\u00e3o existe uma camada \"fa\u00e7a o trabalho por mim\" que componha tudo com as credenciais e o or\u00e7amento do pr\u00f3prio usu\u00e1rio.\n\n### 2.2 Root Cause Analysis\nAs ferramentas s\u00e3o **point-solutions**: cada uma resolve um peda\u00e7o, nenhuma orquestra o fluxo per-tenant. Builders gen\u00e9ricos de agentes (no-code) n\u00e3o t\u00eam integra\u00e7\u00e3o vertical com m\u00f3dulos de conte\u00fado/afiliado nem economia nativa. No pr\u00f3prio MCORCH, a camada de agentes existia s\u00f3 como **teatro visual** \u2014 `useSimulation` flipava status aleat\u00f3rio; n\u00e3o havia binding a fun\u00e7\u00e3o real, nem isolamento, nem controle de custo por usu\u00e1rio.\n\n### 2.3 Desired State\nUm \u00fanico cockpit onde o usu\u00e1rio **pr\u00e9-configura** uma crew enxuta (4 departamentos \u00d7 at\u00e9 4 subagentes m\u00f3dulo-bound + um Core orquestrador), cada subagente com acesso a um m\u00f3dulo real, chave BYOK e teto de consumo. Os agentes executam tarefas reais (minerar tend\u00eancias, gerar conte\u00fado, renderizar canvas, publicar, forjar links de afiliado, ler analytics), cada a\u00e7\u00e3o medida em mcoCoins, tudo escopado 100% \u00e0 conta do usu\u00e1rio.\n\n---\n\n## 3. Target Market Segments\n\n| Segment | Description | Size Estimate | Urgency | Accessibility |\n|---------|-------------|---------------|---------|---------------|\n| Primary | Criadores/afiliados solo que monetizam conte\u00fado (creator-economy BR/LatAm) | SAM ~2\u20134M criadores LatAm | High | Self-serve via signup + BYOK |\n| Secondary | Pequenas ag\u00eancias/SMBs gerindo m\u00faltiplas marcas | ~200k SMBs LatAm | Medium | Sales-assisted + plano Enterprise |\n\n### 3.1 TAM / SAM / SOM\n\n| Metric | Value | Basis |\n|--------|-------|-------|\n| TAM | ~50M criadores globais monetizando | Estimativas de creator-economy (ordem de grandeza) |\n| SAM | ~2\u20134M criadores LatAm/PT-BR com inten\u00e7\u00e3o de afilia\u00e7\u00e3o | Foco lingu\u00edstico/regional do MCORCH |\n| SOM (12m) | ~1.000\u20135.000 contas ativas | Capacidade realista de aquisi\u00e7\u00e3o na fase Usu\u00e1rio Zero \u2192 Usu\u00e1rio N |\n\n> **Nota de honestidade (Lei 1):** n\u00fameros de mercado s\u00e3o estimativas de ordem de grandeza para enquadrar prioridade, N\u00c3O proje\u00e7\u00f5es auditadas. O dado material hoje \u00e9 **1 usu\u00e1rio real** (Sovereign). A v2 \u00e9 pr\u00e9-requisito t\u00e9cnico para escalar al\u00e9m de 1.\n\n---\n\n## 4. Competitive Landscape\n\n| Competitor | Positioning | Strengths | Weaknesses | Our Differentiation |\n|------------|-------------|-----------|------------|---------------------|\n| Builders no-code de agentes (gen\u00e9ricos) | \"monte seu agente\" | flex\u00edvel, hype | sem m\u00f3dulos verticais, sem economia, sem afilia\u00e7\u00e3o | m\u00f3dulos prontos + economia mcoCoins nativa + BYOK |\n| Ferramentas verticais de conte\u00fado (ex.: geradores de post) | \"escreva mais r\u00e1pido\" | foco, qualidade de copy | single-purpose, sem orquestra\u00e7\u00e3o nem afiliados | crew multi-m\u00f3dulo orquestrada por departamento |\n| VA humano / ag\u00eancia | \"terceirize a opera\u00e7\u00e3o\" | julgamento humano | caro, n\u00e3o escala, sem isolamento de credenciais | agentes 24/7 cost-controlled per-tenant |\n\n---\n\n## 5. Market Opportunity & Timing\n\nTr\u00eas curvas convergem: (1) **tool-calling de LLMs** virou commodity confi\u00e1vel (Groq/OpenRouter baratos); (2) **os m\u00f3dulos j\u00e1 existem e est\u00e3o robustos** no MCORCH (orchestrate-content, canvas-execute, fetch-trends, link-forge, publish-*); (3) **a funda\u00e7\u00e3o econ\u00f4mica est\u00e1 viva** \u2014 a CEA v1.1 j\u00e1 mede execu\u00e7\u00f5es reais de agente em mcoCoins. Falta s\u00f3 a camada que falava-se desde o in\u00edcio: transformar a constela\u00e7\u00e3o decorativa em motor operacional per-tenant. Construir agora aproveita ativos j\u00e1 pagos em vez de reescrever.\n\n---\n\n## 6. Market Requirements\n\n> Priority: **Critical** (must have at launch) | **High** | **Medium** | **Low**\n\n| ID | Market Requirement | Priority | Rationale | Source |\n|----|-------------------|----------|-----------|--------|\n| MR-CV2-001 | Agentes executam **trabalho real** nos m\u00f3dulos (n\u00e3o demo visual) | Critical | \u00c9 a raz\u00e3o de existir do v2; sem isso continua teatro | Diretiva Sovereign 2026-05-31 |\n| MR-CV2-002 | **Isolamento de tenant duro** \u2014 agentes escopados \u00e0 conta do user; ZERO acesso ao sistema/dev MCORCH ou a outros tenants | Critical | Seguran\u00e7a + LGPD + condi\u00e7\u00e3o de multi-tenancy; diretiva expl\u00edcita \"isso n\u00e3o pode acontecer\" | Diretiva Sovereign |\n| MR-CV2-003 | **Controle de custo per-user**: mcoCoins medido + BYOK + caps de consumo por API | Critical | Risco financeiro isolado por tenant; evita um user esgotar quota global | Diretiva Sovereign + API Tenancy Model |\n| MR-CV2-004 | **Empty-start**: novos usu\u00e1rios nascem sem agentes; crew criada on-demand | High | Fim da polui\u00e7\u00e3o decorativa (688 linhas-lixo); UX intencional | Diretiva Sovereign |\n| MR-CV2-005 | **Cockpit unificado** cobrindo os 16 capabilities (4\u00d74) com hierarquia Leads\u2192Core | High | Cobertura de todo o ecossistema num s\u00f3 lugar | Diretiva Sovereign + mapa 4\u00d74 aprovado |\n| MR-CV2-006 | **Observabilidade** do trabalho dos agentes (live logs + dashboard de economia) | Medium | Confian\u00e7a + calibra\u00e7\u00e3o de margem | CEA v1.1 + ProdBOK |\n| MR-CV2-007 | **Performance** do cockpit 3D (render suave, sem z-index quebrado) | Medium | Casca atual mata perf com 53+ n\u00f3s e tem bugs de layering | Observa\u00e7\u00e3o visual Sovereign (screenshot) |\n\n---\n\n## 7. Success Metrics (Market-Level KPIs)\n\n| KPI | Definition | Target (6-month) | Target (12-month) | Measurement |\n|-----|-----------|------------------|-------------------|-------------|\n| Activation | % de contas ativas com \u22651 subagente que executou tarefa real | 60% | 80% | `agent_executions` por user |\n| Agent throughput | execu\u00e7\u00f5es reais de agente por user ativo / semana | \u2265 10 | \u2265 30 | `agent_executions` count |\n| Economic activation | mcoCoins consumidos via execu\u00e7\u00e3o de agente / m\u00eas | > 0 (material) | crescimento MoM | `mcoin_transactions` action=`*_spend` |\n| Task success rate | % execu\u00e7\u00f5es `status=done` (vs failed/timeout) | \u2265 90% | \u2265 95% | `agent_executions.status` |\n\n---\n\n## 8. Regulatory & Compliance Context\n\n| Regulation | Applicability | Key Constraint | Compliance Owner |\n|------------|---------------|----------------|-----------------|\n| LGPD | Sim \u2014 dados per-user + credenciais BYOK | Credenciais cifradas, escopadas por `auth.uid()`, revog\u00e1veis pelo user; agentes n\u00e3o vazam dados entre tenants; direito ao esquecimento cascateia para crew + execu\u00e7\u00f5es | Engineering |\n| API Tenancy Model (diretiva interna) | Sim \u2014 toda chamada a API externa resolve credencial per-user | Sem `Deno.env` global em fluxo user-facing; BYOK primeiro, fallback restrito | Engineering |\n\n---\n\n## 9. Traceability Matrix Stub\n\n| MR ID | \u2192 BR ID | Rationale |\n|-------|---------|-----------|\n| MR-CV2-001 | BR-CV2-001 | invoca\u00e7\u00e3o real de m\u00f3dulo |\n| MR-CV2-002 | BR-CV2-002 | isolamento de tenant |\n| MR-CV2-003 | BR-CV2-003 | economia + BYOK + caps |\n| MR-CV2-004 | BR-CV2-004 | empty-start |\n| MR-CV2-005 | BR-CV2-005 | cockpit 4\u00d74 + hierarquia |\n| MR-CV2-006 | BR-CV2-006 | observabilidade |\n| MR-CV2-007 | BR-CV2-007 | performance 3D |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/01-mrd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:45:53)*
+
+
+## 🤖 Claude *(02:46:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/02-brd.md",
+  "content": "# BRD \u2014 Business Requirements Document\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** BABOK v3 (Requirements Analysis & Design Definition)\n**Status:** Draft\n\n---\n\n## 1. Executive Summary\n\nA `constellation-v2` transforma a constela\u00e7\u00e3o 3D de **custo** (casca decorativa que mata performance e n\u00e3o gera nada) em **motor de receita**: cada usu\u00e1rio opera uma crew enxuta de agentes que executam trabalho real nos m\u00f3dulos do MCORCH, consumindo mcoCoins por a\u00e7\u00e3o e usando credenciais BYOK pr\u00f3prias. O retorno de neg\u00f3cio \u00e9 triplo: (1) **consumo mcoCoins** direto por execu\u00e7\u00e3o de agente; (2) **receita de afiliado** amplificada por agentes que forjam links e publicam autonomamente; (3) **prontid\u00e3o multi-tenant** \u2014 isolamento + BYOK + caps s\u00e3o pr\u00e9-condi\u00e7\u00e3o para vender al\u00e9m do Usu\u00e1rio Zero. Constr\u00f3i-se sobre a CEA v1.1 (j\u00e1 viva), reusando edge functions robustas via uma camada fina de roteamento de capability.\n\n---\n\n## 2. Business Objectives (SMART)\n\n| ID | Objective | Specific | Measurable | Achievable | Relevant | Time-bound |\n|----|-----------|----------|------------|------------|----------|------------|\n| BO-CV2-001 | Ativar a constela\u00e7\u00e3o economicamente | Converter agentes decorativos em executores que consomem mcoCoins | mcoCoins consumidos via `agent_executions` > 0 e crescente | Sim \u2014 CEA v1.1 j\u00e1 mede execs | Liga receita ao produto-core | 30 dias p\u00f3s-launch v2 |\n| BO-CV2-002 | Atingir prontid\u00e3o multi-tenant | Isolamento de tenant + BYOK + caps audit\u00e1veis | Security-review passa; 0 acesso cross-tenant em auditoria | Sim \u2014 RLS + API Tenancy j\u00e1 s\u00e3o padr\u00e3o | Desbloqueia Usu\u00e1rio 1..N | v2 GA |\n| BO-CV2-003 | Reduzir fric\u00e7\u00e3o operacional do criador | Substituir opera\u00e7\u00e3o manual de 10+ ferramentas por crew orquestrada | \u2265 10 execu\u00e7\u00f5es de agente / user ativo / semana | Sim \u2014 m\u00f3dulos j\u00e1 existem | Reten\u00e7\u00e3o + valor percebido | 90 dias p\u00f3s-launch |\n\n---\n\n## 3. Stakeholder Register\n\n| ID | Role | Interest | Influence | Communication Cadence | Contact |\n|----|------|----------|-----------|----------------------|---------|\n| SH-CV2-001 | Sovereign / Maestro | High | High | Continuous | Gabriel Zarattini |\n| SH-CV2-002 | End User (criador/afiliado, prim\u00e1rio) | High | Medium | NPS mensal + in-app | Usu\u00e1rio Zero \u2192 N |\n| SH-CV2-003 | Ag\u00eancia/SMB (secund\u00e1rio) | Medium | Low (hoje) | Trimestral | futuro |\n| SH-CV2-004 | OpenClaw Pantheon (agentes de DEV \u2014 engineer/scientist/etc.) | Medium | Medium | via mesh bridge | distinto dos agentes de produto \u2014 **N\u00c3O confundir** |\n\n> **SH-CV2-004 \u00e9 a fronteira cr\u00edtica:** os agentes do Pantheon OpenClaw operam o **sistema/dev** (este repo). Os agentes da constela\u00e7\u00e3o-v2 operam a **conta do tenant**. S\u00e3o universos disjuntos; o v2 pro\u00edbe arquiteturalmente que um agente de produto acesse o sistema (BR-CV2-002).\n\n---\n\n## 4. Business Requirements\n\n> Cada BR tra\u00e7a a \u22651 MR. mcoCoins definido onde a a\u00e7\u00e3o consome recurso.\n\n| ID | Requirement | MR Traced | Priority | mcoCoins Cost | Acceptance Criteria |\n|----|-------------|-----------|----------|---------------|---------------------|\n| BR-CV2-001 | Cada subagente invoca a fun\u00e7\u00e3o real do seu m\u00f3dulo via camada de roteamento de capability | MR-CV2-001 | Critical | Vari\u00e1vel por capability (ver \u00a76) | Clicar \"executar\" num subagente Viral Miner cria 1 row real em `agent_executions` + chama `fetch-trends` e retorna dados reais |\n| BR-CV2-002 | Isolamento de tenant duro: RLS `auth.uid()` em todas as tabelas de crew/execu\u00e7\u00e3o; allowlist de capabilities; **denylist de acesso a sistema** | MR-CV2-002 | Critical | 0 | Auditoria: nenhum agente l\u00ea/escreve dados de outro `user_id`; nenhuma capability mapeia a fun\u00e7\u00e3o de sistema/dev |\n| BR-CV2-003 | Resolu\u00e7\u00e3o BYOK per-user + caps de consumo por user/API + dedu\u00e7\u00e3o at\u00f4mica mcoCoins | MR-CV2-003 | Critical | medido | Execu\u00e7\u00e3o resolve chave de `user_api_keys`; estoura cap \u2192 HTTP 402; custo debitado via `deduct_mco_coins` (Sovereign freebie) |\n| BR-CV2-004 | Novos usu\u00e1rios nascem com constela\u00e7\u00e3o vazia; cria\u00e7\u00e3o on-demand | MR-CV2-004 | High | 0 | Signup novo \u2192 `crew_agents` count = 0; wizard cria crew sob demanda |\n| BR-CV2-005 | Topologia 4 deptos \u00d7 \u22644 subagentes m\u00f3dulo-bound + GCRUX Core; Leads reportam ao Core | MR-CV2-005 | High | 0 | Mapa 4\u00d74 renderizado; edges `Directive` Core\u2192Lead e `Reporting` Lead\u2192subagente |\n| BR-CV2-006 | Observabilidade: feed de execu\u00e7\u00f5es reais (live logs) + dashboard de economia | MR-CV2-006 | Medium | 0 | `useAgentActivity` projeta execs; `/dashboard/agent-economics` mostra tokens/USD/mcoCoins por squad |\n| BR-CV2-007 | Performance do cockpit 3D: render suave + z-index correto + cap de n\u00f3s/tenant | MR-CV2-007 | Medium | 0 | \u226421 n\u00f3s/tenant; 60fps alvo; pain\u00e9is sem sobreposi\u00e7\u00e3o quebrada |\n\n---\n\n## 5. ROI Model\n\n### 5.1 Cost Estimates\n\n| Cost Item | Type | Monthly Estimate | Annual Estimate |\n|-----------|------|-----------------|----------------|\n| Infra (Supabase, Docker mesh) | OpEx | sem incremento material (reusa stack) | \u2014 |\n| AI API calls | Variable | **BYOK \u2014 custo do tenant**, n\u00e3o do MCORCH | \u2014 |\n| AI API (fallback global Sovereign freebie) | Variable | baixo (cap `max_tokens=500` + groq) | \u2014 |\n| Desenvolvimento v2 | CapEx | \u2014 | esfor\u00e7o de ~1 sprint (refactor in-place) |\n\n> **Insight de modelo de neg\u00f3cio:** por ser **BYOK**, o custo vari\u00e1vel de IA migra para o tenant \u2014 o MCORCH cobra a **camada de orquestra\u00e7\u00e3o em mcoCoins**, n\u00e3o a infer\u00eancia. Margem limpa.\n\n### 5.2 Revenue Streams\n\n| Stream | Model | Monthly Potential | Notes |\n|--------|-------|-----------------|-------|\n| Consumo mcoCoins por execu\u00e7\u00e3o de agente | transaction | proporcional a # execs \u00d7 custo m\u00e9dio | core do v2 |\n| Receita de afiliado (links forjados por agentes) | revenue-share | proporcional a convers\u00f5es ML | amplificado por automa\u00e7\u00e3o |\n| Upgrade de plano (mais mcoCoins/caps) | subscription | Starter 500 / Pro 2000 / Ent 10k | gatilho: usu\u00e1rio esgota cap |\n\n### 5.3 Payback Analysis\n\n| Metric | Value |\n|--------|-------|\n| Break-even | N/A formal \u2014 reusa infra existente; payback = esfor\u00e7o de 1 sprint vs. ativa\u00e7\u00e3o de consumo |\n| 12-month ROI | Qualitativo: desbloqueia toda a tese multi-tenant (sem v2, receita per-tenant \u00e9 0) |\n| IRR | N/A (est\u00e1gio Usu\u00e1rio Zero) |\n\n---\n\n## 6. mcoCoins Economics\n\n| Operation (capability) | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |\n|-----------|-----------|-------------------|-----------------------|----------------------|\n| LLM-planning step (qualquer subagente, groq pilot) | 1 (floor) via `calc_agent_cost_mcoin` | Starter(500)/Pro(2000)/Ent(10k) | alto | base |\n| Conte\u00fado / Blog (generate-content) | ~1\u201310 conforme tokens | idem | m\u00e9dio | m\u00e9dio |\n| Canvas Studio (imagem) | conforme `agent_pricing` + surcharge | idem | m\u00e9dio | m\u00e9dio |\n| Canvas Studio (v\u00eddeo DoP) | **125** (precedente real `canvas_video_spend`) | idem | baixo | alto unit\u00e1rio |\n| Orquestra\u00e7\u00e3o (orchestrate-content) | **10** (custo de pipeline existente) | idem | m\u00e9dio | alto |\n| Viral Miner (fetch-trends) | ~1\u20135 | idem | alto | m\u00e9dio |\n| Afiliados (link-forge) | ~1 | idem | m\u00e9dio | baixo (mas gera receita afiliado) |\n\n> Custo SEMPRE via RPC `calc_agent_cost_mcoin` + `deduct_mco_coins` (at\u00f4mico). Nunca hardcoded client-side. Sovereign = admin freebie (`sovereign_freebie=true`).\n\n---\n\n## 7. Constraints & Assumptions\n\n### Constraints\n- Reusar edge functions existentes (decis\u00e3o A1) \u2014 n\u00e3o reescrever m\u00f3dulos.\n- Refactor in-place (decis\u00e3o C) \u2014 sem rota `/constellation-v2` paralela.\n- Provider/model dos subagentes deve casar com `agent_pricing` (hoje h\u00e1 drift: Anthropic sem endpoint, \"Llama 3\" sem pricing \u2192 corrigir).\n- LGPD: credenciais BYOK cifradas e revog\u00e1veis; reset cascateia.\n\n### Assumptions\n- O usu\u00e1rio fornece suas pr\u00f3prias chaves (BYOK) por capability que precise de IA/servi\u00e7o externo.\n- O Sovereign opera em modo admin freebie (n\u00e3o debita) por design.\n- A maioria dos capabilities mapeia 1:1 a uma edge function j\u00e1 deployada.\n\n---\n\n## 8. Business Risk Register\n\n| Risk ID | Description | Probability | Impact | RPN | Mitigation |\n|---------|-------------|-------------|--------|-----|------------|\n| BR-RISK-CV2-001 | Vazamento cross-tenant (agente l\u00ea dados de outro user) | 2 | 5 | 10 | RLS `auth.uid()` default-deny + allowlist capability + security-review obrigat\u00f3rio |\n| BR-RISK-CV2-002 | Agente de produto ganha acesso ao sistema/dev (confus\u00e3o de escopo) | 2 | 5 | 10 | Denylist arquitetural: capabilities mapeiam s\u00f3 a fun\u00e7\u00f5es tenant-scoped; nenhuma a shell/repo/service-role |\n| BR-RISK-CV2-003 | Custo descontrolado (loop de execu\u00e7\u00e3o / tokens) | 3 | 4 | 12 | `max_tokens` cap + caps de consumo por user/API + dedu\u00e7\u00e3o at\u00f4mica + circuit breaker |\n| BR-RISK-CV2-004 | Reset apaga dados reais (execu\u00e7\u00f5es/perfil) por engano | 2 | 4 | 8 | Arquivar 31 execs antes do wipe (OTD-CV2-004); purge filtrado por owners \u00f3rf\u00e3os; backup |\n| BR-RISK-CV2-005 | Drift provider/model \u2192 execu\u00e7\u00e3o falha silenciosa | 3 | 3 | 9 | Default `groq/llama-3.3-70b-versatile` v\u00e1lido + `assertExecuteSuccess` (j\u00e1 existe) |\n| BR-RISK-CV2-006 | BYOK key inv\u00e1lida/revogada do tenant | 3 | 2 | 6 | Fail-closed HTTP 402/501 estruturado + banner UI link p/ settings |\n\n> Probability & Impact: 1=Low, 5=High. RPN = Probability \u00d7 Impact.\n\n---\n\n## 9. Business Acceptance Criteria\n\n| ID | Criterion | Verification Method |\n|----|-----------|-------------------|\n| BAC-CV2-001 | Um subagente m\u00f3dulo-bound executa a fun\u00e7\u00e3o real do m\u00f3dulo e retorna resultado material | E2E: criar subagente Viral Miner \u2192 executar \u2192 row `agent_executions` done + payload real de `fetch-trends` |\n| BAC-CV2-002 | Novo usu\u00e1rio n\u00e3o v\u00ea nenhum agente at\u00e9 criar | E2E: signup \u2192 `crew_agents` count=0 |\n| BAC-CV2-003 | Custo debitado corretamente; Sovereign n\u00e3o \u00e9 cobrado | REST: `mco_balance` do tenant cai pelo custo; Sovereign inalterado |\n| BAC-CV2-004 | Auditoria de isolamento: 0 acesso cross-tenant e 0 capability de sistema | Security-review + query de RLS + revis\u00e3o do registry de capabilities |\n| BAC-CV2-005 | Performance: cockpit renderiza \u226421 n\u00f3s suave, sem z-index quebrado | E2E UI audit 1920\u00d71080 (skill `e2e-user-zero-audit`) |\n\n---\n\n## 10. Traceability Matrix\n\n| MR ID | BR ID | PR ID (stub) |\n|-------|-------|--------------|\n| MR-CV2-001 | BR-CV2-001 | PR-CV2-001, PR-CV2-002 |\n| MR-CV2-002 | BR-CV2-002 | PR-CV2-003 |\n| MR-CV2-003 | BR-CV2-003 | PR-CV2-004 |\n| MR-CV2-004 | BR-CV2-004 | PR-CV2-005 |\n| MR-CV2-005 | BR-CV2-005 | PR-CV2-006, PR-CV2-007 |\n| MR-CV2-006 | BR-CV2-006 | PR-CV2-010 |\n| MR-CV2-007 | BR-CV2-007 | PR-CV2-011 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/02-brd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:47:03)*
+
+
+## 🤖 Claude *(02:47:04)*
+
+**Fase 1 selada** (MRD + BRD). Autorando **Fase 2** (PRD — ProdBOK + CXBOK):
+
+## 🤖 Claude *(02:48:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/03-prd.md",
+  "content": "# PRD \u2014 Product Requirements Document\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** ProdBOK + CXBOK\n**Status:** Draft\n\n---\n\n## 1. Product Vision Statement\n\n> Para o **criador/afiliado** que perde o dia trocando de ferramenta, a **Constela\u00e7\u00e3o v2** \u00e9 um **cockpit de agentes per-user** que executa o trabalho real dos m\u00f3dulos (conte\u00fado, canvas, tend\u00eancias, publica\u00e7\u00e3o, afiliados, analytics) sob seu comando e seu or\u00e7amento. Diferente de builders de agentes gen\u00e9ricos, nossos agentes j\u00e1 v\u00eam integrados aos m\u00f3dulos, medidos em mcoCoins e isolados na conta do usu\u00e1rio.\n\n---\n\n## 2. User Personas\n\n### Persona 1 \u2014 L\u00e9o, o Criador-Afiliado Solo (Primary)\n\n| Attribute | Detail |\n|-----------|--------|\n| Role | Criador de conte\u00fado que monetiza via afiliados (Mercado Livre, etc.) |\n| Goals | Produzir+publicar+monetizar mais, com menos tempo manual; controlar custo de IA |\n| Frustrations | 10+ ferramentas desconexas; medo de estourar custo de API; setup repetitivo |\n| Tech-savviness | 3/5 \u2014 usa ferramentas, n\u00e3o programa; entende \"chave de API\" e \"saldo\" |\n| MCORCH usage pattern | Entra no cockpit, manda a crew minerar+gerar+publicar, acompanha logs e saldo |\n| Quote | _\"Eu quero dizer 'vai' e a constela\u00e7\u00e3o trabalhar \u2014 sem eu abrir cinco abas e estourar minha cota.\"_ |\n\n### Persona 2 \u2014 Marina, a Gestora de Pequena Ag\u00eancia (Secondary)\n\n| Attribute | Detail |\n|-----------|--------|\n| Role | Gere m\u00faltiplas marcas/contas de clientes |\n| Goals | Escalar opera\u00e7\u00e3o sem contratar; isolar custo e credenciais por marca |\n| Frustrations | Risco de misturar credenciais entre clientes; sem teto de gasto por conta |\n| Tech-savviness | 4/5 |\n| MCORCH usage pattern | Configura crews por conta, define caps de consumo, audita economia por squad |\n| Quote | _\"Cada cliente tem que ter sua pr\u00f3pria crew, sua pr\u00f3pria chave e seu pr\u00f3prio teto \u2014 sem vazar nada entre eles.\"_ |\n\n---\n\n## 3. User Journey Maps\n\n### Journey: Primeira Crew Operacional (L\u00e9o, Happy Path)\n\n| Stage | Action | Touchpoint | Emotion | Opportunity |\n|-------|--------|-----------|---------|-------------|\n| Awareness | Abre `/dashboard/constellation` rec\u00e9m-criada (vazia) | Cockpit 3D vazio + CTA \"Criar minha crew\" | \ud83d\ude10 Neutral | Onboarding wizard claro |\n| Consideration | Wizard sugere os 4 deptos + mapa 4\u00d74 | Wizard/NodePalette | \ud83e\udd14 Curious | Pr\u00e9-config de m\u00f3dulo+BYOK por subagente |\n| Activation | Cria Lead + 1 subagente (ex.: Viral Miner) e binda chave BYOK | AgentDetail/config | \ud83d\ude0a Excited | Valida\u00e7\u00e3o de chave inline |\n| Value | Clica \"Executar\" \u2192 agente minera tend\u00eancias reais; v\u00ea log + custo mcoCoins | Live Logs + status 3D | \ud83d\ude80 Delighted | \"Run squad\" em cadeia |\n| Retention | Crew roda di\u00e1rio (pulse) e entrega resultados; saldo controlado | Dashboard de economia | \u2764\ufe0f Loyal | Caps + alertas de saldo |\n\n#### Edge Case 1: Chave BYOK ausente/revogada\n> Subagente sem chave v\u00e1lida \u2192 execu\u00e7\u00e3o fail-closed (HTTP 402/501) \u2192 toast PT-BR + banner com link para `/dashboard/settings`. Nenhuma cobran\u00e7a; nenhum fallback silencioso para chave global.\n\n#### Edge Case 2: Cap de consumo atingido\n> Execu\u00e7\u00e3o excede o cap di\u00e1rio do user/API \u2192 HTTP 402 estruturado \u2192 toast \"Limite di\u00e1rio deste m\u00f3dulo atingido\" \u2192 agente volta a `idle`, saldo intacto.\n\n### Journey: Isolamento por Marca (Marina, Happy Path resumido)\nCria crews separadas (futuro: por `project_id`); cada uma com BYOK e caps pr\u00f3prios; auditoria de economia por squad. Garantia: zero acesso cruzado (RLS).\n\n---\n\n## 4. Feature Inventory (MoSCoW)\n\n> Effort: S=horas, M=dias, L=semana, XL=sprint\n\n### Must Have (MVP)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-CV2-001 | **Capability invocation** \u2014 subagente executa fun\u00e7\u00e3o real do m\u00f3dulo via roteador | P1,P2 | BR-CV2-001 | L | vari\u00e1vel | reusa edge functions (A1) |\n| PR-CV2-002 | **Crew on-demand creation** \u2014 criar Lead/subagente m\u00f3dulo-bound | P1,P2 | BR-CV2-001 | M | 0 | extends \"+ Agente\" / wizard |\n| PR-CV2-003 | **Tenant isolation hard** \u2014 RLS + capability allowlist + system denylist | P1,P2 | BR-CV2-002 | M | 0 | security-critical |\n| PR-CV2-004 | **Cost control** \u2014 BYOK resolve + caps + dedu\u00e7\u00e3o at\u00f4mica | P1,P2 | BR-CV2-003 | L | medido | estende canvas-daily-cap + CEA |\n| PR-CV2-005 | **Empty-start** \u2014 remover auto-seed; signup vazio | P1,P2 | BR-CV2-004 | S | 0 | drop RPC auto-call |\n| PR-CV2-006 | **4\u00d74 capability map** \u2014 registry dos 16 capabilities por depto | P1,P2 | BR-CV2-005 | M | 0 | seed on-demand |\n| PR-CV2-007 | **Hierarchy Leads\u2192Core** \u2014 edges Directive/Reporting + render | P1 | BR-CV2-005 | S | 0 | j\u00e1 \u00e9 a topologia base |\n\n### Should Have (v1.0)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-CV2-010 | **Observabilidade v2** \u2014 live logs reais + economia por squad | P1,P2 | BR-CV2-006 | M | 0 | extends `useAgentActivity` |\n| PR-CV2-011 | **Performance/UX 3D** \u2014 cap n\u00f3s, LOD, fix z-index | P1 | BR-CV2-007 | M | 0 | resolve polui\u00e7\u00e3o atual |\n| PR-CV2-012 | **Access config UI** \u2014 por subagente: m\u00f3dulo + BYOK + caps | P1,P2 | BR-CV2-003 | M | 0 | \"acesso pr\u00e9-configurado\" |\n| PR-CV2-013 | **Run Squad / Run All** \u2014 disparo em cadeia BFS pela hierarquia | P1 | BR-CV2-001 | M | soma | reusa padr\u00e3o Canvas Run-All |\n\n### Could Have (Future)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-CV2-020 | **LLM tool-calling planner** \u2014 Core decide quais capabilities acionar | P1 | BR-CV2-001 | XL | vari\u00e1vel | evolu\u00e7\u00e3o de A1\u2192A2 (OTD-CV2-002) |\n| PR-CV2-021 | **Cron aut\u00f4nomo por subagente** \u2014 agenda pr\u00f3pria al\u00e9m do daily-pulse | P1 | BR-CV2-006 | L | vari\u00e1vel | estende agent-daily-pulse |\n| PR-CV2-022 | **Multi-brand por `project_id`** \u2014 crews por marca (Marina) | P2 | BR-CV2-002 | L | 0 | multi-tenant avan\u00e7ado |\n\n### Won't Have (This Cycle)\n- Agentes de produto com qualquer acesso ao sistema/dev/repo MCORCH (proibido por design \u2014 BR-CV2-002).\n- Marketplace de agentes entre tenants.\n- Edi\u00e7\u00e3o visual livre de hierarquia fora do modelo 4 deptos \u00d7 \u22644 (mant\u00e9m o cap de performance).\n\n---\n\n## 5. Release Phasing\n\n### MVP Scope\n**Target:** sprint v2.0\n**Included:** PR-CV2-001..007\n**Success gate:** BAC-CV2-001 (execu\u00e7\u00e3o real) + BAC-CV2-002 (empty-start) + BAC-CV2-003 (custo correto) + BAC-CV2-004 (isolamento) verdes.\n\n### v1.0 Scope\n**Adds:** PR-CV2-010, 011, 012, 013\n**Success gate:** BAC-CV2-005 (E2E UI audit 1920\u00d71080 passa) + dashboard de economia por squad vivo.\n\n### Future Scope\n**Items:** PR-CV2-020+\n**Condition:** ap\u00f3s MVP+v1.0 est\u00e1veis e \u22651 ciclo de calibra\u00e7\u00e3o de `MARGIN_FACTOR`.\n\n---\n\n## 6. Luxury UX Specifications\n\n### 6.1 Color & Visual Identity\n\n| Token | Value | Usage |\n|-------|-------|-------|\n| `--bg-deep` | `#0A0A0F` | Fundo do cockpit 3D |\n| `--accent-violet` | `#7C3AED` | CTA prim\u00e1rio, estados ativos, edges animados |\n| `--accent-cyan` | `#06B6D4` | Highlights de dados, status \"thinking\" |\n| `--glass-surface` | `rgba(255,255,255,0.04)` | Pain\u00e9is (HUD, AgentDetail, Logs) |\n| `--border-subtle` | `rgba(255,255,255,0.08)` | Bordas de painel |\n\nCores por departamento (mantidas do v1): Content `#ec4899` \u00b7 Tech `#3b82f6` \u00b7 Market `#22c55e` \u00b7 Ops `#f59e0b`. Core = branco/teal central.\n\n### 6.2 Animation Guidelines\n\n| Element | Library | Duration | Easing |\n|---------|---------|----------|--------|\n| Entrada de n\u00f3 (3D) | R3F / drei | 500ms | `spring(stiffness:80)` |\n| Status pulse (thinking/running) | CSS keyframes | 2s | `ease-in-out infinite` |\n| Edge animado (execu\u00e7\u00e3o ativa) | R3F particles | cont\u00ednuo | linear |\n| Pain\u00e9is (HUD/AgentDetail) | Framer Motion | 150\u2013300ms | `easeOut` |\n\n### 6.3 Interaction Patterns\n- **Pain\u00e9is:** glass morphism (`backdrop-blur-sm`), borda sutil, z-index em camadas **estritas** (corrige o bug atual): canvas 3D (z-0) < edges/labels (z-10) < HUD/pain\u00e9is (z-40) < toasts/modais (z-50).\n- **CTAs:** gradiente no hover; \"Executar\" e \"Run Squad\" com destaque violeta.\n- **Loading:** skeleton shimmer; status 3D pulsa (n\u00e3o spinner).\n- **Toasts:** `sonner` \u2014 sucesso violeta, erro vermelho, saldo baixo \u00e2mbar (reusa `LOW_BALANCE_THRESHOLD`).\n\n### 6.4 Accessibility (WCAG 2.1 AA)\n- Contraste \u2265 4.5:1 em texto sobre glass.\n- Bot\u00f5es s\u00f3-\u00edcone do HUD com ARIA labels.\n- Navega\u00e7\u00e3o por teclado nos pain\u00e9is 2D (o canvas 3D \u00e9 gesture/mouse, com fallback de lista acess\u00edvel).\n- Foco vis\u00edvel \u2265 2px.\n\n---\n\n## 7. Acceptance Criteria (Gherkin)\n\n```gherkin\nFeature: Constellation v2 \u2014 agentes operacionais per-user\n\n  Scenario: Executar capability real (PR-CV2-001)\n    Given um subagente \"Viral Miner\" m\u00f3dulo-bound com chave BYOK v\u00e1lida e saldo suficiente\n    When o usu\u00e1rio clica \"Executar tarefa\"\n    Then uma row real \u00e9 criada em agent_executions com status running\u2192done\n    And a edge function fetch-trends \u00e9 invocada com a chave BYOK do usu\u00e1rio\n    And o custo \u00e9 debitado via deduct_mco_coins (Sovereign = freebie)\n    And o resultado material aparece nos Live Logs\n\n  Scenario: Empty-start de novo usu\u00e1rio (PR-CV2-005)\n    Given um usu\u00e1rio rec\u00e9m-cadastrado\n    When ele abre /dashboard/constellation\n    Then crew_agents.count para o user \u00e9 0\n    And um CTA \"Criar minha crew\" \u00e9 exibido (sem auto-seed)\n\n  Scenario: Isolamento de tenant (PR-CV2-003)\n    Given dois usu\u00e1rios A e B com crews pr\u00f3prias\n    When A executa qualquer capability\n    Then nenhuma row/credencial/execu\u00e7\u00e3o de B \u00e9 lida ou escrita\n    And nenhuma capability mapeia a fun\u00e7\u00e3o de sistema/dev/service-role\n\n  Scenario: Cap de consumo atingido (PR-CV2-004)\n    Given um subagente cujo cap di\u00e1rio de mcoCoins/API foi atingido\n    When o usu\u00e1rio clica \"Executar\"\n    Then a resposta \u00e9 HTTP 402 estruturado\n    And o saldo permanece intacto\n    And um toast PT-BR informa o limite\n```\n\n---\n\n## 8. Traceability Matrix\n\n| MR ID | BR ID | PR ID |\n|-------|-------|-------|\n| MR-CV2-001 | BR-CV2-001 | PR-CV2-001, PR-CV2-002, PR-CV2-013, PR-CV2-020 |\n| MR-CV2-002 | BR-CV2-002 | PR-CV2-003, PR-CV2-022 |\n| MR-CV2-003 | BR-CV2-003 | PR-CV2-004, PR-CV2-012 |\n| MR-CV2-004 | BR-CV2-004 | PR-CV2-005 |\n| MR-CV2-005 | BR-CV2-005 | PR-CV2-006, PR-CV2-007 |\n| MR-CV2-006 | BR-CV2-006 | PR-CV2-010, PR-CV2-021 |\n| MR-CV2-007 | BR-CV2-007 | PR-CV2-011 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/03-prd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:48:13)*
+
+
+## 🤖 Claude *(02:48:14)*
+
+**Fase 2 selada** (PRD). Autorando **Fase 3** (FRD + SDD — SWEBOK + CISSP CBK):
+
+## 🤖 Claude *(02:49:15)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/04-frd.md",
+  "content": "# FRD \u2014 Functional Requirements Document\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** SWEBOK v4 (Software Requirements)\n**Status:** Draft\n\n---\n\n## 1. Scope Statement\n\nEspecifica os requisitos funcionais e n\u00e3o-funcionais da `constellation-v2`. Deriva do PRD `03-prd.md` e alimenta o SDD `05-sdd.md`.\n\n**In scope:** camada de roteamento de capability (subagente\u2192fun\u00e7\u00e3o real do m\u00f3dulo), refactor `agent-task-execute` para capabilities, BYOK + caps de consumo, empty-start, registry 4\u00d74, hierarquia Leads\u2192Core, observabilidade, performance/UX 3D, reset/migra\u00e7\u00e3o de dados.\n**Out of scope:** reescrita dos m\u00f3dulos (reusados via A1), qualquer acesso de agente de produto ao sistema/dev, LLM tool-calling planner (Future PR-CV2-020), multi-brand `project_id` (Future PR-CV2-022).\n\n---\n\n## 2. Functional Requirements\n\n> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron`\n\n| ID | Title | Description | Priority | PR Traced | Category | Test ID |\n|----|-------|-------------|----------|-----------|----------|---------|\n| FR-CV2-001 | Capability registry | Tabela/registry mapeando `capability_key` \u2192 edge function alvo + schema de input + custo base + flag `requires_byok` | Critical | PR-CV2-001 | DB | AT-CV2-001 |\n| FR-CV2-002 | Capability router (edge) | `agent-task-execute` v2 resolve `capability_key` do subagente, valida JWT, resolve BYOK, checa cap, invoca a edge function alvo, mede custo, grava `agent_executions` | Critical | PR-CV2-001 | EdgeFunction | AT-CV2-002 |\n| FR-CV2-003 | Subagent \u2192 capability binding | `crew_agents` ganha `capability_key` (nullable; Leads/Core = null) | Critical | PR-CV2-001 | DB | AT-CV2-003 |\n| FR-CV2-004 | Execute hook v2 | `useAgentTask` envia `capability_key` + payload; trata 200/402/501 via `assertExecuteSuccess` | Critical | PR-CV2-001 | Hook | AT-CV2-004 |\n| FR-CV2-005 | Crew creation on-demand | UI/wizard cria Lead/subagente com depto + `capability_key`; insere edge `Reporting`/`Directive` | Critical | PR-CV2-002 | UI+Hook | AT-CV2-005 |\n| FR-CV2-006 | Stable agent keys | Seed usa keys est\u00e1veis (`core`, `lead-<dept>`, `agent-<dept>-<capability>`) para idempot\u00eancia e re-link de execs | High | PR-CV2-002 | DB | AT-CV2-006 |\n| FR-CV2-010 | RLS tenant isolation | Todas as tabelas (`crew_agents`, `crew_edges`, `agent_capabilities` user-scoped, `agent_consumption_caps`, `agent_executions`) com RLS `auth.uid()` default-deny | Critical | PR-CV2-003 | DB | AT-CV2-010 |\n| FR-CV2-011 | Capability allowlist | Router s\u00f3 executa `capability_key` presente no registry de produto; rejeita desconhecidos (422) | Critical | PR-CV2-003 | EdgeFunction | AT-CV2-011 |\n| FR-CV2-012 | System-access denylist | Nenhuma capability mapeia a fun\u00e7\u00e3o de sistema/dev/service-role/shell; router roda s\u00f3 com JWT de user (nunca service-role no path user-facing) | Critical | PR-CV2-003 | EdgeFunction | AT-CV2-012 |\n| FR-CV2-020 | BYOK resolution | Router resolve chave do provider/servi\u00e7o de `user_api_keys` por `auth.uid()`; fail-closed 402/501 se ausente | Critical | PR-CV2-004 | EdgeFunction | AT-CV2-020 |\n| FR-CV2-021 | Consumption caps | Cap di\u00e1rio por user/API (`agent_consumption_caps`) verificado antes da execu\u00e7\u00e3o; HTTP 402 estruturado ao estourar | Critical | PR-CV2-004 | EdgeFunction+DB | AT-CV2-021 |\n| FR-CV2-022 | Atomic metering | Custo via `calc_agent_cost_mcoin` + `deduct_mco_coins` (Sovereign freebie); grava `cost_mcoin`/`cost_usd_micro` em `agent_executions` | Critical | PR-CV2-004 | EdgeFunction | AT-CV2-022 |\n| FR-CV2-023 | Access config UI | Por subagente: habilitar m\u00f3dulo + bindar chave BYOK + definir caps | High | PR-CV2-012 | UI+Hook | AT-CV2-023 |\n| FR-CV2-030 | Remove auto-seed | `useCrewData` N\u00c3O chama mais `seed_crew_template` quando crew vazia; estado vazio \u00e9 v\u00e1lido | Critical | PR-CV2-005 | Hook | AT-CV2-030 |\n| FR-CV2-031 | Empty-state UX | Cockpit vazio mostra CTA \"Criar minha crew\" + wizard | High | PR-CV2-005 | UI | AT-CV2-031 |\n| FR-CV2-040 | 4\u00d74 capability map seed | Seed on-demand cria 4 Leads + N subagentes m\u00f3dulo-bound conforme mapa aprovado | High | PR-CV2-006 | DB+Hook | AT-CV2-040 |\n| FR-CV2-041 | Hierarchy edges | `Directive` Core\u2192Lead, `Reporting` Lead\u2192subagente; render 3D | High | PR-CV2-007 | DB+UI | AT-CV2-041 |\n| FR-CV2-050 | Activity feed v2 | `useAgentActivity` projeta execs reais (incl. capability/result) nos Live Logs + status 3D; economia por squad no dashboard | Medium | PR-CV2-010 | Hook+UI | AT-CV2-050 |\n| FR-CV2-060 | Render budget | Cap \u226421 n\u00f3s/tenant; LOD; remo\u00e7\u00e3o do loop de re-render (getState pattern preservado) | Medium | PR-CV2-011 | UI | AT-CV2-060 |\n| FR-CV2-061 | Z-index layering | Camadas estritas: canvas(0) < edges/labels(10) < HUD/pain\u00e9is(40) < toasts/modais(50) | Medium | PR-CV2-011 | UI | AT-CV2-061 |\n| FR-CV2-070 | Data reset/migration | Purga owners \u00f3rf\u00e3os + wipe crew Sovereign + arquiva 31 execs antes do wipe | High | BR-CV2-004 | DB | AT-CV2-070 |\n\n---\n\n## 3. Non-Functional Requirements\n\n| ID | Category | Requirement | Target | Measurement |\n|----|----------|-------------|--------|-------------|\n| NFR-CV2-001 | Performance | Render do cockpit 3D (\u226421 n\u00f3s) | 60fps alvo / \u226530fps piso | DevTools / E2E UI audit |\n| NFR-CV2-002 | Performance | Router edge p95 (excl. lat\u00eancia do m\u00f3dulo alvo) | < 800ms | Supabase logs |\n| NFR-CV2-003 | Scalability | Tenants concorrentes sem degrada\u00e7\u00e3o | \u2265 100 (alvo inicial) | Load test |\n| NFR-CV2-004 | Availability | Uptime do cockpit + router | 99.5%/m\u00eas | Watchdog telemetry |\n| NFR-CV2-005 | Maintainability | Complexidade ciclom\u00e1tica por hook | \u2264 10 | ESLint |\n| NFR-CV2-006 | Security | Todo endpoint user-facing exige JWT de user v\u00e1lido | 100% | Security review |\n| NFR-CV2-007 | Security | Isolamento de tenant: 0 acesso cross-tenant | 100% | RLS audit + security-review |\n| NFR-CV2-008 | Security | Denylist de sistema: 0 capability mapeando fun\u00e7\u00e3o de sistema/dev | 100% | Registry review |\n| NFR-CV2-009 | Cost-safety | Toda execu\u00e7\u00e3o com IA respeita cap + `max_tokens` | 100% | Edge logs + caps table |\n| NFR-CV2-010 | Privacy (LGPD) | Credenciais BYOK cifradas, escopadas por `auth.uid()`, revog\u00e1veis; reset cascateia | 100% | Schema + delete_account audit |\n| NFR-CV2-011 | Observability | Toda execu\u00e7\u00e3o gera row em `agent_executions` + pulse em `infra_health_logs` | 100% | REST audit |\n| NFR-CV2-012 | Idempotency | Re-execu\u00e7\u00e3o do mesmo trigger n\u00e3o duplica cobran\u00e7a | 100% | idempotency key em `agent_executions` |\n\n---\n\n## 4. Interface Requirements\n\n### 4.1 UI \u2192 Hook \u2192 Edge Function Contract\n\n```\n[Component: AgentDetail.tsx / NodePalette / CrewWizard]\n  \u2193 calls\n[Hook: useAgentTask / useCrewData / useAgentCapabilities]\n  \u2193 POST + user JWT\n[Edge Function: agent-task-execute (v2 capability router)]\n  \u2193 resolve capability \u2192 invoke target\n[Edge Function alvo: fetch-trends | canvas-execute | orchestrate-content | link-forge | publish-* | generate-content]\n  \u2193 reads/writes (RLS auth.uid())\n[Tables: crew_agents \u00b7 agent_capabilities \u00b7 agent_consumption_caps \u00b7 agent_executions \u00b7 user_api_keys]\n```\n\n### 4.2 External API Contracts\n\n#### `POST /functions/v1/agent-task-execute` (v2)\n\n**Auth:** Bearer JWT (user scope) \u2014 service-role+`x-user-id` **somente** no path cron/admin (n\u00e3o user-facing).\n**Request:**\n```typescript\n{\n  agent_id: string,          // crew_agents.id (RLS-owned)\n  capability_key?: string,   // override; default = agent.capability_key\n  task_prompt?: string,      // contexto da tarefa (LLM-planning steps)\n  payload?: Record<string, unknown>,  // input espec\u00edfico da capability (ex.: { niche } p/ fetch-trends)\n}\n```\n**Response (200):**\n```typescript\n{\n  status: 'done' | 'failed' | 'timeout',\n  execution_id: string,      // agent_executions.id\n  capability_key: string,\n  result?: unknown,          // payload material do m\u00f3dulo alvo\n  cost_mcoin: number,\n  credits_charged: number,   // 0 quando Sovereign freebie ou falha\n  billed: boolean,\n}\n```\n**Error codes:**\n| Code | Condition |\n|------|-----------|\n| 401 | JWT ausente/inv\u00e1lido |\n| 402 | Saldo mcoCoins insuficiente OU cap de consumo atingido |\n| 422 | `capability_key` desconhecido (n\u00e3o no allowlist) OU payload inv\u00e1lido |\n| 501 | BYOK ausente para a capability (`<service>_not_configured`) |\n| 500 | Erro interno (logado em `infra_health_logs`) |\n\n---\n\n## 5. Data Requirements\n\n| Field | Type | Nullable | Validation Rule | Error Message (PT-BR) |\n|-------|------|----------|-----------------|----------------------|\n| `crew_agents.capability_key` | text | YES (null p/ Lead/Core) | \u2208 registry `agent_capabilities.capability_key` | \"Capability inv\u00e1lida para este agente\" |\n| `crew_agents.level` | int | NO | \u2208 {0,1,2} (Core/Lead/subagente) | \"N\u00edvel de agente inv\u00e1lido\" |\n| `crew_agents.squad` | text | YES (null p/ Core) | \u2208 {content,tech,market,ops} | \"Departamento inv\u00e1lido\" |\n| `agent_consumption_caps.daily_mcoin_cap` | numeric | NO | \u2265 0 | \"Cap deve ser n\u00e3o-negativo\" |\n| `agent_consumption_caps.api_key_ref` | text | NO | provider conhecido | \"Provider/API desconhecido\" |\n| `agent_capabilities.target_function` | text | NO | \u2208 edge functions deployadas (allowlist) | \"Fun\u00e7\u00e3o alvo n\u00e3o permitida\" |\n| `agent_executions.idempotency_key` | text | YES | \u00fanico por (agent_id, trigger) | \u2014 |\n\n---\n\n## 6. Test Strategy Matrix\n\n| FR ID | Unit Test | Integration Test | E2E Test | Notes |\n|-------|-----------|-----------------|----------|-------|\n| FR-CV2-002 (router) | \u2705 | \u2705 | \u2705 | resolve+invoke+meter; mock m\u00f3dulo alvo no unit |\n| FR-CV2-010..012 (isolation) | \u2705 | \u2705 | \u2705 | RLS cross-tenant deny + denylist registry |\n| FR-CV2-020..022 (BYOK/caps/meter) | \u2705 | \u2705 | \u2705 | fail-closed 402/501; dedu\u00e7\u00e3o at\u00f4mica |\n| FR-CV2-030 (no auto-seed) | \u2705 | \u2705 | \u2705 | signup \u2192 count 0 |\n| FR-CV2-040..041 (4\u00d74 + edges) | \u2705 | \u2705 | \u2014 | seed on-demand |\n| FR-CV2-060..061 (perf/z-index) | \u2014 | \u2014 | \u2705 | E2E UI audit 1920\u00d71080 |\n| FR-CV2-070 (reset) | \u2705 (dry-run) | \u2705 | \u2014 | arquiva antes do wipe; idempotente |\n\n**Test files location:**\n- Unit: `src/hooks/__tests__/useAgentTask.test.ts`, `useAgentCapabilities.test.ts`\n- Integration: `src/__tests__/integration/constellation-v2.test.ts`\n- E2E: `scripts/qa/e2e-user-zero/flows/constellation-v2.ts` + skill `e2e-user-zero-audit`\n\n---\n\n## 7. Traceability Matrix\n\n| PR ID | FR ID | NFR ID |\n|-------|-------|--------|\n| PR-CV2-001 | FR-CV2-001, 002, 003, 004 | NFR-CV2-002, 006, 011 |\n| PR-CV2-002 | FR-CV2-005, 006 | NFR-CV2-005 |\n| PR-CV2-003 | FR-CV2-010, 011, 012 | NFR-CV2-006, 007, 008 |\n| PR-CV2-004 | FR-CV2-020, 021, 022 | NFR-CV2-009, 010, 012 |\n| PR-CV2-005 | FR-CV2-030, 031 | \u2014 |\n| PR-CV2-006 | FR-CV2-040 | NFR-CV2-001 |\n| PR-CV2-007 | FR-CV2-041 | NFR-CV2-001 |\n| PR-CV2-010 | FR-CV2-050 | NFR-CV2-011 |\n| PR-CV2-011 | FR-CV2-060, 061 | NFR-CV2-001 |\n| PR-CV2-012 | FR-CV2-023 | NFR-CV2-010 |\n| (reset) | FR-CV2-070 | NFR-CV2-010 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/04-frd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:18)*
+
+
+## 🤖 Claude *(02:49:20)*
+
+Autorando **SDD** (05 — SWEBOK + CISSP CBK, o doc técnico mais denso):
+
+## 🤖 Claude *(02:50:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/05-sdd.md",
+  "content": "# SDD \u2014 System Design Document\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** SWEBOK v4 (Software Design) + CISSP CBK 2024 (Software Development Security)\n**Status:** Draft\n\n---\n\n## 1. Architecture Overview\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  PRESENTATION (display-only)                                       \u2502\n\u2502  ConstellationPage \u00b7 CrewGraph (R3F) \u00b7 AgentNode/Edge/SquadHull    \u2502\n\u2502  HUD \u00b7 AgentDetail \u00b7 LogsPanel \u00b7 CrewWizard \u00b7 AccessConfigCard     \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                            \u2502 calls (hooks only)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  LOGIC (Harness Engineering)                                       \u2502\n\u2502  useCrewData \u00b7 useAgentTask \u00b7 useAgentCapabilities \u00b7               \u2502\n\u2502  useAgentActivity \u00b7 useAccessConfig \u00b7 store/useCrewStore (Zustand) \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                            \u2502 HTTP + USER JWT (nunca service-role aqui)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  EDGE \u2014 CAPABILITY ROUTER                                          \u2502\n\u2502  agent-task-execute (v2): JWT \u2192 resolve capability \u2192 BYOK \u2192        \u2502\n\u2502  cap check \u2192 invoke target \u2192 meter \u2192 write agent_executions        \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u2502 invoke (allowlist)                 \u2502 RLS auth.uid()\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  EXISTING MODULE EDGE FNs (A1)    \u2502  \u2502  DB LAYER (RLS default-deny)   \u2502\n\u2502  fetch-trends \u00b7 canvas-execute \u00b7  \u2502  \u2502  crew_agents \u00b7 crew_edges      \u2502\n\u2502  orchestrate-content \u00b7 link-forge \u2502  \u2502  agent_capabilities (registry) \u2502\n\u2502  \u00b7 publish-{meta,social,wordpress}\u2502  \u2502  agent_consumption_caps        \u2502\n\u2502  \u00b7 generate-content \u00b7 analytics   \u2502  \u2502  agent_executions \u00b7 user_api_keys\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                            \u2502\n                  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                  \u2502 mcorch_nodes/edges \u2502  \u2190 observation node por execu\u00e7\u00e3o (opcional)\n                  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n**Princ\u00edpio-chave (A1):** o router **n\u00e3o reimplementa** m\u00f3dulos \u2014 ele \u00e9 um *despachante* fino que valida, resolve credencial/cap, e delega \u00e0 edge function j\u00e1 existente, capturando custo e resultado.\n\n---\n\n## 2. Component Catalog\n\n### 2.1 New / Modified Custom Hooks (`src/hooks/`)\n\n| Hook | File | Responsibility | TanStack Query keys |\n|------|------|---------------|---------------------|\n| `useAgentCapabilities` | `useAgentCapabilities.ts` (novo) | l\u00ea registry `agent_capabilities` + bindings do user | `['agent_capabilities', userId]` |\n| `useAgentTask` | `useAgentTask.ts` (modificar) | dispara `agent-task-execute` v2 com `capability_key`+payload; `assertExecuteSuccess` | mutation |\n| `useCrewData` | `useCrewData.ts` (modificar) | **remove** auto-seed; estado vazio v\u00e1lido | `['crew_agents', userId]` `['crew_edges', userId]` |\n| `useAccessConfig` | `useAccessConfig.ts` (novo) | CRUD de `agent_consumption_caps` + binding BYOK por subagente | `['agent_caps', userId]` |\n| `useAgentActivity` | `useAgentActivity.ts` (modificar) | projeta execs reais (+capability/result) nos logs/status | `['agent_executions', userId]` |\n\n### 2.2 New / Modified Display Components (`src/components/`)\n\n| Component | File | Props | Hook consumed |\n|-----------|------|-------|--------------|\n| `CrewWizard` | `components/constellation/CrewWizard.tsx` (novo) | `onCreate` | `useCrewData`, `useAgentCapabilities` |\n| `AccessConfigCard` | `components/constellation/AccessConfigCard.tsx` (novo) | `agentId` | `useAccessConfig` |\n| `AgentDetail` | `components/panels/AgentDetail.tsx` (modificar) | `agentId` | `useAgentTask` (capability-aware) |\n| `EmptyConstellation` | `components/constellation/EmptyConstellation.tsx` (novo) | \u2014 | \u2014 (CTA \u2192 wizard) |\n| `CrewGraph` | `components/graph/CrewGraph.tsx` (modificar) | \u2014 | `useCrewStore` (z-index/LOD/node-cap) |\n\n### 2.3 New / Modified Edge Functions (`supabase/functions/`)\n\n| Function | Path | Auth | mcoCoins | Secrets needed |\n|----------|------|------|----------|----------------|\n| `agent-task-execute` (v2) | `supabase/functions/agent-task-execute/index.ts` | JWT (user) | medido via RPC | nenhum pr\u00f3prio; resolve BYOK do user; fallback Sovereign usa vault s\u00f3 em path freebie documentado |\n| (target fns \u2014 reuso) | `fetch-trends`, `canvas-execute`, `orchestrate-content`, `link-forge`, `process-affiliate-link`, `publish-meta/social/wordpress`, `generate-content` | JWT (user) | conforme cada uma | j\u00e1 deployadas (sem mudan\u00e7a de contrato) |\n\n### 2.4 Zustand Store Slices\n\n| Slice | Store file | State shape | Actions |\n|-------|------------|-------------|---------|\n| crew (existente, estender) | `src/store/useCrewStore.ts` | `agents`, `edges`, `logs`, `selectedAgentId`, **`emptyState:boolean`** | `setAgents`, `setEdges`, `setLogs`, `updateAgentStatus`, **(remover `seedEnterpriseStructure`)** |\n\n### 2.5 New DB Objects\n\n| Object | Type | Purpose | Migration file |\n|--------|------|---------|---------------|\n| `agent_capabilities` | Table | registry capability_key \u2192 target_function + input schema + custo base + requires_byok | `<ts>_constellation_v2_capabilities.sql` |\n| `agent_consumption_caps` | Table | caps di\u00e1rios por user/API/agente | `<ts>_constellation_v2_caps.sql` |\n| `crew_agents.capability_key` | Column | binding subagente\u2192capability | `<ts>_constellation_v2_crew_capability.sql` |\n| `agent_executions_archive` | Table | arquivo dos 31 execs antes do reset (OTD-CV2-004) | `<ts>_constellation_v2_exec_archive.sql` |\n| `agent_executions.idempotency_key` | Column | anti-double-charge | mesma migra\u00e7\u00e3o do router |\n\n---\n\n## 3. Data Flow Diagrams\n\n### Use Case: Subagente Viral Miner minera tend\u00eancias reais\n\n```\nUser            useAgentTask        agent-task-execute(v2)        fetch-trends        DB\n \u2502                  \u2502                       \u2502                          \u2502              \u2502\n \u2502\u2500[Executar]\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502                       \u2502                          \u2502              \u2502\n \u2502                  \u2502\u2500[POST JWT {agent_id}]\u25b6\u2502                          \u2502              \u2502\n \u2502                  \u2502                       \u2502\u2500[SELECT crew_agents RLS]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 capability_key='viral_miner'\n \u2502                  \u2502                       \u2502\u2500[lookup agent_capabilities]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 target='fetch-trends', requires_byok\n \u2502                  \u2502                       \u2502\u2500[resolve user_api_keys (BYOK)]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 (402/501 se ausente)\n \u2502                  \u2502                       \u2502\u2500[check agent_consumption_caps]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 (402 se estourado)\n \u2502                  \u2502                       \u2502\u2500[INSERT agent_executions status=running]\u2500\u25b6\u2502 \u2192 execution_id\n \u2502                  \u2502                       \u2502\u2500[invoke fetch-trends (user JWT/BYOK)]\u2500\u2500\u2500\u2500\u25b6\u2502 dados reais\n \u2502                  \u2502                       \u2502\u25c0\u2500[trends payload]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502              \u2502\n \u2502                  \u2502                       \u2502\u2500[calc_agent_cost_mcoin + deduct]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 (Sovereign freebie skip)\n \u2502                  \u2502                       \u2502\u2500[UPDATE agent_executions status=done]\u2500\u2500\u2500\u2500\u25b6\u2502\n \u2502                  \u2502                       \u2502\u2500[pulse infra_health_logs]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502\n \u2502                  \u2502\u25c0\u2500[200 {result,cost}]\u2500\u2500\u2502                          \u2502              \u2502\n \u2502\u25c0\u2500[logs+status]\u2500\u2500\u2500\u2502                       \u2502                          \u2502              \u2502\n```\n\n---\n\n## 4. API Contract Definitions\n\n> Todo endpoint user-facing valida JWT de user ANTES de qualquer l\u00f3gica. **Service-role nunca no path user-facing** (FR-CV2-012).\n\n### `POST /functions/v1/agent-task-execute` (v2 capability router)\n\n```typescript\ninterface AgentTaskExecuteV2Request {\n  agent_id: string            // crew_agents.id (RLS-owned)\n  capability_key?: string     // default = agent.capability_key\n  task_prompt?: string\n  payload?: Record<string, unknown>\n  idempotency_key?: string\n}\n\ninterface AgentTaskExecuteV2Response {\n  status: 'done' | 'failed' | 'timeout'\n  execution_id: string\n  capability_key: string\n  result?: unknown\n  cost_mcoin: number\n  credits_charged: number\n  billed: boolean\n}\n\n// Sequ\u00eancia interna:\n// 1. JWT user \u2192 auth.getUser  (401)\n// 2. SELECT crew_agents WHERE id=agent_id  (RLS auth.uid() \u2014 404 se n\u00e3o-dono)\n// 3. resolve capability_key \u2192 agent_capabilities (allowlist \u2014 422 se desconhecido)\n// 4. if requires_byok: resolve user_api_keys[provider] (501 se ausente)\n// 5. check agent_consumption_caps daily (402 se estourado)\n// 6. INSERT agent_executions (status=running, idempotency_key)\n// 7. invoke target_function com BYOK/contexto do user\n// 8. calc_agent_cost_mcoin \u2192 deduct_mco_coins (skip se Sovereign)  (402 se saldo insuf.)\n// 9. UPDATE agent_executions (done/failed + cost + result)\n// 10. pulse infra_health_logs service='agent-task-execute'\n```\n\n---\n\n## 5. Security Design\n\n### 5.1 Threat Model (STRIDE)\n\n| Component | Threat | Type | Severity | Mitigation |\n|-----------|--------|------|----------|------------|\n| `agent-task-execute` | acesso n\u00e3o autenticado | Spoofing | High | JWT user no entry-point; sem service-role no path user-facing |\n| `crew_agents`/`agent_executions` | leitura cross-tenant | Information Disclosure | Critical | RLS `user_id = auth.uid()` default-deny |\n| Capability router | **agente aciona fun\u00e7\u00e3o de sistema/dev** | Elevation of Privilege | Critical | **denylist**: `agent_capabilities.target_function` \u2208 allowlist de fun\u00e7\u00f5es tenant-scoped; nunca shell/migrations/service-role |\n| BYOK keys | exfiltra\u00e7\u00e3o de credencial | Information Disclosure | Critical | coluna RLS + column-REVOKE de leitura ampla; resolvida s\u00f3 server-side no router; nunca retornada ao client |\n| mcoCoins deduction | bypass client-side | Tampering | Critical | s\u00f3 via RPC `deduct_mco_coins` server-side |\n| Consumption caps | loop de custo / esgotar quota | DoS / financeiro | High | cap di\u00e1rio por user/API + `max_tokens` + circuit breaker |\n| Reset/migration | apagar dados reais | Repudiation/loss | High | arquivar execs + purge filtrado por owners \u00f3rf\u00e3os + dry-run |\n\n### 5.2 RLS Policy Definitions\n\n```sql\n-- agent_capabilities: registry GLOBAL (system rows, read-all autenticado) + bindings per-user via crew_agents\nALTER TABLE public.agent_capabilities ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"agent_capabilities: read for authenticated\"\n  ON public.agent_capabilities FOR SELECT\n  USING (auth.uid() IS NOT NULL);\n-- writes: service_role only (seed) \u2014 sem policy de INSERT/UPDATE para user\n\n-- agent_consumption_caps: per-user\nALTER TABLE public.agent_consumption_caps ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"caps: users manage own\"\n  ON public.agent_consumption_caps FOR ALL\n  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n```\n\n> `crew_agents`, `crew_edges`, `agent_executions`, `user_api_keys` j\u00e1 possuem RLS per-user; v2 reauditar\u00e1 e endurecer\u00e1 default-deny.\n\n### 5.3 JWT Validation Points\n\n```typescript\nconst authHeader = req.headers.get('Authorization')\nif (!authHeader) return json(401, { error: 'unauthorized' })\nconst { data: { user }, error } = await supabaseUserClient.auth.getUser(\n  authHeader.replace('Bearer ', '')\n)\nif (error || !user) return json(401, { error: 'unauthorized' })\n// TODAS as queries subsequentes usam o client com o JWT do user (RLS aplica auth.uid()).\n```\n\n### 5.4 Secrets Inventory\n\n| Secret Name | Used In | Vault Location | Rotation Policy |\n|-------------|---------|----------------|----------------|\n| (BYOK do user) `user_api_keys.<provider>_api_key` | router \u2192 m\u00f3dulo alvo | tabela per-user (RLS) | usu\u00e1rio gerencia/revoga |\n| `SUPABASE_SERVICE_ROLE_KEY` | **somente** path cron/admin de `agent-daily-pulse` (N\u00c3O user-facing) | Supabase vault | padr\u00e3o |\n| `SOVEREIGN_USER_ID` | gate de freebie (`user.id === SOVEREIGN_USER_ID`) | Supabase vault | est\u00e1vel |\n| (fallback global por capability) ex.: `GEMINI_API_KEY` | s\u00f3 path cron/onboarding default documentado | Supabase vault | per API Tenancy Model |\n\n> \u26a0\ufe0f NUNCA commitar valores. Apenas nomes de chave aparecem na documenta\u00e7\u00e3o. BYOK nunca retorna ao client.\n\n---\n\n## 6. Infrastructure Touchpoints\n\n| Infrastructure | Usage | Impact |\n|----------------|-------|--------|\n| `mega-brain-daemon` | watchdog do router + caps | self-heal se error rate alto |\n| `infra_health_logs` | novo servi\u00e7o `agent-task-execute` + `constellation_v2_*` events | telemetria por execu\u00e7\u00e3o |\n| `agent-daily-pulse` (cron) | estende para incluir os subagentes (n\u00e3o s\u00f3 Directors) | execu\u00e7\u00f5es di\u00e1rias por subagente |\n| ChromaDB / mcorch_nodes | observation node opcional por execu\u00e7\u00e3o (mesh) | rastreabilidade GraphRAG |\n\n---\n\n## 7. Migration Stubs\n\n```sql\n-- ============================================================\n-- MIGRATION: <ts>_constellation_v2_capabilities.sql\n-- ============================================================\nCREATE TABLE public.agent_capabilities (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  capability_key  text UNIQUE NOT NULL,            -- ex.: 'viral_miner', 'canvas_studio'\n  department      text NOT NULL,                    -- content|tech|market|ops\n  display_name    text NOT NULL,\n  target_function text NOT NULL,                    -- edge function ALVO (allowlist)\n  input_schema    jsonb NOT NULL DEFAULT '{}',\n  base_mcoin_cost numeric NOT NULL DEFAULT 0,\n  requires_byok   boolean NOT NULL DEFAULT true,\n  byok_provider   text,                             -- coluna em user_api_keys\n  is_active       boolean NOT NULL DEFAULT true,\n  created_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.agent_capabilities ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"agent_capabilities: read for authenticated\"\n  ON public.agent_capabilities FOR SELECT USING (auth.uid() IS NOT NULL);\n-- writes: service_role only (seed script)\n\n-- crew_agents binding\nALTER TABLE public.crew_agents\n  ADD COLUMN IF NOT EXISTS capability_key text REFERENCES public.agent_capabilities(capability_key);\n\n-- consumption caps (per user/API)\nCREATE TABLE public.agent_consumption_caps (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  api_key_ref     text NOT NULL,                    -- provider/servi\u00e7o\n  daily_mcoin_cap numeric NOT NULL DEFAULT 0,        -- 0 = ilimitado (Sovereign)\n  agent_id        uuid REFERENCES public.crew_agents(id) ON DELETE CASCADE, -- null = cap por API global do user\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.agent_consumption_caps ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"caps: users manage own\"\n  ON public.agent_consumption_caps FOR ALL\n  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n\n-- exec idempotency + archive\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS idempotency_key text;\nCREATE TABLE public.agent_executions_archive (LIKE public.agent_executions INCLUDING ALL);\n```\n\n> RLS habilitado em toda tabela nova (default-deny). Toda migra\u00e7\u00e3o nova passa por `/security-review` antes do commit (FMEA-011).\n\n---\n\n## 8. Open Technical Decisions\n\n| ID | Description | Option A | Option B | Recommendation | Owner |\n|----|-------------|----------|----------|----------------|-------|\n| OTD-CV2-001 | Reuso de `crew_agents` vs. tabela v2 nova | estender `crew_agents` + `agent_capabilities` | nova `constellation_v2_agents` | **A** (in-place, migra\u00e7\u00e3o + binding) | Sovereign |\n| OTD-CV2-002 | Modelo de execu\u00e7\u00e3o | binding direto 1 capability\u21921 fun\u00e7\u00e3o | LLM tool-calling planner | **A na fase 1**; B (PR-CV2-020) depois | Sovereign |\n| OTD-CV2-003 | Granularidade do cap | por-API global do user | por-agente | **h\u00edbrido** (linha com `agent_id` null = global; com agent_id = espec\u00edfico) | Sovereign |\n| OTD-CV2-004 | 31 execs \u00f3rf\u00e3os no reset | wipe | arquivar | **arquivar** em `agent_executions_archive` | Sovereign |\n| OTD-CV2-005 | provider/model default | manter seed atual (drift) | `groq/llama-3.3-70b-versatile` | **groq** (v\u00e1lido em `agent_pricing`) | Engineering |\n| OTD-CV2-006 | Publica\u00e7\u00e3o Social | N subagentes | 1 subagente roteando publish-* | **1** (roteia meta/social/wordpress) | Sovereign |\n| OTD-CV2-007 | Render 3D em baixa perf | degradar p/ 2D | R3F + LOD + cap n\u00f3s | **R3F + LOD + cap \u226421** | Engineering |\n| OTD-CV2-008 | Watchdog/Infra subagente | pode acionar self-heal | read-only no escopo do tenant | **read-only** (sem acesso a system) | Sovereign |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/05-sdd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:50:49)*
+
+
+## 🤖 Claude *(02:50:50)*
+
+**Fase 3 selada** (FRD + SDD). Autorando **Fase 4** (Data Model + Process Flow — DMBOK + BPM CBOK):
+
+## 🤖 Claude *(02:51:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/06-data-model.md",
+  "content": "# Data & Knowledge Model\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)\n**Status:** Draft\n\n---\n\n## 1. Conceptual Data Model\n\n```\n[profiles (tenant)] \u2500\u2500(1:N)\u2500\u2500\u25b6 [crew_agents] \u2500\u2500(N:1)\u2500\u2500\u25b6 [agent_capabilities (registry)]\n       \u2502                            \u2502                            \u2502\n       \u2502                            \u2502 (N:M via crew_edges)        \u2502 (1:1) target_function\n       \u2502                            \u25bc                            \u25bc\n       \u2502                       [crew_edges]              [edge function ALVO (reuso)]\n       \u2502\n       \u251c\u2500\u2500(1:N)\u2500\u2500\u25b6 [agent_consumption_caps]\n       \u251c\u2500\u2500(1:N)\u2500\u2500\u25b6 [user_api_keys (BYOK)]\n       \u2514\u2500\u2500(1:N)\u2500\u2500\u25b6 [agent_executions] \u2500\u2500(archive)\u2500\u2500\u25b6 [agent_executions_archive]\n```\n\n**Entities:**\n- **crew_agents:** o n\u00f3 da constela\u00e7\u00e3o (Core L0, Lead L1, subagente L2 m\u00f3dulo-bound). Per-user.\n- **crew_edges:** hierarquia (Directive Core\u2192Lead, Reporting Lead\u2192subagente). Per-user.\n- **agent_capabilities:** registry GLOBAL (system rows) capability_key \u2192 target_function + custo + requires_byok.\n- **agent_consumption_caps:** tetos de consumo por user/API/agente.\n- **agent_executions:** log append-only de toda execu\u00e7\u00e3o real (tokens, custo, lat\u00eancia, resultado).\n- **user_api_keys:** chaves BYOK per-user (j\u00e1 existe).\n\n---\n\n## 2. Logical Data Model\n\n### Table: `agent_capabilities` (registry global \u2014 system data)\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `capability_key` | `text` | NOT NULL (UNIQUE) | \u2014 | \u2014 | ex.: `viral_miner`, `canvas_studio`, `orchestration` |\n| `department` | `text` | NOT NULL | \u2014 | \u2014 | content\\|tech\\|market\\|ops |\n| `display_name` | `text` | NOT NULL | \u2014 | \u2014 | r\u00f3tulo PT-BR |\n| `target_function` | `text` | NOT NULL | \u2014 | \u2014 | edge function alvo (allowlist) |\n| `input_schema` | `jsonb` | NOT NULL | `'{}'` | \u2014 | shape do payload |\n| `base_mcoin_cost` | `numeric` | NOT NULL | `0` | \u2014 | custo base (al\u00e9m do medido por tokens) |\n| `requires_byok` | `bool` | NOT NULL | `true` | \u2014 | precisa chave do user |\n| `byok_provider` | `text` | NULL | \u2014 | \u2014 | coluna em `user_api_keys` |\n| `is_active` | `bool` | NOT NULL | `true` | \u2014 | gate |\n| `created_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | audit |\n\n### Table: `crew_agents` (existente \u2014 coluna nova)\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| ... (existentes: id, user_id, agent_key, name, role, avatar, provider, model, status, position, system_prompt, priority, level, squad) | | | | | preservados |\n| `capability_key` | `text` | NULL | \u2014 | `agent_capabilities.capability_key` | binding (null p/ Core/Lead) |\n\n### Table: `agent_consumption_caps`\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `user_id` | `uuid` | NOT NULL | \u2014 | `auth.users.id` | tenant |\n| `api_key_ref` | `text` | NOT NULL | \u2014 | \u2014 | provider/servi\u00e7o |\n| `daily_mcoin_cap` | `numeric` | NOT NULL | `0` | \u2014 | 0 = ilimitado (Sovereign) |\n| `agent_id` | `uuid` | NULL | \u2014 | `crew_agents.id` | null = cap por-API global do user |\n| `created_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | audit |\n| `updated_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | audit |\n\n### Table: `agent_executions` (existente \u2014 coluna nova)\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| ... (existentes: id, agent_id, user_id, status, provider, model, tokens_in, tokens_out, cost_mcoin, cost_usd_micro, latency_ms, error_msg, started_at, completed_at) | | | | | preservados |\n| `capability_key` | `text` | NULL | \u2014 | \u2014 | qual capability rodou |\n| `idempotency_key` | `text` | NULL | \u2014 | \u2014 | anti-double-charge |\n| `result_summary` | `text` | NULL | \u2014 | \u2014 | s\u00edntese material do resultado |\n\n---\n\n## 3. Supabase Physical Schema Stubs\n\n```sql\n-- ============================================================\n-- MIGRATION: <ts>_constellation_v2_schema.sql\n-- (passa por /security-review antes do commit \u2014 FMEA-011)\n-- ============================================================\n\n-- 1. Registry global de capabilities\nCREATE TABLE public.agent_capabilities (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  capability_key  text UNIQUE NOT NULL,\n  department      text NOT NULL CHECK (department IN ('content','tech','market','ops')),\n  display_name    text NOT NULL,\n  target_function text NOT NULL,\n  input_schema    jsonb NOT NULL DEFAULT '{}',\n  base_mcoin_cost numeric NOT NULL DEFAULT 0 CHECK (base_mcoin_cost >= 0),\n  requires_byok   boolean NOT NULL DEFAULT true,\n  byok_provider   text,\n  is_active       boolean NOT NULL DEFAULT true,\n  created_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.agent_capabilities ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"agent_capabilities: read for authenticated\"\n  ON public.agent_capabilities FOR SELECT USING (auth.uid() IS NOT NULL);\n-- writes: service_role only (seed)\n\n-- 2. crew_agents binding\nALTER TABLE public.crew_agents\n  ADD COLUMN IF NOT EXISTS capability_key text\n  REFERENCES public.agent_capabilities(capability_key);\n\n-- 3. consumption caps\nCREATE TABLE public.agent_consumption_caps (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  api_key_ref     text NOT NULL,\n  daily_mcoin_cap numeric NOT NULL DEFAULT 0 CHECK (daily_mcoin_cap >= 0),\n  agent_id        uuid REFERENCES public.crew_agents(id) ON DELETE CASCADE,\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (user_id, api_key_ref, agent_id)\n);\nALTER TABLE public.agent_consumption_caps ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"caps: users manage own\"\n  ON public.agent_consumption_caps FOR ALL\n  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\nCREATE INDEX agent_consumption_caps_user_idx ON public.agent_consumption_caps (user_id);\n\n-- 4. exec idempotency + archive (preserva 31 execs reais antes do reset)\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS capability_key text;\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS idempotency_key text;\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS result_summary text;\nCREATE TABLE public.agent_executions_archive (LIKE public.agent_executions INCLUDING ALL);\n```\n\n---\n\n## 4. GraphRAG Knowledge Nodes\n\n### Node Types Introduced\n\n| node_type | Title Pattern | Content Fields | Embedding Source |\n|-----------|--------------|----------------|-----------------|\n| `observation` (reuso) | `constellation-v2-exec-<id>` | capability + result_summary + custo | `display_name + result_summary` |\n| `documentation_suite` | `bok-scribe-seal-constellation-v2-v1` | s\u00edntese da su\u00edte | content do seal |\n\n> A v2 N\u00c3O cria um novo `node_type` pr\u00f3prio para agentes no mesh \u2014 os `crew_agents` vivem na sua tabela; a malha recebe **observations** opcionais por execu\u00e7\u00e3o (rastreabilidade), via padr\u00e3o CEA.\n\n### Edge Types Introduced\n\n| Edge relationship | Source node_type | Target node_type | Metadata |\n|-------------------|-----------------|-----------------|----------|\n| `DERIVES_FROM` | documentation_suite | documentation_suite (parent seal) | weight=1.0 |\n| `observes` (reuso auto-stitch) | observation | markdown_file/feature | capability ref |\n\n### Embedding Trigger\nO seal `documentation_suite` \u00e9 inserido com `embedding IS NULL` \u2192 `trg_mcorch_embed_on_insert` (pg_net) dispara `embed-mcorch-node` (768d). Confirmar via REST `embedding=not.is.null`.\n\n### FSRS-6 Parameters\n\n| Field | Initial Value | Decay Rule |\n|-------|--------------|------------|\n| `stability_score` | `0.85` (seal) | migra\u00e7\u00e3o `20260425190000` |\n| `revenue_impact` | modesto n\u00e3o-zero (v2 ativa consumo mcoCoins + afiliado) | atualizado por ciclo econ\u00f4mico |\n\n---\n\n## 5. Tenant Isolation Map\n\n| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |\n|-------|----------------|-------------------|-------------------------------|\n| `crew_agents` | \u2705 Required | Futuro (multi-brand PR-CV2-022) | No |\n| `crew_edges` | \u2705 Required | Futuro | No |\n| `agent_capabilities` | \u2014 (registry global) | \u2014 | **Yes** (system data, read-all autenticado) |\n| `agent_consumption_caps` | \u2705 Required | \u2014 | No |\n| `agent_executions` | \u2705 Required | \u2014 | No |\n| `user_api_keys` (BYOK) | \u2705 Required | \u2014 | No |\n\n> **Barreira de sistema (BR-CV2-002):** `agent_capabilities.target_function` \u00e9 um **allowlist** de fun\u00e7\u00f5es tenant-scoped. Nenhuma linha pode apontar para fun\u00e7\u00e3o de sistema/dev, migrations, service-role, shell, ou pipelines do Pantheon OpenClaw. Revis\u00e3o do registry \u00e9 gate de security-review.\n\n---\n\n## 6. Data Quality Rules\n\n| Table | Column | Rule | Violation Message (PT-BR) |\n|-------|--------|------|--------------------------|\n| `crew_agents` | `capability_key` | se `level=2` ent\u00e3o NOT NULL e \u2208 registry; se `level\u2208{0,1}` ent\u00e3o NULL | \"Subagente precisa de capability; Lead/Core n\u00e3o t\u00eam\" |\n| `crew_agents` | `level` | \u2208 {0,1,2} | \"N\u00edvel inv\u00e1lido\" |\n| `agent_capabilities` | `target_function` | \u2208 allowlist de fun\u00e7\u00f5es tenant-scoped | \"Fun\u00e7\u00e3o alvo n\u00e3o permitida (fora do allowlist)\" |\n| `agent_consumption_caps` | `daily_mcoin_cap` | \u2265 0 | \"Cap n\u00e3o pode ser negativo\" |\n| `agent_executions` | `cost_mcoin` | \u2265 0 quando done | \"Custo inv\u00e1lido\" |\n| `crew_agents` (por user) | count | \u2264 21 (1 Core + 4 Leads + 16 subagentes) | \"Limite de agentes da constela\u00e7\u00e3o atingido\" |\n\n---\n\n## 7. Retention & Archival Policy\n\n| Data | Retention Period | Archival Strategy | Deletion Trigger |\n|------|-----------------|-------------------|-----------------|\n| `crew_agents`/`crew_edges` | enquanto o tenant existir | \u2014 | `delete_account()` cascade (LGPD) |\n| `agent_executions` | 12 meses ativos | move p/ `agent_executions_archive` | cron de arquivamento |\n| `agent_executions_archive` (incl. 31 do reset) | indefinido (auditoria econ\u00f4mica) | \u2014 | manual |\n| `agent_consumption_caps` | enquanto o tenant existir | \u2014 | cascade |\n| `user_api_keys` (BYOK) | enquanto o user mantiver | \u2014 | revoga\u00e7\u00e3o pelo user / `delete_account()` |\n| **Reset inicial** | \u2014 | purga owners \u00f3rf\u00e3os (sem profile) + wipe crew Sovereign **ap\u00f3s** arquivar execs | one-shot migra\u00e7\u00e3o/script |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/06-data-model.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:51:45)*
+
+
+## 🤖 Claude *(02:51:45)*
+
+Autorando **Process Flow** (07 — BPM CBOK):
+
+## 🤖 Claude *(02:52:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/07-process-flow.md",
+  "content": "# Process & Automation Blueprint\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)\n**Status:** Draft\n\n---\n\n## 1. Process Inventory\n\n| Process ID | Name | Type | Trigger | Owner | SLA |\n|------------|------|------|---------|-------|-----|\n| PROC-CV2-001 | Crew creation on-demand | human-in-loop | usu\u00e1rio (wizard / \"+ Agente\") | User | < 2s/insert |\n| PROC-CV2-002 | Capability execution (subagente\u2192m\u00f3dulo real) | event-driven | bot\u00e3o \"Executar\" / Run Squad | System | < 800ms router + lat\u00eancia do m\u00f3dulo |\n| PROC-CV2-003 | BYOK + cap + metering | automated (dentro do router) | cada execu\u00e7\u00e3o | System | parte do PROC-CV2-002 |\n| PROC-CV2-004 | Daily pulse (subagentes) | cron | `0 7 * * *` BRT | System | < 5min/loop |\n| PROC-CV2-005 | Reset/migration inicial | human-in-loop | one-shot (Sovereign) | Sovereign | N/A (one-shot, dry-run first) |\n| PROC-CV2-006 | Run Squad / Run All (BFS hierarquia) | event-driven | bot\u00e3o \"Run Squad\" | User | soma das execu\u00e7\u00f5es |\n| PROC-CV2-007 | Empty-start signup | automated | novo cadastro | System | imediato |\n| PROC-CV2-008 | Access config (m\u00f3dulo + BYOK + caps) | human-in-loop | settings do subagente | User | < 1s |\n| PROC-CV2-009 | Observation node emission (mesh) | automated | p\u00f3s-execu\u00e7\u00e3o done | System | best-effort ass\u00edncrono |\n\n---\n\n## 2. BPMN-lite Process Maps\n\n### PROC-CV2-002 + PROC-CV2-003: Capability execution + BYOK/cap/meter\n\n```\nSTART \u2500\u2500\u25b6 [Validar JWT user] \u2500\u2500\u25b6 <auth ok?>\n                                   \u2502 NO \u2500\u2500\u25b6 HTTP 401\n                                   \u2502 YES\n                          [SELECT crew_agents RLS auth.uid()]\n                                   \u2502\n                          [resolve capability_key \u2192 agent_capabilities] \u2500\u2500<no allowlist?>\u2500\u2500\u25b6 HTTP 422\n                                   \u2502 YES\n                          <requires_byok?>\n                             \u2502 YES \u2500\u2500\u25b6 [resolve user_api_keys] \u2500\u2500<ausente?>\u2500\u2500\u25b6 HTTP 501 (<service>_not_configured)\n                             \u2502 NO/OK\n                          [check agent_consumption_caps (di\u00e1rio)] \u2500\u2500<estourou?>\u2500\u2500\u25b6 HTTP 402 (cap_reached)\n                                   \u2502 OK\n                          [INSERT agent_executions status=running]\n                                   \u2502\n                          [invoke target_function (BYOK + user ctx)] \u2500\u2500<falha?>\u2500\u2500\u25b6 [UPDATE failed] \u2500\u2500\u25b6 HTTP 200 {failed}\n                                   \u2502 OK\n                          [calc_agent_cost_mcoin]\n                                   \u2502\n                          <user == Sovereign?>\n                             \u2502 YES \u2500\u2500\u25b6 [skip deduct \u00b7 sovereign_freebie=true]\n                             \u2502 NO \u2500\u2500\u25b6 [deduct_mco_coins] \u2500\u2500<saldo insuf?>\u2500\u2500\u25b6 HTTP 402 (mas exec preservado, billed=false)\n                                   \u2502\n                          [UPDATE agent_executions status=done + cost + result_summary]\n                                   \u2502\n                          [pulse infra_health_logs service=agent-task-execute]\n                                   \u2502\n                          [emit observation node (PROC-CV2-009, async best-effort)]\n                                   \u2502\n                                  END (HTTP 200 {done, result, cost})\n```\n\n**Swimlanes:**\n\n| Swimlane | Participant | Tasks |\n|----------|-------------|-------|\n| User | Browser | clica \"Executar\", v\u00ea logs/status/saldo |\n| Frontend Hook | `useAgentTask.ts` | POST + JWT; `assertExecuteSuccess`; invalida queries |\n| Edge Function | `agent-task-execute` (v2) | JWT, resolve capability, BYOK, cap, invoke, meter, write |\n| External/Module | `fetch-trends`/`canvas-execute`/`orchestrate-content`/`link-forge`/`publish-*` | trabalho real (reuso A1) |\n| DB | Supabase | `crew_agents`, `agent_capabilities`, `agent_consumption_caps`, `agent_executions` (RLS) |\n\n---\n\n### PROC-CV2-005: Reset/migration inicial (one-shot, dry-run first)\n\n```\n[Sovereign autoriza] \u2500\u2500\u25b6 [DRY-RUN: contar owners \u00f3rf\u00e3os (sem profile) + crew Sovereign + execs]\n   \u2502\n   \u25bc\n[Arquivar agent_executions \u2192 agent_executions_archive]  (OTD-CV2-004)\n   \u2502\n   \u25bc\n[DELETE crew_edges/crew_agents WHERE user_id NOT IN (SELECT id FROM profiles)]  (purga 26 \u00f3rf\u00e3os)\n   \u2502\n   \u25bc\n[DELETE crew_edges/crew_agents WHERE user_id = SOVEREIGN]  (wipe da crew inchada)\n   \u2502\n   \u25bc\n[Migra\u00e7\u00e3o: drop auto-seed call em useCrewData (empty-start)]\n   \u2502\n   \u25bc\n[Verifica\u00e7\u00e3o material: crew_agents count = 0; archive count = 31] \u2500\u2500\u25b6 END\n```\n\n> **Recovery:** dry-run obrigat\u00f3rio + backup antes de qualquer DELETE. Filtro por `NOT IN profiles` \u00e9 a salvaguarda contra apagar o tenant real. Idempotente.\n\n---\n\n### PROC-CV2-001 + PROC-CV2-007: Empty-start + crew on-demand\n\n```\n[Novo signup] \u2500\u2500\u25b6 [NENHUM auto-seed]  (FR-CV2-030)\n   \u2502\n   \u25bc\n[Abre /dashboard/constellation] \u2500\u2500\u25b6 <crew vazia?>\n                                       \u2502 YES \u2500\u2500\u25b6 [EmptyConstellation + CTA \"Criar minha crew\"]\n                                       \u2502\n                                  [CrewWizard: escolher deptos + capabilities (mapa 4\u00d74)]\n                                       \u2502\n                                  [INSERT Core + Leads + subagentes (keys est\u00e1veis) + edges Directive/Reporting]\n                                       \u2502\n                                  [AccessConfig por subagente: BYOK + caps]  (PROC-CV2-008)\n                                       \u2502\n                                      END (crew operacional)\n```\n\n---\n\n## 3. n8n Workflow Blueprints\n\n### Workflow: (opcional) Agendamento aut\u00f4nomo por subagente (PR-CV2-021, Future)\n\n**Trigger:** cron por-subagente (config do user)\n**Idempotency key:** `cv2-<agent_id>-<yyyymmdd>`\n\n```\n[Trigger: cron por-subagente]\n  \u2502\n  \u25bc\n[HTTP Request \u2192 /functions/v1/agent-task-execute (service-role + x-user-id, path admin documentado)]\n  \u251c\u2500\u2500 Body: { agent_id, capability_key, payload }\n  \u251c\u2500\u2500 (success) \u2500\u2500\u25b6 [Update status + log]\n  \u2514\u2500\u2500 (error) \u2500\u2500\u25b6 [retry \u22643 backoff exponencial] \u2500\u2500(>3)\u2500\u2500\u25b6 [infra_health_logs {event:'cv2_cron_failure'}] \u2500\u2500\u25b6 [Alert]\n```\n\n> No MVP, o agendamento \u00e9 o `agent-daily-pulse` estendido (cron nativo), n\u00e3o n8n. n8n \u00e9 caminho Future.\n\n---\n\n## 4. Orchestration Integration Points\n\n> A capability `orchestration` (depto Ops) invoca o pipeline `orchestrate-content` existente.\n\n| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |\n|---------------|---------|----------|-------------|-----------------|\n| Capability `orchestration` | via router | \u2014 | subagente Ops dispara `orchestrate-content` com payload do user | 10 mco (custo do pipeline, j\u00e1 existente) |\n\n**Integration stub (dentro de `agent-task-execute` v2, ramo orchestration):**\n```typescript\n// capability_key === 'orchestration'\nconst r = await invokeTarget('orchestrate-content', { ...payload }, userJwt)  // reuso A1\n// custo j\u00e1 \u00e9 tratado dentro de orchestrate-content (10 mco); router N\u00c3O double-charge\n```\n\n> **Anti-double-charge (FMEA-CV2):** capabilities cujo m\u00f3dulo alvo J\u00c1 debita mcoCoins (orchestrate-content=10, canvas v\u00eddeo=125) N\u00c3O s\u00e3o re-cobradas pelo router \u2014 `base_mcoin_cost=0` + flag `module_self_bills=true` no registry. O router s\u00f3 mede/cobra os LLM-planning steps pr\u00f3prios.\n\n---\n\n## 5. Error Handling & Retry Strategy\n\n| Process | Step | Error Type | Max Retries | Backoff | Failure Action |\n|---------|------|-----------|-------------|---------|----------------|\n| PROC-CV2-002 | invoke m\u00f3dulo alvo | Network timeout | 2 | Exponencial (2s,4s) | UPDATE failed + `infra_health_logs` |\n| PROC-CV2-002 | BYOK resolve | ausente/revogada | 0 | \u2014 | HTTP 501 estruturado + banner |\n| PROC-CV2-003 | cap check | estourado | 0 | \u2014 | HTTP 402; saldo intacto |\n| PROC-CV2-003 | deduct_mco_coins | saldo insuf. | 0 | \u2014 | HTTP 402; exec preservado `billed=false` |\n| Any | JWT | inv\u00e1lido | 0 | \u2014 | HTTP 401 imediato |\n| PROC-CV2-005 | DELETE | filtro errado | 0 | \u2014 | abortado por dry-run/guard `NOT IN profiles` |\n\n---\n\n## 6. SLA Definitions\n\n| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |\n|---------|------|------------------|-------------------|-------------------|\n| PROC-CV2-002 | router (excl. m\u00f3dulo) | < 800ms p95 | 5s | Yes \u2192 infra_health_logs |\n| PROC-CV2-002 | m\u00f3dulo alvo (ex.: canvas v\u00eddeo) | conforme m\u00f3dulo (v\u00eddeo async) | per m\u00f3dulo | watchdog do m\u00f3dulo |\n| PROC-CV2-004 | daily pulse loop | < 5min | 15min | Yes |\n| PROC-CV2-001 | insert crew | < 2s | 10s | No |\n\n---\n\n## 7. Cron Jobs\n\n| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |\n|----------|----------------|----------|-------------|-----------------|\n| `agent-daily-pulse` (estendido) | `0 7 * * *` (10:00 UTC / 07:00 BRT) | loop subagentes Sovereign-owned (n\u00e3o s\u00f3 Directors) | `cv2-<agent_id>-<date>` | `infra_health_logs` |\n| `agent-executions-archive` (novo, opcional) | `0 4 * * 0` (semanal) | move execs > 12m p/ archive | last-write-wins | `infra_health_logs` |\n\n> Todo cron idempotente. O daily-pulse usa override `groq/llama-3.3-70b-versatile` (v\u00e1lido em `agent_pricing`) e respeita caps + Sovereign freebie.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/07-process-flow.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:52:36)*
+
+
+## 🤖 Claude *(02:52:39)*
+
+Autorando **Quality & Metrics** (08 — CMQ/OE BOK, fecha a Fase 5):
+
+## 🤖 Claude *(02:53:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/08-quality-metrics.md",
+  "content": "# Quality & Self-Optimization Specification\n\n**Project:** constellation-v2\n**Version:** v0.1 | **Date:** 2026-05-31\n**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)\n**Status:** Draft\n\n---\n\n## 1. Quality Objectives\n\n| QO ID | Objective | Linked Business Objective | Target | Review Cadence |\n|-------|-----------|--------------------------|--------|---------------|\n| QO-CV2-001 | Execu\u00e7\u00e3o real de capabilities sem regress\u00e3o a teatro | BO-CV2-001 | \u2265 90% execs `done` com resultado material | Weekly |\n| QO-CV2-002 | Zero vazamento cross-tenant e zero acesso a sistema | BO-CV2-002 | 100% (audit\u00e1vel) | Monthly + a cada migra\u00e7\u00e3o |\n| QO-CV2-003 | Custo controlado por tenant | BO-CV2-001 | 0 cobran\u00e7as fora de cap; 0 cobran\u00e7a do Sovereign | Monthly |\n| QO-CV2-004 | Performance do cockpit | BO-CV2-003 | \u226530fps piso \u00b7 \u226421 n\u00f3s/tenant | Per release (E2E UI audit) |\n\n---\n\n## 2. KPI Dashboard Definition\n\n| KPI ID | Name | Formula | Target | Warn | Critical | Data Source |\n|--------|------|---------|--------|------|----------|-------------|\n| KPI-CV2-001 | Agent task success rate | `done / total` execs | \u2265 90% | < 85% | < 70% | `agent_executions` |\n| KPI-CV2-002 | Activation | % users c/ \u22651 subagente que executou | \u2265 60% | < 40% | < 20% | `agent_executions` + `profiles` |\n| KPI-CV2-003 | Economic activation | mcoCoins/m\u00eas via execu\u00e7\u00e3o de agente | > 0 crescente | 0 por 7d | 0 por 30d | `mcoin_transactions` action=`*_spend` |\n| KPI-CV2-004 | Router p95 latency (excl. m\u00f3dulo) | `PERCENTILE_CONT(0.95)` | < 800ms | 1000ms | 2000ms | Supabase logs |\n| KPI-CV2-005 | BYOK fail rate | `501 / total` | < 5% | 10% | 25% | edge logs |\n| KPI-CV2-006 | Cap-hit rate | `402(cap) / total` | informativo | \u2014 | \u2014 | edge logs |\n| KPI-CV2-007 | Cross-tenant access incidents | count | **0** | \u2014 | \u22651 | RLS audit |\n| KPI-CV2-008 | System-access denylist violations | count de capability apontando p/ sistema | **0** | \u2014 | \u22651 | registry review |\n| KPI-CV2-009 | Crew size compliance | max(crew_agents/user) | \u2264 21 | 22\u201330 | > 30 | `crew_agents` |\n| KPI-CV2-010 | Render FPS (cockpit) | m\u00e9dia fps | \u2265 60 | < 30 | < 15 | E2E UI audit |\n\n---\n\n## 3. FMEA Table\n\n> Severity, Occurrence, Detection: 1 (best) \u2192 10 (worst). RPN = S \u00d7 O \u00d7 D. **RPN > 100 requer a\u00e7\u00e3o.**\n\n| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |\n|----|---------|--------------|--------|---|---|---|-----|--------------------|\n| FMEA-CV2-001 | Tenant isolation (RLS) | Agente l\u00ea dados de outro tenant | Vazamento LGPD / quebra de confian\u00e7a | 10 | 3 | 4 | **120** | RLS `auth.uid()` default-deny + security-review obrigat\u00f3rio por migra\u00e7\u00e3o + teste E2E cross-tenant |\n| FMEA-CV2-002 | Capability denylist | Capability mapeia fun\u00e7\u00e3o de sistema/dev | Agente de produto opera o sistema (EoP) | 10 | 3 | 4 | **120** | Allowlist r\u00edgido em `target_function` + review do registry como gate + router s\u00f3 com JWT user |\n| FMEA-CV2-003 | Cost control | Loop de execu\u00e7\u00e3o / tokens sem cap | Custo explode / quota global esgotada | 8 | 4 | 4 | **128** | `max_tokens` cap + `agent_consumption_caps` di\u00e1rio + circuit breaker + dedu\u00e7\u00e3o at\u00f4mica |\n| FMEA-CV2-004 | BYOK resolution | Chave ausente cai em fallback global silencioso | Cobran\u00e7a/uso indevido cross-tenant | 8 | 3 | 5 | **120** | Fail-closed 501 estruturado; fallback global S\u00d3 em path cron/onboarding documentado (API Tenancy Model) |\n| FMEA-CV2-005 | Reset/migration | DELETE apaga tenant real | Perda de dados do Sovereign | 9 | 2 | 3 | 54 | Dry-run + guard `NOT IN profiles` + arquivar execs + backup |\n| FMEA-CV2-006 | agent-task-execute | M\u00f3dulo retorna 200 c/ erro no corpo | Frontend mente \"sucesso\" | 7 | 4 | 3 | 84 | `assertExecuteSuccess` (j\u00e1 existe) THROW em `error`/status failed |\n| FMEA-CV2-007 | Metering | RPC timeout \u2192 double charge | Usu\u00e1rio cobrado em dobro | 8 | 2 | 3 | 48 | `idempotency_key` por execu\u00e7\u00e3o |\n| FMEA-CV2-008 | provider/model drift | Default inv\u00e1lido (Anthropic sem endpoint / \"Llama 3\" sem pricing) | Execu\u00e7\u00e3o falha silenciosa | 6 | 5 | 3 | 90 | Default `groq/llama-3.3-70b-versatile` + valida\u00e7\u00e3o contra `agent_pricing` |\n| FMEA-CV2-009 | Render 3D | N\u00f3s ilimitados / re-render loop | P\u00e1gina trava (perf atual) | 6 | 4 | 3 | 72 | Cap \u226421 n\u00f3s + LOD + getState pattern (evita React #185) |\n| FMEA-CV2-010 | Z-index | Pain\u00e9is sobrep\u00f5em canvas/toasts | UX quebrada | 4 | 5 | 2 | 40 | Camadas estritas 0/10/40/50 |\n| FMEA-CV2-011 | Empty-start | Auto-seed reintroduzido por engano | Volta a polui\u00e7\u00e3o decorativa | 5 | 3 | 4 | 60 | Remover `seed_crew_template` call + teste signup count=0 |\n| FMEA-CV2-012 | Anti-double-charge m\u00f3dulo | Router cobra + m\u00f3dulo cobra | Cobran\u00e7a dupla (orchestrate/canvas) | 7 | 3 | 4 | 84 | Flag `module_self_bills=true` \u2192 router `base_mcoin_cost=0` |\n\n**RPN > 100 (a\u00e7\u00e3o obrigat\u00f3ria):** FMEA-CV2-001 (120) \u00b7 CV2-002 (120) \u00b7 CV2-003 (128) \u00b7 CV2-004 (120). Todos com a\u00e7\u00e3o recomendada acima.\n\n---\n\n## 4. Self-Optimization Loops\n\n| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |\n|---------|------------------|------------|--------------------|--------------------|\n| SOL-CV2-001 | KPI-CV2-004 router p95 > 1000ms por 5 chamadas | infra_health_logs | mega-brain-daemon: investigar/restart fun\u00e7\u00e3o | Alert Sovereign se > 2s |\n| SOL-CV2-002 | KPI-CV2-003 mcoCoins = 0 por 7 dias | mcoin_transactions | notificar (constela\u00e7\u00e3o ociosa) + sugerir Run Squad | Alert se 30d |\n| SOL-CV2-003 | KPI-CV2-005 BYOK fail > 10% | edge logs | banner global \"configure suas chaves\" | \u2014 |\n| SOL-CV2-004 | cap atingido (KPI-CV2-006) | agent_consumption_caps | toast + sugerir upgrade de plano | \u2014 |\n| SOL-CV2-005 | KPI-CV2-007/008 > 0 (incidente de isolamento) | RLS/registry audit | **bloquear capability afetada** + alerta P0 | Sovereign imediato (P0) |\n\n---\n\n## 5. Self-Healing Specifications\n\n### 5.1 Watchdog Telemetry Events\n\n| Event Type | Trigger | Severity | Payload |\n|------------|---------|----------|---------|\n| `constellation_v2_fn_failure` | router 5xx ap\u00f3s retry | error | `{capability_key, error, user_id}` |\n| `constellation_v2_byok_missing` | BYOK ausente | warn | `{capability_key, provider, user_id}` |\n| `constellation_v2_cap_reached` | cap di\u00e1rio atingido | info | `{user_id, api_key_ref, cap}` |\n| `constellation_v2_isolation_violation` | acesso cross-tenant/sistema detectado | **critical** | `{detail}` \u2192 SOL-CV2-005 |\n| `constellation_v2_sla_breach` | router > 5s | warn | `{capability_key, elapsed_ms}` |\n\n### 5.2 Auto-Recovery Script Stub\n\n```bash\n#!/bin/bash\n# scripts/self-heal-constellation-v2.sh\n# Triggered by mega-brain-daemon on constellation_v2_fn_failure\nFUNCTION_NAME=\"agent-task-execute\"\nSTATUS=$(curl -s -o /dev/null -w \"%{http_code}\" \\\n  \"$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health\" \\\n  -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\nif [ \"$STATUS\" != \"200\" ]; then\n  echo \"[WARN] router unhealthy ($STATUS). Re-deploying...\"\n  npx supabase functions deploy \"$FUNCTION_NAME\"\nfi\necho \"[OK] self-heal complete\"\n```\n\n### 5.3 mega-brain-daemon Integration\n\n| Daemon Event | Condition | Action |\n|-------------|-----------|--------|\n| `health_check` | a cada 5min (watchdog) | checar error rate do router em `infra_health_logs` |\n| `anomaly_detected` | error rate > 5/h | executar `self-heal-constellation-v2.sh` |\n| `isolation_violation` | `constellation_v2_isolation_violation` | **P0**: desabilitar capability + alerta Sovereign |\n\n---\n\n## 6. SLA / SLO / SLI Definitions\n\n| Service | SLI | SLO | SLA |\n|---------|-----|-----|-----|\n| `agent-task-execute` (router) | p95 latency (excl. m\u00f3dulo) | \u2264 800ms | cr\u00e9ditos se > 2s em > 1% das chamadas/m\u00eas |\n| Capability execution | % execs `done` | \u2265 90% | incident report se < 70% |\n| Tenant isolation | incidentes cross-tenant | 0 | P0 + disclosure se \u22651 |\n| Cockpit render | fps m\u00e9dio | \u2265 30 piso | re-otimiza\u00e7\u00e3o obrigat\u00f3ria se < 15 |\n\n---\n\n## 7. PDCA Improvement Cadence\n\n| Cycle | Phase | Activity | Owner | Frequency |\n|-------|-------|----------|-------|-----------|\n| CV2 Quality | Plan | Revisar FMEA + KPI targets | Sovereign | Quarterly |\n| CV2 Quality | Do | Implementar top a\u00e7\u00e3o (RPN>100) | Engineering | Per sprint |\n| CV2 Quality | Check | KPIs vs targets; atualizar RPNs | AIOS/scientist | Monthly |\n| CV2 Quality | Act | Fechar loop; atualizar este doc | Sovereign | Monthly |\n\n**Improvement backlog:** `.claude/context/sprint-priorities.md`\n\n---\n\n## 8. Observability Checklist\n\n### 8.1 Logging Events\n\n| Event | Location | Level | Fields |\n|-------|----------|-------|--------|\n| Router entry | `agent-task-execute/index.ts` ~10 | INFO | `{user_id, agent_id, capability_key, request_id}` |\n| BYOK resolve | ap\u00f3s lookup | INFO/WARN | `{provider, resolved:boolean}` |\n| Cap check | antes de invoke | INFO | `{api_key_ref, used, cap}` |\n| mcoCoins deduction | ap\u00f3s RPC | INFO | `{user_id, amount, billed}` |\n| Module error | catch | ERROR | `{capability_key, error}` |\n| Isolation guard | qualquer deny | ERROR | `{reason}` \u2192 critical event |\n\n### 8.2 Alerting Rules\n\n| Condition | Channel | Escalation |\n|-----------|---------|------------|\n| error rate > 1% / 5min | `infra_health_logs` | mega-brain auto-heal |\n| isolation_violation | `infra_health_logs` critical | Sovereign P0 |\n| mcoCoins = 0 / 7d | scheduled check | notifica\u00e7\u00e3o |\n\n### 8.3 Distributed Tracing Touchpoints\n\n| Span | Start | End | Tags |\n|------|-------|-----|------|\n| `router.total` | request recebido | response enviado | `user_id, capability_key, status` |\n| `router.byok` | antes lookup | depois | `provider, resolved` |\n| `router.invoke_target` | antes invoke | depois | `target_function, ok` |\n| `router.meter` | antes RPC | depois | `cost_mcoin, billed` |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/08-quality-metrics.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:53:46)*
+
+
+## 🤖 Claude *(02:53:49)*
+
+Os 9 documentos estão autorados. **Fase 6 — validação de rastreabilidade:** cadeia MR→BR→PR→FR→(tabela/edge/processo) fechada, 0 órfãos; toda tabela nova aparece em ≥1 processo; os 4 FMEA com RPN>100 (CV2-001/002/003/004) têm ação. 
+
+Agora **Fase 7 — injeção na Knowledge Mesh**. Vou espelhar o script-precedente canônico e contar as LOC reais dos docs para o metadata:
+
+## 🤖 Claude *(02:53:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-openclaw-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the BoK documentation suite for openclaw in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node with stability 0.85; embedding triggered
+> 5	 * automatically by trg_mcorch_embed_on_insert.
+> 6	 *
+> 7	 * Usage: bun run scripts/seed-openclaw-bok-seal.ts
+> 8	 */
+> 9	import { createClient } from '@supabase/supabase-js';
+> 10	
+> 11	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 12	const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 13	
+> 14	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 15	  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+> 16	  process.exit(1);
+> 17	}
+> 18	
+> 19	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 20	
+> 21	const sealNode = {
+> 22	  name: 'bok-scribe-seal-openclaw-v1',
+> 23	  node_type: 'documentation_suite',
+> 24	  project_id: 'openclaw',
+> 25	  stability_score: 0.85,
+> 26	  revenue_impact: 0, // módulo é enabler horizontal de velocity para os outros 4 BoK; proxy via lift dos outros módulos (não direct revenue)
+> 27	  content: `OpenClaw — Pantheon Agency Runtime (BoK retroativa)
+> 28	
+> 29	BoK suite (9 docs) sealed 2026-05-19 sob MCORCH Master Execution Protocol. Esta seal quita o override consciente do BoK Gate registrado em Sprint v6.2.0 (2026-05-15) — Sovereign havia autorizado que a própria Agência OpenClaw quitaria a dívida assincronamente; com 4 sprints decorridos e a Agência operando em produção, esta seal materializa retroativamente o BoK que governa o módulo.
+> 30	
+> 31	VISÃO: Runtime de Pantheon Architecture com 7 agentes IA especializados (main router + engineer/scientist/artisan/marketing-growth L1 Heads + guardian Coordination + claw-master L2 Specialist) operando sob soberania física do Sovereign Gabriel Zarattini em /home/ubuntu/.openclaw/. Gateway local 127.0.0.1:18789 sob auth token (48-char hex), memória SQLite per-agente (FTS5 + vector embeddings), Memory Wiki em vault bridge mode, ciclo circadiano noturno (Stage 1 03:00 / Stage 2 05:00 / Stage 3 07:00 BRT espaçados 2h), e briefing diário ao Telegram chat 5835174772 às 07:30 BRT compondo 6 seções markdown ≤ 4000 chars (git delta + MEMORY promotions + BoK debt + revenue snippet + news pulse Perplexity Sonar + reflexão Paz e Vitalidade).
+> 32	
+> 33	ARQUITETURA: 1 config canônica (openclaw.json 180 LOC com schema strict v2026.5.14), 1 vault file-based (secrets.json chmod 600 com 6 SecretRef pointers), 7 agent dirs com 7-8 canonical files cada (SOUL/AGENTS/MEMORY/BOOTSTRAP/HEARTBEAT/IDENTITY/TOOLS/USER), 6 SQLite memory artifacts (main 626 MB + engineer 390 MB + scientist 232 MB + claw-master 90 MB + artisan 28 MB + marketing-growth 20 MB + guardian 20 MB), 1 OpenClaw daemon (gateway loopback), 1 Memory Wiki vault (~20 pages seed manual MCORCH-aware com pageType ∈ {synthesis, entity, concept, source, dashboard}). Pipeline scripts MCORCH: bridge-mesh-to-openclaw.ts (327 LOC two-tier hybrid; tier1 strategy + tier2 AST excluding ast_variable noise) + distribute-mesh-to-agents.ts (275 LOC shared base + overlay BoK-específica file copies) + nightly-stage{1,2,3}-*.sh (130/130/110 LOC) + compose-morning-briefing.ts (~250 LOC) + morning-briefing.sh (95 LOC) + news-impact-analyzer.ts (173 LOC) + watchdog-mcorch.sh (~150 LOC com Layer 2 escalation counter). Cron pipeline: 03:00/05:00/07:00 BRT (stages) + 03:00 OpenClaw native (Memory Dreaming Promotion) + */5min (watchdog) + 06:00 dia 16 (claw-master audit mensal).
+> 34	
+> 35	DRIFT RECONCILIADO (5 fechados em sprints anteriores · 8 ativos como OTDs): D-OC-001 (6 plain-text secrets → vault SecretRefs em v6.4.0), D-OC-002 (allowInsecureAuth=true → false em v6.4.0), D-OC-003 (perms 775 → 700 em v6.4.0), D-OC-004 (schema strict rejeitando agents.list[].enabled → jq surgical em v6.6.1), D-OC-005 (Memory Palace empty state → 20 wiki pages seed em v6.6.1). Drifts permanentes catalogados como OTDs: OTD-V660-002 (CLI memory index drift), OTD-OC-001 (main.sqlite 626 MB growth), OTD-OC-002 (SQLite schema opaco upstream), OTD-OC-005 (dynamic plugin loading aguardando upstream), OTD-CM-004/005/007 (rate limit + redact + showInSidebar pendentes). Registro autoritativo em 06-data-model.md §8 Drift Reconciliation Appendix.
+> 36	
+> 37	ECONOMIA: zero mcoCoins (módulo é infraestrutura, não tarifa operações). Custos diretos R$ 60-200/ano (orçamento OpenRouter Perplexity Sonar para Stage 3 news pulse). ROI direto não-quantificável; proxy material é velocity dos 5 outros módulos BoK (conteudo-v2 + viralmind + mcorch-constellation + gamificacao-nodes + este) — provavelmente 3-5× mais tempo Sovereign sem o squad.
+> 38	
+> 39	KPIs (10): KPI-OC-001 bridge runtime p95 ≤ 180s · KPI-OC-002 chunks indexed ≥ 9000 (atual 9185) · KPI-OC-003 briefing delivery rate ≥ 95%/30d · KPI-OC-004 SQLite growth ≤ 20MB/agent/dia · KPI-OC-005 watchdog escalation rate ≤ 1/sem · KPI-OC-006 Telegram quota usage ≤ 30% · KPI-OC-007 audit findings ≤ 1 P0 OR 3 P1 · KPI-OC-008 Dreaming runtime ≤ 30min · KPI-OC-009 wiki linter pass rate 100% · KPI-OC-010 secrets vault adherence 100%. FMEA-OC-001..010 com 5 RPN > 100: secrets regression (180), bridge fail stale overlay (150), daemon crash sem watchdog (126), Telegram quota silencia (125), audit scrape fail (105). Mitigations catalogadas em sprint backlog.
+> 40	
+> 41	OTDs ATIVAS (5 novas + 6 herdadas): OTD-OC-001..005 (main.sqlite vacuum cadence · SQLite schema opaque · multi-user expansion · briefing fallback · dynamic plugin loading). Herdadas: OTD-V660-002 (CLI drift) + OTD-CM-004 (rate limit) + OTD-CM-005 (redact) + OTD-CM-006 (multi-user heuristic — Decided 2026-05-19) + OTD-CM-007 (showInSidebar) + OTD-CM-008 (SOUL template — Decided 2026-05-16).
+> 42	
+> 43	DOCUMENTOS: docs/bok/openclaw/{00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics}.md totalizando ~1700 LOC novos.
+> 44	
+> 45	TRACEABILITY: 6 MR-OC → 14 BR-OC → 8 FR-OC + 8 NFR-OC → 10 PROC-OC → 10 KPI-OC validados em 02-brd §10.
+> 46	
+> 47	PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
+> 48	  metadata: {
+> 49	    bok_version: '1.0.0',
+> 50	    documents: [
+> 51	      '00-index',
+> 52	      '01-mrd',
+> 53	      '02-brd',
+> 54	      '03-prd',
+> 55	      '04-frd',
+> 56	      '05-sdd',
+> 57	      '06-data-model',
+> 58	      '07-process-flow',
+> 59	      '08-quality-metrics',
+> 60	    ],
+> 61	    phase_completed: 'Phase 7',
+> 62	    traceability_validated: true,
+> 63	    bok_gate: 'override-completion', // quita override consciente registrado em Sprint v6.2.0
+> 64	    drift_reconciled: 5, // D-OC-001..005 (todos fechados em v6.4.0 e v6.6.1)
+> 65	    drift_pending: 8, // D-OC-006..013 (catalogados como OTDs ativos)
+> 66	    market_segment: 'B2B2C-internal',
+> 67	    monetization_model: 'indirect-enabler',
+> 68	    regulatory_profile: 'LGPD',
+> 69	    integration_surface: 'extends-mcorch',
+> 70	    project_slug: 'openclaw',
+> 71	    feature_flag: 'pantheon-v6.3.1', // implícito
+> 72	    sprint_introduced: 'v6.2.0',
+> 73	    sprint_sealed: 'v6.6.5',
+> 74	    tags: ['bok-scribe', 'openclaw', 'pantheon', 'agency', 'memory-bridge', 'retroactive', 'infrastructure'],
+> 75	    new_tables: 0, // módulo é infraestrutura local; não introduz tabelas Supabase
+> 76	    new_edge_functions: 0,
+> 77	    new_rpcs: 0,
+> 78	    new_pipeline_scripts: 9, // bridge + distribute + 3 stages + bridge-refresh + compose + morning + news-analyzer
+> 79	    new_agents: 7, // main + 4 L1 + 1 Coord + 1 L2
+> 80	    id_ranges: {
+> 81	      MR: '001..006',
+> 82	      BR: '001..014',
+> 83	      BO: '001..006',
+> 84	      SH: '001..010',
+> 85	      FR: '1..8',
+> 86	      NFR: '001..008',
+> 87	      PR: '001..014',
+> 88	      PROC: '001..010',
+> 89	      KPI: '001..010',
+> 90	      FMEA: '001..010',
+> 91	      SOL: '001..006',
+> 92	      QO: '001..008',
+> 93	      BAC: '001..010',
+> 94	      OTD_OC: '001..005',
+> 95	    },
+> 96	    related_otds: [
+> 97	      'OTD-V631-001', // openclaw BoK SLA expandido — fechada por esta seal
+> 98	      'OTD-V660-002', // CLI drift permanent
+> 99	      'OTD-CM-001', 'OTD-CM-002', 'OTD-CM-003', // fechadas v6.4.0
+> 100	      'OTD-CM-004', 'OTD-CM-005', 'OTD-CM-006', 'OTD-CM-007', 'OTD-CM-008', // herdadas audit-v1
+> 101	      'OTD-OC-001', 'OTD-OC-002', 'OTD-OC-003', 'OTD-OC-004', 'OTD-OC-005', // novas
+> 102	    ],
+> 103	    fmea_rpn_over_100: ['FMEA-OC-001', 'FMEA-OC-002', 'FMEA-OC-003', 'FMEA-OC-004', 'FMEA-OC-010'],
+> 104	    derives_from: 'bok-scribe-seal-gamificacao-nodes-v1', // UUID 6e8546bc-d995-4cc5-ac88-06cecbece181
+> 105	    pantheon_agents: ['main', 'engineer', 'scientist', 'artisan', 'marketing-growth', 'guardian', 'claw-master'],
+> 106	    cron_pipeline: ['stage1-03:00', 'stage2-05:00', 'stage3-07:00', 'memory-dreaming-05:00', 'watchdog-5min', 'audit-monthly-day16'],
+> 107	  },
+> 108	};
+> 109	
+> 110	console.log(`📝 Sealing BoK suite "openclaw"...`);
+> 111	console.log(`   Project: ${sealNode.project_id}`);
+> 112	console.log(`   Stability: ${sealNode.stability_score}`);
+> 113	console.log(`   Revenue impact: ${sealNode.revenue_impact} (indirect-enabler — velocity proxy)`);
+> 114	console.log(`   BoK gate: ${sealNode.metadata.bok_gate}`);
+> 115	console.log(`   Drift reconciled: ${sealNode.metadata.drift_reconciled} (D-OC-001..005)`);
+> 116	console.log(`   Drift pending: ${sealNode.metadata.drift_pending} (OTDs ativos)`);
+> 117	
+> 118	const { data, error } = await supabase
+> 119	  .from('mcorch_nodes')
+> 120	  .insert(sealNode)
+> 121	  .select('id, name, node_type, stability_score, created_at')
+> 122	  .single();
+> 123	
+> 124	if (error) {
+> 125	  console.error('❌ Seal failed:', error);
+> 126	  process.exit(1);
+> 127	}
+> 128	
+> 129	console.log(`\n✅ Seal node inserted:`);
+> 130	console.log(`   ID:        ${data.id}`);
+> 131	console.log(`   Name:      ${data.name}`);
+> 132	console.log(`   Type:      ${data.node_type}`);
+> 133	console.log(`   Stability: ${data.stability_score}`);
+> 134	console.log(`   Created:   ${data.created_at}`);
+> 135	console.log(`\n🧠 Embedding will be generated automatically by trg_mcorch_embed_on_insert (assíncrono via pg_net).`);
+> 136	console.log(`   Confirm with: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${data.id}';`);
+> 137	
+> ```
+
+## 🤖 Claude *(02:53:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2500\u2500\u2500 LOC dos docs constellation-v2 \u2500\u2500\u2500\"; wc -l docs/bok/constellation-v2/*.md\necho \"\u2500\u2500\u2500 parent seal existe? \u2500\u2500\u2500\"\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\ncurl -s \"$BASE/mcorch_nodes?name=eq.bok-scribe-seal-mcorch-constellation-v1&select=id,name,stability_score\" -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\"\necho \"\"\necho \"\u2500\u2500\u2500 seal constellation-v2 j\u00e1 existe? (idempot\u00eancia) \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_nodes?name=eq.bok-scribe-seal-constellation-v2-v1&select=id\" -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\"",
+  "description": "Read precedent seed script + count doc LOC + check parent seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ─── LOC dos docs constellation-v2 ───
+>   126 docs/bok/constellation-v2/00-index.md
+>   114 docs/bok/constellation-v2/01-mrd.md
+>   158 docs/bok/constellation-v2/02-brd.md
+>   208 docs/bok/constellation-v2/03-prd.md
+>   172 docs/bok/constellation-v2/04-frd.md
+>   296 docs/bok/constellation-v2/05-sdd.md
+>   211 docs/bok/constellation-v2/06-data-model.md
+>   194 docs/bok/constellation-v2/07-process-flow.md
+>   168 docs/bok/constellation-v2/08-quality-metrics.md
+>  1647 total
+> ─── parent seal existe? ───
+> [{"id":"78cb74e6-538c-4c9e-80a2-50268947dfca","name":"bok-scribe-seal-mcorch-constellation-v1","stability_score":0.00922152542363481}]
+> ─── seal constellation-v2 já existe? (idempotência) ───
+> []
+> ```
+
+## 🤖 Claude *(02:54:51)*
+
+
+## 🤖 Claude *(02:54:54)*
+
+Precedente lido (LOC reais: **1647**; parent seal `mcorch-constellation-v1` = `78cb74e6-538c-4c9e-80a2-50268947dfca`; seal v2 ainda não existe → insert seguro). O script-precedente põe `derives_from` só no metadata, mas o framework Fase 7 exige a **aresta** `DERIVES_FROM` real. Vou conferir o schema de `mcorch_edges` antes de escrever o insert (não chutar coluna — Lei 1):
+
+## 🤖 Claude *(02:54:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\necho \"\u2500\u2500\u2500 amostra de aresta DERIVES_FROM (colunas reais) \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_edges?relationship=eq.DERIVES_FROM&limit=1\" \"${HK[@]}\" | jq '.'\necho \"\u2500\u2500\u2500 fallback: tentar coluna edge_type \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_edges?edge_type=eq.DERIVES_FROM&limit=1\" \"${HK[@]}\" | jq '.' 2>/dev/null | head -20\necho \"\u2500\u2500\u2500 qualquer 1 aresta p/ ver todas as colunas \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_edges?limit=1\" \"${HK[@]}\" | jq '.[0] | keys'",
+  "description": "Inspect mcorch_edges schema for DERIVES_FROM edge insertion"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ─── amostra de aresta DERIVES_FROM (colunas reais) ───
+> {
+>   "code": "42703",
+>   "details": null,
+>   "hint": null,
+>   "message": "column mcorch_edges.relationship does not exist"
+> }
+> ─── fallback: tentar coluna edge_type ───
+> {
+>   "code": "42703",
+>   "details": null,
+>   "hint": null,
+>   "message": "column mcorch_edges.edge_type does not exist"
+> }
+> ─── qualquer 1 aresta p/ ver todas as colunas ───
+> [
+>   "created_at",
+>   "id",
+>   "metadata",
+>   "project_id",
+>   "relation_type",
+>   "source_id",
+>   "target_id",
+>   "user_id",
+>   "weight"
+> ]
+> ```
+
+## 🤖 Claude *(02:55:23)*
+
+
+## 🤖 Claude *(02:55:25)*
+
+`mcorch_edges` confirmado: colunas `relation_type · source_id · target_id · weight · metadata · project_id · user_id`. Escrevendo o seed script (espelha o precedente + adiciona a aresta `DERIVES_FROM` real + idempotência):
+
+## 🤖 Claude *(02:56:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-bok-seal.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the BoK documentation suite for constellation-v2 in the Knowledge Mesh.\n * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the\n * parent seal `bok-scribe-seal-mcorch-constellation-v1` (the v1 shell BoK this supersedes).\n * Embedding is triggered automatically by trg_mcorch_embed_on_insert (pg_net, async).\n *\n * Idempotent: if the seal already exists (UNIQUE name), logs and exits 0.\n *\n * Usage: bun run scripts/seed-constellation-v2-bok-seal.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;\n\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');\n  process.exit(1);\n}\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst SEAL_NAME = 'bok-scribe-seal-constellation-v2-v1';\nconst PARENT_SEAL_NAME = 'bok-scribe-seal-mcorch-constellation-v1';\n\nconst sealNode = {\n  name: SEAL_NAME,\n  node_type: 'documentation_suite',\n  project_id: 'constellation-v2',\n  stability_score: 0.85,\n  // Camada de ATIVA\u00c7\u00c3O econ\u00f4mica (mcoCoins + afiliado), mas receita material hoje = R$0 (Usu\u00e1rio Zero, 1 perfil real).\n  // Mantido 0 por honestidade material (Lei 1): potencial documentado no BRD \u00a75, n\u00e3o auditado.\n  revenue_impact: 0,\n  content: `Constellation v2 \u2014 Cockpit Operacional de Agentes per-user (refatora\u00e7\u00e3o v2 do /dashboard/constellation)\n\nBoK suite (9 docs, 1647 LOC) selada 2026-05-31 sob MCORCH Master Execution Protocol (Closed-Loop Gate \u2014 N\u00c3O override; passou pelo gate corretamente antes de qualquer c\u00f3digo). Supera a BoK v1 'mcorch-constellation' que documentava a CASCA do Lovable.\n\nVIS\u00c3O: cada usu\u00e1rio tem sua pr\u00f3pria constela\u00e7\u00e3o de agentes de PRODUTO que executam trabalho REAL dentro da conta dele, acionando os m\u00f3dulos do ecossistema \u2014 substitui a casca decorativa (717 crew_agents, 26 owners \u00f3rf\u00e3os, ~688 linhas-lixo) por uma topologia enxuta e funcional. Fronteira de seguran\u00e7a DURA: agentes de produto operam o tenant (auth.uid()), NUNCA o sistema/dev MCORCH nem outros tenants (distinto do Pantheon OpenClaw, que opera o repo).\n\nTOPOLOGIA: 4 departamentos \u00d7 (1 Lead + \u22644 subagentes m\u00f3dulo-bound) + GCRUX Core; Leads reportam ao Core (edges Directive/Reporting). Mapa 4\u00d74 aprovado: Creative Content(Conte\u00fado/Blog/Canvas Studio/Canvas Design) \u00b7 Market Intelligence(Viral Miner/Analytics/Produtos/Campanhas) \u00b7 Operational Ops(Afiliados/Calend\u00e1rio/Orquestra\u00e7\u00e3o/Publica\u00e7\u00e3o Social) \u00b7 Technical Engine(Core-AIOS/IA Arena/agent-economics/Watchdog). Cap \u226421 n\u00f3s/tenant.\n\nARQUITETURA (decis\u00f5es Sovereign-delegadas): A1 = reusar edge functions existentes (fetch-trends/canvas-execute/orchestrate-content/link-forge/publish-*/generate-content) como TOOLS via camada fina de roteamento de capability (N\u00c3O reescrever m\u00f3dulos); B = config de acesso pr\u00e9-configurada por subagente (m\u00f3dulo + BYOK + caps); C = refactor in-place atr\u00e1s de reset limpo. Router = refactor de agent-task-execute v2 (JWT user \u2192 resolve capability \u2192 BYOK \u2192 cap \u2192 invoke target \u2192 meter \u2192 write agent_executions). Funda\u00e7\u00e3o reusada: CEA v1.1 (agent_executions, agent-task-execute, agent-daily-pulse, agent_pricing, useAgentActivity, /dashboard/agent-economics).\n\nDADOS: 3 tabelas novas (agent_capabilities registry global \u00b7 agent_consumption_caps per-user \u00b7 agent_executions_archive) + 2 colunas (crew_agents.capability_key \u00b7 agent_executions.idempotency_key). RLS auth.uid() default-deny em tudo; registry tem allowlist de target_function tenant-scoped (denylist arquitetural contra acesso a sistema). Empty-start: remove auto-seed seed_crew_template; novos users nascem vazios; crew on-demand via wizard.\n\nECONOMIA per-user: toda a\u00e7\u00e3o medida via RPC calc_agent_cost_mcoin + deduct_mco_coins (at\u00f4mico); Sovereign = admin freebie; BYOK resolvido de user_api_keys (fail-closed 402/501); caps di\u00e1rios por user/API; anti-double-charge para m\u00f3dulos que j\u00e1 cobram (orchestrate=10, canvas v\u00eddeo=125 \u2192 router base_mcoin_cost=0).\n\nMATERIAL (verificado 2026-05-31 via REST service-role): 1 perfil real (Sovereign) \u00b7 717 crew_agents / 27 owners (26 \u00f3rf\u00e3os sem profile) \u00b7 689 crew_edges \u00b7 31 agent_executions reais (a arquivar antes do reset) \u00b7 3 seeders divergentes (RPC 6/squad \u00b7 store 6 \u00b7 deployEnterprise 12/squad \u2192 53 n\u00f3s Sovereign).\n\nID SPACE: MR-CV2-001..007 \u00b7 BR-CV2-001..007 \u00b7 BO-CV2-001..003 \u00b7 SH-CV2-001..004 \u00b7 PR-CV2-001..022 \u00b7 FR-CV2-001..070 \u00b7 NFR-CV2-001..012 \u00b7 PROC-CV2-001..009 \u00b7 KPI-CV2-001..010 \u00b7 FMEA-CV2-001..012 \u00b7 SOL-CV2-001..005 \u00b7 QO-CV2-001..004 \u00b7 OTD-CV2-001..008.\n\nFMEA RPN>100 (4): FMEA-CV2-001 isolamento cross-tenant (120) \u00b7 CV2-002 capability\u2192sistema/EoP (120) \u00b7 CV2-003 custo descontrolado (128) \u00b7 CV2-004 BYOK fallback silencioso (120). Todas com a\u00e7\u00e3o recomendada.\n\nTRACEABILITY: MR\u2192BR\u2192PR\u2192FR\u2192(tabela/edge/processo) validada em 00-index \u00a7Traceability + 04-frd \u00a77; 0 \u00f3rf\u00e3os.\n\nPR\u00d3XIMO DELIVERABLE (post-seal): (a) /bok-agents-generator para formalizar o sistema de agentes; (b) Fase 0 reset (arquivar 31 execs + purgar 26 \u00f3rf\u00e3os + wipe crew Sovereign + remover auto-seed); (c) migra\u00e7\u00e3o agent_capabilities + caps + binding (passa /security-review); (d) refactor agent-task-execute v2 capability router; (e) E2E completo vazio\u2192criar\u2192trabalhar\u2192medir + E2E UI audit 1920\u00d71080.`,\n  metadata: {\n    bok_version: '1.0.0',\n    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics'],\n    document_lines: {\n      '00-index': 126, '01-mrd': 114, '02-brd': 158, '03-prd': 208, '04-frd': 172,\n      '05-sdd': 296, '06-data-model': 211, '07-process-flow': 194, '08-quality-metrics': 168,\n      total: 1647,\n    },\n    phase_completed: 'Phase 7',\n    traceability_validated: true,\n    traceability_orphans: 0,\n    bok_gate: 'closed-loop-gate', // passou pelo gate corretamente (n\u00e3o \u00e9 override)\n    supersedes: 'mcorch-constellation-v1',\n    market_segment: 'B2B2C',\n    monetization_model: 'hybrid',\n    monetization: 'direct-mcoin-consumption + affiliate (material today = R$0, Usu\u00e1rio Zero)',\n    regulatory_profile: 'LGPD',\n    integration_surface: 'extends-mcorch',\n    project_slug: 'constellation-v2',\n    id_space: {\n      MR: 'MR-CV2-001..007', BR: 'BR-CV2-001..007', BO: 'BO-CV2-001..003', SH: 'SH-CV2-001..004',\n      PR: 'PR-CV2-001..022', FR: 'FR-CV2-001..070', NFR: 'NFR-CV2-001..012', PROC: 'PROC-CV2-001..009',\n      KPI: 'KPI-CV2-001..010', FMEA: 'FMEA-CV2-001..012', SOL: 'SOL-CV2-001..005', QO: 'QO-CV2-001..004',\n      OTD: 'OTD-CV2-001..008',\n    },\n    fmea_high_rpn_count: 4,\n    fmea_high_rpn_items: ['FMEA-CV2-001 (RPN 120)', 'FMEA-CV2-002 (RPN 120)', 'FMEA-CV2-003 (RPN 128)', 'FMEA-CV2-004 (RPN 120)'],\n    new_migrations: 4, // capabilities + caps + crew_capability column + exec archive/idempotency\n    new_tables: 3, // agent_capabilities, agent_consumption_caps, agent_executions_archive\n    new_columns: 2, // crew_agents.capability_key, agent_executions.idempotency_key\n    new_edge_functions: 0, // router = refactor de agent-task-execute (existente)\n    new_hooks: 3, // useAgentCapabilities, useAccessConfig, + mods em useAgentTask/useCrewData/useAgentActivity\n    architecture_decisions: { A: 'A1-reuse-edge-fns', B: 'per-subagent-access-config', C: 'in-place-refactor-after-reset' },\n    derives_from_seal: 'bok-scribe-seal-mcorch-constellation-v1', // 78cb74e6-538c-4c9e-80a2-50268947dfca\n    depends_on_sop: 'docs/processes/constellation-economic-activation.md',\n    material_context: { real_profiles: 1, crew_agents: 717, orphan_owners: 26, crew_edges: 689, agent_executions: 31 },\n    tags: ['bok-scribe', 'constellation-v2', 'agents', 'per-user', 'tenant-isolation', 'byok', 'mcoCoins', 'capability-router', 'B2B2C'],\n  },\n};\n\nconsole.log(`\ud83d\udcdd Sealing BoK suite \"constellation-v2\"...`);\nconsole.log(`   Project:   ${sealNode.project_id}`);\nconsole.log(`   Stability: ${sealNode.stability_score}`);\nconsole.log(`   Supersedes: ${sealNode.metadata.supersedes}`);\nconsole.log(`   BoK gate:  ${sealNode.metadata.bok_gate}`);\nconsole.log(`   Docs LOC:  ${sealNode.metadata.document_lines.total}`);\n\n// Idempotency: skip if already sealed\nconst { data: existing } = await supabase\n  .from('mcorch_nodes')\n  .select('id')\n  .eq('name', SEAL_NAME)\n  .maybeSingle();\n\nif (existing) {\n  console.log(`\\n\u26a0\ufe0f  Seal \"${SEAL_NAME}\" already exists (id ${existing.id}). Idempotent exit 0.`);\n  process.exit(0);\n}\n\nconst { data, error } = await supabase\n  .from('mcorch_nodes')\n  .insert(sealNode)\n  .select('id, name, node_type, stability_score, created_at')\n  .single();\n\nif (error) {\n  console.error('\u274c Seal failed:', error);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Seal node inserted:`);\nconsole.log(`   ID:        ${data.id}`);\nconsole.log(`   Name:      ${data.name}`);\nconsole.log(`   Type:      ${data.node_type}`);\nconsole.log(`   Stability: ${data.stability_score}`);\nconsole.log(`   Created:   ${data.created_at}`);\n\n// DERIVES_FROM edge \u2192 parent seal (the v1 shell BoK this supersedes)\nconst { data: parent } = await supabase\n  .from('mcorch_nodes')\n  .select('id')\n  .eq('name', PARENT_SEAL_NAME)\n  .maybeSingle();\n\nif (parent) {\n  const { data: edge, error: edgeErr } = await supabase\n    .from('mcorch_edges')\n    .insert({\n      source_id: data.id,\n      target_id: parent.id,\n      relation_type: 'DERIVES_FROM',\n      project_id: 'constellation-v2',\n      weight: 1.0,\n      metadata: { reason: 'constellation-v2 supersedes mcorch-constellation v1 shell BoK', sealed: '2026-05-31' },\n    })\n    .select('id, source_id, target_id, relation_type')\n    .single();\n  if (edgeErr) {\n    console.error('\u26a0\ufe0f  Edge insert failed (node OK):', edgeErr.message);\n  } else {\n    console.log(`\\n\ud83d\udd17 DERIVES_FROM edge inserted:`);\n    console.log(`   Edge ID: ${edge.id}`);\n    console.log(`   ${edge.source_id} \u2500\u2500DERIVES_FROM\u2500\u2500\u25b6 ${edge.target_id} (mcorch-constellation-v1)`);\n  }\n} else {\n  console.log(`\\n\u26a0\ufe0f  Parent seal \"${PARENT_SEAL_NAME}\" not found \u2014 skipping DERIVES_FROM edge.`);\n}\n\nconsole.log(`\\n\ud83e\udde0 Embedding generated automatically by trg_mcorch_embed_on_insert (async via pg_net).`);\nconsole.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${data.id}';`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-bok-seal.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:56:19)*
+
+
+## 🤖 Claude *(02:56:20)*
+
+Executando o seed (Fase 7) e verificando materialmente o node + aresta + embedding:
+
+## 🤖 Claude *(02:56:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"\u2550\u2550\u2550 RUN seed \u2550\u2550\u2550\"\nbun run scripts/seed-constellation-v2-bok-seal.ts",
+  "description": "Execute constellation-v2 BoK seal seed script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ RUN seed ═══
+> 📝 Sealing BoK suite "constellation-v2"...
+>    Project:   constellation-v2
+>    Stability: 0.85
+>    Supersedes: mcorch-constellation-v1
+>    BoK gate:  closed-loop-gate
+>    Docs LOC:  1647
+> 
+> ✅ Seal node inserted:
+>    ID:        38d7e7a4-c58d-4749-b044-97800d2f8e81
+>    Name:      bok-scribe-seal-constellation-v2-v1
+>    Type:      documentation_suite
+>    Stability: 0.85
+>    Created:   2026-06-01T02:56:22.642022+00:00
+> 
+> 🔗 DERIVES_FROM edge inserted:
+>    Edge ID: c3dd9d58-4a44-44fd-899a-a1734dfe7960
+>    38d7e7a4-c58d-4749-b044-97800d2f8e81 ──DERIVES_FROM──▶ 78cb74e6-538c-4c9e-80a2-50268947dfca (mcorch-constellation-v1)
+> 
+> 🧠 Embedding generated automatically by trg_mcorch_embed_on_insert (async via pg_net).
+>    Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '38d7e7a4-c58d-4749-b044-97800d2f8e81';
+> ```
+
+## 🤖 Claude *(02:56:28)*
+
+
+## 🤖 Claude *(02:56:30)*
+
+Seal material: node `38d7e7a4-c58d-4749-b044-97800d2f8e81` + aresta DERIVES_FROM `c3dd9d58-4a44-44fd-899a-a1734dfe7960`. Verificando o embedding (async via pg_net — pode levar alguns segundos):
+
+## 🤖 Claude *(02:56:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\nID=\"38d7e7a4-c58d-4749-b044-97800d2f8e81\"\necho \"\u2500\u2500\u2500 embedding status (tentativa 1) \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_nodes?id=eq.$ID&select=name,node_type,stability_score,embedding\" \"${HK[@]}\" | jq '.[0] | {name, node_type, stability_score, embedded: (.embedding != null)}'\necho \"\u2500\u2500\u2500 aresta DERIVES_FROM confirmada \u2500\u2500\u2500\"\ncurl -s \"$BASE/mcorch_edges?id=eq.c3dd9d58-4a44-44fd-899a-a1734dfe7960&select=relation_type,source_id,target_id,weight\" \"${HK[@]}\" | jq '.'\necho \"\u2500\u2500\u2500 su\u00edte de docs no disco \u2500\u2500\u2500\"\nls -1 docs/bok/constellation-v2/*.md | xargs -n1 basename",
+  "description": "Verify seal embedding + edge + docs on disk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ─── embedding status (tentativa 1) ───
+> {
+>   "name": "bok-scribe-seal-constellation-v2-v1",
+>   "node_type": "documentation_suite",
+>   "stability_score": 0.85,
+>   "embedded": true
+> }
+> ─── aresta DERIVES_FROM confirmada ───
+> [
+>   {
+>     "relation_type": "DERIVES_FROM",
+>     "source_id": "38d7e7a4-c58d-4749-b044-97800d2f8e81",
+>     "target_id": "78cb74e6-538c-4c9e-80a2-50268947dfca",
+>     "weight": 1
+>   }
+> ]
+> ─── suíte de docs no disco ───
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> ```
+
+## 🤖 Claude *(02:57:11)*
+
+
+## 🤖 Claude *(02:57:21)*
+
+**Fase 7 verde — embedding `true` (768d), aresta confirmada, 9 docs no disco.** A suíte BoK do `constellation-v2` está completa e selada.
+
+## 📋 BoK Scribe — Suíte `constellation-v2` (resumo)
+
+| # | Arquivo | Documento | BoK | LOC |
+|---|---------|-----------|-----|-----|
+| 0 | `00-index.md` | Project Manifest + traceability + material snapshot | — | 126 |
+| 1 | `01-mrd.md` | Market Requirements | BABOK v3 | 114 |
+| 2 | `02-brd.md` | Business Requirements (3 BO · 7 BR · ROI · risco) | BABOK v3 | 158 |
+| 3 | `03-prd.md` | Product Requirements (2 personas · 13 PR MoSCoW · Gherkin) | ProdBOK+CXBOK | 208 |
+| 4 | `04-frd.md` | Functional Requirements (30+ FR · 12 NFR · contratos) | SWEBOK v4 | 172 |
+| 5 | `05-sdd.md` | System Design (arquitetura · STRIDE · RLS · migrations · 8 OTD) | SWEBOK+CISSP | 296 |
+| 6 | `06-data-model.md` | Data Model (3 tabelas novas · isolamento · qualidade) | DMBOK v2 | 211 |
+| 7 | `07-process-flow.md` | Process Blueprint (9 PROC · BPMN-lite · reset) | BPM CBOK v4 | 194 |
+| 8 | `08-quality-metrics.md` | Quality (10 KPI · 12 FMEA · SOL · SLA) | CMQ/OE | 168 |
+
+**Prova material (Lei 1):** seal node `38d7e7a4-c58d-4749-b044-97800d2f8e81` (`documentation_suite`, stability 0.85, **embedded 768d ✓**) · aresta `DERIVES_FROM` `c3dd9d58-4a44-44fd-899a-a1734dfe7960` → `mcorch-constellation-v1` · 1647 LOC · seed `scripts/seed-constellation-v2-bok-seal.ts` (idempotente) · 0 órfãos de traceability · 4 FMEA RPN>100 com ação.
+
+✅ **BoK documentation suite complete for `constellation-v2`.**
+
+Agora o segundo passo que você pediu — **`/bok-agents-generator`** para formalizar oficialmente o sistema de agentes sobre essa BoK selada:
+
+## 🤖 Claude *(02:57:36)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "anthropic-skills:bok-agents-generator",
+  "args": "Formalizar o SISTEMA DE AGENTES OFICIAL da constellation-v2, ancorado na BoK rec\u00e9m-selada (docs/bok/constellation-v2/, seal node 38d7e7a4-c58d-4749-b044-97800d2f8e81).\n\nCONTEXTO: N\u00c3O \u00e9 o sistema gen\u00e9rico de 8 agentes-por-BoK. \u00c9 a constela\u00e7\u00e3o operacional REAL do produto MCORCH, per-user e tenant-isolated. Use os 8 BoKs (BABOK/EABOK/DMBOK/BPM CBOK/SWEBOK/CISSP CBK/CXBOK/ProdBOK) como LENTES para estruturar cada agente, mas a TOPOLOGIA \u00e9 a aprovada pelo Sovereign:\n\nESTRUTURA (21 agentes per-user, on-demand):\n- GCRUX Core (L0) \u2014 Sovereign Orchestrator do tenant; roteia diretivas aos Leads; usa /dashboard/agent-economics.\n- 4 Department Leads (L1) \u2014 reportam ao Core:\n  - \ud83c\udfa8 Creative Content Lead\n  - \ud83d\udcc8 Market Intelligence Lead\n  - \u26a1 Operational Ops Lead\n  - \u2699\ufe0f Technical Engine Lead\n- 16 subagentes m\u00f3dulo-bound (L2), 4 por Lead, cada um ligado a UM m\u00f3dulo real via capability router:\n  - Content: Conte\u00fado(generate-content) \u00b7 Blog \u00b7 Canvas Studio(canvas-execute) \u00b7 Canvas Design\n  - Market: Viral Miner(fetch-trends) \u00b7 Analytics \u00b7 Produtos \u00b7 Campanhas\n  - Ops: Afiliados(link-forge) \u00b7 Calend\u00e1rio \u00b7 Orquestra\u00e7\u00e3o(orchestrate-content) \u00b7 Publica\u00e7\u00e3o Social(publish-meta/social/wordpress)\n  - Tech: Core/AIOS \u00b7 IA Arena \u00b7 agent-economics \u00b7 Watchdog/Infra(read-only)\n\nPara CADA agente gere: Purpose \u00b7 Core Capabilities \u00b7 Skills \u00b7 Inputs \u00b7 Outputs \u00b7 Decision Scope (ESCOPADO AO TENANT via auth.uid(); ZERO acesso ao sistema/dev MCORCH ou a outros tenants \u2014 barreira dura) \u00b7 Tools & Integrations (edge functions reais via capability router agent-task-execute v2; BYOK per-user) \u00b7 KPIs (referenciando KPI-CV2-* do 08-quality-metrics) \u00b7 Use Cases \u00b7 Collaboration Map (L2\u2192Lead\u2192Core).\n\nCAMADAS CROSS-AGENT:\n- Orchestration Model: capability router (agent-task-execute v2) \u2014 resolve capability\u2192edge function, BYOK, caps, metering mcoCoins.\n- Intelligent Engineering Layer: economia per-user (calc_agent_cost_mcoin + deduct_mco_coins at\u00f4mico, Sovereign freebie) + resolu\u00e7\u00e3o BYOK (user_api_keys) + caps de consumo (agent_consumption_caps).\n- Cross-Cutting Enablers: RLS auth.uid() tenant isolation + capability allowlist/system denylist + observabilidade (agent_executions + infra_health_logs) + self-healing (mega-brain-daemon).\n\nRESTRI\u00c7\u00c3O DURA (repetir como NFR de seguran\u00e7a): estes s\u00e3o agentes de PRODUTO do tenant \u2014 distintos e ISOLADOS do Pantheon OpenClaw (engineer/scientist/artisan/marketing-growth/guardian/claw-master) que opera o sistema/dev/repo. Nenhuma capability mapeia a fun\u00e7\u00e3o de sistema.\n\nOUTPUT: docs/bok/constellation-v2/bok-agents-system--constellation-v2.md (mirror do precedente docs/bok/mcorch-constellation/bok-agents-system--mcorch-constellation.md de v5.8.0). Idioma: estrutura/labels em ingl\u00eas, narrativa ao Sovereign em PT-BR."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: anthropic-skills:bok-agents-generator
+> ```
+
+## 👤 User *(02:57:36)*
+
+Base directory for this skill: /home/ubuntu/.claude/remote/plugins/02d3361e68356973/skills/bok-agents-generator
+
+# BoK Agents Generator
+
+Generates a full **8-agent AI system** grounded in enterprise Bodies of Knowledge, plus the three
+cross-agent layers that make them interoperable as a living system.
+
+**System Identity — always include this block at the top of every generated document:**
+```
+# SOFTWARE ENGINEERING INTELLIGENCE
+## KNOWLEDGE CORE v2.0.0 | STATUS: ONLINE
+
+> Integrated Body of Knowledge for Engineering, Architecture, Delivery,
+> Security, Experience and Product Excellence
+>
+> **OUTCOMES:** Better Knowledge · Better Decisions · Better Outcomes
+> **ONE KNOWLEDGE ECOSYSTEM. INFINITE POSSIBILITIES.**
+```
+
+**System Footer — always include this block at the end of every generated document:**
+```
+---
+→ ALIGN  →  INTEGRATE  →  OPTIMIZE  →  INNOVATE  →  TRANSFORM  →  DELIVER VALUE
+
+**SYSTEM STATUS: ALL SYSTEMS OPERATIONAL**
+```
+
+---
+
+## Execution Flow
+
+### Step 1 — Context Capture
+
+Before generating, check if the user provided any of these optional context inputs:
+
+| Input | Examples |
+|---|---|
+| **Industry** | Fintech, Healthcare, Retail, Manufacturing, SaaS |
+| **Company maturity** | Startup, Scale-up, Mid-market, Enterprise |
+| **Digital capabilities** | Low / Medium / High / AI-native |
+| **Business model** | B2B, B2C, B2B2C, Marketplace, Platform |
+
+If no context is provided → generate the **generic enterprise-ready version** (explicitly note this at the top of the output).
+
+If context is provided → adapt every agent's Use Cases, Tools, and KPIs to that context.
+
+---
+
+### Step 2 — Generate All 8 BoK Agents
+
+Generate agents in this exact order. Each agent uses the **strict output format** below.
+
+**Agent order:**
+1. BABOK — Business Analysis
+2. EABOK — Enterprise Architecture
+3. DMBOK — Data Management
+4. BPM CBOK — Business Process Management
+5. SWEBOK — Software Engineering
+6. CISSP CBK — Cybersecurity
+7. CXBOK — Customer Experience
+8. ProdBOK — Product Management
+
+---
+
+### Strict Output Format Per Agent
+
+```
+---
+
+🤖 Agent: [BoK Name] — [Domain Label]
+
+### 1. Purpose
+[2–3 sentence strategic description. What this agent owns in a business context. NOT a textbook definition.]
+
+### 2. Core Capabilities
+[6–10 capabilities directly derived from the BoK. Noun phrases, not verbs.]
+
+### 3. Skills (Operational Level)
+[Bullet list. Action-oriented. Each skill starts with a verb. Map to the capabilities above.]
+
+### 4. Inputs
+[What this agent needs to operate: data, documents, signals, systems, events.]
+
+### 5. Outputs
+[Deliverables, insights, decisions, artifacts this agent produces.]
+
+### 6. Decision Scope
+[What decisions this agent can autonomously support or recommend. Be specific about autonomy level.]
+
+### 7. Tools & Integrations
+[Platforms, systems, APIs this agent typically connects to. Real tool names.]
+
+### 8. KPIs / Success Metrics
+[Business + operational metrics. Mix leading and lagging indicators.]
+
+### 9. Example Use Cases
+[3 real-world scenarios. Format: **Scenario Title** — 2-sentence description of the problem + value created.]
+
+### 10. Collaboration Map
+[How this agent interfaces with other BoK agents. Format: → AgentName: [nature of dependency or data flow]]
+```
+
+---
+
+### Step 3 — Cross-Agent Layers
+
+After all 8 agents, generate the three cross-agent sections:
+
+#### 3a. Orchestration Model
+
+```
+---
+
+## 🔄 Orchestration Model
+
+Describe the end-to-end flow: how agents activate each other, share outputs, and form closed loops.
+Include:
+- Which agent is the primary orchestrator (or if orchestration is event-driven)
+- Trigger conditions (what activates the system)
+- Key handoff points between agents
+- Feedback loops
+- Conflict resolution (when two agents have overlapping scope)
+```
+
+#### 3b. Intelligent Engineering Layer
+
+```
+---
+
+## 🧠 Intelligent Engineering Layer
+
+Explain how the system integrates across SEVEN dimensions (as defined in the Knowledge Core):
+
+| Dimension | Description |
+|---|---|
+| **People** | How agents augment human roles and teams |
+| **Process** | How agents embed into business workflows |
+| **Technology** | Infrastructure and platform requirements |
+| **Data** | Data flows, quality gates, and knowledge graph |
+| **Knowledge** | How agents learn, update, and share knowledge |
+| **Value** | How the system translates agent outputs into business value |
+| **Sustainable Impact** | How the system generates outcomes that endure — environmental, social, and economic sustainability of the decisions made by the agent ecosystem |
+```
+
+#### 3c. Cross-Cutting Enablers
+
+```
+---
+
+## ⚙️ Cross-Cutting Enablers
+
+Define how these five capabilities are embedded across ALL agents (not per-agent — system-wide):
+
+1. **Systems Thinking** — [How the system models interdependencies]
+2. **Analytics & Metrics** — [Shared observability layer]
+3. **Collaboration & Communication** — [Inter-agent and human-agent protocols]
+4. **Automation & Tooling** — [Shared automation infrastructure]
+5. **Ethics, Compliance & Sustainability** — [Governance model across agents]
+```
+
+---
+
+## Quality Rules
+
+Apply these rules during generation — do NOT repeat them in the output:
+
+- **No textbook definitions** — every section must describe execution, not theory
+- **No capability repetition** across agents unless absolutely necessary (flag it when it occurs)
+- **Tools must be real** — no invented platform names
+- **Collaboration Map must form a coherent graph** — every agent must connect to at least 3 others
+- **Use Cases must be industry-specific** if context was provided
+- **KPIs must be measurable** — no vague metrics like "improved quality"
+- **Decision Scope must distinguish** between autonomous recommendation vs. human-in-the-loop
+
+---
+
+## Output — Write to File (Primary Delivery Mode)
+
+This skill runs in **Claude Code (terminal)**. Output is always written to disk as a `.md` file.
+Do NOT print the full content to the terminal — write the file, then confirm to the user.
+
+### File naming convention
+```
+bok-agents-system[--<slug>].md
+```
+- No context provided → `bok-agents-system.md`
+- Context provided → slugify the industry + maturity, e.g. `bok-agents-system--fintech-enterprise.md`
+
+### Output path
+Write to the **current working directory** unless the user specifies otherwise.
+If a path is specified, respect it exactly.
+
+### Write procedure (execute in this order)
+1. Compose the full document in memory following Steps 1–3
+2. Write to file using the bash tool or Python `open()` — single write operation
+3. Print a short confirmation to the terminal:
+   ```
+   ✅ BoK Agents System written to: ./bok-agents-system--<slug>.md
+   📄 Agents: 8 | Sections: 10 per agent + 3 cross-agent layers
+   📁 Size: ~<N> KB
+   ```
+4. Do NOT print the document content to stdout
+
+### Document structure (inside the .md file)
+- H1 title: `# BoK Agents System — [Context or "Enterprise-Ready Generic Version"]`
+- If context was provided: frontmatter metadata block at the top:
+  ```markdown
+  > **Context applied:** Industry: X | Maturity: Y | Digital capabilities: Z | Model: W
+  ```
+- Use `##` for each agent header (`## 🤖 Agent: BABOK — Business Analysis`)
+- Use `###` for the 10 section headers within each agent
+- Use `---` as horizontal rule between agents
+- Use `##` for the three cross-agent layer headers
+- Emoji headers exactly as specified (🤖, 🔄, 🧠, ⚙️)
+
+### Context adaptation rules (when context is provided)
+Adapt these fields per agent — everything else stays structurally consistent:
+- **Use Cases** → scenarios specific to the provided industry and maturity level
+- **Tools & Integrations** → prioritize tools common in that industry/stack
+- **KPIs** → benchmark values calibrated to maturity level (startup vs. enterprise targets differ)
+- **Decision Scope** → autonomy level adjusted to digital capability maturity (Low = more human-in-loop)
+
+Do NOT adapt: agent Purpose, Core Capabilities, Skills structure, or the cross-agent layers topology.
+
+---
+
+## Reference: BoK Domain Map
+
+See `references/bok-domains.md` for the authoritative list of capabilities per BoK, used to
+validate that generated capabilities are grounded in the actual body of knowledge (not invented).
+Read this file if you need to verify correctness of a specific BoK's scope.
+
+
+ARGUMENTS: Formalizar o SISTEMA DE AGENTES OFICIAL da constellation-v2, ancorado na BoK recém-selada (docs/bok/constellation-v2/, seal node 38d7e7a4-c58d-4749-b044-97800d2f8e81).
+
+CONTEXTO: NÃO é o sistema genérico de 8 agentes-por-BoK. É a constelação operacional REAL do produto MCORCH, per-user e tenant-isolated. Use os 8 BoKs (BABOK/EABOK/DMBOK/BPM CBOK/SWEBOK/CISSP CBK/CXBOK/ProdBOK) como LENTES para estruturar cada agente, mas a TOPOLOGIA é a aprovada pelo Sovereign:
+
+ESTRUTURA (21 agentes per-user, on-demand):
+- GCRUX Core (L0) — Sovereign Orchestrator do tenant; roteia diretivas aos Leads; usa /dashboard/agent-economics.
+- 4 Department Leads (L1) — reportam ao Core:
+  - 🎨 Creative Content Lead
+  - 📈 Market Intelligence Lead
+  - ⚡ Operational Ops Lead
+  - ⚙️ Technical Engine Lead
+- 16 subagentes módulo-bound (L2), 4 por Lead, cada um ligado a UM módulo real via capability router:
+  - Content: Conteúdo(generate-content) · Blog · Canvas Studio(canvas-execute) · Canvas Design
+  - Market: Viral Miner(fetch-trends) · Analytics · Produtos · Campanhas
+  - Ops: Afiliados(link-forge) · Calendário · Orquestração(orchestrate-content) · Publicação Social(publish-meta/social/wordpress)
+  - Tech: Core/AIOS · IA Arena · agent-economics · Watchdog/Infra(read-only)
+
+Para CADA agente gere: Purpose · Core Capabilities · Skills · Inputs · Outputs · Decision Scope (ESCOPADO AO TENANT via auth.uid(); ZERO acesso ao sistema/dev MCORCH ou a outros tenants — barreira dura) · Tools & Integrations (edge functions reais via capability router agent-task-execute v2; BYOK per-user) · KPIs (referenciando KPI-CV2-* do 08-quality-metrics) · Use Cases · Collaboration Map (L2→Lead→Core).
+
+CAMADAS CROSS-AGENT:
+- Orchestration Model: capability router (agent-task-execute v2) — resolve capability→edge function, BYOK, caps, metering mcoCoins.
+- Intelligent Engineering Layer: economia per-user (calc_agent_cost_mcoin + deduct_mco_coins atômico, Sovereign freebie) + resolução BYOK (user_api_keys) + caps de consumo (agent_consumption_caps).
+- Cross-Cutting Enablers: RLS auth.uid() tenant isolation + capability allowlist/system denylist + observabilidade (agent_executions + infra_health_logs) + self-healing (mega-brain-daemon).
+
+RESTRIÇÃO DURA (repetir como NFR de segurança): estes são agentes de PRODUTO do tenant — distintos e ISOLADOS do Pantheon OpenClaw (engineer/scientist/artisan/marketing-growth/guardian/claw-master) que opera o sistema/dev/repo. Nenhuma capability mapeia a função de sistema.
+
+OUTPUT: docs/bok/constellation-v2/bok-agents-system--constellation-v2.md (mirror do precedente docs/bok/mcorch-constellation/bok-agents-system--mcorch-constellation.md de v5.8.0). Idioma: estrutura/labels em inglês, narrativa ao Sovereign em PT-BR.
+
 ---
 
 %% --- TIMELINE START --- %%
