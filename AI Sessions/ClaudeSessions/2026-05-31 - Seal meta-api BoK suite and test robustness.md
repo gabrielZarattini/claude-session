@@ -5951,5 +5951,5 @@ O selo v6.14.8 está em `origin/main`. O Passo 1 do Meta Gateway está materiali
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-31 - Fix tenant isolation in edge functions]]
-> * **Próxima Sessão**: [[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]
+> * **Próxima Sessão**: [[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]
 %% --- TIMELINE END --- %%

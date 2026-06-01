@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 229
-> * **Sessões do Claude**: 199
+> * **Total de Sessões Registradas**: 230
+> * **Sessões do Claude**: 200
 > * **Sessões do Gemini**: 30
 
 ---
@@ -54,6 +54,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` - *2026-06-01*
+*   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` - *2026-06-01*
 *   `[[2026-05-31 - handson]]` - *2026-05-31*
 *   `[[2026-05-31 - Seal meta-api BoK suite and test robustness]]` - *2026-05-31*
 *   `[[2026-05-31 - Fix tenant isolation in edge functions]]` - *2026-05-31*
@@ -63,8 +64,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-30 - Fix tenant isolation in edge functions]]` - *2026-05-30*
 *   `[[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]` - *2026-05-30*
 *   `[[2026-05-29 - Update context and continue antigravity handoff]]` - *2026-05-29*
-*   `[[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]` - *2026-05-29*
-*   *... e mais 196 sessões nessa categoria.*
+*   *... e mais 197 sessões nessa categoria.*
 
 ---
 
@@ -254,6 +254,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` (ClaudeSessions)
+*   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` (ClaudeSessions)
 
 ### Abril 2026
 *   `[[2026-04-26 - ffc7407f-40e6-45ef-a261-ef73cd5bca92]]` (ClaudeSessions)
