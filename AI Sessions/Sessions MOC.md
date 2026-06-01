@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 236
-> * **Sessões do Claude**: 206
+> * **Total de Sessões Registradas**: 237
+> * **Sessões do Claude**: 207
 > * **Sessões do Gemini**: 30
 
 ---
@@ -41,6 +41,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-03 - AIOS Constelação MCORCH system updates]]` - *2026-05-03*
 
 ### UI Extensions & Layouts
+*   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` - *2026-06-01*
 *   `[[2026-05-30 - Configure canvas nodes and validate enterprise deploy]]` - *2026-05-30*
 *   `[[2026-05-14 - Sprint 4 — Canvas Studio UX Completion]]` - *2026-05-14*
 *   `[[2026-05-14 - Build content v2 AI canvas platform]]` - *2026-05-14*
@@ -257,6 +258,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` (ClaudeSessions)
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` (ClaudeSessions)
 *   `[[2026-06-01 - Resolve priority alerts]]` (ClaudeSessions)
+*   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` (ClaudeSessions)
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` (ClaudeSessions)
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` (ClaudeSessions)

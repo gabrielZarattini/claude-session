@@ -9532,10 +9532,824 @@ Print seal summary in **Portuguese (Brasil)**:
 - Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
 - git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
 
+
+## 🤖 Claude *(17:00:25)*
+
+
+## 🤖 Claude *(17:00:25)*
+
+Executando o `/handoff` v4. **PRE-FLIGHT** (tudo em paralelo):
+
+## 🤖 Claude *(17:00:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== git status ===\"; git status --short\necho \"=== diff stat ===\"; git diff HEAD --stat\necho \"=== log -7 ===\"; git log --oneline -7\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Pre-flight: git state + tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> === diff stat ===
+> === log -7 ===
+> 1dacd10 feat(settings): organiza Configurações em tabs (IA / WordPress / Meta / LGPD)
+> 8a0c547 fix(settings): valida API keys server-side (lê a chave descriptografada)
+> 9a13545 feat(constellation-v2): botão 'Zerar constelação' per-user no cockpit
+> 8ed3f78 docs: runbooks vivos apontam para SB_SECRET_KEY (service_role legada revogada)
+> 7b2b277 feat(constellation-v2): Fase 3 — cockpit per-user com wizard 2-portas + execução real de capability
+> 9a4b569 fix(build): restaura ícones de marca do lucide via shim local + anticorpo de auditoria
+> c833cdb docs(handoff): seal service_role key cutover + leak revoked (P0 closed)
+> === tsc ===
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(17:00:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== mcorch containers ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== mega-brain ===\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== chroma ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat || echo \"CHROMA_UNREACHABLE\"\necho \"=== origin sync ===\"; git rev-parse --short HEAD; git rev-parse --short origin/main",
+  "description": "Pre-flight: infra + origin sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mcorch containers ===
+> mcorch_chroma: Up 8 days (healthy)
+> mcorch_claude_mem: Up 8 days (healthy)
+> === mega-brain ===
+> mega-brain-dashboard: Up 8 days
+> mega-brain-webhook: Up 8 days (healthy)
+> mega-brain-daemon: Up 8 days (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1780333229800006587}=== origin sync ===
+> 1dacd10
+> 1dacd10
+> ```
+
+## 🤖 Claude *(17:00:50)*
+
+
+## 🤖 Claude *(17:00:52)*
+
+**PRE-FLIGHT ✅** — working tree **limpo** (todo o código da sessão já commitado + pushed, `HEAD==origin/main==1dacd10`), `tsc` 0, 5 containers healthy, chroma OK.
+
+**PHASE 1 — SECURITY AUDIT** (escaneando o range da sessão `c833cdb..HEAD`, já que a árvore está limpa):
+
+## 🤖 Claude *(17:00:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 1a. secret leak scan (session diff) ===\"\ngit diff c833cdb..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_SECRET|SERVICE_ROLE_KEY\\s*=\\s*['\\\"]|ACCESS_TOKEN\\s*=\\s*['\\\"])\" | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|Deno.env\\|process.env\\|??\" | head -10 || echo \"NO HARDCODED SECRETS \u2705\"\necho\necho \"=== 1b. edge fn JWT enforcement (new test-api-key) ===\"\ngrep -L \"Authorization\\|jwt\\|JWT\\|service_role\\|getUser\" supabase/functions/test-api-key/index.ts || echo \"test-api-key: JWT/auth enforced \u2705\"\necho\necho \"=== 1c. client-side mco_balance update ===\"\ngit diff c833cdb..HEAD -- src/ | grep -iE \"mco_balance.*update|update.*mco_balance\" | head -5 || echo \"NO CLIENT-SIDE BALANCE WRITE \u2705\"\necho\necho \"=== 1d. service_role / rls bypass in src ===\"\ngit diff c833cdb..HEAD -- src/ | grep -iE \"^\\+.*(service_role|bypass.*rls|SB_SECRET)\" | head -5 || echo \"NO RLS BYPASS IN SRC \u2705\"\necho\necho \"=== 1e. sensitive console.log ===\"\ngit diff c833cdb..HEAD -- src/ | grep -iE \"^\\+.*console\\.(log|warn).*(token|api_key|secret|password)\" | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit on session diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (session diff) ===
+> 
+> === 1b. edge fn JWT enforcement (new test-api-key) ===
+> test-api-key: JWT/auth enforced ✅
+> 
+> === 1c. client-side mco_balance update ===
+> 
+> === 1d. service_role / rls bypass in src ===
+> 
+> === 1e. sensitive console.log ===
+> ```
+
+## 🤖 Claude *(17:01:22)*
+
+
+## 🤖 Claude *(17:01:25)*
+
+**PHASE 1 ✅** — todos os 5 checks limpos (sem secrets hardcoded · `test-api-key` JWT-guarded · sem write client-side de `mco_balance` · sem RLS bypass · sem logs sensíveis). Zero 🔴.
+
+**PHASE 2** — working tree limpo: os 6 commits da sessão já estão feitos + pushed. README/HANDOFF vêm nas fases 4/5.
+
+**PHASE 3 — KNOWLEDGE MESH MILESTONE** (insiro o nó handoff via `SB_SECRET_KEY`):
+
+## 🤖 Claude *(17:01:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"constellation-v2-cockpit-e2e\"\nSESSION_SUMMARY=\"Constellation v2 provada E2E: Fase 3 cockpit per-user (empty-state 2-portas + wizard 4x4 + execucao real de capability via agent-task-execute v2 + AccessConfigCard) + Fase 0 reset destrutivo (746/717/35 -> 0, 35 execs arquivadas) + botao Zerar per-user; fix do build lucide (brand-icon shim + audit antibody, producao voltou a buildar); P0 login (publishable key stale no bundle -> redeploy com a registrada); teste de API keys server-side (edge fn test-api-key, descoberta da view mascarada credential_encryption); tabs em Settings. Fase 4 E2E exec 488a7744 watchdog_infra done cost0 255ms result_summary chroma+intelligence healthy.\"\n\nNODE_ID=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -6 | tr '\\n' '|')\\\"\n    }\n  }\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERROR'))\")\necho \"NODE_ID=$NODE_ID\"\necho \"$NODE_ID\" | grep -qE '^[0-9a-f-]{36}$' && echo \"\u2705 handoff node inserted\" || echo \"\ud83d\udd34 insert failed\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"proof-manifest.json:\"; cat proof-manifest.json",
+  "description": "Insert handoff milestone node + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID=a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9
+> ✅ handoff node inserted
+> proof-manifest.json:
+> {"handoffNodeId": "a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9"}
+> ```
+
+## 🤖 Claude *(17:01:43)*
+
+
+## 🤖 Claude *(17:01:45)*
+
+Nó inserido: **`a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9`** + proof-manifest. Disparo o embedding + consulto a contagem **live** da malha (Lei 1 — números reais pro README/GraphRAG):
+
+## 🤖 Claude *(17:01:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9\"\necho \"=== trigger embedding ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200\necho; echo \"=== live mesh counts (exact) ===\"\nfor t in mcorch_nodes mcorch_edges; do\n  c=$(curl -s -D - -o /dev/null \"${SUPABASE_URL}/rest/v1/${t}?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" | grep -i '^content-range:' | tr -d '\\r' | sed 's#.*/##')\n  echo \"  $t: $c\"\ndone\necho \"=== handoff node embedded? ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,name,embedding\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); r=d[0] if d else {}; print('  embedded:', 'YES \u2705' if r.get('embedding') else 'pending (autoembed async)')\"",
+  "description": "Trigger embed + live mesh counts + verify embedding"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === trigger embedding ===
+> {"error":"Request body must contain { node_id: string }"}
+> === live mesh counts (exact) ===
+>   mcorch_nodes: 8746
+>   mcorch_edges: 9070
+> === handoff node embedded? ===
+>   embedded: YES ✅
+> ```
+
+## 🤖 Claude *(17:02:08)*
+
+
+## 🤖 Claude *(17:02:10)*
+
+**PHASE 3 ✅** — nó `a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9` inserido + **embedded** (autoembed trigger; o call explícito falhou por shape stale do payload — o trigger cobriu). Malha live: **8746 nós / 9070 arestas** (+1 nó = este handoff).
+
+**PHASE 4 — README.md**. Localizando badges + seções:
+
+## 🤖 Claude *(17:02:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE 'neural_mesh-[0-9]+|version-[0-9]+\\.[0-9]+\\.[0-9]+|## .*(Novidades|What.s New|Status)|^### \\[v[0-9]' README.md | head -20",
+  "description": "Find README badges + sections"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.17.0--service--role--key--cutover-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8745_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 263:### [v6.17.0] — Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)
+> 269:### [v6.15.1] — Mercado Pago Postback Signature Gate (FMEA-ML-003/004) (2026-05-31)
+> 275:### [v6.14.3] — meta-api BoK Suite & Agents System Sealed (2026-05-30)
+> 280:### [v6.14.2] — OTD-ML-001 Material Resolution + v6.14.1 Correction (2026-05-30)
+> 287:### [v6.14.1] — OTD-ML-001 Resolved & fetch-trends Deployed (2026-05-30)
+> 292:### [v6.14.0] — Sovereign Dogfood: Affiliate Per-User · Constellation Real · Canvas Graph · Deploy Antibody (2026-05-30)
+> 300:### [v6.13.0] — OpenClaw Ecosystem 100% Validation + Resilience Hardening (2026-05-29)
+> 308:### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> 315:### [v6.8.5] — e2e-user-zero framework MVP — Phase Commercial Gate operacional (2026-05-26)
+> 323:### [v6.8.4] — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern (2026-05-26)
+> 331:### [v6.8.3] — mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening (2026-05-25)
+> 336:### [v6.8.2] — OE-661 Flywheel Validated End-to-End + PGRST203 Hotfix (2026-05-25)
+> 345:### [v6.8.0] — Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)
+> 350:### [v6.7.9] — Canvas Studio Magic Prompt & E2E Audit (2026-05-24)
+> 355:### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+> 361:### [v6.7.6] — Canvas Studio Video Tiers & Error Propagation (2026-05-24)
+> 367:### [v6.7.5] — Canvas Studio Evolution: Take Pipeline, Re-execution, CRUD and Asset Import (2026-05-24)
+> 373:### [v6.7.3] — BoK aios-sql-bridge + OE-661 Flywheel + Canvas Design Submenu (2026-05-23)
+> ```
+
+## 🤖 Claude *(17:02:23)*
+
+
+## 🤖 Claude *(17:02:25)*
+
+Badges: linha 3 (version 6.17.0) e linha 6 (neural_mesh 8745). Leio o formato da última entrada "What's New" pra casar:
+
+## 🤖 Claude *(17:02:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 261,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 261	```
+> 262	
+> 263	### [v6.17.0] — Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)
+> 264	- **Leaked legacy `service_role` JWT killed.** A hardcoded service_role key (public on GitHub ~1 month) was cut over to the new Supabase API keys: 52 edge functions + 57 scripts now read `SB_SECRET_KEY`/`SB_PUBLISHABLE_KEY` (legacy fallback), `verify_jwt=false` + in-code auth gates on the 3 service→service targets, and the embed-on-insert trigger reads its key from **Supabase Vault** (no hardcoded literal).
+> 265	- **Sovereign disabled the legacy API keys + revoked the HS256 signing key** (`211a3abc`). Material proof: the leaked JWT now returns `PGRST301: No suitable key was found to decode the JWT` on both the `apikey` and `Authorization: Bearer` paths — cryptographically dead. System intact on the new keys (REST · functions · frontend), zero downtime.
+> 266	- **GitGuardian FP remediation** — randomized throwaway smoke-test passwords (`crypto.randomUUID()`); **pre-commit hook portability fix** (the anti-credential hook silently no-op'd under the Claude Code ugrep shim — now catches `eyJ`/`AIza`/generic-password literals on AI-driven commits).
+> 267	- **Constellation v2 Fase 3 foundation** — `useAgentCapabilities` + `useAccessConfig` hooks + Supabase types regen (UI components pending).
+> 268	
+> 269	### [v6.15.1] — Mercado Pago Postback Signature Gate (FMEA-ML-003/004) (2026-05-31)
+> 270	- **HMAC `x-signature` validation** on `handle-ml-postback`: the endpoint ran with `verify_jwt=false` and only *declared* `x-ml-signature` in CORS without ever validating it — a public, internet-facing function that wrote revenue (`revenue_cents`, `revenue_impact`, `ATTRIBUTES_REVENUE_TO` edges). Now fail-closed against Mercado Pago's official scheme (manifest `id;request-id;ts` → HMAC-SHA256 compared to `v1`): `501` without a configured secret, `401` on invalid/missing signature.
+> ```
+
+## 🤖 Claude *(17:02:47)*
+
+
+## 🤖 Claude *(17:02:47)*
+
+Formato capturado. Aplico os 3 edits do README (version + neural_mesh badges + nova entrada v6.18.0):
+
+## 🤖 Claude *(17:02:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.17.0--service--role--key--cutover-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.18.0--constellation--v2--cockpit--live-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8745_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8746_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:03:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.17.0] \u2014 Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)",
+  "new_string": "### [v6.18.0] \u2014 Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)\n- **Constellation v2 proven end-to-end** \u2014 from decorative shell (717 fake agents, zero real work) to an operational per-user cockpit. Empty-start (no auto-seed) \u2192 dual-door wizard (`useCreateCrew`: ready 4\u00d74 map = N\u00facleo + 4 Leads + 13 module-bound subagents, OR guided builder) \u2192 a capability-bound subagent invokes a **real module function** via the v2 capability router (`agent-task-execute`), metered in mcoCoins, isolated by `auth.uid()`. Fase 4 E2E proof: exec `488a7744` \u2192 `watchdog_infra`/`get-infra-status` \u2192 `done` \u00b7 0 mcoCoins \u00b7 255ms \u00b7 `result_summary` = real `{chroma:healthy, intelligence:healthy}`.\n- **Fase 0 destructive reset** (`scripts/reset-constellation-v2.ts --execute`) \u2014 archived 35 execs \u2192 wiped 746 crew_agents + 717 crew_edges \u2192 0; `profiles` preserved. Plus a per-user **\"Zerar constela\u00e7\u00e3o\"** button (`useResetCrew`, RLS-scoped) so any user restarts from zero or re-seeds the 4\u00d74 anytime.\n- **Production build unblocked** \u2014 `lucide-react@1.x` had dropped brand icons (`Instagram`/`Facebook`/`Figma`), silently breaking `vite build` (rollup) while dev (esbuild) tolerated it; the live site was serving a stale May-30 bundle. Fixed with a local brand-icon shim + a `scripts/qa/audit-lucide-imports.ts` antibody that catches removed-icon imports before the build breaks.\n- **P0 login outage fixed** \u2014 the live bundle baked a publishable key the credential migration had rotated/unregistered (`UNAUTHORIZED_UNREGISTERED_API_KEY` on `/auth/v1/user`); a redeploy baked the registered `.env` key. Keys are env-driven (`client.ts` reads `import.meta.env`), so the rebuild itself was the fix.\n- **Settings: server-side API-key validation + tabs** \u2014 `user_api_keys` is a masking view (credential encryption); the browser only ever holds `\u2022\u2022\u2022\u2022`, so the client-side \"Testar\" always failed. New `test-api-key` edge function resolves the real decrypted key (`decrypted_user_api_keys`) and validates server-side (also covers Replicate's CORS block). The 4 settings sections moved into tabs (IA \u00b7 WordPress \u00b7 Meta \u00b7 LGPD).\n\n### [v6.17.0] \u2014 Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:03:32)*
+
+
+## 🤖 Claude *(17:03:33)*
+
+README atualizado (v6.18.0 · 8746 nós · nova entrada). Commit do README + leio o topo do HANDOFF.md pra inserir o Record:
+
+## 🤖 Claude *(17:03:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add README.md\ngit commit -q -m \"docs(readme): v6.18.0 \u2014 constellation v2 cockpit live (E2E) + build/login/settings fixes\" -m \"Bump version + neural_mesh 8745->8746; nova entrada What's New cobrindo Fase 3 cockpit + Fase 0 reset + botao Zerar + fix lucide build + P0 login + teste de chaves server-side + tabs.\"\ngit log --oneline -1\necho \"=== HANDOFF.md top (Task State + first record anchor) ===\"\nsed -n '11,15p' HANDOFF.md\necho \"=== GraphRAG State count lines ===\"\ngrep -nE '^- \\*\\*[0-9]+ total nodes\\*\\*|total nodes|total edges' HANDOFF.md | head -4",
+  "description": "Commit README + locate HANDOFF anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 18dd696 docs(readme): v6.18.0 — constellation v2 cockpit live (E2E) + build/login/settings fixes
+> === HANDOFF.md top (Task State + first record anchor) ===
+> 
+> ## Task State
+> 
+> ## Service_role Key Leak — Full Cutover + Revoke (P0 closed) Record (2026-06-01)
+> 
+> === GraphRAG State count lines ===
+> 4984:  Result: +259 cross-file CALLS · 646 total edges in mesh
+> 5748:- **8714 total nodes** (verificado live 2026-05-31 via REST count=exact, 0 sem embedding; v6.8.6 snapshot era 8605, cujo handoff `196b7acf-9035-4d87-a19b-7d7d6b55bee0` embedded 768d via autoembed trigger pg_net) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> 5749:- **9040 total edges** (verificado live 2026-05-31 via REST count=exact; v6.6.9 snapshot registrava 11925, cujo +1 foi DERIVES_FROM edge `4254225d-a666-4363-a4bd-98947efc434f` → mcorch-qa-healing parent) — defines · calls · INHABITS · DERIVES_FROM · REQUIRES · observes (OE-661-003) · ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) · CONTAINS_LINK_FOR (OE-661-004) · OBSERVES (e2e-user-zero finding observations — when runner.ts lands)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:04:36)*
+
+
+## 🤖 Claude *(17:04:37)*
+
+README commitado (18dd696). **PHASE 5 — HANDOFF.md**. Insiro o Record da sessão (entre `## Task State` e o record v6.17.0):
+
+## 🤖 Claude *(17:05:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Service_role Key Leak \u2014 Full Cutover + Revoke (P0 closed) Record (2026-06-01)",
+  "new_string": "## Task State\n\n## Constellation v2 Cockpit Live \u2014 Fase 3+4 E2E + Build/Login/Settings Fixes Record (2026-06-01)\n\n**v6.18.0 (2026-06-01)** \u2014 Sess\u00e3o densa que levou a Constela\u00e7\u00e3o v2 de casca decorativa a **cockpit operacional per-user provado ponta-a-ponta**, mais 3 incidentes de produ\u00e7\u00e3o resolvidos (build quebrado, P0 login, teste de chaves). Fluxo: `/handson` \u2192 resolver alertas priorit\u00e1rios \u2192 Fase 3 UI \u2192 (o gate de build revelou um blocker pr\u00e9-existente do lucide) \u2192 P0 login reportado pelo Sovereign \u2192 Fase 0 reset destrutivo \u2192 bot\u00e3o Zerar \u2192 teste de chaves falhando (descoberta da cripto de credenciais) \u2192 Tabs \u2192 Fase 4 E2E provado \u2192 este selo.\n\n**O que foi entregue:**\n- **Fase 3 \u2014 cockpit (`constellation-v2`, BoK selada `38d7e7a4`):** empty-state com CTA duplo (`EmptyConstellation`) + wizard 2-portas (`CrewWizard` + `useCreateCrew`: mapa 4\u00d74 = N\u00facleo + 4 Leads + 13 subagentes m\u00f3dulo-bound, OU builder guiado depto\u2192capability\u2192nome) com keys est\u00e1veis (FR-CV2-006) + upsert idempotente; `AccessConfigCard` (BYOK + cap di\u00e1rio por subagente, FR-CV2-023); `useAgentTask`+`agent-task-result` (FR-CV2-004: envia `capability_key`, trata 402/422/502+`status:failed`); `useAgentActivity` projeta capability/result nos Live Logs (FR-CV2-050); `CrewGraph` cap\u226421 + LOD + z-index estrito (FR-CV2-060/061); bot\u00e3o legado \"Deploy Enterprise\" \u2192 \"Criar crew\".\n- **Fase 0 \u2014 reset destrutivo:** `scripts/reset-constellation-v2.ts --execute` arquivou 35 execs \u2192 wipou 746 crew_agents + 717 crew_edges \u2192 0; `profiles`=1 intacto. Verificado independente via REST.\n- **Bot\u00e3o \"Zerar\" per-user** (`useResetCrew`, RLS-scoped a `auth.uid()`): qualquer user reinicia do zero / re-semeia o 4\u00d74 quando quiser. Preserva `mco_balance` e hist\u00f3rico.\n- **Blocker de build (pr\u00e9-existente) morto:** `lucide-react@1.x` removeu os \u00edcones de marca \u2192 `vite build` (rollup) quebrava em `MetaConfigCard`/`v0-ai-chat` enquanto o dev (esbuild) tolerava \u2192 produ\u00e7\u00e3o servia bundle stale de May-30. Fix: shim local `src/components/icons/brand-icons.tsx` + anticorpo `scripts/qa/audit-lucide-imports.ts` (cruza imports de lucide vs exports reais).\n- **P0 login (outage):** o bundle vivo assava uma publishable key que a migration de cripto rotacionou/desregistrou (`UNAUTHORIZED_UNREGISTERED_API_KEY` em `/auth/v1/user`); redeploy assou a registrada do `.env`. Env-driven (`client.ts` l\u00ea `import.meta.env`), ent\u00e3o o rebuild foi o fix. Li\u00e7\u00e3o na mem\u00f3ria [[reference_supabase_keys_migrated]].\n- **Teste de chaves server-side + Tabs:** `user_api_keys` \u00e9 VIEW que mascara (migration `credential_encryption`); o cliente s\u00f3 via `\u2022\u2022\u2022\u2022` \u2192 teste client-side mandava o mask \u2192 401 sempre (\"Falhou\" \u2260 chave inv\u00e1lida). Edge fn `test-api-key` (JWT-guarded) resolve a chave real (`decrypted_user_api_keys` ou valor digitado) e testa server-side (cobre Replicate, que bloqueia CORS). 4 se\u00e7\u00f5es de Settings em Tabs. Li\u00e7\u00e3o na mem\u00f3ria [[reference_user_api_keys_encrypted]].\n\n**Prova material da Fase 4 (E2E):** exec `488a7744-ceb6-4048-a482-f78462e0aa2a` \u2192 capability `watchdog_infra` \u2192 `get-infra-status` \u2192 `done` \u00b7 `cost_mcoin` 0 \u00b7 `latency_ms` 255 \u00b7 `result_summary` `{\"chroma\":\"healthy\",\"intelligence\":\"healthy\",...}` (output real do m\u00f3dulo). Primeira execu\u00e7\u00e3o real no cockpit per-user p\u00f3s-reset, com o n\u00f3 pulsando e o Live Logs exibindo o resultado.\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign (Fase 0 destrutiva + deploys de produ\u00e7\u00e3o autorizados explicitamente; blast radius: 746 crew decorativos apagados/arquivados, `profiles`+ledger preservados).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Fase 4 E2E exec | \u2705 `488a7744` done \u00b7 watchdog_infra \u00b7 0 mco \u00b7 255ms \u00b7 result real |\n| Fase 0 reset | \u2705 crew 0 \u00b7 archive 35 \u00b7 profiles 1 (REST independente) |\n| Build lucide | \u2705 audit 5835 exports limpo \u00b7 `built in ~22s` \u00b7 prod desbloqueado |\n| P0 login | \u2705 index.html \u2192 `index-BY2MQsU-` \u2192 chave `FkE` registrada \u00b7 chunks velhos 404 |\n| `test-api-key` edge fn | \u2705 deploy 103.5kB \u00b7 OPTIONS 200 \u00b7 sem JWT 401 |\n| Chaves no Vault | \u2705 `decrypted_user_api_keys` = reais v\u00e1lidas (prefixos `gsk_`/`sk-o`/`sk-p`/`AIza`/`r8_`) |\n| `tsc --noEmit` | \u2705 0 erros |\n| Handoff node | \u2705 `a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9` embedded 768d |\n| Mesh total | **8746 n\u00f3s / 9070 arestas** (REST count=exact) |\n| Containers | \u2705 5 healthy |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `9a4b569` | fix(build): lucide brand-icon shim + audit antibody |\n| `7b2b277` | feat(constellation-v2): Fase 3 cockpit + wizard + capability real |\n| `8ed3f78` | docs: runbooks \u2192 SB_SECRET_KEY |\n| `9a13545` | feat(constellation-v2): bot\u00e3o Zerar per-user |\n| `8a0c547` | fix(settings): teste de chaves server-side |\n| `1dacd10` | feat(settings): tabs IA/WordPress/Meta/LGPD |\n| `18dd696` | docs(readme): v6.18.0 |\n\n### Arquitetura \u2014 capability execution (v2)\n```\nSubagente (capability_key) \u2192 AgentDetail \"Executar capability\"\n  \u2192 agent-task-execute (ramo capability): resolve agent_capabilities allowlist \u2192 denylist sistema \u2192 cap check\n  \u2192 invoke target_function (get-infra-status) c/ JWT do user \u2192 meter (module_self_bills \u2192 0)\n  \u2192 agent_executions (done, result_summary) \u2192 useAgentActivity \u2192 Live Logs + pulse 3D\n```\n\n### Arquitetura \u2014 credenciais BYOK (descoberta da sess\u00e3o)\n```\nSettings (form) \u2192 user_api_keys (VIEW que MASCARA: \u2022\u2022\u2022\u2022 no SELECT)        [cliente nunca v\u00ea a chave]\nINSTEAD OF trigger \u2192 cifra no Supabase Vault (user_api_keys_table)         [COALESCE(NULLIF(mask)) preserva]\nEdge fns / test-api-key \u2192 decrypted_user_api_keys (descriptografa)         [chave real, server-side]\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno (exec 488a7744 + reset counts + mesh count via REST \u00b7 build exit 0 \u00b7 chunks servidos via curl \u00b7 decrypted keys reais \u00b7 handoff node embedded). Zero fabrica\u00e7\u00e3o. 3 hip\u00f3teses minhas REFUTADAS com evid\u00eancia e corrigidas em aberto (CORS dos provedores liberado; masks = cripto-por-design, n\u00e3o corrup\u00e7\u00e3o; causa = credential_encryption, n\u00e3o a v6.17.0). Nenhuma escondida.\nLaw 2 (Process): \u2705 Fase 0 com SOP (reset script PROC-CV2-005) + plano persistido `.claude/context/execution-plan-constellation-v2.md`. `test-api-key`/Zerar s\u00e3o fix/utilit\u00e1rio dentro de features documentadas (settings + constellation-v2 BoK selada). Bot\u00e3o Zerar = mesmo processo do reset admin, per-user.\nLaw 3 (Pruning): \u2705 poda no /handoff; plano constellation-v2 persiste o detalhe das fases.\nLaw 4 (ORO): \u2705 triplet declarado nas tasks destrutivas; Fase 0 (wipe) e cada deploy de produ\u00e7\u00e3o autorizados explicitamente pelo Sovereign.\n```\n\n## Service_role Key Leak \u2014 Full Cutover + Revoke (P0 closed) Record (2026-06-01)"
+}
+```
+
+## 🤖 Claude *(17:05:17)*
+
+
+## 🤖 Claude *(17:05:17)*
+
+Atualizo a contagem no GraphRAG State (estava 8714/9040 de 2026-05-31):
+
+## 🤖 Claude *(17:05:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8714 total nodes** (verificado live 2026-05-31 via REST count=exact, 0 sem embedding;",
+  "new_string": "- **8746 total nodes** (verificado live 2026-06-01 via REST count=exact, 0 sem embedding;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **9040 total edges** (verificado live 2026-05-31 via REST count=exact;",
+  "new_string": "- **9070 total edges** (verificado live 2026-06-01 via REST count=exact;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:25)*
+
+
+## 🤖 Claude *(17:05:25)*
+
+**PHASE 5b — HANDOFF.md SECRET SCAN** (obrigatório antes do commit):
+
+## 🤖 Claude *(17:05:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 5b-1. real credential values in HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|sb_secret_[A-Za-z0-9]{20,}|gsk_[A-Za-z0-9]{40,}|r8_[A-Za-z0-9]{30,})\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\\|prefixos\" | head -10 || echo \"NO CREDENTIALS \u2705\"\necho \"=== 5b-2. Google API keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3. inline assignments of real-looking values ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|[0-9a-f-]\\{36\\}\" | head -5 || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b secret scan on HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. real credential values in HANDOFF.md ===
+> === 5b-2. Google API keys ===
+> === 5b-3. inline assignments of real-looking values ===
+> 5335:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5337:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 5338:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 5380:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5382:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(17:05:48)*
+
+
+## 🤖 Claude *(17:05:49)*
+
+**PHASE 5b ✅** — sem credenciais. As 3 linhas do 5b-3 são `project_id = 'mcorch-constellation'` (slug de projeto, não secret; pré-existentes). Commit do HANDOFF.md:
+
+## 🤖 Claude *(17:05:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal constellation v2 cockpit live \u2014 Fase 3+4 E2E + build/login/settings fixes\" -m \"v6.18.0: cockpit per-user provado ponta-a-ponta (exec 488a7744 watchdog_infra) + Fase 0 reset + bot\u00e3o Zerar + fix lucide build + P0 login + teste de chaves server-side + tabs. Mesh 8746/9070. Survival Laws 4/4.\"\ngit log --oneline -1\necho \"=== proof-manifest.json (untracked, transient for 5c) ===\"; git status --short",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 11f60fc docs(handoff): seal constellation v2 cockpit live — Fase 3+4 E2E + build/login/settings fixes
+> === proof-manifest.json (untracked, transient for 5c) ===
+> ```
+
+## 🤖 Claude *(17:06:04)*
+
+
+## 🤖 Claude *(17:06:05)*
+
+**PHASE 5b ✅** · HANDOFF.md commitado (`11f60fc`) · proof-manifest.json gitignored.
+
+**PHASE 5c — MATERIAL PROOF AUDIT** (verificação mecânica independente das claims do Record):
+
+## 🤖 Claude *(17:06:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -50; echo \"AUDIT_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 488a7744 | mesh_node | 488a7744-ceb6-4048-a482-f78462e0aa2a | absent | ⏭ |
+> | mesh node a0eb5da7 | mesh_node | a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9 | a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9 | ✅ |
+> | commit 9a4b569 | git_commit | 9a4b569 | 9a4b569 | ✅ |
+> | commit 7b2b277 | git_commit | 7b2b277 | 7b2b277 | ✅ |
+> | commit 8ed3f78 | git_commit | 8ed3f78 | 8ed3f78 | ✅ |
+> | commit 9a13545 | git_commit | 9a13545 | 9a13545 | ✅ |
+> | commit 8a0c547 | git_commit | 8a0c547 | 8a0c547 | ✅ |
+> | commit 1dacd10 | git_commit | 1dacd10 | 1dacd10 | ✅ |
+> | commit 18dd696 | git_commit | 18dd696 | 18dd696 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | file src/components/icons/brand-icons.tsx | file_exists | src/components/icons/brand-icons.tsx | src/components/icons/brand-icons.tsx | ✅ |
+> | file scripts/qa/audit-lucide-imports.ts | file_exists | scripts/qa/audit-lucide-imports.ts | scripts/qa/audit-lucide-imports.ts | ✅ |
+> | file .claude/context/execution-plan-constellation-v2.md | file_exists | .claude/context/execution-plan-constellation-v2.md | .claude/context/execution-plan-constellation-v2.md | ✅ |
+> | deploy size 103.5kB | edge_deploy | 103.5kB | 103.5kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (Fase 0 destrutiva + deploys de produçã | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (Fase 0 destrutiva + deploys de produçã | ✅ |
+> 
+> QA VERDICT: 13 verified · 2 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.8s)
+> AUDIT_EXIT=0
+> ```
+
+## 🤖 Claude *(17:06:15)*
+
+
+## 🤖 Claude *(17:06:17)*
+
+**PHASE 5c ✅ — `SEAL ALLOWED`** (13 verified · 2 skipped · 0 failed). Todas as 7 commits + handoff node `a0eb5da7` + tsc + files verificados mecanicamente. Os 2 skips: `488a7744` (está em `agent_executions`, não na malha) + deploy size-only.
+
+**PHASE 6 — BoK SEAL STATUS** (módulos da sessão precisam de BoK selada):
+
+## 🤖 Claude *(17:06:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 6-1. BoK suites completeness ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho\necho \"=== 6-2. session-touched modules (new pages/edge fns/Components) ===\"\ngit diff --name-only c833cdb..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | awk -F/ '{print $1\"/\"$2\"/\"$3}' | sort -u",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-1. BoK suites completeness ===
+> ✅ aios-sql-bridge
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ conteudo-v2
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ viralmind
+> 
+> === 6-2. session-touched modules (new pages/edge fns/Components) ===
+> src/pages/ConstellationPage.tsx
+> src/pages/SettingsPage.tsx
+> supabase/functions/test-api-key
+> ```
+
+## 🤖 Claude *(17:06:34)*
+
+
+## 🤖 Claude *(17:06:37)*
+
+**PHASE 6 ✅** — todas as 12 BoK completas. Módulos tocados: `ConstellationPage` (constellation-v2 → **BoK selada `38d7e7a4`** ✅); `SettingsPage` + `test-api-key` = fix/utilitário server-side dentro da feature **existente** de settings/BYOK (exempt: single-file scoped a feature documentada, não é módulo novo). **Sem bloqueio de BoK.**
+
+**PHASE 7 — PUSH** (README + HANDOFF ainda não pushed; os 6 commits de código já estavam):
+
+## 🤖 Claude *(17:06:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -3\necho \"--- sync check ---\"; git rev-parse --short HEAD; git rev-parse --short origin/main\necho \"--- commits this session (c833cdb..HEAD) ---\"; git log --oneline c833cdb..HEAD | wc -l; echo \"commits\"",
+  "description": "Phase 7 push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    1dacd10..11f60fc  main -> main
+> --- sync check ---
+> 11f60fc
+> 11f60fc
+> --- commits this session (c833cdb..HEAD) ---
+> 8
+> commits
+> ```
+
+## 🤖 Claude *(17:06:55)*
+
+
+## 🤖 Claude *(17:06:56)*
+
+**PHASE 7 ✅** — `1dacd10..11f60fc` pushed · `HEAD==origin/main` · **8 commits** nesta sessão.
+
+**PHASE 7b — HYGIENE.** Sprint-priorities + scratch:
+
+## 🤖 Claude *(17:06:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== sprint-priorities top (insertion anchor) ===\"; sed -n '1,10p' .claude/context/sprint-priorities.md\necho \"=== scratch/ ===\"; ls scratch/ 2>/dev/null && echo \"has files\" || echo \"clean \u2705\"",
+  "description": "Read sprint-priorities top + scratch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint-priorities top (insertion anchor) ===
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 
+> **Sprint v5.5.5 selado em 2026-05-05** — Settings Sovereignty: useUserApiKeys TanStack Query + pref_ai_model persistido + mcoCoins RPC atômico + Testar key client-side + Epsilon v9 hub badge + 2559 nós/3516 arestas.
+> 
+> === scratch/ ===
+> clean ✅
+> ```
+
+## 🤖 Claude *(17:07:27)*
+
+
+## 🤖 Claude *(17:07:28)*
+
+scratch/ limpo ✅. Adiciono a entrada v6.18.0 no topo da lista de seals (sem `/audit` esta sessão):
+
+## 🤖 Claude *(17:07:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v5.5.2 selado em 2026-05-04** \u2014 Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.",
+  "new_string": "**Sprint v6.18.0 selado em 2026-06-01** \u2014 Constellation v2 cockpit LIVE (E2E): empty-state wizard 2-portas + execu\u00e7\u00e3o real de capability (`watchdog_infra` \u2192 get-infra-status, done \u00b7 0 mco \u00b7 255ms) + Fase 0 reset destrutivo + bot\u00e3o Zerar per-user. 3 incidentes de produ\u00e7\u00e3o resolvidos: build lucide quebrado (shim + anticorpo `audit-lucide-imports.ts`) \u00b7 P0 login (publishable key stale no bundle \u2192 redeploy) \u00b7 teste de chaves \"Falhou\" (descoberta da cripto de credenciais \u2192 edge fn `test-api-key` server-side). + Tabs em Settings. Mesh 8746/9070. Survival Laws 4/4. 8 commits.\n\n**Sprint v5.5.2 selado em 2026-05-04** \u2014 Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(17:07:39)*
+
+
+## 🤖 Claude *(17:07:40)*
+
+Preciso ler com a Read tool antes de editar (o `sed` não conta). Lendo + editando:
+
+## 🤖 Claude *(17:07:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 8	
+> ```
+
+## 🤖 Claude *(17:07:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v5.5.2 selado em 2026-05-04** \u2014 Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.",
+  "new_string": "**Sprint v6.18.0 selado em 2026-06-01** \u2014 Constellation v2 cockpit LIVE (E2E): empty-state wizard 2-portas + execu\u00e7\u00e3o real de capability (`watchdog_infra` \u2192 get-infra-status, done \u00b7 0 mco \u00b7 255ms) + Fase 0 reset destrutivo + bot\u00e3o Zerar per-user. 3 incidentes de produ\u00e7\u00e3o resolvidos: build lucide quebrado (shim + anticorpo `audit-lucide-imports.ts`) \u00b7 P0 login (publishable key stale no bundle \u2192 redeploy) \u00b7 teste de chaves \"Falhou\" (descoberta da cripto de credenciais \u2192 edge fn `test-api-key` server-side). + Tabs em Settings. Mesh 8746/9070. Survival Laws 4/4. 8 commits.\n\n**Sprint v5.5.2 selado em 2026-05-04** \u2014 Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:07:53)*
+
+
+## 🤖 Claude *(17:07:54)*
+
+Commit + push do sprint-priorities:
+
+## 🤖 Claude *(17:07:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.18.0 constellation v2 cockpit live (E2E)\"\ngit push origin main 2>&1 | tail -2\necho \"--- final sync ---\"; git rev-parse --short HEAD; git rev-parse --short origin/main\necho \"--- total commits this session ---\"; git log --oneline c833cdb..HEAD | wc -l",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    11f60fc..8c54fae  main -> main
+> --- final sync ---
+> 8c54fae
+> 8c54fae
+> --- total commits this session ---
+> 9
+> ```
+
+## 🤖 Claude *(17:08:16)*
+
+
+## 🤖 Claude *(17:08:37)*
+
+**PHASE 7b ✅** — sprint-priorities atualizado + pushed · scratch limpo · sem MCP novo. **`11f60fc..8c54fae`** · **9 commits** na sessão, todos no remoto.
+
+**PHASE 8 — FINAL REPORT:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Constellation v2 Cockpit Live (Fase 3+4 E2E) — 2026-06-01
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret scan ........... ✅ sem creds hardcoded
+  1b edge fn JWT ........... ✅ test-api-key gated (getUser)
+  1c client mco_balance .... ✅ nenhum write client-side
+  1d RLS bypass src ........ ✅ nenhum
+  1e logs sensíveis ........ ✅ nenhum
+  5b HANDOFF.md secret ..... ✅ limpo (project_id ≠ secret)
+
+📦 COMMITS (9 total · c833cdb..8c54fae)
+  9a4b569 — fix(build): lucide brand-icon shim + anticorpo
+  7b2b277 — feat(constellation-v2): Fase 3 cockpit + wizard + capability real
+  8ed3f78 — docs: runbooks → SB_SECRET_KEY
+  9a13545 — feat(constellation-v2): botão Zerar per-user
+  8a0c547 — fix(settings): teste de chaves server-side
+  1dacd10 — feat(settings): tabs IA/WordPress/Meta/LGPD
+  18dd696 — docs(readme): v6.18.0
+  11f60fc — docs(handoff): seal v6.18.0
+  8c54fae — chore(sprint): sprint-priorities v6.18.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9
+  Embedding: ✅ (768d, autoembed trigger)
+  Total: 8746 nós · 9070 arestas (REST count=exact)
+
+📖 README.md
+  Versão: 6.17.0 → 6.18.0
+  Badge neural_mesh: 8745 → 8746 nós
+  Seção: nova entrada [v6.18.0] (5 bullets)
+
+🧠 HANDOFF.md
+  Fase selada: Constellation v2 Cockpit Live (Fase 3+4 E2E)
+  Atualizado: Task State (novo Record), GraphRAG State (8746/9070), 2 diagramas de arquitetura
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED ✅
+  Claims: 13 verificadas · 2 skipped · 0 falhas
+  (skips: exec 488a7744 não é nó da malha · deploy size-only)
+
+🚀 PUSH
+  Branch: main → origin/main (8c54fae)
+  Commits enviados: 9
+
+📌 SPRINT
+  sprint-priorities.md: atualizado ✅ (entrada v6.18.0)
+  scratch/ cleanup: limpo ✅
+  MCP docs: sem MCP novo ✅
+
+📚 BoK
+  12/12 suites completas · constellation-v2 selada (38d7e7a4)
+  SettingsPage/test-api-key: fix scoped a feature existente (exempt)
+
+⏭  PRÓXIMOS PASSOS
+  1. Exercitar mais capabilities BYOK-real (content_generate / viral_miner) p/ validar o fluxo de receita per-user ponta-a-ponta
+  2. nginx: Cache-Control: no-cache no index.html (evita usuários presos em bundle stale pós-deploy)
+  3. Pendências Usuário Zero (deferidas): Stripe live keys · Twitter Basic tier · Instagram App Review
+
+═══════════════════════════════════════════════════════════
+  Survival Laws Self-audit: 4/4 ✅
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Sessão selada, Maestro.** 🛰️
+
+Foi densa e de alto impacto: a **Constelação v2 está viva e provada ponta-a-ponta** (casca decorativa → cockpit operacional per-user com execução real de módulos medida em mcoCoins), e de quebra fechamos **3 incidentes de produção** que estavam latentes — o build de frontend que estava quebrado há tempos, o outage de login, e o teste de chaves. Tudo deployado, verificado materialmente e no remoto.
+
+Quando quiser retomar, o caminho natural é exercitar as outras capabilities com chaves BYOK reais (ex.: `viral_miner`, `content_generate`) pra ver o fluxo de receita per-user rodar. Por ora, descanse — está tudo selado e estável. 👋
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-01 - Fix tenant isolation in edge functions]]
+> * **Sessão Anterior**: [[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]
 > * **Próxima Sessão**: [[2026-06-01 - Restructure enterprise constellation agents]]
 %% --- TIMELINE END --- %%
