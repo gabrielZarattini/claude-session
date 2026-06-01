@@ -5424,6 +5424,656 @@ Vou atualizar o runbook com o escopo real tracado (pra a sessão focada executar
 > The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(12:30:01)*
+
+
+## 🤖 Claude *(12:30:02)*
+
+Vou quantificar a dimensão anon→publishable pra o report ser material:
+
+## 🤖 Claude *(12:30:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== edge functions que leem SUPABASE_ANON_KEY (quebram no revoke da legada) ===\"\ngit grep -lE 'Deno\\.env\\.get\\([\"'\"'\"']SUPABASE_ANON_KEY' -- 'supabase/functions' | wc -l\ngit grep -lE 'Deno\\.env\\.get\\([\"'\"'\"']SUPABASE_ANON_KEY' -- 'supabase/functions' | sed 's#supabase/functions/##; s#/index.ts##' | tr '\\n' ' '; echo\necho \"=== leaked key ainda viva? (confirma\u00e7\u00e3o final do estado) ===\"\nLEAK=$(git show 850941d:supabase/migrations/20260503120000_embed_on_insert_trigger.sql 2>/dev/null | grep -oE \"eyJ[A-Za-z0-9._-]+\" | head -1)\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -m 12 \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $LEAK\" 2>/dev/null",
+  "description": "Quantify anon-key usage in functions and confirm leak still live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === edge functions que leem SUPABASE_ANON_KEY (quebram no revoke da legada) ===
+> 33
+> admin-manage-user agent-task-execute aios-chat analyze-node analyze-sem analyze-seo canvas-execute check-video-status create-checkout data-export delete-account design-job-enqueue fetch-trends generate-audio-script generate-content generate-image generate-video-script generate-video list-provider-models openrouter-swarm orchestrate-content process-affiliate-link publish-meta publish-social publish-wordpress refresh-social-token rescue-video self-heal social-auth-init sync-meta-ads trigger-embeddings trigger-ingest tts-speak 
+> === leaked key ainda viva? (confirmação final do estado) ===
+> HTTP 200
+> ```
+
+## 🤖 Claude *(12:30:44)*
+
+
+## 🤖 Claude *(12:30:58)*
+
+**33 edge functions** leem o anon legado — e a chave vazada segue **HTTP 200 (viva)**. Quadro material completo.
+
+## 🔴 Estado e decisão honesta
+
+**Step 1 ✅ commitado** (`6c93c7c`) — camada de leitura de env migrada, backward-compatible, muda nada até o revoke.
+
+**Step 2 (cutover) — tracei e é maior + mais sensível que o runbook estimava:**
+
+| Peça | Veredito |
+|---|---|
+| `publish-social`, `refresh-social-token` | ✅ se auto-protegem → seguros sob `verify_jwt=false`, sem mudar código |
+| `embed-mcorch-node` | precisa **novo gate de auth** (é chamado pelo frontend `useMcorchMemory`/`useAIOSConversations` + service) |
+| `apikey` nas 4 chamadas service→service | mecânico |
+| 🔴 **anon → publishable** | **33 functions** leem `SUPABASE_ANON_KEY` p/ `getUser()` → **quebram quando você revogar a legada**. Dimensão inteira nova. |
+| Trigger Vault + deploy + dashboard | coordenado |
+| Validação | **impossível antes do deploy** (precisa do Function secret) |
+
+**Minha recomendação (honesta):** o cutover é uma **sessão focada e testada**, não a cauda deste turno gigantesco. Meio-implementar mudança de **auth que não consigo testar** (gate novo + 33 functions anon→publishable + verify_jwt) é como se cria um buraco de segurança — pior que o estado atual. O runbook agora tem o **plano completo tracado** (`.claude/context/service-role-key-migration-runbook.md`) pronto pra executar com calma + deploy + smoke.
+
+## ⚡ Ponte rápida pro risco (faça agora, minutos)
+Enquanto o cutover é planejado: **Supabase → Settings → (Database/API) → Network Restrictions** → restrinja o acesso à API/DB aos **IPs do seu servidor**. Isso torna a chave vazada **inútil de fora** sem tocar em código — mata o risco prático em minutos (se seu plano suportar). A chave segue tecnicamente válida, mas só do seu IP.
+
+## Como sigo?
+- **(a) Sessão focada pro cutover** (recomendo) — fresco, com deploy + smoke. + Network Restriction agora como ponte.
+- **(b) Começo o cutover agora mesmo assim** — faço os edits (config + embed gate + anon→publishable nas 33 + trigger Vault), mas só validamos quando você deployar + setar os secrets; risco de iterar no escuro.
+
+Diz qual e eu sigo. (Quando o leak fechar de verdade — eu re-probo e confirmo `401` — retomamos a Fase 3: commit da fundação + components.)
+
+## 👤 User *(12:48:33)*
+
+temos notificações no supabase.:
+Entity
+public.meta_config
+Issue
+View public.meta_config is defined with the SECURITY DEFINER property
+
+Description
+Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+--
+The Assistant has just been updated to help you better!
+You may now opt-in to share schema metadata and even logs for better results
+Permission settings
+Summarize the issue and suggest fixes for the following lint item: Title: Security Definer View Entity: public.meta_config Schema: public Issue Details: View `public.meta_config` is defined with the SECURITY DEFINER property Description: Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+Ran load_knowledge
+Ran load_knowledge
+Ran search_docs
+Issue summary (Lint: Security Definer View)
+Your view `public.meta_config` is created as a SECURITY DEFINER view. In Postgres, that means the view’s underlying query runs with the creator’s privileges, not the requesting user’s privileges. As a result, the view can bypass or undermine Row Level Security (RLS) that you intended to apply for each querying user.
+This is especially risky when the view is exposed through Supabase’s APIs (e.g., in the `public` schema).
+Recommended fixes ✅
+1) Change the view to security invoker
+If you’re on Postgres 15+, recreate the view so it respects RLS by using `security_invoker`.
+SQL Query
+
+```sql
+create or replace view public.meta_config
+with (security_invoker = on)
+as
+select ...;
+```
+
+What to check after:
+
+* Ensure the view no longer “leaks” data when tested as different users.
+* Ensure the underlying tables have the appropriate RLS policies enabled.
+2) Move the view out of the API-exposed schema (fallback)
+If you can’t use `security_invoker`, protect the view by moving it to a schema that isn’t exposed (e.g. `private`) and only grant access intentionally to the minimal roles you need.
+High-level approach:
+
+* Create/move view into `private` schema
+* Revoke `PUBLIC`/API role access on the view in `public`
+* Grant only specific usage/select permissions
+3) Prefer RLS-compliant patterns (if the view doesn’t need escalation)
+If `public.meta_config` just aggregates/reads data, it’s usually safest to:
+
+* expose the underlying table(s) with proper RLS policies, and
+* avoid security escalation via SECURITY DEFINER views.
+Quick guidance for your specific case
+Because the lint flagged `public.meta_config`, the key question is: Does your view depend on underlying tables that have RLS?
+
+* If yes: switch to `security_invoker=on` (best on PG15+).
+* If no (or if it’s truly public/constant config): you can consider keeping it public, but you should still confirm it can’t reveal unintended rows.
+If you paste the current definition of `public.meta_config` (the `SELECT ...` inside the view) I can tell you exactly which of the above fixes is the most appropriate and what RLS/policy implications to verify.
+
+--
+
+Entity
+public.social_accounts
+Issue
+View public.social_accounts is defined with the SECURITY DEFINER property
+
+Description
+Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+
+Summarize the issue and suggest fixes for the following lint item: Title: Security Definer View Entity: public.social_accounts Schema: public Issue Details: View `public.social_accounts` is defined with the SECURITY DEFINER property Description: Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+Reasoned
+Ran load_knowledge
+Ran load_knowledge
+Ran search_docs
+Ran search_docs
+Summary of the issue (Lint: Security Definer View)
+`public.social_accounts` is a view created with `SECURITY DEFINER` (default for views). That means when API clients query the view, Postgres runs the view using the permissions of the view owner/creator, not the querying user.
+Security impact: because this can bypass/ignore the usual RLS (Row Level Security) behavior, the view may return rows that the querying user should not be able to see.
+Why it’s flagged
+
+* Views in Postgres commonly run as `SECURITY DEFINER` by default.
+* In Supabase, RLS is meant to ensure access is enforced based on the querying user’s auth context.
+* With `SECURITY DEFINER`, that enforcement can be unintentionally weakened.
+Suggested fixes
+✅ Best fix: Make the view respect RLS (`SECURITY INVOKER`)
+If you’re on a compatible Postgres version (Postgres 15+), recreate the view so it runs with invoker privileges:
+SQL Query
+
+```sql
+create or replace view public.social_accounts
+with (security_invoker = on)
+as
+...
+;
+```
+
+Then ensure your underlying tables have RLS enabled and correct policies defined.
+✅ If you must keep SECURITY DEFINER: lock it down tightly
+Only do this if you fully understand the risk and have verified behavior.
+Recommendations:
+
+* Ensure the view query itself filters rows correctly for the caller (e.g. based on `auth.uid()` / tenant IDs), rather than relying on RLS-through-views.
+* Put the view into an unexposed/private schema, then expose only what you intend (if applicable to your API setup).
+* Re-check grants so untrusted roles can’t access the view in unintended ways.
+✅ Verify underlying RLS/policies
+Even with `security_invoker=on`, your underlying tables must have:
+
+* `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`
+* appropriate `CREATE POLICY ...` for `SELECT/INSERT/UPDATE/DELETE` as needed.
+If you paste the current `CREATE VIEW public.social_accounts ...` definition, I can tell you whether switching to `security_invoker=on` is straightforward and what RLS policies (or filters inside the view) you’ll likely need.
+
+--_
+
+Entity
+public.meta_config
+Issue
+View public.meta_config is defined with the SECURITY DEFINER property
+
+Description
+Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+
+Summarize the issue and suggest fixes for the following lint item: Title: Security Definer View Entity: public.meta_config Schema: public Issue Details: View `public.meta_config` is defined with the SECURITY DEFINER property Description: Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user
+Reasoned
+Ran load_knowledge
+Ran load_knowledge
+Ran search_docs
+Reasoned
+Ran search_docs
+Issue summary
+Your view `public.meta_config` is created with `SECURITY DEFINER` (i.e., it runs with the permissions of the view owner). In Supabase/Postgres, this can be risky because:
+
+* RLS may not be enforced the way you expect: the view owner’s privileges are used, not the querying user’s.
+* If the view owner has broader access than `authenticated`/`anon`, users may be able to read rows they otherwise couldn’t through normal RLS-protected tables.
+This lint is warning that the querying user’s permissions and RLS constraints might not apply as intended.
+Suggested fixes
+1) Prefer making the view obey RLS (`security_invoker`)
+If you’re on Postgres 15+, you can set the view to execute as the caller:
+SQL Query
+
+```sql
+alter view public.meta_config set (security_invoker = true);
+-- or recreate with: create view ... with (security_invoker=true) as ...
+```
+
+This makes the view apply permissions/RLS based on the calling role instead of the owner.
+2) If you must keep `security_definer`, restrict who can access the view
+If `meta_config` is intentionally privileged, you should ensure only trusted roles can select it:
+
+* revoke broad access (e.g., from `public`, `anon`, `authenticated`)
+* grant only to the roles that should see it (often `service_role` for internal use, or a restricted Postgres role)
+Example pattern (adjust roles as needed):
+SQL Query
+
+```sql
+revoke all on public.meta_config from public, anon, authenticated;
+grant select on public.meta_config to <trusted_role>;
+```
+
+3) Move sensitive logic away from a definer view
+If your goal is “safe per-user access”, consider:
+
+* using RLS policies on the underlying tables, and
+* exposing a view using `security_invoker` (preferred), or
+* using carefully designed `SECURITY INVOKER` constructs / RPC with strict checks.
+4) Verify the view owner and what it can bypass
+A practical check is to confirm who owns the view (because that owner’s privileges determine what `SECURITY DEFINER` can expose). If the owner is a highly privileged role, the risk is higher.
+What I need from you (to recommend the exact best fix)
+
+1. Is `public.meta_config` intended to be readable by `anon`, `authenticated`, or only admins/internal?
+2. Are you on Postgres 15+ in your Supabase project? (If you’re not sure, tell me your Supabase “Database version” from Dashboard.)
+
+
+---
+
+
+a chave default eu ja exclui que antes era sb_publishable_k1RvsCCw4uqszn3ofX4Aag_uQwTUy6i; Não encontrei onde restringir por IP... e não é possivel fazer isso no supabase olha o que ele me sugeriu.:
+
+Preciso restringir minha service role da Legacy anon, service_role API keys para somente o ip do meu servidor como posso fazer isso?
+
+
+
+
+Reasoned
+
+Ran load_knowledge
+
+Ran search_docs
+
+Ran search_docs
+
+Ran search_docs
+Resposta curta
+No Supabase “hosted” você não consegue restringir uma service_role (legacy SERVICE_ROLE_KEY / legacy anon) por IP diretamente. Essas chaves são JWTs e, quando válidas, o Supabase aceita a requisição independentemente do IP.
+
+O caminho recomendado é colocar um “gate” que valida IP antes (Edge Function/API proxy), ou então reduzir o uso da service role e garantir segurança com RLS.
+
+Opção A (recomendada): usar Edge Function como “proxy” com allowlist de IP
+Seu servidor chama uma Edge Function do Supabase.
+A Edge Function verifica o IP (ou allowlist via cabeçalho de sua infra) e só então usa a service role para acessar o banco.
+Assim, mesmo que alguém consiga obter a service_role, ela não fica exposta “na borda” — só é usada internamente na função.
+
+Observação: o IP que você consegue ver em Edge Function pode depender do seu proxy/CDN. Se você estiver atrás de Nginx/Cloudflare, normalmente precisa encaminhar o IP real (ex: X-Forwarded-For) e validar do lado do gateway.
+
+Opção B: proibir tráfego por IP no seu lado (infra/reverse proxy)
+Se você controla o endpoint que expõe seu backend (por exemplo, Nginx, Caddy, ALB, Cloudflare), restrinja lá:
+
+permitir apenas o IP do seu servidor
+negar o resto
+Isso é o equivalente correto a “restringir chaves por IP”, mas feito fora do Supabase.
+
+Opção C (hosted): “legacy anon/service_role” → desativar e migrar
+Se seu objetivo é mitigar risco das Legacy JWT keys, uma abordagem é:
+
+migrar para o sistema de Signing keys / API keys novas (sb_) e
+desabilitar as keys legacy quando possível._
+Existe endpoint de gestão para habilitar/desabilitar as legacy keys, mas isso não é por IP; é por segurança/rotacionar/migrar.
+
+Pergunta rápida pra eu te direcionar certinho
+Você está usando Supabase hosted (managed) ou self-hosted (docker/VPS)?
+E esse “seu servidor” faz chamadas via:
+
+HTTP direto no /rest/v1 usando a service_role, ou
+chama suas Edge Functions, ou
+chama algum middleware (Next.js server, API própria, Nginx, etc.)?
+Com isso eu te passo o desenho exato (e, se quiser, um exemplo pronto da Edge Function).
+
+gabrielZarattini
+ok então preciso rotacionar / mudar minha chave Legacy anon, service_role API keys como posso fazer isso?
+
+
+
+
+Ran load_knowledge
+
+Ran load_knowledge
+
+Ran search_docs
+
+Ran search_docs
+
+Ran search_docs
+Antes de tudo (importante)
+Se você está falando de Legacy anon / service_role (as “Legacy API keys” do Dashboard):
+
+No Supabase hosted, você não consegue “rotacionar”/alterar o valor dessas chaves automaticamente como acontece com outros segredos.
+O que você consegue fazer de forma segura e suportada é migrar/rotacionar para o novo sistema (Signing keys + publishable/secret sb_) e então desabilitar/invalidar as legacy (quando possível no fluxo de migração/gestão)._
+Existe também um guia específico: “Rotating Anon, Service, and JWT Secrets” e ele recomenda migrar para Signing keys + API keys novas porque as legacy perdem capacidade de rotação segura.
+
+Passo a passo recomendado (hosted): migrar para o novo sistema
+1) Verifique se você está usando Legacy JWT secret
+No Supabase Dashboard:
+
+Project Settings → JWT Keys
+veja se você já está no modo Signing keys (novo) ou ainda usa legacy.
+2) Migre para “JWT Signing Keys”
+No mesmo lugar (Project Settings → JWT Keys):
+
+clique em Migrate JWT secret
+isso importa sua configuração atual para o novo sistema e cria uma nova chave em standby.
+3) Ative/“Rotate keys” e valide seu fluxo
+depois, use Rotate keys conforme necessário no painel.
+garanta que seu backend (se usa Edge Functions que validam JWT, ou server próprio) está ok com a mudança.
+Esse processo é desenhado para não causar downtime para usuários logados (tokens ainda válidos continuam aceitos até expirar).
+
+4) Migre suas chamadas para as API keys novas
+Você vai parar de usar:
+
+Legacy anon / service_role
+e passar a usar:
+
+publishable (para chamadas “anon” do cliente)
+secret (para chamadas server-side)
+Essas novas chaves são do formato sb_publishable_... e sb_secret_....
+
+5) Depois desabilite as legacy keys (mitigação final)
+Quando sua aplicação estiver 100% usando as chaves novas, você então:
+
+desabilita as legacy (anon e service_role) via o processo de gestão do painel / endpoint de gestão disponível.
+O doc de “Rotating Anon, Service, and JWT Secrets” diz que:
+
+se você não migrou para o novo sistema, não é possível rotacionar legacy de forma suportada como deveria.
+Se você quer uma “receita” do que fazer agora
+Me diga só 2 coisas para eu te passar o checklist exato (sem suposições):
+
+Você usa Edge Functions ou um backend próprio (Node/Next/etc.) que chama PostgREST com service_role?
+No seu projeto, em Project Settings → JWT Keys, aparece Signing keys (novo) ou ainda está Legacy?
+Com isso eu te digo:
+
+onde clicar no Dashboard
+qual ordem de troca (client → server → funções)
+e quando desabilitar as legacy sem quebrar nada.
+
+
+---
+
+Acredito que a melhor forma seria realmente migrar para JWT Signing Keys de vez.
+
+## 🤖 Claude *(12:50:10)*
+
+
+## 🤖 Claude *(12:50:14)*
+
+O ponto-chave da sua mensagem: **decisão de migrar pro novo sistema de keys de vez** (você já está em JWT Signing Keys; falta migrar o *código* pras API keys novas e então **desabilitar as legacy**). É exatamente o cutover do runbook. ✅
+
+Mas tem um **alerta urgente** no que você disse: você **deletou** a publishable `sb_publishable_k1Rv…`. Se o `.env`/bundle ainda usa essa, o **frontend quebra** (key não existe mais). Verifico isso + leio as 2 views dos lints:
+
+## 🤖 Claude *(12:50:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== \ud83d\udd34 publishable deletada ainda no .env? (frontend quebra se sim) ===\"\nDELKEY='sb_publishable_k1RvsCCw4uqszn3ofX4Aag_uQwTUy6i'\ncommand grep -qF \"$DELKEY\" .env && echo \"\ud83d\udd34 SIM \u2014 .env tem a publishable DELETADA \u2192 frontend/33-fns quebram at\u00e9 trocar+rebuild\" || echo \"\u2705 .env N\u00c3O tem a deletada (j\u00e1 trocou por uma nova)\"\ncommand grep -E \"^(VITE_)?SUPABASE_PUBLISHABLE_KEY=\" .env | sed -E 's/=[[:space:]]*[\"'\"'\"']?(sb_publishable_.{6}).*/= \\1\u2026(redacted)/'\necho\necho \"=== views dos lints: DDL nas migrations ===\"\ngit grep -nE \"(CREATE|REPLACE).*VIEW (public\\.)?(meta_config|social_accounts)|security_invoker|security_definer\" -- 'supabase/migrations' | head -20\necho\necho \"=== meta_config / social_accounts s\u00e3o VIEW ou TABLE? (migrations) ===\"\ngit grep -nlE \"(meta_config|social_accounts)\" -- 'supabase/migrations' | head",
+  "description": "Check if deleted publishable key still in .env and find view DDLs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 🔴 publishable deletada ainda no .env? (frontend quebra se sim) ===
+> ✅ .env NÃO tem a deletada (já trocou por uma nova)
+> SUPABASE_PUBLISHABLE_KEY= sb_publishable_FkEPbh…(redacted)
+> VITE_SUPABASE_PUBLISHABLE_KEY= sb_publishable_FkEPbh…(redacted)
+> 
+> === views dos lints: DDL nas migrations ===
+> supabase/migrations/20260601000000_credential_encryption.sql:350:CREATE OR REPLACE VIEW public.meta_config WITH (security_invoker = true) AS
+> supabase/migrations/20260601000000_credential_encryption.sql:369:CREATE OR REPLACE VIEW public.social_accounts WITH (security_invoker = true) AS
+> supabase/migrations/20260601000000_credential_encryption.sql:387:CREATE OR REPLACE VIEW public.user_api_keys WITH (security_invoker = true) AS
+> supabase/migrations/20260601000600_secure_definer_views.sql:4:-- 1. Drop existing security_invoker views
+> supabase/migrations/20260601000600_secure_definer_views.sql:10:CREATE OR REPLACE VIEW public.meta_config AS
+> supabase/migrations/20260601000600_secure_definer_views.sql:29:CREATE OR REPLACE VIEW public.social_accounts AS
+> 
+> === meta_config / social_accounts são VIEW ou TABLE? (migrations) ===
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql
+> supabase/migrations/20260412011759_a440b3cf-9a77-411c-bf43-10c347d5030b.sql
+> supabase/migrations/20260413183335_c270c108-e010-4a06-a064-e1df77780c6a.sql
+> supabase/migrations/20260413222900_235d4190-bafb-4b8e-b821-bbca058820a4.sql
+> supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql
+> supabase/migrations/20260508025933_delete_account_rpc.sql
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> supabase/migrations/20260527005036_soft_reset_account_rpc_v2.sql
+> supabase/migrations/20260530210000_meta_api_foundation.sql
+> supabase/migrations/20260531193000_fix_meta_config_column_privileges.sql
+> ```
+
+## 🤖 Claude *(12:51:00)*
+
+
+## 🤖 Claude *(12:51:04)*
+
+**Publishable: OK** ✅ — `.env` já tem uma **nova** (`sb_publishable_FkEPbh…`), não a deletada. (Só garanta que o frontend foi **rebuildado+deployado** com ela, senão o bundle vivo ainda usa a antiga.)
+
+**View lints — achei a causa raiz:** a migration `20260601000000_credential_encryption.sql` criou as views **com** `security_invoker = true` (correto), mas a migration seguinte `20260601000600_secure_definer_views.sql` **recriou** `meta_config` + `social_accounts` com `CREATE OR REPLACE VIEW … AS` **sem** o `security_invoker` → voltaram pro default (SECURITY DEFINER). Por isso o lint. Lendo a 000600 pra corrigir sem quebrar o masking:
+
+## 🤖 Claude *(12:51:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000600_secure_definer_views.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: Re-create credentials views as secure Definir views with built-in tenancy filtering
+> 2	-- OTD-META-ENCRYPT
+> 3	
+> 4	-- 1. Drop existing security_invoker views
+> 5	DROP VIEW IF EXISTS public.meta_config CASCADE;
+> 6	DROP VIEW IF EXISTS public.social_accounts CASCADE;
+> 7	DROP VIEW IF EXISTS public.user_api_keys CASCADE;
+> 8	
+> 9	-- 2. Create definer views with user_id/service_role filter
+> 10	CREATE OR REPLACE VIEW public.meta_config AS
+> 11	SELECT
+> 12	  id,
+> 13	  user_id,
+> 14	  facebook_user_id,
+> 15	  CASE WHEN long_lived_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS long_lived_token,
+> 16	  scopes,
+> 17	  CASE WHEN pages IS NOT NULL THEN to_jsonb('••••••••••••'::text) ELSE NULL END AS pages,
+> 18	  instagram_business_account_id,
+> 19	  whatsapp_phone_number_id,
+> 20	  whatsapp_waba_id,
+> 21	  meta_ad_account_id,
+> 22	  requires_reauth,
+> 23	  token_expires_at,
+> 24	  created_at,
+> 25	  updated_at
+> 26	FROM public.meta_config_table
+> 27	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 28	
+> 29	CREATE OR REPLACE VIEW public.social_accounts AS
+> 30	SELECT
+> 31	  id,
+> 32	  user_id,
+> 33	  platform,
+> 34	  platform_user_id,
+> 35	  platform_username,
+> 36	  CASE WHEN access_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS access_token,
+> 37	  CASE WHEN refresh_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS refresh_token,
+> 38	  token_expires_at,
+> 39	  scopes,
+> 40	  is_active,
+> 41	  metadata,
+> 42	  created_at,
+> 43	  updated_at
+> 44	FROM public.social_accounts_table
+> 45	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 46	
+> 47	CREATE OR REPLACE VIEW public.user_api_keys AS
+> 48	SELECT
+> 49	  user_id,
+> 50	  created_at,
+> 51	  updated_at,
+> 52	  pref_audio_provider,
+> 53	  pref_image_provider,
+> 54	  pref_video_provider,
+> 55	  wp_site_url,
+> 56	  wp_username,
+> 57	  pref_ai_model,
+> 58	  CASE WHEN groq_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS groq_api_key,
+> 59	  CASE WHEN openrouter_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openrouter_api_key,
+> 60	  CASE WHEN openai_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openai_api_key,
+> 61	  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS elevenlabs_api_key,
+> 62	  CASE WHEN google_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS google_api_key,
+> 63	  CASE WHEN nanobana_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS nanobana_api_key,
+> 64	  CASE WHEN seedance_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS seedance_api_key,
+> 65	  CASE WHEN wp_app_password IS NOT NULL THEN '••••••••••••' ELSE NULL END AS wp_app_password,
+> 66	  CASE WHEN replicate_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS replicate_api_key,
+> 67	  CASE WHEN higgsfield_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key,
+> 68	  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key_secret
+> 69	FROM public.user_api_keys_table
+> 70	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 71	
+> 72	-- 3. Re-create Instead-of Triggers on the views
+> 73	CREATE TRIGGER trg_instead_of_meta_config
+> 74	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.meta_config
+> 75	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_meta_config();
+> 76	
+> 77	CREATE TRIGGER trg_instead_of_social_accounts
+> 78	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.social_accounts
+> 79	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_social_accounts();
+> 80	
+> 81	CREATE TRIGGER trg_instead_of_user_api_keys
+> 82	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.user_api_keys
+> 83	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_user_api_keys();
+> 84	
+> 85	-- 4. Grant full client permissions on views
+> 86	GRANT SELECT, INSERT, UPDATE, DELETE ON public.meta_config TO anon, authenticated;
+> 87	GRANT SELECT, INSERT, UPDATE, DELETE ON public.social_accounts TO anon, authenticated;
+> 88	GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;
+> 89	
+> 90	-- 5. Revoke SELECT on the underlying tables to prevent direct client access
+> 91	REVOKE SELECT ON public.meta_config_table FROM anon, authenticated;
+> 92	REVOKE SELECT ON public.social_accounts_table FROM anon, authenticated;
+> 93	REVOKE SELECT ON public.user_api_keys_table FROM anon, authenticated;
+> 94	
+> ```
+
+## 🤖 Claude *(12:53:30)*
+
+
+## 🤖 Claude *(12:53:37)*
+
+**View lints — leituras das views revelam que é design intencional e SEGURO**, não falso-negativo:
+- `meta_config`/`social_accounts` são **views de masking** sobre `*_table`: filtram `WHERE auth.uid() = user_id OR auth.role() = 'service_role'` **dentro da view**, mascaram tokens (`••••`), e o `SELECT` nas tabelas-base foi **REVOKE**ado de anon/authenticated.
+- 🔴 **Trocar pra `security_invoker` (sugestão do linter) QUEBRARIA isso** — o user não tem SELECT na tabela-base (revogado) → view falha; e se você re-conceder, exporia tokens **sem máscara**. O definer aqui é proposital e correto (`auth.uid()` é request-scoped mesmo em definer view).
+
+Antes de fechar o veredito e o cutover, uma dúvida **pivotal** que nunca resolvi e muda TUDO no plano das edge functions: pós-migração/revoke, o Supabase **mantém** `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` injetados válidos nas functions, ou eles morrem? (+ o prefixo `SUPABASE_` é reservado p/ Function secrets?). Vou à doc:
+
+## 🤖 Claude *(12:53:38)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Supabase edge functions SUPABASE_SERVICE_ROLE_KEY SUPABASE_ANON_KEY after migrating new API keys disable legacy still valid auto-injected secret name SUPABASE_ prefix reserved",
+  "allowed_domains": [
+    "supabase.com"
+  ]
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Supabase edge functions SUPABASE_SERVICE_ROLE_KEY SUPABASE_ANON_KEY after migrating new API keys disable legacy still valid auto-injected secret name SUPABASE_ prefix reserved"
+> 
+> Links: [{"title":"JWT Signing Keys | Supabase Docs","url":"https://supabase.com/docs/guides/auth/signing-keys"},{"title":"Supabase Docs | Troubleshooting | Edge Function 401 error response","url":"https://supabase.com/docs/guides/troubleshooting/edge-function-401-error-response"},{"title":"Understanding API keys | Supabase Docs","url":"https://supabase.com/docs/guides/api/api-keys"},{"title":"Supabase for Platforms | Supabase Docs","url":"https://supabase.com/docs/guides/integrations/supabase-for-platforms"},{"title":"Edge Functions | Supabase Docs","url":"https://supabase.com/docs/guides/functions"},{"title":"Getting Started with Edge Functions | Supabase Docs","url":"https://supabase.com/docs/guides/functions/quickstart"},{"title":"New API Keys and Asymmetric Authentication | Supabase Docs","url":"https://supabase.com/docs/guides/self-hosting/self-hosted-auth-keys"},{"title":"Getting Started with Edge Functions (Dashboard) | Supabase Docs","url":"https://supabase.com/docs/guides/functions/quickstart-dashboard"},{"title":"Supabase Docs | Troubleshooting | Why is my service role key client getting RLS errors or not returning data?","url":"https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"},{"title":"Changelog","url":"https://supabase.com/changelog?next=Y3Vyc29yOnYyOpK0MjAyNC0wOS0xOFQxOTowNTozN1rOAG3scg%3D%3D&restPage=2"}]
+> 
+> Let me search for more specific information about environment variable injection in Edge Functions.
+> 
+> Links: [{"title":"Environment Variables | Supabase Docs","url":"https://supabase.com/docs/guides/functions/secrets"},{"title":"Managing config and secrets | Supabase Docs","url":"https://supabase.com/docs/guides/local-development/managing-config"},{"title":"Managing Environments | Supabase Docs","url":"https://supabase.com/docs/guides/deployment/managing-environments"},{"title":"Configuration | Supabase Docs","url":"https://supabase.com/docs/guides/deployment/branching/configuration"},{"title":"CLI Reference | Supabase Docs","url":"https://supabase.com/docs/reference/cli/introduction"},{"title":"Supabase CLI reference - Set a secret","url":"https://supabase.com/docs/reference/cli/supabase-secrets-set"},{"title":"Supabase Docs | Troubleshooting | Inspecting edge function environment variables","url":"https://supabase.com/docs/guides/troubleshooting/inspecting-edge-function-environment-variables-wg5qOQ"},{"title":"Self-Hosted Functions | Supabase Docs","url":"https://supabase.com/docs/guides/self-hosting/self-hosted-functions"},{"title":"Supabase CLI reference - Manage secrets","url":"https://supabase.com/docs/reference/cli/supabase-secrets"},{"title":"Vault | Supabase Docs","url":"https://supabase.com/docs/guides/database/vault"}]
+> 
+> Now let me search for more specific information about reserved environment variables and the SUPABASE_ prefix.
+> 
+> Links: [{"title":"Environment Variables | Supabase Docs","url":"https://supabase.com/docs/guides/functions/secrets"},{"title":"Supabase Docs | Troubleshooting | Inspecting edge function environment variables","url":"https://supabase.com/docs/guides/troubleshooting/inspecting-edge-function-environment-variables-wg5qOQ"},{"title":"Self-Hosted Functions | Supabase Docs","url":"https://supabase.com/docs/guides/self-hosting/self-hosted-functions"},{"title":"Managing Environments | Supabase Docs","url":"https://supabase.com/docs/guides/deployment/managing-environments"},{"title":"Supabase CLI reference - Serve functions locally","url":"https://supabase.com/docs/reference/cli/supabase-functions-serve"},{"title":"Managing config and secrets | Supabase Docs","url":"https://supabase.com/docs/guides/local-development/managing-config"},{"title":"Configuration | Supabase Docs","url":"https://supabase.com/docs/guides/deployment/branching/configuration"},{"title":"CLI Reference | Supabase Docs","url":"https://supabase.com/docs/reference/cli/v0/supabase-functions-deploy"},{"title":"Edge Functions | Supabase Docs","url":"https://supabase.com/docs/guides/functions"},{"title":"Supabase CLI reference - Deploy a function","url":"https://supabase.com/docs/reference/cli/supabase-functions-deploy"}]
+> 
+> Based on my search results, I've found comprehensive information about Supabase Edge Functions and API keys. Here's what I found:
+> 
+> ## Key Auto-Injected Environment Variables
+> 
+> In Edge Functions, Supabase automatically provides several environment variables with the `SUPABASE_` prefix: `SUPABASE_SECRET_KEYS` (the secret keys JSON dictionary), `SUPABASE_JWKS` (the JSON Web Key Set for verifying user JWTs), `SUPABASE_ANON_KEY` (the anon key), and `SUPABASE_SERVICE_ROLE_KEY` (the service_role key).
+> 
+> ## Legacy vs. New API Keys
+> 
+> Supabase is in the process of migrating away from legacy API keys (anon and service_role) towards new API keys (publishable and secret). You can disable and re-enable the anon and service_role keys as needed during the migration period.
+> 
+> ## Migration Timeline and Compatibility
+> 
+> The new API keys change starts out as early preview and is opt-in, with no action necessary until at least November 1st, 2025. The new authentication configuration is fully backward compatible - the API Gateway accepts both key types simultaneously, and you can migrate clients incrementally.
+> 
+> ## Edge Functions and JWT Verification
+> 
+> If your project uses the new asymmetric keys for authentication but the legacy auth verification check only understands the legacy format, there may be compatibility issues. Edge Functions only support JWT verification via the anon and service_role JWT-based API keys, and you will need to use the --no-verify-jwt option when using publishable and secret keys.
+> 
+> The `SUPABASE_` prefix appears to be reserved for auto-injected system variables in Edge Functions, and these legacy key names will continue to be available during the migration period even as new API key formats are introduced.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(12:54:59)*
+
+
+## 🤖 Claude *(12:55:05)*
+
+Achados **decisivos** da doc oficial que **corrigem o plano do cutover** (e mostram um furo no meu step 1):
+
+- Edge functions recebem as chaves novas via **`SUPABASE_SECRET_KEYS`** (dict JSON auto-injetado), **não** via um secret custom. E o prefixo **`SUPABASE_` é RESERVADO** → você **não consegue** setar `SUPABASE_SECRET_KEY` como Function secret. Ou seja: meu step 1 (que fez as edge functions lerem `SUPABASE_SECRET_KEY`) está **certo pros scripts locais** (`.env`, sem restrição) mas **não funciona pras edge functions** — elas precisam ler `SUPABASE_SECRET_KEYS`.
+- Revogar a signing key legada **invalida** o `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` auto-injetados → por isso as functions precisam migrar pro secret novo + publishable.
+- Chamadas com secret/publishable exigem **`--no-verify-jwt`** (bate com meu plano).
+
+Atualizo o runbook com essas correções (sobrevive à compactação):
+
+## 🤖 Claude *(12:55:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md",
+  "old_string": "## Sources\nSupabase: [signing-keys](https://supabase.com/docs/guides/auth/signing-keys) \u00b7 [api-keys](https://supabase.com/docs/guides/api/api-keys) \u00b7 [securing edge functions](https://supabase.com/docs/guides/functions/auth)",
+  "new_string": "## \ud83d\udd34 CRITICAL CORRECTIONS (2026-06-01, from Supabase docs \u2014 REWORK step 2 edge-fn approach)\n- **Edge functions read the new secret via auto-injected `SUPABASE_SECRET_KEYS`** (a JSON dict), NOT a custom env. The `SUPABASE_` prefix is **RESERVED** \u2014 you CANNOT `supabase secrets set SUPABASE_SECRET_KEY=\u2026`. So step-1's edge-fn rewrite to `SUPABASE_SECRET_KEY` is INERT in functions (it only helped the local scripts via `.env`, which has no prefix restriction \u2014 those are fine). **Rework:** edge functions must derive the service key from `SUPABASE_SECRET_KEYS` (parse JSON) \u2014 or keep using auto-injected `SUPABASE_SERVICE_ROLE_KEY` only until revoke.\n- **Revoking the legacy HS256 signing key invalidates the auto-injected `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY`** (they're HS256 JWTs; Supabase does NOT re-sign them with the new ECC key). So every function relying on the injected legacy names breaks at revoke \u2192 must move to `SUPABASE_SECRET_KEYS` (service) + publishable, AND set `verify_jwt=false` / deploy `--no-verify-jwt` for secret-key calls.\n- **anon\u2192publishable:** 33 functions read `SUPABASE_ANON_KEY` for user-context `getUser()` clients \u2192 same problem; need the publishable key (also can't be a `SUPABASE_`-prefixed custom secret; use `SUPABASE_SECRET_KEYS`/JWKS-based verification or a non-prefixed secret).\n- **Net:** the edge-function cutover is more involved than env-swap \u2014 it's a focused, deploy-tested effort. Local scripts (.env) + the leaked-literal removal (commit 6c93c7c) stand.\n\n## View-lint verdict (meta_config / social_accounts SECURITY DEFINER)\n- **INTENTIONAL + SAFE \u2014 do NOT switch to security_invoker.** Migration `20260601000600` made them definer masking views: self-filter `WHERE auth.uid()=user_id OR auth.role()='service_role'`, mask tokens (`\u2022\u2022\u2022\u2022`), and `REVOKE SELECT` on the base `*_table` from anon/authenticated. `auth.uid()` is request-scoped even in a definer view \u2192 per-user tenancy holds. `security_invoker=on` would BREAK them (no SELECT on revoked base) and re-granting the base would expose UNMASKED tokens. Recommended: **dismiss the lint** (known-safe pattern). The new `sb_secret_` key still maps to `auth.role()='service_role'`, so the views keep working post-cutover.\n\n## Sources\nSupabase: [signing-keys](https://supabase.com/docs/guides/auth/signing-keys) \u00b7 [api-keys](https://supabase.com/docs/guides/api/api-keys) \u00b7 [securing edge functions](https://supabase.com/docs/guides/functions/auth) \u00b7 [env vars / secrets](https://supabase.com/docs/guides/functions/secrets) \u00b7 [edge fn 401](https://supabase.com/docs/guides/troubleshooting/edge-function-401-error-response)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:55:48)*
+
+
+## 🤖 Claude *(12:56:04)*
+
+Runbook corrigido. Síntese desta rodada:
+
+## 1) View lints (`meta_config`, `social_accounts`) — veredito: **manter definer, NÃO migrar pra invoker**
+São **views de masking intencionais e seguras** (migration `20260601000600`):
+- filtram `WHERE auth.uid() = user_id OR auth.role() = 'service_role'` **dentro da view** (tenancy correta — `auth.uid()` é request-scoped mesmo em definer);
+- mascaram tokens (`••••`);
+- `SELECT` nas tabelas-base (`*_table`) foi **REVOKE**ado de anon/authenticated.
+
+🔴 A sugestão do linter (`security_invoker=on`) **quebraria**: o user não tem SELECT na base (revogada) → view falha; e re-conceder a base exporia **tokens sem máscara**. O definer aqui é a escolha **correta** pra masking. **Recomendo dismissar o lint** (padrão conhecido-seguro). Bônus: a chave `sb_secret_` nova continua mapeando pra `auth.role()='service_role'`, então as views seguem funcionando pós-cutover.
+
+## 2) Publishable deletada — ✅ OK
+`.env` já tem uma **nova** (`sb_publishable_FkEPbh…`), não a deletada. Só **rebuilde+deploye o frontend** pra garantir que o bundle vivo não usa a antiga.
+
+## 3) Cutover — a doc oficial **corrigiu o plano** (e achou um furo no meu step 1)
+- Edge functions pegam a chave nova via auto-injetada **`SUPABASE_SECRET_KEYS`** (dict JSON), e o prefixo **`SUPABASE_` é reservado** → **não dá** pra setar `SUPABASE_SECRET_KEY` como Function secret. Meu step 1 está **certo pros scripts locais** (`.env`) + removeu o literal vazado, mas a parte das **edge functions precisa de rework** (ler `SUPABASE_SECRET_KEYS`).
+- Revogar a legada **invalida** `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` injetados → functions têm que migrar mesmo (+ `--no-verify-jwt`).
+- Validável **só com deploy** (loop change→deploy→probe).
+
+**Conclusão honesta:** o cutover das edge functions é uma **sessão focada de deploy-loop**, não cabe na cauda deste turno. O runbook tem o plano corrigido.
+
+## Como matar o leak (escolha) — não há mitigação parcial limpa no Supabase hosted (IP-restrict não existe; proxy em function não cobre o `/rest/v1`)
+- **(a) Cutover limpo** (eu dirijo, sessão dedicada com deploy-loop) — zero downtime, mas a chave vive até terminar.
+- **(b) Desabilitar a legada AGORA** (mata o leak em ~20min) — backend (crons/embedding/orchestration/auth) **cai** até eu terminar o cutover. Por ser pré-launch / 1 usuário, é defensável pra estancar já.
+
+Qual caminho? E quer que eu **dismisse mentalmente** as views como resolvidas (sem código) e foque 100% no cutover na próxima?
+
+**Sources:** [signing-keys](https://supabase.com/docs/guides/auth/signing-keys) · [api-keys](https://supabase.com/docs/guides/api/api-keys) · [edge fn env/secrets](https://supabase.com/docs/guides/functions/secrets) · [edge fn 401](https://supabase.com/docs/guides/troubleshooting/edge-function-401-error-response)
+
 ---
 
 %% --- TIMELINE START --- %%
