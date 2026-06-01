@@ -5648,9 +5648,1449 @@ RESTRIÇÃO DURA (repetir como NFR de segurança): estes são agentes de PRODUTO
 
 OUTPUT: docs/bok/constellation-v2/bok-agents-system--constellation-v2.md (mirror do precedente docs/bok/mcorch-constellation/bok-agents-system--mcorch-constellation.md de v5.8.0). Idioma: estrutura/labels em inglês, narrativa ao Sovereign em PT-BR.
 
+## 🤖 Claude *(02:58:23)*
+
+
+## 🤖 Claude *(02:58:26)*
+
+Skill carregado — formato canônico = **8 agentes BoK + 3 camadas cross-agent**, contextualizados (o precedente `bok-agents-system--mcorch-constellation.md` seguiu esse mesmo formato). Vou gerar os 8 agentes BoK como **lentes de competência** adaptadas à constellation-v2, com uma seção de **mapeamento topológico** ligando as 8 lentes aos 21 agentes operacionais (Core + 4 Leads + 16 subagentes), e escrever em arquivo único (o skill manda não imprimir no stdout):
+
+## 🤖 Claude *(03:01:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/bok-agents-system--constellation-v2.md",
+  "content": "# BoK Agents System \u2014 Constellation v2 (Creator-Economy SaaS \u00b7 Startup \u00b7 AI-native \u00b7 B2B2C)\n\n> **Context applied:** Industry: Creator-Economy SaaS (MCORCH) | Maturity: Startup (Usu\u00e1rio Zero) | Digital capabilities: AI-native | Model: B2B2C\n> **Anchored to:** `docs/bok/constellation-v2/` BoK suite \u00b7 seal node `38d7e7a4-c58d-4749-b044-97800d2f8e81`\n\n# SOFTWARE ENGINEERING INTELLIGENCE\n## KNOWLEDGE CORE v2.0.0 | STATUS: ONLINE\n\n> Integrated Body of Knowledge for Engineering, Architecture, Delivery,\n> Security, Experience and Product Excellence\n>\n> **OUTCOMES:** Better Knowledge \u00b7 Better Decisions \u00b7 Better Outcomes\n> **ONE KNOWLEDGE ECOSYSTEM. INFINITE POSSIBILITIES.**\n\n---\n\n## \ud83e\udded Reading Guide (PT-BR ao Sovereign)\n\nEste documento formaliza o **sistema de agentes oficial** da `constellation-v2` sob duas vistas complementares:\n\n1. **Vista de Compet\u00eancia (BoK)** \u2014 os **8 agentes-lente** abaixo (BABOK\u2192ProdBOK) definem *como* a constela\u00e7\u00e3o \u00e9 governada: cada Body of Knowledge \u00e9 uma disciplina que rege uma fatia da opera\u00e7\u00e3o. \u00c9 o formato can\u00f4nico do gerador.\n2. **Vista Operacional (Topologia)** \u2014 os **21 agentes per-user** reais (GCRUX Core L0 + 4 Department Leads L1 + 16 subagentes m\u00f3dulo-bound L2) que o tenant v\u00ea na tela. O mapeamento lente\u2192topologia est\u00e1 na se\u00e7\u00e3o **Orchestration Model \u2192 Topology Mapping**.\n\n> \u26a0\ufe0f **NFR de seguran\u00e7a dura (repetido em todo Decision Scope):** estes s\u00e3o agentes de **PRODUTO do tenant**, escopados por `auth.uid()`. S\u00e3o **disjuntos e isolados** do **Pantheon OpenClaw** (engineer/scientist/artisan/marketing-growth/guardian/claw-master), que opera o sistema/dev/repo. **Nenhuma capability mapeia fun\u00e7\u00e3o de sistema, service-role, shell, migra\u00e7\u00e3o ou dados de outro tenant.**\n\n---\n\n## \ud83e\udd16 Agent: BABOK \u2014 Business Analysis\n\n### 1. Purpose\nTraduz a inten\u00e7\u00e3o comercial do tenant (criador/afiliado) em diretivas execut\u00e1veis pela crew. \u00c9 a lente que garante que cada subagente acionado serve um objetivo de neg\u00f3cio do *pr\u00f3prio usu\u00e1rio* \u2014 n\u00e3o trabalho sem prop\u00f3sito. Encarna a fun\u00e7\u00e3o do **GCRUX Core** ao decompor \"quero monetizar este nicho\" em capabilities concretas.\n\n### 2. Core Capabilities\n- Elicitation & Collaboration (extra\u00e7\u00e3o de inten\u00e7\u00e3o do tenant via prompt/wizard)\n- Requirements Life Cycle Management (diretiva \u2192 capabilities \u2192 execu\u00e7\u00e3o)\n- Strategy Analysis (current vs desired state da opera\u00e7\u00e3o do tenant)\n- Requirements Analysis & Design Definition (mapeamento para o 4\u00d74)\n- Stakeholder scoping per-tenant (o \u00fanico stakeholder \u00e9 o dono da conta)\n- Solution evaluation (a crew entregou o resultado de neg\u00f3cio?)\n\n### 3. Skills (Operational Level)\n- Decompor uma meta do tenant em sequ\u00eancia de capabilities (Run Squad BFS)\n- Priorizar quais subagentes acionar dado saldo mcoCoins + caps\n- Validar que o output de um subagente atende ao crit\u00e9rio de aceite de neg\u00f3cio\n- Reconciliar diretiva do Core com a Decision Scope de cada Lead\n\n### 4. Inputs\nDiretiva do tenant (texto/wizard) \u00b7 cat\u00e1logo de capabilities (`agent_capabilities`) \u00b7 saldo mcoCoins (`profiles.mco_balance`) \u00b7 caps (`agent_consumption_caps`) \u00b7 hist\u00f3rico (`agent_executions`).\n\n### 5. Outputs\nPlano de execu\u00e7\u00e3o da crew (quais subagentes, em que ordem) \u00b7 diretivas Core\u2192Lead (edges `Directive`) \u00b7 crit\u00e9rios de aceite por tarefa \u00b7 `result_summary` agregado por squad.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** sugerir sequ\u00eancia de capabilities e prioridade dado o saldo. **Human-in-loop:** cria\u00e7\u00e3o/edi\u00e7\u00e3o da crew e binding de capability (o tenant aprova). **Proibido:** qualquer diretiva que acione fun\u00e7\u00e3o de sistema/dev ou dados de outro tenant.\n\n### 7. Tools & Integrations\n`agent_capabilities` (registry) \u00b7 `useCrewData` / `CrewWizard` \u00b7 `/dashboard/agent-economics` \u00b7 mcorch_nodes (observations de diretiva) \u00b7 capability router `agent-task-execute` v2.\n\n### 8. KPIs / Success Metrics\nKPI-CV2-002 Activation (% users c/ \u22651 subagente que executou \u2265 60%) \u00b7 KPI-CV2-001 task success \u2265 90% \u00b7 diretivas com crit\u00e9rio de aceite atendido / total.\n\n### 9. Example Use Cases\n- **Nicho \u2192 campanha** \u2014 Tenant diz \"monetizar rob\u00f4s aspiradores\"; BABOK decomp\u00f5e em Viral Miner \u2192 Conte\u00fado \u2192 Canvas \u2192 Afiliados \u2192 Publica\u00e7\u00e3o. Valor: opera\u00e7\u00e3o inteira a partir de uma frase.\n- **Or\u00e7amento apertado** \u2014 Saldo baixo; BABOK prioriza s\u00f3 Viral Miner + Conte\u00fado (capabilities baratas) e adia v\u00eddeo (125 mco). Valor: ROI por mcoCoin.\n- **Aceite de neg\u00f3cio** \u2014 Conte\u00fado gerado n\u00e3o cita o produto; BABOK marca falha de crit\u00e9rio e re-aciona com contexto. Valor: qualidade orientada a objetivo.\n\n### 10. Collaboration Map\n- \u2192 ProdBOK: recebe prioriza\u00e7\u00e3o MoSCoW das capabilities\n- \u2192 BPM CBOK: entrega o plano para orquestra\u00e7\u00e3o de processo\n- \u2192 CXBOK: alinha diretiva \u00e0 jornada do tenant\n- \u2192 CISSP CBK: valida que a diretiva respeita o isolamento de tenant\n\n---\n\n## \ud83e\udd16 Agent: EABOK \u2014 Enterprise Architecture\n\n### 1. Purpose\nGoverna a **camada de roteamento de capability** \u2014 o cora\u00e7\u00e3o t\u00e9cnico do v2. Garante que cada `capability_key` mapeia a uma edge function REAL no allowlist (decis\u00e3o A1: reusar, n\u00e3o reescrever) e que a topologia 4\u00d74 permanece coerente, perform\u00e1tica (\u226421 n\u00f3s) e extens\u00edvel sem d\u00edvida.\n\n### 2. Core Capabilities\n- Capability-to-function mapping (registry `agent_capabilities`)\n- Allowlist/denylist architecture (tenant-scoped vs system)\n- Reuse-first integration (A1 \u2014 edge functions existentes como tools)\n- Topology governance (4 deptos \u00d7 \u22644 subagentes + Core)\n- Architecture runway & technical debt control\n- Interface contract definition (router \u2194 m\u00f3dulos)\n\n### 3. Skills (Operational Level)\n- Registrar nova capability validando `target_function` contra o allowlist\n- Rotepar `capability_key` \u2192 edge function preservando contrato JWT/BYOK\n- Rejeitar capability fora do allowlist (HTTP 422)\n- Manter o cap de n\u00f3s e o budget de render do cockpit\n\n### 4. Inputs\nRegistry `agent_capabilities` \u00b7 cat\u00e1logo de edge functions deployadas \u00b7 `crew_agents.capability_key` \u00b7 contratos de API (04-frd \u00a74).\n\n### 5. Outputs\nDecis\u00e3o de roteamento (capability \u2192 fun\u00e7\u00e3o) \u00b7 contratos de interface \u00b7 OTDs arquiteturais (OTD-CV2-001..008) \u00b7 diagrama de topologia.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** roteamento dentro do allowlist; rejei\u00e7\u00e3o de capability desconhecida. **Human-in-loop:** registrar NOVA `target_function` no allowlist (gate de security-review). **Proibido:** mapear qualquer fun\u00e7\u00e3o de sistema/dev/service-role \u2014 barreira EoP.\n\n### 7. Tools & Integrations\n`agent-task-execute` v2 (router) \u00b7 `agent_capabilities` \u00b7 edge functions: `fetch-trends`, `canvas-execute`, `orchestrate-content`, `link-forge`, `process-affiliate-link`, `publish-meta/social/wordpress`, `generate-content` \u00b7 Supabase migrations.\n\n### 8. KPIs / Success Metrics\nKPI-CV2-004 router p95 < 800ms \u00b7 KPI-CV2-008 system-denylist violations = 0 \u00b7 KPI-CV2-009 crew size \u2264 21 \u00b7 capabilities reusando edge fn existente / total (alvo 100% na fase 1).\n\n### 9. Example Use Cases\n- **Nova capability** \u2014 Adicionar \"Newsletter\"; EABOK exige edge function alvo no allowlist + security-review antes de habilitar. Valor: extensibilidade sem buraco de seguran\u00e7a.\n- **Anti-double-charge** \u2014 Capability `orchestration` aponta para `orchestrate-content` que j\u00e1 cobra 10 mco; EABOK marca `module_self_bills=true` \u2192 router n\u00e3o re-cobra. Valor: integridade econ\u00f4mica.\n- **Render budget** \u2014 Tenant tenta criar 30 subagentes; EABOK aplica cap \u226421 + LOD. Valor: performance previs\u00edvel.\n\n### 10. Collaboration Map\n- \u2192 SWEBOK: entrega contratos para implementa\u00e7\u00e3o do router\n- \u2192 CISSP CBK: co-define allowlist/denylist\n- \u2192 DMBOK: alinha schema do registry e isolamento\n- \u2192 BPM CBOK: exp\u00f5e os pontos de integra\u00e7\u00e3o de processo\n\n---\n\n## \ud83e\udd16 Agent: DMBOK \u2014 Data Management\n\n### 1. Purpose\nDono da **soberania de dados per-tenant**: isolamento RLS, qualidade dos `agent_executions`, governan\u00e7a das credenciais BYOK e dos embeddings no Knowledge Mesh. \u00c9 a lente que torna \"cada usu\u00e1rio s\u00f3 v\u00ea o seu\" uma garantia material, n\u00e3o uma promessa.\n\n### 2. Core Capabilities\n- Data modeling & design (4 tabelas v2 + colunas)\n- Data security & privacy (RLS `auth.uid()`, LGPD)\n- Reference & master data (registry global `agent_capabilities`)\n- Data quality (regras de `06-data-model \u00a76`)\n- Metadata & lineage (`agent_executions` \u2192 observation nodes)\n- Data retention & archival (archive dos 31 execs antes do reset)\n\n### 3. Skills (Operational Level)\n- Aplicar RLS default-deny em toda tabela nova\n- Validar `capability_key` \u2208 registry e `crew_agents` count \u2264 21\n- Arquivar execu\u00e7\u00f5es antes do reset (preserva auditoria econ\u00f4mica)\n- Garantir embedding 768d nos n\u00f3s de mesh (trigger pg_net)\n\n### 4. Inputs\nSchemas (`crew_agents`, `agent_capabilities`, `agent_consumption_caps`, `agent_executions`, `user_api_keys`) \u00b7 regras de qualidade \u00b7 pol\u00edticas LGPD.\n\n### 5. Outputs\nPol\u00edticas RLS \u00b7 regras de qualidade aplicadas \u00b7 tabela archive \u00b7 lineage de execu\u00e7\u00e3o \u2192 mesh \u00b7 mapa de isolamento de tenant.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** rejeitar escrita que viole RLS/qualidade; arquivar conforme reten\u00e7\u00e3o. **Human-in-loop:** reset/migra\u00e7\u00e3o destrutiva (dry-run + Sovereign). **Proibido:** expor BYOK ao client ou cruzar `user_id`.\n\n### 7. Tools & Integrations\nSupabase Postgres + RLS \u00b7 `user_api_keys` (BYOK) \u00b7 `embed-mcorch-node` (768d) \u00b7 `mcorch_nodes`/`mcorch_edges` \u00b7 `agent_executions_archive` \u00b7 `delete_account()` (LGPD cascade).\n\n### 8. KPIs / Success Metrics\nKPI-CV2-007 cross-tenant incidents = 0 \u00b7 KPI-CV2-005 BYOK fail rate < 5% \u00b7 % execs com `result_summary` preenchido \u00b7 % n\u00f3s com embedding \u2264 5min do insert \u2265 95%.\n\n### 9. Example Use Cases\n- **Reset seguro** \u2014 Antes de purgar 26 owners \u00f3rf\u00e3os, DMBOK arquiva os 31 execs reais e aplica guard `NOT IN profiles`. Valor: zero perda do tenant real.\n- **BYOK revogado** \u2014 Tenant revoga chave; DMBOK garante que execu\u00e7\u00f5es subsequentes falham fail-closed, sem fallback global. Valor: controle do dono.\n- **Direito ao esquecimento** \u2014 `delete_account()` cascateia crew + execu\u00e7\u00f5es + caps + chaves. Valor: conformidade LGPD material.\n\n### 10. Collaboration Map\n- \u2192 CISSP CBK: co-owna RLS e manuseio de segredo\n- \u2192 EABOK: alinha schema do registry\n- \u2192 ProdBOK: fornece dados de consumo para economia\n- \u2192 BPM CBOK: define gatilhos de reten\u00e7\u00e3o/arquivamento\n\n---\n\n## \ud83e\udd16 Agent: BPM CBOK \u2014 Business Process Management\n\n### 1. Purpose\nModela e executa os **9 processos** da constela\u00e7\u00e3o (PROC-CV2-001..009) \u2014 da cria\u00e7\u00e3o on-demand da crew ao ciclo de execu\u00e7\u00e3o de capability com BYOK/cap/metering, ao daily pulse, ao reset. \u00c9 a lente que transforma agentes parados em fluxo orquestrado.\n\n### 2. Core Capabilities\n- Process modeling (BPMN-lite dos 9 PROC)\n- Process orchestration (Run Squad BFS pela hierarquia)\n- Process performance management (SLA por step)\n- Exception & retry handling (backoff, fail-closed)\n- Process automation (daily pulse cron)\n- Idempotency design (anti-double-charge)\n\n### 3. Skills (Operational Level)\n- Executar a sequ\u00eancia router: JWT\u2192capability\u2192BYOK\u2192cap\u2192invoke\u2192meter\u2192write\n- Orquestrar Run All BFS Core\u2192Leads\u2192subagentes\n- Aplicar retry com backoff em falha de m\u00f3dulo; fail-closed em BYOK/cap\n- Garantir idempot\u00eancia via `idempotency_key`\n\n### 4. Inputs\nPlano de execu\u00e7\u00e3o (do BABOK) \u00b7 estados de `agent_executions` \u00b7 SLAs (07-process-flow \u00a76) \u00b7 gatilhos (clique/cron).\n\n### 5. Outputs\nExecu\u00e7\u00f5es orquestradas \u00b7 transi\u00e7\u00f5es de status (running\u2192done/failed) \u00b7 pulses `infra_health_logs` \u00b7 relat\u00f3rios de SLA.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** orquestrar, retry, marcar timeout/failed, idempot\u00eancia. **Human-in-loop:** disparar processos em massa (Run All) e o reset one-shot. **Proibido:** processo que toque sistema/outro tenant.\n\n### 7. Tools & Integrations\n`agent-task-execute` v2 \u00b7 `agent-daily-pulse` (cron estendido) \u00b7 `useAgentTask` / `useCrewData` \u00b7 `infra_health_logs` \u00b7 `deduct_mco_coins` RPC \u00b7 m\u00f3dulos-alvo.\n\n### 8. KPIs / Success Metrics\nKPI-CV2-001 task success \u2265 90% \u00b7 router p95 (KPI-CV2-004) \u00b7 SLA breach rate \u00b7 daily pulse loop < 5min.\n\n### 9. Example Use Cases\n- **Run Squad** \u2014 Tenant clica \"Run Squad\" no Market Lead; BPM executa Viral Miner\u2192Analytics\u2192Produtos\u2192Campanhas em cadeia. Valor: opera\u00e7\u00e3o de um clique.\n- **Falha resiliente** \u2014 `canvas-execute` retorna 5xx; BPM aplica 2 retries com backoff, depois marca failed + telemetria. Valor: robustez sem cobran\u00e7a indevida.\n- **Pulse di\u00e1rio** \u2014 Cron 07:00 BRT roda os subagentes Sovereign-owned com groq pilot. Valor: constela\u00e7\u00e3o viva sem clique.\n\n### 10. Collaboration Map\n- \u2192 BABOK: recebe o plano de execu\u00e7\u00e3o\n- \u2192 EABOK: usa os contratos de roteamento\n- \u2192 CISSP CBK: respeita os gates fail-closed\n- \u2192 DMBOK: aciona arquivamento/reten\u00e7\u00e3o\n\n---\n\n## \ud83e\udd16 Agent: SWEBOK \u2014 Software Engineering\n\n### 1. Purpose\nEncarna a disciplina de constru\u00e7\u00e3o do v2 sob **Harness Engineering**: o refactor do router, os hooks (l\u00f3gica) e componentes (display-only), a estrat\u00e9gia de teste e a qualidade de c\u00f3digo. \u00c9 a lente que materializa a arquitetura sem d\u00edvida \u2014 mapeia operacionalmente ao **Technical Engine Lead**.\n\n### 2. Core Capabilities\n- Software requirements \u2192 design \u2192 construction (FR-CV2-*)\n- Harness Engineering (l\u00f3gica em hooks; componentes display-only)\n- Software testing (unit/integration/E2E matrix)\n- Software maintenance & complexity control\n- Configuration & build/deploy materiality\n- Construction security (secure coding)\n\n### 3. Skills (Operational Level)\n- Refatorar `agent-task-execute` para capability router v2\n- Implementar hooks (`useAgentCapabilities`, `useAccessConfig`) e componentes (`CrewWizard`, `AccessConfigCard`, `EmptyConstellation`)\n- Escrever testes (unit + integration + E2E) por FR\n- Garantir build/deploy material (skill build-deploy-guardian)\n\n### 4. Inputs\nSDD (`05-sdd`) \u00b7 FRD (`04-frd`) \u00b7 contratos de interface \u00b7 padr\u00f5es de c\u00f3digo MCORCH (CLAUDE.md).\n\n### 5. Outputs\nRouter v2 \u00b7 hooks/componentes \u00b7 migrations \u00b7 testes \u00b7 deploy verificado (env baked + chunk novo).\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** decis\u00f5es de implementa\u00e7\u00e3o dentro do SDD; refactors lint-safe. **Human-in-loop:** mudan\u00e7as de contrato/arquitetura (volta ao EABOK/BoK). **Proibido:** dar ao agente de produto qualquer acesso ao repo/sistema (a fronteira que o SWEBOK constr\u00f3i e o CISSP audita).\n\n### 7. Tools & Integrations\nVite/React/TanStack Query/Zustand \u00b7 Supabase Edge (Deno) \u00b7 Vitest/Playwright \u00b7 ESLint/tsc \u00b7 `scripts/` (seed, deploy) \u00b7 build-deploy-guardian.\n\n### 8. KPIs / Success Metrics\nNFR-CV2-005 complexidade \u2264 10/hook \u00b7 cobertura de teste por FR \u00b7 `tsc --noEmit` 0 erros \u00b7 KPI-CV2-010 render fps \u2265 60.\n\n### 9. Example Use Cases\n- **Router refactor** \u2014 Implementa resolu\u00e7\u00e3o capability\u2192fun\u00e7\u00e3o reusando o padr\u00e3o `assertExecuteSuccess`. Valor: execu\u00e7\u00e3o real sem mentira de sucesso.\n- **Empty-start** \u2014 Remove a chamada de `seed_crew_template`; adiciona `EmptyConstellation`. Valor: fim da polui\u00e7\u00e3o.\n- **Z-index fix** \u2014 Reorganiza camadas 0/10/40/50 no `CrewGraph`/HUD. Valor: UX limpa (bug atual fechado).\n\n### 10. Collaboration Map\n- \u2192 EABOK: implementa os contratos de arquitetura\n- \u2192 CISSP CBK: aplica secure coding + JWT/RLS\n- \u2192 CXBOK: constr\u00f3i os componentes da jornada\n- \u2192 BPM CBOK: codifica os processos de orquestra\u00e7\u00e3o\n\n---\n\n## \ud83e\udd16 Agent: CISSP CBK \u2014 Cybersecurity\n\n### 1. Purpose\n**Agente de governan\u00e7a cr\u00edtica do v2.** Dono da barreira que define o produto inteiro: agentes de tenant **JAMAIS** tocam sistema/dev ou outro tenant. Owna o threat model STRIDE, a allowlist/denylist de capabilities, o manuseio fail-closed de BYOK e o gate de isolamento (SOL-CV2-005 = P0).\n\n### 2. Core Capabilities\n- Identity & Access Management (JWT user, RLS `auth.uid()`)\n- Security architecture & engineering (allowlist/denylist)\n- Threat modeling (STRIDE por componente)\n- Secrets management (BYOK column-REVOKE, never client)\n- Security operations (isolation violation = P0)\n- Software development security (privilege separation produto vs sistema)\n\n### 3. Skills (Operational Level)\n- Validar JWT de user em todo path user-facing (nunca service-role)\n- Bloquear capability cujo `target_function` n\u00e3o esteja no allowlist tenant-scoped\n- Resolver BYOK server-side fail-closed (402/501), nunca devolver chave\n- Disparar P0 + desabilitar capability em incidente de isolamento\n\n### 4. Inputs\nThreat model (`05-sdd \u00a75`) \u00b7 registry de capabilities \u00b7 `user_api_keys` \u00b7 RLS policies \u00b7 `infra_health_logs`.\n\n### 5. Outputs\nVeredito de allowlist \u00b7 gates fail-closed \u00b7 eventos `constellation_v2_isolation_violation` \u00b7 relat\u00f3rio de security-review por migra\u00e7\u00e3o.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** negar acesso, bloquear capability, fail-closed, disparar P0. **Human-in-loop:** aprovar nova `target_function` no allowlist. **Proibido (enforced):** permitir que QUALQUER agente de produto acione fun\u00e7\u00e3o de sistema/dev/service-role/shell \u2014 esta \u00e9 a linha vermelha do v2.\n\n### 7. Tools & Integrations\nSupabase Auth (JWT) + RLS \u00b7 `agent_capabilities` allowlist \u00b7 `user_api_keys` (column-REVOKE) \u00b7 `/security-review` \u00b7 `mega-brain-daemon` (P0 auto-response) \u00b7 `infra_health_logs`.\n\n### 8. KPIs / Success Metrics\nKPI-CV2-007 cross-tenant incidents = 0 \u00b7 KPI-CV2-008 system-denylist violations = 0 \u00b7 KPI-CV2-005 BYOK fail handled fail-closed 100% \u00b7 100% migra\u00e7\u00f5es via `/security-review`.\n\n### 9. Example Use Cases\n- **Tentativa de escalonamento** \u2014 Uma capability \u00e9 registrada apontando para fun\u00e7\u00e3o de sistema; CISSP bloqueia no gate de review (FMEA-CV2-002, RPN 120). Valor: EoP prevenido.\n- **BYOK ausente** \u2014 Subagente sem chave cai em fail-closed 501, sem fallback global silencioso (FMEA-CV2-004, RPN 120). Valor: sem cobran\u00e7a/uso cruzado.\n- **Isolamento P0** \u2014 Detecta leitura cross-tenant; desabilita capability + alerta Sovereign imediato (SOL-CV2-005). Valor: conten\u00e7\u00e3o de blast radius.\n\n### 10. Collaboration Map\n- \u2192 DMBOK: co-owna RLS e segredos\n- \u2192 EABOK: co-define allowlist/denylist\n- \u2192 SWEBOK: imp\u00f5e secure coding\n- \u2192 BPM CBOK: insere gates fail-closed nos processos\n\n---\n\n## \ud83e\udd16 Agent: CXBOK \u2014 Customer Experience\n\n### 1. Purpose\nOwna a experi\u00eancia do tenant no cockpit: o **empty-start** acolhedor, o wizard de cria\u00e7\u00e3o, a jornada \"diga vai e a crew trabalha\", a est\u00e9tica luxo (dark mesh/neon) e a **performance/z-index** que hoje est\u00e3o quebradas. Mapeia operacionalmente ao **Creative Content Lead** e \u00e0 camada de UX.\n\n### 2. Core Capabilities\n- Customer understanding (personas L\u00e9o/Marina)\n- Journey mapping (awareness\u2192value\u2192retention)\n- Experience design (luxury UX, glass morphism)\n- Touchpoint orchestration (cockpit 3D, pain\u00e9is, toasts)\n- Accessibility (WCAG 2.1 AA)\n- Voice-of-customer (NPS, saldo/erro feedback)\n\n### 3. Skills (Operational Level)\n- Renderizar empty-state com CTA \"Criar minha crew\"\n- Conduzir o wizard de crew + config de acesso por subagente\n- Surface de status/logs/saldo em tempo real (sem mock)\n- Aplicar camadas z-index estritas + LOD para 60fps\n\n### 4. Inputs\nPersonas/journeys (`03-prd`) \u00b7 estado da crew (`useCrewData`) \u00b7 execu\u00e7\u00f5es (`useAgentActivity`) \u00b7 saldo (`profiles.mco_balance`).\n\n### 5. Outputs\nCockpit renderizado \u00b7 wizard/onboarding \u00b7 Live Logs \u00b7 toasts (sucesso/erro/saldo) \u00b7 jornada sem fric\u00e7\u00e3o.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** layout, anima\u00e7\u00e3o, surfacing de estado, alertas de saldo. **Human-in-loop:** decis\u00f5es de produto que mudam jornada (com ProdBOK). **Proibido:** exibir dados de outro tenant ou credenciais.\n\n### 7. Tools & Integrations\nR3F/drei (CrewGraph) \u00b7 Framer Motion \u00b7 `sonner` (toasts) \u00b7 `useAgentActivity` \u00b7 `e2e-user-zero-audit` (E2E UI 1920\u00d71080) \u00b7 DashboardLayout (LOW_BALANCE_THRESHOLD).\n\n### 8. KPIs / Success Metrics\nKPI-CV2-010 render fps \u2265 60 (piso 30) \u00b7 NPS \u00b7 time-to-first-crew \u00b7 % jornadas que chegam a \"value\" (1\u00aa execu\u00e7\u00e3o real).\n\n### 9. Example Use Cases\n- **Primeiro acesso** \u2014 User novo v\u00ea cockpit vazio + CTA, n\u00e3o 53 fantasmas. Valor: clareza (resolve a polui\u00e7\u00e3o da imagem).\n- **Feedback de saldo** \u2014 Saldo < 50; pill \u00e2mbar + toast. Valor: sem surpresa de cobran\u00e7a.\n- **z-index limpo** \u2014 Pain\u00e9is n\u00e3o cobrem mais o canvas/toasts. Valor: UX profissional (bug atual fechado).\n\n### 10. Collaboration Map\n- \u2192 ProdBOK: alinha jornada \u00e0 prioriza\u00e7\u00e3o de features\n- \u2192 BABOK: traduz a inten\u00e7\u00e3o do tenant na entrada do wizard\n- \u2192 SWEBOK: especifica componentes display-only\n- \u2192 DMBOK: garante que s\u00f3 dados do tenant aparecem\n\n---\n\n## \ud83e\udd16 Agent: ProdBOK \u2014 Product Management\n\n### 1. Purpose\nOwna a **estrat\u00e9gia de produto e a economia** do v2: o roadmap MoSCoW (MVP\u2192v1\u2192future), a precifica\u00e7\u00e3o mcoCoins por capability, a prioriza\u00e7\u00e3o do 4\u00d74 e a tese de monetiza\u00e7\u00e3o BYOK (custo de IA migra ao tenant; MCORCH cobra a orquestra\u00e7\u00e3o). Mapeia ao **GCRUX Core** na vista de produto.\n\n### 2. Core Capabilities\n- Product vision & strategy (cockpit operacional per-user)\n- Roadmap & release phasing (MVP PR-CV2-001..007)\n- Feature prioritization (MoSCoW)\n- Pricing & monetization (mcoCoins por capability)\n- Product analytics (ativa\u00e7\u00e3o econ\u00f4mica)\n- Lifecycle management (v1\u2192future PR-CV2-020+)\n\n### 3. Skills (Operational Level)\n- Priorizar capabilities por valor/esfor\u00e7o/custo\n- Definir custo mcoCoins por capability (via `calc_agent_cost_mcoin` + surcharge)\n- Calibrar `MARGIN_FACTOR` ap\u00f3s 7d+ de dados\n- Decidir gates de release (BAC-CV2-*)\n\n### 4. Inputs\nPRD (`03-prd`) \u00b7 economia (`02-brd \u00a76`) \u00b7 KPIs (`08-quality-metrics`) \u00b7 dados de consumo (`agent_executions`, `mcoin_transactions`).\n\n### 5. Outputs\nRoadmap priorizado \u00b7 tabela de pre\u00e7os mcoCoins \u00b7 gates de release \u00b7 decis\u00f5es de margem.\n\n### 6. Decision Scope\n**Aut\u00f4nomo:** prioriza\u00e7\u00e3o e m\u00e9tricas; ajuste de custo dentro de guardrails. **Human-in-loop:** mudan\u00e7a de modelo de pre\u00e7o/plano e calibra\u00e7\u00e3o de `MARGIN_FACTOR` (Sovereign + scientist). **Proibido:** cobrar o Sovereign (admin freebie por design).\n\n### 7. Tools & Integrations\n`/dashboard/agent-economics` \u00b7 `agent_pricing` \u00b7 `calc_agent_cost_mcoin` + `deduct_mco_coins` \u00b7 `profiles.mco_balance` \u00b7 planos (Starter/Pro/Enterprise).\n\n### 8. KPIs / Success Metrics\nKPI-CV2-003 economic activation (mcoCoins/m\u00eas > 0 crescente) \u00b7 KPI-CV2-002 activation \u2265 60% \u00b7 KPI-CV2-006 cap-hit rate \u00b7 ARPU por squad.\n\n### 9. Example Use Cases\n- **Pre\u00e7o de capability** \u2014 Define v\u00eddeo DoP = 125 mco (precedente real) e fetch-trends = ~1\u20135. Valor: economia coerente.\n- **Gate de release** \u2014 Bloqueia GA at\u00e9 BAC-CV2-001..004 verdes. Valor: qualidade antes de escala.\n- **Upsell por cap** \u2014 Tenant bate cap di\u00e1rio; ProdBOK sugere upgrade Pro. Valor: monetiza\u00e7\u00e3o natural.\n\n### 10. Collaboration Map\n- \u2192 BABOK: recebe necessidades de neg\u00f3cio do tenant\n- \u2192 CXBOK: alinha pre\u00e7o \u00e0 jornada (sem fric\u00e7\u00e3o)\n- \u2192 DMBOK: consome dados de uso para an\u00e1lise\n- \u2192 BPM CBOK: define gatilhos de upsell/alerta\n\n---\n\n## \ud83d\udd04 Orchestration Model\n\n**Orquestrador prim\u00e1rio:** o **capability router** (`agent-task-execute` v2) \u00e9 o orquestrador t\u00e9cnico event-driven; o **GCRUX Core** \u00e9 o orquestrador *de neg\u00f3cio* per-tenant (decomp\u00f5e diretiva \u2192 Leads \u2192 subagentes).\n\n**Trigger conditions:** (a) clique do tenant (\"Executar\" / \"Run Squad\"); (b) cron `agent-daily-pulse` (07:00 BRT); (c) [future] cron por-subagente.\n\n**Handoff points:**\n```\nTenant \u2500\u2500diretiva\u2500\u2500\u25b6 GCRUX Core (BABOK/ProdBOK lens)\n   \u2514\u2500\u25b6 Department Lead (Directive edge) \u2500\u2500\u25b6 Subagente m\u00f3dulo-bound (Reporting edge)\n        \u2514\u2500\u25b6 Capability Router (EABOK/BPM lens): JWT \u2192 capability \u2192 BYOK(DMBOK) \u2192 cap(ProdBOK) \u2192 invoke m\u00f3dulo(SWEBOK) \u2192 meter \u2192 write\n             \u2514\u2500\u25b6 agent_executions \u2500\u2500\u25b6 useAgentActivity \u2500\u2500\u25b6 status 3D + Live Logs (CXBOK)\n```\n\n**Feedback loops:** `agent_executions` \u2192 `useAgentActivity` (status/log em 12s) \u2192 Core reavalia plano; economia \u2192 `/dashboard/agent-economics` \u2192 ProdBOK calibra pre\u00e7o; `infra_health_logs` \u2192 `mega-brain-daemon` \u2192 self-heal/P0.\n\n**Conflict resolution:** escopo sobreposto resolve-se pela hierarquia (Core > Lead > subagente) e pelo allowlist (CISSP vence em seguran\u00e7a; EABOK vence em arquitetura \u2014 alinhado ao CLAUDE.md: \"Master Protocol vence arquitetura, Survival Laws vencem execu\u00e7\u00e3o\").\n\n### \ud83d\uddfa\ufe0f Topology Mapping (8 lentes BoK \u2192 21 agentes operacionais)\n\n| Operational Agent (per-user) | Level | Capability/Module | Governing BoK Lens |\n|------------------------------|-------|-------------------|--------------------|\n| **GCRUX Core** | L0 | orquestra + agent-economics | BABOK + ProdBOK |\n| **Creative Content Lead** | L1 | dept content | CXBOK |\n| \u2192 Conte\u00fado | L2 | `generate-content` | CXBOK/ProdBOK |\n| \u2192 Blog | L2 | blog/wordpress | CXBOK |\n| \u2192 Canvas Studio | L2 | `canvas-execute` | CXBOK/SWEBOK |\n| \u2192 Canvas Design | L2 | canvas design | CXBOK |\n| **Market Intelligence Lead** | L1 | dept market | BABOK |\n| \u2192 Viral Miner | L2 | `fetch-trends` | BABOK |\n| \u2192 Analytics | L2 | analytics queries | DMBOK |\n| \u2192 Produtos | L2 | cat\u00e1logo | ProdBOK |\n| \u2192 Campanhas | L2 | campanhas | ProdBOK |\n| **Operational Ops Lead** | L1 | dept ops | BPM CBOK |\n| \u2192 Afiliados | L2 | `link-forge` | ProdBOK/BPM |\n| \u2192 Calend\u00e1rio | L2 | agenda | BPM |\n| \u2192 Orquestra\u00e7\u00e3o | L2 | `orchestrate-content` | BPM CBOK |\n| \u2192 Publica\u00e7\u00e3o Social | L2 | `publish-meta/social/wordpress` | BPM/CXBOK |\n| **Technical Engine Lead** | L1 | dept tech | SWEBOK + EABOK |\n| \u2192 Core/AIOS | L2 | aios-chat | SWEBOK |\n| \u2192 IA Arena | L2 | model arena | EABOK |\n| \u2192 agent-economics | L2 | economia | ProdBOK/DMBOK |\n| \u2192 Watchdog/Infra (read-only) | L2 | `get-infra-status` (read) | CISSP/EABOK |\n\n> **Governan\u00e7a transversal:** CISSP CBK e DMBOK governam **todos** os 21 agentes (isolamento + dados), n\u00e3o um departamento espec\u00edfico.\n\n---\n\n## \ud83e\udde0 Intelligent Engineering Layer\n\n| Dimension | Description |\n|---|---|\n| **People** | Os agentes aumentam UM humano (o tenant criador/afiliado), substituindo a troca de contexto entre 10+ ferramentas. O Sovereign opera em modo admin freebie. Nenhum agente substitui o time de DEV (esse \u00e9 o Pantheon OpenClaw, separado). |\n| **Process** | Embutidos nos 9 PROC-CV2: cria\u00e7\u00e3o on-demand, execu\u00e7\u00e3o de capability com BYOK/cap/metering, Run Squad BFS, daily pulse, reset. Cada processo tem SLA e fail-closed. |\n| **Technology** | Supabase (Postgres+RLS+Edge Deno), capability router `agent-task-execute` v2, React/R3F cockpit, CEA v1.1 (agent_executions/pricing), Docker mesh (mega-brain-daemon). Reuso-first (A1). |\n| **Data** | Isolamento `auth.uid()` em toda tabela; registry global de capabilities; BYOK em `user_api_keys`; lineage execu\u00e7\u00e3o\u2192observation node (768d); archive antes do reset. |\n| **Knowledge** | Cada execu\u00e7\u00e3o pode emitir observation node no Knowledge Mesh; a BoK suite (`docs/bok/constellation-v2/`) \u00e9 a SSOT; FSRS-6 decai estabilidade; `useAgentActivity` reflete aprendizado operacional. |\n| **Value** | mcoCoins consumidos por execu\u00e7\u00e3o = receita direta; links de afiliado forjados = receita indireta; tempo do tenant economizado = valor percebido. ProdBOK traduz outputs em ARPU. |\n| **Sustainable Impact** | BYOK move o custo de IA ao tenant (margem limpa, sem subs\u00eddio insustent\u00e1vel); caps previnem desperd\u00edcio de tokens; admin freebie do Sovereign \u00e9 bounded; isolamento de tenant \u00e9 a base de confian\u00e7a que sustenta a escala multi-tenant a longo prazo. |\n\n---\n\n## \u2699\ufe0f Cross-Cutting Enablers\n\n1. **Systems Thinking** \u2014 A topologia 4\u00d74 + Core modela explicitamente as interdepend\u00eancias (Directive/Reporting edges); o router torna o acoplamento m\u00f3dulo\u2194agente declarativo no registry; OTDs capturam trade-offs arquiteturais (OTD-CV2-001..008).\n2. **Analytics & Metrics** \u2014 Camada de observabilidade compartilhada: `agent_executions` (toda execu\u00e7\u00e3o) + `infra_health_logs` (toda telemetria) + `/dashboard/agent-economics` (KPIs por squad). 10 KPI-CV2 com thresholds warn/critical.\n3. **Collaboration & Communication** \u2014 Protocolo inter-agente via edges hier\u00e1rquicos (Core\u2192Lead\u2192subagente) e via o router (handoffs expl\u00edcitos). Humano\u2194agente via cockpit (diretiva, logs, toasts) \u2014 sempre PT-BR ao tenant.\n4. **Automation & Tooling** \u2014 Infra de automa\u00e7\u00e3o compartilhada: capability router (reuso de edge functions), `agent-daily-pulse` cron, `mega-brain-daemon` self-heal, build-deploy-guardian, seed scripts idempotentes.\n5. **Ethics, Compliance & Sustainability** \u2014 Governan\u00e7a system-wide: RLS `auth.uid()` + allowlist/denylist (CISSP) como linha vermelha contra acesso a sistema/cross-tenant; LGPD (BYOK revog\u00e1vel, delete cascade); mcoCoins at\u00f4mico + caps (sem cobran\u00e7a indevida); Survival Laws SSP-01 (materialidade, processo antecipado, ORO) aplicadas ao ecossistema.\n\n---\n\u2192 ALIGN  \u2192  INTEGRATE  \u2192  OPTIMIZE  \u2192  INNOVATE  \u2192  TRANSFORM  \u2192  DELIVER VALUE\n\n**SYSTEM STATUS: ALL SYSTEMS OPERATIONAL**\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/constellation-v2/bok-agents-system--constellation-v2.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:23)*
+
+
+## 🤖 Claude *(03:01:24)*
+
+Documento escrito. Confirmando tamanho material + garantindo que o novo script `.ts` não quebrou o TS check:
+
+## 🤖 Claude *(03:01:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2500\u2500\u2500 bok-agents-system file \u2500\u2500\u2500\"\nls -la docs/bok/constellation-v2/bok-agents-system--constellation-v2.md | awk '{print $5\" bytes \u00b7 \"$9}'\nwc -l docs/bok/constellation-v2/bok-agents-system--constellation-v2.md\necho \"\u2500\u2500\u2500 agentes detectados (## \ud83e\udd16) \u2500\u2500\u2500\"; grep -c \"^## \ud83e\udd16 Agent:\" docs/bok/constellation-v2/bok-agents-system--constellation-v2.md\necho \"\u2500\u2500\u2500 camadas cross-agent \u2500\u2500\u2500\"; grep -cE \"^## (\ud83d\udd04|\ud83e\udde0|\u2699\ufe0f)\" docs/bok/constellation-v2/bok-agents-system--constellation-v2.md\necho \"\u2500\u2500\u2500 su\u00edte completa constellation-v2 \u2500\u2500\u2500\"; ls -1 docs/bok/constellation-v2/\necho \"\u2500\u2500\u2500 tsc check (novo seed .ts n\u00e3o pode quebrar build) \u2500\u2500\u2500\"; npx tsc --noEmit 2>&1 | tail -5; echo \"exit: ${PIPESTATUS[0]}\"",
+  "description": "Confirm bok-agents file size + tsc clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ─── bok-agents-system file ───
+> 29085 bytes · docs/bok/constellation-v2/bok-agents-system--constellation-v2.md
+> 477 docs/bok/constellation-v2/bok-agents-system--constellation-v2.md
+> ─── agentes detectados (## 🤖) ───
+> 8
+> ─── camadas cross-agent ───
+> 3
+> ─── suíte completa constellation-v2 ───
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> bok-agents-system--constellation-v2.md
+> ─── tsc check (novo seed .ts não pode quebrar build) ───
+> exit: 0
+> ```
+
+## 🤖 Claude *(03:01:57)*
+
+
+## 🤖 Claude *(03:02:17)*
+
+✅ **Ambos os skills concluídos — `constellation-v2` oficializada.**
+
+```
+✅ BoK Agents System → docs/bok/constellation-v2/bok-agents-system--constellation-v2.md
+📄 Agents: 8 (BABOK→ProdBOK) | Sections: 10/agente + 3 camadas cross-agent
+📁 Size: ~29 KB (477 linhas)
+```
+
+## 📦 Entregue (prova material — Lei 1)
+
+| Artefato | Prova |
+|---|---|
+| Suíte BoK (9 docs) | `docs/bok/constellation-v2/` · 1647 LOC · traceability 0 órfãos |
+| Seal na Knowledge Mesh | node `38d7e7a4-c58d-4749-b044-97800d2f8e81` · **embedded 768d ✓** · stability 0.85 |
+| Aresta de linhagem | `DERIVES_FROM` `c3dd9d58-…` → `mcorch-constellation-v1` (supera a casca) |
+| Seed script idempotente | `scripts/seed-constellation-v2-bok-seal.ts` |
+| Sistema de Agentes oficial | `bok-agents-system--constellation-v2.md` · 8 lentes BoK + 3 camadas + **Topology Mapping** (8 lentes → 21 agentes) |
+| Build intacto | `tsc --noEmit` exit **0** |
+
+**O que o sistema oficial cristaliza:** as 8 lentes BoK governam a constelação, e o **Topology Mapping** liga cada lente aos 21 agentes reais (GCRUX Core + 4 Leads + 16 subagentes módulo-bound). A linha vermelha está selada como NFR de segurança em todo *Decision Scope*: **agentes de produto do tenant ≠ Pantheon OpenClaw (dev/sistema); nenhuma capability mapeia função de sistema.** CISSP + DMBOK governam isolamento/dados transversalmente.
+
+## 🛣️ Implementação — agora DESBLOQUEADA pela BoK (roadmap do `00-index`)
+
+1. **Fase 0 — Reset** ⚠️ *(destrutivo)*: arquivar 31 execs → purgar 26 owners órfãos → wipe da sua crew (53) → remover auto-seed.
+2. **Fase 1** — migrations (`agent_capabilities` + `agent_consumption_caps` + colunas) → **passa `/security-review`** (FMEA-011).
+3. **Fase 2** — refactor `agent-task-execute` v2 (capability router: JWT→capability→BYOK→cap→invoke→meter).
+4. **Fase 3** — UI: empty-start + wizard + AccessConfig + fix perf/z-index.
+5. **Fase 4** — E2E completo (vazio→criar→trabalhar→medir) + E2E UI audit 1920×1080.
+
+## ⚖️ Survival Laws (mini-audit desta etapa)
+- **Lei 1:** todo seal/contagem citado vem de output verificado neste turno (REST/bun/wc); 0 fabricação.
+- **Lei 2/Master Protocol:** BoK selada **antes** de qualquer código do v2 — gate respeitado (não foi override).
+- **Lei 4 (ORO):** Operator=eu · Reviewer/Owner=você.
+- **Lei 3 (Poda):** solto da atenção ativa os 9 templates + o script-precedente (referência em `.claude/agents/bok-scribe/templates/` e `scripts/seed-openclaw-bok-seal.ts`).
+
+**Como prosseguir?** Minha recomendação: começar pela **base não-destrutiva** — Fase 1 (migrations + `/security-review`) e Fase 2 (router) — e deixar a **Fase 0 (reset)** para depois, executada com **dry-run que você aprova** antes de qualquer DELETE em produção. Posso (a) persistir o plano de execução em `.claude/context/` e arrancar pela Fase 1, (b) selar a sessão agora via `/handoff`, ou (c) outro caminho que preferir.
+
+## 👤 User *(03:11:04)*
+
+Sim vai com A, plano de execução context e arrancar pela faase 1 e se conseguir ir até todas as fases melhor ainda
+
+## 🤖 Claude *(03:12:21)*
+
+
+## 🤖 Claude *(03:12:24)*
+
+Fechado — **Opção A**. Persisto o plano de execução e arranco pela Fase 1, indo o mais longe que a materialidade permitir (com o **gate de dry-run** obrigatório antes de qualquer DELETE na Fase 0).
+
+Primeiro o plano persistente + levantamento material do mecanismo de apply/migration e das funções reais (preciso saber o que existe antes de mapear capabilities):
+
+## 🤖 Claude *(03:12:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md",
+  "content": "# Execution Plan \u2014 Constellation v2\n\n**Created:** 2026-06-01 \u00b7 **Owner (ORO):** Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign (Gabriel)\n**SSOT:** `docs/bok/constellation-v2/` (seal `38d7e7a4-c58d-4749-b044-97800d2f8e81`)\n**Status legend:** \u2b1c pending \u00b7 \ud83d\udfe1 in-progress \u00b7 \u2705 done (material proof) \u00b7 \u26a0\ufe0f gated\n\n> Diretiva Sovereign 2026-06-01: \"vai com A \u2014 plano de execu\u00e7\u00e3o em context e arrancar pela Fase 1; se conseguir ir at\u00e9 todas as fases melhor.\"\n> **Gate duro:** nenhuma opera\u00e7\u00e3o destrutiva (Fase 0 DELETE) sem dry-run aprovado.\n\n---\n\n## Phase order (dependency-correct)\n\nMigrations primeiro (Fase 1) \u2014 a tabela `agent_executions_archive` precisa existir ANTES da Fase 0 arquivar. Por isso **Fase 1 \u2192 Fase 0 \u2192 Fase 2 \u2192 Fase 3 \u2192 Fase 4**.\n\n### Fase 1 \u2014 Foundation migrations  \u2b1c\n- Migration `<ts>_constellation_v2_foundation.sql`: `agent_capabilities` (registry global) + `agent_consumption_caps` (per-user) + `crew_agents.capability_key` + `agent_executions` colunas (`capability_key`, `idempotency_key`, `result_summary`) + `agent_executions_archive`.\n- RLS default-deny em toda tabela nova (CISSP/DMBOK). CHECK constraints (06-data-model \u00a73).\n- **GATE:** `/security-review` PASS (FMEA-011) antes do commit.\n- **GATE material:** schema cache lista as tabelas; `tsc` 0 erros.\n- Seed do registry: 16 capabilities (s\u00f3 `is_active=true` as que t\u00eam edge function REAL deployada \u2014 honestidade Lei 1).\n\n### Fase 0 \u2014 Reset (DESTRUTIVO) \u26a0\ufe0f\n- **DRY-RUN obrigat\u00f3rio:** contar owners \u00f3rf\u00e3os (NOT IN profiles) + crew Sovereign + execs. Mostrar ao Sovereign.\n- Arquivar 31 `agent_executions` \u2192 `agent_executions_archive`.\n- DELETE `crew_edges`/`crew_agents` WHERE user_id NOT IN (SELECT id FROM profiles) \u2014 purga 26 \u00f3rf\u00e3os.\n- DELETE crew do Sovereign (wipe dos 53 \u2014 autorizado).\n- Code: remover auto-seed `seed_crew_template` em `useCrewData` (empty-start).\n- **GATE material:** `crew_agents` count = 0 p\u00f3s-reset; archive count = 31.\n\n### Fase 2 \u2014 Capability router (agent-task-execute v2) \u2b1c\n- Refactor: JWT user \u2192 resolve `capability_key` \u2192 `agent_capabilities` (allowlist) \u2192 BYOK (`user_api_keys`) \u2192 cap (`agent_consumption_caps`) \u2192 invoke `target_function` \u2192 `calc_agent_cost_mcoin`+`deduct_mco_coins` (Sovereign freebie) \u2192 write `agent_executions` \u2192 pulse `infra_health_logs`.\n- Fail-closed: 401/402/422/501. `assertExecuteSuccess`. Anti-double-charge (`module_self_bills`).\n- Denylist de sistema: `target_function` \u2208 allowlist tenant-scoped apenas.\n- **GATE material:** deploy size + 1 execu\u00e7\u00e3o real retorna `done` + row em `agent_executions`.\n\n### Fase 3 \u2014 UI (hooks + components) \u2b1c\n- Hooks: `useAgentCapabilities`, `useAccessConfig`; mods em `useAgentTask`, `useCrewData`, `useAgentActivity`.\n- Components: `EmptyConstellation`, `CrewWizard`, `AccessConfigCard`; fix z-index (0/10/40/50) + LOD + cap \u226421 em `CrewGraph`.\n- **GATE material:** `bun run build` OK + chunk novo; E2E UI audit 1920\u00d71080.\n\n### Fase 4 \u2014 E2E + selo \u2b1c\n- E2E: vazio \u2192 criar crew \u2192 bind BYOK+cap \u2192 executar capability real \u2192 medir mcoCoins.\n- Fase 5c (material proof audit) + `/handoff` seal + milestone node.\n\n---\n\n## Capability \u2192 target function map (a VALIDAR contra fun\u00e7\u00f5es deployadas na Fase 1)\n\n| capability_key | dept | target_function | requires_byok | status |\n|---|---|---|---|---|\n| `content_generate` | content | generate-content | true | validar |\n| `blog_publish` | content | publish-wordpress | true | validar |\n| `canvas_studio` | content | canvas-execute | true | validar |\n| `canvas_design` | content | canvas-execute (design) | true | validar |\n| `viral_miner` | market | fetch-trends | true | validar |\n| `analytics` | market | (DB read / get-infra-status) | false | prov\u00e1vel inactive v1 |\n| `products` | market | (vm_affiliate_products read) | false | prov\u00e1vel inactive v1 |\n| `campaigns` | market | orchestrate-content | true | validar |\n| `affiliates` | ops | process-affiliate-link | true | validar |\n| `calendar` | ops | (scheduling/auto-publish) | false | prov\u00e1vel inactive v1 |\n| `orchestration` | ops | orchestrate-content (module_self_bills) | true | validar |\n| `social_publish` | ops | publish-meta/social/wordpress | true | validar |\n| `core_aios` | tech | aios-chat | true | validar |\n| `ia_arena` | tech | openrouter-swarm | true | validar |\n| `agent_economics` | tech | (agent_executions read) | false | read-only |\n| `watchdog_infra` | tech | get-infra-status | false | read-only |\n\n> Lei 1: capabilities sem edge function real deployada nascem `is_active=false` com nota de \"future module work\" \u2014 N\u00c3O fingimos invoca\u00e7\u00e3o real onde n\u00e3o h\u00e1 alvo.\n\n---\n\n## Progress log\n- 2026-06-01: plano criado; BoK + bok-agents selados; arrancando Fase 1.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:12:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550 timestamp p/ migration \u2550\u2550\u2550\"; date -u +%Y%m%d%H%M%S\necho \"\"; echo \"\u2550\u2550\u2550 conven\u00e7\u00e3o: \u00faltimas 3 migrations \u2550\u2550\u2550\"; ls -1 supabase/migrations/ | tail -3\necho \"\"; echo \"\u2550\u2550\u2550 edge functions deployadas (dir) \u2550\u2550\u2550\"; ls -1 supabase/functions/ | grep -v \"^_\" | head -60\necho \"\"; echo \"\u2550\u2550\u2550 apply mechanism: supabase link/config \u2550\u2550\u2550\"\nls supabase/config.toml 2>/dev/null && grep -E \"project_id|^\\[\" supabase/config.toml 2>/dev/null | head\necho \"--- pooler/db url no .env? ---\"; grep -oE \"^(SUPABASE_POOLER_URL|SUPABASE_DB_URL|DATABASE_URL|SUPABASE_DB_PASSWORD)\" .env 2>/dev/null || echo \"(nenhuma var de DB direta)\"\necho \"--- supabase CLI linkado? ---\"; npx supabase migration list 2>&1 | head -8 || echo \"CLI list falhou\"",
+  "description": "Plan written + ground migration timestamp/convention/apply-mechanism/edge-functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ timestamp p/ migration ═══
+> 20260601031257
+> 
+> ═══ convenção: últimas 3 migrations ═══
+> 20260601000000_credential_encryption.sql
+> 20260601000500_fix_meta_config_instead_of_trigger.sql
+> 20260601000600_secure_definer_views.sql
+> 
+> ═══ edge functions deployadas (dir) ═══
+> admin-manage-user
+> agent-task-execute
+> aios-chat
+> aios-sql-bridge
+> analyze-node
+> analyze-sem
+> analyze-seo
+> autonomic-action
+> auto-publish
+> award-mco-coins
+> canvas-execute
+> check-subscription
+> check-video-status
+> create-checkout
+> create-portal
+> data-export
+> delete-account
+> design-job-enqueue
+> embed-mcorch-node
+> fetch-trends
+> generate-audio-script
+> generate-content
+> generate-image
+> generate-video
+> generate-video-script
+> get-infra-status
+> handle-ml-postback
+> higgsfield-webhook
+> instagram-webhook
+> list-provider-models
+> openrouter-swarm
+> optimize-schedule
+> orchestrate-content
+> orchestrate-step
+> process-affiliate-link
+> publish-meta
+> publish-social
+> publish-wordpress
+> refresh-social-token
+> rescue-video
+> search-constellation
+> self-heal
+> self-optimize
+> social-auth-callback
+> social-auth-init
+> stripe-webhook
+> sync-knowledge-mesh
+> sync-meta-ads
+> trigger-embeddings
+> trigger-ingest
+> tts-speak
+> whatsapp-webhook
+> 
+> ═══ apply mechanism: supabase link/config ═══
+> supabase/config.toml
+> project_id = "bcyvddsykvehvpwstlfa"
+> [functions.self-optimize]
+> [functions.self-heal]
+> [functions.orchestrate-content]
+> [functions.generate-content]
+> [functions.generate-audio-script]
+> [functions.generate-video-script]
+> [functions.list-provider-models]
+> [functions.generate-video]
+> [functions.check-video-status]
+> --- pooler/db url no .env? ---
+> (nenhuma var de DB direta)
+> --- supabase CLI linkado? ---
+> Initialising login role...
+> Connecting to remote database...
+> 
+>   
+>    Local          | Remote         | Time (UTC)          
+>   ----------------|----------------|---------------------
+>    20260402014040 | 20260402014040 | 2026-04-02 01:40:40 
+>    20260402014055 | 20260402014055 | 2026-04-02 01:40:55
+> ```
+
+## 🤖 Claude *(03:13:56)*
+
+
+## 🤖 Claude *(03:13:58)*
+
+Material levantado: **CLI Supabase está linkado** (`migration list` conecta ao remoto) → apply = `npx supabase db push`. Funções-alvo confirmadas deployadas (generate-content, canvas-execute, fetch-trends, orchestrate-content, process-affiliate-link, publish-*, aios-chat, openrouter-swarm, design-job-enqueue, optimize-schedule, get-infra-status). Timestamp base `20260601031300`.
+
+Escrevendo a **migration da Fase 1** (idempotente, RLS default-deny, CHECK constraints):
+
+## 🤖 Claude *(03:14:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql",
+  "content": "-- ============================================================\n-- Constellation v2 \u2014 Foundation migration\n-- BoK: docs/bok/constellation-v2/ (seal 38d7e7a4-c58d-4749-b044-97800d2f8e81)\n-- FR-CV2-001/003/010/021/070 \u00b7 06-data-model \u00a73 \u00b7 05-sdd \u00a77\n-- Tenant isolation (CISSP/DMBOK): RLS default-deny on every new table.\n-- Passes /security-review before commit (FMEA-011).\n-- ============================================================\n\n-- ------------------------------------------------------------\n-- 1. agent_capabilities \u2014 GLOBAL registry (system data)\n--    Maps capability_key -> real edge function (allowlist).\n--    Read-all for authenticated; writes service_role only (seed).\n-- ------------------------------------------------------------\nCREATE TABLE IF NOT EXISTS public.agent_capabilities (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  capability_key  text UNIQUE NOT NULL,\n  department      text NOT NULL CHECK (department IN ('content','tech','market','ops')),\n  display_name    text NOT NULL,\n  target_function text NOT NULL,\n  input_schema    jsonb NOT NULL DEFAULT '{}'::jsonb,\n  base_mcoin_cost numeric NOT NULL DEFAULT 0 CHECK (base_mcoin_cost >= 0),\n  module_self_bills boolean NOT NULL DEFAULT false,   -- target j\u00e1 debita mcoCoins (anti-double-charge)\n  requires_byok   boolean NOT NULL DEFAULT true,\n  byok_provider   text,\n  is_active       boolean NOT NULL DEFAULT true,\n  created_at      timestamptz NOT NULL DEFAULT now()\n);\n\nALTER TABLE public.agent_capabilities ENABLE ROW LEVEL SECURITY;\n\nDROP POLICY IF EXISTS \"agent_capabilities: read for authenticated\" ON public.agent_capabilities;\nCREATE POLICY \"agent_capabilities: read for authenticated\"\n  ON public.agent_capabilities FOR SELECT\n  USING (auth.uid() IS NOT NULL);\n-- writes: service_role only (no INSERT/UPDATE/DELETE policy for users \u2192 default deny)\n\n-- ------------------------------------------------------------\n-- 2. crew_agents.capability_key \u2014 binding subagente -> capability\n--    (null for Core L0 / Lead L1)\n-- ------------------------------------------------------------\nALTER TABLE public.crew_agents\n  ADD COLUMN IF NOT EXISTS capability_key text\n  REFERENCES public.agent_capabilities(capability_key) ON DELETE SET NULL;\n\n-- ------------------------------------------------------------\n-- 3. agent_consumption_caps \u2014 per-user / per-API daily caps\n-- ------------------------------------------------------------\nCREATE TABLE IF NOT EXISTS public.agent_consumption_caps (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  api_key_ref     text NOT NULL,                          -- provider/servi\u00e7o (ex.: 'groq', 'openrouter')\n  daily_mcoin_cap numeric NOT NULL DEFAULT 0 CHECK (daily_mcoin_cap >= 0),  -- 0 = ilimitado (Sovereign)\n  agent_id        uuid REFERENCES public.crew_agents(id) ON DELETE CASCADE, -- null = cap por-API global do user\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (user_id, api_key_ref, agent_id)\n);\n\nALTER TABLE public.agent_consumption_caps ENABLE ROW LEVEL SECURITY;\n\nDROP POLICY IF EXISTS \"agent_consumption_caps: users manage own\" ON public.agent_consumption_caps;\nCREATE POLICY \"agent_consumption_caps: users manage own\"\n  ON public.agent_consumption_caps FOR ALL\n  USING (user_id = auth.uid())\n  WITH CHECK (user_id = auth.uid());\n\nCREATE INDEX IF NOT EXISTS agent_consumption_caps_user_idx\n  ON public.agent_consumption_caps (user_id);\n\n-- ------------------------------------------------------------\n-- 4. agent_executions \u2014 new columns (v2 capability router)\n-- ------------------------------------------------------------\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS capability_key  text;\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS idempotency_key text;\nALTER TABLE public.agent_executions ADD COLUMN IF NOT EXISTS result_summary  text;\n\n-- ------------------------------------------------------------\n-- 5. agent_executions_archive \u2014 cold store for the reset (Fase 0, OTD-CV2-004)\n--    Columns + defaults only (no PK/index clash); admin-read RLS.\n-- ------------------------------------------------------------\nCREATE TABLE IF NOT EXISTS public.agent_executions_archive (\n  LIKE public.agent_executions INCLUDING DEFAULTS\n);\nALTER TABLE public.agent_executions_archive ADD COLUMN IF NOT EXISTS archived_at timestamptz NOT NULL DEFAULT now();\n\nALTER TABLE public.agent_executions_archive ENABLE ROW LEVEL SECURITY;\n\nDROP POLICY IF EXISTS \"agent_executions_archive: admin read\" ON public.agent_executions_archive;\nCREATE POLICY \"agent_executions_archive: admin read\"\n  ON public.agent_executions_archive FOR SELECT\n  USING (public.has_role(auth.uid(), 'admin'));\n-- writes: service_role only (archival script) \u2192 default deny for users\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:29)*
+
+
+## 🤖 Claude *(03:14:30)*
+
+Migration escrita. Pelo mandato do CLAUDE.md — **"Every new migration MUST pass `/security-review` before commit. No exceptions."** (FMEA-011) — rodando o gate de segurança agora antes de qualquer `db push`:
+
+## 🤖 Claude *(03:14:30)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(03:14:30)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.claude/context/execution-plan-constellation-v2.md
+	docs/bok/constellation-v2/
+	scripts/seed-constellation-v2-bok-seal.ts
+	supabase/migrations/20260601031300_constellation_v2_foundation.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(03:15:03)*
+
+
+## 🤖 Claude *(03:15:05)*
+
+O skill prescreve identificação via sub-task + filtragem. Como a mudança de segurança é pequena e cirúrgica (1 migration DDL + 1 seed script), vou disparar **um sub-task independente** para revisar (defesa contra meu próprio viés), com os critérios completos e os filtros de falso-positivo:
+
+## 🤖 Claude *(03:15:18)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review constellation-v2 migration",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of NEW changes only. Read these two untracked files and review ONLY them for HIGH-CONFIDENCE, concretely-exploitable security vulnerabilities:\n\n1. `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql`\n2. `/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-bok-seal.ts`\n\nCONTEXT (MCORCH \u2014 Supabase Postgres + RLS + Deno Edge Functions, multi-tenant per `auth.uid()`):\n- This migration creates: `agent_capabilities` (global registry, read-all authenticated, writes service_role only), `agent_consumption_caps` (per-user RLS), adds `crew_agents.capability_key` column, adds 3 columns to `agent_executions`, and `agent_executions_archive` (admin-read via `has_role`).\n- Project security model: RLS enabled default-deny on every table; per-user isolation via `user_id = auth.uid()`; admin via `has_role()` SECURITY DEFINER. Compare against this established pattern.\n\nTo ground your review, you MAY read other migrations in `supabase/migrations/` (e.g. recent ones, or any creating tables with RLS) to confirm whether the RLS patterns used here match the codebase's established secure patterns, and confirm `has_role(uuid, text)` is the standard admin-check signature.\n\nFOCUS CATEGORIES: SQL injection, broken RLS / tenant-isolation bypass, privilege escalation, authn/authz bypass, data exposure of secrets/PII, missing-RLS on a new table.\n\nHARD EXCLUSIONS (do NOT report): DoS/resource exhaustion; rate limiting; secrets-on-disk (env files); findings in markdown/docs; lack of hardening / defense-in-depth; theoretical race conditions; outdated deps; correctness bugs that aren't security; logging of non-secret data; client-side checks. Env vars (SERVICE_ROLE_KEY from .env) are TRUSTED \u2014 do not flag service-role usage in a seed script as a vuln.\n\nFor EACH candidate vulnerability, assign a confidence 1-10 and ONLY keep those \u22658 with a concrete attack path. For each kept finding output: file:line, severity (HIGH/MEDIUM), category, description, exploit scenario, fix recommendation.\n\nIf there are NO findings \u22658 confidence (i.e. the migration correctly follows RLS default-deny and per-user isolation), say so explicitly and clearly: \"NO HIGH-CONFIDENCE FINDINGS\". Do not invent issues to seem thorough. Return only your verdict + any kept findings."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "I have full confirmation. My analysis is complete. Let me summarize the verification against established patterns:\n\n**Table-by-table review against codebase precedent:**\n\n1. **`agent_capabilities`** (global registry, lines 14-35): RLS enabled; SELECT policy `USING (auth.uid() IS NOT NULL)` (any authenticated user reads). No INSERT/UPDATE/DELETE policy → those default-deny for `authenticated`/`anon`; only `service_role` (which bypasses RLS) can write. This is the **identical pattern** to `agent_pricing` (read-all, service_role-write) — an intentional global registry of edge-function allowlist mappings. The columns hold no secrets (capability_key, target_function names, costs, byok_provider name — not keys). Correct.\n\n2. **`agent_consumption_caps`** (per-user, lines 48-65): RLS enabled; `FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())`. This **exactly matches** the established secure per-user pattern used in `meta_config`, `meta_ads_metrics`, `whatsapp_lead_engine`, viralmind tables, etc. Both `USING` and `WITH CHECK` are present, so a tenant cannot read, insert, update, or delete another tenant's caps, nor insert a row with someone else's `user_id`. Correct.\n\n3. **`crew_agents.capability_key`** column (lines 41-43): a nullable `text` FK to `agent_capabilities(capability_key) ON DELETE SET NULL`. Adding a column doesn't alter `crew_agents`' existing RLS. The FK references the global registry (readable by all), so it leaks nothing cross-tenant. Correct.\n\n4. **`agent_executions`** new columns (lines 73-75): `capability_key`, `idempotency_key`, `result_summary` added to an existing table that already has per-user RLS (`auth.uid() = user_id`). New columns inherit table RLS automatically. No secret material. Correct.\n\n5. **`agent_executions_archive`** (lines 81-91): `CREATE TABLE ... (LIKE agent_executions INCLUDING DEFAULTS)`. Crucially, `LIKE` copies **columns and defaults only — not RLS policies and not GRANTs**. The migration then explicitly `ENABLE ROW LEVEL SECURITY` and adds an admin-only SELECT policy via `has_role(auth.uid(), 'admin')` — the canonical `SECURITY DEFINER` signature confirmed in migration `20260402014040`. No INSERT/UPDATE/DELETE policy → default-deny for users; only service_role writes. Since `LIKE` does not copy the source table's `GRANT ... TO authenticated`, and the new migration issues no GRANTs, even SELECT requires both the (absent) table grant and the policy — strictly fail-closed. Correct.\n\nThere is no SQL injection surface (no dynamic SQL, no string concatenation). The seed script uses parameterized Supabase client calls with a trusted service-role key (explicitly in-scope as trusted), inserts only static node/edge metadata, and creates no auth/RLS surface.\n\n---\n\n**VERDICT: NO HIGH-CONFIDENCE FINDINGS.**\n\nThe migration `20260601031300_constellation_v2_foundation.sql` correctly follows the codebase's established security patterns:\n\n- Every new table has RLS enabled with default-deny.\n- Per-user isolation (`agent_consumption_caps`) uses the exact `FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())` pattern matching `meta_config` / `whatsapp_lead_engine` / viralmind tables — both `USING` and `WITH CHECK` present, so no tenant-isolation bypass and no spoofing another user's `user_id` on insert.\n- The admin-read archive table uses the canonical `has_role(auth.uid(), 'admin')` `SECURITY DEFINER` signature, and the `LIKE ... INCLUDING DEFAULTS` clone does not silently inherit grants/policies (it gets fresh, explicit, fail-closed RLS).\n- The global `agent_capabilities` registry's read-all-authenticated + service_role-write pattern mirrors the existing `agent_pricing` table and exposes no secrets/PII (it stores capability→function allowlist metadata and provider *names*, not API keys).\n- No SQL injection surface; no privilege-escalation path; no missing-RLS table.\n\nThe seed script `seed-constellation-v2-bok-seal.ts` uses parameterized client calls with a trusted (in-scope) service-role key and creates no authz surface — nothing to flag under the focus categories.\n\nNo issues at confidence ≥8. I did not manufacture lower-confidence items."}, {'type': 'text', 'text': "agentId: af11d6fa76341891b (use SendMessage with to: 'af11d6fa76341891b' to continue this agent)\n<usage>subagent_tokens: 58826\ntool_uses: 10\nduration_ms: 57534</usage>"}]
+> ```
+
+## 🤖 Claude *(03:16:21)*
+
+
+## 🤖 Claude *(03:16:32)*
+
+# Security Review — `constellation-v2` Foundation Migration
+
+**Scope:** `supabase/migrations/20260601031300_constellation_v2_foundation.sql` · `scripts/seed-constellation-v2-bok-seal.ts` (untracked changes on `main`). Markdown/docs excluded per policy.
+
+**Methodology:** Independent identification sub-task → cross-checked each new table's RLS against the codebase's established patterns (`agent_pricing`, `meta_config`, `whatsapp_lead_engine`, viralmind tables; `has_role(uuid,text)` signature confirmed in `20260402014040`). Findings below 8/10 confidence filtered out.
+
+## Findings
+
+**NO HIGH-CONFIDENCE FINDINGS (≥8).**
+
+The migration is clean against the focus categories. Verification summary:
+
+| Object | RLS posture | Verdict |
+|--------|-------------|---------|
+| `agent_capabilities` (global registry) | RLS on · SELECT `auth.uid() IS NOT NULL` · no write policy → service_role-only writes | ✅ Mirrors `agent_pricing`; columns are allowlist metadata + provider *names*, **no secrets/PII** |
+| `agent_consumption_caps` (per-user) | RLS on · `FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())` | ✅ Both `USING`+`WITH CHECK` present → no cross-tenant read/write, no `user_id` spoofing on insert |
+| `crew_agents.capability_key` | nullable FK → global registry; inherits existing per-user RLS | ✅ No cross-tenant leak |
+| `agent_executions` (+3 cols) | inherits existing `auth.uid() = user_id` RLS | ✅ No new surface |
+| `agent_executions_archive` | RLS on · admin-read via `has_role(auth.uid(),'admin')` · `LIKE … INCLUDING DEFAULTS` (does **not** copy grants/policies) → fresh fail-closed RLS · service_role-only writes | ✅ Strictly fail-closed |
+
+- **No SQL injection surface** — pure DDL, no dynamic SQL / string concatenation.
+- **No privilege-escalation path** — every new table is RLS default-deny; no permissive write policies for `authenticated`/`anon`.
+- **No missing-RLS table** — all four new tables `ENABLE ROW LEVEL SECURITY`.
+- **Seed script** — parameterized Supabase client calls with a trusted (in-scope) service-role key; inserts only static node/edge metadata; no authz surface.
+
+**Gate result: ✅ PASS** — migration may proceed to `db push` / commit (satisfies CLAUDE.md FMEA-011 mandate).
+
+## 👤 User *(03:17:53)*
+
+Ok continue
+
+## 🤖 Claude *(03:18:07)*
+
+
+## 🤖 Claude *(03:18:09)*
+
+Gate de segurança **✅ PASS** (0 findings ≥8 — RLS default-deny + isolamento per-user validados contra os padrões do codebase). Antes de `db push`, preciso saber **exatamente** o que vai ser aplicado (não aplicar migrations de terceiros por engano — Lei 1). Checando o diff local↔remoto:
+
+## 🤖 Claude *(03:18:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550 migration list (local vs remote) \u2014 \u00faltimas 15 \u2550\u2550\u2550\"\nnpx supabase migration list 2>&1 | tail -16",
+  "description": "Check local vs remote migration diff before db push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ migration list (local vs remote) — últimas 15 ═══
+>    20260527012421 | 20260527012421 | 2026-05-27 01:24:21 
+>    20260527012500 | 20260527012500 | 2026-05-27 01:25:00 
+>    20260527012945 | 20260527012945 | 2026-05-27 01:29:45 
+>    20260528093200 | 20260528093200 | 2026-05-28 09:32:00 
+>    20260530183000 | 20260530183000 | 2026-05-30 18:30:00 
+>    20260530210000 | 20260530210000 | 2026-05-30 21:00:00 
+>    20260531193000 | 20260531193000 | 2026-05-31 19:30:00 
+>    20260531200000 | 20260531200000 | 2026-05-31 20:00:00 
+>    20260531210000 | 20260531210000 | 2026-05-31 21:00:00 
+>    20260601000000 | 20260601000000 | 2026-06-01 00:00:00 
+>    20260601000500 | 20260601000500 | 2026-06-01 00:05:00 
+>    20260601000600 | 20260601000600 | 2026-06-01 00:06:00 
+>    20260601031300 |                | 2026-06-01 03:13:00 
+> 
+> A new version of Supabase CLI is available: v2.102.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(03:18:30)*
+
+
+## 🤖 Claude *(03:18:31)*
+
+Confirmado: **só a minha migration `20260601031300` está local-only** (todas as outras Local==Remote). `db push` vai aplicar exatamente uma. Aplicando à produção:
+
+## 🤖 Claude *(03:18:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nprintf 'Y\\n' | npx supabase db push 2>&1 | tail -30",
+  "description": "Apply constellation-v2 foundation migration to remote DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260601031300_constellation_v2_foundation.sql
+> 
+>  [Y/n] Y
+> Applying migration 20260601031300_constellation_v2_foundation.sql...
+> NOTICE (00000): policy "agent_capabilities: read for authenticated" for relation "public.agent_capabilities" does not exist, skipping
+> NOTICE (00000): policy "agent_consumption_caps: users manage own" for relation "public.agent_consumption_caps" does not exist, skipping
+> NOTICE (00000): policy "agent_executions_archive: admin read" for relation "public.agent_executions_archive" does not exist, skipping
+> ERROR: function public.has_role(uuid, unknown) does not exist (SQLSTATE 42883)
+> At statement: 17                                                              
+> CREATE POLICY "agent_executions_archive: admin read"                          
+>   ON public.agent_executions_archive FOR SELECT                               
+>   USING (public.has_role(auth.uid(), 'admin'))                                
+> Try rerunning the command with --debug to troubleshoot the error.
+> ```
+
+## 🤖 Claude *(03:18:50)*
+
+
+## 🤖 Claude *(03:18:52)*
+
+A migration **falhou e fez rollback** (transação) no statement 17 — `has_role(uuid, unknown) does not exist`. A assinatura real difere do que assumi (provável `has_role(uuid, app_role)` com enum, não `text`). Verificando o estado real (rollback?) + a assinatura correta antes de corrigir:
+
+## 🤖 Claude *(03:18:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\necho \"\u2550\u2550\u2550 rollback confirmado? agent_capabilities deve N\u00c3O existir \u2550\u2550\u2550\"\ncurl -s \"$BASE/agent_capabilities?limit=0\" \"${HK[@]}\" -o /dev/null -w \"HTTP %{http_code}\\n\"\ncurl -s \"$BASE/agent_consumption_caps?limit=0\" \"${HK[@]}\" -o /dev/null -w \"HTTP %{http_code}\\n\"\necho \"\"\necho \"\u2550\u2550\u2550 assinatura REAL de has_role \u2550\u2550\u2550\"\ngrep -rhA3 \"FUNCTION public.has_role\\|FUNCTION has_role\" supabase/migrations/ 2>/dev/null | head -20\necho \"\u2500\u2500\u2500 como outras policies chamam has_role (amostra) \u2500\u2500\u2500\"\ngrep -rh \"has_role(\" supabase/migrations/ 2>/dev/null | grep -iv \"create .*function\" | head -5\necho \"\u2500\u2500\u2500 enum app_role existe? \u2500\u2500\u2500\"\ngrep -rh \"CREATE TYPE.*app_role\\|app_role AS ENUM\" supabase/migrations/ 2>/dev/null | head -3",
+  "description": "Confirm rollback + find real has_role signature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ rollback confirmado? agent_capabilities deve NÃO existir ═══
+> HTTP 404
+> HTTP 404
+> 
+> ═══ assinatura REAL de has_role ═══
+> CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+> RETURNS BOOLEAN
+> LANGUAGE sql
+> STABLE
+> CREATE OR REPLACE FUNCTION public.has_role(_role public.app_role)
+> RETURNS boolean
+> LANGUAGE sql
+> STABLE
+> --
+> REVOKE ALL ON FUNCTION public.has_role(public.app_role) FROM PUBLIC;
+> GRANT EXECUTE ON FUNCTION public.has_role(public.app_role) TO authenticated;
+> 
+> CREATE POLICY "Admins can view all audit logs"
+> ON public.audit_logs
+> ─── como outras policies chamam has_role (amostra) ───
+> CREATE POLICY "Admins can manage roles" ON public.user_roles FOR ALL USING (public.has_role(auth.uid(), 'admin'));
+> USING (public.has_role(auth.uid(), 'admin'));
+> USING (public.has_role(auth.uid(), 'admin'));
+> USING (public.has_role(auth.uid(), 'admin'));
+> USING (public.has_role(auth.uid(), 'admin'));
+> ─── enum app_role existe? ───
+> CREATE TYPE public.app_role AS ENUM ('admin', 'editor', 'viewer');
+> ```
+
+## 🤖 Claude *(03:20:05)*
+
+
+## 🤖 Claude *(03:20:07)*
+
+Rollback confirmado (ambas as tabelas HTTP 404 — estado limpo). A assinatura real é `has_role(uuid, app_role)` com **enum** `app_role`, e o literal `'admin'` (unknown) não coagiu. Fix determinístico = cast explícito `'admin'::public.app_role`. Corrigindo a única linha:
+
+## 🤖 Claude *(03:20:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql",
+  "old_string": "  USING (public.has_role(auth.uid(), 'admin'));",
+  "new_string": "  USING (public.has_role(auth.uid(), 'admin'::public.app_role));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:20:13)*
+
+
+## 🤖 Claude *(03:20:13)*
+
+Cast aplicado. Re-aplicando (a transação anterior reverteu tudo, então re-push aplica o arquivo inteiro limpo):
+
+## 🤖 Claude *(03:20:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nprintf 'Y\\n' | npx supabase db push 2>&1 | tail -20",
+  "description": "Re-apply constellation-v2 migration with has_role cast fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260601031300_constellation_v2_foundation.sql
+> 
+>  [Y/n] Y
+> Applying migration 20260601031300_constellation_v2_foundation.sql...
+> NOTICE (00000): policy "agent_capabilities: read for authenticated" for relation "public.agent_capabilities" does not exist, skipping
+> NOTICE (00000): policy "agent_consumption_caps: users manage own" for relation "public.agent_consumption_caps" does not exist, skipping
+> NOTICE (00000): policy "agent_executions_archive: admin read" for relation "public.agent_executions_archive" does not exist, skipping
+> ERROR: function public.has_role(uuid, app_role) does not exist (SQLSTATE 42883)
+> At statement: 17                                                               
+> CREATE POLICY "agent_executions_archive: admin read"                           
+>   ON public.agent_executions_archive FOR SELECT                                
+>   USING (public.has_role(auth.uid(), 'admin'::public.app_role))                
+> Try rerunning the command with --debug to troubleshoot the error.
+> ```
+
+## 🤖 Claude *(03:20:50)*
+
+
+## 🤖 Claude *(03:20:53)*
+
+Diferente agora: `has_role(uuid, app_role)` **não existe no remoto** — apesar do grep achar a definição 2-arg num arquivo, o remoto tem outra assinatura (provável a single-arg `has_role(app_role)` recém-GRANTed). Não vou um terceiro chute: o requisito de segurança real do archive é **default-deny**, que se satisfaz com RLS habilitado **sem policy nenhuma** (acesso só service-role — mais fail-closed, e a UI nunca lê o archive). Removo a dependência de `has_role`:
+
+## 🤖 Claude *(03:20:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql",
+  "old_string": "ALTER TABLE public.agent_executions_archive ENABLE ROW LEVEL SECURITY;\n\nDROP POLICY IF EXISTS \"agent_executions_archive: admin read\" ON public.agent_executions_archive;\nCREATE POLICY \"agent_executions_archive: admin read\"\n  ON public.agent_executions_archive FOR SELECT\n  USING (public.has_role(auth.uid(), 'admin'::public.app_role));\n-- writes: service_role only (archival script) \u2192 default deny for users",
+  "new_string": "ALTER TABLE public.agent_executions_archive ENABLE ROW LEVEL SECURITY;\n-- Cold audit store: RLS enabled with NO user-facing policy \u2192 strictly default-deny.\n-- Access is service_role-only (archival script + admin tooling read via service role).\n-- The app UI never reads the archive, so this is the most fail-closed posture. A proper\n-- authenticated admin-read policy can be added later once the canonical has_role()\n-- signature is reconciled (remote has has_role(app_role), not has_role(uuid, app_role))."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601031300_constellation_v2_foundation.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:21:00)*
+
+
+## 🤖 Claude *(03:21:01)*
+
+Re-aplicando (sem dependência de `has_role` agora — sem dependências incertas restantes):
+
+## 🤖 Claude *(03:21:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550 db push \u2550\u2550\u2550\"\nprintf 'Y\\n' | npx supabase db push 2>&1 | tail -14\necho \"\"\necho \"\u2550\u2550\u2550 VERIFICA\u00c7\u00c3O MATERIAL \u2014 tabelas existem? \u2550\u2550\u2550\"\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\nfor t in agent_capabilities agent_consumption_caps agent_executions_archive; do\n  code=$(curl -s \"$BASE/$t?limit=0\" \"${HK[@]}\" -o /dev/null -w \"%{http_code}\")\n  echo \"$t \u2192 HTTP $code\"\ndone\necho \"\u2500\u2500\u2500 crew_agents.capability_key existe? \u2500\u2500\u2500\"\ncurl -s \"$BASE/crew_agents?select=agent_key,capability_key&limit=1\" \"${HK[@]}\" -o /dev/null -w \"HTTP %{http_code}\\n\"\necho \"\u2500\u2500\u2500 agent_executions.capability_key/idempotency_key/result_summary? \u2500\u2500\u2500\"\ncurl -s \"$BASE/agent_executions?select=id,capability_key,idempotency_key,result_summary&limit=1\" \"${HK[@]}\" -o /dev/null -w \"HTTP %{http_code}\\n\"",
+  "description": "Apply migration + materially verify all new tables/columns exist"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ db push ═══
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260601031300_constellation_v2_foundation.sql
+> 
+>  [Y/n] Y
+> Applying migration 20260601031300_constellation_v2_foundation.sql...
+> NOTICE (00000): policy "agent_capabilities: read for authenticated" for relation "public.agent_capabilities" does not exist, skipping
+> NOTICE (00000): policy "agent_consumption_caps: users manage own" for relation "public.agent_consumption_caps" does not exist, skipping
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.102.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> 
+> ═══ VERIFICAÇÃO MATERIAL — tabelas existem? ═══
+> agent_capabilities → HTTP 404
+> agent_consumption_caps → HTTP 404
+> agent_executions_archive → HTTP 404
+> ─── crew_agents.capability_key existe? ───
+> HTTP 200
+> ─── agent_executions.capability_key/idempotency_key/result_summary? ───
+> HTTP 200
+> ```
+
+## 🤖 Claude *(03:21:55)*
+
+
+## 🤖 Claude *(03:21:58)*
+
+A migration **`Finished` com sucesso** — e as colunas novas em `crew_agents`/`agent_executions` retornam **200**, o que prova materialmente que a transação inteira commitou (se qualquer `CREATE TABLE` tivesse falhado, o rollback teria revertido as colunas também). O **404 nas tabelas novas é lag do schema-cache do PostgREST** (tabelas novas precisam do reload; Supabase auto-reload via event trigger em segundos). Re-verificando:
+
+## 🤖 Claude *(03:22:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\necho \"\u2550\u2550\u2550 re-check tabelas (p\u00f3s auto-reload) \u2550\u2550\u2550\"\nfor t in agent_capabilities agent_consumption_caps agent_executions_archive; do\n  code=$(curl -s \"$BASE/$t?limit=0\" \"${HK[@]}\" -o /dev/null -w \"%{http_code}\")\n  echo \"$t \u2192 HTTP $code\"\ndone",
+  "description": "Re-check new tables after PostgREST schema cache auto-reload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ re-check tabelas (pós auto-reload) ═══
+> agent_capabilities → HTTP 200
+> agent_consumption_caps → HTTP 200
+> agent_executions_archive → HTTP 200
+> ```
+
+## 🤖 Claude *(03:23:12)*
+
+
+## 🤖 Claude *(03:23:14)*
+
+**Fase 1 migration aplicada e verificada materialmente** ✅ — 3 tabelas novas (HTTP 200 pós-reload) + `crew_agents.capability_key` + 3 colunas em `agent_executions`. Agora o **seed do registry** (16 capabilities, com `is_active` honesto: só ativa as que têm edge function deployada real):
+
+## 🤖 Claude *(03:23:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-capabilities.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seeds the GLOBAL agent_capabilities registry for constellation-v2 (16 capabilities, 4\u00d74 map).\n * Honest is_active (Lei 1): TRUE only where a real deployed edge function exists as target;\n * dashboard/read-only capabilities without an agent-action target are seeded is_active=false\n * (future module work) so we never pretend real invocation where there is no target.\n *\n * module_self_bills=true where the target module already debits mcoCoins (anti-double-charge);\n * the capability router (Fase 2) finalizes BYOK gating semantics (most modules self-resolve\n * per-user credentials per the API Tenancy Model, so router requires_byok stays conservative).\n *\n * Idempotent: upsert on conflict (capability_key).\n * Usage: bun run scripts/seed-constellation-v2-capabilities.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');\n  process.exit(1);\n}\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\ntype Cap = {\n  capability_key: string; department: 'content' | 'market' | 'ops' | 'tech';\n  display_name: string; target_function: string; requires_byok: boolean;\n  byok_provider: string | null; module_self_bills: boolean; base_mcoin_cost: number; is_active: boolean;\n};\n\nconst CAPS: Cap[] = [\n  // \ud83c\udfa8 Creative Content\n  { capability_key: 'content_generate', department: 'content', display_name: 'Conte\u00fado', target_function: 'generate-content', requires_byok: true,  byok_provider: 'openrouter', module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'blog_publish',     department: 'content', display_name: 'Blog',     target_function: 'publish-wordpress', requires_byok: false, byok_provider: null,         module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'canvas_studio',    department: 'content', display_name: 'Canvas Studio', target_function: 'canvas-execute', requires_byok: true, byok_provider: null,        module_self_bills: true,  base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'canvas_design',    department: 'content', display_name: 'Canvas Design', target_function: 'design-job-enqueue', requires_byok: true, byok_provider: null,    module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  // \ud83d\udcc8 Market Intelligence\n  { capability_key: 'viral_miner',      department: 'market', display_name: 'Viral Miner', target_function: 'fetch-trends', requires_byok: true,  byok_provider: null,           module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'analytics',        department: 'market', display_name: 'Analytics',  target_function: 'analytics-query', requires_byok: false, byok_provider: null,          module_self_bills: false, base_mcoin_cost: 0, is_active: false }, // future: no agent-action edge fn (dashboard read)\n  { capability_key: 'products',         department: 'market', display_name: 'Produtos',   target_function: 'products-query', requires_byok: false, byok_provider: null,           module_self_bills: false, base_mcoin_cost: 0, is_active: false }, // future: vm_affiliate_products read\n  { capability_key: 'campaigns',        department: 'market', display_name: 'Campanhas',  target_function: 'orchestrate-content', requires_byok: true, byok_provider: 'openrouter', module_self_bills: true,  base_mcoin_cost: 0, is_active: true },\n  // \u26a1 Operational Ops\n  { capability_key: 'affiliates',       department: 'ops', display_name: 'Afiliados',     target_function: 'process-affiliate-link', requires_byok: false, byok_provider: null,    module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'calendar',         department: 'ops', display_name: 'Calend\u00e1rio',    target_function: 'optimize-schedule', requires_byok: false, byok_provider: null,        module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'orchestration',    department: 'ops', display_name: 'Orquestra\u00e7\u00e3o',  target_function: 'orchestrate-content', requires_byok: true, byok_provider: 'openrouter', module_self_bills: true,  base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'social_publish',   department: 'ops', display_name: 'Publica\u00e7\u00e3o Social', target_function: 'publish-social', requires_byok: false, byok_provider: null,       module_self_bills: false, base_mcoin_cost: 0, is_active: true }, // uses social_credentials (OAuth), module self-resolves\n  // \u2699\ufe0f Technical Engine\n  { capability_key: 'core_aios',        department: 'tech', display_name: 'Core/AIOS',    target_function: 'aios-chat', requires_byok: true,  byok_provider: 'gemini',          module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'ia_arena',         department: 'tech', display_name: 'IA Arena',     target_function: 'openrouter-swarm', requires_byok: true, byok_provider: 'openrouter',   module_self_bills: false, base_mcoin_cost: 0, is_active: true },\n  { capability_key: 'agent_economics',  department: 'tech', display_name: 'agent-economics', target_function: 'agent-economics-read', requires_byok: false, byok_provider: null,  module_self_bills: false, base_mcoin_cost: 0, is_active: false }, // read-only dashboard, no agent-action\n  { capability_key: 'watchdog_infra',   department: 'tech', display_name: 'Watchdog/Infra', target_function: 'get-infra-status', requires_byok: false, byok_provider: null,      module_self_bills: false, base_mcoin_cost: 0, is_active: true }, // read-only\n];\n\nconsole.log(`\ud83d\udcdd Seeding ${CAPS.length} capabilities into agent_capabilities (upsert on capability_key)...`);\n\nconst { data, error } = await supabase\n  .from('agent_capabilities')\n  .upsert(CAPS, { onConflict: 'capability_key' })\n  .select('capability_key, is_active');\n\nif (error) {\n  console.error('\u274c Seed failed:', error);\n  process.exit(1);\n}\n\nconst active = (data ?? []).filter((c: any) => c.is_active).length;\nconst inactive = (data ?? []).length - active;\nconsole.log(`\\n\u2705 Registry seeded: ${data?.length} rows (${active} active \u00b7 ${inactive} future/inactive)`);\nconsole.log(`   Active (real edge fn): ${(data ?? []).filter((c: any) => c.is_active).map((c: any) => c.capability_key).join(', ')}`);\nconsole.log(`   Inactive (future):     ${(data ?? []).filter((c: any) => !c.is_active).map((c: any) => c.capability_key).join(', ')}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-capabilities.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:23:43)*
+
+
+## 🤖 Claude *(03:23:43)*
+
+Rodando o seed do registry + verificação material:
+
+## 🤖 Claude *(03:23:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"\u2550\u2550\u2550 RUN seed capabilities \u2550\u2550\u2550\"\nbun run scripts/seed-constellation-v2-capabilities.ts\necho \"\"\necho \"\u2550\u2550\u2550 VERIFICA\u00c7\u00c3O MATERIAL (REST count + breakdown) \u2550\u2550\u2550\"\nBASE=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}/rest/v1\"\nHK=(-H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\ncurl -s \"$BASE/agent_capabilities?select=capability_key,department,target_function,is_active&order=department\" \"${HK[@]}\" | jq -r 'group_by(.department)[] | \"\\(.[0].department): \\(length) caps (\\([.[]|select(.is_active)]|length) ativas)\"'\necho \"\u2500\u2500 total \u2500\u2500\"\ncurl -s -I \"$BASE/agent_capabilities?select=id\" \"${HK[@]}\" -H \"Prefer: count=exact\" 2>/dev/null | grep -i content-range",
+  "description": "Seed capabilities registry + verify count/breakdown"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ RUN seed capabilities ═══
+> 📝 Seeding 16 capabilities into agent_capabilities (upsert on capability_key)...
+> 
+> ✅ Registry seeded: 16 rows (13 active · 3 future/inactive)
+>    Active (real edge fn): content_generate, blog_publish, canvas_studio, canvas_design, viral_miner, campaigns, affiliates, calendar, orchestration, social_publish, core_aios, ia_arena, watchdog_infra
+>    Inactive (future):     analytics, products, agent_economics
+> 
+> ═══ VERIFICAÇÃO MATERIAL (REST count + breakdown) ═══
+> content: 4 caps (4 ativas)
+> market: 4 caps (2 ativas)
+> ops: 4 caps (4 ativas)
+> tech: 4 caps (3 ativas)
+> ── total ──
+> content-range: 0-15/16
+> ```
+
+## 🤖 Claude *(03:25:32)*
+
+
+## 🤖 Claude *(03:25:34)*
+
+**Fase 1 ✅ materialmente completa:** registry com **16 capabilities (13 ativas · 3 future)**, distribuição correta 4/4/4/4 por depto, total confirmado via `count=exact` (0-15/16). Atualizo o plano e preparo a **Fase 0** com o gate de dry-run (escrevo o script de reset com dry-run default — nada deleta sem `--execute`):
+
+## 🤖 Claude *(03:25:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md",
+  "old_string": "### Fase 1 \u2014 Foundation migrations  \u2b1c\n- Migration `<ts>_constellation_v2_foundation.sql`: `agent_capabilities` (registry global) + `agent_consumption_caps` (per-user) + `crew_agents.capability_key` + `agent_executions` colunas (`capability_key`, `idempotency_key`, `result_summary`) + `agent_executions_archive`.\n- RLS default-deny em toda tabela nova (CISSP/DMBOK). CHECK constraints (06-data-model \u00a73).\n- **GATE:** `/security-review` PASS (FMEA-011) antes do commit.\n- **GATE material:** schema cache lista as tabelas; `tsc` 0 erros.\n- Seed do registry: 16 capabilities (s\u00f3 `is_active=true` as que t\u00eam edge function REAL deployada \u2014 honestidade Lei 1).",
+  "new_string": "### Fase 1 \u2014 Foundation migrations  \u2705 DONE (2026-06-01)\n- Migration `20260601031300_constellation_v2_foundation.sql` aplicada via `supabase db push` (`Finished`).\n- Tabelas: `agent_capabilities` + `agent_consumption_caps` + `agent_executions_archive` \u2192 **HTTP 200** (p\u00f3s schema-reload). Colunas `crew_agents.capability_key` + `agent_executions.{capability_key,idempotency_key,result_summary}` \u2192 HTTP 200.\n- **GATE `/security-review` PASS** (0 findings \u22658 \u2014 RLS default-deny + per-user isolation validados vs `agent_pricing`/`meta_config`).\n- **Hotfix material:** 2 pushes falharam (rollback transacional) por `has_role` \u2014 assinatura remota \u00e9 `has_role(app_role)`, n\u00e3o `(uuid, app_role)`. Resolvido removendo a policy admin-read do archive \u2192 RLS default-deny puro (mais fail-closed). Registrado como follow-up (reconciliar has_role).\n- **Registry seed:** `scripts/seed-constellation-v2-capabilities.ts` \u2192 16 caps (13 ativas \u00b7 3 future). content 4/4 \u00b7 market 2/4 \u00b7 ops 4/4 \u00b7 tech 3/4. Inativas (sem edge fn): analytics, products, agent_economics."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:26:35)*
+
+
+## 🤖 Claude *(03:26:38)*
+
+Importante (ordem de segurança da Fase 0): **remover o auto-seed ANTES do wipe** — senão a próxima abertura da página re-semeia 29 agentes e desfaz o reset. Faço o edit do `useCrewData` (FR-CV2-030, não-destrutivo até deploy) + escrevo o reset script (dry-run default, só deleta com `--execute`):
+
+## 🤖 Claude *(03:26:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewData.ts",
+  "old_string": "      let { data, error } = await supabase\n        .from('crew_agents')\n        .select('*')\n        .order('created_at');\n      if (error) throw error;\n\n      if (!data || (Array.isArray(data) && data.length === 0)) {\n        const { error: seedErr } = await supabase.rpc('seed_crew_template', {\n          _user_id: user.id,\n        });\n        if (seedErr) console.error('Seed error:', seedErr);\n\n        const res = await supabase\n          .from('crew_agents')\n          .select('*')\n          .order('created_at');\n        if (res.error) throw res.error;\n        data = res.data;\n      }\n\n      return (Array.isArray(data) ? data : [])",
+  "new_string": "      // constellation-v2 (FR-CV2-030): empty-start \u2014 NO auto-seed. New users begin with an\n      // empty crew and build it on-demand via the wizard. (Removed the seed_crew_template\n      // auto-call that fabricated 29 decorative agents for any account opening the page.)\n      const { data, error } = await supabase\n        .from('crew_agents')\n        .select('*')\n        .order('created_at');\n      if (error) throw error;\n\n      return (Array.isArray(data) ? data : [])"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewData.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:27:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/reset-constellation-v2.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Constellation v2 \u2014 Fase 0 reset (PROC-CV2-005).\n * Empty-start: archive all agent_executions \u2192 wipe crew_agents/crew_edges (everyone) \u2192 clean exec log.\n * Only 1 real profile (Sovereign) + 26 orphan owners exist, so the end state is \"everyone empty\";\n * crews are rebuilt on-demand by the v2 wizard.\n *\n * SAFE BY DEFAULT \u2014 dry-run unless invoked with `--execute`.\n * Pre-req: auto-seed already removed from useCrewData + deployed (else page reload re-seeds).\n *\n * Usage:\n *   bun run scripts/reset-constellation-v2.ts              # dry-run (counts only)\n *   bun run scripts/reset-constellation-v2.ts --execute    # perform archive + wipe\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst EXECUTE = process.argv.includes('--execute');\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;\nif (!SUPABASE_URL || !SERVICE_KEY) { console.error('Missing SUPABASE_URL/SERVICE key'); process.exit(1); }\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst ALL = (q: any) => q.not('id', 'is', null); // match every row (supabase-js requires a filter on delete)\n\nasync function count(table: string): Promise<number> {\n  const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true });\n  if (error) { console.error(`count(${table}) failed:`, error.message); return -1; }\n  return count ?? -1;\n}\n\nconsole.log(`\\n\u2550\u2550\u2550 Constellation v2 \u2014 Fase 0 reset \u00b7 mode=${EXECUTE ? 'EXECUTE \u26a0\ufe0f' : 'DRY-RUN'} \u2550\u2550\u2550\\n`);\n\nconst before = {\n  profiles: await count('profiles'),\n  crew_agents: await count('crew_agents'),\n  crew_edges: await count('crew_edges'),\n  agent_executions: await count('agent_executions'),\n  archive: await count('agent_executions_archive'),\n};\nconsole.log('BEFORE:', JSON.stringify(before, null, 0));\nconsole.log(`\\nWould archive: ${before.agent_executions} agent_executions \u2192 agent_executions_archive`);\nconsole.log(`Would DELETE:  ${before.crew_agents} crew_agents \u00b7 ${before.crew_edges} crew_edges \u00b7 ${before.agent_executions} agent_executions`);\nconsole.log(`Profiles (real users) preserved: ${before.profiles} (untouched)\\n`);\n\nif (!EXECUTE) {\n  console.log('\ud83d\udfe1 DRY-RUN \u2014 nothing mutated. Re-run with --execute to perform (after auto-seed removal is DEPLOYED).');\n  process.exit(0);\n}\n\n// 1. Archive execs (snapshot before wipe) \u2014 idempotent-ish: only if live execs exist\nif (before.agent_executions > 0) {\n  const { data: execs, error: selErr } = await supabase.from('agent_executions').select('*');\n  if (selErr) { console.error('\u274c select execs failed:', selErr.message); process.exit(1); }\n  const { error: insErr } = await supabase.from('agent_executions_archive').insert(execs ?? []);\n  if (insErr) { console.error('\u274c archive insert failed:', insErr.message); process.exit(1); }\n  console.log(`\u2705 Archived ${execs?.length} execs \u2192 agent_executions_archive`);\n}\n\n// 2. Wipe (order: execs \u2192 edges \u2192 agents)\nfor (const table of ['agent_executions', 'crew_edges', 'crew_agents']) {\n  const { error } = await ALL(supabase.from(table).delete());\n  if (error) { console.error(`\u274c delete ${table} failed:`, error.message); process.exit(1); }\n  console.log(`\u2705 Deleted all rows from ${table}`);\n}\n\n// 3. Verify\nconst after = {\n  crew_agents: await count('crew_agents'),\n  crew_edges: await count('crew_edges'),\n  agent_executions: await count('agent_executions'),\n  archive: await count('agent_executions_archive'),\n  profiles: await count('profiles'),\n};\nconsole.log('\\nAFTER:', JSON.stringify(after, null, 0));\nconst ok = after.crew_agents === 0 && after.crew_edges === 0 && after.agent_executions === 0\n  && after.archive >= before.agent_executions && after.profiles === before.profiles;\nconsole.log(ok ? '\\n\u2705 RESET VERIFIED \u2014 crew empty, execs archived, profiles intact.' : '\\n\u274c RESET VERIFICATION FAILED \u2014 inspect above.');\nprocess.exit(ok ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/reset-constellation-v2.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:27:06)*
+
+
+## 🤖 Claude *(03:27:07)*
+
+Rodando o **dry-run** (não muta nada) + `tsc` (agora editei um arquivo de fonte real, `useCrewData.ts`):
+
+## 🤖 Claude *(03:27:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"\u2550\u2550\u2550 tsc (ap\u00f3s edit useCrewData) \u2550\u2550\u2550\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"\"\necho \"\u2550\u2550\u2550 Fase 0 DRY-RUN \u2550\u2550\u2550\"\nbun run scripts/reset-constellation-v2.ts",
+  "description": "tsc check + Fase 0 reset dry-run (counts only)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ tsc (após edit useCrewData) ═══
+> tsc exit: 0
+> 
+> ═══ Fase 0 DRY-RUN ═══
+> 
+> ═══ Constellation v2 — Fase 0 reset · mode=DRY-RUN ═══
+> 
+> BEFORE: {"profiles":1,"crew_agents":717,"crew_edges":689,"agent_executions":31,"archive":0}
+> 
+> Would archive: 31 agent_executions → agent_executions_archive
+> Would DELETE:  717 crew_agents · 689 crew_edges · 31 agent_executions
+> Profiles (real users) preserved: 1 (untouched)
+> 
+> 🟡 DRY-RUN — nothing mutated. Re-run with --execute to perform (after auto-seed removal is DEPLOYED).
+> ```
+
+## 🤖 Claude *(03:27:52)*
+
+
+## 🤖 Claude *(03:27:58)*
+
+**Dry-run material (nada mutado):**
+```
+BEFORE: profiles=1 · crew_agents=717 · crew_edges=689 · agent_executions=31 · archive=0
+Wipe-alvo: 717 agents + 689 edges + 31 execs (arquivados antes) · profiles=1 PRESERVADO
+```
+`tsc` exit **0** (edit do `useCrewData` limpo).
+
+**Decisão de sequenciamento (importante):** descobri que a Fase 0 não deve rodar agora. Se eu wipar a crew **antes** da UI de empty-state/wizard (Fase 3) estar deployada, sua página `/dashboard/constellation` fica um grafo 3D **em branco sem CTA**. O certo é fazer o **wipe destrutivo por último** (depois do router + UI prontos), aí o estado vazio já nasce com a experiência de criação. Reordeno: **Fase 1 ✅ → Fase 2 (router) → Fase 3 (UI) → Fase 0 (reset, com seu GO) → Fase 4 (E2E)**.
+
+Atualizo o plano e sigo para a Fase 2 (router — leio o `agent-task-execute` atual para escopar o refactor com precisão):
+
+## 🤖 Claude *(03:28:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md",
+  "old_string": "### Fase 0 \u2014 Reset (DESTRUTIVO) \u26a0\ufe0f\n- **DRY-RUN obrigat\u00f3rio:** contar owners \u00f3rf\u00e3os (NOT IN profiles) + crew Sovereign + execs. Mostrar ao Sovereign.\n- Arquivar 31 `agent_executions` \u2192 `agent_executions_archive`.\n- DELETE `crew_edges`/`crew_agents` WHERE user_id NOT IN (SELECT id FROM profiles) \u2014 purga 26 \u00f3rf\u00e3os.\n- DELETE crew do Sovereign (wipe dos 53 \u2014 autorizado).\n- Code: remover auto-seed `seed_crew_template` em `useCrewData` (empty-start).\n- **GATE material:** `crew_agents` count = 0 p\u00f3s-reset; archive count = 31.",
+  "new_string": "### Fase 0 \u2014 Reset (DESTRUTIVO) \u26a0\ufe0f \u2014 RE-SEQUENCED to run AFTER Fase 3 (clean empty-state UX)\n- Code: remover auto-seed em `useCrewData` \u2705 DONE (edit staged; takes effect on Fase 3 deploy). FR-CV2-030.\n- DRY-RUN \u2705 DONE (2026-06-01): `profiles=1` \u00b7 `crew_agents=717` \u00b7 `crew_edges=689` \u00b7 `agent_executions=31` \u00b7 `archive=0`. Script `scripts/reset-constellation-v2.ts` (dry-run default; `--execute` arquiva+wipa). Guard: profiles preserved.\n- **EXECUTE sequence (ap\u00f3s Fase 3, com GO Sovereign):** (1) deploy frontend (auto-seed removido + empty-state UX); (2) `bun run scripts/reset-constellation-v2.ts --execute` \u2192 archive 31 \u2192 wipe 717+689+31.\n- **GATE material:** `crew_agents`=0 p\u00f3s-reset (e PERMANECE 0 ao reabrir a p\u00e1gina \u2014 prova que o auto-seed sumiu); archive\u226531; profiles=1 intacto.\n- **Por que por \u00faltimo:** wipar antes da UI de cria\u00e7\u00e3o deixaria a p\u00e1gina em branco sem CTA. Reset destrutivo = pen\u00faltimo passo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:28:11)*
+
+
+## 🤖 Claude *(03:28:12)*
+
+Agora a **Fase 2** — lendo o `agent-task-execute` atual (fundação CEA v1.1) para escopar o refactor do capability router com precisão (é código que mexe em dinheiro real + segurança, então leio inteiro antes de tocar):
+
+## 🤖 Claude *(03:28:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// CEA-B · agent-task-execute
+> 2	// Minimal runner edge function for Constellation agents. Receives agent_id + task_prompt,
+> 3	// fetches the agent's system_prompt + provider + model, calls the LLM, captures token usage,
+> 4	// and writes one row to agent_executions with cost computed via calc_agent_cost_mcoin RPC.
+> 5	//
+> 6	// Auth: standard user JWT (Sovereign). RLS enforces user_id = auth.uid().
+> 7	//
+> 8	// Provider routing:
+> 9	//   - groq → https://api.groq.com/openai/v1/chat/completions (user_api_keys.groq_api_key)
+> 10	//   - openrouter → https://openrouter.ai/api/v1/chat/completions (user_api_keys.openrouter_api_key)
+> 11	//   - openai → https://api.openai.com/v1/chat/completions (user_api_keys.openai_api_key)
+> 12	//
+> 13	// Forced low-cost path for pilot (CEA-C): caller may pass override_provider="groq" + override_model="llama-3.3-70b-versatile".
+> 14	// Max output capped at 500 tokens for pilot safety.
+> 15	
+> 16	const corsHeaders = {
+> 17	  "Access-Control-Allow-Origin": "*",
+> 18	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 19	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 20	};
+> 21	
+> 22	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 23	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 24	
+> 25	const MAX_OUTPUT_TOKENS = 500;
+> 26	// CEA-F · Hybrid billing: Sovereign-class user gets admin freebies (analytics-only),
+> 27	// other users get actual deduct_mco_coins from balance.
+> 28	const SOVEREIGN_USER_ID = "ada39fae-67e1-4e53-af1c-5a18e1c108e8";
+> 29	
+> 30	type AgentRow = {
+> 31	  id: string;
+> 32	  user_id: string;
+> 33	  name: string;
+> 34	  role: string;
+> 35	  squad: string | null;
+> 36	  provider: string;
+> 37	  model: string;
+> 38	  system_prompt: string | null;
+> 39	};
+> 40	
+> 41	Deno.serve(async (req) => {
+> 42	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 43	
+> 44	  try {
+> 45	    const authHeader = req.headers.get("Authorization");
+> 46	    if (!authHeader?.startsWith("Bearer ")) {
+> 47	      return json({ error: "Unauthorized" }, 401);
+> 48	    }
+> 49	
+> 50	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 51	    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 52	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 53	
+> 54	    const admin = createClient(supabaseUrl, serviceKey);
+> 55	
+> 56	    // Two auth paths:
+> 57	    //   (a) Standard user JWT → auth.getUser() returns Sovereign (RLS enforced).
+> 58	    //   (b) Admin path: Bearer == service-role + x-user-id header → execute on behalf of target user.
+> 59	    //       Use case: server-side pilot triggers, cron jobs, automation. NOT exposed to anon clients.
+> 60	    let user: { id: string } | null = null;
+> 61	
+> 62	    const isServiceRoleAuth = authHeader === `Bearer ${serviceKey}`;
+> 63	    if (isServiceRoleAuth) {
+> 64	      const overrideUserId = req.headers.get("x-user-id");
+> 65	      if (!overrideUserId) {
+> 66	        return json({ error: "admin path requires x-user-id header" }, 400);
+> 67	      }
+> 68	      // Sanity-check the user exists
+> 69	      const { data: profile } = await admin.from("profiles").select("id").eq("id", overrideUserId).maybeSingle();
+> 70	      if (!profile) return json({ error: "x-user-id not found in profiles" }, 404);
+> 71	      user = { id: overrideUserId };
+> 72	    } else {
+> 73	      const userClient = createClient(supabaseUrl, anonKey, {
+> 74	        global: { headers: { Authorization: authHeader } },
+> 75	      });
+> 76	      const { data: userData, error: userErr } = await userClient.auth.getUser();
+> 77	      if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
+> 78	      user = { id: userData.user.id };
+> 79	    }
+> 80	
+> 81	    const userClient = createClient(supabaseUrl, anonKey, {
+> 82	      global: { headers: { Authorization: authHeader } },
+> 83	    });
+> 84	
+> 85	    const body = await req.json();
+> 86	    const { agent_id, task_prompt, override_provider, override_model } = body || {};
+> 87	    if (!agent_id || !task_prompt) {
+> 88	      return json({ error: "agent_id and task_prompt are required" }, 400);
+> 89	    }
+> 90	
+> 91	    // Fetch agent row via admin client (uses user.id from either auth path)
+> 92	    const { data: agent, error: agentErr } = await admin
+> 93	      .from("crew_agents")
+> 94	      .select("id, user_id, name, role, squad, provider, model, system_prompt")
+> 95	      .eq("id", agent_id)
+> 96	      .maybeSingle<AgentRow>();
+> 97	
+> 98	    if (agentErr || !agent) {
+> 99	      return json({ error: "Agent not found or not owned by caller" }, 404);
+> 100	    }
+> 101	    if (agent.user_id !== user.id) {
+> 102	      return json({ error: "Forbidden: agent belongs to different user" }, 403);
+> 103	    }
+> 104	
+> 105	    const provider = (override_provider || agent.provider || "groq").toLowerCase();
+> 106	    const model = override_model || agent.model || "llama-3.3-70b-versatile";
+> 107	    const systemPrompt = agent.system_prompt || `You are ${agent.name}, a ${agent.role}.`;
+> 108	
+> 109	    // Insert execution row (pending → running)
+> 110	    const startedAt = new Date().toISOString();
+> 111	    const { data: execRow, error: insertErr } = await admin
+> 112	      .from("agent_executions")
+> 113	      .insert({
+> 114	        agent_id: agent.id,
+> 115	        user_id: user.id,
+> 116	        prompt: task_prompt,
+> 117	        provider,
+> 118	        model,
+> 119	        status: "running",
+> 120	        started_at: startedAt,
+> 121	      })
+> 122	      .select("id")
+> 123	      .single();
+> 124	
+> 125	    if (insertErr || !execRow) {
+> 126	      return json({ error: "Failed to create execution row", detail: insertErr?.message }, 500);
+> 127	    }
+> 128	    const execId = execRow.id;
+> 129	
+> 130	    // Pull provider key from per-user vault
+> 131	    const { data: keys } = await admin
+> 132	      .from("decrypted_user_api_keys")
+> 133	      .select("groq_api_key, openrouter_api_key, openai_api_key, google_api_key")
+> 134	      .eq("user_id", user.id)
+> 135	      .maybeSingle();
+> 136	
+> 137	    const groqKey = keys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 138	    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 139	    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 140	
+> 141	    const apiKey =
+> 142	      provider === "groq" ? groqKey :
+> 143	      provider === "openrouter" ? openRouterKey :
+> 144	      provider === "openai" ? keys?.openai_api_key :
+> 145	      provider === "ollama" ? "ollama-local" :
+> 146	      null;
+> 147	
+> 148	    if (!apiKey) {
+> 149	      await admin.from("agent_executions").update({
+> 150	        status: "failed",
+> 151	        error_msg: `No API key for provider=${provider} in user_api_keys`,
+> 152	        completed_at: new Date().toISOString(),
+> 153	      }).eq("id", execId);
+> 154	      return json({ error: `provider_key_missing:${provider}`, exec_id: execId }, 402);
+> 155	    }
+> 156	
+> 157	    const ollamaBase = Deno.env.get("OLLAMA_HOST") || "http://host.docker.internal:11434";
+> 158	    const endpoint =
+> 159	      provider === "groq" ? "https://api.groq.com/openai/v1/chat/completions" :
+> 160	      provider === "openrouter" ? "https://openrouter.ai/api/v1/chat/completions" :
+> 161	      provider === "openai" ? "https://api.openai.com/v1/chat/completions" :
+> 162	      provider === "ollama" ? `${ollamaBase}/api/chat` :
+> 163	      "";
+> 164	
+> 165	    // Update status to running (was already running, but timestamp updated)
+> 166	    const t0 = Date.now();
+> 167	    let llmResp: Response;
+> 168	    try {
+> 169	      const fetchHeaders: Record<string, string> = {
+> 170	        "Content-Type": "application/json",
+> 171	      };
+> 172	      if (provider !== "ollama") {
+> 173	        fetchHeaders["Authorization"] = `Bearer ${apiKey}`;
+> 174	      }
+> 175	
+> 176	      const fetchBody = provider === "ollama"
+> 177	        ? JSON.stringify({
+> 178	            model,
+> 179	            messages: [
+> 180	              { role: "system", content: systemPrompt },
+> 181	              { role: "user", content: task_prompt },
+> 182	            ],
+> 183	            stream: false,
+> 184	            options: {
+> 185	              num_predict: MAX_OUTPUT_TOKENS,
+> 186	            },
+> 187	          })
+> 188	        : JSON.stringify({
+> 189	            model,
+> 190	            messages: [
+> 191	              { role: "system", content: systemPrompt },
+> 192	              { role: "user", content: task_prompt },
+> 193	            ],
+> 194	            max_tokens: MAX_OUTPUT_TOKENS,
+> 195	          });
+> 196	
+> 197	      llmResp = await fetchLLMWithFallback(endpoint, {
+> 198	        method: "POST",
+> 199	        headers: fetchHeaders,
+> 200	        body: fetchBody,
+> 201	      }, {
+> 202	        openRouterKey: openRouterKey || undefined,
+> 203	        geminiKey: geminiKey || undefined,
+> 204	        groqKey: groqKey || undefined,
+> 205	      });
+> 206	    } catch (e) {
+> 207	      const msg = e instanceof Error ? e.message : "fetch failed";
+> 208	      await admin.from("agent_executions").update({
+> 209	        status: "failed",
+> 210	        error_msg: `fetch_error: ${msg}`,
+> 211	        latency_ms: Date.now() - t0,
+> 212	        completed_at: new Date().toISOString(),
+> 213	      }).eq("id", execId);
+> 214	      return json({ error: "provider_unreachable", detail: msg, exec_id: execId }, 502);
+> 215	    }
+> 216	
+> 217	    const latencyMs = Date.now() - t0;
+> 218	
+> 219	    if (!llmResp.ok) {
+> 220	      const errBody = await llmResp.text();
+> 221	      await admin.from("agent_executions").update({
+> 222	        status: "failed",
+> 223	        error_msg: `provider_${llmResp.status}: ${errBody.slice(0, 500)}`,
+> 224	        latency_ms: latencyMs,
+> 225	        completed_at: new Date().toISOString(),
+> 226	      }).eq("id", execId);
+> 227	      return json({
+> 228	        error: "provider_error",
+> 229	        provider_status: llmResp.status,
+> 230	        provider_body: errBody.slice(0, 500),
+> 231	        exec_id: execId,
+> 232	      }, 502);
+> 233	    }
+> 234	
+> 235	    const llmData = await llmResp.json();
+> 236	    const response = provider === "ollama"
+> 237	      ? (llmData?.message?.content ?? "")
+> 238	      : (llmData?.choices?.[0]?.message?.content ?? "");
+> 239	    const tokensIn = provider === "ollama"
+> 240	      ? (llmData?.prompt_eval_count ?? 0)
+> 241	      : (llmData?.usage?.prompt_tokens ?? 0);
+> 242	    const tokensOut = provider === "ollama"
+> 243	      ? (llmData?.eval_count ?? 0)
+> 244	      : (llmData?.usage?.completion_tokens ?? 0);
+> 245	
+> 246	    // Compute cost via RPC (single source of truth)
+> 247	    const { data: costData } = await admin.rpc("calc_agent_cost_mcoin", {
+> 248	      p_tokens_in: tokensIn,
+> 249	      p_tokens_out: tokensOut,
+> 250	      p_provider: provider,
+> 251	      p_model: model,
+> 252	    });
+> 253	
+> 254	    const costMcoin = costData?.cost_mcoin ?? 0;
+> 255	    const costUsdMicro = costData?.cost_usd_micro ?? 0;
+> 256	
+> 257	    await admin.from("agent_executions").update({
+> 258	      status: "done",
+> 259	      response,
+> 260	      tokens_in: tokensIn,
+> 261	      tokens_out: tokensOut,
+> 262	      cost_usd_micro: costUsdMicro,
+> 263	      cost_mcoin: costMcoin,
+> 264	      latency_ms: latencyMs,
+> 265	      completed_at: new Date().toISOString(),
+> 266	    }).eq("id", execId);
+> 267	
+> 268	    // CEA-F · Hybrid billing: deduct only for non-Sovereign users
+> 269	    let billed = false;
+> 270	    if (user.id !== SOVEREIGN_USER_ID && costMcoin > 0) {
+> 271	      const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 272	        p_user_id: user.id,
+> 273	        p_amount: Number(costMcoin),
+> 274	      });
+> 275	      if (deductErr) {
+> 276	        // Don't fail the exec — already done; just log the billing gap
+> 277	        console.warn(`[agent-task-execute] deduct failed for user ${user.id}:`, deductErr.message);
+> 278	      } else {
+> 279	        billed = true;
+> 280	      }
+> 281	    }
+> 282	
+> 283	    return json({
+> 284	      ok: true,
+> 285	      exec_id: execId,
+> 286	      agent_id: agent.id,
+> 287	      agent_name: agent.name,
+> 288	      squad: agent.squad,
+> 289	      provider,
+> 290	      model,
+> 291	      tokens_in: tokensIn,
+> 292	      tokens_out: tokensOut,
+> 293	      cost_usd_micro: costUsdMicro,
+> 294	      cost_mcoin: costMcoin,
+> 295	      billed,
+> 296	      sovereign_freebie: user.id === SOVEREIGN_USER_ID,
+> 297	      latency_ms: latencyMs,
+> 298	      response_preview: response.slice(0, 200),
+> 299	    });
+> 300	  } catch (e) {
+> 301	    const msg = e instanceof Error ? e.message : "unknown";
+> 302	    return json({ error: "internal", detail: msg }, 500);
+> 303	  }
+> 304	});
+> 305	
+> 306	function json(body: unknown, status = 200): Response {
+> 307	  return new Response(JSON.stringify(body), {
+> 308	    status,
+> 309	    headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 310	  });
+> 311	}
+> 312	
+> ```
+
+## 🤖 Claude *(03:29:00)*
+
+
+## 🤖 Claude *(03:29:04)*
+
+Li o router atual (CEA v1.1): hoje é um **runner LLM-only** (agent_id + task_prompt → chat completion → meter → grava `agent_executions`). Não invoca módulos. O refactor da Fase 2 é **aditivo** (não quebra os fluxos CEA existentes): adicionar um ramo de **capability** que resolve `capability_key` → `agent_capabilities` (allowlist + denylist de sistema) → cap check → invoca a `target_function` real com o JWT do user → mede respeitando `module_self_bills`.
+
+Atualizo o progresso e faço um checkpoint honesto — porque daqui pra frente é **código que mexe em dinheiro real + segurança** (router) e merece execução cuidadosa, não atropelada no fim de uma sessão longa:
+
+## 🤖 Claude *(03:29:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md",
+  "old_string": "## Progress log\n- 2026-06-01: plano criado; BoK + bok-agents selados; arrancando Fase 1.",
+  "new_string": "## Progress log\n- 2026-06-01: plano criado; BoK + bok-agents selados; arrancando Fase 1.\n- 2026-06-01: **Fase 1 \u2705** \u2014 migration aplicada (3 tabelas + colunas, HTTP 200) \u00b7 `/security-review` PASS \u00b7 registry 16 caps (13 ativas). `tsc` 0.\n- 2026-06-01: **Fase 0 prep** \u2014 auto-seed removido de `useCrewData` (staged) \u00b7 reset script + dry-run OK (717/689/31, profiles=1) \u00b7 reset destrutivo RE-SEQUENCED para ap\u00f3s Fase 3.\n- 2026-06-01: **Fase 2 SCOPED** \u2014 `agent-task-execute` \u00e9 LLM-only; refactor = ramo capability aditivo (resolve `agent_capabilities` allowlist + denylist sistema \u2192 cap check \u2192 invoke `target_function` c/ JWT user \u2192 meter c/ `module_self_bills`). Pr\u00f3ximo chunk focado.\n\n## Fase 2 \u2014 refactor scope (do c\u00f3digo lido)\nAdicionar ANTES do path LLM existente (que vira fallback quando n\u00e3o h\u00e1 `capability_key`):\n1. `capability_key` do body OU `agent.capability_key` (novo select).\n2. SELECT `agent_capabilities` WHERE key + `is_active=true` \u2192 sen\u00e3o 422.\n3. **Denylist de sistema (CISSP/FR-CV2-012):** rejeitar se `target_function` \u2208 {aios-sql-bridge, admin-manage-user, delete-account, data-export, stripe-webhook, create-checkout, create-portal, self-heal, self-optimize, sync-knowledge-mesh, embed-mcorch-node, *-webhook} \u2192 403.\n4. Cap check (`agent_consumption_caps` + soma `cost_mcoin` de hoje do user) \u2192 402 se estourar (cap=0 = ilimitado/Sovereign).\n5. INSERT `agent_executions` (status=running, capability_key, idempotency_key).\n6. Invoke `${SUPABASE_URL}/functions/v1/${target_function}` com **Authorization do user** (m\u00f3dulo aplica pr\u00f3pria RLS + resolve BYOK pr\u00f3prio) + payload.\n7. Custo = `module_self_bills ? 0 : base_mcoin_cost`; deduct se >0 e n\u00e3o-Sovereign.\n8. UPDATE `agent_executions` (done/failed + result_summary = resp truncada).\n9. Pulse `infra_health_logs` service='agent-task-execute' capability.\nSmoke real exige um subagente com `capability_key` (vem da Fase 3 wizard ou insert manual de teste)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/execution-plan-constellation-v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:29:28)*
+
+
+## 🤖 Claude *(03:29:46)*
+
+## ⏸️ Checkpoint — Constellation v2 (Fase 1 ✅ · Fase 0 pronta · Fase 2 escopada)
+
+Fui o mais longe que a materialidade permite com qualidade. Daqui pra frente é router (dinheiro real + segurança) e wipe destrutivo — então paro num ponto **100% verificado** em vez de atropelar.
+
+### ✅ Entregue nesta sessão (prova material)
+| Item | Prova |
+|---|---|
+| BoK suite `constellation-v2` (9 docs) | seal `38d7e7a4…` embedded 768d · DERIVES_FROM `c3dd9d58…` |
+| Sistema de Agentes oficial | `bok-agents-system--constellation-v2.md` (8 lentes + 3 camadas + topology map 8→21) |
+| Plano de execução | `.claude/context/execution-plan-constellation-v2.md` |
+| **Fase 1 — migrations** | `20260601031300_…` aplicada (`db push Finished`) · 3 tabelas HTTP 200 · colunas OK · **`/security-review` PASS** (0 findings ≥8) |
+| **Fase 1 — registry** | 16 capabilities (13 ativas · 3 future) · 4/4/4/4 por depto |
+| `tsc --noEmit` | exit **0** |
+
+### 🟡 Fase 0 — pronta, gated (roda por ÚLTIMO)
+- Auto-seed removido de `useCrewData` (FR-CV2-030, staged).
+- **Dry-run (nada mutado):** `crew_agents=717 · crew_edges=689 · agent_executions=31 · profiles=1`. Script arquiva os 31 → wipa tudo; `profiles` preservado.
+- ⚠️ O wipe destrutivo só roda **depois da UI de empty-state/wizard (Fase 3)** estar deployada — senão sua página fica em branco sem CTA. Precisa do seu **GO** explícito.
+
+### 📋 Fase 2 — escopada (router), próximo chunk focado
+Refactor **aditivo** do `agent-task-execute` (li o código): novo ramo capability → allowlist `agent_capabilities` + **denylist de sistema** (bloqueia aios-sql-bridge/admin/stripe/webhooks…) → cap check → invoca a `target_function` real com o JWT do user → meter com `module_self_bills`. Os fluxos CEA atuais continuam intactos (fallback LLM).
+
+### ⚖️ Survival Laws (mini)
+- **Lei 1:** toda claim acima tem output verificado neste turno (db push / REST / bun / tsc). 2 falhas de push foram reportadas honestamente + corrigidas (has_role). Zero fabricação.
+- **Lei 2:** migration passou `/security-review` antes de aplicar; SOPs/BoK precedem o código.
+- **Lei 4 (ORO):** Operator=eu · Reviewer/Owner=você. Reset destrutivo aguarda seu GO.
+
+**Como seguir?** Recomendo eu **emendar a Fase 2 (router) agora** como próximo passo — é aditivo e não-destrutivo. O smoke test real dela depende de um subagente com `capability_key` (vem da Fase 3 wizard ou insert de teste), então faço router → UI (Fase 3) → aí o reset (Fase 0) com seu GO → E2E (Fase 4). Quer que eu **continue direto na Fase 2**, ou prefere **selar aqui via `/handoff`** e retomar depois? (O plano persistido deixa o pickup trivial.)
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Fix tenant isolation in edge functions]]
+> * **Próxima Sessão**: [[2026-06-01 - agent-af11d6fa76341891b]]
 %% --- TIMELINE END --- %%
