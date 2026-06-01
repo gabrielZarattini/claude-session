@@ -4884,6 +4884,546 @@ A camada migrada é grande (104 arquivos) e **segura** (backward-compatible). Re
 
 (Quando o leak fechar: cleanup da branch do vault + Fase 3 retomam, conforme runbook.)
 
+## 👤 User *(12:15:05)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(12:15:05)*
+
+No response requested.
+
+## 👤 User *(12:20:10)*
+
+primeiro 1 depois o 2
+
+## 🤖 Claude *(12:21:26)*
+
+
+## 🤖 Claude *(12:21:27)*
+
+Entendido: **1 (commit) primeiro, depois 2 (9 inter-function + trigger Vault)**.
+
+## Passo 1 — commit da camada migrada (segura, backward-compatible)
+
+Estagiando só a migração (edge functions + scripts + runbook); Fase 3 (`src/` hooks + types + plano) fica separada pra depois:
+
+## 🤖 Claude *(12:21:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions scripts .claude/context/service-role-key-migration-runbook.md\necho \"=== staged (deve ser 104 + runbook; SEM src/ e SEM execution-plan) ===\"\ngit diff --cached --name-only | wc -l\necho \"--- src/ ou execution-plan staged por engano? (deve ser vazio) ---\"\ngit diff --cached --name-only | grep -E \"^src/|execution-plan-constellation\" || echo \"\u2705 nenhum\"\necho \"--- migration .sql staged? (deve ser vazio \u2014 leaked key fica fora) ---\"\ngit diff --cached --name-only | grep \"supabase/migrations\" || echo \"\u2705 nenhum\"",
+  "description": "Stage migration files and runbook, verify scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged (deve ser 104 + runbook; SEM src/ e SEM execution-plan) ===
+> 105
+> --- src/ ou execution-plan staged por engano? (deve ser vazio) ---
+> ✅ nenhum
+> --- migration .sql staged? (deve ser vazio — leaked key fica fora) ---
+> ✅ nenhum
+> ```
+
+## 🤖 Claude *(12:21:36)*
+
+
+## 🤖 Claude *(12:21:37)*
+
+105 staged (104 migração + runbook), sem Fase 3, sem o migration com a chave. Commitando + push:
+
+## 🤖 Claude *(12:21:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit commit -q -F - <<'EOF'\nrefactor(security): server-side reads prefer SUPABASE_SECRET_KEY w/ legacy fallback\n\nPasso 1 da resposta ao vazamento da service_role HS256 (p\u00fablica na main\ndesde ~03/05, ainda viva). Migra 47 edge functions + 57 scripts (TS/JS/bash)\npara ler a chave secreta nova (SUPABASE_SECRET_KEY) com fallback para a\nservice_role legada \u2014 backward-compatible: nenhuma mudan\u00e7a de comportamento\nat\u00e9 o Function secret ser setado e a legada revogada.\n\nFalta o passo 2 (9 chamadas inter-function + trigger via Vault) antes de\nsetar o secret/revogar. Runbook: .claude/context/service-role-key-migration-runbook.md\nEOF\necho \"commit exit: $?\"; git log --oneline -1\necho \"=== push ===\"; git push origin main 2>&1 | tail -4; echo \"push exit: ${PIPESTATUS[0]}\"\ngit rev-list --left-right --count HEAD...origin/main",
+  "description": "Commit and push the security migration layer"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit exit: 0
+> 6c93c7c refactor(security): server-side reads prefer SUPABASE_SECRET_KEY w/ legacy fallback
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    279801b..6c93c7c  main -> main
+> push exit: 0
+> 0	0
+> ```
+
+## 🤖 Claude *(12:21:54)*
+
+
+## 🤖 Claude *(12:21:56)*
+
+✅ **Passo 1 fechado** — commit `6c93c7c` pushed (`279801b..6c93c7c`), HEAD ≡ origin/main, pre-commit hook passou. 104 arquivos travados.
+
+## Passo 2 — 9 inter-function + trigger (a parte de auth)
+
+Primeiro mapeio caller→target e quais targets são `verify_jwt=true` (default, fora do config.toml) — esses quebram com a chave nova:
+
+## 🤖 Claude *(12:22:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== TODAS as chamadas functions/v1/<target> (caller \u2192 target) ===\"\ngit grep -nE \"functions/v1/[a-z0-9-]+\" -- supabase/functions | sed -E 's#.*/functions/([^\"/]+)/index\\.ts:[0-9]+:.*functions/v1/([a-z0-9-]+).*#\\1 \u2192 \\2#' | sort -u\necho\necho \"=== fun\u00e7\u00f5es COM verify_jwt=false no config.toml ===\"\ncommand grep -E \"\\[functions\\.\" supabase/config.toml | sed -E 's/\\[functions\\.(.+)\\]/\\1/' | sort > /tmp/cfg_fns.txt\ncat /tmp/cfg_fns.txt | tr '\\n' ' '; echo\necho\necho \"=== caller envia apikey hoje? (amostra dos 9) ===\"\nfor f in auto-publish trigger-embeddings canvas-execute orchestrate-step self-heal; do\n  echo -n \"$f: \"; command grep -qE \"apikey\" \"supabase/functions/$f/index.ts\" && echo \"tem 'apikey' em algum lugar\" || echo \"SEM apikey\"\ndone",
+  "description": "Map inter-function caller\u2192target and verify_jwt status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TODAS as chamadas functions/v1/<target> (caller → target) ===
+> auto-publish → publish-social
+> canvas-execute → higgsfield-webhook
+> higgsfield-webhook → higgsfield-webhook
+> orchestrate-step → publish-wordpress
+> publish-social → refresh-social-token
+> self-heal → refresh-social-token
+> social-auth-callback → social-auth-callback
+> social-auth-init → social-auth-callback
+> trigger-embeddings → embed-mcorch-node
+> 
+> === funções COM verify_jwt=false no config.toml ===
+> analyze-seo check-video-status generate-audio-script generate-content generate-image generate-video generate-video-script handle-ml-postback higgsfield-webhook instagram-webhook list-provider-models orchestrate-content process-affiliate-link publish-wordpress self-heal self-optimize social-auth-callback social-auth-init stripe-webhook sync-knowledge-mesh 
+> 
+> === caller envia apikey hoje? (amostra dos 9) ===
+> auto-publish: tem 'apikey' em algum lugar
+> trigger-embeddings: tem 'apikey' em algum lugar
+> canvas-execute: tem 'apikey' em algum lugar
+> orchestrate-step: tem 'apikey' em algum lugar
+> self-heal: tem 'apikey' em algum lugar
+> ```
+
+## 🤖 Claude *(12:23:07)*
+
+
+## 🤖 Claude *(12:23:09)*
+
+Mapa caller→target montado. **3 targets são `verify_jwt=true` (default, fora do config)** e quebram com a chave nova: **`publish-social`**, **`refresh-social-token`**, **`embed-mcorch-node`**.
+
+Antes de editar 9 functions, testo **empiricamente** qual recipe de header o gateway de Functions aceita com a chave nova (resolve o "preciso de apikey?" sem chutar). Uso `list-provider-models` (já é verify_jwt=false):
+
+## 🤖 Claude *(12:23:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSK=$(command grep -E \"^SUPABASE_SECRET_KEY=\" .env | head -1 | sed -E 's/^SUPABASE_SECRET_KEY=//; s/^[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"']?[[:space:]]*$//')\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/list-provider-models\"\necho \"=== gateway de Functions (verify_jwt=false) com a chave nova sb_secret_ ===\"\necho -n \"(1) s\u00f3 Authorization Bearer \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$URL\" -H \"Authorization: Bearer $SK\" -H \"Content-Type: application/json\"\necho -n \"(2) s\u00f3 apikey               \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$URL\" -H \"apikey: $SK\" -H \"Content-Type: application/json\"\necho -n \"(3) apikey + Bearer         \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$URL\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\" -H \"Content-Type: application/json\"\necho \"(200/2xx = aceita \u00b7 401 = rejeita)\"",
+  "description": "Empirically test which header recipe the Functions gateway accepts with the new secret key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gateway de Functions (verify_jwt=false) com a chave nova sb_secret_ ===
+> (1) só Authorization Bearer → 401
+> (2) só apikey               → 401
+> (3) apikey + Bearer         → 401
+> (200/2xx = aceita · 401 = rejeita)
+> ```
+
+## 🤖 Claude *(12:23:58)*
+
+
+## 🤖 Claude *(12:24:00)*
+
+Surpresa material: **todos 401** no gateway de Functions (mesmo apikey+Bearer), apesar de funcionar no REST. Isso muda a estratégia — preciso entender o porquê antes de editar 9 functions. Diagnóstico: corpo do 401 + testo um webhook que é comprovadamente `verify_jwt=false`:
+
+## 🤖 Claude *(12:24:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSK=$(command grep -E \"^SUPABASE_SECRET_KEY=\" .env | head -1 | sed -E 's/^SUPABASE_SECRET_KEY=//; s/^[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"']?[[:space:]]*$//')\nPUB=$(command grep -E \"^SUPABASE_PUBLISHABLE_KEY=\" .env | head -1 | sed -E 's/^SUPABASE_PUBLISHABLE_KEY=//; s/^[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"']?[[:space:]]*$//')\nBASE=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\necho \"=== corpo do 401 (list-provider-models, secret apikey+Bearer) ===\"\ncurl -s -m 20 \"$BASE/list-provider-models\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\" -X POST -d '{}' | head -c 300; echo\necho \"=== handle-ml-postback (config diz verify_jwt=false) com SECRET ===\"\necho -n \"secret apikey+Bearer \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$BASE/handle-ml-postback\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\" -X POST -d '{}'\necho \"=== mesmo endpoint com PUBLISHABLE (anon novo) ===\"\necho -n \"publishable apikey   \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$BASE/handle-ml-postback\" -H \"apikey: $PUB\" -X POST -d '{}'\necho \"=== list-provider-models com PUBLISHABLE (verify_jwt real?) ===\"\necho -n \"publishable apikey   \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 20 \"$BASE/list-provider-models\" -H \"apikey: $PUB\" -X POST -d '{}'",
+  "description": "Diagnose 401 body and test secret/publishable keys on verify_jwt=false function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === corpo do 401 (list-provider-models, secret apikey+Bearer) ===
+> {"error":"Token inválido"}
+> === handle-ml-postback (config diz verify_jwt=false) com SECRET ===
+> secret apikey+Bearer → 401
+> === mesmo endpoint com PUBLISHABLE (anon novo) ===
+> publishable apikey   → 401
+> === list-provider-models com PUBLISHABLE (verify_jwt real?) ===
+> publishable apikey   → 401
+> ```
+
+## 🤖 Claude *(12:24:55)*
+
+
+## 🤖 Claude *(12:24:58)*
+
+`{"error":"Token inválido"}` em PT-BR = isso é **código MCORCH**, não o gateway. Muitas functions fazem **verificação de JWT própria** (o SOP `edge-jwt-identity-verification`). Ou seja: inter-function com a chave nova (não-JWT) falha na auth **interna** do alvo, não só no `verify_jwt` do gateway. Isso é mais profundo que o runbook estimou.
+
+Vou confirmar lendo a auth dos 2 alvos centrais (`embed-mcorch-node` — chamado pelo trigger + trigger-embeddings; e `publish-social`):
+
+## 🤖 Claude *(12:25:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 embed-mcorch-node (auth?) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\ncommand grep -nE \"Authorization|Bearer|verifyJWT|verify_jwt|jwt|getUser|auth|SERVICE_ROLE|SECRET_KEY|Token inv\u00e1lido|apikey|401|createClient\" supabase/functions/embed-mcorch-node/index.ts | head -20\necho\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 publish-social (auth?) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\ncommand grep -nE \"Authorization|Bearer|verifyJWT|getUser|Token inv\u00e1lido|SERVICE_ROLE|SECRET_KEY|apikey|401|service_role\" supabase/functions/publish-social/index.ts | head -20\necho\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 refresh-social-token (auth?) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\ncommand grep -nE \"Authorization|Bearer|verifyJWT|getUser|Token inv\u00e1lido|SERVICE_ROLE|SECRET_KEY|apikey|401|service_role\" supabase/functions/refresh-social-token/index.ts | head -15",
+  "description": "Inspect internal auth logic of inter-function targets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════════ embed-mcorch-node (auth?) ════════
+> 1:import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+> 22:        "Authorization": `Bearer ${openRouterKey}`,
+> 118:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 153:  const supabase = createClient(
+> 155:    (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 257:  supabase: ReturnType<typeof createClient>,
+> 
+> ════════ publish-social (auth?) ════════
+> 6:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 15:    const authHeader = req.headers.get("Authorization");
+> 16:    if (!authHeader?.startsWith("Bearer ")) {
+> 18:        status: 401,
+> 35:      (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!
+> 38:    const serviceKey = (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 39:    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 42:    // - User JWT (frontend): auth.getUser() returns a user
+> 43:    // - Service role (auto-publish cron): auth.getUser() returns null; trust user_id from body
+> 48:      { global: { headers: { Authorization: authHeader } } }
+> 50:    const { data: { user } } = await supabase.auth.getUser();
+> 59:        status: 401,
+> 89:          Authorization: `Bearer ${(Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))}`,
+> 95:          status: 401,
+> 118:          Authorization: `Bearer ${account.access_token}`,
+> 200:          Authorization: `Bearer ${account.access_token}`,
+> 
+> ════════ refresh-social-token (auth?) ════════
+> 6:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token",
+> 15:    const authHeader = req.headers.get("Authorization");
+> 16:    if (!authHeader?.startsWith("Bearer ")) {
+> 18:        status: 401,
+> 25:    const serviceRoleKey = (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 31:      global: { headers: { Authorization: authHeader } },
+> 33:    const { data: { user } } = await userClient.auth.getUser();
+> 34:    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+> 113:          Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+> ```
+
+## 🤖 Claude *(12:26:33)*
+
+
+## 🤖 Claude *(12:26:37)*
+
+A auth interna não é JWT-strict — é o padrão `isServiceRole = authHeader === \`Bearer ${serviceKey}\`` + `getUser()`. Isso **funciona** com a chave nova (caller e target resolvem a MESMA key via fallback → match). 
+
+Mas aí mora um risco de segurança: setar `verify_jwt=false` no gateway **transfere toda a auth pro código da função** — se ela "confia no user_id do body quando não-user", vira escalada de privilégio (publicar como qualquer user) com a publishable key (que é pública). Preciso ver como `publish-social` trata o caso "nem user nem service":
+
+## 🤖 Claude *(12:26:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "offset": 13,
+  "limit": 78
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 13	
+> 14	  try {
+> 15	    const authHeader = req.headers.get("Authorization");
+> 16	    if (!authHeader?.startsWith("Bearer ")) {
+> 17	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 18	        status: 401,
+> 19	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 20	      });
+> 21	    }
+> 22	
+> 23	    const body = await req.json();
+> 24	    const { platform, content, social_account_id, scheduled_post_id, user_id: bodyUserId } = body;
+> 25	
+> 26	    if (!platform || !content) {
+> 27	      return new Response(JSON.stringify({ error: "platform and content required" }), {
+> 28	        status: 400,
+> 29	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 30	      });
+> 31	    }
+> 32	
+> 33	    const adminClient = createClient(
+> 34	      Deno.env.get("SUPABASE_URL")!,
+> 35	      (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!
+> 36	    );
+> 37	
+> 38	    const serviceKey = (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 39	    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 40	
+> 41	    // Resolve caller identity:
+> 42	    // - User JWT (frontend): auth.getUser() returns a user
+> 43	    // - Service role (auto-publish cron): auth.getUser() returns null; trust user_id from body
+> 44	    //   since Supabase infrastructure already validated the JWT signature
+> 45	    const supabase = createClient(
+> 46	      Deno.env.get("SUPABASE_URL")!,
+> 47	      Deno.env.get("SUPABASE_ANON_KEY")!,
+> 48	      { global: { headers: { Authorization: authHeader } } }
+> 49	    );
+> 50	    const { data: { user } } = await supabase.auth.getUser();
+> 51	
+> 52	    let userId: string;
+> 53	    if (user) {
+> 54	      userId = user.id;
+> 55	    } else if (isServiceRole && bodyUserId) {
+> 56	      userId = bodyUserId;
+> 57	    } else {
+> 58	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 59	        status: 401,
+> 60	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 61	      });
+> 62	    }
+> 63	
+> 64	    let query = adminClient
+> 65	      .from("decrypted_social_accounts")
+> 66	      .select("*")
+> 67	      .eq("user_id", userId)
+> 68	      .eq("platform", platform)
+> 69	      .eq("is_active", true);
+> 70	
+> 71	    if (social_account_id) query = query.eq("id", social_account_id);
+> 72	
+> 73	    const { data: accounts, error: accError } = await query.limit(1).single();
+> 74	    if (accError || !accounts) {
+> 75	      return new Response(JSON.stringify({ error: `No active ${platform} account found` }), {
+> 76	        status: 404,
+> 77	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 78	      });
+> 79	    }
+> 80	
+> 81	    const account = accounts;
+> 82	
+> 83	    // Refresh token if expired, then re-fetch account to get the new access_token
+> 84	    if (account.token_expires_at && new Date(account.token_expires_at) < new Date()) {
+> 85	      const refreshRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/refresh-social-token`, {
+> 86	        method: "POST",
+> 87	        headers: {
+> 88	          "Content-Type": "application/json",
+> 89	          Authorization: `Bearer ${(Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))}`,
+> 90	        },
+> ```
+
+## 🤖 Claude *(12:27:27)*
+
+
+## 🤖 Claude *(12:27:30)*
+
+`publish-social` é **seguro** sob verify_jwt=false: linha 57-62 → se nem user válido nem `isServiceRole`, **401**. A publishable (pública) não escala. ✅ O gateway era redundante com a checagem interna.
+
+Falta confirmar o mesmo pra `refresh-social-token` e ver `embed-mcorch-node` (o grep não mostrou checagem interna nele — verify_jwt=false o deixaria aberto). Traço os callers de embed + leio os handlers:
+
+## 🤖 Claude *(12:27:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== quem chama embed-mcorch-node? (functions + src + scripts) ===\"\ngit grep -lE \"functions/v1/embed-mcorch-node|invoke\\(['\\\"]embed-mcorch-node\" -- 'supabase/functions' 'src' 'scripts' | grep -v 'embed-mcorch-node/index.ts'\necho\necho \"=== embed-mcorch-node: in\u00edcio do handler (tem checagem de auth?) ===\"\nsed -n '120,160p' supabase/functions/embed-mcorch-node/index.ts | command grep -nE \"serve|req|Authorization|authHeader|method|OPTIONS|json|return|401|node_id\" | head -15\necho\necho \"=== refresh-social-token: caso 'nem user nem service' (deve dar 401) ===\"\nsed -n '33,60p' supabase/functions/refresh-social-token/index.ts",
+  "description": "Trace embed-mcorch-node callers and confirm refresh-social-token self-gates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem chama embed-mcorch-node? (functions + src + scripts) ===
+> scripts/backfill-embeddings-priority.sh
+> scripts/seed-aios-milestone.ts
+> scripts/seed-social-oauth-adrs.ts
+> src/hooks/useAIOSConversations.ts
+> src/hooks/useMcorchMemory.ts
+> supabase/functions/trigger-embeddings/index.ts
+> 
+> === embed-mcorch-node: início do handler (tem checagem de auth?) ===
+> 7:  if (text.length <= CHUNK_CHARS) return [text];
+> 19:  return chunks;
+> 26:  return avg.map((x) => x / vectors.length);
+> 29:Deno.serve(async (req) => {
+> 30:  if (req.method === "OPTIONS") {
+> 31:    return new Response("ok", { headers: corsHeaders });
+> 
+> === refresh-social-token: caso 'nem user nem service' (deve dar 401) ===
+>     const { data: { user } } = await userClient.auth.getUser();
+>     const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+>     const isInternalServiceCall = isServiceRole;
+> 
+>     const { social_account_id } = await req.json();
+>     if (typeof social_account_id !== "string" || !social_account_id.trim()) {
+>       return new Response(JSON.stringify({ error: "social_account_id required" }), {
+>         status: 400,
+>         headers: { ...corsHeaders, "Content-Type": "application/json" },
+>       });
+>     }
+> 
+>     const { data: account, error } = await admin
+>       .from("decrypted_social_accounts")
+>       .select("*")
+>       .eq("id", social_account_id)
+>       .single();
+> 
+>     if (error || !account) {
+>       return new Response(JSON.stringify({ error: "Account not found" }), {
+>         status: 404,
+>         headers: { ...corsHeaders, "Content-Type": "application/json" },
+>       });
+>     }
+> 
+>     // Ownership check
+>     if (!isInternalServiceCall && (!user || account.user_id !== user.id)) {
+>       return new Response(JSON.stringify({ error: "Forbidden" }), {
+> ```
+
+## 🤖 Claude *(12:28:15)*
+
+
+## 🤖 Claude *(12:28:19)*
+
+Tracei tudo. Veredito de segurança:
+- **`refresh-social-token`**: seguro sob verify_jwt=false (linha "ownership check": `!isInternalServiceCall && !user` → Forbidden). ✅
+- **`embed-mcorch-node`**: **não tem checagem de auth** (só embeda) E é chamado pelo **frontend** (`useAIOSConversations`, `useMcorchMemory`) com JWT de user. Logo: verify_jwt=false **sem gate interno** o abriria → preciso adicionar um gate (user válido **OU** isServiceRole, senão 401) — padrão idêntico ao publish-social, preservando os callers frontend.
+
+Lendo o handler do embed pra inserir o gate no ponto certo:
+
+## 🤖 Claude *(12:28:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts",
+  "offset": 110,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 110	  }
+> 111	
+> 112	  throw new Error("All Gemini embedding models failed — no working model found");
+> 113	}
+> 114	
+> 115	const corsHeaders = {
+> 116	  "Access-Control-Allow-Origin": "*",
+> 117	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 118	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 119	};
+> 120	
+> 121	// FMEA-005: chunk at semantic boundaries so nodes > 8 192 tokens are fully embedded
+> 122	// via vector averaging rather than silently truncated by the API.
+> 123	const CHUNK_CHARS = 20_000; // ≈5 000 tokens — safe margin below the 8 192-token API limit
+> 124	
+> 125	function splitChunks(text: string): string[] {
+> 126	  if (text.length <= CHUNK_CHARS) return [text];
+> 127	  const chunks: string[] = [];
+> 128	  let pos = 0;
+> 129	  while (pos < text.length) {
+> 130	    let end = Math.min(pos + CHUNK_CHARS, text.length);
+> 131	    if (end < text.length) {
+> 132	      const boundary = text.lastIndexOf("\n\n", end);
+> 133	      if (boundary > pos + CHUNK_CHARS / 2) end = boundary;
+> 134	    }
+> 135	    chunks.push(text.slice(pos, end));
+> 136	    pos = end;
+> 137	  }
+> 138	  return chunks;
+> 139	}
+> 140	
+> 141	function averageVectors(vectors: number[][]): number[] {
+> 142	  const dims = vectors[0].length;
+> 143	  const avg = new Array<number>(dims).fill(0);
+> 144	  for (const v of vectors) for (let i = 0; i < dims; i++) avg[i] += v[i];
+> 145	  return avg.map((x) => x / vectors.length);
+> 146	}
+> 147	
+> 148	Deno.serve(async (req) => {
+> 149	  if (req.method === "OPTIONS") {
+> 150	    return new Response("ok", { headers: corsHeaders });
+> 151	  }
+> 152	
+> 153	  const supabase = createClient(
+> 154	    Deno.env.get("SUPABASE_URL")!,
+> 155	    (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 156	  );
+> 157	
+> 158	  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> 159	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> 160	  if (!openRouterKey && !geminiKey) {
+> 161	    return new Response(
+> 162	      JSON.stringify({ error: "Neither OPENROUTER_API_KEY nor GEMINI_API_KEY configured" }),
+> 163	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 164	    );
+> 165	  }
+> 166	
+> 167	  let node_id: string;
+> 168	  try {
+> 169	    ({ node_id } = await req.json());
+> ```
+
+## 🤖 Claude *(12:29:23)*
+
+
+## 🤖 Claude *(12:29:30)*
+
+Tracei o caller graph e a auth de cada alvo. Achei algo que **expande o escopo do passo 2** de forma material — e me faz parar antes de mexer em auth no escuro:
+
+**Findings (verificados, não chutados):**
+- `publish-social` e `refresh-social-token` **se auto-protegem** (rejeitam quando nem user nem service) → seguros sob `verify_jwt=false`. ✅
+- `embed-mcorch-node` **não tem gate de auth** E é chamado pelo **frontend** (`useAIOSConversations`, `useMcorchMemory`) → preciso ADICIONAR um gate (user OU service), senão verify_jwt=false o abre.
+- 🔴 **Dimensão nova:** várias functions fazem `createClient(URL, SUPABASE_ANON_KEY, {Authorization: userJWT})` pra `getUser()`. Quando você **revogar a legada**, o `SUPABASE_ANON_KEY` injetado (legado) **morre** → esse padrão quebra. Precisa migrar pra **publishable** também (outra dimensão, não só service_role).
+- E nada disso é testável **antes do deploy** (precisa do Function secret setado).
+
+Vou atualizar o runbook com o escopo real tracado (pra a sessão focada executar certo) em vez de meio-implementar mudança de auth fatigado:
+
+## 🤖 Claude *(12:29:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md",
+  "old_string": "### TODO \u2014 code (Operator)\n- [ ] **8 bash crons** \u2014 after `set -a; source .env; set +a` add: `[ -n \"${SUPABASE_SECRET_KEY:-}\" ] && SUPABASE_SERVICE_ROLE_KEY=\"$SUPABASE_SECRET_KEY\"`. Files: agent-daily-pulse, auto-publish-cron, canvas-video-watchdog, nightly-stage{1,2,3}, watchdog-mcorch, backfill-embeddings-priority.\n- [ ] **9 inter-function callers** (`Bearer ${key}` \u2192 verify_jwt=true targets break with non-JWT secret): auto-publish\u2192publish-social, trigger-embeddings\u2192embed-mcorch-node, canvas-execute, orchestrate-step, publish-social, self-heal, social-auth-init/callback, higgsfield-webhook. Fix = send key in **`apikey`** header + set TARGET `verify_jwt=false` in `supabase/config.toml` (publish-social, embed-mcorch-node currently default-true).\n- [ ] **Embed trigger** `mcorch_embed_on_insert` (migration `20260503120000`): new migration reading key from **Supabase Vault** (`vault.decrypted_secrets`), sent as `apikey`; embed-mcorch-node \u2192 verify_jwt=false. Redact the literal in the old migration file.",
+  "new_string": "### DONE (commit 6c93c7c \u2014 env-read layer, backward-compatible)\n- [x] 8 bash crons normalized (`[ -n \"$SUPABASE_SECRET_KEY\" ] && SUPABASE_SERVICE_ROLE_KEY=\u2026`).\n\n### TODO \u2014 code (Operator) \u2014 STEP 2: inter-function auth cutover (SECURITY-SENSITIVE, deploy-gated)\n> Traced 2026-06-01. Bigger than first estimated \u2014 needs a FOCUSED, deploy-tested session, not a rushed edit.\n> The MCORCH functions do their OWN identity check (`isServiceRole = authHeader === \\`Bearer ${serviceKey}\\``\n> + `getUser()`), so the gateway `verify_jwt` is mostly redundant \u2014 BUT disabling it shifts ALL auth to\n> function code, which must reject the public publishable key. Verified per target:\n\n- [ ] **config.toml** `verify_jwt = false` for the 3 default-true targets called with the service key:\n  `publish-social`, `refresh-social-token`, `embed-mcorch-node`.\n- [x] **publish-social / refresh-social-token** \u2014 already self-gate (reject when neither user nor service \u2192 401/403). SAFE under verify_jwt=false. No code change.\n- [ ] **embed-mcorch-node** \u2014 has **NO** internal auth gate AND is called by the **frontend** (`src/hooks/useAIOSConversations.ts`, `useMcorchMemory.ts`) + service (trigger, trigger-embeddings, backfill scripts). ADD a gate (allow valid user JWT OR `isServiceRole`, else 401) mirroring publish-social \u2014 required before verify_jwt=false or it becomes an open endpoint.\n- [ ] **`apikey` header** on the service\u2192service fetches (gateway needs the secret key): auto-publish\u2192publish-social, publish-social\u2192refresh-social-token, self-heal\u2192refresh-social-token, trigger-embeddings\u2192embed-mcorch-node.\n- [ ] \ud83d\udd34 **NEW DIMENSION \u2014 anon \u2192 publishable:** functions that build a user-context client via `createClient(URL, Deno.env.get(\"SUPABASE_ANON_KEY\"), {headers:{Authorization: userJWT}})` for `getUser()` (publish-social:47, refresh-social-token, embed gate, others) will break when the **legacy anon** is revoked (injected `SUPABASE_ANON_KEY` dies). Must use the **publishable** key. Audit all `SUPABASE_ANON_KEY` reads in `supabase/functions`; set a `SUPABASE_PUBLISHABLE_KEY` Function secret + read it with fallback. **Scope this before revoke.**\n- [ ] **Embed trigger** `mcorch_embed_on_insert` (migration `20260503120000`): new migration reading key from **Supabase Vault** (`vault.decrypted_secrets`), sent as `apikey`; embed-mcorch-node verify_jwt=false + gate accepts isServiceRole. Redact the literal in the old migration file.\n- [ ] **Cannot validate pre-deploy.** Sequence: edits \u2192 `supabase functions deploy` \u2192 set `SUPABASE_SECRET_KEY` (+ `SUPABASE_PUBLISHABLE_KEY`) Function secrets \u2192 smoke (1 frontend caller + 1 cron caller) \u2192 THEN dashboard disable/revoke."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
