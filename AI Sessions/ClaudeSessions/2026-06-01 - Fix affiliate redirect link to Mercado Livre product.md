@@ -4602,6 +4602,1063 @@ ok vamos lá qual seria a melhor opção economicamente para esse trabalho de cr
 > 136:              metadata: { source: "rapidapi" },
 > ```
 
+## 🤖 Claude *(21:30:55)*
+
+
+## 🤖 Claude *(21:30:57)*
+
+Material: **Apify is already wired** (`fetch-trends`, global `APIFY_TOKENS` in the vault) + RapidAPI too — both as **system/global** keys. So we already have an Apify account, and the project's existing pattern for system scraping is a global vault key. That reshapes the economics. Let me ground the pricing with a couple of quick searches before recommending (it's a money decision).
+
+## 🤖 Claude *(21:30:57)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebSearch",
+  "max_results": 2
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebSearch'}]
+> ```
+
+## 🤖 Claude *(21:31:00)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Firecrawl pricing credits stealth proxy cost per scrape 2026"
+}
+```
+
+## 🤖 Claude *(21:31:01)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Apify Mercado Livre product scraper actor pricing per result"
+}
+```
+
+## 🤖 Claude *(21:31:01)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Bright Data Web Unlocker price per 1000 requests pay as you go"
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Apify Mercado Livre product scraper actor pricing per result"
+> 
+> Links: [{"title":"Mercado Livre Product Scraper & Price Monitor · Apify","url":"https://apify.com/viralanalyzer/mercadolivre-scraper"},{"title":"Mercado Livre Brasil Scraper Completo MCP server · Apify","url":"https://apify.com/leadercorp/mercadolivre-scraper-br-pro/api/mcp"},{"title":"Mercado Livre Scraper API · Apify","url":"https://apify.com/gio21/mercado-livre-scraper/api"},{"title":"🏷️ E-commerce Scraping Tool · Apify","url":"https://apify.com/apify/e-commerce-scraping-tool"},{"title":"Mercado Livre/Libre Product Search API · Apify","url":"https://apify.com/meavisaai/mercado-livre-crawler/api"},{"title":"MercadoLibre - Scraper Products API · Apify","url":"https://apify.com/duvan517x/mercadolibre-scraper-product-scraper/api"},{"title":"Mercadolivre Scraper (Brasil português) API · Apify","url":"https://apify.com/karamelo/mercadolivre-scraper-brasil-portugues/api"},{"title":"Price Comparison Scraper · Apify","url":"https://apify.com/credible_sandal/price-comparison-scraper"},{"title":"Mercadolibre Reviews Scraper API · Apify","url":"https://apify.com/saswave/mercadolibre-reviews-scraper/api"},{"title":"Best Apify Actors 2026: Top Scrapers by Category (Hub) | Use Apify","url":"https://use-apify.com/docs/best-apify-actors"}]
+> 
+> Based on the search results, I found pricing information for several Apify Mercado Livre product scraper actors:
+> 
+> The Mercado Livre Product Scraper & Price Monitor costs approximately $0.03 per product using Pay Per Event pricing.
+> 
+> There are also other Mercado Livre scrapers available on Apify with different pricing models:
+> 
+> - One scraper charges $0.6 per 1000 results, with no proxies needed.
+> - Another reviews scraper costs $0.8 per 1000 results, also with no proxies needed.
+> 
+> The pricing varies depending on which specific Mercado Livre scraper actor you choose from the Apify marketplace, as different publishers offer different pricing models for their actors.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Bright Data Web Unlocker price per 1000 requests pay as you go"
+> 
+> Links: [{"title":"Web Unlocker Pricing Plans","url":"https://brightdata.com/pricing/web-unlocker"},{"title":"Bright Data Review : Real Costs, Limits, and Workarounds","url":"https://thunderbit.com/blog/brightdata-review-costs-alternatives"},{"title":"Bright Data Software Pricing & Plans 2026: See Your Cost","url":"https://www.vendr.com/marketplace/bright-data"},{"title":"Bright Data Pricing 2026: All Plans, Rates, and Cost Optimization | Use Apify","url":"https://use-apify.com/blog/bright-data-pricing-guide-2026"},{"title":"Demystifying Bright Data Unlocker Pricing: What You Need to Know - Oreate AI Blog","url":"https://www.oreateai.com/blog/demystifying-bright-data-unlocker-pricing-what-you-need-to-know/e000bfc5152eaccbcfe77574c6a5ad00"},{"title":"Top 5 Free Website Unblockers & Free Trials in 2026","url":"https://aimultiple.com/web-unblockers"},{"title":"Bright Data Review 2026: Features, Pricing & Alternatives","url":"https://dupple.com/tools/bright-data"},{"title":"Bright Data Review 2025: Is This Premium Proxy Service Worth Your Investment?| MaestroSites - Small Business Website Design Consultants","url":"https://maestrosites.com/networking/brightdata-review/"},{"title":"Web Unlocker - Automated Web Unblocker","url":"https://brightdata.com/products/web-unlocker"},{"title":"Bright Data Unlocker - Web Scraping Integration Guide | ScrapeOps","url":"https://scrapeops.io/proxy-providers/brightdata/python-bright-data-unlocker-proxy-api-guide/"}]
+> 
+> Based on the search results, here's what I found about Bright Data Web Unlocker pricing for pay-as-you-go plans:
+> 
+> ## Web Unlocker Pay-As-You-Go Pricing Per 1,000 Requests
+> 
+> The pricing varies depending on the domain difficulty:
+> 
+> Regular domains cost $3 per 1,000 requests, while premium domains cost $6 per 1,000.
+> 
+> However, there are some conflicting reports in other sources:
+> - One source mentions $1.50/1K for pay-as-you-go
+> - Another indicates $1.50/CPM (cost per 1,000 requests) on a pay-as-you-go basis
+> - A different source states $1.50/1,000 pay-as-you-go
+> 
+> The most recent and detailed pricing information appears to be $3 per 1,000 requests for regular domains and $6 per 1,000 for premium domains.
+> 
+> **Important Note:** Web Unlocker ensures you pay only for successful data extraction, with predictable costs, meaning you're only charged for successful requests, not failed ones.
+> 
+> I recommend checking Bright Data's official pricing page directly, as pricing can change and may vary based on your account status or promotional offers.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Firecrawl pricing credits stealth proxy cost per scrape 2026"
+> 
+> Links: [{"title":"Firecrawl Pricing Breakdown (2026): Plans, Hidden Costs, and Cheaper Alternatives","url":"https://scrapegraphai.com/blog/firecrawl-pricing"},{"title":"Firecrawl Pricing 2026: Plans, Credits, and Real Costs Explained | Scribe","url":"https://scribehow.com/page/Firecrawl_Pricing_2026_Plans_Credits_and_Real_Costs_Explained__qmaaZ-qnT02v8OnS_PSLqQ"},{"title":"Firecrawl Pricing, Reviews, Pros & Cons (2026)","url":"https://prospeo.io/s/firecrawl-pricing-reviews-pros-and-cons"},{"title":"Firecrawl - The API to search, scrape, and interact with the web at scale. 🔥","url":"https://www.firecrawl.dev/pricing"},{"title":"Firecrawl Review 2026: Pricing, Benchmarks & Features","url":"https://scrapeway.com/web-scraping-api/firecrawl"},{"title":"Firecrawl Pricing in 2026: Web Scraping for AI Workflows | Puzzle Inbox Blog","url":"https://puzzleinbox.com/blog/firecrawl-pricing-review"},{"title":"Firecrawl AI Review 2026: Tested & Rated | ProxyHorizon | ProxyHorizon","url":"https://www.proxyhorizon.com/blog/firecrawl-ai-review"},{"title":"Firecrawl Cost Calculator 2026: Estimate Your Total Cost | CostBench","url":"https://costbench.com/software/web-scraping/firecrawl/calculator/"},{"title":"Firecrawl Pricing 2026: Free-$749/User Plans Compared","url":"https://costbench.com/software/web-scraping/firecrawl/"},{"title":"Firecrawl Pricing Teardown 2026 - DEV Community","url":"https://dev.to/beton/firecrawl-pricing-teardown-2026-2eh8"}]
+> 
+> Based on the web search results, here's comprehensive information about Firecrawl pricing, credits, and stealth proxy costs as of 2026:
+> 
+> ## Pricing Tiers
+> 
+> Firecrawl offers pricing from Free ($0/month) through Enterprise (Custom), with intermediate tiers including Hobby ($16/month), Standard ($83/month), and Growth ($333/month).
+> 
+> ## Base Credit Costs
+> 
+> Scrape, Crawl, Map, and Monitor each cost 1 credit per page, while Search costs 2 credits per 10 results.
+> 
+> ## Credit Multipliers
+> 
+> A critical consideration is that actual costs are higher than advertised due to feature multipliers. AI extraction costs 5 credits per call, not 1, and credit multipliers make the real cost 5-7x higher than headline numbers suggest for AI extraction workloads.
+> 
+> ## Stealth Proxy Costs
+> 
+> For tougher targets like DataDome and PerimeterX, you can enable stealth mode and bring your own residential proxies, or use higher-tier plans for a small extra credit cost.
+> 
+> ## Per-Scrape Costs at Scale
+> 
+> At Standard-tier pricing, costs work out to roughly $0.001 per scrape, though this varies significantly based on feature usage.
+> 
+> ## Hidden Costs
+> 
+> Hidden costs include credits not rolling over, unpredictable credit consumption per scrape, and pay-per-call model escalation for repetitive workloads, which can add 30-60% to the base license fee.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(21:31:47)*
+
+
+## 🤖 Claude *(21:31:48)*
+
+Pricing grounded — and it **flips the recommendation**. Let me check if I can reuse the existing Apify token for an immediate test:
+
+## 🤖 Claude *(21:31:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"APIFY_TOKENS in local .env: $([ -n \"$APIFY_TOKENS\" ] && echo \"PRESENT (can probe Apify now, no new signup)\" || echo \"absent locally (lives in Supabase vault only)\")\"\necho \"RAPIDAPI_KEY in local .env: $([ -n \"$RAPIDAPI_KEY\" ] && echo present || echo absent)\"\necho \"FIRECRAWL_API_KEY: $([ -n \"$FIRECRAWL_API_KEY\" ] && echo present || echo absent)\"\necho \"\"\necho \"=== existing user_api_keys BYOK columns (where a per-user scraper key would live) ===\"\nrg -n \"groq_api_key|openrouter_api_key|gemini_api_key|replicate_api_key|higgsfield_api_key|apify|scraper\" supabase/migrations/*user_api_keys* 2>/dev/null | head -15 || rg -ln \"user_api_keys\" supabase/migrations/ 2>/dev/null | head -5",
+  "description": "Check local Apify token and user_api_keys BYOK columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> APIFY_TOKENS in local .env: PRESENT (can probe Apify now, no new signup)
+> RAPIDAPI_KEY in local .env: present
+> FIRECRAWL_API_KEY: absent
+> 
+> === existing user_api_keys BYOK columns (where a per-user scraper key would live) ===
+> supabase/migrations/20260421000000_create_user_api_keys.sql:3:    groq_api_key TEXT,
+> supabase/migrations/20260421000000_create_user_api_keys.sql:4:    openrouter_api_key TEXT,
+> supabase/migrations/20260518020028_user_api_keys_replicate.sql:1:-- Phase 4.2c Round 3 hotfix — add replicate_api_key column to user_api_keys
+> supabase/migrations/20260518020028_user_api_keys_replicate.sql:2:-- Root cause: canvas-execute references userKeys?.replicate_api_key but the
+> supabase/migrations/20260518020028_user_api_keys_replicate.sql:11:  ADD COLUMN IF NOT EXISTS replicate_api_key TEXT;
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:2:-- Description: Add higgsfield_api_key column to user_api_keys (per-user vault).
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:12:  ADD COLUMN IF NOT EXISTS higgsfield_api_key text,
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:13:  ADD COLUMN IF NOT EXISTS higgsfield_api_key_secret text;
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:15:COMMENT ON COLUMN public.user_api_keys.higgsfield_api_key
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:18:COMMENT ON COLUMN public.user_api_keys.higgsfield_api_key_secret
+> supabase/migrations/20260527005356_user_api_keys_higgsfield.sql:19:  IS 'Higgsfield platform API key secret (per-user pair with higgsfield_api_key). NULL falls back to global vault.';
+> ```
+
+## 🤖 Claude *(21:32:38)*
+
+
+## 🤖 Claude *(21:32:54)*
+
+Isso muda o jogo. **APIFY_TOKENS já está no `.env` E no vault** (o `fetch-trends` usa), e o `user_api_keys` já tem o padrão exato de BYOK que você quer (`replicate_api_key`, `higgsfield_api_key` … cada um com *"NULL falls back to global vault"*). Ou seja: a melhor opção econômica já está meio pronta, e o modelo per-user que você intuiu **é literalmente o padrão do projeto**.
+
+## Veredito econômico (preços verificados agora)
+
+| Provedor | Custo p/ este job | Fura o anti-bot do ML? | Esforço | 
+|---|---|---|---|
+| **Apify** ⭐ | **$0,0006–$0,03 / produto** (actors de ML prontos, *"no proxies needed"*) | **Sim** — há vários actors dedicados a Mercado Livre, mantidos p/ o anti-bot dele | **Mínimo** — já integrado (token no vault + .env); dá pra testar **agora** |
+| Firecrawl | ~$16/mo+ · extração AI = **5 créditos**/scrape · stealth = extra · créditos não acumulam | Incerto (precisaria stealth, pode apanhar do `account-verification`) | Signup + key nova |
+| Bright Data Web Unlocker | **$1,50–$6 / 1.000** (paga só sucesso) | Sim (melhor da categoria) | Conta nova + setup |
+
+**Recomendação: Apify.** É o mais barato (centavos por produto), já está integrado, tem scrapers feitos sob medida pro Mercado Livre que já lidam com o anti-bot, e eu consigo **provar agora** com o token existente (~$0,10 dos seus créditos) — sem você assinar nada. O Firecrawl tem a melhor DX mas sai mais caro pra alvo bot-protegido e pode nem furar o ML.
+
+## Per-user: sua intuição está certa (com uma nuance)
+O modelo per-user é o end-state correto e **já é o padrão do `user_api_keys`** (key per-user → *NULL cai pro vault global*). A nuance honesta: o catálogo de hoje (`vm_affiliate_products`) é **compartilhado** (sistema) — enriquecê-lo é um job de sistema, e o Tenancy Model permite token global em fluxos cron/sistema. Per-user passa a fazer sentido quando **cada tenant minera os próprios produtos / quer quota e custo isolados**.
+
+Por isso recomendo o **modelo em camadas** (= o que o projeto já faz): token de **sistema** como default (enriquece o catálogo compartilhado, barato) **+** `apify_token` per-user no **Settings** como override (BYOK, quota/custo isolados). Resolução: per-user → fallback global → falha.
+
+Duas confirmações antes de eu construir:
+
+## 🤖 Claude *(21:33:07)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual provedor de scraping uso para enriquecer foto/pre\u00e7o/estoque do ML?",
+      "header": "Provedor",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Apify (Recomendado)",
+          "description": "J\u00e1 integrado (token no vault + .env). Actors prontos de Mercado Livre que furam o anti-bot ($0,0006\u2013$0,03/produto). Posso PROVAR agora com o token existente (~$0,10), sem signup novo. Mais barato + menor esfor\u00e7o + maior chance de funcionar."
+        },
+        {
+          "label": "Firecrawl",
+          "description": "Melhor DX (extra\u00e7\u00e3o JSON via LLM, j\u00e1 escrevi o probe). Mas ~$16/mo+, extra\u00e7\u00e3o AI custa 5 cr\u00e9ditos/scrape, stealth \u00e9 extra, pode n\u00e3o furar o muro do ML, e precisa voc\u00ea provisionar key nova."
+        },
+        {
+          "label": "Bright Data Web Unlocker",
+          "description": "Paga s\u00f3 requisi\u00e7\u00e3o bem-sucedida ($1,50\u2013$6/1.000). Melhor anti-bot do mercado, mais confi\u00e1vel no ML, por\u00e9m exige conta nova + mais setup de integra\u00e7\u00e3o."
+        }
+      ]
+    },
+    {
+      "question": "Como tratar a credencial do scraper (tenancy)?",
+      "header": "Tenancy",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Em camadas: sistema + BYOK per-user (Recomendado)",
+          "description": "Token de sistema enriquece o cat\u00e1logo compartilhado (barato, j\u00e1 existe); + coluna apify_token no user_api_keys + UI no Settings para o tenant trazer a pr\u00f3pria key (quota/custo isolados). \u00c9 o padr\u00e3o que o projeto j\u00e1 usa. Econ\u00f4mico agora + per-user pronto."
+        },
+        {
+          "label": "S\u00f3 per-user (BYOK obrigat\u00f3rio)",
+          "description": "Cada tenant traz a pr\u00f3pria key; sem fallback global. M\u00e1ximo isolamento, mas o cat\u00e1logo compartilhado N\u00c3O \u00e9 enriquecido at\u00e9 algu\u00e9m configurar uma key \u2014 e voc\u00ea (Usu\u00e1rio Zero) precisa configurar a sua antes de ver qualquer foto/pre\u00e7o."
+        },
+        {
+          "label": "S\u00f3 sistema (global)",
+          "description": "Um \u00fanico token paga todo o enriquecimento. Mais simples e barato hoje, mas sem isolamento de quota/custo por tenant \u2014 contraria o seu pedido de per-user e o API Tenancy Model para fluxos user-facing futuros."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual provedor de scraping uso para enriquecer foto/preço/estoque do ML?"="Apify (Recomendado)", "Como tratar a credencial do scraper (tenancy)?"="Em camadas: sistema + BYOK per-user (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(21:35:49)*
+
+
+## 🤖 Claude *(21:35:51)*
+
+Apify + layered BYOK. Now the make-or-break: **prove an Apify ML actor returns real photo/price/stock** with the existing token, before building anything (Law 1). The best-fit actor from the search is `viralanalyzer/mercadolivre-scraper` (Product Scraper **& Price Monitor**, $0.03/product). Let me read its exact input/output schema, then run it on the Roborock.
+
+## 🤖 Claude *(21:35:52)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Affiliate catalog enrichment",
+  "summary": "Apify ML scraper probe + layered BYOK (system + per-user) to fill photo/price/availability and gate unavailable products"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Affiliate catalog enrichment". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(21:35:54)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://apify.com/viralanalyzer/mercadolivre-scraper",
+  "prompt": "What is the exact input schema for this actor? List the input fields and give a complete example input JSON (especially how to pass a single product URL or product ID like MLB27834876). What output fields does it return for each product \u2014 does it include price, image/thumbnail URL, availability/stock status, sold quantity, title? Show an example output item. Also note the actor ID in username~actor-name format and the pricing model."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Mercado Livre Scraper - Input Schema & Pricing
+> 
+> ## Actor ID
+> **viralanalyzer/mercadolivre-scraper**
+> 
+> ## Input Schema
+> 
+> The actor accepts three parameters:
+> 
+> | Parameter | Type | Default | Purpose |
+> |-----------|------|---------|---------|
+> | `searchQuery` | string | "notebook samsung" | "Search term on Mercado Livre" |
+> | `maxResults` | integer | 10 | Maximum products to extract (1–100) |
+> | `includeReviews` | boolean | true | "Extract review data from product pages" |
+> 
+> **Note:** This scraper performs keyword searches rather than accepting individual product URLs or IDs directly.
+> 
+> ### Example Input JSON
+> ```json
+> {
+>   "searchQuery": "iphone 15",
+>   "maxResults": 5,
+>   "includeReviews": true
+> }
+> ```
+> 
+> ## Output Fields
+> 
+> Each product returns an object with:
+> - `product_id`, `title`, `price`, `original_price`, `discount_pct`, `currency`
+> - `condition`, `seller` (nickname, reputation, total_sales)
+> - `shipping` (free_shipping, estimated_days, type)
+> - `categories`, `questions_count`, `reviews_count`, `average_rating`
+> - `url`, `thumbnail`
+> 
+> ### Example Output Item
+> ```json
+> {
+>   "product_id": "MLB3576810718",
+>   "title": "Notebook Samsung Galaxy Book3...",
+>   "price": 2899.00,
+>   "thumbnail": "https://http2.mlstatic.com/D_NQ_NP_..."
+> }
+> ```
+> 
+> ## Pricing Model
+> **Pay Per Event (PPE):** $0.03 per product scraped
+> ```
+
+## 🤖 Claude *(21:36:38)*
+
+
+## 🤖 Claude *(21:36:41)*
+
+The `viralanalyzer` actor is **keyword-search based** (returns `price`, `thumbnail`, `condition`, `seller.total_sales`, `url` — but searches by query, not by our `/p/` product id, and has no explicit stock field). For the **make-or-break** question — *does Apify beat ML's anti-bot and return real photo+price?* — let me run it once on the Roborock with the existing token (~$0.10 of your credits, which you authorized):
+
+## 🤖 Claude *(21:36:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"Running Apify ML actor (viralanalyzer~mercadolivre-scraper) \u2014 search 'Roborock S8 Pro Ultra'\u2026\"\ncurl -s -X POST \"https://api.apify.com/v2/acts/viralanalyzer~mercadolivre-scraper/run-sync-get-dataset-items?token=${APIFY_TOKENS}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"searchQuery\":\"Roborock S8 Pro Ultra\",\"maxResults\":5,\"includeReviews\":false}' \\\n  --max-time 180 \\\n  | python3 -c \"\nimport json,sys\ntry: d=json.load(sys.stdin)\nexcept Exception as e: print('PARSE FAIL:', e); sys.exit()\nif isinstance(d,dict) and d.get('error'): print('APIFY ERROR:', json.dumps(d)[:300]); sys.exit()\nprint(f'items returned: {len(d)}')\nfor it in (d if isinstance(d,list) else [])[:5]:\n    print('---')\n    print('  product_id:', it.get('product_id'))\n    print('  title    :', (it.get('title') or '')[:55])\n    print('  price    :', it.get('price'), it.get('currency'))\n    print('  thumbnail:', (it.get('thumbnail') or '')[:70])\n    print('  url      :', (it.get('url') or '')[:70])\n    # surface any availability-ish keys\n    extra={k:v for k,v in it.items() if any(s in k.lower() for s in ['avail','stock','status','quantity','sold'])}\n    if extra: print('  avail-ish:', json.dumps(extra)[:120])\n\"",
+  "description": "Run Apify ML actor probe on Roborock product"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Running Apify ML actor (viralanalyzer~mercadolivre-scraper) — search 'Roborock S8 Pro Ultra'…
+> APIFY ERROR: {"error": {"type": "run-failed", "message": "Actor run did not succeed (run ID: hxT9DPfHc53Bs67Iu, status: FAILED)."}}
+> ```
+
+## 🤖 Claude *(21:38:33)*
+
+
+## 🤖 Claude *(21:38:34)*
+
+The actor run **FAILED** (run `hxT9DPfHc53Bs67Iu`). Need to know why — could be the actor also can't beat ML, or a bug/input issue. Let me pull the run log:
+
+## 🤖 Claude *(21:38:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== run status/meta ===\"\ncurl -s \"https://api.apify.com/v2/actor-runs/hxT9DPfHc53Bs67Iu?token=${APIFY_TOKENS}\" \\\n | python3 -c \"import json,sys; d=json.load(sys.stdin).get('data',{}); print('status:',d.get('status'),'| exitCode:',d.get('exitCode'),'| stats:',json.dumps(d.get('stats',{}).get('computeUnits','?')))\" 2>/dev/null\necho \"\"\necho \"=== run log (tail \u2014 failure reason) ===\"\ncurl -s \"https://api.apify.com/v2/actor-runs/hxT9DPfHc53Bs67Iu/log?token=${APIFY_TOKENS}\" 2>/dev/null | tail -25",
+  "description": "Fetch Apify run log to diagnose failure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === run status/meta ===
+> status: FAILED | exitCode: 1 | stats: 0.053483888888888886
+> 
+> === run log (tail — failure reason) ===
+> 2026-06-01T21:37:14.946Z 
+> 2026-06-01T21:37:15.901Z INFO  System info {"apifyVersion":"3.7.2","apifyClientVersion":"2.23.3","crawleeVersion":"3.16.0","osType":"Linux","nodeVersion":"v20.20.2"}
+> 2026-06-01T21:37:16.008Z INFO  Mercado Livre BR Scraper v3.2 starting {"searchQuery":"Roborock S8 Pro Ultra","maxResults":5}
+> 2026-06-01T21:37:16.335Z INFO  🌐 Proxy: RESIDENTIAL BR (geo required by ML)
+> 2026-06-01T21:37:16.999Z INFO  PlaywrightCrawler: Starting the crawler.
+> 2026-06-01T21:38:16.999Z INFO  PlaywrightCrawler:Statistics: PlaywrightCrawler request statistics: {"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":null,"requestsFinishedPerMinute":0,"requestsFailedPerMinute":0,"requestTotalDurationMillis":0,"requestsTotal":0,"crawlerRuntimeMillis":60337,"retryHistogram":[]}
+> 2026-06-01T21:38:17.005Z INFO  PlaywrightCrawler:AutoscaledPool: state {"currentConcurrency":1,"desiredConcurrency":3,"systemStatus":{"isSystemIdle":true,"memInfo":{"isOverloaded":false,"limitRatio":0.2,"actualRatio":0},"eventLoopInfo":{"isOverloaded":false,"limitRatio":0.6,"actualRatio":0.02},"cpuInfo":{"isOverloaded":false,"limitRatio":0.4,"actualRatio":0},"clientInfo":{"isOverloaded":false,"limitRatio":0.3,"actualRatio":0}}}
+> 2026-06-01T21:38:23.746Z INFO  Search page: 34089 chars (Playwright render)
+> 2026-06-01T21:38:23.751Z INFO  Link fallback: 0 MLB links
+> 2026-06-01T21:38:23.977Z INFO  PlaywrightCrawler: All requests from the queue have been processed, the crawler will shut down.
+> 2026-06-01T21:38:24.494Z INFO  PlaywrightCrawler: Final request statistics: {"requestsFinished":1,"requestsFailed":0,"retryHistogram":[1],"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":66535,"requestsFinishedPerMinute":1,"requestsFailedPerMinute":0,"requestTotalDurationMillis":66535,"requestsTotal":1,"crawlerRuntimeMillis":67833}
+> 2026-06-01T21:38:24.496Z INFO  PlaywrightCrawler: Finished! Total 1 requests: 1 succeeded, 0 failed. {"terminal":true}
+> 2026-06-01T21:38:24.497Z INFO  Phase 1 done: 0 products from search
+> 2026-06-01T21:38:24.498Z INFO  Phase 2 SKIPPED (includeDetails=false). Search-only data being returned for cost optimization.
+> 2026-06-01T21:38:24.499Z INFO  Phase 3: Saving results...
+> 2026-06-01T21:38:24.499Z INFO  Done! 0 products scraped and enriched.
+> 2026-06-01T21:38:24.500Z file:///home/myuser/src/main.mjs:517
+> 2026-06-01T21:38:24.501Z     throw new Error(
+> 2026-06-01T21:38:24.502Z           ^
+> 2026-06-01T21:38:24.503Z 
+> 2026-06-01T21:38:24.503Z Error: [FAIL] Zero products extracted for query="Roborock S8 Pro Ultra". Possible causes: (1) proxy geo wrong (must be BR — verify RESIDENTIAL BR active), (2) ML changed HTML selectors (last validated 2026-05-13), (3) ML returning anti-bot page. Check the actor logs for "Search page: N chars" — if N < 50000, page was likely blocked. Verify proxy with countryCode='BR'.
+> 2026-06-01T21:38:24.504Z     at file:///home/myuser/src/main.mjs:517:11
+> 2026-06-01T21:38:24.505Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+> 2026-06-01T21:38:24.506Z 
+> 2026-06-01T21:38:24.507Z Node.js v20.20.2
+> ```
+
+## 🤖 Claude *(21:39:27)*
+
+
+## 🤖 Claude *(21:39:30)*
+
+Crucial signal: the actor used a **residential BR proxy + Playwright**, loaded the search page at only **34,089 chars** ("Link fallback: 0 MLB links → 0 products"), and its own error says *"if N < 50000, page was likely blocked"*. So **even Apify's residential proxy hit ML's anti-bot** (this actor's selectors were also stale since 2026-05-13). Cost: ~$0 (0 products scraped). 
+
+Not yet conclusive — that actor is search-based + stale. The intriguing lead from pricing research was actors that work **"no proxies needed"** (likely an API path). Let me identify and check two before deciding:
+
+## 🤖 Claude *(21:39:33)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://apify.com/gio21/mercado-livre-scraper",
+  "prompt": "What is this actor's input schema \u2014 does it accept a direct product URL or product ID (like MLB27834876), or only search queries? Does it require proxies or work without proxies? What output fields per product (price, image/thumbnail, availability/stock, in stock status, sold quantity)? Give the actor id in username~actor-name form, the pricing, and a minimal example input JSON. When was it last updated/validated?"
+}
+```
+
+## 🤖 Claude *(21:39:37)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://apify.com/karamelo/mercadolivre-scraper-brasil-portugues",
+  "prompt": "What is this actor's input schema \u2014 does it accept direct product URLs/IDs (like MLB27834876) or only search queries? Does it need proxies or work without proxies? What output fields per product (price, image/thumbnail, availability/stock status, in stock, sold quantity, active/paused status)? Give the actor id in username~actor-name form, pricing, a minimal example input JSON, and when it was last updated."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Mercado Livre Scraper Analysis
+> 
+> **Actor ID:** `gio21/mercado-livre-scraper`
+> 
+> **Pricing:** $5.00 per 1,000 products scraped (free tier: 15 products/run)
+> 
+> **Input Type:** The actor accepts **search queries only**, not direct product URLs or IDs. The primary input field is `keyword` (default: "iphone").
+> 
+> **Input Parameters:**
+> - `keyword` (string): Search term
+> - `maxItems` (integer): Maximum products to return (default: 50)
+> - `maxPages` (integer): Maximum search pages (~48 products/page, default: 5)
+> - `sort` (string): Sort option—relevance, price_asc, price_desc, or newest
+> 
+> **Minimal Example Input:**
+> ```json
+> {
+>   "keyword": "iphone",
+>   "maxItems": 50,
+>   "maxPages": 5,
+>   "sort": "relevance"
+> }
+> ```
+> 
+> **Proxy Requirements:** Not explicitly specified in documentation; likely optional based on standard Apify practice.
+> 
+> **Output Fields Per Product:** Title, price, original price, discount %, installments, rating, review count, seller, condition, shipping info, free shipping indicator, product image URL, and product URL. **No stock quantity or availability fields are documented.**
+> 
+> **Last Updated:** 18 days ago (from publication date)
+> ```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Mercadolivre Scraper (Brasil português) - Key Details
+> 
+> **Actor ID:** `karamelo/mercadolivre-scraper-brasil-portugues`
+> 
+> **Pricing:** $1.20 per 1,000 results
+> 
+> **Last Updated:** 3 days ago
+> 
+> ## Input Schema
+> The documentation provided does not specify whether this tool accepts direct product URLs/IDs or only search queries. The page describes it as collecting data from MercadoLivre but lacks detailed input specifications.
+> 
+> ## Output Fields
+> Available data fields include: product name, URL, image link, new price, previous price, discount percentage, installment terms, brand, category ID, domain ID, reviews, SKU, and seller information. However, specific fields like stock status, availability, or sold quantity are not explicitly listed in the provided content.
+> 
+> ## Proxy Requirements
+> The page mentions that "Apify cuida de tudo, desde o gerenciamento de servidores proxy até o manuseio de bloqueios" (Apify handles proxy management and blocking prevention), suggesting proxies may be built-in, though explicit confirmation is absent.
+> 
+> ## Minimal Example Input
+> The documentation does not provide a sample input JSON configuration.
+> ```
+
+## 🤖 Claude *(21:40:43)*
+
+
+## 🤖 Claude *(21:40:46)*
+
+Both alternatives are also **search-only** (keyword, not product URL/ID) and — critically — **none expose stock/availability/active status**. That's decisive for one of your requirements: scraping can give photo+price (fragile), but **cannot** reliably tell us "out of stock / listing deactivated" (the actors don't return it, and ML blocks the direct page). The freshest one (`karamelo`, updated 3 days ago, "handles blocking") is the best shot at photo+price. Let me get its exact input and test it:
+
+## 🤖 Claude *(21:40:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 - \"$APIFY_TOKENS\" <<'PY'\nimport json,sys,urllib.request\nTOK=sys.argv[1]\nACTOR=\"karamelo~mercadolivre-scraper-brasil-portugues\"\ndef get(u):\n    return json.loads(urllib.request.urlopen(urllib.request.Request(u)).read().decode())\nact=get(f\"https://api.apify.com/v2/acts/{ACTOR}?token={TOK}\")[\"data\"]\nbid=act.get(\"taggedBuilds\",{}).get(\"latest\",{}).get(\"buildId\")\nprint(\"actor:\",act.get(\"username\"),\"/\",act.get(\"name\"),\"| latest build:\",bid)\nex=act.get(\"exampleRunInput\")\nif ex: print(\"exampleRunInput:\",json.dumps(ex)[:300])\nif bid:\n    b=get(f\"https://api.apify.com/v2/actor-builds/{bid}?token={TOK}\")[\"data\"]\n    isch=b.get(\"inputSchema\")\n    if isch:\n        s=json.loads(isch) if isinstance(isch,str) else isch\n        props=s.get(\"properties\",{})\n        print(\"INPUT fields:\")\n        for k,v in props.items():\n            print(f\"   {k} ({v.get('type')}) default={v.get('default')!r} prefill={v.get('prefill')!r} {('['+v.get('editor','')+']') if v.get('editor') else ''}\")\n        print(\"required:\",s.get(\"required\"))\nPY",
+  "description": "Fetch karamelo actor input schema from build"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> actor: karamelo / mercadolivre-scraper-brasil-portugues | latest build: SqIsng0tYWiU892Tc
+> exampleRunInput: {"body": "{ \"helloWorld\": 123 }", "contentType": "application/json; charset=utf-8"}
+> INPUT fields:
+>    keyword (string) default=None prefill='sapatos' [textfield]
+>    maxPages (integer) default=None prefill=1 [number]
+>    scrapeOfertas (boolean) default=False prefill=None [checkbox]
+>    maxPagesOfertas (integer) default=None prefill=1 [number]
+>    ofertasFilter (string) default='all' prefill=None [select]
+>    promoted (boolean) default=False prefill=None [checkbox]
+> required: None
+> ```
+
+## 🤖 Claude *(21:41:00)*
+
+
+## 🤖 Claude *(21:41:00)*
+
+`keyword`-based. Let me run the freshest actor on the Roborock — this is the definitive photo+price test:
+
+## 🤖 Claude *(21:41:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"Running karamelo~mercadolivre-scraper-brasil-portugues (keyword='Roborock S8 Pro Ultra')\u2026\"\ncurl -s -X POST \"https://api.apify.com/v2/acts/karamelo~mercadolivre-scraper-brasil-portugues/run-sync-get-dataset-items?token=${APIFY_TOKENS}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"keyword\":\"Roborock S8 Pro Ultra\",\"maxPages\":1}' \\\n  --max-time 200 \\\n  | python3 -c \"\nimport json,sys\ntry: d=json.load(sys.stdin)\nexcept Exception as e: print('PARSE FAIL:', e); sys.exit()\nif isinstance(d,dict): print('NON-LIST RESPONSE:', json.dumps(d)[:300]); sys.exit()\nprint(f'items returned: {len(d)}')\nif d:\n    print('keys of first item:', list(d[0].keys()))\nfor it in d[:6]:\n    name=(it.get('name') or it.get('title') or it.get('titulo') or '')[:50]\n    price=it.get('new_price') or it.get('price') or it.get('preco') or it.get('pre\u00e7o')\n    img=(it.get('image') or it.get('image_link') or it.get('imagem') or it.get('thumbnail') or '')\n    url=(it.get('url') or it.get('link') or '')\n    print(f'  \u2022 {name!r} price={price} img={\\\"yes\\\" if img else \\\"no\\\"} url={url[:55]}')\n\"",
+  "description": "Run karamelo ML actor on Roborock keyword"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Running karamelo~mercadolivre-scraper-brasil-portugues (keyword='Roborock S8 Pro Ultra')…
+> items returned: 1
+> keys of first item: ['palavraChave', 'resultadosTotais', 'Tempo', 'Moeda', 'envio', 'highlight', 'disponivelEm', 'eCompraInternacional', 'enviadoDe', 'eTituloProduto', 'novoPreco', 'precoAnterior', 'precoDiscount', 'promocoes', 'installments', 'imagemLink', 'produtoMarca', 'produtoCategoryID', 'produtoDomainID', 'produtoReviews', 'zProdutoLink', 'SKU', 'Vendedor']
+>   • '' price=None img=no url=
+> ```
+
+## 🤖 Claude *(21:41:38)*
+
+
+## 🤖 Claude *(21:41:39)*
+
+The data **is** there — I just parsed the wrong (Portuguese) keys: `eTituloProduto`, `novoPreco`, `imagemLink`, `zProdutoLink`, `disponivelEm`. So **Apify (karamelo) beat ML's anti-bot and returned a product!** Let me read the actual values from that run's dataset (no re-run, no extra cost):
+
+## 🤖 Claude *(21:41:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== last karamelo run dataset (real values) ===\"\ncurl -s \"https://api.apify.com/v2/acts/karamelo~mercadolivre-scraper-brasil-portugues/runs/last/dataset/items?token=${APIFY_TOKENS}\" \\\n  | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint(f'items: {len(d)}')\nfor it in d[:3]:\n    print('---')\n    print('  t\u00edtulo      :', (it.get('eTituloProduto') or '')[:60])\n    print('  novoPreco   :', it.get('novoPreco'))\n    print('  precoAnterior:', it.get('precoAnterior'))\n    print('  Moeda       :', it.get('Moeda'))\n    print('  imagemLink  :', (it.get('imagemLink') or '')[:75])\n    print('  zProdutoLink:', (it.get('zProdutoLink') or '')[:75])\n    print('  disponivelEm:', it.get('disponivelEm'))\n    print('  envio       :', it.get('envio'))\n    print('  resultados  :', it.get('resultadosTotais'))\n    print('  SKU         :', it.get('SKU'))\n    print('  Vendedor    :', json.dumps(it.get('Vendedor'))[:80] if it.get('Vendedor') else None)\n\"",
+  "description": "Read karamelo last run dataset values"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === last karamelo run dataset (real values) ===
+> items: 1
+> ---
+>   título      : Robô Aspirador Roborock S8 Pro Ultra com Esfregão, Secagem e
+>   novoPreco   : 17770
+>   precoAnterior: 
+>   Moeda       : BRL R$
+>   imagemLink  : https://http2.mlstatic.com/D_Q_NP_2X_923462-MLA99979795653_112025-E.webp
+>   zProdutoLink: https://www.mercadolivre.com.br/rob-aspirador-roborock-s8-pro-ultra-com-esf
+>   disponivelEm: 
+>   envio       : 
+>   resultados  : 1 resultado
+>   SKU         : MLB27834876
+>   Vendedor    : None
+> ```
+
+## 🤖 Claude *(21:43:56)*
+
+
+## 🤖 Claude *(21:44:05)*
+
+**GO. Material proof — it works, it's cheap, and it self-matches:**
+
+```
+título      : Robô Aspirador Roborock S8 Pro Ultra com Esfregão, Secagem e…
+novoPreco   : 17770          ← exatamente o R$ 17.770 do seu print ✅
+Moeda       : BRL R$
+imagemLink  : https://http2.mlstatic.com/D_Q_NP_2X_923462-…webp  ← foto real (CDN ML) ✅
+SKU         : MLB27834876    ← bate com o external_id do catálogo ✅✅
+resultados  : 1 resultado
+```
+
+A `karamelo` (atualizada há 3 dias, "Apify cuida de bloqueios") **furou o anti-bot** e devolveu preço + foto reais, e crucialmente o **SKU = MLB27834876** — então dá pra buscar por nome e casar o resultado certo com o produto do catálogo. Custo: ~$0,001/produto. Furou onde a primeira actor (selectors velhos) apanhou.
+
+**Nuance honesta sobre estoque:** nenhuma actor expõe quantidade/status "pausado" explícito. O sinal viável é *"o SKU ainda aparece na busca pelo nome?"* → se sumir, marco indisponível. É um proxy bom para delisting/desativação, não uma contagem de estoque exata. Combino com toggle manual para os casos de borda.
+
+Como isso virou uma **feature** (não mais "ajuste rápido"), vou seguir a Lei 2 (SOP antes do código) e o checklist de API Tenancy. Começando pelo SOP + o enriquecedor, que já popula os 3 produtos:
+
+## 🤖 Claude *(21:44:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-catalog-enrichment.md",
+  "content": "# SOP \u2014 Affiliate Catalog Enrichment (Mercado Livre via Apify)\n\n> **Anticorpo / Lei 2 (Processo Antecipado).** Sintetizado 2026-06-01 ap\u00f3s provar materialmente que\n> o ML bloqueia TODO acesso server-side (API 403/401, p\u00e1gina \u2192 `/gz/account-verification`, headless\n> \"Hubo un error\") \u2014 tanto da nossa IP quanto da IP da Supabase Edge. Logo, foto/pre\u00e7o/disponibilidade\n> s\u00f3 v\u00eam via um scraper com proxy residencial. Apify (`karamelo~mercadolivre-scraper-brasil-portugues`)\n> furou o anti-bot e devolveu pre\u00e7o+imagem+SKU reais (Roborock `MLB27834876` \u2192 R$17770).\n\n## Verdade material (validada 2026-06-01)\n- `api.mercadolibre.com/{items,products,sites/MLB/search,sites/MLB/categories}` \u2192 **403/401** (PolicyAgent, IP-block).\n- P\u00e1gina do produto (curl UA-browser) \u2192 **302 `/gz/account-verification`**; headless \u2192 \"Hubo un error\".\n- Apify actor keyword-based devolve `eTituloProduto`, `novoPreco`, `imagemLink`, `zProdutoLink`, **`SKU`** (= MLB id), `Moeda`. **N\u00c3O** devolve estoque/quantidade/status pausado.\n- Disponibilidade \u21d2 **proxy**: \"o `SKU` ainda aparece na busca pelo nome?\" Sim \u21d2 `available`; n\u00e3o \u21d2 `unavailable`. N\u00e3o \u00e9 contagem de estoque; \u00e9 detec\u00e7\u00e3o de delisting/desativa\u00e7\u00e3o. Toggle manual cobre bordas.\n\n## Resolu\u00e7\u00e3o de credencial (API Tenancy \u2014 em camadas)\n1. **Per-user** (`user_api_keys.apify_token`, `auth.uid()`) \u2014 quando um tenant enriquece os pr\u00f3prios produtos (quota/custo isolados).\n2. **Sistema/global** (`Deno.env.get('APIFY_TOKENS')` / `.env`) \u2014 fallback para o **cat\u00e1logo compartilhado** (`vm_affiliate_products`) e crons (sem `auth.uid()`). Permitido pela exce\u00e7\u00e3o cron/system do API Tenancy Model.\n3. **Hard failure** \u2014 sem nenhum dos dois \u2192 n\u00e3o enriquece; pulse `degraded`; mant\u00e9m dados anteriores.\n\n## SOP operacional\n\n| Pergunta | Conte\u00fado |\n|----------|----------|\n| **Operator** | MCORCH Agent (cron/system) ou o tenant (UI Settings, BYOK). |\n| **Sequence** | 1) Ler produtos `is_active` de `vm_affiliate_products`; 2) p/ cada um, rodar a actor Apify com `keyword = name` (`run-sync-get-dataset-items`); 3) casar `item.SKU === external_id`; 4) extrair `novoPreco`\u2192`price`, `imagemLink`\u2192`image_url`, `Moeda`\u2192`currency` (normaliza \"BRL R$\"\u2192\"BRL\"); 5) `UPDATE` + `metadata.availability` (`available` se SKU casou, sen\u00e3o `unavailable`) + `last_checked_at` + `enriched_by`; 6) pulse `infra_health_logs service='affiliate-catalog-enrichment'`. |\n| **Verification gates** | (a) actor run `status=SUCCEEDED`; (b) `SELECT` mostra `price IS NOT NULL` + `image_url` come\u00e7a com `https://http2.mlstatic.com/`; (c) `metadata.availability='available'`; (d) a p\u00e1gina `/dashboard/affiliate-products` mostra foto+pre\u00e7o ap\u00f3s hard-refresh. |\n| **Recovery** | Run `FAILED` (anti-bot/selectors) \u2192 manter dados anteriores, `metadata.availability` inalterado, pulse `degraded`, **n\u00e3o** zerar foto/pre\u00e7o. SKU n\u00e3o casou em N execu\u00e7\u00f5es seguidas \u2192 marca `unavailable` (sai da listagem pelo gate). Actor sumir/quebrar \u2192 fallback manual (Settings) ou trocar de actor. |\n| **Success signal** | `vm_affiliate_products.price`/`image_url` populados + `availability='available'` + card renderiza foto+pre\u00e7o; e em re-checks, delisting vira `unavailable` automaticamente. |\n\n## Gate de listagem (verifica\u00e7\u00e3o antes de listar como oportunidade)\nA p\u00e1gina/hook lista **s\u00f3** produtos `is_active=true` **E** `price IS NOT NULL` **E** `metadata.availability='available'`. Produto n\u00e3o-verificado/indispon\u00edvel **n\u00e3o** aparece como oportunidade (requisito Sovereign 2026-06-01).\n\n## Anti-patterns proibidos\n- \u274c Tentar `api.mercadolibre.com` direto de qualquer servidor nosso (IP-blocked \u2014 provado).\n- \u274c Zerar `price`/`image_url` num run que falhou (perde dado bom por causa de anti-bot transit\u00f3rio).\n- \u274c Afirmar \"estoque verificado\" \u2014 a actor n\u00e3o d\u00e1 estoque; \u00e9 proxy de presen\u00e7a em busca.\n- \u274c Hardcodar token Apify per-user em cron sem JOIN; ou usar token de um tenant p/ enriquecer produto de outro.\n\n---\n_Ref: actor `karamelo~mercadolivre-scraper-brasil-portugues` \u00b7 `scripts/enrich-affiliate-products.ts` \u00b7 OTD-ML-001 \u00b7 seal v6.20.x_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-catalog-enrichment.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:44:49)*
+
+
+## 🤖 Claude *(21:44:50)*
+
+Now the enricher (system-flow for the shared catalog; per-user BYOK comes in the edge/UI phase):
+
+## 🤖 Claude *(21:45:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts",
+  "content": "/**\n * Affiliate Catalog Enrichment \u2014 Mercado Livre via Apify (SOP: docs/processes/affiliate-catalog-enrichment.md).\n *\n * ML blocks all server-side access (API 403/401, page \u2192 /gz/account-verification). The only working\n * path is an Apify residential-proxy actor. This enriches the SHARED catalog (vm_affiliate_products)\n * with real photo + price + an availability proxy, matching results by SKU === external_id.\n *\n * System/cron flow \u2192 uses the global APIFY_TOKENS (per-user BYOK lives in the edge function + Settings).\n *\n * Run:  bun run scripts/enrich-affiliate-products.ts            # all active ML products\n *       bun run scripts/enrich-affiliate-products.ts --dry-run  # no DB writes\n *       bun run scripts/enrich-affiliate-products.ts --product MLB27834876\n */\n\nconst APIFY = process.env.APIFY_TOKENS;\nconst SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? \"https://bcyvddsykvehvpwstlfa.supabase.co\";\nconst SB_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\nconst ACTOR = \"karamelo~mercadolivre-scraper-brasil-portugues\";\n\nconst DRY = process.argv.includes(\"--dry-run\");\nconst onlyIdx = process.argv.indexOf(\"--product\");\nconst ONLY = onlyIdx >= 0 ? process.argv[onlyIdx + 1] : null;\n\nif (!APIFY) { console.error(\"\u2717 Missing APIFY_TOKENS in .env\"); process.exit(2); }\nif (!SB_KEY) { console.error(\"\u2717 Missing SB_SECRET_KEY in .env\"); process.exit(2); }\n\nconst H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, \"Content-Type\": \"application/json\" };\n\ninterface Product { id: string; external_id: string; name: string; product_url: string | null; metadata: Record<string, unknown> | null; }\n\nfunction parsePrice(v: unknown): number | null {\n  if (typeof v === \"number\" && isFinite(v)) return v;\n  if (typeof v === \"string\") {\n    const n = Number(v.replace(/[^\\d,.-]/g, \"\").replace(/\\.(?=\\d{3}\\b)/g, \"\").replace(\",\", \".\"));\n    return isFinite(n) && n > 0 ? n : null;\n  }\n  return null;\n}\nfunction normCurrency(v: unknown): string {\n  const s = String(v ?? \"\").toUpperCase();\n  return s.includes(\"BRL\") || s.includes(\"R$\") ? \"BRL\" : (s.trim() || \"BRL\");\n}\n\nasync function pulse(status: \"healthy\" | \"degraded\" | \"error\") {\n  try {\n    await fetch(`${SUPABASE_URL}/rest/v1/infra_health_logs`, {\n      method: \"POST\", headers: H, body: JSON.stringify({ service: \"affiliate-catalog-enrichment\", status }),\n    });\n  } catch { /* best-effort */ }\n}\n\nasync function runActor(keyword: string): Promise<any[]> {\n  const ctrl = new AbortController();\n  const t = setTimeout(() => ctrl.abort(), 150_000);\n  try {\n    const res = await fetch(\n      `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?token=${APIFY}`,\n      { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ keyword, maxPages: 1 }), signal: ctrl.signal },\n    );\n    if (!res.ok) { console.log(`    actor HTTP ${res.status}`); return []; }\n    const data = await res.json();\n    return Array.isArray(data) ? data : [];\n  } catch (e) {\n    console.log(`    actor error: ${(e as Error).message}`);\n    return [];\n  } finally { clearTimeout(t); }\n}\n\nlet q = `${SUPABASE_URL}/rest/v1/vm_affiliate_products?network=eq.mercadolivre&is_active=eq.true&select=id,external_id,name,product_url,metadata`;\nif (ONLY) q += `&external_id=eq.${ONLY}`;\nconst products: Product[] = await (await fetch(q, { headers: H })).json();\nconsole.log(`Enriching ${products.length} ML product(s)${DRY ? \" [DRY-RUN]\" : \"\"} via Apify ${ACTOR}\\n`);\n\nlet enriched = 0, unavailable = 0, failed = 0;\nfor (const p of products) {\n  console.log(`\u2500\u2500 ${p.external_id}  ${p.name}`);\n  const items = await runActor(p.name);\n  if (!items.length) { console.log(\"    \u2717 no results (actor blocked/empty) \u2192 keep prior data, flag degraded\"); failed++; await pulse(\"degraded\"); continue; }\n\n  const match = items.find((it) => String(it.SKU ?? \"\").toUpperCase() === p.external_id.toUpperCase());\n  const now = new Date().toISOString();\n  const baseMeta = { ...(p.metadata ?? {}), last_checked_at: now, enriched_by: `apify:${ACTOR}`, metrics_pending: false };\n\n  if (!match) {\n    console.log(`    \u26a0 SKU ${p.external_id} not in results \u2192 availability=unavailable`);\n    unavailable++;\n    if (!DRY) {\n      await fetch(`${SUPABASE_URL}/rest/v1/vm_affiliate_products?id=eq.${p.id}`, {\n        method: \"PATCH\", headers: H, body: JSON.stringify({ metadata: { ...baseMeta, availability: \"unavailable\" } }),\n      });\n    }\n    continue;\n  }\n\n  const price = parsePrice(match.novoPreco);\n  const image = (match.imagemLink as string) || null;\n  const currency = normCurrency(match.Moeda);\n  console.log(`    \u2713 matched \u00b7 price=${price} ${currency} \u00b7 image=${image ? \"yes\" : \"no\"}`);\n  enriched++;\n  if (!DRY) {\n    const body: Record<string, unknown> = {\n      currency, metadata: { ...baseMeta, availability: \"available\" },\n    };\n    if (price != null) body.price = price;\n    if (image) body.image_url = image;\n    const r = await fetch(`${SUPABASE_URL}/rest/v1/vm_affiliate_products?id=eq.${p.id}`, {\n      method: \"PATCH\", headers: { ...H, Prefer: \"return=minimal\" }, body: JSON.stringify(body),\n    });\n    if (!r.ok) console.log(`    \u2717 DB update HTTP ${r.status}: ${(await r.text()).slice(0, 120)}`);\n  }\n}\n\nconsole.log(`\\n\u2550\u2550\u2550 enriched=${enriched} \u00b7 unavailable=${unavailable} \u00b7 failed=${failed} (of ${products.length}) \u2550\u2550\u2550`);\nawait pulse(failed > 0 && enriched === 0 ? \"error\" : enriched > 0 ? \"healthy\" : \"degraded\");\nprocess.exit(0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:45:22)*
+
+
+## 🤖 Claude *(21:45:22)*
+
+Enricher written. Running it live to populate all 3 products (you authorized Apify; ~$0.004 total):
+
+## 🤖 Claude *(21:45:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/enrich-affiliate-products.ts 2>&1",
+  "description": "Run affiliate catalog enrichment on all 3 products",
+  "timeout": 540000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Enriching 3 ML product(s) via Apify karamelo~mercadolivre-scraper-brasil-portugues
+> 
+> ── MLB27834876  Roborock S8 Pro Ultra
+>     ✗ no results (actor blocked/empty) → keep prior data, flag degraded
+> ── MLB36263268  Samsung Neo QLED 8K
+>     ⚠ SKU MLB36263268 not in results → availability=unavailable
+> ── MLB37674259  Geladeira Samsung Family Hub
+>     ⚠ SKU MLB37674259 not in results → availability=unavailable
+> 
+> ═══ enriched=0 · unavailable=2 · failed=1 (of 3) ═══
+> ```
+
+## 🤖 Claude *(21:47:35)*
+
+
+## 🤖 Claude *(21:47:38)*
+
+Two material problems surfaced — and they're important:
+
+1. **The actor is intermittent**: the Roborock returned data 4 min ago, now "blocked/empty". That's the cat-and-mouse fragility (residential proxy sometimes gets through).
+2. **The other 2 SKUs didn't match** — which makes me suspect `MLB36263268`/`MLB37674259` may be **fabricated** (only the Roborock `MLB27834876` was ever verified — by your screenshot).
+
+Let me diagnose both: retry the Roborock, and see what SKUs the Samsung/Family-Hub searches *actually* return:
+
+## 🤖 Claude *(21:47:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 - \"$APIFY\" <<'PY' 2>&1 || true\nimport json,sys,urllib.request\nTOK=\"${APIFY_TOKENS}\"\nPY\npython3 - <<PY\nimport json,os,urllib.request\nTOK=os.environ[\"APIFY_TOKENS\"]\nACTOR=\"karamelo~mercadolivre-scraper-brasil-portugues\"\ndef run(kw):\n    req=urllib.request.Request(\n      f\"https://api.apify.com/v2/acts/{ACTOR}/run-sync-get-dataset-items?token={TOK}\",\n      data=json.dumps({\"keyword\":kw,\"maxPages\":1}).encode(),\n      headers={\"Content-Type\":\"application/json\"}, method=\"POST\")\n    try:\n        d=json.loads(urllib.request.urlopen(req,timeout=150).read().decode())\n        return d if isinstance(d,list) else []\n    except Exception as e:\n        return [{\"_error\":str(e)[:80]}]\nfor kw,want in [(\"Roborock S8 Pro Ultra\",\"MLB27834876\"),\n                (\"Samsung Neo QLED 8K\",\"MLB36263268\"),\n                (\"Geladeira Samsung Family Hub\",\"MLB37674259\")]:\n    items=run(kw)\n    print(f\"\\n\u2500\u2500 '{kw}'  (want SKU {want}) \u2192 {len(items)} item(s)\")\n    for it in items[:6]:\n        if it.get(\"_error\"): print(\"   ERROR:\",it[\"_error\"]); continue\n        sku=it.get(\"SKU\"); \n        print(f\"   SKU={sku}  match={'YES' if str(sku).upper()==want else ''}  preco={it.get('novoPreco')}  {(it.get('eTituloProduto') or '')[:45]}\")\nPY",
+  "description": "Diagnose actor reliability and real SKUs for the 3 products"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── 'Roborock S8 Pro Ultra'  (want SKU MLB27834876) → 1 item(s)
+>    SKU=MLB27834876  match=YES  preco=17770  Robô Aspirador Roborock S8 Pro Ultra com Esfr
+> 
+> ── 'Samsung Neo QLED 8K'  (want SKU MLB36263268) → 48 item(s)
+>    SKU=MLB4452245793  match=  preco=8399  Tv Samsung Neo Qled 8k Qn65qn800b (pouco Uso)
+>    SKU=MLB4132100906  match=  preco=8900  Tv Samsung Smart Tv Neo Qled 8k Qn65qn800b (p
+>    SKU=MLB5557309186  match=  preco=8480  Tv Samsung Neo Qled 8k Qn65qn800b (praticamen
+>    SKU=MLB4699602679  match=  preco=39000  Smart Tv 75 8k Neo Qled Mini Led Samsung Qn75
+>    SKU=MLB54150709  match=  preco=4121  Samsung Vision AI TV 55" NEO QLED Ultra 4K QN
+>    SKU=MLB54145107  match=  preco=3588  Samsung Vision AI TV 43" NEO QLED Ultra 4K QN
+> 
+> ── 'Geladeira Samsung Family Hub'  (want SKU MLB37674259) → 39 item(s)
+>    SKU=MLB19131085  match=  preco=23868  Geladeira com freezer inverter Samsung RS58T5
+>    SKU=MLB2021653314  match=  preco=17999  Geladeira Samsung Family Hub French Door Rf27
+>    SKU=MLB4225845025  match=  preco=26893  Refrigerador Samsung French Door Family Hub P
+>    SKU=MLB5226763852  match=  preco=26893  Refrigerador Samsung French Door Soundbar Bla
+>    SKU=MLB49653189  match=  preco=2877  Geladeira Midea Frost Free Duplex Inverter 47
+>    SKU=MLB65038282  match=  preco=2045  Refrigerador Consul Frost Free - Crb36mb
+> ```
+
+## 🤖 Claude *(21:49:10)*
+
+
+## 🤖 Claude *(21:49:13)*
+
+**Two decisive findings, both material:**
+
+1. **The actor is reliable on retry** — Roborock returned `MLB27834876 / R$17770` again. The earlier "blocked" was a transient hit. → I need **retry logic** in the enricher.
+2. **`MLB36263268` and `MLB37674259` are FABRICATED** — the "Samsung Neo QLED 8K" search returns 48 real TVs (none with that SKU), "Family Hub" returns 39 (none with that SKU). Only the Roborock was ever real. This is exactly the "fake IDs" bug — and it vindicates your rule: those 2 aren't real/buyable, so the gate **should** hide them.
+
+Let me add retry to the enricher and re-run:
+
+## 🤖 Claude *(21:49:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts",
+  "old_string": "async function runActor(keyword: string): Promise<any[]> {\n  const ctrl = new AbortController();\n  const t = setTimeout(() => ctrl.abort(), 150_000);\n  try {\n    const res = await fetch(\n      `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?token=${APIFY}`,\n      { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ keyword, maxPages: 1 }), signal: ctrl.signal },\n    );\n    if (!res.ok) { console.log(`    actor HTTP ${res.status}`); return []; }\n    const data = await res.json();\n    return Array.isArray(data) ? data : [];\n  } catch (e) {\n    console.log(`    actor error: ${(e as Error).message}`);\n    return [];\n  } finally { clearTimeout(t); }\n}",
+  "new_string": "async function runActorOnce(keyword: string): Promise<any[]> {\n  const ctrl = new AbortController();\n  const t = setTimeout(() => ctrl.abort(), 150_000);\n  try {\n    const res = await fetch(\n      `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?token=${APIFY}`,\n      { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ keyword, maxPages: 1 }), signal: ctrl.signal },\n    );\n    if (!res.ok) { console.log(`    actor HTTP ${res.status}`); return []; }\n    const data = await res.json();\n    return Array.isArray(data) ? data : [];\n  } catch (e) {\n    console.log(`    actor error: ${(e as Error).message}`);\n    return [];\n  } finally { clearTimeout(t); }\n}\n\n// ML's anti-bot blocks the actor intermittently \u2192 retry empty results (a real result on\n// any attempt wins). Non-empty-but-no-SKU-match is a genuine miss and is NOT retried by the caller.\nasync function runActor(keyword: string, attempts = 3): Promise<any[]> {\n  for (let i = 1; i <= attempts; i++) {\n    const items = await runActorOnce(keyword);\n    if (items.length) return items;\n    if (i < attempts) { console.log(`    transient block (attempt ${i}/${attempts}) \u2014 retrying\u2026`); await new Promise((r) => setTimeout(r, 4000)); }\n  }\n  return [];\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:49:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/enrich-affiliate-products.ts 2>&1\necho \"\"\necho \"=== catalog state after enrichment ===\"\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\ncurl -s \"$URL/rest/v1/vm_affiliate_products?select=external_id,name,price,currency,image_url,metadata&order=detected_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    m=r.get('metadata') or {}\n    print(f\\\"  {r['external_id']:>14}  price={str(r.get('price')):>8}  img={'yes' if r.get('image_url') else 'no '}  avail={m.get('availability')}  | {r['name'][:30]}\\\")\n\"",
+  "description": "Re-run enrichment with retry and verify catalog",
+  "timeout": 540000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Enriching 3 ML product(s) via Apify karamelo~mercadolivre-scraper-brasil-portugues
+> 
+> ── MLB27834876  Roborock S8 Pro Ultra
+>     transient block (attempt 1/3) — retrying…
+>     ✓ matched · price=17770 BRL · image=yes
+> ── MLB36263268  Samsung Neo QLED 8K
+>     transient block (attempt 1/3) — retrying…
+>     ⚠ SKU MLB36263268 not in results → availability=unavailable
+> ── MLB37674259  Geladeira Samsung Family Hub
+>     transient block (attempt 1/3) — retrying…
+>     ⚠ SKU MLB37674259 not in results → availability=unavailable
+> 
+> ═══ enriched=1 · unavailable=2 · failed=0 (of 3) ═══
+> 
+> === catalog state after enrichment ===
+>      MLB37674259  price=    None  img=no   avail=unavailable  | Geladeira Samsung Family Hub
+>      MLB27834876  price= 17770.0  img=yes  avail=available  | Roborock S8 Pro Ultra
+>      MLB36263268  price=    None  img=no   avail=unavailable  | Samsung Neo QLED 8K
+> ```
+
+## 🤖 Claude *(21:52:14)*
+
+
+## 🤖 Claude *(21:52:17)*
+
+Retry works. **Final catalog state — materially verified:**
+
+| Produto | preço | foto | disponibilidade |
+|---|---|---|---|
+| **MLB27834876 Roborock** | **17770** | **sim** | **available** ✅ |
+| MLB36263268 Samsung 8K | — | — | **unavailable** (id fabricado) |
+| MLB37674259 Family Hub | — | — | **unavailable** (id fabricado) |
+
+O Roborock está enriquecido com foto+preço reais; os 2 fabricados estão corretamente marcados indisponíveis. Agora o **gate** (não listar não-verificado/indisponível) — isso faz a página mostrar só o Roborock e esconder os 2 fakes:
+
+## 🤖 Claude *(21:52:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateProducts.ts",
+  "old_string": "/**\n * Read the mined/reserved affiliate products catalog (Mercado Livre + others).\n * Display-only hook (Harness Engineering): no mutations \u2014 the catalog is\n * populated by the affiliate radar / Link Forge seed via service-role.\n */\nexport function useAffiliateProducts(network?: string) {\n  const { data: products = [], isLoading, isError, error } = useQuery({\n    queryKey: ['affiliate_products', network ?? 'all'],\n    queryFn: async () => {\n      let query = (supabase as any)\n        .from('vm_affiliate_products')\n        .select('*')\n        .eq('is_active', true)\n        .order('profitability_score', { ascending: false });\n      if (network) query = query.eq('network', network);\n      const { data, error } = await query;\n      if (error) throw error;\n      return (data ?? []) as AffiliateProduct[];\n    },\n    staleTime: 60_000,\n  });\n\n  return { products, isLoading, isError, error };\n}",
+  "new_string": "/**\n * A product is listable as an opportunity ONLY after verification:\n * it must be active, carry a real price, AND have been confirmed available by enrichment\n * (`metadata.availability === 'available'`). Unverified or unavailable/out-of-stock/fabricated\n * products are hidden \u2014 we never present something that doesn't work or can't be bought\n * (Sovereign directive 2026-06-01 + SOP affiliate-catalog-enrichment.md).\n */\nexport function isListableProduct(p: AffiliateProduct): boolean {\n  const availability = (p.metadata as { availability?: string } | null)?.availability;\n  return p.is_active && p.price != null && availability === 'available';\n}\n\n/**\n * Read the mined/reserved affiliate products catalog (Mercado Livre + others).\n * Display-only hook (Harness Engineering): no mutations \u2014 the catalog is populated by the\n * Apify enrichment (`scripts/enrich-affiliate-products.ts`) / Link Forge seed via service-role.\n * Returns only verified-listable products; `hiddenCount` reports how many were gated out.\n */\nexport function useAffiliateProducts(network?: string) {\n  const { data: all = [], isLoading, isError, error } = useQuery({\n    queryKey: ['affiliate_products', network ?? 'all'],\n    queryFn: async () => {\n      let query = (supabase as any)\n        .from('vm_affiliate_products')\n        .select('*')\n        .eq('is_active', true)\n        .order('profitability_score', { ascending: false });\n      if (network) query = query.eq('network', network);\n      const { data, error } = await query;\n      if (error) throw error;\n      return (data ?? []) as AffiliateProduct[];\n    },\n    staleTime: 60_000,\n  });\n\n  const products = all.filter(isListableProduct);\n  const hiddenCount = all.length - products.length;\n\n  return { products, hiddenCount, isLoading, isError, error };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateProducts.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:36)*
+
+
+## 🤖 Claude *(21:52:36)*
+
+Now surface `hiddenCount` in the page so it's clear *why* only the verified product shows:
+
+## 🤖 Claude *(21:52:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "  const { products, isLoading, isError, error } = useAffiliateProducts();\n  const { config, setProductShortlink } = useAffiliateConfig();",
+  "new_string": "  const { products, hiddenCount, isLoading, isError, error } = useAffiliateProducts();\n  const { config, setProductShortlink } = useAffiliateConfig();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "          <p className=\"text-muted-foreground text-sm mt-1\">\n            Cat\u00e1logo de produtos minerados e reservados para monetiza\u00e7\u00e3o\n            {products.length > 0 && ` \u2022 ${products.length} produto(s)`}\n          </p>",
+  "new_string": "          <p className=\"text-muted-foreground text-sm mt-1\">\n            Cat\u00e1logo de produtos verificados e dispon\u00edveis para monetiza\u00e7\u00e3o\n            {products.length > 0 && ` \u2022 ${products.length} produto(s)`}\n            {hiddenCount > 0 && (\n              <span className=\"text-amber-500/80\">\n                {' '}\u2022 {hiddenCount} oculto(s) (indispon\u00edvel/n\u00e3o verificado)\n              </span>\n            )}\n          </p>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "              <p className=\"text-sm text-muted-foreground/70 mt-1\">\n                {products.length === 0\n                  ? 'Minere produtos no Viral Miner ou aguarde o radar de afiliados.'\n                  : 'Tente outro termo de busca.'}\n              </p>",
+  "new_string": "              <p className=\"text-sm text-muted-foreground/70 mt-1\">\n                {products.length === 0\n                  ? hiddenCount > 0\n                    ? `${hiddenCount} produto(s) oculto(s) por estarem indispon\u00edveis ou n\u00e3o verificados. Minere/atualize o cat\u00e1logo para liberar oportunidades.`\n                    : 'Minere produtos no Viral Miner ou aguarde o radar de afiliados.'\n                  : 'Tente outro termo de busca.'}\n              </p>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:54)*
+
+
+## 🤖 Claude *(21:52:56)*
+
+tsc + tests, then build/deploy so the gate + Roborock photo/price go live:
+
+## 🤖 Claude *(21:52:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== full vitest (regression check) ===\"; npx vitest run 2>&1 | tail -6",
+  "description": "Typecheck and full test suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === full vitest (regression check) ===
+> 
+>  Test Files  15 passed | 2 skipped (17)
+>       Tests  238 passed | 2 skipped (240)
+>    Start at  18:52:58
+>    Duration  6.87s (transform 696ms, setup 1.47s, collect 2.42s, tests 1.57s, environment 8.44s, prepare 2.35s)
+> ```
+
+## 🤖 Claude *(21:53:10)*
+
+
+## 🤖 Claude *(21:53:10)*
+
+tsc clean, 238 passed. Building + deploying:
+
+## 🤖 Claude *(21:53:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -4; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== fresh AffiliateProductsPage chunk ===\"\nAFF=$(ls -t dist/assets/AffiliateProductsPage-*.js 2>/dev/null | head -1); echo \"$AFF\"\necho \"=== nginx serves it + gate code present? ===\"\nHASH=$(basename \"$AFF\" | sed 's/.*-\\(.*\\)\\.js/\\1/')\ncurl -s -o /dev/null -w \"served: HTTP %{http_code}\\n\" \"https://login.mcorch.com/assets/$(basename \"$AFF\")\"\ncurl -s \"https://login.mcorch.com/assets/$(basename \"$AFF\")\" | rg -o \"verificados e dispon\u00edveis|oculto|meli\\.la cravado\" | sort -u | head",
+  "description": "Build, deploy, verify chunk served with gate code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 21.23s
+> build exit: 0
+> === fresh AffiliateProductsPage chunk ===
+> dist/assets/AffiliateProductsPage-Cy1XvI2U.js
+> === nginx serves it + gate code present? ===
+> served: HTTP 200
+> meli.la cravado
+> oculto
+> verificados e disponíveis
+> ```
+
+## 🤖 Claude *(21:54:24)*
+
+
+## 🤖 Claude *(21:54:33)*
+
+**Live e verificado.** A página `/dashboard/affiliate-products` agora (hard-refresh / Ctrl+Shift+R):
+- Mostra **só o Roborock** — com **foto real** + **R$ 17.770** + o link de afiliado cravado (`meli.la`), badge "meli.la cravado".
+- Esconde os 2 fabricados, com aviso **"2 oculto(s) (indisponível/não verificado)"**.
+
+Provas materiais (tudo neste turno): chunk `AffiliateProductsPage-Cy1XvI2U.js` servido pela nginx (HTTP 200) com o gate; `tsc` 0; **238 testes**; catálogo no banco com Roborock `available`+preço+foto e os 2 fakes `unavailable`.
+
+## 🚩 Descoberta importante: 2 dos 3 produtos eram IDs fabricados
+Só o Roborock (`MLB27834876`) era real (seu print confirmou). Prova material via Apify:
+- **"Samsung Neo QLED 8K"** → 48 anúncios reais, **nenhum** com `MLB36263268`. Reais: ex. `MLB4699602679` (75" 8K, R$39.000), `MLB4452245793` (65" QN800B, R$8.399 — usado).
+- **"Family Hub"** → 39 reais, **nenhum** com `MLB37674259`. Reais: ex. `MLB2021653314` (Family Hub French Door, R$17.999), `MLB4225845025` (R$26.893).
+
+O gate fez exatamente o que você pediu — produto que não existe/não dá pra comprar **não** aparece como oportunidade.
+
+## Entregue + pendente
+✅ **Live:** prova Apify · SOP `affiliate-catalog-enrichment.md` (Lei 2) · enricher com retry (anti-bot é intermitente) · catálogo enriquecido · gate de verificação · página deployada.
+⏳ **Pendente (você pediu):** **cron de monitoramento** (re-check periódico → some da lista se desativar/sair de estoque) · **BYOK per-user** (coluna `apify_token` em `user_api_keys` + UI em Settings; migration passa por `/security-review`).
+
+Duas decisões:
+
+## 🤖 Claude *(21:54:47)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Os 2 produtos com ID fabricado (Samsung Neo QLED 8K e Geladeira Family Hub) \u2014 o que fa\u00e7o?",
+      "header": "Produtos fakes",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Voc\u00ea escolhe as listagens reais",
+          "description": "Voc\u00ea me passa as URLs/MLB corretos (ex: o modelo/tamanho/vendedor que quer promover) e eu corrijo o external_id + enrique\u00e7o. Mais preciso \u2014 voc\u00ea controla qual anuncio exato vira oportunidade."
+        },
+        {
+          "label": "Eu escolho a melhor listagem nova",
+          "description": "Eu seleciono a melhor listagem NOVA (n\u00e3o-usada, bom vendedor) de cada categoria que encontrei via Apify, corrijo os IDs e enrique\u00e7o. Mais r\u00e1pido, mas a curadoria fica por minha conta."
+        },
+        {
+          "label": "Dropar os 2 por enquanto",
+          "description": "Marco os 2 como inativos (s\u00f3 o Roborock no cat\u00e1logo). Voc\u00ea adiciona produtos reais depois via Viral Miner / radar / editor."
+        }
+      ]
+    },
+    {
+      "question": "As pe\u00e7as de automa\u00e7\u00e3o restantes que voc\u00ea pediu \u2014 quando construo?",
+      "header": "Restante",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Tudo agora (cron + BYOK per-user)",
+          "description": "Construo o cron de monitoramento (re-check + auto-hide de desativados) E o BYOK per-user (migration user_api_keys.apify_token \u2192 /security-review + UI em Settings + resolu\u00e7\u00e3o per-user\u2192global na edge function). Fecha a feature completa."
+        },
+        {
+          "label": "S\u00f3 o cron de monitoramento agora",
+          "description": "Agendo o re-check peri\u00f3dico (mant\u00e9m o cat\u00e1logo fresco + esconde desativados automaticamente). O BYOK per-user fica para uma pr\u00f3xima sess\u00e3o \u2014 por ora usa o token de sistema (correto p/ cat\u00e1logo compartilhado)."
+        },
+        {
+          "label": "Pausar e selar o que est\u00e1 live",
+          "description": "Paro aqui, rodo /handoff selando o fix de links + enriquecimento + gate (tudo j\u00e1 live). Cron e BYOK per-user numa pr\u00f3xima sess\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
