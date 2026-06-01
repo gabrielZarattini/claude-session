@@ -4512,6 +4512,369 @@ Para fechar o ciclo do piloto falta o mapeamento **MÓDULO C**: ao receber o web
 
 Quer que eu já emende o **MÓDULO C** (buscar o pagamento + creditar), ou prefere primeiro setar o segredo e testar a assinatura, e aí seguimos?
 
+## 👤 User *(23:39:13)*
+
+Estou criando a aplicação agora no mercado pago. E tenho as seguintes opções, vejo que podemos inclusive deixar o stripe para o futuro e somente para pagamentos em moedas internacionais talvez caso o mercado pago não seja melhor com taxas mais baixas, mas isso é assunto para o futuro.:
+
+Selecione como quer receber pagamentos na loja
+3 de 4
+
+
+
+Mais usado 🔥
+
+Integração fácil
+
+Checkout Pro
+
+Experiência pré-desenhada
+
+Seus clientes pagam no ambiente do Mercado Pago
+
+Aceita cartões e outros meios de pagamento
+
+Não aceita pagamentos recorrentes
+
+Integração intermediária
+
+Checkout Bricks
+
+Checkout modular e flexível
+
+Integre apenas os bricks que precisar
+
+Aceita cartões e outros meios de pagamento
+
+Aceita pagamentos recorrentes
+
+Integração avançada
+
+Checkout Transparente
+
+Experiência personalizável
+
+Seus clientes pagam dentro da sua loja
+
+Aceita cartões e outros meios de pagamento
+
+Aceita pagamentos recorrentes
+
+
+--
+
+qual devo escolher?
+
+## 🤖 Claude *(23:40:50)*
+
+
+## 🤖 Claude *(23:41:04)*
+
+Resposta curta: **Checkout Bricks.**
+
+Mas antes, uma distinção que importa pra você não se confundir: **essa escolha de "como receber pagamentos" é sobre COBRAR clientes na sua loja (o billing do SaaS no futuro) — é um fluxo diferente do webhook de comissão que acabamos de blindar.** Para pegar a *assinatura secreta* do `handle-ml-postback`, o tipo de checkout **não importa**; você só precisa terminar de criar o app e ir em Webhooks → Configurar notificações. Então qualquer escolha aqui te leva ao secret — mas escolha a que não te trava no futuro.
+
+## Por que Bricks (e não os outros)
+
+| | Recorrência | UX | Esforço/PCI |
+|---|---|---|---|
+| **Checkout Pro** | ❌ **não faz** | redirect pro MP | mínimo |
+| **Checkout Bricks** ✅ | ✅ sim | embutido no seu app | médio, MP cuida do cartão |
+| **Checkout Transparente** | ✅ sim | 100% sua | alto + PCI por sua conta |
+
+1. **Recorrência é obrigatória pra você.** Seus planos (Starter/Pro/Enterprise = mcoCoins) são **assinaturas**. A própria tela diz que o **Pro não aceita pagamentos recorrentes** → isso elimina o Pro. Sobram Bricks e Transparente.
+2. **Bricks combina com sua stack.** MCORCH é React/Vite com Harness Pattern — os Bricks são componentes React embutidos (hook + componente display-only), pagamento dentro da sua loja, **sem redirect**.
+3. **Menos peso de compliance.** O Transparente te dá controle total, mas joga o cartão (PCI) no seu colo e é muito mais trabalho — ganho marginal de UX. Bricks é o meio-termo certo.
+4. **Não limita o webhook.** Webhooks/Payments API funcionam igual em qualquer checkout — a atribuição de receita não depende dessa escolha.
+
+## Sobre o Stripe — seu instinto está certo
+
+Sim: **MP para BRL** (Pix, taxas menores, sem FX) e **Stripe só para internacional/USD** depois é uma estratégia sólida. O Pix sozinho já é vantagem enorme no Brasil (instantâneo, taxa baixa). Mas é decisão de futuro — escolher **Bricks** agora te deixa pronto pra recorrência e billing nacional **sem travar nada**, e o Stripe sandbox fica em débito até você decidir.
+
+**Então:** escolha **Bricks**, finalize a criação do app, e em seguida vá em **Webhooks → Configurar notificações** (URL do `handle-ml-postback` + evento **Pagamentos** → Salvar) pra revelar a **assinatura secreta** que vai no `MP_WEBHOOK_SECRET`. Quando tiver o secret setado, me avisa que eu fecho o **MÓDULO C** (mapear o pagamento → creditar a receita) pra destravar o demo do piloto.
+
+## 👤 User *(23:45:32)*
+
+Configurar notificações Webhooks
+Defina os eventos e o URL para onde serão enviadas. Saiba mais
+
+Modo de teste
+
+Modo de produção
+URL para teste
+https://
+[www.seudominio.com](https://www.seudominio.com)
+Erro
+Revise a URL inserida
+
+Eventos recomendados para integrações com Checkout Bricks
+
+Pagamentos
+
+Vinculação de aplicações
+
+Reclamações
+
+Card Updater
+
+Contestações
+
+Perfil de pago
+
+Outros eventos
+
+Planos e assinaturas
+
+Integrações Point
+
+Delivery (proximity marketplace)
+
+Wallet Connect
+
+Alertas de fraude
+
+Order (Mercado Pago)
+
+Pedidos comerciais
+
+Envios (Mercado Pago)
+
+Self Service
+
+--
+
+Preciso colocar a url de teste tambem seria a mesma de produção?: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback?
+
+## 🤖 Claude *(23:47:13)*
+
+
+## 🤖 Claude *(23:47:25)*
+
+Resposta direta: **sim, pode usar a mesma URL nas duas** (é a mesma função, lida com teste e produção igual) — mas **a que importa pra receita real é a de produção**. Se o campo de teste estiver travando o save com aquele erro, é só por causa do placeholder `www.seudominio.com`; troque pela URL real e o erro some.
+
+## A URL (sem o `?` no final)
+
+```
+https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback
+```
+
+⚠️ **Não** ponha o `?` nem parâmetros no final. O MP **anexa sozinho** o `?data.id=...&type=payment` quando chama — e é exatamente de lá que minha validação lê o `data.id`. Se você já deixar um `?` na config, pode virar `??` e quebrar.
+
+## Eventos: marque só **Pagamentos**
+
+É o evento de receita ("a comissão caiu"). Os outros (Vinculação, Reclamações, Card Updater, Contestações, Perfil de pago) **não** marque — só geram ruído/carga no endpoint. *("Planos e assinaturas" só lá na frente, quando ligarmos o billing SaaS via Bricks.)*
+
+## A ordem certa (pra não cair numa pegadinha)
+
+O secret que setei agora é um **placeholder** → enquanto não for o real do MP, qualquer evento/simulação dá **401**. Faça nesta ordem:
+
+1. Preencha a URL (produção) + marque **Pagamentos** → **Salvar**
+2. O MP gera a **Assinatura secreta** → revele e copie
+3. Sete no vault:
+   ```bash
+   npx supabase secrets set MP_WEBHOOK_SECRET="<assinatura secreta>" --project-ref bcyvddsykvehvpwstlfa
+   ```
+4. **Só então** o botão **Simular** do MP (e os eventos reais) vão passar ✅
+
+Um detalhe honesto: o MP pode gerar **secrets diferentes para teste e produção**. Use o de **produção** no `MP_WEBHOOK_SECRET` (é por onde vem o dinheiro de verdade). Se quiser também usar o **Simular** no modo de teste, me avisa que eu faço a função aceitar os dois secrets (mudança de 2 min). Quando o secret real estiver setado, me chama que eu fecho o **MÓDULO C**.
+
+## 👤 User *(23:50:33)*
+
+fui executar o npxsupabase.: 9
+
+Send to Agent
+
+x
+
+x
+
+8
+
+Send to Agent
+
+x
+
+x
+
+8
+
+Send to Agent
+
+x
+
+index.ts home/gcrUX/htdocs/constellation-orchestra/supabase/functions/optimize-schedule
+x Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations. ts(2307) [Ln 1, Col 30]
+x Cannot find name 'Deno'. ts(2304) [Ln 11, Col 1]
+Parameter 'req' implicitly has an 'any' type. ts(7006) [Ln 11, Col 19]
+Cannot find name 'Deno'. ts(2304) [Ln 25, Col 25]
+Cannot find name 'Deno'. ts(2304) [Ln 26, Col 24]
+x Cannot find name 'Deno'. ts(2304) [Ln 53, Col 47]
+x Cannot find name 'Deno'. ts(2304) [Ln 54, Col 59]
+Cannot find name 'Deno'. ts(2304) [Ln 55, Col 51]
+'err' is of type 'unknown'. ts(18046) [Ln 159, Col 49]
+index.ts home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step
+x Cannot find module 'https://esm.sh/@supabase/supabase-js@2.49.1' or its corresponding type declar ... ts(2307) [Ln 8, Col 30]
+x Cannot find name 'Deno'. ts(2304) [Ln 45, Col 1]
+Parameter 'req' implicitly has an 'any' type. ts(7006) [Ln 45, Col 19]
+x Cannot find name 'Deno'. ts(2304) [Ln 50, Col 24]
+x Cannot find name 'Deno'. ts(2304) [Ln 64, Col 25]
+x Cannot find name 'Deno'. ts(2304) [Ln 108, Col 47]
+Cannot find name 'Deno'. ts(2304) [Ln 109, Col 59]
+Cannot find name 'Deno'. ts(2304) [Ln 110, Col 51]
+index.ts home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-optimize
+x Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations. ts(2307) [Ln 1, Col 30]
+x Cannot find name 'Deno'. ts(2304) [Ln 11, Col 1]
+Parameter 'req' implicitly has an 'any' type. ts(7006) [Ln 11, Col 19]
+Cannot find name 'Deno'. ts(2304) [Ln 20, Col 25]
+Cannot find name 'Deno'. ts(2304) [Ln 21, Col 24]
+x Cannot find name 'Deno'. ts(2304) [Ln 52, Col 47]
+Cannot find name 'Deno'. ts(2304) [Ln 53, Col 59]
+
+--
+
+ubuntu@panel:/$ npx supabase secrets set MP_WEBHOOK_SECRET="CHAVE_REVELADA" --project-ref bcyvddsykvehvpwstlfa
+Need to install the following packages:
+supabase@2.102.0
+Ok to proceed? (y) y
+
+---
+
+E esta travado nisso o terminal.
+
+## 🤖 Claude *(23:51:43)*
+
+
+## 🤖 Claude *(23:51:58)*
+
+Duas coisas diferentes acontecendo aí — vou separar, porque uma é só barulho e a outra tem um atalho.
+
+## 1. Os erros de TypeScript → **ignore, são falso-positivo** ✅
+
+`Cannot find name 'Deno'`, `Cannot find module 'https://esm.sh/...'`, `req implicitly has 'any'` — isso é o **TypeScript do editor (modo Node) reclamando de código Deno**. Edge Functions rodam em **Deno**, onde `Deno`, imports por URL e tudo isso são válidos. O editor não sabe disso e marca como erro.
+
+**Prova material de que não bloqueia nada:** eu já deployei `publish-social` (v28) e `handle-ml-postback` (v22) com sucesso hoje, sob exatamente essas mesmas condições — o bundler do Supabase (Deno) resolve isso de boa. São aviso de IDE, não erro de deploy. (Se quiser silenciar: extensão "Deno" do VS Code + `deno.json` na pasta — mas é cosmético, não precisa agora.)
+
+## 2. O terminal travado → é o `npx` baixando o CLI
+
+Você rodou no servidor `panel` (`ubuntu@panel:/`), onde o supabase CLI não está instalado, então o `npx` está baixando o `supabase@2.102.0` (pode demorar 1-2 min na 1ª vez). Se passar disso e não sair do lugar, **Ctrl+C** e use o atalho abaixo.
+
+## 3. Jeito mais fácil de setar o secret: **pelo Dashboard (sem CLI nenhum)**
+
+Já que o `npx` está travando, não precisa lutar com ele. O secret é **cloud-side** (vale pra qualquer máquina), então:
+
+1. Abra: `https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa`
+2. **Project Settings → Edge Functions → Secrets** (ou na página **Edge Functions → aba Secrets**) → **Add new secret**
+3. Name: `MP_WEBHOOK_SECRET` · Value: **a assinatura secreta revelada no MP** → Save
+
+Pronto — sem instalar nada, sem travar.
+
+⚠️ **Confirme que você colou o valor REAL** (não o texto literal `CHAVE_REVELADA` — imagino que você redigiu isso só pra me mostrar; se digitou literal, troque pelo secret de verdade).
+
+---
+
+Quando setar (por qualquer caminho), me avisa. Eu **verifico materialmente** sem ver o valor — `supabase secrets list` mostra o nome + um *digest* (hash), então consigo confirmar que o `MP_WEBHOOK_SECRET` mudou do placeholder pro real. Aí fecho o **MÓDULO C** (buscar o pagamento no `/v1/payments/{id}` + creditar a receita) e o ciclo do piloto fica completo. Se preferir que **eu** rode o `secrets set` daqui (meu CLI está autenticado), você me passa o valor — mas o Dashboard mantém o secret fora do chat, que é mais limpo.
+
+## 👤 User *(23:54:55)*
+
+a pareceu agora apos reload windows... Finished supabase secrets set. consegue conferir e fazer um teste? Simular notificações
+Teste eventos de Webhooks em sua URL
+
+URL
+
+URL de produção - https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback
+Tipo de evento
+
+Pagamentos
+Data ID
+É a identificação que será enviada no corpo da notificação.
+123456
+
+enviando direto do testador do mercadopago?
+
+## 🤖 Claude *(23:56:25)*
+
+
+## 🤖 Claude *(23:56:27)*
+
+Boa! "Finished supabase secrets set" = o secret entrou. Deixa eu **verificar materialmente** que ele mudou do placeholder (sem ver o valor) — duas provas: o digest do `secrets list` e um re-teste com a assinatura ANTIGA do placeholder (que agora deve dar 401):
+
+## 🤖 Claude *(23:56:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 1. secrets list \u2014 digest do MP_WEBHOOK_SECRET ===\" && npx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"NAME|DIGEST|MP_WEBHOOK_SECRET\" | head\necho \"\"\necho \"=== 2. sha256 do PLACEHOLDER antigo (se o digest acima for IGUAL a isto, ainda \u00e9 placeholder) ===\" && printf '%s' \"PILOT_PLACEHOLDER_SWAP_WITH_REAL_MP_SECRET\" | sha256sum | awk '{print \"placeholder_sha256:\", $1}'\necho \"\"\necho \"=== 3. re-envio assinado com o PLACEHOLDER \u2192 agora deve dar 401 se o secret mudou ===\" && URL=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback?data.id=123456789\"\ncurl -s -m 25 -w \"\\nHTTP:%{http_code}\" -X POST \"$URL\" -H \"x-signature: ts=1730000000,v1=114451089fddb0ae93c09d6a473c2a64dc0ab3b1326c5a229606f21412183192\" -H \"x-request-id: test-req-id-001\" -H \"Content-Type: application/json\" -d '{\"status\":\"cancelled\"}'",
+  "description": "Verify MP_WEBHOOK_SECRET changed from placeholder via digest and 401 re-test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. secrets list — digest do MP_WEBHOOK_SECRET ===
+>    NAME                           | DIGEST                                                           
+>    MP_WEBHOOK_SECRET              | c168312c1b1443f4f472bee7ffa7732110fd028f3e835a66a8f7e4b006f66be9 
+>    WP_USERNAME                    | eb9be987f7b36fc4a3b4cda52a430d32065e8ee59cc0c7ca2be932f098022721 
+> 
+> === 2. sha256 do PLACEHOLDER antigo (se o digest acima for IGUAL a isto, ainda é placeholder) ===
+> placeholder_sha256: d9871071349e9f6b33528b76c42e0400835b4d94bdf50d8457c3b40dd15d4197
+> 
+> === 3. re-envio assinado com o PLACEHOLDER → agora deve dar 401 se o secret mudou ===
+> {"error":"invalid_signature"}
+> HTTP:401
+> ```
+
+## 🤖 Claude *(23:57:45)*
+
+
+## 🤖 Claude *(23:57:55)*
+
+**Verificado materialmente — o secret mudou do placeholder ✅** (sem eu ver o valor):
+- Digest do `MP_WEBHOOK_SECRET` = `c168312c…66be9` · sha256 do placeholder antigo = `d987…4197` → **diferentes**.
+- A assinatura que eu tinha gerado com o placeholder agora retorna **401 invalid_signature** (antes dava 200). Ou seja: o secret antigo morreu, o novo está ativo.
+
+Mas — só o **testador do MP prova que o valor BATE com o do MP**, porque ele assina com o secret real (eu não tenho o valor pra assinar). Então:
+
+## Sim — manda direto do testador do Mercado Pago 👇
+
+Com o que você já tem na tela (URL de produção · evento **Pagamentos** · Data ID **123456**), clique em **Simular** e me cola o que o MP mostrar: **HTTP status + corpo da resposta**.
+
+### O que esperar (pra você não se assustar):
+
+- **HTTP 200** (mesmo que o corpo diga `unresolved_logged`) = **assinatura PASSOU** → secret certo, gate funcionando. 🎉 O "unresolved" é **esperado**: o `123456` é um pagamento fake e o mapeamento de receita (MÓDULO C) ainda não existe.
+- **HTTP 401** `invalid_signature` = quase certeza que é um detalhe de **onde o MP põe o `data.id`** (query vs corpo) ou secret de **teste vs produção** — **não** é o seu secret estar errado. Se der isso, eu conserto em ~2 min (já sei o ajuste: ler o `data.id` também do corpo via `req.clone()`).
+
+Manda o resultado do Simular que eu te digo na hora se fechamos a trava de segurança ou se preciso do micro-ajuste. Se passar, partimos pro **MÓDULO C** (buscar o pagamento real + creditar a receita) — a última peça do ciclo do piloto.
+
+## 👤 User *(23:58:47)*
+
+Excelente! Enviamos uma notificação Webhook com sucesso.
+Solicitação:
+
+{
+
+  action: "payment.updated",
+
+  api_version: "v1",
+
+  data: {"id":"123456"},
+
+  date_created: "2021-11-01T02:02:02Z",
+
+  id: "123456",
+
+  live_mode: false,
+
+  type: "payment",
+
+  user_id: 279265461
+
+}
+
+Resposta:
+
+200 - OK
+
 ---
 
 %% --- TIMELINE START --- %%
