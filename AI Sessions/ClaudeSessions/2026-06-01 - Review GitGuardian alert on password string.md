@@ -6074,10 +6074,828 @@ Qual caminho? E quer que eu **dismisse mentalmente** as views como resolvidas (s
 
 **Sources:** [signing-keys](https://supabase.com/docs/guides/auth/signing-keys) · [api-keys](https://supabase.com/docs/guides/api/api-keys) · [edge fn env/secrets](https://supabase.com/docs/guides/functions/secrets) · [edge fn 401](https://supabase.com/docs/guides/troubleshooting/edge-function-401-error-response)
 
+## 👤 User *(13:08:16)*
+
+Não sei como seguir pode decidir você, analise primeiro e verifique qual a melhor opção. Realmente não encontrei uma opção para desabilitar a service_role que vazou a unica opção que temos e Disable JWT-based API Keys conforme o print que estou enviando
+
+## 🤖 Claude *(13:10:38)*
+
+
+## 🤖 Claude *(13:10:44)*
+
+Vi o print — **a única opção é "Disable JWT-based API keys"**, que mata `anon` **e** `service_role` legados de uma vez. Decisão analisada:
+
+## 🎯 Decisão: **NÃO clicar "Disable" ainda** — cutover primeiro
+Clicar agora mata o leak em ~20min, **mas derruba as 52 edge functions** (elas usam o `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` auto-injetados, que morrem no disable). Frontend (publishable) e scripts locais (`.env` secret) sobrevivem; o backend não.
+
+**Chave do plano:** o disable é **reversível** ("disable **and re-enable** as needed during the migration period"). Então o caminho seguro é: **eu deixo o código pronto (backward-compatible) → você deploya → você clica Disable → testamos → re-enable se algo quebrar.** Mata o leak sem perder o backend.
+
+**Correção de naming (importante):** como `SUPABASE_` é prefixo **reservado**, vou padronizar o código em **`SB_SECRET_KEY`** + **`SB_PUBLISHABLE_KEY`** (settáveis como Function secret) no lugar do `SUPABASE_SECRET_KEY` do step 1.
+
+Executando o rework mecânico backward-compatible (rename + anon→publishable), depois config/gate/trigger:
+
+## 🤖 Claude *(13:10:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== (1) rename SUPABASE_SECRET_KEY \u2192 SB_SECRET_KEY (edge + scripts; corrige prefixo reservado) ===\"\nmapfile -t F1 < <(git grep -l \"SUPABASE_SECRET_KEY\" -- 'supabase/functions' 'scripts')\necho \"arquivos com SUPABASE_SECRET_KEY: ${#F1[@]}\"\n[ ${#F1[@]} -gt 0 ] && perl -pi -e 's/\\bSUPABASE_SECRET_KEY\\b/SB_SECRET_KEY/g;' \"${F1[@]}\"\necho \"rename exit: $?  \u00b7 restam SUPABASE_SECRET_KEY: $(git grep -c \"SUPABASE_SECRET_KEY\" -- 'supabase/functions' 'scripts' | wc -l)\"\n\necho \"=== (2) anon\u2192publishable nas edge functions (getUser user-context) ===\"\nmapfile -t F2 < <(git grep -lE 'Deno\\.env\\.get\\([\"'\"'\"']SUPABASE_ANON_KEY' -- 'supabase/functions')\necho \"edge functions com SUPABASE_ANON_KEY: ${#F2[@]}\"\n[ ${#F2[@]} -gt 0 ] && perl -pi -e '\n  s/(?<!\\?\\? )Deno\\.env\\.get\\(\"SUPABASE_ANON_KEY\"\\)/(Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))/g;\n  s/(?<!\\?\\? )Deno\\.env\\.get\\(\\x27SUPABASE_ANON_KEY\\x27\\)/(Deno.env.get(\\x27SB_PUBLISHABLE_KEY\\x27) ?? Deno.env.get(\\x27SUPABASE_ANON_KEY\\x27))/g;\n' \"${F2[@]}\"\necho \"anon-swap exit: $?\"\necho \"=== verifica\u00e7\u00e3o ===\"\necho \"SB_SECRET_KEY refs: $(git grep -c \"SB_SECRET_KEY\" -- 'supabase/functions' 'scripts' | wc -l) arquivos\"\necho \"anon sem fallback restante: $(git grep -nE 'Deno\\.env\\.get\\([\"'\"'\"']SUPABASE_ANON_KEY' -- 'supabase/functions' | grep -v '?? Deno.env.get(' | wc -l)\"\necho \"double-wrap publishable (deve 0): $(git grep -c 'SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SB_PUBLISHABLE_KEY' -- 'supabase/functions' | wc -l)\"",
+  "description": "Rename to SB_SECRET_KEY and sweep anon to publishable in edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === (1) rename SUPABASE_SECRET_KEY → SB_SECRET_KEY (edge + scripts; corrige prefixo reservado) ===
+> arquivos com SUPABASE_SECRET_KEY: 104
+> rename exit: 0  · restam SUPABASE_SECRET_KEY: 0
+> === (2) anon→publishable nas edge functions (getUser user-context) ===
+> edge functions com SUPABASE_ANON_KEY: 33
+> anon-swap exit: 0
+> === verificação ===
+> SB_SECRET_KEY refs: 104 arquivos
+> anon sem fallback restante: 0
+> double-wrap publishable (deve 0): 0
+> ```
+
+## 🤖 Claude *(13:11:54)*
+
+
+## 🤖 Claude *(13:11:56)*
+
+Rename + anon→publishable: **104 arquivos** renomeados pra `SB_SECRET_KEY` (0 sobrando), **33** edge functions com publishable-fallback (0 sem fallback, 0 double-wrap). Backward-compatible.
+
+Agora a parte de auth (config verify_jwt + gate no embed). Lendo os pontos exatos pra editar com precisão:
+
+## 🤖 Claude *(13:11:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts",
+  "offset": 146,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 146	}
+> 147	
+> 148	Deno.serve(async (req) => {
+> 149	  if (req.method === "OPTIONS") {
+> 150	    return new Response("ok", { headers: corsHeaders });
+> 151	  }
+> 152	
+> 153	  const supabase = createClient(
+> 154	    Deno.env.get("SUPABASE_URL")!,
+> 155	    (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 156	  );
+> 157	
+> 158	  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> 159	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> ```
+
+## 🤖 Claude *(13:11:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 1,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	project_id = "bcyvddsykvehvpwstlfa"
+> 2	
+> 3	# Configuração de Bypass de JWT para Orquestração Soberana
+> 4	[functions.self-optimize]
+> 5	verify_jwt = false
+> 6	[functions.self-heal]
+> 7	verify_jwt = false
+> 8	[functions.orchestrate-content]
+> 9	verify_jwt = false
+> 10	[functions.generate-content]
+> 11	verify_jwt = false
+> 12	[functions.generate-audio-script]
+> ```
+
+## 🤖 Claude *(13:12:32)*
+
+
+## 🤖 Claude *(13:12:33)*
+
+Pontos exatos confirmados. Aplicando a parte de auth: config.toml (verify_jwt=false nos 3 alvos) + gate no embed-mcorch-node (user OU service, senão 401 — preserva callers frontend):
+
+## 🤖 Claude *(13:12:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "# Configura\u00e7\u00e3o de Bypass de JWT para Orquestra\u00e7\u00e3o Soberana\n[functions.self-optimize]\nverify_jwt = false",
+  "new_string": "# Configura\u00e7\u00e3o de Bypass de JWT para Orquestra\u00e7\u00e3o Soberana\n# key-migration 2026-06-01: service\u2192service targets are called with the new sb_secret_ key (not a JWT),\n# so the gateway JWT check must be off; each function below enforces its own in-code auth gate.\n[functions.publish-social]\nverify_jwt = false\n[functions.refresh-social-token]\nverify_jwt = false\n[functions.embed-mcorch-node]\nverify_jwt = false\n[functions.self-optimize]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:12:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts",
+  "old_string": "  if (req.method === \"OPTIONS\") {\n    return new Response(\"ok\", { headers: corsHeaders });\n  }\n\n  const supabase = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n  );",
+  "new_string": "  if (req.method === \"OPTIONS\") {\n    return new Response(\"ok\", { headers: corsHeaders });\n  }\n\n  // key-migration 2026-06-01: gateway verify_jwt is disabled here so the function accepts the new\n  // sb_secret_ key (not a JWT). Enforce auth in-code: allow a valid user JWT (frontend callers\n  // useMcorchMemory/useAIOSConversations) OR the service secret (cron, trigger, scripts). Anything\n  // else (e.g. the public publishable key alone) \u2192 401.\n  const authHeader = req.headers.get(\"Authorization\");\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  if (!authHeader?.startsWith(\"Bearer \")) {\n    return new Response(JSON.stringify({ error: \"Unauthorized\" }), {\n      status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  }\n  if (authHeader !== `Bearer ${serviceKey}`) {\n    const { data: { user } } = await createClient(\n      Deno.env.get(\"SUPABASE_URL\")!,\n      (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!,\n      { global: { headers: { Authorization: authHeader } } },\n    ).auth.getUser();\n    if (!user) {\n      return new Response(JSON.stringify({ error: \"Unauthorized\" }), {\n        status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n  }\n\n  const supabase = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    serviceKey,\n  );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:12:53)*
+
+
+## 🤖 Claude *(13:12:55)*
+
+Trigger Vault migration (lê a chave do Vault — sem literal; `apikey`+Bearer pro embed que agora tem gate). Precisará de `/security-review` antes do commit (CLAUDE.md):
+
+## 🤖 Claude *(13:13:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601050000_embed_trigger_vault_key.sql",
+  "content": "-- key-migration 2026-06-01: embed-on-insert trigger reads the service key from Supabase Vault.\n-- Context: the original trigger (migration 20260503120000) baked the legacy service_role JWT into\n-- the function body in plaintext \u2014 that key leaked publicly. Triggers run in Postgres (not the Edge\n-- runtime) so they can't read Function secrets; the supported way to hold a credential is Vault.\n-- This re-creates mcorch_embed_on_insert() to pull the active secret key from Vault and call\n-- embed-mcorch-node (now verify_jwt=false + in-code isServiceRole gate) via the apikey header.\n--\n-- PREREQ (Sovereign, run ONCE before relying on this \u2014 replace with the real sb_secret_ value):\n--   select vault.create_secret('sb_secret_REPLACE_ME', 'sb_secret_key', 'Internal pg_net service key');\n-- To rotate later:\n--   select vault.update_secret((select id from vault.secrets where name='sb_secret_key'), 'sb_secret_NEW');\n--\n-- Passes /security-review before commit (FMEA-011). No plaintext credential in this file.\n\nCREATE OR REPLACE FUNCTION public.mcorch_embed_on_insert()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = public\nAS $$\nDECLARE\n  v_key text;\nBEGIN\n  IF NEW.embedding IS NOT NULL THEN\n    RETURN NEW;\n  END IF;\n\n  SELECT decrypted_secret INTO v_key\n  FROM vault.decrypted_secrets\n  WHERE name = 'sb_secret_key'\n  LIMIT 1;\n\n  -- No key configured yet \u2192 skip silently (never block the INSERT). Fire-and-forget.\n  IF v_key IS NULL THEN\n    RAISE WARNING '[mcorch] embed_on_insert: vault secret sb_secret_key missing \u2014 skipped for %', NEW.id;\n    RETURN NEW;\n  END IF;\n\n  PERFORM net.http_post(\n    url     := 'https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node',\n    headers := jsonb_build_object(\n      'Content-Type',  'application/json',\n      'apikey',        v_key,\n      'Authorization', 'Bearer ' || v_key\n    ),\n    body    := jsonb_build_object('node_id', NEW.id::text)\n  );\n\n  RETURN NEW;\nEXCEPTION WHEN OTHERS THEN\n  RAISE WARNING '[mcorch] embed_on_insert skipped for %: %', NEW.id, SQLERRM;\n  RETURN NEW;\nEND;\n$$;\n\nCOMMENT ON FUNCTION public.mcorch_embed_on_insert() IS\n  'Auto-embeds new mcorch_nodes via embed-mcorch-node. Service key from Vault (sb_secret_key). Fire-and-forget.';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601050000_embed_trigger_vault_key.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:13:17)*
+
+
+## 🤖 Claude *(13:13:18)*
+
+Cutover code aplicado. Verificação final + estado:
+
+## 🤖 Claude *(13:13:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc (src) ===\"; npx tsc --noEmit 2>&1 | tail -4; echo \"exit ${PIPESTATUS[0]}\"\necho \"=== SUPABASE_SECRET_KEY remanescente (deve 0) ===\"; git grep -c \"SUPABASE_SECRET_KEY\" -- 'supabase/functions' 'scripts' | wc -l\necho \"=== embed gate presente? ===\"; command grep -c \"Enforce auth in-code\" supabase/functions/embed-mcorch-node/index.ts\necho \"=== config.toml: os 3 verify_jwt novos ===\"; command grep -A1 -E \"\\[functions\\.(publish-social|refresh-social-token|embed-mcorch-node)\\]\" supabase/config.toml\necho \"=== working tree (categorias) ===\"\necho \"edge fns: $(git status --short -- supabase/functions | wc -l) \u00b7 scripts: $(git status --short -- scripts | wc -l) \u00b7 migrations: $(git status --short -- supabase/migrations | wc -l) \u00b7 config: $(git status --short -- supabase/config.toml | wc -l)\"\necho \"TOTAL n\u00e3o-commitado: $(git status --short | wc -l)\"",
+  "description": "Verify cutover code: tsc, rename complete, gate present, config entries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (src) ===
+> exit 0
+> === SUPABASE_SECRET_KEY remanescente (deve 0) ===
+> 0
+> === embed gate presente? ===
+> 1
+> === config.toml: os 3 verify_jwt novos ===
+> [functions.publish-social]
+> verify_jwt = false
+> [functions.refresh-social-token]
+> verify_jwt = false
+> [functions.embed-mcorch-node]
+> verify_jwt = false
+> === working tree (categorias) ===
+> edge fns: 50 · scripts: 57 · migrations: 1 · config: 1
+> TOTAL não-commitado: 114
+> ```
+
+## 🤖 Claude *(13:14:03)*
+
+
+## 🤖 Claude *(13:14:05)*
+
+✅ Cutover code **completo e verificado**: tsc 0, 0 `SUPABASE_SECRET_KEY` restante, gate no embed presente, 3 `verify_jwt=false` no config.toml. 114 arquivos no working tree (backward-compatible — prod intacto até deploy+disable).
+
+Atualizo o runbook com o estado final + deploy-loop, depois te entrego o handoff:
+
+## 🤖 Claude *(13:14:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md",
+  "old_string": "## \ud83d\udd34 CRITICAL CORRECTIONS (2026-06-01, from Supabase docs \u2014 REWORK step 2 edge-fn approach)",
+  "new_string": "## \u2705 CUTOVER CODE DONE (2026-06-01, uncommitted \u2014 backward-compatible, deploy-gated)\nCanonical names: **`SB_SECRET_KEY`** (service) + **`SB_PUBLISHABLE_KEY`** (publishable) \u2014 non-`SUPABASE_`-prefixed so they ARE settable as Function secrets.\n- [x] Edge fns + scripts: `SUPABASE_SECRET_KEY`\u2192`SB_SECRET_KEY` (104 files); reads `SB_SECRET_KEY ?? SUPABASE_SERVICE_ROLE_KEY`.\n- [x] 33 edge fns: `SUPABASE_ANON_KEY`\u2192`(SB_PUBLISHABLE_KEY ?? SUPABASE_ANON_KEY)` for getUser clients.\n- [x] config.toml: `verify_jwt=false` for publish-social, refresh-social-token, embed-mcorch-node.\n- [x] embed-mcorch-node: in-code auth gate (valid user JWT OR isServiceRole, else 401) \u2014 preserves frontend callers.\n- [x] Trigger migration `20260601050000_embed_trigger_vault_key.sql`: reads key from Vault `sb_secret_key`, sends apikey+Bearer. (Needs /security-review before commit.)\n- [ ] DEFERRED to deploy-loop: `apikey` header on the 4 inter-fn fetches (add only if Bearer-only fails the gateway \u2014 test reveals); redact the dead literal in old migration 20260503120000.\n\n### DEPLOY-LOOP (Sovereign + Operator, in order \u2014 disable is REVERSIBLE so safe to test)\n1. **Sovereign:** `supabase secrets set SB_SECRET_KEY=<sb_secret_\u2026>` + `SB_PUBLISHABLE_KEY=<sb_publishable_\u2026>` (Function secrets).\n2. **Sovereign:** Vault \u2192 `select vault.create_secret('<sb_secret_\u2026>', 'sb_secret_key', 'internal pg_net key');`\n3. **Sovereign:** apply migration `20260601050000` + `supabase functions deploy` (all). Deploy = syntax gate.\n4. **Operator:** smoke \u2014 1 frontend caller (user JWT \u2192 embed) + 1 cron path (publish-social/embed via secret) while legacy still ON.\n5. **Sovereign:** dashboard \u2192 **Disable JWT-based API keys** (kills leaked service_role + legacy anon). Frontend (publishable) + scripts (SB_SECRET_KEY in .env) survive.\n6. **Operator:** re-probe leaked key \u2192 expect 401. Smoke crons/functions. **If anything 401s \u2192 re-enable legacy, add `apikey` to that caller / fix, redeploy, retry.**\n\n## \ud83d\udd34 CRITICAL CORRECTIONS (2026-06-01, from Supabase docs \u2014 REWORK step 2 edge-fn approach)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:14:36)*
+
+
+## 🤖 Claude *(13:14:51)*
+
+Cutover code **completo, verificado, backward-compatible**. Decidi e executei conforme você pediu. Resumo do que ficou pronto + **seu caminho pra matar o leak com segurança**.
+
+## ✅ O que está pronto (no working tree, backward-compatible)
+- Naming canônico **`SB_SECRET_KEY`** + **`SB_PUBLISHABLE_KEY`** (não-`SUPABASE_` → settáveis como Function secret; o `SUPABASE_SECRET_KEY` do step 1 não funcionaria em function).
+- 104 arquivos: serviço lê `SB_SECRET_KEY ?? SERVICE_ROLE_KEY`.
+- 33 edge fns: `getUser` usa `SB_PUBLISHABLE_KEY ?? ANON_KEY`.
+- `config.toml`: `verify_jwt=false` em publish-social, refresh-social-token, embed-mcorch-node.
+- `embed-mcorch-node`: gate de auth (user válido **ou** service, senão 401) — não abre o endpoint.
+- Migration `20260601050000`: trigger lê a chave do **Vault** (zero literal).
+
+## 🚀 Deploy-loop (você + eu) — o disable é **REVERSÍVEL**, então é seguro testar
+1. **Você (secrets):** `supabase secrets set SB_SECRET_KEY=<sb_secret_…>` e `SB_PUBLISHABLE_KEY=<sb_publishable_…>`.
+2. **Você (Vault):** `select vault.create_secret('<sb_secret_…>', 'sb_secret_key', 'internal pg_net key');`
+3. **Você (deploy):** aplica a migration `20260601050000` + `supabase functions deploy` (todas).
+4. **Você (dashboard):** clica **"Disable JWT-based API keys"** → mata a vazada (~20min de cache).
+5. **Eu:** **re-probo** a chave vazada → confirmo `401` (morta) + smoke nas functions/crons.
+6. **Se algo der 401:** você **re-habilita** as legacy (reversível), eu adiciono `apikey` no caller que falhou / corrijo, redeploy, repete.
+
+> Front (publishable) e scripts locais (`SB_SECRET_KEY` no `.env`) sobrevivem ao disable. Deixei 2 itens p/ o loop: `apikey` nos 4 callers (só se Bearer sozinho falhar o gateway) + redação do literal morto na migration antiga (cleanup pós-disable).
+
+## Commit
+Recomendo **commitar o cutover agora** (trava os 114 arquivos, backward-compatible) — rodo `/security-review` na migration antes (mandato CLAUDE.md). Quer que eu **rode o /security-review + comite** já, ou prefere validar no deploy-loop primeiro e commitar depois?
+
+⚠️ Lembrete: **antes do passo 1**, garanta que o `.env` tenha `SB_SECRET_KEY` (hoje só tem `SUPABASE_SECRET_KEY` — renomeie/adicione) pros scripts locais. E **rebuilde o frontend** com a publishable nova.
+
+Runbook completo (deploy-loop + verdict das views) em `.claude/context/service-role-key-migration-runbook.md`. Diz o commit e eu sigo.
+
+## 👤 User *(13:20:51)*
+
+Analise se esta correto o arquivo /home/gcrUX/htdocs/constellation-orchestra/.env pois acabei de duplicar o SUPABASE_SECRET_KEY  caso tenha usado em algum lugar por isso não renomeei e sim adicionei a mesma chave com o nome SB_SECRET_KEY, então agora faça os commits granulares depois pode seguir com  /security-review + comite.
+
+E preciso tambem do passo a passo para os passos 1. 2. 3 ante de fazer o 4 que já sei como fazer, porem você não consegue fazer os passos 1 até o 3?
+
+## 🤖 Claude *(13:23:07)*
+
+
+## 🤖 Claude *(13:23:08)*
+
+Vou: (1) analisar o `.env`, (2) checar se consigo fazer os passos 1–3 (auth do CLI), depois faço os commits granulares → `/security-review` → commit da migration. Começando pela análise + auth check:
+
+## 🤖 Claude *(13:23:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== .env: chaves relevantes presentes ===\"\ncommand grep -oE \"^(SUPABASE_URL|VITE_SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|SB_SECRET_KEY|SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SB_PUBLISHABLE_KEY)=\" .env 2>/dev/null | sort\necho\necho \"=== SB_SECRET_KEY == SUPABASE_SECRET_KEY (duplicado correto)? ===\"\na=$(command grep -E \"^SB_SECRET_KEY=\" .env | head -1 | sed -E 's/^SB_SECRET_KEY=[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"'][[:space:]]*$//')\nb=$(command grep -E \"^SUPABASE_SECRET_KEY=\" .env | head -1 | sed -E 's/^SUPABASE_SECRET_KEY=[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"'][[:space:]]*$//')\n[ -n \"$a\" ] && [ \"$a\" = \"$b\" ] && echo \"\u2705 iguais ($(echo \"$a\" | sed -E 's/(sb_secret_.{4}).*/\\1\u2026/'))\" || echo \"\u26a0\ufe0f a='$(echo \"$a\"|cut -c1-11)\u2026' b='$(echo \"$b\"|cut -c1-11)\u2026' (diferentes ou vazio)\"\necho \"SB_PUBLISHABLE_KEY no .env? (functions usam, mas s\u00f3 como Function secret): $(command grep -qE '^SB_PUBLISHABLE_KEY=' .env && echo sim || echo 'n\u00e3o (ok p/ local \u2014 scripts usam SUPABASE_PUBLISHABLE_KEY)')\"\necho\necho \"=== posso fazer passos 1-3? auth do supabase CLI ===\"\nnpx supabase projects list 2>&1 | head -6\necho \"--- secrets list (confirma auth + mostra se SB_* j\u00e1 setado) ---\"\nnpx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | head -20",
+  "description": "Analyze .env correctness and check Supabase CLI auth for steps 1-3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .env: chaves relevantes presentes ===
+> SB_SECRET_KEY=
+> SUPABASE_PUBLISHABLE_KEY=
+> SUPABASE_SECRET_KEY=
+> SUPABASE_SERVICE_ROLE_KEY=
+> SUPABASE_URL=
+> VITE_SUPABASE_PUBLISHABLE_KEY=
+> VITE_SUPABASE_URL=
+> 
+> === SB_SECRET_KEY == SUPABASE_SECRET_KEY (duplicado correto)? ===
+> ✅ iguais (sb_secret_3dGL…)
+> SB_PUBLISHABLE_KEY no .env? (functions usam, mas só como Function secret): não (ok p/ local — scripts usam SUPABASE_PUBLISHABLE_KEY)
+> 
+> === posso fazer passos 1-3? auth do supabase CLI ===
+> 
+>   
+>    LINKED | ORG ID               | REFERENCE ID         | NAME                              | REGION                    | CREATED AT (UTC)    
+>   --------|----------------------|----------------------|-----------------------------------|---------------------------|---------------------
+>           | odupjdcpkxqjaxkwvjqs | wgvdvjcqcsuhboyedhes | Mega Brain Beyond Pro             | South America (São Paulo) | 2026-03-01 03:26:19 
+>      ●    | odupjdcpkxqjaxkwvjqs | bcyvddsykvehvpwstlfa | Magic Constellation Orchestration | South America (São Paulo) | 2026-04-15 22:28:12 
+> --- secrets list (confirma auth + mostra se SB_* já setado) ---
+> 
+>   
+>    NAME                           | DIGEST                                                           
+>   --------------------------------|------------------------------------------------------------------
+>    GCRUX_ML_AFFILIATE_TOKEN       | e86f74a08ebb33eafc13da6cd8d605bc80cbddf4d40c66c7dfa972cb8f9c0eec 
+>    GEMINI_API_KEY                 | 6e5d6bab502800c4a0264e998b7d6561a70549f4e84abca37f5b5861212d164e 
+>    HIGGSFIELD_API_KEY             | 1d89cbedb4e36ebe56d5465ae4a6383d166e20f595720251d909d80a4358a3ae 
+>    HIGGSFIELD_API_KEY_SECRET      | 7b31ee645eac077e5f9939a831fc09511b713834f0278818d738dcbe149f36ea 
+>    INSTAGRAM_APP_ID               | 7ace9407a43835ad0f103e269c971af3ec7fd0e433c7bfe07f49d799b175a7ea 
+>    INSTAGRAM_APP_SECRET           | d023157f052d7f3104a7d745d7f4f569a591d478b823cfdb57a909e039659622 
+>    INSTAGRAM_WEBHOOK_VERIFY_TOKEN | 9bcb26a0eb242cc87fd7a0165476aa72a918be9b479187e9f12cd30ea63fa4a1 
+>    LINKEDIN_CLIENT_ID             | 1fcfde6a62244558932dc1740753ad4bb157136b8402b2a27373147af9ad254c 
+>    LINKEDIN_CLIENT_SECRET         | 8007371a81a003bcc9fae3564eb8752b9caf62bfedfb631144f8b6650897c13e 
+>    META_APP_SECRET                | 30d1476e0387b10ef060be9934832260bc6ad273efd2c0a293651aac80d8853d 
+>    META_WEBHOOK_VERIFY_TOKEN      | e51b969b3dc66c15af3a3c0371aa9c7dced45f16acabd05757a573b7d97453d4 
+>    MP_WEBHOOK_SECRET              | c168312c1b1443f4f472bee7ffa7732110fd028f3e835a66a8f7e4b006f66be9 
+>    OPENROUTER_API_KEY             | a365bcd2b5ef2217e420cf3d4f2e07228f55085b00759f3bd342d50b1ef3e80c 
+>    SERVICE_ROLE_JWT_LEGACY        | b13363029eea0a7040f13af8b1237059743fe37a58c2b5f8b00154a707b32f14 
+>    SERVICE_ROLE_KEY_LEGACY        | b13363029eea0a7040f13af8b1237059743fe37a58c2b5f8b00154a707b32f14 
+>    STRIPE_SECRET_KEY              | 7e08a26f3b6d813e786d4be00701f9e4680656b90a1c5202e11e0b95191d426a
+> ```
+
+## 🤖 Claude *(13:24:55)*
+
+
+## 🤖 Claude *(13:24:59)*
+
+**`.env` correto** ✅ — `SB_SECRET_KEY == SUPABASE_SECRET_KEY` (duplicado proposital, mantém compat); publishable presente; service_role legada mantida como fallback. (`SB_PUBLISHABLE_KEY` não precisa no `.env` local — scripts usam `SUPABASE_PUBLISHABLE_KEY`; só as **Function secrets** precisam dele.)
+
+**E sim — consigo fazer os passos 1–3:** o CLU está **autenticado + linkado** ao projeto (`● LINKED bcyvddsykvehvpwstlfa`). Faço eu.
+
+Primeiro os **commits granulares**. Commit A (scripts) + B (edge+config+runbook), Fase 3 fica de fora:
+
+## 🤖 Claude *(13:25:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# Commit A \u2014 scripts\ngit add scripts\necho \"staged A (scripts): $(git diff --cached --name-only | wc -l) \u00b7 Fase3 vazado? [$(git diff --cached --name-only | grep -E '^src/|execution-plan' || echo none)]\"\ngit commit -q -F - <<'EOF'\nrefactor(security): scripts read SB_SECRET_KEY (legacy fallback)\n\nCutover pra chave secreta nova: scripts (TS/JS/bash) leem SB_SECRET_KEY\ncom fallback p/ SUPABASE_SERVICE_ROLE_KEY. SB_SECRET_KEY \u00e9 nome n\u00e3o-reservado\n(sett\u00e1vel como Function secret; SUPABASE_SECRET_KEY n\u00e3o \u00e9). Backward-compatible.\nEOF\necho \"commit A: $? \u2192 $(git log --oneline -1)\"\n# Commit B \u2014 edge functions + config + runbook\ngit add supabase/functions supabase/config.toml .claude/context/service-role-key-migration-runbook.md\necho \"staged B: $(git diff --cached --name-only | wc -l)\"\ngit commit -q -F - <<'EOF'\nfeat(security): edge fns cutover to SB_ keys + verify_jwt gates + embed auth gate\n\nEdge functions: servi\u00e7o l\u00ea SB_SECRET_KEY; getUser usa SB_PUBLISHABLE_KEY\n(fallback p/ anon) \u2014 sobrevive ao disable das legacy. config.toml: verify_jwt=false\nem publish-social/refresh-social-token/embed-mcorch-node (service\u2192service com a\nchave nova, que n\u00e3o \u00e9 JWT). embed-mcorch-node ganha gate de auth in-code\n(user v\u00e1lido OU service, sen\u00e3o 401). Runbook do cutover atualizado. Backward-compatible.\nEOF\necho \"commit B: $? \u2192 $(git log --oneline -1)\"\necho \"=== pendente agora (deve sobrar migration + Fase3) ===\"; git status --short | sed 's/^/  /'",
+  "description": "Granular commits A (scripts) and B (edge functions + config + runbook)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> staged A (scripts): 57 · Fase3 vazado? [none]
+> commit A: 0 → 1046ef1 refactor(security): scripts read SB_SECRET_KEY (legacy fallback)
+> staged B: 52
+> commit B: 0 → e04912a feat(security): edge fns cutover to SB_ keys + verify_jwt gates + embed auth gate
+> === pendente agora (deve sobrar migration + Fase3) ===
+>    M .claude/context/execution-plan-constellation-v2.md
+>    M src/integrations/supabase/types.ts
+>   ?? src/hooks/useAccessConfig.ts
+>   ?? src/hooks/useAgentCapabilities.ts
+>   ?? supabase/migrations/20260601050000_embed_trigger_vault_key.sql
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> staged p/ review: supabase/migrations/20260601050000_embed_trigger_vault_key.sql
+> ```
+
+## 🤖 Claude *(13:25:29)*
+
+
+## 🤖 Claude *(13:25:31)*
+
+Commits **A (`1046ef1`)** + **B (`e04912a`)** feitos — Fase 3 ficou de fora ✅. Resta a migration (+ Fase 3). Per mandato CLAUDE.md, **`/security-review` na migration antes de commitá-la**. Estagiando-a e rodando o review:
+
+## 🤖 Claude *(13:25:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260601050000_embed_trigger_vault_key.sql\necho \"staged p/ review: $(git diff --cached --name-only)\"",
+  "description": "Stage the trigger migration for security review"
+}
+```
+
+## 🤖 Claude *(13:25:36)*
+
+
+## 🤖 Claude *(13:25:36)*
+
+Migration estagiada. Rodando `/security-review`:
+
+## 🤖 Claude *(13:25:36)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(13:25:36)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   supabase/migrations/20260601050000_embed_trigger_vault_key.sql
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .claude/context/execution-plan-constellation-v2.md
+	modified:   src/integrations/supabase/types.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	src/hooks/useAccessConfig.ts
+	src/hooks/useAgentCapabilities.ts
+```
+
+FILES MODIFIED:
+
+```
+.claude/context/service-role-key-migration-runbook.md
+scripts/agent-daily-pulse.sh
+scripts/audit-mesh-edges.js
+scripts/audit-mesh-edges.ts
+scripts/auto-publish-cron.sh
+scripts/backfill-ast-embeddings.ts
+scripts/backfill-embeddings-priority.sh
+scripts/backfill-embeddings.ts
+scripts/backfill-node-content.ts
+scripts/bridge-mesh-to-openclaw.ts
+scripts/canvas-backfill-edge-handles.ts
+scripts/canvas-campaign-build.ts
+scripts/canvas-video-watchdog.sh
+scripts/check-node-revenue.cjs
+scripts/check-node-status.cjs
+scripts/compose-morning-briefing.ts
+scripts/design-bridge.ts
+scripts/genesis-agents.ts
+scripts/ingest-codebase.ts
+scripts/ingest-new-docs.cjs
+scripts/inspect-nodes-status.cjs
+scripts/link-forge.ts
+scripts/list-recent-edges.js
+scripts/news-impact-analyzer.ts
+scripts/nightly-stage1-light-sleep.sh
+scripts/nightly-stage2-deep-sleep.sh
+scripts/nightly-stage3-rem.sh
+scripts/opencode-bridge.ts
+scripts/qa/audit-canvas-ui.ts
+scripts/qa/run-audit.ts
+scripts/qa/smoke-constellation-v2-router.ts
+scripts/qa/test-publish-meta-smoke.ts
+scripts/qa/test-sync-meta-ads.ts
+scripts/qa/test-whatsapp-webhook.ts
+scripts/register-patch-mesh.cjs
+scripts/reset-constellation-v2.ts
+scripts/reward-healing.ts
+scripts/scrape-openclaw-docs.ts
+scripts/seed-aios-milestone.ts
+scripts/seed-antigravity-docs.ts
+scripts/seed-claw-master-audit-v1-seal.ts
+scripts/seed-constellation-v2-bok-seal.ts
+scripts/seed-constellation-v2-capabilities.ts
+scripts/seed-conteudo-v2-bok-seal.ts
+scripts/seed-e2e-user-zero-bok-seal.ts
+scripts/seed-gamificacao-nodes-bok-seal.ts
+scripts/seed-mercado-livre-api-bok-seal.ts
+scripts/seed-meta-api-bok-seal.ts
+scripts/seed-openclaw-bok-seal.ts
+scripts/seed-social-oauth-adrs.ts
+scripts/seed-viralmind-bok-seal.ts
+scripts/stitch-edges.js
+scripts/stitch-fallback.js
+scripts/sync-canvas-nodes.ts
+scripts/test-files.js
+scripts/test-types.js
+scripts/verify_counts.ts
+scripts/watchdog-mcorch.sh
+supabase/config.toml
+supabase/functions/admin-manage-user/index.ts
+supabase/functions/agent-task-execute/index.ts
+supabase/functions/aios-chat/index.ts
+supabase/functions/aios-sql-bridge/index.ts
+supabase/functions/analyze-node/index.ts
+supabase/functions/analyze-sem/index.ts
+supabase/functions/analyze-seo/index.ts
+supabase/functions/auto-publish/index.ts
+supabase/functions/autonomic-action/index.ts
+supabase/functions/award-mco-coins/index.ts
+supabase/functions/canvas-execute/index.ts
+supabase/functions/check-subscription/index.ts
+supabase/functions/check-video-status/index.ts
+supabase/functions/create-checkout/index.ts
+supabase/functions/data-export/index.ts
+supabase/functions/delete-account/index.ts
+supabase/functions/design-job-enqueue/index.ts
+supabase/functions/embed-mcorch-node/index.ts
+supabase/functions/fetch-trends/index.ts
+supabase/functions/generate-audio-script/index.ts
+supabase/functions/generate-content/index.ts
+supabase/functions/generate-image/index.ts
+supabase/functions/generate-video-script/index.ts
+supabase/functions/generate-video/index.ts
+supabase/functions/get-infra-status/index.ts
+supabase/functions/handle-ml-postback/index.ts
+supabase/functions/higgsfield-webhook/index.ts
+supabase/functions/instagram-webhook/index.ts
+supabase/functions/list-provider-models/index.ts
+supabase/functions/openrouter-swarm/index.ts
+supabase/functions/optimize-schedule/index.ts
+supabase/functions/orchestrate-content/index.ts
+supabase/functions/orchestrate-step/index.ts
+supabase/functions/process-affiliate-link/index.ts
+supabase/functions/publish-meta/index.ts
+supabase/functions/publish-social/index.ts
+supabase/functions/publish-wordpress/index.ts
+supabase/functions/refresh-social-token/index.ts
+supabase/functions/rescue-video/index.ts
+supabase/functions/search-constellation/index.ts
+supabase/functions/self-heal/index.ts
+supabase/functions/self-optimize/index.ts
+supabase/functions/social-auth-callback/index.ts
+supabase/functions/social-auth-init/index.ts
+supabase/functions/stripe-webhook/index.ts
+supabase/functions/sync-meta-ads/index.ts
+supabase/functions/trigger-embeddings/index.ts
+supabase/functions/trigger-ingest/index.ts
+supabase/functions/tts-speak/index.ts
+supabase/functions/whatsapp-webhook/index.ts
+```
+
+COMMITS:
+
+```
+commit e04912aabe7c6d62755e733b4167115034922895
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 1 10:25:07 2026 -0300
+
+    feat(security): edge fns cutover to SB_ keys + verify_jwt gates + embed auth gate
+    
+    Edge functions: serviço lê SB_SECRET_KEY; getUser usa SB_PUBLISHABLE_KEY
+    (fallback p/ anon) — sobrevive ao disable das legacy. config.toml: verify_jwt=false
+    em publish-social/refresh-social-token/embed-mcorch-node (service→service com a
+    chave nova, que não é JWT). embed-mcorch-node ganha gate de auth in-code
+    (user válido OU service, senão 401). Runbook do cutover atualizado. Backward-compatible.
+
+commit 1046ef1f33c4e1032f0cfe2b56d0376bf1a9fcd1
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 1 10:25:07 2026 -0300
+
+    refactor(security): scripts read SB_SECRET_KEY (legacy fallback)
+    
+    Cutover pra chave secreta nova: scripts (TS/JS/bash) leem SB_SECRET_KEY
+    com fallback p/ SUPABASE_SERVICE_ROLE_KEY. SB_SECRET_KEY é nome não-reservado
+    (settável como Function secret; SUPABASE_SECRET_KEY não é). Backward-compatible.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (94.1KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/80b5cc81-9792-406f-be09-b46ebd275638/tool-results/bawivyfgt.txt
+
+Preview (first 2KB):
+diff --git a/.claude/context/service-role-key-migration-runbook.md b/.claude/context/service-role-key-migration-runbook.md
+index 0bc19b9..6b51d56 100644
+--- a/.claude/context/service-role-key-migration-runbook.md
++++ b/.claude/context/service-role-key-migration-runbook.md
+@@ -21,10 +21,23 @@ hardcoded in `scripts/backfill-embeddings-priority.sh` + migration `202605031200
+ - [x] 49 TS scripts + 11 JS/CJS (`process.env`) → fallback wrap. 0 double-wrap, 0 unwrapped.
+ - [x] `scripts/backfill-embeddings-priority.sh` — leaked literal removed (env-only) [needs SECRET pref, see below].
+ 
+-### TODO — code (Operator)
+-- [ ] **8 bash crons** — after `set -a; source .env; set +a` add: `[ -n "${SUPABASE_SECRET_KEY:-}" ] && SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SECRET_KEY"`. Files: agent-daily-pulse, auto-publish-cron, canvas-video-watchdog, nightly-stage{1,2,3}, watchdog-mcorch, backfill-embeddings-priority.
+-- [ ] **9 inter-function callers** (`Bearer ${key}` → verify_jwt=true targets break with non-JWT secret): auto-publish→publish-social, trigger-embeddings→embed-mcorch-node, canvas-execute, orchestrate-step, publish-social, self-heal, social-auth-init/callback, higgsfield-webhook. Fix = send key in **`apikey`** header + set TARGET `verify_jwt=false` in `supabase/config.toml` (publish-social, embed-mcorch-node currently default-true).
+-- [ ] **Embed trigger** `mcorch_embed_on_insert` (migration `20260503120000`): new migration reading key from **Supabase Vault** (`vault.decrypted_secrets`), sent as `apikey`; embed-mcorch-node → verify_jwt=false. Redact the literal in the old migration file.
++### DONE (commit 6c93c7c — env-read layer, backward-compatible)
++- [x] 8 bash crons normalized (`[ -n "$SUPABASE_SECRET_KEY" ] && SUPABASE_SERVICE_ROLE_KEY=…`).
++
++### TODO — code (Operator) — STEP 2: inter-function auth cutover (SECURITY-SENSITIVE, deploy-gated)
++> Traced 2026-06-01. Bigger than first estimated — needs a FOCUSED, deploy-tested session, not a rushed edit.
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(13:26:10)*
+
+
+## 🤖 Claude *(13:26:11)*
+
+Executando o review conforme o protocolo do skill — sub-agente de identificação primeiro (foco no que a PR mudou: `verify_jwt=false` nos 3 alvos + gate novo no embed + cutover de chave + migration):
+
+## 🤖 Claude *(13:26:35)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify security vulns in cutover PR",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of a specific change set in this repo (a Supabase + Deno edge-functions project). Identify ONLY HIGH-CONFIDENCE security vulnerabilities NEWLY INTRODUCED by these changes. Do not report pre-existing issues, style, or theoretical concerns.\n\n## What the change set does (the \"API key cutover\" + a trigger migration)\nThe full diff is saved here \u2014 READ IT: `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/80b5cc81-9792-406f-be09-b46ebd275638/tool-results/bawivyfgt.txt`\n\nSummary of changes:\n1. **Env-key rename (mechanical):** across ~50 edge functions (`supabase/functions/*/index.ts`) and ~57 scripts, every `Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\")` / `process.env.SUPABASE_SERVICE_ROLE_KEY` became `(Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))` (legacy fallback). And in 33 edge functions, `Deno.env.get(\"SUPABASE_ANON_KEY\")` became `(Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))`.\n2. **`supabase/config.toml`:** added `verify_jwt = false` for `publish-social`, `refresh-social-token`, `embed-mcorch-node`. This DISABLES the Supabase gateway JWT check for these 3 functions, shifting ALL auth to the function's own in-code logic. This is the highest-risk change \u2014 verify that each of these 3 functions correctly REJECTS unauthenticated/unauthorized callers in-code (else it's an auth-bypass / privilege-escalation, since the publishable/anon key is public).\n3. **`supabase/functions/embed-mcorch-node/index.ts`:** added a NEW in-code auth gate near the top of the handler: requires `Authorization: Bearer <X>` AND (`X === serviceKey` OR `getUser()` returns a valid user), else 401. Verify this gate is sound (no bypass) \u2014 e.g., what if serviceKey resolves empty/undefined? Could an attacker send `Bearer undefined` and match? (serviceKey = `(Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!`.)\n4. **New migration `supabase/migrations/20260601050000_embed_trigger_vault_key.sql`:** redefines a SECURITY DEFINER trigger function `mcorch_embed_on_insert()` to read a service key from `vault.decrypted_secrets WHERE name='sb_secret_key'` and `net.http_post` to an edge function with `apikey`+`Bearer` = that key, body `{node_id: NEW.id::text}`. Check for SQL injection (NEW.id is a uuid), credential exposure, or unsafe SECURITY DEFINER behavior.\n\n## Read these specific files for context (the auth-sensitive ones)\n- `supabase/functions/embed-mcorch-node/index.ts` (the new gate)\n- `supabase/functions/publish-social/index.ts` (verify it self-gates: must reject when neither valid user nor service key \u2014 look for the `else \u2192 401` after `getUser()` + `isServiceRole` checks)\n- `supabase/functions/refresh-social-token/index.ts` (verify it self-gates \u2014 ownership check rejecting non-user non-service)\n- `supabase/migrations/20260601050000_embed_trigger_vault_key.sql`\n- `supabase/config.toml`\n\n## Focus areas (only flag >80% confident, exploitable):\n- **Auth bypass / privilege escalation** from `verify_jwt=false` IF a function trusts a body-provided `user_id` or performs privileged actions WITHOUT verifying the caller is the service key or a matching authenticated user. The public publishable/anon key can now reach these endpoints \u2014 does any of the 3 let an attacker act as another user or perform service-only actions?\n- **The `Bearer ${serviceKey}` comparison** edge cases (empty/undefined serviceKey \u2192 spoofable).\n- **SQL injection / unsafe SECURITY DEFINER** in the migration.\n- **Secret exposure** (logging a key in plaintext, etc.) newly introduced.\n\nIGNORE: the mechanical env rename itself (env vars are trusted), DOS, rate limiting, outdated deps, the markdown runbook, the Fase 3 hooks (`src/hooks/useAccessConfig.ts`, `useAgentCapabilities.ts` \u2014 read-only TanStack hooks), client-side checks, log spoofing.\n\n## Output\nA markdown list of candidate findings. For each: `file:line`, severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix recommendation, and a confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly. Be precise and avoid false positives. Do NOT write to any files."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'My analysis is complete. The migration has no dynamic SQL (only parameterized `jsonb_build_object` + hardcoded URL), and the embed gate creates a fresh per-request client for `getUser()` (no shared-state token confusion). The auth gates are sound against the public publishable key because `getUser()` validates the token server-side against GoTrue.\n\nHere is my final report.\n\n---\n\n## Security Review: API Key Cutover + Embed Trigger Migration\n\n**Scope confirmed:** Commit `e04912a`. The 3 `verify_jwt=false` blocks (`publish-social`, `refresh-social-token`, `embed-mcorch-node`) are confirmed NEW (absent in parent `e04912a^`). The in-code auth gates in `publish-social` and `refresh-social-token` are PRE-EXISTING (only env-var names changed in this diff); the embed-mcorch-node gate is NEW.\n\n### Verdict: No high-confidence, exploitable-now vulnerability newly introduced.\n\nThe highest-risk change (`verify_jwt=false` on 3 functions) is correctly compensated by in-code gates. I verified the critical attack path — an attacker holding only the **public publishable/anon key** sending `Authorization: Bearer <publishable_key>`:\n- `supabase.auth.getUser()` validates the token **server-side against GoTrue** (it does not trust the token locally), so a publishable key or forged JWT yields `user = null`.\n- `isServiceRole` is `false` (publishable key ≠ service key).\n- Result: `publish-social` → `else → 401` (index.ts:57-61); `refresh-social-token` → ownership check `403` (index.ts:59-64); `embed-mcorch-node` → `!user → 401` (index.ts:170-174).\n\nThe `publish-social` body-`user_id` trust (`index.ts:55`) is correctly gated behind `isServiceRole && bodyUserId` — an attacker cannot supply a spoofed `user_id` without already holding the service secret. Sound. The legitimate frontend embed caller (`src/hooks/useAIOSConversations.ts:172-178`) sends a real user `access_token`, so the new gate admits it. No key is logged in any of the 3 functions.\n\n**Migration `20260601050000_embed_trigger_vault_key.sql`:** Clean. `NEW.id::text` is a uuid passed via parameterized `jsonb_build_object` (no string-concatenation into SQL/URL); URL is a hardcoded literal — no SQL injection. `SECURITY DEFINER` is correctly hardened with `SET search_path = public`. The vault key (`v_key`) is read into a local var and sent only in HTTP headers — never returned, never logged (the `RAISE WARNING` paths emit only `NEW.id` and `SQLERRM`). No credential exposure. Fire-and-forget exception handling never blocks the INSERT. Sound.\n\n---\n\n### Candidate finding (MEDIUM — latent, not exploitable in current prod config)\n\n**1. `embed-mcorch-node/index.ts:158` + `:164` — `Bearer undefined` spoof if both service-key env vars are unset**\n- **Category:** Auth bypass / privilege escalation (defense-in-depth gap)\n- **Description:** `const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!`. The `!` is a TypeScript compile-time non-null assertion and does **not** throw at runtime. If BOTH env vars are absent, `serviceKey` is `undefined`, and the gate `if (authHeader !== \\`Bearer ${serviceKey}\\`)` compares against the literal string `"Bearer undefined"`. An attacker sending `Authorization: Bearer undefined` would satisfy `authHeader === "Bearer undefined"`, skip the `getUser()` user-validation branch entirely, and be treated as the service role — then the function proceeds to build an admin client with `serviceKey = undefined` (which would itself fail downstream, limiting impact, but the *auth decision* is already bypassed).\n- **Exploit scenario:** Only reachable if neither `SB_SECRET_KEY` nor the auto-injected `SUPABASE_SERVICE_ROLE_KEY` is set in the function environment. In current production, `SUPABASE_SERVICE_ROLE_KEY` is auto-injected by the Supabase Edge runtime, so the precondition does **not** hold today. It becomes relevant only after the planned "Disable JWT-based API keys / revoke" step described in the runbook (which kills the auto-injected legacy key) if `SB_SECRET_KEY` is not correctly set first — exactly the failure mode the deploy-loop is trying to avoid. Same latent pattern exists (pre-existing) in `publish-social:38-39` and `refresh-social-token:25,34`, so all 3 share the exposure post-revoke.\n- **Fix:** Fail closed on missing/empty key before the comparison, e.g.:\n  ```ts\n  const serviceKey = Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");\n  if (!serviceKey) return new Response(JSON.stringify({ error: "Server misconfigured" }), { status: 500, headers: {...} });\n  ```\n  and guard the equality with a non-empty check (`serviceKey && authHeader === \\`Bearer ${serviceKey}\\``) so an empty/undefined key can never match a `Bearer undefined` / `Bearer ` header.\n- **Confidence:** 4/10 that it is exploitable as currently deployed (precondition not met in prod). 8/10 that the `Bearer undefined` matching behavior is real if the env is ever empty. Worth a cheap fail-closed hardening before the revoke step, but not a blocking vuln in the present configuration.\n\n### Notes (explicitly NOT flagged)\n- The mechanical `SB_SECRET_KEY ?? SUPABASE_SERVICE_ROLE_KEY` / `SB_PUBLISHABLE_KEY ?? SUPABASE_ANON_KEY` rename across ~50 functions + ~57 scripts: env vars are trusted; out of scope per instructions. No double-wrap or unwrapped reads observed in the auth-sensitive files.\n- `verify_jwt=false` exposing the endpoints to the public key is **adequately handled** by the (pre-existing, now sole-defense) in-code gates — verified above.\n\nMateriality note: all claims above are grounded in the file contents read this turn and `git show e04912a^` output confirming the new config blocks; no fabricated hashes or outputs.'}, {'type': 'text', 'text': "agentId: aa306815868636459 (use SendMessage with to: 'aa306815868636459' to continue this agent)\n<usage>subagent_tokens: 107086\ntool_uses: 17\nduration_ms: 124753</usage>"}]
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Restructure enterprise constellation agents]]
-> * **Próxima Sessão**: [[2026-06-01 - agent-af11d6fa76341891b]]
+> * **Próxima Sessão**: [[2026-06-01 - agent-aa306815868636459]]
 %% --- TIMELINE END --- %%
