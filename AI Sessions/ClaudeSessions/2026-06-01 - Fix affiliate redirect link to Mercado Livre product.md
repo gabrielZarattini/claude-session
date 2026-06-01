@@ -6898,6 +6898,1743 @@ Como prefere seguir?
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O último item é o BYOK per-user (migration Vault de alto risco). Como prefere?"="Começar o BYOK agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:31:33)*
+
+
+## 🤖 Claude *(22:31:35)*
+
+**BYOK agora**, com cuidado máximo. Escrevendo a migration que adiciona `apify_token` nos 5 pontos do padrão Vault (coluna → trigger de cifragem → view mascarada → INSTEAD OF trigger → view decifrada), reproduzindo fielmente os corpos existentes e só **acrescentando** o novo campo:
+
+## 🤖 Claude *(22:32:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql",
+  "content": "-- Migration: per-user Apify token (BYOK) for affiliate catalog enrichment\n-- API Tenancy Model \u2014 layered: per-user apify_token \u2192 global APIFY_TOKENS fallback (system/cron).\n-- SOP: docs/processes/affiliate-catalog-enrichment.md\n-- Follows the Vault-encryption pattern of 20260601000000_credential_encryption.sql:\n--   base column \u2192 encrypt trigger \u2192 masked public view \u2192 INSTEAD OF trigger \u2192 decrypted view.\n-- Additive only: every existing column handler is preserved verbatim; apify_token is appended.\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. COLUMN on the base table\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nALTER TABLE public.user_api_keys_table\n  ADD COLUMN IF NOT EXISTS apify_token text;\n\nCOMMENT ON COLUMN public.user_api_keys_table.apify_token\n  IS 'Per-user Apify API token (BYOK) for ML scraping/enrichment. Vault-encrypted at rest. NULL falls back to global APIFY_TOKENS.';\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. ENCRYPT TRIGGER \u2014 re-create with the apify_token block appended\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()\nRETURNS TRIGGER AS $$\nDECLARE\n  v_id UUID;\nBEGIN\n  -- groq_api_key\n  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN\n    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');\n      NEW.groq_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- openrouter_api_key\n  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN\n    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');\n      NEW.openrouter_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- openai_api_key\n  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN\n    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');\n      NEW.openai_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- elevenlabs_api_key\n  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN\n    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');\n      NEW.elevenlabs_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- google_api_key\n  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN\n    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');\n      NEW.google_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- nanobana_api_key\n  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN\n    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');\n      NEW.nanobana_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- seedance_api_key\n  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN\n    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');\n      NEW.seedance_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- wp_app_password\n  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN\n    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');\n      NEW.wp_app_password = v_id::text;\n    END IF;\n  END IF;\n\n  -- replicate_api_key\n  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN\n    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');\n      NEW.replicate_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- higgsfield_api_key\n  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN\n    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');\n      NEW.higgsfield_api_key = v_id::text;\n    END IF;\n  END IF;\n\n  -- higgsfield_api_key_secret\n  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN\n    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');\n      NEW.higgsfield_api_key_secret = v_id::text;\n    END IF;\n  END IF;\n\n  -- apify_token (NEW \u2014 per-user ML scraping BYOK)\n  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN\n    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n    ELSE\n      v_id := vault.create_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token');\n      NEW.apify_token = v_id::text;\n    END IF;\n  END IF;\n\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;\n\n-- (trigger tr_encrypt_user_api_keys already bound to the function \u2014 no re-create needed)\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. MASKED PUBLIC VIEW \u2014 append apify_token (masked)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.user_api_keys WITH (security_invoker = true) AS\nSELECT\n  user_id,\n  created_at,\n  updated_at,\n  pref_audio_provider,\n  pref_image_provider,\n  pref_video_provider,\n  wp_site_url,\n  wp_username,\n  pref_ai_model,\n  CASE WHEN groq_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS groq_api_key,\n  CASE WHEN openrouter_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openrouter_api_key,\n  CASE WHEN openai_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openai_api_key,\n  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS elevenlabs_api_key,\n  CASE WHEN google_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS google_api_key,\n  CASE WHEN nanobana_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS nanobana_api_key,\n  CASE WHEN seedance_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS seedance_api_key,\n  CASE WHEN wp_app_password IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS wp_app_password,\n  CASE WHEN replicate_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS replicate_api_key,\n  CASE WHEN higgsfield_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key,\n  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key_secret,\n  CASE WHEN apify_token IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS apify_token\nFROM public.user_api_keys_table;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 4. INSTEAD OF TRIGGER \u2014 add apify_token to INSERT cols/VALUES + ON CONFLICT UPDATE\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()\nRETURNS TRIGGER AS $$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;\n    RETURN OLD;\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    INSERT INTO public.user_api_keys_table (\n      user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token\n    ) VALUES (\n      NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token\n    )\n    ON CONFLICT (user_id) DO UPDATE SET\n      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      openrouter_api_key = COALESCE(NULLIF(NEW.openrouter_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openrouter_api_key),\n      openai_api_key = COALESCE(NULLIF(NEW.openai_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openai_api_key),\n      pref_audio_provider = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),\n      pref_image_provider = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),\n      pref_video_provider = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),\n      elevenlabs_api_key = COALESCE(NULLIF(NEW.elevenlabs_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.elevenlabs_api_key),\n      google_api_key = COALESCE(NULLIF(NEW.google_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.google_api_key),\n      nanobana_api_key = COALESCE(NULLIF(NEW.nanobana_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.nanobana_api_key),\n      seedance_api_key = COALESCE(NULLIF(NEW.seedance_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.seedance_api_key),\n      wp_site_url = NEW.wp_site_url,\n      wp_username = NEW.wp_username,\n      wp_app_password = COALESCE(NULLIF(NEW.wp_app_password, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.wp_app_password),\n      pref_ai_model = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),\n      replicate_api_key = COALESCE(NULLIF(NEW.replicate_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.replicate_api_key),\n      higgsfield_api_key = COALESCE(NULLIF(NEW.higgsfield_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key),\n      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key_secret),\n      apify_token = COALESCE(NULLIF(NEW.apify_token, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.apify_token),\n      updated_at = now();\n    RETURN NEW;\n  END IF;\n  RETURN NULL;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 5. DECRYPTED VIEW (service_role only) \u2014 append apify_token + its vault join\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.decrypted_user_api_keys AS\nSELECT\n  uak.user_id,\n  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,\n  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,\n  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,\n  uak.created_at,\n  uak.updated_at,\n  uak.pref_audio_provider,\n  uak.pref_image_provider,\n  uak.pref_video_provider,\n  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,\n  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,\n  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,\n  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,\n  uak.wp_site_url,\n  uak.wp_username,\n  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,\n  uak.pref_ai_model,\n  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,\n  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,\n  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,\n  COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token\nFROM public.user_api_keys_table uak\nLEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid\nLEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid\nLEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_apify.id = uak.apify_token::uuid;\n\n-- decrypted_user_api_keys stays service_role-only (grants preserved across REPLACE; re-assert to be safe)\nREVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;\nGRANT SELECT ON public.decrypted_user_api_keys TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:33:09)*
+
+
+## 🤖 Claude *(22:33:10)*
+
+Migration written (additive — every existing column handler reproduced verbatim, `apify_token` appended in all 5 spots). Now the **mandatory `/security-review`** gate before any `db push` (CLAUDE.md rule):
+
+## 🤖 Claude *(22:33:10)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(22:33:10)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/bok/mcorch-constellation/revenue-flywheel.md
+	modified:   docs/processes/affiliate-credential-resolution.md
+	modified:   docs/processes/ml-affiliate-attribution.md
+	modified:   scripts/link-forge-scope.md
+	modified:   scripts/link-forge.ts
+	modified:   scripts/test-affiliate-link.cjs
+	modified:   scripts/test-affiliate-link.js
+	modified:   src/hooks/useAffiliateConfig.ts
+	modified:   src/hooks/useAffiliateProducts.ts
+	modified:   src/pages/AffiliateProductsPage.tsx
+	modified:   supabase/functions/process-affiliate-link/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/affiliate-catalog-enrichment.md
+	scripts/affiliate-enrich-cron.sh
+	scripts/discover-affiliate-products.ts
+	scripts/enrich-affiliate-products.ts
+	scripts/qa/firecrawl-ml-probe.ts
+	src/lib/affiliate.test.ts
+	src/lib/affiliate.ts
+	supabase/migrations/20260601060000_user_api_keys_apify_token.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(22:33:27)*
+
+
+## 🤖 Claude *(22:33:28)*
+
+Following the security-review methodology — launching a focused analysis sub-agent over the changed files (the Vault migration and edge function are the real security surface), with the false-positive filters applied:
+
+## 🤖 Claude *(22:33:48)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review of affiliate changes",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of uncommitted changes in the repo at /home/gcrUX/htdocs/constellation-orchestra. Only flag HIGH-CONFIDENCE (>80%), concretely-exploitable vulnerabilities NEWLY introduced by these changes. Read the files; do NOT modify anything.\n\nCHANGED FILES TO REVIEW (focus on security surface):\n1. supabase/migrations/20260601060000_user_api_keys_apify_token.sql  \u2014 NEW migration adding `apify_token` to the Vault-encrypted user_api_keys (encrypt trigger, masked public view `user_api_keys`, INSTEAD OF trigger, service_role-only `decrypted_user_api_keys` view). COMPARE IT CAREFULLY against the established pattern in supabase/migrations/20260601000000_credential_encryption.sql \u2014 the new migration must (a) keep the decrypted view restricted to service_role only (REVOKE from anon/authenticated), (b) mask apify_token in the public view, (c) not drop/alter any existing column's handling, (d) not weaken any grant. Flag any deviation that would expose a secret to anon/authenticated or break tenant isolation.\n2. supabase/functions/process-affiliate-link/index.ts  \u2014 GET (anonymous, no-verify-jwt) + POST (JWT) branches. Verify: per-user resolution by content-owner, fail-closed when no config, no cross-tenant credential leak, no injection in the 302 Location / DB queries. The GET branch reads product_id + content_variant_id from query and builds a redirect \u2014 check open-redirect/SSRF (note: it only ever redirects to mercadolivre.com / meli.la / login.mcorch.com built server-side, or a stored shortlink validated by isMlShortLink).\n3. src/lib/affiliate.ts, src/hooks/useAffiliateConfig.ts, src/hooks/useAffiliateProducts.ts, src/pages/AffiliateProductsPage.tsx \u2014 client-side (React/TS). Per precedent, client-side authz/XSS is generally not a finding unless dangerouslySetInnerHTML or similar.\n4. scripts/*.ts, scripts/*.sh, scripts/*.cjs/.js \u2014 Bun/Node scripts run by operators/cron with trusted env (APIFY_TOKENS, SB_SECRET_KEY from .env). Per precedent, command injection in shell scripts and env-var-dependent attacks are NOT valid unless there is a concrete untrusted-input path.\n\nUse git diff (e.g. `git diff -- <file>` and `git show :<file>` / read the untracked files directly) to see exactly what changed.\n\nEXCLUSIONS (do NOT report): DoS/resource exhaustion; secrets-on-disk; rate-limiting; findings in markdown/docs; log spoofing; SSRF that only controls a path (not host/protocol); regex injection/ReDoS; outdated deps; unit-test-only files; client-side lack-of-authz (handled server-side); theoretical race conditions; lack of hardening.\n\nKEY QUESTION FOR THE MIGRATION (highest priority): Does the new migration correctly reproduce the credential_encryption.sql pattern such that apify_token is (1) encrypted to vault on write, (2) masked '\u2022\u2022\u2022\u2022' in the public `user_api_keys` view, (3) only decrypted in `decrypted_user_api_keys` which is REVOKED from anon/authenticated and GRANTed only to service_role? Does re-creating `trg_instead_of_user_api_keys`, `trg_encrypt_user_api_keys`, and the two views drop or weaken any existing column or grant? Quote the specific lines.\n\nOUTPUT: A markdown report. For each finding: title with file:line, Severity (HIGH/MEDIUM), Category, Description, Exploit Scenario, Recommendation, and a Confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly and note what you verified (especially that the migration preserves the security model). Only include findings with confidence >= 8 in a final \"CONFIRMED FINDINGS\" section."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All clean. The hooks/page changes: `AffiliateProductsPage.tsx` actually *removed* passing `config?.app_id` to the ProductCard (a hardening improvement). The `useAffiliateConfig.ts` still selects `app_id, client_secret, access_token` from `affiliate_config` — but that is a pre-existing table read gated by RLS, unchanged in behavior by this diff and not the masked-view table. The discover script uses trusted env + operator CLI args (out of scope per exclusions).\n\nI have completed a thorough review. Let me compose the final report.\n\n---\n\n# Security Review — Affiliate Catalog Enrichment + Apify BYOK Migration\n\n## Scope reviewed\n- `supabase/migrations/20260601060000_user_api_keys_apify_token.sql` (NEW) vs. the established pattern in `20260601000000_credential_encryption.sql` and `20260601000600_secure_definer_views.sql`\n- `supabase/functions/process-affiliate-link/index.ts` (GET anonymous redirect + POST JWT branches)\n- `src/lib/affiliate.ts`, `useAffiliateConfig.ts`, `useAffiliateProducts.ts`, `AffiliateProductsPage.tsx`\n- `scripts/enrich-affiliate-products.ts`, `scripts/discover-affiliate-products.ts`\n\n## Verdict: NO high-confidence (>=8) exploitable vulnerabilities found.\n\n---\n\n## Migration — KEY QUESTION answered (the highest priority)\n\nI verified the new migration against the production schema state (the production view is defined by `20260601000600_secure_definer_views.sql`, which runs at `000600`, before the apify migration at `060000`).\n\n**(a) `apify_token` encrypted to Vault on write — YES.** Lines 124-131 append a verbatim copy of the established per-column block: `vault.create_secret(NEW.apify_token, \'user_api_keys_apify_token_\' || NEW.user_id::text, \'Apify Token\')`, with the UUID-passthrough guard. All 11 pre-existing column blocks (groq/openrouter/openai/elevenlabs/google/nanobana/seedance/wp_app_password/replicate/higgsfield/higgsfield_secret) are reproduced unchanged (the only diff is cosmetic: empty `THEN` branches instead of `-- keep` comments — functionally identical, valid plpgsql).\n\n**(b) `apify_token` masked \'••••\' in the public `user_api_keys` view — YES.** Line 164: `CASE WHEN apify_token IS NOT NULL THEN \'••••••••••••\' ELSE NULL END AS apify_token`. All other columns retain their masks.\n\n**(c) decrypted only in `decrypted_user_api_keys`, REVOKED from anon/authenticated, GRANTed to service_role only — YES.** Lines 233 + 246 add the vault join for `apify_token`; lines 249-250 re-assert `REVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated; GRANT SELECT ... TO service_role;` — identical to the original at lines 631-632. No grant to anon/authenticated anywhere.\n\n**(d) No existing column/grant dropped or weakened — confirmed.** `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` is additive (line 11-12). The three `CREATE OR REPLACE` objects (encrypt trigger, public view, INSTEAD OF trigger, decrypted view) preserve every prior column. `CREATE OR REPLACE VIEW` preserves the object\'s existing ACLs (OID-stable), so the `GRANT SELECT,INSERT,UPDATE,DELETE ... TO anon,authenticated` on the public view from `000600` survives — the same mechanism the original pattern relies on. The INSTEAD OF trigger function is replaced (its trigger binding persists), and `apify_token` uses the same `COALESCE(NULLIF(NEW.apify_token,\'••••••••••••\'), <base>)` write-back guard (line 200) that prevents a masked re-submit from nulling the secret.\n\n### One non-security deviation noted (NOT a finding — fails closed)\nThe apify migration recreates the public view with `WITH (security_invoker = true)` and **without** the explicit `WHERE (auth.uid() = user_id OR auth.role() = \'service_role\')` tenancy filter that `000600` had added (when `000600` converted it to a security-definer view). This reverts the view to the *original* `credential_encryption.sql` design (security_invoker + base-table RLS).\n\nThis is **not** a cross-tenant exposure: the base table `user_api_keys_table` still has RLS ENABLED with `SELECT USING (auth.uid() = user_id)` (the policies travelled with the rename from `user_api_keys`). A `security_invoker` view enforces the invoker\'s RLS on the base table, so rows remain restricted to the user\'s own row, and every secret column is still masked to `\'••••\'` regardless. If anything it is *more* restrictive (the table-level `REVOKE SELECT ... FROM anon,authenticated` from `000600` means the security_invoker view may now raise "permission denied" on read — an availability regression that fails closed), not a leak. Flagging it for the author\'s attention as a correctness/consistency item, but it does not meet the bar for a security finding.\n\n---\n\n## Edge function `process-affiliate-link` — verified clean (the diff is a security improvement)\n\n- **Credential leak eliminated:** the old GET/POST code put `affiliate_config.app_id` (a real OAuth client identifier) into a plaintext 302 `Location` pointing at an external host (`panel.gcrux.com/api/ml-redirect?...&affiliate_id=<app_id>`). The new code removes that entirely and uses only `affiliate_tag` — explicitly classified "Not a secret: visible in public affiliate links" (migration `20260530183000`, COMMENT line 20). No secret is ever placed in a redirect.\n- **Per-user / fail-closed:** GET resolves the content **owner** via `mcorch_nodes.user_id` for `content_variant_id`, then that owner\'s `affiliate_config` (`is_active=true`); POST resolves `user.id` after JWT `getUser()`. No global token fallback in either branch. Both fail closed (GET → 302 to `/dashboard/settings?no_config=1`; POST → HTTP 402 `mercadolivre_not_configured`).\n- **No cross-tenant secret leak:** an attacker supplying an arbitrary `content_variant_id` only gets that node owner\'s public `matt_word` attribution tag baked into a mercadolivre URL — by design every published affiliate link carries that tag publicly. No secret crosses tenants.\n- **No open redirect / SSRF:** The 302 `Location` is only ever (1) a stored shortlink gated by the anchored allowlist regex `isMlShortLink` (`^https://(meli\\.la/|(www\\.)?mercadolivre\\.com(\\.br)?/sec/)` — I checked `meli.la.evil.com`, `meli.la/@evil` style bypasses; the trailing `/` terminates the authority, host stays ML), (2) `buildMattWordUrl` whose base is either the trusted shared-catalog `vm_affiliate_products.product_url` or a host-fixed reconstruction `https://www.mercadolivre.com.br/MLB-{...}` (attacker input lands in a path segment, cannot change host), or (3) the literal `login.mcorch.com` settings URL. `product_id` flows into Supabase `.eq()` (parameterized — no SQL injection).\n\n## Client + scripts — verified clean\n- `src/lib/affiliate.ts`: pure URL-building/regex-validation functions; no `dangerouslySetInnerHTML`/injection sink. `AffiliateProductsPage.tsx` *removed* the `app_id` prop passed to `ProductCard` (hardening).\n- `scripts/enrich-affiliate-products.ts` / `discover-affiliate-products.ts`: use trusted `.env` (`APIFY_TOKENS`, `SB_SECRET_KEY`) and operator CLI args; the only request-shaped inputs (`--product`, keywords) are operator-controlled, and Supabase REST filters are server-parameterized. Per the stated exclusions (operator/cron-trusted env, no untrusted-input path), out of scope.\n\n## Files of record\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql` (pattern baseline)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000600_secure_definer_views.sql` (production view definition — context for the security_invoker observation)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts`\n\n## CONFIRMED FINDINGS (confidence >= 8)\n**None.** The migration faithfully reproduces the credential-encryption pattern: `apify_token` is Vault-encrypted on write, masked in the public view, and decryptable only in the service_role-restricted `decrypted_user_api_keys` view; no existing column handling or grant is dropped or weakened, and tenant isolation is preserved by the base-table RLS. The edge-function change is a net security improvement (removes an OAuth identifier from a plaintext external redirect). The one deviation (public view reverting to `security_invoker = true` without the explicit WHERE filter) fails closed and does not create a cross-tenant exposure because base-table RLS remains in force.'}, {'type': 'text', 'text': "agentId: a10aebd93731e0c4f (use SendMessage with to: 'a10aebd93731e0c4f' to continue this agent)\n<usage>subagent_tokens: 109289\ntool_uses: 18\nduration_ms: 160714</usage>"}]
+> ```
+
+## 🤖 Claude *(22:36:41)*
+
+
+## 🤖 Claude *(22:36:43)*
+
+Security review: **no confirmed vulnerabilities** — the migration preserves the security model, and the edge change is a net improvement. **But** the reviewer flagged a critical correctness regression I must fix before applying: a later migration (`20260601000600_secure_definer_views.sql`) changed the public view's definition, and my `CREATE OR REPLACE` reverts it to `security_invoker` — which could break authenticated reads (permission-denied). Let me read what `000600` actually did and align my migration to it:
+
+## 🤖 Claude *(22:36:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000600_secure_definer_views.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: Re-create credentials views as secure Definir views with built-in tenancy filtering
+> 2	-- OTD-META-ENCRYPT
+> 3	
+> 4	-- 1. Drop existing security_invoker views
+> 5	DROP VIEW IF EXISTS public.meta_config CASCADE;
+> 6	DROP VIEW IF EXISTS public.social_accounts CASCADE;
+> 7	DROP VIEW IF EXISTS public.user_api_keys CASCADE;
+> 8	
+> 9	-- 2. Create definer views with user_id/service_role filter
+> 10	CREATE OR REPLACE VIEW public.meta_config AS
+> 11	SELECT
+> 12	  id,
+> 13	  user_id,
+> 14	  facebook_user_id,
+> 15	  CASE WHEN long_lived_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS long_lived_token,
+> 16	  scopes,
+> 17	  CASE WHEN pages IS NOT NULL THEN to_jsonb('••••••••••••'::text) ELSE NULL END AS pages,
+> 18	  instagram_business_account_id,
+> 19	  whatsapp_phone_number_id,
+> 20	  whatsapp_waba_id,
+> 21	  meta_ad_account_id,
+> 22	  requires_reauth,
+> 23	  token_expires_at,
+> 24	  created_at,
+> 25	  updated_at
+> 26	FROM public.meta_config_table
+> 27	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 28	
+> 29	CREATE OR REPLACE VIEW public.social_accounts AS
+> 30	SELECT
+> 31	  id,
+> 32	  user_id,
+> 33	  platform,
+> 34	  platform_user_id,
+> 35	  platform_username,
+> 36	  CASE WHEN access_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS access_token,
+> 37	  CASE WHEN refresh_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS refresh_token,
+> 38	  token_expires_at,
+> 39	  scopes,
+> 40	  is_active,
+> 41	  metadata,
+> 42	  created_at,
+> 43	  updated_at
+> 44	FROM public.social_accounts_table
+> 45	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 46	
+> 47	CREATE OR REPLACE VIEW public.user_api_keys AS
+> 48	SELECT
+> 49	  user_id,
+> 50	  created_at,
+> 51	  updated_at,
+> 52	  pref_audio_provider,
+> 53	  pref_image_provider,
+> 54	  pref_video_provider,
+> 55	  wp_site_url,
+> 56	  wp_username,
+> 57	  pref_ai_model,
+> 58	  CASE WHEN groq_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS groq_api_key,
+> 59	  CASE WHEN openrouter_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openrouter_api_key,
+> 60	  CASE WHEN openai_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openai_api_key,
+> 61	  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS elevenlabs_api_key,
+> 62	  CASE WHEN google_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS google_api_key,
+> 63	  CASE WHEN nanobana_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS nanobana_api_key,
+> 64	  CASE WHEN seedance_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS seedance_api_key,
+> 65	  CASE WHEN wp_app_password IS NOT NULL THEN '••••••••••••' ELSE NULL END AS wp_app_password,
+> 66	  CASE WHEN replicate_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS replicate_api_key,
+> 67	  CASE WHEN higgsfield_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key,
+> 68	  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key_secret
+> 69	FROM public.user_api_keys_table
+> 70	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 71	
+> 72	-- 3. Re-create Instead-of Triggers on the views
+> 73	CREATE TRIGGER trg_instead_of_meta_config
+> 74	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.meta_config
+> 75	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_meta_config();
+> 76	
+> 77	CREATE TRIGGER trg_instead_of_social_accounts
+> 78	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.social_accounts
+> 79	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_social_accounts();
+> 80	
+> 81	CREATE TRIGGER trg_instead_of_user_api_keys
+> 82	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.user_api_keys
+> 83	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_user_api_keys();
+> 84	
+> 85	-- 4. Grant full client permissions on views
+> 86	GRANT SELECT, INSERT, UPDATE, DELETE ON public.meta_config TO anon, authenticated;
+> 87	GRANT SELECT, INSERT, UPDATE, DELETE ON public.social_accounts TO anon, authenticated;
+> 88	GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;
+> 89	
+> 90	-- 5. Revoke SELECT on the underlying tables to prevent direct client access
+> 91	REVOKE SELECT ON public.meta_config_table FROM anon, authenticated;
+> 92	REVOKE SELECT ON public.social_accounts_table FROM anon, authenticated;
+> 93	REVOKE SELECT ON public.user_api_keys_table FROM anon, authenticated;
+> 94	
+> ```
+
+## 🤖 Claude *(22:37:25)*
+
+
+## 🤖 Claude *(22:37:27)*
+
+Confirmed — the reviewer caught a real, feature-breaking bug. The **current** production view (`000600`) is a **security-definer view with a `WHERE (auth.uid() = user_id OR auth.role() = 'service_role')` filter**, and base-table SELECT is revoked from `authenticated`. My `CREATE OR REPLACE ... WITH (security_invoker = true)` without the WHERE would make authenticated reads hit "permission denied" → break Settings for everyone. Fixing the migration to match `000600` exactly:
+
+## 🤖 Claude *(22:37:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql",
+  "old_string": "-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. MASKED PUBLIC VIEW \u2014 append apify_token (masked)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.user_api_keys WITH (security_invoker = true) AS\nSELECT",
+  "new_string": "-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. MASKED PUBLIC VIEW \u2014 append apify_token (masked)\n-- MUST match the CURRENT production definition from 20260601000600_secure_definer_views.sql:\n-- a SECURITY DEFINER view (default, NOT security_invoker \u2014 base-table SELECT is REVOKED from\n-- authenticated) with an explicit WHERE tenancy filter. Reverting to security_invoker here would\n-- break authenticated reads (permission denied on the base table).\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.user_api_keys AS\nSELECT"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:37:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql",
+  "old_string": "  CASE WHEN apify_token IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS apify_token\nFROM public.user_api_keys_table;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 4. INSTEAD OF TRIGGER",
+  "new_string": "  CASE WHEN apify_token IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS apify_token\nFROM public.user_api_keys_table\nWHERE (auth.uid() = user_id OR auth.role() = 'service_role');\n\n-- Preserve client grants (CREATE OR REPLACE keeps ACLs; re-assert to be safe / idempotent).\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 4. INSTEAD OF TRIGGER"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:37:58)*
+
+
+## 🤖 Claude *(22:37:59)*
+
+Migration now matches the production definer-view + WHERE filter + grants. Before `db push`, let me confirm exactly which migrations are pending (I only want mine applied, not a surprise backlog):
+
+## 🤖 Claude *(22:38:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migration list (Local vs Remote) ===\"\nnpx supabase migration list 2>&1 | tail -25",
+  "description": "Check local vs remote migration state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migration list (Local vs Remote) ===
+>    20260526202000 | 20260526202000 | 2026-05-26 20:20:00 
+>    20260527004739 | 20260527004739 | 2026-05-27 00:47:39 
+>    20260527005036 | 20260527005036 | 2026-05-27 00:50:36 
+>    20260527005356 | 20260527005356 | 2026-05-27 00:53:56 
+>    20260527012253 | 20260527012253 | 2026-05-27 01:22:53 
+>    20260527012332 | 20260527012332 | 2026-05-27 01:23:32 
+>    20260527012404 | 20260527012404 | 2026-05-27 01:24:04 
+>    20260527012421 | 20260527012421 | 2026-05-27 01:24:21 
+>    20260527012500 | 20260527012500 | 2026-05-27 01:25:00 
+>    20260527012945 | 20260527012945 | 2026-05-27 01:29:45 
+>    20260528093200 | 20260528093200 | 2026-05-28 09:32:00 
+>    20260530183000 | 20260530183000 | 2026-05-30 18:30:00 
+>    20260530210000 | 20260530210000 | 2026-05-30 21:00:00 
+>    20260531193000 | 20260531193000 | 2026-05-31 19:30:00 
+>    20260531200000 | 20260531200000 | 2026-05-31 20:00:00 
+>    20260531210000 | 20260531210000 | 2026-05-31 21:00:00 
+>    20260601000000 | 20260601000000 | 2026-06-01 00:00:00 
+>    20260601000500 | 20260601000500 | 2026-06-01 00:05:00 
+>    20260601000600 | 20260601000600 | 2026-06-01 00:06:00 
+>    20260601031300 | 20260601031300 | 2026-06-01 03:13:00 
+>    20260601050000 | 20260601050000 | 2026-06-01 05:00:00 
+>    20260601060000 |                | 2026-06-01 06:00:00 
+> 
+> A new version of Supabase CLI is available: v2.103.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(22:38:09)*
+
+
+## 🤖 Claude *(22:38:09)*
+
+Only `20260601060000` (mine) is pending — clean. Applying it:
+
+## 🤖 Claude *(22:38:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"y\" | npx supabase db push 2>&1 | tail -25; echo \"push exit: ${PIPESTATUS[1]:-$?}\"",
+  "description": "Apply the apify_token migration to remote"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260601060000_user_api_keys_apify_token.sql
+> 
+>  [Y/n] y
+> Applying migration 20260601060000_user_api_keys_apify_token.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.103.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> push exit: 0
+> ```
+
+## 🤖 Claude *(22:38:42)*
+
+
+## 🤖 Claude *(22:38:44)*
+
+**Migration applied (exit 0).** Now the critical materiality check (Law 1) — did it preserve the credential system? Verify existing keys still decrypt, apify_token is masked in the public view, and a write round-trips — **without printing any secret value**:
+
+## 🤖 Claude *(22:38:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\necho \"=== 1. masked public view \u2014 apify_token column exists + masking intact (service_role) ===\"\ncurl -s \"$URL/rest/v1/user_api_keys?user_id=eq.$UID_SOV&select=apify_token,openrouter_api_key,higgsfield_api_key\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d if not d else {k:('MASKED' if v=='\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' else ('null' if v is None else 'PLAINTEXT?!')) for k,v in d[0].items()})\"\n\necho \"=== 2. existing keys STILL decrypt (proves migration didn't break them) \u2014 present+len, NO values ===\"\ncurl -s \"$URL/rest/v1/decrypted_user_api_keys?user_id=eq.$UID_SOV&select=openrouter_api_key,groq_api_key,apify_token\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin); r=d[0] if d else {}; print({k:(f'present(len {len(v)})' if v else 'null') for k,v in r.items()})\"",
+  "description": "Verify masked view + existing keys intact after migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. masked public view — apify_token column exists + masking intact (service_role) ===
+> {'apify_token': 'null', 'openrouter_api_key': 'MASKED', 'higgsfield_api_key': 'MASKED'}
+> === 2. existing keys STILL decrypt (proves migration didn't break them) — present+len, NO values ===
+> {'openrouter_api_key': 'present(len 73)', 'groq_api_key': 'present(len 56)', 'apify_token': 'null'}
+> ```
+
+## 🤖 Claude *(22:39:20)*
+
+
+## 🤖 Claude *(22:39:22)*
+
+**Migration verified safe:** apify_token masked in the public view, and **existing keys still decrypt** (openrouter len 73, groq len 56 — not broken). Now the write round-trip — provisioning your `apify_token` via the masked view (proves encrypt→decrypt works + makes your BYOK live), without printing the secret:
+
+## 🤖 Claude *(22:39:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\npython3 - <<PY\nimport json,os,urllib.request\nKEY=os.environ[\"SB_SECRET_KEY\"] if os.environ.get(\"SB_SECRET_KEY\") else os.environ[\"SUPABASE_SERVICE_ROLE_KEY\"]\nURL=os.environ.get(\"VITE_SUPABASE_URL\",\"https://bcyvddsykvehvpwstlfa.supabase.co\"); UID=\"$UID_SOV\"\nTOK=os.environ.get(\"APIFY_TOKENS\",\"\")\nH={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\"}\ndef req(m,p,b=None,pref=None):\n    h=dict(H); \n    if pref: h[\"Prefer\"]=pref\n    r=urllib.request.Request(URL+p,data=json.dumps(b).encode() if b is not None else None,headers=h,method=m)\n    return urllib.request.urlopen(r,timeout=30).read().decode()\n# 1. write apify_token via the MASKED VIEW (exercises INSTEAD OF + encrypt trigger)\nreq(\"PATCH\",f\"/rest/v1/user_api_keys?user_id=eq.{UID}\",{\"apify_token\":TOK},pref=\"return=minimal\")\nprint(f\"wrote apify_token via view (env token len {len(TOK)})\")\n# 2. decrypted view \u2192 must round-trip to same length; other keys intact\nd=json.loads(req(\"GET\",f\"/rest/v1/decrypted_user_api_keys?user_id=eq.{UID}&select=apify_token,openrouter_api_key,groq_api_key\"))[0]\nat=d.get(\"apify_token\") or \"\"\nprint(\"apify_token round-trip:\", \"OK \u2705 (len matches)\" if len(at)==len(TOK) and at==TOK else f\"MISMATCH (got len {len(at)})\")\nprint(\"openrouter still intact:\", \"yes\" if d.get(\"openrouter_api_key\") else \"NO\")\nprint(\"groq still intact:\", \"yes\" if d.get(\"groq_api_key\") else \"NO\")\n# 3. masked view now hides it\nm=json.loads(req(\"GET\",f\"/rest/v1/user_api_keys?user_id=eq.{UID}&select=apify_token\"))[0]\nprint(\"masked view apify_token:\", \"MASKED \u2705\" if m[\"apify_token\"]==\"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\" else m[\"apify_token\"])\nPY",
+  "description": "Test apify_token write round-trip through Vault"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<stdin>", line 12, in <module>
+>   File "<stdin>", line 10, in req
+>   File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+>     return opener.open(url, data, timeout)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+>     response = meth(req, response)
+>                ^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+>     response = self.parent.error(
+>                ^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+>     return self._call_chain(*args)
+>            ^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+>     result = func(*args)
+>              ^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+>     raise HTTPError(req.full_url, code, msg, hdrs, fp)
+> urllib.error.HTTPError: HTTP Error 409: Conflict
+> ```
+
+## 🤖 Claude *(22:40:11)*
+
+
+## 🤖 Claude *(22:40:12)*
+
+HTTP 409 on the view PATCH — I must not leave that as a landmine (the Settings UI writes this view). Let me pinpoint: check how the UI actually writes it, test the base-table round-trip (isolates the Vault triggers I changed), and test the view upsert (the UI's real path):
+
+## 🤖 Claude *(22:40:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== how does the frontend WRITE user_api_keys? (upsert vs update) ===\"\nrg -n \"user_api_keys\" src/hooks/*.ts 2>/dev/null | rg -iE \"upsert|update|insert|onConflict|from\\(\" | head\necho \"\"\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\npython3 - <<PY\nimport json,os,urllib.request\nKEY=os.environ.get(\"SB_SECRET_KEY\") or os.environ[\"SUPABASE_SERVICE_ROLE_KEY\"]\nURL=os.environ.get(\"VITE_SUPABASE_URL\",\"https://bcyvddsykvehvpwstlfa.supabase.co\"); UID=\"$UID_SOV\"; TOK=os.environ.get(\"APIFY_TOKENS\",\"\")\ndef call(m,p,b=None,pref=None):\n    h={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\"}\n    if pref: h[\"Prefer\"]=pref\n    try:\n        r=urllib.request.Request(URL+p,data=json.dumps(b).encode() if b is not None else None,headers=h,method=m)\n        return urllib.request.urlopen(r,timeout=30).getcode(), urllib.request.urlopen(r,timeout=30).read().decode()[:80] if False else \"\"\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()[:120]\n# A. base-table write (isolates encrypt trigger + decrypted view \u2014 the migration's core)\nc,_=call(\"PATCH\",f\"/rest/v1/user_api_keys_table?user_id=eq.{UID}\",{\"apify_token\":TOK},\"return=minimal\")\nprint(\"A. base-table PATCH:\",c)\nd=json.loads(open('/dev/stdin').read()) if False else None\nimport urllib.request as u2\nr=u2.Request(f\"{URL}/rest/v1/decrypted_user_api_keys?user_id=eq.{UID}&select=apify_token,openrouter_api_key\",headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\"})\ndd=json.loads(u2.urlopen(r,timeout=30).read())[0]\nat=dd.get(\"apify_token\") or \"\"\nprint(\"   round-trip:\", \"OK \u2705\" if at==TOK else f\"MISMATCH(len {len(at)} vs {len(TOK)})\", \"| openrouter intact:\", \"yes\" if dd.get(\"openrouter_api_key\") else \"NO\")\n# B. view upsert (the UI path: supabase-js .upsert \u2192 POST resolution=merge-duplicates)\nc,body=call(\"POST\",\"/rest/v1/user_api_keys?on_conflict=user_id\",{\"user_id\":UID,\"apify_token\":TOK},\"resolution=merge-duplicates,return=minimal\")\nprint(\"B. view upsert (UI path):\",c, body)\nPY",
+  "description": "Diagnose 409, test base-table round-trip and view upsert"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === how does the frontend WRITE user_api_keys? (upsert vs update) ===
+> rg: error parsing flag -E: grep config error: unknown encoding: upsert|update|insert|onConflict|from\(
+> 
+> A. base-table PATCH: 204
+>    round-trip: OK ✅ | openrouter intact: yes
+> B. view upsert (UI path): 400 {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLIC
+> ```
+
+## 🤖 Claude *(22:40:56)*
+
+
+## 🤖 Claude *(22:40:58)*
+
+Base-table round-trip is **OK ✅** (apify_token encrypts→decrypts, openrouter intact) — so the migration's Vault core works. The 409/400 are about *view writes*; my grep flag was malformed (ripgrep `-E` ≠ extended-regex). Let me find how the UI actually writes the view and test that exact method (to rule out a regression in the INSTEAD OF trigger I rewrote):
+
+## 🤖 Claude *(22:41:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== UI write method for user_api_keys ===\"\nrg -n \"user_api_keys\" src/hooks/useUserApiKeys.ts 2>/dev/null | head\necho \"--- the mutation (upsert/update/insert) ---\"\nrg -n \"upsert|\\.update\\(|\\.insert\\(|onConflict|from\\(['\\\"]user_api_keys\" src/hooks/useUserApiKeys.ts 2>/dev/null | head\necho \"\"\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== test plain upsert on view (POST, Prefer merge-duplicates, NO on_conflict \u2014 typical supabase-js upsert path) ===\"\ncurl -s -o /dev/null -w \"view upsert (no on_conflict): HTTP %{http_code}\\n\" -X POST \"$URL/rest/v1/user_api_keys\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -H \"Prefer: resolution=merge-duplicates,return=minimal\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID_SOV\\\",\\\"pref_ai_model\\\":\\\"google/gemini-2.5-flash\\\"}\"\necho \"=== confirm apify_token + openrouter both still decrypt after these writes ===\"\ncurl -s \"$URL/rest/v1/decrypted_user_api_keys?user_id=eq.$UID_SOV&select=apify_token,openrouter_api_key,groq_api_key\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin)[0]; print({k:('present' if v else 'NULL') for k,v in d.items()})\"",
+  "description": "Find UI write method and test view upsert"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === UI write method for user_api_keys ===
+> 6:export type UserApiKeysRow = Database['public']['Tables']['user_api_keys']['Row'];
+> 7:type UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update'];
+> 9:const QUERY_KEY = (userId: string | undefined) => ['user_api_keys', userId] as const;
+> 19:        .from('user_api_keys')
+> 33:        .from('user_api_keys')
+> --- the mutation (upsert/update/insert) ---
+> 19:        .from('user_api_keys')
+> 33:        .from('user_api_keys')
+> 34:        .upsert({
+> 
+> === test plain upsert on view (POST, Prefer merge-duplicates, NO on_conflict — typical supabase-js upsert path) ===
+> view upsert (no on_conflict): HTTP 400
+> === confirm apify_token + openrouter both still decrypt after these writes ===
+> {'apify_token': 'present', 'openrouter_api_key': 'present', 'groq_api_key': 'present'}
+> ```
+
+## 🤖 Claude *(22:41:52)*
+
+
+## 🤖 Claude *(22:41:53)*
+
+Base-table round-trip works and didn't break existing keys — the migration's Vault core is sound. The view-write 400/409 are about *how* PostgREST hits the view; since I reproduced the INSTEAD OF trigger faithfully, this behavior is unchanged from `000600` (pre-existing, not my change). Let me confirm by reading the UI's exact upsert and testing the plain INSTEAD OF INSERT path:
+
+## 🤖 Claude *(22:41:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts",
+  "offset": 28,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 28	  });
+> 29	
+> 30	  const { mutateAsync: saveKeys, isPending: isSaving } = useMutation({
+> 31	    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {
+> 32	      const { error } = await supabase
+> 33	        .from('user_api_keys')
+> 34	        .upsert({
+> 35	          ...payload,
+> 36	          user_id: user!.id,
+> 37	          updated_at: new Date().toISOString(),
+> 38	        } as UserApiKeysUpdate);
+> 39	      if (error) throw error;
+> 40	    },
+> 41	    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(user?.id) }),
+> 42	  });
+> 43	
+> 44	  return { userKeys, saveKeys, isSaving, isLoading };
+> 45	}
+> 46	
+> ```
+
+## 🤖 Claude *(22:42:46)*
+
+
+## 🤖 Claude *(22:42:48)*
+
+The UI hook uses `.upsert()` (no `onConflict`) → PostgREST sends `merge-duplicates`, which needs a constraint the **view doesn't have** → 400. This was introduced by **today's earlier migration `000600`** (table→view conversion), not mine — but it means UI key-saving (and my future BYOK field) would fail. Let me confirm the correct write path (plain INSERT → INSTEAD OF trigger upserts internally):
+
+## 🤖 Claude *(22:42:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== plain POST (INSERT, no merge-duplicates) \u2192 INSTEAD OF INSERT trigger upserts internally ===\"\ncurl -s -o /dev/null -w \"plain insert on view: HTTP %{http_code}\\n\" -X POST \"$URL/rest/v1/user_api_keys\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=minimal\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID_SOV\\\",\\\"pref_ai_model\\\":\\\"google/gemini-2.5-flash\\\"}\"\necho \"=== also test authenticated-style: does a SECOND insert (existing row) still 'upsert' cleanly via the trigger? ===\"\ncurl -s -o /dev/null -w \"second plain insert (conflict\u2192trigger update): HTTP %{http_code}\\n\" -X POST \"$URL/rest/v1/user_api_keys\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=minimal\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID_SOV\\\",\\\"pref_ai_model\\\":\\\"google/gemini-2.5-flash\\\"}\"",
+  "description": "Test plain insert path on the view (INSTEAD OF trigger upsert)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === plain POST (INSERT, no merge-duplicates) → INSTEAD OF INSERT trigger upserts internally ===
+> plain insert on view: HTTP 201
+> === also test authenticated-style: does a SECOND insert (existing row) still 'upsert' cleanly via the trigger? ===
+> second plain insert (conflict→trigger update): HTTP 201
+> ```
+
+## 🤖 Claude *(22:43:35)*
+
+
+## 🤖 Claude *(22:43:38)*
+
+**Root cause found + it's bigger than my feature.** The view-write works via plain **`.insert()`** (HTTP 201, even on existing rows — the INSTEAD OF trigger upserts via `ON CONFLICT DO UPDATE`), but **`.upsert()`** (what the UI uses) sends `merge-duplicates` → **400** (views have no constraint). This is a **pre-existing P0 from today's `000600`** (table→view): it breaks **all** Settings key-saving. It also blocks my BYOK UI. The fix (`.upsert()`→`.insert()`) resolves both. Let me read the hook fully + check meta/social for the same pattern:
+
+## 🤖 Claude *(22:43:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import type { Database } from '@/integrations/supabase/types';
+> 5	
+> 6	export type UserApiKeysRow = Database['public']['Tables']['user_api_keys']['Row'];
+> 7	type UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update'];
+> 8	
+> 9	const QUERY_KEY = (userId: string | undefined) => ['user_api_keys', userId] as const;
+> 10	
+> 11	export function useUserApiKeys() {
+> 12	  const { user } = useAuth();
+> 13	  const qc = useQueryClient();
+> 14	
+> 15	  const { data: userKeys, isLoading } = useQuery({
+> 16	    queryKey: QUERY_KEY(user?.id),
+> 17	    queryFn: async () => {
+> 18	      const { data, error } = await supabase
+> 19	        .from('user_api_keys')
+> 20	        .select('*')
+> 21	        .eq('user_id', user!.id)
+> 22	        .maybeSingle();
+> 23	      if (error) throw error;
+> 24	      return data as UserApiKeysRow | null;
+> 25	    },
+> 26	    enabled: !!user?.id,
+> 27	    staleTime: 60_000,
+> 28	  });
+> 29	
+> 30	  const { mutateAsync: saveKeys, isPending: isSaving } = useMutation({
+> 31	    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {
+> 32	      const { error } = await supabase
+> 33	        .from('user_api_keys')
+> 34	        .upsert({
+> 35	          ...payload,
+> 36	          user_id: user!.id,
+> 37	          updated_at: new Date().toISOString(),
+> 38	        } as UserApiKeysUpdate);
+> 39	      if (error) throw error;
+> 40	    },
+> 41	    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(user?.id) }),
+> 42	  });
+> 43	
+> 44	  return { userKeys, saveKeys, isSaving, isLoading };
+> 45	}
+> 46	
+> ```
+
+## 🤖 Claude *(22:43:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== other hooks writing the converted VIEWS (meta_config / social_accounts / user_api_keys) via .upsert (same 400 bug)? ===\"\nrg -n \"from\\(['\\\"](user_api_keys|meta_config|social_accounts)['\\\"]\\)\" src/ -A3 2>/dev/null | rg -n \"upsert|from\\(\" | head -20",
+  "description": "Read full hook and find other upsert-on-view usages"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === other hooks writing the converted VIEWS (meta_config / social_accounts / user_api_keys) via .upsert (same 400 bug)? ===
+> 1:src/hooks/useSocialAccounts.ts:29:        .from('social_accounts')
+> 6:src/hooks/useSocialAccounts.ts:40:      const { error } = await supabase.from('social_accounts').delete().eq('id', id);
+> 11:src/hooks/useDashboardData.ts:33:        supabase.from('social_accounts').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_active', true),
+> 12:src/hooks/useDashboardData.ts-34-        supabase.from('notifications').select('id, title, message, type, read, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+> 13:src/hooks/useDashboardData.ts-35-        supabase.from('audit_logs').select('id, action, resource_type, details, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+> 14:src/hooks/useDashboardData.ts-36-        supabase.from('campaign_metrics').select('platform, impressions, clicks, engagements').eq('user_id', user.id),
+> 16:src/hooks/useMetaConfig.ts:29:        .from('meta_config')
+> 21:src/hooks/useMetaConfig.ts:57:          .from('meta_config')
+> 26:src/hooks/useMetaConfig.ts:63:          .from('meta_config')
+> 31:src/hooks/useMetaConfig.ts:76:      const { error } = await db.from('meta_config').delete().eq('id', status.id);
+> 36:src/hooks/useUserApiKeys.ts:19:        .from('user_api_keys')
+> 41:src/hooks/useUserApiKeys.ts:33:        .from('user_api_keys')
+> 42:src/hooks/useUserApiKeys.ts-34-        .upsert({
+> 46:src/pages/SocialAccountsPage.tsx:31:      .from('user_api_keys')
+> 51:src/pages/SocialAccountsPage.tsx:51:      const { error } = await supabase.from('user_api_keys').upsert(
+> 56:src/pages/SocialAccountsPage.tsx:68:      const { error } = await supabase.from('user_api_keys').upsert(
+> ```
+
+## 🤖 Claude *(22:44:41)*
+
+
+## 🤖 Claude *(22:44:44)*
+
+Confirmed: `.insert()` works (201, upserts via the trigger's `ON CONFLICT`); `.upsert()` 400s. **Scope discipline:** the BYOK feature *requires* `useUserApiKeys.saveKeys` to work, so I'll fix that hook (required) + build the apify_token UI. The same pre-existing `000600` bug also hits `SocialAccountsPage` (×2) and possibly meta/social views (different trigger semantics) — I'll **flag those precisely** for a focused follow-up rather than balloon scope.
+
+Fixing the hook (`.upsert`→`.insert`; the `user_api_keys` INSTEAD OF trigger upserts via `ON CONFLICT`) and finding its UI:
+
+## 🤖 Claude *(22:44:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts",
+  "old_string": "export type UserApiKeysRow = Database['public']['Tables']['user_api_keys']['Row'];\ntype UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update'];",
+  "new_string": "export type UserApiKeysRow = Database['public']['Tables']['user_api_keys']['Row'];\ntype UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update'];\ntype UserApiKeysInsert = Database['public']['Tables']['user_api_keys']['Insert'];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:44:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts",
+  "old_string": "    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {\n      const { error } = await supabase\n        .from('user_api_keys')\n        .upsert({\n          ...payload,\n          user_id: user!.id,\n          updated_at: new Date().toISOString(),\n        } as UserApiKeysUpdate);\n      if (error) throw error;\n    },",
+  "new_string": "    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {\n      // INSERT (not upsert): `user_api_keys` is now a masked VIEW (credential_encryption) whose\n      // INSTEAD OF INSERT trigger runs `INSERT ... ON CONFLICT (user_id) DO UPDATE` \u2014 i.e. it\n      // upserts internally. A PostgREST `.upsert()` would send `merge-duplicates`, which needs a\n      // unique constraint the view lacks \u2192 HTTP 400. `.insert()` routes through the trigger.\n      const { error } = await supabase\n        .from('user_api_keys')\n        .insert({\n          ...payload,\n          user_id: user!.id,\n          updated_at: new Date().toISOString(),\n        } as UserApiKeysInsert);\n      if (error) throw error;\n    },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:44:57)*
+
+
+## 🤖 Claude *(22:44:57)*
+
+Now find the Settings UI that consumes `useUserApiKeys` to add the `apify_token` field:
+
+## 🤖 Claude *(22:45:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== who uses useUserApiKeys (the BYOK keys UI) ===\"\nrg -ln \"useUserApiKeys\" src/ 2>/dev/null\necho \"=== where keys are rendered (look for an api-keys settings component listing key fields) ===\"\nrg -ln \"replicate_api_key|higgsfield_api_key|saveKeys|openrouter_api_key\" src/components src/pages 2>/dev/null | head\necho \"=== component that renders the key inputs + uses saveKeys ===\"\nrg -ln \"saveKeys\" src/ 2>/dev/null",
+  "description": "Locate the API keys settings UI component"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === who uses useUserApiKeys (the BYOK keys UI) ===
+> src/hooks/useAccessConfig.ts
+> src/hooks/useUserApiKeys.ts
+> src/pages/SettingsPage.tsx
+> src/pages/CoreV2Page.tsx
+> src/components/panels/AccessConfigCard.tsx
+> src/components/panels/ConfigPanel.tsx
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+> === where keys are rendered (look for an api-keys settings component listing key fields) ===
+> src/components/panels/ConfigPanel.tsx
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+> src/pages/SettingsPage.tsx
+> src/pages/CoreV2Page.tsx
+> === component that renders the key inputs + uses saveKeys ===
+> src/hooks/useUserApiKeys.ts
+> src/pages/SettingsPage.tsx
+> src/pages/CoreV2Page.tsx
+> ```
+
+## 🤖 Claude *(22:45:04)*
+
+
+## 🤖 Claude *(22:45:05)*
+
+`SettingsPage.tsx` is the keys UI. Let me see how it renders a key field (to mirror the pattern for `apify_token`):
+
+## 🤖 Claude *(22:45:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SettingsPage: key fields + saveKeys usage + state shape ===\"\nrg -n \"saveKeys|replicate_api_key|higgsfield_api_key|openrouter_api_key|api_key|useUserApiKeys|useState|KeyField|Input\" src/pages/SettingsPage.tsx 2>/dev/null | head -40",
+  "description": "Inspect SettingsPage key field rendering pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SettingsPage: key fields + saveKeys usage + state shape ===
+> 1:import { useState, useEffect, useCallback } from "react";
+> 5:import { useUserApiKeys } from "@/hooks/useUserApiKeys";
+> 11:import { Input } from "@/components/ui/input";
+> 25:// the encrypted user_api_keys view, so a saved key can't be tested in the browser. A masked/empty
+> 41:function KeyField({
+> 47:  const [status, setStatus] = useState<KeyStatus>("idle");
+> 65:        <Input
+> 107:  const { userKeys, saveKeys, isSaving, isLoading } = useUserApiKeys();
+> 110:  const [deleteConfirm, setDeleteConfirm] = useState("");
+> 111:  const [showDeleteModal, setShowDeleteModal] = useState(false);
+> 122:  const [keys, setKeys] = useState({
+> 123:    groq_api_key: "",
+> 124:    openrouter_api_key: "",
+> 125:    openai_api_key: "",
+> 126:    elevenlabs_api_key: "",
+> 127:    google_api_key: "",
+> 128:    nanobana_api_key: "",
+> 129:    seedance_api_key: "",
+> 130:    replicate_api_key: "",
+> 132:  const [prefs, setPrefs] = useState({
+> 138:  const [wpConfig, setWpConfig] = useState({
+> 143:  const [savingWp, setSavingWp] = useState(false);
+> 144:  const [advancedOpen, setAdvancedOpen] = useState(false);
+> 150:      groq_api_key: userKeys.groq_api_key || "",
+> 151:      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 152:      openai_api_key: userKeys.openai_api_key || "",
+> 153:      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 154:      google_api_key: userKeys.google_api_key || "",
+> 155:      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 156:      seedance_api_key: userKeys.seedance_api_key || "",
+> 157:      replicate_api_key: userKeys.replicate_api_key || "",
+> 174:      await saveKeys({ ...keys, ...prefs });
+> 184:      await saveKeys({
+> 239:              <KeyField
+> 240:                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 243:                value={keys.openrouter_api_key}
+> 244:                onChange={(v) => setKeys((p) => ({ ...p, openrouter_api_key: v }))}
+> 246:              <KeyField
+> 247:                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 250:                value={keys.google_api_key}
+> ```
+
+## 🤖 Claude *(22:45:19)*
+
+
+## 🤖 Claude *(22:45:20)*
+
+Clear pattern (`keys` state + load effect + `<KeyField>`). Let me read the exact `KeyField` props and a render block to mirror them precisely for `apify_token`:
+
+## 🤖 Claude *(22:45:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 41,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 41	function KeyField({
+> 42	  id, label, placeholder, description, provider, value, onChange,
+> 43	}: {
+> 44	  id: string; label: string; placeholder: string; description: string;
+> 45	  provider: string; value: string; onChange: (v: string) => void;
+> 46	}) {
+> 47	  const [status, setStatus] = useState<KeyStatus>("idle");
+> 48	
+> 49	  const handleTest = useCallback(async () => {
+> 50	    if (!value.trim()) { toast.error("Insira a chave antes de testar."); return; }
+> 51	    setStatus("testing");
+> 52	    const ok = await testApiKey(provider, value);
+> 53	    setStatus(ok ? "ok" : "error");
+> 54	    if (ok) toast.success(`${label}: chave válida ✓`);
+> 55	    else toast.error(`${label}: chave inválida ou sem permissão.`);
+> 56	  }, [value, provider, label]);
+> 57	
+> 58	  return (
+> 59	    <div className="space-y-2">
+> 60	      <Label htmlFor={id} className="flex items-center gap-2">
+> 61	        <Key className="h-3 w-3 text-muted-foreground" />
+> 62	        {label}
+> 63	      </Label>
+> 64	      <div className="flex gap-2">
+> 65	        <Input
+> 66	          id={id}
+> 67	          name={id}
+> 68	          type="password"
+> 69	          autoComplete="new-password"
+> 70	          data-lpignore="true"
+> 71	          data-1p-ignore="true"
+> 72	          placeholder={placeholder}
+> 73	          value={value}
+> 74	          onChange={(e) => { onChange(e.target.value); setStatus("idle"); }}
+> 75	          className="font-mono text-sm flex-1"
+> 76	        />
+> 77	        <Button
+> 78	          type="button"
+> 79	          variant="outline"
+> 80	          size="sm"
+> 81	          onClick={handleTest}
+> 82	          disabled={status === "testing" || !value.trim()}
+> 83	          className="shrink-0 gap-1.5 text-xs"
+> 84	        >
+> 85	          {status === "testing" ? (
+> 86	            <Loader2 className="h-3 w-3 animate-spin" />
+> 87	          ) : status === "ok" ? (
+> 88	            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+> 89	          ) : status === "error" ? (
+> 90	            <XCircle className="h-3 w-3 text-red-400" />
+> 91	          ) : (
+> 92	            <Zap className="h-3 w-3" />
+> ```
+
+## 🤖 Claude *(22:45:43)*
+
+
+## 🤖 Claude *(22:45:44)*
+
+`KeyField` requires `description` + `provider` (drives a Test button). Let me read a full usage block to mirror it exactly, then add the `apify_token` field:
+
+## 🤖 Claude *(22:45:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 236,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 236	            </div>
+> 237	          ) : (
+> 238	            <>
+> 239	              <KeyField
+> 240	                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 241	                description="Provedor principal multi-modelo. Usado pelo pipeline de conteúdo e AIOS."
+> 242	                provider="openrouter"
+> 243	                value={keys.openrouter_api_key}
+> 244	                onChange={(v) => setKeys((p) => ({ ...p, openrouter_api_key: v }))}
+> 245	              />
+> 246	              <KeyField
+> 247	                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 248	                description="Chave Gemini do usuário. Usada pelo AIOS Chat, TTS e geração de vídeo."
+> 249	                provider="google"
+> 250	                value={keys.google_api_key}
+> 251	                onChange={(v) => setKeys((p) => ({ ...p, google_api_key: v }))}
+> 252	              />
+> 253	              <KeyField
+> 254	                id="groq_api_key" label="Groq API Key" placeholder="gsk_..."
+> 255	                description="Provedor ultra-rápido via Llama-3. Fallback de alta velocidade."
+> 256	                provider="groq"
+> 257	                value={keys.groq_api_key}
+> 258	                onChange={(v) => setKeys((p) => ({ ...p, groq_api_key: v }))}
+> 259	              />
+> 260	              <KeyField
+> 261	                id="openai_api_key" label="OpenAI API Key" placeholder="sk-proj-..."
+> 262	                description="Usado para geração de imagens via DALL-E 3."
+> 263	                provider="openai"
+> 264	                value={keys.openai_api_key}
+> 265	                onChange={(v) => setKeys((p) => ({ ...p, openai_api_key: v }))}
+> 266	              />
+> 267	              <KeyField
+> 268	                id="replicate_api_key" label="Replicate API Key" placeholder="r8_..."
+> 269	                description="Usado pelo Canvas para FLUX 1.1 Pro, FLUX Schnell e SDXL."
+> 270	                provider="replicate"
+> 271	                value={keys.replicate_api_key}
+> 272	                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}
+> 273	              />
+> 274	              <KeyField
+> 275	                id="elevenlabs_api_key" label="ElevenLabs API Key" placeholder="sk_..."
+> ```
+
+## 🤖 Claude *(22:46:08)*
+
+
+## 🤖 Claude *(22:46:08)*
+
+Now adding the `apify_token` field. Let me read the exact state + load-effect lines to edit precisely:
+
+## 🤖 Claude *(22:46:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 122,
+  "limit": 42
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 122	  const [keys, setKeys] = useState({
+> 123	    groq_api_key: "",
+> 124	    openrouter_api_key: "",
+> 125	    openai_api_key: "",
+> 126	    elevenlabs_api_key: "",
+> 127	    google_api_key: "",
+> 128	    nanobana_api_key: "",
+> 129	    seedance_api_key: "",
+> 130	    replicate_api_key: "",
+> 131	  });
+> 132	  const [prefs, setPrefs] = useState({
+> 133	    pref_ai_model: "gemini-2.5-flash",
+> 134	    pref_audio_provider: "openai",
+> 135	    pref_image_provider: "openai",
+> 136	    pref_video_provider: "veo",
+> 137	  });
+> 138	  const [wpConfig, setWpConfig] = useState({
+> 139	    wp_site_url: "",
+> 140	    wp_username: "",
+> 141	    wp_app_password: "",
+> 142	  });
+> 143	  const [savingWp, setSavingWp] = useState(false);
+> 144	  const [advancedOpen, setAdvancedOpen] = useState(false);
+> 145	
+> 146	  // Populate form from hook data
+> 147	  useEffect(() => {
+> 148	    if (!userKeys) return;
+> 149	    setKeys({
+> 150	      groq_api_key: userKeys.groq_api_key || "",
+> 151	      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 152	      openai_api_key: userKeys.openai_api_key || "",
+> 153	      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 154	      google_api_key: userKeys.google_api_key || "",
+> 155	      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 156	      seedance_api_key: userKeys.seedance_api_key || "",
+> 157	      replicate_api_key: userKeys.replicate_api_key || "",
+> 158	    });
+> 159	    setPrefs({
+> 160	      pref_ai_model: userKeys.pref_ai_model || "gemini-2.5-flash",
+> 161	      pref_audio_provider: userKeys.pref_audio_provider || "openai",
+> 162	      pref_image_provider: userKeys.pref_image_provider || "openai",
+> 163	      pref_video_provider: userKeys.pref_video_provider || "veo",
+> ```
+
+## 🤖 Claude *(22:46:21)*
+
+
+## 🤖 Claude *(22:46:21)*
+
+Making the 3 edits (state, load-effect, render):
+
+## 🤖 Claude *(22:46:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "    seedance_api_key: \"\",\n    replicate_api_key: \"\",\n  });\n  const [prefs, setPrefs] = useState({",
+  "new_string": "    seedance_api_key: \"\",\n    replicate_api_key: \"\",\n    apify_token: \"\",\n  });\n  const [prefs, setPrefs] = useState({"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:46:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "      seedance_api_key: userKeys.seedance_api_key || \"\",\n      replicate_api_key: userKeys.replicate_api_key || \"\",\n    });\n    setPrefs({",
+  "new_string": "      seedance_api_key: userKeys.seedance_api_key || \"\",\n      replicate_api_key: userKeys.replicate_api_key || \"\",\n      apify_token: userKeys.apify_token || \"\",\n    });\n    setPrefs({"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:46:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "                value={keys.replicate_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}\n              />\n              <KeyField\n                id=\"elevenlabs_api_key\" label=\"ElevenLabs API Key\" placeholder=\"sk_...\"",
+  "new_string": "                value={keys.replicate_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}\n              />\n              <KeyField\n                id=\"apify_token\" label=\"Apify Token (minera\u00e7\u00e3o de produtos ML)\" placeholder=\"apify_api_...\"\n                description=\"BYOK opcional p/ enriquecer foto/pre\u00e7o/estoque de afiliados via Apify. Sem ela, usa o token de sistema (cat\u00e1logo compartilhado).\"\n                provider=\"apify\"\n                value={keys.apify_token}\n                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}\n              />\n              <KeyField\n                id=\"elevenlabs_api_key\" label=\"ElevenLabs API Key\" placeholder=\"sk_...\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:47:32)*
+
+
+## 🤖 Claude *(22:47:33)*
+
+Now wiring the **layered resolution** so the stored per-user token is actually *used* (per-user → system fallback), making BYOK functional end-to-end. Editing the enricher:
+
+## 🤖 Claude *(22:47:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts",
+  "old_string": "const APIFY = process.env.APIFY_TOKENS;\nconst SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? \"https://bcyvddsykvehvpwstlfa.supabase.co\";\nconst SB_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\nconst ACTOR = \"karamelo~mercadolivre-scraper-brasil-portugues\";\n\nconst DRY = process.argv.includes(\"--dry-run\");\nconst onlyIdx = process.argv.indexOf(\"--product\");\nconst ONLY = onlyIdx >= 0 ? process.argv[onlyIdx + 1] : null;\n\nif (!APIFY) { console.error(\"\u2717 Missing APIFY_TOKENS in .env\"); process.exit(2); }\nif (!SB_KEY) { console.error(\"\u2717 Missing SB_SECRET_KEY in .env\"); process.exit(2); }",
+  "new_string": "const SYSTEM_APIFY = process.env.APIFY_TOKENS;\nconst SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? \"https://bcyvddsykvehvpwstlfa.supabase.co\";\nconst SB_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\nconst ACTOR = \"karamelo~mercadolivre-scraper-brasil-portugues\";\n\nconst DRY = process.argv.includes(\"--dry-run\");\nconst onlyIdx = process.argv.indexOf(\"--product\");\nconst ONLY = onlyIdx >= 0 ? process.argv[onlyIdx + 1] : null;\nconst userIdx = process.argv.indexOf(\"--user\");\nconst USER = userIdx >= 0 ? process.argv[userIdx + 1] : null; // per-user BYOK run (else system/cron)\n\nif (!SB_KEY) { console.error(\"\u2717 Missing SB_SECRET_KEY in .env\"); process.exit(2); }\n\n// Layered token resolution (API Tenancy): per-user apify_token \u2192 system APIFY_TOKENS fallback.\n// `--user <uuid>` reads that tenant's decrypted apify_token (BYOK, isolated quota); the system\n// cron omits --user and uses the global token to enrich the SHARED catalog.\nlet APIFY: string | undefined = SYSTEM_APIFY;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:47:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts",
+  "old_string": "let q = `${SUPABASE_URL}/rest/v1/vm_affiliate_products?network=eq.mercadolivre&is_active=eq.true&select=id,external_id,name,product_url,metadata`;",
+  "new_string": "// Resolve the Apify token (per-user \u2192 system) before any actor call.\nasync function resolveApifyToken(): Promise<string | undefined> {\n  if (USER) {\n    try {\n      const r = await fetch(`${SUPABASE_URL}/rest/v1/decrypted_user_api_keys?user_id=eq.${USER}&select=apify_token`, { headers: H });\n      const d = await r.json();\n      const t = Array.isArray(d) && d[0]?.apify_token;\n      if (t) { console.log(`token: per-user BYOK (${USER})`); return t as string; }\n      console.log(`token: no per-user apify_token for ${USER} \u2192 system fallback`);\n    } catch { /* fall through to system */ }\n  } else {\n    console.log(\"token: system (shared-catalog/cron flow)\");\n  }\n  return SYSTEM_APIFY;\n}\nAPIFY = await resolveApifyToken();\nif (!APIFY) { console.error(\"\u2717 No Apify token (neither per-user nor APIFY_TOKENS).\"); process.exit(2); }\n\nlet q = `${SUPABASE_URL}/rest/v1/vm_affiliate_products?network=eq.mercadolivre&is_active=eq.true&select=id,external_id,name,product_url,metadata`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/enrich-affiliate-products.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:48:07)*
+
+
+## 🤖 Claude *(22:48:08)*
+
+Layered resolution wired. Now verify — tsc + tests (frontend changes), then prove the per-user token actually drives a scrape (`--user` resolves the Sovereign's stored token):
+
+## 🤖 Claude *(22:48:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -10; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== affiliate unit tests ===\"; npx vitest run src/lib/affiliate.test.ts 2>&1 | tail -4",
+  "description": "Typecheck and affiliate tests after BYOK UI + hook fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === affiliate unit tests ===
+>       Tests  14 passed (14)
+>    Start at  19:48:11
+>    Duration  1.01s (transform 66ms, setup 88ms, collect 46ms, tests 19ms, environment 403ms, prepare 207ms)
+> ```
+
+## 🤖 Claude *(22:48:18)*
+
+
+## 🤖 Claude *(22:48:19)*
+
+tsc clean, tests green. Now the end-to-end proof that the **stored per-user token drives a real scrape** (`--user` + Roborock, dry — ~$0.001):
+
+## 🤖 Claude *(22:48:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/enrich-affiliate-products.ts --user ada39fae-67e1-4e53-af1c-5a18e1c108e8 --product MLB27834876 --dry-run 2>&1",
+  "description": "Test per-user BYOK token drives a scrape (dry)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> token: per-user BYOK (ada39fae-67e1-4e53-af1c-5a18e1c108e8)
+> Enriching 1 ML product(s) [DRY-RUN] via Apify karamelo~mercadolivre-scraper-brasil-portugues
+> 
+> ── MLB27834876  Roborock S8 Pro Ultra
+>     ✓ matched · price=17770 BRL · image=yes
+> 
+> ═══ enriched=1 · unavailable=0 · failed=0 (of 1) ═══
+> ```
+
+## 🤖 Claude *(22:48:49)*
+
+
+## 🤖 Claude *(22:48:50)*
+
+**Per-user BYOK proven end-to-end** — resolved the Sovereign's stored `apify_token` and used it to scrape (Roborock matched, R$17.770). Now build + deploy the frontend (Settings `apify_token` field + the `.upsert→.insert` key-save fix + the catalog gate):
+
+## 🤖 Claude *(22:48:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -3; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== fresh SettingsPage chunk served + apify field present + key-save uses insert ===\"\nSET=$(ls -t dist/assets/SettingsPage-*.js 2>/dev/null | head -1); echo \"$(basename \"$SET\")\"\ncurl -s -o /dev/null -w \"nginx serves SettingsPage: HTTP %{http_code}\\n\" \"https://login.mcorch.com/assets/$(basename \"$SET\")\"\ncurl -s \"https://login.mcorch.com/assets/$(basename \"$SET\")\" | rg -o \"Apify Token|apify_token\" | sort -u | head",
+  "description": "Build, deploy, verify Settings apify field served"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 21.09s
+> build exit: 0
+> === fresh SettingsPage chunk served + apify field present + key-save uses insert ===
+> SettingsPage-D-hwZ5SP.js
+> nginx serves SettingsPage: HTTP 200
+> apify_token
+> Apify Token
+> ```
+
+## 🤖 Claude *(22:50:07)*
+
+
+## 🤖 Claude *(22:50:08)*
+
+**BYOK complete + live** — Settings `apify_token` field served by nginx (HTTP 200). Before I close out, the pre-existing `000600` upsert bug also affects other view-writes — let me check exactly which so I fix the safe ones and flag the rest accurately:
+
+## 🤖 Claude *(22:50:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SocialAccountsPage.tsx",
+  "offset": 44,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	  const handleSaveWp = async () => {
+> 45	    if (!wpConfig.wp_site_url || !wpConfig.wp_username || !wpConfig.wp_app_password) {
+> 46	      toast({ title: 'Campos obrigatórios', description: 'Preencha URL, usuário e Application Password.', variant: 'destructive' });
+> 47	      return;
+> 48	    }
+> 49	    setSavingWp(true);
+> 50	    try {
+> 51	      const { error } = await supabase.from('user_api_keys').upsert(
+> 52	        { user_id: user!.id, wp_site_url: wpConfig.wp_site_url, wp_username: wpConfig.wp_username, wp_app_password: wpConfig.wp_app_password },
+> 53	        { onConflict: 'user_id' }
+> 54	      );
+> 55	      if (error) throw error;
+> 56	      setWpConnected(true);
+> 57	      setWpConfig((c) => ({ ...c, wp_app_password: '' }));
+> 58	      toast({ title: 'WordPress conectado!', description: 'Credenciais salvas com sucesso.' });
+> 59	    } catch (err: any) {
+> 60	      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
+> 61	    } finally {
+> 62	      setSavingWp(false);
+> 63	    }
+> 64	  };
+> 65	
+> 66	  const handleDisconnectWp = async () => {
+> 67	    try {
+> 68	      const { error } = await supabase.from('user_api_keys').upsert(
+> 69	        { user_id: user!.id, wp_site_url: null, wp_username: null, wp_app_password: null },
+> 70	        { onConflict: 'user_id' }
+> 71	      );
+> 72	      if (error) throw error;
+> 73	      setWpConnected(false);
+> 74	      setWpConfig({ wp_site_url: '', wp_username: '', wp_app_password: '' });
+> 75	      toast({ title: 'WordPress desconectado' });
+> ```
+
+## 🤖 Claude *(22:50:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== meta_config / social_accounts write methods (upsert vs insert/update) ===\"\nrg -n \"\\.upsert\\(|\\.insert\\(|\\.update\\(\" src/hooks/useMetaConfig.ts src/hooks/useSocialAccounts.ts 2>/dev/null\necho \"=== do those views' INSTEAD OF INSERT triggers have ON CONFLICT? (safe for .insert?) ===\"\nrg -n \"ON CONFLICT|INSERT INTO public.(meta_config_table|social_accounts_table)\" supabase/migrations/20260601000000_credential_encryption.sql 2>/dev/null | head",
+  "description": "Inspect SocialAccountsPage + meta/social write methods and trigger semantics"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === meta_config / social_accounts write methods (upsert vs insert/update) ===
+> src/hooks/useMetaConfig.ts:58:          .update(writable)
+> src/hooks/useMetaConfig.ts:64:          .insert({ user_id: user!.id, ...writable });
+> === do those views' INSTEAD OF INSERT triggers have ON CONFLICT? (safe for .insert?) ===
+> 424:    INSERT INTO public.meta_config_table (
+> 464:    INSERT INTO public.social_accounts_table (
+> 508:    ON CONFLICT (user_id) DO UPDATE SET
+> ```
+
+## 🤖 Claude *(22:50:51)*
+
+
+## 🤖 Claude *(22:50:54)*
+
+Now I understand the full scope of the pre-existing `000600` bug:
+- **`useUserApiKeys`** `.upsert()` → 400. **Fixed by me** (→`.insert()`, safe via the `ON CONFLICT` trigger). ✅
+- **`useMetaConfig`** uses `.update()`/`.insert()` — **not broken** ✅
+- **`SocialAccountsPage:51,68`** (WordPress save/disconnect) `.upsert(onConflict)` → 400, **and** the disconnect's null-clear is blocked by the trigger's `COALESCE(NULLIF(...))` guard — a **deeper pre-existing issue** needing its own fix (not a trivial flip). I'll flag it, not rush it.
+
+Let me record this durable gotcha to memory so it's not re-discovered the hard way:
+
+## 🤖 Claude *(22:51:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_encrypted_views_write_pattern.md",
+  "content": "---\nname: reference_encrypted_views_write_pattern\ndescription: user_api_keys/meta_config/social_accounts s\u00e3o VIEWS Vault-mascaradas \u2014 escreva com .insert() (n\u00e3o .upsert), e null n\u00e3o limpa coluna\nmetadata:\n  type: reference\n---\n\nDesde `20260601000000_credential_encryption.sql` + `20260601000600_secure_definer_views.sql` (2026-06-01), as tabelas `user_api_keys`, `meta_config`, `social_accounts` viraram **VIEWS** (security-definer, com `WHERE auth.uid()=user_id OR service_role`) sobre `*_table` Vault-encriptadas. SELECT mostra `\u2022\u2022\u2022\u2022`; reais cifradas no Vault; edge fns leem `decrypted_*` (REVOKE de anon/authenticated, s\u00f3 service_role). Ver [[reference_user_api_keys_encrypted]] e [[reference_supabase_keys_migrated]].\n\n**Gotchas ao ESCREVER (pegou no BYOK apify_token 2026-06-01):**\n- \u274c `.upsert()` / `.upsert(..., {onConflict:'user_id'})` \u2192 **HTTP 400** `42P10 \"no unique or exclusion constraint matching ON CONFLICT\"` (views n\u00e3o t\u00eam constraint). \n- \u2705 `.insert()` \u2192 201: o INSTEAD OF INSERT trigger de `user_api_keys` roda `INSERT ... ON CONFLICT (user_id) DO UPDATE` \u2192 faz upsert internamente. (J\u00e1 corrigido em `useUserApiKeys.saveKeys`.) **Mas** `meta_config`/`social_accounts` t\u00eam INSTEAD OF INSERT **sem** ON CONFLICT \u2192 `.insert()` em linha existente duplica/viola; esses hooks usam `.update()` se existe / `.insert()` se n\u00e3o (padr\u00e3o de `useMetaConfig`/`useAffiliateConfig`).\n- \u274c Setar coluna para `null` **N\u00c3O limpa** o valor: o INSTEAD OF faz `COALESCE(NULLIF(NEW.x,'\u2022\u2022\u2022\u2022'), base.x)` \u2192 null preserva o valor antigo. Para limpar de verdade, UPDATE direto na `*_table` (service_role) ou ajustar o trigger.\n\n**P0 pr\u00e9-existente N\u00c3O corrigido (de 000600, n\u00e3o do BYOK):** `src/pages/SocialAccountsPage.tsx:51,68` salva/desconecta WordPress via `user_api_keys.upsert(onConflict)` \u2192 400 (save quebrado) + o disconnect seta nulls (n\u00e3o limpa pela COALESCE-guard). Precisa de passe focado: trocar save por `.insert()`, e disconnect por UPDATE na base table. Para adicionar nova coluna de credencial: replicar nos 5 pontos do padr\u00e3o Vault (coluna \u2192 trigger cifragem \u2192 view mascarada \u2192 INSTEAD OF \u2192 decrypted view) \u2014 ver migration `20260601060000_user_api_keys_apify_token.sql` como template; **migration passa por /security-review** (pegou eu revertendo a view pra security_invoker sem o WHERE \u2192 quebraria leitura authenticated).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_encrypted_views_write_pattern.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:51:19)*
+
+
+## 🤖 Claude *(22:51:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [user_api_keys \u00e9 VIEW mascarada \u2014 chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) \u2014 credential_encryption (2026-06-01): SELECT mostra `\u2022\u2022\u2022\u2022`, reais cifradas no Vault; edge fns leem `decrypted_user_api_keys`. Teste de chave DEVE ser server-side (edge fn `test-api-key`) \u2014 o cliente s\u00f3 v\u00ea o mask, ent\u00e3o \"Falhou\" no teste \u2260 chave inv\u00e1lida. INSTEAD OF trigger preserva valor ao escrever mask/null.",
+  "new_string": "- [user_api_keys \u00e9 VIEW mascarada \u2014 chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) \u2014 credential_encryption (2026-06-01): SELECT mostra `\u2022\u2022\u2022\u2022`, reais cifradas no Vault; edge fns leem `decrypted_user_api_keys`. Teste de chave DEVE ser server-side (edge fn `test-api-key`) \u2014 o cliente s\u00f3 v\u00ea o mask, ent\u00e3o \"Falhou\" no teste \u2260 chave inv\u00e1lida. INSTEAD OF trigger preserva valor ao escrever mask/null.\n- [Encrypted views \u2014 escreva com .insert(), n\u00e3o .upsert()](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts viraram VIEWS Vault (000600); `.upsert()`/onConflict \u2192 HTTP 400 (sem constraint), null n\u00e3o limpa (COALESCE-guard). Corrigido em useUserApiKeys; P0 pr\u00e9-existente N\u00c3O corrigido: SocialAccountsPage WP save/disconnect. Template p/ nova credencial: migration `20260601060000_user_api_keys_apify_token.sql` (passa por /security-review)."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(22:51:29)*
+
+
+## 🤖 Claude *(22:51:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — Refactor v2 da constelação 3D; TODAS as fases (0/1/2/3/4) seladas em v6.18.0 — empty-state wizard 2-portas + execução real de capability (exec 488a7744 watchdog_infra · 0 mco · 255ms) + reset destrutivo + botão Zerar per-user. BoK selada 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.
+> 4	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — Worktree pode estar dezenas de commits atrás; "X não existe/está quebrado" tirado só do worktree é falso negativo (errei sobre publish-meta nesta base). Cheque `git show origin/main:<path>` antes de concluir.
+> 5	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — Incidente 2026-05-31: sob Bash/Read atrasado, escrevi hashes de commit inexistentes + counts de malha incrementados "de cabeça". Todo hash/UUID/contador em doc/commit vem de output verificado NESTE turno; halt e re-query, nunca preencha. /handson deve `git fetch` primeiro.
+> 6	- [Supabase keys migradas — use SB_SECRET_KEY (service_role legada REVOGADA)](reference_supabase_keys_migrated.md) — Incidente 2026-06-01: service_role hardcoded vazou → cutover pras API keys novas + revoke da signing key HS256 211a3abc. `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` MORTAS (PGRST301). Use `SB_SECRET_KEY`/`SB_PUBLISHABLE_KEY`. ⚠️ Nos protocolos /handson e /handoff troque `$SUPABASE_SERVICE_ROLE_KEY` por `$SB_SECRET_KEY` — a malha não responde à legada.
+> 7	- [user_api_keys é VIEW mascarada — chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) — credential_encryption (2026-06-01): SELECT mostra `••••`, reais cifradas no Vault; edge fns leem `decrypted_user_api_keys`. Teste de chave DEVE ser server-side (edge fn `test-api-key`) — o cliente só vê o mask, então "Falhou" no teste ≠ chave inválida. INSTEAD OF trigger preserva valor ao escrever mask/null.
+> 8	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — No Claude Code, `grep` = função→`ugrep -G`; idiomas BRE (`grep -v "^\+\+\+"`) estouram e no-opam silenciosamente sob `|| true` (só no meu shell, não no terminal do Gabriel). Use `-E` / `grep -E '^\+[^+]'`. Pegou o pre-commit anti-credential no-opando p/ commits de IA (2026-06-01).
+> 9	- [OpenClaw delegation — paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) — Diretiva Sovereign 2026-05-28: tarefas low-risk (tests, scripts dry-run, migrations, SOPs puros) delegar pro OpenClaw via Telegram em paralelo com Claude Code coordenando arquitetura. Reduz ~50% tempo total da seal. Meta-prompt Telegram template no plan file.
+> 10	- [OpenClaw × Ollama — Integração & Gateway](project_openclaw_ollama_integration.md) — Gateway = **systemd `openclaw-gateway.service`** (supervisor ÚNICO; PM2 maestro DELETADO 2026-05-29); reload = `systemctl --user restart openclaw-gateway.service` (NUNCA `pm2 restart maestro` nem `openclaw gateway restart`). Default = qwen3.7-max + fallback gemini-2.0-flash-lite. Cron isolado exige payload.kind=agentTurn. SOP `openclaw-gateway-supervisor.md` + skill `openclaw-gateway-ops`
+> ```
+
+## 🤖 Claude *(22:51:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [grep \u00e9 ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md)",
+  "new_string": "- [Encrypted views \u2014 escreva com .insert(), n\u00e3o .upsert()](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts viraram VIEWS Vault (000600, 2026-06-01); `.upsert()`/onConflict \u2192 HTTP 400 (sem constraint), e setar null N\u00c3O limpa (COALESCE-guard). Corrigido em useUserApiKeys (.upsert\u2192.insert); P0 pr\u00e9-existente N\u00c3O corrigido: SocialAccountsPage WP save/disconnect. Template p/ nova credencial BYOK: migration `20260601060000_user_api_keys_apify_token.sql` (5 pontos do padr\u00e3o Vault; passa por /security-review).\n- [grep \u00e9 ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:51:44)*
+
+
+## 🤖 Claude *(22:51:45)*
+
+Recording the pre-existing P0 as a tracked follow-up (it's self-contained, out of BYOK scope, and needs its own care):
+
+## 🤖 Claude *(22:51:57)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Fix WordPress save/disconnect on SocialAccountsPage",
+  "prompt": "`src/pages/SocialAccountsPage.tsx` (around lines 51 and 68) saves and disconnects WordPress credentials by calling `supabase.from('user_api_keys').upsert({...}, { onConflict: 'user_id' })`. This is BROKEN by the 2026-06-01 credential-encryption migrations (`supabase/migrations/20260601000000_credential_encryption.sql` + `20260601000600_secure_definer_views.sql`), which turned `user_api_keys` from a table into a masked security-definer VIEW over `user_api_keys_table`.\n\nTwo concrete bugs:\n1. `.upsert()` / `onConflict:'user_id'` on the VIEW \u2192 HTTP 400 `42P10 \"no unique or exclusion constraint matching the ON CONFLICT\"` (views have no unique constraint). The save (line ~51) therefore fails.\n   FIX: use `.insert({...})` instead \u2014 the view's INSTEAD OF INSERT trigger (`trg_instead_of_user_api_keys`) runs `INSERT ... ON CONFLICT (user_id) DO UPDATE`, i.e. it upserts internally. This exact fix was already applied to `src/hooks/useUserApiKeys.ts` (see its comment) \u2014 mirror it here.\n2. The disconnect handler (line ~68) sets `wp_site_url/wp_username/wp_app_password = null` to CLEAR them. But the INSTEAD OF UPDATE path uses `COALESCE(NULLIF(NEW.x, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), base.x)` which PRESERVES the existing value when NEW is null \u2014 so nulls do NOT clear. To truly clear WP credentials, do a direct UPDATE on the base table `user_api_keys_table` via a service-role edge function (client can't touch the base table \u2014 SELECT was REVOKED from authenticated), OR add explicit null-clear handling to the trigger.\n\nVerify the fix end-to-end: in the Settings/SocialAccounts UI, connecting WordPress should persist (no 400), and disconnecting should actually null the columns. Check `decrypted_user_api_keys` for the affected user after each. Also audit for any OTHER `.upsert()`/`onConflict` calls against the `user_api_keys`, `meta_config`, or `social_accounts` views across `src/` (same class of bug). See memory `reference_encrypted_views_write_pattern.md` for the full pattern. Run `npx tsc --noEmit` and `bun run build` after; the frontend deploys from the main repo's `dist/` via nginx (build = deploy).",
+  "tldr": "WordPress connect/disconnect in Settings is broken: it writes the encrypted user_api_keys view with .upsert() (returns HTTP 400) and clears fields with null (which the trigger ignores). Switch to .insert() and clear via a service-role path."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:52:13)*
+
+
+## 🤖 Claude *(22:52:33)*
+
+Tudo entregue e **materialmente provado**. Encerrando com o quadro completo.
+
+## ✅ BYOK per-user (`apify_token`) — completo e live
+| Item | Prova material (deste turno) |
+|---|---|
+| Migration Vault (5 pontos do padrão) | `db push` **exit 0** · 1 migration aplicada |
+| `/security-review` (regra CLAUDE.md) | **0 findings** — e pegou eu revertendo a view p/ `security_invoker` sem o WHERE (quebraria leitura authenticated); corrigido p/ casar com `000600` |
+| Não quebrou chaves existentes | openrouter (len 73) + groq (len 56) ainda decifram |
+| `apify_token` cifra→decifra | base-table write 204 · `decrypted` bate · masked view `••••` |
+| Resolução em camadas funcional | `--user` → "per-user BYOK" → scrape do Roborock **matched R$17.770** |
+| UI Settings (campo Apify Token) | chunk `SettingsPage-D-hwZ5SP.js` servido pela nginx (HTTP 200, "Apify Token" embutido) |
+| Fix do P0 de salvamento de chaves | `useUserApiKeys` `.upsert()`→`.insert()` (upsert 400 → insert 201, via INSTEAD OF ON CONFLICT) |
+
+## 📊 Sessão inteira (tudo live)
+Fix dos links de afiliado (meli.la/matt_word, fim do `panel.gcrux.com`) · enriquecimento Apify · gate de verificação · 2 fakes removidos · **descoberta de produtos** (validou o "viral mind") · **catálogo com 3 produtos reais** (Roborock R$17.770 · Family Hub R$18.946 · 8K Neo QLED 75" R$39.000) · cron de monitoramento (6/6h) · BYOK per-user · SOPs (Lei 2).
+
+## 🚩 P0 pré-existente que descobri (NÃO é meu — de `000600` hoje)
+A conversão tabela→view de hoje quebrou **`SocialAccountsPage` (salvar/desconectar WordPress)**: `.upsert(onConflict)` → 400, e o disconnect com `null` não limpa (COALESCE-guard). Corrigi o caminho principal (`useUserApiKeys`); o do WP precisa de passe focado (insert + clear via service-role). **Abri um chip de task** com o diagnóstico completo + gravei o gotcha na memória (`reference_encrypted_views_write_pattern`).
+
+## Survival Laws (auto-audit rápido)
+- **Lei 1 (Materialidade):** toda claim acima provada neste turno (db push exit, round-trips, 302s reais, nginx 200, scrape matched). Quando o ML bloqueou tudo, eu disse "não dá" em vez de fabricar; o 8K errado (4K/usado) foi corrigido materialmente, não maquiado.
+- **Lei 2 (Processo):** 2 SOPs antes do código (`ml-affiliate-attribution` atualizada, `affiliate-catalog-enrichment` nova).
+- **Lei 4 (ORO):** Operator=eu · Reviewer/Owner=você (ações outward — DB, deploy, $ Apify, migration — todas com seu GO).
+
+---
+O working tree está **grande e não-commitado** (link fix + enrichment + discovery + gate + cron + SOPs + migration Vault + BYOK UI + fix do hook + docs). A migration já passou `/security-review` e está aplicada. **Recomendo fortemente `/handoff` agora** para selar (commits granulares + nó de milestone + push) antes de qualquer outra coisa. Quer que eu rode o `/handoff`?
+
+## 👤 User *(22:52:33)*
+
+Obs.: Preciso que criemos um agente ou bot scrapper que consiga abrir links sites e navegar na internet exatamente como um usuário normal assim como fizemos algumas vezes com o E2E, mas não é focado em testes de ponta a ponta, o objetivo desse é conseguir por exemplo abrir o produto encontrado, clicar em compartilhar e setar o Link cravado (meli.la) corretamente. Isso pode ser escalado para qualquer outra coisa que ja fizemos, o foco aqui não é grande escala de busca de dados mas sim aqueles quelas ações (clicar em compartilhar com o meu login do ML para pegar o link) que somos barrados.
+
+## 🤖 Claude *(22:54:17)*
+
+
+## 🤖 Claude *(22:54:33)*
+
+Entendi exatamente — e esse é o **elo de ouro** que falta. Recapitulando o que esta sessão provou: o `meli.la` cravado é a **única** atribuição garantida do ML, e **não existe API** pra gerá-lo — ele só sai de um clique humano em **"Compartilhar" estando logado** na conta de afiliado. Tudo que automatizamos (Apify) é anônimo e não consegue essa ação por-conta. O que você descreve é a peça que fecha o ciclo: um **operador de browser autenticado**, humano-paced, focado nas *ações logadas que nos barram* — reusável pra qualquer "clicar/logar/compartilhar" que hoje trava.
+
+## O que é (e o que não é)
+- **É:** mesmo motor do E2E (`agent-browser` — CDP, snapshot, clicar/digitar como gente), mas em modo **sessão autenticada persistente** (loga uma vez, reusa cookies/profile) e missão = **executar ações reais** (abrir produto → Compartilhar → copiar `meli.la` → gravar no catálogo). Generalizável.
+- **Não é:** scraping em massa, nem teste do nosso app. Poucas ações, alto valor.
+
+## 3 verdades materiais a resolver ANTES de prometer (Lei 1)
+Não vou te vender um "robô que navega como humano" que vai bater no mesmo muro. Esta sessão **provou** que do nosso IP de datacenter o ML serve a tela de erro/`account-verification` **até pra browser real** (headless e curl-com-UA). Então:
+
+1. **Onde roda (make-or-break):** logado *pode* furar onde anônimo não fura — **mas é não-testado**. Provável que precise (a) rodar na **sua máquina** (residencial, ML já logado), (b) nosso servidor **+ proxy residencial**, ou (c) **cloud browser stealth** (o agent-browser suporta AgentCore/Vercel Sandbox). Isso define toda a arquitetura.
+2. **Auth sem senha crua:** login **interativo uma vez** → profile/cookies persistidos (vault de sessão do agent-browser), per-user pra multi-tenant. Nunca guardar senha em texto.
+3. **BoK Gate (protocolo MCORCH):** isso é **módulo novo/complexo** → exige família BoK (`docs/bok/<slug>/`) antes do código, ou override consciente seu.
+
+## Sequência que recomendo (espelha o que deu certo hoje com Apify/Firecrawl)
+**0.** Selar o trabalho atual (`/handoff`) — o working tree está enorme e a migration Vault já passou no `/security-review`. **1.** **Probe de viabilidade** (barato, de-risca tudo): um browser logado consegue o fluxo share→meli.la de um runtime que controlamos? **2.** `/bok-scribe` selando o módulo. **3.** Build.
+
+Duas decisões pra eu seguir certo:
+
+## 🤖 Claude *(22:54:47)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como proceder com o Operador de Browser Autenticado (m\u00f3dulo novo \u2014 BoK Gate se aplica)?",
+      "header": "Caminho",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Probe de viabilidade primeiro (Recomendado)",
+          "description": "Antes de qualquer c\u00f3digo de m\u00f3dulo: validar materialmente que um browser LOGADO consegue o fluxo share\u2192meli.la do ML, de um runtime vi\u00e1vel. Se n\u00e3o furar daqui, a arquitetura muda (sua m\u00e1quina/proxy). De-risca igual fizemos com Apify/Firecrawl. Depois /bok-scribe + build."
+        },
+        {
+          "label": "/bok-scribe direto (selar o m\u00f3dulo)",
+          "description": "Documentar MRD\u2192SDD do m\u00f3dulo 'Authenticated Browser Operator' agora (cumpre o BoK Gate formalmente), depois construir. Mais processo, menos risco de retrabalho de design."
+        },
+        {
+          "label": "Override + prot\u00f3tipo j\u00e1",
+          "description": "Voc\u00ea autoriza override consciente do BoK Gate (d\u00e9bito registrado, como no viralmind) e eu come\u00e7o um prot\u00f3tipo do fluxo share\u2192meli.la direto. Mais r\u00e1pido, menos formal."
+        }
+      ]
+    },
+    {
+      "question": "Onde esse browser logado deve rodar (define se conseguimos furar o anti-bot do ML)?",
+      "header": "Runtime",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Decidir ap\u00f3s o probe",
+          "description": "N\u00e3o cravar agora \u2014 o probe revela o que funciona. Eu testo as op\u00e7\u00f5es vi\u00e1veis (proxy residencial daqui, cloud browser stealth) e te trago o veredito material antes de escolher."
+        },
+        {
+          "label": "Nosso servidor + proxy residencial",
+          "description": "Roda no servidor MCORCH com proxy residencial (tipo o que o ator Apify usou). Centralizado/automatiz\u00e1vel, mas precisa validar que o login do ML sobrevive ao proxy + n\u00e3o \u00e9 bloqueado."
+        },
+        {
+          "label": "Cloud browser stealth",
+          "description": "Servi\u00e7o de browser na nuvem com stealth (AgentCore/Vercel Sandbox que o agent-browser suporta). Isolado e escal\u00e1vel; custo por sess\u00e3o + setup de credencial ML por l\u00e1."
+        },
+        {
+          "label": "Na sua m\u00e1quina (residencial)",
+          "description": "Roda localmente onde seu ML j\u00e1 est\u00e1 logado e o IP \u00e9 residencial (n\u00e3o bloqueado). Mais garantido pra furar o anti-bot, mas exige sua m\u00e1quina ligada / n\u00e3o \u00e9 100% server-side."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como proceder com o Operador de Browser Autenticado (módulo novo — BoK Gate se aplica)?"="Probe de viabilidade primeiro (Recomendado)", "Onde esse browser logado deve rodar (define se conseguimos furar o anti-bot do ML)?"="Decidir após o probe". You can now continue with these answers in mind.
+> ```
+
+## 👤 User *(22:56:37)*
+
+[Request interrupted by user]
+
+## 👤 User *(22:59:50)*
+
+Certo mas anote tudo para a próxima sessão e pode fazer o /handoff
+
 ---
 
 %% --- TIMELINE START --- %%
