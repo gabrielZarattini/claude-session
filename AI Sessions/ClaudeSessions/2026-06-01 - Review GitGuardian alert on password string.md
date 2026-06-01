@@ -4610,6 +4610,280 @@ Swap em massa aplicado: **86 arquivos TS**, 93 wraps, **0 double-wrap, 0 SERVICE
 > 90
 > ```
 
+## 🤖 Claude *(05:30:03)*
+
+
+## 🤖 Claude *(05:30:04)*
+
+Verificação boa: **tsc 0**, samples corretos, scripts `.ts` ok. Mas o grep revelou que meu sweep pegou só `.ts` — faltaram ~10 scripts `.js`/`.cjs` (audit/debug, baixa criticidade) e os 8 bash. Completando os `.js`/`.cjs` agora (mesmo padrão):
+
+## 🤖 Claude *(05:30:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nmapfile -t JSF < <(git grep -l \"SUPABASE_SERVICE_ROLE_KEY\" -- 'scripts' | grep -E '\\.(js|cjs|mjs)$')\necho \"arquivos JS/CJS alvo: ${#JSF[@]}\"\n[ ${#JSF[@]} -gt 0 ] && perl -pi -e 's/(?<!\\?\\? )process\\.env\\.SUPABASE_SERVICE_ROLE_KEY\\b/(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)/g;' \"${JSF[@]}\"\necho \"perl exit: $?\"\necho \"=== verifica\u00e7\u00e3o JS/CJS: reads sem fallback (deve ser 0) ===\"; git grep -nE \"process\\.env\\.SUPABASE_SERVICE_ROLE_KEY\" -- 'scripts/*.js' 'scripts/*.cjs' 'scripts/*.mjs' 2>/dev/null | grep -v '?? process.env.SUPABASE_SERVICE_ROLE_KEY' | wc -l\necho \"=== bash scripts que ainda usam \\$SUPABASE_SERVICE_ROLE_KEY (a tratar) ===\"; git grep -lE '\\$\\{?SUPABASE_SERVICE_ROLE_KEY' -- 'scripts' | grep -E '\\.sh$'",
+  "description": "Swap .js/.cjs scripts and list remaining bash scripts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> arquivos JS/CJS alvo: 11
+> perl exit: 0
+> === verificação JS/CJS: reads sem fallback (deve ser 0) ===
+> 0
+> === bash scripts que ainda usam $SUPABASE_SERVICE_ROLE_KEY (a tratar) ===
+> scripts/agent-daily-pulse.sh
+> scripts/auto-publish-cron.sh
+> scripts/backfill-embeddings-priority.sh
+> scripts/canvas-video-watchdog.sh
+> scripts/nightly-stage1-light-sleep.sh
+> scripts/nightly-stage2-deep-sleep.sh
+> scripts/nightly-stage3-rem.sh
+> scripts/watchdog-mcorch.sh
+> ```
+
+## 🤖 Claude *(05:30:35)*
+
+
+## 🤖 Claude *(05:30:36)*
+
+JS/CJS done (11 files, 0 remaining). Agora os 8 bash. Vejo como cada um carrega env pra inserir a normalização no ponto certo:
+
+## 🤖 Claude *(05:30:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in agent-daily-pulse auto-publish-cron canvas-video-watchdog nightly-stage1-light-sleep nightly-stage2-deep-sleep nightly-stage3-rem watchdog-mcorch; do\n  echo \"\u2500\u2500 scripts/$f.sh \u2500\u2500\"\n  command grep -nE \"source|\\. .*\\.env|set -a|\\.env|SUPABASE_SERVICE_ROLE_KEY=\" \"scripts/$f.sh\" 2>/dev/null | head -4\ndone",
+  "description": "Inspect how bash cron scripts load env vars"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── scripts/agent-daily-pulse.sh ──
+> 10:set -a; source .env; set +a
+> ── scripts/auto-publish-cron.sh ──
+> 8:if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 9:    set -a; source "${COMPOSE_DIR}/.env"; set +a
+> ── scripts/canvas-video-watchdog.sh ──
+> 14:# Pattern source: scripts/watchdog-mcorch.sh + scripts/auto-publish-cron.sh
+> 29:if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 31:    set -a; source "${COMPOSE_DIR}/.env"; set +a
+> 34:# Fall back to the canonical project URL if .env doesn't set SUPABASE_URL.
+> ── scripts/nightly-stage1-light-sleep.sh ──
+> 76:  # Source .env for Supabase keys (health_pulse needs them)
+> 77:  if [ -f "$REPO/.env" ]; then
+> 78:    set -a
+> 80:    source "$REPO/.env"
+> ── scripts/nightly-stage2-deep-sleep.sh ──
+> 70:  if [ -f "$REPO/.env" ]; then
+> 71:    set -a
+> 73:    source "$REPO/.env"
+> 119:  # path uses SUPABASE_POOLER_URL or DATABASE_URL from .env when configured.
+> ── scripts/nightly-stage3-rem.sh ──
+> 68:  if [ -f "$REPO/.env" ]; then
+> 69:    set -a
+> 71:    source "$REPO/.env"
+> ── scripts/watchdog-mcorch.sh ──
+> 47:if [ -f "${COMPOSE_DIR}/.env" ]; then
+> 49:    set -a; source "${COMPOSE_DIR}/.env"; set +a
+> ```
+
+## 🤖 Claude *(05:31:51)*
+
+
+## 🤖 Claude *(05:31:55)*
+
+JS/CJS done (0 remaining). Os 8 bash todos fazem `set -a; source .env; set +a` — então `SUPABASE_SECRET_KEY` está disponível. Falta a normalização neles + a parte intrincada (9 inter-function + trigger + deploy + dashboard).
+
+A sessão está longuíssima e a parte que resta é interconectada e precisa de cuidado (não de pressa no fim de um turno enorme). Vou **persistir o runbook** (sobrevive à compactação de contexto) e te dar um checkpoint material preciso:
+
+## 🤖 Claude *(05:32:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md",
+  "content": "# Runbook \u2014 Service_role key migration (leaked legacy HS256 \u2192 sb_secret_)\n\n**Created:** 2026-06-01 \u00b7 **Owner (ORO):** Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign\n**Trigger:** GitGuardian \u2014 legacy `service_role` JWT (HS256, signed by revoked-pending key `211a3abc`)\nhardcoded in `scripts/backfill-embeddings-priority.sh` + migration `20260503120000_\u2026sql`, public on\n`origin/main` since ~2026-05-03 (commits `850941d`, `f92dbf4`). **Probed LIVE (HTTP 200) on 2026-06-01.**\n\n## Material facts (verified)\n- Leaked key = current `.env` `SUPABASE_SERVICE_ROLE_KEY` (live production key).\n- Project migrated to JWT **Signing Keys**: current=ECC `d073a3db`; legacy HS256 `211a3abc` = \"previous\"/standby (still verifying \u2192 why leak is live). Leaked token `exp`=2036 (never self-expires).\n- Frontend already on `sb_publishable_` (`VITE_SUPABASE_PUBLISHABLE_KEY`) \u2192 **JWT-secret revoke won't break frontend**.\n- New secret key `sb_secret_\u2026` in `.env` as **`SUPABASE_SECRET_KEY`** (reserved name `SUPABASE_SERVICE_ROLE_KEY` can't be overridden in Function secrets \u2192 code must read the new name).\n- New key probed: works in `createClient`, REST `apikey`, REST `apikey+Bearer`, bypasses RLS, RPC. **Drop-in** (headers unchanged, only value).\n- Scope: 47 edge functions + 49 TS scripts + 11 JS/CJS + 8 bash use the legacy key.\n\n## Kill sequence (Supabase docs: migrate \u2192 disable legacy \u2192 revoke)\n\u26a0\ufe0f 10\u201320 min multi-level cache: leaked JWT may still be accepted up to ~20 min after revoke.\n\n### DONE (this session, uncommitted, backward-compatible `SECRET_KEY ?? SERVICE_ROLE_KEY`)\n- [x] 47 edge functions (`Deno.env.get`) \u2192 fallback wrap. tsc 0.\n- [x] 49 TS scripts + 11 JS/CJS (`process.env`) \u2192 fallback wrap. 0 double-wrap, 0 unwrapped.\n- [x] `scripts/backfill-embeddings-priority.sh` \u2014 leaked literal removed (env-only) [needs SECRET pref, see below].\n\n### TODO \u2014 code (Operator)\n- [ ] **8 bash crons** \u2014 after `set -a; source .env; set +a` add: `[ -n \"${SUPABASE_SECRET_KEY:-}\" ] && SUPABASE_SERVICE_ROLE_KEY=\"$SUPABASE_SECRET_KEY\"`. Files: agent-daily-pulse, auto-publish-cron, canvas-video-watchdog, nightly-stage{1,2,3}, watchdog-mcorch, backfill-embeddings-priority.\n- [ ] **9 inter-function callers** (`Bearer ${key}` \u2192 verify_jwt=true targets break with non-JWT secret): auto-publish\u2192publish-social, trigger-embeddings\u2192embed-mcorch-node, canvas-execute, orchestrate-step, publish-social, self-heal, social-auth-init/callback, higgsfield-webhook. Fix = send key in **`apikey`** header + set TARGET `verify_jwt=false` in `supabase/config.toml` (publish-social, embed-mcorch-node currently default-true).\n- [ ] **Embed trigger** `mcorch_embed_on_insert` (migration `20260503120000`): new migration reading key from **Supabase Vault** (`vault.decrypted_secrets`), sent as `apikey`; embed-mcorch-node \u2192 verify_jwt=false. Redact the literal in the old migration file.\n\n### TODO \u2014 Supabase (Reviewer/Sovereign)\n- [ ] Set Function secret **`SUPABASE_SECRET_KEY`** = sb_secret_ value (`supabase secrets set SUPABASE_SECRET_KEY=\u2026`). \u26a0\ufe0f ONLY after the 9 inter-function fixes deployed, else those break.\n- [ ] Create Vault secret for the trigger (new key).\n- [ ] `supabase functions deploy` (all 47). Deploy is the syntax gate.\n- [ ] Smoke test (1 createClient fn + 1 inter-function caller).\n- [ ] Dashboard \u2192 **Settings > API Keys** \u2192 disable legacy `anon` + `service_role`.\n- [ ] Dashboard \u2192 **Settings > JWT Signing Keys** \u2192 **Revoke** HS256 `211a3abc`.\n- [ ] Update local `.env` `SUPABASE_SERVICE_ROLE_KEY` \u2192 sb_secret_ (or remove; code prefers SECRET_KEY).\n\n### TODO \u2014 verify (Operator)\n- [ ] Re-probe leaked key \u2192 expect **401/403** (dead). `curl \u2026 /rest/v1/mcorch_nodes -H \"apikey: <leaked>\"`.\n\n## AFTER kill confirmed\n- History cleanup: branch `origin/fix/landing-constellation-import` (16 unmerged commits incl. dead Gemini key + vault) \u2014 delete vs rewrite vs cherry-pick (Sovereign decides). Main history purge of dead key (optional hygiene; rewrites seal chain).\n- Resume Fase 3: commit foundation (types-sync + hooks) \u2192 components.\n\n## Sources\nSupabase: [signing-keys](https://supabase.com/docs/guides/auth/signing-keys) \u00b7 [api-keys](https://supabase.com/docs/guides/api/api-keys) \u00b7 [securing edge functions](https://supabase.com/docs/guides/functions/auth)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/service-role-key-migration-runbook.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:33:20)*
+
+
+## 🤖 Claude *(05:33:22)*
+
+Vou fechar a camada de **leitura de env** terminando os 8 bash (mecânico, verificável com `bash -n`), e aí faço o checkpoint — a parte intrincada (9 inter-function + trigger, que mexem em auth e no pipeline autônomo) merece passo dedicado, não a cauda deste turno gigante.
+
+## 🤖 Claude *(05:33:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# 7 scripts que fazem `source .env`: insere normaliza\u00e7\u00e3o logo ap\u00f3s a linha de source\nNORM='[ -n \"${SUPABASE_SECRET_KEY:-}\" ] \\&\\& SUPABASE_SERVICE_ROLE_KEY=\"$SUPABASE_SECRET_KEY\"'\nfor f in agent-daily-pulse auto-publish-cron canvas-video-watchdog nightly-stage1-light-sleep nightly-stage2-deep-sleep nightly-stage3-rem watchdog-mcorch; do\n  sed -i \"/source.*\\.env/a ${NORM}\" \"scripts/$f.sh\"\ndone\necho \"=== bash -n em todos os 8 (sintaxe) ===\"\nok=1\nfor f in agent-daily-pulse auto-publish-cron canvas-video-watchdog nightly-stage1-light-sleep nightly-stage2-deep-sleep nightly-stage3-rem watchdog-mcorch backfill-embeddings-priority; do\n  if bash -n \"scripts/$f.sh\" 2>/dev/null; then echo \"  \u2705 $f.sh\"; else echo \"  \u274c $f.sh SINTAXE\"; ok=0; fi\ndone\necho \"=== normaliza\u00e7\u00e3o presente? ===\"; git grep -c 'SUPABASE_SERVICE_ROLE_KEY=\"$SUPABASE_SECRET_KEY\"' -- 'scripts/*.sh' | head\n[ $ok -eq 1 ] && echo \"\u2705 7/7 sed OK (backfill tratado \u00e0 parte a seguir)\" || echo \"\u26a0\ufe0f revisar\"",
+  "description": "Add SECRET_KEY normalization to bash cron scripts and syntax-check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === bash -n em todos os 8 (sintaxe) ===
+>   ✅ agent-daily-pulse.sh
+>   ✅ auto-publish-cron.sh
+>   ✅ canvas-video-watchdog.sh
+>   ✅ nightly-stage1-light-sleep.sh
+>   ✅ nightly-stage2-deep-sleep.sh
+>   ✅ nightly-stage3-rem.sh
+>   ✅ watchdog-mcorch.sh
+>   ✅ backfill-embeddings-priority.sh
+> === normalização presente? ===
+> scripts/agent-daily-pulse.sh:1
+> scripts/auto-publish-cron.sh:1
+> scripts/canvas-video-watchdog.sh:1
+> scripts/nightly-stage1-light-sleep.sh:1
+> scripts/nightly-stage2-deep-sleep.sh:1
+> scripts/nightly-stage3-rem.sh:1
+> scripts/watchdog-mcorch.sh:1
+> ✅ 7/7 sed OK (backfill tratado à parte a seguir)
+> ```
+
+## 🤖 Claude *(05:33:47)*
+
+
+## 🤖 Claude *(05:33:47)*
+
+Os 8 bash passam `bash -n`. Fechando o último (backfill — preferir SECRET):
+
+## 🤖 Claude *(05:33:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-embeddings-priority.sh",
+  "old_string": "SERVICE_KEY=\"${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY not set \u2014 add it to .env}\"",
+  "new_string": "SERVICE_KEY=\"${SUPABASE_SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:?set SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY) in .env}}\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/backfill-embeddings-priority.sh has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:33:56)*
+
+
+## 🤖 Claude *(05:33:57)*
+
+Camada de leitura de env **100% migrada e verificada**. Status material final do working tree antes do checkpoint:
+
+## 🤖 Claude *(05:34:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== working tree (por categoria) ===\"\necho \"edge functions: $(git status --short -- 'supabase/functions' | wc -l)\"\necho \"scripts (ts/js/sh): $(git status --short -- 'scripts' | wc -l)\"\necho \"migration (.sql): $(git status --short -- 'supabase/migrations' | wc -l)\"\necho \"Fase 3 (src hooks + types): $(git status --short -- 'src' | wc -l)\"\necho \"context/docs: $(git status --short -- '.claude' | wc -l)\"\necho \"TOTAL: $(git status --short | wc -l) arquivos\"\necho \"=== sanity final: 0 leitura de service_role SEM fallback em todo o c\u00f3digo? ===\"\necho \"edge+scripts sem fallback: $(git grep -nE \"(Deno\\.env\\.get|process\\.env)[.(]['\\\"]?SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 'scripts' | grep -vE \"SECRET_KEY \\?\\?|\\?\\? process\" | grep -vE \"//|console|Missing|Requires|\\*|:\\?\" | wc -l)\"\necho \"=== tsc final ===\"; npx tsc --noEmit 2>&1 | tail -3; echo \"exit ${PIPESTATUS[0]}\"",
+  "description": "Final working tree summary and migration completeness sanity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree (por categoria) ===
+> edge functions: 47
+> scripts (ts/js/sh): 57
+> migration (.sql): 0
+> Fase 3 (src hooks + types): 3
+> context/docs: 2
+> TOTAL: 109 arquivos
+> === sanity final: 0 leitura de service_role SEM fallback em todo o código? ===
+> edge+scripts sem fallback: 55
+> === tsc final ===
+> exit 0
+> ```
+
+## 🤖 Claude *(05:34:32)*
+
+
+## 🤖 Claude *(05:34:34)*
+
+O "55" é artefato do meu filtro (esperava `SECRET_KEY ??` mas o texto real é `SECRET_KEY") ??`). Re-verificando corretamente — leituras de SERVICE_ROLE **sem** o `??` de fallback antes:
+
+## 🤖 Claude *(05:34:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== leituras de env SERVICE_ROLE N\u00c3O precedidas por '?? ' (deve ser ~0; resto = comments/strings) ===\"\ngit grep -nE \"(Deno\\.env\\.get\\(|process\\.env\\.)['\\\"]?SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 'scripts' \\\n | grep -vE \"\\?\\? (Deno\\.env\\.get|process\\.env)\" \\\n | grep -vE \"console\\.|Missing|Requires|not set|^\\S+:\\s*(//|\\*)|\\.md:\" \necho \"--- contagem acima: $(git grep -nE \"(Deno\\.env\\.get\\(|process\\.env\\.)['\\\"]?SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 'scripts' | grep -vE \"\\?\\? (Deno\\.env\\.get|process\\.env)\" | grep -vEc \"console\\.|Missing|Requires|not set\") ---\"",
+  "description": "Correctly verify no unwrapped SERVICE_ROLE env reads remain"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === leituras de env SERVICE_ROLE NÃO precedidas por '?? ' (deve ser ~0; resto = comments/strings) ===
+> --- contagem acima: 0 ---
+> ```
+
+## 🤖 Claude *(05:35:07)*
+
+
+## 🤖 Claude *(05:35:22)*
+
+✅ **0 leituras sem fallback** — confirmado material. A **camada de leitura de env está 100% migrada e verificada**.
+
+## 🟢 Migração service_role — camada de código DONE (verificada)
+
+| Verificação | Resultado |
+|---|---|
+| Edge functions migradas | **47/47** → `SECRET_KEY ?? SERVICE_ROLE_KEY` |
+| Scripts (TS/JS/CJS/bash) | **57** → fallback (bash via normalização pós-`source .env`) |
+| `tsc --noEmit` | ✅ exit 0 |
+| `bash -n` (8 crons) | ✅ 8/8 |
+| Leituras SERVICE_ROLE sem fallback | **0** |
+| Comportamento | **backward-compatible** — resolve pra chave legada até você setar o Function secret. **Zero mudança de prod agora.** |
+
+**Working tree:** 109 arquivos (104 da migração + 3 Fase 3 + 2 docs). Runbook persistido em `.claude/context/service-role-key-migration-runbook.md` (sobrevive à compactação).
+
+## ⏭️ Falta (no runbook) — a parte que mexe em auth, faço com calma
+1. **9 inter-function + trigger** — chamam alvos `verify_jwt=true` (`publish-social`, `embed-mcorch-node`) com Bearer; a chave nova não é JWT → preciso mandar como **`apikey`** + setar esses alvos `verify_jwt=false` no `config.toml`. O trigger vira **migration via Vault**.
+2. **Você (Supabase):** setar Function secret `SUPABASE_SECRET_KEY` → `supabase functions deploy` (47) → **disablar legadas + revogar HS256 `211a3abc`**. ⚠️ cache 10–20 min.
+3. Eu **re-probo** → confirmo `401`.
+
+> 🔴 **Sequência crítica:** **NÃO** sete o `SUPABASE_SECRET_KEY` no Function secrets antes de eu corrigir+deployar as 9 inter-function — senão elas quebram (secret não-JWT como Bearer em alvo verify_jwt=true). A camada já migrada (createClient/DB) é segura.
+
+## Decisões
+A camada migrada é grande (104 arquivos) e **segura** (backward-compatible). Recomendo **commitar agora** como 1 commit de segurança granular (`refactor(security): server-side reads prefer SUPABASE_SECRET_KEY w/ legacy fallback`) pra travar o progresso — não muda comportamento.
+
+**Como sigo?**
+1. **Commito a camada migrada agora?** (recomendo sim — trava 104 arquivos verificados)
+2. **Faço já as 9 inter-function + trigger Vault migration** (parte intrincada), ou pauso aqui pra você revisar o approach do sweep primeiro?
+
+(Quando o leak fechar: cleanup da branch do vault + Fase 3 retomam, conforme runbook.)
+
 ---
 
 %% --- TIMELINE START --- %%
