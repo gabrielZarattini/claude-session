@@ -6392,4 +6392,5 @@ Quando quiser retomar, o caminho natural é o **MÓDULO C** — e ele merece spe
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]
+> * **Próxima Sessão**: [[2026-06-01 - Restructure enterprise constellation agents]]
 %% --- TIMELINE END --- %%
