@@ -3811,6 +3811,86 @@ O link velho que você já tinha copiado continua morto — **recopie** da pági
 ---
 As mudanças estão no working tree (não commitei — sua decisão). Posso **selar com `/handoff`** (commits granulares + nó de milestone na malha) quando você confirmar que a cópia funcionou no seu browser. Quer que eu sele agora ou prefere testar primeiro?
 
+## 👤 User *(20:50:19)*
+
+acabei de verificar e sim funciona os links agora, mas o https://www.mercadolivre.com.br/p/MLB37674259?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=269949e2-c100-47c2-966a-7a6f593d9a02 funcionaria igualmente? Pois pelo que entendi o link https://meli.la/2gh13Sw não pode ser gerado automaticamente eu teria que colocar manualmente certo?
+
+## 🤖 Claude *(20:51:16)*
+
+
+## 🤖 Claude *(20:51:33)*
+
+Boa — você confirmou no seu browser real que os links abrem. Esse era o gate de materialidade que faltava (o headless é bot-bloqueado, você não). 
+
+Suas duas perguntas, com honestidade total porque aqui é dinheiro:
+
+## 1. O `meli.la` é manual? — **Sim, correto.**
+O Mercado Livre **não tem API pública** para gerar `meli.la` (confirmado em OTD-ML-001: `/items` dá 403, `client_credentials` dá `invalid_client`). Ele só sai do **painel de afiliados, por usuário**. Por isso o `meli.la` é o que você cola à mão (no ícone 🔗 de cada card), e o `matt_word` é o que o sistema monta sozinho. Foi exatamente essa assimetria que motivou o **híbrido**: automático por padrão, cravado onde você colar.
+
+## 2. O link `matt_word` do Family Hub "funcionaria igualmente"? — **Depende do que "funcionar" significa.**
+
+| Critério | `matt_word` (automático) | `meli.la` (manual) |
+|---|---|---|
+| **Abrir o produto** | ✅ Idêntico — você confirmou. É a mesma URL do "Ver no ML" + query params (params não mudam o roteamento). | ✅ |
+| **Atribuir a comissão** | ⚠️ **Best-effort.** Carrega sua etiqueta `caga6077534`, mas o ML credita de forma **garantida** só pelo link que ele mesmo gera. | ✅ **Garantida** — embute conta + canal completo (etiqueta + `matt_tool` + handshake). |
+
+Ou seja: **navega igual, atribui com menos garantia.** Não posso te afirmar "é igual" para a comissão sem prova material — e a única prova real é uma conversão atribuída no seu painel ML. Seria desonesto (Lei 1) eu cravar isso de cabeça.
+
+## O que eu recomendo
+- **3 produtos high-ticket** (Roborock, Samsung 8K, Family Hub): cole o `meli.la` de cada um (≈30s no painel, uma vez). Garantia máxima onde a comissão é gorda. O Roborock já está cravado.
+- **Cauda longa** (conteúdo gerado em escala): o `matt_word` automático cobre sozinho — melhor ter atribuição best-effort do que link nenhum.
+
+## Como **saber** de fato (e até reforçar o automático)
+1. **Teste barato:** clique no seu próprio link `matt_word` e veja em **Afiliados → Métricas** se registra um **clique** atribuído a `caga6077534`. Clique costuma aparecer antes mesmo de venda.
+2. **Reforço opcional:** se você abrir `https://meli.la/2gh13Sw` no seu browser e me colar a **URL final expandida** (depois do redirect), eu vejo se ela carrega um `matt_tool=...` além do `matt_word`. Se sim, eu adiciono esse `matt_tool` ao builder automático — aí o link `matt_word` fica muito mais próximo do cravado, **sem** depender de colar `meli.la` produto a produto.
+
+Quer que eu siga pela opção 2 (você cola a URL expandida e eu turbino o automático)? E posso **selar com `/handoff`** agora que você validou — ou seguro até você decidir sobre o `matt_tool`.
+
+## 👤 User *(20:58:28)*
+
+ótimo então faça uma comparação para verificar se realmente funcionaria.:
+Ver no ML:
+https://www.mercadolivre.com.br/p/MLB27834876
+----
+Copiar link cravado.:
+https://meli.la/2gh13Sw
+----
+Link cravado vira o seguinte quando abre.:
+https://www.mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&forceInApp=true&ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EXz0VxQk0%2Fbh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy%2FwygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L%2B5orCUnsiygLrQ%3D%3D
+
+## 🤖 Claude *(20:59:31)*
+
+
+## 🤖 Claude *(20:59:32)*
+
+Excelente — agora eu vejo a anatomia real do link cravado. Deixa eu fazer a comparação rigorosa, e tentar uma confirmação em browser do que o `ref` faz.
+
+## 🤖 Claude *(20:59:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nCRAVADO='https://www.mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&forceInApp=true&ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EXz0VxQk0%2Fbh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy%2FwygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L%2B5orCUnsiygLrQ%3D%3D'\necho \"=== open expanded cravado link \u2014 does the ref decode/redirect to MLB27834876? ===\"\nagent-browser open \"$CRAVADO\" --wait load 2>&1 | tail -2\necho \"final url:\"; agent-browser get url 2>&1\necho \"--- snapshot top ---\"; agent-browser snapshot -i -c -d 3 2>&1 | head -6\nagent-browser close --all 2>&1 | tail -1",
+  "description": "Open expanded cravado link to see where ref routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === open expanded cravado link — does the ref decode/redirect to MLB27834876? ===
+> ✓ 
+>   https://www.mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&forceInApp=true&ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EXz0VxQk0%2Fbh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy%2FwygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L%2B5orCUnsiygLrQ%3D%3D
+> final url:
+> https://www.mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&forceInApp=true&ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EXz0VxQk0%2Fbh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy%2FwygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L%2B5orCUnsiygLrQ%3D%3D
+> --- snapshot top ---
+> - link "Mercado Libre - Donde comprar y vender de todo" [ref=e1]
+> - heading "Hubo un error accediendo a esta pagina..." [level=4, ref=e2]
+> - link "Ir a la página principal" [ref=e3]
+> ✓ Closed session: default
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
