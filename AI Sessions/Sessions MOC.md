@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 227
-> * **Sessões do Claude**: 197
+> * **Total de Sessões Registradas**: 228
+> * **Sessões do Claude**: 198
 > * **Sessões do Gemini**: 30
 
 ---
@@ -52,6 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
 *   `[[2026-05-31 - handson]]` - *2026-05-31*
 *   `[[2026-05-31 - Seal meta-api BoK suite and test robustness]]` - *2026-05-31*
 *   `[[2026-05-31 - Fix tenant isolation in edge functions]]` - *2026-05-31*
@@ -63,8 +64,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Update context and continue antigravity handoff]]` - *2026-05-29*
 *   `[[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]` - *2026-05-29*
 *   `[[2026-05-28 - handson]]` - *2026-05-28*
-*   `[[2026-05-28 - agent-ae995d35a4949f2ed]]` - *2026-05-28*
-*   *... e mais 194 sessões nessa categoria.*
+*   *... e mais 195 sessões nessa categoria.*
 
 ---
 
@@ -250,6 +250,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - 815f4d1e-ada4-445c-a0ff-7d13a567be7d]]` (ClaudeSessions)
 *   `[[2026-05-01 - Enterprise infrastructure and monetization quantum leap]]` (ClaudeSessions)
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
+
+### Junho 2026
+*   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
 
 ### Abril 2026
 *   `[[2026-04-26 - ffc7407f-40e6-45ef-a261-ef73cd5bca92]]` (ClaudeSessions)
