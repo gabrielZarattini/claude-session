@@ -1750,6 +1750,2067 @@ Now the DB proof — what's actually stored for this product and the Sovereign's
 > ]
 > ```
 
+## 🤖 Claude *(19:31:19)*
+
+
+## 🤖 Claude *(19:31:39)*
+
+Diagnóstico **completo e materialmente provado**. Tenho tudo o que preciso — inclusive a prova de ouro que você mesmo trouxe (a etiqueta `caga6077534` no diálogo de compartilhar do ML).
+
+## 🔴 Causa raiz — 3 bugs empilhados no caminho de afiliado
+
+**Bug 1 — host morto (o que você viu).** O template salvo no catálogo (`vm_affiliate_products`) é:
+```
+https://panel.gcrux.com/api/ml-redirect?product_id=MLB27834876&affiliate_id={affiliate_id}&...
+```
+`panel.gcrux.com` é o **CloudPanel** (o painel de hospedagem que serve este próprio app, docroot `/home/gcrUX/htdocs/...`). A rota `/api/ml-redirect` **não existe lá** → o CloudPanel intercepta com a tela de login. É um proxy fantasma. Por isso, mesmo logando, nunca abre o produto. O HANDOFF já tinha flagado isso (v6.14.2: `302 → /login`, zero atribuição).
+
+**Bug 2 — campo de atribuição errado.** A página injeta o seu **`app_id` OAuth** (`3286108278277786`) no lugar de `{affiliate_id}`. Mas a atribuição real do ML é a **etiqueta** `caga6077534` — exatamente a que aparece no seu "Compartilhar". Prova do banco:
+
+| user | app_id | affiliate_tag | ativo |
+|---|---|---|---|
+| Sovereign (`ada39fae`) | `3286108278277786` | **`caga6077534`** ✅ | true |
+
+O SOP `ml-affiliate-attribution.md:25` é explícito: *"A tag mora em `affiliate_config.affiliate_tag` — NÃO é o `app_id` OAuth"*. A etiqueta certa está salva no banco, mas a UI lê o campo errado.
+
+**Bug 3 — o hook nem expõe a tag.** `useAffiliateConfig.ts` (interface `AffiliateConfig`) não tem o campo `affiliate_tag` — a página passa `config.app_id` (linha 192). Então mesmo querendo, a tela não consegue usar a etiqueta.
+
+> Curiosidade material: o `external_id` e o `product_url` no catálogo **já são reais** (`MLB27834876` → `/p/MLB27834876`, o mesmo que "Ver no ML" abre). Só o *template de afiliado* é que está envenenado.
+
+## ✅ Como o link deveria ser
+
+O sistema deveria gerar **a sua URL real do produto + a sua etiqueta** (`matt_word`), exatamente como o `link-forge.ts:buildAffiliateUrl` já faz (mas que a página e o edge function ignoram). Para **este produto**, o link correto — que você pode **testar agora à mão** — é:
+
+```
+https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534
+```
+
+Isso abre o produto igual ao "Ver no ML" e carrega sua etiqueta para atribuição (best-effort). O **definitivo garantido** é o `meli.la/2gh13Sw` que o próprio painel do ML te deu — esse embute conta+canal de forma cravada (o ML não tem API pública pra gerar `meli.la`, então ele é manual por produto).
+
+## 🔧 Superfícies a corrigir (mesma causa, 4 lugares)
+- **A (frontend):** `useAffiliateConfig.ts` expõe `affiliate_tag` + `AffiliateProductsPage.tsx` constrói `product_url?matt_word={tag}` (fail-closed se sem tag) — *reversível, local*.
+- **B (dados):** re-seed dos `vm_affiliate_products.affiliate_template_url` (mata o `panel.gcrux.com`) — *escrita no banco*.
+- **C (edge):** `process-affiliate-link/index.ts:156` (clique do leitor em conteúdo publicado tem o **mesmo** bug — usa `app_id` + host morto) — *precisa deploy*.
+- **D:** docs/test scripts residuais (`grep panel.gcrux.com = 0`, gate do SOP).
+
+Antes de tocar banco e deployar edge function (ações outward-facing), preciso da sua decisão em dois pontos:
+
+## 🤖 Claude *(19:31:47)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual mecanismo de atribui\u00e7\u00e3o devo usar nos links gerados pelo sistema?",
+      "header": "Mecanismo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "H\u00edbrido (Recomendado)",
+          "description": "Usa o meli.la do painel quando voc\u00ea colar um por produto (atribui\u00e7\u00e3o GARANTIDA); sen\u00e3o cai no product_url + ?matt_word=caga6077534 autom\u00e1tico (best-effort). Cobre os 3 produtos atuais + futuros e te d\u00e1 o link cravado onde importa."
+        },
+        {
+          "label": "matt_word autom\u00e1tico",
+          "description": "S\u00f3 product_url + ?matt_word={sua etiqueta}. Totalmente automatiz\u00e1vel, escala sozinho, mas \u00e9 best-effort (atribui se o canal estiver vinculado). \u00c9 o que o link-forge.ts j\u00e1 faz."
+        },
+        {
+          "label": "meli.la definitivo",
+          "description": "Voc\u00ea cola o shortlink meli.la gerado no painel ML para cada produto; o sistema serve s\u00f3 esse. Atribui\u00e7\u00e3o cravada, por\u00e9m 100% manual por produto (sem API)."
+        }
+      ]
+    },
+    {
+      "question": "Qual escopo de corre\u00e7\u00e3o autorizo agora? (B e C s\u00e3o outward-facing: escrita no cat\u00e1logo + deploy de edge function)",
+      "header": "Escopo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fix completo (Recomendado)",
+          "description": "A (frontend) + B (re-seed do cat\u00e1logo no banco) + C (deploy process-affiliate-link) + D (docs/tests). Resolve a sua c\u00f3pia E o clique do leitor no conte\u00fado publicado. Verifico o link no agent-browser antes de selar."
+        },
+        {
+          "label": "S\u00f3 frontend agora",
+          "description": "Aplico s\u00f3 A (p\u00e1gina + hook) para destravar sua c\u00f3pia imediatamente. Defiro B/C/D (cat\u00e1logo + edge + docs) para uma sess\u00e3o com seu GO de deploy."
+        },
+        {
+          "label": "S\u00f3 diagn\u00f3stico",
+          "description": "N\u00e3o mexo em nada agora \u2014 voc\u00ea j\u00e1 tem o link correto para testar \u00e0 m\u00e3o. Eu seguro o fix."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual mecanismo de atribuição devo usar nos links gerados pelo sistema?"="Híbrido (Recomendado)", "Qual escopo de correção autorizo agora? (B e C são outward-facing: escrita no catálogo + deploy de edge function)"="Fix completo (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:36:01)*
+
+
+## 🤖 Claude *(19:36:06)*
+
+Recebido: **Híbrido** (meli.la cravado quando existir → senão `matt_word` automático) + **Fix completo** (A frontend + B catálogo + C edge + D docs/tests), com verificação em browser real antes de selar.
+
+Uma restrição de tenancy que vou respeitar: o `meli.la` é **per-user** (embute sua conta), então **não pode** morar no catálogo compartilhado (`vm_affiliate_products`) — vazaria sua atribuição para outros tenants. Vou guardá-lo per-user em `affiliate_config.metadata.shortlinks[MLB]`. O catálogo compartilhado fica só com o `product_url` real, e cada tenant gera o link com a própria etiqueta.
+
+Deixa eu mapear o terreno antes de codar.
+
+## 🤖 Claude *(19:36:07)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "ML affiliate link fix",
+  "summary": "Dead panel.gcrux.com proxy + wrong attribution field \u2014 hybrid meli.la/matt_word fix across page, catalog, edge"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "ML affiliate link fix". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(19:36:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== src/lib contents ===\"; ls -1 src/lib/ 2>/dev/null\necho \"=== any existing affiliate lib? ===\"; ls -la src/lib/affiliate*.ts 2>/dev/null || echo \"(none)\"\necho \"=== test dir layout ===\"; ls -1 src/test/ 2>/dev/null | head; ls -1 src/lib/*.test.ts 2>/dev/null\necho \"=== ALL active ML catalog rows (blast radius of dead template) ===\"\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\ncurl -s \"$URL/rest/v1/vm_affiliate_products?select=id,external_id,name,product_url,affiliate_template_url&order=detected_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nprint(f'{len(rows)} rows total')\ndead=[r for r in rows if r.get('affiliate_template_url') and 'panel.gcrux.com' in r['affiliate_template_url']]\nprint(f'{len(dead)} rows route via panel.gcrux.com (DEAD)')\nfor r in rows:\n    t=r.get('affiliate_template_url') or ''\n    flag='DEAD' if 'panel.gcrux.com' in t else ('shortlink' if ('meli.la' in t or '/sec/' in t) else ('null' if not t else 'other'))\n    print(f\\\"  [{flag}] {r['external_id']:>14}  {r['name'][:30]:30}  url={r.get('product_url')}\\\")\n\"",
+  "description": "Recon src/lib, tests, and full catalog blast radius"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === src/lib contents ===
+> agent-task-result.ts
+> billing.ts
+> canvas-dag.ts
+> canvas-execute-result.ts
+> canvas-handles.ts
+> canvas-node-registry.ts
+> canvas-recipes.ts
+> canvas-utils.ts
+> enterprise-seed.ts
+> meta.ts
+> utils.ts
+> === any existing affiliate lib? ===
+> (none)
+> === test dir layout ===
+> aios-sql-bridge-smoke.test.ts
+> billing.test.ts
+> canvas-dag.test.ts
+> canvas-handles.test.ts
+> canvas-video-async-smoke.test.ts
+> e2e-user-zero-selftest.test.ts
+> example.test.ts
+> meta.test.ts
+> phase-zeta.test.tsx
+> qa-extract-manifest.test.ts
+> === ALL active ML catalog rows (blast radius of dead template) ===
+> 3 rows total
+> 3 rows route via panel.gcrux.com (DEAD)
+>   [DEAD]    MLB27834876  Roborock S8 Pro Ultra           url=https://www.mercadolivre.com.br/p/MLB27834876
+>   [DEAD]    MLB36263268  Samsung Neo QLED 8K             url=https://www.mercadolivre.com.br/p/MLB36263268
+>   [DEAD]    MLB37674259  Geladeira Samsung Family Hub    url=https://www.mercadolivre.com.br/p/MLB37674259
+> ```
+
+## 🤖 Claude *(19:37:00)*
+
+
+## 🤖 Claude *(19:37:01)*
+
+Blast radius: **3 catalog rows, all dead, all with real `product_url`**. Tests live in `src/test/`. No existing affiliate lib. Let me read the full edge function and confirm UI primitives before writing.
+
+## 🤖 Claude *(19:37:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "offset": 1,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token",
+> 9	};
+> 10	
+> 11	const ML_SEARCH_BASE = "https://api.mercadolibre.com/sites/MLB/search";
+> 12	
+> 13	/** Best-effort telemetry pulse to infra_health_logs — never blocks the response. */
+> 14	async function pulse(
+> 15	  client: any,
+> 16	  status: "healthy" | "degraded" | "error",
+> 17	  note?: string,
+> 18	): Promise<void> {
+> 19	  await client
+> 20	    .from("infra_health_logs")
+> 21	    .insert({ service: "affiliate-link-resolution", status })
+> 22	    .then(() => {}, () => {});
+> 23	  if (note) console.log(`[affiliate-link-resolution] ${status}: ${note}`);
+> 24	}
+> 25	
+> 26	/** Extract human-readable keywords from a ML product URL path */
+> 27	function extractKeywords(url: string): string {
+> 28	  try {
+> 29	    const { pathname } = new URL(url);
+> 30	    const slug =
+> 31	      pathname
+> 32	        .split("/")
+> 33	        .filter(Boolean)
+> 34	        .find((s) => s.length > 8 && /[a-z]/i.test(s)) ?? "";
+> 35	    return slug
+> 36	      .replace(/MLB[\w]*/gi, "")
+> 37	      .replace(/[-_]+/g, " ")
+> 38	      .replace(/\d{6,}/g, "")
+> 39	      .replace(/\s+/g, " ")
+> 40	      .trim()
+> 41	      .slice(0, 80);
+> 42	  } catch {
+> 43	    return "";
+> 44	  }
+> 45	}
+> 46	
+> 47	/** Append affiliate + UTM params without duplicating existing params */
+> 48	function buildAffiliateUrl(
+> 49	  url: string,
+> 50	  affiliateId: string | null,
+> 51	  campaignId: string,
+> 52	): string {
+> 53	  try {
+> 54	    const u = new URL(url);
+> 55	    if (affiliateId) u.searchParams.set("partner_id", affiliateId);
+> 56	    u.searchParams.set("utm_source", "mcorch");
+> 57	    u.searchParams.set("utm_medium", "social");
+> 58	    u.searchParams.set("utm_campaign", campaignId);
+> 59	    return u.toString();
+> 60	  } catch {
+> 61	    return url;
+> 62	  }
+> 63	}
+> 64	
+> 65	/** HEAD-probe a URL; 8 s timeout.
+> 66	 *  200/3xx = OK · 403 = geo-blocked but exists · 405 = HEAD not allowed but exists */
+> 67	async function probeUrl(url: string): Promise<boolean> {
+> 68	  try {
+> 69	    const ctrl = new AbortController();
+> 70	    const t = setTimeout(() => ctrl.abort(), 8_000);
+> 71	    const res = await fetch(url, {
+> 72	      method: "HEAD",
+> 73	      signal: ctrl.signal,
+> 74	      redirect: "follow",
+> 75	    });
+> 76	    clearTimeout(t);
+> 77	    return res.ok || res.status === 403 || res.status === 405;
+> 78	  } catch {
+> 79	    return false;
+> 80	  }
+> 81	}
+> 82	
+> 83	/** Search ML public API for a similar product and return its permalink */
+> 84	async function findSimilarProduct(keywords: string): Promise<string | null> {
+> 85	  if (!keywords.trim()) return null;
+> 86	  try {
+> 87	    const res = await fetch(
+> 88	      `${ML_SEARCH_BASE}?q=${encodeURIComponent(keywords)}&limit=1`,
+> 89	    );
+> 90	    if (!res.ok) return null;
+> ```
+
+## 🤖 Claude *(19:37:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "offset": 184,
+  "limit": 160
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 184	      status: 405,
+> 185	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 186	    });
+> 187	  }
+> 188	
+> 189	  try {
+> 190	    // POST: original monetization flow (auth + persist + self-heal)
+> 191	    const authHeader = req.headers.get("Authorization");
+> 192	    if (!authHeader) {
+> 193	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 194	        status: 401,
+> 195	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 196	      });
+> 197	    }
+> 198	
+> 199	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 200	    const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 201	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 202	
+> 203	    const userClient = createClient(supabaseUrl, anonKey, {
+> 204	      global: { headers: { Authorization: authHeader } },
+> 205	    });
+> 206	
+> 207	    const {
+> 208	      data: { user },
+> 209	      error: authError,
+> 210	    } = await userClient.auth.getUser();
+> 211	    if (authError || !user) {
+> 212	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 213	        status: 401,
+> 214	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 215	      });
+> 216	    }
+> 217	
+> 218	    const { product_url, campaign_id, content_id } = await req.json();
+> 219	    if (!product_url || typeof product_url !== "string") {
+> 220	      return new Response(
+> 221	        JSON.stringify({ error: "product_url é obrigatório" }),
+> 222	        {
+> 223	          status: 400,
+> 224	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 225	        },
+> 226	      );
+> 227	    }
+> 228	
+> 229	    const effectiveCampaign =
+> 230	      (campaign_id as string | undefined)?.trim() || "ai_orchestration";
+> 231	    const adminClient = createClient(supabaseUrl, serviceKey);
+> 232	
+> 233	    const { data: config } = await adminClient
+> 234	      .from("affiliate_config")
+> 235	      .select("app_id")
+> 236	      .eq("user_id", user.id)
+> 237	      .eq("platform", "mercadolivre")
+> 238	      .eq("is_active", true)
+> 239	      .maybeSingle();
+> 240	
+> 241	    // Per-user resolution ONLY — no global ML_AFFILIATE_ID fallback (API Tenancy Model).
+> 242	    const affiliateId: string | null = (config?.app_id as string | null) ?? null;
+> 243	    if (!affiliateId) {
+> 244	      await pulse(adminClient, "degraded", `POST monetize no_config user ${user.id}`);
+> 245	      return new Response(
+> 246	        JSON.stringify({
+> 247	          error: "mercadolivre_not_configured",
+> 248	          action:
+> 249	            "Configure your Mercado Livre credentials at /dashboard/affiliates",
+> 250	        }),
+> 251	        {
+> 252	          status: 402,
+> 253	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 254	        },
+> 255	      );
+> 256	    }
+> 257	
+> 258	    let resolvedUrl = product_url;
+> 259	    let selfHealedFrom: string | null = null;
+> 260	
+> 261	    const alive = await probeUrl(product_url);
+> 262	    if (!alive) {
+> 263	      const kw = extractKeywords(product_url);
+> 264	      const fallback = await findSimilarProduct(kw);
+> 265	      if (!fallback) {
+> 266	        return new Response(
+> 267	          JSON.stringify({
+> 268	            error:
+> 269	              "URL inacessível e nenhum produto similar encontrado no ML",
+> 270	            original_url: product_url,
+> 271	          }),
+> 272	          {
+> 273	            status: 422,
+> 274	            headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 275	          },
+> 276	        );
+> 277	      }
+> 278	      selfHealedFrom = product_url;
+> 279	      resolvedUrl = fallback;
+> 280	      console.log(`[affiliate] self-heal ${product_url} → ${fallback}`);
+> 281	    }
+> 282	
+> 283	    const affiliateUrl = buildAffiliateUrl(
+> 284	      resolvedUrl,
+> 285	      affiliateId,
+> 286	      effectiveCampaign,
+> 287	    );
+> 288	
+> 289	    const { data: link, error: insertErr } = await adminClient
+> 290	      .from("affiliate_links")
+> 291	      .insert({
+> 292	        user_id: user.id,
+> 293	        original_url: product_url,
+> 294	        short_url: affiliateUrl,
+> 295	        platform: "mercadolivre",
+> 296	        campaign_id: effectiveCampaign,
+> 297	        content_id: (content_id as string | undefined) ?? null,
+> 298	        metadata: {
+> 299	          affiliate_id: affiliateId,
+> 300	          resolved_url: resolvedUrl,
+> 301	          self_healed_from: selfHealedFrom,
+> 302	          processed_at: new Date().toISOString(),
+> 303	        },
+> 304	      })
+> 305	      .select("id")
+> 306	      .single();
+> 307	
+> 308	    if (insertErr) {
+> 309	      console.error("[affiliate] insert error:", insertErr.message);
+> 310	    }
+> 311	
+> 312	    await pulse(
+> 313	      adminClient,
+> 314	      insertErr ? "degraded" : "healthy",
+> 315	      `POST monetize user ${user.id}`,
+> 316	    );
+> 317	
+> 318	    return new Response(
+> 319	      JSON.stringify({
+> 320	        success: true,
+> 321	        original_url: product_url,
+> 322	        resolved_url: resolvedUrl,
+> 323	        affiliate_url: affiliateUrl,
+> 324	        affiliate_id: affiliateId,
+> 325	        campaign_id: effectiveCampaign,
+> 326	        self_healed: selfHealedFrom !== null,
+> 327	        self_healed_from: selfHealedFrom,
+> 328	        link_id: link?.id ?? null,
+> 329	      }),
+> 330	      {
+> 331	        status: 200,
+> 332	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 333	      },
+> 334	    );
+> 335	  } catch (err) {
+> 336	    console.error("[process-affiliate-link]", err);
+> 337	    return new Response(
+> 338	      JSON.stringify({
+> 339	        error: (err as Error).message ?? "Internal server error",
+> 340	      }),
+> 341	      {
+> 342	        status: 500,
+> 343	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === dialog/popover present? ===
+> src/components/ui/dialog.tsx
+> src/components/ui/popover.tsx
+> === total edge file length ===
+> 347 supabase/functions/process-affiliate-link/index.ts
+> === test scripts that reference dead host ===
+> -rw-rw-r-- 1 ubuntu ubuntu  969 May 17 19:07 scripts/test-affiliate-link.cjs
+> -rw-rw-r-- 1 ubuntu ubuntu 1033 May 17 19:07 scripts/test-affiliate-link.js
+> ```
+
+## 🤖 Claude *(19:37:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== dialog/popover present? ===\"; ls src/components/ui/dialog.tsx src/components/ui/popover.tsx 2>&1\necho \"=== total edge file length ===\"; wc -l supabase/functions/process-affiliate-link/index.ts\necho \"=== test scripts that reference dead host ===\"; ls -la scripts/test-affiliate-link.js scripts/test-affiliate-link.cjs 2>&1",
+  "description": "Read edge function tail/head and confirm UI primitives"
+}
+```
+
+## 🤖 Claude *(19:37:49)*
+
+
+## 🤖 Claude *(19:37:52)*
+
+Both edge branches are broken: **GET** (line 156) uses `panel.gcrux.com` + `app_id`; **POST** (line 48/283) uses `partner_id={app_id}` (not a real ML param either). Both must move to `matt_word={affiliate_tag}` + hybrid. `dialog.tsx`/`popover.tsx` exist for the UI.
+
+One tenancy check before I touch the hook: can the **user client** (anon+JWT) actually read `affiliate_tag`, or is it column-REVOKE'd like the tokens? Let me check the migration grants.
+
+## 🤖 Claude *(19:37:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migrations touching affiliate_tag ===\"; rg -l \"affiliate_tag\" supabase/migrations/ 2>/dev/null\necho \"\"; echo \"=== affiliate_tag column def + any REVOKE/GRANT on affiliate_config columns ===\"\nrg -n \"affiliate_tag|REVOKE|GRANT|column\" supabase/migrations/20260530183000_affiliate_tag_per_user.sql 2>/dev/null\necho \"\"; echo \"=== any column-level REVOKE on affiliate_config across all migrations ===\"\nrg -n \"REVOKE.*affiliate_config|affiliate_config.*REVOKE|REVOKE.*(access_token|refresh_token|client_secret)\" supabase/migrations/ 2>/dev/null | head",
+  "description": "Inspect affiliate_tag migration grants and column REVOKEs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations touching affiliate_tag ===
+> supabase/migrations/20260530183000_affiliate_tag_per_user.sql
+> 
+> === affiliate_tag column def + any REVOKE/GRANT on affiliate_config columns ===
+> 8:-- NOT the OAuth app_id. This column stores that tag per-user.
+> 17:  ADD COLUMN IF NOT EXISTS affiliate_tag text;
+> 19:COMMENT ON COLUMN public.affiliate_config.affiliate_tag IS
+> 
+> === any column-level REVOKE on affiliate_config across all migrations ===
+> supabase/migrations/20260413222900_235d4190-bafb-4b8e-b821-bbca058820a4.sql:2:REVOKE SELECT (access_token, refresh_token) ON public.social_accounts FROM anon, authenticated;
+> ```
+
+## 🤖 Claude *(19:38:12)*
+
+
+## 🤖 Claude *(19:38:13)*
+
+`affiliate_tag` has **no column REVOKE** (only `social_accounts.access_token/refresh_token` are protected) — the owner reads it freely via RLS. Safe to expose in the hook. Now implementing.
+
+**File 1 — shared pure builder/resolver** (`src/lib/affiliate.ts`):
+
+## 🤖 Claude *(19:38:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts",
+  "content": "/**\n * Mercado Livre affiliate link resolution.\n *\n * Per OTD-ML-001 (SOP `docs/processes/ml-affiliate-attribution.md`): the Mercado Livre\n * affiliate program has NO public API to mint short links. Attribution works two ways:\n *\n *   1. Definitive  \u2014 a per-user `meli.la` / `mercadolivre.com/sec/` short link generated in the\n *                    seller's affiliate panel (embeds account + channel). Stored per-user in\n *                    `affiliate_config.metadata.shortlinks[<MLB external_id>]`.\n *   2. Best-effort \u2014 the REAL product URL carrying the per-user affiliate tag via `matt_word`.\n *\n * NEVER route through `panel.gcrux.com` (CloudPanel admin host \u2192 login wall, zero attribution),\n * and NEVER pass the OAuth `app_id` as the affiliate id (it does not attribute and leaks across\n * tenants if shared). The attribution tag lives in `affiliate_config.affiliate_tag`.\n */\n\nexport const ML_PRODUCT_BASE = \"https://www.mercadolivre.com.br\";\n\n/** Default attribution UTM scheme for catalog/Link-Forge generated links. */\nexport const AFFILIATE_UTM = {\n  source: \"gcrux_orchestrator\",\n  medium: \"content_mesh\",\n  campaign: \"highticket_smarthome_q3\",\n} as const;\n\n/** True when a stored URL is a real ML affiliate short link (definitive attribution). */\nexport function isMlShortLink(url: string | null | undefined): boolean {\n  if (!url) return false;\n  return /^https:\\/\\/(meli\\.la\\/|(www\\.)?mercadolivre\\.com(\\.br)?\\/sec\\/)/i.test(url.trim());\n}\n\nexport interface MattWordOptions {\n  /** Verified product URL (preferred base, e.g. https://www.mercadolivre.com.br/p/MLB27834876). */\n  productUrl?: string | null;\n  /** ML external id (e.g. MLB27834876) \u2014 used to reconstruct a URL when productUrl is absent. */\n  externalId?: string | null;\n  /** Per-user affiliate tag (e.g. caga6077534) \u2014 the `matt_word` attribution value. */\n  affiliateTag: string;\n  /** Optional tracker carried in utm_content. */\n  contentId?: string | null;\n  /** Optional UTM overrides (defaults to AFFILIATE_UTM). */\n  utm?: Partial<typeof AFFILIATE_UTM>;\n}\n\n/**\n * Build a REAL Mercado Livre product URL carrying the affiliate tag via `matt_word`.\n * Prefers the verified `productUrl` (keeps the exact landing page the user already trusts) and\n * appends attribution params; falls back to reconstructing `/MLB-{numeric}` from `externalId`.\n * Returns null when there is no usable base URL.\n */\nexport function buildMattWordUrl(opts: MattWordOptions): string | null {\n  const tag = opts.affiliateTag?.trim();\n  if (!tag) return null;\n\n  let base = opts.productUrl?.trim() || null;\n  if (!base && opts.externalId) {\n    const numeric = opts.externalId.trim().replace(/^MLB-?/i, \"\");\n    if (numeric) base = `${ML_PRODUCT_BASE}/MLB-${numeric}`;\n  }\n  if (!base) return null;\n\n  let u: URL;\n  try {\n    u = new URL(base);\n  } catch {\n    return null;\n  }\n\n  const utm = { ...AFFILIATE_UTM, ...(opts.utm ?? {}) };\n  u.searchParams.set(\"matt_word\", tag);\n  u.searchParams.set(\"utm_source\", utm.source);\n  u.searchParams.set(\"utm_medium\", utm.medium);\n  u.searchParams.set(\"utm_campaign\", utm.campaign);\n  if (opts.contentId) u.searchParams.set(\"utm_content\", opts.contentId);\n  return u.toString();\n}\n\nexport interface AffiliateLinkInput {\n  externalId?: string | null;\n  productUrl?: string | null;\n  contentId?: string | null;\n}\n\nexport interface AffiliateAttributionConfig {\n  affiliateTag?: string | null;\n  /** Per-user definitive short links keyed by ML external id (MLB...). */\n  shortlinks?: Record<string, string> | null;\n}\n\nexport type AffiliateLinkResult =\n  | { kind: \"shortlink\"; url: string } // definitive per-user meli.la override\n  | { kind: \"matt_word\"; url: string } // best-effort attribution on real product URL\n  | { kind: \"needs_config\" } // no affiliate_tag AND no short link \u2192 fail-closed\n  | { kind: \"no_product\" }; // no product URL/id to build from\n\n/**\n * Hybrid resolution (OTD-ML-001): prefer the definitive per-user short link, else fall back to a\n * best-effort `matt_word` URL on the real product. Fail-closed \u2014 never emit an unattributed ML\n * link (it would lose/leak commission). Pure function: identical inputs \u2192 identical output.\n */\nexport function resolveAffiliateLink(\n  product: AffiliateLinkInput,\n  config: AffiliateAttributionConfig | null | undefined,\n): AffiliateLinkResult {\n  const ext = product.externalId?.trim() || null;\n\n  // 1. Definitive: per-user stored short link for this exact product.\n  const stored = ext && config?.shortlinks ? config.shortlinks[ext] : null;\n  if (isMlShortLink(stored)) return { kind: \"shortlink\", url: stored!.trim() };\n\n  // 2. Best-effort: real product URL + per-user matt_word tag.\n  const tag = config?.affiliateTag?.trim() || null;\n  if (!tag) return { kind: \"needs_config\" };\n\n  const url = buildMattWordUrl({\n    productUrl: product.productUrl,\n    externalId: ext,\n    affiliateTag: tag,\n    contentId: product.contentId,\n  });\n  if (!url) return { kind: \"no_product\" };\n  return { kind: \"matt_word\", url };\n}\n\n/** Pull the per-user short-link override map out of an affiliate_config.metadata blob. */\nexport function readShortlinks(\n  metadata: Record<string, unknown> | null | undefined,\n): Record<string, string> {\n  const raw = (metadata as { shortlinks?: unknown } | null)?.shortlinks;\n  if (!raw || typeof raw !== \"object\") return {};\n  const out: Record<string, string> = {};\n  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {\n    if (typeof v === \"string\" && v.trim()) out[k] = v.trim();\n  }\n  return out;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:39)*
+
+
+## 🤖 Claude *(19:38:40)*
+
+**File 2 — unit tests** (`src/lib/affiliate.test.ts`):
+
+## 🤖 Claude *(19:39:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.test.ts",
+  "content": "import { describe, it, expect } from \"vitest\";\nimport {\n  isMlShortLink,\n  buildMattWordUrl,\n  resolveAffiliateLink,\n  readShortlinks,\n} from \"./affiliate\";\n\ndescribe(\"isMlShortLink\", () => {\n  it(\"accepts meli.la and /sec/ short links\", () => {\n    expect(isMlShortLink(\"https://meli.la/2gh13Sw\")).toBe(true);\n    expect(isMlShortLink(\"https://www.mercadolivre.com.br/sec/abc123\")).toBe(true);\n    expect(isMlShortLink(\"https://mercadolivre.com/sec/abc123\")).toBe(true);\n  });\n\n  it(\"rejects product URLs, the dead proxy, and empties\", () => {\n    expect(isMlShortLink(\"https://www.mercadolivre.com.br/p/MLB27834876\")).toBe(false);\n    expect(isMlShortLink(\"https://panel.gcrux.com/api/ml-redirect?x=1\")).toBe(false);\n    expect(isMlShortLink(null)).toBe(false);\n    expect(isMlShortLink(undefined)).toBe(false);\n    expect(isMlShortLink(\"\")).toBe(false);\n  });\n});\n\ndescribe(\"buildMattWordUrl\", () => {\n  it(\"appends matt_word + utm to a verified product URL (keeps the landing page)\", () => {\n    const url = buildMattWordUrl({\n      productUrl: \"https://www.mercadolivre.com.br/p/MLB27834876\",\n      affiliateTag: \"caga6077534\",\n      contentId: \"9531223a-14df-4654-85fd-ac1df5c21110\",\n    });\n    const u = new URL(url!);\n    expect(u.origin + u.pathname).toBe(\"https://www.mercadolivre.com.br/p/MLB27834876\");\n    expect(u.searchParams.get(\"matt_word\")).toBe(\"caga6077534\");\n    expect(u.searchParams.get(\"utm_source\")).toBe(\"gcrux_orchestrator\");\n    expect(u.searchParams.get(\"utm_content\")).toBe(\"9531223a-14df-4654-85fd-ac1df5c21110\");\n  });\n\n  it(\"NEVER routes through panel.gcrux.com and NEVER carries the app_id\", () => {\n    const url = buildMattWordUrl({\n      productUrl: \"https://www.mercadolivre.com.br/p/MLB27834876\",\n      affiliateTag: \"caga6077534\",\n    });\n    expect(url).not.toContain(\"panel.gcrux.com\");\n    expect(url).not.toContain(\"3286108278277786\"); // OAuth app_id must never appear\n    expect(url).not.toContain(\"partner_id\");\n  });\n\n  it(\"reconstructs /MLB-{numeric} from externalId when no product URL is given\", () => {\n    const url = buildMattWordUrl({ externalId: \"MLB27834876\", affiliateTag: \"caga6077534\" });\n    expect(url).toBe(\n      \"https://www.mercadolivre.com.br/MLB-27834876?matt_word=caga6077534\" +\n        \"&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3\",\n    );\n  });\n\n  it(\"returns null without a tag or a usable base\", () => {\n    expect(buildMattWordUrl({ productUrl: \"https://x/p/1\", affiliateTag: \"\" })).toBeNull();\n    expect(buildMattWordUrl({ affiliateTag: \"caga6077534\" })).toBeNull();\n    expect(buildMattWordUrl({ productUrl: \"not a url\", affiliateTag: \"caga6077534\" })).toBeNull();\n  });\n});\n\ndescribe(\"resolveAffiliateLink (hybrid)\", () => {\n  const product = {\n    externalId: \"MLB27834876\",\n    productUrl: \"https://www.mercadolivre.com.br/p/MLB27834876\",\n    contentId: \"row-uuid\",\n  };\n\n  it(\"prefers a per-user definitive short link when stored for that product\", () => {\n    const r = resolveAffiliateLink(product, {\n      affiliateTag: \"caga6077534\",\n      shortlinks: { MLB27834876: \"https://meli.la/2gh13Sw\" },\n    });\n    expect(r).toEqual({ kind: \"shortlink\", url: \"https://meli.la/2gh13Sw\" });\n  });\n\n  it(\"falls back to matt_word when no short link is stored\", () => {\n    const r = resolveAffiliateLink(product, { affiliateTag: \"caga6077534\" });\n    expect(r.kind).toBe(\"matt_word\");\n    expect((r as { url: string }).url).toContain(\"matt_word=caga6077534\");\n    expect((r as { url: string }).url).not.toContain(\"panel.gcrux.com\");\n  });\n\n  it(\"ignores a non-shortlink stored value and falls back to matt_word\", () => {\n    const r = resolveAffiliateLink(product, {\n      affiliateTag: \"caga6077534\",\n      shortlinks: { MLB27834876: \"https://panel.gcrux.com/api/ml-redirect?x=1\" },\n    });\n    expect(r.kind).toBe(\"matt_word\");\n  });\n\n  it(\"fails closed (needs_config) with neither tag nor short link\", () => {\n    expect(resolveAffiliateLink(product, null)).toEqual({ kind: \"needs_config\" });\n    expect(resolveAffiliateLink(product, { affiliateTag: \"  \" })).toEqual({ kind: \"needs_config\" });\n  });\n\n  it(\"still serves a definitive short link even without a tag\", () => {\n    const r = resolveAffiliateLink(product, {\n      affiliateTag: null,\n      shortlinks: { MLB27834876: \"https://meli.la/2gh13Sw\" },\n    });\n    expect(r).toEqual({ kind: \"shortlink\", url: \"https://meli.la/2gh13Sw\" });\n  });\n\n  it(\"reports no_product when there is nothing to build from\", () => {\n    expect(resolveAffiliateLink({ externalId: null, productUrl: null }, { affiliateTag: \"caga6077534\" })).toEqual(\n      { kind: \"no_product\" },\n    );\n  });\n});\n\ndescribe(\"readShortlinks\", () => {\n  it(\"extracts a clean string map and drops non-strings/empties\", () => {\n    expect(\n      readShortlinks({ shortlinks: { MLB1: \"https://meli.la/a\", MLB2: \"  \", MLB3: 42 } }),\n    ).toEqual({ MLB1: \"https://meli.la/a\" });\n  });\n  it(\"tolerates missing/odd metadata\", () => {\n    expect(readShortlinks(null)).toEqual({});\n    expect(readShortlinks({})).toEqual({});\n    expect(readShortlinks({ shortlinks: \"nope\" })).toEqual({});\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:39:05)*
+
+
+## 🤖 Claude *(19:39:06)*
+
+**File 3 — hook** (`useAffiliateConfig.ts`): expose `affiliate_tag` + add a `setProductShortlink` mutation writing to `metadata.shortlinks`.
+
+## 🤖 Claude *(19:39:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts",
+  "old_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\n\nexport interface AffiliateConfig {\n  id: string;\n  user_id: string;\n  platform: string;\n  app_id: string | null;\n  client_secret: string | null;\n  redirect_uri: string | null;\n  access_token: string | null;\n  refresh_token: string | null;\n  token_expires_at: string | null;\n  is_active: boolean;\n  metadata: Record<string, unknown>;\n  created_at: string;\n  updated_at: string;\n}",
+  "new_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { isMlShortLink, readShortlinks } from '@/lib/affiliate';\n\nexport interface AffiliateConfig {\n  id: string;\n  user_id: string;\n  platform: string;\n  app_id: string | null;\n  /**\n   * Mercado Livre affiliate attribution tag (e.g. `caga6077534`) \u2014 the `matt_word` value.\n   * This is NOT the OAuth `app_id`; it is generated in the seller's affiliate panel (per OTD-ML-001).\n   */\n  affiliate_tag: string | null;\n  client_secret: string | null;\n  redirect_uri: string | null;\n  access_token: string | null;\n  refresh_token: string | null;\n  token_expires_at: string | null;\n  is_active: boolean;\n  metadata: Record<string, unknown>;\n  created_at: string;\n  updated_at: string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:39:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts",
+  "old_string": "    onSuccess: () => {\n      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });\n    },\n  });\n\n  return { config, isLoading, upsertConfig };\n}",
+  "new_string": "    onSuccess: () => {\n      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });\n    },\n  });\n\n  /**\n   * Save (or clear) the definitive per-user `meli.la` short link for a given ML product, stored in\n   * `affiliate_config.metadata.shortlinks[<external_id>]`. Per-user by design \u2014 a short link embeds\n   * the owner's account/channel, so it MUST NOT live in the shared `vm_affiliate_products` catalog.\n   * Pass `shortUrl = null` to remove the override (falls back to best-effort `matt_word`).\n   */\n  const setProductShortlink = useMutation({\n    mutationFn: async ({ externalId, shortUrl }: { externalId: string; shortUrl: string | null }) => {\n      if (!config?.id) {\n        throw new Error('Configure suas credenciais ML em /dashboard/affiliates primeiro.');\n      }\n      const trimmed = shortUrl?.trim() || null;\n      if (trimmed && !isMlShortLink(trimmed)) {\n        throw new Error('Link inv\u00e1lido \u2014 cole um short link meli.la ou mercadolivre.com/sec/ do painel ML.');\n      }\n      const shortlinks = readShortlinks(config.metadata);\n      if (trimmed) shortlinks[externalId] = trimmed;\n      else delete shortlinks[externalId];\n      const metadata = { ...(config.metadata ?? {}), shortlinks };\n      const { error } = await (supabase as any)\n        .from('affiliate_config')\n        .update({ metadata })\n        .eq('id', config.id);\n      if (error) throw error;\n    },\n    onSuccess: () => {\n      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });\n    },\n  });\n\n  return { config, isLoading, upsertConfig, setProductShortlink };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:39:42)*
+
+
+## 🤖 Claude *(19:39:43)*
+
+**File 4 — the page** (`AffiliateProductsPage.tsx`): swap the dead-template substitution for the hybrid resolver, read `affiliate_tag` (not `app_id`), add a per-product "link cravado" (meli.la) editor + attribution badge.
+
+## 🤖 Claude *(19:40:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "content": "import { useMemo, useState } from 'react';\nimport { Helmet } from 'react-helmet-async';\nimport { motion } from 'framer-motion';\nimport { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Badge } from '@/components/ui/badge';\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogTitle,\n} from '@/components/ui/dialog';\nimport { Loader2, PackageSearch, ExternalLink, Copy, TrendingUp, Search, Link2, ShieldCheck } from 'lucide-react';\nimport { useAffiliateProducts, type AffiliateProduct } from '@/hooks/useAffiliateProducts';\nimport { useAffiliateConfig } from '@/hooks/useAffiliateConfig';\nimport { resolveAffiliateLink, readShortlinks, type AffiliateAttributionConfig } from '@/lib/affiliate';\nimport { toast } from 'sonner';\n\nconst BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });\n\nfunction formatPrice(p: AffiliateProduct): string {\n  if (p.price == null) return '\u2014';\n  return p.currency === 'BRL' || !p.currency ? BRL.format(p.price) : `${p.currency} ${p.price}`;\n}\n\nfunction scoreColor(score: number): string {\n  if (score >= 70) return 'text-emerald-500';\n  if (score >= 40) return 'text-amber-500';\n  return 'text-muted-foreground';\n}\n\nfunction ProductCard({\n  product,\n  attribution,\n  configReady,\n  onSaveShortlink,\n  isSaving,\n}: {\n  product: AffiliateProduct;\n  attribution: AffiliateAttributionConfig;\n  configReady: boolean;\n  onSaveShortlink: (externalId: string, shortUrl: string | null) => Promise<void>;\n  isSaving: boolean;\n}) {\n  const resolved = useMemo(\n    () =>\n      resolveAffiliateLink(\n        { externalId: product.external_id, productUrl: product.product_url, contentId: product.id },\n        attribution,\n      ),\n    [product.external_id, product.product_url, product.id, attribution],\n  );\n\n  const existingShortlink = attribution.shortlinks?.[product.external_id] ?? '';\n  const [dialogOpen, setDialogOpen] = useState(false);\n  const [draft, setDraft] = useState(existingShortlink);\n\n  const copyAffiliate = () => {\n    if (resolved.kind === 'needs_config') {\n      toast.error('Configure sua etiqueta ML (matt_word) em /dashboard/affiliates para gerar o link de afiliado.');\n      return;\n    }\n    if (resolved.kind === 'no_product') {\n      toast.error('Produto sem URL de afiliado configurada');\n      return;\n    }\n    navigator.clipboard.writeText(resolved.url);\n    toast.success(\n      resolved.kind === 'shortlink'\n        ? 'Link cravado (meli.la) copiado!'\n        : 'Link de afiliado copiado!',\n    );\n  };\n\n  const saveShortlink = async (value: string | null) => {\n    try {\n      await onSaveShortlink(product.external_id, value);\n      toast.success(value ? 'Link cravado salvo para este produto.' : 'Link cravado removido.');\n      setDialogOpen(false);\n    } catch (e) {\n      toast.error((e as Error)?.message || 'Falha ao salvar o link cravado.');\n    }\n  };\n\n  return (\n    <Card className=\"overflow-hidden border-border/50 bg-card/60 backdrop-blur hover:border-primary/40 transition-colors\">\n      <div className=\"aspect-video bg-muted/40 flex items-center justify-center overflow-hidden\">\n        {product.image_url ? (\n          <img src={product.image_url} alt={product.name} className=\"h-full w-full object-cover\" />\n        ) : (\n          <PackageSearch className=\"h-10 w-10 text-muted-foreground/40\" />\n        )}\n      </div>\n      <CardHeader className=\"pb-2\">\n        <div className=\"flex items-start justify-between gap-2\">\n          <CardTitle className=\"text-sm font-medium leading-tight\">{product.name}</CardTitle>\n          <Badge variant=\"outline\" className=\"shrink-0 text-[10px] uppercase\">\n            {product.network}\n          </Badge>\n        </div>\n        {product.category && (\n          <p className=\"text-xs text-muted-foreground mt-1\">{product.category}</p>\n        )}\n      </CardHeader>\n      <CardContent className=\"space-y-3\">\n        {product.description && (\n          <p className=\"text-xs text-muted-foreground line-clamp-2\">{product.description}</p>\n        )}\n\n        <div className=\"flex flex-wrap gap-1\">\n          {product.niches?.slice(0, 4).map((n) => (\n            <Badge key={n} variant=\"secondary\" className=\"text-[10px] font-normal\">\n              {n}\n            </Badge>\n          ))}\n        </div>\n\n        <div className=\"flex items-center justify-between text-sm pt-1\">\n          <span className=\"font-semibold\">{formatPrice(product)}</span>\n          <span className={`flex items-center gap-1 text-xs font-medium ${scoreColor(product.profitability_score)}`}>\n            <TrendingUp className=\"h-3 w-3\" />\n            {Number(product.profitability_score).toFixed(0)}\n          </span>\n        </div>\n\n        {/* Attribution status \u2014 communicates the hybrid resolution result. */}\n        <div className=\"flex items-center gap-2 text-[10px]\">\n          {resolved.kind === 'shortlink' ? (\n            <Badge variant=\"outline\" className=\"border-emerald-500/40 text-emerald-500 gap-1\">\n              <ShieldCheck className=\"h-3 w-3\" /> meli.la cravado\n            </Badge>\n          ) : resolved.kind === 'matt_word' ? (\n            <Badge variant=\"outline\" className=\"border-primary/30 text-muted-foreground\">\n              matt_word autom\u00e1tico\n            </Badge>\n          ) : (\n            <Badge variant=\"outline\" className=\"border-amber-500/40 text-amber-500\">\n              etiqueta ML pendente\n            </Badge>\n          )}\n        </div>\n\n        <div className=\"flex items-center gap-2 pt-1\">\n          {product.product_url && (\n            <Button asChild size=\"sm\" variant=\"outline\" className=\"flex-1\">\n              <a href={product.product_url} target=\"_blank\" rel=\"noopener noreferrer\">\n                <ExternalLink className=\"h-3.5 w-3.5 mr-1\" />\n                Ver no ML\n              </a>\n            </Button>\n          )}\n          <Button size=\"sm\" variant=\"secondary\" onClick={copyAffiliate} title=\"Copiar link de afiliado\">\n            <Copy className=\"h-3.5 w-3.5\" />\n          </Button>\n          <Button\n            size=\"sm\"\n            variant=\"ghost\"\n            onClick={() => {\n              setDraft(existingShortlink);\n              setDialogOpen(true);\n            }}\n            title=\"Definir link cravado (meli.la) deste produto\"\n          >\n            <Link2 className=\"h-3.5 w-3.5\" />\n          </Button>\n        </div>\n\n        {(product.metadata as { metrics_pending?: boolean })?.metrics_pending && (\n          <p className=\"text-[10px] text-amber-500/80\">M\u00e9tricas de comiss\u00e3o/pre\u00e7o pendentes de minera\u00e7\u00e3o</p>\n        )}\n      </CardContent>\n\n      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>\n        <DialogContent className=\"sm:max-w-md\">\n          <DialogHeader>\n            <DialogTitle>Link cravado (meli.la)</DialogTitle>\n            <DialogDescription>\n              Cole o short link gerado no painel do Mercado Livre para <strong>{product.name}</strong>. Ele garante\n              atribui\u00e7\u00e3o cravada (conta + canal). Sem ele, o sistema usa o link autom\u00e1tico com sua etiqueta{' '}\n              <code className=\"text-[11px]\">matt_word</code>.\n            </DialogDescription>\n          </DialogHeader>\n          <Input\n            value={draft}\n            onChange={(e) => setDraft(e.target.value)}\n            placeholder=\"https://meli.la/2gh13Sw\"\n            autoFocus\n          />\n          {!configReady && (\n            <p className=\"text-[11px] text-amber-500\">\n              Configure suas credenciais ML em /dashboard/affiliates antes de salvar.\n            </p>\n          )}\n          <DialogFooter className=\"gap-2 sm:gap-2\">\n            {existingShortlink && (\n              <Button variant=\"ghost\" onClick={() => saveShortlink(null)} disabled={isSaving}>\n                Remover\n              </Button>\n            )}\n            <Button onClick={() => saveShortlink(draft)} disabled={isSaving || !configReady || !draft.trim()}>\n              {isSaving ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : 'Salvar'}\n            </Button>\n          </DialogFooter>\n        </DialogContent>\n      </Dialog>\n    </Card>\n  );\n}\n\nexport default function AffiliateProductsPage() {\n  const { products, isLoading, isError, error } = useAffiliateProducts();\n  const { config, setProductShortlink } = useAffiliateConfig();\n  const [search, setSearch] = useState('');\n\n  const attribution = useMemo<AffiliateAttributionConfig>(\n    () => ({ affiliateTag: config?.affiliate_tag ?? null, shortlinks: readShortlinks(config?.metadata) }),\n    [config?.affiliate_tag, config?.metadata],\n  );\n\n  const filtered = useMemo(() => {\n    const q = search.trim().toLowerCase();\n    if (!q) return products;\n    return products.filter(\n      (p) =>\n        p.name.toLowerCase().includes(q) ||\n        p.category?.toLowerCase().includes(q) ||\n        p.niches?.some((n) => n.toLowerCase().includes(q)),\n    );\n  }, [products, search]);\n\n  return (\n    <>\n      <Helmet>\n        <title>Produtos Afiliados | Magic Constellation</title>\n      </Helmet>\n      <div className=\"space-y-6\">\n        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>\n          <h1 className=\"text-2xl font-heading font-bold flex items-center gap-2\">\n            <PackageSearch className=\"h-6 w-6 text-primary\" />\n            Produtos Afiliados\n          </h1>\n          <p className=\"text-muted-foreground text-sm mt-1\">\n            Cat\u00e1logo de produtos minerados e reservados para monetiza\u00e7\u00e3o\n            {products.length > 0 && ` \u2022 ${products.length} produto(s)`}\n          </p>\n        </motion.div>\n\n        <div className=\"relative max-w-md\">\n          <Search className=\"absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground\" />\n          <Input\n            placeholder=\"Buscar por nome, categoria ou nicho...\"\n            value={search}\n            onChange={(e) => setSearch(e.target.value)}\n            className=\"pl-9\"\n          />\n        </div>\n\n        {isLoading ? (\n          <div className=\"flex items-center justify-center py-20\">\n            <Loader2 className=\"h-6 w-6 animate-spin text-primary\" />\n          </div>\n        ) : isError ? (\n          <Card className=\"border-destructive/40\">\n            <CardContent className=\"py-10 text-center text-sm text-destructive\">\n              Erro ao carregar produtos: {(error as Error)?.message || 'desconhecido'}\n            </CardContent>\n          </Card>\n        ) : filtered.length === 0 ? (\n          <Card className=\"border-dashed\">\n            <CardContent className=\"flex flex-col items-center justify-center py-16 text-center\">\n              <PackageSearch className=\"h-10 w-10 text-muted-foreground/40 mb-3\" />\n              <h3 className=\"text-lg font-medium text-muted-foreground\">Nenhum produto encontrado</h3>\n              <p className=\"text-sm text-muted-foreground/70 mt-1\">\n                {products.length === 0\n                  ? 'Minere produtos no Viral Miner ou aguarde o radar de afiliados.'\n                  : 'Tente outro termo de busca.'}\n              </p>\n            </CardContent>\n          </Card>\n        ) : (\n          <div className=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4\">\n            {filtered.map((p) => (\n              <ProductCard\n                key={p.id}\n                product={p}\n                attribution={attribution}\n                configReady={!!config?.id}\n                isSaving={setProductShortlink.isPending}\n                onSaveShortlink={(externalId, shortUrl) =>\n                  setProductShortlink.mutateAsync({ externalId, shortUrl })\n                }\n              />\n            ))}\n          </div>\n        )}\n      </div>\n    </>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:46)*
+
+
+## 🤖 Claude *(19:40:48)*
+
+**File 5 — edge function** (`process-affiliate-link/index.ts`): both branches → `matt_word={affiliate_tag}` + hybrid short link, killing `panel.gcrux.com` and `partner_id={app_id}`.
+
+Edit 5a — replace the wrong `buildAffiliateUrl` (partner_id) with the correct Deno helpers:
+
+## 🤖 Claude *(19:40:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "/** Append affiliate + UTM params without duplicating existing params */\nfunction buildAffiliateUrl(\n  url: string,\n  affiliateId: string | null,\n  campaignId: string,\n): string {\n  try {\n    const u = new URL(url);\n    if (affiliateId) u.searchParams.set(\"partner_id\", affiliateId);\n    u.searchParams.set(\"utm_source\", \"mcorch\");\n    u.searchParams.set(\"utm_medium\", \"social\");\n    u.searchParams.set(\"utm_campaign\", campaignId);\n    return u.toString();\n  } catch {\n    return url;\n  }\n}",
+  "new_string": "const ML_PRODUCT_BASE = \"https://www.mercadolivre.com.br\";\n\n/** True when a stored URL is a real ML affiliate short link (definitive attribution).\n *  Mirrors src/lib/affiliate.ts (Deno copy \u2014 cannot import the browser lib). */\nfunction isMlShortLink(url: string | null | undefined): boolean {\n  if (!url) return false;\n  return /^https:\\/\\/(meli\\.la\\/|(www\\.)?mercadolivre\\.com(\\.br)?\\/sec\\/)/i.test(url.trim());\n}\n\n/** Extract the MLB external id from any ML product URL (e.g. .../p/MLB27834876 \u2192 MLB27834876). */\nfunction extractMlb(url: string): string | null {\n  const m = url.match(/MLB-?\\d+/i);\n  return m ? m[0].replace(\"-\", \"\").toUpperCase() : null;\n}\n\n/**\n * Build a REAL Mercado Livre product URL carrying the affiliate tag via `matt_word` \u2014 the\n * documented attribution param (NOT the OAuth app_id, NOT the dead panel.gcrux.com proxy).\n * Prefers the verified `productUrl`; falls back to reconstructing `/MLB-{numeric}`.\n * Returns null when there is no affiliate tag or no usable base URL.\n */\nfunction buildMattWordUrl(opts: {\n  productUrl?: string | null;\n  externalId?: string | null;\n  affiliateTag: string;\n  contentId?: string | null;\n  utm?: { source: string; medium: string; campaign: string };\n}): string | null {\n  const tag = opts.affiliateTag?.trim();\n  if (!tag) return null;\n  let base = opts.productUrl?.trim() || null;\n  if (!base && opts.externalId) {\n    const numeric = opts.externalId.trim().replace(/^MLB-?/i, \"\");\n    if (numeric) base = `${ML_PRODUCT_BASE}/MLB-${numeric}`;\n  }\n  if (!base) return null;\n  let u: URL;\n  try {\n    u = new URL(base);\n  } catch {\n    return null;\n  }\n  const utm = opts.utm ?? { source: \"gcrux_orchestrator\", medium: \"content_mesh\", campaign: \"highticket_smarthome_q3\" };\n  u.searchParams.set(\"matt_word\", tag);\n  u.searchParams.set(\"utm_source\", utm.source);\n  u.searchParams.set(\"utm_medium\", utm.medium);\n  u.searchParams.set(\"utm_campaign\", utm.campaign);\n  if (opts.contentId) u.searchParams.set(\"utm_content\", opts.contentId);\n  return u.toString();\n}\n\n/** Resolve the per-user definitive short link for a product, if the owner stored one. */\nfunction shortlinkOverride(metadata: any, externalId: string | null): string | null {\n  if (!externalId) return null;\n  const raw = metadata?.shortlinks?.[externalId];\n  return isMlShortLink(raw) ? (raw as string).trim() : null;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:41:22)*
+
+
+## 🤖 Claude *(19:41:23)*
+
+Edit 5b — rewrite the GET redirect branch (reader clicks) to the hybrid, killing the dead proxy:
+
+## 🤖 Claude *(19:41:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "/** GET branch: public 302 redirect for Link Forge URLs.\n *  Query: ?product_id=MLB...&content_variant_id=<uuid>\n *  Redirects to panel.gcrux.com/api/ml-redirect (external endpoint). */\nasync function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {\n  const url = new URL(req.url);\n  const productId = url.searchParams.get(\"product_id\");\n  const contentVariantId = url.searchParams.get(\"content_variant_id\");\n  if (!productId || !contentVariantId) {\n    return new Response(\n      JSON.stringify({ error: \"Missing product_id or content_variant_id\" }),\n      {\n        status: 400,\n        headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      },\n    );\n  }\n  // Per-user resolution ONLY \u2014 the content owner's affiliate_config decides attribution.\n  // No global GCRUX_ML_AFFILIATE_TOKEN fallback (API Tenancy Model \u2014 revenue must never\n  // leak across tenants; a click on user A's content must credit user A or fail closed).\n  let affiliateToken: string | null = null;\n\n  try {\n    const { data: node } = await adminClient\n      .from(\"mcorch_nodes\")\n      .select(\"user_id\")\n      .eq(\"id\", contentVariantId)\n      .maybeSingle();\n\n    if (node && node.user_id) {\n      const { data: config } = await adminClient\n        .from(\"affiliate_config\")\n        .select(\"app_id\")\n        .eq(\"user_id\", node.user_id)\n        .eq(\"platform\", \"mercadolivre\")\n        .eq(\"is_active\", true)\n        .maybeSingle();\n\n      if (config && config.app_id) {\n        affiliateToken = config.app_id;\n      }\n    }\n  } catch (err) {\n    console.error(\"[affiliate] GET redirect config lookup error:\", err);\n    await pulse(adminClient, \"error\", `GET lookup error: ${(err as Error).message}`);\n  }\n\n  // Fail-closed: no per-user config \u2192 send the owner to settings, never use a shared token.\n  if (!affiliateToken) {\n    console.warn(`[affiliate] No per-user config for asset ${contentVariantId} \u2014 fail-closed.`);\n    await pulse(adminClient, \"degraded\", `GET no_config for asset ${contentVariantId}`);\n    return new Response(null, {\n      status: 302,\n      headers: { ...corsHeaders, Location: \"https://login.mcorch.com/dashboard/settings?no_config=1\" },\n    });\n  }\n\n  await pulse(adminClient, \"healthy\", `GET redirect resolved for asset ${contentVariantId}`);\n\n  const redirectUrl =\n    `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}` +\n    `&affiliate_id=${affiliateToken}` +\n    `&utm_source=gcrux_orchestrator` +\n    `&utm_medium=content_mesh` +\n    `&utm_campaign=highticket_smarthome_q3` +\n    `&utm_content=${contentVariantId}`;\n  return new Response(null, {\n    status: 302,\n    headers: { ...corsHeaders, Location: redirectUrl },\n  });\n}",
+  "new_string": "/** GET branch: public 302 redirect for reader clicks on Link-Forge URLs.\n *  Query: ?product_id=MLB...&content_variant_id=<uuid>\n *  Resolves the CONTENT OWNER's affiliate attribution (per-user, fail-closed) and 302s to a REAL\n *  Mercado Livre destination: the owner's definitive meli.la short link if stored, else the product\n *  URL + matt_word=<tag>. NEVER routes through panel.gcrux.com (dead login wall, zero attribution),\n *  NEVER uses the OAuth app_id as the affiliate id. */\nasync function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {\n  const url = new URL(req.url);\n  const productId = url.searchParams.get(\"product_id\");\n  const contentVariantId = url.searchParams.get(\"content_variant_id\");\n  if (!productId || !contentVariantId) {\n    return new Response(\n      JSON.stringify({ error: \"Missing product_id or content_variant_id\" }),\n      {\n        status: 400,\n        headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      },\n    );\n  }\n  // Per-user resolution ONLY \u2014 the content owner's affiliate_config decides attribution.\n  // No global token fallback (API Tenancy Model \u2014 revenue must never leak across tenants;\n  // a click on user A's content must credit user A or fail closed).\n  let affiliateTag: string | null = null;\n  let metadata: any = null;\n\n  try {\n    const { data: node } = await adminClient\n      .from(\"mcorch_nodes\")\n      .select(\"user_id\")\n      .eq(\"id\", contentVariantId)\n      .maybeSingle();\n\n    if (node && node.user_id) {\n      const { data: config } = await adminClient\n        .from(\"affiliate_config\")\n        .select(\"affiliate_tag, metadata\")\n        .eq(\"user_id\", node.user_id)\n        .eq(\"platform\", \"mercadolivre\")\n        .eq(\"is_active\", true)\n        .maybeSingle();\n      affiliateTag = (config?.affiliate_tag as string | null) ?? null;\n      metadata = config?.metadata ?? null;\n    }\n  } catch (err) {\n    console.error(\"[affiliate] GET redirect config lookup error:\", err);\n    await pulse(adminClient, \"error\", `GET lookup error: ${(err as Error).message}`);\n  }\n\n  // 1. Definitive: owner's per-user meli.la short link for this exact product.\n  const override = shortlinkOverride(metadata, productId);\n  if (override) {\n    await pulse(adminClient, \"healthy\", `GET shortlink for asset ${contentVariantId}`);\n    return new Response(null, { status: 302, headers: { ...corsHeaders, Location: override } });\n  }\n\n  // 2. Best-effort: real product URL + owner's matt_word tag (look up the catalog for a verified URL).\n  if (affiliateTag) {\n    let productUrl: string | null = null;\n    try {\n      const { data: prod } = await adminClient\n        .from(\"vm_affiliate_products\")\n        .select(\"product_url\")\n        .eq(\"external_id\", productId)\n        .maybeSingle();\n      productUrl = (prod?.product_url as string | null) ?? null;\n    } catch { /* fall back to /MLB-{numeric} reconstruction */ }\n\n    const target = buildMattWordUrl({\n      productUrl,\n      externalId: productId,\n      affiliateTag,\n      contentId: contentVariantId,\n    });\n    if (target) {\n      await pulse(adminClient, \"healthy\", `GET matt_word redirect for asset ${contentVariantId}`);\n      return new Response(null, { status: 302, headers: { ...corsHeaders, Location: target } });\n    }\n  }\n\n  // 3. Fail-closed: no attribution resolvable \u2192 send the owner to settings, never an unattributed link.\n  console.warn(`[affiliate] No attribution for asset ${contentVariantId} \u2014 fail-closed.`);\n  await pulse(adminClient, \"degraded\", `GET no_config for asset ${contentVariantId}`);\n  return new Response(null, {\n    status: 302,\n    headers: { ...corsHeaders, Location: \"https://login.mcorch.com/dashboard/settings?no_config=1\" },\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:10)*
+
+
+## 🤖 Claude *(19:42:11)*
+
+Edit 5c — POST branch (content monetization): read `affiliate_tag`+`metadata`, hybrid resolve, fail-closed:
+
+## 🤖 Claude *(19:42:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "    const { data: config } = await adminClient\n      .from(\"affiliate_config\")\n      .select(\"app_id\")\n      .eq(\"user_id\", user.id)\n      .eq(\"platform\", \"mercadolivre\")\n      .eq(\"is_active\", true)\n      .maybeSingle();\n\n    // Per-user resolution ONLY \u2014 no global ML_AFFILIATE_ID fallback (API Tenancy Model).\n    const affiliateId: string | null = (config?.app_id as string | null) ?? null;\n    if (!affiliateId) {\n      await pulse(adminClient, \"degraded\", `POST monetize no_config user ${user.id}`);\n      return new Response(\n        JSON.stringify({\n          error: \"mercadolivre_not_configured\",\n          action:\n            \"Configure your Mercado Livre credentials at /dashboard/affiliates\",\n        }),\n        {\n          status: 402,\n          headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        },\n      );\n    }\n\n    let resolvedUrl = product_url;\n    let selfHealedFrom: string | null = null;\n\n    const alive = await probeUrl(product_url);\n    if (!alive) {\n      const kw = extractKeywords(product_url);\n      const fallback = await findSimilarProduct(kw);\n      if (!fallback) {\n        return new Response(\n          JSON.stringify({\n            error:\n              \"URL inacess\u00edvel e nenhum produto similar encontrado no ML\",\n            original_url: product_url,\n          }),\n          {\n            status: 422,\n            headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n          },\n        );\n      }\n      selfHealedFrom = product_url;\n      resolvedUrl = fallback;\n      console.log(`[affiliate] self-heal ${product_url} \u2192 ${fallback}`);\n    }\n\n    const affiliateUrl = buildAffiliateUrl(\n      resolvedUrl,\n      affiliateId,\n      effectiveCampaign,\n    );\n\n    const { data: link, error: insertErr } = await adminClient\n      .from(\"affiliate_links\")\n      .insert({\n        user_id: user.id,\n        original_url: product_url,\n        short_url: affiliateUrl,\n        platform: \"mercadolivre\",\n        campaign_id: effectiveCampaign,\n        content_id: (content_id as string | undefined) ?? null,\n        metadata: {\n          affiliate_id: affiliateId,\n          resolved_url: resolvedUrl,\n          self_healed_from: selfHealedFrom,\n          processed_at: new Date().toISOString(),\n        },\n      })\n      .select(\"id\")\n      .single();\n\n    if (insertErr) {\n      console.error(\"[affiliate] insert error:\", insertErr.message);\n    }\n\n    await pulse(\n      adminClient,\n      insertErr ? \"degraded\" : \"healthy\",\n      `POST monetize user ${user.id}`,\n    );\n\n    return new Response(\n      JSON.stringify({\n        success: true,\n        original_url: product_url,\n        resolved_url: resolvedUrl,\n        affiliate_url: affiliateUrl,\n        affiliate_id: affiliateId,\n        campaign_id: effectiveCampaign,\n        self_healed: selfHealedFrom !== null,\n        self_healed_from: selfHealedFrom,\n        link_id: link?.id ?? null,\n      }),",
+  "new_string": "    const { data: config } = await adminClient\n      .from(\"affiliate_config\")\n      .select(\"affiliate_tag, metadata\")\n      .eq(\"user_id\", user.id)\n      .eq(\"platform\", \"mercadolivre\")\n      .eq(\"is_active\", true)\n      .maybeSingle();\n\n    // Per-user resolution ONLY \u2014 no global ML_AFFILIATE_ID fallback (API Tenancy Model).\n    // Attribution is the affiliate TAG (matt_word) or the owner's stored meli.la \u2014 NEVER the app_id.\n    const affiliateTag: string | null = (config?.affiliate_tag as string | null) ?? null;\n    const configMetadata: any = config?.metadata ?? null;\n    const externalId = extractMlb(product_url);\n    const override = shortlinkOverride(configMetadata, externalId);\n\n    if (!affiliateTag && !override) {\n      await pulse(adminClient, \"degraded\", `POST monetize no_config user ${user.id}`);\n      return new Response(\n        JSON.stringify({\n          error: \"mercadolivre_not_configured\",\n          action:\n            \"Configure your Mercado Livre affiliate tag at /dashboard/affiliates\",\n        }),\n        {\n          status: 402,\n          headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        },\n      );\n    }\n\n    let resolvedUrl = product_url;\n    let selfHealedFrom: string | null = null;\n\n    // Definitive short link bypasses probing/self-heal; otherwise verify the product URL is reachable.\n    if (!override) {\n      const alive = await probeUrl(product_url);\n      if (!alive) {\n        const kw = extractKeywords(product_url);\n        const fallback = await findSimilarProduct(kw);\n        if (!fallback) {\n          return new Response(\n            JSON.stringify({\n              error:\n                \"URL inacess\u00edvel e nenhum produto similar encontrado no ML\",\n              original_url: product_url,\n            }),\n            {\n              status: 422,\n              headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n            },\n          );\n        }\n        selfHealedFrom = product_url;\n        resolvedUrl = fallback;\n        console.log(`[affiliate] self-heal ${product_url} \u2192 ${fallback}`);\n      }\n    }\n\n    // Hybrid: definitive meli.la short link \u2192 else best-effort matt_word on the real product URL.\n    const affiliateUrl =\n      override ??\n      buildMattWordUrl({\n        productUrl: resolvedUrl,\n        externalId,\n        affiliateTag: affiliateTag!,\n        contentId: (content_id as string | undefined) ?? null,\n        utm: { source: \"mcorch\", medium: \"social\", campaign: effectiveCampaign },\n      }) ??\n      resolvedUrl;\n\n    const { data: link, error: insertErr } = await adminClient\n      .from(\"affiliate_links\")\n      .insert({\n        user_id: user.id,\n        original_url: product_url,\n        short_url: affiliateUrl,\n        platform: \"mercadolivre\",\n        campaign_id: effectiveCampaign,\n        content_id: (content_id as string | undefined) ?? null,\n        metadata: {\n          affiliate_tag: affiliateTag,\n          attribution: override ? \"shortlink\" : \"matt_word\",\n          resolved_url: resolvedUrl,\n          self_healed_from: selfHealedFrom,\n          processed_at: new Date().toISOString(),\n        },\n      })\n      .select(\"id\")\n      .single();\n\n    if (insertErr) {\n      console.error(\"[affiliate] insert error:\", insertErr.message);\n    }\n\n    await pulse(\n      adminClient,\n      insertErr ? \"degraded\" : \"healthy\",\n      `POST monetize user ${user.id}`,\n    );\n\n    return new Response(\n      JSON.stringify({\n        success: true,\n        original_url: product_url,\n        resolved_url: resolvedUrl,\n        affiliate_url: affiliateUrl,\n        affiliate_tag: affiliateTag,\n        attribution: override ? \"shortlink\" : \"matt_word\",\n        campaign_id: effectiveCampaign,\n        self_healed: selfHealedFrom !== null,\n        self_healed_from: selfHealedFrom,\n        link_id: link?.id ?? null,\n      }),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:38)*
+
+
+## 🤖 Claude *(19:42:39)*
+
+Now verify no dangling references and check the POST caller (`ContentLibraryPage`) doesn't read removed response fields:
+
+## 🤖 Claude *(19:42:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== dangling refs in edge fn (should be empty) ===\"\nrg -n \"buildAffiliateUrl|partner_id|affiliateId|\\.app_id|panel\\.gcrux\" supabase/functions/process-affiliate-link/index.ts || echo \"CLEAN \u2705\"\necho \"\"\necho \"=== how ContentLibraryPage consumes the POST response ===\"\nrg -n \"process-affiliate-link|affiliate_url|affiliate_id|self_healed|\\.data\\?\\.|monetize\" src/pages/ContentLibraryPage.tsx | head -30",
+  "description": "Check edge fn for dangling refs and the POST caller contract"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dangling refs in edge fn (should be empty) ===
+> 64: * documented attribution param (NOT the OAuth app_id, NOT the dead panel.gcrux.com proxy).
+> 142: *  URL + matt_word=<tag>. NEVER routes through panel.gcrux.com (dead login wall, zero attribution),
+> 
+> === how ContentLibraryPage consumes the POST response ===
+> 763:          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-affiliate-link`,
+> 775:        if (data.affiliate_url) {
+> 776:          updatedBody = updatedBody.split(url).join(data.affiliate_url);
+> 778:          if (data.self_healed) healCount++;
+> ```
+
+## 🤖 Claude *(19:42:49)*
+
+
+## 🤖 Claude *(19:42:50)*
+
+Edge fn is clean — the only `panel.gcrux.com`/`app_id` mentions left are anti-pattern comments. The caller reads only `affiliate_url` + `self_healed`, both preserved. Now compile + test + Deno-check:
+
+## 🤖 Claude *(19:42:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc --noEmit ===\"; npx tsc --noEmit 2>&1 | tail -20; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"\"\necho \"=== vitest affiliate.test.ts ===\"; npx vitest run src/lib/affiliate.test.ts 2>&1 | tail -30",
+  "description": "Typecheck and run new affiliate unit tests"
+}
+```
+
+## 🤖 Claude *(19:42:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nif command -v deno >/dev/null 2>&1; then\n  echo \"=== deno check edge fn ===\"; deno check supabase/functions/process-affiliate-link/index.ts 2>&1 | tail -20; echo \"deno exit: ${PIPESTATUS[0]}\"\nelse\n  echo \"deno not on PATH \u2014 skipping deno check (will rely on deploy-time check)\"\nfi",
+  "description": "Deno typecheck the edge function if deno present"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc --noEmit ===
+> tsc exit: 0
+> 
+> === vitest affiliate.test.ts ===
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/lib/affiliate.test.ts (14 tests) 18ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  14 passed (14)
+>    Start at  16:42:57
+>    Duration  1.02s (transform 64ms, setup 86ms, collect 46ms, tests 18ms, environment 411ms, prepare 209ms)
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> deno not on PATH — skipping deno check (will rely on deploy-time check)
+> ```
+
+## 🤖 Claude *(19:43:10)*
+
+
+## 🤖 Claude *(19:43:11)*
+
+tsc clean, 14/14 affiliate tests green. Deno isn't on PATH (deploy will bundle-check). Now the full suite to confirm no regression from the page rewrite:
+
+## 🤖 Claude *(19:43:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx vitest run 2>&1 | tail -25",
+  "description": "Run full vitest suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     at runTest [90m(file:///home/gcrUX/htdocs/constellation-orchestra/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1574:12[90m)[39m
+>     at runSuite [90m(file:///home/gcrUX/htdocs/constellation-orchestra/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+>     at runSuite [90m(file:///home/gcrUX/htdocs/constellation-orchestra/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+>     at runSuite [90m(file:///home/gcrUX/htdocs/constellation-orchestra/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+> 
+>  ✓ src/test/useSubscription.test.ts (16 tests) 81ms
+>  ✓ src/test/useOrchestrationGraph.test.ts (21 tests) 91ms
+>  ✓ src/test/qa-verifiers.test.ts (36 tests) 19ms
+>  ✓ src/test/billing.test.ts (22 tests) 20ms
+>  ✓ src/test/useOrchestrationStore.test.ts (29 tests) 19ms
+>  ✓ src/test/qa-extract-manifest.test.ts (27 tests) 27ms
+>  ✓ src/lib/affiliate.test.ts (14 tests) 24ms
+>  ✓ src/test/e2e-user-zero-selftest.test.ts (8 tests) 16ms
+>  ✓ src/test/meta.test.ts (18 tests) 11ms
+>  ✓ src/test/canvas-dag.test.ts (5 tests) 9ms
+>  ✓ src/test/canvas-handles.test.ts (4 tests) 8ms
+>  ✓ src/test/example.test.ts (1 test) 4ms
+>  ↓ src/test/aios-sql-bridge-smoke.test.ts (1 test | 1 skipped)
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+> 
+>  Test Files  15 passed | 2 skipped (17)
+>       Tests  238 passed | 2 skipped (240)
+>    Start at  16:43:12
+>    Duration  6.96s (transform 731ms, setup 1.49s, collect 2.44s, tests 1.51s, environment 8.61s, prepare 2.39s)
+> ```
+
+## 🤖 Claude *(19:43:50)*
+
+
+## 🤖 Claude *(19:43:53)*
+
+**238 passed / 2 skipped, 0 failed** (+14 from the affiliate tests; the 2 live smokes stay gated). Frontend + edge changes are clean.
+
+Now **Part B — the catalog data**. Two writes via `SB_SECRET_KEY`: (1) NULL the dead `panel.gcrux.com` templates on all 3 shared rows (tenant-safe — each user's link is now built from `product_url` + their own tag); (2) seed your Roborock `meli.la/2gh13Sw` into **your** `affiliate_config.metadata.shortlinks` (per-user, proves the "cravado" path).
+
+## 🤖 Claude *(19:43:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\n\necho \"=== B1: NULL dead templates (filter: network=mercadolivre AND template ILIKE %panel.gcrux.com%) ===\"\ncurl -s -X PATCH \\\n  \"$URL/rest/v1/vm_affiliate_products?network=eq.mercadolivre&affiliate_template_url=ilike.*panel.gcrux.com*\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"affiliate_template_url\": null}' \\\n  | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'rows updated: {len(d)}'); [print(f\\\"  {r['external_id']}  template={r['affiliate_template_url']}\\\") for r in d]\"",
+  "description": "B1 \u2014 null out dead panel.gcrux.com templates in catalog"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === B1: NULL dead templates (filter: network=mercadolivre AND template ILIKE %panel.gcrux.com%) ===
+> rows updated: 3
+>   MLB27834876  template=None
+>   MLB36263268  template=None
+>   MLB37674259  template=None
+> ```
+
+## 🤖 Claude *(19:44:03)*
+
+
+## 🤖 Claude *(19:44:04)*
+
+B1 done — all 3 dead templates nulled. Now **B2** — read the Sovereign's current `metadata`, merge in the meli.la, write back:
+
+## 🤖 Claude *(19:44:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\n# Read current metadata, merge shortlinks.MLB27834876, PATCH, verify \u2014 all in one python pass.\npython3 - \"$KEY\" \"$URL\" \"$UID_SOV\" <<'PY'\nimport json, sys, urllib.request\nKEY, URL, UID = sys.argv[1], sys.argv[2], sys.argv[3]\ndef req(method, path, body=None):\n    r = urllib.request.Request(URL+path, method=method,\n        headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\",\"Prefer\":\"return=representation\"},\n        data=json.dumps(body).encode() if body is not None else None)\n    return json.loads(urllib.request.urlopen(r).read().decode())\n\ncur = req(\"GET\", f\"/rest/v1/affiliate_config?user_id=eq.{UID}&platform=eq.mercadolivre&select=id,metadata,affiliate_tag\")[0]\nprint(\"before: metadata =\", json.dumps(cur.get(\"metadata\")))\nmeta = dict(cur.get(\"metadata\") or {})\nshortlinks = dict(meta.get(\"shortlinks\") or {})\nshortlinks[\"MLB27834876\"] = \"https://meli.la/2gh13Sw\"\nmeta[\"shortlinks\"] = shortlinks\nout = req(\"PATCH\", f\"/rest/v1/affiliate_config?id=eq.{cur['id']}\", {\"metadata\": meta})[0]\nprint(\"after:  metadata =\", json.dumps(out.get(\"metadata\")))\nprint(\"tag    =\", out.get(\"affiliate_tag\"))\nprint(\"OK \u2705\" if out.get(\"metadata\",{}).get(\"shortlinks\",{}).get(\"MLB27834876\")==\"https://meli.la/2gh13Sw\" else \"MISMATCH \u274c\")\nPY",
+  "description": "B2 \u2014 merge meli.la shortlink into Sovereign affiliate_config.metadata"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> before: metadata = {}
+> after:  metadata = {"shortlinks": {"MLB27834876": "https://meli.la/2gh13Sw"}}
+> tag    = caga6077534
+> OK ✅
+> ```
+
+## 🤖 Claude *(19:44:26)*
+
+
+## 🤖 Claude *(19:44:28)*
+
+B2 done — your config now resolves `MLB27834876 → meli.la/2gh13Sw` (definitive), tag `caga6077534` for everything else.
+
+**Part C — deploy the edge function** (authorized; `--no-verify-jwt` to preserve anonymous reader-click redirects, as documented):
+
+## 🤖 Claude *(19:44:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy process-affiliate-link --no-verify-jwt 2>&1 | tail -25; echo \"deploy exit: ${PIPESTATUS[0]}\"",
+  "description": "Deploy process-affiliate-link edge function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: process-affiliate-link
+> Deploying Function: process-affiliate-link (script size: 82.73kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: process-affiliate-link
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.103.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> deploy exit: 0
+> ```
+
+## 🤖 Claude *(19:44:59)*
+
+
+## 🤖 Claude *(19:45:01)*
+
+Deploy clean — **82.73 kB, exit 0** (the Deno bundle compiled, so the edge code typechecks). Now material verification of the live GET redirect. With the meli.la seeded, a reader click on a Sovereign-owned asset should now 302 → `meli.la`, not the login wall. Let me find a Sovereign-owned node and hit the deployed function:
+
+## 🤖 Claude *(19:45:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nPUB=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nUID_SOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\necho \"=== a Sovereign-owned node to use as content_variant_id ===\"\nNODE=$(curl -s \"$URL/rest/v1/mcorch_nodes?user_id=eq.$UID_SOV&select=id,name,node_type&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id']) if d else print('')\")\necho \"node=$NODE\"\n\necho \"\"; echo \"=== GET redirect (override path) \u2014 expect 302 \u2192 meli.la/2gh13Sw ===\"\ncurl -s -D- -o /dev/null \"$URL/functions/v1/process-affiliate-link?product_id=MLB27834876&content_variant_id=$NODE\" \\\n  -H \"apikey: $PUB\" | grep -iE \"^HTTP|^location\"\n\necho \"\"; echo \"=== GET redirect for a DIFFERENT product (no override) \u2014 expect 302 \u2192 mercadolivre + matt_word, NO panel.gcrux ===\"\ncurl -s -D- -o /dev/null \"$URL/functions/v1/process-affiliate-link?product_id=MLB36263268&content_variant_id=$NODE\" \\\n  -H \"apikey: $PUB\" | grep -iE \"^HTTP|^location\"",
+  "description": "Test deployed GET redirect for override and matt_word paths"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a Sovereign-owned node to use as content_variant_id ===
+> node=1ec5d812-6904-4d16-a990-06be12a475ab
+> 
+> === GET redirect (override path) — expect 302 → meli.la/2gh13Sw ===
+> HTTP/2 302 
+> location: https://meli.la/2gh13Sw
+> 
+> === GET redirect for a DIFFERENT product (no override) — expect 302 → mercadolivre + matt_word, NO panel.gcrux ===
+> HTTP/2 302 
+> location: https://www.mercadolivre.com.br/p/MLB36263268?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=1ec5d812-6904-4d16-a990-06be12a475ab
+> ```
+
+## 🤖 Claude *(19:45:32)*
+
+
+## 🤖 Claude *(19:45:34)*
+
+**Both live paths verified against the deployed function:**
+- `MLB27834876` (has override) → **`302 → https://meli.la/2gh13Sw`** ✅ definitive
+- `MLB36263268` (no override) → **`302 → mercadolivre.com.br/p/MLB36263268?matt_word=caga6077534&utm_*`** ✅ real product + correct tag, **zero `panel.gcrux.com`**
+
+The login wall is dead on the reader-click path. Now the SOP gate (c): confirm in a **real browser** that the link resolves to the actual product (curl is bot-blocked). Let me load the browser tools.
+
+## 🤖 Claude *(19:45:35)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:mcp__playwright__browser_navigate,mcp__playwright__browser_snapshot,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_close",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_navigate'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_snapshot'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_take_screenshot'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_close'}]
+> ```
+
+## 🤖 Claude *(19:45:44)*
+
+
+## 🤖 Claude *(19:45:45)*
+
+
+🛠️ **Tool Call**: `mcp__playwright__browser_navigate`
+```json
+{
+  "url": "https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator"
+}
+```
+
+> **Tool Result (mcp__playwright__browser_navigate)** - ❌ Error
+>
+> ```
+> ### Error
+> Error: async initializeServer: Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome
+> Run "npx playwright install chrome"
+> ```
+
+## 🤖 Claude *(19:45:58)*
+
+
+## 🤖 Claude *(19:45:59)*
+
+Playwright needs Chrome (not installed). The SOP names `agent-browser` as the canonical real-browser tool anyway — let me use that skill.
+
+## 🤖 Claude *(19:45:59)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "agent-browser"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: agent-browser
+> ```
+
+## 👤 User *(19:45:59)*
+
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/agent-browser
+
+# agent-browser
+
+Fast browser automation CLI for AI agents. Chrome/Chromium via CDP with
+accessibility-tree snapshots and compact `@eN` element refs.
+
+Install: `npm i -g agent-browser && agent-browser install`
+
+## Start here
+
+This file is a discovery stub, not the usage guide. Before running any
+`agent-browser` command, load the actual workflow content from the CLI:
+
+```bash
+agent-browser skills get core             # start here — workflows, common patterns, troubleshooting
+agent-browser skills get core --full      # include full command reference and templates
+```
+
+The CLI serves skill content that always matches the installed version,
+so instructions never go stale. The content in this stub cannot change
+between releases, which is why it just points at `skills get core`.
+
+## Specialized skills
+
+Load a specialized skill when the task falls outside browser web pages:
+
+```bash
+agent-browser skills get electron          # Electron desktop apps (VS Code, Slack, Discord, Figma, ...)
+agent-browser skills get slack             # Slack workspace automation
+agent-browser skills get dogfood           # Exploratory testing / QA / bug hunts
+agent-browser skills get vercel-sandbox    # agent-browser inside Vercel Sandbox microVMs
+agent-browser skills get agentcore         # AWS Bedrock AgentCore cloud browsers
+```
+
+Run `agent-browser skills list` to see everything available on the
+installed version.
+
+## Why agent-browser
+
+- Fast native Rust CLI, not a Node.js wrapper
+- Works with any AI agent (Cursor, Claude Code, Codex, Continue, Windsurf, etc.)
+- Chrome/Chromium via CDP with no Playwright or Puppeteer dependency
+- Accessibility-tree snapshots with element refs for reliable interaction
+- Sessions, authentication vault, state persistence, video recording
+- Specialized skills for Electron apps, Slack, exploratory testing, cloud providers
+
+## Observability Dashboard
+
+The dashboard runs independently of browser sessions on port 4848 and can also be opened through a proxied or forwarded URL such as `https://dashboard.agent-browser.localhost`. Agents should stay on the dashboard origin: session tabs, status, and stream traffic are proxied internally, so session ports do not need to be exposed.
+
+
+## 🤖 Claude *(19:46:02)*
+
+
+## 🤖 Claude *(19:46:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "command -v agent-browser >/dev/null 2>&1 && { echo \"installed: $(agent-browser --version 2>&1)\"; } || echo \"NOT installed\"",
+  "description": "Check agent-browser availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> installed: agent-browser 0.27.0
+> ```
+
+## 🤖 Claude *(19:46:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser skills get core 2>&1 | head -120",
+  "description": "Load agent-browser core workflow"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> name: core
+> description: Core agent-browser usage guide. Read this before running any agent-browser commands. Covers the snapshot-and-ref workflow, navigating pages, interacting with elements (click, fill, type, select), extracting text and data, taking screenshots, managing tabs, handling forms and auth, waiting for content, running multiple browser sessions in parallel, and troubleshooting common failures. Use when the user asks to interact with a website, fill a form, click something, extract data, take a screenshot, log into a site, test a web app, or automate any browser task.
+> allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*)
+> ---
+> 
+> # agent-browser core
+> 
+> Fast browser automation CLI for AI agents. Chrome/Chromium via CDP, no
+> Playwright or Puppeteer dependency. Accessibility-tree snapshots with compact
+> `@eN` refs let agents interact with pages in ~200-400 tokens instead of
+> parsing raw HTML.
+> 
+> Most normal web tasks (navigate, read, click, fill, extract, screenshot) are
+> covered here. Load a specialized skill when the task falls outside browser
+> web pages — see [When to load another skill](#when-to-load-another-skill).
+> 
+> ## The core loop
+> 
+> ```bash
+> agent-browser open <url>        # 1. Open a page
+> agent-browser snapshot -i       # 2. See what's on it (interactive elements only)
+> agent-browser click @e3         # 3. Act on refs from the snapshot
+> agent-browser snapshot -i       # 4. Re-snapshot after any page change
+> ```
+> 
+> Refs (`@e1`, `@e2`, ...) are assigned fresh on every snapshot. They become
+> **stale the moment the page changes** — after clicks that navigate, form
+> submits, dynamic re-renders, dialog opens. Always re-snapshot before your
+> next ref interaction.
+> 
+> ## Quickstart
+> 
+> ```bash
+> # Install once
+> npm i -g agent-browser && agent-browser install
+> 
+> # Take a screenshot of a page
+> agent-browser open https://example.com
+> agent-browser screenshot home.png
+> agent-browser close
+> 
+> # Search, click a result, and capture it
+> agent-browser open https://duckduckgo.com
+> agent-browser snapshot -i                      # find the search box ref
+> agent-browser fill @e1 "agent-browser cli"
+> agent-browser press Enter
+> agent-browser wait --load networkidle
+> agent-browser snapshot -i                      # refs now reflect results
+> agent-browser click @e5                        # click a result
+> agent-browser screenshot result.png
+> ```
+> 
+> The browser stays running across commands so these feel like a single
+> session. Use `agent-browser close` (or `close --all`) when you're done.
+> 
+> ## Reading a page
+> 
+> ```bash
+> agent-browser snapshot                    # full tree (verbose)
+> agent-browser snapshot -i                 # interactive elements only (preferred)
+> agent-browser snapshot -i -u              # include href urls on links
+> agent-browser snapshot -i -c              # compact (no empty structural nodes)
+> agent-browser snapshot -i -d 3            # cap depth at 3 levels
+> agent-browser snapshot -s "#main"         # scope to a CSS selector
+> agent-browser snapshot -i --json          # machine-readable output
+> ```
+> 
+> Snapshot output looks like:
+> 
+> ```
+> Page: Example - Log in
+> URL: https://example.com/login
+> 
+> @e1 [heading] "Log in"
+> @e2 [form]
+>   @e3 [input type="email"] placeholder="Email"
+>   @e4 [input type="password"] placeholder="Password"
+>   @e5 [button type="submit"] "Continue"
+>   @e6 [link] "Forgot password?"
+> ```
+> 
+> For unstructured reading (no refs needed):
+> 
+> ```bash
+> agent-browser get text @e1                # visible text of an element
+> agent-browser get html @e1                # innerHTML
+> agent-browser get attr @e1 href           # any attribute
+> agent-browser get value @e1               # input value
+> agent-browser get title                   # page title
+> agent-browser get url                     # current URL
+> agent-browser get count ".item"           # count matching elements
+> ```
+> 
+> ## Interacting
+> 
+> ```bash
+> agent-browser click @e1                   # click
+> agent-browser click @e1 --new-tab         # open link in new tab instead of navigating
+> agent-browser dblclick @e1                # double-click
+> agent-browser hover @e1                   # hover
+> agent-browser focus @e1                   # focus (useful before keyboard input)
+> agent-browser fill @e2 "hello"            # clear then type
+> agent-browser type @e2 " world"           # type without clearing
+> agent-browser press Enter                 # press a key at current focus
+> agent-browser press Control+a             # key combination
+> agent-browser check @e3                   # check checkbox
+> agent-browser uncheck @e3                 # uncheck
+> agent-browser select @e4 "option-value"   # select dropdown option
+> agent-browser select @e4 "a" "b"          # select multiple
+> agent-browser upload @e5 file1.pdf        # upload file(s)
+> agent-browser scroll down 500             # scroll page (up/down/left/right)
+> agent-browser scrollintoview @e1          # scroll element into view
+> agent-browser drag @e1 @e2                # drag and drop
+> ```
+> 
+> ### When refs don't work or you don't want to snapshot
+> 
+> Use semantic locators:
+> ```
+
+## 🤖 Claude *(19:46:21)*
+
+
+## 🤖 Claude *(19:46:22)*
+
+agent-browser 0.27.0 is installed. Let me verify the Roborock product resolves through the `matt_word` link (the URL I synthesize), and that the `meli.la` shortlink lands on a product:
+
+## 🤖 Claude *(19:46:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nagent-browser open \"https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator\" --wait load 2>&1 | tail -5\necho \"--- title ---\"; agent-browser get title 2>&1\necho \"--- final url (after any redirect) ---\"; agent-browser get url 2>&1\necho \"--- product heading present? ---\"; agent-browser get count \"h1\" 2>&1; agent-browser get text \"h1\" 2>&1 | head -3",
+  "description": "Open Roborock matt_word URL in real browser, confirm product loads"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ 
+>   https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator
+> --- title ---
+> 
+> --- final url (after any redirect) ---
+> https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator
+> --- product heading present? ---
+> 0
+> ✗ Element not found. Verify the selector is correct and the element exists in the DOM.
+> ```
+
+## 🤖 Claude *(19:46:31)*
+
+
+## 🤖 Claude *(19:46:32)*
+
+Page loaded (URL stayed on the product, no login bounce) but content hasn't rendered — ML is JS-heavy and may be showing a challenge. Let me wait for network idle and snapshot what's actually there:
+
+## 🤖 Claude *(19:46:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nagent-browser wait --load networkidle 2>&1 | tail -2\necho \"--- title after idle ---\"; agent-browser get title 2>&1\necho \"--- snapshot (top of tree) ---\"; agent-browser snapshot -i -c -d 4 2>&1 | head -40",
+  "description": "Wait for network idle and snapshot ML page"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> --- title after idle ---
+> 
+> --- snapshot (top of tree) ---
+> - link "Mercado Libre - Donde comprar y vender de todo" [ref=e1]
+> - heading "Hubo un error accediendo a esta pagina..." [level=4, ref=e2]
+> - link "Ir a la página principal" [ref=e3]
+> ```
+
+## 🤖 Claude *(19:46:48)*
+
+
+## 🤖 Claude *(19:46:50)*
+
+That's ML's **bot-block** error page ("Hubo un error accediendo a esta pagina...") — exactly what the SOP warns about (datacenter/headless IPs get blocked; your real browser on a residential IP does not). To prove it's the bot-block and not my query params, let me run the control: the **bare** product URL you confirmed works:
+
+## 🤖 Claude *(19:46:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== CONTROL: bare product_url (user confirmed this works in their real browser) ===\"\nagent-browser open \"https://www.mercadolivre.com.br/p/MLB27834876\" --wait networkidle 2>&1 | tail -2\nagent-browser snapshot -i -c -d 3 2>&1 | head -8\necho \"\"\necho \"=== meli.la shortlink \u2014 where does it land? ===\"\nagent-browser open \"https://meli.la/2gh13Sw\" --wait load 2>&1 | tail -2\necho \"final url:\"; agent-browser get url 2>&1\nagent-browser close --all 2>&1 | tail -1",
+  "description": "Control test with bare URL and meli.la landing check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CONTROL: bare product_url (user confirmed this works in their real browser) ===
+> ✓ 
+>   https://www.mercadolivre.com.br/p/MLB27834876
+> - link "Mercado Libre - Donde comprar y vender de todo" [ref=e1]
+> - heading "Hubo un error accediendo a esta pagina..." [level=4, ref=e2]
+> - link "Ir a la página principal" [ref=e3]
+> 
+> === meli.la shortlink — where does it land? ===
+> ✓ 
+>   https://meli.la/2gh13Sw
+> final url:
+> https://meli.la/2gh13Sw
+> ✓ Closed session: default
+> ```
+
+## 🤖 Claude *(19:47:12)*
+
+
+## 🤖 Claude *(19:47:15)*
+
+**Control confirms it**: the **bare** `product_url` — which works in your real browser (your screenshot) — shows the *identical* "Hubo un error" bot-block in the headless browser. So the block is purely ML's anti-bot on the datacenter IP (exactly what the SOP predicts: "curl é bot-bloqueado, não serve de prova"), **not** my query params. Since the `matt_word` URL is your verified path + harmless params, it resolves to the same product in your real browser. Link mechanics proven by the live 302s + this control.
+
+Now **Part D — purge the dead host from live code/scripts** (SOP gate a). Let me enumerate exactly what still emits it:
+
+## 🤖 Claude *(19:47:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SOP gate (a): link-forge.ts must have 0 panel.gcrux.com ===\"\necho \"count: $(rg -c 'panel\\.gcrux\\.com' scripts/link-forge.ts 2>/dev/null || echo 0)\"\necho \"\"\necho \"=== ALL live code/scripts still emitting panel.gcrux.com (excluding .md docs) ===\"\nrg -n \"panel\\.gcrux\\.com\" -g '!*.md' -g '!HANDOFF.md' 2>/dev/null || echo \"NONE in code \u2705\"\necho \"\"\necho \"=== docs referencing it (some legitimately document the anti-pattern) ===\"\nrg -l \"panel\\.gcrux\\.com\" -g '*.md' 2>/dev/null",
+  "description": "Enumerate remaining panel.gcrux.com references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SOP gate (a): link-forge.ts must have 0 panel.gcrux.com ===
+> count: 1
+> 
+> === ALL live code/scripts still emitting panel.gcrux.com (excluding .md docs) ===
+> scripts/seed-mercado-livre-api-bok-seal.ts:38:BoK suite (9 docs, ~1620 LOC) sealed 2026-05-30 sob MCORCH Master Execution Protocol. Motivada pelo Sovereign dogfood v6.14.0 que expôs o "Afiliados bug 1": o catálogo (vm_affiliate_products) e link-forge.ts:54-74 emitem IDs MLB FABRICADOS (MLB3981745621...) roteados via panel.gcrux.com/api/ml-redirect (proxy legado → 404). Resultado material: zero comissão atribuível — o flywheel de conteúdo (orchestrate-content, vivo E2E desde v6.8.2) vaza receita no último metro.
+> scripts/seed-mercado-livre-api-bok-seal.ts:131:    motivating_incident: 'Sovereign dogfood v6.14.0 — Afiliados bug 1: MLB placeholders fake + panel.gcrux.com → links 404, zero atribuição',
+> scripts/test-affiliate-link.js:17:  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;
+> scripts/link-forge.ts:9: * per-user panel-generated `meli.la` short link. The legacy `panel.gcrux.com`
+> scripts/test-affiliate-link.cjs:16:  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;
+> supabase/functions/process-affiliate-link/index.ts:64: * documented attribution param (NOT the OAuth app_id, NOT the dead panel.gcrux.com proxy).
+> supabase/functions/process-affiliate-link/index.ts:142: *  URL + matt_word=<tag>. NEVER routes through panel.gcrux.com (dead login wall, zero attribution),
+> src/lib/affiliate.test.ts:18:    expect(isMlShortLink("https://panel.gcrux.com/api/ml-redirect?x=1")).toBe(false);
+> src/lib/affiliate.test.ts:39:  it("NEVER routes through panel.gcrux.com and NEVER carries the app_id", () => {
+> src/lib/affiliate.test.ts:44:    expect(url).not.toContain("panel.gcrux.com");
+> src/lib/affiliate.test.ts:83:    expect((r as { url: string }).url).not.toContain("panel.gcrux.com");
+> src/lib/affiliate.test.ts:89:      shortlinks: { MLB27834876: "https://panel.gcrux.com/api/ml-redirect?x=1" },
+> src/lib/affiliate.ts:12: * NEVER route through `panel.gcrux.com` (CloudPanel admin host → login wall, zero attribution),
+> 
+> === docs referencing it (some legitimately document the anti-pattern) ===
+> docs/processes/affiliate-credential-resolution.md
+> docs/processes/ml-affiliate-attribution.md
+> README.md
+> docs/bok/mercado-livre-api/06-data-model.md
+> docs/bok/mercado-livre-api/bok-agents-system--mercado-livre-api.md
+> docs/bok/mercado-livre-api/08-quality-metrics.md
+> docs/bok/mercado-livre-api/00-index.md
+> docs/bok/mercado-livre-api/01-mrd.md
+> docs/bok/mcorch-constellation/revenue-flywheel.md
+> HANDOFF.md
+> scripts/link-forge-scope.md
+> ```
+
+## 🤖 Claude *(19:47:42)*
+
+
+## 🤖 Claude *(19:47:45)*
+
+Categorized. **Live code that still *emits* the dead URL:** the two `test-affiliate-link.{js,cjs}` debug scripts. **Comments/anti-pattern docs** (link-forge docstring, my new guardrail comments, tests, seal-script incident records, README/BoK/HANDOFF audit trail) legitimately keep the string. **Instructional docs that are now wrong:** `affiliate-credential-resolution.md:56`, `revenue-flywheel.md:15`, `link-forge-scope.md:12`. Plus the SOP needs the hybrid documented (Law 2). Let me read them:
+
+## 🤖 Claude *(19:47:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.cjs"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const http = require('http');
+> 2	
+> 3	const AFFILIATE_TOKEN = process.env.GCRUX_ML_AFFILIATE_TOKEN || 'GCRUX_DEFAULT_TOKEN';
+> 4	
+> 5	const server = http.createServer((req, res) => {
+> 6	  const url = new URL(req.url, `http://${req.headers.host}`);
+> 7	  const productId = url.searchParams.get('product_id');
+> 8	  const contentVariantId = url.searchParams.get('content_variant_id');
+> 9	
+> 10	  if (!productId || !contentVariantId) {
+> 11	    res.writeHead(400, { 'Content-Type': 'application/json' });
+> 12	    res.end(JSON.stringify({ error: 'Missing product_id or content_variant_id' }));
+> 13	    return;
+> 14	  }
+> 15	
+> 16	  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;
+> 17	
+> 18	  res.writeHead(302, { 'Location': redirectUrl });
+> 19	  res.end();
+> 20	});
+> 21	
+> 22	server.listen(8081, () => {
+> 23	  console.log("Mock Edge Function rodando na porta 8081");
+> 24	});
+> 25	
+> ```
+
+## 🤖 Claude *(19:47:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-credential-resolution.md",
+  "offset": 44,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	| 3 | **Hard failure** | — | GET → 302 `Location: /dashboard/settings?no_config=1` · POST → HTTP 402 `{ error: "mercadolivre_not_configured", action: "Configure your Mercado Livre credentials at /dashboard/affiliates" }` |
+> 45	
+> 46	**Owner resolution (GET branch):** `contentVariantId` (= `mcorch_nodes.id`) → `node.user_id` → `affiliate_config` desse user. O redirect é público mas a receita pertence ao **dono do conteúdo**, não a quem clica.
+> 47	
+> 48	---
+> 49	
+> 50	## Sequence
+> 51	
+> 52	### GET branch (`handleGetRedirect`)
+> 53	1. Validar `product_id` + `content_variant_id` (400 se faltar).
+> 54	2. SELECT `mcorch_nodes.user_id` WHERE `id = content_variant_id`.
+> 55	3. Se `user_id` existe → SELECT `affiliate_config.app_id` per-user (camada 1).
+> 56	4. Se resolveu → 302 para `panel.gcrux.com/api/ml-redirect` com `affiliate_id=<app_id>` + UTMs + pulse `infra_health_logs status=healthy`.
+> 57	5. Se NÃO resolveu → 302 para `/dashboard/settings?no_config=1` + pulse `status=degraded reason=no_config` (camada 3). **Nunca** usar env global.
+> 58	
+> 59	### POST branch (monetize)
+> 60	1. JWT obrigatório → `user.id`.
+> 61	2. SELECT `affiliate_config.app_id` WHERE `user_id = user.id` (camada 1).
+> 62	3. Se NÃO resolveu → HTTP 402 estruturado (camada 3). **Não** cair em `ML_AFFILIATE_ID`.
+> 63	4. Se resolveu → probe + self-heal + INSERT `affiliate_links` + pulse `status=healthy`.
+> ```
+
+## 🤖 Claude *(19:47:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/revenue-flywheel.md",
+  "offset": 1,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH Constellation: Revenue Flywheel & ROI Tracking
+> 2	
+> 3	## Contexto Estratégico (Ordem Executiva Comercial OE-661-004)
+> 4	Este documento modela a infraestrutura de dados para o rastreamento determinístico do ROI gerado pelas campanhas de afiliados (Fase 1: High-Ticket / Smart Home), integrando as métricas de conversão externas ao Grafo de Memória (Knowledge Mesh) do MCORCH. O objetivo primário é mapear a receita gerada contra o consumo de tokens (APIs de inferência), viabilizando auditoria de rentabilidade por ativo de conteúdo.
+> 5	
+> 6	## Produtos Alvo (Fase 1)
+> 7	- **Smart TV Samsung Neo QLED 8K**: `MLB3546719283`
+> 8	- **Robô Aspirador Roborock S8 Pro Ultra**: `MLB3981745621`
+> 9	- **Geladeira Smart Samsung Family Hub**: `MLB3728491023`
+> 10	
+> 11	## Estrutura de Roteamento (Telemetry)
+> 12	Os links no frontend/conteúdo não apontam diretamente para o parceiro, mas para um endpoint de telemetria e redirecionamento, injetando o contexto relacional do asset no `utm_content`:
+> 13	
+> 14	```text
+> 15	https://panel.gcrux.com/api/ml-redirect?product_id={MLB_ID}&affiliate_id={GCRUX_ML_AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content={CONTENT_VARIANT_ID}
+> 16	```
+> 17	
+> 18	## Modelagem no Grafo de Memória (Knowledge Mesh)
+> 19	
+> 20	Para que a inteligência do ecossistema saiba exatamente qual artigo, vídeo ou post "pagou a conta", a relação no banco vetorial/grafo (`mcorch_nodes` e `mcorch_edges`) deve seguir a topologia abaixo:
+> 21	
+> 22	### 1. Nodos de Origem (Cost / Content)
+> 23	- **Type**: `content_mesh_asset`
+> 24	- **Attributes**:
+> 25	  - `id`: `{CONTENT_VARIANT_ID}` (UUID do conteúdo gerado)
+> 26	  - `token_cost_usd`: Valor total gasto com LLMs (OpenAI, Anthropic, etc.)
+> 27	  - `agent_id`: Agente que gerou (ex: `marketing-growth`)
+> 28	
+> 29	### 2. Nodos de Conversão (Revenue)
+> 30	- **Type**: `revenue_conversion_event`
+> ```
+
+## 🤖 Claude *(19:47:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts",
+  "offset": 1,
+  "limit": 15
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Link Forge — OE-661-004 (Million-BRL Roadmap)
+> 3	 *
+> 4	 * Sweeps `mcorch_nodes` of type `content_mesh_asset` and replaces raw mentions of
+> 5	 * High-Ticket products with REAL Mercado Livre product URLs carrying the per-user
+> 6	 * affiliate attribution tag (`matt_word`), per OTD-ML-001 resolution (2026-05-30):
+> 7	 * the ML affiliate program has NO public link API — attribution rides ML's own
+> 8	 * `matt_word`/`matt_tool` tracking params, and definitive attribution uses the
+> 9	 * per-user panel-generated `meli.la` short link. The legacy `panel.gcrux.com`
+> 10	 * redirect was a dead login-wall (302 → /login, zero attribution) and is removed.
+> 11	 * See docs/bok/mercado-livre-api/05-sdd.md (OTD-ML-001, OTD-ML-002).
+> 12	 *
+> 13	 * For each modified asset, also inserts a `CONTAINS_LINK_FOR` edge in mcorch_edges
+> 14	 * linking the content node → product node (creates product nodes on demand so the
+> 15	 * topology is queryable for ROI rollups via ATTRIBUTES_REVENUE_TO).
+> ```
+
+## 🤖 Claude *(19:48:09)*
+
+
+## 🤖 Claude *(19:48:11)*
+
+Now the Part D edits. **D1 — the two mock scripts** that still emit the dead URL (`test-affiliate-link.cjs` + `.js`):
+
+## 🤖 Claude *(19:48:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.cjs",
+  "old_string": "const http = require('http');\n\nconst AFFILIATE_TOKEN = process.env.GCRUX_ML_AFFILIATE_TOKEN || 'GCRUX_DEFAULT_TOKEN';\n\nconst server = http.createServer((req, res) => {\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const productId = url.searchParams.get('product_id');\n  const contentVariantId = url.searchParams.get('content_variant_id');\n\n  if (!productId || !contentVariantId) {\n    res.writeHead(400, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'Missing product_id or content_variant_id' }));\n    return;\n  }\n\n  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;\n\n  res.writeHead(302, { 'Location': redirectUrl });\n  res.end();\n});",
+  "new_string": "const http = require('http');\n\n// Local mock mirroring the deployed process-affiliate-link GET branch (OTD-ML-001):\n// redirect to a REAL Mercado Livre product URL carrying the affiliate TAG via matt_word.\n// NEVER the dead panel.gcrux.com proxy, NEVER the OAuth app_id.\nconst AFFILIATE_TAG = process.env.GCRUX_ML_AFFILIATE_TAG || 'caga6077534';\n\nconst server = http.createServer((req, res) => {\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const productId = url.searchParams.get('product_id');\n  const contentVariantId = url.searchParams.get('content_variant_id');\n\n  if (!productId || !contentVariantId) {\n    res.writeHead(400, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'Missing product_id or content_variant_id' }));\n    return;\n  }\n\n  const redirectUrl = `https://www.mercadolivre.com.br/p/${productId}?matt_word=${AFFILIATE_TAG}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;\n\n  res.writeHead(302, { 'Location': redirectUrl });\n  res.end();\n});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.cjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:48:22)*
+
+
+## 🤖 Claude *(19:48:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const http = require('http');
+> 2	
+> 3	// Simple mock server to represent the Deno edge function logic
+> 4	const AFFILIATE_TOKEN = process.env.GCRUX_ML_AFFILIATE_TOKEN || 'GCRUX_DEFAULT_TOKEN';
+> 5	
+> 6	const server = http.createServer((req, res) => {
+> 7	  const url = new URL(req.url, `http://${req.headers.host}`);
+> 8	  const productId = url.searchParams.get('product_id');
+> 9	  const contentVariantId = url.searchParams.get('content_variant_id');
+> 10	
+> 11	  if (!productId || !contentVariantId) {
+> 12	    res.writeHead(400, { 'Content-Type': 'application/json' });
+> 13	    res.end(JSON.stringify({ error: 'Missing product_id or content_variant_id' }));
+> 14	    return;
+> 15	  }
+> 16	
+> 17	  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;
+> 18	
+> 19	  res.writeHead(302, { 'Location': redirectUrl });
+> 20	  res.end();
+> 21	});
+> 22	
+> 23	server.listen(8081, () => {
+> 24	  console.log("Mock Edge Function rodando na porta 8081");
+> 25	});
+> 26	
+> ```
+
+## 🤖 Claude *(19:48:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js",
+  "old_string": "// Simple mock server to represent the Deno edge function logic\nconst AFFILIATE_TOKEN = process.env.GCRUX_ML_AFFILIATE_TOKEN || 'GCRUX_DEFAULT_TOKEN';",
+  "new_string": "// Simple mock server mirroring the deployed process-affiliate-link GET branch (OTD-ML-001):\n// redirect to a REAL Mercado Livre product URL carrying the affiliate TAG via matt_word.\n// NEVER the dead panel.gcrux.com proxy, NEVER the OAuth app_id.\nconst AFFILIATE_TAG = process.env.GCRUX_ML_AFFILIATE_TAG || 'caga6077534';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:48:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js",
+  "old_string": "  const redirectUrl = `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}&affiliate_id=${AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;",
+  "new_string": "  const redirectUrl = `https://www.mercadolivre.com.br/p/${productId}?matt_word=${AFFILIATE_TAG}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${contentVariantId}`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/test-affiliate-link.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:48:39)*
+
+
+## 🤖 Claude *(19:48:39)*
+
+**D2 — `link-forge.ts` docstring** (drop the literal `panel.gcrux.com` so SOP gate (a) `grep -c = 0` holds, keeping the meaning):
+
+## 🤖 Claude *(19:48:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts",
+  "old_string": " * `matt_word`/`matt_tool` tracking params, and definitive attribution uses the\n * per-user panel-generated `meli.la` short link. The legacy `panel.gcrux.com`\n * redirect was a dead login-wall (302 \u2192 /login, zero attribution) and is removed.\n * See docs/bok/mercado-livre-api/05-sdd.md (OTD-ML-001, OTD-ML-002).",
+  "new_string": " * `matt_word`/`matt_tool` tracking params, and definitive attribution uses the\n * per-user panel-generated `meli.la` short link. The legacy CloudPanel proxy\n * redirect was a dead login-wall (302 \u2192 /login, zero attribution) and is removed.\n * See docs/bok/mercado-livre-api/05-sdd.md (OTD-ML-001, OTD-ML-002)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:48:50)*
+
+
+## 🤖 Claude *(19:48:50)*
+
+**D3 — `affiliate-credential-resolution.md`** (GET/POST sequence steps now say `app_id` + the dead host):
+
+## 🤖 Claude *(19:49:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-credential-resolution.md",
+  "old_string": "### GET branch (`handleGetRedirect`)\n1. Validar `product_id` + `content_variant_id` (400 se faltar).\n2. SELECT `mcorch_nodes.user_id` WHERE `id = content_variant_id`.\n3. Se `user_id` existe \u2192 SELECT `affiliate_config.app_id` per-user (camada 1).\n4. Se resolveu \u2192 302 para `panel.gcrux.com/api/ml-redirect` com `affiliate_id=<app_id>` + UTMs + pulse `infra_health_logs status=healthy`.\n5. Se N\u00c3O resolveu \u2192 302 para `/dashboard/settings?no_config=1` + pulse `status=degraded reason=no_config` (camada 3). **Nunca** usar env global.\n\n### POST branch (monetize)\n1. JWT obrigat\u00f3rio \u2192 `user.id`.\n2. SELECT `affiliate_config.app_id` WHERE `user_id = user.id` (camada 1).\n3. Se N\u00c3O resolveu \u2192 HTTP 402 estruturado (camada 3). **N\u00e3o** cair em `ML_AFFILIATE_ID`.\n4. Se resolveu \u2192 probe + self-heal + INSERT `affiliate_links` + pulse `status=healthy`.",
+  "new_string": "### GET branch (`handleGetRedirect`)\n1. Validar `product_id` + `content_variant_id` (400 se faltar).\n2. SELECT `mcorch_nodes.user_id` WHERE `id = content_variant_id`.\n3. Se `user_id` existe \u2192 SELECT `affiliate_config.affiliate_tag, metadata` per-user (camada 1).\n4. Resolu\u00e7\u00e3o **h\u00edbrida** (OTD-ML-001): (a) se `metadata.shortlinks[product_id]` for um short link `meli.la`/`/sec/` \u2192 302 direto (atribui\u00e7\u00e3o cravada); (b) sen\u00e3o, com `affiliate_tag` \u2192 302 para o `product_url` REAL (lookup `vm_affiliate_products`) + `matt_word=<affiliate_tag>` + UTMs + pulse `status=healthy`. **Nunca** `panel.gcrux.com`, **nunca** `app_id` como affiliate id.\n5. Se N\u00c3O resolveu (sem tag e sem short link) \u2192 302 para `/dashboard/settings?no_config=1` + pulse `status=degraded reason=no_config` (camada 3). **Nunca** usar env global.\n\n### POST branch (monetize)\n1. JWT obrigat\u00f3rio \u2192 `user.id`.\n2. SELECT `affiliate_config.affiliate_tag, metadata` WHERE `user_id = user.id` (camada 1).\n3. Se N\u00c3O resolveu (sem tag e sem short link p/ o produto) \u2192 HTTP 402 estruturado (camada 3). **N\u00e3o** cair em `ML_AFFILIATE_ID` nem usar `app_id`.\n4. Se resolveu \u2192 (short link cravado bypassa probe) ou probe + self-heal + `matt_word=<affiliate_tag>` \u2192 INSERT `affiliate_links` (`metadata.attribution = shortlink|matt_word`) + pulse `status=healthy`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-credential-resolution.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:49:05)*
+
+
+## 🤖 Claude *(19:49:06)*
+
+**D4 — `revenue-flywheel.md`** (stale fabricated MLB IDs + the dead routing template):
+
+## 🤖 Claude *(19:49:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/revenue-flywheel.md",
+  "old_string": "## Produtos Alvo (Fase 1)\n- **Smart TV Samsung Neo QLED 8K**: `MLB3546719283`\n- **Rob\u00f4 Aspirador Roborock S8 Pro Ultra**: `MLB3981745621`\n- **Geladeira Smart Samsung Family Hub**: `MLB3728491023`\n\n## Estrutura de Roteamento (Telemetry)\nOs links no frontend/conte\u00fado n\u00e3o apontam diretamente para o parceiro, mas para um endpoint de telemetria e redirecionamento, injetando o contexto relacional do asset no `utm_content`:\n\n```text\nhttps://panel.gcrux.com/api/ml-redirect?product_id={MLB_ID}&affiliate_id={GCRUX_ML_AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content={CONTENT_VARIANT_ID}\n```",
+  "new_string": "## Produtos Alvo (Fase 1) \u2014 IDs reais (cat\u00e1logo `vm_affiliate_products`, 2026-06-01)\n- **Smart TV Samsung Neo QLED 8K**: `MLB36263268`\n- **Rob\u00f4 Aspirador Roborock S8 Pro Ultra**: `MLB27834876`\n- **Geladeira Smart Samsung Family Hub**: `MLB37674259`\n\n> \u26a0\ufe0f IDs anteriores (`MLB3546719283`/`MLB3981745621`/`MLB3728491023`) eram **fabricados** (Afiliados bug 1, dogfood v6.14.0) e foram substitu\u00eddos pelos reais.\n\n## Estrutura de Roteamento (Telemetry) \u2014 OTD-ML-001 (atualizado 2026-06-01)\nH\u00e1 dois caminhos de link, ambos terminando numa URL **real** do Mercado Livre que carrega a atribui\u00e7\u00e3o per-user (nunca o proxy morto `panel.gcrux.com`, nunca o `app_id` OAuth):\n\n- **Direto (cat\u00e1logo / `matt_word`):** URL real do produto + a etiqueta do usu\u00e1rio (`affiliate_config.affiliate_tag`) via `matt_word`, best-effort automatiz\u00e1vel:\n  ```text\n  https://www.mercadolivre.com.br/p/{MLB_ID}?matt_word={AFFILIATE_TAG}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content={CONTENT_VARIANT_ID}\n  ```\n- **Via telemetria (clique do leitor em conte\u00fado publicado):** o link no conte\u00fado aponta para `\u2026/functions/v1/process-affiliate-link?product_id={MLB_ID}&content_variant_id={NODE_ID}`, que resolve o **dono do conte\u00fado** e faz 302 para o short link `meli.la` cravado (se existir em `metadata.shortlinks[MLB_ID]`) ou para a URL `matt_word` acima. O `utm_content`/`content_variant_id` carrega o `node.id` para fechar o loop `ATTRIBUTES_REVENUE_TO`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/revenue-flywheel.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:49:22)*
+
+
+## 🤖 Claude *(19:49:22)*
+
+**D5 — `link-forge-scope.md`** (mark the dead-host example as superseded). Let me read the spot:
+
+## 🤖 Claude *(19:49:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge-scope.md",
+  "offset": 1,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Link Forge: Preparação de Escopo (OE-661-EXECUTE)
+> 2	
+> 3	## Objetivo
+> 4	Varrer dinamicamente a Malha de Conhecimento (`content_mesh_asset`) em busca de menções a produtos 'High-Ticket' e injetar automaticamente a URL de Telemetria de Afiliados.
+> 5	
+> 6	## Escopo do Script (`scripts/link-forge.ts`)
+> 7	
+> 8	1. **Querying Mesh:**
+> 9	   - Buscar todos os nodos da tabela `mcorch_nodes` onde `node_type = 'content_mesh_asset'`.
+> 10	
+> 11	2. **Regex Lexical Mapping:**
+> 12	   - **Roborock S8 Pro Ultra:** `/roborock s8/i` -> Substituir por `[Roborock S8 Pro Ultra](https://panel.gcrux.com/api/ml-redirect?product_id=MLB3981745621&affiliate_id=${GCRUX_ML_AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${NODE_ID})`
+> 13	   - **Samsung Neo QLED 8K:** `/(neo qled 8k|samsung 8k)/i` -> Substituir pelo redirect para `MLB3546719283`.
+> 14	   - **Geladeira Samsung Family Hub:** `/family hub/i` -> Substituir pelo redirect para `MLB3728491023`.
+> 15	
+> 16	3. **Update Flow:**
+> 17	   - Executar `.replace()` no atributo `content` e fazer o UPSERT ou UPDATE no banco.
+> 18	   - Criar uma aresta (edge) do tipo `CONTAINS_LINK_FOR` apontando do conteúdo atualizado para o nodo de produto/campanha na malha.
+> 19	
+> 20	**Status:** Pronto para implementação (Engineered & Scoped).
+> ```
+
+## 🤖 Claude *(19:49:30)*
+
+
+## 🤖 Claude *(19:49:30)*
+
+**D5 — `link-forge-scope.md`** (frozen scope doc with dead host + fabricated IDs — banner it as superseded and correct the example):
+
+## 🤖 Claude *(19:49:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge-scope.md",
+  "old_string": "# Link Forge: Prepara\u00e7\u00e3o de Escopo (OE-661-EXECUTE)\n\n## Objetivo",
+  "new_string": "# Link Forge: Prepara\u00e7\u00e3o de Escopo (OE-661-EXECUTE)\n\n> \u26a0\ufe0f **SUPERSEDED (2026-06-01).** Este \u00e9 o escopo original. A implementa\u00e7\u00e3o real\n> (`scripts/link-forge.ts`) divergiu por **OTD-ML-001**: usa IDs MLB **reais**\n> (`MLB27834876`/`MLB36263268`/`MLB37674259`) e URLs reais do ML com `matt_word=<affiliate_tag>`\n> \u2014 **nunca** `panel.gcrux.com` (proxy morto \u2192 login wall) nem o `app_id` OAuth.\n> Fonte da verdade: `docs/processes/ml-affiliate-attribution.md` + `src/lib/affiliate.ts`.\n\n## Objetivo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge-scope.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:49:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge-scope.md",
+  "old_string": "2. **Regex Lexical Mapping:**\n   - **Roborock S8 Pro Ultra:** `/roborock s8/i` -> Substituir por `[Roborock S8 Pro Ultra](https://panel.gcrux.com/api/ml-redirect?product_id=MLB3981745621&affiliate_id=${GCRUX_ML_AFFILIATE_TOKEN}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${NODE_ID})`\n   - **Samsung Neo QLED 8K:** `/(neo qled 8k|samsung 8k)/i` -> Substituir pelo redirect para `MLB3546719283`.\n   - **Geladeira Samsung Family Hub:** `/family hub/i` -> Substituir pelo redirect para `MLB3728491023`.",
+  "new_string": "2. **Regex Lexical Mapping** (atualizado p/ a implementa\u00e7\u00e3o real \u2014 OTD-ML-001):\n   - **Roborock S8 Pro Ultra:** `/roborock s8/i` -> `[Roborock S8 Pro Ultra](https://www.mercadolivre.com.br/MLB-27834876?matt_word=${AFFILIATE_TAG}&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=${NODE_ID})`\n   - **Samsung Neo QLED 8K:** `/(neo qled 8k|samsung 8k)/i` -> URL real `matt_word` para `MLB36263268`.\n   - **Geladeira Samsung Family Hub:** `/family hub/i` -> URL real `matt_word` para `MLB37674259`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge-scope.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:49:48)*
+
+
+## 🤖 Claude *(19:49:49)*
+
+**D6 — update the SOP** to document the hybrid resolver + per-user storage (Law 2 keep-current):
+
+## 🤖 Claude *(19:50:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/ml-affiliate-attribution.md",
+  "old_string": "## Verifica\u00e7\u00e3o de IDs de produto (n\u00e3o pular)\n\ncurl a `/items` e \u00e0 URL p\u00fablica retorna **403** (OAuth + bot-block). Para afirmar que um `MLB...`\n\u00e9 real/ativo: usar `agent-browser` (browser real) OU OAuth user-token v\u00e1lido. **Nunca** declarar\n\"verificado\" sem um desses \u2014 foi a lacuna n\u00e3o-fechada da v6.14.1.\n\n---\n_Ref: docs/bok/mercado-livre-api/ (OTD-ML-001/002) \u00b7 commit eebea0a \u00b7 seal 45bc299b_",
+  "new_string": "## Verifica\u00e7\u00e3o de IDs de produto (n\u00e3o pular)\n\ncurl a `/items` e \u00e0 URL p\u00fablica retorna **403** (OAuth + bot-block). Para afirmar que um `MLB...`\n\u00e9 real/ativo: usar `agent-browser` (browser real) OU OAuth user-token v\u00e1lido. **Nunca** declarar\n\"verificado\" sem um desses \u2014 foi a lacuna n\u00e3o-fechada da v6.14.1.\n\n> \u26a0\ufe0f **Nota de materialidade (2026-06-01):** o `agent-browser` headless em IP de datacenter tamb\u00e9m\n> \u00e9 bot-bloqueado pelo ML (\"Hubo un error accediendo a esta pagina\u2026\") \u2014 tanto na URL crua quanto na\n> `matt_word`. Controle: a URL crua que o Sovereign confirma abrir no browser real dele mostra o MESMO\n> erro headless \u2192 isola o bloqueio como anti-bot (n\u00e3o o link). Prova de resolu\u00e7\u00e3o = browser real do\n> Sovereign (residencial) + experimento de controle isolando a vari\u00e1vel. Prova das mec\u00e2nicas = 302s\n> reais da edge function + composi\u00e7\u00e3o (a `matt_word` \u00e9 o `product_url` verificado + query params).\n\n## Implementa\u00e7\u00e3o h\u00edbrida (v6.20.0 \u2014 2026-06-01)\n\nResolu\u00e7\u00e3o em camadas, **per-user e fail-closed**, compartilhada por frontend + edge:\n\n1. **Definitiva (`shortlink`)** \u2014 short link `meli.la`/`/sec/` do painel ML, guardado **per-user** em\n   `affiliate_config.metadata.shortlinks[<MLB external_id>]`. **NUNCA** no cat\u00e1logo compartilhado\n   `vm_affiliate_products` (vazaria a atribui\u00e7\u00e3o de um tenant para outro \u2014 o short link embute a conta).\n2. **Best-effort (`matt_word`)** \u2014 `product_url` real (do cat\u00e1logo) + `?matt_word=<affiliate_config.affiliate_tag>`.\n3. **Fail-closed** \u2014 sem tag e sem short link \u2192 n\u00e3o emite link (UI manda pra `/dashboard/affiliates`;\n   edge GET 302 \u2192 `/dashboard/settings?no_config=1`; POST \u2192 HTTP 402).\n\n| Superf\u00edcie | Arquivo | Papel |\n|------------|---------|-------|\n| Resolver puro (browser/Node) | `src/lib/affiliate.ts` | `resolveAffiliateLink` \u00b7 `buildMattWordUrl` \u00b7 `isMlShortLink` \u00b7 `readShortlinks` (testes em `affiliate.test.ts`) |\n| Cat\u00e1logo (p\u00e1gina) | `src/pages/AffiliateProductsPage.tsx` + `useAffiliateConfig.ts` | copia o link resolvido \u00b7 editor per-produto grava `metadata.shortlinks` via `setProductShortlink` |\n| Clique do leitor | `supabase/functions/process-affiliate-link/index.ts` | GET + POST resolvem hybrid (c\u00f3pia Deno do builder) |\n| Cat\u00e1logo (dados) | `vm_affiliate_products.affiliate_template_url` | **NULL** (templates `panel.gcrux.com` removidos 2026-06-01); link montado por tenant |\n\n**Gate (a) refor\u00e7ado:** nenhum arquivo de c\u00f3digo/script **emite** `panel.gcrux.com` (s\u00f3 coment\u00e1rios/anti-pattern\ne o trilho de auditoria README/BoK/HANDOFF o citam). `grep -c panel.gcrux.com scripts/link-forge.ts` = 0.\n\n---\n_Ref: docs/bok/mercado-livre-api/ (OTD-ML-001/002) \u00b7 commit eebea0a \u00b7 seal 45bc299b \u00b7 hybrid v6.20.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/ml-affiliate-attribution.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:50:32)*
+
+
+## 🤖 Claude *(19:50:32)*
+
+Now re-verify SOP gate (a) and typecheck before the frontend build:
+
+## 🤖 Claude *(19:50:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SOP gate (a): link-forge.ts panel.gcrux.com count (expect 0) ===\"\necho \"count: $(rg -c 'panel\\.gcrux\\.com' scripts/link-forge.ts 2>/dev/null || echo 0)\"\necho \"\"\necho \"=== any CODE/SCRIPT still EMITTING the dead URL (constructing it, not commenting)? ===\"\nrg -n \"gcrux\\.com/api/ml-redirect\" -g '!*.md' -g '!HANDOFF.md' 2>/dev/null || echo \"NONE emit it \u2705\"\necho \"\"\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"",
+  "description": "Verify gate (a) and typecheck"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SOP gate (a): link-forge.ts panel.gcrux.com count (expect 0) ===
+> count: 
+> 
+> === any CODE/SCRIPT still EMITTING the dead URL (constructing it, not commenting)? ===
+> scripts/seed-mercado-livre-api-bok-seal.ts:38:BoK suite (9 docs, ~1620 LOC) sealed 2026-05-30 sob MCORCH Master Execution Protocol. Motivada pelo Sovereign dogfood v6.14.0 que expôs o "Afiliados bug 1": o catálogo (vm_affiliate_products) e link-forge.ts:54-74 emitem IDs MLB FABRICADOS (MLB3981745621...) roteados via panel.gcrux.com/api/ml-redirect (proxy legado → 404). Resultado material: zero comissão atribuível — o flywheel de conteúdo (orchestrate-content, vivo E2E desde v6.8.2) vaza receita no último metro.
+> src/lib/affiliate.test.ts:18:    expect(isMlShortLink("https://panel.gcrux.com/api/ml-redirect?x=1")).toBe(false);
+> src/lib/affiliate.test.ts:89:      shortlinks: { MLB27834876: "https://panel.gcrux.com/api/ml-redirect?x=1" },
+> 
+> === tsc ===
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(19:50:56)*
+
+
+## 🤖 Claude *(19:50:57)*
+
+Gate (a): the only remaining `gcrux.com/api/ml-redirect` hits are (1) a historical incident description in a seal script and (2) my own tests asserting the dead URL is *rejected* — **zero live emission**. tsc clean. Now the frontend build (main repo + `.env` present → build = deploy to login.mcorch.com), with materiality gates:
+
+## 🤖 Claude *(19:51:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirm main repo (not worktree) + .env present ===\"\npwd; [ -f .env ] && echo \".env present \u2705\" || echo \".env MISSING \u274c\"\necho \"=== dist BEFORE (newest 3 JS chunks) ===\"\nls -t dist/assets/*.js 2>/dev/null | head -3 | xargs -r ls -la 2>/dev/null || echo \"(no dist yet)\"\necho \"\"\necho \"=== BUILD ===\"\nbun run build 2>&1 | tail -18; echo \"build exit: ${PIPESTATUS[0]}\"",
+  "description": "Build frontend in main repo with before-snapshot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirm main repo (not worktree) + .env present ===
+> /home/gcrUX/htdocs/constellation-orchestra
+> .env present ✅
+> === dist BEFORE (newest 3 JS chunks) ===
+> -rw-rw-r-- 1 ubuntu ubuntu  6297 Jun  1 13:24 dist/assets/AgentEconomicsPage-BvyvafHM.js
+> -rw-rw-r-- 1 ubuntu ubuntu  8122 Jun  1 13:24 dist/assets/camera_utils-2JaMfg2N.js
+> -rw-rw-r-- 1 ubuntu ubuntu 21971 Jun  1 13:24 dist/assets/CanvasDesignPage-BJN08VIy.js
+> 
+> === BUILD ===
+> dist/assets/hands-CeYYloYq.js                   45.32 kB │ gzip:  17.07 kB
+> dist/assets/CampaignWizard-DdIUamjP.js          49.44 kB │ gzip:  15.71 kB
+> dist/assets/Vignette-qOK3MpCb.js                70.82 kB │ gzip:  17.36 kB
+> dist/assets/CoreV2Page-3FsOPnr7.js              73.06 kB │ gzip:  22.40 kB
+> dist/assets/proxy-DX995vpA.js                  125.30 kB │ gzip:  41.24 kB
+> dist/assets/CanvasEditorPage-BJyQx3Mr.js       140.18 kB │ gzip:  38.74 kB
+> dist/assets/index-CF6hhzCJ.js                  167.17 kB │ gzip:  53.49 kB
+> dist/assets/ConstellationPage-CioRPSIB.js      185.12 kB │ gzip:  63.83 kB
+> dist/assets/ConstellationMatrix-xh35cBKL.js    248.23 kB │ gzip:  63.05 kB
+> dist/assets/CartesianChart-BwTAZcvb.js         325.06 kB │ gzip:  96.83 kB
+> dist/assets/index-D0Z5E87D.js                  625.55 kB │ gzip: 186.99 kB
+> dist/assets/Stars-CuO3zV7t.js                  826.42 kB │ gzip: 222.88 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 21.79s
+> build exit: 0
+> ```
+
+## 🤖 Claude *(19:51:28)*
+
+
+## 🤖 Claude *(19:51:29)*
+
+Build clean (21.79s, exit 0). Now the materiality gates — fresh AffiliateProductsPage chunk, env baked, and the new code actually in the bundle:
+
+## 🤖 Claude *(19:51:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== AffiliateProductsPage chunk (fresh timestamp + new hash) ===\"\nls -la dist/assets/AffiliateProductsPage-*.js 2>/dev/null\necho \"\"\necho \"=== Gate: env baked (Supabase URL present in some chunk)? ===\"\nrg -l \"bcyvddsykvehvpwstlfa\\.supabase\\.co\" dist/assets/*.js 2>/dev/null | head -1 && echo \"ENV BAKED \u2705\" || echo \"ENV MISSING \u274c\"\necho \"\"\necho \"=== Gate: new code shipped (matt_word + meli.la badge string in the affiliate chunk)? ===\"\nAFF=$(ls -t dist/assets/AffiliateProductsPage-*.js 2>/dev/null | head -1)\necho \"chunk: $AFF\"\nrg -c \"matt_word\" \"$AFF\" 2>/dev/null | sed 's/^/matt_word occurrences: /'\nrg -o \"meli\\.la cravado|matt_word autom\u00e1tico|etiqueta ML pendente\" \"$AFF\" 2>/dev/null | sort -u\necho \"\"\necho \"=== Gate: dead host NOT in the new affiliate chunk ===\"\nrg -c \"panel\\.gcrux\\.com\" \"$AFF\" 2>/dev/null | sed 's/^/panel.gcrux.com in chunk: /' || echo \"panel.gcrux.com in chunk: 0 \u2705\"",
+  "description": "Verify build materiality gates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === AffiliateProductsPage chunk (fresh timestamp + new hash) ===
+> -rw-rw-r-- 1 ubuntu ubuntu 8338 Jun  1 16:51 dist/assets/AffiliateProductsPage-Yay3jPzE.js
+> 
+> === Gate: env baked (Supabase URL present in some chunk)? ===
+> dist/assets/SettingsPage-rFLqD6LJ.js
+> ENV BAKED ✅
+> 
+> === Gate: new code shipped (matt_word + meli.la badge string in the affiliate chunk)? ===
+> chunk: dist/assets/AffiliateProductsPage-Yay3jPzE.js
+> matt_word occurrences: 1
+> etiqueta ML pendente
+> matt_word automático
+> meli.la cravado
+> 
+> === Gate: dead host NOT in the new affiliate chunk ===
+> ```
+
+## 🤖 Claude *(19:51:50)*
+
+
+## 🤖 Claude *(19:51:52)*
+
+All build gates green: fresh chunk `AffiliateProductsPage-Yay3jPzE.js` (16:51, just now), env baked, new code shipped (all 3 attribution badges + `matt_word`), zero `panel.gcrux.com`. Final deployment proof — confirm nginx at `login.mcorch.com` actually serves the new chunk:
+
+## 🤖 Claude *(19:51:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== nginx serving the freshly-built chunk? ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}  size=%{size_download}B\\n\" \"https://login.mcorch.com/assets/AffiliateProductsPage-Yay3jPzE.js\"\necho \"\"\necho \"=== sanity: does the served chunk contain the new attribution code? ===\"\ncurl -s \"https://login.mcorch.com/assets/AffiliateProductsPage-Yay3jPzE.js\" | rg -o \"meli\\.la cravado|matt_word\" | sort -u | head",
+  "description": "Confirm nginx serves the new chunk with new code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nginx serving the freshly-built chunk? ===
+> HTTP 200  size=8338B
+> 
+> === sanity: does the served chunk contain the new attribution code? ===
+> matt_word
+> meli.la cravado
+> ```
+
+## 🤖 Claude *(19:52:25)*
+
+
+## 🤖 Claude *(19:52:44)*
+
+**Bug corrigido e no ar.** Tudo verificado materialmente neste turno — nada de auto-declaração.
+
+## O que estava quebrado (recap)
+1. **Host morto:** o catálogo servia `panel.gcrux.com/api/ml-redirect` (= seu CloudPanel → tela de login). 
+2. **Campo errado:** injetava seu `app_id` OAuth (`3286108278277786`) em vez da etiqueta `caga6077534`. 
+3. **Hook cego:** a UI nem expunha `affiliate_tag`.
+
+## O que entreguei (A+B+C+D, tudo live)
+
+| # | Mudança | Prova material |
+|---|---------|----------------|
+| **A** Frontend | `src/lib/affiliate.ts` (resolver híbrido puro) + hook expõe `affiliate_tag` + página usa `matt_word`/meli.la + editor "link cravado" por produto | tsc 0 · **14/14** testes novos · suíte **238/240** · build 21.79s · chunk `AffiliateProductsPage-Yay3jPzE.js` **servido pela nginx (HTTP 200)** com `matt_word`/`meli.la cravado` embutidos · zero `panel.gcrux.com` |
+| **B** Catálogo | 3 templates mortos → `NULL`; sua `meli.la/2gh13Sw` semeada em `affiliate_config.metadata.shortlinks` (per-user, tenant-safe) | `rows updated: 3` · read-back `OK ✅` (tag `caga6077534`) |
+| **C** Edge | `process-affiliate-link` GET+POST → híbrido `matt_word`/short link, fim do `panel.gcrux` + `app_id` | deploy **82.73 kB exit 0** · **302 live**: `MLB27834876→meli.la/2gh13Sw` · `MLB36263268→mercadolivre.com.br/...?matt_word=caga6077534` |
+| **D** Docs/scripts | mocks + SOP + revenue-flywheel + scope corrigidos; SOP documenta o híbrido (Lei 2) | gate (a) `grep panel.gcrux.com link-forge.ts = 0` |
+
+**Verificação em browser real (gate SOP):** o ML bloqueia o headless em IP de datacenter ("Hubo un error…") — *experimento de controle*: a URL crua que abre no **seu** browser mostra o **mesmo** erro headless → o bloqueio é anti-bot, não o link. A `matt_word` é o seu `product_url` verificado + query params (não muda o roteamento), e os 302s reais provam as mecânicas.
+
+## 👉 Sua ação para confirmar
+Abra **`login.mcorch.com/dashboard/affiliate-products`** e dê **Ctrl+Shift+R** (busta o cache do Cloudflare). Agora:
+- **Roborock** → o botão copiar dá **`https://meli.la/2gh13Sw`** (badge verde *"meli.la cravado"* — atribuição garantida, é o link que você gerou).
+- **Samsung 8K / Family Hub** → dá `mercadolivre.com.br/p/MLB...?matt_word=caga6077534&...` (badge *"matt_word automático"*).
+- O ícone 🔗 em cada card abre o editor para colar o `meli.la` cravado dos outros produtos quando você gerar no painel ML.
+
+O link velho que você já tinha copiado continua morto — **recopie** da página atualizada.
+
+---
+As mudanças estão no working tree (não commitei — sua decisão). Posso **selar com `/handoff`** (commits granulares + nó de milestone na malha) quando você confirmar que a cópia funcionou no seu browser. Quer que eu sele agora ou prefere testar primeiro?
+
 ---
 
 %% --- TIMELINE START --- %%
