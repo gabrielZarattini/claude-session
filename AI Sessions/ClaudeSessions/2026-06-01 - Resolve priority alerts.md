@@ -1791,6 +1791,3615 @@ Agora **vamos avante com a Fase 3**. Deixa eu carregar os specs exatos da BoK + 
 > -rw-rw-r--  1 ubuntu ubuntu 3044 Apr 26 12:46 SquadHull.tsx
 > ```
 
+## 🤖 Claude *(14:30:09)*
+
+
+## 🤖 Claude *(14:30:10)*
+
+FR specs carregados. Agora leio os hooks existentes + o `CrewGraph` para casar exatamente com os padrões antes de escrever (Harness Engineering — lógica nos hooks, componentes display-only).
+
+## 🤖 Claude *(14:30:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentCapabilities.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import { useQuery } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { useAuth } from '@/hooks/useAuth';
+> 5	
+> 6	// constellation-v2 (FR-CV2-001): the GLOBAL capability registry — maps each capability_key to a
+> 7	// real edge function (allowlist) plus its cost + BYOK metadata. Read-all for authenticated users
+> 8	// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> 9	// access-config card (FR-CV2-023) bind subagents to these capabilities — never to anything outside
+> 10	// the registry (FR-CV2-011 allowlist / FR-CV2-012 system denylist enforced server-side).
+> 11	
+> 12	export type CapabilityDepartment = 'content' | 'tech' | 'market' | 'ops';
+> 13	
+> 14	export interface AgentCapability {
+> 15	  id: string;
+> 16	  capabilityKey: string;
+> 17	  department: CapabilityDepartment;
+> 18	  displayName: string;
+> 19	  targetFunction: string;
+> 20	  baseMcoinCost: number;
+> 21	  moduleSelfBills: boolean;
+> 22	  requiresByok: boolean;
+> 23	  byokProvider: string | null;
+> 24	  isActive: boolean;
+> 25	}
+> 26	
+> 27	export type CapabilitiesByDepartment = Record<CapabilityDepartment, AgentCapability[]>;
+> 28	
+> 29	const EMPTY_BY_DEPARTMENT: CapabilitiesByDepartment = { content: [], tech: [], market: [], ops: [] };
+> 30	
+> 31	export function useAgentCapabilities() {
+> 32	  const { user } = useAuth();
+> 33	
+> 34	  const query = useQuery({
+> 35	    queryKey: ['agent_capabilities'],
+> 36	    queryFn: async (): Promise<AgentCapability[]> => {
+> 37	      const { data, error } = await supabase
+> 38	        .from('agent_capabilities')
+> 39	        .select(
+> 40	          'id, capability_key, department, display_name, target_function, base_mcoin_cost, module_self_bills, requires_byok, byok_provider, is_active',
+> 41	        )
+> 42	        .order('department')
+> 43	        .order('display_name');
+> 44	      if (error) throw error;
+> 45	
+> 46	      return (data ?? []).map((c): AgentCapability => ({
+> 47	        id: c.id,
+> 48	        capabilityKey: c.capability_key,
+> 49	        department: c.department as CapabilityDepartment,
+> 50	        displayName: c.display_name,
+> 51	        targetFunction: c.target_function,
+> 52	        baseMcoinCost: Number(c.base_mcoin_cost ?? 0),
+> 53	        moduleSelfBills: !!c.module_self_bills,
+> 54	        requiresByok: !!c.requires_byok,
+> 55	        byokProvider: c.byok_provider ?? null,
+> 56	        isActive: !!c.is_active,
+> 57	      }));
+> 58	    },
+> 59	    enabled: !!user,
+> 60	    // Registry is system data that rarely changes within a session — cache hard, never refetch on focus.
+> 61	    staleTime: Infinity,
+> 62	    gcTime: Infinity,
+> 63	  });
+> 64	
+> 65	  const capabilities = useMemo(() => query.data ?? [], [query.data]);
+> 66	
+> 67	  const byDepartment = useMemo<CapabilitiesByDepartment>(() => {
+> 68	    if (capabilities.length === 0) return EMPTY_BY_DEPARTMENT;
+> 69	    const grouped: CapabilitiesByDepartment = { content: [], tech: [], market: [], ops: [] };
+> 70	    for (const cap of capabilities) grouped[cap.department].push(cap);
+> 71	    return grouped;
+> 72	  }, [capabilities]);
+> 73	
+> 74	  const activeCapabilities = useMemo(() => capabilities.filter((c) => c.isActive), [capabilities]);
+> 75	
+> 76	  const byKey = useMemo(
+> 77	    () => new Map(capabilities.map((c) => [c.capabilityKey, c] as const)),
+> 78	    [capabilities],
+> 79	  );
+> 80	
+> 81	  return {
+> 82	    capabilities,
+> 83	    activeCapabilities,
+> 84	    byDepartment,
+> 85	    byKey,
+> 86	    isLoading: query.isLoading,
+> 87	    error: query.error,
+> 88	  };
+> 89	}
+> 90	
+> ```
+
+## 🤖 Claude *(14:30:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAccessConfig.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { useAuth } from '@/hooks/useAuth';
+> 5	
+> 6	// constellation-v2 (FR-CV2-023): per-user consumption caps (agent_consumption_caps).
+> 7	// A cap bounds the daily mcoCoin spend for a (provider/API, optional agent) pair; the router
+> 8	// (FR-CV2-021) returns HTTP 402 once the day's spend would exceed it. agent_id = null is a per-API
+> 9	// global cap for the user; daily_mcoin_cap = 0 means unlimited (Sovereign freebie). The BYOK keys
+> 10	// themselves live in user_api_keys (see useUserApiKeys) — this hook owns the caps layer only.
+> 11	
+> 12	export interface ConsumptionCap {
+> 13	  id: string;
+> 14	  apiKeyRef: string;
+> 15	  agentId: string | null;
+> 16	  dailyMcoinCap: number;
+> 17	}
+> 18	
+> 19	export interface SetCapInput {
+> 20	  apiKeyRef: string;
+> 21	  agentId?: string | null;
+> 22	  dailyMcoinCap: number;
+> 23	}
+> 24	
+> 25	// Stable composite key for the lookup map; '*' stands in for the per-API global (agent_id null).
+> 26	const capId = (agentId: string | null, apiKeyRef: string) => `${agentId ?? '*'}::${apiKeyRef}`;
+> 27	
+> 28	export function useAccessConfig() {
+> 29	  const { user } = useAuth();
+> 30	  const queryClient = useQueryClient();
+> 31	  const queryKey = ['agent_consumption_caps', user?.id] as const;
+> 32	
+> 33	  const query = useQuery({
+> 34	    queryKey,
+> 35	    queryFn: async (): Promise<ConsumptionCap[]> => {
+> 36	      // RLS scopes to auth.uid(); no explicit user filter needed for the read.
+> 37	      const { data, error } = await supabase
+> 38	        .from('agent_consumption_caps')
+> 39	        .select('id, api_key_ref, agent_id, daily_mcoin_cap')
+> 40	        .order('api_key_ref');
+> 41	      if (error) throw error;
+> 42	
+> 43	      return (data ?? []).map((c): ConsumptionCap => ({
+> 44	        id: c.id,
+> 45	        apiKeyRef: c.api_key_ref,
+> 46	        agentId: c.agent_id ?? null,
+> 47	        dailyMcoinCap: Number(c.daily_mcoin_cap ?? 0),
+> 48	      }));
+> 49	    },
+> 50	    enabled: !!user?.id,
+> 51	  });
+> 52	
+> 53	  const caps = useMemo(() => query.data ?? [], [query.data]);
+> 54	
+> 55	  const capLookup = useMemo(
+> 56	    () => new Map(caps.map((c) => [capId(c.agentId, c.apiKeyRef), c] as const)),
+> 57	    [caps],
+> 58	  );
+> 59	
+> 60	  const setCap = useMutation({
+> 61	    mutationFn: async ({ apiKeyRef, agentId = null, dailyMcoinCap }: SetCapInput) => {
+> 62	      if (!user?.id) throw new Error('User not authenticated');
+> 63	      if (dailyMcoinCap < 0) throw new Error('Cap deve ser não-negativo');
+> 64	
+> 65	      // UNIQUE (user_id, api_key_ref, agent_id), but a NULL agent_id defeats ON CONFLICT dedupe
+> 66	      // (NULL != NULL), so resolve the existing row by hand — mirrors useMetaConfig's find-then-write.
+> 67	      let lookup = supabase
+> 68	        .from('agent_consumption_caps')
+> 69	        .select('id')
+> 70	        .eq('user_id', user.id)
+> 71	        .eq('api_key_ref', apiKeyRef);
+> 72	      lookup = agentId === null ? lookup.is('agent_id', null) : lookup.eq('agent_id', agentId);
+> 73	      const { data: existing, error: findErr } = await lookup.maybeSingle();
+> 74	      if (findErr) throw findErr;
+> 75	
+> 76	      if (existing?.id) {
+> 77	        const { error } = await supabase
+> 78	          .from('agent_consumption_caps')
+> 79	          .update({ daily_mcoin_cap: dailyMcoinCap, updated_at: new Date().toISOString() })
+> 80	          .eq('id', existing.id);
+> 81	        if (error) throw error;
+> 82	      } else {
+> 83	        const { error } = await supabase.from('agent_consumption_caps').insert({
+> 84	          user_id: user.id,
+> 85	          api_key_ref: apiKeyRef,
+> 86	          agent_id: agentId,
+> 87	          daily_mcoin_cap: dailyMcoinCap,
+> 88	        });
+> 89	        if (error) throw error;
+> 90	      }
+> 91	    },
+> 92	    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+> 93	  });
+> 94	
+> 95	  const removeCap = useMutation({
+> 96	    mutationFn: async (id: string) => {
+> 97	      const { error } = await supabase.from('agent_consumption_caps').delete().eq('id', id);
+> 98	      if (error) throw error;
+> 99	    },
+> 100	    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+> 101	  });
+> 102	
+> 103	  return {
+> 104	    caps,
+> 105	    capLookup,
+> 106	    capFor: (agentId: string | null, apiKeyRef: string) => capLookup.get(capId(agentId, apiKeyRef)) ?? null,
+> 107	    isLoading: query.isLoading,
+> 108	    error: query.error,
+> 109	    setCap,
+> 110	    removeCap,
+> 111	  };
+> 112	}
+> 113	
+> ```
+
+## 🤖 Claude *(14:30:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewData.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useRef, useMemo } from 'react';
+> 2	import { useQuery } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { useAuth } from '@/hooks/useAuth';
+> 5	import { useCrewStore, type Agent, type Edge } from '@/store/useCrewStore';
+> 6	
+> 7	export function useCrewData() {
+> 8	  const { user } = useAuth();
+> 9	  const setAgents = useCrewStore((s) => s.setAgents);
+> 10	  const setEdges = useCrewStore((s) => s.setEdges);
+> 11	  const setLoaded = useCrewStore((s) => s.setLoaded);
+> 12	
+> 13	  // Guards: only push to Zustand when content actually changes — prevents cascade on background refetches
+> 14	  const agentsHashRef = useRef<string>('');
+> 15	  const edgesHashRef = useRef<string>('');
+> 16	
+> 17	  const agentsQuery = useQuery({
+> 18	    queryKey: ['crew_agents', user?.id],
+> 19	    queryFn: async () => {
+> 20	      if (!user?.id) throw new Error('User not authenticated');
+> 21	
+> 22	      // constellation-v2 (FR-CV2-030): empty-start — NO auto-seed. New users begin with an
+> 23	      // empty crew and build it on-demand via the wizard. (Removed the seed_crew_template
+> 24	      // auto-call that fabricated 29 decorative agents for any account opening the page.)
+> 25	      const { data, error } = await supabase
+> 26	        .from('crew_agents')
+> 27	        .select('*')
+> 28	        .order('created_at');
+> 29	      if (error) throw error;
+> 30	
+> 31	      return (Array.isArray(data) ? data : [])
+> 32	        .map((a: any): Agent | null => {
+> 33	          if (!a?.agent_key) return null;
+> 34	
+> 35	          let pos: [number, number, number] = [0, 0, 0];
+> 36	          try {
+> 37	            const rawPos = typeof a.position === 'string' ? JSON.parse(a.position) : a.position;
+> 38	            if (Array.isArray(rawPos) && rawPos.length === 3) {
+> 39	              pos = rawPos as [number, number, number];
+> 40	            } else if (rawPos && typeof rawPos === 'object') {
+> 41	              pos = [rawPos.x || 0, rawPos.y || 0, rawPos.z || 0];
+> 42	            }
+> 43	          } catch (e) {
+> 44	            console.error('Failed to parse position for agent:', a.agent_key, e);
+> 45	          }
+> 46	
+> 47	          return {
+> 48	            id: a.agent_key,
+> 49	            dbId: a.id,
+> 50	            name: a.name ?? 'Unknown Agent',
+> 51	            role: a.role ?? 'specialist',
+> 52	            avatar: a.avatar ?? '',
+> 53	            provider: a.provider ?? 'openai',
+> 54	            model: a.model ?? 'gpt-4o',
+> 55	            status: (a.status ?? 'idle') as Agent['status'],
+> 56	            position: pos,
+> 57	            systemPrompt: a.system_prompt ?? '',
+> 58	            priority: (a.priority ?? 1) as Agent['priority'],
+> 59	            level: a.level ?? 1,
+> 60	            squad: a.squad ?? 'unassigned',
+> 61	          };
+> 62	        })
+> 63	        .filter(Boolean) as Agent[];
+> 64	    },
+> 65	    enabled: !!user,
+> 66	    staleTime: 60_000, // 60s: avoids background refetch storms on window focus after reboot
+> 67	  });
+> 68	
+> 69	  const edgesQuery = useQuery({
+> 70	    queryKey: ['crew_edges', user?.id],
+> 71	    queryFn: async () => {
+> 72	      const { data, error } = await supabase
+> 73	        .from('crew_edges')
+> 74	        .select('*')
+> 75	        .order('created_at');
+> 76	      if (error) throw error;
+> 77	
+> 78	      return (Array.isArray(data) ? data : [])
+> 79	        .map((e: any): Edge | null => {
+> 80	          if (!e?.id || !e?.from_agent_key || !e?.to_agent_key) return null;
+> 81	          return {
+> 82	            id: e.id,
+> 83	            from: e.from_agent_key,
+> 84	            to: e.to_agent_key,
+> 85	            status: (e.status ?? 'idle') as Edge['status'],
+> 86	            label: e.label ?? '',
+> 87	            createdAt: e.created_at ? new Date(e.created_at).getTime() : Date.now(),
+> 88	          };
+> 89	        })
+> 90	        .filter(Boolean) as Edge[];
+> 91	    },
+> 92	    enabled: !!user,
+> 93	    staleTime: 60_000,
+> 94	  });
+> 95	
+> 96	  useEffect(() => {
+> 97	    if (!agentsQuery.data) return;
+> 98	    const hash = JSON.stringify(agentsQuery.data);
+> 99	    if (hash === agentsHashRef.current) return; // same content — skip Zustand write
+> 100	    agentsHashRef.current = hash;
+> 101	    setAgents(agentsQuery.data);
+> 102	  }, [agentsQuery.data, setAgents]);
+> 103	
+> 104	  useEffect(() => {
+> 105	    if (edgesQuery.isSuccess) {
+> 106	      const hash = JSON.stringify(edgesQuery.data);
+> 107	      if (hash !== edgesHashRef.current) {
+> 108	        edgesHashRef.current = hash;
+> 109	        setEdges(edgesQuery.data);
+> 110	      }
+> 111	      setLoaded(true);
+> 112	    } else if (edgesQuery.isError) {
+> 113	      setLoaded(true);
+> 114	    }
+> 115	  }, [edgesQuery.isSuccess, edgesQuery.isError, edgesQuery.data, setEdges, setLoaded]);
+> 116	
+> 117	  return useMemo(
+> 118	    () => ({
+> 119	      isLoading: agentsQuery.isLoading || edgesQuery.isLoading,
+> 120	      error: agentsQuery.error || edgesQuery.error,
+> 121	    }),
+> 122	    [agentsQuery.isLoading, agentsQuery.error, edgesQuery.isLoading, edgesQuery.error],
+> 123	  );
+> 124	}
+> 125	
+> ```
+
+## 🤖 Claude *(14:30:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentTask.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMutation, useQueryClient } from "@tanstack/react-query";
+> 2	import { supabase } from "@/integrations/supabase/client";
+> 3	import { toast } from "sonner";
+> 4	
+> 5	type AgentTaskInput = {
+> 6	  agent_id: string;
+> 7	  task_prompt: string;
+> 8	  override_provider?: string;
+> 9	  override_model?: string;
+> 10	};
+> 11	
+> 12	type AgentTaskResult = {
+> 13	  ok: boolean;
+> 14	  exec_id: string;
+> 15	  agent_id: string;
+> 16	  agent_name: string;
+> 17	  squad: string | null;
+> 18	  provider: string;
+> 19	  model: string;
+> 20	  tokens_in: number;
+> 21	  tokens_out: number;
+> 22	  cost_usd_micro: number;
+> 23	  cost_mcoin: number;
+> 24	  latency_ms: number;
+> 25	  response_preview: string;
+> 26	};
+> 27	
+> 28	export function useAgentTask() {
+> 29	  const queryClient = useQueryClient();
+> 30	
+> 31	  return useMutation<AgentTaskResult, Error, AgentTaskInput>({
+> 32	    mutationFn: async (input) => {
+> 33	      const { data, error } = await supabase.functions.invoke<AgentTaskResult>(
+> 34	        "agent-task-execute",
+> 35	        { body: input },
+> 36	      );
+> 37	      if (error) throw new Error(error.message);
+> 38	      if (!data?.ok) throw new Error("Resposta inválida do agent-task-execute");
+> 39	      return data;
+> 40	    },
+> 41	    onSuccess: (data) => {
+> 42	      toast.success(
+> 43	        `${data.agent_name} executou — ${data.tokens_in + data.tokens_out} tokens · ${data.cost_mcoin} mcoCoins · ${data.latency_ms}ms`,
+> 44	      );
+> 45	      queryClient.invalidateQueries({ queryKey: ["agent_executions"] });
+> 46	      queryClient.invalidateQueries({ queryKey: ["agent_economics"] });
+> 47	      queryClient.invalidateQueries({ queryKey: ["crew_agents"] });
+> 48	    },
+> 49	    onError: (err) => {
+> 50	      toast.error(`Falha ao executar agente: ${err.message}`);
+> 51	    },
+> 52	  });
+> 53	}
+> 54	
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 1	import { Canvas } from '@react-three/fiber';
+> 2	import { OrbitControls, Stars, Float } from '@react-three/drei';
+> 3	import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@react-three/postprocessing';
+> 4	import { useCrewStore } from '@/store/useCrewStore';
+> 5	import { AgentNode } from './AgentNode';
+> 6	import { AgentEdge } from './AgentEdge';
+> 7	import { SquadHull } from './SquadHull';
+> 8	import { useCallback, useMemo, memo, useEffect, useRef } from 'react';
+> 9	import * as THREE from 'three';
+> 10	
+> 11	const SQUAD_META: Record<string, { name: string; color: string }> = {
+> 12	  content: { name: 'Creative Content', color: '#ec4899' },
+> 13	  tech: { name: 'Technical Engine', color: '#3b82f6' },
+> 14	  market: { name: 'Market Intelligence', color: '#22c55e' },
+> 15	  ops: { name: 'Operational Ops', color: '#f59e0b' },
+> 16	};
+> 17	
+> 18	const PostProcessing = memo(function PostProcessing() {
+> 19	  const chromaticOffset = useMemo(() => new THREE.Vector2(0.002, 0.002), []);
+> 20	  return (
+> 21	    <EffectComposer>
+> 22	      <Bloom intensity={2.8} luminanceThreshold={0.1} luminanceSmoothing={0.7} mipmapBlur />
+> 23	      <ChromaticAberration offset={chromaticOffset} />
+> 24	      <Noise opacity={0.12} />
+> 25	      <Vignette eskil={false} offset={0.05} darkness={1.4} />
+> 26	    </EffectComposer>
+> 27	  );
+> 28	});
+> 29	
+> 30	const Scene = memo(function Scene() {
+> 31	  const renderCountRef = useRef(0);
+> 32	  useEffect(() => {
+> 33	    renderCountRef.current += 1;
+> 34	    if (renderCountRef.current > 30) {
+> 35	      console.warn('[CrewGraph] Scene rendered', renderCountRef.current, 'times — possible loop');
+> 36	    }
+> 37	  });
+> 38	
+> 39	  const agents = useCrewStore((s) => s.agents || []);
+> 40	  const edges = useCrewStore((s) => s.edges || []);
+> 41	  const selectedAgentId = useCrewStore((s) => s.selectedAgentId);
+> 42	  const setSelectedAgent = useCrewStore((s) => s.setSelectedAgent);
+> 43	  const connectionMode = useCrewStore((s) => s.connectionMode);
+> 44	  const connectingFrom = useCrewStore((s) => s.connectingFrom);
+> 45	  const setConnectingFrom = useCrewStore((s) => s.setConnectingFrom);
+> 46	
+> 47	  const agentMap = useMemo(() => {
+> 48	    const map = new Map();
+> 49	    if (agents && Array.isArray(agents)) {
+> 50	      agents.forEach(a => {
+> 51	        if (a && a.id) map.set(a.id, a);
+> 52	      });
+> 53	    }
+> 54	    return map;
+> 55	  }, [agents]);
+> 56	
+> 57	  const squads = useMemo(() => {
+> 58	    if (!agents || !Array.isArray(agents)) return [];
+> 59	    const unique = new Set(agents.map(a => a?.squad).filter(Boolean));
+> 60	    return Array.from(unique) as string[];
+> 61	  }, [agents]);
+> 62	
+> 63	  const handleNodeClick = useCallback((agentId: string) => {
+> 64	    if (connectionMode) {
+> 65	      if (!connectingFrom) {
+> 66	        setConnectingFrom(agentId);
+> 67	      } else if (connectingFrom !== agentId) {
+> 68	        (window as any).__openEdgeDialog?.(connectingFrom, agentId);
+> 69	      } else {
+> 70	        setConnectingFrom(null);
+> 71	      }
+> 72	    } else {
+> 73	      setSelectedAgent(agentId === selectedAgentId ? null : agentId);
+> 74	    }
+> 75	  }, [connectionMode, connectingFrom, selectedAgentId, setSelectedAgent, setConnectingFrom]);
+> 76	
+> 77	  return (
+> 78	    <>
+> 79	      <color attach="background" args={['#000205']} />
+> 80	      <fog attach="fog" args={['#000205', 10, 40]} />
+> 81	      <ambientLight intensity={0.1} />
+> 82	      <pointLight position={[10, 10, 10]} intensity={3} color="#38bdf8" />
+> 83	      <pointLight position={[-10, -5, -10]} intensity={2} color="#a855f7" />
+> 84	      <pointLight position={[0, 10, -20]} intensity={2} color="#22d3ee" />
+> 85	      
+> 86	      <Stars radius={150} depth={60} count={12000} factor={7} saturation={0.5} fade speed={2} />
+> 87	      
+> 88	      {/* Dynamic Grid Floor */}
+> 89	      <gridHelper args={[100, 100, '#1e293b', '#080d1a']} position={[0, -8, 0]} rotation={[0, 0, 0]} />
+> 90	
+> 91	      <group>
+> 92	        {/* Render Squad Hulls */}
+> 93	        {squads && squads.map(squadId => (
+> 94	          <SquadHull 
+> 95	            key={squadId} 
+> 96	            squadId={squadId} 
+> 97	            name={SQUAD_META[squadId]?.name || squadId}
+> 98	            color={SQUAD_META[squadId]?.color || '#ffffff'}
+> 99	          />
+> 100	        ))}
+> 101	
+> 102	        {edges && edges.map((edge) => {
+> 103	          const fromAgent = agentMap.get(edge.from);
+> 104	          const toAgent = agentMap.get(edge.to);
+> 105	          if (!fromAgent?.position || !toAgent?.position) return null;
+> 106	          return (
+> 107	            <AgentEdge
+> 108	              key={edge.id}
+> 109	              fromPos={fromAgent.position}
+> 110	              toPos={toAgent.position}
+> 111	              status={edge.status}
+> 112	              color={fromAgent.squad === toAgent.squad ? (SQUAD_META[fromAgent.squad || '']?.color || '#3b82f6') : '#ffffff'}
+> 113	            />
+> 114	          );
+> 115	        })}
+> 116	
+> 117	        {agents && agents.map((agent) => (
+> 118	          <Float key={agent.id} speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+> 119	            <AgentNode
+> 120	              agent={agent}
+> 121	              selected={selectedAgentId === agent.id}
+> 122	              connecting={connectionMode && connectingFrom === agent.id}
+> 123	              connectionMode={connectionMode}
+> 124	              onClick={() => handleNodeClick(agent.id)}
+> 125	            />
+> 126	          </Float>
+> 127	        ))}
+> 128	      </group>
+> 129	
+> 130	      <PostProcessing />
+> 131	    </>
+> 132	  );
+> 133	});
+> 134	
+> 135	export function CrewGraph() {
+> 136	  return (
+> 137	    <div className="absolute inset-0">
+> 138	      <Canvas
+> 139	        camera={{ position: [0, 5, 15], fov: 45 }}
+> 140	        gl={{ antialias: true, alpha: true, stencil: false, depth: true }}
+> 141	        style={{ background: '#020617' }}
+> 142	      >
+> 143	        <Scene />
+> 144	        <OrbitControls
+> 145	          enableDamping
+> 146	          dampingFactor={0.05}
+> 147	          minDistance={5}
+> 148	          maxDistance={35}
+> 149	          maxPolarAngle={Math.PI / 1.5}
+> 150	          minPolarAngle={Math.PI / 6}
+> 151	        />
+> 152	      </Canvas>
+> 153	    </div>
+> 154	  );
+> 155	}
+> 156	
+> ```
+
+## 🤖 Claude *(14:30:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect } from 'react';
+> 2	import { useQuery, useQueryClient } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { useAuth } from '@/hooks/useAuth';
+> 5	import { useCrewStore, type AgentStatus, type LogEntry } from '@/store/useCrewStore';
+> 6	
+> 7	/**
+> 8	 * Real Constellation activity feed — replaces the `useSimulation` mock.
+> 9	 *
+> 10	 * Reads actual `agent_executions` rows (written by the agent-daily-pulse cron and by
+> 11	 * manual "Executar tarefa" triggers via agent-task-execute) and projects them onto:
+> 12	 *   - the Live Logs panel (`store.logs`)
+> 13	 *   - per-agent 3D status (`updateAgentStatus`)
+> 14	 *
+> 15	 * Mapping: agent_executions.agent_id === crew_agents.id === store Agent.dbId.
+> 16	 *
+> 17	 * React 18 / Zustand safety: the effect depends ONLY on the query payload and reads the
+> 18	 * live agents array via getState() inside the callback — never subscribes to `agents` in
+> 19	 * deps (would recreate the effect on every updateAgentStatus → Error #185 cascade).
+> 20	 */
+> 21	
+> 22	type ExecRow = {
+> 23	  id: string;
+> 24	  agent_id: string;
+> 25	  status: 'pending' | 'running' | 'done' | 'failed';
+> 26	  provider: string;
+> 27	  model: string;
+> 28	  tokens_in: number | null;
+> 29	  tokens_out: number | null;
+> 30	  cost_mcoin: number | null;
+> 31	  latency_ms: number | null;
+> 32	  error_msg: string | null;
+> 33	  started_at: string;
+> 34	  completed_at: string | null;
+> 35	};
+> 36	
+> 37	const STATUS_MAP: Record<ExecRow['status'], AgentStatus> = {
+> 38	  pending: 'waiting',
+> 39	  running: 'thinking',
+> 40	  done: 'idle',
+> 41	  failed: 'error',
+> 42	};
+> 43	
+> 44	const EVENT_MAP: Record<ExecRow['status'], LogEntry['eventType']> = {
+> 45	  pending: 'info',
+> 46	  running: 'start',
+> 47	  done: 'complete',
+> 48	  failed: 'error',
+> 49	};
+> 50	
+> 51	function buildMessage(e: ExecRow): string {
+> 52	  switch (e.status) {
+> 53	    case 'done': {
+> 54	      const total = (e.tokens_in ?? 0) + (e.tokens_out ?? 0);
+> 55	      return `${e.provider}/${e.model} · ${total} tokens · ${e.cost_mcoin ?? 0} mco · ${e.latency_ms ?? 0}ms`;
+> 56	    }
+> 57	    case 'running':
+> 58	      return `executando tarefa via ${e.provider}/${e.model}…`;
+> 59	    case 'failed':
+> 60	      return `falhou: ${(e.error_msg ?? 'erro desconhecido').slice(0, 100)}`;
+> 61	    default:
+> 62	      return 'na fila…';
+> 63	  }
+> 64	}
+> 65	
+> 66	export function useAgentActivity() {
+> 67	  const { user } = useAuth();
+> 68	  const queryClient = useQueryClient();
+> 69	  const setLogs = useCrewStore((s) => s.setLogs);
+> 70	
+> 71	  const execQuery = useQuery({
+> 72	    queryKey: ['agent_executions', user?.id],
+> 73	    queryFn: async (): Promise<ExecRow[]> => {
+> 74	      const { data, error } = await supabase
+> 75	        .from('agent_executions')
+> 76	        .select(
+> 77	          'id, agent_id, status, provider, model, tokens_in, tokens_out, cost_mcoin, latency_ms, error_msg, started_at, completed_at',
+> 78	        )
+> 79	        .order('started_at', { ascending: false })
+> 80	        .limit(40);
+> 81	      if (error) throw error;
+> 82	      return (data ?? []) as ExecRow[];
+> 83	    },
+> 84	    enabled: !!user,
+> 85	    refetchInterval: 12_000, // poll for cron-driven execs; pauses when tab hidden (RQ default)
+> 86	    staleTime: 8_000,
+> 87	  });
+> 88	
+> 89	  useEffect(() => {
+> 90	    const execs = execQuery.data;
+> 91	    if (!execs) return;
+> 92	
+> 93	    // Read live agents without subscribing (avoids React 18 #185 cascade).
+> 94	    const { agents, updateAgentStatus } = useCrewStore.getState();
+> 95	    const byDbId = new Map(agents.filter((a) => a?.dbId).map((a) => [a.dbId as string, a]));
+> 96	
+> 97	    // Live Logs: project each exec into a stable LogEntry (id keyed on exec id → no dupes).
+> 98	    const logs: LogEntry[] = execs.map((e) => {
+> 99	      const agent = byDbId.get(e.agent_id);
+> 100	      return {
+> 101	        id: `exec-${e.id}`,
+> 102	        timestamp: new Date(e.completed_at ?? e.started_at).getTime(),
+> 103	        agentId: agent?.id ?? e.agent_id,
+> 104	        agentName: agent?.name ?? `agent ${e.agent_id.slice(0, 8)}`,
+> 105	        eventType: EVENT_MAP[e.status] ?? 'info',
+> 106	        message: buildMessage(e),
+> 107	      };
+> 108	    });
+> 109	    setLogs(logs);
+> 110	
+> 111	    // Per-agent status: the latest exec per agent wins (execs are sorted desc).
+> 112	    const latestStatusByDbId = new Map<string, AgentStatus>();
+> 113	    for (const e of execs) {
+> 114	      if (!latestStatusByDbId.has(e.agent_id)) {
+> 115	        latestStatusByDbId.set(e.agent_id, STATUS_MAP[e.status] ?? 'idle');
+> 116	      }
+> 117	    }
+> 118	    for (const [dbId, status] of latestStatusByDbId) {
+> 119	      const agent = byDbId.get(dbId);
+> 120	      if (agent && agent.status !== status) updateAgentStatus(agent.id, status);
+> 121	    }
+> 122	  }, [execQuery.data, setLogs]);
+> 123	
+> 124	  return {
+> 125	    isLoading: execQuery.isLoading,
+> 126	    refetch: () => queryClient.invalidateQueries({ queryKey: ['agent_executions', user?.id] }),
+> 127	  };
+> 128	}
+> 129	
+> ```
+
+## 🤖 Claude *(14:30:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx"
+}
+```
+
+## 🤖 Claude *(14:30:51)*
+
+
+## 🤖 Claude *(14:30:54)*
+
+Excelente — agora tenho o padrão completo. Fase 3 é um build grande (engine de criação + wizard 2-portas + access card + mods de hook + fixes 3D). Vou construir na ordem dependency-correct, com gates `tsc` frequentes. Primeiro, as 3 peças que faltam pra escrever o `useCreateCrew` (coração das duas portas): o store, a página hospedeira, e o shape exato de `crew_agents`/`crew_edges`.
+
+## 🤖 Claude *(14:30:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useCrewStore.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { create } from 'zustand';
+> 2	
+> 3	export type AgentStatus = 'active' | 'thinking' | 'waiting' | 'error' | 'idle';
+> 4	
+> 5	export interface Agent {
+> 6	  id: string;
+> 7	  dbId?: string;
+> 8	  name: string;
+> 9	  role: string;
+> 10	  avatar: string;
+> 11	  provider: string;
+> 12	  model: string;
+> 13	  status: AgentStatus;
+> 14	  position: [number, number, number];
+> 15	  systemPrompt: string;
+> 16	  priority: 'low' | 'medium' | 'high';
+> 17	  squad?: string;
+> 18	  level?: number;
+> 19	}
+> 20	
+> 21	export interface Edge {
+> 22	  id: string;
+> 23	  dbId?: string;
+> 24	  from: string;
+> 25	  to: string;
+> 26	  status: 'active' | 'waiting' | 'error' | 'idle';
+> 27	  label?: string;
+> 28	  createdAt: number;
+> 29	}
+> 30	
+> 31	export interface LogEntry {
+> 32	  id: string;
+> 33	  timestamp: number;
+> 34	  agentId: string;
+> 35	  agentName: string;
+> 36	  eventType: 'info' | 'error' | 'start' | 'toolCall' | 'complete';
+> 37	  message: string;
+> 38	}
+> 39	
+> 40	export interface Provider {
+> 41	  id: string;
+> 42	  name: string;
+> 43	  endpoint: string;
+> 44	  model: string;
+> 45	  connected: boolean;
+> 46	}
+> 47	
+> 48	interface CrewState {
+> 49	  agents: Agent[];
+> 50	  edges: Edge[];
+> 51	  logs: LogEntry[];
+> 52	  providers: Provider[];
+> 53	  loaded: boolean;
+> 54	  selectedAgentId: string | null;
+> 55	  configOpen: boolean;
+> 56	  logsOpen: boolean;
+> 57	  connectingFrom: string | null;
+> 58	  connectionMode: boolean;
+> 59	  setAgents: (agents: Agent[]) => void;
+> 60	  setEdges: (edges: Edge[]) => void;
+> 61	  setLoaded: (loaded: boolean) => void;
+> 62	  setSelectedAgent: (id: string | null) => void;
+> 63	  setConfigOpen: (open: boolean) => void;
+> 64	  setLogsOpen: (open: boolean) => void;
+> 65	  setConnectingFrom: (id: string | null) => void;
+> 66	  setConnectionMode: (mode: boolean) => void;
+> 67	  addLog: (log: Omit<LogEntry, 'id' | 'timestamp'>) => void;
+> 68	  setLogs: (logs: LogEntry[]) => void;
+> 69	  updateAgentStatus: (id: string, status: AgentStatus) => void;
+> 70	  updateEdgeStatus: (id: string, status: Edge['status']) => void;
+> 71	  addEdge: (edge: Omit<Edge, 'id' | 'createdAt'>) => void;
+> 72	  removeEdge: (id: string) => void;
+> 73	  seedEnterpriseStructure: () => void;
+> 74	}
+> 75	
+> 76	const INITIAL_PROVIDERS: Provider[] = [
+> 77	  { id: 'openai', name: 'OpenAI', endpoint: 'https://api.openai.com/v1', model: 'gpt-4-turbo', connected: true },
+> 78	  { id: 'anthropic', name: 'Anthropic', endpoint: 'https://api.anthropic.com/v1', model: 'claude-3-opus', connected: true },
+> 79	  { id: 'google', name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com', model: 'gemini-pro', connected: false },
+> 80	  { id: 'mistral', name: 'Mistral AI', endpoint: 'https://api.mistral.ai/v1', model: 'mistral-large', connected: false },
+> 81	];
+> 82	
+> 83	let logCounter = 0;
+> 84	
+> 85	export const useCrewStore = create<CrewState>((set) => ({
+> 86	  agents: [],
+> 87	  edges: [],
+> 88	  logs: [],
+> 89	  providers: INITIAL_PROVIDERS,
+> 90	  loaded: false,
+> 91	  selectedAgentId: null,
+> 92	  configOpen: false,
+> 93	  logsOpen: false,
+> 94	  connectingFrom: null,
+> 95	  connectionMode: false,
+> 96	  setAgents: (agents) => set({ agents: Array.isArray(agents) ? agents.filter(Boolean) : [] }),
+> 97	  setEdges: (edges) => set({ edges: Array.isArray(edges) ? edges.filter(Boolean) : [] }),
+> 98	  setLoaded: (loaded) => set({ loaded }),
+> 99	  setSelectedAgent: (id) => set({ selectedAgentId: id }),
+> 100	  setConfigOpen: (open) => set({ configOpen: open }),
+> 101	  setLogsOpen: (open) => set({ logsOpen: open }),
+> 102	  setConnectingFrom: (id) => set({ connectingFrom: id }),
+> 103	  setConnectionMode: (mode) => set({ connectionMode: mode, connectingFrom: null }),
+> 104	  addLog: (log) => set((s) => ({
+> 105	    logs: [{ ...log, id: `log-${++logCounter}`, timestamp: Date.now() }, ...(s.logs || [])].slice(0, 200),
+> 106	  })),
+> 107	  setLogs: (logs) => set({ logs: Array.isArray(logs) ? logs.slice(0, 200) : [] }),
+> 108	  updateAgentStatus: (id, status) => set((s) => ({
+> 109	    agents: (s.agents || []).map((a) => (a && a.id === id ? { ...a, status } : a)),
+> 110	  })),
+> 111	  updateEdgeStatus: (id, status) => set((s) => ({
+> 112	    edges: (s.edges || []).map((e) => (e && e.id === id ? { ...e, status } : e)),
+> 113	  })),
+> 114	  addEdge: (edge) => set((s) => ({
+> 115	    edges: [...(s.edges || []), { ...edge, id: `e-${Date.now()}`, createdAt: Date.now() }],
+> 116	  })),
+> 117	  removeEdge: (id) => set((s) => ({
+> 118	    edges: (s.edges || []).filter((e) => e && e.id !== id),
+> 119	  })),
+> 120	  seedEnterpriseStructure: () => {
+> 121	    const agents: Agent[] = [];
+> 122	    const edges: Edge[] = [];
+> 123	    const now = Date.now();
+> 124	
+> 125	    // 1. CEO / Orchestrator (Tier 0)
+> 126	    const ceoId = 'ceo-001';
+> 127	    agents.push({
+> 128	      id: ceoId,
+> 129	      name: 'GCRUX Core',
+> 130	      role: 'Sovereign Orchestrator',
+> 131	      avatar: '👑',
+> 132	      provider: 'OpenAI',
+> 133	      model: 'GPT-4o',
+> 134	      status: 'active',
+> 135	      position: [0, 0, 0],
+> 136	      systemPrompt: 'The brain of the operation.',
+> 137	      priority: 'high',
+> 138	      level: 0
+> 139	    });
+> 140	
+> 141	    const squads = [
+> 142	      { id: 'content', name: 'Creative Content', color: '#ec4899', icon: '🎨' },
+> 143	      { id: 'tech', name: 'Technical Engine', color: '#3b82f6', icon: '⚙️' },
+> 144	      { id: 'market', name: 'Market Intelligence', color: '#22c55e', icon: '📈' },
+> 145	      { id: 'ops', name: 'Operational Ops', color: '#f59e0b', icon: '⚡' },
+> 146	    ];
+> 147	
+> 148	    squads.forEach((squad, sIdx) => {
+> 149	      const squadAngle = (sIdx / squads.length) * Math.PI * 2;
+> 150	      const squadRadius = 8;
+> 151	      const squadX = Math.cos(squadAngle) * squadRadius;
+> 152	      const squadZ = Math.sin(squadAngle) * squadRadius;
+> 153	
+> 154	      // 2. Squad Leaders (Tier 1)
+> 155	      const leaderId = `leader-${squad.id}`;
+> 156	      agents.push({
+> 157	        id: leaderId,
+> 158	        name: `${squad.name} Lead`,
+> 159	        role: 'Director',
+> 160	        avatar: squad.icon,
+> 161	        provider: 'Anthropic',
+> 162	        model: 'Claude 3.5 Sonnet',
+> 163	        status: 'idle',
+> 164	        position: [squadX, 2, squadZ],
+> 165	        systemPrompt: `Leading the ${squad.name} division.`,
+> 166	        priority: 'high',
+> 167	        squad: squad.id,
+> 168	        level: 1
+> 169	      });
+> 170	
+> 171	      edges.push({
+> 172	        id: `edge-ceo-${leaderId}`,
+> 173	        from: ceoId,
+> 174	        to: leaderId,
+> 175	        status: 'active',
+> 176	        label: 'Directive',
+> 177	        createdAt: now
+> 178	      });
+> 179	
+> 180	      // 3. Squad Members (Tier 2) - "Gigantic Squads"
+> 181	      const memberCount = 6;
+> 182	      for (let i = 0; i < memberCount; i++) {
+> 183	        const memberAngle = (i / memberCount) * Math.PI * 2;
+> 184	        const memberRadius = 3;
+> 185	        const mx = squadX + Math.cos(memberAngle) * memberRadius;
+> 186	        const mz = squadZ + Math.sin(memberAngle) * memberRadius;
+> 187	        const my = (Math.random() - 0.5) * 4;
+> 188	
+> 189	        const memberId = `agent-${squad.id}-${i}`;
+> 190	        agents.push({
+> 191	          id: memberId,
+> 192	          name: `${squad.id.toUpperCase()}-${i + 1}`,
+> 193	          role: 'specialist',
+> 194	          avatar: '🤖',
+> 195	          provider: 'Groq',
+> 196	          model: 'Llama 3',
+> 197	          status: 'idle',
+> 198	          position: [mx, my, mz],
+> 199	          systemPrompt: 'Executing specialized tasks.',
+> 200	          priority: 'medium',
+> 201	          squad: squad.id,
+> 202	          level: 2
+> 203	        });
+> 204	
+> 205	        edges.push({
+> 206	          id: `edge-${leaderId}-${memberId}`,
+> 207	          from: leaderId,
+> 208	          to: memberId,
+> 209	          status: 'idle',
+> 210	          label: 'Reporting',
+> 211	          createdAt: now
+> 212	        });
+> 213	      }
+> 214	    });
+> 215	
+> 216	    set({ agents, edges, loaded: true });
+> 217	  }
+> 218	}));
+> 219	
+> ```
+
+## 🤖 Claude *(14:30:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== Constellation page (route /dashboard/constellation) =====\"\ngrep -rn -E 'constellation' src/App.tsx 2>/dev/null | head -10\necho \"--- candidate page files ---\"\nls -la src/pages/ 2>/dev/null | grep -iE 'constell|crew|matrix' \necho\necho \"===== crew_agents + crew_edges Insert columns (from types.ts) =====\"\ngrep -n -E 'crew_agents:|crew_edges:' src/integrations/supabase/types.ts | head -6",
+  "description": "Read store + find page + locate schema in types.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== Constellation page (route /dashboard/constellation) =====
+> src/App.tsx:91:                <Route path="constellation" element={<ConstellationPage />} />
+> src/App.tsx:92:                <Route path="constellation/memory" element={<MemoryPage />} />
+> src/App.tsx:93:                <Route path="constellation/matrix" element={<MatrixPage />} />
+> --- candidate page files ---
+> -rw-rw-r--  1 ubuntu ubuntu  6298 May 30 13:00 ConstellationPage.tsx
+> -rw-rw-r--  1 ubuntu ubuntu   673 May  6 15:25 MatrixPage.tsx
+> 
+> ===== crew_agents + crew_edges Insert columns (from types.ts) =====
+> 709:      crew_agents: {
+> 777:      crew_edges: {
+> ```
+
+## 🤖 Claude *(14:31:02)*
+
+
+## 🤖 Claude *(14:31:03)*
+
+Agora a página hospedeira + o shape exato das tabelas:
+
+## 🤖 Claude *(14:31:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { CrewGraph } from '@/components/graph/CrewGraph';
+> 2	import { HUD } from '@/components/HUD';
+> 3	import { ConfigPanel } from '@/components/panels/ConfigPanel';
+> 4	import { LogsPanel } from '@/components/panels/LogsPanel';
+> 5	import { AgentDetail } from '@/components/panels/AgentDetail';
+> 6	import { Legend } from '@/components/Legend';
+> 7	import { useAgentActivity } from '@/hooks/useAgentActivity';
+> 8	import { useCrewData } from '@/hooks/useCrewData';
+> 9	import { useHandTracking } from '@/hooks/useHandTracking';
+> 10	import { useAuth } from '@/hooks/useAuth';
+> 11	import { GestureParticleOverlay } from '@/components/gestures/GestureParticles';
+> 12	import { GestureHUD } from '@/components/gestures/GestureHUD';
+> 13	import { GestureController } from '@/components/gestures/GestureController';
+> 14	import { AddAgentDialog } from '@/components/panels/AddAgentDialog';
+> 15	import { NewEdgeDialog } from '@/components/panels/NewEdgeDialog';
+> 16	import { Button } from '@/components/ui/button';
+> 17	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+> 18	import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network } from 'lucide-react';
+> 19	import { useNavigate } from 'react-router-dom';
+> 20	import { useState } from 'react';
+> 21	import { useCrewStore } from '@/store/useCrewStore';
+> 22	import { deployEnterpriseToSupabase } from '@/lib/enterprise-seed';
+> 23	
+> 24	export default function ConstellationPage() {
+> 25	  const { user } = useAuth();
+> 26	  const { isLoading: crewLoading } = useCrewData();
+> 27	  const loaded = useCrewStore((s) => s.loaded);
+> 28	  const connectionMode = useCrewStore((s) => s.connectionMode);
+> 29	  const setConnectionMode = useCrewStore((s) => s.setConnectionMode);
+> 30	  useAgentActivity(); // real agent_executions feed (replaces the useSimulation mock)
+> 31	  const navigate = useNavigate();
+> 32	  const [gesturesEnabled, setGesturesEnabled] = useState(false);
+> 33	  const [addOpen, setAddOpen] = useState(false);
+> 34	  const [isDeploying, setIsDeploying] = useState(false);
+> 35	  const { handData, isLoading, error } = useHandTracking(gesturesEnabled);
+> 36	
+> 37	  if (crewLoading || !loaded) {
+> 38	    return (
+> 39	      <div className="relative w-full h-full flex items-center justify-center bg-background rounded-lg">
+> 40	        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 41	      </div>
+> 42	    );
+> 43	  }
+> 44	
+> 45	  return (
+> 46	    <TooltipProvider>
+> 47	      <div className="relative w-full h-full overflow-hidden bg-background rounded-lg">
+> 48	        <div className="crt-overlay" />
+> 49	        <div className="scanline" />
+> 50	        <CrewGraph />
+> 51	        {gesturesEnabled && <GestureParticleOverlay handData={handData} />}
+> 52	        <GestureController handData={handData} enabled={gesturesEnabled} />
+> 53	        <HUD>
+> 54	          <Tooltip>
+> 55	            <TooltipTrigger asChild>
+> 56	              <Button
+> 57	                variant={connectionMode ? 'default' : 'outline'}
+> 58	                size="sm"
+> 59	                className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 60	                onClick={() => setConnectionMode(!connectionMode)}
+> 61	              >
+> 62	                {connectionMode ? <Link2Off className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+> 63	                {connectionMode ? 'Sair' : 'Conectar'}
+> 64	              </Button>
+> 65	            </TooltipTrigger>
+> 66	            <TooltipContent>
+> 67	              {connectionMode ? 'Clique em dois agentes para conectá-los' : 'Ativar modo conexão'}
+> 68	            </TooltipContent>
+> 69	          </Tooltip>
+> 70	
+> 71	          <Button
+> 72	            variant="outline"
+> 73	            size="sm"
+> 74	            disabled={isDeploying}
+> 75	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9 bg-primary/10 text-primary hover:bg-primary/20"
+> 76	            onClick={async () => {
+> 77	              if (!user?.id) return;
+> 78	              setIsDeploying(true);
+> 79	              const res = await deployEnterpriseToSupabase(user.id);
+> 80	              if (res.success) {
+> 81	                window.location.reload();
+> 82	              }
+> 83	              setIsDeploying(false);
+> 84	            }}
+> 85	          >
+> 86	            {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Loader2 className="h-3.5 w-3.5" />}
+> 87	            {isDeploying ? 'Deploying...' : 'Deploy Enterprise'}
+> 88	          </Button>
+> 89	
+> 90	          <Button
+> 91	            variant="outline"
+> 92	            size="sm"
+> 93	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 94	            onClick={() => setAddOpen(true)}
+> 95	          >
+> 96	            <Plus className="h-3.5 w-3.5" />
+> 97	            Agente
+> 98	          </Button>
+> 99	
+> 100	          {/* Matrix — full-screen AST Constellation page */}
+> 101	          <Button
+> 102	            variant="outline"
+> 103	            size="sm"
+> 104	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 105	            onClick={() => navigate('/dashboard/constellation/matrix')}
+> 106	          >
+> 107	            <Network className="h-3.5 w-3.5" />
+> 108	            Matrix
+> 109	          </Button>
+> 110	
+> 111	          {/* Memory Mesh — full-screen isolated page */}
+> 112	          <Button
+> 113	            variant="outline"
+> 114	            size="sm"
+> 115	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 116	            onClick={() => navigate('/dashboard/constellation/memory')}
+> 117	          >
+> 118	            <Brain className="h-3.5 w-3.5" />
+> 119	            Memória
+> 120	          </Button>
+> 121	
+> 122	          <Button
+> 123	            variant="outline"
+> 124	            size="sm"
+> 125	            className="glass-panel border-border/50 gap-1.5 h-8 sm:h-9"
+> 126	            onClick={() => navigate('/dashboard')}
+> 127	          >
+> 128	            <Minimize2 className="h-3.5 w-3.5" />
+> 129	            Minimizar
+> 130	          </Button>
+> 131	        </HUD>
+> 132	        <AgentDetail />
+> 133	        <ConfigPanel />
+> 134	        <LogsPanel />
+> 135	        <Legend />
+> 136	        <GestureHUD
+> 137	          handData={handData}
+> 138	          isLoading={isLoading}
+> 139	          error={error}
+> 140	          enabled={gesturesEnabled}
+> 141	          onToggle={() => setGesturesEnabled(!gesturesEnabled)}
+> 142	        />
+> 143	
+> 144	        {connectionMode && (
+> 145	          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 glass-panel rounded-full px-4 py-2 text-sm text-primary animate-pulse shadow-lg shadow-primary/20 flex items-center gap-2">
+> 146	            <Link2 className="h-4 w-4" />
+> 147	            <span>Clique em um agente de origem, depois no destino</span>
+> 148	          </div>
+> 149	        )}
+> 150	
+> 151	        <AddAgentDialog open={addOpen} onOpenChange={setAddOpen} />
+> 152	        <NewEdgeDialog />
+> 153	      </div>
+> 154	    </TooltipProvider>
+> 155	  );
+> 156	}
+> 157	
+> ```
+
+## 🤖 Claude *(14:31:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/integrations/supabase/types.ts",
+  "offset": 709,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 709	      crew_agents: {
+> 710	        Row: {
+> 711	          agent_key: string
+> 712	          avatar: string
+> 713	          capability_key: string | null
+> 714	          created_at: string
+> 715	          id: string
+> 716	          level: number | null
+> 717	          model: string
+> 718	          name: string
+> 719	          position: Json
+> 720	          priority: string
+> 721	          provider: string
+> 722	          role: string
+> 723	          squad: string | null
+> 724	          status: string
+> 725	          system_prompt: string
+> 726	          updated_at: string
+> 727	          user_id: string
+> 728	        }
+> 729	        Insert: {
+> 730	          agent_key: string
+> 731	          avatar?: string
+> 732	          capability_key?: string | null
+> 733	          created_at?: string
+> 734	          id?: string
+> 735	          level?: number | null
+> 736	          model?: string
+> 737	          name: string
+> 738	          position?: Json
+> 739	          priority?: string
+> 740	          provider?: string
+> 741	          role?: string
+> 742	          squad?: string | null
+> 743	          status?: string
+> 744	          system_prompt?: string
+> 745	          updated_at?: string
+> 746	          user_id: string
+> 747	        }
+> 748	        Update: {
+> 749	          agent_key?: string
+> 750	          avatar?: string
+> 751	          capability_key?: string | null
+> 752	          created_at?: string
+> 753	          id?: string
+> 754	          level?: number | null
+> 755	          model?: string
+> 756	          name?: string
+> 757	          position?: Json
+> 758	          priority?: string
+> 759	          provider?: string
+> 760	          role?: string
+> 761	          squad?: string | null
+> 762	          status?: string
+> 763	          system_prompt?: string
+> 764	          updated_at?: string
+> 765	          user_id?: string
+> 766	        }
+> 767	        Relationships: [
+> 768	          {
+> 769	            foreignKeyName: "crew_agents_capability_key_fkey"
+> 770	            columns: ["capability_key"]
+> 771	            isOneToOne: false
+> 772	            referencedRelation: "agent_capabilities"
+> 773	            referencedColumns: ["capability_key"]
+> 774	          },
+> 775	        ]
+> 776	      }
+> 777	      crew_edges: {
+> 778	        Row: {
+> 779	          created_at: string
+> 780	          from_agent_key: string
+> 781	          id: string
+> 782	          label: string | null
+> 783	          status: string
+> 784	          to_agent_key: string
+> 785	          updated_at: string
+> 786	          user_id: string
+> 787	        }
+> 788	        Insert: {
+> 789	          created_at?: string
+> 790	          from_agent_key: string
+> 791	          id?: string
+> 792	          label?: string | null
+> 793	          status?: string
+> 794	          to_agent_key: string
+> 795	          updated_at?: string
+> 796	          user_id: string
+> 797	        }
+> 798	        Update: {
+> 799	          created_at?: string
+> 800	          from_agent_key?: string
+> 801	          id?: string
+> 802	          label?: string | null
+> 803	          status?: string
+> 804	          to_agent_key?: string
+> 805	          updated_at?: string
+> 806	          user_id?: string
+> 807	        }
+> 808	        Relationships: []
+> 809	      }
+> 810	      crew_module_ownership: {
+> 811	        Row: {
+> 812	          agent_id: string
+> 813	          created_at: string
+> 814	          id: string
+> 815	          module_path: string
+> 816	          squad_label: string
+> 817	          user_id: string
+> 818	        }
+> 819	        Insert: {
+> 820	          agent_id: string
+> 821	          created_at?: string
+> 822	          id?: string
+> 823	          module_path: string
+> 824	          squad_label?: string
+> 825	          user_id: string
+> 826	        }
+> 827	        Update: {
+> 828	          agent_id?: string
+> ```
+
+## 🤖 Claude *(14:31:59)*
+
+
+## 🤖 Claude *(14:32:02)*
+
+Tenho o quadro completo. Pontos-chave:
+- `crew_agents` Insert: `agent_key`+`name`+`user_id` obrigatórios; `capability_key` FK→`agent_capabilities`. `crew_edges`: `from_agent_key`+`to_agent_key`+`user_id`.
+- A página ainda tem o botão legado **"Deploy Enterprise"** (`deployEnterpriseToSupabase` — o seed decorativo que FR-CV2-030/031 substitui). Vou trocá-lo pelo wizard.
+- Empty-state: `loaded && agents.length === 0` → overlay `EmptyConstellation`.
+
+Vou checar se há UNIQUE em `(user_id, agent_key)` (decide upsert vs find-then-insert) antes de escrever o engine:
+
+## 🤖 Claude *(14:32:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== crew_agents constraints (unique on user_id+agent_key?) =====\"\ngrep -rn -iE 'crew_agents|agent_key' supabase/migrations/ 2>/dev/null | grep -iE 'unique|constraint|primary|create table' | head -20\necho\necho \"===== does a from-zero builder need byok? check user_api_keys hook exists =====\"\nls -la src/hooks/useUserApiKeys.ts 2>/dev/null && echo \"useUserApiKeys EXISTS\"\necho\necho \"===== how other dialogs are structured (shadcn Dialog pattern) \u2014 AddAgentDialog =====\"\nsed -n '1,40p' src/components/panels/AddAgentDialog.tsx 2>/dev/null",
+  "description": "Check crew_agents unique constraint + dialog pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== crew_agents constraints (unique on user_id+agent_key?) =====
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql:3:CREATE TABLE public.crew_agents (
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql:18:  UNIQUE(user_id, agent_key)
+> 
+> ===== does a from-zero builder need byok? check user_api_keys hook exists =====
+> -rw-rw-r-- 1 ubuntu ubuntu 1532 May  5 11:31 src/hooks/useUserApiKeys.ts
+> useUserApiKeys EXISTS
+> 
+> ===== how other dialogs are structured (shadcn Dialog pattern) — AddAgentDialog =====
+> import { useState } from 'react';
+> import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+> import { Button } from '@/components/ui/button';
+> import { Input } from '@/components/ui/input';
+> import { Label } from '@/components/ui/label';
+> import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> import { Textarea } from '@/components/ui/textarea';
+> import { useCreateAgent } from '@/hooks/useAgentMutations';
+> import { Loader2 } from 'lucide-react';
+> 
+> const AVATARS = ['🤖', '👔', '📊', '💻', '📈', '🎧', '✍️', '🎨', '🔬', '🛡️', '📱', '🧠'];
+> const PROVIDERS = ['openai', 'anthropic', 'google', 'mistral'];
+> const MODELS: Record<string, string[]> = {
+>   openai: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+>   anthropic: ['claude-3', 'claude-3-opus', 'claude-3-sonnet'],
+>   google: ['gemini-pro', 'gemini-2.5-flash'],
+>   mistral: ['mistral-large', 'mistral-medium'],
+> };
+> 
+> interface Props {
+>   open: boolean;
+>   onOpenChange: (open: boolean) => void;
+> }
+> 
+> export function AddAgentDialog({ open, onOpenChange }: Props) {
+>   const createAgent = useCreateAgent();
+>   const [name, setName] = useState('');
+>   const [role, setRole] = useState('');
+>   const [avatar, setAvatar] = useState('🤖');
+>   const [provider, setProvider] = useState('openai');
+>   const [model, setModel] = useState('gpt-4');
+>   const [priority, setPriority] = useState('medium');
+>   const [systemPrompt, setSystemPrompt] = useState('');
+> 
+>   const handleSubmit = () => {
+>     if (!name.trim()) return;
+>     createAgent.mutate({
+>       agent_key: `agent-${Date.now()}`,
+>       name: name.trim(),
+>       role: role.trim(),
+> ```
+
+## 🤖 Claude *(14:32:13)*
+
+
+## 🤖 Claude *(14:32:14)*
+
+`UNIQUE(user_id, agent_key)` confirmado → posso usar `upsert` com `onConflict` para idempotência (FR-CV2-006). Existe `useAgentMutations` (`useCreateAgent`) — vou reusar o padrão. Deixa eu lê-lo + checar constraint de `crew_edges`:
+
+## 🤖 Claude *(14:32:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentMutations.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import { toast } from 'sonner';
+> 5	
+> 6	interface CreateAgentInput {
+> 7	  agent_key: string;
+> 8	  name: string;
+> 9	  role: string;
+> 10	  avatar: string;
+> 11	  provider: string;
+> 12	  model: string;
+> 13	  system_prompt: string;
+> 14	  priority: string;
+> 15	  position: number[];
+> 16	}
+> 17	
+> 18	interface UpdateAgentInput {
+> 19	  dbId: string;
+> 20	  name?: string;
+> 21	  role?: string;
+> 22	  avatar?: string;
+> 23	  provider?: string;
+> 24	  model?: string;
+> 25	  system_prompt?: string;
+> 26	  priority?: string;
+> 27	  status?: string;
+> 28	}
+> 29	
+> 30	export function useCreateAgent() {
+> 31	  const { user } = useAuth();
+> 32	  const qc = useQueryClient();
+> 33	
+> 34	  return useMutation({
+> 35	    mutationFn: async (input: CreateAgentInput) => {
+> 36	      const { error } = await supabase.from('crew_agents').insert({
+> 37	        user_id: user!.id,
+> 38	        ...input,
+> 39	        position: JSON.stringify(input.position),
+> 40	      });
+> 41	      if (error) throw error;
+> 42	    },
+> 43	    onSuccess: () => {
+> 44	      qc.invalidateQueries({ queryKey: ['crew_agents'] });
+> 45	      toast.success('Agente criado');
+> 46	    },
+> 47	    onError: (e: Error) => toast.error(e.message),
+> 48	  });
+> 49	}
+> 50	
+> 51	export function useUpdateAgent() {
+> 52	  const qc = useQueryClient();
+> 53	
+> 54	  return useMutation({
+> 55	    mutationFn: async ({ dbId, ...updates }: UpdateAgentInput) => {
+> 56	      const { error } = await supabase
+> 57	        .from('crew_agents')
+> 58	        .update(updates)
+> 59	        .eq('id', dbId);
+> 60	      if (error) throw error;
+> 61	    },
+> 62	    onSuccess: () => {
+> 63	      qc.invalidateQueries({ queryKey: ['crew_agents'] });
+> 64	      toast.success('Agente atualizado');
+> 65	    },
+> 66	    onError: (e: Error) => toast.error(e.message),
+> 67	  });
+> 68	}
+> 69	
+> 70	export function useDeleteAgent() {
+> 71	  const { user } = useAuth();
+> 72	  const qc = useQueryClient();
+> 73	
+> 74	  return useMutation({
+> 75	    mutationFn: async (agentKey: string) => {
+> 76	      await supabase
+> 77	        .from('crew_edges')
+> 78	        .delete()
+> 79	        .eq('user_id', user!.id)
+> 80	        .or(`from_agent_key.eq.${agentKey},to_agent_key.eq.${agentKey}`);
+> 81	
+> 82	      const { error } = await supabase
+> 83	        .from('crew_agents')
+> 84	        .delete()
+> 85	        .eq('user_id', user!.id)
+> 86	        .eq('agent_key', agentKey);
+> 87	      if (error) throw error;
+> 88	    },
+> 89	    onSuccess: () => {
+> 90	      qc.invalidateQueries({ queryKey: ['crew_agents'] });
+> 91	      qc.invalidateQueries({ queryKey: ['crew_edges'] });
+> 92	      toast.success('Agente removido');
+> 93	    },
+> 94	    onError: (e: Error) => toast.error(e.message),
+> 95	  });
+> 96	}
+> 97	
+> 98	// Edge CRUD
+> 99	interface CreateEdgeInput {
+> 100	  from_agent_key: string;
+> 101	  to_agent_key: string;
+> 102	  label?: string;
+> 103	  status?: string;
+> 104	}
+> 105	
+> 106	export function useCreateEdge() {
+> 107	  const { user } = useAuth();
+> 108	  const qc = useQueryClient();
+> 109	
+> 110	  return useMutation({
+> 111	    mutationFn: async (input: CreateEdgeInput) => {
+> 112	      const { error } = await supabase.from('crew_edges').insert({
+> 113	        user_id: user!.id,
+> 114	        from_agent_key: input.from_agent_key,
+> 115	        to_agent_key: input.to_agent_key,
+> 116	        label: input.label || 'Conexão',
+> 117	        status: input.status || 'idle',
+> 118	      });
+> 119	      if (error) throw error;
+> 120	    },
+> 121	    onSuccess: () => {
+> 122	      qc.invalidateQueries({ queryKey: ['crew_edges'] });
+> 123	      toast.success('Conexão criada');
+> 124	    },
+> 125	    onError: (e: Error) => toast.error(e.message),
+> 126	  });
+> 127	}
+> 128	
+> 129	export function useDeleteEdge() {
+> 130	  const qc = useQueryClient();
+> 131	
+> 132	  return useMutation({
+> 133	    mutationFn: async (edgeId: string) => {
+> 134	      const { error } = await supabase
+> 135	        .from('crew_edges')
+> 136	        .delete()
+> 137	        .eq('id', edgeId);
+> 138	      if (error) throw error;
+> 139	    },
+> 140	    onSuccess: () => {
+> 141	      qc.invalidateQueries({ queryKey: ['crew_edges'] });
+> 142	      toast.success('Conexão removida');
+> 143	    },
+> 144	    onError: (e: Error) => toast.error(e.message),
+> 145	  });
+> 146	}
+> 147	
+> ```
+
+## 🤖 Claude *(14:32:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== crew_edges table def + constraints =====\"\nsed -n '1,60p' supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql 2>/dev/null | grep -nE 'crew_edges|UNIQUE|from_agent|to_agent|CREATE TABLE|REFERENCES' ",
+  "description": "Read useAgentMutations + crew_edges constraints"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== crew_edges table def + constraints =====
+> 3:CREATE TABLE public.crew_agents (
+> 18:  UNIQUE(user_id, agent_key)
+> 30:-- Create crew_edges table
+> 31:CREATE TABLE public.crew_edges (
+> 34:  from_agent_key TEXT NOT NULL,
+> 35:  to_agent_key TEXT NOT NULL,
+> 42:ALTER TABLE public.crew_edges ENABLE ROW LEVEL SECURITY;
+> 44:CREATE POLICY "Users can view own edges" ON public.crew_edges FOR SELECT USING (auth.uid() = user_id);
+> 45:CREATE POLICY "Users can create own edges" ON public.crew_edges FOR INSERT WITH CHECK (auth.uid() = user_id);
+> 46:CREATE POLICY "Users can update own edges" ON public.crew_edges FOR UPDATE USING (auth.uid() = user_id);
+> 47:CREATE POLICY "Users can delete own edges" ON public.crew_edges FOR DELETE USING (auth.uid() = user_id);
+> 49:CREATE TRIGGER update_crew_edges_updated_at BEFORE UPDATE ON public.crew_edges FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+> ```
+
+## 🤖 Claude *(14:33:25)*
+
+
+## 🤖 Claude *(14:33:27)*
+
+Tudo mapeado: `crew_edges` sem unique → insert-missing; `crew_agents` com UNIQUE → upsert `ignoreDuplicates` (nunca clobbera customização). `useAgentMutations` já existe para CRUD unitário. Agora escrevo o **engine `useCreateCrew`** (coração das 2 portas, data-driven a partir do registry ativo).
+
+## 🤖 Claude *(14:34:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCreateCrew.ts",
+  "content": "import { useMemo } from 'react';\nimport { useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { toast } from 'sonner';\nimport {\n  useAgentCapabilities,\n  type AgentCapability,\n  type CapabilityDepartment,\n  type CapabilitiesByDepartment,\n} from '@/hooks/useAgentCapabilities';\n\n// constellation-v2 (FR-CV2-005/006/040/041): on-demand crew creation \u2014 the engine behind the\n// empty-state wizard's two doors:\n//   (a) seedApprovedMap()  \u2192 the approved 4\u00d74 map: 1 Core + 4 Leads + N module-bound subagents\n//                            (one per ACTIVE capability in the registry), wired with Directive\n//                            (Core\u2192Lead) and Reporting (Lead\u2192subagent) hierarchy edges.\n//   (b) createSubagent()   \u2192 the from-zero builder: a single capability-bound subagent, ensuring\n//                            its Core + department Lead exist first.\n// Both write to crew_agents/crew_edges scoped to auth.uid() and use STABLE keys (FR-CV2-006:\n// `core`, `lead-<dept>`, `agent-<dept>-<capability>`) so re-runs are idempotent and execution\n// history can re-link by key. Agents upsert with ignoreDuplicates \u2192 an existing (possibly\n// user-customized) node is never clobbered; only missing nodes/edges are created.\n\nconst DEPT_ORDER: CapabilityDepartment[] = ['content', 'tech', 'market', 'ops'];\n\nconst DEPT_META: Record<CapabilityDepartment, { name: string; icon: string }> = {\n  content: { name: 'Creative Content', icon: '\ud83c\udfa8' },\n  tech: { name: 'Technical Engine', icon: '\u2699\ufe0f' },\n  market: { name: 'Market Intelligence', icon: '\ud83d\udcc8' },\n  ops: { name: 'Operational Ops', icon: '\u26a1' },\n};\n\n// Seeded agents default to the CEA reasoning provider; the user re-binds provider/BYOK per node\n// later via the access-config card. Cosmetic only \u2014 the capability router invokes the target\n// function with the caller's JWT, not this model.\nconst DEFAULT_PROVIDER = 'groq';\nconst DEFAULT_MODEL = 'llama-3.3-70b-versatile';\n\nconst CORE_KEY = 'core';\nconst leadKeyFor = (dept: CapabilityDepartment) => `lead-${dept}`;\nconst subKeyFor = (dept: CapabilityDepartment, capabilityKey: string) => `agent-${dept}-${capabilityKey}`;\n\nexport interface BlueprintAgent {\n  agentKey: string;\n  name: string;\n  role: 'orchestrator' | 'lead' | 'specialist';\n  avatar: string;\n  level: 0 | 1 | 2;\n  squad: CapabilityDepartment | null;\n  capabilityKey: string | null;\n  position: [number, number, number];\n}\n\nexport interface BlueprintEdge {\n  from: string;\n  to: string;\n  label: 'Directive' | 'Reporting';\n}\n\nexport interface CrewBlueprint {\n  agents: BlueprintAgent[];\n  edges: BlueprintEdge[];\n  leadCount: number;\n  subagentCount: number;\n}\n\n// Deterministic 3D layout (no Math.random \u2192 stable positions across re-seeds): Core at origin,\n// Leads on a ring (radius 8), subagents on a sub-ring (radius 3.2) around each Lead.\nfunction buildBlueprint(activeByDept: CapabilitiesByDepartment): CrewBlueprint {\n  const agents: BlueprintAgent[] = [\n    { agentKey: CORE_KEY, name: 'N\u00facleo GCRUX', role: 'orchestrator', avatar: '\ud83d\udc51', level: 0, squad: null, capabilityKey: null, position: [0, 0, 0] },\n  ];\n  const edges: BlueprintEdge[] = [];\n  let subagentCount = 0;\n\n  DEPT_ORDER.forEach((dept, sIdx) => {\n    const angle = (sIdx / DEPT_ORDER.length) * Math.PI * 2;\n    const lx = Math.cos(angle) * 8;\n    const lz = Math.sin(angle) * 8;\n    const leadKey = leadKeyFor(dept);\n\n    agents.push({ agentKey: leadKey, name: `Lead ${DEPT_META[dept].name}`, role: 'lead', avatar: DEPT_META[dept].icon, level: 1, squad: dept, capabilityKey: null, position: [lx, 2, lz] });\n    edges.push({ from: CORE_KEY, to: leadKey, label: 'Directive' });\n\n    const caps = activeByDept[dept];\n    caps.forEach((cap, i) => {\n      const ma = (i / Math.max(caps.length, 1)) * Math.PI * 2;\n      const mx = lx + Math.cos(ma) * 3.2;\n      const mz = lz + Math.sin(ma) * 3.2;\n      const my = ((i % 3) - 1) * 1.6; // deterministic vertical spread (-1.6 / 0 / +1.6)\n      const subKey = subKeyFor(dept, cap.capabilityKey);\n      agents.push({ agentKey: subKey, name: cap.displayName, role: 'specialist', avatar: '\ud83e\udd16', level: 2, squad: dept, capabilityKey: cap.capabilityKey, position: [mx, my, mz] });\n      edges.push({ from: leadKey, to: subKey, label: 'Reporting' });\n      subagentCount += 1;\n    });\n  });\n\n  return { agents, edges, leadCount: DEPT_ORDER.length, subagentCount };\n}\n\nexport interface CreateSubagentInput {\n  department: CapabilityDepartment;\n  capabilityKey: string;\n  name?: string;\n}\n\nexport function useCreateCrew() {\n  const { user } = useAuth();\n  const qc = useQueryClient();\n  const { activeCapabilities, isLoading: capsLoading } = useAgentCapabilities();\n\n  // Active capabilities regrouped by department \u2014 the source of truth for both the 4\u00d74 seed\n  // and the from-zero builder's department\u2192capability selectors.\n  const activeByDept = useMemo<CapabilitiesByDepartment>(() => {\n    const grouped: CapabilitiesByDepartment = { content: [], tech: [], market: [], ops: [] };\n    for (const cap of activeCapabilities) grouped[cap.department].push(cap);\n    return grouped;\n  }, [activeCapabilities]);\n\n  const blueprint = useMemo(() => buildBlueprint(activeByDept), [activeByDept]);\n\n  // Shared persistence: idempotent agent upsert (never clobbers existing) + insert-only-missing edges.\n  async function persist(agents: BlueprintAgent[], edges: BlueprintEdge[]) {\n    if (!user?.id) throw new Error('Usu\u00e1rio n\u00e3o autenticado');\n\n    const rows = agents.map((a) => ({\n      user_id: user.id,\n      agent_key: a.agentKey,\n      name: a.name,\n      role: a.role,\n      avatar: a.avatar,\n      provider: DEFAULT_PROVIDER,\n      model: DEFAULT_MODEL,\n      system_prompt: '',\n      priority: a.level === 2 ? 'medium' : 'high',\n      level: a.level,\n      squad: a.squad,\n      capability_key: a.capabilityKey,\n      position: JSON.stringify(a.position),\n      status: 'idle',\n    }));\n    const { error: agentErr } = await supabase\n      .from('crew_agents')\n      .upsert(rows, { onConflict: 'user_id,agent_key', ignoreDuplicates: true });\n    if (agentErr) throw agentErr;\n\n    // crew_edges has no unique constraint \u2192 dedupe against existing (from::to) before inserting.\n    const { data: existing, error: readErr } = await supabase\n      .from('crew_edges')\n      .select('from_agent_key, to_agent_key')\n      .eq('user_id', user.id);\n    if (readErr) throw readErr;\n\n    const seen = new Set((existing ?? []).map((e) => `${e.from_agent_key}::${e.to_agent_key}`));\n    const newEdges = edges\n      .filter((e) => !seen.has(`${e.from}::${e.to}`))\n      .map((e) => ({ user_id: user.id, from_agent_key: e.from, to_agent_key: e.to, label: e.label, status: 'idle' }));\n    if (newEdges.length > 0) {\n      const { error: edgeErr } = await supabase.from('crew_edges').insert(newEdges);\n      if (edgeErr) throw edgeErr;\n    }\n\n    return { agents: rows.length, edges: newEdges.length };\n  }\n\n  const invalidate = () => {\n    qc.invalidateQueries({ queryKey: ['crew_agents'] });\n    qc.invalidateQueries({ queryKey: ['crew_edges'] });\n  };\n\n  // Door A \u2014 seed the full approved 4\u00d74 map.\n  const seedApprovedMap = useMutation({\n    mutationFn: async () => {\n      if (blueprint.subagentCount === 0) {\n        throw new Error('Nenhuma capability ativa no registry \u2014 n\u00e3o h\u00e1 subagentes para criar');\n      }\n      return persist(blueprint.agents, blueprint.edges);\n    },\n    onSuccess: () => {\n      invalidate();\n      toast.success(`Crew 4\u00d74 criada \u2014 ${blueprint.leadCount} Leads + ${blueprint.subagentCount} subagentes`);\n    },\n    onError: (e: Error) => toast.error(`Falha ao criar crew: ${e.message}`),\n  });\n\n  // Door B \u2014 create a single capability-bound subagent (ensuring Core + Lead exist).\n  const createSubagent = useMutation({\n    mutationFn: async ({ department, capabilityKey, name }: CreateSubagentInput) => {\n      const cap: AgentCapability | undefined = activeCapabilities.find((c) => c.capabilityKey === capabilityKey);\n      if (!cap) throw new Error('Capability inv\u00e1lida ou inativa');\n\n      const leadKey = leadKeyFor(department);\n      const subKey = subKeyFor(department, capabilityKey);\n\n      // Pull the three relevant nodes from the blueprint so positions stay consistent with the 4\u00d74.\n      const core = blueprint.agents.find((a) => a.agentKey === CORE_KEY)!;\n      const lead = blueprint.agents.find((a) => a.agentKey === leadKey)\n        ?? { agentKey: leadKey, name: `Lead ${DEPT_META[department].name}`, role: 'lead' as const, avatar: DEPT_META[department].icon, level: 1 as const, squad: department, capabilityKey: null, position: [Math.cos((DEPT_ORDER.indexOf(department) / DEPT_ORDER.length) * Math.PI * 2) * 8, 2, Math.sin((DEPT_ORDER.indexOf(department) / DEPT_ORDER.length) * Math.PI * 2) * 8] as [number, number, number] };\n      const sub = blueprint.agents.find((a) => a.agentKey === subKey)\n        ?? { agentKey: subKey, name: cap.displayName, role: 'specialist' as const, avatar: '\ud83e\udd16', level: 2 as const, squad: department, capabilityKey, position: lead.position };\n\n      const subWithName: BlueprintAgent = { ...sub, name: name?.trim() || cap.displayName };\n      return persist(\n        [core, lead, subWithName],\n        [{ from: CORE_KEY, to: leadKey, label: 'Directive' }, { from: leadKey, to: subKey, label: 'Reporting' }],\n      );\n    },\n    onSuccess: (_res, vars) => {\n      invalidate();\n      toast.success(`Subagente criado em ${DEPT_META[vars.department].name}`);\n    },\n    onError: (e: Error) => toast.error(`Falha ao criar subagente: ${e.message}`),\n  });\n\n  return {\n    blueprint,\n    activeByDept,\n    capsLoading,\n    seedApprovedMap,\n    createSubagent,\n    isWorking: seedApprovedMap.isPending || createSubagent.isPending,\n  };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCreateCrew.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:35:22)*
+
+
+## 🤖 Claude *(14:35:23)*
+
+Engine pronto. Agora os 2 componentes display-only: `EmptyConstellation` (CTA duplo) e `CrewWizard` (ambas as portas). Escrevo os dois e faço um gate `tsc` único.
+
+## 🤖 Claude *(14:35:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/EmptyConstellation.tsx",
+  "content": "import { Button } from '@/components/ui/button';\nimport { Loader2, Sparkles, Wrench } from 'lucide-react';\nimport { useCreateCrew } from '@/hooks/useCreateCrew';\n\n// constellation-v2 (FR-CV2-031): empty-state UX. When a tenant's crew is empty (no auto-seed \u2014\n// FR-CV2-030), the cockpit shows this dual-door CTA over the dark canvas:\n//   Door A \u2192 seed the approved 4\u00d74 map in one click.\n//   Door B \u2192 open the guided from-zero builder (CrewWizard), owned by the page.\n// Display-only: door A's mutation lives in useCreateCrew; door B delegates via onBuildFromZero.\n// z-40 = HUD/panel layer (FR-CV2-061).\n\ninterface Props {\n  onBuildFromZero: () => void;\n}\n\nexport function EmptyConstellation({ onBuildFromZero }: Props) {\n  const { blueprint, capsLoading, seedApprovedMap } = useCreateCrew();\n\n  return (\n    <div className=\"absolute inset-0 z-40 flex items-center justify-center p-4 pointer-events-none\">\n      <div className=\"glass-panel pointer-events-auto w-full max-w-2xl rounded-2xl border border-border/50 p-6 text-center shadow-2xl shadow-primary/10 sm:p-8\">\n        <h2 className=\"text-xl font-semibold text-foreground sm:text-2xl\">Sua constela\u00e7\u00e3o est\u00e1 vazia</h2>\n        <p className=\"mt-2 text-sm text-muted-foreground\">\n          Crie sua crew de agentes \u2014 comece pelo mapa pronto ou monte do zero.\n        </p>\n\n        <div className=\"mt-6 grid gap-4 sm:grid-cols-2\">\n          {/* Door A \u2014 approved 4\u00d74 map */}\n          <div className=\"flex flex-col rounded-xl border border-primary/30 bg-primary/5 p-5 text-left\">\n            <Sparkles className=\"h-5 w-5 text-primary\" />\n            <h3 className=\"mt-2 font-medium text-foreground\">Mapa 4\u00d74 pronto</h3>\n            <p className=\"mt-1 flex-1 text-xs text-muted-foreground\">\n              {capsLoading\n                ? 'Carregando capabilities\u2026'\n                : `${blueprint.leadCount} Leads + ${blueprint.subagentCount} subagentes m\u00f3dulo-bound, prontos para executar.`}\n            </p>\n            <Button\n              className=\"mt-4 w-full gap-1.5\"\n              disabled={capsLoading || blueprint.subagentCount === 0 || seedApprovedMap.isPending}\n              onClick={() => seedApprovedMap.mutate()}\n            >\n              {seedApprovedMap.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Sparkles className=\"h-4 w-4\" />}\n              Usar mapa pronto\n            </Button>\n          </div>\n\n          {/* Door B \u2014 guided from-zero builder */}\n          <div className=\"flex flex-col rounded-xl border border-border/50 bg-card/40 p-5 text-left\">\n            <Wrench className=\"h-5 w-5 text-muted-foreground\" />\n            <h3 className=\"mt-2 font-medium text-foreground\">Montar do zero</h3>\n            <p className=\"mt-1 flex-1 text-xs text-muted-foreground\">\n              Builder guiado: departamento \u2192 capability \u2192 nome. Adicione um subagente por vez.\n            </p>\n            <Button variant=\"outline\" className=\"mt-4 w-full gap-1.5\" onClick={onBuildFromZero}>\n              <Wrench className=\"h-4 w-4\" />\n              Construir manualmente\n            </Button>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/EmptyConstellation.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:35:47)*
+
+
+## 🤖 Claude *(14:35:48)*
+
+Antes do `CrewWizard`, confirmo o export de `DialogDescription` (o `AddAgentDialog` não o usa):
+
+## 🤖 Claude *(14:35:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE 'DialogDescription|DialogFooter' src/components/ui/dialog.tsx | grep -iE 'export|as ' | head",
+  "description": "Confirm DialogDescription export"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(14:35:55)*
+
+
+## 🤖 Claude *(14:35:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'DialogDescription' src/components/ui/dialog.tsx | head; echo \"---full export block---\"; grep -n -A2 -B0 '^export {' src/components/ui/dialog.tsx | head -20",
+  "description": "Find DialogDescription in dialog.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 76:const DialogDescription = React.forwardRef<
+> 82:DialogDescription.displayName = DialogPrimitive.Description.displayName;
+> 94:  DialogDescription,
+> ---full export block---
+> 84:export {
+> 85-  Dialog,
+> 86-  DialogPortal,
+> ```
+
+## 🤖 Claude *(14:35:58)*
+
+
+## 🤖 Claude *(14:35:59)*
+
+`DialogDescription` existe e é exportado. Escrevo o `CrewWizard`:
+
+## 🤖 Claude *(14:36:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewWizard.tsx",
+  "content": "import { useState, useMemo } from 'react';\nimport {\n  Dialog,\n  DialogContent,\n  DialogHeader,\n  DialogTitle,\n  DialogDescription,\n  DialogFooter,\n} from '@/components/ui/dialog';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport { Loader2, Sparkles, Wrench, KeyRound } from 'lucide-react';\nimport { useCreateCrew } from '@/hooks/useCreateCrew';\nimport type { CapabilityDepartment } from '@/hooks/useAgentCapabilities';\n\n// constellation-v2 (FR-CV2-005/040/041): the crew-creation wizard \u2014 both doors in one modal.\n//   Door A  \u2192 seed the approved 4\u00d74 map (closes on success).\n//   Door B  \u2192 guided from-zero builder: department \u2192 capability \u2192 name \u2192 create. Stays open so\n//             the operator can add several subagents in a row; \"Concluir\" closes.\n// Display-only: all persistence lives in useCreateCrew.\n\nconst DEPT_LABEL: Record<CapabilityDepartment, string> = {\n  content: 'Creative Content',\n  tech: 'Technical Engine',\n  market: 'Market Intelligence',\n  ops: 'Operational Ops',\n};\n\ninterface Props {\n  open: boolean;\n  onOpenChange: (open: boolean) => void;\n}\n\nexport function CrewWizard({ open, onOpenChange }: Props) {\n  const { blueprint, activeByDept, capsLoading, seedApprovedMap, createSubagent } = useCreateCrew();\n  const [department, setDepartment] = useState<CapabilityDepartment>('content');\n  const [capabilityKey, setCapabilityKey] = useState('');\n  const [name, setName] = useState('');\n\n  const deptCaps = activeByDept[department] ?? [];\n  const selectedCap = useMemo(\n    () => deptCaps.find((c) => c.capabilityKey === capabilityKey) ?? null,\n    [deptCaps, capabilityKey],\n  );\n\n  const handleSeed = () => {\n    seedApprovedMap.mutate(undefined, { onSuccess: () => onOpenChange(false) });\n  };\n\n  const handleCreateSub = () => {\n    if (!capabilityKey) return;\n    createSubagent.mutate(\n      { department, capabilityKey, name },\n      { onSuccess: () => { setName(''); setCapabilityKey(''); } },\n    );\n  };\n\n  return (\n    <Dialog open={open} onOpenChange={onOpenChange}>\n      <DialogContent className=\"sm:max-w-lg\">\n        <DialogHeader>\n          <DialogTitle>Criar minha crew</DialogTitle>\n          <DialogDescription>Use o mapa pronto ou monte do zero, um subagente por vez.</DialogDescription>\n        </DialogHeader>\n\n        {/* Door A \u2014 approved 4\u00d74 map */}\n        <div className=\"rounded-xl border border-primary/30 bg-primary/5 p-4\">\n          <div className=\"flex items-center gap-2 text-sm font-medium text-foreground\">\n            <Sparkles className=\"h-4 w-4 text-primary\" /> Mapa 4\u00d74 pronto\n          </div>\n          <p className=\"mt-1 text-xs text-muted-foreground\">\n            {capsLoading ? 'Carregando\u2026' : `${blueprint.leadCount} Leads + ${blueprint.subagentCount} subagentes m\u00f3dulo-bound.`}\n          </p>\n          <Button\n            className=\"mt-3 w-full gap-1.5\"\n            disabled={capsLoading || blueprint.subagentCount === 0 || seedApprovedMap.isPending}\n            onClick={handleSeed}\n          >\n            {seedApprovedMap.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Sparkles className=\"h-4 w-4\" />}\n            Usar mapa pronto\n          </Button>\n        </div>\n\n        <div className=\"relative my-1 flex items-center\">\n          <span className=\"flex-1 border-t border-border/50\" />\n          <span className=\"px-3 text-xs uppercase tracking-wide text-muted-foreground\">ou monte do zero</span>\n          <span className=\"flex-1 border-t border-border/50\" />\n        </div>\n\n        {/* Door B \u2014 guided from-zero builder */}\n        <div className=\"space-y-3\">\n          <div className=\"space-y-1.5\">\n            <Label>Departamento</Label>\n            <Select\n              value={department}\n              onValueChange={(v) => { setDepartment(v as CapabilityDepartment); setCapabilityKey(''); }}\n            >\n              <SelectTrigger><SelectValue /></SelectTrigger>\n              <SelectContent>\n                {(Object.keys(DEPT_LABEL) as CapabilityDepartment[]).map((d) => (\n                  <SelectItem key={d} value={d}>{DEPT_LABEL[d]}</SelectItem>\n                ))}\n              </SelectContent>\n            </Select>\n          </div>\n\n          <div className=\"space-y-1.5\">\n            <Label>Capability</Label>\n            <Select value={capabilityKey} onValueChange={setCapabilityKey} disabled={deptCaps.length === 0}>\n              <SelectTrigger>\n                <SelectValue placeholder={deptCaps.length === 0 ? 'Sem capabilities ativas' : 'Selecione\u2026'} />\n              </SelectTrigger>\n              <SelectContent>\n                {deptCaps.map((c) => (\n                  <SelectItem key={c.capabilityKey} value={c.capabilityKey}>{c.displayName}</SelectItem>\n                ))}\n              </SelectContent>\n            </Select>\n          </div>\n\n          <div className=\"space-y-1.5\">\n            <Label>Nome do subagente</Label>\n            <Input\n              value={name}\n              onChange={(e) => setName(e.target.value)}\n              placeholder={selectedCap?.displayName ?? 'Nome\u2026'}\n            />\n          </div>\n\n          {selectedCap?.requiresByok && (\n            <p className=\"flex items-center gap-1.5 text-xs text-amber-500\">\n              <KeyRound className=\"h-3.5 w-3.5\" /> Requer chave BYOK \u2014 configure depois no card de acesso do agente.\n            </p>\n          )}\n\n          <Button\n            variant=\"outline\"\n            className=\"w-full gap-1.5\"\n            disabled={!capabilityKey || createSubagent.isPending}\n            onClick={handleCreateSub}\n          >\n            {createSubagent.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Wrench className=\"h-4 w-4\" />}\n            Adicionar subagente\n          </Button>\n        </div>\n\n        <DialogFooter>\n          <Button variant=\"ghost\" onClick={() => onOpenChange(false)}>Concluir</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewWizard.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:03)*
+
+
+## 🤖 Claude *(14:37:04)*
+
+Agora conecto à `ConstellationPage`: detecção de empty-state, montar o wizard, e **substituir o botão legado "Deploy Enterprise"** (o seed decorativo que a v2 aposenta) por "Criar crew".
+
+## 🤖 Claude *(14:37:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "import { useCrewStore } from '@/store/useCrewStore';\nimport { deployEnterpriseToSupabase } from '@/lib/enterprise-seed';",
+  "new_string": "import { useCrewStore } from '@/store/useCrewStore';\nimport { EmptyConstellation } from '@/components/graph/EmptyConstellation';\nimport { CrewWizard } from '@/components/graph/CrewWizard';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:09)*
+
+
+## 🤖 Claude *(14:37:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network } from 'lucide-react';",
+  "new_string": "import { Minimize2, Loader2, Plus, Link2, Link2Off, Brain, Network, Sparkles } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "  const loaded = useCrewStore((s) => s.loaded);\n  const connectionMode = useCrewStore((s) => s.connectionMode);",
+  "new_string": "  const loaded = useCrewStore((s) => s.loaded);\n  const agents = useCrewStore((s) => s.agents);\n  const connectionMode = useCrewStore((s) => s.connectionMode);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "  const [addOpen, setAddOpen] = useState(false);\n  const [isDeploying, setIsDeploying] = useState(false);",
+  "new_string": "  const [addOpen, setAddOpen] = useState(false);\n  const [wizardOpen, setWizardOpen] = useState(false);\n  const isEmpty = loaded && agents.length === 0;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "          <Button\n            variant=\"outline\"\n            size=\"sm\"\n            disabled={isDeploying}\n            className=\"glass-panel border-border/50 gap-1.5 h-8 sm:h-9 bg-primary/10 text-primary hover:bg-primary/20\"\n            onClick={async () => {\n              if (!user?.id) return;\n              setIsDeploying(true);\n              const res = await deployEnterpriseToSupabase(user.id);\n              if (res.success) {\n                window.location.reload();\n              }\n              setIsDeploying(false);\n            }}\n          >\n            {isDeploying ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Loader2 className=\"h-3.5 w-3.5\" />}\n            {isDeploying ? 'Deploying...' : 'Deploy Enterprise'}\n          </Button>",
+  "new_string": "          <Button\n            variant=\"outline\"\n            size=\"sm\"\n            className=\"glass-panel border-border/50 gap-1.5 h-8 sm:h-9 bg-primary/10 text-primary hover:bg-primary/20\"\n            onClick={() => setWizardOpen(true)}\n          >\n            <Sparkles className=\"h-3.5 w-3.5\" />\n            Criar crew\n          </Button>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "        <AddAgentDialog open={addOpen} onOpenChange={setAddOpen} />\n        <NewEdgeDialog />",
+  "new_string": "        {isEmpty && <EmptyConstellation onBuildFromZero={() => setWizardOpen(true)} />}\n        <CrewWizard open={wizardOpen} onOpenChange={setWizardOpen} />\n\n        <AddAgentDialog open={addOpen} onOpenChange={setAddOpen} />\n        <NewEdgeDialog />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:29)*
+
+
+## 🤖 Claude *(14:37:30)*
+
+Wizard e empty-state conectados. Botão legado substituído. `user` provavelmente ficou órfão — o gate `tsc` vai pegar. Rodando:
+
+## 🤖 Claude *(14:37:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | head -40; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "TypeScript gate for Fase 3 hooks + components"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(14:37:41)*
+
+
+## 🤖 Claude *(14:37:43)*
+
+`tsc` zero erros ✅. Deixa eu limpar o `user` se ficou órfão e localizar o `assertExecuteSuccess` (FR-CV2-004 pede tratar 200/402/501 por ele):
+
+## 🤖 Claude *(14:37:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== is 'user' still used in ConstellationPage? =====\"\ngrep -n -E '\\buser\\b' src/pages/ConstellationPage.tsx\necho\necho \"===== assertExecuteSuccess helper location =====\"\ngrep -rn 'assertExecuteSuccess' src/ 2>/dev/null | head -10",
+  "description": "Check user usage + find assertExecuteSuccess"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== is 'user' still used in ConstellationPage? =====
+> 26:  const { user } = useAuth();
+> 
+> ===== assertExecuteSuccess helper location =====
+> src/pages/CanvasEditorPage.tsx:29:import { assertExecuteSuccess } from "@/lib/canvas-execute-result";
+> src/lib/canvas-execute-result.ts:31:export function assertExecuteSuccess<T extends CanvasExecuteResult | undefined | null>(
+> src/components/canvas/RightPanel/inspectors/StyleTransferInspector.tsx:15:import { assertExecuteSuccess } from "@/lib/canvas-execute-result";
+> src/components/canvas/RightPanel/inspectors/StyleTransferInspector.tsx:95:      const result = assertExecuteSuccess(raw);
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:17:import { assertExecuteSuccess } from "@/lib/canvas-execute-result";
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:85:      const result = assertExecuteSuccess(raw as any);
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:139:      assertExecuteSuccess(raw);
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:43:import { assertExecuteSuccess } from "@/lib/canvas-execute-result";
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:121:      const result = assertExecuteSuccess(raw as any);
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:149:      const result = assertExecuteSuccess(raw);
+> ```
+
+## 🤖 Claude *(14:38:04)*
+
+
+## 🤖 Claude *(14:38:06)*
+
+`user` ficou órfão — removo (padrão clean-code). E `assertExecuteSuccess` é específico do Canvas; FR-CV2-004 quer o tratamento 200/402/501 análogo pro router v2. Vou ler o helper-padrão e os status-codes exatos que o router retorna:
+
+## 🤖 Claude *(14:38:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "import { useHandTracking } from '@/hooks/useHandTracking';\nimport { useAuth } from '@/hooks/useAuth';",
+  "new_string": "import { useHandTracking } from '@/hooks/useHandTracking';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:38:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx",
+  "old_string": "  const { user } = useAuth();\n  const { isLoading: crewLoading } = useCrewData();",
+  "new_string": "  const { isLoading: crewLoading } = useCrewData();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/ConstellationPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:38:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-execute-result.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Shared helper to validate canvas-execute responses. The Edge Function
+> 3	 * returns HTTP 200 even when the underlying provider fails (it logs the
+> 4	 * error into `vm_canvas_executions.error_message` and returns a structured
+> 5	 * body with `status: 'failed'` + `error: <msg>`). Inspectors must not
+> 6	 * blindly treat the resolved mutation as success — they MUST inspect the
+> 7	 * payload and re-throw on backend-reported failure.
+> 8	 *
+> 9	 * Root cause memory: smoke test 2026-05-17 — OpenRouter image endpoint
+> 10	 * returned 404 HTML, backend correctly set status='failed' with
+> 11	 * credits_charged=0, but inspector toast lied "Geração concluída".
+> 12	 */
+> 13	
+> 14	export interface CanvasExecuteResult {
+> 15	  execution_id?: string;
+> 16	  status?: string;
+> 17	  output_url?: string | null;
+> 18	  asset_id?: string | null;
+> 19	  credits_charged?: number;
+> 20	  credits_remaining?: number;
+> 21	  webhook_token?: string;
+> 22	  operation_id?: string;
+> 23	  error?: string;
+> 24	}
+> 25	
+> 26	/**
+> 27	 * Returns the result unchanged on success. Throws on backend-reported failure
+> 28	 * so callers can use a single try/catch path. The thrown Error carries the
+> 29	 * backend's pt-BR message verbatim — safe to surface via toast.
+> 30	 */
+> 31	export function assertExecuteSuccess<T extends CanvasExecuteResult | undefined | null>(
+> 32	  result: T,
+> 33	): T {
+> 34	  if (!result) {
+> 35	    throw new Error("canvas-execute retornou resposta vazia");
+> 36	  }
+> 37	  if (result.error) {
+> 38	    throw new Error(result.error);
+> 39	  }
+> 40	  if (result.status === "failed" || result.status === "timeout" || result.status === "cancelled") {
+> 41	    throw new Error(`Geração ${result.status}`);
+> 42	  }
+> 43	  return result;
+> 44	}
+> 45	
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> ===== agent-task-execute v2 capability branch: status codes + error shapes =====
+> 4://   (1) CAPABILITY (constellation-v2, FR-CV2-002): body.capability_key OR agent.capability_key set.
+> 7://       enforces its own RLS + resolves its own per-user BYOK) → meters per module_self_bills
+> 8://       (anti-double-charge) → writes agent_executions with capability_key/result_summary.
+> 50:  capability_key: string | null;
+> 59:      return json({ error: "Unauthorized" }, 401);
+> 77:        return json({ error: "admin path requires x-user-id header" }, 400);
+> 80:      if (!profile) return json({ error: "x-user-id not found in profiles" }, 404);
+> 87:      if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
+> 91:    const body = await req.json();
+> 92:    const { agent_id, task_prompt, override_provider, override_model, capability_key, payload, idempotency_key } = body || {};
+> 94:      return json({ error: "agent_id is required" }, 400);
+> 100:      .select("id, user_id, name, role, squad, provider, model, system_prompt, capability_key")
+> 105:      return json({ error: "Agent not found or not owned by caller" }, 404);
+> 108:      return json({ error: "Forbidden: agent belongs to different user" }, 403);
+> 114:    const effectiveCapability = capability_key || agent.capability_key || null;
+> 127:      return json({ error: "task_prompt is required for non-capability execution" }, 400);
+> 151:      return json({ error: "Failed to create execution row", detail: insertErr?.message }, 500);
+> 179:      return json({ error: `provider_key_missing:${provider}`, exec_id: execId }, 402);
+> 238:      return json({ error: "provider_unreachable", detail: msg, exec_id: execId }, 502);
+> 251:      return json({
+> 259:    const llmData = await llmResp.json();
+> 306:    return json({
+> 325:    return json({ error: "internal", detail: msg }, 500);
+> 350:    .select("capability_key, department, display_name, target_function, base_mcoin_cost, module_self_bills, requires_byok, is_active")
+> 351:    .eq("capability_key", capabilityKey)
+> 354:  if (capErr || !cap) return json({ status: "failed", error: `capability_unknown:${capabilityKey}` }, 422);
+> 355:  if (!cap.is_active) return json({ status: "failed", error: `capability_inactive:${capabilityKey}` }, 422);
+> 360:    return json({ status: "failed", error: `capability_target_forbidden:${cap.target_function}` }, 403);
+> 366:    return json({ status: "failed", error: "consumption_cap_reached", daily_mcoin_cap: capHit }, 402);
+> 380:      capability_key: capabilityKey,
+> 388:    return json({ status: "failed", error: "failed_to_create_execution", detail: insErr?.message }, 500);
+> 408:    return json({ status: "failed", execution_id: execId, capability_key: capabilityKey, error: "target_unreachable", detail: msg }, 502);
+> 422:    return json({ status: "failed", execution_id: execId, capability_key: capabilityKey, target_status: targetResp.status, result });
+> 425:  // 6. Meter — module_self_bills → 0 (anti-double-charge); else base_mcoin_cost. Sovereign freebie.
+> 426:  const costMcoin = cap.module_self_bills ? 0 : Number(cap.base_mcoin_cost ?? 0);
+> 442:  return json({
+> 443:    status: "done", execution_id: execId, capability_key: capabilityKey,
+> 445:    credits_charged: billed ? costMcoin : 0, billed, module_self_bills: cap.module_self_bills,
+> 479:function json(body: unknown, status = 200): Response {
+> ```
+
+## 🤖 Claude *(14:38:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== agent-task-execute v2 capability branch: status codes + error shapes =====\"\ngrep -nE 'status:\\s*[0-9]{3}|402|501|422|json\\(|capability_key|requires_byok|module_self_bills|return json' supabase/functions/agent-task-execute/index.ts 2>/dev/null | head -40",
+  "description": "Read canvas helper + router status codes"
+}
+```
+
+## 🤖 Claude *(14:38:42)*
+
+
+## 🤖 Claude *(14:38:45)*
+
+Agora entendo o contrato do router v2: sucesso = HTTP 200 `{status:"done", execution_id, capability_key, credits_charged, billed, ...}`; falhas = 422 (unknown/inactive) · 402 (`consumption_cap_reached`/`provider_key_missing`) · 502 (unreachable) · **200 com `status:"failed"`** (target retornou non-2xx, igual ao canvas). Preciso dos shapes de sucesso exatos (LLM vs capability) pra tipar o `useAgentTask`:
+
+## 🤖 Claude *(14:38:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts",
+  "offset": 296,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 296	        p_user_id: user.id,
+> 297	        p_amount: Number(costMcoin),
+> 298	      });
+> 299	      if (deductErr) {
+> 300	        console.warn(`[agent-task-execute] deduct failed for user ${user.id}:`, deductErr.message);
+> 301	      } else {
+> 302	        billed = true;
+> 303	      }
+> 304	    }
+> 305	
+> 306	    return json({
+> 307	      ok: true,
+> 308	      exec_id: execId,
+> 309	      agent_id: agent.id,
+> 310	      agent_name: agent.name,
+> 311	      squad: agent.squad,
+> 312	      provider,
+> 313	      model,
+> 314	      tokens_in: tokensIn,
+> 315	      tokens_out: tokensOut,
+> 316	      cost_usd_micro: costUsdMicro,
+> 317	      cost_mcoin: costMcoin,
+> 318	      billed,
+> 319	      sovereign_freebie: user.id === SOVEREIGN_USER_ID,
+> 320	      latency_ms: latencyMs,
+> 321	      response_preview: response.slice(0, 200),
+> 322	    });
+> 323	  } catch (e) {
+> 324	    const msg = e instanceof Error ? e.message : "unknown";
+> 325	    return json({ error: "internal", detail: msg }, 500);
+> 326	  }
+> 327	});
+> 328	
+> 329	// ─────────────────────────────────────────────────────────────────────────────
+> 330	// Capability router helpers (constellation-v2)
+> ```
+
+## 🤖 Claude *(14:38:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts",
+  "offset": 424,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 424	
+> 425	  // 6. Meter — module_self_bills → 0 (anti-double-charge); else base_mcoin_cost. Sovereign freebie.
+> 426	  const costMcoin = cap.module_self_bills ? 0 : Number(cap.base_mcoin_cost ?? 0);
+> 427	  let billed = false;
+> 428	  if (costMcoin > 0 && user.id !== SOVEREIGN_USER_ID) {
+> 429	    const { error: dErr } = await admin.rpc("deduct_mco_coins", { p_user_id: user.id, p_amount: costMcoin });
+> 430	    if (dErr) console.warn(`[capability] deduct failed for ${user.id}:`, dErr.message);
+> 431	    else billed = true;
+> 432	  }
+> 433	
+> 434	  // 7. Finalize
+> 435	  const summary = typeof result === "string" ? result.slice(0, 300) : JSON.stringify(result).slice(0, 300);
+> 436	  await admin.from("agent_executions").update({
+> 437	    status: "done", response: rawText.slice(0, 4000), result_summary: summary,
+> 438	    cost_mcoin: costMcoin, latency_ms: latencyMs, completed_at: new Date().toISOString(),
+> 439	  }).eq("id", execId);
+> 440	  await pulse(admin, "healthy");
+> 441	
+> 442	  return json({
+> 443	    status: "done", execution_id: execId, capability_key: capabilityKey,
+> 444	    target_function: cap.target_function, result, cost_mcoin: costMcoin,
+> 445	    credits_charged: billed ? costMcoin : 0, billed, module_self_bills: cap.module_self_bills,
+> 446	    sovereign_freebie: user.id === SOVEREIGN_USER_ID, latency_ms: latencyMs,
+> 447	  });
+> 448	}
+> 449	
+> 450	// Opt-in daily cap. Returns the hit cap (number) if exceeded, else null (unlimited/within budget).
+> 451	async function checkConsumptionCap(
+> 452	  admin: ReturnType<typeof createClient>, userId: string, agentId: string,
+> 453	): Promise<number | null> {
+> 454	  const { data: caps } = await admin
+> 455	    .from("agent_consumption_caps")
+> 456	    .select("daily_mcoin_cap, agent_id")
+> 457	    .eq("user_id", userId);
+> 458	  if (!caps || caps.length === 0) return null;
+> 459	  const relevant = caps.filter((c: any) => Number(c.daily_mcoin_cap) > 0 && (c.agent_id === null || c.agent_id === agentId));
+> 460	  if (relevant.length === 0) return null;
+> 461	  const minCap = Math.min(...relevant.map((c: any) => Number(c.daily_mcoin_cap)));
+> 462	  const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+> 463	  const { data: today } = await admin
+> 464	    .from("agent_executions")
+> 465	    .select("cost_mcoin")
+> 466	    .eq("user_id", userId)
+> 467	    .gte("started_at", since.toISOString());
+> 468	  const spent = (today ?? []).reduce((s: number, r: any) => s + Number(r.cost_mcoin ?? 0), 0);
+> 469	  return spent >= minCap ? minCap : null;
+> 470	}
+> 471	
+> 472	// Best-effort telemetry pulse (infra_health_logs = {service, status} only — no detail column).
+> 473	async function pulse(admin: ReturnType<typeof createClient>, status: string): Promise<void> {
+> 474	  try {
+> 475	    await admin.from("infra_health_logs").insert({ service: "agent-task-execute", status });
+> 476	  } catch (_) { /* best-effort */ }
+> 477	}
+> 478	
+> 479	function json(body: unknown, status = 200): Response {
+> 480	  return new Response(JSON.stringify(body), {
+> 481	    status,
+> 482	    headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 483	  });
+> ```
+
+## 🤖 Claude *(14:39:18)*
+
+
+## 🤖 Claude *(14:39:21)*
+
+Contrato preciso capturado. Vou criar um helper-padrão `agent-task-result.ts` (espelha `canvas-execute-result.ts` — FR-CV2-004) que trata as duas formas de sucesso (LLM `ok:true` / capability `status:"done"`) + a falha HTTP-200 (`status:"failed"`) + o mapa de status HTTP→PT-BR, e reescrever o `useAgentTask` para enviar `capability_key` e usá-lo.
+
+## 🤖 Claude *(14:39:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/agent-task-result.ts",
+  "content": "/**\n * Shared validator for `agent-task-execute` responses (constellation-v2, FR-CV2-004).\n *\n * The function answers in two shapes:\n *   - LLM path (CEA)        \u2192 { ok: true, exec_id, agent_name, tokens_*, cost_mcoin, ... }\n *   - Capability path (v2)  \u2192 { status: \"done\", execution_id, capability_key, result, credits_charged, ... }\n *\n * Like canvas-execute, the capability path can return HTTP 200 with `status: \"failed\"` when the\n * TARGET module itself answered non-2xx (the router logged it and metered 0). Callers must inspect\n * the body \u2014 not just the HTTP status \u2014 so a failed target never toasts \"success\".\n *\n * Mirrors `canvas-execute-result.ts` so the cockpit has one consistent failure-handling idiom.\n */\n\nexport interface AgentTaskResult {\n  // common\n  cost_mcoin?: number;\n  billed?: boolean;\n  sovereign_freebie?: boolean;\n  latency_ms?: number;\n  // LLM (CEA) path\n  ok?: boolean;\n  exec_id?: string;\n  agent_id?: string;\n  agent_name?: string;\n  squad?: string | null;\n  provider?: string;\n  model?: string;\n  tokens_in?: number;\n  tokens_out?: number;\n  cost_usd_micro?: number;\n  response_preview?: string;\n  // capability path\n  status?: 'done' | 'failed';\n  execution_id?: string;\n  capability_key?: string | null;\n  target_function?: string;\n  target_status?: number;\n  result?: unknown;\n  credits_charged?: number;\n  module_self_bills?: boolean;\n  // failure marker (either path)\n  error?: string;\n}\n\n/**\n * Returns the result unchanged on success; throws on backend-reported failure so callers use a\n * single try/catch. The thrown Error carries a pt-BR message safe to surface via toast.\n */\nexport function assertAgentTaskSuccess(data: AgentTaskResult | null | undefined): AgentTaskResult {\n  if (!data) throw new Error('agent-task-execute retornou resposta vazia');\n  if (data.error) throw new Error(data.error);\n  if (data.status === 'failed') {\n    throw new Error(`Execu\u00e7\u00e3o falhou${data.target_status ? ` (alvo HTTP ${data.target_status})` : ''}`);\n  }\n  return data;\n}\n\n/**\n * Maps a non-2xx response from the router (read off the supabase FunctionsHttpError context) into a\n * pt-BR message. Returns null when the status is unrecognized so the caller can fall back to the\n * raw error message. Covers the router's real codes: 402 (cap / missing BYOK key), 422 (unknown or\n * inactive capability), 403 (forbidden target / wrong owner), 502 (target unreachable), 401, 5xx.\n */\nexport function httpErrorToMessage(\n  status: number,\n  body: { error?: string; daily_mcoin_cap?: number } | null,\n): string | null {\n  const code = body?.error ?? '';\n  if (status === 402) {\n    if (code.startsWith('provider_key_missing')) {\n      const provider = code.split(':')[1] || 'do provedor';\n      return `Configure sua chave ${provider} em Defini\u00e7\u00f5es para executar este agente.`;\n    }\n    if (code === 'consumption_cap_reached') {\n      return `Limite di\u00e1rio de mcoCoins atingido${body?.daily_mcoin_cap ? ` (${body.daily_mcoin_cap}/dia)` : ''}.`;\n    }\n    return 'Saldo de mcoCoins insuficiente.';\n  }\n  if (status === 422) return 'Capability desconhecida ou inativa no registry.';\n  if (status === 403) return 'Acesso negado \u2014 fun\u00e7\u00e3o fora do allowlist ou agente de outro usu\u00e1rio.';\n  if (status === 502) return 'M\u00f3dulo de destino indispon\u00edvel. Tente novamente em instantes.';\n  if (status === 401) return 'Sess\u00e3o expirada \u2014 entre novamente.';\n  if (status >= 500) return 'Erro interno no executor de agentes.';\n  return null;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/agent-task-result.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:39)*
+
+
+## 🤖 Claude *(14:39:40)*
+
+Agora reescrevo o `useAgentTask` para enviar `capability_key`/`payload` e usar o helper (FR-CV2-004):
+
+## 🤖 Claude *(14:39:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentTask.ts",
+  "content": "import { useMutation, useQueryClient } from \"@tanstack/react-query\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { toast } from \"sonner\";\nimport {\n  assertAgentTaskSuccess,\n  httpErrorToMessage,\n  type AgentTaskResult,\n} from \"@/lib/agent-task-result\";\n\n// constellation-v2 (FR-CV2-004): execute hook v2. Sends an optional `capability_key` (+ structured\n// payload) so the router takes the capability branch (invoke a real module function) instead of the\n// LLM branch. Failure handling goes through assertAgentTaskSuccess (body-level `status: \"failed\"`)\n// and httpErrorToMessage (HTTP 402/422/403/502 read off the supabase error context) so a failed\n// target or an insufficient balance never toasts success.\n\nexport type AgentTaskInput = {\n  agent_id: string;\n  task_prompt?: string;\n  capability_key?: string;\n  payload?: unknown;\n  idempotency_key?: string;\n  override_provider?: string;\n  override_model?: string;\n};\n\nexport function useAgentTask() {\n  const queryClient = useQueryClient();\n\n  return useMutation<AgentTaskResult, Error, AgentTaskInput>({\n    mutationFn: async (input) => {\n      const { data, error } = await supabase.functions.invoke<AgentTaskResult>(\n        \"agent-task-execute\",\n        { body: input },\n      );\n\n      if (error) {\n        // FunctionsHttpError carries the raw Response in `.context` \u2014 read status + structured body\n        // to surface a precise pt-BR reason (e.g. 402 cap reached, 422 unknown capability).\n        const ctx = (error as { context?: Response }).context;\n        let mapped: string | null = null;\n        if (ctx && typeof ctx.json === \"function\") {\n          try {\n            const body = await ctx.clone().json();\n            mapped = httpErrorToMessage(ctx.status, body);\n          } catch {\n            mapped = httpErrorToMessage(ctx.status ?? 0, null);\n          }\n        }\n        throw new Error(mapped ?? error.message);\n      }\n\n      return assertAgentTaskSuccess(data);\n    },\n    onSuccess: (data) => {\n      if (data.capability_key) {\n        toast.success(\n          `Capability \"${data.capability_key}\" executada \u2014 ${data.credits_charged ?? 0} mcoCoins \u00b7 ${data.latency_ms ?? 0}ms`,\n        );\n      } else {\n        const tokens = (data.tokens_in ?? 0) + (data.tokens_out ?? 0);\n        toast.success(\n          `${data.agent_name ?? \"Agente\"} executou \u2014 ${tokens} tokens \u00b7 ${data.cost_mcoin ?? 0} mcoCoins \u00b7 ${data.latency_ms ?? 0}ms`,\n        );\n      }\n      queryClient.invalidateQueries({ queryKey: [\"agent_executions\"] });\n      queryClient.invalidateQueries({ queryKey: [\"agent_economics\"] });\n      queryClient.invalidateQueries({ queryKey: [\"crew_agents\"] });\n    },\n    onError: (err) => {\n      toast.error(`Falha ao executar agente: ${err.message}`);\n    },\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentTask.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:55)*
+
+
+## 🤖 Claude *(14:39:56)*
+
+Deixa eu verificar que não quebrei consumidores existentes do `useAgentTask` (mudei input + result shape):
+
+## 🤖 Claude *(14:39:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== useAgentTask consumers =====\"\ngrep -rn 'useAgentTask' src/ 2>/dev/null | grep -v 'hooks/useAgentTask.ts' | head\necho \"--- how they use the result (.exec_id / .response_preview / mutate args) ---\"\nfor f in $(grep -rln 'useAgentTask' src/ 2>/dev/null | grep -v 'hooks/useAgentTask.ts'); do\n  echo \"### $f\"\n  grep -nE 'useAgentTask|\\.mutate|exec_id|response_preview|task_prompt|capability' \"$f\" | head -12\ndone",
+  "description": "Find useAgentTask consumers + usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== useAgentTask consumers =====
+> src/components/panels/AgentDetail.tsx:13:import { useAgentTask } from '@/hooks/useAgentTask';
+> src/components/panels/AgentDetail.tsx:34:  const runTask = useAgentTask();
+> --- how they use the result (.exec_id / .response_preview / mutate args) ---
+> ### src/components/panels/AgentDetail.tsx
+> 13:import { useAgentTask } from '@/hooks/useAgentTask';
+> 34:  const runTask = useAgentTask();
+> 66:    updateAgent.mutate({
+> 79:    deleteAgent.mutate(agent.id, {
+> 89:    runTask.mutate(
+> 92:        task_prompt: taskPrompt.trim(),
+> ```
+
+## 🤖 Claude *(14:40:05)*
+
+
+## 🤖 Claude *(14:40:06)*
+
+Só um consumidor (`AgentDetail`). Deixa eu lê-lo para confirmar compatibilidade e wirar o `capability_key` do agente (FR-CV2-004 — quando o subagente tem capability, "Executar" deve rodar o módulo real):
+
+## 🤖 Claude *(14:40:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useCrewStore } from '@/store/useCrewStore';
+> 3	import { Button } from '@/components/ui/button';
+> 4	import { Badge } from '@/components/ui/badge';
+> 5	import { Input } from '@/components/ui/input';
+> 6	import { Label } from '@/components/ui/label';
+> 7	import { Textarea } from '@/components/ui/textarea';
+> 8	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 9	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+> 10	import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+> 11	import { X, Zap, Bot, Pencil, Trash2, Loader2, Play } from 'lucide-react';
+> 12	import { useUpdateAgent, useDeleteAgent } from '@/hooks/useAgentMutations';
+> 13	import { useAgentTask } from '@/hooks/useAgentTask';
+> 14	
+> 15	// Pilot guardrail (SOP constellation-economic-activation): force the cheap, priced, key-available
+> 16	// path for manual runs — agent's own provider/model may be Anthropic (no endpoint) or "Llama 3"
+> 17	// (no pricing row). groq/llama-3.3-70b-versatile = 1 mcoCoin floor + Sovereign has the key.
+> 18	const PILOT_PROVIDER = 'groq';
+> 19	const PILOT_MODEL = 'llama-3.3-70b-versatile';
+> 20	
+> 21	const STATUS_BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+> 22	  active: 'default',
+> 23	  thinking: 'secondary',
+> 24	  waiting: 'outline',
+> 25	  error: 'destructive',
+> 26	  idle: 'secondary',
+> 27	};
+> 28	
+> 29	export function AgentDetail() {
+> 30	  const { selectedAgentId, agents = [], edges = [], setSelectedAgent } = useCrewStore();
+> 31	  const agent = agents.find((a) => a?.id === selectedAgentId);
+> 32	  const updateAgent = useUpdateAgent();
+> 33	  const deleteAgent = useDeleteAgent();
+> 34	  const runTask = useAgentTask();
+> 35	
+> 36	  const [editOpen, setEditOpen] = useState(false);
+> 37	  const [deleteOpen, setDeleteOpen] = useState(false);
+> 38	  const [taskPrompt, setTaskPrompt] = useState('');
+> 39	
+> 40	  // Edit form state
+> 41	  const [editName, setEditName] = useState('');
+> 42	  const [editRole, setEditRole] = useState('');
+> 43	  const [editAvatar, setEditAvatar] = useState('');
+> 44	  const [editProvider, setEditProvider] = useState('');
+> 45	  const [editModel, setEditModel] = useState('');
+> 46	  const [editPriority, setEditPriority] = useState('');
+> 47	  const [editPrompt, setEditPrompt] = useState('');
+> 48	
+> 49	  if (!agent) return null;
+> 50	
+> 51	  const connections = edges.filter((e) => e.from === agent.id || e.to === agent.id);
+> 52	
+> 53	  const openEdit = () => {
+> 54	    setEditName(agent.name);
+> 55	    setEditRole(agent.role);
+> 56	    setEditAvatar(agent.avatar);
+> 57	    setEditProvider(agent.provider);
+> 58	    setEditModel(agent.model);
+> 59	    setEditPriority(agent.priority);
+> 60	    setEditPrompt(agent.systemPrompt);
+> 61	    setEditOpen(true);
+> 62	  };
+> 63	
+> 64	  const handleUpdate = () => {
+> 65	    if (!agent.dbId) return;
+> 66	    updateAgent.mutate({
+> 67	      dbId: agent.dbId,
+> 68	      name: editName,
+> 69	      role: editRole,
+> 70	      avatar: editAvatar,
+> 71	      provider: editProvider,
+> 72	      model: editModel,
+> 73	      priority: editPriority,
+> 74	      system_prompt: editPrompt,
+> 75	    }, { onSuccess: () => setEditOpen(false) });
+> 76	  };
+> 77	
+> 78	  const handleDelete = () => {
+> 79	    deleteAgent.mutate(agent.id, {
+> 80	      onSuccess: () => {
+> 81	        setSelectedAgent(null);
+> 82	        setDeleteOpen(false);
+> 83	      },
+> 84	    });
+> 85	  };
+> 86	
+> 87	  const handleRunTask = () => {
+> 88	    if (!agent.dbId || !taskPrompt.trim()) return;
+> 89	    runTask.mutate(
+> 90	      {
+> 91	        agent_id: agent.dbId,
+> 92	        task_prompt: taskPrompt.trim(),
+> 93	        override_provider: PILOT_PROVIDER,
+> 94	        override_model: PILOT_MODEL,
+> 95	      },
+> 96	      { onSuccess: () => setTaskPrompt('') },
+> 97	    );
+> 98	  };
+> 99	
+> 100	  return (
+> 101	    <>
+> 102	      <div className="absolute top-20 left-4 sm:top-24 w-80 max-w-[calc(100vw-2rem)] glass-panel rounded-xl z-30 animate-in slide-in-from-left duration-300 shadow-2xl shadow-background/50">
+> 103	        <div className="p-4">
+> 104	          <div className="flex items-center justify-between mb-3">
+> 105	            <div className="flex items-center gap-2">
+> 106	              <span className="text-2xl">{agent.avatar}</span>
+> 107	              <div>
+> 108	                <h3 className="font-heading text-sm font-semibold text-foreground">{agent.name}</h3>
+> 109	                <p className="text-xs text-muted-foreground">{agent.role}</p>
+> 110	              </div>
+> 111	            </div>
+> 112	            <div className="flex items-center gap-1">
+> 113	              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openEdit}>
+> 114	                <Pencil className="w-3.5 h-3.5" />
+> 115	              </Button>
+> 116	              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+> 117	                <Trash2 className="w-3.5 h-3.5" />
+> 118	              </Button>
+> 119	              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedAgent(null)}>
+> 120	                <X className="w-4 h-4" />
+> 121	              </Button>
+> 122	            </div>
+> 123	          </div>
+> 124	
+> 125	          <div className="space-y-3">
+> 126	            <div className="flex items-center gap-2">
+> 127	              <Badge variant={STATUS_BADGE_VARIANT[agent.status]} className="capitalize">{agent.status}</Badge>
+> 128	              <Badge variant="outline" className="gap-1 text-xs">
+> 129	                <Bot className="w-3 h-3" />{agent.provider}
+> 130	              </Badge>
+> 131	            </div>
+> 132	
+> 133	            <div>
+> 134	              <p className="text-xs text-muted-foreground mb-1">System Prompt</p>
+> 135	              <p className="text-xs text-foreground bg-secondary/50 rounded p-2">{agent.systemPrompt}</p>
+> 136	            </div>
+> 137	
+> 138	            <div>
+> 139	              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+> 140	                <Zap className="w-3 h-3" /> Conexões ({connections.length})
+> 141	              </p>
+> 142	              {connections.map((c) => {
+> 143	                const otherAgent = agents.find((a) => a.id === (c.from === agent.id ? c.to : c.from));
+> 144	                if (!otherAgent) return null;
+> 145	                return (
+> 146	                  <div key={c.id} className="text-xs text-foreground flex items-center gap-1 py-0.5">
+> 147	                    <span className="w-2 h-2 rounded-full" style={{
+> 148	                      backgroundColor: c.status === 'active' ? '#22c55e' : c.status === 'error' ? '#ef4444' : c.status === 'waiting' ? '#f59e0b' : '#60a5fa',
+> 149	                    }} />
+> 150	                    {c.from === agent.id ? '→' : '←'} {otherAgent.name} — {c.label}
+> 151	                  </div>
+> 152	                );
+> 153	              })}
+> 154	            </div>
+> 155	
+> 156	            {/* Real task execution — CEA agent-task-execute (replaces simulated activity) */}
+> 157	            <div className="border-t border-border/50 pt-3">
+> 158	              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+> 159	                <Play className="w-3 h-3" /> Executar tarefa real
+> 160	              </p>
+> 161	              <Textarea
+> 162	                value={taskPrompt}
+> 163	                onChange={(e) => setTaskPrompt(e.target.value)}
+> 164	                rows={2}
+> 165	                placeholder="Ex.: Resuma as 3 principais tendências de smart home desta semana."
+> 166	                className="text-xs"
+> 167	              />
+> 168	              <Button
+> 169	                size="sm"
+> 170	                className="w-full mt-2 gap-1.5"
+> 171	                disabled={!agent.dbId || !taskPrompt.trim() || runTask.isPending}
+> 172	                onClick={handleRunTask}
+> 173	              >
+> 174	                {runTask.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+> 175	                {runTask.isPending ? 'Executando…' : 'Executar (Groq · ~1 mco)'}
+> 176	              </Button>
+> 177	              {!agent.dbId && (
+> 178	                <p className="text-[10px] text-muted-foreground mt-1">Agente não persistido — salve antes de executar.</p>
+> 179	              )}
+> 180	            </div>
+> 181	          </div>
+> 182	        </div>
+> 183	      </div>
+> 184	
+> 185	      {/* Edit Dialog */}
+> 186	      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+> 187	        <DialogContent className="max-w-md">
+> 188	          <DialogHeader>
+> 189	            <DialogTitle>Editar Agente</DialogTitle>
+> 190	          </DialogHeader>
+> 191	          <div className="space-y-3">
+> 192	            <div className="grid grid-cols-2 gap-3">
+> 193	              <div>
+> 194	                <Label>Nome</Label>
+> 195	                <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+> 196	              </div>
+> 197	              <div>
+> 198	                <Label>Função</Label>
+> 199	                <Input value={editRole} onChange={(e) => setEditRole(e.target.value)} />
+> 200	              </div>
+> 201	            </div>
+> 202	            <div>
+> 203	              <Label>Avatar (emoji)</Label>
+> 204	              <Input value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} className="w-20" />
+> 205	            </div>
+> 206	            <div className="grid grid-cols-2 gap-3">
+> 207	              <div>
+> 208	                <Label>Provider</Label>
+> 209	                <Input value={editProvider} onChange={(e) => setEditProvider(e.target.value)} />
+> 210	              </div>
+> 211	              <div>
+> 212	                <Label>Modelo</Label>
+> 213	                <Input value={editModel} onChange={(e) => setEditModel(e.target.value)} />
+> 214	              </div>
+> 215	            </div>
+> 216	            <div>
+> 217	              <Label>Prioridade</Label>
+> 218	              <Select value={editPriority} onValueChange={setEditPriority}>
+> 219	                <SelectTrigger><SelectValue /></SelectTrigger>
+> 220	                <SelectContent>
+> 221	                  <SelectItem value="low">Baixa</SelectItem>
+> 222	                  <SelectItem value="medium">Média</SelectItem>
+> 223	                  <SelectItem value="high">Alta</SelectItem>
+> 224	                </SelectContent>
+> 225	              </Select>
+> 226	            </div>
+> 227	            <div>
+> 228	              <Label>System Prompt</Label>
+> 229	              <Textarea value={editPrompt} onChange={(e) => setEditPrompt(e.target.value)} rows={3} />
+> 230	            </div>
+> 231	          </div>
+> 232	          <DialogFooter>
+> 233	            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+> 234	            <Button onClick={handleUpdate} disabled={updateAgent.isPending}>
+> 235	              {updateAgent.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+> 236	              Salvar
+> 237	            </Button>
+> 238	          </DialogFooter>
+> 239	        </DialogContent>
+> 240	      </Dialog>
+> 241	
+> 242	      {/* Delete Confirmation */}
+> 243	      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+> 244	        <AlertDialogContent>
+> 245	          <AlertDialogHeader>
+> 246	            <AlertDialogTitle>Remover agente?</AlertDialogTitle>
+> 247	            <AlertDialogDescription>
+> 248	              O agente "{agent.name}" e todas as suas conexões serão removidos permanentemente.
+> 249	            </AlertDialogDescription>
+> 250	          </AlertDialogHeader>
+> 251	          <AlertDialogFooter>
+> 252	            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+> 253	            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+> 254	              {deleteAgent.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+> 255	              Remover
+> 256	            </AlertDialogAction>
+> 257	          </AlertDialogFooter>
+> 258	        </AlertDialogContent>
+> 259	      </AlertDialog>
+> 260	    </>
+> 261	  );
+> 262	}
+> 263	
+> ```
+
+## 🤖 Claude *(14:40:45)*
+
+
+## 🤖 Claude *(14:40:48)*
+
+`AgentDetail` continua compatível. Vou wirar o **capability path de verdade** (o payoff da v2): adiciono `capabilityKey` ao store Agent + mapeio no `useCrewData`, e faço o `AgentDetail` executar o módulo real quando o subagente tem capability. 5 edits em 3 arquivos:
+
+## 🤖 Claude *(14:40:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useCrewStore.ts",
+  "old_string": "  squad?: string;\n  level?: number;\n}\n\nexport interface Edge {",
+  "new_string": "  squad?: string;\n  level?: number;\n  capabilityKey?: string | null;\n}\n\nexport interface Edge {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/store/useCrewStore.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:40:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewData.ts",
+  "old_string": "            level: a.level ?? 1,\n            squad: a.squad ?? 'unassigned',\n          };",
+  "new_string": "            level: a.level ?? 1,\n            squad: a.squad ?? 'unassigned',\n            capabilityKey: a.capability_key ?? null,\n          };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewData.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:40:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "  const connections = edges.filter((e) => e.from === agent.id || e.to === agent.id);",
+  "new_string": "  const connections = edges.filter((e) => e.from === agent.id || e.to === agent.id);\n  const isCapability = !!agent.capabilityKey;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:40:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "  const handleRunTask = () => {\n    if (!agent.dbId || !taskPrompt.trim()) return;\n    runTask.mutate(\n      {\n        agent_id: agent.dbId,\n        task_prompt: taskPrompt.trim(),\n        override_provider: PILOT_PROVIDER,\n        override_model: PILOT_MODEL,\n      },\n      { onSuccess: () => setTaskPrompt('') },\n    );\n  };",
+  "new_string": "  const handleRunTask = () => {\n    if (!agent.dbId) return;\n    if (agent.capabilityKey) {\n      // constellation-v2 (FR-CV2-004): capability-bound subagent \u2192 invoke the real module function.\n      // The prompt is optional context (payload); many capabilities (e.g. watchdog_infra) need none.\n      runTask.mutate(\n        {\n          agent_id: agent.dbId,\n          capability_key: agent.capabilityKey,\n          payload: taskPrompt.trim() ? { prompt: taskPrompt.trim() } : undefined,\n        },\n        { onSuccess: () => setTaskPrompt('') },\n      );\n      return;\n    }\n    if (!taskPrompt.trim()) return;\n    runTask.mutate(\n      {\n        agent_id: agent.dbId,\n        task_prompt: taskPrompt.trim(),\n        override_provider: PILOT_PROVIDER,\n        override_model: PILOT_MODEL,\n      },\n      { onSuccess: () => setTaskPrompt('') },\n    );\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:41:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "              <Badge variant=\"outline\" className=\"gap-1 text-xs\">\n                <Bot className=\"w-3 h-3\" />{agent.provider}\n              </Badge>\n            </div>",
+  "new_string": "              <Badge variant=\"outline\" className=\"gap-1 text-xs\">\n                <Bot className=\"w-3 h-3\" />{agent.provider}\n              </Badge>\n              {agent.capabilityKey && (\n                <Badge variant=\"outline\" className=\"gap-1 text-xs text-primary border-primary/40\">\n                  <Zap className=\"w-3 h-3\" />{agent.capabilityKey}\n                </Badge>\n              )}\n            </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:41:07)*
+
+
+## 🤖 Claude *(14:41:08)*
+
+Falta o label/disabled/placeholder cientes de capability + o gate `tsc`:
+
+## 🤖 Claude *(14:41:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "              <Textarea\n                value={taskPrompt}\n                onChange={(e) => setTaskPrompt(e.target.value)}\n                rows={2}\n                placeholder=\"Ex.: Resuma as 3 principais tend\u00eancias de smart home desta semana.\"\n                className=\"text-xs\"\n              />\n              <Button\n                size=\"sm\"\n                className=\"w-full mt-2 gap-1.5\"\n                disabled={!agent.dbId || !taskPrompt.trim() || runTask.isPending}\n                onClick={handleRunTask}\n              >\n                {runTask.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Play className=\"h-3.5 w-3.5\" />}\n                {runTask.isPending ? 'Executando\u2026' : 'Executar (Groq \u00b7 ~1 mco)'}\n              </Button>",
+  "new_string": "              <Textarea\n                value={taskPrompt}\n                onChange={(e) => setTaskPrompt(e.target.value)}\n                rows={2}\n                placeholder={isCapability\n                  ? 'Contexto opcional para a capability\u2026'\n                  : 'Ex.: Resuma as 3 principais tend\u00eancias de smart home desta semana.'}\n                className=\"text-xs\"\n              />\n              <Button\n                size=\"sm\"\n                className=\"w-full mt-2 gap-1.5\"\n                disabled={!agent.dbId || runTask.isPending || (!isCapability && !taskPrompt.trim())}\n                onClick={handleRunTask}\n              >\n                {runTask.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Play className=\"h-3.5 w-3.5\" />}\n                {runTask.isPending ? 'Executando\u2026' : isCapability ? 'Executar capability' : 'Executar (Groq \u00b7 ~1 mco)'}\n              </Button>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:41:24)*
+
+
+## 🤖 Claude *(14:41:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | head -30; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "TypeScript gate after useAgentTask + capability wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(14:42:20)*
+
+
+## 🤖 Claude *(14:42:22)*
+
+`tsc` zero ✅. Capability path agora executa o módulo real no `AgentDetail`. Faltam 3 itens da Fase 3: `CrewGraph` (z-index/LOD/cap≤21), `AccessConfigCard` (FR-CV2-023, High), e `useAgentActivity` (capability nos logs). Deixa eu mapear o z-index atual + o shape de `useUserApiKeys`:
+
+## 🤖 Claude *(14:42:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== z-index landscape in constellation panels =====\"\ngrep -rnoE 'z-[0-9]+' src/components/HUD.tsx src/components/panels/ src/components/Legend.tsx src/pages/ConstellationPage.tsx 2>/dev/null | sort -u\necho\necho \"===== useUserApiKeys shape (BYOK key fields) =====\"\nsed -n '1,60p' src/hooks/useUserApiKeys.ts",
+  "description": "z-index audit + useUserApiKeys shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== z-index landscape in constellation panels =====
+> src/components/HUD.tsx:30:z-40
+> src/components/Legend.tsx:16:z-20
+> src/components/panels/AgentDetail.tsx:117:z-30
+> src/components/panels/ConfigPanel.tsx:22:z-50
+> src/components/panels/LogsPanel.tsx:27:z-30
+> src/pages/ConstellationPage.tsx:137:z-50
+> 
+> ===== useUserApiKeys shape (BYOK key fields) =====
+> import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> import { supabase } from '@/integrations/supabase/client';
+> import { useAuth } from '@/hooks/useAuth';
+> import type { Database } from '@/integrations/supabase/types';
+> 
+> export type UserApiKeysRow = Database['public']['Tables']['user_api_keys']['Row'];
+> type UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update'];
+> 
+> const QUERY_KEY = (userId: string | undefined) => ['user_api_keys', userId] as const;
+> 
+> export function useUserApiKeys() {
+>   const { user } = useAuth();
+>   const qc = useQueryClient();
+> 
+>   const { data: userKeys, isLoading } = useQuery({
+>     queryKey: QUERY_KEY(user?.id),
+>     queryFn: async () => {
+>       const { data, error } = await supabase
+>         .from('user_api_keys')
+>         .select('*')
+>         .eq('user_id', user!.id)
+>         .maybeSingle();
+>       if (error) throw error;
+>       return data as UserApiKeysRow | null;
+>     },
+>     enabled: !!user?.id,
+>     staleTime: 60_000,
+>   });
+> 
+>   const { mutateAsync: saveKeys, isPending: isSaving } = useMutation({
+>     mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {
+>       const { error } = await supabase
+>         .from('user_api_keys')
+>         .upsert({
+>           ...payload,
+>           user_id: user!.id,
+>           updated_at: new Date().toISOString(),
+>         } as UserApiKeysUpdate);
+>       if (error) throw error;
+>     },
+>     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(user?.id) }),
+>   });
+> 
+>   return { userKeys, saveKeys, isSaving, isLoading };
+> }
+> ```
+
+## 🤖 Claude *(14:43:45)*
+
+
+## 🤖 Claude *(14:43:46)*
+
+z-index atual: HUD=40 ✅, mas AgentDetail=30, LogsPanel=30, ConfigPanel=50 — fora da camada estrita de painéis (40). Vou padronizar + aplicar cap≤21/LOD no CrewGraph. Batch: edits no CrewGraph + AgentDetail z + leio os 2 painéis restantes:
+
+## 🤖 Claude *(14:43:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx",
+  "old_string": "const PostProcessing = memo(function PostProcessing() {\n  const chromaticOffset = useMemo(() => new THREE.Vector2(0.002, 0.002), []);\n  return (\n    <EffectComposer>\n      <Bloom intensity={2.8} luminanceThreshold={0.1} luminanceSmoothing={0.7} mipmapBlur />\n      <ChromaticAberration offset={chromaticOffset} />\n      <Noise opacity={0.12} />\n      <Vignette eskil={false} offset={0.05} darkness={1.4} />\n    </EffectComposer>\n  );\n});",
+  "new_string": "// FR-CV2-060 render budget: never draw more than MAX_RENDERED nodes/tenant; above LOD_THRESHOLD\n// drop to a level-of-detail profile (fewer stars + the two cheapest post effects disabled).\nconst MAX_RENDERED = 21;\nconst LOD_THRESHOLD = 14;\n\nconst PostProcessing = memo(function PostProcessing({ lod }: { lod: boolean }) {\n  const chromaticOffset = useMemo(() => new THREE.Vector2(0.002, 0.002), []);\n  if (lod) {\n    return (\n      <EffectComposer>\n        <Bloom intensity={2.8} luminanceThreshold={0.1} luminanceSmoothing={0.7} mipmapBlur />\n        <Vignette eskil={false} offset={0.05} darkness={1.4} />\n      </EffectComposer>\n    );\n  }\n  return (\n    <EffectComposer>\n      <Bloom intensity={2.8} luminanceThreshold={0.1} luminanceSmoothing={0.7} mipmapBlur />\n      <ChromaticAberration offset={chromaticOffset} />\n      <Noise opacity={0.12} />\n      <Vignette eskil={false} offset={0.05} darkness={1.4} />\n    </EffectComposer>\n  );\n});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:43:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx",
+  "old_string": "  const agents = useCrewStore((s) => s.agents || []);\n  const edges = useCrewStore((s) => s.edges || []);\n  const selectedAgentId = useCrewStore((s) => s.selectedAgentId);",
+  "new_string": "  const allAgents = useCrewStore((s) => s.agents || []);\n  const edges = useCrewStore((s) => s.edges || []);\n  const selectedAgentId = useCrewStore((s) => s.selectedAgentId);\n\n  // FR-CV2-060: hard render budget. Edges to dropped nodes fall away naturally (render guards on\n  // agentMap.get below). `dense` drives the LOD profile (stars + post effects).\n  const agents = useMemo(\n    () => (allAgents.length > MAX_RENDERED ? allAgents.slice(0, MAX_RENDERED) : allAgents),\n    [allAgents],\n  );\n  const dense = agents.length > LOD_THRESHOLD;\n  useEffect(() => {\n    if (allAgents.length > MAX_RENDERED) {\n      console.warn(`[CrewGraph] ${allAgents.length} nodes exceed render cap ${MAX_RENDERED} \u2014 drawing first ${MAX_RENDERED} (FR-CV2-060)`);\n    }\n  }, [allAgents.length]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx",
+  "old_string": "      <Stars radius={150} depth={60} count={12000} factor={7} saturation={0.5} fade speed={2} />",
+  "new_string": "      <Stars radius={150} depth={60} count={dense ? 6000 : 12000} factor={7} saturation={0.5} fade speed={2} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx",
+  "old_string": "      <PostProcessing />\n    </>\n  );\n});",
+  "new_string": "      <PostProcessing lod={dense} />\n    </>\n  );\n});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 16	  const { configOpen, setConfigOpen, agents } = useCrewStore();
+> 17	  const { userKeys, isLoading } = useUserApiKeys();
+> 18	
+> 19	  if (!configOpen) return null;
+> 20	
+> 21	  return (
+> 22	    <div className="absolute top-0 right-0 h-full w-full max-w-sm glass-panel z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+> 23	      <div className="p-5">
+> 24	        <div className="flex items-center justify-between mb-6">
+> 25	          <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+> 26	            <Settings className="w-5 h-5 text-primary" />
+> 27	            Configuration
+> ```
+
+## 🤖 Claude *(14:44:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx",
+  "old_string": "  return (\n    <div className=\"absolute inset-0\">\n      <Canvas",
+  "new_string": "  return (\n    <div className=\"absolute inset-0 z-0\">\n      <Canvas"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/graph/CrewGraph.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "rounded-xl z-30 animate-in slide-in-from-left",
+  "new_string": "rounded-xl z-40 animate-in slide-in-from-left"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/LogsPanel.tsx",
+  "offset": 20,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	
+> 21	export function LogsPanel() {
+> 22	  const { logsOpen, setLogsOpen, logs } = useCrewStore();
+> 23	
+> 24	  if (!logsOpen) return null;
+> 25	
+> 26	  return (
+> 27	    <div className="absolute bottom-0 left-0 right-0 h-64 glass-panel z-30 animate-in slide-in-from-bottom duration-300">
+> 28	      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+> 29	        <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
+> 30	          <Terminal className="w-4 h-4 text-primary" />
+> 31	          Live Logs
+> ```
+
+## 🤖 Claude *(14:44:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/ConfigPanel.tsx",
+  "offset": 16,
+  "limit": 12
+}
+```
+
+## 🤖 Claude *(14:44:15)*
+
+
+## 🤖 Claude *(14:44:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/LogsPanel.tsx",
+  "old_string": "    <div className=\"absolute bottom-0 left-0 right-0 h-64 glass-panel z-30 animate-in slide-in-from-bottom duration-300\">",
+  "new_string": "    <div className=\"absolute bottom-0 left-0 right-0 h-64 glass-panel z-40 animate-in slide-in-from-bottom duration-300\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/LogsPanel.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/ConfigPanel.tsx",
+  "old_string": "    <div className=\"absolute top-0 right-0 h-full w-full max-w-sm glass-panel z-50 overflow-y-auto animate-in slide-in-from-right duration-300\">",
+  "new_string": "    <div className=\"absolute top-0 right-0 h-full w-full max-w-sm glass-panel z-40 overflow-y-auto animate-in slide-in-from-right duration-300\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/ConfigPanel.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:52)*
+
+
+## 🤖 Claude *(14:44:53)*
+
+Agora `useAgentActivity` projetando capability/result nos logs (FR-CV2-050) + o `AccessConfigCard` (FR-CV2-023). Edits no activity hook + escrevo o card:
+
+## 🤖 Claude *(14:44:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts",
+  "old_string": "  cost_mcoin: number | null;\n  latency_ms: number | null;\n  error_msg: string | null;\n  started_at: string;\n  completed_at: string | null;\n};",
+  "new_string": "  cost_mcoin: number | null;\n  latency_ms: number | null;\n  error_msg: string | null;\n  capability_key: string | null;\n  result_summary: string | null;\n  started_at: string;\n  completed_at: string | null;\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:44:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts",
+  "old_string": "          'id, agent_id, status, provider, model, tokens_in, tokens_out, cost_mcoin, latency_ms, error_msg, started_at, completed_at',",
+  "new_string": "          'id, agent_id, status, provider, model, tokens_in, tokens_out, cost_mcoin, latency_ms, error_msg, capability_key, result_summary, started_at, completed_at',"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:45:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts",
+  "old_string": "    case 'done': {\n      const total = (e.tokens_in ?? 0) + (e.tokens_out ?? 0);\n      return `${e.provider}/${e.model} \u00b7 ${total} tokens \u00b7 ${e.cost_mcoin ?? 0} mco \u00b7 ${e.latency_ms ?? 0}ms`;\n    }\n    case 'running':\n      return `executando tarefa via ${e.provider}/${e.model}\u2026`;",
+  "new_string": "    case 'done': {\n      if (e.capability_key) {\n        const summary = (e.result_summary ?? '').slice(0, 80);\n        return `capability \"${e.capability_key}\" \u00b7 ${e.cost_mcoin ?? 0} mco${summary ? ` \u00b7 ${summary}` : ''}`;\n      }\n      const total = (e.tokens_in ?? 0) + (e.tokens_out ?? 0);\n      return `${e.provider}/${e.model} \u00b7 ${total} tokens \u00b7 ${e.cost_mcoin ?? 0} mco \u00b7 ${e.latency_ms ?? 0}ms`;\n    }\n    case 'running':\n      return e.capability_key\n        ? `executando capability \"${e.capability_key}\"\u2026`\n        : `executando tarefa via ${e.provider}/${e.model}\u2026`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAgentActivity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:45:39)*
+
+
+## 🤖 Claude *(14:45:40)*
+
+Agora o `AccessConfigCard` (FR-CV2-023 — módulo + BYOK + cap diário por subagente):
+
+## 🤖 Claude *(14:45:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AccessConfigCard.tsx",
+  "content": "import { useState, useEffect } from 'react';\nimport { Link } from 'react-router-dom';\nimport { Input } from '@/components/ui/input';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport { KeyRound, ShieldCheck, Coins, Loader2, CircleAlert, ExternalLink } from 'lucide-react';\nimport { useAgentCapabilities } from '@/hooks/useAgentCapabilities';\nimport { useAccessConfig } from '@/hooks/useAccessConfig';\nimport { useUserApiKeys } from '@/hooks/useUserApiKeys';\n\n// constellation-v2 (FR-CV2-023): per-subagent access config rendered inside AgentDetail. Surfaces\n// the bound module (capability) + cost, the BYOK key status for the capability's provider, and the\n// daily mcoCoin cap the router enforces via HTTP 402 (consumption_cap_reached). The cap row is keyed\n// ('mcoin', agentId); 0 clears it (unlimited). Display-only \u2014 persistence lives in useAccessConfig.\n\nconst CAP_REF = 'mcoin';\n\ninterface Props {\n  agentDbId: string;\n  capabilityKey: string;\n}\n\nexport function AccessConfigCard({ agentDbId, capabilityKey }: Props) {\n  const { byKey } = useAgentCapabilities();\n  const { capFor, setCap, removeCap } = useAccessConfig();\n  const { userKeys } = useUserApiKeys();\n\n  const cap = byKey.get(capabilityKey) ?? null;\n  const existing = capFor(agentDbId, CAP_REF);\n  const [limit, setLimit] = useState('');\n\n  // Re-sync the input when the persisted cap changes (e.g. after save invalidates the query).\n  useEffect(() => {\n    setLimit(existing ? String(existing.dailyMcoinCap) : '');\n  }, [existing]);\n\n  const byokProvider = cap?.byokProvider ?? null;\n  const byokPresent = byokProvider\n    ? !!(userKeys as Record<string, unknown> | null)?.[`${byokProvider}_api_key`]\n    : true;\n\n  const handleSaveCap = () => {\n    const n = Number(limit);\n    if (!Number.isFinite(n) || n < 0) return;\n    if (n === 0 && existing) {\n      removeCap.mutate(existing.id);\n    } else {\n      setCap.mutate({ apiKeyRef: CAP_REF, agentId: agentDbId, dailyMcoinCap: n });\n    }\n  };\n\n  const saving = setCap.isPending || removeCap.isPending;\n\n  return (\n    <div className=\"border-t border-border/50 pt-3 space-y-2.5\">\n      <p className=\"text-xs text-muted-foreground flex items-center gap-1\">\n        <ShieldCheck className=\"w-3 h-3\" /> Acesso & limites\n      </p>\n\n      {/* Bound module + cost */}\n      <div className=\"flex items-center justify-between text-xs\">\n        <span className=\"text-foreground\">{cap?.displayName ?? capabilityKey}</span>\n        <Badge variant=\"outline\" className=\"text-[10px]\">\n          {cap?.moduleSelfBills ? 'auto-bill' : `${cap?.baseMcoinCost ?? 0} mco`}\n        </Badge>\n      </div>\n\n      {/* BYOK key status */}\n      {cap?.requiresByok && (\n        byokPresent ? (\n          <p className=\"text-[11px] text-emerald-500 flex items-center gap-1\">\n            <KeyRound className=\"w-3 h-3\" /> Chave {byokProvider} configurada\n          </p>\n        ) : (\n          <Link\n            to=\"/dashboard/settings\"\n            className=\"text-[11px] text-amber-500 flex items-center gap-1 hover:underline\"\n          >\n            <CircleAlert className=\"w-3 h-3\" /> Configurar chave {byokProvider}\n            <ExternalLink className=\"w-3 h-3\" />\n          </Link>\n        )\n      )}\n\n      {/* Daily mcoCoin cap */}\n      <div className=\"space-y-1\">\n        <p className=\"text-[11px] text-muted-foreground flex items-center gap-1\">\n          <Coins className=\"w-3 h-3\" /> Limite di\u00e1rio (mcoCoins \u00b7 0 = ilimitado)\n        </p>\n        <div className=\"flex gap-1.5\">\n          <Input\n            type=\"number\"\n            min={0}\n            value={limit}\n            onChange={(e) => setLimit(e.target.value)}\n            placeholder=\"0\"\n            className=\"h-8 text-xs\"\n          />\n          <Button size=\"sm\" variant=\"outline\" className=\"h-8 px-2.5\" disabled={saving} onClick={handleSaveCap}>\n            {saving ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : 'Salvar'}\n          </Button>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AccessConfigCard.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:46:00)*
+
+
+## 🤖 Claude *(14:46:00)*
+
+Wirando o card no `AgentDetail` e fechando com os gates `tsc` + `build`:
+
+## 🤖 Claude *(14:46:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "import { useAgentTask } from '@/hooks/useAgentTask';",
+  "new_string": "import { useAgentTask } from '@/hooks/useAgentTask';\nimport { AccessConfigCard } from '@/components/panels/AccessConfigCard';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:46:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx",
+  "old_string": "              {!agent.dbId && (\n                <p className=\"text-[10px] text-muted-foreground mt-1\">Agente n\u00e3o persistido \u2014 salve antes de executar.</p>\n              )}\n            </div>",
+  "new_string": "              {!agent.dbId && (\n                <p className=\"text-[10px] text-muted-foreground mt-1\">Agente n\u00e3o persistido \u2014 salve antes de executar.</p>\n              )}\n            </div>\n\n            {isCapability && agent.dbId && agent.capabilityKey && (\n              <AccessConfigCard agentDbId={agent.dbId} capabilityKey={agent.capabilityKey} />\n            )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/panels/AgentDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:46:09)*
+
+
+## 🤖 Claude *(14:46:09)*
+
+Fase 3 UI completa. Gates materiais agora — `tsc` + `bun run build` (gate FR-CV2: build OK + chunk novo):
+
+## 🤖 Claude *(14:46:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | head -30; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "TypeScript gate \u2014 full Fase 3 UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(14:46:49)*
+
+
+## 🤖 Claude *(14:46:51)*
+
+`tsc` zero ✅. Para o gate de build: estou no **repo principal** (nginx serve este `dist/`), então `bun run build` aqui = **deploy em produção**. O plano sequencia o deploy do frontend junto com o GO da Fase 0 (destrutiva). Vou buildar para um **outDir temporário** — prova materialmente o gate (compila + chunk novo) **sem** deployar sem autorização. Deixa eu ver o script de build:
+
+## 🤖 Claude *(14:46:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE '\"(build|build:dev|dev|lint)\":' package.json",
+  "description": "Inspect build script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7:    "dev": "vite",
+> 8:    "build": "vite build",
+> 9:    "build:dev": "vite build --mode development",
+> 10:    "lint": "eslint .",
+> ```
+
+## 🤖 Claude *(14:47:01)*
+
+
+## 🤖 Claude *(14:47:02)*
+
+`build` = `vite build`. Buildo para `dist-verify/` (temp) — prova o gate sem deployar:
+
+## 🤖 Claude *(14:47:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx vite build --outDir dist-verify --emptyOutDir 2>&1 | tail -25; echo \"BUILD_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Build to temp dir to prove Fase 3 gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   npx update-browserslist-db@latest
+>   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+> ✓ 4922 modules transformed.
+> x Build failed in 11.77s
+> error during build:
+> src/components/settings/MetaConfigCard.tsx (9:32): "Instagram" is not exported by "node_modules/lucide-react/dist/esm/lucide-react.mjs", imported by "src/components/settings/MetaConfigCard.tsx".
+> file: /home/gcrUX/htdocs/constellation-orchestra/src/components/settings/MetaConfigCard.tsx:9:32
+> 
+>  7: import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+>  8: import { toast } from "sonner";
+>  9: import { Share2, Save, Loader2, Instagram, Facebook, ChevronDown, AlertTriangle, CheckCircle2, Trash2 } from "lucide-...
+>                                     ^
+> 10: 
+> 11: /**
+> 
+>     at getRollupError (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/parseAst.js:395:41)
+>     at error (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/parseAst.js:391:42)
+>     at Module.error (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:15535:16)
+>     at Module.traceVariable (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:15984:29)
+>     at ModuleScope.findVariable (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:13770:39)
+>     at FunctionScope.findVariable (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:5252:38)
+>     at FunctionBodyScope.findVariable (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:5252:38)
+>     at Identifier.bind (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:5035:40)
+>     at CallExpression.bind (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:2851:28)
+>     at CallExpression.bind (file:///home/gcrUX/htdocs/constellation-orchestra/node_modules/rollup/dist/es/shared/node-entry.js:11235:15)
+> BUILD_EXIT=1
+> ```
+
+## 🤖 Claude *(14:47:50)*
+
+
+## 🤖 Claude *(14:47:52)*
+
+O build falhou — mas **não é o meu código**. É um blocker **pré-existente**: `MetaConfigCard.tsx` importa `Instagram` do `lucide-react`, que a versão instalada **não exporta mais** (lucide removeu ícones de marca). `tsc` passou (os types ainda listam), mas o rollup quebra no bundle. Isso bloqueia **qualquer** deploy de frontend, não só a Fase 3. Deixa eu confirmar que é pré-existente + mapear o alcance:
+
+## 🤖 Claude *(14:47:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== my changeset (MetaConfigCard should NOT be here = pre-existing) =====\"\ngit status --short\necho\necho \"===== all removed-brand-icon imports from lucide-react across src =====\"\ngrep -rnoE '\\b(Instagram|Facebook|Twitter|Linkedin|Youtube|Github|Twitch|Figma|Chrome|Dribbble|Gitlab|Slack)\\b' src/ 2>/dev/null | grep -v node_modules | head -40\necho\necho \"===== lucide-react installed version =====\"\ngrep '\"lucide-react\"' package.json\ncat node_modules/lucide-react/package.json 2>/dev/null | grep '\"version\"' | head -1",
+  "description": "Confirm pre-existing + scope brand-icon breakage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== my changeset (MetaConfigCard should NOT be here = pre-existing) =====
+>  M .claude/commands/handoff.md
+>  M HANDOFF.md
+>  M README.md
+>  M src/components/graph/CrewGraph.tsx
+>  M src/components/panels/AgentDetail.tsx
+>  M src/components/panels/ConfigPanel.tsx
+>  M src/components/panels/LogsPanel.tsx
+>  M src/hooks/useAgentActivity.ts
+>  M src/hooks/useAgentTask.ts
+>  M src/hooks/useCrewData.ts
+>  M src/pages/ConstellationPage.tsx
+>  M src/store/useCrewStore.ts
+> ?? src/components/graph/CrewWizard.tsx
+> ?? src/components/graph/EmptyConstellation.tsx
+> ?? src/components/panels/AccessConfigCard.tsx
+> ?? src/hooks/useCreateCrew.ts
+> ?? src/lib/agent-task-result.ts
+> 
+> ===== all removed-brand-icon imports from lucide-react across src =====
+> src/pages/ViralMinerPage.tsx:14:Instagram
+> src/pages/ViralMinerPage.tsx:17:Twitter
+> src/pages/ViralMinerPage.tsx:90:Instagram
+> src/pages/DashboardHome.tsx:84:Instagram
+> src/pages/DashboardHome.tsx:86:Facebook
+> src/pages/DashboardHome.tsx:87:Twitter
+> src/pages/SettingsPage.tsx:459:Facebook
+> src/pages/SettingsPage.tsx:459:Instagram
+> src/pages/CampaignWizard.tsx:25:Instagram
+> src/pages/CampaignWizard.tsx:26:Facebook
+> src/pages/CampaignWizard.tsx:28:Twitter
+> src/lib/canvas-recipes.ts:319:Instagram
+> src/pages/CalendarPage.tsx:36:Instagram
+> src/pages/CalendarPage.tsx:37:Facebook
+> src/pages/CalendarPage.tsx:38:Twitter
+> src/lib/meta.ts:1:Facebook
+> src/lib/meta.ts:1:Instagram
+> src/pages/ContentLibraryPage.tsx:78:Instagram
+> src/pages/ContentLibraryPage.tsx:78:Instagram
+> src/pages/ContentLibraryPage.tsx:79:Twitter
+> src/pages/ContentLibraryPage.tsx:79:Twitter
+> src/pages/ContentLibraryPage.tsx:913:Instagram
+> src/pages/ContentLibraryPage.tsx:914:Twitter
+> src/pages/ContentLibraryPage.tsx:917:Facebook
+> src/components/landing/FeaturesSection.tsx:16:Instagram
+> src/components/landing/FeaturesSection.tsx:16:Facebook
+> src/components/landing/FeaturesSection.tsx:16:Twitter
+> src/components/landing/TestimonialsSection.tsx:9:Instagram
+> src/components/core/AIOSTerminal.tsx:271:Chrome
+> src/components/landing/FAQSection.tsx:16:Instagram
+> src/components/landing/FAQSection.tsx:16:Facebook
+> src/components/landing/FAQSection.tsx:16:Twitter
+> src/components/ui/v0-ai-chat.tsx:10:Figma
+> src/components/ui/v0-ai-chat.tsx:175:Figma
+> src/components/ui/v0-ai-chat.tsx:176:Figma
+> src/hooks/usePipelineHistory.ts:31:Twitter
+> src/hooks/useSocialAccounts.ts:13:Instagram
+> src/hooks/useSocialAccounts.ts:14:Facebook
+> src/hooks/useSocialAccounts.ts:15:Twitter
+> src/hooks/useSocialAccounts.ts:55:Instagram
+> 
+> ===== lucide-react installed version =====
+>     "lucide-react": "^1.11.0",
+>   "version": "1.11.0",
+> ```
+
+## 🤖 Claude *(14:48:44)*
+
+
+## 🤖 Claude *(14:48:48)*
+
+Achado material importante. Deixa eu separar os fatos:
+
+- **Meu changeset está limpo** — `MetaConfigCard.tsx` não está nele. O blocker é **pré-existente**.
+- **`lucide-react` está em `1.11.0`** — anômalo (o lucide-react real é 0.x). `tsc` passou mas o rollup quebra → provável **mismatch `.d.ts` (tem Instagram) vs `.mjs` (não exporta)** = install corrompido/major-bump que removeu ícones de marca.
+- **Alcance:** ~18 arquivos importam Instagram/Facebook/Twitter/Chrome/Figma — quebra **todo** deploy de frontend, não só a Fase 3.
+
+Deixa eu confirmar a causa-raiz (histórico da versão + mismatch d.ts/mjs) antes de propor o caminho:
+
+## 🤖 Claude *(14:48:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== git history of lucide-react version in package.json =====\"\ngit log -5 --oneline -L '/lucide-react/,+0:package.json' 2>/dev/null | head -30 || git log --oneline -S 'lucide-react' -- package.json | head -10\necho\necho \"===== is Instagram in the .d.ts (explains tsc pass) but NOT in .mjs? =====\"\necho -n \"Instagram in dynamicIconImports/.d.ts: \"; grep -rl 'Instagram' node_modules/lucide-react/dist/*.d.ts 2>/dev/null | head -2\necho -n \"Instagram exported in esm .mjs: \"; grep -c 'Instagram' node_modules/lucide-react/dist/esm/lucide-react.mjs 2>/dev/null\necho\necho \"===== what version was lucide-react historically (git show prior package.json) =====\"\ngit log --oneline -S 'lucide-react' -- package.json 2>/dev/null | tail -3\necho \"--- current bun.lockb / package-lock present? ---\"\nls -la bun.lockb package-lock.json 2>/dev/null",
+  "description": "Root-cause lucide-react anomaly"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== git history of lucide-react version in package.json =====
+> 
+> ===== is Instagram in the .d.ts (explains tsc pass) but NOT in .mjs? =====
+> Instagram in dynamicIconImports/.d.ts: Instagram exported in esm .mjs: 0
+> 
+> ===== what version was lucide-react historically (git show prior package.json) =====
+> 1bc8809 template: vite_react_shadcn_ts_2026-03-20
+> --- current bun.lockb / package-lock present? ---
+> -rwxrwxr-x 1 ubuntu ubuntu 246885 Apr 17 00:26 bun.lockb
+> -rw-rw-r-- 1 ubuntu ubuntu 382003 May 14 01:44 package-lock.json
+> ```
+
+## 🤖 Claude *(14:50:23)*
+
+
+## 🤖 Claude *(14:50:28)*
+
+Causa-raiz confirmada e ela é reveladora:
+
+- `lucide-react@^1.11.0` está pinado **desde o template inicial** (commit `1bc8809`, 2026-03-20) — não é regressão recente.
+- `Instagram` **não está nem no `.d.ts` nem no `.mjs`** da versão instalada → ícones de marca nunca existiram nessa versão.
+- **Por que passou despercebido:** o esbuild (dev server) trata named-export ausente como `undefined` (ícone quebrado, sem erro) — o app *roda* em dev. Mas o rollup (`vite build`) trata como **erro fatal**. Logo: **o `vite build` de produção está quebrado** e o site vivo serve um bundle antigo/buildado noutro lugar. Isso é independente da Fase 3 e bloqueia **qualquer** deploy de frontend.
+
+Deixa eu confirmar que **meu código não usa nenhum ícone removido** (senão o blocker seria meu) e limpar o temp:
+
+## 🤖 Claude *(14:50:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== do MY added icons exist in installed lucide-react@1.11.0? =====\"\nfor icon in Sparkles Wrench KeyRound ShieldCheck Coins CircleAlert ExternalLink Zap Play Network Loader2; do\n  n=$(grep -c \"as $icon\\b\\|export.*\\b$icon\\b\" node_modules/lucide-react/dist/esm/lucide-react.mjs 2>/dev/null)\n  # fallback: check the icon module file exists\n  f=$(ls node_modules/lucide-react/dist/esm/icons/${icon,,}*.js 2>/dev/null | head -1)\n  echo \"$icon: export_hits=$n  file=$(basename \"$f\" 2>/dev/null || echo MISSING)\"\ndone\necho\necho \"--- cleanup temp build dir ---\"\nrm -rf dist-verify && echo \"dist-verify removed \u2705\"\necho \"--- live dist/ untouched (mtime) ---\"\nls -lad dist 2>/dev/null | awk '{print $6, $7, $8, $9}'",
+  "description": "Verify my icons exist + cleanup temp"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== do MY added icons exist in installed lucide-react@1.11.0? =====
+> Sparkles: export_hits=1  file=
+> Wrench: export_hits=1  file=
+> KeyRound: export_hits=1  file=
+> ShieldCheck: export_hits=1  file=
+> Coins: export_hits=1  file=
+> CircleAlert: export_hits=1  file=
+> ExternalLink: export_hits=1  file=
+> Zap: export_hits=1  file=
+> Play: export_hits=1  file=
+> Network: export_hits=1  file=
+> Loader2: export_hits=1  file=
+> 
+> --- cleanup temp build dir ---
+> dist-verify removed ✅
+> --- live dist/ untouched (mtime) ---
+> May 30 23:49 dist
+> ```
+
+## 🤖 Claude *(14:51:40)*
+
+
+## 🤖 Claude *(14:51:46)*
+
+Diagnóstico fechado e a notícia é dupla:
+
+✅ **Fase 3 está code-complete e tsc-verde, e NÃO introduz nenhum break** — todos os 11 ícones que usei (Sparkles, Wrench, KeyRound, ShieldCheck, Coins, CircleAlert, ExternalLink, Zap, Play, Network, Loader2) existem no lucide instalado. O `dist/` vivo (May 30) ficou intacto — não deployei nada.
+
+🔴 **Mas o `vite build` de produção está quebrado por um blocker pré-existente e repo-wide:** ~18 arquivos importam ícones de marca (`Instagram`/`Facebook`/`Twitter`/`Chrome`/`Figma`) que o `lucide-react@1.11.0` instalado não exporta. Pista forte de **install corrompido**: o `tsc` passa (o `.d.ts` resolve `Instagram`) mas o `.mjs` não o exporta — clássico de pacote parcial (e há histórico de `pnpm` destrutivo neste repo). Roda em dev (esbuild tolera), quebra no build (rollup é estrito) → o site vivo serve um bundle antigo.
+
+Isso é a sua decisão — é pré-existente, afeta produção inteira, e tem caminhos com trade-offs diferentes:
+
+## 🤖 Claude *(14:51:52)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O vite build de produ\u00e7\u00e3o est\u00e1 quebrado por um blocker pr\u00e9-existente (\u00edcones de marca do lucide-react@1.11.0 em ~18 arquivos \u2014 nada a ver com a Fase 3, que est\u00e1 code-complete + tsc-verde). Como proceder com o gate de build/deploy?",
+      "header": "Build blocker",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Reinstalar lucide (raiz)",
+          "description": "Investigar o install corrompido e rodar `bun install` do bun.lockb commitado. Se o .mjs estava parcial, restaura os \u00edcones e destrava TODO o build de uma vez, sem editar arquivo. Fallback: shim se n\u00e3o resolver. Toca node_modules (mas bun \u00e9 o gerenciador sancionado; pnpm que \u00e9 proibido)."
+        },
+        {
+          "label": "Shim de \u00edcones agora",
+          "description": "Sem mexer na depend\u00eancia: crio um shim local de \u00edcones de marca (SVG inline, props lucide-compat\u00edveis) e repointo os ~18 imports. Destrava o build deterministicamente, independente da vers\u00e3o do lucide. Mais arquivos editados, zero risco de depend\u00eancia."
+        },
+        {
+          "label": "Selar Fase 3, adiar build",
+          "description": "Commito a Fase 3 (tsc-verde) agora; o blocker do lucide + o deploy do frontend viram P1 numa sess\u00e3o dedicada. Nada vai pra produ\u00e7\u00e3o ainda \u2014 gate de build fica explicitamente bloqueado por causa externa, documentado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O vite build de produção está quebrado por um blocker pré-existente (ícones de marca do lucide-react@1.11.0 em ~18 arquivos — nada a ver com a Fase 3, que está code-complete + tsc-verde). Como proceder com o gate de build/deploy?"="Reinstalar lucide (raiz)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:57:25)*
+
+
+## 🤖 Claude *(14:57:27)*
+
+Maestro escolheu **reinstalar (raiz)**. Vou **investigar antes de reinstalar** — confirmar se é barrel corrompido (ícone existe como módulo mas o `.mjs` não re-exporta → reinstall conserta) ou se o 1.11.0 genuinamente não tem ícones de marca (→ preciso do shim). Checo a identidade do pacote, os módulos por-ícone, e a assinatura de destruição do pnpm (`.ignored/`):
+
+## 🤖 Claude *(14:57:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== installed lucide-react identity =====\"\ngrep -E '\"(name|version|homepage|description)\"' node_modules/lucide-react/package.json 2>/dev/null | head\necho\necho \"===== per-icon module files present? (instagram/facebook/twitter) =====\"\nls node_modules/lucide-react/dist/esm/icons/ 2>/dev/null | grep -iE 'instagram|facebook|^twitter|chrome|figma' | head\necho \"total icon modules:\"; ls node_modules/lucide-react/dist/esm/icons/*.js 2>/dev/null | wc -l\necho\necho \"===== Instagram in the .d.ts? (explains tsc pass) =====\"\ngrep -rl 'Instagram' node_modules/lucide-react/dist/ 2>/dev/null | head\necho\necho \"===== pnpm-destruction signature: node_modules/.ignored/ =====\"\nls -la node_modules/.ignored/ 2>/dev/null | head || echo \"no .ignored/ dir\"\necho\necho \"===== barrel .mjs size + does it reference icons/ at all? =====\"\nls -la node_modules/lucide-react/dist/esm/lucide-react.mjs 2>/dev/null\ngrep -c 'createLucideIcon\\|from.*icons/' node_modules/lucide-react/dist/esm/lucide-react.mjs 2>/dev/null",
+  "description": "Diagnose lucide install: corrupted barrel vs genuinely missing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== installed lucide-react identity =====
+>   "name": "lucide-react",
+>   "description": "A Lucide icon library package for React applications.",
+>   "version": "1.11.0",
+>   "homepage": "https://lucide.dev",
+>     "version": "pnpm version --git-tag-version=false"
+> 
+> ===== per-icon module files present? (instagram/facebook/twitter) =====
+> total icon modules:
+> 0
+> 
+> ===== Instagram in the .d.ts? (explains tsc pass) =====
+> 
+> ===== pnpm-destruction signature: node_modules/.ignored/ =====
+> 
+> ===== barrel .mjs size + does it reference icons/ at all? =====
+> -rw-rw-r-- 1 ubuntu ubuntu 227458 Apr 24 21:03 node_modules/lucide-react/dist/esm/lucide-react.mjs
+> 1701
+> ```
+
+## 🤖 Claude *(14:58:24)*
+
+
+## 🤖 Claude *(14:58:29)*
+
+A investigação muda o diagnóstico — deixa eu confirmar antes de agir:
+
+- O pacote é o **lucide-react REAL** (`homepage: lucide.dev`), versão **1.11.0**.
+- **Não há corrupção:** o barrel `.mjs` está íntegro (227KB, 1701 ícones inline) — os ícones de marca simplesmente **não existem** no 1.x (lucide os removeu upstream). Não é `.mjs` parcial; é remoção intencional.
+- Sem `.ignored/` (sem assinatura de destruição pnpm).
+
+Ou seja: a precondição da opção ("se o `.mjs` estava parcial, restaura") é **falsa** — `bun install` traria o **mesmo 1.11.0 sem ícones de marca**. Deixa eu confirmar o pin dos lockfiles (há `bun.lockb` E `package-lock.json` — outro sinal de confusão de gerenciador) para ter certeza de que o reinstall não muda a versão:
+
+## 🤖 Claude *(14:58:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== lucide-react pin in each lockfile =====\"\necho -n \"bun.lockb: \"; strings bun.lockb 2>/dev/null | grep -oE 'lucide-react@[0-9][^\"]*' | sort -u | head\necho -n \"package-lock.json: \"; grep -oE '\"lucide-react\": *\"[^\"]*\"|node_modules/lucide-react\"' package-lock.json 2>/dev/null | head -3\ngrep -A3 '\"node_modules/lucide-react\"' package-lock.json 2>/dev/null | grep -E '\"version\"' | head -1\necho\necho \"===== sanity: does ANY brand icon exist in 1.11.0 barrel? (Instagram/Facebook/Twitter/Chrome/Figma) =====\"\nfor i in Instagram Facebook Twitter Chrome Figma; do\n  echo -n \"$i: \"; grep -c \"\\\\b$i\\\\b\" node_modules/lucide-react/dist/esm/lucide-react.mjs 2>/dev/null\ndone\necho\necho \"===== how does tsc pass then? check the .d.ts export style =====\"\nls node_modules/lucide-react/dist/lucide-react.d.ts 2>/dev/null && grep -cE 'Instagram|export declare const' node_modules/lucide-react/dist/lucide-react.d.ts 2>/dev/null | head -1\nfind node_modules/lucide-react -name '*.d.ts' | head -5",
+  "description": "Confirm lockfile pins + brand icons truly absent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== lucide-react pin in each lockfile =====
+> bun.lockb: package-lock.json: "lucide-react": "^1.11.0"
+> node_modules/lucide-react"
+>       "version": "1.11.0",
+> 
+> ===== sanity: does ANY brand icon exist in 1.11.0 barrel? (Instagram/Facebook/Twitter/Chrome/Figma) =====
+> Instagram: 0
+> Facebook: 0
+> Twitter: 0
+> Chrome: 0
+> Figma: 0
+> 
+> ===== how does tsc pass then? check the .d.ts export style =====
+> node_modules/lucide-react/dist/lucide-react.d.ts
+> 0
+> node_modules/lucide-react/dynamic.d.ts
+> node_modules/lucide-react/dynamicIconImports.d.ts
+> node_modules/lucide-react/dist/lucide-react.prefixed.d.ts
+> node_modules/lucide-react/dist/lucide-react.suffixed.d.ts
+> node_modules/lucide-react/dist/lucide-react.d.ts
+> ```
+
+## 🤖 Claude *(14:59:50)*
+
+
+## 🤖 Claude *(14:59:55)*
+
+Confirmado em definitivo: package-lock pina `lucide-react@^1.11.0` (instalado 1.11.0), e **todos** os ícones de marca = 0 ocorrências no barrel. Não é corrupção — o **1.x do lucide removeu os ícones de marca** upstream. Logo `bun install` restauraria o mesmo 1.11.0 sem ícones — **reinstall é no-op provado** (precondição "se o .mjs estava parcial" = falsa). Sigo para o **fallback shim** que você pré-autorizou.
+
+Primeiro, vou mapear **com rigor** TODOS os ícones importados que o lucide instalado não exporta (não só os 5 que vi) — escrevo um auditor que cruza cada import de `lucide-react` contra os exports reais. Isso também vira um **anticorpo** (Mandato Obstáculo→Síntese) contra reincidência:
+
+## 🤖 Claude *(15:00:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-lucide-imports.ts",
+  "content": "/**\n * Lucide import guard (antibody \u2014 Obstacle\u2192Synthesis, 2026-06-01).\n *\n * lucide-react@1.x removed all brand/logo icons (Instagram, Facebook, Twitter, Chrome, Figma, \u2026).\n * Vite dev (esbuild) tolerates a missing named export (it becomes `undefined` \u2192 invisible icon), so\n * the app \"runs\" while `vite build` (rollup) fails hard with \"X is not exported by lucide-react\".\n * tsc can also pass depending on type resolution. This audit cross-checks every name imported from\n * `lucide-react` against what the installed package ACTUALLY exports, so a removed icon is caught\n * mechanically before the production build breaks.\n *\n * Run: bun run scripts/qa/audit-lucide-imports.ts\n * Exit 0 = clean \u00b7 Exit 1 = unresolved imports found (printed per file).\n */\nimport { readdirSync, readFileSync, statSync } from 'node:fs';\nimport { join } from 'node:path';\nimport * as Lucide from 'lucide-react';\n\nconst SRC = new URL('../../src', import.meta.url).pathname;\nconst valid = new Set(Object.keys(Lucide));\n\nfunction walk(dir: string): string[] {\n  const out: string[] = [];\n  for (const entry of readdirSync(dir)) {\n    const full = join(dir, entry);\n    if (statSync(full).isDirectory()) out.push(...walk(full));\n    else if (/\\.(tsx?|jsx?)$/.test(entry)) out.push(full);\n  }\n  return out;\n}\n\n// Capture every `import { ... } from 'lucide-react'` block (single- or multi-line).\nconst IMPORT_RE = /import\\s*(?:type\\s*)?\\{([\\s\\S]*?)\\}\\s*from\\s*['\"]lucide-react['\"]/g;\n\nconst findings: Record<string, string[]> = {};\n\nfor (const file of walk(SRC)) {\n  const code = readFileSync(file, 'utf8');\n  let m: RegExpExecArray | null;\n  while ((m = IMPORT_RE.exec(code)) !== null) {\n    const names = m[1]\n      .split(',')\n      .map((s) => s.trim())\n      .filter(Boolean)\n      // `Foo as Bar` \u2192 the imported (source) name is `Foo`\n      .map((s) => s.split(/\\s+as\\s+/)[0].trim());\n    const missing = names.filter((n) => n && !valid.has(n));\n    if (missing.length) {\n      const rel = file.replace(SRC, 'src');\n      findings[rel] = [...new Set([...(findings[rel] ?? []), ...missing])];\n    }\n  }\n}\n\nconst files = Object.keys(findings).sort();\nif (files.length === 0) {\n  console.log(`\u2705 lucide import guard: all imports resolve against lucide-react (${valid.size} exports)`);\n  process.exit(0);\n}\n\nconsole.log(`\ud83d\udd34 lucide import guard: ${files.length} file(s) import names lucide-react@${Lucide ? '' : ''}does NOT export:\\n`);\nconst allMissing = new Set<string>();\nfor (const f of files) {\n  findings[f].forEach((n) => allMissing.add(n));\n  console.log(`  ${f}\\n    \u2192 ${findings[f].join(', ')}`);\n}\nconsole.log(`\\n  Distinct missing icons: ${[...allMissing].sort().join(', ')}`);\nprocess.exit(1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-lucide-imports.ts (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
