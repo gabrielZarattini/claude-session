@@ -1,0 +1,4102 @@
+# Address OTD-OE661-PER-USER and documentation tasks
+**Date:** 2026-06-01 | **Session ID:** `804f5d6b-2cc1-4247-b123-312f23773546`
+
+---
+
+## 👤 User *(00:34:47)*
+
+<command-message>handson</command-message>
+<command-name>/handson</command-name>
+
+## 👤 User *(00:34:47)*
+
+# ShakeHands — Session Pick-Up Protocol v3
+
+Execute the ShakeHands /handson ritual for this project.
+
+> **v3 (2026-05-08):** Added BoK Gate enforcement per MCORCH Master Execution Protocol — alert when active module work has no sealed BoK suite at `docs/bok/<slug>/`.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before reading anything)
+
+```bash
+git log --oneline -7                        # recent history + commit style
+git status --short                          # uncommitted changes
+git diff HEAD --stat                        # change scope
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # Chroma API v2 health
+ls docs/bok/ 2>/dev/null                    # BoK suites disponíveis
+wc -l HANDOFF.md                            # total lines — drives the read-from-end offset
+```
+
+Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+- `HANDOFF.md` with `limit=71` → Task State header + FIRST ACTION FOR NEXT AGENT (sempre estável, contém summary da fase atual selada)
+- `HANDOFF.md` with `offset=<total_lines - 400>` `limit=400` → últimas 1-2 Records + Pending Actions + GraphRAG State + Infrastructure + Key Files (suffix sections always at the tail)
+- `CLAUDE.md` (architecture rules, data flow, key files — incluindo MCORCH Master Execution Protocol + Survival Laws link)
+- `.claude/context/sprint-priorities.md` (sprint goal, 4Cs snapshot, top gaps)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
+
+> ⚠️ **Auditoria histórica de seals antigos:** usar `Read` com offset arbitrário em HANDOFF.md (fora do fluxo padrão de pickup). Ordering newest-first: seal mais antigo ≈ linha 2805, seal mais recente logo após linha 71. Cada `## <Phase> Record (YYYY-MM-DD)` marca um seal. Manter o Read em chunks ≤ 400 linhas para preservar budget de tokens.
+
+Also check for loose files in scratch/:
+```bash
+ls scratch/ 2>/dev/null && echo "⚠️ scratch/ has files — consider moving to .claude/scripts/db/" || echo "scratch/ clean ✅"
+```
+
+### BoK Gate check (v3 — MCORCH Master Execution Protocol)
+
+For each BoK suite in `docs/bok/<slug>/`, verify completeness:
+```bash
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK complete" || echo "⚠️ $slug — missing: ${missing[*]}"
+done
+```
+
+If the user mentions working on a **new module / complex feature / integration / architectural change**:
+- Check whether `docs/bok/<expected-slug>/` exists with all 9 docs.
+- If missing: surface in the **ALERTAS** section as a critical block per CLAUDE.md MCORCH Master Execution Protocol.
+- Recommend `/bok-scribe <idea summary>` before any code is written.
+
+---
+
+## BRIEF OUTPUT
+
+After gathering all context, produce a structured brief in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDSON — <FASE SELADA> (<data do último seal>)
+═══════════════════════════════════════════════════════════
+
+🏁 ESTADO ATUAL
+  Fase selada: <nome da última fase — do Task State header>
+  Últimos commits:
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+
+📂 MUDANÇAS PENDENTES
+  <lista de arquivos M/?? com descrição do que contém, ou "Worktree limpo ✅">
+
+🏗️ INFRA
+  mcorch_chroma:     <status> — Chroma API: <OK / ERRO>
+  mcorch_claude_mem: <status>
+  mega-brain-*:      <status resumido>
+
+🧠 KNOWLEDGE MESH
+  <totalNodes> nós · <totalEdges> arestas (fonte: HANDOFF.md GraphRAG State)
+  Top tipos: <milestone:N · architecture:N · decision:N ...>
+
+🔧 TYPESCRIPT
+  <"Zero erros ✅" ou lista dos erros críticos>
+
+📚 BoK SUITES (v3 — MCORCH Master Execution Protocol)
+  Sealed: <list of docs/bok/<slug>/ com 9 docs completos>
+  Incomplete: <slugs com docs faltando ou "nenhum">
+  Mesh seal nodes:
+    <slug> → <node_id> (stability X.XX)
+
+⚠️ **GATE alert:** se sessão tocar módulo significativo sem BoK selada,
+    listar como bloqueador crítico e sugerir /bok-scribe antes de qualquer commit.
+
+📌 SPRINT
+  Goal: <Sprint Goal de sprint-priorities.md, ou "⚠️ Sprint goal não definido — rode /audit">
+  Top gap: <Gap #1 da seção "Top 3 Gap Closures", ou "não definido">
+
+⚡ PRÓXIMOS PASSOS (prioridade)
+  1. <item de maior prioridade do Pending Actions — com contexto de por que é urgente>
+  2. <segundo item>
+  3. <terceiro item>
+
+⚠️ ALERTAS
+  <containers unhealthy, TS errors, uncommitted changes que conflitam, scratch/ com arquivos, ou "Nenhum alerta ✅">
+
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## Rules
+
+- **TypeScript errors → report immediately.** If there are TS errors, list them under ALERTAS. Do not start implementing new features until errors are resolved (unless the user explicitly asks to proceed despite errors).
+- **Unhealthy containers → report with triage.** Suggest the fix command if known (e.g., `docker compose restart mcorch-vector-engine` for chroma).
+- **Uncommitted changes → describe, do not commit.** Only describe what exists in the working tree; committing is the user's call.
+- **Keep the brief tight.** No padding. No repetition of CLAUDE.md architecture. The user already knows the architecture — they need the delta: what changed, what's broken, what's next.
+- **Pending Actions priority order:** CRITICAL (before first client) > NON-CRITICAL > Phase Zeta > Core v3 > Epsilon v9.
+- **Knowledge Mesh numbers:** use `GraphRAG State` section from HANDOFF.md as the source. Do not invent counts.
+
+
+## 🤖 Claude *(00:35:04)*
+
+
+## 🤖 Claude *(00:35:04)*
+
+I'll execute the ShakeHands `/handson` pick-up protocol. Starting with all pre-flight checks in parallel.
+
+## 🤖 Claude *(00:35:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== GIT LOG ===\" && git log --oneline -7 && echo \"\" && echo \"=== GIT STATUS ===\" && git status --short && echo \"\" && echo \"=== GIT DIFF STAT ===\" && git diff HEAD --stat",
+  "description": "Git history, status, and diff scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GIT LOG ===
+> 7881231 docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node
+> af3abdb fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests
+> 57d34e1 feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions
+> 80976b6 docs: update HANDOFF.md task record for v6.14.9
+> 41d5a5c docs: update README.md version, badges, and changelog for v6.14.9
+> bae9ae0 chore(scripts): add QA smoke tests for WhatsApp webhook, ads sync, and credentials encryption
+> c86f570 feat(edge): implement whatsapp webhook, ads sync, and decrypt views integration
+> 
+> === GIT STATUS ===
+> 
+> === GIT DIFF STAT ===
+> ```
+
+## 🤖 Claude *(00:35:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -20 && echo \"=== TSC EXIT: ${PIPESTATUS[0]} ===\"",
+  "description": "TypeScript strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TSC EXIT: 0 ===
+> ```
+
+## 🤖 Claude *(00:35:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== MCORCH CONTAINERS ===\" && docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" && echo \"\" && echo \"=== MEGA-BRAIN ===\" && docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" && echo \"\" && echo \"=== CHROMA HEARTBEAT ===\" && curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat && echo \"\"",
+  "description": "Docker containers and Chroma health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === MCORCH CONTAINERS ===
+> mcorch_chroma: Up 8 days (healthy)
+> mcorch_claude_mem: Up 8 days (healthy)
+> 
+> === MEGA-BRAIN ===
+> mega-brain-dashboard: Up 8 days
+> mega-brain-webhook: Up 8 days (healthy)
+> mega-brain-daemon: Up 8 days (healthy)
+> 
+> === CHROMA HEARTBEAT ===
+> {"nanosecond heartbeat":1780274108956915214}
+> ```
+
+## 🤖 Claude *(00:35:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== HANDOFF LINES ===\" && wc -l HANDOFF.md && echo \"\" && echo \"=== BoK SUITES ===\" && ls docs/bok/ 2>/dev/null && echo \"\" && echo \"=== SCRATCH ===\" && (ls scratch/ 2>/dev/null && echo \"\u26a0\ufe0f scratch/ has files\" || echo \"scratch/ clean \u2705\")",
+  "description": "HANDOFF size, BoK suites, scratch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HANDOFF LINES ===
+> 5741 HANDOFF.md
+> 
+> === BoK SUITES ===
+> aios-sql-bridge
+> canvas-design
+> conteudo-v2
+> e2e-user-zero
+> gamificacao-nodes
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> viralmind
+> 
+> === SCRATCH ===
+> scratch/ clean ✅
+> ```
+
+## 🤖 Claude *(00:35:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "description": "BoK Gate completeness check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ aios-sql-bridge — BoK complete
+> ✅ canvas-design — BoK complete
+> ✅ conteudo-v2 — BoK complete
+> ✅ e2e-user-zero — BoK complete
+> ✅ gamificacao-nodes — BoK complete
+> ✅ mcorch-constellation — BoK complete
+> ✅ mcorch-qa-healing — BoK complete
+> ✅ mercado-livre-api — BoK complete
+> ✅ meta-api — BoK complete
+> ✅ openclaw — BoK complete
+> ✅ viralmind — BoK complete
+> ```
+
+## 🤖 Claude *(00:35:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 71
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## LLM Cascading Fallback & aios-sql-bridge E2E Validation (2026-05-31)
+> 15	
+> 16	**v6.15.0 (2026-05-31)** — Implementada a cascata de fallback do LLM nas Edge Functions, a correção e teste de fumaça E2E da `aios-sql-bridge` e a verificação do watchdog do Canvas Studio Higgsfield.
+> 17	
+> 18	**O que foi entregue:**
+> 19	- **LLM Cascading Fallback (OTD-LLM-FALLBACK)** — Helper [llm-fallback.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts) compartilhado implantado. Realiza fallback em cascata (OpenRouter Pago → Gemini Free `/v1beta` OpenAI API → OpenRouter Free `google/gemma-2-9b-it:free`) sob falhas de HTTP 402/429 ou rede. Refatoradas **12 Edge Functions** para utilizar o helper.
+> 20	- **aios-sql-bridge E2E Validation** — Correção crítica no checkAdmin no [index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-sql-bridge/index.ts) para ler a tabela `user_roles` usando o client `admin` (service role), sanando os erros de assinatura obsoleta de 2 argumentos do `has_role`. Executada a suíte de testes do Vitest [aios-sql-bridge-smoke.test.ts](file:///home/gcrUX/htdocs/constellation-orchestra/src/test/aios-sql-bridge-smoke.test.ts) que passou com sucesso nos 3 cenários (happy path, forbidden columns e non-whitelisted tables).
+> 21	- **Higgsfield Video Watchdog (Fase 4.2c)** — Whitelisting de modelos Higgsfield em `canvas-execute` e validação física do script [canvas-video-watchdog.sh](file:///home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh) que verifica jobs stale e grava telemetria saudável em `infra_health_logs`.
+> 22	
+> 23	**ORO triplet:**
+> 24	- **Operator:** MCORCH Master Execution Agent (eu)
+> 25	- **Reviewer:** Sovereign (Gabriel Zarattini)
+> 26	- **Owner:** Sovereign (blast radius = infraestrutura de LLM Fallback, governança de segurança da SQL bridge e integridade dos jobs de vídeo Higgsfield)
+> 27	
+> 28	| Verificação | Resultado |
+> 29	|---|---|
+> 30	| `tsc --noEmit` (árvore combinada) | ✅ 0 erros |
+> 31	| Unit tests | ✅ **217/217** (incluindo o novo E2E smoke test da SQL Bridge) |
+> 32	| Handoff node | ✅ `4aaa1887-b34d-4711-b121-9ad637899b62` embedded 768d |
+> 33	| Mesh total | **8713 nodes** |
+> 34	| Deploy | ✅ 12 Edge Functions deployadas e funcionando online |
+> 35	
+> 36	| Commit | Conteúdo |
+> 37	|---|---|
+> 38	| `57d34e130b0cebda9d67fd2e1022ff80a295f9fb` | feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions |
+> 39	| `af3abdb88b0aaa20b7b577801ac8f1661823efd1` | fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests |
+> 40	
+> 41	### Survival Laws Self-audit
+> 42	```
+> 43	### Law 1 (Materiality)
+> 44	- [x] Toda claim tem prova? SIM — commits hashes completos, logs de teste do Vitest e telemetria inserida com sucesso em infra_health_logs
+> 45	- [x] Cérebro sem mãos? SIM — detectada e corrigida a assinatura incorreta da RPC de admin na SQL Bridge rodando em produção
+> 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
+> 47	 
+> 48	### Law 2 (Process)
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 50	 
+> 51	### Law 3 (Pruning)
+> 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
+> 53	 
+> 54	### Law 4 (ORO)
+> 55	- [x] ORO triplet declarado e alinhado com o Sovereign
+> 56	```
+> 57	
+> 58	#### Material Proofs Audit Result (Fase 5c):
+> 59	| Claim | Kind | Expected | Actual | Verdict |
+> 60	|-------|------|----------|--------|---------|
+> 61	| mesh node 856cad26 | mesh_node | 856cad26-a931-4d87-94ad-063b22c8152d | 856cad26-a931-4d87-94ad-063b22c8152d | ✅ |
+> 62	| commit 0a1c4e6 | git_commit | 0a1c4e6 | 0a1c4e6 | ✅ |
+> 63	| commit d34ff5d | git_commit | d34ff5d | d34ff5d | ✅ |
+> 64	| tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> 65	| file docs/bok/mcorch-constellation/roadmap-v1.md | file_exists | docs/bok/mcorch-constellation/roadmap-v1.md | docs/bok/mcorch-constellation/roadmap-v1.md | ✅ |
+> 66	| oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 67	| handoff node 4aaa1887 | mesh_node | 4aaa1887-b34d-4711-b121-9ad637899b62 | 4aaa1887-b34d-4711-b121-9ad637899b62 | ✅ |
+> 68	
+> 69	QA VERDICT: 7 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 70	
+> 71	
+> ```
+
+## 🤖 Claude *(00:35:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-40 of 171 total (30091 tokens, cap 25000). Call Read with offset=41 limit=40 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 8	
+> 9	**Sprint v5.5.5 selado em 2026-05-05** — Settings Sovereignty: useUserApiKeys TanStack Query + pref_ai_model persistido + mcoCoins RPC atômico + Testar key client-side + Epsilon v9 hub badge + 2559 nós/3516 arestas.
+> 10	
+> 11	**Sprint v5.5.6 selado em 2026-05-06** — Core Promotion: CorePage v1 arquivada para `.archive/pages/`, `Core v2` promovida para `Core` no menu, `/dashboard/core` redireciona via Navigate. Gemini Live validado (VITE_GEMINI_API_KEY no `.env` + GEMINI_API_KEY no vault) — Pending Action #8 era falso positivo. 2560 nós · 100% embedded.
+> 12	
+> 13	**Sprint v5.6.0 selado em 2026-05-06** — DevOps + Security Seal: 6 branches mobile sincronizados + DOCUMENTATION_CREDENTIAL_RULE + pre-commit hook anti-credential + Gemini API key rotacionada + test coverage 0→66 testes (billing + store + phase-zeta) + BoK Scribe Agent (MRD/BRD/PRD/FRD/SDD templates) + MCORCH Master Execution Protocol em CLAUDE.md + /sync-mobile-branch protocol. 2561 nós · 100% embedded.
+> 14	
+> 15	**Sprint v5.6.1 selado em 2026-05-06** — Layout + UX Fixes: Matrix/Memory layout regression corrigida (absolute→relative), search bar inline nos badges, texto 100% opaco, MeshControl sincronizado com hook de grafo. 2564 nós · 100% embedded.
+> 16	
+> 17	**Sprint v5.7.0 selado em 2026-05-07** — BoK Suite v1 + A2UI Wiring + Test Coverage 122: parseAgentMessage conectado ao AIOSTerminal.onMessage (A2UI surfaces vivas em produção), 56 testes novos (66→122 — useOrchestrationGraph + useKnowledgeMesh + useSubscription), e família BoK completa de 9 docs (~29.185 palavras) reverse-engineered de 177 src files + 30 migrations + 39 edge functions + 4 crons. Mesh seal `bok-scribe-seal-mcorch-constellation-v1` (type `documentation_suite`, stability 0.85). 2567 nós · 100% embedded.
+> 18	
+> 19	**Sprint v5.9.0 selado em 2026-05-08** — FMEA-005 + LGPD Deploy: FMEA-005 (RPN 144) fechado com chunked embedding e vector averaging em `embed-mcorch-node`; LGPD (data-export + delete-account + delete_account() RPC) confirmada em produção; scratch/ removida. 7280 nós · 100% embedded.
+> 20	
+> 21	**Sprint v5.8.0 selado em 2026-05-08** — FMEA + BoK Phase 2 + 8-Agent System + LGPD: FMEA-008 (RPN 120) e FMEA-011 (RPN 100) fechados; BoK Suite enriquecida com voz estratégica (+227 linhas em 6 docs: Sovereign's Conviction, Business Philosophy, Por Que Vencemos, Validação com Criadores, Architectural Decisions, Quality Philosophy); `/bok-agents-generator` produziu `bok-agents-system--mcorch-constellation.md` (704 linhas · 8 agentes · 3 camadas cross-agent); LGPD DD-001+DD-002 implementados (delete_account() RPC + Edge Functions + hooks + SettingsPage modal). Phase Commercial desbloqueada. 7276 nós · 100% embedded.
+> 22	
+> 23	**Sprint v6.0.0 selado em 2026-05-14** — Conteúdo v2 BoK + VIRALmind Sprints 1-3 + ShakeHands v3: convergência de 3 streams paralelos. (1) BoK Conteúdo v2 selada (10 docs, 2276 linhas) com mesh seal `bok-scribe-seal-conteudo-v2-v1` (stability 0.85, R\$5.4M ARR Y2 projeção); (2) VIRALmind integrado via Antigravity — 4 migrations `vm_*` (trends/canvas/affiliate/niches) + 2 Edge Functions (`fetch-trends` Apify+RapidAPI, `canvas-execute` multi-provider OpenAI/Replicate/OpenRouter/Higgsfield) + 3 pages (Viral Miner, Canvas Studio, Canvas Editor) + 2 hooks (`useViralTrends`, `useCanvasStudio`); (3) ShakeHands v3 protocol — BoK Gate enforcement no /handson PRE-FLIGHT + BRIEF + /handoff Phase 5b mandatory check; (4) Feature gamificacao-mcoCoins-v1 mergeada (`mcoin_transactions` + `award_mco_coins` RPC + Circuit Breaker em opencode-bridge + memory hook integration). Conteúdo v2 BoK reconciliada com VIRALmind v1: v1=xyflow+vm_*, v2=tldraw+canvas-mcp reservado para Phase 7+8. 13 commits granulares. Sprint 4 (Canvas UX Mood Board completion) é o próximo deliverable.
+> 24	
+> 25	**Sprint v6.1.0 selado em 2026-05-14** — Canvas Studio UX Shell + Higgsfield Fix: shell do Canvas Studio migrado do `viralmind-builder` (store Zustand+zundo, lanes overlay, TopBar/LeftPanel/StatusBar, catálogo de 9 receitas, ImageLightbox, PipelineEdge); `canvas-execute` com endpoint Higgsfield corrigido (`platform.higgsfield.ai` rota Soul) + RPC `deduct_mco_coins`. Plano Phase 4.2 selado em `~/.claude/plans/floating-sleeping-sparrow.md`.
+> 26	
+> 27	**Sprint v6.1.1 selado em 2026-05-14** — viralmind BoK Suite Sealed: dívida documental do override consciente do BoK Gate quitada. 6 docs autorados (`01-mrd`, `02-brd`, `06-data-model`, `07-process-flow`, `08-quality-metrics`, `00-index`) + `04-frd` reescrito de handbook CLAUDE.md → FRD real (32 FR + 14 NFR + matriz PR→FR). Ancorado nas 10 tabelas `vm_*` + 6 enums + Edge Functions `fetch-trends`/`canvas-execute`. Mesh seal `bok-scribe-seal-viralmind-v1` (`documentation_suite`, stability 0.85, revenue_impact R\$14M, embedded 768d). 7 OTDs registrados (destaques: `vector(1536)` vs padrão `768` sem índice HNSW — FMEA-VM-002 RPN 288; bucket `canvas-assets` público — FMEA-VM-003 RPN 140). BoK Gate do viralmind **liberado**. Sessão selada com ~51% de contexto — Canvas Studio Phase 4.2 diferida para sessão nova. 7463 nós · 100% embedded. 6 commits granulares. **Pendência conhecida (não desta sessão):** `docs/bok/gamificacao-nodes/` incompleta (5/9 docs) — rodar `/bok-scribe` ou completar antes de tocar o módulo.
+> 28	
+> 29	**Sprint v6.6.9 selado em 2026-05-20** — mcorch-qa-healing v1 — Material Proof Gate: novo módulo de QA sênior que fecha a fraqueza de Lei 1 (Materialidade) — o bloco Survival Laws Self-audit do `/handoff` era auto-declarado; agora é verificado mecanicamente pela nova **Fase 5c**. Executado em 6 stages na ordem de governança não-negociável (BoK → SOP → código): suíte BoK 9/9 `docs/bok/mcorch-qa-healing/` (1423 LOC, 6ª suíte do projeto, gerada via `/bok-scribe`, campos de mercado/monetização honestamente N/A para tooling interno) + SOP `docs/processes/handoff-material-proof-audit.md` (Lei 2) + engine `scripts/qa/` (5 módulos Bun, 710 LOC, injeção de dependências para reuso pelo cron OpenClaw) + skill `mcorch-qa-healing` + Fase 5c wired no `/handoff` (entre 5b e 6 — bloqueia em qualquer 🔴) + 2 suítes Vitest. O dry-run contra o selo v6.6.8 real pegou e fechou um falso-positivo (`COMMIT_RE` agarrava prefixos de UUID de 8-hex como commits — FMEA-002 fechada antes do gate ir ao ar). **Material proofs**: TS zero erros · 165 testes (122→165, +43) · **Fase 5c ao vivo neste selo → 13 verified · 0 skipped · 0 failed → SEAL ALLOWED** · 9 commits granulares · milestone node `a08780dc-f665-47c5-b34b-a2eb7c9eea5c` + documentation_suite seal `b00e938a-717b-4f62-b936-f4934845ec52` (DERIVES_FROM openclaw seal) embedded 768d · mesh **8361+ nodes** · Survival Laws Self-audit 4/4 ✓. **Hazard registrado**: agente main do OpenClaw (Qwen3.5 local) operou na mesma working dir durante a sessão — 3 diretórios gitignorados, zero overlap de path. **Próximo**: Canvas Design (Initiative B — integração `nexu-io/open-design`) em sessão dedicada via `/bok-scribe canvas-design`.
+> 30	
+> 31	**Sprint v6.6.8 selado em 2026-05-19** — Bridge Recovery + MAPE-K Audit + SDD aios-sql-bridge + Survival Laws 4/4: sessão de auditoria reativa disparada por Sovereign observando `claw.gcrux.com/dreaming` stagnation (Imported Insights congelado em 2026-05-16, Memory Palace counts estáticos, Dream Scene "0 promovido"). **Root cause material**: Stage 2 cron `nightly-bridge-refresh.sh` invocava `node` PATH-resolved como v18.19.1 no env do user `ubuntu` apesar do interativo ter v22.22.3 — OpenClaw CLI exige v22.12+ → 100% FAIL silently em Step 3 (reindex SQLite) há ≥3 dias; Steps 1+2 (bridge + distribute) rodavam clean. **Fix dual no mesmo edit**: (1) `NODE_BIN=/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node` resolved-target (não symlink); (2) descoberta runtime de bug latente segundo — `claw-master` foi adicionado em v6.3.1 ao distribute script MAS NÃO ao indexer loop (`for agent in main artisan engineer scientist marketing-growth guardian; do` omitia claw-master) → `claw-master.sqlite` stale May 16 → exatamente o checkpoint "AIOS Core v2 (2026-05-16)" que Sovereign observou na UI. **SOP first per Lei 2**: `docs/processes/openclaw-bridge-recovery.md` 86 LOC autorada ANTES do edit. **5 phases materializadas** (todas com ORO triplet + Survival Laws ✓): Phase A (bridge fix + claw-master loop), Phase B (MAPE-K closed-loop audit + 4 observation nodes em mesh — Plan `a4c4c026` / Execute `69f6e356` / Monitor `d605bdda` / Analyze `d8952ce8` com edges DERIVES_FROM v6.6.7), Phase C (9 untracked files versionados via 3 commits: miv landing assets + miv tools + memory audit trail), Phase D (esta seal + milestone `c4643058`), Phase E (OTD-SSP01-001 closed via SDD `aios-sql-bridge` 376 LOC enterprise-grade + 00-index 69 LOC suite skeleton + documentation_suite seal `4e0acc7e` stability 0.85 DERIVES_FROM openclaw seal). **Material proofs**: 6 commits granulares pushed (`03911e9` fix(cron) + `cbdee4f` feat(landing) + `bb1cc96` chore(tools) + `2aa80f1` chore(memory) + `1b3bdd8` docs(bok) + `b71b991` docs(handoff) + `230ad70` docs(readme)); 7/7 SQLites OpenClaw reindexed (was 0/6 fail); log final `[2026-05-19T19:06:32-03:00] nightly-bridge-refresh DONE (zero failures)`; mesh **8359 nodes** (+6 desta seal); TS zero erros; 5 containers healthy. **Survival Laws Self-audit 4/4 ✓ pela primeira vez consecutivamente desde v6.6.0** — encerra retroativamente OTD-PROC-001 (RPN 60) + OTD-PROC-002 (RPN 40) + OTD-SSP01-001 (RPN 240 SLA 2026-05-24). **Pending TOP**: OE-661 Step 1.5 first-run E2E (Sovereign click `/dashboard/orchestration` TriggerNode); OTD-OE661-PER-USER refactor (SLA 2026-06-02, 14 dias); MAPE-K gaps 1/2/3 implementáveis em v6.7.x/v6.8.x conforme plans dedicados (recomendações registradas no mesh, aguardam acionamento).
+> 32	
+> 33	**Sprint v6.6.7 selado em 2026-05-19** — OE-661 Phase 1 Prep + API Tenancy Directive: sessão executou parcialmente o plan persistido OE-661 — toda a preparação completada, Step 1.5 (first run E2E) **DEFERRED** por context budget Sovereign 92% (retoma em ~3h). Infraestrutura material: SOP `docs/processes/orchestration-content-mesh-asset-emission.md` (120 LOC) escrita ANTES do código (Lei 2); `orchestrate-content/index.ts:404-465` emite `content_mesh_asset` em paralelo com observation via `Promise.allSettled` (Amendment A) gated por `wpPostUrl` (Amendment B); `link-forge.ts:153` ganha `.eq("project_id", "mcorch-affiliate")` (Amendment C); `handle-ml-postback/index.ts` ganha pulse `infra_health_logs` em 4 return paths (Amendment E — fecha cegueira de 17 dias). Deploys material: `orchestrate-content` 113.6kB + `handle-ml-postback` 60.45kB. Vault `GCRUX_ML_AFFILIATE_TOKEN` provisionado (digest `e86f74a0...`). **DIRETIVA SOVEREIGN-CLASS NOVA "API Tenancy Model"** emitida durante sessão (questionamento direto sobre por que usar env global se `affiliate_config` per-user já existia) — selada em 3 superfícies: `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"` com resolution order de 3 níveis + 5 tabelas canônicas + 5 anti-patterns; `CLAUDE.md > Code standards` one-liner enforcement; auto-memory `feedback_api_tenancy_per_user.md` indexada. **OTD-OE661-PER-USER** registrada (RPN 120 · SLA 2026-06-02) catalogando violação em `link-forge.ts` + `process-affiliate-link` GET branch. Sovereign autorizou Opção B (provisionar global temporário com `affiliate_config.app_id` value, deferir refactor). **Survival Laws Self-audit retroativo (Amendment H)** v6.6.1..v6.6.5 + esta seal — conclusão: Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 (overrides conscientes v6.6.1+v6.6.3) · Lei 3 ✗ 0/5 (OTD-PROC-002 RPN 40) · Lei 4 ✗ 0/5 (OTD-PROC-001 RPN 60 — esta seal v6.6.7 começa cumprimento). **Material proofs**: TS zero erros · 122/122 testes em 4.84s · 7 commits granulares locais (`03f6822` SOP · `e662da3` orchestrate Amendments A+B · `bafac16` link-forge Amendment C · `9cec88a` postback Amendment E · `044f21e` CLAUDE+OTD diretiva · `96ee72a` README v6.6.7 · `7d06934` HANDOFF seal + redactions) · milestone node `9d482014-a759-4656-93d9-99e05ab4a714` embedded 768d · mesh **8353 nodes** (+1 desde v6.6.6) · 11650 edges (+33). Path correção material: `/dashboard/orchestrate` → `/dashboard/orchestration` (Sovereign clarification). **Próximos deliverables**: (a) Sovereign dispara primeira campanha real em `/dashboard/orchestration` (TriggerNode + topic Link Forge catálogo + wp+linkedin platforms + Run) → eu monitoro pipeline_runs + content_mesh_asset emit material via REST; (b) ao completar, synthetic postback chain (Amendment D) + cleanup (Amendment J); (c) selar v6.6.8 com flywheel rodando E2E pela primeira vez na história do projeto; (d) atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias) — SDD `aios-sql-bridge`; (e) executar Phase 2 (`mcoins-ledger-reconciliation.md`) — fecha OTD-V660-001.
+> 34	
+> 35	**Sprint v6.6.6 selado em 2026-05-19** — Planning Seal + Debt Audit + Self-audit Retroativo: sessão dedicada a (a) `/handson` brief v6.6.5; (b) persistir execution plan dos 3 carry-overs OE-661 + Ledger SOP + Canvas 4.2c por diretiva Sovereign "slave o plano atual para posteriormente implantar"; (c) auditoria completa em 3 frentes paralelas; (d) emendas críticas; (e) /handoff oficial. **Zero código de produção tocado**. Plan persistido em `.claude/context/execution-plan-oe661-carryovers.md` (~403 LOC, md5 `0e5f0ba9...`) + observation node `3dde2572-cad6-491b-b523-c56ec763ff8e` (autoembed 768d). Audit em `.claude/context/audit-2026-05-19-oe661-debt-sweep.md` (~297 LOC, md5 `5c4f8a9f...`) + observation node `6164c80f-cadd-48d5-95a4-f87f22ebd09b` + DERIVES_FROM edge `acb4b0d9-091d-4973-96a8-d40515be7990`. **21 OTDs ativos catalogados (8 RPN ≥ 100): VM-OTD-001 RPN 288 viralmind HNSW · OTD-SSP01-005 RPN 280 admin claim · OTD-SSP01-001 RPN 240 SLA 2026-05-24 · OTD-V660-002 RPN 150 · VM-OTD-004 RPN 140 · OTD-V660-001 RPN 120 (coberta pelo plan Phase 2) · OTD-V660-003 RPN 80 · OTD-CV42C-001**. **5 inconsistências processuais**: (1) **5 seals consecutivas (v6.6.1..v6.6.5) omitiram bloco mandatory Survival Laws Self-audit** — Severidade ALTA; (2) Survival Audit v2 não re-rodado em 32 dias; (3) 3 SOPs implícitas não formalizadas; (4) HANDOFF v6.6.3 claimed 4 content_mesh_asset mas reality = 1 row (3 "products" têm `node_type='feature'`); (5) `handle-ml-postback` cego — zero `infra_health_logs` em 17 dias. **4 bugs concretos no plan**: A race condition obs+asset não atômicos · B wpPostUrl null não gated · C Link Forge query global sem project_id · D postback content_id drift. **10 amendments aplicados** (A-J) via Amendments Appendix no topo do plan. Schema drift fixed: `infra_health_logs.created_at` NÃO EXISTE (real: `last_seen_at`). **Predicted Survival Audit v3** (não emitido formalmente): Memory 5/5 · Skill 4/5 · Cost Discipline 4.5/5 ↑ · Observability 4/5 ↑ · SOP 5/5 · **avg 4.4/5 · min 4/5** — Phase Commercial threshold mantido. **Material proofs**: 14 integrity checks paralelos · 4 commits granulares (`ea7efaf` plan + `44e464c` audit + `fb6f07d` README + `99d70f6` handoff seal) push → origin/main · milestone handoff node `821dc554-78e2-4abb-999d-37363c5df6c9` embedded 768d · mesh total **8352 nodes** (+4 desde v6.6.5). **Próximos deliverables**: (a) Sovereign autoriza execução das Fases 1-3 do plan quando convier (bugs A-D já fixed); (b) **atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias)** — BoK Gate override `aios-sql-bridge` precisa SDD; (c) provisionar `SUPABASE_POOLER_URL` (OTD-V660-003); (d) materializar Survival Audit v3 formal antes de Phase Commercial; (e) executar Phase 2 do plan (SOP `mcoins-ledger-reconciliation.md`) — Sovereign-only — fecha OTD-V660-001.
+> 36	
+> 37	**Sprint v6.6.5 selado em 2026-05-19** — OpenClaw BoK 9/9 (retroativa + BoK Gate liberado · 5ª e última suíte): última dívida BoK do projeto quitada. Override consciente do BoK Gate registrado em Sprint v6.2.0 (2026-05-15) — Sovereign havia autorizado que a própria Agência OpenClaw quitaria a dívida assincronamente; com 4 sprints decorridos e a Agência operando em produção (7 agentes · gateway loopback · pipeline cron triplo · briefing diário Telegram), esta seal materializa retroativamente o BoK que governa o módulo. **9 docs novos autorados manualmente seguindo `.claude/agents/bok-scribe/templates/`** (Plano B mirror gamificacao-nodes v6.6.4 — NÃO o `/bok-scribe` Skill, que produziria conteúdo template-canonical desalinhado): `01-mrd.md` (BABOK v3 ~205 LOC — Pantheon vision · 6 MR-OC-* · biz model enabler), `02-brd.md` (BABOK v3 ~190 LOC — 6 BO-OC-* SMART + 10 SH-OC-* Stakeholder Register + 14 BR-OC-* com refs precisas `openclaw.json:agents.list[]` / `scripts/bridge-mesh-to-openclaw.ts:tier1Filter` / `scripts/morning-briefing.sh:65` + §10 Traceability Matrix), `03-prd.md` (ProdBOK + CXBOK ~224 LOC — personas P1 Sovereign + P2 agente operacional · User Journey diário BRT · 14 PR-OC-* MoSCoW · Gherkin AC), `04-frd.md` (SWEBOK v4 ~209 LOC — 8 FR-OC-* + 8 NFR-OC-* + Test Strategy Matrix), `05-sdd.md` (SWEBOK v4 + CISSP CBK ~460 LOC — architecture overview Pantheon + Ciclo Circadiano BRT + Component Catalog 7 agentes/9 scripts/6 SQLite/gateway + STRIDE threat model + secrets lifecycle + OTD grid), `06-data-model.md` (DMBOK v2 ~339 LOC — schema `openclaw.json` + `secrets.json` vault + SQLite per-agente FTS5/vector + Mesh export tier1/tier2 + Memory Wiki frontmatter + filesystem perms · **§8 Drift Reconciliation Appendix** com 5 drifts fechados em sprints anteriores + 8 drifts permanentes catalogados como OTDs), `07-process-flow.md` (BPM CBOK v4 ~483 LOC — **10 PROC-OC-*** em swimlanes markdown table com refs precisas `nightly-stage2-deep-sleep.sh` / `bridge-mesh-to-openclaw.ts` / `distribute-mesh-to-agents.ts` / `compose-morning-briefing.ts` / `news-impact-analyzer.ts` / `watchdog-mcorch.sh`), `08-quality-metrics.md` (CMQ/OE BOK ~227 LOC — 8 QO-OC-* + **10 KPI-OC-*** + **10 FMEA-OC-*** com 5 RPN > 100 (FMEA-OC-001 secrets regression 180 · OC-002 bridge fail 150 · OC-003 daemon crash 126 · OC-004 Telegram quota 125 · OC-010 audit scrape fail 105) + 6 SOL-OC-* + SLA/SLO/SLI grid + observability events tagged `openclaw-*`), `00-index.md` (~163 LOC — Document Registry 9/9 + Traceability Chain MR-OC→BR-OC→FR-OC→PROC-OC→KPI-OC + Convergence Note registrando 5 drifts já reconciliados em v6.4.0/v6.6.1 + 8 ativos como OTDs + Phase Completion Log Phase 0-7 + OTD registry 11 itens (5 novas OTD-OC + 6 herdadas OTD-V631/V660/CM)). **ID space cunhada**: MR-OC-001..006 · BR-OC-001..014 · BO-OC-001..006 · SH-OC-001..010 · PR-OC-001..014 · FR-OC-1..8 · NFR-OC-001..008 · PROC-OC-001..010 · KPI-OC-001..010 · FMEA-OC-001..010 · SOL-OC-001..006 · QO-OC-001..008 · BAC-OC-001..010 · OTD-OC-001..005. **Mesh seal**: novo `scripts/seed-openclaw-bok-seal.ts` (Bun-native, 136 LOC, mirror 1:1 de `seed-gamificacao-nodes-bok-seal.ts`) executado material: node `bok-scribe-seal-openclaw-v1` UUID **`05c55dfd-d318-4dcf-b7f0-aefb0529872f`** inserted stability 0.85 · DERIVES_FROM `bok-scribe-seal-gamificacao-nodes-v1` · `revenue_impact: 0` (módulo é enabler horizontal de velocity — proxy via lift dos outros 4 BoK suites) · metadata bok_gate=`override-completion` + drift_reconciled=5 (D-OC-001..005 fechados em v6.4.0/v6.6.1) + drift_pending=8 (OTDs ativos) + related_otds inclui OTD-V631-001 (fechada por esta seal — SLA expandido da v6.3.1) + pantheon_agents lista 7 + cron_pipeline 6 entradas · autoembed via `trg_mcorch_embed_on_insert` (pg_net 768d openai/text-embedding-3-small) **confirmado via REST `embedding=not.is.null`**. **Debt registry final**: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅ · **`openclaw` 9/9 ✅** — **todas as 5 suítes BoK do projeto seladas**. BoK Gate liberado para código novo em qualquer módulo. Atenção: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users em gamificacao-nodes) fechar via SOP `mcoins-ledger-reconciliation.md`. **Material proofs**: TS `tsc --noEmit` zero erros · 122/122 testes em 5.73s · BoK Gate validator loop ✅ 9/9 docs (00-index 163 + 01-mrd 205 + 02-brd 190 + 03-prd 224 + 04-frd 209 + 05-sdd 460 + 06-data-model 339 + 07-process-flow 483 + 08-quality-metrics 227 = 2500 LOC total) · seed script 136 LOC · seal UUID confirmado via INSERT RETURNING + created_at `2026-05-18T20:23:52.775245+00:00` + embedding NOT NULL via REST GET · mesh total **8345 nodes** (+1 desde v6.6.4). **Próximo deliverable**: (a) carry-overs OE-661 v6.6.3/v6.6.4 — provisionar `GCRUX_ML_AFFILIATE_TOKEN` na vault + wire `orchestrate-content` para emitir `content_mesh_asset` nodes pós-geração + primeiro run end-to-end Usuário Zero do flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget); (b) Sovereign executar SOP `mcoins-ledger-reconciliation.md` para fechar OTD-V660-001 (drift 2 users) e destravar features ledger-touching; (c) claw-master audit-v2 planejado 2026-06-16 — verificar regressão D-OC-001..005 + novas findings; (d) Stripe live keys swap continua DEFERRED por decisão Sovereign até primeiro cliente externo.
+> 38	
+> 39	**Sprint v6.6.4 selado em 2026-05-18** — Gamificação-Nodes BoK 9/9 (retroativa + BoK Gate liberado): débito documental herdado do override consciente do BoK Gate (Sprint v6.3.0, SLA originalmente 29/05) quitado em sessão única. 5 docs autorados manualmente seguindo `.claude/agents/bok-scribe/templates/` (Plano B sobre `/bok-scribe` Skill, que sobrescreveria os 4 docs existentes): `06-data-model.md` (DMBOK v2 ~277 LOC — schema canônico `profiles.mco_balance` + `mcoin_transactions` + 3 RPCs SECURITY DEFINER `award_mco_coins`/`deduct_mco_coins`/`add_user_score` com loyalty 100:1), `07-process-flow.md` (BPM CBOK v4 ~309 LOC — 9 PROC-GN-* em swimlanes com refs precisas `award-mco-coins/index.ts:78` cap-per-action, `canvas-execute/index.ts:133-148,349` cap-canvas-agregado + atomic deduct, `orchestrate-content/index.ts:60` pre-flight deduct, n8n `autonomic-action` trail loyalty), `08-quality-metrics.md` (CMQ/OE BOK ~215 LOC — 10 KPI-GN-* + 10 FMEA-GN-* com 4 RPN > 100, 6 SOL-GN-*, observability completa em `infra_health_logs`), `02-brd.md` (BABOK v3 ~188 LOC — 12 BR-GN-* + 5 BO-GN-* SMART + Risk Register + Traceability Matrix), `00-index.md` (~122 LOC — Document Registry 9/9 + Traceability Chain MR→BR-GN→FR→PROC-GN→KPI-GN + Convergence Note registrando drifts + 5 OTDs incluindo 2 herdadas OTD-V660-001/002). **Drift BoK ↔ código (3 itens) reconciliado via patches cirúrgicos sub-10-linhas preservando git blame**: (1) `04-frd.md` R3 "streak reseta 24h" deprecado inline → R3a (cap-per-action) + R3b (cap-canvas-agregado); (2) `05-sdd.md` ganha §4.2 documentando trilha n8n loyalty ausente do SDD original; (3) `01-mrd.md` L114 BRD externo inexistente substituído por `02-brd.md` local. **Mesh seal** `scripts/seed-gamificacao-nodes-bok-seal.ts` (mirror 1:1 viralmind seal): node `bok-scribe-seal-gamificacao-nodes-v1` UUID **`6e8546bc-d995-4cc5-ac88-06cecbece181`** inserted stability 0.85 · DERIVES_FROM `bok-scribe-seal-viralmind-v1` · `revenue_impact: 0` (módulo é enabler de retenção/ARPU) · autoembed via `trg_mcorch_embed_on_insert` (pg_net 768d). **BoK Gate liberado** para código novo no módulo `gamificacao-nodes`. Atenção: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users) fechar via SOP `mcoins-ledger-reconciliation.md`. **Debt registry geral atualizado**: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅. `openclaw` BoK ainda pendente (override consciente original do v6.2.0). **Material proofs**: TS zero erros · 122/122 testes em 3.34s · BoK Gate validator loop ✅ 9/9 · ~1111 LOC novas + ~30 LOC patches surgical · seal UUID confirmado via INSERT RETURNING · mesh total **8344 nodes** (+1 desde v6.6.3). **Próximo deliverable**: (a) executar SOP `mcoins-ledger-reconciliation.md` para fechar OTD-V660-001; (b) carry-overs v6.6.3 (`GCRUX_ML_AFFILIATE_TOKEN` provisionar + wire orchestrate emitir content_mesh_asset + primeiro run Usuário Zero OE-661 flywheel).
+> 40	
+> ```
+
+## 🤖 Claude *(00:35:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"exit\"",
+  "description": "placeholder"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit
+> ```
+
+## 🤖 Claude *(00:35:17)*
+
+
+## 🤖 Claude *(00:35:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== GIT LOG ===\" && git log --oneline -7 && echo \"\" && echo \"=== GIT STATUS ===\" && git status --short && echo \"(end status)\" && echo \"\" && echo \"=== GIT DIFF STAT ===\" && git diff HEAD --stat && echo \"(end diff)\"",
+  "description": "Git history, status, and diff scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GIT LOG ===
+> 7881231 docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node
+> af3abdb fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests
+> 57d34e1 feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions
+> 80976b6 docs: update HANDOFF.md task record for v6.14.9
+> 41d5a5c docs: update README.md version, badges, and changelog for v6.14.9
+> bae9ae0 chore(scripts): add QA smoke tests for WhatsApp webhook, ads sync, and credentials encryption
+> c86f570 feat(edge): implement whatsapp webhook, ads sync, and decrypt views integration
+> 
+> === GIT STATUS ===
+> (end status)
+> 
+> === GIT DIFF STAT ===
+> (end diff)
+> ```
+
+## 🤖 Claude *(00:35:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== HANDOFF LINES ===\" && wc -l HANDOFF.md && echo \"\" && echo \"=== BoK SUITES ===\" && ls docs/bok/ 2>/dev/null && echo \"\" && echo \"=== SCRATCH ===\" && (ls scratch/ 2>/dev/null && echo \"scratch has files\" || echo \"scratch clean\")",
+  "description": "HANDOFF size, BoK suites, scratch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HANDOFF LINES ===
+> 5741 HANDOFF.md
+> 
+> === BoK SUITES ===
+> aios-sql-bridge
+> canvas-design
+> conteudo-v2
+> e2e-user-zero
+> gamificacao-nodes
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> viralmind
+> 
+> === SCRATCH ===
+> scratch clean
+> ```
+
+## 🤖 Claude *(00:35:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -7",
+  "description": "Git recent history"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7881231 docs: update README.md and HANDOFF.md with v6.15.0 handoff milestone node
+> af3abdb fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests
+> 57d34e1 feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions
+> 80976b6 docs: update HANDOFF.md task record for v6.14.9
+> 41d5a5c docs: update README.md version, badges, and changelog for v6.14.9
+> bae9ae0 chore(scripts): add QA smoke tests for WhatsApp webhook, ads sync, and credentials encryption
+> c86f570 feat(edge): implement whatsapp webhook, ads sync, and decrypt views integration
+> ```
+
+## 🤖 Claude *(00:35:27)*
+
+
+## 🤖 Claude *(00:35:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short; echo \"---DIFFSTAT---\"; git diff HEAD --stat",
+  "description": "Working tree status and diff scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---DIFFSTAT---
+> ```
+
+## 🤖 Claude *(00:35:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l HANDOFF.md; echo \"---BOK---\"; ls docs/bok/ 2>/dev/null; echo \"---SCRATCH---\"; ls scratch/ 2>/dev/null && echo \"scratch has files\" || echo \"scratch clean\"",
+  "description": "HANDOFF size, BoK suites, scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5741 HANDOFF.md
+> ---BOK---
+> aios-sql-bridge
+> canvas-design
+> conteudo-v2
+> e2e-user-zero
+> gamificacao-nodes
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> viralmind
+> ---SCRATCH---
+> scratch clean
+> ```
+
+## 🤖 Claude *(00:35:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; echo \"---MEGABRAIN---\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; echo \"---CHROMA---\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat; echo \"\"",
+  "description": "Docker containers and Chroma heartbeat"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_chroma: Up 8 days (healthy)
+> mcorch_claude_mem: Up 8 days (healthy)
+> ---MEGABRAIN---
+> mega-brain-dashboard: Up 8 days
+> mega-brain-webhook: Up 8 days (healthy)
+> mega-brain-daemon: Up 8 days (healthy)
+> ---CHROMA---
+> {"nanosecond heartbeat":1780274131595610526}
+> ```
+
+## 🤖 Claude *(00:35:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short && echo \"===END===\"",
+  "description": "Working tree status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===END===
+> ```
+
+## 🤖 Claude *(00:35:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --porcelain | head -50; echo \"EXIT=$?\"",
+  "description": "Porcelain status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> EXIT=0
+> ```
+
+## 🤖 Claude *(00:35:35)*
+
+
+## 🤖 Claude *(00:35:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l HANDOFF.md",
+  "description": "HANDOFF line count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5741 HANDOFF.md
+> ```
+
+## 🤖 Claude *(00:35:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls docs/bok/ 2>/dev/null; echo \"---SCRATCH---\"; ls scratch/ 2>/dev/null && echo \"HAS FILES\" || echo \"CLEAN\"",
+  "description": "BoK suites and scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> aios-sql-bridge
+> canvas-design
+> conteudo-v2
+> e2e-user-zero
+> gamificacao-nodes
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> viralmind
+> ---SCRATCH---
+> CLEAN
+> ```
+
+## 🤖 Claude *(00:35:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; echo \"===\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; echo \"===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat; echo \" <-chroma\"",
+  "description": "Docker and Chroma health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_chroma: Up 8 days (healthy)
+> mcorch_claude_mem: Up 8 days (healthy)
+> ===
+> mega-brain-dashboard: Up 8 days
+> mega-brain-webhook: Up 8 days (healthy)
+> mega-brain-daemon: Up 8 days (healthy)
+> ===
+> {"nanosecond heartbeat":1780274141026897100} <-chroma
+> ```
+
+## 🤖 Claude *(00:35:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"OK $slug \u2014 complete\" || echo \"WARN $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "description": "BoK Gate completeness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK aios-sql-bridge — complete
+> OK canvas-design — complete
+> OK conteudo-v2 — complete
+> OK e2e-user-zero — complete
+> OK gamificacao-nodes — complete
+> OK mcorch-constellation — complete
+> OK mcorch-qa-healing — complete
+> OK mercado-livre-api — complete
+> OK meta-api — complete
+> OK openclaw — complete
+> OK viralmind — complete
+> ```
+
+## 🤖 Claude *(00:35:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -20; echo \"=== TSC EXIT: ${PIPESTATUS[0]} ===\"",
+  "description": "TypeScript strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TSC EXIT: 0 ===
+> ```
+
+## 🤖 Claude *(00:35:46)*
+
+
+## 🤖 Claude *(00:35:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 71
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## LLM Cascading Fallback & aios-sql-bridge E2E Validation (2026-05-31)
+> 15	
+> 16	**v6.15.0 (2026-05-31)** — Implementada a cascata de fallback do LLM nas Edge Functions, a correção e teste de fumaça E2E da `aios-sql-bridge` e a verificação do watchdog do Canvas Studio Higgsfield.
+> 17	
+> 18	**O que foi entregue:**
+> 19	- **LLM Cascading Fallback (OTD-LLM-FALLBACK)** — Helper [llm-fallback.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts) compartilhado implantado. Realiza fallback em cascata (OpenRouter Pago → Gemini Free `/v1beta` OpenAI API → OpenRouter Free `google/gemma-2-9b-it:free`) sob falhas de HTTP 402/429 ou rede. Refatoradas **12 Edge Functions** para utilizar o helper.
+> 20	- **aios-sql-bridge E2E Validation** — Correção crítica no checkAdmin no [index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-sql-bridge/index.ts) para ler a tabela `user_roles` usando o client `admin` (service role), sanando os erros de assinatura obsoleta de 2 argumentos do `has_role`. Executada a suíte de testes do Vitest [aios-sql-bridge-smoke.test.ts](file:///home/gcrUX/htdocs/constellation-orchestra/src/test/aios-sql-bridge-smoke.test.ts) que passou com sucesso nos 3 cenários (happy path, forbidden columns e non-whitelisted tables).
+> 21	- **Higgsfield Video Watchdog (Fase 4.2c)** — Whitelisting de modelos Higgsfield em `canvas-execute` e validação física do script [canvas-video-watchdog.sh](file:///home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh) que verifica jobs stale e grava telemetria saudável em `infra_health_logs`.
+> 22	
+> 23	**ORO triplet:**
+> 24	- **Operator:** MCORCH Master Execution Agent (eu)
+> 25	- **Reviewer:** Sovereign (Gabriel Zarattini)
+> 26	- **Owner:** Sovereign (blast radius = infraestrutura de LLM Fallback, governança de segurança da SQL bridge e integridade dos jobs de vídeo Higgsfield)
+> 27	
+> 28	| Verificação | Resultado |
+> 29	|---|---|
+> 30	| `tsc --noEmit` (árvore combinada) | ✅ 0 erros |
+> 31	| Unit tests | ✅ **217/217** (incluindo o novo E2E smoke test da SQL Bridge) |
+> 32	| Handoff node | ✅ `4aaa1887-b34d-4711-b121-9ad637899b62` embedded 768d |
+> 33	| Mesh total | **8713 nodes** |
+> 34	| Deploy | ✅ 12 Edge Functions deployadas e funcionando online |
+> 35	
+> 36	| Commit | Conteúdo |
+> 37	|---|---|
+> 38	| `57d34e130b0cebda9d67fd2e1022ff80a295f9fb` | feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions |
+> 39	| `af3abdb88b0aaa20b7b577801ac8f1661823efd1` | fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests |
+> 40	
+> 41	### Survival Laws Self-audit
+> 42	```
+> 43	### Law 1 (Materiality)
+> 44	- [x] Toda claim tem prova? SIM — commits hashes completos, logs de teste do Vitest e telemetria inserida com sucesso em infra_health_logs
+> 45	- [x] Cérebro sem mãos? SIM — detectada e corrigida a assinatura incorreta da RPC de admin na SQL Bridge rodando em produção
+> 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
+> 47	 
+> 48	### Law 2 (Process)
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 50	 
+> 51	### Law 3 (Pruning)
+> 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
+> 53	 
+> 54	### Law 4 (ORO)
+> 55	- [x] ORO triplet declarado e alinhado com o Sovereign
+> 56	```
+> 57	
+> 58	#### Material Proofs Audit Result (Fase 5c):
+> 59	| Claim | Kind | Expected | Actual | Verdict |
+> 60	|-------|------|----------|--------|---------|
+> 61	| mesh node 856cad26 | mesh_node | 856cad26-a931-4d87-94ad-063b22c8152d | 856cad26-a931-4d87-94ad-063b22c8152d | ✅ |
+> 62	| commit 0a1c4e6 | git_commit | 0a1c4e6 | 0a1c4e6 | ✅ |
+> 63	| commit d34ff5d | git_commit | d34ff5d | d34ff5d | ✅ |
+> 64	| tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> 65	| file docs/bok/mcorch-constellation/roadmap-v1.md | file_exists | docs/bok/mcorch-constellation/roadmap-v1.md | docs/bok/mcorch-constellation/roadmap-v1.md | ✅ |
+> 66	| oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 67	| handoff node 4aaa1887 | mesh_node | 4aaa1887-b34d-4711-b121-9ad637899b62 | 4aaa1887-b34d-4711-b121-9ad637899b62 | ✅ |
+> 68	
+> 69	QA VERDICT: 7 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 70	
+> 71	
+> ```
+
+## 🤖 Claude *(00:35:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 3272,
+  "limit": 400
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3272	| `src/components/core/AIOSTerminal.tsx` — Props + onMessage callback | ✅ `onMessage?: (content: string) => void` adicionado · disparado no streaming-end useEffect antes do reset do TTS buffer |
+> 3273	| `src/pages/CoreV2Page.tsx` — wiring | ✅ `parseAgentMessage` destrucurado de `useA2UI()` · passado como `onMessage` para `<AIOSTerminal>` |
+> 3274	| `src/test/useOrchestrationGraph.test.ts` (novo) | ✅ 21 testes — input validation, state transitions, success/mcoCoins gate/partial errors, persistPositions |
+> 3275	| `src/test/useKnowledgeMesh.test.ts` (novo) | ✅ 19 testes — multi-bucket fetch, dedup, contextString format, contextNodeIds, meshStats, RLS-only isolation, realtime lifecycle |
+> 3276	| `src/test/useSubscription.test.ts` (novo) | ✅ 16 testes — checkout/openPortal happy + error paths, loading transitions, redirect via window.location.href |
+> 3277	| Test suite total | ✅ 66 → 122 testes (todos passando · zero TS errors) |
+> 3278	| `docs/bok/mcorch-constellation/00-index.md` | ✅ Project manifest + traceability index + Phase 7 mesh payload |
+> 3279	| `docs/bok/mcorch-constellation/01-mrd.md` | ✅ 12 MRs (BABOK v3) + TAM/SAM/SOM + 6 competitors + 6 market timing trends |
+> 3280	| `docs/bok/mcorch-constellation/02-brd.md` | ✅ 18 BRs + 5 SMART objectives + 9 stakeholders + ROI + mcoCoins economics + 10 risks |
+> 3281	| `docs/bok/mcorch-constellation/03-prd.md` | ✅ 24 PRs (MoSCoW) + 3 personas + 3 journeys + Gherkin acceptance criteria + UX tokens |
+> 3282	| `docs/bok/mcorch-constellation/04-frd.md` | ✅ 42 FRs + 24 NFRs + interface contracts + test matrix mapeada aos 122 testes |
+> 3283	| `docs/bok/mcorch-constellation/05-sdd.md` | ✅ Architecture overview + 30 hooks + 39 edge fns + STRIDE + RLS patterns + secrets inventory + 9 OTDs |
+> 3284	| `docs/bok/mcorch-constellation/06-data-model.md` | ✅ 16 tabelas + 30 migrations chronology + RLS catalogue + GraphRAG node/edge types + tenant isolation map |
+> 3285	| `docs/bok/mcorch-constellation/07-process-flow.md` | ✅ 14 processos BPMN-lite + retry/SLA matrix + 5 cron jobs + n8n workflow blueprints |
+> 3286	| `docs/bok/mcorch-constellation/08-quality-metrics.md` | ✅ 15 KPIs + 18 FMEA + 17 doc-debt items + self-heal specs + PDCA cadence |
+> 3287	| Mesh seal — `bok-scribe-seal-mcorch-constellation-v1` | ✅ Node inserido em `mcorch_nodes` via Supabase SQL editor · trigger autônomo embedou (success no rows returned confirma INSERT) |
+> 3288	| Live node count | 2564 → 2567 (3 novos: BoK seal milestone + 2 novos nós ast/observação do trigger) |
+> 3289	| TypeScript zero errors | ✅ `npx tsc --noEmit` exit 0 |
+> 3290	
+> 3291	| Commit | Conteúdo |
+> 3292	|--------|----------|
+> 3293	| `a9dcb61` | feat(a2ui): wire parseAgentMessage to AIOSTerminal.onMessage |
+> 3294	| `f553aa4` | test(hooks): expand coverage with 56 tests for orchestration, knowledge mesh and subscription |
+> 3295	| `3ce0085` | docs(bok): seal BoK Suite v1 for mcorch-constellation — 9 docs reverse-engineered from running system |
+> 3296	| `708c34a` | docs(readme): v5.7.0 — BoK Suite v1 + A2UI wiring + 122 tests (2567 nós) |
+> 3297	
+> 3298	### Arquitetura — A2UI Wiring
+> 3299	
+> 3300	```
+> 3301	useAIOSChat (token streaming)
+> 3302	  ↓ onTokens(delta) → ttsBufferRef.current += delta
+> 3303	AIOSTerminal (stream tracking)
+> 3304	  ↓ useEffect on isStreaming false transition
+> 3305	  ↓ if (ttsBufferRef.current) onMessage?.(ttsBufferRef.current)
+> 3306	  ↓ then reset ttsBufferRef
+> 3307	CoreV2Page passes parseAgentMessage as onMessage prop
+> 3308	  ↓ regex scan for ```json {type:"a2ui",...}``` blocks
+> 3309	useA2UI.dispatchPayload(payload)
+> 3310	  ↓ surfaces Map state updated
+> 3311	A2UI surfaces render in CoreV2Page center column
+> 3312	  (MetricsPanel | AgentStatusCard | SystemAlert | TextBlock)
+> 3313	```
+> 3314	
+> 3315	### Arquitetura — Test Coverage Pyramid
+> 3316	
+> 3317	```
+> 3318	122 tests across 7 files
+> 3319	├── Unit (hooks + libs)
+> 3320	│   ├── billing.test.ts                    22 tests  (RPC atomicity, coin guard)
+> 3321	│   ├── useOrchestrationGraph.test.ts      21 tests  (pipeline state machine)
+> 3322	│   ├── useOrchestrationStore.test.ts      29 tests  (Zustand store transitions)
+> 3323	│   ├── useKnowledgeMesh.test.ts           19 tests  (multi-bucket + RLS)
+> 3324	│   └── useSubscription.test.ts            16 tests  (Stripe checkout/portal)
+> 3325	├── Integration
+> 3326	│   └── phase-zeta.test.tsx                14 tests  (AIOS conversation persistence)
+> 3327	└── Sanity
+> 3328	    └── example.test.ts                     1 test
+> 3329	```
+> 3330	
+> 3331	### Arquitetura — BoK Reverse-Engineering Mode
+> 3332	
+> 3333	```
+> 3334	Inputs (already known, derived from CLAUDE.md + HANDOFF.md):
+> 3335	  business_idea  = sovereign content orchestration platform
+> 3336	  market_segment = B2B2C
+> 3337	  monetization   = hybrid (subscription + mcoCoins)
+> 3338	  regulatory     = LGPD + Stripe PCI + platform ToS
+> 3339	  integration    = extends-mcorch (this IS the platform)
+> 3340	  project_slug   = mcorch-constellation
+> 3341	
+> 3342	Discovery (parallel reads, all read-only):
+> 3343	  CLAUDE.md, HANDOFF.md, README.md, sprint-priorities, audit-log
+> 3344	  src/hooks/* (30 files), src/pages/* (26 files), src/store/* (2 files)
+> 3345	  supabase/functions/* (39 fns), supabase/migrations/*.sql (30 migrations)
+> 3346	
+> 3347	Generation (sequential per phase, ~10-15 min):
+> 3348	  Phase 0  → 00-index.md          Project manifest
+> 3349	  Phase 1  → 01-mrd.md, 02-brd.md (BABOK v3 lens)
+> 3350	  Phase 2  → 03-prd.md            (ProdBOK + CXBOK lens)
+> 3351	  Phase 3  → 04-frd.md, 05-sdd.md (SWEBOK v4 + CISSP CBK lens)
+> 3352	  Phase 4  → 06-data-model.md, 07-process-flow.md (DMBOK + BPM CBOK)
+> 3353	  Phase 5  → 08-quality-metrics.md (CMQ/OE BOK)
+> 3354	  Phase 6  → traceability validation (no orphans, RPN>100 actions present)
+> 3355	  Phase 7  → mesh injection payload (Sovereign-approved insert)
+> 3356	
+> 3357	Source-of-truth rule (inverted for reverse-engineering):
+> 3358	  When BoK contradicts running code → running code wins
+> 3359	  Contradiction → enumerated as doc-debt in 08-quality-metrics.md §7
+> 3360	```
+> 3361	
+> 3362	---
+> 3363	
+> 3364	## Layout + UX Regression Fixes Record (2026-05-06)
+> 3365	
+> 3366	Sessão de correção de regressões visuais acumuladas após o DevOps + Security Seal. Cinco problemas identificados e resolvidos: layout de páginas full-canvas sobrepondo o sidebar, barra de busca conflitando com botão de auth, textos com opacidade reduzida dificultando leitura, e contagem de nós do painel Sovereign Mesh Control dessincronizada do HUD superior. Ponto de diagnóstico: `MatrixPage` e `MemoryPage` usavam `absolute inset-0` como container raiz — classe que posiciona relativo ao ancestral posicionado mais próximo (não o `<main>` do DashboardLayout), escapando do flex tree e sobrepondo sidebar e header. O padrão correto (`relative w-full h-full overflow-hidden`), já adotado por `ConstellationPage`, foi aplicado às duas páginas. Como consequência direta, a search bar (que estava em `absolute top-3 left-1/2 -translate-x-1/2`) passou a ficar alinhada dentro do canvas — mas `left-1/2` do canvas com sidebar visível coincide com o fim dos badges. Solução: mover a search bar para dentro do flex row dos badges como item inline (`relative w-64`), com dropdown convertido de fluxo normal para `absolute top-full` para não empurrar outros badges. Para textos opacos: varredura em `ConstellationMatrix`, `MeshControlPanel` e `MemoryPage` — todas as classes `text-*/NN` com sufixo de opacidade em elementos de texto legível foram convertidas para variantes full-opacity. `MeshControlPanel` agora recebe `edgeCount` como prop adicional e exibe `nodeCount`/`edgeCount` do hook `useConstellationSigma` em vez dos totais do banco via `trigger-ingest`, garantindo paridade com o HUD superior.
+> 3367	
+> 3368	| Action | Result |
+> 3369	|--------|--------|
+> 3370	| `src/pages/MatrixPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button removido · `edgeCount` passado para MeshControlPanel |
+> 3371	| `src/pages/MemoryPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button + `useNavigate` + `ChevronLeft` removidos |
+> 3372	| `src/components/orchestrator/ConstellationMatrix.tsx` — search bar | ✅ Movida de `absolute left-1/2 -translate-x-1/2` para item inline no badges flex row · dropdown `absolute top-full` · texto opaco corrigido (legend, tooltip, results) |
+> 3373	| `src/components/orchestrator/MeshControlPanel.tsx` — stats + opacity | ✅ `edgeCount: number` adicionado como prop · stats grid usa `nodeCount`/`edgeCount` props em vez de `stats.totalNodes/totalEdges` · labels e textos com opacidade corrigidos |
+> 3374	| `HANDOFF.md` — pending action | ✅ API key Google marcada como excluída via AI Studio (`aistudio.google.com/app/api-keys`), não Cloud Console |
+> 3375	
+> 3376	| Commit | Conteúdo |
+> 3377	|--------|----------|
+> 3378	| `97c34fe` | fix(layout): Matrix + Memory pages layout regression — absolute inset-0 → relative w-full h-full |
+> 3379	| `0988f53` | fix(ux): search bar inline alignment + text opacity + MeshControl node count sync |
+> 3380	| `9840f7b` | docs(readme): v5.6.1 — Layout + UX Regression Fixes (2564 nós) |
+> 3381	
+> 3382	### Arquitetura — Layout Fix
+> 3383	
+> 3384	```
+> 3385	DashboardLayout (flex col, h-screen)
+> 3386	  ├── header (h-14, shrink-0)          ← breadcrumbs + mcoCoins + auth
+> 3387	  └── main (flex-1, min-h-0, overflow-hidden p-0)   ← full-canvas mode
+> 3388	        └── MatrixPage / MemoryPage
+> 3389	              relative w-full h-full   ← fills <main> without escaping
+> 3390	                ├── ConstellationMatrix (w-full h-full)
+> 3391	                │     absolute inset-0  ← Sigma WebGL canvas (relative to ConstellationMatrix)
+> 3392	                │     absolute top-3 left-3  ← badges flex row (stays BELOW h-14 header)
+> 3393	                │       └── search bar (relative w-64, inline)
+> 3394	                │             absolute top-full  ← dropdown (no flex push)
+> 3395	                └── MeshControlPanel (absolute bottom-3 left-3)
+> 3396	
+> 3397	Before fix: absolute inset-0 on MatrixPage escaped <main> → overlapped sidebar + header
+> 3398	After fix: relative w-full h-full → stays within <main> flex area
+> 3399	```
+> 3400	
+> 3401	### Arquitetura — MeshControl Sync
+> 3402	
+> 3403	```
+> 3404	useConstellationSigma() → { nodeCount, edgeCount, neuralDensity }
+> 3405	  ↓ props
+> 3406	MatrixPage → <MeshControlPanel nodeCount={nodeCount} edgeCount={edgeCount} neuralDensity={neuralDensity} />
+> 3407	  ↓ display (always live)
+> 3408	  Nós: nodeCount    (= top HUD badge)
+> 3409	  Arestas: edgeCount (= top HUD badge)
+> 3410	  Neural: stats?.embeddedPct ?? neuralDensity  (DB via trigger-ingest or prop fallback)
+> 3411	
+> 3412	Before fix: stats.totalNodes from trigger-ingest (DB) ≠ nodeCount from Sigma graph
+> 3413	After fix: both HUD and panel show same source → always identical
+> 3414	```
+> 3415	
+> 3416	---
+> 3417	
+> 3418	## DevOps + Security Seal Record (2026-05-06)
+> 3419	
+> 3420	Sessão de manutenção e infraestrutura de engenharia. Ponto de partida: repositório com 6 branches `claude/*` pendentes (criados em sessões mobile sem SSH), 1 stash obsoleto, e 0 testes de cobertura em 177 arquivos fonte. Entrega fecha os três vetores: segurança, qualidade e protocolo.
+> 3421	
+> 3422	**Segurança:** Auditoria detectou `VITE_GEMINI_API_KEY` exposta em plain text no commit `06369c5` (HANDOFF.md). Branch `revoke-exposed-api-key-rLNWf` cherry-pickado — valor redacted, substituído por referência de localização. Branch `fix-api-key-security-kgrEg` cherry-pickado — protocolo `/handoff` recebeu DOCUMENTATION_CREDENTIAL_RULE (invariante: docs descrevem ONDE a credencial mora, nunca seu valor) + Phase 4b mandatory secret scan em HANDOFF.md antes de cada commit + pre-commit hook (`.claude/hooks/pre-commit`) com scan de padrões `AIza*`, `sk-*`, `eyJ*`, `ghp_*`. Chave rotacionada: `VITE_GEMINI_API_KEY` no `.env`, `GEMINI_API_KEY` no vault Supabase, rebuild do `dist/` confirmado (0 ocorrências da chave antiga).
+> 3423	
+> 3424	**Branches sincronizados:** `elastic-cohen-5b890d` (Phase Zeta v5.1.0) — features já em main, único pendente eram 14 testes; cherry-pick seletivo com adaptação de `edge_type` → `relation_type` (schema v5.5.x) e mock de `useQuery`. `mcorch-bok-scribe-agent-NCJXW` — BoK Scribe Agent completo (12 arquivos de templates) + MCORCH Master Execution Protocol inserido no topo do `CLAUDE.md` como diretiva top-priority com BoK Documentation Gate (coding só começa após MRD/BRD/PRD/FRD/SDD consolidados). Demais 4 branches (pensive-khorana, core-v2-implementation, revoke-exposed, fix-api-key) cherry-pickados ou confirmados como integrados e deletados.
+> 3425	
+> 3426	**Test coverage:** Elevado de 1 → 4 arquivos, 1 → 66 testes. `billing.test.ts` (22 testes): COIN_COSTS shape, deductMcoCoins delegando exclusivamente para RPC (nunca deduções client-side), getMcoBalance retorna 0 em perfil inexistente, hasSufficientBalance exact/over/under, checkAndDeductCoins abortando antes do RPC quando saldo insuficiente — invariante de billing crítico coberto. `useOrchestrationStore.test.ts` (29 testes): shape default 8 nós / 9 arestas, todas as 7 transições de estado da máquina (idle→pending→running→done/error/blocked), updateNodeStatus isolado (apenas nó alvo muda), resetNodeStatuses, setRunning idempotente, updateNodeData merge parcial, savePositions + readback de posições do localStorage. Coverage provider v8 instalado com reporter text+html.
+> 3427	
+> 3428	**Protocolo mobile:** `/sync-mobile-branch` skill criada (`.claude/commands/sync-mobile-branch.md`) com 6 fases: inventário via `git fetch`, classificação em 5 categorias (INTEGRADO/SEGURANÇA/FEATURE/DOCS/OBSOLETO), ordem obrigatória (segurança antes de feature), cherry-pick seletivo com guarda contra docs desatualizados, verificação TS+tests pós-integração, push+limpeza, relatório PT-BR. Cheklist rápido para o Maestro ao criar branches pelo celular.
+> 3429	
+> 3430	| Action | Result |
+> 3431	|--------|--------|
+> 3432	| `fix(security)`: redact VITE_GEMINI_API_KEY do HANDOFF.md | ✅ commit `83f89d0` — chave antiga substituída por referência de localização |
+> 3433	| `fix(security)`: harden handoff protocol + pre-commit hook | ✅ commit `fec47fd` — `.claude/hooks/pre-commit` + DOCUMENTATION_CREDENTIAL_RULE + Phase 4b |
+> 3434	| `test(phase-zeta)`: 14 testes Social Consciousness | ✅ commit `0e8ceda` — persistência, DERIVES_FROM, ConversationTimeline UI |
+> 3435	| BoK Scribe Agent scaffold | ✅ commit `331354a` — 12 templates (MRD/BRD/PRD/FRD/SDD/Data/Process/Quality) + agent framework + slash command |
+> 3436	| MCORCH Master Execution Protocol → CLAUDE.md | ✅ commit `d74b362` — BoK Documentation Gate + Closed-Loop Protocol |
+> 3437	| `test(coverage)`: billing.ts + useOrchestrationStore — 66 testes | ✅ commit `aa4f979` — coverage v8 habilitado |
+> 3438	| `/sync-mobile-branch` protocol | ✅ commit `843d86c` — 6 fases + checklist mobile |
+> 3439	| `chore(deps)`: @vitest/coverage-v8 | ✅ commit `59c13fa` — bun.lock atualizado |
+> 3440	| GEMINI_API_KEY rotacionada | ✅ `.env` + vault Supabase + `bun run build` — 0 ocorrências da chave antiga no dist/ |
+> 3441	
+> 3442	| Commit | Conteúdo |
+> 3443	|--------|----------|
+> 3444	| `83f89d0` | fix(security): redact exposed Google API key from HANDOFF.md |
+> 3445	| `fec47fd` | fix(security): harden handoff protocol against credential leaks in docs |
+> 3446	| `0e8ceda` | test(phase-zeta): 14 testes Social Consciousness |
+> 3447	| `331354a` | feat: scaffold MCORCH BoK Scribe Agent |
+> 3448	| `d74b362` | feat: install MCORCH Master Execution Protocol |
+> 3449	| `aa4f979` | test(coverage): billing.ts + useOrchestrationStore — 66 testes, coverage v8 |
+> 3450	| `843d86c` | feat(protocol): /sync-mobile-branch |
+> 3451	| `59c13fa` | chore(deps): add @vitest/coverage-v8 |
+> 3452	| `c91a454` | docs(readme): v5.6.0 |
+> 3453	
+> 3454	### Arquitetura — Security Layers
+> 3455	
+> 3456	```
+> 3457	Credential Protection (3 camadas):
+> 3458	  1. DOCUMENTATION_CREDENTIAL_RULE (handoff.md invariante)
+> 3459	     → docs descrevem ONDE a credencial mora, nunca seu valor
+> 3460	  2. Phase 4b mandatory scan (handoff protocol)
+> 3461	     → grep AIza*/sk-*/eyJ*/ghp_* no HANDOFF.md antes de commit
+> 3462	     → bloqueia se qualquer match encontrado
+> 3463	  3. .claude/hooks/pre-commit (last barrier)
+> 3464	     → scan em todos os staged files
+> 3465	     → instalação: cp .claude/hooks/pre-commit .git/hooks/pre-commit && chmod +x
+> 3466	
+> 3467	Test Coverage Architecture:
+> 3468	  billing.test.ts → src/lib/billing.ts (pure logic, no React)
+> 3469	    └── COIN_COSTS · deductMcoCoins (RPC-only) · getMcoBalance · hasSufficientBalance · checkAndDeductCoins
+> 3470	  useOrchestrationStore.test.ts → src/store/useOrchestrationStore.ts (pure Zustand)
+> 3471	    └── default pipeline shape · state machine · reset · localStorage persistence
+> 3472	  phase-zeta.test.tsx → useAIOSConversations + ConversationTimeline
+> 3473	    └── persistência · DERIVES_FROM relation_type · UI actions
+> 3474	
+> 3475	Mobile Branch Protocol:
+> 3476	  /handson → /sync-mobile-branch (se git fetch revelar branches claude/*)
+> 3477	    → git fetch --all --prune
+> 3478	    → classify: INTEGRADO | SEGURANÇA | FEATURE | DOCS | OBSOLETO
+> 3479	    → apply order: security first → features → delete integrated
+> 3480	    → cherry-pick seletivo (nunca merge docs desatualizados)
+> 3481	    → TS check + test suite
+> 3482	    → git push + delete remotes
+> 3483	  /handoff → seal changes
+> 3484	```
+> 3485	
+> 3486	---
+> 3487	
+> 3488	## Core Promotion + Gemini Live Validated Record (2026-05-06)
+> 3489	
+> 3490	Sessão de hygiene pós-Settings Sovereignty. O `/handson` reportou um alerta crítico — "AIOS Gemini Live key não provisionada" — que ao verificar mostrou ser falso positivo: `GEMINI_API_KEY` já está no vault Supabase (`secrets list`) e `VITE_GEMINI_API_KEY` já está no `.env` local há semanas. O HANDOFF tinha info desatualizada que sobreviveu a múltiplos seals. Junto disso, a Core v2 já está estável em produção há semanas (v5.5.4 + v5.5.5) e duas entradas no menu confundem o usuário — Core v1 oficialmente arquivada. CorePage.tsx movida para `.archive/pages/` via `git mv` (histórico preservado), rota `/dashboard/core` redireciona para `/dashboard/core-v2`, label "Core v2" promovida para "Core" e ícone `BrainCircuit` (unused) removido. Zero TypeScript errors, build passa em 21.47s, nenhum chunk órfão. Ambos pending actions (#8 Commercial Launch + decisão CorePage) marcados como resolvidos.
+> 3491	
+> 3492	| Action | Result |
+> 3493	|--------|--------|
+> 3494	| `src/pages/CorePage.tsx` → `.archive/pages/CorePage.tsx` | ✅ `git mv` preserva histórico — fora do build |
+> 3495	| `src/App.tsx` | ✅ Import CorePage removido · rota `core` agora é `<Navigate to="/dashboard/core-v2" replace />` |
+> 3496	| `src/components/dashboard/DashboardSidebar.tsx` | ✅ Entry "Core v1" removida · "Core v2" → label "Core" · ícone `BrainCircuit` (unused) removido do import |
+> 3497	| `src/components/dashboard/DashboardLayout.tsx` | ✅ BREADCRUMB_MAP — `core` removida, `'core-v2': 'Core'` (sem "v2" no breadcrumb) |
+> 3498	| `HANDOFF.md` Pending Action #8 (Gemini Live) | ✅ Marcado como resolvido — falso positivo do handson |
+> 3499	| Validação | ✅ `npx tsc --noEmit` zero erros · `bun run build` 21.47s · CoreV2Page chunk presente |
+> 3500	
+> 3501	| Commit | Conteúdo |
+> 3502	|--------|----------|
+> 3503	| `1466928` | refactor(dashboard): archive Core v1 — Core v2 promovida para 'Core' |
+> 3504	| `d94ad61` | docs(readme): v5.5.6 — Core Promotion + Gemini Live validated (2560 nós) |
+> 3505	
+> 3506	### Arquitetura — Core Promotion
+> 3507	
+> 3508	```
+> 3509	/dashboard/core      → <Navigate to="/dashboard/core-v2" replace />  (compat)
+> 3510	/dashboard/core-v2   → <CoreV2Page />                                (canônico)
+> 3511	
+> 3512	DashboardSidebar:
+> 3513	  mainItems: [..., { title: 'Core', url: '/dashboard/core-v2', icon: Brain }]
+> 3514	  (entry v1 com ícone BrainCircuit removida)
+> 3515	
+> 3516	DashboardLayout BREADCRUMB_MAP:
+> 3517	  'core-v2': 'Core'   (single entry, label simplificado)
+> 3518	
+> 3519	.archive/pages/CorePage.tsx                                          (off-build)
+> 3520	```
+> 3521	
+> 3522	### Gemini Live — Validação
+> 3523	
+> 3524	```
+> 3525	.env (client-side / Vite build):
+> 3526	  VITE_GEMINI_API_KEY="<redacted — revoke and rotate in Google Cloud Console>"
+> 3527	    → AIOSTerminal.tsx:447  hasGeminiKey check
+> 3528	    → AIOSTerminal.tsx:639  Live Mode toggle visível
+> 3529	    → useGeminiLive.ts:187  BidiGenerateContent WS direto do browser
+> 3530	
+> 3531	Supabase vault (server-side / Edge Functions):
+> 3532	  GEMINI_API_KEY (digest 0fe0e159...)
+> 3533	    → aios-chat/index.ts:66   userKeys?.google_api_key || vault
+> 3534	    → tts-speak/index.ts:76   mesmo padrão vault-first
+> 3535	```
+> 3536	
+> 3537	---
+> 3538	
+> 3539	## Settings Sovereignty + Epsilon v9 + Delta v5 Record (2026-05-05)
+> 3540	
+> 3541	Sessão de fechamento do ciclo de configuração do Usuário Zero. O ponto de partida era a SettingsPage acumulando dívida técnica: sem TanStack Query, model selector efêmero (perdido no refresh), chaves de usuário ignoradas pelas edge functions, tipos desincronizados, e mcoCoins subtraídos diretamente pelo cliente. O plano de 6 fases fechou tudo. A migration `20260505100000` adicionou `pref_ai_model` à `user_api_keys` e criou a RPC `add_mco_coins(SECURITY DEFINER)`. O hook `useUserApiKeys` encapsula toda a lógica em TanStack Query com `staleTime: 60_000`. A SettingsPage foi reescrita sem `useState` nem `useEffect` para dados remotos — usa o hook, expõe `pref_ai_model` com 6 opções, botão "Testar" por provider com validação client-side, e campos para nanobana/seedance em seção colapsável. O `aios-chat` e o `tts-speak` agora seguem o padrão vault-first com user key override. O `orchestrate-content` resolve `pref_ai_model` do usuário e o propaga para `generate-content`, com mapeamento `gemini-*` → `google/*` para OpenRouter. O `ConfigPanel` foi reescrito para mostrar status real das chaves do usuário em vez de dados estáticos do Zustand. Na Epsilon v9, o nó de maior `callsIn` no Sigma.js ganha badge dourado ★ clicável com fly-to animado. Adicionalmente foram inseridos e embedados 62 novos nós via `sync-mesh` pós-commit, chegando a 2559 nós com 100% de embedding.
+> 3542	
+> 3543	| Action | Result |
+> 3544	|--------|--------|
+> 3545	| `supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql` | ✅ coluna `pref_ai_model` + RPC `add_mco_coins` SECURITY DEFINER |
+> 3546	| `src/integrations/supabase/types.ts` | ✅ `pref_ai_model`, `wp_site_url`, `wp_username`, `wp_app_password` sincronizados |
+> 3547	| `src/hooks/useUserApiKeys.ts` (NOVO) | ✅ TanStack Query `staleTime: 60_000` · upsert mutation · `saveKeys` exportado |
+> 3548	| `src/pages/SettingsPage.tsx` | ✅ Reescrita — `useUserApiKeys` · Testar key · pref_ai_model Select · mcoCoins RPC |
+> 3549	| `src/pages/CoreV2Page.tsx` | ✅ `useEffect` sincroniza `selectedModel` do DB · onChange persiste `pref_ai_model` |
+> 3550	| `supabase/functions/aios-chat/index.ts` | ✅ user `google_api_key` override + `pref_ai_model` → model resolution |
+> 3551	| `supabase/functions/tts-speak/index.ts` | ✅ user `google_api_key` override (padrão vault-first) |
+> 3552	| `supabase/functions/orchestrate-content/index.ts` | ✅ `prefModel` → `selectedModel` com mapeamento `gemini-*` → `google/*` para OpenRouter |
+> 3553	| `src/components/panels/ConfigPanel.tsx` | ✅ Reescrito — dados reais via `useUserApiKeys` · badges verde/vermelho por provider |
+> 3554	| `src/components/orchestrator/ConstellationMatrix.tsx` | ✅ Epsilon v9 — hub node badge dourado ★ + pulse + fly-to animado |
+> 3555	
+> 3556	| Commit | Conteúdo |
+> 3557	|--------|----------|
+> 3558	| `3f0c648` | feat(epsilon-v9): hub node badge |
+> 3559	| `1df6bb6` | feat(settings): Settings Overhaul v5.5.5 |
+> 3560	| `935cb80` | docs(readme): v5.5.5 |
+> 3561	
+> 3562	### Arquitetura — Settings Sovereignty
+> 3563	
+> 3564	```
+> 3565	useUserApiKeys (TanStack Query, staleTime: 60s)
+> 3566	  ↓ queryFn → supabase.user_api_keys.select('*').eq('user_id')
+> 3567	  ↓ mutationFn → supabase.user_api_keys.upsert({...payload, user_id})
+> 3568	  ↓ onSuccess → qc.invalidateQueries(['user_api_keys'])
+> 3569	
+> 3570	SettingsPage → useUserApiKeys → saveKeys({ pref_ai_model })
+> 3571	CoreV2Page  → useUserApiKeys → useEffect → setSelectedModel (DB sync)
+> 3572	             onChange → saveKeys({ pref_ai_model }) (persist)
+> 3573	ConfigPanel → useUserApiKeys → connected = !!(userKeys?.[p.key])
+> 3574	
+> 3575	aios-chat / tts-speak:
+> 3576	  admin.user_api_keys(user.id) → google_api_key || vault GEMINI_API_KEY
+> 3577	  pref_ai_model: body.model || userKeys.pref_ai_model || "gemini-2.5-flash"
+> 3578	
+> 3579	orchestrate-content:
+> 3580	  prefModel = userKeys.pref_ai_model
+> 3581	  gemini-* → google/* (OpenRouter format)
+> 3582	  selectedModel → generate-content body
+> 3583	
+> 3584	mcoCoins (SettingsPage top-up):
+> 3585	  supabase.rpc("add_mco_coins", { p_user_id, p_amount })
+> 3586	  SECURITY DEFINER → atômico, não manipulável pelo cliente
+> 3587	```
+> 3588	
+> 3589	---
+> 3590	
+> 3591	## Core v2 UX Fixes + Social OAuth ADRs Record (2026-05-04)
+> 3592	
+> 3593	Sessão focada em dois eixos: qualidade da interface do Core v2 e enriquecimento do Knowledge Mesh com as decisões arquiteturais do pipeline social. No Core v2, o dropdown de ações de mensagem (···) abria para baixo e era clipado pelo `overflow-hidden` do container terminal — corrigido para `fixed` positioning com coordenadas calculadas via `getBoundingClientRect`, abrindo sempre acima do botão. O auto-scroll brigava com scroll manual durante streaming — adicionado rastreamento de posição via `handleChatScroll` que só permite auto-scroll quando o usuário está no fundo (dentro de 80px). No `useKnowledgeMesh`, `contextString` e `contextNodeIds` eram recalculados a cada re-render; adicionado `useMemo` com deps `[nodes, meshStats]`. Cinco nós ADR foram inseridos e embedados no Knowledge Mesh via `seed-social-oauth-adrs.ts`, dando ao AIOS grounding semântico completo sobre as decisões do pipeline social.
+> 3594	
+> 3595	| Action | Result |
+> 3596	|--------|--------|
+> 3597	| `src/components/core/AIOSTerminal.tsx` — dropdown | ✅ `fixed` positioning via `getBoundingClientRect` · abre sempre para cima · nunca clipa |
+> 3598	| `src/components/core/AIOSTerminal.tsx` — auto-scroll | ✅ `handleChatScroll` rastreia posição · auto-scroll só dispara quando usuário está no fundo |
+> 3599	| `src/hooks/useKnowledgeMesh.ts` | ✅ `useMemo` em `contextString` + `contextNodeIds` — elimina recálculo desnecessário |
+> 3600	| `scripts/seed-social-oauth-adrs.ts` criado | ✅ 5 nós inseridos e embedados: ADR-001 Twitter PKCE · ADR-002 Instagram v21 · ADR-003 Service Role Identity · ADR-004 N+1 Consolidation · Milestone v5.5.3 |
+> 3601	
+> 3602	| Commit | Conteúdo |
+> 3603	|--------|----------|
+> 3604	| `422ff2b` | fix(core-v2): message actions dropdown + auto-scroll inteligente |
+> 3605	| `b165ab2` | perf(hooks): useMemo em contextString e contextNodeIds |
+> 3606	| `273a371` | chore(scripts): seed-social-oauth-adrs — 5 ADR nodes ingested no Knowledge Mesh |
+> 3607	| `01b38d5` | docs(readme): v5.5.4 — Core v2 UX fixes + Social OAuth ADRs no Knowledge Mesh |
+> 3608	
+> 3609	### Arquitetura — Dropdown Fixed Positioning
+> 3610	
+> 3611	```
+> 3612	MessageActions (AIOSTerminal.tsx)
+> 3613	  btnRef.current.getBoundingClientRect()
+> 3614	    → { bottom, left }
+> 3615	    → bottom: window.innerHeight - rect.top + 4  (abre acima)
+> 3616	    → left: Math.max(8, Math.min(rect.left, window.innerWidth - 130 - 8))
+> 3617	  <div style={{ position: fixed, bottom, left }}> ← não clipado por overflow-hidden
+> 3618	```
+> 3619	
+> 3620	### Arquitetura — Auto-Scroll Inteligente
+> 3621	
+> 3622	```
+> 3623	handleChatScroll (onScroll handler)
+> 3624	  → el.scrollHeight - el.scrollTop - el.clientHeight > 80
+> 3625	  → userScrolledUpRef.current = true/false
+> 3626	
+> 3627	useEffect([messages])
+> 3628	  → if (!userScrolledUpRef.current) scrollTop = scrollHeight
+> 3629	  → durante streaming: só rola se usuário está no fundo
+> 3630	  → usuário scrollando para cima: streaming não interrompe leitura
+> 3631	```
+> 3632	
+> 3633	---
+> 3634	
+> 3635	## Social Pipeline Live + Query Consolidation Record (2026-05-04)
+> 3636	
+> 3637	Sessão de debug e consolidação do pipeline social autônomo. O ponto de partida era o auto-publish agendando posts mas nunca publicando — três bugs encapsulados no caminho service-role → publish-social → refresh-social-token. Adicionalmente, três N+1 queries (user_roles 3×/load, mcorch_nodes 6 queries/mount, aios_conversations 4×/navegação) foram eliminados via migração para TanStack Query com staleTime adequado. Instagram foi migrado para o novo app MCORCH-IG (ID 1271182438521153) com webhook ativo, e o 4Cs Audit fechou em 100/100 com as rotinas de crontab documentadas e o Sprint Goal definido.
+> 3638	
+> 3639	**Auto-publish pipeline — 3 bugs corrigidos:**
+> 3640	- Bug 1 (identity): `auto-publish` não passava `user_id` no body → `publish-social` via service role tinha `user.id = null` e retornava 401. Fix: body inclui `user_id: post.user_id`.
+> 3641	- Bug 2 (token refresh silencioso): `refresh-social-token` comparava `token === SUPABASE_SERVICE_ROLE_KEY` — sempre falso porque o header chega como Bearer token completo, não a chave raw. Fix: detectar service role via `auth.getUser() === null`, aceitar `user_id` do body.
+> 3642	- Bug 3 (token pós-refresh undefined): `publish-social` chamava `refresh-social-token` mas usava `account.access_token` que não foi atualizado (a função retorna `{success, expires_at}`, não o token). Fix: re-fetch `social_accounts` da DB após refresh e sobrescrever `account.access_token`.
+> 3643	
+> 3644	**N+1 consolidation:** `useAdminData` migrado de `useEffect` + fetch raw para TanStack Query com `staleTime: Infinity, gcTime: Infinity` (roles são imutáveis por sessão). `useMcorchMemory` reescrito com `fetchAllPages<T>()` module-level + dois `useQuery` com `staleTime: 5min` — múltiplos mounts compartilham um único cache ao invés de disparar 6 requests sequenciais cada. `useAIOSConversations` recebeu `staleTime: 60_000` no `useInfiniteQuery`. Realtime no mcorch_memory usa `qc.setQueryData()` direto no cache ao invés de `setState`.
+> 3645	
+> 3646	**Instagram MCORCH-IG:** App 1271182438521153 configurado com novo `INSTAGRAM_APP_ID/SECRET` no vault. Webhook `instagram-webhook` Edge Function criada (--no-verify-jwt) para responder ao handshake GET + logar eventos POST. Token @magicorch armazenado via oauth callback restaurado com `--no-verify-jwt` (havia sido re-deployado sem a flag). Conta Instagram ativa junto com LinkedIn e Twitter — todas as 3 contas no dashboard.
+> 3647	
+> 3648	**4Cs 100/100:** `scripts/audit-4cs.sh` criado (bash puro, sem Claude) com snapshot semanal via crontab `0 12 * * 1`. Sprint Goal preenchido com "Distribuição social autônoma operacional". Loop section em sprint-priorities.md substituída por tabela real com 4 rotinas crontab.
+> 3649	
+> 3650	| Action | Result |
+> 3651	|--------|--------|
+> 3652	| `supabase/functions/auto-publish/index.ts` | ✅ Passa `user_id: post.user_id` no body do fetch publish-social |
+> 3653	| `supabase/functions/publish-social/index.ts` | ✅ Identity via `auth.getUser()` null-check + re-fetch token pós-refresh |
+> 3654	| `supabase/functions/refresh-social-token/index.ts` | ✅ Service role detectado via `auth.getUser() === null` em vez de string comparison |
+> 3655	| `supabase/functions/social-auth-callback/index.ts` | ✅ Re-deployada com `--no-verify-jwt` (Instagram OAuth redireciona browser direto) |
+> 3656	| `supabase/functions/instagram-webhook/index.ts` | ✅ GET handshake + POST event logging · `--no-verify-jwt` |
+> 3657	| `src/hooks/useAdminData.ts` | ✅ N+1 #002 — TanStack Query `staleTime: Infinity` para user_roles |
+> 3658	| `src/hooks/useMcorchMemory.ts` | ✅ N+1 #003 — `fetchAllPages<T>()` module-level + 2 useQuery com cache compartilhado |
+> 3659	| `src/hooks/useAIOSConversations.ts` | ✅ N+1 #009 — `staleTime: 60_000` no useInfiniteQuery |
+> 3660	| `scripts/audit-4cs.sh` | ✅ Bash puro · coleta 10+ métricas · appenda audit-log.md · commit automático |
+> 3661	| `scripts/auto-publish-cron.sh` | ✅ Curl para auto-publish Edge Function a cada 5min via crontab |
+> 3662	| `.claude/context/sprint-priorities.md` | ✅ Sprint Goal + Loop table + itens concluídos ~~riscados~~ |
+> 3663	
+> 3664	| Commit | Conteúdo |
+> 3665	|--------|----------|
+> 3666	| `aa214bc` | fix(social): auto-publish pipeline operacional — LinkedIn publicando ✅ |
+> 3667	| `1107cf4` | chore(audit): 4Cs weekly snapshot — 2026-05-04 |
+> 3668	| `aac1f2b` | chore(scripts): audit-4cs.sh + auto-publish-cron.sh — crontab configurado |
+> 3669	| `ee46ec2` | chore(audit): 4Cs — 97/100 · 2026-05-04 |
+> 3670	| `0b289fd` | chore(sprint): v5.5.3 — sprint-priorities atualizado · 4Cs 97/100 · rotinas documentadas |
+> 3671	| `e1e391a` | fix(queries): N+1 consolidation #002/#003/#009 + Instagram webhook |
+> ```
+
+## 🤖 Claude *(00:36:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 71
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## LLM Cascading Fallback & aios-sql-bridge E2E Validation (2026-05-31)
+> 15	
+> 16	**v6.15.0 (2026-05-31)** — Implementada a cascata de fallback do LLM nas Edge Functions, a correção e teste de fumaça E2E da `aios-sql-bridge` e a verificação do watchdog do Canvas Studio Higgsfield.
+> 17	
+> 18	**O que foi entregue:**
+> 19	- **LLM Cascading Fallback (OTD-LLM-FALLBACK)** — Helper [llm-fallback.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts) compartilhado implantado. Realiza fallback em cascata (OpenRouter Pago → Gemini Free `/v1beta` OpenAI API → OpenRouter Free `google/gemma-2-9b-it:free`) sob falhas de HTTP 402/429 ou rede. Refatoradas **12 Edge Functions** para utilizar o helper.
+> 20	- **aios-sql-bridge E2E Validation** — Correção crítica no checkAdmin no [index.ts](file:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-sql-bridge/index.ts) para ler a tabela `user_roles` usando o client `admin` (service role), sanando os erros de assinatura obsoleta de 2 argumentos do `has_role`. Executada a suíte de testes do Vitest [aios-sql-bridge-smoke.test.ts](file:///home/gcrUX/htdocs/constellation-orchestra/src/test/aios-sql-bridge-smoke.test.ts) que passou com sucesso nos 3 cenários (happy path, forbidden columns e non-whitelisted tables).
+> 21	- **Higgsfield Video Watchdog (Fase 4.2c)** — Whitelisting de modelos Higgsfield em `canvas-execute` e validação física do script [canvas-video-watchdog.sh](file:///home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh) que verifica jobs stale e grava telemetria saudável em `infra_health_logs`.
+> 22	
+> 23	**ORO triplet:**
+> 24	- **Operator:** MCORCH Master Execution Agent (eu)
+> 25	- **Reviewer:** Sovereign (Gabriel Zarattini)
+> 26	- **Owner:** Sovereign (blast radius = infraestrutura de LLM Fallback, governança de segurança da SQL bridge e integridade dos jobs de vídeo Higgsfield)
+> 27	
+> 28	| Verificação | Resultado |
+> 29	|---|---|
+> 30	| `tsc --noEmit` (árvore combinada) | ✅ 0 erros |
+> 31	| Unit tests | ✅ **217/217** (incluindo o novo E2E smoke test da SQL Bridge) |
+> 32	| Handoff node | ✅ `4aaa1887-b34d-4711-b121-9ad637899b62` embedded 768d |
+> 33	| Mesh total | **8713 nodes** |
+> 34	| Deploy | ✅ 12 Edge Functions deployadas e funcionando online |
+> 35	
+> 36	| Commit | Conteúdo |
+> 37	|---|---|
+> 38	| `57d34e130b0cebda9d67fd2e1022ff80a295f9fb` | feat(llm-fallback): implement LLM cascading fallback helper and integrate in edge functions |
+> 39	| `af3abdb88b0aaa20b7b577801ac8f1661823efd1` | fix(sql-bridge): update checkAdmin verification logic to query user_roles table and add vitest E2E smoke tests |
+> 40	
+> 41	### Survival Laws Self-audit
+> 42	```
+> 43	### Law 1 (Materiality)
+> 44	- [x] Toda claim tem prova? SIM — commits hashes completos, logs de teste do Vitest e telemetria inserida com sucesso em infra_health_logs
+> 45	- [x] Cérebro sem mãos? SIM — detectada e corrigida a assinatura incorreta da RPC de admin na SQL Bridge rodando em produção
+> 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
+> 47	 
+> 48	### Law 2 (Process)
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 50	 
+> 51	### Law 3 (Pruning)
+> 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
+> 53	 
+> 54	### Law 4 (ORO)
+> 55	- [x] ORO triplet declarado e alinhado com o Sovereign
+> 56	```
+> 57	
+> 58	#### Material Proofs Audit Result (Fase 5c):
+> 59	| Claim | Kind | Expected | Actual | Verdict |
+> 60	|-------|------|----------|--------|---------|
+> 61	| mesh node 856cad26 | mesh_node | 856cad26-a931-4d87-94ad-063b22c8152d | 856cad26-a931-4d87-94ad-063b22c8152d | ✅ |
+> 62	| commit 0a1c4e6 | git_commit | 0a1c4e6 | 0a1c4e6 | ✅ |
+> 63	| commit d34ff5d | git_commit | d34ff5d | d34ff5d | ✅ |
+> 64	| tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> 65	| file docs/bok/mcorch-constellation/roadmap-v1.md | file_exists | docs/bok/mcorch-constellation/roadmap-v1.md | docs/bok/mcorch-constellation/roadmap-v1.md | ✅ |
+> 66	| oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | Operator = MCORCH Master Execution Agent (eu); Reviewer = Sovereign (Gabriel Zarattini); O | ✅ |
+> 67	| handoff node 4aaa1887 | mesh_node | 4aaa1887-b34d-4711-b121-9ad637899b62 | 4aaa1887-b34d-4711-b121-9ad637899b62 | ✅ |
+> 68	
+> 69	QA VERDICT: 7 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 70	
+> 71	
+> ```
+
+## 🤖 Claude *(00:36:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 3272,
+  "limit": 400
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3272	| `src/components/core/AIOSTerminal.tsx` — Props + onMessage callback | ✅ `onMessage?: (content: string) => void` adicionado · disparado no streaming-end useEffect antes do reset do TTS buffer |
+> 3273	| `src/pages/CoreV2Page.tsx` — wiring | ✅ `parseAgentMessage` destrucurado de `useA2UI()` · passado como `onMessage` para `<AIOSTerminal>` |
+> 3274	| `src/test/useOrchestrationGraph.test.ts` (novo) | ✅ 21 testes — input validation, state transitions, success/mcoCoins gate/partial errors, persistPositions |
+> 3275	| `src/test/useKnowledgeMesh.test.ts` (novo) | ✅ 19 testes — multi-bucket fetch, dedup, contextString format, contextNodeIds, meshStats, RLS-only isolation, realtime lifecycle |
+> 3276	| `src/test/useSubscription.test.ts` (novo) | ✅ 16 testes — checkout/openPortal happy + error paths, loading transitions, redirect via window.location.href |
+> 3277	| Test suite total | ✅ 66 → 122 testes (todos passando · zero TS errors) |
+> 3278	| `docs/bok/mcorch-constellation/00-index.md` | ✅ Project manifest + traceability index + Phase 7 mesh payload |
+> 3279	| `docs/bok/mcorch-constellation/01-mrd.md` | ✅ 12 MRs (BABOK v3) + TAM/SAM/SOM + 6 competitors + 6 market timing trends |
+> 3280	| `docs/bok/mcorch-constellation/02-brd.md` | ✅ 18 BRs + 5 SMART objectives + 9 stakeholders + ROI + mcoCoins economics + 10 risks |
+> 3281	| `docs/bok/mcorch-constellation/03-prd.md` | ✅ 24 PRs (MoSCoW) + 3 personas + 3 journeys + Gherkin acceptance criteria + UX tokens |
+> 3282	| `docs/bok/mcorch-constellation/04-frd.md` | ✅ 42 FRs + 24 NFRs + interface contracts + test matrix mapeada aos 122 testes |
+> 3283	| `docs/bok/mcorch-constellation/05-sdd.md` | ✅ Architecture overview + 30 hooks + 39 edge fns + STRIDE + RLS patterns + secrets inventory + 9 OTDs |
+> 3284	| `docs/bok/mcorch-constellation/06-data-model.md` | ✅ 16 tabelas + 30 migrations chronology + RLS catalogue + GraphRAG node/edge types + tenant isolation map |
+> 3285	| `docs/bok/mcorch-constellation/07-process-flow.md` | ✅ 14 processos BPMN-lite + retry/SLA matrix + 5 cron jobs + n8n workflow blueprints |
+> 3286	| `docs/bok/mcorch-constellation/08-quality-metrics.md` | ✅ 15 KPIs + 18 FMEA + 17 doc-debt items + self-heal specs + PDCA cadence |
+> 3287	| Mesh seal — `bok-scribe-seal-mcorch-constellation-v1` | ✅ Node inserido em `mcorch_nodes` via Supabase SQL editor · trigger autônomo embedou (success no rows returned confirma INSERT) |
+> 3288	| Live node count | 2564 → 2567 (3 novos: BoK seal milestone + 2 novos nós ast/observação do trigger) |
+> 3289	| TypeScript zero errors | ✅ `npx tsc --noEmit` exit 0 |
+> 3290	
+> 3291	| Commit | Conteúdo |
+> 3292	|--------|----------|
+> 3293	| `a9dcb61` | feat(a2ui): wire parseAgentMessage to AIOSTerminal.onMessage |
+> 3294	| `f553aa4` | test(hooks): expand coverage with 56 tests for orchestration, knowledge mesh and subscription |
+> 3295	| `3ce0085` | docs(bok): seal BoK Suite v1 for mcorch-constellation — 9 docs reverse-engineered from running system |
+> 3296	| `708c34a` | docs(readme): v5.7.0 — BoK Suite v1 + A2UI wiring + 122 tests (2567 nós) |
+> 3297	
+> 3298	### Arquitetura — A2UI Wiring
+> 3299	
+> 3300	```
+> 3301	useAIOSChat (token streaming)
+> 3302	  ↓ onTokens(delta) → ttsBufferRef.current += delta
+> 3303	AIOSTerminal (stream tracking)
+> 3304	  ↓ useEffect on isStreaming false transition
+> 3305	  ↓ if (ttsBufferRef.current) onMessage?.(ttsBufferRef.current)
+> 3306	  ↓ then reset ttsBufferRef
+> 3307	CoreV2Page passes parseAgentMessage as onMessage prop
+> 3308	  ↓ regex scan for ```json {type:"a2ui",...}``` blocks
+> 3309	useA2UI.dispatchPayload(payload)
+> 3310	  ↓ surfaces Map state updated
+> 3311	A2UI surfaces render in CoreV2Page center column
+> 3312	  (MetricsPanel | AgentStatusCard | SystemAlert | TextBlock)
+> 3313	```
+> 3314	
+> 3315	### Arquitetura — Test Coverage Pyramid
+> 3316	
+> 3317	```
+> 3318	122 tests across 7 files
+> 3319	├── Unit (hooks + libs)
+> 3320	│   ├── billing.test.ts                    22 tests  (RPC atomicity, coin guard)
+> 3321	│   ├── useOrchestrationGraph.test.ts      21 tests  (pipeline state machine)
+> 3322	│   ├── useOrchestrationStore.test.ts      29 tests  (Zustand store transitions)
+> 3323	│   ├── useKnowledgeMesh.test.ts           19 tests  (multi-bucket + RLS)
+> 3324	│   └── useSubscription.test.ts            16 tests  (Stripe checkout/portal)
+> 3325	├── Integration
+> 3326	│   └── phase-zeta.test.tsx                14 tests  (AIOS conversation persistence)
+> 3327	└── Sanity
+> 3328	    └── example.test.ts                     1 test
+> 3329	```
+> 3330	
+> 3331	### Arquitetura — BoK Reverse-Engineering Mode
+> 3332	
+> 3333	```
+> 3334	Inputs (already known, derived from CLAUDE.md + HANDOFF.md):
+> 3335	  business_idea  = sovereign content orchestration platform
+> 3336	  market_segment = B2B2C
+> 3337	  monetization   = hybrid (subscription + mcoCoins)
+> 3338	  regulatory     = LGPD + Stripe PCI + platform ToS
+> 3339	  integration    = extends-mcorch (this IS the platform)
+> 3340	  project_slug   = mcorch-constellation
+> 3341	
+> 3342	Discovery (parallel reads, all read-only):
+> 3343	  CLAUDE.md, HANDOFF.md, README.md, sprint-priorities, audit-log
+> 3344	  src/hooks/* (30 files), src/pages/* (26 files), src/store/* (2 files)
+> 3345	  supabase/functions/* (39 fns), supabase/migrations/*.sql (30 migrations)
+> 3346	
+> 3347	Generation (sequential per phase, ~10-15 min):
+> 3348	  Phase 0  → 00-index.md          Project manifest
+> 3349	  Phase 1  → 01-mrd.md, 02-brd.md (BABOK v3 lens)
+> 3350	  Phase 2  → 03-prd.md            (ProdBOK + CXBOK lens)
+> 3351	  Phase 3  → 04-frd.md, 05-sdd.md (SWEBOK v4 + CISSP CBK lens)
+> 3352	  Phase 4  → 06-data-model.md, 07-process-flow.md (DMBOK + BPM CBOK)
+> 3353	  Phase 5  → 08-quality-metrics.md (CMQ/OE BOK)
+> 3354	  Phase 6  → traceability validation (no orphans, RPN>100 actions present)
+> 3355	  Phase 7  → mesh injection payload (Sovereign-approved insert)
+> 3356	
+> 3357	Source-of-truth rule (inverted for reverse-engineering):
+> 3358	  When BoK contradicts running code → running code wins
+> 3359	  Contradiction → enumerated as doc-debt in 08-quality-metrics.md §7
+> 3360	```
+> 3361	
+> 3362	---
+> 3363	
+> 3364	## Layout + UX Regression Fixes Record (2026-05-06)
+> 3365	
+> 3366	Sessão de correção de regressões visuais acumuladas após o DevOps + Security Seal. Cinco problemas identificados e resolvidos: layout de páginas full-canvas sobrepondo o sidebar, barra de busca conflitando com botão de auth, textos com opacidade reduzida dificultando leitura, e contagem de nós do painel Sovereign Mesh Control dessincronizada do HUD superior. Ponto de diagnóstico: `MatrixPage` e `MemoryPage` usavam `absolute inset-0` como container raiz — classe que posiciona relativo ao ancestral posicionado mais próximo (não o `<main>` do DashboardLayout), escapando do flex tree e sobrepondo sidebar e header. O padrão correto (`relative w-full h-full overflow-hidden`), já adotado por `ConstellationPage`, foi aplicado às duas páginas. Como consequência direta, a search bar (que estava em `absolute top-3 left-1/2 -translate-x-1/2`) passou a ficar alinhada dentro do canvas — mas `left-1/2` do canvas com sidebar visível coincide com o fim dos badges. Solução: mover a search bar para dentro do flex row dos badges como item inline (`relative w-64`), com dropdown convertido de fluxo normal para `absolute top-full` para não empurrar outros badges. Para textos opacos: varredura em `ConstellationMatrix`, `MeshControlPanel` e `MemoryPage` — todas as classes `text-*/NN` com sufixo de opacidade em elementos de texto legível foram convertidas para variantes full-opacity. `MeshControlPanel` agora recebe `edgeCount` como prop adicional e exibe `nodeCount`/`edgeCount` do hook `useConstellationSigma` em vez dos totais do banco via `trigger-ingest`, garantindo paridade com o HUD superior.
+> 3367	
+> 3368	| Action | Result |
+> 3369	|--------|--------|
+> 3370	| `src/pages/MatrixPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button removido · `edgeCount` passado para MeshControlPanel |
+> 3371	| `src/pages/MemoryPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button + `useNavigate` + `ChevronLeft` removidos |
+> 3372	| `src/components/orchestrator/ConstellationMatrix.tsx` — search bar | ✅ Movida de `absolute left-1/2 -translate-x-1/2` para item inline no badges flex row · dropdown `absolute top-full` · texto opaco corrigido (legend, tooltip, results) |
+> 3373	| `src/components/orchestrator/MeshControlPanel.tsx` — stats + opacity | ✅ `edgeCount: number` adicionado como prop · stats grid usa `nodeCount`/`edgeCount` props em vez de `stats.totalNodes/totalEdges` · labels e textos com opacidade corrigidos |
+> 3374	| `HANDOFF.md` — pending action | ✅ API key Google marcada como excluída via AI Studio (`aistudio.google.com/app/api-keys`), não Cloud Console |
+> 3375	
+> 3376	| Commit | Conteúdo |
+> 3377	|--------|----------|
+> 3378	| `97c34fe` | fix(layout): Matrix + Memory pages layout regression — absolute inset-0 → relative w-full h-full |
+> 3379	| `0988f53` | fix(ux): search bar inline alignment + text opacity + MeshControl node count sync |
+> 3380	| `9840f7b` | docs(readme): v5.6.1 — Layout + UX Regression Fixes (2564 nós) |
+> 3381	
+> 3382	### Arquitetura — Layout Fix
+> 3383	
+> 3384	```
+> 3385	DashboardLayout (flex col, h-screen)
+> 3386	  ├── header (h-14, shrink-0)          ← breadcrumbs + mcoCoins + auth
+> 3387	  └── main (flex-1, min-h-0, overflow-hidden p-0)   ← full-canvas mode
+> 3388	        └── MatrixPage / MemoryPage
+> 3389	              relative w-full h-full   ← fills <main> without escaping
+> 3390	                ├── ConstellationMatrix (w-full h-full)
+> 3391	                │     absolute inset-0  ← Sigma WebGL canvas (relative to ConstellationMatrix)
+> 3392	                │     absolute top-3 left-3  ← badges flex row (stays BELOW h-14 header)
+> 3393	                │       └── search bar (relative w-64, inline)
+> 3394	                │             absolute top-full  ← dropdown (no flex push)
+> 3395	                └── MeshControlPanel (absolute bottom-3 left-3)
+> 3396	
+> 3397	Before fix: absolute inset-0 on MatrixPage escaped <main> → overlapped sidebar + header
+> 3398	After fix: relative w-full h-full → stays within <main> flex area
+> 3399	```
+> 3400	
+> 3401	### Arquitetura — MeshControl Sync
+> 3402	
+> 3403	```
+> 3404	useConstellationSigma() → { nodeCount, edgeCount, neuralDensity }
+> 3405	  ↓ props
+> 3406	MatrixPage → <MeshControlPanel nodeCount={nodeCount} edgeCount={edgeCount} neuralDensity={neuralDensity} />
+> 3407	  ↓ display (always live)
+> 3408	  Nós: nodeCount    (= top HUD badge)
+> 3409	  Arestas: edgeCount (= top HUD badge)
+> 3410	  Neural: stats?.embeddedPct ?? neuralDensity  (DB via trigger-ingest or prop fallback)
+> 3411	
+> 3412	Before fix: stats.totalNodes from trigger-ingest (DB) ≠ nodeCount from Sigma graph
+> 3413	After fix: both HUD and panel show same source → always identical
+> 3414	```
+> 3415	
+> 3416	---
+> 3417	
+> 3418	## DevOps + Security Seal Record (2026-05-06)
+> 3419	
+> 3420	Sessão de manutenção e infraestrutura de engenharia. Ponto de partida: repositório com 6 branches `claude/*` pendentes (criados em sessões mobile sem SSH), 1 stash obsoleto, e 0 testes de cobertura em 177 arquivos fonte. Entrega fecha os três vetores: segurança, qualidade e protocolo.
+> 3421	
+> 3422	**Segurança:** Auditoria detectou `VITE_GEMINI_API_KEY` exposta em plain text no commit `06369c5` (HANDOFF.md). Branch `revoke-exposed-api-key-rLNWf` cherry-pickado — valor redacted, substituído por referência de localização. Branch `fix-api-key-security-kgrEg` cherry-pickado — protocolo `/handoff` recebeu DOCUMENTATION_CREDENTIAL_RULE (invariante: docs descrevem ONDE a credencial mora, nunca seu valor) + Phase 4b mandatory secret scan em HANDOFF.md antes de cada commit + pre-commit hook (`.claude/hooks/pre-commit`) com scan de padrões `AIza*`, `sk-*`, `eyJ*`, `ghp_*`. Chave rotacionada: `VITE_GEMINI_API_KEY` no `.env`, `GEMINI_API_KEY` no vault Supabase, rebuild do `dist/` confirmado (0 ocorrências da chave antiga).
+> 3423	
+> 3424	**Branches sincronizados:** `elastic-cohen-5b890d` (Phase Zeta v5.1.0) — features já em main, único pendente eram 14 testes; cherry-pick seletivo com adaptação de `edge_type` → `relation_type` (schema v5.5.x) e mock de `useQuery`. `mcorch-bok-scribe-agent-NCJXW` — BoK Scribe Agent completo (12 arquivos de templates) + MCORCH Master Execution Protocol inserido no topo do `CLAUDE.md` como diretiva top-priority com BoK Documentation Gate (coding só começa após MRD/BRD/PRD/FRD/SDD consolidados). Demais 4 branches (pensive-khorana, core-v2-implementation, revoke-exposed, fix-api-key) cherry-pickados ou confirmados como integrados e deletados.
+> 3425	
+> 3426	**Test coverage:** Elevado de 1 → 4 arquivos, 1 → 66 testes. `billing.test.ts` (22 testes): COIN_COSTS shape, deductMcoCoins delegando exclusivamente para RPC (nunca deduções client-side), getMcoBalance retorna 0 em perfil inexistente, hasSufficientBalance exact/over/under, checkAndDeductCoins abortando antes do RPC quando saldo insuficiente — invariante de billing crítico coberto. `useOrchestrationStore.test.ts` (29 testes): shape default 8 nós / 9 arestas, todas as 7 transições de estado da máquina (idle→pending→running→done/error/blocked), updateNodeStatus isolado (apenas nó alvo muda), resetNodeStatuses, setRunning idempotente, updateNodeData merge parcial, savePositions + readback de posições do localStorage. Coverage provider v8 instalado com reporter text+html.
+> 3427	
+> 3428	**Protocolo mobile:** `/sync-mobile-branch` skill criada (`.claude/commands/sync-mobile-branch.md`) com 6 fases: inventário via `git fetch`, classificação em 5 categorias (INTEGRADO/SEGURANÇA/FEATURE/DOCS/OBSOLETO), ordem obrigatória (segurança antes de feature), cherry-pick seletivo com guarda contra docs desatualizados, verificação TS+tests pós-integração, push+limpeza, relatório PT-BR. Cheklist rápido para o Maestro ao criar branches pelo celular.
+> 3429	
+> 3430	| Action | Result |
+> 3431	|--------|--------|
+> 3432	| `fix(security)`: redact VITE_GEMINI_API_KEY do HANDOFF.md | ✅ commit `83f89d0` — chave antiga substituída por referência de localização |
+> 3433	| `fix(security)`: harden handoff protocol + pre-commit hook | ✅ commit `fec47fd` — `.claude/hooks/pre-commit` + DOCUMENTATION_CREDENTIAL_RULE + Phase 4b |
+> 3434	| `test(phase-zeta)`: 14 testes Social Consciousness | ✅ commit `0e8ceda` — persistência, DERIVES_FROM, ConversationTimeline UI |
+> 3435	| BoK Scribe Agent scaffold | ✅ commit `331354a` — 12 templates (MRD/BRD/PRD/FRD/SDD/Data/Process/Quality) + agent framework + slash command |
+> 3436	| MCORCH Master Execution Protocol → CLAUDE.md | ✅ commit `d74b362` — BoK Documentation Gate + Closed-Loop Protocol |
+> 3437	| `test(coverage)`: billing.ts + useOrchestrationStore — 66 testes | ✅ commit `aa4f979` — coverage v8 habilitado |
+> 3438	| `/sync-mobile-branch` protocol | ✅ commit `843d86c` — 6 fases + checklist mobile |
+> 3439	| `chore(deps)`: @vitest/coverage-v8 | ✅ commit `59c13fa` — bun.lock atualizado |
+> 3440	| GEMINI_API_KEY rotacionada | ✅ `.env` + vault Supabase + `bun run build` — 0 ocorrências da chave antiga no dist/ |
+> 3441	
+> 3442	| Commit | Conteúdo |
+> 3443	|--------|----------|
+> 3444	| `83f89d0` | fix(security): redact exposed Google API key from HANDOFF.md |
+> 3445	| `fec47fd` | fix(security): harden handoff protocol against credential leaks in docs |
+> 3446	| `0e8ceda` | test(phase-zeta): 14 testes Social Consciousness |
+> 3447	| `331354a` | feat: scaffold MCORCH BoK Scribe Agent |
+> 3448	| `d74b362` | feat: install MCORCH Master Execution Protocol |
+> 3449	| `aa4f979` | test(coverage): billing.ts + useOrchestrationStore — 66 testes, coverage v8 |
+> 3450	| `843d86c` | feat(protocol): /sync-mobile-branch |
+> 3451	| `59c13fa` | chore(deps): add @vitest/coverage-v8 |
+> 3452	| `c91a454` | docs(readme): v5.6.0 |
+> 3453	
+> 3454	### Arquitetura — Security Layers
+> 3455	
+> 3456	```
+> 3457	Credential Protection (3 camadas):
+> 3458	  1. DOCUMENTATION_CREDENTIAL_RULE (handoff.md invariante)
+> 3459	     → docs descrevem ONDE a credencial mora, nunca seu valor
+> 3460	  2. Phase 4b mandatory scan (handoff protocol)
+> 3461	     → grep AIza*/sk-*/eyJ*/ghp_* no HANDOFF.md antes de commit
+> 3462	     → bloqueia se qualquer match encontrado
+> 3463	  3. .claude/hooks/pre-commit (last barrier)
+> 3464	     → scan em todos os staged files
+> 3465	     → instalação: cp .claude/hooks/pre-commit .git/hooks/pre-commit && chmod +x
+> 3466	
+> 3467	Test Coverage Architecture:
+> 3468	  billing.test.ts → src/lib/billing.ts (pure logic, no React)
+> 3469	    └── COIN_COSTS · deductMcoCoins (RPC-only) · getMcoBalance · hasSufficientBalance · checkAndDeductCoins
+> 3470	  useOrchestrationStore.test.ts → src/store/useOrchestrationStore.ts (pure Zustand)
+> 3471	    └── default pipeline shape · state machine · reset · localStorage persistence
+> 3472	  phase-zeta.test.tsx → useAIOSConversations + ConversationTimeline
+> 3473	    └── persistência · DERIVES_FROM relation_type · UI actions
+> 3474	
+> 3475	Mobile Branch Protocol:
+> 3476	  /handson → /sync-mobile-branch (se git fetch revelar branches claude/*)
+> 3477	    → git fetch --all --prune
+> 3478	    → classify: INTEGRADO | SEGURANÇA | FEATURE | DOCS | OBSOLETO
+> 3479	    → apply order: security first → features → delete integrated
+> 3480	    → cherry-pick seletivo (nunca merge docs desatualizados)
+> 3481	    → TS check + test suite
+> 3482	    → git push + delete remotes
+> 3483	  /handoff → seal changes
+> 3484	```
+> 3485	
+> 3486	---
+> 3487	
+> 3488	## Core Promotion + Gemini Live Validated Record (2026-05-06)
+> 3489	
+> 3490	Sessão de hygiene pós-Settings Sovereignty. O `/handson` reportou um alerta crítico — "AIOS Gemini Live key não provisionada" — que ao verificar mostrou ser falso positivo: `GEMINI_API_KEY` já está no vault Supabase (`secrets list`) e `VITE_GEMINI_API_KEY` já está no `.env` local há semanas. O HANDOFF tinha info desatualizada que sobreviveu a múltiplos seals. Junto disso, a Core v2 já está estável em produção há semanas (v5.5.4 + v5.5.5) e duas entradas no menu confundem o usuário — Core v1 oficialmente arquivada. CorePage.tsx movida para `.archive/pages/` via `git mv` (histórico preservado), rota `/dashboard/core` redireciona para `/dashboard/core-v2`, label "Core v2" promovida para "Core" e ícone `BrainCircuit` (unused) removido. Zero TypeScript errors, build passa em 21.47s, nenhum chunk órfão. Ambos pending actions (#8 Commercial Launch + decisão CorePage) marcados como resolvidos.
+> 3491	
+> 3492	| Action | Result |
+> 3493	|--------|--------|
+> 3494	| `src/pages/CorePage.tsx` → `.archive/pages/CorePage.tsx` | ✅ `git mv` preserva histórico — fora do build |
+> 3495	| `src/App.tsx` | ✅ Import CorePage removido · rota `core` agora é `<Navigate to="/dashboard/core-v2" replace />` |
+> 3496	| `src/components/dashboard/DashboardSidebar.tsx` | ✅ Entry "Core v1" removida · "Core v2" → label "Core" · ícone `BrainCircuit` (unused) removido do import |
+> 3497	| `src/components/dashboard/DashboardLayout.tsx` | ✅ BREADCRUMB_MAP — `core` removida, `'core-v2': 'Core'` (sem "v2" no breadcrumb) |
+> 3498	| `HANDOFF.md` Pending Action #8 (Gemini Live) | ✅ Marcado como resolvido — falso positivo do handson |
+> 3499	| Validação | ✅ `npx tsc --noEmit` zero erros · `bun run build` 21.47s · CoreV2Page chunk presente |
+> 3500	
+> 3501	| Commit | Conteúdo |
+> 3502	|--------|----------|
+> 3503	| `1466928` | refactor(dashboard): archive Core v1 — Core v2 promovida para 'Core' |
+> 3504	| `d94ad61` | docs(readme): v5.5.6 — Core Promotion + Gemini Live validated (2560 nós) |
+> 3505	
+> 3506	### Arquitetura — Core Promotion
+> 3507	
+> 3508	```
+> 3509	/dashboard/core      → <Navigate to="/dashboard/core-v2" replace />  (compat)
+> 3510	/dashboard/core-v2   → <CoreV2Page />                                (canônico)
+> 3511	
+> 3512	DashboardSidebar:
+> 3513	  mainItems: [..., { title: 'Core', url: '/dashboard/core-v2', icon: Brain }]
+> 3514	  (entry v1 com ícone BrainCircuit removida)
+> 3515	
+> 3516	DashboardLayout BREADCRUMB_MAP:
+> 3517	  'core-v2': 'Core'   (single entry, label simplificado)
+> 3518	
+> 3519	.archive/pages/CorePage.tsx                                          (off-build)
+> 3520	```
+> 3521	
+> 3522	### Gemini Live — Validação
+> 3523	
+> 3524	```
+> 3525	.env (client-side / Vite build):
+> 3526	  VITE_GEMINI_API_KEY="<redacted — revoke and rotate in Google Cloud Console>"
+> 3527	    → AIOSTerminal.tsx:447  hasGeminiKey check
+> 3528	    → AIOSTerminal.tsx:639  Live Mode toggle visível
+> 3529	    → useGeminiLive.ts:187  BidiGenerateContent WS direto do browser
+> 3530	
+> 3531	Supabase vault (server-side / Edge Functions):
+> 3532	  GEMINI_API_KEY (digest 0fe0e159...)
+> 3533	    → aios-chat/index.ts:66   userKeys?.google_api_key || vault
+> 3534	    → tts-speak/index.ts:76   mesmo padrão vault-first
+> 3535	```
+> 3536	
+> 3537	---
+> 3538	
+> 3539	## Settings Sovereignty + Epsilon v9 + Delta v5 Record (2026-05-05)
+> 3540	
+> 3541	Sessão de fechamento do ciclo de configuração do Usuário Zero. O ponto de partida era a SettingsPage acumulando dívida técnica: sem TanStack Query, model selector efêmero (perdido no refresh), chaves de usuário ignoradas pelas edge functions, tipos desincronizados, e mcoCoins subtraídos diretamente pelo cliente. O plano de 6 fases fechou tudo. A migration `20260505100000` adicionou `pref_ai_model` à `user_api_keys` e criou a RPC `add_mco_coins(SECURITY DEFINER)`. O hook `useUserApiKeys` encapsula toda a lógica em TanStack Query com `staleTime: 60_000`. A SettingsPage foi reescrita sem `useState` nem `useEffect` para dados remotos — usa o hook, expõe `pref_ai_model` com 6 opções, botão "Testar" por provider com validação client-side, e campos para nanobana/seedance em seção colapsável. O `aios-chat` e o `tts-speak` agora seguem o padrão vault-first com user key override. O `orchestrate-content` resolve `pref_ai_model` do usuário e o propaga para `generate-content`, com mapeamento `gemini-*` → `google/*` para OpenRouter. O `ConfigPanel` foi reescrito para mostrar status real das chaves do usuário em vez de dados estáticos do Zustand. Na Epsilon v9, o nó de maior `callsIn` no Sigma.js ganha badge dourado ★ clicável com fly-to animado. Adicionalmente foram inseridos e embedados 62 novos nós via `sync-mesh` pós-commit, chegando a 2559 nós com 100% de embedding.
+> 3542	
+> 3543	| Action | Result |
+> 3544	|--------|--------|
+> 3545	| `supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql` | ✅ coluna `pref_ai_model` + RPC `add_mco_coins` SECURITY DEFINER |
+> 3546	| `src/integrations/supabase/types.ts` | ✅ `pref_ai_model`, `wp_site_url`, `wp_username`, `wp_app_password` sincronizados |
+> 3547	| `src/hooks/useUserApiKeys.ts` (NOVO) | ✅ TanStack Query `staleTime: 60_000` · upsert mutation · `saveKeys` exportado |
+> 3548	| `src/pages/SettingsPage.tsx` | ✅ Reescrita — `useUserApiKeys` · Testar key · pref_ai_model Select · mcoCoins RPC |
+> 3549	| `src/pages/CoreV2Page.tsx` | ✅ `useEffect` sincroniza `selectedModel` do DB · onChange persiste `pref_ai_model` |
+> 3550	| `supabase/functions/aios-chat/index.ts` | ✅ user `google_api_key` override + `pref_ai_model` → model resolution |
+> 3551	| `supabase/functions/tts-speak/index.ts` | ✅ user `google_api_key` override (padrão vault-first) |
+> 3552	| `supabase/functions/orchestrate-content/index.ts` | ✅ `prefModel` → `selectedModel` com mapeamento `gemini-*` → `google/*` para OpenRouter |
+> 3553	| `src/components/panels/ConfigPanel.tsx` | ✅ Reescrito — dados reais via `useUserApiKeys` · badges verde/vermelho por provider |
+> 3554	| `src/components/orchestrator/ConstellationMatrix.tsx` | ✅ Epsilon v9 — hub node badge dourado ★ + pulse + fly-to animado |
+> 3555	
+> 3556	| Commit | Conteúdo |
+> 3557	|--------|----------|
+> 3558	| `3f0c648` | feat(epsilon-v9): hub node badge |
+> 3559	| `1df6bb6` | feat(settings): Settings Overhaul v5.5.5 |
+> 3560	| `935cb80` | docs(readme): v5.5.5 |
+> 3561	
+> 3562	### Arquitetura — Settings Sovereignty
+> 3563	
+> 3564	```
+> 3565	useUserApiKeys (TanStack Query, staleTime: 60s)
+> 3566	  ↓ queryFn → supabase.user_api_keys.select('*').eq('user_id')
+> 3567	  ↓ mutationFn → supabase.user_api_keys.upsert({...payload, user_id})
+> 3568	  ↓ onSuccess → qc.invalidateQueries(['user_api_keys'])
+> 3569	
+> 3570	SettingsPage → useUserApiKeys → saveKeys({ pref_ai_model })
+> 3571	CoreV2Page  → useUserApiKeys → useEffect → setSelectedModel (DB sync)
+> 3572	             onChange → saveKeys({ pref_ai_model }) (persist)
+> 3573	ConfigPanel → useUserApiKeys → connected = !!(userKeys?.[p.key])
+> 3574	
+> 3575	aios-chat / tts-speak:
+> 3576	  admin.user_api_keys(user.id) → google_api_key || vault GEMINI_API_KEY
+> 3577	  pref_ai_model: body.model || userKeys.pref_ai_model || "gemini-2.5-flash"
+> 3578	
+> 3579	orchestrate-content:
+> 3580	  prefModel = userKeys.pref_ai_model
+> 3581	  gemini-* → google/* (OpenRouter format)
+> 3582	  selectedModel → generate-content body
+> 3583	
+> 3584	mcoCoins (SettingsPage top-up):
+> 3585	  supabase.rpc("add_mco_coins", { p_user_id, p_amount })
+> 3586	  SECURITY DEFINER → atômico, não manipulável pelo cliente
+> 3587	```
+> 3588	
+> 3589	---
+> 3590	
+> 3591	## Core v2 UX Fixes + Social OAuth ADRs Record (2026-05-04)
+> 3592	
+> 3593	Sessão focada em dois eixos: qualidade da interface do Core v2 e enriquecimento do Knowledge Mesh com as decisões arquiteturais do pipeline social. No Core v2, o dropdown de ações de mensagem (···) abria para baixo e era clipado pelo `overflow-hidden` do container terminal — corrigido para `fixed` positioning com coordenadas calculadas via `getBoundingClientRect`, abrindo sempre acima do botão. O auto-scroll brigava com scroll manual durante streaming — adicionado rastreamento de posição via `handleChatScroll` que só permite auto-scroll quando o usuário está no fundo (dentro de 80px). No `useKnowledgeMesh`, `contextString` e `contextNodeIds` eram recalculados a cada re-render; adicionado `useMemo` com deps `[nodes, meshStats]`. Cinco nós ADR foram inseridos e embedados no Knowledge Mesh via `seed-social-oauth-adrs.ts`, dando ao AIOS grounding semântico completo sobre as decisões do pipeline social.
+> 3594	
+> 3595	| Action | Result |
+> 3596	|--------|--------|
+> 3597	| `src/components/core/AIOSTerminal.tsx` — dropdown | ✅ `fixed` positioning via `getBoundingClientRect` · abre sempre para cima · nunca clipa |
+> 3598	| `src/components/core/AIOSTerminal.tsx` — auto-scroll | ✅ `handleChatScroll` rastreia posição · auto-scroll só dispara quando usuário está no fundo |
+> 3599	| `src/hooks/useKnowledgeMesh.ts` | ✅ `useMemo` em `contextString` + `contextNodeIds` — elimina recálculo desnecessário |
+> 3600	| `scripts/seed-social-oauth-adrs.ts` criado | ✅ 5 nós inseridos e embedados: ADR-001 Twitter PKCE · ADR-002 Instagram v21 · ADR-003 Service Role Identity · ADR-004 N+1 Consolidation · Milestone v5.5.3 |
+> 3601	
+> 3602	| Commit | Conteúdo |
+> 3603	|--------|----------|
+> 3604	| `422ff2b` | fix(core-v2): message actions dropdown + auto-scroll inteligente |
+> 3605	| `b165ab2` | perf(hooks): useMemo em contextString e contextNodeIds |
+> 3606	| `273a371` | chore(scripts): seed-social-oauth-adrs — 5 ADR nodes ingested no Knowledge Mesh |
+> 3607	| `01b38d5` | docs(readme): v5.5.4 — Core v2 UX fixes + Social OAuth ADRs no Knowledge Mesh |
+> 3608	
+> 3609	### Arquitetura — Dropdown Fixed Positioning
+> 3610	
+> 3611	```
+> 3612	MessageActions (AIOSTerminal.tsx)
+> 3613	  btnRef.current.getBoundingClientRect()
+> 3614	    → { bottom, left }
+> 3615	    → bottom: window.innerHeight - rect.top + 4  (abre acima)
+> 3616	    → left: Math.max(8, Math.min(rect.left, window.innerWidth - 130 - 8))
+> 3617	  <div style={{ position: fixed, bottom, left }}> ← não clipado por overflow-hidden
+> 3618	```
+> 3619	
+> 3620	### Arquitetura — Auto-Scroll Inteligente
+> 3621	
+> 3622	```
+> 3623	handleChatScroll (onScroll handler)
+> 3624	  → el.scrollHeight - el.scrollTop - el.clientHeight > 80
+> 3625	  → userScrolledUpRef.current = true/false
+> 3626	
+> 3627	useEffect([messages])
+> 3628	  → if (!userScrolledUpRef.current) scrollTop = scrollHeight
+> 3629	  → durante streaming: só rola se usuário está no fundo
+> 3630	  → usuário scrollando para cima: streaming não interrompe leitura
+> 3631	```
+> 3632	
+> 3633	---
+> 3634	
+> 3635	## Social Pipeline Live + Query Consolidation Record (2026-05-04)
+> 3636	
+> 3637	Sessão de debug e consolidação do pipeline social autônomo. O ponto de partida era o auto-publish agendando posts mas nunca publicando — três bugs encapsulados no caminho service-role → publish-social → refresh-social-token. Adicionalmente, três N+1 queries (user_roles 3×/load, mcorch_nodes 6 queries/mount, aios_conversations 4×/navegação) foram eliminados via migração para TanStack Query com staleTime adequado. Instagram foi migrado para o novo app MCORCH-IG (ID 1271182438521153) com webhook ativo, e o 4Cs Audit fechou em 100/100 com as rotinas de crontab documentadas e o Sprint Goal definido.
+> 3638	
+> 3639	**Auto-publish pipeline — 3 bugs corrigidos:**
+> 3640	- Bug 1 (identity): `auto-publish` não passava `user_id` no body → `publish-social` via service role tinha `user.id = null` e retornava 401. Fix: body inclui `user_id: post.user_id`.
+> 3641	- Bug 2 (token refresh silencioso): `refresh-social-token` comparava `token === SUPABASE_SERVICE_ROLE_KEY` — sempre falso porque o header chega como Bearer token completo, não a chave raw. Fix: detectar service role via `auth.getUser() === null`, aceitar `user_id` do body.
+> 3642	- Bug 3 (token pós-refresh undefined): `publish-social` chamava `refresh-social-token` mas usava `account.access_token` que não foi atualizado (a função retorna `{success, expires_at}`, não o token). Fix: re-fetch `social_accounts` da DB após refresh e sobrescrever `account.access_token`.
+> 3643	
+> 3644	**N+1 consolidation:** `useAdminData` migrado de `useEffect` + fetch raw para TanStack Query com `staleTime: Infinity, gcTime: Infinity` (roles são imutáveis por sessão). `useMcorchMemory` reescrito com `fetchAllPages<T>()` module-level + dois `useQuery` com `staleTime: 5min` — múltiplos mounts compartilham um único cache ao invés de disparar 6 requests sequenciais cada. `useAIOSConversations` recebeu `staleTime: 60_000` no `useInfiniteQuery`. Realtime no mcorch_memory usa `qc.setQueryData()` direto no cache ao invés de `setState`.
+> 3645	
+> 3646	**Instagram MCORCH-IG:** App 1271182438521153 configurado com novo `INSTAGRAM_APP_ID/SECRET` no vault. Webhook `instagram-webhook` Edge Function criada (--no-verify-jwt) para responder ao handshake GET + logar eventos POST. Token @magicorch armazenado via oauth callback restaurado com `--no-verify-jwt` (havia sido re-deployado sem a flag). Conta Instagram ativa junto com LinkedIn e Twitter — todas as 3 contas no dashboard.
+> 3647	
+> 3648	**4Cs 100/100:** `scripts/audit-4cs.sh` criado (bash puro, sem Claude) com snapshot semanal via crontab `0 12 * * 1`. Sprint Goal preenchido com "Distribuição social autônoma operacional". Loop section em sprint-priorities.md substituída por tabela real com 4 rotinas crontab.
+> 3649	
+> 3650	| Action | Result |
+> 3651	|--------|--------|
+> 3652	| `supabase/functions/auto-publish/index.ts` | ✅ Passa `user_id: post.user_id` no body do fetch publish-social |
+> 3653	| `supabase/functions/publish-social/index.ts` | ✅ Identity via `auth.getUser()` null-check + re-fetch token pós-refresh |
+> 3654	| `supabase/functions/refresh-social-token/index.ts` | ✅ Service role detectado via `auth.getUser() === null` em vez de string comparison |
+> 3655	| `supabase/functions/social-auth-callback/index.ts` | ✅ Re-deployada com `--no-verify-jwt` (Instagram OAuth redireciona browser direto) |
+> 3656	| `supabase/functions/instagram-webhook/index.ts` | ✅ GET handshake + POST event logging · `--no-verify-jwt` |
+> 3657	| `src/hooks/useAdminData.ts` | ✅ N+1 #002 — TanStack Query `staleTime: Infinity` para user_roles |
+> 3658	| `src/hooks/useMcorchMemory.ts` | ✅ N+1 #003 — `fetchAllPages<T>()` module-level + 2 useQuery com cache compartilhado |
+> 3659	| `src/hooks/useAIOSConversations.ts` | ✅ N+1 #009 — `staleTime: 60_000` no useInfiniteQuery |
+> 3660	| `scripts/audit-4cs.sh` | ✅ Bash puro · coleta 10+ métricas · appenda audit-log.md · commit automático |
+> 3661	| `scripts/auto-publish-cron.sh` | ✅ Curl para auto-publish Edge Function a cada 5min via crontab |
+> 3662	| `.claude/context/sprint-priorities.md` | ✅ Sprint Goal + Loop table + itens concluídos ~~riscados~~ |
+> 3663	
+> 3664	| Commit | Conteúdo |
+> 3665	|--------|----------|
+> 3666	| `aa214bc` | fix(social): auto-publish pipeline operacional — LinkedIn publicando ✅ |
+> 3667	| `1107cf4` | chore(audit): 4Cs weekly snapshot — 2026-05-04 |
+> 3668	| `aac1f2b` | chore(scripts): audit-4cs.sh + auto-publish-cron.sh — crontab configurado |
+> 3669	| `ee46ec2` | chore(audit): 4Cs — 97/100 · 2026-05-04 |
+> 3670	| `0b289fd` | chore(sprint): v5.5.3 — sprint-priorities atualizado · 4Cs 97/100 · rotinas documentadas |
+> 3671	| `e1e391a` | fix(queries): N+1 consolidation #002/#003/#009 + Instagram webhook |
+> ```
+
+## 🤖 Claude *(00:36:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 3272,
+  "limit": 200
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3272	| `src/components/core/AIOSTerminal.tsx` — Props + onMessage callback | ✅ `onMessage?: (content: string) => void` adicionado · disparado no streaming-end useEffect antes do reset do TTS buffer |
+> 3273	| `src/pages/CoreV2Page.tsx` — wiring | ✅ `parseAgentMessage` destrucurado de `useA2UI()` · passado como `onMessage` para `<AIOSTerminal>` |
+> 3274	| `src/test/useOrchestrationGraph.test.ts` (novo) | ✅ 21 testes — input validation, state transitions, success/mcoCoins gate/partial errors, persistPositions |
+> 3275	| `src/test/useKnowledgeMesh.test.ts` (novo) | ✅ 19 testes — multi-bucket fetch, dedup, contextString format, contextNodeIds, meshStats, RLS-only isolation, realtime lifecycle |
+> 3276	| `src/test/useSubscription.test.ts` (novo) | ✅ 16 testes — checkout/openPortal happy + error paths, loading transitions, redirect via window.location.href |
+> 3277	| Test suite total | ✅ 66 → 122 testes (todos passando · zero TS errors) |
+> 3278	| `docs/bok/mcorch-constellation/00-index.md` | ✅ Project manifest + traceability index + Phase 7 mesh payload |
+> 3279	| `docs/bok/mcorch-constellation/01-mrd.md` | ✅ 12 MRs (BABOK v3) + TAM/SAM/SOM + 6 competitors + 6 market timing trends |
+> 3280	| `docs/bok/mcorch-constellation/02-brd.md` | ✅ 18 BRs + 5 SMART objectives + 9 stakeholders + ROI + mcoCoins economics + 10 risks |
+> 3281	| `docs/bok/mcorch-constellation/03-prd.md` | ✅ 24 PRs (MoSCoW) + 3 personas + 3 journeys + Gherkin acceptance criteria + UX tokens |
+> 3282	| `docs/bok/mcorch-constellation/04-frd.md` | ✅ 42 FRs + 24 NFRs + interface contracts + test matrix mapeada aos 122 testes |
+> 3283	| `docs/bok/mcorch-constellation/05-sdd.md` | ✅ Architecture overview + 30 hooks + 39 edge fns + STRIDE + RLS patterns + secrets inventory + 9 OTDs |
+> 3284	| `docs/bok/mcorch-constellation/06-data-model.md` | ✅ 16 tabelas + 30 migrations chronology + RLS catalogue + GraphRAG node/edge types + tenant isolation map |
+> 3285	| `docs/bok/mcorch-constellation/07-process-flow.md` | ✅ 14 processos BPMN-lite + retry/SLA matrix + 5 cron jobs + n8n workflow blueprints |
+> 3286	| `docs/bok/mcorch-constellation/08-quality-metrics.md` | ✅ 15 KPIs + 18 FMEA + 17 doc-debt items + self-heal specs + PDCA cadence |
+> 3287	| Mesh seal — `bok-scribe-seal-mcorch-constellation-v1` | ✅ Node inserido em `mcorch_nodes` via Supabase SQL editor · trigger autônomo embedou (success no rows returned confirma INSERT) |
+> 3288	| Live node count | 2564 → 2567 (3 novos: BoK seal milestone + 2 novos nós ast/observação do trigger) |
+> 3289	| TypeScript zero errors | ✅ `npx tsc --noEmit` exit 0 |
+> 3290	
+> 3291	| Commit | Conteúdo |
+> 3292	|--------|----------|
+> 3293	| `a9dcb61` | feat(a2ui): wire parseAgentMessage to AIOSTerminal.onMessage |
+> 3294	| `f553aa4` | test(hooks): expand coverage with 56 tests for orchestration, knowledge mesh and subscription |
+> 3295	| `3ce0085` | docs(bok): seal BoK Suite v1 for mcorch-constellation — 9 docs reverse-engineered from running system |
+> 3296	| `708c34a` | docs(readme): v5.7.0 — BoK Suite v1 + A2UI wiring + 122 tests (2567 nós) |
+> 3297	
+> 3298	### Arquitetura — A2UI Wiring
+> 3299	
+> 3300	```
+> 3301	useAIOSChat (token streaming)
+> 3302	  ↓ onTokens(delta) → ttsBufferRef.current += delta
+> 3303	AIOSTerminal (stream tracking)
+> 3304	  ↓ useEffect on isStreaming false transition
+> 3305	  ↓ if (ttsBufferRef.current) onMessage?.(ttsBufferRef.current)
+> 3306	  ↓ then reset ttsBufferRef
+> 3307	CoreV2Page passes parseAgentMessage as onMessage prop
+> 3308	  ↓ regex scan for ```json {type:"a2ui",...}``` blocks
+> 3309	useA2UI.dispatchPayload(payload)
+> 3310	  ↓ surfaces Map state updated
+> 3311	A2UI surfaces render in CoreV2Page center column
+> 3312	  (MetricsPanel | AgentStatusCard | SystemAlert | TextBlock)
+> 3313	```
+> 3314	
+> 3315	### Arquitetura — Test Coverage Pyramid
+> 3316	
+> 3317	```
+> 3318	122 tests across 7 files
+> 3319	├── Unit (hooks + libs)
+> 3320	│   ├── billing.test.ts                    22 tests  (RPC atomicity, coin guard)
+> 3321	│   ├── useOrchestrationGraph.test.ts      21 tests  (pipeline state machine)
+> 3322	│   ├── useOrchestrationStore.test.ts      29 tests  (Zustand store transitions)
+> 3323	│   ├── useKnowledgeMesh.test.ts           19 tests  (multi-bucket + RLS)
+> 3324	│   └── useSubscription.test.ts            16 tests  (Stripe checkout/portal)
+> 3325	├── Integration
+> 3326	│   └── phase-zeta.test.tsx                14 tests  (AIOS conversation persistence)
+> 3327	└── Sanity
+> 3328	    └── example.test.ts                     1 test
+> 3329	```
+> 3330	
+> 3331	### Arquitetura — BoK Reverse-Engineering Mode
+> 3332	
+> 3333	```
+> 3334	Inputs (already known, derived from CLAUDE.md + HANDOFF.md):
+> 3335	  business_idea  = sovereign content orchestration platform
+> 3336	  market_segment = B2B2C
+> 3337	  monetization   = hybrid (subscription + mcoCoins)
+> 3338	  regulatory     = LGPD + Stripe PCI + platform ToS
+> 3339	  integration    = extends-mcorch (this IS the platform)
+> 3340	  project_slug   = mcorch-constellation
+> 3341	
+> 3342	Discovery (parallel reads, all read-only):
+> 3343	  CLAUDE.md, HANDOFF.md, README.md, sprint-priorities, audit-log
+> 3344	  src/hooks/* (30 files), src/pages/* (26 files), src/store/* (2 files)
+> 3345	  supabase/functions/* (39 fns), supabase/migrations/*.sql (30 migrations)
+> 3346	
+> 3347	Generation (sequential per phase, ~10-15 min):
+> 3348	  Phase 0  → 00-index.md          Project manifest
+> 3349	  Phase 1  → 01-mrd.md, 02-brd.md (BABOK v3 lens)
+> 3350	  Phase 2  → 03-prd.md            (ProdBOK + CXBOK lens)
+> 3351	  Phase 3  → 04-frd.md, 05-sdd.md (SWEBOK v4 + CISSP CBK lens)
+> 3352	  Phase 4  → 06-data-model.md, 07-process-flow.md (DMBOK + BPM CBOK)
+> 3353	  Phase 5  → 08-quality-metrics.md (CMQ/OE BOK)
+> 3354	  Phase 6  → traceability validation (no orphans, RPN>100 actions present)
+> 3355	  Phase 7  → mesh injection payload (Sovereign-approved insert)
+> 3356	
+> 3357	Source-of-truth rule (inverted for reverse-engineering):
+> 3358	  When BoK contradicts running code → running code wins
+> 3359	  Contradiction → enumerated as doc-debt in 08-quality-metrics.md §7
+> 3360	```
+> 3361	
+> 3362	---
+> 3363	
+> 3364	## Layout + UX Regression Fixes Record (2026-05-06)
+> 3365	
+> 3366	Sessão de correção de regressões visuais acumuladas após o DevOps + Security Seal. Cinco problemas identificados e resolvidos: layout de páginas full-canvas sobrepondo o sidebar, barra de busca conflitando com botão de auth, textos com opacidade reduzida dificultando leitura, e contagem de nós do painel Sovereign Mesh Control dessincronizada do HUD superior. Ponto de diagnóstico: `MatrixPage` e `MemoryPage` usavam `absolute inset-0` como container raiz — classe que posiciona relativo ao ancestral posicionado mais próximo (não o `<main>` do DashboardLayout), escapando do flex tree e sobrepondo sidebar e header. O padrão correto (`relative w-full h-full overflow-hidden`), já adotado por `ConstellationPage`, foi aplicado às duas páginas. Como consequência direta, a search bar (que estava em `absolute top-3 left-1/2 -translate-x-1/2`) passou a ficar alinhada dentro do canvas — mas `left-1/2` do canvas com sidebar visível coincide com o fim dos badges. Solução: mover a search bar para dentro do flex row dos badges como item inline (`relative w-64`), com dropdown convertido de fluxo normal para `absolute top-full` para não empurrar outros badges. Para textos opacos: varredura em `ConstellationMatrix`, `MeshControlPanel` e `MemoryPage` — todas as classes `text-*/NN` com sufixo de opacidade em elementos de texto legível foram convertidas para variantes full-opacity. `MeshControlPanel` agora recebe `edgeCount` como prop adicional e exibe `nodeCount`/`edgeCount` do hook `useConstellationSigma` em vez dos totais do banco via `trigger-ingest`, garantindo paridade com o HUD superior.
+> 3367	
+> 3368	| Action | Result |
+> 3369	|--------|--------|
+> 3370	| `src/pages/MatrixPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button removido · `edgeCount` passado para MeshControlPanel |
+> 3371	| `src/pages/MemoryPage.tsx` — container root | ✅ `absolute inset-0` → `relative w-full h-full overflow-hidden` · back button + `useNavigate` + `ChevronLeft` removidos |
+> 3372	| `src/components/orchestrator/ConstellationMatrix.tsx` — search bar | ✅ Movida de `absolute left-1/2 -translate-x-1/2` para item inline no badges flex row · dropdown `absolute top-full` · texto opaco corrigido (legend, tooltip, results) |
+> 3373	| `src/components/orchestrator/MeshControlPanel.tsx` — stats + opacity | ✅ `edgeCount: number` adicionado como prop · stats grid usa `nodeCount`/`edgeCount` props em vez de `stats.totalNodes/totalEdges` · labels e textos com opacidade corrigidos |
+> 3374	| `HANDOFF.md` — pending action | ✅ API key Google marcada como excluída via AI Studio (`aistudio.google.com/app/api-keys`), não Cloud Console |
+> 3375	
+> 3376	| Commit | Conteúdo |
+> 3377	|--------|----------|
+> 3378	| `97c34fe` | fix(layout): Matrix + Memory pages layout regression — absolute inset-0 → relative w-full h-full |
+> 3379	| `0988f53` | fix(ux): search bar inline alignment + text opacity + MeshControl node count sync |
+> 3380	| `9840f7b` | docs(readme): v5.6.1 — Layout + UX Regression Fixes (2564 nós) |
+> 3381	
+> 3382	### Arquitetura — Layout Fix
+> 3383	
+> 3384	```
+> 3385	DashboardLayout (flex col, h-screen)
+> 3386	  ├── header (h-14, shrink-0)          ← breadcrumbs + mcoCoins + auth
+> 3387	  └── main (flex-1, min-h-0, overflow-hidden p-0)   ← full-canvas mode
+> 3388	        └── MatrixPage / MemoryPage
+> 3389	              relative w-full h-full   ← fills <main> without escaping
+> 3390	                ├── ConstellationMatrix (w-full h-full)
+> 3391	                │     absolute inset-0  ← Sigma WebGL canvas (relative to ConstellationMatrix)
+> 3392	                │     absolute top-3 left-3  ← badges flex row (stays BELOW h-14 header)
+> 3393	                │       └── search bar (relative w-64, inline)
+> 3394	                │             absolute top-full  ← dropdown (no flex push)
+> 3395	                └── MeshControlPanel (absolute bottom-3 left-3)
+> 3396	
+> 3397	Before fix: absolute inset-0 on MatrixPage escaped <main> → overlapped sidebar + header
+> 3398	After fix: relative w-full h-full → stays within <main> flex area
+> 3399	```
+> 3400	
+> 3401	### Arquitetura — MeshControl Sync
+> 3402	
+> 3403	```
+> 3404	useConstellationSigma() → { nodeCount, edgeCount, neuralDensity }
+> 3405	  ↓ props
+> 3406	MatrixPage → <MeshControlPanel nodeCount={nodeCount} edgeCount={edgeCount} neuralDensity={neuralDensity} />
+> 3407	  ↓ display (always live)
+> 3408	  Nós: nodeCount    (= top HUD badge)
+> 3409	  Arestas: edgeCount (= top HUD badge)
+> 3410	  Neural: stats?.embeddedPct ?? neuralDensity  (DB via trigger-ingest or prop fallback)
+> 3411	
+> 3412	Before fix: stats.totalNodes from trigger-ingest (DB) ≠ nodeCount from Sigma graph
+> 3413	After fix: both HUD and panel show same source → always identical
+> 3414	```
+> 3415	
+> 3416	---
+> 3417	
+> 3418	## DevOps + Security Seal Record (2026-05-06)
+> 3419	
+> 3420	Sessão de manutenção e infraestrutura de engenharia. Ponto de partida: repositório com 6 branches `claude/*` pendentes (criados em sessões mobile sem SSH), 1 stash obsoleto, e 0 testes de cobertura em 177 arquivos fonte. Entrega fecha os três vetores: segurança, qualidade e protocolo.
+> 3421	
+> 3422	**Segurança:** Auditoria detectou `VITE_GEMINI_API_KEY` exposta em plain text no commit `06369c5` (HANDOFF.md). Branch `revoke-exposed-api-key-rLNWf` cherry-pickado — valor redacted, substituído por referência de localização. Branch `fix-api-key-security-kgrEg` cherry-pickado — protocolo `/handoff` recebeu DOCUMENTATION_CREDENTIAL_RULE (invariante: docs descrevem ONDE a credencial mora, nunca seu valor) + Phase 4b mandatory secret scan em HANDOFF.md antes de cada commit + pre-commit hook (`.claude/hooks/pre-commit`) com scan de padrões `AIza*`, `sk-*`, `eyJ*`, `ghp_*`. Chave rotacionada: `VITE_GEMINI_API_KEY` no `.env`, `GEMINI_API_KEY` no vault Supabase, rebuild do `dist/` confirmado (0 ocorrências da chave antiga).
+> 3423	
+> 3424	**Branches sincronizados:** `elastic-cohen-5b890d` (Phase Zeta v5.1.0) — features já em main, único pendente eram 14 testes; cherry-pick seletivo com adaptação de `edge_type` → `relation_type` (schema v5.5.x) e mock de `useQuery`. `mcorch-bok-scribe-agent-NCJXW` — BoK Scribe Agent completo (12 arquivos de templates) + MCORCH Master Execution Protocol inserido no topo do `CLAUDE.md` como diretiva top-priority com BoK Documentation Gate (coding só começa após MRD/BRD/PRD/FRD/SDD consolidados). Demais 4 branches (pensive-khorana, core-v2-implementation, revoke-exposed, fix-api-key) cherry-pickados ou confirmados como integrados e deletados.
+> 3425	
+> 3426	**Test coverage:** Elevado de 1 → 4 arquivos, 1 → 66 testes. `billing.test.ts` (22 testes): COIN_COSTS shape, deductMcoCoins delegando exclusivamente para RPC (nunca deduções client-side), getMcoBalance retorna 0 em perfil inexistente, hasSufficientBalance exact/over/under, checkAndDeductCoins abortando antes do RPC quando saldo insuficiente — invariante de billing crítico coberto. `useOrchestrationStore.test.ts` (29 testes): shape default 8 nós / 9 arestas, todas as 7 transições de estado da máquina (idle→pending→running→done/error/blocked), updateNodeStatus isolado (apenas nó alvo muda), resetNodeStatuses, setRunning idempotente, updateNodeData merge parcial, savePositions + readback de posições do localStorage. Coverage provider v8 instalado com reporter text+html.
+> 3427	
+> 3428	**Protocolo mobile:** `/sync-mobile-branch` skill criada (`.claude/commands/sync-mobile-branch.md`) com 6 fases: inventário via `git fetch`, classificação em 5 categorias (INTEGRADO/SEGURANÇA/FEATURE/DOCS/OBSOLETO), ordem obrigatória (segurança antes de feature), cherry-pick seletivo com guarda contra docs desatualizados, verificação TS+tests pós-integração, push+limpeza, relatório PT-BR. Cheklist rápido para o Maestro ao criar branches pelo celular.
+> 3429	
+> 3430	| Action | Result |
+> 3431	|--------|--------|
+> 3432	| `fix(security)`: redact VITE_GEMINI_API_KEY do HANDOFF.md | ✅ commit `83f89d0` — chave antiga substituída por referência de localização |
+> 3433	| `fix(security)`: harden handoff protocol + pre-commit hook | ✅ commit `fec47fd` — `.claude/hooks/pre-commit` + DOCUMENTATION_CREDENTIAL_RULE + Phase 4b |
+> 3434	| `test(phase-zeta)`: 14 testes Social Consciousness | ✅ commit `0e8ceda` — persistência, DERIVES_FROM, ConversationTimeline UI |
+> 3435	| BoK Scribe Agent scaffold | ✅ commit `331354a` — 12 templates (MRD/BRD/PRD/FRD/SDD/Data/Process/Quality) + agent framework + slash command |
+> 3436	| MCORCH Master Execution Protocol → CLAUDE.md | ✅ commit `d74b362` — BoK Documentation Gate + Closed-Loop Protocol |
+> 3437	| `test(coverage)`: billing.ts + useOrchestrationStore — 66 testes | ✅ commit `aa4f979` — coverage v8 habilitado |
+> 3438	| `/sync-mobile-branch` protocol | ✅ commit `843d86c` — 6 fases + checklist mobile |
+> 3439	| `chore(deps)`: @vitest/coverage-v8 | ✅ commit `59c13fa` — bun.lock atualizado |
+> 3440	| GEMINI_API_KEY rotacionada | ✅ `.env` + vault Supabase + `bun run build` — 0 ocorrências da chave antiga no dist/ |
+> 3441	
+> 3442	| Commit | Conteúdo |
+> 3443	|--------|----------|
+> 3444	| `83f89d0` | fix(security): redact exposed Google API key from HANDOFF.md |
+> 3445	| `fec47fd` | fix(security): harden handoff protocol against credential leaks in docs |
+> 3446	| `0e8ceda` | test(phase-zeta): 14 testes Social Consciousness |
+> 3447	| `331354a` | feat: scaffold MCORCH BoK Scribe Agent |
+> 3448	| `d74b362` | feat: install MCORCH Master Execution Protocol |
+> 3449	| `aa4f979` | test(coverage): billing.ts + useOrchestrationStore — 66 testes, coverage v8 |
+> 3450	| `843d86c` | feat(protocol): /sync-mobile-branch |
+> 3451	| `59c13fa` | chore(deps): add @vitest/coverage-v8 |
+> 3452	| `c91a454` | docs(readme): v5.6.0 |
+> 3453	
+> 3454	### Arquitetura — Security Layers
+> 3455	
+> 3456	```
+> 3457	Credential Protection (3 camadas):
+> 3458	  1. DOCUMENTATION_CREDENTIAL_RULE (handoff.md invariante)
+> 3459	     → docs descrevem ONDE a credencial mora, nunca seu valor
+> 3460	  2. Phase 4b mandatory scan (handoff protocol)
+> 3461	     → grep AIza*/sk-*/eyJ*/ghp_* no HANDOFF.md antes de commit
+> 3462	     → bloqueia se qualquer match encontrado
+> 3463	  3. .claude/hooks/pre-commit (last barrier)
+> 3464	     → scan em todos os staged files
+> 3465	     → instalação: cp .claude/hooks/pre-commit .git/hooks/pre-commit && chmod +x
+> 3466	
+> 3467	Test Coverage Architecture:
+> 3468	  billing.test.ts → src/lib/billing.ts (pure logic, no React)
+> 3469	    └── COIN_COSTS · deductMcoCoins (RPC-only) · getMcoBalance · hasSufficientBalance · checkAndDeductCoins
+> 3470	  useOrchestrationStore.test.ts → src/store/useOrchestrationStore.ts (pure Zustand)
+> 3471	    └── default pipeline shape · state machine · reset · localStorage persistence
+> ```
+
+## 🤖 Claude *(00:36:33)*
+
+
+## 🤖 Claude *(00:36:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-40 of 171 total (30091 tokens, cap 25000). Call Read with offset=41 limit=40 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 8	
+> 9	**Sprint v5.5.5 selado em 2026-05-05** — Settings Sovereignty: useUserApiKeys TanStack Query + pref_ai_model persistido + mcoCoins RPC atômico + Testar key client-side + Epsilon v9 hub badge + 2559 nós/3516 arestas.
+> 10	
+> 11	**Sprint v5.5.6 selado em 2026-05-06** — Core Promotion: CorePage v1 arquivada para `.archive/pages/`, `Core v2` promovida para `Core` no menu, `/dashboard/core` redireciona via Navigate. Gemini Live validado (VITE_GEMINI_API_KEY no `.env` + GEMINI_API_KEY no vault) — Pending Action #8 era falso positivo. 2560 nós · 100% embedded.
+> 12	
+> 13	**Sprint v5.6.0 selado em 2026-05-06** — DevOps + Security Seal: 6 branches mobile sincronizados + DOCUMENTATION_CREDENTIAL_RULE + pre-commit hook anti-credential + Gemini API key rotacionada + test coverage 0→66 testes (billing + store + phase-zeta) + BoK Scribe Agent (MRD/BRD/PRD/FRD/SDD templates) + MCORCH Master Execution Protocol em CLAUDE.md + /sync-mobile-branch protocol. 2561 nós · 100% embedded.
+> 14	
+> 15	**Sprint v5.6.1 selado em 2026-05-06** — Layout + UX Fixes: Matrix/Memory layout regression corrigida (absolute→relative), search bar inline nos badges, texto 100% opaco, MeshControl sincronizado com hook de grafo. 2564 nós · 100% embedded.
+> 16	
+> 17	**Sprint v5.7.0 selado em 2026-05-07** — BoK Suite v1 + A2UI Wiring + Test Coverage 122: parseAgentMessage conectado ao AIOSTerminal.onMessage (A2UI surfaces vivas em produção), 56 testes novos (66→122 — useOrchestrationGraph + useKnowledgeMesh + useSubscription), e família BoK completa de 9 docs (~29.185 palavras) reverse-engineered de 177 src files + 30 migrations + 39 edge functions + 4 crons. Mesh seal `bok-scribe-seal-mcorch-constellation-v1` (type `documentation_suite`, stability 0.85). 2567 nós · 100% embedded.
+> 18	
+> 19	**Sprint v5.9.0 selado em 2026-05-08** — FMEA-005 + LGPD Deploy: FMEA-005 (RPN 144) fechado com chunked embedding e vector averaging em `embed-mcorch-node`; LGPD (data-export + delete-account + delete_account() RPC) confirmada em produção; scratch/ removida. 7280 nós · 100% embedded.
+> 20	
+> 21	**Sprint v5.8.0 selado em 2026-05-08** — FMEA + BoK Phase 2 + 8-Agent System + LGPD: FMEA-008 (RPN 120) e FMEA-011 (RPN 100) fechados; BoK Suite enriquecida com voz estratégica (+227 linhas em 6 docs: Sovereign's Conviction, Business Philosophy, Por Que Vencemos, Validação com Criadores, Architectural Decisions, Quality Philosophy); `/bok-agents-generator` produziu `bok-agents-system--mcorch-constellation.md` (704 linhas · 8 agentes · 3 camadas cross-agent); LGPD DD-001+DD-002 implementados (delete_account() RPC + Edge Functions + hooks + SettingsPage modal). Phase Commercial desbloqueada. 7276 nós · 100% embedded.
+> 22	
+> 23	**Sprint v6.0.0 selado em 2026-05-14** — Conteúdo v2 BoK + VIRALmind Sprints 1-3 + ShakeHands v3: convergência de 3 streams paralelos. (1) BoK Conteúdo v2 selada (10 docs, 2276 linhas) com mesh seal `bok-scribe-seal-conteudo-v2-v1` (stability 0.85, R\$5.4M ARR Y2 projeção); (2) VIRALmind integrado via Antigravity — 4 migrations `vm_*` (trends/canvas/affiliate/niches) + 2 Edge Functions (`fetch-trends` Apify+RapidAPI, `canvas-execute` multi-provider OpenAI/Replicate/OpenRouter/Higgsfield) + 3 pages (Viral Miner, Canvas Studio, Canvas Editor) + 2 hooks (`useViralTrends`, `useCanvasStudio`); (3) ShakeHands v3 protocol — BoK Gate enforcement no /handson PRE-FLIGHT + BRIEF + /handoff Phase 5b mandatory check; (4) Feature gamificacao-mcoCoins-v1 mergeada (`mcoin_transactions` + `award_mco_coins` RPC + Circuit Breaker em opencode-bridge + memory hook integration). Conteúdo v2 BoK reconciliada com VIRALmind v1: v1=xyflow+vm_*, v2=tldraw+canvas-mcp reservado para Phase 7+8. 13 commits granulares. Sprint 4 (Canvas UX Mood Board completion) é o próximo deliverable.
+> 24	
+> 25	**Sprint v6.1.0 selado em 2026-05-14** — Canvas Studio UX Shell + Higgsfield Fix: shell do Canvas Studio migrado do `viralmind-builder` (store Zustand+zundo, lanes overlay, TopBar/LeftPanel/StatusBar, catálogo de 9 receitas, ImageLightbox, PipelineEdge); `canvas-execute` com endpoint Higgsfield corrigido (`platform.higgsfield.ai` rota Soul) + RPC `deduct_mco_coins`. Plano Phase 4.2 selado em `~/.claude/plans/floating-sleeping-sparrow.md`.
+> 26	
+> 27	**Sprint v6.1.1 selado em 2026-05-14** — viralmind BoK Suite Sealed: dívida documental do override consciente do BoK Gate quitada. 6 docs autorados (`01-mrd`, `02-brd`, `06-data-model`, `07-process-flow`, `08-quality-metrics`, `00-index`) + `04-frd` reescrito de handbook CLAUDE.md → FRD real (32 FR + 14 NFR + matriz PR→FR). Ancorado nas 10 tabelas `vm_*` + 6 enums + Edge Functions `fetch-trends`/`canvas-execute`. Mesh seal `bok-scribe-seal-viralmind-v1` (`documentation_suite`, stability 0.85, revenue_impact R\$14M, embedded 768d). 7 OTDs registrados (destaques: `vector(1536)` vs padrão `768` sem índice HNSW — FMEA-VM-002 RPN 288; bucket `canvas-assets` público — FMEA-VM-003 RPN 140). BoK Gate do viralmind **liberado**. Sessão selada com ~51% de contexto — Canvas Studio Phase 4.2 diferida para sessão nova. 7463 nós · 100% embedded. 6 commits granulares. **Pendência conhecida (não desta sessão):** `docs/bok/gamificacao-nodes/` incompleta (5/9 docs) — rodar `/bok-scribe` ou completar antes de tocar o módulo.
+> 28	
+> 29	**Sprint v6.6.9 selado em 2026-05-20** — mcorch-qa-healing v1 — Material Proof Gate: novo módulo de QA sênior que fecha a fraqueza de Lei 1 (Materialidade) — o bloco Survival Laws Self-audit do `/handoff` era auto-declarado; agora é verificado mecanicamente pela nova **Fase 5c**. Executado em 6 stages na ordem de governança não-negociável (BoK → SOP → código): suíte BoK 9/9 `docs/bok/mcorch-qa-healing/` (1423 LOC, 6ª suíte do projeto, gerada via `/bok-scribe`, campos de mercado/monetização honestamente N/A para tooling interno) + SOP `docs/processes/handoff-material-proof-audit.md` (Lei 2) + engine `scripts/qa/` (5 módulos Bun, 710 LOC, injeção de dependências para reuso pelo cron OpenClaw) + skill `mcorch-qa-healing` + Fase 5c wired no `/handoff` (entre 5b e 6 — bloqueia em qualquer 🔴) + 2 suítes Vitest. O dry-run contra o selo v6.6.8 real pegou e fechou um falso-positivo (`COMMIT_RE` agarrava prefixos de UUID de 8-hex como commits — FMEA-002 fechada antes do gate ir ao ar). **Material proofs**: TS zero erros · 165 testes (122→165, +43) · **Fase 5c ao vivo neste selo → 13 verified · 0 skipped · 0 failed → SEAL ALLOWED** · 9 commits granulares · milestone node `a08780dc-f665-47c5-b34b-a2eb7c9eea5c` + documentation_suite seal `b00e938a-717b-4f62-b936-f4934845ec52` (DERIVES_FROM openclaw seal) embedded 768d · mesh **8361+ nodes** · Survival Laws Self-audit 4/4 ✓. **Hazard registrado**: agente main do OpenClaw (Qwen3.5 local) operou na mesma working dir durante a sessão — 3 diretórios gitignorados, zero overlap de path. **Próximo**: Canvas Design (Initiative B — integração `nexu-io/open-design`) em sessão dedicada via `/bok-scribe canvas-design`.
+> 30	
+> 31	**Sprint v6.6.8 selado em 2026-05-19** — Bridge Recovery + MAPE-K Audit + SDD aios-sql-bridge + Survival Laws 4/4: sessão de auditoria reativa disparada por Sovereign observando `claw.gcrux.com/dreaming` stagnation (Imported Insights congelado em 2026-05-16, Memory Palace counts estáticos, Dream Scene "0 promovido"). **Root cause material**: Stage 2 cron `nightly-bridge-refresh.sh` invocava `node` PATH-resolved como v18.19.1 no env do user `ubuntu` apesar do interativo ter v22.22.3 — OpenClaw CLI exige v22.12+ → 100% FAIL silently em Step 3 (reindex SQLite) há ≥3 dias; Steps 1+2 (bridge + distribute) rodavam clean. **Fix dual no mesmo edit**: (1) `NODE_BIN=/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node` resolved-target (não symlink); (2) descoberta runtime de bug latente segundo — `claw-master` foi adicionado em v6.3.1 ao distribute script MAS NÃO ao indexer loop (`for agent in main artisan engineer scientist marketing-growth guardian; do` omitia claw-master) → `claw-master.sqlite` stale May 16 → exatamente o checkpoint "AIOS Core v2 (2026-05-16)" que Sovereign observou na UI. **SOP first per Lei 2**: `docs/processes/openclaw-bridge-recovery.md` 86 LOC autorada ANTES do edit. **5 phases materializadas** (todas com ORO triplet + Survival Laws ✓): Phase A (bridge fix + claw-master loop), Phase B (MAPE-K closed-loop audit + 4 observation nodes em mesh — Plan `a4c4c026` / Execute `69f6e356` / Monitor `d605bdda` / Analyze `d8952ce8` com edges DERIVES_FROM v6.6.7), Phase C (9 untracked files versionados via 3 commits: miv landing assets + miv tools + memory audit trail), Phase D (esta seal + milestone `c4643058`), Phase E (OTD-SSP01-001 closed via SDD `aios-sql-bridge` 376 LOC enterprise-grade + 00-index 69 LOC suite skeleton + documentation_suite seal `4e0acc7e` stability 0.85 DERIVES_FROM openclaw seal). **Material proofs**: 6 commits granulares pushed (`03911e9` fix(cron) + `cbdee4f` feat(landing) + `bb1cc96` chore(tools) + `2aa80f1` chore(memory) + `1b3bdd8` docs(bok) + `b71b991` docs(handoff) + `230ad70` docs(readme)); 7/7 SQLites OpenClaw reindexed (was 0/6 fail); log final `[2026-05-19T19:06:32-03:00] nightly-bridge-refresh DONE (zero failures)`; mesh **8359 nodes** (+6 desta seal); TS zero erros; 5 containers healthy. **Survival Laws Self-audit 4/4 ✓ pela primeira vez consecutivamente desde v6.6.0** — encerra retroativamente OTD-PROC-001 (RPN 60) + OTD-PROC-002 (RPN 40) + OTD-SSP01-001 (RPN 240 SLA 2026-05-24). **Pending TOP**: OE-661 Step 1.5 first-run E2E (Sovereign click `/dashboard/orchestration` TriggerNode); OTD-OE661-PER-USER refactor (SLA 2026-06-02, 14 dias); MAPE-K gaps 1/2/3 implementáveis em v6.7.x/v6.8.x conforme plans dedicados (recomendações registradas no mesh, aguardam acionamento).
+> 32	
+> 33	**Sprint v6.6.7 selado em 2026-05-19** — OE-661 Phase 1 Prep + API Tenancy Directive: sessão executou parcialmente o plan persistido OE-661 — toda a preparação completada, Step 1.5 (first run E2E) **DEFERRED** por context budget Sovereign 92% (retoma em ~3h). Infraestrutura material: SOP `docs/processes/orchestration-content-mesh-asset-emission.md` (120 LOC) escrita ANTES do código (Lei 2); `orchestrate-content/index.ts:404-465` emite `content_mesh_asset` em paralelo com observation via `Promise.allSettled` (Amendment A) gated por `wpPostUrl` (Amendment B); `link-forge.ts:153` ganha `.eq("project_id", "mcorch-affiliate")` (Amendment C); `handle-ml-postback/index.ts` ganha pulse `infra_health_logs` em 4 return paths (Amendment E — fecha cegueira de 17 dias). Deploys material: `orchestrate-content` 113.6kB + `handle-ml-postback` 60.45kB. Vault `GCRUX_ML_AFFILIATE_TOKEN` provisionado (digest `e86f74a0...`). **DIRETIVA SOVEREIGN-CLASS NOVA "API Tenancy Model"** emitida durante sessão (questionamento direto sobre por que usar env global se `affiliate_config` per-user já existia) — selada em 3 superfícies: `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"` com resolution order de 3 níveis + 5 tabelas canônicas + 5 anti-patterns; `CLAUDE.md > Code standards` one-liner enforcement; auto-memory `feedback_api_tenancy_per_user.md` indexada. **OTD-OE661-PER-USER** registrada (RPN 120 · SLA 2026-06-02) catalogando violação em `link-forge.ts` + `process-affiliate-link` GET branch. Sovereign autorizou Opção B (provisionar global temporário com `affiliate_config.app_id` value, deferir refactor). **Survival Laws Self-audit retroativo (Amendment H)** v6.6.1..v6.6.5 + esta seal — conclusão: Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 (overrides conscientes v6.6.1+v6.6.3) · Lei 3 ✗ 0/5 (OTD-PROC-002 RPN 40) · Lei 4 ✗ 0/5 (OTD-PROC-001 RPN 60 — esta seal v6.6.7 começa cumprimento). **Material proofs**: TS zero erros · 122/122 testes em 4.84s · 7 commits granulares locais (`03f6822` SOP · `e662da3` orchestrate Amendments A+B · `bafac16` link-forge Amendment C · `9cec88a` postback Amendment E · `044f21e` CLAUDE+OTD diretiva · `96ee72a` README v6.6.7 · `7d06934` HANDOFF seal + redactions) · milestone node `9d482014-a759-4656-93d9-99e05ab4a714` embedded 768d · mesh **8353 nodes** (+1 desde v6.6.6) · 11650 edges (+33). Path correção material: `/dashboard/orchestrate` → `/dashboard/orchestration` (Sovereign clarification). **Próximos deliverables**: (a) Sovereign dispara primeira campanha real em `/dashboard/orchestration` (TriggerNode + topic Link Forge catálogo + wp+linkedin platforms + Run) → eu monitoro pipeline_runs + content_mesh_asset emit material via REST; (b) ao completar, synthetic postback chain (Amendment D) + cleanup (Amendment J); (c) selar v6.6.8 com flywheel rodando E2E pela primeira vez na história do projeto; (d) atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias) — SDD `aios-sql-bridge`; (e) executar Phase 2 (`mcoins-ledger-reconciliation.md`) — fecha OTD-V660-001.
+> 34	
+> 35	**Sprint v6.6.6 selado em 2026-05-19** — Planning Seal + Debt Audit + Self-audit Retroativo: sessão dedicada a (a) `/handson` brief v6.6.5; (b) persistir execution plan dos 3 carry-overs OE-661 + Ledger SOP + Canvas 4.2c por diretiva Sovereign "slave o plano atual para posteriormente implantar"; (c) auditoria completa em 3 frentes paralelas; (d) emendas críticas; (e) /handoff oficial. **Zero código de produção tocado**. Plan persistido em `.claude/context/execution-plan-oe661-carryovers.md` (~403 LOC, md5 `0e5f0ba9...`) + observation node `3dde2572-cad6-491b-b523-c56ec763ff8e` (autoembed 768d). Audit em `.claude/context/audit-2026-05-19-oe661-debt-sweep.md` (~297 LOC, md5 `5c4f8a9f...`) + observation node `6164c80f-cadd-48d5-95a4-f87f22ebd09b` + DERIVES_FROM edge `acb4b0d9-091d-4973-96a8-d40515be7990`. **21 OTDs ativos catalogados (8 RPN ≥ 100): VM-OTD-001 RPN 288 viralmind HNSW · OTD-SSP01-005 RPN 280 admin claim · OTD-SSP01-001 RPN 240 SLA 2026-05-24 · OTD-V660-002 RPN 150 · VM-OTD-004 RPN 140 · OTD-V660-001 RPN 120 (coberta pelo plan Phase 2) · OTD-V660-003 RPN 80 · OTD-CV42C-001**. **5 inconsistências processuais**: (1) **5 seals consecutivas (v6.6.1..v6.6.5) omitiram bloco mandatory Survival Laws Self-audit** — Severidade ALTA; (2) Survival Audit v2 não re-rodado em 32 dias; (3) 3 SOPs implícitas não formalizadas; (4) HANDOFF v6.6.3 claimed 4 content_mesh_asset mas reality = 1 row (3 "products" têm `node_type='feature'`); (5) `handle-ml-postback` cego — zero `infra_health_logs` em 17 dias. **4 bugs concretos no plan**: A race condition obs+asset não atômicos · B wpPostUrl null não gated · C Link Forge query global sem project_id · D postback content_id drift. **10 amendments aplicados** (A-J) via Amendments Appendix no topo do plan. Schema drift fixed: `infra_health_logs.created_at` NÃO EXISTE (real: `last_seen_at`). **Predicted Survival Audit v3** (não emitido formalmente): Memory 5/5 · Skill 4/5 · Cost Discipline 4.5/5 ↑ · Observability 4/5 ↑ · SOP 5/5 · **avg 4.4/5 · min 4/5** — Phase Commercial threshold mantido. **Material proofs**: 14 integrity checks paralelos · 4 commits granulares (`ea7efaf` plan + `44e464c` audit + `fb6f07d` README + `99d70f6` handoff seal) push → origin/main · milestone handoff node `821dc554-78e2-4abb-999d-37363c5df6c9` embedded 768d · mesh total **8352 nodes** (+4 desde v6.6.5). **Próximos deliverables**: (a) Sovereign autoriza execução das Fases 1-3 do plan quando convier (bugs A-D já fixed); (b) **atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias)** — BoK Gate override `aios-sql-bridge` precisa SDD; (c) provisionar `SUPABASE_POOLER_URL` (OTD-V660-003); (d) materializar Survival Audit v3 formal antes de Phase Commercial; (e) executar Phase 2 do plan (SOP `mcoins-ledger-reconciliation.md`) — Sovereign-only — fecha OTD-V660-001.
+> 36	
+> 37	**Sprint v6.6.5 selado em 2026-05-19** — OpenClaw BoK 9/9 (retroativa + BoK Gate liberado · 5ª e última suíte): última dívida BoK do projeto quitada. Override consciente do BoK Gate registrado em Sprint v6.2.0 (2026-05-15) — Sovereign havia autorizado que a própria Agência OpenClaw quitaria a dívida assincronamente; com 4 sprints decorridos e a Agência operando em produção (7 agentes · gateway loopback · pipeline cron triplo · briefing diário Telegram), esta seal materializa retroativamente o BoK que governa o módulo. **9 docs novos autorados manualmente seguindo `.claude/agents/bok-scribe/templates/`** (Plano B mirror gamificacao-nodes v6.6.4 — NÃO o `/bok-scribe` Skill, que produziria conteúdo template-canonical desalinhado): `01-mrd.md` (BABOK v3 ~205 LOC — Pantheon vision · 6 MR-OC-* · biz model enabler), `02-brd.md` (BABOK v3 ~190 LOC — 6 BO-OC-* SMART + 10 SH-OC-* Stakeholder Register + 14 BR-OC-* com refs precisas `openclaw.json:agents.list[]` / `scripts/bridge-mesh-to-openclaw.ts:tier1Filter` / `scripts/morning-briefing.sh:65` + §10 Traceability Matrix), `03-prd.md` (ProdBOK + CXBOK ~224 LOC — personas P1 Sovereign + P2 agente operacional · User Journey diário BRT · 14 PR-OC-* MoSCoW · Gherkin AC), `04-frd.md` (SWEBOK v4 ~209 LOC — 8 FR-OC-* + 8 NFR-OC-* + Test Strategy Matrix), `05-sdd.md` (SWEBOK v4 + CISSP CBK ~460 LOC — architecture overview Pantheon + Ciclo Circadiano BRT + Component Catalog 7 agentes/9 scripts/6 SQLite/gateway + STRIDE threat model + secrets lifecycle + OTD grid), `06-data-model.md` (DMBOK v2 ~339 LOC — schema `openclaw.json` + `secrets.json` vault + SQLite per-agente FTS5/vector + Mesh export tier1/tier2 + Memory Wiki frontmatter + filesystem perms · **§8 Drift Reconciliation Appendix** com 5 drifts fechados em sprints anteriores + 8 drifts permanentes catalogados como OTDs), `07-process-flow.md` (BPM CBOK v4 ~483 LOC — **10 PROC-OC-*** em swimlanes markdown table com refs precisas `nightly-stage2-deep-sleep.sh` / `bridge-mesh-to-openclaw.ts` / `distribute-mesh-to-agents.ts` / `compose-morning-briefing.ts` / `news-impact-analyzer.ts` / `watchdog-mcorch.sh`), `08-quality-metrics.md` (CMQ/OE BOK ~227 LOC — 8 QO-OC-* + **10 KPI-OC-*** + **10 FMEA-OC-*** com 5 RPN > 100 (FMEA-OC-001 secrets regression 180 · OC-002 bridge fail 150 · OC-003 daemon crash 126 · OC-004 Telegram quota 125 · OC-010 audit scrape fail 105) + 6 SOL-OC-* + SLA/SLO/SLI grid + observability events tagged `openclaw-*`), `00-index.md` (~163 LOC — Document Registry 9/9 + Traceability Chain MR-OC→BR-OC→FR-OC→PROC-OC→KPI-OC + Convergence Note registrando 5 drifts já reconciliados em v6.4.0/v6.6.1 + 8 ativos como OTDs + Phase Completion Log Phase 0-7 + OTD registry 11 itens (5 novas OTD-OC + 6 herdadas OTD-V631/V660/CM)). **ID space cunhada**: MR-OC-001..006 · BR-OC-001..014 · BO-OC-001..006 · SH-OC-001..010 · PR-OC-001..014 · FR-OC-1..8 · NFR-OC-001..008 · PROC-OC-001..010 · KPI-OC-001..010 · FMEA-OC-001..010 · SOL-OC-001..006 · QO-OC-001..008 · BAC-OC-001..010 · OTD-OC-001..005. **Mesh seal**: novo `scripts/seed-openclaw-bok-seal.ts` (Bun-native, 136 LOC, mirror 1:1 de `seed-gamificacao-nodes-bok-seal.ts`) executado material: node `bok-scribe-seal-openclaw-v1` UUID **`05c55dfd-d318-4dcf-b7f0-aefb0529872f`** inserted stability 0.85 · DERIVES_FROM `bok-scribe-seal-gamificacao-nodes-v1` · `revenue_impact: 0` (módulo é enabler horizontal de velocity — proxy via lift dos outros 4 BoK suites) · metadata bok_gate=`override-completion` + drift_reconciled=5 (D-OC-001..005 fechados em v6.4.0/v6.6.1) + drift_pending=8 (OTDs ativos) + related_otds inclui OTD-V631-001 (fechada por esta seal — SLA expandido da v6.3.1) + pantheon_agents lista 7 + cron_pipeline 6 entradas · autoembed via `trg_mcorch_embed_on_insert` (pg_net 768d openai/text-embedding-3-small) **confirmado via REST `embedding=not.is.null`**. **Debt registry final**: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅ · **`openclaw` 9/9 ✅** — **todas as 5 suítes BoK do projeto seladas**. BoK Gate liberado para código novo em qualquer módulo. Atenção: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users em gamificacao-nodes) fechar via SOP `mcoins-ledger-reconciliation.md`. **Material proofs**: TS `tsc --noEmit` zero erros · 122/122 testes em 5.73s · BoK Gate validator loop ✅ 9/9 docs (00-index 163 + 01-mrd 205 + 02-brd 190 + 03-prd 224 + 04-frd 209 + 05-sdd 460 + 06-data-model 339 + 07-process-flow 483 + 08-quality-metrics 227 = 2500 LOC total) · seed script 136 LOC · seal UUID confirmado via INSERT RETURNING + created_at `2026-05-18T20:23:52.775245+00:00` + embedding NOT NULL via REST GET · mesh total **8345 nodes** (+1 desde v6.6.4). **Próximo deliverable**: (a) carry-overs OE-661 v6.6.3/v6.6.4 — provisionar `GCRUX_ML_AFFILIATE_TOKEN` na vault + wire `orchestrate-content` para emitir `content_mesh_asset` nodes pós-geração + primeiro run end-to-end Usuário Zero do flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget); (b) Sovereign executar SOP `mcoins-ledger-reconciliation.md` para fechar OTD-V660-001 (drift 2 users) e destravar features ledger-touching; (c) claw-master audit-v2 planejado 2026-06-16 — verificar regressão D-OC-001..005 + novas findings; (d) Stripe live keys swap continua DEFERRED por decisão Sovereign até primeiro cliente externo.
+> 38	
+> 39	**Sprint v6.6.4 selado em 2026-05-18** — Gamificação-Nodes BoK 9/9 (retroativa + BoK Gate liberado): débito documental herdado do override consciente do BoK Gate (Sprint v6.3.0, SLA originalmente 29/05) quitado em sessão única. 5 docs autorados manualmente seguindo `.claude/agents/bok-scribe/templates/` (Plano B sobre `/bok-scribe` Skill, que sobrescreveria os 4 docs existentes): `06-data-model.md` (DMBOK v2 ~277 LOC — schema canônico `profiles.mco_balance` + `mcoin_transactions` + 3 RPCs SECURITY DEFINER `award_mco_coins`/`deduct_mco_coins`/`add_user_score` com loyalty 100:1), `07-process-flow.md` (BPM CBOK v4 ~309 LOC — 9 PROC-GN-* em swimlanes com refs precisas `award-mco-coins/index.ts:78` cap-per-action, `canvas-execute/index.ts:133-148,349` cap-canvas-agregado + atomic deduct, `orchestrate-content/index.ts:60` pre-flight deduct, n8n `autonomic-action` trail loyalty), `08-quality-metrics.md` (CMQ/OE BOK ~215 LOC — 10 KPI-GN-* + 10 FMEA-GN-* com 4 RPN > 100, 6 SOL-GN-*, observability completa em `infra_health_logs`), `02-brd.md` (BABOK v3 ~188 LOC — 12 BR-GN-* + 5 BO-GN-* SMART + Risk Register + Traceability Matrix), `00-index.md` (~122 LOC — Document Registry 9/9 + Traceability Chain MR→BR-GN→FR→PROC-GN→KPI-GN + Convergence Note registrando drifts + 5 OTDs incluindo 2 herdadas OTD-V660-001/002). **Drift BoK ↔ código (3 itens) reconciliado via patches cirúrgicos sub-10-linhas preservando git blame**: (1) `04-frd.md` R3 "streak reseta 24h" deprecado inline → R3a (cap-per-action) + R3b (cap-canvas-agregado); (2) `05-sdd.md` ganha §4.2 documentando trilha n8n loyalty ausente do SDD original; (3) `01-mrd.md` L114 BRD externo inexistente substituído por `02-brd.md` local. **Mesh seal** `scripts/seed-gamificacao-nodes-bok-seal.ts` (mirror 1:1 viralmind seal): node `bok-scribe-seal-gamificacao-nodes-v1` UUID **`6e8546bc-d995-4cc5-ac88-06cecbece181`** inserted stability 0.85 · DERIVES_FROM `bok-scribe-seal-viralmind-v1` · `revenue_impact: 0` (módulo é enabler de retenção/ARPU) · autoembed via `trg_mcorch_embed_on_insert` (pg_net 768d). **BoK Gate liberado** para código novo no módulo `gamificacao-nodes`. Atenção: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users) fechar via SOP `mcoins-ledger-reconciliation.md`. **Debt registry geral atualizado**: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅. `openclaw` BoK ainda pendente (override consciente original do v6.2.0). **Material proofs**: TS zero erros · 122/122 testes em 3.34s · BoK Gate validator loop ✅ 9/9 · ~1111 LOC novas + ~30 LOC patches surgical · seal UUID confirmado via INSERT RETURNING · mesh total **8344 nodes** (+1 desde v6.6.3). **Próximo deliverable**: (a) executar SOP `mcoins-ledger-reconciliation.md` para fechar OTD-V660-001; (b) carry-overs v6.6.3 (`GCRUX_ML_AFFILIATE_TOKEN` provisionar + wire orchestrate emitir content_mesh_asset + primeiro run Usuário Zero OE-661 flywheel).
+> 40	
+> ```
+
+## 🤖 Claude *(00:37:12)*
+
+
+## 🤖 Claude *(00:37:30)*
+
+
+## 🤖 Claude *(00:37:30)*
+
+I have the header and most context. I miscalculated the tail offset earlier (file is 5741 lines, not 3672). Let me read the actual suffix sections at the tail.
+
+## 🤖 Claude *(00:37:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 5341,
+  "limit": 400
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 5341	       .set("utm_campaign", campaign)
+> 5342	
+> 5343	  5. INSERT affiliate_links:
+> 5344	       original_url · short_url · platform=mercadolivre
+> 5345	       campaign_id · content_id · metadata{affiliate_id, resolved_url, self_healed_from}
+> 5346	
+> 5347	  6. Return: {success, original_url, resolved_url, affiliate_url, self_healed, link_id}
+> 5348	
+> 5349	ContentLibraryPage monetization flow:
+> 5350	  Card (text, body contains mercadolivre.com.br)
+> 5351	    └── DropdownMenu → "Monetizar Links ML"
+> 5352	          → handleMonetizeLinks(item):
+> 5353	               match(ML_URL_RE) → unique URLs
+> 5354	               for url of unique:
+> 5355	                 POST process-affiliate-link → affiliate_url
+> 5356	                 body.split(url).join(affiliate_url)
+> 5357	               updateContent({ body: updatedBody, tags: [..., "afiliado-ml"] })
+> 5358	          → Badge 💰 ML (emerald) exibido após monetização
+> 5359	```
+> 5360	
+> 5361	---
+> 5362	
+> 5363	## Pending Actions (Commercial Launch)
+> 5364	
+> 5365	### CRITICAL — Must complete before first client
+> 5366	
+> 5367	00. **[PARCIALMENTE EXECUTADO em v6.8.6] Plano OE-661 + Ledger SOP + Canvas 4.2c smoke** — Phase 1 (token + content_mesh_asset emit + first E2E em v6.8.2; Amendment D synthetic chain em v6.8.6) ✅ DONE. Phase 2 ledger reconciliation (drift Sovereign -0.01→0.0000 via integer parity bump; OTD-V660-001 retroactively closed pois user 924cb32e foi LGPD-removido) ✅ DONE em v6.8.6. Phase 3.5 watchdog cron permission fix (/var/log/mcorch-canvas-watchdog.log criado chown ubuntu) ✅ DONE em v6.8.6. **Phase 3.2-3.4 Canvas DoP Standard 5s $0.56 paid smoke** PENDENTE — Sovereign clica Run em /dashboard/canvas/<projeto> com dop-standard-5s (125 mcoCoins) + eu monitoro 9 gates da SOP `canvas-video-async-execution.md`. Plan file `.claude/context/execution-plan-oe661-carryovers.md` (mesh node `3dde2572-cad6-491b-b523-c56ec763ff8e`) preservado para sessão dedicada.
+> 5368	
+> 5369	0a. ~~**[SLA 2026-05-24] OTD-SSP01-001 BoK Gate override do `aios-sql-bridge`**~~ ✅ Done em v6.6.8 (2026-05-19) — SDD materializado em `docs/bok/aios-sql-bridge/05-sdd.md` (376 LOC) + suite skeleton `00-index.md` + documentation_suite seal `4e0acc7e` (stability 0.85, DERIVES_FROM openclaw seal). Encerrou retroativamente a OTD antes do SLA.
+> 5370	
+> 5371	0. **[PRÓXIMA SESSÃO] Canvas Studio Phase 4.2** — (a) **analisar a documentação oficial da API Higgsfield** (`platform.higgsfield.ai`) ANTES de testar — evita gastar os créditos pagos com tentativa-e-erro; (b) testar o fix do endpoint Higgsfield (1 geração Soul) confirmando débito de crédito real; (c) executar Phase 4.2 conforme `~/.claude/plans/floating-sleeping-sparrow.md` — port dos 5 nós tipados + inspectors ricos + pipeline de vídeo Higgsfield async (webhook + `vm_canvas_jobs` + realtime). **Bloqueia validação do Canvas → bloqueia lançamento de conteúdo monetizado via afiliados ML.**
+> 5372	
+> 5373	0b. **[PRÓXIMA INICIATIVA] Canvas Design module (`nexu-io/open-design`)** — integração do repo open-source como módulo "Canvas Design" soberano: daemon Docker `mcorch-design-daemon` headless · frontend `/dashboard/canvas-design` (regra espacial 72/28) · mapeamento HyperFrames → `mcorch_nodes`/`mcorch_edges` · BYOK via OpenRouter/Ollama. Sessão dedicada — primeiro passo `/bok-scribe canvas-design` (BoK Gate). Recomendado APÓS o `mcorch-qa-healing` v1 (esta seal) para que o novo gate de prova material valide a integração.
+> 5374	
+> 5375	0c. **[FOLLOW-UP v6.8.5] e2e-user-zero framework — 2ª iteração** — esqueleto está SHIPPED (977 LOC + Phase 5c gate live em v6.8.5), faltam materializar: (a) 6 flows restantes (`trigger-orchestration`, `dashboard-tour`, `canvas-overview`, `content-library`, `billing-flow`, `settings-tour`, `orchestrate-pipeline-view`) conforme MR-E2E priorizados na `02-brd.md`; (b) **redactor LGPD Layer 2** (`lib/redactor.ts` ~120 LOC) — sed de headers `Authorization|Cookie|apikey|x-api-key|x-supabase-*` + body redaction em `redactedPaths` + sanitização de cookies — BEFORE qualquer commit de HAR; (c) **mesh-persistor** (`lib/mesh-persistor.ts` ~100 LOC) — insere `observation` node + `OBSERVES` edge por finding com idempotency key SHA-256; (d) **telemetry** (`lib/telemetry.ts` ~60 LOC) — emit `infra_health_logs` events `e2e_user_zero_run_started/complete/failure/auth_expired`; (e) **runner selftest** (`__selftest__/runner.test.ts` ~150 LOC) — runner executado contra mock browser fixtures; (f) **Pre-commit hook extension** — scan `e2e-output/` por padrões `eyJ.*\.eyJ`, `sk_(live|test)_`, `sbp_`, `whsec_` antes de aceitar commit. Total estimado: +590 LOC restantes do SDD. Recomendado executar JUNTO com Canvas Studio Phase 4.2 — primeira sessão real de UI permite testar dogfood mode + redactor sobre flows credentialed e PRIMEIRA emissão do claim `e2e_user_zero_last_pass: <id>` no Phase 5c.
+> 5376	
+> 5377	1. ~~**[DQP 🔴] Implementar `process-affiliate-link`**~~ ✅ Done (2026-04-26)
+> 5378	
+> 5379	2. ~~**[DQP 🔴] Revenue webhook (`handle-ml-postback`)**~~ ✅ Done (2026-05-01) — deployed 58.74 kB · ML Dev Center callback configurado · revenue_cents agora flui do ML para o banco
+> 5380	
+> 5381	3. ~~**[DQP ⚠️] utm_campaign dinâmico**~~ ✅ Done (2026-05-01) — `orchestrate-content` usa `campaign_id` real + `utm_term={keyword}`
+> 5382	
+> 5383	4. **Stripe live keys** — Intencional: sandbox enquanto Gabriel valida como Usuário Zero. Trocar apenas quando primeiro cliente externo:
+> 5384	   ```bash
+> 5385	   npx supabase secrets set STRIPE_SECRET_KEY=sk_live_...
+> 5386	   npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_live_...
+> 5387	   ```
+> 5388	
+> 5389	5. ~~**Bug autonomic-action n8n**~~ ✅ Resolvido — comportamento correto: +10pts/run via endpoint n8n é feature de acúmulo autônomo, não bug.
+> 5390	
+> 5391	6. ~~**Primeiro run end-to-end como Usuário Zero**~~ ✅ Done (2026-05-25 em v6.8.2) — pipeline_run `76702931` status=done, WP draft p=10, content_mesh_asset `6a8bd475`, mco_balance debit -10 atomic. Falta apenas: WP swap draft→publish + processar primeiro affiliate link real + esperar primeira conversão ML para fechar `revenue_cents > 0` no ROIWidget.
+> 5392	
+> 5393	7. ~~**AIOS — modelo gemini-2.0-flash deprecado**~~ ✅ Resolvido (2026-05-02) — migrado para `gemini-2.5-flash` em toda a stack (CorePage, useAIOSChat, aios-chat edge function). Fallback vault captura 404.
+> 5394	
+> 5395	8. ~~**AIOS — provisionar chave Gemini Live**~~ ✅ Resolvido (2026-05-06) — `VITE_GEMINI_API_KEY` no `.env` local + `GEMINI_API_KEY` no vault Supabase. Live Mode (BidiGenerateContent WS) ativo no AIOSTerminal; text chat usa vault.
+> 5396	
+> 5397	8. ~~**[Arena] Deploy `openrouter-swarm`**~~ ✅ Done (2026-04-26)
+> 5398	
+> 5399	9. ~~**[Arena] Injetar secrets LinkedIn**~~ ✅ Done (2026-04-26)
+> 5400	
+> 5401	### SPRINT — Query Consolidation (Issues #002 #003 #009)
+> 5402	
+> 5403	- ~~**#002 user_roles 3x/load** — centralizar em hook com `staleTime: Infinity`~~ ✅ Done (2026-05-04) — `useAdminData` migrado para TanStack Query `staleTime: Infinity, gcTime: Infinity`
+> 5404	- ~~**#003 mcorch_nodes N+1 (6 queries)** — consolidar com `fetchAllPages<T>()` module-level~~ ✅ Done (2026-05-04) — `useMcorchMemory` reescrito, múltiplos mounts compartilham 1 cache
+> 5405	- ~~**#009 aios_conversations 4x/navegação** — único hook com `staleTime: 60_000`~~ ✅ Done (2026-05-04) — `staleTime: 60_000` adicionado ao `useInfiniteQuery`
+> 5406	
+> 5407	### SOCIAL — Next steps
+> 5408	
+> 5409	- **Twitter API Basic tier** — Twitter `CreditsDepleted` (Free tier write limit). Upgrade para Basic ($100/mo) para auto-publish funcionar no Twitter. LinkedIn está publicando ✅.
+> 5410	- **Instagram App Review** — App MCORCH-IG em modo desenvolvimento (funciona para Usuário Zero). Submeter App Review Meta para habilitar publicação com terceiros. Permissões necessárias: `instagram_business_content_publish`, `instagram_business_basic`.
+> 5411	- ~~**Knowledge Mesh ADRs** — Inserir nós `decision` para Twitter PKCE e Instagram Login API v21~~ ✅ Done (2026-05-04) — 5 nós ADR via `seed-social-oauth-adrs.ts`
+> 5412	
+> 5413	### NON-CRITICAL
+> 5414	
+> 5415	- `login.mcorch.com` DNS → redirect to `/auth` (não configurado)
+> 5416	- `decay_mcorch_stability()` — ✅ now callable manually: `SELECT * FROM decay_mcorch_stability();`
+> 5417	- `browserslist` — ✅ updated (2026-04-26)
+> 5418	- **[Arena] Swarm Arena Phase 2:** Integrar `fastest_model` como roteador padrão em `orchestrate-content` — se latência < 2s, usar o modelo vencedor para geração de content rápido em vez de modelo fixo
+> 5419	
+> 5420	### GITNEXUS MCP — Next steps
+> 5421	
+> 5422	- ~~**Build + integrar:** `cd packages/gitnexus-core && npm run build` → adicionar ao `.mcp.json`~~ ✅ Done
+> 5423	- ~~**Delta v2 bridge:** SupabaseAdapter.syncFromGraph() + CLI sync-to-mesh~~ ✅ Done — 493 nós, 344 edges
+> 5424	- ~~**Delta v3 — Call-graph intra-file:** scope-tracked walker no TypeScript visitor~~ ✅ Done
+> 5425	- ~~**Delta v4 — Cross-file calls:** Two-pass ingestion + globalFunctionMap → +259 edges~~ ✅ Done (2026-04-26) — 646 edges total
+> 5426	- ~~**Embeddings dos nós AST:** 493/493 embedded~~ ✅ Done
+> 5427	- ~~**Delta v5 — Embeddings para novos edges (192):** Disparar `embed-mcorch-node` para os 192 CALLS edges inseridos no Delta v4~~ ✅ Done (2026-05-05) — sync-mesh pós-commit → 2559 nós 100% embedded · 3516 edges
+> 5428	- **Subir container Docker:** `docker compose up -d mcorch-gitnexus-mcp` (opcional — stdio já funciona)
+> 5429	
+> 5430	### PHASE EPSILON — Next iterations
+> 5431	
+> 5432	- ~~**Epsilon v1–v8:** Sigma WebGL, Louvain, Semantic Probe, Crew Overlay, MatrixPage, Ownership coloring, Territory UX, CALLS counter~~ ✅ All done
+> 5433	- **Epsilon v9 — WebGPU upgrade:** Monitorar `sigma@next` — não disponível em npm (2026-05-01). Migrar quando estável.
+> 5434	- ~~**Epsilon v9 — Nó de maior conectividade:** Badge/highlight no nó com maior `callsIn` (hub da arquitetura)~~ ✅ Done (2026-05-05) — badge dourado ★ + pulse + fly-to animado
+> 5435	
+> 5436	### CORE — Next iterations
+> 5437	
+> 5438	- ~~**Core v2 — AIOS Consciousness:** Gemini TTS neural (AudioContext AnalyserNode), divider drag, model selector tri-provider, 429 fallback~~ ✅ Done (2026-05-01)
+> 5439	- **Core v3 — Gemini Live WebSocket:** Upgrade do tri-mode para WebSocket nativo da Gemini Live API (Barge-in real com áudio PCM bidirecional) — requer `GEMINI_API_KEY` provisionada
+> 5440	- **Phase Zeta — Social Consciousness:** Cada sessão AIOS persistida como nó `conversation` em `mcorch_nodes`. Feed timeline no CorePage (X/Twitter arch). DERIVES_FROM edges para reasoning threads. Fork de sessão (copy context → novo nó). "Boost": compartilhar conversa para Antigravity ou Claude Code.
+> 5441	- **Core v3 — Ondas reativas a voz:** Conectar AudioContext (frequência do microfone) ao `intensity` das VibrationalWaves — campo visual responde ao timbre da voz em tempo real
+> 5442	
+> 5443	### PHASE DELTA — Next iterations
+> 5444	
+> 5445	- ~~**Delta v2:** Persist canvas pipelines to `mcorch_nodes`~~ ✅ Done
+> 5446	- ~~**Delta v3:** Call-graph intra-file~~ ✅ Done
+> 5447	- ~~**Delta v4:** Cross-file call resolution~~ ✅ Done
+> 5448	- **Delta v5:** Agentic Consensus UI — real-time Auditor/Estrategista triangulation panel no OrchestrationCanvas
+> 5449	- **Delta v6:** Video pipeline canvas — SceneNodes → TransitionNodes wired to `generate-video`
+> 5450	- **Delta v7:** Dynamic sub-agent spawning from failed nodes (AOrchestra pattern)
+> 5451	
+> 5452	### USUÁRIO ZERO — Checklist de validação
+> 5453	
+> 5454	- ✅ mco_balance injetado: 5003 mcoCoins (2026-04-26)
+> 5455	- ✅ Stripe sandbox secrets no vault
+> 5456	- ✅ Token expiry UI visível (DQP auditado 2026-04-26)
+> 5457	- ✅ Latência visual <50ms confirmada (DQP auditado 2026-04-26)
+> 5458	- ✅ Bug autonomic-action resolvido — comportamento correto (+10pts/run via n8n)
+> 5459	- ✅ affiliate_links.revenue_cents: process-affiliate-link + handle-ml-postback implementados (2026-05-01)
+> 5460	- ✅ Neural density 100% — 1993/1993 nós embedded (2026-05-03)
+> 5461	- ✅ Code tab real — 1758 nós com código-fonte (2026-05-03)
+> 5462	- ✅ AI Brain real — analyze-node edge function deployed (2026-05-03)
+> 5463	- ✅ Pipeline embedding autônomo — pg_net trigger + post-commit hook + MeshControlPanel (2026-05-03)
+> 5464	- ✅ **Primeiro run end-to-end** — orchestrate-content → WordPress (draft p=10) → LinkedIn scheduled → content_mesh_asset `6a8bd475` (2026-05-25). Faltam: WP draft→publish swap, affiliate link real, ML conversion para `revenue_cents > 0`.
+> 5465	- ⬜ Verificar `infra_health_logs` populando após 1ª campanha
+> 5466	- ⬜ Swap para Stripe live keys (intencional — sandbox enquanto valida como Usuário Zero)
+> 5467	
+> 5468	---
+> 5469	
+> 5470	## Infrastructure
+> 5471	
+> 5472	| Service | Container | Port | Status |
+> 5473	|---------|-----------|------|--------|
+> 5474	| Vector Engine | `mcorch_chroma` | `localhost:8001` | ✅ healthy (healthcheck fix :1F40 — 2026-05-01) |
+> 5475	| Intelligence Node | `mcorch_claude_mem` | — | ✅ healthy |
+> 5476	| Autonomic Daemon | `mega-brain-daemon` | — | ✅ healthy |
+> 5477	| Brain Webhook | `mega-brain-webhook` | — | ✅ healthy |
+> 5478	| Brain Dashboard | `mega-brain-dashboard` | — | ✅ up |
+> 5479	| **GitNexus MCP** | `mcorch_gitnexus` | `localhost:3100` | ✅ built (stdio ativo) · Docker opcional |
+> 5480	| Watchdog Cron | crontab (ubuntu + gcrUX) | — | ✅ `*/5 * * * *` watchdog-mcorch.sh |
+> 5481	| Auto-publish Cron | crontab gcrUX | — | ✅ `*/5 * * * *` auto-publish-cron.sh |
+> 5482	| Audit 4Cs Cron | crontab gcrUX | — | ✅ `0 12 * * 1` audit-4cs.sh (seg 09h BRT) |
+> 5483	
+> 5484	**Chroma API is v2** — use `http://localhost:8001/api/v2/heartbeat`
+> 5485	
+> 5486	```bash
+> 5487	docker compose up -d
+> 5488	docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+> 5489	```
+> 5490	
+> 5491	---
+> 5492	
+> 5493	## Security Model (Post-Go-Live)
+> 5494	
+> 5495	| Table | Isolation |
+> 5496	|-------|-----------|
+> 5497	| `mcorch_nodes` | `user_id IS NULL OR auth.uid() = user_id` (system nodes visible to all) |
+> 5498	| `mcorch_edges` | Same pattern |
+> 5499	| `infra_health_logs` | Read-all for authenticated; write only service_role |
+> 5500	| All other tables | `user_id = auth.uid()` via existing RESTRICTIVE policies |
+> 5501	
+> 5502	---
+> 5503	
+> 5504	## Billing Architecture
+> 5505	
+> 5506	| Decision | Value |
+> 5507	|----------|-------|
+> 5508	| Canonical billing ledger | `profiles.mco_balance` |
+> 5509	| Deduction RPC | `public.deduct_mco_coins(p_user_id uuid, p_amount decimal)` |
+> 5510	| Cost constants | `src/lib/billing.ts` → `COIN_COSTS` |
+> 5511	| Orchestration cost | 10 mcoCoins/run |
+> 5512	| Plan allocation | Starter: 500 · Pro: 2000 · Enterprise: 10000 |
+> 5513	| Stripe | Sandbox keys active — swap to live before first client |
+> 5514	
+> 5515	---
+> 5516	
+> 5517	## GraphRAG State
+> 5518	
+> 5519	- **8605 total nodes** (v6.8.6: handoff `196b7acf-9035-4d87-a19b-7d7d6b55bee0` embedded 768d via autoembed trigger pg_net; +1 desde v6.8.5 — synthetic Amendment D nodes inseridos+limpos zero net delta) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> 5520	- **11925 total edges** (+1 nesta seal: DERIVES_FROM edge `4254225d-a666-4363-a4bd-98947efc434f` → mcorch-qa-healing parent) — defines · calls · INHABITS · DERIVES_FROM · REQUIRES · observes (OE-661-003) · ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) · CONTAINS_LINK_FOR (OE-661-004) · OBSERVES (e2e-user-zero finding observations — when runner.ts lands)
+> 5521	- Neural density: **100%** — trigger INSERT autônomo garante embedding imediato
+> 5522	- Paginação completa na Matrix (fetchAll() 1000 rows/page)
+> 5523	- AIOS grounding: 26+ nós por sessão via multi-bucket + semantic search (pgvector HNSW cosine 768d)
+> 5524	- Phase Zeta: node_type `conversation` persistido — cada sessão AIOS vira nó + DERIVES_FROM edges
+> 5525	- `useKnowledgeMesh` exporta `meshStats` com totalNodes/totalEdges/dominantTypes — `contextString` e `contextNodeIds` memoizados
+> 5526	- HNSW cosine index operational
+> 5527	- Milestone node (2026-05-04): `session-handoff-20260504-social-pipeline-live` inserido
+> 5528	- ADR nodes (2026-05-04): 5 decision/milestone nodes via `seed-social-oauth-adrs.ts` — Social OAuth ADRs pesquisáveis semanticamente
+> 5529	- Content backfill: 1758 nós AST com código-fonte real via `scripts/backfill-node-content.ts`
+> 5530	- Milestone node (2026-05-05): `session-handoff-20260505-settings-sovereignty` inserido
+> 5531	- Milestone node (2026-05-06): `session-handoff-20260506-core-promotion` inserido
+> 5532	- Milestone node (2026-05-06): `session-handoff-20260506-devops-security-seal` inserido
+> 5533	- Milestone node (2026-05-06): `session-handoff-20260506-layout-ux-fixes` inserido
+> 5534	- Documentation suite (2026-05-07): `bok-scribe-seal-mcorch-constellation-v1` inserido (type=`documentation_suite` · stability 0.85)
+> 5535	- Milestone node (2026-05-08): `session-handoff-20260508-fmea005-lgpd-deploy` inserido (esta sessão · FMEA-005 closed + LGPD em produção)
+> 5536	- Milestone node (2026-05-07): `session-handoff-20260507-bok-suite-v1` inserido
+> 5537	- Milestone node (2026-05-08): `session-handoff-20260508-sprint-v580` será inserido nesta seal
+> 5538	- Milestone node (2026-05-14): `session-handoff-20260514-canvas-4-1-shell` (`c93c74c3-42cd-4f4b-92d9-775bd9cbfa86`) inserido + embedded (768d) — Canvas 4.1 shell + Higgsfield endpoint fix
+> 5539	- Documentation suite (2026-05-14): `bok-scribe-seal-viralmind-v1` (`5c4bf1e9-b7cb-4896-a3b8-038f64f56ecf`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact R$ 14M) — suíte BoK viralmind 9/9 selada (04-frd reescrito de handbook CLAUDE.md → FRD real; handbook realocado p/ `viralmind-dev-handbook.md`; 7 OTDs registrados; DERIVES_FROM `bok-scribe-seal-conteudo-v2-v1`)
+> 5540	- Milestone node (2026-05-16): `session-handoff-20260516-openclaw-v631-neural-bridge` (`c1dbc53b-3a27-4da7-aef3-debd5c4047a0`) inserido (type=`milestone` · stability 1.0) — Sprint v6.3.1 selada (OpenClaw Neural Bridge + Departmental Army Pantheon; 9185 chunks indexados across 6 agentes; cron pipeline 02:30/03:00/03:30 ativo; primeira Telegram briefing entregue msg_id 201)
+> 5541	- Observation node (2026-05-17): `pantheon-config-audit-2026-05-17` (`ccecdbd1-8007-40c4-8c88-fb3463b6fe55`) inserido (type=`observation` · stability 0.85) — Phase 1 v6.6.1 (Pantheon canonical files unificados: 7 MEMORY.md + 7 BOOTSTRAP.md + main SOUL enhanced + HEARTBEAT tasks + pantheon-role-matrix.md)
+> 5542	- Observation node (2026-05-17): `memory-wiki-population-2026-05-17` (`569ba6bf-b2df-443e-9bba-b0c064032ab7`) inserido (type=`observation` · stability 0.85) — Phase 2 v6.6.1 (Memory Wiki seed manual MCORCH-aware: 20 wiki pages autorados; 5 syntheses + 8 entities + 6 concepts + 1 chatgpt-export source)
+> 5543	- Handoff node (2026-05-17): `session-handoff-20260517-pantheon-config-memory-wiki-unblock` (`d48f59d4-cf7b-44c5-83a3-2eb3db0b7e17`) inserido (type=`handoff` · stability 1.0) — v6.6.1 selada consolidando 3 trilhos sequenciais (Pantheon config audit + Memory Wiki seed manual + agents.list enabled key drift fix); confirmação visual Sovereign: Memory Palace renderiza 5 syntheses · 18 claims · 11 questions · 2 contradictions + Imported Insights 1 cluster AIOS medium risk
+> 5544	- Handoff node (2026-05-17): `session-handoff-20260517-canvas-4-2c-async-video` (`eb0b3ae0-9ec1-4328-ad31-1b079d3f294e`) inserido (type=`handoff` · stability 1.0) — v6.6.2 selada com Phase 4.2c async video pipeline live (canvas-execute branch image_to_video + Realtime callback + tier-gate dop-standard + watchdog cron) + 3 rounds de hotfix (assertExecuteSuccess unifica fail handling; OpenAI sem response_format + URL download server-side; OpenRouter migrado pra chat-completions multimodal Gemini+FLUX; Replicate column + SettingsPage; canvas-assets RLS reparada via DROP+CREATE com TO public guard); saldo Sovereign 5533 intacto pré e pós-sessão (zero cobrança em failed paths)
+> 5545	- Handoff node (2026-05-18): `session-handoff-20260518-oe661-debt-liquidation` (`6f2cf405-4bb5-440b-a02a-9579fc39f29f`) inserido (type=`handoff` · stability 1.0) — v6.6.3 selada com OE-661-ROADMAP debt liquidation completa (Postback ATTRIBUTES_REVENUE_TO + Memory gateway-recovery skill + Million-BRL Link Forge + OE-661-003 Target Binding) + Financial Stripe DEFERRED por decisão Sovereign; +7 nodes (8336→8343), +1555 edges (10062+→11617 com observes retrofit + autoembed cascade); 3 Edge Functions redeployed (process-affiliate-link 78.31kB Hybrid POST+GET · handle-ml-postback 59.34kB · embed-mcorch-node 105.1kB com auto-stitch); 10/10 observations VALID em Target Binding audit; 4 markdown_files autoembed (gateway-recovery + revenue-flywheel + roadmap-v1 + link-forge-scope)
+> 5546	- Documentation suite (2026-05-18): `bok-scribe-seal-gamificacao-nodes-v1` (`6e8546bc-d995-4cc5-ac88-06cecbece181`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact 0) — Sprint v6.6.4 selada com gamificacao-nodes BoK 9/9 retroativa (5 docs novos + 3 drifts reconciliados; DERIVES_FROM `bok-scribe-seal-viralmind-v1`; 12 BR-GN + 9 PROC-GN + 10 KPI-GN + 10 FMEA-GN com 4 RPN > 100)
+> 5547	- Documentation suite (2026-05-19): `bok-scribe-seal-openclaw-v1` (`05c55dfd-d318-4dcf-b7f0-aefb0529872f`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact 0) — Sprint v6.6.5 selada com openclaw BoK 9/9 retroativa (9 docs novos · 2500 LOC total · DERIVES_FROM `bok-scribe-seal-gamificacao-nodes-v1`; 14 BR-OC + 10 PROC-OC + 10 KPI-OC + 10 FMEA-OC com 5 RPN > 100; 5 drifts FECHADOS em v6.4.0/v6.6.1 + 8 ATIVOS como OTDs; OTD-V631-001 RPN 280 fechada por esta seal — 5ª e última suíte BoK do projeto)
+> 5548	- Handoff node (2026-05-19): `session-handoff-20260519-openclaw-bok-9-of-9-v665` (`8455932c-1486-490b-99a2-894022e2ba5a`) inserido (type=`handoff` · stability 1.0) — v6.6.5 selada quitando última dívida BoK do projeto; **5/5 suítes BoK seladas** (viralmind · conteudo-v2 · mcorch-constellation · gamificacao-nodes · openclaw); BoK Gate liberado para código novo em qualquer módulo; carry-overs OE-661 (GCRUX_ML_AFFILIATE_TOKEN + content_mesh_asset emission + primeiro run Usuário Zero) seguem pendentes
+> 5549	- Observation node (2026-05-19): `execution-plan-oe661-carryovers-2026-05-19` (`3dde2572-cad6-491b-b523-c56ec763ff8e`) inserido (type=`observation` · stability 0.85) — plan persistido para Fases 1-3 (OE-661 wire + Ledger SOP + Canvas 4.2c paid smoke) por diretiva Sovereign "slave o plano atual"; emendado com 10 fixes pós-audit (A-J); md5 `0e5f0ba995e89bc7ef76cda00733f941`
+> 5550	- Observation node (2026-05-19): `audit-oe661-debt-sweep-2026-05-19` (`6164c80f-cadd-48d5-95a4-f87f22ebd09b`) inserido (type=`observation` · stability 0.9) — audit completo: 3 Explore agents + 12 REST queries materiais; 21 OTDs ativos catalogados (8 RPN ≥ 100); 5 inconsistências processuais incluindo 5 seals consecutivas omitindo Survival Laws Self-audit; 4 bugs concretos no plan original fixed via amendments
+> 5551	- Edge DERIVES_FROM (2026-05-19): `acb4b0d9-091d-4973-96a8-d40515be7990` (audit `6164c80f` → plan `3dde2572`) weight=1.0 — audit derivou-se do plan + recomendou as 10 emendas
+> 5552	- Handoff node (2026-05-19): `session-handoff-20260519-oe661-plan-audit-v666` (`821dc554-78e2-4abb-999d-37363c5df6c9`) inserido (type=`handoff` · stability 1.0) — v6.6.6 sealed: Planning Seal + Debt Audit + Self-audit Retroativo das 5 seals omitidas; zero código tocado; mesh 8352 nodes; predicted Survival v3 aggregate 4.4/5
+> 5553	- Handoff node (2026-05-19): `session-handoff-20260519-oe661-phase1-prep-v667` (`9d482014-a759-4656-93d9-99e05ab4a714`) inserido (type=`handoff` · stability 1.0) — v6.6.7 sealed: OE-661 Phase 1 prep complete (SOP Law 2 + Amendments A/B/C/E shipped + 2 Edge Functions deployed + vault provisioned + API Tenancy directive Sovereign-class em CLAUDE.md + OTD-OE661-PER-USER); Step 1.5 first run E2E deferido por context budget Sovereign 92% (retoma em ~3h); mesh 8353 nodes; Survival Audit retroativo das 5 seals omitidas incluído (Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 · Lei 3 ✗ 0/5 · Lei 4 ✗ 0/5 — OTD-PROC-001 RPN 60 / OTD-PROC-002 RPN 40 registradas)
+> 5554	
+> 5555	### Embedding Model
+> 5556	`openai/text-embedding-3-small`, `dimensions: 768` (truncated output via OpenRouter).
+> 5557	Schema: `vector(768)` — HNSW cosine index.
+> 5558	
+> 5559	### Embedding Pipeline (Autônomo — 2026-05-03)
+> 5560	Três camadas eliminam intervenção manual:
+> 5561	1. **INSERT trigger** — `trg_mcorch_embed_on_insert` (pg_net) dispara `embed-mcorch-node` assincronamente em todo INSERT onde `embedding IS NULL`. Nunca bloqueia o INSERT.
+> 5562	2. **Post-commit hook** — `.git/hooks/post-commit` roda `node scripts/ingest-codebase.ts --quiet` em background após cada commit → re-ingesta AST.
+> 5563	3. **MeshControlPanel** — UI bottom-left do MatrixPage: "Sync Embeddings" (`trigger-embeddings`) e "Refresh Mesh Stats" (`trigger-ingest`).
+> 5564	
+> 5565	### Comandos de manutenção da Mesh
+> 5566	```bash
+> 5567	# Verificar nós sem embedding (deveria retornar array vazio):
+> 5568	curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?embedding=is.null&select=id,name" \
+> 5569	  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'{len(d)} nós sem embedding')"
+> 5570	
+> 5571	# Backfill manual (Bun-native — requer .env):
+> 5572	bun run scripts/backfill-embeddings.ts
+> 5573	
+> 5574	# Backfill de código-fonte nos nós AST:
+> 5575	bun run scripts/backfill-node-content.ts
+> 5576	
+> 5577	# Re-sync AST completo:
+> 5578	cd packages/gitnexus-core && npm run sync-mesh
+> 5579	
+> 5580	# Acompanhar re-ingesta pós-commit:
+> 5581	tail -f /tmp/mcorch-ingest.log
+> 5582	```
+> 5583	
+> 5584	---
+> 5585	
+> 5586	## Video Rescue Protocol
+> 5587	
+> 5588	When a video generation operation (Google Veo) times out or client disconnects:
+> 5589	```bash
+> 5590	# Via edge function (production):
+> 5591	curl -X POST "https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/rescue-video" \
+> 5592	  -H "Authorization: Bearer <user_jwt>" \
+> 5593	  -d '{"content_id":"<uuid>","operation_id":"<operation_name>"}'
+> 5594	
+> 5595	# Via local script (admin/debug):
+> 5596	source .env && bun run rescue.ts <operation_id> <content_id>
+> 5597	```
+> 5598	
+> 5599	---
+> 5600	
+> 5601	## Architecture Pillars
+> 5602	
+> 5603	| Layer | Implementation |
+> 5604	|-------|---------------|
+> 5605	| **Infra** | Docker Sovereign Mesh (`mcorch_chroma` + `mcorch_claude_mem` + `mega-brain-daemon`) + `watchdog-mcorch.sh` telemetry |
+> 5606	| **Memory** | GraphRAG (`mcorch_nodes`/`mcorch_edges`) + Neural Embeddings via OpenRouter (openai/text-embedding-3-small, 768d) + HNSW cosine index |
+> 5607	| **Economics** | mcoCoins Gatekeeper (`profiles.mco_balance` → `deduct_mco_coins` RPC) + Real ROI (`affiliate_links.revenue_cents`) + Stripe Sandbox |
+> 5608	| **Rescue** | Video recovery via `rescue-video` edge function + `rescue.ts` local companion |
+> 5609	| **Protocol** | ShakeHands (`/handson` pick-up, `/handoff` seal) |
+> 5610	
+> 5611	---
+> 5612	
+> 5613	## Phase Delta — Architecture
+> 5614	
+> 5615	```
+> 5616	OrchestrationPage (full-canvas, p-0)
+> 5617	  └── OrchestrationCanvas.tsx        ← @xyflow/react, nodeTypes/edgeTypes registry
+> 5618	        ├── nodes/TriggerNode.tsx    ← topic input + platform toggles + Run button
+> 5619	        ├── nodes/AgentNode.tsx      ← AI step display (status pulse animation)
+> 5620	        ├── nodes/SceneNode.tsx      ← video scene (stability + coin cost)
+> 5621	        ├── nodes/QualityGateNode.tsx← blocks downstream on error
+> 5622	        ├── nodes/PublishNode.tsx    ← final distribution output
+> 5623	        ├── edges/OrchestrationEdge.tsx ← glowing bezier (violet when animated)
+> 5624	        └── NodePalette.tsx          ← top toolbar to add nodes
+> 5625	
+> 5626	src/store/useOrchestrationStore.ts   ← Zustand (nodes, edges, run state)
+> 5627	src/hooks/useOrchestrationGraph.ts   ← runPipeline → orchestrate-content → node status sync
+> 5628	supabase/migrations/20260426120000_delta_graph_positioning.sql
+> 5629	  ├── GIN indexes on mcorch_nodes.metadata + mcorch_edges.metadata
+> 5630	  └── decay_mcorch_stability() — FSRS-6 manual decay (free tier safe)
+> 5631	```
+> 5632	
+> 5633	### Canvas State Architecture (Hybrid)
+> 5634	
+> 5635	```
+> 5636	User interaction → ReactFlow internal state (positions, drag)
+> 5637	                         ↓ (debounced 600ms)
+> 5638	                   localStorage (positions persist across refresh)
+> 5639	                         ↑
+> 5640	Store (Zustand) ← runPipeline → orchestrate-content Edge Function
+> 5641	     ↓ (status changes sync to ReactFlow via useEffect)
+> 5642	ReactFlow renders visual status (idle/running/done/error/blocked)
+> 5643	```
+> 5644	
+> 5645	## Key Files
+> 5646	
+> 5647	| Purpose | Path |
+> 5648	|---------|------|
+> 5649	| Architecture rules | `CLAUDE.md` |
+> 5650	| **3D Constellation Graph** | `src/components/graph/CrewGraph.tsx` |
+> 5651	| **Crew data hook** | `src/hooks/useCrewData.ts` |
+> 5652	| **Agent edges (particles)** | `src/components/graph/AgentEdge.tsx` |
+> 5653	| **Squad hull (3D bubble)** | `src/components/graph/SquadHull.tsx` |
+> 5654	| **Visual Orchestrator Canvas** | `src/components/orchestrator/OrchestrationCanvas.tsx` |
+> 5655	| **Orchestration Store (Zustand)** | `src/store/useOrchestrationStore.ts` |
+> 5656	| **Pipeline hook** | `src/hooks/useOrchestrationGraph.ts` |
+> 5657	| **Node types** | `src/components/orchestrator/nodes/` |
+> 5658	| GraphRAG hook | `src/hooks/useMcorchMemory.ts` |
+> 5659	| Memory graph (d3-force + stability) | `src/components/dashboard/MemoryGraphWidget.tsx` |
+> 5660	| Real ROI widget | `src/components/dashboard/ROIWidget.tsx` |
+> 5661	| Dashboard header (mcoCoins HUD) | `src/components/dashboard/DashboardLayout.tsx` |
+> 5662	| Neural Mesh HUD | `src/components/HUD.tsx` |
+> 5663	| Infra status hook | `src/hooks/useInfraStatus.ts` |
+> 5664	| Billing utilities | `src/lib/billing.ts` |
+> 5665	| Orchestration function | `supabase/functions/orchestrate-content/index.ts` |
+> 5666	| Infra status function | `supabase/functions/get-infra-status/index.ts` |
+> 5667	| Embed function | `supabase/functions/embed-mcorch-node/index.ts` |
+> 5668	| Video rescue function | `supabase/functions/rescue-video/index.ts` |
+> 5669	| Video rescue (local) | `rescue.ts` |
+> 5670	| Watchdog + telemetry | `scripts/watchdog-mcorch.sh` |
+> 5671	| Backfill script | `scripts/backfill-embeddings.ts` |
+> 5672	| Deploy harness | `scripts/harness-deploy.sh` |
+> 5673	
+> 5674	---
+> 5675	
+> 5676	## First Client Onboarding Checklist
+> 5677	
+> 5678	1. ~~Set OPENROUTER_API_KEY in vault~~ ✅ Done
+> 5679	2. ~~Run backfill~~ ✅ Done (9/9 nodes)
+> 5680	3. ~~Activate watchdog cron~~ ✅ Done
+> 5681	4. ~~Deploy rescue-video function~~ ✅ Done
+> 5682	5. Swap Stripe to live keys → `npx supabase secrets set STRIPE_SECRET_KEY=<live-key>`
+> 5683	6. Walk client through OnboardingPage → verify 10-coin deduction on first orchestration.
+> 5684	7. Monitor `infra_health_logs` for first 24h.
+> 5685	8. Confirm `affiliate_links.revenue_cents` populates after first campaign run.
+> 5686	
+> 5687	---
+> 5688	
+> 5689	## Constellation Matrix Intelligence & Stabilization Record (2026-05-03)
+> 5690	
+> 5691	Sessão de elevação da `ConstellationMatrix` ao nível de **Code Intelligence** e estabilização do motor gráfico. O motor Sigma.js/ForceAtlas2 apresentava loops de renderização infinitos ("blinking") e resets de estado ao interagir com a sidebar. A correção envolveu a estabilização de referências de props, memoização rigorosa das opções do grafo e desacoplamento de filtros dos ciclos de renderização do canvas. Paralelamente, a Matrix foi dotada de inteligência de código nativa via hook `useNodeIntelligence` e um `NodeDetailsPanel` reestruturado com navegação por abas.
+> 5692	
+> 5693	| Action | Result |
+> 5694	|--------|--------|
+> 5695	| `src/hooks/useNodeIntelligence.ts` — criado | ✅ Orquestração de busca de código (`mcorch_nodes`) + análise semântica simulada Gemini |
+> 5696	| `src/components/orchestrator/NodeDetailsPanel.tsx` | ✅ Navegação por abas (Meta, Code, Brain) + Code Preview + IA Analysis flow |
+> 5697	| `src/components/orchestrator/ConstellationMatrix.tsx` | ✅ Estabilização Sigma.js: memoized options + stable refs + engine integration fix |
+> 5698	| `src/hooks/useConstellationSigma.ts` | ✅ `useRef` para event handlers + callbacks estáveis — fim do "blinking" |
+> 5699	| `src/components/ui/progress.tsx` | ✅ Prop `indicatorClassName` adicionado para estilização dinâmica da barra de IA |
+> 5700	
+> 5701	| Commit | Conteúdo |
+> 5702	|--------|----------|
+> 5703	| `e8f1a2b` | feat(matrix): Code Intelligence — useNodeIntelligence + NodeDetailsPanel tabs |
+> 5704	| `d9c3e4f` | fix(matrix): Sigma.js stabilization — elimina re-render loops e blinking |
+> 5705	| `c7b5a1d` | chore(ui): progress indicator styling support |
+> 5706	
+> 5707	### Arquitetura Matrix Intelligence
+> 5708	
+> 5709	```
+> 5710	ConstellationMatrix (Stabilized Engine)
+> 5711	  ├── useConstellationSigma (stable refs, no re-bind on render)
+> 5712	  └── NodeDetailsPanel (Tabbed Navigation)
+> 5713	        ├── Tab Meta: Neighbor exploration + Net Context
+> 5714	        ├── Tab Code: Source code preview (Supabase sync)
+> 5715	        └── Tab Brain: semantic analysis (Gemini orchestrator)
+> 5716	
+> 5717	useNodeIntelligence Hook:
+> 5718	  - contentQuery: fetch nodes.content column
+> 5719	  - analyzeMutation: REAL AI analysis via analyze-node edge function (OpenRouter)
+> 5720	  - state: isAnalyzing, analysisResult, progress
+> 5721	```
+> 5722	
+> 5723	---
+> 5724	
+> 5725	## AI Brain — Real Intelligence Wiring (2026-05-03)
+> 5726	
+> 5727	Substituição da análise simulada (setTimeout + texto hardcoded) por chamada real ao OpenRouter via edge function.
+> 5728	
+> 5729	| Action | Result |
+> 5730	|--------|--------|
+> 5731	| `supabase/functions/analyze-node/index.ts` — criado | ✅ Edge function com auth JWT + OpenRouter claude-sonnet-4-5 |
+> 5732	| `src/hooks/useNodeIntelligence.ts` — atualizado | ✅ `analyzeNode` chama `supabase.functions.invoke('analyze-node')` |
+> 5733	| Deploy `analyze-node` | ✅ Deployed em bcyvddsykvehvpwstlfa |
+> 5734	
+> 5735	**Output da análise (estruturado em pt-BR):**
+> 5736	- Visão Geral — papel do módulo no sistema
+> 5737	- Padrões Detectados — design patterns, antipatterns
+> 5738	- Acoplamento & Dependências — análise In/Out-Degree
+> 5739	- Recomendações — 1-3 ações priorizadas
+> 5740	
+> ```
+
+## 🤖 Claude *(00:38:22)*
+
+
+## 🤖 Claude *(00:38:49)*
+
+Tenho todo o contexto material. Compilando o brief.
+
+═══════════════════════════════════════════════════════════
+  HANDSON — v6.15.0 · LLM Cascading Fallback & aios-sql-bridge E2E (2026-05-31)
+═══════════════════════════════════════════════════════════
+
+🏁 **ESTADO ATUAL**
+  Fase selada: **v6.15.0** — LLM Cascading Fallback nas Edge Functions + correção/E2E smoke da `aios-sql-bridge` + watchdog Higgsfield (Fase 4.2c)
+  Últimos commits:
+```
+7881231  docs: README + HANDOFF — milestone node v6.15.0
+af3abdb  fix(sql-bridge): checkAdmin via user_roles + vitest E2E smoke
+57d34e1  feat(llm-fallback): helper de cascata + 12 edge functions
+80976b6  docs: HANDOFF task record v6.14.9
+41d5a5c  docs: README v6.14.9
+```
+
+📂 **MUDANÇAS PENDENTES**
+  Worktree limpo ✅ (working tree no repo **principal**, branch `main` — sem worktree trap)
+
+🏗️ **INFRA** (todos com 8 dias de uptime)
+  `mcorch_chroma`:     ✅ healthy — Chroma API v2 heartbeat **OK**
+  `mcorch_claude_mem`: ✅ healthy
+  `mega-brain-daemon`: ✅ healthy · `mega-brain-webhook` ✅ · `mega-brain-dashboard` ✅ up
+
+🧠 **KNOWLEDGE MESH**
+  **8.713 nós · 100% embedded** (768d HNSW cosine) — fonte: tabela do selo v6.15.0
+  Arestas: ~11.925+ (último valor preciso registrado foi v6.6.9)
+  Tipos: handoff · milestone · architecture · decision · observation · requirement · conversation · documentation_suite · content_mesh_asset · AST (file/function/interface/type/class)
+  ⚠️ *Per-tipo exigiria query ao vivo — não fabriquei contagens (Lei 1)*
+
+🔧 **TYPESCRIPT**
+  **Zero erros ✅** (`tsc --noEmit` exit 0, árvore combinada)
+  Testes: 217/217 conforme selo v6.15.0 (não re-rodados nesta sessão)
+
+📚 **BoK SUITES** (MCORCH Master Execution Protocol)
+  **11/11 suítes completas (9/9 docs cada) ✅** — nenhuma incompleta:
+  `aios-sql-bridge` · `canvas-design` · `conteudo-v2` · `e2e-user-zero` · `gamificacao-nodes` · `mcorch-constellation` · `mcorch-qa-healing` · `mercado-livre-api` · `meta-api` · `openclaw` · `viralmind`
+  **GATE:** Liberado para código novo em qualquer módulo. Aguardando direção — sem novo módulo declarado.
+
+📌 **SPRINT** (OE-661-ROADMAP — caminho para Primeira Receita)
+  Débitos de engenharia:
+  - ✅ **Resilience Debt** (LLM Cascading Fallback) — FECHADO nesta v6.15.0 (era SLA 2026-06-07)
+  - 🟡 **Postback Debt** (ATTRIBUTES_REVENUE_TO) — edge existe; falta 1ª conversão ML real (`revenue_cents > 0`)
+  - ⏸️ **Financial Debt** (Stripe live keys) — DEFERIDO intencionalmente até 1º cliente externo (estratégia Usuário Zero)
+  - 🟡 **Memory Debt** (Gateway Recovery Skill) — skill entregue em v6.6.3
+
+⚡ **PRÓXIMOS PASSOS** (prioridade)
+  1. 🔴 **OTD-OE661-PER-USER — SLA 2026-06-02 (em 2 dias!)** — refatorar `scripts/link-forge.ts` e `process-affiliate-link/index.ts` (branch GET) para resolver credencial via `affiliate_config` per-user em vez do global `GCRUX_ML_AFFILIATE_TOKEN`. Viola a diretiva API Tenancy; bloqueante antes de multi-user.
+  2. **Canvas DoP paid smoke (Phase 3.2-3.4)** — *Sovereign-gated*: você clica Run em `/dashboard/canvas/<projeto>` com `dop-standard-5s` (125 mcoCoins), eu monitoro os 9 gates da SOP `canvas-video-async-execution.md`. Desbloqueia lançamento de conteúdo monetizado.
+  3. **Fechar o flywheel Usuário Zero** — WP draft→publish swap + 1º affiliate link real + aguardar conversão ML para `revenue_cents > 0` no ROIWidget. (Alternativa: 2ª iteração do `e2e-user-zero`, ~590 LOC restantes.)
+
+⚠️ **ALERTAS**
+  - 🔴 **OTD-OE661-PER-USER vence em 2 dias** (SLA 2026-06-02) — único item com prazo material apertado.
+  - 🟡 **Drift de documentação**: a seção *GraphRAG State* no rodapé do HANDOFF.md está estagnada em v6.8.6 (8.605 nós) — diverge do header v6.15.0 (8.713). É descompasso de doc, não de sistema; vale atualizar no próximo seal.
+  - Sem containers unhealthy, sem erros TS, sem `scratch/`, sem mudanças não-commitadas. ✅
+
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+
+## 🤖 Claude *(00:38:49)*
+
+
+## 🤖 Claude *(00:38:52)*
+
+O brief está completo. Destaco que o único item com **prazo material apertado** é o `OTD-OE661-PER-USER` (SLA 2026-06-02, daqui a 2 dias) — refactor de credencial per-user em `link-forge.ts` + `process-affiliate-link` GET. Se quiser, posso atacá-lo já (é refactor de código revisado em módulo documentado — sem necessidade de BoK Gate), ou seguir outra direção.
+
+Aguardando seu comando, Maestro.
+
+## 👤 User *(00:41:24)*
+
+Vamos atacar diretamente o OTD-OE661-PER-USER vence em 2 dias (SLA 2026-06-02) , e depois podemos seguir com o drift de documentação GraphRAG State no rodapé do handoff. E por fim vamos avante com canvas DoP paid smoke e depois fechar o flywheel usuário zero
+
+## 🤖 Claude *(00:41:53)*
+
+
+## 🤖 Claude *(00:41:57)*
+
+Entendido, Maestro. Sequência travada: **(1) OTD-OE661-PER-USER** → **(2) drift GraphRAG State** → **(3) Canvas DoP paid smoke** → **(4) flywheel Usuário Zero**.
+
+Começando pelo refactor crítico (SLA em 2 dias). Primeiro, investigação material — vou ler o código atual, o SOP existente (Lei 2) e o schema da tabela per-user.
+
+**ORO triplet desta task (OTD-OE661-PER-USER):**
+- **Operator:** MCORCH Master Execution Agent (eu)
+- **Reviewer:** Sovereign (Gabriel)
+- **Owner:** Sovereign (blast radius = atribuição de receita por tenant; credencial ML vazando entre usuários = fraude por design)
+
+## 🤖 Claude *(00:41:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * Link Forge — OE-661-004 (Million-BRL Roadmap)
+> 3	 *
+> 4	 * Sweeps `mcorch_nodes` of type `content_mesh_asset` and replaces raw mentions of
+> 5	 * High-Ticket products with REAL Mercado Livre product URLs carrying the per-user
+> 6	 * affiliate attribution tag (`matt_word`), per OTD-ML-001 resolution (2026-05-30):
+> 7	 * the ML affiliate program has NO public link API — attribution rides ML's own
+> 8	 * `matt_word`/`matt_tool` tracking params, and definitive attribution uses the
+> 9	 * per-user panel-generated `meli.la` short link. The legacy `panel.gcrux.com`
+> 10	 * redirect was a dead login-wall (302 → /login, zero attribution) and is removed.
+> 11	 * See docs/bok/mercado-livre-api/05-sdd.md (OTD-ML-001, OTD-ML-002).
+> 12	 *
+> 13	 * For each modified asset, also inserts a `CONTAINS_LINK_FOR` edge in mcorch_edges
+> 14	 * linking the content node → product node (creates product nodes on demand so the
+> 15	 * topology is queryable for ROI rollups via ATTRIBUTES_REVENUE_TO).
+> 16	 *
+> 17	 * Usage:
+> 18	 *   bun run scripts/link-forge.ts --dry-run     # preview, no writes
+> 19	 *   bun run scripts/link-forge.ts               # apply
+> 20	 */
+> 21	import { createClient } from "@supabase/supabase-js";
+> 22	import fs from "fs";
+> 23	import path from "path";
+> 24	import { fileURLToPath } from "url";
+> 25	
+> 26	const __filename = fileURLToPath(import.meta.url);
+> 27	const __dirname = path.dirname(__filename);
+> 28	const envPath = path.resolve(__dirname, "../.env");
+> 29	if (fs.existsSync(envPath)) {
+> 30	  const envFile = fs.readFileSync(envPath, "utf8");
+> 31	  envFile.split("\n").forEach((line) => {
+> 32	    const m = line.match(/^([^=]+)=(.*)$/);
+> 33	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^['"](.*)['"]$/, "$1");
+> 34	  });
+> 35	}
+> 36	
+> 37	const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+> 38	const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 39	
+> 40	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 41	  console.error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env");
+> 42	  process.exit(1);
+> 43	}
+> 44	
+> 45	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 46	const DRY_RUN = process.argv.includes("--dry-run");
+> 47	
+> 48	type ProductMatch = {
+> 49	  key: string;
+> 50	  mlb: string;
+> 51	  display: string;
+> 52	  pattern: RegExp;
+> 53	};
+> 54	
+> 55	// Product catalog (Phase 1 High-Ticket / Smart Home — revenue-flywheel.md §6).
+> 56	const PRODUCTS: ProductMatch[] = [
+> 57	  {
+> 58	    key: "roborock_s8",
+> 59	    mlb: "MLB27834876",
+> 60	    display: "Roborock S8 Pro Ultra",
+> 61	    pattern: /roborock\s+s8[a-z0-9 ]*(?:pro\s+ultra)?/gi,
+> 62	  },
+> 63	  {
+> 64	    key: "samsung_neo_qled_8k",
+> 65	    mlb: "MLB36263268",
+> 66	    display: "Samsung Neo QLED 8K",
+> 67	    pattern: /(?:neo\s+qled\s+8k|samsung\s+8k)/gi,
+> 68	  },
+> 69	  {
+> 70	    key: "family_hub",
+> 71	    mlb: "MLB37674259",
+> 72	    display: "Geladeira Samsung Family Hub",
+> 73	    pattern: /family\s+hub/gi,
+> 74	  },
+> 75	];
+> 76	
+> 77	const ML_PRODUCT_BASE = "https://www.mercadolivre.com.br";
+> 78	
+> 79	/**
+> 80	 * Build a REAL Mercado Livre product URL carrying the affiliate attribution tag.
+> 81	 * `affiliateTag` is the ML affiliate "word" (e.g. caga6077534), applied via the
+> 82	 * documented `matt_word` param — NOT the OAuth app_id. There is no public API to
+> 83	 * mint `meli.la` short links (OTD-ML-001), so this is the best-effort programmatic
+> 84	 * attribution; definitive attribution requires the per-user panel short link.
+> 85	 */
+> 86	function buildAffiliateUrl(mlb: string, contentVariantId: string, affiliateTag: string): string {
+> 87	  const numeric = mlb.replace(/^MLB/i, "");
+> 88	  const u = new URL(`${ML_PRODUCT_BASE}/MLB-${numeric}`);
+> 89	  if (affiliateTag) u.searchParams.set("matt_word", affiliateTag);
+> 90	  u.searchParams.set("utm_source", "gcrux_orchestrator");
+> 91	  u.searchParams.set("utm_medium", "content_mesh");
+> 92	  u.searchParams.set("utm_campaign", "highticket_smarthome_q3");
+> 93	  u.searchParams.set("utm_content", contentVariantId);
+> 94	  return u.toString();
+> 95	}
+> 96	
+> 97	/** Ensure a product node exists in the mesh; return its id. */
+> 98	async function ensureProductNode(p: ProductMatch): Promise<string | null> {
+> 99	  const productName = `product:${p.mlb}`;
+> 100	  const { data: existing } = await supabase
+> 101	    .from("mcorch_nodes")
+> 102	    .select("id")
+> 103	    .eq("name", productName)
+> 104	    .maybeSingle();
+> 105	  if (existing) return existing.id;
+> 106	
+> 107	  if (DRY_RUN) {
+> 108	    console.log(`  [DRY] would create product node ${productName}`);
+> 109	    return null;
+> 110	  }
+> 111	
+> 112	  const { data: created, error } = await supabase
+> 113	    .from("mcorch_nodes")
+> 114	    .insert({
+> 115	      name: productName,
+> 116	      node_type: "feature",
+> 117	      content: `Product catalog entry — ${p.display} (${p.mlb}). High-ticket affiliate target.`,
+> 118	      metadata: { mlb: p.mlb, display: p.display, source: "link-forge" },
+> 119	      project_id: "mcorch-affiliate",
+> 120	    })
+> 121	    .select("id")
+> 122	    .single();
+> 123	  if (error) {
+> 124	    console.error(`  ERROR creating product node ${productName}:`, error.message);
+> 125	    return null;
+> 126	  }
+> 127	  return created.id;
+> 128	}
+> 129	
+> 130	async function ensureContainsLinkEdge(
+> 131	  contentNodeId: string,
+> 132	  productNodeId: string,
+> 133	): Promise<boolean> {
+> 134	  const { data: existing } = await supabase
+> 135	    .from("mcorch_edges")
+> 136	    .select("id")
+> 137	    .eq("source_id", contentNodeId)
+> 138	    .eq("target_id", productNodeId)
+> 139	    .eq("relation_type", "CONTAINS_LINK_FOR")
+> 140	    .limit(1);
+> 141	  if (existing && existing.length > 0) return false;
+> 142	
+> 143	  if (DRY_RUN) return true;
+> 144	
+> 145	  const { error } = await supabase.from("mcorch_edges").insert({
+> 146	    source_id: contentNodeId,
+> 147	    target_id: productNodeId,
+> 148	    relation_type: "CONTAINS_LINK_FOR",
+> 149	    weight: 1.0,
+> 150	  });
+> 151	  if (error) {
+> 152	    console.error("  ERROR inserting edge:", error.message);
+> 153	    return false;
+> 154	  }
+> 155	  return true;
+> 156	}
+> 157	
+> 158	async function insertNoConfigObservation(userId: string) {
+> 159	  const nodeName = `link-forge-no-config:${userId}`;
+> 160	  const { data: existing } = await supabase
+> 161	    .from("mcorch_nodes")
+> 162	    .select("id")
+> 163	    .eq("name", nodeName)
+> 164	    .maybeSingle();
+> 165	  if (existing) return;
+> 166	
+> 167	  const { error } = await supabase.from("mcorch_nodes").insert({
+> 168	    name: nodeName,
+> 169	    node_type: "observation",
+> 170	    content: `User ${userId} does not have an active affiliate configuration for Mercado Livre. Link Forge skipped.`,
+> 171	    user_id: userId,
+> 172	    project_id: "mcorch-affiliate"
+> 173	  });
+> 174	  if (error) {
+> 175	    console.error(`  ERROR creating observation node ${nodeName}:`, error.message);
+> 176	  }
+> 177	}
+> 178	
+> 179	async function main() {
+> 180	  console.log(`Link Forge — ${DRY_RUN ? "DRY RUN" : "APPLY"} mode\n`);
+> 181	
+> 182	  const { data: configs, error: configErr } = await supabase
+> 183	    .from("affiliate_config")
+> 184	    .select("user_id, affiliate_tag")
+> 185	    .eq("platform", "mercadolivre")
+> 186	    .eq("is_active", true);
+> 187	
+> 188	  if (configErr) {
+> 189	    console.error("Error loading affiliate configs:", configErr.message);
+> 190	    process.exit(1);
+> 191	  }
+> 192	
+> 193	  // Map user_id → affiliate_tag (matt_word). Only users WITH a tag get links —
+> 194	  // a link without an attribution tag is worthless to the affiliate (fail-closed).
+> 195	  const configMap = new Map<string, string>();
+> 196	  if (configs) {
+> 197	    for (const c of configs) {
+> 198	      if (c.user_id && c.affiliate_tag) {
+> 199	        configMap.set(c.user_id, c.affiliate_tag);
+> 200	      }
+> 201	    }
+> 202	  }
+> 203	
+> 204	  const { data: assets, error } = await supabase
+> 205	    .from("mcorch_nodes")
+> 206	    .select("id, name, content, user_id")
+> 207	    .eq("node_type", "content_mesh_asset")
+> 208	    .eq("project_id", "mcorch-affiliate");
+> 209	
+> 210	  if (error) {
+> 211	    console.error("Query error:", error);
+> 212	    process.exit(1);
+> 213	  }
+> 214	  if (!assets || assets.length === 0) {
+> 215	    console.log("No content_mesh_asset nodes found. Noop.");
+> 216	    return;
+> 217	  }
+> 218	
+> 219	  console.log(`Scanning ${assets.length} content_mesh_asset node(s)...\n`);
+> 220	
+> 221	  let updatedCount = 0;
+> 222	  let edgeCount = 0;
+> 223	  let skippedCount = 0;
+> 224	
+> 225	  for (const asset of assets) {
+> 226	    const content: string = asset.content ?? "";
+> 227	    if (!content) {
+> 228	      skippedCount++;
+> 229	      continue;
+> 230	    }
+> 231	
+> 232	    const userId = asset.user_id;
+> 233	    const affiliateTag = userId ? configMap.get(userId) : null;
+> 234	    if (!affiliateTag) {
+> 235	      console.warn(`  [WARN] User ${userId} has no affiliate_tag in active mercadolivre config (OTD-ML-002). Skipping asset ${asset.id}.`);
+> 236	      if (userId && !DRY_RUN) {
+> 237	        await insertNoConfigObservation(userId);
+> 238	      }
+> 239	      skippedCount++;
+> 240	      continue;
+> 241	    }
+> 242	
+> 243	    let newContent = content;
+> 244	    const hits: ProductMatch[] = [];
+> 245	
+> 246	    for (const p of PRODUCTS) {
+> 247	      if (!p.pattern.test(content)) continue;
+> 248	      hits.push(p);
+> 249	      const affiliateUrl = buildAffiliateUrl(p.mlb, asset.id, affiliateTag);
+> 250	      // Reset regex lastIndex (global flag) before replace.
+> 251	      p.pattern.lastIndex = 0;
+> 252	      newContent = newContent.replace(p.pattern, `[${p.display}](${affiliateUrl})`);
+> 253	    }
+> 254	
+> 255	    if (hits.length === 0) {
+> 256	      skippedCount++;
+> 257	      continue;
+> 258	    }
+> 259	
+> 260	    console.log(`[${asset.id.slice(0, 8)}] ${asset.name}`);
+> 261	    for (const h of hits) console.log(`  matched: ${h.display} (${h.mlb})`);
+> 262	
+> 263	    if (DRY_RUN) {
+> 264	      console.log(`  [DRY] would update content (${content.length} → ${newContent.length} chars)`);
+> 265	    } else {
+> 266	      const { error: upErr } = await supabase
+> 267	        .from("mcorch_nodes")
+> 268	        .update({ content: newContent })
+> 269	        .eq("id", asset.id);
+> 270	      if (upErr) {
+> 271	        console.error("  ERROR updating content:", upErr.message);
+> 272	        continue;
+> 273	      }
+> 274	      updatedCount++;
+> 275	      console.log(`  applied: content updated`);
+> 276	    }
+> 277	
+> 278	    for (const p of hits) {
+> 279	      const productId = await ensureProductNode(p);
+> 280	      if (!productId) continue;
+> 281	      const created = await ensureContainsLinkEdge(asset.id, productId);
+> 282	      if (created) edgeCount++;
+> 283	    }
+> 284	  }
+> 285	
+> 286	  console.log(`\n==== Link Forge Report ====`);
+> 287	  console.log(`  Assets scanned:    ${assets.length}`);
+> 288	  console.log(`  Assets matched:    ${assets.length - skippedCount}`);
+> 289	  console.log(`  Content updates:   ${DRY_RUN ? "0 (dry)" : updatedCount}`);
+> 290	  console.log(`  CONTAINS_LINK_FOR: ${DRY_RUN ? "(dry preview)" : edgeCount}`);
+> 291	}
+> 292	
+> 293	main();
+> 294	
+> ```
+
+## 🤖 Claude *(00:41:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token",
+> 9	};
+> 10	
+> 11	const ML_SEARCH_BASE = "https://api.mercadolibre.com/sites/MLB/search";
+> 12	
+> 13	/** Best-effort telemetry pulse to infra_health_logs — never blocks the response. */
+> 14	async function pulse(
+> 15	  client: any,
+> 16	  status: "healthy" | "degraded" | "error",
+> 17	  note?: string,
+> 18	): Promise<void> {
+> 19	  await client
+> 20	    .from("infra_health_logs")
+> 21	    .insert({ service: "affiliate-link-resolution", status })
+> 22	    .then(() => {}, () => {});
+> 23	  if (note) console.log(`[affiliate-link-resolution] ${status}: ${note}`);
+> 24	}
+> 25	
+> 26	/** Extract human-readable keywords from a ML product URL path */
+> 27	function extractKeywords(url: string): string {
+> 28	  try {
+> 29	    const { pathname } = new URL(url);
+> 30	    const slug =
+> 31	      pathname
+> 32	        .split("/")
+> 33	        .filter(Boolean)
+> 34	        .find((s) => s.length > 8 && /[a-z]/i.test(s)) ?? "";
+> 35	    return slug
+> 36	      .replace(/MLB[\w]*/gi, "")
+> 37	      .replace(/[-_]+/g, " ")
+> 38	      .replace(/\d{6,}/g, "")
+> 39	      .replace(/\s+/g, " ")
+> 40	      .trim()
+> 41	      .slice(0, 80);
+> 42	  } catch {
+> 43	    return "";
+> 44	  }
+> 45	}
+> 46	
+> 47	/** Append affiliate + UTM params without duplicating existing params */
+> 48	function buildAffiliateUrl(
+> 49	  url: string,
+> 50	  affiliateId: string | null,
+> 51	  campaignId: string,
+> 52	): string {
+> 53	  try {
+> 54	    const u = new URL(url);
+> 55	    if (affiliateId) u.searchParams.set("partner_id", affiliateId);
+> 56	    u.searchParams.set("utm_source", "mcorch");
+> 57	    u.searchParams.set("utm_medium", "social");
+> 58	    u.searchParams.set("utm_campaign", campaignId);
+> 59	    return u.toString();
+> 60	  } catch {
+> 61	    return url;
+> 62	  }
+> 63	}
+> 64	
+> 65	/** HEAD-probe a URL; 8 s timeout.
+> 66	 *  200/3xx = OK · 403 = geo-blocked but exists · 405 = HEAD not allowed but exists */
+> 67	async function probeUrl(url: string): Promise<boolean> {
+> 68	  try {
+> 69	    const ctrl = new AbortController();
+> 70	    const t = setTimeout(() => ctrl.abort(), 8_000);
+> 71	    const res = await fetch(url, {
+> 72	      method: "HEAD",
+> 73	      signal: ctrl.signal,
+> 74	      redirect: "follow",
+> 75	    });
+> 76	    clearTimeout(t);
+> 77	    return res.ok || res.status === 403 || res.status === 405;
+> 78	  } catch {
+> 79	    return false;
+> 80	  }
+> 81	}
+> 82	
+> 83	/** Search ML public API for a similar product and return its permalink */
+> 84	async function findSimilarProduct(keywords: string): Promise<string | null> {
+> 85	  if (!keywords.trim()) return null;
+> 86	  try {
+> 87	    const res = await fetch(
+> 88	      `${ML_SEARCH_BASE}?q=${encodeURIComponent(keywords)}&limit=1`,
+> 89	    );
+> 90	    if (!res.ok) return null;
+> 91	    const json = await res.json();
+> 92	    return (json?.results?.[0]?.permalink as string) ?? null;
+> 93	  } catch {
+> 94	    return null;
+> 95	  }
+> 96	}
+> 97	
+> 98	/** GET branch: public 302 redirect for Link Forge URLs.
+> 99	 *  Query: ?product_id=MLB...&content_variant_id=<uuid>
+> 100	 *  Redirects to panel.gcrux.com/api/ml-redirect (external endpoint). */
+> 101	async function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {
+> 102	  const url = new URL(req.url);
+> 103	  const productId = url.searchParams.get("product_id");
+> 104	  const contentVariantId = url.searchParams.get("content_variant_id");
+> 105	  if (!productId || !contentVariantId) {
+> 106	    return new Response(
+> 107	      JSON.stringify({ error: "Missing product_id or content_variant_id" }),
+> 108	      {
+> 109	        status: 400,
+> 110	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 111	      },
+> 112	    );
+> 113	  }
+> 114	  // Per-user resolution ONLY — the content owner's affiliate_config decides attribution.
+> 115	  // No global GCRUX_ML_AFFILIATE_TOKEN fallback (API Tenancy Model — revenue must never
+> 116	  // leak across tenants; a click on user A's content must credit user A or fail closed).
+> 117	  let affiliateToken: string | null = null;
+> 118	
+> 119	  try {
+> 120	    const { data: node } = await adminClient
+> 121	      .from("mcorch_nodes")
+> 122	      .select("user_id")
+> 123	      .eq("id", contentVariantId)
+> 124	      .maybeSingle();
+> 125	
+> 126	    if (node && node.user_id) {
+> 127	      const { data: config } = await adminClient
+> 128	        .from("affiliate_config")
+> 129	        .select("app_id")
+> 130	        .eq("user_id", node.user_id)
+> 131	        .eq("platform", "mercadolivre")
+> 132	        .eq("is_active", true)
+> 133	        .maybeSingle();
+> 134	
+> 135	      if (config && config.app_id) {
+> 136	        affiliateToken = config.app_id;
+> 137	      }
+> 138	    }
+> 139	  } catch (err) {
+> 140	    console.error("[affiliate] GET redirect config lookup error:", err);
+> 141	    await pulse(adminClient, "error", `GET lookup error: ${(err as Error).message}`);
+> 142	  }
+> 143	
+> 144	  // Fail-closed: no per-user config → send the owner to settings, never use a shared token.
+> 145	  if (!affiliateToken) {
+> 146	    console.warn(`[affiliate] No per-user config for asset ${contentVariantId} — fail-closed.`);
+> 147	    await pulse(adminClient, "degraded", `GET no_config for asset ${contentVariantId}`);
+> 148	    return new Response(null, {
+> 149	      status: 302,
+> 150	      headers: { ...corsHeaders, Location: "https://login.mcorch.com/dashboard/settings?no_config=1" },
+> 151	    });
+> 152	  }
+> 153	
+> 154	  await pulse(adminClient, "healthy", `GET redirect resolved for asset ${contentVariantId}`);
+> 155	
+> 156	  const redirectUrl =
+> 157	    `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}` +
+> 158	    `&affiliate_id=${affiliateToken}` +
+> 159	    `&utm_source=gcrux_orchestrator` +
+> 160	    `&utm_medium=content_mesh` +
+> 161	    `&utm_campaign=highticket_smarthome_q3` +
+> 162	    `&utm_content=${contentVariantId}`;
+> 163	  return new Response(null, {
+> 164	    status: 302,
+> 165	    headers: { ...corsHeaders, Location: redirectUrl },
+> 166	  });
+> 167	}
+> 168	
+> 169	serve(async (req) => {
+> 170	  if (req.method === "OPTIONS") {
+> 171	    return new Response("ok", { headers: corsHeaders });
+> 172	  }
+> 173	
+> 174	  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 175	  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 176	  const adminClient = createClient(supabaseUrl, serviceKey);
+> 177	
+> 178	  if (req.method === "GET") {
+> 179	    return await handleGetRedirect(req, adminClient);
+> 180	  }
+> 181	
+> 182	  if (req.method !== "POST") {
+> 183	    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+> 184	      status: 405,
+> 185	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 186	    });
+> 187	  }
+> 188	
+> 189	  try {
+> 190	    // POST: original monetization flow (auth + persist + self-heal)
+> 191	    const authHeader = req.headers.get("Authorization");
+> 192	    if (!authHeader) {
+> 193	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 194	        status: 401,
+> 195	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 196	      });
+> 197	    }
+> 198	
+> 199	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 200	    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 201	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 202	
+> 203	    const userClient = createClient(supabaseUrl, anonKey, {
+> 204	      global: { headers: { Authorization: authHeader } },
+> 205	    });
+> 206	
+> 207	    const {
+> 208	      data: { user },
+> 209	      error: authError,
+> 210	    } = await userClient.auth.getUser();
+> 211	    if (authError || !user) {
+> 212	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 213	        status: 401,
+> 214	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 215	      });
+> 216	    }
+> 217	
+> 218	    const { product_url, campaign_id, content_id } = await req.json();
+> 219	    if (!product_url || typeof product_url !== "string") {
+> 220	      return new Response(
+> 221	        JSON.stringify({ error: "product_url é obrigatório" }),
+> 222	        {
+> 223	          status: 400,
+> 224	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 225	        },
+> 226	      );
+> 227	    }
+> 228	
+> 229	    const effectiveCampaign =
+> 230	      (campaign_id as string | undefined)?.trim() || "ai_orchestration";
+> 231	    const adminClient = createClient(supabaseUrl, serviceKey);
+> 232	
+> 233	    const { data: config } = await adminClient
+> 234	      .from("affiliate_config")
+> 235	      .select("app_id")
+> 236	      .eq("user_id", user.id)
+> 237	      .eq("platform", "mercadolivre")
+> 238	      .eq("is_active", true)
+> 239	      .maybeSingle();
+> 240	
+> 241	    // Per-user resolution ONLY — no global ML_AFFILIATE_ID fallback (API Tenancy Model).
+> 242	    const affiliateId: string | null = (config?.app_id as string | null) ?? null;
+> 243	    if (!affiliateId) {
+> 244	      await pulse(adminClient, "degraded", `POST monetize no_config user ${user.id}`);
+> 245	      return new Response(
+> 246	        JSON.stringify({
+> 247	          error: "mercadolivre_not_configured",
+> 248	          action:
+> 249	            "Configure your Mercado Livre credentials at /dashboard/affiliates",
+> 250	        }),
+> 251	        {
+> 252	          status: 402,
+> 253	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 254	        },
+> 255	      );
+> 256	    }
+> 257	
+> 258	    let resolvedUrl = product_url;
+> 259	    let selfHealedFrom: string | null = null;
+> 260	
+> 261	    const alive = await probeUrl(product_url);
+> 262	    if (!alive) {
+> 263	      const kw = extractKeywords(product_url);
+> 264	      const fallback = await findSimilarProduct(kw);
+> 265	      if (!fallback) {
+> 266	        return new Response(
+> 267	          JSON.stringify({
+> 268	            error:
+> 269	              "URL inacessível e nenhum produto similar encontrado no ML",
+> 270	            original_url: product_url,
+> 271	          }),
+> 272	          {
+> 273	            status: 422,
+> 274	            headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 275	          },
+> 276	        );
+> 277	      }
+> 278	      selfHealedFrom = product_url;
+> 279	      resolvedUrl = fallback;
+> 280	      console.log(`[affiliate] self-heal ${product_url} → ${fallback}`);
+> 281	    }
+> 282	
+> 283	    const affiliateUrl = buildAffiliateUrl(
+> 284	      resolvedUrl,
+> 285	      affiliateId,
+> 286	      effectiveCampaign,
+> 287	    );
+> 288	
+> 289	    const { data: link, error: insertErr } = await adminClient
+> 290	      .from("affiliate_links")
+> 291	      .insert({
+> 292	        user_id: user.id,
+> 293	        original_url: product_url,
+> 294	        short_url: affiliateUrl,
+> 295	        platform: "mercadolivre",
+> 296	        campaign_id: effectiveCampaign,
+> 297	        content_id: (content_id as string | undefined) ?? null,
+> 298	        metadata: {
+> 299	          affiliate_id: affiliateId,
+> 300	          resolved_url: resolvedUrl,
+> 301	          self_healed_from: selfHealedFrom,
+> 302	          processed_at: new Date().toISOString(),
+> 303	        },
+> 304	      })
+> 305	      .select("id")
+> 306	      .single();
+> 307	
+> 308	    if (insertErr) {
+> 309	      console.error("[affiliate] insert error:", insertErr.message);
+> 310	    }
+> 311	
+> 312	    await pulse(
+> 313	      adminClient,
+> 314	      insertErr ? "degraded" : "healthy",
+> 315	      `POST monetize user ${user.id}`,
+> 316	    );
+> 317	
+> 318	    return new Response(
+> 319	      JSON.stringify({
+> 320	        success: true,
+> 321	        original_url: product_url,
+> 322	        resolved_url: resolvedUrl,
+> 323	        affiliate_url: affiliateUrl,
+> 324	        affiliate_id: affiliateId,
+> 325	        campaign_id: effectiveCampaign,
+> 326	        self_healed: selfHealedFrom !== null,
+> 327	        self_healed_from: selfHealedFrom,
+> 328	        link_id: link?.id ?? null,
+> 329	      }),
+> 330	      {
+> 331	        status: 200,
+> 332	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 333	      },
+> 334	    );
+> 335	  } catch (err) {
+> 336	    console.error("[process-affiliate-link]", err);
+> 337	    return new Response(
+> 338	      JSON.stringify({
+> 339	        error: (err as Error).message ?? "Internal server error",
+> 340	      }),
+> 341	      {
+> 342	        status: 500,
+> 343	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 344	      },
+> 345	    );
+> 346	  }
+> 347	});
+> 348	
+> ```
+
+## 🤖 Claude *(00:42:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-credential-resolution.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP: ML Affiliate Credential Resolution (Per-User)
+> 2	
+> 3	**Status:** ACTIVE · v1.0 · 2026-05-30
+> 4	**Owner:** Sovereign (Gabriel Zarattini)
+> 5	**Survival Law 2 compliance:** Escrita ANTES do refactor fail-closed em `supabase/functions/process-affiliate-link/index.ts` (fecha OTD-OE661-PER-USER · RPN 120 · SLA 2026-06-02).
+> 6	**Canonical directive:** `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"`
+> 7	
+> 8	---
+> 9	
+> 10	## Context
+> 11	
+> 12	A monetização via Mercado Livre resolve um **affiliate_id** (`affiliate_config.app_id`) para anexar a links de produto. Antes deste SOP, dois caminhos vazavam atribuição de receita para uma credencial **global compartilhada**:
+> 13	
+> 14	1. **GET redirect** (`handleGetRedirect`, público no-JWT) — inicializava `affiliateToken` com `Deno.env.get("GCRUX_ML_AFFILIATE_TOKEN")` e só fazia fail-closed quando o token era o literal placeholder `"GCRUX_DEFAULT_TOKEN"`. Se o env global estivesse provisionado (foi, em v6.6.7), um asset SEM config per-user redirecionava usando o token global → **receita do clique creditada à conta afiliada errada**.
+> 15	2. **POST monetize** (`ContentLibraryPage → "Monetizar Links ML"`, JWT-authed) — `affiliateId = config?.app_id ?? Deno.env.get("ML_AFFILIATE_ID") ?? null`, e seguia construindo o link mesmo com `null` (sem `partner_id`, atribuição perdida).
+> 16	
+> 17	`scripts/link-forge.ts` **já** resolve per-user (carrega `affiliate_config` por `user_id`, pula com observation node quando falta) — fora de escopo deste fix.
+> 18	
+> 19	**Por que importa (multi-tenant readiness):** atribuição de receita correta por tenant · isolamento de risco financeiro · LGPD (cada user controla/revoga sua credencial) · anti-fraude (um user não monetiza pela credencial de outro).
+> 20	
+> 21	---
+> 22	
+> 23	## ORO triplet
+> 24	
+> 25	- **Operator:** MCORCH Master Execution Agent (refactor) + Cron/Edge runtime (execução)
+> 26	- **Reviewer:** Sovereign (Gabriel) — aprova o diff + valida o smoke
+> 27	- **Owner:** Sovereign — blast radius = atribuição de receita ML por tenant + risco financeiro isolado
+> 28	
+> 29	---
+> 30	
+> 31	## Operator (quem executa manualmente hoje)
+> 32	
+> 33	- **Usuário Zero / cliente:** configura suas credenciais ML em `/dashboard/affiliates` (hook `useAffiliateConfig` → INSERT `affiliate_config` `platform='mercadolivre'`, `is_active=true`, `app_id=<seu affiliate id>`).
+> 34	- **Edge function `process-affiliate-link`:** resolve a credencial por request (GET click-through OU POST monetize) e atribui a receita ao dono do conteúdo.
+> 35	
+> 36	---
+> 37	
+> 38	## Resolution order (canonical — espelha API Tenancy Model)
+> 39	
+> 40	| # | Camada | Fonte | Permitido em |
+> 41	|---|--------|-------|--------------|
+> 42	| 1 | **Per-user** | `affiliate_config` WHERE `user_id = <owner>` AND `platform='mercadolivre'` AND `is_active=true` → `app_id` | SEMPRE (caminho primário) |
+> 43	| 2 | **Global vault fallback** | `Deno.env.get('GCRUX_ML_AFFILIATE_TOKEN')` / `ML_AFFILIATE_ID` | **PROIBIDO** em atribuição de receita user-facing. Reservado a cron/system/onboarding default explícito documentado. |
+> 44	| 3 | **Hard failure** | — | GET → 302 `Location: /dashboard/settings?no_config=1` · POST → HTTP 402 `{ error: "mercadolivre_not_configured", action: "Configure your Mercado Livre credentials at /dashboard/affiliates" }` |
+> 45	
+> 46	**Owner resolution (GET branch):** `contentVariantId` (= `mcorch_nodes.id`) → `node.user_id` → `affiliate_config` desse user. O redirect é público mas a receita pertence ao **dono do conteúdo**, não a quem clica.
+> 47	
+> 48	---
+> 49	
+> 50	## Sequence
+> 51	
+> 52	### GET branch (`handleGetRedirect`)
+> 53	1. Validar `product_id` + `content_variant_id` (400 se faltar).
+> 54	2. SELECT `mcorch_nodes.user_id` WHERE `id = content_variant_id`.
+> 55	3. Se `user_id` existe → SELECT `affiliate_config.app_id` per-user (camada 1).
+> 56	4. Se resolveu → 302 para `panel.gcrux.com/api/ml-redirect` com `affiliate_id=<app_id>` + UTMs + pulse `infra_health_logs status=healthy`.
+> 57	5. Se NÃO resolveu → 302 para `/dashboard/settings?no_config=1` + pulse `status=degraded reason=no_config` (camada 3). **Nunca** usar env global.
+> 58	
+> 59	### POST branch (monetize)
+> 60	1. JWT obrigatório → `user.id`.
+> 61	2. SELECT `affiliate_config.app_id` WHERE `user_id = user.id` (camada 1).
+> 62	3. Se NÃO resolveu → HTTP 402 estruturado (camada 3). **Não** cair em `ML_AFFILIATE_ID`.
+> 63	4. Se resolveu → probe + self-heal + INSERT `affiliate_links` + pulse `status=healthy`.
+> 64	
+> 65	---
+> 66	
+> 67	## Verification gates
+> 68	
+> 69	| Gate | Check | Pass criterion |
+> 70	|------|-------|----------------|
+> 71	| G1 | User COM config → POST monetize | HTTP 200 · `affiliate_url` contém `partner_id=<app_id>` · row em `affiliate_links` |
+> 72	| G2 | User SEM config → POST monetize | HTTP 402 · body `mercadolivre_not_configured` · ZERO row em `affiliate_links` |
+> 73	| G3 | Asset COM config → GET redirect | 302 `Location` contém `affiliate_id=<app_id>` (≠ token global) |
+> 74	| G4 | Asset SEM config → GET redirect | 302 `Location=/dashboard/settings?no_config=1` |
+> 75	| G5 | Telemetria | `infra_health_logs.service='affiliate-link-resolution'` recebe pulse em cada path (healthy/degraded) |
+> 76	| G6 | Zero global em path user-facing | `grep GCRUX_ML_AFFILIATE_TOKEN\|ML_AFFILIATE_ID` em `process-affiliate-link` → 0 refs em branch de atribuição |
+> 77	
+> 78	---
+> 79	
+> 80	## Recovery path
+> 81	
+> 82	| Cenário | Detecção | Recovery |
+> 83	|---------|----------|----------|
+> 84	| User reclama "link sem comissão" | `affiliate_links.metadata.affiliate_id` null | Verificar `affiliate_config` ativo do user; reprocessar após configurar |
+> 85	| GET 302 loop para settings | pulse `degraded reason=no_config` repetido | Confirmar que o asset tem `user_id` setado + config ativa do dono |
+> 86	| Regressão (global reintroduzido) | G6 falha em CI/grep | Reverter; global só em cron/system documentado |
+> 87	| `affiliate_config` lookup erro DB | `console.error` no edge log + pulse `status=error` | Fail-closed (camada 3), nunca fallback silencioso |
+> 88	
+> 89	---
+> 90	
+> 91	## Success signal (whole protocol)
+> 92	
+> 93	- G1–G6 verdes no smoke.
+> 94	- `process-affiliate-link` redeployado (script size + ACTIVE em `supabase functions list`).
+> 95	- `infra_health_logs.service='affiliate-link-resolution'` com pulses recentes (`last_seen_at` < 1h pós-smoke).
+> 96	- OTD-OE661-PER-USER fechada antes de 2026-06-02.
+> 97	
+> 98	---
+> 99	
+> 100	## Anti-patterns prohibited
+> 101	
+> 102	- ❌ `Deno.env.get('GCRUX_ML_AFFILIATE_TOKEN')` / `ML_AFFILIATE_ID` em branch de atribuição user-facing.
+> 103	- ❌ Construir affiliate URL com `affiliate_id=null` silenciosamente (atribuição perdida sem erro).
+> 104	- ❌ Fail-closed só quando token == placeholder literal (deixa o env global setado vazar).
+> 105	- ❌ Compartilhar receita/quota de um user com outro via credencial global (fraude por design).
+> 106	
+> 107	---
+> 108	
+> 109	## Connection to Survival Laws
+> 110	
+> 111	- **Lei 1 (Materialidade):** cada gate produz prova material (HTTP status + body + `affiliate_links` row + pulse UUID).
+> 112	- **Lei 2 (Anticipated Process):** este SOP escrito ANTES do refactor (requisito explícito da diretiva API Tenancy item 5).
+> 113	- **Lei 3 (Pruning):** resolução stateless por request; nada acumulado em contexto.
+> 114	- **Lei 4 (ORO):** triplet declarado acima; Reviewer = Sovereign aprova o diff antes do deploy.
+> 115	
+> ```
+
+## 🤖 Claude *(00:42:33)*
+
+
+## 🤖 Claude *(00:42:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== link-forge.ts ===\"; wc -l scripts/link-forge.ts; echo \"=== process-affiliate-link ===\"; wc -l supabase/functions/process-affiliate-link/index.ts; echo \"=== SOP ===\"; wc -l docs/processes/affiliate-credential-resolution.md; echo \"=== SOP char/longest line ===\"; awk '{ if (length > max) max = length } END { print \"longest line:\", max }' docs/processes/affiliate-credential-resolution.md",
+  "description": "Line counts and longest line of target files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === link-forge.ts ===
+> 293 scripts/link-forge.ts
+> === process-affiliate-link ===
+> 347 supabase/functions/process-affiliate-link/index.ts
+> === SOP ===
+> 114 docs/processes/affiliate-credential-resolution.md
+> === SOP char/longest line ===
+> longest line: 406
+> ```
+
+## 🤖 Claude *(00:42:42)*
+
+
+## 🤖 Claude *(00:42:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/affiliate-credential-resolution.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP: ML Affiliate Credential Resolution (Per-User)
+> 2	
+> 3	**Status:** ACTIVE · v1.0 · 2026-05-30
+> 4	**Owner:** Sovereign (Gabriel Zarattini)
+> 5	**Survival Law 2 compliance:** Escrita ANTES do refactor fail-closed em `supabase/functions/process-affiliate-link/index.ts` (fecha OTD-OE661-PER-USER · RPN 120 · SLA 2026-06-02).
+> 6	**Canonical directive:** `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"`
+> 7	
+> 8	---
+> 9	
+> 10	## Context
+> 11	
+> 12	A monetização via Mercado Livre resolve um **affiliate_id** (`affiliate_config.app_id`) para anexar a links de produto. Antes deste SOP, dois caminhos vazavam atribuição de receita para uma credencial **global compartilhada**:
+> 13	
+> 14	1. **GET redirect** (`handleGetRedirect`, público no-JWT) — inicializava `affiliateToken` com `Deno.env.get("GCRUX_ML_AFFILIATE_TOKEN")` e só fazia fail-closed quando o token era o literal placeholder `"GCRUX_DEFAULT_TOKEN"`. Se o env global estivesse provisionado (foi, em v6.6.7), um asset SEM config per-user redirecionava usando o token global → **receita do clique creditada à conta afiliada errada**.
+> 15	2. **POST monetize** (`ContentLibraryPage → "Monetizar Links ML"`, JWT-authed) — `affiliateId = config?.app_id ?? Deno.env.get("ML_AFFILIATE_ID") ?? null`, e seguia construindo o link mesmo com `null` (sem `partner_id`, atribuição perdida).
+> 16	
+> 17	`scripts/link-forge.ts` **já** resolve per-user (carrega `affiliate_config` por `user_id`, pula com observation node quando falta) — fora de escopo deste fix.
+> 18	
+> 19	**Por que importa (multi-tenant readiness):** atribuição de receita correta por tenant · isolamento de risco financeiro · LGPD (cada user controla/revoga sua credencial) · anti-fraude (um user não monetiza pela credencial de outro).
+> 20	
+> 21	---
+> 22	
+> 23	## ORO triplet
+> 24	
+> 25	- **Operator:** MCORCH Master Execution Agent (refactor) + Cron/Edge runtime (execução)
+> 26	- **Reviewer:** Sovereign (Gabriel) — aprova o diff + valida o smoke
+> 27	- **Owner:** Sovereign — blast radius = atribuição de receita ML por tenant + risco financeiro isolado
+> 28	
+> 29	---
+> 30	
+> 31	## Operator (quem executa manualmente hoje)
+> 32	
+> 33	- **Usuário Zero / cliente:** configura suas credenciais ML em `/dashboard/affiliates` (hook `useAffiliateConfig` → INSERT `affiliate_config` `platform='mercadolivre'`, `is_active=true`, `app_id=<seu affiliate id>`).
+> 34	- **Edge function `process-affiliate-link`:** resolve a credencial por request (GET click-through OU POST monetize) e atribui a receita ao dono do conteúdo.
+> 35	
+> 36	---
+> 37	
+> 38	## Resolution order (canonical — espelha API Tenancy Model)
+> 39	
+> 40	| # | Camada | Fonte | Permitido em |
+> 41	|---|--------|-------|--------------|
+> 42	| 1 | **Per-user** | `affiliate_config` WHERE `user_id = <owner>` AND `platform='mercadolivre'` AND `is_active=true` → `app_id` | SEMPRE (caminho primário) |
+> 43	| 2 | **Global vault fallback** | `Deno.env.get('GCRUX_ML_AFFILIATE_TOKEN')` / `ML_AFFILIATE_ID` | **PROIBIDO** em atribuição de receita user-facing. Reservado a cron/system/onboarding default explícito documentado. |
+> 44	| 3 | **Hard failure** | — | GET → 302 `Location: /dashboard/settings?no_config=1` · POST → HTTP 402 `{ error: "mercadolivre_not_configured", action: "Configure your Mercado Livre credentials at /dashboard/affiliates" }` |
+> 45	
+> 46	**Owner resolution (GET branch):** `contentVariantId` (= `mcorch_nodes.id`) → `node.user_id` → `affiliate_config` desse user. O redirect é público mas a receita pertence ao **dono do conteúdo**, não a quem clica.
+> 47	
+> 48	---
+> 49	
+> 50	## Sequence
+> 51	
+> 52	### GET branch (`handleGetRedirect`)
+> 53	1. Validar `product_id` + `content_variant_id` (400 se faltar).
+> 54	2. SELECT `mcorch_nodes.user_id` WHERE `id = content_variant_id`.
+> 55	3. Se `user_id` existe → SELECT `affiliate_config.app_id` per-user (camada 1).
+> 56	4. Se resolveu → 302 para `panel.gcrux.com/api/ml-redirect` com `affiliate_id=<app_id>` + UTMs + pulse `infra_health_logs status=healthy`.
+> 57	5. Se NÃO resolveu → 302 para `/dashboard/settings?no_config=1` + pulse `status=degraded reason=no_config` (camada 3). **Nunca** usar env global.
+> 58	
+> 59	### POST branch (monetize)
+> 60	1. JWT obrigatório → `user.id`.
+> 61	2. SELECT `affiliate_config.app_id` WHERE `user_id = user.id` (camada 1).
+> 62	3. Se NÃO resolveu → HTTP 402 estruturado (camada 3). **Não** cair em `ML_AFFILIATE_ID`.
+> 63	4. Se resolveu → probe + self-heal + INSERT `affiliate_links` + pulse `status=healthy`.
+> 64	
+> 65	---
+> 66	
+> 67	## Verification gates
+> 68	
+> 69	| Gate | Check | Pass criterion |
+> 70	|------|-------|----------------|
+> 71	| G1 | User COM config → POST monetize | HTTP 200 · `affiliate_url` contém `partner_id=<app_id>` · row em `affiliate_links` |
+> 72	| G2 | User SEM config → POST monetize | HTTP 402 · body `mercadolivre_not_configured` · ZERO row em `affiliate_links` |
+> 73	| G3 | Asset COM config → GET redirect | 302 `Location` contém `affiliate_id=<app_id>` (≠ token global) |
+> 74	| G4 | Asset SEM config → GET redirect | 302 `Location=/dashboard/settings?no_config=1` |
+> 75	| G5 | Telemetria | `infra_health_logs.service='affiliate-link-resolution'` recebe pulse em cada path (healthy/degraded) |
+> 76	| G6 | Zero global em path user-facing | `grep GCRUX_ML_AFFILIATE_TOKEN\|ML_AFFILIATE_ID` em `process-affiliate-link` → 0 refs em branch de atribuição |
+> 77	
+> 78	---
+> 79	
+> 80	## Recovery path
+> 81	
+> 82	| Cenário | Detecção | Recovery |
+> 83	|---------|----------|----------|
+> 84	| User reclama "link sem comissão" | `affiliate_links.metadata.affiliate_id` null | Verificar `affiliate_config` ativo do user; reprocessar após configurar |
+> 85	| GET 302 loop para settings | pulse `degraded reason=no_config` repetido | Confirmar que o asset tem `user_id` setado + config ativa do dono |
+> 86	| Regressão (global reintroduzido) | G6 falha em CI/grep | Reverter; global só em cron/system documentado |
+> 87	| `affiliate_config` lookup erro DB | `console.error` no edge log + pulse `status=error` | Fail-closed (camada 3), nunca fallback silencioso |
+> 88	
+> 89	---
+> 90	
+> 91	## Success signal (whole protocol)
+> 92	
+> 93	- G1–G6 verdes no smoke.
+> 94	- `process-affiliate-link` redeployado (script size + ACTIVE em `supabase functions list`).
+> 95	- `infra_health_logs.service='affiliate-link-resolution'` com pulses recentes (`last_seen_at` < 1h pós-smoke).
+> 96	- OTD-OE661-PER-USER fechada antes de 2026-06-02.
+> 97	
+> 98	---
+> 99	
+> 100	## Anti-patterns prohibited
+> 101	
+> 102	- ❌ `Deno.env.get('GCRUX_ML_AFFILIATE_TOKEN')` / `ML_AFFILIATE_ID` em branch de atribuição user-facing.
+> 103	- ❌ Construir affiliate URL com `affiliate_id=null` silenciosamente (atribuição perdida sem erro).
+> 104	- ❌ Fail-closed só quando token == placeholder literal (deixa o env global setado vazar).
+> 105	- ❌ Compartilhar receita/quota de um user com outro via credencial global (fraude por design).
+> 106	
+> 107	---
+> 108	
+> 109	## Connection to Survival Laws
+> 110	
+> 111	- **Lei 1 (Materialidade):** cada gate produz prova material (HTTP status + body + `affiliate_links` row + pulse UUID).
+> 112	- **Lei 2 (Anticipated Process):** este SOP escrito ANTES do refactor (requisito explícito da diretiva API Tenancy item 5).
+> 113	- **Lei 3 (Pruning):** resolução stateless por request; nada acumulado em contexto.
+> 114	- **Lei 4 (ORO):** triplet declarado acima; Reviewer = Sovereign aprova o diff antes do deploy.
+> 115	
+> ```
+
+## 🤖 Claude *(00:42:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts",
+  "offset": 74,
+  "limit": 91
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	  },
+> 75	];
+> 76	
+> 77	const ML_PRODUCT_BASE = "https://www.mercadolivre.com.br";
+> 78	
+> 79	/**
+> 80	 * Build a REAL Mercado Livre product URL carrying the affiliate attribution tag.
+> 81	 * `affiliateTag` is the ML affiliate "word" (e.g. caga6077534), applied via the
+> 82	 * documented `matt_word` param — NOT the OAuth app_id. There is no public API to
+> 83	 * mint `meli.la` short links (OTD-ML-001), so this is the best-effort programmatic
+> 84	 * attribution; definitive attribution requires the per-user panel short link.
+> 85	 */
+> 86	function buildAffiliateUrl(mlb: string, contentVariantId: string, affiliateTag: string): string {
+> 87	  const numeric = mlb.replace(/^MLB/i, "");
+> 88	  const u = new URL(`${ML_PRODUCT_BASE}/MLB-${numeric}`);
+> 89	  if (affiliateTag) u.searchParams.set("matt_word", affiliateTag);
+> 90	  u.searchParams.set("utm_source", "gcrux_orchestrator");
+> 91	  u.searchParams.set("utm_medium", "content_mesh");
+> 92	  u.searchParams.set("utm_campaign", "highticket_smarthome_q3");
+> 93	  u.searchParams.set("utm_content", contentVariantId);
+> 94	  return u.toString();
+> 95	}
+> 96	
+> 97	/** Ensure a product node exists in the mesh; return its id. */
+> 98	async function ensureProductNode(p: ProductMatch): Promise<string | null> {
+> 99	  const productName = `product:${p.mlb}`;
+> 100	  const { data: existing } = await supabase
+> 101	    .from("mcorch_nodes")
+> 102	    .select("id")
+> 103	    .eq("name", productName)
+> 104	    .maybeSingle();
+> 105	  if (existing) return existing.id;
+> 106	
+> 107	  if (DRY_RUN) {
+> 108	    console.log(`  [DRY] would create product node ${productName}`);
+> 109	    return null;
+> 110	  }
+> 111	
+> 112	  const { data: created, error } = await supabase
+> 113	    .from("mcorch_nodes")
+> 114	    .insert({
+> 115	      name: productName,
+> 116	      node_type: "feature",
+> 117	      content: `Product catalog entry — ${p.display} (${p.mlb}). High-ticket affiliate target.`,
+> 118	      metadata: { mlb: p.mlb, display: p.display, source: "link-forge" },
+> 119	      project_id: "mcorch-affiliate",
+> 120	    })
+> 121	    .select("id")
+> 122	    .single();
+> 123	  if (error) {
+> 124	    console.error(`  ERROR creating product node ${productName}:`, error.message);
+> 125	    return null;
+> 126	  }
+> 127	  return created.id;
+> 128	}
+> 129	
+> 130	async function ensureContainsLinkEdge(
+> 131	  contentNodeId: string,
+> 132	  productNodeId: string,
+> 133	): Promise<boolean> {
+> 134	  const { data: existing } = await supabase
+> 135	    .from("mcorch_edges")
+> 136	    .select("id")
+> 137	    .eq("source_id", contentNodeId)
+> 138	    .eq("target_id", productNodeId)
+> 139	    .eq("relation_type", "CONTAINS_LINK_FOR")
+> 140	    .limit(1);
+> 141	  if (existing && existing.length > 0) return false;
+> 142	
+> 143	  if (DRY_RUN) return true;
+> 144	
+> 145	  const { error } = await supabase.from("mcorch_edges").insert({
+> 146	    source_id: contentNodeId,
+> 147	    target_id: productNodeId,
+> 148	    relation_type: "CONTAINS_LINK_FOR",
+> 149	    weight: 1.0,
+> 150	  });
+> 151	  if (error) {
+> 152	    console.error("  ERROR inserting edge:", error.message);
+> 153	    return false;
+> 154	  }
+> 155	  return true;
+> 156	}
+> 157	
+> 158	async function insertNoConfigObservation(userId: string) {
+> 159	  const nodeName = `link-forge-no-config:${userId}`;
+> 160	  const { data: existing } = await supabase
+> 161	    .from("mcorch_nodes")
+> 162	    .select("id")
+> 163	    .eq("name", nodeName)
+> 164	    .maybeSingle();
+> ```
+
+## 🤖 Claude *(00:43:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "offset": 47,
+  "limit": 211
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 47	/** Append affiliate + UTM params without duplicating existing params */
+> 48	function buildAffiliateUrl(
+> 49	  url: string,
+> 50	  affiliateId: string | null,
+> 51	  campaignId: string,
+> 52	): string {
+> 53	  try {
+> 54	    const u = new URL(url);
+> 55	    if (affiliateId) u.searchParams.set("partner_id", affiliateId);
+> 56	    u.searchParams.set("utm_source", "mcorch");
+> 57	    u.searchParams.set("utm_medium", "social");
+> 58	    u.searchParams.set("utm_campaign", campaignId);
+> 59	    return u.toString();
+> 60	  } catch {
+> 61	    return url;
+> 62	  }
+> 63	}
+> 64	
+> 65	/** HEAD-probe a URL; 8 s timeout.
+> 66	 *  200/3xx = OK · 403 = geo-blocked but exists · 405 = HEAD not allowed but exists */
+> 67	async function probeUrl(url: string): Promise<boolean> {
+> 68	  try {
+> 69	    const ctrl = new AbortController();
+> 70	    const t = setTimeout(() => ctrl.abort(), 8_000);
+> 71	    const res = await fetch(url, {
+> 72	      method: "HEAD",
+> 73	      signal: ctrl.signal,
+> 74	      redirect: "follow",
+> 75	    });
+> 76	    clearTimeout(t);
+> 77	    return res.ok || res.status === 403 || res.status === 405;
+> 78	  } catch {
+> 79	    return false;
+> 80	  }
+> 81	}
+> 82	
+> 83	/** Search ML public API for a similar product and return its permalink */
+> 84	async function findSimilarProduct(keywords: string): Promise<string | null> {
+> 85	  if (!keywords.trim()) return null;
+> 86	  try {
+> 87	    const res = await fetch(
+> 88	      `${ML_SEARCH_BASE}?q=${encodeURIComponent(keywords)}&limit=1`,
+> 89	    );
+> 90	    if (!res.ok) return null;
+> 91	    const json = await res.json();
+> 92	    return (json?.results?.[0]?.permalink as string) ?? null;
+> 93	  } catch {
+> 94	    return null;
+> 95	  }
+> 96	}
+> 97	
+> 98	/** GET branch: public 302 redirect for Link Forge URLs.
+> 99	 *  Query: ?product_id=MLB...&content_variant_id=<uuid>
+> 100	 *  Redirects to panel.gcrux.com/api/ml-redirect (external endpoint). */
+> 101	async function handleGetRedirect(req: Request, adminClient: any): Promise<Response> {
+> 102	  const url = new URL(req.url);
+> 103	  const productId = url.searchParams.get("product_id");
+> 104	  const contentVariantId = url.searchParams.get("content_variant_id");
+> 105	  if (!productId || !contentVariantId) {
+> 106	    return new Response(
+> 107	      JSON.stringify({ error: "Missing product_id or content_variant_id" }),
+> 108	      {
+> 109	        status: 400,
+> 110	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 111	      },
+> 112	    );
+> 113	  }
+> 114	  // Per-user resolution ONLY — the content owner's affiliate_config decides attribution.
+> 115	  // No global GCRUX_ML_AFFILIATE_TOKEN fallback (API Tenancy Model — revenue must never
+> 116	  // leak across tenants; a click on user A's content must credit user A or fail closed).
+> 117	  let affiliateToken: string | null = null;
+> 118	
+> 119	  try {
+> 120	    const { data: node } = await adminClient
+> 121	      .from("mcorch_nodes")
+> 122	      .select("user_id")
+> 123	      .eq("id", contentVariantId)
+> 124	      .maybeSingle();
+> 125	
+> 126	    if (node && node.user_id) {
+> 127	      const { data: config } = await adminClient
+> 128	        .from("affiliate_config")
+> 129	        .select("app_id")
+> 130	        .eq("user_id", node.user_id)
+> 131	        .eq("platform", "mercadolivre")
+> 132	        .eq("is_active", true)
+> 133	        .maybeSingle();
+> 134	
+> 135	      if (config && config.app_id) {
+> 136	        affiliateToken = config.app_id;
+> 137	      }
+> 138	    }
+> 139	  } catch (err) {
+> 140	    console.error("[affiliate] GET redirect config lookup error:", err);
+> 141	    await pulse(adminClient, "error", `GET lookup error: ${(err as Error).message}`);
+> 142	  }
+> 143	
+> 144	  // Fail-closed: no per-user config → send the owner to settings, never use a shared token.
+> 145	  if (!affiliateToken) {
+> 146	    console.warn(`[affiliate] No per-user config for asset ${contentVariantId} — fail-closed.`);
+> 147	    await pulse(adminClient, "degraded", `GET no_config for asset ${contentVariantId}`);
+> 148	    return new Response(null, {
+> 149	      status: 302,
+> 150	      headers: { ...corsHeaders, Location: "https://login.mcorch.com/dashboard/settings?no_config=1" },
+> 151	    });
+> 152	  }
+> 153	
+> 154	  await pulse(adminClient, "healthy", `GET redirect resolved for asset ${contentVariantId}`);
+> 155	
+> 156	  const redirectUrl =
+> 157	    `https://panel.gcrux.com/api/ml-redirect?product_id=${productId}` +
+> 158	    `&affiliate_id=${affiliateToken}` +
+> 159	    `&utm_source=gcrux_orchestrator` +
+> 160	    `&utm_medium=content_mesh` +
+> 161	    `&utm_campaign=highticket_smarthome_q3` +
+> 162	    `&utm_content=${contentVariantId}`;
+> 163	  return new Response(null, {
+> 164	    status: 302,
+> 165	    headers: { ...corsHeaders, Location: redirectUrl },
+> 166	  });
+> 167	}
+> 168	
+> 169	serve(async (req) => {
+> 170	  if (req.method === "OPTIONS") {
+> 171	    return new Response("ok", { headers: corsHeaders });
+> 172	  }
+> 173	
+> 174	  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 175	  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 176	  const adminClient = createClient(supabaseUrl, serviceKey);
+> 177	
+> 178	  if (req.method === "GET") {
+> 179	    return await handleGetRedirect(req, adminClient);
+> 180	  }
+> 181	
+> 182	  if (req.method !== "POST") {
+> 183	    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+> 184	      status: 405,
+> 185	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 186	    });
+> 187	  }
+> 188	
+> 189	  try {
+> 190	    // POST: original monetization flow (auth + persist + self-heal)
+> 191	    const authHeader = req.headers.get("Authorization");
+> 192	    if (!authHeader) {
+> 193	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 194	        status: 401,
+> 195	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 196	      });
+> 197	    }
+> 198	
+> 199	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 200	    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 201	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 202	
+> 203	    const userClient = createClient(supabaseUrl, anonKey, {
+> 204	      global: { headers: { Authorization: authHeader } },
+> 205	    });
+> 206	
+> 207	    const {
+> 208	      data: { user },
+> 209	      error: authError,
+> 210	    } = await userClient.auth.getUser();
+> 211	    if (authError || !user) {
+> 212	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 213	        status: 401,
+> 214	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 215	      });
+> 216	    }
+> 217	
+> 218	    const { product_url, campaign_id, content_id } = await req.json();
+> 219	    if (!product_url || typeof product_url !== "string") {
+> 220	      return new Response(
+> 221	        JSON.stringify({ error: "product_url é obrigatório" }),
+> 222	        {
+> 223	          status: 400,
+> 224	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 225	        },
+> 226	      );
+> 227	    }
+> 228	
+> 229	    const effectiveCampaign =
+> 230	      (campaign_id as string | undefined)?.trim() || "ai_orchestration";
+> 231	    const adminClient = createClient(supabaseUrl, serviceKey);
+> 232	
+> 233	    const { data: config } = await adminClient
+> 234	      .from("affiliate_config")
+> 235	      .select("app_id")
+> 236	      .eq("user_id", user.id)
+> 237	      .eq("platform", "mercadolivre")
+> 238	      .eq("is_active", true)
+> 239	      .maybeSingle();
+> 240	
+> 241	    // Per-user resolution ONLY — no global ML_AFFILIATE_ID fallback (API Tenancy Model).
+> 242	    const affiliateId: string | null = (config?.app_id as string | null) ?? null;
+> 243	    if (!affiliateId) {
+> 244	      await pulse(adminClient, "degraded", `POST monetize no_config user ${user.id}`);
+> 245	      return new Response(
+> 246	        JSON.stringify({
+> 247	          error: "mercadolivre_not_configured",
+> 248	          action:
+> 249	            "Configure your Mercado Livre credentials at /dashboard/affiliates",
+> 250	        }),
+> 251	        {
+> 252	          status: 402,
+> 253	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 254	        },
+> 255	      );
+> 256	    }
+> 257	
+> ```
+
+## 🤖 Claude *(00:43:39)*
+
+
+## 🤖 Claude *(00:44:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "offset": 196,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 196	      });
+> 197	    }
+> 198	
+> 199	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 200	    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+> 201	    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> 202	
+> 203	    const userClient = createClient(supabaseUrl, anonKey, {
+> 204	      global: { headers: { Authorization: authHeader } },
+> 205	    });
+> 206	
+> 207	    const {
+> 208	      data: { user },
+> 209	      error: authError,
+> 210	    } = await userClient.auth.getUser();
+> 211	    if (authError || !user) {
+> 212	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 213	        status: 401,
+> 214	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 215	      });
+> 216	    }
+> 217	
+> 218	    const { product_url, campaign_id, content_id } = await req.json();
+> 219	    if (!product_url || typeof product_url !== "string") {
+> 220	      return new Response(
+> 221	        JSON.stringify({ error: "product_url é obrigatório" }),
+> 222	        {
+> 223	          status: 400,
+> 224	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 225	        },
+> 226	      );
+> 227	    }
+> 228	
+> 229	    const effectiveCampaign =
+> 230	      (campaign_id as string | undefined)?.trim() || "ai_orchestration";
+> 231	    const adminClient = createClient(supabaseUrl, serviceKey);
+> 232	
+> 233	    const { data: config } = await adminClient
+> 234	      .from("affiliate_config")
+> 235	      .select("app_id")
+> 236	      .eq("user_id", user.id)
+> 237	      .eq("platform", "mercadolivre")
+> 238	      .eq("is_active", true)
+> 239	      .maybeSingle();
+> 240	
+> 241	    // Per-user resolution ONLY — no global ML_AFFILIATE_ID fallback (API Tenancy Model).
+> 242	    const affiliateId: string | null = (config?.app_id as string | null) ?? null;
+> 243	    if (!affiliateId) {
+> 244	      await pulse(adminClient, "degraded", `POST monetize no_config user ${user.id}`);
+> 245	      return new Response(
+> 246	        JSON.stringify({
+> 247	          error: "mercadolivre_not_configured",
+> 248	          action:
+> 249	            "Configure your Mercado Livre credentials at /dashboard/affiliates",
+> 250	        }),
+> 251	        {
+> 252	          status: 402,
+> 253	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 254	        },
+> 255	      );
+> 256	    }
+> 257	
+> ```
+
+## 🤖 Claude *(00:44:11)*
+
+
+## 🤖 Claude *(00:44:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Callers de process-affiliate-link ===\"; grep -rn \"process-affiliate-link\" src/ supabase/ scripts/ 2>/dev/null | grep -v \"supabase/functions/process-affiliate-link/index.ts\"; echo \"\"; echo \"=== Schema affiliate_config (migrations) ===\"; grep -rln \"affiliate_config\" supabase/migrations/ 2>/dev/null",
+  "description": "Find callers and affiliate_config migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Callers de process-affiliate-link ===
+> src/pages/ContentLibraryPage.tsx:763:          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-affiliate-link`,
+> supabase/config.toml:40:[functions.process-affiliate-link]
+> supabase/migrations/20260530183000_affiliate_tag_per_user.sql:20:  'Mercado Livre affiliate attribution tag (matt_word), per-user. Applied to product URLs by link-forge.ts / process-affiliate-link. Not a secret: visible in public affiliate links. Definitive attribution still uses the per-user panel-generated meli.la short link (OTD-ML-001: ML has no public link-minting API).';
+> scripts/seed-mercado-livre-api-bok-seal.ts:40:VISÃO: três módulos soberanos, todos sob o API Tenancy Model (credencial per-user via auth.uid() → fallback vault restrito → hard failure 402/501). MÓDULO A (ML Core Afiliados, MVP): resolução real de item (/items/{id} + /sites/MLB/search, já usado em process-affiliate-link) + geração de short link de afiliado oficial (meli.la/...) com tag per-user (caga6077534 para Usuário Zero) + postback de receita (handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget). MÓDULO C (Mercado Pago per-user, v1.0): OAuth Connect per-user em nova tabela mercado_pago_config (RLS auth.uid(), RESTRICTIVE no-delete, token server-side only) + edge fns mercado-pago-oauth/webhook (x-signature HMAC). MÓDULO B (Global Selling, Future): catálogo cross-border USD via nova coluna vm_affiliate_products.currency. SKIP explícito de Mercado Envios (MR-ML-007 — MCORCH não faz envio físico).
+> scripts/seed-mercado-livre-api-bok-seal.ts:42:ARQUITETURA: extends-mcorch (não recria). process-affiliate-link + handle-ml-postback já em produção são estendidos; 1 tabela nova (mercado_pago_config) + 2 colunas (currency, affiliate_tag) + 3 edge fns novas (mercado-pago-oauth, mercado-pago-webhook, global-selling-sync). CISSP CBK elevado (perfil financeiro): STRIDE com 8 ameaças mapeadas, RLS default-deny + column-level em tokens, webhook signature validation, idempotência por order_id/payment_id.
+> scripts/seed-mercado-livre-api-bok-seal.ts:58:PRÓXIMO DELIVERABLE (post-seal): (a) /bok-agents-generator para o squad de agentes desta API (diretiva Sovereign); (b) resolver OTD-ML-001 contra developers.mercadolivre.com.br; (c) Módulo A MVP — estender process-affiliate-link para meli.la real + remover MLB placeholders de link-forge.ts; (d) Módulo C Mercado Pago per-user; (e) skill+agent por módulo (mandato Obstacle→Synthesis).`,
+> scripts/seed-mercado-livre-api-bok-seal.ts:102:    extended_edge_functions: 2, // process-affiliate-link, handle-ml-postback
+> 
+> === Schema affiliate_config (migrations) ===
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> supabase/migrations/20260530183000_affiliate_tag_per_user.sql
+> supabase/migrations/20260415204755_4af00c7d-3b24-4aa1-b57f-0be36a2e70b6.sql
+> supabase/migrations/20260527005036_soft_reset_account_rpc_v2.sql
+> supabase/migrations/20260415201855_59f77a3a-3611-478f-9e5f-a6f85690f270.sql
+> ```
+
+## 🤖 Claude *(00:44:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== vm_affiliate_products schema ===\"; grep -rln \"vm_affiliate_products\" supabase/migrations/ 2>/dev/null; echo \"\"; echo \"=== GET ?url= / redirect usage ===\"; grep -rn \"process-affiliate-link?url\\|/process-affiliate-link?\" src/ supabase/ scripts/ 2>/dev/null",
+  "description": "Find vm_affiliate_products schema and GET usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vm_affiliate_products schema ===
+> supabase/migrations/20260514040300_viralmind_affiliate_radar.sql
+> 
+> === GET ?url= / redirect usage ===
+> ```
+
+## 🤖 Claude *(00:44:23)*
+
+
+## 🤖 Claude *(00:44:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260501090000_affiliate_config.sql"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> File does not exist. Note: your current working directory is /home/gcrUX/htdocs/constellation-orchestra.
+> ```
+
+## 🤖 Claude *(00:44:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"vm_affiliate_products\" supabase/migrations/20260514120000_viralmind_schema.sql | head -5; echo \"=== columns block ===\"; awk '/CREATE TABLE.*vm_affiliate_products/,/\\);/' supabase/migrations/20260514120000_viralmind_schema.sql",
+  "description": "Read vm_affiliate_products table definition"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> ugrep: warning: supabase/migrations/20260514120000_viralmind_schema.sql: No such file or directory
+> === columns block ===
+> awk: fatal: cannot open file `supabase/migrations/20260514120000_viralmind_schema.sql' for reading: No such file or directory
+> ```
+
+## 🤖 Claude *(00:46:13)*
+
+
+## 🤖 Claude *(00:46:14)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "OTD-OE661-PER-USER refactor",
+  "summary": "Per-user affiliate credential resolution: SOP expansion + link-forge.ts + process-affiliate-link edge"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ❌ Error
+>
+> ```
+> <tool_use_error>Cancelled: parallel tool call Bash(grep -n "vm_affiliate_products" supabase…) errored</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:46:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== tsconfig include/exclude (link-forge in scope?) ===\"; cat tsconfig.json 2>/dev/null | grep -A20 '\"include\"\\|\"exclude\"\\|\"references\"' | head -40; echo \"=== scripts in any tsconfig? ===\"; grep -rn \"scripts\" tsconfig*.json 2>/dev/null; echo \"=== SOVEREIGN_USER_ID j\u00e1 usado em algum lugar? ===\"; grep -rn \"SOVEREIGN_USER_ID\" . --include=\"*.ts\" --include=\"*.sh\" 2>/dev/null | grep -v node_modules | head",
+  "description": "Check tsconfig scope and existing SOVEREIGN_USER_ID usage"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> <tool_use_error>Cancelled: parallel tool call Bash(grep -n "vm_affiliate_products" supabase…) errored</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:46:28)*
+
+
+## 🤖 Claude *(00:46:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== tsconfig.json ===\"; cat tsconfig.json 2>/dev/null; echo \"\"; echo \"=== .env presence (keys only, no values) ===\"; [ -f .env ] && grep -oE '^[A-Z_]+=' .env | sort || echo \"no .env\"",
+  "description": "Read tsconfig and list .env keys"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> <tool_use_error>Cancelled: parallel tool call Bash(grep -n "vm_affiliate_products" supabase…) errored</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:46:38)*
+
+---
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-31 - Seal meta-api BoK suite and test robustness]]
+> * **Próxima Sessão**: [[2026-06-01 - Fix tenant isolation in edge functions]]
+%% --- TIMELINE END --- %%
