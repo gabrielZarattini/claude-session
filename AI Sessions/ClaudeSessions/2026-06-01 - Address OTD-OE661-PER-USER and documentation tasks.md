@@ -8757,5 +8757,5 @@ Tudo no origin agora é **material e verificado**. Pronto pro próximo passo qua
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]
-> * **Próxima Sessão**: [[2026-06-01 - Fix tenant isolation in edge functions]]
+> * **Próxima Sessão**: [[2026-06-01 - Fix affiliate redirect link to Mercado Livre product]]
 %% --- TIMELINE END --- %%

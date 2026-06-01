@@ -7292,6 +7292,247 @@ Tudo selado e pushed. Tree limpo. Ajustando o tracker (Stream C: readiness feito
 
 Dois brindes não-planejados que fortaleceram o ecossistema: a suíte saiu de 2 falhas crônicas (chave revogada) para **verde** com os smokes pagos devidamente gateados, e o Phase 5c provou seu valor bloqueando o seal até cada claim bater. **Mate a poesia, entregue engenharia.** 🛡️
 
+## 👤 User *(19:08:28)*
+
+Apareceu um tarefa sugerida, não entendi pois apareceu assi mque eu solicitei o handoff.:
+
+Tarefa sugerida
+Fix canvas-video-async-smoke.test.ts live-auth 401
+`src/test/canvas-video-async-smoke.test.ts` has 2 failing tests in the vitest suite. The failure is `AuthApiError status 401` on `supabase.auth.admin.generateLink({ type: "magiclink", email: "gabrielcall@gmail.com" })` at ~line 54 (`expect(linkErr).toBeNull()` fails).
+
+Root cause is almost certainly the 2026-06-01 Supabase key migration: the legacy `SUPABASE_SERVICE_ROLE_KEY` (HS256 signing key) was REVOKED in favor of `SB_SECRET_KEY`. The test (or its setup) builds an admin client with the old/dead key → 401 on every admin auth call. Confirm by checking which env var the test's admin client uses.
+
+Fix options (pick the cleanest):
+1. Update the test/setup to read `SB_SECRET_KEY` (fallback to `SUPABASE_SERVICE_ROLE_KEY`) — mirror the pattern already used in `supabase/functions/higgsfield-webhook/index.ts:126` and `canvas-execute/index.ts:128`.
+2. If the test is a live-integration smoke that shouldn't run in unit CI without creds, guard it: `describe.skipIf(!process.env.SB_SECRET_KEY)` so it skips cleanly when admin creds are absent instead of failing red.
+
+Verify with: `bun run test src/test/canvas-video-async-smoke.test.ts`. Goal: suite goes from "2 failed | 224 passed" to all green (or cleanly skipped). This is pre-existing debt unrelated to the e2e-user-zero work; surfaced via a git-stash baseline on 2026-06-01.
+
+---
+
+Cliquei e foi aberta uma nova sessão
+
+## 🤖 Claude *(19:08:54)*
+
+
+## 🤖 Claude *(19:08:58)*
+
+Ah, entendo a confusão — deixa eu esclarecer, porque essa tarefa **já está resolvida** e a nova sessão é redundante.
+
+**O que era aquele chip:** mais cedo nesta sessão, quando eu *descobri* os 2 testes falhando (`canvas-video-async-smoke` + a auditoria material), eu disparei um `spawn_task` — um lembrete clicável pra tratar essa dívida pré-existente numa sessão separada. Foi criado **antes** de eu decidir consertar inline. Quando você clicou, ele abriu uma sessão nova com aquele briefing (que reflete o estado *daquele momento*: "2 failed").
+
+**Mas eu já consertei durante o `/handoff`** — e melhor do que o chip sugeria. Deixa eu provar materialmente que está verde agora:
+
+## 🤖 Claude *(19:09:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"$(git rev-parse --show-toplevel)\"\necho \"=== o teste que o chip menciona, rodado AGORA ===\"\nbun run test src/test/canvas-video-async-smoke.test.ts 2>&1 | grep -E \"Test Files|Tests |skipped|failed|\u2193\" | tail -6\necho \"=== o commit que resolveu (j\u00e1 no origin/main) ===\"\ngit log --oneline | grep -i \"RUN_LIVE_SMOKE\" | head -1",
+  "description": "Confirm the spawned-task issue is already fixed (test skips cleanly)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o teste que o chip menciona, rodado AGORA ===
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+>  Test Files  1 skipped (1)
+>       Tests  1 skipped (1)
+> === o commit que resolveu (já no origin/main) ===
+> 0c5eefd fix(tests): gateia smokes live (canvas pago + sql-bridge) atrás de RUN_LIVE_SMOKE
+> ```
+
+## 🤖 Claude *(19:09:12)*
+
+
+## 🤖 Claude *(19:09:24)*
+
+Pronto — **prova material**: o teste agora **skipa limpo** (`1 skipped`, 0 failed), e o commit `0c5eefd` que resolveu já está no `origin/main`. O estado "2 failed" descrito no chip é uma **foto antiga** (de antes do conserto).
+
+## O que aconteceu, em resumo
+
+- **O chip foi criado por mim, no meio da sessão**, no instante em que descobri os testes falhando — como um lembrete "trate isso depois, em sessão separada". Ele guarda o briefing *daquele momento*.
+- **Depois, no `/handoff`, eu consertei inline** (commit `0c5eefd`) — e de um jeito **melhor** do que o próprio chip sugeria:
+  - A opção 1 do chip (só repontar pra `SB_SECRET_KEY`) tinha um **footgun**: faria o teste *autenticar* e então **disparar uma geração de vídeo PAGA do Higgsfield a cada `bun run test`**. Gasto real, silencioso.
+  - O que fiz: **gatear por `RUN_LIVE_SMOKE`** (skipa no `bun run test` default → suíte verde, zero gasto) **+** repontar a chave (pra funcionar quando você roda de propósito: `RUN_LIVE_SMOKE=1 bun run test ...`). Apliquei nos **dois** smokes live (canvas + sql-bridge).
+- O Phase 5c do handoff só liberou o seal **depois** que a suíte ficou verde por causa disso.
+
+## O que fazer com a sessão nova
+
+**Pode fechar/descartar** — não há nada a fazer lá. Se ela rodar o `bun run test`, vai encontrar a suíte já verde (224 passed / 2 skipped / 0 failed) e concluir "nada a corrigir". Era trabalho que eu adiantei.
+
+> Mecânica do chip pra referência: esses "Tarefas sugeridas" são fire-and-forget — clicar abre uma sessão fresca num worktree isolado. Quando eu resolvo a coisa inline antes do fim da sessão (como agora), o chip vira redundante e o certo é dispensá-lo. Da próxima vez que eu disparar um, se eu mesmo fechar a pendência no caminho, eu te aviso explicitamente no seal pra você não clicar à toa.
+
+Quer que eu faça mais alguma coisa, ou seguimos para o **Stream C** (a campanha real) quando você tiver tópico/produto + o GO?
+
+## 👤 User *(19:10:24)*
+
+e a resposta na outra sessão da terefa sugerida foi.:
+
+I'll start by reading the failing test file and the reference patterns to confirm the root cause.
+
+The file I'm reading already differs from what the task describes. The task says there are **2 failing tests** with the admin client using a dead key, but the current file at lines 21-24 **already** uses `SB_SECRET_KEY` with fallback, and the whole suite is **already** gated behind `describe.skipIf(!process.env.RUN_LIVE_SMOKE)` at line 37 — with only **one** `it()` test, not two.
+
+This looks already-fixed. Before concluding anything, I'll verify materially: run the test and check the git history for this file.
+
+The git history reveals this is **already fixed**. Commit `0c5eefd fix(tests): gateia smokes live (canvas pago + sql-bridge) atrás de RUN_LIVE_SMOKE` — the second-most-recent commit on `main` — already applied exactly the fix the task describes (option 2: gate behind `RUN_LIVE_SMOKE`), and commit `b127656`/the SB_SECRET_KEY line already handles the key migration (option 1). Working tree is clean.
+
+The task description matches the **pre-`0c5eefd` baseline** (the "git-stash baseline on 2026-06-01" it mentions). Let me verify materially that current `main` is green by running the test.
+
+The test now **cleanly skips** (`1 test | 1 skipped`, 0 failures) — the 401 is gone because the suite is gated behind `RUN_LIVE_SMOKE` and the admin client already reads `SB_SECRET_KEY`. Both fix options from the task are already in `main`.
+
+Let me confirm the **full** suite is green (the task's real goal — from "2 failed | 224 passed" to all green):
+
+Full suite is green: **224 passed | 2 skipped (226)**, zero failures. The arithmetic confirms the exact transition the task wanted — the 2 tests that were failing red (the two **live smokes**: `canvas-video-async-smoke` + `aios-sql-bridge-smoke`) are now the 2 that cleanly skip. Let me confirm there are no hidden FAIL markers (that stack-trace fragment at the top warrants a check):
+
+Confirmado — nenhum marcador de falha. A suíte está totalmente verde.
+
+## Diagnóstico: o débito já estava sanado em `main`
+
+A correção que a tarefa pede **já está aplicada** no HEAD atual (`865ded6`). A descrição da tarefa reflete a baseline **anterior** ao commit `0c5eefd` (o "git-stash baseline" mencionado). Verifiquei materialmente em vez de reaplicar um fix redundante.
+
+**O que encontrei no arquivo atual (`src/test/canvas-video-async-smoke.test.ts`):**
+- **Linha 23** — admin client já lê a chave canônica com fallback: `process.env.SB_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY` *(opção 1 da tarefa — migração de chave)*.
+- **Linha 37** — a suíte inteira já está gated: `describe.skipIf(!process.env.RUN_LIVE_SMOKE)(...)` *(opção 2 da tarefa — guard de smoke live)*. É um único `it()`, não dois.
+
+**Commit que selou isso:** `0c5eefd fix(tests): gateia smokes live (canvas pago + sql-bridge) atrás de RUN_LIVE_SMOKE` — penúltimo commit em `main`.
+
+## Prova material (Lei 1)
+
+| Gate | Comando | Output literal |
+|------|---------|----------------|
+| Arquivo isolado | `bun run test src/test/canvas-video-async-smoke.test.ts` | `1 test \| 1 skipped` — 0 falhas |
+| Suíte completa | `bun run test` | **`Test Files 14 passed \| 2 skipped (16)` · `Tests 224 passed \| 2 skipped (226)`** |
+| Scan de falhas | `grep -E "FAIL\|✗\|❯\|failed"` | `NO FAILURE MARKERS FOUND` |
+| Working tree | `git status --short` | (limpo) |
+
+A aritmética bate exatamente com o alvo: os **2 que falhavam em vermelho** (os dois smokes *live* — `canvas-video-async-smoke` + `aios-sql-bridge-smoke`, ambos batem em Supabase/Higgsfield reais) agora são os **2 que pulam limpos**. `224 passed | 2 skipped` = 226 total, idêntico ao `2 failed | 224 passed` da baseline, sem nenhum vermelho.
+
+## Conclusão
+
+**Nenhuma mudança de código necessária** — o `AuthApiError 401` no `generateLink` não pode mais ocorrer no `bun run test` default porque o bloco é pulado antes de instanciar o admin client, e mesmo sob `RUN_LIVE_SMOKE=1` o client agora usa `SB_SECRET_KEY`. O objetivo da tarefa (suíte all-green) já está satisfeito pelos commits `b127656` + `0c5eefd`. Não fabriquei um fix nem commitei nada redundante — só verifiquei e reportei o estado real.
+
+## 🤖 Claude *(19:10:53)*
+
+
+## 🤖 Claude *(19:10:56)*
+
+Perfeito — a outra sessão chegou **exatamente à mesma conclusão**, e do jeito certo: ela **verificou materialmente em vez de reaplicar** um fix redundante (Lei 1 na veia — "não fabriquei um fix nem commitei nada redundante"). Isso é o comportamento ideal de um agente: bater o estado real antes de agir. Confirmação independente de que `main` está verde. ✅
+
+Só um detalhe de precisão pra deixar o registro limpo — a outra sessão citou um commit `b127656` pra a linha do `SB_SECRET_KEY`. Deixa eu conferir, porque na minha sessão o repoint da chave **e** o gate foram no mesmo commit (`0c5eefd`):
+
+## 🤖 Claude *(19:11:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"$(git rev-parse --show-toplevel)\"\necho \"=== b127656 existe? ===\"\ngit cat-file -t b127656 2>/dev/null && git log --oneline -1 b127656 2>/dev/null || echo \"b127656 N\u00c3O existe no repo (prov\u00e1vel atribui\u00e7\u00e3o equivocada da outra sess\u00e3o)\"\necho \"=== o que 0c5eefd realmente mudou (key + gate juntos?) ===\"\ngit show 0c5eefd --stat --format=\"%h %s\" | head -8\necho \"=== linhas do canvas test tocadas em 0c5eefd ===\"\ngit show 0c5eefd -- src/test/canvas-video-async-smoke.test.ts | grep -E \"^\\+\" | grep -iE \"SB_SECRET_KEY|skipIf|RUN_LIVE_SMOKE\" | head",
+  "description": "Verify b127656 existence + confirm 0c5eefd contains both key repoint and gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === b127656 existe? ===
+> commit
+> b127656 test: update canvas video async smoke tests
+> === o que 0c5eefd realmente mudou (key + gate juntos?) ===
+> 0c5eefd fix(tests): gateia smokes live (canvas pago + sql-bridge) atrás de RUN_LIVE_SMOKE
+> 
+>  src/test/aios-sql-bridge-smoke.test.ts    | 8 ++++++--
+>  src/test/canvas-video-async-smoke.test.ts | 9 +++++++--
+>  2 files changed, 13 insertions(+), 4 deletions(-)
+> === linhas do canvas test tocadas em 0c5eefd ===
+> +// SB_SECRET_KEY is canonical (legacy SUPABASE_SERVICE_ROLE_KEY was REVOKED 2026-06-01).
+> +const serviceRoleKey = process.env.SB_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+> +// Gated behind RUN_LIVE_SMOKE so the default `bun run test` skips it (no spend, no
+> +//   RUN_LIVE_SMOKE=1 bun run test src/test/canvas-video-async-smoke.test.ts
+> +describe.skipIf(!process.env.RUN_LIVE_SMOKE)("Canvas Video Async Execution E2E Smoke Test", () => {
+> ```
+
+## 🤖 Claude *(19:11:18)*
+
+
+## 🤖 Claude *(19:11:27)*
+
+Conferido — e a honestidade material me corrige: **`b127656` existe sim** ("test: update canvas video async smoke tests", commit mais antigo que tocou esse arquivo). Então a outra sessão **não alucinou** — eu é que suspeitei errado. O único ajuste fino: o repoint pra `SB_SECRET_KEY` **e** o gate `RUN_LIVE_SMOKE` vieram **juntos no `0c5eefd`** (minha sessão, confirmado no `git show` acima) — a outra sessão emparelhou a linha do `SB_SECRET_KEY` com o `b127656`, o que é trivial e não muda nada. A conclusão dela está **100% correta**.
+
+## Resumo final desta confusão
+
+- **Os dois lados concordam** + a prova material concorda: `main` (HEAD `865ded6`) está verde — `224 passed / 2 skipped / 0 failed`. A dívida que o chip descrevia **já estava sanada** antes de você clicar.
+- A outra sessão fez o certo: **verificou e reportou, não recommitou nada redundante**. Working tree dela limpo, zero mudança.
+- **Ação:** pode fechar/descartar aquela sessão com tranquilidade — não há nada pendente lá.
+
+Nada a fazer em nenhuma das duas sessões sobre isso. O estado real é exatamente o que selei no `/handoff`.
+
+Quando quiser, seguimos para o **Stream C** (a campanha real de afiliado) — é só me passar **tópico + produto ML** e o **GO**, que eu deployo o `higgsfield-webhook`, rodo o `orchestrate-content` e te mantenho no loop em cada passo que publica ou gasta. 🛡️
+
+## 👤 User *(19:11:48)*
+
+então não é necessário handoff aqui nem na nova sessão da tarefa sugerida?
+
+## 🤖 Claude *(19:12:10)*
+
+
+## 🤖 Claude *(19:12:11)*
+
+Correto — **nenhum dos dois precisa de `/handoff`**. Deixa eu confirmar materialmente antes de afirmar (essa decisão é sua, então não vou no "achismo"):
+
+## 🤖 Claude *(19:12:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"$(git rev-parse --show-toplevel)\"\necho \"=== working tree desta sess\u00e3o ===\"\ngit status --short && echo \"(LIMPO \u2014 nada n\u00e3o-commitado)\"\necho \"=== HEAD atual (deve ser o seal 865ded6, nada novo depois) ===\"\ngit log --oneline -1\necho \"=== local vs origin sincronizados? ===\"\ngit rev-list --count HEAD..origin/main 2>/dev/null | sed 's/^/atr\u00e1s de origin: /'\ngit rev-list --count origin/main..HEAD 2>/dev/null | sed 's/^/\u00e0 frente de origin: /'",
+  "description": "Confirm this session is fully sealed and synced \u2014 nothing new to handoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree desta sessão ===
+> (LIMPO — nada não-commitado)
+> === HEAD atual (deve ser o seal 865ded6, nada novo depois) ===
+> 865ded6 chore(sprint): selo v6.19.0 — e2e-user-zero v2 + 3-stream sweep (suíte verde, 8747 nós)
+> === local vs origin sincronizados? ===
+> atrás de origin: 0
+> à frente de origin: 0
+> ```
+
+## 🤖 Claude *(19:12:28)*
+
+
+## 🤖 Claude *(19:12:38)*
+
+Confirmado materialmente — **nenhum `/handoff` é necessário em nenhuma das duas.**
+
+| | Estado | Precisa `/handoff`? |
+|---|---|---|
+| **Esta sessão** | Já selada: HEAD `865ded6`, tree **limpo**, **0 atrás / 0 à frente** do origin. Tudo depois do seal foi só verificação read-only + conversa (zero mudança). | ❌ Não — seria um seal **vazio** |
+| **Sessão da tarefa sugerida** | Fez **zero mudanças** (só verificou, nada commitado, tree limpo). | ❌ Não — não há trabalho pra selar |
+
+## O princípio (pra você ter a regra)
+
+O `/handoff` existe pra **selar trabalho**: transformar mudanças não-commitadas em commits granulares + nó de milestone na malha + atualizar o HANDOFF.md. A lógica é simples:
+
+- **Tem mudança não-commitada / trabalho novo?** → `/handoff` sela.
+- **Nada mudou (ou já foi selado)?** → não há o que selar; um `/handoff` só geraria ruído (um Record vazio, um nó de milestone sem substância).
+
+A sessão da tarefa sugerida é o exemplo perfeito disso: ela fez a coisa **certa** ao *não* commitar nada redundante — e justamente por isso não há nada pra selar. É só **fechar/descartar**.
+
+E esta sessão aqui já passou pelo ritual completo (8 commits, nó `59f92fe0` embedded, Phase 5c SEAL ALLOWED, push). Está **lacrada**.
+
+---
+
+**Resumindo:** pode fechar a sessão da tarefa sugerida sem cerimônia, e aqui não rode `/handoff` de novo. O próximo `/handoff` só faz sentido quando produzirmos trabalho novo — que seria o **Stream C** (a campanha real), quando você me passar **tópico + produto ML + GO**. Aí sim teremos algo material pra selar. 🛡️
+
 ---
 
 %% --- TIMELINE START --- %%

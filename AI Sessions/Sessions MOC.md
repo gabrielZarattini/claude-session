@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 239
-> * **Sessões do Claude**: 209
+> * **Total de Sessões Registradas**: 241
+> * **Sessões do Claude**: 211
 > * **Sessões do Gemini**: 30
 
 ---
@@ -19,6 +19,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ## 📂 Tópicos e Categorias Principais
 
 ### Supabase & Database
+*   `[[2026-06-01 - Fix failing smoke test Supabase auth key migration]]` - *2026-06-01*
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` - *2026-05-01*
 
 ### JWT & Authentication
@@ -61,11 +62,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
 *   `[[2026-06-01 - Resolve priority alerts]]` - *2026-06-01*
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
+*   `[[2026-06-01 - Fix affiliate redirect link to Mercado Livre product]]` - *2026-06-01*
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` - *2026-06-01*
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` - *2026-06-01*
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` - *2026-06-01*
-*   `[[2026-05-31 - handson]]` - *2026-05-31*
-*   *... e mais 205 sessões nessa categoria.*
+*   *... e mais 206 sessões nessa categoria.*
 
 ---
 
@@ -262,6 +263,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - Resolve priority alerts]]` (ClaudeSessions)
 *   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` (ClaudeSessions)
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
+*   `[[2026-06-01 - Fix failing smoke test Supabase auth key migration]]` (ClaudeSessions)
+*   `[[2026-06-01 - Fix affiliate redirect link to Mercado Livre product]]` (ClaudeSessions)
 *   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` (ClaudeSessions)
 *   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` (ClaudeSessions)
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)

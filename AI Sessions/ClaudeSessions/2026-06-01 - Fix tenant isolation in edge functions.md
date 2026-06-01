@@ -6391,6 +6391,6 @@ Quando quiser retomar, o caminho natural é o **MÓDULO C** — e ele merece spe
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]
+> * **Sessão Anterior**: [[2026-06-01 - Fix failing smoke test Supabase auth key migration]]
 > * **Próxima Sessão**: [[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]
 %% --- TIMELINE END --- %%
