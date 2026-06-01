@@ -3830,6 +3830,786 @@ Eu **seguro os commits da Fase 3** — não vou empilhar commits numa `main` com
 
 Assim que a rotação estiver feita, eu disparo: remoção coordenada → 2 commits da fundação → components.
 
+## 👤 User *(05:06:06)*
+
+rotacionei a secret agora é.: sb_secret_kqkmpGUZlU3BqHv1ALdIFg_W4RlCgKW
+
+Ja removi a default antiga. mas ainda não consegui rotacionar a service_role
+secret. eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjeXZkZHN5a3ZlaHZwd3N0bGZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjI5MjA5MiwiZXhwIjoyMDkxODY4MDkyfQ.RLtcgAKJjXjbTS52-kzEmEk8V11IrOFSoDzAzWM-QfE
+
+Tem a mesangem.: This key has the ability to bypass Row Level Security. Never share it publicly. If leaked, generate a new JWT secret immediately. Prefer using Secret API keys instead.
+
+mas ja removi a antiga secret e criei essa que enviei agora
+
+## 🤖 Claude *(05:07:16)*
+
+
+## 🤖 Claude *(05:07:21)*
+
+⚠️ Primeiro, um aviso importante: **você acabou de colar duas chaves aqui no chat** — inclusive a nova `sb_secret_…`, que **não estava exposta antes**. Eu não vou gravá-las em arquivo nenhum, mas o transcript desta conversa passa a contê-las. Trate a `sb_secret_` nova como "tocada" e considere rotacioná-la de novo depois que tudo estiver no lugar. **Não cole chaves vivas no chat** — referencie por nome (`.env`, vault).
+
+Agora o ponto crítico que preciso esclarecer: **criar a `sb_secret_` nova NÃO mata a `service_role` JWT vazada.** São dois sistemas (API keys novas vs JWT legado). A mensagem do Supabase confirma: pra invalidar a legada é *"generate a new JWT secret"*. Você disse que ainda não conseguiu rotacionar a service_role — então a chave vazada provavelmente **ainda está viva**. Deixa eu confirmar materialmente agora:
+
+## 🤖 Claude *(05:07:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nKEY=$(git show 279801b:supabase/migrations/20260503120000_embed_on_insert_trigger.sql 2>/dev/null | grep -oE \"eyJ[A-Za-z0-9._-]+\" | head -1)\necho \"=== re-probe da service_role JWT VAZADA (legada) ===\"\ncode=$(curl -s -o /dev/null -w \"%{http_code}\" -m 15 \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null)\necho \"HTTP $code  \u2192  $([ \"$code\" = \"200\" ] || [ \"$code\" = \"206\" ] && echo '\ud83d\udd34 AINDA VIVA \u2014 a chave vazada continua v\u00e1lida (criar sb_secret_ n\u00e3o a matou)' || echo '\u2705 MORTA (401/403) \u2014 legada invalidada')\"",
+  "description": "Re-probe leaked legacy service_role JWT after user created new sb_secret key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-probe da service_role JWT VAZADA (legada) ===
+> HTTP 200  →  🔴 AINDA VIVA — a chave vazada continua válida (criar sb_secret_ não a matou)
+> ```
+
+## 🤖 Claude *(05:08:09)*
+
+
+## 🤖 Claude *(05:08:12)*
+
+**Confirmado e crítico: a chave vazada AINDA está viva — `HTTP 200` agora mesmo.** Criar a `sb_secret_` nova **não fechou o vazamento**. São dois sistemas separados:
+
+- **API keys novas** (`sb_publishable_…` / `sb_secret_…`) — o que você criou.
+- **JWT legado** (`anon` + `service_role` `eyJ…`) — onde a chave vazada vive. **Continua válida** até você invalidar o JWT legado.
+
+A própria mensagem do Supabase diz: *"generate a new JWT secret"* — é isso que mata a vazada. Deixa eu mapear o que **quebra** quando você fizer isso, pra você migrar sem derrubar nada:
+
+## 🤖 Claude *(05:08:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nH=$(git rev-parse HEAD)\necho \"=== quem usa qual chave (tracked, HEAD) ===\"\ngit grep -nE \"SUPABASE_SERVICE_ROLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY\" $H -- 'src' 'scripts' 'supabase/functions' 2>/dev/null | sed -E 's/:[0-9]+:/: /' | sort -u | head -40\necho\necho \"=== frontend client (publishable \u00e9 legado anon ou sb_publishable?) ===\"\ngit show $H:src/integrations/supabase/client.ts 2>/dev/null | grep -nE \"PUBLISHABLE|ANON|createClient|supabaseKey|http\" | head\necho\necho \"=== edge functions hardcodam service_role? (deveriam ler do env auto-injetado) ===\"\ngit grep -lE \"SUPABASE_SERVICE_ROLE_KEY\" $H -- 'supabase/functions' 2>/dev/null | wc -l",
+  "description": "Inventory which keys the codebase uses to plan safe migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem usa qual chave (tracked, HEAD) ===
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh:   COST=$(curl -s -X POST "$SUPA_URL/rest/v1/rpc/calc_agent_cost_mcoin" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -d "{\"p_tokens_in\":$TI,\"p_tokens_out\":$TO,\"p_provider\":\"groq\",\"p_model\":\"llama-3.3-70b-versatile\"}")
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh:   curl -s -X PATCH "$SUPA_URL/rest/v1/agent_executions?id=eq.$EXEC_ID" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -d "$UPDATE_BODY" > /dev/null
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh:     curl -s -X PATCH "$SUPA_URL/rest/v1/agent_executions?id=eq.$EXEC_ID" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -d '{"status":"failed"}' > /dev/null
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh: curl -s -X POST "$SUPA_URL/rest/v1/infra_health_logs" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Content-Type: application/json" -d "{\"service\":\"agent-daily-pulse\",\"status\":\"healthy\",\"last_seen_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > /dev/null
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh: DIRS=$(curl -s "$SUPA_URL/rest/v1/crew_agents?user_id=eq.$SOV&role=eq.Director&select=id,name,squad" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh: GROQ_KEY=$(curl -s "$SUPA_URL/rest/v1/user_api_keys?user_id=eq.$SOV&select=groq_api_key" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['groq_api_key'])")
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/agent-daily-pulse.sh:     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/audit-mesh-edges.js: const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/audit-mesh-edges.ts: const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/auto-publish-cron.sh:     echo "[${DATE}] ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set"
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/auto-publish-cron.sh:     -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/auto-publish-cron.sh: if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-ast-embeddings.ts:   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-ast-embeddings.ts: const SERVICE_KEY     = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-ast-embeddings.ts:  *   SUPABASE_SERVICE_ROLE_KEY
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-embeddings.ts:   console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-embeddings.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-embeddings.ts:  *   SUPABASE_SERVICE_ROLE_KEY
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-node-content.ts:   console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-node-content.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/backfill-node-content.ts:  * Requires .env with: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/bridge-mesh-to-openclaw.ts:   console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/bridge-mesh-to-openclaw.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/bridge-mesh-to-openclaw.ts:  * Requires .env with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-backfill-edge-handles.ts: const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-backfill-edge-handles.ts:   if (!SUPABASE_URL || (!SERVICE_ROLE_KEY_LEGACY && !SUPABASE_SERVICE_ROLE_KEY)) {
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-backfill-edge-handles.ts:   SERVICE_ROLE_KEY_LEGACY || SUPABASE_SERVICE_ROLE_KEY as string,
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-campaign-build.ts: const PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-campaign-build.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-video-watchdog.sh: APIKEY_HEADER="apikey: ${SUPABASE_SERVICE_ROLE_KEY}"
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-video-watchdog.sh: AUTH_HEADER="Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-video-watchdog.sh: if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/canvas-video-watchdog.sh:     log "ERROR: SUPABASE_SERVICE_ROLE_KEY not set — aborting"
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/check-node-revenue.cjs: const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/check-node-status.cjs: const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/compose-morning-briefing.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/design-bridge.ts:   console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/design-bridge.ts: const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/genesis-agents.ts: const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+> 279801bdaf71f2bb7ce5203bd94c6c1df52e6f2d:scripts/ingest-codebase.ts:   console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+> 
+> === frontend client (publishable é legado anon ou sb_publishable?) ===
+> 2:import { createClient } from '@supabase/supabase-js';
+> 6:const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+> 11:export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+> 
+> === edge functions hardcodam service_role? (deveriam ler do env auto-injetado) ===
+> 47
+> ```
+
+## 🤖 Claude *(05:08:58)*
+
+
+## 🤖 Claude *(05:09:00)*
+
+Inventário claro: **~47 edge functions** + dezenas de scripts/crons usam a `service_role` legada (via env). Vou ver o que seu `.env` já tem (prefixos, redatado) pra te dar o caminho exato com o mínimo de quebra:
+
+## 🤖 Claude *(05:09:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== prefixos das chaves no .env (classificar legado eyJ vs novo sb_) ===\"\ncommand grep -E \"^(VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_SERVICE_ROLE_KEY|VITE_SUPABASE_ANON_KEY|SUPABASE_ANON_KEY)=\" .env 2>/dev/null | sed -E 's/=(.{12}).*/= \\1\u2026(redacted)/' || echo \"(n\u00e3o consegui ler .env)\"\necho\necho \"=== .env SERVICE_ROLE ainda == a chave vazada? ===\"\nLEAK=$(git show 279801b:supabase/migrations/20260503120000_embed_on_insert_trigger.sql 2>/dev/null | grep -oE \"eyJ[A-Za-z0-9._-]+\" | head -1)\ncommand grep -qF \"$LEAK\" .env 2>/dev/null && echo \"\ud83d\udd34 SIM \u2014 .env local ainda tem a service_role vazada (atualize ap\u00f3s rolar o JWT secret)\" || echo \"\u2705 .env j\u00e1 n\u00e3o tem a vazada\"",
+  "description": "Classify .env keys as legacy vs new and check if leaked key still in .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === prefixos das chaves no .env (classificar legado eyJ vs novo sb_) ===
+> SUPABASE_PUBLISHABLE_KEY= "sb_publisha…(redacted)
+> VITE_SUPABASE_PUBLISHABLE_KEY= "sb_publisha…(redacted)
+> SUPABASE_SERVICE_ROLE_KEY= "eyJhbGciOiJ…(redacted)
+> 
+> === .env SERVICE_ROLE ainda == a chave vazada? ===
+> 🔴 SIM — .env local ainda tem a service_role vazada (atualize após rolar o JWT secret)
+> ```
+
+## 🤖 Claude *(05:10:11)*
+
+
+## 🤖 Claude *(05:10:27)*
+
+Quadro completo agora — e tem **boa notícia**: seu front já está na chave nova.
+
+| Var no `.env` | Estado |
+|---|---|
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | ✅ já é `sb_publishable_…` (front **não** depende mais do anon legado) |
+| `SUPABASE_PUBLISHABLE_KEY` | ✅ `sb_publishable_…` |
+| `SUPABASE_SERVICE_ROLE_KEY` | 🔴 **ainda é a `service_role` legada VAZADA** |
+
+## O que você está perdendo: a chave que mata a vazada não é a `sb_secret_` — é **rolar o JWT secret**
+
+Criar a `sb_secret_` não toca no JWT legado. A ação que invalida a vazada é exatamente a da mensagem que você viu: **"generate a new JWT secret"**.
+
+### ✅ Caminho recomendado (mata agora, quebra mínima)
+**Supabase → Settings → API → JWT Settings → "Generate new JWT secret"** (rolar o secret legado).
+- **Front:** intacto — já usa `sb_publishable_` ✅.
+- **As ~47 edge functions:** o Supabase regenera o `service_role` e **atualiza sozinho** o env injetado `SUPABASE_SERVICE_ROLE_KEY` → seguem funcionando (confirme 1 depois).
+- **Você atualiza:** `.env` `SUPABASE_SERVICE_ROLE_KEY` = o novo `service_role` JWT (copia do dashboard) → scripts/crons leem do `.env`.
+- **Eu conserto** o trigger `mcorch_embed_on_insert` (chave velha *baked* no DB) via migration usando **Vault** (nunca literal).
+
+> Por que não disablar a legada agora? Disablar mata a vazada também, mas exige migrar as 47 edge functions pro `sb_secret_` **antes** (senão quebram). Rolar o JWT secret é o atalho seguro pro emergencial. Migrar tudo pra `sb_secret_` + disablar legado = melhor prática, fica pra **depois** (sem pressa, sem chave viva exposta).
+
+### Sequência completa
+1. Você rola o JWT secret ⬅️ **agora** (mata a vazada).
+2. Eu **re-probo** → confirmo `401` (morta) materialmente.
+3. Você atualiza `.env` service_role; eu disparo a migration do trigger via Vault.
+4. **Aí sim** faço a remoção do histórico (branch do vault + decisão da main) — agora com chave morta, não é teatro.
+5. Commito a fundação (2 checkpoints) → sigo pros components.
+
+🔐 Lembrete: a `sb_secret_` que você colou aqui entrou no transcript. Se ainda não a usa em lugar nenhum, o mais limpo é **regenerá-la** quando sobrar — e daqui pra frente, nada de chave viva no chat.
+
+Rola o JWT secret e me avisa — eu confirmo a morte da chave na hora.
+
+## 👤 User *(05:14:07)*
+
+Legacy JWT secret has been migrated to new JWT Signing Keys
+Legacy JWT secret can only be changed by rotating to a standby key and then revoking it. It is used to only verify JSON Web Tokens by Supabase products.
+
+This includes the anon and service_role JWT based API keys. Consider switching to publishable and secret API keys to disable them.
+
+Status	ID da chave	Tipo		Ações
+Chave atual
+d073a3db-a8f3-4e68-8ec5-6f6b47d14456
+ECC (P-256)
+
+
+Chaves usadas anteriormente
+Essas chaves de assinatura JWT ainda são usadas para verificar tokens que ainda não expiraram. Revogue-as assim que todos os tokens expirarem.
+
+Status	ID da chave	Tipo	Última rotação em	Ações
+Chave anterior
+211a3abc-0111-4fd1-8b70-af6aa1675e15
+Legado HS256 (Segredo Compartilhado)
+
+2 meses atrás
+
+## 🤖 Claude *(05:15:55)*
+
+
+## 🤖 Claude *(05:16:00)*
+
+Agora ficou claro o setup do seu projeto — e por que a chave não morre:
+
+- Você já migrou pro novo modelo de **JWT Signing Keys**: chave atual = **ECC P-256** (`d073a3db`).
+- A `service_role` vazada é **HS256**, assinada pela chave **legada `211a3abc`** — que está em **"chave anterior"**, ainda **verificando tokens não-expirados**. É por isso que ela responde `200`.
+- A vazada tem `exp` em **2036** → nunca vai expirar sozinha. **A única forma de matá-la é REVOGAR a chave legada `211a3abc`.**
+
+O risco: revogar `211a3abc` mata a vazada **e** qualquer token HS256 ainda em uso (as 47 edge functions via env injetado + `.env` + o trigger). Antes de te mandar revogar e quebrar o backend, deixa eu confirmar o comportamento exato do Supabase (env de edge functions pós-revogação) na doc oficial — não vou chutar numa ação que pode derrubar 47 functions:
+
+## 🤖 Claude *(05:16:01)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebSearch,WebFetch",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebSearch'}, {'type': 'tool_reference', 'tool_name': 'WebFetch'}]
+> ```
+
+## 🤖 Claude *(05:16:08)*
+
+
+## 🤖 Claude *(05:16:08)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Supabase revoke legacy JWT signing key service_role edge functions SUPABASE_SERVICE_ROLE_KEY new API keys secret key migration",
+  "allowed_domains": [
+    "supabase.com"
+  ]
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Supabase revoke legacy JWT signing key service_role edge functions SUPABASE_SERVICE_ROLE_KEY new API keys secret key migration"
+> 
+> Links: [{"title":"JWT Signing Keys | Supabase Docs","url":"https://supabase.com/docs/guides/auth/signing-keys"},{"title":"Introducing JWT Signing Keys","url":"https://supabase.com/blog/jwt-signing-keys"},{"title":"Supabase Docs | Troubleshooting | Rotating Anon, Service, and JWT Secrets","url":"https://supabase.com/docs/guides/troubleshooting/rotating-anon-service-and-jwt-secrets-1Jq6yd"},{"title":"JSON Web Token (JWT) | Supabase Docs","url":"https://supabase.com/docs/guides/auth/jwts"},{"title":"Securing Edge Functions | Supabase Docs","url":"https://supabase.com/docs/guides/functions/auth"},{"title":"Understanding API keys | Supabase Docs","url":"https://supabase.com/docs/guides/api/api-keys"},{"title":"Function Configuration | Supabase Docs","url":"https://supabase.com/docs/guides/functions/function-configuration"},{"title":"Changelog","url":"https://supabase.com/changelog?next=Y3Vyc29yOnYyOpK0MjAyNC0wOS0xNlQxOTozNzo1NVrOAG3Mrw%3D%3D&restPage=2"},{"title":"JWT Signing Keys | Supabase Features","url":"https://supabase.com/features/jwt-signing-keys"},{"title":"Supabase Docs | Troubleshooting | Why is my service role key client getting RLS errors or not returning data?","url":"https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"}]
+> 
+> Based on the web search results, here's information about revoking legacy JWT signing keys, service_role keys, and the migration to new API keys in Supabase:
+> 
+> ## Revoking Legacy JWT Signing Keys
+> 
+> Revoking the legacy JWT secret means that your application no longer trusts any JWT signed with it. However, before you revoke the legacy JWT secret, you must disable the anon and service_role to ensure a consistent security setup.
+> 
+> If you're using Edge Functions that have the Verify JWT setting, continuing with the rotation might break your app.
+> 
+> ## Migration to New API Keys
+> 
+> It is no longer possible to rotate the legacy anon, service and JWT secrets, and Supabase recommends migrating to asymmetric JWT signing keys and publishable/secret API keys.
+> 
+> If the JWT secret is secure, substitute the service_role JWT-based key with a new secret key which you can create in the Settings > API Keys section of the Dashboard.
+> 
+> ## Asymmetric JWT Signing Keys
+> 
+> JWT Signing Keys replace the legacy JWT secret with asymmetric key cryptography, where private keys sign tokens on Supabase servers, while public keys verify them anywhere—enabling local JWT verification without calling Supabase servers.
+> 
+> ## Using Secret Keys with Edge Functions
+> 
+> Cron jobs, workers, pg_net, or another Edge Function make calls with a secret key on the apikey header rather than a user JWT. Disable verify_jwt and use auth: 'secret' to validate the key against any secret key from your dashboard. You get ctx.supabaseAdmin for privileged work.
+> 
+> The search results provide comprehensive documentation about the migration process and security considerations for updating from legacy JWT-based keys to the new system.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(05:16:30)*
+
+
+## 🤖 Claude *(05:16:31)*
+
+Doc oficial confirma a sequência (e o caveat das edge functions). Vou puxar o passo-a-passo exato pra não te dar ordem errada:
+
+## 🤖 Claude *(05:16:34)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://supabase.com/docs/guides/troubleshooting/rotating-anon-service-and-jwt-secrets-1Jq6yd",
+  "prompt": "What is the exact ordered sequence to invalidate/revoke a leaked legacy service_role JWT key on a project that has already migrated to asymmetric JWT signing keys (current key ECC, legacy HS256 in \"previously used\"/standby)? Specifically: (1) Do I substitute service_role with a new secret (sb_secret_) key first? (2) How do I disable the legacy anon and service_role keys? (3) When do I revoke the standby/previous legacy HS256 signing key? (4) What happens to Edge Functions that read SUPABASE_SERVICE_ROLE_KEY env after disabling legacy keys \u2014 do they break, and how to migrate them to the new secret key? List the precise steps and any warnings."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 404 Not Found.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+## 🤖 Claude *(05:16:41)*
+
+
+## 🤖 Claude *(05:16:42)*
+
+404. Puxando o guia principal de Signing Keys:
+
+## 🤖 Claude *(05:16:45)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://supabase.com/docs/guides/auth/signing-keys",
+  "prompt": "Project already migrated to asymmetric JWT signing keys: current key is ECC P-256, and the legacy HS256 shared secret is listed as a \"previously used\" / standby key still used to verify unexpired tokens. A long-lived service_role JWT signed by that legacy HS256 key was leaked and is still valid. Questions: (1) What is the exact step to REVOKE the previous/standby legacy HS256 key so the leaked service_role token stops being accepted? (2) Before revoking, must I disable the legacy anon and service_role API keys, and where (Settings > API Keys)? (3) What happens to Edge Functions and to anything reading SUPABASE_SERVICE_ROLE_KEY once the legacy keys are disabled/revoked \u2014 do they break? (4) How to substitute service_role with a new secret (sb_secret_) key for edge functions and server code. Give the precise ordered steps and warnings."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Revoking Legacy HS256 Key with Leaked Service Role JWT
+> 
+> ## (1) Exact Steps to Revoke the Legacy HS256 Key
+> 
+> Based on the documentation, the process involves key state transitions:
+> 
+> 1. Navigate to **Settings > JWT Signing Keys** in the Supabase dashboard
+> 2. Locate your legacy HS256 key (currently in "previously used" or standby state)
+> 3. Move it to **Revoked** state
+> 
+> The documentation states: "Once all regularly valid JWTs have expired (or sooner) revoke the previously used key to revoke trust in it."
+> 
+> **Critical timing consideration**: If your leaked JWT has extended expiry, you may need to revoke immediately despite the cache implications noted below.
+> 
+> ## (2) Disabling Legacy anon/service_role API Keys First
+> 
+> **Yes, this is mandatory.** The documentation explicitly states: "Unfortunately `anon` and `service_role` are not just API keys, but are also valid JSON Web Tokens, signed by the legacy JWT secret."
+> 
+> Steps:
+> 1. Go to **Settings > API Keys** section of the dashboard
+> 2. Locate the legacy JWT-based `anon` and `service_role` keys
+> 3. Disable them **before** revoking the HS256 signing key
+> 
+> This ensures "a consistent security setup."
+> 
+> ## (3) Impact on Edge Functions and Code Using SUPABASE_SERVICE_ROLE_KEY
+> 
+> **Yes, they will break** if they rely on the legacy key. The documentation warns that if you're "verifying every JWT against the legacy JWT secret (using a library like `jose`, `jsonwebtoken` or similar), continuing with the rotation might break those components."
+> 
+> Additionally: "If you're using Edge Functions that have the Verify JWT setting, continuing with the rotation might break your app."
+> 
+> ## (4) Precise Steps to Substitute with New Secret Key
+> 
+> **Before revoking the legacy key**, execute these ordered steps:
+> 
+> 1. **Generate new secret API key**
+>    - Navigate to **Settings > API Keys**
+>    - Create a new secret key (prefixed `sb_secret_`)
+> 
+> 2. **Update all Edge Functions**
+>    - Replace environment variable references from legacy `service_role` JWT usage
+>    - Disable the "Verify JWT" setting on Edge Functions if enabled
+>    - Update verification code to use `supabase.auth.getClaims()` instead of manual JWT validation
+> 
+> 3. **Update server-side code**
+>    - Replace `SUPABASE_SERVICE_ROLE_KEY` environment variable with new secret key value
+>    - Send the new key in the `apikey` header instead of `Authorization: Bearer` JWT headers
+>    - Test thoroughly in staging environment
+> 
+> 4. **Deploy all changes** to production and confirm functionality
+> 
+> 5. **Only then**: Return to **Settings > API Keys** to disable legacy JWT-based keys
+> 
+> 6. **Finally**: Move HS256 key to **Revoked** state at **Settings > JWT Signing Keys**
+> 
+> **⚠️ Critical warning**: The documentation notes a "multi-level cache" of 10-20 minutes. Leaked JWTs may still be accepted during this window even after revocation. For urgent incidents, consider implementing "a cache busting mechanism as part of your app's backend infrastructure."
+> ```
+
+## 🤖 Claude *(05:17:55)*
+
+
+## 🤖 Claude *(05:17:58)*
+
+Agora tenho a sequência **autoritativa** da doc do Supabase. A má notícia: **não é um clique** — matar a `service_role` legada exige *disablar* a legada, da qual suas 47 edge functions + scripts + trigger dependem hoje. Tem que migrar pro `sb_secret_` **antes**, senão o backend cai. Deixa eu quantificar quanto da migração de edge functions é "trocar o valor do env" vs "mudar código":
+
+## 🤖 Claude *(05:18:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nH=$(git rev-parse HEAD)\necho \"=== edge functions que usam service_role como Bearer p/ chamar OUTRA function (precisa verify_jwt off) ===\"\ngit grep -lE \"functions/v1/[a-z-]+\" $H -- 'supabase/functions' 2>/dev/null | sed \"s#$H:##\" | head -40\necho\necho \"=== padr\u00e3o de uso do service_role nas edge functions (amostra) ===\"\ngit grep -nE \"createClient\\(|Authorization.*SERVICE_ROLE|Bearer.*serviceRole|apikey\" $H -- 'supabase/functions' 2>/dev/null | grep -iE \"SERVICE_ROLE|serviceRole|serviceKey\" | sed \"s#$H:##\" | head -15\necho\necho \"=== total edge functions ===\"; git ls-tree -r --name-only $H -- 'supabase/functions' | grep -c 'index.ts'",
+  "description": "Audit edge function service_role usage patterns to quantify migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === edge functions que usam service_role como Bearer p/ chamar OUTRA function (precisa verify_jwt off) ===
+> supabase/functions/auto-publish/index.ts
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/higgsfield-webhook/index.ts
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/publish-social/index.ts
+> supabase/functions/self-heal/index.ts
+> supabase/functions/social-auth-callback/index.ts
+> supabase/functions/social-auth-init/index.ts
+> supabase/functions/trigger-embeddings/index.ts
+> 
+> === padrão de uso do service_role nas edge functions (amostra) ===
+> supabase/functions/admin-manage-user/index.ts:30:  const admin = createClient(supabaseUrl, serviceKey);
+> supabase/functions/agent-task-execute/index.ts:66:    const admin = createClient(supabaseUrl, serviceKey);
+> supabase/functions/aios-sql-bridge/index.ts:26:const admin = createClient(supabaseUrl, serviceRoleKey);
+> supabase/functions/analyze-node/index.ts:44:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/analyze-sem/index.ts:31:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/analyze-seo/index.ts:30:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/auto-publish/index.ts:75:              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+> supabase/functions/award-mco-coins/index.ts:11:const supabase = createClient(supabaseUrl, serviceRoleKey);
+> supabase/functions/canvas-execute/index.ts:128:    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/check-video-status/index.ts:89:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/data-export/index.ts:34:    const admin = createClient(supabaseUrl, serviceKey);
+> supabase/functions/delete-account/index.ts:34:    const admin = createClient(supabaseUrl, serviceKey);
+> supabase/functions/design-job-enqueue/index.ts:74:    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/fetch-trends/index.ts:48:    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> supabase/functions/generate-audio-script/index.ts:46:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+> 
+> === total edge functions ===
+> 52
+> ```
+
+## 🤖 Claude *(05:19:25)*
+
+
+## 🤖 Claude *(05:19:35)*
+
+Doc oficial confirma a sequência — e por que **não dá pra revogar e pronto**.
+
+## Como a chave morre (sequência autoritativa Supabase)
+1. **Substituir** a service_role legada pelo `sb_secret_` em TODOS os consumidores.
+2. **Disablar** as legadas `anon` + `service_role` (Settings → API Keys).
+3. **Revogar** a HS256 `211a3abc` (Settings → JWT Signing Keys → *Revoked*).
+
+⚠️ **Cache de 10–20 min:** a chave vazada pode ainda ser aceita por até ~20 min após revogar (não é instantâneo).
+
+## Por que é migração, não 1 clique
+**52 edge functions** dependem do `SUPABASE_SERVICE_ROLE_KEY` legado. Disablar a legada sem migrar = backend cai (crons, embedding, orchestration, auth-flows, delete-account…). Auditoria:
+- **~43 functions:** só `createClient(url, serviceKey)` p/ DB → *drop-in* com `sb_secret_`.
+- **9 functions chamam outra function** com `Bearer service_role` (`auto-publish`, `canvas-execute`, `orchestrate-step`, `publish-social`, `self-heal`, `social-auth-init/callback`, `higgsfield-webhook`, `trigger-embeddings`) → precisam de `verify_jwt` off + `apikey`.
+- ⚠️ A confirmar no começo: se `SUPABASE_SERVICE_ROLE_KEY` (nome reservado) aceita o valor `sb_secret_`, ou se troco pra `SB_SECRET_KEY` no código.
+
+## Divisão de trabalho proposta
+- **Eu (código, no seu GO):** migro as 52 functions pro secret novo, trato as 9 inter-function, reescrevo o trigger via **Vault**, atualizo `.env`/scripts, deploy + testo. Depois te entrego pronto pra disablar+revogar.
+- **Você (dashboard):** ao final → disablar legadas → revogar `211a3abc`. Eu **re-probo** e confirmo `401`.
+
+**Sources:** [JWT Signing Keys](https://supabase.com/docs/guides/auth/signing-keys) · [Understanding API keys](https://supabase.com/docs/guides/api/api-keys) · [Securing Edge Functions](https://supabase.com/docs/guides/functions/auth)
+
+Uma decisão muda o caminho:
+
+## 🤖 Claude *(05:19:43)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como matar a service_role legada vazada? (disablar/revogar exige que as 52 edge functions parem de depender dela)",
+      "header": "Kill da service_role",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Migra\u00e7\u00e3o limpa primeiro (eu dirijo) (Recommended)",
+          "description": "Eu migro as 52 edge functions + 9 inter-function + trigger (via Vault) + .env/scripts pro sb_secret_, deploy e testo. S\u00d3 DEPOIS voc\u00ea disabla legada + revoga HS256. Zero downtime; \u00e9 um mini-projeto de migra\u00e7\u00e3o (algumas horas), mas n\u00e3o quebra auth/pagamento/crons. A chave fica viva mais um pouco (j\u00e1 estava p\u00fablica h\u00e1 ~1 m\u00eas)."
+        },
+        {
+          "label": "Kill r\u00e1pido agora, conserto depois",
+          "description": "Voc\u00ea disabla legada + revoga HS256 J\u00c1 \u2192 a chave morre em ~20min (cache). O backend (crons, embedding aut\u00f4nomo, orchestration, social-auth, delete-account) CAI at\u00e9 eu terminar a migra\u00e7\u00e3o pro sb_secret_. Mais r\u00e1pido pra seguran\u00e7a; aceita downtime. OK por ser pr\u00e9-launch / 1 usu\u00e1rio real."
+        },
+        {
+          "label": "Pr\u00e9-testar barato primeiro",
+          "description": "Antes de decidir: eu testo (sem quebrar prod) se o sb_secret_ funciona em createClient/REST e se d\u00e1 pra setar SUPABASE_SERVICE_ROLE_KEY=sb_secret_ via secrets (nome pode ser reservado). Isso revela se a migra\u00e7\u00e3o \u00e9 'trocar 1 env' (f\u00e1cil) ou '52 edi\u00e7\u00f5es de c\u00f3digo' \u2014 e a\u00ed escolhemos A ou B com dado material."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como matar a service_role legada vazada? (disablar/revogar exige que as 52 edge functions parem de depender dela)"="Acreditoque o recomendado seja melhor migração limpa primeiro mas eu exlcuir denovo a secret e criei uma nova adicionei ela tambem no .env com a variavel SUPABASE_SECRET_KEY.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(05:22:54)*
+
+
+## 🤖 Claude *(05:22:56)*
+
+Ótimo — e bom que você **regenerou** a secret (a que tinha colado morreu) e pôs em `.env` como `SUPABASE_SECRET_KEY`. Vou de **migração limpa**, eu dirijo.
+
+Antes de editar 52 functions + scripts, preciso saber **materialmente** como o `sb_secret_` se comporta nos 3 contextos (createClient/apikey/Bearer) — senão um sed cego quebra header. Testando read-only com a chave do seu `.env`:
+
+## 🤖 Claude *(05:23:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSK=$(command grep -E \"^SUPABASE_SECRET_KEY=\" .env | head -1 | sed -E 's/^SUPABASE_SECRET_KEY=//; s/^[[:space:]]*[\"'\"'\"']?//; s/[\"'\"'\"']?[[:space:]]*$//')\n[ -z \"$SK\" ] && { echo \"\u274c SUPABASE_SECRET_KEY n\u00e3o encontrada no .env\"; exit 0; }\necho \"secret key prefix: $(printf %s \"$SK\" | cut -c1-11)\u2026 (len=$(printf %s \"$SK\" | wc -c))\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho -n \"(a) apikey s\u00f3         \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 15 \"$URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $SK\"\necho -n \"(b) apikey + Bearer   \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 15 \"$URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\"\necho -n \"(c) RLS bypass (profiles, deve ver \u22651) \u2192 \"; curl -s -m 15 \"$URL/rest/v1/profiles?select=id\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('rows=', len(d) if isinstance(d,list) else d)\" 2>/dev/null || echo \"?\"\necho -n \"(d) RPC deduct existe? (s\u00f3 checa auth, p_amount=0) \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" -m 15 -X POST \"$URL/rest/v1/rpc/calc_agent_cost_mcoin\" -H \"apikey: $SK\" -H \"Authorization: Bearer $SK\" -H \"Content-Type: application/json\" -d '{\"p_tokens_in\":0,\"p_tokens_out\":0,\"p_provider\":\"groq\",\"p_model\":\"x\"}'",
+  "description": "Probe new sb_secret_ key behavior across REST contexts before migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> secret key prefix: sb_secret_3… (len=41)
+> (a) apikey só         → 200
+> (b) apikey + Bearer   → 200
+> (c) RLS bypass (profiles, deve ver ≥1) → rows= 1
+> (d) RPC deduct existe? (só checa auth, p_amount=0) → 200
+> ```
+
+## 🤖 Claude *(05:24:16)*
+
+
+## 🤖 Claude *(05:24:18)*
+
+Perfeito — material confirmado: o `sb_secret_` é **drop-in** (apikey ✅, apikey+Bearer ✅, bypassa RLS ✅, RPC ✅). Os headers não precisam mudar, só o **valor**. Isso simplifica muito a migração.
+
+Antes do edit em massa, checo as 9 inter-function (verify_jwt das chamadas + se já mandam `apikey`), que é o único ponto delicado:
+
+## 🤖 Claude *(05:24:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== verify_jwt no config.toml ===\"; [ -f supabase/config.toml ] && command grep -nE \"\\[functions|verify_jwt\" supabase/config.toml | head -60 || echo \"sem config.toml\"\necho\necho \"=== como auto-publish chama outra function (headers)? linhas ~70-80 ===\"; sed -n '68,82p' supabase/functions/auto-publish/index.ts\necho \"=== trigger-embeddings call (headers) ===\"; command grep -nE \"functions/v1|apikey|Authorization|Bearer\" supabase/functions/trigger-embeddings/index.ts | head",
+  "description": "Check verify_jwt config and inter-function call header structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === verify_jwt no config.toml ===
+> 4:[functions.self-optimize]
+> 5:verify_jwt = false
+> 6:[functions.self-heal]
+> 7:verify_jwt = false
+> 8:[functions.orchestrate-content]
+> 9:verify_jwt = false
+> 10:[functions.generate-content]
+> 11:verify_jwt = false
+> 12:[functions.generate-audio-script]
+> 13:verify_jwt = false
+> 14:[functions.generate-video-script]
+> 15:verify_jwt = false
+> 16:[functions.list-provider-models]
+> 17:verify_jwt = false
+> 18:[functions.generate-video]
+> 19:verify_jwt = false
+> 20:[functions.check-video-status]
+> 21:verify_jwt = false
+> 22:[functions.generate-image]
+> 23:verify_jwt = false
+> 24:[functions.analyze-seo]
+> 25:verify_jwt = false
+> 26:[functions.publish-wordpress]
+> 27:verify_jwt = false
+> 28:[functions.sync-knowledge-mesh]
+> 30:verify_jwt = true
+> 34:[functions.higgsfield-webhook]
+> 35:verify_jwt = false
+> 37:[functions.handle-ml-postback]
+> 38:verify_jwt = false
+> 40:[functions.process-affiliate-link]
+> 41:verify_jwt = false
+> 43:[functions.instagram-webhook]
+> 44:verify_jwt = false
+> 46:[functions.stripe-webhook]
+> 47:verify_jwt = false
+> 49:[functions.social-auth-callback]
+> 50:verify_jwt = false
+> 52:[functions.social-auth-init]
+> 53:verify_jwt = false
+> 
+> === como auto-publish chama outra function (headers)? linhas ~70-80 ===
+>         // Call publish-social
+>         const publishRes = await fetch(
+>           `${Deno.env.get("SUPABASE_URL")}/functions/v1/publish-social`,
+>           {
+>             method: "POST",
+>             headers: {
+>               "Content-Type": "application/json",
+>               Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+>             },
+>             body: JSON.stringify({
+>               platform: post.platform,
+>               content: contentText,
+>               social_account_id: post.social_account_id,
+>               scheduled_post_id: post.id,
+>               user_id: post.user_id,
+> === trigger-embeddings call (headers) ===
+> 11:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 18:    const authHeader = req.headers.get("Authorization");
+> 19:    if (!authHeader?.startsWith("Bearer ")) {
+> 31:      global: { headers: { Authorization: authHeader } },
+> 57:    const functionsUrl = `${supabaseUrl}/functions/v1/embed-mcorch-node`;
+> 70:              "Authorization": `Bearer ${serviceKey}`,
+> ```
+
+## 🤖 Claude *(05:25:40)*
+
+
+## 🤖 Claude *(05:25:42)*
+
+Padrão confirmado: chamadas inter-function usam `Bearer ${SERVICE_ROLE_KEY}` (sem `apikey` explícito). Com a chave nova (não-JWT), `verify_jwt=true` no destino rejeitaria. Preciso do `config.toml` completo pra saber quais destinos são `verify_jwt=true` (os que precisam de ajuste) e dimensionar o swap:
+
+## 🤖 Claude *(05:25:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== config.toml completo (functions + verify_jwt) ===\"; command grep -nE \"\\[functions\\.|verify_jwt\" supabase/config.toml 2>/dev/null\necho\necho \"=== n\u00ba de ocorr\u00eancias do padr\u00e3o a trocar ===\"\necho \"edge functions Deno.env.get(SERVICE_ROLE_KEY): $(command grep -rl 'SUPABASE_SERVICE_ROLE_KEY' supabase/functions 2>/dev/null | wc -l) arquivos\"\necho \"TS scripts process.env.SUPABASE_SERVICE_ROLE_KEY: $(command grep -rlE 'process\\.env\\.SUPABASE_SERVICE_ROLE_KEY' scripts 2>/dev/null | wc -l) arquivos\"\necho \"bash scripts \\$SUPABASE_SERVICE_ROLE_KEY: $(command grep -rlE '\\$\\{?SUPABASE_SERVICE_ROLE_KEY' scripts 2>/dev/null | wc -l) arquivos\"\necho\necho \"=== deno dispon\u00edvel p/ syntax check? ===\"; command -v deno >/dev/null 2>&1 && deno --version | head -1 || echo \"deno N\u00c3O instalado (verifico via tsc/grep)\"",
+  "description": "Full verify_jwt config and migration scope counts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === config.toml completo (functions + verify_jwt) ===
+> 4:[functions.self-optimize]
+> 5:verify_jwt = false
+> 6:[functions.self-heal]
+> 7:verify_jwt = false
+> 8:[functions.orchestrate-content]
+> 9:verify_jwt = false
+> 10:[functions.generate-content]
+> 11:verify_jwt = false
+> 12:[functions.generate-audio-script]
+> 13:verify_jwt = false
+> 14:[functions.generate-video-script]
+> 15:verify_jwt = false
+> 16:[functions.list-provider-models]
+> 17:verify_jwt = false
+> 18:[functions.generate-video]
+> 19:verify_jwt = false
+> 20:[functions.check-video-status]
+> 21:verify_jwt = false
+> 22:[functions.generate-image]
+> 23:verify_jwt = false
+> 24:[functions.analyze-seo]
+> 25:verify_jwt = false
+> 26:[functions.publish-wordpress]
+> 27:verify_jwt = false
+> 28:[functions.sync-knowledge-mesh]
+> 30:verify_jwt = true
+> 34:[functions.higgsfield-webhook]
+> 35:verify_jwt = false
+> 37:[functions.handle-ml-postback]
+> 38:verify_jwt = false
+> 40:[functions.process-affiliate-link]
+> 41:verify_jwt = false
+> 43:[functions.instagram-webhook]
+> 44:verify_jwt = false
+> 46:[functions.stripe-webhook]
+> 47:verify_jwt = false
+> 49:[functions.social-auth-callback]
+> 50:verify_jwt = false
+> 52:[functions.social-auth-init]
+> 53:verify_jwt = false
+> 
+> === nº de ocorrências do padrão a trocar ===
+> edge functions Deno.env.get(SERVICE_ROLE_KEY): 47 arquivos
+> TS scripts process.env.SUPABASE_SERVICE_ROLE_KEY: 49 arquivos
+> bash scripts $SUPABASE_SERVICE_ROLE_KEY: 8 arquivos
+> 
+> === deno disponível p/ syntax check? ===
+> deno NÃO instalado (verifico via tsc/grep)
+> ```
+
+## 🤖 Claude *(05:27:50)*
+
+
+## 🤖 Claude *(05:27:57)*
+
+Tudo material pra desenhar a migração com segurança. Resumo do que descobri:
+- `sb_secret_` é **drop-in** em createClient + REST (apikey e Bearer) — só troca o **valor**, headers ficam.
+- Escopo: **47 edge functions + 49 TS scripts + 8 bash**.
+- ⚠️ Como `SUPABASE_SERVICE_ROLE_KEY` é nome **reservado** (não dá override), o código tem que ler `SUPABASE_SECRET_KEY` (foi por isso que você criou essa var). Uso **padrão com fallback** `SECRET_KEY ?? SERVICE_ROLE_KEY` → **backward-compatible** (prod intacto até você revogar; zero downtime).
+- ⚠️ As 9 inter-function chamam alvos `verify_jwt=true` (ex.: `publish-social`, `embed-mcorch-node`) com Bearer-JWT → com a chave nova (não-JWT) quebrariam → tratamento especial (apikey + verify_jwt=false).
+
+Começando pelo **swap mecânico backward-compatible** nos arquivos TS (reversível via git; deploy é o gate de sintaxe):
+
+## 🤖 Claude *(05:28:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# Lista de arquivos TS tracked que usam a chave (git grep = determin\u00edstico, sem shim)\nmapfile -t FILES < <(git grep -l \"SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 'scripts' | grep -E '\\.ts$')\necho \"arquivos TS alvo: ${#FILES[@]}\"\n# contagem ANTES\nbefore=$(git grep -oE \"(Deno\\.env\\.get|process\\.env)[.(]['\\\"]?SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 'scripts' | wc -l)\necho \"ocorr\u00eancias SERVICE_ROLE antes: $before\"\n\n# Swap idempotente (n\u00e3o re-embrulha o que j\u00e1 tem '?? ' antes). Deno (\\\" e '), e process.env.\nperl -pi -e '\n  s/(?<!\\?\\? )Deno\\.env\\.get\\(\"SUPABASE_SERVICE_ROLE_KEY\"\\)/(Deno.env.get(\"SUPABASE_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))/g;\n  s/(?<!\\?\\? )Deno\\.env\\.get\\(\\x27SUPABASE_SERVICE_ROLE_KEY\\x27\\)/(Deno.env.get(\\x27SUPABASE_SECRET_KEY\\x27) ?? Deno.env.get(\\x27SUPABASE_SERVICE_ROLE_KEY\\x27))/g;\n  s/(?<!\\?\\? )process\\.env\\.SUPABASE_SERVICE_ROLE_KEY\\b/(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)/g;\n' \"${FILES[@]}\"\necho \"perl exit: $?\"\n\necho \"=== VERIFICA\u00c7\u00c3O ===\"\necho \"arquivos modificados: $(git diff --name-only | grep -cE '\\.(ts)$')\"\necho \"wraps SECRET_KEY criados: $(git grep -oE \"SUPABASE_SECRET_KEY\" -- 'supabase/functions' 'scripts' | wc -l)\"\necho \"double-wrap (deve ser 0): $(git grep -oE \"SUPABASE_SECRET_KEY\\\"\\) \\?\\? Deno\\.env\\.get\\(\\\"SUPABASE_SECRET_KEY\" -- 'supabase/functions' 'scripts' | wc -l)\"\necho \"SERVICE_ROLE remanescente SEM fallback (deve ser 0): $(git grep -nE \"(?<![?] )Deno\\.env\\.get\\(['\\\"]SUPABASE_SERVICE_ROLE_KEY\" -- 'supabase/functions' 2>/dev/null | grep -v '?? Deno' | wc -l)\"",
+  "description": "Bulk-swap TS edge functions and scripts to SECRET_KEY fallback pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> arquivos TS alvo: 85
+> ocorrências SERVICE_ROLE antes: 104
+> perl exit: 0
+> === VERIFICAÇÃO ===
+> arquivos modificados: 86
+> wraps SECRET_KEY criados: 93
+> double-wrap (deve ser 0): 0
+> SERVICE_ROLE remanescente SEM fallback (deve ser 0): 0
+> ```
+
+## 🤖 Claude *(05:28:48)*
+
+
+## 🤖 Claude *(05:28:50)*
+
+Swap em massa aplicado: **86 arquivos TS**, 93 wraps, **0 double-wrap, 0 SERVICE_ROLE sem fallback** nas edge functions. Padrão backward-compatible (`SECRET_KEY ?? SERVICE_ROLE_KEY`) → prod intacto até você revogar. Verificando:
+
+## 🤖 Claude *(05:28:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc (src \u2014 n\u00e3o deve ter regress\u00e3o) ===\"; npx tsc --noEmit 2>&1 | tail -6; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== scripts: process.env.SERVICE_ROLE sem fallback (deve ser 0) ===\"; git grep -nE \"process\\.env\\.SUPABASE_SERVICE_ROLE_KEY\" -- scripts | grep -v '?? process.env.SUPABASE_SERVICE_ROLE_KEY' | grep -vE \"//|console|Missing|Requires|\\* \" | head\necho \"=== amostra: 1 edge function + 1 script (diff) ===\"\ngit diff supabase/functions/orchestrate-content/index.ts 2>/dev/null | grep -E \"^\\+|^-\" | grep -i \"secret_key\\|service_role\" | head -4\ngit diff scripts/backfill-embeddings.ts 2>/dev/null | grep -E \"^\\+|^-\" | grep -i \"secret_key\\|service_role\" | head -4\necho \"=== total arquivos no working tree agora ===\"; git status --short | wc -l",
+  "description": "Verify tsc, scripts wrapped, sample diffs after bulk swap"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (src — não deve ter regressão) ===
+> tsc exit: 0
+> === scripts: process.env.SERVICE_ROLE sem fallback (deve ser 0) ===
+> scripts/audit-mesh-edges.js:21:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/check-node-revenue.cjs:15:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/check-node-status.cjs:15:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/ingest-new-docs.cjs:15:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/inspect-nodes-status.cjs:15:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/list-recent-edges.js:18:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/register-patch-mesh.cjs:15:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/stitch-edges.js:18:const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+> scripts/stitch-fallback.js:16:const supabase = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+> scripts/test-files.js:17:const supabase = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+> === amostra: 1 edge function + 1 script (diff) ===
+> -    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+> +    const serviceKey = (Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> -const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+> +const SERVICE_KEY = (process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> === total arquivos no working tree agora ===
+> 90
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
