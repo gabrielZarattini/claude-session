@@ -3745,6 +3745,364 @@ Pre-flight limpo: working tree clean (tudo já commitado em `76bb9e3`/`610e1f3`)
 }
 ```
 
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)
+> 15	
+> 16	**v6.20.2 (2026-06-02)** — Sessão disparada pela dívida residual que a própria seal v6.20.1 anotou no Pending: o `trg_encrypt_user_api_keys` (+ irmãos meta/social) chamava `vault.create_secret` **incondicionalmente** → re-salvar um segredo p/ valor novo colidia no índice único `vault.secrets.name` (`23505`) — o caso "editar a senha WP sem desconectar antes". Padrão dominante: **probe-first material** (Management API, todo teste em `BEGIN…ROLLBACK` → zero mutação de produção) + **adversarial verify** — um achado HIGH do `/security-review` foi REFUTADO materialmente (o overwrite cross-tenant é fail-closed pelo `PRIMARY KEY`, md5 da vítima inalterado), mas a investigação revelou um gap REAL paralelo (injeção cross-tenant id-novo nas INSTEAD OF de meta/social), fechado na mesma sessão.
+> 17	
+> 18	**O que foi entregue:**
+> 19	- **Idempotência (fecha o 23505 no re-save):** helper `public.vault_upsert_secret(value,name,desc)` (`SECURITY DEFINER`, `search_path=''`, EXECUTE revogado de PUBLIC/anon/authenticated → não é RPC alcançável) resolve o segredo por nome e rotaciona in-place via `vault.update_secret` (COALESCE-keep de nome/desc), senão cria; +fallback `unique_violation` p/ a corrida. As 3 encrypt triggers passam a usá-lo + ganham `search_path=''`. A coluna mantém o MESMO UUID Vault entre rotações (sem órfãos). Migration `20260602140000`.
+> 20	- **Guard de tenant (fecha injeção cross-tenant):** as INSTEAD OF de `meta_config`/`social_accounts` não tinham o guard `auth.uid()` da `130000`. Views `SECURITY DEFINER` + o WHERE de view não restringe INSERT → autenticado injetava credencial em nome de outro (user_id spoofado + id novo). Guard `42501` portado pras branches INSERT+UPDATE das 2, recriadas **verbatim** do `pg_get_functiondef` live + `search_path=''`. `service_role` isento. Migration `20260602150000`.
+> 21	
+> 22	**ORO triplet:** Operator=MCORCH Agent · Reviewer/Owner=Sovereign (escopo aprovado: "analise tudo e faça"; toda ação outward com prova material por turno, rolled-back).
+> 23	
+> 24	| Verificação | Resultado |
+> 25	|---|---|
+> 26	| 23505 no re-save (prova do bug) | ✅ reproduzido — `ERROR 23505 secrets_name_idx ... trg_encrypt_user_api_keys() line 72` |
+> 27	| Re-save pós-fix (`user_api_keys`) | ✅ `{decrypted_wp:"wp-pass-BRAVO", secret_count:1, col_is_uuid_ref:true, sibling_groq_intact:true}` |
+> 28	| Re-save pós-fix (`social_accounts`, linha real `39ce0ebb…`) | ✅ `{decrypted_access:"sa-BRAVO", secret_count:1}` |
+> 29	| Helper lockdown | ✅ EXECUTE anon/authenticated=false; postgres=true |
+> 30	| Injeção cross-tenant ANTES | ✅ atacante criou `meta_config` da vítima (`decrypted_token:"INJECTED-BY-ATTACKER"`) |
+> 31	| Injeção cross-tenant DEPOIS | ✅ `42501` nas 2 tabelas; self-insert + `service_role` intactos |
+> 32	| HIGH do `/security-review` (overwrite) | ✅ REFUTADO material — PK fail-closed (`23505 social_accounts_pkey`) + md5 vítima inalterado |
+> 33	| `tsc --noEmit` | ✅ 0 erros |
+> 34	| 2 migrations `/security-review` | ✅ ambas **SAFE** |
+> 35	| Migrations aplicadas (Mgmt API, txn) | ✅ `20260602140000`+`20260602150000` no `schema_migrations` |
+> 36	| Cleanliness | ✅ meta=0/social=3 linhas · 0 segredos de teste · dados reais intactos |
+> 37	| Mesh | ✅ 8751 nós |
+> 38	| Containers | ✅ 5 healthy (9d) · Chroma v2 OK |
+> 39	| Handoff node | ✅ `ea6a3a17-2804-4de3-b153-31f823a9fdb5` embedded 768d |
+> 40	
+> 41	| Commit | Conteúdo |
+> 42	|---|---|
+> 43	| `2db5f62` | fix(credentials): vault_upsert_secret idempotente — elimina 23505 ao rotacionar segredo |
+> 44	| `87c926f` | fix(credentials): guard de tenant nas INSTEAD OF de meta_config/social_accounts |
+> 45	| `deb661c` | docs(processes): fecha débito de idempotência + guard meta/social no SOP |
+> 46	| `beec4aa` | docs(readme): v6.20.2 |
+> 47	
+> 48	### Arquitetura — idempotência + isolamento de tenant na camada Vault
+> 49	```
+> 50	RE-SAVE (rotação): encrypt trigger → public.vault_upsert_secret(value,name,desc)
+> 51	                   SELECT id FROM vault.secrets WHERE name=p_name
+> 52	                     achou → vault.update_secret(id,value)   [mesmo UUID, só rotaciona o valor]
+> 53	                     senão → vault.create_secret(...)        [unique_violation → re-resolve+update]
+> 54	GUARD (meta/social INSTEAD OF, branches INSERT+UPDATE):
+> 55	   auth.role()<>'service_role' AND NEW.user_id<>auth.uid() → 42501
+> 56	   (DELETE fica SEM guard de propósito — o WHERE da view mascarada já filtra DELETE/UPDATE/SELECT;
+> 57	    só INSERT escapa do WHERE → é exatamente onde o guard entra)
+> 58	```
+> 59	
+> 60	### Survival Laws Self-audit
+> 61	```
+> 62	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API, tudo rolled-back — 23505 reproduzido + before/after de re-save (user_api_keys + social_accounts) + lockdown do helper + injeção antes/depois (42501) + metadados pós-apply + cleanliness. Zero fabricação. Achado HIGH do /security-review REFUTADO com teste material (PK fail-closed + md5 da vítima inalterado), não com argumento. 1 armadilha de ambiente divulgada (`UID` readonly do bash → `$U`). Fase 5c executada abaixo.
+> 63	Law 2 (Process): ✅ SOP credential-disconnect-clear.md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
+> 64	Law 3 (Pruning): investigação longa (probes C1-C4, V1-V2, before/after meta+social) — outputs consumidos, referência por path/UUID/migration.
+> 65	Law 4 (ORO): ✅ declarado no início; "analise tudo e faça" = autorização autônoma do Sovereign p/ resolver em-sessão + selar.
+> 66	```
+> 67	
+> 68	**Pendências/Próximos (anotados p/ próxima sessão):**
+> 69	- **Segredo órfão no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta só a linha base via INSTEAD OF DELETE — o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica órfão** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. Débito LGPD/retenção.
+> 70	- **E2E no navegador:** verifiquei PostgREST + triggers + Vault pela perspectiva do banco; o clique na UI logada não foi executado (browser autenticado indisponível).
+> 71	
+> 72	---
+> 73	
+> 74	## WordPress BYOK Credential-Write Fix + Encrypt Double-Fire Record (2026-06-02)
+> 75	
+> ```
+
+## 🤖 Claude *(20:07:59)*
+
+
+## 🤖 Claude *(20:08:01)*
+
+HANDOFF.md entendido: o débito de segredo órfão (linha 69) é exatamente o que fechei — vou riscá-lo. Estrutura clara. Executando **PHASE 1 — SECURITY AUDIT** (com `grep -E` por causa do ugrep-shim; escaneando o diff real da sessão `66859b0..HEAD`, já que o working tree está limpo):
+
+## 🤖 Claude *(20:08:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. Secret leak scan (session diff 66859b0..HEAD) ===\"\ngit diff 66859b0..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -vE \"example|placeholder|<.*>|your-key|YOUR_\" | head -20 || echo \"NO SECRETS IN SESSION DIFF \u2705\"\necho \"\"\necho \"=== 1c. Client-side mco_balance update ===\"\ngrep -rnE \"mco_balance.*update|UPDATE.*mco_balance\" src/ | grep -vE \"settings|top.up|topup|SettingsPage\" | head -10 || echo \"NO VIOLATIONS \u2705\"\necho \"\"\necho \"=== 1d. service_role / RLS bypass in client src/ ===\"\ngrep -rnE \"service_role|bypass.*rls|rls.*bypass\" src/ | head -10 || echo \"NO VIOLATIONS \u2705\"\necho \"\"\necho \"=== 1e. Sensitive console.log ===\"\ngrep -rnE \"console\\.log.*(token|key|secret|password)\" src/ | head -10 || echo \"NO SENSITIVE LOGS \u2705\"\necho \"\"\necho \"=== my session diff: what RPC calls were added ===\"\ngit diff 66859b0..HEAD -- src/ | grep -E \"^\\+.*\\.rpc\\(\" || echo \"(none)\"",
+  "description": "Phase 1 security audit scans"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. Secret leak scan (session diff 66859b0..HEAD) ===
+> 
+> === 1c. Client-side mco_balance update ===
+> 
+> === 1d. service_role / RLS bypass in client src/ ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> 
+> === 1e. Sensitive console.log ===
+> src/test/canvas-video-async-smoke.test.ts:239:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:247:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:252:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> 
+> === my session diff: what RPC calls were added ===
+> +      const { error } = await db.rpc('disconnect_meta');
+> +      const { error } = await supabase.rpc('disconnect_social', { p_account_id: id });
+> ```
+
+## 🤖 Claude *(20:08:16)*
+
+
+## 🤖 Claude *(20:08:18)*
+
+Phase 1 limpo: 1a sem segredos no diff da sessão ✅; 1c sem violação ✅; 1d só um **comentário** descritivo (`useAgentCapabilities.ts:8`, não-meu, não é violação) ✅; 1e só logs de **teste** (probe de token inválido, não-meu) ✅; minhas RPCs adicionadas são limpas. Rodando 1b para completar o protocolo:
+
+## 🤖 Claude *(20:08:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1b. Edge function JWT enforcement (repo-wide; I touched NO edge fn this session) ===\"\ngrep -rLE \"Authorization|jwt|JWT|service_role\" supabase/functions/*/index.ts 2>/dev/null | grep -vE \"get-infra-status|watchdog\" || echo \"ALL FUNCTIONS: JWT enforced \u2705\"\necho \"\"\necho \"=== confirm session touched zero edge functions ===\"\ngit diff 66859b0..HEAD --name-only | grep -E \"supabase/functions/\" || echo \"ZERO edge functions touched this session \u2705\"",
+  "description": "Phase 1b edge function JWT check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1b. Edge function JWT enforcement (repo-wide; I touched NO edge fn this session) ===
+> supabase/functions/autonomic-action/index.ts
+> supabase/functions/instagram-webhook/index.ts
+> supabase/functions/stripe-webhook/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> 
+> === confirm session touched zero edge functions ===
+> ZERO edge functions touched this session ✅
+> ```
+
+## 🤖 Claude *(20:08:33)*
+
+
+## 🤖 Claude *(20:08:36)*
+
+Phase 1 ✅ — as 4 funções do 1b são **webhooks** (Instagram/Stripe/WhatsApp/autonomic — auth por assinatura, não JWT), pré-existentes e arquiteturalmente esperadas; toquei **zero** edge functions nesta sessão. Sem 🔴 BLOCK.
+
+Phase 2 ✅ — commits granulares já feitos (working tree clean: `76bb9e3` fix, `610e1f3` docs).
+
+**PHASE 3 — KNOWLEDGE MESH MILESTONE** (usando `SB_SECRET_KEY`, não a legada revogada):
+
+## 🤖 Claude *(20:08:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB_SECRET_KEY=$(grep -E '^SB_SECRET_KEY' .env | cut -d'\"' -f2)\n[ -z \"$SB_SECRET_KEY\" ] && SB_SECRET_KEY=$(grep -E '^SB_SECRET_KEY' .env | cut -d'=' -f2- | tr -d '\"'\"'\"' ')\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"key present: $([ -n \"$SB_SECRET_KEY\" ] && echo yes || echo NO)\"\nCOMMITS=$(git log --oneline -4 | tr '\\n' '|')\npython3 - \"$SB_SECRET_KEY\" \"$SUPABASE_URL\" \"$COMMITS\" <<'PY' > /tmp/node_payload.json\nimport json,sys\nkey,url,commits=sys.argv[1],sys.argv[2],sys.argv[3]\nimport datetime\npayload={\n \"name\":\"session-handoff-20260602-meta-social-disconnect-rpc\",\n \"node_type\":\"handoff\",\n \"content\":\"[HANDOFF SEAL] disconnect_meta/disconnect_social RPCs (migration 20260602160000) revogam segredos Vault orfaos no disconnect de Meta/social \u2014 espelham disconnect_wordpress, name-binding por id-de-linha+PK tenant-safe; limpeza one-time de 12 segredos meta orfaos (12->0, 3 sociais vivos intactos). Tambem: /security-review redundante do commit 87c926f (guard de tenant meta/social) \u2014 veredito LIMPO 9/10. Prova material: suite RPC 5/5 (happy meta+social, foreign-id no-op, planted-ref name-binding, unauth 28000), tsc 0, 238 testes, bundle servido com as RPCs.\",\n \"stability_score\":1.0,\n \"project_id\":None,\n \"user_id\":None,\n \"metadata\":{\"session\":\"meta-social-disconnect-rpc\",\"sealed_at\":datetime.datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\"commits\":commits}\n}\nprint(json.dumps(payload))\nPY\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  --data-binary @/tmp/node_payload.json)\necho \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) and d else d)\" 2>/dev/null || echo \"RAW: $RESP\"",
+  "description": "Insert Knowledge Mesh handoff milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> key present: yes
+> <stdin>:11: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+> Node ID: f7805e20-bebd-4a30-8533-09806238f135
+> ```
+
+## 🤖 Claude *(20:08:52)*
+
+
+## 🤖 Claude *(20:08:53)*
+
+Node inserido: `f7805e20-bebd-4a30-8533-09806238f135` (o DeprecationWarning é inócuo). Disparando o embedding + emitindo o `proof-manifest.json` para a Fase 5c:
+
+## 🤖 Claude *(20:09:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB_SECRET_KEY=$(grep -E '^SB_SECRET_KEY' .env | cut -d'\"' -f2)\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"f7805e20-bebd-4a30-8533-09806238f135\"\necho \"=== trigger embedding ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d)\" 2>/dev/null || echo \"\u26a0\ufe0f embedding response non-JSON\"\necho \"\"; echo \"=== confirm embedding persisted (vector dims) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,name,embedding\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if d else {}; emb=n.get('embedding'); print('embedded:', 'YES (768d)' if emb and (isinstance(emb,str) and len(emb)>1000 or isinstance(emb,list)) else 'NO/empty')\" 2>/dev/null || echo \"check failed\"\necho \"\"; echo \"=== emit proof-manifest.json ===\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json && cat proof-manifest.json\necho \"\"; echo \"=== live mesh node count (after insert) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'",
+  "description": "Trigger embedding, emit proof manifest, get live node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === trigger embedding ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> 
+> === confirm embedding persisted (vector dims) ===
+> embedded: YES (768d)
+> 
+> === emit proof-manifest.json ===
+> {"handoffNodeId": "f7805e20-bebd-4a30-8533-09806238f135"}
+> 
+> === live mesh node count (after insert) ===
+> 8752
+> ```
+
+## 🤖 Claude *(20:09:13)*
+
+
+## 🤖 Claude *(20:09:16)*
+
+O embed manual usou shape antigo (`{record:{id}}`), mas o node **já está embedded (768d)** — auto-disparado pelo trigger de insert (pg_net). Vou re-chamar com o shape correto `{node_id}` para garantir materialmente, e o count vivo é **8752** (era 8751 no selo v6.20.2, +1 = este node):
+
+## 🤖 Claude *(20:09:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB_SECRET_KEY=$(grep -E '^SB_SECRET_KEY' .env | cut -d'\"' -f2)\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"f7805e20-bebd-4a30-8533-09806238f135\"\necho \"=== re-trigger embedding with correct {node_id} shape ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d)\" 2>/dev/null || echo \"non-JSON resp\"\nrm -f /tmp/node_payload.json",
+  "description": "Re-trigger embedding with correct payload shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-trigger embedding with correct {node_id} shape ===
+> Embedded: {'node_id': 'f7805e20-bebd-4a30-8533-09806238f135', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 'provider': 'openrouter', 'stitched': 0}
+> ```
+
+## 🤖 Claude *(20:09:24)*
+
+
+## 🤖 Claude *(20:09:25)*
+
+Embedding confirmado materialmente: `dims: 768, chunks: 1, model: openai/text-embedding-3-small`. 
+
+**PHASE 4 — README.md UPDATE** (count vivo 8752, versão → v6.20.3). Lendo o topo do README:
+
+## 🤖 Claude *(20:09:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== badges + version (first 12 lines) ===\"; sed -n '1,12p' README.md\necho \"\"; echo \"=== neural_mesh / version badge lines ===\"; grep -nE \"neural_mesh|version-|What's New|## .*v6\\.20\" README.md | head",
+  "description": "Inspect README badges and version"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === badges + version (first 12 lines) ===
+> <p align="center">
+>   <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+>   <img src="https://img.shields.io/badge/version-6.20.2--vault--idempotent--encrypt--+--tenant--guard-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+>   <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+>   <img src="https://img.shields.io/badge/neural_mesh-8751_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+>   <img src="https://img.shields.io/badge/test_coverage-240_tests-success?style=for-the-badge" alt="Test Coverage" />
+>   <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+>   <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+>   <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+>   <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+>   <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 
+> === neural_mesh / version badge lines ===
+> 3:  <img src="https://img.shields.io/badge/version-6.20.2--vault--idempotent--encrypt--+--tenant--guard-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8751_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 51:## 🆕 What's new in v6.20.2 (2026-06-02)
+> 62:## 🆕 What's new in v6.20.1 (2026-06-02)
+> 73:## 🆕 What's new in v6.20.0 (2026-06-01)
+> ```
+
+## 🤖 Claude *(20:09:34)*
+
+
+## 🤖 Claude *(20:09:34)*
+
+Vou atualizar os badges (versão → 6.20.3, mesh 8751→8752) e ler a seção "What's new" da v6.20.2 para espelhar o formato:
+
+## 🤖 Claude *(20:09:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 51,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 51	## 🆕 What's new in v6.20.2 (2026-06-02)
+> 52	
+> 53	**Idempotent credential encryption + cross-tenant guard on the sibling views** — closes the exact residual debt the v6.20.1 seal flagged, then closes the gap its own `/security-review` surfaced:
+> 54	
+> 55	1. **The `23505` on credential re-save is gone**: the three encryption triggers (`user_api_keys`/`meta_config`/`social_accounts`) called `vault.create_secret` unconditionally, so rotating a stored secret to a new value while its same-named Vault secret still existed collided on the unique `secrets_name_idx` (the "edit the WordPress password without disconnecting first" path). New `public.vault_upsert_secret(value, name, desc)` — SECURITY DEFINER, `search_path=''`, EXECUTE revoked from clients — resolves the secret by name and rotates it **in place** via `vault.update_secret` (else creates it), with a `unique_violation` fallback for the create race. The stored column keeps the same Vault UUID across rotations, so no orphans accumulate.
+> 56	2. **[Found by the review] Cross-tenant injection on `meta_config`/`social_accounts` closed**: their INSTEAD OF triggers lacked the `auth.uid()` tenant guard `user_api_keys` already had. Because a view's WHERE does not constrain INSERT, an authenticated user could inject a credential row owned by another tenant (spoofed `user_id` + fresh `id`; the colliding-`id` overwrite was already fail-closed by `PRIMARY KEY(id)`). Ported the same guard (`42501`) to both INSERT/UPDATE branches, plus `search_path=''`, reproduced verbatim from the live definitions. `service_role` (edge OAuth/cron) stays exempt.
+> 57	
+> 58	**Material proofs:** 3 granular commits (`2db5f62`·`87c926f`·`deb661c`) · `tsc --noEmit` 0 errors · 2 migrations applied (`20260602140000`, `20260602150000`), **both `/security-review` SAFE** · every test rolled back, zero production mutation — BEFORE: re-save `23505` reproduced + cross-tenant injection succeeded; AFTER: re-save returns the 2nd value with a single Vault secret (`user_api_keys` + `social_accounts`), injection → `42501` on both tables, legit self-insert + `service_role` writes intact · handoff node `ea6a3a17-2804-4de3-b153-31f823a9fdb5` embedded 768d · mesh **8751 nodes**. **Next:** disconnecting Meta/social still orphans the Vault secret (no revoke, unlike `disconnect_wordpress()`) — a dedicated disconnect RPC per the same LGPD pattern.
+> 59	
+> 60	---
+> 61	
+> 62	## 🆕 What's new in v6.20.1 (2026-06-02)
+> ```
+
+## 🤖 Claude *(20:19:40)*
+
+
+## 🤖 Claude *(20:19:41)*
+
+Perfeito — a própria seção v6.20.2 termina com "**Next:** ... a dedicated disconnect RPC per the same LGPD pattern" — exatamente o que entreguei. Fazendo as 3 edições no README:
+
+## 🤖 Claude *(20:19:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.20.2--vault--idempotent--encrypt--+--tenant--guard-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.20.3--disconnect--rpc--orphan--secret--revocation-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:29:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8751_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8752_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
