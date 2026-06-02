@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 249
-> * **Sessões do Claude**: 219
+> * **Total de Sessões Registradas**: 251
+> * **Sessões do Claude**: 221
 > * **Sessões do Gemini**: 30
 
 ---
@@ -56,7 +56,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a856110ba10475991]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a79c43bd461f65425]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
@@ -65,9 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-aa306815868636459]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-a86068c8c8bc3d3e1]]` - *2026-06-01*
-*   `[[2026-06-01 - agent-a10aebd93731e0c4f]]` - *2026-06-01*
-*   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
-*   *... e mais 213 sessões nessa categoria.*
+*   *... e mais 215 sessões nessa categoria.*
 
 ---
 
@@ -256,7 +256,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a856110ba10475991]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a79c43bd461f65425]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` (ClaudeSessions)
