@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 248
-> * **Sessões do Claude**: 218
+> * **Total de Sessões Registradas**: 249
+> * **Sessões do Claude**: 219
 > * **Sessões do Gemini**: 30
 
 ---
@@ -60,14 +60,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
+*   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` - *2026-06-02*
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-aa306815868636459]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-a86068c8c8bc3d3e1]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-a10aebd93731e0c4f]]` - *2026-06-01*
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
-*   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
-*   *... e mais 212 sessões nessa categoria.*
+*   *... e mais 213 sessões nessa categoria.*
 
 ---
 
@@ -261,6 +261,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` (ClaudeSessions)
+*   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-aa306815868636459]]` (ClaudeSessions)

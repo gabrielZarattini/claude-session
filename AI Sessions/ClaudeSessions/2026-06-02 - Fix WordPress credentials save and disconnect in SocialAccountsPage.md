@@ -5518,6 +5518,6 @@ A única verificação que **não** executei foi o clique na UI logada (browser 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-01 - agent-af11d6fa76341891b]]
+> * **Sessão Anterior**: [[2026-06-02 - Add tenant guard to credential encryption triggers]]
 > * **Próxima Sessão**: [[2026-06-02 - Fix vault secret upsert duplicate key error]]
 %% --- TIMELINE END --- %%
