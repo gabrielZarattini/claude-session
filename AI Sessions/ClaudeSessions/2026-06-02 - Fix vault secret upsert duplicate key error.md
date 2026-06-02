@@ -4979,6 +4979,402 @@ README committed (`beec4aa`). **PHASE 5 — HANDOFF.md.** Let me map its structu
 }
 ```
 
+## 🤖 Claude *(15:00:01)*
+
+
+## 🤖 Claude *(15:00:02)*
+
+HANDOFF.md uses chronological Record sections (newest first, after `## Task State`), with pending embedded per-record. My session directly closes the residual debt the v6.20.1 record flagged. Inserting my Record + marking that debt resolved.
+
+## 🤖 Claude *(15:00:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## WordPress BYOK Credential-Write Fix + Encrypt Double-Fire Record (2026-06-02)",
+  "new_string": "## Task State\n\n## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)\n\n**v6.20.2 (2026-06-02)** \u2014 Sess\u00e3o disparada pela d\u00edvida residual que a pr\u00f3pria seal v6.20.1 anotou no Pending: o `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) chamava `vault.create_secret` **incondicionalmente** \u2192 re-salvar um segredo p/ valor novo colidia no \u00edndice \u00fanico `vault.secrets.name` (`23505`) \u2014 o caso \"editar a senha WP sem desconectar antes\". Padr\u00e3o dominante: **probe-first material** (Management API, todo teste em `BEGIN\u2026ROLLBACK` \u2192 zero muta\u00e7\u00e3o de produ\u00e7\u00e3o) + **adversarial verify** \u2014 um achado HIGH do `/security-review` foi REFUTADO materialmente (o overwrite cross-tenant \u00e9 fail-closed pelo `PRIMARY KEY`, md5 da v\u00edtima inalterado), mas a investiga\u00e7\u00e3o revelou um gap REAL paralelo (inje\u00e7\u00e3o cross-tenant id-novo nas INSTEAD OF de meta/social), fechado na mesma sess\u00e3o.\n\n**O que foi entregue:**\n- **Idempot\u00eancia (fecha o 23505 no re-save):** helper `public.vault_upsert_secret(value,name,desc)` (`SECURITY DEFINER`, `search_path=''`, EXECUTE revogado de PUBLIC/anon/authenticated \u2192 n\u00e3o \u00e9 RPC alcan\u00e7\u00e1vel) resolve o segredo por nome e rotaciona in-place via `vault.update_secret` (COALESCE-keep de nome/desc), sen\u00e3o cria; +fallback `unique_violation` p/ a corrida. As 3 encrypt triggers passam a us\u00e1-lo + ganham `search_path=''`. A coluna mant\u00e9m o MESMO UUID Vault entre rota\u00e7\u00f5es (sem \u00f3rf\u00e3os). Migration `20260602140000`.\n- **Guard de tenant (fecha inje\u00e7\u00e3o cross-tenant):** as INSTEAD OF de `meta_config`/`social_accounts` n\u00e3o tinham o guard `auth.uid()` da `130000`. Views `SECURITY DEFINER` + o WHERE de view n\u00e3o restringe INSERT \u2192 autenticado injetava credencial em nome de outro (user_id spoofado + id novo). Guard `42501` portado pras branches INSERT+UPDATE das 2, recriadas **verbatim** do `pg_get_functiondef` live + `search_path=''`. `service_role` isento. Migration `20260602150000`.\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign (escopo aprovado: \"analise tudo e fa\u00e7a\"; toda a\u00e7\u00e3o outward com prova material por turno, rolled-back).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| 23505 no re-save (prova do bug) | \u2705 reproduzido \u2014 `ERROR 23505 secrets_name_idx ... trg_encrypt_user_api_keys() line 72` |\n| Re-save p\u00f3s-fix (`user_api_keys`) | \u2705 `{decrypted_wp:\"wp-pass-BRAVO\", secret_count:1, col_is_uuid_ref:true, sibling_groq_intact:true}` |\n| Re-save p\u00f3s-fix (`social_accounts`, linha real `39ce0ebb\u2026`) | \u2705 `{decrypted_access:\"sa-BRAVO\", secret_count:1}` |\n| Helper lockdown | \u2705 EXECUTE anon/authenticated=false; postgres=true |\n| Inje\u00e7\u00e3o cross-tenant ANTES | \u2705 atacante criou `meta_config` da v\u00edtima (`decrypted_token:\"INJECTED-BY-ATTACKER\"`) |\n| Inje\u00e7\u00e3o cross-tenant DEPOIS | \u2705 `42501` nas 2 tabelas; self-insert + `service_role` intactos |\n| HIGH do `/security-review` (overwrite) | \u2705 REFUTADO material \u2014 PK fail-closed (`23505 social_accounts_pkey`) + md5 v\u00edtima inalterado |\n| `tsc --noEmit` | \u2705 0 erros |\n| 2 migrations `/security-review` | \u2705 ambas **SAFE** |\n| Migrations aplicadas (Mgmt API, txn) | \u2705 `20260602140000`+`20260602150000` no `schema_migrations` |\n| Cleanliness | \u2705 meta=0/social=3 linhas \u00b7 0 segredos de teste \u00b7 dados reais intactos |\n| Mesh | \u2705 8751 n\u00f3s |\n| Containers | \u2705 5 healthy (9d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `ea6a3a17-2804-4de3-b153-31f823a9fdb5` embedded 768d |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `2db5f62` | fix(credentials): vault_upsert_secret idempotente \u2014 elimina 23505 ao rotacionar segredo |\n| `87c926f` | fix(credentials): guard de tenant nas INSTEAD OF de meta_config/social_accounts |\n| `deb661c` | docs(processes): fecha d\u00e9bito de idempot\u00eancia + guard meta/social no SOP |\n| `beec4aa` | docs(readme): v6.20.2 |\n\n### Arquitetura \u2014 idempot\u00eancia + isolamento de tenant na camada Vault\n```\nRE-SAVE (rota\u00e7\u00e3o): encrypt trigger \u2192 public.vault_upsert_secret(value,name,desc)\n                   SELECT id FROM vault.secrets WHERE name=p_name\n                     achou \u2192 vault.update_secret(id,value)   [mesmo UUID, s\u00f3 rotaciona o valor]\n                     sen\u00e3o \u2192 vault.create_secret(...)        [unique_violation \u2192 re-resolve+update]\nGUARD (meta/social INSTEAD OF, branches INSERT+UPDATE):\n   auth.role()<>'service_role' AND NEW.user_id<>auth.uid() \u2192 42501\n   (DELETE fica SEM guard de prop\u00f3sito \u2014 o WHERE da view mascarada j\u00e1 filtra DELETE/UPDATE/SELECT;\n    s\u00f3 INSERT escapa do WHERE \u2192 \u00e9 exatamente onde o guard entra)\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno via Management API, tudo rolled-back \u2014 23505 reproduzido + before/after de re-save (user_api_keys + social_accounts) + lockdown do helper + inje\u00e7\u00e3o antes/depois (42501) + metadados p\u00f3s-apply + cleanliness. Zero fabrica\u00e7\u00e3o. Achado HIGH do /security-review REFUTADO com teste material (PK fail-closed + md5 da v\u00edtima inalterado), n\u00e3o com argumento. 1 armadilha de ambiente divulgada (`UID` readonly do bash \u2192 `$U`). Fase 5c executada abaixo.\nLaw 2 (Process): \u2705 SOP credential-disconnect-clear.md atualizado (d\u00e9bito \u2192 Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas \u2192 sem BoK gate.\nLaw 3 (Pruning): investiga\u00e7\u00e3o longa (probes C1-C4, V1-V2, before/after meta+social) \u2014 outputs consumidos, refer\u00eancia por path/UUID/migration.\nLaw 4 (ORO): \u2705 declarado no in\u00edcio; \"analise tudo e fa\u00e7a\" = autoriza\u00e7\u00e3o aut\u00f4noma do Sovereign p/ resolver em-sess\u00e3o + selar.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos (anotados p/ pr\u00f3xima sess\u00e3o):**\n- **Segredo \u00f3rf\u00e3o no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta s\u00f3 a linha base via INSTEAD OF DELETE \u2014 o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica \u00f3rf\u00e3o** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. D\u00e9bito LGPD/reten\u00e7\u00e3o.\n- **E2E no navegador:** verifiquei PostgREST + triggers + Vault pela perspectiva do banco; o clique na UI logada n\u00e3o foi executado (browser autenticado indispon\u00edvel).\n\n---\n\n## WordPress BYOK Credential-Write Fix + Encrypt Double-Fire Record (2026-06-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:00:30)*
+
+
+## 🤖 Claude *(15:00:30)*
+
+Now marking the v6.20.1 record's residual-debt pending item as closed:
+
+## 🤖 Claude *(15:00:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **D\u00edvida residual (task spawned):** tornar `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) idempotente (update-or-create por nome) \u2014 editar um segredo p/ valor novo sem desconectar antes ainda d\u00e1 `23505`. Precisa de `/security-review` pr\u00f3prio.",
+  "new_string": "- ~~**D\u00edvida residual (task spawned):** tornar `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) idempotente (update-or-create por nome) \u2014 editar um segredo p/ valor novo sem desconectar antes ainda d\u00e1 `23505`.~~ \u2705 **FECHADA em v6.20.2** (migration `20260602140000`, helper `vault_upsert_secret`; + guard de tenant meta/social `20260602150000`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:00:44)*
+
+
+## 🤖 Claude *(15:00:44)*
+
+**PHASE 5b — HANDOFF.md secret scan** (mandatory before committing it):
+
+## 🤖 Claude *(15:00:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential value scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\\s*['\\\"]?[A-Za-z0-9+/]{40,})\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -20 || echo \"5b-1: NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google api keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -10 || echo \"5b-2: NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline = assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|id.*[0-9a-f-]\\{36\\}\" | head -10 || echo \"5b-3: NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential value scan ===
+> === 5b-2 google api keys ===
+> === 5b-3 inline = assignments ===
+> 2825:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 2858:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 5561:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5563:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 5564:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 5606:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5608:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(15:01:04)*
+
+
+## 🤖 Claude *(15:01:06)*
+
+**PHASE 5b verdict — ✅ PASS.** 5b-1 and 5b-2 clean. The 5b-3 matches are all **pre-existing** lines (ledger action names like `'opening_balance_reconciliation'`, the `'mcorch-constellation'` project slug, amounts) — benign domain strings, not credentials, and none in my added content. No real credential value present. Committing HANDOFF.md:
+
+## 🤖 Claude *(15:01:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -m \"docs(handoff): seal v6.20.2 \u2014 vault encrypt idempotente + guard de tenant meta/social\" 2>&1 | tail -3",
+  "description": "Commit HANDOFF.md seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 5b79980] docs(handoff): seal v6.20.2 — vault encrypt idempotente + guard de tenant meta/social
+>  1 file changed, 61 insertions(+), 1 deletion(-)
+> ```
+
+## 🤖 Claude *(15:01:14)*
+
+
+## 🤖 Claude *(15:01:15)*
+
+HANDOFF.md committed (`5b79980`). **PHASE 5c — Material Proof Audit** (mechanical re-verification of every claim; must return `SEAL ALLOWED` before push):
+
+## 🤖 Claude *(15:01:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -60\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node ea6a3a17 | mesh_node | ea6a3a17-2804-4de3-b153-31f823a9fdb5 | ea6a3a17-2804-4de3-b153-31f823a9fdb5 | ✅ |
+> | commit 2db5f62 | git_commit | 2db5f62 | 2db5f62 | ✅ |
+> | commit 87c926f | git_commit | 87c926f | 87c926f | ✅ |
+> | commit deb661c | git_commit | deb661c | deb661c | ✅ |
+> | commit beec4aa | git_commit | beec4aa | beec4aa | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (escopo aprovado: "analise tudo e faça" | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (escopo aprovado: "analise tudo e faça" | ✅ |
+> 
+> QA VERDICT: 7 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.7s)
+> audit exit: 0
+> ```
+
+## 🤖 Claude *(15:01:29)*
+
+
+## 🤖 Claude *(15:01:30)*
+
+**PHASE 5c — `SEAL ALLOWED`** (7 verified · 0 skipped · 0 failed). 
+
+**PHASE 6 — BoK seal status** + confirm this session created no new module (migration-only → exempt), then **PHASE 7 push**:
+
+## 🤖 Claude *(15:01:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== this session's touched paths (commits since ec80563) ===\"\ngit diff --name-only ec80563..HEAD\necho \"=== new modules (src/pages | supabase/functions | new components)? ===\"\ngit diff --name-only ec80563..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" || echo \"NONE \u2014 migration + docs only \u2192 BoK gate N/A (exempt: bug patch on documented credential layer) \u2705\"\necho \"=== PUSH ===\"\ngit push origin main 2>&1 | tail -8",
+  "description": "Phase 6 BoK check + Phase 7 push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === this session's touched paths (commits since ec80563) ===
+> CLAUDE.md
+> HANDOFF.md
+> README.md
+> docs/processes/credential-disconnect-clear.md
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql
+> supabase/migrations/20260602150000_meta_social_instead_of_tenant_guard.sql
+> === new modules (src/pages | supabase/functions | new components)? ===
+> NONE — migration + docs only → BoK gate N/A (exempt: bug patch on documented credential layer) ✅
+> === PUSH ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ec80563..5b79980  main -> main
+> ```
+
+## 🤖 Claude *(15:01:45)*
+
+
+## 🤖 Claude *(15:01:46)*
+
+**PHASE 7 — Pushed:** `ec80563..5b79980 main -> main` (6 commits). BoK gate N/A (migration + docs only). 
+
+**PHASE 7b — Sprint & hygiene:**
+
+## 🤖 Claude *(15:01:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== working tree state ===\"\ngit status --short\necho \"=== sprint-priorities.md exists? credential-layer relevance? ===\"\nls -la .claude/context/sprint-priorities.md 2>/dev/null && grep -niE \"credential|encrypt|vault|tenant|byok\" .claude/context/sprint-priorities.md | head -5 || echo \"no sprint-priorities.md or no credential refs\"\necho \"=== scratch/ ===\"\nls scratch/*.ts 2>/dev/null || echo \"scratch/: nothing to migrate \u2705\"\necho \"=== proof-manifest.json tracked? ===\"\ngit check-ignore proof-manifest.json && echo \"(gitignored)\" || git ls-files --error-unmatch proof-manifest.json 2>/dev/null && echo \"(tracked)\" || echo \"(untracked transient \u2014 leaving as-is, matches prior seals)\"",
+  "description": "Phase 7b sprint/scratch/MCP hygiene checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree state ===
+> === sprint-priorities.md exists? credential-layer relevance? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 66157 Jun  2 10:35 .claude/context/sprint-priorities.md
+> 7:**Sprint v6.20.1 selado em 2026-06-02** — WordPress BYOK + fix do double-fire da encriptação de credenciais: fechado o P0 que a v6.20.0 sinalizou (`SocialAccountsPage` salvava/desconectava WP via `.upsert(onConflict)` numa VIEW → HTTP 400 `42P10`). Save → `.insert()`; disconnect → RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, `auth.uid()`, nula 3 cols WP + **deleta o segredo do Vault** — revogação LGPD) (migration `20260602120000`). Corrigir isso revelou bug **muito maior**: o `trg_instead_of_user_api_keys` usava `INSERT...ON CONFLICT DO UPDATE` → trigger de encriptação dispara **2×** numa só statement → `vault.create_secret` nome duplicado → **`23505`**, quebrando connect/save de **todo** usuário com linha pré-existente (e `.update` re-encriptava o `••••`). Trocado p/ **UPDATE-first / INSERT-if-not-found** + **guard de tenant** (`auth.uid()` → `42501`, fecha escrita cross-tenant que o ON CONFLICT mascarava) (migration `20260602130000`). Tudo provado material via Management API; 2 migrations `/security-review` **SAFE**; Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8750**. 5 commits. **Novo gap (Top Gap — task spawned):** `trg_encrypt_user_api_keys` (+ irmãos meta/social) não-idempotente → editar segredo p/ valor novo sem desconectar antes ainda dá `23505`; conserto = update-or-create por nome nas 3 tabelas, precisa de `/security-review` próprio. **Lição:** probe-first material pegou que o `.insert` sozinho NÃO bastava (o bug estava na camada de encriptação, não nos 2 `.upsert` reportados).
+> 9:**Sprint v6.20.0 selado em 2026-06-01** — Afiliados híbrido + catálogo Apify real + BYOK per-user: corrigido o link de afiliado que abria login do CloudPanel (`panel.gcrux.com` proxy morto + `app_id` como affiliate id) → resolver **híbrido** `meli.la` cravado (per-user `metadata.shortlinks`) senão `product_url?matt_word=<affiliate_tag>` fail-closed (`src/lib/affiliate.ts` + 14 testes; 302s reais provados). ML bloqueia todo server-side (API 403/401, página→account-verification, nosso IP **e** Supabase Edge) → enriquecimento via actor **Apify** residencial (`enrich-affiliate-products.ts` SKU-match + `discover-affiliate-products.ts` descoberta real validando "viral mind") + gate de verificação em `useAffiliateProducts` + cron 6/6h. **2 IDs fabricados removidos** → catálogo com **3 produtos reais** (Roborock R$17.770 · Family Hub R$18.946 · 8K Neo QLED R$39.000). **BYOK per-user `apify_token`** no padrão Vault (migration `20260601060000`, `/security-review` PASS — pegou regressão `security_invoker`) + campo Settings + fix do P0 de `000600` (`.upsert()`→`.insert()` em view sem constraint). Phase 5c **SEAL ALLOWED** (12 verified). Mesh **8748**. Survival Laws 4/4. 6 commits. **Próximo:** Operador de Browser Autenticado (probe-first) p/ ações logadas (ML Compartilhar→meli.la). **Lição:** probe-first economizou 3 becos (API ML/Firecrawl/actor velho) e pegou IDs fakes + regressão de credencial.
+> 15:**Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 19:**Sprint v5.5.6 selado em 2026-05-06** — Core Promotion: CorePage v1 arquivada para `.archive/pages/`, `Core v2` promovida para `Core` no menu, `/dashboard/core` redireciona via Navigate. Gemini Live validado (VITE_GEMINI_API_KEY no `.env` + GEMINI_API_KEY no vault) — Pending Action #8 era falso positivo. 2560 nós · 100% embedded.
+> 21:**Sprint v5.6.0 selado em 2026-05-06** — DevOps + Security Seal: 6 branches mobile sincronizados + DOCUMENTATION_CREDENTIAL_RULE + pre-commit hook anti-credential + Gemini API key rotacionada + test coverage 0→66 testes (billing + store + phase-zeta) + BoK Scribe Agent (MRD/BRD/PRD/FRD/SDD templates) + MCORCH Master Execution Protocol em CLAUDE.md + /sync-mobile-branch protocol. 2561 nós · 100% embedded.
+> === scratch/ ===
+> scratch/: nothing to migrate ✅
+> === proof-manifest.json tracked? ===
+> proof-manifest.json
+> (gitignored)
+> (tracked)
+> ```
+
+## 🤖 Claude *(15:02:20)*
+
+
+## 🤖 Claude *(15:02:21)*
+
+Working tree clean; push complete; scratch clean; `proof-manifest.json` is a gitignored transient. `sprint-priorities.md` has the v6.20.1 entry whose "Top Gap (task spawned)" — the idempotency debt — this session **closed**. Let me read its head and add the v6.20.2 seal.
+
+## 🤖 Claude *(15:02:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.20.1 selado em 2026-06-02** — WordPress BYOK + fix do double-fire da encriptação de credenciais: fechado o P0 que a v6.20.0 sinalizou (`SocialAccountsPage` salvava/desconectava WP via `.upsert(onConflict)` numa VIEW → HTTP 400 `42P10`). Save → `.insert()`; disconnect → RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, `auth.uid()`, nula 3 cols WP + **deleta o segredo do Vault** — revogação LGPD) (migration `20260602120000`). Corrigir isso revelou bug **muito maior**: o `trg_instead_of_user_api_keys` usava `INSERT...ON CONFLICT DO UPDATE` → trigger de encriptação dispara **2×** numa só statement → `vault.create_secret` nome duplicado → **`23505`**, quebrando connect/save de **todo** usuário com linha pré-existente (e `.update` re-encriptava o `••••`). Trocado p/ **UPDATE-first / INSERT-if-not-found** + **guard de tenant** (`auth.uid()` → `42501`, fecha escrita cross-tenant que o ON CONFLICT mascarava) (migration `20260602130000`). Tudo provado material via Management API; 2 migrations `/security-review` **SAFE**; Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8750**. 5 commits. **Novo gap (Top Gap — task spawned):** `trg_encrypt_user_api_keys` (+ irmãos meta/social) não-idempotente → editar segredo p/ valor novo sem desconectar antes ainda dá `23505`; conserto = update-or-create por nome nas 3 tabelas, precisa de `/security-review` próprio. **Lição:** probe-first material pegou que o `.insert` sozinho NÃO bastava (o bug estava na camada de encriptação, não nos 2 `.upsert` reportados).
+> 8	
+> 9	**Sprint v6.20.0 selado em 2026-06-01** — Afiliados híbrido + catálogo Apify real + BYOK per-user: corrigido o link de afiliado que abria login do CloudPanel (`panel.gcrux.com` proxy morto + `app_id` como affiliate id) → resolver **híbrido** `meli.la` cravado (per-user `metadata.shortlinks`) senão `product_url?matt_word=<affiliate_tag>` fail-closed (`src/lib/affiliate.ts` + 14 testes; 302s reais provados). ML bloqueia todo server-side (API 403/401, página→account-verification, nosso IP **e** Supabase Edge) → enriquecimento via actor **Apify** residencial (`enrich-affiliate-products.ts` SKU-match + `discover-affiliate-products.ts` descoberta real validando "viral mind") + gate de verificação em `useAffiliateProducts` + cron 6/6h. **2 IDs fabricados removidos** → catálogo com **3 produtos reais** (Roborock R$17.770 · Family Hub R$18.946 · 8K Neo QLED R$39.000). **BYOK per-user `apify_token`** no padrão Vault (migration `20260601060000`, `/security-review` PASS — pegou regressão `security_invoker`) + campo Settings + fix do P0 de `000600` (`.upsert()`→`.insert()` em view sem constraint). Phase 5c **SEAL ALLOWED** (12 verified). Mesh **8748**. Survival Laws 4/4. 6 commits. **Próximo:** Operador de Browser Autenticado (probe-first) p/ ações logadas (ML Compartilhar→meli.la). **Lição:** probe-first economizou 3 becos (API ML/Firecrawl/actor velho) e pegou IDs fakes + regressão de credencial.
+> ```
+
+## 🤖 Claude *(15:02:27)*
+
+
+## 🤖 Claude *(15:02:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.20.1 selado em 2026-06-02** \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o de credenciais:",
+  "new_string": "**Sprint v6.20.2 selado em 2026-06-02** \u2014 Idempot\u00eancia da encripta\u00e7\u00e3o + guard de tenant nas views irm\u00e3s: **FECHADO o Top Gap que a v6.20.1 sinalizou** \u2014 `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) chamava `vault.create_secret` incondicionalmente \u2192 re-salvar segredo p/ valor novo colidia no \u00edndice \u00fanico `vault.secrets.name` (`23505`). Helper `public.vault_upsert_secret(value,name,desc)` (`SECURITY DEFINER`, `search_path=''`, EXECUTE revogado de PUBLIC/anon/authenticated) rotaciona in-place via `vault.update_secret` (mesmo UUID, sem \u00f3rf\u00e3os) sen\u00e3o cria; as 3 encrypt triggers passam a us\u00e1-lo (migration `20260602140000`). O `/security-review` dessa migration **exp\u00f4s um gap pr\u00e9-existente** nas INSTEAD OF de `meta_config`/`social_accounts` (sem guard `auth.uid()` \u2192 inje\u00e7\u00e3o cross-tenant id-novo; o overwrite id-colidente j\u00e1 era fail-closed pelo PK \u2014 achado HIGH do review REFUTADO material) \u2192 guard `42501` portado pras 2 (migration `20260602150000`). Ambas `/security-review` **SAFE**; tudo provado material via Management API em `BEGIN\u2026ROLLBACK` (antes 23505/inje\u00e7\u00e3o OK, depois OK/42501); Phase 5c **SEAL ALLOWED** (7 verified). Mesh **8751**. 6 commits. **Novo gap (Top Gap):** desconectar Meta/social deixa o segredo Vault **\u00f3rf\u00e3o** (INSTEAD OF DELETE s\u00f3 apaga a linha base) \u2014 precisa de RPC dedicada de disconnect (nula+revoga) no padr\u00e3o `disconnect_wordpress()`, d\u00e9bito LGPD. **Li\u00e7\u00e3o:** adversarial-verify material (PK fail-closed + md5 da v\u00edtima) refutou um HIGH e ao mesmo tempo revelou o gap real adjacente \u2014 resolvido na mesma sess\u00e3o em vez de empurrar pra fria.\n\n**Sprint v6.20.1 selado em 2026-06-02** \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o de credenciais:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:02:44)*
+
+
+## 🤖 Claude *(15:02:44)*
+
+Committing the sprint update + pushing:
+
+## 🤖 Claude *(15:02:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"chore(sprint): selo v6.20.2 \u2014 idempot\u00eancia do Vault + guard de tenant meta/social\" 2>&1 | tail -3\ngit push origin main 2>&1 | tail -4\necho \"=== final log ===\"\ngit log --oneline -7\necho \"=== tree clean? ===\"\ngit status --short && echo \"(clean)\"",
+  "description": "Commit + push sprint priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 66859b0] chore(sprint): selo v6.20.2 — idempotência do Vault + guard de tenant meta/social
+>  1 file changed, 2 insertions(+)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    5b79980..66859b0  main -> main
+> === final log ===
+> 66859b0 chore(sprint): selo v6.20.2 — idempotência do Vault + guard de tenant meta/social
+> 5b79980 docs(handoff): seal v6.20.2 — vault encrypt idempotente + guard de tenant meta/social
+> beec4aa docs(readme): v6.20.2 — vault encrypt idempotente + guard de tenant meta/social
+> deb661c docs(processes): fecha débito de idempotência + guard meta/social no SOP de credenciais
+> 87c926f fix(credentials): guard de tenant nas INSTEAD OF de meta_config/social_accounts
+> 2db5f62 fix(credentials): vault_upsert_secret idempotente — elimina 23505 ao rotacionar segredo
+> ec80563 chore(sprint): selo v6.20.1 — WordPress BYOK + fix do double-fire da encriptação
+> === tree clean? ===
+> (clean)
+> ```
+
+## 🤖 Claude *(15:03:00)*
+
+
+## 🤖 Claude *(15:03:25)*
+
+Tudo selado e empurrado — tree limpo, 6 commits em `origin/main`. **PHASE 8 — Relatório final:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — VAULT IDEMPOTENT ENCRYPT + TENANT GUARD (2026-06-02)
+  v6.20.2
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a Secret leak (diff)   ✅ só o NOME de var `SB_SECRET_KEY` num comentário de SOP (regra de credencial permite descrever onde mora)
+  1c Coin deduction       ✅ sem violação client-side
+  1e Sensitive logs       ✅ matches são test file pré-existente (probe "invalid token", não tocado)
+  1b/1d Edge JWT / RLS     ⏭ N/A — sessão não tocou edge fns nem src/ (só migrations + docs)
+  → Nenhum 🔴. As 2 migrations passaram /security-review (ambas SAFE); 1 achado HIGH REFUTADO material.
+
+📦 COMMITS (6)
+  2db5f62 — fix(credentials): vault_upsert_secret idempotente — elimina 23505 ao rotacionar segredo
+  87c926f — fix(credentials): guard de tenant nas INSTEAD OF de meta_config/social_accounts
+  deb661c — docs(processes): fecha débito de idempotência + guard meta/social no SOP
+  beec4aa — docs(readme): v6.20.2
+  5b79980 — docs(handoff): seal v6.20.2
+  66859b0 — chore(sprint): selo v6.20.2
+
+⬡ KNOWLEDGE MESH
+  Milestone node: ea6a3a17-2804-4de3-b153-31f823a9fdb5 — session-handoff-20260602-vault-idempotency-tenant-guard
+  Embedding: ✅ 768d · 1 chunk · openai/text-embedding-3-small (verificado embedded=true)
+
+📖 README.md
+  Versão: 6.20.1 → 6.20.2
+  Badge neural_mesh: 8750 → 8751 nós
+  Seção adicionada: "What's new in v6.20.2"
+
+🧠 HANDOFF.md
+  Fase selada: Vault Idempotent Encrypt + Tenant Guard Record
+  Seções: novo Record + tabelas de verificação/commits/arquitetura + Survival Laws self-audit; débito residual da v6.20.1 marcado ✅ FECHADA
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 7 verificadas · 0 skipped · 0 falhas (4 commits + node mesh + tsc + ORO)
+
+🚀 PUSH
+  Branch: main → origin/main (ec80563..66859b0)
+  Commits enviados: 6
+
+🗄️  PRODUÇÃO
+  Ambas migrations APLICADAS e commitadas no banco (Management API, txn) + registradas em schema_migrations.
+  Sem rebuild de frontend (zero mudança em src/) → nginx inalterado.
+
+📌 SPRINT
+  sprint-priorities.md: atualizado ✅ (selo v6.20.2 + Top Gap fechado)
+  scratch/ cleanup: limpo ✅ (nada a migrar)
+  MCP docs: sem MCP novo nesta sessão ✅
+
+📊 BoK
+  Gate N/A — migration + docs only (bug patch em feature documentada, isento)
+
+⏭  PRÓXIMOS PASSOS
+  1. Segredo órfão no disconnect Meta/social: INSTEAD OF DELETE só apaga a linha base → token plaintext fica no Vault. RPC dedicada (nula+revoga) no padrão disconnect_wordpress() + /security-review. Débito LGPD.
+  2. E2E no navegador logado: validei PostgREST + triggers + Vault pela perspectiva do banco; o clique na UI logada não foi exercido (browser autenticado indisponível).
+  3. (Carry-over) Sprint OE-661: Stripe prod swap, ML postback edge, LLM cascading fallback (OTD-LLM-FALLBACK).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Resumo, Maestro:** havia sim trabalho resolvível em-sessão e resolvi tudo — em vez de só selar o fix de 23505 e empurrar o resto pra uma sessão fria.
+
+Nesta sessão fechei **duas** dívidas da camada de credenciais, ambas **LIVE em produção** e provadas materialmente (todo teste em `BEGIN…ROLLBACK`, zero mutação real):
+
+1. **23505 no re-save** (o débito residual que a própria seal v6.20.1 deixou anotado) → helper `vault_upsert_secret` idempotente.
+2. **Injeção cross-tenant em meta/social** — gap pré-existente que o `/security-review` da primeira migration revelou. Importante: o review levantou um HIGH de *overwrite* cross-tenant; **refutei-o materialmente** (o PK das base tables faz fail-closed, md5 da vítima inalterado) em vez de aceitar de cara — e essa mesma investigação expôs o gap **real** adjacente (injeção de `id` novo), que portei o guard `auth.uid()` e fechei.
+
+Deixei **uma** nova dívida anotada (segredo Vault órfão ao desconectar Meta/social — paralelo ao que o `disconnect_wordpress()` resolveu) para a próxima sessão, com o caminho de fix já mapeado. Pode dispensar o chip de follow-up do guard de tenant — já foi feito aqui.
+
 ---
 
 %% --- TIMELINE START --- %%
