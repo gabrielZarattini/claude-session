@@ -10,15 +10,16 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 228
-> * **Sessões do Claude**: 198
-> * **Sessões do Gemini**: 30
+> * **Total de Sessões Registradas**: 253
+> * **Sessões do Claude**: 222
+> * **Sessões do Gemini**: 31
 
 ---
 
 ## 📂 Tópicos e Categorias Principais
 
 ### Supabase & Database
+*   `[[2026-06-01 - Fix failing smoke test Supabase auth key migration]]` - *2026-06-01*
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` - *2026-05-01*
 
 ### JWT & Authentication
@@ -41,6 +42,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-03 - AIOS Constelação MCORCH system updates]]` - *2026-05-03*
 
 ### UI Extensions & Layouts
+*   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` - *2026-06-01*
 *   `[[2026-05-30 - Configure canvas nodes and validate enterprise deploy]]` - *2026-05-30*
 *   `[[2026-05-14 - Sprint 4 — Canvas Studio UX Completion]]` - *2026-05-14*
 *   `[[2026-05-14 - Build content v2 AI canvas platform]]` - *2026-05-14*
@@ -48,23 +50,24 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-04 - Fix message options overflow in Core V2]]` - *2026-05-04*
 
 ### Security & Credentials
+*   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` - *2026-06-02*
 *   `[[2026-05-30 - Fix API key leak and reconfigure model defaults]]` - *2026-05-30*
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-*   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
-*   `[[2026-05-31 - handson]]` - *2026-05-31*
-*   `[[2026-05-31 - Seal meta-api BoK suite and test robustness]]` - *2026-05-31*
-*   `[[2026-05-31 - Fix tenant isolation in edge functions]]` - *2026-05-31*
-*   `[[2026-05-30 - handson]]` - *2026-05-30*
-*   `[[2026-05-30 - Você se lembra que criamos um...]]` - *2026-05-30*
-*   `[[2026-05-30 - Seal meta-api BoK suite and test robustness]]` - *2026-05-30*
-*   `[[2026-05-30 - Fix tenant isolation in edge functions]]` - *2026-05-30*
-*   `[[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]` - *2026-05-30*
-*   `[[2026-05-29 - Update context and continue antigravity handoff]]` - *2026-05-29*
-*   `[[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]` - *2026-05-29*
-*   `[[2026-05-28 - handson]]` - *2026-05-28*
-*   *... e mais 195 sessões nessa categoria.*
+*   `[[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-af037801ea2099be9]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a856110ba10475991]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a79c43bd461f65425]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
+*   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
+*   `[[2026-06-02 - Finalize visual design and unblock next phases]]` - *2026-06-02*
+*   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` - *2026-06-02*
+*   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
+*   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
+*   *... e mais 217 sessões nessa categoria.*
 
 ---
 
@@ -252,7 +255,32 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
+*   `[[2026-06-02 - agent-af037801ea2099be9]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a856110ba10475991]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a79c43bd461f65425]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a75197cea68044e8c]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
+*   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` (ClaudeSessions)
+*   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` (ClaudeSessions)
+*   `[[2026-06-02 - Finalize visual design and unblock next phases]]` (ClaudeSessions)
+*   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-af11d6fa76341891b]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-aa306815868636459]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-a86068c8c8bc3d3e1]]` (ClaudeSessions)
+*   `[[2026-06-01 - agent-a10aebd93731e0c4f]]` (ClaudeSessions)
+*   `[[2026-06-01 - Review GitGuardian alert on password string]]` (ClaudeSessions)
+*   `[[2026-06-01 - Restructure enterprise constellation agents]]` (ClaudeSessions)
+*   `[[2026-06-01 - Resolve priority alerts]]` (ClaudeSessions)
+*   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` (ClaudeSessions)
 *   `[[2026-06-01 - Fix tenant isolation in edge functions]]` (ClaudeSessions)
+*   `[[2026-06-01 - Fix failing smoke test Supabase auth key migration]]` (ClaudeSessions)
+*   `[[2026-06-01 - Fix affiliate redirect link to Mercado Livre product]]` (ClaudeSessions)
+*   `[[2026-06-01 - Address OTD-OE661-PER-USER and documentation tasks]]` (ClaudeSessions)
+*   `[[2026-06-01 - 7b21c6d6-784b-4fde-8bfc-11695db9eb2e]]` (ClaudeSessions)
+*   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Abril 2026
 *   `[[2026-04-26 - ffc7407f-40e6-45ef-a261-ef73cd5bca92]]` (ClaudeSessions)
