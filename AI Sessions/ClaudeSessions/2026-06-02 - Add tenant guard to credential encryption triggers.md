@@ -4103,10 +4103,1126 @@ Perfeito — a própria seção v6.20.2 termina com "**Next:** ... a dedicated d
 }
 ```
 
+## 👤 User *(20:43:01)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(20:43:01)*
+
+No response requested.
+
+## 👤 User *(20:43:27)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(20:43:27)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(20:43:38)*
+
+
+## 🤖 Claude *(20:43:39)*
+
+Retomando o `/handoff` de onde parei — completei PRE-FLIGHT, Phase 1 (segurança ✅), Phase 2 (commits já feitos), Phase 3 (node `f7805e20…` embedded 768d, mesh 8752), e a 1ª edição do README (badge de versão). Continuando **PHASE 4** — badge neural_mesh + seção What's New:
+
+## 🤖 Claude *(20:43:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8751_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8752_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:43:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.20.2 (2026-06-02)",
+  "new_string": "## \ud83c\udd95 What's new in v6.20.3 (2026-06-02)\n\n**Meta/social disconnect now revokes the orphaned Vault secret** \u2014 closes the exact LGPD/retention debt the v6.20.2 seal flagged as \"Next\", plus a belt-and-suspenders re-review of the prior tenant-guard commit:\n\n1. **`disconnect_meta()` / `disconnect_social(p_account_id)`** \u2014 two privileged RPCs mirroring `disconnect_wordpress()` (SECURITY DEFINER, `search_path=''`, fail-closed `28000` on no `auth.uid()`, EXECUTE granted to `authenticated` only). Disconnecting Meta or a social account previously issued a plain `.delete()` through the masked view \u2192 the INSTEAD OF DELETE trigger removed only the base row and **left the encrypted token's Vault secret orphaned** (retained plaintext). The RPCs delete the row **and** revoke the secret. The hooks (`useMetaConfig`/`useSocialAccounts`) were switched from `.delete()` to `.rpc()`.\n2. **Tenant-safe by name-binding (key difference vs WordPress)** \u2014 meta/social secrets are named by the **row id**, not `user_id`. Each Vault delete is double-bound (`id = ref read from the caller's own row` **AND** `name = '<prefix>_' || caller's own row id`); since `id` is `PRIMARY KEY`, the caller's row id can never equal a victim's, so a planted foreign reference can only ever no-op. The raw Vault UUID is never exposed to clients (masked columns, base-table SELECT revoked, `decrypted_*` service_role-only), so it cannot even be learned.\n3. **One-time cleanup** \u2014 the migration revokes the already-orphaned secrets (materially: **12 orphaned Meta secrets \u2192 0**), provably orphan-scoped (`NOT EXISTS` a base row whose `id::text = right(name,36)`), preserving the 3 live social secrets.\n4. **Redundant `/security-review` of `87c926f`** (the v6.20.2 tenant guard) at the Sovereign's request \u2192 **clean, net-hardening, 9/10**.\n\n**Material proofs:** 2 granular commits (`76bb9e3`\u00b7`610e1f3`) \u00b7 migration `20260602160000` applied + recorded in `schema_migrations` \u00b7 **both Part A and Part B `/security-review` SAFE (9/10)** \u00b7 `tsc --noEmit` 0 errors \u00b7 238 tests pass \u00b7 RPC suite 5/5 in `BEGIN\u2026ROLLBACK` (happy meta+social, foreign-id no-op, planted-ref name-binding holds, unauth `28000`) \u00b7 post-apply 12\u21920 Meta orphans / 3 live social secrets + rows intact \u00b7 served bundle contains both RPC calls + baked env \u00b7 handoff node `f7805e20-bebd-4a30-8533-09806238f135` embedded 768d \u00b7 mesh **8752 nodes**.\n\n---\n\n## \ud83c\udd95 What's new in v6.20.2 (2026-06-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:44:01)*
+
+
+## 🤖 Claude *(20:44:02)*
+
+README atualizado (badges + seção v6.20.3). Commit separado do README (Phase 4):
+
+## 🤖 Claude *(20:44:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.20.3 \u2014 disconnect RPC revoga segredo Vault \u00f3rf\u00e3o (meta/social)\n\nBadge de vers\u00e3o 6.20.2\u21926.20.3, neural_mesh 8751\u21928752, e se\u00e7\u00e3o What's new\ndocumentando disconnect_meta/disconnect_social (revoga\u00e7\u00e3o de \u00f3rf\u00e3o, name-binding\ntenant-safe, limpeza 12\u21920) + o /security-review redundante limpo do 87c926f.\"\necho \"exit=$?\"; git log --oneline -1",
+  "description": "Commit README update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit=0
+> ac1cba1 docs(readme): v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+> ```
+
+> **Tool Result (Unknown Tool)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:44:10)*
+
+
+## 🤖 Claude *(20:44:11)*
+
+README selado (`ac1cba1`). **PHASE 5 — HANDOFF.md UPDATE** — inserindo o novo Record no topo do histórico (após `## Task State`) e riscando o pending fechado:
+
+## 🤖 Claude *(20:44:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)",
+  "new_string": "## Task State\n\n## Meta/Social Disconnect \u2014 Orphaned-Secret Revocation Record (2026-06-02)\n\n**v6.20.3 (2026-06-02)** \u2014 Sess\u00e3o disparada por duas diretivas do Sovereign: (A) rodar `/security-review` **redundante** apontado para o `87c926f` (o guard de tenant meta/social selado em v6.20.2) \u2014 cinto-e-suspens\u00f3rio; e (B) atacar o d\u00e9bito de **segredo Vault \u00f3rf\u00e3o** que a pr\u00f3pria seal v6.20.2 anotou no Pending. Padr\u00e3o dominante mantido: **probe-first material** (Management API, todo teste mutante em `BEGIN\u2026ROLLBACK` \u2192 zero muta\u00e7\u00e3o de produ\u00e7\u00e3o) + **adversarial verify**. Antes de codar a Parte B, confirmei materialmente que o gap de tenant guard da diretiva original j\u00e1 estava 100% fechado em prod (`pg_get_functiondef` das 2 triggers + ataque comportamental 5/5 \u2192 `42501`), evitando uma migration redundante.\n\n**O que foi entregue (Parte B):**\n- **`disconnect_meta()` / `disconnect_social(p_account_id uuid)`** (migration `20260602160000`) \u2014 RPCs SECURITY DEFINER, `search_path=''`, fail-closed `28000` sem `auth.uid()`, EXECUTE s\u00f3 `authenticated`. Espelham `disconnect_wordpress`: deletam a linha **E** revogam o segredo Vault. Hooks `useMetaConfig`/`useSocialAccounts` migrados de `.delete()` \u2192 `.rpc()`; `types.ts` regenerado (3 entradas: as 2 RPCs + `vault_upsert_secret`).\n- **Guard de tenant por name-binding** (diferen\u00e7a do WP): segredos meta/social s\u00e3o nomeados pelo `id` da linha, n\u00e3o `user_id`. Cada `DELETE` no Vault \u00e9 double-bound (`id = ref-da-pr\u00f3pria-linha` **E** `name = '<prefix>_' || id-da-pr\u00f3pria-linha`); como `id` \u00e9 PK, o id do atacante nunca iguala o da v\u00edtima \u2192 imposs\u00edvel revogar segredo alheio. Defesa independente: o UUID bruto nunca vaza ao cliente.\n- **Limpeza one-time** dos \u00f3rf\u00e3os preexistentes (`12 \u2192 0` segredos Meta), provadamente orphan-scoped (`NOT EXISTS` linha base via `right(name,36)`), preservando os 3 segredos sociais vivos.\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + gate `/security-review` \u00b7 Owner=Sovereign (blast radius = reten\u00e7\u00e3o de plaintext \u00f3rf\u00e3o LGPD + integridade do disconnect per-user).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Parte A \u2014 `/security-review` do `87c926f` | \u2705 **LIMPO 9/10** (net-hardening; `IS DISTINCT FROM` fecha bypass NULL, UPDATE s\u00f3 v\u00ea OLD do pr\u00f3prio tenant, sem SQL din\u00e2mico) |\n| Gap original j\u00e1 fechado (pr\u00e9-build) | \u2705 `pg_get_functiondef` das 2 triggers c/ guard+`42501`+`search_path=\"\"` \u00b7 ataque comportamental 5/5 `42501` |\n| Su\u00edte RPC (BEGIN/ROLLBACK, dados reais) | \u2705 **5/5** \u2014 happy meta+social \u00b7 foreign-id no-op \u00b7 planted-ref name-binding aguenta \u00b7 unauth `28000` \u00b7 zero res\u00edduo |\n| Limpeza de \u00f3rf\u00e3os (preview\u2192apply) | \u2705 `12 \u2192 0` segredos Meta \u00f3rf\u00e3os \u00b7 3 sociais vivos + 3 linhas intactos |\n| Parte B \u2014 `/security-review` da `20260602160000` | \u2705 **LIMPO/SAFE 9/10** (PK garante id distinto + UUID n\u00e3o-vazado) |\n| Apply em prod (Mgmt API, txn at\u00f4mica) | \u2705 `20260602160000` no `schema_migrations`; fun\u00e7\u00f5es SECURITY DEFINER `search_path=\"\"`; EXECUTE authenticated\u2713/anon revogado\u2713 |\n| `tsc --noEmit` | \u2705 0 erros |\n| Testes | \u2705 238 passed / 2 skipped \u00b7 eslint 0 |\n| Frontend deploy | \u2705 build exit 0; bundle servido cont\u00e9m `disconnect_meta`/`disconnect_social` + Supabase URL baked |\n| Mesh | \u2705 8752 n\u00f3s |\n| Containers | \u2705 5 healthy (9d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `f7805e20-bebd-4a30-8533-09806238f135` embedded 768d |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `76bb9e3` | fix(credentials): disconnect_meta/disconnect_social revogam o segredo Vault \u00f3rf\u00e3o |\n| `610e1f3` | docs(processes): SOP + Key Files do disconnect Meta/social (revoga\u00e7\u00e3o de \u00f3rf\u00e3o) |\n| `ac1cba1` | docs(readme): v6.20.3 \u2014 disconnect RPC revoga segredo Vault \u00f3rf\u00e3o (meta/social) |\n\n### Arquitetura \u2014 disconnect com revoga\u00e7\u00e3o de segredo \u00f3rf\u00e3o\n```\nDISCONNECT (meta/social), antes:  client .delete() \u2192 INSTEAD OF DELETE \u2192 DELETE base row\n                                  \u2192 segredo Vault FICA \u00d3RF\u00c3O (plaintext retido) \u274c\nDISCONNECT (meta/social), agora:  client .rpc('disconnect_meta' | 'disconnect_social', {p_account_id})\n   disconnect_*(): IF auth.uid() IS NULL \u2192 28000\n     v_row_id, v_*_ref \u2190 SELECT da PR\u00d3PRIA linha (WHERE user_id = auth.uid() [+ id = p_account_id])\n     DELETE base row\n     DELETE vault.secrets WHERE id = v_*_ref  AND  name = '<prefix>_' || v_row_id   \u2190 double-bind\n       (id \u00e9 PK \u21d2 id-do-atacante \u2260 id-da-v\u00edtima \u21d2 name nunca casa segredo alheio = tenant-safe)\nCLEANUP one-time: DELETE vault.secrets WHERE name ~ '^<prefix>_<uuid>$'\n                  AND NOT EXISTS (linha base com id = right(name,36))   \u2190 s\u00f3 \u00f3rf\u00e3os (12\u21920)\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno via Management API \u2014 gap original j\u00e1-fechado (pg_get_functiondef + 5/5 comportamental), su\u00edte RPC 5/5 rolled-back, preview\u2192apply da limpeza (12\u21920 / 3 vivos), p\u00f3s-apply (fun\u00e7\u00f5es+grants+tracking), build+bundle servido com as RPCs. Zero fabrica\u00e7\u00e3o. 1 armadilha divulgada (urllib\u2192Cloudflare 1010 \u2192 troquei p/ curl). Fase 5c executada abaixo. N\u00c3O criei migration redundante p/ o gap j\u00e1 fechado (seria fabricar trabalho).\nLaw 2 (Process): \u2705 SOP credential-disconnect-clear.md estendido (se\u00e7\u00e3o disconnect meta/social + equival\u00eancia LGPD) antes do commit; CLAUDE.md Key Files. Extens\u00e3o de feature documentada (disconnect/clear) \u2192 sem BoK gate.\nLaw 3 (Pruning): investiga\u00e7\u00e3o focada; outputs consumidos, refer\u00eancia por path/UUID/migration/commit.\nLaw 4 (ORO): \u2705 declarado no in\u00edcio da Parte B; \"fa\u00e7a os dois\" = autoriza\u00e7\u00e3o aut\u00f4noma do Sovereign.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos (anotados p/ pr\u00f3xima sess\u00e3o):**\n- **E2E no navegador:** o disconnect foi verificado pela perspectiva do banco (RPC 5/5 + bundle servido cont\u00e9m as RPCs); o clique real na UI logada (`/dashboard/settings` \u2192 Desconectar Meta/social) n\u00e3o foi executado (browser autenticado indispon\u00edvel). Confirmar visualmente no pr\u00f3ximo passe.\n- **2 commits locais n\u00e3o-pushados** quando este Record foi escrito \u2014 Phase 7 do handoff resolve.\n\n---\n\n## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)"
+}
+```
+
+## 🤖 Claude *(20:44:53)*
+
+
+## 🤖 Claude *(20:44:54)*
+
+O estado do arquivo foi resetado na retomada — preciso re-ler antes de editar:
+
+## 🤖 Claude *(20:44:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 10,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)
+> 15	
+> 16	**v6.20.2 (2026-06-02)** — Sessão disparada pela dívida residual que a própria seal v6.20.1 anotou no Pending: o `trg_encrypt_user_api_keys` (+ irmãos meta/social) chamava `vault.create_secret` **incondicionalmente** → re-salvar um segredo p/ valor novo colidia no índice único `vault.secrets.name` (`23505`) — o caso "editar a senha WP sem desconectar antes". Padrão dominante: **probe-first material** (Management API, todo teste em `BEGIN…ROLLBACK` → zero mutação de produção) + **adversarial verify** — um achado HIGH do `/security-review` foi REFUTADO materialmente (o overwrite cross-tenant é fail-closed pelo `PRIMARY KEY`, md5 da vítima inalterado), mas a investigação revelou um gap REAL paralelo (injeção cross-tenant id-novo nas INSTEAD OF de meta/social), fechado na mesma sessão.
+> 17	
+> ```
+
+## 🤖 Claude *(20:44:57)*
+
+
+## 🤖 Claude *(20:44:58)*
+
+Confirmado. Refazendo a inserção do Record:
+
+## 🤖 Claude *(20:45:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)",
+  "new_string": "## Task State\n\n## Meta/Social Disconnect \u2014 Orphaned-Secret Revocation Record (2026-06-02)\n\n**v6.20.3 (2026-06-02)** \u2014 Sess\u00e3o disparada por duas diretivas do Sovereign: (A) rodar `/security-review` **redundante** apontado para o `87c926f` (o guard de tenant meta/social selado em v6.20.2) \u2014 cinto-e-suspens\u00f3rio; e (B) atacar o d\u00e9bito de **segredo Vault \u00f3rf\u00e3o** que a pr\u00f3pria seal v6.20.2 anotou no Pending. Padr\u00e3o dominante mantido: **probe-first material** (Management API, todo teste mutante em `BEGIN\u2026ROLLBACK` \u2192 zero muta\u00e7\u00e3o de produ\u00e7\u00e3o) + **adversarial verify**. Antes de codar a Parte B, confirmei materialmente que o gap de tenant guard da diretiva original j\u00e1 estava 100% fechado em prod (`pg_get_functiondef` das 2 triggers + ataque comportamental 5/5 \u2192 `42501`), evitando uma migration redundante.\n\n**O que foi entregue (Parte B):**\n- **`disconnect_meta()` / `disconnect_social(p_account_id uuid)`** (migration `20260602160000`) \u2014 RPCs SECURITY DEFINER, `search_path=''`, fail-closed `28000` sem `auth.uid()`, EXECUTE s\u00f3 `authenticated`. Espelham `disconnect_wordpress`: deletam a linha **E** revogam o segredo Vault. Hooks `useMetaConfig`/`useSocialAccounts` migrados de `.delete()` \u2192 `.rpc()`; `types.ts` regenerado (3 entradas: as 2 RPCs + `vault_upsert_secret`).\n- **Guard de tenant por name-binding** (diferen\u00e7a do WP): segredos meta/social s\u00e3o nomeados pelo `id` da linha, n\u00e3o `user_id`. Cada `DELETE` no Vault \u00e9 double-bound (`id = ref-da-pr\u00f3pria-linha` **E** `name = '<prefix>_' || id-da-pr\u00f3pria-linha`); como `id` \u00e9 PK, o id do atacante nunca iguala o da v\u00edtima \u2192 imposs\u00edvel revogar segredo alheio. Defesa independente: o UUID bruto nunca vaza ao cliente.\n- **Limpeza one-time** dos \u00f3rf\u00e3os preexistentes (`12 \u2192 0` segredos Meta), provadamente orphan-scoped (`NOT EXISTS` linha base via `right(name,36)`), preservando os 3 segredos sociais vivos.\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + gate `/security-review` \u00b7 Owner=Sovereign (blast radius = reten\u00e7\u00e3o de plaintext \u00f3rf\u00e3o LGPD + integridade do disconnect per-user).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Parte A \u2014 `/security-review` do `87c926f` | \u2705 **LIMPO 9/10** (net-hardening; `IS DISTINCT FROM` fecha bypass NULL, UPDATE s\u00f3 v\u00ea OLD do pr\u00f3prio tenant, sem SQL din\u00e2mico) |\n| Gap original j\u00e1 fechado (pr\u00e9-build) | \u2705 `pg_get_functiondef` das 2 triggers c/ guard+`42501`+`search_path=\"\"` \u00b7 ataque comportamental 5/5 `42501` |\n| Su\u00edte RPC (BEGIN/ROLLBACK, dados reais) | \u2705 **5/5** \u2014 happy meta+social \u00b7 foreign-id no-op \u00b7 planted-ref name-binding aguenta \u00b7 unauth `28000` \u00b7 zero res\u00edduo |\n| Limpeza de \u00f3rf\u00e3os (preview\u2192apply) | \u2705 `12 \u2192 0` segredos Meta \u00f3rf\u00e3os \u00b7 3 sociais vivos + 3 linhas intactos |\n| Parte B \u2014 `/security-review` da `20260602160000` | \u2705 **LIMPO/SAFE 9/10** (PK garante id distinto + UUID n\u00e3o-vazado) |\n| Apply em prod (Mgmt API, txn at\u00f4mica) | \u2705 `20260602160000` no `schema_migrations`; fun\u00e7\u00f5es SECURITY DEFINER `search_path=\"\"`; EXECUTE authenticated\u2713/anon revogado\u2713 |\n| `tsc --noEmit` | \u2705 0 erros |\n| Testes | \u2705 238 passed / 2 skipped \u00b7 eslint 0 |\n| Frontend deploy | \u2705 build exit 0; bundle servido cont\u00e9m `disconnect_meta`/`disconnect_social` + Supabase URL baked |\n| Mesh | \u2705 8752 n\u00f3s |\n| Containers | \u2705 5 healthy (9d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `f7805e20-bebd-4a30-8533-09806238f135` embedded 768d |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `76bb9e3` | fix(credentials): disconnect_meta/disconnect_social revogam o segredo Vault \u00f3rf\u00e3o |\n| `610e1f3` | docs(processes): SOP + Key Files do disconnect Meta/social (revoga\u00e7\u00e3o de \u00f3rf\u00e3o) |\n| `ac1cba1` | docs(readme): v6.20.3 \u2014 disconnect RPC revoga segredo Vault \u00f3rf\u00e3o (meta/social) |\n\n### Arquitetura \u2014 disconnect com revoga\u00e7\u00e3o de segredo \u00f3rf\u00e3o\n```\nDISCONNECT (meta/social), antes:  client .delete() \u2192 INSTEAD OF DELETE \u2192 DELETE base row\n                                  \u2192 segredo Vault FICA \u00d3RF\u00c3O (plaintext retido) \u274c\nDISCONNECT (meta/social), agora:  client .rpc('disconnect_meta' | 'disconnect_social', {p_account_id})\n   disconnect_*(): IF auth.uid() IS NULL \u2192 28000\n     v_row_id, v_*_ref \u2190 SELECT da PR\u00d3PRIA linha (WHERE user_id = auth.uid() [+ id = p_account_id])\n     DELETE base row\n     DELETE vault.secrets WHERE id = v_*_ref  AND  name = '<prefix>_' || v_row_id   \u2190 double-bind\n       (id \u00e9 PK \u21d2 id-do-atacante \u2260 id-da-v\u00edtima \u21d2 name nunca casa segredo alheio = tenant-safe)\nCLEANUP one-time: DELETE vault.secrets WHERE name ~ '^<prefix>_<uuid>$'\n                  AND NOT EXISTS (linha base com id = right(name,36))   \u2190 s\u00f3 \u00f3rf\u00e3os (12\u21920)\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno via Management API \u2014 gap original j\u00e1-fechado (pg_get_functiondef + 5/5 comportamental), su\u00edte RPC 5/5 rolled-back, preview\u2192apply da limpeza (12\u21920 / 3 vivos), p\u00f3s-apply (fun\u00e7\u00f5es+grants+tracking), build+bundle servido com as RPCs. Zero fabrica\u00e7\u00e3o. 1 armadilha divulgada (urllib\u2192Cloudflare 1010 \u2192 troquei p/ curl). Fase 5c executada abaixo. N\u00c3O criei migration redundante p/ o gap j\u00e1 fechado (seria fabricar trabalho).\nLaw 2 (Process): \u2705 SOP credential-disconnect-clear.md estendido (se\u00e7\u00e3o disconnect meta/social + equival\u00eancia LGPD) antes do commit; CLAUDE.md Key Files. Extens\u00e3o de feature documentada (disconnect/clear) \u2192 sem BoK gate.\nLaw 3 (Pruning): investiga\u00e7\u00e3o focada; outputs consumidos, refer\u00eancia por path/UUID/migration/commit.\nLaw 4 (ORO): \u2705 declarado no in\u00edcio da Parte B; \"fa\u00e7a os dois\" = autoriza\u00e7\u00e3o aut\u00f4noma do Sovereign.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos (anotados p/ pr\u00f3xima sess\u00e3o):**\n- **E2E no navegador:** o disconnect foi verificado pela perspectiva do banco (RPC 5/5 + bundle servido cont\u00e9m as RPCs); o clique real na UI logada (`/dashboard/settings` \u2192 Desconectar Meta/social) n\u00e3o foi executado (browser autenticado indispon\u00edvel). Confirmar visualmente no pr\u00f3ximo passe.\n\n---\n\n## Vault Idempotent Encrypt + Tenant Guard Record (2026-06-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:45:33)*
+
+
+## 🤖 Claude *(20:45:34)*
+
+Record inserido. Agora riscar o pending fechado (o débito de segredo órfão na seção v6.20.2). Localizando o texto exato:
+
+## 🤖 Claude *(20:45:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"Segredo \u00f3rf\u00e3o no disconnect Meta/social\" HANDOFF.md",
+  "description": "Locate the orphaned-secret pending line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 128:- **Segredo órfão no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta só a linha base via INSTEAD OF DELETE — o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica órfão** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. Débito LGPD/retenção.
+> ```
+
+## 🤖 Claude *(20:45:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 128,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 128	- **Segredo órfão no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta só a linha base via INSTEAD OF DELETE — o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica órfão** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. Débito LGPD/retenção.
+> ```
+
+## 🤖 Claude *(20:45:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **Segredo \u00f3rf\u00e3o no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta s\u00f3 a linha base via INSTEAD OF DELETE \u2014 o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica \u00f3rf\u00e3o** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. D\u00e9bito LGPD/reten\u00e7\u00e3o.",
+  "new_string": "- ~~**Segredo \u00f3rf\u00e3o no disconnect Meta/social:** desconectar Meta (`useMetaConfig.disconnect`) ou social deleta s\u00f3 a linha base via INSTEAD OF DELETE \u2014 o segredo Vault (`meta_config_long_lived_token_<id>` etc.) **fica \u00f3rf\u00e3o** (plaintext retido). Paralelo ao que `disconnect_wordpress()` resolveu pro WP; precisa de RPC dedicada (nula linha + revoga segredo) + `/security-review`. D\u00e9bito LGPD/reten\u00e7\u00e3o.~~ \u2705 **FECHADO 2026-06-02 (v6.20.3)** \u2014 RPCs `disconnect_meta()`/`disconnect_social(uuid)` (migration `20260602160000`); 12 segredos Meta \u00f3rf\u00e3os limpos (12\u21920); ver Record no topo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:45:50)*
+
+
+## 🤖 Claude *(20:45:51)*
+
+HANDOFF.md atualizado (Record no topo + pending riscado). **PHASE 5b — SECRET SCAN no HANDOFF.md** antes de commitar:
+
+## 🤖 Claude *(20:45:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1. credential value scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\\s*['\\\"]?[A-Za-z0-9+/]{40,})\" HANDOFF.md \\\n  | grep -vE \"example|placeholder|<.*>|your-key|YOUR_|digest|sha256|hash|fingerprint\" | head -20 || echo \"HANDOFF.md: NO CREDENTIALS FOUND \u2705\"\necho \"\"; echo \"=== 5b-2. Google API keys ===\"\ngrep -nE \"AIza[0-9A-Za-z_-]{35}\" HANDOFF.md | head -10 || echo \"NO GOOGLE API KEYS \u2705\"\necho \"\"; echo \"=== 5b-3. inline = \\\"value\\\" assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md \\\n  | grep -vE \"example|placeholder|<.*>|your-|YOUR_|digest|hash|uuid|id.*[0-9a-f-]{36}\" | head -10 || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. credential value scan ===
+> 
+> === 5b-2. Google API keys ===
+> 
+> === 5b-3. inline = "value" assignments ===
+> 2884:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 2917:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 5620:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5622:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 5623:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 5665:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5667:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(20:46:11)*
+
+
+## 🤖 Claude *(20:46:13)*
+
+Phase 5b: 5b-1 e 5b-2 limpos ✅. As 3 ocorrências do 5b-3 (linhas 2884+) são **conteúdo pré-existente e benigno** (`project_id = 'mcorch-constellation'`, `amount=5533`, refs de UUID em prosa — não são credenciais) e estão longe do meu bloco novo (linhas 14-72). Verificando materialmente que (a) meu bloco é limpo e (b) essas linhas já estavam no HEAD (não são minhas):
+
+## 🤖 Claude *(20:46:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== (a) my NEW Record block (lines 14-72) scanned for 5b-3 pattern ===\"\nsed -n '14,72p' HANDOFF.md | grep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" | grep -vE \"example|placeholder|uuid|id.*[0-9a-f-]{36}\" | head || echo \"MY BLOCK: NO INLINE ASSIGNMENTS \u2705\"\necho \"\"; echo \"=== (b) are lines 2884/2917/5620 pre-existing (in HEAD)? \u2014 diff only added/removed in working tree ===\"\ngit diff HEAD -- HANDOFF.md | grep -nE \"^\\+\" | grep -E \"4caa9314|mcorch-constellation|amount=5533\" | head || echo \"NONE of those lines are NEW this session (pre-existing prose) \u2705\"\necho \"\"; echo \"=== confirm the 5b-3 hits are benign tokens (project_id/amount/uuid-in-prose), not credentials ===\"\necho \"line 2884 \u2192 UUID ref in prose | 2917 \u2192 amount/action strings | 5620-5667 \u2192 project_id literal. None are secrets.\"",
+  "description": "Verify new block clean + 5b-3 hits are pre-existing benign"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === (a) my NEW Record block (lines 14-72) scanned for 5b-3 pattern ===
+> 
+> === (b) are lines 2884/2917/5620 pre-existing (in HEAD)? — diff only added/removed in working tree ===
+> 
+> === confirm the 5b-3 hits are benign tokens (project_id/amount/uuid-in-prose), not credentials ===
+> line 2884 → UUID ref in prose | 2917 → amount/action strings | 5620-5667 → project_id literal. None are secrets.
+> ```
+
+## 🤖 Claude *(20:46:27)*
+
+
+## 🤖 Claude *(20:46:28)*
+
+Phase 5b ✅ — meu bloco novo (14-72) sem assignments; os hits do 5b-3 não são novos nesta sessão (`git diff HEAD` não os mostra) e são prosa benigna (UUID/project_id/amount). Sem credencial real. Commitando HANDOFF.md:
+
+## 🤖 Claude *(20:46:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal v6.20.3 \u2014 disconnect RPC revoga segredo Vault \u00f3rf\u00e3o (meta/social)\n\nRecord da sess\u00e3o: disconnect_meta/disconnect_social (migration 20260602160000)\nrevogam o segredo Vault no disconnect (12 \u00f3rf\u00e3os meta limpos), name-binding por\nid-de-linha+PK tenant-safe; + /security-review redundante limpo do 87c926f.\nPending de segredo \u00f3rf\u00e3o riscado como FECHADO.\"\necho \"exit=$?\"; git log --oneline -4",
+  "description": "Commit HANDOFF.md after Phase 5b passed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit=0
+> 8338d8a docs(handoff): seal v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+> ac1cba1 docs(readme): v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+> 610e1f3 docs(processes): SOP + Key Files do disconnect Meta/social (revogação de órfão)
+> 76bb9e3 fix(credentials): disconnect_meta/disconnect_social revogam o segredo Vault órfão
+> ```
+
+## 🤖 Claude *(20:46:36)*
+
+
+## 🤖 Claude *(20:46:37)*
+
+HANDOFF.md selado (`8338d8a`). **PHASE 5c — MATERIAL PROOF AUDIT** (verificação mecânica independente do Record):
+
+## 🤖 Claude *(20:46:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 400 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -60; echo \"audit exit=${PIPESTATUS[0]}\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node f7805e20 | mesh_node | f7805e20-bebd-4a30-8533-09806238f135 | f7805e20-bebd-4a30-8533-09806238f135 | ✅ |
+> | commit 87c926f | git_commit | 87c926f | 87c926f | ✅ |
+> | commit 76bb9e3 | git_commit | 76bb9e3 | 76bb9e3 | ✅ |
+> | commit 610e1f3 | git_commit | 610e1f3 | 610e1f3 | ✅ |
+> | commit ac1cba1 | git_commit | ac1cba1 | ac1cba1 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 238 passing | test_suite | 238 | 238 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + gate `/security-review` · Owner=Sovereign ( | Operator = MCORCH Agent · Reviewer=Sovereign + gate `/security-review` · Owner=Sovereign ( | ✅ |
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 9.2s)
+> audit exit=0
+> ```
+
+## 🤖 Claude *(20:46:53)*
+
+
+## 🤖 Claude *(20:46:54)*
+
+**Phase 5c: SEAL ALLOWED** — 8 claims verificadas, 0 falhas (node f7805e20, 4 commits, tsc 0, 238 testes, ORO). **PHASE 6 — BoK SEAL STATUS**:
+
+## 🤖 Claude *(20:46:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 6-2. session-touched modules (pages / edge fns / new components) ===\"\ngit diff --name-only HEAD~5..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" || echo \"ZERO new pages/edge-fns/components this session \u2705 (only: migration + 2 hooks + types + docs)\"\necho \"\"; echo \"=== session file inventory (what actually changed) ===\"\ngit diff --name-only 66859b0..HEAD\necho \"\"; echo \"=== verdict ===\"; echo \"Extens\u00e3o de feature documentada (disconnect/clear \u2014 SOP credential-disconnect-clear.md j\u00e1 existe e foi estendido). RPC patch scoped a feature existente \u2192 exemption do BoK gate (CLAUDE.md). Nenhum m\u00f3dulo novo sem BoK.\"",
+  "description": "Phase 6 BoK seal status check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-2. session-touched modules (pages / edge fns / new components) ===
+> ZERO new pages/edge-fns/components this session ✅ (only: migration + 2 hooks + types + docs)
+> 
+> === session file inventory (what actually changed) ===
+> CLAUDE.md
+> HANDOFF.md
+> README.md
+> docs/processes/credential-disconnect-clear.md
+> src/hooks/useMetaConfig.ts
+> src/hooks/useSocialAccounts.ts
+> src/integrations/supabase/types.ts
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql
+> 
+> === verdict ===
+> Extensão de feature documentada (disconnect/clear — SOP credential-disconnect-clear.md já existe e foi estendido). RPC patch scoped a feature existente → exemption do BoK gate (CLAUDE.md). Nenhum módulo novo sem BoK.
+> ```
+
+## 🤖 Claude *(20:47:03)*
+
+
+## 🤖 Claude *(20:47:05)*
+
+Phase 6 ✅ — zero módulos novos (só migration + 2 hooks + types + docs); extensão da feature documentada disconnect/clear → exemption do BoK gate. **PHASE 7 — PUSH** (4 commits à frente do origin):
+
+## 🤖 Claude *(20:47:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits ahead of origin/main ===\"; git rev-list --count origin/main..HEAD\necho \"=== push ===\"; git push origin main 2>&1 | tail -8; echo \"push exit=${PIPESTATUS[0]}\"\necho \"\"; echo \"=== verify sync ===\"; git rev-list --left-right --count origin/main...HEAD | awk '{print \"behind: \"$1\" \u00b7 ahead: \"$2}'",
+  "description": "Phase 7 push to origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits ahead of origin/main ===
+> 4
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    66859b0..8338d8a  main -> main
+> push exit=0
+> 
+> === verify sync ===
+> behind: 0 · ahead: 0
+> ```
+
+## 🤖 Claude *(20:47:15)*
+
+
+## 🤖 Claude *(20:47:16)*
+
+**Push OK** — `66859b0..8338d8a main -> main`, agora sincronizado (behind 0 · ahead 0), remote `github.com:gabrielZarattini/constellation-orchestra`. **PHASE 7b — SPRINT & CONNECTIONS HYGIENE**:
+
+## 🤖 Claude *(20:47:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (untracked artifacts like proof-manifest.json?) ===\"; git status --short\necho \"\"; echo \"=== proof-manifest.json tracked/ignored? ===\"; git check-ignore proof-manifest.json && echo \"(gitignored \u2014 transient, OK)\" || echo \"(not ignored)\"\necho \"\"; echo \"=== scratch/ ===\"; ls scratch/ 2>/dev/null && echo \"(has files)\" || echo \"scratch/ empty or absent \u2705\"\necho \"\"; echo \"=== sprint-priorities.md present? ===\"; test -f .claude/context/sprint-priorities.md && echo \"yes\" || echo \"(absent)\"\necho \"\"; echo \"=== .mcp.json servers ===\"; test -f .mcp.json && python3 -c \"import json; d=json.load(open('.mcp.json')); print('servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"(no .mcp.json or parse issue)\"",
+  "description": "Phase 7b hygiene checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (untracked artifacts like proof-manifest.json?) ===
+> 
+> === proof-manifest.json tracked/ignored? ===
+> proof-manifest.json
+> (gitignored — transient, OK)
+> 
+> === scratch/ ===
+> scratch/ empty or absent ✅
+> 
+> === sprint-priorities.md present? ===
+> yes
+> 
+> === .mcp.json servers ===
+> servers: ['gitnexus', 'obsidian', 'playwright']
+> ```
+
+## 🤖 Claude *(20:47:28)*
+
+
+## 🤖 Claude *(20:47:30)*
+
+Phase 7b: working tree limpo (proof-manifest.json é gitignored/transiente ✅), scratch vazio ✅, MCP servers (gitnexus/obsidian/playwright) sem novidade nesta sessão. Checando se sprint-priorities.md tem item que fechei:
+
+## 🤖 Claude *(20:47:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -niE \"\u00f3rf|orphan|disconnect|segredo|credential|meta_config|social_account|LGPD\" .claude/context/sprint-priorities.md | head -10 || echo \"NO matching sprint item \u2705 (orphaned-secret debt was a HANDOFF Pending, not a tracked sprint priority)\"",
+  "description": "Check sprint-priorities for items closed this session"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7:**Sprint v6.20.2 selado em 2026-06-02** — Idempotência da encriptação + guard de tenant nas views irmãs: **FECHADO o Top Gap que a v6.20.1 sinalizou** — `trg_encrypt_user_api_keys` (+ irmãos meta/social) chamava `vault.create_secret` incondicionalmente → re-salvar segredo p/ valor novo colidia no índice único `vault.secrets.name` (`23505`). Helper `public.vault_upsert_secret(value,name,desc)` (`SECURITY DEFINER`, `search_path=''`, EXECUTE revogado de PUBLIC/anon/authenticated) rotaciona in-place via `vault.update_secret` (mesmo UUID, sem órfãos) senão cria; as 3 encrypt triggers passam a usá-lo (migration `20260602140000`). O `/security-review` dessa migration **expôs um gap pré-existente** nas INSTEAD OF de `meta_config`/`social_accounts` (sem guard `auth.uid()` → injeção cross-tenant id-novo; o overwrite id-colidente já era fail-closed pelo PK — achado HIGH do review REFUTADO material) → guard `42501` portado pras 2 (migration `20260602150000`). Ambas `/security-review` **SAFE**; tudo provado material via Management API em `BEGIN…ROLLBACK` (antes 23505/injeção OK, depois OK/42501); Phase 5c **SEAL ALLOWED** (7 verified). Mesh **8751**. 6 commits. **Novo gap (Top Gap):** desconectar Meta/social deixa o segredo Vault **órfão** (INSTEAD OF DELETE só apaga a linha base) — precisa de RPC dedicada de disconnect (nula+revoga) no padrão `disconnect_wordpress()`, débito LGPD. **Lição:** adversarial-verify material (PK fail-closed + md5 da vítima) refutou um HIGH e ao mesmo tempo revelou o gap real adjacente — resolvido na mesma sessão em vez de empurrar pra fria.
+> 9:**Sprint v6.20.1 selado em 2026-06-02** — WordPress BYOK + fix do double-fire da encriptação de credenciais: fechado o P0 que a v6.20.0 sinalizou (`SocialAccountsPage` salvava/desconectava WP via `.upsert(onConflict)` numa VIEW → HTTP 400 `42P10`). Save → `.insert()`; disconnect → RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, `auth.uid()`, nula 3 cols WP + **deleta o segredo do Vault** — revogação LGPD) (migration `20260602120000`). Corrigir isso revelou bug **muito maior**: o `trg_instead_of_user_api_keys` usava `INSERT...ON CONFLICT DO UPDATE` → trigger de encriptação dispara **2×** numa só statement → `vault.create_secret` nome duplicado → **`23505`**, quebrando connect/save de **todo** usuário com linha pré-existente (e `.update` re-encriptava o `••••`). Trocado p/ **UPDATE-first / INSERT-if-not-found** + **guard de tenant** (`auth.uid()` → `42501`, fecha escrita cross-tenant que o ON CONFLICT mascarava) (migration `20260602130000`). Tudo provado material via Management API; 2 migrations `/security-review` **SAFE**; Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8750**. 5 commits. **Novo gap (Top Gap — task spawned):** `trg_encrypt_user_api_keys` (+ irmãos meta/social) não-idempotente → editar segredo p/ valor novo sem desconectar antes ainda dá `23505`; conserto = update-or-create por nome nas 3 tabelas, precisa de `/security-review` próprio. **Lição:** probe-first material pegou que o `.insert` sozinho NÃO bastava (o bug estava na camada de encriptação, não nos 2 `.upsert` reportados).
+> 13:**Sprint v6.19.0 selado em 2026-06-01** — e2e-user-zero 2ª iteração + 3-stream sweep: framework de QA de esqueleto MVP → harness executável (`redactor` LGPD + `mesh-persistor` observation/OBSERVES idempotente + `telemetry` infra_health_logs + 6 dashboard flows + selftest 8 testes + pre-commit tripwire defesa Layer 4, hook versionado em `scripts/hooks/`). Stream A (consistência cross-node + Canvas 4.2) **VERIFICADO materialmente como já shipado** → zero retrabalho; único gap real fechado: `higgsfield-webhook` nsfw/canceled → razão clara de soft-fail. 2 smokes live (canvas pago + sql-bridge) gateados por `RUN_LIVE_SMOKE` → suíte **224 passed / 2 skipped / 0 failed**. Stream C flywheel readiness verde (orchestrate-content 200 · affiliate ativo · balance 5351), **gated em GO Sovereign**. Phase 5c **SEAL ALLOWED** (13 verified). Mesh **8747**. Survival Laws 4/4. 7 commits. **Lição:** o código está sistematicamente à frente dos Pending Actions — verificação material (Lei 1) antes de codar evita reconstruir features prontas.
+> 23:**Sprint v5.6.0 selado em 2026-05-06** — DevOps + Security Seal: 6 branches mobile sincronizados + DOCUMENTATION_CREDENTIAL_RULE + pre-commit hook anti-credential + Gemini API key rotacionada + test coverage 0→66 testes (billing + store + phase-zeta) + BoK Scribe Agent (MRD/BRD/PRD/FRD/SDD templates) + MCORCH Master Execution Protocol em CLAUDE.md + /sync-mobile-branch protocol. 2561 nós · 100% embedded.
+> 29:**Sprint v5.9.0 selado em 2026-05-08** — FMEA-005 + LGPD Deploy: FMEA-005 (RPN 144) fechado com chunked embedding e vector averaging em `embed-mcorch-node`; LGPD (data-export + delete-account + delete_account() RPC) confirmada em produção; scratch/ removida. 7280 nós · 100% embedded.
+> 31:**Sprint v5.8.0 selado em 2026-05-08** — FMEA + BoK Phase 2 + 8-Agent System + LGPD: FMEA-008 (RPN 120) e FMEA-011 (RPN 100) fechados; BoK Suite enriquecida com voz estratégica (+227 linhas em 6 docs: Sovereign's Conviction, Business Philosophy, Por Que Vencemos, Validação com Criadores, Architectural Decisions, Quality Philosophy); `/bok-agents-generator` produziu `bok-agents-system--mcorch-constellation.md` (704 linhas · 8 agentes · 3 camadas cross-agent); LGPD DD-001+DD-002 implementados (delete_account() RPC + Edge Functions + hooks + SettingsPage modal). Phase Commercial desbloqueada. 7276 nós · 100% embedded.
+> 43:**Sprint v6.6.7 selado em 2026-05-19** — OE-661 Phase 1 Prep + API Tenancy Directive: sessão executou parcialmente o plan persistido OE-661 — toda a preparação completada, Step 1.5 (first run E2E) **DEFERRED** por context budget Sovereign 92% (retoma em ~3h). Infraestrutura material: SOP `docs/processes/orchestration-content-mesh-asset-emission.md` (120 LOC) escrita ANTES do código (Lei 2); `orchestrate-content/index.ts:404-465` emite `content_mesh_asset` em paralelo com observation via `Promise.allSettled` (Amendment A) gated por `wpPostUrl` (Amendment B); `link-forge.ts:153` ganha `.eq("project_id", "mcorch-affiliate")` (Amendment C); `handle-ml-postback/index.ts` ganha pulse `infra_health_logs` em 4 return paths (Amendment E — fecha cegueira de 17 dias). Deploys material: `orchestrate-content` 113.6kB + `handle-ml-postback` 60.45kB. Vault `GCRUX_ML_AFFILIATE_TOKEN` provisionado (digest `e86f74a0...`). **DIRETIVA SOVEREIGN-CLASS NOVA "API Tenancy Model"** emitida durante sessão (questionamento direto sobre por que usar env global se `affiliate_config` per-user já existia) — selada em 3 superfícies: `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"` com resolution order de 3 níveis + 5 tabelas canônicas + 5 anti-patterns; `CLAUDE.md > Code standards` one-liner enforcement; auto-memory `feedback_api_tenancy_per_user.md` indexada. **OTD-OE661-PER-USER** registrada (RPN 120 · SLA 2026-06-02) catalogando violação em `link-forge.ts` + `process-affiliate-link` GET branch. Sovereign autorizou Opção B (provisionar global temporário com `affiliate_config.app_id` value, deferir refactor). **Survival Laws Self-audit retroativo (Amendment H)** v6.6.1..v6.6.5 + esta seal — conclusão: Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 (overrides conscientes v6.6.1+v6.6.3) · Lei 3 ✗ 0/5 (OTD-PROC-002 RPN 40) · Lei 4 ✗ 0/5 (OTD-PROC-001 RPN 60 — esta seal v6.6.7 começa cumprimento). **Material proofs**: TS zero erros · 122/122 testes em 4.84s · 7 commits granulares locais (`03f6822` SOP · `e662da3` orchestrate Amendments A+B · `bafac16` link-forge Amendment C · `9cec88a` postback Amendment E · `044f21e` CLAUDE+OTD diretiva · `96ee72a` README v6.6.7 · `7d06934` HANDOFF seal + redactions) · milestone node `9d482014-a759-4656-93d9-99e05ab4a714` embedded 768d · mesh **8353 nodes** (+1 desde v6.6.6) · 11650 edges (+33). Path correção material: `/dashboard/orchestrate` → `/dashboard/orchestration` (Sovereign clarification). **Próximos deliverables**: (a) Sovereign dispara primeira campanha real em `/dashboard/orchestration` (TriggerNode + topic Link Forge catálogo + wp+linkedin platforms + Run) → eu monitoro pipeline_runs + content_mesh_asset emit material via REST; (b) ao completar, synthetic postback chain (Amendment D) + cleanup (Amendment J); (c) selar v6.6.8 com flywheel rodando E2E pela primeira vez na história do projeto; (d) atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias) — SDD `aios-sql-bridge`; (e) executar Phase 2 (`mcoins-ledger-reconciliation.md`) — fecha OTD-V660-001.
+> 51:**Sprint v6.6.3 selado em 2026-05-18** — OE-661-ROADMAP Debt Liquidation: sessão única liquidando 3 das 4 dívidas declaradas em CLAUDE.md (Financial deferred por decisão Sovereign até Usuário 1) + dívida implícita OE-661-003 Target Binding. **(Phase 0 Hybrid restore)** `process-affiliate-link/index.ts` (POST original 234 LOC tinha sido refatorado em -222 LOC para redirect 302 puro — quebrava `ContentLibraryPage.tsx:744`). Hybrid restaurado: GET 302 público (no-verify-jwt, redireciona a `panel.gcrux.com/api/ml-redirect`) + POST autenticado original (probe HEAD + self-heal ML search + insert em `affiliate_links`). Deploy 78.31 kB. **(Phase 1 Postback Debt)** `handle-ml-postback` captura `obsNode.id` da observation inserida + cria edge `ATTRIBUTES_REVENUE_TO` (source=observation, target=content_mesh_asset preferred + fallback OR, weight=revenueCents). `.maybeSingle()` para tolerar zero matches. Deploy 59.34 kB. Smoke chain (synthetic): test affiliate_link `adb9e131` → observation `f65d52b2` → edge `65d072fe` → content_mesh_asset `f3a091f7`. **(Phase 2 Auto-Stitching OE-661-003)** `embed-mcorch-node/index.ts` ganha `autoStitchObservation()` que regex-extrai file paths do conteúdo + nome (.ts/.tsx/.js/.md/.sql/.sh/.json/...) e cria edges `observes` para ast_file/markdown_file/vault_note correspondentes; fallback obrigatório a `root:CLAUDE` (`2747e164`) quando nenhum path resolve. Deploy 105.1 kB. Retrofit: `stitch-fallback.js` (fix OR `root:CLAUDE`) costurou 6 orphans pré-existentes; `audit-mesh-edges.ts` (fix schema `type`→`node_type`) reporta **10/10 observations VALID — 100% Target Binding coverage**. Live auto-stitch confirmado em re-embed `{stitched:1}` edge `2e1e57db`. **(Phase 3 Link Forge OE-661-004)** Novo `scripts/link-forge.ts` (Bun-native, mirror backfill-embeddings) varre content_mesh_asset, aplica 3 regex (Roborock S8 MLB3981745621 · Samsung Neo QLED 8K MLB3546719283 · Family Hub MLB3728491023), substitui menções por markdown links para `panel.gcrux.com/api/ml-redirect?...&utm_content=$node.id`, UPDATE atomic + `CONTAINS_LINK_FOR` edge para product node criado on-demand. Flag `--dry-run`. Smoke: dry-run preview 179→905 chars; live 1 content updated + 3 edges (`884fceef`/`f4f4146c`/`c834ca23`) + 3 product nodes (`77ac9b9f`/`3d12ac89`/`92a60fc0`). Pendência: `GCRUX_ML_AFFILIATE_TOKEN` ainda DEFAULT na vault — provisionar antes do primeiro run real. **(Phase 4 Memory ingest)** 4 markdown_files autoembed via trigger pós-upsert: `8ad38681` gateway-recovery.md (Memory Debt sealed), `549e01a4` roadmap-v1.md, `5e957727` revenue-flywheel.md (recém ingerido), `d1296632` link-forge-scope.md. **Material proofs**: 8 commits granulares (56ed242 hybrid affiliate · dfabb17 postback · 1f368c1 auto-stitch · 140f248 link-forge · 27c7105 skills+docs+utility · c12906b CLAUDE+BoK rule · b8f5702 handoff seal · este sprint update); TS zero erros (após fix node symlink `/home/ubuntu/.local/bin/node`); 122/122 testes em 3.39s; 3 Edge Functions deployed (`process-affiliate-link --no-verify-jwt` · `handle-ml-postback --no-verify-jwt` · `embed-mcorch-node --no-verify-jwt`); milestone node `6f2cf405-4bb5-440b-a02a-9579fc39f29f` embedado (768d); mesh total **8343 nodes** (+7 desde v6.6.2) · **11617 edges** (+1555 entre observes retrofit, ATTRIBUTES_REVENUE_TO, CONTAINS_LINK_FOR, e autoembed cascade). **Próximo deliverable:** (a) provisionar `GCRUX_ML_AFFILIATE_TOKEN` na vault Supabase; (b) wire `orchestrate-content` (ou processo equivalente) a emitir `content_mesh_asset` nodes pós-geração — sem eles Link Forge é noop em produção; (c) primeiro run end-to-end Usuário Zero validando flywheel completo (gera → publica → ML afiliado → postback → ATTRIBUTES_REVENUE_TO → ROIWidget); (d) Stripe Financial Debt continua deferred (decisão Sovereign — sandbox enquanto Gabriel valida como Usuário Zero).
+> 61:**Sprint v6.4.0 selado em 2026-05-16** — P0 Security Remediation + Revenue Ledger + Canvas 4.2b Infra: três frentes em sequência estrita (mantra "Security First → Revenue Second → Canvas Phase 4.2b"). (A) 3 P0 OTDs do Claw-Master audit v1 fechadas — OTD-CM-001 (RPN 162): 6 plain-text secrets migrados para SecretRef vault file-based (`~/.openclaw/secrets.json` chmod 600 + 6 SecretRef pointers em openclaw.json); OTD-CM-002 (RPN 140): `allowInsecureAuth=false` + daemon restart, audit dropou de 3 warn para 1; OTD-CM-003 (RPN 112): `chmod 700 /home/ubuntu/.openclaw`. Script `morning-briefing.sh:65` refatorado para ler secrets.json direto via jq (zero dependência daemon). (B) `mcoin_transactions` virou ledger canônico — migration `20260516224541_deduct_mco_coins_ledger.sql` estende `deduct_mco_coins` para INSERTar linha negativa (mirror de award_mco_coins). Backwards-compatible via DEFAULT params, zero changes nos 3 callers. `revenueSnippet()` em compose-morning-briefing.ts usa fonte única em vez de pipeline_runs.revenue_cents inexistente — **Resolves OTD-V631-002 (RPN 144)**. (C) Canvas Phase 4.2b infrastructure (vídeo async): migration `20260516224542_vm_canvas_executions_async_video.sql` estende tabela existente (não cria nova vm_canvas_jobs — single SoT) com `operation_id`/`webhook_token` (64 hex via 2× UUID concat, sem pgcrypto)/`response_payload`/`webhook_received_at`, status enum + `timeout`, unique idx token, partial idx watchdog. Edge Function `higgsfield-webhook` deployed (77.82 kB): token-in-query auth, idempotente HTTP 409, valida ≥100KB+video/*, upload canvas-assets signed 7d, atomic finalize (update exec → deduct action='canvas_video_spend' → INSERT vm_canvas_assets). Hook `useCanvasJobsRealtime.ts` (Realtime UPDATE filter user_id, invalida TanStack Query keys). **Deferido p/ Phase 4.2c**: fork canvas-execute.ts, wiring CanvasEditorPage, cron polling watchdog, enable ImageToVideo button. (D) Claw-Master L2 inception consolidado — scaffold + 24 docs scraped + audit v1 sealed (observation node beb04be8). **7 commits granulares** (ead84e0 memory · 38f4e00 claw-master · 3da66b0 security · dbae240 .temp · fb0f5f6 billing · 57db23a canvas · 56d9e15 docs) + README v6.4.0 + handoff seal. TypeScript zero erros · 2 migrations deployed · 1 Edge Function deployed · types.ts regenerado (2362 linhas). Total mesh: **8302 nodes (100% embedded)** · Departmental Army: **7 agents / 9641 chunks**. 4 OTDs novos (V640-001..004 — destaque V640-004 RPN 72: useCanvasJobsRealtime hook órfão até Phase 4.2c wire). **Próximo deliverable**: Phase 4.2c (canvas-execute fork + UI wiring + polling watchdog + ImageToVideo enable).
+> 99:14. ~~**LGPD data export**~~ ✅ data-export Edge Function + useDataExport hook + UI (2026-05-08)
+> ```
+
+## 🤖 Claude *(20:47:39)*
+
+
+## 🤖 Claude *(20:47:40)*
+
+A linha 7 (selo v6.20.2) termina marcando exatamente este gap como "Top Gap": "desconectar Meta/social deixa o segredo Vault órfão ... precisa de RPC dedicada ... débito LGPD". Fechei-o — devo adicionar a entrada v6.20.3. Lendo o topo do arquivo:
+
+## 🤖 Claude *(20:47:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.20.2 selado em 2026-06-02** — Idempotência da encriptação + guard de tenant nas views irmãs: **FECHADO o Top Gap que a v6.20.1 sinalizou** — `trg_encrypt_user_api_keys` (+ irmãos meta/social) chamava `vault.create_secret` incondicionalmente → re-salvar segredo p/ valor novo colidia no índice único `vault.secrets.name` (`23505`). Helper `public.vault_upsert_secret(value,name,desc)` (`SECURITY DEFINER`, `search_path=''`, EXECUTE revogado de PUBLIC/anon/authenticated) rotaciona in-place via `vault.update_secret` (mesmo UUID, sem órfãos) senão cria; as 3 encrypt triggers passam a usá-lo (migration `20260602140000`). O `/security-review` dessa migration **expôs um gap pré-existente** nas INSTEAD OF de `meta_config`/`social_accounts` (sem guard `auth.uid()` → injeção cross-tenant id-novo; o overwrite id-colidente já era fail-closed pelo PK — achado HIGH do review REFUTADO material) → guard `42501` portado pras 2 (migration `20260602150000`). Ambas `/security-review` **SAFE**; tudo provado material via Management API em `BEGIN…ROLLBACK` (antes 23505/injeção OK, depois OK/42501); Phase 5c **SEAL ALLOWED** (7 verified). Mesh **8751**. 6 commits. **Novo gap (Top Gap):** desconectar Meta/social deixa o segredo Vault **órfão** (INSTEAD OF DELETE só apaga a linha base) — precisa de RPC dedicada de disconnect (nula+revoga) no padrão `disconnect_wordpress()`, débito LGPD. **Lição:** adversarial-verify material (PK fail-closed + md5 da vítima) refutou um HIGH e ao mesmo tempo revelou o gap real adjacente — resolvido na mesma sessão em vez de empurrar pra fria.
+> 8	
+> ```
+
+## 🤖 Claude *(20:47:45)*
+
+
+## 🤖 Claude *(20:47:45)*
+
+Vou inserir a entrada v6.20.3 acima da v6.20.2, marcando o Top Gap como fechado:
+
+## 🤖 Claude *(20:47:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.20.2 selado em 2026-06-02** \u2014 Idempot\u00eancia da encripta\u00e7\u00e3o + guard de tenant nas views irm\u00e3s:",
+  "new_string": "**Sprint v6.20.3 selado em 2026-06-02** \u2014 Disconnect RPC + revoga\u00e7\u00e3o de segredo \u00f3rf\u00e3o: **FECHADO o Top Gap que a v6.20.2 sinalizou** \u2014 desconectar Meta/social fazia `.delete()` pela view \u2192 INSTEAD OF DELETE s\u00f3 apagava a linha base, deixando o segredo Vault **\u00f3rf\u00e3o** (plaintext retido; 12 \u00f3rf\u00e3os Meta observados em prod). RPCs `disconnect_meta()`/`disconnect_social(p_account_id uuid)` (migration `20260602160000`) espelham `disconnect_wordpress` (`SECURITY DEFINER`, `search_path=''`, fail-closed `28000`, EXECUTE s\u00f3 authenticated): deletam a linha **E** revogam o segredo. Guard de tenant por name-binding (`id`-de-linha + PK \u21d2 atacante nunca casa nome de segredo alheio; UUID bruto nunca vaza ao cliente). Limpeza one-time **12\u21920** \u00f3rf\u00e3os Meta (orphan-scoped via `NOT EXISTS`+`right(name,36)`), 3 sociais vivos intactos. Hooks migrados `.delete()`\u2192`.rpc()`; `types.ts` regenerado. **Tamb\u00e9m (diretiva A):** `/security-review` redundante do `87c926f` (guard de tenant v6.20.2) \u2192 **LIMPO 9/10**. Ambos os reviews SAFE; su\u00edte RPC 5/5 em `BEGIN\u2026ROLLBACK` (happy meta+social \u00b7 foreign-id no-op \u00b7 planted-ref name-binding \u00b7 unauth 28000); Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8752**. 4 commits. **Li\u00e7\u00e3o:** verificar materialidade ANTES de codar (Lei 1) \u2014 o gap de tenant guard da diretiva original j\u00e1 estava 100% fechado em prod, ent\u00e3o a Parte B virou o foco real em vez de uma migration redundante.\n\n**Sprint v6.20.2 selado em 2026-06-02** \u2014 Idempot\u00eancia da encripta\u00e7\u00e3o + guard de tenant nas views irm\u00e3s:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:47:59)*
+
+
+## 🤖 Claude *(20:47:59)*
+
+sprint-priorities atualizado (Top Gap v6.20.2 fechado). Commitando e dando push:
+
+## 🤖 Claude *(20:48:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.20.3 fecha o Top Gap de segredo \u00f3rf\u00e3o (disconnect RPC)\"\necho \"commit exit=$?\"\ngit push origin main 2>&1 | tail -4; echo \"push exit=${PIPESTATUS[0]}\"\necho \"\"; echo \"=== final sync ===\"; git rev-list --left-right --count origin/main...HEAD | awk '{print \"behind: \"$1\" \u00b7 ahead: \"$2}'\necho \"\"; echo \"=== all commits this session ===\"; git log --oneline -5",
+  "description": "Commit and push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit exit=0
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    8338d8a..844ebcf  main -> main
+> push exit=0
+> 
+> === final sync ===
+> behind: 0 · ahead: 0
+> 
+> === all commits this session ===
+> 844ebcf chore(sprint): update sprint-priorities — v6.20.3 fecha o Top Gap de segredo órfão (disconnect RPC)
+> 8338d8a docs(handoff): seal v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+> ac1cba1 docs(readme): v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+> 610e1f3 docs(processes): SOP + Key Files do disconnect Meta/social (revogação de órfão)
+> 76bb9e3 fix(credentials): disconnect_meta/disconnect_social revogam o segredo Vault órfão
+> ```
+
+## 🤖 Claude *(20:48:18)*
+
+
+## 🤖 Claude *(20:48:40)*
+
+Tudo pushado — 5 commits, `origin/main` sincronizado (behind 0 · ahead 0). **PHASE 8 — FINAL REPORT**.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — META/SOCIAL DISCONNECT · ORPHANED-SECRET REVOCATION (2026-06-02)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a. Secret leak (diff da sessão)        ✅ PASS — zero segredos
+  1b. Edge function JWT                   ⚠️ WARN — 4 webhooks sem JWT (instagram/stripe/whatsapp/
+                                            autonomic) são auth-por-assinatura, pré-existentes;
+                                            toquei ZERO edge fns nesta sessão
+  1c. Client-side mco_balance update      ✅ PASS — sem violação
+  1d. RLS bypass em src/                   ✅ PASS — só 1 comentário descritivo (não-meu)
+  1e. console.log sensível                 ✅ PASS — só logs de teste (não-meu)
+  Part A /security-review (87c926f)        ✅ LIMPO 9/10 (net-hardening)
+  Part B /security-review (20260602160000) ✅ SAFE 9/10 (PK + UUID não-vazado)
+  → Nenhum 🔴 BLOCK
+
+📦 COMMITS (5 total)
+  76bb9e3 — fix(credentials): disconnect_meta/disconnect_social revogam o segredo Vault órfão
+  610e1f3 — docs(processes): SOP + Key Files do disconnect Meta/social (revogação de órfão)
+  ac1cba1 — docs(readme): v6.20.3 — disconnect RPC revoga segredo Vault órfão (meta/social)
+  8338d8a — docs(handoff): seal v6.20.3 — disconnect RPC revoga segredo Vault órfão
+  844ebcf — chore(sprint): update sprint-priorities — v6.20.3 fecha o Top Gap de segredo órfão
+
+⬡ KNOWLEDGE MESH
+  Milestone node: f7805e20-bebd-4a30-8533-09806238f135 — session-handoff-20260602-meta-social-disconnect-rpc
+  Embedding: ✅ 768d (model openai/text-embedding-3-small · chunks 1)
+
+📖 README.md
+  Versão: 6.20.2 → 6.20.3
+  Badge neural_mesh: 8751 → 8752 nós
+  Seção adicionada: "What's new in v6.20.3"
+
+🧠 HANDOFF.md
+  Fase selada: Meta/Social Disconnect — Orphaned-Secret Revocation
+  Seções: Task State Record (topo), Pending (órfão riscado → FECHADO), Arquitetura, Survival Laws Self-audit
+
+📋 PROVA MATERIAL (Fase 5c — auditoria mecânica independente)
+  Veredito: SEAL ALLOWED
+  Claims: 8 verificadas · 0 skipped · 0 falhas
+  (node f7805e20 · commits 87c926f/76bb9e3/610e1f3/ac1cba1 · tsc 0 · 238 testes · ORO)
+
+🚀 PUSH
+  Branch: main → origin/main (github.com:gabrielZarattini/constellation-orchestra)
+  Commits enviados: 5 · sync final: behind 0 · ahead 0
+
+📌 SPRINT
+  sprint-priorities.md: ✅ atualizado (entrada v6.20.3 — Top Gap v6.20.2 fechado)
+  scratch/ cleanup: ✅ limpo (nada a mover)
+  MCP docs: ✅ ok (gitnexus/obsidian/playwright — sem MCP novo nesta sessão)
+
+⏭  PRÓXIMOS PASSOS
+  1. E2E no navegador logado: clicar "Desconectar" Meta/social em /dashboard/settings e confirmar
+     visualmente (banco já provado: RPC 5/5 + bundle servido contém as RPCs).
+  2. Resilience Debt — OTD-LLM-FALLBACK (LLM Cascading Fallback, SLA 2026-06-07, owner engineer).
+  3. Financial Debt — Stripe prod swap (deferido até Usuário 1, decisão Sovereign).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Selo concluído, Maestro.** Ambas as diretivas entregues e seladas em **v6.20.3**:
+
+- **(A)** `/security-review` redundante do `87c926f` → **limpo, 9/10** (cinto-e-suspensório confirmado).
+- **(B)** Débito de segredo órfão **fechado** — `disconnect_meta()`/`disconnect_social()` revogam o segredo no disconnect (12 órfãos Meta limpos `12→0`), tenant-safe por name-binding + PK, com `/security-review` próprio **SAFE**.
+
+Tudo materialmente provado (Lei 1): suíte RPC 5/5 em `BEGIN…ROLLBACK`, apply atômico verificado em prod, build com o bundle servido contendo as RPCs, e a **Fase 5c retornou `SEAL ALLOWED`** (auditoria mecânica independente, 8 claims, 0 falhas). Remote sincronizado, infra 100% saudável.
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - agent-af11d6fa76341891b]]
-> * **Próxima Sessão**: [[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]
+> * **Próxima Sessão**: [[2026-06-02 - Finalize visual design and unblock next phases]]
 %% --- TIMELINE END --- %%
