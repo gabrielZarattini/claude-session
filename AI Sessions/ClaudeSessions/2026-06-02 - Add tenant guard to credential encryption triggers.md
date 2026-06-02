@@ -3165,6 +3165,54 @@ Memória atualizada (entrada de fix selado, companheira da do `disconnect_wordpr
 > behind origin: 0 · ahead of origin: 2
 > ```
 
+## 🤖 Claude *(17:00:10)*
+
+
+## 🤖 Claude *(17:00:34)*
+
+Ambos os pedidos do Sovereign concluídos e materialmente verificados. Working tree limpo, 2 commits locais (não enviados ao origin — só faço push sob pedido).
+
+---
+
+# Parte A — `/security-review` no `87c926f`: ✅ LIMPO (cinto-e-suspensório)
+
+A auto-extração do skill veio vazia (commit já mergeado em `main` → sem diff pendente), então alimentei `git show 87c926f` à revisão. Sub-task de senior security + trilha de confiança completa (views, GRANTs, constraints base, guard irmão, hooks): **zero vulnerabilidades de alta confiança — ganho líquido de segurança, 9/10**. Confirmações decisivas: `IS DISTINCT FROM` fecha o bypass `NEW.user_id=NULL`; branch UPDATE seguro (a view só materializa `OLD` do próprio tenant); `search_path=''` não quebra; zero SQL dinâmico; isenção `service_role` sólida.
+
+# Parte B — Débito do segredo Vault órfão: ✅ FECHADO E DEPLOYADO
+
+**A descoberta material foi pior que o previsto:** a vítima tinha **0 linhas `meta_config` mas 12 segredos Meta órfãos** no Vault (6 token + 6 pages) — resíduo de ~6 ciclos connect/disconnect, tokens plaintext retidos. Débito LGPD **ativo**, não teórico.
+
+**O que construí** (migration `20260602160000`, espelhando `disconnect_wordpress`):
+- `disconnect_meta()` e `disconnect_social(p_account_id uuid)` — SECURITY DEFINER · `search_path=''` · fail-closed `28000` · EXECUTE só `authenticated`. Deletam a linha **E** revogam o segredo.
+- **Guard de tenant (diferença do WP):** nome do segredo meta/social é keyed por `id` da linha, não `user_id`. Delete double-bound (`id=ref-da-própria-linha` **E** `name=…||id-da-própria-linha`); como `id` é PK, o id do atacante nunca iguala o da vítima → name-binding tenant-safe. Defesa independente: o uuid bruto nunca vaza ao cliente.
+- Limpeza one-time dos 12 órfãos (provadamente orphan-scoped via `NOT EXISTS`).
+- Hooks `useMetaConfig`/`useSocialAccounts` migrados de `.delete()` → `.rpc()`; `types.ts` regenerado.
+
+**`/security-review` da Parte B: ✅ LIMPO (9/10)** — reviewer cravou o vetor crítico (nome por `id`) com PK + não-vazamento do uuid.
+
+**Prova material:**
+
+| Gate | Evidência |
+|------|-----------|
+| Suíte RPC (BEGIN/ROLLBACK) | **5/5 PASS** — happy meta+social · foreign-id no-op · planted-ref name-binding aguenta · unauth `28000` · zero resíduo |
+| Apply em prod (HTTP 201, atômico) | funções vivas (SECURITY DEFINER, `search_path=""`) · EXECUTE authenticated✓/anon revogado✓ |
+| Limpeza de órfãos | **12 → 0** (`meta_config_%` agora 0) · **3 segredos sociais vivos + 3 linhas intactos** |
+| Tracking | migration registrada em `schema_migrations` |
+| Frontend | `tsc` 0 · eslint 0 · **238 testes pass** · build exit 0 · bundle servido contém `disconnect_meta`/`disconnect_social` + Supabase URL baked |
+| SOP + Key Files | `credential-disconnect-clear.md` (+seção, +equivalência LGPD) · `CLAUDE.md` atualizado |
+
+**Commits:** `76bb9e3` (fix) · `610e1f3` (docs).
+
+---
+
+### Survival Laws self-audit (conciso)
+- **Lei 1 (Materialidade):** toda claim acima tem prova citada (outputs reais via Management API, exit codes, counts antes/depois). Nenhum "cérebro sem mãos".
+- **Lei 2 (Processo):** SOP `credential-disconnect-clear.md` já existia e foi estendido antes do código.
+- **Lei 4 (ORO):** Operator=eu, Reviewer=Sovereign+`/security-review`, Owner=Sovereign (risco LGPD/tenant).
+
+### Pendência operacional (decisão tua)
+Prod (DB + frontend) está atualizado, mas os **2 commits estão só locais — `ahead 2` do `origin/main`**. No início da sessão `HEAD==origin/main`, então o normal aqui é manter o origin em sincronia. Não dei `git push` (só faço sob pedido). **Quer que eu envie ao `origin/main`?** Ou prefere selar via `/handoff`.
+
 ---
 
 %% --- TIMELINE START --- %%
