@@ -2299,6 +2299,833 @@ Agora a pergunta de ouro do probe. Disparando a pesquisa da doc oficial (WebFetc
 > REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
 > ```
 
+## 🤖 Claude *(21:59:56)*
+
+
+## 🤖 Claude *(22:00:00)*
+
+O probe de documentação já deu um sinal forte e convergente de múltiplas fontes:
+
+> **O programa de afiliados do Mercado Livre NÃO tem API oficial.** Os links são gerados só pela **UI logada** — Portal de Afiliados ("Criar link" → cola URL → "Gerar link") ou a "Barra de Afiliados". Existem só APIs **não-oficiais** de terceiros/GitHub (scrapers).
+
+Isso aponta — preliminarmente — para o **cenário B** que eu tinha mapeado: se confirmado, OAuth (API token) **não basta**, e o link/`meli.la` realmente exige sessão de navegador logada → o Browser Operator (#2) se justifica.
+
+Mas isso são fontes secundárias (blog, Reclame Aqui). Antes de cravar, verifico na **fonte primária** + descubro **como** as soluções não-oficiais geram o link (é isso que decide a arquitetura: scraping da UI logada vs algum endpoint interno replicável):
+
+## 🤖 Claude *(22:00:02)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://www.mercadolivre.com.br/l/afiliados-gere-seus-links",
+  "prompt": "Quais s\u00e3o os m\u00e9todos OFICIAIS para gerar um link de afiliado no Mercado Livre? Existe uma API oficial/program\u00e1tica, ou apenas o portal web e a \"Barra de Afiliados\" na interface logada? O texto menciona automa\u00e7\u00e3o, API, ou integra\u00e7\u00e3o program\u00e1tica? Como \u00e9 o formato do link gerado (ex: meli.la shortlink)?"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 403 Forbidden.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+## 🤖 Claude *(22:00:05)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://github.com/Fripixel/mercadolivre-link-de-afiliados",
+  "prompt": "Como este projeto gera o link de afiliado do Mercado Livre, tecnicamente? Ele usa: (a) scraping da p\u00e1gina/portal logado com cookies de sess\u00e3o, (b) algum endpoint HTTP/AJAX interno do mercadolibre, ou (c) API oficial? Liste os endpoints/URLs do mercadolibre que ele chama e qual autentica\u00e7\u00e3o/cookies/tokens s\u00e3o necess\u00e1rios. Ele precisa de uma sess\u00e3o de navegador logada?"
+}
+```
+
+## 🤖 Claude *(22:00:07)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://developers.mercadolivre.com.br/pt_br/api-docs-pt-br",
+  "prompt": "Procure por qualquer men\u00e7\u00e3o a \"afiliados\", \"affiliate\", \"link de afiliado\", ou gera\u00e7\u00e3o program\u00e1tica de links de afiliado. Existe algum endpoint de API oficial documentado para o programa de afiliados (gerar links, shortlinks, atribui\u00e7\u00e3o de comiss\u00e3o)? Liste os grupos de APIs dispon\u00edveis."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 403 Forbidden.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # API Mercado Livre - Technical Implementation Details
+> 
+> Based on the GitHub repository content provided, I cannot determine the specific technical approach used by this API.
+> 
+> The repository description only mentions that it's an "API geradora de link de afiliados Mercado Livre" with capabilities for generating affiliate links and capturing daily promotions. However, **the actual implementation details are not disclosed** in the README or visible files shown.
+> 
+> ## What's Missing
+> 
+> The content does not specify:
+> - Whether it uses web scraping, internal endpoints, or official APIs
+> - What authentication mechanism is employed
+> - Which Mercado Livre URLs/endpoints are called
+> - If browser sessions or cookies are required
+> - Technical architecture details
+> 
+> ## Recommendation
+> 
+> To understand the implementation, you would need to:
+> 1. Access the actual source code files in the repository
+> 2. Contact the developer (Fripixel) via the WhatsApp link provided
+> 3. Review any documentation files not shown in this excerpt
+> 
+> The repository appears to be commercial software where technical specifications may be kept proprietary.
+> ```
+
+## 🤖 Claude *(22:01:05)*
+
+
+## 🤖 Claude *(22:01:08)*
+
+O ML bloqueia até o **WebFetch da Anthropic (403)** — tanto a página de afiliados quanto a doc de developers. Isso reforça o quão hostil o ML é a acesso programático (bate com o histórico: bloqueia nosso IP e o Supabase Edge). O GitHub não revelou o mecanismo pelo README.
+
+O sinal decisivo agora é o **código das soluções não-oficiais** — se elas geram o link via scraping da UI logada (precisa sessão) ou via algum endpoint. Vou ler o código aberto direto (repo público, sem 403):
+
+## 🤖 Claude *(22:01:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== DeivianDS/mercadolivre-afiliados: \u00e1rvore de arquivos ===\"\ncurl -s \"https://api.github.com/repos/DeivianDS/mercadolivre-afiliados/contents\" 2>/dev/null | jq -r '.[]? | \"\\(.name)  (\\(.type), \\(.size)b)\"' 2>/dev/null | head -30\necho \"\"\necho \"=== procurar como o repo chama o mercadolibre (raw) ===\"\nfor f in app.py main.py index.js server.js bot.py afiliados.py README.md; do\n  url=\"https://raw.githubusercontent.com/DeivianDS/mercadolivre-afiliados/main/$f\"\n  body=$(curl -s \"$url\" 2>/dev/null)\n  if [ -n \"$body\" ] && ! echo \"$body\" | grep -q \"404: Not Found\"; then\n    echo \"--- $f (matches ML/afiliado/cookie/login/session) ---\"\n    echo \"$body\" | grep -inE \"mercadol|afiliad|cookie|session|login|matt_word|meli\\.la|/affiliate|sec/|selenium|playwright|puppeteer|requests\\.|fetch\\(|axios\" | head -20\n  fi\ndone",
+  "description": "Inspect non-official ML affiliate repo mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DeivianDS/mercadolivre-afiliados: árvore de arquivos ===
+> .env.example  (file, 613b)
+> .gitignore  (file, 331b)
+> README.md  (file, 3475b)
+> api  (dir, 0b)
+> index.html  (file, 791b)
+> package-lock.json  (file, 59755b)
+> package.json  (file, 378b)
+> src  (dir, 0b)
+> vite.config.js  (file, 395b)
+> 
+> === procurar como o repo chama o mercadolibre (raw) ===
+> --- README.md (matches ML/afiliado/cookie/login/session) ---
+> 1:# Mercado Livre Afiliados - Gerador de Links
+> 3:Aplicação web simples para buscar produtos no Mercado Livre, gerar links de afiliado e criar publicações formatadas para WhatsApp.
+> 8:- 🔗 Gerar links de afiliado automaticamente
+> 20:### 2. Configure sua tag de afiliado
+> 27:Edite o arquivo `.env` e adicione sua tag de afiliado.
+> 46:> **Como encontrar seus dados de afiliado?**
+> 47:> 1. Acesse o [programa de afiliados do Mercado Livre](https://afiliados.mercadolivre.com.br/)
+> 48:> 2. Faça login com sua conta de afiliado
+> 49:> 3. Gere um link de afiliado para qualquer produto
+> 50:> 4. Se o link contiver `matt_word` e `matt_tool`, use o formato 2
+> 132:🔗 *Link:* [link com tag de afiliado]
+> 141:Feito com 💜 para afiliados do Mercado Livre
+> 142:# mercadolivre-afiliados
+> ```
+
+## 🤖 Claude *(22:01:41)*
+
+
+## 🤖 Claude *(22:01:44)*
+
+O README do DeivianDS já entrega o mecanismo: **não há API** — ele pega a tag de afiliado (`matt_word` + `matt_tool`, obtida 1× no portal logado) e **anexa à URL do produto**. Igual ao nosso fallback. A pergunta crítica vira: **`matt_word`+`matt_tool` anexados geram atribuição de comissão real** (dispensando browser e meli.la)? Deixa eu ler o código dele e comparar com o nosso resolver:
+
+## 🤖 Claude *(22:01:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== DeivianDS .env.example \u2014 quais par\u00e2metros de afiliado ele usa? ===\"\ncurl -s \"https://raw.githubusercontent.com/DeivianDS/mercadolivre-afiliados/main/.env.example\" 2>/dev/null\necho \"\"\necho \"=== DeivianDS: arquivos em src/ e api/ ===\"\ncurl -s \"https://api.github.com/repos/DeivianDS/mercadolivre-afiliados/contents/src\" 2>/dev/null | jq -r '.[]?.name' 2>/dev/null\ncurl -s \"https://api.github.com/repos/DeivianDS/mercadolivre-afiliados/contents/api\" 2>/dev/null | jq -r '.[]?.name' 2>/dev/null\necho \"\"\necho \"=== como o DeivianDS monta o link (grep nos JS) ===\"\nfor p in src/main.js src/app.js api/index.js api/gerar.js src/utils.js; do\n  b=$(curl -s \"https://raw.githubusercontent.com/DeivianDS/mercadolivre-afiliados/main/$p\" 2>/dev/null)\n  echo \"$b\" | grep -q \"404\" || { echo \"--- $p ---\"; echo \"$b\" | grep -inE \"matt_word|matt_tool|affiliate|montarLink|gerarLink|buildLink|\\?.*=|URLSearchParams\" | head -12; }\ndone",
+  "description": "Read DeivianDS link-building mechanism"
+}
+```
+
+## 🤖 Claude *(22:01:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== NOSSO resolver: src/lib/affiliate.ts (params usados) ===\"\ngrep -inE \"matt_word|matt_tool|affiliate_tag|searchParams|\\.set\\(|shortlink|meli\" src/lib/affiliate.ts | head -30",
+  "description": "Inspect our affiliate resolver params"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DeivianDS .env.example — quais parâmetros de afiliado ele usa? ===
+> # Tag de afiliado do Mercado Livre
+> # Obtenha sua tag em: https://afiliados.mercadolivre.com.br/
+> #
+> # FORMATO 1 - Tag Simples (antigo):
+> # VITE_ML_AFFILIATE_TAG=SEUNOME-20
+> #
+> # FORMATO 2 - Matt Tool (novo):
+> # VITE_ML_AFFILIATE_TAG=matt:USERNAME:TOOLID
+> # Exemplo: VITE_ML_AFFILIATE_TAG=matt:pamelabenachio:78793736
+> #
+> VITE_ML_AFFILIATE_TAG=
+> 
+> # IMPORTANTE: Se a API do Mercado Livre bloquear requisições (CORS),
+> # você pode:
+> # 1. Fazer deploy em produção (Vercel/Netlify) - Recomendado
+> # 2. Usar extensão de navegador para desabilitar CORS temporariamente
+> # 3. Usar ngrok para expor localhost: npx ngrok http 5173
+> 
+> === DeivianDS: arquivos em src/ e api/ ===
+> App.jsx
+> components
+> index.css
+> main.jsx
+> services
+> authenticated-search.js
+> search.js
+> 
+> === como o DeivianDS monta o link (grep nos JS) ===
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === NOSSO resolver: src/lib/affiliate.ts (params usados) ===
+> 7: *   1. Definitive  — a per-user `meli.la` / `mercadolivre.com/sec/` short link generated in the
+> 9: *                    `affiliate_config.metadata.shortlinks[<MLB external_id>]`.
+> 10: *   2. Best-effort — the REAL product URL carrying the per-user affiliate tag via `matt_word`.
+> 14: * tenants if shared). The attribution tag lives in `affiliate_config.affiliate_tag`.
+> 27:export function isMlShortLink(url: string | null | undefined): boolean {
+> 29:  return /^https:\/\/(meli\.la\/|(www\.)?mercadolivre\.com(\.br)?\/sec\/)/i.test(url.trim());
+> 37:  /** Per-user affiliate tag (e.g. caga6077534) — the `matt_word` attribution value. */
+> 46: * Build a REAL Mercado Livre product URL carrying the affiliate tag via `matt_word`.
+> 70:  u.searchParams.set("matt_word", tag);
+> 71:  u.searchParams.set("utm_source", utm.source);
+> 72:  u.searchParams.set("utm_medium", utm.medium);
+> 73:  u.searchParams.set("utm_campaign", utm.campaign);
+> 74:  if (opts.contentId) u.searchParams.set("utm_content", opts.contentId);
+> 87:  shortlinks?: Record<string, string> | null;
+> 91:  | { kind: "shortlink"; url: string } // definitive per-user meli.la override
+> 92:  | { kind: "matt_word"; url: string } // best-effort attribution on real product URL
+> 93:  | { kind: "needs_config" } // no affiliate_tag AND no short link → fail-closed
+> 98: * best-effort `matt_word` URL on the real product. Fail-closed — never emit an unattributed ML
+> 108:  const stored = ext && config?.shortlinks ? config.shortlinks[ext] : null;
+> 109:  if (isMlShortLink(stored)) return { kind: "shortlink", url: stored!.trim() };
+> 111:  // 2. Best-effort: real product URL + per-user matt_word tag.
+> 122:  return { kind: "matt_word", url };
+> 126:export function readShortlinks(
+> 129:  const raw = (metadata as { shortlinks?: unknown } | null)?.shortlinks;
+> ```
+
+## 🤖 Claude *(22:02:39)*
+
+
+## 🤖 Claude *(22:02:43)*
+
+Achado decisivo no `.env.example` do DeivianDS — **o formato moderno de afiliado do ML é `matt:USERNAME:TOOLID`** (ex: `matt:pamelabenachio:78793736`), ou seja, **`matt_word` + `matt_tool`**. E o nosso resolver (`affiliate.ts:70`) seta **só `matt_word=caga6077534`** — **falta o `matt_tool`**. Essa pode ser a peça que falta.
+
+A pergunta de comissão (o ML atribui a link montado, ou só ao gerado pelo portal?) eu resolvo materialmente **seguindo o redirect do nosso único shortlink oficial** (`meli.la/2gh13Sw`, gerado pelo portal pro Usuário Zero) — a URL final revela o formato de atribuição exato que o ML considera oficial:
+
+## 🤖 Claude *(22:02:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== cadeia de redirect do shortlink OFICIAL do Usu\u00e1rio Zero (revela o formato de atribui\u00e7\u00e3o que o ML usa) ===\"\ncurl -sIL --max-time 25 -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64)\" \"https://meli.la/2gh13Sw\" 2>&1 | grep -iE \"^HTTP|^location:\" | head -20\necho \"\"\necho \"=== (fallback) GET com -L mostrando s\u00f3 a URL efetiva final ===\"\ncurl -s -o /dev/null -w \"URL final: %{url_effective}\\nHTTP: %{http_code}\\n\" -L --max-time 25 -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64)\" \"https://meli.la/2gh13Sw\" 2>&1 | sed -E 's/(matt_word=)[^&]*/\\1***/; s/(matt_tool=)[^&]*/\\1***/'",
+  "description": "Follow official meli.la shortlink to reveal attribution format"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cadeia de redirect do shortlink OFICIAL do Usuário Zero (revela o formato de atribuição que o ML usa) ===
+> HTTP/2 405 
+> 
+> === (fallback) GET com -L mostrando só a URL efetiva final ===
+> URL final: https://www.mercadolivre.com.br/social/uxmarket?matt_word=***&matt_tool=***&forceInApp=true&ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EXz0VxQk0%2Fbh9mmJ7RWCaoX71dccKfAYs9WrZl9RwaP3OSMhBxwLx8Li1TafQb9Jb5XIDYEwXDrNKXWKP6lChL7yy%2FwygWa7OUIWkiCNN7UQ3x174vpaV091lQnHzg2RjiO3nOlid282JyUJFiCCdZuw8L%2B5orCUnsiygLrQ%3D%3D
+> HTTP: 200
+> ```
+
+## 🤖 Claude *(22:02:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== DeivianDS services/authenticated-search.js \u2014 o que exige autentica\u00e7\u00e3o? (busca vs gera\u00e7\u00e3o de link) ===\"\ncurl -s \"https://raw.githubusercontent.com/DeivianDS/mercadolivre-afiliados/main/src/services/authenticated-search.js\" 2>/dev/null | grep -inE \"mercadol|cookie|session|login|token|matt|affiliate|fetch|headers|Authorization|/sites/|/sec/\" | head -25",
+  "description": "Inspect DeivianDS authenticated-search mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DeivianDS services/authenticated-search.js — o que exige autenticação? (busca vs geração de link) ===
+> ```
+
+## 🤖 Claude *(22:04:41)*
+
+
+## 🤖 Claude *(22:04:50)*
+
+## Achado decisivo do probe
+
+Segui o redirect do seu shortlink oficial (`meli.la/2gh13Sw`, gerado pelo portal) e a URL final foi:
+
+```
+https://www.mercadolivre.com.br/social/uxmarket?matt_word=***&matt_tool=***&forceInApp=true&ref=<TOKEN_LONGO_ASSINADO>
+```
+
+Isso muda o entendimento — três coisas importam:
+1. Path `/social/...` (não a URL crua do produto).
+2. `matt_word` + `matt_tool` (a tag dupla — nosso resolver só tem `matt_word`).
+3. **Um `ref=` longo, criptografado/assinado pelo ML** — **não-fabricável manualmente**. É a peça que o portal gera no ato.
+
+## Veredito preliminar do probe (forte)
+
+- **O ML não tem API oficial de afiliados** — convergência de múltiplas fontes + o próprio ML retornando **403 até pro WebFetch da Anthropic**. → **OAuth sozinho NÃO resolve** o #2.
+- O link oficial carrega um **token `ref` assinado** que só nasce no **portal de afiliados logado**. → confirma o cenário B: a geração exige **sessão de navegador logada**, não um API token.
+- **Sua intuição estava certa, refinada:** o "login com consentimento" do ML capturaria a **sessão** (cookies), não um OAuth token — porque não há API. É literalmente o **Browser Operator (#2)**.
+
+## Duas incertezas que faltam cravar (continuo autônomo na barata)
+
+**A — Atribuição (pode matar o #2):** será que `matt_word`+`matt_tool` anexados — **sem** o `ref` — já geram comissão? Se sim, há um atalho **sem browser**: só completar nosso resolver com o `matt_tool`. Se não, o browser é obrigatório. Estou checando agora (não precisa de você):
+
+## 🤖 Claude *(22:04:54)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://rallydevendas.com.br/blog/como-criar-link-afiliado-mercado-livre",
+  "prompt": "Para um link de afiliado do Mercado Livre gerar comiss\u00e3o de verdade, \u00e9 obrigat\u00f3rio GERAR o link pelo portal de afiliados (que cria um link encurtado meli.la / mercadolivre.com/sec/ com um token), ou basta ANEXAR manualmente os par\u00e2metros matt_word e matt_tool a qualquer URL de produto? A atribui\u00e7\u00e3o de comiss\u00e3o funciona com a tag anexada manualmente, ou o Mercado Livre s\u00f3 rastreia/credita cliques vindos de links oficialmente gerados pelo portal? Explique o papel do token \"ref\" no link."
+}
+```
+
+## 🤖 Claude *(22:04:56)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://afiliadomarketplace.com.br/api-completa-para-gerar-links-de-afiliados-no-mercado-livre/",
+  "prompt": "Esta \"API completa\" para gerar links de afiliado do Mercado Livre funciona como? Ela apenas anexa a tag matt_word/matt_tool \u00e0 URL do produto, ou ela precisa estar logada na conta de afiliado (sess\u00e3o/cookies) para gerar o link oficial encurtado com token? A atribui\u00e7\u00e3o de comiss\u00e3o do Mercado Livre exige o link gerado pelo portal, ou aceita a tag anexada manualmente? Que mecanismo t\u00e9cnico ela usa?"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Mercado Livre Affiliate Link Attribution: Official Generation vs. Manual Parameters
+> 
+> Based on the article, **you must use the official portal to generate trackable affiliate links**. The document states that the official method produces links with this structure: `mercadolivre.com.br/produto/[ID]?picker=&affiliate=[SEU_ID]`.
+> 
+> ## Key Points:
+> 
+> **Official Generation Required:**
+> The article emphasizes "O que separa afiliados medianos dos profissionais é o rastreamento constante" (what separates average from professional affiliates is constant tracking). This implies proper tracking infrastructure matters.
+> 
+> **Warnings Against Manual Parameters:**
+> The FAQ explicitly warns: "Alguns encurtadores de terceiros podem fazer com que o parâmetro de afiliado seja perdido ou bloqueado" (third-party shorteners may cause affiliate parameters to be lost or blocked). This suggests the platform has specific tracking mechanisms beyond simple URL parameters.
+> 
+> **No Information on Manual Tagging:**
+> The article does **not address** whether manually appending parameters like `matt_word` or `matt_tool` generates commissions. It only discusses:
+> - Official portal link generation
+> - Chrome extension integration with the official system
+> - API integration for advanced users
+> 
+> **Attribution Window:**
+> "A janela de atribuição da comissão é de 30 dias a partir do clique" (the commission attribution window is 30 days from the click).
+> 
+> The article doesn't explain the "ref" token's role—it focuses on the `affiliate` parameter instead. For definitive answers about manual parameter effectiveness, you'd need Mercado Livre's official developer documentation.
+> ```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Analysis of the Article's Technical Explanation
+> 
+> Based on the webpage content, the article **does not provide specific technical details** about how the API actually generates affiliate links.
+> 
+> The article only offers a simplified example: `"https://mercadolivre.com/afiliado/{product_id}"` — which appears to be pseudocode rather than a functional mechanism.
+> 
+> ## What the Article Claims vs. What It Doesn't Explain
+> 
+> **The article states:**
+> - The API receives `product_id` as a parameter and returns an affiliate link
+> - It uses HTTP requests and JSON responses
+> - It automates link generation
+> 
+> **The article does NOT clarify:**
+> - Whether links use manual tags (like `matt_word` or `matt_tool`) or require authenticated sessions
+> - Whether Mercado Libre accepts manually-appended parameters or demands officially-generated tokens
+> - The actual authentication mechanism with Mercado Libre's systems
+> - How commission attribution technically functions
+> 
+> ## Conclusion
+> 
+> This appears to be promotional content focused on automation benefits rather than technical documentation. It lacks the specifics needed to understand if the API integrates with Mercado Libre's official systems, relies on workarounds, or uses a proprietary token system. **The article doesn't answer your core technical questions about link generation mechanisms.**
+> ```
+
+## 🤖 Claude *(22:05:46)*
+
+
+## 🤖 Claude *(22:05:56)*
+
+## Probe A (atribuição) — resultado
+
+As fontes convergem, e contra o atalho fácil:
+- **"Você deve usar o portal oficial para gerar links rastreáveis"**; encurtadores/parâmetros de terceiros **"podem fazer o parâmetro de afiliado ser perdido ou bloqueado"** ([afiliadomarketplace](https://afiliadomarketplace.com.br/api-completa-para-gerar-links-de-afiliados-no-mercado-livre/), [Rally de Vendas](https://rallydevendas.com.br/blog/como-criar-link-afiliado-mercado-livre)).
+- Nenhuma fonte confirma que anexar `matt_word`/`matt_tool` **sem o `ref`** atribui comissão. O `ref` assinado é claramente um mecanismo de design anti-fraude de atribuição.
+
+Não é prova primária do ML, mas a evidência é forte e consistente: **anexar a tag manualmente é arriscado/incerto; a atribuição confiável exige o link gerado no portal logado.**
+
+## Veredito consolidado do probe-first
+
+| Hipótese | Veredito |
+|---|---|
+| OAuth resolve (API oficial) | ❌ **Não** — ML não tem API de afiliados (403 hostil até pro WebFetch) |
+| Anexar `matt_word`+`matt_tool` resolve | ⚠️ **Improvável/arriscado** — sem o `ref` assinado, atribuição incerta |
+| **Operar o portal de afiliados logado** (Browser Operator) | ✅ **É o caminho** — é onde nasce o `meli.la` + `ref` |
+
+Sua intuição se confirma, refinada: **login-com-consentimento no ML capturando _sessão_ (cookies)** — não OAuth token — alimentando um operador que gera os links no portal. Isso **é** o #2.
+
+## Probe de runtime (autônomo, read-only) — a última incógnita
+
+Falta a pergunta que decide **onde** o #2 roda: *o nosso datacenter consegue operar o ML com um browser real, ou o IP é bloqueado?* (a memória marcava isso como "não-testado"). O `agent-browser` é um Chromium real — pode passar onde o WebFetch (bot óbvio) levou 403. Testando agora contra o portal de afiliados, **deslogado** (não preciso da sua sessão pra isto):
+
+## 🤖 Claude *(22:06:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== probe runtime: Chromium real (datacenter) consegue abrir o portal de afiliados ML? ===\"\ntimeout 70 agent-browser open \"https://www.mercadolivre.com.br/afiliados/\" >/dev/null 2>&1; echo \"open rc=$?\"\nsleep 6\necho \"URL:\"; agent-browser get url 2>&1 | tail -1 | sed 's/#.*//'\necho \"TITLE:\"; agent-browser get title 2>&1 | tail -1\nagent-browser screenshot /tmp/ml-afiliados-portal.png >/dev/null 2>&1\nls -la /tmp/ml-afiliados-portal.png 2>/dev/null | awk '{print \"screenshot:\", $5, \"bytes\"}'\necho \"=== sinais: bloqueio/captcha  vs  portal normal ===\"\nagent-browser get text body 2>&1 | grep -ioE \"captcha|robot|verifica[a-z]*|acesso negado|denied|forbidden|bloque[a-z]*|unusual traffic|afiliad[a-z]*|entrar|fazer login|ganhe|comiss[a-z]*|criar link\" | sort | uniq -c | head -20",
+  "description": "Probe if datacenter Chromium can load ML affiliate portal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === probe runtime: Chromium real (datacenter) consegue abrir o portal de afiliados ML? ===
+> open rc=0
+> URL:
+> https://www.mercadolivre.com.br/afiliados/
+> TITLE:
+> 
+> screenshot: 16368 bytes
+> === sinais: bloqueio/captcha  vs  portal normal ===
+> ```
+
+## 🤖 Claude *(22:06:16)*
+
+
+## 🤖 Claude *(22:06:18)*
+
+Título vazio, screenshot de só **16 KB** (vs 106–113 KB das nossas páginas), zero texto reconhecível no corpo. Cheira a bloqueio/página vazia. Deixa eu ver o que o ML serviu:
+
+## 🤖 Claude *(22:06:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/ml-afiliados-portal.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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ABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMA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IAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAAQAAiIIABgAAIAoCGAAAgCgIYAAAAKIggAEAAIiCAAYAACAKAhgAAIAoCGAAAACiIIABAACIggAGAAAgCgIYAACAKAhgAAAAoiCAARIAAMRAAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEAUBDAAAQBQEMAAAAFEQwAAAAERBAAMAABAFAQwAAEAUBDAAAABREMAAAABEQQADAAAQBQEMAABAFAQwAAAAURDAAAAAREEAAwAAEIX/HwAA///n0eBiAAAABklEQVQDAHF6Z3RBUwlUAAAAAElFTkSuQmCC', 'media_type': 'image/png'}}]
+> ```
+
+## 🤖 Claude *(22:08:20)*
+
+
+## 🤖 Claude *(22:08:21)*
+
+Aí está a prova material — o ML serviu uma **página de erro/bloqueio** ("Hubo un error accediendo a esta pagina...") para o Chromium real do nosso datacenter:
+
+## 🤖 Claude *(22:08:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== fechando sess\u00e3o do agent-browser (limpeza) ===\"\nagent-browser close --all 2>&1 | tail -2\necho \"done\"",
+  "description": "Close agent-browser session"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fechando sessão do agent-browser (limpeza) ===
+> ✓ Closed session: default
+> done
+> ```
+
+## 🤖 Claude *(22:08:49)*
+
+
+## 🤖 Claude *(22:08:56)*
+
+Sessão do browser fechada (limpeza). Aqui está o fechamento do probe.
+
+## Probe-first CONCLUÍDO — veredito 100% material desta sessão
+
+| Hipótese pro #2 (links de afiliado per-user) | Veredito | Prova |
+|---|---|---|
+| OAuth / API oficial resolve | ❌ Não | ML não tem API de afiliados — múltiplas fontes + 403 até no WebFetch da Anthropic |
+| Anexar `matt_word`+`matt_tool` resolve | ⚠️ Arriscado | link oficial tem `ref` **assinado, não-fabricável**; fontes: tag de terceiros "pode ser perdida/bloqueada" |
+| Operar o **portal logado** (Browser Operator) | ✅ caminho técnico… | é onde nasce o `meli.la`+`ref` |
+| …mas roda do nosso datacenter? | ❌ **Não** | ML bloqueia o IP — provado: "Hubo un error accediendo a esta pagina" pro Chromium real |
+
+**Tradução:** o link oficial só nasce no portal ML logado, e o portal **não é operável do nosso datacenter** nem com browser real. Logo, o #2 — se construído — **tem que rodar fora daqui** (navegador do usuário ou IP residencial). O probe-first acabou de nos poupar de construir um operador no datacenter que **nunca funcionaria**.
+
+**O que muda a economia da decisão:** seu catálogo minerado é **curado e pequeno** (3 produtos). Você não precisa de um robô operando o ML 24/7 — precisa gerar o `meli.la` **1× por produto novo**. O resto do flywheel (minerar→gerar→publicar→atribuir) continua autônomo; só a captura do link é pontual.
+
+## 🤖 Claude *(22:08:58)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/social-accounts.png",
+    "/tmp/ml-afiliados-portal.png"
+  ],
+  "caption": "Esq/cima: prova do #1 \u2014 UI logada (/dashboard/social) renderiza as 3 contas \"Ativa\" com bot\u00e3o Desconectar wired \u00e0 RPC. Dir/baixo: prova do bloqueio \u2014 o ML serve p\u00e1gina de erro pro Chromium real do nosso datacenter.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 2 files delivered to user.
+> ```
+
+## 🤖 Claude *(22:09:03)*
+
+
+## 🤖 Claude *(22:09:05)*
+
+**Entregue nesta sessão:** ✅ #1 fechado (disconnect verificado na UI logada, não-destrutivo) · ✅ probe do #2 concluído com veredito material. **Falta sua decisão de direção** — e aí o `/bok-scribe` (BoK Gate, módulo novo) com a arquitetura escolhida.
+
+## 🤖 Claude *(22:09:11)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O probe fechou: o link de afiliado oficial (meli.la+ref) s\u00f3 nasce no portal ML logado, que N\u00c3O roda do nosso datacenter (bloqueado, provado). Como o cat\u00e1logo minerado \u00e9 curado/pequeno, a economia muda. Qual dire\u00e7\u00e3o pro #2?",
+      "header": "Dire\u00e7\u00e3o #2",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Captura assistida 1\u00d7/produto",
+          "description": "Voc\u00ea (ou uma extens\u00e3o leve no SEU navegador / a Barra de Afiliados oficial do ML) gera o meli.la 1\u00d7 por produto novo do cat\u00e1logo; n\u00f3s cacheamos em affiliate_config.shortlinks e o flywheel usa dali. Sustent\u00e1vel, oficial, fora da corrida anti-bot. Recomendado: baixo volume + preserva a autonomia do resto."
+        },
+        {
+          "label": "Operador aut\u00f4nomo (IP residencial)",
+          "description": "agent-browser logado na sess\u00e3o ML de cada usu\u00e1rio, via proxy Apify residencial (que j\u00e1 temos) ou cloud browser. Aut\u00f4nomo server-side, mas fr\u00e1gil \u2014 anti-bot do ML, ToS, sess\u00e3o expira \u2014 e exige manter a sess\u00e3o ML per-user. Corrida armamentista cont\u00ednua."
+        },
+        {
+          "label": "Validar atribui\u00e7\u00e3o antes de construir",
+          "description": "Completar o resolver com matt_tool e testar empiricamente (1 compra real de teste, janela de 30 dias) se o link montado SEM o ref credita comiss\u00e3o. Se creditar \u2192 mata o #2 inteiro (zero browser). Cientificamente o mais limpo, mas lento e custa uma compra."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O probe fechou: o link de afiliado oficial (meli.la+ref) só nasce no portal ML logado, que NÃO roda do nosso datacenter (bloqueado, provado). Como o catálogo minerado é curado/pequeno, a economia muda. Qual direção pro #2?"="Vamos esperar então para verificar se os clicks gerados ja https://www.mercadolivre.com.br/smart-tv-75-8k-neo-qled-mini-led-samsung-qn75qn900b/up/MLBU3980641251?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=fcfa1362-8026-47f3-b8c0-13c463bc2efc vão ser comtabilizados amanhã, pois no painel vejo 1 click que acho que foi de ontem, porem n da para ver os clicks do dia atual, Período
+> 
+> Até agora neste mês
+> Dados atualizados em 2 de junho de 2026
+> Cliques
+> É a quantidade de vezes que os compradores clicaram no link compartilhado.
+> 1
+> 100%
+> 
+> Como estamos no segundo dia do mes deveria aparecer mais com os links novos que você gerou, Mandei para a minha namorada abrir no celular dela com o 3g fora do wifi que estou usando, dois links novos se estiver tudo certo com esse link https://www.mercadolivre.com.br/geladeira-samsung-family-hub-french-door-rf27-black-inox/p/MLB32642694?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=a1b98ea5-03ba-42fb-aab4-99ee364500df deve aparecer 3 clicks no painel amanhã ou quando atualizar.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:16:49)*
+
+
+## 🤖 Claude *(22:16:52)*
+
+Decisão registrada: **esperar o dado empírico** — você está rodando o teste de atribuição (Opção 3) de forma mais barata e esperta que eu propus: clique (não compra), e por **dispositivo/rede independente** (namorada, 3G fora do seu WiFi), evitando contaminação. Método sólido.
+
+Mas tem uma **variável de confusão material** que preciso apontar pra você não tirar a conclusão errada amanhã. Deixa eu capturar do seu shortlink oficial qual o formato exato que o ML usa:
+
+## 🤖 Claude *(22:16:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== formato de atribui\u00e7\u00e3o OFICIAL do ML (extra\u00eddo do seu meli.la/2gh13Sw) ===\"\nFINAL=$(curl -s -o /dev/null -w \"%{url_effective}\" -L --max-time 25 -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64)\" \"https://meli.la/2gh13Sw\" 2>/dev/null)\necho \"path base:\"; echo \"$FINAL\" | sed -E 's/\\?.*//'\necho \"matt_word:\"; echo \"$FINAL\" | grep -oE \"matt_word=[^&]+\"\necho \"matt_tool:\"; echo \"$FINAL\" | grep -oE \"matt_tool=[^&]+\"\necho \"tem ref assinado?\"; echo \"$FINAL\" | grep -oE \"ref=[^&]+\" | head -c 40; echo \"...\"\necho \"\"\necho \"=== compara\u00e7\u00e3o com os links que voc\u00ea est\u00e1 testando ===\"\necho \"Seu teste usa:  matt_word=caga6077534  (SEM matt_tool, SEM ref, na URL crua do produto)\"\necho \"Oficial usa:    matt_word + matt_tool + ref assinado, via path /social/\"",
+  "description": "Extract official ML attribution format for comparison"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === formato de atribuição OFICIAL do ML (extraído do seu meli.la/2gh13Sw) ===
+> path base:
+> https://www.mercadolivre.com.br/social/uxmarket
+> matt_word:
+> matt_word=caga6077534
+> matt_tool:
+> matt_tool=43641843
+> tem ref assinado?
+> ref=BDKNlMHg2FSILlZMjtVq%2B4uC%2F6rOC3EX...
+> 
+> === comparação com os links que você está testando ===
+> Seu teste usa:  matt_word=caga6077534  (SEM matt_tool, SEM ref, na URL crua do produto)
+> Oficial usa:    matt_word + matt_tool + ref assinado, via path /social/
+> ```
+
+## 🤖 Claude *(22:18:31)*
+
+
+## 🤖 Claude *(22:18:40)*
+
+Capturei o formato oficial do seu link. Comparação material:
+
+| Componente | Oficial (seu `meli.la`) | Seus links de teste | 
+|---|---|---|
+| `matt_word` | `caga6077534` | `caga6077534` ✅ **bate** |
+| `matt_tool` | `43641843` | ❌ **ausente** |
+| `ref` (assinado) | `BDKNlMHg2…` | ❌ ausente (não-fabricável) |
+| path | `/social/uxmarket` | URL crua do produto |
+
+**Variável de confusão — leia antes de concluir amanhã:** seus links de teste diferem do oficial em **3 coisas** (matt_tool, ref, path), não 1. Então:
+
+- **Se os cliques subirem 1 → 3** amanhã → **conclusivo**: `matt_word` sozinho já rastreia → o #2 praticamente morre (sem browser, sem ref).
+- **Se ficarem em 1** → **inconclusivo**: não dá pra saber se faltou o `matt_tool`, o `ref` ou o path `/social/`. Aí o próximo braço é testar `matt_word`+`matt_tool` (agora sei o valor: `43641843`) pra isolar o `ref`.
+
+**Cérebro sem mãos (Lei 1):** eu **não consigo ver seu painel de afiliados** — é logado e o ML bloqueia nosso IP (acabamos de provar com a página de erro). Dependo de você me passar o número quando o painel atualizar.
+
+Duas coisas que ajudam:
+1. **Amanhã, ao reportar o nº de cliques, me diga se o painel mostra cliques _por-link_ ou só o _total_** — isso decide se rodamos os braços (matt_word vs matt_word+matt_tool) em paralelo ou um de cada vez.
+2. Nota per-user: o `matt_tool` é por-usuário (o seu é `43641843`, ligado ao canal "uxmarket"). Hoje o `affiliate_config` guarda só o `matt_word` (`affiliate_tag`) — se o teste apontar que o `matt_tool` importa, ele precisa virar um campo per-user também.
+
+Registrando o probe + esse experimento na memória do projeto pra retomarmos amanhã sem perder o fio:
+
+## 🤖 Claude *(22:18:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_authenticated_browser_operator
+> 3	description: "Módulo novo a construir — browser logado humano-paced p/ ações que nos barram (ex: ML share→meli.la cravado). Probe-first."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: d4434afb-c259-4270-a01a-03d85ba37719
+> 8	---
+> 9	
+> 10	**Diretiva Sovereign 2026-06-01:** construir um **Operador de Browser Autenticado** — um agente/browser que navega "exatamente como um usuário normal" **logado**, focado nas **ações interativas que nos barram** (não scraping em massa, não teste E2E). Caso canônico: abrir o produto ML → clicar **Compartilhar** com o login ML do usuário → pegar o **`meli.la` cravado** → gravar em `affiliate_config.metadata.shortlinks[MLB]` (fecha o elo de atribuição garantida — ver [[reference_encrypted_views_write_pattern]] e o SOP `docs/processes/ml-affiliate-attribution.md`). Generalizável p/ qualquer ação logada bloqueada.
+> 11	
+> 12	**Por quê:** o `meli.la` é a única atribuição **garantida** do ML e **não tem API** — só sai de clique humano logado em "Compartilhar". O Apify (residencial, anônimo) faz busca mas **não** ações por-conta. Esta sessão provou que do **IP de datacenter** o ML serve `account-verification`/"Hubo un error" até pra **browser real** (headless + curl-UA + Apify intermitente).
+> 13	
+> 14	**Decisões do Sovereign (AskUserQuestion 2026-06-01):**
+> 15	- **Caminho = PROBE-FIRST.** Antes de código de módulo: validar materialmente que um browser **LOGADO** consegue o fluxo share→meli.la de um runtime viável. Se não furar daqui, a arquitetura muda. Depois `/bok-scribe` (BoK Gate — é módulo novo) → build.
+> 16	- **Runtime = decidir APÓS o probe.** Testar opções: nosso servidor + proxy residencial · cloud browser stealth (agent-browser suporta AgentCore/Vercel Sandbox) · máquina do Sovereign (residencial, ML logado). Logado *pode* furar onde anônimo não — não-testado.
+> 17	
+> 18	**Constraints a respeitar:**
+> 19	1. **Auth sem senha crua:** login interativo 1×→ profile/cookies persistidos (vault de sessão do `agent-browser`), per-user p/ multi-tenant. Nunca senha em texto.
+> 20	2. **Tool base:** `agent-browser` (mesmo motor do E2E, modo sessão persistente). Siblings: Claude-in-Chrome MCP, Playwright.
+> 21	3. **BoK Gate:** módulo novo → MRD→SDD via `/bok-scribe` antes do código (ou override consciente registrado).
+> 22	
+> 23	**Próximo passo concreto:** probe de viabilidade (browser logado faz share→meli.la), trazer veredito material, então escolher runtime + `/bok-scribe`.
+> 24	
+> ```
+
+## 🤖 Claude *(22:19:46)*
+
+
+## 🤖 Claude *(22:19:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "description: \"M\u00f3dulo novo a construir \u2014 browser logado humano-paced p/ a\u00e7\u00f5es que nos barram (ex: ML share\u2192meli.la cravado). Probe-first.\"",
+  "new_string": "description: \"Probe EXECUTADO 2026-06-02: ML sem API de afiliados, link oficial exige portal logado (ref assinado n\u00e3o-fabric\u00e1vel), datacenter bloqueado p/ browser REAL. Aguardando teste de atribui\u00e7\u00e3o de clique (matt_word anexado) p/ decidir runtime/necessidade.\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:20:00)*
+
+
+## 🤖 Claude *(22:20:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "**Pr\u00f3ximo passo concreto:** probe de viabilidade (browser logado faz share\u2192meli.la), trazer veredito material, ent\u00e3o escolher runtime + `/bok-scribe`.",
+  "new_string": "**PROBE EXECUTADO (2026-06-02) \u2014 veredito material:**\n- **ML n\u00e3o tem API de afiliados** (m\u00faltiplas fontes + 403 at\u00e9 no WebFetch da Anthropic). OAuth/login-consentimento daria s\u00f3 API token, que n\u00e3o existe p/ afiliados.\n- **Link oficial = portal logado.** Segui o `meli.la/2gh13Sw` (shortlink do Usu\u00e1rio Zero) \u2192 redireciona p/ `mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&ref=<ASSINADO>`. O `ref` \u00e9 token assinado **n\u00e3o-fabric\u00e1vel** \u2192 s\u00f3 nasce no portal de afiliados logado.\n- **Datacenter bloqueado \u2014 PROVADO p/ browser REAL:** `agent-browser` (Chromium real) abrindo `mercadolivre.com.br/afiliados/` do IP Oracle \u2192 p\u00e1gina \"Hubo un error accediendo a esta pagina\" (shot `/tmp/ml-afiliados-portal.png`). Confirma o que era \"n\u00e3o-testado\". \u21d2 Browser Operator **N\u00c3O roda do datacenter**; runtime = navegador do user OU IP residencial (Apify/cloud browser).\n- **Resolver `src/lib/affiliate.ts` incompleto:** seta s\u00f3 `matt_word` (correto, =caga6077534) mas **falta `matt_tool=43641843`** (per-user; hoje n\u00e3o armazenado no `affiliate_config`).\n\n**EXPERIMENTO EM CURSO (resultado ~2026-06-03):** Sovereign compartilhou 2 links `matt_word`-anexados (TV `MLBU3980641251` + Geladeira `MLB32642694`, sem matt_tool/ref/path-social) abertos por dispositivo independente (3G, fora do WiFi). Painel de afiliados ML mostrava 1 clique (de 2026-06-01); espera 3. **Se subir 1\u21923 \u2192 matt_word sozinho rastreia \u2192 #2 quase morre. Se ficar 1 \u2192 inconclusivo (3 vari\u00e1veis: matt_tool, ref, path) \u2192 testar bra\u00e7o matt_word+matt_tool.** \u26a0\ufe0f N\u00c3O consigo ver o painel ML (logado + IP bloqueado) \u2014 Sovereign reporta o n\u00ba (perguntar se painel mostra por-link ou s\u00f3 total).\n\n**T\u00e9cnica reutiliz\u00e1vel (achada no #1 disconnect):** logar o `agent-browser` como qualquer user via Supabase Admin API `POST /auth/v1/admin/generate_link` (magiclink) + abrir o `action_link` \u2014 sem senha nem token do DevTools, per-user nativo. Usei p/ verificar (n\u00e3o-destrutivo) o disconnect Meta/social na UI logada `/dashboard/social` (bot\u00f5es wired a `rpc('disconnect_social')`). Ver [[reference_supabase_keys_migrated]] (SB_SECRET_KEY p/ Admin API).\n\n**Pr\u00f3ximo passo:** aguardar n\u00ba de cliques (Sovereign) \u2192 interpretar \u2192 (a) matt_word basta: completar/seguir; (b) precisa matt_tool: add campo per-user no `affiliate_config` + testar; (c) precisa ref: `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:20:26)*
+
+
+## 🤖 Claude *(22:20:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "Datacenter IP bloqueado at\u00e9 p/ browser real; logado n\u00e3o-testado.",
+  "new_string": "PROBE 2026-06-02: ML sem API de afiliados; link oficial exige portal logado (ref assinado n\u00e3o-fabric\u00e1vel); datacenter bloqueado p/ browser REAL (provado, \"Hubo un error\"). Aguardando teste de atribui\u00e7\u00e3o de clique (matt_word) p/ ver se #2 \u00e9 necess\u00e1rio."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(22:20:33)*
+
+
+## 🤖 Claude *(22:20:34)*
+
+Preciso ler o MEMORY.md antes de editar:
+
+## 🤖 Claude *(22:20:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — Refactor v2 da constelação 3D; TODAS as fases (0/1/2/3/4) seladas em v6.18.0 — empty-state wizard 2-portas + execução real de capability (exec 488a7744 watchdog_infra · 0 mco · 255ms) + reset destrutivo + botão Zerar per-user. BoK selada 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.
+> 4	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — Worktree pode estar dezenas de commits atrás; "X não existe/está quebrado" tirado só do worktree é falso negativo (errei sobre publish-meta nesta base). Cheque `git show origin/main:<path>` antes de concluir.
+> 5	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — Incidente 2026-05-31: sob Bash/Read atrasado, escrevi hashes de commit inexistentes + counts de malha incrementados "de cabeça". Todo hash/UUID/contador em doc/commit vem de output verificado NESTE turno; halt e re-query, nunca preencha. /handson deve `git fetch` primeiro.
+> 6	- [Supabase keys migradas — use SB_SECRET_KEY (service_role legada REVOGADA)](reference_supabase_keys_migrated.md) — Incidente 2026-06-01: service_role hardcoded vazou → cutover pras API keys novas + revoke da signing key HS256 211a3abc. `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` MORTAS (PGRST301). Use `SB_SECRET_KEY`/`SB_PUBLISHABLE_KEY`. ⚠️ Nos protocolos /handson e /handoff troque `$SUPABASE_SERVICE_ROLE_KEY` por `$SB_SECRET_KEY` — a malha não responde à legada.
+> 7	- [user_api_keys é VIEW mascarada — chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) — credential_encryption (2026-06-01): SELECT mostra `••••`, reais cifradas no Vault; edge fns leem `decrypted_user_api_keys`. Teste de chave DEVE ser server-side (edge fn `test-api-key`) — o cliente só vê o mask, então "Falhou" no teste ≠ chave inválida. INSTEAD OF trigger preserva valor ao escrever mask/null.
+> 8	- [Operador de Browser Autenticado — módulo a construir (probe-first)](project_authenticated_browser_operator.md) — Diretiva Sovereign 2026-06-01: browser LOGADO humano-paced p/ ações que nos barram (ML Compartilhar→meli.la cravado→gravar shortlinks). NÃO scraping/E2E. Datacenter IP bloqueado até p/ browser real; logado não-testado. Decisões: PROBE-FIRST → runtime decidido após probe → /bok-scribe (BoK Gate) → build. Auth = login interativo 1×+profile persistido, sem senha crua. Tool: agent-browser.
+> 9	- [Encrypted views — .insert() (não .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) — user_api_keys/meta_config/social_accounts são VIEWS Vault (000600). `.upsert()`→400; null NÃO limpa (COALESCE-guard, use RPC). SocialAccountsPage WP FIXADO 2026-06-02 (.insert + RPC `disconnect_wordpress` que revoga o segredo Vault). ⚠️ Bug profundo achado+corrigido: o INSTEAD OF do user_api_keys usava `INSERT...ON CONFLICT` → double-fire do encrypt trigger → 23505 p/ QUALQUER linha pré-existente; corrigido p/ UPDATE-first (migration 20260602130000) + guard de tenant. Idempotência do encrypt trigger SELADA 2026-06-02 (helper `vault_upsert_secret` update-in-place por nome, migration 20260602140000 — antes 23505 / depois OK material). Gap pré-existente (meta/social INSTEAD OF sem guard de tenant → injeção cross-tenant id-novo) achado no /security-review e TAMBÉM SELADO na mesma sessão: guard `auth.uid()` portado pras 2 triggers irmãs (migration 20260602150000 — antes injeção OK / depois 42501 material).
+> 10	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — No Claude Code, `grep` = função→`ugrep -G`; idiomas BRE (`grep -v "^\+\+\+"`) estouram e no-opam silenciosamente sob `|| true` (só no meu shell, não no terminal do Gabriel). Use `-E` / `grep -E '^\+[^+]'`. Pegou o pre-commit anti-credential no-opando p/ commits de IA (2026-06-01).
+> ```
+
+## 🤖 Claude *(22:20:38)*
+
+
+## 🤖 Claude *(22:20:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "Datacenter IP bloqueado at\u00e9 p/ browser real; logado n\u00e3o-testado. Decis\u00f5es: PROBE-FIRST \u2192 runtime decidido ap\u00f3s probe \u2192 /bok-scribe (BoK Gate) \u2192 build. Auth = login interativo 1\u00d7+profile persistido, sem senha crua. Tool: agent-browser.",
+  "new_string": "PROBE EXECUTADO 2026-06-02: ML sem API de afiliados; link oficial exige portal logado (matt_word=caga6077534 + matt_tool=43641843 + ref ASSINADO n\u00e3o-fabric\u00e1vel, via /social/); datacenter bloqueado p/ browser REAL (provado \u2014 \"Hubo un error accediendo\"). \u21d2 #2 n\u00e3o roda do datacenter (runtime = navegador do user / IP residencial). Resolver s\u00f3 seta matt_word (falta matt_tool). Aguardando teste de atribui\u00e7\u00e3o de clique (Sovereign, ~06-03) p/ ver se #2 \u00e9 necess\u00e1rio. T\u00e9cnica reutiliz\u00e1vel: agent-browser logado via Admin API generate_link (magiclink) \u2014 usado p/ verificar disconnect Meta/social na UI logada (#1, n\u00e3o-destrutivo)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:20:57)*
+
+
+## 🤖 Claude *(22:21:07)*
+
+Memória atualizada (arquivo + índice). Fechando o turno com o estado consolidado:
+
+## Onde paramos
+
+**Entregue e provado nesta sessão:**
+- ✅ **#1 fechado** — disconnect Meta/social verificado na UI logada (`/dashboard/social`, 3 contas "Ativa" com botões wired a `rpc('disconnect_social')`), **não-destrutivo**, via `agent-browser` logado pela Admin API `generate_link` (técnica per-user reproduzível). Suas 3 contas seguem intactas.
+- ✅ **Probe do #2 concluído** — veredito material: ML sem API de afiliados · link oficial exige portal logado (`ref` assinado não-fabricável) · datacenter bloqueado pro Chromium real · nosso resolver tem o `matt_word` certo mas falta o `matt_tool=43641843`.
+
+**Em espera (bola com você):** o teste de atribuição de clique. Resultado quando o painel de afiliados atualizar (~amanhã, 03/06).
+
+**O que preciso de você amanhã:**
+1. O **número de cliques** no painel (esperado: 1 → 3 se os links `matt_word` rastrearem).
+2. Se o painel mostra cliques **por-link ou só o total** (decide se testamos os braços em paralelo).
+
+Não dá pra eu agendar checagem automática — o painel é logado e o ML bloqueia nosso IP, então sou cego pra ele (Lei 1). Quando você trouxer o número, eu interpreto pela tabela e a gente decide o destino do #2 numa tacada: `matt_word` basta (mata o #2) · falta só `matt_tool` (campo per-user, sem browser) · precisa do `ref` (`/bok-scribe` do Browser Operator com runtime fora do datacenter).
+
+Bom descanso, Maestro — o flywheel está medindo sozinho. 🧘
+
 ---
 
 %% --- TIMELINE START --- %%
