@@ -187,8 +187,9 @@
       "github-sync:Sync with Remote": false
     }
   },
-  "active": "bc6a42ef35de2f2b",
+  "active": "8f5a01492875c909",
   "lastOpenFiles": [
+    "ClaudeSessions/2026-06-01 - Fix tenant isolation in edge functions.md",
     "ClaudeSessions/2026-05-31 - Fix tenant isolation in edge functions.md",
     "GeminiSessions/2026-05-31 - handson.md",
     "ClaudeSessions/2026-05-31 - Seal meta-api BoK suite and test robustness.md",
