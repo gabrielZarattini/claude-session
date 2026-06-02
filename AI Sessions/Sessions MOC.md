@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 247
-> * **Sessões do Claude**: 217
+> * **Total de Sessões Registradas**: 248
+> * **Sessões do Claude**: 218
 > * **Sessões do Gemini**: 30
 
 ---
@@ -55,6 +55,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-02 - agent-af037801ea2099be9]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a856110ba10475991]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
@@ -66,8 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - agent-a10aebd93731e0c4f]]` - *2026-06-01*
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
-*   `[[2026-06-01 - Resolve priority alerts]]` - *2026-06-01*
-*   *... e mais 211 sessões nessa categoria.*
+*   *... e mais 212 sessões nessa categoria.*
 
 ---
 
@@ -255,6 +255,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-02 - agent-af037801ea2099be9]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a856110ba10475991]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
