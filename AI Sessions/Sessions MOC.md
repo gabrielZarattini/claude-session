@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 245
-> * **Sessões do Claude**: 215
+> * **Total de Sessões Registradas**: 247
+> * **Sessões do Claude**: 217
 > * **Sessões do Gemini**: 30
 
 ---
@@ -50,12 +50,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-04 - Fix message options overflow in Core V2]]` - *2026-05-04*
 
 ### Security & Credentials
+*   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` - *2026-06-02*
 *   `[[2026-05-30 - Fix API key leak and reconfigure model defaults]]` - *2026-05-30*
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
 *   `[[2026-06-02 - agent-a856110ba10475991]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
+*   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
 *   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
@@ -65,8 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - Review GitGuardian alert on password string]]` - *2026-06-01*
 *   `[[2026-06-01 - Restructure enterprise constellation agents]]` - *2026-06-01*
 *   `[[2026-06-01 - Resolve priority alerts]]` - *2026-06-01*
-*   `[[2026-06-01 - Fix tenant isolation in edge functions]]` - *2026-06-01*
-*   *... e mais 210 sessões nessa categoria.*
+*   *... e mais 211 sessões nessa categoria.*
 
 ---
 
@@ -256,6 +257,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-02 - agent-a856110ba10475991]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` (ClaudeSessions)
+*   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
+*   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` (ClaudeSessions)
