@@ -4677,6 +4677,843 @@ PRE-FLIGHT ✅ — containers 5/5 healthy (9d), Chroma v2 OK, git/log coerentes.
 > ea2f1f4 chore(sprint): selo v6.20.0 — afiliados híbrido + catálogo Apify real + BYOK per-user
 > ```
 
+## 🤖 Claude *(13:30:03)*
+
+
+## 🤖 Claude *(13:30:05)*
+
+3 commits selados (pre-commit hook passou). **PHASE 3 — KNOWLEDGE MESH MILESTONE** (antes da Phase 4 para o count incluir este nó). Usando `$SB_SECRET_KEY`:
+
+## 🤖 Claude *(13:30:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"wordpress-byok-credential-write-fix\"\nSESSION_SUMMARY=\"WordPress BYOK fix + bug profundo da encriptacao: save .upsert->.insert, disconnect via RPC disconnect_wordpress (revoga segredo Vault, LGPD), e trg_instead_of_user_api_keys trocado de INSERT...ON CONFLICT (double-fire 23505 quebrando credencial de todo user existente) para UPDATE-first + guard de tenant. Provado material via Management API; 2 migrations /security-review SAFE; frontend deployado.\"\n\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -3 | tr '\\n' '|')\\\"\n    }\n  }\")\necho \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('NODE_ID='+(d[0]['id'] if isinstance(d,list) and d else d.get('id','ERROR')))\" 2>/dev/null > /tmp/node_id.txt || echo \"NODE_ID=ERROR\" > /tmp/node_id.txt\ncat /tmp/node_id.txt\nNODE_ID=$(sed 's/NODE_ID=//' /tmp/node_id.txt)\necho \"$NODE_ID\" > /tmp/nid.txt\necho \"--- raw resp (first 200 chars) ---\"; echo \"$RESP\" | head -c 200",
+  "description": "Insert handoff milestone node into knowledge mesh"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID=7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3
+> --- raw resp (first 200 chars) ---
+> [{"id":"7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3","node_type":"handoff","name":"session-handoff-20260602-wordpress-byok-credential-write-fix","content":"[HANDOFF SEAL] WordPress BYOK fix + bug profundo da
+> ```
+
+## 🤖 Claude *(13:30:18)*
+
+
+## 🤖 Claude *(13:30:19)*
+
+Nó inserido: `7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3`. Disparando embedding + gravando `proof-manifest.json` (para a Phase 5c):
+
+## 🤖 Claude *(13:30:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3\"\necho \"=== trigger embedding ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 300\necho \"\"\necho \"=== verify embedding landed (embedding not null) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,embedding\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); e=d[0].get('embedding') if d else None; print('embedding:', 'present (len '+str(len(e))+' chars)' if e else 'NULL')\" 2>/dev/null\necho \"\"\necho \"=== write proof-manifest.json ===\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\ncat proof-manifest.json",
+  "description": "Trigger embedding and write proof manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === trigger embedding ===
+> {"error":"Request body must contain { node_id: string }"}
+> === verify embedding landed (embedding not null) ===
+> embedding: present (len 9502 chars)
+> 
+> === write proof-manifest.json ===
+> {"handoffNodeId": "7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3"}
+> ```
+
+## 🤖 Claude *(13:30:36)*
+
+
+## 🤖 Claude *(13:30:38)*
+
+Embedding **presente (9502 chars ≈ 768d)** — auto-embedado no insert (meu call manual usou payload antigo `{record}`, mas o trigger já vetorizou). Nó vetorizado ✅. `proof-manifest.json` gravado.
+
+**PHASE 4 — README.md.** Buscando o count real de nós (já inclui este handoff) + estrutura do README:
+
+## 🤖 Claude *(13:30:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== live node count (includes this handoff node) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'\necho \"\"\necho \"=== README badges + version + phase table head ===\"\ngrep -nE \"version-|neural_mesh-|badge|Phase Status|What's New|v6\\.20|^## |^### \\[v\" README.md | head -40",
+  "description": "Get live node count and inspect README structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === live node count (includes this handoff node) ===
+> 8750
+> 
+> === README badges + version + phase table head ===
+> 2:  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3:  <img src="https://img.shields.io/badge/version-6.20.0--afiliados--hibrido--%2B--apify--byok-blueviolet?style=for-the-badge" alt="Version" />
+> 4:  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5:  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8748_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7:  <img src="https://img.shields.io/badge/test_coverage-240_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8:  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 9:  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 10:  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 11:  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 12:  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 13:  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 14:  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 15:  <img src="https://img.shields.io/badge/Core_v2-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core v2" />
+> 16:  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 17:  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 18:  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 19:  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 20:  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 21:  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 22:  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 23:  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 24:  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 25:  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 26:  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 27:  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 28:  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 29:  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 30:  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 31:  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 32:  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 33:  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 34:  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 35:  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 36:  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 37:  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 38:  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 39:  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 40:  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 41:  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> ```
+
+## 🤖 Claude *(13:30:50)*
+
+
+## 🤖 Claude *(13:30:52)*
+
+Count real: **8750** (badge mostra 8748). Vou atualizar badge de versão (6.20.0→6.20.1) + neural_mesh (8748→8750). Localizando as seções "What's New" / changelog e phase table:
+
+## 🤖 Claude *(13:30:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== section headers in README ===\"; grep -nE \"^#{1,3} \" README.md | head -50\necho \"\"; echo \"=== where v6.20.0 changelog entry lives ===\"; grep -nE \"6\\.20\\.0|6\\.19|What|Novidades|Changelog|Release|Status das Fases|Phase\" README.md | head -20",
+  "description": "Find README changelog and phase sections"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === section headers in README ===
+> 51:## 🆕 What's new in v6.20.0 (2026-06-01)
+> 63:## 🆕 What's new in v6.19.0 (2026-06-01)
+> 75:## 🆕 What's new in v6.16.0 (2026-06-01)
+> 88:## 🆕 What's new in v6.15.2 (2026-05-31)
+> 101:## 🆕 What's new in v6.15.0 (2026-05-31)
+> 113:## 🆕 What's new in v6.14.9 (2026-05-31)
+> 128:## 🆕 What's new in v6.14.8 (2026-05-31)
+> 140:## 🆕 What's new in v6.14.7 (2026-05-31)
+> 159:## 🆕 What's new in v6.14.6 (2026-05-31)
+> 170:## 🆕 What's new in v6.14.5 (2026-05-30)
+> 178:## 🆕 What's new in v6.12.0 (2026-05-29)
+> 196:## 🆕 What's new in v6.11.0 (2026-05-28)
+> 218:## 🆕 What's new in v6.10.0 (2026-05-27)
+> 240:# ✨ Constellation Orchestra
+> 247:## 📋 Table of Contents
+> 272:## 🎯 Overview
+> 276:### Core Value Proposition
+> 290:### [v6.18.0] — Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)
+> 297:### [v6.17.0] — Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)
+> 303:### [v6.15.1] — Mercado Pago Postback Signature Gate (FMEA-ML-003/004) (2026-05-31)
+> 309:### [v6.14.3] — meta-api BoK Suite & Agents System Sealed (2026-05-30)
+> 314:### [v6.14.2] — OTD-ML-001 Material Resolution + v6.14.1 Correction (2026-05-30)
+> 321:### [v6.14.1] — OTD-ML-001 Resolved & fetch-trends Deployed (2026-05-30)
+> 326:### [v6.14.0] — Sovereign Dogfood: Affiliate Per-User · Constellation Real · Canvas Graph · Deploy Antibody (2026-05-30)
+> 334:### [v6.13.0] — OpenClaw Ecosystem 100% Validation + Resilience Hardening (2026-05-29)
+> 342:### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> 349:### [v6.8.5] — e2e-user-zero framework MVP — Phase Commercial Gate operacional (2026-05-26)
+> 357:### [v6.8.4] — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern (2026-05-26)
+> 365:### [v6.8.3] — mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening (2026-05-25)
+> 370:### [v6.8.2] — OE-661 Flywheel Validated End-to-End + PGRST203 Hotfix (2026-05-25)
+> 379:### [v6.8.0] — Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)
+> 384:### [v6.7.9] — Canvas Studio Magic Prompt & E2E Audit (2026-05-24)
+> 389:### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+> 395:### [v6.7.6] — Canvas Studio Video Tiers & Error Propagation (2026-05-24)
+> 401:### [v6.7.5] — Canvas Studio Evolution: Take Pipeline, Re-execution, CRUD and Asset Import (2026-05-24)
+> 407:### [v6.7.3] — BoK aios-sql-bridge + OE-661 Flywheel + Canvas Design Submenu (2026-05-23)
+> 413:### [v6.7.1] — Customization Directory & Workflow Alignment (2026-05-23)
+> 417:### [v6.7.0] — Admin User Management Panel (2026-05-20)
+> 423:### [v6.6.9] — mcorch-qa-healing v1 — Material Proof Gate (2026-05-20)
+> 431:### [v6.6.7] — OE-661 Phase 1 Prep + API Tenancy Directive (2026-05-19)
+> 440:### [v6.6.6] — Planning Seal + Debt Audit + Self-audit Retroativo (2026-05-19)
+> 448:### [v6.6.4] — Gamificação-Nodes BoK 9/9 Sealed (BoK Gate liberado, retroativa) (2026-05-18)
+> 457:### [v6.6.3] — OE-661 Debt Liquidation — Postback + Auto-Stitch + Link Forge + Memory (2026-05-18)
+> 468:### [v6.6.2] — Canvas Studio Phase 4.2c — Async Video Pipeline Live (2026-05-17)
+> 475:### [v6.6.1] — Pantheon Configuration + Memory Wiki Seed Manual (2026-05-17)
+> 483:### [v6.6.0] — SSP-01 Repair & REM Cycle (OE01-OE04) (2026-05-17)
+> 497:### [v6.5.0] — SSP-01 Survival Architecture + aios-sql-bridge + Survival Audit v1 (2026-05-17)
+> 506:### [v6.4.0] — P0 Security Remediation + Revenue Ledger + Canvas 4.2b Infra (2026-05-16)
+> 521:### [v6.3.1] — OpenClaw Neural Bridge + Departmental Army (2026-05-16)
+> 530:### [v6.3.0] — Canvas Studio Phase 4.2a — Typed Nodes & Inspectors (2026-05-15)
+> 
+> === where v6.20.0 changelog entry lives ===
+> 3:  <img src="https://img.shields.io/badge/version-6.20.0--afiliados--hibrido--%2B--apify--byok-blueviolet?style=for-the-badge" alt="Version" />
+> 42:  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 51:## 🆕 What's new in v6.20.0 (2026-06-01)
+> 63:## 🆕 What's new in v6.19.0 (2026-06-01)
+> 75:## 🆕 What's new in v6.16.0 (2026-06-01)
+> 88:## 🆕 What's new in v6.15.2 (2026-05-31)
+> 97:**Material proofs:** 3 doc commits (`4fdd226` · `9607a44` · `84b5d4c`) · `tsc --noEmit` 0 errors · handoff node `bab8435f-520a-442c-b9be-1ed7e9f7f1d5` embedded 768d · mesh **8715 nodes**. Flywheel (Phase 4) verified cold-start — deferred (depends on external ML conversion).
+> 101:## 🆕 What's new in v6.15.0 (2026-05-31)
+> 103:**LLM Cascading Fallback, aios-sql-bridge & Watchdog (OTD-LLM-FALLBACK, Phase 4.2c)** — fully implemented, deployed, and verified:
+> 107:3. **Higgsfield Video Watchdog (Phase 4.2c)**: validated the local video watchdog script which queries stale executions, updates statuses to failed/timeout or redelivers webhooks, and registers healthy pulses in `infra_health_logs`.
+> 113:## 🆕 What's new in v6.14.9 (2026-05-31)
+> 117:1. **WhatsApp Lead Engine (Passo 2)**: deployed the `whatsapp-webhook` function with digital signature validation and lead persistence, successfully publishing observations to the Knowledge Mesh.
+> 128:## 🆕 What's new in v6.14.8 (2026-05-31)
+> 140:## 🆕 What's new in v6.14.7 (2026-05-31)
+> 159:## 🆕 What's new in v6.14.6 (2026-05-31)
+> 170:## 🆕 What's new in v6.14.5 (2026-05-30)
+> 178:## 🆕 What's new in v6.12.0 (2026-05-29)
+> 196:## 🆕 What's new in v6.11.0 (2026-05-28)
+> 214:**Material proofs:** 5 commits merged to `main` · milestone node `5c17c893-9084-45e8-9126-d50476f10c39` · 189/189 tests passing · TS clean · 5/5 containers healthy · Phase 5c audit returns `SEAL ALLOWED`.
+> 218:## 🆕 What's new in v6.10.0 (2026-05-27)
+> ```
+
+## 🤖 Claude *(13:31:06)*
+
+
+## 🤖 Claude *(13:31:07)*
+
+README usa a seção `## 🆕 What's new in vX.X.X` (topo) como changelog ativo. Lendo o bloco exato (badges + primeira entrada) para editar com precisão:
+
+## 🤖 Claude *(13:31:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 44,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 45	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 46	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 47	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 48	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 49	</p>
+> 50	
+> 51	## 🆕 What's new in v6.20.0 (2026-06-01)
+> 52	
+> 53	**Affiliate links fixed (hybrid meli.la/matt_word) + real catalog (Apify) + per-user BYOK** — closing the last-meter revenue leak the Sovereign hit while dogfooding the affiliate-products page:
+> 54	
+> 55	1. **Hybrid affiliate links**: the catalog + `process-affiliate-link` routed through a dead `panel.gcrux.com/api/ml-redirect` proxy (CloudPanel login wall, zero attribution) using the OAuth `app_id` as the affiliate id. Now resolves layered — definitive per-user `meli.la` short link (`affiliate_config.metadata.shortlinks`) when present, else the real `product_url?matt_word=<affiliate_tag>` — fail-closed, never the dead host. Pure `src/lib/affiliate.ts` + 14 tests; live 302s verified (override → `meli.la`, fallback → real ML URL).
+> 56	2. **Real catalog via Apify**: ML blocks every server-side door (API 403/401, page → `account-verification`, both our IP and the Supabase Edge IP). The only working path is the Apify residential actor — `enrich-affiliate-products.ts` (photo/price/availability by SKU match, anti-bot retry, per-user→system token resolution) + `discover-affiliate-products.ts` (real product discovery, validating "Viral Miner busca de produtos"). The 2 **fabricated** catalog IDs were removed; the catalog now holds 3 **real** products (Roborock R$17.770 · Family Hub R$18.946 · 75" 8K Neo QLED R$39.000). A `useAffiliateProducts` verification gate hides anything unverified/unavailable, with a 6h monitoring cron.
+> 57	3. **Per-user Apify BYOK**: `apify_token` added to the Vault-encrypted `user_api_keys` (migration `20260601060000`, **/security-review PASS** — which caught & fixed a `security_invoker` view regression that would have broken authenticated reads) + a Settings field. Also fixed a pre-existing P0 from today's table→view conversion (`000600`): key-saving used `.upsert()` (HTTP 400 on a constraint-less view) → now `.insert()` (the INSTEAD OF trigger upserts via `ON CONFLICT`).
+> 58	
+> 59	**Material proofs:** 4 granular commits (`4a9df8d`·`5288bb8`·`fb07323`·`adcbd6f`) · `tsc --noEmit` 0 errors · suite **238 passed / 2 skipped / 240** (+14 affiliate-lib tests) · migration applied (existing keys still decrypt, `apify_token` round-trips, masked in public view) · per-user BYOK proven (resolved token drove a real scrape) · live edge 302s (override→meli.la, fallback→real ML) · handoff node `af33a839` embedded 768d · mesh **8748 nodes**. **Next:** Authenticated Browser Operator (probe-first) for logged-in actions (ML Share → `meli.la`). Flagged pre-existing P0: `SocialAccountsPage` WP save/disconnect (same view-upsert bug → spawned task).
+> 60	
+> 61	---
+> 62	
+> 63	## 🆕 What's new in v6.19.0 (2026-06-01)
+> ```
+
+## 🤖 Claude *(13:31:18)*
+
+
+## 🤖 Claude *(13:31:20)*
+
+Vejo que a entrada v6.20.0 (linha 59) literalmente diz *"Flagged pre-existing P0: `SocialAccountsPage` WP save/disconnect... → spawned task"* — exatamente o que fechei. Atualizando badges + prependendo a entrada v6.20.1:
+
+## 🤖 Claude *(13:31:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.20.0--afiliados--hibrido--%2B--apify--byok-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.20.1--wordpress--byok--credential--write--fix-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:31:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8748_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8750_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:31:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.20.0 (2026-06-01)",
+  "new_string": "## \ud83c\udd95 What's new in v6.20.1 (2026-06-02)\n\n**WordPress BYOK fixed + a deeper credential-write bug found and closed** \u2014 the v6.20.0 seal flagged a pre-existing P0 (`SocialAccountsPage` WP save/disconnect via view-upsert); fixing it surfaced a far bigger bug in the credential-encryption layer:\n\n1. **The two reported `.upsert()` bugs**: WP **save** used `.upsert(onConflict)` on the masked `user_api_keys` VIEW \u2192 HTTP 400 (`42P10`, views have no unique constraint) \u2192 switched to `.insert()` (the INSTEAD OF trigger upserts internally). WP **disconnect** wrote NULLs, which the trigger's `COALESCE-NULLIF` guard *preserves* (and the base table isn't client-writable) \u2192 replaced with the `disconnect_wordpress()` RPC (SECURITY DEFINER, `auth.uid()`-scoped) that nulls the three WP columns **and revokes the Vault secret** (true LGPD revocation; delete bound to both `id` and the deterministic name \u2192 tenant-safe).\n2. **[Discovered] Encrypt double-fire breaking ALL credential writes for existing users**: `trg_instead_of_user_api_keys` routed both INSERT and UPDATE through one `INSERT \u2026 ON CONFLICT DO UPDATE`, which fires the BEFORE-row encryption trigger **twice** in a single statement \u2192 `vault.create_secret` with a duplicate deterministic name \u2192 **`23505`** (and `.update()` re-encrypted the masked `\u2022\u2022\u2022\u2022` sentinel). Effect: connect/save was broken for every user whose `user_api_keys` row already existed \u2014 not just WordPress. Rewritten to **UPDATE-first / INSERT-if-not-found** (encryption fires exactly once, matching the `meta_config`/`social_accounts` siblings), plus a **tenant guard** (`auth.uid()`) that closes a cross-tenant write the old `ON CONFLICT` only masked via the crash.\n\n**Material proofs:** 3 granular commits (`5dc8084`\u00b7`bafa7a2`\u00b7`377251e`) \u00b7 `tsc --noEmit` 0 errors \u00b7 2 migrations applied (`20260602120000`, `20260602130000`), **both `/security-review` SAFE** \u00b7 full lifecycle proven live via the Management API (connect persists + encrypts, disconnect nulls + deletes the Vault secret, sibling AI keys intact, cross-tenant write \u2192 `42501`) \u00b7 the Sovereign's orphaned WP password purged from the Vault \u00b7 frontend rebuilt & served (chunk carries `disconnect_wordpress`) \u00b7 handoff node `7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3` embedded 768d \u00b7 mesh **8750 nodes**. **Residual debt (tracked):** the encrypt trigger still always `create_secret`s, so editing a secret to a new value without disconnecting first still collides \u2014 idempotency (update-or-create by name) across the 3 tables is a spawned follow-up needing its own `/security-review`.\n\n---\n\n## \ud83c\udd95 What's new in v6.20.0 (2026-06-01)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:31:50)*
+
+
+## 🤖 Claude *(13:31:50)*
+
+README atualizado (badges + entrada v6.20.1). Commit do README (Phase 4):
+
+## 🤖 Claude *(13:31:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -m \"docs(readme): v6.20.1 \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o de credenciais\" -m \"Badge de vers\u00e3o 6.20.0->6.20.1, neural_mesh 8748->8750 n\u00f3s, e entrada What's-new que fecha o P0 sinalizado em v6.20.0 (SocialAccountsPage WP) + documenta o bug profundo descoberto (double-fire 23505 quebrando todo save de credencial de user existente).\" 2>&1 | tail -4",
+  "description": "Commit README update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 6b2f8db] docs(readme): v6.20.1 — WordPress BYOK + fix do double-fire da encriptação de credenciais
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === HANDOFF.md section headers + key anchors ===
+> 1:# HANDOFF — MCORCH Constellation Orchestra
+> 3:## ⚡ FIRST ACTION FOR NEXT AGENT
+> 7:# Then explore the codebase — do NOT start from the file tree
+> 12:## Task State
+> 14:## Afiliados Híbrido + Catálogo Apify Real + BYOK per-user Record (2026-06-01)
+> 36:| Containers | ✅ 5 healthy (9d) · Chroma v2 OK |
+> 37:| Handoff node | ✅ `af33a839-acd9-412d-a770-8ad5a2edccb4` embedded 768d |
+> 47:### Arquitetura — resolução de link de afiliado (híbrida, OTD-ML-001)
+> 53:process-affiliate-link GET (clique do leitor): node→owner→affiliate_config → mesma resolução → 302 ML real
+> 58:### Survival Laws Self-audit
+> 66:**Pendências/Próximos (anotados p/ próxima sessão):**
+> 73:## e2e-user-zero v2 + 3-Stream Sweep Record (2026-06-01)
+> 75:**v6.19.0 (2026-06-01)** — Sessão de execução de 3 streams autorizados pelo Sovereign (e2e-user-zero 2ª iteração · gaps reais do Canvas · 1ª campanha real). Padrão dominante: **o código estava sistematicamente à frente dos próprios Pending Actions** — verificação material (Lei 1) ANTES de codar evitou reconstruir 2 features já prontas. Fluxo: `/handson` → priorização → descoberta de que Canvas 4.2 + consistência já estavam shipados → build real do Stream B → readiness do Stream C → seal.
+> 78:- **Stream B — e2e-user-zero 2ª iteração (build real):** `scripts/qa/e2e-user-zero/lib/redactor.ts` (LGPD Layer 2 — redação de headers `Authorization|Cookie|apikey|x-api-key|x-supabase-*` + body em `redactedPaths` + sanitização de cookie; `scanResidualSecrets` p/ o tripwire), `scripts/qa/e2e-user-zero/lib/mesh-persistor.ts` (finding → `observation` node + aresta `OBSERVES`, idempotente via SHA-256 do `name`, fail-soft, `SB_SECRET_KEY`), `scripts/qa/e2e-user-zero/lib/telemetry.ts` (pulse de ciclo de vida em `infra_health_logs`), 6 flows (`dashboard-tour`·`orchestrate-pipeline-view`·`content-library`·`billing-flow`·`settings-tour`·`constellation-view`) + helper `_nav-capture`, runner fiado (started/complete/failure/auth-expired exit-3 + persist), selftest vitest `src/test/e2e-user-zero-selftest.test.ts` (8 testes). Guard do runner endurecido (`includes("runner")` pegava `runner.test.ts`).
+> 93:| Handoff node | ✅ `59f92fe0-e346-4320-aeaf-842a91458125` embedded 768d (chunks:1, openai/text-embedding-3-small) |
+> 94:| Containers | ✅ 5 healthy · Chroma v2 OK |
+> 104:### Arquitetura — e2e-user-zero runner (v2)
+> 109:  → insertFindings() [mesh-persistor: observation node + OBSERVES edge, idempotent, fail-soft]
+> 114:### Survival Laws Self-audit
+> 116:Law 1 (Materiality): ✅ toda claim provada NESTE turno — selftest 8/8 + suite 224/226 + git-stash baseline (prova de zero regressão) + tsc 0 + hook testado (exit 1/0) + handoff node embedded via REST + readiness via curl real. Descoberta-chave: 2 features "pendentes" estavam shipadas (provado por grep de código real antes de codar) → zero retrabalho/fabricação. Excerpt do mesh-persistor do SDD corrigido contra schema real (relation_type + SB_SECRET_KEY).
+> 124:## Constellation v2 Cockpit Live — Fase 3+4 E2E + Build/Login/Settings Fixes Record (2026-06-01)
+> 149:| Handoff node | ✅ `a0eb5da7-d2b1-43b0-9ee6-cfb6cccd14c9` embedded 768d |
+> 151:| Containers | ✅ 5 healthy |
+> 163:### Arquitetura — capability execution (v2)
+> 171:### Arquitetura — credenciais BYOK (descoberta da sessão)
+> 178:### Survival Laws Self-audit
+> 180:Law 1 (Materiality): ✅ toda claim provada NESTE turno (exec 488a7744 + reset counts + mesh count via REST · build exit 0 · chunks servidos via curl · decrypted keys reais · handoff node embedded). Zero fabricação. 3 hipóteses minhas REFUTADAS com evidência e corrigidas em aberto (CORS dos provedores liberado; masks = cripto-por-design, não corrupção; causa = credential_encryption, não a v6.17.0). Nenhuma escondida.
+> 186:## Service_role Key Leak — Full Cutover + Revoke (P0 closed) Record (2026-06-01)
+> 191:- **Cutover (52 edge fns + 57 scripts):** `SUPABASE_SERVICE_ROLE_KEY` → `SB_SECRET_KEY ?? SERVICE_ROLE_KEY`; `SUPABASE_ANON_KEY` (getUser) → `SB_PUBLISHABLE_KEY ?? ANON_KEY`. Nomes não-`SUPABASE_` porque o prefixo é reservado p/ Function secrets. `config.toml`: `verify_jwt=false` em publish-social/refresh-social-token/embed-mcorch-node (service→service com a chave nova, que não é JWT) — cada uma com gate de auth in-code (user válido OU service, senão 401; embed ganhou gate novo + fail-closed). Trigger `mcorch_embed_on_insert` reescrito pra ler a chave do **Supabase Vault** (`sb_secret_key`) — zero literal.
+> 197:**Prova material da morte da chave:** leaked JWT → `apikey`: **401** · `Authorization: Bearer` (+ publishable): **401 `PGRST301: No suitable key was found to decode the JWT`** (assinatura não-verificável pós-revoke). Sistema vivo nas chaves novas: REST service rows=1 · embed 400 (gate) · publishable 200, **zero downtime**. **Trigger Vault provado E2E:** o próprio handoff node auto-embedou.
+> 205:| Trigger Vault E2E | ✅ handoff node auto-embedou |
+> 209:| Handoff node | ✅ `ece599be-9523-4022-9cdc-f61c421047aa` embedded 768d |
+> 211:| Containers | ✅ 5 healthy |
+> 224:### Arquitetura — key cutover
+> 233:### Survival Laws Self-audit
+> 235:Law 1 (Materiality): ✅ toda claim provada neste turno (PGRST301 da chave morta · deploy exit 0 · smoke HTTP codes · db push Finished · node ece599be embedded · mesh count=exact). Zero fabricação. Falha de deploy (bare import) reportada + corrigida honestamente.
+> 241:## Constellation v2 — Backend Foundation (Fase 1+2) Record (2026-06-01)
+> 262:| Handoff node | ✅ `c6c5c38d-a527-4f80-9fe0-51fa2e3d3997` embedded 768d |
+> 264:| Containers | ✅ 5 healthy (8 dias) |
+> 274:### Arquitetura Constellation v2 (capability router)
+> 
+> === total lines ===
+> 6142 HANDOFF.md
+> ```
+
+## 🤖 Claude *(13:32:01)*
+
+
+## 🤖 Claude *(13:32:02)*
+
+HANDOFF.md (6b2f8db README selado). **PHASE 5 — HANDOFF.md.** Mapeando as seções que o protocolo pede atualizar:
+
+## 🤖 Claude *(13:32:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== HANDOFF.md section headers + key anchors ===\"\ngrep -nE \"^#{1,3} |Pending|GraphRAG|Infrastructure|Task State|Pr\u00f3ximos|Containers|node\" HANDOFF.md | head -40\necho \"\"; echo \"=== total lines ===\"; wc -l HANDOFF.md",
+  "description": "Map HANDOFF.md structure"
+}
+```
+
+## 🤖 Claude *(13:32:56)*
+
+
+## 🤖 Claude *(13:32:57)*
+
+HANDOFF.md usa blocos Record (mais recente primeiro) logo após `## Task State`. Prependendo o Record da v6.20.1 (formato idêntico aos anteriores: prosa + tabela de verificação + commits + arquitetura + self-audit + pendências):
+
+## 🤖 Claude *(13:33:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Afiliados H\u00edbrido + Cat\u00e1logo Apify Real + BYOK per-user Record (2026-06-01)",
+  "new_string": "## Task State\n\n## WordPress BYOK Credential-Write Fix + Encrypt Double-Fire Record (2026-06-02)\n\n**v6.20.1 (2026-06-02)** \u2014 Sess\u00e3o disparada pelo P0 que a pr\u00f3pria seal v6.20.0 sinalizou: `SocialAccountsPage` salvava/desconectava WordPress via `.upsert(onConflict)` numa VIEW mascarada. Corrigir os 2 `.upsert` reportados revelou um bug **muito maior e pr\u00e9-existente** na camada `credential_encryption`: o `INSTEAD OF` do `user_api_keys` disparava o trigger de encripta\u00e7\u00e3o **2\u00d7** numa s\u00f3 statement \u2192 `23505`, quebrando connect/save de **qualquer** usu\u00e1rio com linha j\u00e1 existente (n\u00e3o s\u00f3 WP). Padr\u00e3o dominante: **probe-first material** (Management API) \u2014 cada hip\u00f3tese provada antes de codar, o que pegou o double-fire (que o `.insert` sozinho n\u00e3o resolveria), a colis\u00e3o do sentinela `\u2022\u2022\u2022\u2022` no `.update`, e uma escrita cross-tenant que o `ON CONFLICT` mascarava com o crash.\n\n**O que foi entregue:**\n- **Fix dos 2 `.upsert` (SocialAccountsPage):** save \u2192 `.insert()` (roteia pelo INSTEAD OF que faz upsert interno; `.upsert` numa view d\u00e1 HTTP 400 `42P10`); disconnect \u2192 RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, `search_path=''`, escopada a `auth.uid()`) que nula as 3 colunas WP **e deleta o segredo do Vault** (revoga\u00e7\u00e3o real LGPD; delete amarrado a `id` E nome determin\u00edstico \u2192 tenant-safe). `null` n\u00e3o limpa via view (guard `COALESCE-NULLIF` preserva). Migration `20260602120000`.\n- **[Descoberto] Fix do double-fire:** `trg_instead_of_user_api_keys` trocado de `INSERT...ON CONFLICT DO UPDATE` (dispara encrypt 2\u00d7 \u2192 `vault.create_secret` nome duplicado \u2192 `23505`; `.update` ainda re-encripta o `\u2022\u2022\u2022\u2022`) para **UPDATE-first / INSERT-if-not-found** (encrypt 1\u00d7, igual aos irm\u00e3os meta/social) + **guard de tenant** (`auth.uid()` \u2192 `42501`). `wp_site_url`/`wp_username` viraram `COALESCE(NEW,base)` (n\u00e3o zeram em save parcial). Migration `20260602130000`. S\u00f3 `user_api_keys` usava `ON CONFLICT`.\n- **types.ts** regenerado (inclui `disconnect_wordpress`); **SOP** `docs/processes/credential-disconnect-clear.md` (Lei 2 + Obst\u00e1culo\u2192S\u00edntese); 3 entradas na Key Files Reference.\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign (escopo profundo aprovado explicitamente via AskUserQuestion; toda a\u00e7\u00e3o outward com provas materiais por turno).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| `.upsert` na view (prova do bug) | \u2705 HTTP **400 `42P10`** reproduzido |\n| connect p\u00f3s-fix (caso 23505) | \u2705 persiste + cifra (base=UUID, 1 segredo Vault), groq intacto |\n| `.update` p\u00f3s-fix (caso 23505 groq) | \u2705 sucesso, sem re-encriptar `\u2022\u2022\u2022\u2022`, `wp_site_url` preservado |\n| `disconnect_wordpress()` | \u2705 3 cols `null` + segredo Vault deletado + AI keys intactas |\n| guard cross-tenant | \u2705 `ERROR 42501 cannot write credentials for another user` |\n| `tsc --noEmit` | \u2705 0 erros |\n| 2 migrations `/security-review` | \u2705 ambas **SAFE** |\n| `db push` (ambas) | \u2705 Finished \u00b7 `20260602120000`+`20260602130000` no remoto |\n| Frontend deploy (nginx) | \u2705 chunk `SocialAccountsPage-4_GWJ_p-.js` com `disconnect_wordpress`, `.env` baked |\n| Mesh | \u2705 8750 n\u00f3s |\n| Containers | \u2705 5 healthy (9d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3` embedded 768d |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `5dc8084` | fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF |\n| `bafa7a2` | fix(settings): WordPress conecta via .insert e desconecta via RPC |\n| `377251e` | docs(processes): SOP de disconnect/clear de credencial |\n| `6b2f8db` | docs(readme): v6.20.1 |\n\n### Arquitetura \u2014 write/clear de credencial nas views Vault-mascaradas\n```\nSAVE  (cliente): .insert() \u2192 INSTEAD OF (UPDATE-first / INSERT-if-not-found) \u2192 encrypt trigger 1\u00d7 \u2192 vault.create_secret\n                 guard: auth.role()<>'service_role' AND NEW.user_id<>auth.uid() \u2192 42501\nCLEAR (cliente): supabase.rpc('disconnect_wordpress') \u2192 SECURITY DEFINER auth.uid() \u2192\n                 UPDATE base SET wp_*=NULL + DELETE vault.secrets WHERE id=ref AND name='...<uid>'\nNUNCA: .upsert (400 42P10) \u00b7 null-write via view (COALESCE preserva) \u00b7 INSERT...ON CONFLICT (double-fire 23505)\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno via Management API \u2014 400 42P10 real, connect/disconnect/guard com SELECT em decrypted_user_api_keys + vault.secrets, db push Finished, 2 /security-review SAFE, chunk servido com a string nova, node 7bf9bb0e embedded. Zero fabrica\u00e7\u00e3o. O double-fire foi PROVADO (T1/T3/T4 + vault.create_secret = INSERT sem ON CONFLICT) antes de afirmar que existia. Fase 5c executada abaixo.\nLaw 2 (Process): \u2705 SOP credential-disconnect-clear.md antes do commit; d\u00edvida residual documentada + task spawned.\nLaw 3 (Pruning): contexto longo de investiga\u00e7\u00e3o (T1-T5) \u2014 outputs de explora\u00e7\u00e3o consumidos, refer\u00eancia por path/UUID.\nLaw 4 (ORO): \u2705 declarado no in\u00edcio; escopo profundo aprovado explicitamente pelo Sovereign via AskUserQuestion.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos (anotados p/ pr\u00f3xima sess\u00e3o):**\n- **D\u00edvida residual (task spawned):** tornar `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) idempotente (update-or-create por nome) \u2014 editar um segredo p/ valor novo sem desconectar antes ainda d\u00e1 `23505`. Precisa de `/security-review` pr\u00f3prio.\n- **E2E no navegador:** verifiquei todas as camadas abaixo da UI (PostgREST 400/201 + triggers + RPC + Vault); o clique na UI logada n\u00e3o foi executado (browser autenticado indispon\u00edvel).\n\n---\n\n## Afiliados H\u00edbrido + Cat\u00e1logo Apify Real + BYOK per-user Record (2026-06-01)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:33:34)*
+
+
+## 🤖 Claude *(13:33:34)*
+
+**PHASE 5b — HANDOFF.md SECRET SCAN** (obrigatório antes do commit). Escaneando o arquivo + foco na minha adição:
+
+## 🤖 Claude *(13:33:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1. credential-value patterns (filtered) ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=[[:space:]]*['\\\"]?[A-Za-z0-9+/]{40,})\" HANDOFF.md \\\n  | grep -vE \"example|placeholder|<.*>|your-key|YOUR_|digest|sha256|hash|fingerprint\" | head -20\necho \"5b-1 exit: done (empty above = \u2705)\"\necho \"\"\necho \"=== 5b-2. Google API keys (AIza) ===\"\ngrep -nE \"AIza[0-9A-Za-z_-]{35}\" HANDOFF.md | head -10; echo \"(empty = \u2705 no Google keys)\"\necho \"\"\necho \"=== 5b-3. inline assignments = 'value' (filtered) ===\"\ngrep -nE \"=[[:space:]]*['\\\"][A-Za-z0-9_-]{20,}['\\\"]\" HANDOFF.md \\\n  | grep -vE \"example|placeholder|<.*>|your-|YOUR_|digest|hash|uuid|[0-9a-f-]{36}\" | head -10; echo \"(empty = \u2705 no inline secret assignments)\"",
+  "description": "Phase 5b secret scan on HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. credential-value patterns (filtered) ===
+> 5b-1 exit: done (empty above = ✅)
+> 
+> === 5b-2. Google API keys (AIza) ===
+> (empty = ✅ no Google keys)
+> 
+> === 5b-3. inline assignments = 'value' (filtered) ===
+> 5501:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5503:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 5504:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 5546:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5548:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> (empty = ✅ no inline secret assignments)
+> ```
+
+## 🤖 Claude *(13:33:47)*
+
+
+## 🤖 Claude *(13:33:48)*
+
+**Phase 5b PASS** — 5b-1/5b-2 vazios; 5b-3 só pega `project_id = 'mcorch-constellation'` (slug de projeto em diagramas pré-existentes, não credencial). Minha adição: zero matches. Commitando HANDOFF.md:
+
+## 🤖 Claude *(13:33:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -m \"docs(handoff): seal v6.20.1 \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o de credenciais\" -m \"Record da sess\u00e3o: fix dos 2 .upsert do SocialAccountsPage (.insert + RPC disconnect_wordpress que revoga o segredo Vault) e do bug profundo descoberto \u2014 INSTEAD OF do user_api_keys trocado de INSERT...ON CONFLICT (double-fire 23505) para UPDATE-first + guard de tenant. Provas materiais via Management API, 2 migrations /security-review SAFE, frontend deployado.\" 2>&1 | tail -4",
+  "description": "Commit HANDOFF.md after secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main dcf5abb] docs(handoff): seal v6.20.1 — WordPress BYOK + fix do double-fire da encriptação de credenciais
+>  1 file changed, 56 insertions(+)
+> ```
+
+## 🤖 Claude *(13:34:01)*
+
+
+## 🤖 Claude *(13:34:02)*
+
+HANDOFF.md selado (dcf5abb). **PHASE 5c — MATERIAL PROOF AUDIT** (verificação mecânica independente; precisa retornar `SEAL ALLOWED` antes do push):
+
+## 🤖 Claude *(13:34:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls scripts/qa/run-audit.ts 2>/dev/null && echo \"(runner present)\" || echo \"(no run-audit.ts \u2014 checking alternatives)\"; ls scripts/qa/*.ts 2>/dev/null | head\necho \"\"\necho \"=== Phase 5c audit ===\"\ntimeout 400 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -60; echo \"AUDIT_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Run Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> (runner present)
+> scripts/qa/audit-canvas-ui.ts
+> scripts/qa/audit-lucide-imports.ts
+> scripts/qa/extract-manifest.ts
+> scripts/qa/firecrawl-ml-probe.ts
+> scripts/qa/health-pulse.ts
+> scripts/qa/run-audit.ts
+> scripts/qa/smoke-constellation-v2-router.ts
+> scripts/qa/test-es256-jwt-verification.ts
+> scripts/qa/test-publish-meta-smoke.ts
+> scripts/qa/test-sync-meta-ads.ts
+> 
+> === Phase 5c audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 7bf9bb0e | mesh_node | 7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3 | 7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3 | ✅ |
+> | commit 5dc8084 | git_commit | 5dc8084 | 5dc8084 | ✅ |
+> | commit bafa7a2 | git_commit | bafa7a2 | bafa7a2 | ✅ |
+> | commit 377251e | git_commit | 377251e | 377251e | ✅ |
+> | commit 6b2f8db | git_commit | 6b2f8db | 6b2f8db | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | file docs/processes/credential-disconnect-clear.md | file_exists | docs/processes/credential-disconnect-clear.md | docs/processes/credential-disconnect-clear.md | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (escopo profundo aprovado explicitament | Operator = MCORCH Agent · Reviewer/Owner=Sovereign (escopo profundo aprovado explicitament | ✅ |
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 1.1s)
+> AUDIT_EXIT=0
+> ```
+
+## 🤖 Claude *(13:34:18)*
+
+
+## 🤖 Claude *(13:34:19)*
+
+**Phase 5c: `SEAL ALLOWED`** (8 verificadas · 0 skip · 0 falhas). **PHASE 6 — BoK SEAL STATUS** (meu trabalho foi bug-fix em features existentes — exemção do Master Protocol; confirmando que não criei módulo novo sem BoK):
+
+## 🤖 Claude *(13:34:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 6-2. session touched NEW pages/functions/components (HEAD~10..HEAD)? ===\"\ngit diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | sort -u || echo \"(none)\"\necho \"\"\necho \"=== my 6 commits' files only (this session) ===\"\ngit diff --name-only ea2f1f4..HEAD | sort -u\necho \"\"\necho \"=== verdict reasoning ===\"\necho \"New src/pages/ created? $(git diff --name-status ea2f1f4..HEAD | grep -E '^A.*src/pages/' | wc -l) (0 = no new page module)\"\necho \"New supabase/functions/ created? $(git diff --name-status ea2f1f4..HEAD | grep -E '^A.*supabase/functions/' | wc -l) (0 = no new edge fn; used an RPC migration instead)\"",
+  "description": "Phase 6 BoK seal status check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-2. session touched NEW pages/functions/components (HEAD~10..HEAD)? ===
+> src/pages/SettingsPage.tsx
+> src/pages/SocialAccountsPage.tsx
+> 
+> === my 6 commits' files only (this session) ===
+> CLAUDE.md
+> docs/processes/credential-disconnect-clear.md
+> HANDOFF.md
+> README.md
+> src/integrations/supabase/types.ts
+> src/pages/SocialAccountsPage.tsx
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+> supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+> === verdict reasoning ===
+> New src/pages/ created? 0 (0 = no new page module)
+> New supabase/functions/ created? 0 (0 = no new edge fn; used an RPC migration instead)
+> ```
+
+## 🤖 Claude *(13:34:31)*
+
+
+## 🤖 Claude *(13:34:32)*
+
+**Phase 6: ✅ PASS** — 0 páginas novas, 0 edge functions novas. Trabalho é bug-fix em features documentadas existentes (camada credential_encryption / BoK meta-api já selada) — exemção do Master Protocol, nenhum módulo sem BoK.
+
+**PHASE 7 — PUSH:**
+
+## 🤖 Claude *(13:34:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits ahead of origin ===\"; git log --oneline origin/main..HEAD\necho \"\"; echo \"=== push ===\"; git push origin main 2>&1 | tail -12; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\necho \"\"; echo \"=== confirm synced ===\"; git rev-list --left-right --count HEAD...origin/main",
+  "description": "Push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits ahead of origin ===
+> dcf5abb docs(handoff): seal v6.20.1 — WordPress BYOK + fix do double-fire da encriptação de credenciais
+> 6b2f8db docs(readme): v6.20.1 — WordPress BYOK + fix do double-fire da encriptação de credenciais
+> 377251e docs(processes): SOP de disconnect/clear de credencial em views Vault-mascaradas
+> bafa7a2 fix(settings): WordPress conecta via .insert e desconecta via RPC disconnect_wordpress
+> 5dc8084 fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF de user_api_keys
+> 
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ea2f1f4..dcf5abb  main -> main
+> PUSH_EXIT=0
+> 
+> === confirm synced ===
+> 0	0
+> ```
+
+## 🤖 Claude *(13:34:47)*
+
+
+## 🤖 Claude *(13:34:48)*
+
+Push OK (`ea2f1f4..dcf5abb`, 5 commits, synced 0/0). **PHASE 7b — SPRINT & CONNECTIONS HYGIENE:**
+
+## 🤖 Claude *(13:34:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sprint-priorities.md present? + does this session relate to roadmap items? ===\"\nls -la .claude/context/sprint-priorities.md 2>/dev/null && grep -niE \"wordpress|credential|byok|encrypt|disconnect\" .claude/context/sprint-priorities.md | head || echo \"(no sprint-priorities.md or no related items)\"\necho \"\"\necho \"=== scratch/ cleanup ===\"\nls scratch/ 2>/dev/null && (ls scratch/*.ts >/dev/null 2>&1 && echo \"has .ts\" || echo \"no .ts to move\") || echo \"(no scratch/ dir)\"\necho \"\"\necho \"=== leftover working-tree artifacts (proof-manifest.json?) ===\"\ngit status --short\necho \"\"\necho \"=== .mcp.json servers ===\"\ncat .mcp.json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print('servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"(no .mcp.json)\"",
+  "description": "Phase 7b sprint, scratch, MCP hygiene checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint-priorities.md present? + does this session relate to roadmap items? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 64581 Jun  1 20:08 .claude/context/sprint-priorities.md
+> 7:**Sprint v6.20.0 selado em 2026-06-01** — Afiliados híbrido + catálogo Apify real + BYOK per-user: corrigido o link de afiliado que abria login do CloudPanel (`panel.gcrux.com` proxy morto + `app_id` como affiliate id) → resolver **híbrido** `meli.la` cravado (per-user `metadata.shortlinks`) senão `product_url?matt_word=<affiliate_tag>` fail-closed (`src/lib/affiliate.ts` + 14 testes; 302s reais provados). ML bloqueia todo server-side (API 403/401, página→account-verification, nosso IP **e** Supabase Edge) → enriquecimento via actor **Apify** residencial (`enrich-affiliate-products.ts` SKU-match + `discover-affiliate-products.ts` descoberta real validando "viral mind") + gate de verificação em `useAffiliateProducts` + cron 6/6h. **2 IDs fabricados removidos** → catálogo com **3 produtos reais** (Roborock R$17.770 · Family Hub R$18.946 · 8K Neo QLED R$39.000). **BYOK per-user `apify_token`** no padrão Vault (migration `20260601060000`, `/security-review` PASS — pegou regressão `security_invoker`) + campo Settings + fix do P0 de `000600` (`.upsert()`→`.insert()` em view sem constraint). Phase 5c **SEAL ALLOWED** (12 verified). Mesh **8748**. Survival Laws 4/4. 6 commits. **Próximo:** Operador de Browser Autenticado (probe-first) p/ ações logadas (ML Compartilhar→meli.la). **Lição:** probe-first economizou 3 becos (API ML/Firecrawl/actor velho) e pegou IDs fakes + regressão de credencial.
+> 13:**Sprint v5.5.2 selado em 2026-05-04** — Social OAuth v1 + Pipeline History + WordPress multi-tenant + auto-publish pipeline corrigido + auditoria 4Cs 97/100.
+> 19:**Sprint v5.6.0 selado em 2026-05-06** — DevOps + Security Seal: 6 branches mobile sincronizados + DOCUMENTATION_CREDENTIAL_RULE + pre-commit hook anti-credential + Gemini API key rotacionada + test coverage 0→66 testes (billing + store + phase-zeta) + BoK Scribe Agent (MRD/BRD/PRD/FRD/SDD templates) + MCORCH Master Execution Protocol em CLAUDE.md + /sync-mobile-branch protocol. 2561 nós · 100% embedded.
+> 39:**Sprint v6.6.7 selado em 2026-05-19** — OE-661 Phase 1 Prep + API Tenancy Directive: sessão executou parcialmente o plan persistido OE-661 — toda a preparação completada, Step 1.5 (first run E2E) **DEFERRED** por context budget Sovereign 92% (retoma em ~3h). Infraestrutura material: SOP `docs/processes/orchestration-content-mesh-asset-emission.md` (120 LOC) escrita ANTES do código (Lei 2); `orchestrate-content/index.ts:404-465` emite `content_mesh_asset` em paralelo com observation via `Promise.allSettled` (Amendment A) gated por `wpPostUrl` (Amendment B); `link-forge.ts:153` ganha `.eq("project_id", "mcorch-affiliate")` (Amendment C); `handle-ml-postback/index.ts` ganha pulse `infra_health_logs` em 4 return paths (Amendment E — fecha cegueira de 17 dias). Deploys material: `orchestrate-content` 113.6kB + `handle-ml-postback` 60.45kB. Vault `GCRUX_ML_AFFILIATE_TOKEN` provisionado (digest `e86f74a0...`). **DIRETIVA SOVEREIGN-CLASS NOVA "API Tenancy Model"** emitida durante sessão (questionamento direto sobre por que usar env global se `affiliate_config` per-user já existia) — selada em 3 superfícies: `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"` com resolution order de 3 níveis + 5 tabelas canônicas + 5 anti-patterns; `CLAUDE.md > Code standards` one-liner enforcement; auto-memory `feedback_api_tenancy_per_user.md` indexada. **OTD-OE661-PER-USER** registrada (RPN 120 · SLA 2026-06-02) catalogando violação em `link-forge.ts` + `process-affiliate-link` GET branch. Sovereign autorizou Opção B (provisionar global temporário com `affiliate_config.app_id` value, deferir refactor). **Survival Laws Self-audit retroativo (Amendment H)** v6.6.1..v6.6.5 + esta seal — conclusão: Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 (overrides conscientes v6.6.1+v6.6.3) · Lei 3 ✗ 0/5 (OTD-PROC-002 RPN 40) · Lei 4 ✗ 0/5 (OTD-PROC-001 RPN 60 — esta seal v6.6.7 começa cumprimento). **Material proofs**: TS zero erros · 122/122 testes em 4.84s · 7 commits granulares locais (`03f6822` SOP · `e662da3` orchestrate Amendments A+B · `bafac16` link-forge Amendment C · `9cec88a` postback Amendment E · `044f21e` CLAUDE+OTD diretiva · `96ee72a` README v6.6.7 · `7d06934` HANDOFF seal + redactions) · milestone node `9d482014-a759-4656-93d9-99e05ab4a714` embedded 768d · mesh **8353 nodes** (+1 desde v6.6.6) · 11650 edges (+33). Path correção material: `/dashboard/orchestrate` → `/dashboard/orchestration` (Sovereign clarification). **Próximos deliverables**: (a) Sovereign dispara primeira campanha real em `/dashboard/orchestration` (TriggerNode + topic Link Forge catálogo + wp+linkedin platforms + Run) → eu monitoro pipeline_runs + content_mesh_asset emit material via REST; (b) ao completar, synthetic postback chain (Amendment D) + cleanup (Amendment J); (c) selar v6.6.8 com flywheel rodando E2E pela primeira vez na história do projeto; (d) atacar OTD-SSP01-001 antes de 2026-05-24 (5 dias) — SDD `aios-sql-bridge`; (e) executar Phase 2 (`mcoins-ledger-reconciliation.md`) — fecha OTD-V660-001.
+> 43:**Sprint v6.6.5 selado em 2026-05-19** — OpenClaw BoK 9/9 (retroativa + BoK Gate liberado · 5ª e última suíte): última dívida BoK do projeto quitada. Override consciente do BoK Gate registrado em Sprint v6.2.0 (2026-05-15) — Sovereign havia autorizado que a própria Agência OpenClaw quitaria a dívida assincronamente; com 4 sprints decorridos e a Agência operando em produção (7 agentes · gateway loopback · pipeline cron triplo · briefing diário Telegram), esta seal materializa retroativamente o BoK que governa o módulo. **9 docs novos autorados manualmente seguindo `.claude/agents/bok-scribe/templates/`** (Plano B mirror gamificacao-nodes v6.6.4 — NÃO o `/bok-scribe` Skill, que produziria conteúdo template-canonical desalinhado): `01-mrd.md` (BABOK v3 ~205 LOC — Pantheon vision · 6 MR-OC-* · biz model enabler), `02-brd.md` (BABOK v3 ~190 LOC — 6 BO-OC-* SMART + 10 SH-OC-* Stakeholder Register + 14 BR-OC-* com refs precisas `openclaw.json:agents.list[]` / `scripts/bridge-mesh-to-openclaw.ts:tier1Filter` / `scripts/morning-briefing.sh:65` + §10 Traceability Matrix), `03-prd.md` (ProdBOK + CXBOK ~224 LOC — personas P1 Sovereign + P2 agente operacional · User Journey diário BRT · 14 PR-OC-* MoSCoW · Gherkin AC), `04-frd.md` (SWEBOK v4 ~209 LOC — 8 FR-OC-* + 8 NFR-OC-* + Test Strategy Matrix), `05-sdd.md` (SWEBOK v4 + CISSP CBK ~460 LOC — architecture overview Pantheon + Ciclo Circadiano BRT + Component Catalog 7 agentes/9 scripts/6 SQLite/gateway + STRIDE threat model + secrets lifecycle + OTD grid), `06-data-model.md` (DMBOK v2 ~339 LOC — schema `openclaw.json` + `secrets.json` vault + SQLite per-agente FTS5/vector + Mesh export tier1/tier2 + Memory Wiki frontmatter + filesystem perms · **§8 Drift Reconciliation Appendix** com 5 drifts fechados em sprints anteriores + 8 drifts permanentes catalogados como OTDs), `07-process-flow.md` (BPM CBOK v4 ~483 LOC — **10 PROC-OC-*** em swimlanes markdown table com refs precisas `nightly-stage2-deep-sleep.sh` / `bridge-mesh-to-openclaw.ts` / `distribute-mesh-to-agents.ts` / `compose-morning-briefing.ts` / `news-impact-analyzer.ts` / `watchdog-mcorch.sh`), `08-quality-metrics.md` (CMQ/OE BOK ~227 LOC — 8 QO-OC-* + **10 KPI-OC-*** + **10 FMEA-OC-*** com 5 RPN > 100 (FMEA-OC-001 secrets regression 180 · OC-002 bridge fail 150 · OC-003 daemon crash 126 · OC-004 Telegram quota 125 · OC-010 audit scrape fail 105) + 6 SOL-OC-* + SLA/SLO/SLI grid + observability events tagged `openclaw-*`), `00-index.md` (~163 LOC — Document Registry 9/9 + Traceability Chain MR-OC→BR-OC→FR-OC→PROC-OC→KPI-OC + Convergence Note registrando 5 drifts já reconciliados em v6.4.0/v6.6.1 + 8 ativos como OTDs + Phase Completion Log Phase 0-7 + OTD registry 11 itens (5 novas OTD-OC + 6 herdadas OTD-V631/V660/CM)). **ID space cunhada**: MR-OC-001..006 · BR-OC-001..014 · BO-OC-001..006 · SH-OC-001..010 · PR-OC-001..014 · FR-OC-1..8 · NFR-OC-001..008 · PROC-OC-001..010 · KPI-OC-001..010 · FMEA-OC-001..010 · SOL-OC-001..006 · QO-OC-001..008 · BAC-OC-001..010 · OTD-OC-001..005. **Mesh seal**: novo `scripts/seed-openclaw-bok-seal.ts` (Bun-native, 136 LOC, mirror 1:1 de `seed-gamificacao-nodes-bok-seal.ts`) executado material: node `bok-scribe-seal-openclaw-v1` UUID **`05c55dfd-d318-4dcf-b7f0-aefb0529872f`** inserted stability 0.85 · DERIVES_FROM `bok-scribe-seal-gamificacao-nodes-v1` · `revenue_impact: 0` (módulo é enabler horizontal de velocity — proxy via lift dos outros 4 BoK suites) · metadata bok_gate=`override-completion` + drift_reconciled=5 (D-OC-001..005 fechados em v6.4.0/v6.6.1) + drift_pending=8 (OTDs ativos) + related_otds inclui OTD-V631-001 (fechada por esta seal — SLA expandido da v6.3.1) + pantheon_agents lista 7 + cron_pipeline 6 entradas · autoembed via `trg_mcorch_embed_on_insert` (pg_net 768d openai/text-embedding-3-small) **confirmado via REST `embedding=not.is.null`**. **Debt registry final**: `viralmind` 9/9 ✅ · `conteudo-v2` 9/9 ✅ · `mcorch-constellation` 9/9 ✅ · `gamificacao-nodes` 9/9 ✅ · **`openclaw` 9/9 ✅** — **todas as 5 suítes BoK do projeto seladas**. BoK Gate liberado para código novo em qualquer módulo. Atenção: features ledger-touching (Stripe top-up, marketplace) seguem bloqueadas até OTD-V660-001 (drift 2 users em gamificacao-nodes) fechar via SOP `mcoins-ledger-reconciliation.md`. **Material proofs**: TS `tsc --noEmit` zero erros · 122/122 testes em 5.73s · BoK Gate validator loop ✅ 9/9 docs (00-index 163 + 01-mrd 205 + 02-brd 190 + 03-prd 224 + 04-frd 209 + 05-sdd 460 + 06-data-model 339 + 07-process-flow 483 + 08-quality-metrics 227 = 2500 LOC total) · seed script 136 LOC · seal UUID confirmado via INSERT RETURNING + created_at `2026-05-18T20:23:52.775245+00:00` + embedding NOT NULL via REST GET · mesh total **8345 nodes** (+1 desde v6.6.4). **Próximo deliverable**: (a) carry-overs OE-661 v6.6.3/v6.6.4 — provisionar `GCRUX_ML_AFFILIATE_TOKEN` na vault + wire `orchestrate-content` para emitir `content_mesh_asset` nodes pós-geração + primeiro run end-to-end Usuário Zero do flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget); (b) Sovereign executar SOP `mcoins-ledger-reconciliation.md` para fechar OTD-V660-001 (drift 2 users) e destravar features ledger-touching; (c) claw-master audit-v2 planejado 2026-06-16 — verificar regressão D-OC-001..005 + novas findings; (d) Stripe live keys swap continua DEFERRED por decisão Sovereign até primeiro cliente externo.
+> 
+> === scratch/ cleanup ===
+> (no scratch/ dir)
+> 
+> === leftover working-tree artifacts (proof-manifest.json?) ===
+> 
+> === .mcp.json servers ===
+> servers: ['gitnexus', 'obsidian', 'playwright']
+> ```
+
+## 🤖 Claude *(13:35:09)*
+
+
+## 🤖 Claude *(13:35:11)*
+
+Sprint-priorities existe; scratch/ ausente; working tree limpo (proof-manifest.json gitignored); MCP servers (gitnexus/obsidian/playwright) pré-existentes (não adicionei nenhum). Vou adicionar a linha de selo v6.20.1 ao sprint log (registra o fechamento do P0 + a nova dívida residual). Lendo o topo:
+
+## 🤖 Claude *(13:35:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.20.0 selado em 2026-06-01** — Afiliados híbrido + catálogo Apify real + BYOK per-user: corrigido o link de afiliado que abria login do CloudPanel (`panel.gcrux.com` proxy morto + `app_id` como affiliate id) → resolver **híbrido** `meli.la` cravado (per-user `metadata.shortlinks`) senão `product_url?matt_word=<affiliate_tag>` fail-closed (`src/lib/affiliate.ts` + 14 testes; 302s reais provados). ML bloqueia todo server-side (API 403/401, página→account-verification, nosso IP **e** Supabase Edge) → enriquecimento via actor **Apify** residencial (`enrich-affiliate-products.ts` SKU-match + `discover-affiliate-products.ts` descoberta real validando "viral mind") + gate de verificação em `useAffiliateProducts` + cron 6/6h. **2 IDs fabricados removidos** → catálogo com **3 produtos reais** (Roborock R$17.770 · Family Hub R$18.946 · 8K Neo QLED R$39.000). **BYOK per-user `apify_token`** no padrão Vault (migration `20260601060000`, `/security-review` PASS — pegou regressão `security_invoker`) + campo Settings + fix do P0 de `000600` (`.upsert()`→`.insert()` em view sem constraint). Phase 5c **SEAL ALLOWED** (12 verified). Mesh **8748**. Survival Laws 4/4. 6 commits. **Próximo:** Operador de Browser Autenticado (probe-first) p/ ações logadas (ML Compartilhar→meli.la). **Lição:** probe-first economizou 3 becos (API ML/Firecrawl/actor velho) e pegou IDs fakes + regressão de credencial.
+> 8	
+> ```
+
+## 🤖 Claude *(13:35:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.20.0 selado em 2026-06-01** \u2014 Afiliados h\u00edbrido + cat\u00e1logo Apify real + BYOK per-user:",
+  "new_string": "**Sprint v6.20.1 selado em 2026-06-02** \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o de credenciais: fechado o P0 que a v6.20.0 sinalizou (`SocialAccountsPage` salvava/desconectava WP via `.upsert(onConflict)` numa VIEW \u2192 HTTP 400 `42P10`). Save \u2192 `.insert()`; disconnect \u2192 RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, `auth.uid()`, nula 3 cols WP + **deleta o segredo do Vault** \u2014 revoga\u00e7\u00e3o LGPD) (migration `20260602120000`). Corrigir isso revelou bug **muito maior**: o `trg_instead_of_user_api_keys` usava `INSERT...ON CONFLICT DO UPDATE` \u2192 trigger de encripta\u00e7\u00e3o dispara **2\u00d7** numa s\u00f3 statement \u2192 `vault.create_secret` nome duplicado \u2192 **`23505`**, quebrando connect/save de **todo** usu\u00e1rio com linha pr\u00e9-existente (e `.update` re-encriptava o `\u2022\u2022\u2022\u2022`). Trocado p/ **UPDATE-first / INSERT-if-not-found** + **guard de tenant** (`auth.uid()` \u2192 `42501`, fecha escrita cross-tenant que o ON CONFLICT mascarava) (migration `20260602130000`). Tudo provado material via Management API; 2 migrations `/security-review` **SAFE**; Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8750**. 5 commits. **Novo gap (Top Gap \u2014 task spawned):** `trg_encrypt_user_api_keys` (+ irm\u00e3os meta/social) n\u00e3o-idempotente \u2192 editar segredo p/ valor novo sem desconectar antes ainda d\u00e1 `23505`; conserto = update-or-create por nome nas 3 tabelas, precisa de `/security-review` pr\u00f3prio. **Li\u00e7\u00e3o:** probe-first material pegou que o `.insert` sozinho N\u00c3O bastava (o bug estava na camada de encripta\u00e7\u00e3o, n\u00e3o nos 2 `.upsert` reportados).\n\n**Sprint v6.20.0 selado em 2026-06-01** \u2014 Afiliados h\u00edbrido + cat\u00e1logo Apify real + BYOK per-user:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:35:29)*
+
+
+## 🤖 Claude *(13:35:30)*
+
+Sprint log atualizado. Commitando + push:
+
+## 🤖 Claude *(13:35:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"chore(sprint): selo v6.20.1 \u2014 WordPress BYOK + fix do double-fire da encripta\u00e7\u00e3o\" -m \"Registra o fechamento do P0 do SocialAccountsPage e o bug profundo descoberto (double-fire 23505), com a nova d\u00edvida residual (encrypt trigger n\u00e3o-idempotente) no Top Gap.\" 2>&1 | tail -3\necho \"\"; echo \"=== push sprint commit ===\"; git push origin main 2>&1 | tail -5; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\necho \"\"; echo \"=== final sync check ===\"; git rev-list --left-right --count HEAD...origin/main",
+  "description": "Commit and push sprint-priorities update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main ec80563] chore(sprint): selo v6.20.1 — WordPress BYOK + fix do double-fire da encriptação
+>  1 file changed, 2 insertions(+)
+> 
+> === push sprint commit ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    dcf5abb..ec80563  main -> main
+> PUSH_EXIT=0
+> 
+> === final sync check ===
+> 0	0
+> ```
+
+## 🤖 Claude *(13:35:43)*
+
+
+## 🤖 Claude *(13:36:08)*
+
+Tudo sincronizado (0/0). 6 commits selados e no remoto. **PHASE 8 — RELATÓRIO FINAL:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — WordPress BYOK + Encrypt Double-Fire Fix (2026-06-02)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a. secret leak scan (diff + untracked)  ✅ PASS (zero segredos)
+  1b. edge function JWT                     ⚠️ WARN (4 webhooks pré-existentes — verificam por assinatura; não tocados)
+  1c. client-side coin deduction            ✅ PASS
+  1d. service_role / RLS bypass em src/     ✅ PASS (só um comentário)
+  1e. console.log sensível                  ✅ PASS (só descrições de teste)
+  HANDOFF.md secret scan (5b)               ✅ PASS (sem credenciais; só slug de projeto)
+  → Sem 🔴 BLOCK
+
+📦 COMMITS (6 total)
+  5dc8084 — fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF
+  bafa7a2 — fix(settings): WordPress conecta via .insert e desconecta via RPC
+  377251e — docs(processes): SOP de disconnect/clear de credencial
+  6b2f8db — docs(readme): v6.20.1
+  dcf5abb — docs(handoff): seal v6.20.1
+  ec80563 — chore(sprint): selo v6.20.1
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 7bf9bb0e-a063-43d9-b473-0dd7cdfc97d3 — session-handoff-20260602-wordpress-byok-credential-write-fix
+  Embedding: ✅ 768d (auto-embed no insert, via trigger Vault)
+
+📖 README.md
+  Versão: 6.20.0 → 6.20.1
+  Badge neural_mesh: 8748 → 8750 nós
+  Seção adicionada: "What's new in v6.20.1" (fecha o P0 sinalizado em v6.20.0)
+
+🧠 HANDOFF.md
+  Fase selada: WordPress BYOK Credential-Write Fix + Encrypt Double-Fire
+  Seções atualizadas: Task State (novo Record), verificação, commits, arquitetura, Self-audit, Pendências
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 8 verificadas · 0 skipped · 0 falhas
+  (mesh node + 4 commits + tsc + SOP file + ORO — todos ✅)
+
+🚀 PUSH
+  Branch: main → origin/main (ea2f1f4 → ec80563)
+  Commits enviados: 6 · sincronizado 0/0
+
+📌 SPRINT
+  sprint-priorities.md: atualizado ✅ (selo v6.20.1 + novo Top Gap)
+  scratch/ cleanup: limpo ✅ (sem diretório)
+  MCP docs: ok ✅ (gitnexus/obsidian/playwright pré-existentes, nenhum novo)
+
+⏭  PRÓXIMOS PASSOS
+  1. [task spawned] Idempotência do encrypt trigger (update-or-create por nome) nas 3 tabelas — fecha o "editar segredo sem desconectar = 23505". Precisa de /security-review próprio.
+  2. E2E no navegador logado do connect/disconnect WP (camadas abaixo da UI já provadas; clique real pendente — browser autenticado indisponível).
+  3. Roadmap OE-661 inalterado: Stripe prod swap · Postback ATTRIBUTES_REVENUE_TO · LLM cascading fallback (SLA 2026-06-07).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Selo v6.20.1 completo.** Resumo executivo do que foi entregue e selado:
+
+- **Os 2 `.upsert()` reportados** no `SocialAccountsPage` — corrigidos (save→`.insert()`, disconnect→RPC `disconnect_wordpress()` que **revoga o segredo do Vault**, não só nula colunas).
+- **Um bug muito maior, pré-existente e fora do escopo reportado** — o `INSTEAD OF` do `user_api_keys` usava `INSERT...ON CONFLICT`, disparando a encriptação 2× e quebrando connect/save de **qualquer** usuário com linha já existente (`23505`). Você aprovou corrigir a fundo; reescrito para UPDATE-first + guard de tenant, e de quebra fechei uma escrita cross-tenant que o código antigo só mascarava com o crash.
+- **Tudo provado materialmente** (Management API ao vivo), **2 migrations passaram `/security-review` SAFE**, frontend reconstruído e servido pelo nginx, `SEAL ALLOWED` na auditoria mecânica, 6 commits no `origin/main`.
+- **Dívida residual honesta:** editar um segredo sem desconectar antes ainda colide (encrypt trigger não-idempotente) — documentada no SOP e com task aberta para uma sessão dedicada com `/security-review` próprio.
+
+A única verificação que **não** executei foi o clique na UI logada (browser autenticado indisponível nesta base) — mas todas as camadas que a UI aciona (PostgREST 400/201, triggers, RPC, Vault) estão materialmente provadas. Se quiser, faço esse E2E de navegador como próximo passo.
+
 ---
 
 %% --- TIMELINE START --- %%
