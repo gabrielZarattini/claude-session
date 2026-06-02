@@ -3028,6 +3028,1655 @@ Isso quebra o connect de **qualquer usuário com linha pré-existente** — exat
 > [][{"dec_hf_after":null,"hf_secret_after":0}]
 > ```
 
+## 🤖 Claude *(13:00:36)*
+
+
+## 🤖 Claude *(13:00:42)*
+
+Resultado **crítico e inesperado** — o bug é mais profundo que os dois `.upsert()` reportados:
+
+- **T3** (`.insert` de um campo-segredo novo numa linha existente): `23505` — double-fire confirmado (fase INSERT + fase UPDATE do `ON CONFLICT`).
+- **T4** (`.update`): `23505` **no `groq`**! Porque a view mascarada devolve `••••` para os campos não-alterados, e a fase INSERT do `ON CONFLICT` tenta `vault.create_secret('••••', groq_name)` → colide com o segredo groq que já existe.
+- Cleanup OK: Gabriel limpo (higgsfield revertido, WP desconectado, AI keys intactas).
+
+**Conclusão:** a camada de encriptação (trigger INSTEAD OF usando `INSERT...ON CONFLICT DO UPDATE`) quebra connect/save de **qualquer usuário com linha pré-existente** — não só WP. Meu fix `.upsert→.insert` troca o 400 por 23505; não basta. Antes de "gritar lobo", vou confirmar como o `apify_token` conseguiu ser salvo (teoria: backfill da migration, não save runtime):
+
+## 🤖 Claude *(13:00:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== apify migration: has a backfill that creates the secret as postgres (plain UPDATE, single trigger fire)? ===\"\ngrep -nE \"create_secret|UPDATE|INSERT|backfill|DO \\\\\\$\\\\\\$|vault\" supabase/migrations/20260601060000_user_api_keys_apify_token.sql | head -40",
+  "description": "Check apify migration for backfill that explains the existing secret"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apify migration: has a backfill that creates the secret as postgres (plain UPDATE, single trigger fire)? ===
+> 26:  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+> 29:      v_id := vault.create_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');
+> 35:  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+> 38:      v_id := vault.create_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');
+> 44:  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+> 47:      v_id := vault.create_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');
+> 53:  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+> 56:      v_id := vault.create_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');
+> 62:  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN
+> 65:      v_id := vault.create_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');
+> 71:  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN
+> 74:      v_id := vault.create_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');
+> 80:  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN
+> 83:      v_id := vault.create_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');
+> 89:  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN
+> 92:      v_id := vault.create_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');
+> 98:  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN
+> 101:      v_id := vault.create_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');
+> 107:  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN
+> 110:      v_id := vault.create_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');
+> 116:  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN
+> 119:      v_id := vault.create_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');
+> 125:  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN
+> 128:      v_id := vault.create_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token');
+> 173:GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;
+> 176:-- 4. INSTEAD OF TRIGGER — add apify_token to INSERT cols/VALUES + ON CONFLICT UPDATE
+> 184:  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+> 185:    INSERT INTO public.user_api_keys_table (
+> 190:    ON CONFLICT (user_id) DO UPDATE SET
+> 217:-- 5. DECRYPTED VIEW (service_role only) — append apify_token + its vault join
+> 243:LEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid
+> 244:LEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid
+> 245:LEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid
+> 246:LEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid
+> 247:LEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid
+> 248:LEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid
+> 249:LEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid
+> 250:LEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid
+> 251:LEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid
+> 252:LEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid
+> ```
+
+## 🤖 Claude *(13:01:21)*
+
+
+## 🤖 Claude *(13:01:27)*
+
+Confirmado: a migration do apify recria o **mesmo** trigger INSTEAD OF com `ON CONFLICT (user_id) DO UPDATE` (linha 190) — então o `apify_token` foi salvo via backfill da migration (UPDATE direto na base table como `postgres`, que dispara o trigger **uma vez**), não por um save runtime. Isso fecha a contradição e **confirma**: writes diretos na base table funcionam; o que quebra é o `INSERT...ON CONFLICT` da view.
+
+Verifiquei também que `meta_config` e `social_accounts` **já ramificam** INSERT/UPDATE separadamente (migration original) — só o `trg_instead_of_user_api_keys` usa o padrão `ON CONFLICT` problemático. O fix é cirúrgico e alinha `user_api_keys` ao padrão que os irmãos já usam.
+
+Diagnóstico fechado. Como isso é um bug pré-existente (2026-06-01) **bem além** dos dois `.upsert()` reportados, e o fix mexe numa camada de segurança compartilhada, preciso do seu rumo antes de expandir escopo:
+
+## 🤖 Claude *(13:01:35)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Achei um bug mais profundo que os 2 .upsert(): o trigger INSTEAD OF do user_api_keys usa INSERT...ON CONFLICT DO UPDATE, que dispara o trigger de encripta\u00e7\u00e3o 2x (e re-encripta o valor mascarado '\u2022\u2022\u2022\u2022' nos UPDATEs) \u2192 HTTP 23505, quebrando connect/save de QUALQUER usu\u00e1rio com linha j\u00e1 existente (n\u00e3o s\u00f3 WP). Provado materialmente (T1/T3/T4). meta_config e social_accounts j\u00e1 ramificam certo; s\u00f3 o user_api_keys n\u00e3o. Meu fix .upsert\u2192.insert troca o 400 por 23505 \u2014 n\u00e3o basta sozinho. Como proceder?",
+      "header": "Escopo do fix",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Corrigir a fundo agora (recomendado)",
+          "description": "Reescrever s\u00f3 o trg_instead_of_user_api_keys p/ ramificar UPDATE-se-existe / INSERT-se-n\u00e3o (igual aos irm\u00e3os meta_config/social_accounts), eliminando double-fire + re-encripta\u00e7\u00e3o de '\u2022\u2022\u2022\u2022'. Faz connect/save voltar p/ todos os usu\u00e1rios existentes. Nova migration + /security-review. Mant\u00e9m disconnect RPC + .insert j\u00e1 feitos. Deixa 'editar senha sem desconectar' como d\u00edvida documentada."
+        },
+        {
+          "label": "A fundo + idempot\u00eancia total",
+          "description": "Item 1 MAIS tornar o trg_encrypt_user_api_keys idempotente (update-or-create por nome), resolvendo at\u00e9 'editar senha sem desconectar antes'. Mais completo, mas mexe no trigger central de encripta\u00e7\u00e3o (11 campos) \u2014 superf\u00edcie de /security-review maior."
+        },
+        {
+          "label": "S\u00f3 o escopo verificado",
+          "description": "Shippar agora s\u00f3 o disconnect RPC (j\u00e1 testado: limpa + revoga o segredo Vault, LGPD OK) + .upsert\u2192.insert. Abrir OTD/task dedicada pro bug da encripta\u00e7\u00e3o. Connect segue dando 23505 p/ usu\u00e1rios com linha existente (ex.: voc\u00ea) at\u00e9 essa task."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Achei um bug mais profundo que os 2 .upsert(): o trigger INSTEAD OF do user_api_keys usa INSERT...ON CONFLICT DO UPDATE, que dispara o trigger de encriptação 2x (e re-encripta o valor mascarado '••••' nos UPDATEs) → HTTP 23505, quebrando connect/save de QUALQUER usuário com linha já existente (não só WP). Provado materialmente (T1/T3/T4). meta_config e social_accounts já ramificam certo; só o user_api_keys não. Meu fix .upsert→.insert troca o 400 por 23505 — não basta sozinho. Como proceder?"="Corrigir a fundo agora (recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:04:03)*
+
+
+## 🤖 Claude *(13:04:05)*
+
+O Maestro escolheu **corrigir a fundo agora** (Opção 1): reescrever apenas o `trg_instead_of_user_api_keys` para ramificar UPDATE-se-existe / INSERT-se-não (como `meta_config`/`social_accounts` já fazem), eliminando o double-fire e a re-encriptação de `••••`. Mantém disconnect RPC + `.insert`.
+
+Preciso da definição **viva** exata do trigger (a migration do apify recriou-o com `apify_token`). Lendo a seção completa:
+
+## 🤖 Claude *(13:04:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql",
+  "offset": 176,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 176	-- 4. INSTEAD OF TRIGGER — add apify_token to INSERT cols/VALUES + ON CONFLICT UPDATE
+> 177	-- ─────────────────────────────────────────────────────────────────────────────
+> 178	CREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()
+> 179	RETURNS TRIGGER AS $$
+> 180	BEGIN
+> 181	  IF TG_OP = 'DELETE' THEN
+> 182	    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;
+> 183	    RETURN OLD;
+> 184	  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+> 185	    INSERT INTO public.user_api_keys_table (
+> 186	      user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token
+> 187	    ) VALUES (
+> 188	      NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token
+> 189	    )
+> 190	    ON CONFLICT (user_id) DO UPDATE SET
+> 191	      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key, '••••••••••••'), public.user_api_keys_table.groq_api_key),
+> 192	      openrouter_api_key = COALESCE(NULLIF(NEW.openrouter_api_key, '••••••••••••'), public.user_api_keys_table.openrouter_api_key),
+> 193	      openai_api_key = COALESCE(NULLIF(NEW.openai_api_key, '••••••••••••'), public.user_api_keys_table.openai_api_key),
+> 194	      pref_audio_provider = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),
+> 195	      pref_image_provider = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),
+> 196	      pref_video_provider = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),
+> 197	      elevenlabs_api_key = COALESCE(NULLIF(NEW.elevenlabs_api_key, '••••••••••••'), public.user_api_keys_table.elevenlabs_api_key),
+> 198	      google_api_key = COALESCE(NULLIF(NEW.google_api_key, '••••••••••••'), public.user_api_keys_table.google_api_key),
+> 199	      nanobana_api_key = COALESCE(NULLIF(NEW.nanobana_api_key, '••••••••••••'), public.user_api_keys_table.nanobana_api_key),
+> 200	      seedance_api_key = COALESCE(NULLIF(NEW.seedance_api_key, '••••••••••••'), public.user_api_keys_table.seedance_api_key),
+> 201	      wp_site_url = NEW.wp_site_url,
+> 202	      wp_username = NEW.wp_username,
+> 203	      wp_app_password = COALESCE(NULLIF(NEW.wp_app_password, '••••••••••••'), public.user_api_keys_table.wp_app_password),
+> 204	      pref_ai_model = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),
+> 205	      replicate_api_key = COALESCE(NULLIF(NEW.replicate_api_key, '••••••••••••'), public.user_api_keys_table.replicate_api_key),
+> 206	      higgsfield_api_key = COALESCE(NULLIF(NEW.higgsfield_api_key, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key),
+> 207	      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key_secret),
+> 208	      apify_token = COALESCE(NULLIF(NEW.apify_token, '••••••••••••'), public.user_api_keys_table.apify_token),
+> 209	      updated_at = now();
+> 210	    RETURN NEW;
+> 211	  END IF;
+> 212	  RETURN NULL;
+> 213	END;
+> 214	$$ LANGUAGE plpgsql SECURITY DEFINER;
+> 215	
+> 216	-- ─────────────────────────────────────────────────────────────────────────────
+> 217	-- 5. DECRYPTED VIEW (service_role only) — append apify_token + its vault join
+> 218	-- ─────────────────────────────────────────────────────────────────────────────
+> 219	CREATE OR REPLACE VIEW public.decrypted_user_api_keys AS
+> 220	SELECT
+> ```
+
+## 🤖 Claude *(13:05:31)*
+
+
+## 🤖 Claude *(13:05:36)*
+
+Tenho a definição viva exata (com `apify_token`). Vou escrever a nova migration que recria o `trg_instead_of_user_api_keys` no padrão **UPDATE-first / INSERT-if-not-found** (dispara o trigger de encriptação exatamente uma vez), preservando os guards COALESCE-NULLIF. 
+
+Uma correção defensiva necessária dentro do mesmo fix: hoje `wp_site_url`/`wp_username` são setados **direto** (`NEW.x`, sem COALESCE) — então um save parcial (ex.: só uma AI key) os **zeraria**. Como meu fix faz os saves voltarem a *persistir*, esse wipe latente passaria a se materializar. Vou alinhá-los aos demais campos não-secretos (COALESCE preserva em null; o clear é feito só pela RPC).
+
+## 🤖 Claude *(13:06:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql",
+  "content": "-- Migration: fix user_api_keys INSTEAD OF trigger \u2014 eliminate encrypt double-fire (23505)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Bug (introduced 2026-06-01 by credential_encryption): trg_instead_of_user_api_keys routed\n-- BOTH client INSERT and UPDATE through a single `INSERT ... ON CONFLICT (user_id) DO UPDATE`\n-- on user_api_keys_table. When the row already exists, Postgres fires the BEFORE-row encryption\n-- trigger TWICE within that one statement \u2014 once for the INSERT phase (which runs\n-- vault.create_secret for each NEW secret value) and again for the DO UPDATE phase (which runs\n-- vault.create_secret AGAIN with the same deterministic name) \u2192 unique_violation on\n-- vault.secrets.secrets_name_idx (SQLSTATE 23505). Additionally, a client UPDATE carries the\n-- masked sentinel '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' for unchanged secret columns; the INSERT phase tried to\n-- vault-encrypt that literal, colliding with the already-existing secret of the same name.\n--\n-- Net effect: connecting/saving ANY credential failed for every user whose user_api_keys row\n-- already existed (only the very first all-fields insert on a brand-new row succeeded). Proven\n-- materially 2026-06-02 (T1/T3 = .insert 23505 on the field being set; T4 = .update 23505 on\n-- groq via the masked-value re-encrypt).\n--\n-- Fix: branch UPDATE-first / INSERT-if-not-found (the idiomatic plpgsql upsert) so the encryption\n-- trigger fires EXACTLY ONCE per write. This matches how trg_instead_of_meta_config and\n-- trg_instead_of_social_accounts already branch. The COALESCE-NULLIF guards are preserved, so an\n-- unchanged secret (sent as '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' or NULL) resolves to the stored Vault reference and is\n-- never re-encrypted. wp_site_url/wp_username are also moved to COALESCE(NEW, base) \u2014 matching the\n-- other non-secret prefs \u2014 so a partial save (e.g. saving only an AI key) can no longer wipe the\n-- WordPress site/username (clearing is done exclusively by disconnect_wordpress()).\n--\n-- Scope: user_api_keys ONLY (meta_config/social_accounts already branch correctly).\n-- Residual debt (documented, not fixed here): changing a secret to a NEW value while the row's\n-- existing same-named Vault secret is still present still collides (the encrypt trigger always\n-- CREATEs); fixing that requires making trg_encrypt_user_api_keys idempotent (update-or-create by\n-- name) and is tracked separately. See docs/processes/credential-disconnect-clear.md.\n\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()\nRETURNS TRIGGER AS $$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;\n    RETURN OLD;\n\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    -- UPDATE-first: fires the BEFORE UPDATE encryption trigger exactly once for an existing row.\n    UPDATE public.user_api_keys_table SET\n      groq_api_key              = COALESCE(NULLIF(NEW.groq_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      openrouter_api_key        = COALESCE(NULLIF(NEW.openrouter_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openrouter_api_key),\n      openai_api_key            = COALESCE(NULLIF(NEW.openai_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openai_api_key),\n      pref_audio_provider       = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),\n      pref_image_provider       = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),\n      pref_video_provider       = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),\n      elevenlabs_api_key        = COALESCE(NULLIF(NEW.elevenlabs_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.elevenlabs_api_key),\n      google_api_key            = COALESCE(NULLIF(NEW.google_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.google_api_key),\n      nanobana_api_key          = COALESCE(NULLIF(NEW.nanobana_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.nanobana_api_key),\n      seedance_api_key          = COALESCE(NULLIF(NEW.seedance_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.seedance_api_key),\n      wp_site_url               = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),\n      wp_username               = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),\n      wp_app_password           = COALESCE(NULLIF(NEW.wp_app_password, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.wp_app_password),\n      pref_ai_model             = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),\n      replicate_api_key         = COALESCE(NULLIF(NEW.replicate_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.replicate_api_key),\n      higgsfield_api_key        = COALESCE(NULLIF(NEW.higgsfield_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key),\n      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key_secret),\n      apify_token               = COALESCE(NULLIF(NEW.apify_token, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.apify_token),\n      updated_at                = now()\n    WHERE user_id = NEW.user_id;\n\n    -- No existing row \u2192 first-time insert (fires the BEFORE INSERT encryption trigger exactly once).\n    IF NOT FOUND THEN\n      INSERT INTO public.user_api_keys_table (\n        user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token\n      ) VALUES (\n        NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token\n      );\n    END IF;\n    RETURN NEW;\n  END IF;\n  RETURN NULL;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:07:28)*
+
+
+## 🤖 Claude *(13:07:32)*
+
+Antes de revisar/aplicar, identifiquei um ponto de segurança que meu próprio fix **exporia**: hoje um INSERT via view com `user_id` falsificado de outro tenant ou **crasha** no 23505 (que "mascarava" a brecha) ou escreve na linha da vítima. Ao fazer os writes passarem a ter sucesso, eu materializaria uma **escrita cross-tenant**. Como a view dá `GRANT INSERT` a `anon`+`authenticated` e o INSTEAD OF roda como definer (bypassa RLS), preciso **fechar isso** com um guard `auth.uid()` (isentando `service_role`, igual as views já fazem). Adicionando:
+
+## 🤖 Claude *(13:07:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql",
+  "old_string": "  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    -- UPDATE-first: fires the BEFORE UPDATE encryption trigger exactly once for an existing row.",
+  "new_string": "  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    -- Tenant guard. The view grants INSERT to anon+authenticated and this INSTEAD OF trigger runs\n    -- as a definer (bypassing base-table RLS), and an INSERT cannot be constrained by the view's\n    -- WHERE filter the way SELECT/UPDATE/DELETE are. Without this check an authenticated caller\n    -- could INSERT with a spoofed user_id and write another tenant's credential row. (Previously\n    -- \"masked\" only by the 23505 crash this migration removes \u2014 so closing it is mandatory here.)\n    -- service_role (edge functions / cron / onboarding) legitimately writes arbitrary user_ids.\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n\n    -- UPDATE-first: fires the BEFORE UPDATE encryption trigger exactly once for an existing row."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:07:51)*
+
+
+## 🤖 Claude *(13:07:52)*
+
+Guard de tenant adicionado. Agora `/security-review` desta migration (mexe em trigger de credenciais — regra inquebrável do CLAUDE.md). Lançando o sub-agente com o antes/depois e os pontos de atenção:
+
+## 🤖 Claude *(13:08:23)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review of INSTEAD OF trigger rewrite",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of a Postgres trigger rewrite in a Supabase multi-tenant app. Only flag HIGH-CONFIDENCE (>80%), concretely exploitable vulnerabilities NEWLY introduced (or newly EXPOSED) by this change vs. the OLD version. Read-only; do not mutate anything.\n\n## CONTEXT (verified facts)\n- `public.user_api_keys` is a SECURITY-DEFINER VIEW over base table `public.user_api_keys_table`, masking secret columns as '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'. The view has `WHERE (auth.uid() = user_id OR auth.role() = 'service_role')`. Client GRANTs: `SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated`. SELECT on the base table is REVOKED from anon/authenticated. The view's INSTEAD OF trigger (this function) runs as definer (owner postgres) and writes the base table directly (bypassing base RLS).\n- Secret columns are encrypted by a separate BEFORE INSERT/UPDATE trigger on the base table (`trg_encrypt_user_api_keys`) which calls `vault.create_secret(value, 'user_api_keys_<col>_<user_id>')`. `vault.secrets.name` is UNIQUE.\n- `auth.uid()` = request JWT 'sub' (null for service_role / anon-without-user). `auth.role()` = request JWT 'role'. Both read request GUCs and are unaffected by SECURITY DEFINER. `auth.role()` is already used in the live view definitions.\n- `user_id` is the PK of user_api_keys_table (NOT NULL, FK to auth.users).\n\n## OLD function (the bug being fixed)\n```sql\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys() RETURNS TRIGGER AS $$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id; RETURN OLD;\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    INSERT INTO public.user_api_keys_table (user_id, groq_api_key, ... , apify_token)\n    VALUES (NEW.user_id, NEW.groq_api_key, ... , NEW.apify_token)\n    ON CONFLICT (user_id) DO UPDATE SET\n      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key,'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      ... (all fields; wp_site_url = NEW.wp_site_url and wp_username = NEW.wp_username were DIRECT, no COALESCE) ...,\n      updated_at = now();\n    RETURN NEW;\n  END IF; RETURN NULL;\nEND; $$ LANGUAGE plpgsql SECURITY DEFINER;\n```\nThis double-fired the encrypt trigger (INSERT phase + ON CONFLICT UPDATE phase) \u2192 23505, breaking writes for existing rows.\n\n## NEW function (under review)\n```sql\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys() RETURNS TRIGGER AS $$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id; RETURN OLD;\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n    UPDATE public.user_api_keys_table SET\n      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key,'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      ... (all secret fields same COALESCE-NULLIF guard) ...,\n      wp_site_url = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),\n      wp_username = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),\n      ... (pref_* fields COALESCE(NEW,base)) ...,\n      apify_token = COALESCE(NULLIF(NEW.apify_token,'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.apify_token),\n      updated_at = now()\n    WHERE user_id = NEW.user_id;\n    IF NOT FOUND THEN\n      INSERT INTO public.user_api_keys_table (user_id, groq_api_key, ... , apify_token)\n      VALUES (NEW.user_id, NEW.groq_api_key, ... , NEW.apify_token);\n    END IF;\n    RETURN NEW;\n  END IF; RETURN NULL;\nEND; $$ LANGUAGE plpgsql SECURITY DEFINER;\n```\n\n## SPECIFICALLY EVALUATE\n1. **Tenant isolation on INSERT/UPDATE:** Does the new `auth.role() <> 'service_role' AND NEW.user_id <> auth.uid()` guard correctly prevent an authenticated/anon caller from writing another tenant's row via a spoofed `user_id` in an INSERT through the view? Consider NULL semantics (IS DISTINCT FROM), anon (auth.uid() NULL), and service_role exemption. Is the guard bypassable?\n2. **Did the rewrite OPEN any cross-tenant write that the OLD version blocked?** (e.g., does removing ON CONFLICT change row-targeting? Both use NEW.user_id.) Confirm the new guard is at least as strong as before (the old version had NO explicit guard).\n3. **UPDATE-first / NOT FOUND / INSERT branch:** any way to write/overwrite an unintended row, or to escalate? Consider that `WHERE user_id = NEW.user_id` is post-guard (so NEW.user_id is pinned to auth.uid() for non-service_role).\n4. **search_path / SECURITY DEFINER hardening:** the function does NOT set `search_path`. Is that exploitable here (function-shadowing of the unqualified `now()` / `auth.role()` / `auth.uid()` / `COALESCE`)? Note all table refs are schema-qualified `public.user_api_keys_table`; `auth.role()`/`auth.uid()` are schema-qualified; `now()`/`COALESCE`/`NULLIF` are pg_catalog. The OLD version also had no search_path. Is the missing `SET search_path` a concrete, exploitable issue for an attacker who is a regular authenticated tenant (can they create objects in a schema that precedes pg_catalog/public in the trigger's search_path)? Assess realistically.\n5. Any SQL injection (no dynamic SQL here), or data-exposure regression.\n\nEXCLUSIONS: DoS, secrets-at-rest, rate limiting, non-exploitable hardening gaps, theoretical races, outdated deps, regex injection, documentation. Do not report PRE-EXISTING issues that this change does not alter (but DO report if the change newly EXPOSES a previously-masked vuln, e.g. by making a write succeed that used to crash).\n\nFor each candidate: file/location, severity, category, concrete attack path, fix, confidence 1-10. Keep only confidence \u22658 with a concrete path. If the change is safe (and the guard correctly closes the cross-tenant INSERT that the bug previously masked), say so explicitly with reasoning. Concise markdown report."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'No grants of `CREATE ON SCHEMA` to tenants in the migrations. On Supabase, `anon`/`authenticated` are not schema-owners and cannot create functions/objects in `public`, `pg_catalog`, or any schema that would precede them in a search_path. Combined with the fact that the function only calls schema-qualified objects (`public.user_api_keys_table`, `auth.uid()`, `auth.role()`) and `pg_catalog` built-ins (`now()`, `COALESCE`, `NULLIF`) that are resolved from `pg_catalog` (always implicitly first), the missing `SET search_path` is **not concretely exploitable** by a regular tenant here. It is also not a regression — the OLD function equally lacked it. This falls under the EXCLUSIONS (non-exploitable hardening gap).\n\nI have completed the analysis. Final reasoning on the remaining edge cases:\n\n- **Post-RAISE `RETURN NEW`**: The RAISE EXCEPTION aborts the statement; control never reaches the UPDATE/INSERT or `RETURN NEW`. No partial write. Clean.\n- **UPDATE-first/NOT FOUND/INSERT**: `WHERE user_id = NEW.user_id` runs *after* the guard pinned `NEW.user_id` to `auth.uid()` (non-service_role). So both the UPDATE target and the INSERT value are the caller\'s own row. No way to target/overwrite another row. The removal of `ON CONFLICT` doesn\'t change row-targeting (both keyed on `NEW.user_id`); it only changes the encrypt-trigger fire count (the actual bug). No escalation.\n- **No dynamic SQL** → no SQLi. **No data-exposure regression** — masking is in the view SELECT (unchanged); the trigger only writes.\n\nHere is my report.\n\n---\n\n## Security Review: `trg_instead_of_user_api_keys` rewrite (`20260602130000_fix_user_api_keys_instead_of_double_fire.sql`)\n\n**Verdict: SAFE. The change is strictly stronger than the version it replaces and correctly closes a real cross-tenant write hole that the old code only partially masked. No confidence-≥8 newly-introduced vulnerability found.**\n\nI verified the CONTEXT against the live migration chain rather than trusting it:\n- The view is indeed a **SECURITY DEFINER** view (`20260601060000` line 146 / `20260601000600` are the canonical defs — `security_invoker` was dropped after `20260601000000`) with `WHERE (auth.uid() = user_id OR auth.role() = \'service_role\')` and `GRANT SELECT,INSERT,UPDATE,DELETE ... TO anon, authenticated`.\n- Base table `user_api_keys_table` has RLS ENABLED but **NO `FORCE ROW LEVEL SECURITY`** anywhere — so the definer trigger (owner postgres) **bypasses base RLS on writes**. Base RLS is therefore *not* an independent backstop; the in-function guard is the only tenant control on the write path. This makes the new guard load-bearing, and it holds.\n\n### Point-by-point\n\n**1. Tenant isolation on INSERT/UPDATE — guard is correct and not bypassable (confidence 9):**\n`auth.role() IS DISTINCT FROM \'service_role\' AND NEW.user_id IS DISTINCT FROM auth.uid()`.\n- *Authenticated attacker, spoofed `NEW.user_id`=victim:* TRUE AND TRUE → raises 42501. Blocked. `auth.uid()`/`auth.role()` read verified-JWT request GUCs and are unaffected by SECURITY DEFINER, so they can\'t be forged in the SQL body.\n- *Anon* (`auth.uid()` NULL), spoofed non-null victim id: TRUE AND (`victim IS DISTINCT FROM NULL` = TRUE) → raises. The author correctly used `IS DISTINCT FROM`; a plain `<>` would have returned NULL and fallen through — this is the right operator.\n- *Anon sets `NEW.user_id = NULL` to slip the guard:* `NULL IS DISTINCT FROM NULL` = FALSE → guard passes, but UPDATE matches nothing → NOT FOUND → INSERT with `user_id = NULL` hits the NOT NULL PK → 23502 abort. No row written, no cross-tenant effect. Not exploitable.\n- *service_role:* short-circuits the first conjunct → intended exemption for edge/cron/onboarding. Service_role already holds the secret key; not a regression.\n\n**2. Did the rewrite OPEN a cross-tenant write the old version blocked? No — the opposite (confidence 9):**\nThe OLD function (`ON CONFLICT (user_id) DO UPDATE`, no guard) only 23505-crashed when the victim row **already existed**. For a victim with **no row yet**, an authenticated/anon INSERT with a spoofed `user_id` took the clean INSERT path, bypassed base RLS via the definer, and **seeded a cross-tenant row** (attacker-controlled `wp_site_url`/prefs, or secrets vault-encrypted under the victim\'s id). That was a genuine, only-partially-masked cross-tenant write primitive. The new guard rejects it for every non-service_role caller. Row-targeting is unchanged (both keyed on `NEW.user_id`); removing `ON CONFLICT` only fixed the double-encrypt fire count.\n\n**3. UPDATE-first / NOT FOUND / INSERT branch — no escalation (confidence 9):**\nThe guard runs *before* the write and pins `NEW.user_id` to `auth.uid()` for non-service_role. Both the `WHERE user_id = NEW.user_id` UPDATE target and the fallback INSERT value are then the caller\'s own row. No path to target or overwrite another tenant\'s row. `RAISE` aborts before any write, so no partial-write leak via `RETURN NEW`.\n\n**4. Missing `SET search_path` — not exploitable here; excluded (confidence 8 it\'s non-exploitable):**\nAll table refs are schema-qualified (`public.user_api_keys_table`); `auth.uid()`/`auth.role()` are schema-qualified; `now()`/`COALESCE`/`NULLIF` resolve from `pg_catalog` (always implicitly first). No `GRANT CREATE ON SCHEMA` to `anon`/`authenticated` exists in the migrations, and Supabase tenants are not schema owners — so a tenant cannot plant a shadowing object in any schema preceding `pg_catalog`/`public`. The OLD function equally lacked `search_path`, so this is neither new nor a concrete attack path. Falls under the EXCLUSIONS (non-exploitable hardening gap). *(Non-blocking: adding `SET search_path = public, pg_catalog` is good belt-and-suspenders hygiene, but not required by this review\'s bar.)*\n\n**5. SQL injection / data-exposure regression — none (confidence 10):**\nNo dynamic SQL. Masking lives in the view\'s SELECT (unchanged by this migration); the trigger only writes. The `wp_site_url`/`wp_username` move to `COALESCE(NEW, base)` is a *correctness/availability* improvement (stops partial saves from wiping WordPress fields) with no confidentiality impact.\n\n### Residual (out of scope, already documented by the author, not a regression)\nThe author\'s own header notes that changing a secret to a *new* value while the same-named Vault secret still exists will still 23505 (the encrypt trigger always `vault.create_secret`s). That is a pre-existing availability bug in `trg_encrypt_user_api_keys`, unchanged by this migration, tracked in `docs/processes/credential-disconnect-clear.md`. Not a security finding and explicitly outside this change\'s scope.\n\n**Files reviewed:**\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql` (the change)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql` (immediate predecessor — the "OLD" function + live view/grants)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql` (encrypt trigger, base-table rename, sibling triggers)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000600_secure_definer_views.sql` (canonical SECURITY DEFINER view + base-table SELECT REVOKE)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260421000000_create_user_api_keys.sql` (original base RLS — confirmed not FORCEd, hence bypassed by the definer write path)'}, {'type': 'text', 'text': "agentId: a856110ba10475991 (use SendMessage with to: 'a856110ba10475991' to continue this agent)\n<usage>subagent_tokens: 70970\ntool_uses: 13\nduration_ms: 128552</usage>"}]
+> ```
+
+## 🤖 Claude *(13:10:45)*
+
+
+## 🤖 Claude *(13:10:49)*
+
+`/security-review` **veredito: SEGURO** — a mudança é estritamente mais forte que a anterior, e o reviewer **confirmou independentemente** que o código antigo tinha um primitivo de escrita cross-tenant (quando a vítima não tinha linha) que meu guard agora fecha. Validou também: guard não-burlável, `IS DISTINCT FROM` correto para NULL, sem regressão, sem SQLi.
+
+O reviewer sugeriu (não-bloqueante) adicionar `SET search_path` por higiene. Como já estou nessa função crítica e tudo é schema-qualified, vou adicionar `SET search_path = ''` (consistente com `disconnect_wordpress`):
+
+## 🤖 Claude *(13:10:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql",
+  "old_string": "  RETURN NULL;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;",
+  "new_string": "  RETURN NULL;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:10:55)*
+
+
+## 🤖 Claude *(13:10:56)*
+
+Aplicando a migration do fix do trigger (a `20260602120000` já está aplicada; só a `130000` está pendente):
+
+## 🤖 Claude *(13:10:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== db push (apply 20260602130000) ===\"\ntimeout 120 npx supabase db push --linked 2>&1 | tail -12; echo \"EXIT=${PIPESTATUS[0]}\"",
+  "description": "Apply the INSTEAD OF trigger fix migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === db push (apply 20260602130000) ===
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+>  [Y/n] 
+> Applying migration 20260602130000_fix_user_api_keys_instead_of_double_fire.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> EXIT=0
+> ```
+
+## 🤖 Claude *(13:11:26)*
+
+
+## 🤖 Claude *(13:11:27)*
+
+Migration aplicada (EXIT=0). Agora a verificação material do fix completo. **R1 — o teste decisivo**: reproduzir o connect (que dava 23505 em T1) como Gabriel → deve ter **sucesso** agora. Mais o caminho `.update()` (que dava 23505 no groq em T4):
+
+## 🤖 Claude *(13:11:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa; UID_G=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\": $(jq -Rs . <<<\"$1\")}\"; }\n\necho \"=== R1: CONNECT as Gabriel (the T1 case that gave 23505) \u2192 expect success now ===\"\nq \"DO \\$\\$ BEGIN\n  PERFORM set_config('request.jwt.claims', '{\\\"sub\\\":\\\"$UID_G\\\",\\\"role\\\":\\\"authenticated\\\"}', true);\n  INSERT INTO public.user_api_keys (user_id, wp_site_url, wp_username, wp_app_password)\n  VALUES ('$UID_G','https://e2e-verify.example.com','e2e_user','test test test test test test');\nEND \\$\\$;\" | head -c 300; echo\n\necho \"\"\necho \"=== verify-R1: persisted + encrypted + surgical ===\"\nq \"SELECT\n   (SELECT wp_site_url FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS dec_site,\n   (SELECT wp_username FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS dec_user,\n   (SELECT wp_app_password FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS dec_pwd,\n   (SELECT (wp_app_password ~ '^[0-9a-f-]{36}\\$') FROM public.user_api_keys_table WHERE user_id='$UID_G') AS base_is_uuid,\n   (SELECT count(*) FROM vault.secrets WHERE name='user_api_keys_wp_app_password_$UID_G') AS wp_secret,\n   (SELECT count(*) FROM public.user_api_keys_table WHERE user_id='$UID_G' AND groq_api_key IS NOT NULL) AS groq_intact;\"\n\necho \"\"\necho \"=== R2: .UPDATE path (the T4 case that gave 23505 on groq via masked '\u2022\u2022\u2022\u2022' re-encrypt) \u2192 expect success ===\"\nq \"DO \\$\\$ BEGIN\n  PERFORM set_config('request.jwt.claims', '{\\\"sub\\\":\\\"$UID_G\\\",\\\"role\\\":\\\"authenticated\\\"}', true);\n  UPDATE public.user_api_keys SET pref_ai_model='google/gemini-2.5-pro' WHERE user_id='$UID_G';\nEND \\$\\$;\" | head -c 300; echo\necho \"--- verify-R2: pref changed, groq+wp still intact (no collision, no wipe) ---\"\nq \"SELECT\n   (SELECT pref_ai_model FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS pref,\n   (SELECT count(*) FROM public.user_api_keys_table WHERE user_id='$UID_G' AND groq_api_key IS NOT NULL) AS groq_intact,\n   (SELECT wp_site_url FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS wp_site_still;\"",
+  "description": "Verify connect succeeds + update path succeeds post-fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === R1: CONNECT as Gabriel (the T1 case that gave 23505) → expect success now ===
+> []
+> 
+> === verify-R1: persisted + encrypted + surgical ===
+> [{"dec_site":"https://e2e-verify.example.com","dec_user":"e2e_user","dec_pwd":"test test test test test test","base_is_uuid":true,"wp_secret":1,"groq_intact":1}]
+> === R2: .UPDATE path (the T4 case that gave 23505 on groq via masked '••••' re-encrypt) → expect success ===
+> []
+> --- verify-R2: pref changed, groq+wp still intact (no collision, no wipe) ---
+> [{"pref":"google/gemini-2.5-pro","groq_intact":1,"wp_site_still":"https://e2e-verify.example.com"}]
+> ```
+
+## 🤖 Claude *(13:12:02)*
+
+
+## 🤖 Claude *(13:12:05)*
+
+**Fix material confirmado:**
+
+| Gate | Antes | Depois | Veredito |
+|---|---|---|---|
+| **R1** connect (caso T1) | 23505 | `[]` sucesso; site/user/pwd decifrados OK, base=uuid, **1** segredo, groq intacto | ✅ double-fire eliminado |
+| **R2** `.update` (caso T4) | 23505 no groq | `[]` sucesso; pref mudou, groq intacto, **wp_site_url preservado** | ✅ re-encripta `••••` + wipe parcial resolvidos |
+
+Agora o guard cross-tenant + disconnect + cleanup:
+
+## 🤖 Claude *(13:12:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa; UID_G=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\": $(jq -Rs . <<<\"$1\")}\"; }\n\necho \"=== R3: TENANT GUARD \u2014 Gabriel (authenticated) tries to write ANOTHER user_id \u2192 expect 42501 ===\"\nq \"DO \\$\\$ BEGIN\n  PERFORM set_config('request.jwt.claims', '{\\\"sub\\\":\\\"$UID_G\\\",\\\"role\\\":\\\"authenticated\\\"}', true);\n  INSERT INTO public.user_api_keys (user_id, wp_site_url) VALUES ('00000000-0000-0000-0000-000000000000','https://evil.example');\nEND \\$\\$;\" | head -c 220; echo\n\necho \"\"\necho \"=== R4: disconnect as Gabriel (clean up R1's connect) ===\"\nq \"DO \\$\\$ BEGIN\n  PERFORM set_config('request.jwt.claims', '{\\\"sub\\\":\\\"$UID_G\\\",\\\"role\\\":\\\"authenticated\\\"}', true);\n  PERFORM public.disconnect_wordpress();\nEND \\$\\$;\"\n\necho \"\"\necho \"=== cleanup: restore pref_ai_model to original (gemini-2.5-flash), base table direct ===\"\nq \"UPDATE public.user_api_keys_table SET pref_ai_model='google/gemini-2.5-flash' WHERE user_id='$UID_G';\"\n\necho \"\"\necho \"=== FINAL state: Gabriel fully clean (wp null, no wp secret, groq intact, pref restored) ===\"\nq \"SELECT\n   (SELECT wp_app_password FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS wp_pwd,\n   (SELECT wp_site_url FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS wp_site,\n   (SELECT count(*) FROM vault.secrets WHERE name='user_api_keys_wp_app_password_$UID_G') AS wp_secret,\n   (SELECT count(*) FROM public.user_api_keys_table WHERE user_id='$UID_G' AND groq_api_key IS NOT NULL) AS groq_intact,\n   (SELECT pref_ai_model FROM public.decrypted_user_api_keys WHERE user_id='$UID_G') AS pref;\"",
+  "description": "Verify tenant guard, disconnect cleanup, restore pref, final state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === R3: TENANT GUARD — Gabriel (authenticated) tries to write ANOTHER user_id → expect 42501 ===
+> {"message":"Failed to run sql query: ERROR:  42501: cannot write credentials for another user\nCONTEXT:  PL/pgSQL function public.trg_instead_of_user_api_keys() line 15 at RAISE\nSQL statement \"INSERT INTO public.user_a
+> 
+> === R4: disconnect as Gabriel (clean up R1's connect) ===
+> []
+> === cleanup: restore pref_ai_model to original (gemini-2.5-flash), base table direct ===
+> []
+> === FINAL state: Gabriel fully clean (wp null, no wp secret, groq intact, pref restored) ===
+> [{"wp_pwd":null,"wp_site":null,"wp_secret":0,"groq_intact":1,"pref":"google/gemini-2.5-flash"}]
+> ```
+
+## 🤖 Claude *(13:12:54)*
+
+
+## 🤖 Claude *(13:12:59)*
+
+**Verificação material completa — todos os gates verdes:**
+
+| Gate | Resultado | Veredito |
+|---|---|---|
+| **R3** guard cross-tenant | `ERROR 42501: cannot write credentials for another user` (line 15 RAISE) | ✅ escrita cross-tenant bloqueada |
+| **R4** disconnect | `[]` sucesso | ✅ |
+| **FINAL** Gabriel | wp_pwd/site `null`, wp_secret `0`, **groq intacto**, pref restaurado `gemini-2.5-flash` | ✅ limpo, sem resíduo de teste |
+
+Camada DB 100% verificada. Agora o frontend: a chamada `supabase.rpc('disconnect_wordpress')` precisa do tipo. Vou avaliar o risco de regenerar `types.ts` inteiro (a regra do projeto manda regenerar, mas `user_api_keys` virou VIEW e um regen pode movê-la de `Tables`→`Views`, quebrando `useUserApiKeys.ts`). Regenero para um temp e comparo antes de decidir:
+
+## 🤖 Claude *(13:13:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== regen types to TEMP (read-only check) ===\"\ntimeout 120 npx supabase gen types typescript --linked > /tmp/types_regen.ts 2>/tmp/types_regen.err; echo \"EXIT=$?\"\necho \"temp size: $(wc -l < /tmp/types_regen.ts 2>/dev/null) lines; current: $(wc -l < src/integrations/supabase/types.ts) lines\"\necho \"\"\necho \"=== does regen keep user_api_keys under Tables (vs moving to Views)? ===\"\necho \"-- current types.ts: --\"; grep -nE \"user_api_keys:\" src/integrations/supabase/types.ts\necho \"-- regen temp: line ranges of Tables: / Views: / Functions: --\"; grep -nE \"^    (Tables|Views|Functions):\" /tmp/types_regen.ts\necho \"-- regen: where does user_api_keys appear + is disconnect_wordpress present? --\"\ngrep -nE \"user_api_keys:|disconnect_wordpress\" /tmp/types_regen.ts | head\necho \"\"\necho \"=== overall diff size (current vs regen) ===\"\ndiff <(sed 's/[[:space:]]*$//' src/integrations/supabase/types.ts) <(sed 's/[[:space:]]*$//' /tmp/types_regen.ts) | grep -cE '^[<>]' || echo \"0 (identical)\"",
+  "description": "Regenerate types to temp and assess diff risk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === regen types to TEMP (read-only check) ===
+> EXIT=0
+> temp size: 3301 lines; current: 3265 lines
+> 
+> === does regen keep user_api_keys under Tables (vs moving to Views)? ===
+> -- current types.ts: --
+> 2666:      decrypted_user_api_keys: {
+> 2790:      user_api_keys: {
+> -- regen temp: line ranges of Tables: / Views: / Functions: --
+> 16:    Tables: {
+> 19:    Views: {
+> 22:    Functions: {
+> 41:    Tables: {
+> 2656:    Views: {
+> 2892:    Functions: {
+> -- regen: where does user_api_keys appear + is disconnect_wordpress present? --
+> 2694:      decrypted_user_api_keys: {
+> 2819:      user_api_keys: {
+> 2950:      disconnect_wordpress: { Args: never; Returns: undefined }
+> 
+> === overall diff size (current vs regen) ===
+> 36
+> ```
+
+## 🤖 Claude *(13:13:26)*
+
+
+## 🤖 Claude *(13:13:28)*
+
+Regen difere em só 36 linhas, mas **crítico**: no regen `user_api_keys` cai sob **Views** (linha 2819, entre `Views:2656` e `Functions:2892`), e `disconnect_wordpress` aparece em Functions. Se o `types.ts` atual tem `user_api_keys` sob `Tables`, o regen o moveria para `Views` → quebraria `useUserApiKeys.ts` (`['Tables']['user_api_keys']`). Preciso ver o diff exato antes de decidir:
+
+## 🤖 Claude *(13:13:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== current types.ts: Tables/Views/Functions boundaries (public schema) ===\"\ngrep -nE \"^    (Tables|Views|Functions): \\{\" src/integrations/supabase/types.ts | head\necho \"\"\necho \"=== Is current user_api_keys (line 2790) under Tables or Views? (nearest preceding boundary) ===\"\nawk 'NR>=41 && /^    (Tables|Views|Functions): \\{/ {b=$0; bl=NR} NR==2790 {print \"user_api_keys@2790 is under: \" b \" (declared line \" bl \")\"; exit}' src/integrations/supabase/types.ts\necho \"\"\necho \"=== ACTUAL DIFF (current \u2192 regen), trimmed trailing ws ===\"\ndiff <(sed 's/[[:space:]]*$//' src/integrations/supabase/types.ts) <(sed 's/[[:space:]]*$//' /tmp/types_regen.ts) | head -80",
+  "description": "Determine current Tables/Views placement and view exact diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === current types.ts: Tables/Views/Functions boundaries (public schema) ===
+> 16:    Tables: {
+> 2628:    Views: {
+> 2860:    Functions: {
+> 
+> === Is current user_api_keys (line 2790) under Tables or Views? (nearest preceding boundary) ===
+> user_api_keys@2790 is under:     Views: { (declared line 2628)
+> 
+> === ACTUAL DIFF (current → regen), trimmed trailing ws ===
+> 14a15,39
+> >   graphql_public: {
+> >     Tables: {
+> >       [_ in never]: never
+> >     }
+> >     Views: {
+> >       [_ in never]: never
+> >     }
+> >     Functions: {
+> >       graphql: {
+> >         Args: {
+> >           extensions?: Json
+> >           operationName?: string
+> >           query?: string
+> >           variables?: Json
+> >         }
+> >         Returns: Json
+> >       }
+> >     }
+> >     Enums: {
+> >       [_ in never]: never
+> >     }
+> >     CompositeTypes: {
+> >       [_ in never]: never
+> >     }
+> >   }
+> 1796a1822
+> >           apify_token: string | null
+> 1818a1845
+> >           apify_token?: string | null
+> 1840a1868
+> >           apify_token?: string | null
+> 2667a2696
+> >           apify_token: string | null
+> 2791a2821
+> >           apify_token: string | null
+> 2813a2844
+> >           apify_token?: never
+> 2835a2867
+> >           apify_token?: never
+> 2917a2950
+> >       disconnect_wordpress: { Args: never; Returns: undefined }
+> 3171a3205,3207
+> >   graphql_public: {
+> >     Enums: {},
+> >   },
+> ```
+
+## 🤖 Claude *(13:14:11)*
+
+
+## 🤖 Claude *(13:14:13)*
+
+Esclarecido: o `types.ts` **atual já tem `user_api_keys` sob `Views`** (boundary Views@2628, entry@2790) — então o regen **não** move nada. O diff é pequeno e seguro: adiciona schema `graphql_public` (inócuo), as colunas `apify_token` (que já existem no DB) e `disconnect_wordpress` em Functions. É um sync canônico correto. Vou aplicar o regen e rodar `tsc`:
+
+## 🤖 Claude *(13:14:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp /tmp/types_regen.ts src/integrations/supabase/types.ts\necho \"=== applied regen. Now tsc --noEmit ===\"\ntimeout 240 npx tsc --noEmit 2>&1 | head -40; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Apply regenerated types and run tsc typecheck"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === applied regen. Now tsc --noEmit ===
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(13:14:25)*
+
+
+## 🤖 Claude *(13:14:27)*
+
+`tsc --noEmit` **EXIT=0** — limpo. O regen (com `disconnect_wordpress` em Functions) resolve a chamada `.rpc()`, e nada mais quebrou.
+
+Estou no **repo principal** (`/home/gcrUX/htdocs/constellation-orchestra`, com `.env`), não num worktree → `bun run build` = deploy direto (nginx serve `dist/`). Rodando o build:
+
+## 🤖 Claude *(13:14:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirm main repo (not worktree) + .env present ===\"; pwd; [ -f .env ] && echo \".env present ($(grep -c . .env) non-empty lines)\" || echo \"NO .env\"\necho \"\"; echo \"=== dist/ SocialAccounts chunk BEFORE build (for materiality) ===\"; ls -la dist/assets/ 2>/dev/null | grep -iE \"social|index\" | head -5 || echo \"(no dist yet)\"\necho \"\"; echo \"=== bun run build ===\"\ntimeout 360 bun run build 2>&1 | tail -25; echo \"BUILD_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Build the frontend (= deploy via nginx) and check materiality"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirm main repo (not worktree) + .env present ===
+> /home/gcrUX/htdocs/constellation-orchestra
+> .env present (16 non-empty lines)
+> 
+> === dist/ SocialAccounts chunk BEFORE build (for materiality) ===
+> -rw-rw-r-- 1 ubuntu ubuntu    232 Jun  1 19:49 index-B6QgDCCb.js
+> -rw-rw-r-- 1 ubuntu ubuntu     64 Jun  1 19:49 index-BdQq_4o_.js
+> -rw-rw-r-- 1 ubuntu ubuntu  15851 Jun  1 19:49 index-BZV40eAE.css
+> -rw-rw-r-- 1 ubuntu ubuntu 141889 Jun  1 19:49 index-CM3qkQbQ.css
+> -rw-rw-r-- 1 ubuntu ubuntu 625586 Jun  1 19:49 index-CWfuJ8cu.js
+> 
+> === bun run build ===
+> dist/assets/OrchestrationPage-D-qNXPs1.js       32.79 kB │ gzip:   9.11 kB
+> dist/assets/Landing-_jn_RJ89.js                 36.83 kB │ gzip:  11.55 kB
+> dist/assets/DashboardHome-DfkdzFsk.js           36.98 kB │ gzip:  10.35 kB
+> dist/assets/ContentLibraryPage-CznWC3or.js      37.01 kB │ gzip:  10.45 kB
+> dist/assets/AreaChart-CVHm2Xee.js               41.27 kB │ gzip:  11.41 kB
+> dist/assets/MemoryPage-C1WVCRgi.js              41.90 kB │ gzip:  13.32 kB
+> dist/assets/core.esm-DAzxFy6h.js                43.72 kB │ gzip:  14.59 kB
+> dist/assets/hands-D6Zp722y.js                   45.32 kB │ gzip:  17.07 kB
+> dist/assets/CampaignWizard-CEbc2eDd.js          49.44 kB │ gzip:  15.70 kB
+> dist/assets/Vignette-BTv_kzPw.js                70.82 kB │ gzip:  17.36 kB
+> dist/assets/CoreV2Page-CW39JAmb.js              73.06 kB │ gzip:  22.40 kB
+> dist/assets/proxy-DqsCc_s9.js                  125.30 kB │ gzip:  41.24 kB
+> dist/assets/CanvasEditorPage-CSnE9jUA.js       140.18 kB │ gzip:  38.73 kB
+> dist/assets/index-82GvXw6U.js                  167.17 kB │ gzip:  53.48 kB
+> dist/assets/ConstellationPage-BsgthP1N.js      185.12 kB │ gzip:  63.83 kB
+> dist/assets/ConstellationMatrix-C0a8vzpM.js    248.23 kB │ gzip:  63.05 kB
+> dist/assets/CartesianChart-BouAApRJ.js         325.06 kB │ gzip:  96.83 kB
+> dist/assets/index-DuFApVSE.js                  625.55 kB │ gzip: 186.99 kB
+> dist/assets/Stars-bc-i1d6h.js                  826.42 kB │ gzip: 222.88 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 20.89s
+> BUILD_EXIT=0
+> ```
+
+## 🤖 Claude *(13:15:01)*
+
+
+## 🤖 Claude *(13:15:02)*
+
+Build OK (`✓ built in 20.89s`, EXIT=0). Agora a **prova de materialidade do deploy** (Lei 1 / build-deploy-guardian): confirmar que o chunk do SocialAccounts foi reconstruído, que meu código (`disconnect_wordpress`) está no bundle servido, e que o `.env` foi baked:
+
+## 🤖 Claude *(13:15:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== fresh SocialAccounts chunk (timestamp must be just now) ===\"\nls -la dist/assets/ | grep -iE \"SocialAccounts\" || echo \"(SocialAccounts bundled into a shared chunk)\"\necho \"\"\necho \"=== MATERIAL: is 'disconnect_wordpress' (my new RPC call) in the served bundle? ===\"\ngrep -rl \"disconnect_wordpress\" dist/assets/*.js | head; echo \"occurrences: $(grep -roh \"disconnect_wordpress\" dist/assets/*.js | wc -l)\"\necho \"\"\necho \"=== MATERIAL: env baked? (Supabase project ref present in bundle) ===\"\ngrep -rl \"bcyvddsykvehvpwstlfa\" dist/assets/*.js | head -3; echo \"ref occurrences: $(grep -roh \"bcyvddsykvehvpwstlfa\" dist/assets/*.js | wc -l)\"\necho \"\"\necho \"=== newest dist files (post-build timestamps) ===\"\nls -lat dist/assets/*.js | head -4\necho \"\"\necho \"=== confirm the OLD broken upsert is GONE from the bundle (no onConflict user_api_keys path) ===\"\ngrep -roh \"user_api_keys\" dist/assets/*.js | wc -l | xargs echo \"user_api_keys refs in bundle:\"",
+  "description": "Verify deploy materiality: fresh chunk, code in bundle, env baked"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fresh SocialAccounts chunk (timestamp must be just now) ===
+> -rw-rw-r-- 1 ubuntu ubuntu   8599 Jun  2 10:14 SocialAccountsPage-4_GWJ_p-.js
+> -rw-rw-r-- 1 ubuntu ubuntu   2378 Jun  2 10:14 useSocialAccounts-zAtTUOMx.js
+> 
+> === MATERIAL: is 'disconnect_wordpress' (my new RPC call) in the served bundle? ===
+> dist/assets/SocialAccountsPage-4_GWJ_p-.js
+> occurrences: 1
+> 
+> === MATERIAL: env baked? (Supabase project ref present in bundle) ===
+> dist/assets/CalendarPage-B5W3xKYm.js
+> dist/assets/CampaignDetail-BA2dHChM.js
+> dist/assets/SettingsPage-BCy2euAV.js
+> ref occurrences: 23
+> 
+> === newest dist files (post-build timestamps) ===
+> -rw-rw-r-- 1 ubuntu ubuntu   8122 Jun  2 10:14 dist/assets/camera_utils-D_wJMvMn.js
+> -rw-rw-r-- 1 ubuntu ubuntu  45318 Jun  2 10:14 dist/assets/hands-D6Zp722y.js
+> -rw-rw-r-- 1 ubuntu ubuntu   6297 Jun  2 10:14 dist/assets/AgentEconomicsPage-JmwqV8OG.js
+> -rw-rw-r-- 1 ubuntu ubuntu  21971 Jun  2 10:14 dist/assets/CanvasDesignPage-BTF0wlHL.js
+> 
+> === confirm the OLD broken upsert is GONE from the bundle (no onConflict user_api_keys path) ===
+> user_api_keys refs in bundle: 5
+> ```
+
+## 🤖 Claude *(13:15:57)*
+
+
+## 🤖 Claude *(13:16:01)*
+
+**Deploy materializado (Lei 1 — gates verdes):**
+
+- Chunk fresco: `SocialAccountsPage-4_GWJ_p-.js` @ `Jun 2 10:14` (hash novo). ✓
+- **`disconnect_wordpress` presente no bundle servido** (`SocialAccountsPage-4_GWJ_p-.js`). ✓ meu código está no artefato live.
+- `.env` baked: ref `bcyvddsykvehvpwstlfa` em 23 ocorrências. ✓
+- Todos os `dist/assets/*.js` com timestamp pós-build. ✓
+
+Fix completo e live. Agora vou sintetizar o aprendizado (mandato Obstáculo→Síntese): atualizar a memória (que ainda marcava o SocialAccountsPage como "NÃO corrigido" e desconhecia o double-fire) e registrar a dívida residual.
+
+## 🤖 Claude *(13:16:26)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_encrypted_views_write_pattern.md",
+  "content": "---\nname: reference_encrypted_views_write_pattern\ndescription: \"user_api_keys/meta_config/social_accounts s\u00e3o VIEWS Vault-mascaradas \u2014 escreva com .insert(); null n\u00e3o limpa (use RPC); o INSTEAD OF do user_api_keys N\u00c3O pode usar INSERT...ON CONFLICT (double-fire 23505)\"\nmetadata:\n  node_type: memory\n  type: reference\n  originSessionId: d4434afb-c259-4270-a01a-03d85ba37719\n---\n\nDesde `20260601000000_credential_encryption.sql` + `20260601000600_secure_definer_views.sql` (2026-06-01), as tabelas `user_api_keys`, `meta_config`, `social_accounts` viraram **VIEWS** (security-definer, com `WHERE auth.uid()=user_id OR service_role`) sobre `*_table` Vault-encriptadas. SELECT mostra `\u2022\u2022\u2022\u2022`; reais cifradas no Vault; edge fns leem `decrypted_*` (REVOKE de anon/authenticated, s\u00f3 service_role). Ver [[reference_user_api_keys_encrypted]] e [[reference_supabase_keys_migrated]].\n\n**Gotchas ao ESCREVER:**\n- \u274c `.upsert()` / `{onConflict:'user_id'}` \u2192 **HTTP 400** `42P10 \"no unique or exclusion constraint matching ON CONFLICT\"` (views n\u00e3o t\u00eam constraint). Provado material 2026-06-02.\n- \u2705 `.insert()` \u2192 roteia pelo INSTEAD OF INSERT. (Padr\u00e3o em `useUserApiKeys.saveKeys`.) `meta_config`/`social_accounts` ramificam INSERT/UPDATE separado; seus hooks fazem `.update()` se existe / `.insert()` se n\u00e3o (`useMetaConfig`/`useAffiliateConfig`).\n- \u274c Setar coluna-segredo para `null` **N\u00c3O limpa**: o INSTEAD OF faz `COALESCE(NULLIF(NEW.x,'\u2022\u2022\u2022\u2022'), base.x)` \u2192 null preserva (e esse guard \u00e9 load-bearing: protege saves parciais). Para limpar de verdade \u2192 UPDATE direto na `*_table` via path privilegiado.\n\n**FIX SELADO 2026-06-02 (SocialAccountsPage WP \u2014 antes era P0 aberto):**\n- Save: `.upsert`\u2192`.insert` (`src/pages/SocialAccountsPage.tsx`). Disconnect: agora chama a RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, escopada a `auth.uid()`, `search_path=''`) \u2014 nula as 3 colunas WP na base table **e DELETA o segredo do Vault** (revoga\u00e7\u00e3o real LGPD; delete amarrado a `id` **E** nome determin\u00edstico \u2192 tenant-safe). Migration `20260602120000_wordpress_disconnect_rpc.sql`. SOP: `docs/processes/credential-disconnect-clear.md`.\n\n**\u26a0\ufe0f BUG PROFUNDO descoberto+corrigido 2026-06-02 (afetava TODOS os saves de credencial, n\u00e3o s\u00f3 WP):**\nO `trg_instead_of_user_api_keys` roteava INSERT **e** UPDATE do cliente por um \u00fanico `INSERT ... ON CONFLICT (user_id) DO UPDATE`. Numa linha **pr\u00e9-existente** o Postgres dispara o BEFORE-trigger de encripta\u00e7\u00e3o **2\u00d7** numa s\u00f3 statement (fase INSERT cria o segredo Vault; fase UPDATE chama `vault.create_secret` de novo com o mesmo nome determin\u00edstico \u2192 **`23505`** `secrets_name_idx`). E `.update()` carrega o sentinela `\u2022\u2022\u2022\u2022` mascarado nos campos n\u00e3o-tocados \u2192 a fase INSERT tenta cifrar `\u2022\u2022\u2022\u2022` \u2192 colide com o segredo j\u00e1 existente (ex.: groq). Efeito: connect/save quebrado p/ qualquer user com linha j\u00e1 existente (s\u00f3 o 1\u00ba insert all-fields em linha nova passava). Provado material (T1/T3/T4) e via `vault.create_secret` = INSERT puro sem ON CONFLICT.\n- **Fix:** reescrever s\u00f3 o `trg_instead_of_user_api_keys` p/ **UPDATE-first / INSERT-if-NOT FOUND** (dispara encrypt 1\u00d7; igual aos irm\u00e3os meta/social que j\u00e1 ramificavam). Migration `20260602130000_fix_user_api_keys_instead_of_double_fire.sql`. Tamb\u00e9m: `wp_site_url`/`wp_username` viraram `COALESCE(NEW,base)` (n\u00e3o zeram em save parcial) + **guard de tenant** (`auth.role()<>'service_role' AND NEW.user_id<>auth.uid()` \u2192 42501) que fecha uma escrita cross-tenant que o ON CONFLICT antigo s\u00f3 mascarava com o crash. Passou `/security-review` (veredito SAFE, guard n\u00e3o-burl\u00e1vel).\n\n**D\u00edvida residual (documentada, N\u00c3O corrigida \u2014 fora de escopo, precisa /security-review pr\u00f3prio):** o `trg_encrypt_user_api_keys` (e irm\u00e3os meta/social) chama `vault.create_secret` **incondicionalmente** quando um segredo muda \u2192 **editar um segredo p/ valor NOVO enquanto o segredo de mesmo nome ainda existe = 23505**. P/ WP s\u00f3 pega \"Editar senha sem desconectar antes\". Conserto = tornar o encrypt trigger idempotente (update-or-create por nome) nas 3 tabelas. Rastreado em `docs/processes/credential-disconnect-clear.md`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_encrypted_views_write_pattern.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:16:33)*
+
+
+## 🤖 Claude *(13:16:33)*
+
+Atualizando o hook no índice `MEMORY.md` (que ainda diz "P0 NÃO corrigido"):
+
+## 🤖 Claude *(13:16:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Encrypted views \u2014 escreva com .insert(), n\u00e3o .upsert()](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts viraram VIEWS Vault (000600, 2026-06-01); `.upsert()`/onConflict \u2192 HTTP 400 (sem constraint), e setar null N\u00c3O limpa (COALESCE-guard). Corrigido em useUserApiKeys (.upsert\u2192.insert); P0 pr\u00e9-existente N\u00c3O corrigido: SocialAccountsPage WP save/disconnect. Template p/ nova credencial BYOK: migration `20260601060000_user_api_keys_apify_token.sql` (5 pontos do padr\u00e3o Vault; passa por /security-review).",
+  "new_string": "- [Encrypted views \u2014 .insert() (n\u00e3o .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts s\u00e3o VIEWS Vault (000600). `.upsert()`\u2192400; null N\u00c3O limpa (COALESCE-guard, use RPC). SocialAccountsPage WP FIXADO 2026-06-02 (.insert + RPC `disconnect_wordpress` que revoga o segredo Vault). \u26a0\ufe0f Bug profundo achado+corrigido: o INSTEAD OF do user_api_keys usava `INSERT...ON CONFLICT` \u2192 double-fire do encrypt trigger \u2192 23505 p/ qualquer linha pr\u00e9-existente; corrigido p/ UPDATE-first (migration 20260602130000) + guard de tenant. D\u00edvida residual: encrypt trigger n\u00e3o-idempotente (editar segredo sem limpar antes = 23505)."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(13:16:43)*
+
+
+## 🤖 Claude *(13:16:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — Refactor v2 da constelação 3D; TODAS as fases (0/1/2/3/4) seladas em v6.18.0 — empty-state wizard 2-portas + execução real de capability (exec 488a7744 watchdog_infra · 0 mco · 255ms) + reset destrutivo + botão Zerar per-user. BoK selada 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.
+> 4	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — Worktree pode estar dezenas de commits atrás; "X não existe/está quebrado" tirado só do worktree é falso negativo (errei sobre publish-meta nesta base). Cheque `git show origin/main:<path>` antes de concluir.
+> 5	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — Incidente 2026-05-31: sob Bash/Read atrasado, escrevi hashes de commit inexistentes + counts de malha incrementados "de cabeça". Todo hash/UUID/contador em doc/commit vem de output verificado NESTE turno; halt e re-query, nunca preencha. /handson deve `git fetch` primeiro.
+> 6	- [Supabase keys migradas — use SB_SECRET_KEY (service_role legada REVOGADA)](reference_supabase_keys_migrated.md) — Incidente 2026-06-01: service_role hardcoded vazou → cutover pras API keys novas + revoke da signing key HS256 211a3abc. `SUPABASE_SERVICE_ROLE_KEY`/`ANON_KEY` MORTAS (PGRST301). Use `SB_SECRET_KEY`/`SB_PUBLISHABLE_KEY`. ⚠️ Nos protocolos /handson e /handoff troque `$SUPABASE_SERVICE_ROLE_KEY` por `$SB_SECRET_KEY` — a malha não responde à legada.
+> 7	- [user_api_keys é VIEW mascarada — chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) — credential_encryption (2026-06-01): SELECT mostra `••••`, reais cifradas no Vault; edge fns leem `decrypted_user_api_keys`. Teste de chave DEVE ser server-side (edge fn `test-api-key`) — o cliente só vê o mask, então "Falhou" no teste ≠ chave inválida. INSTEAD OF trigger preserva valor ao escrever mask/null.
+> 8	- [Operador de Browser Autenticado — módulo a construir (probe-first)](project_authenticated_browser_operator.md) — Diretiva Sovereign 2026-06-01: browser LOGADO humano-paced p/ ações que nos barram (ML Compartilhar→meli.la cravado→gravar shortlinks). NÃO scraping/E2E. Datacenter IP bloqueado até p/ browser real; logado não-testado. Decisões: PROBE-FIRST → runtime decidido após probe → /bok-scribe (BoK Gate) → build. Auth = login interativo 1×+profile persistido, sem senha crua. Tool: agent-browser.
+> 9	- [Encrypted views — escreva com .insert(), não .upsert()](reference_encrypted_views_write_pattern.md) — user_api_keys/meta_config/social_accounts viraram VIEWS Vault (000600, 2026-06-01); `.upsert()`/onConflict → HTTP 400 (sem constraint), e setar null NÃO limpa (COALESCE-guard). Corrigido em useUserApiKeys (.upsert→.insert); P0 pré-existente NÃO corrigido: SocialAccountsPage WP save/disconnect. Template p/ nova credencial BYOK: migration `20260601060000_user_api_keys_apify_token.sql` (5 pontos do padrão Vault; passa por /security-review).
+> 10	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — No Claude Code, `grep` = função→`ugrep -G`; idiomas BRE (`grep -v "^\+\+\+"`) estouram e no-opam silenciosamente sob `|| true` (só no meu shell, não no terminal do Gabriel). Use `-E` / `grep -E '^\+[^+]'`. Pegou o pre-commit anti-credential no-opando p/ commits de IA (2026-06-01).
+> ```
+
+## 🤖 Claude *(13:16:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Encrypted views \u2014 escreva com .insert(), n\u00e3o .upsert()](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts viraram VIEWS Vault (000600, 2026-06-01); `.upsert()`/onConflict \u2192 HTTP 400 (sem constraint), e setar null N\u00c3O limpa (COALESCE-guard). Corrigido em useUserApiKeys (.upsert\u2192.insert); P0 pr\u00e9-existente N\u00c3O corrigido: SocialAccountsPage WP save/disconnect. Template p/ nova credencial BYOK: migration `20260601060000_user_api_keys_apify_token.sql` (5 pontos do padr\u00e3o Vault; passa por /security-review).",
+  "new_string": "- [Encrypted views \u2014 .insert() (n\u00e3o .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) \u2014 user_api_keys/meta_config/social_accounts s\u00e3o VIEWS Vault (000600). `.upsert()`\u2192400; null N\u00c3O limpa (COALESCE-guard, use RPC). SocialAccountsPage WP FIXADO 2026-06-02 (.insert + RPC `disconnect_wordpress` que revoga o segredo Vault). \u26a0\ufe0f Bug profundo achado+corrigido: o INSTEAD OF do user_api_keys usava `INSERT...ON CONFLICT` \u2192 double-fire do encrypt trigger \u2192 23505 p/ QUALQUER linha pr\u00e9-existente; corrigido p/ UPDATE-first (migration 20260602130000) + guard de tenant. D\u00edvida residual: encrypt trigger n\u00e3o-idempotente (editar segredo sem limpar antes = 23505)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:16:59)*
+
+
+## 🤖 Claude *(13:16:59)*
+
+Adicionando entradas na Key Files Reference do CLAUDE.md (parte do mandato Obstáculo→Síntese). Localizando a âncora:
+
+## 🤖 Claude *(13:17:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"credential resolution SOP|Affiliate credential resolution|Meta config hook\" CLAUDE.md | head",
+  "description": "Find anchor row in CLAUDE.md Key Files Reference"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 424:| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |
+> 427:| **Meta credential resolution SOP** | `docs/processes/meta-credential-resolution.md` (per-user `meta_config`, fail-closed, OTD-META-ENCRYPT) |
+> 430:| **Meta config hook** | `src/hooks/useMetaConfig.ts` (BYOK · safe-columns select) |
+> ```
+
+## 🤖 Claude *(13:17:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 424,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 424	| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |
+> 425	| **Edge JWT identity verification SOP** | `docs/processes/edge-jwt-identity-verification.md` (verify_jwt=false → ES256 JWKS verify; NUNCA atob cego) |
+> ```
+
+## 🤖 Claude *(13:17:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |\n| **Edge JWT identity verification SOP** | `docs/processes/edge-jwt-identity-verification.md` (verify_jwt=false \u2192 ES256 JWKS verify; NUNCA atob cego) |",
+  "new_string": "| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |\n| **Credential disconnect/clear SOP** | `docs/processes/credential-disconnect-clear.md` (masked-view null N\u00c3O limpa; `.insert` n\u00e3o `.upsert`; INSTEAD OF do user_api_keys N\u00c3O pode usar `INSERT...ON CONFLICT` \u2192 double-fire 23505) |\n| **WordPress disconnect RPC** | `supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql` (`disconnect_wordpress()` SECURITY DEFINER \u00b7 nula 3 cols WP + revoga segredo Vault \u00b7 auth.uid()-scoped) |\n| **user_api_keys INSTEAD OF double-fire fix** | `supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql` (UPDATE-first/INSERT-if-not-found + guard de tenant) |\n| **Edge JWT identity verification SOP** | `docs/processes/edge-jwt-identity-verification.md` (verify_jwt=false \u2192 ES256 JWKS verify; NUNCA atob cego) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:17:20)*
+
+
+## 🤖 Claude *(13:17:21)*
+
+Registrando a dívida residual confirmada (edit-while-connected = 23505) como task separada — é out-of-scope, mexe no trigger central de encriptação das 3 tabelas e precisa de `/security-review` próprio:
+
+## 🤖 Claude *(13:17:39)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Tornar encrypt trigger idempotente (Vault create\u2192upsert)",
+  "tldr": "Os triggers de encripta\u00e7\u00e3o de credenciais sempre criam um novo segredo no Vault; re-salvar um segredo j\u00e1 existente colide (HTTP 23505). Tornar idempotente (atualizar-ou-criar por nome) nas 3 tabelas.",
+  "prompt": "Bug de availability confirmado materialmente em 2026-06-02 (sess\u00e3o do fix do WordPress BYOK), deixado como d\u00edvida residual documentada.\n\nPROBLEMA: O trigger BEFORE INSERT/UPDATE `trg_encrypt_user_api_keys` (em `supabase/migrations/20260601000000_credential_encryption.sql`, recriado em `20260601060000_user_api_keys_apify_token.sql`) chama `vault.create_secret(value, '<nome-deterministico>')` INCONDICIONALMENTE quando uma coluna-segredo muda de valor. `vault.create_secret` faz `INSERT INTO vault.secrets` puro SEM ON CONFLICT, e `vault.secrets.name` tem \u00edndice \u00fanico (`secrets_name_idx`). Logo: editar um segredo para um valor NOVO enquanto o segredo de mesmo nome determin\u00edstico ainda existe \u2192 `ERROR 23505 duplicate key ... secrets_name_idx`. \n\nPara WordPress isso se manifesta no fluxo \"Editar senha sem desconectar antes\" (em `src/pages/SocialAccountsPage.tsx` o bot\u00e3o \"Editar\"). Os mesmos triggers irm\u00e3os `trg_encrypt_meta_config` e `trg_encrypt_social_accounts` t\u00eam o mesmo padr\u00e3o (nomes por `id` de linha, ent\u00e3o re-salvar token na mesma linha tamb\u00e9m colide).\n\nCONTEXTO J\u00c1 RESOLVIDO (n\u00e3o refazer): o double-fire do `INSERT...ON CONFLICT` no `trg_instead_of_user_api_keys` foi corrigido em `20260602130000_fix_user_api_keys_instead_of_double_fire.sql` (UPDATE-first). O disconnect via `disconnect_wordpress()` deleta o segredo, ent\u00e3o connect\u2192disconnect\u2192reconnect funciona. S\u00f3 falta o caso \"trocar valor sem deletar antes\".\n\nFIX PROPOSTO: criar um helper `vault_upsert_secret(p_value text, p_name text, p_desc text) RETURNS uuid` que: `SELECT id FROM vault.secrets WHERE name=p_name`; se achou \u2192 `vault.update_secret(id, p_value)` e retorna id; sen\u00e3o \u2192 `vault.create_secret(...)`. Substituir as ~11 chamadas `vault.create_secret` em `trg_encrypt_user_api_keys` (e avaliar fazer o mesmo em `trg_encrypt_meta_config`/`trg_encrypt_social_accounts`) por esse helper, preservando o guard de \"j\u00e1 \u00e9 UUID \u2192 keep\". \n\nREQUISITOS: nova migration com timestamp > 20260602130000; OBRIGAT\u00d3RIO passar `/security-review` (mexe na camada central de encripta\u00e7\u00e3o de credenciais \u2014 toda migration passa por /security-review por regra do CLAUDE.md). Verificar materialmente via Management API (token em ~/.supabase/access-token, project ref bcyvddsykvehvpwstlfa, endpoint POST https://api.supabase.com/v1/projects/<ref>/database/query): simular um usu\u00e1rio com set_config('request.jwt.claims', '{\"sub\":\"<uid>\",\"role\":\"authenticated\"}', true) e provar que salvar um segredo DUAS vezes com valores diferentes n\u00e3o d\u00e1 23505 e que o decrypted_user_api_keys reflete o 2\u00ba valor. Atualizar o SOP `docs/processes/credential-disconnect-clear.md` (se\u00e7\u00e3o \"Known latent debt\") quando fechado."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(13:17:48)*
+
+
+## 🤖 Claude *(13:17:49)*
+
+Síntese registrada. Agora o balanço final do conjunto de mudanças e self-audit das Leis de Sobrevivência:
+
+## 🤖 Claude *(13:17:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (what changed) ===\"; git status --short\necho \"\"; echo \"=== diff stat (tracked) ===\"; git diff --stat; echo \"--- untracked migrations/docs ---\"; git status --porcelain | grep '^??'\necho \"\"; echo \"=== is dist/ gitignored? ===\"; git check-ignore dist >/dev/null 2>&1 && echo \"yes (dist/ ignored \u2014 build artifact, not committed)\" || echo \"no\"\necho \"\"; echo \"=== applied migrations on remote (confirm both landed) ===\"\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d '{\"query\":\"SELECT version FROM supabase_migrations.schema_migrations WHERE version IN ('\"'\"'20260602120000'\"'\"','\"'\"'20260602130000'\"'\"') ORDER BY version;\"}'",
+  "description": "Final change-set review and confirm migrations applied on remote"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (what changed) ===
+>  M CLAUDE.md
+>  M src/integrations/supabase/types.ts
+>  M src/pages/SocialAccountsPage.tsx
+> ?? docs/processes/credential-disconnect-clear.md
+> ?? supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+> ?? supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+> === diff stat (tracked) ===
+>  CLAUDE.md                          |  3 +++
+>  src/integrations/supabase/types.ts | 36 ++++++++++++++++++++++++++++++++++++
+>  src/pages/SocialAccountsPage.tsx   | 25 +++++++++++++++++--------
+>  3 files changed, 56 insertions(+), 8 deletions(-)
+> --- untracked migrations/docs ---
+> ?? docs/processes/credential-disconnect-clear.md
+> ?? supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+> ?? supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+> === is dist/ gitignored? ===
+> yes (dist/ ignored — build artifact, not committed)
+> 
+> === applied migrations on remote (confirm both landed) ===
+> [{"version":"20260602120000"},{"version":"20260602130000"}]
+> ```
+
+## 🤖 Claude *(13:18:01)*
+
+
+## 🤖 Claude *(13:18:28)*
+
+Tudo confirmado: ambas as migrations aplicadas no remoto (`20260602120000`, `20260602130000`), `dist/` é gitignored (artefato de build, servido pelo nginx — já live), e o working tree está limpo e coerente.
+
+---
+
+## Selo — Fix WordPress BYOK (SocialAccountsPage) + bug profundo da camada de encriptação
+
+**ORO:** Operator: eu · Reviewer/Owner: Sovereign. O bug reportado eram 2 `.upsert()`; a investigação material revelou um terceiro bug **mais grave e pré-existente** que você autorizou corrigir a fundo.
+
+### O que estava quebrado e o que fiz
+
+**1. Save (`SocialAccountsPage.tsx:51`)** — `.upsert(onConflict)` numa VIEW → **HTTP 400 `42P10`**. Trocado por `.insert()` (roteia pelo INSTEAD OF). ✅
+
+**2. Disconnect (`SocialAccountsPage.tsx:68`)** — `null` não limpa (guard `COALESCE-NULLIF` preserva) e o cliente não pode tocar a base table. Trocado pela RPC **`disconnect_wordpress()`** (`SECURITY DEFINER`, escopada a `auth.uid()`, `search_path=''`) que nula as 3 colunas WP **e deleta o segredo do Vault** — revogação real LGPD (migration `20260602120000`). ✅
+
+**3. [Descoberto] Double-fire da encriptação** — o `trg_instead_of_user_api_keys` usava `INSERT...ON CONFLICT DO UPDATE`, que dispara o trigger de encriptação **2×** numa só statement → `vault.create_secret` com nome duplicado → **`23505`**. Quebrava connect/save de **qualquer** usuário com linha já existente (não só WP), e `.update()` ainda re-encriptava o `••••` mascarado. Reescrito para **UPDATE-first / INSERT-if-not-found** + **guard de tenant** (`auth.uid()`), alinhando ao padrão que `meta_config`/`social_accounts` já usavam (migration `20260602130000`). ✅
+
+### Prova material (Management API, ao vivo no projeto `bcyvddsykvehvpwstlfa`)
+
+| Gate | Resultado |
+|---|---|
+| `.upsert` na view | `HTTP 400 / 42P10` ✅ (confirma o bug) |
+| connect (antes `23505`) | **sucesso**; site/user/pwd decifrados, base=UUID, **1** segredo Vault, groq intacto ✅ |
+| `.update` (antes `23505` no groq) | **sucesso**; pref muda, groq + wp_site_url preservados ✅ |
+| `disconnect_wordpress()` | colunas `null` + segredo Vault **deletado** (0) + groq/pref intactos ✅ |
+| guard cross-tenant | `ERROR 42501 cannot write credentials for another user` ✅ |
+
+Bônus real: a senha de aplicação WordPress órfã do seu usuário (29 chars, presa no Vault sem site/username) foi **purgada**.
+
+### Segurança, audit e deploy
+
+- **`/security-review` nas 2 migrations → ambas SAFE.** Adotei um hardening sugerido (delete do Vault amarrado a `id` **E** nome determinístico) e o guard de tenant fechou uma escrita cross-tenant que o `ON CONFLICT` antigo só mascarava com o crash.
+- **Audit pedido:** varri `src/` — o **único** `.upsert()`/`onConflict` contra as views encriptadas estava no `SocialAccountsPage`. Os outros 3 (`vm_user_trends`, `crew_agents`, `crew_module_ownership`) são tabelas reais com constraint. Limpo.
+- `npx tsc --noEmit` → **EXIT 0** (regenerei `types.ts` p/ incluir o RPC). `bun run build` → **✓ 20.89s**. Deploy materializado: chunk `SocialAccountsPage-4_GWJ_p-.js` fresco com `disconnect_wordpress` dentro + `.env` baked (nginx serve `dist/` → **já live**).
+
+### Pendências e estado
+
+- **Dívida residual** (documentada + task aberta no chip): editar um segredo para valor novo *sem desconectar antes* ainda dá `23505` (o `trg_encrypt_user_api_keys` sempre cria no Vault). Conserto = idempotência (update-or-create por nome) nas 3 tabelas — precisa de `/security-review` próprio. Para WP isso só afeta o botão "Editar"; connect→disconnect→reconnect funciona 100%.
+- **UI no navegador:** verifiquei materialmente todas as camadas que a UI aciona (PostgREST 400/201 + triggers + RPC + Vault, via `decrypted_user_api_keys`), mas **não cliquei** na UI logada (browser autenticado não está disponível). Se quiser, faço um E2E via `agent-browser`.
+- **Git:** mudanças **não commitadas** (não foi pedido). Prod já está atualizado (migrations + frontend). Pronto para `/handoff` ou commit quando você autorizar.
+
+**Self-audit Leis:** L1 ✅ toda claim ancorada em output (HTTP codes, SQL, hashes de chunk, versions de migration). L2 ✅ SOP `credential-disconnect-clear.md` antes do código. L3 — contexto longo de investigação; posso podar os outputs de exploração T1-T5 se seguirmos. L4 ✅ ORO declarado.
+
+Quer que eu **comite + `/handoff`**, ou que eu rode o **E2E no navegador** antes?
+
+## 👤 User *(13:27:15)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(13:27:15)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(13:27:48)*
+
+
+## 🤖 Claude *(13:27:48)*
+
+Executando o ritual ShakeHands /handoff v4. Começando pelo **PRE-FLIGHT** (paralelo) + leitura do HANDOFF.md.
+
+## 🤖 Claude *(13:27:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status --short ===\"; git status --short\necho \"\"; echo \"=== git diff HEAD --stat ===\"; git diff HEAD --stat\necho \"\"; echo \"=== git log --oneline -7 ===\"; git log --oneline -7\necho \"\"; echo \"=== docker mcorch ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null || echo \"docker unavailable\"\necho \"=== docker mega-brain ===\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null || echo \"docker unavailable\"\necho \"=== chroma heartbeat ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat || echo \"(chroma unreachable)\"",
+  "description": "Pre-flight git + infra checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status --short ===
+>  M CLAUDE.md
+>  M src/integrations/supabase/types.ts
+>  M src/pages/SocialAccountsPage.tsx
+> ?? docs/processes/credential-disconnect-clear.md
+> ?? supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+> ?? supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+> === git diff HEAD --stat ===
+>  CLAUDE.md                          |  3 +++
+>  src/integrations/supabase/types.ts | 36 ++++++++++++++++++++++++++++++++++++
+>  src/pages/SocialAccountsPage.tsx   | 25 +++++++++++++++++--------
+>  3 files changed, 56 insertions(+), 8 deletions(-)
+> 
+> === git log --oneline -7 ===
+> ea2f1f4 chore(sprint): selo v6.20.0 — afiliados híbrido + catálogo Apify real + BYOK per-user
+> 3358548 docs(handoff): seal v6.20.0 — afiliados híbrido + catálogo Apify real + BYOK per-user
+> eb9653d docs(readme): v6.20.0 — afiliados híbrido + catálogo Apify real + BYOK per-user
+> adcbd6f docs(afiliados): SOPs de atribuição/enriquecimento + revenue-flywheel com IDs reais
+> fb07323 feat(settings): BYOK Apify token per-user (Vault) + fix do salvamento de chaves
+> 5288bb8 feat(afiliados): enriquecimento Apify + descoberta de produtos + gate de verificação + cron
+> 4a9df8d feat(afiliados): links híbridos meli.la/matt_word — fim do proxy morto panel.gcrux.com
+> 
+> === docker mcorch ===
+> mcorch_chroma: Up 9 days (healthy)
+> mcorch_claude_mem: Up 9 days (healthy)
+> === docker mega-brain ===
+> mega-brain-dashboard: Up 9 days
+> mega-brain-webhook: Up 9 days (healthy)
+> mega-brain-daemon: Up 9 days (healthy)
+> === chroma heartbeat ===
+> {"nanosecond heartbeat":1780406872885369063}
+> ```
+
+## 🤖 Claude *(13:27:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Afiliados Híbrido + Catálogo Apify Real + BYOK per-user Record (2026-06-01)
+> 15	
+> 16	**v6.20.0 (2026-06-01)** — Sessão disparada pelo Sovereign dogfoodando `/dashboard/affiliate-products`: o link de afiliado copiado abria a **tela de login do CloudPanel** em vez do produto. Fluxo: diagnóstico material → fix dos links → enriquecimento do catálogo → descoberta de produtos → BYOK per-user → seal. Padrão dominante: **probe-first** (provar materialmente antes de construir) — economizou esforço em 3 becos (API ML, Firecrawl, actor com selectors velhos) e pegou 2 IDs fabricados + 1 regressão de credencial no `/security-review`.
+> 17	
+> 18	**O que foi entregue:**
+> 19	- **Fix dos links de afiliado (híbrido meli.la/matt_word):** o catálogo e `process-affiliate-link` (GET+POST) roteavam via `panel.gcrux.com/api/ml-redirect` (proxy morto = login wall, zero atribuição) usando o `app_id` OAuth como affiliate id — ambos banidos pelo SOP. Agora resolve em camadas: short link `meli.la` **cravado** (per-user em `affiliate_config.metadata.shortlinks[MLB]`) quando existir, senão `product_url` real + `matt_word=<affiliate_tag>`, **fail-closed**. `src/lib/affiliate.ts` puro (`resolveAffiliateLink`/`buildMattWordUrl`/`isMlShortLink`/`readShortlinks`) + 14 testes; editor de link cravado por produto na página; `useAffiliateConfig` expõe `affiliate_tag` + `setProductShortlink`. Prova: 302s reais da edge function — `MLB27834876`→`meli.la/2gh13Sw` (override) · `MLB36263268`→`mercadolivre.com.br/p/...?matt_word=caga6077534` (fallback), zero `panel.gcrux.com`.
+> 20	- **Catálogo real via Apify (ML bloqueia todo server-side):** provado materialmente que `api.mercadolibre.com/{items,products,search,categories}` → 403/401 e a página → 302 `/gz/account-verification`, **tanto do nosso IP quanto da Supabase Edge** (probe `ml-probe` deployada+deletada). OAuth não furaria (IP-block). Único caminho: actor Apify residencial `karamelo~mercadolivre-scraper-brasil-portugues` (devolve `eTituloProduto`/`novoPreco`/`imagemLink`/`SKU`). `scripts/enrich-affiliate-products.ts` (busca por nome → casa `SKU===external_id` → preço/foto/disponibilidade, retry anti-bot intermitente, resolução token per-user→sistema) + `scripts/discover-affiliate-products.ts` (descoberta real — valida "viral mind") + `useAffiliateProducts` gate (só lista `is_active`+`price`+`availability=available`; `hiddenCount`) + cron `affiliate-enrich-cron.sh` 6/6h.
+> 21	- **2 produtos fabricados removidos:** `MLB36263268`/`MLB37674259` eram IDs inventados (link-forge hardcoded — nunca "descobertos"); busca real retornou SKUs reais diferentes → DELETE permanente. Catálogo agora: **3 produtos reais novos** — Roborock S8 Pro Ultra `MLB27834876` R$17.770 · Family Hub `MLB32642694` R$18.946 · 75" 8K Neo QLED QN900B `MLB4699602679` R$39.000 (todos `available`, foto+preço reais).
+> 22	- **BYOK per-user `apify_token`:** migration `20260601060000` adiciona `apify_token` no padrão Vault de `credential_encryption` (coluna → trigger cifragem → view mascarada → INSTEAD OF → decrypted view service_role-only) — **passou `/security-review`**, que pegou e corrigiu eu revertendo a view mascarada p/ `security_invoker` sem o `WHERE` (quebraria leitura authenticated). Resolução em camadas per-user→`APIFY_TOKENS` sistema (provada: `--user` resolveu o token do Sovereign e dirigiu um scrape real). Campo no `SettingsPage`. **Corrige P0 pré-existente de `000600`:** `useUserApiKeys.saveKeys` usava `.upsert()` → HTTP 400 (view sem constraint) → `.insert()` (INSTEAD OF trigger faz upsert via `ON CONFLICT user_id`).
+> 23	
+> 24	**ORO triplet:** Operator=MCORCH Agent · Reviewer/Owner=Sovereign (todas as ações outward — DB writes, deploys, migration Vault, gasto Apify — com GO explícito; provas materiais por turno).
+> 25	
+> 26	| Verificação | Resultado |
+> 27	|---|---|
+> 28	| `tsc --noEmit` | ✅ 0 erros |
+> 29	| Suite vitest | ✅ **238 passed / 2 skipped / 240** (+14 testes `affiliate.test.ts`) |
+> 30	| Migration Vault aplicada | ✅ `db push` exit 0 · chaves existentes ainda decifram (openrouter/groq) · `apify_token` round-trip OK · mascarada na view pública |
+> 31	| `/security-review` | ✅ 0 findings + pegou/corrigiu regressão `security_invoker` |
+> 32	| BYOK per-user funcional | ✅ `--user` → token resolvido → scrape Roborock matched R$17.770 |
+> 33	| Edge 302s (deploy 82.73 kB) | ✅ override→meli.la · fallback→ML real · zero panel.gcrux |
+> 34	| Frontend deploy (nginx) | ✅ chunks `AffiliateProductsPage`/`SettingsPage` servidos HTTP 200 com código novo |
+> 35	| Cron monitoramento | ✅ `0 */6 * * *` instalado (vizinhos intactos) |
+> 36	| Containers | ✅ 5 healthy (9d) · Chroma v2 OK |
+> 37	| Handoff node | ✅ `af33a839-acd9-412d-a770-8ad5a2edccb4` embedded 768d |
+> 38	
+> 39	| Commit | Conteúdo |
+> 40	|---|---|
+> 41	| `4a9df8d` | feat(afiliados): links híbridos meli.la/matt_word — fim do proxy morto |
+> 42	| `5288bb8` | feat(afiliados): enriquecimento Apify + descoberta + gate + cron |
+> 43	| `fb07323` | feat(settings): BYOK Apify token per-user (Vault) + fix salvamento de chaves |
+> 44	| `adcbd6f` | docs(afiliados): SOPs + revenue-flywheel com IDs reais |
+> 45	| `eb9653d` | docs(readme): v6.20.0 |
+> 46	
+> 47	### Arquitetura — resolução de link de afiliado (híbrida, OTD-ML-001)
+> 48	```
+> 49	resolveAffiliateLink(product, config):
+> 50	  1. config.metadata.shortlinks[external_id] é meli.la/sec?  → { shortlink }   (definitivo, per-user)
+> 51	  2. config.affiliate_tag presente?  → product_url + ?matt_word=<tag>+utm      (best-effort)
+> 52	  3. senão → { needs_config }  (fail-closed — nunca link sem atribuição)
+> 53	process-affiliate-link GET (clique do leitor): node→owner→affiliate_config → mesma resolução → 302 ML real
+> 54	Enriquecimento: Apify karamelo (residencial) → SKU match → vm_affiliate_products{price,image_url,availability}
+> 55	  token: per-user (decrypted_user_api_keys.apify_token) → sistema (APIFY_TOKENS)
+> 56	```
+> 57	
+> 58	### Survival Laws Self-audit
+> 59	```
+> 60	Law 1 (Materiality): ✅ toda claim provada NESTE turno — 302s reais, db push exit 0, round-trips (sem imprimir segredo), suite 238/240, nginx 200, scrape matched. Quando o ML bloqueou tudo, disse "não dá" (probe ml-probe) em vez de fabricar. O 8K errado (4K→usado) foi corrigido materialmente 2×, não maquiado. Fase 5c executada (veredito mecânico abaixo).
+> ```
+
+## 🤖 Claude *(13:28:34)*
+
+
+## 🤖 Claude *(13:28:36)*
+
+PRE-FLIGHT ✅ — containers 5/5 healthy (9d), Chroma v2 OK, git/log coerentes. Versão atual v6.20.0 → vou selar como **v6.20.1** (patch, bug fix). 
+
+**PHASE 1 — SECURITY AUDIT** + re-run material do tsc. Vou escanear também os arquivos untracked (serão commitados) e ler o output cru (sem confiar no `|| echo`, dado o shim ugrep):
+
+## 🤖 Claude *(13:28:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (tracked diff + untracked new files) ===\"\n{ git diff HEAD; for f in docs/processes/credential-disconnect-clear.md supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql; do cat \"$f\"; done; } \\\n  | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_|SECRET_KEY=|ACCESS_TOKEN=|api_key[[:space:]]*=[[:space:]]*['\\\"][^'\\\"]{10,})\" \\\n  | grep -vE \"example|placeholder|<.*>|your-key|YOUR_\" | head -20 && echo \"(scan complete \u2014 empty above = \u2705 no secrets)\"\necho \"\"\necho \"=== 1c. client-side coin deduction (src/) ===\"\ngrep -rnE \"mco_balance.*update|UPDATE.*mco_balance\" src/ | grep -vE \"settings|top.?up|SettingsPage\" | head -5; echo \"exit=$? (no lines = \u2705)\"\necho \"\"\necho \"=== 1d. service_role / RLS bypass in src/ (my changes add an RPC, not service_role) ===\"\ngrep -rnE \"service_role|bypass.*rls|rls.*bypass\" src/ | head -5; echo \"(no lines = \u2705)\"\necho \"\"\necho \"=== 1e. sensitive console.log in src/ ===\"\ngrep -rnE \"console\\.log.*(token|key|secret|password)\" src/ | head -5; echo \"(no lines = \u2705)\"\necho \"\"\necho \"=== tsc --noEmit (re-run, material) ===\"\ntimeout 240 npx tsc --noEmit 2>&1 | tail -15; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Phase 1 security scans + fresh tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (tracked diff + untracked new files) ===
+> (scan complete — empty above = ✅ no secrets)
+> 
+> === 1c. client-side coin deduction (src/) ===
+> exit=0 (no lines = ✅)
+> 
+> === 1d. service_role / RLS bypass in src/ (my changes add an RPC, not service_role) ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> (no lines = ✅)
+> 
+> === 1e. sensitive console.log in src/ ===
+> src/test/canvas-video-async-smoke.test.ts:239:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:247:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:252:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> (no lines = ✅)
+> 
+> === tsc --noEmit (re-run, material) ===
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(13:29:12)*
+
+
+## 🤖 Claude *(13:29:12)*
+
+**1b** (edge JWT enforcement) para completar a Phase 1 — não toquei em edge functions, mas o protocolo pede:
+
+## 🤖 Claude *(13:29:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1b. edge functions lacking JWT/service_role (baseline \u2014 I added none) ===\"\ngrep -rLE \"Authorization|jwt|JWT|service_role\" supabase/functions/*/index.ts 2>/dev/null | grep -vE \"get-infra-status|watchdog\" || echo \"ALL FUNCTIONS: JWT enforced \u2705\"",
+  "description": "Phase 1b edge function JWT check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1b. edge functions lacking JWT/service_role (baseline — I added none) ===
+> supabase/functions/autonomic-action/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> supabase/functions/instagram-webhook/index.ts
+> supabase/functions/stripe-webhook/index.ts
+> ```
+
+## 🤖 Claude *(13:29:34)*
+
+
+## 🤖 Claude *(13:29:37)*
+
+**Phase 1 verdict:** 1a ✅ · 1b ⚠️ (4 webhooks pré-existentes sem JWT — esperado, verificam por assinatura; **não toquei** neles) · 1c ✅ · 1d ✅ (só um comentário) · 1e ✅ (só descrições de teste). **Sem 🔴 BLOCK.** tsc EXIT 0.
+
+**PHASE 2 — GRANULAR COMMITS** (3 grupos lógicos, staging explícito, sem Co-Authored-By):
+
+## 🤖 Claude *(13:29:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -e\necho \"=== Commit 1/3 \u2014 DB migrations ===\"\ngit add supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql\ngit commit -m \"fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF de user_api_keys\" -m \"A camada de credential_encryption (2026-06-01) deixou todo save/clear de credencial quebrado para usuarios com linha ja existente, nao so o WordPress dos 2 .upsert reportados. Esta seal restaura o ciclo completo de credencial das views Vault-mascaradas.\n\ndisconnect_wordpress(): caminho privilegiado de revogacao \u2014 a view mascarada nao consegue limpar um segredo via null (guard COALESCE-NULLIF preserva) e a base table nao e cliente-gravavel. SECURITY DEFINER escopada a auth.uid(), nula as 3 colunas WP e deleta o segredo do Vault (revogacao real LGPD), com o delete amarrado a id E nome deterministico (tenant-safe por construcao).\n\ntrg_instead_of_user_api_keys: trocado o INSERT...ON CONFLICT DO UPDATE (que disparava o trigger de encriptacao 2x numa so statement -> vault.create_secret com nome duplicado -> 23505, e re-encriptava o sentinela mascarado em updates) por UPDATE-first / INSERT-if-not-found \u2014 encriptacao dispara exatamente 1x, alinhando user_api_keys ao padrao que meta_config/social_accounts ja usavam. Inclui guard de tenant (auth.uid()) que fecha uma escrita cross-tenant que o ON CONFLICT so mascarava com o crash. Ambas as migrations passaram /security-review (veredito SAFE).\"\necho \"\"\necho \"=== Commit 2/3 \u2014 frontend ===\"\ngit add src/pages/SocialAccountsPage.tsx src/integrations/supabase/types.ts\ngit commit -m \"fix(settings): WordPress conecta via .insert e desconecta via RPC disconnect_wordpress\" -m \"O card WordPress do SocialAccountsPage salvava e desconectava via .upsert(onConflict) numa VIEW \u2014 HTTP 400 (42P10, view nao tem constraint). Save trocado por .insert() (roteia pelo INSTEAD OF trigger que faz upsert interno); disconnect trocado pela RPC disconnect_wordpress que limpa as colunas e revoga o segredo do Vault. types.ts regenerado do schema para incluir a funcao disconnect_wordpress (e sincroniza apify_token / graphql_public).\"\necho \"\"\necho \"=== Commit 3/3 \u2014 SOP + Key Files Reference ===\"\ngit add docs/processes/credential-disconnect-clear.md CLAUDE.md\ngit commit -m \"docs(processes): SOP de disconnect/clear de credencial em views Vault-mascaradas\" -m \"Sintetiza a armadilha (Lei 2 + mandato Obstaculo->Sintese): null nao limpa em view mascarada, .insert nao .upsert, e o INSTEAD OF do user_api_keys nao pode usar INSERT...ON CONFLICT (double-fire 23505). Documenta a divida residual (encrypt trigger nao-idempotente -> editar segredo sem limpar antes ainda colide) e adiciona as 3 entradas na Key Files Reference do CLAUDE.md.\"\necho \"\"\necho \"=== resulting log ===\"; git log --oneline -4",
+  "description": "Three granular commits for migrations, frontend, docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Commit 1/3 — DB migrations ===
+> [main 5dc8084] fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF de user_api_keys
+>  2 files changed, 161 insertions(+)
+>  create mode 100644 supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+>  create mode 100644 supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 
+> === Commit 2/3 — frontend ===
+> [main bafa7a2] fix(settings): WordPress conecta via .insert e desconecta via RPC disconnect_wordpress
+>  2 files changed, 53 insertions(+), 8 deletions(-)
+> 
+> === Commit 3/3 — SOP + Key Files Reference ===
+> [main 377251e] docs(processes): SOP de disconnect/clear de credencial em views Vault-mascaradas
+>  2 files changed, 89 insertions(+)
+>  create mode 100644 docs/processes/credential-disconnect-clear.md
+> 
+> === resulting log ===
+> 377251e docs(processes): SOP de disconnect/clear de credencial em views Vault-mascaradas
+> bafa7a2 fix(settings): WordPress conecta via .insert e desconecta via RPC disconnect_wordpress
+> 5dc8084 fix(credentials): disconnect_wordpress RPC + elimina double-fire do INSTEAD OF de user_api_keys
+> ea2f1f4 chore(sprint): selo v6.20.0 — afiliados híbrido + catálogo Apify real + BYOK per-user
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
