@@ -2025,6 +2025,2900 @@ A 1.x (fork ccxt) **mantém uma camada de compatibilidade** com a API clássica:
 > 595	
 > ```
 
+## 🤖 Claude *(17:31:36)*
+
+
+## 🤖 Claude *(17:31:41)*
+
+Ótimas notícias estruturais, confirmadas pela introspecção da instância:
+- `new Binance().options({APIKEY, APISECRET, urls:{base,stream}, recvWindow,...})` **ainda funciona e retorna `this`**, e roteia testnet corretamente (`getSpotUrl`/`getStreamUrl` retornaram os hosts de testnet). 
+- **`binance.websockets.*` ainda existe** como camada de compat (userData, chart, candlesticks, miniTicker, bookTickers, prevDay, terminate, subscribe...).
+- `withdraw`/`getCoins` do wrapper usam **axios próprio + HMAC manual** → não dependem da lib → zero mudança.
+- Pontos sutis a confirmar no source: `ohlc`→`populateOHLC`, `userData` agora tem `all_updates_callback` como 1º arg (5 callbacks), shapes de stream (miniTicker/book/chart/prevDay), e fluxo de `type`/`stopPrice` em `buy/sell/order` + `ocoOrder`.
+
+Vou ler o código consumidor (app-em, beholder, ordersController, model de orders) e extrair as implementações reais da 1.x em paralelo.
+
+## 🤖 Claude *(17:31:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const ordersRepository = require('./repositories/ordersRepository');
+> 2	const { orderStatus } = require('./repositories/ordersRepository');
+> 3	const { monitorTypes, getActiveMonitors } = require('./repositories/monitorsRepository');
+> 4	const { execCalc, indexKeys } = require('./utils/indexes');
+> 5	const logger = require('./utils/logger');
+> 6	const push = require('./utils/push');
+> 7	const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 8	
+> 9	let WSS, beholder, exchange;
+> 10	
+> 11	function startMiniTickerMonitor(monitorId, broadcastLabel, logs) {
+> 12	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 13	    exchange.miniTickerStream(async (markets) => {
+> 14	        if (logs) logger('M:' + monitorId, markets);
+> 15	
+> 16	        try {
+> 17	            Object.entries(markets).map(async (mkt) => {
+> 18	
+> 19	                delete mkt[1].volume;
+> 20	                delete mkt[1].quoteVolume;
+> 21	                delete mkt[1].eventTime;
+> 22	                const converted = {};
+> 23	                Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 24	
+> 25	                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 26	                if (results) results.map(r => sendMessage({ notification: r }));
+> 27	            })
+> 28	
+> 29	            if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: markets });
+> 30	
+> 31	            //simulação de book
+> 32	            const books = Object.entries(markets).map(mkt => {
+> 33	                const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+> 34	                const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 35	
+> 36	                const newMemory = {};
+> 37	                newMemory.previous = currentMemory ? currentMemory.current : book;
+> 38	                newMemory.current = book;
+> 39	
+> 40	                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 41	                    .then(results => {
+> 42	                        if (results)
+> 43	                            results.map(r => sendMessage({ notification: r }));
+> 44	                    })
+> 45	
+> 46	                return book;
+> 47	            })
+> 48	            if (WSS) sendMessage({ book: books });
+> 49	            //fim da simulação de book
+> 50	
+> 51	        } catch (err) {
+> 52	            if (logs) logger('M:' + monitorId, err)
+> 53	        }
+> 54	    })
+> 55	    logger('M:' + monitorId, 'Mini Ticker Monitor has started!');
+> 56	}
+> 57	
+> 58	let book = [];
+> 59	function startBookMonitor(monitorId, broadcastLabel, logs) {
+> 60	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 61	    exchange.bookStream(async (order) => {
+> 62	        if (logs) logger('M:' + monitorId, order);
+> 63	
+> 64	        try {
+> 65	            if (book.length === 200) {
+> 66	                if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: book });
+> 67	                book = [];
+> 68	            }
+> 69	            else book.push({ ...order });
+> 70	
+> 71	            const orderCopy = { ...order };
+> 72	            delete orderCopy.symbol;
+> 73	            delete orderCopy.updateId;
+> 74	            delete orderCopy.bestAskQty;
+> 75	            delete orderCopy.bestBidQty;
+> 76	
+> 77	            const converted = {};
+> 78	            Object.entries(orderCopy).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 79	
+> 80	            const currentMemory = beholder.getMemory(order.symbol, indexKeys.BOOK);
+> 81	
+> 82	            const newMemory = {};
+> 83	            newMemory.previous = currentMemory ? currentMemory.current : converted;
+> 84	            newMemory.current = converted;
+> 85	
+> 86	            const results = await beholder.updateMemory(order.symbol, indexKeys.BOOK, null, newMemory);
+> 87	            if (results) results.map(r => sendMessage({ notification: r }));
+> 88	        } catch (err) {
+> 89	            if (logs) logger('M:' + monitorId, err);
+> 90	        }
+> 91	    })
+> 92	    logger('M:' + monitorId, 'Book Monitor has started!');
+> 93	}
+> 94	
+> 95	async function loadWallet() {
+> 96	    if (!exchange) throw new Error('Exchange Monitor not initialized yet.');
+> 97	
+> 98	    try {
+> 99	        const info = await exchange.balance();
+> 100	        const wallet = Object.entries(info).map(async (item) => {
+> 101	            const results = await beholder.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+> 102	            if (results) results.map(r => sendMessage({ notification: r }));
+> 103	
+> 104	            return {
+> 105	                symbol: item[0],
+> 106	                available: item[1].available,
+> 107	                onOrder: item[1].onOrder
+> 108	            }
+> 109	        })
+> 110	        return Promise.all(wallet);
+> 111	    } catch (err) {
+> 112	        throw new Error(err.body ? JSON.stringify(err.body) : err.message);//evita 401 da Binance
+> 113	    }
+> 114	}
+> 115	
+> 116	function getLightOrder(order) {
+> 117	    const orderCopy = { ...order };
+> 118	    delete orderCopy.id;
+> 119	    delete orderCopy.symbol;
+> 120	    delete orderCopy.automationId;
+> 121	    delete orderCopy.orderId;
+> 122	    delete orderCopy.clientOrderId;
+> 123	    delete orderCopy.transactTime;
+> 124	    delete orderCopy.isMaker;
+> 125	    delete orderCopy.commission;
+> 126	    delete orderCopy.obs;
+> 127	    delete orderCopy.automation;
+> 128	    delete orderCopy.createdAt;
+> 129	    delete orderCopy.updatedAt;
+> 130	
+> 131	    orderCopy.limitPrice = orderCopy.limitPrice ? parseFloat(orderCopy.limitPrice) : null;
+> 132	    orderCopy.stopPrice = orderCopy.stopPrice ? parseFloat(orderCopy.stopPrice) : null;
+> 133	    orderCopy.avgPrice = orderCopy.avgPrice ? parseFloat(orderCopy.avgPrice) : null;
+> 134	    orderCopy.net = orderCopy.net ? parseFloat(orderCopy.net) : null;
+> 135	    orderCopy.quantity = orderCopy.quantity ? parseFloat(orderCopy.quantity) : null;
+> 136	    orderCopy.icebergQty = orderCopy.icebergQty ? parseFloat(orderCopy.icebergQty) : null;
+> 137	    return orderCopy;
+> 138	}
+> 139	
+> 140	function notifyOrderUpdate(order) {
+> 141	    let type = '';
+> 142	    switch (order.status) {
+> 143	        case 'FILLED': type = 'success'; break;
+> 144	        case 'REJECTED':
+> 145	        case 'CANCELED':
+> 146	        case 'EXPIRED': type = 'error'; break;
+> 147	        default: type = 'info'; break;
+> 148	    }
+> 149	    sendMessage({ notification: { text: `Order #${order.orderId} was updated as ${order.status}`, type } });
+> 150	}
+> 151	
+> 152	function processExecutionData(monitorId, executionData, broadcastLabel) {
+> 153	    if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes
+> 154	
+> 155	    const order = {
+> 156	        symbol: executionData.s,
+> 157	        orderId: executionData.i,
+> 158	        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,
+> 159	        side: executionData.S,
+> 160	        type: executionData.o,
+> 161	        status: executionData.X,
+> 162	        isMaker: executionData.m,
+> 163	        transactTime: executionData.T
+> 164	    }
+> 165	
+> 166	    if (order.status === orderStatus.FILLED) {
+> 167	        const quoteAmount = parseFloat(executionData.Z);
+> 168	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 169	        order.commission = executionData.n;
+> 170	        order.quantity = executionData.q;
+> 171	        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 172	        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 173	    }
+> 174	
+> 175	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 176	
+> 177	    setTimeout(async () => {
+> 178	        try {
+> 179	            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 180	            if (updatedOrder) {
+> 181	
+> 182	                notifyOrderUpdate(order);
+> 183	
+> 184	                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));
+> 185	                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 186	                if (results) results.map(r => sendMessage({ notification: r }));
+> 187	                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });
+> 188	            }
+> 189	        } catch (err) {
+> 190	            logger('M:' + monitorId, err);
+> 191	        }
+> 192	    }, 3000)
+> 193	}
+> 194	
+> 195	async function processBalanceData(monitorId, broadcastLabel, logs, data) {
+> 196	    if (logs) logger('M:' + monitorId, data);
+> 197	
+> 198	    try {
+> 199	        const wallet = await loadWallet();
+> 200	        if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: wallet });
+> 201	    } catch (err) {
+> 202	        if (logs) logger('M:' + monitorId, err);
+> 203	    }
+> 204	}
+> 205	
+> 206	async function startUserDataMonitor(monitorId, broadcastLabel, logs) {
+> 207	    const [balanceBroadcast, executionBroadcast] = broadcastLabel ? broadcastLabel.split(',') : [null, null];
+> 208	
+> 209	    try {
+> 210	        await loadWallet();
+> 211	
+> 212	        if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 213	        exchange.userDataStream(data => {
+> 214	            if (data.e === 'executionReport')
+> 215	                processExecutionData(monitorId, data, executionBroadcast);
+> 216	            else if (data.e === 'balanceUpdate' || data.e === 'outboundAccountPosition')
+> 217	                processBalanceData(monitorId, balanceBroadcast, logs, data)
+> 218	        })
+> 219	
+> 220	        logger('M:' + monitorId, 'User Data Monitor has started!');
+> 221	    } catch (err) {
+> 222	        logger('M:' + monitorId, 'User Data Monitor has NOT started!\n' + err.message);
+> 223	    }
+> 224	}
+> 225	
+> 226	async function processChartData(monitorId, symbol, indexes, interval, ohlc, logs) {
+> 227	    if (typeof indexes === 'string') indexes = indexes.split(',');
+> 228	    if (!indexes || !Array.isArray(indexes) || indexes.length === 0) return false;
+> 229	
+> 230	    const memoryKeys = [];
+> 231	
+> 232	    indexes.map(index => {
+> 233	        const params = index.split('_');
+> 234	        const indexName = params[0];
+> 235	        params.splice(0, 1);
+> 236	
+> 237	        try {
+> 238	            const calc = execCalc(indexName, ohlc, ...params);
+> 239	            if (logs) logger('M:' + monitorId, `${index}_${interval} calculated: ${JSON.stringify(calc.current ? calc.current : calc)}`);
+> 240	            beholder.updateMemory(symbol, index, interval, calc, false);
+> 241	
+> 242	            memoryKeys.push(beholder.parseMemoryKey(symbol, index, interval));
+> 243	        } catch (err) {
+> 244	            logger('M:' + monitorId, `Exchange Monitor => Can't calc the index ${index}:`);
+> 245	            logger('M:' + monitorId, err);
+> 246	        }
+> 247	    });
+> 248	
+> 249	    return Promise.all(memoryKeys.map(async (key) => {
+> 250	        return beholder.testAutomations(key);
+> 251	    }))
+> 252	}
+> 253	
+> 254	function startChartMonitor(monitorId, symbol, interval, indexes, broadcastLabel, logs) {
+> 255	    if (!symbol) return new Error(`Can't start a Chart Monitor without a symbol.`);
+> 256	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 257	
+> 258	    exchange.chartStream(symbol, interval || '1m', async (ohlc) => {
+> 259	        const lastCandle = {
+> 260	            open: ohlc.open[ohlc.open.length - 1],
+> 261	            close: ohlc.close[ohlc.close.length - 1],
+> 262	            high: ohlc.high[ohlc.high.length - 1],
+> 263	            low: ohlc.low[ohlc.low.length - 1],
+> 264	            volume: ohlc.volume[ohlc.volume.length - 1],
+> 265	        };
+> 266	
+> 267	        const previousCandle = {
+> 268	            open: ohlc.open[ohlc.open.length - 2],
+> 269	            close: ohlc.close[ohlc.close.length - 2],
+> 270	            high: ohlc.high[ohlc.high.length - 2],
+> 271	            low: ohlc.low[ohlc.low.length - 2],
+> 272	            volume: ohlc.volume[ohlc.volume.length - 2],
+> 273	        };
+> 274	
+> 275	        const previousPreviousCandle = {
+> 276	            open: ohlc.open[ohlc.open.length - 3],
+> 277	            close: ohlc.close[ohlc.close.length - 3],
+> 278	            high: ohlc.high[ohlc.high.length - 3],
+> 279	            low: ohlc.low[ohlc.low.length - 3],
+> 280	            volume: ohlc.volume[ohlc.volume.length - 3],
+> 281	        };
+> 282	
+> 283	        if (logs) logger('M:' + monitorId, lastCandle);
+> 284	
+> 285	        try {
+> 286	            beholder.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, { current: lastCandle, previous: previousCandle }, false);
+> 287	            beholder.updateMemory(symbol, indexKeys.PREVIOUS_CANDLE, interval, { current: previousCandle, previous: previousPreviousCandle }, false);
+> 288	
+> 289	            if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
+> 290	
+> 291	            let results = await processChartData(monitorId, symbol, indexes, interval, ohlc, logs);
+> 292	
+> 293	            if (results) {
+> 294	                results.push(await beholder.testAutomations(beholder.parseMemoryKey(symbol, indexKeys.LAST_CANDLE, interval)));
+> 295	                results.push(await beholder.testAutomations(beholder.parseMemoryKey(symbol, indexKeys.PREVIOUS_CANDLE, interval)));
+> 296	
+> 297	                if (logs) logger('M:' + monitorId, `chartStream Results: ${results}`);
+> 298	                results.flat().map(r => sendMessage({ notification: r }));
+> 299	            }
+> 300	        } catch (err) {
+> 301	            if (logs) logger('M:' + monitorId, err);
+> 302	        }
+> 303	    })
+> 304	    logger('M:' + monitorId, `Chart Monitor has started for ${symbol}_${interval}!`);
+> 305	}
+> 306	
+> 307	function stopChartMonitor(monitorId, symbol, interval, indexes, logs) {
+> 308	    if (!symbol) return new Error(`Can't stop a Chart Monitor without a symbol.`);
+> 309	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 310	    exchange.terminateChartStream(symbol, interval);
+> 311	    if (logs) logger('M:' + monitorId, `Chart Monitor ${symbol}_${interval} stopped!`);
+> 312	
+> 313	    beholder.deleteMemory(symbol, indexKeys.LAST_CANDLE, interval);
+> 314	    beholder.deleteMemory(symbol, indexKeys.PREVIOUS_CANDLE, interval);
+> 315	
+> 316	    if (indexes && Array.isArray(indexes))
+> 317	        indexes.map(ix => beholder.deleteMemory(symbol, ix, interval));
+> 318	}
+> 319	
+> 320	function stopTickerMonitor(monitorId, symbol, logs) {
+> 321	    if (!symbol) return new Error(`Can't stop a Ticker Monitor without a symbol.`);
+> 322	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 323	
+> 324	    exchange.terminateTickerStream(symbol);
+> 325	
+> 326	    if (logs) logger('M:' + monitorId, `Ticker Monitor ${symbol} stopped!`);
+> 327	
+> 328	    beholder.deleteMemory(symbol, indexKeys.TICKER);
+> 329	}
+> 330	
+> 331	function getLightTicker(data) {
+> 332	    delete data.eventType;
+> 333	    delete data.eventTime;
+> 334	    delete data.symbol;
+> 335	    delete data.openTime;
+> 336	    delete data.closeTime;
+> 337	    delete data.firstTradeId;
+> 338	    delete data.lastTradeId;
+> 339	    delete data.numTrades;
+> 340	    delete data.closeQty;
+> 341	    delete data.bestBidQty;
+> 342	    delete data.bestAskQty;
+> 343	
+> 344	    data.quoteVolume = parseFloat(data.quoteVolume);
+> 345	    data.volume = parseFloat(data.volume);
+> 346	    data.priceChange = parseFloat(data.priceChange);
+> 347	    data.percentChange = parseFloat(data.percentChange);
+> 348	    data.averagePrice = parseFloat(data.averagePrice);
+> 349	    data.prevClose = parseFloat(data.prevClose);
+> 350	    data.high = parseFloat(data.high);
+> 351	    data.low = parseFloat(data.low);
+> 352	    data.open = parseFloat(data.open);
+> 353	    data.close = parseFloat(data.close);
+> 354	    data.bestBid = parseFloat(data.bestBid);
+> 355	    data.bestAsk = parseFloat(data.bestAsk);
+> 356	
+> 357	    return data;
+> 358	}
+> 359	
+> 360	async function startTickerMonitor(monitorId, symbol, broadcastLabel, logs) {
+> 361	    if (!symbol) return new Error(`Can't start a Ticker Monitor without a symbol.`);
+> 362	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 363	
+> 364	    exchange.tickerStream(symbol, async (data) => {
+> 365	        if (logs) logger('M:' + monitorId, data);
+> 366	
+> 367	        try {
+> 368	            const ticker = getLightTicker({ ...data });
+> 369	            const currentMemory = beholder.getMemory(symbol, indexKeys.TICKER);
+> 370	
+> 371	            const newMemory = {};
+> 372	            newMemory.previous = currentMemory ? currentMemory.current : ticker;
+> 373	            newMemory.current = ticker;
+> 374	
+> 375	            const results = await beholder.updateMemory(data.symbol, indexKeys.TICKER, null, newMemory);
+> 376	            if (results) results.map(r => sendMessage({ notification: r }));
+> 377	
+> 378	            if (WSS && broadcastLabel) sendMessage({ [broadcastLabel]: data });
+> 379	        }
+> 380	        catch (err) {
+> 381	            if (logs) logger('M:' + monitorId, err);
+> 382	        }
+> 383	    })
+> 384	    logger('M:' + monitorId, `Ticker Monitor has started for ${symbol}`);
+> 385	}
+> 386	
+> 387	async function sendMessage(json) {
+> 388	    try {
+> 389	        if (json.notification) {
+> 390	            const settings = await getDefaultSettings();
+> 391	            push.send(settings, json.notification.text, 'Beholder Notification', json.notification);
+> 392	        }
+> 393	    } catch (err) { }
+> 394	
+> 395	    return WSS.broadcast(json);
+> 396	}
+> 397	
+> 398	async function init(settings, wssInstance, beholderInstance) {
+> 399	    if (!settings || !beholderInstance) throw new Error(`You can't init the Exchange Monitor App without his settings. Check your database and/or startup code.`);
+> 400	
+> 401	    WSS = wssInstance;
+> 402	    beholder = beholderInstance;
+> 403	    exchange = require('./utils/exchange')(settings);
+> 404	
+> 405	    const monitors = await getActiveMonitors();
+> 406	    monitors.map(m => {
+> 407	        setTimeout(() => {
+> 408	            switch (m.type) {
+> 409	                case monitorTypes.MINI_TICKER:
+> 410	                    return startMiniTickerMonitor(m.id, m.broadcastLabel, m.logs);
+> 411	                case monitorTypes.BOOK:
+> 412	                    return startBookMonitor(m.id, m.broadcastLabel, m.logs);
+> 413	                case monitorTypes.USER_DATA: {
+> 414	                    if (!settings.accessKey || !settings.secretKey) return;
+> 415	                    return startUserDataMonitor(m.id, m.broadcastLabel, m.logs);
+> 416	                }
+> 417	                case monitorTypes.CANDLES:
+> 418	                    return startChartMonitor(m.id, m.symbol, m.interval, m.indexes ? m.indexes.split(',') : [], m.broadcastLabel, m.logs);
+> 419	                case monitorTypes.TICKER:
+> 420	                    return startTickerMonitor(m.id, m.symbol, m.broadcastLabel, m.logs);
+> 421	            }
+> 422	        }, 250)//Binance only permits 5 commands / second
+> 423	    })
+> 424	
+> 425	    const lastOrders = await ordersRepository.getLastFilledOrders();
+> 426	    await Promise.all(lastOrders.map(async (order) => {
+> 427	        const orderCopy = getLightOrder(order.get({ plain: true }));
+> 428	        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> 429	    }))
+> 430	
+> 431	    logger('system', 'App Exchange Monitor is running!');
+> 432	}
+> 433	
+> 434	module.exports = {
+> 435	    init,
+> 436	    startChartMonitor,
+> 437	    stopChartMonitor,
+> 438	    startTickerMonitor,
+> 439	    stopTickerMonitor,
+> 440	    sendMessage
+> 441	}
+> 442	
+> ```
+
+## 🤖 Claude *(17:31:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const settingsRepository = require('../repositories/settingsRepository');
+> 2	const ordersRepository = require('../repositories/ordersRepository');
+> 3	const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 4	const automationsRepository = require('../repositories/automationsRepository');
+> 5	const actionsRepository = require('../repositories/actionsRepository');
+> 6	const beholder = require('../beholder');
+> 7	const logger = require('../utils/logger');
+> 8	const db = require('../db');
+> 9	const appEm = require('../app-em');
+> 10	
+> 11	async function getOrder(req, res, next) {
+> 12	    const { orderId, clientOrderId } = req.params;
+> 13	    const order = await ordersRepository.getOrder(orderId, clientOrderId);
+> 14	    res.json(order);
+> 15	}
+> 16	
+> 17	async function getOrders(req, res, next) {
+> 18	    const symbol = req.params.symbol && req.params.symbol.toUpperCase();
+> 19	    const page = parseInt(req.query.page);
+> 20	    const orders = await ordersRepository.getOrders(symbol, page || 1);
+> 21	    res.json(orders);
+> 22	}
+> 23	
+> 24	function calcTrailingStop(side, limitPrice, stopPriceMultiplier) {
+> 25	    return side === 'BUY' ? limitPrice * (1 + (stopPriceMultiplier / 100))
+> 26	        : limitPrice * (1 - (stopPriceMultiplier / 100))
+> 27	}
+> 28	
+> 29	function saveOrderTemplate(order, timestamp, transaction) {
+> 30	    const stopPriceMultiplier = parseFloat(order.options.stopPriceMultiplier);
+> 31	    const orderTemplate = {
+> 32	        name: `TRAILING ${order.side} ${timestamp}`,
+> 33	        symbol: order.symbol,
+> 34	        type: order.options.type,
+> 35	        side: order.side,
+> 36	        limitPrice: order.limitPrice,
+> 37	        limitPriceMultiplier: 1,
+> 38	        stopPrice: calcTrailingStop(order.side, order.limitPrice, stopPriceMultiplier),
+> 39	        stopPriceMultiplier,
+> 40	        quantity: order.quantity,
+> 41	        quantityMultiplier: 1,
+> 42	        icebergQtyMultiplier: 1
+> 43	    }
+> 44	    return orderTemplatesRepository.insertOrderTemplate(orderTemplate, transaction);
+> 45	}
+> 46	
+> 47	function saveAutomation(order, timestamp, transaction) {
+> 48	    const conditions = order.side === 'BUY'
+> 49	        ? `MEMORY['${order.symbol}:BOOK'].current.bestAsk<=${order.limitPrice}`
+> 50	        : `MEMORY['${order.symbol}:BOOK'].current.bestBid>=${order.limitPrice}`
+> 51	
+> 52	    const automation = {
+> 53	        name: `TRAILING ${order.side} ${timestamp}`,
+> 54	        symbol: order.symbol,
+> 55	        indexes: `${order.symbol}:BOOK`,
+> 56	        conditions,
+> 57	        isActive: true,
+> 58	        logs: false
+> 59	    }
+> 60	    return automationsRepository.insertAutomation(automation, transaction);
+> 61	}
+> 62	
+> 63	function saveAction(automationId, orderTemplateId, transaction) {
+> 64	    const action = {
+> 65	        type: 'TRAILING',
+> 66	        automationId,
+> 67	        orderTemplateId
+> 68	    }
+> 69	    return actionsRepository.insertActions([action], transaction);
+> 70	}
+> 71	
+> 72	async function placeTrailingStop(req, res, next) {
+> 73	    const order = req.body;
+> 74	
+> 75	    const transaction = await db.transaction();
+> 76	    const timestamp = Date.now();
+> 77	
+> 78	    try {
+> 79	        const orderTemplate = await saveOrderTemplate(order, timestamp, transaction);
+> 80	
+> 81	        let automation = await saveAutomation(order, timestamp, transaction);
+> 82	
+> 83	        await saveAction(automation.id, orderTemplate.id, transaction);
+> 84	
+> 85	        await transaction.commit();
+> 86	
+> 87	        automation = await automationsRepository.getAutomation(automation.id);
+> 88	
+> 89	        beholder.updateBrain(automation);
+> 90	
+> 91	        await appEm.sendMessage({ notification: { type: 'success', text: 'Trailing Stop placed!' } });
+> 92	
+> 93	        return res.status(202).send(`Trailing Stop placed!`);
+> 94	    }
+> 95	    catch (err) {
+> 96	        await transaction.rollback();
+> 97	        logger('system', err);
+> 98	        return res.status(500).send(err.message);
+> 99	    }
+> 100	}
+> 101	
+> 102	async function placeOrder(req, res, next) {
+> 103	    if (req.body.options.type === 'TRAILING_STOP') return placeTrailingStop(req, res, next);
+> 104	
+> 105	    const id = res.locals.token.id;
+> 106	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 107	    const exchange = require('../utils/exchange')(settings.get({ plain: true }));
+> 108	
+> 109	    const { side, symbol, quantity, limitPrice, options, automationId } = req.body;
+> 110	
+> 111	    let result;
+> 112	
+> 113	    try {
+> 114	        if (side === 'BUY')
+> 115	            result = await exchange.buy(symbol, quantity, limitPrice, options);
+> 116	        else if (side === 'SELL')
+> 117	            result = await exchange.sell(symbol, quantity, limitPrice, options);
+> 118	    }
+> 119	    catch (err) {
+> 120	        return res.status(400).json(err.body);
+> 121	    }
+> 122	
+> 123	    const order = await ordersRepository.insertOrder({
+> 124	        automationId,
+> 125	        symbol,
+> 126	        quantity,
+> 127	        type: options ? options.type : 'MARKET',
+> 128	        side,
+> 129	        limitPrice,
+> 130	        stopPrice: options ? options.stopPrice : null,
+> 131	        icebergQty: options ? options.icebergQty : null,
+> 132	        orderId: result.orderId,
+> 133	        clientOrderId: result.clientOrderId,
+> 134	        transactTime: result.transactTime,
+> 135	        status: result.status || 'NEW'
+> 136	    })
+> 137	
+> 138	    res.status(201).json(order.get({ plain: true }));
+> 139	}
+> 140	
+> 141	async function cancelOrder(req, res, next) {
+> 142	    const id = res.locals.token.id;
+> 143	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 144	    const exchange = require('../utils/exchange')(settings);
+> 145	
+> 146	    const { symbol, orderId } = req.params;
+> 147	
+> 148	    let result;
+> 149	    try {
+> 150	        result = await exchange.cancel(symbol, orderId);
+> 151	    }
+> 152	    catch (err) {
+> 153	        return res.status(400).json(err.body);
+> 154	    }
+> 155	
+> 156	    const order = await ordersRepository.updateOrderByOrderId(result.orderId, result.origClientOrderId, {
+> 157	        status: result.status
+> 158	    })
+> 159	    res.json(order.get({ plain: true }));
+> 160	}
+> 161	
+> 162	async function syncOrder(req, res, next) {
+> 163	    const id = res.locals.token.id;
+> 164	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 165	    const exchange = require('../utils/exchange')(settings);
+> 166	
+> 167	    const beholderOrderId = req.params.id;
+> 168	    const order = await ordersRepository.getOrderById(beholderOrderId);
+> 169	    if (!order) return res.sendStatus(404);
+> 170	
+> 171	    let binanceOrder, binanceTrade;
+> 172	    try {
+> 173	        binanceOrder = await exchange.orderStatus(order.symbol, order.orderId);
+> 174	        order.status = binanceOrder.status;
+> 175	        order.transactTime = binanceOrder.updateTime;
+> 176	
+> 177	        if (binanceOrder.status !== 'FILLED') {
+> 178	            await order.save();
+> 179	            return res.json(order);
+> 180	        }
+> 181	
+> 182	        binanceTrade = await exchange.orderTrade(order.symbol, order.orderId);
+> 183	    }
+> 184	    catch (err) {
+> 185	        logger('system', err);
+> 186	        return res.sendStatus(404);
+> 187	    }
+> 188	
+> 189	    const quoteQuantity = parseFloat(binanceOrder.cummulativeQuoteQty);
+> 190	    order.avgPrice = quoteQuantity / parseFloat(binanceOrder.executedQty);
+> 191	    order.isMaker = binanceTrade.isMaker;
+> 192	    order.commission = binanceTrade.commission;
+> 193	    order.quantity = binanceOrder.executedQty;
+> 194	
+> 195	    const isQuoteComission = binanceTrade.commissionAsset && order.symbol.endsWith(binanceTrade.commissionAsset);
+> 196	    if (isQuoteComission)
+> 197	        order.net = quoteQuantity - parseFloat(binanceTrade.commission);
+> 198	    else
+> 199	        order.net = quoteQuantity;
+> 200	
+> 201	    await order.save();
+> 202	
+> 203	    res.json(order);
+> 204	}
+> 205	
+> 206	async function getLastOrders(req, res, next) {
+> 207	    const orders = await ordersRepository.getLastFilledOrders();
+> 208	    res.json(orders);
+> 209	}
+> 210	
+> 211	function calcVolume(orders, side, startTime, endTime) {
+> 212	    startTime = !startTime ? 0 : startTime;
+> 213	    endTime = !endTime ? Date.now() : endTime;
+> 214	
+> 215	    const filteredOrders = orders.filter(o => o.transactTime >= startTime && o.transactTime < endTime && o.side === side);
+> 216	    if (!filteredOrders || !filteredOrders.length) return 0;
+> 217	
+> 218	    return filteredOrders.map(o => parseFloat(o.net))
+> 219	        .reduce((a, b) => a + b);
+> 220	}
+> 221	
+> 222	function thirtyDaysAgo() {
+> 223	    const date = new Date();
+> 224	    date.setUTCDate(date.getUTCDate() - 30);
+> 225	    date.setUTCHours(0, 0, 0, 0);
+> 226	    return date.getTime();
+> 227	}
+> 228	
+> 229	function getStartToday() {
+> 230	    const date = new Date();
+> 231	    date.setUTCHours(0, 0, 0, 0);
+> 232	    return date.getTime();
+> 233	}
+> 234	
+> 235	function getToday() {
+> 236	    const date = new Date();
+> 237	    date.setUTCHours(23, 59, 59, 999);
+> 238	    return date.getTime();
+> 239	}
+> 240	
+> 241	async function getOrdersReport(req, res, next) {
+> 242	    if (req.query.date)
+> 243	        return getDayTradeReport(req, res, next);
+> 244	    else
+> 245	        return getMonthReport(req, res, next);
+> 246	}
+> 247	
+> 248	const EMPTY_REPORT = {
+> 249	    orders: 0,
+> 250	    buyVolume: 0,
+> 251	    sellVolume: 0,
+> 252	    wallet: 0,
+> 253	    profit: 0,
+> 254	    profitPerc: 0,
+> 255	    subs: [],
+> 256	    series: [],
+> 257	    automations: []
+> 258	}
+> 259	
+> 260	function groupByAutomations(orders) {
+> 261	    const automationsObj = {};
+> 262	    orders.forEach(o => {
+> 263	        const automationId = o.automationId ? o.automationId : 'M';
+> 264	        if (!automationsObj[automationId])
+> 265	            automationsObj[automationId] = { name: o.automationId ? o['automation.name'] : 'Others', executions: 1, net: 0 };
+> 266	        else
+> 267	            automationsObj[automationId].executions++;
+> 268	
+> 269	        if (o.side === 'BUY')
+> 270	            automationsObj[automationId].net -= parseFloat(o.net);
+> 271	        else
+> 272	            automationsObj[automationId].net += parseFloat(o.net);
+> 273	    })
+> 274	
+> 275	    return Object.entries(automationsObj).map(prop => prop[1]).sort((a, b) => b.net - a.net);
+> 276	}
+> 277	
+> 278	async function getDayTradeReport(req, res, next) {
+> 279	    const quote = req.params.quote;
+> 280	
+> 281	    let startDate = req.query.date ? parseInt(req.query.date) : getStartToday();
+> 282	    let endDate = startDate + (23 * 60 * 60 * 1000) + (59 * 60 * 1000) + (59 * 1000) + 999;
+> 283	
+> 284	    //permitir apenas 24h
+> 285	    if ((endDate - startDate) > (1 * 24 * 60 * 60 * 1000)) startDate = getStartToday();
+> 286	
+> 287	    const orders = await ordersRepository.getReportOrders(quote, startDate, endDate);
+> 288	    if (!orders || !orders.length) return res.json({ ...EMPTY_REPORT, quote, startDate, endDate });
+> 289	
+> 290	    const subs = [];
+> 291	    const series = [];
+> 292	    for (let i = 0; i < 24; i++) {
+> 293	        const newDate = new Date(startDate);
+> 294	        newDate.setUTCHours(i);
+> 295	        subs.push(`${i}h`);
+> 296	
+> 297	        const lastMoment = new Date(newDate.getTime())
+> 298	        lastMoment.setUTCMinutes(59, 59, 999);
+> 299	
+> 300	        const partialBuy = calcVolume(orders, 'BUY', newDate.getTime(), lastMoment.getTime());
+> 301	        const partialSell = calcVolume(orders, 'SELL', newDate.getTime(), lastMoment.getTime());
+> 302	        series.push(partialSell - partialBuy);
+> 303	    }
+> 304	
+> 305	    const buyVolume = calcVolume(orders, 'BUY');
+> 306	    const sellVolume = calcVolume(orders, 'SELL');
+> 307	    const profit = sellVolume - buyVolume;
+> 308	
+> 309	    const wallet = beholder.getMemory(quote, 'WALLET');
+> 310	    const profitPerc = (profit * 100) / (parseFloat(wallet) - profit);
+> 311	    const automations = groupByAutomations(orders);
+> 312	
+> 313	    res.json({
+> 314	        quote,
+> 315	        orders: orders.length,
+> 316	        buyVolume,
+> 317	        sellVolume,
+> 318	        wallet,
+> 319	        profit,
+> 320	        profitPerc,
+> 321	        startDate,
+> 322	        endDate,
+> 323	        subs,
+> 324	        series,
+> 325	        automations
+> 326	    })
+> 327	}
+> 328	
+> 329	async function getMonthReport(req, res, next) {
+> 330	
+> 331	    const quote = req.params.quote;
+> 332	
+> 333	    let startDate = req.query.startDate ? parseInt(req.query.startDate) : thirtyDaysAgo();
+> 334	    let endDate = req.query.endDate ? parseInt(req.query.endDate) : getToday();
+> 335	
+> 336	    //permitir apenas 30 dias
+> 337	    if ((endDate - startDate) > (31 * 24 * 60 * 60 * 1000)) startDate = thirtyDaysAgo();
+> 338	
+> 339	    const orders = await ordersRepository.getReportOrders(quote, startDate, endDate);
+> 340	    if (!orders || !orders.length) return res.json({ ...EMPTY_REPORT, quote, startDate, endDate });
+> 341	
+> 342	    const daysInRange = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+> 343	
+> 344	    const subs = [];
+> 345	    const series = [];
+> 346	    for (let i = 0; i < daysInRange; i++) {
+> 347	        const newDate = new Date(startDate);
+> 348	        newDate.setUTCDate(newDate.getUTCDate() + i);
+> 349	        subs.push(`${newDate.getUTCDate()}/${newDate.getUTCMonth() + 1}`);
+> 350	
+> 351	        const lastMoment = new Date(newDate.getTime())
+> 352	        lastMoment.setUTCHours(23, 59, 59, 999);
+> 353	
+> 354	        const partialBuy = calcVolume(orders, 'BUY', newDate.getTime(), lastMoment.getTime());
+> 355	        const partialSell = calcVolume(orders, 'SELL', newDate.getTime(), lastMoment.getTime());
+> 356	        series.push(partialSell - partialBuy);
+> 357	    }
+> 358	
+> 359	    const buyVolume = calcVolume(orders, 'BUY');
+> 360	    const sellVolume = calcVolume(orders, 'SELL');
+> 361	    const profit = sellVolume - buyVolume;
+> 362	
+> 363	    const wallet = beholder.getMemory(quote, 'WALLET');
+> 364	    const profitPerc = (profit * 100) / (parseFloat(wallet) - profit);
+> 365	    const automations = groupByAutomations(orders);
+> 366	
+> 367	    res.json({
+> 368	        quote,
+> 369	        orders: orders.length,
+> 370	        buyVolume,
+> 371	        sellVolume,
+> 372	        wallet,
+> 373	        profit,
+> 374	        profitPerc,
+> 375	        startDate,
+> 376	        endDate,
+> 377	        subs,
+> 378	        series,
+> 379	        automations
+> 380	    })
+> 381	}
+> 382	
+> 383	module.exports = {
+> 384	    placeOrder,
+> 385	    cancelOrder,
+> 386	    getOrders,
+> 387	    syncOrder,
+> 388	    getLastOrders,
+> 389	    getOrdersReport,
+> 390	    getOrder
+> 391	}
+> ```
+
+## 🤖 Claude *(17:31:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== balance() callers (wrapper + binance) ===\"; grep -rn --include=*.js \"balance\" . | grep -vi \"balances\\|balanceData\" | head -20\necho; echo \"=== OCO references in backend ===\"; grep -rni \"oco\\|orderList\\|order_list\" . | head -20\necho; echo \"=== orders model fields ===\"; sed -n '1,80p' models/ordersModel.js 2>/dev/null || ls models\necho; echo \"=== order types/constants ===\"; grep -rn \"STOP_LOSS\\|TAKE_PROFIT\\|LIMIT_MAKER\\|MARKET\\|ICEBERG\\|quoteOrderQty\\|stopPrice\" . | grep -v node_modules | head -30",
+  "description": "Find balance callers, OCO refs, orders model, order type constants"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === balance() callers (wrapper + binance) ===
+> app-em.js:99:        const info = await exchange.balance();
+> app-em.js:207:    const [balanceBroadcast, executionBroadcast] = broadcastLabel ? broadcastLabel.split(',') : [null, null];
+> app-em.js:216:            else if (data.e === 'balanceUpdate' || data.e === 'outboundAccountPosition')
+> utils/exchange.js:26:    async function balance() {
+> utils/exchange.js:28:        return binance.balance();
+> utils/exchange.js:173:        balance,
+> controllers/exchangeController.js:10:    const info = await exchange.balance();
+> routers/exchangeRouter.js:5:router.get('/balance/full/:fiat', exchangeController.getFullBalance);
+> routers/exchangeRouter.js:7:router.get('/balance/:fiat', exchangeController.getBalance);
+> 
+> === OCO references in backend ===
+> 
+> === orders model fields ===
+> actionModel.js
+> automationModel.js
+> gridModel.js
+> monitorModel.js
+> orderModel.js
+> orderTemplateModel.js
+> settingsModel.js
+> symbolModel.js
+> withdrawTemplateModel.js
+> 
+> === order types/constants ===
+> beholder.js:175:                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> beholder.js:176:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> beholder.js:181:                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> beholder.js:192:        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> beholder.js:249:    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> beholder.js:250:        throw new Error(`Only MARKET orders can cal quote qty.`);
+> beholder.js:255:        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> beholder.js:279:        orderTemplate.type = 'MARKET';
+> beholder.js:281:        orderTemplate.stopPrice = null;
+> beholder.js:295:    if (order.options.type === 'MARKET'
+> beholder.js:297:        order.options.quoteOrderQty = calcQuoteQty(orderTemplate, symbol);
+> beholder.js:315:            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> beholder.js:317:            if (!isFinite(stopPrice) || !stopPrice)
+> beholder.js:318:                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> beholder.js:320:            order.options.stopPrice = stopPrice;
+> beholder.js:342:    let stopPrice;
+> beholder.js:344:        stopPrice = action.orderTemplate.stopPrice;
+> beholder.js:346:        stopPrice = order.options.stopPrice;
+> beholder.js:355:        stopPrice,
+> beholder.js:445:            type: 'MARKET',
+> beholder.js:449:            stopPrice: null,
+> beholder.js:450:            stopPriceMultiplier: 1,
+> beholder.js:461:            type: 'MARKET',
+> beholder.js:465:            stopPrice: null,
+> beholder.js:466:            stopPriceMultiplier: 1,
+> beholder.js:562:    const stopPrice = parseFloat(action.orderTemplate.stopPrice);
+> beholder.js:574:    const isStopActivated = isBuy ? currentPrice >= stopPrice && previousPrice < stopPrice
+> beholder.js:575:        : currentPrice <= stopPrice && previousPrice > stopPrice;
+> beholder.js:592:    const newStopPrice = isBuy ? currentPrice * (1 + (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100))
+> beholder.js:593:        : currentPrice * (1 - (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100));
+> ```
+
+## 🤖 Claude *(17:32:52)*
+
+
+## 🤖 Claude *(17:32:59)*
+
+Mapeei o lado consumidor — pontos críticos de compatibilidade que o `exchange.js` precisa preservar (o wrapper é o shim):
+- **miniTicker** → objeto keyed-by-symbol com `{close,open,high,low,volume,quoteVolume,eventTime}`.
+- **book** → `{symbol,updateId,bestBid,bestBidQty,bestAsk,bestAskQty}` (todos os símbolos).
+- **chart** → `ohlc` com arrays `{open,high,low,close,volume}` + `chart[tick].isFinal`; `ohlc`→`populateOHLC`.
+- **userData** → callback único que faz switch em `data.e` e lê os campos RAW do executionReport (`.x/.X/.s/.i/.c/.C/.Z/.z/.n/.N/...`). Preciso confirmar se a 1.x entrega RAW ou convertido no spot.
+- **ticker (prevDay)** → ⚠️ a interface `Ticker` da 1.x renomeou campos (`percentChange`→`priceChangePercent`, `prevClose`→`prevDayClose`, etc.) — o wrapper terá de **remapear** pros nomes antigos.
+- **order**: confirmar fluxo de `type`/`stopPrice`/`quoteOrderQty` em `buy/sell/marketBuy/order`.
+
+Vou localizar as implementações reais na fonte .ts e ler beholder + orderModel.
+
+## 🤖 Claude *(17:33:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 240,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 240	function hasEnoughAssets(symbol, order, price) {
+> 241	    const qty = parseFloat(order.quantity);
+> 242	    if (order.side === 'BUY')
+> 243	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 244	    else
+> 245	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 246	}
+> 247	
+> 248	function calcQuoteQty(orderTemplate, symbol) {
+> 249	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> 250	        throw new Error(`Only MARKET orders can cal quote qty.`);
+> 251	
+> 252	    const multiplier = orderTemplate.quantityMultiplier;
+> 253	
+> 254	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 255	        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> 256	
+> 257	        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 258	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 259	
+> 260	        return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 261	    }
+> 262	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 263	        return (parseFloat(symbol.minNotional) * (multiplier < 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 264	    }
+> 265	
+> 266	    throw new Error(`Invalid order template quantity ${orderTemplate.quantity}`);
+> 267	}
+> 268	
+> 269	async function placeOrder(settings, automation, action) {
+> 270	
+> 271	    if (!settings || !automation || !action)
+> 272	        throw new Error(`All parameters are required to place an order.`);
+> 273	
+> 274	    if (!action.orderTemplateId)
+> 275	        throw new Error(`There is no order template for '${automation.name}', action #${action.id}`);
+> 276	
+> 277	    const orderTemplate = action.orderTemplate ? { ...action.orderTemplate } : await orderTemplatesRepository.getOrderTemplate(action.orderTemplateId);
+> 278	    if (orderTemplate.type === 'TRAILING_STOP') {
+> 279	        orderTemplate.type = 'MARKET';
+> 280	        orderTemplate.limitPrice = null;
+> 281	        orderTemplate.stopPrice = null;
+> 282	    }
+> 283	
+> 284	    const symbol = await getSymbol(orderTemplate.symbol);
+> 285	
+> 286	    const order = {
+> 287	        symbol: orderTemplate.symbol.toUpperCase(),
+> 288	        side: orderTemplate.side.toUpperCase(),
+> 289	        options: {
+> 290	            type: orderTemplate.type.toUpperCase()
+> 291	        }
+> 292	    }
+> 293	
+> 294	    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> 295	    if (order.options.type === 'MARKET'
+> 296	        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> 297	        order.options.quoteOrderQty = calcQuoteQty(orderTemplate, symbol);
+> 298	    } else {
+> 299	        const price = calcPrice(orderTemplate, symbol, false);
+> 300	
+> 301	        if (!isFinite(price) || !price)
+> 302	            throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+> 303	
+> 304	        if (LIMIT_TYPES.includes(order.options.type))
+> 305	            order.limitPrice = price;
+> 306	
+> 307	        const quantity = calcQty(orderTemplate, price, symbol, false);
+> 308	
+> 309	        if (!isFinite(quantity) || !quantity)
+> 310	            throw new Error(`Error in calcQty function, params: OTID ${orderTemplate.id}, $: ${price}, qty: ${quantity}`);
+> 311	
+> 312	        order.quantity = quantity;
+> 313	
+> 314	        if (STOP_TYPES.includes(order.options.type)) {
+> 315	            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> 316	
+> 317	            if (!isFinite(stopPrice) || !stopPrice)
+> 318	                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> 319	
+> 320	            order.options.stopPrice = stopPrice;
+> 321	        }
+> 322	
+> 323	        if (!hasEnoughAssets(symbol, order, price))
+> 324	            throw new Error(`You wanna ${order.side} ${order.quantity} ${order.symbol} but you haven't enough assets.`);
+> 325	    }
+> 326	
+> 327	    let result;
+> 328	    const exchange = require('./utils/exchange')(settings);
+> 329	
+> 330	    try {
+> 331	        if (order.side === 'BUY')
+> 332	            result = await exchange.buy(order.symbol, order.quantity, order.limitPrice, order.options);
+> 333	        else
+> 334	            result = await exchange.sell(order.symbol, order.quantity, order.limitPrice, order.options);
+> 335	    }
+> 336	    catch (err) {
+> 337	        logger('A:' + automation.id, err.body ? err.body : err);
+> 338	        logger('A:' + automation.id, order);
+> 339	        return { type: 'error', text: `Order failed! ` + err.body ? err.body : err.message };
+> 340	    }
+> 341	
+> 342	    let stopPrice;
+> 343	    if (action.orderTemplate && action.orderTemplate.type === 'TRAILING_STOP')
+> 344	        stopPrice = action.orderTemplate.stopPrice;
+> 345	    else if (STOP_TYPES.includes(order.type))
+> 346	        stopPrice = order.options.stopPrice;
+> 347	
+> 348	    const savedOrder = await insertOrder({
+> 349	        automationId: automation.id,
+> 350	        symbol: order.symbol,
+> 351	        quantity: order.quantity || result.executedQty,
+> 352	        type: order.options.type,
+> 353	        side: order.side,
+> 354	        limitPrice: LIMIT_TYPES.includes(order.options.type) ? order.limitPrice : null,
+> 355	        stopPrice,
+> 356	        icebergQty: null,
+> 357	        orderId: result.orderId,
+> 358	        clientOrderId: result.clientOrderId,
+> 359	        transactTime: result.transactTime,
+> 360	        status: result.status || 'NEW'
+> 361	    })
+> 362	
+> 363	    if (automation.logs) logger('A:' + automation.id, savedOrder.get({ plain: true }));
+> 364	
+> 365	    return { type: 'success', text: `Order ${order.side} ${order.symbol} ${result.status}` };
+> 366	}
+> 367	
+> 368	async function gridEval(settings, automation) {
+> 369	    automation.grids = automation.grids.sort((a, b) => a.id - b.id);
+> ```
+
+## 🤖 Claude *(17:33:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/orderModel.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const Sequelize = require('sequelize');
+> 2	const database = require('../db');
+> 3	const AutomationModel = require('./automationModel');
+> 4	
+> 5	const OrderModel = database.define('orders', {
+> 6	    id: {
+> 7	        type: Sequelize.INTEGER,
+> 8	        autoIncrement: true,
+> 9	        allowNull: false,
+> 10	        primaryKey: true
+> 11	    },
+> 12	    automationId: Sequelize.INTEGER,
+> 13	    symbol: {
+> 14	        type: Sequelize.STRING,
+> 15	        allowNull: false
+> 16	    },
+> 17	    orderId: {
+> 18	        type: Sequelize.BIGINT,
+> 19	        allowNull: false
+> 20	    },
+> 21	    clientOrderId: {
+> 22	        type: Sequelize.STRING,
+> 23	        allowNull: false
+> 24	    },
+> 25	    transactTime: {
+> 26	        type: Sequelize.BIGINT,
+> 27	        allowNull: false
+> 28	    },
+> 29	    type: {
+> 30	        type: Sequelize.STRING,
+> 31	        allowNull: false
+> 32	    },
+> 33	    side: {
+> 34	        type: Sequelize.STRING,
+> 35	        allowNull: false
+> 36	    },
+> 37	    status: {
+> 38	        type: Sequelize.STRING,
+> 39	        allowNull: false
+> 40	    },
+> 41	    isMaker: Sequelize.BOOLEAN,
+> 42	    limitPrice: Sequelize.STRING,
+> 43	    stopPrice: Sequelize.STRING,
+> 44	    avgPrice: Sequelize.DECIMAL(18, 8),
+> 45	    commission: Sequelize.STRING,
+> 46	    net: Sequelize.DECIMAL(18, 8),
+> 47	    quantity: {
+> 48	        type: Sequelize.STRING,
+> 49	        allowNull: false
+> 50	    },
+> 51	    icebergQty: Sequelize.STRING,
+> 52	    obs: Sequelize.STRING,
+> 53	    createdAt: Sequelize.DATE,
+> 54	    updatedAt: Sequelize.DATE
+> 55	}, {
+> 56	    indexes: [{
+> 57	        unique: true,
+> 58	        fields: ['clientOrderId', 'orderId']
+> 59	    }, {
+> 60	        fields: ['symbol']
+> 61	    }]
+> 62	})
+> 63	
+> 64	OrderModel.belongsTo(AutomationModel, {
+> 65	    foreignKey: 'automationId'
+> 66	})
+> 67	
+> 68	module.exports = OrderModel;
+> ```
+
+## 🤖 Claude *(17:33:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/nba-inspect/node_modules/node-binance-api/src\necho \"=== locate spot order/stream method defs (line numbers) ===\"\ngrep -nE \"^[[:space:]]+(async[[:space:]]+)?(order|buy|sell|marketBuy|marketSell|ocoOrder|populateOHLC|last|klineHandler|klineData|chartData|chart|userDataHandler|userData|miniTicker|bookTickers|prevDayConvertData|prevDayStreamHandler|prevDayStream|terminate|subscribe|miniTickerConvertData)[[:space:]]*[(=]\" node-binance-api.ts | grep -viE \"futures|delivery|future|deliver|fAgg|dAgg|classify\" | head -80",
+  "description": "Locate 1.x source method definition line numbers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === locate spot order/stream method defs (line numbers) ===
+> 842:    async order(type: OrderType, side: OrderSide, symbol: string, quantity: number, price?: number, params: Dict = {}): Promise<Order> {
+> 939:    async ocoOrder(side: OrderSide, symbol: string, quantity: number, params: Dict = {}): Promise<OCOOrder> {
+> 964:    async buy(symbol: string, quantity: number, price: number, flags = {}) {
+> 977:    async sell(symbol: string, quantity: number, price: number, flags = {}) {
+> 991:    async marketBuy(symbol: string, quantity: number, params: Dict = {}) {
+> 1036:    async marketSell(symbol: string, quantity: number, params: Dict = {}) {
+> 1440:    subscribe(endpoint: string, callback: Callback, reconnect?: Callback, opened_callback?: Callback) {
+> 1541:    terminate(endpoint: string, reconnect = false) {
+> 2345:        order = orderConverter(order);
+> 2988:        order = orderConverter(order);
+> 3002:    userDataHandler(data: any) {
+> 3173:    prevDayConvertData(data: any) {
+> 3245:    prevDayStreamHandler(data, callback: Callback) {
+> 3308:    klineData(symbol, interval, ticks) { // Used for /depth
+> 3348:    klineHandler(symbol, kline, firstTime = 0) {
+> 3692:    last(object) {
+> 3964:    async bookTickers(symbol?: string, params: Dict = {}): Promise<{ [key: string]: BookTicker }> {
+> 4294:    populateOHLC(chart) {
+> 6112:    userData(all_updates_callback?: Callback, balance_callback?: Callback, execution_callback?: Callback, subscribed_callback?: Callback, list_status_callback?: Callback) {
+> 6642:    chart(symbols: string[] | string, interval: Interval, callback: Callback, limit = 500) {
+> 6743:    miniTicker(callback) {
+> 6795:    prevDayStream(symbols: string[] | string | undefined, callback?: Callback, singleCallback?: Callback) {
+> 6809:                prevDayStreamHandler(data, callback);
+> 6815:                prevDayStreamHandler(data, callback);
+> 6821:                    prevDayStreamHandler(data, callback);
+> 6824:                        prevDayStreamHandler(line, callback);
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(17:33:28)*
+
+
+## 🤖 Claude *(17:33:30)*
+
+Tenho os números de linha das implementações reais da 1.x. Vou ler os trechos exatos do source (orders/OCO/buy/sell, handlers de userData/kline/prevDay, `last`/`populateOHLC`, e os websockets chart/miniTicker/prevDay/userData) + localizar o ws `bookTickers` e as chaves de subscription/terminate.
+
+## 🤖 Claude *(17:33:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 842,
+  "limit": 255
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 842	    async order(type: OrderType, side: OrderSide, symbol: string, quantity: number, price?: number, params: Dict = {}): Promise<Order> {
+> 843	        const isOCO = type === 'OCO' || params.type === 'OCO';
+> 844	        let endpoint = isOCO ? 'v3/orderList/oco' : 'v3/order';
+> 845	        if (params.test) {
+> 846	            delete params.test;
+> 847	            endpoint += '/test';
+> 848	        }
+> 849	        const request = {
+> 850	            symbol: symbol,
+> 851	            side: side,
+> 852	            // type: type
+> 853	        } as Dict;
+> 854	        if (!isOCO) request.type = type;
+> 855	        if (params.quoteOrderQty && params.quoteOrderQty > 0)
+> 856	            request.quoteOrderQty = params.quoteOrderQty;
+> 857	        else
+> 858	            request.quantity = quantity;
+> 859	
+> 860	        if (!isOCO && request.type.includes('LIMIT')) {
+> 861	            request.price = price;
+> 862	            if (request.type !== 'LIMIT_MAKER') {
+> 863	                request.timeInForce = 'GTC';
+> 864	            }
+> 865	        }
+> 866	        if (!isOCO && request.type == 'MARKET' && typeof params.quoteOrderQty !== 'undefined') {
+> 867	            request.quoteOrderQty = params.quoteOrderQty;
+> 868	            delete request.quantity;
+> 869	        }
+> 870	        // if (typeof params.timeInForce !== 'undefined') opt.timeInForce = params.timeInForce;
+> 871	        // if (typeof params.newOrderRespType !== 'undefined') opt.newOrderRespType = params.newOrderRespType;
+> 872	        if (!params.newClientOrderId && !params.listClientOrderId) {
+> 873	            const id = this.SPOT_PREFIX + this.uuid22();
+> 874	            if (!isOCO) {
+> 875	                request.newClientOrderId = id;
+> 876	            } else {
+> 877	                request.listClientOrderId = id;
+> 878	            }
+> 879	        }
+> 880	
+> 881	        const allowedTypesForStopAndTrailing = ['STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT', 'OCO'];
+> 882	        if (params.trailingDelta) {
+> 883	            request.trailingDelta = params.trailingDelta;
+> 884	
+> 885	            if (!isOCO && !allowedTypesForStopAndTrailing.includes(request.type)) {
+> 886	                throw Error('trailingDelta: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, OCO');
+> 887	            }
+> 888	        }
+> 889	
+> 890	        /*
+> 891	         * STOP_LOSS
+> 892	         * STOP_LOSS_LIMIT
+> 893	         * TAKE_PROFIT
+> 894	         * TAKE_PROFIT_LIMIT
+> 895	         * LIMIT_MAKER
+> 896	         */
+> 897	        // if (typeof params.icebergQty !== 'undefined') request.icebergQty = params.icebergQty;
+> 898	        if (params.stopPrice) {
+> 899	            request.stopPrice = params.stopPrice;
+> 900	            if (!isOCO && !allowedTypesForStopAndTrailing.includes(request.type)) {
+> 901	                throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, OCO');
+> 902	            }
+> 903	        }
+> 904	        const response = await this.privateSpotRequest(endpoint, this.extend(request, params), 'POST');
+> 905	        // to do error handling
+> 906	        // if ( !response ) {
+> 907	        //     if ( callback ) callback( error, response );
+> 908	        //     else this.options.log( 'Order() error:', error );
+> 909	        //     return;
+> 910	        // }
+> 911	        // if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
+> 912	        //     this.options.log( 'Order quantity too small. See exchangeInfo() for minimum amounts' );
+> 913	        // }
+> 914	        // if ( callback ) callback( error, response );
+> 915	        // else this.options.log( side + '(' + symbol + ',' + quantity + ',' + price + ') ', response );
+> 916	        return response;
+> 917	    }
+> 918	
+> 919	    /**
+> 920	     * Create an OCO spot order
+> 921	     * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 922	     * @param {OrderSide} side - BUY or SELL
+> 923	     * @param {string} symbol - The symbol to buy or sell
+> 924	     * @param {string} quantity - The quantity to buy or sell
+> 925	     * @param {string} price - The price per unit to transact each unit at
+> 926	     * @param {object} params - additional order settings
+> 927	     * @param {string} params.aboveType - The type of the above order
+> 928	     * @param {string} params.belowType - The type of the below order
+> 929	     * @param {string} params.abovePrice - The price of the above order
+> 930	     * @param {string} params.aboveStopPrice - The stop price of the above order
+> 931	     * @param {string} params.aboveTrailingDelta - The trailing delta of the above order
+> 932	     * @param {string} params.aboveTimeInForce - The time in force of the above order
+> 933	     * @param {string} params.belowPrice - The price of the below order
+> 934	     * @param {string} params.belowStopPrice - The stop price of the below order
+> 935	     * @param {string} params.belowTrailingDelta - The trailing delta of the below order
+> 936	     * @param {string} params.belowTimeInForce - The time in force of the below order
+> 937	     * @return {undefined}
+> 938	     */
+> 939	    async ocoOrder(side: OrderSide, symbol: string, quantity: number, params: Dict = {}): Promise<OCOOrder> {
+> 940	        const request = {
+> 941	            symbol: symbol,
+> 942	            side: side,
+> 943	            quantity: quantity,
+> 944	        } as Dict;
+> 945	
+> 946	        if (!params.listClientOrderId) {
+> 947	            const id = this.SPOT_PREFIX + this.uuid22();
+> 948	            request.listClientOrderId = id;
+> 949	        }
+> 950	
+> 951	        const endpoint = 'v3/orderList/oco';
+> 952	        const response = await this.privateSpotRequest(endpoint, this.extend(request, params), 'POST');
+> 953	        return response;
+> 954	    }
+> 955	
+> 956	    /**
+> 957	    * Creates a buy order
+> 958	    * @param {string} symbol - the symbol to buy
+> 959	    * @param {numeric} quantity - the quantity required
+> 960	    * @param {numeric} price - the price to pay for each unit
+> 961	    * @param {object} flags - additional buy order flags
+> 962	    * @return {promise or undefined} - omitting the callback returns a promise
+> 963	    */
+> 964	    async buy(symbol: string, quantity: number, price: number, flags = {}) {
+> 965	        return await this.order('LIMIT', 'BUY', symbol, quantity, price, flags);
+> 966	    }
+> 967	
+> 968	    /**
+> 969	* Creates a sell order
+> 970	* @param {string} symbol - the symbol to sell
+> 971	* @param {numeric} quantity - the quantity required
+> 972	* @param {numeric} price - the price to pay for each unit
+> 973	* @param {object} flags - additional buy order flags
+> 974	* @param {function} callback - the callback function
+> 975	* @return {promise or undefined} - omitting the callback returns a promise
+> 976	*/
+> 977	    async sell(symbol: string, quantity: number, price: number, flags = {}) {
+> 978	        return await this.order('LIMIT', 'SELL', symbol, quantity, price, flags);
+> 979	    }
+> 980	
+> 981	    /**
+> 982	* Creates a market buy order
+> 983	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 984	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 985	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 986	* @param {string} symbol - the symbol to buy
+> 987	* @param {numeric} quantity - the quantity required
+> 988	* @param {object} params - additional buy order flags
+> 989	* @return {promise or undefined} - omitting the callback returns a promise
+> 990	*/
+> 991	    async marketBuy(symbol: string, quantity: number, params: Dict = {}) {
+> 992	        return await this.order('MARKET', 'BUY', symbol, quantity, 0, params);
+> 993	    }
+> 994	
+> 995	    /**
+> 996	* Creates a spot limit order
+> 997	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 998	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 999	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 1000	* @param {string} side - the side of the order (BUY or SELL)
+> 1001	* @param {string} symbol - the symbol to buy
+> 1002	* @param {numeric} quantity - the quantity required
+> 1003	* @param {numeric} price - the price to pay for each unit
+> 1004	* @param {object} params - additional buy order flags
+> 1005	* @return {promise or undefined} - omitting the callback returns a promise
+> 1006	*/
+> 1007	    async limitOrder(side: OrderSide, symbol: string, quantity: number, price: number, params: Dict = {}) {
+> 1008	        return await this.order('LIMIT', side, symbol, quantity, price, params);
+> 1009	    }
+> 1010	
+> 1011	    /**
+> 1012	* Creates a market buy order using the cost instead of the quantity (eg: 100usd instead of 0.01btc)
+> 1013	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 1014	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 1015	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 1016	* @param {string} symbol - the symbol to buy
+> 1017	* @param {numeric} quantity - the quantity required
+> 1018	* @param {object} params - additional buy order flags
+> 1019	* @return {promise or undefined} - omitting the callback returns a promise
+> 1020	*/
+> 1021	    async marketBuyWithCost(symbol: string, cost: number, params: Dict = {}) {
+> 1022	        params.quoteOrderQty = cost;
+> 1023	        return await this.order('MARKET', 'BUY', symbol, 0, 0, params);
+> 1024	    }
+> 1025	
+> 1026	    /**
+> 1027	    * Creates a market sell order
+> 1028	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 1029	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 1030	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 1031	    * @param {string} symbol - the symbol to sell
+> 1032	    * @param {numeric} quantity - the quantity required
+> 1033	    * @param {object} flags - additional buy order flags
+> 1034	    * @return {promise or undefined} - omitting the callback returns a promise
+> 1035	    */
+> 1036	    async marketSell(symbol: string, quantity: number, params: Dict = {}) {
+> 1037	        return await this.order('MARKET', 'SELL', symbol, quantity, 0, params);
+> 1038	    }
+> 1039	
+> 1040	    /**
+> 1041	    * Creates a market sell order using the cost instead of the quantity (eg: 100usd instead of 0.01btc)
+> 1042	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 1043	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 1044	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 1045	    * @param {string} symbol - the symbol to sell
+> 1046	    * @param {numeric} quantity - the quantity required
+> 1047	    * @param {object} flags - additional buy order flags
+> 1048	    * @return {promise or undefined} - omitting the callback returns a promise
+> 1049	    */
+> 1050	    async marketSellWithCost(symbol: string, cost: number, params: Dict = {}) {
+> 1051	        params.quoteOrderQty = cost;
+> 1052	        return await this.order('MARKET', 'SELL', symbol, 0, 0, params);
+> 1053	    }
+> 1054	
+> 1055	    /**
+> 1056	    * Cancels an order
+> 1057	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#cancel-order-trade
+> 1058	    * @param {string} symbol - the symbol to cancel
+> 1059	    * @param {string} orderid - the orderid to cancel
+> 1060	    * @return {promise or undefined} - omitting the callback returns a promise
+> 1061	    */
+> 1062	    async cancel(symbol: string, orderid: number | string, params: Dict = {}): Promise<CancelOrder> {
+> 1063	        return await this.privateSpotRequest('v3/order', this.extend({ symbol: symbol, orderId: orderid }, params), 'DELETE');
+> 1064	    }
+> 1065	
+> 1066	    /**
+> 1067	    * Cancels all orders
+> 1068	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#cancel-all-open-orders-on-a-symbol-trade
+> 1069	    * @param {string} symbol - the symbol to cancel
+> 1070	    * @return {promise or undefined} - omitting the callback returns a promise
+> 1071	    */
+> 1072	    async cancelAll(symbol: string, params: Dict = {}): Promise<CancelOrder> {
+> 1073	        return await this.privateSpotRequest('v3/openOrders', this.extend({ symbol: symbol }, params), 'DELETE');
+> 1074	    }
+> 1075	
+> 1076	    /**
+> 1077	* Gets the status of an order
+> 1078	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#query-order-user_data
+> 1079	* @param {string} symbol - the symbol to check
+> 1080	* @param {string} orderid - the orderid to check if !orderid then  use flags to search
+> 1081	* @param {object} flags - any additional flags
+> 1082	* @return {promise or undefined} - omitting the callback returns a promise
+> 1083	*/
+> 1084	    async orderStatus(symbol: string, orderid?: number | string, flags = {}) {
+> 1085	        let parameters = Object.assign({ symbol: symbol }, flags);
+> 1086	        if (orderid) {
+> 1087	            parameters = Object.assign({ orderId: orderid }, parameters);
+> 1088	        }
+> 1089	        return await this.privateSpotRequest('v3/order', parameters);
+> 1090	    }
+> 1091	
+> 1092	    /**
+> 1093	* Gets open orders
+> 1094	* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#current-open-orders-user_data
+> 1095	* @param {string} symbol - the symbol to get
+> 1096	* @return {promise or undefined} - omitting the callback returns a promise
+> ```
+
+## 🤖 Claude *(17:33:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 3002,
+  "limit": 300
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3002	    userDataHandler(data: any) {
+> 3003	        let eventData = data;
+> 3004	        if (data.subscriptionId !== undefined && data.event) {
+> 3005	            eventData = data.event;
+> 3006	        }
+> 3007	
+> 3008	        const type = eventData.e;
+> 3009	
+> 3010	        // Handle event stream termination
+> 3011	        if (type === 'eventStreamTerminated') {
+> 3012	            this.Options.log('User Data Stream terminated at ' + eventData.E);
+> 3013	            if (this.Options.all_updates_callback) this.Options.all_updates_callback(eventData);
+> 3014	            return;
+> 3015	        }
+> 3016	
+> 3017	        if (this.Options.all_updates_callback) this.Options.all_updates_callback(eventData);
+> 3018	
+> 3019	        if (type === 'outboundAccountInfo') {
+> 3020	            // XXX: Deprecated in 2020-09-08
+> 3021	        } else if (type === 'executionReport') {
+> 3022	            if (this.Options.execution_callback) this.Options.execution_callback(eventData);
+> 3023	        } else if (type === 'listStatus') {
+> 3024	            if (this.Options.list_status_callback) this.Options.list_status_callback(eventData);
+> 3025	        } else if (type === 'outboundAccountPosition' || type === 'balanceUpdate') {
+> 3026	            if (this.Options.balance_callback) this.Options.balance_callback(eventData);
+> 3027	        } else if (type === 'externalLockUpdate') {
+> 3028	            // Handle external lock updates (e.g., when balance is locked for margin collateral)
+> 3029	            if (this.Options.balance_callback) this.Options.balance_callback(eventData);
+> 3030	        } else {
+> 3031	            this.Options.log('Unexpected userData: ' + type);
+> 3032	        }
+> 3033	    }
+> 3034	
+> 3035	    /**
+> 3036	     * Used as part of the user data websockets callback
+> 3037	     * @param {object} data - user data callback data type
+> 3038	     * @return {undefined}
+> 3039	     */
+> 3040	    userMarginDataHandler(data: any) {
+> 3041	        let eventData = data;
+> 3042	        if (data.subscriptionId !== undefined && data.event) {
+> 3043	            eventData = data.event;
+> 3044	        }
+> 3045	
+> 3046	        const type = eventData.e;
+> 3047	
+> 3048	        // Handle event stream termination
+> 3049	        if (type === 'eventStreamTerminated') {
+> 3050	            this.Options.log('Margin Data Stream terminated at ' + eventData.E);
+> 3051	            if (this.Options.margin_all_updates_callback) this.Options.margin_all_updates_callback(eventData);
+> 3052	            return;
+> 3053	        }
+> 3054	
+> 3055	        if (this.Options.margin_all_updates_callback) this.Options.margin_all_updates_callback(eventData);
+> 3056	
+> 3057	        if (type === 'outboundAccountInfo') {
+> 3058	            // XXX: Deprecated in 2020-09-08
+> 3059	        } else if (type === 'executionReport') {
+> 3060	            if (this.Options.margin_execution_callback) this.Options.margin_execution_callback(eventData);
+> 3061	        } else if (type === 'listStatus') {
+> 3062	            if (this.Options.margin_list_status_callback) this.Options.margin_list_status_callback(eventData);
+> 3063	        } else if (type === 'outboundAccountPosition' || type === 'balanceUpdate') {
+> 3064	            if (this.Options.margin_balance_callback) this.Options.margin_balance_callback(eventData);
+> 3065	        } else if (type === 'externalLockUpdate') {
+> 3066	            // Handle external lock updates (e.g., when balance is locked for margin collateral)
+> 3067	            if (this.Options.margin_balance_callback) this.Options.margin_balance_callback(eventData);
+> 3068	        }
+> 3069	    }
+> 3070	
+> 3071	    /**
+> 3072	     * Used as part of the user data websockets callback
+> 3073	     * @param {object} data - user data callback data type
+> 3074	     * @return {undefined}
+> 3075	     */
+> 3076	    userFutureDataHandler(data: any) {
+> 3077	        const type = data.e;
+> 3078	
+> 3079	        if (this.Options.futures_all_updates_callback) this.Options.futures_all_updates_callback(data);
+> 3080	
+> 3081	        if (type === 'MARGIN_CALL') {
+> 3082	            this.Options.future_margin_call_callback(this.fUserDataMarginConvertData(data));
+> 3083	        } else if (type === 'ACCOUNT_UPDATE') {
+> 3084	            if (this.Options.future_account_update_callback) {
+> 3085	                this.Options.future_account_update_callback(this.fUserDataAccountUpdateConvertData(data));
+> 3086	            }
+> 3087	        } else if (type === 'ORDER_TRADE_UPDATE' || type === 'TRADE_LITE') {
+> 3088	            if (this.Options.future_order_update_callback) {
+> 3089	                this.Options.future_order_update_callback(this.fUserDataOrderUpdateConvertData(data));
+> 3090	            }
+> 3091	        } else if (type === 'ACCOUNT_CONFIG_UPDATE') {
+> 3092	            if (this.Options.future_account_config_update_callback) {
+> 3093	                this.Options.future_account_config_update_callback(this.fUserConfigDataAccountUpdateConvertData(data));
+> 3094	            }
+> 3095	        }
+> 3096	    }
+> 3097	
+> 3098	    /**
+> 3099	   * Used as part of the user data websockets callback
+> 3100	   * @param {object} data - user data callback data type
+> 3101	   * @return {undefined}
+> 3102	   */
+> 3103	    userDeliveryDataHandler(data: any) {
+> 3104	        const type = data.e;
+> 3105	        if (type === "MARGIN_CALL") {
+> 3106	            this.Options.delivery_margin_call_callback(
+> 3107	                this.fUserDataMarginConvertData(data)
+> 3108	            );
+> 3109	        } else if (type === "ACCOUNT_UPDATE") {
+> 3110	            if (this.Options.delivery_account_update_callback) {
+> 3111	                this.Options.delivery_account_update_callback(
+> 3112	                    this.fUserDataAccountUpdateConvertData(data)
+> 3113	                );
+> 3114	            }
+> 3115	        } else if (type === "ORDER_TRADE_UPDATE") {
+> 3116	            if (this.Options.delivery_order_update_callback) {
+> 3117	                this.Options.delivery_order_update_callback(
+> 3118	                    this.dUserDataOrderUpdateConvertData(data)
+> 3119	                );
+> 3120	            }
+> 3121	        } else {
+> 3122	            this.Options.log("Unexpected userDeliveryData: " + type);
+> 3123	        }
+> 3124	    }
+> 3125	
+> 3126	    /**
+> 3127	    * Universal Transfer requires API permissions enabled
+> 3128	    * @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
+> 3129	    * @param {string} asset - the asset - example :USDT    *
+> 3130	    * @param {number} amount - the callback function
+> 3131	    * @return {promise}
+> 3132	    */
+> 3133	    async universalTransfer(type: string, asset: string, amount: number) {
+> 3134	        const parameters = Object.assign({
+> 3135	            asset,
+> 3136	            amount,
+> 3137	            type,
+> 3138	        });
+> 3139	        return await this.privateSpotRequest("v1/asset/transfer",
+> 3140	            parameters,
+> 3141	            "POST"
+> 3142	        );
+> 3143	    }
+> 3144	
+> 3145	    /**
+> 3146	   * Transfer between main account and futures/delivery accounts
+> 3147	   * @param {string} asset - the asset
+> 3148	   * @param {number} amount - the asset
+> 3149	   * @param {object} options - additional options
+> 3150	   * @return {undefined}
+> 3151	   */
+> 3152	    async transferBetweenMainAndFutures(
+> 3153	        asset: string,
+> 3154	        amount: number,
+> 3155	        type: any,
+> 3156	    ) {
+> 3157	        const parameters = Object.assign({
+> 3158	            asset,
+> 3159	            amount,
+> 3160	            type,
+> 3161	        });
+> 3162	        return await this.privateSpotRequest("v1/futures/transfer",
+> 3163	            parameters,
+> 3164	            "POST"
+> 3165	        );
+> 3166	    }
+> 3167	
+> 3168	    /**
+> 3169	     * Converts the previous day stream into friendly object
+> 3170	     * @param {object} data - user data callback data type
+> 3171	     * @return {object} - user friendly data type
+> 3172	     */
+> 3173	    prevDayConvertData(data: any) {
+> 3174	        const convertData = (data: any) => {
+> 3175	            const {
+> 3176	                e: eventType,
+> 3177	                E: eventTime,
+> 3178	                s: symbol,
+> 3179	                p: priceChange,
+> 3180	                P: percentChange,
+> 3181	                w: averagePrice,
+> 3182	                x: prevClose,
+> 3183	                c: close,
+> 3184	                Q: closeQty,
+> 3185	                b: bestBid,
+> 3186	                B: bestBidQty,
+> 3187	                a: bestAsk,
+> 3188	                A: bestAskQty,
+> 3189	                o: open,
+> 3190	                h: high,
+> 3191	                l: low,
+> 3192	                v: volume,
+> 3193	                q: quoteVolume,
+> 3194	                O: openTime,
+> 3195	                C: closeTime,
+> 3196	                F: firstTradeId,
+> 3197	                L: lastTradeId,
+> 3198	                n: numTrades
+> 3199	            } = data;
+> 3200	            return {
+> 3201	                eventType,
+> 3202	                eventTime,
+> 3203	                symbol,
+> 3204	                priceChange,
+> 3205	                percentChange,
+> 3206	                averagePrice,
+> 3207	                prevClose,
+> 3208	                close,
+> 3209	                closeQty,
+> 3210	                bestBid,
+> 3211	                bestBidQty,
+> 3212	                bestAsk,
+> 3213	                bestAskQty,
+> 3214	                open,
+> 3215	                high,
+> 3216	                low,
+> 3217	                volume,
+> 3218	                quoteVolume,
+> 3219	                openTime,
+> 3220	                closeTime,
+> 3221	                firstTradeId,
+> 3222	                lastTradeId,
+> 3223	                numTrades
+> 3224	            };
+> 3225	        };
+> 3226	        if (Array.isArray(data)) {
+> 3227	            const result = [];
+> 3228	            for (const obj of data) {
+> 3229	                const converted = convertData(obj);
+> 3230	                result.push(converted);
+> 3231	            }
+> 3232	            return result;
+> 3233	            // eslint-disable-next-line no-else-return
+> 3234	        } else {
+> 3235	            return convertData(data);
+> 3236	        }
+> 3237	    }
+> 3238	
+> 3239	    /**
+> 3240	     * Parses the previous day stream and calls the user callback with friendly object
+> 3241	     * @param {object} data - user data callback data type
+> 3242	     * @param {function} callback - user data callback data type
+> 3243	     * @return {undefined}
+> 3244	     */
+> 3245	    prevDayStreamHandler(data, callback: Callback) {
+> 3246	        const converted = this.prevDayConvertData(data);
+> 3247	        callback(null, converted);
+> 3248	    }
+> 3249	
+> 3250	    /**
+> 3251	     * Gets the price of a given symbol or symbols
+> 3252	     * @param {array} data - array of symbols
+> 3253	     * @return {array} - symbols with their current prices
+> 3254	     */
+> 3255	    priceData(data: any): { [key: string]: number } {
+> 3256	        const prices = {};
+> 3257	        if (Array.isArray(data)) {
+> 3258	            for (const obj of data) {
+> 3259	                prices[obj.symbol] = obj.price;
+> 3260	            }
+> 3261	        } else { // Single price returned
+> 3262	            prices[data.symbol] = parseFloat(data.price);
+> 3263	        }
+> 3264	        return prices;
+> 3265	    }
+> 3266	
+> 3267	    /**
+> 3268	     * Used by bookTickers to format the bids and asks given given symbols
+> 3269	     * @param {array} data - array of symbols
+> 3270	     * @return {object} - symbols with their bids and asks data
+> 3271	     */
+> 3272	    bookPriceData(data: any): { [key: string]: BookTicker } {
+> 3273	        if (!Array.isArray(data)) {
+> 3274	            data = [data];
+> 3275	        }
+> 3276	        const prices = {};
+> 3277	        for (const obj of data) {
+> 3278	            prices[obj.symbol] = obj;
+> 3279	        }
+> 3280	        return prices;
+> 3281	    }
+> 3282	
+> 3283	    /**
+> 3284	     * Used by balance to get the balance data
+> 3285	     * @param {array} data - account info object
+> 3286	     * @return {object} - balances hel with available, onorder amounts
+> 3287	     */
+> 3288	    balanceData(data: any) {
+> 3289	        const balances = {};
+> 3290	        if (typeof data === 'undefined') return {};
+> 3291	        if (typeof data.balances === 'undefined') {
+> 3292	            this.Options.log('balanceData error', data);
+> 3293	            return {};
+> 3294	        }
+> 3295	        for (const obj of data.balances) {
+> 3296	            balances[obj.asset] = { available: obj.free, onOrder: obj.locked };
+> 3297	        }
+> 3298	        return balances;
+> 3299	    }
+> 3300	
+> 3301	    /**
+> ```
+
+## 🤖 Claude *(17:33:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 3300,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3300	
+> 3301	    /**
+> 3302	     * Used by web sockets depth and populates OHLC and info
+> 3303	     * @param {string} symbol - symbol to get candlestick info
+> 3304	     * @param {string} interval - time interval, 1m, 3m, 5m ....
+> 3305	     * @param {array} ticks - tick array
+> 3306	     * @return {undefined}
+> 3307	     */
+> 3308	    klineData(symbol, interval, ticks) { // Used for /depth
+> 3309	        let last_time = 0;
+> 3310	        if (this.isIterable(ticks)) {
+> 3311	            for (const tick of ticks) {
+> 3312	                // eslint-disable-next-line no-unused-vars
+> 3313	                const [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
+> 3314	                this.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+> 3315	                last_time = time;
+> 3316	            }
+> 3317	
+> 3318	            this.info[symbol][interval].timestamp = last_time;
+> 3319	        }
+> 3320	    }
+> 3321	
+> 3322	    /**
+> 3323	     * Combines all OHLC data with latest update
+> 3324	     * @param {string} symbol - the symbol
+> 3325	     * @param {string} interval - time interval, 1m, 3m, 5m ....
+> 3326	     * @return {array} - interval data for given symbol
+> 3327	     */
+> 3328	    klineConcat(symbol: string, interval: Interval) {
+> 3329	        const output = this.ohlc[symbol][interval];
+> 3330	        if (typeof this.ohlcLatest[symbol][interval].time === 'undefined') return output;
+> 3331	        const time = this.ohlcLatest[symbol][interval].time;
+> 3332	        const last_updated = Object.keys(this.ohlc[symbol][interval]).pop();
+> 3333	        if (time >= last_updated) {
+> 3334	            output[time] = this.ohlcLatest[symbol][interval];
+> 3335	            delete output[time].time;
+> 3336	            output[time].isFinal = false;
+> 3337	        }
+> 3338	        return output;
+> 3339	    }
+> 3340	
+> 3341	    /**
+> 3342	     * Used for websocket @kline
+> 3343	     * @param {string} symbol - the symbol
+> 3344	     * @param {object} kline - object with kline info
+> 3345	     * @param {string} firstTime - time filter
+> 3346	     * @return {undefined}
+> 3347	     */
+> 3348	    klineHandler(symbol, kline, firstTime = 0) {
+> 3349	        // TODO: add Taker buy base asset volume
+> 3350	        // eslint-disable-next-line no-unused-vars
+> 3351	        const { e: eventType, E: eventTime, k: ticks } = kline;
+> 3352	        // eslint-disable-next-line no-unused-vars
+> 3353	        const { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, t: time } = ticks; //n:trades, V:buyVolume, Q:quoteBuyVolume
+> 3354	        if (time <= firstTime) return;
+> 3355	        if (!isFinal) {
+> 3356	            if (typeof this.ohlcLatest[symbol][interval].time !== 'undefined') {
+> 3357	                if (this.ohlcLatest[symbol][interval].time > time) return;
+> 3358	            }
+> 3359	            this.ohlcLatest[symbol][interval] = { open: open, high: high, low: low, close: close, volume: volume, time: time };
+> 3360	            return;
+> 3361	        }
+> 3362	        // Delete an element from the beginning so we don't run out of memory
+> 3363	        const first_updated = Object.keys(this.ohlc[symbol][interval]).shift();
+> 3364	        if (first_updated) delete this.ohlc[symbol][interval][first_updated];
+> 3365	        this.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+> 3366	    }
+> 3367	
+> 3368	    /**
+> 3369	     * Used by futures websockets chart cache
+> 3370	     * @param {string} symbol - symbol to get candlestick info
+> 3371	     * @param {string} interval - time interval, 1m, 3m, 5m ....
+> 3372	     * @param {array} ticks - tick array
+> 3373	     * @return {undefined}
+> 3374	     */
+> 3375	    futuresKlineData(symbol: string, interval: Interval, ticks: any[]) {
+> 3376	        let last_time = 0;
+> 3377	        if (this.isIterable(ticks)) {
+> 3378	            for (const tick of ticks) {
+> 3379	                // eslint-disable-next-line no-unused-vars
+> 3380	                const [time, open, high, low, close, volume, closeTime, quoteVolume, trades, takerBuyBaseVolume, takerBuyQuoteVolume, ignored] = tick;
+> 3381	                this.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades };
+> 3382	                last_time = time;
+> 3383	            }
+> 3384	            this.futuresMeta[symbol][interval].timestamp = last_time;
+> 3385	        }
+> 3386	    }
+> 3387	
+> 3388	    /**
+> 3389	     * Used by delivery websockets chart cache
+> 3390	     * @param {string} symbol - symbol to get candlestick info
+> 3391	     * @param {string} interval - time interval, 1m, 3m, 5m ....
+> 3392	     * @param {array} ticks - tick array
+> 3393	     * @return {undefined}
+> 3394	     */
+> 3395	    deliveryKlineData(symbol, interval, ticks) {
+> 3396	        let last_time = 0;
+> 3397	        if (this.isIterable(ticks)) {
+> 3398	            for (const tick of ticks) {
+> 3399	                // eslint-disable-next-line no-unused-vars
+> 3400	                const [time, open, high, low, close, volume, closeTime, quoteVolume, trades, takerBuyBaseVolume, takerBuyQuoteVolume, ignored] = tick;
+> 3401	                this.deliveryTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades };
+> 3402	                last_time = time;
+> 3403	            }
+> 3404	            this.deliveryMeta[symbol][interval].timestamp = last_time;
+> 3405	        }
+> 3406	    }
+> 3407	
+> 3408	    /**
+> 3409	     * Used for /depth endpoint
+> 3410	     * @param {object} data - containing the bids and asks
+> 3411	     * @return {undefined}
+> 3412	     */
+> 3413	    depthData(data: any) {
+> 3414	        if (!data) return { bids: [], asks: [] };
+> 3415	        const bids = {}, asks = {};
+> 3416	        let obj;
+> 3417	        if (typeof data.bids !== 'undefined') {
+> 3418	            for (obj of data.bids) {
+> 3419	                bids[obj[0]] = parseFloat(obj[1]);
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === ws bookTickers def (inside websockets obj) ===
+> 137:        bookTickers: this.bookTickersStream.bind(this),
+> 3268:     * Used by bookTickers to format the bids and asks given given symbols
+> 3964:    async bookTickers(symbol?: string, params: Dict = {}): Promise<{ [key: string]: BookTicker }> {
+> 6771:    bookTickersStream(symbol: string | string[], callback = console.log) {
+> 6773:            if (this.Options.reconnect) this.bookTickersStream(symbol, callback);
+> 
+> === endpoint key literals (@kline/@ticker/@miniTicker/@bookTicker) ===
+> 304:        if (endpoint.includes('@bookTicker') || endpoint === '!bookTicker'
+> 305:            || endpoint.includes('@depth')) {
+> 3342:     * Used for websocket @kline
+> 5065:    Diff. Book Depth Streams (250ms, 100ms, or realtime): <symbol>@depth OR <symbol>@depth@100ms OR <symbol>@depth@0ms
+> 5066:    Partial Book Depth Streams (5, 10, 20): <symbol>@depth<levels> OR <symbol>@depth<levels>@100ms
+> 5069:    Chart data (250ms): <symbol>@kline_<interval>
+> 5703:            const streams = symbols.map(symbol => symbol.toLowerCase() + '@aggTrade');
+> 5753:        const endpoint = symbol ? `${symbol.toLowerCase()}@ticker` : '!ticker@arr';
+> 5768:        const endpoint = symbol ? `${symbol.toLowerCase()}@miniTicker` : '!miniTicker@arr';
+> 5783:        const endpoint = symbol ? `${symbol.toLowerCase()}@bookTicker` : '!bookTicker';
+> 5841:            const streams = symbols.map(symbol => `${symbol.toLowerCase()}@kline_${interval}`);
+> 5867:            const streams = symbols.map(symbol => symbol.toLowerCase() + '@kline_' + interval);
+> 5931:            const streams = symbols.map(symbol => symbol.toLowerCase() + '@aggTrade');
+> 5981:        const endpoint = symbol ? `${symbol.toLowerCase()}@ticker` : '!ticker@arr';
+> 5996:        const endpoint = symbol ? `${symbol.toLowerCase()}@miniTicker` : '!miniTicker@arr';
+> 6011:        const endpoint = symbol ? `${symbol.toLowerCase()}@bookTicker` : '!bookTicker';
+> 6069:            const streams = symbols.map(symbol => `${symbol.toLowerCase()}@kline_${interval}`);
+> 6095:            const streams = symbols.map(symbol => symbol.toLowerCase() + '@kline_' + interval);
+> 6413:                return symbol.toLowerCase() + '@depth@100ms';
+> 6418:            subscription = this.subscribe(symbol.toLowerCase() + '@depth@100ms', callback, reconnect);
+> 6519:                return symbol.toLowerCase() + `@depth@100ms`;
+> 6536:            subscription = this.subscribe(symbol.toLowerCase() + `@depth@100ms`, handleDepthStreamData, reconnect, () => {
+> 6599:                return symbol.toLowerCase() + '@aggTrade';
+> 6604:            subscription = this.subscribe(symbol.toLowerCase() + '@aggTrade', callback, reconnect);
+> 6624:                return symbol.toLowerCase() + '@trade';
+> 6629:            subscription = this.subscribe(symbol.toLowerCase() + '@trade', callback, reconnect);
+> 6666:                //this.options.log('@klines at ' + kline.k.t);
+> 6696:                return symbol.toLowerCase() + '@kline_' + interval;
+> 6703:            subscription = this.subscribe(symbol.toLowerCase() + '@kline_' + interval, handleKlineStreamData, reconnect);
+> 6728:                return symbol.toLowerCase() + '@kline_' + interval;
+> 
+> === how subscribe builds endpoint + subscriptions map (terminate key) ===
+>     subscribe(endpoint: string, callback: Callback, reconnect?: Callback, opened_callback?: Callback) {
+>         const httpsproxy = this.getHttpsProxy();
+>         let socksproxy = this.getSocksProxy();
+>         let ws: WebSocket = undefined;
+> 
+>         if (socksproxy) {
+>             socksproxy = this.proxyReplacewithIp(socksproxy);
+>             if (this.Options.verbose) this.Options.log('using socks proxy server ' + socksproxy);
+>             const agent = new SocksProxyAgent({
+>                 protocol: this.parseProxy(socksproxy)[0],
+>                 host: this.parseProxy(socksproxy)[1],
+>                 port: this.parseProxy(socksproxy)[2]
+>             });
+>             ws = new WebSocket(this.getStreamUrl() + endpoint, { agent: agent });
+>         } else if (httpsproxy) {
+>             const config = url.parse(httpsproxy);
+>             const agent = new HttpsProxyAgent(config);
+>             if (this.Options.verbose) this.Options.log('using proxy server ' + agent);
+>             ws = new WebSocket(this.getStreamUrl() + endpoint, { agent: agent });
+>         } else {
+>             ws = new WebSocket(this.getStreamUrl() + endpoint);
+>         }
+> 
+>         if (this.Options.verbose) this.Options.log('Subscribed to ' + endpoint);
+>         (ws as any).reconnect = this.Options.reconnect;
+>         (ws as any).endpoint = endpoint;
+>         (ws as any).isAlive = false;
+>         ws.on('open', this.handleSocketOpen.bind(this, ws, opened_callback));
+>         ws.on('pong', this.handleSocketHeartbeat.bind(this, ws));
+>         ws.on('error', this.handleSocketError.bind(this, ws));
+>         ws.on('close', this.handleSocketClose.bind(this, ws, reconnect));
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(17:33:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 3688,
+  "limit": 26
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 3688	    * Returns the last property of an object
+> 3689	    * @param {object} object - the object to get the first member
+> 3690	    * @return {string} - the object key
+> 3691	    */
+> 3692	    last(object) {
+> 3693	        return Object.keys(object).pop();
+> 3694	    }
+> 3695	
+> 3696	    /**
+> 3697	    * Returns an array of properties starting at start
+> 3698	    * @param {object} object - the object to get the properties form
+> 3699	    * @param {int} start - the starting index
+> 3700	    * @return {array} - the array of entires
+> 3701	    */
+> 3702	    slice(object, start = 0) {
+> 3703	        return Object.keys(object).slice(start);
+> 3704	    }
+> 3705	
+> 3706	    /**
+> 3707	    * Gets the minimum key form object
+> 3708	    * @param {object} object - the object to get the properties form
+> 3709	    * @return {string} - the minimum key
+> 3710	    */
+> 3711	    min(object) {
+> 3712	        // eslint-disable-next-line prefer-spread
+> 3713	        return Math.min.apply(Math, Object.keys(object));
+> ```
+
+## 🤖 Claude *(17:33:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 4290,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 4290	    * Populates OHLC information
+> 4291	    * @param {object} chart - the chart
+> 4292	    * @return {object} - object with candle information
+> 4293	    */
+> 4294	    populateOHLC(chart) {
+> 4295	        const open = [], high = [], low = [], close = [], volume = [];
+> 4296	        for (const timestamp in chart) { //this.ohlc[symbol][interval]
+> 4297	            const obj = chart[timestamp];
+> 4298	            open.push(parseFloat(obj.open));
+> 4299	            high.push(parseFloat(obj.high));
+> 4300	            low.push(parseFloat(obj.low));
+> 4301	            close.push(parseFloat(obj.close));
+> 4302	            volume.push(parseFloat(obj.volume));
+> 4303	        }
+> 4304	        return { open: open, high: high, low: low, close: close, volume: volume };
+> 4305	    }
+> 4306	
+> 4307	    /**
+> 4308	    * Gets the candles information for a given symbol
+> 4309	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data
+> 4310	    * intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+> 4311	    * @param {string} symbol - the symbol
+> 4312	    * @param {function} interval - the callback function
+> 4313	    * @param {object} options - additional options
+> 4314	    * @return {promise or undefined} - omitting the callback returns a promise
+> 4315	    */
+> 4316	    async candlesticks(symbol: string, interval: Interval = '5m', params: Dict = {}): Promise<Candle[]> {
+> 4317	        if (!params.limit) params.limit = 500;
+> 4318	        params = Object.assign({ symbol: symbol, interval: interval }, params);
+> 4319	        const res = await this.publicSpotRequest('v3/klines', params);
+> 4320	        return this.parseCandles(res);
+> 4321	    }
+> 4322	
+> 4323	    /**
+> 4324	    * Gets the candles information for a given symbol
+> 4325	    * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data
+> 4326	    * intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+> 4327	    * @param {string} symbol - the symbol
+> 4328	    * @param {function} interval - the callback function
+> 4329	    * @param {object} options - additional options
+> 4330	    * @return {promise or undefined} - omitting the callback returns a promise
+> 4331	    */
+> 4332	    async candles(symbol: string, interval: Interval = '5m', params: Dict = {}): Promise<Candle[]> {
+> 4333	        return await this.candlesticks(symbol, interval, params); // make name consistent with futures
+> 4334	    }
+> 4335	
+> 4336	    parseCandles(candles: any[]): Candle[] {
+> 4337	        const res: Candle[] = [];
+> 4338	        // spot
+> 4339	        // [
+> 4340	        //     [
+> 4341	        //       1499040000000,      // Open time
+> 4342	        //       "0.01634790",       // Open
+> 4343	        //       "0.80000000",       // High
+> 4344	        //       "0.01575800",       // Low
+> 4345	        //       "0.01577100",       // Close
+> 4346	        //       "148976.11427815",  // Volume
+> 4347	        //       1499644799999,      // Close time
+> 4348	        //       "2434.19055334",    // Quote asset volume
+> 4349	        //       308,                // Number of trades
+> 4350	        //       "1756.87402397",    // Taker buy base asset volume
+> 4351	        //       "28.46694368",      // Taker buy quote asset volume
+> ```
+
+## 🤖 Claude *(17:33:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 6112,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 6112	    userData(all_updates_callback?: Callback, balance_callback?: Callback, execution_callback?: Callback, subscribed_callback?: Callback, list_status_callback?: Callback) {
+> 6113	        const reconnect = () => {
+> 6114	            if (this.Options.reconnect) this.userData(all_updates_callback, balance_callback, execution_callback, subscribed_callback, list_status_callback);
+> 6115	        };
+> 6116	
+> 6117	        // Set up callbacks
+> 6118	        this.Options.all_updates_callback = all_updates_callback;
+> 6119	        this.Options.balance_callback = balance_callback;
+> 6120	        this.Options.execution_callback = execution_callback ? execution_callback : balance_callback;
+> 6121	        this.Options.list_status_callback = list_status_callback;
+> 6122	
+> 6123	        // Connect to WebSocket API
+> 6124	        const connectionId = 'userData';
+> 6125	        const ws = this.connectWsApi(connectionId, this.userDataHandler.bind(this), reconnect);
+> 6126	
+> 6127	        ws.on('open', async () => {
+> 6128	            try {
+> 6129	                // Subscribe using userDataStream.subscribe.signature method
+> 6130	                const timestamp = Date.now();
+> 6131	                const query = `apiKey=${this.APIKEY}&timestamp=${timestamp}`;
+> 6132	                const signature = this.generateSignature(query);
+> 6133	
+> 6134	                const result = await this.sendWsApiRequest(connectionId, 'userDataStream.subscribe.signature', {
+> 6135	                    apiKey: this.APIKEY,
+> 6136	                    timestamp: timestamp,
+> 6137	                    signature: signature
+> 6138	                });
+> 6139	
+> 6140	                this.Options.userDataSubscriptionId = result.subscriptionId;
+> 6141	                if (this.Options.verbose) {
+> 6142	                    this.Options.log(`User Data Stream subscribed with subscriptionId: ${result.subscriptionId}`);
+> 6143	                }
+> 6144	
+> 6145	                if (subscribed_callback) subscribed_callback(connectionId);
+> 6146	            } catch (error) {
+> 6147	                this.Options.log('User Data Stream subscription error:', error.message);
+> 6148	                if (reconnect) setTimeout(reconnect, 5000);
+> 6149	            }
+> 6150	        });
+> 6151	    }
+> 6152	
+> 6153	    /**
+> 6154	     * Margin Userdata websockets function
+> 6155	     * @param {function} all_updates_callback
+> 6156	     * @param {function} execution_callback - optional execution callback
+> 6157	     * @param {function} subscribed_callback - subscription callback
+> 6158	     * @param {function} list_status_callback - status callback
+> 6159	     * @return {undefined}
+> 6160	     */
+> 6161	    userMarginData(all_updates_callback?: Callback, balance_callback?: Callback, execution_callback?: Callback, subscribed_callback?: Callback, list_status_callback?: Callback) {
+> 6162	        const self = this;
+> 6163	        const reconnect = () => {
+> 6164	            if (this.Options.reconnect) this.userMarginData(all_updates_callback, balance_callback, execution_callback, subscribed_callback, list_status_callback);
+> 6165	        };
+> 6166	
+> 6167	        // Set up callbacks
+> 6168	        this.Options.margin_all_updates_callback = all_updates_callback;
+> 6169	        this.Options.margin_balance_callback = balance_callback;
+> 6170	        this.Options.margin_execution_callback = execution_callback;
+> 6171	        this.Options.margin_list_status_callback = list_status_callback;
+> 6172	
+> 6173	        // Get listenToken from REST API
+> 6174	        this.apiRequest(this.sapi + 'v1/userListenToken', {}, 'POST').then((response: any) => {
+> 6175	            const listenToken = response.token;
+> 6176	            const expirationTime = response.expirationTime;
+> 6177	            this.Options.marginListenToken = listenToken;
+> 6178	            this.Options.marginListenTokenExpiry = expirationTime;
+> 6179	
+> 6180	            if (this.Options.verbose) {
+> 6181	                this.Options.log(`Margin listenToken obtained, expires at: ${new Date(expirationTime).toISOString()}`);
+> 6182	            }
+> 6183	
+> 6184	            // Connect to WebSocket API
+> 6185	            const connectionId = 'userMarginData';
+> 6186	            const ws = this.connectWsApi(connectionId, this.userMarginDataHandler.bind(this), reconnect);
+> 6187	
+> 6188	            ws.on('open', async () => {
+> 6189	                try {
+> 6190	                    // Subscribe using userDataStream.subscribe.listenToken method
+> 6191	                    const result = await this.sendWsApiRequest(connectionId, 'userDataStream.subscribe.listenToken', {
+> 6192	                        listenToken: listenToken
+> 6193	                    });
+> 6194	
+> 6195	                    this.Options.marginDataSubscriptionId = result.subscriptionId;
+> 6196	                    const subscriptionExpiry = result.expirationTime;
+> 6197	
+> 6198	                    if (this.Options.verbose) {
+> 6199	                        this.Options.log(`Margin Data Stream subscribed with subscriptionId: ${result.subscriptionId}`);
+> 6200	                        this.Options.log(`Subscription expires at: ${new Date(subscriptionExpiry).toISOString()}`);
+> 6201	                    }
+> 6202	
+> 6203	                    // Set up renewal before expiration (renew 5 minutes before expiry)
+> 6204	                    const renewalTime = subscriptionExpiry - Date.now() - (5 * 60 * 1000);
+> 6205	                    if (renewalTime > 0) {
+> 6206	                        setTimeout(async function renewSubscription() {
+> 6207	                            try {
+> 6208	                                // Get new listenToken
+> 6209	                                const renewResponse: any = await self.apiRequest(self.sapi + 'v1/userListenToken', {}, 'POST');
+> 6210	                                const newListenToken = renewResponse.token;
+> 6211	                                const newExpirationTime = renewResponse.expirationTime;
+> 6212	
+> 6213	                                if (self.Options.verbose) {
+> 6214	                                    self.Options.log(`New margin listenToken obtained, expires at: ${new Date(newExpirationTime).toISOString()}`);
+> 6215	                                }
+> 6216	
+> 6217	                                // Re-subscribe with new token
+> 6218	                                const renewResult = await self.sendWsApiRequest(connectionId, 'userDataStream.subscribe.listenToken', {
+> 6219	                                    listenToken: newListenToken
+> 6220	                                });
+> 6221	
+> 6222	                                self.Options.marginDataSubscriptionId = renewResult.subscriptionId;
+> 6223	                                const newSubscriptionExpiry = renewResult.expirationTime;
+> 6224	
+> 6225	                                if (self.Options.verbose) {
+> 6226	                                    self.Options.log(`Margin Data Stream renewed with subscriptionId: ${renewResult.subscriptionId}`);
+> 6227	                                }
+> 6228	
+> 6229	                                // Schedule next renewal
+> 6230	                                const nextRenewalTime = newSubscriptionExpiry - Date.now() - (5 * 60 * 1000);
+> 6231	                                if (nextRenewalTime > 0) {
+> ```
+
+## 🤖 Claude *(17:33:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 6630,
+  "limit": 215
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 6630	        }
+> 6631	        return (subscription as any).url;
+> 6632	    }
+> 6633	
+> 6634	    /**
+> 6635	     * Websocket klines
+> 6636	     * @param {array/string} symbols - an array or string of symbols to query
+> 6637	     * @param {string} interval - the time interval
+> 6638	     * @param {function} callback - callback function
+> 6639	     * @param {int} limit - maximum results, no more than 1000
+> 6640	     * @return {string} the websocket endpoint
+> 6641	     */
+> 6642	    chart(symbols: string[] | string, interval: Interval, callback: Callback, limit = 500) {
+> 6643	        const reconnect = () => {
+> 6644	            if (this.Options.reconnect) this.chart(symbols, interval, callback, limit);
+> 6645	        };
+> 6646	
+> 6647	        const symbolChartInit = symbol => {
+> 6648	            if (typeof this.info[symbol] === 'undefined') this.info[symbol] = {};
+> 6649	            if (typeof this.info[symbol][interval] === 'undefined') this.info[symbol][interval] = {};
+> 6650	            if (typeof this.ohlc[symbol] === 'undefined') this.ohlc[symbol] = {};
+> 6651	            if (typeof this.ohlc[symbol][interval] === 'undefined') this.ohlc[symbol][interval] = {};
+> 6652	            if (typeof this.ohlcLatest[symbol] === 'undefined') this.ohlcLatest[symbol] = {};
+> 6653	            if (typeof this.ohlcLatest[symbol][interval] === 'undefined') this.ohlcLatest[symbol][interval] = {};
+> 6654	            if (typeof this.klineQueue[symbol] === 'undefined') this.klineQueue[symbol] = {};
+> 6655	            if (typeof this.klineQueue[symbol][interval] === 'undefined') this.klineQueue[symbol][interval] = [];
+> 6656	            this.info[symbol][interval].timestamp = 0;
+> 6657	        };
+> 6658	
+> 6659	        const handleKlineStreamData = kline => {
+> 6660	            const symbol = kline.s, interval: Interval = kline.k.i;
+> 6661	            if (!this.info[symbol][interval].timestamp) {
+> 6662	                if (typeof (this.klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
+> 6663	                    this.klineQueue[symbol][interval].push(kline);
+> 6664	                }
+> 6665	            } else {
+> 6666	                //this.options.log('@klines at ' + kline.k.t);
+> 6667	                this.klineHandler(symbol, kline);
+> 6668	                if (callback) callback(symbol, interval, this.klineConcat(symbol, interval));
+> 6669	            }
+> 6670	        };
+> 6671	
+> 6672	        const getSymbolKlineSnapshot = async (symbol: string, limit = 500) => {
+> 6673	            const data = await this.publicSpotRequest('v3/klines', { symbol: symbol, interval: interval, limit: limit });
+> 6674	            // function (error, data) {
+> 6675	            //     klineData(symbol, interval, data);
+> 6676	            //     //this.options.log('/klines at ' +this.info[symbol][interval].timestamp);
+> 6677	            //     if (typeof this.klineQueue[symbol][interval] !== 'undefined') {
+> 6678	            //         for (let kline of this.klineQueue[symbol][interval]) klineHandler(symbol, kline, this.info[symbol][interval].timestamp);
+> 6679	            //         delete this.klineQueue[symbol][interval];
+> 6680	            //     }
+> 6681	            //     if (callback) callback(symbol, interval, this.klineConcat(symbol, interval));
+> 6682	            // }
+> 6683	            this.klineData(symbol, interval, data);
+> 6684	            if (typeof this.klineQueue[symbol][interval] !== 'undefined') {
+> 6685	                for (const kline of this.klineQueue[symbol][interval]) this.klineHandler(symbol, kline, this.info[symbol][interval].timestamp);
+> 6686	                delete this.klineQueue[symbol][interval];
+> 6687	            }
+> 6688	            if (callback) callback(symbol, interval, this.klineConcat(symbol, interval));
+> 6689	        };
+> 6690	
+> 6691	        let subscription;
+> 6692	        if (Array.isArray(symbols)) {
+> 6693	            if (!this.isArrayUnique(symbols)) throw Error('chart: "symbols" cannot contain duplicate elements.');
+> 6694	            symbols.forEach(symbolChartInit);
+> 6695	            const streams = symbols.map(function (symbol) {
+> 6696	                return symbol.toLowerCase() + '@kline_' + interval;
+> 6697	            });
+> 6698	            subscription = this.subscribeCombined(streams, handleKlineStreamData, reconnect);
+> 6699	            symbols.forEach(element => getSymbolKlineSnapshot(element, limit));
+> 6700	        } else {
+> 6701	            const symbol = symbols;
+> 6702	            symbolChartInit(symbol);
+> 6703	            subscription = this.subscribe(symbol.toLowerCase() + '@kline_' + interval, handleKlineStreamData, reconnect);
+> 6704	            getSymbolKlineSnapshot(symbol, limit);
+> 6705	        }
+> 6706	        return (subscription as any).url;
+> 6707	    }
+> 6708	
+> 6709	    /**
+> 6710	     * Websocket candle sticks
+> 6711	     * @param {array/string} symbols - an array or string of symbols to query
+> 6712	     * @param {string} interval - the time interval
+> 6713	     * @param {function} callback - callback function
+> 6714	     * @return {string} the websocket endpoint
+> 6715	     */
+> 6716	    candlesticksStream(symbols: string[] | string, interval: Interval, callback: Callback) {
+> 6717	        const reconnect = () => {
+> 6718	            if (this.Options.reconnect) this.candlesticksStream(symbols, interval, callback);
+> 6719	        };
+> 6720	
+> 6721	        /* If an array of symbols are sent we use a combined stream connection rather.
+> 6722	         This is transparent to the developer, and results in a single socket connection.
+> 6723	         This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
+> 6724	        let subscription;
+> 6725	        if (Array.isArray(symbols)) {
+> 6726	            if (!this.isArrayUnique(symbols)) throw Error('candlesticks: "symbols" cannot contain duplicate elements.');
+> 6727	            const streams = symbols.map(function (symbol) {
+> 6728	                return symbol.toLowerCase() + '@kline_' + interval;
+> 6729	            });
+> 6730	            subscription = this.subscribeCombined(streams, callback, reconnect);
+> 6731	        } else {
+> 6732	            const symbol = symbols.toLowerCase();
+> 6733	            subscription = this.subscribe(symbol + '@kline_' + interval, callback, reconnect);
+> 6734	        }
+> 6735	        return (subscription as any).url;
+> 6736	    }
+> 6737	
+> 6738	    /**
+> 6739	     * Websocket mini ticker
+> 6740	     * @param {function} callback - callback function
+> 6741	     * @return {string} the websocket endpoint
+> 6742	     */
+> 6743	    miniTicker(callback) {
+> 6744	        const reconnect = () => {
+> 6745	            if (this.Options.reconnect) this.miniTicker(callback);
+> 6746	        };
+> 6747	        const subscription = this.subscribe('!miniTicker@arr', function (data: any) {
+> 6748	            const markets = {};
+> 6749	            for (const obj of data) {
+> 6750	                markets[obj.s] = {
+> 6751	                    close: obj.c,
+> 6752	                    open: obj.o,
+> 6753	                    high: obj.h,
+> 6754	                    low: obj.l,
+> 6755	                    volume: obj.v,
+> 6756	                    quoteVolume: obj.q,
+> 6757	                    eventTime: obj.E
+> 6758	                };
+> 6759	            }
+> 6760	            callback(markets);
+> 6761	        }, reconnect);
+> 6762	        return (subscription as any).url;
+> 6763	    }
+> 6764	
+> 6765	    /**
+> 6766	     * Spot WebSocket bookTicker (bid/ask quotes including price & amount)
+> 6767	     * @param {string | string[]} symbol symbol or array of symbols
+> 6768	     * @param {function} callback - callback function
+> 6769	     * @return {string} the websocket endpoint
+> 6770	     */
+> 6771	    bookTickersStream(symbol: string | string[], callback = console.log) {
+> 6772	        const reconnect = () => {
+> 6773	            if (this.Options.reconnect) this.bookTickersStream(symbol, callback);
+> 6774	        };
+> 6775	        let subscription: any;
+> 6776	        if (Array.isArray(symbol)) {
+> 6777	            const streams = symbol.map(function (symbol) {
+> 6778	                return symbol.toLowerCase() + '@bookTicker';
+> 6779	            });
+> 6780	            subscription = this.subscribeCombined(streams, data => callback(this.fBookTickerConvertData(data)), reconnect);
+> 6781	        } else {
+> 6782	            const endpoint = `${(symbol as string).toLowerCase()}@bookTicker`;
+> 6783	            subscription = this.subscribe(endpoint, data => callback(this.fBookTickerConvertData(data)), reconnect);
+> 6784	        }
+> 6785	        return (subscription as any).url;
+> 6786	    }
+> 6787	
+> 6788	    /**
+> 6789	     * Websocket prevday percentage
+> 6790	     * @param {array/string} symbols - an array or string of symbols to query
+> 6791	     * @param {function} callback - callback function
+> 6792	     * @param {boolean} singleCallback - avoid call one callback for each symbol in data array
+> 6793	     * @return {string} the websocket endpoint
+> 6794	     */
+> 6795	    prevDayStream(symbols: string[] | string | undefined, callback?: Callback, singleCallback?: Callback) {
+> 6796	        const reconnect = () => {
+> 6797	            if (this.Options.reconnect) this.prevDayStream(symbols, callback, singleCallback);
+> 6798	        };
+> 6799	
+> 6800	        let subscription;
+> 6801	        const prevDayStreamHandler = this.prevDayStreamHandler.bind(this);
+> 6802	        // Combine stream for array of symbols
+> 6803	        if (Array.isArray(symbols)) {
+> 6804	            if (!this.isArrayUnique(symbols)) throw Error('prevDay: "symbols" cannot contain duplicate elements.');
+> 6805	            const streams = symbols.map(function (symbol) {
+> 6806	                return symbol.toLowerCase() + '@ticker';
+> 6807	            });
+> 6808	            subscription = this.subscribeCombined(streams, function (data: any) {
+> 6809	                prevDayStreamHandler(data, callback);
+> 6810	            }, reconnect);
+> 6811	            // Raw stream for  a single symbol
+> 6812	        } else if (symbols) {
+> 6813	            const symbol = symbols;
+> 6814	            subscription = this.subscribe(symbol.toLowerCase() + '@ticker', function (data: any) {
+> 6815	                prevDayStreamHandler(data, callback);
+> 6816	            }, reconnect);
+> 6817	            // Raw stream of all listed symbols
+> 6818	        } else {
+> 6819	            subscription = this.subscribe('!miniTicker@arr', function (data: any) {
+> 6820	                if (singleCallback) {
+> 6821	                    prevDayStreamHandler(data, callback);
+> 6822	                } else {
+> 6823	                    for (const line of data) {
+> 6824	                        prevDayStreamHandler(line, callback);
+> 6825	                    }
+> 6826	                }
+> 6827	            }, reconnect);
+> 6828	        }
+> 6829	        return (subscription as any).url;
+> 6830	    }
+> 6831	}
+> 6832	
+> ```
+
+## 🤖 Claude *(17:33:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/nba-inspect/node_modules/node-binance-api/src\necho \"=== ws bookTickers def (inside websockets obj) ===\"\ngrep -nE \"bookTickers\" node-binance-api.ts | head -20\necho; echo \"=== endpoint key literals (@kline/@ticker/@miniTicker/@bookTicker) ===\"\ngrep -nE \"@(kline|ticker|miniTicker|bookTicker|depth|trade|aggTrade)\" node-binance-api.ts | grep -viE \"futures|delivery|fstream|dstream\" | head -30\necho; echo \"=== how subscribe builds endpoint + subscriptions map (terminate key) ===\"\nsed -n '1440,1470p' node-binance-api.ts",
+  "description": "Locate ws bookTickers, endpoint key literals, subscribe/terminate keying"
+}
+```
+
+## 🤖 Claude *(17:36:20)*
+
+
+## 🤖 Claude *(17:36:31)*
+
+Agora tenho a verdade da maior parte. Síntese dos achados (todos confirmados no source):
+
+**Compatível / mudança mínima:**
+- `miniTicker` 1.x entrega exatamente `{symbol:{close,open,high,low,volume,quoteVolume,eventTime}}` → `miniTickerStream` **zero mudança**.
+- `chartStream`: callback `(symbol,interval,chart)` e `chart[tick].isFinal` iguais; só troca `binance.ohlc()` → **`binance.populateOHLC()`** (mesma forma de retorno). `last` existe.
+- `prevDayConvertData` (usado pelo ws) ainda devolve os nomes ANTIGOS (`percentChange/averagePrice/prevClose/close/...`) → `tickerStream` praticamente inalterado (callback `(null, converted)`).
+- `balance()` → `{ASSET:{available,onOrder}}` igual. `exchangeInfo/orderStatus/trades/cancel` iguais.
+- `terminate(symbol@kline_interval)` e `(symbol@ticker)` batem com as chaves de subscription.
+
+**Mudanças/risco que exigem cuidado:**
+1. **Ordens STOP**: `buy()/sell()` da 1.x fixam `type='LIMIT'` posicional e o guard de `stopPrice` checa esse type ANTES do `params` sobrescrever → `buy(...,{type:'STOP_LOSS_LIMIT',stopPrice})` **lança erro**. Solução: o wrapper deve chamar `binance.order(type,side,...)` direto com o `type` correto. (MARKET→`marketBuy/Sell` que tratam `quoteOrderQty`.)
+2. **userData**: 1.x usa a **WebSocket-API** (`connectWsApi` + `userDataStream.subscribe.signature`), não o listenKey clássico. Preciso confirmar se `getWsApiUrl()` respeita testnet — **risco real de conectar no mainnet ws-api com chave testnet**.
+3. **bookStream**: `websockets.bookTickers` perdeu o modo all-symbols e usa conversor de futures. Preciso ver se o monitor BOOK está ativo.
+
+Vou fechar os dois últimos desconhecidos (ws-api testnet + monitores ativos) e olhar OCO/testnet no README.
+
+## 🤖 Claude *(17:36:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/nba-inspect/node_modules/node-binance-api/src\necho \"=== getWsApiUrl + getStreamUrl + getSpotUrl defs ===\"\ngrep -nE \"getWsApiUrl|getStreamUrl\\s*\\(\\)|getSpotUrl\\s*\\(\\)|getSapiUrl\\s*\\(\" node-binance-api.ts | head\nsed -n '/getWsApiUrl[^a-zA-Z]/,/^    }/p' node-binance-api.ts | head -40\necho; echo \"=== url DEFAULTS (base/stream/wsApi/testnet) in constructor/Options ===\"\ngrep -nE \"binance\\.(com|vision)|testnet|ws-api|wsApiUrl|wsapi|stream\\.|/ws-api/\" node-binance-api.ts | head -40",
+  "description": "Inspect getWsApiUrl + url defaults + testnet handling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getWsApiUrl + getStreamUrl + getSpotUrl defs ===
+> 253:    getSpotUrl() {
+> 259:    getSapiUrl() {
+> 281:    getStreamUrl() {
+> 287:    getWsApiUrl() {
+> 711:        return await this.publicRequest/**/(this.getSpotUrl() + path, data, method);
+> 723:        return await this.signedRequest/**/(this.getSpotUrl() + path, data, method, noDataInSignature);
+> 730:        return await this.signedRequest/**/(this.getSapiUrl() + path, data, method, noDataInSignature);
+> 1129:    //     //     signedRequest(this.getSpotUrl() + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+> 1453:            ws = new WebSocket(this.getStreamUrl() + endpoint, { agent: agent });
+> 1458:            ws = new WebSocket(this.getStreamUrl() + endpoint, { agent: agent });
+>     getWsApiUrl() {
+>         if (this.Options.test) return this.wsApiTest;
+>         return this.wsApi;
+>     }
+>             ws = new WebSocket(this.getWsApiUrl(), { agent: agent });
+>         } else if (httpsproxy) {
+>             const config = url.parse(httpsproxy);
+>             const agent = new HttpsProxyAgent(config);
+>             if (this.Options.verbose) this.Options.log('WebSocket API: using proxy server ' + agent);
+>             ws = new WebSocket(this.getWsApiUrl(), { agent: agent });
+>         } else {
+>             ws = new WebSocket(this.getWsApiUrl());
+>         }
+> 
+>         (ws as any).reconnect = this.Options.reconnect;
+>         (ws as any).connectionId = connectionId;
+>         (ws as any).isAlive = false;
+> 
+>         ws.on('open', () => {
+>             if (this.Options.verbose) this.Options.log('WebSocket API: Connected to ' + this.getWsApiUrl());
+>             (ws as any).isAlive = true;
+>         });
+>         ws.on('pong', () => { (ws as any).isAlive = true; });
+>         ws.on('error', (err) => {
+>             this.Options.log('WebSocket API error: ' + (ws as any).connectionId + ' error: ' + err.message);
+>         });
+>         ws.on('close', (code, reason) => {
+>             if (this.Options.verbose) this.Options.log('WebSocket API closed: ' + (ws as any).connectionId +
+>                 (code ? ' (' + code + ')' : '') +
+>                 (reason ? ' ' + reason : ''));
+>             delete this.wsApiConnections[connectionId];
+>             if ((ws as any).reconnect && typeof reconnect === 'function') {
+>                 if (this.Options.verbose) this.Options.log('WebSocket API reconnecting: ' + connectionId);
+>                 reconnect();
+>             }
+>         });
+>         ws.on('message', data => {
+>             try {
+>                 if (this.Options.verbose) this.Options.log('WebSocket API data:', data);
+>                 const message = JSONbig.parse(data as any);
+> 
+> === url DEFAULTS (base/stream/wsApi/testnet) in constructor/Options ===
+> 33:    baseTest = `https://testnet.binance.vision/api/`;
+> 34:    baseDemo = `https://demo-api.binance.com/api/`;
+> 39:    fapiTest = `https://testnet.binancefuture.com/fapi/`;
+> 40:    fapiDemo = `https://demo-fapi.binance.com/fapi/`;
+> 41:    dapiTest = `https://testnet.binancefuture.com/dapi/`;
+> 42:    dapiDemo = `https://demo-dapi.binance.com/dapi/`;
+> 43:    fstream = `wss://fstream.binance.${this.domain}/stream?streams=`;
+> 44:    fstreamSingle = `wss://fstream.binance.${this.domain}/ws/`;
+> 45:    fstreamSingleTest = `wss://stream.binancefuture.${this.domain}/ws/`;
+> 46:    fstreamSingleDemo = `wss://fstream.binancefuture.com/ws/`;
+> 47:    fstreamTest = `wss://stream.binancefuture.${this.domain}/stream?streams=`;
+> 48:    fstreamDemo = `wss://fstream.binancefuture.com/stream?streams=`;
+> 49:    dstream = `wss://dstream.binance.${this.domain}/stream?streams=`;
+> 50:    dstreamSingle = `wss://dstream.binance.${this.domain}/ws/`;
+> 51:    dstreamSingleTest = `wss://dstream.binancefuture.${this.domain}/ws/`;
+> 52:    dstreamSingleDemo = `wss://dstream.binancefuture.com/ws/`;
+> 53:    dstreamTest = `wss://dstream.binancefuture.${this.domain}/stream?streams=`;
+> 54:    dstreamDemo = `wss://dstream.binancefuture.com/stream?streams=`;
+> 55:    stream = `wss://stream.binance.${this.domain}:9443/ws/`;
+> 56:    streamTest = `wss://stream.testnet.binance.vision/ws/`;
+> 57:    streamDemo = `wss://demo-stream.binance.com/ws/`;
+> 58:    combineStream = `wss://stream.binance.${this.domain}:9443/stream?streams=`;
+> 59:    combineStreamTest = `wss://stream.testnet.binance.vision/stream?streams=`;
+> 60:    combineStreamDemo = `wss://demo-stream.binance.com/stream?streams=`;
+> 61:    wsApi = `wss://ws-api.binance.${this.domain}:443/ws-api/v3`;
+> 62:    wsApiTest = `wss://ws-api.testnet.binance.vision/ws-api/v3`;
+> 318:            if (this.Options.demo) return `wss://fstream.binancefuture.com/${category}/ws/`;
+> 319:            if (this.Options.test) return `wss://stream.binancefuture.${this.domain}/${category}/ws/`;
+> 320:            return `wss://fstream.binance.${this.domain}/${category}/ws/`;
+> 329:            if (this.Options.demo) return `wss://fstream.binancefuture.com/${category}/stream?streams=`;
+> 330:            if (this.Options.test) return `wss://stream.binancefuture.${this.domain}/${category}/stream?streams=`;
+> 331:            return `wss://fstream.binance.${this.domain}/${category}/stream?streams=`;
+> 828:     * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 829:     * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 830:     * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 921:     * @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 983:* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> 984:* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/public-api-endpoints#test-new-order-trade
+> 985:* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+> 997:* @see https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-trade
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(17:36:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== monitorTypes + seeders for monitors ===\"\ngrep -rn \"monitorTypes\" src/repositories/monitorsRepository.js | head\necho \"--- seeders dir ---\"; ls src/seeders 2>/dev/null || ls seeders 2>/dev/null || find . -path ./node_modules -prune -o -name \"*monitor*seed*\" -print 2>/dev/null\necho \"--- monitor seeder content (types active) ---\"\nfind . -path ./node_modules -prune -o -name \"*.js\" -path \"*seeders*\" -print 2>/dev/null | head\nfor f in $(find . -path ./node_modules -prune -o -name \"*.js\" -path \"*seeders*\" -print 2>/dev/null | grep -i monitor); do echo \"### $f\"; grep -nE \"type|isActive|BOOK|USER_DATA|MINI_TICKER|CANDLES|TICKER\" \"$f\" | head -30; done",
+  "description": "Check which monitor types are seeded/active"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === monitorTypes + seeders for monitors ===
+> src/repositories/monitorsRepository.js:3:const monitorTypes = {
+> src/repositories/monitorsRepository.js:35:    if (currentMonitor.type === monitorTypes.CANDLES) {
+> src/repositories/monitorsRepository.js:83:    monitorTypes,
+> --- seeders dir ---
+> 20210904035656-default-settings.js
+> 20210904192101-symbol-default.js
+> 20210910174749-default-monitors.js
+> 20210914122144-default-automation.js
+> 20210916221432-default-action.js
+> 20210919222709-default-orderTemplate.js
+> --- monitor seeder content (types active) ---
+> ./seeders/20210919222709-default-orderTemplate.js
+> ./seeders/20210910174749-default-monitors.js
+> ./seeders/20210914122144-default-automation.js
+> ./seeders/20210904035656-default-settings.js
+> ./seeders/20210904192101-symbol-default.js
+> ./seeders/20210916221432-default-action.js
+> ### ./seeders/20210910174749-default-monitors.js
+> 11:          type: monitorTypes.MINI_TICKER,
+> 15:          isActive: true,
+> 23:          type: monitorTypes.BOOK,
+> 27:          isActive: false,
+> 35:          type: monitorTypes.USER_DATA,
+> 39:          isActive: true,
+> 47:          type: monitorTypes.CANDLES,
+> 51:          isActive: true,
+> ```
+
+## 🤖 Claude *(17:37:20)*
+
+
+## 🤖 Claude *(17:37:27)*
+
+Os dois últimos riscos resolvidos:
+
+**userData/testnet (era o maior risco):** `getWsApiUrl()` faz `if (Options.test) return wsApiTest` (`wss://ws-api.testnet.binance.vision/ws-api/v3`) senão mainnet. Ou seja, só os `urls.base/stream` **não** redirecionam a WS-API — preciso setar **`test: true`** nas options quando for testnet (derivo de `apiUrl.includes('testnet')`). Sem isso, o monitor USER_DATA (ativo) tentaria autenticar no ws-api **mainnet** com chave testnet → erro no boot.
+
+**Monitores ativos (seeder):** MINI_TICKER ✅ativo, CANDLES ✅ativo, USER_DATA ✅ativo, **BOOK ❌inativo**. Então `bookStream` não está no hot-path (o book já é simulado a partir do miniTicker) — de-risca essa parte. Os que importam (miniTicker/candles/userData) eu já sei adaptar.
+
+Vou confirmar a precedência dos getters de URL (pra `test:true` não quebrar o REST) e pegar o exemplo de OCO do README.
+
+## 🤖 Claude *(17:37:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/nba-inspect/node_modules/node-binance-api/src/node-binance-api.ts",
+  "offset": 253,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 253	    getSpotUrl() {
+> 254	        if (this.Options.demo) return this.baseDemo;
+> 255	        if (this.Options.test) return this.baseTest;
+> 256	        return this.base;
+> 257	    }
+> 258	
+> 259	    getSapiUrl() {
+> 260	        return this.sapi;
+> 261	    }
+> 262	
+> 263	    getFapiUrl() {
+> 264	        if (this.Options.demo) return this.fapiDemo;
+> 265	        if (this.Options.test) return this.fapiTest;
+> 266	        return this.fapi;
+> 267	    }
+> 268	
+> 269	    getDapiUrl() {
+> 270	        if (this.Options.demo) return this.dapiDemo;
+> 271	        if (this.Options.test) return this.dapiTest;
+> 272	        return this.dapi;
+> 273	    }
+> 274	
+> 275	    getCombineStreamUrl() {
+> 276	        if (this.Options.demo) return this.combineStreamDemo;
+> 277	        if (this.Options.test) return this.combineStreamTest;
+> 278	        return this.combineStream;
+> 279	    }
+> 280	
+> 281	    getStreamUrl() {
+> 282	        if (this.Options.demo) return this.streamDemo;
+> 283	        if (this.Options.test) return this.streamTest;
+> 284	        return this.stream;
+> 285	    }
+> 286	
+> 287	    getWsApiUrl() {
+> 288	        if (this.Options.test) return this.wsApiTest;
+> 289	        return this.wsApi;
+> 290	    }
+> 291	
+> 292	    getDStreamSingleUrl() {
+> 293	        if (this.Options.demo) return this.dstreamSingleDemo;
+> 294	        if (this.Options.test) return this.dstreamSingleTest;
+> 295	        return this.dstreamSingle;
+> 296	    }
+> 297	
+> 298	    /**
+> 299	     * Classify a futures stream endpoint into public, market, or private category
+> 300	     * per Binance USDⓈ-M Futures WebSocket URL split (2026-03-06)
+> 301	     */
+> 302	    classifyFuturesStream(endpoint: string): 'public' | 'market' | 'private' {
+> 303	        // Public: bookTicker and depth streams (high-frequency)
+> 304	        if (endpoint.includes('@bookTicker') || endpoint === '!bookTicker'
+> 305	            || endpoint.includes('@depth')) {
+> 306	            return 'public';
+> 307	        }
+> 308	        // Private: listenKey is a long alphanumeric string (60+ chars, no @ or !)
+> 309	        if (/^[A-Za-z0-9]{20,}$/.test(endpoint)) {
+> 310	            return 'private';
+> 311	        }
+> 312	        // Market: aggTrade, markPrice, kline, ticker, miniTicker, forceOrder, etc.
+> 313	        return 'market';
+> 314	    }
+> 315	
+> 316	    getFStreamSingleUrl(category?: 'public' | 'market' | 'private') {
+> 317	        if (category) {
+> 318	            if (this.Options.demo) return `wss://fstream.binancefuture.com/${category}/ws/`;
+> 319	            if (this.Options.test) return `wss://stream.binancefuture.${this.domain}/${category}/ws/`;
+> 320	            return `wss://fstream.binance.${this.domain}/${category}/ws/`;
+> 321	        }
+> 322	        if (this.Options.demo) return this.fstreamSingleDemo;
+> 323	        if (this.Options.test) return this.fstreamSingleTest;
+> 324	        return this.fstreamSingle;
+> 325	    }
+> 326	
+> 327	    getFStreamUrl(category?: 'public' | 'market' | 'private') {
+> 328	        if (category) {
+> 329	            if (this.Options.demo) return `wss://fstream.binancefuture.com/${category}/stream?streams=`;
+> 330	            if (this.Options.test) return `wss://stream.binancefuture.${this.domain}/${category}/stream?streams=`;
+> 331	            return `wss://fstream.binance.${this.domain}/${category}/stream?streams=`;
+> 332	        }
+> 333	        if (this.Options.demo) return this.fstreamDemo;
+> 334	        if (this.Options.test) return this.fstreamTest;
+> 335	        return this.fstream;
+> 336	    }
+> 337	
+> 338	    getDStreamUrl() {
+> 339	        if (this.Options.demo) return this.dstreamDemo;
+> 340	        if (this.Options.test) return this.dstreamTest;
+> 341	        return this.dstream;
+> 342	    }
+> ```
+
+## 🤖 Claude *(17:37:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/nba-inspect/node_modules/node-binance-api\necho \"=== README: OCO usage ===\"\ngrep -niE \"oco\" README.md | head -20\necho \"--- OCO example block ---\"\nawk '/[Oo][Cc][Oo]/{print NR\": \"$0}' README.md | head -20",
+  "description": "Confirm url getter precedence and find README OCO examples"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === README: OCO usage ===
+> --- OCO example block ---
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(17:39:29)*
+
+
+## 🤖 Claude *(17:39:40)*
+
+Investigação a fundo concluída — tenho a verdade da API 1.x (fork ccxt) confirmada no source, não em suposição. Resumo do que muda no `exchange.js` (o wrapper é o shim de isolamento; quase nenhum caller muda):
+
+**Compatível direto:** `exchangeInfo`, `balance` (`{ASSET:{available,onOrder}}`), `cancel`, `orderStatus`, `trades`(orderTrade), `miniTicker` (shape idêntico), `tickerStream`/prevDay (ainda devolve nomes antigos), `terminate` (chaves batem), `withdraw`/`getCoins` (usam axios+HMAC próprios, não dependem da lib).
+
+**Mudanças necessárias (com motivo confirmado no código):**
+1. **Ordens** — `buy()/sell()` da 1.x fixam `type='LIMIT'` e o guard de `stopPrice` dispara erro antes do override. → wrapper passa a chamar `binance.order(type,side,…)` direto (MARKET via `marketBuy/Sell` preservando `quoteOrderQty`). Cobre LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER/MARKET.
+2. **chartStream** — `binance.ohlc()` virou `binance.populateOHLC()` (mesma forma `{open,high,low,close,volume}[]`).
+3. **userData** — 1.x usa WebSocket-API; precisa `test:true` nas options (derivado de `apiUrl.includes('testnet')`) senão autentica no **ws-api mainnet** com chave testnet. Também reordenar callbacks (`all_updates_callback` 1º).
+4. **bookStream** — `websockets.bookTickers` perdeu o modo all-symbols; mas o monitor **BOOK está inativo** no seeder (book é simulado do miniTicker) → fora do hot-path; deixo funcional via `subscribe('!bookTicker')` best-effort.
+
+**Segurança:** a árvore nova dropa `request/tough-cookie/uuid`; só resta `qs@6.15.2` (recente, não vulnerável). Removo o `overrides` form-data e reconfiro `npm audit`.
+
+Antes de mexer no core de trading, preciso travar **uma** decisão de escopo que muda o que construo e o risco no hot-path:
+
+## 🤖 Claude *(17:39:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Escopo do OCO nesta subida (a 1.x exp\u00f5e ocoOrder \u2192 endpoint novo v3/orderList/oco). O bump de seguran\u00e7a + adapta\u00e7\u00e3o do exchange.js \u00e9 o n\u00facleo cr\u00edtico; o OCO \u00e9 o b\u00f4nus. Como voc\u00ea quer fechar o OCO agora?",
+      "header": "Escopo OCO",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Enxuto agora (recomendado)",
+          "description": "Exponho oco()/cancel-via-orderList no wrapper + smoke REST de OCO em testnet (place+cancel). OCO fica CALLABLE e o d\u00e9bito 'lib n\u00e3o suporta' some, mas SEM mexer no motor de a\u00e7\u00f5es do Beholder. Mant\u00e9m o bump focado/shipp\u00e1vel e o hot-path com risco m\u00ednimo. O wiring no Beholder vira a pr\u00f3xima task."
+        },
+        {
+          "label": "Completo agora",
+          "description": "Al\u00e9m do acima, fa\u00e7o o wiring no Beholder ap\u00f3s o buy: novo fluxo de a\u00e7\u00e3o OCO, orderListId no orderModel, tratamento de listStatus no userData e persist\u00eancia das 2 pernas. Fecha tudo numa subida s\u00f3, mas adiciona superf\u00edcie de feature ao hot-path de trading no mesmo deploy do bump de seguran\u00e7a (mais a validar/gate)."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
