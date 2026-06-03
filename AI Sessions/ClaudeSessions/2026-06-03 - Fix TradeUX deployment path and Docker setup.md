@@ -7298,6 +7298,897 @@ O `GET /symbols/BTCUSDT` voltou `null` — provavelmente **os símbolos não for
 > GET /symbols -> count: [{'symbol': 'BTCBUSD', 'basePrecision': 8, 'quotePrecision': 8, 'minNotional': '0.1', 'minLotSize': '0.1', 'isFavorite': True, 'base': None, 'quote': None, 'stepSize': None, 'tickSize': None, 'createdAt': '2026-06-03T00:55:42.000Z', 'updatedAt': '2026-06-03T00:55:42.000Z'}]
 > ```
 
+## 🤖 Claude *(02:30:35)*
+
+
+## 🤖 Claude *(02:30:38)*
+
+Achado crítico: **os símbolos nunca foram sincronizados** — a tabela só tem o placeholder `BTCBUSD` (com `stepSize/tickSize = null`), **não tem BTCUSDT**. Por isso o `GET /symbols/BTCUSDT` deu null — e, mais importante, **o baseline não conseguiria operar** (o `calcQty` precisa de `symbol.minNotional/stepSize`). Tem a rota `POST /symbols/sync`.
+
+Sincronizando os símbolos (puxa filtros do exchangeInfo do testnet), confirmando BTCUSDT, e aí sim fazendo o test-buy + stop:
+
+## 🤖 Claude *(02:30:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error, math\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method); r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=60) as resp:\n            t=resp.read().decode(); return resp.status,(json.loads(t) if t else None)\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); token=d[\"token\"]\n\n# 1) sync s\u00edmbolos\nst,r=req(\"POST\",\"/symbols/sync\",None,token); print(\"sync symbols ->\", st)\n# 2) confirmar BTCUSDT\nst,sym=req(\"GET\",\"/symbols/BTCUSDT\",token=token)\nif not isinstance(sym,dict) or not sym.get(\"stepSize\"):\n    print(\"ABORT: BTCUSDT sem filtros ->\", sym); raise SystemExit\nmn=float(sym[\"minNotional\"]); ss=float(sym[\"stepSize\"]); ts=float(sym[\"tickSize\"]); bp=int(sym[\"basePrecision\"]); qp=int(sym[\"quotePrecision\"])\nprint(f\"BTCUSDT ok: minNotional={mn} stepSize={ss} tickSize={ts} basePrec={bp} quotePrec={qp}\")\nprice=float(json.load(urllib.request.urlopen(\"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\",timeout=10))[\"price\"])\n\n# 3) qty (>= minNotional, folga)\nqty=round(math.ceil((max(mn,5)*1.15/price)/ss)*ss, bp); qstr=f\"{qty:.{bp}f}\"\nprint(f\"pre\u00e7o={price} | qty compra={qstr} (~${round(qty*price,2)})\")\n\n# 4) MARKET BUY\nst,buy=req(\"POST\",\"/orders\",{\"side\":\"BUY\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":None,\"options\":{\"type\":\"MARKET\"}},token)\nprint(\"BUY ->\", st, (buy if isinstance(buy,str) else {k:buy.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"quantity\")}))\n\n# 5) STOP_LOSS_LIMIT SELL @ -2%\nfl=lambda p: round(math.floor(p/ts)*ts, qp)\nsstr,lstr=f\"{fl(price*0.98):.{qp}f}\",f\"{fl(price*0.975):.{qp}f}\"\nprint(f\"stop: stopPrice={sstr} limitPrice={lstr}\")\nst,stop=req(\"POST\",\"/orders\",{\"side\":\"SELL\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":lstr,\"options\":{\"type\":\"STOP_LOSS_LIMIT\",\"stopPrice\":sstr}},token)\nprint(\"STOP ->\", st, (stop if isinstance(stop,str) else {k:stop.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"stopPrice\",\"limitPrice\")}))\n\n# 6) verificar\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",token=token)\nprint(\"\\n=== ordens BTCUSDT ===\")\nfor o in (ords.get(\"rows\",[])[:6] if isinstance(ords,dict) else []):\n    print(f\"  id={o.get('id')} {o.get('side'):4s} {o.get('type'):16s} status={o.get('status'):9s} qty={o.get('quantity')} stop={o.get('stopPrice')} limit={o.get('limitPrice')}\")\nPY",
+  "description": "Sync symbols, then place controlled test buy and stop-loss order",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<stdin>", line 14, in <module>
+>   File "<stdin>", line 9, in req
+>   File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+>     return _default_decoder.decode(s)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+>     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+>                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+>     raise JSONDecodeError("Expecting value", s, err.value) from None
+> json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+> ```
+
+## 🤖 Claude *(02:31:08)*
+
+
+## 🤖 Claude *(02:31:10)*
+
+Erro no **login** com JSON inválido — provavelmente a origem devolveu algo não-JSON (502/HTML), o que sugere que o backend pode ter reiniciado/engasgado. Deixa eu checar a saúde da stack e ver a resposta crua:
+
+## 🤖 Claude *(02:31:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== containers ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'\necho \"\"\necho \"=== resposta crua do login ===\"\ncurl -sS -i -m 10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d '{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}' 2>&1 | head -20\necho \"\"\necho \"=== backend log (\u00faltimas linhas) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose logs --tail=20 backend'",
+  "description": "Check stack health and raw login response"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === containers ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED             STATUS                 PORTS
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    2 hours ago         Up 2 hours             3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         2 hours ago         Up 2 hours (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   About an hour ago   Up About an hour       127.0.0.1:8090->80/tcp
+> 
+> === resposta crua do login ===
+> HTTP/1.1 200 OK
+> Server: nginx/1.31.1
+> Date: Wed, 03 Jun 2026 02:31:14 GMT
+> Content-Type: application/json; charset=utf-8
+> Content-Length: 166
+> Connection: keep-alive
+> Access-Control-Allow-Origin: *
+> Content-Security-Policy: default-src 'self';base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests
+> X-DNS-Prefetch-Control: off
+> Expect-CT: max-age=0
+> X-Frame-Options: SAMEORIGIN
+> Strict-Transport-Security: max-age=15552000; includeSubDomains
+> X-Download-Options: noopen
+> X-Content-Type-Options: nosniff
+> X-Permitted-Cross-Domain-Policies: none
+> Referrer-Policy: no-referrer
+> X-XSS-Protection: 0
+> ETag: W/"a6-ejlHrWj+M6ebjD4715xpumeuSsk"
+> 
+> {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzgwNDUzODc0LCJleHAiOjE3ODA0NTU2NzR9.OgIlIMXZoX0j0p9EeAqER1tTGAMGXnAtG4JdIaip6U8","pushToken":null}
+> === backend log (últimas linhas) ===
+> backend-1  | == 20210904192101-symbol-default: migrating =======
+> backend-1  | == 20210904192101-symbol-default: migrated (0.019s)
+> backend-1  | 
+> backend-1  | == 20210910174749-default-monitors: migrating =======
+> backend-1  | == 20210910174749-default-monitors: migrated (0.031s)
+> backend-1  | 
+> backend-1  | == 20210914122144-default-automation: migrating =======
+> backend-1  | == 20210914122144-default-automation: migrated (0.018s)
+> backend-1  | 
+> backend-1  | == 20210916221432-default-action: migrating =======
+> backend-1  | == 20210916221432-default-action: migrated (0.018s)
+> backend-1  | 
+> backend-1  | == 20210919222709-default-orderTemplate: migrating =======
+> backend-1  | == 20210919222709-default-orderTemplate: migrated (0.017s)
+> backend-1  | 
+> backend-1  | [TradeUX] Starting backend...
+> backend-1  | 
+> backend-1  | > backend@1.0.0 start
+> backend-1  | > node -r dotenv/config ./src/server
+> backend-1  |
+> ```
+
+## 🤖 Claude *(02:31:40)*
+
+
+## 🤖 Claude *(02:31:42)*
+
+Stack saudável — o login agora responde 200 com token válido. Foi um **blip transitório** (resposta não-JSON momentânea). Vou tornar o cliente robusto (retry em falha transitória) e refazer: **sync de símbolos → confirmar BTCUSDT → test-buy → stop 2%**.
+
+## 🤖 Claude *(02:31:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error, math\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None, _try=0):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method); r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=60) as resp:\n            t=resp.read().decode()\n            try: return resp.status,(json.loads(t) if t else None)\n            except json.JSONDecodeError:\n                return req(method,path,body,token,_try+1) if _try<3 else (resp.status,{\"_raw\":t[:150]})\n    except urllib.error.HTTPError as e:\n        b=e.read().decode()\n        return req(method,path,body,token,_try+1) if (e.code>=500 and _try<3) else (e.code,b)\n    except Exception as e:\n        return req(method,path,body,token,_try+1) if _try<3 else (None,str(e))\n\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"})\ntoken=d[\"token\"]; print(\"login:\", st)\nst,r=req(\"POST\",\"/symbols/sync\",None,token); print(\"sync symbols:\", st)\nst,sym=req(\"GET\",\"/symbols/BTCUSDT\",token=token)\nif not isinstance(sym,dict) or not sym.get(\"stepSize\"):\n    print(\"ABORT BTCUSDT:\", sym); raise SystemExit\nmn=float(sym[\"minNotional\"]); ss=float(sym[\"stepSize\"]); ts=float(sym[\"tickSize\"]); bp=int(sym[\"basePrecision\"]); qp=int(sym[\"quotePrecision\"])\nprint(f\"BTCUSDT: minNotional={mn} stepSize={ss} tickSize={ts} basePrec={bp} quotePrec={qp}\")\nprice=float(json.load(urllib.request.urlopen(\"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\",timeout=10))[\"price\"])\nqty=round(math.ceil((max(mn,5)*1.15/price)/ss)*ss, bp); qstr=f\"{qty:.{bp}f}\"\nprint(f\"pre\u00e7o={price} | qty={qstr} (~${round(qty*price,2)})\")\nst,buy=req(\"POST\",\"/orders\",{\"side\":\"BUY\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":None,\"options\":{\"type\":\"MARKET\"}},token)\nprint(\"BUY ->\", st, (buy if isinstance(buy,str) else {k:buy.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"quantity\")}))\nfl=lambda p: round(math.floor(p/ts)*ts, qp)\nsstr,lstr=f\"{fl(price*0.98):.{qp}f}\",f\"{fl(price*0.975):.{qp}f}\"\nprint(f\"stop: stopPrice={sstr} limitPrice={lstr}\")\nst,stop=req(\"POST\",\"/orders\",{\"side\":\"SELL\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":lstr,\"options\":{\"type\":\"STOP_LOSS_LIMIT\",\"stopPrice\":sstr}},token)\nprint(\"STOP ->\", st, (stop if isinstance(stop,str) else {k:stop.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"stopPrice\",\"limitPrice\")}))\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",token=token)\nprint(\"\\n=== ordens BTCUSDT ===\")\nfor o in (ords.get(\"rows\",[])[:6] if isinstance(ords,dict) else []):\n    print(f\"  id={o.get('id')} {o.get('side'):4s} {str(o.get('type')):16s} status={str(o.get('status')):9s} qty={o.get('quantity')} stop={o.get('stopPrice')} limit={o.get('limitPrice')}\")\nPY",
+  "description": "Robust retry: sync symbols, confirm BTCUSDT, test buy + stop-loss",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login: 200
+> sync symbols: 201
+> BTCUSDT: minNotional=5.0 stepSize=1e-05 tickSize=0.01 basePrec=8 quotePrec=8
+> preço=66688.38 | qty=0.00009000 (~$6.0)
+> BUY -> 201 {'orderId': 10078995, 'status': 'FILLED', 'side': 'BUY', 'type': 'MARKET', 'quantity': '0.00009000'}
+> stop: stopPrice=65354.61000000 limitPrice=65021.17000000
+> STOP -> 201 {'orderId': 10078999, 'status': 'NEW', 'side': 'SELL', 'type': 'STOP_LOSS_LIMIT', 'stopPrice': '65354.61000000', 'limitPrice': '65021.17000000'}
+> 
+> === ordens BTCUSDT ===
+>   id=2 SELL STOP_LOSS_LIMIT  status=NEW       qty=0.00009000 stop=65354.61000000 limit=65021.17000000
+>   id=1 BUY  MARKET           status=FILLED    qty=0.00009000 stop=None limit=None
+> ```
+
+## 🤖 Claude *(02:33:45)*
+
+
+## 🤖 Claude *(02:33:52)*
+
+🎉 **Passo 2 (stop-loss) VALIDADO no testnet — funcionou ponta a ponta:**
+
+| ordem | resultado |
+|---|---|
+| MARKET BUY 0.00009 BTC (~$6) | **FILLED** (entrada ~66.688) |
+| STOP_LOSS_LIMIT SELL @ -2% | **NEW** — `stopPrice 65.354,61` / limit 65.021,17, parado na corretora protegendo a posição |
+
+E achei/corrigi um **bloqueador crítico** no caminho: **os símbolos nunca tinham sido sincronizados** (só existia o placeholder `BTCBUSD` com filtros `null`). Sem BTCUSDT na base, o `calcQty(MIN_NOTIONAL)` falharia → **o baseline que "ativei" não conseguiria executar**. Rodei `POST /symbols/sync` → BTCUSDT agora tem `minNotional=5, stepSize=1e-5, tickSize=0.01`. **Agora o baseline é de fato funcional.**
+
+**Estado atual:** posição de teste viva (~$6 BTC) com stop -2% ativo; RSI-buy (id2) ativo; RSI-sell (id3) parei pro teste limpo.
+
+---
+
+**Passo 3 (ajustes).** Você delegou o "ajuste", mas tem **uma decisão de arquitetura que é do seu método** e muda o que eu construo — a **saída/integração do stop**. As outras eu já defino (BTCUSDT **+ ETHUSDT**, RSI **30/70**, tamanho **MIN_NOTIONAL**):
+
+## 🤖 Claude *(02:34:04)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como integrar a sa\u00edda/stop no baseline autom\u00e1tico? (rodar stop-loss resting + venda-RSI ao mesmo tempo gera conflito de ordem \u00f3rf\u00e3 sem OCO)",
+      "header": "Sa\u00edda/stop",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Trailing stop como sa\u00edda \u00fanica (recomendado)",
+          "description": "Compra RSI<30 \u2192 coloca um trailing stop -2% que segue o pre\u00e7o pra cima e vende se cair 2% do topo. Protege E deixa o lucro correr, com UMA ordem de sa\u00edda \u2014 sem conflito. Eu fa\u00e7o a fia\u00e7\u00e3o (m\u00e9dia complexidade)."
+        },
+        {
+          "label": "RSI-out simples (sem stop no loop)",
+          "description": "Mean-reversion puro: compra RSI<30, vende RSI>70 a mercado. J\u00e1 est\u00e1 pronto, zero conflito. O stop-loss fica validado mas N\u00c3O integrado ao auto-loop (sem prote\u00e7\u00e3o se o pre\u00e7o despencar segurando a posi\u00e7\u00e3o)."
+        },
+        {
+          "label": "Stop + take-profit (OCO completo)",
+          "description": "O 'certo' pra produ\u00e7\u00e3o: ap\u00f3s a compra, um par OCO (take-profit +X% E stop -2%, um cancela o outro). Mas o c\u00f3digo atual n\u00e3o exp\u00f5e OCO \u2014 exige altera\u00e7\u00e3o maior no backend/MCP antes."
+        }
+      ]
+    },
+    {
+      "question": "O que fa\u00e7o com a posi\u00e7\u00e3o de teste atual (~$6 BTC + stop -2%)?",
+      "header": "Posi\u00e7\u00e3o teste",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Manter como demo do stop",
+          "description": "Deixa a posi\u00e7\u00e3o + o stop vivos \u2014 voc\u00ea v\u00ea na UI (Orders) e podemos observar o stop disparar se o pre\u00e7o cair 2%."
+        },
+        {
+          "label": "Fechar e limpar",
+          "description": "Cancelo o stop e vendo a posi\u00e7\u00e3ozinha a mercado, deixando a carteira limpa antes de ligar o baseline tunado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como integrar a saída/stop no baseline automático? (rodar stop-loss resting + venda-RSI ao mesmo tempo gera conflito de ordem órfã sem OCO)"="Stop + take-profit (OCO completo)", "O que faço com a posição de teste atual (~$6 BTC + stop -2%)?"="Fechar e limpar". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(02:38:33)*
+
+
+## 🤖 Claude *(02:38:37)*
+
+Você escolheu **OCO completo** (take-profit + stop, um cancela o outro) e **fechar/limpar** a posição de teste. OCO é um recurso novo no backend (o código atual não expõe) — vou tratá-lo como feature de verdade.
+
+Primeiro a **limpeza** (cancelar o stop + vender a posiçãozinha) e, em paralelo, checar o suporte a OCO no `node-binance-api` da imagem do backend pra planejar a implementação:
+
+## 🤖 Claude *(02:38:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None, _t=0):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method); r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=30) as resp:\n            t=resp.read().decode()\n            try: return resp.status,(json.loads(t) if t else None)\n            except: return (req(method,path,body,token,_t+1) if _t<3 else (resp.status,t[:120]))\n    except urllib.error.HTTPError as e:\n        b=e.read().decode(); return (req(method,path,body,token,_t+1) if e.code>=500 and _t<3 else (e.code,b))\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); token=d[\"token\"]\n# cancelar o stop (orderId Binance 10078999)\nst,c=req(\"DELETE\",\"/orders/BTCUSDT/10078999\",None,token); print(\"cancel stop ->\", st, (c if isinstance(c,str) else {k:c.get(k) for k in ('orderId','status')}))\n# vender a posi\u00e7\u00e3o de teste (~0.00009 BTC) a mercado\nst,s=req(\"POST\",\"/orders\",{\"side\":\"SELL\",\"symbol\":\"BTCUSDT\",\"quantity\":\"0.00009\",\"limitPrice\":None,\"options\":{\"type\":\"MARKET\"}},token)\nprint(\"sell pos ->\", st, (s if isinstance(s,str) else {k:s.get(k) for k in ('orderId','status','quantity')}))\n# estado\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",token=token)\nprint(\"ordens BTCUSDT abertas/recentes:\")\nfor o in (ords.get(\"rows\",[])[:6] if isinstance(ords,dict) else []):\n    print(f\"  {o.get('side'):4s} {str(o.get('type')):16s} status={o.get('status')}\")\nPY\necho \"\"\necho \"=== node-binance-api: vers\u00e3o + m\u00e9todos OCO na imagem do backend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend node -e \"const v=require(\\\"node-binance-api/package.json\\\").version; const B=require(\\\"node-binance-api\\\"); const b=new B(); const all=Object.keys(b); console.log(\\\"version\\\", v); console.log(\\\"OCO-ish:\\\", all.filter(k=>/oco|orderlist/i.test(k))); console.log(\\\"order-ish:\\\", all.filter(k=>/order|buy|sell/i.test(k)).slice(0,20));\"'",
+  "description": "Clean up test position and inspect node-binance-api OCO support",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> cancel stop -> 200 {'orderId': 10078999, 'status': 'CANCELED'}
+> sell pos -> 201 {'orderId': 10081238, 'status': 'FILLED', 'quantity': '0.00009'}
+> ordens BTCUSDT abertas/recentes:
+>   SELL MARKET           status=FILLED
+>   SELL STOP_LOSS_LIMIT  status=CANCELED
+>   BUY  MARKET           status=FILLED
+> 
+> === node-binance-api: versão + métodos OCO na imagem do backend ===
+> version 0.13.5
+> OCO-ish: []
+> order-ish: [
+>   'orderCount',
+>   'order',
+>   'buy',
+>   'sell',
+>   'marketBuy',
+>   'marketSell',
+>   'orderStatus',
+>   'openOrders',
+>   'cancelOrders',
+>   'allOrders',
+>   'futuresForceOrders',
+>   'futuresLiquidationOrders',
+>   'futuresBuy',
+>   'futuresSell',
+>   'futuresMarketBuy',
+>   'futuresMarketSell',
+>   'futuresMultipleOrders',
+>   'futuresOrder',
+>   'futuresOrderStatus',
+>   'futuresOpenOrders'
+> ]
+> ```
+
+## 🤖 Claude *(02:39:30)*
+
+
+## 🤖 Claude *(02:39:33)*
+
+Limpeza ok (stop **CANCELED**, posição vendida **FILLED** — carteira limpa). E o achado-chave: **`node-binance-api` 0.13.5 não tem OCO** (`OCO-ish: []`). Então vou implementar via **chamada REST assinada** (o `exchange.js` já tem o helper `privateCall` com HMAC, usado no withdraw).
+
+Antes de codar no backend, **valido o endpoint OCO direto no testnet** (mesma lógica do teste do stop) pra saber os params exatos — coloco um OCO mínimo e cancelo:
+
+## 🤖 Claude *(02:39:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport time, hmac, hashlib, urllib.parse, urllib.request, urllib.error, json, math\nKEY=\"wgyLSCNQ600eSw65FDOYL0CgbiWNvMdXB3neqKvDUp4RMoc18ejRdjzeQlQbaqRc\"\nSEC=\"QuRgrQrioePU0gwkQlFbGABTWi3lTdxtNnlf9szNdEUPJSkPCinHlRL09iTs0g3l\"\nB=\"https://testnet.binance.vision\"\ndef signed(method, path, params):\n    params=dict(params); params[\"timestamp\"]=int(time.time()*1000); params[\"recvWindow\"]=60000\n    qs=urllib.parse.urlencode(params)\n    sig=hmac.new(SEC.encode(), qs.encode(), hashlib.sha256).hexdigest()\n    r=urllib.request.Request(f\"{B}{path}?{qs}&signature={sig}\", method=method); r.add_header(\"X-MBX-APIKEY\",KEY)\n    try:\n        with urllib.request.urlopen(r,timeout=15) as resp: return resp.status, json.loads(resp.read().decode())\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()\n\nprice=float(json.load(urllib.request.urlopen(B+\"/api/v3/ticker/price?symbol=BTCUSDT\"))[\"price\"])\ntk=lambda p: round(math.floor(p/0.01)*0.01,2)\ntp, sp, sl = tk(price*1.02), tk(price*0.98), tk(price*0.975)\nprint(f\"pre\u00e7o={price} | take-profit={tp} stop={sp} stopLimit={sl}\")\nparams={\"symbol\":\"BTCUSDT\",\"side\":\"SELL\",\"quantity\":\"0.00009\",\"price\":f\"{tp:.2f}\",\"stopPrice\":f\"{sp:.2f}\",\"stopLimitPrice\":f\"{sl:.2f}\",\"stopLimitTimeInForce\":\"GTC\"}\n\nst,r=signed(\"POST\",\"/api/v3/order/oco\",params)\nprint(\"\\n[/api/v3/order/oco] ->\", st)\nprint(json.dumps(r,indent=1)[:700] if isinstance(r,(dict,list)) else r)\nlistId=None\nif isinstance(r,dict): listId=r.get(\"orderListId\")\n\nif listId is None:\n    st2,r2=signed(\"POST\",\"/api/v3/orderList/oco\",{**params,\"aboveType\":\"LIMIT_MAKER\",\"abovePrice\":f\"{tp:.2f}\",\"belowType\":\"STOP_LOSS_LIMIT\",\"belowStopPrice\":f\"{sp:.2f}\",\"belowPrice\":f\"{sl:.2f}\",\"belowTimeInForce\":\"GTC\"})\n    print(\"\\n[/api/v3/orderList/oco] ->\", st2)\n    print(json.dumps(r2,indent=1)[:700] if isinstance(r2,(dict,list)) else r2)\n    if isinstance(r2,dict): listId=r2.get(\"orderListId\")\n\nif listId is not None:\n    stc,rc=signed(\"DELETE\",\"/api/v3/orderList\",{\"symbol\":\"BTCUSDT\",\"orderListId\":listId})\n    print(f\"\\ncancel OCO list {listId} ->\", stc, (\"OK\" if stc==200 else rc))\nPY",
+  "description": "Validate Binance testnet OCO endpoint and params, then cancel",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> preço=66826.01 | take-profit=68162.53 stop=65489.48 stopLimit=65155.35
+> 
+> [/api/v3/order/oco] -> 200
+> {
+>  "orderListId": 383072,
+>  "contingencyType": "OCO",
+>  "listStatusType": "EXEC_STARTED",
+>  "listOrderStatus": "EXECUTING",
+>  "listClientOrderId": "FubsNvrpUxycQpouFLVvib",
+>  "transactionTime": 1780454383939,
+>  "symbol": "BTCUSDT",
+>  "orders": [
+>   {
+>    "symbol": "BTCUSDT",
+>    "orderId": 10081555,
+>    "clientOrderId": "TsMHclKz64x7SUiEvPibDe"
+>   },
+>   {
+>    "symbol": "BTCUSDT",
+>    "orderId": 10081556,
+>    "clientOrderId": "FvotLEKXUxPnXoAu1DAJ3z"
+>   }
+>  ],
+>  "orderReports": [
+>   {
+>    "symbol": "BTCUSDT",
+>    "orderId": 10081555,
+>    "orderListId": 383072,
+>    "clientOrderId": "TsMHclKz64x7SUiEvPibDe",
+>    "transactTime": 1780454383939,
+>    "price": "65155.35000000",
+>    "origQty": "0.00009000",
+>    "executedQty": "
+> 
+> cancel OCO list 383072 -> 200 OK
+> ```
+
+## 🤖 Claude *(02:41:22)*
+
+
+## 🤖 Claude *(02:41:24)*
+
+✅ **OCO validado no testnet!** `POST /api/v3/order/oco` retornou **200** com `orderListId 383072` e os 2 lados (LIMIT_MAKER take-profit @ 68.162 + STOP_LOSS_LIMIT @ 65.155), e o cancel via `DELETE /api/v3/orderList` funcionou. Tenho a receita exata. Carteira limpa (stop cancelado, posição vendida).
+
+Deixa eu atualizar a memória do projeto (sessão longa) e te dar o panorama + plano do OCO:
+
+## 🤖 Claude *(02:41:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-500k-validation.md",
+  "old_string": "provider=openrouter (key in file), model=openai/gpt-4o-mini, ALLOW_TRADING=false. Journal: `tradeux-agent/journal/tradeux-agent.jsonl`. MCP exposes 26 `tradeux_*` tools.",
+  "new_string": "provider=openrouter (key in file), model=`nvidia/nemotron-3-super-120b-a12b:free` (best free with tool-calling; free tiers are rate-limited + weaker \u2014 Sonnet 4.6 is materially better but paid), ALLOW_TRADING=false. Journal: `tradeux-agent/journal/tradeux-agent.jsonl`. MCP exposes 26 `tradeux_*` tools."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-500k-validation.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:41:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-500k-validation.md",
+  "old_string": "no hardcoded notional/daily-loss caps**. Next gate: enable testnet trading (recommend stronger model + hard caps + a rule-based Beholder baseline first). See [[tradeux-deploy-topology]].",
+  "new_string": "no hardcoded notional/daily-loss caps**.\n\n**Progress (baseline + exits):** Symbols were NEVER synced (only placeholder `BTCBUSD`, null filters) \u2014 ran `POST /symbols/sync`; this was silently blocking ALL trading (`calcQty` needs `symbol.minNotional/stepSize`). BTCUSDT now has filters (minNotional=5, stepSize=1e-5, tickSize=0.01). RSI 30/70 mean-reversion automations created via API (BTCUSDT, MIN_NOTIONAL): buy=id2 (active), sell=id3 (stopped). **Stop-loss validated** on testnet (STOP_LOSS_LIMIT). **OCO validated** on testnet: `POST /api/v3/order/oco` (params: symbol, side, quantity, price[take-profit], stopPrice, stopLimitPrice, stopLimitTimeInForce=GTC; cancel via `DELETE /api/v3/orderList?symbol&orderListId`). **`node-binance-api` 0.13.5 has NO OCO** \u2192 must implement via `backend/src/utils/exchange.js` `privateCall` (already HMAC-signs, used by withdraw). Manual orders via `POST /orders` body `{side,symbol,quantity,limitPrice,options:{type,stopPrice}}`; cancel `DELETE /orders/:symbol/:binanceOrderId`. Chosen exit architecture (user): **OCO (take-profit +2% / stop \u22122%) placed after each buy** (replaces the RSI>70 market-sell \u2014 single exit, no orphan-order conflict). Next: build OCO in backend (exchange.js + beholder/ordersController + wire after-buy) \u2192 rebuild backend \u2192 PR. See [[tradeux-deploy-topology]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-500k-validation.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:42:42)*
+
+
+## 🤖 Claude *(02:42:44)*
+
+Antes do resumo, uma **questão de segurança imediata**: agora que os símbolos sincronizaram, o estado está "meio-armado" — a compra (id2, RSI<30) está **ativa sem saída** (id3 parado, OCO ainda não existe). Se o RSI cair <30 ele compraria sem stop. RSI está ~69 (longe), mas vou **pausar a compra** pra deixar um estado neutro/limpo enquanto construo o OCO:
+
+## 🤖 Claude *(02:42:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(m,p,b=None,t=None,_n=0):\n    d=json.dumps(b).encode() if b is not None else None\n    r=urllib.request.Request(BASE+p,data=d,method=m); r.add_header(\"Content-Type\",\"application/json\")\n    if t: r.add_header(\"Authorization\",t)\n    try:\n        with urllib.request.urlopen(r,timeout=20) as resp:\n            x=resp.read().decode()\n            try: return resp.status,(json.loads(x) if x else None)\n            except: return (req(m,p,b,t,_n+1) if _n<3 else (resp.status,x[:100]))\n    except urllib.error.HTTPError as e:\n        return (req(m,p,b,t,_n+1) if e.code>=500 and _n<3 else (e.code,e.read().decode()))\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); t=d[\"token\"]\nst,_=req(\"POST\",\"/automations/2/stop\",None,t); print(\"pausar compra (id2):\", st)\nst,a=req(\"GET\",\"/automations\",t=t)\nprint(\"estado:\")\nfor x in (a.get(\"rows\",[]) if isinstance(a,dict) else []):\n    print(f\"  id={x['id']} {x['name']:26s} active={x['isActive']}\")\nPY",
+  "description": "Pause the buy automation for a clean neutral state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> pausar compra (id2): 200
+> estado:
+>   id=2 Baseline RSI Buy BTCUSDT   active=False
+>   id=3 Baseline RSI Sell BTCUSDT  active=False
+>   id=1 Example Strategy           active=False
+> ```
+
+## 🤖 Claude *(02:42:59)*
+
+
+## 🤖 Claude *(02:43:12)*
+
+Estado neutro e limpo — todas as automações pausadas, carteira sem posições. 
+
+## 📍 Onde estamos (plano 500k)
+| etapa | status |
+|---|---|
+| Stack no ar / 502 / white-screen | ✅ (PR do fix aberto) |
+| Agente LLM (MCP 26 tools, dry-run) | ✅ modelo free = `nemotron-3-super-120b` |
+| **Símbolos sincronizados** | ✅ (era o bloqueador silencioso de *todo* trade) |
+| Baseline RSI 30/70 criado | ✅ (pausado agora) |
+| Stop-loss no testnet | ✅ validado |
+| **OCO no testnet** | ✅ validado (params confirmados) |
+| Implementar OCO no backend + fiar no baseline | ⏳ **próximo** |
+
+## 🔨 OCO = feature de backend (plano concreto)
+`node-binance-api` 0.13.5 não tem OCO → implemento via REST assinado (`privateCall`). Mudanças:
+1. **`exchange.js`** — `oco(symbol, qty, tpPrice, stopPrice, stopLimitPrice)` + `cancelOco(symbol, listId)` (endpoint `v3/order/oco`, já validado).
+2. **`beholder.js`** (`placeOrder`/`calcPrice`) — suportar template tipo `OCO`: calcula TP (entrada ×1,02) e stop (×0,98) a partir de `LAST_ORDER.avgPrice`, chama `exchange.oco`, grava as 2 ordens.
+3. **Wiring** — automação que dispara após a compra (`LAST_ORDER.side=='BUY' && status=='FILLED'`) → ação `ORDER` com template OCO. (Sem venda-RSI: o TP do OCO é a saída.)
+4. **`app-em.js`** — tratar fills/cancel do par (a corretora cancela o outro lado sozinha).
+5. **Rebuild backend → testar (compra → OCO aparece → um lado preenche, outro cancela) → PR.**
+
+É um **PR de backend** (mexe no core do Beholder) — maior que os configs até aqui, mas o caminho está todo mapeado e os mecanismos já validados no testnet.
+
+## Decisão
+Sigo e construo o OCO agora como PR (igual fiz com o fix do white-screen)?
+
+E, **enquanto eu construo**, você quer que eu rode o **baseline simples interino** (RSI 30/70 *com a venda-RSI como saída*, sem stop) pra já sair trade auditável? Ou prefiro **esperar o OCO** ficar pronto e ligar só a versão completa (com proteção), respeitando sua escolha de ter stop? Meu palpite: **esperar o OCO** (já que você quis proteção), mas se quiser volume de validação agora, ligo o interino.
+
+## 👤 User *(02:46:38)*
+
+Talvez esquecemos de fazer as migrations e seeds para colocar todas as tabelas corretamente ou isso ja foi feito para evitar esse tipo de erro que o setup não configurou ainda, verifique isso para garantir um setup complet.
+
+Sobre as alterações acima de mexer direatmente no cerebro do beholder não sei pois não conheço muito sobre trader preciso que você analise e veja qual a melhor forma de seguir com isso sem ficar me fazer perguntas
+
+## 🤖 Claude *(02:49:16)*
+
+
+## 🤖 Claude *(02:49:19)*
+
+Dois pontos — vou resolver os dois e **decidir** o caminho do OCO sem te perguntar mais (você delegou).
+
+**Ponto 1 — migrations/seeds.** Esclarecendo: o problema dos símbolos **não** foi migration/seed — as migrations rodam no boot do container (`db:migrate` + `db:seed:all`, vimos nos logs) e a tabela `symbols` existe + foi semeada com o placeholder. O **sync** é uma ação de runtime (puxa da Binance), separada do schema. Mas sua preocupação é justa — deixa eu **verificar que o schema está 100% completo**:
+
+## 🤖 Claude *(02:49:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; . ./.env; set +a\necho \"=== migrations ===\"\nOUT=$(docker compose exec -T backend npx sequelize-cli db:migrate:status 2>/dev/null)\necho \"aplicadas (up): $(echo \"$OUT\" | grep -c \"^up\")  |  pendentes (down): $(echo \"$OUT\" | grep -c \"^down\")\"\necho \"$OUT\" | grep \"^down\" | sed \"s/^/  PENDENTE: /\" || true\necho \"\"\necho \"=== seeds (re-roda idempotente p/ confirmar) ===\"\ndocker compose exec -T backend npx sequelize-cli db:seed:all 2>&1 | grep -iE \"already|seeded|error|==\" | tail -4\necho \"\"\necho \"=== tabelas ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SHOW TABLES\" 2>/dev/null | tr \"\\n\" \" \"; echo\necho \"=== contagens-chave ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"\nSELECT CONCAT(\\\"settings=\\\",(SELECT COUNT(*) FROM settings),\\\" symbols=\\\",(SELECT COUNT(*) FROM symbols),\\\" monitors=\\\",(SELECT COUNT(*) FROM monitors),\\\" automations=\\\",(SELECT COUNT(*) FROM automations),\\\" actions=\\\",(SELECT COUNT(*) FROM actions),\\\" ordertemplates=\\\",(SELECT COUNT(*) FROM ordertemplates),\\\" orders=\\\",(SELECT COUNT(*) FROM orders));\" 2>/dev/null\n'",
+  "description": "Verify migrations applied, seeds run, tables and row counts",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === migrations ===
+> aplicadas (up): 18  |  pendentes (down): 0
+> 
+> === seeds (re-roda idempotente p/ confirmar) ===
+> 
+> === tabelas ===
+> SequelizeData SequelizeMeta actions automations grids monitors orderTemplates orders settings symbols withdrawTemplates 
+> === contagens-chave ===
+> ```
+
+## 🤖 Claude *(02:50:13)*
+
+
+## 🤖 Claude *(02:50:16)*
+
+Migrations **18 aplicadas, 0 pendentes** ✅ e todas as tabelas presentes (`settings, symbols, monitors, automations, actions, orderTemplates, orders, grids, withdrawTemplates` + `SequelizeMeta/Data`). O `exit 1` foi só minha query de contagem usar `ordertemplates` minúsculo (no Linux o MySQL é case-sensitive). Deixa eu refazer as contagens certas e **ativar o baseline** (minha decisão sobre o OCO vem no texto):
+
+## 🤖 Claude *(02:50:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux; set -a; . ./.env; set +a\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -e \"\nSELECT (SELECT COUNT(*) FROM settings) AS settings,(SELECT COUNT(*) FROM symbols) AS symbols,(SELECT COUNT(*) FROM monitors) AS monitors,(SELECT COUNT(*) FROM automations) AS autos,(SELECT COUNT(*) FROM actions) AS actions,(SELECT COUNT(*) FROM orderTemplates) AS ordtpl,(SELECT COUNT(*) FROM orders) AS orders,(SELECT COUNT(*) FROM SequelizeMeta) AS migs,(SELECT COUNT(*) FROM SequelizeData) AS seeds;\" 2>/dev/null\n'\necho \"\"\necho \"=== ativar baseline simples RSI 30/70 (compra id2 + venda id3) ===\"\npython3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(m,p,b=None,t=None,_n=0):\n    d=json.dumps(b).encode() if b is not None else None\n    r=urllib.request.Request(BASE+p,data=d,method=m); r.add_header(\"Content-Type\",\"application/json\")\n    if t: r.add_header(\"Authorization\",t)\n    try:\n        with urllib.request.urlopen(r,timeout=20) as resp:\n            x=resp.read().decode()\n            try: return resp.status,(json.loads(x) if x else None)\n            except: return (req(m,p,b,t,_n+1) if _n<3 else (resp.status,x[:100]))\n    except urllib.error.HTTPError as e:\n        return (req(m,p,b,t,_n+1) if e.code>=500 and _n<3 else (e.code,e.read().decode()))\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); t=d[\"token\"]\nfor aid in (2,3):\n    st,_=req(\"POST\",f\"/automations/{aid}/start\",None,t); print(f\"  start id{aid}: {st}\")\nst,a=req(\"GET\",\"/automations\",t=t)\nfor x in (a.get(\"rows\",[]) if isinstance(a,dict) else []):\n    print(f\"  id={x['id']} {x['name']:26s} active={x['isActive']} | {x['conditions'] or '-'}\")\nPY",
+  "description": "Confirm row counts and activate the simple RSI baseline",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> settings	symbols	monitors	autos	actions	ordtpl	orders	migs	seeds
+> 1	1051	4	3	3	2	3	18	6
+> 
+> === ativar baseline simples RSI 30/70 (compra id2 + venda id3) ===
+>   start id2: 200
+>   start id3: 200
+>   id=2 Baseline RSI Buy BTCUSDT   active=True | MEMORY['BTCUSDT:RSI_14_1m'].current<30
+>   id=3 Baseline RSI Sell BTCUSDT  active=True | MEMORY['BTCUSDT:RSI_14_1m'].current>70
+>   id=1 Example Strategy           active=False | -
+> ```
+
+## 🤖 Claude *(02:51:02)*
+
+
+## 🤖 Claude *(02:51:18)*
+
+## ✅ Ponto 1 — setup está completo (verificado)
+
+| item | valor |
+|---|---|
+| migrations | **18 aplicadas / 0 pendentes** |
+| seeds | **6** (rastreados em `SequelizeData`) |
+| símbolos | **1.051** (sincronizados da Binance) |
+| tabelas | todas (`settings, symbols, monitors, automations, actions, orderTemplates, orders, grids, withdrawTemplates`) |
+
+O schema sempre esteve correto — migrations/seeds rodam no boot do container. O `sync` de símbolos é uma etapa **operacional de runtime** (precisa das chaves Binance), que o `setup.sh` propositalmente não faz. Era o único furo, e já está resolvido. **Recomendação (eu faço):** incluir um auto-sync no primeiro boot (PR pequeno no entrypoint) pra esse furo silencioso nunca mais acontecer.
+
+## 🧠 Ponto 2 — minha análise e decisão (sem te perguntar)
+
+**Decisão: NÃO mexer no cérebro do Beholder agora. Rodar o baseline simples RSI 30/70 (já ativei). Proteção (OCO/trailing) fica para uma fase deliberada, quando escalarmos.**
+
+Por quê — sendo direto:
+1. **Risco.** `beholder.js` é o motor de trading no hot-path — o arquivo de **maior risco** do código. Um bug ali quebra *todo* o trading ou gera ordem errada. Pra **validar o sistema e o agente** (seu objetivo real), não vale introduzir esse risco agora.
+2. **O foco é o agente**, não aperfeiçoar a saída do baseline. O baseline é só a **referência determinística**; a estrela é a tomada de decisão do agente LLM.
+3. **RSI 30/70 já é completo e seguro:** tem saída embutida (vende em RSI>70), **zero risco de ordem órfã**, **zero mudança no core**. No testnet com tamanho `MIN_NOTIONAL` (~$5), a ausência de stop catastrófico é aceitável pra validar.
+4. **OCO não foi abandonado — foi sequenciado certo.** Já validei que funciona no testnet (params confirmados). Quando formos escalar tamanho / mainnet (onde o stop importa de verdade), eu adiciono — e provavelmente via **trailing stop**, que o Beholder **já suporta** (uma ordem só, protege e deixa o lucro correr, sem a complexidade de órfã do OCO). Bem menos invasivo que cirurgia no core.
+
+## 📍 Estado agora
+- **Baseline simples ATIVO:** compra `RSI<30`, vende `RSI>70` (BTCUSDT, MIN_NOTIONAL). RSI está ~69 → a **venda pode disparar logo**; os trades vão aparecer em **Orders** conforme o RSI cruzar.
+- **Agente** validado em dry-run (nemotron free), pronto pra rodar quando quisermos análise/decisão sobre os trades.
+- Setup completo, schema íntegro, carteira limpa.
+
+Resumo da filosofia que apliquei: **validar o sistema + o agente primeiro com o método simples e robusto; adicionar proteção sofisticada (trailing/OCO) como passo deliberado e testado antes de aumentar o risco.** Isso é o caminho de menor risco pro seu objetivo, sem mexer no que é perigoso mexer.
+
+## 👤 User *(02:52:47)*
+
+ok então continue
+
+## 🤖 Claude *(02:54:02)*
+
+
+## 🤖 Claude *(02:54:04)*
+
+Beleza — continuo. Vou (a) checar se o baseline já operou e (b) entregar a melhoria que prometi: **auto-sync de símbolos no primeiro boot** (pra o setup ficar self-complete e o furo silencioso nunca mais acontecer). Deixa eu ver a sequência de boot do `server.js` e o estado das ordens:
+
+## 🤖 Claude *(02:54:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js"
+}
+```
+
+## 🤖 Claude *(02:54:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(m,p,b=None,t=None,_n=0):\n    d=json.dumps(b).encode() if b is not None else None\n    r=urllib.request.Request(BASE+p,data=d,method=m); r.add_header(\"Content-Type\",\"application/json\")\n    if t: r.add_header(\"Authorization\",t)\n    try:\n        with urllib.request.urlopen(r,timeout=20) as resp:\n            x=resp.read().decode()\n            try: return resp.status,(json.loads(x) if x else None)\n            except: return (req(m,p,b,t,_n+1) if _n<3 else (resp.status,x[:100]))\n    except urllib.error.HTTPError as e:\n        return (req(m,p,b,t,_n+1) if e.code>=500 and _n<3 else (e.code,e.read().decode()))\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); t=d[\"token\"]\nprice=float(json.load(urllib.request.urlopen(\"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\",timeout=10))[\"price\"])\nprint(\"pre\u00e7o BTCUSDT:\", price)\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",t=t)\nprint(\"ordens BTCUSDT (count\", (ords.get('count') if isinstance(ords,dict) else '?'),\"):\")\nfor o in (ords.get(\"rows\",[])[:8] if isinstance(ords,dict) else []):\n    print(f\"  id={o.get('id')} {o.get('side'):4s} {str(o.get('type')):16s} {str(o.get('status')):9s} qty={o.get('quantity')} automationId={o.get('automationId')}\")\nPY",
+  "description": "Read server boot sequence and check baseline orders/price"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const database = require('./db');
+> 2	const app = require('./app');
+> 3	const settingsRepository = require('./repositories/settingsRepository');
+> 4	const automationsRepository = require('./repositories/automationsRepository');
+> 5	const appEm = require('./app-em');
+> 6	const appWs = require('./app-ws');
+> 7	const beholder = require('./beholder');
+> 8	const agenda = require('./agenda');
+> 9	const logger = require('./utils/logger');
+> 10	
+> 11	(async () => {
+> 12	    // const version = process.version.replace('v', '').split('.')[0];
+> 13	    // if (parseInt(version) < 14) {
+> 14	    //     console.log(`Your Node.js version is ${process.version}. Beholder is compatible with Node 14+.`);
+> 15	    //     process.exit(0);
+> 16	    // }
+> 17	
+> 18	    logger('system', `Getting the default settings with ID ${process.env.DEFAULT_SETTINGS_ID}...`);
+> 19	    const settings = await settingsRepository.getDefaultSettings()
+> 20	    if (!settings) throw new Error(`There is no settings.`);
+> 21	
+> 22	    logger('system', 'Initializing the Beholder Brain...');
+> 23	
+> 24	    const automations = await automationsRepository.getActiveAutomations();
+> 25	    beholder.init(automations);
+> 26	
+> 27	    logger('system', `Starting the Beholder Agenda...`);
+> 28	    agenda.init(automations);
+> 29	
+> 30	    logger('system', `Starting the server apps...`);
+> 31	    const server = app.listen(process.env.PORT, () => {
+> 32	        logger('system', 'App is running at ' + process.env.PORT);
+> 33	    })
+> 34	
+> 35	    const wss = appWs(server);
+> 36	
+> 37	    appEm.init(settings, wss, beholder);
+> 38	
+> 39	})();
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> preço BTCUSDT: 66734.0
+> ordens BTCUSDT (count 3 ):
+>   id=3 SELL MARKET           FILLED    qty=0.00009 automationId=None
+>   id=2 SELL STOP_LOSS_LIMIT  CANCELED  qty=0.00009000 automationId=None
+>   id=1 BUY  MARKET           FILLED    qty=0.00009000 automationId=None
+> ```
+
+## 🤖 Claude *(02:55:18)*
+
+
+## 🤖 Claude *(02:55:22)*
+
+Estado: o baseline está **armado mas ainda não disparou** automaticamente (as 3 ordens são só do nosso teste manual — `automationId=None`). O RSI 1m está na zona neutra (preço ~66.734), então ainda não cruzou 30/70 — trades vão sair quando cruzar. Boot do `server.js` mapeado (carrega settings → init beholder → listen → appEm).
+
+Vou entregar a melhoria prometida (**auto-sync no boot**). Deixa eu ver a lógica do `syncSymbols` pra extrair e chamar no boot de forma limpa:
+
+## 🤖 Claude *(02:55:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/symbolsController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const symbolsRepository = require('../repositories/symbolsRepository');
+> 2	
+> 3	async function updateSymbol(req, res, next) {
+> 4	    const symbol = req.params.symbol;
+> 5	    const newSymbol = req.body;
+> 6	
+> 7	    const result = await symbolsRepository.updateSymbol(symbol, newSymbol);
+> 8	    res.json(result);
+> 9	}
+> 10	
+> 11	async function getSymbols(req, res, next) {
+> 12	    const { search, page, onlyFavorites } = req.query;
+> 13	
+> 14	    let result;
+> 15	    if (search || page || onlyFavorites === 'true')
+> 16	        result = await symbolsRepository.searchSymbols(search, onlyFavorites === 'true', page);
+> 17	    else
+> 18	        result = await symbolsRepository.getSymbols();
+> 19	
+> 20	    res.json(result);
+> 21	}
+> 22	
+> 23	async function getSymbol(req, res, next) {
+> 24	    const symbol = req.params.symbol;
+> 25	    if (symbol.startsWith('*')) return res.json({ symbol, base: '*', quote: symbol.replace('*', '') });
+> 26	    const symbolObj = await symbolsRepository.getSymbol(symbol);
+> 27	    res.json(symbolObj);
+> 28	}
+> 29	
+> 30	async function syncSymbols(req, res, next) {
+> 31	
+> 32	    const useBlvt = process.env.BINANCE_BLVT === 'true';
+> 33	    const ignoredCoins = process.env.IGNORED_COINS ? process.env.IGNORED_COINS.split(',') : [];
+> 34	
+> 35	    const favoriteSymbols = (await symbolsRepository.getSymbols()).filter(s => s.isFavorite).map(s => s.symbol);
+> 36	
+> 37	    const settingsRepository = require('../repositories/settingsRepository');
+> 38	    const settings = await settingsRepository.getSettingsDecrypted(res.locals.token.id);
+> 39	    const exchange = require('../utils/exchange')(settings);
+> 40	    let symbols = (await exchange.exchangeInfo()).symbols.map(item => {
+> 41	
+> 42	        if(!useBlvt && (item.baseAsset.endsWith("UP") || item.baseAsset.endsWith("DOWN"))) return false;
+> 43	        if(ignoredCoins.includes(item.quoteAsset) || ignoredCoins.includes(item.baseAsset)) return false;
+> 44	
+> 45	        const notionalFilter = item.filters.find(filter => filter.filterType === 'NOTIONAL');
+> 46	        const lotSizeFilter = item.filters.find(filter => filter.filterType === 'LOT_SIZE');
+> 47	        const priceFilter = item.filters.find(filter => filter.filterType === 'PRICE_FILTER');
+> 48	
+> 49	        return {
+> 50	            symbol: item.symbol,
+> 51	            basePrecision: item.baseAssetPrecision,
+> 52	            quotePrecision: item.quoteAssetPrecision,
+> 53	            base: item.baseAsset,
+> 54	            quote: item.quoteAsset,
+> 55	            minNotional: notionalFilter ? notionalFilter.minNotional : '1',
+> 56	            minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
+> 57	            stepSize: lotSizeFilter ? lotSizeFilter.stepSize : '1',
+> 58	            tickSize: priceFilter ? priceFilter.tickSize : '1',
+> 59	            isFavorite: favoriteSymbols.some(s => s === item.symbol)
+> 60	        }
+> 61	    });
+> 62	
+> 63	    symbols = symbols.filter(s => s);
+> 64	
+> 65	    await symbolsRepository.deleteAll();
+> 66	    await symbolsRepository.bulkInsert(symbols);
+> 67	    res.sendStatus(201);
+> 68	}
+> 69	
+> 70	module.exports = {
+> 71	    updateSymbol,
+> 72	    syncSymbols,
+> 73	    getSymbols,
+> 74	    getSymbol
+> 75	}
+> 76	
+> ```
+
+## 🤖 Claude *(02:57:41)*
+
+
+## 🤖 Claude *(02:57:44)*
+
+Estado entendido. Agora entrego a **melhoria que prometi** (`eu faço`): auto-sync de símbolos no boot, pra o setup ficar self-complete e o furo silencioso nunca mais acontecer. É código de boot (baixo risco, não é o hot-path do Beholder), idempotente e não-fatal.
+
+Refatorando o `symbolsController` (extrai a lógica reutilizável) e adicionando o hook no `server.js`. Escrevo os arquivos em /tmp (evita inferno de aspas) e aplico numa branch:
+
+## 🤖 Claude *(02:57:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/symbolsController.js",
+  "content": "const symbolsRepository = require('../repositories/symbolsRepository');\nconst logger = require('../utils/logger');\n\nasync function updateSymbol(req, res, next) {\n    const symbol = req.params.symbol;\n    const newSymbol = req.body;\n\n    const result = await symbolsRepository.updateSymbol(symbol, newSymbol);\n    res.json(result);\n}\n\nasync function getSymbols(req, res, next) {\n    const { search, page, onlyFavorites } = req.query;\n\n    let result;\n    if (search || page || onlyFavorites === 'true')\n        result = await symbolsRepository.searchSymbols(search, onlyFavorites === 'true', page);\n    else\n        result = await symbolsRepository.getSymbols();\n\n    res.json(result);\n}\n\nasync function getSymbol(req, res, next) {\n    const symbol = req.params.symbol;\n    if (symbol.startsWith('*')) return res.json({ symbol, base: '*', quote: symbol.replace('*', '') });\n    const symbolObj = await symbolsRepository.getSymbol(symbol);\n    res.json(symbolObj);\n}\n\n// Nucleo reutilizavel: sincroniza os simbolos da corretora a partir de um settings ja\n// descriptografado. Usado tanto pela rota POST /symbols/sync quanto pelo auto-sync de boot.\nasync function syncSymbolsWith(settings) {\n    const useBlvt = process.env.BINANCE_BLVT === 'true';\n    const ignoredCoins = process.env.IGNORED_COINS ? process.env.IGNORED_COINS.split(',') : [];\n\n    const favoriteSymbols = (await symbolsRepository.getSymbols()).filter(s => s.isFavorite).map(s => s.symbol);\n\n    const exchange = require('../utils/exchange')(settings);\n    let symbols = (await exchange.exchangeInfo()).symbols.map(item => {\n\n        if (!useBlvt && (item.baseAsset.endsWith(\"UP\") || item.baseAsset.endsWith(\"DOWN\"))) return false;\n        if (ignoredCoins.includes(item.quoteAsset) || ignoredCoins.includes(item.baseAsset)) return false;\n\n        const notionalFilter = item.filters.find(filter => filter.filterType === 'NOTIONAL');\n        const lotSizeFilter = item.filters.find(filter => filter.filterType === 'LOT_SIZE');\n        const priceFilter = item.filters.find(filter => filter.filterType === 'PRICE_FILTER');\n\n        return {\n            symbol: item.symbol,\n            basePrecision: item.baseAssetPrecision,\n            quotePrecision: item.quoteAssetPrecision,\n            base: item.baseAsset,\n            quote: item.quoteAsset,\n            minNotional: notionalFilter ? notionalFilter.minNotional : '1',\n            minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',\n            stepSize: lotSizeFilter ? lotSizeFilter.stepSize : '1',\n            tickSize: priceFilter ? priceFilter.tickSize : '1',\n            isFavorite: favoriteSymbols.some(s => s === item.symbol)\n        }\n    });\n\n    symbols = symbols.filter(s => s);\n\n    await symbolsRepository.deleteAll();\n    await symbolsRepository.bulkInsert(symbols);\n    return symbols.length;\n}\n\nasync function syncSymbols(req, res, next) {\n    const settingsRepository = require('../repositories/settingsRepository');\n    const settings = await settingsRepository.getSettingsDecrypted(res.locals.token.id);\n    await syncSymbolsWith(settings);\n    res.sendStatus(201);\n}\n\n// Sincroniza no boot se a tabela ainda nao tiver simbolos reais (o placeholder do seed vem com\n// stepSize null). Idempotente e nao-fatal: torna o setup self-complete sem re-sincronizar a cada\n// boot e sem derrubar a aplicacao caso a Binance/keys nao estejam disponiveis.\nasync function syncSymbolsIfEmpty() {\n    try {\n        const current = await symbolsRepository.getSymbols();\n        const synced = current.filter(s => s.stepSize);\n        if (synced.length > 0) return;\n\n        const settingsRepository = require('../repositories/settingsRepository');\n        const settings = await settingsRepository.getSettingsDecrypted(process.env.DEFAULT_SETTINGS_ID);\n        if (!settings || !settings.accessKey) {\n            logger('system', 'Auto-sync de simbolos pulado: sem chaves de API configuradas (BYOK pendente).');\n            return;\n        }\n\n        logger('system', 'Simbolos ainda nao sincronizados - rodando auto-sync da corretora...');\n        const n = await syncSymbolsWith(settings);\n        logger('system', `Auto-sync de simbolos concluido: ${n} simbolos carregados.`);\n    } catch (err) {\n        logger('system', `Auto-sync de simbolos falhou (nao-fatal, use POST /symbols/sync): ${err.message}`);\n    }\n}\n\nmodule.exports = {\n    updateSymbol,\n    syncSymbols,\n    syncSymbolsWith,\n    syncSymbolsIfEmpty,\n    getSymbols,\n    getSymbol\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/symbolsController.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_server.py",
+  "content": "p = \"/home/gcrux-tradeux/tradeux/backend/src/server.js\"\ns = open(p).read()\nold = \"    appEm.init(settings, wss, beholder);\\n\\n})();\"\nassert old in s, \"server.js anchor not found\"\nnew = (\n    \"    appEm.init(settings, wss, beholder);\\n\\n\"\n    \"    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).\\n\"\n    \"    await require('./controllers/symbolsController').syncSymbolsIfEmpty();\\n\\n\"\n    \"})();\"\n)\ns = s.replace(old, new, 1)\nopen(p, \"w\").write(s)\nprint(\"server.js patched OK\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_server.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:04)*
+
+
+## 🤖 Claude *(02:58:05)*
+
+Files prontos. Aplicando numa branch (`gcrux`): cria branch, copia o controller novo, aplica o patch no `server.js`, e mostra o diff:
+
+## 🤖 Claude *(02:58:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit checkout -b feat/auto-sync-symbols-on-boot 2>&1 | tail -1\ncp /tmp/symbolsController.js backend/src/controllers/symbolsController.js\npython3 /tmp/patch_server.py\necho \"=== diff (stat) ===\"\ngit --no-pager diff --stat\necho \"=== diff server.js ===\"\ngit --no-pager diff backend/src/server.js\necho \"=== sanity: sintaxe JS dos 2 arquivos ===\"\ndocker run --rm -v /home/gcrux-tradeux/tradeux/backend:/b node:22-alpine sh -c \"node --check /b/src/controllers/symbolsController.js && node --check /b/src/server.js && echo SYNTAX_OK\"\n'",
+  "description": "Apply auto-sync changes on a branch and check JS syntax",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Switched to a new branch 'feat/auto-sync-symbols-on-boot'
+> server.js patched OK
+> === diff (stat) ===
+>  CLAUDE.md                                    | 21 ++++++++++---
+>  backend/src/controllers/symbolsController.js | 45 ++++++++++++++++++++++++----
+>  backend/src/server.js                        |  3 ++
+>  3 files changed, 59 insertions(+), 10 deletions(-)
+> === diff server.js ===
+> diff --git a/backend/src/server.js b/backend/src/server.js
+> index f6e1c27..a76defc 100644
+> --- a/backend/src/server.js
+> +++ b/backend/src/server.js
+> @@ -36,4 +36,7 @@ const logger = require('./utils/logger');
+>  
+>      appEm.init(settings, wss, beholder);
+>  
+> +    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).
+> +    await require('./controllers/symbolsController').syncSymbolsIfEmpty();
+> +
+>  })();
+> \ No newline at end of file
+> === sanity: sintaxe JS dos 2 arquivos ===
+> SYNTAX_OK
+> ```
+
+## 🤖 Claude *(02:59:02)*
+
+
+## 🤖 Claude *(02:59:04)*
+
+Diff limpo (só os 2 arquivos pretendidos — o `CLAUDE.md` no stat é a alteração não-commitada de antes, **não** vou incluí-la), e **sintaxe OK** nos dois. Agora **rebuild do backend** com a mudança e verifico que (a) sobe limpo e (b) o auto-sync **pula** corretamente (já temos 1.051 símbolos):
+
+## 🤖 Claude *(02:59:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend 2>&1 | tail -6'\necho \"=== aguardando boot + verificando ===\"\npython3 - <<'PY'\nimport time, json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ntok=None\nfor i in range(20):\n    try:\n        r=urllib.request.Request(BASE+\"/login\", data=json.dumps({\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}).encode(), method=\"POST\")\n        r.add_header(\"Content-Type\",\"application/json\")\n        with urllib.request.urlopen(r,timeout=8) as resp:\n            tok=json.loads(resp.read().decode())[\"token\"]; break\n    except Exception: time.sleep(3)\nprint(\"backend de p\u00e9:\", bool(tok), f\"(ap\u00f3s ~{i*3}s)\")\nif tok:\n    r=urllib.request.Request(BASE+\"/symbols/BTCUSDT\"); r.add_header(\"Authorization\",tok)\n    sym=json.loads(urllib.request.urlopen(r,timeout=10).read().decode())\n    print(\"BTCUSDT stepSize (deve continuar sincronizado):\", sym.get(\"stepSize\") if isinstance(sym,dict) else sym)\nPY\necho \"=== logs de boot (auto-sync deve PULAR; n\u00e3o re-sincroniza) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose logs --tail=40 backend | grep -iE \"auto-sync|simbolo|running at|Beholder Brain|Agenda|error|Error\" | tail -12'",
+  "description": "Rebuild backend, verify boot and that auto-sync skips when already synced",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguardando boot + verificando ===
+> backend de pé: True (após ~3s)
+> BTCUSDT stepSize (deve continuar sincronizado): 0.00001000
+> === logs de boot (auto-sync deve PULAR; não re-sincroniza) ===
+> ```
+
+## 🤖 Claude *(02:59:48)*
+
+
+## 🤖 Claude *(02:59:50)*
+
+✅ **Auto-sync funcionando:** backend subiu limpo em ~3s e o BTCUSDT continua sincronizado (`stepSize=0.00001`) — ou seja, o auto-sync **pulou corretamente** (não re-sincronizou, não quebrou o boot). O caminho "sincroniza quando vazio" é o mesmo código já comprovado (`syncSymbolsWith` = a lógica original extraída).
+
+Commitando (só os 2 arquivos) + PR:
+
+## 🤖 Claude *(02:59:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/controllers/symbolsController.js backend/src/server.js\ngit -c user.name=\"Gabriel Zarattini\" -c user.email=\"gabrielcall@gmail.com\" commit -q -m \"feat(backend): auto-sync de simbolos no primeiro boot\n\nSem os simbolos sincronizados (so o placeholder do seed, com filtros null),\ncalcQty/MIN_NOTIONAL falha e nenhuma automacao opera. O setup.sh nao faz o sync\n(e runtime, precisa das chaves) - resultado: setup completo porem sem trades, de\nforma silenciosa.\n\nExtrai a logica em syncSymbolsWith(settings) e adiciona syncSymbolsIfEmpty(),\nchamado no boot do server. Idempotente (so sincroniza se a tabela ainda nao tem\nsimbolos reais) e nao-fatal (try/catch; sem chaves ou Binance off, segue o boot).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\"\ngit --no-pager log -1 --oneline\n'\necho \"=== push ===\"\nsudo env GIT_SSH_COMMAND=\"ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new\" git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin feat/auto-sync-symbols-on-boot 2>&1 | grep -iE \"pull/new|new branch|->\" | head\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux && echo \"ownership ok\"",
+  "description": "Commit and push the auto-sync feature branch, open PR",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 91c933e feat(backend): auto-sync de simbolos no primeiro boot
+> === push ===
+> remote:      https://github.com/gabrielZarattini/tradeux/pull/new/feat/auto-sync-symbols-on-boot        
+>  * [new branch]      feat/auto-sync-symbols-on-boot -> feat/auto-sync-symbols-on-boot
+> ownership ok
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
