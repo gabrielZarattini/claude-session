@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 267
-> * **Sessões do Claude**: 235
+> * **Total de Sessões Registradas**: 292
+> * **Sessões do Claude**: 260
 > * **Sessões do Gemini**: 32
 
 ---
@@ -56,18 +56,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-03*
+*   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` - *2026-06-03*
+*   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` - *2026-06-03*
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-aee9ed2070f3f1ca9]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-aec42cd0c906a9869]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-ab4c0f4e4e809f4b2]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-ab194a1c886ea8eff]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-aa1786337b7814af2]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-a89e99af2c1c13575]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-a03cbfb16a38aa951]]` - *2026-06-03*
-*   `[[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]` - *2026-06-03*
-*   `[[2026-06-03 - Monitor affiliate product updates and test results]]` - *2026-06-03*
-*   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-03*
-*   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` - *2026-06-03*
-*   *... e mais 231 sessões nessa categoria.*
+*   `[[2026-06-03 - agent-a9c976491fb9d3c44]]` - *2026-06-03*
+*   *... e mais 256 sessões nessa categoria.*
 
 ---
 
@@ -256,17 +256,42 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
+*   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` (ClaudeSessions)
+*   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions)
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-aee9ed2070f3f1ca9]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-aec42cd0c906a9869]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-ab4c0f4e4e809f4b2]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-ab194a1c886ea8eff]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-aa1786337b7814af2]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a9c976491fb9d3c44]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a973de25d5615561b]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a89e99af2c1c13575]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a74daadda992ceb7c]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a699963bfb2415c80]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a62755e5c0cd5c6a0]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a51bd96e78598d6f1]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a4d2dc373cac6c367]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a40dea0a7de6beb63]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a3ab03d11cc28e223]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a283f6403318fb494]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a1d623a3f04567355]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a179cd26ef0b4439b]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a13a3576eec1302d7]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a0510ed362cec6fd6]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a03cbfb16a38aa951]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a01b1545e8ef5408f]]` (ClaudeSessions)
 *   `[[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]` (ClaudeSessions)
+*   `[[2026-06-03 - Wire OCO orders into Beholder automation engine]]` (ClaudeSessions)
+*   `[[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]` (ClaudeSessions)
+*   `[[2026-06-03 - Plan paid E2E cascade run and prioritize next features]]` (ClaudeSessions)
 *   `[[2026-06-03 - Monitor affiliate product updates and test results]]` (ClaudeSessions)
 *   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` (ClaudeSessions)
 *   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` (ClaudeSessions)
+*   `[[2026-06-03 - Audit database migrations and clean test artifacts]]` (ClaudeSessions)
 *   `[[2026-06-03 - Address alerts timezone issue and next steps]]` (ClaudeSessions)
 *   `[[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` (ClaudeSessions)

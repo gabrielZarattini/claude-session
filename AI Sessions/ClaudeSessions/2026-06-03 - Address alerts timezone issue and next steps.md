@@ -6842,5 +6842,5 @@ O `campaign-run` ficou **decidido (cascata fiel) e especificado**, mas conscient
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-02 - agent-af037801ea2099be9]]
-> * **Próxima Sessão**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]
+> * **Próxima Sessão**: [[2026-06-03 - Audit database migrations and clean test artifacts]]
 %% --- TIMELINE END --- %%

@@ -7983,6 +7983,6 @@ Selo completo, Maestro. O módulo **marketing-hub** existe agora como Fonte da V
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-03 - Address alerts timezone issue and next steps]]
+> * **Sessão Anterior**: [[2026-06-03 - Audit database migrations and clean test artifacts]]
 > * **Próxima Sessão**: [[2026-06-03 - Fix TradeUX deployment path and Docker setup]]
 %% --- TIMELINE END --- %%
