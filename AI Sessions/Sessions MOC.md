@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 279
-> * **Sessões do Claude**: 247
+> * **Total de Sessões Registradas**: 281
+> * **Sessões do Claude**: 249
 > * **Sessões do Gemini**: 32
 
 ---
@@ -63,11 +63,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-aa1786337b7814af2]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-a9c976491fb9d3c44]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a973de25d5615561b]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a89e99af2c1c13575]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a74daadda992ceb7c]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-a699963bfb2415c80]]` - *2026-06-03*
-*   *... e mais 243 sessões nessa categoria.*
+*   *... e mais 245 sessões nessa categoria.*
 
 ---
 
@@ -263,10 +263,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-aa1786337b7814af2]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a9c976491fb9d3c44]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a973de25d5615561b]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a89e99af2c1c13575]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a74daadda992ceb7c]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a699963bfb2415c80]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a4d2dc373cac6c367]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a40dea0a7de6beb63]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a1d623a3f04567355]]` (ClaudeSessions)

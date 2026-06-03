@@ -3364,6 +3364,714 @@ As alavancas que são **suas** (Owner do risco financeiro): a **margem-alvo** (a
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Primeiro run pago E2E — qual caminho? (lembrando: gasta mco real, sem auto-refund, e um passo social publica de verdade no LinkedIn em ~1h via cron)"="Flywheel completo — reconecto o WP", "Calibração COIN_COST — como prosseguir? (os números estão ~4× sobre custo real; o único furo é IMAGE_GENERATION)"="Adotar modelo 4× + fix IMAGE_GENERATION 3→9". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:08:06)*
+
+
+## 🤖 Claude *(19:08:07)*
+
+Decisões registradas. **Flywheel completo (você reconecta o WP)** + **calibração modelo 4× com fix IMAGE_GENERATION 3→9**. 
+
+Ataco a **calibração agora** (autônoma, decidida) e em paralelo te passo o caminho do WP. Primeiro mapeio onde as constantes são realmente cobradas pra espelhar sem quebrar nada:
+
+## 🤖 Claude *(19:08:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== COIN_COSTS.IMAGE_GENERATION / CONTENT_GENERATION usage (src + functions) ===\"\ngrep -rn -E \"IMAGE_GENERATION|CONTENT_GENERATION\" src supabase/functions 2>/dev/null\necho; echo \"=== COIN_COSTS references ===\"\ngrep -rn -E \"COIN_COSTS\" src supabase/functions 2>/dev/null\necho; echo \"=== tests touching these constants ===\"\ngrep -rn -E \"IMAGE_GENERATION|CONTENT_GENERATION|ORCHESTRATION_RUN|COIN_COSTS\" src/test 2>/dev/null\necho; echo \"=== where canvas image/video coin costs live (for cross-ref) ===\"\ngrep -rn -E \"canvas_image_spend|canvas_video_spend|= ?125|=> ?125|: ?125\" supabase/functions/canvas-execute 2>/dev/null | head -20",
+  "description": "Map COIN_COSTS constant usage before editing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === COIN_COSTS.IMAGE_GENERATION / CONTENT_GENERATION usage (src + functions) ===
+> src/test/billing.test.ts:46:  it("CONTENT_GENERATION costs 5", () => {
+> src/test/billing.test.ts:47:    expect(COIN_COSTS.CONTENT_GENERATION).toBe(5);
+> src/test/billing.test.ts:50:  it("IMAGE_GENERATION costs 3", () => {
+> src/test/billing.test.ts:51:    expect(COIN_COSTS.IMAGE_GENERATION).toBe(3);
+> src/test/billing.test.ts:147:    "CONTENT_GENERATION",
+> src/test/billing.test.ts:148:    "IMAGE_GENERATION",
+> src/lib/billing.ts:6:// (3×CONTENT_GENERATION + IMAGE_GENERATION = 18); real spend (mcoin_transactions) shows canvas_video as
+> src/lib/billing.ts:12:  CONTENT_GENERATION: 5,
+> src/lib/billing.ts:13:  IMAGE_GENERATION: 3,
+> 
+> === COIN_COSTS references ===
+> src/lib/billing.ts:10:export const COIN_COSTS = {
+> src/lib/billing.ts:20:export type CoinOperation = keyof typeof COIN_COSTS;
+> src/lib/billing.ts:83:  const cost = COIN_COSTS[operation];
+> src/test/billing.test.ts:3:  COIN_COSTS,
+> src/test/billing.test.ts:39:// ─── 1. COIN_COSTS — values and shape ────────────────────────────────────────
+> src/test/billing.test.ts:41:describe("COIN_COSTS", () => {
+> src/test/billing.test.ts:43:    expect(COIN_COSTS.ORCHESTRATION_RUN).toBe(10);
+> src/test/billing.test.ts:47:    expect(COIN_COSTS.CONTENT_GENERATION).toBe(5);
+> src/test/billing.test.ts:51:    expect(COIN_COSTS.IMAGE_GENERATION).toBe(3);
+> src/test/billing.test.ts:55:    expect(COIN_COSTS.EMBED_NODE).toBe(1);
+> src/test/billing.test.ts:59:    for (const [, cost] of Object.entries(COIN_COSTS)) {
+> src/test/billing.test.ts:153:    it(`deducts correct amount for ${op} (${COIN_COSTS[op]} coins)`, async () => {
+> src/test/billing.test.ts:154:      const cost = COIN_COSTS[op];
+> src/components/marketing/CampaignRunButton.tsx:8:import { COIN_COSTS } from '@/lib/billing';
+> src/components/marketing/CampaignRunButton.tsx:24:  const estimate = COIN_COSTS.CAMPAIGN_RUN + COIN_COSTS.ORCHESTRATION_RUN * dispatchable;
+> src/components/marketing/CampaignRunButton.tsx:55:              <span>{COIN_COSTS.CAMPAIGN_RUN} mcoCoins</span>
+> src/components/marketing/CampaignRunButton.tsx:58:              <span className="text-muted-foreground">{dispatchable} passo(s) × {COIN_COSTS.ORCHESTRATION_RUN}</span>
+> src/components/marketing/CampaignRunButton.tsx:59:              <span>{COIN_COSTS.ORCHESTRATION_RUN * dispatchable} mcoCoins</span>
+> supabase/functions/campaign-run/index.ts:22:const CAMPAIGN_RUN_COST = 10; // mirrors COIN_COSTS.CAMPAIGN_RUN — the orchestration fee (Deno can't import src/lib).
+> supabase/functions/nurture-dispatch/index.ts:20:const DISPATCH_COST = 2; // mirrors COIN_COSTS.NURTURE_DISPATCH (Deno can't import src/lib).
+> 
+> === tests touching these constants ===
+> src/test/billing.test.ts:3:  COIN_COSTS,
+> src/test/billing.test.ts:39:// ─── 1. COIN_COSTS — values and shape ────────────────────────────────────────
+> src/test/billing.test.ts:41:describe("COIN_COSTS", () => {
+> src/test/billing.test.ts:42:  it("ORCHESTRATION_RUN costs 10", () => {
+> src/test/billing.test.ts:43:    expect(COIN_COSTS.ORCHESTRATION_RUN).toBe(10);
+> src/test/billing.test.ts:46:  it("CONTENT_GENERATION costs 5", () => {
+> src/test/billing.test.ts:47:    expect(COIN_COSTS.CONTENT_GENERATION).toBe(5);
+> src/test/billing.test.ts:50:  it("IMAGE_GENERATION costs 3", () => {
+> src/test/billing.test.ts:51:    expect(COIN_COSTS.IMAGE_GENERATION).toBe(3);
+> src/test/billing.test.ts:55:    expect(COIN_COSTS.EMBED_NODE).toBe(1);
+> src/test/billing.test.ts:59:    for (const [, cost] of Object.entries(COIN_COSTS)) {
+> src/test/billing.test.ts:146:    "ORCHESTRATION_RUN",
+> src/test/billing.test.ts:147:    "CONTENT_GENERATION",
+> src/test/billing.test.ts:148:    "IMAGE_GENERATION",
+> src/test/billing.test.ts:153:    it(`deducts correct amount for ${op} (${COIN_COSTS[op]} coins)`, async () => {
+> src/test/billing.test.ts:154:      const cost = COIN_COSTS[op];
+> src/test/billing.test.ts:166:    await expect(checkAndDeductCoins(sb, "user-1", "ORCHESTRATION_RUN")).rejects.toThrow(
+> src/test/billing.test.ts:167:      'Saldo insuficiente: operação "ORCHESTRATION_RUN" custa 10 mcoCoins'
+> src/test/billing.test.ts:173:    await expect(checkAndDeductCoins(sb, "user-1", "ORCHESTRATION_RUN")).rejects.toThrow();
+> 
+> === where canvas image/video coin costs live (for cross-ref) ===
+> supabase/functions/canvas-execute/index.ts:34:  "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+> supabase/functions/canvas-execute/index.ts:563:    // canvas_image_spend / canvas_video_spend are the canonical action tags.
+> supabase/functions/canvas-execute/index.ts:566:        ? "canvas_video_spend"
+> supabase/functions/canvas-execute/index.ts:567:        : "canvas_image_spend";
+> ```
+
+## 🤖 Claude *(19:09:07)*
+
+
+## 🤖 Claude *(19:09:10)*
+
+Decisivo: `IMAGE_GENERATION`/`CONTENT_GENERATION` **não estão ligados a nenhum caminho de cobrança em produção** (orchestrate cobra 10 flat; só `billing.test.ts` os asserta). Mudá-los é seguro. Os mirrors dos edge fns (CAMPAIGN_RUN=10, NURTURE=2, ORCHESTRATION=10) ficam intactos — todos validados em 4×. Lendo o teste pra editar com precisão:
+
+## 🤖 Claude *(19:09:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/billing.test.ts",
+  "offset": 39,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 39	// ─── 1. COIN_COSTS — values and shape ────────────────────────────────────────
+> 40	
+> 41	describe("COIN_COSTS", () => {
+> 42	  it("ORCHESTRATION_RUN costs 10", () => {
+> 43	    expect(COIN_COSTS.ORCHESTRATION_RUN).toBe(10);
+> 44	  });
+> 45	
+> 46	  it("CONTENT_GENERATION costs 5", () => {
+> 47	    expect(COIN_COSTS.CONTENT_GENERATION).toBe(5);
+> 48	  });
+> 49	
+> 50	  it("IMAGE_GENERATION costs 3", () => {
+> 51	    expect(COIN_COSTS.IMAGE_GENERATION).toBe(3);
+> 52	  });
+> 53	
+> 54	  it("EMBED_NODE costs 1", () => {
+> 55	    expect(COIN_COSTS.EMBED_NODE).toBe(1);
+> 56	  });
+> 57	
+> 58	  it("all values are positive integers", () => {
+> 59	    for (const [, cost] of Object.entries(COIN_COSTS)) {
+> 60	      expect(cost).toBeGreaterThan(0);
+> 61	      expect(Number.isInteger(cost)).toBe(true);
+> 62	    }
+> 63	  });
+> ```
+
+## 🤖 Claude *(19:09:21)*
+
+
+## 🤖 Claude *(19:09:21)*
+
+Aplicando a calibração — `billing.ts` (valores + modelo documentado) e o teste:
+
+## 🤖 Claude *(19:09:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts",
+  "old_string": "// mcoCoins cost per operation \u2014 single source of truth (frontend).\n// CALIBRATION NOTE (2026-06-03 \u00b7 OTD-MCOIN-CALIBRATION): these are round figures, NOT yet derived from\n// real provider $ cost. ORCHESTRATION_RUN (10) is charged FLAT and is LESS than the sum of its parts\n// (3\u00d7CONTENT_GENERATION + IMAGE_GENERATION = 18); real spend (mcoin_transactions) shows canvas_video as\n// the dominant cost (~122/video). campaign-run (FR-MH-004) is a CASCADE: CAMPAIGN_RUN once + N\u00d7ORCHESTRATION_RUN\n// per dispatched step. Edge functions currently mirror these constants by hand (Deno can't import src/lib).\n// \u2192 Pending: tune against per-model token $ + Higgsfield video price before commercial pricing.\nexport const COIN_COSTS = {\n  ORCHESTRATION_RUN: 10,\n  CONTENT_GENERATION: 5,\n  IMAGE_GENERATION: 3,\n  EMBED_NODE: 1,\n  LEAD_SCORE: 1, // marketing-hub FR-MH-003 (lead-score edge fn mirrors this)\n  CAMPAIGN_RUN: 10, // marketing-hub FR-MH-004 \u2014 orchestration fee ON TOP of the cascaded per-step ORCHESTRATION_RUN\n  NURTURE_DISPATCH: 2, // marketing-hub FR-MH-008 \u2014 per nurturing message (nurture-dispatch edge fn mirrors this)\n} as const;",
+  "new_string": "// mcoCoins cost per operation \u2014 single source of truth (frontend).\n//\n// CALIBRATION MODEL (2026-06-03 \u00b7 OTD-MCOIN-CALIBRATION CLOSED) \u2014 derived from REAL provider cost, not round figures.\n// SOP: docs/processes/mcoin-cost-calibration.md.\n//   formula:    mco(op) = ceil( real_cost_usd(op) / USD_PER_MCO_FLOOR \u00d7 MARGIN )\n//   floor rate: USD_PER_MCO_FLOOR = $0.018/mco \u2014 the CHEAPEST sale: Enterprise R$997 / 10000 mco \u00f7 R$5.5/USD.\n//               (Starter R$147/500 = $0.053/mco and Pro R$397/2000 = $0.036/mco sell DEARER \u2192 more margin there.)\n//   margin:     MARGIN = 4\u00d7 (target gross markup at the worst-case sale price).\n//   FX:         R$5.5/USD assumed; conclusions hold across R$5\u20137 except IMAGE near R$7 (kept at 4\u00d7 headroom).\n//\n//   Measured real costs (USD): text llama-3.3-70b \u2248 $0.001 (Groq ~free) \u00b7 DALL\u00b7E 3 1024\u00b2 image = $0.04 \u00b7\n//   orchestrate run (3 texts + 1 image) \u2248 $0.04 \u00b7 Higgsfield DoP 5s video = $0.56 (canvas-execute, validated 4\u00d7).\n//   Per-op markup at the floor: ORCHESTRATION_RUN 10 \u2192 4.4\u00d7 \u2713 \u00b7 canvas video 125 \u2192 4.0\u00d7 \u2713 \u00b7 canvas image 12 \u2192 5.4\u00d7 \u2713.\n//   ORCHESTRATION_RUN stays a FLAT 10 (bundle): covers 3\u00d7CONTENT_GENERATION + IMAGE_GENERATION (sum 15) at a\n//   deliberate bundle discount. Edge fns hardcode their own copies (Deno can't import src/lib) \u2014 keep in sync.\nexport const COIN_COSTS = {\n  ORCHESTRATION_RUN: 10,   // 3 texts + 1 image, charged flat (bundle discount vs the 15 below). ~4.4\u00d7 at floor.\n  CONTENT_GENERATION: 2,   // 1 LLM article (~$0.0006). Strict floor is 1; held at 2 as a conservative minimum. (was 5)\n  IMAGE_GENERATION: 9,     // 1 DALL\u00b7E 3 1024\u00b2 image ($0.04 \u2192 4\u00d7 at floor). WAS 3 = 1.36\u00d7 (under-margined) \u2192 fixed.\n  EMBED_NODE: 1,           // 1 embedding call (~$0.000002). Floor minimum.\n  LEAD_SCORE: 1,           // 1 LLM scoring call (~$0.0005). marketing-hub FR-MH-003 (lead-score edge fn mirrors this).\n  CAMPAIGN_RUN: 10,        // marketing-hub FR-MH-004 \u2014 orchestration FEE on top of the cascaded per-step ORCHESTRATION_RUN.\n  NURTURE_DISPATCH: 2,     // marketing-hub FR-MH-008 \u2014 1 LLM message (~$0.0006). nurture-dispatch edge fn mirrors this.\n} as const;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:09:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/billing.test.ts",
+  "old_string": "  it(\"CONTENT_GENERATION costs 5\", () => {\n    expect(COIN_COSTS.CONTENT_GENERATION).toBe(5);\n  });\n\n  it(\"IMAGE_GENERATION costs 3\", () => {\n    expect(COIN_COSTS.IMAGE_GENERATION).toBe(3);\n  });",
+  "new_string": "  it(\"CONTENT_GENERATION costs 2 (calibrated 2026-06-03 \u2014 text is ~free; conservative floor)\", () => {\n    expect(COIN_COSTS.CONTENT_GENERATION).toBe(2);\n  });\n\n  it(\"IMAGE_GENERATION costs 9 (calibrated 2026-06-03 \u2014 DALL\u00b7E 3 $0.04 \u2192 4\u00d7 at Enterprise floor)\", () => {\n    expect(COIN_COSTS.IMAGE_GENERATION).toBe(9);\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/test/billing.test.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:09:48)*
+
+
+## 🤖 Claude *(19:09:49)*
+
+Calibração aplicada. Provando material (tsc + suíte):
+
+## 🤖 Claude *(19:09:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -10 && echo \"TSC_EXIT=$?\"",
+  "description": "TypeScript strict check after calibration edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(19:09:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test src/test/billing.test.ts 2>&1 | tail -25",
+  "description": "Run billing test suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vitest run src/test/billing.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/test/billing.test.ts (22 tests) 23ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  22 passed (22)
+>    Start at  16:09:51
+>    Duration  1.11s (transform 63ms, setup 86ms, collect 45ms, tests 23ms, environment 414ms, prepare 97ms)
+> ```
+
+## 🤖 Claude *(19:11:08)*
+
+
+## 🤖 Claude *(19:11:10)*
+
+**Calibração provada material:** `tsc` exit 0 · billing **22/22**. Agora o vacina da Lei 2 — SOP do modelo de calibração (pra qualquer op futura seguir a fórmula em vez de chutar número redondo):
+
+## 🤖 Claude *(19:11:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/mcoin-cost-calibration.md",
+  "content": "# SOP \u2014 mcoCoins Cost Calibration (OTD-MCOIN-CALIBRATION)\n\n> **Lei 2 (Processo Antecipado).** Como precificar uma opera\u00e7\u00e3o em mcoCoins a partir do custo $ real,\n> em vez de um n\u00famero redondo. Selado em 2026-06-03 (decis\u00e3o Sovereign: \"modelo 4\u00d7, fix IMAGE_GENERATION\").\n> SSOT dos valores: [`src/lib/billing.ts`](../../src/lib/billing.ts) \u2192 `COIN_COSTS`.\n\n---\n\n## O modelo\n\n```\nmco(op) = ceil( real_cost_usd(op) / USD_PER_MCO_FLOOR \u00d7 MARGIN )\n```\n\n| Lever | Valor (2026-06-03) | Quem decide | Por qu\u00ea |\n|-------|--------------------|-------------|---------|\n| `USD_PER_MCO_FLOOR` | **$0.018/mco** | Sovereign (pricing) | A **venda mais barata** do mcoCoin = pior caso de margem. Enterprise R$997 / 10000 mco \u00f7 R$5.5/USD. |\n| `MARGIN` | **4\u00d7** | Sovereign (Owner) | Markup bruto alvo no pre\u00e7o de venda mais baixo. |\n| `FX` | **R$5.5/USD** | Sovereign | Premissa de c\u00e2mbio; revisar se BRL sair de R$5\u20137. |\n\n**Por que o piso \u00e9 o Enterprise, n\u00e3o o Starter:** o desconto de volume \u00e9 \u00edngreme \u2014\nStarter R$147/500 = **R$0.294/mco** ($0.053) \u00b7 Pro R$397/2000 = **R$0.199/mco** ($0.036) \u00b7\nEnterprise R$997/10000 = **R$0.0997/mco** ($0.018). Calibrar no piso garante margem em **todos** os planos.\n(Pre\u00e7os de plano: [`src/pages/BillingPage.tsx`](../../src/pages/BillingPage.tsx).)\n\n---\n\n## Custos reais medidos (2026-06-03)\n\n| Componente | Provider / modelo | Custo $ real | Fonte |\n|------------|-------------------|--------------|-------|\n| Texto (artigo/post/thread) | llama-3.3-70b (Groq ~free / OpenRouter $0.10\u00b7$0.32/M) | **~$0.001** por gera\u00e7\u00e3o | OpenRouter `/api/v1/models` live |\n| Imagem | DALL\u00b7E 3 1024\u00b2 standard | **$0.04** | OpenAI pricing \u00b7 `generate-image:82` model `dall-e-3` |\n| Orchestrate run | 3 textos + 1 imagem | **~$0.04** | soma (imagem domina) |\n| V\u00eddeo | Higgsfield DoP 5s (9 hf credits) | **$0.56** | `canvas-execute:34` + smoke pago |\n\n---\n\n## COIN_COSTS calibrado + markup no piso Enterprise\n\n| Opera\u00e7\u00e3o | mco | Custo $ | Markup @ floor | Nota |\n|----------|-----|---------|----------------|------|\n| `ORCHESTRATION_RUN` | 10 | $0.04 | **4.4\u00d7** \u2713 | flat (bundle: 3\u00d7CONTENT + IMAGE = 15, vendido a 10) |\n| `CONTENT_GENERATION` | 2 | ~$0.0006 | enorme | piso conservador (estrito = 1) \u2014 **era 5** |\n| `IMAGE_GENERATION` | **9** | $0.04 | **4.4\u00d7** \u2713 | **era 3 = 1.36\u00d7 (sub-margem) \u2192 corrigido** |\n| `EMBED_NODE` | 1 | ~$0.000002 | enorme | piso m\u00ednimo |\n| `LEAD_SCORE` | 1 | ~$0.0005 | enorme | 1 call de scoring |\n| `CAMPAIGN_RUN` | 10 | $0 direto | n/a | **fee** de orquestra\u00e7\u00e3o (valor/coordena\u00e7\u00e3o), n\u00e3o custo de provider |\n| `NURTURE_DISPATCH` | 2 | ~$0.0006 | enorme | 1 gera\u00e7\u00e3o de mensagem |\n| `canvas_video_spend` | 125 | $0.56 | **4.0\u00d7** \u2713 | `canvas-execute` (validado, sem mudan\u00e7a) |\n| `canvas_image_spend` | 12 | $0.04 | **5.4\u00d7** \u2713 | `canvas-execute` (validado, sem mudan\u00e7a) |\n\n**Achado-chave:** o `10` e o `125` que pareciam arbitr\u00e1rios j\u00e1 eram **~4\u00d7** sobre o custo real no piso.\nA OTD fechou validando-os; o \u00fanico furo genu\u00edno era `IMAGE_GENERATION` (3 \u2192 9).\n\n---\n\n## Operator / Sequence / Verification / Recovery / Success\n\n- **Operator** \u2014 MCORCH Agent mede o custo $ real; **Sovereign** (Owner) fixa `MARGIN` + `FX` + `USD_PER_MCO_FLOOR`.\n- **Sequence** (ao adicionar/recalibrar uma op):\n  1. Medir `real_cost_usd(op)` material \u2014 pre\u00e7o por-token do provider (OpenRouter `/models`) \u00d7 tokens, ou pre\u00e7o fixo (imagem/v\u00eddeo).\n  2. Aplicar a f\u00f3rmula com o piso/margem/FX vigentes \u2192 `ceil`.\n  3. Editar `COIN_COSTS` em `src/lib/billing.ts` **E** o mirror hardcoded no edge fn correspondente (Deno n\u00e3o importa src/lib).\n  4. Atualizar `src/test/billing.test.ts` (asserts dos valores).\n- **Verification gates:** `npx tsc --noEmit` exit 0 \u00b7 `bun run test src/test/billing.test.ts` verde \u00b7 markup \u2265 `MARGIN` no piso recomputado.\n- **Recovery (margem afunda):** se um provider subir de pre\u00e7o OU o FX passar de R$7, recomputar a op afetada e subir o mco;\n  nunca deixar uma op < 1\u00d7 no piso (venderia no preju\u00edzo no Enterprise).\n- **Success signal:** todo `COIN_COSTS[op]` \u2265 `ceil(custo_usd/floor \u00d7 1)` (nunca no preju\u00edzo) e o alvo \u00e9 `\u00d7 MARGIN`;\n  edge fn mirrors em sincronia; su\u00edte verde.\n\n---\n\n## Mirrors hardcoded (manter em sincronia \u2014 Deno n\u00e3o importa `src/lib`)\n\n| Constante | Edge fn | Linha |\n|-----------|---------|-------|\n| `CAMPAIGN_RUN` (10) | `supabase/functions/campaign-run/index.ts` | `CAMPAIGN_RUN_COST` |\n| `ORCHESTRATION_RUN` (10) | `supabase/functions/orchestrate-content/index.ts` | `ORCHESTRATION_COST` |\n| `NURTURE_DISPATCH` (2) | `supabase/functions/nurture-dispatch/index.ts` | `DISPATCH_COST` |\n| `LEAD_SCORE` (1) | `supabase/functions/lead-score/index.ts` | (inline) |\n\n> `IMAGE_GENERATION`/`CONTENT_GENERATION` **n\u00e3o** t\u00eam caminho de cobran\u00e7a em produ\u00e7\u00e3o hoje (orchestrate cobra flat 10) \u2014\n> s\u00e3o cat\u00e1logo/teste. Se forem ligados a uma cobran\u00e7a, criar o mirror no edge fn na mesma hora.\n\n---\n\n## Decis\u00f5es abertas (pricing \u2014 Sovereign)\n\n- **Desconto de volume** (Enterprise a 1/3 do Starter) \u00e9 o que comprime a margem para o piso de $0.018 \u2014 revisar se quiser\n  mais folga em todos os planos. Fora do escopo da calibra\u00e7\u00e3o de custo (\u00e9 decis\u00e3o de pricing de plano).\n- **FX din\u00e2mico:** hoje premissa fixa R$5.5; se quiser, ancorar num oracle de c\u00e2mbio e recomputar `USD_PER_MCO_FLOOR`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/mcoin-cost-calibration.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:12:01)*
+
+
+## 🤖 Claude *(19:12:03)*
+
+SOP selado (Lei 2). Agora preparo o terreno do run: semeio a campanha de teste pro Usuário Zero (dado interno, reversível) — primeiro confirmo os valores válidos de canal/ação que a UI usa:
+
+## 🤖 Claude *(19:12:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== step channel/action constants in hooks ===\"\ngrep -rn -E \"channel|action|CHANNEL|ACTION|content|social|affiliate|email\" src/hooks/useCampaigns.ts 2>/dev/null | grep -iE \"const|:|=|\\[\" | head -40",
+  "description": "Find valid campaign step channel/action values"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === step channel/action constants in hooks ===
+> src/hooks/useCampaigns.ts:12:type SocialPlatform = Database['public']['Enums']['social_platform'];
+> src/hooks/useCampaigns.ts:168:  // FR-MH-005 — create a campaign AND its ordered multichannel steps in one flow (wizard composer).
+> src/hooks/useCampaigns.ts:172:      steps: { channel: string; action: string }[];
+> src/hooks/useCampaigns.ts:182:          campaign_id: created.id, user_id: user!.id, position: i, channel: s.channel, action: s.action,
+> src/hooks/useCampaigns.ts:223:// Campaign Core v2 (MVP-2/3) — multichannel ordered steps + the campaign-run cascade.
+> src/hooks/useCampaigns.ts:224:// Absorbs v1: the campaign CRUD above is the social-campaign shell; these add the
+> src/hooks/useCampaigns.ts:225:// `campaign_steps` model + FR-MH-004 run. `channels`/`intent` columns flow through createCampaign.
+> src/hooks/useCampaigns.ts:229:export type CampaignChannel = 'content' | 'social' | 'email' | 'affiliate';
+> src/hooks/useCampaigns.ts:230:export type CampaignStepAction = 'generate_content' | 'publish' | 'affiliate_attach';
+> src/hooks/useCampaigns.ts:233:// channel → what campaign-run dispatches. `email` is nurture-dispatch territory (blocked by campaign-run).
+> src/hooks/useCampaigns.ts:234:export const CAMPAIGN_CHANNELS: { value: CampaignChannel; label: string; hint: string }[] = [
+> src/hooks/useCampaigns.ts:235:  { value: 'content', label: 'Conteúdo', hint: 'Artigo no WordPress' },
+> src/hooks/useCampaigns.ts:236:  { value: 'social', label: 'Social', hint: 'LinkedIn + Twitter/X' },
+> src/hooks/useCampaigns.ts:237:  { value: 'affiliate', label: 'Afiliado', hint: 'Artigo + link ML' },
+> src/hooks/useCampaigns.ts:238:  { value: 'email', label: 'E-mail', hint: 'Nurturing (em breve)' },
+> src/hooks/useCampaigns.ts:241:export const STEP_ACTION_LABELS: Record<CampaignStepAction, string> = {
+> src/hooks/useCampaigns.ts:242:  generate_content: 'Gerar conteúdo',
+> src/hooks/useCampaigns.ts:244:  affiliate_attach: 'Anexar afiliado',
+> src/hooks/useCampaigns.ts:283:    mutationFn: async (step: { channel: CampaignChannel; action: CampaignStepAction; position: number }) => {
+> src/hooks/useCampaigns.ts:319:/** FR-MH-004 — invokes the JWT-guarded campaign-run edge fn (cascade: CAMPAIGN_RUN fee + per-step orchestrate-content). */
+> ```
+
+## 🤖 Claude *(19:12:26)*
+
+
+## 🤖 Claude *(19:12:28)*
+
+Valores válidos: canais `content|social|affiliate|email`, ações `generate_content|publish|affiliate_attach`. Semeando a campanha de prova (content + social — os dois caminhos distintos; nota: o canal `affiliate` na cascata atual = outro artigo WP, a injeção real do link ML é pós-publicação via `process-affiliate-link`):
+
+## 🤖 Claude *(19:12:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUID=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== create campaign ===\"\ncamp=$(curl -s -X POST \"$URL/campaigns\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID\\\",\\\"name\\\":\\\"E2E Flywheel \u2014 2026-06-03\\\",\\\"intent\\\":\\\"Como ag\u00eancias de marketing escalam resultados com automa\u00e7\u00e3o de conte\u00fado por IA\\\",\\\"channels\\\":[\\\"content\\\",\\\"social\\\"],\\\"status\\\":\\\"draft\\\"}\")\necho \"$camp\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps(d,ensure_ascii=False,indent=1)[:900])\"\ncid=$(echo \"$camp\" | python3 -c \"import json,sys\nd=json.load(sys.stdin)\nprint(d[0]['id'] if isinstance(d,list) and d else (d.get('id','') if isinstance(d,dict) else ''))\" 2>/dev/null)\necho \"CAMPAIGN_ID=$cid\"\nif [ -n \"$cid\" ] && [ \"$cid\" != \"None\" ]; then\n  echo \"=== create steps ===\"\n  curl -s -X POST \"$URL/campaign_steps\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n    -d \"[{\\\"campaign_id\\\":\\\"$cid\\\",\\\"user_id\\\":\\\"$UID\\\",\\\"position\\\":0,\\\"channel\\\":\\\"content\\\",\\\"action\\\":\\\"generate_content\\\",\\\"status\\\":\\\"idle\\\"},{\\\"campaign_id\\\":\\\"$cid\\\",\\\"user_id\\\":\\\"$UID\\\",\\\"position\\\":1,\\\"channel\\\":\\\"social\\\",\\\"action\\\":\\\"generate_content\\\",\\\"status\\\":\\\"idle\\\"}]\" \\\n    | python3 -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps(d,ensure_ascii=False,indent=1)[:1200])\"\nfi",
+  "description": "Seed E2E test campaign + 2 steps for Usu\u00e1rio Zero"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /bin/bash: line 23: UID: readonly variable
+> === create campaign ===
+> {
+>  "code": "22P02",
+>  "details": null,
+>  "hint": null,
+>  "message": "invalid input syntax for type uuid: \"1001\""
+> }
+> CAMPAIGN_ID=
+> ```
+
+## 🤖 Claude *(19:12:44)*
+
+
+## 🤖 Claude *(19:12:45)*
+
+`UID` é readonly no bash (a armadilha já registrada na memória) — virou "1001". Renomeando pra `UZ` e re-rodando:
+
+## 🤖 Claude *(19:12:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== create campaign ===\"\ncamp=$(curl -s -X POST \"$URL/campaigns\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"$UZ\\\",\\\"name\\\":\\\"E2E Flywheel \u2014 2026-06-03\\\",\\\"intent\\\":\\\"Como ag\u00eancias de marketing escalam resultados com automa\u00e7\u00e3o de conte\u00fado por IA\\\",\\\"channels\\\":[\\\"content\\\",\\\"social\\\"],\\\"status\\\":\\\"draft\\\"}\")\necho \"$camp\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps(d,ensure_ascii=False,indent=1)[:900])\"\ncid=$(echo \"$camp\" | python3 -c \"import json,sys\nd=json.load(sys.stdin)\nprint(d[0]['id'] if isinstance(d,list) and d else (d.get('id','') if isinstance(d,dict) else ''))\" 2>/dev/null)\necho \"CAMPAIGN_ID=$cid\"\nif [ -n \"$cid\" ] && [ \"$cid\" != \"None\" ] && [ \"$cid\" != \"\" ]; then\n  echo \"=== create steps ===\"\n  curl -s -X POST \"$URL/campaign_steps\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n    -d \"[{\\\"campaign_id\\\":\\\"$cid\\\",\\\"user_id\\\":\\\"$UZ\\\",\\\"position\\\":0,\\\"channel\\\":\\\"content\\\",\\\"action\\\":\\\"generate_content\\\",\\\"status\\\":\\\"idle\\\"},{\\\"campaign_id\\\":\\\"$cid\\\",\\\"user_id\\\":\\\"$UZ\\\",\\\"position\\\":1,\\\"channel\\\":\\\"social\\\",\\\"action\\\":\\\"generate_content\\\",\\\"status\\\":\\\"idle\\\"}]\" \\\n    | python3 -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps(d,ensure_ascii=False,indent=1)[:1400])\"\nfi",
+  "description": "Seed E2E test campaign + 2 steps (UID trap fixed)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === create campaign ===
+> [
+>  {
+>   "id": "29b85b73-3982-41f3-90a4-dc5dab2e8ef3",
+>   "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>   "name": "E2E Flywheel — 2026-06-03",
+>   "description": null,
+>   "objective": null,
+>   "target_audience": {},
+>   "platforms": [],
+>   "budget_cents": 0,
+>   "status": "draft",
+>   "starts_at": null,
+>   "ends_at": null,
+>   "metadata": {},
+>   "created_at": "2026-06-03T19:12:55.873094+00:00",
+>   "updated_at": "2026-06-03T19:12:55.873094+00:00",
+>   "intent": "Como agências de marketing escalam resultados com automação de conteúdo por IA",
+>   "channels": [
+>    "content",
+>    "social"
+>   ],
+>   "mesh_node_id": null
+>  }
+> ]
+> CAMPAIGN_ID=29b85b73-3982-41f3-90a4-dc5dab2e8ef3
+> === create steps ===
+> [
+>  {
+>   "id": "095f6326-1688-4492-b4f8-5011b28fbe99",
+>   "campaign_id": "29b85b73-3982-41f3-90a4-dc5dab2e8ef3",
+>   "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>   "position": 0,
+>   "channel": "content",
+>   "action": "generate_content",
+>   "status": "idle",
+>   "created_at": "2026-06-03T19:12:56.134482+00:00"
+>  },
+>  {
+>   "id": "1402e857-e3ad-4583-bbc2-aa2ee0b2bf13",
+>   "campaign_id": "29b85b73-3982-41f3-90a4-dc5dab2e8ef3",
+>   "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>   "position": 1,
+>   "channel": "social",
+>   "action": "generate_content",
+>   "status": "idle",
+>   "created_at": "2026-06-03T19:12:56.134482+00:00"
+>  }
+> ]
+> ```
+
+## 🤖 Claude *(19:13:17)*
+
+
+## 🤖 Claude *(19:13:19)*
+
+✅ Campanha de prova sob `29b85b73-3982-41f3-90a4-dc5dab2e8ef3` (2 passos: content `095f6326` + social `1402e857`, idle). **Único bloqueio restante: WordPress.** Localizando a rota exata da UI pra te instruir + confirmando que consigo mintar o JWT pro run:
+
+## 🤖 Claude *(19:13:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== route for WordPress/social settings page ===\"\ngrep -rn -E \"SocialAccountsPage|/dashboard/social|wordpress|WordPress\" src/App.tsx 2>/dev/null | head\necho \"=== WP card field labels (site url / username / app password) ===\"\ngrep -rln -iE \"wp_site_url|wp_app_password|Application Password|WordPress\" src/pages src/components 2>/dev/null | head\necho \"=== magic-link helper exists? ===\"\nls -la scripts/qa/gen-magiclink.ts 2>/dev/null && echo \"---head---\" && sed -n '1,40p' scripts/qa/gen-magiclink.ts 2>/dev/null",
+  "description": "Find WP settings route + magic-link helper"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === route for WordPress/social settings page ===
+> src/App.tsx:25:const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> src/App.tsx:103:                <Route path="social" element={<SocialAccountsPage />} />
+> === WP card field labels (site url / username / app password) ===
+> src/pages/SocialAccountsPage.tsx
+> src/pages/DashboardHome.tsx
+> src/pages/SettingsPage.tsx
+> src/pages/CampaignWizard.tsx
+> src/pages/CalendarPage.tsx
+> src/pages/BlogEditorPage.tsx
+> src/components/landing/FeaturesSection.tsx
+> src/pages/AnalyticsPage.tsx
+> src/components/orchestrator/nodes/TriggerNode.tsx
+> src/components/orchestrator/PipelineHistoryPanel.tsx
+> === magic-link helper exists? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 1243 Jun  3 12:09 scripts/qa/gen-magiclink.ts
+> ---head---
+> #!/usr/bin/env bun
+> /**
+>  * Generate a one-time magic link for a user via the Supabase Admin API — for logged-in UI verification
+>  * (agent-browser / e2e). Per-user, reproducible, no raw password, no DevTools token. Pattern from v6.20.4.
+>  *
+>  * Usage: bun run scripts/qa/gen-magiclink.ts <email> [redirectTo]
+>  *   e.g. bun run scripts/qa/gen-magiclink.ts gabrielcall@gmail.com https://login.mcorch.com/dashboard/marketing
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const email = process.argv[2];
+> const redirectTo = process.argv[3] ?? 'https://login.mcorch.com/dashboard/marketing';
+> if (!URL || !SVC || !email) { console.error('Usage: gen-magiclink.ts <email> [redirectTo]  (needs SUPABASE_URL + SB_SECRET_KEY)'); process.exit(1); }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email, options: { redirectTo } });
+> if (error) { console.error('generateLink error:', error.message); process.exit(1); }
+> console.log(data.properties?.action_link ?? '(no action_link)');
+> ```
+
+## 🤖 Claude *(19:14:07)*
+
+
+## 🤖 Claude *(19:14:09)*
+
+WP fica em **`/dashboard/social`** (SocialAccountsPage). O magic-link helper gera só o link; pro run preciso de um access_token. Antes de te instruir, valido o elo async que falhou em 05-27 (a RPC `async_orchestrate_step`) — pra não te mandar gastar 30 mco numa cadeia quebrada — e já deixo o minter de JWT pronto:
+
+## 🤖 Claude *(19:14:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== async_orchestrate_step RPC definition (migrations) ===\"\ngrep -rln \"async_orchestrate_step\" supabase/migrations 2>/dev/null\necho \"---\"\nf=$(grep -rln \"FUNCTION.*async_orchestrate_step|async_orchestrate_step\" supabase/migrations 2>/dev/null | tail -1)\necho \"file: $f\"\ngrep -rn -A 30 \"FUNCTION public.async_orchestrate_step\\|FUNCTION async_orchestrate_step\\|async_orchestrate_step(\" supabase/migrations 2>/dev/null | grep -iE \"net\\.http|http_post|Authorization|Bearer|service_key|p_service_key|url|headers|body\" | head -30",
+  "description": "Inspect async_orchestrate_step RPC for key handling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === async_orchestrate_step RPC definition (migrations) ===
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql
+> supabase/migrations/20260526202000_async_orchestrate_step.sql
+> ---
+> file: 
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-5-  p_supabase_url text,
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-6-  p_service_key text,
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-15-  PERFORM net.http_post(
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-16-    url     := p_supabase_url || '/functions/v1/orchestrate-step',
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-17-    headers := jsonb_build_object(
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-19-      'Authorization', 'Bearer ' || p_service_key
+> supabase/migrations/20260526202000_async_orchestrate_step.sql-21-    body    := jsonb_build_object(
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-18-  p_supabase_url text,
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-19-  p_service_key text,
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-29-    run_id, step, service_key_len, service_key_prefix, service_key_suffix, url
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-33-    COALESCE(length(p_service_key), 0),
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-34-    COALESCE(substring(p_service_key, 1, 16), 'NULL'),
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-35-    COALESCE(substring(p_service_key FROM GREATEST(length(p_service_key)-9, 1)), 'NULL'),
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-36-    p_supabase_url || '/functions/v1/orchestrate-step'
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-39-  PERFORM net.http_post(
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-40-    url     := p_supabase_url || '/functions/v1/orchestrate-step',
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-41-    headers := jsonb_build_object(
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-43-      'Authorization', 'Bearer ' || p_service_key
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql-45-    body    := jsonb_build_object(
+> ```
+
+## 🤖 Claude *(19:14:46)*
+
+
+## 🤖 Claude *(19:14:50)*
+
+Elo async **estruturalmente são**: `async_orchestrate_step(p_service_key)` → `net.http_post` pro `orchestrate-step` com `Bearer <key>`, e ambos resolvem `SB_SECRET_KEY ?? SUPABASE_SERVICE_ROLE_KEY` (mesmo projeto = mesmo segredo). A falha de 05-27 (`sb_secret_format`) foi **durante** a migração de chaves (já assentada). Há até uma migration de debug que loga o prefixo da chave recebida — diagnóstico pronto se precisar. Risco aceitável; só o run real confirma.
+
+Deixando o minter de JWT pronto (zero-spend até eu chamar o run):
+
+## 🤖 Claude *(19:14:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA \u2014 without a browser or raw password.\n * Admin generateLink (magiclink) \u2192 verifyOtp(token_hash) \u2192 session.access_token. Per-user, reproducible.\n * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.\n *\n * Usage: bun run scripts/qa/gen-user-jwt.ts <email>\n *   \u2192 prints the access_token on stdout (nothing else), or an error on stderr + exit 1.\n *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst email = process.argv[2];\nif (!URL || !SVC || !ANON || !email) {\n  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');\n  process.exit(1);\n}\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\n\nconst { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\nif (error || !data.properties?.hashed_token) {\n  console.error('generateLink error:', error?.message ?? 'no hashed_token');\n  process.exit(1);\n}\nconst tokenHash = data.properties.hashed_token;\n\nlet accessToken: string | null = null;\nfor (const type of ['magiclink', 'email'] as const) {\n  const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });\n  if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }\n}\nif (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }\nconsole.log(accessToken);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:15:32)*
+
+
+## 🤖 Claude *(19:15:33)*
+
+Tudo que é autônomo está feito e provado. Deixo a memória da calibração em dia (a OTD estava marcada como "decisão do Sovereign, não improvisar" — agora resolvida) e te passo o status + o único passo que é seu:
+
+## 🤖 Claude *(19:15:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcoin_calibration.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_mcoin_calibration
+> 3	description: "Dívida OTD-MCOIN-CALIBRATION — custos mcoCoins (COIN_COSTS) são números redondos, não calibrados ao custo $ real; campaign-run será cascata fiel"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: b43c292c-3446-43f6-b536-a0868bbbf729
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-03 (v6.22.0): ao decidir o billing do `campaign-run`, o Sovereign escolheu **cascata fiel** (campaign-run debita `CAMPAIGN_RUN` 10 **uma vez** + por passo `invoke('orchestrate-content')` que **já debita** `ORCHESTRATION_RUN` 10 cada → custo total `10 + 10×N`), MAS levantou que **"precisamos calibrar isso conforme os gastos, ser ainda mais fiel à economia mcoCoins"** e questionou se o `10` por item foi calibrado.
+> 11	
+> 12	**Achado material (probe `mcoin_transactions` + `src/lib/billing.ts`):** o `10` **NÃO é calibrado** — é número redondo.
+> 13	- `COIN_COSTS` (SSOT frontend): `ORCHESTRATION_RUN 10 · CONTENT_GENERATION 5 · IMAGE_GENERATION 3 · EMBED_NODE 1` + (add v6.22.0) `LEAD_SCORE 1 · CAMPAIGN_RUN 10`.
+> 14	- **Incoerência:** `orchestrate-content` cobra **10 flat**, mas seus componentes somam **18** (3×content 5 + image 3) → subsídio implícito não-intencional.
+> 15	- **Duplicação (drift risk):** o `10` vive em 2 lugares — `billing.ts` E hardcoded em `orchestrate-content/index.ts:76` (`ORCHESTRATION_COST = 10`). Edge fns (Deno) **não importam** `src/lib` → espelham à mão. lead-score/campaign-run hardcodam com comentário `mirror COIN_COSTS`.
+> 16	- **Gasto real dominante = vídeo:** `canvas_video_spend` −4280 (35 txns ~122/vídeo) ≫ `canvas_image` −314 (~11.6) > `magic_prompt` −55 (5) > `orchestrate` −30 (10). O custo real é o **vídeo Higgsfield**, não a orquestração de texto.
+> 17	
+> 18	**Para calibrar (próxima sessão, com o Sovereign):** mapear mcoCoin↔R$/$ usando os preços $ por-modelo (OpenRouter token cost) + Higgsfield vídeo. Vídeo é o maior risco de custo. Eliminar a duplicação billing.ts↔edge (um `_shared/coin-costs.ts` Deno seria o SSOT real das edge fns).
+> 19	
+> 20	**Why:** Phase Commercial cobra tenants per-uso; preço descalibrado = prejuízo (subsídio) ou churn (caro demais). Cascata `10+10×N` do campaign-run amplifica qualquer erro de calibração por N passos.
+> 21	
+> 22	**How to apply:** ao implementar `campaign-run`, hardcodar o custo com `// mirror COIN_COSTS.CAMPAIGN_RUN` (não inventar valor novo) e deixar a cascata explícita; NÃO calibrar sozinho — é decisão do Sovereign com dados de custo $. Relacionado: [[project_marketing_hub_v2]] · [[project_stripe_strategy]].
+> 23	
+> ```
+
+## 🤖 Claude *(19:15:42)*
+
+
+## 🤖 Claude *(19:15:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcoin_calibration.md",
+  "content": "---\nname: project_mcoin_calibration\ndescription: \"OTD-MCOIN-CALIBRATION \u2014 FECHADA 2026-06-03: modelo 4\u00d7-floor adotado; COIN_COSTS validado ~4\u00d7 sobre custo real; fix IMAGE_GENERATION 3\u21929\"\nmetadata: \n  node_type: memory\n  type: project\n  originSessionId: b43c292c-3446-43f6-b536-a0868bbbf729\n---\n\n**STATUS: FECHADA 2026-06-03** (diretiva Sovereign \"modelo 4\u00d7, fix IMAGE_GENERATION\"). SOP: `docs/processes/mcoin-cost-calibration.md`.\n\n**O modelo adotado:** `mco(op) = ceil( custo_usd / USD_PER_MCO_FLOOR \u00d7 MARGIN )`.\n- `USD_PER_MCO_FLOOR = $0.018/mco` = a venda **mais barata** (Enterprise R$997/10000 \u00f7 R$5.5/USD). \u00c9 o piso porque o desconto de volume \u00e9 \u00edngreme (Starter R$0.294/mco \u00b7 Pro R$0.199 \u00b7 Enterprise R$0.0997 \u2192 calibrar no Enterprise garante margem em todos os planos). Pre\u00e7os: `src/pages/BillingPage.tsx`.\n- `MARGIN = 4\u00d7` \u00b7 `FX = R$5.5/USD` (premissas registradas, Owner=Sovereign).\n\n**Custos reais medidos:** texto llama-3.3-70b \u2248 **$0.001** (Groq ~free; OpenRouter `/api/v1/models` live) \u00b7 imagem **DALL\u00b7E 3 1024\u00b2 = $0.04** (`generate-image` model `dall-e-3`) \u00b7 orchestrate run (3 textos+1 img) \u2248 **$0.04** \u00b7 **v\u00eddeo Higgsfield DoP 5s = $0.56** (`canvas-execute:34`).\n\n**A surpresa honesta:** o `10` (ORCHESTRATION_RUN) e o `125` (canvas_video) que pareciam redondos **j\u00e1 eram ~4\u00d7** sobre o custo real no piso (4.4\u00d7 e 4.0\u00d7). O **\u00fanico furo genu\u00edno** era `IMAGE_GENERATION = 3` (1.36\u00d7 \u2014 sub-margem). Corrigido `3\u21929`; `CONTENT_GENERATION 5\u21922` (texto \u00e9 ~gr\u00e1tis, piso conservador). `CAMPAIGN_RUN 10` = fee de orquestra\u00e7\u00e3o (sem custo de provider direto). billing.test.ts atualizado; tsc 0 \u00b7 22/22.\n\n**IMPORTANTE \u2014 n\u00e3o h\u00e1 caminho de cobran\u00e7a em produ\u00e7\u00e3o pra IMAGE/CONTENT_GENERATION** (orchestrate cobra flat 10; esses 2 s\u00e3o cat\u00e1logo/teste). Mud\u00e1-los foi seguro. Mirrors hardcoded vivos (Deno n\u00e3o importa src/lib): `CAMPAIGN_RUN_COST`/`ORCHESTRATION_COST`/`DISPATCH_COST`/lead-score inline \u2014 todos validados, sem mudan\u00e7a.\n\n**D\u00edvida residual (n\u00e3o-bloqueante):** a duplica\u00e7\u00e3o billing.ts \u2194 mirrors hardcoded segue (um `_shared/coin-costs.ts` Deno seria o SSOT real das edge fns). Decis\u00e3o de pricing aberta: o desconto de volume Enterprise (1/3 do Starter) comprime a margem ao piso $0.018 \u2014 revis\u00e3o de pricing de plano \u00e0 parte.\n\n**Why:** Phase Commercial cobra per-uso; descalibrado = preju\u00edzo ou churn. **How to apply:** nova op \u2192 seguir a f\u00f3rmula do SOP (medir custo $ real, aplicar piso/margem/FX, espelhar no edge fn, atualizar billing.test.ts), nunca chutar n\u00famero redondo. Relacionado: [[project_marketing_hub_v2]] \u00b7 [[project_stripe_strategy]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcoin_calibration.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:16:06)*
+
+
+## 🤖 Claude *(19:16:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Calibra\u00e7\u00e3o mcoCoins \u2014 OTD-MCOIN-CALIBRATION (custos n\u00e3o-calibrados)](project_mcoin_calibration.md) \u2014 o 10 de orchestrate \u00e9 n\u00famero redondo, n\u00e3o $-calibrado (componentes somam 18); v\u00eddeo Higgsfield \u00e9 o maior custo real (~122/v\u00eddeo); campaign-run = cascata fiel 10+10\u00d7N; calibrar com pre\u00e7os $ \u00e9 decis\u00e3o do Sovereign, n\u00e3o improvisar",
+  "new_string": "- [Calibra\u00e7\u00e3o mcoCoins \u2014 OTD-MCOIN-CALIBRATION FECHADA (modelo 4\u00d7-floor)](project_mcoin_calibration.md) \u2014 fechada 2026-06-03: modelo `mco=ceil(custo_usd/$0.018_floor\u00d74)` (floor=Enterprise R$997/10000); surpresa honesta \u2014 10 e 125 j\u00e1 eram ~4\u00d7, \u00fanico furo era IMAGE_GENERATION 3\u21929 (CONTENT 5\u21922); custos reais: texto ~free, DALL\u00b7E $0.04, v\u00eddeo $0.56; SOP mcoin-cost-calibration.md"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:16:16)*
+
+
+## 🤖 Claude *(19:16:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Marketing Hub v2 — módulo agentic (MVP-1..4 LIVE; UI /dashboard/marketing)](project_marketing_hub_v2.md) — v2 que absorve o marketing v1; Lead Core+Campaign Core+lead-score+campaign-run (cascata fiel 10+10×N, dispatch paralelo, email→blocked, smoke 13/13) + MVP-4 UI (LeadBoard + wizard Passos absorvendo v1, UI logada verificada) LIVE; MVP-5 attribution + 1º run pago E2E (gated GO) + OTD-CAMPAIGN-RUN-ASYNC pendentes; ⚠️ campaigns/campaign_metrics JÁ EXISTEM (absorver, não criar) + projects não existe
+> 4	- [Calibração de contexto — usar a janela INTEIRA, selar só a ~95%](feedback_context_budget_calibration.md) — Diretiva Sovereign 2026-06-03: janela 1M (Max), seal custa ~5%; empacotar cada sessão com roadmap e só finalizar com ≤5% de folga (≈95% usado). Selar a 45% é desperdício; poda≠selar; puxar próximo pendente em vez de selar. Recalibrou Lei 3 survival.md.
+> 5	- [Calibração mcoCoins — OTD-MCOIN-CALIBRATION (custos não-calibrados)](project_mcoin_calibration.md) — o 10 de orchestrate é número redondo, não $-calibrado (componentes somam 18); vídeo Higgsfield é o maior custo real (~122/vídeo); campaign-run = cascata fiel 10+10×N; calibrar com preços $ é decisão do Sovereign, não improvisar
+> ```
+
+## 🤖 Claude *(19:16:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Calibra\u00e7\u00e3o mcoCoins \u2014 OTD-MCOIN-CALIBRATION (custos n\u00e3o-calibrados)](project_mcoin_calibration.md) \u2014 o 10 de orchestrate \u00e9 n\u00famero redondo, n\u00e3o $-calibrado (componentes somam 18); v\u00eddeo Higgsfield \u00e9 o maior custo real (~122/v\u00eddeo); campaign-run = cascata fiel 10+10\u00d7N; calibrar com pre\u00e7os $ \u00e9 decis\u00e3o do Sovereign, n\u00e3o improvisar",
+  "new_string": "- [Calibra\u00e7\u00e3o mcoCoins \u2014 OTD-MCOIN-CALIBRATION FECHADA (modelo 4\u00d7-floor)](project_mcoin_calibration.md) \u2014 fechada 2026-06-03: modelo `mco=ceil(custo_usd/$0.018_floor\u00d74)` (floor=Enterprise R$997/10000); surpresa honesta \u2014 10 e 125 j\u00e1 eram ~4\u00d7, \u00fanico furo era IMAGE_GENERATION 3\u21929 (CONTENT 5\u21922); custos reais: texto ~free, DALL\u00b7E $0.04, v\u00eddeo $0.56; SOP mcoin-cost-calibration.md"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:16:50)*
+
+
+## 🤖 Claude *(19:17:03)*
+
+Tudo que é autônomo está **entregue e provado**. Status executivo:
+
+## ✅ Calibração COIN_COST — DONE (provado material)
+| Item | Prova |
+|---|---|
+| `IMAGE_GENERATION 3→9`, `CONTENT_GENERATION 5→2` + modelo documentado | [billing.ts](src/lib/billing.ts) |
+| Teste atualizado | `tsc` exit **0** · billing **22/22** |
+| SOP do modelo (Lei 2) | [docs/processes/mcoin-cost-calibration.md](docs/processes/mcoin-cost-calibration.md) |
+| Memória + índice | atualizados (OTD marcada FECHADA) |
+
+*(uncommitted no worktree — commito quando você mandar selar.)* **A descoberta:** o `10` e o `125` já eram ~4× sobre custo real; só o `IMAGE_GENERATION` estava sub-margem. A OTD fecha **validando**, não reescrevendo.
+
+## 🟡 Run pago E2E — armado, falta SÓ o WordPress
+| Pré-requisito | Estado |
+|---|---|
+| Campanha de prova | ✅ `29b85b73` (passos content+social, idle) |
+| JWT minter | ✅ [gen-user-jwt.ts](scripts/qa/gen-user-jwt.ts) pronto |
+| Elo async (`async_orchestrate_step`→`orchestrate-step`) | ✅ estruturalmente são (Bearer da mesma chave) |
+| Saldo / IA keys / LinkedIn / affiliate | ✅ 5351 mco · keys SET · LI ativo · tag ativa |
+| **WordPress** | ❌ `wp_*` NULL — o passo `content` falha sem ele |
+
+### 👉 O passo que é seu (1 minuto)
+Conecte o WP em **`login.mcorch.com/dashboard/social`** → card **WordPress** → **Site URL + Username + Application Password** → Salvar.
+*(Application Password: wp-admin → Usuários → seu perfil → "Senhas de aplicativo" → gerar e copiar.)*
+Ou, se já houver `WP_SITE_URL/WP_USERNAME/WP_APP_PASSWORD` nos secrets do Edge (vault global), me avisa que eu pulo a reconexão.
+
+### Quando você disser **"WP conectado"**, eu executo:
+1. Verifico `wp_*` setado (REST) → minto o JWT do Usuário Zero → chamo `campaign-run` na `29b85b73`.
+2. **Custo ~30 mco** (10 fee + 2×10). WP sai como **rascunho** (privado, seguro).
+3. ⚠️ **Outward:** o passo social enfileira um post no seu **LinkedIn real** (cron publica em ~1h). **Defaultei pro seguro:** logo após o run eu **seguro o post do LinkedIn** (pauso o `scheduled_post`) e te mostro o conteúdo gerado pra você **aprovar antes** de ir ao ar — prova material sem nada público sem seu OK.
+4. Prova: `pipeline_runs=done` + `content_library` (artigo+LI+thread) + URL do rascunho WP + `scheduled_posts`.
+
+Conecta o WP e me dá o sinal. 🚀
+
 ---
 
 %% --- TIMELINE START --- %%
