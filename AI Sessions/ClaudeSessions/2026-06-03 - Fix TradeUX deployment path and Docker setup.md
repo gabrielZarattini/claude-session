@@ -5849,6 +5849,1455 @@ Tenho os payloads de criação (automations + order templates). Falta só confir
 > 40	}
 > ```
 
+## 🤖 Claude *(02:01:09)*
+
+
+## 🤖 Claude *(02:01:13)*
+
+`actionTypes.ORDER = 'ORDER'`. Agora tenho tudo pra montar o baseline. Vou **criar** (ainda inativo, sem disparar ordem) e te mostrar a config exata pra você dar o ok da ativação:
+
+**Baseline proposto — RSI mean-reversion, BTCUSDT, spot long-only, tamanho `MIN_NOTIONAL` (mínimo, ~$5–10 testnet):**
+- **Compra** quando `RSI_14(1m) < 30` (sobrevendido) → MARKET BUY
+- **Vende** quando `RSI_14(1m) > 70` (sobrecomprado) → MARKET SELL
+- Determinístico, auditável, gera trades pra validar a execução.
+
+Criando o template de venda + as duas automações (inativas):
+
+## 🤖 Claude *(02:01:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None):\n    data = json.dumps(body).encode() if body is not None else None\n    r = urllib.request.Request(BASE+path, data=data, method=method)\n    r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=12) as resp:\n            t = resp.read().decode()\n            return resp.status, (json.loads(t) if t else None)\n    except urllib.error.HTTPError as e:\n        return e.code, e.read().decode()\n\nst,d = req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"})\ntoken = d[\"token\"]; print(\"login:\", st)\n\n# 1) template de VENDA (o seeded id=1 'Template Show' j\u00e1 \u00e9 BUY MIN_NOTIONAL)\nst,tpl = req(\"POST\",\"/ordertemplates\",{\n  \"name\":\"Baseline SELL BTCUSDT\",\"symbol\":\"BTCUSDT\",\"type\":\"MARKET\",\"side\":\"SELL\",\n  \"limitPrice\":None,\"limitPriceMultiplier\":\"1.00\",\"stopPrice\":None,\"stopPriceMultiplier\":\"1.00\",\n  \"quantity\":\"MIN_NOTIONAL\",\"quantityMultiplier\":\"1.00\",\"icebergQty\":None,\"icebergQtyMultiplier\":\"1.00\"\n}, token)\nsell_tpl = tpl.get(\"id\") if isinstance(tpl,dict) else None\nprint(\"sell template:\", st, \"id=\", sell_tpl, \"\" if sell_tpl else tpl)\n\n# 2) automa\u00e7\u00e3o de COMPRA (RSI<30) usando template BUY id=1\nst,buy = req(\"POST\",\"/automations\",{\n  \"name\":\"Baseline RSI Buy BTCUSDT\",\"symbol\":\"BTCUSDT\",\"indexes\":\"BTCUSDT:RSI_14_1m\",\n  \"conditions\":\"MEMORY['BTCUSDT:RSI_14_1m'].current<30\",\"schedule\":None,\"isActive\":False,\"logs\":True,\n  \"actions\":[{\"type\":\"ORDER\",\"orderTemplateId\":1}]\n}, token)\nbuy_id = buy.get(\"id\") if isinstance(buy,dict) else None\nprint(\"buy automation:\", st, \"id=\", buy_id, \"\" if buy_id else buy)\n\n# 3) automa\u00e7\u00e3o de VENDA (RSI>70) usando o template de venda rec\u00e9m-criado\nst,sell = req(\"POST\",\"/automations\",{\n  \"name\":\"Baseline RSI Sell BTCUSDT\",\"symbol\":\"BTCUSDT\",\"indexes\":\"BTCUSDT:RSI_14_1m\",\n  \"conditions\":\"MEMORY['BTCUSDT:RSI_14_1m'].current>70\",\"schedule\":None,\"isActive\":False,\"logs\":True,\n  \"actions\":[{\"type\":\"ORDER\",\"orderTemplateId\":sell_tpl}]\n}, token)\nsell_auto = sell.get(\"id\") if isinstance(sell,dict) else None\nprint(\"sell automation:\", st, \"id=\", sell_auto, \"\" if sell_auto else sell)\n\n# verifica\u00e7\u00e3o\nst,autos = req(\"GET\",\"/automations\", token=token)\nprint(\"\\n=== automa\u00e7\u00f5es agora ===\")\nfor a in (autos.get(\"rows\",[]) if isinstance(autos,dict) else []):\n    print(f\" id={a['id']} | {a['name']} | active={a['isActive']} | cond={a['conditions']} | actions={[ (x['type'], x.get('orderTemplateId')) for x in a.get('actions',[])]}\")\nPY",
+  "description": "Create sell template and buy/sell RSI automations (inactive) via API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login: 200
+> sell template: 201 id= 2 
+> buy automation: 201 id= 2 
+> sell automation: 201 id= 3 
+> 
+> === automações agora ===
+>  id=2 | Baseline RSI Buy BTCUSDT | active=False | cond=MEMORY['BTCUSDT:RSI_14_1m'].current<30 | actions=[('ORDER', 1)]
+>  id=3 | Baseline RSI Sell BTCUSDT | active=False | cond=MEMORY['BTCUSDT:RSI_14_1m'].current>70 | actions=[('ORDER', 2)]
+>  id=1 | Example Strategy | active=False | cond= | actions=[('ALERT_EMAIL', None)]
+> ```
+
+## 🤖 Claude *(02:01:48)*
+
+
+## 🤖 Claude *(02:01:58)*
+
+✅ **Baseline criado (inativo — nada disparou ainda):**
+
+| id | nome | condição | ação |
+|---|---|---|---|
+| auto **2** | Baseline RSI Buy BTCUSDT | `RSI_14_1m < 30` | MARKET **BUY** (MIN_NOTIONAL) |
+| auto **3** | Baseline RSI Sell BTCUSDT | `RSI_14_1m > 70` | MARKET **SELL** (MIN_NOTIONAL) |
+
+Condições validadas pelo regex do Beholder, ações do tipo `ORDER` apontando pros templates certos. Está tudo **pronto pra ativar** — e ativar é o passo que cruza pra **execução real no testnet** (ordens minúsculas, reversível: paro/deleto quando quiser).
+
+**Um ponto do método antes de ligar** (decisão sua, é "seu método"):
+- A saída hoje é **só por RSI>70** (funciona como take-profit). **Não há stop-loss hard**: se comprar em RSI<30 e o preço continuar caindo, a posição fica até o RSI subir. No testnet o risco é dinheiro falso, mas pra metodologia o stop importa.
+- Detalhe: o RSI 1m está ~68,8 agora (perto de 70) — se eu ativar, a **venda** pode disparar logo (vende MIN_NOTIONAL de BTC que já temos). Ótimo como primeiro trade pra validar a execução.
+
+Como prefere?
+1. **Ativar agora assim** (RSI 30/70, sem stop) — começa a gerar trades auditáveis já.
+2. **Adicionar um stop-loss antes** — eu crio um template `STOP_LOSS` + automação de proteção (ex.: vende se cair X% da entrada) e aí ativo tudo.
+3. **Ajustar parâmetros** (limiares RSI, símbolo, tamanho, timeframe 1m→1h) antes de ativar.
+
+Meu palpite: **(1) ativar agora** pra ver a execução de ponta a ponta no testnet, e já emendar **(2) o stop** como primeira refinada. Mas é seu método — você decide.
+
+## 👤 User *(02:02:00)*
+
+vamos usar um modelo free do openrouter. veja qual o melhor para essa questão
+
+## 🤖 Claude *(02:02:31)*
+
+
+## 🤖 Claude *(02:02:33)*
+
+Boa — modelo **free** então. O filtro decisivo aqui não é só "ser grátis": o agente usa **tool calling** (function calling) — muitos modelos free **não suportam tools**, e aí o loop quebra (ele não chama `get_wallet` etc.). Então vou listar os free **que suportam `tools`** e têm bom raciocínio/contexto, e depois **validar de verdade** com um dry-run.
+
+Consultando a API do OpenRouter e filtrando free + tool-capable:
+
+## 🤖 Claude *(02:02:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request\nd = json.load(urllib.request.urlopen(\"https://openrouter.ai/api/v1/models\", timeout=25))\nfree=[]\nfor m in d[\"data\"]:\n    p=m.get(\"pricing\",{}) or {}\n    if str(p.get(\"prompt\"))==\"0\" and str(p.get(\"completion\"))==\"0\":\n        sp=m.get(\"supported_parameters\",[]) or []\n        free.append((m[\"id\"], \"tools\" in sp, m.get(\"context_length\") or 0))\ntool_free=sorted([x for x in free if x[1]], key=lambda x:-x[2])\nprint(f\"Free totais: {len(free)} | Free com TOOLS: {len(tool_free)}\\n\")\nprint(\"=== FREE + tool-calling (ord. por contexto) ===\")\nfor mid,t,ctx in tool_free[:30]:\n    print(f\"{mid:58s} ctx={ctx:>9}\")\nPY",
+  "description": "List OpenRouter free models that support tool calling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Free totais: 25 | Free com TOOLS: 18
+> 
+> === FREE + tool-calling (ord. por contexto) ===
+> openrouter/owl-alpha                                       ctx=  1048756
+> qwen/qwen3-coder:free                                      ctx=  1048576
+> nvidia/nemotron-3-super-120b-a12b:free                     ctx=  1000000
+> poolside/laguna-xs.2:free                                  ctx=   262144
+> poolside/laguna-m.1:free                                   ctx=   262144
+> moonshotai/kimi-k2.6:free                                  ctx=   262144
+> google/gemma-4-26b-a4b-it:free                             ctx=   262144
+> google/gemma-4-31b-it:free                                 ctx=   262144
+> qwen/qwen3-next-80b-a3b-instruct:free                      ctx=   262144
+> nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free         ctx=   256000
+> nvidia/nemotron-3-nano-30b-a3b:free                        ctx=   256000
+> openrouter/free                                            ctx=   200000
+> openai/gpt-oss-120b:free                                   ctx=   131072
+> openai/gpt-oss-20b:free                                    ctx=   131072
+> z-ai/glm-4.5-air:free                                      ctx=   131072
+> meta-llama/llama-3.3-70b-instruct:free                     ctx=   131072
+> nvidia/nemotron-nano-12b-v2-vl:free                        ctx=   128000
+> nvidia/nemotron-nano-9b-v2:free                            ctx=   128000
+> ```
+
+## 🤖 Claude *(02:03:33)*
+
+
+## 🤖 Claude *(02:03:36)*
+
+18 free models suportam tools. Vou avaliar **empiricamente** os mais fortes pra uso agêntico (não dá pra confiar só na ficha) — testo 2 candidatos de ponta num dry-run e comparo: chamam as tools certas (puxam o RSI da memória, como o Sonnet)? raciocinam bem? respeitam o guard-rail?
+
+Candidatos: **`moonshotai/kimi-k2.6:free`** (linhagem Kimi K2, referência em tool use) vs **`openai/gpt-oss-120b:free`** (open-weight forte). Rodando os dois:
+
+## 🤖 Claude *(02:03:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "run_model() {\n  local M=\"$1\"\n  echo \"\"\n  echo \"############################## $M ##############################\"\n  docker run --rm --network tradeux_tradeux -v /home/gcrux-tradeux/tradeux:/work -w /work/tradeux-agent \\\n    node:22-alpine sh -c \"\n      set -a; . /work/tradeux-agent/.env; set +a\n      export OPENROUTER_MODEL='$M'\n      node /work/tradeux-agent/src/index.js --once 2>&1\n    \" | sed -n '1,40p'\n  sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux >/dev/null 2>&1\n  echo \"---- tools desse ciclo (journal) ----\"\n  sudo -n -u gcrux-tradeux bash -lc \"tail -1 /home/gcrux-tradeux/tradeux/tradeux-agent/journal/tradeux-agent.jsonl | python3 -c \\\"import sys,json;d=json.load(sys.stdin);print('rounds',d.get('rounds'),'| toolCalls',len(d.get('toolCalls',[])));[print('  -',t['name'],t.get('input')) for t in d.get('toolCalls',[])]\\\" 2>/dev/null || echo '(sem ciclo no journal \u2014 prov\u00e1vel erro)'\"\n}\nrun_model \"moonshotai/kimi-k2.6:free\"\nrun_model \"openai/gpt-oss-120b:free\"",
+  "description": "Compare two free tool-capable models on a dry-run cycle",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############################## moonshotai/kimi-k2.6:free ##############################
+> [tradeux-agent] Conectando ao tradeux-mcp...
+> tradeux-mcp pronto (API=http://backend:3001, trading=OFF)
+> [tradeux-agent] Conectado. 26 ferramentas disponíveis.
+> [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: ./journal/tradeux-agent.jsonl
+> [tradeux-agent] Ciclo 1 iniciando (1780452222699-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 429: {"error":{"message":"Provider returned error","code":429,"metadata":{"raw":"moonshotai/kimi-k2.6:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations","provider_name":"Crucible","is_byok":false}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> [tradeux-agent] Modo --once: concluído.
+> ---- tools desse ciclo (journal) ----
+> rounds 2 | toolCalls 8
+>   - tradeux_get_wallet {'fiat': 'USDT'}
+>   - tradeux_get_last_orders {}
+>   - tradeux_get_analysis {}
+>   - tradeux_get_memory_indexes {}
+>   - tradeux_get_memory {'symbol': 'BTCUSDT', 'index': 'RSI_14_1m'}
+>   - tradeux_get_memory {'symbol': 'BTCUSDT', 'index': 'MINI_TICKER'}
+>   - tradeux_get_brain {}
+>   - tradeux_list_automations {}
+> 
+> ############################## openai/gpt-oss-120b:free ##############################
+> [tradeux-agent] Conectando ao tradeux-mcp...
+> tradeux-mcp pronto (API=http://backend:3001, trading=OFF)
+> [tradeux-agent] Conectado. 26 ferramentas disponíveis.
+> [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: ./journal/tradeux-agent.jsonl
+> [tradeux-agent] Ciclo 1 iniciando (1780452224780-1)...
+> [tradeux-agent] Ciclo 1: 5 tool calls.
+> [tradeux-agent] Resumo: **Resumo do ciclo**
+> 
+> - **Carteira:** USDT disponível: ~10 000 USDT; BTC disponível: 1 BTC (≈ 66 844 USDT).  
+> - **Preço BTC/USDT:** 66 887 USDT (close), com queda marcada abaixo da abertura (70 672 USDT) – tendência de baixa recente.  
+> - **Indicadores:** Não foram encontrados dados de RSI ou outros indicadores no búfer de memória.  
+> - **Análise:** O preço está em retração, possivelmente oferecendo oportunidade de compra a médio‑curto prazo. Decidi propor uma compra limitada de **≈ 500 USDT** em BTC (0,0075 BTC) para aproveitar a queda, mantendo o risco bem abaixo de 5 % do capital em USDT.  
+> 
+> **Ação:** A tentativa de enviar a ordem foi bloqueada porque as permissões de trading (`TRADEUX_ALLOW_TRADING`) estão desativadas. Não foi possível executar a operação.
+> 
+> **Conclusão:** Sem permissão para operar, não há mudança na carteira. Caso a permissão seja habilitada, a ordem proposta pode ser revisada e enviada.
+> [tradeux-agent] Modo --once: concluído.
+> ---- tools desse ciclo (journal) ----
+> rounds 5 | toolCalls 5
+>   - tradeux_get_wallet {'fiat': 'USDT'}
+>   - tradeux_get_price {'symbol': 'BTCUSDT'}
+>   - tradeux_get_memory {'index': 'RSI', 'symbol': 'BTCUSDT', 'interval': '1h'}
+>   - tradeux_get_symbol {'symbol': 'BTCUSDT'}
+>   - tradeux_place_order {'symbol': 'BTCUSDT', 'side': 'BUY', 'type': 'LIMIT', 'limitPrice': 66880, 'quantity': 0.0075}
+> ```
+
+## 🤖 Claude *(02:04:51)*
+
+
+## 🤖 Claude *(02:04:56)*
+
+Resultado revelador:
+- **`kimi-k2.6:free`** → **429 rate-limited** (indisponível agora). *(o "8 tools" que apareceu é resíduo do ciclo anterior do Sonnet — o ciclo do Kimi falhou antes de journalizar.)*
+- **`gpt-oss-120b:free`** → funcionou, mas **mais fraco**: errou os params do `get_memory` (`index:'RSI', interval:'1h'` em vez de `RSI_14_1m`) → **não leu o RSI**, e mesmo assim **tentou comprar** (LIMIT 0.0075 BTC ~$500) — bloqueado pelo guard-rail (✓). Ou seja: dispara ordem sem ler o indicador direito.
+
+Os free são claramente um degrau abaixo do Sonnet (que descobriu a chave via `get_memory_indexes` e leu o RSI certo). Vou testar mais 3 fortes pra achar o melhor que **(a) esteja disponível** e **(b) leia o RSI corretamente**:
+
+## 🤖 Claude *(02:05:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "run_model() {\n  local M=\"$1\"\n  echo \"\"\n  echo \"############################## $M ##############################\"\n  docker run --rm --network tradeux_tradeux -v /home/gcrux-tradeux/tradeux:/work -w /work/tradeux-agent \\\n    node:22-alpine sh -c \"\n      set -a; . /work/tradeux-agent/.env; set +a\n      export OPENROUTER_MODEL='$M'\n      node /work/tradeux-agent/src/index.js --once 2>&1\n    \" | grep -iE 'Ciclo 1|falhou|429|rate|Resumo|RSI|place_order|n\u00e3o oper|nao oper|comprar|vender|BUY|SELL|decis' | head -22\n  sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux >/dev/null 2>&1\n}\nrun_model \"qwen/qwen3-next-80b-a3b-instruct:free\"\nrun_model \"nvidia/nemotron-3-super-120b-a12b:free\"\nrun_model \"z-ai/glm-4.5-air:free\"",
+  "description": "Test three more free models on dry-run, filtering key signals",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############################## qwen/qwen3-next-80b-a3b-instruct:free ##############################
+> [tradeux-agent] Ciclo 1 iniciando (1780452302171-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 429: {"error":{"message":"Provider returned error","code":429,"metadata":{"raw":"qwen/qwen3-next-80b-a3b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations","provider_name":"Venice","is_byok":false,"retry_after_seconds":10,"retry_after_seconds_raw":9.783,"headers":{"Retry-After":"10"}}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> 
+> ############################## nvidia/nemotron-3-super-120b-a12b:free ##############################
+> [tradeux-agent] Ciclo 1 iniciando (1780452304007-1)...
+> [tradeux-agent] Ciclo 1: 7 tool calls.
+> [tradeux-agent] Resumo: **Ciclo de decisão – resumo**
+> - **Análise disponível:** a lista de indicadores (RSI, MACD, SMA, EMA, etc.) está presente, porém **não há valores reais** desses indicadores na memória do Beholder (consultas `tradeux_get_memory` retornaram `null`). Sem esses valores não é possível calcular sinais de sobrecompra/sobrevenda, cruzamento de médias, etc.  
+> **Decisão:** **Não operar neste ciclo.**  
+> Motivo: falta de dados de indicadores (RSI, MACD, etc.) que sustentem uma análise de risco/retorno; sem sinal claro, qualquer posição seria especulativa e contrariaria o princípio de gerenciamento de risco (posições pequenas, nunca “all-in”). Assim, a recomendação é aguardar até que os monitores estejam ativos e os indicadores estejam disponíveis na memória, ou então buscar outra fonte de sinal antes de colocar qualquer ordem.
+> 
+> ############################## z-ai/glm-4.5-air:free ##############################
+> [tradeux-agent] Ciclo 1 iniciando (1780452363227-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 400: {"error":{"message":"This endpoint's maximum context length is 131072 tokens. However, you requested about 195620 tokens (193250 of text input, 2370 of tool input). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically.","code":400,"metadata":{"provider_name":null}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> ```
+
+## 🤖 Claude *(02:07:16)*
+
+
+## 🤖 Claude *(02:07:20)*
+
+Comparação completa (free + tools, dry-run real):
+
+| modelo `:free` | disponível? | leu o RSI? | decisão | veredito |
+|---|---|---|---|---|
+| `kimi-k2.6` | ❌ 429 | — | — | rate-limited upstream |
+| `qwen3-next-80b` | ❌ 429 | — | — | rate-limited upstream |
+| `glm-4.5-air` | ❌ 400 | — | — | contexto 131k **estourou** (o nosso ~193k) |
+| `gpt-oss-120b` | ✅ | ❌ params errados | tentou **comprar cego** (bloqueado ✓) | funciona, mas imprudente + ctx 131k arrisca estourar |
+| **`nemotron-3-super-120b`** | ✅ | ❌ (null) porém **não operou** | **não operar** (disciplinado) | **melhor free** |
+
+**Melhor free: `nvidia/nemotron-3-super-120b-a12b:free`** — disponível, contexto **1M** (não estoura), faz tool calls e foi **prudente** (não operou sem dados, ao contrário do gpt-oss que tentou comprar às cegas). Configurando:
+
+## 🤖 Claude *(02:07:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/tradeux-agent && sed -i \"s|^OPENROUTER_MODEL=.*|OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free|\" .env && echo \"modelo ->\" && grep ^OPENROUTER_MODEL= .env'",
+  "description": "Set the free Nemotron model in the agent .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> modelo ->
+> OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
+> ```
+
+## 🤖 Claude *(02:07:50)*
+
+
+## 🤖 Claude *(02:08:01)*
+
+Modelo setado: **`nvidia/nemotron-3-super-120b-a12b:free`** (o melhor free pra esse caso). Pra ser honesto sobre o trade-off:
+
+- ⚠️ **Nenhum free leu o RSI tão bem quanto o Sonnet** (chutaram a chave da memória → `null`). O nemotron pelo menos é **disciplinado** (não opera sem dado). Raciocínio é um degrau abaixo.
+- ⚠️ **Free é rate-limited** (kimi/qwen deram 429). No loop contínuo, espere **429 intermitentes** → o agente pula o ciclo e segue (não quebra), mas a confiabilidade é menor.
+- 💡 Sugestão: usar o **free no loop de rotina** e o **Sonnet 4.6 pontualmente** (revisões profundas) — ele custa centavos/ciclo e é nitidamente melhor pra validar método.
+
+**Achado paralelo importante:** nosso contexto explodiu pra **~193k tokens** porque a carteira testnet tem dezenas de moedas-lixo (`456`, `这是测试币`…) e o `get_wallet` despeja tudo — foi o que estourou os modelos de 131k. Vale uma otimização no `tradeux-mcp` (filtrar dust/estimativa 0 no `get_wallet`): corta custo, latência e pressão de rate-limit em todo ciclo. Posso fazer isso depois — me avisa.
+
+---
+
+Voltando ao fluxo: o **baseline (RSI 30/70) está criado e inativo** — a decisão de **ativar** (cruzar pra execução no testnet) ainda está com você:
+
+1. **Ativar agora** (RSI 30/70, sem stop) — começa a gerar trades auditáveis já. *(meu recomendado)*
+2. **Adicionar stop-loss antes** — crio template `STOP_LOSS` + automação de proteção e aí ativo.
+3. **Ajustar** limiares/símbolo/tamanho antes.
+
+Qual seguimos? Se disser "ativa", eu ligo as duas automações e já te mostro o `brain` populado + fico de olho na primeira ordem que disparar.
+
+## 👤 User *(02:11:46)*
+
+Faça o 1 primeiro depois faça testes tambem com o stop-loss e depois ajuste limiares simbolo e tamanho e tambem pode fazer o ativa
+
+## 🤖 Claude *(02:12:52)*
+
+
+## 🤖 Claude *(02:12:53)*
+
+Entendido — faço o **1 (ativar agora)**, depois **stop-loss**, depois **ajustes (limiares/símbolo/tamanho)**. Vamos por partes, começando pela ativação.
+
+**Passo 1 — ativar o baseline RSI 30/70:**
+
+## 🤖 Claude *(02:13:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method)\n    r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=12) as resp:\n            t=resp.read().decode(); return resp.status,(json.loads(t) if t else None)\n    except urllib.error.HTTPError as e:\n        return e.code, e.read().decode()\n\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); token=d[\"token\"]\n# ativar as duas automa\u00e7\u00f5es do baseline\nfor aid in (2,3):\n    st,r=req(\"POST\",f\"/automations/{aid}/start\",None,token)\n    print(f\"start automation {aid}: HTTP {st}\", \"-> isActive\" , (r.get('isActive') if isinstance(r,dict) else r))\n# confirmar estado\nst,autos=req(\"GET\",\"/automations\",token=token)\nprint(\"\\n=== estado das automa\u00e7\u00f5es ===\")\nfor a in autos.get(\"rows\",[]):\n    print(f\" id={a['id']} | {a['name']:26s} | active={a['isActive']} | {a['conditions'] or '(sem cond)'}\")\n# checar ordens recentes de BTCUSDT\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",token=token)\nn = ords.get(\"count\") if isinstance(ords,dict) else \"?\"\nprint(f\"\\n=== ordens BTCUSDT at\u00e9 agora: count={n} ===\")\nfor o in (ords.get(\"rows\",[])[:5] if isinstance(ords,dict) else []):\n    print(f\"  {o.get('symbol')} {o.get('side')} {o.get('type')} status={o.get('status')} qty={o.get('quantity')} @ {o.get('avgPrice') or o.get('limitPrice')}\")\nPY",
+  "description": "Activate the two baseline automations and verify state and orders"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> start automation 2: HTTP 200 -> isActive True
+> start automation 3: HTTP 200 -> isActive True
+> 
+> === estado das automações ===
+>  id=2 | Baseline RSI Buy BTCUSDT   | active=True | MEMORY['BTCUSDT:RSI_14_1m'].current<30
+>  id=3 | Baseline RSI Sell BTCUSDT  | active=True | MEMORY['BTCUSDT:RSI_14_1m'].current>70
+>  id=1 | Example Strategy           | active=False | (sem cond)
+> 
+> === ordens BTCUSDT até agora: count=0 ===
+> ```
+
+## 🤖 Claude *(02:13:54)*
+
+
+## 🤖 Claude *(02:13:57)*
+
+✅ **Passo 1 feito — baseline ATIVO no testnet:**
+- `id=2 Baseline RSI Buy` (RSI<30) → **active**
+- `id=3 Baseline RSI Sell` (RSI>70) → **active**
+- Ordens até agora: **0** (correto — RSI está ~69, entre 30 e 70; armado e esperando o cruzamento). O `start` retornou 200 = `beholder.updateBrain` aplicado, então estão no cérebro reagindo a `BTCUSDT:RSI_14_1m`.
+
+Agora o **Passo 2 (stop-loss)**. Não vou chutar um mecanismo crítico — deixa eu ver como o Beholder coloca ordens/stops e quais chaves de MEMORY existem pra posição/entrada:
+
+## 🤖 Claude *(02:13:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const settingsRepository = require('../repositories/settingsRepository');
+> 2	const ordersRepository = require('../repositories/ordersRepository');
+> 3	const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 4	const automationsRepository = require('../repositories/automationsRepository');
+> 5	const actionsRepository = require('../repositories/actionsRepository');
+> 6	const beholder = require('../beholder');
+> 7	const logger = require('../utils/logger');
+> 8	const db = require('../db');
+> 9	const appEm = require('../app-em');
+> 10	
+> 11	async function getOrder(req, res, next) {
+> 12	    const { orderId, clientOrderId } = req.params;
+> 13	    const order = await ordersRepository.getOrder(orderId, clientOrderId);
+> 14	    res.json(order);
+> 15	}
+> 16	
+> 17	async function getOrders(req, res, next) {
+> 18	    const symbol = req.params.symbol && req.params.symbol.toUpperCase();
+> 19	    const page = parseInt(req.query.page);
+> 20	    const orders = await ordersRepository.getOrders(symbol, page || 1);
+> 21	    res.json(orders);
+> 22	}
+> 23	
+> 24	function calcTrailingStop(side, limitPrice, stopPriceMultiplier) {
+> 25	    return side === 'BUY' ? limitPrice * (1 + (stopPriceMultiplier / 100))
+> 26	        : limitPrice * (1 - (stopPriceMultiplier / 100))
+> 27	}
+> 28	
+> 29	function saveOrderTemplate(order, timestamp, transaction) {
+> 30	    const stopPriceMultiplier = parseFloat(order.options.stopPriceMultiplier);
+> 31	    const orderTemplate = {
+> 32	        name: `TRAILING ${order.side} ${timestamp}`,
+> 33	        symbol: order.symbol,
+> 34	        type: order.options.type,
+> 35	        side: order.side,
+> 36	        limitPrice: order.limitPrice,
+> 37	        limitPriceMultiplier: 1,
+> 38	        stopPrice: calcTrailingStop(order.side, order.limitPrice, stopPriceMultiplier),
+> 39	        stopPriceMultiplier,
+> 40	        quantity: order.quantity,
+> 41	        quantityMultiplier: 1,
+> 42	        icebergQtyMultiplier: 1
+> 43	    }
+> 44	    return orderTemplatesRepository.insertOrderTemplate(orderTemplate, transaction);
+> 45	}
+> 46	
+> 47	function saveAutomation(order, timestamp, transaction) {
+> 48	    const conditions = order.side === 'BUY'
+> 49	        ? `MEMORY['${order.symbol}:BOOK'].current.bestAsk<=${order.limitPrice}`
+> 50	        : `MEMORY['${order.symbol}:BOOK'].current.bestBid>=${order.limitPrice}`
+> 51	
+> 52	    const automation = {
+> 53	        name: `TRAILING ${order.side} ${timestamp}`,
+> 54	        symbol: order.symbol,
+> 55	        indexes: `${order.symbol}:BOOK`,
+> 56	        conditions,
+> 57	        isActive: true,
+> 58	        logs: false
+> 59	    }
+> 60	    return automationsRepository.insertAutomation(automation, transaction);
+> 61	}
+> 62	
+> 63	function saveAction(automationId, orderTemplateId, transaction) {
+> 64	    const action = {
+> 65	        type: 'TRAILING',
+> 66	        automationId,
+> 67	        orderTemplateId
+> 68	    }
+> 69	    return actionsRepository.insertActions([action], transaction);
+> 70	}
+> 71	
+> 72	async function placeTrailingStop(req, res, next) {
+> 73	    const order = req.body;
+> 74	
+> 75	    const transaction = await db.transaction();
+> 76	    const timestamp = Date.now();
+> 77	
+> 78	    try {
+> 79	        const orderTemplate = await saveOrderTemplate(order, timestamp, transaction);
+> 80	
+> 81	        let automation = await saveAutomation(order, timestamp, transaction);
+> 82	
+> 83	        await saveAction(automation.id, orderTemplate.id, transaction);
+> 84	
+> 85	        await transaction.commit();
+> 86	
+> 87	        automation = await automationsRepository.getAutomation(automation.id);
+> 88	
+> 89	        beholder.updateBrain(automation);
+> 90	
+> 91	        await appEm.sendMessage({ notification: { type: 'success', text: 'Trailing Stop placed!' } });
+> 92	
+> 93	        return res.status(202).send(`Trailing Stop placed!`);
+> 94	    }
+> 95	    catch (err) {
+> 96	        await transaction.rollback();
+> 97	        logger('system', err);
+> 98	        return res.status(500).send(err.message);
+> 99	    }
+> 100	}
+> 101	
+> 102	async function placeOrder(req, res, next) {
+> 103	    if (req.body.options.type === 'TRAILING_STOP') return placeTrailingStop(req, res, next);
+> 104	
+> 105	    const id = res.locals.token.id;
+> 106	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 107	    const exchange = require('../utils/exchange')(settings.get({ plain: true }));
+> 108	
+> 109	    const { side, symbol, quantity, limitPrice, options, automationId } = req.body;
+> 110	
+> 111	    let result;
+> 112	
+> 113	    try {
+> 114	        if (side === 'BUY')
+> 115	            result = await exchange.buy(symbol, quantity, limitPrice, options);
+> 116	        else if (side === 'SELL')
+> 117	            result = await exchange.sell(symbol, quantity, limitPrice, options);
+> 118	    }
+> 119	    catch (err) {
+> 120	        return res.status(400).json(err.body);
+> 121	    }
+> 122	
+> 123	    const order = await ordersRepository.insertOrder({
+> 124	        automationId,
+> 125	        symbol,
+> 126	        quantity,
+> 127	        type: options ? options.type : 'MARKET',
+> 128	        side,
+> 129	        limitPrice,
+> 130	        stopPrice: options ? options.stopPrice : null,
+> 131	        icebergQty: options ? options.icebergQty : null,
+> 132	        orderId: result.orderId,
+> 133	        clientOrderId: result.clientOrderId,
+> 134	        transactTime: result.transactTime,
+> 135	        status: result.status || 'NEW'
+> 136	    })
+> 137	
+> 138	    res.status(201).json(order.get({ plain: true }));
+> 139	}
+> 140	
+> 141	async function cancelOrder(req, res, next) {
+> 142	    const id = res.locals.token.id;
+> 143	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 144	    const exchange = require('../utils/exchange')(settings);
+> 145	
+> 146	    const { symbol, orderId } = req.params;
+> 147	
+> 148	    let result;
+> 149	    try {
+> 150	        result = await exchange.cancel(symbol, orderId);
+> 151	    }
+> 152	    catch (err) {
+> 153	        return res.status(400).json(err.body);
+> 154	    }
+> 155	
+> 156	    const order = await ordersRepository.updateOrderByOrderId(result.orderId, result.origClientOrderId, {
+> 157	        status: result.status
+> 158	    })
+> 159	    res.json(order.get({ plain: true }));
+> 160	}
+> 161	
+> 162	async function syncOrder(req, res, next) {
+> 163	    const id = res.locals.token.id;
+> 164	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> 165	    const exchange = require('../utils/exchange')(settings);
+> 166	
+> 167	    const beholderOrderId = req.params.id;
+> 168	    const order = await ordersRepository.getOrderById(beholderOrderId);
+> 169	    if (!order) return res.sendStatus(404);
+> 170	
+> 171	    let binanceOrder, binanceTrade;
+> 172	    try {
+> 173	        binanceOrder = await exchange.orderStatus(order.symbol, order.orderId);
+> 174	        order.status = binanceOrder.status;
+> 175	        order.transactTime = binanceOrder.updateTime;
+> 176	
+> 177	        if (binanceOrder.status !== 'FILLED') {
+> 178	            await order.save();
+> 179	            return res.json(order);
+> 180	        }
+> 181	
+> 182	        binanceTrade = await exchange.orderTrade(order.symbol, order.orderId);
+> 183	    }
+> 184	    catch (err) {
+> 185	        logger('system', err);
+> 186	        return res.sendStatus(404);
+> 187	    }
+> 188	
+> 189	    const quoteQuantity = parseFloat(binanceOrder.cummulativeQuoteQty);
+> 190	    order.avgPrice = quoteQuantity / parseFloat(binanceOrder.executedQty);
+> 191	    order.isMaker = binanceTrade.isMaker;
+> 192	    order.commission = binanceTrade.commission;
+> 193	    order.quantity = binanceOrder.executedQty;
+> 194	
+> 195	    const isQuoteComission = binanceTrade.commissionAsset && order.symbol.endsWith(binanceTrade.commissionAsset);
+> 196	    if (isQuoteComission)
+> 197	        order.net = quoteQuantity - parseFloat(binanceTrade.commission);
+> 198	    else
+> 199	        order.net = quoteQuantity;
+> 200	
+> 201	    await order.save();
+> 202	
+> 203	    res.json(order);
+> 204	}
+> 205	
+> 206	async function getLastOrders(req, res, next) {
+> 207	    const orders = await ordersRepository.getLastFilledOrders();
+> 208	    res.json(orders);
+> 209	}
+> 210	
+> 211	function calcVolume(orders, side, startTime, endTime) {
+> 212	    startTime = !startTime ? 0 : startTime;
+> 213	    endTime = !endTime ? Date.now() : endTime;
+> 214	
+> 215	    const filteredOrders = orders.filter(o => o.transactTime >= startTime && o.transactTime < endTime && o.side === side);
+> 216	    if (!filteredOrders || !filteredOrders.length) return 0;
+> 217	
+> 218	    return filteredOrders.map(o => parseFloat(o.net))
+> 219	        .reduce((a, b) => a + b);
+> 220	}
+> 221	
+> 222	function thirtyDaysAgo() {
+> 223	    const date = new Date();
+> 224	    date.setUTCDate(date.getUTCDate() - 30);
+> 225	    date.setUTCHours(0, 0, 0, 0);
+> 226	    return date.getTime();
+> 227	}
+> 228	
+> 229	function getStartToday() {
+> 230	    const date = new Date();
+> 231	    date.setUTCHours(0, 0, 0, 0);
+> 232	    return date.getTime();
+> 233	}
+> 234	
+> 235	function getToday() {
+> 236	    const date = new Date();
+> 237	    date.setUTCHours(23, 59, 59, 999);
+> 238	    return date.getTime();
+> 239	}
+> 240	
+> 241	async function getOrdersReport(req, res, next) {
+> 242	    if (req.query.date)
+> 243	        return getDayTradeReport(req, res, next);
+> 244	    else
+> 245	        return getMonthReport(req, res, next);
+> 246	}
+> 247	
+> 248	const EMPTY_REPORT = {
+> 249	    orders: 0,
+> 250	    buyVolume: 0,
+> 251	    sellVolume: 0,
+> 252	    wallet: 0,
+> 253	    profit: 0,
+> 254	    profitPerc: 0,
+> 255	    subs: [],
+> 256	    series: [],
+> 257	    automations: []
+> 258	}
+> 259	
+> 260	function groupByAutomations(orders) {
+> 261	    const automationsObj = {};
+> 262	    orders.forEach(o => {
+> 263	        const automationId = o.automationId ? o.automationId : 'M';
+> 264	        if (!automationsObj[automationId])
+> 265	            automationsObj[automationId] = { name: o.automationId ? o['automation.name'] : 'Others', executions: 1, net: 0 };
+> 266	        else
+> 267	            automationsObj[automationId].executions++;
+> 268	
+> 269	        if (o.side === 'BUY')
+> 270	            automationsObj[automationId].net -= parseFloat(o.net);
+> 271	        else
+> 272	            automationsObj[automationId].net += parseFloat(o.net);
+> 273	    })
+> 274	
+> 275	    return Object.entries(automationsObj).map(prop => prop[1]).sort((a, b) => b.net - a.net);
+> 276	}
+> 277	
+> 278	async function getDayTradeReport(req, res, next) {
+> 279	    const quote = req.params.quote;
+> 280	
+> 281	    let startDate = req.query.date ? parseInt(req.query.date) : getStartToday();
+> 282	    let endDate = startDate + (23 * 60 * 60 * 1000) + (59 * 60 * 1000) + (59 * 1000) + 999;
+> 283	
+> 284	    //permitir apenas 24h
+> 285	    if ((endDate - startDate) > (1 * 24 * 60 * 60 * 1000)) startDate = getStartToday();
+> 286	
+> 287	    const orders = await ordersRepository.getReportOrders(quote, startDate, endDate);
+> 288	    if (!orders || !orders.length) return res.json({ ...EMPTY_REPORT, quote, startDate, endDate });
+> 289	
+> 290	    const subs = [];
+> 291	    const series = [];
+> 292	    for (let i = 0; i < 24; i++) {
+> 293	        const newDate = new Date(startDate);
+> 294	        newDate.setUTCHours(i);
+> 295	        subs.push(`${i}h`);
+> 296	
+> 297	        const lastMoment = new Date(newDate.getTime())
+> 298	        lastMoment.setUTCMinutes(59, 59, 999);
+> 299	
+> 300	        const partialBuy = calcVolume(orders, 'BUY', newDate.getTime(), lastMoment.getTime());
+> 301	        const partialSell = calcVolume(orders, 'SELL', newDate.getTime(), lastMoment.getTime());
+> 302	        series.push(partialSell - partialBuy);
+> 303	    }
+> 304	
+> 305	    const buyVolume = calcVolume(orders, 'BUY');
+> 306	    const sellVolume = calcVolume(orders, 'SELL');
+> 307	    const profit = sellVolume - buyVolume;
+> 308	
+> 309	    const wallet = beholder.getMemory(quote, 'WALLET');
+> 310	    const profitPerc = (profit * 100) / (parseFloat(wallet) - profit);
+> 311	    const automations = groupByAutomations(orders);
+> 312	
+> 313	    res.json({
+> 314	        quote,
+> 315	        orders: orders.length,
+> 316	        buyVolume,
+> 317	        sellVolume,
+> 318	        wallet,
+> 319	        profit,
+> 320	        profitPerc,
+> 321	        startDate,
+> 322	        endDate,
+> 323	        subs,
+> 324	        series,
+> 325	        automations
+> 326	    })
+> 327	}
+> 328	
+> 329	async function getMonthReport(req, res, next) {
+> 330	
+> 331	    const quote = req.params.quote;
+> 332	
+> 333	    let startDate = req.query.startDate ? parseInt(req.query.startDate) : thirtyDaysAgo();
+> 334	    let endDate = req.query.endDate ? parseInt(req.query.endDate) : getToday();
+> 335	
+> 336	    //permitir apenas 30 dias
+> 337	    if ((endDate - startDate) > (31 * 24 * 60 * 60 * 1000)) startDate = thirtyDaysAgo();
+> 338	
+> 339	    const orders = await ordersRepository.getReportOrders(quote, startDate, endDate);
+> 340	    if (!orders || !orders.length) return res.json({ ...EMPTY_REPORT, quote, startDate, endDate });
+> 341	
+> 342	    const daysInRange = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+> 343	
+> 344	    const subs = [];
+> 345	    const series = [];
+> 346	    for (let i = 0; i < daysInRange; i++) {
+> 347	        const newDate = new Date(startDate);
+> 348	        newDate.setUTCDate(newDate.getUTCDate() + i);
+> 349	        subs.push(`${newDate.getUTCDate()}/${newDate.getUTCMonth() + 1}`);
+> 350	
+> 351	        const lastMoment = new Date(newDate.getTime())
+> 352	        lastMoment.setUTCHours(23, 59, 59, 999);
+> 353	
+> 354	        const partialBuy = calcVolume(orders, 'BUY', newDate.getTime(), lastMoment.getTime());
+> 355	        const partialSell = calcVolume(orders, 'SELL', newDate.getTime(), lastMoment.getTime());
+> 356	        series.push(partialSell - partialBuy);
+> 357	    }
+> 358	
+> 359	    const buyVolume = calcVolume(orders, 'BUY');
+> 360	    const sellVolume = calcVolume(orders, 'SELL');
+> 361	    const profit = sellVolume - buyVolume;
+> 362	
+> 363	    const wallet = beholder.getMemory(quote, 'WALLET');
+> 364	    const profitPerc = (profit * 100) / (parseFloat(wallet) - profit);
+> 365	    const automations = groupByAutomations(orders);
+> 366	
+> 367	    res.json({
+> 368	        quote,
+> 369	        orders: orders.length,
+> 370	        buyVolume,
+> 371	        sellVolume,
+> 372	        wallet,
+> 373	        profit,
+> 374	        profitPerc,
+> 375	        startDate,
+> 376	        endDate,
+> 377	        subs,
+> 378	        series,
+> 379	        automations
+> 380	    })
+> 381	}
+> 382	
+> 383	module.exports = {
+> 384	    placeOrder,
+> 385	    cancelOrder,
+> 386	    getOrders,
+> 387	    syncOrder,
+> 388	    getLastOrders,
+> 389	    getOrdersReport,
+> 390	    getOrder
+> 391	}
+> ```
+
+## 🤖 Claude *(02:14:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== STOP / TAKE / LAST_ORDER / stopPrice no beholder.js ===\"\ngrep -nE \"STOP_LOSS|STOP_LOSS_LIMIT|TAKE_PROFIT|LAST_ORDER|stopPrice|calculateOrder|MIN_NOTIONAL|placeOrder|doOrder|sendOrder\" beholder.js | head -30\necho \"\"\necho \"=== como MEMORY guarda pre\u00e7o/\u00faltima ordem (chaves) ===\"\ngrep -noE \"MEMORY\\[[^]]+\\]|':LAST_ORDER'|:LAST_CANDLE|:MINI_TICKER|memoryKey\" beholder.js | sort -u | head -30",
+  "description": "Read orders controller and find Beholder stop/order/memory mechanics"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STOP / TAKE / LAST_ORDER / stopPrice no beholder.js ===
+> 175:                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 176:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 181:                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 192:        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> 224:    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 227:    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 228:        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 262:    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 269:async function placeOrder(settings, automation, action) {
+> 281:        orderTemplate.stopPrice = null;
+> 294:    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> 296:        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> 315:            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> 317:            if (!isFinite(stopPrice) || !stopPrice)
+> 318:                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> 320:            order.options.stopPrice = stopPrice;
+> 342:    let stopPrice;
+> 344:        stopPrice = action.orderTemplate.stopPrice;
+> 346:        stopPrice = order.options.stopPrice;
+> 355:        stopPrice,
+> 386:        const result = await placeOrder(settings, automation, automation.actions[0]);
+> 449:            stopPrice: null,
+> 450:            stopPriceMultiplier: 1,
+> 465:            stopPrice: null,
+> 466:            stopPriceMultiplier: 1,
+> 528:        else if (withdrawTemplate.amount === 'LAST_ORDER_QTY') {
+> 529:            const keys = searchMemory(new RegExp(`^((${withdrawTemplate.coin}.+|.+${withdrawTemplate.coin}):LAST_ORDER)$`));
+> 562:    const stopPrice = parseFloat(action.orderTemplate.stopPrice);
+> 574:    const isStopActivated = isBuy ? currentPrice >= stopPrice && previousPrice < stopPrice
+> 575:        : currentPrice <= stopPrice && previousPrice > stopPrice;
+> 
+> === como MEMORY guarda preço/última ordem (chaves) ===
+> 138:memoryKey
+> 140:memoryKey
+> 187:MEMORY[`${orderTemplate.symbol}:BOOK`]
+> 203:MEMORY[`${symbol.quote}:WALLET`]
+> 207:MEMORY[`${symbol.base}:WALLET`]
+> 228:MEMORY[`${orderTemplate.symbol}:LAST_ORDER`]
+> 243:MEMORY[`${symbol.quote}:WALLET`]
+> 245:MEMORY[`${symbol.base}:WALLET`]
+> 257:MEMORY[`${symbol.quote}:WALLET`]
+> 383:MEMORY[`${automation.symbol}:BOOK`]
+> 473:MEMORY[`${automation.symbol}:BOOK`]
+> 490:MEMORY['${automation.symbol}:BOOK']
+> 499:MEMORY['${automation.symbol}:BOOK']
+> 523:MEMORY[`${withdrawTemplate.coin}:WALLET`]
+> 558:MEMORY[`${automation.symbol}:BOOK`]
+> 625:memoryKey
+> 629:':LAST_ORDER'
+> 629:memoryKey
+> 630::LAST_CANDLE
+> 630:memoryKey
+> 631:memoryKey
+> 634:memoryKey
+> 641:MEMORY[ix]
+> 644:memoryKey
+> 682:memoryKey
+> 684:memoryKey
+> 687:memoryKey
+> 699:memoryKey
+> 711:memoryKey
+> 743:memoryKey
+> ```
+
+## 🤖 Claude *(02:14:50)*
+
+
+## 🤖 Claude *(02:14:51)*
+
+Mecânica do stop entendida: existe a chave `MEMORY['BTCUSDT:LAST_ORDER']` (referência da entrada), o `stopPrice` do template pode ser uma **expressão de MEMORY** (avaliada em runtime), há `quantity: LAST_ORDER_QTY` (vende o que comprou) e o Beholder tem lógica de ativação de stop (`currentPrice <= stopPrice` na venda). Deixa eu confirmar os campos exatos do `LAST_ORDER` e a fiação do stop:
+
+## 🤖 Claude *(02:14:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 165,
+  "limit": 110
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 165	    const tickSize = parseFloat(symbol.tickSize);
+> 166	    let newPrice, factor;
+> 167	
+> 168	    if (LIMIT_TYPES.includes(orderTemplate.type)) {
+> 169	        try {
+> 170	            if (!isStopPrice) {
+> 171	                if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;
+> 172	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 173	            }
+> 174	            else {
+> 175	                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 176	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 177	            }
+> 178	        }
+> 179	        catch (err) {
+> 180	            if (isStopPrice)
+> 181	                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 182	            else
+> 183	                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> 184	        }
+> 185	    }
+> 186	    else {
+> 187	        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 188	        if (!memory)
+> 189	            throw new Error(`Error trying to get market price. OTID: ${orderTemplate.id}, ${isStopPrice}. No Book.`);
+> 190	
+> 191	        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> 192	        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> 193	    }
+> 194	
+> 195	    factor = Math.floor(newPrice / tickSize);
+> 196	    return (factor * tickSize).toFixed(symbol.quotePrecision);
+> 197	}
+> 198	
+> 199	function calcQty(orderTemplate, price, symbol) {
+> 200	    let asset;
+> 201	
+> 202	    if (orderTemplate.side === 'BUY') {
+> 203	        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 204	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 205	    }
+> 206	    else {
+> 207	        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 208	        if (!asset) throw new Error(`There is no ${symbol.base} in your wallet to place a sell.`);
+> 209	    }
+> 210	
+> 211	    let qty = orderTemplate.quantity.replace(',', '.');
+> 212	    if (parseFloat(qty)) return qty;
+> 213	
+> 214	    const multiplier = orderTemplate.quantityMultiplier;
+> 215	    const stepSize = parseFloat(symbol.stepSize);
+> 216	
+> 217	    let newQty, factor;
+> 218	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 219	        if (orderTemplate.side === 'BUY')
+> 220	            newQty = (parseFloat(asset) / parseFloat(price)) * (multiplier > 1 ? 1 : multiplier);
+> 221	        else
+> 222	            newQty = parseFloat(asset) * (multiplier > 1 ? 1 : multiplier);
+> 223	    }
+> 224	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 225	        newQty = (parseFloat(symbol.minNotional) / parseFloat(price)) * (multiplier < 1 ? 1 : multiplier);
+> 226	    }
+> 227	    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 228	        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 229	        if (!lastOrder)
+> 230	            throw new Error(`There is no last order to use as qty reference for ${orderTemplate.symbol}.`);
+> 231	
+> 232	        newQty = parseFloat(lastOrder.quantity) * multiplier;
+> 233	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;
+> 234	    }
+> 235	
+> 236	    factor = Math.floor(newQty / stepSize);
+> 237	    return (factor * stepSize).toFixed(symbol.basePrecision);
+> 238	}
+> 239	
+> 240	function hasEnoughAssets(symbol, order, price) {
+> 241	    const qty = parseFloat(order.quantity);
+> 242	    if (order.side === 'BUY')
+> 243	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 244	    else
+> 245	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 246	}
+> 247	
+> 248	function calcQuoteQty(orderTemplate, symbol) {
+> 249	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> 250	        throw new Error(`Only MARKET orders can cal quote qty.`);
+> 251	
+> 252	    const multiplier = orderTemplate.quantityMultiplier;
+> 253	
+> 254	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 255	        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> 256	
+> 257	        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 258	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 259	
+> 260	        return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 261	    }
+> 262	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 263	        return (parseFloat(symbol.minNotional) * (multiplier < 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 264	    }
+> 265	
+> 266	    throw new Error(`Invalid order template quantity ${orderTemplate.quantity}`);
+> 267	}
+> 268	
+> 269	async function placeOrder(settings, automation, action) {
+> 270	
+> 271	    if (!settings || !automation || !action)
+> 272	        throw new Error(`All parameters are required to place an order.`);
+> 273	
+> 274	    if (!action.orderTemplateId)
+> ```
+
+## 🤖 Claude *(02:14:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 540,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 540	
+> 541	        if (automation.logs) logger('A:' + automation.id, `WITHDRAW`, withdrawTemplate);
+> 542	
+> 543	        return { type: 'success', text: `Withdraw #${result.id} realized successfully for ${withdrawTemplate.coin}` };
+> 544	    } catch (err) {
+> 545	        throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 546	    }
+> 547	}
+> 548	
+> 549	async function sendTelegram(settings, automation) {
+> 550	    await require('./utils/telegram')(settings, automation.name + ' has fired!');
+> 551	    if (automation.logs) logger('A:' + automation.id, `Telegram sent!`);
+> 552	    return { text: `Telegram sent from automation '${automation.name}'`, type: 'success' };
+> 553	}
+> 554	
+> 555	async function trailingEval(settings, automation, action) {
+> 556	    const isBuy = action.orderTemplate.side === 'BUY';
+> 557	
+> 558	    const book = MEMORY[`${automation.symbol}:BOOK`];
+> 559	    if (!book) return { type: 'error', text: `No book info for ${automation.name}` };
+> 560	
+> 561	    const activationPrice = parseFloat(action.orderTemplate.limitPrice);
+> 562	    const stopPrice = parseFloat(action.orderTemplate.stopPrice);
+> 563	
+> 564	    const currentPrice = isBuy ? book.current.bestAsk : book.current.bestBid;
+> 565	    const previousPrice = isBuy ? book.previous.bestAsk : book.previous.bestBid;
+> 566	
+> 567	    const isPriceActivated = isBuy ? currentPrice <= activationPrice : currentPrice >= activationPrice;
+> 568	
+> 569	    if (!isPriceActivated) return false;
+> 570	
+> 571	    if (LOGS)
+> 572	        logger('A:' + automation.id, `Beholder is in the Trailing zone at ${automation.name}`);
+> 573	
+> 574	    const isStopActivated = isBuy ? currentPrice >= stopPrice && previousPrice < stopPrice
+> 575	        : currentPrice <= stopPrice && previousPrice > stopPrice;
+> 576	
+> 577	    if (isStopActivated) {
+> 578	        if (automation.logs || LOGS)
+> 579	            logger('A:' + automation.id, `Stop price activated at ${automation.name}`);
+> 580	
+> 581	        const results = await placeOrder(settings, automation, action);
+> 582	
+> 583	        //para executar apenas uma vez
+> 584	        deleteBrain(automation);
+> 585	
+> 586	        automation.isActive = false;
+> 587	        await automationsRepository.updateAutomation(automation.id, automation);
+> 588	
+> 589	        return results;
+> 590	    }
+> 591	
+> 592	    const newStopPrice = isBuy ? currentPrice * (1 + (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100))
+> 593	        : currentPrice * (1 - (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100));
+> 594	
+> 595	    if (!stopPrice || (isBuy && newStopPrice < stopPrice) || (!isBuy && newStopPrice > stopPrice)) {
+> 596	        if (LOGS)
+> 597	            logger('A:' + automation.id, `Stop price changed to ${newStopPrice} at ${automation.name}`);
+> 598	
+> 599	        action.orderTemplate.stopPrice = newStopPrice;
+> ```
+
+## 🤖 Claude *(02:15:54)*
+
+
+## 🤖 Claude *(02:15:56)*
+
+Mecânica confirmada: `MEMORY['BTCUSDT:LAST_ORDER']` tem `.quantity` (e o `stopPrice` do template aceita expressão de MEMORY × multiplicador). Preciso confirmar se o `LAST_ORDER` guarda o **preço de entrada** (pra ancorar o stop). Deixa eu ver onde ele é gravado:
+
+## 🤖 Claude *(02:15:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== onde LAST_ORDER \u00e9 gravado na MEMORY + campos ===\"\ngrep -rnE \"LAST_ORDER\" . | grep -ivE \"quantity reference|searchMemory|WITHDRAW\" | head\necho \"\"\necho \"=== app-em.js: tratamento de execu\u00e7\u00e3o de ordem (campos do objeto) ===\"\ngrep -nE \"LAST_ORDER|updateMemory|order\\.|priceX|\\.price|executionReport|orderId|side\" app-em.js | head -30",
+  "description": "Find where LAST_ORDER is written and its fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde LAST_ORDER é gravado na MEMORY + campos ===
+> beholder.js:227:    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> beholder.js:228:        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> beholder.js:629:        || memoryKey.indexOf(':LAST_ORDER') !== -1
+> app-em.js:185:                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> app-em.js:428:        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> utils/indexes.js:72:    LAST_ORDER: 'LAST_ORDER',
+> 
+> === app-em.js: tratamento de execução de ordem (campos do objeto) ===
+> 25:                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 40:                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 80:            const currentMemory = beholder.getMemory(order.symbol, indexKeys.BOOK);
+> 86:            const results = await beholder.updateMemory(order.symbol, indexKeys.BOOK, null, newMemory);
+> 101:            const results = await beholder.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+> 121:    delete orderCopy.orderId;
+> 142:    switch (order.status) {
+> 149:    sendMessage({ notification: { text: `Order #${order.orderId} was updated as ${order.status}`, type } });
+> 157:        orderId: executionData.i,
+> 159:        side: executionData.S,
+> 166:    if (order.status === orderStatus.FILLED) {
+> 168:        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 169:        order.commission = executionData.n;
+> 170:        order.quantity = executionData.q;
+> 171:        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 172:        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 175:    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 179:            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 185:                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 214:            if (data.e === 'executionReport')
+> 240:            beholder.updateMemory(symbol, index, interval, calc, false);
+> 286:            beholder.updateMemory(symbol, indexKeys.LAST_CANDLE, interval, { current: lastCandle, previous: previousCandle }, false);
+> 287:            beholder.updateMemory(symbol, indexKeys.PREVIOUS_CANDLE, interval, { current: previousCandle, previous: previousPreviousCandle }, false);
+> 346:    data.priceChange = parseFloat(data.priceChange);
+> 375:            const results = await beholder.updateMemory(data.symbol, indexKeys.TICKER, null, newMemory);
+> 427:        const orderCopy = getLightOrder(order.get({ plain: true }));
+> 428:        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> ```
+
+## 🤖 Claude *(02:17:24)*
+
+
+## 🤖 Claude *(02:17:29)*
+
+✅ **Passo 1 confirmado** — baseline no ar (0 ordens, RSI ~69, armado; venda em RSI>70 pode disparar sozinha logo, já que está perto).
+
+**Passo 2 (stop-loss) — mapeei exatamente como construir**, e descobri o ponto-chave:
+
+- Template `STOP_LOSS_LIMIT` SELL, `quantity: LAST_ORDER_QTY` (vende o que comprou), `stopPrice = MEMORY['BTCUSDT:LAST_ORDER'].avgPrice × (1 − X%)` — ou seja, **ancorado no preço de entrada da última compra**.
+- ⚠️ **Mas um stop-loss precisa de uma posição pra proteger.** O lado de **compra (RSI<30) ainda não disparou** (RSI~69), então não há posição nem `LAST_ORDER` ainda — não há o que "stopar". Esperar um RSI<30 natural pode levar horas.
+
+Pra **testar o stop de verdade agora**, o caminho direto é abrir uma posição controlada e ver o stop armar/disparar. Isso já encosta no Passo 3 (tamanho/limiares). Duas definições suas (são trades no testnet + é "seu método"):
+
+## 🤖 Claude *(02:17:38)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Pra testar o stop-loss precisamos de uma posi\u00e7\u00e3o comprada. Como criar?",
+      "header": "Testar stop",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Test-buy controlado agora (recomendado)",
+          "description": "Eu coloco UMA compra market min\u00fascula (MIN_NOTIONAL, ~$5-10 testnet) em BTCUSDT pra criar posi\u00e7\u00e3o + LAST_ORDER, anexo o stop e a gente observa ele armar/disparar. Valida o ciclo completo em minutos."
+        },
+        {
+          "label": "Esperar sinal natural RSI<30",
+          "description": "N\u00e3o fa\u00e7o trade manual; deixo o baseline comprar sozinho quando o RSI cair <30 (pode levar horas/dias) e o stop protege a partir da\u00ed. Mais 'limpo', por\u00e9m lento pra validar."
+        }
+      ]
+    },
+    {
+      "question": "Qual a dist\u00e2ncia do stop-loss (abaixo do pre\u00e7o de entrada)?",
+      "header": "Dist. do stop",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "2% (mais apertado)",
+          "description": "Stop a 2% abaixo da entrada. Corta perda r\u00e1pido, mas pode ser estopado por ru\u00eddo de curto prazo (1m \u00e9 vol\u00e1til)."
+        },
+        {
+          "label": "3% (equilibrado)",
+          "description": "Stop a 3% abaixo da entrada. Meio-termo entre proteger e n\u00e3o ser estopado por ru\u00eddo."
+        },
+        {
+          "label": "5% (mais folgado)",
+          "description": "Stop a 5% abaixo da entrada. Aguenta mais ru\u00eddo, perda m\u00e1xima por trade maior."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Pra testar o stop-loss precisamos de uma posição comprada. Como criar?"="ambos", "Qual a distância do stop-loss (abaixo do preço de entrada)?"="2% (mais apertado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(02:28:00)*
+
+
+## 🤖 Claude *(02:28:03)*
+
+Você escolheu **ambos** (test-buy controlado **+** manter o sinal natural) e **stop 2%**. Antes de disparar ordens de verdade no testnet, **não vou construir o payload no chute** — deixa eu ler o wrapper da Binance (`utils/exchange.js`) pra montar a compra MARKET + o `STOP_LOSS_LIMIT` corretamente:
+
+## 🤖 Claude *(02:28:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const Binance = require('node-binance-api');
+> 2	const LOGS = process.env.BINANCE_LOGS === 'true';
+> 3	const SAPI_URL = process.env.BINANCE_SAPI_URL;
+> 4	const logger = require('./logger');
+> 5	
+> 6	module.exports = (settings) => {
+> 7	
+> 8	    if (!settings) throw new Error(`The settings object is required to connect on exchange!`);
+> 9	
+> 10	    const binance = new Binance().options({
+> 11	        APIKEY: settings.accessKey,
+> 12	        APISECRET: settings.secretKey,
+> 13	        recvWindow: 60000,
+> 14	        family: 0,
+> 15	        urls: {
+> 16	            base: settings.apiUrl.endsWith('/') ? settings.apiUrl : settings.apiUrl + '/',
+> 17	            stream: settings.streamUrl.endsWith('/') ? settings.streamUrl : settings.streamUrl + '/'
+> 18	        },
+> 19	        verbose: LOGS
+> 20	    });
+> 21	
+> 22	    function exchangeInfo() {
+> 23	        return binance.exchangeInfo();
+> 24	    }
+> 25	
+> 26	    async function balance() {
+> 27	        await binance.useServerTime();
+> 28	        return binance.balance();
+> 29	    }
+> 30	
+> 31	    function buy(symbol, quantity, price, options) {
+> 32	        if (!options.type || options.type === 'MARKET')
+> 33	            return binance.marketBuy(symbol, quantity, options);
+> 34	
+> 35	        return binance.buy(symbol, quantity, price, options);
+> 36	    }
+> 37	
+> 38	    function sell(symbol, quantity, price, options) {
+> 39	        if (!options.type || options.type === 'MARKET')
+> 40	            return binance.marketSell(symbol, quantity, options);
+> 41	
+> 42	        return binance.sell(symbol, quantity, price, options);
+> 43	    }
+> 44	
+> 45	    function cancel(symbol, orderId) {
+> 46	        return binance.cancel(symbol, orderId);
+> 47	    }
+> 48	
+> 49	    function orderStatus(symbol, orderId) {
+> 50	        return binance.orderStatus(symbol, orderId);
+> 51	    }
+> 52	
+> 53	    async function orderTrade(symbol, orderId) {
+> 54	        const trades = await binance.trades(symbol);
+> 55	        return trades.find(t => t.orderId === orderId);
+> 56	    }
+> 57	
+> 58	    function withdraw(coin, amount, address, network, addressTag) {
+> 59	        try {
+> 60	            const data = { coin, amount, address };
+> 61	            if (addressTag) data.addressTag = addressTag;
+> 62	            if (network) data.network = network;
+> 63	            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');
+> 64	        } catch (err) {
+> 65	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 66	        }
+> 67	    }
+> 68	
+> 69	    async function getCoins() {
+> 70	        try {
+> 71	            const coins = await privateCall(SAPI_URL + 'capital/config/getall', null, 'GET');
+> 72	            return coins.map(c => {
+> 73	                return {
+> 74	                    coin: c.coin,
+> 75	                    networks: c.networkList.map(n => {
+> 76	                        return {
+> 77	                            network: n.network,
+> 78	                            withdrawIntegerMultiple: n.withdrawIntegerMultiple,
+> 79	                            isDefault: n.isDefault,
+> 80	                            name: n.name,
+> 81	                            withdrawFee: n.withdrawFee,
+> 82	                            withdrawMin: n.withdrawMin,
+> 83	                            minConfirm: n.minConfirm
+> 84	                        }
+> 85	                    })
+> 86	                }
+> 87	            })
+> 88	        } catch (err) {
+> 89	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 90	        }
+> 91	    }
+> 92	
+> 93	    async function privateCall(apiUrl, data = {}, method = 'GET') {
+> 94	
+> 95	        const timestamp = Date.now();
+> 96	        const recvWindow = 60000;
+> 97	
+> 98	        const axios = require('axios');
+> 99	        const queryString = new URLSearchParams();
+> 100	        Object.entries({ ...data, timestamp, recvWindow }).map(prop => queryString.append(prop[0], `${prop[1]}`));
+> 101	
+> 102	        const signature = require('crypto')
+> 103	            .createHmac('sha256', settings.secretKey)
+> 104	            .update(queryString.toString())
+> 105	            .digest('hex');
+> 106	
+> 107	        queryString.append('signature', signature);
+> 108	
+> 109	        const result = await axios({
+> 110	            method,
+> 111	            url: `${apiUrl}?${queryString.toString()}`,
+> 112	            headers: { 'X-MBX-APIKEY': settings.accessKey }
+> 113	        })
+> 114	
+> 115	        return result.data;
+> 116	    }
+> 117	
+> 118	    function miniTickerStream(callback) {
+> 119	        binance.websockets.miniTicker(markets => {
+> 120	            callback(markets)
+> 121	        });
+> 122	    }
+> 123	
+> 124	    function bookStream(callback) {
+> 125	        binance.websockets.bookTickers(order => {
+> 126	            callback(order)
+> 127	        });
+> 128	    }
+> 129	
+> 130	    function chartStream(symbol, interval, callback) {
+> 131	        const streamUrl = binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
+> 132	            const tick = binance.last(chart);
+> 133	            const isIncomplete = tick && chart[tick] && chart[tick].isFinal === false;
+> 134	            if ((!process.env.INCOMPLETE_CANDLES || process.env.INCOMPLETE_CANDLES === 'false') && isIncomplete)
+> 135	                return;
+> 136	
+> 137	            const ohlc = binance.ohlc(chart);
+> 138	            ohlc.isComplete = !isIncomplete;
+> 139	
+> 140	            callback(ohlc);
+> 141	        });
+> 142	        if (LOGS) logger('system', `Chart Stream connected at ${streamUrl}`);
+> 143	    }
+> 144	
+> 145	    function terminateChartStream(symbol, interval) {
+> 146	        //btcusdt@kline_1m
+> 147	        binance.websockets.terminate(`${symbol.toLowerCase()}@kline_${interval}`);
+> 148	        logger('system', `Chart Stream ${symbol.toLowerCase()}@kline_${interval} terminated!`);
+> 149	    }
+> 150	
+> 151	    function userDataStream(updateCallback, listStatusCallback) {
+> 152	        binance.websockets.userData(
+> 153	            data => updateCallback(data),
+> 154	            true,
+> 155	            subscribedData => logger('system', `userDataStream:subscribeEvent: ${JSON.stringify(subscribedData)}`),
+> 156	            listStatusData => listStatusCallback(listStatusData));
+> 157	    }
+> 158	
+> 159	    async function tickerStream(symbol, callback) {
+> 160	        const streamUrl = binance.websockets.prevDay(symbol, (data, converted) => {
+> 161	            callback(converted);
+> 162	        })
+> 163	        if (LOGS) logger('system', `Ticker Stream connected at ${streamUrl}`);
+> 164	    }
+> 165	
+> 166	    function terminateTickerStream(symbol) {
+> 167	        binance.websockets.terminate(`${symbol.toLowerCase()}@ticker`);
+> 168	        logger('system', `Ticker Stream disconnected at ${symbol.toLowerCase()}@ticker`);
+> 169	    }
+> 170	
+> 171	    return {
+> 172	        exchangeInfo,
+> 173	        balance,
+> 174	        buy,
+> 175	        sell,
+> 176	        cancel,
+> 177	        miniTickerStream,
+> 178	        bookStream,
+> 179	        chartStream,
+> 180	        terminateChartStream,
+> 181	        terminateTickerStream,
+> 182	        userDataStream,
+> 183	        orderStatus,
+> 184	        orderTrade,
+> 185	        tickerStream,
+> 186	        getCoins,
+> 187	        withdraw
+> 188	    }
+> 189	}
+> ```
+
+## 🤖 Claude *(02:28:55)*
+
+
+## 🤖 Claude *(02:28:58)*
+
+Wrapper claro: `buy/sell` com `type:'MARKET'` → `marketBuy/marketSell`; senão `binance.buy/sell(symbol, qty, price, {type, stopPrice})`. Agora sei montar os payloads.
+
+**Executando o teste do stop (test-buy controlado + STOP_LOSS_LIMIT 2%):** paro a venda-RSI (id 3) pra não interferir, compro o mínimo, e coloco o stop a 2% abaixo da entrada:
+
+## 🤖 Claude *(02:29:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error, math\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method)\n    r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=20) as resp:\n            t=resp.read().decode(); return resp.status,(json.loads(t) if t else None)\n    except urllib.error.HTTPError as e:\n        return e.code, e.read().decode()\n\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); token=d[\"token\"]\n\n# 0) parar venda-RSI (id 3) pra teste limpo\nst,_=req(\"POST\",\"/automations/3/stop\",None,token); print(\"stop venda-RSI (id3):\", st)\n\n# 1) filtros do s\u00edmbolo + pre\u00e7o atual (testnet p\u00fablico)\nst,sym=req(\"GET\",\"/symbols/BTCUSDT\",token=token)\nmn=float(sym[\"minNotional\"]); ss=float(sym[\"stepSize\"]); ts=float(sym[\"tickSize\"]); bp=int(sym[\"basePrecision\"]); qp=int(sym[\"quotePrecision\"])\nprice=float(json.load(urllib.request.urlopen(\"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\",timeout=10))[\"price\"])\nprint(f\"filtros BTCUSDT: minNotional={mn} stepSize={ss} tickSize={ts} basePrec={bp} quotePrec={qp} | pre\u00e7o={price}\")\n\n# 2) qty de compra (>= minNotional, com folga)\nqty=round(math.ceil((mn*1.1/price)/ss)*ss, bp); qstr=f\"{qty:.{bp}f}\"\nprint(f\"qty compra={qstr}  (~${round(qty*price,2)})\")\n\n# 3) MARKET BUY\nst,buy=req(\"POST\",\"/orders\",{\"side\":\"BUY\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":None,\"options\":{\"type\":\"MARKET\"}},token)\nprint(\"BUY ->\", st, (buy if isinstance(buy,str) else {k:buy.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"quantity\")}))\n\n# 4) STOP_LOSS_LIMIT SELL a 2% abaixo da entrada\nfl=lambda p: round(math.floor(p/ts)*ts, qp)\nstopP, limitP = fl(price*0.98), fl(price*0.975)\nsstr,lstr=f\"{stopP:.{qp}f}\",f\"{limitP:.{qp}f}\"\nprint(f\"stop: stopPrice={sstr} | limitPrice={lstr} (entrada~{price})\")\nst,stop=req(\"POST\",\"/orders\",{\"side\":\"SELL\",\"symbol\":\"BTCUSDT\",\"quantity\":qstr,\"limitPrice\":lstr,\"options\":{\"type\":\"STOP_LOSS_LIMIT\",\"stopPrice\":sstr}},token)\nprint(\"STOP ->\", st, (stop if isinstance(stop,str) else {k:stop.get(k) for k in (\"orderId\",\"status\",\"side\",\"type\",\"stopPrice\",\"limitPrice\")}))\n\n# 5) verificar ordens\nst,ords=req(\"GET\",\"/orders/BTCUSDT?page=1\",token=token)\nprint(\"\\n=== ordens BTCUSDT (count\", (ords.get('count') if isinstance(ords,dict) else '?'),\") ===\")\nfor o in (ords.get(\"rows\",[])[:6] if isinstance(ords,dict) else []):\n    print(f\"  id={o.get('id')} {o.get('side'):4s} {o.get('type'):16s} status={o.get('status'):9s} qty={o.get('quantity')} stop={o.get('stopPrice')} limit={o.get('limitPrice')}\")\nPY",
+  "description": "Controlled test buy + STOP_LOSS_LIMIT at 2% to validate stop-loss on testnet",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> stop venda-RSI (id3): 200
+> Traceback (most recent call last):
+>   File "<stdin>", line 21, in <module>
+> TypeError: 'NoneType' object is not subscriptable
+> ```
+
+## 🤖 Claude *(02:29:46)*
+
+
+## 🤖 Claude *(02:29:49)*
+
+O `GET /symbols/BTCUSDT` voltou `null` — provavelmente **os símbolos não foram sincronizados** (a tabela não tem BTCUSDT com os filtros). Isso é importante: sem o símbolo na base, o `calcQty` do Beholder (MIN_NOTIONAL) não computa quantidade → **as automações do baseline não conseguiriam executar**. Deixa eu ver as rotas de símbolos e o estado atual:
+
+## 🤖 Claude *(02:29:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/symbolsRouter.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const express = require('express');
+> 2	const router = express.Router();
+> 3	const symbolsController = require('../controllers/symbolsController');
+> 4	
+> 5	router.post('/sync', symbolsController.syncSymbols);
+> 6	
+> 7	router.patch('/:symbol', symbolsController.updateSymbol);
+> 8	
+> 9	router.get('/:symbol', symbolsController.getSymbol);
+> 10	
+> 11	router.get('/', symbolsController.getSymbols);
+> 12	
+> 13	module.exports = router;
+> ```
+
+## 🤖 Claude *(02:29:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\ndef req(method, path, body=None, token=None):\n    data=json.dumps(body).encode() if body is not None else None\n    r=urllib.request.Request(BASE+path, data=data, method=method); r.add_header(\"Content-Type\",\"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=20) as resp:\n            t=resp.read().decode(); return resp.status,(json.loads(t) if t else None)\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()\nst,d=req(\"POST\",\"/login\",{\"email\":\"gabrielcall@gmail.com\",\"password\":\"2QyLiZAkFe2uUuTxOEhn\"}); token=d[\"token\"]\nst,syms=req(\"GET\",\"/symbols\",token=token)\nn = syms.get(\"count\") if isinstance(syms,dict) else syms\nprint(\"GET /symbols -> count:\", n)\nif isinstance(syms,dict):\n    for s in syms.get(\"rows\",[])[:8]:\n        print(\"  \", s.get(\"symbol\"), \"minNotional=\",s.get(\"minNotional\"),\"stepSize=\",s.get(\"stepSize\"))\nPY",
+  "description": "Read symbols router and check current symbols table state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> GET /symbols -> count: [{'symbol': 'BTCBUSD', 'basePrecision': 8, 'quotePrecision': 8, 'minNotional': '0.1', 'minLotSize': '0.1', 'isFavorite': True, 'base': None, 'quote': None, 'stepSize': None, 'tickSize': None, 'createdAt': '2026-06-03T00:55:42.000Z', 'updatedAt': '2026-06-03T00:55:42.000Z'}]
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
