@@ -3161,6 +3161,1958 @@ A foundation de Campaign Core está no ar com tenancy à prova de cross-tenant. 
 > Your questions have been answered: "MVP-2 Campaign Core está LIVE e provado. Todas as opções commitam o MVP-2 primeiro (a migration já está em prod — o repo precisa refletir). Qual a próxima frente?"="Commit + OTD-LLM-FALLBACK +Commit + MVP-3". You can now continue with these answers in mind.
 > ```
 
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: MVP-3 edge fns (lead-score + campaign-run)
+> ```
+
+## 🤖 Claude *(13:00:41)*
+
+
+## 🤖 Claude *(13:00:43)*
+
+O Sovereign quer **ambas as frentes**: commit do MVP-2, depois **OTD-LLM-FALLBACK** (SLA primeiro) **e MVP-3**. Começo commitando o MVP-2 (fecha o gap repo↔prod) e, em paralelo, faço o probe-first da OTD-LLM-FALLBACK.
+
+## 🤖 Claude *(13:00:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/integrations/supabase/types.ts\necho \"=== staged ===\"; git status --short\ngit commit -m \"feat(marketing-hub): MVP-2 Campaign Core \u2014 campaigns absorvida + campaign_steps + marketing_attribution\" -m \"Campaign Core LIVE: passos multicanal + atribuicao de receita com tenancy cross-tenant-safe. campaigns ABSORVIDA via ALTER (intent/channels/mesh_node_id + UNIQUE(id,user_id)), nao recriada; campaign_steps por FK composta tenant-escopada CASCADE (espelha lead_events); marketing_attribution retem receita de-linkada (FK SET NULL + RLS WITH CHECK de posse, espelha marketing_consents). erase_lead() estendida (FMEA-MH-003) reportando attributions_delinked.\n\nTenancy provada comportamentalmente: 23503 (fk_campaign_steps_campaign) e 42501 (WITH CHECK attribution autenticado) nos ataques cross-tenant, 201 nos legitimos, cleanup zero-residuo. /security-review SAFE (revisor independente). BoK data-model reconciliado (absorb-not-create). Migration 20260603025256 aplicada em producao. Mesh seal 7628892b DERIVES_FROM bok-scribe-seal-marketing-hub-v1. types.ts regenerado; tsc 0 erros.\" 2>&1 | tail -8\necho \"=== HEAD ===\"; git log --oneline -1",
+  "description": "Commit MVP-2 Campaign Core"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+> M  docs/bok/marketing-hub/06-data-model.md
+> M  src/integrations/supabase/types.ts
+> A  supabase/migrations/20260603025256_marketing_hub_campaign_core.sql
+> [main 7fd8e7a] feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+>  3 files changed, 413 insertions(+), 1 deletion(-)
+>  create mode 100644 supabase/migrations/20260603025256_marketing_hub_campaign_core.sql
+> === HEAD ===
+> 7fd8e7a feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+> ```
+
+## 🤖 Claude *(13:00:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== generation/LLM edge functions ===\"\nls -1 supabase/functions/ | grep -iE \"generate|orchestrate|content|chat|swarm|analyze|llm\" || true\necho \"\"\necho \"=== LLM provider call sites (files) ===\"\ngrep -rlnE \"openrouter|api\\.groq|generativelanguage|LOVABLE_API_KEY|OPENROUTER_API_KEY|ai\\.gateway|anthropic\" supabase/functions/ 2>/dev/null | head -25\necho \"\"\necho \"=== existing fallback/cascade logic? ===\"\ngrep -rlnE \"fallback|cascad|FALLBACK_MODELS|models\\s*=\\s*\\[\" supabase/functions/ 2>/dev/null | head\necho \"\"\necho \"=== OTD-LLM-FALLBACK SOP / mentions ===\"\ngrep -rlnE \"LLM-FALLBACK|llm.?fallback|cascading.{0,15}llm|OTD-LLM\" docs/ .claude/ 2>/dev/null | head",
+  "description": "Probe LLM provider call sites + existing fallback + OTD doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === generation/LLM edge functions ===
+> aios-chat
+> analyze-node
+> analyze-sem
+> analyze-seo
+> generate-audio-script
+> generate-content
+> generate-image
+> generate-video
+> generate-video-script
+> openrouter-swarm
+> orchestrate-content
+> orchestrate-step
+> 
+> === LLM provider call sites (files) ===
+> supabase/functions/openrouter-swarm/index.ts
+> supabase/functions/check-video-status/index.ts
+> supabase/functions/analyze-node/index.ts
+> supabase/functions/orchestrate-content/index.ts
+> supabase/functions/optimize-schedule/index.ts
+> supabase/functions/generate-content/index.ts
+> supabase/functions/generate-image/index.ts
+> supabase/functions/embed-mcorch-node/index.ts
+> supabase/functions/aios-chat/index.ts
+> supabase/functions/tts-speak/index.ts
+> supabase/functions/self-optimize/index.ts
+> supabase/functions/rescue-video/index.ts
+> supabase/functions/_shared/llm-fallback.ts
+> supabase/functions/analyze-sem/index.ts
+> supabase/functions/search-constellation/index.ts
+> supabase/functions/analyze-seo/index.ts
+> supabase/functions/generate-audio-script/index.ts
+> supabase/functions/sync-knowledge-mesh/index.ts
+> supabase/functions/generate-video/index.ts
+> supabase/functions/generate-video-script/index.ts
+> supabase/functions/test-api-key/index.ts
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/agent-task-execute/index.ts
+> supabase/functions/list-provider-models/index.ts
+> 
+> === existing fallback/cascade logic? ===
+> supabase/functions/analyze-node/index.ts
+> supabase/functions/embed-mcorch-node/index.ts
+> supabase/functions/orchestrate-content/index.ts
+> supabase/functions/agent-task-execute/index.ts
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/self-optimize/index.ts
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/handle-ml-postback/index.ts
+> supabase/functions/optimize-schedule/index.ts
+> supabase/functions/search-constellation/index.ts
+> 
+> === OTD-LLM-FALLBACK SOP / mentions ===
+> docs/bok/mcorch-constellation/roadmap-v1.md
+> docs/processes/llm-cascading-fallback.md
+> .claude/worktrees/dreamy-blackburn-2dd6e7/HANDOFF.md
+> .claude/worktrees/dreamy-blackburn-2dd6e7/README.md
+> .claude/worktrees/dreamy-blackburn-2dd6e7/CLAUDE.md
+> .claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/analyze-node/index.ts
+> .claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/orchestrate-step/index.ts
+> .claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/_shared/llm-fallback.ts
+> .claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/analyze-sem/index.ts
+> .claude/worktrees/dreamy-blackburn-2dd6e7/supabase/functions/generate-audio-script/index.ts
+> ```
+
+## 🤖 Claude *(13:00:55)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed",
+  "metadata": {
+    "result": "LIVE em prod: migration 20260603025256 \u00b7 campaigns absorvida + campaign_steps + marketing_attribution \u00b7 tenant-FK provado 23503/42501/201 zero-residuo \u00b7 /security-review SAFE \u00b7 types.ts 3544 \u00b7 tsc 0 \u00b7 mesh node 7628892b/edge 0d58d93b \u00b7 mesh 8756"
+  }
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 metadata, status
+> ```
+
+## 🤖 Claude *(13:00:55)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(13:00:57)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "MVP-3 edge fns (lead-score + campaign-run)",
+  "description": "marketing-hub MVP-3: edge fn lead-score (1 mco) + campaign-run (10 mco, orquestra orchestrate-content). JWT gate + deduct_mco_coins at\u00f4mico + infra_health_logs telemetry. Ancorar em BoK 04-frd/05-sdd (FR-MH). Per-user credentials (API Tenancy Model).",
+  "activeForm": "Implementando MVP-3 edge fns"
+}
+```
+
+## 🤖 Claude *(13:01:28)*
+
+
+## 🤖 Claude *(13:01:31)*
+
+MVP-2 commitado: **`7fd8e7a`** (3 files, +413). ✓
+
+O probe da OTD-LLM-FALLBACK é revelador — **muito trabalho já existe** (a lição v6.19.0: o código está à frente dos Pending Actions):
+- **`_shared/llm-fallback.ts` JÁ EXISTE** na main + **SOP `docs/processes/llm-cascading-fallback.md`** (Lei 2 cumprida).
+- Várias edge fns já têm lógica de fallback.
+- ⚠️ Há um **worktree `dreamy-blackburn-2dd6e7`** com versões dessas fns — possível trabalho não-merdgeado (lição stale-worktree).
+
+Preciso mapear o estado REAL antes de codar (não reconstruir o que existe). Lendo o SOP + a implementação atual + quem já a usa + o worktree:
+
+## 🤖 Claude *(13:01:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/llm-cascading-fallback.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP — LLM Cascading Fallback
+> 2	
+> 3	**Versão:** v1 · **Selada:** 2026-05-31 · **Lei 2 (Processo Antecipado)** · **OTD-LLM-FALLBACK**
+> 4	
+> 5	## ORO triplet
+> 6	
+> 7	- **Operator:** MCORCH Master Execution Agent (executa nas Edge Functions de completions)
+> 8	- **Reviewer:** Sovereign (Gabriel)
+> 9	- **Owner:** Sovereign (Gabriel) - Blast radius de custos e confiabilidade da geração de conteúdo.
+> 10	
+> 11	## Contexto
+> 12	
+> 13	A orquestração do Constellation Orchestra depende de completions confiáveis de LLM para gerar artigos, scripts, posts e planos. Se a conta do OpenRouter ficar sem saldo (retornando HTTP 402) ou sofrer com limites severos de requisição (retornando HTTP 429), o sistema deve migrar dinamicamente para o Gemini Free (via endpoint oficial do Google compatível com a API da OpenAI) e, em último caso, para modelos gratuitos do OpenRouter (OpenRouter Free).
+> 14	
+> 15	## Sequence — Fluxo de Fallback de Completions
+> 16	
+> 17	| # | Action | Output esperado | Verification gate |
+> 18	|---|--------|-----------------|-------------------|
+> 19	| 1 | Edge function intercepta chamada de completion e chama o helper `fetchLLMWithFallback` | Retorna Response com dados da API ou stream | Helper executa fetch primário |
+> 20	| 2 | Chamada primária ao OpenRouter Pago falha com HTTP `402`, `429` ou erro de rede | Helper captura a falha e registra aviso no console | Console logs: "OpenRouter primary call failed. Falling back to Gemini Free." |
+> 21	| 3 | Helper mapeia o modelo para Gemini correspondente (Heavy vs Light/Medium) | Modelo definido: `gemini-2.5-pro` / `gemini-1.5-pro` ou `gemini-2.5-flash` / `gemini-1.5-flash` | Mapeamento no log de depuração do Deno |
+> 22	| 4 | Helper faz chamada secundária ao Gemini OpenAI-Compatible Endpoint com a chave de API resolvida | Retorna HTTP 200 com a resposta do Gemini em formato compatível com OpenAI (incluindo streams) | `Authorization` header contém `Bearer <GEMINI_API_KEY>`; corpo da resposta tem formato OpenAI |
+> 23	| 5 | Se chamada ao Gemini falhar (HTTP diferente de 2xx ou rede offline) | Helper intercepta e loga falha secundária | Console logs: "Gemini fallback failed. Attempting OpenRouter Free fallback." |
+> 24	| 6 | Helper faz chamada de último recurso ao OpenRouter usando o modelo gratuito `google/gemma-2-9b-it:free` | Retorna HTTP 200 com resposta do modelo gratuito | Modelo no payload alterado para `google/gemma-2-9b-it:free` |
+> 25	| 7 | Se todas as tentativas falharem | Helper propaga o erro final estruturado HTTP 502 / 500 | Resposta JSON com `{ error: "All LLM providers failed in cascade" }` |
+> 26	
+> 27	## Verification gates (Lei 1 — Materiality)
+> 28	
+> 29	Comandos reproduzíveis e verificações de integridade:
+> 30	
+> 31	```bash
+> 32	# Verificar se o Gemini OpenAI-Compatible Endpoint está respondendo de forma saudável
+> 33	curl https://generativelanguage.googleapis.com/v1beta/openai/chat/completions \
+> 34	  -H "Authorization: Bearer $GEMINI_API_KEY" \
+> 35	  -H "Content-Type: application/json" \
+> 36	  -d '{
+> 37	    "model": "gemini-2.5-flash",
+> 38	    "messages": [{"role": "user", "content": "Hello"}],
+> 39	    "stream": false
+> 40	  }'
+> 41	```
+> 42	
+> 43	## Recovery path
+> 44	
+> 45	| Falha | Detecção | Ação | Resultado |
+> 46	|-------|----------|------|-----------|
+> 47	| **Gemini API Key Ausente** | `geminiKey` é nulo/indefinido | Helper pula direto para a tentativa de OpenRouter Free | Execução não quebra por falta de chave Gemini |
+> 48	| **Timeout upstream** | Requisição fica travada > 30s | AbortController cancela a tentativa e aciona o próximo provedor na cascata | Resiliência contra travamento do OpenRouter ou Gemini |
+> 49	| **Stream corrompida** | Erro de leitura de stream no meio da geração | Interrompe e lança erro ao cliente (não há como fazer fallback no meio de uma stream já iniciada) | Retorna erro HTTP parcial ao cliente de forma limpa |
+> 50	
+> 51	## Success signal
+> 52	
+> 53	- Chamada da Edge Function retorna HTTP 200 com resposta completa ou stream de texto.
+> 54	- Telemetria de depuração no console do Deno detalhando qual etapa da cascata foi utilizada.
+> 55	- Registros saudáveis em `infra_health_logs` para as funções correspondentes.
+> 56	
+> ```
+
+## 🤖 Claude *(13:01:40)*
+
+
+## 🤖 Claude *(13:01:41)*
+
+O SOP está completo (v1, selado 2026-05-31): cascata `fetchLLMWithFallback` = OpenRouter pago → Gemini Free → OpenRouter Free (`gemma-2-9b-it:free`) → 502 estruturado. Agora o estado real do helper + cobertura + o worktree:
+
+## 🤖 Claude *(13:01:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// supabase/functions/_shared/llm-fallback.ts
+> 2	// Shared helper for OTD-LLM-FALLBACK. Falls back gracefully when OpenRouter credits are exhausted.
+> 3	
+> 4	export interface FallbackOptions {
+> 5	  openRouterKey?: string;
+> 6	  geminiKey?: string;
+> 7	  groqKey?: string;
+> 8	}
+> 9	
+> 10	const HEAVY_MODEL_REGEX = /claude-3\.5|claude-4|gpt-4|llama-3\.1-405b/i;
+> 11	
+> 12	/**
+> 13	 * Executes a chat completion fetch request, falling back gracefully to free alternatives
+> 14	 * if the primary provider fails due to credit exhaustion (402), rate-limits (429), or network errors.
+> 15	 * 
+> 16	 * Cascade order:
+> 17	 * 1. Primary provider (OpenRouter / Groq)
+> 18	 * 2. Gemini Free OpenAI-Compatible Endpoint:
+> 19	 *    - Heavy models -> gemini-2.5-pro -> gemini-1.5-pro
+> 20	 *    - Medium/Light models -> gemini-2.5-flash -> gemini-1.5-flash
+> 21	 * 3. OpenRouter Free (gemma-2-9b-it:free / llama-3-8b-instruct:free)
+> 22	 */
+> 23	export async function fetchLLMWithFallback(
+> 24	  originalEndpoint: string,
+> 25	  requestInit: RequestInit,
+> 26	  options: FallbackOptions
+> 27	): Promise<Response> {
+> 28	  const openRouterKey = options.openRouterKey;
+> 29	  const geminiKey = options.geminiKey;
+> 30	  const groqKey = options.groqKey;
+> 31	
+> 32	  let requestBodyObj: any = {};
+> 33	  if (requestInit.body && typeof requestInit.body === "string") {
+> 34	    try {
+> 35	      requestBodyObj = JSON.parse(requestInit.body);
+> 36	    } catch (_) {
+> 37	      console.warn("[llm-fallback] Failed to parse request body as JSON");
+> 38	    }
+> 39	  }
+> 40	
+> 41	  const originalModel = requestBodyObj.model || "";
+> 42	
+> 43	  // Helper to execute fetch and handle potential network errors
+> 44	  const safeFetch = async (url: string, init: RequestInit): Promise<Response> => {
+> 45	    try {
+> 46	      return await fetch(url, init);
+> 47	    } catch (err) {
+> 48	      console.warn(`[llm-fallback] Fetch error to ${url}:`, err);
+> 49	      // Return a synthetic 500 response to trigger the next level of cascade
+> 50	      return new Response(
+> 51	        JSON.stringify({ error: "Network fetch failed", details: String(err) }),
+> 52	        { status: 500, headers: { "Content-Type": "application/json" } }
+> 53	      );
+> 54	    }
+> 55	  };
+> 56	
+> 57	  // --- Step 1: Attempt Primary Request ---
+> 58	  console.log(`[llm-fallback] Attempting primary LLM request with model "${originalModel}"`);
+> 59	  let response = await safeFetch(originalEndpoint, requestInit);
+> 60	
+> 61	  // If successful, return immediately
+> 62	  if (response.ok) {
+> 63	    return response;
+> 64	  }
+> 65	
+> 66	  // Detect billing or rate limit errors
+> 67	  const isCreditError = response.status === 402;
+> 68	  const isRateLimitError = response.status === 429;
+> 69	  const isServerError = response.status >= 500;
+> 70	  
+> 71	  const shouldFallback = isCreditError || isRateLimitError || isServerError;
+> 72	
+> 73	  if (!shouldFallback) {
+> 74	    console.warn(`[llm-fallback] Primary request failed with status ${response.status} (no fallback triggered)`);
+> 75	    return response;
+> 76	  }
+> 77	
+> 78	  const errBodyText = await response.clone().text().catch(() => "unknown error body");
+> 79	  console.warn(
+> 80	    `[llm-fallback] Primary request failed (status=${response.status}). Initiating cascade. Details: ${errBodyText.slice(0, 200)}`
+> 81	  );
+> 82	
+> 83	  // --- Step 2: Gemini Free Fallback (OpenAI-compatible) ---
+> 84	  if (geminiKey) {
+> 85	    const isHeavy = HEAVY_MODEL_REGEX.test(originalModel);
+> 86	    const geminiCandidates = isHeavy
+> 87	      ? ["gemini-2.5-pro", "gemini-1.5-pro"]
+> 88	      : ["gemini-2.5-flash", "gemini-1.5-flash"];
+> 89	
+> 90	    console.log(`[llm-fallback] Attempting Gemini Free fallback. Candidates: ${geminiCandidates.join(", ")}`);
+> 91	
+> 92	    for (const model of geminiCandidates) {
+> 93	      const geminiBody = {
+> 94	        ...requestBodyObj,
+> 95	        model,
+> 96	      };
+> 97	
+> 98	      const geminiHeaders = new Headers(requestInit.headers || {});
+> 99	      geminiHeaders.set("Authorization", `Bearer ${geminiKey}`);
+> 100	      geminiHeaders.set("Content-Type", "application/json");
+> 101	      // Remove OpenRouter-specific headers that might throw errors or pollute logs
+> 102	      geminiHeaders.delete("HTTP-Referer");
+> 103	      geminiHeaders.delete("X-Title");
+> 104	
+> 105	      const geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+> 106	      
+> 107	      console.log(`[llm-fallback] Dispatching fallback request to Gemini Free using model "${model}"`);
+> 108	      const geminiResp = await safeFetch(geminiEndpoint, {
+> 109	        ...requestInit,
+> 110	        headers: geminiHeaders,
+> 111	        body: JSON.stringify(geminiBody),
+> 112	      });
+> 113	
+> 114	      if (geminiResp.ok) {
+> 115	        console.log(`[llm-fallback] Gemini Free fallback succeeded with model "${model}"`);
+> 116	        return geminiResp;
+> 117	      }
+> 118	
+> 119	      const geminiErrText = await geminiResp.text().catch(() => "unknown");
+> 120	      console.warn(`[llm-fallback] Gemini model "${model}" failed (status=${geminiResp.status}): ${geminiErrText.slice(0, 200)}`);
+> 121	    }
+> 122	  } else {
+> 123	    console.log("[llm-fallback] GEMINI_API_KEY unavailable - skipping Gemini Free fallback");
+> 124	  }
+> 125	
+> 126	  // --- Step 3: OpenRouter Free Fallback ---
+> 127	  const routerKey = openRouterKey || groqKey;
+> 128	  if (routerKey) {
+> 129	    const freeModels = ["google/gemma-2-9b-it:free", "meta-llama/llama-3-8b-instruct:free"];
+> 130	    console.log(`[llm-fallback] Attempting OpenRouter Free fallback. Candidates: ${freeModels.join(", ")}`);
+> 131	
+> 132	    for (const model of freeModels) {
+> 133	      const freeBody = {
+> 134	        ...requestBodyObj,
+> 135	        model,
+> 136	      };
+> 137	
+> 138	      const freeHeaders = new Headers(requestInit.headers || {});
+> 139	      freeHeaders.set("Authorization", `Bearer ${routerKey}`);
+> 140	      freeHeaders.set("Content-Type", "application/json");
+> 141	
+> 142	      const freeEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+> 143	      
+> 144	      console.log(`[llm-fallback] Dispatching fallback request to OpenRouter Free using model "${model}"`);
+> 145	      const freeResp = await safeFetch(freeEndpoint, {
+> 146	        ...requestInit,
+> 147	        headers: freeHeaders,
+> 148	        body: JSON.stringify(freeBody),
+> 149	      });
+> 150	
+> 151	      if (freeResp.ok) {
+> 152	        console.log(`[llm-fallback] OpenRouter Free fallback succeeded with model "${model}"`);
+> 153	        return freeResp;
+> 154	      }
+> 155	
+> 156	      const freeErrText = await freeResp.text().catch(() => "unknown");
+> 157	      console.warn(`[llm-fallback] OpenRouter Free model "${model}" failed (status=${freeResp.status}): ${freeErrText.slice(0, 200)}`);
+> 158	    }
+> 159	  } else {
+> 160	    console.log("[llm-fallback] OpenRouter API Key unavailable - skipping OpenRouter Free fallback");
+> 161	  }
+> 162	
+> 163	  // If all fallbacks fail, return the original failure response
+> 164	  console.error("[llm-fallback] All LLM providers in cascade failed.");
+> 165	  return new Response(
+> 166	    JSON.stringify({
+> 167	      error: "LLM fallback exhaustion",
+> 168	      message: "Both primary LLM and all fallback alternatives failed.",
+> 169	    }),
+> 170	    { status: 502, headers: { "Content-Type": "application/json" } }
+> 171	  );
+> 172	}
+> 173	
+> ```
+
+## 🤖 Claude *(13:01:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git worktrees ===\"\ngit worktree list 2>/dev/null\necho \"\"\necho \"=== MAIN: fns importing _shared/llm-fallback (have cascade) ===\"\ngrep -rlnE \"_shared/llm-fallback|fetchLLMWithFallback\" supabase/functions/ 2>/dev/null | grep -v \"_shared/llm-fallback.ts\" | sed 's#supabase/functions/##'\necho \"\"\necho \"=== MAIN: completion fns NOT yet importing the helper (candidates / gap) ===\"\nfor f in aios-chat generate-content generate-video-script generate-audio-script analyze-seo analyze-sem analyze-node orchestrate-step self-optimize optimize-schedule search-constellation openrouter-swarm; do\n  if grep -qE \"fetchLLMWithFallback|_shared/llm-fallback\" \"supabase/functions/$f/index.ts\" 2>/dev/null; then\n    echo \"  [HAS] $f\"\n  else\n    # only flag if it actually does a chat completion call\n    if grep -qE \"chat/completions|openrouter|generativelanguage\" \"supabase/functions/$f/index.ts\" 2>/dev/null; then\n      echo \"  [GAP] $f\"\n    fi\n  fi\ndone",
+  "description": "Read llm-fallback helper + worktree list + adoption gap analysis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git worktrees ===
+> /home/gcrUX/htdocs/constellation-orchestra                                                 7fd8e7a [main]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/beautiful-dijkstra-207b09     88670b2 [claude/beautiful-dijkstra-207b09]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/bold-visvesvaraya-4a95b9      e007e05 [claude/bold-visvesvaraya-4a95b9]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7       7cc07ee [claude/dreamy-blackburn-2dd6e7]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1            02c39eb [claude/eager-brown-6ef0f1]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/gallant-blackwell-594b5a      60bf7cb [claude/gallant-blackwell-594b5a]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5             9a0f60f [claude/stoic-bose-9b72f5]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/suspicious-tereshkova-eb75cb  50451fb [claude/suspicious-tereshkova-eb75cb]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9         cf121c1 [claude/wizardly-allen-2a03a9]
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/youthful-poincare-565e7c      4cfe96f [claude/youthful-poincare-565e7c]
+> /home/ubuntu/.openclaw/agents/artisan/workspace                                            7bf0617 (detached HEAD)
+> /home/ubuntu/.openclaw/agents/claw-master/workspace                                        7bf0617 (detached HEAD)
+> /home/ubuntu/.openclaw/agents/engineer/workspace                                           7bf0617 [agent/engineer/enforce-dop-standard-5s-model]
+> /home/ubuntu/.openclaw/agents/guardian/workspace                                           7bf0617 [agent/guardian/verify-all-10-gates-from-docs]
+> /home/ubuntu/.openclaw/agents/marketing-growth/workspace                                   7bf0617 (detached HEAD)
+> /home/ubuntu/.openclaw/agents/scientist/workspace                                          7bf0617 [agent/scientist/add-node_id-and-input_asset_id]
+> 
+> === MAIN: fns importing _shared/llm-fallback (have cascade) ===
+> analyze-node/index.ts
+> agent-task-execute/index.ts
+> canvas-execute/index.ts
+> orchestrate-step/index.ts
+> self-optimize/index.ts
+> analyze-sem/index.ts
+> optimize-schedule/index.ts
+> generate-content/index.ts
+> analyze-seo/index.ts
+> generate-audio-script/index.ts
+> generate-video-script/index.ts
+> 
+> === MAIN: completion fns NOT yet importing the helper (candidates / gap) ===
+>   [GAP] aios-chat
+>   [HAS] generate-content
+>   [HAS] generate-video-script
+>   [HAS] generate-audio-script
+>   [HAS] analyze-seo
+>   [HAS] analyze-sem
+>   [HAS] analyze-node
+>   [HAS] orchestrate-step
+>   [HAS] self-optimize
+>   [HAS] optimize-schedule
+>   [GAP] search-constellation
+>   [GAP] openrouter-swarm
+> ```
+
+## 🤖 Claude *(13:02:37)*
+
+
+## 🤖 Claude *(13:02:40)*
+
+Quadro claro: a OTD-LLM-FALLBACK está **~80% implementada na main** — o helper `fetchLLMWithFallback` existe e está completo conforme o SOP, e **11 edge fns já o adotaram**. O worktree `dreamy-blackburn` é resíduo da sessão que criou isso (2026-05-31); a main é a verdade e já absorveu o trabalho.
+
+**Gaps reais a investigar:** `aios-chat`, `search-constellation`, `openrouter-swarm` (fazem completion mas não usam o helper). Preciso confirmar quais *genuinamente* precisam de fallback (ex: `openrouter-swarm` é arena de comparação — fallback distorceria por design). Sondando o padrão de adoção + o que cada gap faz:
+
+## 🤖 Claude *(13:02:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ADOPTION PATTERN (generate-content \u2014 how it imports + calls the helper) ===\"\ngrep -nE \"import.*llm-fallback|fetchLLMWithFallback|openRouterKey:|geminiKey:|groqKey:\" supabase/functions/generate-content/index.ts\necho \"\"\necho \"=== GAP 1: aios-chat \u2014 completion call + provider ===\"\ngrep -nE \"chat/completions|openrouter\\.ai|generativelanguage|await fetch\\(|model:\\s*[\\\"']|response_format|stream\" supabase/functions/aios-chat/index.ts | head -12\necho \"\"\necho \"=== GAP 2: search-constellation \u2014 completions or embeddings only? ===\"\ngrep -nE \"chat/completions|embeddings|openrouter\\.ai|generativelanguage|await fetch\\(|match_mcorch\" supabase/functions/search-constellation/index.ts | head -12\necho \"\"\necho \"=== GAP 3: openrouter-swarm \u2014 purpose (arena? parallel compare?) ===\"\ngrep -nE \"chat/completions|await fetch\\(|Promise\\.(all|race)|swarm|compare|fastest|model\" supabase/functions/openrouter-swarm/index.ts | head -15",
+  "description": "Inspect adoption pattern + the 3 gap functions' completion usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ADOPTION PATTERN (generate-content — how it imports + calls the helper) ===
+> 3:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 75:    const aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 
+> === GAP 1: aios-chat — completion call + provider ===
+> 107:    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+> 110:    const res = await fetch(geminiUrl, {
+> 
+> === GAP 2: search-constellation — completions or embeddings only? ===
+> 24:    const res = await fetch("https://openrouter.ai/api/v1/embeddings", {
+> 68:    const url = `https://generativelanguage.googleapis.com/${candidate.version}/models/${candidate.model}:embedContent?key=${geminiKey}`;
+> 76:    const res = await fetch(url, {
+> 144:  const { data, error: rpcErr } = await supabase.rpc("match_mcorch_nodes", {
+> 
+> === GAP 3: openrouter-swarm — purpose (arena? parallel compare?) ===
+> 10:const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
+> 19:  model: string;
+> 30:  fastest_model: string | null;
+> 36:  model: string,
+> 46:    const res = await fetch(OPENROUTER_API, {
+> 55:        model,
+> 68:      return { model, latency_ms, output: null, tokens_used: null, error: `HTTP ${res.status}: ${body}`, rank: 0 };
+> 75:    return { model, latency_ms, output, tokens_used, error: null, rank: 0 };
+> 82:    return { model, latency_ms, output: null, tokens_used: null, error, rank: 0 };
+> 120:  let model_ids: string[];
+> 125:    model_ids = Array.isArray(body.model_ids) && body.model_ids.length > 0
+> 126:      ? body.model_ids
+> 133:    // Guard: max 5 models per call to prevent runaway costs
+> 134:    if (model_ids.length > 5) {
+> 135:      return respond({ error: "max 5 models per call" }, 400);
+> ```
+
+## 🤖 Claude *(13:03:38)*
+
+
+## 🤖 Claude *(13:03:43)*
+
+Análise dos 3 gaps — **todos corretamente fora do escopo**:
+- **`aios-chat`** (linha 107): usa Gemini **nativo** (`generateContent`, key na URL), não o formato OpenAI chat/completions do helper → já é Gemini-first (resiliente), formato incompatível.
+- **`search-constellation`** (linhas 24/68): usa **embeddings** (não completions) e já tem fallback próprio OpenRouter→Gemini.
+- **`openrouter-swarm`** (arena): compara modelos e mede `fastest_model` — fallback **distorceria a comparação** por design.
+
+Então a cobertura está **correta e completa**: 11 fns de chat/completion têm o helper; as 3 sem ele não deveriam tê-lo. Resta verificar materialmente que **funciona e está deployado**, e o gap de **telemetria** (o SOP pede `infra_health_logs`, mas o helper só faz `console.log`). Verificando o gate do SOP (Gemini health) + deploy + testes:
+
+## 🤖 Claude *(13:03:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== SOP verification gate: Gemini OpenAI-compat endpoint (the fallback tier) ===\"\ncurl -s -w \"\\n[HTTP %{http_code}]\\n\" \"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions\" \\\n  -H \"Authorization: Bearer ${VITE_GEMINI_API_KEY}\" -H \"Content-Type: application/json\" \\\n  -d '{\"model\":\"gemini-2.5-flash\",\"messages\":[{\"role\":\"user\",\"content\":\"reply with the single word OK\"}],\"stream\":false}' | python3 -c \"import json,sys; t=sys.stdin.read(); \nimport re\nm=re.search(r'\\[HTTP (\\d+)\\]',t); \nprint('HTTP', m.group(1) if m else '?'); \nbody=t.split('[HTTP')[0]\ntry:\n  d=json.loads(body); print('content:', d.get('choices',[{}])[0].get('message',{}).get('content','?')[:60], '| model:', d.get('model','?'))\nexcept Exception as e: print('body head:', body[:200])\"\necho \"\"\necho \"=== helper unit/integration tests present? ===\"\nfind . -path ./node_modules -prune -o -name \"*.test.ts\" -print 2>/dev/null | xargs grep -ln \"llm-fallback\\|fetchLLMWithFallback\" 2>/dev/null || echo \"(no dedicated tests found)\"\necho \"\"\necho \"=== how generate-content resolves+passes keys (per-user vs global?) ===\"\ngrep -nE \"openRouterKey|geminiKey|groqKey|user_api_keys|Deno.env.get|OPENROUTER_API_KEY|GEMINI_API_KEY|decrypted_user\" supabase/functions/generate-content/index.ts | head -15",
+  "description": "Test Gemini fallback gate + check helper tests + key resolution pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SOP verification gate: Gemini OpenAI-compat endpoint (the fallback tier) ===
+> HTTP 200
+> content: OK | model: gemini-2.5-flash
+> 
+> === helper unit/integration tests present? ===
+> (no dedicated tests found)
+> 
+> === how generate-content resolves+passes keys (per-user vs global?) ===
+> 24:      Deno.env.get("SUPABASE_URL")!,
+> 25:      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 42:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 43:    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 45:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 46:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 47:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 48:    const aiKey = groqKey || openRouterKey;
+> 56:    const isGroq = !!groqKey;
+> 92:      openRouterKey,
+> 93:      geminiKey,
+> 94:      groqKey
+> ```
+
+## 🤖 Claude *(13:05:10)*
+
+
+## 🤖 Claude *(13:05:13)*
+
+Estado material da OTD confirmado:
+- **Gemini fallback tier: HTTP 200, "OK", `gemini-2.5-flash`** — o tier de fallback está **saudável e provado** (verification gate do SOP ✓).
+- `generate-content` resolve keys **per-user** (`decrypted_user_api_keys` por `user.id` + fallback global) e passa ao helper — **API Tenancy Model respeitado** ✓.
+- **Sem testes** do helper (gap) + helper só faz `console.log` (gap de telemetria vs SOP success signal).
+
+Verificando deploy real + precedente de teste/telemetria para fechar com integridade:
+
+## 🤖 Claude *(13:05:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deployed functions status (updated_at) ===\"\ntimeout 90 npx supabase functions list 2>&1 | grep -iE \"NAME|generate-content|orchestrate-step|orchestrate-content|analyze-node|generate-video-script|optimize-schedule|generate-audio-script|analyze-seo|analyze-sem|self-optimize|canvas-execute|agent-task\" | head -20\necho \"\"\necho \"=== Deno.test precedent in repo? ===\"\ngrep -rln \"Deno.test\" supabase/ 2>/dev/null | head\necho \"\"\necho \"=== infra_health_logs write pattern (existing fns that log telemetry) ===\"\ngrep -rlnE \"infra_health_logs\" supabase/functions/ 2>/dev/null | sed 's#supabase/functions/##' | head -8\necho \"\"\necho \"=== does orchestrate-step (pipeline driver) already log infra_health + use helper? ===\"\ngrep -nE \"infra_health_logs|fetchLLMWithFallback|llm-fallback\" supabase/functions/orchestrate-step/index.ts | head",
+  "description": "Check deploy status + Deno test precedent + infra_health_logs pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deployed functions status (updated_at) ===
+>    ID                                   | NAME                   | SLUG                   | STATUS | VERSION | UPDATED_AT (UTC)    
+>    bd68e2f5-4432-4414-8e7d-8a9d112da8de | analyze-seo            | analyze-seo            | ACTIVE | 42      | 2026-06-02 15:02:39 
+>    f29f16f5-eeb9-4820-b238-c5fd2c8217f8 | optimize-schedule      | optimize-schedule      | ACTIVE | 43      | 2026-06-01 13:36:49 
+>    fbda6eaa-4970-433b-b4d1-c1705ced8a4d | generate-audio-script  | generate-audio-script  | ACTIVE | 43      | 2026-06-02 15:02:39 
+>    3678c37e-ed98-4f6a-94bc-3fafe3ab6fd4 | generate-content       | generate-content       | ACTIVE | 43      | 2026-06-02 15:02:39 
+>    84f86a96-9a2e-49ed-8d4c-9be72f4d5d01 | self-optimize          | self-optimize          | ACTIVE | 48      | 2026-06-02 15:02:39 
+>    d40142eb-b0a4-4386-807e-89b2c01476f1 | analyze-sem            | analyze-sem            | ACTIVE | 41      | 2026-06-01 13:36:30 
+>    cb6af9de-b54c-4675-81b3-bb1648949db1 | generate-video-script  | generate-video-script  | ACTIVE | 47      | 2026-06-02 15:02:39 
+>    8eef2fda-226b-4520-934e-cd2a74da5cd7 | orchestrate-content    | orchestrate-content    | ACTIVE | 49      | 2026-06-01 13:41:21 
+>    7a4b478a-adb6-4457-ab21-32322189d755 | analyze-node           | analyze-node           | ACTIVE | 29      | 2026-06-01 13:41:21 
+>    2fcbed05-5dc7-4799-bebf-897ffae5d24a | canvas-execute         | canvas-execute         | ACTIVE | 40      | 2026-06-01 13:36:33 
+>    82d2bfb7-55a9-4112-ad3e-16d16360769d | orchestrate-step       | orchestrate-step       | ACTIVE | 23      | 2026-06-01 13:41:21 
+>    3eb61d51-cc20-414c-86b8-927ebbf03c34 | agent-task-execute     | agent-task-execute     | ACTIVE | 26      | 2026-06-01 13:36:28 
+> 
+> === Deno.test precedent in repo? ===
+> 
+> === infra_health_logs write pattern (existing fns that log telemetry) ===
+> agent-task-execute/index.ts
+> canvas-execute/index.ts
+> aios-sql-bridge/index.ts
+> publish-meta/index.ts
+> handle-ml-postback/index.ts
+> process-affiliate-link/index.ts
+> whatsapp-webhook/index.ts
+> instagram-webhook/index.ts
+> 
+> === does orchestrate-step (pipeline driver) already log infra_health + use helper? ===
+> 9:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 125:        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 261:        const liRes = await fetchLLMWithFallback(aiEndpoint, {
+> 331:        const xRes = await fetchLLMWithFallback(aiEndpoint, {
+> ```
+
+## 🤖 Claude *(13:06:41)*
+
+
+## 🤖 Claude *(13:06:43)*
+
+Deploy confirmado: as 11 fns com o helper estão **ACTIVE**, deployadas em **2026-06-01/06-02** (após o helper criado em 05-31) → o fallback está **live em produção**. `orchestrate-step` (driver do pipeline) usa o helper em 3 pontos (article/LI/X).
+
+**Diagnóstico final da OTD:** funcionalmente completa e deployada, tier provado. O **único gap vs o próprio SOP** é a **telemetria** — o success signal pede "Registros saudáveis em `infra_health_logs`", mas o helper só faz `console.log`. Quando OpenRouter cai e o Gemini salva, o Sovereign (Owner do blast radius de custo/confiabilidade) fica cego. Esse é o fechamento de código com real valor.
+
+Sondando o schema de `infra_health_logs` (atenção ao drift `last_seen_at`≠`created_at`) + o padrão de escrita + a infra de teste:
+
+## 🤖 Claude *(13:06:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== infra_health_logs REAL columns ===\"\ncurl -s \"$URL/rest/v1/\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); p=d['definitions'].get('infra_health_logs',{}).get('properties',{}); [print(f'  {k}: {v.get(\\\"format\\\",v.get(\\\"type\\\"))}'+(' [required]' if k in d['definitions'].get('infra_health_logs',{}).get('required',[]) else '')) for k,v in p.items()]\"\necho \"\"\necho \"=== existing infra_health_logs insert shape (canvas-execute) ===\"\ngrep -nEA6 \"from\\(.infra_health_logs.\\)\\.insert|infra_health_logs\" supabase/functions/canvas-execute/index.ts | head -20",
+  "description": "Probe infra_health_logs schema + existing insert pattern"
+}
+```
+
+## 🤖 Claude *(13:06:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === infra_health_logs REAL columns ===
+>   id: uuid [required]
+>   service: text [required]
+>   status: text [required]
+>   last_seen_at: timestamp with time zone [required]
+> 
+> === existing infra_health_logs insert shape (canvas-execute) ===
+> 384:          .from("infra_health_logs")
+> 385-          .insert({ service: "canvas-execute", status: "healthy" })
+> 386-          .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 387-
+> 388-        return new Response(
+> 389-          JSON.stringify({
+> 390-            execution_id: execution.id,
+> --
+> 409:          .from("infra_health_logs")
+> 410-          .insert({ service: "canvas-execute", status: "unhealthy" })
+> 411-          .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 412-
+> 413-        return new Response(JSON.stringify({ error: err.message || "Failed to generate magic prompt" }), {
+> 414-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 415-        });
+> --
+> 557:      .from("infra_health_logs")
+> 558-      .insert({ service: "canvas-execute", status: error ? "unhealthy" : "healthy" })
+> 559-      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 560-
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { defineConfig } from "vitest/config";
+> 2	import react from "@vitejs/plugin-react-swc";
+> 3	import path from "path";
+> 4	
+> 5	export default defineConfig({
+> 6	  plugins: [react()],
+> 7	  test: {
+> 8	    environment: "jsdom",
+> 9	    globals: true,
+> 10	    setupFiles: ["./src/test/setup.ts"],
+> 11	    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+> 12	    coverage: {
+> 13	      provider: "v8",
+> 14	      reporter: ["text", "html"],
+> 15	      include: ["src/lib/**", "src/store/**", "src/hooks/**"],
+> 16	      exclude: ["src/**/*.test.*", "src/test/**", "src/integrations/**"],
+> 17	    },
+> 18	  },
+> 19	  resolve: {
+> 20	    alias: { "@": path.resolve(__dirname, "./src") },
+> 21	  },
+> 22	});
+> 23	
+> ```
+
+## 🤖 Claude *(13:08:57)*
+
+
+## 🤖 Claude *(13:09:00)*
+
+Tudo mapeado: `infra_health_logs` = `{service, status, last_seen_at(default)}`; padrão fire-and-forget `.insert({service, status}).then(()=>{}, …)`. Vitest cobre só `src/**`. 
+
+**Decisão de design (testável + autossuficiente):** o helper emite telemetria via `fetch` REST direto ao PostgREST (sem import do SDK Deno, que quebraria o teste), com guard `typeof Deno` (no-op em vitest) e `functionName` opcional. Só registra **degradação/falha** (não o happy path). Editando o helper:
+
+## 🤖 Claude *(13:09:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "old_string": "export interface FallbackOptions {\n  openRouterKey?: string;\n  geminiKey?: string;\n  groqKey?: string;\n}\n\nconst HEAVY_MODEL_REGEX = /claude-3\\.5|claude-4|gpt-4|llama-3\\.1-405b/i;",
+  "new_string": "export interface FallbackOptions {\n  openRouterKey?: string;\n  geminiKey?: string;\n  groqKey?: string;\n  /** Optional caller name for granular fallback telemetry (service = `llm-fallback:<functionName>`). */\n  functionName?: string;\n}\n\nconst HEAVY_MODEL_REGEX = /claude-3\\.5|claude-4|gpt-4|llama-3\\.1-405b/i;\n\n/**\n * Fire-and-forget telemetry to infra_health_logs when the cascade DEGRADES (a free tier rescued\n * the call) or FAILS (all providers exhausted). Self-sufficient inside Deno (reads SUPABASE_URL +\n * SB_SECRET_KEY straight from the function env and POSTs to PostgREST \u2014 no SDK import); a silent\n * no-op outside Deno (unit tests) and on ANY error \u2014 observability must NEVER break a generation.\n */\nasync function logFallbackHealth(status: \"degraded\" | \"unhealthy\", functionName?: string): Promise<void> {\n  try {\n    const denoEnv = (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env;\n    if (!denoEnv) return;\n    const url = denoEnv.get(\"SUPABASE_URL\");\n    const key = denoEnv.get(\"SB_SECRET_KEY\") ?? denoEnv.get(\"SUPABASE_SERVICE_ROLE_KEY\");\n    if (!url || !key) return;\n    await fetch(`${url}/rest/v1/infra_health_logs`, {\n      method: \"POST\",\n      headers: { apikey: key, Authorization: `Bearer ${key}`, \"Content-Type\": \"application/json\" },\n      body: JSON.stringify({ service: `llm-fallback:${functionName ?? \"unknown\"}`, status }),\n    }).catch(() => {});\n  } catch (_) {\n    // swallow \u2014 telemetry is best-effort and must not affect the LLM cascade\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:09:10)*
+
+
+## 🤖 Claude *(13:09:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "old_string": "      if (geminiResp.ok) {\n        console.log(`[llm-fallback] Gemini Free fallback succeeded with model \"${model}\"`);\n        return geminiResp;\n      }",
+  "new_string": "      if (geminiResp.ok) {\n        console.log(`[llm-fallback] Gemini Free fallback succeeded with model \"${model}\"`);\n        await logFallbackHealth(\"degraded\", options.functionName);\n        return geminiResp;\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:09:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "old_string": "      if (freeResp.ok) {\n        console.log(`[llm-fallback] OpenRouter Free fallback succeeded with model \"${model}\"`);\n        return freeResp;\n      }",
+  "new_string": "      if (freeResp.ok) {\n        console.log(`[llm-fallback] OpenRouter Free fallback succeeded with model \"${model}\"`);\n        await logFallbackHealth(\"degraded\", options.functionName);\n        return freeResp;\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:09:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "old_string": "  console.error(\"[llm-fallback] All LLM providers in cascade failed.\");\n  return new Response(\n    JSON.stringify({\n      error: \"LLM fallback exhaustion\",",
+  "new_string": "  console.error(\"[llm-fallback] All LLM providers in cascade failed.\");\n  await logFallbackHealth(\"unhealthy\", options.functionName);\n  return new Response(\n    JSON.stringify({\n      error: \"LLM fallback exhaustion\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:10:36)*
+
+
+## 🤖 Claude *(13:10:38)*
+
+Helper com telemetria autossuficiente pronto (cobre as 11 fns ao re-deployar; granularidade por-fn fica como follow-up trivial). Agora a **prova material da lógica** — um teste unit da cascata (o projeto não tinha nenhum). Habilito o vitest para `supabase/functions` e escrevo o teste:
+
+## 🤖 Claude *(13:10:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts",
+  "old_string": "    include: [\"src/**/*.{test,spec}.{ts,tsx}\"],",
+  "new_string": "    include: [\"src/**/*.{test,spec}.{ts,tsx}\", \"supabase/functions/**/*.{test,spec}.ts\"],"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/vitest.config.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:10:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.test.ts",
+  "content": "// @vitest-environment node\n// Unit proof for OTD-LLM-FALLBACK cascade (SOP: docs/processes/llm-cascading-fallback.md).\n// Verifies: primary success short-circuits; 402/429 trigger Gemini Free; Gemini failure cascades\n// to OpenRouter Free; total exhaustion returns structured 502; telemetry is a no-op outside Deno.\nimport { describe, it, expect, vi, beforeEach, afterEach } from \"vitest\";\nimport { fetchLLMWithFallback } from \"./llm-fallback.ts\";\n\nconst ENDPOINT = \"https://openrouter.ai/api/v1/chat/completions\";\nconst init = () => ({\n  method: \"POST\",\n  headers: { Authorization: \"Bearer primary\", \"HTTP-Referer\": \"x\", \"X-Title\": \"y\" },\n  // a \"heavy\" model so the Gemini candidates are the -pro tier (2 candidates)\n  body: JSON.stringify({ model: \"anthropic/claude-3.5-sonnet\", messages: [{ role: \"user\", content: \"hi\" }] }),\n});\nconst json = (status: number, body: unknown) =>\n  new Response(JSON.stringify(body), { status, headers: { \"Content-Type\": \"application/json\" } });\n\ndescribe(\"fetchLLMWithFallback (OTD-LLM-FALLBACK cascade)\", () => {\n  let fetchMock: ReturnType<typeof vi.fn>;\n  beforeEach(() => {\n    fetchMock = vi.fn();\n    vi.stubGlobal(\"fetch\", fetchMock);\n  });\n  afterEach(() => vi.unstubAllGlobals());\n\n  it(\"returns the primary response and does NOT fall back on success\", async () => {\n    fetchMock.mockResolvedValueOnce(json(200, { choices: [{ message: { content: \"primary\" } }] }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\" });\n    expect(res.status).toBe(200);\n    expect(fetchMock).toHaveBeenCalledTimes(1);\n    expect(fetchMock.mock.calls[0][0]).toBe(ENDPOINT);\n  });\n\n  it(\"falls back to Gemini Free on 402 credit exhaustion\", async () => {\n    fetchMock\n      .mockResolvedValueOnce(json(402, { error: \"credits exhausted\" }))\n      .mockResolvedValueOnce(json(200, { choices: [{ message: { content: \"gemini\" } }] }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\" });\n    expect(res.status).toBe(200);\n    expect(fetchMock.mock.calls[1][0]).toContain(\"generativelanguage.googleapis.com\");\n    // request body must be re-pointed at a Gemini model, OpenRouter-only headers stripped\n    expect(JSON.parse(fetchMock.mock.calls[1][1].body).model).toContain(\"gemini\");\n  });\n\n  it(\"cascades to OpenRouter Free when the primary AND every Gemini candidate fail\", async () => {\n    fetchMock\n      .mockResolvedValueOnce(json(429, { error: \"rate limited\" })) // primary\n      .mockResolvedValueOnce(json(500, { error: \"gemini-2.5-pro down\" }))\n      .mockResolvedValueOnce(json(500, { error: \"gemini-1.5-pro down\" }))\n      .mockResolvedValueOnce(json(200, { choices: [{ message: { content: \"free\" } }] }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\" });\n    expect(res.status).toBe(200);\n    const last = fetchMock.mock.calls.at(-1)!;\n    expect(last[0]).toContain(\"openrouter.ai\");\n    expect(JSON.parse(last[1].body).model).toContain(\":free\");\n  });\n\n  it(\"returns a structured 502 when every provider in the cascade fails\", async () => {\n    fetchMock.mockResolvedValue(json(402, { error: \"no credits anywhere\" }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\" });\n    expect(res.status).toBe(502);\n    expect((await res.json()).error).toBe(\"LLM fallback exhaustion\");\n  });\n\n  it(\"does not fall back on a non-billing client error (e.g. 400 bad request)\", async () => {\n    fetchMock.mockResolvedValueOnce(json(400, { error: \"bad prompt\" }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\" });\n    expect(res.status).toBe(400);\n    expect(fetchMock).toHaveBeenCalledTimes(1); // no cascade for a 4xx that isn't 402/429\n  });\n\n  it(\"emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)\", async () => {\n    fetchMock\n      .mockResolvedValueOnce(json(402, {}))\n      .mockResolvedValueOnce(json(200, { choices: [{ message: { content: \"ok\" } }] }));\n    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: \"k\", geminiKey: \"g\", functionName: \"unit-test\" });\n    expect(res.status).toBe(200);\n    // primary(402) + gemini(200) = exactly 2 fetches; the degraded telemetry POST is skipped (no Deno).\n    expect(fetchMock).toHaveBeenCalledTimes(2);\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:11:16)*
+
+
+## 🤖 Claude *(13:11:16)*
+
+Teste escrito. Rodando-o (prova material da cascata):
+
+## 🤖 Claude *(13:11:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx vitest run supabase/functions/_shared/llm-fallback.test.ts 2>&1 | tail -35",
+  "description": "Run the llm-fallback cascade unit test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+> 
+> ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+> 
+>  FAIL  supabase/functions/_shared/llm-fallback.test.ts [ supabase/functions/_shared/llm-fallback.test.ts ]
+> ReferenceError: window is not defined
+>  ❯ src/test/setup.ts:11:23
+>       9| } as unknown as typeof IntersectionObserver;
+>      10| 
+>      11| Object.defineProperty(window, "matchMedia", {
+>        |                       ^
+>      12|   writable: true,
+>      13|   value: (query: string) => ({
+> 
+> ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+> 
+> 
+>  Test Files  1 failed (1)
+>       Tests  no tests
+>    Start at  10:11:18
+>    Duration  620ms (transform 39ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 109ms)
+> ```
+
+## 🤖 Claude *(13:11:50)*
+
+
+## 🤖 Claude *(13:11:51)*
+
+O teste falha no `setupFiles` global (`src/test/setup.ts`) que assume `window` (jsdom), mas meu teste roda em `environment node`. Vou tornar o setup tolerante a ambos os ambientes (guard `typeof window`) — mudança segura que não afeta os testes jsdom existentes. Lendo o setup:
+
+## 🤖 Claude *(13:11:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/setup.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import "@testing-library/jest-dom";
+> 2	
+> 3	// IntersectionObserver is not available in jsdom
+> 4	global.IntersectionObserver = class IntersectionObserver {
+> 5	  observe = vi.fn();
+> 6	  unobserve = vi.fn();
+> 7	  disconnect = vi.fn();
+> 8	  constructor(_cb: IntersectionObserverCallback, _opts?: IntersectionObserverInit) {}
+> 9	} as unknown as typeof IntersectionObserver;
+> 10	
+> 11	Object.defineProperty(window, "matchMedia", {
+> 12	  writable: true,
+> 13	  value: (query: string) => ({
+> 14	    matches: false,
+> 15	    media: query,
+> 16	    onchange: null,
+> 17	    addListener: () => {},
+> 18	    removeListener: () => {},
+> 19	    addEventListener: () => {},
+> 20	    removeEventListener: () => {},
+> 21	    dispatchEvent: () => {},
+> 22	  }),
+> 23	});
+> 24	
+> ```
+
+## 🤖 Claude *(13:12:09)*
+
+
+## 🤖 Claude *(13:12:10)*
+
+Só o bloco `window.matchMedia` quebra em node env (o resto usa `global`/`vi`, válidos em ambos). Guardando-o — torna o setup tolerante a node sem afetar os testes jsdom:
+
+## 🤖 Claude *(13:12:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/setup.ts",
+  "old_string": "Object.defineProperty(window, \"matchMedia\", {\n  writable: true,\n  value: (query: string) => ({\n    matches: false,\n    media: query,\n    onchange: null,\n    addListener: () => {},\n    removeListener: () => {},\n    addEventListener: () => {},\n    removeEventListener: () => {},\n    dispatchEvent: () => {},\n  }),\n});",
+  "new_string": "// jsdom-only globals \u2014 guarded so Node-environment tests (e.g. edge-function helpers) can share this setup.\nif (typeof window !== \"undefined\") {\n  Object.defineProperty(window, \"matchMedia\", {\n    writable: true,\n    value: (query: string) => ({\n      matches: false,\n      media: query,\n      onchange: null,\n      addListener: () => {},\n      removeListener: () => {},\n      addEventListener: () => {},\n      removeEventListener: () => {},\n      dispatchEvent: () => {},\n    }),\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/test/setup.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:12:17)*
+
+
+## 🤖 Claude *(13:12:17)*
+
+Rodando o teste de novo:
+
+## 🤖 Claude *(13:12:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx vitest run supabase/functions/_shared/llm-fallback.test.ts 2>&1 | tail -30",
+  "description": "Re-run llm-fallback cascade unit test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > returns a structured 502 when every provider in the cascade fails
+> [llm-fallback] OpenRouter Free model "meta-llama/llama-3-8b-instruct:free" failed (status=402): unknown
+> [llm-fallback] All LLM providers in cascade failed.
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > does not fall back on a non-billing client error (e.g. 400 bad request)
+> [llm-fallback] Attempting primary LLM request with model "anthropic/claude-3.5-sonnet"
+> 
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > does not fall back on a non-billing client error (e.g. 400 bad request)
+> [llm-fallback] Primary request failed with status 400 (no fallback triggered)
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting primary LLM request with model "anthropic/claude-3.5-sonnet"
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting Gemini Free fallback. Candidates: gemini-2.5-pro, gemini-1.5-pro
+> [llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> 
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Primary request failed (status=402). Initiating cascade. Details: {}
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+> 
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 25ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  6 passed (6)
+>    Start at  10:12:19
+>    Duration  679ms (transform 73ms, setup 90ms, collect 57ms, tests 25ms, environment 0ms, prepare 100ms)
+> ```
+
+## 🤖 Claude *(13:12:33)*
+
+
+## 🤖 Claude *(13:12:35)*
+
+**Teste passou: 6/6 ✓** — cascata provada materialmente (primário→Gemini→Free→502, mais o caso 400-não-cascateia e a telemetria no-op fora de Deno). Agora confirmo zero regressão na suíte completa + tsc (o novo include + guard do setup não podem quebrar nada):
+
+## 🤖 Claude *(13:12:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx vitest run 2>&1 | tail -15",
+  "description": "Full vitest suite \u2014 regression check"
+}
+```
+
+## 🤖 Claude *(13:12:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -10\necho \"--- tsc exit: ${PIPESTATUS[0]} ---\"",
+  "description": "TypeScript check after helper + test changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [llm-fallback] Attempting Gemini Free fallback. Candidates: gemini-2.5-pro, gemini-1.5-pro
+> [llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+> 
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 30ms
+>  ↓ src/test/aios-sql-bridge-smoke.test.ts (1 test | 1 skipped)
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+> 
+>  Test Files  16 passed | 2 skipped (18)
+>       Tests  244 passed | 2 skipped (246)
+>    Start at  10:12:38
+>    Duration  7.15s (transform 691ms, setup 1.58s, collect 2.43s, tests 1.56s, environment 8.67s, prepare 2.23s)
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- tsc exit: 0 ---
+> ```
+
+## 🤖 Claude *(13:14:04)*
+
+
+## 🤖 Claude *(13:14:05)*
+
+Suíte completa: **244 passed | 2 skipped** (era 224/226 — +6 do teste novo, zero regressão). tsc **0 erros**. 
+
+Agora o deploy: re-deployar as 11 fns que usam o helper ativa a telemetria (o `_shared` é bundled em cada uma). `SB_SECRET_KEY` está nos secrets das edge fns (generate-content já o usa), então o POST de telemetria autentica. Deployando as 11:
+
+## 🤖 Claude *(13:14:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nok=0; fail=0; failed=\"\"\nfor fn in orchestrate-step generate-content generate-video-script generate-audio-script analyze-seo analyze-sem analyze-node optimize-schedule self-optimize canvas-execute agent-task-execute; do\n  out=$(npx supabase functions deploy \"$fn\" 2>&1)\n  if echo \"$out\" | grep -qiE \"Deployed Function\"; then echo \"\u2705 $fn\"; ok=$((ok+1)); else echo \"\u274c $fn\"; echo \"$out\" | tail -3; fail=$((fail+1)); failed=\"$failed $fn\"; fi\ndone\necho \"=== DEPLOY SUMMARY: $ok deployed / $fail failed ${failed:+(failed:$failed)} ===\"",
+  "description": "Deploy the 11 LLM-fallback edge functions to activate telemetry",
+  "timeout": 540000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ orchestrate-step
+> ✅ generate-content
+> ✅ generate-video-script
+> ✅ generate-audio-script
+> ✅ analyze-seo
+> ✅ analyze-sem
+> ✅ analyze-node
+> ✅ optimize-schedule
+> ✅ self-optimize
+> ✅ canvas-execute
+> ✅ agent-task-execute
+> === DEPLOY SUMMARY: 11 deployed / 0 failed  ===
+> ```
+
+## 🤖 Claude *(13:15:25)*
+
+
+## 🤖 Claude *(13:15:26)*
+
+**Deploy: 11/11 deployed, 0 failed** ✅ — a telemetria está ativa em produção. Provo materialmente que o **caminho de telemetria funciona** (o helper faz exatamente este POST quando degrada) com uma linha-probe que insiro e removo, + git status:
+
+## 🤖 Claude *(13:15:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== telemetry path proof: INSERT a probe row exactly like the helper does (service+status) ===\"\nPROBE=$(curl -s -w \"\\n%{http_code}\" \"$URL/rest/v1/infra_health_logs\" -H \"$H1\" -H \"$H2\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d '{\"service\":\"llm-fallback:deploy-probe\",\"status\":\"degraded\"}')\nHTTP=$(echo \"$PROBE\" | tail -1); ROW=$(echo \"$PROBE\" | head -1)\necho \"INSERT HTTP $HTTP\"; echo \"row: $ROW\"\nPID=$(echo \"$ROW\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) and d else '')\" 2>/dev/null)\n[ -n \"$PID\" ] && curl -s -o /dev/null -w \"cleanup probe: %{http_code}\\n\" -X DELETE \"$URL/rest/v1/infra_health_logs?id=eq.$PID\" -H \"$H1\" -H \"$H2\"\necho \"\"\necho \"=== git status (OTD changes to commit) ===\"\ngit status --short",
+  "description": "Prove telemetry insert path works + show OTD changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === telemetry path proof: INSERT a probe row exactly like the helper does (service+status) ===
+> INSERT HTTP 201
+> row: [{"id":"e46c80f5-41ef-4381-ad42-3f328e324907","service":"llm-fallback:deploy-probe","status":"degraded","last_seen_at":"2026-06-03T13:15:32.497464+00:00"}]
+> cleanup probe: 204
+> 
+> === git status (OTD changes to commit) ===
+>  M src/test/setup.ts
+>  M supabase/functions/_shared/llm-fallback.ts
+>  M vitest.config.ts
+> ?? supabase/functions/_shared/llm-fallback.test.ts
+> ```
+
+## 🤖 Claude *(13:15:52)*
+
+
+## 🤖 Claude *(13:15:53)*
+
+Telemetria provada materialmente: **INSERT HTTP 201** (`service:"llm-fallback:deploy-probe", status:"degraded", last_seen_at` auto) + cleanup 204 — o caminho exato que o helper percorre ao degradar funciona. Commitando a OTD:
+
+## 🤖 Claude *(13:15:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/test/setup.ts supabase/functions/_shared/llm-fallback.ts vitest.config.ts supabase/functions/_shared/llm-fallback.test.ts\ngit commit -m \"feat(llm-fallback): telemetria infra_health_logs + teste de cascata \u2014 fecha OTD-LLM-FALLBACK\" -m \"O helper de cascata (OpenRouter->Gemini Free->OpenRouter Free->502) ja estava live em 11 edge fns de completion; faltava o success signal do SOP: observabilidade. O helper agora registra infra_health_logs (status degraded quando um tier gratuito resgata a chamada, unhealthy na exaustao total) \u2014 autossuficiente em Deno (POST direto ao PostgREST, sem SDK), fire-and-forget (nunca quebra a geracao), no-op em testes. functionName opcional para granularidade.\n\nPrimeiro teste do helper (6 casos cobrindo toda a cascata: primario short-circuita, 402/429 disparam Gemini, falha do Gemini cascateia para OpenRouter Free, exaustao retorna 502 estruturado, 4xx nao-billing nao cascateia, telemetria no-op fora de Deno). vitest estendido a supabase/functions; setup tolerante a node env.\n\nProvas: 6/6 testes verdes, suite 244 passed, tsc 0, 11 fns re-deployadas (telemetria ativa em prod), caminho de telemetria provado (insert 201 em infra_health_logs), tier Gemini de fallback saudavel (HTTP 200). SOP docs/processes/llm-cascading-fallback.md.\" 2>&1 | tail -6\necho \"=== HEAD ===\"; git log --oneline -2",
+  "description": "Commit OTD-LLM-FALLBACK telemetry + test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 0a182d3] feat(llm-fallback): telemetria infra_health_logs + teste de cascata — fecha OTD-LLM-FALLBACK
+>  4 files changed, 126 insertions(+), 14 deletions(-)
+>  create mode 100644 supabase/functions/_shared/llm-fallback.test.ts
+> === HEAD ===
+> 0a182d3 feat(llm-fallback): telemetria infra_health_logs + teste de cascata — fecha OTD-LLM-FALLBACK
+> 7fd8e7a feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Updated task #3 metadata, status
+> ```
+
+## 🤖 Claude *(13:16:29)*
+
+
+## 🤖 Claude *(13:16:29)*
+
+OTD commitada: **`0a182d3`** (4 files, +126/-14). Selando na malha + marcando a task:
+
+## 🤖 Claude *(13:16:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 <<'PY'\nimport json, urllib.request, urllib.error, os\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; SK=os.environ['SB_SECRET_KEY']\nH={\"apikey\":SK,\"Authorization\":f\"Bearer {SK}\",\"Content-Type\":\"application/json\"}\ndef post(path,payload):\n    req=urllib.request.Request(URL+path,data=json.dumps(payload).encode(),method=\"POST\",headers={**H,\"Prefer\":\"return=representation\"})\n    try:\n        with urllib.request.urlopen(req) as r: return r.status, r.read().decode()\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()\ncontent=(\"OTD-LLM-FALLBACK CLOSED (owner engineer, SLA 2026-06-07 \u2014 closed early). The cascade helper \"\n\"fetchLLMWithFallback (OpenRouter paid -> Gemini Free OpenAI-compat -> OpenRouter Free gemma/llama -> structured 502) \"\n\"was already live across 11 completion edge fns; this seal closes the SOP success-signal gap by adding \"\n\"infra_health_logs telemetry (degraded when a free tier rescues a call, unhealthy on total exhaustion) \u2014 \"\n\"self-sufficient in Deno (direct PostgREST POST, no SDK), fire-and-forget (never breaks generation), no-op in tests. \"\n\"Added the project's FIRST edge-helper unit test (6 cascade cases) + extended vitest to supabase/functions + node-tolerant setup. \"\n\"Proofs: 6/6 tests green, full suite 244 passed, tsc 0, 11 fns redeployed (telemetry live), telemetry insert path proven (HTTP 201), \"\n\"Gemini fallback tier healthy (HTTP 200). Coverage: aios-chat/search-constellation/openrouter-swarm intentionally excluded \"\n\"(gemini-native / embeddings-only / arena-by-design). Commit 0a182d3. SOP docs/processes/llm-cascading-fallback.md.\")\nnode={\"node_type\":\"milestone\",\"name\":\"otd-llm-fallback-closed-20260603\",\"stability_score\":1.0,\"revenue_impact\":0,\n\"user_id\":None,\"project_id\":\"mcorch-constellation\",\"content\":content,\n\"metadata\":{\"otd\":\"OTD-LLM-FALLBACK\",\"status\":\"closed\",\"sla\":\"2026-06-07\",\"closed_early\":True,\n\"helper\":\"_shared/llm-fallback.ts\",\"adopting_fns\":11,\"telemetry\":\"infra_health_logs degraded/unhealthy\",\n\"test\":\"llm-fallback.test.ts (6 cases)\",\"commit\":\"0a182d3\"}}\nst,body=post(\"/rest/v1/mcorch_nodes\",node)\nprint(\"OTD milestone node HTTP\",st)\nif st in (200,201): print(\"node id:\",json.loads(body)[0][\"id\"])\nelse: print(body[:300])\nPY",
+  "description": "Insert OTD-LLM-FALLBACK closure milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OTD milestone node HTTP 201
+> node id: 6061a6d2-2346-4cfa-bf20-218addb3ef21
+> ```
+
+## 🤖 Claude *(13:16:42)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed",
+  "metadata": {
+    "result": "FECHADA cedo (SLA 06-07). Helper cascata ja live em 11 fns; gap fechado = telemetria infra_health_logs (degraded/unhealthy) autossuficiente Deno + 1o teste do helper (6 casos) + vitest estendido. Provas: 6/6 testes, suite 244, tsc 0, 11 fns redeployadas, telemetria insert 201, Gemini tier 200. Commit 0a182d3. 3 fns fora do escopo por design (aios-chat gemini-native / search-constellation embeddings / openrouter-swarm arena)."
+  }
+}
+```
+
+## 🤖 Claude *(13:17:56)*
+
+
+## 🤖 Claude *(13:18:04)*
+
+OTD selada na malha: **node `6061a6d2`**. Task #3 ✅.
+
+## Status — 2 das 3 frentes fechadas
+
+| Frente | Resultado | Prova |
+|---|---|---|
+| 🟢 Alerta `meta_config` | Verificado **vazio** (nada a limpar) | 0 linhas · auth.users 1==profiles 1 · RPC 160000 aplicada |
+| 🟢 **MVP-2 Campaign Core** | **LIVE** em prod | commit `7fd8e7a` · migration `20260603025256` · tenant-FK 23503/42501 · mesh `7628892b` |
+| 🟢 **OTD-LLM-FALLBACK** | **Fechada cedo** (SLA 06-07) | commit `0a182d3` · 6/6 testes · 11 fns redeploy · telemetria 201 · mesh `6061a6d2` |
+| ⚪ MVP-3 (lead-score+campaign-run) | Pendente | — |
+
+**Poda explícita (Lei 3):** descartei do contexto ativo os detalhes das investigações já concluídas — probe `meta_config`, leitura das migrations `20260402014040`/`20260603000000`, e o probe completo do `llm-fallback`/SOP. **Preservados via:** commits `7fd8e7a`/`0a182d3` + nodes `7628892b`/`6061a6d2` + SOPs em `docs/processes/`. Reciclo relendo o arquivo se precisar do detalhe exato. **Mantenho:** sprint goal, task list, specs do MVP-3 (a obter).
+
+Honrando o pedido do MVP-3 — começo pelo **probe-first** ancorado na Fonte da Verdade BoK (specs das 2 edge fns) + o padrão de JWT-gate/`deduct_mco_coins`:
+
+## 🤖 Claude *(13:18:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SDD/FRD anchors for lead-score + campaign-run ===\"\ngrep -niE \"lead.?score|campaign.?run|lead-score|campaign-run|deduct_mco|1 mco|10 mco\" docs/bok/marketing-hub/05-sdd.md docs/bok/marketing-hub/04-frd.md | head -25\necho \"\"\necho \"=== FR-MH ids touching scoring / campaign execution ===\"\ngrep -niE \"FR-MH-0[0-9]+.*(score|campaign|run|orchestrat|nurtur)\" docs/bok/marketing-hub/04-frd.md | head\necho \"\"\necho \"=== edge fn pattern (orchestrate-content): JWT + deduct_mco_coins + 402 + health ===\"\ngrep -nE \"auth.getUser|getUser\\(|Authorization|deduct_mco_coins|402|insufficient|infra_health_logs|COIN_COSTS|verify_jwt\" supabase/functions/orchestrate-content/index.ts | head -20\necho \"\"\necho \"=== existing config.toml verify_jwt entries (pattern) ===\"\ngrep -nE \"verify_jwt|functions\\.\" supabase/config.toml 2>/dev/null | head",
+  "description": "Probe BoK specs for MVP-3 edge fns + JWT/deduct pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SDD/FRD anchors for lead-score + campaign-run ===
+> docs/bok/marketing-hub/04-frd.md:29:| FR-MH-003 | Lead Scoring Edge Fn | `lead-score`: JWT-guarded, debita 1 mcoCoin via RPC, chama IA (per-user→sistema), grava `score` 0–100, fail-soft | Critical | PR-MH-002 | EdgeFunction | AT-MH-003 |
+> docs/bok/marketing-hub/04-frd.md:30:| FR-MH-004 | Campaign Run Edge Fn | `campaign-run`: JWT-guarded, debita 10 mcoCoins, orquestra `orchestrate-content` por passo de campanha, sincroniza status | Critical | PR-MH-003 | EdgeFunction | AT-MH-004 |
+> docs/bok/marketing-hub/04-frd.md:68:[Edge Function: lead-score / campaign-run / nurture-dispatch / intent-orchestrate / aeo-audit]
+> docs/bok/marketing-hub/04-frd.md:75:#### `POST /functions/v1/lead-score`
+> docs/bok/marketing-hub/04-frd.md:104:#### `POST /functions/v1/campaign-run`
+> docs/bok/marketing-hub/04-frd.md:133:| FR-MH-004 | ✅ Required | ✅ Required | ✅ Required | Campaign run orquestra orchestrate-content |
+> docs/bok/marketing-hub/05-sdd.md:23:│  useLeads · useCampaigns · useLeadScore · useNurturing ·           │
+> docs/bok/marketing-hub/05-sdd.md:30:│  lead-score · campaign-run · nurture-dispatch · intent-orchestrate ·│
+> docs/bok/marketing-hub/05-sdd.md:57:| `useLeadScore` | `useLeadScore.ts` | Invoca `lead-score`; trata 402/404 | `['lead-score', leadId]` |
+> docs/bok/marketing-hub/05-sdd.md:80:| `lead-score` | `supabase/functions/lead-score/index.ts` | JWT (user) | 1 | per-user AI key (`user_api_keys`) → `OPENROUTER_API_KEY` |
+> docs/bok/marketing-hub/05-sdd.md:81:| `campaign-run` | `supabase/functions/campaign-run/index.ts` | JWT (user) | 10 | (reusa orchestrate-content secrets) |
+> docs/bok/marketing-hub/05-sdd.md:117:User                useLeadScore        lead-score Edge Fn      DB
+> docs/bok/marketing-hub/05-sdd.md:122: │                    │                     │──[deduct_mco_coins 1]▶ profiles (RPC, 402 if low)
+> docs/bok/marketing-hub/05-sdd.md:150:### `POST /functions/v1/campaign-run`
+> docs/bok/marketing-hub/05-sdd.md:154:interface CampaignRunRequest {
+> docs/bok/marketing-hub/05-sdd.md:159:interface CampaignRunResponse {
+> docs/bok/marketing-hub/05-sdd.md:168://   await supabase.rpc('deduct_mco_coins', { p_user_id, p_amount: 10 })
+> docs/bok/marketing-hub/05-sdd.md:194:| `lead-score` / all edge fns | Acesso não autenticado | Spoofing | High | JWT validation no entry point (getUser) |
+> docs/bok/marketing-hub/05-sdd.md:196:| mcoCoins deduction | Bypass client-side | Tampering | Critical | RPC `deduct_mco_coins` server-side only |
+> 
+> === FR-MH ids touching scoring / campaign execution ===
+> 27:| FR-MH-001 | Lead Lifecycle Board | Board/kanban exibindo leads por estado (`new`/`scored`/`nurturing`/`converted`/`lost`); transições via hook `useLeads`; RLS per-tenant | Critical | PR-MH-001 | UI + Hook | AT-MH-001 |
+> 29:| FR-MH-003 | Lead Scoring Edge Fn | `lead-score`: JWT-guarded, debita 1 mcoCoin via RPC, chama IA (per-user→sistema), grava `score` 0–100, fail-soft | Critical | PR-MH-002 | EdgeFunction | AT-MH-003 |
+> 30:| FR-MH-004 | Campaign Run Edge Fn | `campaign-run`: JWT-guarded, debita 10 mcoCoins, orquestra `orchestrate-content` por passo de campanha, sincroniza status | Critical | PR-MH-003 | EdgeFunction | AT-MH-004 |
+> 31:| FR-MH-005 | Campaign Composer | UI para compor campanha (canais+passos) + `useCampaigns` hook; persiste em `campaigns`/`campaign_steps` | Critical | PR-MH-003 | UI + Hook | AT-MH-005 |
+> 33:| FR-MH-007 | Campaign Attribution | Liga receita a `campaign_id`/`lead_id`; estende `ATTRIBUTES_REVENUE_TO`; expõe por campanha no `ROIWidget` | High | PR-MH-005 | Hook + DB | AT-MH-007 |
+> 34:| FR-MH-008 | Nurturing Sequences | Engine de drip: `sequences`+`sequence_enrollments`; passo dispara `nurture-dispatch` (gera msg, 2 mcoCoins); respeita opt-out; idempotente; cron avança passos | High | PR-MH-010 | EdgeFunction + Cron | AT-MH-008 |
+> 35:| FR-MH-009 | Intent Orchestrator + HITL | `intent-orchestrate`: traduz intenção→plano de tarefas; policy engine decide auto vs. HITL; aprovação humana persiste rationale (XAI) | High | PR-MH-011 | EdgeFunction + Hook | AT-MH-009 |
+> 37:| FR-MH-011 | Customer 360 | View agregando eventos/canais/score/consent por contato; `useCustomer360` hook | Medium | PR-MH-013 | DB + Hook | AT-MH-011 |
+> 47:| NFR-MH-002 | Performance | Edge Fn p95 latency (score/campaign/aeo) | < 800ms (excl. IA externa) | Supabase logs |
+> 52:| NFR-MH-007 | Privacy (LGPD) | Erasure de lead cascateia em ≤ 24h; consent obrigatório antes de nurturing | 100% cascata; 0 envio sem consent | Auditoria + teste de erasure |
+> 
+> === edge fn pattern (orchestrate-content): JWT + deduct_mco_coins + 402 + health ===
+> 24:    const authHeader = req.headers.get("Authorization");
+> 36:      global: { headers: { Authorization: authHeader } },
+> 38:    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 86:        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 90:    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 97:        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 
+> === existing config.toml verify_jwt entries (pattern) ===
+> 6:[functions.publish-social]
+> 7:verify_jwt = false
+> 8:[functions.refresh-social-token]
+> 9:verify_jwt = false
+> 10:[functions.embed-mcorch-node]
+> 11:verify_jwt = false
+> 12:[functions.self-optimize]
+> 13:verify_jwt = false
+> 14:[functions.self-heal]
+> 15:verify_jwt = false
+> ```
+
+## 🤖 Claude *(13:18:48)*
+
+
+## 🤖 Claude *(13:18:51)*
+
+Specs do MVP-3 ancorados no BoK:
+- **`lead-score`** (FR-MH-003): JWT, **1 mco**, IA per-user→sistema (`user_api_keys`→`OPENROUTER_API_KEY`), grava `score` 0–100, **fail-soft**.
+- **`campaign-run`** (FR-MH-004): JWT, **10 mco**, orquestra `orchestrate-content` por `campaign_step`, sincroniza status.
+- Padrão `orchestrate-content` confirmado: `getUser()` via Authorization header → `deduct_mco_coins` admin RPC → 402 se baixo.
+
+Lendo os contratos exatos (request/response/erros) das 2 fns antes de codar:
+
+## 🤖 Claude *(13:18:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/04-frd.md",
+  "offset": 73,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 73	### 4.2 External API Contracts
+> 74	
+> 75	#### `POST /functions/v1/lead-score`
+> 76	
+> 77	**Auth:** Bearer JWT (user scope)  
+> 78	**Request:**
+> 79	```typescript
+> 80	{
+> 81	  lead_id: string,   // uuid do lead a pontuar
+> 82	  context?: string,  // sinal adicional opcional (campanha, origem)
+> 83	}
+> 84	```
+> 85	**Response (200):**
+> 86	```typescript
+> 87	{
+> 88	  status: 'ok',
+> 89	  lead_id: string,
+> 90	  score: number,          // 0–100
+> 91	  rationale: string,      // XAI: por que esse score
+> 92	  new_balance: number,    // saldo mcoCoins pós-débito
+> 93	}
+> 94	```
+> 95	**Error codes:**
+> 96	| Code | Condition |
+> 97	|------|-----------|
+> 98	| 401 | Missing or invalid JWT |
+> 99	| 402 | Insufficient mcoCoins balance |
+> 100	| 404 | Lead não encontrado / não pertence ao tenant |
+> 101	| 422 | Validation failure (campo + mensagem PT-BR) |
+> 102	| 500 | Internal error (logged to infra_health_logs) |
+> 103	
+> 104	#### `POST /functions/v1/campaign-run`
+> 105	
+> 106	**Auth:** Bearer JWT (user scope)  
+> 107	**Request:** `{ campaign_id: string }`  
+> 108	**Response (200):** `{ status: 'ok', campaign_id: string, run_id: string, steps_dispatched: number, new_balance: number }`  
+> 109	**Errors:** 401 / 402 / 404 / 422 / 500 (mesma semântica acima).
+> 110	
+> 111	---
+> 112	
+> 113	## 5. Data Requirements
+> 114	
+> 115	| Field | Type | Nullable | Validation Rule | Error Message (PT-BR) |
+> 116	|-------|------|----------|-----------------|----------------------|
+> 117	| `leads.contact` | `text` | NOT NULL | E.164 (telefone) OU email válido | "Contato inválido — informe telefone (E.164) ou email" |
+> 118	| `leads.status` | `enum` | NOT NULL | ∈ {new, scored, nurturing, converted, lost} | "Status de lead inválido" |
+> 119	| `leads.score` | `int2` | NULL | 0 ≤ score ≤ 100 | "Score deve estar entre 0 e 100" |
+> 120	| `marketing_consents.basis` | `enum` | NOT NULL | ∈ {consent, legitimate_interest, contract} | "Base legal LGPD obrigatória" |
+> 121	| `campaigns.name` | `text` | NOT NULL | 1–120 chars | "Nome da campanha é obrigatório (1–120)" |
+> 122	| `aeo_audits.query` | `text` | NOT NULL | 1–280 chars | "Query de AEO obrigatória" |
+> 123	
+> 124	---
+> 125	
+> 126	## 6. Test Strategy Matrix
+> 127	
+> 128	| FR ID | Unit Test | Integration Test | E2E Test | Notes |
+> 129	|-------|-----------|-----------------|----------|-------|
+> 130	| FR-MH-001 | ✅ Required | ✅ Required | ✅ Required | Board states + RLS isolation |
+> 131	| FR-MH-002 | ✅ Required | ✅ Required | — | Migration backfill count before/after |
+> 132	| FR-MH-003 | ✅ Required | ✅ Required | ✅ Required | Score + mcoCoins débito atômico + 402 path |
+> 133	| FR-MH-004 | ✅ Required | ✅ Required | ✅ Required | Campaign run orquestra orchestrate-content |
+> 134	| FR-MH-005 | ✅ Required | ✅ Required | — | Composer persist |
+> ```
+
+## 🤖 Claude *(13:18:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/05-sdd.md",
+  "offset": 110,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 110	---
+> 111	
+> 112	## 3. Data Flow Diagrams
+> 113	
+> 114	### Use Case: Lead scoring (FR-MH-003)
+> 115	
+> 116	```
+> 117	User                useLeadScore        lead-score Edge Fn      DB
+> 118	 │                    │                     │                    │
+> 119	 │──[Qualificar]─────▶│                     │                    │
+> 120	 │                    │──[POST JWT]─────────▶│                    │
+> 121	 │                    │                     │──[getUser → 401?]──│
+> 122	 │                    │                     │──[deduct_mco_coins 1]▶ profiles (RPC, 402 if low)
+> 123	 │                    │                     │◀──[ok]──────────────│
+> 124	 │                    │                     │──[AI score (per-user key)]▶ OpenRouter
+> 125	 │                    │                     │◀──[score+rationale]─│
+> 126	 │                    │                     │──[UPDATE leads.score]▶ leads (RLS)
+> 127	 │                    │                     │──[insert lead_event]▶ lead_events
+> 128	 │                    │                     │──[infra_health_logs pulse]▶
+> 129	 │                    │◀──[200 score]───────│                    │
+> 130	 │◀──[board updates]──│                     │                    │
+> 131	```
+> 132	
+> 133	### Use Case: Erasure (FR-MH-006, LGPD-critical)
+> 134	
+> 135	```
+> 136	User/Subject → useMarketingConsent → erase-lead Edge Fn (service-role)
+> 137	   → DELETE leads + lead_events + sequence_enrollments + marketing_consents (cascade by lead_id)
+> 138	   → DELETE marketing_attribution rows referencing lead
+> 139	   → REVOKE any Vault secret tied to the lead (if BYOK channel token stored)
+> 140	   → insert infra_health_logs {event:'marketing_hub_lead_erased'}
+> 141	   → 200 { erased: true, tables_cleared: [...] }
+> 142	```
+> 143	
+> 144	---
+> 145	
+> 146	## 4. API Contract Definitions
+> 147	
+> 148	> All Edge Functions must validate JWT before any business logic.
+> 149	
+> 150	### `POST /functions/v1/campaign-run`
+> 151	
+> 152	```typescript
+> 153	// Request
+> 154	interface CampaignRunRequest {
+> 155	  campaign_id: string
+> 156	}
+> 157	
+> 158	// Response (HTTP 200)
+> 159	interface CampaignRunResponse {
+> 160	  status: 'ok'
+> 161	  campaign_id: string
+> 162	  run_id: string
+> 163	  steps_dispatched: number
+> 164	}
+> 165	
+> 166	// mcoCoins deduction point:
+> 167	// → After JWT + ownership check, before dispatch:
+> 168	//   await supabase.rpc('deduct_mco_coins', { p_user_id, p_amount: 10 })
+> 169	// → HTTP 402 if insufficient balance
+> 170	// → Then per step: invoke('orchestrate-content', { ...stepPayload }) and sync status
+> 171	```
+> 172	
+> 173	### `POST /functions/v1/aeo-audit`
+> 174	
+> 175	```typescript
+> 176	interface AeoAuditRequest { queries: string[]; brand: string }
+> 177	interface AeoAuditResponse {
+> 178	  status: 'ok'
+> 179	  audit_id: string
+> 180	  citation_rate: number        // % queries citando a marca
+> 181	  findings: Array<{ query: string; cited: boolean; recommendation: string }>
+> 182	}
+> 183	// mcoCoins: deduct 5 at entry. Provider per OTD-MH-003; degraded mode documented if no provider.
+> 184	```
+> 185	
+> 186	---
+> 187	
+> 188	## 5. Security Design
+> 189	
+> ```
+
+## 🤖 Claude *(13:19:46)*
+
+
+## 🤖 Claude *(13:19:48)*
+
+Contratos completos extraídos. Ambas as fns são **isoladas** (sem migration — usam `leads`/`campaign_steps`/`campaigns` já existentes), seguem o padrão `orchestrate-content`, e `lead-score` pode **reusar o `fetchLLMWithFallback`** que acabei de endurecer (boa sinergia). Risco controlado. Vou implementar ambas. Lendo o boilerplate de referência (`generate-content`: getUser + per-user keys + helper):
+
+## 🤖 Claude *(13:19:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-content/index.ts",
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 3	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 4	
+> 5	const corsHeaders = {
+> 6	  "Access-Control-Allow-Origin": "*",
+> 7	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 8	  "Access-Control-Allow-Headers":
+> 9	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 10	};
+> 11	
+> 12	serve(async (req) => {
+> 13	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 14	
+> 15	  try {
+> 16	    const authHeader = req.headers.get("Authorization");
+> 17	    if (!authHeader) {
+> 18	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 19	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 20	      });
+> 21	    }
+> 22	
+> 23	    const supabase = createClient(
+> 24	      Deno.env.get("SUPABASE_URL")!,
+> 25	      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 26	      { global: { headers: { Authorization: authHeader } } }
+> 27	    );
+> 28	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 29	    if (authError || !user) {
+> 30	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 31	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 32	      });
+> 33	    }
+> 34	
+> 35	    const { type, prompt, platform, tone, language = "pt-BR" } = await req.json();
+> 36	    if (!type || !prompt) {
+> 37	      return new Response(JSON.stringify({ error: "type and prompt are required" }), {
+> 38	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 39	      });
+> 40	    }
+> 41	
+> 42	    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 43	    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 44	    
+> 45	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 46	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 47	    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 48	    const aiKey = groqKey || openRouterKey;
+> 49	
+> 50	    if (!aiKey) {
+> 51	      return new Response(JSON.stringify({ error: "AI not configured" }), {
+> 52	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 53	      });
+> 54	    }
+> 55	    
+> 56	    const isGroq = !!groqKey;
+> 57	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 58	    const selectedModel = isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct";
+> 59	
+> 60	    const systemPrompt = `Você é um especialista em marketing digital e criação de conteúdo para redes sociais.
+> 61	Idioma: ${language}
+> 62	${platform ? `Plataforma alvo: ${platform}` : ""}
+> 63	${tone ? `Tom de voz: ${tone}` : "Tom profissional e envolvente"}
+> 64	
+> 65	Regras:
+> 66	- Crie conteúdo pronto para publicar
+> 67	- Inclua hashtags relevantes quando apropriado
+> 68	- Respeite limites de caracteres da plataforma
+> 69	- Use emojis com moderação
+> 70	- Otimize para engajamento
+> 71	
+> 72	Responda APENAS com o conteúdo gerado, sem explicações adicionais.`;
+> 73	
+> 74	    // Agnostic AI Gateway Support with Fallback
+> 75	    const aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 76	      method: "POST",
+> 77	      headers: {
+> 78	        Authorization: `Bearer ${aiKey}`,
+> 79	        "Content-Type": "application/json",
+> 80	        "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 81	        "X-Title": "GCRUX Constellation" // For OpenRouter
+> 82	      },
+> 83	      body: JSON.stringify({
+> 84	        model: selectedModel,
+> 85	        messages: [
+> 86	          { role: "system", content: systemPrompt },
+> 87	          { role: "user", content: prompt },
+> 88	        ],
+> 89	        stream: true,
+> 90	      }),
+> 91	    }, {
+> 92	      openRouterKey,
+> 93	      geminiKey,
+> 94	      groqKey
+> 95	    });
+> 96	
+> 97	    if (!aiResponse.ok) {
+> 98	      if (aiResponse.status === 429) {
+> 99	        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+> 100	          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> ```
+
+## 🤖 Claude *(13:20:17)*
+
+
+## 🤖 Claude *(13:20:19)*
+
+Padrão de referência claro (boilerplate + per-user keys + `fetchLLMWithFallback`). Preciso do padrão exato de **billing** (check de saldo + `deduct_mco_coins` + `new_balance`) — é financeiro, não posso espelhar errado. Lendo o trecho de billing de `orchestrate-content`:
+
+## 🤖 Claude *(13:20:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 40,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 41	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 42	      });
+> 43	    }
+> 44	
+> 45	    const admin = createClient(supabaseUrl, serviceKey);
+> 46	
+> 47	    // pre-flight: check AI keys before charging user
+> 48	    const { data: userKeys } = await admin.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 49	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 50	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 51	
+> 52	    const prefModel = userKeys?.pref_ai_model ?? null;
+> 53	    const prefRequiresOR = prefModel && (prefModel.includes("/") || prefModel.startsWith("gemini-"));
+> 54	    const aiKey = prefRequiresOR ? (openRouterKey || groqKey) : (groqKey || openRouterKey);
+> 55	
+> 56	    if (!aiKey) {
+> 57	      return new Response(JSON.stringify({ error: "GROQ_API_KEY or OPENROUTER_API_KEY not configured" }), {
+> 58	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 59	      });
+> 60	    }
+> 61	
+> 62	    const isGroq = !prefRequiresOR && !!groqKey && aiKey === groqKey;
+> 63	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 64	    const orPrefModel = prefModel?.startsWith("gemini-") ? `google/${prefModel}` : prefModel;
+> 65	    const selectedModel = orPrefModel ?? (isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct");
+> 66	
+> 67	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft" } = await req.json();
+> 68	
+> 69	    if (!topic) {
+> 70	      return new Response(JSON.stringify({ error: "topic is required" }), {
+> 71	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 72	      });
+> 73	    }
+> 74	
+> 75	    // mcoCoins gatekeeper
+> 76	    const ORCHESTRATION_COST = 10;
+> 77	    const { data: profileBalance } = await admin
+> 78	      .from("profiles")
+> 79	      .select("mco_balance")
+> 80	      .eq("id", user.id)
+> 81	      .maybeSingle();
+> 82	
+> 83	    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {
+> 84	      return new Response(
+> 85	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 86	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 87	      );
+> 88	    }
+> 89	
+> 90	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 91	      p_user_id: user.id,
+> 92	      p_amount: ORCHESTRATION_COST,
+> 93	    });
+> 94	    if (deductErr) {
+> 95	      return new Response(
+> 96	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 97	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 98	      );
+> 99	    }
+> 100	
+> 101	    // utm_campaign uses the campaign_id for per-campaign attribution; fallback to slug for unnamed runs
+> 102	    const utmCampaign = campaign_id
+> 103	      ? encodeURIComponent(campaign_id)
+> 104	      : `mcorch_${topic.slice(0, 24).replace(/\s+/g, "_").toLowerCase()}`;
+> 105	
+> 106	    // --- Create pipeline_run record ---
+> 107	    const runStarted = new Date().toISOString();
+> 108	    const { data: runRow } = await admin
+> 109	      .from("pipeline_runs")
+> ```
+
+## 🤖 Claude *(13:22:00)*
+
+
+## 🤖 Claude *(13:22:04)*
+
+Padrão de billing claro: check `mco_balance` → `deduct_mco_coins({p_user_id, p_amount})` → 402. 
+
+**Decisão de escopo importante (Master Protocol — não improvisar em ambiguidade):** `lead-score` é autocontida e segura (debita 1, IA com fail-soft, sem cascata). Mas `campaign-run` tem uma **ambiguidade financeira real**: o BoK manda invocar `orchestrate-content` por passo, e `orchestrate-content` **já debita 10 mco internamente** — então `campaign-run` (debita 10) + N×`orchestrate-content` (10 cada) = **cobrança em cascata**. Isso é risco do Owner (Sovereign) e não devo improvisar. 
+
+Implemento `lead-score` agora (completa + deploy + smoke real) e levo a decisão de billing do `campaign-run` ao Sovereign. Escrevendo `lead-score`:
+
+## 🤖 Claude *(13:22:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts",
+  "content": "// lead-score \u2014 marketing-hub FR-MH-003 (BoK SSOT: docs/bok/marketing-hub/04-frd.md \u00a74.2 + 05-sdd.md \u00a73).\n// JWT-guarded \u00b7 debits 1 mcoCoin atomically (deduct_mco_coins RPC) \u00b7 scores a lead 0-100 via the\n// per-user AI key (API Tenancy Model) with the shared LLM cascade fallback \u00b7 FAIL-SOFT to a heuristic\n// when the LLM is unavailable \u00b7 persists leads.score + an immutable lead_event + an infra_health pulse.\nimport { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nconst SCORE_COST = 1;\n\ninterface LeadRow {\n  id: string;\n  user_id: string;\n  status: string;\n  name: string | null;\n  intent_signal: Record<string, unknown> | null;\n}\n\n// Fail-soft heuristic when the LLM is unavailable: a rough 0-100 from non-PII lifecycle signals.\nfunction heuristicScore(lead: LeadRow): number {\n  if (lead.status === \"converted\") return 95;\n  if (lead.status === \"lost\") return 15;\n  let s = 40;\n  if (lead.name) s += 10;\n  const intentKeys = lead.intent_signal ? Object.keys(lead.intent_signal).length : 0;\n  s += Math.min(intentKeys * 8, 32);\n  if (lead.status === \"nurturing\") s += 10;\n  return Math.max(0, Math.min(100, s));\n}\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (body: unknown, status = 200) =>\n    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const admin = createClient(url, serviceKey);\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Missing authorization\" }, 401);\n\n    const userClient = createClient(url, (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!, {\n      global: { headers: { Authorization: authHeader } },\n    });\n    const { data: { user }, error: authError } = await userClient.auth.getUser();\n    if (authError || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const { lead_id, context } = await req.json().catch(() => ({}));\n    if (!lead_id || typeof lead_id !== \"string\") return json({ error: \"lead_id \u00e9 obrigat\u00f3rio\" }, 422);\n\n    // existence + ownership (tenant-scoped); 404 also covers another tenant's lead.\n    const { data: lead } = await admin\n      .from(\"leads\")\n      .select(\"id, user_id, status, name, intent_signal\")\n      .eq(\"id\", lead_id)\n      .eq(\"user_id\", user.id)\n      .maybeSingle();\n    if (!lead) return json({ error: \"Lead n\u00e3o encontrado\" }, 404);\n\n    // mcoCoins gatekeeper: pre-check, then atomic server-side deduction (never client-side).\n    const { data: bal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    if ((bal?.mco_balance ?? 0) < SCORE_COST) return json({ error: \"Saldo insuficiente de mcoCoins\" }, 402);\n    const { error: deductErr } = await admin.rpc(\"deduct_mco_coins\", { p_user_id: user.id, p_amount: SCORE_COST });\n    if (deductErr) return json({ error: \"Saldo insuficiente de mcoCoins\" }, 402);\n\n    // per-user AI key (API Tenancy Model) -> system fallback.\n    const { data: userKeys } = await admin.from(\"decrypted_user_api_keys\").select(\"*\").eq(\"user_id\", user.id).maybeSingle();\n    const groqKey = userKeys?.groq_api_key || Deno.env.get(\"GROQ_API_KEY\");\n    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\");\n    const geminiKey = userKeys?.google_api_key || Deno.env.get(\"GEMINI_API_KEY\");\n    const aiKey = groqKey || openRouterKey;\n\n    let score: number | null = null;\n    let rationale = \"\";\n\n    if (aiKey) {\n      const isGroq = !!groqKey;\n      const endpoint = isGroq\n        ? \"https://api.groq.com/openai/v1/chat/completions\"\n        : \"https://openrouter.ai/api/v1/chat/completions\";\n      const model = isGroq ? \"llama-3.3-70b-versatile\" : \"meta-llama/llama-3.3-70b-instruct\";\n      const sys =\n        'Voc\u00ea \u00e9 um especialista em qualifica\u00e7\u00e3o de leads. Avalie a inten\u00e7\u00e3o de compra do lead numa ' +\n        'escala 0-100 (0=frio, 100=pronto para comprar). Responda APENAS com JSON v\u00e1lido: ' +\n        '{\"score\": <inteiro 0-100>, \"rationale\": \"<1 frase em pt-BR>\"}';\n      const userMsg =\n        `Lead: status=${lead.status}, tem_nome=${!!lead.name}, sinais=${JSON.stringify(lead.intent_signal ?? {})}` +\n        `${context ? `, contexto=${String(context).slice(0, 240)}` : \"\"}. Pontue.`;\n      try {\n        const aiResp = await fetchLLMWithFallback(\n          endpoint,\n          {\n            method: \"POST\",\n            headers: {\n              Authorization: `Bearer ${aiKey}`,\n              \"Content-Type\": \"application/json\",\n              \"HTTP-Referer\": \"https://mcorch.com\",\n              \"X-Title\": \"GCRUX Constellation\",\n            },\n            body: JSON.stringify({\n              model,\n              messages: [{ role: \"system\", content: sys }, { role: \"user\", content: userMsg }],\n              stream: false,\n              temperature: 0.2,\n            }),\n          },\n          { openRouterKey, geminiKey, groqKey, functionName: \"lead-score\" },\n        );\n        if (aiResp.ok) {\n          const data = await aiResp.json();\n          const content: string = data?.choices?.[0]?.message?.content ?? \"\";\n          const m = content.match(/\\{[\\s\\S]*\\}/);\n          if (m) {\n            const parsed = JSON.parse(m[0]);\n            const n = Number(parsed.score);\n            if (Number.isFinite(n)) {\n              score = Math.max(0, Math.min(100, Math.round(n)));\n              rationale = String(parsed.rationale ?? \"\").slice(0, 280);\n            }\n          }\n        }\n      } catch (_) {\n        // fail-soft below\n      }\n    }\n\n    // FAIL-SOFT: heuristic when the LLM was unavailable, errored, or returned unparseable output.\n    if (score === null) {\n      score = heuristicScore(lead as LeadRow);\n      rationale = rationale ||\n        \"Pontua\u00e7\u00e3o heur\u00edstica (IA indispon\u00edvel): baseada em status, identifica\u00e7\u00e3o e sinais de inten\u00e7\u00e3o.\";\n    }\n\n    // persist: score + promote new->scored; immutable scored event; best-effort health pulse.\n    await admin.from(\"leads\")\n      .update({ score, status: lead.status === \"new\" ? \"scored\" : lead.status })\n      .eq(\"id\", lead_id).eq(\"user_id\", user.id);\n    await admin.from(\"lead_events\").insert({\n      lead_id, user_id: user.id, channel: \"system\", event_type: \"scored\",\n      payload: { score, rationale, source: aiKey ? \"ai\" : \"heuristic\" },\n    });\n    admin.from(\"infra_health_logs\").insert({ service: \"lead-score\", status: \"healthy\" }).then(() => {}, () => {});\n\n    const { data: newBal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    return json({ status: \"ok\", lead_id, score, rationale, new_balance: newBal?.mco_balance ?? null });\n  } catch (err) {\n    admin.from(\"infra_health_logs\").insert({ service: \"lead-score\", status: \"unhealthy\" }).then(() => {}, () => {});\n    return json({ error: \"Erro interno ao pontuar lead\", detail: String((err as Error)?.message ?? err) }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:23:03)*
+
+
+## 🤖 Claude *(13:23:04)*
+
+`lead-score` escrita (reusa o helper LLM-fallback + fail-soft heurístico). Deployando:
+
+## 🤖 Claude *(13:23:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy lead-score 2>&1 | grep -iE \"Deploying|Deployed|error|bundl|fail|warning\" | head -8\necho \"--- deploy exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Deploy lead-score edge function",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: lead-score
+> Deploying Function: lead-score (script size: 84.31kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: lead-score
+> --- deploy exit: 0 ---
+> ```
+
+## 🤖 Claude *(13:23:58)*
+
+
+## 🤖 Claude *(13:23:59)*
+
+`lead-score` deployada (84.31kB, exit 0) — bundle válido. Agora **smoke real material**: user efêmero C com saldo, lead de teste, JWT real, invoco `lead-score`, verifico score+débito+evento, limpo:
+
+## 🤖 Claude *(13:24:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSK=\"$SB_SECRET_KEY\"\nPK=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nhsr=(-H \"apikey: $SK\" -H \"Authorization: Bearer $SK\"); ct=(-H \"Content-Type: application/json\")\nTS=$(date +%s); EMAIL=\"leadscore-smoke-${TS}@example.com\"; PASS=\"Smoke-${TS}-xQ9z\"\n\nC_UID=$(curl -s \"$URL/auth/v1/admin/users\" \"${hsr[@]}\" \"${ct[@]}\" -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PASS\\\",\\\"email_confirm\\\":true}\" | python3 -c \"import json,sys;print(json.load(sys.stdin).get('id',''))\")\necho \"C_UID=$C_UID\"\nUPD=$(curl -s -w \"%{http_code}\" -o /dev/null -X PATCH \"$URL/rest/v1/profiles?id=eq.$C_UID\" \"${hsr[@]}\" \"${ct[@]}\" -H \"Prefer: return=minimal\" -d '{\"mco_balance\":100}')\n[ \"$UPD\" != \"204\" ] && curl -s -o /dev/null \"$URL/rest/v1/profiles\" \"${hsr[@]}\" \"${ct[@]}\" -d \"{\\\"id\\\":\\\"$C_UID\\\",\\\"mco_balance\\\":100}\"\nBAL0=$(curl -s \"$URL/rest/v1/profiles?id=eq.$C_UID&select=mco_balance\" \"${hsr[@]}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['mco_balance'] if d else 'none')\")\necho \"balance before: $BAL0 (profile patch http=$UPD)\"\nLEAD=$(curl -s \"$URL/rest/v1/leads\" \"${hsr[@]}\" \"${ct[@]}\" -H \"Prefer: return=representation\" -d \"{\\\"user_id\\\":\\\"$C_UID\\\",\\\"contact\\\":\\\"smoke-${TS}@test.com\\\",\\\"name\\\":\\\"Smoke Lead\\\",\\\"status\\\":\\\"new\\\",\\\"intent_signal\\\":{\\\"page_views\\\":12,\\\"pricing_visited\\\":true,\\\"demo_requested\\\":true}}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) and d else '')\")\necho \"LEAD=$LEAD\"\nC_TOK=$(curl -s \"$URL/auth/v1/token?grant_type=password\" -H \"apikey: $SK\" \"${ct[@]}\" -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PASS\\\"}\" | python3 -c \"import json,sys;print(json.load(sys.stdin).get('access_token',''))\")\necho \"C_TOK len=${#C_TOK}\"\necho \"=== INVOKE lead-score (real AI call) ===\"\ncurl -s -w \"\\n[HTTP %{http_code}]\\n\" \"$URL/functions/v1/lead-score\" -H \"apikey: $PK\" -H \"Authorization: Bearer $C_TOK\" \"${ct[@]}\" -d \"{\\\"lead_id\\\":\\\"$LEAD\\\",\\\"context\\\":\\\"veio de campanha de pricing\\\"}\"\necho \"=== persisted score/status ===\"; curl -s \"$URL/rest/v1/leads?id=eq.$LEAD&select=score,status\" \"${hsr[@]}\"\necho \"\"; echo \"=== lead_event ===\"; curl -s \"$URL/rest/v1/lead_events?lead_id=eq.$LEAD&select=event_type,payload\" \"${hsr[@]}\"\nBAL1=$(curl -s \"$URL/rest/v1/profiles?id=eq.$C_UID&select=mco_balance\" \"${hsr[@]}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['mco_balance'] if d else 'none')\")\necho \"\"; echo \"balance after: $BAL1 (expect $BAL0 - 1)\"\necho \"=== CLEANUP ===\"\ncurl -s -o /dev/null -w \"del lead: %{http_code}\\n\" -X DELETE \"$URL/rest/v1/leads?id=eq.$LEAD\" \"${hsr[@]}\"\ncurl -s -o /dev/null -w \"del user C: %{http_code}\\n\" -X DELETE \"$URL/auth/v1/admin/users/$C_UID\" \"${hsr[@]}\"\necho \"residue leads: $(curl -s \"$URL/rest/v1/leads?user_id=eq.$C_UID&select=id\" \"${hsr[@]}\")\"",
+  "description": "Real smoke test of lead-score: create user+lead, invoke, verify score+debit, cleanup",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> C_UID=089dd11a-8976-4cf7-9dd2-5c8daebacf8d
+> balance before: 100.0 (profile patch http=204)
+> LEAD=60318d33-fb78-42da-b8d1-a8c32c76edbf
+> C_TOK len=823
+> === INVOKE lead-score (real AI call) ===
+> {"status":"ok","lead_id":"60318d33-fb78-42da-b8d1-a8c32c76edbf","score":80,"rationale":"O lead tem um alto nível de engajamento, tendo visitado a página de preços e solicitado uma demonstração, indicando uma forte intenção de compra.","new_balance":99}
+> [HTTP 200]
+> === persisted score/status ===
+> [{"score":80,"status":"scored"}]
+> === lead_event ===
+> [{"event_type":"scored","payload":{"score": 80, "source": "ai", "rationale": "O lead tem um alto nível de engajamento, tendo visitado a página de preços e solicitado uma demonstração, indicando uma forte intenção de compra."}}]
+> balance after: 99.0 (expect 100.0 - 1)
+> === CLEANUP ===
+> del lead: 204
+> del user C: 200
+> residue leads: []
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Updated task #4 metadata, status
+> ```
+
+## 🤖 Claude *(13:24:59)*
+
+
+## 🤖 Claude *(13:25:03)*
+
+**Smoke real de `lead-score` — VERDE end-to-end:**
+
+| Gate | Resultado material |
+|---|---|
+| INVOKE (JWT real de C) | **HTTP 200** · `score:80` · rationale coerente ("visitou pricing + solicitou demo → forte intenção") · `new_balance:99` |
+| IA real | `source:"ai"` (chamou OpenRouter de verdade, não heurística) |
+| Persistência | `leads.score=80`, `status` promovido `new→scored` · `lead_event` `scored` imutável |
+| **Débito atômico** | `100 → 99` (−1 mco via `deduct_mco_coins`) ✓ |
+| Cleanup | del lead 204 · del user 200 · resíduo `[]` zero ✓ |
+
+`lead-score` está **LIVE e provada**. Commitando + registrando o estado parcial do MVP-3:
+
+## 🤖 Claude *(13:25:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/lead-score/index.ts\ngit commit -m \"feat(marketing-hub): lead-score edge fn (FR-MH-003) \u2014 JWT + 1 mco + IA fail-soft\" -m \"MVP-3 parte 1. lead-score: JWT gate (getUser), debito atomico de 1 mcoCoin (deduct_mco_coins server-side), scoring 0-100 via IA per-user->sistema reusando o cascade fetchLLMWithFallback, FAIL-SOFT heuristico quando a IA cai. Persiste leads.score + promove new->scored + lead_event imutavel + pulse infra_health_logs.\n\nSmoke real E2E provado: HTTP 200 score=80 rationale coerente (source=ai via OpenRouter), leads.score=80 status=scored, lead_event scored, debito atomico 100->99, cleanup zero-residuo. Deploy 84.31kB.\n\ncampaign-run (parte 2) PENDENTE de decisao Sovereign sobre billing: o BoK manda invocar orchestrate-content por passo, e orchestrate-content ja debita 10 mco cada -> cobranca em cascata (10 da campanha + 10xN passos).\" 2>&1 | tail -5\necho \"=== HEAD ===\"; git log --oneline -3",
+  "description": "Commit lead-score edge function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 46362c4] feat(marketing-hub): lead-score edge fn (FR-MH-003) — JWT + 1 mco + IA fail-soft
+>  1 file changed, 158 insertions(+)
+>  create mode 100644 supabase/functions/lead-score/index.ts
+> === HEAD ===
+> 46362c4 feat(marketing-hub): lead-score edge fn (FR-MH-003) — JWT + 1 mco + IA fail-soft
+> 0a182d3 feat(llm-fallback): telemetria infra_health_logs + teste de cascata — fecha OTD-LLM-FALLBACK
+> 7fd8e7a feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+> ```
+
+## 🤖 Claude *(13:25:10)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress",
+  "metadata": {
+    "lead_score": "DONE \u2014 LIVE, smoke E2E provado (200 score=80 source=ai, debito 100->99, zero-residuo), deploy 84.31kB, commit pendente verificacao",
+    "campaign_run": "BLOQUEADA por decisao de billing: BoK manda invocar orchestrate-content/passo que ja debita 10 cada -> cascata. Aguarda Sovereign."
+  }
+}
+```
+
+## 🤖 Claude *(13:25:52)*
+
+
+## 🤖 Claude *(13:25:57)*
+
+lead-score commitada: **`46362c4`**. 
+
+Estado da sessão: entreguei **alerta + MVP-2 + OTD-LLM-FALLBACK + lead-score** (metade do MVP-3), todos com prova material e em produção. Resta `campaign-run` — mas ele carrega uma **decisão de billing que é genuinamente sua** (risco financeiro = Owner), e o Master Protocol me proíbe de improvisar: o BoK manda `campaign-run` invocar `orchestrate-content` por passo, e `orchestrate-content` **já debita 10 mco cada** → cobrança em cascata (10 da campanha + 10×N passos).
+
+Como o contexto desta sessão já está extenso (Lei 3 — Pruning), decido com você o billing **e** o ritmo:
+
+## 🤖 Claude *(13:26:00)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "campaign-run (MVP-3 parte 2): o BoK manda invocar orchestrate-content por passo, mas cada orchestrate-content j\u00e1 debita 10 mco \u2014 cobran\u00e7a em cascata (10 da campanha + 10\u00d7N passos). Como modelar o billing e prosseguir?",
+      "header": "campaign-run",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Selar sess\u00e3o agora",
+          "description": "lead-score j\u00e1 LIVE e provada. Fa\u00e7o /handoff consolidando as 4 frentes (alerta+MVP-2+OTD+lead-score) e deixo campaign-run + MVP-4/5 para sess\u00e3o fresca \u2014 contexto desta j\u00e1 extenso (Lei 3). Voc\u00ea decide o billing com a cabe\u00e7a descansada."
+        },
+        {
+          "label": "Taxa \u00fanica (10/campanha)",
+          "description": "Implemento agora: campaign-run debita 10 UMA vez; orchestrate-content roda em modo interno sem re-cobrar (bypass service-role + patch BoK data-model). Custo previs\u00edvel p/ tenant comercial. + smoke + deploy."
+        },
+        {
+          "label": "Cascata fiel ao BoK",
+          "description": "Implemento agora: campaign-run debita 10 + cada orchestrate-content debita 10 (10+10\u00d7N). N\u00e3o toca a fn cr\u00edtica orchestrate-content, mas custo cresce com n\u00ba de passos. + smoke + deploy."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%

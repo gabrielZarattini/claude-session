@@ -8381,6 +8381,890 @@ Deixo o backtest **robusto**: muito mais histórico (1+ ano, atravessando vário
 
 Sigo montando a versão robusta do backtest + o detector de regime.
 
+## 👤 User *(13:09:33)*
+
+ok antes dos próximos passos preciso que você adote o protocolo shakehands que temos em /home/gcrUX/... procure pelo protocolo e copie para o nosso contexto, criando o handoff e handson para selar nossas sessões
+
+## 🤖 Claude *(13:09:55)*
+
+
+## 🤖 Claude *(13:09:56)*
+
+Entendido — você quer que eu encontre o **protocolo "shakehands"** em `/home/gcrUX/`, traga pro nosso contexto e crie o **handoff/handson** pra selar as sessões. Deixa eu localizar o protocolo primeiro:
+
+## 🤖 Claude *(13:09:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== acesso a /home/gcrUX ===\"; ls -la /home/gcrUX/ 2>&1 | head -40\necho \"\"\necho \"=== arquivos com nome shake/handoff/handson/protocol ===\"\nfind /home/gcrUX -maxdepth 5 \\( -iname \"*shake*\" -o -iname \"*handoff*\" -o -iname \"*handson*\" -o -iname \"*protocol*\" \\) 2>/dev/null | head -40",
+  "description": "Explore gcrUX home and search for shakehands protocol files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === acesso a /home/gcrUX ===
+> total 44
+> drwx--x--x  9 ubuntu ubuntu 4096 Apr 25 17:56 .
+> drwxr-xr-x 15 ubuntu ubuntu 4096 Jun  2 18:34 ..
+> drwxrwx---  3 ubuntu ubuntu 4096 Aug 21  2025 backups
+> -rwxrwx---  1 ubuntu ubuntu  182 Aug 21  2025 .bashrc
+> drwxrwxr-x  3 ubuntu ubuntu 4096 Apr 25 17:56 .claude
+> drwxrwxr-x  5 gcrUX  gcrUX  4096 May 13 23:57 htdocs
+> drwxrwx---  5 ubuntu ubuntu 4096 Apr 12 13:53 logs
+> -rwxrwx---  1 ubuntu ubuntu  675 Aug 21  2025 .profile
+> drwx------  2 ubuntu ubuntu 4096 Aug 21  2025 .ssh
+> drwxrwx---  2 ubuntu ubuntu 4096 Apr 12 13:53 tmp
+> drwxrwx---  2 ubuntu ubuntu 4096 Apr 12 13:53 .varnish-cache
+> 
+> === arquivos com nome shake/handoff/handson/protocol ===
+> /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md
+> /home/gcrUX/htdocs/constellation-orchestra/.agents/rules/handoff.md
+> /home/gcrUX/htdocs/constellation-orchestra/.agents/skills/shake-hands
+> /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handoff.md
+> /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md
+> /home/gcrUX/htdocs/constellation-orchestra/docs/processes/handoff-material-proof-audit.md
+> ```
+
+## 🤖 Claude *(13:10:07)*
+
+
+## 🤖 Claude *(13:10:07)*
+
+Encontrei — há um projeto `constellation-orchestra` com o protocolo. Vou ler o skill `shake-hands` e os comandos `handoff`/`handson` pra entender o protocolo antes de aplicá-lo:
+
+## 🤖 Claude *(13:10:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D=/home/gcrUX/htdocs/constellation-orchestra\necho \"=== skill shake-hands (conte\u00fado do dir) ===\"; ls -la \"$D/.agents/skills/shake-hands/\" 2>&1\necho \"\"; echo \"=== \u00e1rvore relevante ===\"; find \"$D/.agents/skills/shake-hands\" \"$D/.claude/commands\" -maxdepth 2 -type f 2>/dev/null\necho \"\"; echo \"=== tamanhos dos arquivos-chave ===\"; wc -l \"$D/HANDOFF.md\" \"$D/.claude/commands/handoff.md\" \"$D/.claude/commands/handson.md\" \"$D/.agents/rules/handoff.md\" \"$D/.agents/workflows/handoff.md\" \"$D/.agents/workflows/handson.md\" 2>&1",
+  "description": "List shake-hands skill and command files with sizes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === skill shake-hands (conteúdo do dir) ===
+> total 16
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Apr 25 20:39 .
+> drwxrwxr-x 10 ubuntu ubuntu 4096 May 22 23:23 ..
+> -rw-rw-r--  1 ubuntu ubuntu 7275 Apr 25 20:39 SKILL.md
+> 
+> === árvore relevante ===
+> /home/gcrUX/htdocs/constellation-orchestra/.agents/skills/shake-hands/SKILL.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/sync-mobile-branch.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/migration.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/bok-scribe.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/debug.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/edge.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/level-up.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/feature.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/audit.md
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md
+> 
+> === tamanhos dos arquivos-chave ===
+>   6417 /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md
+>    441 /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md
+>    124 /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md
+>     74 /home/gcrUX/htdocs/constellation-orchestra/.agents/rules/handoff.md
+>    172 /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handoff.md
+>    115 /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md
+>   7343 total
+> ```
+
+## 🤖 Claude *(13:10:23)*
+
+
+## 🤖 Claude *(13:10:23)*
+
+O núcleo é o `SKILL.md` do skill `shake-hands`. Vou ler ele + os comandos `handoff`/`handson` + os workflows pra entender o protocolo completo:
+
+## 🤖 Claude *(13:10:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.agents/skills/shake-hands/SKILL.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: shake-hands
+> 3	description: |
+> 4	  Continuity Protocol — automates session entry (handson) and exit (handoff).
+> 5	  Eliminates redundant context re-discovery and guarantees every session
+> 6	  persists its state to the Knowledge Mesh before closing.
+> 7	allowed-tools:
+> 8	  - Bash
+> 9	  - Read
+> 10	  - Edit
+> 11	  - Write
+> 12	triggers:
+> 13	  - /handson
+> 14	  - /handoff
+> 15	  - /bye
+> 16	  - "HANDOFF"
+> 17	---
+> 18	
+> 19	# ShakeHands Agent — Continuity Protocol
+> 20	
+> 21	Provides two symmetric commands: `handson` (enter) and `handoff` (exit).
+> 22	Together they form a deterministic state machine that makes every session
+> 23	stateless from the agent's perspective — all state lives in Supabase + HANDOFF.md.
+> 24	
+> 25	---
+> 26	
+> 27	## Command: `/handson`
+> 28	
+> 29	**Purpose:** Load full session context in < 10 seconds. Never re-discover from scratch.
+> 30	
+> 31	### Execution sequence
+> 32	
+> 33	```bash
+> 34	# 1. Read the single source of truth
+> 35	cat /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md
+> 36	
+> 37	# 2. Last 5 commits — understand recency
+> 38	git -C /home/gcrUX/htdocs/constellation-orchestra log --oneline -5
+> 39	
+> 40	# 3. Container health
+> 41	docker ps --filter "name=mcorch" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null \
+> 42	  || echo "[containers] docker not accessible from this shell"
+> 43	
+> 44	# 4. Pending migrations (not yet pushed)
+> 45	ls /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/ | tail -5
+> 46	
+> 47	# 5. Dirty working tree
+> 48	git -C /home/gcrUX/htdocs/constellation-orchestra status --short
+> 49	```
+> 50	
+> 51	### Output format
+> 52	
+> 53	```
+> 54	═══════════════════════════════════════════
+> 55	🤝 HANDSON — <ISO date>
+> 56	───────────────────────────────────────────
+> 57	Phase   : <current phase from HANDOFF.md>
+> 58	Last commit: <hash> <message>
+> 59	Containers: <names and statuses>
+> 60	Dirty files: <count>
+> 61	Next action: <first item from HANDOFF.md Next Steps>
+> 62	═══════════════════════════════════════════
+> 63	```
+> 64	
+> 65	### Rules
+> 66	
+> 67	- Do NOT read the file tree after running handson — trust HANDOFF.md.
+> 68	- If containers are unhealthy, print a warning but do NOT restart them automatically.
+> 69	- If there are dirty files, surface them as "uncommitted work from previous session".
+> 70	
+> 71	---
+> 72	
+> 73	## Command: `/handoff` (alias: `/bye`, trigger: "HANDOFF")
+> 74	
+> 75	**Purpose:** Seal the session — commit everything, inject into Knowledge Mesh,
+> 76	update HANDOFF.md, write memory files. Leaves zero orphaned state.
+> 77	
+> 78	### Execution sequence
+> 79	
+> 80	#### Phase 1 — Audit
+> 81	
+> 82	```bash
+> 83	# What changed this session?
+> 84	git -C /home/gcrUX/htdocs/constellation-orchestra diff --stat HEAD
+> 85	git -C /home/gcrUX/htdocs/constellation-orchestra status --short
+> 86	```
+> 87	
+> 88	#### Phase 2 — Granular commits
+> 89	
+> 90	Group dirty files by layer and commit each group separately:
+> 91	
+> 92	| Layer | File pattern | Commit prefix |
+> 93	|-------|-------------|---------------|
+> 94	| Database | `supabase/migrations/*.sql` | `feat(db):` |
+> 95	| Edge Functions | `supabase/functions/**` | `feat(edge):` |
+> 96	| Hooks | `src/hooks/**` | `feat(hooks):` |
+> 97	| Components | `src/components/**` | `feat(ui):` |
+> 98	| Scripts | `scripts/**` | `chore(scripts):` |
+> 99	| Docs | `*.md`, `HANDOFF.md` | `docs:` |
+> 100	
+> 101	If files span multiple layers, use the dominant layer prefix.
+> 102	Always append `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`.
+> 103	
+> 104	#### Phase 3 — Knowledge Mesh injection
+> 105	
+> 106	```bash
+> 107	source /home/gcrUX/htdocs/constellation-orchestra/.env
+> 108	
+> 109	SESSION_DATE=$(date -I)
+> 110	SESSION_SUMMARY="<one-paragraph summary of what was implemented this session>"
+> 111	
+> 112	# Insert session decision node
+> 113	RESPONSE=$(curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+> 114	  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 115	  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 116	  -H "Content-Type: application/json" \
+> 117	  -H "Prefer: return=representation" \
+> 118	  -d "{
+> 119	    \"node_type\": \"decision\",
+> 120	    \"name\": \"session-handoff-${SESSION_DATE}\",
+> 121	    \"content\": \"${SESSION_SUMMARY}\",
+> 122	    \"stability_score\": 1.0,
+> 123	    \"metadata\": {
+> 124	      \"agent\": \"claude-code\",
+> 125	      \"session_date\": \"${SESSION_DATE}\",
+> 126	      \"phase\": \"Gamma\",
+> 127	      \"files_changed\": \"<comma-separated list>\"
+> 128	    }
+> 129	  }")
+> 130	
+> 131	NODE_ID=$(echo "$RESPONSE" | python3 -c \
+> 132	  "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d['id'])" \
+> 133	  2>/dev/null)
+> 134	
+> 135	echo "Node injected: ${NODE_ID}"
+> 136	```
+> 137	
+> 138	#### Phase 4 — System milestone
+> 139	
+> 140	```bash
+> 141	source /home/gcrUX/htdocs/constellation-orchestra/.env
+> 142	
+> 143	curl -s -X POST "${SUPABASE_URL}/rest/v1/system_milestones" \
+> 144	  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 145	  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+> 146	  -H "Content-Type: application/json" \
+> 147	  -d "{
+> 148	    \"event_type\": \"session_sealed\",
+> 149	    \"event_description\": \"ShakeHands handoff — ${SESSION_DATE}. <summary>\",
+> 150	    \"metadata\": {
+> 151	      \"phase\": \"Gamma\",
+> 152	      \"agent\": \"claude-code\",
+> 153	      \"node_id\": \"${NODE_ID}\",
+> 154	      \"date\": \"${SESSION_DATE}\"
+> 155	    }
+> 156	  }"
+> 157	```
+> 158	
+> 159	#### Phase 5 — HANDOFF.md update
+> 160	
+> 161	- Update the task state table: mark completed items ✅, add new pending items.
+> 162	- Update the "Deploy Checklist" if new functions were created.
+> 163	- Add any new Technical Debt discovered.
+> 164	- Increment the "Phase" label if a phase boundary was crossed.
+> 165	
+> 166	#### Phase 6 — Memory files
+> 167	
+> 168	Write or update the relevant memory files under:
+> 169	`/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/`
+> 170	
+> 171	At minimum update `project_phase_*.md` with what changed.
+> 172	
+> 173	#### Phase 7 — GitHub Push (MANDATORY final step)
+> 174	
+> 175	```bash
+> 176	# Push all commits to remote — this is the final sealing act
+> 177	git push origin main
+> 178	
+> 179	# Verify remote is in sync
+> 180	git log --oneline origin/main..HEAD
+> 181	# Should output nothing (empty) — all commits are upstream
+> 182	```
+> 183	
+> 184	This step is **non-negotiable**. The handoff is not complete until `origin/main`
+> 185	reflects the sealed session state. No orphaned commits stay local.
+> 186	
+> 187	### Output format
+> 188	
+> 189	```
+> 190	═══════════════════════════════════════════
+> 191	🤝 HANDOFF — <ISO date>
+> 192	───────────────────────────────────────────
+> 193	Commits     : <N> (<prefixes used>)
+> 194	Nodes inject: <N> (IDs: <ids>)
+> 195	Milestones  : <N>
+> 196	Memory files: <N> updated
+> 197	HANDOFF.md  : ✅ updated
+> 198	GitHub push : ✅ origin/main synced
+> 199	═══════════════════════════════════════════
+> 200	Next session starts with: /handson
+> 201	═══════════════════════════════════════════
+> 202	```
+> 203	
+> 204	---
+> 205	
+> 206	## Error Handling
+> 207	
+> 208	| Error | Action |
+> 209	|-------|--------|
+> 210	| `curl: connection refused` | Supabase URL not set — skip injection, warn operator |
+> 211	| `git: nothing to commit` | Skip commit phase, proceed to injection |
+> 212	| `docker: not found` | Skip container check, note in handson output |
+> 213	| `python3: not found` | Use `jq` fallback: `jq -r '.[0].id'` |
+> 214	
+> 215	## Token Economy
+> 216	
+> 217	The entire handson sequence costs ≈ 500 tokens.
+> 218	The entire handoff sequence costs ≈ 1 000 tokens.
+> 219	Combined: replaces 5 000–15 000 tokens of blind re-discovery.
+> 220	Savings per session: 70–90 %.
+> 221	
+> ```
+
+## 🤖 Claude *(13:11:43)*
+
+
+## 🤖 Claude *(13:11:45)*
+
+Protocolo entendido (SKILL.md): **continuity protocol** com `/handson` (entrar: carregar contexto rápido do `HANDOFF.md` + git + containers) e `/handoff` (selar: commits por camada → injetar no Knowledge Mesh/Supabase → milestone → atualizar `HANDOFF.md` → memory files → push). Vou ver o formato dos comandos pra replicar fiel ao que você usa:
+
+## 🤖 Claude *(13:11:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# ShakeHands — Session Pick-Up Protocol v3
+> 2	
+> 3	Execute the ShakeHands /handson ritual for this project.
+> 4	
+> 5	> **v3 (2026-05-08):** Added BoK Gate enforcement per MCORCH Master Execution Protocol — alert when active module work has no sealed BoK suite at `docs/bok/<slug>/`.
+> 6	
+> 7	---
+> 8	
+> 9	## PRE-FLIGHT (execute ALL in parallel before reading anything)
+> 10	
+> 11	```bash
+> 12	git log --oneline -7                        # recent history + commit style
+> 13	git status --short                          # uncommitted changes
+> 14	git diff HEAD --stat                        # change scope
+> 15	npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+> 16	docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+> 17	docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+> 18	curl -s http://localhost:8001/api/v2/heartbeat  # Chroma API v2 health
+> 19	ls docs/bok/ 2>/dev/null                    # BoK suites disponíveis
+> 20	wc -l HANDOFF.md                            # total lines — drives the read-from-end offset
+> 21	```
+> 22	
+> 23	Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+> 24	- `HANDOFF.md` with `limit=71` → Task State header + FIRST ACTION FOR NEXT AGENT (sempre estável, contém summary da fase atual selada)
+> 25	- `HANDOFF.md` with `offset=<total_lines - 400>` `limit=400` → últimas 1-2 Records + Pending Actions + GraphRAG State + Infrastructure + Key Files (suffix sections always at the tail)
+> 26	- `CLAUDE.md` (architecture rules, data flow, key files — incluindo MCORCH Master Execution Protocol + Survival Laws link)
+> 27	- `.claude/context/sprint-priorities.md` (sprint goal, 4Cs snapshot, top gaps)
+> 28	- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
+> 29	
+> 30	> ⚠️ **Auditoria histórica de seals antigos:** usar `Read` com offset arbitrário em HANDOFF.md (fora do fluxo padrão de pickup). Ordering newest-first: seal mais antigo ≈ linha 2805, seal mais recente logo após linha 71. Cada `## <Phase> Record (YYYY-MM-DD)` marca um seal. Manter o Read em chunks ≤ 400 linhas para preservar budget de tokens.
+> 31	
+> 32	Also check for loose files in scratch/:
+> 33	```bash
+> 34	ls scratch/ 2>/dev/null && echo "⚠️ scratch/ has files — consider moving to .claude/scripts/db/" || echo "scratch/ clean ✅"
+> 35	```
+> 36	
+> 37	### BoK Gate check (v3 — MCORCH Master Execution Protocol)
+> 38	
+> 39	For each BoK suite in `docs/bok/<slug>/`, verify completeness:
+> 40	```bash
+> 41	for slug in $(ls docs/bok/ 2>/dev/null); do
+> 42	  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+> 43	  missing=()
+> 44	  for doc in "${required[@]}"; do
+> 45	    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+> 46	  done
+> 47	  [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK complete" || echo "⚠️ $slug — missing: ${missing[*]}"
+> 48	done
+> 49	```
+> 50	
+> 51	If the user mentions working on a **new module / complex feature / integration / architectural change**:
+> 52	- Check whether `docs/bok/<expected-slug>/` exists with all 9 docs.
+> 53	- If missing: surface in the **ALERTAS** section as a critical block per CLAUDE.md MCORCH Master Execution Protocol.
+> 54	- Recommend `/bok-scribe <idea summary>` before any code is written.
+> 55	
+> 56	---
+> 57	
+> 58	## BRIEF OUTPUT
+> 59	
+> 60	After gathering all context, produce a structured brief in **Portuguese (Brasil)**:
+> 61	
+> 62	```
+> 63	═══════════════════════════════════════════════════════════
+> 64	  HANDSON — <FASE SELADA> (<data do último seal>)
+> 65	═══════════════════════════════════════════════════════════
+> 66	
+> 67	🏁 ESTADO ATUAL
+> 68	  Fase selada: <nome da última fase — do Task State header>
+> 69	  Últimos commits:
+> 70	    <hash> — <mensagem>
+> 71	    <hash> — <mensagem>
+> 72	    <hash> — <mensagem>
+> 73	
+> 74	📂 MUDANÇAS PENDENTES
+> 75	  <lista de arquivos M/?? com descrição do que contém, ou "Worktree limpo ✅">
+> 76	
+> 77	🏗️ INFRA
+> 78	  mcorch_chroma:     <status> — Chroma API: <OK / ERRO>
+> 79	  mcorch_claude_mem: <status>
+> 80	  mega-brain-*:      <status resumido>
+> 81	
+> 82	🧠 KNOWLEDGE MESH
+> 83	  <totalNodes> nós · <totalEdges> arestas (fonte: HANDOFF.md GraphRAG State)
+> 84	  Top tipos: <milestone:N · architecture:N · decision:N ...>
+> 85	
+> 86	🔧 TYPESCRIPT
+> 87	  <"Zero erros ✅" ou lista dos erros críticos>
+> 88	
+> 89	📚 BoK SUITES (v3 — MCORCH Master Execution Protocol)
+> 90	  Sealed: <list of docs/bok/<slug>/ com 9 docs completos>
+> 91	  Incomplete: <slugs com docs faltando ou "nenhum">
+> 92	  Mesh seal nodes:
+> 93	    <slug> → <node_id> (stability X.XX)
+> 94	
+> 95	⚠️ **GATE alert:** se sessão tocar módulo significativo sem BoK selada,
+> 96	    listar como bloqueador crítico e sugerir /bok-scribe antes de qualquer commit.
+> 97	
+> 98	📌 SPRINT
+> 99	  Goal: <Sprint Goal de sprint-priorities.md, ou "⚠️ Sprint goal não definido — rode /audit">
+> 100	  Top gap: <Gap #1 da seção "Top 3 Gap Closures", ou "não definido">
+> 101	
+> 102	⚡ PRÓXIMOS PASSOS (prioridade)
+> 103	  1. <item de maior prioridade do Pending Actions — com contexto de por que é urgente>
+> 104	  2. <segundo item>
+> 105	  3. <terceiro item>
+> 106	
+> 107	⚠️ ALERTAS
+> 108	  <containers unhealthy, TS errors, uncommitted changes que conflitam, scratch/ com arquivos, ou "Nenhum alerta ✅">
+> 109	
+> 110	═══════════════════════════════════════════════════════════
+> 111	  Pronto para trabalhar. Aguardando direção.
+> 112	═══════════════════════════════════════════════════════════
+> 113	```
+> 114	
+> 115	---
+> 116	
+> 117	## Rules
+> 118	
+> 119	- **TypeScript errors → report immediately.** If there are TS errors, list them under ALERTAS. Do not start implementing new features until errors are resolved (unless the user explicitly asks to proceed despite errors).
+> 120	- **Unhealthy containers → report with triage.** Suggest the fix command if known (e.g., `docker compose restart mcorch-vector-engine` for chroma).
+> 121	- **Uncommitted changes → describe, do not commit.** Only describe what exists in the working tree; committing is the user's call.
+> 122	- **Keep the brief tight.** No padding. No repetition of CLAUDE.md architecture. The user already knows the architecture — they need the delta: what changed, what's broken, what's next.
+> 123	- **Pending Actions priority order:** CRITICAL (before first client) > NON-CRITICAL > Phase Zeta > Core v3 > Epsilon v9.
+> 124	- **Knowledge Mesh numbers:** use `GraphRAG State` section from HANDOFF.md as the source. Do not invent counts.
+> 125	
+> ```
+
+## 🤖 Claude *(13:11:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# ShakeHands — Session Seal Protocol v4
+> 2	
+> 3	Execute the ShakeHands /handoff ritual to seal this session.
+> 4	
+> 5	> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> 6	> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> 7	> node itself. Previously the badge was always 1-3 nodes behind.
+> 8	>
+> 9	> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> 10	> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> 11	> Execution Protocol. Blocks seal if significant module work lacks BoK.
+> 12	
+> 13	---
+> 14	
+> 15	## PRE-FLIGHT (execute ALL in parallel before anything else)
+> 16	
+> 17	```bash
+> 18	git status --short                          # inventory uncommitted changes
+> 19	git diff HEAD --stat                        # change scope
+> 20	git log --oneline -7                        # recent history + commit style
+> 21	npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+> 22	docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+> 23	docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+> 24	curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+> 25	```
+> 26	
+> 27	Read in parallel:
+> 28	- `HANDOFF.md` (current state, pending actions)
+> 29	- `CLAUDE.md` (architecture rules)
+> 30	- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+> 31	
+> 32	If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+> 33	
+> 34	---
+> 35	
+> 36	## PHASE 1 — SECURITY AUDIT
+> 37	
+> 38	Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+> 39	
+> 40	> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> 41	> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+> 42	
+> 43	```bash
+> 44	# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+> 45	git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+> 46	  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+> 47	
+> 48	# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+> 49	grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+> 50	  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+> 51	
+> 52	# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+> 53	grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+> 54	  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+> 55	
+> 56	# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+> 57	grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+> 58	
+> 59	# 1e. Sensitive data in console.log
+> 60	grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+> ```
+
+## 🤖 Claude *(13:14:03)*
+
+
+## 🤖 Claude *(13:14:04)*
+
+Protocolo entendido por completo. Vou **adaptá-lo ao nosso contexto** (TradeUX, sem o Supabase Knowledge Mesh / BoK do constellation — aqui a fonte da verdade é `HANDOFF.md` + memory files), criar os comandos `handson`/`handoff` e **selar esta sessão** com o `HANDOFF.md`. Primeiro a estrutura de pastas:
+
+## 🤖 Claude *(13:14:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "mkdir -p /home/gcrux-tradeux/.claude/commands /home/gcrux-tradeux/.claude/skills/shake-hands && echo \"dirs criados:\" && ls -ld /home/gcrux-tradeux/.claude /home/gcrux-tradeux/.claude/commands /home/gcrux-tradeux/.claude/skills/shake-hands",
+  "description": "Create .claude commands and skills directories"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dirs criados:
+> drwxrwxr-x 4 ubuntu ubuntu 4096 Jun  3 10:14 /home/gcrux-tradeux/.claude
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Jun  3 10:14 /home/gcrux-tradeux/.claude/commands
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Jun  3 10:14 /home/gcrux-tradeux/.claude/skills/shake-hands
+> ```
+
+## 🤖 Claude *(13:14:10)*
+
+
+## 🤖 Claude *(13:14:11)*
+
+Dirs prontos. Escrevendo o protocolo adaptado (SKILL + comandos `handson`/`handoff`) e o `HANDOFF.md` que sela esta sessão:
+
+## 🤖 Claude *(13:14:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/.claude/skills/shake-hands/SKILL.md",
+  "content": "---\nname: shake-hands\ndescription: |\n  Continuity Protocol for TradeUX \u2014 automates session entry (/handson) and exit\n  (/handoff). Eliminates redundant context re-discovery and guarantees every\n  session persists its state before closing. Adapted from constellation-orchestra;\n  here the source of truth is HANDOFF.md + memory files (no Supabase Knowledge Mesh).\nallowed-tools:\n  - Bash\n  - Read\n  - Edit\n  - Write\ntriggers:\n  - /handson\n  - /handoff\n  - /bye\n  - \"HANDOFF\"\n---\n\n# ShakeHands \u2014 TradeUX Continuity Protocol\n\nTwo symmetric commands \u2014 `handson` (enter) and `handoff` (exit) \u2014 that make every\nsession stateless from the agent's perspective: all durable state lives in\n`HANDOFF.md` + the memory files.\n\n## Context anchors (TradeUX)\n- **App / repo:** `/home/gcrux-tradeux/tradeux` \u2014 Docker stack `db + backend + frontend`,\n  published on `127.0.0.1:8090`, fronted by CloudPanel nginx (TLS) \u2192 Cloudflare \u2192\n  `tradeux.gcrux.com`.\n- **Source of truth:** `/home/gcrux-tradeux/HANDOFF.md` (what `/handson` reads first).\n- **Memory:** `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/`.\n- **Identity:** the shell runs as `ubuntu`; act as the site user with `sudo -n -u gcrux-tradeux`.\n- **Git push:** the repo is `gcrux-tradeux`-owned, but only `ubuntu`'s SSH key reaches\n  GitHub. Push as root with that key, then chown back (see `/handoff` Phase 5).\n- **NOT applicable here** (constellation-orchestra only): Supabase Knowledge Mesh,\n  BoK gates, Chroma, TypeScript/edge-functions, mcorch/mega-brain containers.\n\n## /handson \u2014 enter (load context in <10s, don't re-discover)\n1. `cat /home/gcrux-tradeux/HANDOFF.md`\n2. `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -7`\n3. `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short`\n4. `sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'`\n5. site check: `curl -s -m5 -o /dev/null -w \"%{http_code}\" https://tradeux.gcrux.com/`\n6. Read repo `CLAUDE.md` + memory `MEMORY.md`.\nThen emit the HANDSON brief (pt-BR). Trust HANDOFF.md \u2014 do not walk the file tree.\nSurface dirty files + open PRs; do NOT auto-restart containers or auto-commit.\n\n## /handoff \u2014 seal (commit \u2192 HANDOFF.md \u2192 memory \u2192 push; zero orphaned state)\n1. **Audit:** `git status --short` + `git diff HEAD --stat` (in the repo).\n2. **Secret scan (BLOCKS the seal):** grep the diff for `sk-\u2026`, `eyJ\u2026`, `SECRET_KEY`,\n   `ACCESS_KEY`, Binance/OpenRouter keys. `.env` must stay gitignored \u2014 keys NEVER committed.\n3. **Commit by layer**, each group separately (branch + PR):\n   | Layer | Pattern | Prefix |\n   |---|---|---|\n   | Backend (Beholder core \u2014 careful) | `backend/**` | `feat(backend):` / `fix(backend):` |\n   | Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |\n   | Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |\n   | Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |\n   | Docs | `*.md` | `docs:` |\n   Append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.\n4. **Update `HANDOFF.md`:** task table \u2705/pending, Next Steps, new tech debt, open PRs,\n   append a dated Session Record.\n5. **Update memory files** under `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/`\n   (+ `MEMORY.md` index).\n6. **Push (mandatory final act):**\n   `sudo env GIT_SSH_COMMAND='ssh -i /home/ubuntu/.ssh/id_ed25519' git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>`\n   then `sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux`.\n   Open the PR via the printed `pull/new/<branch>` URL (no `gh`/token on this box).\nEmit the HANDOFF seal box. The seal is complete only when `origin` reflects the work.\n\n## Error handling\n- `git: nothing to commit` \u2192 skip commit, still update HANDOFF.md + memory.\n- push auth fails \u2192 confirm you used ubuntu's key as root (`github-ssh-key-on-ubuntu` memory).\n- secret found in diff \u2192 STOP, scrub it, do not push.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/.claude/skills/shake-hands/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:14:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/.claude/commands/handson.md",
+  "content": "# ShakeHands \u2014 /handson (TradeUX session pick-up)\n\nExecute the ShakeHands `/handson` ritual. Load full context in <10s \u2014 trust\n`HANDOFF.md`, do not re-discover the file tree. (See skill `shake-hands`.)\n\n## PRE-FLIGHT (run in parallel)\n```bash\ncat /home/gcrux-tradeux/HANDOFF.md\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -7\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>/dev/null || docker ps --filter name=tradeux --format \"table {{.Names}}\\t{{.Status}}\"\ncurl -s -m5 -o /dev/null -w \"site https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/\n```\nRead in parallel: `HANDOFF.md`, repo `CLAUDE.md`, `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md`.\n\n## BRIEF OUTPUT (pt-BR)\n```\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  HANDSON \u2014 <fase> (<data do \u00faltimo seal>)\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\ud83c\udfc1 ESTADO     : <fase atual + 1 linha>\n\ud83e\uddfe COMMITS    : <3 \u00faltimos hash \u2014 msg>\n\ud83d\udc33 STACK      : db/backend/frontend <status> \u00b7 site <HTTP>\n\ud83d\udcc8 BASELINE   : automa\u00e7\u00f5es <ativas?> \u00b7 s\u00edmbolos <synced?> \u00b7 ordens <n>\n\ud83d\udd00 PRs ABERTOS: <lista \u2014 lembrete de merge>\n\ud83d\udcc2 PENDENTE   : <dirty files, ou \"worktree limpo\">\n\u26a1 PR\u00d3XIMO    : <1\u00ba item dos Next Steps do HANDOFF.md>\n\u26a0\ufe0f ALERTAS    : <stack unhealthy / dirty conflitante / PRs sem merge / ou \"nenhum\">\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  Pronto pra trabalhar. Aguardando dire\u00e7\u00e3o.\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n```\n\n## Rules\n- Trust HANDOFF.md; do NOT auto-restart unhealthy containers.\n- Dirty files \u2192 describe as \"trabalho n\u00e3o-commitado da sess\u00e3o anterior\"; do NOT commit.\n- Always surface open PRs as a merge reminder (we can't merge \u2014 no gh/token).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/.claude/commands/handson.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:14:46)*
+
+
+## 🤖 Claude *(13:15:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/.claude/commands/handoff.md",
+  "content": "# ShakeHands \u2014 /handoff (TradeUX session seal)\n\nExecute the ShakeHands `/handoff` ritual to seal this session. Leaves zero\norphaned state. (See skill `shake-hands`.)\n\n## PRE-FLIGHT\n```bash\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'\n```\n\n## PHASE 1 \u2014 SECRET SCAN (BLOCKS the seal on any finding)\n```bash\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\n```\n`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key\nshows up in the diff \u2192 STOP, scrub, do not push.\n\n## PHASE 2 \u2014 COMMIT BY LAYER (branch + PR)\n| Layer | Pattern | Prefix |\n|---|---|---|\n| Backend (Beholder core \u2014 careful) | `backend/**` | `feat(backend):` / `fix(backend):` |\n| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |\n| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |\n| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |\n| Docs | `*.md` | `docs:` |\n\nCommit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.\nDo it on a branch (we ship via PR, not direct-to-master).\n\n## PHASE 3 \u2014 UPDATE `HANDOFF.md`\nMark completed items \u2705, add pending, refresh Next Steps + Tech Debt + Open PRs,\nappend a dated **Session Record** paragraph.\n\n## PHASE 4 \u2014 MEMORY FILES\nUpdate `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)\nwith anything durable + non-obvious learned this session.\n\n> No Supabase Knowledge Mesh / system_milestones here \u2014 that's constellation-orchestra.\n> HANDOFF.md + memory ARE our mesh.\n\n## PHASE 5 \u2014 PUSH (mandatory final act)\n```bash\nsudo env GIT_SSH_COMMAND=\"ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new\" \\\n  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux\n```\nSurface the printed `\u2026/pull/new/<branch>` URL \u2014 opening/merging the PR is the user's\naction (no `gh`/token on this box).\n\n## OUTPUT\n```\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  \ud83e\udd1d HANDOFF \u2014 <data ISO>\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCommits     : <N> (<prefixes>)  |  Branch: <branch>\nHANDOFF.md  : \u2705 atualizado\nMemory      : <N> arquivos\nPRs abertos : <urls \u2014 aguardando merge>\nPush        : <\u2705 origin sincronizado / N/A sem c\u00f3digo novo>\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  Pr\u00f3xima sess\u00e3o come\u00e7a com: /handson\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n```\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/.claude/commands/handoff.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:15:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "content": "# TradeUX \u2014 HANDOFF (single source of truth)\n\n> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.\n> Project: **TradeUX** \u2014 Beholder-based multi-coin Binance Spot bot + LLM agent (testnet).\n> Updated: **2026-06-03** \u00b7 Phase: **Validation (testnet)**\n\n## \u26a1 FIRST ACTION FOR NEXT AGENT\n1. **Merge the 2 open PRs** (gabrielZarattini/tradeux) \u2014 see Open PRs. The white-screen fix\n   runs on the server but is NOT in `master`; redeploying from master reintroduces the bug.\n2. Continue the **robust backtest + regime detector** (agreed next step) \u2014 see Next Steps.\n3. Sanity on `/handson`: stack up on 8090, baseline automations active, symbols synced.\n\n## \ud83c\udfc1 Current state (what's live)\n- **Stack DEPLOYED & healthy**: `tradeux-db/backend/frontend`. Chain: CloudPanel nginx (TLS) \u2192\n  Cloudflare \u2192 `127.0.0.1:8090` \u2192 frontend \u2192 backend \u2192 db. `https://tradeux.gcrux.com` loads,\n  login works. **502 resolved.** htdocs is intentionally empty (app runs via Docker).\n- **Frontend white-screen** (CRA\u2192Vite leftover `require()`) **fixed on server** (PR open).\n- **DB/schema**: 18 migrations / 6 seeds, all tables. **Symbols synced (1051)** \u2014 this was the\n  silent blocker of *all* trading. Auto-sync-on-boot added (PR).\n- **Binance**: testnet, BYOK keys in `.env` (seeded into Settings; AES at rest). Mainnet reachable.\n- **Baseline**: RSI 30/70 mean-reversion (BTCUSDT, MIN_NOTIONAL) \u2014 automations `id2`(buy<30) /\n  `id3`(sell>70) **ACTIVE/armed**. Stop-loss + OCO **validated on testnet** (OCO impl deferred).\n- **LLM agent**: `tradeux-agent` + `tradeux-mcp` set up. Provider OpenRouter, model\n  `nvidia/nemotron-3-super-120b-a12b:free` (best free w/ tool-calling), `ALLOW_TRADING=false`\n  (dry-run validated, 26 MCP tools). Runs via container on the `tradeux_tradeux` network.\n\n## \ud83d\udccb Task state\n| Item | Status |\n|---|---|\n| Deploy stack / fix 502 | \u2705 |\n| Frontend white-screen fix | \u2705 (PR open) |\n| Schema + symbol sync | \u2705 |\n| Auto-sync symbols on boot | \u2705 (PR open) |\n| Agent infra + dry-run | \u2705 |\n| Model selection (free, tool-capable) | \u2705 nemotron-3-super-120b:free |\n| RSI 30/70 baseline live | \u2705 |\n| Stop-loss / OCO validated (testnet) | \u2705 |\n| Backtest harness v1 (fee-adjusted, real data) | \u2705 |\n| Robust backtest (1y+, walk-forward) + regime detector | \u23f3 NEXT |\n| OCO integration into Beholder | \u23f8\ufe0f deferred (avoid hot-path surgery during validation) |\n\n## \ud83d\udd00 Open PRs (need merge on GitHub \u2014 agent can't merge: no gh/token)\n1. **`fix/frontend-vite-require-import`** \u2014 white-screen fix. **MERGE PRIORITY** (live on server, not in master).\n2. **`feat/auto-sync-symbols-on-boot`** \u2014 auto-sync symbols on first boot (setup self-complete).\n\n## \ud83c\udfaf Validation plan \u2192 500k (testnet)\n- 500k = **stress/validation milestone, NOT profitability** (testnet fills synthetic; resets ~monthly \u2014 persist metrics our side).\n- **Backtest v1** (real BTC/ETH 1h, ~83d, fee 0.1%/side): **mean-reversion RSI 30/70 had positive\n  net expectancy** (BTC +0.48%/trade, ETH +1.35%/trade) and beat buy&hold; **trend/breakout LOST**\n  (whipsaw in a choppy/range regime). \u26a0\ufe0f tiny sample (7\u20139 trades) = low confidence; regime-dependent.\n- **The edge is regime detection + strategy switching** \u2014 the agent's job. HFT / \"90% accuracy\" /\n  exponential ideas are mathematically dead: typical 1m move ~0.04\u20130.08% < 0.20% round-trip fee.\n- **Next steps:** (a) robust backtest \u2014 1y+ history, walk-forward train/test, param sensitivity, more\n  symbols \u2014 to separate edge from luck; (b) regime classifier (ADX / realized-vol) so the agent picks\n  mean-reversion (range) vs trend (trend); (c) keep RSI baseline running on testnet (regime-appropriate now).\n\n## \ud83e\uddf1 Technical debt / gotchas\n- **Git push:** repo is `gcrux-tradeux`-owned but only `ubuntu`'s SSH key reaches GitHub \u2192 push as\n  root with that key + chown back (memory: `github-ssh-key-on-ubuntu`).\n- **Repo `CLAUDE.md`** has an uncommitted working-tree edit (auto-added language rule + a mangled\n  `+`\u2192`-` bullet) \u2014 NOT authored intentionally, NOT in any PR. Clean it up.\n- **OCO:** validated (`POST /api/v3/order/oco`; cancel `DELETE /api/v3/orderList`) but\n  `node-binance-api` 0.13.5 has **no OCO** \u2192 would need an `exchange.js privateCall` impl + Beholder\n  wiring (after-buy). Deferred by decision (don't surgery the hot-path engine during validation).\n- **Free model rate limits:** nemotron:free 429s intermittently; the agent loop tolerates (skips a\n  cycle). Sonnet 4.6 (paid, ~pennies/cycle) is materially better for serious validation.\n- **Bloated agent context:** `get_wallet` dumps dozens of testnet junk coins (~193k tokens) \u2192\n  overflows 131k-ctx models. Trim `get_wallet` (future MCP/backend tweak).\n- **Testnet SAPI** not supported (wallet/withdraw SAPI calls 404 on testnet).\n\n## \ud83d\udd11 Key paths & commands\n- Repo: `/home/gcrux-tradeux/tradeux` \u00b7 shell is `ubuntu`, act as site user via `sudo -n -u gcrux-tradeux`.\n- Deploy: `cd ~/tradeux && ./setup.sh` (= `make up`); `make logs/ps/restart/down`; `make nuke` wipes the DB volume.\n- Backend API (local origin): `http://127.0.0.1:8090/api` \u00b7 panel login `gabrielcall@gmail.com` (pwd in `.env`).\n- Agent (container on tradeux network, reaches `backend:3001`):\n  `docker run --rm --network tradeux_tradeux -v /home/gcrux-tradeux/tradeux:/work -w /work/tradeux-agent node:22-alpine sh -c 'set -a; . .env; set +a; node src/index.js --check'`\n  (swap `--check`\u2192`--once`/no-flag), then `sudo chown -R gcrux-tradeux:gcrux-tradeux ~/tradeux`.\n- Memory: `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/`.\n\n---\n\n## \ud83d\udcdd Session Records (newest last)\n\n### Record \u2014 2026-06-03 (Validation phase)\nDeployed the full TradeUX Docker stack and cleared the 502 (htdocs is intentionally empty; app is\nDocker on 8090 behind CloudPanel+Cloudflare). Fixed the CRA\u2192Vite white-screen (`require`\u2192`import` in\n`OrdersService.js`, PR) and verified login + dashboard in a real browser via Claude-in-Chrome (testnet\nwallet ~US$174k, live BTC chart, App WS connected, zero console errors). Stood up the LLM agent\n(`tradeux-agent`/`tradeux-mcp`, OpenRouter) \u2014 validated the MCP bridge (26 `tradeux_*` tools) + a\ndry-run cycle; compared free tool-capable models and picked `nemotron-3-super-120b:free`. Found and\nfixed the silent **symbols-not-synced** blocker (synced 1051; shipped auto-sync-on-boot PR). Built and\nactivated the **RSI 30/70 baseline**; validated **stop-loss** and **OCO** on testnet (OCO integration\ndeferred \u2014 avoids surgery on Beholder's hot-path engine during validation). Built a **fee-adjusted\nbacktest harness** on real Binance data \u2014 mean-reversion beat trend/breakout in the recent choppy\nregime (small sample; regime-dependent). Adopted the **ShakeHands** continuity protocol (this doc +\n`/handson`,`/handoff` under `.claude/`). Two PRs open awaiting merge. Next: robust backtest +\nregime classifier for the agent.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/HANDOFF.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:16:00)*
+
+
+## 🤖 Claude *(13:16:01)*
+
+Protocolo adaptado e o `HANDOFF.md` (selo desta sessão) escritos. Registrando na memória + **demonstrando o `/handson`** (provar que o ritual carrega o contexto):
+
+## 🤖 Claude *(13:16:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/shakehands-protocol.md",
+  "content": "---\nname: shakehands-protocol\ndescription: TradeUX adopted the ShakeHands continuity protocol \u2014 /handson (load context) + /handoff (seal session); HANDOFF.md is the source of truth\nmetadata:\n  type: reference\n---\n\nTradeUX adopted the **ShakeHands continuity protocol** (ported/adapted from `gcrUX`'s `constellation-orchestra`, `/home/gcrUX/htdocs/constellation-orchestra/.agents/skills/shake-hands/`).\n\n- **Source of truth:** `/home/gcrux-tradeux/HANDOFF.md` \u2014 read it FIRST each session.\n- **Protocol files (our context):** `/home/gcrux-tradeux/.claude/skills/shake-hands/SKILL.md` + `/home/gcrux-tradeux/.claude/commands/handson.md` + `handoff.md`.\n- **`/handson`** (enter): `cat HANDOFF.md` + `git log -7` + `docker compose ps` + site curl + read repo CLAUDE.md & memory \u2192 emit a pt-BR brief. Trust HANDOFF.md, don't re-walk the tree.\n- **`/handoff`** (seal): secret-scan (blocks) \u2192 commit by layer on a branch (PR) \u2192 update HANDOFF.md \u2192 update these memory files \u2192 push as root with ubuntu's key + chown back.\n- **Adaptation:** NO Supabase Knowledge Mesh / BoK gates / Chroma / TS checks (those are constellation-orchestra-only). Here `HANDOFF.md` + memory ARE the mesh.\n\nRelated: [[tradeux-deploy-topology]], [[github-ssh-key-on-ubuntu]], [[tradeux-agent-500k-validation]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/shakehands-protocol.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:16:11)*
+
+
+## 🤖 Claude *(13:16:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Agent 500k testnet validation](tradeux-agent-500k-validation.md) \u2014 goal/state for validating methods + LLM agent on testnet; how to run the agent (container on tradeux network)",
+  "new_string": "- [Agent 500k testnet validation](tradeux-agent-500k-validation.md) \u2014 goal/state for validating methods + LLM agent on testnet; how to run the agent (container on tradeux network)\n- [ShakeHands protocol](shakehands-protocol.md) \u2014 session continuity: /handson loads HANDOFF.md state, /handoff seals it; HANDOFF.md at ~/HANDOFF.md is the source of truth"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:16:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== arquivos do protocolo criados ===\"\nls -la /home/gcrux-tradeux/HANDOFF.md /home/gcrux-tradeux/.claude/commands/ /home/gcrux-tradeux/.claude/skills/shake-hands/\necho \"\"\necho \"============ DEMO /handson (pre-flight) ============\"\necho \"-- HANDOFF.md (cabe\u00e7alho) --\"; sed -n '1,6p' /home/gcrux-tradeux/HANDOFF.md\necho \"\"; echo \"-- \u00faltimos commits --\"; sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -5\necho \"\"; echo \"-- stack --\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps --format \"table {{.Service}}\\t{{.Status}}\"'\necho \"\"; echo \"-- site --\"; curl -s -m6 -o /dev/null -w \"https://tradeux.gcrux.com -> HTTP %{http_code}\\n\" https://tradeux.gcrux.com/\necho \"\"; echo \"-- worktree --\"; sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short | head",
+  "description": "Update memory index and demo the handson pre-flight"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do protocolo criados ===
+> -rw-rw-r-- 1 ubuntu ubuntu 6948 Jun  3 10:15 /home/gcrux-tradeux/HANDOFF.md
+> 
+> /home/gcrux-tradeux/.claude/commands/:
+> total 16
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Jun  3 10:15 .
+> drwxrwxr-x 4 ubuntu ubuntu 4096 Jun  3 10:14 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 3322 Jun  3 10:15 handoff.md
+> -rw-rw-r-- 1 ubuntu ubuntu 2291 Jun  3 10:14 handson.md
+> 
+> /home/gcrux-tradeux/.claude/skills/shake-hands/:
+> total 12
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Jun  3 10:14 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 Jun  3 10:14 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 3999 Jun  3 10:14 SKILL.md
+> 
+> ============ DEMO /handson (pre-flight) ============
+> -- HANDOFF.md (cabeçalho) --
+> # TradeUX — HANDOFF (single source of truth)
+> 
+> > ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> > Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (testnet).
+> > Updated: **2026-06-03** · Phase: **Validation (testnet)**
+> 
+> 
+> -- últimos commits --
+> 91c933e feat(backend): auto-sync de simbolos no primeiro boot
+> 3237236 fix(frontend): troca require() por import ESM em OrdersService
+> 590a802 TradeUX: deploy + MCP + agente LLM + testnet + seguranca (#8)
+> d355541 Adiciona CLAUDE.md com arquitetura e decisoes de deploy
+> de6bf66 Deploy atras de proxy reverso (CloudPanel/Cloudflare) + Supabase local
+> 
+> -- stack --
+> SERVICE    STATUS
+> backend    Up 10 hours
+> db         Up 12 hours (healthy)
+> frontend   Up 12 hours
+> 
+> -- site --
+> https://tradeux.gcrux.com -> HTTP 200
+> 
+> -- worktree --
+>  M CLAUDE.md
+> ```
+
+## 🤖 Claude *(13:16:45)*
+
+
+## 🤖 Claude *(13:16:58)*
+
+Pronto — **protocolo ShakeHands adotado e adaptado ao TradeUX, e esta sessão selada.** O `/handson` já foi demonstrado funcionando (carregou HANDOFF.md + commits + stack saudável + site 200 + worktree).
+
+## O que ficou no nosso contexto
+```
+/home/gcrux-tradeux/
+├── HANDOFF.md                          ← fonte da verdade (selo desta sessão)
+└── .claude/
+    ├── skills/shake-hands/SKILL.md     ← o protocolo (adaptado: sem Supabase Mesh/BoK)
+    └── commands/
+        ├── handson.md                  ← /handson (entrar: carregar estado em <10s)
+        └── handoff.md                  ← /handoff (selar: scan→commit/PR→HANDOFF→memory→push)
+```
++ memory `shakehands-protocol.md` (indexado). *(Os comandos `/handson` e `/handoff` ficam disponíveis quando o Claude Code roda a partir de `/home/gcrux-tradeux` — pode pedir um reload da sessão pra registrá-los.)*
+
+Adaptações ao nosso contexto: tirei o que era só do `constellation-orchestra` (Knowledge Mesh/Supabase, BoK gates, Chroma, TypeScript) e ancorei nos nossos caminhos (repo Docker em `~/tradeux`, push com a chave do `ubuntu`, memory dir, baseline/testnet). Aqui **`HANDOFF.md` + memory SÃO a mesh**.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-03
+───────────────────────────────────────────────────
+Fase        : Validation (testnet)
+Commits     : 0 novos (código já está nos 2 PRs)
+HANDOFF.md  : ✅ criado (estado completo + Session Record)
+Memory      : ✅ +1 (shakehands-protocol) + índice
+Stack       : db(healthy)/backend/frontend Up · site HTTP 200
+PRs abertos : 2 — fix/frontend-vite-require-import · feat/auto-sync-symbols-on-boot
+Worktree    : ⚠️ M CLAUDE.md (alteração não-autorada de antes — limpar)
+Push        : N/A (sem código novo; os 2 PRs já estão no remoto)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+A partir de agora, toda sessão **abre com `/handson`** (carrega o estado sem redescobrir) e **fecha com `/handoff`** (sela: commits por camada em PR, atualiza o `HANDOFF.md` + memory, e dá push). Os 2 PRs continuam te esperando no GitHub pra merge — está tudo registrado no `HANDOFF.md` como **primeira ação da próxima sessão**.
+
+Quando quiser, retomamos o **próximo passo técnico** (backtest robusto + detector de regime) — é só dar o `/handson` ou mandar seguir.
+
+## 👤 User *(13:24:38)*
+
+agora precisamos de um agente de QA e um Tech Leads para aprovar as PRs
+
+## 🤖 Claude *(13:27:20)*
+
+
+## 🤖 Claude *(13:27:22)*
+
+Faz sentido — antes de mergear, as PRs precisam passar por **QA** (funciona? quebra algo?) e **Tech Lead** (qualidade/risco/aprovação). Vou criar esses dois agentes como papéis reutilizáveis **e** já colocá-los pra revisar/aprovar os 2 PRs abertos agora.
+
+Criando o diretório de agentes e **disparando QA + Tech Lead em paralelo** pra revisar os 2 PRs (eles leem os diffs + o contexto do HANDOFF):
+
+## 🤖 Claude *(13:27:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "mkdir -p /home/gcrux-tradeux/.claude/agents && echo \"ok: /home/gcrux-tradeux/.claude/agents\"",
+  "description": "Create the agents directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ok: /home/gcrux-tradeux/.claude/agents
+> ```
+
+## 🤖 Claude *(13:27:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review of the 2 open PRs",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a SENIOR QA ENGINEER doing a pre-merge review of 2 open pull requests for the **TradeUX** project. TradeUX = a Beholder-based Binance Spot trading bot: Node/Express + Sequelize backend, Vite/React frontend, Docker stack (db+backend+frontend), plus an LLM agent. This is money/order-handling code \u2014 be rigorous and skeptical. Keep exploration MEDIUM (the diffs are small; don't over-spelunk).\n\nSTEP 1 \u2014 Load context (read these):\n- `/home/gcrux-tradeux/HANDOFF.md` (project state, gotchas, the deploy chain, testnet)\n- `/home/gcrux-tradeux/tradeux/CLAUDE.md` (architecture/conventions; note: comments are pt-BR)\n\nSTEP 2 \u2014 Read the two PR diffs (run these):\n- PR1 (white-screen fix): `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' show 3237236`\n- PR2 (auto-sync symbols on boot): `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' show 91c933e`\n  Also read the FULL new file for PR2: `/home/gcrux-tradeux/tradeux/backend/src/controllers/symbolsController.js` and the boot file `/home/gcrux-tradeux/tradeux/backend/src/server.js`.\n\nKnown test status (factor in, but verify the REASONING yourself \u2014 don't just trust it):\n- PR1 was verified in a real browser: login + dashboard render, zero console errors, the old `Uncaught ReferenceError: require is not defined` is gone.\n- PR2: backend was rebuilt, boots clean (~3s), and the auto-sync correctly SKIPS when symbols are already synced (1051 present) \u2014 it did NOT re-sync or break boot.\n\nSTEP 3 \u2014 For EACH PR, assess like a QA who can block a release: does it actually do what it claims? Edge cases, regressions, failure modes, idempotency, race conditions, error handling, and what you would TEST to be confident. Specifically probe PR2: what if there are 0 settings? settings without keys (BYOK blank)? Binance unreachable at boot? does `syncSymbolsIfEmpty` correctly detect \"only the placeholder seed (stepSize null)\" vs \"real symbols\"? could it ever wipe/re-sync 1051 symbols unintentionally? is it non-fatal to boot?\n\nOUTPUT (concise, structured, in Brazilian Portuguese):\n```\n## PR1 \u2014 fix/frontend-vite-require-import\nVEREDITO: PASS | PASS COM RESSALVAS | FAIL\nAchados: [cr\u00edtico/m\u00e9dio/nit] ...\nTestes que eu rodaria: ...\n\n## PR2 \u2014 feat/auto-sync-symbols-on-boot\nVEREDITO: ...\nAchados: ...\nTestes que eu rodaria: ...\n\n## QA \u2014 conclus\u00e3o: mergear ambos? segurar algum? por qu\u00ea.\n```\nBe concrete. Don't rubber-stamp; if it's clean, say so crisply. Your final message IS the report (no preamble)."
+}
+```
+
+## 🤖 Claude *(13:27:49)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech Lead review of the 2 open PRs",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a PRAGMATIC SENIOR TECH LEAD / code owner doing the merge-decision review of 2 open pull requests for the **TradeUX** project (Beholder-based Binance Spot bot: Node/Express + Sequelize backend, Vite/React frontend, Docker; plus an LLM agent). You decide whether each PR is mergeable. Keep exploration MEDIUM (small diffs).\n\nSTEP 1 \u2014 Context:\n- `/home/gcrux-tradeux/HANDOFF.md` (state, tech debt, deploy chain, the git-push credential nuance)\n- `/home/gcrux-tradeux/tradeux/CLAUDE.md` (architecture: routers\u2192controllers\u2192repositories\u2192models; beholder.js is the stateful hot-path engine; pt-BR comments)\n\nSTEP 2 \u2014 Read the diffs:\n- PR1 (white-screen fix): `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' show 3237236`\n- PR2 (auto-sync symbols on boot): `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' show 91c933e`\n  Read the full new `backend/src/controllers/symbolsController.js` and the change in `backend/src/server.js`.\n\nSTEP 3 \u2014 Evaluate each PR as the merge gatekeeper:\n- Design/architecture fit (does PR2's extraction of `syncSymbolsWith` + `syncSymbolsIfEmpty` + the `server.js` boot hook respect the layering and not bloat the hot path? PR1 \u2014 is `import` the right ESM fix?).\n- Maintainability / readability / convention adherence (pt-BR comments, module structure).\n- RISK + blast radius: does anything touch `beholder.js` or order/money flow? PR2 runs at BOOT and can hit the network (Binance) + delete/insert the symbols table \u2014 is the failure mode safe (non-fatal, idempotent, no accidental wipe)? PR1 is frontend-only.\n- Security: any secret committed? `.env` still gitignored? (PR2 reads decrypted settings \u2014 does it ever log/leak keys?).\n- Backward compatibility (does the existing `POST /symbols/sync` route still behave identically after the refactor?).\n- Be pragmatic: small, well-scoped, reversible changes should be APPROVED without bikeshedding; flag real risks clearly and separate must-fix from nice-to-have.\n\nOUTPUT (concise, structured, Brazilian Portuguese):\n```\n## PR1 \u2014 fix/frontend-vite-require-import\nVEREDITO: APPROVE | APPROVE COM SUGEST\u00d5ES | REQUEST CHANGES | BLOCK\nRacional: ...\nMust-fix: ... | Nice-to-have: ...\n\n## PR2 \u2014 feat/auto-sync-symbols-on-boot\nVEREDITO: ...\nRacional: ...\nMust-fix: ... | Nice-to-have: ...\n\n## Tech Lead \u2014 decis\u00e3o de merge: (qual mergeia, ordem, condi\u00e7\u00f5es)\n```\nYour final message IS the review (no preamble)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Everything checks out. The seed placeholder confirms the sentinel: it inserts `BTCBUSD` with **no `stepSize`** field (so `stepSize` is null), which is exactly what PR2\'s idempotency filter `current.filter(s => s.stepSize)` keys on — correct and robust. `exchangeInfo()` is a public endpoint but `exchange.js` still requires `accessKey`/`secretKey` to construct, and the guard ensures both are present (route path uses `getDefaultSettings` → `getSettingsDecrypted` which decrypts `secretKey`; PR2 path uses `getSettingsDecrypted(DEFAULT_SETTINGS_ID)` directly — same decryption, so `secretKey` is properly decrypted in both paths).\n\nOne last correctness check on the **backward-compat** of the refactored route: original `syncSymbols` called `getSettingsDecrypted(res.locals.token.id)`; refactored version does the same then delegates to `syncSymbolsWith(settings)`. The only behavioral difference is `favoriteSymbols` is now computed inside `syncSymbolsWith` (it always was) and `res.locals` is no longer touched inside the core — identical output, still returns `201`. Confirmed identical.\n\nI have everything needed. Writing the review.\n\n---\n\n## PR1 — fix/frontend-vite-require-import\n**VEREDITO: APPROVE**\n\n**Racional:** Correção de uma linha, cirúrgica e correta. `require(\'./ExchangeService\')` é resíduo de CommonJS da migração CRA→Vite; no bundle ESM do Vite `require` é `undefined`, o módulo quebra no load e derruba o app inteiro (tela branca / `ReferenceError: require is not defined`). A troca por `import { STOP_TYPES } from \'./ExchangeService\'` no topo é o fix ESM idiomático e idêntico ao resto do arquivo (que já usa `import axios from \'./BaseService\'`). Frontend-only, blast radius zero no backend/hot-path, sem `beholder.js`, sem fluxo de ordem/dinheiro, sem segredos. `STOP_TYPES` é named export estático, então hoisting do `import` não muda semântica. Reversível trivialmente. É a **prioridade de merge** segundo o HANDOFF: o fix está vivo no servidor mas não está em `master` — redeploy de master reintroduz o bug.\n\n**Must-fix:** nenhum. | **Nice-to-have:** confirmar que `ExchangeService.js` realmente exporta `STOP_TYPES` como named export (alta confiança de que sim, dado o padrão de uso — a build do Vite no CI quebraria caso contrário, o que serve de rede de segurança).\n\n## PR2 — feat/auto-sync-symbols-on-boot\n**VEREDITO: APPROVE COM SUGESTÕES**\n\n**Racional:** Boa engenharia e respeita o layering (controller→repository→`utils/exchange`; não toca routers/models nem `beholder.js`). A extração de `syncSymbolsWith(settings)` separa corretamente o núcleo reutilizável do wrapper HTTP, e a rota `POST /symbols/sync` permanece **100% backward-compatible**: continua usando `getSettingsDecrypted(res.locals.token.id)` e retornando `201`; a única mudança é delegar o miolo (incl. cálculo de `favoriteSymbols`, que já vivia ali). O hook de boot está no lugar certo — **depois** de `app.listen`/WS/`appEm.init`, fora do hot-path, e não bloqueia a subida do servidor.\n\nOs três pontos de risco foram tratados adequadamente:\n- **Idempotência:** sentinela `current.filter(s => s.stepSize)` — confirmei no seed `20210904192101-symbol-default.js` que o placeholder `BTCBUSD` é inserido **sem** `stepSize` (null). Logo, em setup já sincronizado o auto-sync é pulado; sem wipe acidental da tabela real.\n- **Não-fatal:** todo o corpo está em `try/catch` com log; sem chaves ou Binance offline/geo-bloqueada, o boot segue. O `deleteAll()`+`bulkInsert()` só roda após `exchangeInfo()` ter sucesso, então uma falha de rede não deixa a tabela vazia (ordem correta: busca → delete → insert).\n- **Segurança:** sem segredo no diff (scan limpo; `.env` segue gitignored e não-trackeado). `logger(\'system\', ...)` recebe **somente strings de mensagem** e `err.message` — nunca o objeto `settings`, `accessKey` ou `secretKey`. Assinatura bate com `utils/logger.js`. Não há vazamento de chave.\n\nPonto de atenção real, não bloqueante: o guard `if (!settings || !settings.accessKey)`. Em `getSettingsDecrypted`, se a row do `DEFAULT_SETTINGS_ID` não existir, `getSettings` retorna `null` e a linha `settings.secretKey = crypto.decrypt(...)` **lança antes** do guard — ou seja, o ramo `!settings` é efetivamente dead code. Inofensivo (o `TypeError` cai no `try/catch` e vira log não-fatal), mas a mensagem amigável "BYOK pendente" não dispara nesse caso específico; só dispara quando a row existe mas `accessKey` está vazio. Aceitável para merge.\n\n**Must-fix:** nenhum (bloqueadores reais: nenhum). | **Nice-to-have:** (1) mover o guard de chave para antes de chamar `exchange.js`, e/ou checar também `settings.secretKey`, para a mensagem "BYOK pendente" cobrir o caso row-ausente; (2) a sincronização ainda usa a settings do `DEFAULT_SETTINGS_ID` — coerente com o boot single-tenant atual, deixar comentado se multi-tenant entrar no roadmap; (3) cosmético: o arquivo sem newline final (`\\ No newline at end of file`).\n\n## Tech Lead — decisão de merge\n**Mergeia os dois.** Ambos estão pequenos, bem-escopados e reversíveis; nenhum toca `beholder.js` nem o fluxo de ordens/dinheiro.\n\n- **Ordem:** **PR1 primeiro** — é a prioridade do HANDOFF (fix vivo no servidor, ausente em `master`; redeploy de master sem ele reintroduz a tela branca). APPROVE direto, sem condições.\n- **PR2 em seguida** — APPROVE; os nice-to-have (guard de chave + checagem de `secretKey`) podem virar um follow-up, não precisam travar o merge dado que o caminho de falha já é não-fatal e idempotente.\n- **Condição transversal (fora dos PRs):** antes/depois do merge, limpar a edição não-intencional no working-tree de `tradeux/CLAUDE.md` (regra de idioma auto-adicionada + bullet `+`→`-` corrompido) citada no HANDOFF — ela **não** faz parte de nenhum dos dois PRs e não deve entrar junto por engano. Nota operacional: o `.git` é owned por `gcrux-tradeux`; rodar os comandos de merge como esse usuário (ou via a chave SSH do `ubuntu` + chown back, conforme a memória), senão o git falha por dubious-ownership.'}, {'type': 'text', 'text': "agentId: aa1786337b7814af2 (use SendMessage with to: 'aa1786337b7814af2' to continue this agent)\n<usage>subagent_tokens: 45228\ntool_uses: 17\nduration_ms: 96106</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All confirmed. `stepSize` is a nullable STRING (no `allowNull:false`), so the seed placeholder genuinely stores `null` → the `s.stepSize` filter is reliable. `NODE_ENV=production` means logger writes to file only (no console), so the auto-sync log lines go to `logs/system.log` — they won\'t appear in `docker logs` stdout. Minor observability nit, not a defect.\n\nOne more concrete edge case worth verifying for idempotency robustness: if Binance `exchangeInfo()` returns successfully but `symbols` filters down to an empty array (e.g. all ignored), `deleteAll()` truncates and `bulkInsert([])` inserts nothing → table left empty → next boot re-syncs. That\'s self-healing, not a wipe-loop. And the "wipe 1051" fear: `syncSymbolsIfEmpty` early-returns when ANY real symbol exists, so it never reaches `deleteAll()`. The only path that truncates is the explicit `POST /symbols/sync` route (unchanged behavior). I have enough to write the report.\n\n---\n\n## PR1 — fix/frontend-vite-require-import\n**VEREDITO: PASS**\n\n**Achados:**\n- [correção correta] O bug é real e o diagnóstico está certo: `OrdersService.js` usava `const { STOP_TYPES } = require(\'./ExchangeService\')` num bundle ESM (Vite), onde `require` não existe no browser → `Uncaught ReferenceError: require is not defined` no load do módulo → tela branca. A troca por `import { STOP_TYPES } from \'./ExchangeService\'` no topo é a correção idiomática e alinhada ao resto do arquivo (que já usa `import axios from \'./BaseService\'`).\n- [verificado] `STOP_TYPES` É exportado por `ExchangeService.js` (linha 6, `export const STOP_TYPES = [...]`). Import não quebra.\n- [nit, não-bloqueante] O `import` de `ExchangeService` agora carrega, em tempo de import, a cadeia `ExchangeService → SelectFiat (getDefaultFiat)`. Como o `require()` antigo era avaliado no load do módulo de qualquer forma, o grafo de dependência efetivo é o mesmo — sem regressão. Sem ciclo de import detectável (ExchangeService não importa OrdersService).\n- [escopo] Mudança de 2 linhas, 1 arquivo, puramente frontend. Risco de regressão praticamente nulo. CI job `frontend` (vite build) cobre a compilação.\n\n**Testes que eu rodaria:**\n- `npm run build` no `frontend/` (já é o que o CI roda) — garante que o ESM resolve em build de produção, não só no dev server.\n- Smoke no browser: login → dashboard → abrir a tela/fluxo de **Orders** especificamente (onde `STOP_TYPES` é consumido), confirmando 0 erros de console. A verificação relatada cobriu login+dashboard; eu exercitaria a página de ordens explicitamente, já que era o módulo quebrado.\n- `grep -rn "require(" frontend/src` para garantir que não sobrou outro `require()` órfão da migração CRA→Vite (mesma classe de bug).\n\n## PR2 — feat/auto-sync-symbols-on-boot\n**VEREDITO: PASS COM RESSALVAS**\n\n**Achados (verifiquei o raciocínio, não só confiei no relato):**\n\n- [detecção placeholder vs real — CORRETA] A pergunta-chave: `syncSymbolsIfEmpty` distingue "só o seed placeholder" de "símbolos reais"? Sim. O seed (`20210904192101-symbol-default.js`) insere `BTCBUSD` **sem** os campos `stepSize`/`tickSize`/`base`/`quote`; no `symbolModel`, `stepSize` é `Sequelize.STRING` **nullable** → fica `null` no banco. O filtro `current.filter(s => s.stepSize)` exclui o placeholder corretamente, e símbolos reais (sync traz `stepSize` preenchido, fallback `\'1\'`) contam. Lógica sólida.\n- [nunca dá wipe nos 1051 — CONFIRMADO] O medo de re-sync/wipe não procede: `if (synced.length > 0) return;` faz early-return **antes** de qualquer `deleteAll()`. O único caminho que chama `deleteAll()+bulkInsert()` no boot é quando NÃO há símbolo real. Com 1051 sincronizados, a função retorna na hora (consistente com o relato "SKIP, não re-sincronizou"). O `deleteAll()` (truncate) só roda via rota explícita `POST /symbols/sync` (comportamento inalterado) ou no boot legítimo de tabela vazia.\n- [não-fatal ao boot — CONFIRMADO, com 1 ressalva de ordem] Todo o corpo está em `try/catch` e só loga no `catch`. Binance inalcançável / keys inválidas / erro de rede → loga e segue. **Ressalva:** o `await syncSymbolsIfEmpty()` é a última linha da IIFE do `server.js`, **depois** de `app.listen` (linha 31) e `appEm.init` (linha 37). Então o Express e o WS já estão no ar antes do auto-sync — bom (auto-sync lento não atrasa o readiness). Porém, como é `await` no fim, se a Binance estiver lenta o `exchangeInfo()` pode demorar; isso não bloqueia o listen (já aconteceu), só posterga o fim da IIFE — inofensivo.\n- [0 settings] Se não existir settings, o `server.js` **já lança** `throw new Error(\'There is no settings.\')` na linha 20 (via `getDefaultSettings`), bem antes do auto-sync. Logo o caso "0 settings" nunca chega no PR2. OK — mas note que esse throw NÃO é do PR2 (comportamento pré-existente).\n- [settings sem keys / BYOK em branco — CORRETO] `accessKey` é gravado em **texto puro** no seed (só `secretKey` é AES). Então o guard `if (!settings || !settings.accessKey)` detecta corretamente BYOK em branco e faz skip logando "sem chaves" — não tenta falar com a Binance com key vazia. Bom.\n- [RESSALVA real — cache de settings decriptado] `getSettingsDecrypted(DEFAULT_SETTINGS_ID)` popula `settingsCache[id]` com `secretKey` em **plaintext**. Isso NÃO é novo: `server.js` linha 19 (`getDefaultSettings`) já aquece esse mesmo cache no boot, e o `appEm` usa o mesmo objeto. PR2 só reusa o padrão existente — sem nova superfície de exposição. Sinalizo como ressalva de awareness, não como defeito introduzido.\n- [idempotência sob falha parcial] Se `exchangeInfo()` retornar mas o filtro zerar `symbols` (ex.: tudo em `IGNORED_COINS`), o fluxo faz `deleteAll()` + `bulkInsert([])` → tabela vazia → próximo boot re-tenta. É auto-curativo, não loop destrutivo. Cenário improvável em prod, mas vale citar.\n- [observabilidade — nit] `NODE_ENV=production` (vejo no `.env.example`) → o `logger` só escreve em **arquivo** (`logs/system.log`), sem console transport. Logo as mensagens "Auto-sync concluído/pulado/falhou" **não** aparecem no `docker logs`/stdout. Quem for validar precisa olhar `logs/system.log` dentro do container, senão parece que "não fez nada". Não bloqueante, mas atrapalha o diagnóstico operacional.\n- [nit] `server.js` continua sem newline final (`\\ No newline at end of file`) — pré-existente, herdado.\n\n**Testes que eu rodaria:**\n- **Tabela vazia + keys boas** (o caminho que o PR existe para cobrir): subir com `symbols` só com o placeholder e `accessKey/secretKey` válidos → confirmar que sincroniza (>1000), e que um **segundo boot** faz SKIP (idempotência). Esse é o teste que prova o valor do PR.\n- **BYOK em branco**: settings com `accessKey` vazio → confirmar skip + log "sem chaves", boot saudável, sem chamada à Binance.\n- **Binance inalcançável**: apontar `apiUrl` para host morto / cortar rede → confirmar que loga "falhou (não-fatal)" e o app continua respondendo em 8090 (boot não derruba).\n- **Símbolos já sincronizados (1051)**: o caso já validado — re-confirmar SKIP imediato (sem `deleteAll`). Eu checaria com um log/contagem no banco antes e depois para provar que NADA foi truncado.\n- **`DEFAULT_SETTINGS_ID` ausente no `.env`**: forçar a env var vazia → garantir que cai no `catch` (não-fatal) e não corrompe nada (no MySQL `where:{id:undefined}` pode pegar a 1ª linha; bom verificar que não dá falso-positivo perigoso — mas está dentro do try/catch).\n- **Paridade Postgres**: como o CI roda matrix mysql+postgres, eu rodaria o boot com `DB_DIALECT=postgres` para garantir que `truncate`/`bulkCreate` e o filtro de `stepSize null` se comportam igual (já que o PR mexe em caminho de boot comum aos dois dialetos).\n\n## QA — conclusão: mergear ambos?\n\n**Mergear os DOIS, PR1 primeiro (prioridade).**\n\n- **PR1 (PASS): merge imediato.** Correção mínima, correta, de um bug confirmado em browser que deixa o app inteiro em tela branca. É a regressão mais grave em aberto e a HANDOFF avisa que **redeploy a partir do master reintroduz o bug** (o fix só vive no servidor). Sem ressalvas técnicas. Bloquear isso seria deixar produção quebrável a cada deploy.\n\n- **PR2 (PASS COM RESSALVAS): merge ok, é seguro.** O ponto que mais importa em código de dinheiro — *"pode apagar/re-sincronizar os 1051 símbolos sem querer?"* — está **provado que não**: o early-return acontece antes de qualquer escrita destrutiva, e o único truncate no boot exige tabela sem símbolos reais. É idempotente, não-fatal e roda depois do listen. As ressalvas são de **operabilidade**, não de segurança/correção:\n  1. logs do auto-sync vão só pra arquivo sob `NODE_ENV=production` (não aparecem no `docker logs`) — recomendo, como follow-up leve, ecoar essas 3 mensagens via `console.log` (ou um transport console gated) para validação operacional;\n  2. ciente do cache de settings em plaintext (pré-existente, não introduzido aqui).\n\nNenhuma das duas ressalvas justifica segurar o merge. Recomendo mergear PR2 e abrir um follow-up trivial só para a observabilidade do log no boot.'}, {'type': 'text', 'text': "agentId: ad97749e62e3c968c (use SendMessage with to: 'ad97749e62e3c968c' to continue this agent)\n<usage>subagent_tokens: 49273\ntool_uses: 21\nduration_ms: 120776</usage>"}]
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%

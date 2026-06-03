@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 260
-> * **Sessões do Claude**: 229
+> * **Total de Sessões Registradas**: 262
+> * **Sessões do Claude**: 231
 > * **Sessões do Gemini**: 31
 
 ---
@@ -56,7 +56,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-ad97749e62e3c968c]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` - *2026-06-03*
+*   `[[2026-06-03 - agent-aa1786337b7814af2]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` - *2026-06-03*
 *   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-03*
 *   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` - *2026-06-03*
@@ -65,9 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a856110ba10475991]]` - *2026-06-02*
-*   `[[2026-06-02 - agent-a79c43bd461f65425]]` - *2026-06-02*
-*   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
-*   *... e mais 224 sessões nessa categoria.*
+*   *... e mais 226 sessões nessa categoria.*
 
 ---
 
@@ -256,7 +256,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-ad97749e62e3c968c]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-aa1786337b7814af2]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` (ClaudeSessions)
 *   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` (ClaudeSessions)
 *   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` (ClaudeSessions)
