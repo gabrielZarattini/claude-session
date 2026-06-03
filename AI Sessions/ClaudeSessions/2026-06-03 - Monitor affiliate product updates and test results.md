@@ -13136,5 +13136,5 @@ Dois ajustes que registrei nas minhas fontes (pra valer toda sessão): **surviva
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - Fix TradeUX deployment path and Docker setup]]
-> * **Próxima Sessão**: [[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]
+> * **Próxima Sessão**: [[2026-06-03 - Plan paid E2E cascade run and prioritize next features]]
 %% --- TIMELINE END --- %%
