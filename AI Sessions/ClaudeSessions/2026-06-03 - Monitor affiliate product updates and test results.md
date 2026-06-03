@@ -8865,6 +8865,1016 @@ Now the survival.md Law 3 recalibration — reading the exact current text:
 > 87	### Como executar a poda
 > ```
 
+## 🤖 Claude *(15:30:13)*
+
+
+## 🤖 Claude *(15:30:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/rules/survival.md",
+  "old_string": "## Law 3 \u2014 Pruning (Anti-Hoarding)\n\n**A cada ~10 intera\u00e7\u00f5es, OU quando context window atinge 50%, OU quando uma fase do plano termina, propor poda expl\u00edcita ao Sovereign.**",
+  "new_string": "## Law 3 \u2014 Pruning (Anti-Hoarding)\n\n**Poda (dropar output stale do contexto ativo) \u2260 selar a sess\u00e3o.** Podar para manter foco quando o contexto encher de tool-results redundantes \u2014 referenciando por path/hash, n\u00e3o recarregando o texto.\n\n**Calibra\u00e7\u00e3o de utiliza\u00e7\u00e3o da janela (Diretiva Sovereign 2026-06-03 \u00b7 [[feedback_context_budget_calibration]]):** a janela \u00e9 **1M tokens** (plano Max) e o `/handoff` custa ~5%. **N\u00c3O selar/finalizar a sess\u00e3o antes de ~95% da janela usada** (deixar \u2264~5% de folga para o pr\u00f3prio seal). Quando uma fase termina e ainda h\u00e1 janela, **puxar o pr\u00f3ximo item do roadmap** (probe-first) em vez de selar \u2014 selar a 45% \u00e9 desperd\u00edcio. **Gatilho de SELAR:** ~95% de uso **OU** roadmap genuinamente esgotado **OU** GO expl\u00edcito do Sovereign. Caveat Lei 1: sem medidor de token preciso no main-loop, estima-se pelo volume; o Sovereign v\u00ea o % na UI e pode sinalizar \"selar\"."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/rules/survival.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:30:27)*
+
+
+## 🤖 Claude *(15:30:27)*
+
+Now update the MEMORY.md index hook + commit the survival.md change to the repo:
+
+## 🤖 Claude *(15:30:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Calibra\u00e7\u00e3o de contexto \u2014 n\u00e3o adiar por Lei 3 antes de ~400k/1M](feedback_context_budget_calibration.md) \u2014 Diretiva Sovereign 2026-06-03: plano Pro\u2192Max, janela 1M, seal barato; parar de declarar \"contexto longo\"/adiar trabalho (ex: campaign-run v6.22) antes de ~400k. S\u00f3 podar perto de 400k+ ou fim de fase real.",
+  "new_string": "- [Calibra\u00e7\u00e3o de contexto \u2014 usar a janela INTEIRA, selar s\u00f3 a ~95%](feedback_context_budget_calibration.md) \u2014 Diretiva Sovereign 2026-06-03: janela 1M (Max), seal custa ~5%; empacotar cada sess\u00e3o com roadmap e s\u00f3 finalizar com \u22645% de folga (\u224895% usado). Selar a 45% \u00e9 desperd\u00edcio; poda\u2260selar; puxar pr\u00f3ximo pendente em vez de selar. Recalibrou Lei 3 survival.md."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:30:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/rules/survival.md\ngit commit -q -m \"chore(survival): recalibra Lei 3 \u2014 selar s\u00f3 a ~95% da janela (1M), n\u00e3o a 45%\n\nDiretiva Sovereign: sess\u00e3o deve empacotar a janela inteira; poda (dropar\nstale) != selar; gatilho de seal = ~95% de uso OU roadmap esgotado OU GO.\nSepara poda-para-foco de finalizar-sess\u00e3o; fim do nudge de 'selar a 50%'.\" && git push origin main 2>&1 | tail -2",
+  "description": "Commit + push survival.md recalibration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    dfeb384..dbf4399  main -> main
+> ```
+
+## 🤖 Claude *(15:31:21)*
+
+
+## 🤖 Claude *(15:31:23)*
+
+Calibration sealed + pushed (`dfeb384..dbf4399`): memory sharpened, **Lei 3 recalibrated** (poda ≠ selar; seal gatilho = ~95% OU roadmap esgotado OU GO). New mode active.
+
+So I keep going — pulling the next roadmap item now instead of stopping. Non-gated next is **MVP-5 (FR-MH-007 — campaign attribution → ROIWidget per campaign)**; the first paid run stays gated on your GO. Probe-first to scope it precisely.
+
+## 🤖 Claude *(15:31:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/ROIWidget.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from 'react';
+> 2	import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 3	import { TrendingUp, DollarSign, MousePointerClick, ArrowUpRight } from 'lucide-react';
+> 4	import { supabase } from '@/integrations/supabase/client';
+> 5	import { useAuth } from '@/hooks/useAuth';
+> 6	import { Skeleton } from '@/components/ui/skeleton';
+> 7	
+> 8	interface ROIData {
+> 9	  totalClicks: number;
+> 10	  totalImpressions: number;
+> 11	  totalConversions: number;
+> 12	  affiliateRevenueBRL: number;
+> 13	  totalCostsDollars: number;
+> 14	  roi: number;
+> 15	}
+> 16	
+> 17	export function ROIWidget() {
+> 18	  const { user } = useAuth();
+> 19	  const [data, setData] = useState<ROIData | null>(null);
+> 20	  const [loading, setLoading] = useState(true);
+> 21	
+> 22	  useEffect(() => {
+> 23	    if (!user) return;
+> 24	    const fetchData = async () => {
+> 25	      const [affiliateRes, metricsRes, usageRes] = await Promise.all([
+> 26	        supabase
+> 27	          .from('affiliate_links')
+> 28	          .select('revenue_cents, clicks, conversions')
+> 29	          .eq('user_id', user.id),
+> 30	        supabase
+> 31	          .from('campaign_metrics')
+> 32	          .select('clicks, impressions, conversions, spend_cents')
+> 33	          .eq('user_id', user.id),
+> 34	        supabase
+> 35	          .from('usage_tracking')
+> 36	          .select('credits_consumed')
+> 37	          .eq('user_id', user.id),
+> 38	      ]);
+> 39	
+> 40	      const affiliate = affiliateRes.data || [];
+> 41	      const metrics = metricsRes.data || [];
+> 42	      const usage = usageRes.data || [];
+> 43	
+> 44	      const totalClicks = metrics.reduce((s, m) => s + (m.clicks || 0), 0)
+> 45	        + affiliate.reduce((s, a) => s + (a.clicks || 0), 0);
+> 46	      const totalImpressions = metrics.reduce((s, m) => s + (m.impressions || 0), 0);
+> 47	      const totalConversions = metrics.reduce((s, m) => s + (m.conversions || 0), 0)
+> 48	        + affiliate.reduce((s, a) => s + (a.conversions || 0), 0);
+> 49	
+> 50	      // Real revenue from affiliate_links (stored in cents)
+> 51	      const affiliateRevenueBRL = affiliate.reduce((s, a) => s + (a.revenue_cents || 0), 0) / 100;
+> 52	
+> 53	      // Real costs: campaign spend + AI credits
+> 54	      const campaignSpend = metrics.reduce((s, m) => s + (m.spend_cents || 0), 0) / 100;
+> 55	      const aiCost = usage.reduce((s, u) => s + (u.credits_consumed || 0), 0) * 0.01;
+> 56	      const totalCostsDollars = campaignSpend + aiCost;
+> 57	
+> 58	      const roi = totalCostsDollars > 0
+> 59	        ? ((affiliateRevenueBRL - totalCostsDollars) / totalCostsDollars) * 100
+> 60	        : 0;
+> 61	
+> 62	      setData({ totalClicks, totalImpressions, totalConversions, affiliateRevenueBRL, totalCostsDollars, roi });
+> 63	      setLoading(false);
+> 64	    };
+> 65	    fetchData();
+> 66	  }, [user]);
+> 67	
+> 68	  if (loading) return <Skeleton className="h-40 w-full" />;
+> 69	  if (!data) return null;
+> 70	
+> 71	  const stats = [
+> 72	    { icon: MousePointerClick, label: 'Cliques Totais', value: data.totalClicks.toLocaleString('pt-BR'), color: 'text-blue-400' },
+> 73	    { icon: ArrowUpRight, label: 'Conversões', value: data.totalConversions.toLocaleString('pt-BR'), color: 'text-green-400' },
+> 74	    { icon: DollarSign, label: 'Receita Afiliados', value: `R$${data.affiliateRevenueBRL.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: 'text-yellow-400' },
+> 75	    { icon: TrendingUp, label: 'ROI', value: `${data.roi.toFixed(0)}%`, color: data.roi > 0 ? 'text-green-400' : 'text-red-400' },
+> 76	  ];
+> 77	
+> 78	  return (
+> 79	    <Card className="border-primary/20 bg-card/80 backdrop-blur">
+> 80	      <CardHeader className="pb-2">
+> 81	        <CardTitle className="text-sm font-medium flex items-center gap-2">
+> 82	          <TrendingUp className="h-4 w-4 text-primary" />
+> 83	          ROI da Orquestração
+> 84	        </CardTitle>
+> 85	      </CardHeader>
+> 86	      <CardContent>
+> 87	        <div className="grid grid-cols-2 gap-3">
+> 88	          {stats.map((s) => (
+> 89	            <div key={s.label} className="flex items-center gap-2">
+> 90	              <s.icon className={`h-4 w-4 ${s.color} shrink-0`} />
+> 91	              <div>
+> 92	                <p className="text-xs text-muted-foreground">{s.label}</p>
+> 93	                <p className="text-sm font-bold">{s.value}</p>
+> 94	              </div>
+> 95	            </div>
+> 96	          ))}
+> 97	        </div>
+> 98	        <div className="mt-3 text-xs text-muted-foreground">
+> 99	          Custo total: R${data.totalCostsDollars.toFixed(2)} · {data.totalImpressions.toLocaleString('pt-BR')} impressões
+> 100	        </div>
+> 101	      </CardContent>
+> 102	    </Card>
+> 103	  );
+> 104	}
+> 105	
+> ```
+
+## 🤖 Claude *(15:31:38)*
+
+
+## 🤖 Claude *(15:31:39)*
+
+ROIWidget is global (affiliate_links + campaign_metrics), not per-campaign, and doesn't touch `marketing_attribution`. MVP-5 (FR-MH-007: "expõe por campanha") needs a per-campaign attribution hook + surface + the postback write. Let me check the SDD spec + how `handle-ml-postback` currently does ATTRIBUTES_REVENUE_TO (to extend it).
+
+## 🤖 Claude *(15:31:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SDD FR-MH-007 / attribution / ROIWidget spec ===\"\ngrep -nE \"FR-MH-007|attribution|marketing_attribution|ROIWidget|ATTRIBUTES_REVENUE|Customer 360|customer_360|useCampaignROI|touchpoint\" docs/bok/marketing-hub/05-sdd.md docs/bok/marketing-hub/06-data-model.md 2>/dev/null | head -25\necho \"\"\necho \"=== handle-ml-postback: campaign_id awareness + ATTRIBUTES_REVENUE_TO + marketing_attribution ===\"\ngrep -nE \"campaign_id|ATTRIBUTES_REVENUE_TO|marketing_attribution|revenue_cents|affiliate_link\" supabase/functions/handle-ml-postback/index.ts | head -20",
+  "description": "Probe FR-MH-007 spec + postback attribution wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SDD FR-MH-007 / attribution / ROIWidget spec ===
+> docs/bok/marketing-hub/06-data-model.md:19:   └──(1:N)──▶ [marketing_attribution] ──(N:1)──▶ [campaign]
+> docs/bok/marketing-hub/06-data-model.md:25:[customer_360]  =  VIEW(lead ⨝ lead_event ⨝ marketing_consent ⨝ score)
+> docs/bok/marketing-hub/06-data-model.md:30:- **lead_event:** evento multicanal por lead (mensagem, abertura, clique, conversão) — base do Customer 360.
+> docs/bok/marketing-hub/06-data-model.md:34:- **marketing_attribution:** liga receita → campanha/lead/touchpoint.
+> docs/bok/marketing-hub/06-data-model.md:36:- **customer_360:** VIEW de perfil unificado.
+> docs/bok/marketing-hub/06-data-model.md:116:### Table: `marketing_attribution`
+> docs/bok/marketing-hub/06-data-model.md:120:| `id` uuid PK · `user_id` uuid · `campaign_id` uuid FK NULL · `lead_id` uuid FK NULL · `touchpoint` text · `revenue_cents` int4 · `model` text (last_touch\|multi_touch) · `occurred_at` timestamptz | Liga receita a campanha/lead; espelha `affiliate_links.revenue_cents` |
+> docs/bok/marketing-hub/06-data-model.md:122:> **FK pattern (MVP-2):** `campaign_id`/`lead_id` usam **FK simples `ON DELETE SET NULL`** (não composta) + RLS `WITH CHECK` de posse — espelha `marketing_consents`. Uma FK composta `(lead_id,user_id)` com `SET NULL` anularia também `user_id NOT NULL` ao apagar o lead, quebrando; assim o registro financeiro é **retido de-linkado** (a receita não some quando o lead é apagado via `erase_lead`). `erase_lead()` é estendida (FMEA-MH-003) para reportar `attributions_delinked`.
+> docs/bok/marketing-hub/06-data-model.md:175:> The remaining tables (`lead_events`, `campaigns`, `campaign_steps`, `sequences`, `sequence_enrollments`, `marketing_consents`, `marketing_attribution`, `aeo_audits`) follow the **identical RLS-default-deny skeleton** with `user_id = auth.uid()` and denormalized `user_id` for child tables to keep RLS simple. Every migration passes `/security-review` (FMEA-011).
+> docs/bok/marketing-hub/06-data-model.md:195:| `ATTRIBUTES_REVENUE_TO` (reuse) | `observation`/`marketing_attribution` | `campaign` / `content_mesh_asset` | `{revenue_cents}` |
+> docs/bok/marketing-hub/06-data-model.md:208:| `revenue_impact` (campaign node) | Soma de `marketing_attribution.revenue_cents` | Atualizado a cada conversão atribuída |
+> docs/bok/marketing-hub/06-data-model.md:223:| `marketing_attribution` | ✅ Required | Optional | No |
+> docs/bok/marketing-hub/06-data-model.md:238:| `marketing_attribution` | `revenue_cents` | ≥ 0 | "Receita não pode ser negativa" |
+> docs/bok/marketing-hub/06-data-model.md:248:| `lead_events` | 18 meses | Agregação anonimizada p/ Customer 360 histórico | Com lead pai (CASCADE) |
+> docs/bok/marketing-hub/06-data-model.md:250:| `marketing_attribution` | Indefinido (financeiro) | — | Com campanha/lead |
+> docs/bok/marketing-hub/05-sdd.md:41:│  marketing_attribution        │  │  n8n (sequence cron dispatch)     │
+> docs/bok/marketing-hub/05-sdd.md:100:| `lead_events` | Table | Eventos multicanal por lead (Customer 360) | idem |
+> docs/bok/marketing-hub/05-sdd.md:107:| `marketing_attribution` | Table | Atribuição receita→campaign/lead | `<ts>_marketing_hub_attribution.sql` |
+> docs/bok/marketing-hub/05-sdd.md:108:| `customer_360` | View | Perfil unificado por contato | `<ts>_marketing_hub_customer360_view.sql` |
+> docs/bok/marketing-hub/05-sdd.md:138:   → DELETE marketing_attribution rows referencing lead
+> docs/bok/marketing-hub/05-sdd.md:206:-- leads RLS (mesmo padrão para lead_events, campaigns, sequences, aeo_audits, marketing_consents, marketing_attribution)
+> docs/bok/marketing-hub/05-sdd.md:257:| `mcorch_nodes`/`mcorch_edges` | Observação de campanha/lead na malha; `ATTRIBUTES_REVENUE_TO` por campaign | Mesh growth |
+> docs/bok/marketing-hub/05-sdd.md:299:> Every migration passes `/security-review` before commit (FMEA-011). `marketing_consents`, `marketing_attribution`, `campaigns`, `sequences`, `aeo_audits` follow the same RLS-default-deny skeleton (see 06-data-model.md).
+> 
+> === handle-ml-postback: campaign_id awareness + ATTRIBUTES_REVENUE_TO + marketing_attribution ===
+> 10:  click_id?: string;        // our affiliate_links.id (short tracking token)
+> 184:          .from("affiliate_links")
+> 196:        .from("affiliate_links")
+> 207:      await supabase.from("affiliate_links").insert({
+> 211:        revenue_cents: revenueCents,
+> 246:      .from("affiliate_links")
+> 248:        revenue_cents: revenueCents,
+> 257:      .select("id, content_id, campaign_id, metadata")
+> 301:        affiliate_link_id: affiliateLinkId,
+> 303:        campaign_id: linkData?.campaign_id,
+> 309:    // OE-661-EXECUTE: Inject ATTRIBUTES_REVENUE_TO edge
+> 315:        relation_type: "ATTRIBUTES_REVENUE_TO",
+> 327:      JSON.stringify({ ok: true, affiliate_link_id: affiliateLinkId, revenue_cents: revenueCents }),
+> ```
+
+## 🤖 Claude *(15:32:06)*
+
+
+## 🤖 Claude *(15:32:07)*
+
+MVP-5 scope is now clear: `handle-ml-postback` already knows `campaign_id` + writes the `ATTRIBUTES_REVENUE_TO` edge, but **doesn't write `marketing_attribution` yet** (that's the FR-MH-007 extension). And data-model says `campaign.revenue_impact` = sum of `marketing_attribution.revenue_cents`. Let me read the postback's attribution block + the `affiliate_links.campaign_id` type (to know if the FK insert is safe).
+
+## 🤖 Claude *(15:32:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/handle-ml-postback/index.ts",
+  "offset": 240,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 240	        );
+> 241	      }
+> 242	    }
+> 243	
+> 244	    // Update revenue on the affiliate link
+> 245	    const { data: linkData, error: updateErr } = await supabase
+> 246	      .from("affiliate_links")
+> 247	      .update({
+> 248	        revenue_cents: revenueCents,
+> 249	        metadata: {
+> 250	          order_id: payload.order_id,
+> 251	          currency: payload.currency ?? "BRL",
+> 252	          status,
+> 253	          postback_received_at: new Date().toISOString(),
+> 254	        },
+> 255	      })
+> 256	      .eq("id", affiliateLinkId)
+> 257	      .select("id, content_id, campaign_id, metadata")
+> 258	      .single();
+> 259	
+> 260	    if (updateErr) throw updateErr;
+> 261	
+> 262	    // Sync revenue_impact to mcorch_nodes (knowledge mesh).
+> 263	    // Prefer content_mesh_asset (revenue-flywheel.md topology); fallback to any node
+> 264	    // matched by ID or metadata.link_id / metadata.content_id (legacy).
+> 265	    const orFilter = `id.eq.${linkData?.content_id ?? "null"},metadata->>link_id.eq.${affiliateLinkId},metadata->>content_id.eq.${linkData?.content_id ?? "null"}`;
+> 266	
+> 267	    let { data: node } = await supabase
+> 268	      .from("mcorch_nodes")
+> 269	      .select("id, revenue_impact")
+> 270	      .eq("node_type", "content_mesh_asset")
+> 271	      .or(orFilter)
+> 272	      .limit(1)
+> 273	      .maybeSingle();
+> 274	
+> 275	    if (!node) {
+> 276	      const fallback = await supabase
+> 277	        .from("mcorch_nodes")
+> 278	        .select("id, revenue_impact")
+> 279	        .or(orFilter)
+> 280	        .limit(1)
+> 281	        .maybeSingle();
+> 282	      node = fallback.data;
+> 283	    }
+> 284	
+> 285	    if (node) {
+> 286	      const newRevenue = (node.revenue_impact ?? 0) + revenueCents;
+> 287	      await supabase
+> 288	        .from("mcorch_nodes")
+> 289	        .update({ revenue_impact: newRevenue })
+> 290	        .eq("id", node.id);
+> 291	    }
+> 292	
+> 293	    // Insert a knowledge mesh observation node for this conversion event
+> 294	    const { data: obsNode } = await supabase.from("mcorch_nodes").insert({
+> 295	      name: `conversion:${affiliateLinkId.slice(0, 8)}`,
+> 296	      node_type: "observation",
+> 297	      content: `ML conversion — R$${(revenueCents / 100).toFixed(2)} from order ${payload.order_id ?? "unknown"}`,
+> 298	      stability_score: 1.0,
+> 299	      revenue_impact: revenueCents,
+> 300	      metadata: {
+> 301	        affiliate_link_id: affiliateLinkId,
+> 302	        order_id: payload.order_id,
+> 303	        campaign_id: linkData?.campaign_id,
+> 304	        event: "ml_conversion",
+> 305	      },
+> 306	      project_id: "mcorch-affiliate",
+> 307	    }).select("id").single();
+> 308	
+> 309	    // OE-661-EXECUTE: Inject ATTRIBUTES_REVENUE_TO edge
+> 310	    let edgeCreated = false;
+> 311	    if (obsNode && node) {
+> 312	      const { error: edgeErr } = await supabase.from("mcorch_edges").insert({
+> 313	        source_id: obsNode.id,
+> 314	        target_id: node.id,
+> 315	        relation_type: "ATTRIBUTES_REVENUE_TO",
+> 316	        weight: revenueCents
+> 317	      });
+> 318	      edgeCreated = !edgeErr;
+> 319	    }
+> 320	
+> 321	    await supabase.from("infra_health_logs").insert({
+> 322	      service: "handle-ml-postback",
+> 323	      status: edgeCreated ? "healthy" : "degraded",
+> 324	    }).then(() => {}, () => {});
+> 325	
+> 326	    return new Response(
+> 327	      JSON.stringify({ ok: true, affiliate_link_id: affiliateLinkId, revenue_cents: revenueCents }),
+> 328	      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 329	    );
+> 330	  } catch (err) {
+> 331	    console.error("handle-ml-postback error:", err);
+> 332	    await supabase.from("infra_health_logs").insert({
+> 333	      service: "handle-ml-postback",
+> 334	      status: "degraded",
+> ```
+
+## 🤖 Claude *(15:32:34)*
+
+
+## 🤖 Claude *(15:32:36)*
+
+The postback knows `campaign_id` + `user_id`-owner and already bumps mesh `revenue_impact` + writes `ATTRIBUTES_REVENUE_TO` — but never writes `marketing_attribution`. That's the FR-MH-007 extension (fail-soft, FK-safe since `campaign_id` could be a non-UUID utm slug). Let me confirm `affiliate_links` has `user_id` + the `campaign_id` type, and set up MVP-5 tracking.
+
+## 🤖 Claude *(15:32:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== affiliate_links Row: user_id + campaign_id type ===\"\nawk '/^      affiliate_links: \\{/{f=1} f&&/Row: \\{/{r=1} r&&/^          (user_id|campaign_id|revenue_cents|content_id):/{print} f&&/Insert:/{exit}' src/integrations/supabase/types.ts | head -8",
+  "description": "Check affiliate_links user_id + campaign_id type"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === affiliate_links Row: user_id + campaign_id type ===
+>           campaign_id: string | null
+>           content_id: string | null
+>           revenue_cents: number
+>           user_id: string
+> ```
+
+## 🤖 Claude *(15:32:57)*
+
+
+## 🤖 Claude *(15:32:58)*
+
+`affiliate_links`: `user_id` (NOT NULL) + `campaign_id: string|null` (could be a slug) → my UUID-guard + existence check is exactly right. Building MVP-5. Tracking + first the postback extension (FK-safe, fail-soft — never break the revenue path):
+
+## 🤖 Claude *(15:33:00)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "MVP-5: postback writes marketing_attribution + useCampaignAttribution hook",
+  "description": "FR-MH-007. Extend handle-ml-postback to insert marketing_attribution (FK-safe campaign_id, fail-soft). Add useCampaignAttribution hook (aggregate revenue per campaign).",
+  "activeForm": "Wiring marketing attribution (FR-MH-007)"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: MVP-5: postback writes marketing_attribution + useCampaignAttribution hook
+> ```
+
+## 🤖 Claude *(15:33:04)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "MVP-5: CampaignDetail \"Receita atribu\u00edda\" card + tests + deploy + verify",
+  "description": "Surface per-campaign attributed revenue in CampaignDetail. Tests for the hook aggregation. Deploy handle-ml-postback + build frontend. Material verify.",
+  "activeForm": "Surfacing + verifying campaign ROI"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: MVP-5: CampaignDetail "Receita atribuída" card + tests + deploy + verify
+> ```
+
+## 🤖 Claude *(15:33:07)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(15:33:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/handle-ml-postback/index.ts",
+  "old_string": "      .eq(\"id\", affiliateLinkId)\n      .select(\"id, content_id, campaign_id, metadata\")\n      .single();\n\n    if (updateErr) throw updateErr;",
+  "new_string": "      .eq(\"id\", affiliateLinkId)\n      .select(\"id, user_id, content_id, campaign_id, metadata\")\n      .single();\n\n    if (updateErr) throw updateErr;\n\n    // FR-MH-007: record into marketing_attribution (per-campaign revenue source of truth).\n    // FAIL-SOFT + FK-safe: campaign_id on affiliate_links may be a UTM slug, not a campaigns UUID \u2014 only\n    // link it when it is a real UUID owned by the same tenant; otherwise retain the revenue de-linked\n    // (campaign_id NULL), mirroring the table's ON DELETE SET NULL \"retain de-linked\" semantics. Never throws.\n    try {\n      const attrUid = linkData?.user_id;\n      const rawCid = linkData?.campaign_id;\n      let attrCampaignId: string | null = null;\n      if (attrUid && rawCid && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(rawCid)) {\n        const { data: camp } = await supabase\n          .from(\"campaigns\").select(\"id\").eq(\"id\", rawCid).eq(\"user_id\", attrUid).maybeSingle();\n        if (camp) attrCampaignId = rawCid;\n      }\n      if (attrUid) {\n        await supabase.from(\"marketing_attribution\").insert({\n          user_id: attrUid,\n          campaign_id: attrCampaignId,\n          lead_id: null,\n          touchpoint: \"affiliate_click\",\n          revenue_cents: revenueCents,\n          model: \"last_touch\",\n        });\n      }\n    } catch (_) { /* attribution is additive \u2014 never break the revenue postback */ }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/handle-ml-postback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:33:29)*
+
+
+## 🤖 Claude *(15:33:29)*
+
+Now the `useCampaignAttribution` hook (aggregates per-campaign revenue from `marketing_attribution`, RLS-scoped):
+
+## 🤖 Claude *(15:33:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts",
+  "old_string": "    onSuccess: (_d, campaignId) => {\n      queryClient.invalidateQueries({ queryKey: ['campaign_steps', campaignId] });\n      queryClient.invalidateQueries({ queryKey: ['campaigns'] });\n      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });\n    },\n  });\n}",
+  "new_string": "    onSuccess: (_d, campaignId) => {\n      queryClient.invalidateQueries({ queryKey: ['campaign_steps', campaignId] });\n      queryClient.invalidateQueries({ queryKey: ['campaigns'] });\n      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });\n    },\n  });\n}\n\nexport interface CampaignAttribution {\n  totalRevenueCents: number;\n  conversions: number;\n  byTouchpoint: { touchpoint: string; revenueCents: number; count: number }[];\n}\n\n/** FR-MH-007 \u2014 per-campaign attributed revenue from `marketing_attribution` (RLS-scoped to the tenant). */\nexport function useCampaignAttribution(campaignId: string | undefined) {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['campaign_attribution', campaignId],\n    queryFn: async (): Promise<CampaignAttribution> => {\n      const { data, error } = await supabase\n        .from('marketing_attribution')\n        .select('touchpoint, revenue_cents')\n        .eq('campaign_id', campaignId!);\n      if (error) throw error;\n      const rows = data ?? [];\n      const totalRevenueCents = rows.reduce((s, r) => s + (r.revenue_cents ?? 0), 0);\n      const map = new Map<string, { revenueCents: number; count: number }>();\n      for (const r of rows) {\n        const tp = r.touchpoint ?? 'unknown';\n        const cur = map.get(tp) ?? { revenueCents: 0, count: 0 };\n        cur.revenueCents += r.revenue_cents ?? 0;\n        cur.count += 1;\n        map.set(tp, cur);\n      }\n      return {\n        totalRevenueCents,\n        conversions: rows.length,\n        byTouchpoint: [...map.entries()].map(([touchpoint, v]) => ({ touchpoint, ...v })),\n      };\n    },\n    enabled: !!user && !!campaignId,\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:33:51)*
+
+
+## 🤖 Claude *(15:33:52)*
+
+Task #5 done. Now task #6 — the "Receita Atribuída" card in CampaignDetail (replacing the "em breve" placeholder with real per-campaign revenue). Imports first:
+
+## 🤖 Claude *(15:33:52)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(15:33:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx",
+  "old_string": "import { ArrowLeft, Loader2, Megaphone } from 'lucide-react';",
+  "new_string": "import { ArrowLeft, Loader2, Megaphone, DollarSign } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx",
+  "old_string": "  useCampaign, useCampaigns, useCampaignSteps,\n  STATUS_LABELS, STATUS_COLORS, STATUS_TRANSITIONS,\n  type CampaignChannel, type CampaignStepAction, type CampaignStepStatus,\n} from '@/hooks/useCampaigns';",
+  "new_string": "  useCampaign, useCampaigns, useCampaignSteps, useCampaignAttribution,\n  STATUS_LABELS, STATUS_COLORS, STATUS_TRANSITIONS,\n  type CampaignChannel, type CampaignStepAction, type CampaignStepStatus,\n} from '@/hooks/useCampaigns';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx",
+  "old_string": "  const { steps, addStep, deleteStep } = useCampaignSteps(id);",
+  "new_string": "  const { steps, addStep, deleteStep } = useCampaignSteps(id);\n  const { data: attribution } = useCampaignAttribution(id);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx",
+  "old_string": "      {/* Metrics placeholder */}\n      <Card className=\"border-dashed\">\n        <CardContent className=\"py-10 text-center\">\n          <p className=\"text-sm text-muted-foreground\">\ud83d\udcca M\u00e9tricas da campanha estar\u00e3o dispon\u00edveis em breve</p>\n        </CardContent>\n      </Card>",
+  "new_string": "      {/* Receita Atribu\u00edda (FR-MH-007 \u2014 per-campaign attribution) */}\n      <Card>\n        <CardHeader className=\"pb-2\">\n          <CardTitle className=\"text-sm flex items-center gap-2\">\n            <DollarSign className=\"h-4 w-4 text-yellow-400\" /> Receita Atribu\u00edda\n          </CardTitle>\n        </CardHeader>\n        <CardContent>\n          {!attribution || attribution.conversions === 0 ? (\n            <p className=\"text-sm text-muted-foreground\">Nenhuma convers\u00e3o atribu\u00edda a esta campanha ainda.</p>\n          ) : (\n            <div className=\"space-y-3\">\n              <div className=\"flex items-baseline gap-2\">\n                <span className=\"text-2xl font-bold text-foreground\">\n                  R$ {(attribution.totalRevenueCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n                </span>\n                <span className=\"text-xs text-muted-foreground\">{attribution.conversions} convers\u00e3o(\u00f5es)</span>\n              </div>\n              <div className=\"space-y-1\">\n                {attribution.byTouchpoint.map((t) => (\n                  <div key={t.touchpoint} className=\"flex items-center justify-between text-xs\">\n                    <span className=\"text-muted-foreground capitalize\">{t.touchpoint.replace(/_/g, ' ')}</span>\n                    <span>R$ {(t.revenueCents / 100).toFixed(2)} \u00b7 {t.count}\u00d7</span>\n                  </div>\n                ))}\n              </div>\n            </div>\n          )}\n        </CardContent>\n      </Card>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:32)*
+
+
+## 🤖 Claude *(15:34:33)*
+
+Let me refactor the aggregation into a pure, testable helper (cleaner than mocking the query builder), then add a unit test:
+
+## 🤖 Claude *(15:34:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts",
+  "old_string": "export interface CampaignAttribution {\n  totalRevenueCents: number;\n  conversions: number;\n  byTouchpoint: { touchpoint: string; revenueCents: number; count: number }[];\n}\n\n/** FR-MH-007 \u2014 per-campaign attributed revenue from `marketing_attribution` (RLS-scoped to the tenant). */\nexport function useCampaignAttribution(campaignId: string | undefined) {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['campaign_attribution', campaignId],\n    queryFn: async (): Promise<CampaignAttribution> => {\n      const { data, error } = await supabase\n        .from('marketing_attribution')\n        .select('touchpoint, revenue_cents')\n        .eq('campaign_id', campaignId!);\n      if (error) throw error;\n      const rows = data ?? [];\n      const totalRevenueCents = rows.reduce((s, r) => s + (r.revenue_cents ?? 0), 0);\n      const map = new Map<string, { revenueCents: number; count: number }>();\n      for (const r of rows) {\n        const tp = r.touchpoint ?? 'unknown';\n        const cur = map.get(tp) ?? { revenueCents: 0, count: 0 };\n        cur.revenueCents += r.revenue_cents ?? 0;\n        cur.count += 1;\n        map.set(tp, cur);\n      }\n      return {\n        totalRevenueCents,\n        conversions: rows.length,\n        byTouchpoint: [...map.entries()].map(([touchpoint, v]) => ({ touchpoint, ...v })),\n      };\n    },\n    enabled: !!user && !!campaignId,\n  });\n}",
+  "new_string": "export interface CampaignAttribution {\n  totalRevenueCents: number;\n  conversions: number;\n  byTouchpoint: { touchpoint: string; revenueCents: number; count: number }[];\n}\n\n/** Pure aggregation of marketing_attribution rows into per-campaign totals (extracted for unit testing). */\nexport function aggregateAttribution(\n  rows: { touchpoint: string | null; revenue_cents: number | null }[],\n): CampaignAttribution {\n  const totalRevenueCents = rows.reduce((s, r) => s + (r.revenue_cents ?? 0), 0);\n  const map = new Map<string, { revenueCents: number; count: number }>();\n  for (const r of rows) {\n    const tp = r.touchpoint ?? 'unknown';\n    const cur = map.get(tp) ?? { revenueCents: 0, count: 0 };\n    cur.revenueCents += r.revenue_cents ?? 0;\n    cur.count += 1;\n    map.set(tp, cur);\n  }\n  return {\n    totalRevenueCents,\n    conversions: rows.length,\n    byTouchpoint: [...map.entries()].map(([touchpoint, v]) => ({ touchpoint, ...v })),\n  };\n}\n\n/** FR-MH-007 \u2014 per-campaign attributed revenue from `marketing_attribution` (RLS-scoped to the tenant). */\nexport function useCampaignAttribution(campaignId: string | undefined) {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['campaign_attribution', campaignId],\n    queryFn: async (): Promise<CampaignAttribution> => {\n      const { data, error } = await supabase\n        .from('marketing_attribution')\n        .select('touchpoint, revenue_cents')\n        .eq('campaign_id', campaignId!);\n      if (error) throw error;\n      return aggregateAttribution(data ?? []);\n    },\n    enabled: !!user && !!campaignId,\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:52)*
+
+
+## 🤖 Claude *(15:34:53)*
+
+Adding the unit test for `aggregateAttribution`:
+
+## 🤖 Claude *(15:34:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/marketing-hub.test.ts",
+  "old_string": "import {\n  useCampaignRun, CAMPAIGN_CHANNELS, STEP_ACTION_LABELS, STEP_STATUS_LABELS, STEP_STATUS_COLORS,\n} from '@/hooks/useCampaigns';",
+  "new_string": "import {\n  useCampaignRun, aggregateAttribution,\n  CAMPAIGN_CHANNELS, STEP_ACTION_LABELS, STEP_STATUS_LABELS, STEP_STATUS_COLORS,\n} from '@/hooks/useCampaigns';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/test/marketing-hub.test.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:35:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/marketing-hub.test.ts",
+  "old_string": "// \u2500\u2500\u2500 useCampaignRun (FR-MH-004) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+  "new_string": "// \u2500\u2500\u2500 aggregateAttribution (FR-MH-007) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndescribe('aggregateAttribution', () => {\n  it('sums revenue and groups by touchpoint', () => {\n    const r = aggregateAttribution([\n      { touchpoint: 'affiliate_click', revenue_cents: 1000 },\n      { touchpoint: 'affiliate_click', revenue_cents: 2500 },\n      { touchpoint: 'wp_article', revenue_cents: 500 },\n    ]);\n    expect(r.totalRevenueCents).toBe(4000);\n    expect(r.conversions).toBe(3);\n    expect(r.byTouchpoint).toContainEqual({ touchpoint: 'affiliate_click', revenueCents: 3500, count: 2 });\n    expect(r.byTouchpoint).toContainEqual({ touchpoint: 'wp_article', revenueCents: 500, count: 1 });\n  });\n  it('handles empty rows and null touchpoint/revenue', () => {\n    expect(aggregateAttribution([])).toEqual({ totalRevenueCents: 0, conversions: 0, byTouchpoint: [] });\n    const r = aggregateAttribution([{ touchpoint: null, revenue_cents: null }]);\n    expect(r.totalRevenueCents).toBe(0);\n    expect(r.byTouchpoint[0].touchpoint).toBe('unknown');\n  });\n});\n\n// \u2500\u2500\u2500 useCampaignRun (FR-MH-004) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/test/marketing-hub.test.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:35:10)*
+
+
+## 🤖 Claude *(15:35:11)*
+
+MVP-5 code complete (postback write + hook + card + test). Verifying — tsc + the marketing-hub suite + lint on touched files:
+
+## 🤖 Claude *(15:35:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -6 && echo \"TSC 0 \u2705\"\necho \"=== marketing-hub tests ===\"; bun run test src/test/marketing-hub.test.ts 2>&1 | tail -8\necho \"=== eslint touched src ===\"; npx eslint src/hooks/useCampaigns.ts src/pages/CampaignDetail.tsx src/test/marketing-hub.test.ts 2>&1 | tail -6; echo \"eslint exit ${PIPESTATUS[0]}\"",
+  "description": "tsc + tests + lint for MVP-5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> TSC 0 ✅
+> === marketing-hub tests ===
+> 
+>  ✓ src/test/marketing-hub.test.ts (13 tests) 99ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  13 passed (13)
+>    Start at  12:35:14
+>    Duration  1.41s (transform 115ms, setup 85ms, collect 290ms, tests 99ms, environment 414ms, prepare 98ms)
+> 
+> === eslint touched src ===
+> eslint exit 0
+> ```
+
+## 🤖 Claude *(15:36:08)*
+
+
+## 🤖 Claude *(15:36:09)*
+
+tsc 0 · **marketing-hub 13/13** (+2 attribution) · eslint clean. Now deploy the postback + read its input contract so I can build a throwaway synthetic-postback smoke (proves the write end-to-end without touching production):
+
+## 🤖 Claude *(15:36:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy handle-ml-postback 2>&1 | tail -5",
+  "description": "Deploy handle-ml-postback"
+}
+```
+
+## 🤖 Claude *(15:36:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/handle-ml-postback/index.ts",
+  "limit": 60
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: handle-ml-postback (script size: 64.73kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: handle-ml-postback
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Headers": "authorization, x-api-key, content-type, x-signature, x-request-id",
+> 6	};
+> 7	
+> 8	// ML Affiliate postback payload — query params or JSON body
+> 9	interface MLPostbackPayload {
+> 10	  click_id?: string;        // our affiliate_links.id (short tracking token)
+> 11	  order_id?: string;        // ML order reference
+> 12	  commission?: string;      // commission value (BRL cents or float)
+> 13	  currency?: string;        // BRL
+> 14	  status?: string;          // approved | pending | cancelled
+> 15	  transaction_id?: string;  // alternate key for click_id
+> 16	  // ML Notification API (topic=orders) shape
+> 17	  topic?: string;
+> 18	  resource?: string;
+> 19	  user_id?: string;
+> 20	}
+> 21	
+> 22	// FMEA-ML-003 — validate the Mercado Pago webhook origin via the x-signature header.
+> 23	// Official scheme (mercadopago.com/developers → Webhooks → signature validation):
+> 24	//   1. x-signature header is "ts=<unix>,v1=<hmac_hex>".
+> 25	//   2. Build the manifest "id:<data.id>;request-id:<x-request-id>;ts:<ts>;" — data.id from the
+> 26	//      query string (lowercased when alphanumeric), x-request-id from the header. Absent
+> 27	//      segments are omitted.
+> 28	//   3. HMAC-SHA256(manifest, secret) in hex must equal v1. Secret = the app's "Your Integrations"
+> 29	//      signature key, resolved from the vault (MP_WEBHOOK_SECRET).
+> 30	// Without a valid signature the request is rejected (fail-closed): an unauthenticated postback
+> 31	// could forge arbitrary revenue and poison the ROI mesh that drives autonomic ad spend.
+> 32	async function verifyMpSignature(opts: {
+> 33	  xSignature: string | null;
+> 34	  xRequestId: string | null;
+> 35	  dataId: string | null;
+> 36	  secret: string;
+> 37	}): Promise<boolean> {
+> 38	  const { xSignature, xRequestId, dataId, secret } = opts;
+> 39	  if (!xSignature || !secret) return false;
+> 40	
+> 41	  let ts = "";
+> 42	  let v1 = "";
+> 43	  for (const part of xSignature.split(",")) {
+> 44	    const eq = part.indexOf("=");
+> 45	    if (eq === -1) continue;
+> 46	    const k = part.slice(0, eq).trim();
+> 47	    const val = part.slice(eq + 1).trim();
+> 48	    if (k === "ts") ts = val;
+> 49	    else if (k === "v1") v1 = val;
+> 50	  }
+> 51	  if (!ts || !v1) return false;
+> 52	
+> 53	  // data.id is lowercased when alphanumeric; lowercasing a purely numeric id is a no-op.
+> 54	  const id = dataId ? dataId.toLowerCase() : null;
+> 55	  let manifest = "";
+> 56	  if (id) manifest += `id:${id};`;
+> 57	  if (xRequestId) manifest += `request-id:${xRequestId};`;
+> 58	  manifest += `ts:${ts};`;
+> 59	
+> 60	  const encoder = new TextEncoder();
+> ```
+
+## 🤖 Claude *(15:36:57)*
+
+
+## 🤖 Claude *(15:36:59)*
+
+Postback deployed (64.73kB). It has MP-signature verification (fail-closed) — so a full forged-signature postback is high-effort for a **fail-soft additive** change. The real risk in my change is whether the `marketing_attribution` insert shape is valid against the live schema + FK. Let me prove that directly (throwaway, zero production impact) and kick the frontend build in parallel.
+
+## 🤖 Claude *(15:37:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -4",
+  "description": "Build frontend (attribution card)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: by0kfm21d. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/10450854-0c9b-4ef1-9d52-adab9c1b16ed/tasks/by0kfm21d.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(15:37:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-attribution.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 marketing_attribution write+read (FR-MH-007 / AT-MH-007), DB level.\n *\n * Proves the exact INSERT shape that handle-ml-postback performs is valid against the live schema:\n * service-role insert (bypasses RLS, as the postback does) with a real campaign_id links the revenue;\n * a bogus campaign_id is rejected by the FK (23503) \u2014 which is precisely why the postback guards the\n * campaign_id (UUID + existence) and falls back to NULL \"retained de-linked\". The per-campaign read\n * mirrors useCampaignAttribution's query. All throwaway (deleted in finally). No production data touched.\n *\n * Usage: bun run scripts/qa/smoke-attribution.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env (URL/SVC)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\n\ntry {\n  const { data: cu, error: cuErr } = await admin.auth.admin.createUser({ email: `attr-${stamp}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (cuErr || !cu?.user) throw new Error(`createUser: ${cuErr?.message}`);\n  uid = cu.user.id;\n\n  const { data: camp, error: cErr } = await admin.from('campaigns')\n    .insert({ user_id: uid, name: 'Attr Smoke', status: 'active', channels: [] }).select('id').single();\n  if (cErr || !camp) throw new Error(`campaign: ${cErr?.message}`);\n  const campaignId = camp.id as string;\n\n  // 1. postback-shaped inserts (service role, mirrors handle-ml-postback) \u2014 2 linked + 1 other touchpoint.\n  const rows = [\n    { user_id: uid, campaign_id: campaignId, lead_id: null, touchpoint: 'affiliate_click', revenue_cents: 1000, model: 'last_touch' },\n    { user_id: uid, campaign_id: campaignId, lead_id: null, touchpoint: 'affiliate_click', revenue_cents: 2500, model: 'last_touch' },\n    { user_id: uid, campaign_id: campaignId, lead_id: null, touchpoint: 'wp_article', revenue_cents: 500, model: 'last_touch' },\n  ];\n  const { error: insErr } = await admin.from('marketing_attribution').insert(rows);\n  check('A insert postback-shaped rows', !insErr, insErr ? insErr.message : '3 rows');\n\n  // 2. read mirrors useCampaignAttribution \u2192 aggregate\n  const { data: read } = await admin.from('marketing_attribution')\n    .select('touchpoint, revenue_cents').eq('campaign_id', campaignId);\n  const total = (read ?? []).reduce((s, r) => s + (r.revenue_cents ?? 0), 0);\n  check('B per-campaign total = 4000', total === 4000, `total=${total} rows=${read?.length}`);\n\n  // 3. FK enforced: bogus campaign_id rejected (23503) \u2014 the reason the postback guards it.\n  const { error: fkErr } = await admin.from('marketing_attribution')\n    .insert({ user_id: uid, campaign_id: crypto.randomUUID(), touchpoint: 'affiliate_click', revenue_cents: 100, model: 'last_touch' });\n  check('C bogus campaign_id rejected by FK (23503)', fkErr?.code === '23503', `code=${fkErr?.code ?? 'none'}`);\n\n  // 4. de-linked insert (campaign_id NULL) \u2014 the fallback when the FK can't be satisfied.\n  const { error: nullErr } = await admin.from('marketing_attribution')\n    .insert({ user_id: uid, campaign_id: null, touchpoint: 'affiliate_click', revenue_cents: 100, model: 'last_touch' });\n  check('D de-linked insert (campaign_id NULL) accepted', !nullErr, nullErr ? nullErr.message : 'ok');\n} catch (e) {\n  pass = false; console.error('\u274c smoke error:', e instanceof Error ? e.message : e);\n} finally {\n  if (uid) await admin.auth.admin.deleteUser(uid); // cascade removes campaign + attribution rows\n  console.log(`\\n\ud83e\uddf9 cleanup: throwaway user deleted (cascade)`);\n  console.log(pass ? '\\n\u2705\u2705 ATTRIBUTION SMOKE PASSED' : '\\n\u274c ATTRIBUTION SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-attribution.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:37:25)*
+
+
+## 🤖 Claude *(15:37:26)*
+
+Build running. Running the attribution smoke (proves the postback's insert shape + FK guard + read aggregation, all throwaway):
+
+## 🤖 Claude *(15:37:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/smoke-attribution.ts 2>&1 | tail -12",
+  "description": "Run attribution DB smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ A insert postback-shaped rows  → 3 rows
+> ✅ B per-campaign total = 4000  → total=4000 rows=3
+> ✅ C bogus campaign_id rejected by FK (23503)  → code=23503
+> ✅ D de-linked insert (campaign_id NULL) accepted  → ok
+> 
+> 🧹 cleanup: throwaway user deleted (cascade)
+> 
+> ✅✅ ATTRIBUTION SMOKE PASSED
+> ```
+
+## 🤖 Claude *(15:37:34)*
+
+
+## 🤖 Claude *(15:37:35)*
+
+**Attribution smoke 4/4** — insert shape valid · per-campaign total 4000 · bogus campaign_id → FK 23503 (why the guard exists) · NULL de-linked fallback OK. The postback write path is proven against the live schema. Build done (exit 0) — reading + verifying the served chunk:
+
+## 🤖 Claude *(15:37:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build output ===\"\ntail -3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/10450854-0c9b-4ef1-9d52-adab9c1b16ed/tasks/by0kfm21d.output\necho \"=== CampaignDetail chunk served + attribution card text ===\"\nls -la dist/assets/ | grep -iE \"CampaignDetail\" | head -1\ngrep -rl \"Receita Atribu\u00edda\" dist/assets/ 2>/dev/null | head -1 && echo \"attribution card in bundle \u2705\"",
+  "description": "Verify build + CampaignDetail chunk served"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build output ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.58s
+> === CampaignDetail chunk served + attribution card text ===
+> -rw-rw-r-- 1 ubuntu ubuntu  12564 Jun  3 12:37 CampaignDetail-Dz6snTeW.js
+> dist/assets/CampaignDetail-Dz6snTeW.js
+> attribution card in bundle ✅
+> ```
+
+## 🤖 Claude *(15:39:32)*
+
+
+## 🤖 Claude *(15:39:33)*
+
+MVP-5 fully verified: postback deployed (write proven via DB smoke 4/4 incl. FK guard) · hook + aggregation (13 tests) · `CampaignDetail-Dz6snTeW.js` served with the "Receita Atribuída" card · build `✓ 22.58s`. Committing:
+
+## 🤖 Claude *(15:39:34)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(15:39:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/handle-ml-postback/index.ts src/hooks/useCampaigns.ts src/pages/CampaignDetail.tsx src/test/marketing-hub.test.ts scripts/qa/smoke-attribution.ts\ngit status --short\ngit commit -q -F - <<'EOF'\nfeat(marketing-hub): MVP-5 \u2014 atribui\u00e7\u00e3o de receita por campanha (FR-MH-007)\n\nLiga receita real \u2192 campanha. handle-ml-postback agora tamb\u00e9m grava em\nmarketing_attribution quando uma convers\u00e3o \u00e9 atribu\u00edda \u2014 FK-safe (campaign_id\ns\u00f3 linka se for UUID real do mesmo tenant; sen\u00e3o ret\u00e9m de-linkado, espelhando\no ON DELETE SET NULL) e FAIL-SOFT (try/catch \u2014 nunca quebra o postback de receita).\n\n- useCampaignAttribution(campaignId): agrega marketing_attribution por campanha\n  (total + convers\u00f5es + por touchpoint), RLS-escopado ao tenant.\n- aggregateAttribution() extra\u00eddo como helper puro (test\u00e1vel sem mock).\n- CampaignDetail: card \"Receita Atribu\u00edda\" substitui o placeholder \"em breve\"\n  (total R$ + convers\u00f5es + breakdown por touchpoint; empty-state honesto).\n\nProva material: smoke DB 4/4 (`scripts/qa/smoke-attribution.ts`, throwaway+cleanup)\n\u2014 insert postback-shaped v\u00e1lido + total agregado 4000 + bogus campaign_id rejeitado\npela FK (23503, o motivo do guard) + de-linked NULL aceito. tsc 0 \u00b7 13 testes\n(suite marketing-hub, +2 attribution) \u00b7 eslint limpo \u00b7 postback redeploy 64.73kB \u00b7\nCampaignDetail-Dz6snTeW.js servido com o card no bundle.\nEOF\ngit push origin main 2>&1 | tail -2",
+  "description": "Commit + push MVP-5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A  scripts/qa/smoke-attribution.ts
+> M  src/hooks/useCampaigns.ts
+> M  src/pages/CampaignDetail.tsx
+> M  src/test/marketing-hub.test.ts
+> M  supabase/functions/handle-ml-postback/index.ts
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    dbf4399..2ed3f63  main -> main
+> ```
+
+## 🤖 Claude *(15:41:01)*
+
+
+## 🤖 Claude *(15:41:04)*
+
+MVP-5 committed + pushed (`dbf4399..2ed3f63`). 
+
+**Session density so far (vs the 45% seal):** in one session — `campaign-run` (FR-MH-004) · MVP-4 full UI · MVP-5 attribution (FR-MH-007) · context calibration. The **Marketing Hub core flywheel is now complete end-to-end**: leads → score → campaign → run → publish → affiliate → conversion → attribution → per-campaign ROI. I'm in high-momentum mode and ready to keep packing the window — but the core milestone is done, and the remaining roadmap forks diverge enough that the next big investment is genuinely your strategic call.
+
+## 🤖 Claude *(15:41:11)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "N\u00facleo do Marketing Hub fechado (MVP-1..5, flywheel completo). Ainda h\u00e1 janela de sobra \u2014 pra onde aponto a for\u00e7a agora? (sigo imediatamente com a escolha; o 1\u00ba run pago real segue gated no seu GO)",
+      "header": "Pr\u00f3xima frente",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Customer 360 (FR-MH-011)",
+          "description": "Perfil unificado do lead: VIEW agregando lead+eventos+consent+score (security_invoker, RLS-safe + /security-review) + useCustomer360 + drawer de detalhe no LeadBoard. Interno, baixo risco, enriquece o hub rec\u00e9m-constru\u00eddo. Recomendado \u2014 roadmap natural."
+        },
+        {
+          "label": "Nurturing Sequences (FR-MH-008)",
+          "description": "Pr\u00f3xima FR 'High': engine de drip (sequences + sequence_enrollments + nurture-dispatch edge fn + cron) que GERA e ENVIA mensagens, consent-gated. Maior + outward (envia mensagens reais \u2192 eu construo o motor, mas o envio real fica gated). Compliance-sens\u00edvel."
+        },
+        {
+          "label": "Endurecer o flywheel + observabilidade",
+          "description": "Pagar a d\u00edvida que esta sess\u00e3o revelou antes do run pago: corrigir o gate de lint (~3716 erros pr\u00e9-existentes em supabase/functions mascarando reais) + granularidade functionName na telemetria do fallback (10 fns) + teste de integra\u00e7\u00e3o marketing-hub (lead\u2192score\u2192campaign\u2192run)."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
