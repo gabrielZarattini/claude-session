@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 272
-> * **Sessões do Claude**: 240
+> * **Total de Sessões Registradas**: 273
+> * **Sessões do Claude**: 241
 > * **Sessões do Gemini**: 32
 
 ---
@@ -67,7 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-a699963bfb2415c80]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a0510ed362cec6fd6]]` - *2026-06-03*
-*   *... e mais 236 sessões nessa categoria.*
+*   *... e mais 237 sessões nessa categoria.*
 
 ---
 
@@ -269,6 +269,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-a0510ed362cec6fd6]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a03cbfb16a38aa951]]` (ClaudeSessions)
 *   `[[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]` (ClaudeSessions)
+*   `[[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]` (ClaudeSessions)
 *   `[[2026-06-03 - Monitor affiliate product updates and test results]]` (ClaudeSessions)
 *   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` (ClaudeSessions)
 *   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` (ClaudeSessions)
