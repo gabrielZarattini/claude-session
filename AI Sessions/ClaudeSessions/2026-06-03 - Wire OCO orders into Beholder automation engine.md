@@ -7010,6 +7010,488 @@ listStatus reconciliou **#6025 e #6024**, zero erros, **0 ordens abertas**. Todo
 > [{'type': 'text', 'text': 'All call sites pass a real persisted `automation` (with a DB `id`) — grid, trailing, and `doAction` all originate from `BRAIN` automations loaded from the DB. There\'s no synthetic/`id`-less automation reaching `placeOco`, so the anti-stacking guard\'s `if (automation.id)` gate will always be satisfied in practice. The guard is sound. The verification is complete.\n\n---\n\nVEREDITO: APPROVE\n\nRe-revisei o delta inteiro contra o código real em disco (não só o diff). Os dois must-fix estão resolvidos corretamente, e as mudanças extra (hardening de persistência, STOP-semantics, extração do timer) estão consistentes com os padrões da casa.\n\n## Must-fix #1 — anti-empilhamento via idempotency-guard (opção b)\nAceito. A opção b é, na verdade, a escolha de design **mais correta** para uma automação protetiva: a opção a (auto-desativar) mataria a recorrência da proteção após o primeiro ciclo, exigindo religar a automação na mão para a próxima posição. A guarda em `placeOco` (`backend/src/beholder.js:164-171`) cobre exatamente o caso catastrófico que eu havia sinalizado — automação sem índice disparando a cada tick — limitando a exposição a 1 OCO por automação+símbolo e re-armando sozinha quando a anterior resolve/é cancelada.\n\nVerifiquei o ponto cego do design: a guarda depende de `automation.id` truthy. Rastreei **todos** os call sites de `placeOco`/`placeOrder` (`beholder.js:397,499,694,724` + agenda) — todos passam uma automation persistida do `BRAIN`/DB, com `id` real. Não há automation sintética/sem-id chegando em `placeOco`, então a guarda nunca é silenciosamente pulada. Sólido. Validado em testnet (2º disparo "skipped", 1 orderListId/2 pernas no DB).\n\n## Must-fix #2 — match por origClientOrderId\nCorreto e consistente. Confirmei que `cancelOrder` (`ordersController.js:156`) usa `result.origClientOrderId` — é exatamente o padrão da casa. O novo `cancelOrderList` (`ordersController.js:185`) e o `cancelAutomationOcoOrders` (`automationsController.js:320`) usam `r.origClientOrderId` direto, sem o fallback `|| r.clientOrderId`. O comentário pt-BR explica o porquê (o `clientOrderId` na resposta de cancel é id novo). `updateOrderByOrderId` casa por `{orderId, clientOrderId}` (`ordersRepository.js:88-92`), então passar o `origClientOrderId` é o que faz o match funcionar. Bate com o validado em testnet (ambas pernas CANCELED).\n\n## STOP-semantics (delete-only)\nCorreto. Remover o cancel da OCO do `stopAutomation` e mantê-lo só no `deleteAutomation` (`automationsController.js:84-95` e `:249-251`) é a semântica segura: pausar não pode tirar o stop-loss de uma posição aberta. O comentário pt-BR documenta a decisão. A query `getOpenOcoOrders` roda **antes** de `removeAutomationFromOrders` zerar o `automationId` — ordem correta.\n\n## Hardening (nice-to-haves)\n- `reports.length !== 2` → cancela a lista viva e falha (`beholder.js:219-223`): evita órfã não-rastreável. Bom.\n- try/catch no insert das pernas → auto-cancela a OCO na corretora se a persistência falhar (`beholder.js:228-251`): mantém DB e exchange coerentes. Esse era o risco real de órfã viva; bem tratado.\n- `processListStatusData` reconcilia só em `ALL_DONE`/`REJECT`, só toca pernas ainda `NEW`/`PARTIALLY_FILLED`, e `updateOrder` por si só já é idempotente (`ordersRepository.js:97-100` só sai de estado não-terminal). Defense-in-depth correto contra `executionReport` perdido. Imports e assinaturas (`getOrder`, `orderStatus`, `getLightOrder`, `notifyOrderUpdate`, `indexKeys`) todos conferidos em `app-em.js`.\n- `OCO_RECONCILE_DELAY_MS=4000` extraído e comentado (`app-em.js:13`).\n\n## Migration / model\n`orderListId BIGINT nullable`, addColumn/removeColumn portável MySQL+Postgres com guard `describeTable` (idempotente para a CI rodar 2x). Coluna no model com comentário pt-BR. Ordens normais ficam NULL e a query OCO filtra `orderListId != null`. Sem quebra de compat.\n\n## Must-fix vs Nice-to-have (restantes)\n**Must-fix:** nenhum. Bloqueadores zerados.\n\n**Nice-to-have (não condiciona o merge):**\n- A guarda anti-empilhamento tem uma janela TOCTOU teórica (dois ticks quase simultâneos do mesmo símbolo passando pelo check antes de qualquer insert). Na prática o hot-path do Beholder é single-threaded por design e o `LOCK_*` serializa, então é improvável — mas se um dia virar problema, o ponto de defesa definitivo é um índice único parcial `(automationId, symbol)` onde `orderListId IS NOT NULL AND status IN (\'NEW\',\'PARTIALLY_FILLED\')`. Deixar anotado, não fazer agora.\n- `cancelOrderList` no wrapper usa `privateSpotRequest(\'v3/orderList\', …, \'DELETE\')` em vez de um método nomeado da lib — consistente com a nota do HANDOFF, ok como está.\n\n## Decisão de merge\n**APPROVE — mergeável.** Mudança bem-escoada, reversível (migration tem `down`, coluna nullable, OCO é opt-in só em template de automação via `showOco`), e o blast-radius no hot-path (`beholder.js`/fluxo de dinheiro) está contido por: guarda anti-empilhamento, auto-cancel em qualquer falha de persistência, e reconciliação idempotente. Validação testnet cobre os 3 caminhos críticos (place, anti-stacking, cancel + reconcile, 0 órfãs).\n\nCondições de ship (operacional, não de código):\n1. Subir como `gcrux-tradeux` (git/docker), push via token, **chown `.git` depois** (gotcha conhecido do npm/git-as-ubuntu).\n2. A migration roda no boot do container (`docker-entrypoint.sh`) — confirmar boot limpo + `db:migrate` aplicando a coluna no ambiente real após o deploy.\n3. Re-armar id2/id3 e checar logs limpos pós-restart.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js`, `/home/gcrux-tradeux/tradeux/backend/src/app-em.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`, `/home/gcrux-tradeux/tradeux/backend/migrations/20260603170000-alter-orders-add-orderListId.js`.'}, {'type': 'text', 'text': "agentId: ab4c0f4e4e809f4b2 (use SendMessage with to: 'ab4c0f4e4e809f4b2' to continue this agent)\n<usage>subagent_tokens: 42195\ntool_uses: 11\nduration_ms: 81576</usage>"}]
 > ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'JSX is well-formed (the conditional uses a proper ternary with a `React.Fragment` else, balanced tags). The `OrderTemplateModal.js` edits from the diff are equally standard (className ternary + text prop ternary). These are low-risk and will compile. I\'m confident enough on CI gate #1 without a full host build; I\'ll flag it as the one not-executed-here item.\n\nI have everything I need. Let me compile the final verdict on the delta.\n\n---\n\nVEREDITO: PASS\n\nRe-validei o delta (working tree, ainda não commitado) contra os 4 must-fixes + CI/DB ao vivo. Os 4 achados originais estão **resolvidos** e não encontrei regressão. Detalhes por ponto que você pediu:\n\n## 1. Guard de idempotência (ALTA re-fire/stacking) — RESOLVIDO\n`backend/src/beholder.js:283-290`. Confirmei a interação com o locking real do Beholder:\n\n- **`testAutomations` (`beholder.js:795-841`)** trava por `automation.id` ANTES de `evalDecision`: `isLocked` + `setLocked(true)` são síncronos (sem `await` entre eles, single-thread) e o `finally` segura a trava por `INTERVAL` quando há resultado. No `.env` deployado **`AUTOMATION_INTERVAL=60000`** → a MESMA automação não re-dispara por 60s. O guard é a **2ª linha de defesa** (cobre o caso pós-60s e o edge `INTERVAL=0`). Sem race entre o read do guard e a persistência **dentro de uma automação**: as ações rodam em `for...await` sequencial e não há 2ª invocação concorrente da mesma automação.\n- **Multi-action / retorno `success`** (você perguntou): correto. O skip retorna `{type:\'success\'}`, então o loop de ações (`beholder.js:777-783`) **não dá break** — uma automação `[OCO, OCO]` no mesmo símbolo coloca a 1ª e pula a 2ª limpa (a 2ª chamada já vê a perna persistida). Se retornasse `error`, abortaria sequências legítimas. Escolha certa.\n- **Wildcard `*USDT`**: `auto.id` é preservado no clone e `getOpenOcoOrders(id)` é filtrado por símbolo (`open.some(o => o.symbol === symbolUpper)`) → uma OCO por símbolo simultânea sob a mesma automação. Coerente com o `placeOco` que recebe `orderTemplate.symbol` já substituído.\n\nEvidência ao vivo (`/app/logs/A1.log`): `OCO #6025 ... placed` seguido 13 ms depois de `OCO já aberta para BTCUSDT; re-disparo ignorado.` DB: automationId=1 tem **exatamente um** orderListId (6025, 2 pernas). Sem empilhamento.\n\n- [MÉDIA — limitação conhecida, NÃO regressão] O guard é por-`automation.id`. **Duas automações distintas** no mesmo símbolo/memoryKey podem, via `Promise.all` em `testAutomations`, colocar **uma OCO cada** simultaneamente (cada uma vê só as próprias ordens). É bounded (1 por automação) e seria misconfig, mas vale documentar: o contrato é "1 OCO por automação por símbolo", não global.\n\n## 2. Auto-cancel em falha de persistência (MÉDIA orphan) — RESOLVIDO\n`backend/src/beholder.js:344-370`. Confirmado o que você pediu:\n- **`exchange` está em escopo**: `const exchange = require(\'./utils/exchange\')(settings)` na linha 324, ANTES tanto do bloco `reports.length !== 2` (338) quanto do try/catch de persist (347). O `cancelOrderList` nos dois catches resolve.\n- **O cancel não mascara o erro original**: cada `cancelOrderList` de recuperação está em seu próprio `try/catch` que só loga (`beholder.js:339-341`, `367-369`); o erro original é logado antes e retorna string determinística. Sem unhandled rejection, sem mascaramento.\n- Também valida `reports.length === 2` cancelando lista anômala. Bom.\n\n## 3. Match por `origClientOrderId` (MÉDIA cancel match) — RESOLVIDO\n`ordersController.cancelOrderList` (`controllers/ordersController.js:185-191`) e `cancelAutomationOcoOrders` (`controllers/automationsController.js:33-37`) casam por `r.orderId, r.origClientOrderId` (sem o frágil `|| r.clientOrderId`), igual ao `cancelOrder`. Correto: na resposta de cancel o `clientOrderId` é um id novo da ação. Validado ao vivo: DELETE da OCO #6024 → ambas pernas CANCELED no DB.\n\n## 4. STOP semantics — RESOLVIDO\n`cancelAutomationOcoOrders` é chamado **só** em `deleteAutomation` (`automationsController.js:254`); `stopAutomation` não cancela mais (comentário em `:84-88`). Grep confirma único call-site. Pausar não remove mais o stop-loss. Sem inconsistência: a função usa `automationId`, e `removeAutomationFromOrders` (que zera o `automationId`) roda DEPOIS, dentro da transação seguinte.\n\n## 5. `OCO_RECONCILE_DELAY_MS = 4000` (magic timer) — RESOLVIDO\n`app-em.js:43`, extraído e comentado.\n\n## Riscos NOVOS introduzidos pelo delta — nenhum bloqueante\n- [BAIXA] Comentário em `app-em.js:265-266` diz "o all_updates_callback acima também recebe o listStatus" — verifiquei na lib instalada (`node-binance-api@1.0.27`, `dist/cjs/...cjs:2768-2778` + assinatura `userData(all_updates, balance, execution, subscribed, list_status)` na 5706): o arg1 REALMENTE recebe o `listStatus`, mas o callback do wrapper só ramifica em `executionReport`/`balance`/`outboundAccountPosition`, então **não há duplo-processamento**; o `listStatus` é tratado só no arg5. Comportamento correto; comentário levemente impreciso. Não-bloqueante.\n- [INFO] `processListStatusData` faz `exchange.orderStatus` (spot `v3/order`, existe no testnet — sem dependência de SAPI) só como rede de segurança e idempotente (`updateOrder` só sai de NEW/PARTIALLY_FILLED). Sem ação de dinheiro. OK.\n- [INFO] `placeOco` exige `side===\'SELL\'` e o front habilita OCO só em templates (`OrderTemplateModal` passa `showOco`; `NewOrderModal` não) — o controller manual `placeOrder` não trata OCO, então defense-in-depth alinhada (UI manual não consegue submeter OCO).\n\n## Testes que eu rodaria\n- **DB/CI gate (rodei):** `npx sequelize-cli db:migrate` no `tradeux-backend-1` → idempotente (no-op); coluna `orders.orderListId` = `bigint NULL`; migração em `SequelizeMeta`. ✅\n- **DB coerência (rodei):** 0 pernas OCO abertas; toda lista com exatamente 2 pernas terminais; #6025 (autom. 1) com 1 só orderListId → guard provado. ✅\n- **Logs ao vivo (rodei):** `A1.log` skip do guard; `M3.log` reconcile `ALL_DONE` de #6024/#6025; `system.log`/stderr sem erro; boot limpo. ✅\n- **Sintaxe (rodei):** `node --check` nos 8 arquivos backend → OK. ✅\n- **Que eu AINDA rodaria antes de commitar (não executável aqui — toolchain front não instalada no host):**\n  - `vite build` (CI gate frontend) pós `npm ci` — as mudanças em `OrderType.js`/`OrderTemplateModal.js` são JSX trivial e bem-formado (inspecionei), risco baixo, mas o gate #1 precisa passar.\n  - Teste de **2 automações distintas, mesmo símbolo**, disparando OCO no mesmo tick → confirmar o comportamento "1 por automação" e decidir se quer um guard global por símbolo.\n  - **Falha de persist forçada** (ex.: matar o DB entre `oco` e `insertOrder`) → confirmar que a lista é cancelada na corretora e fica 0 órfã (caminho `beholder.js:365-369`).\n  - **Postgres** migrate+seed (a outra metade do gate `[mysql, postgres]`) — a migração é portável (só `addColumn`), mas o CI roda nos dois.\n\n## Recomendação de merge\n**Aprovar.** Os 4 must-fixes estão resolvidos e corroborados por DB + logs do testnet; nenhuma regressão. Antes do commit direto no master, rodar o `vite build` (gate frontend) e o leg postgres do migrate (gate backend) — são os dois únicos checks que não consegui executar neste host. Sugiro registrar a limitação "guard por-automação, não global" como ressalva conhecida (BAIXA) e ajustar a frase do comentário em `app-em.js:265-266`.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`placeOco` 274-376; guard 283-290; auto-cancel 338-342 / 365-369)\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (`processListStatusData` 206-237; wiring 262-272; `OCO_RECONCILE_DELAY_MS` 43)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` (`cancelOrderList` 164-192)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (`cancelAutomationOcoOrders` 19-44; só em delete 254; stop 84-88)\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js` (`getOpenOcoOrders` 153-161)\n- `/home/gcrux-tradeux/tradeux/backend/migrations/20260603170000-alter-orders-add-orderListId.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`userDataStream` 203-210; `oco`/`cancelOrderList` 70-81)\n- `/home/gcrux-tradeux/tradeux/frontend/src/components/NewOrder/OrderType.js` e `/home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js`'}, {'type': 'text', 'text': "agentId: a13a3576eec1302d7 (use SendMessage with to: 'a13a3576eec1302d7' to continue this agent)\n<usage>subagent_tokens: 71248\ntool_uses: 38\nduration_ms: 312401</usage>"}]
+> ```
+
+## 🤖 Claude *(20:32:56)*
+
+
+## 🤖 Claude *(20:33:00)*
+
+**Ambos os gates agora aprovam:**
+- **QA: PASS** — os 4 must-fixes resolvidos, sem regressão (evidência em `A1.log` o skip do guard, `M3.log` os reconciles).
+- **Tech-lead: APPROVE** — guard (opção b) é a escolha de design mais correta; hardening bom; sem bloqueadores.
+
+Ambos pediram 2 checks pré-commit que faltam neste host: **vite build** (gate de CI frontend) e **migrate no Postgres** (a outra metade do gate `[mysql,postgres]`). Vou rodar os dois antes de commitar — Postgres descartável + reconfirmar o build do frontend.
+
+## 🤖 Claude *(20:33:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nNET=$(sudo -n -u gcrux-tradeux docker network ls --format '{{.Name}}' | grep -i tradeux | head -1)\necho \"NET=$NET\"\nDB_USER=$(grep -E '^DB_USER=' .env | cut -d= -f2-); DB_PWD=$(grep -E '^DB_PWD=' .env | cut -d= -f2-); DB_NAME=$(grep -E '^DB_NAME=' .env | cut -d= -f2-)\necho \"=== sobe Postgres descart\u00e1vel (pgtest) ===\"\nsudo -n -u gcrux-tradeux docker rm -f pgtest >/dev/null 2>&1\nsudo -n -u gcrux-tradeux docker run -d --name pgtest --network \"$NET\" -e POSTGRES_USER=\"$DB_USER\" -e POSTGRES_PASSWORD=\"$DB_PWD\" -e POSTGRES_DB=\"$DB_NAME\" postgres:16 >/dev/null 2>&1\necho \"aguarda pg subir...\"; sleep 9\necho \"=== migrate no Postgres (cadeia completa + minha migration), 2x p/ idempot\u00eancia ===\"\nsudo -n -u gcrux-tradeux docker run --rm --network \"$NET\" \\\n  -e DB_DIALECT=postgres -e DB_HOST=pgtest -e DB_PORT=5432 -e DB_USER=\"$DB_USER\" -e DB_PWD=\"$DB_PWD\" -e DB_NAME=\"$DB_NAME\" -e DB_SSL=false \\\n  -e AES_KEY=00000000000000000000000000000000 -e NODE_ENV=production \\\n  -w /app tradeux-backend sh -c 'npx sequelize-cli db:migrate && echo \"--- RE-RUN ---\" && npx sequelize-cli db:migrate' 2>&1 | grep -iE \"orderListId|migrated|already|No migrations|error|ERR\" | tail -25",
+  "description": "Run migration chain on throwaway Postgres (CI parity)",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NET=tradeux_tradeux
+> === sobe Postgres descartável (pgtest) ===
+> aguarda pg subir...
+> === migrate no Postgres (cadeia completa + minha migration), 2x p/ idempotência ===
+> == 20210904033809-create-settings: migrated (0.023s)
+> == 20210904041722-create-index-settings-email: migrated (0.009s)
+> == 20210904191433-create-symbols: migrated (0.014s)
+> == 20210906203940-alter-settings-streamUrl: migrated (0.007s)
+> == 20210908162542-alter-symbols-assets: migrated (0.008s)
+> == 20210909133021-create-orders: migrated (0.024s)
+> == 20210910174253-create-monitors: migrated (0.023s)
+> == 20210914121558-create-automations: migrated (0.019s)
+> == 20210916220945-create-actions: migrated (0.015s)
+> == 20210918122334-alter-settings-alerts: migrated (0.015s)
+> == 20210919213750-create-orderTemplates: migrated (0.020s)
+> == 20210919214332-alter-auto-orders: migrated (0.014s)
+> == 20210923213510-create-grids: migrated (0.011s)
+> == 20210925132734-alter-automations-schedule: migrated (0.006s)
+> == 20210925190922-create-withdrawTemplates: migrated (0.017s)
+> == 20210925192003-alter-actions-withdraw: migrated (0.006s)
+> == 20210928193003-alter-settings-telegram: migrated (0.007s)
+> == 20220128150240-alter-settings-pushToken: migrated (0.007s)
+> == 20260603170000-alter-orders-add-orderListId: migrating =======
+> == 20260603170000-alter-orders-add-orderListId: migrated (0.020s)
+> ERROR: Illegal arguments: undefined, string
+> ```
+
+## 🤖 Claude *(20:33:57)*
+
+
+## 🤖 Claude *(20:33:59)*
+
+A cadeia **inteira migrou limpa no Postgres**, incluindo a minha (`20260603170000 … migrated 0.020s`). Mas apareceu um `ERROR: Illegal arguments: undefined, string` no fim (cheira a bcrypt, não a migration). Preciso isolar: vou rodar o `db:migrate` de novo no mesmo pgtest, com saída completa, pra ver se a idempotência está ok ou se há um erro real.
+
+## 🤖 Claude *(20:34:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nNET=tradeux_tradeux\nDB_USER=$(grep -E '^DB_USER=' .env | cut -d= -f2-); DB_PWD=$(grep -E '^DB_PWD=' .env | cut -d= -f2-); DB_NAME=$(grep -E '^DB_NAME=' .env | cut -d= -f2-)\necho \"=== db:migrate idempot\u00eancia (verbose, sem grep) ===\"\nsudo -n -u gcrux-tradeux docker run --rm --network \"$NET\" \\\n  -e DB_DIALECT=postgres -e DB_HOST=pgtest -e DB_PORT=5432 -e DB_USER=\"$DB_USER\" -e DB_PWD=\"$DB_PWD\" -e DB_NAME=\"$DB_NAME\" -e DB_SSL=false \\\n  -e AES_KEY=00000000000000000000000000000000 -e NODE_ENV=production \\\n  -w /app tradeux-backend npx sequelize-cli db:migrate 2>&1 | tail -8\necho \"exit: $?\"\necho \"=== confirma a coluna no Postgres ===\"\nsudo -n -u gcrux-tradeux docker exec -e PGPASSWORD=\"$DB_PWD\" pgtest psql -U \"$DB_USER\" -d \"$DB_NAME\" -c \"\\d orders\" 2>&1 | grep -iE \"orderListId|Column\" | head\necho \"=== seed no Postgres (paridade total com CI) ===\"\nsudo -n -u gcrux-tradeux docker run --rm --network \"$NET\" \\\n  -e DB_DIALECT=postgres -e DB_HOST=pgtest -e DB_PORT=5432 -e DB_USER=\"$DB_USER\" -e DB_PWD=\"$DB_PWD\" -e DB_NAME=\"$DB_NAME\" -e DB_SSL=false \\\n  -e AES_KEY=00000000000000000000000000000000 -e NODE_ENV=production \\\n  -e DEFAULT_SETTINGS_EMAIL=test@test.com -e DEFAULT_SETTINGS_PWD=test123 -e DEFAULT_SETTINGS_ACCESS_KEY=x -e DEFAULT_SETTINGS_SECRET_KEY=y \\\n  -w /app tradeux-backend npx sequelize-cli db:seed:all 2>&1 | tail -10\necho \"seed exit: $?\"",
+  "description": "Diagnose Postgres migrate idempotency + seed parity",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === db:migrate idempotência (verbose, sem grep) ===
+> Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> 
+> Loaded configuration file "config/config.js".
+> Using environment "production".
+> == 20210904035656-default-settings: migrating =======
+> 
+> 
+> ERROR: Illegal arguments: undefined, string
+> exit: 0
+> === confirma a coluna no Postgres ===
+>     Column     |           Type           | Collation | Nullable |              Default               
+>  orderListId   | bigint                   |           |          | 
+> === seed no Postgres (paridade total com CI) ===
+> == 20210919222709-default-orderTemplate: migrating =======
+> == 20210919222709-default-orderTemplate: migrated (0.007s)
+> 
+> [TradeUX] Starting backend...
+> 
+> Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> 
+> Loaded configuration file "config/config.js".
+> Using environment "production".
+> No seeders found.
+> seed exit: 0
+> ```
+
+## 🤖 Claude *(20:34:43)*
+
+
+## 🤖 Claude *(20:34:46)*
+
+O `ERROR: Illegal arguments` é do **entrypoint da imagem** rodando `db:seed:all` (o seeder `default-settings` chama `bcrypt.hashSync` com `DEFAULT_SETTINGS_PWD` indefinido no meu harness) — **nada a ver com a minha migration**, que aplicou limpa e criou a coluna `orderListId bigint` no Postgres. Vou confirmar a **idempotência** isolando o `db:migrate` (bypass do entrypoint, sem seed).
+
+## 🤖 Claude *(20:34:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nNET=tradeux_tradeux\nDB_USER=$(grep -E '^DB_USER=' .env | cut -d= -f2-); DB_PWD=$(grep -E '^DB_PWD=' .env | cut -d= -f2-); DB_NAME=$(grep -E '^DB_NAME=' .env | cut -d= -f2-)\necho \"=== migrate idempotente no Postgres (bypass do entrypoint, sem seed) \u2014 2x ===\"\nsudo -n -u gcrux-tradeux docker run --rm --network \"$NET\" --entrypoint sh \\\n  -e DB_DIALECT=postgres -e DB_HOST=pgtest -e DB_PORT=5432 -e DB_USER=\"$DB_USER\" -e DB_PWD=\"$DB_PWD\" -e DB_NAME=\"$DB_NAME\" -e DB_SSL=false \\\n  tradeux-backend -c 'cd /app && npx sequelize-cli db:migrate && echo \"=== RUN2 ===\" && npx sequelize-cli db:migrate' 2>&1 | grep -vE \"^$|Sequelize CLI|Loaded config|Using environment\" | tail -12\necho \"=== teardown pgtest ===\"\nsudo -n -u gcrux-tradeux docker rm -f pgtest >/dev/null 2>&1 && echo \"pgtest removido\"",
+  "description": "Confirm Postgres migrate idempotency (entrypoint bypassed) + cleanup",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrate idempotente no Postgres (bypass do entrypoint, sem seed) — 2x ===
+> Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'SequelizeMeta'
+> Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'SequelizeMeta' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+> Executing (default): SELECT "name" FROM "SequelizeMeta" AS "SequelizeMeta" ORDER BY "SequelizeMeta"."name" ASC;
+> No migrations were executed, database schema was already up to date.
+> === RUN2 ===
+> Executing (default): SELECT 1+1 AS result
+> Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type LIKE '%TABLE' AND table_name != 'spatial_ref_sys';
+> Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'SequelizeMeta' AND c.table_schema = 'public'
+> Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'SequelizeMeta'
+> Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'SequelizeMeta' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+> Executing (default): SELECT "name" FROM "SequelizeMeta" AS "SequelizeMeta" ORDER BY "SequelizeMeta"."name" ASC;
+> No migrations were executed, database schema was already up to date.
+> === teardown pgtest ===
+> pgtest removido
+> ```
+
+## 🤖 Claude *(20:35:24)*
+
+
+## 🤖 Claude *(20:35:27)*
+
+Postgres: **idempotente** (RUN1 e RUN2 = "No migrations were executed"), coluna `orderListId bigint` criada. O `Illegal arguments` era o seed do entrypoint (faltava `DEFAULT_SETTINGS_PWD` no meu harness) — não a migration. Portabilidade MySQL+Postgres provada. pgtest removido.
+
+Agora preciso ter certeza que o **build do frontend incluiu** minhas mudanças (vi um `CACHED` no build anterior). Vou checar se o bundle servido contém as strings que adicionei.
+
+## 🤖 Claude *(20:35:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== o bundle servido cont\u00e9m minhas strings de OCO? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T frontend sh -c 'grep -rl \"OCO (TP\" /usr/share/nginx/html/ 2>/dev/null | head; echo \"---\"; grep -rho \"Take Profit Price\\|OCO (TP + Stop)\\|showOco\" /usr/share/nginx/html/assets/*.js 2>/dev/null | sort -u | head' 2>&1",
+  "description": "Check frontend bundle includes OCO changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o bundle servido contém minhas strings de OCO? ===
+> /usr/share/nginx/html/assets/index-BD8h9fDN.js
+> ---
+> OCO (TP + Stop)
+> Take Profit Price
+> showOco
+> ```
+
+## 🤖 Claude *(20:35:54)*
+
+
+## 🤖 Claude *(20:35:56)*
+
+O bundle servido **contém** "OCO (TP + Stop)", "Take Profit Price" e "showOco" → o `vite build` compilou minhas mudanças (gate de CI frontend satisfeito).
+
+**Validação 100% completa.** Como orquestrador, com QA=PASS e Tech-lead=APPROVE, decido: **APROVAR → produção**. Antes do commit, sanity final do diff (sem DIAG/segredos/lixo) + branch atual.
+
+## 🤖 Claude *(20:36:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== branch atual + HEAD ===\"\nsudo -n -u gcrux-tradeux git rev-parse --abbrev-ref HEAD 2>&1\nsudo -n -u gcrux-tradeux git log --oneline -1 2>&1\necho \"=== sanity: nenhum DIAG/console.log/segredo no diff ===\"\ngrep -nE \"DIAG|console\\.log|TODO|FIXME|GITHUB_TOKEN|secretKey =|APIKEY\" /tmp/oco-full.diff | grep '^+' | head || echo \"(limpo)\"\ngrep -cE \"^\\+\" /tmp/oco-full.diff | xargs echo \"linhas adicionadas:\"\necho \"=== arquivos no diff (deve ser s\u00f3 os 10 esperados) ===\"\nsudo -n -u gcrux-tradeux git --no-pager diff --name-only 2>&1\necho \"?? novo:\"; sudo -n -u gcrux-tradeux git status --short 2>&1 | grep '^??'",
+  "description": "Final diff sanity + branch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === branch atual + HEAD ===
+> master
+> 063df19 fix(security): node-binance-api 0.13→1.x (fork ccxt) + @sendgrid 6→8 + OCO no wrapper
+> === sanity: nenhum DIAG/console.log/segredo no diff ===
+> linhas adicionadas: 312
+> === arquivos no diff (deve ser só os 10 esperados) ===
+> backend/migrations/20260603170000-alter-orders-add-orderListId.js
+> backend/src/app-em.js
+> backend/src/beholder.js
+> backend/src/controllers/automationsController.js
+> backend/src/controllers/ordersController.js
+> backend/src/models/orderModel.js
+> backend/src/repositories/ordersRepository.js
+> backend/src/routers/ordersRouter.js
+> frontend/src/components/NewOrder/OrderType.js
+> frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js
+> ?? novo:
+> ```
+
+## 🤖 Claude *(20:36:28)*
+
+
+## 🤖 Claude *(20:36:29)*
+
+Sanity limpo: branch `master`, 312 linhas adicionadas, **sem DIAG/segredos/lixo**, exatamente os 10 arquivos esperados. Vou conferir a identidade git e chownar tudo antes do commit.
+
+## 🤖 Claude *(20:36:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git identity (gcrux) ===\"\nsudo -n -u gcrux-tradeux git config user.name 2>&1; sudo -n -u gcrux-tradeux git config user.email 2>&1\necho \"=== autor do \u00faltimo commit (p/ casar identidade) ===\"\nsudo -n -u gcrux-tradeux git log -1 --format='%an <%ae>' 2>&1\necho \"=== chown final defensivo de tudo que mudou ===\"\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git 2>&1\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  backend/migrations/20260603170000-alter-orders-add-orderListId.js \\\n  backend/src/app-em.js backend/src/beholder.js \\\n  backend/src/controllers/automationsController.js backend/src/controllers/ordersController.js \\\n  backend/src/models/orderModel.js backend/src/repositories/ordersRepository.js \\\n  backend/src/routers/ordersRouter.js \\\n  frontend/src/components/NewOrder/OrderType.js \\\n  frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js 2>&1 && echo \"chowned\"\necho \"=== token presente no .env? (s\u00f3 confirma exist\u00eancia) ===\"\ngrep -qE '^GITHUB_TOKEN_API=.+' .env && echo \"GITHUB_TOKEN_API: presente\" || echo \"AUSENTE\"",
+  "description": "Check git identity + final chown + token presence"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git identity (gcrux) ===
+> === autor do último commit (p/ casar identidade) ===
+> Gabriel Zarattini <gabrielcall@gmail.com>
+> === chown final defensivo de tudo que mudou ===
+> chowned
+> === token presente no .env? (só confirma existência) ===
+> GITHUB_TOKEN_API: presente
+> ```
+
+## 🤖 Claude *(20:37:03)*
+
+
+## 🤖 Claude *(20:37:04)*
+
+Identidade vazia no gcrux; vou usar inline a identidade do último commit (`Gabriel Zarattini <gabrielcall@gmail.com>`). Token presente. Vou escrever a mensagem de commit (pt-BR) e commitar.
+
+## 🤖 Claude *(20:37:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/oco-commit-msg.txt",
+  "content": "feat(oco): wiring de OCO no Beholder \u2014 persist\u00eancia, listStatus e cancel\n\nLiga OCO (One-Cancels-the-Other) ao motor de automa\u00e7\u00f5es (o plumbing da\nfronteira da exchange j\u00e1 estava em 063df19). Caso de uso: SELL protetiva\n(TP + SL) ap\u00f3s uma compra.\n\n- migration: coluna orderListId (BIGINT, nullable) em orders \u2014 port\u00e1vel\n  MySQL+Postgres, idempotente (guard describeTable). Ordens normais ficam NULL.\n- beholder.placeOco: order-template type:'OCO' \u2192 SELL protetiva (TP via\n  LIMIT_MAKER \"above\" + SL via STOP_LOSS_LIMIT \"below\"); persiste as 2 pernas\n  com o mesmo orderListId. calcPrice trata OCO como pre\u00e7o expl\u00edcito (igual aos\n  LIMIT). Guard anti-empilhamento: 1 OCO aberta por automa\u00e7\u00e3o/s\u00edmbolo (re-arma\n  sozinha quando a anterior resolve). Em falha de persist\u00eancia, cancela a lista\n  na corretora para n\u00e3o deixar ordem \u00f3rf\u00e3.\n- app-em: 2\u00ba callback dedicado ao listStatus; quando a lista resolve\n  (ALL_DONE/REJECT) reconcilia o status real de cada perna \u2014 rede de seguran\u00e7a\n  idempotente atr\u00e1s do executionReport por-perna.\n- ordersController/router: DELETE /orders/oco/:symbol/:orderListId.\n- automationsController: cancela as OCO abertas ao DELETAR a automa\u00e7\u00e3o (n\u00e3o ao\n  apenas parar \u2014 pausar n\u00e3o deve remover a prote\u00e7\u00e3o de uma posi\u00e7\u00e3o aberta).\n- frontend: op\u00e7\u00e3o OCO s\u00f3 no template de automa\u00e7\u00e3o (prop showOco); stop vis\u00edvel.\n\nValidado em testnet: place \u2192 2 pernas persistidas com orderListId \u2192 cancel via\nendpoint \u2192 ambas CANCELED; listStatus ALL_DONE reconciliado no processo servidor;\nguard anti-empilhamento; migrate + idempot\u00eancia em MySQL e Postgres; boot limpo;\n0 ordens \u00f3rf\u00e3s. Gate QA + Tech-Lead: aprovado.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/oco-commit-msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:37:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git add \\\n  backend/migrations/20260603170000-alter-orders-add-orderListId.js \\\n  backend/src/app-em.js backend/src/beholder.js \\\n  backend/src/controllers/automationsController.js backend/src/controllers/ordersController.js \\\n  backend/src/models/orderModel.js backend/src/repositories/ordersRepository.js \\\n  backend/src/routers/ordersRouter.js \\\n  frontend/src/components/NewOrder/OrderType.js \\\n  frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js 2>&1\necho \"=== staged ===\"\nsudo -n -u gcrux-tradeux git diff --cached --name-only 2>&1\necho \"=== commit ===\"\nsudo -n -u gcrux-tradeux git -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit -F /tmp/oco-commit-msg.txt 2>&1 | tail -5\necho \"=== HEAD agora ===\"\nsudo -n -u gcrux-tradeux git log --oneline -2 2>&1",
+  "description": "Stage and commit OCO changes as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+> backend/migrations/20260603170000-alter-orders-add-orderListId.js
+> backend/src/app-em.js
+> backend/src/beholder.js
+> backend/src/controllers/automationsController.js
+> backend/src/controllers/ordersController.js
+> backend/src/models/orderModel.js
+> backend/src/repositories/ordersRepository.js
+> backend/src/routers/ordersRouter.js
+> frontend/src/components/NewOrder/OrderType.js
+> frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js
+> === commit ===
+> [master aa3f7f7] feat(oco): wiring de OCO no Beholder — persistência, listStatus e cancel
+>  10 files changed, 302 insertions(+), 13 deletions(-)
+>  create mode 100644 backend/migrations/20260603170000-alter-orders-add-orderListId.js
+> === HEAD agora ===
+> aa3f7f7 feat(oco): wiring de OCO no Beholder — persistência, listStatus e cancel
+> 063df19 fix(security): node-binance-api 0.13→1.x (fork ccxt) + @sendgrid 6→8 + OCO no wrapper
+> ```
+
+## 🤖 Claude *(20:37:23)*
+
+
+## 🤖 Claude *(20:37:24)*
+
+Commit `aa3f7f7` criado no master (10 arquivos, 302/-13). Agora o **push** pro GitHub via HTTPS com o token do `.env` (inline, sem ecoar).
+
+## 🤖 Claude *(20:37:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(grep -E '^GITHUB_TOKEN_API=' .env | cut -d= -f2- | tr -d '\\r\\n')\nsudo -n -u gcrux-tradeux git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s/${TOKEN}/***REDACTED***/g\" | tail -8",
+  "description": "Push commit to GitHub master via token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 3 vulnerabilities on gabrielZarattini/tradeux's default branch (3 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    063df19..aa3f7f7  HEAD -> master
+> ```
+
+## 🤖 Claude *(20:37:50)*
+
+
+## 🤖 Claude *(20:37:51)*
+
+**Push concluído**: `063df19..aa3f7f7 HEAD -> master`. (Os 3 alertas moderados do Dependabot são pré-existentes — não adicionei deps.)
+
+Vou fazer o check final de saúde do stack ao vivo + limpeza, e registrar um aprendizado operacional não-óbvio na memória.
+
+## 🤖 Claude *(20:37:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== stack saud\u00e1vel? login no 8090 ===\"\nEMAIL=$(grep -E '^DEFAULT_SETTINGS_EMAIL=' .env | cut -d= -f2-); PW=$(grep -E '^DEFAULT_SETTINGS_PWD=' .env | cut -d= -f2-)\nBODY=$(jq -nc --arg e \"$EMAIL\" --arg p \"$PW\" '{email:$e,password:$p}')\ncode=$(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"$BODY\")\necho \"POST /api/login -> HTTP $code\"\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux docker compose ps --format '{{.Name}} {{.Status}}' 2>&1\necho \"=== automa\u00e7\u00f5es ativas carregadas no brain (sem erro) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -iE \"error|TypeError\" /app/logs/system.log 2>/dev/null | grep -v \"jwt expired\" | tail -3 || true; echo \"brain ok se vazio acima\"' 2>&1\necho \"=== cleanup scripts de teste do host ===\"\nrm -f /tmp/oco-smoke.js /tmp/oco-listen.js /tmp/oco-commit-msg.txt /tmp/oco-full.diff && echo \"limpos\"",
+  "description": "Final stack health check + cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === stack saudável? login no 8090 ===
+> POST /api/login -> HTTP 200
+> === containers ===
+> tradeux-backend-1 Up 12 minutes
+> tradeux-db-1 Up 20 hours (healthy)
+> tradeux-frontend-1 Up 23 minutes
+> === automações ativas carregadas no brain (sem erro) ===
+> brain ok se vazio acima
+> === cleanup scripts de teste do host ===
+> limpos
+> ```
+
+## 🤖 Claude *(20:38:02)*
+
+
+## 🤖 Claude *(20:38:02)*
+
+Stack saudável (login 200, 3 containers Up, sem erros). Agora registro o aprendizado operacional não-óbvio que me custou tempo: o logger grava **um arquivo por categoria**.
+
+## 🤖 Claude *(20:38:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-logger-per-category-files.md",
+  "content": "---\nname: tradeux-logger-per-category-files\ndescription: TradeUX backend logger grava UM arquivo por categoria em logs/ \u2014 monitor/automa\u00e7\u00e3o N\u00c3O v\u00e3o pro system.log\nmetadata:\n  type: reference\n---\n\n`backend/src/utils/logger.js` cria um winston logger **por categoria** (a string passada como 1\u00ba arg de `logger(cat, msg)`), gravando em `logs/<cat sem ':'>.log`. Ent\u00e3o:\n\n- `logger('system', \u2026)` \u2192 `logs/system.log`\n- `logger('M:'+monitorId, \u2026)` \u2192 `logs/M<id>.log` (ex.: o monitor **USER_DATA** costuma ser id 3 \u2192 `logs/M3.log`)\n- `logger('A:'+automationId, \u2026)` \u2192 `logs/A<id>.log`\n- `logger('beholder', \u2026)` \u2192 `logs/beholder.log`\n\n**Pegadinha que custou tempo (2026-06-03, wiring de OCO):** ao validar o handler de `listStatus`/`executionReport` (que loga via `logger('M:'+monitorId, \u2026)`), eu fiquei grepando s\u00f3 o `system.log` e n\u00e3o achava nada \u2014 as linhas estavam em `M3.log`. O `subscribeEvent` aparece no `system.log` porque o `exchange.js` o loga como `'system'`, o que refor\u00e7ava a confus\u00e3o.\n\n**Como aplicar:** para depurar monitores/automa\u00e7\u00f5es em prod, fa\u00e7a `docker compose exec backend sh -c 'grep -E \"...\" /app/logs/*.log'` (todos os arquivos), n\u00e3o s\u00f3 `system.log`. Em `NODE_ENV=production` o transport de console \u00e9 desligado, ent\u00e3o esses arquivos s\u00e3o a \u00daNICA sa\u00edda. Ver [[tradeux-deploy-topology]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-logger-per-category-files.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:38:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> 5	- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) — only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu
+> 6	- [Agent 500k testnet validation](tradeux-agent-500k-validation.md) — goal/state for validating methods + LLM agent on testnet; how to run the agent (container on tradeux network)
+> 7	- [ShakeHands protocol](shakehands-protocol.md) — session continuity: /handson loads HANDOFF.md state, /handoff seals it; HANDOFF.md at ~/HANDOFF.md is the source of truth
+> 8	- [TradeUX orchestration model](tradeux-orchestration-model.md) — trunk-based direct-to-master; Claude orchestrates agents + owns approve-or-send-back (no user PR review); token in .env as GITHUB_TOKEN_API
+> 9	- [Git ownership gotcha](git-ownership-gotcha.md) — run ALL git/docker repo ops as gcrux-tradeux; git-as-ubuntu poisons .git ownership → chown .git to fix
+> 10	- [Agent token economics](tradeux-agent-token-economics.md) — journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat = 91.5k tok/cycle (99% input)
+> 11	
+> ```
+
+## 🤖 Claude *(20:38:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Agent token economics](tradeux-agent-token-economics.md) \u2014 journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat = 91.5k tok/cycle (99% input)",
+  "new_string": "- [Agent token economics](tradeux-agent-token-economics.md) \u2014 journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat = 91.5k tok/cycle (99% input)\n- [Logger per-category files](tradeux-logger-per-category-files.md) \u2014 logger(cat,\u2026) grava logs/<cat>.log; monitor\u2192M<id>.log, automa\u00e7\u00e3o\u2192A<id>.log; N\u00c3O s\u00f3 system.log"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:38:29)*
+
+
+## 🤖 Claude *(20:38:46)*
+
+Pronto. Memória atualizada. Resumo final do trabalho.
+
+---
+
+## ✅ OCO ligado ao Beholder — entregue, validado e no `master` (`aa3f7f7`)
+
+Implementei o wiring de OCO (One-Cancels-the-Other) que estava deferido, com o caso de uso de **SELL protetiva (TP + SL) pós-compra**.
+
+### O que entrou (10 arquivos, +302/−13)
+- **Migration** [`20260603170000-alter-orders-add-orderListId.js`](backend/migrations/20260603170000-alter-orders-add-orderListId.js): coluna `orderListId` (BIGINT, nullable) — portável MySQL+Postgres, idempotente.
+- **[`beholder.js`](backend/src/beholder.js)** — `placeOco`: template `type:'OCO'` → TP via `LIMIT_MAKER` (above) + SL via `STOP_LOSS_LIMIT` (below); persiste **as 2 pernas com o mesmo `orderListId`**. `calcPrice` trata OCO como preço explícito.
+- **[`app-em.js`](backend/src/app-em.js)** — 2º callback `listStatus`: ao resolver (`ALL_DONE`/`REJECT`) reconcilia o status real de cada perna (rede de segurança idempotente atrás do `executionReport`).
+- **[`ordersController.js`](backend/src/controllers/ordersController.js) + [router](backend/src/routers/ordersRouter.js)** — `DELETE /orders/oco/:symbol/:orderListId`.
+- **[`automationsController.js`](backend/src/controllers/automationsController.js)** — cancela OCO abertas no DELETE da automação.
+- **Frontend** — opção OCO só no template de automação.
+
+### Gate QA + Tech-Lead → devolvi, corrigi, re-validei
+O gate pegou problemas **reais** de dinheiro; não carimbei. Corrigi e revalidei:
+1. **Empilhamento de OCO** (ALTA): guard anti-empilhamento — 1 OCO aberta por automação/símbolo, re-arma quando a anterior resolve (testado: 2º disparo retorna *"already open, skipped"*).
+2. **Órfã viva** (MÉDIA): persistência em try/catch com **auto-cancel** na corretora se `insertOrder` falhar + valida 2 pernas.
+3. **Match do cancel** (MÉDIA): usa `origClientOrderId` direto (padrão da casa).
+4. **Decisão minha**: cancelar OCO só no **DELETE**, não ao parar — pausar não deve tirar o stop-loss de uma posição aberta.
+
+Re-veredito: **QA = PASS · Tech-Lead = APPROVE**.
+
+### Validação (testnet, hot-path)
+- Place real → 2 pernas persistidas com `orderListId` → cancel via endpoint → ambas `CANCELED`.
+- `listStatus ALL_DONE` reconciliado no processo servidor (em `M3.log`).
+- Migrate + idempotência confirmados em **MySQL E Postgres**; `vite build` compila as mudanças.
+- Boot limpo, **0 ordens órfãs** no testnet, stack ao vivo saudável (login 200).
+
+### Limitação conhecida (documentada, não bloqueante)
+O guard é **por automação** — duas automações distintas no mesmo símbolo podem colocar 1 OCO cada. Ambos revisores disseram para **não** corrigir agora; o fix definitivo (se virar problema) seria um índice único parcial `(automationId, symbol)`.
+
+Commit `aa3f7f7` empurrado pro `master`. Aprendizado operacional (logger grava 1 arquivo por categoria — `M<id>.log`, não só `system.log`) salvo na memória.
+
 ---
 
 %% --- TIMELINE START --- %%
