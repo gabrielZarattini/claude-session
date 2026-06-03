@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 253
-> * **Sessões do Claude**: 222
+> * **Total de Sessões Registradas**: 254
+> * **Sessões do Claude**: 223
 > * **Sessões do Gemini**: 31
 
 ---
@@ -63,11 +63,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - agent-a75197cea68044e8c]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` - *2026-06-02*
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
+*   `[[2026-06-02 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-02*
 *   `[[2026-06-02 - Finalize visual design and unblock next phases]]` - *2026-06-02*
 *   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` - *2026-06-02*
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
-*   `[[2026-06-01 - agent-ad4a92c55262ffb32]]` - *2026-06-01*
-*   *... e mais 217 sessões nessa categoria.*
+*   *... e mais 218 sessões nessa categoria.*
 
 ---
 
@@ -264,6 +264,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - agent-a5d10b1c82e30c144]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` (ClaudeSessions)
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` (ClaudeSessions)
+*   `[[2026-06-02 - Fix TradeUX deployment path and Docker setup]]` (ClaudeSessions)
 *   `[[2026-06-02 - Finalize visual design and unblock next phases]]` (ClaudeSessions)
 *   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` (ClaudeSessions)
 *   `[[2026-06-01 - agent-af11d6fa76341891b]]` (ClaudeSessions)

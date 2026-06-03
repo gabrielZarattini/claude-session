@@ -5518,6 +5518,6 @@ A única verificação que **não** executei foi o clique na UI logada (browser 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-02 - Finalize visual design and unblock next phases]]
+> * **Sessão Anterior**: [[2026-06-02 - Fix TradeUX deployment path and Docker setup]]
 > * **Próxima Sessão**: [[2026-06-02 - Fix vault secret upsert duplicate key error]]
 %% --- TIMELINE END --- %%
