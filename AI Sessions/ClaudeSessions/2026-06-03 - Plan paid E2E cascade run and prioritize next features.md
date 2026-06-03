@@ -7361,6 +7361,388 @@ Insiro a entrada v6.25.0 + atualizo badges (version 6.24.0→6.25.0, mesh 8761�
 > README ✅ a5b89e8
 > ```
 
+## 🤖 Claude *(22:30:03)*
+
+
+## 🤖 Claude *(22:30:03)*
+
+**Fase 5 — HANDOFF.md** (novo Record no topo, newest-first):
+
+## 🤖 Claude *(22:30:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Customer 360 + Nurturing + Flywheel Hardening Record (2026-06-03)",
+  "new_string": "## Task State\n\n## Flywheel Resurrection + mcoCoins Calibration Record (2026-06-03)\n\n**v6.25.0 (2026-06-03)** \u2014 Sess\u00e3o `/handson` \u2192 diretiva Sovereign: \"o que precisamos pro 1\u00ba run pago E2E + n\u00e3o seria melhor j\u00e1 calibrar o COIN_COST?\". Calibrei **antes** do run (n\u00e3o rodar a 1\u00aa transa\u00e7\u00e3o econ\u00f4mica a pre\u00e7os inventados). O run pago ent\u00e3o **exp\u00f4s que o flywheel de conte\u00fado estava silenciosamente MORTO desde o cutover de chaves (01-06)** \u2014 3 P0s compostos deixavam todo `orchestrate-content` preso em `pipeline_runs.status='running'`. Padr\u00e3o: **probe-first material** (cada causa raiz provada antes do fix) + **adversarial verify** (echo de debug provou a causa do WP \u2014 array de posts `www`, n\u00e3o chute).\n\n**O que foi entregue:**\n- **Calibra\u00e7\u00e3o COIN_COST (OTD-MCOIN-CALIBRATION FECHADA)** \u2014 modelo `mco=ceil(custo_usd/$0.018_piso\u00d74)` (piso = venda Enterprise R$997/10000 \u00f7 R$5.5, pior margem). **Surpresa honesta:** o `10` (orchestrate) e o `125` (canvas v\u00eddeo) **j\u00e1** eram ~4\u00d7 sobre o custo real ($0.04 imagem DALL\u00b7E \u00b7 $0.56 v\u00eddeo Higgsfield); \u00fanico furo era `IMAGE_GENERATION` (1.36\u00d7\u21929); `CONTENT_GENERATION 5\u21922`. Esses 2 **n\u00e3o t\u00eam caminho de cobran\u00e7a em prod** (orchestrate cobra flat 10) \u2192 mudan\u00e7a segura. SOP `mcoin-cost-calibration.md`. (commit `73b8282`)\n- **3 P0s do flywheel fixados + provados E2E:**\n  - **#1** `orchestrate-step verify_jwt=false` no `config.toml` (faltava \u2192 default `true` \u2192 gateway 401 na chave opaca `sb_secret_` do pg_net). Deploy 118.4kB. (commit `7b3a481`)\n  - **#2** `async_orchestrate_step` realinhada p/ `p_service_key` + `GRANT service_role` (estava `p_service_jwt_legacy` por hotfix em prod **sem migration** \u2192 PGRST202 \u2192 auto-chain morto). Migration `20260603190000` \u00b7 `/security-review` SAFE \u00b7 `db push` Finished. (commit `166dfbf`)\n  - **#3** `wp_site_url` `mcorch.com`\u2192`https://www.mcorch.com` (n\u00e3o-www \u2192 301 \u2192 POST vira GET \u2192 WP devolve LISTA \u2192 sem `post_url`). `publish-wordpress` endurecido (valida `id`, 502 honesto). (commit `9ce1301`)\n- **SOP** `orchestrate-async-pipeline.md` (3 modos de falha + gates de verifica\u00e7\u00e3o + recovery) + `scripts/qa/gen-user-jwt.ts` (minta access_token de user p/ QA logada). (commit `091b7da`)\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign (c\u00f3digo + pol\u00edtica de pre\u00e7o + GO do run + migration, via AskUserQuestion) \u00b7 Owner=Sovereign (blast radius = gasto real de mcoCoins + 1\u00aa publica\u00e7\u00e3o outward + schema de prod).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Calibra\u00e7\u00e3o | \u2705 tsc 0 \u00b7 billing 22/22 \u00b7 SOP |\n| Bug #1 verify_jwt | \u2705 deploy 118.4kB \u00b7 orchestrate-step alcan\u00e7\u00e1vel |\n| Bug #2 migration | \u2705 /security-review SAFE \u00b7 db push Finished \u00b7 RPC **204** (era PGRST202) |\n| Auto-chain (#1+#2) | \u2705 run `aca7b593` auto-completou a `done` SEM kick (linkedin+mesh) |\n| Bug #3 WP | \u2705 `publish-wordpress` retorna `post_url` (rascunho `p=13`); 502 honesto em n\u00e3o-www |\n| **Flywheel COMPLETO E2E** | \u2705 run `89f18bea` **6/6 passos `done` sem kick** \u00b7 WP `?p=14` \u00b7 `content_mesh_asset` done |\n| tsc / su\u00edte | \u2705 0 erros \u00b7 257 passed / 2 skipped (259) |\n| Containers / Chroma | \u2705 5 healthy (10d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `5e1b6f32-7d32-4fbb-a1b7-1834e42d187e` embedded 768d |\n| Mesh | \u2705 8769 n\u00f3s |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `7b3a481` | fix(orchestrate): orchestrate-step verify_jwt=false |\n| `166dfbf` | fix(orchestrate): realinha async_orchestrate_step + grant service_role |\n| `9ce1301` | fix(wordpress): valida post criado \u2014 fim do success falso no redirect |\n| `73b8282` | feat(billing): calibra COIN_COST 4\u00d7-floor \u2014 IMAGE_GENERATION 3\u21929 |\n| `091b7da` | docs(processes): SOPs pipeline async + calibra\u00e7\u00e3o + QA minter |\n| `a5b89e8` | docs(readme): v6.25.0 |\n\n### Arquitetura \u2014 pipeline async ressuscitado\n```\norchestrate-content (JWT user \u00b7 cobra 10 \u00b7 cria pipeline_run)\n  \u2514\u2192 async_orchestrate_step RPC  [p_service_key \u2713 \u00b7 GRANT service_role \u2713]   (pg_net, Bearer sb_secret_)\n       \u2514\u2192 orchestrate-step  [verify_jwt=false \u2713 \u00b7 self-check Bearer===SB_SECRET_KEY]\n            article_generation \u2192 wordpress_publish [www can\u00f4nico \u2713 \u2192 post_url] \u2192 linkedin_post \u2192 twitter_thread\n              \u2192 knowledge_mesh + content_mesh_asset\n            (cada passo chama async_orchestrate_step p/ o PR\u00d3XIMO \u2192 auto-chain)\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 cada claim provada NESTE turno \u2014 deploys (\"Deployed\"), migration (\"Finished\"), RPC 204, 2 runs auto-completos (output literal dos steps), /security-review por subagente INDEPENDENTE (SAFE), echo de debug provou a causa WP (array de posts www), tsc 0, su\u00edte 257/259, handoff node embedded 768d. Falha do 1\u00ba run reportada honestamente (n\u00e3o mascarada). 1 incidente de higiene divulgado (ecoei valores de chave 1\u00d7 \u2192 n\u00e3o reimprimi). Fase 5c abaixo. Zero fabrica\u00e7\u00e3o.\nLaw 2 (Process): \u2705 2 SOPs novos ANTES de selar; migration passou /security-review (regra CLAUDE.md); Obst\u00e1culo\u2192S\u00edntese (3 P0s \u2192 SOP + Key Files + mem\u00f3ria + n\u00f3). Calibra\u00e7\u00e3o registrada como decis\u00e3o Sovereign, n\u00e3o improvisada.\nLaw 3 (Pruning): \u2705 sess\u00e3o longa de alta densidade (calibra\u00e7\u00e3o + ca\u00e7a a 3 bugs); contexto consumido em debugging material focado; selada em ponto natural de completude.\nLaw 4 (ORO): \u2705 triplet declarado; toda a\u00e7\u00e3o outward (deploys, migration, db push, 2 runs pagos, edit de wp_site_url) com GO expl\u00edcito (AskUserQuestion).\n```\n\n**Pend\u00eancias/Pr\u00f3ximos:**\n- **Limpar/liberar artefatos de teste:** 5 `scheduled_posts` parqueados em 2027 (campanha `29b85b73` + adhoc) + 2 rascunhos WP de teste (`?p=13`/`?p=14`) \u2014 Sovereign decide apagar ou liberar.\n- **Drift deployado\u2194migrations:** a `async_orchestrate_step` fora hotfixada em prod sem migration \u2014 **auditar outras fun\u00e7\u00f5es/RPCs por drift similar** (desconfiar do que as migrations dizem vs. o deployado).\n- **Twitter** n\u00e3o conectado (CreditsDepleted) \u2014 passo gera conte\u00fado mas n\u00e3o publica.\n- **Roadmap marketing-hub:** FR-MH-009 (Intent+HITL) \u00b7 FR-MH-010 (AEO) \u00b7 FR-MH-012 (BYOK) \u00b7 Nurturing follow-up (entrega externa + cron) \u00b7 `functionName` nas 9 fns restantes.\n- **[AGUARDANDO] Atribui\u00e7\u00e3o de clique ML** \u2014 Sovereign reporta quando maturar.\n\n---\n\n## Customer 360 + Nurturing + Flywheel Hardening Record (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:30:43)*
+
+
+## 🤖 Claude *(22:30:44)*
+
+**Fase 5b — secret scan no HANDOFF.md** (obrigatório antes do commit) + localizo o GraphRAG State pra atualizar a contagem:
+
+## 🤖 Claude *(22:30:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 secret scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -10 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"NO GOOGLE KEYS \u2705\"\necho \"=== literal sb_secret_ VALUES (not the pattern name) ===\"\ngrep -oE \"sb_secret_[A-Za-z0-9]{20,}\" HANDOFF.md | head -3 || echo \"no literal key values \u2705\"\necho \"=== GraphRAG State node-count line ===\"\ngrep -n \"total nodes\\|total_nodes\\|GraphRAG State\" HANDOFF.md | head -5",
+  "description": "Phase 5b secret scan + locate GraphRAG State"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 secret scan ===
+> === 5b-2 google keys ===
+> === literal sb_secret_ VALUES (not the pattern name) ===
+> === GraphRAG State node-count line ===
+> 819:- **Fase 2 — Drift GraphRAG State corrigido** — o footer do `HANDOFF.md` estava congelado no snapshot v6.8.6 (8605 nós/11925 arestas). Reconciliado para a contagem viva via REST `count=exact`: **8714 nós / 9040 arestas / 100% embedded** (0 sem embedding). Observação flagada: arestas caíram de 11925 (v6.6.9) → 9040, sem causa confirmada.
+> 841:| `9607a44` | docs(handoff): reconcile GraphRAG State to live mesh counts 8714/9040 |
+> 3357:**1) Phase 0 — HANDOFF.md read-from-end.** O `/handson` da própria sessão falhou imediatamente: HANDOFF.md cresceu para 113922 tokens (3167 linhas, 48 sprint seals newest-first) e estourou o limite de 25k do Read tool. Decisão Sovereign (Option B): mantém arquivo monolítico, modifica `.claude/commands/handson.md` linhas 11-26 para ler em duas fatias — `head -71` (Task State header + FIRST ACTION) + `tail -400` (últimas 1-2 seals + Pending Actions + GraphRAG State + Infrastructure + Key Files). Token usage por sessão futura: 5-8k. Auditoria histórica via Read com offset arbitrário fora do fluxo padrão. Outras opções (A: split por sprint; C: híbrido) descartadas por exigirem migração estrutural + atualização de `/handoff` em paralelo.
+> 6428:## GraphRAG State
+> 6430:- **8759 total nodes** (v6.22.0: +handoff `aec4cb9c` +milestones MVP-2 `7628892b`/OTD `6061a6d2`; was 8755 in v6.21.0)
+> ```
+
+## 🤖 Claude *(22:31:01)*
+
+
+## 🤖 Claude *(22:31:02)*
+
+5b **✅ LIMPO** (sem credenciais no HANDOFF.md). Atualizo o GraphRAG State (8759→8769) e commito:
+
+## 🤖 Claude *(22:31:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8759 total nodes** (v6.22.0: +handoff `aec4cb9c` +milestones MVP-2 `7628892b`/OTD `6061a6d2`; was 8755 in v6.21.0)",
+  "new_string": "- **8769 total nodes** (v6.25.0: +handoff `5e1b6f32` + observation/content_mesh_asset nodes dos 3 runs E2E de valida\u00e7\u00e3o do flywheel; was 8761 in v6.24.0 / 8759 in v6.22.0 snapshot)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:31:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md && git commit -m \"docs(handoff): seal v6.25.0 \u2014 flywheel resurrection (3 P0s) + mcoCoins calibration\" -q && echo \"HANDOFF \u2705 $(git rev-parse --short HEAD)\"",
+  "description": "Commit HANDOFF.md seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF ✅ bcbe79a
+> ```
+
+## 🤖 Claude *(22:31:13)*
+
+
+## 🤖 Claude *(22:31:14)*
+
+**Fase 5c — Material Proof Audit** (verificação mecânica independente das claims do selo):
+
+## 🤖 Claude *(22:31:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 180 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45",
+  "description": "Phase 5c material proof audit",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 5e1b6f32 | mesh_node | 5e1b6f32-7d32-4fbb-a1b7-1834e42d187e | 5e1b6f32-7d32-4fbb-a1b7-1834e42d187e | ✅ |
+> | commit 73b8282 | git_commit | 73b8282 | 73b8282 | ✅ |
+> | commit 7b3a481 | git_commit | 7b3a481 | 7b3a481 | ✅ |
+> | commit 166dfbf | git_commit | 166dfbf | 166dfbf | ✅ |
+> | commit 9ce1301 | git_commit | 9ce1301 | 9ce1301 | ✅ |
+> | commit 091b7da | git_commit | 091b7da | 091b7da | ✅ |
+> | commit a5b89e8 | git_commit | a5b89e8 | a5b89e8 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 257 passing | test_suite | 257 | 257 passed | ✅ |
+> | file scripts/qa/gen-user-jwt.ts | file_exists | scripts/qa/gen-user-jwt.ts | scripts/qa/gen-user-jwt.ts | ✅ |
+> | deploy size 118.4kB | edge_deploy | 118.4kB | 118.4kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign (código + política de preço + GO do run + mig | Operator = MCORCH Agent · Reviewer=Sovereign (código + política de preço + GO do run + mig | ✅ |
+> 
+> QA VERDICT: 11 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 10.6s)
+> ```
+
+## 🤖 Claude *(22:31:35)*
+
+
+## 🤖 Claude *(22:31:37)*
+
+**5c: `SEAL ALLOWED`** (11 verificadas · 1 skip · 0 falhas). **Fase 6 — BoK Seal Status** (sessão foi bug-fix + calibração, sem módulo novo — confirmo):
+
+## 🤖 Claude *(22:31:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 6-1 BoK suites completeness ===\"\nok=0; warn=0\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  miss=()\n  for d in \"${req[@]}\"; do [ -f \"docs/bok/$slug/$d.md\" ] || miss+=(\"$d\"); done\n  [ ${#miss[@]} -eq 0 ] && ok=$((ok+1)) || { warn=$((warn+1)); echo \"\u26a0\ufe0f $slug missing: ${miss[*]}\"; }\ndone\necho \"BoK complete: $ok suites \u00b7 incomplete: $warn\"\necho \"=== 6-2 session NEW modules (new pages / edge fns this session) ===\"\ngit diff --name-only HEAD~7..HEAD | grep -E \"^(src/pages/|supabase/functions/[^/]+/index)\" | grep -v \"publish-wordpress\" || echo \"no NEW modules \u2014 only edits to existing (publish-wordpress) + migration/docs \u2705\"",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-1 BoK suites completeness ===
+> BoK complete: 13 suites · incomplete: 0
+> === 6-2 session NEW modules (new pages / edge fns this session) ===
+> no NEW modules — only edits to existing (publish-wordpress) + migration/docs ✅
+> ```
+
+## 🤖 Claude *(22:31:45)*
+
+
+## 🤖 Claude *(22:31:46)*
+
+**Fase 6 ✅** (13 suites BoK completas · 0 incompletas · sem módulo novo → sem bloqueio). **Fase 7 — Push:**
+
+## 🤖 Claude *(22:31:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -8\necho \"=== confirm ===\"; git log --oneline -8 | cat; echo \"---\"; git status -sb | head -2",
+  "description": "Phase 7 push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    157ce17..bcbe79a  main -> main
+> === confirm ===
+> bcbe79a docs(handoff): seal v6.25.0 — flywheel resurrection (3 P0s) + mcoCoins calibration
+> a5b89e8 docs(readme): v6.25.0 — flywheel resurrection (3 key-migration P0s) + mcoCoins calibration
+> 091b7da docs(processes): SOPs pipeline async + calibracao mcoCoins + QA user-JWT minter
+> 73b8282 feat(billing): calibra COIN_COST no modelo 4x-floor — IMAGE_GENERATION 3->9
+> 9ce1301 fix(wordpress): valida post criado — fim do success:true falso no redirect nao-www
+> 166dfbf fix(orchestrate): realinha async_orchestrate_step p/ p_service_key + grant service_role — religa o auto-chain
+> 7b3a481 fix(orchestrate): orchestrate-step verify_jwt=false — destrava o gateway p/ a chave sb_secret_ do pg_net
+> 157ce17 chore(sprint): update sprint-priorities — v6.24.0 Customer 360 + Nurturing + hardening (alta densidade)
+> ---
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(22:32:03)*
+
+
+## 🤖 Claude *(22:32:04)*
+
+**Push ✅** — `157ce17..bcbe79a`, 7 commits, `main...origin/main` em sync. **Fase 7b — Higiene** (sprint + scratch + MCP). Lendo os anchors:
+
+## 🤖 Claude *(22:32:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 5,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.24.0 selado em 2026-06-03** — **Sessão de alta densidade** (diretiva Sovereign: selar a 45% é desperdício → usar a janela 1M inteira, selar só a ~95%; **Lei 3 recalibrada** em survival.md: poda≠selar). Resposta ao "faça os três, foco em endurecer o flywheel": 5 entregas pós-v6.23.0, cada uma com **smoke LIVE throwaway**. **(1) MVP-5 Atribuição (FR-MH-007)**: `handle-ml-postback`→`marketing_attribution` (campaign_id FK-safe, fail-soft) + `useCampaignAttribution`+card "Receita Atribuída"; smoke DB 4/4 (FK 23503 + de-linked). **(2) Hardening+observabilidade (FOCO)**: `eslint .` **honesto** (Deno `supabase/functions`+tailwind excluídos — ~3716 erros falsos, exit mascarado por `| tail`) + functionName telemetry no flywheel + smoke integração lead→score→campaign→attribution 5/5. **(3) Customer 360 (FR-MH-011)**: VIEW `security_invoker` RLS-safe + `useCustomer360`+drawer; /security-review SAFE + **isolation smoke 4/4** (B não vaza p/ A). **(4) Nurturing (FR-MH-008)**: engine `sequences`+`sequence_enrollments` (FK composta CASCADE) + `nurture-dispatch` **consent-gated** (envio gated) + `useNurturing`+`NurturingPanel`; /security-review SAFE + **consent-gate smoke 10/10**. 2 migrations /security-review SAFE (subagentes independentes) · tsc 0 · suíte **259** · eslint exit 0 honesto · 4 deploys · 5 smokes LIVE. Phase 5c **SEAL ALLOWED** (11 verified). Mesh **8761** (orphan obs de smoke limpo + smoke vacinado). Survival Laws **4/4**. 8 commits. **Novo Top Gap:** 1º run pago E2E (gated GO) · Nurturing follow-up (entrega externa real + cron + UI enroll/dispatch) · OTD-MCOIN-CALIBRATION · FRs restantes FR-MH-009/010/012. **Lição:** densidade máxima por sessão (5 frentes numa só) sem perda de materialidade — cada uma provada por smoke LIVE; o gate de lint estava mentindo (exit mascarado) — fix de raiz restaura honestidade da Lei 1.
+> 8	
+> ```
+
+## 🤖 Claude *(22:32:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"HAS FILES\" || echo \"clean/absent \u2705\"\necho \"=== proof-manifest tracked? ===\"; git status --short proof-manifest.json 2>/dev/null; git check-ignore proof-manifest.json 2>/dev/null && echo \"(gitignored \u2705)\" || echo \"(not ignored)\"\necho \"=== .mcp.json servers ===\"; cat .mcp.json 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"no .mcp.json\"",
+  "description": "Sprint anchor + scratch + MCP check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> clean/absent ✅
+> === proof-manifest tracked? ===
+> proof-manifest.json
+> (gitignored ✅)
+> === .mcp.json servers ===
+> ['gitnexus', 'obsidian', 'playwright']
+> ```
+
+## 🤖 Claude *(22:32:30)*
+
+
+## 🤖 Claude *(22:32:31)*
+
+scratch limpo · proof-manifest gitignored · MCP (gitnexus/obsidian/playwright) sem novidade. Prepend do seal v6.25.0 no sprint-priorities:
+
+## 🤖 Claude *(22:32:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.24.0 selado em 2026-06-03** \u2014 **Sess\u00e3o de alta densidade**",
+  "new_string": "**Sprint v6.25.0 selado em 2026-06-03** \u2014 **Flywheel ressuscitado + calibra\u00e7\u00e3o mcoCoins**. `/handson` \u2192 diretiva Sovereign (\"o que falta pro 1\u00ba run pago E2E + j\u00e1 calibrar o COIN_COST?\"). Calibrei **antes** do run (n\u00e3o rodar a 1\u00aa transa\u00e7\u00e3o econ\u00f4mica a pre\u00e7os inventados): **OTD-MCOIN-CALIBRATION FECHADA** \u2014 modelo `mco=ceil(custo_usd/$0.018_piso\u00d74)` (piso=Enterprise); surpresa honesta \u2014 `10` (orchestrate) e `125` (canvas v\u00eddeo) **j\u00e1** eram ~4\u00d7 sobre custo real, \u00fanico furo `IMAGE_GENERATION 3\u21929` (`CONTENT_GENERATION 5\u21922`). O **1\u00ba run pago E2E ent\u00e3o exp\u00f4s que o flywheel de conte\u00fado estava MORTO desde o cutover de chaves (01-06)** \u2014 3 P0s compostos deixavam todo run preso em `running`: **#1** `orchestrate-step` faltava no `config.toml` (`verify_jwt=true` \u2192 gateway **401** na chave opaca `sb_secret_` do pg_net); **#2** `async_orchestrate_step` hotfixada em prod **sem migration** (`p_service_jwt_legacy`\u2260`p_service_key` \u2192 **PGRST202** \u2192 auto-chain morto) \u2192 migration `20260603190000` realinha + `GRANT service_role`, `/security-review` SAFE, RPC **204**; **#3** `wp_site_url` n\u00e3o-www \u2192 **301 \u2192 POST vira GET** \u2192 WP devolve LISTA de posts \u2192 `publish-wordpress` endurecido (valida `id`, 502 honesto) + `wp_site_url\u2192www`. **Provado E2E**: run `89f18bea` **auto-completou 6/6 passos sem kick** \u2192 rascunho WP `?p=14` + `content_mesh_asset` done. Phase 5c **SEAL ALLOWED** (11 verified). Mesh **8769**. Survival Laws **4/4**. 7 commits. **Novo Top Gap:** auditar **drift deployado\u2194migrations** (outras RPCs/fns hotfixadas em prod?) \u00b7 limpar artefatos de teste (5 posts parqueados 2027 + 2 rascunhos WP) \u00b7 FR-MH-009/010/012 + Nurturing follow-up \u00b7 functionName nas 9 fns. **Li\u00e7\u00e3o:** o 1\u00ba run pago **n\u00e3o \"falhou\"** \u2014 fez seu trabalho: exp\u00f4s 3 P0s silenciosos no cora\u00e7\u00e3o do produto (falha sem erro vis\u00edvel, sem auto-refund); calibrar **antes** do run foi a decis\u00e3o certa (transa\u00e7\u00e3o econ\u00f4mica honesta).\n\n**Sprint v6.24.0 selado em 2026-06-03** \u2014 **Sess\u00e3o de alta densidade**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:32:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md && git commit -m \"chore(sprint): update sprint-priorities \u2014 v6.25.0 flywheel resurrection + mcoCoins calibration\" -q && echo \"sprint \u2705 $(git rev-parse --short HEAD)\"\ngit push origin main 2>&1 | tail -3\necho \"=== final status ===\"; git status -sb | head -2",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sprint ✅ c6faafe
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    bcbe79a..c6faafe  main -> main
+> === final status ===
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(22:32:56)*
+
+
+## 🤖 Claude *(22:33:18)*
+
+**Todas as fases ✅.** Selo completo. 
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Flywheel Resurrection + mcoCoins Calibration (2026-06-03)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret scan (diff)......... ✅ sem valores de chave (menções a nomes de env-var apenas)
+  1b JWT enforcement............ ✅ orchestrate-step + publish-wordpress auto-autenticam
+  1c client-side mco_balance.... ✅ sem violação
+  1d RLS bypass em src/......... ✅ (1 match = comentário de RLS, não violação)
+  1e console.log sensível....... ✅ (matches = teste pré-existente, não valores)
+  5b HANDOFF.md secret scan..... ✅ LIMPO
+  Veredito: nenhum 🔴 — seal autorizado
+
+📦 COMMITS (8 — push 157ce17..c6faafe)
+  7b3a481 — fix(orchestrate): orchestrate-step verify_jwt=false
+  166dfbf — fix(orchestrate): realinha async_orchestrate_step + grant service_role
+  9ce1301 — fix(wordpress): valida post criado — fim do success falso
+  73b8282 — feat(billing): calibra COIN_COST 4×-floor — IMAGE_GENERATION 3→9
+  091b7da — docs(processes): SOPs pipeline async + calibração + QA minter
+  a5b89e8 — docs(readme): v6.25.0
+  bcbe79a — docs(handoff): seal v6.25.0
+  c6faafe — chore(sprint): v6.25.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 5e1b6f32-7d32-4fbb-a1b7-1834e42d187e — session-handoff-20260603-flywheel-resurrection
+  Embedding: ✅ 768d · 1 chunk · openai/text-embedding-3-small
+  Total: 8769 nós (era 8761)
+
+📖 README.md
+  Versão: 6.24.0 → 6.25.0-flywheel-resurrection
+  Badge neural_mesh: 8761 → 8769 nós
+  Seção: [v6.25.0] no What's New
+
+🧠 HANDOFF.md
+  Fase selada: Flywheel Resurrection + mcoCoins Calibration
+  Atualizado: Task State/Record, GraphRAG State (8769), Pending Actions
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 11 verificadas · 1 skipped (deploy size-only) · 0 falhas
+
+🚀 PUSH
+  Branch: main → origin/main (em sync)
+  Commits enviados: 8
+
+📌 SPRINT / HIGIENE
+  sprint-priorities.md: ✅ v6.25.0 prepended
+  scratch/: ✅ limpo · proof-manifest.json: gitignored
+  MCP docs: ✅ gitnexus/obsidian/playwright (sem novidade)
+
+📚 BoK: ✅ 13 suites completas · sem módulo novo (só edits + migration/docs)
+
+⏭  PRÓXIMOS PASSOS
+  1. Auditar drift deployado↔migrations (a async_orchestrate_step foi hotfixada em prod sem migration — há outras?)
+  2. Limpar/liberar artefatos de teste (5 scheduled_posts parqueados em 2027 + rascunhos WP ?p=13/?p=14)
+  3. Roadmap marketing-hub: FR-MH-009/010/012 · Nurturing follow-up (entrega externa + cron) · functionName nas 9 fns
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Maestro, sessão selada. 🎯
+
+**O resumo honesto:** você pediu pra calibrar o COIN_COST e iniciar o 1º run pago. Calibrei (modelo 4×-floor, OTD fechada) — e o run pago **descobriu que o flywheel de conteúdo estava clinicamente morto há 3 dias**, vítima silenciosa do cutover de chaves de 01-06: 3 P0s compostos, sem erro visível, sem auto-refund, todo run preso em `running`. Os três foram diagnosticados na causa raiz (material, não chute), corrigidos, e o pipeline inteiro está **provado E2E rodando sozinho** (run `89f18bea`: 6/6 passos, rascunho WP real, wire de monetização fechada).
+
+A maior lição (no Top Gap): a `async_orchestrate_step` tinha sido **alterada direto em produção sem migration** — vale auditar se outras funções/RPCs têm o mesmo drift entre o que está deployado e o que o VCS diz. Os artefatos de teste (posts parqueados em 2027 + 2 rascunhos WP) ficam pra você apagar ou liberar quando quiser.
+
 ---
 
 %% --- TIMELINE START --- %%
