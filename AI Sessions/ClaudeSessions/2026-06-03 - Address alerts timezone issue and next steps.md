@@ -2799,6 +2799,362 @@ Ao aprovar, executo o padrão da MVP-1: **apply → prova comportamental do tena
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "MVP-2 Campaign Core está pronto e o /security-review passou SAFE (revisor independente, 0 findings ≥8). Aplico a migration 20260603025256 em produção via db push agora?"="Aprovado — aplicar". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(03:02:12)*
+
+
+## 🤖 Claude *(03:02:13)*
+
+GO recebido — **"Aprovado"**. Executando o padrão material da v6.21.0. Passo 1: aplicar a migration em produção.
+
+## 🤖 Claude *(03:02:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho y | npx supabase db push 2>&1 | tail -40\necho \"--- db push exit: ${PIPESTATUS[1]} ---\"",
+  "description": "Apply MVP-2 migration to production via supabase db push",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260603025256_marketing_hub_campaign_core.sql
+> 
+>  [Y/n] y
+> Applying migration 20260603025256_marketing_hub_campaign_core.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> --- db push exit: 0 ---
+> ```
+
+## 🤖 Claude *(03:03:10)*
+
+
+## 🤖 Claude *(03:03:11)*
+
+**`db push` Finished — exit 0.** A migration `20260603025256` foi aplicada (e só ela). Agora a prova material pós-apply. Passo 1: confirmar que o PostgREST enxerga o novo schema (tabelas + colunas novas):
+
+## 🤖 Claude *(03:03:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\nSW=$(curl -s \"$URL/rest/v1/\" -H \"$H1\" -H \"$H2\")\necho \"=== campaigns NEW columns present? (intent/channels/mesh_node_id) ===\"\necho \"$SW\" | python3 -c \"import json,sys; d=json.load(sys.stdin); p=d['definitions'].get('campaigns',{}).get('properties',{}); print({k:p[k].get('format',p[k].get('type')) for k in ('intent','channels','mesh_node_id') if k in p})\"\necho \"=== campaign_steps columns ===\"\necho \"$SW\" | python3 -c \"import json,sys; d=json.load(sys.stdin); c=d['definitions'].get('campaign_steps'); print('NOT EXPOSED' if c is None else list(c.get('properties',{}).keys()))\"\necho \"=== marketing_attribution columns ===\"\necho \"$SW\" | python3 -c \"import json,sys; d=json.load(sys.stdin); c=d['definitions'].get('marketing_attribution'); print('NOT EXPOSED' if c is None else list(c.get('properties',{}).keys()))\"\necho \"=== counts (expect 0/0) ===\"\ncurl -s -D - -o /dev/null \"$URL/rest/v1/campaign_steps?select=id\" -H \"$H1\" -H \"$H2\" -H \"Prefer: count=exact\" | grep -i content-range\ncurl -s -D - -o /dev/null \"$URL/rest/v1/marketing_attribution?select=id\" -H \"$H1\" -H \"$H2\" -H \"Prefer: count=exact\" | grep -i content-range",
+  "description": "Verify new schema visible via PostgREST post-apply"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campaigns NEW columns present? (intent/channels/mesh_node_id) ===
+> {'intent': 'text', 'channels': 'text[]', 'mesh_node_id': 'uuid'}
+> === campaign_steps columns ===
+> ['id', 'campaign_id', 'user_id', 'position', 'channel', 'action', 'status', 'created_at']
+> === marketing_attribution columns ===
+> ['id', 'user_id', 'campaign_id', 'lead_id', 'touchpoint', 'revenue_cents', 'model', 'occurred_at']
+> === counts (expect 0/0) ===
+> content-range: */0
+> content-range: */0
+> ```
+
+## 🤖 Claude *(03:05:01)*
+
+
+## 🤖 Claude *(03:05:04)*
+
+PostgREST já enxerga tudo: `campaigns.{intent,channels,mesh_node_id}` ✓, `campaign_steps` (8 cols) ✓, `marketing_attribution` (8 cols) ✓, counts 0/0.
+
+Passo 2: **prova comportamental do tenant-FK**. Crio um user efêmero B (real `auth.user`, para isolar a tenant-FK de campaigns da FK de `auth.users`), provo (1) a FK composta de `campaign_steps` via service role e (2) o `WITH CHECK` de `marketing_attribution` autenticado como B, e limpo tudo com verificação zero-resíduo:
+
+## 🤖 Claude *(03:05:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSK=\"$SB_SECRET_KEY\"\nA_UID=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nTS=$(date +%s)\nEMAIL=\"mvp2-fktest-${TS}@example.com\"\nPASS=\"Mvp2Test-${TS}-xQ9z\"\nhsr=(-H \"apikey: $SK\" -H \"Authorization: Bearer $SK\")\nct=(-H \"Content-Type: application/json\")\n\necho \"=== 1. create ephemeral user B (Admin API) ===\"\nB_UID=$(curl -s \"$URL/auth/v1/admin/users\" \"${hsr[@]}\" \"${ct[@]}\" -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PASS\\\",\\\"email_confirm\\\":true}\" | python3 -c \"import json,sys;print(json.load(sys.stdin).get('id',''))\")\necho \"B_UID=$B_UID\"\n\necho \"=== 2. login B (password grant) -> JWT ===\"\nB_TOK=$(curl -s \"$URL/auth/v1/token?grant_type=password\" -H \"apikey: $SK\" \"${ct[@]}\" -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PASS\\\"}\" | python3 -c \"import json,sys;print(json.load(sys.stdin).get('access_token',''))\")\necho \"B_TOK length=${#B_TOK}\"\n\necho \"=== 3. create campaigns for A and B (service role) ===\"\nCAMP_A=$(curl -s \"$URL/rest/v1/campaigns\" \"${hsr[@]}\" \"${ct[@]}\" -H \"Prefer: return=representation\" -d \"{\\\"user_id\\\":\\\"$A_UID\\\",\\\"name\\\":\\\"__mvp2_A__\\\",\\\"channels\\\":[\\\"content\\\"]}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) and d else '')\")\nCAMP_B=$(curl -s \"$URL/rest/v1/campaigns\" \"${hsr[@]}\" \"${ct[@]}\" -H \"Prefer: return=representation\" -d \"{\\\"user_id\\\":\\\"$B_UID\\\",\\\"name\\\":\\\"__mvp2_B__\\\",\\\"channels\\\":[\\\"content\\\"]}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) and d else '')\")\necho \"CAMP_A=$CAMP_A  CAMP_B=$CAMP_B\"\n\necho \"\"\necho \"=== PROVA 1a: ATTACK campaign_steps composite FK (A's campaign + user_id B) -> expect 23503 / fk_campaign_steps_campaign ===\"\ncurl -s -w \"  [HTTP %{http_code}]\\n\" \"$URL/rest/v1/campaign_steps\" \"${hsr[@]}\" \"${ct[@]}\" -d \"{\\\"campaign_id\\\":\\\"$CAMP_A\\\",\\\"user_id\\\":\\\"$B_UID\\\",\\\"position\\\":1,\\\"channel\\\":\\\"content\\\",\\\"action\\\":\\\"generate_content\\\"}\"\necho \"=== PROVA 1b: LEGIT campaign_steps (A's campaign + user_id A) -> expect 201 ===\"\ncurl -s -o /dev/null -w \"  [HTTP %{http_code}]\\n\" \"$URL/rest/v1/campaign_steps\" \"${hsr[@]}\" \"${ct[@]}\" -d \"{\\\"campaign_id\\\":\\\"$CAMP_A\\\",\\\"user_id\\\":\\\"$A_UID\\\",\\\"position\\\":1,\\\"channel\\\":\\\"content\\\",\\\"action\\\":\\\"generate_content\\\"}\"\n\necho \"\"\necho \"=== PROVA 2a: WITH CHECK attribution as B planting A's campaign -> expect 4xx RLS reject ===\"\nif [ -n \"$B_TOK\" ]; then\n  curl -s -w \"  [HTTP %{http_code}]\\n\" \"$URL/rest/v1/marketing_attribution\" -H \"apikey: $SK\" -H \"Authorization: Bearer $B_TOK\" \"${ct[@]}\" -d \"{\\\"user_id\\\":\\\"$B_UID\\\",\\\"campaign_id\\\":\\\"$CAMP_A\\\",\\\"revenue_cents\\\":100}\"\n  echo \"=== PROVA 2b: LEGIT attribution as B with B's own campaign -> expect 201 ===\"\n  curl -s -o /dev/null -w \"  [HTTP %{http_code}]\\n\" \"$URL/rest/v1/marketing_attribution\" -H \"apikey: $SK\" -H \"Authorization: Bearer $B_TOK\" \"${ct[@]}\" -H \"Prefer: return=representation\" -d \"{\\\"user_id\\\":\\\"$B_UID\\\",\\\"campaign_id\\\":\\\"$CAMP_B\\\",\\\"revenue_cents\\\":50}\"\nelse\n  echo \"  (B_TOK empty \u2014 password grant disabled; WITH CHECK left to static /security-review)\"\nfi\n\necho \"\"\necho \"=== CLEANUP (service role + Admin delete cascade) ===\"\ncurl -s -o /dev/null -w \"del steps(campA): %{http_code}\\n\" -X DELETE \"$URL/rest/v1/campaign_steps?campaign_id=eq.$CAMP_A\" \"${hsr[@]}\"\ncurl -s -o /dev/null -w \"del attr(B): %{http_code}\\n\" -X DELETE \"$URL/rest/v1/marketing_attribution?user_id=eq.$B_UID\" \"${hsr[@]}\"\ncurl -s -o /dev/null -w \"del campA: %{http_code}\\n\" -X DELETE \"$URL/rest/v1/campaigns?id=eq.$CAMP_A\" \"${hsr[@]}\"\ncurl -s -o /dev/null -w \"del campB: %{http_code}\\n\" -X DELETE \"$URL/rest/v1/campaigns?id=eq.$CAMP_B\" \"${hsr[@]}\"\ncurl -s -o /dev/null -w \"del userB: %{http_code}\\n\" -X DELETE \"$URL/auth/v1/admin/users/$B_UID\" \"${hsr[@]}\"\n\necho \"\"\necho \"=== ZERO-RESIDUE (expect campaign_steps */0, attribution */0, campaigns */0, auth.users 1) ===\"\ncurl -s -D - -o /dev/null \"$URL/rest/v1/campaign_steps?select=id\" \"${hsr[@]}\" -H \"Prefer: count=exact\" | grep -i content-range\ncurl -s -D - -o /dev/null \"$URL/rest/v1/marketing_attribution?select=id\" \"${hsr[@]}\" -H \"Prefer: count=exact\" | grep -i content-range\ncurl -s -D - -o /dev/null \"$URL/rest/v1/campaigns?select=id\" \"${hsr[@]}\" -H \"Prefer: count=exact\" | grep -i content-range\ncurl -s \"$URL/auth/v1/admin/users?per_page=200\" \"${hsr[@]}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('auth.users total:',len(d.get('users',[])))\"",
+  "description": "Behavioral proof: tenant-FK 23503 attack + 201 legit + RLS WITH CHECK + zero-residue cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. create ephemeral user B (Admin API) ===
+> B_UID=2ab27065-eadd-4930-ac5b-3cde50d9f2e6
+> === 2. login B (password grant) -> JWT ===
+> B_TOK length=818
+> === 3. create campaigns for A and B (service role) ===
+> CAMP_A=b0a61eb7-2367-4d57-bd79-ae34c1d92b86  CAMP_B=179f0c90-62f7-43f4-a28e-6c9d5807aacf
+> 
+> === PROVA 1a: ATTACK campaign_steps composite FK (A's campaign + user_id B) -> expect 23503 / fk_campaign_steps_campaign ===
+> {"code":"23503","details":"Key (campaign_id, user_id)=(b0a61eb7-2367-4d57-bd79-ae34c1d92b86, 2ab27065-eadd-4930-ac5b-3cde50d9f2e6) is not present in table \"campaigns\".","hint":null,"message":"insert or update on table \"campaign_steps\" violates foreign key constraint \"fk_campaign_steps_campaign\""}  [HTTP 409]
+> === PROVA 1b: LEGIT campaign_steps (A's campaign + user_id A) -> expect 201 ===
+>   [HTTP 201]
+> 
+> === PROVA 2a: WITH CHECK attribution as B planting A's campaign -> expect 4xx RLS reject ===
+> {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"marketing_attribution\""}  [HTTP 403]
+> === PROVA 2b: LEGIT attribution as B with B's own campaign -> expect 201 ===
+>   [HTTP 201]
+> 
+> === CLEANUP (service role + Admin delete cascade) ===
+> del steps(campA): 204
+> del attr(B): 204
+> del campA: 204
+> del campB: 204
+> del userB: 200
+> 
+> === ZERO-RESIDUE (expect campaign_steps */0, attribution */0, campaigns */0, auth.users 1) ===
+> content-range: */0
+> content-range: */0
+> content-range: */0
+> auth.users total: 1
+> ```
+
+## 🤖 Claude *(03:06:14)*
+
+
+## 🤖 Claude *(03:06:20)*
+
+**Prova comportamental COMPLETA — as duas defesas tenant provadas materialmente:**
+
+| Gate | Resultado material |
+|---|---|
+| **1a** FK composta `campaign_steps` — ataque (campanha de A + `user_id` B) | **`23503`** · `"Key (campaign_id, user_id)=(…) is not present in campaigns"` · constraint **`fk_campaign_steps_campaign`** → HTTP 409 — isolado na tenant-FK ✓ |
+| **1b** step legítimo (campanha de A + `user_id` A) | **HTTP 201** ✓ |
+| **2a** `WITH CHECK` attribution — B autenticado planta campanha de A | **`42501`** "new row violates row-level security policy" → HTTP 403 ✓ |
+| **2b** attribution legítimo (B com campanha de B) | **HTTP 201** ✓ |
+| Cleanup | steps/attr/campA/campB 204 · userB 200 |
+| **Zero-resíduo** | campaign_steps `*/0` · attribution `*/0` · campaigns `*/0` · **auth.users 1** (só A) ✓ |
+
+Mais forte que a v6.21.0: o `WITH CHECK` de attribution foi provado **autenticado** (JWT real de B, RLS aplicada), não só estático. Passo 3: regenerar `types.ts` (com guarda anti-corrupção) e validar o TS:
+
+## 🤖 Claude *(03:06:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== current types.ts ===\"; wc -l src/integrations/supabase/types.ts\necho \"=== regenerate from linked schema ===\"\nnpx supabase gen types typescript --linked > /tmp/types_new.ts 2>/tmp/types_err.txt\nGEN_EXIT=$?\nNEW_LINES=$(wc -l < /tmp/types_new.ts 2>/dev/null || echo 0)\nHAS_TABLES=$(grep -cE \"campaign_steps:|marketing_attribution:\" /tmp/types_new.ts 2>/dev/null || echo 0)\nHAS_MESH=$(grep -c \"mesh_node_id\" /tmp/types_new.ts 2>/dev/null || echo 0)\necho \"gen exit=$GEN_EXIT  new_lines=$NEW_LINES  new_tables_found=$HAS_TABLES  mesh_node_id_refs=$HAS_MESH\"\nif [ \"$GEN_EXIT\" -eq 0 ] && [ \"$NEW_LINES\" -gt 1000 ] && [ \"$HAS_TABLES\" -ge 2 ]; then\n  cp /tmp/types_new.ts src/integrations/supabase/types.ts\n  echo \"\u2705 types.ts updated ($NEW_LINES lines)\"\nelse\n  echo \"\u274c ABORT \u2014 types.ts unchanged\"; head -5 /tmp/types_err.txt\nfi",
+  "description": "Regenerate types.ts from schema with anti-corruption guard"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === current types.ts ===
+> 3307 src/integrations/supabase/types.ts
+> === regenerate from linked schema ===
+> gen exit=0  new_lines=3544  new_tables_found=2  mesh_node_id_refs=10
+> ✅ types.ts updated (3544 lines)
+> ```
+
+## 🤖 Claude *(03:06:42)*
+
+
+## 🤖 Claude *(03:06:43)*
+
+`types.ts` regenerado: 3307 → 3544 linhas (+237), com as 2 novas tabelas + 10 refs a `mesh_node_id` ✅. Passo 4: validar TS (não pode introduzir erro nos consumidores existentes):
+
+## 🤖 Claude *(03:06:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -15\necho \"--- tsc exit: ${PIPESTATUS[0]} ---\"",
+  "description": "TypeScript strict check after types.ts regen"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- tsc exit: 0 ---
+> ```
+
+## 🤖 Claude *(03:07:24)*
+
+
+## 🤖 Claude *(03:07:25)*
+
+`tsc --noEmit` **exit 0** — zero erros, nada quebrou. Passo 5: **mesh seal** (Mesh Connection Mandate). Antes de inserir, sondo o shape exato de `mcorch_nodes` espelhando o BoK seal `d5163fed` do próprio marketing-hub (probe-first, sem tentativa-e-erro):
+
+## 🤖 Claude *(03:07:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== mcorch_nodes required (non-nullable, no-default) fields ===\"\ncurl -s \"$URL/rest/v1/\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); n=d['definitions'].get('mcorch_nodes',{}); req=n.get('required',[]); print('required:', req)\"\necho \"=== shape of marketing-hub BoK seal node d5163fed (mirror reference) ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?id=eq.d5163fed-da85-4f95-8445-0d0aa5b6bafe&select=node_type,name,stability_score,revenue_impact,user_id,project_id\" -H \"$H1\" -H \"$H2\"\necho \"\"\necho \"=== mcorch_edges required fields ===\"\ncurl -s \"$URL/rest/v1/\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); n=d['definitions'].get('mcorch_edges',{}); print('required:', n.get('required',[]))\"",
+  "description": "Probe mcorch_nodes/edges required fields + BoK seal node shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mcorch_nodes required (non-nullable, no-default) fields ===
+> required: ['id', 'node_type', 'name', 'stability_score']
+> === shape of marketing-hub BoK seal node d5163fed (mirror reference) ===
+> [{"node_type":"documentation_suite","name":"bok-scribe-seal-marketing-hub-v1","stability_score":0.842766014221132,"revenue_impact":1000000,"user_id":null,"project_id":"marketing-hub"}]
+> === mcorch_edges required fields ===
+> required: ['id', 'relation_type']
+> ```
+
+## 🤖 Claude *(03:08:26)*
+
+
+## 🤖 Claude *(03:08:28)*
+
+Schema confirmado (`mcorch_nodes` required: node_type/name/stability_score; BoK seal usa `project_id='marketing-hub'`, `user_id=null`). Inserindo o **milestone node do MVP-2** + a edge `DERIVES_FROM` o BoK seal `d5163fed`:
+
+## 🤖 Claude *(03:08:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 <<'PY'\nimport json, urllib.request, urllib.error, os\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSK=os.environ['SB_SECRET_KEY']\nH={\"apikey\":SK,\"Authorization\":f\"Bearer {SK}\",\"Content-Type\":\"application/json\"}\ndef post(path,payload):\n    req=urllib.request.Request(URL+path,data=json.dumps(payload).encode(),method=\"POST\",\n        headers={**H,\"Prefer\":\"return=representation\"})\n    try:\n        with urllib.request.urlopen(req) as r: return r.status, r.read().decode()\n    except urllib.error.HTTPError as e: return e.code, e.read().decode()\ncontent=(\"MVP-2 Campaign Core LIVE (marketing-hub). Migration 20260603025256 applied (db push Finished). \"\n\"ALTER campaigns absorb-not-create: +intent +channels text[] +mesh_node_id uuid->mcorch_nodes + UNIQUE(id,user_id). \"\n\"CREATE campaign_steps (composite tenant-FK (campaign_id,user_id)->campaigns CASCADE, mirrors lead_events) + \"\n\"marketing_attribution (simple FK SET NULL + RLS WITH CHECK ownership, mirrors marketing_consents). \"\n\"erase_lead() extended (FMEA-MH-003) reporting attributions_delinked. /security-review SAFE (independent subagent, 0 findings>=8). \"\n\"Behavioral proof: campaign_steps 23503 cross-tenant attack (fk_campaign_steps_campaign) + 201 legit; \"\n\"marketing_attribution WITH CHECK 42501 (B authed planting A's campaign) + 201 legit; zero-residue cleanup (auth.users 1). \"\n\"types.ts 3307->3544. tsc 0 errors. BoK data-model patched (absorb-not-create + FK pattern).\")\nnode={\"node_type\":\"milestone\",\"name\":\"mvp2-campaign-core-live-20260603\",\"stability_score\":1.0,\n\"revenue_impact\":0,\"user_id\":None,\"project_id\":\"marketing-hub\",\"content\":content,\n\"metadata\":{\"mvp\":\"2-campaign-core\",\"migration\":\"20260603025256_marketing_hub_campaign_core\",\n\"tables_created\":[\"campaign_steps\",\"marketing_attribution\"],\"tables_altered\":[\"campaigns\"],\n\"columns_added\":[\"intent\",\"channels\",\"mesh_node_id\"],\"security_review\":\"SAFE-independent-0findings\",\n\"tenant_fk_proof\":{\"campaign_steps_23503\":True,\"attribution_withcheck_42501\":True,\"zero_residue\":True}}}\nst,body=post(\"/rest/v1/mcorch_nodes\",node)\nprint(\"NODE insert HTTP\",st)\nif st in (200,201):\n    nid=json.loads(body)[0][\"id\"]\n    print(\"NODE id:\",nid)\n    edge={\"source_node_id\":nid,\"target_node_id\":\"d5163fed-da85-4f95-8445-0d0aa5b6bafe\",\"relation_type\":\"DERIVES_FROM\",\"metadata\":{\"weight\":1.0}}\n    st2,body2=post(\"/rest/v1/mcorch_edges\",edge)\n    print(\"EDGE insert HTTP\",st2)\n    if st2 in (200,201): print(\"EDGE id:\", json.loads(body2)[0][\"id\"])\n    else: print(\"EDGE body:\",body2[:300])\nelse:\n    print(\"NODE body:\",body[:400])\nPY",
+  "description": "Insert MVP-2 milestone node + DERIVES_FROM edge to BoK seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE insert HTTP 201
+> NODE id: 7628892b-477e-4ffb-bb33-7541e324fa25
+> EDGE insert HTTP 400
+> EDGE body: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'source_node_id' column of 'mcorch_edges' in the schema cache"}
+> ```
+
+## 🤖 Claude *(03:08:44)*
+
+
+## 🤖 Claude *(03:08:45)*
+
+Node inserido ✅ (`7628892b-477e-4ffb-bb33-7541e324fa25`), mas a edge usou nome de coluna errado (`PGRST204`). Sondando os nomes reais de `mcorch_edges` e reinserindo a edge:
+
+## 🤖 Claude *(03:08:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== mcorch_edges columns ===\"\ncurl -s \"$URL/rest/v1/\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d['definitions'].get('mcorch_edges',{}).get('properties',{}).keys()))\"\necho \"=== sample existing DERIVES_FROM edge (shape) ===\"\ncurl -s \"$URL/rest/v1/mcorch_edges?relation_type=eq.DERIVES_FROM&select=*&limit=1\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d[0].keys()) if d else 'none')\"",
+  "description": "Discover mcorch_edges real column names"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mcorch_edges columns ===
+> ['id', 'source_id', 'target_id', 'relation_type', 'weight', 'metadata', 'created_at', 'user_id', 'project_id']
+> === sample existing DERIVES_FROM edge (shape) ===
+> ['id', 'source_id', 'target_id', 'relation_type', 'weight', 'metadata', 'created_at', 'user_id', 'project_id']
+> ```
+
+## 🤖 Claude *(03:08:54)*
+
+
+## 🤖 Claude *(03:08:55)*
+
+Colunas reais: `source_id`/`target_id` + `weight` próprio. Reinserindo a edge:
+
+## 🤖 Claude *(03:09:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\ncurl -s -w \"\\nEDGE HTTP %{http_code}\\n\" \"$URL/rest/v1/mcorch_edges\" -H \"$H1\" -H \"$H2\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"source_id\":\"7628892b-477e-4ffb-bb33-7541e324fa25\",\"target_id\":\"d5163fed-da85-4f95-8445-0d0aa5b6bafe\",\"relation_type\":\"DERIVES_FROM\",\"weight\":1.0,\"project_id\":\"marketing-hub\"}' \\\n  | python3 -c \"import json,sys; t=sys.stdin.read(); print(t)\" 2>/dev/null || echo \"(parse)\"\necho \"=== confirm node embedded (autoembed async \u2014 may still be pending) + mesh count ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?id=eq.7628892b-477e-4ffb-bb33-7541e324fa25&select=id,name,node_type,embedding\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys; d=json.load(sys.stdin); r=d[0] if d else {}; print('node:', r.get('name'), '| embedded:', r.get('embedding') is not None)\"\ncurl -s -D - -o /dev/null \"$URL/rest/v1/mcorch_nodes?select=id\" -H \"$H1\" -H \"$H2\" -H \"Prefer: count=exact\" | grep -i content-range",
+  "description": "Insert DERIVES_FROM edge with correct columns + verify node embedding + mesh count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"0d58d93b-e630-45bb-81aa-d4c5ba6dedb2","source_id":"7628892b-477e-4ffb-bb33-7541e324fa25","target_id":"d5163fed-da85-4f95-8445-0d0aa5b6bafe","relation_type":"DERIVES_FROM","weight":1,"metadata":{},"created_at":"2026-06-03T03:09:02.454899+00:00","user_id":null,"project_id":"marketing-hub"}]
+> EDGE HTTP 201
+> 
+> === confirm node embedded (autoembed async — may still be pending) + mesh count ===
+> node: mvp2-campaign-core-live-20260603 | embedded: True
+> content-range: 0-999/8756
+> ```
+
+## 🤖 Claude *(03:10:15)*
+
+
+## 🤖 Claude *(03:10:23)*
+
+Mesh seal completo: **node `7628892b`** (embedded ✓) + **edge `DERIVES_FROM 0d58d93b`** → BoK seal `d5163fed`. Mesh **8756 nós** (8755 +1).
+
+## ✅ MVP-2 Campaign Core — LIVE e materialmente provado
+
+| Gate | Prova material |
+|---|---|
+| Migration aplicada | `20260603025256` · `db push Finished` exit 0 |
+| Schema | `campaigns` +`intent`/`channels`/`mesh_node_id` +`UNIQUE(id,user_id)` · `campaign_steps` (8 col) · `marketing_attribution` (8 col) — todas via REST |
+| **Tenant-FK (comportamental)** | **`23503`** `fk_campaign_steps_campaign` (ataque cross-tenant) + **`42501`** WITH CHECK attribution (B autenticado) + **201** nos legítimos + **zero-resíduo** (auth.users 1) |
+| `/security-review` | **SAFE** — subagente independente, 0 findings ≥8 |
+| `types.ts` | regenerado 3307→3544 (guard anti-corrupção) |
+| `tsc --noEmit` | **0 erros** |
+| BoK SSOT | `06-data-model.md` patcheado (absorb-not-create + FK pattern) |
+| Mesh seal | node `7628892b` (embedded) + edge `0d58d93b` DERIVES_FROM `d5163fed` · mesh **8756** |
+
+A foundation de Campaign Core está no ar com tenancy à prova de cross-tenant. Survival Laws respeitadas (Lei 1 material em cada gate · Lei 2 BoK-first · Lei 4 ORO + GO no apply).
+
+**Ainda NÃO commitei** — a migration está em produção mas o working tree tem `migration + types.ts + data-model patch` por commitar (a regra é commit só com seu OK). Escolha a direção:
+
+## 🤖 Claude *(03:10:29)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "MVP-2 Campaign Core est\u00e1 LIVE e provado. Todas as op\u00e7\u00f5es commitam o MVP-2 primeiro (a migration j\u00e1 est\u00e1 em prod \u2014 o repo precisa refletir). Qual a pr\u00f3xima frente?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Commit + MVP-3 (edge fns)",
+          "description": "Commita o MVP-2, depois implementa lead-score (1 mco) e campaign-run (10 mco, orquestra orchestrate-content) \u2014 JWT gate + deduct_mco_coins + infra_health_logs. Continua a cadeia marketing-hub."
+        },
+        {
+          "label": "Commit + OTD-LLM-FALLBACK",
+          "description": "Commita o MVP-2, depois ataca a Resilience Debt (cascading LLM fallback, owner engineer, SLA 2026-06-07 \u2014 4 dias). Sai do marketing-hub para fechar o d\u00e9bito com prazo."
+        },
+        {
+          "label": "Commit + selar /handoff",
+          "description": "Commita o MVP-2 granular e sela a sess\u00e3o (HANDOFF + Survival Laws self-audit + Fase 5c). Para aqui com o trabalho consolidado."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
