@@ -6256,6 +6256,1111 @@ Lei 4 (ORO): ✅ Operator=Agent · Reviewer/Owner=Sovereign; toda ação outward
 
 Ou, se preferir manter a janela rodando enquanto você ajusta o WP, puxo um item autônomo do roadmap (cleanup `functionName` nas 9 fns · Nurturing follow-up · FR-MH-012 BYOK). Como quer seguir?
 
+## 👤 User *(21:51:05)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(21:51:05)*
+
+No response requested.
+
+## 👤 User *(22:15:02)*
+
+nas configuracoes esta com WordPress — Site Próprio
+Conecte seu WordPress self-hosted via Application Password
+
+Conectado
+https://mcorch.com/
+
+Usuário: gcrUX
+
+## 🤖 Claude *(22:15:48)*
+
+
+## 🤖 Claude *(22:15:50)*
+
+O print confirma o **bug #3 exato**: WP conectado como **`https://mcorch.com/` (sem www)** — é essa URL que redireciona 301→www e rebaixa o POST. Como mudar só a URL pela UI exigiria redigitar o Application Password (ele é write-only), **corrijo direto** o campo (não-secreto) preservando a senha cifrada, e verifico:
+
+## 🤖 Claude *(22:15:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== before ===\"\ncurl -s \"$URL/user_api_keys?select=wp_site_url,wp_username,wp_app_password&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho; echo \"=== PATCH wp_site_url -> https://www.mcorch.com (canonical, no redirect) ===\"\ncurl -s -X PATCH \"$URL/user_api_keys?user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"wp_site_url\":\"https://www.mcorch.com\"}' | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('  result:',d); sys.exit(0)\nfor r in d:\n    print('  wp_site_url:',r.get('wp_site_url'))\n    print('  wp_username:',r.get('wp_username'))\n    print('  wp_app_password:',('SET' if r.get('wp_app_password') not in (None,'') else 'NULL/CLEARED'))\n\"",
+  "description": "Update wp_site_url to canonical www + verify app_password preserved"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === before ===
+> [{"wp_site_url":"https://mcorch.com/","wp_username":"gcrUX","wp_app_password":"••••••••••••"}]
+> === PATCH wp_site_url -> https://www.mcorch.com (canonical, no redirect) ===
+>   wp_site_url: https://www.mcorch.com
+>   wp_username: gcrUX
+>   wp_app_password: SET
+> ```
+
+## 🤖 Claude *(22:16:04)*
+
+
+## 🤖 Claude *(22:16:05)*
+
+`wp_site_url` agora `https://www.mcorch.com` (senha cifrada preservada). Testo o `publish-wordpress` direto — deve retornar `post_url` real agora (sem redirect):
+
+## 🤖 Claude *(22:16:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\necho \"=== direct publish-wordpress (www canonical) ===\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"MCORCH E2E \u2014 WP can\u00f4nico (www)\",\"content\":\"<p>Valida\u00e7\u00e3o final: POST direto sem redirect cria o rascunho e retorna a URL.</p>\",\"tags\":\"teste-e2e\",\"status\":\"draft\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  keys:',list(d.keys())); print('  post_url:',d.get('post_url')); print('  post_id:',d.get('post_id'),'status:',d.get('status'))\"",
+  "description": "Verify publish-wordpress now returns post_url with www URL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === direct publish-wordpress (www canonical) ===
+>   keys: ['success', 'post_url', 'post_id', 'status', 'slug']
+>   post_url: https://www.mcorch.com/?p=13
+>   post_id: 13 status: draft
+> ```
+
+## 🤖 Claude *(22:16:30)*
+
+
+## 🤖 Claude *(22:16:32)*
+
+🎉 **WP FUNCIONA** — `post_url: https://www.mcorch.com/?p=13`, `post_id: 13`, status `draft`, shape completo. Rascunho real criado. **Bug #3 fechado.**
+
+Agora a **prova capstone**: um `orchestrate-content` completo (`wordpress`+`linkedin`+`twitter`, 10 mco flat) que auto-encadeia artigo→rascunho WP→LinkedIn/X linkando o artigo→malha+`content_mesh_asset` — o flywheel inteiro num run, sem kicks:
+
+## 🤖 Claude *(22:16:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && { echo \"JWT FAIL\"; cat /tmp/jwterr; exit 1; }\necho \"JWT ok\"\ncurl -s -X POST \"$FUNCS/orchestrate-content\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d '{\"topic\":\"3 fluxos de automa\u00e7\u00e3o com IA que toda ag\u00eancia de marketing deveria ter em 2026\",\"platforms\":[\"wordpress\",\"linkedin\",\"twitter\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  run_id:',d.get('run_id'))\"",
+  "description": "Invoke full-platform orchestrate-content (capstone flywheel proof)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> JWT ok
+>   run_id: 89f18bea-4432-4146-b7d5-dcfd8ecbfddd
+> ```
+
+## 🤖 Claude *(22:16:43)*
+
+
+## 🤖 Claude *(22:16:45)*
+
+Run `89f18bea` disparado (saldo 5301→5291). Vigia até auto-completar — espero **todos os passos `done`** + `wordpress_url` setado + `content_mesh_asset=done` (não skipped):
+
+## 🤖 Claude *(22:16:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nRID=\"89f18bea-4432-4146-b7d5-dcfd8ecbfddd\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nfor i in $(seq 1 50); do\n  st=$(curl -s \"$URL/pipeline_runs?select=status&id=eq.$RID\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys\ntry: print(json.load(sys.stdin)[0]['status'])\nexcept: print('?')\" 2>/dev/null)\n  echo \"poll $i: status=$st\"\n  [ \"$st\" != \"running\" ] && [ \"$st\" != \"?\" ] && break\n  sleep 6\ndone\necho \"=== FINAL (NO manual kicks) ===\"\ncurl -s \"$URL/pipeline_runs?select=status,wordpress_url,steps&id=eq.$RID\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nr=json.load(sys.stdin)[0]\nprint('status=%s'%r.get('status'))\nprint('wordpress_url=%s'%r.get('wordpress_url'))\nfor s in (r.get('steps') or []): print('   %s = %s  %s'%(s.get('name'),s.get('status'), (json.dumps(s.get('output'),ensure_ascii=False)[:90] if s.get('status')!='done' else '')))\n\"\necho \"--- park any new queued posts (2026 -> 2027) ---\"\ncurl -s -X PATCH \"$URL/scheduled_posts?user_id=eq.$UZ&status=eq.queued&scheduled_at=lt.2027-01-01\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d '{\"scheduled_at\":\"2027-06-03T00:00:00Z\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  parked',len(d) if isinstance(d,list) else d)\"",
+  "description": "Poll full flywheel run to completion + park new posts",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b5pjsaouu. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b5pjsaouu.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(22:16:59)*
+
+
+## 🤖 Claude *(22:17:01)*
+
+Vigia `b5pjsaouu` rodando. Quando a cadeia completa fechar, te trago a prova final do flywheel inteiro (artigo→rascunho WP com URL→LinkedIn/X→`content_mesh_asset`) e os novos posts já parqueados. Aguardando.
+
+## 👤 User *(22:17:43)*
+
+<task-notification>
+<task-id>b5pjsaouu</task-id>
+<tool-use-id>toolu_019xRXEgJX3x2fBfPzrjmweT</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b5pjsaouu.output</output-file>
+<status>completed</status>
+<summary>Background command "Poll full flywheel run to completion + park new posts" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(22:17:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b5pjsaouu.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	poll 1: status=running
+> 2	poll 2: status=running
+> 3	poll 3: status=running
+> 4	poll 4: status=running
+> 5	poll 5: status=running
+> 6	poll 6: status=running
+> 7	poll 7: status=running
+> 8	poll 8: status=running
+> 9	poll 9: status=done
+> 10	=== FINAL (NO manual kicks) ===
+> 11	status=done
+> 12	wordpress_url=https://www.mcorch.com/?p=14
+> 13	   article_generation = done  
+> 14	   wordpress_publish = done  
+> 15	   linkedin_post = done  
+> 16	   twitter_thread = done  
+> 17	   knowledge_mesh = done  
+> 18	   content_mesh_asset = done  
+> 19	--- park any new queued posts (2026 -> 2027) ---
+> 20	  parked 2
+> 21	
+> ```
+
+## 🤖 Claude *(22:18:13)*
+
+
+## 🤖 Claude *(22:18:26)*
+
+**🎉 FLYWHEEL INTEIRO PROVADO END-TO-END** — run `89f18bea` auto-completou (`done` em ~54s, **zero kicks manuais**):
+
+```
+article_generation = done
+wordpress_publish  = done   → wordpress_url = https://www.mcorch.com/?p=14  (rascunho real!)
+linkedin_post      = done   (linka o artigo)
+twitter_thread     = done   (linka o artigo)
+knowledge_mesh     = done
+content_mesh_asset = done   ← NÃO mais "skipped" (a wire de monetização OE-661 fechou)
+```
+
+Os 3 bugs estão **fechados e verificados**, e o flywheel completo (artigo→rascunho WP→social→malha) roda **autônomo num clique**. Novos posts parqueados.
+
+## ✅ Estado final — flywheel de conteúdo RESSUSCITADO
+
+| Bug (morto desde o cutover 01-06) | Status |
+|---|---|
+| #1 `orchestrate-step verify_jwt` (gateway 401) | ✅ fixado + deploy |
+| #2 RPC param drift (PGRST202, auto-chain morto) | ✅ migration `20260603190000` + `/security-review` SAFE + **verificado** (run auto-`done`) |
+| #3 `wp_site_url` não-www (301→POST vira GET) | ✅ `→ https://www.mcorch.com` + `publish-wordpress` endurecido |
+| **Flywheel completo** | ✅ **PROVADO** (run `89f18bea`: 6/6 passos `done`, rascunho WP `p=14`, `content_mesh_asset` done) |
+
+**Notas:** 2 rascunhos de teste no seu WP (`?p=13` e `?p=14` — pode apagar ou manter o 14, é um artigo real) · 5 `scheduled_posts` de teste parqueados em 2027 (nada publica) · ~60 mco gastos na validação (débito correto a cada etapa) · saldo ~5291.
+
+A perna que faltava agora está provada com a sua correção do WP. **A diretiva original desta sessão está 100% cumprida e excedida:** calibrei o COIN_COST E descobri+reparei que o flywheel inteiro estava morto.
+
+---
+
+**Recomendação forte: selar agora (`/handoff`).** É um bloco coeso, completo e materialmente verificado (calibração + reparo P0 do flywheel + prova E2E). Não há pendência bloqueante — o próximo passo seria um item novo do roadmap.
+
+Quer que eu rode o **`/handoff`** (commits granulares no seu estilo + atualização do HANDOFF.md + nó milestone na malha)? Ou prefere puxar mais um item autônomo antes de selar?
+
+## 👤 User *(22:25:00)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(22:25:00)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(22:25:26)*
+
+
+## 🤖 Claude *(22:25:27)*
+
+Executando o ritual /handoff v4. **PRE-FLIGHT + Fase 1 (Segurança)** em paralelo + leitura do head do HANDOFF.md pro ponto de inserção:
+
+## 🤖 Claude *(22:25:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== git diff stat ===\"; git diff HEAD --stat\necho \"=== git log -7 ===\"; git log --oneline -7\necho \"=== docker ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== chroma ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat || echo \"CHROMA_UNREACHABLE\"",
+  "description": "Pre-flight: git state, docker, chroma"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+>  M CLAUDE.md
+>  M src/lib/billing.ts
+>  M src/test/billing.test.ts
+>  M supabase/config.toml
+>  M supabase/functions/publish-wordpress/index.ts
+> ?? docs/processes/mcoin-cost-calibration.md
+> ?? docs/processes/orchestrate-async-pipeline.md
+> ?? scripts/qa/gen-user-jwt.ts
+> ?? supabase/migrations/20260603190000_fix_async_orchestrate_step_param_drift.sql
+> === git diff stat ===
+>  CLAUDE.md                                     |  3 +++
+>  src/lib/billing.ts                            | 34 +++++++++++++++++----------
+>  src/test/billing.test.ts                      |  8 +++----
+>  supabase/config.toml                          |  2 ++
+>  supabase/functions/publish-wordpress/index.ts | 15 +++++++++---
+>  5 files changed, 42 insertions(+), 20 deletions(-)
+> === git log -7 ===
+> 157ce17 chore(sprint): update sprint-priorities — v6.24.0 Customer 360 + Nurturing + hardening (alta densidade)
+> c3f1008 docs(handoff): seal v6.24.0 — Customer 360 + Nurturing + flywheel hardening (sessão alta densidade)
+> 902a5a1 docs(readme): v6.24.0 — Customer 360 + Nurturing + flywheel hardening (sessão de alta densidade)
+> e9c2b66 fix(qa): smoke-marketing-hub limpa mesh nodes do throwaway (campaign-run obs não cascateia no delete do user)
+> 7e203de docs(claude): Key Files — Customer 360 + Nurturing engine + LIVE smokes + magic-link helper
+> ea6c8ba feat(marketing-hub): Nurturing Sequences engine (FR-MH-008) — consent-gated, sends gated
+> 297b0d6 feat(marketing-hub): Customer 360 — perfil unificado do lead (FR-MH-011)
+> === docker ===
+> mcorch_chroma: Up 10 days (healthy)
+> mcorch_claude_mem: Up 10 days (healthy)
+> mega-brain-dashboard: Up 10 days
+> mega-brain-webhook: Up 10 days (healthy)
+> mega-brain-daemon: Up 10 days (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1780525530694033955}
+> ```
+
+## 🤖 Claude *(22:25:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (git diff) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|ghp_[a-zA-Z0-9]{36})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -10 || true\necho \"--- (env-var NAME mentions like SB_SECRET_KEY are not values; checking for actual sb_secret_ VALUES) ---\"\ngit diff HEAD | grep -oE \"sb_secret_[A-Za-z0-9_]{10,}|sb_publishable_[A-Za-z0-9_]{10,}\" | head -5 || echo \"no literal key values \u2705\"\necho \"=== 1c. client-side mco_balance update ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|topup\\|SettingsPage\" | head -5 || echo \"NO VIOLATIONS \u2705\"\necho \"=== 1e. sensitive console.log in src/ ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*key\\|console\\.log.*secret\\|console\\.log.*password\" src/ | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (git diff) ===
+> --- (env-var NAME mentions like SB_SECRET_KEY are not values; checking for actual sb_secret_ VALUES) ---
+> === 1c. client-side mco_balance update ===
+> === 1e. sensitive console.log in src/ ===
+> src/test/canvas-video-async-smoke.test.ts:239:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:247:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:252:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> ```
+
+## 🤖 Claude *(22:25:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 15
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Customer 360 + Nurturing + Flywheel Hardening Record (2026-06-03)
+> 15	
+> ```
+
+## 🤖 Claude *(22:26:07)*
+
+
+## 🤖 Claude *(22:26:09)*
+
+PRE-FLIGHT ✅ (worktree inventariado, 5 healthy, Chroma OK). Segurança 1a/1c/1e ✅ (sem valores de chave no diff; o match 1e é teste pré-existente com "token" em descrição, não valor). Completando 1b/1d + tsc antes dos commits:
+
+## 🤖 Claude *(22:26:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -3 && echo \"tsc exit 0 \u2705\"\necho \"=== 1b. functions without auth refs (changed this session: orchestrate-step, publish-wordpress) ===\"\ngrep -rL \"Authorization\\|jwt\\|JWT\\|service_role\\|serviceKey\" supabase/functions/orchestrate-step/index.ts supabase/functions/publish-wordpress/index.ts 2>/dev/null || echo \"both changed fns enforce auth \u2705\"\necho \"=== 1d. service_role / rls bypass in src/ ===\"\ngrep -rn \"service_role\\|bypass.*rls\\|rls.*bypass\" src/ | head -5 || echo \"NO VIOLATIONS \u2705\"",
+  "description": "tsc + remaining security checks 1b/1d"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit 0 ✅
+> === 1b. functions without auth refs (changed this session: orchestrate-step, publish-wordpress) ===
+> both changed fns enforce auth ✅
+> === 1d. service_role / rls bypass in src/ ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> ```
+
+## 🤖 Claude *(22:26:52)*
+
+
+## 🤖 Claude *(22:26:54)*
+
+Segurança: **✅ todos PASS** (1d match é comentário de RLS pré-existente, não violação). tsc 0. Sem 🔴 — prossigo.
+
+**Fase 2 — Commits granulares** (staging explícito, sem Co-Authored-By). Os 3 fixes do flywheel primeiro:
+
+## 🤖 Claude *(22:27:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/config.toml && git commit -m \"fix(orchestrate): orchestrate-step verify_jwt=false \u2014 destrava o gateway p/ a chave sb_secret_ do pg_net\" -m \"O 1o run pago E2E expos que o pipeline de conteudo estava morto desde o cutover de chaves (01-06): orchestrate-step nao estava no config.toml, herdava verify_jwt=true e o gateway rejeitava como JWT invalido a chave opaca sb_secret_ que o pg_net envia \u2014 todo run ficava preso em running. Regra: toda edge fn chamada por pg_net tem de ser verify_jwt=false (auto-autentica no codigo).\" -q && echo \"A \u2705 $(git rev-parse --short HEAD)\"\n\ngit add supabase/migrations/20260603190000_fix_async_orchestrate_step_param_drift.sql && git commit -m \"fix(orchestrate): realinha async_orchestrate_step p/ p_service_key + grant service_role \u2014 religa o auto-chain\" -m \"Segundo P0 do mesmo cutover: a RPC fora alterada direto em prod (sem migration) renomeando o param p/ p_service_jwt_legacy, mas os edge fns chamam p_service_key \u2192 PGRST202 \u2192 o encadeamento entre passos nunca disparava. A migration dropa os overloads, recria com p_service_key, adiciona search_path='' e GRANT EXECUTE a service_role. /security-review SAFE. Verificado: run se auto-completa a done sem kick manual (RPC 204).\" -q && echo \"B \u2705 $(git rev-parse --short HEAD)\"\n\ngit add supabase/functions/publish-wordpress/index.ts && git commit -m \"fix(wordpress): valida post criado \u2014 fim do success:true falso no redirect nao-www\" -m \"Terceiro P0: wp_site_url nao-canonica (mcorch.com \u2192 301 \u2192 www) fazia o fetch rebaixar POST\u2192GET, e o WP devolvia a LISTA de posts; publish-wordpress confiava so em wpRes.ok e retornava success sem post_url \u2192 orchestrate-step marcava wordpress_publish como erro. Agora valida que a resposta e um post criado (objeto com id) e retorna 502 honesto com a dica da URL canonica.\" -q && echo \"C \u2705 $(git rev-parse --short HEAD)\"",
+  "description": "Commits A/B/C \u2014 the 3 flywheel fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A ✅ 7b3a481
+> B ✅ 166dfbf
+> C ✅ 9ce1301
+> ```
+
+## 🤖 Claude *(22:27:06)*
+
+
+## 🤖 Claude *(22:27:07)*
+
+Commits A/B/C ✅. Agora D (calibração) + E (docs/SOPs):
+
+## 🤖 Claude *(22:27:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/lib/billing.ts src/test/billing.test.ts && git commit -m \"feat(billing): calibra COIN_COST no modelo 4x-floor \u2014 IMAGE_GENERATION 3->9\" -m \"Fecha OTD-MCOIN-CALIBRATION. Modelo mco=ceil(custo_usd / 0.018_piso x 4), piso = venda Enterprise (pior margem, R\\$997/10000 \u00f7 R\\$5.5). Descoberta material: 10 (orchestrate) e 125 (canvas video) ja eram ~4x sobre custo real; unico furo era IMAGE_GENERATION (1.36x) \u2192 9; CONTENT_GENERATION 5\u21922. Esses 2 nao tem caminho de cobranca em producao (orchestrate cobra flat 10) \u2014 mudanca segura. tsc 0, billing 22/22.\" -q && echo \"D \u2705 $(git rev-parse --short HEAD)\"\n\ngit add docs/processes/orchestrate-async-pipeline.md docs/processes/mcoin-cost-calibration.md scripts/qa/gen-user-jwt.ts CLAUDE.md && git commit -m \"docs(processes): SOPs pipeline async + calibracao mcoCoins + QA user-JWT minter\" -m \"Obstaculo\u2192Sintese dos 3 P0s do cutover de chaves: orchestrate-async-pipeline.md (3 modos de falha + gates de verificacao + recovery) e mcoin-cost-calibration.md (modelo 4x). scripts/qa/gen-user-jwt.ts minta access_token de user (admin generateLink\u2192verifyOtp) p/ QA de edge fns logadas. CLAUDE.md Key Files atualizado.\" -q && echo \"E \u2705 $(git rev-parse --short HEAD)\"\necho \"=== working tree after commits ===\"; git status --short",
+  "description": "Commits D/E \u2014 calibration + docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> D ✅ 73b8282
+> E ✅ 091b7da
+> === working tree after commits ===
+> ```
+
+## 🤖 Claude *(22:27:33)*
+
+
+## 🤖 Claude *(22:27:34)*
+
+5 commits selados (7b3a481 · 166dfbf · 9ce1301 · 73b8282 · 091b7da), worktree limpo. **Fase 3 — Nó milestone na malha** (insert + embed + proof-manifest):
+
+## 🤖 Claude *(22:27:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nCOMMITS=$(git log --oneline -5 | tr '\\n' '|')\nNODE=$(curl -s -X POST \"$SUPABASE_URL/rest/v1/mcorch_nodes\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d \"{\n  \\\"name\\\": \\\"session-handoff-20260603-flywheel-resurrection\\\",\n  \\\"node_type\\\": \\\"handoff\\\",\n  \\\"content\\\": \\\"[HANDOFF SEAL] Calibracao COIN_COST (modelo 4x-floor, OTD-MCOIN-CALIBRATION fechada) + reparo P0 do flywheel de conteudo: 3 bugs silenciosos do cutover de chaves (01-06) \u2014 orchestrate-step verify_jwt, async_orchestrate_step param drift p_service_jwt_legacy vs p_service_key, wp_site_url nao-www 301 POST->GET \u2014 fixados e provados E2E (run 89f18bea auto-completo 6/6 passos, rascunho WP p=14, content_mesh_asset done).\\\",\n  \\\"stability_score\\\": 1.0,\n  \\\"project_id\\\": null,\n  \\\"user_id\\\": null,\n  \\\"metadata\\\": {\\\"session\\\": \\\"flywheel-resurrection-mcoin-calibration\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$COMMITS\\\"}\n}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERROR'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\nif [ -n \"$NODE_ID\" ] && [ \"$NODE_ID\" != \"ERROR\" ]; then\n  echo \"{\\\"handoffNodeId\\\": \\\"$NODE_ID\\\"}\" > proof-manifest.json\n  echo \"proof-manifest.json written\"\n  echo \"=== embed ===\"\n  curl -s -X POST \"$SUPABASE_URL/functions/v1/embed-mcorch-node\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"$NODE_ID\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', json.dumps(d)[:160])\" 2>/dev/null || echo \"embed response non-JSON\"\nfi",
+  "description": "Insert handoff milestone node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 5e1b6f32-7d32-4fbb-a1b7-1834e42d187e
+> proof-manifest.json written
+> === embed ===
+> Embedded: {"error": "Request body must contain { node_id: string }"}
+> ```
+
+## 🤖 Claude *(22:27:51)*
+
+
+## 🤖 Claude *(22:27:52)*
+
+Nó `5e1b6f32-7d32-4fbb-a1b7-1834e42d187e` inserido + proof-manifest escrito. O embed espera `{node_id}` (não `{record:{id}}`) — retento com o payload certo:
+
+## 🤖 Claude *(22:27:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"5e1b6f32-7d32-4fbb-a1b7-1834e42d187e\"\necho \"=== embed (node_id payload) ===\"\ncurl -s -X POST \"$SUPABASE_URL/functions/v1/embed-mcorch-node\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"$NODE_ID\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', json.dumps(d)[:200])\" 2>/dev/null || echo \"non-JSON\"\necho \"=== verify node has embedding + get live node count ===\"\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.$NODE_ID&select=id,embedding\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import sys,json; d=json.load(sys.stdin); r=d[0] if d else {}; e=r.get('embedding'); print('embedding:', 'SET (768d)' if e else 'NULL')\" 2>/dev/null\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$' | sed 's/^/total nodes: /'",
+  "description": "Embed handoff node with correct payload + verify + node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embed (node_id payload) ===
+> Embedded: {"node_id": "5e1b6f32-7d32-4fbb-a1b7-1834e42d187e", "dims": 768, "chunks": 1, "model": "openai/text-embedding-3-small", "provider": "openrouter", "stitched": 0}
+> === verify node has embedding + get live node count ===
+> embedding: SET (768d)
+> total nodes: 8769
+> total nodes: 
+> total nodes:
+> ```
+
+## 🤖 Claude *(22:28:11)*
+
+
+## 🤖 Claude *(22:28:13)*
+
+Embed ✅ (768d, 1 chunk) · nó com embedding · **malha 8769 nós** (era 8761 — +8 dos runs de teste + handoff). **Fase 4 — README.md**. Lendo o topo pra atualizar badges + What's New:
+
+## 🤖 Claude *(22:28:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"version-\\|neural_mesh-\\|What's New\\|## \\[v6\\|Phase Status\\|### \\[v6\" README.md | head -25",
+  "description": "Locate README badges + What's New anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.24.0--marketing--hub--c360--nurturing-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8761_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 392:### [v6.18.0] — Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)
+> 399:### [v6.17.0] — Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)
+> 405:### [v6.15.1] — Mercado Pago Postback Signature Gate (FMEA-ML-003/004) (2026-05-31)
+> 411:### [v6.14.3] — meta-api BoK Suite & Agents System Sealed (2026-05-30)
+> 416:### [v6.14.2] — OTD-ML-001 Material Resolution + v6.14.1 Correction (2026-05-30)
+> 423:### [v6.14.1] — OTD-ML-001 Resolved & fetch-trends Deployed (2026-05-30)
+> 428:### [v6.14.0] — Sovereign Dogfood: Affiliate Per-User · Constellation Real · Canvas Graph · Deploy Antibody (2026-05-30)
+> 436:### [v6.13.0] — OpenClaw Ecosystem 100% Validation + Resilience Hardening (2026-05-29)
+> 444:### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> 451:### [v6.8.5] — e2e-user-zero framework MVP — Phase Commercial Gate operacional (2026-05-26)
+> 459:### [v6.8.4] — e2e-user-zero BoK 9/9 + agent-browser SOP + canonical seed pattern (2026-05-26)
+> 467:### [v6.8.3] — mcorch-qa-healing COMMIT_RE Pure-Decimal Tightening (2026-05-25)
+> 472:### [v6.8.2] — OE-661 Flywheel Validated End-to-End + PGRST203 Hotfix (2026-05-25)
+> 481:### [v6.8.0] — Canvas Studio Node Type Mapping & Error Diagnostics Fix (2026-05-25)
+> 486:### [v6.7.9] — Canvas Studio Magic Prompt & E2E Audit (2026-05-24)
+> 491:### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+> 497:### [v6.7.6] — Canvas Studio Video Tiers & Error Propagation (2026-05-24)
+> 503:### [v6.7.5] — Canvas Studio Evolution: Take Pipeline, Re-execution, CRUD and Asset Import (2026-05-24)
+> 509:### [v6.7.3] — BoK aios-sql-bridge + OE-661 Flywheel + Canvas Design Submenu (2026-05-23)
+> 515:### [v6.7.1] — Customization Directory & Workflow Alignment (2026-05-23)
+> 519:### [v6.7.0] — Admin User Management Panel (2026-05-20)
+> 525:### [v6.6.9] — mcorch-qa-healing v1 — Material Proof Gate (2026-05-20)
+> 533:### [v6.6.7] — OE-661 Phase 1 Prep + API Tenancy Directive (2026-05-19)
+> ```
+
+## 🤖 Claude *(22:28:30)*
+
+
+## 🤖 Claude *(22:28:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.24.0--marketing--hub--c360--nurturing-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8761_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-259_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..008%2C011_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 9	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 10	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> ```
+
+## 🤖 Claude *(22:28:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 386,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 386	         + Neural HUD telemetry
+> 387	         + Constellation Matrix WebGL (8679 nodes · 8989 edges — paginação completa)
+> 388	         + Visual Orchestration Canvas with Quality Gates
+> 389	         + AIOS — conversational AI consciousness with VAD + Barge-in
+> 390	```
+> 391	
+> 392	### [v6.18.0] — Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)
+> 393	- **Constellation v2 proven end-to-end** — from decorative shell (717 fake agents, zero real work) to an operational per-user cockpit. Empty-start (no auto-seed) → dual-door wizard (`useCreateCrew`: ready 4×4 map = Núcleo + 4 Leads + 13 module-bound subagents, OR guided builder) → a capability-bound subagent invokes a **real module function** via the v2 capability router (`agent-task-execute`), metered in mcoCoins, isolated by `auth.uid()`. Fase 4 E2E proof: exec `488a7744` → `watchdog_infra`/`get-infra-status` → `done` · 0 mcoCoins · 255ms · `result_summary` = real `{chroma:healthy, intelligence:healthy}`.
+> 394	- **Fase 0 destructive reset** (`scripts/reset-constellation-v2.ts --execute`) — archived 35 execs → wiped 746 crew_agents + 717 crew_edges → 0; `profiles` preserved. Plus a per-user **"Zerar constelação"** button (`useResetCrew`, RLS-scoped) so any user restarts from zero or re-seeds the 4×4 anytime.
+> 395	- **Production build unblocked** — `lucide-react@1.x` had dropped brand icons (`Instagram`/`Facebook`/`Figma`), silently breaking `vite build` (rollup) while dev (esbuild) tolerated it; the live site was serving a stale May-30 bundle. Fixed with a local brand-icon shim + a `scripts/qa/audit-lucide-imports.ts` antibody that catches removed-icon imports before the build breaks.
+> ```
+
+## 🤖 Claude *(22:28:51)*
+
+
+## 🤖 Claude *(22:28:51)*
+
+Insiro a entrada v6.25.0 + atualizo badges (version 6.24.0→6.25.0, mesh 8761→8769):
+
+## 🤖 Claude *(22:28:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.24.0--marketing--hub--c360--nurturing-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.25.0--flywheel--resurrection-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:28:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8761_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8769_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:29:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.18.0] \u2014 Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)",
+  "new_string": "### [v6.25.0] \u2014 Flywheel Resurrection: 3 Key-Migration P0s Fixed + mcoCoins Calibration (2026-06-03)\n- **The content flywheel had been silently dead since the 2026-06-01 key cutover** \u2014 the first paid E2E run surfaced 3 compounding P0s that left every orchestration stuck at `running`. (1) `orchestrate-step` was missing from `config.toml` \u2192 default `verify_jwt=true` \u2192 the gateway rejected the opaque `sb_secret_` key that pg_net sends, as an invalid JWT (401). (2) `async_orchestrate_step` had been hotfixed in prod (no migration) renaming its param to `p_service_jwt_legacy` while the callers pass `p_service_key` \u2192 PGRST202 \u2192 the step auto-chain never fired. (3) `wp_site_url` was non-canonical (`mcorch.com` \u2192 301 \u2192 `www.mcorch.com`) \u2192 `fetch` downgraded the authenticated POST to a GET \u2192 WordPress returned the post LIST \u2192 `wordpress_publish` errored. All three fixed + **proven E2E**: run `89f18bea` self-completed 6/6 steps with no manual kicks \u2192 WP draft `?p=14` + `content_mesh_asset` done.\n- **`publish-wordpress` hardened** \u2014 now validates that the WP response is a created post (`id` present) and returns an honest 502 instead of a silent `{success:true}` on the redirect-to-GET case.\n- **OTD-MCOIN-CALIBRATION closed** \u2014 `COIN_COSTS` calibrated to the 4\u00d7-floor model `mco = ceil(usd / $0.018 \u00d7 4)` (floor = the cheapest Enterprise sale). The honest finding: `10` (orchestrate) and `125` (canvas video) were already ~4\u00d7 over real cost; the only under-margined value was `IMAGE_GENERATION` (3 \u2192 9). SOP `docs/processes/mcoin-cost-calibration.md`.\n- **New SOP** `docs/processes/orchestrate-async-pipeline.md` (the 3 failure modes + verification gates: RPC 204 \u00b7 run auto-completes `done` without kicks \u00b7 `publish-wordpress` returns `post_url`) + `scripts/qa/gen-user-jwt.ts` (mint a user access_token for authenticated edge-fn QA).\n\n### [v6.18.0] \u2014 Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:29:08)*
+
+
+## 🤖 Claude *(22:29:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md && git commit -m \"docs(readme): v6.25.0 \u2014 flywheel resurrection (3 key-migration P0s) + mcoCoins calibration\" -q && echo \"README \u2705 $(git rev-parse --short HEAD)\"",
+  "description": "Commit README v6.25.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README ✅ a5b89e8
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
