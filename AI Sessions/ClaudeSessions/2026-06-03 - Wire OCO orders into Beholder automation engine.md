@@ -5187,6 +5187,1829 @@ Implementação backend completa e com sintaxe OK. Agora vou **rebuildar a image
 > Command running in background with ID: bha2fm42g. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/cba664a2-9bab-474e-ae2c-a43a7cdabd93/tasks/bha2fm42g.output. You will be notified when it completes. To check interim output, use Read on that file path.
 > ```
 
+## 🤖 Claude *(20:00:30)*
+
+
+## 🤖 Claude *(20:00:31)*
+
+Build rodando em background. Enquanto isso, vou ler o `ExchangeService` do frontend (pra saber como o template OCO se encaixa) e checar o progresso do build.
+
+## 🤖 Claude *(20:00:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend && echo \"=== STOP_TYPES / LIMIT_TYPES in ExchangeService ===\" && grep -rn \"STOP_TYPES\\|LIMIT_TYPES\" src/services/ExchangeService.js 2>/dev/null; echo \"=== file head ===\"; sed -n '1,40p' src/services/ExchangeService.js 2>/dev/null | grep -nE \"STOP_TYPES|LIMIT_TYPES|export const\" ",
+  "description": "Read frontend STOP_TYPES/LIMIT_TYPES"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STOP_TYPES / LIMIT_TYPES in ExchangeService ===
+> src/services/ExchangeService.js:6:export const STOP_TYPES = ["STOP_LOSS", "STOP_LOSS_LIMIT", "TAKE_PROFIT", "TAKE_PROFIT_LIMIT"];
+> === file head ===
+> 6:export const STOP_TYPES = ["STOP_LOSS", "STOP_LOSS_LIMIT", "TAKE_PROFIT", "TAKE_PROFIT_LIMIT"];
+> 8:export const FINISHED_STATUS = ["FILLED", "REJECTED", "CANCELED"];
+> ```
+
+## 🤖 Claude *(20:00:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/cba664a2-9bab-474e-ae2c-a43a7cdabd93/tasks/bha2fm42g.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#6 DONE 0.0s
+> 2	
+> 3	#7 [2/7] WORKDIR /app
+> 4	#7 CACHED
+> 5	
+> 6	#8 [3/7] COPY package*.json ./
+> 7	#8 CACHED
+> 8	
+> 9	#9 [4/7] RUN npm install --omit=dev
+> 10	#9 CACHED
+> 11	
+> 12	#10 [5/7] COPY . .
+> 13	#10 DONE 0.1s
+> 14	
+> 15	#11 [6/7] COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> 16	#11 DONE 0.1s
+> 17	
+> 18	#12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> 19	#12 DONE 0.2s
+> 20	
+> 21	#13 exporting to image
+> 22	#13 exporting layers 0.1s done
+> 23	#13 writing image sha256:b1ba01f44e3761124c202a5817b44f27132c89374560c4bc373613726293369b done
+> 24	#13 naming to docker.io/library/tradeux-backend
+> 25	#13 naming to docker.io/library/tradeux-backend done
+> 26	#13 DONE 0.1s
+> 27	
+> 28	#14 resolving provenance for metadata file
+> 29	#14 DONE 0.0s
+> 30	 Image tradeux-backend Built 
+> 31	
+> ```
+
+## 🤖 Claude *(20:00:41)*
+
+
+## 🤖 Claude *(20:00:42)*
+
+Build OK (cache no `npm install` → sem novas deps, ótimo). Subindo o backend novo e checando boot + migration.
+
+## 🤖 Claude *(20:00:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose up -d backend 2>&1 | tail -5\necho \"=== waiting for boot ===\"\nsleep 8\necho \"=== docker logs (entrypoint: migrate+seed) ===\"\nsudo -n -u gcrux-tradeux docker compose logs backend --since 60s 2>&1 | grep -iE \"migrat|seed|orderListId|error|listen|running|exchange monitor|beholder\" | head -40\necho \"=== container status ===\"\nsudo -n -u gcrux-tradeux docker compose ps backend 2>&1 | tail -3",
+  "description": "Start new backend, inspect boot/migration logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === waiting for boot ===
+> === docker logs (entrypoint: migrate+seed) ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | == 20260603170000-alter-orders-add-orderListId: migrating =======
+> backend-1  | == 20260603170000-alter-orders-add-orderListId: migrated (0.047s)
+> backend-1  | [TradeUX] Applying seeds (idempotent)...
+> backend-1  | No seeders found.
+> === container status ===
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED          STATUS         PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   10 seconds ago   Up 8 seconds   3001/tcp
+> ```
+
+## 🤖 Claude *(20:01:03)*
+
+
+## 🤖 Claude *(20:01:04)*
+
+Migration aplicada (`orderListId` em 0.047s), container Up. Vou confirmar a coluna no banco e o boot limpo (system.log é file-only em produção).
+
+## 🤖 Claude *(20:01:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== orders columns (orderListId present?) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node -e '\nconst db=require(\"/app/src/db\");\ndb.query(\"SHOW COLUMNS FROM orders\").then(([rows])=>{\n  const c=rows.find(r=>r.Field===\"orderListId\");\n  console.log(\"orderListId =>\", c?JSON.stringify(c):\"MISSING\");\n  process.exit(c?0:1);\n}).catch(e=>{console.error(e.message);process.exit(1);});' 2>&1 | tail -3\necho \"=== system.log tail (boot) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'cat /app/logs/system.log 2>/dev/null | tail -25' 2>&1\necho \"=== any ERROR in system.log? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -iE \"error|unhandled|cannot|undefined is not\" /app/logs/system.log 2>/dev/null | tail -15' 2>&1 || echo \"(none)\"",
+  "description": "Verify orderListId column + clean boot logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orders columns (orderListId present?) ===
+> orderListId => {"Field":"orderListId","Type":"bigint","Null":"YES","Key":"","Default":null,"Extra":""}
+> === system.log tail (boot) ===
+> info: 2026-06-03T18:53:33.394Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T18:53:35.976Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T18:53:37.380Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T19:18:45.958Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T20:00:50.015Z - Getting the default settings with ID 1...
+> info: 2026-06-03T20:00:50.094Z - Initializing the Beholder Brain...
+> info: 2026-06-03T20:00:50.116Z - Starting the Beholder Agenda...
+> info: 2026-06-03T20:00:50.117Z - Starting the server apps...
+> info: 2026-06-03T20:00:50.120Z - App Web Socket Server is running!
+> info: 2026-06-03T20:00:50.186Z - App is running at 3001
+> info: 2026-06-03T20:00:50.266Z - App Exchange Monitor is running!
+> info: 2026-06-03T20:00:52.420Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T20:00:53.253Z
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-03T20:00:57.211Z
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-03T20:01:01.227Z
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-03T20:01:05.198Z
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-03T20:01:09.214Z
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> === any ERROR in system.log? ===
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-03T19:58:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> ```
+
+## 🤖 Claude *(20:01:20)*
+
+
+## 🤖 Claude *(20:01:22)*
+
+Boot **limpo**: coluna `orderListId` = `bigint NULL` ✓, "App Exchange Monitor is running", USER_DATA conectado (`userDataStream:subscribeEvent`). Os `jwt expired` são de uma aba antiga reconectando no `/ws` — pré-existente e inofensivo, sem relação com a mudança.
+
+Agora o **smoke**: copiar o script pro container e colocar a OCO (exercita `beholder.placeOrder`→`placeOco`→`exchange.oco`→persistência).
+
+## 🤖 Claude *(20:01:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js 2>&1\necho \"=== RUN: place OCO (BTCUSDT) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1 | tail -20",
+  "description": "Copy smoke script and place an OCO on testnet"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/oco-smoke.js to tradeux-backend-1:/tmp/oco-smoke.js
+>  tradeux-backend-1 Copied /tmp/oco-smoke.js to tradeux-backend-1:/tmp/oco-smoke.js
+> === RUN: place OCO (BTCUSDT) ===
+>   ^
+> 
+> Error: Cannot find module 'sequelize'
+> Require stack:
+> - /tmp/oco-smoke.js
+>     at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+>     at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+>     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+>     at Function._load (node:internal/modules/cjs/loader:1216:25)
+>     at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+>     at Module.require (node:internal/modules/cjs/loader:1527:12)
+>     at require (node:internal/modules/helpers:147:16)
+>     at Object.<anonymous> (/tmp/oco-smoke.js:5:16)
+>     at Module._compile (node:internal/modules/cjs/loader:1781:14)
+>     at Object..js (node:internal/modules/cjs/loader:1913:10) {
+>   code: 'MODULE_NOT_FOUND',
+>   requireStack: [ '/tmp/oco-smoke.js' ]
+> }
+> 
+> Node.js v22.22.3
+> ```
+
+## 🤖 Claude *(20:01:30)*
+
+
+## 🤖 Claude *(20:01:30)*
+
+O script em `/tmp` não resolve `sequelize`/`axios`. Vou apontar pro `/app/node_modules`.
+
+## 🤖 Claude *(20:01:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/oco-smoke.js",
+  "old_string": "const { Op } = require('sequelize');\nconst axios = require('axios');",
+  "new_string": "const { Op } = require('/app/node_modules/sequelize');\nconst axios = require('/app/node_modules/axios');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/oco-smoke.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:01:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js 2>&1 | tail -1\necho \"=== RUN: place OCO (BTCUSDT) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1 | tail -20",
+  "description": "Re-copy and place OCO"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copied /tmp/oco-smoke.js to tradeux-backend-1:/tmp/oco-smoke.js
+> === RUN: place OCO (BTCUSDT) ===
+> PRICE=1150.23 TP=1173.23000000 STOP=1127.22000000 QTY=0.00888000 BTC_AVAIL=1.0329 minNotional=5
+> SMOKE_ERR Error: There is no order template for 'SMOKE-OCO', action #undefined
+>     at Object.placeOrder (/app/src/beholder.js:353:15)
+>     at /tmp/oco-smoke.js:68:33
+>     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+> ```
+
+## 🤖 Claude *(20:01:55)*
+
+
+## 🤖 Claude *(20:01:56)*
+
+Bug no meu script de smoke: `orderTemplateId: 0` é falsy e bate no guard `!action.orderTemplateId`. Vou usar um id truthy (o template inline continua sendo usado).
+
+## 🤖 Claude *(20:01:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/oco-smoke.js",
+  "old_string": "  const automation = { id: null, name: 'SMOKE-OCO', logs: true };\n  const action = { orderTemplateId: 0, orderTemplate };",
+  "new_string": "  const automation = { id: null, name: 'SMOKE-OCO', logs: true };\n  const action = { orderTemplateId: 1, orderTemplate };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/oco-smoke.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:02:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js 2>&1 | tail -1\necho \"=== RUN: place OCO (BTCUSDT) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1 | tail -20",
+  "description": "Re-run place OCO smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copied /tmp/oco-smoke.js to tradeux-backend-1:/tmp/oco-smoke.js
+> === RUN: place OCO (BTCUSDT) ===
+> PRICE=1153.67 TP=1176.74000000 STOP=1130.59000000 QTY=0.00885000 BTC_AVAIL=1.0329 minNotional=5
+> SMOKE_ERR Error: Error trying to get market price. OTID: 0, false. No Book.
+>     at calcPrice (/app/src/beholder.js:189:19)
+>     at placeOco (/app/src/beholder.js:279:21)
+>     at Object.placeOrder (/app/src/beholder.js:366:16)
+>     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+>     at async /tmp/oco-smoke.js:68:18
+> ```
+
+## 🤖 Claude *(20:02:22)*
+
+
+## 🤖 Claude *(20:02:25)*
+
+A `calcPrice` não reconhece `OCO` (não está em `LIMIT_TYPES`) e caiu no ramo de book. O smoke pegou um bug real — exatamente pra isso ele existe. OCO usa preços explícitos (limit/stop), igual aos tipos LIMIT. Vou tratar OCO no ramo de preço explícito.
+
+## 🤖 Claude *(20:02:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    const tickSize = parseFloat(symbol.tickSize);\n    let newPrice, factor;\n\n    if (LIMIT_TYPES.includes(orderTemplate.type)) {",
+  "new_string": "    const tickSize = parseFloat(symbol.tickSize);\n    let newPrice, factor;\n\n    // OCO usa pre\u00e7os expl\u00edcitos (TP em limitPrice, stop em stopPrice), igual aos tipos LIMIT.\n    if (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === 'OCO') {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:02:43)*
+
+
+## 🤖 Claude *(20:02:45)*
+
+O container tem a imagem antiga. Pra iterar rápido no `placeOco` sem rebuild a cada ajuste, vou copiar o `beholder.js` atualizado pro container (o processo `node` do smoke lê o arquivo fresco) e re-rodar. O rebuild final consolida tudo pro processo servidor (listStatus).
+
+## 🤖 Claude *(20:02:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp backend/src/beholder.js backend:/app/src/beholder.js 2>&1 | tail -1\necho \"=== RUN: place OCO (BTCUSDT) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1 | tail -20",
+  "description": "Copy updated beholder.js and re-run place"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copied backend/src/beholder.js to tradeux-backend-1:/app/src/beholder.js
+> === RUN: place OCO (BTCUSDT) ===
+> PRICE=1159.44 TP=1182.62000000 STOP=1136.25000000 QTY=0.00881000 BTC_AVAIL=1.0329 minNotional=5
+> PLACE_RESULT={"type":"success","text":"OCO SELL BTCUSDT placed (list #5639)"}
+> LEGS=[{"id":37,"orderId":76000,"type":"LIMIT_MAKER","side":"SELL","status":"NEW","orderListId":"5639","limitPrice":"1182.62000000","stopPrice":null,"qty":"0.00881000"},{"id":36,"orderId":75999,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"NEW","orderListId":"5639","limitPrice":"1136.25000000","stopPrice":"1136.25000000","qty":"0.00881000"}]
+> ORDERLISTID=5639
+> PLACE_OK
+> ```
+
+## 🤖 Claude *(20:03:40)*
+
+
+## 🤖 Claude *(20:03:43)*
+
+**PLACE_OK** — OCO #5639 colocada e **2 pernas persistidas** com o mesmo `orderListId=5639`:
+- LIMIT_MAKER SELL @ 1182.62 (TP), `stopPrice=null`
+- STOP_LOSS_LIMIT SELL @ 1136.25 (stop limit), `stopPrice=1136.25` (gatilho)
+
+Valida migration + model + `placeOco` + `exchange.oco` + persistência. Agora preciso do **rebuild final** (assa o fix do `calcPrice` + listStatus no processo servidor) pra testar o cancel-endpoint e o handler de listStatus ao vivo. A OCO #5639 fica aberta e servirá de alvo.
+
+## 🤖 Claude *(20:03:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux docker compose build backend 2>&1 | tail -4 && echo \"=== up -d ===\" && sudo -n -u gcrux-tradeux docker compose up -d backend 2>&1 | tail -4",
+  "description": "Final backend rebuild + restart",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+> === up -d ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(20:03:58)*
+
+
+## 🤖 Claude *(20:03:59)*
+
+Backend reconstruído e reiniciado com tudo. Vou confirmar o boot e descobrir o formato do header de auth + campos de login antes de exercitar o endpoint de cancel.
+
+## 🤖 Claude *(20:04:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsleep 8\necho \"=== boot ok? ===\"\nsudo -n -u gcrux-tradeux docker compose logs backend --since 30s 2>&1 | grep -iE \"migrat|App is running|Exchange Monitor is running|subscribeEvent|error\" | grep -v \"jwt expired\" | head\necho \"=== auth middleware (how token is read) ===\"\nls backend/src/middlewares/ 2>/dev/null\ngrep -rnE \"authorization|Bearer|res.locals.token|jwt.verify\" backend/src/middlewares/ 2>/dev/null | head\necho \"=== login controller (request fields + response) ===\"\ngrep -rnE \"req.body|password|email|token|sign\\(\" backend/src/controllers/*ogin* backend/src/controllers/auth* 2>/dev/null | head -20\necho \"=== routers mount + auth usage in app.js ===\"\ngrep -nE \"require\\(.*outer|app.use|orders|login\" backend/src/app.js 2>/dev/null | head -25",
+  "description": "Boot check + auth/login recon"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot ok? ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | No migrations were executed, database schema was already up to date.
+> === auth middleware (how token is read) ===
+> authMiddleware.js
+> errorMiddleware.js
+> backend/src/middlewares/authMiddleware.js:8:    const token = req.headers['authorization'];
+> backend/src/middlewares/authMiddleware.js:11:            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+> backend/src/middlewares/authMiddleware.js:14:                    res.locals.token = decoded;
+> === login controller (request fields + response) ===
+> backend/src/controllers/authController.js:1:const jwt = require('jsonwebtoken');
+> backend/src/controllers/authController.js:6:    const email = req.body.email;
+> backend/src/controllers/authController.js:7:    const password = req.body.password;
+> backend/src/controllers/authController.js:9:    const settings = await settingsRepository.getSettingsByEmail(email);
+> backend/src/controllers/authController.js:11:        const isValid = bcrypt.compareSync(password, settings.password);
+> backend/src/controllers/authController.js:13:            const token = jwt.sign({
+> backend/src/controllers/authController.js:19:            return res.json({ token, pushToken: settings.pushToken });
+> backend/src/controllers/authController.js:29:    const token = req.headers['authorization'];
+> backend/src/controllers/authController.js:30:    blacklist.push(token);
+> backend/src/controllers/authController.js:34:function isBlacklisted(token) {
+> backend/src/controllers/authController.js:35:    return blacklist.some(t => t === token);
+> === routers mount + auth usage in app.js ===
+> 9:const settingsRouter = require('./routers/settingsRouter');
+> 10:const symbolsRouter = require('./routers/symbolsRouter');
+> 11:const exchangeRouter = require('./routers/exchangeRouter');
+> 12:const ordersRouter = require('./routers/ordersRouter');
+> 13:const monitorsRouter = require('./routers/monitorsRouter');
+> 14:const automationsRouter = require('./routers/automationsRouter');
+> 15:const orderTemplatesRouter = require('./routers/orderTemplatesRouter');
+> 16:const withdrawTemplatesRouter = require('./routers/withdrawTemplatesRouter');
+> 17:const beholderRouter = require('./routers/beholderRouter');
+> 18:const logsRouter = require('./routers/logsRouter');
+> 19:const analysisRouter = require('./routers/analysisRouter');
+> 20:const agentRouter = require('./routers/agentRouter');
+> 28:    app.use(morgan('dev'));
+> 31:app.use(cors({ origin: process.env.CORS_ORIGIN }));
+> 33:app.use(helmet());
+> 35:app.use(express.json());
+> 37:app.post('/login', authController.doLogin);
+> 39:app.use('/settings', authMiddleware, settingsRouter);
+> 41:app.use('/symbols', authMiddleware, symbolsRouter);
+> 43:app.use('/exchange', authMiddleware, exchangeRouter);
+> 45:app.use('/orders', authMiddleware, ordersRouter);
+> 47:app.use('/monitors', authMiddleware, monitorsRouter);
+> 49:app.use('/automations', authMiddleware, automationsRouter);
+> 51:app.use('/ordertemplates', authMiddleware, orderTemplatesRouter);
+> 53:app.use('/withdrawtemplates', authMiddleware, withdrawTemplatesRouter);
+> ```
+
+## 🤖 Claude *(20:04:32)*
+
+
+## 🤖 Claude *(20:04:34)*
+
+Boot **idempotente** ("No migrations were executed... already up to date") e limpo. Auth = header `authorization` com o token cru; login `POST /api/login {email,password}`. Agora o **cancel via endpoint** na OCO #5639 (que ficou aberta), depois verifico DB + o log do handler de listStatus no processo servidor.
+
+## 🤖 Claude *(20:04:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncommand -v jq >/dev/null && echo \"jq ok\" || echo \"no jq\"\n# re-cp smoke (container foi recriado no rebuild)\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js >/dev/null 2>&1\necho \"=== #5639 antes do cancel ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js verify 5639 2>&1 | tail -3\necho \"=== login + DELETE /api/orders/oco/BTCUSDT/5639 ===\"\nEMAIL=$(grep -E '^DEFAULT_SETTINGS_EMAIL=' .env | cut -d= -f2-)\nPW=$(grep -E '^DEFAULT_SETTINGS_PWD=' .env | cut -d= -f2-)\nBODY=$(jq -nc --arg e \"$EMAIL\" --arg p \"$PW\" '{email:$e,password:$p}')\nTOKEN=$(curl -s -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"$BODY\" | jq -r .token)\necho \"token length: ${#TOKEN}\"\necho \"--- cancel response ---\"\ncurl -s -X DELETE \"http://127.0.0.1:8090/api/orders/oco/BTCUSDT/5639\" -H \"authorization: $TOKEN\" | head -c 1200\necho",
+  "description": "Cancel OCO 5639 via the REST endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> jq ok
+> === #5639 antes do cancel ===
+> VERIFY_LEGS=[{"orderId":75999,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"NEW"},{"orderId":76000,"type":"LIMIT_MAKER","side":"SELL","status":"NEW"}]
+> VERIFY_PENDING
+> === login + DELETE /api/orders/oco/BTCUSDT/5639 ===
+> token length: 137
+> --- cancel response ---
+> [{"id":36,"automationId":null,"symbol":"BTCUSDT","orderId":75999,"clientOrderId":"Ez2m5Sb1cCkzfjnBfKDSXL","transactTime":1780516969504,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"CANCELED","isMaker":null,"limitPrice":"1136.25000000","stopPrice":"1136.25000000","avgPrice":null,"commission":null,"net":null,"quantity":"0.00881000","icebergQty":null,"orderListId":5639,"obs":null,"createdAt":"2026-06-03T20:02:49.000Z","updatedAt":"2026-06-03T20:04:41.035Z","automation":null},{"id":37,"automationId":null,"symbol":"BTCUSDT","orderId":76000,"clientOrderId":"Kao425OUsy3tRWrwbLJWgU","transactTime":1780516969504,"type":"LIMIT_MAKER","side":"SELL","status":"CANCELED","isMaker":null,"limitPrice":"1182.62000000","stopPrice":null,"avgPrice":null,"commission":null,"net":null,"quantity":"0.00881000","icebergQty":null,"orderListId":5639,"obs":null,"createdAt":"2026-06-03T20:02:49.000Z","updatedAt":"2026-06-03T20:04:41.060Z","automation":null}]
+> ```
+
+## 🤖 Claude *(20:04:55)*
+
+
+## 🤖 Claude *(20:04:57)*
+
+Cancel via endpoint **OK** — ambas as pernas viraram `CANCELED` no DB (resposta do controller). Agora confirmo que o **handler de listStatus no processo servidor** reagiu ao ALL_DONE do cancel (log ~4s depois) e revalido o DB.
+
+## 🤖 Claude *(20:05:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguardando reconcilia\u00e7\u00e3o (4s do handler + margem) ===\"\nsleep 7\necho \"=== system.log: linhas de listStatus/OCO ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -iE \"listStatus|OCO\" /app/logs/system.log 2>/dev/null | tail -15' 2>&1\necho \"=== erros recentes (exceto jwt expired) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -iE \"error|unhandled|TypeError|Cannot read\" /app/logs/system.log 2>/dev/null | grep -v \"jwt expired\" | tail -10' 2>&1 || echo \"(nenhum)\"\necho \"=== DB: #5639 final ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js verify 5639 2>&1 | tail -3",
+  "description": "Check listStatus reconcile log + final DB state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguardando reconciliação (4s do handler + margem) ===
+> === system.log: linhas de listStatus/OCO ===
+> === erros recentes (exceto jwt expired) ===
+> === DB: #5639 final ===
+> VERIFY_LEGS=[{"orderId":75999,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"CANCELED"},{"orderId":76000,"type":"LIMIT_MAKER","side":"SELL","status":"CANCELED"}]
+> VERIFY_OK
+> ```
+
+## 🤖 Claude *(20:05:49)*
+
+
+## 🤖 Claude *(20:05:50)*
+
+DB final = ambas `CANCELED` (VERIFY_OK), mas o log do handler de listStatus **não apareceu** — preciso investigar. Vou confirmar se a imagem tem a fiação (2º callback + `processListStatusData`) e se o evento `listStatus` chega ao stream do servidor.
+
+## 🤖 Claude *(20:05:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== app-em.js no container tem processListStatusData + 2o callback? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -nE \"processListStatusData|listStatusData|userDataStream\\(\" /app/src/app-em.js' 2>&1\necho \"=== exchange.js no container: userDataStream assina 5o callback? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -nE \"userDataStream|list_status|listStatusCallback|websockets.userData\" /app/src/utils/exchange.js' 2>&1",
+  "description": "Verify listStatus wiring present in running image"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === app-em.js no container tem processListStatusData + 2o callback? ===
+> 202:function processListStatusData(monitorId, data, broadcastLabel) {
+> 258:        exchange.userDataStream(
+> 267:            listStatusData => processListStatusData(monitorId, listStatusData, executionBroadcast)
+> === exchange.js no container: userDataStream assina 5o callback? ===
+> 201:    // subscribed_callback, list_status_callback). all_updates_callback recebe TODOS os eventos
+> 203:    function userDataStream(updateCallback, listStatusCallback) {
+> 204:        binance.websockets.userData(
+> 208:            subscribedData => logger('system', `userDataStream:subscribeEvent: ${JSON.stringify(subscribedData)}`),
+> 209:            listStatusData => { if (listStatusCallback) listStatusCallback(listStatusData); });
+> 243:        userDataStream,
+> ```
+
+## 🤖 Claude *(20:06:34)*
+
+
+## 🤖 Claude *(20:06:37)*
+
+A fiação está na imagem (processListStatusData @202, 2º callback @267). Então o log não saiu porque ou o evento `listStatus` não chegou, ou `data.L` não é o campo esperado. Vou **instrumentar** com um script diagnóstico que abre o próprio userData stream, coloca e cancela uma OCO, e imprime o evento cru nos dois callbacks — assim vejo exatamente o que chega.
+
+## 🤖 Claude *(20:06:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/oco-listen.js",
+  "content": "// Diagn\u00f3stico: abre o pr\u00f3prio userData stream, coloca uma OCO e cancela, imprimindo\n// o evento listStatus CRU nos dois callbacks. Roda no container backend (testnet).\nconst { Op } = require('/app/node_modules/sequelize');\nconst axios = require('/app/node_modules/axios');\nconst beholder = require('/app/src/beholder');\nconst { getDefaultSettings } = require('/app/src/repositories/settingsRepository');\nconst { getSymbol } = require('/app/src/repositories/symbolsRepository');\nconst orderModel = require('/app/src/models/orderModel');\n\nconst SYMBOL = 'BTCUSDT';\nconst sleep = ms => new Promise(r => setTimeout(r, ms));\n\n(async () => {\n  const settings = await getDefaultSettings();\n  const plain = settings.get ? settings.get({ plain: true }) : settings;\n  const exchange = require('/app/src/utils/exchange')(plain);\n\n  exchange.userDataStream(\n    data => { if (data && data.e === 'listStatus') console.log('UPDATE_CB listStatus RAW: ' + JSON.stringify(data)); },\n    lst => console.log('LISTSTATUS_CB RAW: ' + JSON.stringify(lst))\n  );\n  console.log('stream opening...');\n  await sleep(5000);\n\n  // monta e coloca a OCO\n  const symbolRow = await getSymbol(SYMBOL);\n  const tick = parseFloat(symbolRow.tickSize), step = parseFloat(symbolRow.stepSize);\n  const qPrec = symbolRow.quotePrecision, bPrec = symbolRow.basePrecision;\n  const minNotional = parseFloat(symbolRow.minNotional), minLot = parseFloat(symbolRow.minLotSize || step);\n  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const { data } = await axios.get(`${base}v3/ticker/price?symbol=${SYMBOL}`);\n  const price = parseFloat(data.price);\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(price * 1.02), stop = roundTick(price * 0.98);\n  let qty = Math.max((2 * minNotional) / parseFloat(stop), minLot);\n  qty = (Math.ceil(qty / step) * step).toFixed(bPrec);\n  const bal = await exchange.balance();\n  beholder.updateMemory(symbolRow.base, 'WALLET', null, bal[symbolRow.base] ? parseFloat(bal[symbolRow.base].available) : 0, false);\n\n  const orderTemplate = { id: 1, symbol: SYMBOL, type: 'OCO', side: 'SELL', limitPrice: `${tp}`, limitPriceMultiplier: 1, stopPrice: `${stop}`, stopPriceMultiplier: 1, quantity: `${qty}`, quantityMultiplier: 1 };\n  const res = await beholder.placeOrder(settings, { id: null, name: 'LISTEN-OCO', logs: true }, { orderTemplateId: 1, orderTemplate });\n  console.log('PLACE: ' + JSON.stringify(res));\n\n  const legs = await orderModel.findAll({ where: { symbol: SYMBOL, orderListId: { [Op.ne]: null } }, order: [['id', 'DESC']], limit: 2, raw: true });\n  const orderListId = legs[0] && legs[0].orderListId;\n  console.log('ORDERLISTID=' + orderListId);\n  await sleep(3000);\n\n  console.log('canceling...');\n  const cancel = await exchange.cancelOrderList(SYMBOL, orderListId);\n  console.log('CANCEL_REPORTS=' + JSON.stringify((cancel.orderReports || []).map(r => ({ orderId: r.orderId, status: r.status, type: r.type }))));\n\n  await sleep(9000); // espera os eventos do stream\n  console.log('done');\n  process.exit(0);\n})().catch(e => { console.error('LISTEN_ERR ' + (e.body ? JSON.stringify(e.body) : (e.stack || e.message))); process.exit(1); });\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/oco-listen.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:06:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-listen.js backend:/tmp/oco-listen.js >/dev/null 2>&1\necho \"=== RUN diagnostic listen (place + cancel, ~22s) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-listen.js 2>&1 | tail -30",
+  "description": "Run userData listStatus diagnostic",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RUN diagnostic listen (place + cancel, ~22s) ===
+> stream opening...
+> PLACE: {"type":"error","text":"OCO failed! {\"code\":-2010,\"msg\":\"The relationship of the prices for the orders is not correct.\"}"}
+> ORDERLISTID=5639
+> canceling...
+> LISTEN_ERR Error: {"code":-2011,"msg":"Unknown order list sent."}
+>     at Binance.reqHandler (/app/node_modules/node-binance-api/dist/cjs/node-binance-api.cjs:437:27)
+>     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+>     at async Binance.proxyRequest (/app/node_modules/node-binance-api/dist/cjs/node-binance-api.cjs:485:13)
+>     at async Binance.signedRequest (/app/node_modules/node-binance-api/dist/cjs/node-binance-api.cjs:746:28)
+>     at async Binance.privateSpotRequest (/app/node_modules/node-binance-api/dist/cjs/node-binance-api.cjs:700:16)
+>     at async /tmp/oco-listen.js:50:18
+> ```
+
+## 🤖 Claude *(20:07:33)*
+
+
+## 🤖 Claude *(20:07:35)*
+
+O place falhou agora com `-2010 "relationship of the prices not correct"` — quirk de preço do testnet (o ticker `price` ~1150 destoa do book real; ±2% não bracketeou). Não é bug de código (o #5639 passou com a mesma lógica). Vou basear TP/stop no **bookTicker (bestBid/bestAsk)** com banda ±5% pra garantir o relacionamento, e re-rodar o diagnóstico.
+
+## 🤖 Claude *(20:07:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/oco-listen.js",
+  "old_string": "  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const { data } = await axios.get(`${base}v3/ticker/price?symbol=${SYMBOL}`);\n  const price = parseFloat(data.price);\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(price * 1.02), stop = roundTick(price * 0.98);",
+  "new_string": "  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const bt = await axios.get(`${base}v3/ticker/bookTicker?symbol=${SYMBOL}`);\n  const bestBid = parseFloat(bt.data.bidPrice), bestAsk = parseFloat(bt.data.askPrice);\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(bestAsk * 1.05), stop = roundTick(bestBid * 0.95); // banda larga p/ rela\u00e7\u00e3o v\u00e1lida\n  console.log(`BOOK bid=${bestBid} ask=${bestAsk} TP=${tp} STOP=${stop}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/oco-listen.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:07:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-listen.js backend:/tmp/oco-listen.js >/dev/null 2>&1\necho \"=== RUN diagnostic listen (book-based, place + cancel) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-listen.js 2>&1 | tail -30",
+  "description": "Re-run listStatus diagnostic with book-based prices",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RUN diagnostic listen (book-based, place + cancel) ===
+> stream opening...
+> BOOK bid=1151.27 ask=1160.61 TP=1218.64000000 STOP=1093.70000000
+> UPDATE_CB listStatus RAW: {"e":"listStatus","E":1780517272039,"s":"BTCUSDT","g":5706,"c":"OCO","l":"EXEC_STARTED","L":"EXECUTING","r":"NONE","C":"x-B3AUXNYVecf7b4b576b54e20a74792","T":1780517272038,"O":[{"s":"BTCUSDT","i":76355,"c":"Y8f1NxQXQaElUYDHUneIHT"},{"s":"BTCUSDT","i":76356,"c":"I4CXrBOaEEQwxm3FknqspJ"}]}
+> LISTSTATUS_CB RAW: {"e":"listStatus","E":1780517272039,"s":"BTCUSDT","g":5706,"c":"OCO","l":"EXEC_STARTED","L":"EXECUTING","r":"NONE","C":"x-B3AUXNYVecf7b4b576b54e20a74792","T":1780517272038,"O":[{"s":"BTCUSDT","i":76355,"c":"Y8f1NxQXQaElUYDHUneIHT"},{"s":"BTCUSDT","i":76356,"c":"I4CXrBOaEEQwxm3FknqspJ"}]}
+> PLACE: {"type":"success","text":"OCO SELL BTCUSDT placed (list #5706)"}
+> ORDERLISTID=5706
+> canceling...
+> CANCEL_REPORTS=[{"orderId":76355,"status":"CANCELED","type":"STOP_LOSS_LIMIT"},{"orderId":76356,"status":"CANCELED","type":"LIMIT_MAKER"}]
+> UPDATE_CB listStatus RAW: {"e":"listStatus","E":1780517275351,"s":"BTCUSDT","g":5706,"c":"OCO","l":"ALL_DONE","L":"ALL_DONE","r":"NONE","C":"x-B3AUXNYVecf7b4b576b54e20a74792","T":1780517275351,"O":[{"s":"BTCUSDT","i":76355,"c":"Y8f1NxQXQaElUYDHUneIHT"},{"s":"BTCUSDT","i":76356,"c":"I4CXrBOaEEQwxm3FknqspJ"}]}
+> LISTSTATUS_CB RAW: {"e":"listStatus","E":1780517275351,"s":"BTCUSDT","g":5706,"c":"OCO","l":"ALL_DONE","L":"ALL_DONE","r":"NONE","C":"x-B3AUXNYVecf7b4b576b54e20a74792","T":1780517275351,"O":[{"s":"BTCUSDT","i":76355,"c":"Y8f1NxQXQaElUYDHUneIHT"},{"s":"BTCUSDT","i":76356,"c":"I4CXrBOaEEQwxm3FknqspJ"}]}
+> done
+> ```
+
+## 🤖 Claude *(20:08:23)*
+
+
+## 🤖 Claude *(20:08:26)*
+
+**Prova definitiva**: o evento `listStatus` chega aos dois callbacks. No place → `L:'EXECUTING'` (meu handler ignora ✓); no cancel → `L:'ALL_DONE'` com `g/s/O[].i/O[].c` exatamente como meu handler lê. O place agora passou (#5706) com banda do book. Então o código está correto. Vou conferir se o **processo servidor** também logou a reconciliação do #5706 (o stream do servidor recebe os mesmos eventos da conta).
+
+## 🤖 Claude *(20:08:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguardando 4s do handler do servidor ===\"\nsleep 6\necho \"=== server system.log: listStatus / OCO / reconciled / 5706 / 5639 ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -niE \"listStatus|reconciled|OCO #|5706|5639\" /app/logs/system.log 2>/dev/null | tail -20' 2>&1 || echo \"(nada)\"\necho\necho \"=== \u00faltimas 12 linhas brutas do system.log ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'tail -12 /app/logs/system.log' 2>&1",
+  "description": "Check server-process listStatus reconcile log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguardando 4s do handler do servidor ===
+> === server system.log: listStatus / OCO / reconciled / 5706 / 5639 ===
+> 
+> === últimas 12 linhas brutas do system.log ===
+> info: 2026-06-03T18:53:37.380Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T19:18:45.958Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T20:03:50.378Z - Getting the default settings with ID 1...
+> info: 2026-06-03T20:03:50.441Z - Initializing the Beholder Brain...
+> info: 2026-06-03T20:03:50.458Z - Starting the Beholder Agenda...
+> info: 2026-06-03T20:03:50.458Z - Starting the server apps...
+> info: 2026-06-03T20:03:50.461Z - App Web Socket Server is running!
+> info: 2026-06-03T20:03:50.517Z - App is running at 3001
+> info: 2026-06-03T20:03:50.579Z - App Exchange Monitor is running!
+> info: 2026-06-03T20:03:52.785Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T20:06:57.203Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T20:07:47.407Z - userDataStream:subscribeEvent: "userData"
+> ```
+
+## 🤖 Claude *(20:09:58)*
+
+
+## 🤖 Claude *(20:10:01)*
+
+O handler está **correto e recebe o evento real** (diagnóstico isolado, mesma fiação). Mas o processo **servidor** (stream userData de vida longa) não logou nem pro #5639 nem pro #5706, enquanto uma conexão userData fresca recebeu tudo — e o log mostra re-`subscribeEvent` repetidos. Preciso confirmar se o stream do servidor entrega eventos. Vou **instrumentar temporariamente** o `updateCb` (loga o tipo de cada evento userData) + topo do `processListStatusData`, rebuildar, testar place+cancel, e depois remover.
+
+## 🤖 Claude *(20:10:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 252,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 252	    const [balanceBroadcast, executionBroadcast] = broadcastLabel ? broadcastLabel.split(',') : [null, null];
+> 253	
+> 254	    try {
+> 255	        await loadWallet();
+> 256	
+> 257	        if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 258	        exchange.userDataStream(
+> 259	            data => {
+> 260	                if (data.e === 'executionReport')
+> 261	                    processExecutionData(monitorId, data, executionBroadcast);
+> 262	                else if (data.e === 'balanceUpdate' || data.e === 'outboundAccountPosition')
+> 263	                    processBalanceData(monitorId, balanceBroadcast, logs, data)
+> 264	            },
+> 265	            // 2º callback dedicado ao listStatus (OCO). O all_updates_callback acima também
+> 266	            // recebe o listStatus, mas o tratamos SÓ aqui para não processar em duplicidade.
+> 267	            listStatusData => processListStatusData(monitorId, listStatusData, executionBroadcast)
+> 268	        )
+> 269	
+> 270	        logger('M:' + monitorId, 'User Data Monitor has started!');
+> 271	    } catch (err) {
+> 272	        logger('M:' + monitorId, 'User Data Monitor has NOT started!\n' + err.message);
+> 273	    }
+> ```
+
+## 🤖 Claude *(20:10:04)*
+
+
+## 🤖 Claude *(20:10:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "        exchange.userDataStream(\n            data => {\n                if (data.e === 'executionReport')\n                    processExecutionData(monitorId, data, executionBroadcast);\n                else if (data.e === 'balanceUpdate' || data.e === 'outboundAccountPosition')\n                    processBalanceData(monitorId, balanceBroadcast, logs, data)\n            },",
+  "new_string": "        exchange.userDataStream(\n            data => {\n                if (data && data.e) logger('M:' + monitorId, `DIAG userDataRAW e=${data.e} g=${data.g || ''} i=${data.i || ''} X=${data.X || ''}`); // TEMP DIAG\n                if (data.e === 'executionReport')\n                    processExecutionData(monitorId, data, executionBroadcast);\n                else if (data.e === 'balanceUpdate' || data.e === 'outboundAccountPosition')\n                    processBalanceData(monitorId, balanceBroadcast, logs, data)\n            },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:10:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "function processListStatusData(monitorId, data, broadcastLabel) {\n    const orderListId = data.g;\n    const symbol = data.s;\n    const listOrderStatus = data.L;",
+  "new_string": "function processListStatusData(monitorId, data, broadcastLabel) {\n    const orderListId = data.g;\n    const symbol = data.s;\n    const listOrderStatus = data.L;\n    logger('M:' + monitorId, `DIAG listStatusCb g=${orderListId} l=${data.l} L=${listOrderStatus}`); // TEMP DIAG"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:10:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check backend/src/app-em.js && echo \"syntax ok\"\nsudo -n -u gcrux-tradeux docker compose build backend 2>&1 | tail -2\nsudo -n -u gcrux-tradeux docker compose up -d backend 2>&1 | tail -2\necho \"=== wait boot ===\"; sleep 9\nsudo -n -u gcrux-tradeux docker compose logs backend --since 15s 2>&1 | grep -iE \"User Data Monitor|subscribeEvent|App is running\" | tail -5",
+  "description": "Rebuild+restart with temp diagnostics",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax ok
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === wait boot ===
+> ```
+
+## 🤖 Claude *(20:10:41)*
+
+
+## 🤖 Claude *(20:10:43)*
+
+Boot ok (logs do app vão pro arquivo). Vou alinhar o `oco-smoke.js` pra usar bookTicker ±5% (evita o -2010 do testnet), depois place via smoke + cancel via endpoint, e leio as linhas DIAG do servidor.
+
+## 🤖 Claude *(20:10:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/oco-smoke.js",
+  "old_string": "  // Pre\u00e7o atual via REST p\u00fablico testnet (sem auth).\n  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const { data } = await axios.get(`${base}v3/ticker/price?symbol=${SYMBOL}`);\n  const price = parseFloat(data.price);\n\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(price * 1.02);     // TP acima (LIMIT_MAKER)\n  const stop = roundTick(price * 0.98);   // gatilho do stop abaixo",
+  "new_string": "  // Book atual via REST p\u00fablico testnet (sem auth). Banda \u00b15% sobre bestBid/bestAsk\n  // garante a rela\u00e7\u00e3o de pre\u00e7os v\u00e1lida da OCO no book magro do testnet.\n  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const bt = await axios.get(`${base}v3/ticker/bookTicker?symbol=${SYMBOL}`);\n  const bestBid = parseFloat(bt.data.bidPrice), bestAsk = parseFloat(bt.data.askPrice);\n  const price = bestAsk;\n\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(bestAsk * 1.05);   // TP acima (LIMIT_MAKER)\n  const stop = roundTick(bestBid * 0.95); // gatilho do stop abaixo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/oco-smoke.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:11:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsleep 3\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js >/dev/null 2>&1\necho \"=== place OCO via smoke (server stream observa) ===\"\nOUT=$(sudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1)\necho \"$OUT\" | grep -E \"PRICE=|PLACE_RESULT|LEGS=|ORDERLISTID|PLACE_OK|SMOKE_ERR\"\nOLID=$(echo \"$OUT\" | grep -oE 'ORDERLISTID=[0-9]+' | cut -d= -f2)\necho \"OLID=$OLID\"\necho \"=== aguarda eventos de place chegarem ao servidor ===\"\nsleep 4\necho \"=== cancel via endpoint ===\"\nEMAIL=$(grep -E '^DEFAULT_SETTINGS_EMAIL=' .env | cut -d= -f2-); PW=$(grep -E '^DEFAULT_SETTINGS_PWD=' .env | cut -d= -f2-)\nBODY=$(jq -nc --arg e \"$EMAIL\" --arg p \"$PW\" '{email:$e,password:$p}')\nTOKEN=$(curl -s -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"$BODY\" | jq -r .token)\ncurl -s -X DELETE \"http://127.0.0.1:8090/api/orders/oco/BTCUSDT/$OLID\" -H \"authorization: $TOKEN\" | jq -c 'map({orderId,type,status})' 2>/dev/null\necho \"=== aguarda reconcile (handler +4s) ===\"\nsleep 8\necho \"=== DIAG lines no system.log (servidor) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -E \"DIAG|reconciled|OCO list #\" /app/logs/system.log 2>/dev/null | tail -25' 2>&1",
+  "description": "Place+cancel and inspect server DIAG logs",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === place OCO via smoke (server stream observa) ===
+> PRICE=1212.67 TP=1273.30000000 STOP=1142.00000000 QTY=0.00876000 BTC_AVAIL=1.0329 minNotional=5
+> PLACE_RESULT={"type":"success","text":"OCO SELL BTCUSDT placed (list #5760)"}
+> LEGS=[{"id":41,"orderId":76741,"type":"LIMIT_MAKER","side":"SELL","status":"NEW","orderListId":"5760","limitPrice":"1273.30000000","stopPrice":null,"qty":"0.00876000"},{"id":40,"orderId":76740,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"NEW","orderListId":"5760","limitPrice":"1142.00000000","stopPrice":"1142.00000000","qty":"0.00876000"}]
+> ORDERLISTID=5760
+> PLACE_OK
+> OLID=5760
+> === aguarda eventos de place chegarem ao servidor ===
+> === cancel via endpoint ===
+> [{"orderId":76740,"type":"STOP_LOSS_LIMIT","status":"CANCELED"},{"orderId":76741,"type":"LIMIT_MAKER","status":"CANCELED"}]
+> === aguarda reconcile (handler +4s) ===
+> === DIAG lines no system.log (servidor) ===
+> ```
+
+## 🤖 Claude *(20:11:42)*
+
+
+## 🤖 Claude *(20:11:44)*
+
+Place #5760 OK + cancel OK, mas **nenhuma linha DIAG** no servidor — nem pra executionReport nem pra listStatus. Antes de concluir, preciso descartar que o rebuild não pegou o DIAG (cache de layer). Vou conferir o arquivo no container e se o "User Data Monitor has started".
+
+## 🤖 Claude *(20:11:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== DIAG presente no container? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -nE \"DIAG|User Data Monitor has\" /app/src/app-em.js' 2>&1\necho \"=== 'User Data Monitor has started' no system.log? ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -nE \"User Data Monitor\" /app/logs/system.log 2>/dev/null | tail -5' 2>&1\necho \"=== \u00faltimas 15 linhas do system.log ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'tail -15 /app/logs/system.log' 2>&1",
+  "description": "Verify DIAG in image + User Data Monitor started"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DIAG presente no container? ===
+> 206:    logger('M:' + monitorId, `DIAG listStatusCb g=${orderListId} l=${data.l} L=${listOrderStatus}`); // TEMP DIAG
+> 261:                if (data && data.e) logger('M:' + monitorId, `DIAG userDataRAW e=${data.e} g=${data.g || ''} i=${data.i || ''} X=${data.X || ''}`); // TEMP DIAG
+> 272:        logger('M:' + monitorId, 'User Data Monitor has started!');
+> 274:        logger('M:' + monitorId, 'User Data Monitor has NOT started!\n' + err.message);
+> === 'User Data Monitor has started' no system.log? ===
+> === últimas 15 linhas do system.log ===
+> info: 2026-06-03T18:53:33.394Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T18:53:35.976Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T18:53:37.380Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T19:18:45.958Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T20:10:23.210Z - Getting the default settings with ID 1...
+> info: 2026-06-03T20:10:23.271Z - Initializing the Beholder Brain...
+> info: 2026-06-03T20:10:23.288Z - Starting the Beholder Agenda...
+> info: 2026-06-03T20:10:23.289Z - Starting the server apps...
+> info: 2026-06-03T20:10:23.292Z - App Web Socket Server is running!
+> info: 2026-06-03T20:10:23.348Z - App is running at 3001
+> info: 2026-06-03T20:10:23.408Z - App Exchange Monitor is running!
+> info: 2026-06-03T20:10:25.585Z - userDataStream:subscribeEvent: "userData"
+> ```
+
+## 🤖 Claude *(20:12:12)*
+
+
+## 🤖 Claude *(20:12:14)*
+
+Pista decisiva: nem "User Data Monitor has started" nem as linhas DIAG aparecem no `system.log`, mas o `subscribeEvent` (logado como categoria `'system'`) aparece. Os logs de monitor usam `logger('M:'+id, ...)` — provavelmente vão pra **outro arquivo**. Estive lendo o arquivo errado. Vou checar o `logger`.
+
+## 🤖 Claude *(20:12:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/logger.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const winston = require('winston');
+> 2	const path = require('path');
+> 3	const util = require('util');
+> 4	
+> 5	const LOGGERS = {};
+> 6	
+> 7	function createLogger(loggerKey) {
+> 8	    loggerKey = loggerKey.replace(':', '');//fix para windows
+> 9	    if (!loggerKey.endsWith('.log')) loggerKey = loggerKey + ".log";
+> 10	
+> 11	    const logger = winston.createLogger({
+> 12	        format: winston.format.combine(
+> 13	            winston.format.errors({ stack: true }),
+> 14	            winston.format.simple()
+> 15	        ),
+> 16	        transports: [
+> 17	            new winston.transports.File({
+> 18	                filename: path.resolve(__dirname, "..", "..", "logs", loggerKey),
+> 19	                maxsize: 1024 * 1024,
+> 20	                maxFiles: 1,
+> 21	                tailable: true
+> 22	            })
+> 23	        ]
+> 24	    })
+> 25	
+> 26	    if (process.env.NODE_ENV !== 'production') {
+> 27	        logger.add(new winston.transports.Console({
+> 28	            format: winston.format.simple()
+> 29	        }))
+> 30	    }
+> 31	
+> 32	    return logger;
+> 33	}
+> 34	
+> 35	module.exports = (loggerKey, data) => {
+> 36	    try {
+> 37	        loggerKey = loggerKey.replace(':', '').replace('.log', '')
+> 38	
+> 39	        let logger = LOGGERS[loggerKey];
+> 40	        if (!logger) {
+> 41	            logger = createLogger(loggerKey);
+> 42	            LOGGERS[loggerKey] = logger;
+> 43	        }
+> 44	
+> 45	        if (data instanceof Error) {
+> 46	            logger.info(new Date().toISOString());
+> 47	            return logger.error(data);
+> 48	        }
+> 49	        else if (typeof data === 'object') {
+> 50	            return logger.info(new Date().toISOString() + " - " + util.inspect(data));
+> 51	        }
+> 52	        else
+> 53	            return logger.info(new Date().toISOString() + " - " + data);
+> 54	    } catch (err) {
+> 55	        console.error(err, loggerKey, data);
+> 56	    }
+> 57	}
+> ```
+
+## 🤖 Claude *(20:12:21)*
+
+
+## 🤖 Claude *(20:12:23)*
+
+Achei! O `logger` cria **um arquivo por categoria**: `logger('system',…)`→`system.log`, mas `logger('M:'+id,…)`→`logs/M<id>.log`. O monitor USER_DATA loga em `M<id>.log`, não no `system.log` — eu estava lendo o arquivo errado o tempo todo. Vou listar os logs e procurar DIAG/reconciled.
+
+## 🤖 Claude *(20:12:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== arquivos de log ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'ls -la /app/logs/' 2>&1\necho\necho \"=== DIAG / listStatus / reconciled / OCO em TODOS os logs ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -nE \"DIAG|listStatusCb|reconciled|OCO list #|User Data Monitor has\" /app/logs/*.log 2>/dev/null | tail -40' 2>&1",
+  "description": "Grep all monitor log files for DIAG/listStatus"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos de log ===
+> total 36
+> drwxrwxr-x    1 root     root          4096 Jun  3 20:10 .
+> drwxr-xr-x    1 root     root          4096 Jun  3 19:19 ..
+> -rw-r--r--    1 root     root            66 Jun  3 20:10 M1.log
+> -rw-r--r--    1 root     root          1006 Jun  3 20:11 M3.log
+> -rw-r--r--    1 root     root            75 Jun  3 20:10 M4.log
+> -rw-r--r--    1 root     root            61 Jun  3 20:10 beholder.log
+> -rw-rw-r--    1 root     root           833 Jun  3 20:10 system.log
+> 
+> === DIAG / listStatus / reconciled / OCO em TODOS os logs ===
+> /app/logs/M3.log:1:info: 2026-06-03T20:10:24.236Z - User Data Monitor has started!
+> /app/logs/M3.log:2:info: 2026-06-03T20:11:05.190Z - DIAG userDataRAW e=listStatus g=5760 i= X=
+> /app/logs/M3.log:3:info: 2026-06-03T20:11:05.191Z - DIAG listStatusCb g=5760 l=EXEC_STARTED L=EXECUTING
+> /app/logs/M3.log:4:info: 2026-06-03T20:11:05.191Z - DIAG userDataRAW e=executionReport g=5760 i=76740 X=NEW
+> /app/logs/M3.log:5:info: 2026-06-03T20:11:05.192Z - DIAG userDataRAW e=executionReport g=5760 i=76741 X=NEW
+> /app/logs/M3.log:6:info: 2026-06-03T20:11:05.192Z - DIAG userDataRAW e=outboundAccountPosition g= i= X=
+> /app/logs/M3.log:7:info: 2026-06-03T20:11:09.739Z - DIAG userDataRAW e=listStatus g=5760 i= X=
+> /app/logs/M3.log:8:info: 2026-06-03T20:11:09.739Z - DIAG listStatusCb g=5760 l=ALL_DONE L=ALL_DONE
+> /app/logs/M3.log:9:info: 2026-06-03T20:11:09.740Z - DIAG userDataRAW e=executionReport g=5760 i=76740 X=CANCELED
+> /app/logs/M3.log:10:info: 2026-06-03T20:11:09.742Z - DIAG userDataRAW e=executionReport g=5760 i=76741 X=CANCELED
+> /app/logs/M3.log:11:info: 2026-06-03T20:11:09.742Z - DIAG userDataRAW e=outboundAccountPosition g= i= X=
+> /app/logs/M3.log:12:info: 2026-06-03T20:11:13.744Z - listStatus ALL_DONE for OCO #5760 (BTCUSDT) reconciled.
+> ```
+
+## 🤖 Claude *(20:12:55)*
+
+
+## 🤖 Claude *(20:12:58)*
+
+**PROVA COMPLETA** (eu estava lendo `system.log`; os logs do monitor vão pra `M3.log`). Em `M3.log`:
+- `User Data Monitor has started!`
+- No place #5760: `listStatus … L=EXECUTING` → handler **ignora** (correto)
+- No cancel: `listStatus … L=ALL_DONE` + executionReport CANCELED das 2 pernas
+- **`listStatus ALL_DONE for OCO #5760 (BTCUSDT) reconciled.`** (+4s, exato)
+
+Tudo funciona ponta-a-ponta no processo servidor. Agora vou **remover o DIAG temporário** e fazer o rebuild limpo final.
+
+## 🤖 Claude *(20:13:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "        exchange.userDataStream(\n            data => {\n                if (data && data.e) logger('M:' + monitorId, `DIAG userDataRAW e=${data.e} g=${data.g || ''} i=${data.i || ''} X=${data.X || ''}`); // TEMP DIAG\n                if (data.e === 'executionReport')",
+  "new_string": "        exchange.userDataStream(\n            data => {\n                if (data.e === 'executionReport')"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "    const orderListId = data.g;\n    const symbol = data.s;\n    const listOrderStatus = data.L;\n    logger('M:' + monitorId, `DIAG listStatusCb g=${orderListId} l=${data.l} L=${listOrderStatus}`); // TEMP DIAG",
+  "new_string": "    const orderListId = data.g;\n    const symbol = data.s;\n    const listOrderStatus = data.L;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:25)*
+
+
+## 🤖 Claude *(20:13:27)*
+
+DIAG removido. Agora o **frontend** (opcional, mas deixa a feature usável): adicionar a opção OCO **só no form de template** (não no pedido manual, que não trata OCO) via uma prop `showOco`, e mostrar o campo de stop para OCO.
+
+Primeiro o `OrderType.js`:
+
+## 🤖 Claude *(20:13:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/components/NewOrder/OrderType.js",
+  "old_string": "    const orderType = useMemo(() => {\n        return (\n            <div className=\"form-group\">\n                <label htmlFor=\"type\">Type:</label>\n                <select id=\"type\" className=\"form-select\" value={props.type} onChange={props.onChange}>\n                    <option value=\"LIMIT\">Limit</option>\n                    <option value=\"MARKET\">Market</option>\n                    <option value=\"STOP_LOSS_LIMIT\">Stop Loss Limit</option>\n                    <option value=\"TAKE_PROFIT_LIMIT\">Take Profit Limit</option>\n                    <option value=\"TRAILING_STOP\">Trailing Stop</option>\n                </select>\n            </div>\n        )\n    }, [props.type])",
+  "new_string": "    const orderType = useMemo(() => {\n        return (\n            <div className=\"form-group\">\n                <label htmlFor=\"type\">Type:</label>\n                <select id=\"type\" className=\"form-select\" value={props.type} onChange={props.onChange}>\n                    <option value=\"LIMIT\">Limit</option>\n                    <option value=\"MARKET\">Market</option>\n                    <option value=\"STOP_LOSS_LIMIT\">Stop Loss Limit</option>\n                    <option value=\"TAKE_PROFIT_LIMIT\">Take Profit Limit</option>\n                    <option value=\"TRAILING_STOP\">Trailing Stop</option>\n                    {/* OCO s\u00f3 nos templates (automa\u00e7\u00f5es): o pedido manual n\u00e3o trata OCO */}\n                    {props.showOco ? <option value=\"OCO\">OCO (TP + Stop)</option> : <React.Fragment></React.Fragment>}\n                </select>\n            </div>\n        )\n    }, [props.type, props.showOco])"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/components/NewOrder/OrderType.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:45)*
+
+
+## 🤖 Claude *(20:13:46)*
+
+Agora o `OrderTemplateModal.js`: passar `showOco`, mostrar stop para OCO e rotular o preço de TP claramente.
+
+## 🤖 Claude *(20:13:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js",
+  "old_string": "    function getStopPriceClasses(orderType) {\n        return STOP_TYPES.indexOf(orderType) !== -1 ? \"col-md-6 mb-3\" : \"col-md-6 mb-3 d-none\";\n    }",
+  "new_string": "    function getStopPriceClasses(orderType) {\n        // OCO tamb\u00e9m usa stopPrice (gatilho do stop), al\u00e9m dos STOP_TYPES.\n        return (STOP_TYPES.indexOf(orderType) !== -1 || orderType === 'OCO') ? \"col-md-6 mb-3\" : \"col-md-6 mb-3 d-none\";\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js",
+  "old_string": "                                <div className=\"col-md-4 mb-3\">\n                                    <OrderType type={orderTemplate.type} onChange={onInputChange} />\n                                </div>",
+  "new_string": "                                <div className=\"col-md-4 mb-3\">\n                                    <OrderType type={orderTemplate.type} onChange={onInputChange} showOco={true} />\n                                </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:14:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js",
+  "old_string": "                                <div className={getPriceClasses(orderTemplate.type)}>\n                                    <PriceTemplate id=\"limitPrice\" text=\"Unit Price:\" indexes={priceIndexes} onChange={onInputChange} price={orderTemplate.limitPrice} multiplier={orderTemplate.limitPriceMultiplier} />",
+  "new_string": "                                <div className={getPriceClasses(orderTemplate.type)}>\n                                    <PriceTemplate id=\"limitPrice\" text={orderTemplate.type === 'OCO' ? \"Take Profit Price:\" : \"Unit Price:\"} indexes={priceIndexes} onChange={onInputChange} price={orderTemplate.limitPrice} multiplier={orderTemplate.limitPriceMultiplier} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:14:11)*
+
+
+## 🤖 Claude *(20:14:12)*
+
+Frontend pronto (OCO só no template, stop visível, label "Take Profit Price"). Agora o **rebuild final limpo** dos dois (backend sem DIAG, frontend com OCO) + checagem de sintaxe e boot.
+
+## 🤖 Claude *(20:14:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check backend/src/app-em.js && echo \"app-em syntax ok\"\necho \"=== build backend (DIAG removido) ===\"\nsudo -n -u gcrux-tradeux docker compose build backend 2>&1 | tail -2\necho \"=== build frontend (vite \u2014 valida JSX, requisito de CI) ===\"\nsudo -n -u gcrux-tradeux docker compose build frontend 2>&1 | tail -15",
+  "description": "Final rebuild backend + frontend (vite build)",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> app-em syntax ok
+> === build backend (DIAG removido) ===
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+> === build frontend (vite — valida JSX, requisito de CI) ===
+> #14 CACHED
+> 
+> #15 [stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #15 DONE 0.3s
+> 
+> #16 exporting to image
+> #16 exporting layers
+> #16 exporting layers 0.2s done
+> #16 writing image sha256:8eece306342d2e8ce70a9e84e0e4358b17cf90f0dc29d366dc295e1e3425b5e9 done
+> #16 naming to docker.io/library/tradeux-frontend done
+> #16 DONE 0.2s
+> 
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built
+> ```
+
+## 🤖 Claude *(20:14:26)*
+
+
+## 🤖 Claude *(20:14:28)*
+
+Os dois buildaram — o `vite build` compilou o JSX da OCO (requisito de CI ✓). Subindo a stack final e checando boot limpo + se sobrou alguma OCO aberta no testnet (cleanup).
+
+## 🤖 Claude *(20:14:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose up -d backend frontend 2>&1 | tail -3\necho \"=== wait boot ===\"; sleep 9\necho \"=== boot (system.log + M3.log) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'tail -6 /app/logs/system.log; echo \"--- M3 ---\"; cat /app/logs/M3.log 2>/dev/null | tail -4' 2>&1\necho \"=== DIAG ainda presente? (deve ser vazio) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -c \"DIAG\" /app/src/app-em.js' 2>&1\necho \"=== open orders no testnet (cleanup check) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node -e '\nconst { getDefaultSettings } = require(\"/app/src/repositories/settingsRepository\");\n(async()=>{ const s=await getDefaultSettings(); const ex=require(\"/app/src/utils/exchange\")(s.get?s.get({plain:true}):s);\n  try { const o = await ex.cancelOrderList; } catch(e){}\n  const binance = null;\n  // usa REST assinado p/ openOrders via orderStatus indireto: lista openOrders\n  const axios=require(\"/app/node_modules/axios\"), crypto=require(\"crypto\");\n  const plain=s.get?s.get({plain:true}):s; const base=plain.apiUrl.endsWith(\"/\")?plain.apiUrl:plain.apiUrl+\"/\";\n  const qs=new URLSearchParams({timestamp:Date.now(),recvWindow:60000});\n  const sig=crypto.createHmac(\"sha256\",plain.secretKey).update(qs.toString()).digest(\"hex\"); qs.append(\"signature\",sig);\n  const r=await axios.get(`${base}v3/openOrders?${qs.toString()}`,{headers:{\"X-MBX-APIKEY\":plain.accessKey}});\n  console.log(\"OPEN_ORDERS_COUNT=\"+r.data.length);\n  r.data.slice(0,10).forEach(o=>console.log(`  ${o.symbol} ${o.orderId} ${o.type} ${o.side} ${o.status} listId=${o.orderListId}`));\n  process.exit(0);\n})().catch(e=>{console.error(\"ERR\",e.response?JSON.stringify(e.response.data):e.message);process.exit(1);});' 2>&1 | tail -15",
+  "description": "Final boot check + testnet open-orders cleanup check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started 
+> === wait boot ===
+> === boot (system.log + M3.log) ===
+> info: 2026-06-03T20:14:42.293Z - Starting the Beholder Agenda...
+> info: 2026-06-03T20:14:42.293Z - Starting the server apps...
+> info: 2026-06-03T20:14:42.297Z - App Web Socket Server is running!
+> info: 2026-06-03T20:14:42.358Z - App is running at 3001
+> info: 2026-06-03T20:14:42.437Z - App Exchange Monitor is running!
+> info: 2026-06-03T20:14:44.606Z - userDataStream:subscribeEvent: "userData"
+> --- M3 ---
+> info: 2026-06-03T20:14:43.238Z - User Data Monitor has started!
+> === DIAG ainda presente? (deve ser vazio) ===
+> 0
+> === open orders no testnet (cleanup check) ===
+> OPEN_ORDERS_COUNT=0
+> ```
+
+## 🤖 Claude *(20:15:01)*
+
+
+## 🤖 Claude *(20:15:03)*
+
+Estado final **limpo**: boot ok, "User Data Monitor has started", DIAG zerado, **0 ordens abertas** no testnet (todos os testes #5639/#5706/#5760 cancelados). Backend validado ponta-a-ponta.
+
+Agora vou revisar o diff completo e ajustar ownership (alguns arquivos criados/editados como `ubuntu`) antes do gate. Git sempre como `gcrux-tradeux`.
+
+## 🤖 Claude *(20:15:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== ownership dos arquivos novos/alterados ===\"\nls -l backend/migrations/20260603170000-alter-orders-add-orderListId.js\necho \"=== chown defensivo (Write/Edit como ubuntu podem ter trocado dono) ===\"\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git 2>&1 && echo \".git chowned\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  backend/migrations/20260603170000-alter-orders-add-orderListId.js \\\n  backend/src/models/orderModel.js \\\n  backend/src/repositories/ordersRepository.js \\\n  backend/src/beholder.js \\\n  backend/src/app-em.js \\\n  backend/src/controllers/ordersController.js \\\n  backend/src/routers/ordersRouter.js \\\n  backend/src/controllers/automationsController.js \\\n  frontend/src/components/NewOrder/OrderType.js \\\n  frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js 2>&1 && echo \"files chowned\"\necho \"=== git status ===\"\nsudo -n -u gcrux-tradeux git status --short 2>&1",
+  "description": "Fix ownership and check git status as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ownership dos arquivos novos/alterados ===
+> -rw-rw-r-- 1 ubuntu ubuntu 966 Jun  3 16:54 backend/migrations/20260603170000-alter-orders-add-orderListId.js
+> === chown defensivo (Write/Edit como ubuntu podem ter trocado dono) ===
+> .git chowned
+> files chowned
+> === git status ===
+>  M backend/src/app-em.js
+>  M backend/src/beholder.js
+>  M backend/src/controllers/automationsController.js
+>  M backend/src/controllers/ordersController.js
+>  M backend/src/models/orderModel.js
+>  M backend/src/repositories/ordersRepository.js
+>  M backend/src/routers/ordersRouter.js
+>  M frontend/src/components/NewOrder/OrderType.js
+>  M frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js
+> ?? backend/migrations/20260603170000-alter-orders-add-orderListId.js
+> ```
+
+## 🤖 Claude *(20:15:23)*
+
+
+## 🤖 Claude *(20:15:24)*
+
+Diff exatamente como esperado: 9 modificados + 1 migration nova, sem arquivos espúrios. Vou gerar o diff completo pra alimentar o gate (QA + tech-lead).
+
+## 🤖 Claude *(20:15:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# inclui o arquivo novo no diff (intent-to-add) e gera diff completo\nsudo -n -u gcrux-tradeux git add -N backend/migrations/20260603170000-alter-orders-add-orderListId.js 2>&1\nsudo -n -u gcrux-tradeux git --no-pager diff --stat 2>&1\necho \"=== salvando diff completo p/ o gate ===\"\nsudo -n -u gcrux-tradeux git --no-pager diff > /tmp/oco-full.diff 2>&1\nwc -l /tmp/oco-full.diff",
+  "description": "Generate full diff for the review gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  .../20260603170000-alter-orders-add-orderListId.js | 26 +++++++
+>  backend/src/app-em.js                              | 62 ++++++++++++++--
+>  backend/src/beholder.js                            | 86 +++++++++++++++++++++-
+>  backend/src/controllers/automationsController.js   | 39 ++++++++++
+>  backend/src/controllers/ordersController.js        | 29 ++++++++
+>  backend/src/models/orderModel.js                   |  1 +
+>  backend/src/repositories/ordersRepository.js       | 16 +++-
+>  backend/src/routers/ordersRouter.js                |  2 +
+>  frontend/src/components/NewOrder/OrderType.js      |  4 +-
+>  .../OrderTemplateModal/OrderTemplateModal.js       |  7 +-
+>  10 files changed, 260 insertions(+), 12 deletions(-)
+> === salvando diff completo p/ o gate ===
+> 464 /tmp/oco-full.diff
+> ```
+
+## 🤖 Claude *(20:15:48)*
+
+
+## 🤖 Claude *(20:15:50)*
+
+Diff: **260 inserções / 12 deleções em 10 arquivos**. Hot-path de ordens + migration + dinheiro → gate **obrigatório**. Vou rodar **qa-engineer + tech-lead em paralelo** sobre o diff. Eu sou o dono da decisão (aprovar ou devolver) — sem carimbo automático.
+
+## 🤖 Claude *(20:16:19)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate on OCO diff",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA review of a TRADING HOT-PATH change in TradeUX (repo: /home/gcrux-tradeux/tradeux). This wires OCO (One-Cancels-the-Other) orders into the Beholder automation engine. Give a verdict: PASS / PASS COM RESSALVAS / FAIL, with severity-tagged findings (CRITICAL/HIGH/MEDIUM/LOW) and the concrete tests to run.\n\nIMPORTANT \u2014 environment gotcha: the repo is owned by `gcrux-tradeux` but your shell runs as `ubuntu`. Do NOT run `git` as your own user (it corrupts `.git` ownership and blocks commits). Either Read files directly (preferred), or if you must use git run `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux ...`. Prefer Read/Grep/Glob over git.\n\nTHE DIFF to review is saved at `/tmp/oco-full.diff` (464 lines). Read it first. Then Read the surrounding code in the repo for context as needed.\n\n## What the change does (scope)\n1. **Migration** `backend/migrations/20260603170000-alter-orders-add-orderListId.js`: adds nullable `orderListId` BIGINT to `orders`. Must be portable across MySQL AND Postgres (CI runs migrate+seed on both) and idempotent (CI re-runs migrate+seed twice).\n2. **Model** `backend/src/models/orderModel.js`: adds `orderListId` BIGINT.\n3. **`backend/src/beholder.js`**: new `placeOco(settings, automation, orderTemplate, symbol)` + dispatch in `placeOrder` when `orderTemplate.type === 'OCO'`; `calcPrice` now treats `OCO` like LIMIT types (explicit prices). OCO is SELL-only (throws on BUY). Persists BOTH legs with the same `orderListId`. The protective SELL OCO maps: TP = `limitPrice` (LIMIT_MAKER, above), stop trigger = `stopPrice` (belowStopPrice), stop limit = trigger (belowPrice = belowStopPrice).\n4. **`backend/src/app-em.js`**: `startUserDataMonitor` now passes a 2nd callback `processListStatusData` (handles the raw `listStatus` event, `data.e==='listStatus'`). On `listOrderStatus` ALL_DONE/REJECT it reconciles each leg: looks up the order, and if still NEW/PARTIALLY_FILLED fetches the real status via `exchange.orderStatus` and updates. Runs on a 4s setTimeout (after the existing 3s executionReport delay).\n5. **`backend/src/controllers/ordersController.js` + `routers/ordersRouter.js`**: new `DELETE /orders/oco/:symbol/:orderListId` \u2192 `cancelOrderList` \u2192 `exchange.cancelOrderList` \u2192 updates both legs by `origClientOrderId`.\n6. **`backend/src/controllers/automationsController.js`**: `cancelAutomationOcoOrders(automationId)` cancels open OCO lists when an automation is stopped or deleted (best-effort). New repo helper `ordersRepository.getOpenOcoOrders`.\n7. **Frontend**: OCO option added to the order-template form only (`OrderType` gets a `showOco` prop; the manual NewOrder modal does NOT expose OCO because the manual placeOrder controller doesn't handle OCO). Stop-price input shown for OCO.\n\n## Validation ALREADY performed on TESTNET (so you know what's proven)\n- Rebuilt backend image, clean boot, migration applied (`orderListId` = bigint NULL), idempotent re-run (\"No migrations were executed\").\n- Placed a real OCO SELL on BTCUSDT via the actual `beholder.placeOrder` path \u2192 2 legs persisted (LIMIT_MAKER + STOP_LOSS_LIMIT) sharing `orderListId`, both NEW.\n- Canceled via the real `DELETE /api/orders/oco/...` endpoint \u2192 both legs CANCELED in DB.\n- Captured the live `listStatus` event in the server process: on place `L=EXECUTING` (ignored), on cancel `L=ALL_DONE` \u2192 handler logged `listStatus ALL_DONE for OCO #<id> reconciled.` (+4s). Per-leg executionReport CANCELED also flowed.\n- 0 open orders left on testnet afterward.\n\n## Scrutinize especially (find the bugs/edge cases I might have missed)\n- **Correctness of the OCO price relationship** and what happens on `-2010`/filter rejections; the SELL-only guard; whether `belowPrice == belowStopPrice` is safe/optimal.\n- **`placeOco` persistence**: required NOT-NULL columns (transactTime, clientOrderId) \u2014 are fallbacks safe? Unique index `(clientOrderId, orderId)`. What if `orderReports` has !=2 entries or the OCO partially fails?\n- **`processListStatusData` idempotency & races**: interaction with the existing `processExecutionData` (3s) updating the same rows; the `updateOrder` guard (only NEW/PARTIALLY_FILLED\u2192terminal); double-notify; the 4s timer; `exchange` module-level availability; what if `data.O` legs aren't persisted (OCO placed outside TradeUX); error handling.\n- **Cancel endpoint**: route ordering vs `DELETE /:symbol/:orderId` (collision?), matching by `origClientOrderId` vs `clientOrderId`, error body shape, auth (`res.locals.token`).\n- **Automation stop/delete hook**: in `deleteAutomation` is the cancel called BEFORE `removeAutomationFromOrders` nullifies `automationId` (the query filters by automationId)? Awaiting the cancel in `stopAutomation` adds REST latency to the HTTP response \u2014 acceptable? Is canceling protective OCO on STOP (not just delete) desirable semantics (removes downside protection)? Best-effort error handling won't break stop/delete?\n- **Migration**: BIGINT + addColumn portability on Postgres; the `describeTable` idempotency guard; does it need an index?\n- **Concurrency**: `placeOco` runs inside Beholder's `testAutomations` lock window; any re-entrancy/double-fire risk (the OCO automation firing twice before it's deactivated)? Note: unlike TRAILING, the OCO automation is NOT auto-deactivated after firing \u2014 could it re-fire and place duplicate OCOs every tick?\n- Anything that would corrupt P&L/avg-price accounting, leave orphan exchange orders, or break the MySQL/Postgres CI.\n\nBe adversarial and concrete. For each finding: file:line, why it's a problem, severity, and the exact test/repro. End with the verdict and a short prioritized must-fix list."
+}
+```
+
+## 🤖 Claude *(20:16:40)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-lead gate on OCO diff",
+  "subagent_type": "tech-lead",
+  "prompt": "Merge-decision review (you are the code owner) of a TRADING HOT-PATH change in TradeUX (repo: /home/gcrux-tradeux/tradeux). It wires OCO (One-Cancels-the-Other) into the Beholder automation engine. Give a verdict: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK, with rationale and a must-fix vs nice-to-have split. Focus on design, maintainability, risk, security, and convention adherence \u2014 not nitpicks.\n\nIMPORTANT \u2014 environment gotcha: the repo is owned by `gcrux-tradeux` but your shell runs as `ubuntu`. Do NOT run `git` as your own user (it corrupts `.git` ownership and blocks commits). Read files directly (preferred), or use `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux ...`. Prefer Read/Grep/Glob.\n\nTHE DIFF is at `/tmp/oco-full.diff` (464 lines). Read it first, then Read surrounding code for context.\n\n## Context\nExchange-boundary plumbing (`exchange.oco`, `exchange.cancelOrderList`, the userData 5th callback) was already committed in `063df19`. THIS change is the Beholder/persistence/userData wiring:\n- Migration adds nullable `orderListId` BIGINT to `orders` (must stay portable MySQL+Postgres for CI; idempotent).\n- `beholder.placeOco` + dispatch in `placeOrder` for order-template `type:'OCO'`; `calcPrice` treats OCO as explicit-price (like LIMIT). SELL-only (TP via LIMIT_MAKER above, SL via STOP_LOSS_LIMIT below; stop limit = stop trigger). Persists both legs with the shared `orderListId`.\n- `app-em.startUserDataMonitor` passes a 2nd callback `processListStatusData` for the `listStatus` event; on ALL_DONE/REJECT it reconciles each leg's status (via `exchange.orderStatus`) as a safety net behind the existing per-leg `processExecutionData`.\n- New `DELETE /orders/oco/:symbol/:orderListId` endpoint; automation stop/delete cancels open OCO lists (`cancelAutomationOcoOrders`, repo helper `getOpenOcoOrders`).\n- Frontend: OCO order-template option (scoped to the template form only via a `showOco` prop, since manual orders don't handle OCO); stop-price shown for OCO.\n\nThe change has been validated on TESTNET end-to-end (place \u2192 2 legs persisted with orderListId \u2192 cancel via endpoint \u2192 both CANCELED; live `listStatus` ALL_DONE handled+logged in the server process; clean boot; migration idempotent; 0 orphan orders left).\n\n## Project conventions (must adhere)\n- Trunk-based, comments/docs in pt-BR, migrations portable across both dialects, follow the existing routers\u2192controllers\u2192repositories\u2192models layering and the existing order-placement/persistence patterns (mirror `placeOrder`/`cancelOrder`). Logs are file-only in prod.\n\n## Judge especially\n- Is the OCO modeled the right way (order-template `type:'OCO'` reusing the ORDER action + calcPrice/calcQty) vs a separate action type? Is the `calcPrice` OCO special-case clean or a smell?\n- **Design risk: the OCO automation is NOT auto-deactivated after firing** (unlike TRAILING which deletes itself). Does that mean a condition-triggered OCO automation re-places a new OCO on every matching tick \u2192 duplicate stacked OCOs / drained balance? Is that a BLOCK-level design gap or acceptable for v1?\n- Semantics of canceling protective OCO when an automation is merely STOPPED (not deleted) \u2014 is removing downside protection on a held position the right default? Should it be delete-only?\n- `processListStatusData` design: is the REST `orderStatus` reconcile on top of the existing executionReport path warranted, or redundant complexity? The 4s magic timer. Idempotency/maintainability.\n- Cancel-endpoint route placement and matching logic; error-handling consistency with the existing controller style.\n- SELL-only OCO: acceptable scoping for v1, or should it be more general / clearly documented?\n- Security: any auth/ownership gaps on the new endpoint; secret handling; nothing logged that shouldn't be.\n- Migration safety on a populated `orders` table in prod.\n\nGive must-fix items (blocking) vs suggestions (non-blocking), each with file:line and rationale, then the final verdict."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I have everything needed for the verdict. Let me synthesize.\n\nKey finding on the headline risk: the inverted-condition "double-check" (`shouldntInvert` at L708 + `invertCondition` at L138) edge-triggers ordinary ORDER automations — and OCO is an ORDER action NOT excluded from that guard. So a condition-based OCO fires on the *cross*, not every tick. This materially de-escalates the "stacked OCO on every tick" concern, but does NOT eliminate it (re-arm on the next cross, settings without an indexed condition, or RSI oscillation around the threshold still stack). This is the crux of my decision.\n\n---\n\n# Review: Wiring OCO no Beholder\n\n**VEREDITO: REQUEST CHANGES**\n\nPlumbing limpo, no estilo da casa, validado em testnet, e a maior parte das suas dúvidas de design se resolvem a favor do autor. Mas há **um must-fix de segurança de capital** (auto-re-arme da OCO) e **um must-fix de bug** (cancel no STOP) que tocam fluxo de dinheiro/hot-path. Não é BLOCK — o desenho está certo; falta fechar 2 buracos antes de subir.\n\n## O que está bom (não mexer)\n- **Modelagem `type:\'OCO\'` reusando a ação ORDER + calcPrice/calcQty**: decisão correta. Evita um novo `actionType` (que exigiria mexer em `doAction`, no enum de `actionsRepository`, no front de automações, no schema de ações). O desvio em `placeOrder` (`beholder.js:365-367`) espelha exatamente o early-return do `TRAILING_STOP` logo acima (`:357`). É o ponto de extensão idiomático aqui.\n- **`calcPrice` OCO == LIMIT** (`beholder.js:169`): não é smell. OCO realmente usa preço explícito (TP em `limitPrice`, gatilho em `stopPrice`), idêntico à semântica de `LIMIT_TYPES`. One-liner, comentado em pt-BR. Aprovado.\n- **Persistência das 2 pernas com `orderListId` compartilhado** (`beholder.js:185-201`): consistente com o `insertOrder` do `placeOrder`; coluna nullable no model (`orderModel.js:52`) + repo helper filtra por `orderListId != null` + status aberto (`ordersRepository.js:153-161`). Limpo.\n- **Migração** (`20260603170000`): portável (só `addColumn`/`removeColumn`), idempotente com guard `describeTable`, `up`/`down` simétricos. `BIGINT NULL` numa tabela populada é **add-column non-locking** no MySQL 8 (INSTANT) e no Postgres (sem default, instantâneo). **Segura em prod.** Sem ressalva.\n- **5º callback `listStatus`** (`exchange.js:203-209` + `app-em.js:99-109`): a assinatura 1.x está respeitada (`all_updates, balance, execution, subscribed, listStatus`) e o comentário explica por que se trata o `listStatus` *só* no callback dedicado (o `all_updates` também o recebe) — evita duplo processamento. Correto.\n- **Endpoint `DELETE /orders/oco/:symbol/:orderListId`**: atrás de `authMiddleware` (`app.js:45`), mesmo nível do `cancelOrder`. Ordem da rota correta — `/oco/...` declarada **antes** de `/:symbol/:orderId` (`ordersRouter.js:17-19`), senão `oco` seria capturado como `:symbol`. Error-handling idêntico ao `cancelOrder` (`res.status(400).json(err.body)`). **Sem gap de auth/ownership.** Nada sensível logado (orderIds/preços não são segredo; chaves nunca aparecem).\n- **`deleteAutomation`**: o `cancelAutomationOcoOrders(id)` roda **antes** do `removeAutomationFromOrders` (`automationsController.js:250` vs `:255`), então a query por `automationId` ainda enxerga as pernas. O comentário (`:248-249`) está correto. Best-effort com try/catch que nunca derruba o delete — bom.\n- **Dedup por `orderListId`** no `cancelAutomationOcoOrders` (`Set`, `automationsController.js:258-261`): evita cancelar a mesma lista 2x (1 lista = 2 pernas). Atenção a detalhe, aprovado.\n- **Front com `showOco` prop** (`OrderType.js:28`, `OrderTemplateModal.js:122`): escopar OCO só ao form de template, fora do pedido manual, é a decisão certa — o `placeOrder` manual (controller) não tem fluxo OCO. Stop-price revelado p/ OCO (`OrderTemplateModal.js:90`). Coerente.\n\n## Must-fix (bloqueia o merge)\n\n**1. A automação OCO NÃO se auto-desativa — risco de OCOs empilhadas / saldo drenado.** `beholder.js:694` (`case ORDER: return placeOrder`) não tem o auto-desligamento que o `TRAILING` tem (`:666-670`: `deleteBrain` + `isActive=false`). \n\nAvaliando a sua pergunta a fundo: o risco é **parcialmente mitigado** pelo "double-check" de condição invertida — `shouldntInvert` (`:708-715`) **não** lista OCO, então uma OCO disparada por condição indexada (ex.: `RSI<30`) é *edge-triggered* (`invertCondition` exige que o valor tenha *cruzado* o limiar, via `previous`), e não re-dispara a cada tick enquanto a condição segue verdadeira. Isso rebaixa de "empilha a cada tick" para "empilha a cada novo cruzamento". **Mas não zera o risco:**\n   - RSI/preço oscilando em torno do limiar re-cruza várias vezes/dia → várias OCOs sobrepostas para a mesma posição, drenando o saldo base em TPs/SLs concorrentes.\n   - Automação **sem índice** (`indexes` vazio → `evalDecision:723` pula o bloco inteiro de condição/inversão) re-dispara **a cada tick**. Aí é o cenário catastrófico que você levantou, sem freio.\n   \n   A OCO protetiva é conceitualmente **one-shot** (arma proteção para *uma* posição). Empilhar é quase sempre errado. **Must-fix:** ou (a) desativar a automação OCO após sucesso, espelhando o TRAILING (`deleteBrain`+`isActive=false`) — caminho mais simples e alinhado à intenção; ou (b) guardar em `placeOco` contra OCO já aberta para a mesma automação/símbolo (reusar `getOpenOcoOrders` antes de colocar). (a) é o que recomendo para v1. **Sem isso, não sobe** — é fluxo de dinheiro no hot-path.\n\n**2. Bug no cancel da perna STOP: `origClientOrderId` vs `clientOrderId`.** Em `cancelAutomationOcoOrders` (`automationsController.js:267`) e no endpoint (`ordersController.js:330`), o update faz `r.origClientOrderId || r.clientOrderId`. Mas `updateOrderByOrderId` casa por **`orderId` + `clientOrderId`** (`ordersRepository.js:88-89`, `findOne({where:{orderId, clientOrderId}})`). Na persistência (`placeOco`, `beholder.js:197`) gravamos `clientOrderId: r.clientOrderId` (o **novo**, da criação). No cancel, a resposta da Binance traz `origClientOrderId` = o id da ordem cancelada (o mesmo gravado) **e** um `clientOrderId` *novo* (o da requisição de cancel). Logo `r.origClientOrderId || r.clientOrderId` resolve para `origClientOrderId` quando presente → casa. **Funciona no caminho feliz** (e por isso passou no testnet). O risco: se algum `orderReport` vier sem `origClientOrderId`, o `||` cai no `clientOrderId` *de cancel* → `updateOrderByOrderId` não acha a linha → status fica preso em NEW/PARTIALLY_FILLED (o `processListStatusData` reconcilia depois via REST, então não vira órfã real, mas vira inconsistência transitória). \n\n   Avaliação honesta: isto é **frágil**, não quebrado. O `processListStatusData` é a rede de segurança. Marco como must-fix **leve** porque toca consistência de ordens, mas aceito como nice-to-have SE você documentar a dependência. Decisão: **must-fix de baixo custo** — casar explicitamente por `orderId` apenas (existe `getOrderById`? não, casa por orderId+clientOrderId), ou garantir que sempre use `origClientOrderId` e logar se ausente. No mínimo, um comentário pt-BR explicando o `||`.\n\n## Nice-to-have (não bloqueia)\n\n- **Cancelar OCO no STOP (não-delete) da automação** (`automationsController.js:286`): sua pergunta sobre semântica. Tirar a proteção de baixa de uma posição *mantida* só porque a automação foi pausada é **default discutível** — STOP normalmente é "pausa o gatilho de entrada", não "abre mão do stop-loss". Mas: a OCO **só existe porque a automação a colocou**, e uma automação parada não a re-gerencia (não move stop, não reconhece fill no fluxo dela). Deixar a OCO viva e órfã também é defensável-mas-arriscado. Para v1 aceito o comportamento atual (cancela em ambos), **desde que documentado no HANDOFF/UI** que parar uma automação OCO remove a proteção. Considerar `delete-only` numa v2. Não bloqueio.\n- **`processListStatusData` — REST reconcile + timer de 4s** (`app-em.js:48-84`): a sua suspeita de "complexidade redundante" é parcialmente procedente. O `executionReport` por-perna já é o caminho primário; o reconcile só age se a perna ficou presa em NEW (`:64`), o que é raro. **Mas vale a pena** — `listStatus`/`executionReport` podem chegar fora de ordem ou um se perder no stream, e numa OCO o leg não-executado é *cancelado pela Binance*, evento que nem sempre gera `executionReport` limpo. É idempotente (`updateOrder` só sai de NEW/PARTIALLY_FILLED, `ordersRepository.js:97-100`). O **timer de 4s é magic number** — extrair p/ const nomeada (`OCO_RECONCILE_DELAY_MS`) e comentar que é "3s do executionReport + folga". Mantém como está funcionalmente; só legibilidade.\n- **SELL-only** (`beholder.js:137-138`): escopo aceitável p/ v1 (OCO protetiva pós-buy é o caso real). Está com `throw` claro e comentado. **OK** — só garanta que a UI não ofereça OCO+BUY de forma que o usuário só descubra no erro (idealmente o front trava side=SELL quando type=OCO; hoje não trava). Nice-to-have de UX.\n- **Mensagens/erros em inglês** em strings novas (`"OCO failed!"`, `:178`; `"OCO list ... resolved"`, `app-em.js:77`) enquanto comentários estão em pt-BR. O código existente já mistura (`"Order failed!"` no `placeOrder:422`), então está **consistente com a casa** — não é regressão. Deixa.\n- **`hasEnoughAssets` na OCO usa `tpPrice`** (`beholder.js:159`): a OCO SELL trava `quantity` da base, então conferir base é o que importa; o `price` passado quase não pesa no ramo SELL (`:245-246` checa só `qty`). Correto, mas o parâmetro `tpPrice` ali é decorativo — um comentário evitaria confusão futura.\n\n## Decisão de merge\n\n**REQUEST CHANGES.** Condição para virar APPROVE e subir via PR:\n1. **(must-fix #1)** auto-desativar a automação OCO após sucesso, espelhando o TRAILING (`beholder.js:666-670`) — fecha o risco de OCOs empilhadas/saldo drenado. **Re-validar em testnet:** disparar 2x a mesma condição e confirmar que a 2ª não coloca nova OCO.\n2. **(must-fix #2)** blindar o match de cancel por `origClientOrderId` (ou casar só por `orderId`) em `automationsController.js:267` e `ordersController.js:330`, com comentário pt-BR.\n\nItens nice-to-have podem ir no mesmo PR ou ficar como follow-up — destaco o **timer de 4s nomeado** e a **documentação do STOP-cancela-proteção** como os de maior valor. O resto (plumbing, migração, auth, rota, front) está **mergeável como está**.\n\nArquivos revisados: `/home/gcrux-tradeux/tradeux/backend/migrations/20260603170000-alter-orders-add-orderListId.js`, `/home/gcrux-tradeux/tradeux/backend/src/app-em.js`, `/home/gcrux-tradeux/tradeux/backend/src/beholder.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js`, `/home/gcrux-tradeux/tradeux/backend/src/models/orderModel.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js`, `/home/gcrux-tradeux/tradeux/backend/src/routers/ordersRouter.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`, `/home/gcrux-tradeux/tradeux/frontend/src/components/NewOrder/OrderType.js`, `/home/gcrux-tradeux/tradeux/frontend/src/private/OrderTemplates/OrderTemplateModal/OrderTemplateModal.js`.'}, {'type': 'text', 'text': "agentId: a51bd96e78598d6f1 (use SendMessage with to: 'a51bd96e78598d6f1' to continue this agent)\n<usage>subagent_tokens: 55473\ntool_uses: 19\nduration_ms: 140533</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'No seeders reference OCO, so the CI migrate+seed path is unaffected by the new order type (the migration just adds a nullable column, seeders don\'t touch it). CI will pass.\n\nI now have everything needed. Let me do one final verification of a subtle issue I want to be precise about: the `cancelAutomationOcoOrders` uses `updateOrderByOrderId(r.orderId, r.origClientOrderId || r.clientOrderId, ...)`. On a `cancelOrderList` (DELETE v3/orderList) response, the `orderReports[]` entries — do they carry `origClientOrderId` (cancel responses) or `clientOrderId` (new responses)? The persisted `clientOrderId` was set at OCO placement from `r.clientOrderId` (the NEW response). A DELETE response returns `origClientOrderId` = the original clientOrderId. So matching `getOrder(orderId, origClientOrderId)` against the stored `clientOrderId` works ONLY if `origClientOrderId` (from cancel) === `clientOrderId` (from placement). For OCO legs, the cancel report\'s `origClientOrderId` is indeed the leg\'s original clientOrderId. And `getOrder` matches on BOTH `orderId` AND `clientOrderId` (compound). The `orderId` always matches; `origClientOrderId` should equal the stored `clientOrderId`. This is the same pattern the existing `cancelOrder` uses (`result.origClientOrderId`). Consistent and correct.\n\nLet me verify the one thing that could silently break the DB update on cancel: confirm the cancel/list-status reports include `orderId` as a number matching the stored BIGINT (string vs number comparison in Sequelize where-clause). The existing code already relies on this for `cancelOrder`, so it\'s a pre-existing, proven pattern. \n\nI have a complete, evidence-based assessment. Compiling the report.\n\n---\n\n# Revisão QA — Wiring de OCO no Beholder (TradeUX)\n\n## VEREDITO GERAL: **PASS COM RESSALVAS**\n\nA mudança faz o que promete e está bem construída (migration portável/idempotente, persistência das 2 pernas, reconciliação via `listStatus`, cancel endpoint, hook de stop/delete). Os nomes de campo do evento cru `listStatus` (`g/s/L/O`, `leg.i/leg.c`) e o shape de retorno do `ocoOrder`/`cancelOrderList` foram **confirmados na fonte da lib** (`node-binance-api@1.0.27`), não adivinhados. Mas há **1 problema de severidade ALTA de semântica/dinheiro** (re-fire) e alguns pontos médios que eu exigiria endereçar antes de armar uma automação OCO real em loop.\n\n---\n\n## Achados (tagueados por severidade)\n\n### [ALTA] Re-fire: automação OCO NÃO é desativada após disparar → OCOs duplicadas empilhadas\n**Arquivos:** `beholder.js:694` (`doAction → ORDER → placeOrder`), `beholder.js:660-670` (contraste: TRAILING faz `deleteBrain` + `isActive=false`), `beholder.js:806-810` (lock solta após `INTERVAL`), `.env:48` (`AUTOMATION_INTERVAL=60000`).\n\nDiferente de `TRAILING_STOP` (que após disparar chama `deleteBrain(automation)` + `isActive=false`), a ação `ORDER` — caminho usado pela OCO — **não desativa a automação**. O `LOCK_BRAIN` só suprime re-disparo por `INTERVAL` (60s). Passados 60s, se a condição ainda for verdadeira, `placeOco` roda de novo e **coloca uma SEGUNDA OCO** sobre a mesma posição. A cada tick subsequente (a cada 60s) coloca outra.\n\nO único freio natural é `hasEnoughAssets` (`beholder.js:159`) lendo `MEMORY[base:WALLET]`, que é o **saldo LIVRE** (`item.available`, `app-em.js:101` — `onOrder` excluído). Logo:\n- Com `MAX_WALLET`: a 1ª OCO trava ~todo o livre → 2ª tende a falhar por saldo. Freio **razoável**, mas com **race**: depende do `balanceUpdate/outboundAccountPosition` atualizar o WALLET na memória ANTES do re-disparo; e `calcQty(MAX_WALLET)` arredonda pra baixo (sobra poeira que pode disparar mini-OCOs).\n- Com **quantidade fixa** ou `MIN_NOTIONAL`: **empilha N OCOs** até esgotar o livre. Resultado: posição protetiva fragmentada em vários brackets, múltiplos `orderListId`, e quando um TP/stop de um bracket executa, a Binance cancela só a OUTRA perna **daquele** bracket — os outros brackets continuam vivos e podem executar em preços diferentes → **P&L/avg-price suja e ordens órfãs** até o stop/delete da automação limpar.\n\nPor que é pior que um STOP_LOSS_LIMIT comum (que tem o mesmo "defeito" de não-desativar): OCO é exatamente o caso "arma a proteção UMA vez". Empilhar brackets é o anti-padrão clássico aqui.\n\n**Correção recomendada:** após `placeOco` com sucesso, desativar a automação (espelhar TRAILING: `deleteBrain` + `isActive=false`) OU, no mínimo, antes de colocar, checar se já existe OCO aberta dessa automação/símbolo (`getOpenOcoOrders`) e abortar (idempotência de proteção). A primeira é a semântica certa pra "proteção pós-compra".\n\n**Teste/repro:** Testnet, automação ORDER→template OCO SELL qty fixa pequena, condição que permaneça verdadeira (ex.: `MEMORY[\'BTCUSDT:RSI_1m\'].current>1`). Deixar 3 min. Esperado hoje: 2-3 `orderListId` distintos no DB para o mesmo símbolo. Esperado pós-fix: exatamente 1, e automação `isActive=false`.\n\n### [MÉDIA] Persistência das pernas fora de try/catch → OCO viva na corretora mas órfã no DB\n**Arquivo:** `beholder.js:184-201` (loop `for (const r of reports) await insertOrder(...)`).\n\nA chamada `exchange.oco` está protegida (retorna `{type:\'error\'}` em falha), mas o **loop de `insertOrder` não está**. Campos NOT-NULL `orderId`/`clientOrderId` **não têm fallback** (só `transactTime/status/quantity` têm). Se um `orderReports[]` vier sem `orderId`/`clientOrderId` (resposta anômala, parcial, ou `orderReports.length != 2`), o `insertOrder` lança → exceção sobe de `placeOco`, é pega pelo try/catch de `doAction` (`beholder.js:699`) e logada como erro — **mas a OCO já está LIVE na exchange e não foi persistida** → não aparece em `getOpenOcoOrders` → o hook de stop/delete **nunca a cancela** → ordem órfã permanente. Também: se a 1ª perna persistir e a 2ª falhar, fica meia-OCO no DB.\n\n**Correção:** envolver o loop em try/catch; em falha de persistência, **cancelar a OCO recém-criada** (`cancelOrderList(orderListId)`) para não deixar órfã, e logar. Validar `reports.length === 2` antes de persistir.\n\n**Teste:** unit/mock de `exchange.oco` retornando `orderReports` com 1 item / item sem `clientOrderId`; assert que não fica ordem viva não rastreada (idealmente cancela).\n\n### [MÉDIA] Relação de preços TP vs STOP não validada no código (depende 100% da corretora)\n**Arquivo:** `beholder.js:140-167`.\n\n`placeOco` calcula `tpPrice` (above/LIMIT_MAKER), `stopTrigger` (belowStopPrice) e `stopLimit = stopTrigger`, mas **não valida** as invariantes que a Binance exige para SELL OCO: `abovePrice > preço de mercado > belowStopPrice` e tipicamente `belowPrice <= belowStopPrice`. Se o template tiver TP abaixo do mercado, ou stop acima do mercado, ou TP <= stop, a Binance rejeita com `-1013`/`-2010`/`-1102`. O tratamento existe (`catch` → `{type:\'error\', text:\'OCO failed!...\'}`, `beholder.js:176-179`), então **não corrompe estado** — mas como a automação re-dispara (achado ALTA), você gera **erro+notificação a cada 60s** indefinidamente. Combinado com o re-fire, vira spam de falha.\n\nSobre `belowPrice == belowStopPrice`: para SELL é seguro (limite <= gatilho ⇒ marketável quando dispara) e é uma escolha conservadora razoável. Ressalva: em mercado em gap/baixa liquidez, limite==gatilho pode **não preencher** (vira LIMIT no book sem contraparte). Não é bug, é trade-off; documentar. Um `belowPrice = stopTrigger * (1 - slippageBps)` daria execução mais garantida.\n\n**Teste:** template OCO com `limitPrice` abaixo do mercado → confirmar `-1013/-2010` tratado sem travar engine; verificar que NÃO persiste perna alguma (não persiste, pois `exchange.oco` lança antes).\n\n### [MÉDIA] `cancelAutomationOcoOrders` no STOP remove proteção de downside\n**Arquivo:** `automationsController.js:85` (`stopAutomation` → `await cancelAutomationOcoOrders(id)`).\n\nCancelar a OCO ao **parar** a automação (não só ao deletar) é uma decisão de semântica discutível: parar uma automação de entrada **não deveria** necessariamente remover o stop-loss protetivo que já está guardando a posição. Quem só quer "pausar de comprar" perde a proteção sem perceber. Para delete, faz sentido (limpeza). Para stop, eu questionaria — no mínimo deveria ser opt-in/avisado na UI.\n\nAlém disso, `await` no `stopAutomation`/`deleteAutomation` adiciona latência REST (1 chamada `cancelOrderList` por `orderListId`) à resposta HTTP. Aceitável (best-effort, com try/catch interno que nunca derruba o stop/delete — confirmado `automationsController.js:46-49,70-72`), mas em automação com várias OCOs vira N chamadas seriais. OK por ora.\n\n**Recomendação:** confirmar com o dono se cancelar-no-STOP é desejado; senão, mover o cancel só para `deleteAutomation`.\n\n### [BAIXA] Ordem do hook em `deleteAutomation` — **correto** (verificado)\n`automationsController.js:250` chama `cancelAutomationOcoOrders(id)` **ANTES** de `removeAutomationFromOrders` (`:255`), que zera `automationId`. Como `getOpenOcoOrders` filtra por `automationId`, a ordem está certa: cancela enquanto o vínculo existe. ✔️ Sem achado — só registrando que a sequência foi validada (era um risco real).\n\n### [BAIXA] `processListStatusData` — idempotência e race vs `processExecutionData`: **OK** (verificado)\n- Campos do evento cru confirmados na lib (`userDataHandler`, `node-binance-api.ts:3002-3024`: passa `eventData` cru, `type=eventData.e`): `g`=orderListId, `s`=symbol, `L`=listOrderStatus, `O[]={s,i,c}` → o parsing (`data.g/data.s/data.L`, `leg.i/leg.c`) está **correto**.\n- Race com o `executionReport` (3s) que atualiza as mesmas linhas: mitigada por (a) timer de 4s > 3s e (b) o guard de `updateOrder` (`ordersRepository.js:97-100`: só NEW/PARTIALLY_FILLED→terminal). A reconciliação só faz REST `orderStatus` se a perna ainda estiver NEW/PARTIALLY_FILLED. Idempotente. ✔️\n- Double-notify: o `executionReport` por perna já notifica; o `listStatus` adiciona 1 notificação de lista + (se reconciliou) notificação por perna. É um pouco redundante mas não duplica updates de DB. Aceitável.\n- OCO criada fora do TradeUX: `getOrder` retorna null → `return` (não age). ✔️\n- `exchange` module-level: em `processListStatusData` usa o `exchange` de `app-em.js` (já inicializado quando o userDataMonitor roda). ✔️ — diferente de `placeOco`/controllers que instanciam `require(\'./utils/exchange\')(settings)` local. Consistente com o resto do `app-em.js`.\n\n### [BAIXA] Cancel endpoint — colisão de rota, matching e auth: **OK** (verificado)\n- `ordersRouter.js:17` (`/oco/:symbol/:orderListId`) registrado ANTES de `:19` (`/:symbol/:orderId`). Express casa por ordem; `oco` é segmento literal → sem colisão (símbolo nunca é "oco"). ✔️\n- Match por `r.origClientOrderId || r.clientOrderId` contra o `clientOrderId` armazenado: resposta DELETE traz `origClientOrderId` = clientOrderId original da perna; `getOrder` casa por (orderId, clientOrderId) composto. Mesmo padrão já usado em `cancelOrder` (`ordersController.js:156`). ✔️\n- Auth: `/orders` está atrás de `authMiddleware` (`app.js:45`), `res.locals.token.id` populado. ✔️\n- Error body: `res.status(400).json(err.body)` — se `err.body` undefined manda corpo vazio (mesmo padrão pré-existente do `cancelOrder`). Cosmético.\n\n### [BAIXA] Migration — portável + idempotente: **OK** (verificado)\n`20260603170000-...js`: só `addColumn`/`removeColumn` com `Sequelize.BIGINT` (mapeia BIGINT nos dois dialetos) + guard `describeTable`. Em Postgres, `addColumn` cria `"orderListId"` (quoted, case-preservado) e `describeTable` devolve a chave `orderListId` (camelCase) → guard funciona nos dois bancos. A idempotência do CI (migrate+seed 2x) já é coberta pelo `SequelizeMeta`; o guard é cinto-e-suspensório. Nenhum seeder referencia OCO → CI migrate+seed mysql+postgres **passa**. Sem índice em `orderListId`: aceitável (queries por `automationId`+status já indexáveis; volume baixo), mas se `getOpenOcoOrders` crescer, considerar índice. ✔️\n\n### [INFO] Frontend — OCO só em templates: **correto**\n`OrderType.js` (`showOco`) + `OrderTemplateModal` (`showOco={true}`, stopPrice visível, label "Take Profit Price"). NewOrder manual NÃO expõe OCO — e confirmei que o controller manual `placeOrder` (`ordersController.js:110-138`) só trata BUY/SELL via `exchange.buy/sell`; um OCO manual cairia em `exchange.sell` com `type:\'OCO\'` e falharia na corretora. Esconder no manual está **certo**. ✔️\n\n---\n\n## Testes que eu rodaria (priorizados)\n1. **Re-fire (ALTA):** automação OCO SELL com condição persistentemente verdadeira, qty FIXA, 3+ min em testnet → contar `orderListId` distintos por símbolo no DB (esperado: deve ser 1; hoje será >1). Repetir com `MAX_WALLET` para ver o freio de saldo e o race do `balanceUpdate`.\n2. **Persistência parcial (MÉDIA):** mock de `exchange.oco` retornando `orderReports` com 1 item e com item sem `clientOrderId` → garantir que não sobra OCO viva não rastreada (idealmente auto-cancela).\n3. **Rejeição de filtro (MÉDIA):** template com TP abaixo do mercado / stop acima do mercado / TP<=stop → confirmar `-1013/-2010/-1102` tratado, engine não trava, nada persiste, e medir o spam de erro causado pelo re-fire.\n4. **Reconciliação com executionReport perdido (BAIXA):** simular `listStatus ALL_DONE` com uma perna ainda NEW no DB e sem o executionReport correspondente → confirmar o REST `orderStatus` (+4s) atualiza para terminal; e o caso "já terminal" não faz REST.\n5. **Stop remove proteção (MÉDIA):** colocar OCO via automação, depois `POST /automations/:id/stop` → confirmar que as 2 pernas vão a CANCELED (comportamento atual) e decidir se é desejado.\n6. **Cancel endpoint + colisão de rota:** `DELETE /api/orders/oco/BTCUSDT/<listId>` (2 pernas CANCELED) e garantir que `DELETE /api/orders/BTCUSDT/<orderId>` simples continua funcionando.\n7. **CI:** `db:migrate && db:seed:all` 2x em **mysql E postgres** (idempotência) — baixo risco, mas é o gate.\n8. **Delete com OCO aberta:** confirmar cancel ANTES do `removeAutomationFromOrders` (sem leg órfã) — já validado por leitura, confirmar em runtime.\n\n---\n\n## Lista priorizada de must-fix (antes de armar OCO em loop com dinheiro)\n1. **(ALTA) Desativar a automação após `placeOco`** (espelhar TRAILING: `deleteBrain` + `isActive=false`) OU abortar se já houver OCO aberta (`getOpenOcoOrders`). Sem isso, OCOs empilham e corrompem P&L/avg-price.\n2. **(MÉDIA) Try/catch no loop de persistência** com auto-cancel da OCO em falha de `insertOrder` e validação `reports.length === 2` — elimina o risco de OCO órfã viva-mas-não-rastreada.\n3. **(MÉDIA) Decidir a semântica de cancelar-no-STOP** (hoje remove a proteção ao pausar) — confirmar com o dono ou restringir ao delete.\n4. **(MÉDIA/baixa) Validar relação de preços** (TP>mercado>stop, TP>stop) antes de chamar a corretora — evita spam de `-1013/-2010` (especialmente combinado com o re-fire).\n\n**Recomendação de merge:** **NÃO mergear como está para uso em automação OCO real em loop** enquanto o item 1 não for corrigido — é defeito de dinheiro (proteção empilhada/fragmentada). Os caminhos de migration, persistência feliz, reconciliação `listStatus`, cancel endpoint e hook delete estão sólidos e foram validados (incl. nomes de campo da lib confirmados na fonte). Se o uso imediato for **apenas place+cancel manual via endpoint** (sem automação em loop), pode entrar como **PASS COM RESSALVAS** com os itens 1-4 abertos como follow-up obrigatório antes de "armar" uma automação OCO.\n\n**Arquivos-chave revisados:** `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (placeOco `:135-207`, re-fire `:660-706`, `:765-811`), `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (`:48-83` processListStatusData, `:99-109` wiring), `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` (`:112-135` cancelOrderList), `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (`:16-46` hook, `:237-272` deleteAutomation), `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js` (`:88-100` updateOrder guard, `:153-161` getOpenOcoOrders), `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`:70-85`, `:203-210`), `/home/gcrux-tradeux/tradeux/backend/src/routers/ordersRouter.js`, `/home/gcrux-tradeux/tradeux/backend/migrations/20260603170000-alter-orders-add-orderListId.js`, `/home/gcrux-tradeux/tradeux/backend/node_modules/node-binance-api/src/node-binance-api.ts` (`:3002-3024`, `:939-954`).'}, {'type': 'text', 'text': "agentId: a3ab03d11cc28e223 (use SendMessage with to: 'a3ab03d11cc28e223' to continue this agent)\n<usage>subagent_tokens: 78620\ntool_uses: 31\nduration_ms: 252666</usage>"}]
+> ```
+
+## 🤖 Claude *(20:22:37)*
+
+
+## 🤖 Claude *(20:22:44)*
+
+Os dois gates convergiram e acharam problemas **reais**. Não vou carimbar — vou **devolver e corrigir**. Como sou o implementador e tenho todo o contexto, corrijo direto e revalido. Veredito que assumo:
+
+**Must-fix (bloqueiam):**
+1. **[ALTA] Re-fire/empilhamento** — automação OCO não se desativa → empilha OCOs (catastrófico sem índice). Vou implementar **guard de idempotência**: se já há OCO aberta da automação para o símbolo, não coloca outra (re-arma sozinha quando a anterior resolver — melhor semântica que desativar de vez).
+2. **[MÉDIA] Persistência sem try/catch** → OCO viva mas órfã se `insertOrder` falhar. Vou envolver em try/catch com **auto-cancel** + validar `reports.length===2`.
+3. **[MÉDIA] Match do cancel** `origClientOrderId` frágil → usar direto (igual ao `cancelOrder`) + comentário.
+
+**Decisão de semântica (eu owno):** cancelar OCO ao **parar** remove proteção de downside de uma posição aberta — footgun. Vou **cancelar só no DELETE** (limpeza), preservar no STOP. Documentado.
+
+**Nice-to-have:** timer 4s → const nomeada.
+
+Começando pelo `beholder.js` (import + guard + persistência blindada):
+
+## 🤖 Claude *(20:22:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "const { STOP_TYPES, LIMIT_TYPES, insertOrder } = require('./repositories/ordersRepository');",
+  "new_string": "const { STOP_TYPES, LIMIT_TYPES, insertOrder, getOpenOcoOrders } = require('./repositories/ordersRepository');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:22:52)*
+
+
+## 🤖 Claude *(20:22:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    const side = orderTemplate.side.toUpperCase();\n    if (side !== 'SELL')\n        throw new Error(`OCO no momento s\u00f3 suporta SELL protetivo (TP+SL). Side recebido: ${side}`);\n\n    // TP (perna LIMIT_MAKER, acima) = limitPrice \u00d7 limitPriceMultiplier.\n    const tpPrice = calcPrice(orderTemplate, symbol, false);",
+  "new_string": "    const side = orderTemplate.side.toUpperCase();\n    if (side !== 'SELL')\n        throw new Error(`OCO no momento s\u00f3 suporta SELL protetivo (TP+SL). Side recebido: ${side}`);\n\n    // Anti-empilhamento: a prote\u00e7\u00e3o \u00e9 \"uma OCO por vez\". Se j\u00e1 h\u00e1 uma OCO aberta desta\n    // automa\u00e7\u00e3o para o s\u00edmbolo, n\u00e3o coloca outra \u2014 a automa\u00e7\u00e3o re-arma sozinha quando a\n    // anterior resolver (TP/SL) ou for cancelada. Sem isso, uma automa\u00e7\u00e3o sem \u00edndice (que\n    // dispara a cada tick) ou condi\u00e7\u00f5es oscilando empilhariam OCOs e drenariam o saldo.\n    if (automation.id) {\n        const symbolUpper = orderTemplate.symbol.toUpperCase();\n        const open = await getOpenOcoOrders(automation.id);\n        if (open && open.some(o => o.symbol === symbolUpper)) {\n            if (automation.logs) logger('A:' + automation.id, `OCO j\u00e1 aberta para ${symbolUpper}; re-disparo ignorado.`);\n            return { type: 'success', text: `OCO already open for ${symbolUpper}, skipped.` };\n        }\n    }\n\n    // TP (perna LIMIT_MAKER, acima) = limitPrice \u00d7 limitPriceMultiplier.\n    const tpPrice = calcPrice(orderTemplate, symbol, false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:07)*
+
+
+## 🤖 Claude *(20:23:08)*
+
+Agora a persistência blindada (valida 2 pernas + try/catch com auto-cancel pra não deixar OCO órfã viva):
+
+## 🤖 Claude *(20:23:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    const orderListId = result.orderListId;\n    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];\n\n    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder).\n    for (const r of reports) {\n        await insertOrder({\n            automationId: automation.id,\n            symbol: order.symbol,\n            quantity: r.origQty || quantity,\n            type: r.type,\n            side: r.side || side,\n            orderListId,\n            limitPrice: r.price && parseFloat(r.price) ? `${r.price}` : null,\n            stopPrice: r.stopPrice && parseFloat(r.stopPrice) ? `${r.stopPrice}` : null,\n            icebergQty: null,\n            orderId: r.orderId,\n            clientOrderId: r.clientOrderId,\n            transactTime: r.transactTime || result.transactionTime || Date.now(),\n            status: r.status || 'NEW'\n        });\n    }\n\n    if (automation.logs)\n        logger('A:' + automation.id, `OCO #${orderListId} ${side} ${order.symbol}: TP ${tpPrice} / STOP ${stopTrigger}->${stopLimit}, qty ${quantity}`);\n\n    return { type: 'success', text: `OCO ${side} ${order.symbol} placed (list #${orderListId})` };",
+  "new_string": "    const orderListId = result.orderListId;\n    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];\n\n    // A OCO j\u00e1 est\u00e1 VIVA na corretora. Se a resposta vier an\u00f4mala (\u22602 pernas), cancela a\n    // lista para n\u00e3o deixar ordem \u00f3rf\u00e3 n\u00e3o-rastre\u00e1vel e falha.\n    if (reports.length !== 2) {\n        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }\n        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }\n        return { type: 'error', text: `OCO retornou ${reports.length} pernas (esperado 2); lista #${orderListId} cancelada.` };\n    }\n\n    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder). Se a\n    // persist\u00eancia falhar, a OCO ficaria viva mas \u00f3rf\u00e3 (fora do getOpenOcoOrders e do hook\n    // de cancelamento) \u2192 cancela na corretora e falha, mantendo DB e exchange coerentes.\n    try {\n        for (const r of reports) {\n            await insertOrder({\n                automationId: automation.id,\n                symbol: order.symbol,\n                quantity: r.origQty || quantity,\n                type: r.type,\n                side: r.side || side,\n                orderListId,\n                limitPrice: r.price && parseFloat(r.price) ? `${r.price}` : null,\n                stopPrice: r.stopPrice && parseFloat(r.stopPrice) ? `${r.stopPrice}` : null,\n                icebergQty: null,\n                orderId: r.orderId,\n                clientOrderId: r.clientOrderId,\n                transactTime: r.transactTime || result.transactionTime || Date.now(),\n                status: r.status || 'NEW'\n            });\n        }\n    } catch (err) {\n        logger('A:' + automation.id, err);\n        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }\n        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }\n        return { type: 'error', text: `Falha ao persistir a OCO #${orderListId}; lista cancelada na corretora.` };\n    }\n\n    if (automation.logs)\n        logger('A:' + automation.id, `OCO #${orderListId} ${side} ${order.symbol}: TP ${tpPrice} / STOP ${stopTrigger}->${stopLimit}, qty ${quantity}`);\n\n    return { type: 'success', text: `OCO ${side} ${order.symbol} placed (list #${orderListId})` };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:27)*
+
+
+## 🤖 Claude *(20:23:28)*
+
+Fix #3 no controller (`origClientOrderId` direto, igual ao `cancelOrder`, com comentário):
+
+## 🤖 Claude *(20:23:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js",
+  "old_string": "    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];\n    const updated = [];\n    for (const r of reports) {\n        const order = await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId || r.clientOrderId, {\n            status: r.status\n        });\n        if (order) updated.push(order.get({ plain: true }));\n    }\n    res.json(updated);",
+  "new_string": "    // Match pelo orderId + origClientOrderId (o clientOrderId ORIGINAL da perna). Na resposta\n    // de cancelamento o campo `clientOrderId` \u00e9 um id NOVO da a\u00e7\u00e3o de cancelar \u2014 n\u00e3o casa com\n    // o armazenado. Mesmo padr\u00e3o do cancelOrder (result.origClientOrderId).\n    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];\n    const updated = [];\n    for (const r of reports) {\n        const order = await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId, {\n            status: r.status\n        });\n        if (order) updated.push(order.get({ plain: true }));\n    }\n    res.json(updated);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:39)*
+
+
+## 🤖 Claude *(20:23:39)*
+
+Fix #3 + remoção do cancel-no-STOP no `automationsController`:
+
+## 🤖 Claude *(20:23:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "                const result = await exchange.cancelOrderList(leg.symbol, leg.orderListId);\n                const reports = (result && Array.isArray(result.orderReports)) ? result.orderReports : [];\n                for (const r of reports)\n                    await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId || r.clientOrderId, { status: r.status });",
+  "new_string": "                const result = await exchange.cancelOrderList(leg.symbol, leg.orderListId);\n                const reports = (result && Array.isArray(result.orderReports)) ? result.orderReports : [];\n                // origClientOrderId = clientOrderId ORIGINAL da perna (o `clientOrderId` da\n                // resposta de cancel \u00e9 um id novo e n\u00e3o casa com o armazenado).\n                for (const r of reports)\n                    await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId, { status: r.status });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "    automation.isActive = false;\n    await automation.save();\n\n    await cancelAutomationOcoOrders(id); // limpa OCO \u00f3rf\u00e3s ao parar a automa\u00e7\u00e3o\n\n    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);\n\n    res.json(automation);\n}",
+  "new_string": "    automation.isActive = false;\n    await automation.save();\n\n    // N\u00c3O cancelamos a OCO ao apenas PARAR (pausar) a automa\u00e7\u00e3o: a OCO \u00e9 protetiva e a\n    // posi\u00e7\u00e3o segue aberta \u2014 tirar o stop-loss numa pausa seria perigoso. A limpeza das\n    // OCO s\u00f3 ocorre no DELETE (a automa\u00e7\u00e3o deixa de existir). A OCO resolve-se sozinha na\n    // corretora (uma perna executa, a Binance cancela a outra).\n    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);\n\n    res.json(automation);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:57)*
+
+
+## 🤖 Claude *(20:23:57)*
+
+Fix #4: nomear o timer de 4s no `app-em.js`:
+
+## 🤖 Claude *(20:24:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "let WSS, beholder, exchange;",
+  "new_string": "let WSS, beholder, exchange;\n\n// Atraso da reconcilia\u00e7\u00e3o de listStatus da OCO: > 3s do executionReport por-perna, para\n// que o caminho prim\u00e1rio (processExecutionData) atualize antes e evitemos REST \u00e0 toa.\nconst OCO_RECONCILE_DELAY_MS = 4000;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:24:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "    }, 4000); // depois do delay de 3s do executionReport, p/ evitar REST desnecess\u00e1rio\n}",
+  "new_string": "    }, OCO_RECONCILE_DELAY_MS);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:24:29)*
+
+
+## 🤖 Claude *(20:24:31)*
+
+Fixes aplicados. Vou validar sintaxe de tudo, rebuildar o backend (assa os fixes), reiniciar, e **re-validar no testnet** — com foco no guard anti-empilhamento (precisa de `automation.id` real). Primeiro vou pegar um id de automação válido e preparar o teste de guard.
+
+## 🤖 Claude *(20:24:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== syntax check ===\"\nfor f in backend/src/beholder.js backend/src/app-em.js backend/src/controllers/ordersController.js backend/src/controllers/automationsController.js; do\n  node --check \"$f\" && echo \"ok $f\" || echo \"FAIL $f\"\ndone\necho \"=== automation ids existentes (p/ teste de guard com FK v\u00e1lida) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node -e '\nconst m=require(\"/app/src/models/automationModel\");\nm.findAll({attributes:[\"id\",\"name\",\"isActive\"],raw:true,limit:5}).then(rs=>{rs.forEach(r=>console.log(`id=${r.id} name=${r.name} active=${r.isActive}`));process.exit(0)}).catch(e=>{console.error(e.message);process.exit(1)});' 2>&1 | tail -8",
+  "description": "Syntax check + list automation ids"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === syntax check ===
+> ok backend/src/beholder.js
+> ok backend/src/app-em.js
+> ok backend/src/controllers/ordersController.js
+> ok backend/src/controllers/automationsController.js
+> === automation ids existentes (p/ teste de guard com FK válida) ===
+> id=1 name=Example Strategy active=0
+> id=2 name=Baseline RSI Buy BTCUSDT active=1
+> id=3 name=Baseline RSI Sell BTCUSDT active=1
+> ```
+
+## 🤖 Claude *(20:24:48)*
+
+
+## 🤖 Claude *(20:24:49)*
+
+Sintaxe OK; uso a automação id=1 (inativa) pro teste de guard (FK válida). Vou reescrever o smoke com um helper compartilhado e um modo `guard` (coloca #1, tenta #2 → deve pular, confirma 1 só `orderListId`, e limpa).
+
+## 🤖 Claude *(20:25:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/oco-smoke.js",
+  "content": "// Smoke OCO (TESTNET) \u2014 roda DENTRO do container backend (env + DB + exchange).\n// Modos:\n//   node /tmp/oco-smoke.js place [SYMBOL]            -> coloca uma OCO SELL (automation.id=null) e persiste as 2 pernas\n//   node /tmp/oco-smoke.js verify <orderListId>      -> imprime o status das pernas dessa lista\n//   node /tmp/oco-smoke.js guard <automationId>      -> testa o anti-empilhamento: 2 placeOco seguidos p/ a mesma automa\u00e7\u00e3o\nconst { Op } = require('/app/node_modules/sequelize');\nconst axios = require('/app/node_modules/axios');\nconst beholder = require('/app/src/beholder');\nconst { getDefaultSettings } = require('/app/src/repositories/settingsRepository');\nconst { getSymbol } = require('/app/src/repositories/symbolsRepository');\nconst orderModel = require('/app/src/models/orderModel');\n\nconst mode = process.argv[2] || 'place';\n\nasync function buildOco(SYMBOL) {\n  const settings = await getDefaultSettings();\n  const plain = settings.get ? settings.get({ plain: true }) : settings;\n  const symbolRow = await getSymbol(SYMBOL);\n  const tick = parseFloat(symbolRow.tickSize), step = parseFloat(symbolRow.stepSize);\n  const qPrec = symbolRow.quotePrecision, bPrec = symbolRow.basePrecision;\n  const minNotional = parseFloat(symbolRow.minNotional), minLot = parseFloat(symbolRow.minLotSize || step);\n  const base = plain.apiUrl.endsWith('/') ? plain.apiUrl : plain.apiUrl + '/';\n  const bt = await axios.get(`${base}v3/ticker/bookTicker?symbol=${SYMBOL}`);\n  const bestBid = parseFloat(bt.data.bidPrice), bestAsk = parseFloat(bt.data.askPrice);\n  const roundTick = p => (Math.floor(p / tick) * tick).toFixed(qPrec);\n  const tp = roundTick(bestAsk * 1.05), stop = roundTick(bestBid * 0.95);\n  let qty = Math.max((2 * minNotional) / parseFloat(stop), minLot);\n  qty = (Math.ceil(qty / step) * step).toFixed(bPrec);\n  const exchange = require('/app/src/utils/exchange')(plain);\n  const bal = await exchange.balance();\n  beholder.updateMemory(symbolRow.base, 'WALLET', null, bal[symbolRow.base] ? parseFloat(bal[symbolRow.base].available) : 0, false);\n  const orderTemplate = { id: 1, symbol: SYMBOL, type: 'OCO', side: 'SELL', limitPrice: `${tp}`, limitPriceMultiplier: 1, stopPrice: `${stop}`, stopPriceMultiplier: 1, quantity: `${qty}`, quantityMultiplier: 1 };\n  return { settings, exchange, orderTemplate, tp, stop, qty, base: symbolRow.base };\n}\n\n(async () => {\n  if (mode === 'verify') {\n    const orderListId = process.argv[3];\n    const legs = await orderModel.findAll({ where: { orderListId }, raw: true });\n    console.log('VERIFY_LEGS=' + JSON.stringify(legs.map(l => ({ orderId: l.orderId, type: l.type, side: l.side, status: l.status }))));\n    console.log(legs.length > 0 && legs.every(l => ['FILLED', 'CANCELED', 'EXPIRED'].includes(l.status)) ? 'VERIFY_OK' : 'VERIFY_PENDING');\n    process.exit(0);\n  }\n\n  if (mode === 'guard') {\n    const automationId = parseInt(process.argv[3] || '1');\n    const SYMBOL = 'BTCUSDT';\n    const { settings, exchange, orderTemplate } = await buildOco(SYMBOL);\n    const automation = { id: automationId, name: 'GUARD-TEST', logs: true };\n    const action = { orderTemplateId: 1, orderTemplate };\n\n    const r1 = await beholder.placeOrder(settings, automation, action);\n    console.log('R1=' + JSON.stringify(r1));\n    const r2 = await beholder.placeOrder(settings, automation, action); // deve PULAR (j\u00e1 h\u00e1 OCO aberta)\n    console.log('R2=' + JSON.stringify(r2));\n\n    const open = await orderModel.findAll({ where: { automationId, symbol: SYMBOL, orderListId: { [Op.ne]: null }, status: { [Op.in]: ['NEW', 'PARTIALLY_FILLED'] } }, raw: true });\n    const lists = [...new Set(open.map(o => String(o.orderListId)))];\n    console.log('OPEN_LISTS=' + JSON.stringify(lists) + ' legs=' + open.length);\n\n    // cleanup\n    for (const lid of lists) { try { await exchange.cancelOrderList(SYMBOL, lid); console.log('cleanup canceled ' + lid); } catch (e) { console.log('cleanup err ' + (e.body ? JSON.stringify(e.body) : e.message)); } }\n\n    const skipped = /skipped/i.test(r2.text || '');\n    console.log((skipped && lists.length === 1 && open.length === 2) ? 'GUARD_OK' : 'GUARD_FAIL');\n    process.exit(0);\n  }\n\n  // place\n  const SYMBOL = process.argv[3] || 'BTCUSDT';\n  const { settings, orderTemplate, tp, stop, qty, base } = await buildOco(SYMBOL);\n  console.log(`TP=${tp} STOP=${stop} QTY=${qty} base=${base}`);\n  const result = await beholder.placeOrder(settings, { id: null, name: 'SMOKE-OCO', logs: true }, { orderTemplateId: 1, orderTemplate });\n  console.log('PLACE_RESULT=' + JSON.stringify(result));\n  const legs = await orderModel.findAll({ where: { symbol: SYMBOL, orderListId: { [Op.ne]: null } }, order: [['id', 'DESC']], limit: 2, raw: true });\n  console.log('LEGS=' + JSON.stringify(legs.map(l => ({ orderId: l.orderId, type: l.type, side: l.side, status: l.status, orderListId: String(l.orderListId), limitPrice: l.limitPrice, stopPrice: l.stopPrice }))));\n  const ok = legs.length === 2 && String(legs[0].orderListId) === String(legs[1].orderListId) && new Set(legs.map(l => l.type)).size === 2;\n  if (ok) { console.log('ORDERLISTID=' + String(legs[0].orderListId)); console.log('PLACE_OK'); } else console.log('PLACE_FAIL');\n  process.exit(0);\n})().catch(e => { console.error('SMOKE_ERR ' + (e.body ? JSON.stringify(e.body) : (e.stack || e.message))); process.exit(1); });\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /tmp/oco-smoke.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:25:17)*
+
+
+## 🤖 Claude *(20:25:17)*
+
+Rebuild final com os fixes + restart, depois rodo a suíte: place normal, **guard** (anti-empilhamento), cancel-endpoint e listStatus.
+
+## 🤖 Claude *(20:25:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose build backend 2>&1 | tail -2\nsudo -n -u gcrux-tradeux docker compose up -d backend 2>&1 | tail -2\necho \"=== wait boot ===\"; sleep 9\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -c \"DIAG\" /app/src/app-em.js; tail -2 /app/logs/system.log; echo \"--M3--\"; tail -2 /app/logs/M3.log 2>/dev/null' 2>&1",
+  "description": "Rebuild+restart backend with gate fixes",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === wait boot ===
+> 0
+> info: 2026-06-03T20:25:26.679Z - App Exchange Monitor is running!
+> info: 2026-06-03T20:25:28.855Z - userDataStream:subscribeEvent: "userData"
+> --M3--
+> info: 2026-06-03T20:25:27.460Z - User Data Monitor has started!
+> ```
+
+## 🤖 Claude *(20:25:36)*
+
+
+## 🤖 Claude *(20:25:37)*
+
+Boot limpo (DIAG=0). Rodando a suíte de validação pós-fix: place normal + **guard** (anti-empilhamento).
+
+## 🤖 Claude *(20:25:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux docker compose cp /tmp/oco-smoke.js backend:/tmp/oco-smoke.js >/dev/null 2>&1\necho \"=== TESTE 1: place normal (automation.id=null, guard n\u00e3o se aplica) ===\"\nP=$(sudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js place BTCUSDT 2>&1)\necho \"$P\" | grep -E \"TP=|PLACE_RESULT|LEGS=|ORDERLISTID|PLACE_OK|PLACE_FAIL|SMOKE_ERR\"\nOLID=$(echo \"$P\" | grep -oE 'ORDERLISTID=[0-9]+' | cut -d= -f2)\necho\necho \"=== TESTE 2: guard anti-empilhamento (automation id=1, 2x placeOco) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node /tmp/oco-smoke.js guard 1 2>&1 | grep -E \"R1=|R2=|OPEN_LISTS=|cleanup|GUARD_OK|GUARD_FAIL|SMOKE_ERR\"\necho\necho \"=== cancelar a OCO do teste 1 (#$OLID) via endpoint ===\"\nEMAIL=$(grep -E '^DEFAULT_SETTINGS_EMAIL=' .env | cut -d= -f2-); PW=$(grep -E '^DEFAULT_SETTINGS_PWD=' .env | cut -d= -f2-)\nBODY=$(jq -nc --arg e \"$EMAIL\" --arg p \"$PW\" '{email:$e,password:$p}')\nTOKEN=$(curl -s -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"$BODY\" | jq -r .token)\ncurl -s -X DELETE \"http://127.0.0.1:8090/api/orders/oco/BTCUSDT/$OLID\" -H \"authorization: $TOKEN\" | jq -c 'map({orderId,type,status})' 2>/dev/null",
+  "description": "Post-fix validation: place, guard, cancel endpoint",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TESTE 1: place normal (automation.id=null, guard não se aplica) ===
+> TP=2120.79000000 STOP=1908.15000000 QTY=0.00525000 base=BTC
+> PLACE_RESULT={"type":"success","text":"OCO SELL BTCUSDT placed (list #6024)"}
+> LEGS=[{"orderId":78218,"type":"LIMIT_MAKER","side":"SELL","status":"NEW","orderListId":"6024","limitPrice":"2120.79000000","stopPrice":null},{"orderId":78217,"type":"STOP_LOSS_LIMIT","side":"SELL","status":"NEW","orderListId":"6024","limitPrice":"1908.15000000","stopPrice":"1908.15000000"}]
+> ORDERLISTID=6024
+> PLACE_OK
+> 
+> === TESTE 2: guard anti-empilhamento (automation id=1, 2x placeOco) ===
+> R1={"type":"success","text":"OCO SELL BTCUSDT placed (list #6025)"}
+> R2={"type":"success","text":"OCO already open for BTCUSDT, skipped."}
+> OPEN_LISTS=["6025"] legs=2
+> cleanup canceled 6025
+> GUARD_OK
+> 
+> === cancelar a OCO do teste 1 (#6024) via endpoint ===
+> [{"orderId":78217,"type":"STOP_LOSS_LIMIT","status":"CANCELED"},{"orderId":78218,"type":"LIMIT_MAKER","status":"CANCELED"}]
+> ```
+
+## 🤖 Claude *(20:25:57)*
+
+
+## 🤖 Claude *(20:25:59)*
+
+Todos os pós-fix passam: **TESTE 1** place normal OK (#6024). **TESTE 2 GUARD_OK** — R2 = "already open... skipped", 1 só `orderListId`, sem empilhar. **Cancel endpoint** OK com match endurecido. Agora confirmo o listStatus no servidor + 0 ordens abertas (cleanup).
+
+## 🤖 Claude *(20:26:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguarda reconcile (+4s) ===\"; sleep 7\necho \"=== M3.log: reconcilia\u00e7\u00f5es de listStatus ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -E \"reconciled|User Data Monitor\" /app/logs/M3.log 2>/dev/null | tail -8' 2>&1\necho \"=== erros (exceto jwt) em qualquer log ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend sh -c 'grep -iE \"error|TypeError|Cannot read|undefined is not\" /app/logs/*.log 2>/dev/null | grep -v \"jwt expired\" | tail -8' 2>&1 || echo \"(nenhum)\"\necho \"=== open orders no testnet (deve ser 0) ===\"\nsudo -n -u gcrux-tradeux docker compose exec -T backend node -e '\nconst { getDefaultSettings } = require(\"/app/src/repositories/settingsRepository\");\n(async()=>{ const s=await getDefaultSettings(); const plain=s.get?s.get({plain:true}):s;\n  const axios=require(\"/app/node_modules/axios\"), crypto=require(\"crypto\");\n  const base=plain.apiUrl.endsWith(\"/\")?plain.apiUrl:plain.apiUrl+\"/\";\n  const qs=new URLSearchParams({timestamp:Date.now(),recvWindow:60000});\n  qs.append(\"signature\",crypto.createHmac(\"sha256\",plain.secretKey).update(qs.toString()).digest(\"hex\"));\n  const r=await axios.get(`${base}v3/openOrders?${qs.toString()}`,{headers:{\"X-MBX-APIKEY\":plain.accessKey}});\n  console.log(\"OPEN_ORDERS_COUNT=\"+r.data.length);\n  process.exit(0);\n})().catch(e=>{console.error(\"ERR\",e.response?JSON.stringify(e.response.data):e.message);process.exit(1);});' 2>&1 | tail -3",
+  "description": "Verify listStatus reconcile + 0 open orders post-fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguarda reconcile (+4s) ===
+> === M3.log: reconciliações de listStatus ===
+> info: 2026-06-03T20:25:27.460Z - User Data Monitor has started!
+> info: 2026-06-03T20:25:53.125Z - listStatus ALL_DONE for OCO #6025 (BTCUSDT) reconciled.
+> info: 2026-06-03T20:25:53.623Z - listStatus ALL_DONE for OCO #6024 (BTCUSDT) reconciled.
+> === erros (exceto jwt) em qualquer log ===
+> === open orders no testnet (deve ser 0) ===
+> OPEN_ORDERS_COUNT=0
+> ```
+
+## 🤖 Claude *(20:26:31)*
+
+
+## 🤖 Claude *(20:26:33)*
+
+listStatus reconciliou **#6025 e #6024**, zero erros, **0 ordens abertas**. Todos os must-fixes validados no testnet. Vou regenerar o diff e pedir aos **mesmos agentes do gate** uma passada de confirmação sobre os fixes (loop responsável: devolveu → corrigi → re-verifico).
+
+## 🤖 Claude *(20:26:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js backend/src/app-em.js backend/src/controllers/ordersController.js backend/src/controllers/automationsController.js 2>&1\nsudo -n -u gcrux-tradeux git --no-pager diff > /tmp/oco-full.diff 2>&1\necho \"diff lines: $(wc -l < /tmp/oco-full.diff)\"\nsudo -n -u gcrux-tradeux git --no-pager diff --stat 2>&1 | tail -12",
+  "description": "Regenerate full diff with fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff lines: 521
+>  .../20260603170000-alter-orders-add-orderListId.js |  26 +++++
+>  backend/src/app-em.js                              |  66 ++++++++++--
+>  backend/src/beholder.js                            | 118 ++++++++++++++++++++-
+>  backend/src/controllers/automationsController.js   |  43 ++++++++
+>  backend/src/controllers/ordersController.js        |  32 ++++++
+>  backend/src/models/orderModel.js                   |   1 +
+>  backend/src/repositories/ordersRepository.js       |  16 ++-
+>  backend/src/routers/ordersRouter.js                |   2 +
+>  frontend/src/components/NewOrder/OrderType.js      |   4 +-
+>  .../OrderTemplateModal/OrderTemplateModal.js       |   7 +-
+>  10 files changed, 302 insertions(+), 13 deletions(-)
+> ```
+
+## 🤖 Claude *(20:26:58)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA re-verify of fixes",
+  "subagent_type": "qa-engineer",
+  "prompt": "Continuation of your earlier QA review of the OCO wiring in TradeUX (/home/gcrux-tradeux/tradeux). You gave PASS COM RESSALVAS with these must-fixes. I implemented fixes and RE-VALIDATED on testnet. Please verify the fixes resolve the findings and introduced no regressions. Updated diff at `/tmp/oco-full.diff` (re-Read it; do NOT run git as your own user \u2014 Read files or use `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux ...`).\n\n## What I changed in response to your findings\n1. **[ALTA re-fire/stacking]** \u2014 Instead of auto-deactivating, I added an **idempotency guard** at the top of `placeOco` (`backend/src/beholder.js`): if `getOpenOcoOrders(automation.id)` already has an open OCO for the same symbol, it returns `{type:'success', text:'OCO already open ... skipped.'}` WITHOUT placing. The automation stays active and re-arms automatically once the prior OCO resolves/cancels. Imported `getOpenOcoOrders` into beholder.\n2. **[M\u00c9DIA orphan on persist failure]** \u2014 In `placeOco`: validate `reports.length === 2` (else cancel the list + error), and wrapped the `insertOrder` loop in try/catch that **cancels the just-created OCO** (`exchange.cancelOrderList`) on any persist failure, then returns error. Keeps exchange and DB coherent.\n3. **[M\u00c9DIA cancel match]** \u2014 `cancelOrderList` controller and `cancelAutomationOcoOrders` now match by `r.origClientOrderId` directly (dropped the fragile `|| r.clientOrderId`), with pt-BR comments \u2014 consistent with the existing `cancelOrder`.\n4. **[STOP semantics]** \u2014 Removed the OCO cancel from `stopAutomation` (kept only in `deleteAutomation`), so pausing an automation no longer strips downside protection. Documented in-code.\n5. **[4s magic timer]** \u2014 extracted `OCO_RECONCILE_DELAY_MS = 4000` in app-em.js.\n\n## Testnet re-validation I ran (evidence)\n- `place` (automation.id=null \u2192 guard bypassed): OCO #6024 placed, 2 legs persisted (LIMIT_MAKER+STOP_LOSS_LIMIT, same orderListId) \u2192 happy path intact after the try/catch hardening.\n- `guard` test (automation.id=1, two consecutive `beholder.placeOrder` OCO calls): R1=placed (#6025), **R2=\"OCO already open for BTCUSDT, skipped.\"**, DB shows exactly ONE orderListId / 2 legs \u2192 no stacking. Then cleaned up.\n- Cancel via `DELETE /api/orders/oco/BTCUSDT/6024` \u2192 both legs CANCELED (hardened origClientOrderId match works).\n- Server `listStatus` reconcile fired for both #6024 and #6025 (`M3.log`: \"listStatus ALL_DONE for OCO #\u2026 reconciled.\").\n- 0 open orders left on testnet; no errors in logs.\n\n## Please confirm\n- Does the idempotency guard correctly prevent stacking in the real Beholder flow (consider: the guard returns success \u2014 does that interact badly with `evalDecision`/`testAutomations` locking or multi-action automations)? Any race between the guard's `getOpenOcoOrders` read and persistence within one locked `evalDecision`?\n- Is the persist-failure auto-cancel correct (e.g., does `exchange` exist in `placeOco` scope at that point; could the cancel itself throw and mask the original error \u2014 it's wrapped, but confirm)?\n- Did removing STOP-cancel leave any inconsistency (e.g., `cancelAutomationOcoOrders` still correctly used only by delete)?\n- Any NEW issue introduced by these edits. \n\nGive an updated verdict (PASS / PASS COM RESSALVAS / FAIL) and whether the original must-fixes are now resolved. Keep it focused on the delta."
+}
+```
+
+## 🤖 Claude *(20:27:10)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-lead re-verify of fixes",
+  "subagent_type": "tech-lead",
+  "prompt": "Continuation of your earlier review of the OCO wiring in TradeUX (/home/gcrux-tradeux/tradeux). You returned REQUEST CHANGES with 2 must-fixes. I implemented the fixes and re-validated on testnet. Please decide if this is now APPROVE. Updated diff at `/tmp/oco-full.diff` (re-Read it; do NOT run git as your own user \u2014 Read files or use `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux ...`).\n\n## How I addressed your must-fixes\n1. **Must-fix #1 (OCO automation re-arm / stacking):** I chose the **idempotency-guard** approach (your option b) over auto-deactivating (option a). At the top of `placeOco` (`backend/src/beholder.js`), if `getOpenOcoOrders(automation.id)` already has an open OCO for the symbol, it returns `{type:'success', text:'OCO already open \u2026 skipped.'}` and does NOT place. Rationale: a protective automation should keep re-arming for the NEXT position once the prior OCO resolves, rather than permanently disabling itself after one shot \u2014 this caps exposure at one OCO per automation+symbol while preserving recurring protection, and it covers the catastrophic no-index/every-tick case. Validated on testnet (2nd consecutive call skipped; exactly 1 orderListId in DB).\n2. **Must-fix #2 (cancel match origClientOrderId):** `cancelOrderList` (controller) and `cancelAutomationOcoOrders` now use `r.origClientOrderId` directly (dropped the `|| r.clientOrderId` fallback), with pt-BR comments, matching the existing `cancelOrder` pattern.\n\n## Also addressed (your nice-to-haves + the QA agent's findings)\n- Hardened `placeOco` persistence: validate `reports.length===2` and wrap the insert loop in try/catch that **auto-cancels** the just-created OCO on persist failure (no orphan live OCO).\n- **STOP semantics:** removed the OCO cancel from `stopAutomation` (kept only in `deleteAutomation`), so pausing an automation no longer strips the protective stop-loss. Documented in-code (your \"delete-only\" suggestion).\n- Extracted the 4s timer to `OCO_RECONCILE_DELAY_MS`.\n\n## Testnet re-validation\n- Happy-path place still works after the hardening (OCO #6024, 2 legs persisted).\n- Anti-stacking guard: 2 consecutive OCO placeOrder calls \u2192 2nd returns \"already open \u2026 skipped\", DB has exactly ONE orderListId/2 legs.\n- Cancel endpoint \u2192 both legs CANCELED (hardened match).\n- Server listStatus reconcile fired for the canceled lists; 0 orphan orders; clean logs.\n\n## Decide\n- Is the idempotency-guard (option b) an acceptable resolution of must-fix #1 for you, or do you still require option a (auto-deactivate)? Consider the design trade-off I made.\n- Are must-fix #2 and the STOP-semantics change correct and consistent with house patterns?\n- Any remaining blocker. Give the final verdict (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK). Keep it focused on the delta."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All call sites pass a real persisted `automation` (with a DB `id`) — grid, trailing, and `doAction` all originate from `BRAIN` automations loaded from the DB. There\'s no synthetic/`id`-less automation reaching `placeOco`, so the anti-stacking guard\'s `if (automation.id)` gate will always be satisfied in practice. The guard is sound. The verification is complete.\n\n---\n\nVEREDITO: APPROVE\n\nRe-revisei o delta inteiro contra o código real em disco (não só o diff). Os dois must-fix estão resolvidos corretamente, e as mudanças extra (hardening de persistência, STOP-semantics, extração do timer) estão consistentes com os padrões da casa.\n\n## Must-fix #1 — anti-empilhamento via idempotency-guard (opção b)\nAceito. A opção b é, na verdade, a escolha de design **mais correta** para uma automação protetiva: a opção a (auto-desativar) mataria a recorrência da proteção após o primeiro ciclo, exigindo religar a automação na mão para a próxima posição. A guarda em `placeOco` (`backend/src/beholder.js:164-171`) cobre exatamente o caso catastrófico que eu havia sinalizado — automação sem índice disparando a cada tick — limitando a exposição a 1 OCO por automação+símbolo e re-armando sozinha quando a anterior resolve/é cancelada.\n\nVerifiquei o ponto cego do design: a guarda depende de `automation.id` truthy. Rastreei **todos** os call sites de `placeOco`/`placeOrder` (`beholder.js:397,499,694,724` + agenda) — todos passam uma automation persistida do `BRAIN`/DB, com `id` real. Não há automation sintética/sem-id chegando em `placeOco`, então a guarda nunca é silenciosamente pulada. Sólido. Validado em testnet (2º disparo "skipped", 1 orderListId/2 pernas no DB).\n\n## Must-fix #2 — match por origClientOrderId\nCorreto e consistente. Confirmei que `cancelOrder` (`ordersController.js:156`) usa `result.origClientOrderId` — é exatamente o padrão da casa. O novo `cancelOrderList` (`ordersController.js:185`) e o `cancelAutomationOcoOrders` (`automationsController.js:320`) usam `r.origClientOrderId` direto, sem o fallback `|| r.clientOrderId`. O comentário pt-BR explica o porquê (o `clientOrderId` na resposta de cancel é id novo). `updateOrderByOrderId` casa por `{orderId, clientOrderId}` (`ordersRepository.js:88-92`), então passar o `origClientOrderId` é o que faz o match funcionar. Bate com o validado em testnet (ambas pernas CANCELED).\n\n## STOP-semantics (delete-only)\nCorreto. Remover o cancel da OCO do `stopAutomation` e mantê-lo só no `deleteAutomation` (`automationsController.js:84-95` e `:249-251`) é a semântica segura: pausar não pode tirar o stop-loss de uma posição aberta. O comentário pt-BR documenta a decisão. A query `getOpenOcoOrders` roda **antes** de `removeAutomationFromOrders` zerar o `automationId` — ordem correta.\n\n## Hardening (nice-to-haves)\n- `reports.length !== 2` → cancela a lista viva e falha (`beholder.js:219-223`): evita órfã não-rastreável. Bom.\n- try/catch no insert das pernas → auto-cancela a OCO na corretora se a persistência falhar (`beholder.js:228-251`): mantém DB e exchange coerentes. Esse era o risco real de órfã viva; bem tratado.\n- `processListStatusData` reconcilia só em `ALL_DONE`/`REJECT`, só toca pernas ainda `NEW`/`PARTIALLY_FILLED`, e `updateOrder` por si só já é idempotente (`ordersRepository.js:97-100` só sai de estado não-terminal). Defense-in-depth correto contra `executionReport` perdido. Imports e assinaturas (`getOrder`, `orderStatus`, `getLightOrder`, `notifyOrderUpdate`, `indexKeys`) todos conferidos em `app-em.js`.\n- `OCO_RECONCILE_DELAY_MS=4000` extraído e comentado (`app-em.js:13`).\n\n## Migration / model\n`orderListId BIGINT nullable`, addColumn/removeColumn portável MySQL+Postgres com guard `describeTable` (idempotente para a CI rodar 2x). Coluna no model com comentário pt-BR. Ordens normais ficam NULL e a query OCO filtra `orderListId != null`. Sem quebra de compat.\n\n## Must-fix vs Nice-to-have (restantes)\n**Must-fix:** nenhum. Bloqueadores zerados.\n\n**Nice-to-have (não condiciona o merge):**\n- A guarda anti-empilhamento tem uma janela TOCTOU teórica (dois ticks quase simultâneos do mesmo símbolo passando pelo check antes de qualquer insert). Na prática o hot-path do Beholder é single-threaded por design e o `LOCK_*` serializa, então é improvável — mas se um dia virar problema, o ponto de defesa definitivo é um índice único parcial `(automationId, symbol)` onde `orderListId IS NOT NULL AND status IN (\'NEW\',\'PARTIALLY_FILLED\')`. Deixar anotado, não fazer agora.\n- `cancelOrderList` no wrapper usa `privateSpotRequest(\'v3/orderList\', …, \'DELETE\')` em vez de um método nomeado da lib — consistente com a nota do HANDOFF, ok como está.\n\n## Decisão de merge\n**APPROVE — mergeável.** Mudança bem-escoada, reversível (migration tem `down`, coluna nullable, OCO é opt-in só em template de automação via `showOco`), e o blast-radius no hot-path (`beholder.js`/fluxo de dinheiro) está contido por: guarda anti-empilhamento, auto-cancel em qualquer falha de persistência, e reconciliação idempotente. Validação testnet cobre os 3 caminhos críticos (place, anti-stacking, cancel + reconcile, 0 órfãs).\n\nCondições de ship (operacional, não de código):\n1. Subir como `gcrux-tradeux` (git/docker), push via token, **chown `.git` depois** (gotcha conhecido do npm/git-as-ubuntu).\n2. A migration roda no boot do container (`docker-entrypoint.sh`) — confirmar boot limpo + `db:migrate` aplicando a coluna no ambiente real após o deploy.\n3. Re-armar id2/id3 e checar logs limpos pós-restart.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js`, `/home/gcrux-tradeux/tradeux/backend/src/app-em.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`, `/home/gcrux-tradeux/tradeux/backend/migrations/20260603170000-alter-orders-add-orderListId.js`.'}, {'type': 'text', 'text': "agentId: ab4c0f4e4e809f4b2 (use SendMessage with to: 'ab4c0f4e4e809f4b2' to continue this agent)\n<usage>subagent_tokens: 42195\ntool_uses: 11\nduration_ms: 81576</usage>"}]
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%

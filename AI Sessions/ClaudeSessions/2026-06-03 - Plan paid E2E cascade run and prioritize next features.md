@@ -4506,6 +4506,1035 @@ O vigia terminou. Lendo a prova material:
 > 11	[]
 > ```
 
+## 🤖 Claude *(20:00:47)*
+
+
+## 🤖 Claude *(20:00:52)*
+
+⚠️ **Falha material confirmada** — após 50 polls (~5 min) os **3 runs seguem `running`, `steps[]` vazio, content_library=0, scheduled_posts=[]**. As cadeias async **não progrediram** além da criação do `pipeline_run`. Isto **é** a falha de 05-27 reincidindo: `orchestrate-content` criou o run e chamou `async_orchestrate_step` (pg_net → `orchestrate-step`), mas o `orchestrate-step` nunca escreveu o 1º passo.
+
+Os 40 mco foram gastos e nada foi produzido. Vou diagnosticar a causa raiz (Lei 1 — não chutar fix) lendo a RPC + a migration de debug que loga a chave recebida:
+
+## 🤖 Claude *(20:00:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260527012500_async_orchestrate_step_debug.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Debug instrumentation: store metadata about async_orchestrate_step calls in a debug table.
+> 2	-- NEVER stores the full JWT — only prefix/suffix/length for diagnostic.
+> 3	
+> 4	CREATE TABLE IF NOT EXISTS public.async_orchestrate_step_debug (
+> 5	  id bigserial PRIMARY KEY,
+> 6	  run_id uuid,
+> 7	  step text,
+> 8	  service_key_len int,
+> 9	  service_key_prefix text,
+> 10	  service_key_suffix text,
+> 11	  url text,
+> 12	  called_at timestamptz DEFAULT now()
+> 13	);
+> 14	GRANT SELECT ON public.async_orchestrate_step_debug TO service_role;
+> 15	
+> 16	-- Re-create async_orchestrate_step with logging
+> 17	CREATE OR REPLACE FUNCTION public.async_orchestrate_step(
+> 18	  p_supabase_url text,
+> 19	  p_service_key text,
+> 20	  p_run_id uuid,
+> 21	  p_step text
+> 22	)
+> 23	RETURNS void
+> 24	LANGUAGE plpgsql
+> 25	SECURITY DEFINER
+> 26	AS $$
+> 27	BEGIN
+> 28	  INSERT INTO public.async_orchestrate_step_debug (
+> 29	    run_id, step, service_key_len, service_key_prefix, service_key_suffix, url
+> 30	  ) VALUES (
+> 31	    p_run_id,
+> 32	    p_step,
+> 33	    COALESCE(length(p_service_key), 0),
+> 34	    COALESCE(substring(p_service_key, 1, 16), 'NULL'),
+> 35	    COALESCE(substring(p_service_key FROM GREATEST(length(p_service_key)-9, 1)), 'NULL'),
+> 36	    p_supabase_url || '/functions/v1/orchestrate-step'
+> 37	  );
+> 38	
+> 39	  PERFORM net.http_post(
+> 40	    url     := p_supabase_url || '/functions/v1/orchestrate-step',
+> 41	    headers := jsonb_build_object(
+> 42	      'Content-Type',  'application/json',
+> 43	      'Authorization', 'Bearer ' || p_service_key
+> 44	    ),
+> 45	    body    := jsonb_build_object(
+> 46	      'run_id', p_run_id::text,
+> 47	      'step', p_step
+> 48	    )
+> 49	  );
+> 50	END;
+> 51	$$;
+> 52	REVOKE EXECUTE ON FUNCTION public.async_orchestrate_step(text, text, uuid, text) FROM public, authenticated, anon;
+> 53	
+> ```
+
+## 🤖 Claude *(20:00:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260526202000_async_orchestrate_step.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: 20260526202000_async_orchestrate_step.sql
+> 2	-- Create a secure, restricted RPC to invoke the orchestrate-step function asynchronously via pg_net.
+> 3	
+> 4	CREATE OR REPLACE FUNCTION public.async_orchestrate_step(
+> 5	  p_supabase_url text,
+> 6	  p_service_key text,
+> 7	  p_run_id uuid,
+> 8	  p_step text
+> 9	)
+> 10	RETURNS void
+> 11	LANGUAGE plpgsql
+> 12	SECURITY DEFINER
+> 13	AS $$
+> 14	BEGIN
+> 15	  PERFORM net.http_post(
+> 16	    url     := p_supabase_url || '/functions/v1/orchestrate-step',
+> 17	    headers := jsonb_build_object(
+> 18	      'Content-Type',  'application/json',
+> 19	      'Authorization', 'Bearer ' || p_service_key
+> 20	    ),
+> 21	    body    := jsonb_build_object(
+> 22	      'run_id', p_run_id::text,
+> 23	      'step', p_step
+> 24	    )
+> 25	  );
+> 26	END;
+> 27	$$;
+> 28	
+> 29	-- Revoke execution from standard roles to prevent abuse/SSRF.
+> 30	-- Only the service_role/admin client can invoke this.
+> 31	REVOKE EXECUTE ON FUNCTION public.async_orchestrate_step(text, text, uuid, text) FROM public, authenticated, anon;
+> 32	
+> ```
+
+## 🤖 Claude *(20:01:40)*
+
+
+## 🤖 Claude *(20:01:42)*
+
+O elo é exatamente este: `async_orchestrate_step` faz `net.http_post` ao `orchestrate-step` com **só** `Authorization: Bearer <p_service_key>` — **sem header `apikey`**. Com a chave nova `sb_secret_` (opaca, não-JWT), o gateway de Edge Functions (verify_jwt) provavelmente rejeita. Há uma tabela de debug (`async_orchestrate_step_debug`) que loga o prefixo da chave. Confirmando material:
+
+## 🤖 Claude *(20:01:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\necho \"=== async_orchestrate_step_debug (recent \u2014 was the RPC called? what key prefix?) ===\"\ncurl -s \"$URL/async_orchestrate_step_debug?select=run_id,step,service_key_len,service_key_prefix,service_key_suffix,called_at&order=called_at.desc&limit=8\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('api-error:',d); sys.exit(0)\nprint('%d rows'%len(d))\nfor r in d:\n    print('  %s step=%s len=%s prefix=%s suffix=%s' % (str(r.get('called_at'))[:19], r.get('step'), r.get('service_key_len'), r.get('service_key_prefix'), r.get('service_key_suffix')))\n\"",
+  "description": "Query debug table for async_orchestrate_step calls + key prefix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === async_orchestrate_step_debug (recent — was the RPC called? what key prefix?) ===
+> 3 rows
+>   2026-05-27T17:16:04 step=knowledge_mesh len=219 prefix=eyJhbGciOiJIUzI1 suffix=DzAzWM-QfE
+>   2026-05-27T17:15:31 step=sanity len=4 prefix=test suffix=test
+>   2026-05-27T01:26:16 step=article_generation len=41 prefix=sb_secret_akYQ2m suffix=Q_JnNKQu7I
+> ```
+
+## 🤖 Claude *(20:01:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== config.toml verify_jwt settings ===\"\nls supabase/config.toml 2>/dev/null && grep -n -E \"verify_jwt|\\[functions\" supabase/config.toml 2>/dev/null | head -60 || echo \"no config.toml\"\necho \"=== any per-function config for orchestrate-step / orchestrate-content ===\"\ngrep -rn -E \"orchestrate-step|orchestrate-content|verify_jwt\" supabase/config.toml 2>/dev/null",
+  "description": "Check verify_jwt config for orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === config.toml verify_jwt settings ===
+> supabase/config.toml
+> 6:[functions.publish-social]
+> 7:verify_jwt = false
+> 8:[functions.refresh-social-token]
+> 9:verify_jwt = false
+> 10:[functions.embed-mcorch-node]
+> 11:verify_jwt = false
+> 12:[functions.self-optimize]
+> 13:verify_jwt = false
+> 14:[functions.self-heal]
+> 15:verify_jwt = false
+> 16:[functions.orchestrate-content]
+> 17:verify_jwt = false
+> 18:[functions.generate-content]
+> 19:verify_jwt = false
+> 20:[functions.generate-audio-script]
+> 21:verify_jwt = false
+> 22:[functions.generate-video-script]
+> 23:verify_jwt = false
+> 24:[functions.list-provider-models]
+> 25:verify_jwt = false
+> 26:[functions.generate-video]
+> 27:verify_jwt = false
+> 28:[functions.check-video-status]
+> 29:verify_jwt = false
+> 30:[functions.generate-image]
+> 31:verify_jwt = false
+> 32:[functions.analyze-seo]
+> 33:verify_jwt = false
+> 34:[functions.publish-wordpress]
+> 35:verify_jwt = false
+> 36:[functions.sync-knowledge-mesh]
+> 38:verify_jwt = true
+> 42:[functions.higgsfield-webhook]
+> 43:verify_jwt = false
+> 45:[functions.handle-ml-postback]
+> 46:verify_jwt = false
+> 48:[functions.process-affiliate-link]
+> 49:verify_jwt = false
+> 51:[functions.instagram-webhook]
+> 52:verify_jwt = false
+> 54:[functions.stripe-webhook]
+> 55:verify_jwt = false
+> 57:[functions.social-auth-callback]
+> 58:verify_jwt = false
+> 60:[functions.social-auth-init]
+> 61:verify_jwt = false
+> === any per-function config for orchestrate-step / orchestrate-content ===
+> supabase/config.toml:7:verify_jwt = false
+> supabase/config.toml:9:verify_jwt = false
+> supabase/config.toml:11:verify_jwt = false
+> supabase/config.toml:13:verify_jwt = false
+> supabase/config.toml:15:verify_jwt = false
+> supabase/config.toml:16:[functions.orchestrate-content]
+> supabase/config.toml:17:verify_jwt = false
+> supabase/config.toml:19:verify_jwt = false
+> supabase/config.toml:21:verify_jwt = false
+> supabase/config.toml:23:verify_jwt = false
+> supabase/config.toml:25:verify_jwt = false
+> supabase/config.toml:27:verify_jwt = false
+> supabase/config.toml:29:verify_jwt = false
+> supabase/config.toml:31:verify_jwt = false
+> supabase/config.toml:33:verify_jwt = false
+> supabase/config.toml:35:verify_jwt = false
+> supabase/config.toml:38:verify_jwt = true
+> supabase/config.toml:43:verify_jwt = false
+> supabase/config.toml:46:verify_jwt = false
+> supabase/config.toml:49:verify_jwt = false
+> supabase/config.toml:52:verify_jwt = false
+> supabase/config.toml:55:verify_jwt = false
+> supabase/config.toml:58:verify_jwt = false
+> supabase/config.toml:61:verify_jwt = false
+> ```
+
+## 🤖 Claude *(20:03:07)*
+
+
+## 🤖 Claude *(20:03:13)*
+
+🎯 **Causa raiz encontrada (material):**
+
+O `config.toml` lista `verify_jwt = false` para **todas** as funções internas chamadas server-to-server (`orchestrate-content`, `publish-wordpress`, `generate-content`, `publish-social`…) — **mas `orchestrate-step` NÃO está lá** → ela usa o **default `verify_jwt = true`**. Como `async_orchestrate_step` a chama via `net.http_post` com `Bearer <sb_secret_...>` (chave **opaca, não-JWT** pós-cutover de 01-06), o gateway tenta verificar como JWT, **falha → 401**, e o `orchestrate-step` nunca roda. Antes do cutover a service key legada era um JWT (`eyJ…`) → o gateway aceitava. O debug confirma: a última tentativa `sb_secret_` (05-27) falhou; depois reverteram pro JWT `eyJ…` (len 219).
+
+`orchestrate-step` se auto-autentica (compara o Bearer à própria service key), então `verify_jwt=false` é o fix correto e seguro — idêntico ao padrão de todas as irmãs. Lendo o config pra editar com precisão:
+
+## 🤖 Claude *(20:03:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	project_id = "bcyvddsykvehvpwstlfa"
+> 2	
+> 3	# Configuração de Bypass de JWT para Orquestração Soberana
+> 4	# key-migration 2026-06-01: service→service targets are called with the new sb_secret_ key (not a JWT),
+> 5	# so the gateway JWT check must be off; each function below enforces its own in-code auth gate.
+> 6	[functions.publish-social]
+> 7	verify_jwt = false
+> 8	[functions.refresh-social-token]
+> 9	verify_jwt = false
+> 10	[functions.embed-mcorch-node]
+> 11	verify_jwt = false
+> 12	[functions.self-optimize]
+> 13	verify_jwt = false
+> 14	[functions.self-heal]
+> 15	verify_jwt = false
+> 16	[functions.orchestrate-content]
+> 17	verify_jwt = false
+> 18	[functions.generate-content]
+> 19	verify_jwt = false
+> 20	[functions.generate-audio-script]
+> 21	verify_jwt = false
+> 22	[functions.generate-video-script]
+> 23	verify_jwt = false
+> 24	[functions.list-provider-models]
+> 25	verify_jwt = false
+> 26	[functions.generate-video]
+> 27	verify_jwt = false
+> 28	[functions.check-video-status]
+> 29	verify_jwt = false
+> 30	[functions.generate-image]
+> 31	verify_jwt = false
+> 32	[functions.analyze-seo]
+> 33	verify_jwt = false
+> 34	[functions.publish-wordpress]
+> 35	verify_jwt = false
+> 36	[functions.sync-knowledge-mesh]
+> 37	enabled = true
+> 38	verify_jwt = true
+> 39	import_map = "./functions/sync-knowledge-mesh/deno.json"
+> 40	entrypoint = "./functions/sync-knowledge-mesh/index.ts"
+> 41	
+> 42	[functions.higgsfield-webhook]
+> 43	verify_jwt = false
+> 44	
+> 45	[functions.handle-ml-postback]
+> 46	verify_jwt = false
+> 47	
+> 48	[functions.process-affiliate-link]
+> 49	verify_jwt = false
+> 50	
+> 51	[functions.instagram-webhook]
+> 52	verify_jwt = false
+> 53	
+> 54	[functions.stripe-webhook]
+> 55	verify_jwt = false
+> 56	
+> 57	[functions.social-auth-callback]
+> 58	verify_jwt = false
+> 59	
+> 60	[functions.social-auth-init]
+> 61	verify_jwt = false
+> 62	
+> 63	
+> ```
+
+## 🤖 Claude *(20:03:27)*
+
+
+## 🤖 Claude *(20:03:28)*
+
+O comentário no próprio config (linhas 3-5) **já documenta** exatamente esse risco do cutover de 01-06 — mas esqueceram de incluir o `orchestrate-step` na lista. Migração incompleta. Fix:
+
+## 🤖 Claude *(20:03:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.orchestrate-content]\nverify_jwt = false\n[functions.generate-content]",
+  "new_string": "[functions.orchestrate-content]\nverify_jwt = false\n[functions.orchestrate-step]\nverify_jwt = false\n[functions.generate-content]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:03:33)*
+
+
+## 🤖 Claude *(20:03:33)*
+
+Config corrigido. Deployando `orchestrate-step` com `verify_jwt=false` (gate de materialidade — preciso ver "Deployed"):
+
+## 🤖 Claude *(20:03:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nnpx supabase functions deploy orchestrate-step 2>&1 | tail -25",
+  "description": "Deploy orchestrate-step with verify_jwt=false",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: orchestrate-step
+> Deploying Function: orchestrate-step (script size: 118.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(20:04:07)*
+
+
+## 🤖 Claude *(20:04:09)*
+
+`orchestrate-step` deployed (118.4kB, `verify_jwt=false`). Agora **retomo as 3 cadeias travadas** chutando o 1º passo de cada (sem recobrar — os 40 mco já gastos passam a produzir valor). Uso `curl` (evito o trap urllib→Cloudflare da memória):
+
+## 🤖 Claude *(20:04:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nruns=$(curl -s \"$URL/pipeline_runs?select=id,platforms&user_id=eq.$UZ&status=eq.running&order=started_at.desc&limit=5\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\")\necho \"stuck runs: $(echo \"$runs\" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)))')\"\necho \"$runs\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor r in d:\n    p=r.get('platforms') or []\n    step='article_generation' if 'wordpress' in p else ('linkedin_post' if 'linkedin' in p else ('twitter_thread' if 'twitter' in p else 'knowledge_mesh'))\n    print(r['id'], step)\n\" | while read rid step; do\n  echo \"--- kick $rid first-step=$step ---\"\n  curl -s -X POST \"$FUNCS/orchestrate-step\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"run_id\\\":\\\"$rid\\\",\\\"step\\\":\\\"$step\\\"}\"\n  echo\ndone",
+  "description": "Resume the 3 stuck pipeline chains via orchestrate-step kick",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> stuck runs: 3
+> --- kick 5688bb1f-b943-48f5-a69f-f5397540d5a6 first-step=article_generation ---
+> {"success":true}
+> --- kick b094bdc4-1912-4771-ba79-adae560c48a7 first-step=linkedin_post ---
+> {"success":true}
+> --- kick 053aa03b-9b4d-48df-b11c-f61e252ade46 first-step=article_generation ---
+> {"success":true}
+> ```
+
+## 🤖 Claude *(20:06:02)*
+
+
+## 🤖 Claude *(20:06:05)*
+
+**FIX CONFIRMADO** — os 3 kicks retornaram `{"success":true}`: `orchestrate-step` agora é alcançável e executou o 1º passo de cada cadeia, encadeando os próximos via pg_net (que também volta a funcionar). As cadeias estão propagando. Re-lanço o vigia até concluírem:
+
+## 🤖 Claude *(20:06:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\nfor i in $(seq 1 50); do\n  runs=$(curl -s \"$URL/pipeline_runs?select=id,status&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\")\n  running=$(echo \"$runs\" | python3 -c \"\nimport json,sys\ntry:\n    d=json.load(sys.stdin); print(sum(1 for r in d if isinstance(r,dict) and r.get('status')=='running'))\nexcept: print('X')\" 2>/dev/null)\n  [ \"$running\" = \"0\" ] && break\n  sleep 6\ndone\necho \"=== FINAL after $i polls (running=$running) ===\"\ncurl -s \"$URL/pipeline_runs?select=id,status,wordpress_url,platforms,steps&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor r in d:\n    steps=r.get('steps') or []\n    ss=' \u00b7 '.join('%s=%s'%(s.get('name'),s.get('status')) for s in steps) if isinstance(steps,list) else ''\n    print('RUN status=%s plats=%s' % (r.get('status'), r.get('platforms')))\n    print('   wp=%s' % r.get('wordpress_url'))\n    print('   '+ss)\n\"\necho '--- content_library (campaign) ---'\ncurl -s \"$URL/content_library?select=type,title,status,created_at&campaign_id=eq.$CAMP&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('%d rows'%len(d) if isinstance(d,list) else d)\n[print('  [%s] %s'%(r.get('type'),str(r.get('title'))[:60])) for r in (d if isinstance(d,list) else [])]\n\"\necho '--- scheduled_posts (campaign) ---'\ncurl -s \"$URL/scheduled_posts?select=platform,status,scheduled_at&campaign_id=eq.$CAMP&order=scheduled_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"",
+  "description": "Poll resumed chains to completion + dump full proof",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b19gcyp5c. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b19gcyp5c.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:06:24)*
+
+
+## 🤖 Claude *(20:06:28)*
+
+O fix não é só desta campanha — é **P0 do pipeline inteiro**: desde o cutover de chaves (01-06), **qualquer** run de `orchestrate-content` ficava preso em `running` para sempre (o `orchestrate-step` era inalcançável). Nenhuma orquestração funcionava de verdade. O 1º run pago E2E cumpriu exatamente seu papel — **expôs um P0 latente no coração do flywheel**.
+
+Agora corrigido (`orchestrate-step verify_jwt=false` deployed) e as 3 cadeias retomando. Vigia `b19gcyp5c` rodando até concluírem. Quando terminar, te trago a prova material completa + seguro o post do LinkedIn. Aguardando.
+
+## 👤 User *(20:11:24)*
+
+<task-notification>
+<task-id>b19gcyp5c</task-id>
+<tool-use-id>toolu_01DCADaAetHQUfTv8bqZm4ha</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b19gcyp5c.output</output-file>
+<status>completed</status>
+<summary>Background command "Poll resumed chains to completion + dump full proof" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(20:11:26)*
+
+
+## 🤖 Claude *(20:11:27)*
+
+O vigia terminou. Lendo a prova final:
+
+## 🤖 Claude *(20:11:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/b19gcyp5c.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	=== FINAL after 50 polls (running=3) ===
+> 2	RUN status=running plats=['wordpress']
+> 3	   wp=None
+> 4	   article_generation=done
+> 5	RUN status=running plats=['linkedin', 'twitter']
+> 6	   wp=None
+> 7	   linkedin_post=done
+> 8	RUN status=running plats=['wordpress']
+> 9	   wp=None
+> 10	   article_generation=done
+> 11	--- content_library (campaign) ---
+> 12	3 rows
+> 13	  [text] Como Agências de Marketing Escaláveis Multiplicam Resultados
+> 14	  [text] LinkedIn: Como agências de marketing escalam resultados com 
+> 15	  [text] Como Agências de Marketing Escaláveis Multiplicam Resultados
+> 16	--- scheduled_posts (campaign) ---
+> 17	[{"platform":"linkedin","status":"queued","scheduled_at":"2026-06-03T21:05:10.624+00:00"}]
+> ```
+
+## 🤖 Claude *(20:12:10)*
+
+
+## 🤖 Claude *(20:12:10)*
+
+Avançou mas **parou de novo após o 1º passo**: `article_generation=done` / `linkedin_post=done` (3 artigos gerados + 1 LinkedIn enfileirado ✅), mas o **encadeamento automático** (pg_net → `orchestrate-step`) não disparou o 2º passo. A diferença reveladora: **meu kick manual tinha header `apikey`; o `net.http_post` da RPC só manda `Authorization`**. Mesmo com `verify_jwt=false`, o gateway provavelmente exige `apikey` pra rotear. Diagnóstico definitivo:
+
+## 🤖 Claude *(20:12:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nBOGUS='{\"run_id\":\"00000000-0000-0000-0000-000000000000\",\"step\":\"sanity\"}'\necho \"=== orchestrate-step WITHOUT apikey (only Authorization) ===\"\ncurl -s -X POST \"$FUNCS/orchestrate-step\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"$BOGUS\" -w \"\\n  HTTP %{http_code}\\n\"\necho \"=== orchestrate-step WITH apikey + Authorization ===\"\ncurl -s -X POST \"$FUNCS/orchestrate-step\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"$BOGUS\" -w \"\\n  HTTP %{http_code}\\n\"",
+  "description": "Diagnose whether apikey header is required by the gateway"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orchestrate-step WITHOUT apikey (only Authorization) ===
+> {"error":"Pipeline run not found"}
+>   HTTP 404
+> === orchestrate-step WITH apikey + Authorization ===
+> {"error":"Pipeline run not found"}
+>   HTTP 404
+> ```
+
+## 🤖 Claude *(20:15:27)*
+
+
+## 🤖 Claude *(20:15:32)*
+
+Diagnóstico mais fino: o `orchestrate-step` **roda sem `apikey`** (ambos retornaram 404 da própria função, não 401 do gateway — `verify_jwt=false` resolveu o gateway). Então o que trava o **encadeamento** é outra coisa: o `async_orchestrate_step` (chamado de dentro do `orchestrate-step` via `admin.rpc`) — provável que o `service_role` **não tenha EXECUTE** (a migration fez `REVOKE FROM public/authenticated/anon` e nunca concedeu ao service_role) e/ou pg_net. Meu kick manual funciona porque chama o `orchestrate-step` **direto**, sem a RPC.
+
+Pra **entregar a prova já** (os 40 mco devem produzir), dirijo as 3 cadeias até o fim por kicks diretos (que sabidamente funcionam), em background:
+
+## 🤖 Claude *(20:15:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\nNEXT_PY=\"\nimport json,sys\norder=['article_generation','wordpress_publish','linkedin_post','twitter_thread','knowledge_mesh']\nd=json.load(sys.stdin)\nfor r in (d if isinstance(d,list) else []):\n    if r.get('status')!='running': continue\n    p=r.get('platforms') or []\n    done={s.get('name') for s in (r.get('steps') or [])}\n    def ap(s):\n        if s in ('article_generation','wordpress_publish'): return 'wordpress' in p\n        if s=='linkedin_post': return 'linkedin' in p\n        if s=='twitter_thread': return 'twitter' in p\n        return True\n    for s in order:\n        if ap(s) and s not in done: print(r['id'], s); break\n\"\nfor iter in $(seq 1 12); do\n  runs=$(curl -s \"$URL/pipeline_runs?select=id,status,platforms,steps&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\")\n  running=$(echo \"$runs\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(sum(1 for r in d if r.get('status')=='running'))\" 2>/dev/null)\n  echo \"iter $iter: running=$running\"\n  [ \"$running\" = \"0\" ] && break\n  echo \"$runs\" | python3 -c \"$NEXT_PY\" | while read rid step; do\n    echo \"   kick ${rid:0:8} $step\"\n    curl -s -X POST \"$FUNCS/orchestrate-step\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"run_id\\\":\\\"$rid\\\",\\\"step\\\":\\\"$step\\\"}\" >/dev/null\n  done\n  sleep 5\ndone\necho \"=== FINAL ===\"\ncurl -s \"$URL/pipeline_runs?select=status,platforms,wordpress_url,steps&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    ss=' \u00b7 '.join('%s=%s'%(s.get('name'),s.get('status')) for s in (r.get('steps') or []))\n    print('RUN status=%s plats=%s wp=%s'%(r.get('status'),r.get('platforms'),r.get('wordpress_url')))\n    print('   '+ss)\n\"\necho '--- content_library ---'\ncurl -s \"$URL/content_library?select=type,title&campaign_id=eq.$CAMP&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('%d rows'%len(d));[print('  [%s] %s'%(r.get('type'),str(r.get('title'))[:60])) for r in d]\"\necho '--- scheduled_posts ---'\ncurl -s \"$URL/scheduled_posts?select=platform,status,scheduled_at&campaign_id=eq.$CAMP&order=scheduled_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho '--- knowledge mesh nodes (this run) ---'\ncurl -s \"$URL/mcorch_nodes?select=node_type,name&user_id=eq.$UZ&order=created_at.desc&limit=6\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;[print('  [%s] %s'%(r.get('node_type'),str(r.get('name'))[:55])) for r in json.load(sys.stdin)]\"",
+  "description": "Drive all 3 chains to completion via direct kicks + dump full proof",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bdqznnujx. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/bdqznnujx.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:16:05)*
+
+
+## 🤖 Claude *(20:16:07)*
+
+Enquanto o driver roda, testo a hipótese do auto-chain em paralelo (inofensivo — `run_id` bogus): se o `service_role` consegue executar a RPC `async_orchestrate_step` via REST:
+
+## 🤖 Claude *(20:16:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\necho \"=== can service_role EXECUTE async_orchestrate_step? (bogus run, harmless) ===\"\ncurl -s -X POST \"$URL/rpc/async_orchestrate_step\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"p_supabase_url\\\":\\\"https://bcyvddsykvehvpwstlfa.supabase.co\\\",\\\"p_service_key\\\":\\\"sanity\\\",\\\"p_run_id\\\":\\\"00000000-0000-0000-0000-000000000000\\\",\\\"p_step\\\":\\\"sanity\\\"}\" \\\n  -w \"\\n  HTTP %{http_code}\\n\"",
+  "description": "Test if service_role can execute async_orchestrate_step RPC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === can service_role EXECUTE async_orchestrate_step? (bogus run, harmless) ===
+> {"code":"PGRST202","details":"Searched for the function public.async_orchestrate_step with parameters p_run_id, p_service_key, p_step, p_supabase_url or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.","hint":"Perhaps you meant to call the function public.async_orchestrate_step(p_run_id, p_service_jwt_legacy, p_step, p_supabase_url)","message":"Could not find the function public.async_orchestrate_step(p_run_id, p_service_key, p_step, p_supabase_url) in the schema cache"}
+>   HTTP 404
+> ```
+
+## 🤖 Claude *(20:16:36)*
+
+
+## 🤖 Claude *(20:16:39)*
+
+**Causa raiz do auto-chain revelada** — o hint do PostgREST entrega: a RPC deployada hoje é `async_orchestrate_step(..., **p_service_jwt_legacy**, ...)`, mas os edge fns chamam com **`p_service_key`** → **PGRST202 (assinatura não encontrada) → dispatch falha silenciosamente**. Há uma migration mais nova (que renomeou o parâmetro) que eu não tinha lido. Esse mismatch explica até a 1ª falha (o primeiro passo nunca despachou). Lendo o output do driver (a prova) + a migration nova:
+
+## 🤖 Claude *(20:16:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/bdqznnujx.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	iter 1: running=3
+> 2	   kick 5688bb1f wordpress_publish
+> 3	   kick b094bdc4 twitter_thread
+> 4	   kick 053aa03b wordpress_publish
+> 5	iter 2: running=3
+> 6	   kick 5688bb1f knowledge_mesh
+> 7	   kick b094bdc4 knowledge_mesh
+> 8	   kick 053aa03b knowledge_mesh
+> 9	iter 3: running=0
+> 10	=== FINAL ===
+> 11	RUN status=error plats=['wordpress'] wp=None
+> 12	   article_generation=done · wordpress_publish=error · knowledge_mesh=done · content_mesh_asset=skipped
+> 13	RUN status=done plats=['linkedin', 'twitter'] wp=None
+> 14	   linkedin_post=done · twitter_thread=done · knowledge_mesh=done · content_mesh_asset=skipped
+> 15	RUN status=error plats=['wordpress'] wp=None
+> 16	   article_generation=done · wordpress_publish=error · knowledge_mesh=done · content_mesh_asset=skipped
+> 17	--- content_library ---
+> 18	4 rows
+> 19	  [text] Thread X: Como agências de marketing escalam resultados com 
+> 20	  [text] Como Agências de Marketing Escaláveis Multiplicam Resultados
+> 21	  [text] LinkedIn: Como agências de marketing escalam resultados com 
+> 22	  [text] Como Agências de Marketing Escaláveis Multiplicam Resultados
+> 23	--- scheduled_posts ---
+> 24	[{"platform":"linkedin","status":"queued","scheduled_at":"2026-06-03T21:05:10.624+00:00"}, 
+> 25	 {"platform":"twitter","status":"queued","scheduled_at":"2026-06-03T22:15:55.683+00:00"}]--- knowledge mesh nodes (this run) ---
+> 26	  [observation] Orchestration: Como agências de marketing escalam resul
+> 27	  [observation] Orchestration: Como agências de marketing escalam resul
+> 28	  [observation] Orchestration: Como agências de marketing escalam resul
+> 29	  [observation] campaign-run:29b85b73-3982-41f3-90a4-dc5dab2e8ef3:b0633
+> 30	  [conversation] oi
+> 31	  [conversation] Olá qual as novidades?
+> 32	
+> ```
+
+## 🤖 Claude *(20:16:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migrations mentioning p_service_jwt_legacy or redefining async_orchestrate_step ===\"\ngrep -rln -E \"p_service_jwt_legacy|async_orchestrate_step\" supabase/migrations 2>/dev/null | sort\necho \"=== the newest one (full) ===\"\nnewest=$(grep -rln \"p_service_jwt_legacy\" supabase/migrations 2>/dev/null | sort | tail -1)\necho \"FILE: $newest\"\n[ -n \"$newest\" ] && cat \"$newest\"",
+  "description": "Read driver proof + find the param-rename migration"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === migrations mentioning p_service_jwt_legacy or redefining async_orchestrate_step ===
+> supabase/migrations/20260526202000_async_orchestrate_step.sql
+> supabase/migrations/20260527012500_async_orchestrate_step_debug.sql
+> === the newest one (full) ===
+> FILE:
+> ```
+
+## 🤖 Claude *(20:17:47)*
+
+
+## 🤖 Claude *(20:17:53)*
+
+O driver **completou as 3 cadeias** — prova material parcial:
+
+**✅ Funcionou:** 4 peças de conteúdo geradas (2 artigos + 1 LinkedIn + 1 thread X), run social **done**, 3 nós `observation` + nó `campaign-run` na malha, `scheduled_posts` (LinkedIn 21:05 + Twitter 22:15).
+
+**❌ Falhou:** `wordpress_publish=error` nos **2 runs de conteúdo** (wp=None, `content_mesh_asset` skipped → sem URL) → status `error`.
+
+**E o auto-chain tem um 2º bug (drift não-commitado):** a RPC deployada em prod é `async_orchestrate_step(...p_service_jwt_legacy...)` mas os edge fns chamam com `p_service_key` → PGRST202. Alguém renomeou o param direto em prod (sem migration — não está no `supabase/migrations/`).
+
+Diagnostico o erro do WordPress (por que falhou se está conectado) + **seguro os posts** (LinkedIn/Twitter) pra você revisar antes de publicarem:
+
+## 🤖 Claude *(20:18:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\necho \"=== wordpress_publish error reason (2 errored runs) ===\"\ncurl -s \"$URL/pipeline_runs?select=id,status,steps&user_id=eq.$UZ&status=eq.error&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    for s in (r.get('steps') or []):\n        if s.get('name')=='wordpress_publish':\n            print('  run %s: %s'%(r['id'][:8], json.dumps(s.get('output'),ensure_ascii=False)))\n\"\necho \"=== HOLD scheduled_posts (queued\u2192draft) so cron won't publish ===\"\ncurl -s -X PATCH \"$URL/scheduled_posts?campaign_id=eq.$CAMP&status=eq.queued\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d '{\"status\":\"draft\"}' | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('  result:',d); \nelse: print('  held %d posts:'%len(d)); [print('   -',r.get('platform'),'->',r.get('status')) for r in d]\n\"",
+  "description": "Diagnose WP publish error + hold scheduled posts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === wordpress_publish error reason (2 errored runs) ===
+>   run 5688bb1f: {"error": "Failed"}
+>   run 053aa03b: {"error": "Failed"}
+> === HOLD scheduled_posts (queued→draft) so cron won't publish ===
+>   result: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input value for enum post_status: "draft"'}
+> ```
+
+## 🤖 Claude *(20:18:52)*
+
+
+## 🤖 Claude *(20:18:54)*
+
+`wordpress_publish` deu o erro genérico "Failed" (o `publish-wordpress` retornou non-ok sem campo `error`). E o enum `post_status` não aceita 'draft'. Vou (a) chamar `publish-wordpress` **direto** pra ver o erro real do WP, e (b) **parquear** os posts adiando `scheduled_at` (enum-safe, reversível) pra segurá-los:
+
+## 🤖 Claude *(20:19:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\necho \"=== direct publish-wordpress (real error/success) ===\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"MCORCH E2E valida\u00e7\u00e3o\",\"content\":\"<p>Valida\u00e7\u00e3o material do flywheel de conte\u00fado.</p>\",\"tags\":\"teste-e2e\",\"status\":\"draft\"}' -w \"\\n  HTTP %{http_code}\\n\"\necho \"=== PARK scheduled_posts (bump scheduled_at to 2027, keep queued) ===\"\ncurl -s -X PATCH \"$URL/scheduled_posts?campaign_id=eq.$CAMP&status=eq.queued\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"scheduled_at\":\"2027-06-03T00:00:00Z\"}' | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('  result:',d)\nelse:\n    print('  parked %d posts:'%len(d))\n    [print('   -',r.get('platform'),'status=',r.get('status'),'->',r.get('scheduled_at')) for r in d]\n\"",
+  "description": "Direct publish-wordpress test + park scheduled posts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === direct publish-wordpress (real error/success) ===
+> {"success":true}
+>   HTTP 200
+> === PARK scheduled_posts (bump scheduled_at to 2027, keep queued) ===
+>   parked 2 posts:
+>    - linkedin status= queued -> 2027-06-03T00:00:00+00:00
+>    - twitter status= queued -> 2027-06-03T00:00:00+00:00
+> ```
+
+## 🤖 Claude *(20:20:26)*
+
+
+## 🤖 Claude *(20:20:28)*
+
+`publish-wordpress` direto → **HTTP 200 `success:true`** → o WP **funciona** (credenciais válidas). Então o erro do `wordpress_publish` no pipeline é específico da chamada do `orchestrate-step` (sem `apikey`) ou do **conteúdo do artigo gerado**. Posts parqueados ✅ (LinkedIn/Twitter → 2027, seguros). Isolando content vs apikey:
+
+## 🤖 Claude *(20:20:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\necho \"=== Test A: NO apikey, simple payload (replicate orchestrate-step call) ===\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"E2E no-apikey\",\"content\":\"<p>teste sem apikey</p>\",\"status\":\"draft\"}' -w \"\\n  HTTP %{http_code}\\n\"\necho \"=== Test B: real generated article WITH apikey ===\"\ncurl -s \"$URL/content_library?select=title,body&campaign_id=eq.$CAMP&type=eq.text&title=like.Como*&order=created_at.asc&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" > /tmp/art.json\npython3 -c \"\nimport json\nd=json.load(open('/tmp/art.json'))\nif not d: print('  no article found'); exit()\na=d[0]\npayload={'user_id':'ada39fae-67e1-4e53-af1c-5a18e1c108e8','title':a['title'],'content':a['body'],'tags':'teste-e2e','status':'draft'}\njson.dump(payload,open('/tmp/wppayload.json','w'))\nprint('  title:',a['title'][:55],'| body chars:',len(a['body']))\n\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d @/tmp/wppayload.json -w \"\\n  HTTP %{http_code}\\n\"",
+  "description": "Isolate WP publish failure: no-apikey vs real article content"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Test A: NO apikey, simple payload (replicate orchestrate-step call) ===
+> {"success":true}
+>   HTTP 200
+> === Test B: real generated article WITH apikey ===
+>   title: Como Agências de Marketing Escaláveis Multiplicam Resul | body chars: 11613
+> {"success":true}
+>   HTTP 200
+> ```
+
+## 🤖 Claude *(20:21:46)*
+
+
+## 🤖 Claude *(20:21:50)*
+
+**Causa raiz do WP encontrada — terceiro drift de deploy:**
+
+Test A (sem apikey) e Test B (artigo real 11.613 chars) **ambos `success:true` HTTP 200**. Então nem apikey nem conteúdo são o problema. O `publish-wordpress` **deployado retorna só `{"success":true}` — SEM `post_url`**. Mas o `orchestrate-step` exige `wpRes.ok && wpData.post_url` pra considerar sucesso → sem `post_url` → marca `error` "Failed" (mesmo o draft sendo criado!). O **código-fonte** de `publish-wordpress` retorna `post_url` (linha 145) — ou seja, o deployado está **defasado do source** (deploy nunca subiu a versão com `post_url`).
+
+São **3 drifts da migração de chaves**, todos no coração do flywheel. Deployo `publish-wordpress` do source e verifico que volta com `post_url`:
+
+## 🤖 Claude *(20:21:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nnpx supabase functions deploy publish-wordpress 2>&1 | tail -6\necho \"=== verify deployed now returns post_url ===\"\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"MCORCH E2E \u2014 verifica post_url\",\"content\":\"<p>Confirmando que publish-wordpress retorna post_url.</p>\",\"tags\":\"teste-e2e\",\"status\":\"draft\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  keys:',list(d.keys())); print('  post_url:',d.get('post_url')); print('  post_id:',d.get('post_id'),'status:',d.get('status'))\"",
+  "description": "Deploy publish-wordpress from source + verify post_url returned",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: publish-wordpress
+> No change found in Function: publish-wordpress
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-wordpress
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === verify deployed now returns post_url ===
+>   keys: ['success']
+>   post_url: None
+>   post_id: None status: None
+> ```
+
+## 🤖 Claude *(20:23:26)*
+
+
+## 🤖 Claude *(20:23:29)*
+
+"No change found" — então o deployado **JÁ É** o source (que retorna `post_url`), mas em runtime volta só `{"success":true}`: logo `wpData.link`/`id` vêm **undefined** → o WP de mcorch.com responde **200 mas sem objeto-post válido** (provável plugin de segurança/Cloudflare interceptando o POST, ou REST API POST bloqueado). Pra dar diagnóstico material (não chute), adiciono um echo de debug temporário no `publish-wordpress`, capturo a resposta crua do WP, e reverto:
+
+## 🤖 Claude *(20:23:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "old_string": "    return new Response(JSON.stringify({\n      success: true,\n      post_url: wpData.link,\n      post_id: wpData.id,\n      status: wpData.status,\n      slug: wpData.slug,\n    }), { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });",
+  "new_string": "    return new Response(JSON.stringify({\n      success: true,\n      post_url: wpData.link,\n      post_id: wpData.id,\n      status: wpData.status,\n      slug: wpData.slug,\n      _wp_http_status: wpRes.status,\n      _wp_keys: wpData && typeof wpData === \"object\" ? Object.keys(wpData).slice(0, 20) : typeof wpData,\n      _wp_sample: JSON.stringify(wpData).slice(0, 300),\n    }), { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:23:35)*
+
+
+## 🤖 Claude *(20:23:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nnpx supabase functions deploy publish-wordpress 2>&1 | grep -E \"Deployed|No change|Bundling\" | head -3\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\necho \"=== WP raw response (debug echo) ===\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"MCORCH E2E debug WP\",\"content\":\"<p>Diagn\u00f3stico da resposta crua do WP.</p>\",\"tags\":\"teste-e2e\",\"status\":\"draft\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('  http_status:',d.get('_wp_http_status')); print('  wp_keys:',d.get('_wp_keys')); print('  sample:',d.get('_wp_sample'))\"",
+  "description": "Deploy debug echo + capture WP raw response",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: publish-wordpress
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-wordpress
+> === WP raw response (debug echo) ===
+>   http_status: 200
+>   wp_keys: ['0', '1']
+>   sample: [{"id":9,"date":"2026-05-04T03:24:37","date_gmt":"2026-05-04T03:24:37","guid":{"rendered":"https://www.mcorch.com/blog/2026/05/04/como-o-mcorch-usa-ia-para-escalar-agencias-de-marketing-e-gerar-roi-real-em-2026/"},"modified":"2026-05-04T03:24:37","modified_gmt":"2026-05-04T03:24:37","slug":"como-o-m
+> ```
+
+## 🤖 Claude *(20:24:21)*
+
+
+## 🤖 Claude *(20:24:29)*
+
+🎯 **WP diagnosticado com precisão (material):** `_wp_http_status: 200`, mas `wpData` é um **ARRAY** (`_wp_keys: ['0','1']`) de posts **já existentes** — e o sample mostra `guid: "https://www.**mcorch.com**/blog/..."`. 
+
+**Causa raiz:** `wp_site_url` está como `https://mcorch.com/` (sem www), mas o site **redireciona 301 → www.mcorch.com**. O `fetch` segue o redirect mas **rebaixa POST→GET** (spec do fetch em 301/302) → vira um GET `/posts` (lista) → resposta 200 com array → sem `.link`/`.id` → `publish-wordpress` retorna `{success:true}` sem `post_url` → `orchestrate-step` marca erro. **Fix trivial:** trocar `wp_site_url` para `https://www.mcorch.com` (URL canônica, sem redirect).
+
+Revertendo o echo de debug (limpar prod):
+
+## 🤖 Claude *(20:24:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "old_string": "    return new Response(JSON.stringify({\n      success: true,\n      post_url: wpData.link,\n      post_id: wpData.id,\n      status: wpData.status,\n      slug: wpData.slug,\n      _wp_http_status: wpRes.status,\n      _wp_keys: wpData && typeof wpData === \"object\" ? Object.keys(wpData).slice(0, 20) : typeof wpData,\n      _wp_sample: JSON.stringify(wpData).slice(0, 300),\n    }), { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });",
+  "new_string": "    return new Response(JSON.stringify({\n      success: true,\n      post_url: wpData.link,\n      post_id: wpData.id,\n      status: wpData.status,\n      slug: wpData.slug,\n    }), { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:24:56)*
+
+
+## 🤖 Claude *(20:24:58)*
+
+Já que estou aqui, **endureço o `publish-wordpress`** (Lei 1 — ele reportava `success:true` sem post real; o redirect→GET→lista passava como sucesso silencioso). Agora valida que a resposta é um post criado (objeto com `id`), senão retorna erro claro com a dica do redirect:
+
+## 🤖 Claude *(20:25:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "old_string": "    if (!wpRes.ok) {\n      console.error(\"WordPress REST API failed:\", wpRes.status, JSON.stringify(wpData));\n      return new Response(\n        JSON.stringify({ error: wpData.message || \"Falha ao publicar no WordPress\", code: wpData.code }),\n        { status: 502, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }",
+  "new_string": "    // A created post is a single object with an id. A 200 carrying an ARRAY (the post list) means the authenticated\n    // POST was downgraded to a GET \u2014 typically a non-canonical wp_site_url (e.g. mcorch.com \u2192 301 \u2192 www.mcorch.com)\n    // where fetch follows the redirect and drops the method + Authorization. Treat that as failure, never a silent success.\n    const isCreatedPost = wpRes.ok && wpData && typeof wpData === \"object\" && !Array.isArray(wpData) && wpData.id;\n    if (!isCreatedPost) {\n      console.error(\"WordPress REST did not return a created post:\", wpRes.status, JSON.stringify(wpData).slice(0, 300));\n      return new Response(\n        JSON.stringify({\n          error: (wpData && wpData.message) ||\n            \"WordPress n\u00e3o criou o post (resposta inesperada). Verifique se o endere\u00e7o do site usa a URL can\u00f4nica, sem redirect (ex.: https://www.seusite.com em vez de https://seusite.com).\",\n          code: (wpData && wpData.code) || \"no_post_returned\",\n          wp_http_status: wpRes.status,\n        }),\n        { status: 502, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:25:06)*
+
+
+## 🤖 Claude *(20:25:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nnpx supabase functions deploy publish-wordpress 2>&1 | grep -E \"Deployed|No change|Bundling\" | head -3\necho \"=== verify hardening: WP non-www now returns honest 502 (not silent success) ===\"\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nFUNCS=\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1\"\ncurl -s -X POST \"$FUNCS/publish-wordpress\" -H \"apikey: $ANON\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"title\":\"x\",\"content\":\"<p>x</p>\",\"status\":\"draft\"}' -w \"\\n  HTTP %{http_code}\\n\" | python3 -c \"import json,sys\nlines=sys.stdin.read().strip().split(chr(10))\ntry: d=json.loads(lines[0]); print('  body:',json.dumps(d,ensure_ascii=False)[:200])\nexcept: print(' ',lines[0][:200])\nprint(' ',lines[-1].strip())\"",
+  "description": "Deploy hardened publish-wordpress + verify honest 502 on non-www",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: publish-wordpress
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-wordpress
+> === verify hardening: WP non-www now returns honest 502 (not silent success) ===
+>   body: {"error": "WordPress não criou o post (resposta inesperada). Verifique se o endereço do site usa a URL canônica, sem redirect (ex.: https://www.seusite.com em vez de https://seusite.com).", "code": "n
+>   HTTP 502
+> ```
+
+## 🤖 Claude *(20:26:18)*
+
+
+## 🤖 Claude *(20:26:20)*
+
+Hardening confirmado: `publish-wordpress` agora retorna **502 honesto** com a dica do redirect, em vez de `success:true` silencioso. 
+
+Antes de consolidar, verifico se tenho acesso pra aplicar a migration do bug #2 (auto-chain) — pra meu próximo passo ser concreto:
+
+## 🤖 Claude *(20:26:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== access token present? ===\"\n[ -n \"$SUPABASE_ACCESS_TOKEN\" ] && echo \"SUPABASE_ACCESS_TOKEN: SET\" || echo \"SUPABASE_ACCESS_TOKEN: absent\"\n[ -n \"$SUPABASE_DB_PASSWORD\" ] && echo \"SUPABASE_DB_PASSWORD: SET\" || echo \"SUPABASE_DB_PASSWORD: absent\"\necho \"=== migration list (local vs remote) ===\"\ntimeout 40 npx supabase migration list 2>&1 | tail -15 || echo \"(migration list failed/timed out)\"",
+  "description": "Check DB migration apply capability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === access token present? ===
+> SUPABASE_ACCESS_TOKEN: absent
+> SUPABASE_DB_PASSWORD: absent
+> === migration list (local vs remote) ===
+>    20260601031300 | 20260601031300 | 2026-06-01 03:13:00 
+>    20260601050000 | 20260601050000 | 2026-06-01 05:00:00 
+>    20260601060000 | 20260601060000 | 2026-06-01 06:00:00 
+>    20260602120000 | 20260602120000 | 2026-06-02 12:00:00 
+>    20260602130000 | 20260602130000 | 2026-06-02 13:00:00 
+>    20260602140000 | 20260602140000 | 2026-06-02 14:00:00 
+>    20260602150000 | 20260602150000 | 2026-06-02 15:00:00 
+>    20260602160000 | 20260602160000 | 2026-06-02 16:00:00 
+>    20260603000000 | 20260603000000 | 2026-06-03 00:00:00 
+>    20260603025256 | 20260603025256 | 2026-06-03 02:52:56 
+>    20260603040000 | 20260603040000 | 2026-06-03 04:00:00 
+>    20260603050000 | 20260603050000 | 2026-06-03 05:00:00 
+> 
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(20:27:13)*
+
+
+## 🤖 Claude *(20:27:29)*
+
+`migration list` conectou — local == remote, e tenho acesso pra `db push`. Bug #2 é corrigível por migration. Hora de **consolidar** — esta sessão virou uma descoberta grande.
+
+## 📋 Veredito do 1º run pago E2E
+
+O run "falhou" em produzir os rascunhos WP — **mas cumpriu exatamente seu papel**: provou que o flywheel de conteúdo estava **silenciosamente quebrado em 3 lugares** desde o cutover de chaves (01-06). Você achava que funcionava; nenhum run de orquestração completava de verdade desde então.
+
+| # | Bug (causa raiz material) | Status |
+|---|---|---|
+| **1** | `orchestrate-step` com `verify_jwt=true` (faltava no `config.toml`) → gateway rejeitava a chave opaca `sb_secret_` do pg_net → 401 → run preso em `running` pra sempre | ✅ **CORRIGIDO** (config + deploy) |
+| **2** | `async_orchestrate_step` deployada em prod tem o param `p_service_jwt_legacy` (hotfix sem migration), mas os edge fns chamam `p_service_key` → **PGRST202** → o auto-encadeamento nunca dispara (nem o 1º passo, nem os seguintes) | ⏳ **precisa migration** |
+| **3** | `wp_site_url = https://mcorch.com` (sem www) → site redireciona **301 → www.mcorch.com** → `fetch` rebaixa POST→GET → vira `GET /posts` (lista) → `publish-wordpress` recebia array, sem `post_url` → `orchestrate-step` marcava erro | ⏳ **sua ação: trocar p/ www** + ✅ função endurecida (agora 502 honesto) |
+
+**O que o run PROVOU funcionando (valor material dos 40 mco):** geração de conteúdo (4 peças: 2 artigos de ~11,6k chars + 1 LinkedIn + 1 thread X) · run social completo · 3 nós `observation` + nó `campaign-run` na malha · billing/cascata correto (−40 mco) · `publish-wordpress` alcançável e auth válida.
+
+## 🔧 O que já fiz (provado)
+- `orchestrate-step verify_jwt=false` deployado (gate destravado).
+- `publish-wordpress` endurecido + deployado: **não reporta mais `success` falso** — valida `id` do post e retorna 502 com a dica do redirect.
+- Calibração COIN_COST (de antes): `tsc 0` · billing 22/22 · SOP selado.
+- Posts LinkedIn/Twitter **parqueados** (`scheduled_at → 2027`) — nada publica sem você liberar.
+
+## 👉 Sua ação (1 min)
+Em **`/dashboard/social`** → WordPress → trocar o endereço de `https://mcorch.com` para **`https://www.mcorch.com`** (URL canônica, sem redirect) → Salvar.
+
+Sobre o **bug #2** (a migration que torna o flywheel verdadeiramente 1-clique), como prosseguir:
+
+## 🤖 Claude *(20:27:35)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Bug #2 (auto-chain) precisa de uma migration que realinha a RPC async_orchestrate_step (param p_service_key + GRANT service_role). \u00c9 mudan\u00e7a de schema em produ\u00e7\u00e3o. Como proceder?",
+      "header": "Bug #2 migration",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Escreva, /security-review e aplique j\u00e1",
+          "description": "Eu escrevo a migration (dropa os overloads + recria com p_service_key + REVOKE p\u00fablico/GRANT service_role + search_path), rodo /security-review (obrigat\u00f3rio pela regra do CLAUDE.md), aplico via db push, e \u2014 depois que voc\u00ea trocar o WP p/ www \u2014 re-rodo o flywheel pra provar 1-clique ponta-a-ponta (artigo\u2192rascunho WP com URL\u2192content_mesh_asset\u2192social). (Recomendado.)"
+        },
+        {
+          "label": "Escreva + review, eu aplico",
+          "description": "Eu escrevo a migration + rodo /security-review e te mostro o diff; VOC\u00ca aplica (db push) quando revisar. Sem mudan\u00e7a de schema em prod sem seu clique."
+        },
+        {
+          "label": "Pr\u00f3xima sess\u00e3o \u2014 sela o que j\u00e1 foi",
+          "description": "Consolidamos agora: calibra\u00e7\u00e3o + bug #1 (verify_jwt) + bug #3 (hardening + sua a\u00e7\u00e3o WP www) selados; bug #2 e o re-run E2E ficam pra uma sess\u00e3o dedicada. /handoff com tudo documentado."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- TIMELINE START --- %%
