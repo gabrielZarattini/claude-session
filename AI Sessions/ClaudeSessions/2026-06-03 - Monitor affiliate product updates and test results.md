@@ -2484,6 +2484,3180 @@ The dispatch pattern is clear (`fetch` with `Authorization: authHeader`). Let me
 > 215	        await admin.from("meta_posts").insert({
 > ```
 
+## 🤖 Claude *(14:32:02)*
+
+
+## 🤖 Claude *(14:32:04)*
+
+I now have everything material: dispatch pattern (`fetch` + `Authorization: authHeader`), observation-node shape, `campaigns.platforms` is `social_platform[]` (so I derive platforms from each step's `channel`, not raw). 
+
+One architecture decision worth flagging: `orchestrate-content` is heavy (3 LLM gens + image + publish, ~60-120s each). Sequential awaits would blow the edge wall-clock for N>1 steps. So I'll dispatch **in parallel** (`Promise.allSettled`) — each orchestrate-content runs in its own edge instance, so total wall-clock ≈ slowest step, not the sum. That honors "per step invoke + sync status" while staying within edge limits. Writing the function now.
+
+## 🤖 Claude *(14:32:05)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "campaign-run edge fn (MVP-3)",
+  "summary": "Build + deploy + verify the campaign-run edge function (FR-MH-004) \u2014 faithful mcoCoins cascade"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "campaign-run edge fn (MVP-3)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(14:32:08)*
+
+
+## 🤖 Claude *(14:32:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts",
+  "content": "// campaign-run \u2014 marketing-hub FR-MH-004 (BoK SSOT: docs/bok/marketing-hub/04-frd.md \u00a7\"POST /functions/v1/campaign-run\"\n// + 05-sdd.md \u00a7\"POST /functions/v1/campaign-run\"). JWT-guarded \u00b7 debits CAMPAIGN_RUN (10 mcoCoins) atomically as the\n// orchestration FEE (deduct_mco_coins RPC) AFTER ownership check \u00b7 then dispatches each ordered campaign_step to\n// orchestrate-content (which SELF-BILLS its own ORCHESTRATION_RUN=10), forwarding the caller's JWT so the whole cascade\n// bills the SAME tenant under RLS. Faithful cascade cost = 10 (fee) + 10\u00d7N (dispatched steps). Syncs each\n// campaign_steps.status (idle\u2192running\u2192done|error|blocked) + inserts a campaign-level mesh observation + an infra pulse.\n//\n// DISPATCH IS PARALLEL (Promise.allSettled): each orchestrate-content runs in its OWN edge instance, so the wall-clock\n// is ~the slowest single step, not the sum \u2014 sequential awaits would blow the edge time budget for N>1 heavy steps.\n// CALIBRATION (OTD-MCOIN-CALIBRATION): the 10/10 figures are round, not $-calibrated \u2014 see src/lib/billing.ts.\n// SCALING CEILING (OTD-CAMPAIGN-RUN-ASYNC): synchronous fan-out is an MVP simplification; a large campaign needs an\n// async queue + per-step webhook callback. Bounded here by MAX_PARALLEL_STEPS (rest left idle for a follow-up run).\nimport { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nconst CAMPAIGN_RUN_COST = 10; // mirrors COIN_COSTS.CAMPAIGN_RUN \u2014 the orchestration fee (Deno can't import src/lib).\nconst STEP_TIMEOUT_MS = 120_000; // per orchestrate-content dispatch (it generates content + image + publishes).\nconst MAX_PARALLEL_STEPS = 8;    // safety bound on simultaneous heavy dispatches; extras left idle (reported in mesh).\n\ninterface CampaignRow {\n  id: string;\n  user_id: string;\n  name: string;\n  intent: string | null;\n  status: string;\n  mesh_node_id: string | null;\n}\n\ninterface StepRow {\n  id: string;\n  position: number;\n  channel: string;\n  action: string;\n  status: string;\n}\n\n// channel -> orchestrate-content platform names. 'email' is nurture-dispatch territory (SDD \u00a73), not servable here.\nfunction channelToPlatforms(channel: string): string[] {\n  switch (channel) {\n    case \"content\": return [\"wordpress\"];\n    case \"affiliate\": return [\"wordpress\"]; // affiliate links attach to the WP article (orchestrate-content step 5).\n    case \"social\": return [\"linkedin\", \"twitter\"];\n    default: return []; // email / unknown -> not dispatchable via orchestrate-content.\n  }\n}\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (body: unknown, status = 200) =>\n    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const anonKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n  const admin = createClient(url, serviceKey);\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Missing authorization\" }, 401);\n\n    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authError } = await userClient.auth.getUser();\n    if (authError || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const { campaign_id } = await req.json().catch(() => ({}));\n    if (!campaign_id || typeof campaign_id !== \"string\") return json({ error: \"campaign_id \u00e9 obrigat\u00f3rio\" }, 422);\n\n    // existence + ownership (tenant-scoped); 404 also covers another tenant's campaign.\n    const { data: campaign } = await admin\n      .from(\"campaigns\")\n      .select(\"id, user_id, name, intent, status, mesh_node_id\")\n      .eq(\"id\", campaign_id).eq(\"user_id\", user.id).maybeSingle();\n    if (!campaign) return json({ error: \"Campanha n\u00e3o encontrada\" }, 404);\n\n    // ordered steps (ascending position) \u2014 a campaign with no steps is a validation failure.\n    const { data: steps } = await admin\n      .from(\"campaign_steps\")\n      .select(\"id, position, channel, action, status\")\n      .eq(\"campaign_id\", campaign_id).eq(\"user_id\", user.id)\n      .order(\"position\", { ascending: true });\n    if (!steps || steps.length === 0) return json({ error: \"Campanha n\u00e3o tem passos para executar\" }, 422);\n\n    // mcoCoins gatekeeper: the orchestration FEE (10) only \u2014 each dispatched step self-bills its own 10 (cascade).\n    const { data: bal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    if ((bal?.mco_balance ?? 0) < CAMPAIGN_RUN_COST) return json({ error: \"Saldo insuficiente de mcoCoins\" }, 402);\n    const { error: deductErr } = await admin.rpc(\"deduct_mco_coins\", { p_user_id: user.id, p_amount: CAMPAIGN_RUN_COST });\n    if (deductErr) return json({ error: \"Saldo insuficiente de mcoCoins\" }, 402);\n\n    const run_id = crypto.randomUUID();\n    const topic = campaign.intent?.trim() || campaign.name; // orchestrate-content requires a topic; name is NOT NULL.\n\n    // running a draft makes the campaign active (best-effort; not in the response contract).\n    await admin.from(\"campaigns\").update({ status: \"active\" }).eq(\"id\", campaign_id).eq(\"user_id\", user.id);\n\n    const rows = steps as StepRow[];\n    // Non-servable channels (email/unknown): block up front \u2014 never dispatched, never charged.\n    const blocked = rows.filter((s) => channelToPlatforms(s.channel).length === 0);\n    for (const s of blocked) {\n      await admin.from(\"campaign_steps\").update({ status: \"blocked\" }).eq(\"id\", s.id).eq(\"user_id\", user.id);\n    }\n    const dispatchable = rows.filter((s) => channelToPlatforms(s.channel).length > 0).slice(0, MAX_PARALLEL_STEPS);\n    const cappedOut = rows.filter((s) => channelToPlatforms(s.channel).length > 0).length - dispatchable.length;\n\n    const orchestrateUrl = `${url}/functions/v1/orchestrate-content`;\n    const results = await Promise.allSettled(\n      dispatchable.map(async (step) => {\n        await admin.from(\"campaign_steps\").update({ status: \"running\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n        const platforms = channelToPlatforms(step.channel);\n        const ctrl = new AbortController();\n        const to = setTimeout(() => ctrl.abort(), STEP_TIMEOUT_MS);\n        try {\n          const resp = await fetch(orchestrateUrl, {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\", Authorization: authHeader },\n            body: JSON.stringify({ topic, campaign_id, platforms, wp_status: \"draft\" }),\n            signal: ctrl.signal,\n          });\n          const ok = resp.ok;\n          await admin.from(\"campaign_steps\").update({ status: ok ? \"done\" : \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n          return ok;\n        } catch (_) {\n          await admin.from(\"campaign_steps\").update({ status: \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n          return false;\n        } finally {\n          clearTimeout(to);\n        }\n      }),\n    );\n    const stepsDispatched = results.filter((r) => r.status === \"fulfilled\" && r.value === true).length;\n    const degraded = stepsDispatched < dispatchable.length || cappedOut > 0;\n\n    // Knowledge mesh mandate: every orchestration run inserts an observation node. Fail-soft \u2014 must not break the run.\n    try {\n      const { data: obsNode } = await admin.from(\"mcorch_nodes\").insert({\n        name: `campaign-run:${campaign_id}:${run_id}`,\n        node_type: \"observation\",\n        content:\n          `Campaign \"${campaign.name}\" run ${run_id}: ${stepsDispatched}/${dispatchable.length} steps dispatched to ` +\n          `orchestrate-content${blocked.length ? `, ${blocked.length} blocked (non-servable channel)` : \"\"}` +\n          `${cappedOut > 0 ? `, ${cappedOut} left idle (parallel cap)` : \"\"}.`,\n        stability_score: 1.0,\n        metadata: {\n          event: \"campaign_run\", campaign_id, run_id,\n          steps_total: rows.length, steps_dispatched: stepsDispatched,\n          steps_blocked: blocked.length, steps_capped: cappedOut,\n        },\n        user_id: user.id,\n      }).select(\"id\").single();\n      if (obsNode && campaign.mesh_node_id) {\n        await admin.from(\"mcorch_edges\").insert({\n          source_id: obsNode.id, target_id: campaign.mesh_node_id, relation_type: \"observes\", weight: 1.0,\n        });\n      }\n    } catch (_) { /* fail-soft */ }\n\n    admin.from(\"infra_health_logs\").insert({ service: \"campaign-run\", status: degraded ? \"degraded\" : \"healthy\" })\n      .then(() => {}, () => {});\n\n    const { data: newBal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    return json({ status: \"ok\", campaign_id, run_id, steps_dispatched: stepsDispatched, new_balance: newBal?.mco_balance ?? null });\n  } catch (err) {\n    admin.from(\"infra_health_logs\").insert({ service: \"campaign-run\", status: \"unhealthy\" }).then(() => {}, () => {});\n    return json({ error: \"Erro interno ao executar campanha\", detail: String((err as Error)?.message ?? err) }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:33:00)*
+
+
+## 🤖 Claude *(14:33:01)*
+
+Let me clean up the unused `CampaignRow` interface and, in parallel, find how the project obtains a real user JWT for smoke tests (the last session got lead-score to HTTP 200 — I want the same material proof level).
+
+## 🤖 Claude *(14:33:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts",
+  "old_string": "interface CampaignRow {\n  id: string;\n  user_id: string;\n  name: string;\n  intent: string | null;\n  status: string;\n  mesh_node_id: string | null;\n}\n\ninterface StepRow {",
+  "new_string": "interface StepRow {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:33:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== how smoke tests obtain a user JWT (generateLink / signIn / access_token) ===\"\ngrep -rlnE \"generateLink|signInWithPassword|access_token|verifyOtp\" scripts/ 2>/dev/null | head -15\necho \"\"\necho \"=== look for a lead-score / marketing smoke script ===\"\nls -1 scripts/qa/ 2>/dev/null | head -40\necho \"\"\necho \"=== env keys available for testing ===\"\ngrep -oE \"^(SB_SECRET_KEY|SB_PUBLISHABLE_KEY|SUPABASE_URL|VITE_SUPABASE_URL)=\" .env 2>/dev/null || echo \"(.env not readable here)\"",
+  "description": "Find JWT-minting method for smoke tests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === how smoke tests obtain a user JWT (generateLink / signIn / access_token) ===
+> scripts/canvas-campaign-build.ts
+> scripts/seed-social-oauth-adrs.ts
+> scripts/qa/test-publish-meta-smoke.ts
+> scripts/qa/audit-canvas-ui.ts
+> scripts/qa/test-sync-meta-ads.ts
+> scripts/qa/smoke-constellation-v2-router.ts
+> scripts/qa/e2e-user-zero/lib/redactor.ts
+> scripts/hooks/pre-commit
+> 
+> === look for a lead-score / marketing smoke script ===
+> audit-canvas-ui.ts
+> audit-lucide-imports.ts
+> e2e-user-zero
+> extract-manifest.ts
+> firecrawl-ml-probe.ts
+> health-pulse.ts
+> run-audit.ts
+> smoke-constellation-v2-router.ts
+> test-es256-jwt-verification.ts
+> test-publish-meta-smoke.ts
+> test-sync-meta-ads.ts
+> test-whatsapp-webhook.ts
+> types.ts
+> verifiers.ts
+> 
+> === env keys available for testing ===
+> SUPABASE_URL=
+> VITE_SUPABASE_URL=
+> SB_SECRET_KEY=
+> ```
+
+## 🤖 Claude *(14:33:12)*
+
+
+## 🤖 Claude *(14:33:13)*
+
+`scripts/qa/smoke-constellation-v2-router.ts` is the closest precedent (smoke-tests a JWT-guarded edge fn). Let me learn its JWT method.
+
+## 🤖 Claude *(14:33:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-constellation-v2-router.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke test — constellation-v2 capability router (agent-task-execute v2), USER PATH (real JWT).
+> 4	 * Creates a throwaway user + a crew agent bound to `watchdog_infra` (read-only get-infra-status,
+> 5	 * zero cost), signs in to get a real access_token, exercises the router, asserts gates, and
+> 6	 * CLEANS UP (deletes agent + user). No production data touched.
+> 7	 *
+> 8	 * Usage: bun run scripts/qa/smoke-constellation-v2-router.ts
+> 9	 */
+> 10	import { createClient } from '@supabase/supabase-js';
+> 11	
+> 12	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 13	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 14	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 15	if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 16	
+> 17	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 18	const stamp = Date.now();
+> 19	const email = `cv2-smoke-${stamp}@example.com`;
+> 20	const password = `Aa1!${crypto.randomUUID()}`; // random per-run; throwaway @example.com user, deleted in finally
+> 21	let uid: string | null = null;
+> 22	let agentId: string | null = null;
+> 23	let pass = true;
+> 24	
+> 25	async function callRouter(token: string, body: unknown) {
+> 26	  const r = await fetch(`${URL}/functions/v1/agent-task-execute`, {
+> 27	    method: 'POST',
+> 28	    headers: { 'Content-Type': 'application/json', apikey: PUB, Authorization: `Bearer ${token}` },
+> 29	    body: JSON.stringify(body),
+> 30	  });
+> 31	  let j: any; const t = await r.text();
+> 32	  try { j = JSON.parse(t); } catch { j = t; }
+> 33	  return { status: r.status, body: j };
+> 34	}
+> 35	
+> 36	try {
+> 37	  // 1. throwaway user
+> 38	  const { data: cu, error: cuErr } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+> 39	  if (cuErr || !cu?.user) throw new Error(`createUser: ${cuErr?.message}`);
+> 40	  uid = cu.user.id;
+> 41	  console.log(`✅ test user ${uid}`);
+> 42	
+> 43	  // 2. crew agent bound to watchdog_infra (read-only capability)
+> 44	  const { data: ag, error: agErr } = await admin.from('crew_agents').insert({
+> 45	    user_id: uid, agent_key: `smoke-${stamp}`, name: 'Smoke Watchdog', role: 'specialist',
+> 46	    avatar: '🤖', provider: 'groq', model: 'llama-3.3-70b-versatile', status: 'idle',
+> 47	    position: [0, 0, 0], system_prompt: 'smoke', priority: 'medium', level: 2, squad: 'tech',
+> 48	    capability_key: 'watchdog_infra',
+> 49	  }).select('id').single();
+> 50	  if (agErr || !ag) throw new Error(`insert agent: ${agErr?.message}`);
+> 51	  agentId = ag.id;
+> 52	  console.log(`✅ test agent ${agentId} (capability=watchdog_infra)`);
+> 53	
+> 54	  // 3. real user JWT
+> 55	  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });
+> 56	  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email, password });
+> 57	  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);
+> 58	  const token = si.session.access_token;
+> 59	  console.log(`✅ user JWT obtained`);
+> 60	
+> 61	  // ── SMOKE 1: happy path (watchdog_infra → get-infra-status) ──
+> 62	  const s1 = await callRouter(token, { agent_id: agentId, capability_key: 'watchdog_infra', payload: {} });
+> 63	  const ok1 = s1.status === 200 && s1.body?.status === 'done' && s1.body?.target_function === 'get-infra-status' && s1.body?.result != null;
+> 64	  console.log(`\nSMOKE 1 (happy)   → HTTP ${s1.status} status=${s1.body?.status} cost=${s1.body?.cost_mcoin} result=${s1.body?.result != null} ${ok1 ? '✅' : '❌'}`);
+> 65	  if (!ok1) { pass = false; console.log('   body:', JSON.stringify(s1.body).slice(0, 300)); }
+> 66	
+> 67	  // ── SMOKE 2: unknown capability → 422 ──
+> 68	  const s2 = await callRouter(token, { agent_id: agentId, capability_key: 'hack_system', payload: {} });
+> 69	  const ok2 = s2.status === 422 && String(s2.body?.error).startsWith('capability_unknown');
+> 70	  console.log(`SMOKE 2 (unknown) → HTTP ${s2.status} error=${s2.body?.error} ${ok2 ? '✅' : '❌'}`);
+> 71	  if (!ok2) pass = false;
+> 72	
+> 73	  // ── SMOKE 3: inactive capability (analytics) → 422 ──
+> 74	  const s3 = await callRouter(token, { agent_id: agentId, capability_key: 'analytics', payload: {} });
+> 75	  const ok3 = s3.status === 422 && String(s3.body?.error).startsWith('capability_inactive');
+> 76	  console.log(`SMOKE 3 (inactive)→ HTTP ${s3.status} error=${s3.body?.error} ${ok3 ? '✅' : '❌'}`);
+> 77	  if (!ok3) pass = false;
+> 78	
+> 79	  // ── verify the happy-path exec row landed ──
+> 80	  const { data: rows } = await admin.from('agent_executions')
+> 81	    .select('status, capability_key, provider, cost_mcoin').eq('agent_id', agentId).order('started_at', { ascending: false }).limit(1);
+> 82	  const row = rows?.[0];
+> 83	  const ok4 = row?.status === 'done' && row?.capability_key === 'watchdog_infra' && row?.provider === 'capability-router';
+> 84	  console.log(`VERIFY exec row   → status=${row?.status} cap=${row?.capability_key} provider=${row?.provider} ${ok4 ? '✅' : '❌'}`);
+> 85	  if (!ok4) pass = false;
+> 86	} catch (e) {
+> 87	  pass = false;
+> 88	  console.error('❌ smoke error:', e instanceof Error ? e.message : e);
+> 89	} finally {
+> 90	  // cleanup (cascade: deleting user removes agent + execs via FK ON DELETE CASCADE; explicit for clarity)
+> 91	  if (agentId) await admin.from('crew_agents').delete().eq('id', agentId);
+> 92	  if (uid) await admin.auth.admin.deleteUser(uid);
+> 93	  console.log(`\n🧹 cleanup: agent + user deleted`);
+> 94	  console.log(pass ? '\n✅✅ ROUTER SMOKE PASSED' : '\n❌ ROUTER SMOKE FAILED');
+> 95	  process.exit(pass ? 0 : 1);
+> 96	}
+> 97	
+> ```
+
+## 🤖 Claude *(14:34:38)*
+
+
+## 🤖 Claude *(14:34:41)*
+
+This is the exact pattern I need (throwaway user + real `signInWithPassword` JWT + assert + cleanup). The key realization: in my function, **every guard path (401/422/404/no-steps/402) executes BEFORE the deduct and before any orchestrate-content dispatch** — so I can prove them with **zero spend**. And a campaign whose only step is an `email` channel dispatches nothing (blocked) — proving the full deduct+block+status-sync+mesh path for just the 10-coin fee on a throwaway balance, **zero LLM cost**. The real paid cascade stays gated on your GO.
+
+Let me verify a few schema details for the throwaway setup (profile balance, cascade behavior) before writing the smoke.
+
+## 🤖 Claude *(14:34:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== campaigns.user_id FK behavior ===\"\ngrep -nE \"user_id\" supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql | grep -iE \"auth.users|cascade\" | head -5\necho \"\"\necho \"=== profiles: handle_new_user trigger + default balance ===\"\ngrep -rnE \"handle_new_user|mco_balance\" supabase/migrations/*.sql 2>/dev/null | grep -iE \"default|insert into public.profiles|mco_balance (numeric|integer|decimal)\" | head -8\necho \"\"\necho \"=== profiles table definition (NOT NULL cols I'd need for upsert) ===\"\ngrep -rlnE \"CREATE TABLE public.profiles\" supabase/migrations/*.sql 2>/dev/null | head -1\necho \"\"\necho \"=== mcorch_nodes.user_id FK behavior ===\"\ngrep -rnE \"user_id.*auth\\.users\" supabase/migrations/*.sql 2>/dev/null | grep -i \"mcorch_nodes\\|node\" | head -3\necho \"(checking node table migration directly)\"\ngrep -rnE \"user_id uuid REFERENCES auth\\.users|user_id.*auth\\.users\\(id\\)\" supabase/migrations/*mcorch_nodes*.sql supabase/migrations/*node*.sql 2>/dev/null | head -5",
+  "description": "Verify throwaway-user setup schema details"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campaigns.user_id FK behavior ===
+> 34:  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 44:  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 61:  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 72:  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 84:  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 
+> === profiles: handle_new_user trigger + default balance ===
+> supabase/migrations/20260417000000_gamification_engine.sql:2:ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mco_balance DECIMAL DEFAULT 0;
+> 
+> === profiles table definition (NOT NULL cols I'd need for upsert) ===
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql
+> 
+> === mcorch_nodes.user_id FK behavior ===
+> (checking node table migration directly)
+> ```
+
+## 🤖 Claude *(14:34:58)*
+
+
+## 🤖 Claude *(14:34:59)*
+
+campaigns cascade-delete on user delete ✓ (throwaway cleanup is clean). `profiles.mco_balance DECIMAL DEFAULT 0` — so I'll set balance explicitly for the one paid-fee smoke. Let me confirm whether a profile row is auto-created on signup (trigger) and the profiles NOT NULL columns, so my balance setup is robust.
+
+## 🤖 Claude *(14:35:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== on-signup trigger that creates a profile ===\"\ngrep -rnE \"AFTER INSERT ON auth\\.users|on_auth_user_created|INSERT INTO public\\.profiles\" supabase/migrations/*.sql 2>/dev/null | head -8\necho \"\"\necho \"=== profiles CREATE TABLE (NOT NULL cols) ===\"\nawk '/CREATE TABLE public\\.profiles/,/\\);/' supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql 2>/dev/null | head -25",
+  "description": "Profile auto-create trigger + NOT NULL columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === on-signup trigger that creates a profile ===
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql:89:  INSERT INTO public.profiles (id, full_name, avatar_url)
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:349:  INSERT INTO public.profiles (id, full_name, avatar_url)
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:369:CREATE TRIGGER on_auth_user_created
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:370:  AFTER INSERT ON auth.users
+> 
+> === profiles CREATE TABLE (NOT NULL cols) ===
+> CREATE TABLE public.profiles (
+>   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+>   full_name TEXT,
+>   avatar_url TEXT,
+>   company TEXT,
+>   website TEXT,
+>   timezone TEXT DEFAULT 'America/Sao_Paulo',
+>   language TEXT DEFAULT 'pt-BR',
+>   onboarding_completed BOOLEAN DEFAULT FALSE,
+>   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+>   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+> );
+> ```
+
+## 🤖 Claude *(14:35:38)*
+
+
+## 🤖 Claude *(14:35:41)*
+
+Everything confirmed: `on_auth_user_created` auto-creates the profile (balance defaults to 0, I'll set it), all FKs cascade on user delete (clean throwaway). 
+
+Now the key insight for material proof: **every guard path (401/422/404/no-steps/402) runs before the deduct and before any dispatch** → provable at zero spend. And an `email`-channel step is blocked (never dispatched) → proves the deduct+block+status-sync+mesh path for just the 10-coin fee on a throwaway balance, **zero LLM cost**. Writing the smoke now (modeled on the v2-router smoke).
+
+## 🤖 Claude *(14:36:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 campaign-run edge fn (marketing-hub FR-MH-004), USER PATH (real JWT).\n *\n * Proves the function's full skeleton at ZERO LLM cost: every guard path (401/422/404/no-steps/402) runs\n * BEFORE the mcoCoins deduct and BEFORE any orchestrate-content dispatch, and an `email`-channel step is\n * BLOCKED (never dispatched), so the happy structural path costs only the 10-coin fee on a THROWAWAY balance\n * and fans out to NOTHING. The real paid cascade (a `social`/`content` step \u2192 real orchestrate-content spend)\n * is intentionally NOT exercised here \u2014 it is gated on Sovereign GO.\n *\n * Creates two throwaway @example.com users, signs in user1 for a real access_token, asserts the gates, and\n * CLEANS UP (deletes users \u2192 cascade removes profiles/campaigns/steps; mesh observation nodes deleted explicitly).\n * No production data, no Sovereign balance, no LLM provider $ touched.\n *\n * Usage: bun run scripts/qa/smoke-campaign-run.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid1: string | null = null;\nlet uid2: string | null = null;\nlet pass = true;\nconst createdNodeNames: string[] = [];\n\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\n\nasync function call(token: string | null, body: unknown) {\n  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };\n  if (token) headers.Authorization = `Bearer ${token}`;\n  const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });\n  let j: any; const t = await r.text();\n  try { j = JSON.parse(t); } catch { j = t; }\n  return { status: r.status, body: j };\n}\n\nasync function mkUser(tag: string) {\n  const email = `cr-smoke-${tag}-${stamp}@example.com`;\n  const password = `Aa1!${crypto.randomUUID()}`;\n  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\n  if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);\n  return { id: data.user.id, email, password };\n}\n\nasync function mkCampaign(userId: string, name: string) {\n  const { data, error } = await admin.from('campaigns')\n    .insert({ user_id: userId, name, status: 'draft', channels: [] }).select('id').single();\n  if (error || !data) throw new Error(`insert campaign \"${name}\": ${error?.message}`);\n  return data.id as string;\n}\n\nasync function addStep(campaignId: string, userId: string, channel: string) {\n  const { error } = await admin.from('campaign_steps')\n    .insert({ campaign_id: campaignId, user_id: userId, position: 0, channel, action: 'generate_content' });\n  if (error) throw new Error(`insert step (${channel}): ${error.message}`);\n}\n\ntry {\n  const u1 = await mkUser('a'); uid1 = u1.id;\n  const u2 = await mkUser('b'); uid2 = u2.id;\n  console.log(`\u2705 throwaway users ${uid1} / ${uid2}`);\n\n  // campaigns\n  const cNoSteps = await mkCampaign(uid1, 'Smoke No-Steps');\n  const cEmail = await mkCampaign(uid1, 'Smoke Email-Only'); await addStep(cEmail, uid1, 'email');\n  const cSocial = await mkCampaign(uid1, 'Smoke Social');    await addStep(cSocial, uid1, 'social');\n  const cForeign = await mkCampaign(uid2, 'Smoke Foreign');  await addStep(cForeign, uid2, 'social');\n\n  // real user1 JWT\n  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });\n  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email: u1.email, password: u1.password });\n  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);\n  const token = si.session.access_token;\n  console.log(`\u2705 user1 JWT obtained\\n`);\n\n  // \u2500\u2500 A: no JWT \u2192 401 (free) \u2500\u2500\n  const a = await call(null, { campaign_id: cEmail });\n  check('A no-JWT \u2192 401', a.status === 401, `HTTP ${a.status}`);\n\n  // \u2500\u2500 B: missing campaign_id \u2192 422 (free) \u2500\u2500\n  const b = await call(token, {});\n  check('B missing campaign_id \u2192 422', b.status === 422, `HTTP ${b.status} ${JSON.stringify(b.body?.error ?? '')}`);\n\n  // \u2500\u2500 C: nonexistent campaign_id \u2192 404 (free) \u2500\u2500\n  const c = await call(token, { campaign_id: crypto.randomUUID() });\n  check('C nonexistent id \u2192 404', c.status === 404, `HTTP ${c.status}`);\n\n  // \u2500\u2500 D: foreign campaign (owned by user2) \u2192 404 \u2014 TENANT ISOLATION (free) \u2500\u2500\n  const d = await call(token, { campaign_id: cForeign });\n  check('D foreign campaign \u2192 404 (tenant isolation)', d.status === 404, `HTTP ${d.status}`);\n\n  // \u2500\u2500 E: campaign with no steps \u2192 422 (free) \u2500\u2500\n  const e = await call(token, { campaign_id: cNoSteps });\n  check('E no-steps \u2192 422', e.status === 422, `HTTP ${e.status} ${JSON.stringify(e.body?.error ?? '')}`);\n\n  // \u2500\u2500 F: email-only step \u2192 200, dispatched=0, step BLOCKED, fee debited (100\u219290), mesh node, campaign active \u2500\u2500\n  await admin.from('profiles').update({ mco_balance: 100 }).eq('id', uid1);\n  const f = await call(token, { campaign_id: cEmail });\n  const fOk = f.status === 200 && f.body?.status === 'ok' && f.body?.steps_dispatched === 0 && Number(f.body?.new_balance) === 90;\n  check('F email-only \u2192 200 dispatched=0 balance 100\u219290', fOk,\n    `HTTP ${f.status} dispatched=${f.body?.steps_dispatched} new_balance=${f.body?.new_balance} run_id=${f.body?.run_id}`);\n  if (f.body?.run_id) createdNodeNames.push(`campaign-run:${cEmail}:${f.body.run_id}`);\n  // step status synced to 'blocked'\n  const { data: stepRows } = await admin.from('campaign_steps').select('status').eq('campaign_id', cEmail);\n  check('F step synced \u2192 blocked', stepRows?.[0]?.status === 'blocked', `status=${stepRows?.[0]?.status}`);\n  // campaign promoted draft \u2192 active\n  const { data: campRow } = await admin.from('campaigns').select('status').eq('id', cEmail).single();\n  check('F campaign \u2192 active', campRow?.status === 'active', `status=${campRow?.status}`);\n  // mesh observation node landed (knowledge mesh mandate)\n  if (f.body?.run_id) {\n    const { data: node } = await admin.from('mcorch_nodes').select('id, node_type, metadata')\n      .eq('name', `campaign-run:${cEmail}:${f.body.run_id}`).maybeSingle();\n    check('F mesh observation node inserted', node?.node_type === 'observation' && (node?.metadata as any)?.event === 'campaign_run',\n      `node=${node?.id ?? 'MISSING'}`);\n  }\n  // DB balance matches the response (atomic deduct, no client-side math)\n  const { data: balRow } = await admin.from('profiles').select('mco_balance').eq('id', uid1).single();\n  check('F DB balance = 90 (atomic)', Number(balRow?.mco_balance) === 90, `db=${balRow?.mco_balance}`);\n\n  // \u2500\u2500 G: insufficient balance (5 < 10) on a dispatchable campaign \u2192 402, balance UNCHANGED (no deduct, free) \u2500\u2500\n  await admin.from('profiles').update({ mco_balance: 5 }).eq('id', uid1);\n  const g = await call(token, { campaign_id: cSocial });\n  check('G insufficient balance \u2192 402', g.status === 402, `HTTP ${g.status}`);\n  const { data: balG } = await admin.from('profiles').select('mco_balance').eq('id', uid1).single();\n  check('G balance unchanged = 5 (no deduct on 402)', Number(balG?.mco_balance) === 5, `db=${balG?.mco_balance}`);\n  // the social step must NOT have been dispatched (still idle)\n  const { data: socialStep } = await admin.from('campaign_steps').select('status').eq('campaign_id', cSocial);\n  check('G social step untouched \u2192 idle', socialStep?.[0]?.status === 'idle', `status=${socialStep?.[0]?.status}`);\n} catch (err) {\n  pass = false;\n  console.error('\u274c smoke error:', err instanceof Error ? err.message : err);\n} finally {\n  // explicit mesh node cleanup (zero residue), then users (cascade removes profiles/campaigns/steps).\n  for (const name of createdNodeNames) await admin.from('mcorch_nodes').delete().eq('name', name);\n  if (uid1) await admin.auth.admin.deleteUser(uid1);\n  if (uid2) await admin.auth.admin.deleteUser(uid2);\n  console.log(`\\n\ud83e\uddf9 cleanup: ${createdNodeNames.length} mesh node(s) + 2 users deleted`);\n  console.log(pass ? '\\n\u2705\u2705 CAMPAIGN-RUN SMOKE PASSED' : '\\n\u274c CAMPAIGN-RUN SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:36:28)*
+
+
+## 🤖 Claude *(14:36:29)*
+
+Function + smoke written. Now deploy `campaign-run` (the deploy bundle is my first material gate — a syntax/import error fails here), then run the zero-cost smoke.
+
+## 🤖 Claude *(14:36:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy campaign-run 2>&1 | tail -25",
+  "description": "Deploy campaign-run edge function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: campaign-run
+> Deploying Function: campaign-run (script size: 80.92kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: campaign-run
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(14:36:48)*
+
+
+## 🤖 Claude *(14:36:49)*
+
+Deployed (80.92kB). Before running the smoke, let me confirm the exact publishable-key env var name (memory says the new key is `SB_PUBLISHABLE_KEY`; the legacy anon key is revoked).
+
+## 🤖 Claude *(14:36:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publishable/anon key var names in .env ===\"\ngrep -oE \"^(SB_PUBLISHABLE_KEY|SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY|VITE_SUPABASE_ANON_KEY)=\" .env 2>/dev/null || echo \"(none matched)\"",
+  "description": "Confirm publishable key var name in .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publishable/anon key var names in .env ===
+> SUPABASE_PUBLISHABLE_KEY=
+> VITE_SUPABASE_PUBLISHABLE_KEY=
+> ```
+
+## 🤖 Claude *(14:36:58)*
+
+
+## 🤖 Claude *(14:36:59)*
+
+Good — `SUPABASE_PUBLISHABLE_KEY` is set (my smoke reads it first). Bun auto-loads `.env`. Running the zero-cost smoke now.
+
+## 🤖 Claude *(14:37:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/smoke-campaign-run.ts 2>&1 | tail -40",
+  "description": "Run campaign-run zero-cost smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ throwaway users c599a781-93a5-4fef-a0be-15081a1b63b7 / 6a8a5e70-8a41-48d5-81cb-e26c4d2c9b9c
+> ✅ user1 JWT obtained
+> 
+> ✅ A no-JWT → 401  → HTTP 401
+> ✅ B missing campaign_id → 422  → HTTP 422 "campaign_id é obrigatório"
+> ✅ C nonexistent id → 404  → HTTP 404
+> ✅ D foreign campaign → 404 (tenant isolation)  → HTTP 404
+> ✅ E no-steps → 422  → HTTP 422 "Campanha não tem passos para executar"
+> ✅ F email-only → 200 dispatched=0 balance 100→90  → HTTP 200 dispatched=0 new_balance=90 run_id=83d27929-6a70-423c-b7fa-87985a4278f3
+> ✅ F step synced → blocked  → status=blocked
+> ✅ F campaign → active  → status=active
+> ✅ F mesh observation node inserted  → node=213567fc-2769-44fc-818b-a769ebf80b65
+> ✅ F DB balance = 90 (atomic)  → db=90
+> ✅ G insufficient balance → 402  → HTTP 402
+> ✅ G balance unchanged = 5 (no deduct on 402)  → db=5
+> ✅ G social step untouched → idle  → status=idle
+> 
+> 🧹 cleanup: 1 mesh node(s) + 2 users deleted
+> 
+> ✅✅ CAMPAIGN-RUN SMOKE PASSED
+> ```
+
+## 🤖 Claude *(14:37:23)*
+
+
+## 🤖 Claude *(14:37:26)*
+
+All 13 assertions green, zero spend, full cleanup. Material proof captured:
+
+- **Guards (zero cost):** no-JWT→401 · missing id→422 · nonexistent→404 · **foreign campaign→404 (tenant isolation)** · no-steps→422 · insufficient balance→402 (balance unchanged, no deduct)
+- **Structural happy path (10-coin fee only, zero LLM):** email-only step → 200 · `steps_dispatched=0` · step synced→`blocked` · campaign `draft→active` · **atomic deduct 100→90** · mesh observation node `213567fc` inserted
+
+The only thing left unproven is the *paid* cascade (a `social`/`content` step → real `orchestrate-content` spend) — gated on your GO.
+
+Now the typecheck + lint gate:
+
+## 🤖 Claude *(14:37:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc --noEmit ===\"\nnpx tsc --noEmit 2>&1 | tail -15 && echo \"TSC: zero errors \u2705\"\necho \"\"\necho \"=== eslint (campaign-run smoke only \u2014 Deno fn is out of eslint src scope) ===\"\nnpx eslint scripts/qa/smoke-campaign-run.ts 2>&1 | tail -15 && echo \"ESLint smoke: clean \u2705\"",
+  "description": "tsc + eslint gates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc --noEmit ===
+> TSC: zero errors ✅
+> 
+> === eslint (campaign-run smoke only — Deno fn is out of eslint src scope) ===
+> 
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts
+>    40:10   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   121:103  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+> 
+> ✖ 2 problems (2 errors, 0 warnings)
+> 
+> ESLint smoke: clean ✅
+> ```
+
+## 🤖 Claude *(14:37:49)*
+
+
+## 🤖 Claude *(14:37:50)*
+
+Two `any` lint errors in my smoke (the sibling smoke gets away with it, but I'll keep mine clean). Fixing with a typed response shape.
+
+## 🤖 Claude *(14:37:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "old_string": "async function call(token: string | null, body: unknown) {\n  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };\n  if (token) headers.Authorization = `Bearer ${token}`;\n  const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });\n  let j: any; const t = await r.text();\n  try { j = JSON.parse(t); } catch { j = t; }\n  return { status: r.status, body: j };\n}",
+  "new_string": "interface CrBody {\n  status?: string; error?: string; campaign_id?: string;\n  run_id?: string; steps_dispatched?: number; new_balance?: number;\n}\nasync function call(token: string | null, body: unknown): Promise<{ status: number; body: CrBody }> {\n  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };\n  if (token) headers.Authorization = `Bearer ${token}`;\n  const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });\n  let j: CrBody; const t = await r.text();\n  try { j = JSON.parse(t) as CrBody; } catch { j = { error: t }; }\n  return { status: r.status, body: j };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "old_string": "    check('F mesh observation node inserted', node?.node_type === 'observation' && (node?.metadata as any)?.event === 'campaign_run',\n      `node=${node?.id ?? 'MISSING'}`);",
+  "new_string": "    check('F mesh observation node inserted',\n      node?.node_type === 'observation' && (node?.metadata as { event?: string } | null)?.event === 'campaign_run',\n      `node=${node?.id ?? 'MISSING'}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:38:07)*
+
+
+## 🤖 Claude *(14:38:08)*
+
+Re-verifying lint + tsc, and re-running the smoke against the final code (free, proves the committed artifact, not a pre-edit version):
+
+## 🤖 Claude *(14:38:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== eslint smoke ===\"\nnpx eslint scripts/qa/smoke-campaign-run.ts 2>&1 | tail -8 && echo \"ESLint: clean \u2705\"\necho \"\"\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -5 && echo \"TSC: zero errors \u2705\"\necho \"\"\necho \"=== re-run smoke (final artifact) ===\"\nbun run scripts/qa/smoke-campaign-run.ts 2>&1 | tail -20",
+  "description": "Re-verify lint + tsc + smoke on final code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === eslint smoke ===
+> ESLint: clean ✅
+> 
+> === tsc ===
+> TSC: zero errors ✅
+> 
+> === re-run smoke (final artifact) ===
+> ✅ throwaway users 29114fce-e099-4138-84c5-80128ea67ad5 / d4fe9c90-8613-475e-b09f-0418ea2f71b2
+> ✅ user1 JWT obtained
+> 
+> ✅ A no-JWT → 401  → HTTP 401
+> ✅ B missing campaign_id → 422  → HTTP 422 "campaign_id é obrigatório"
+> ✅ C nonexistent id → 404  → HTTP 404
+> ✅ D foreign campaign → 404 (tenant isolation)  → HTTP 404
+> ✅ E no-steps → 422  → HTTP 422 "Campanha não tem passos para executar"
+> ✅ F email-only → 200 dispatched=0 balance 100→90  → HTTP 200 dispatched=0 new_balance=90 run_id=6ab6fb07-266e-4661-870e-e9fe180d5e6c
+> ✅ F step synced → blocked  → status=blocked
+> ✅ F campaign → active  → status=active
+> ✅ F mesh observation node inserted  → node=928bfbfb-8fcf-4220-9b27-b71f27fabd20
+> ✅ F DB balance = 90 (atomic)  → db=90
+> ✅ G insufficient balance → 402  → HTTP 402
+> ✅ G balance unchanged = 5 (no deduct on 402)  → db=5
+> ✅ G social step untouched → idle  → status=idle
+> 
+> 🧹 cleanup: 1 mesh node(s) + 2 users deleted
+> 
+> ✅✅ CAMPAIGN-RUN SMOKE PASSED
+> ```
+
+## 🤖 Claude *(14:39:03)*
+
+
+## 🤖 Claude *(14:39:05)*
+
+Final artifact fully green: eslint clean, tsc 0 errors, **smoke 13/13** (fresh users, run_id `6ab6fb07`, node `928bfbfb`, cleanup complete).
+
+Now the synthesis discipline — register `campaign-run` in the CLAUDE.md Key Files Reference. Let me find the right spot.
+
+## 🤖 Claude *(14:39:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== marketing-hub / lead-score / campaign refs already in CLAUDE.md ===\"\ngrep -nE \"marketing-hub|lead-score|lead_score|campaign-run|leads/|erase_lead\" CLAUDE.md | head -20\necho \"\"\necho \"=== line numbers of Key Files table region (Meta/WhatsApp cluster as anchor) ===\"\ngrep -nE \"publish-meta/index.ts|whatsapp|Meta publisher function|marketing-hub|Marketing Hub\" CLAUDE.md | head -10",
+  "description": "Locate marketing-hub refs + insertion anchor in CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === marketing-hub / lead-score / campaign refs already in CLAUDE.md ===
+> 
+> === line numbers of Key Files table region (Meta/WhatsApp cluster as anchor) ===
+> 434:| **Meta publisher function** | `supabase/functions/publish-meta/index.ts` (IG container + FB feed · reauth gate · mesh observation) |
+> ```
+
+## 🤖 Claude *(14:39:17)*
+
+
+## 🤖 Claude *(14:39:18)*
+
+No marketing-hub entries exist in CLAUDE.md yet (lead-score from last session was never registered). I'll add a small marketing-hub cluster. Let me read the anchor region.
+
+## 🤖 Claude *(14:39:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 426,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 426	| **WordPress disconnect RPC** | `supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql` (`disconnect_wordpress()` SECURITY DEFINER · nula 3 cols WP + revoga segredo Vault · auth.uid()-scoped) |
+> 427	| **user_api_keys INSTEAD OF double-fire fix** | `supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql` (UPDATE-first/INSERT-if-not-found + guard de tenant) |
+> 428	| **Vault idempotent encrypt (re-save 23505 fix)** | `supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql` (`vault_upsert_secret()` update-in-place por nome · `search_path=''` · EXECUTE revogado · 3 triggers de encriptação) |
+> 429	| **Meta/social tenant guard (cross-tenant injection fix)** | `supabase/migrations/20260602150000_meta_social_instead_of_tenant_guard.sql` (porta o guard `auth.uid()` da `130000` pras INSTEAD OF de `meta_config`/`social_accounts` · `search_path=''` · service_role isento) |
+> 430	| **Meta/social disconnect RPC (orphaned-secret revocation)** | `supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql` (`disconnect_meta()`/`disconnect_social(uuid)` espelham `disconnect_wordpress` — deletam linha + revogam segredo Vault órfão · name-binding por `id` da linha + PK ⇒ tenant-safe · limpeza one-time de 12 órfãos meta · hooks `useMetaConfig`/`useSocialAccounts` migrados de `.delete()` p/ `.rpc()`) |
+> 431	| **Edge JWT identity verification SOP** | `docs/processes/edge-jwt-identity-verification.md` (verify_jwt=false → ES256 JWKS verify; NUNCA atob cego) |
+> 432	| **ES256 JWT verification test** | `scripts/qa/test-es256-jwt-verification.ts` (Deno; G1/G2 gates do SOP acima) |
+> 433	| **Meta credential resolution SOP** | `docs/processes/meta-credential-resolution.md` (per-user `meta_config`, fail-closed, OTD-META-ENCRYPT) |
+> 434	| **Meta publisher function** | `supabase/functions/publish-meta/index.ts` (IG container + FB feed · reauth gate · mesh observation) |
+> 435	| **Meta foundation migration** | `supabase/migrations/20260530210000_meta_api_foundation.sql` (`meta_config` + `meta_posts`, token column-REVOKE) |
+> 436	| **Meta config hook** | `src/hooks/useMetaConfig.ts` (BYOK · safe-columns select) |
+> 437	| **Meta settings card** | `src/components/settings/MetaConfigCard.tsx` |
+> 438	| **Meta shared lib (types/helpers)** | `src/lib/meta.ts` (`META_SAFE_COLUMNS` · connection state helpers) |
+> 439	| **BoK Scribe Agent (slash cmd)** | `.claude/commands/bok-scribe.md` |
+> ```
+
+## 🤖 Claude *(14:39:23)*
+
+
+## 🤖 Claude *(14:39:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Meta shared lib (types/helpers)** | `src/lib/meta.ts` (`META_SAFE_COLUMNS` \u00b7 connection state helpers) |\n| **BoK Scribe Agent (slash cmd)** | `.claude/commands/bok-scribe.md` |",
+  "new_string": "| **Meta shared lib (types/helpers)** | `src/lib/meta.ts` (`META_SAFE_COLUMNS` \u00b7 connection state helpers) |\n| **Marketing Hub \u2014 Lead Core migration** | `supabase/migrations/20260603000000_*.sql` (`leads`/`lead_events`/`marketing_consents` + `erase_lead()` LGPD \u00b7 FK composta tenant-escopada) |\n| **Marketing Hub \u2014 Campaign Core migration** | `supabase/migrations/20260603025256_marketing_hub_campaign_core.sql` (ALTER `campaigns` absorb + `campaign_steps` FK composta CASCADE + `marketing_attribution` SET NULL) |\n| **lead-score edge fn (FR-MH-003)** | `supabase/functions/lead-score/index.ts` (JWT \u00b7 1 mco at\u00f4mico \u00b7 IA per-user\u2192sistema fail-soft heur\u00edstico \u00b7 `lead_events` imut\u00e1vel) |\n| **campaign-run edge fn (FR-MH-004)** | `supabase/functions/campaign-run/index.ts` (JWT \u00b7 cascata fiel `CAMPAIGN_RUN` 10 + 10\u00d7N \u00b7 dispatch PARALELO p/ orchestrate-content self-bill \u00b7 `email`\u2192blocked \u00b7 OTD-CAMPAIGN-RUN-ASYNC) |\n| **campaign-run smoke (zero-cost gates)** | `scripts/qa/smoke-campaign-run.ts` (throwaway users \u00b7 401/422/404/no-steps/402 + email-only=blocked provam tudo SEM gasto; cascata paga gated em GO Sovereign) |\n| **BoK Scribe Agent (slash cmd)** | `.claude/commands/bok-scribe.md` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:39)*
+
+
+## 🤖 Claude *(14:39:40)*
+
+CLAUDE.md updated. Now committing the verified deliverable (local commit, trunk-based per project convention; **not** pushing — push stays for the seal). Following project commit style: no Co-Authored-By, milestone-oriented body.
+
+## 🤖 Claude *(14:39:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/campaign-run/index.ts scripts/qa/smoke-campaign-run.ts CLAUDE.md\necho \"=== staged ===\"\ngit status --short\necho \"\"\ngit commit -q -F - <<'EOF'\nfeat(marketing-hub): campaign-run edge fn (FR-MH-004) \u2014 cascata fiel 10+10\u00d7N\n\nFecha o backend do Marketing Hub (MVP-3 parte 2): rodar uma campanha\nagora orquestra orchestrate-content por passo. Decis\u00e3o Sovereign de\nretomar cedo \u2014 o \u00fanico motivo do adiamento (contexto) foi refutado.\n\n- campaign-run: JWT + ownership tenant-escopada \u2192 d\u00e9bito at\u00f4mico do FEE\n  CAMPAIGN_RUN (10) \u2192 dispatch dos passos. Cada orchestrate-content\n  self-bila seu pr\u00f3prio 10 (cascata fiel 10 + 10\u00d7N), com o JWT do caller\n  encaminhado p/ billing + RLS no mesmo tenant.\n- Dispatch PARALELO (Promise.allSettled): cada orchestrate-content roda\n  na pr\u00f3pria inst\u00e2ncia edge \u2192 wall-clock ~= passo mais lento, n\u00e3o a soma\n  (sequencial estouraria o budget da edge p/ N>1 passos pesados).\n- channel\u2192platforms: content/affiliate\u2192wordpress, social\u2192linkedin+twitter,\n  email\u2192BLOCKED (territ\u00f3rio nurture-dispatch, n\u00e3o cobrado). Cap de 8\n  dispatches paralelos (OTD-CAMPAIGN-RUN-ASYNC: fila async p/ campanhas grandes).\n- Sincroniza campaign_steps.status (idle\u2192running\u2192done|error|blocked) +\n  observation node na malha + pulse infra_health.\n- Calibra\u00e7\u00e3o $ N\u00c3O improvisada (OTD-MCOIN-CALIBRATION segue aberta ao Sovereign).\n\nProva material (zero gasto): smoke 13/13 \u2014 401/422/404/no-steps/402 +\ntenant isolation (campanha alheia\u2192404) + email-only\u2192200 dispatched=0\nstep\u2192blocked d\u00e9bito at\u00f4mico 100\u219290 mesh node inserido, tudo com cleanup\nzero-res\u00edduo. A cascata PAGA real (passo social/content) fica gated em GO\nSovereign. tsc 0 erros \u00b7 eslint limpo \u00b7 deploy 80.92kB.\nEOF\necho \"\"\necho \"=== HEAD ===\"\ngit log -1 --format=\"%h %s\"",
+  "description": "Commit campaign-run deliverable (no push)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+> M  CLAUDE.md
+> A  scripts/qa/smoke-campaign-run.ts
+> A  supabase/functions/campaign-run/index.ts
+> 
+> 
+> === HEAD ===
+> 2f51651 feat(marketing-hub): campaign-run edge fn (FR-MH-004) — cascata fiel 10+10×N
+> ```
+
+## 🤖 Claude *(14:41:16)*
+
+
+## 🤖 Claude *(14:41:20)*
+
+Committed locally as `2f51651` (not pushed — push waits for the seal). 
+
+**campaign-run is done and the Marketing Hub backend is now complete** — leads + scoring + campaigns + running all live and tenant-isolated.
+
+Per your steer (you decide priorities + keep momentum + don't seal prematurely citing context), I'm **continuing to MVP-4** — the hooks + UI that surface all this at `/dashboard/marketing`. That's the natural next step now that the backend is whole, and the paid cascade run gets exercised for real once you can build a campaign in the UI and click Run (your GO at click-time, your money — no separate gate needed since it's downstream of the UI).
+
+I'll build to the **BoK FRD spec** (FR-MH-001 LeadBoard, FR-MH-005 CampaignComposer — already sealed 9/9), not invent. Probing the exact spec + existing app patterns now.
+
+## 🤖 Claude *(14:41:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/04-frd.md",
+  "offset": 20,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	
+> 21	## 2. Functional Requirements
+> 22	
+> 23	> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron`
+> 24	
+> 25	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 26	|----|-------|-------------|----------|-----------|----------|---------|
+> 27	| FR-MH-001 | Lead Lifecycle Board | Board/kanban exibindo leads por estado (`new`/`scored`/`nurturing`/`converted`/`lost`); transições via hook `useLeads`; RLS per-tenant | Critical | PR-MH-001 | UI + Hook | AT-MH-001 |
+> 28	| FR-MH-002 | Absorb whatsapp_leads | Migration que traz `whatsapp_leads` ao Lead Core (tutela `meta-api`→`marketing-hub`, OTD-MH-001); backfill sem perda; `whatsapp-webhook` continua escrevendo | Critical | PR-MH-001 | DB | AT-MH-002 |
+> 29	| FR-MH-003 | Lead Scoring Edge Fn | `lead-score`: JWT-guarded, debita 1 mcoCoin via RPC, chama IA (per-user→sistema), grava `score` 0–100, fail-soft | Critical | PR-MH-002 | EdgeFunction | AT-MH-003 |
+> 30	| FR-MH-004 | Campaign Run Edge Fn | `campaign-run`: JWT-guarded, debita 10 mcoCoins, orquestra `orchestrate-content` por passo de campanha, sincroniza status | Critical | PR-MH-003 | EdgeFunction | AT-MH-004 |
+> 31	| FR-MH-005 | Campaign Composer | UI para compor campanha (canais+passos) + `useCampaigns` hook; persiste em `campaigns`/`campaign_steps` | Critical | PR-MH-003 | UI + Hook | AT-MH-005 |
+> 32	| FR-MH-006 | Consent & Erasure | Captura de consentimento por lead; erasure cascade (todas tabelas PII + segredos Vault) via RPC `erase_lead()` SECURITY DEFINER | Critical | PR-MH-004 | DB + EdgeFunction | AT-MH-006 |
+> 33	| FR-MH-007 | Campaign Attribution | Liga receita a `campaign_id`/`lead_id`; estende `ATTRIBUTES_REVENUE_TO`; expõe por campanha no `ROIWidget` | High | PR-MH-005 | Hook + DB | AT-MH-007 |
+> 34	| FR-MH-008 | Nurturing Sequences | Engine de drip: `sequences`+`sequence_enrollments`; passo dispara `nurture-dispatch` (gera msg, 2 mcoCoins); respeita opt-out; idempotente; cron avança passos | High | PR-MH-010 | EdgeFunction + Cron | AT-MH-008 |
+> 35	| FR-MH-009 | Intent Orchestrator + HITL | `intent-orchestrate`: traduz intenção→plano de tarefas; policy engine decide auto vs. HITL; aprovação humana persiste rationale (XAI) | High | PR-MH-011 | EdgeFunction + Hook | AT-MH-009 |
+> 36	| FR-MH-010 | AEO Audit | `aeo-audit`: JWT-guarded, 5 mcoCoins, mede citação da marca p/ queries rastreadas (provider OTD-MH-003), persiste `aeo_audits` + recomendações | High | PR-MH-012 | EdgeFunction | AT-MH-010 |
+> 37	| FR-MH-011 | Customer 360 | View agregando eventos/canais/score/consent por contato; `useCustomer360` hook | Medium | PR-MH-013 | DB + Hook | AT-MH-011 |
+> 38	| FR-MH-012 | BYOK per-tenant | Colunas/credenciais de marketing per-tenant no padrão Vault; resolve per-user→sistema | Medium | PR-MH-014 | DB + UI | AT-MH-012 |
+> 39	
+> 40	---
+> 41	
+> 42	## 3. Non-Functional Requirements
+> 43	
+> 44	| ID | Category | Requirement | Target | Measurement |
+> 45	|----|----------|-------------|--------|-------------|
+> 46	| NFR-MH-001 | Performance | Lead Board load (LCP) | < 2.5s | Lighthouse CI |
+> 47	| NFR-MH-002 | Performance | Edge Fn p95 latency (score/campaign/aeo) | < 800ms (excl. IA externa) | Supabase logs |
+> 48	| NFR-MH-003 | Scalability | Leads por tenant sem degradação de board | ≥ 10k leads/tenant (paginado) | Load test |
+> 49	| NFR-MH-004 | Availability | Uptime SLO do módulo | 99.5%/mês | Watchdog telemetry |
+> 50	| NFR-MH-005 | Maintainability | Complexidade ciclomática por hook | ≤ 10 | ESLint |
+> 51	| NFR-MH-006 | Security | Todo endpoint exige JWT válido; toda tabela PII RLS default-deny | 100% | `/security-review` |
+> 52	| NFR-MH-007 | Privacy (LGPD) | Erasure de lead cascateia em ≤ 24h; consent obrigatório antes de nurturing | 100% cascata; 0 envio sem consent | Auditoria + teste de erasure |
+> 53	| NFR-MH-008 | Cost discipline | Toda ação AI-powered debita via RPC atômico; cap por ação | 0 dedução client-side | Material proof (mcoin_transactions) |
+> 54	| NFR-MH-009 | Observability | Cada path (success/degraded/error) emite `infra_health_logs` | 100% dos edge fns | Telemetry audit |
+> 55	| NFR-MH-010 | Freshness (AEO) | Idade máxima de um audit AEO antes de "stale" | ≤ 7 dias | `aeo_audits.created_at` |
+> 56	
+> 57	---
+> 58	
+> 59	## 4. Interface Requirements
+> 60	
+> 61	### 4.1 UI → Hook → Edge Function Contract
+> 62	
+> 63	```
+> 64	[Component: LeadBoard / CampaignComposer / HITLApprovalCard]
+> ```
+
+## 🤖 Claude *(14:41:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== marketing route already registered? ===\"\ngrep -nE \"marketing|Marketing\" src/App.tsx 2>/dev/null | head\necho \"\"\necho \"=== dashboard routes pattern in App.tsx (a sample) ===\"\ngrep -nE \"dashboard/(affiliate-products|social|settings|orchestration)\" src/App.tsx | head\necho \"\"\necho \"=== existing marketing-related hooks/pages ===\"\nls -1 src/hooks/ | grep -iE \"lead|campaign|marketing\" || echo \"(no marketing hooks yet)\"\nls -1 src/pages/ | grep -iE \"lead|campaign|marketing|affiliate\" || echo \"(no marketing pages yet)\"\necho \"\"\necho \"=== DashboardLayout nav items (where a Marketing link goes) ===\"\ngrep -nE \"to=\\\"/dashboard|label:|title:|name:\" src/components/dashboard/DashboardLayout.tsx 2>/dev/null | grep -iE \"afiliad|social|orchestr|settings|content|marketing\" | head",
+  "description": "Probe MVP-4 spec + routes + existing patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === marketing route already registered? ===
+> 
+> === dashboard routes pattern in App.tsx (a sample) ===
+> 
+> === existing marketing-related hooks/pages ===
+> useCampaigns.ts
+> AffiliateProductsPage.tsx
+> AffiliatesPage.tsx
+> CampaignDetail.tsx
+> CampaignsPage.tsx
+> CampaignWizard.tsx
+> 
+> === DashboardLayout nav items (where a Marketing link goes) ===
+> ```
+
+## 🤖 Claude *(14:41:45)*
+
+
+## 🤖 Claude *(14:41:47)*
+
+**Probe-first pays off again** — `useCampaigns.ts` + `CampaignsPage.tsx` + `CampaignDetail.tsx` + `CampaignWizard.tsx` **already exist**. MVP-4 (FR-MH-005) may be partly built from v1. I must understand what's there before building anything — recreating would be the exact anti-pattern this project keeps catching. (No `useLeads`/LeadBoard yet — those are net-new.)
+
+Let me read the existing campaign layer + routing.
+
+## 🤖 Claude *(14:41:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+> 5	import type { Database } from '@/integrations/supabase/types';
+> 6	
+> 7	type Campaign = Tables<'campaigns'>;
+> 8	type CampaignInsert = TablesInsert<'campaigns'>;
+> 9	type CampaignUpdate = TablesUpdate<'campaigns'>;
+> 10	type CampaignStatus = Database['public']['Enums']['campaign_status'];
+> 11	type SocialPlatform = Database['public']['Enums']['social_platform'];
+> 12	
+> 13	export interface CampaignTemplate {
+> 14	  name: string;
+> 15	  description: string;
+> 16	  objective: string;
+> 17	  icon: string;
+> 18	  defaults: Partial<CampaignInsert>;
+> 19	}
+> 20	
+> 21	export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
+> 22	  {
+> 23	    name: 'Lançamento de Produto',
+> 24	    description: 'Campanha focada em gerar buzz e conversões para um novo produto ou serviço.',
+> 25	    objective: 'launch',
+> 26	    icon: '🚀',
+> 27	    defaults: {
+> 28	      objective: 'launch',
+> 29	      platforms: ['instagram', 'facebook', 'linkedin'] as SocialPlatform[],
+> 30	      target_audience: { age_range: '25-45', interests: ['tecnologia', 'inovação'] },
+> 31	    },
+> 32	  },
+> 33	  {
+> 34	    name: 'Promoção Sazonal',
+> 35	    description: 'Campanha de ofertas e descontos para datas comemorativas ou eventos especiais.',
+> 36	    objective: 'promotion',
+> 37	    icon: '🎁',
+> 38	    defaults: {
+> 39	      objective: 'promotion',
+> 40	      platforms: ['instagram', 'facebook', 'twitter'] as SocialPlatform[],
+> 41	      target_audience: { age_range: '18-55', interests: ['ofertas', 'descontos'] },
+> 42	    },
+> 43	  },
+> 44	  {
+> 45	    name: 'Brand Awareness',
+> 46	    description: 'Campanha para aumentar o reconhecimento da marca e alcançar novos públicos.',
+> 47	    objective: 'awareness',
+> 48	    icon: '📣',
+> 49	    defaults: {
+> 50	      objective: 'awareness',
+> 51	      platforms: ['instagram', 'tiktok', 'youtube'] as SocialPlatform[],
+> 52	      target_audience: { age_range: '18-35', interests: ['lifestyle', 'entretenimento'] },
+> 53	    },
+> 54	  },
+> 55	  {
+> 56	    name: 'Engajamento',
+> 57	    description: 'Campanha para aumentar interações, comentários e compartilhamentos.',
+> 58	    objective: 'engagement',
+> 59	    icon: '💬',
+> 60	    defaults: {
+> 61	      objective: 'engagement',
+> 62	      platforms: ['instagram', 'twitter', 'tiktok'] as SocialPlatform[],
+> 63	      target_audience: { age_range: '18-40', interests: ['comunidade', 'trends'] },
+> 64	    },
+> 65	  },
+> 66	];
+> 67	
+> 68	export const STATUS_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
+> 69	  draft: ['active', 'archived'],
+> 70	  active: ['paused', 'completed', 'archived'],
+> 71	  paused: ['active', 'archived'],
+> 72	  completed: ['archived'],
+> 73	  archived: [],
+> 74	};
+> 75	
+> 76	export const STATUS_LABELS: Record<CampaignStatus, string> = {
+> 77	  draft: 'Rascunho',
+> 78	  active: 'Ativa',
+> 79	  paused: 'Pausada',
+> 80	  completed: 'Concluída',
+> 81	  archived: 'Arquivada',
+> 82	};
+> 83	
+> 84	export const STATUS_COLORS: Record<CampaignStatus, string> = {
+> 85	  draft: 'bg-muted text-muted-foreground',
+> 86	  active: 'bg-emerald-500/20 text-emerald-400',
+> 87	  paused: 'bg-amber-500/20 text-amber-400',
+> 88	  completed: 'bg-blue-500/20 text-blue-400',
+> 89	  archived: 'bg-zinc-500/20 text-zinc-400',
+> 90	};
+> 91	
+> 92	export function useCampaigns(statusFilter?: CampaignStatus) {
+> 93	  const { user } = useAuth();
+> 94	  const queryClient = useQueryClient();
+> 95	
+> 96	  const campaignsQuery = useQuery({
+> 97	    queryKey: ['campaigns', user?.id, statusFilter],
+> 98	    queryFn: async () => {
+> 99	      let query = supabase
+> 100	        .from('campaigns')
+> 101	        .select('*')
+> 102	        .order('updated_at', { ascending: false });
+> 103	
+> 104	      if (statusFilter) {
+> 105	        query = query.eq('status', statusFilter);
+> 106	      }
+> 107	
+> 108	      const { data, error } = await query;
+> 109	      if (error) throw error;
+> 110	      return data as Campaign[];
+> 111	    },
+> 112	    enabled: !!user,
+> 113	  });
+> 114	
+> 115	  const createCampaign = useMutation({
+> 116	    mutationFn: async (campaign: Omit<CampaignInsert, 'user_id'>) => {
+> 117	      const { data, error } = await supabase
+> 118	        .from('campaigns')
+> 119	        .insert({ ...campaign, user_id: user!.id })
+> 120	        .select()
+> 121	        .single();
+> 122	      if (error) throw error;
+> 123	      return data;
+> 124	    },
+> 125	    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
+> 126	  });
+> 127	
+> 128	  const updateCampaign = useMutation({
+> 129	    mutationFn: async ({ id, ...updates }: CampaignUpdate & { id: string }) => {
+> 130	      const { data, error } = await supabase
+> 131	        .from('campaigns')
+> 132	        .update(updates)
+> 133	        .eq('id', id)
+> 134	        .select()
+> 135	        .single();
+> 136	      if (error) throw error;
+> 137	      return data;
+> 138	    },
+> 139	    onSuccess: (data) => {
+> 140	      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+> 141	      queryClient.invalidateQueries({ queryKey: ['campaign', data.id] });
+> 142	    },
+> 143	  });
+> 144	
+> 145	  const deleteCampaign = useMutation({
+> 146	    mutationFn: async (id: string) => {
+> 147	      const { error } = await supabase.from('campaigns').delete().eq('id', id);
+> 148	      if (error) throw error;
+> 149	    },
+> 150	    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
+> 151	  });
+> 152	
+> 153	  const duplicateCampaign = useMutation({
+> 154	    mutationFn: async (campaign: Campaign) => {
+> 155	      const { id, created_at, updated_at, ...rest } = campaign;
+> 156	      const { data, error } = await supabase
+> 157	        .from('campaigns')
+> 158	        .insert({ ...rest, name: `${rest.name} (cópia)`, status: 'draft' as CampaignStatus })
+> 159	        .select()
+> 160	        .single();
+> 161	      if (error) throw error;
+> 162	      return data;
+> 163	    },
+> 164	    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
+> 165	  });
+> 166	
+> 167	  return {
+> 168	    campaigns: campaignsQuery.data ?? [],
+> 169	    isLoading: campaignsQuery.isLoading,
+> 170	    error: campaignsQuery.error,
+> 171	    createCampaign,
+> 172	    updateCampaign,
+> 173	    deleteCampaign,
+> 174	    duplicateCampaign,
+> 175	  };
+> 176	}
+> 177	
+> 178	export function useCampaign(id: string | undefined) {
+> 179	  const { user } = useAuth();
+> 180	
+> 181	  return useQuery({
+> 182	    queryKey: ['campaign', id],
+> 183	    queryFn: async () => {
+> 184	      const { data, error } = await supabase
+> 185	        .from('campaigns')
+> 186	        .select('*')
+> 187	        .eq('id', id!)
+> 188	        .single();
+> 189	      if (error) throw error;
+> 190	      return data as Campaign;
+> 191	    },
+> 192	    enabled: !!user && !!id,
+> 193	  });
+> 194	}
+> 195	
+> ```
+
+## 🤖 Claude *(14:41:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== campaign pages: do they touch campaign_steps / campaign-run / the new columns? ===\"\ngrep -nE \"campaign_steps|campaign-run|campaign_run|intent|channels|mesh_node_id\" src/pages/CampaignsPage.tsx src/pages/CampaignDetail.tsx src/pages/CampaignWizard.tsx 2>/dev/null | head -20\necho \"\"\necho \"=== how campaigns routes are registered (App.tsx) ===\"\ngrep -nE \"Campaign|campaign|Affiliate|affiliate|Lazy|lazy\\(\" src/App.tsx 2>/dev/null | head -25\necho \"\"\necho \"=== line count of each existing campaign file ===\"\nwc -l src/pages/CampaignsPage.tsx src/pages/CampaignDetail.tsx src/pages/CampaignWizard.tsx src/hooks/useCampaigns.ts 2>/dev/null",
+  "description": "Understand existing campaign UI + routing + wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campaign pages: do they touch campaign_steps / campaign-run / the new columns? ===
+> 
+> === how campaigns routes are registered (App.tsx) ===
+> 12:// Lazy-loaded pages
+> 13:const Landing = lazy(() => import("./pages/Landing.tsx"));
+> 14:const Auth = lazy(() => import("./pages/Auth.tsx"));
+> 15:const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+> 16:const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+> 17:const DashboardHome = lazy(() => import("./pages/DashboardHome.tsx"));
+> 18:const ConstellationPage = lazy(() => import("./pages/ConstellationPage.tsx"));
+> 19:const VideoEditorPage = lazy(() => import("./pages/VideoEditorPage.tsx"));
+> 20:const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.tsx"));
+> 21:const CampaignsPage = lazy(() => import("./pages/CampaignsPage.tsx"));
+> 22:const CampaignWizard = lazy(() => import("./pages/CampaignWizard.tsx"));
+> 23:const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
+> 24:const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> 25:const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> 26:const ContentLibraryPage = lazy(() => import("./pages/ContentLibraryPage.tsx"));
+> 27:const CalendarPage = lazy(() => import("./pages/CalendarPage.tsx"));
+> 28:const BlogEditorPage = lazy(() => import("./pages/BlogEditorPage.tsx"));
+> 29:const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+> 30:const OrchestrationPage = lazy(() => import("./pages/OrchestrationPage.tsx"));
+> 31:const MemoryPage = lazy(() => import("./pages/MemoryPage.tsx"));
+> 32:const MatrixPage = lazy(() => import("./pages/MatrixPage.tsx"));
+> 33:const AffiliatesPage = lazy(() => import("./pages/AffiliatesPage.tsx"));
+> 34:const AffiliateProductsPage = lazy(() => import("./pages/AffiliateProductsPage.tsx"));
+> 35:const ModelArenaPage = lazy(() => import("./pages/ModelArenaPage.tsx"));
+> 36:const CoreV2Page = lazy(() => import("./pages/CoreV2Page.tsx"));
+> 
+> === line count of each existing campaign file ===
+>   207 src/pages/CampaignsPage.tsx
+>   318 src/pages/CampaignDetail.tsx
+>   427 src/pages/CampaignWizard.tsx
+>   194 src/hooks/useCampaigns.ts
+>  1146 total
+> ```
+
+## 🤖 Claude *(14:42:36)*
+
+
+## 🤖 Claude *(14:42:39)*
+
+Major probe finding — there's a **substantial existing v1 campaign UI**: `useCampaigns.ts` (full CRUD) + `CampaignsPage`/`CampaignWizard`/`CampaignDetail` (1146 LOC, all routed in App.tsx). But it's pure v1 — social-media campaign CRUD with templates; it knows **nothing** about the new `campaign_steps`, `campaign-run`, or the multichannel columns (`intent`/`channels`/`mesh_node_id`). Zero references.
+
+The marketing-hub v2 BoK explicitly says it **"absorbs and scales v1"** — so this is a genuine architecture fork on your primary surface, and it's your call (not a "priority" I should just pick). The Leads board (FR-MH-001) is net-new with no conflict — I'll build that regardless. The question is how `campaign-run` + the multichannel step model should land in the UI.
+
+## 🤖 Claude *(14:42:48)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O backend do Marketing Hub est\u00e1 completo (campaign-run live). J\u00e1 existe uma UI v1 de campanhas (CampaignsPage/Wizard/Detail, 1146 LOC) que \u00e9 CRUD de campanha social e N\u00c3O conhece o modelo novo (campaign_steps/canais/Run). Como trago o campaign-run + o modelo multicanal pra UI no MVP-4?",
+      "header": "Estrat\u00e9gia UI MVP-4",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "M\u00ednimo agora, evoluir depois",
+          "description": "Construo o LeadBoard novo (FR-MH-001) + adiciono um bot\u00e3o \"Rodar campanha\" no CampaignDetail existente (wired a campaign-run) + editor leve de passos. Ativa o campaign-run na UI j\u00e1, baixo risco de regress\u00e3o. O composer completo fica como follow-up. Maior momentum, honra \"estende v1\"."
+        },
+        {
+          "label": "Absorver v1 por completo",
+          "description": "Evoluo CampaignWizard/CampaignsPage pro modelo v2: editor de passos multicanal (channels/passos), campos intent/channels, Run wired. Fiel ao \"absorve v1\" do BoK, reusa a UI que funciona \u2014 por\u00e9m \u00e9 refactor maior e mais cuidadoso de 1146 LOC que voc\u00ea pode usar hoje."
+        },
+        {
+          "label": "Superf\u00edcie /dashboard/marketing nova",
+          "description": "LeadBoard + CampaignComposer novos no /dashboard/marketing pro modelo v2, deixo a UI v1 de campanhas intacta por ora. Separa\u00e7\u00e3o limpa e r\u00e1pida, mas cria 2 UIs de campanha temporariamente (consolido depois) \u2014 contraria \"n\u00e3o duplicar\" do BoK no curto prazo."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O backend do Marketing Hub está completo (campaign-run live). Já existe uma UI v1 de campanhas (CampaignsPage/Wizard/Detail, 1146 LOC) que é CRUD de campanha social e NÃO conhece o modelo novo (campaign_steps/canais/Run). Como trago o campaign-run + o modelo multicanal pra UI no MVP-4?"="Faça absorver v1 por completo e tambem /dashboard/marketing nova. Faça completo e não apre até terminar". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:45:30)*
+
+
+## 🤖 Claude *(14:45:32)*
+
+He wants **both — full v1 absorb + a new `/dashboard/marketing`, complete, no stopping until done.** Understood. This is a large autonomous build; I'll execute it end-to-end (hooks → components → absorb the v1 campaign UI → new marketing surface → routes/nav → tests → build/deploy → material verify → seal).
+
+Let me set up tracking and run the deep probe of the existing v1 campaign UI + nav + types in parallel.
+
+## 🤖 Claude *(14:45:33)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskCreate,TaskUpdate,TaskList",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskCreate'}, {'type': 'tool_reference', 'tool_name': 'TaskUpdate'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}]
+> ```
+
+## 🤖 Claude *(14:45:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useNavigate } from 'react-router-dom';
+> 3	import { motion, AnimatePresence } from 'framer-motion';
+> 4	import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
+> 5	import { Button } from '@/components/ui/button';
+> 6	import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 7	import { Input } from '@/components/ui/input';
+> 8	import { Textarea } from '@/components/ui/textarea';
+> 9	import { Label } from '@/components/ui/label';
+> 10	import { Checkbox } from '@/components/ui/checkbox';
+> 11	import { Badge } from '@/components/ui/badge';
+> 12	import { Calendar } from '@/components/ui/calendar';
+> 13	import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+> 14	import { useCampaigns, CAMPAIGN_TEMPLATES } from '@/hooks/useCampaigns';
+> 15	import { toast } from '@/hooks/use-toast';
+> 16	import type { Database } from '@/integrations/supabase/types';
+> 17	import { cn } from '@/lib/utils';
+> 18	import { CalendarIcon } from 'lucide-react';
+> 19	import { format } from 'date-fns';
+> 20	import { ptBR } from 'date-fns/locale';
+> 21	
+> 22	type SocialPlatform = Database['public']['Enums']['social_platform'];
+> 23	
+> 24	const ALL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
+> 25	  { value: 'instagram', label: 'Instagram' },
+> 26	  { value: 'facebook', label: 'Facebook' },
+> 27	  { value: 'linkedin', label: 'LinkedIn' },
+> 28	  { value: 'twitter', label: 'Twitter/X' },
+> 29	  { value: 'tiktok', label: 'TikTok' },
+> 30	  { value: 'youtube', label: 'YouTube' },
+> 31	  { value: 'pinterest', label: 'Pinterest' },
+> 32	  { value: 'wordpress', label: 'WordPress' },
+> 33	];
+> 34	
+> 35	const STEPS = ['Objetivo', 'Público-Alvo', 'Canais', 'Orçamento', 'Cronograma'];
+> 36	
+> 37	interface WizardData {
+> 38	  name: string;
+> 39	  description: string;
+> 40	  objective: string;
+> 41	  target_audience: { age_range: string; location: string; interests: string[] };
+> 42	  platforms: SocialPlatform[];
+> 43	  budget_cents: number;
+> 44	  starts_at: Date | undefined;
+> 45	  ends_at: Date | undefined;
+> 46	}
+> 47	
+> 48	const initialData: WizardData = {
+> 49	  name: '',
+> 50	  description: '',
+> 51	  objective: '',
+> 52	  target_audience: { age_range: '18-45', location: '', interests: [] },
+> 53	  platforms: [],
+> 54	  budget_cents: 0,
+> 55	  starts_at: undefined,
+> 56	  ends_at: undefined,
+> 57	};
+> 58	
+> 59	export default function CampaignWizard() {
+> 60	  const navigate = useNavigate();
+> 61	  const { createCampaign } = useCampaigns();
+> 62	  const [step, setStep] = useState(0);
+> 63	  const [data, setData] = useState<WizardData>(initialData);
+> 64	  const [interestInput, setInterestInput] = useState('');
+> 65	  const [saving, setSaving] = useState(false);
+> 66	
+> 67	  const applyTemplate = (tpl: (typeof CAMPAIGN_TEMPLATES)[0]) => {
+> 68	    setData((d) => ({
+> 69	      ...d,
+> 70	      objective: tpl.defaults.objective ?? '',
+> 71	      platforms: (tpl.defaults.platforms as SocialPlatform[]) ?? [],
+> 72	      target_audience: {
+> 73	        ...d.target_audience,
+> 74	        ...(tpl.defaults.target_audience as any),
+> 75	      },
+> 76	    }));
+> 77	    toast({ title: `Template "${tpl.name}" aplicado!` });
+> 78	  };
+> 79	
+> 80	  const addInterest = () => {
+> 81	    if (interestInput.trim()) {
+> 82	      setData((d) => ({
+> 83	        ...d,
+> 84	        target_audience: {
+> 85	          ...d.target_audience,
+> 86	          interests: [...d.target_audience.interests, interestInput.trim()],
+> 87	        },
+> 88	      }));
+> 89	      setInterestInput('');
+> 90	    }
+> 91	  };
+> 92	
+> 93	  const removeInterest = (idx: number) => {
+> 94	    setData((d) => ({
+> 95	      ...d,
+> 96	      target_audience: {
+> 97	        ...d.target_audience,
+> 98	        interests: d.target_audience.interests.filter((_, i) => i !== idx),
+> 99	      },
+> 100	    }));
+> 101	  };
+> 102	
+> 103	  const togglePlatform = (p: SocialPlatform) => {
+> 104	    setData((d) => ({
+> 105	      ...d,
+> 106	      platforms: d.platforms.includes(p)
+> 107	        ? d.platforms.filter((x) => x !== p)
+> 108	        : [...d.platforms, p],
+> 109	    }));
+> 110	  };
+> 111	
+> 112	  const canProceed = () => {
+> 113	    if (step === 0) return data.name.trim().length > 0;
+> 114	    if (step === 2) return data.platforms.length > 0;
+> 115	    return true;
+> 116	  };
+> 117	
+> 118	  const handleSubmit = async () => {
+> 119	    setSaving(true);
+> 120	    try {
+> 121	      await createCampaign.mutateAsync({
+> 122	        name: data.name,
+> 123	        description: data.description || null,
+> 124	        objective: data.objective || null,
+> 125	        target_audience: data.target_audience,
+> 126	        platforms: data.platforms,
+> 127	        budget_cents: data.budget_cents,
+> 128	        starts_at: data.starts_at?.toISOString() ?? null,
+> 129	        ends_at: data.ends_at?.toISOString() ?? null,
+> 130	        status: 'draft',
+> 131	      });
+> 132	      toast({ title: 'Campanha criada com sucesso!' });
+> 133	      navigate('/dashboard/campaigns');
+> 134	    } catch {
+> 135	      toast({ title: 'Erro ao criar campanha', variant: 'destructive' });
+> 136	    } finally {
+> 137	      setSaving(false);
+> 138	    }
+> 139	  };
+> 140	
+> 141	  return (
+> 142	    <div className="max-w-2xl mx-auto space-y-6">
+> 143	      {/* Header */}
+> 144	      <div className="flex items-center gap-3">
+> 145	        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/campaigns')}>
+> 146	          <ArrowLeft className="h-4 w-4" />
+> 147	        </Button>
+> 148	        <div>
+> 149	          <h1 className="text-xl font-heading font-bold text-foreground">Nova Campanha</h1>
+> 150	          <p className="text-sm text-muted-foreground">Passo {step + 1} de {STEPS.length}</p>
+> 151	        </div>
+> 152	      </div>
+> 153	
+> 154	      {/* Stepper */}
+> 155	      <div className="flex items-center gap-1">
+> 156	        {STEPS.map((s, i) => (
+> 157	          <div key={s} className="flex items-center flex-1">
+> 158	            <div
+> 159	              className={cn(
+> 160	                'flex items-center justify-center h-8 w-8 rounded-full text-xs font-bold shrink-0 transition-colors',
+> 161	                i < step
+> 162	                  ? 'bg-primary text-primary-foreground'
+> 163	                  : i === step
+> 164	                  ? 'bg-primary/20 text-primary border-2 border-primary'
+> 165	                  : 'bg-muted text-muted-foreground'
+> 166	              )}
+> 167	            >
+> 168	              {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+> 169	            </div>
+> 170	            {i < STEPS.length - 1 && (
+> 171	              <div
+> 172	                className={cn(
+> 173	                  'h-0.5 flex-1 mx-1 rounded',
+> 174	                  i < step ? 'bg-primary' : 'bg-muted'
+> 175	                )}
+> 176	              />
+> 177	            )}
+> 178	          </div>
+> 179	        ))}
+> 180	      </div>
+> 181	
+> 182	      {/* Content */}
+> 183	      <AnimatePresence mode="wait">
+> 184	        <motion.div
+> 185	          key={step}
+> 186	          initial={{ opacity: 0, x: 20 }}
+> 187	          animate={{ opacity: 1, x: 0 }}
+> 188	          exit={{ opacity: 0, x: -20 }}
+> 189	          transition={{ duration: 0.2 }}
+> 190	        >
+> 191	          <Card>
+> 192	            <CardHeader>
+> 193	              <CardTitle className="text-lg">{STEPS[step]}</CardTitle>
+> 194	            </CardHeader>
+> 195	            <CardContent className="space-y-4">
+> 196	              {step === 0 && (
+> 197	                <>
+> 198	                  {/* Templates */}
+> 199	                  <div>
+> 200	                    <Label className="text-xs text-muted-foreground mb-2 block">Templates rápidos</Label>
+> 201	                    <div className="grid grid-cols-2 gap-2">
+> 202	                      {CAMPAIGN_TEMPLATES.map((tpl) => (
+> 203	                        <Button
+> 204	                          key={tpl.objective}
+> 205	                          variant="outline"
+> 206	                          size="sm"
+> 207	                          className="justify-start gap-2 h-auto py-2"
+> 208	                          onClick={() => applyTemplate(tpl)}
+> 209	                        >
+> 210	                          <span>{tpl.icon}</span>
+> 211	                          <span className="text-left text-xs">{tpl.name}</span>
+> 212	                        </Button>
+> 213	                      ))}
+> 214	                    </div>
+> 215	                  </div>
+> 216	                  <div className="space-y-2">
+> 217	                    <Label>Nome da campanha *</Label>
+> 218	                    <Input
+> 219	                      value={data.name}
+> 220	                      onChange={(e) => setData((d) => ({ ...d, name: e.target.value }))}
+> 221	                      placeholder="Ex: Black Friday 2026"
+> 222	                    />
+> 223	                  </div>
+> 224	                  <div className="space-y-2">
+> 225	                    <Label>Descrição</Label>
+> 226	                    <Textarea
+> 227	                      value={data.description}
+> 228	                      onChange={(e) => setData((d) => ({ ...d, description: e.target.value }))}
+> 229	                      placeholder="Descreva o objetivo principal da campanha..."
+> 230	                      rows={3}
+> 231	                    />
+> 232	                  </div>
+> 233	                  <div className="space-y-2">
+> 234	                    <Label>Objetivo</Label>
+> 235	                    <Input
+> 236	                      value={data.objective}
+> 237	                      onChange={(e) => setData((d) => ({ ...d, objective: e.target.value }))}
+> 238	                      placeholder="Ex: awareness, engajamento, vendas"
+> 239	                    />
+> 240	                  </div>
+> 241	                </>
+> 242	              )}
+> 243	
+> 244	              {step === 1 && (
+> 245	                <>
+> 246	                  <div className="space-y-2">
+> 247	                    <Label>Faixa etária</Label>
+> 248	                    <Input
+> 249	                      value={data.target_audience.age_range}
+> 250	                      onChange={(e) =>
+> 251	                        setData((d) => ({
+> 252	                          ...d,
+> 253	                          target_audience: { ...d.target_audience, age_range: e.target.value },
+> 254	                        }))
+> 255	                      }
+> 256	                      placeholder="Ex: 25-45"
+> 257	                    />
+> 258	                  </div>
+> 259	                  <div className="space-y-2">
+> 260	                    <Label>Localização</Label>
+> 261	                    <Input
+> 262	                      value={data.target_audience.location}
+> 263	                      onChange={(e) =>
+> 264	                        setData((d) => ({
+> 265	                          ...d,
+> 266	                          target_audience: { ...d.target_audience, location: e.target.value },
+> 267	                        }))
+> 268	                      }
+> 269	                      placeholder="Ex: Brasil, São Paulo"
+> 270	                    />
+> 271	                  </div>
+> 272	                  <div className="space-y-2">
+> 273	                    <Label>Interesses</Label>
+> 274	                    <div className="flex gap-2">
+> 275	                      <Input
+> 276	                        value={interestInput}
+> 277	                        onChange={(e) => setInterestInput(e.target.value)}
+> 278	                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInterest())}
+> 279	                        placeholder="Adicionar interesse..."
+> 280	                      />
+> 281	                      <Button type="button" size="sm" onClick={addInterest}>
+> 282	                        +
+> 283	                      </Button>
+> 284	                    </div>
+> 285	                    <div className="flex flex-wrap gap-1.5 mt-2">
+> 286	                      {data.target_audience.interests.map((int, idx) => (
+> 287	                        <Badge
+> 288	                          key={idx}
+> 289	                          variant="secondary"
+> 290	                          className="cursor-pointer"
+> 291	                          onClick={() => removeInterest(idx)}
+> 292	                        >
+> 293	                          {int} ×
+> 294	                        </Badge>
+> 295	                      ))}
+> 296	                    </div>
+> 297	                  </div>
+> 298	                </>
+> 299	              )}
+> 300	
+> 301	              {step === 2 && (
+> 302	                <>
+> 303	                  <p className="text-sm text-muted-foreground">
+> 304	                    Selecione as plataformas para esta campanha
+> 305	                  </p>
+> 306	                  <div className="grid grid-cols-2 gap-3">
+> 307	                    {ALL_PLATFORMS.map((p) => (
+> 308	                      <label
+> 309	                        key={p.value}
+> 310	                        className={cn(
+> 311	                          'flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors',
+> 312	                          data.platforms.includes(p.value)
+> 313	                            ? 'border-primary bg-primary/5'
+> 314	                            : 'border-border hover:border-muted-foreground/30'
+> 315	                        )}
+> 316	                      >
+> 317	                        <Checkbox
+> 318	                          checked={data.platforms.includes(p.value)}
+> 319	                          onCheckedChange={() => togglePlatform(p.value)}
+> 320	                        />
+> 321	                        <span className="text-sm font-medium">{p.label}</span>
+> 322	                      </label>
+> 323	                    ))}
+> 324	                  </div>
+> 325	                </>
+> 326	              )}
+> 327	
+> 328	              {step === 3 && (
+> 329	                <>
+> 330	                  <div className="space-y-2">
+> 331	                    <Label>Orçamento total (R$)</Label>
+> 332	                    <Input
+> 333	                      type="number"
+> 334	                      min={0}
+> 335	                      step={0.01}
+> 336	                      value={data.budget_cents ? (data.budget_cents / 100).toFixed(2) : ''}
+> 337	                      onChange={(e) =>
+> 338	                        setData((d) => ({
+> 339	                          ...d,
+> 340	                          budget_cents: Math.round(parseFloat(e.target.value || '0') * 100),
+> 341	                        }))
+> 342	                      }
+> 343	                      placeholder="0.00"
+> 344	                    />
+> 345	                    <p className="text-xs text-muted-foreground">
+> 346	                      Deixe em branco ou zero se não houver orçamento definido
+> 347	                    </p>
+> 348	                  </div>
+> 349	                </>
+> 350	              )}
+> 351	
+> 352	              {step === 4 && (
+> 353	                <>
+> 354	                  <div className="grid grid-cols-2 gap-4">
+> 355	                    <div className="space-y-2">
+> 356	                      <Label>Data de início</Label>
+> 357	                      <Popover>
+> 358	                        <PopoverTrigger asChild>
+> 359	                          <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !data.starts_at && 'text-muted-foreground')}>
+> 360	                            <CalendarIcon className="mr-2 h-4 w-4" />
+> 361	                            {data.starts_at ? format(data.starts_at, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar'}
+> 362	                          </Button>
+> 363	                        </PopoverTrigger>
+> 364	                        <PopoverContent className="w-auto p-0">
+> 365	                          <Calendar mode="single" selected={data.starts_at} onSelect={(d) => setData((prev) => ({ ...prev, starts_at: d }))} />
+> 366	                        </PopoverContent>
+> 367	                      </Popover>
+> 368	                    </div>
+> 369	                    <div className="space-y-2">
+> 370	                      <Label>Data de término</Label>
+> 371	                      <Popover>
+> 372	                        <PopoverTrigger asChild>
+> 373	                          <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !data.ends_at && 'text-muted-foreground')}>
+> 374	                            <CalendarIcon className="mr-2 h-4 w-4" />
+> 375	                            {data.ends_at ? format(data.ends_at, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar'}
+> 376	                          </Button>
+> 377	                        </PopoverTrigger>
+> 378	                        <PopoverContent className="w-auto p-0">
+> 379	                          <Calendar mode="single" selected={data.ends_at} onSelect={(d) => setData((prev) => ({ ...prev, ends_at: d }))} />
+> 380	                        </PopoverContent>
+> 381	                      </Popover>
+> 382	                    </div>
+> 383	                  </div>
+> 384	
+> 385	                  {/* Review */}
+> 386	                  <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border space-y-2">
+> 387	                    <h4 className="font-semibold text-sm flex items-center gap-2">
+> 388	                      <Sparkles className="h-4 w-4 text-primary" /> Resumo da Campanha
+> 389	                    </h4>
+> 390	                    <div className="text-sm space-y-1 text-muted-foreground">
+> 391	                      <p><strong className="text-foreground">Nome:</strong> {data.name}</p>
+> 392	                      {data.objective && <p><strong className="text-foreground">Objetivo:</strong> {data.objective}</p>}
+> 393	                      <p><strong className="text-foreground">Canais:</strong> {data.platforms.join(', ') || 'Nenhum'}</p>
+> 394	                      {data.budget_cents > 0 && (
+> 395	                        <p><strong className="text-foreground">Orçamento:</strong> R$ {(data.budget_cents / 100).toFixed(2)}</p>
+> 396	                      )}
+> 397	                      {data.starts_at && (
+> 398	                        <p><strong className="text-foreground">Período:</strong> {format(data.starts_at, 'dd/MM/yyyy', { locale: ptBR })} {data.ends_at ? `— ${format(data.ends_at, 'dd/MM/yyyy', { locale: ptBR })}` : ''}</p>
+> 399	                      )}
+> 400	                    </div>
+> 401	                  </div>
+> 402	                </>
+> 403	              )}
+> 404	            </CardContent>
+> 405	          </Card>
+> 406	        </motion.div>
+> 407	      </AnimatePresence>
+> 408	
+> 409	      {/* Navigation */}
+> 410	      <div className="flex justify-between">
+> 411	        <Button variant="ghost" onClick={() => (step === 0 ? navigate('/dashboard/campaigns') : setStep(step - 1))}>
+> 412	          <ArrowLeft className="h-4 w-4 mr-1" />
+> 413	          {step === 0 ? 'Cancelar' : 'Voltar'}
+> 414	        </Button>
+> 415	        {step < STEPS.length - 1 ? (
+> 416	          <Button onClick={() => setStep(step + 1)} disabled={!canProceed()}>
+> 417	            Próximo <ArrowRight className="h-4 w-4 ml-1" />
+> 418	          </Button>
+> 419	        ) : (
+> 420	          <Button onClick={handleSubmit} disabled={saving || !canProceed()}>
+> 421	            {saving ? 'Criando...' : 'Criar Campanha'} <Check className="h-4 w-4 ml-1" />
+> 422	          </Button>
+> 423	        )}
+> 424	      </div>
+> 425	    </div>
+> 426	  );
+> 427	}
+> 428	
+> ```
+
+## 🤖 Claude *(14:45:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignDetail.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useParams, useNavigate } from 'react-router-dom';
+> 3	import { ArrowLeft, Loader2, Megaphone } from 'lucide-react';
+> 4	import { Button } from '@/components/ui/button';
+> 5	import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 6	import { Badge } from '@/components/ui/badge';
+> 7	import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+> 8	import { useCampaign, useCampaigns, STATUS_LABELS, STATUS_COLORS, STATUS_TRANSITIONS } from '@/hooks/useCampaigns';
+> 9	import { useAuth } from '@/hooks/useAuth';
+> 10	import { toast } from '@/hooks/use-toast';
+> 11	import type { Database } from '@/integrations/supabase/types';
+> 12	import { format } from 'date-fns';
+> 13	import { ptBR } from 'date-fns/locale';
+> 14	
+> 15	type CampaignStatus = Database['public']['Enums']['campaign_status'];
+> 16	
+> 17	const ACTION_LABELS: Record<string, string> = {
+> 18	  active: 'Ativar',
+> 19	  paused: 'Pausar',
+> 20	  completed: 'Concluir',
+> 21	  archived: 'Arquivar',
+> 22	};
+> 23	
+> 24	interface SEMResult {
+> 25	  ad_copies: { headline: string; description: string; cta: string }[];
+> 26	  cpc_estimates: { platform: string; cpc_min_brl: number; cpc_max_brl: number; daily_budget_suggested_brl?: number }[];
+> 27	  negative_keywords: string[];
+> 28	  positive_keywords: string[];
+> 29	  quality_score: number;
+> 30	  optimizations: string[];
+> 31	}
+> 32	
+> 33	export default function CampaignDetail() {
+> 34	  const { id } = useParams<{ id: string }>();
+> 35	  const navigate = useNavigate();
+> 36	  const { session } = useAuth();
+> 37	  const { data: campaign, isLoading } = useCampaign(id);
+> 38	  const { updateCampaign } = useCampaigns();
+> 39	
+> 40	  const [semOpen, setSemOpen] = useState(false);
+> 41	  const [semLoading, setSemLoading] = useState(false);
+> 42	  const [semResult, setSemResult] = useState<SEMResult | null>(null);
+> 43	
+> 44	  const handleStatus = async (status: CampaignStatus) => {
+> 45	    try {
+> 46	      await updateCampaign.mutateAsync({ id: id!, status });
+> 47	      toast({ title: `Campanha ${STATUS_LABELS[status].toLowerCase()}` });
+> 48	    } catch {
+> 49	      toast({ title: 'Erro ao atualizar', variant: 'destructive' });
+> 50	    }
+> 51	  };
+> 52	
+> 53	  const handleAnalyzeSEM = async () => {
+> 54	    if (!campaign || !session) return;
+> 55	    setSemLoading(true);
+> 56	    setSemOpen(true);
+> 57	    setSemResult(null);
+> 58	    try {
+> 59	      const audience = campaign.target_audience as { age_range?: string; location?: string; interests?: string[] } | null;
+> 60	      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-sem`, {
+> 61	        method: 'POST',
+> 62	        headers: {
+> 63	          'Content-Type': 'application/json',
+> 64	          Authorization: `Bearer ${session.access_token}`,
+> 65	        },
+> 66	        body: JSON.stringify({
+> 67	          campaign_name: campaign.name,
+> 68	          objective: campaign.objective,
+> 69	          target_audience: audience,
+> 70	          platforms: campaign.platforms,
+> 71	          budget_cents: campaign.budget_cents,
+> 72	        }),
+> 73	      });
+> 74	      if (!resp.ok) {
+> 75	        const err = await resp.json().catch(() => ({}));
+> 76	        throw new Error(err.error || 'Erro na análise SEM');
+> 77	      }
+> 78	      const data = await resp.json();
+> 79	      setSemResult(data);
+> 80	    } catch (e: any) {
+> 81	      toast({ title: e.message || 'Erro na análise SEM', variant: 'destructive' });
+> 82	      setSemOpen(false);
+> 83	    } finally {
+> 84	      setSemLoading(false);
+> 85	    }
+> 86	  };
+> 87	
+> 88	  if (isLoading) {
+> 89	    return (
+> 90	      <div className="flex items-center justify-center py-20">
+> 91	        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 92	      </div>
+> 93	    );
+> 94	  }
+> 95	
+> 96	  if (!campaign) {
+> 97	    return (
+> 98	      <div className="text-center py-20">
+> 99	        <p className="text-muted-foreground">Campanha não encontrada</p>
+> 100	        <Button variant="link" onClick={() => navigate('/dashboard/campaigns')}>Voltar</Button>
+> 101	      </div>
+> 102	    );
+> 103	  }
+> 104	
+> 105	  const transitions = STATUS_TRANSITIONS[campaign.status];
+> 106	  const audience = campaign.target_audience as { age_range?: string; location?: string; interests?: string[] } | null;
+> 107	
+> 108	  return (
+> 109	    <div className="max-w-3xl mx-auto space-y-6">
+> 110	      {/* Header */}
+> 111	      <div className="flex items-center gap-3">
+> 112	        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/campaigns')}>
+> 113	          <ArrowLeft className="h-4 w-4" />
+> 114	        </Button>
+> 115	        <div className="flex-1 min-w-0">
+> 116	          <h1 className="text-xl font-heading font-bold text-foreground truncate">{campaign.name}</h1>
+> 117	          <div className="flex items-center gap-2 mt-1">
+> 118	            <Badge className={STATUS_COLORS[campaign.status]} variant="secondary">
+> 119	              {STATUS_LABELS[campaign.status]}
+> 120	            </Badge>
+> 121	            {campaign.objective && (
+> 122	              <span className="text-xs text-muted-foreground">• {campaign.objective}</span>
+> 123	            )}
+> 124	          </div>
+> 125	        </div>
+> 126	      </div>
+> 127	
+> 128	      {/* Status Actions + SEM */}
+> 129	      <div className="flex gap-2 flex-wrap">
+> 130	        {transitions.map((s) => (
+> 131	          <Button key={s} variant={s === 'active' ? 'default' : 'outline'} size="sm" onClick={() => handleStatus(s)} disabled={updateCampaign.isPending}>
+> 132	            {ACTION_LABELS[s] || s}
+> 133	          </Button>
+> 134	        ))}
+> 135	        {campaign.budget_cents && campaign.budget_cents > 0 && (
+> 136	          <Button variant="outline" size="sm" onClick={handleAnalyzeSEM} disabled={semLoading} className="ml-auto">
+> 137	            <Megaphone className="h-4 w-4 mr-1" />
+> 138	            Analisar SEM
+> 139	          </Button>
+> 140	        )}
+> 141	      </div>
+> 142	
+> 143	      <div className="grid gap-4 md:grid-cols-2">
+> 144	        {/* Info */}
+> 145	        <Card>
+> 146	          <CardHeader><CardTitle className="text-sm">Detalhes</CardTitle></CardHeader>
+> 147	          <CardContent className="space-y-3 text-sm">
+> 148	            {campaign.description && (
+> 149	              <div>
+> 150	                <span className="text-muted-foreground">Descrição</span>
+> 151	                <p className="text-foreground mt-0.5">{campaign.description}</p>
+> 152	              </div>
+> 153	            )}
+> 154	            <div>
+> 155	              <span className="text-muted-foreground">Orçamento</span>
+> 156	              <p className="text-foreground mt-0.5">
+> 157	                {campaign.budget_cents ? `R$ ${(campaign.budget_cents / 100).toFixed(2)}` : 'Não definido'}
+> 158	              </p>
+> 159	            </div>
+> 160	            <div>
+> 161	              <span className="text-muted-foreground">Período</span>
+> 162	              <p className="text-foreground mt-0.5">
+> 163	                {campaign.starts_at ? format(new Date(campaign.starts_at), 'dd/MM/yyyy', { locale: ptBR }) : '—'} → {campaign.ends_at ? format(new Date(campaign.ends_at), 'dd/MM/yyyy', { locale: ptBR }) : '—'}
+> 164	              </p>
+> 165	            </div>
+> 166	            <div>
+> 167	              <span className="text-muted-foreground">Criada em</span>
+> 168	              <p className="text-foreground mt-0.5">{format(new Date(campaign.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+> 169	            </div>
+> 170	          </CardContent>
+> 171	        </Card>
+> 172	
+> 173	        {/* Audience & Platforms */}
+> 174	        <Card>
+> 175	          <CardHeader><CardTitle className="text-sm">Público & Canais</CardTitle></CardHeader>
+> 176	          <CardContent className="space-y-3 text-sm">
+> 177	            {audience?.age_range && (
+> 178	              <div>
+> 179	                <span className="text-muted-foreground">Faixa etária</span>
+> 180	                <p className="text-foreground mt-0.5">{audience.age_range}</p>
+> 181	              </div>
+> 182	            )}
+> 183	            {audience?.location && (
+> 184	              <div>
+> 185	                <span className="text-muted-foreground">Localização</span>
+> 186	                <p className="text-foreground mt-0.5">{audience.location}</p>
+> 187	              </div>
+> 188	            )}
+> 189	            {audience?.interests && audience.interests.length > 0 && (
+> 190	              <div>
+> 191	                <span className="text-muted-foreground">Interesses</span>
+> 192	                <div className="flex flex-wrap gap-1 mt-1">
+> 193	                  {audience.interests.map((i, idx) => (
+> 194	                    <Badge key={idx} variant="outline" className="text-xs">{i}</Badge>
+> 195	                  ))}
+> 196	                </div>
+> 197	              </div>
+> 198	            )}
+> 199	            <div>
+> 200	              <span className="text-muted-foreground">Plataformas</span>
+> 201	              <div className="flex flex-wrap gap-1 mt-1">
+> 202	                {campaign.platforms?.length ? (
+> 203	                  campaign.platforms.map((p) => (
+> 204	                    <Badge key={p} variant="secondary" className="capitalize text-xs">{p}</Badge>
+> 205	                  ))
+> 206	                ) : (
+> 207	                  <span className="text-muted-foreground">Nenhuma</span>
+> 208	                )}
+> 209	              </div>
+> 210	            </div>
+> 211	          </CardContent>
+> 212	        </Card>
+> 213	      </div>
+> 214	
+> 215	      {/* Metrics placeholder */}
+> 216	      <Card className="border-dashed">
+> 217	        <CardContent className="py-10 text-center">
+> 218	          <p className="text-sm text-muted-foreground">📊 Métricas da campanha estarão disponíveis em breve</p>
+> 219	        </CardContent>
+> 220	      </Card>
+> 221	
+> 222	      {/* SEM Dialog */}
+> 223	      <Dialog open={semOpen} onOpenChange={setSemOpen}>
+> 224	        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+> 225	          <DialogHeader>
+> 226	            <DialogTitle className="flex items-center gap-2">
+> 227	              <Megaphone className="h-5 w-5 text-primary" />
+> 228	              Análise SEM — {campaign.name}
+> 229	            </DialogTitle>
+> 230	          </DialogHeader>
+> 231	
+> 232	          {semLoading && (
+> 233	            <div className="flex items-center justify-center py-12">
+> 234	              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 235	              <span className="ml-3 text-sm text-muted-foreground">Analisando com IA...</span>
+> 236	            </div>
+> 237	          )}
+> 238	
+> 239	          {semResult && (
+> 240	            <div className="space-y-5">
+> 241	              {/* Quality Score */}
+> 242	              <div className="flex items-center gap-3">
+> 243	                <span className="text-sm text-muted-foreground">Quality Score:</span>
+> 244	                <Badge variant={semResult.quality_score >= 7 ? 'default' : semResult.quality_score >= 4 ? 'secondary' : 'destructive'} className="text-lg px-3">
+> 245	                  {semResult.quality_score}/10
+> 246	                </Badge>
+> 247	              </div>
+> 248	
+> 249	              {/* Ad Copies */}
+> 250	              <div>
+> 251	                <h3 className="text-sm font-semibold mb-2">Sugestões de Anúncio</h3>
+> 252	                <div className="grid gap-3">
+> 253	                  {semResult.ad_copies.map((ad, i) => (
+> 254	                    <Card key={i}>
+> 255	                      <CardContent className="p-3 space-y-1">
+> 256	                        <p className="font-semibold text-sm text-primary">{ad.headline}</p>
+> 257	                        <p className="text-sm text-foreground">{ad.description}</p>
+> 258	                        <Badge variant="outline" className="text-xs">{ad.cta}</Badge>
+> 259	                      </CardContent>
+> 260	                    </Card>
+> 261	                  ))}
+> 262	                </div>
+> 263	              </div>
+> 264	
+> 265	              {/* CPC Estimates */}
+> 266	              <div>
+> 267	                <h3 className="text-sm font-semibold mb-2">CPC Estimado por Plataforma</h3>
+> 268	                <div className="grid gap-2">
+> 269	                  {semResult.cpc_estimates.map((est, i) => (
+> 270	                    <div key={i} className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+> 271	                      <span className="capitalize font-medium">{est.platform}</span>
+> 272	                      <span>R$ {est.cpc_min_brl.toFixed(2)} – R$ {est.cpc_max_brl.toFixed(2)}</span>
+> 273	                      {est.daily_budget_suggested_brl && (
+> 274	                        <Badge variant="secondary" className="text-xs">Diário: R$ {est.daily_budget_suggested_brl.toFixed(2)}</Badge>
+> 275	                      )}
+> 276	                    </div>
+> 277	                  ))}
+> 278	                </div>
+> 279	              </div>
+> 280	
+> 281	              {/* Keywords */}
+> 282	              <div className="grid grid-cols-2 gap-4">
+> 283	                <div>
+> 284	                  <h3 className="text-sm font-semibold mb-2 text-green-500">Keywords Positivas</h3>
+> 285	                  <div className="flex flex-wrap gap-1">
+> 286	                    {semResult.positive_keywords.map((k, i) => (
+> 287	                      <Badge key={i} variant="secondary" className="text-xs">{k}</Badge>
+> 288	                    ))}
+> 289	                  </div>
+> 290	                </div>
+> 291	                <div>
+> 292	                  <h3 className="text-sm font-semibold mb-2 text-red-400">Keywords Negativas</h3>
+> 293	                  <div className="flex flex-wrap gap-1">
+> 294	                    {semResult.negative_keywords.map((k, i) => (
+> 295	                      <Badge key={i} variant="outline" className="text-xs">{k}</Badge>
+> 296	                    ))}
+> 297	                  </div>
+> 298	                </div>
+> 299	              </div>
+> 300	
+> 301	              {/* Optimizations */}
+> 302	              <div>
+> 303	                <h3 className="text-sm font-semibold mb-2">Otimizações Sugeridas</h3>
+> 304	                <ul className="space-y-1">
+> 305	                  {semResult.optimizations.map((o, i) => (
+> 306	                    <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+> 307	                      <span className="text-primary mt-0.5">•</span> {o}
+> 308	                    </li>
+> 309	                  ))}
+> 310	                </ul>
+> 311	              </div>
+> 312	            </div>
+> 313	          )}
+> 314	        </DialogContent>
+> 315	      </Dialog>
+> 316	    </div>
+> 317	  );
+> 318	}
+> 319	
+> ```
+
+## 🤖 Claude *(14:46:03)*
+
+
+## 🤖 Claude *(14:46:05)*
+
+Now I fully understand the v1 campaign UI: social-campaign CRUD (`useCampaigns` + 5-step `CampaignWizard` + `CampaignDetail` with status transitions + "Analisar SEM"). It's `target_audience`/social-platform centric — knows nothing of `campaign_steps`/`campaign-run`/`intent`/`channels`. 
+
+Let me set up the task list and finish probing the last pieces (CampaignsPage, nav, leads schema in types, client edge-invoke pattern).
+
+## 🤖 Claude *(14:46:06)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Hooks: useLeads + useLeadScore + useCampaignSteps + useCampaignRun",
+  "description": "Business-logic layer (Harness Engineering). useLeads (board states/transitions, RLS), useLeadScore (invoke lead-score), useCampaignSteps (CRUD campaign_steps), useCampaignRun (invoke campaign-run), extend useCampaigns for intent/channels.",
+  "activeForm": "Building marketing-hub hooks"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Hooks: useLeads + useLeadScore + useCampaignSteps + useCampaignRun
+> ```
+
+## 🤖 Claude *(14:46:10)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "LeadBoard component (FR-MH-001) + new /dashboard/marketing page",
+  "description": "LeadBoard kanban by status (new/scored/nurturing/converted/lost) with score action. MarketingPage hub at /dashboard/marketing combining LeadBoard + campaigns overview. Route in App.tsx + nav in DashboardLayout.",
+  "activeForm": "Building LeadBoard + marketing page"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: LeadBoard component (FR-MH-001) + new /dashboard/marketing page
+> ```
+
+## 🤖 Claude *(14:46:12)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Absorb v1: evolve CampaignWizard + CampaignDetail to v2 model",
+  "description": "CampaignWizard: add intent/channels + multichannel steps editor (channel/action/position), persist campaign_steps. CampaignDetail: show steps + statuses + \"Rodar campanha\" button wired to campaign-run (cascade cost shown).",
+  "activeForm": "Absorbing v1 campaign UI into v2"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Absorb v1: evolve CampaignWizard + CampaignDetail to v2 model
+> ```
+
+## 🤖 Claude *(14:46:14)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Tests + tsc/lint + build/deploy + UI verify + seal",
+  "description": "Vitest for useLeads/useCampaigns extensions. tsc 0 + eslint clean + suite green. Build/deploy frontend via build-deploy-guardian (nginx dist/). Material UI render verify. /handoff seal.",
+  "activeForm": "Verifying + deploying + sealing"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Tests + tsc/lint + build/deploy + UI verify + seal
+> ```
+
+## 🤖 Claude *(14:46:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignsPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useNavigate } from 'react-router-dom';
+> 3	import { motion } from 'framer-motion';
+> 4	import { Plus, Copy, Archive, MoreHorizontal, Megaphone, Search } from 'lucide-react';
+> 5	import { Button } from '@/components/ui/button';
+> 6	import { Card, CardContent } from '@/components/ui/card';
+> 7	import { Badge } from '@/components/ui/badge';
+> 8	import { Input } from '@/components/ui/input';
+> 9	import {
+> 10	  DropdownMenu,
+> 11	  DropdownMenuContent,
+> 12	  DropdownMenuItem,
+> 13	  DropdownMenuTrigger,
+> 14	} from '@/components/ui/dropdown-menu';
+> 15	import { Skeleton } from '@/components/ui/skeleton';
+> 16	import {
+> 17	  useCampaigns,
+> 18	  STATUS_LABELS,
+> 19	  STATUS_COLORS,
+> 20	  STATUS_TRANSITIONS,
+> 21	} from '@/hooks/useCampaigns';
+> 22	import type { Database } from '@/integrations/supabase/types';
+> 23	import { toast } from '@/hooks/use-toast';
+> 24	
+> 25	type CampaignStatus = Database['public']['Enums']['campaign_status'];
+> 26	
+> 27	const STATUS_TABS: { label: string; value: CampaignStatus | 'all' }[] = [
+> 28	  { label: 'Todas', value: 'all' },
+> 29	  { label: 'Rascunho', value: 'draft' },
+> 30	  { label: 'Ativas', value: 'active' },
+> 31	  { label: 'Pausadas', value: 'paused' },
+> 32	  { label: 'Concluídas', value: 'completed' },
+> 33	  { label: 'Arquivadas', value: 'archived' },
+> 34	];
+> 35	
+> 36	export default function CampaignsPage() {
+> 37	  const navigate = useNavigate();
+> 38	  const [activeTab, setActiveTab] = useState<CampaignStatus | 'all'>('all');
+> 39	  const [search, setSearch] = useState('');
+> 40	  const { campaigns, isLoading, updateCampaign, duplicateCampaign, deleteCampaign } = useCampaigns(
+> 41	    activeTab === 'all' ? undefined : activeTab
+> 42	  );
+> 43	
+> 44	  const filtered = campaigns.filter((c) =>
+> 45	    c.name.toLowerCase().includes(search.toLowerCase())
+> 46	  );
+> 47	
+> 48	  const handleStatusChange = async (id: string, status: CampaignStatus) => {
+> 49	    try {
+> 50	      await updateCampaign.mutateAsync({ id, status });
+> 51	      toast({ title: `Campanha ${STATUS_LABELS[status].toLowerCase()}` });
+> 52	    } catch {
+> 53	      toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+> 54	    }
+> 55	  };
+> 56	
+> 57	  const handleDuplicate = async (campaign: (typeof campaigns)[0]) => {
+> 58	    try {
+> 59	      await duplicateCampaign.mutateAsync(campaign);
+> 60	      toast({ title: 'Campanha duplicada!' });
+> 61	    } catch {
+> 62	      toast({ title: 'Erro ao duplicar', variant: 'destructive' });
+> 63	    }
+> 64	  };
+> 65	
+> 66	  return (
+> 67	    <div className="space-y-6">
+> 68	      {/* Header */}
+> 69	      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+> 70	        <div>
+> 71	          <h1 className="text-2xl font-heading font-bold text-foreground">Campanhas</h1>
+> 72	          <p className="text-sm text-muted-foreground mt-1">
+> 73	            Gerencie suas campanhas de marketing
+> 74	          </p>
+> 75	        </div>
+> 76	        <Button onClick={() => navigate('/dashboard/campaigns/new')} className="gap-2">
+> 77	          <Plus className="h-4 w-4" />
+> 78	          Nova Campanha
+> 79	        </Button>
+> 80	      </div>
+> 81	
+> 82	      {/* Filters */}
+> 83	      <div className="flex flex-col sm:flex-row gap-3">
+> 84	        <div className="relative flex-1 max-w-sm">
+> 85	          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+> 86	          <Input
+> 87	            placeholder="Buscar campanhas..."
+> 88	            value={search}
+> 89	            onChange={(e) => setSearch(e.target.value)}
+> 90	            className="pl-9"
+> 91	          />
+> 92	        </div>
+> 93	        <div className="flex gap-1 overflow-x-auto">
+> 94	          {STATUS_TABS.map((tab) => (
+> 95	            <Button
+> 96	              key={tab.value}
+> 97	              variant={activeTab === tab.value ? 'default' : 'ghost'}
+> 98	              size="sm"
+> 99	              onClick={() => setActiveTab(tab.value)}
+> 100	              className="whitespace-nowrap"
+> 101	            >
+> 102	              {tab.label}
+> 103	            </Button>
+> 104	          ))}
+> 105	        </div>
+> 106	      </div>
+> 107	
+> 108	      {/* List */}
+> 109	      {isLoading ? (
+> 110	        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+> 111	          {[1, 2, 3].map((i) => (
+> 112	            <Skeleton key={i} className="h-48 rounded-lg" />
+> 113	          ))}
+> 114	        </div>
+> 115	      ) : filtered.length === 0 ? (
+> 116	        <Card className="border-dashed">
+> 117	          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+> 118	            <Megaphone className="h-12 w-12 text-muted-foreground/40 mb-4" />
+> 119	            <h3 className="font-semibold text-foreground mb-1">Nenhuma campanha encontrada</h3>
+> 120	            <p className="text-sm text-muted-foreground mb-4">
+> 121	              Crie sua primeira campanha para começar
+> 122	            </p>
+> 123	            <Button onClick={() => navigate('/dashboard/campaigns/new')} size="sm">
+> 124	              <Plus className="h-4 w-4 mr-1" /> Nova Campanha
+> 125	            </Button>
+> 126	          </CardContent>
+> 127	        </Card>
+> 128	      ) : (
+> 129	        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+> 130	          {filtered.map((campaign, i) => (
+> 131	            <motion.div
+> 132	              key={campaign.id}
+> 133	              initial={{ opacity: 0, y: 12 }}
+> 134	              animate={{ opacity: 1, y: 0 }}
+> 135	              transition={{ delay: i * 0.05 }}
+> 136	            >
+> 137	              <Card
+> 138	                className="cursor-pointer hover:border-primary/40 transition-colors group"
+> 139	                onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
+> 140	              >
+> 141	                <CardContent className="p-5 space-y-3">
+> 142	                  <div className="flex items-start justify-between">
+> 143	                    <div className="space-y-1 min-w-0 flex-1">
+> 144	                      <h3 className="font-semibold text-foreground truncate">{campaign.name}</h3>
+> 145	                      {campaign.description && (
+> 146	                        <p className="text-xs text-muted-foreground line-clamp-2">
+> 147	                          {campaign.description}
+> 148	                        </p>
+> 149	                      )}
+> 150	                    </div>
+> 151	                    <DropdownMenu>
+> 152	                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+> 153	                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+> 154	                          <MoreHorizontal className="h-4 w-4" />
+> 155	                        </Button>
+> 156	                      </DropdownMenuTrigger>
+> 157	                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+> 158	                        {STATUS_TRANSITIONS[campaign.status].map((s) => (
+> 159	                          <DropdownMenuItem key={s} onClick={() => handleStatusChange(campaign.id, s)}>
+> 160	                            {s === 'active' ? 'Ativar' : s === 'paused' ? 'Pausar' : s === 'completed' ? 'Concluir' : 'Arquivar'}
+> 161	                          </DropdownMenuItem>
+> 162	                        ))}
+> 163	                        <DropdownMenuItem onClick={() => handleDuplicate(campaign)}>
+> 164	                          <Copy className="h-3.5 w-3.5 mr-2" /> Duplicar
+> 165	                        </DropdownMenuItem>
+> 166	                        {campaign.status === 'draft' && (
+> 167	                          <DropdownMenuItem
+> 168	                            className="text-destructive"
+> 169	                            onClick={() => deleteCampaign.mutate(campaign.id)}
+> 170	                          >
+> 171	                            <Archive className="h-3.5 w-3.5 mr-2" /> Excluir
+> 172	                          </DropdownMenuItem>
+> 173	                        )}
+> 174	                      </DropdownMenuContent>
+> 175	                    </DropdownMenu>
+> 176	                  </div>
+> 177	
+> 178	                  <div className="flex items-center gap-2 flex-wrap">
+> 179	                    <Badge className={STATUS_COLORS[campaign.status]} variant="secondary">
+> 180	                      {STATUS_LABELS[campaign.status]}
+> 181	                    </Badge>
+> 182	                    {campaign.platforms?.map((p) => (
+> 183	                      <Badge key={p} variant="outline" className="text-[10px] capitalize">
+> 184	                        {p}
+> 185	                      </Badge>
+> 186	                    ))}
+> 187	                  </div>
+> 188	
+> 189	                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/50">
+> 190	                    <span>
+> 191	                      {campaign.budget_cents
+> 192	                        ? `R$ ${(campaign.budget_cents / 100).toFixed(2)}`
+> 193	                        : 'Sem orçamento'}
+> 194	                    </span>
+> 195	                    <span>
+> 196	                      {new Date(campaign.updated_at).toLocaleDateString('pt-BR')}
+> 197	                    </span>
+> 198	                  </div>
+> 199	                </CardContent>
+> 200	              </Card>
+> 201	            </motion.div>
+> 202	          ))}
+> 203	        </div>
+> 204	      )}
+> 205	    </div>
+> 206	  );
+> 207	}
+> 208	
+> ```
+
+## 🤖 Claude *(14:46:29)*
+
+
+## 🤖 Claude *(14:46:31)*
+
+Full v1 UI understood (card-grid list + tabs + dropdown actions). Last probe before building — the exact `leads`/`campaign_steps` types, the nav structure, and the client's edge-invoke convention.
+
+## 🤖 Claude *(14:46:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== leads Row type (types.ts) ===\"\nawk '/^      leads: \\{/{f=1} f{print} /Relationships: \\[/{if(f)c++} f&&c>=1&&/\\]/{print \"---END---\"; exit}' src/integrations/supabase/types.ts | sed -n '1,40p'\necho \"\"\necho \"=== campaign_steps Row type ===\"\nawk '/^      campaign_steps: \\{/{f=1} f{print} f&&/Relationships:/{c++} f&&c>=1{exit}' src/integrations/supabase/types.ts | sed -n '1,30p'",
+  "description": "Extract leads + campaign_steps types"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === leads Row type (types.ts) ===
+>       leads: {
+>         Row: {
+>           contact: string
+>           created_at: string
+>           embedding: string | null
+>           id: string
+>           intent_signal: Json
+>           name: string | null
+>           project_id: string | null
+>           score: number | null
+>           source: string
+>           status: string
+>           updated_at: string
+>           user_id: string
+>         }
+>         Insert: {
+>           contact: string
+>           created_at?: string
+>           embedding?: string | null
+>           id?: string
+>           intent_signal?: Json
+>           name?: string | null
+>           project_id?: string | null
+>           score?: number | null
+>           source?: string
+>           status?: string
+>           updated_at?: string
+>           user_id: string
+>         }
+>         Update: {
+>           contact?: string
+>           created_at?: string
+>           embedding?: string | null
+>           id?: string
+>           intent_signal?: Json
+>           name?: string | null
+>           project_id?: string | null
+>           score?: number | null
+>           source?: string
+>           status?: string
+> 
+> === campaign_steps Row type ===
+>       campaign_steps: {
+>         Row: {
+>           action: string
+>           campaign_id: string
+>           channel: string
+>           created_at: string
+>           id: string
+>           position: number
+>           status: string
+>           user_id: string
+>         }
+>         Insert: {
+>           action: string
+>           campaign_id: string
+>           channel: string
+>           created_at?: string
+>           id?: string
+>           position: number
+>           status?: string
+>           user_id: string
+>         }
+>         Update: {
+>           action?: string
+>           campaign_id?: string
+>           channel?: string
+>           created_at?: string
+>           id?: string
+>           position?: number
+>           status?: string
+>           user_id?: string
+> ```
+
+## 🤖 Claude *(14:46:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== client edge-invoke pattern (functions.invoke) in src ===\"\ngrep -rnE \"functions\\.invoke\\(\" src/hooks/ src/pages/ 2>/dev/null | head -8\necho \"\"\necho \"=== DashboardLayout nav items array ===\"\ngrep -nE \"icon:|label:|to:|path:|href:|name:|\\{ *(label|to|path)\" src/components/dashboard/DashboardLayout.tsx 2>/dev/null | head -30",
+  "description": "Edge-invoke pattern + nav structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === client edge-invoke pattern (functions.invoke) in src ===
+> src/hooks/useMcorchMemory.ts:184:      const { data, error: fnError } = await supabase.functions.invoke('award-mco-coins', {
+> src/hooks/useSwarmArena.ts:85:      const { data, error } = await supabase.functions.invoke('openrouter-swarm', {
+> src/hooks/useNodeIntelligence.ts:56:      const res = await supabase.functions.invoke('analyze-node', {
+> src/hooks/useViralTrends.ts:91:      const resp = await supabase.functions.invoke("fetch-trends", {
+> src/hooks/useDesignJobs.ts:90:      const { data, error } = await supabase.functions.invoke('design-job-enqueue', {
+> src/hooks/useAdminUserActions.ts:21:      const { data, error } = await supabase.functions.invoke('admin-manage-user', { body: vars });
+> src/hooks/useSubscription.ts:18:      const { data, error } = await supabase.functions.invoke('create-checkout', {
+> src/hooks/useSubscription.ts:39:      const { data, error } = await supabase.functions.invoke('create-portal');
+> 
+> === DashboardLayout nav items array ===
+> 9:import { toast } from 'sonner';
+> 97:    label: BREADCRUMB_MAP[seg] || seg,
+> 98:    path: '/' + segments.slice(0, i + 1).join('/'),
+> ```
+
+## 🤖 Claude *(14:46:46)*
+
+
+## 🤖 Claude *(14:46:48)*
+
+Types confirmed: `leads` (status:string text, intent_signal:Json, score:number|null, contact, source) and `campaign_steps` (channel/action/position/status). Client convention is `supabase.functions.invoke('fn', { body })` (auto-attaches JWT). The nav menu isn't in DashboardLayout's grep — let me locate where the sidebar links live.
+
+## 🤖 Claude *(14:46:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== where is the /dashboard/campaigns nav link defined? ===\"\ngrep -rlnE \"dashboard/campaigns|'Campanhas'|\\\"Campanhas\\\"\" src/ 2>/dev/null | head\necho \"\"\necho \"=== sidebar / nav menu component ===\"\ngrep -rlnE \"NavLink|navItems|sidebarItems|menuItems|navigation\" src/components/dashboard/ src/components/layout/ 2>/dev/null | head\necho \"\"\necho \"=== grep the campaigns nav entry with context ===\"\ngrep -rnE \"dashboard/campaigns|Megaphone|Afiliados|dashboard/affiliate\" src/components/ 2>/dev/null | grep -iE \"campaign|afili|megaphone|to:|path:|icon\" | head -15",
+  "description": "Locate sidebar nav menu definition"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === where is the /dashboard/campaigns nav link defined? ===
+> src/pages/CampaignsPage.tsx
+> src/pages/CampaignWizard.tsx
+> src/pages/CampaignDetail.tsx
+> src/components/dashboard/DashboardSidebar.tsx
+> src/components/dashboard/DashboardLayout.tsx
+> src/components/dashboard/OnboardingWizard.tsx
+> src/pages/DashboardHome.tsx
+> 
+> === sidebar / nav menu component ===
+> src/components/dashboard/DashboardSidebar.tsx
+> 
+> === grep the campaigns nav entry with context ===
+> src/components/dashboard/OnboardingWizard.tsx:7:import { Sparkles, Users, Megaphone, Orbit, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+> src/components/dashboard/OnboardingWizard.tsx:20:  { icon: Megaphone, title: 'Crie sua Primeira Campanha', description: 'Organize seu conteúdo com campanhas inteligentes.' },
+> src/components/dashboard/OnboardingWizard.tsx:59:    if (idx === 2) navigate('/dashboard/campaigns/new');
+> src/components/dashboard/DashboardSidebar.tsx:4:  Megaphone,
+> src/components/dashboard/DashboardSidebar.tsx:70:      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> src/components/dashboard/DashboardSidebar.tsx:81:      { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },
+> src/components/dashboard/DashboardSidebar.tsx:82:      { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },
+> src/components/dashboard/ROIWidget.tsx:74:    { icon: DollarSign, label: 'Receita Afiliados', value: `R$${data.affiliateRevenueBRL.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: 'text-yellow-400' },
+> ```
+
+## 🤖 Claude *(14:47:18)*
+
+
+## 🤖 Claude *(14:47:19)*
+
+Nav lives in `src/components/dashboard/DashboardSidebar.tsx` (line 70: Campanhas → Megaphone). Let me read its nav structure + an existing hook-test pattern to mirror, then I start building.
+
+## 🤖 Claude *(14:47:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 1,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import {
+> 2	  LayoutDashboard,
+> 3	  BarChart3,
+> 4	  Megaphone,
+> 5	  FileText,
+> 6	  Calendar,
+> 7	  Settings,
+> 8	  CreditCard,
+> 9	  Users,
+> 10	  Sparkles,
+> 11	  Orbit,
+> 12	  LogOut,
+> 13	  BookOpen,
+> 14	  Shield,
+> 15	  Wand2,
+> 16	  ShoppingBag,
+> 17	  PackageSearch,
+> 18	  Network,
+> 19	  Brain,
+> 20	  ChevronDown,
+> 21	  Cpu,
+> 22	  TrendingUp,
+> 23	  Palette,
+> 24	  Layers,
+> 25	  Coins,
+> 26	  Bot,
+> 27	  LineChart,
+> 28	  type LucideIcon,
+> 29	} from 'lucide-react';
+> 30	import { NavLink } from '@/components/NavLink';
+> 31	import { useLocation, useNavigate } from 'react-router-dom';
+> 32	import { useAuth } from '@/hooks/useAuth';
+> 33	import { useIsAdmin } from '@/hooks/useAdminData';
+> 34	import {
+> 35	  Sidebar,
+> 36	  SidebarContent,
+> 37	  SidebarGroup,
+> 38	  SidebarGroupContent,
+> 39	  SidebarGroupLabel,
+> 40	  SidebarMenu,
+> 41	  SidebarMenuButton,
+> 42	  SidebarMenuItem,
+> 43	  SidebarMenuSub,
+> 44	  SidebarMenuSubButton,
+> 45	  SidebarMenuSubItem,
+> 46	  SidebarFooter,
+> 47	  useSidebar,
+> 48	} from '@/components/ui/sidebar';
+> 49	import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+> 50	import { Button } from '@/components/ui/button';
+> 51	
+> 52	interface NavLeaf {
+> 53	  title: string;
+> 54	  url: string;
+> 55	  icon: LucideIcon;
+> 56	}
+> 57	
+> 58	interface NavCategoryDef {
+> 59	  title: string;
+> 60	  icon: LucideIcon;
+> 61	  items: NavLeaf[];
+> 62	}
+> 63	
+> 64	// Grouped navigation — collapsible categories keep the rail short (no scrollbar).
+> 65	const categories: NavCategoryDef[] = [
+> 66	  {
+> 67	    title: 'Conteúdo & Campanhas',
+> 68	    icon: Layers,
+> 69	    items: [
+> 70	      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> 71	      { title: 'Orquestração', url: '/dashboard/orchestration', icon: Wand2 },
+> 72	      { title: 'Conteúdo', url: '/dashboard/content', icon: FileText },
+> 73	      { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },
+> 74	      { title: 'Calendário', url: '/dashboard/calendar', icon: Calendar },
+> 75	    ],
+> 76	  },
+> 77	  {
+> 78	    title: 'Monetização',
+> 79	    icon: Coins,
+> 80	    items: [
+> 81	      { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },
+> 82	      { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },
+> 83	      { title: 'Viral Miner', url: '/dashboard/miner', icon: TrendingUp },
+> 84	      { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+> 85	    ],
+> 86	  },
+> 87	  {
+> 88	    title: 'Inteligência IA',
+> 89	    icon: Bot,
+> 90	    items: [
+> 91	      { title: 'Core', url: '/dashboard/core-v2', icon: Brain },
+> 92	      { title: 'AI Arena', url: '/dashboard/arena', icon: Cpu },
+> 93	      { title: 'Economia dos Agentes', url: '/dashboard/agent-economics', icon: LineChart },
+> 94	    ],
+> 95	  },
+> 96	];
+> 97	
+> 98	const systemItems: NavLeaf[] = [
+> 99	  { title: 'Redes Sociais', url: '/dashboard/social', icon: Users },
+> 100	  { title: 'Assinatura', url: '/dashboard/billing', icon: CreditCard },
+> ```
+
+## 🤖 Claude *(14:47:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== existing hook test files (mirror pattern) ===\"\nls -1 src/hooks/__tests__/ 2>/dev/null; ls -1 src/test/ 2>/dev/null | head\necho \"\"\necho \"=== how supabase client is mocked in a hook test ===\"\ngrep -rlnE \"vi.mock\\(.@/integrations/supabase\" src/ 2>/dev/null | head -3",
+  "description": "Sidebar nav region + hook test pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === existing hook test files (mirror pattern) ===
+> aios-sql-bridge-smoke.test.ts
+> billing.test.ts
+> canvas-dag.test.ts
+> canvas-handles.test.ts
+> canvas-video-async-smoke.test.ts
+> e2e-user-zero-selftest.test.ts
+> example.test.ts
+> meta.test.ts
+> phase-zeta.test.tsx
+> qa-extract-manifest.test.ts
+> 
+> === how supabase client is mocked in a hook test ===
+> src/test/phase-zeta.test.tsx
+> src/test/useSubscription.test.ts
+> src/test/useOrchestrationGraph.test.ts
+> ```
+
+## 🤖 Claude *(14:47:57)*
+
+
+## 🤖 Claude *(14:47:58)*
+
+I have the full picture now (nav groups in DashboardSidebar; test mocks in `src/test/useOrchestrationGraph.test.ts`). Starting the build — task #1 (hooks) first. Writing `useLeads.ts`.
+
+## 🤖 Claude *(14:47:58)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(14:48:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts",
+  "content": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';\n\n// marketing-hub FR-MH-001 (Lead Lifecycle Board) + FR-MH-003 (Lead Scoring).\n// Harness Engineering: all lead business logic lives here; components are display-only.\n\nexport type Lead = Tables<'leads'>;\nexport type LeadStatus = 'new' | 'scored' | 'nurturing' | 'converted' | 'lost';\n\n// Board column order (left\u2192right lifecycle). DB stores `status` as text with a CHECK on these 5 values.\nexport const LEAD_STATUSES: LeadStatus[] = ['new', 'scored', 'nurturing', 'converted', 'lost'];\n\nexport const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {\n  new: 'Novo',\n  scored: 'Pontuado',\n  nurturing: 'Nutrindo',\n  converted: 'Convertido',\n  lost: 'Perdido',\n};\n\nexport const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {\n  new: 'bg-sky-500/15 text-sky-400 border-sky-500/30',\n  scored: 'bg-violet-500/15 text-violet-400 border-violet-500/30',\n  nurturing: 'bg-amber-500/15 text-amber-400 border-amber-500/30',\n  converted: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',\n  lost: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30',\n};\n\n/** Extract a PT-BR error message from a Supabase Edge Function non-2xx response (e.g. 402 \"Saldo insuficiente\"). */\nasync function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {\n  const ctx = (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context;\n  try {\n    const body = await ctx?.json?.();\n    if (body?.error) return body.error;\n  } catch { /* not JSON */ }\n  return (error as { message?: string })?.message || fallback;\n}\n\nexport function useLeads(statusFilter?: LeadStatus) {\n  const { user } = useAuth();\n  const queryClient = useQueryClient();\n\n  const leadsQuery = useQuery({\n    queryKey: ['leads', user?.id, statusFilter],\n    queryFn: async () => {\n      let query = supabase.from('leads').select('*').order('updated_at', { ascending: false });\n      if (statusFilter) query = query.eq('status', statusFilter);\n      const { data, error } = await query;\n      if (error) throw error;\n      return data as Lead[];\n    },\n    enabled: !!user,\n  });\n\n  // Manual capture (leads also arrive via whatsapp-webhook). contact is NOT NULL (E.164 phone OR email).\n  const createLead = useMutation({\n    mutationFn: async (lead: Pick<TablesInsert<'leads'>, 'contact' | 'name'> & { intent_signal?: Record<string, unknown> }) => {\n      const { data, error } = await supabase\n        .from('leads')\n        .insert({ ...lead, user_id: user!.id, source: 'manual', status: 'new' })\n        .select()\n        .single();\n      if (error) throw error;\n      return data as Lead;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] }),\n  });\n\n  const updateLeadStatus = useMutation({\n    mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {\n      const { data, error } = await supabase\n        .from('leads')\n        .update({ status })\n        .eq('id', id)\n        .select()\n        .single();\n      if (error) throw error;\n      return data as Lead;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] }),\n  });\n\n  return {\n    leads: leadsQuery.data ?? [],\n    isLoading: leadsQuery.isLoading,\n    error: leadsQuery.error,\n    createLead,\n    updateLeadStatus,\n  };\n}\n\nexport interface LeadScoreResult {\n  status: 'ok';\n  lead_id: string;\n  score: number;\n  rationale: string;\n  new_balance: number | null;\n}\n\n/** FR-MH-003 \u2014 invokes the JWT-guarded lead-score edge fn (debits 1 mcoCoin atomically). */\nexport function useLeadScore() {\n  const queryClient = useQueryClient();\n  return useMutation({\n    mutationFn: async (lead_id: string): Promise<LeadScoreResult> => {\n      const { data, error } = await supabase.functions.invoke('lead-score', { body: { lead_id } });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Erro ao pontuar lead'));\n      return data as LeadScoreResult;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] }),\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:27)*
+
+
+## 🤖 Claude *(14:48:28)*
+
+Now a small shared helper for extracting PT-BR errors from edge responses (used by both lead + campaign run hooks), then extend `useCampaigns`.
+
+## 🤖 Claude *(14:48:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/edge.ts",
+  "content": "// Shared helper for Supabase Edge Function invocations from the client.\n// supabase.functions.invoke() returns a FunctionsHttpError for any non-2xx response, with the raw\n// Response on `error.context`. Our edge fns return a PT-BR `{ error }` body (e.g. 402 \"Saldo insuficiente\"),\n// so we read that to surface the real message to the user instead of the generic \"Edge Function returned a\n// non-2xx status code\".\n\n/** Extract a PT-BR error message from a Supabase Edge Function non-2xx response. */\nexport async function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {\n  const ctx = (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context;\n  try {\n    const body = await ctx?.json?.();\n    if (body?.error) return body.error;\n  } catch { /* response body was not JSON */ }\n  return (error as { message?: string })?.message || fallback;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/edge.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:35)*
+
+
+## 🤖 Claude *(14:48:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts",
+  "old_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';",
+  "new_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts",
+  "old_string": "/** Extract a PT-BR error message from a Supabase Edge Function non-2xx response (e.g. 402 \"Saldo insuficiente\"). */\nasync function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {\n  const ctx = (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context;\n  try {\n    const body = await ctx?.json?.();\n    if (body?.error) return body.error;\n  } catch { /* not JSON */ }\n  return (error as { message?: string })?.message || fallback;\n}\n\nexport function useLeads(statusFilter?: LeadStatus) {",
+  "new_string": "export function useLeads(statusFilter?: LeadStatus) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useLeads.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:02)*
+
+
+## 🤖 Claude *(14:49:03)*
+
+Now extend `useCampaigns.ts` — add the edge helper import, then append `useCampaignSteps` + `useCampaignRun` + step constants.
+
+## 🤖 Claude *(14:49:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts",
+  "old_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';\nimport type { Database } from '@/integrations/supabase/types';",
+  "new_string": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';\nimport type { Database } from '@/integrations/supabase/types';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts",
+  "old_string": "export function useCampaign(id: string | undefined) {\n  const { user } = useAuth();\n\n  return useQuery({\n    queryKey: ['campaign', id],\n    queryFn: async () => {\n      const { data, error } = await supabase\n        .from('campaigns')\n        .select('*')\n        .eq('id', id!)\n        .single();\n      if (error) throw error;\n      return data as Campaign;\n    },\n    enabled: !!user && !!id,\n  });\n}",
+  "new_string": "export function useCampaign(id: string | undefined) {\n  const { user } = useAuth();\n\n  return useQuery({\n    queryKey: ['campaign', id],\n    queryFn: async () => {\n      const { data, error } = await supabase\n        .from('campaigns')\n        .select('*')\n        .eq('id', id!)\n        .single();\n      if (error) throw error;\n      return data as Campaign;\n    },\n    enabled: !!user && !!id,\n  });\n}\n\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Campaign Core v2 (MVP-2/3) \u2014 multichannel ordered steps + the campaign-run cascade.\n// Absorbs v1: the campaign CRUD above is the social-campaign shell; these add the\n// `campaign_steps` model + FR-MH-004 run. `channels`/`intent` columns flow through createCampaign.\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nexport type CampaignStep = Tables<'campaign_steps'>;\nexport type CampaignChannel = 'content' | 'social' | 'email' | 'affiliate';\nexport type CampaignStepAction = 'generate_content' | 'publish' | 'affiliate_attach';\nexport type CampaignStepStatus = 'idle' | 'running' | 'done' | 'error' | 'blocked';\n\n// channel \u2192 what campaign-run dispatches. `email` is nurture-dispatch territory (blocked by campaign-run).\nexport const CAMPAIGN_CHANNELS: { value: CampaignChannel; label: string; hint: string }[] = [\n  { value: 'content', label: 'Conte\u00fado', hint: 'Artigo no WordPress' },\n  { value: 'social', label: 'Social', hint: 'LinkedIn + Twitter/X' },\n  { value: 'affiliate', label: 'Afiliado', hint: 'Artigo + link ML' },\n  { value: 'email', label: 'E-mail', hint: 'Nurturing (em breve)' },\n];\n\nexport const STEP_ACTION_LABELS: Record<CampaignStepAction, string> = {\n  generate_content: 'Gerar conte\u00fado',\n  publish: 'Publicar',\n  affiliate_attach: 'Anexar afiliado',\n};\n\nexport const STEP_STATUS_LABELS: Record<CampaignStepStatus, string> = {\n  idle: 'Aguardando',\n  running: 'Executando',\n  done: 'Conclu\u00eddo',\n  error: 'Erro',\n  blocked: 'Bloqueado',\n};\n\nexport const STEP_STATUS_COLORS: Record<CampaignStepStatus, string> = {\n  idle: 'bg-muted text-muted-foreground',\n  running: 'bg-amber-500/20 text-amber-400',\n  done: 'bg-emerald-500/20 text-emerald-400',\n  error: 'bg-red-500/20 text-red-400',\n  blocked: 'bg-zinc-500/20 text-zinc-400',\n};\n\nexport function useCampaignSteps(campaignId: string | undefined) {\n  const { user } = useAuth();\n  const queryClient = useQueryClient();\n  const key = ['campaign_steps', campaignId];\n\n  const stepsQuery = useQuery({\n    queryKey: key,\n    queryFn: async () => {\n      const { data, error } = await supabase\n        .from('campaign_steps')\n        .select('*')\n        .eq('campaign_id', campaignId!)\n        .order('position', { ascending: true });\n      if (error) throw error;\n      return data as CampaignStep[];\n    },\n    enabled: !!user && !!campaignId,\n  });\n\n  const addStep = useMutation({\n    mutationFn: async (step: { channel: CampaignChannel; action: CampaignStepAction; position: number }) => {\n      const { data, error } = await supabase\n        .from('campaign_steps')\n        .insert({ ...step, campaign_id: campaignId!, user_id: user!.id })\n        .select()\n        .single();\n      if (error) throw error;\n      return data as CampaignStep;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),\n  });\n\n  const deleteStep = useMutation({\n    mutationFn: async (id: string) => {\n      const { error } = await supabase.from('campaign_steps').delete().eq('id', id);\n      if (error) throw error;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),\n  });\n\n  return {\n    steps: stepsQuery.data ?? [],\n    isLoading: stepsQuery.isLoading,\n    addStep,\n    deleteStep,\n  };\n}\n\nexport interface CampaignRunResult {\n  status: 'ok';\n  campaign_id: string;\n  run_id: string;\n  steps_dispatched: number;\n  new_balance: number | null;\n}\n\n/** FR-MH-004 \u2014 invokes the JWT-guarded campaign-run edge fn (cascade: CAMPAIGN_RUN fee + per-step orchestrate-content). */\nexport function useCampaignRun() {\n  const queryClient = useQueryClient();\n  return useMutation({\n    mutationFn: async (campaignId: string): Promise<CampaignRunResult> => {\n      const { data, error } = await supabase.functions.invoke('campaign-run', { body: { campaign_id: campaignId } });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Erro ao executar campanha'));\n      return data as CampaignRunResult;\n    },\n    onSuccess: (_d, campaignId) => {\n      queryClient.invalidateQueries({ queryKey: ['campaign_steps', campaignId] });\n      queryClient.invalidateQueries({ queryKey: ['campaigns'] });\n      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });\n    },\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:44)*
+
+
+## 🤖 Claude *(14:49:45)*
+
+Hooks done. Marking task #1 complete; starting components. Building `LeadBoard` first.
+
+## 🤖 Claude *(14:49:45)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(14:50:15)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/LeadBoard.tsx",
+  "content": "import { useMemo, useState } from 'react';\nimport { motion } from 'framer-motion';\nimport { Plus, Sparkles, Loader2, UserPlus } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport {\n  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,\n} from '@/components/ui/dialog';\nimport {\n  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,\n} from '@/components/ui/dropdown-menu';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport {\n  useLeads, useLeadScore, LEAD_STATUSES, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS,\n  type Lead, type LeadStatus,\n} from '@/hooks/useLeads';\nimport { toast } from '@/hooks/use-toast';\n\nfunction scoreColor(score: number): string {\n  if (score >= 70) return 'bg-emerald-500/20 text-emerald-400';\n  if (score >= 40) return 'bg-amber-500/20 text-amber-400';\n  return 'bg-zinc-500/20 text-zinc-400';\n}\n\nfunction LeadCard({ lead, onScore, onMove, scoring }: {\n  lead: Lead;\n  onScore: (id: string) => void;\n  onMove: (id: string, status: LeadStatus) => void;\n  scoring: boolean;\n}) {\n  return (\n    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>\n      <Card className=\"hover:border-primary/40 transition-colors\">\n        <CardContent className=\"p-3 space-y-2\">\n          <div className=\"flex items-start justify-between gap-2\">\n            <div className=\"min-w-0\">\n              <p className=\"text-sm font-medium text-foreground truncate\">{lead.name || lead.contact}</p>\n              {lead.name && <p className=\"text-xs text-muted-foreground truncate\">{lead.contact}</p>}\n            </div>\n            {lead.score != null && (\n              <Badge variant=\"secondary\" className={`shrink-0 ${scoreColor(lead.score)}`}>{lead.score}</Badge>\n            )}\n          </div>\n          <div className=\"flex items-center gap-1.5\">\n            {lead.status !== 'converted' && lead.status !== 'lost' && (\n              <Button\n                size=\"sm\" variant=\"outline\" className=\"h-7 px-2 text-xs gap-1\"\n                onClick={() => onScore(lead.id)} disabled={scoring}\n              >\n                {scoring ? <Loader2 className=\"h-3 w-3 animate-spin\" /> : <Sparkles className=\"h-3 w-3\" />}\n                Pontuar\n              </Button>\n            )}\n            <DropdownMenu>\n              <DropdownMenuTrigger asChild>\n                <Button size=\"sm\" variant=\"ghost\" className=\"h-7 px-2 text-xs\">Mover</Button>\n              </DropdownMenuTrigger>\n              <DropdownMenuContent align=\"start\">\n                {LEAD_STATUSES.filter((s) => s !== lead.status).map((s) => (\n                  <DropdownMenuItem key={s} onClick={() => onMove(lead.id, s)}>\n                    {LEAD_STATUS_LABELS[s]}\n                  </DropdownMenuItem>\n                ))}\n              </DropdownMenuContent>\n            </DropdownMenu>\n          </div>\n        </CardContent>\n      </Card>\n    </motion.div>\n  );\n}\n\nfunction AddLeadDialog({ onAdd, pending }: { onAdd: (v: { contact: string; name: string }) => void; pending: boolean }) {\n  const [open, setOpen] = useState(false);\n  const [contact, setContact] = useState('');\n  const [name, setName] = useState('');\n  const submit = () => {\n    if (!contact.trim()) { toast({ title: 'Informe telefone ou email do lead', variant: 'destructive' }); return; }\n    onAdd({ contact: contact.trim(), name: name.trim() });\n    setContact(''); setName(''); setOpen(false);\n  };\n  return (\n    <Dialog open={open} onOpenChange={setOpen}>\n      <DialogTrigger asChild>\n        <Button size=\"sm\" className=\"gap-2\"><UserPlus className=\"h-4 w-4\" /> Novo lead</Button>\n      </DialogTrigger>\n      <DialogContent>\n        <DialogHeader><DialogTitle>Novo lead</DialogTitle></DialogHeader>\n        <div className=\"space-y-3\">\n          <div className=\"space-y-1.5\">\n            <Label>Contato * (telefone ou email)</Label>\n            <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder=\"+5511999998888 ou lead@email.com\" />\n          </div>\n          <div className=\"space-y-1.5\">\n            <Label>Nome</Label>\n            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder=\"Opcional\" />\n          </div>\n        </div>\n        <DialogFooter>\n          <Button onClick={submit} disabled={pending} className=\"gap-2\">\n            {pending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Plus className=\"h-4 w-4\" />} Adicionar\n          </Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\nexport default function LeadBoard() {\n  const { leads, isLoading, createLead, updateLeadStatus } = useLeads();\n  const leadScore = useLeadScore();\n  const [scoringId, setScoringId] = useState<string | null>(null);\n\n  const byStatus = useMemo(() => {\n    const map: Record<LeadStatus, Lead[]> = { new: [], scored: [], nurturing: [], converted: [], lost: [] };\n    for (const lead of leads) {\n      const s = (LEAD_STATUSES as string[]).includes(lead.status) ? (lead.status as LeadStatus) : 'new';\n      map[s].push(lead);\n    }\n    return map;\n  }, [leads]);\n\n  const handleScore = async (id: string) => {\n    setScoringId(id);\n    try {\n      const r = await leadScore.mutateAsync(id);\n      toast({ title: `Lead pontuado: ${r.score}/100`, description: r.rationale });\n    } catch (e) {\n      toast({ title: (e as Error).message, variant: 'destructive' });\n    } finally {\n      setScoringId(null);\n    }\n  };\n\n  const handleMove = async (id: string, status: LeadStatus) => {\n    try {\n      await updateLeadStatus.mutateAsync({ id, status });\n      toast({ title: `Lead movido para \"${LEAD_STATUS_LABELS[status]}\"` });\n    } catch {\n      toast({ title: 'Erro ao mover lead', variant: 'destructive' });\n    }\n  };\n\n  const handleAdd = async (v: { contact: string; name: string }) => {\n    try {\n      await createLead.mutateAsync({ contact: v.contact, name: v.name || null });\n      toast({ title: 'Lead adicionado' });\n    } catch (e) {\n      toast({ title: (e as Error).message || 'Erro ao adicionar lead', variant: 'destructive' });\n    }\n  };\n\n  return (\n    <div className=\"space-y-4\">\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <h2 className=\"text-lg font-heading font-semibold text-foreground\">Leads</h2>\n          <p className=\"text-xs text-muted-foreground\">{leads.length} lead(s) no funil</p>\n        </div>\n        <AddLeadDialog onAdd={handleAdd} pending={createLead.isPending} />\n      </div>\n\n      {isLoading ? (\n        <div className=\"grid gap-3 md:grid-cols-3 lg:grid-cols-5\">\n          {LEAD_STATUSES.map((s) => <Skeleton key={s} className=\"h-40 rounded-lg\" />)}\n        </div>\n      ) : (\n        <div className=\"grid gap-3 md:grid-cols-3 lg:grid-cols-5\">\n          {LEAD_STATUSES.map((status) => (\n            <div key={status} className=\"space-y-2\">\n              <div className=\"flex items-center justify-between px-1\">\n                <Badge variant=\"outline\" className={`text-xs ${LEAD_STATUS_COLORS[status]}`}>\n                  {LEAD_STATUS_LABELS[status]}\n                </Badge>\n                <span className=\"text-xs text-muted-foreground\">{byStatus[status].length}</span>\n              </div>\n              <div className=\"space-y-2 min-h-[2rem]\">\n                {byStatus[status].map((lead) => (\n                  <LeadCard\n                    key={lead.id} lead={lead}\n                    onScore={handleScore} onMove={handleMove}\n                    scoring={scoringId === lead.id}\n                  />\n                ))}\n                {byStatus[status].length === 0 && (\n                  <p className=\"text-[11px] text-muted-foreground/50 text-center py-3\">\u2014</p>\n                )}\n              </div>\n            </div>\n          ))}\n        </div>\n      )}\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/LeadBoard.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:50:39)*
+
+
+## 🤖 Claude *(14:50:40)*
+
+`LeadBoard` done. Now the reusable `CampaignStepsEditor` (controlled — works for both the wizard draft and the live DB-backed detail view) and `CampaignRunButton`.
+
+## 🤖 Claude *(14:50:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/CampaignStepsEditor.tsx",
+  "content": "import { useState } from 'react';\nimport { Plus, Trash2, GripVertical } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport {\n  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,\n} from '@/components/ui/select';\nimport {\n  CAMPAIGN_CHANNELS, STEP_ACTION_LABELS, STEP_STATUS_LABELS, STEP_STATUS_COLORS,\n  type CampaignChannel, type CampaignStepAction, type CampaignStepStatus,\n} from '@/hooks/useCampaigns';\n\nexport interface EditorStep {\n  id?: string;\n  channel: CampaignChannel;\n  action: CampaignStepAction;\n  status?: CampaignStepStatus;\n}\n\nconst ACTIONS: CampaignStepAction[] = ['generate_content', 'publish', 'affiliate_attach'];\n\ninterface Props {\n  steps: EditorStep[];\n  onAdd: (channel: CampaignChannel, action: CampaignStepAction) => void;\n  onRemove: (step: EditorStep, index: number) => void;\n  showStatus?: boolean;\n  disabled?: boolean;\n}\n\n/** Controlled multichannel steps editor \u2014 reused by the campaign wizard (draft) and detail (live, with status). */\nexport default function CampaignStepsEditor({ steps, onAdd, onRemove, showStatus, disabled }: Props) {\n  const [channel, setChannel] = useState<CampaignChannel>('content');\n  const [action, setAction] = useState<CampaignStepAction>('generate_content');\n\n  const channelLabel = (c: string) => CAMPAIGN_CHANNELS.find((x) => x.value === c)?.label ?? c;\n\n  return (\n    <div className=\"space-y-3\">\n      {steps.length > 0 ? (\n        <ol className=\"space-y-2\">\n          {steps.map((step, i) => (\n            <li key={step.id ?? i} className=\"flex items-center gap-2 rounded-lg border border-border p-2.5\">\n              <GripVertical className=\"h-4 w-4 text-muted-foreground/40 shrink-0\" />\n              <span className=\"flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary\">\n                {i + 1}\n              </span>\n              <div className=\"min-w-0 flex-1\">\n                <p className=\"text-sm font-medium text-foreground\">{channelLabel(step.channel)}</p>\n                <p className=\"text-xs text-muted-foreground\">{STEP_ACTION_LABELS[step.action]}</p>\n              </div>\n              {showStatus && step.status && (\n                <Badge variant=\"secondary\" className={`text-[10px] ${STEP_STATUS_COLORS[step.status]}`}>\n                  {STEP_STATUS_LABELS[step.status]}\n                </Badge>\n              )}\n              <Button\n                variant=\"ghost\" size=\"icon\" className=\"h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive\"\n                onClick={() => onRemove(step, i)} disabled={disabled}\n              >\n                <Trash2 className=\"h-3.5 w-3.5\" />\n              </Button>\n            </li>\n          ))}\n        </ol>\n      ) : (\n        <p className=\"text-xs text-muted-foreground py-2\">Nenhum passo ainda. Adicione canais para compor a campanha.</p>\n      )}\n\n      <div className=\"flex flex-col gap-2 rounded-lg border border-dashed border-border p-3 sm:flex-row sm:items-end\">\n        <div className=\"flex-1 space-y-1\">\n          <label className=\"text-xs text-muted-foreground\">Canal</label>\n          <Select value={channel} onValueChange={(v) => setChannel(v as CampaignChannel)} disabled={disabled}>\n            <SelectTrigger className=\"h-9\"><SelectValue /></SelectTrigger>\n            <SelectContent>\n              {CAMPAIGN_CHANNELS.map((c) => (\n                <SelectItem key={c.value} value={c.value}>\n                  {c.label} <span className=\"text-muted-foreground\">\u00b7 {c.hint}</span>\n                </SelectItem>\n              ))}\n            </SelectContent>\n          </Select>\n        </div>\n        <div className=\"flex-1 space-y-1\">\n          <label className=\"text-xs text-muted-foreground\">A\u00e7\u00e3o</label>\n          <Select value={action} onValueChange={(v) => setAction(v as CampaignStepAction)} disabled={disabled}>\n            <SelectTrigger className=\"h-9\"><SelectValue /></SelectTrigger>\n            <SelectContent>\n              {ACTIONS.map((a) => (\n                <SelectItem key={a} value={a}>{STEP_ACTION_LABELS[a]}</SelectItem>\n              ))}\n            </SelectContent>\n          </Select>\n        </div>\n        <Button type=\"button\" variant=\"outline\" className=\"gap-1.5\" onClick={() => onAdd(channel, action)} disabled={disabled}>\n          <Plus className=\"h-4 w-4\" /> Adicionar passo\n        </Button>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/CampaignStepsEditor.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:51:08)*
+
+
+## 🤖 Claude *(14:51:08)*
+
+Now `CampaignRunButton` — confirm dialog showing the faithful cascade cost estimate, wired to `useCampaignRun`.
+
+## 🤖 Claude *(14:51:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/CampaignRunButton.tsx",
+  "content": "import { useState } from 'react';\nimport { Play, Loader2, Coins } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport {\n  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,\n} from '@/components/ui/dialog';\nimport { useCampaignRun, type CampaignChannel } from '@/hooks/useCampaigns';\nimport { COIN_COSTS } from '@/lib/billing';\nimport { toast } from '@/hooks/use-toast';\n\ninterface Props {\n  campaignId: string;\n  steps: { channel: CampaignChannel | string }[];\n  disabled?: boolean;\n}\n\n/** \"Rodar campanha\" \u2014 confirms the faithful cascade cost, then invokes campaign-run (FR-MH-004). */\nexport default function CampaignRunButton({ campaignId, steps, disabled }: Props) {\n  const [open, setOpen] = useState(false);\n  const run = useCampaignRun();\n\n  // email steps are blocked by campaign-run (not dispatched, not charged) \u2014 exclude from the estimate.\n  const dispatchable = steps.filter((s) => s.channel !== 'email').length;\n  const estimate = COIN_COSTS.CAMPAIGN_RUN + COIN_COSTS.ORCHESTRATION_RUN * dispatchable;\n\n  const handleRun = async () => {\n    try {\n      const r = await run.mutateAsync(campaignId);\n      toast({\n        title: `Campanha disparada \u2014 ${r.steps_dispatched} passo(s)`,\n        description: r.new_balance != null ? `Saldo restante: ${r.new_balance} mcoCoins` : undefined,\n      });\n      setOpen(false);\n    } catch (e) {\n      toast({ title: (e as Error).message, variant: 'destructive' });\n    }\n  };\n\n  return (\n    <>\n      <Button size=\"sm\" onClick={() => setOpen(true)} disabled={disabled || dispatchable === 0} className=\"gap-1.5\">\n        <Play className=\"h-4 w-4\" /> Rodar campanha\n      </Button>\n      <Dialog open={open} onOpenChange={(o) => !run.isPending && setOpen(o)}>\n        <DialogContent>\n          <DialogHeader>\n            <DialogTitle>Rodar campanha?</DialogTitle>\n            <DialogDescription>\n              Cada passo dispara o pipeline de conte\u00fado (orchestrate-content) \u2014 gera e publica como rascunho.\n            </DialogDescription>\n          </DialogHeader>\n          <div className=\"rounded-lg border border-border bg-muted/40 p-3 text-sm space-y-1.5\">\n            <div className=\"flex items-center justify-between\">\n              <span className=\"text-muted-foreground\">Taxa de orquestra\u00e7\u00e3o</span>\n              <span>{COIN_COSTS.CAMPAIGN_RUN} mcoCoins</span>\n            </div>\n            <div className=\"flex items-center justify-between\">\n              <span className=\"text-muted-foreground\">{dispatchable} passo(s) \u00d7 {COIN_COSTS.ORCHESTRATION_RUN}</span>\n              <span>{COIN_COSTS.ORCHESTRATION_RUN * dispatchable} mcoCoins</span>\n            </div>\n            <div className=\"flex items-center justify-between border-t border-border pt-1.5 font-medium\">\n              <span className=\"flex items-center gap-1.5\"><Coins className=\"h-4 w-4 text-amber-400\" /> Custo estimado</span>\n              <span>~{estimate} mcoCoins</span>\n            </div>\n          </div>\n          <DialogFooter>\n            <Button variant=\"ghost\" onClick={() => setOpen(false)} disabled={run.isPending}>Cancelar</Button>\n            <Button onClick={handleRun} disabled={run.isPending} className=\"gap-1.5\">\n              {run.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Play className=\"h-4 w-4\" />}\n              Confirmar e rodar\n            </Button>\n          </DialogFooter>\n        </DialogContent>\n      </Dialog>\n    </>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/CampaignRunButton.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:51:28)*
+
+
+## 🤖 Claude *(14:51:28)*
+
+Now the `/dashboard/marketing` hub page combining the LeadBoard + a campaigns overview.
+
+## 🤖 Claude *(14:51:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx",
+  "content": "import { useNavigate } from 'react-router-dom';\nimport { Megaphone, Plus, ArrowRight, Target } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport LeadBoard from '@/components/marketing/LeadBoard';\nimport { useCampaigns, STATUS_LABELS, STATUS_COLORS } from '@/hooks/useCampaigns';\nimport type { Database } from '@/integrations/supabase/types';\n\ntype CampaignStatus = Database['public']['Enums']['campaign_status'];\n\nexport default function MarketingPage() {\n  const navigate = useNavigate();\n  const { campaigns, isLoading } = useCampaigns();\n\n  const counts = campaigns.reduce((acc, c) => {\n    acc[c.status] = (acc[c.status] ?? 0) + 1;\n    return acc;\n  }, {} as Record<CampaignStatus, number>);\n  const recent = campaigns.slice(0, 4);\n\n  return (\n    <div className=\"space-y-8\">\n      {/* Header */}\n      <div className=\"flex flex-col gap-2\">\n        <div className=\"flex items-center gap-2\">\n          <Target className=\"h-6 w-6 text-primary\" />\n          <h1 className=\"text-2xl font-heading font-bold text-foreground\">Marketing Hub</h1>\n        </div>\n        <p className=\"text-sm text-muted-foreground\">\n          Capture e qualifique leads, componha campanhas multicanal e dispare o pipeline de conte\u00fado.\n        </p>\n      </div>\n\n      {/* Leads board */}\n      <section>\n        <LeadBoard />\n      </section>\n\n      {/* Campaigns overview */}\n      <section className=\"space-y-3\">\n        <div className=\"flex items-center justify-between\">\n          <div>\n            <h2 className=\"text-lg font-heading font-semibold text-foreground\">Campanhas</h2>\n            <p className=\"text-xs text-muted-foreground\">\n              {isLoading ? 'Carregando\u2026' : `${campaigns.length} campanha(s)`}\n            </p>\n          </div>\n          <div className=\"flex gap-2\">\n            <Button variant=\"outline\" size=\"sm\" className=\"gap-1.5\" onClick={() => navigate('/dashboard/campaigns')}>\n              Ver todas <ArrowRight className=\"h-4 w-4\" />\n            </Button>\n            <Button size=\"sm\" className=\"gap-1.5\" onClick={() => navigate('/dashboard/campaigns/new')}>\n              <Plus className=\"h-4 w-4\" /> Nova campanha\n            </Button>\n          </div>\n        </div>\n\n        {!isLoading && campaigns.length === 0 ? (\n          <Card className=\"border-dashed\">\n            <CardContent className=\"flex flex-col items-center justify-center py-12 text-center\">\n              <Megaphone className=\"h-10 w-10 text-muted-foreground/40 mb-3\" />\n              <p className=\"text-sm text-muted-foreground mb-3\">Nenhuma campanha ainda</p>\n              <Button size=\"sm\" onClick={() => navigate('/dashboard/campaigns/new')} className=\"gap-1.5\">\n                <Plus className=\"h-4 w-4\" /> Criar primeira campanha\n              </Button>\n            </CardContent>\n          </Card>\n        ) : (\n          <div className=\"grid gap-3 sm:grid-cols-2 lg:grid-cols-4\">\n            {recent.map((c) => (\n              <Card\n                key={c.id}\n                className=\"cursor-pointer hover:border-primary/40 transition-colors\"\n                onClick={() => navigate(`/dashboard/campaigns/${c.id}`)}\n              >\n                <CardHeader className=\"pb-2\">\n                  <CardTitle className=\"text-sm truncate\">{c.name}</CardTitle>\n                </CardHeader>\n                <CardContent>\n                  <Badge variant=\"secondary\" className={STATUS_COLORS[c.status]}>\n                    {STATUS_LABELS[c.status]}\n                  </Badge>\n                  {c.intent && <p className=\"text-xs text-muted-foreground mt-2 line-clamp-2\">{c.intent}</p>}\n                </CardContent>\n              </Card>\n            ))}\n          </div>\n        )}\n\n        {/* status summary chips */}\n        {!isLoading && campaigns.length > 0 && (\n          <div className=\"flex flex-wrap gap-2 pt-1\">\n            {(Object.keys(counts) as CampaignStatus[]).map((s) => (\n              <Badge key={s} variant=\"outline\" className={`text-xs ${STATUS_COLORS[s]}`}>\n                {STATUS_LABELS[s]}: {counts[s]}\n              </Badge>\n            ))}\n          </div>\n        )}\n      </section>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:51:49)*
+
+
+## 🤖 Claude *(14:51:50)*
+
+LeadBoard + page + components done. Now wire the route + nav (finishing task #2). Let me find the route definitions in App.tsx.
+
+## 🤖 Claude *(14:51:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== dashboard <Route> definitions in App.tsx ===\"\ngrep -nE \"path=\\\"(campaigns|affiliate-products|orchestration|social|content)\\\"|<Route path=\\\"dashboard\\\"|element=\\{<Dashboard\" src/App.tsx | head -20",
+  "description": "Find route insertion point in App.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dashboard <Route> definitions in App.tsx ===
+> 90:                <Route index element={<DashboardHome />} />
+> 94:                <Route path="campaigns" element={<CampaignsPage />} />
+> 97:                <Route path="content" element={<ContentLibraryPage />} />
+> 101:                <Route path="social" element={<SocialAccountsPage />} />
+> 105:                <Route path="orchestration" element={<OrchestrationPage />} />
+> 107:                <Route path="affiliate-products" element={<AffiliateProductsPage />} />
+> ```
+
+## 🤖 Claude *(14:51:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 90,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 90	                <Route index element={<DashboardHome />} />
+> 91	                <Route path="constellation" element={<ConstellationPage />} />
+> 92	                <Route path="constellation/memory" element={<MemoryPage />} />
+> 93	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 94	                <Route path="campaigns" element={<CampaignsPage />} />
+> 95	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 96	                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> 97	                <Route path="content" element={<ContentLibraryPage />} />
+> 98	                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 99	                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> 100	                <Route path="calendar" element={<CalendarPage />} />
+> 101	                <Route path="social" element={<SocialAccountsPage />} />
+> ```
+
+## 🤖 Claude *(14:52:00)*
+
+
+## 🤖 Claude *(14:52:01)*
+
+Adding the lazy import + route in App.tsx, and the nav item in DashboardSidebar.
+
+## 🤖 Claude *(14:52:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const CampaignDetail = lazy(() => import(\"./pages/CampaignDetail.tsx\"));",
+  "new_string": "const CampaignDetail = lazy(() => import(\"./pages/CampaignDetail.tsx\"));\nconst MarketingPage = lazy(() => import(\"./pages/MarketingPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:52:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"campaigns\" element={<CampaignsPage />} />\n                <Route path=\"campaigns/new\" element={<CampaignWizard />} />\n                <Route path=\"campaigns/:id\" element={<CampaignDetail />} />",
+  "new_string": "                <Route path=\"marketing\" element={<MarketingPage />} />\n                <Route path=\"campaigns\" element={<CampaignsPage />} />\n                <Route path=\"campaigns/new\" element={<CampaignWizard />} />\n                <Route path=\"campaigns/:id\" element={<CampaignDetail />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:52:13)*
+
+
+## 🤖 Claude *(14:52:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  Coins,\n  Bot,\n  LineChart,\n  type LucideIcon,\n} from 'lucide-react';",
+  "new_string": "  Coins,\n  Bot,\n  LineChart,\n  Target,\n  type LucideIcon,\n} from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:52:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "    title: 'Conte\u00fado & Campanhas',\n    icon: Layers,\n    items: [\n      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },",
+  "new_string": "    title: 'Conte\u00fado & Campanhas',\n    icon: Layers,\n    items: [\n      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },\n      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:53:02)*
+
+
+## 🤖 Claude *(14:53:03)*
+
+Task #2 complete (route + nav wired). Starting task #3 — absorbing the v1 wizard/detail into v2. First, a hook mutation to create a campaign **with** its steps atomically (Harness Engineering — logic in the hook, not the page).
+
+## 🤖 Claude *(14:53:03)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(14:53:06)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(14:53:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts",
+  "old_string": "  const duplicateCampaign = useMutation({\n    mutationFn: async (campaign: Campaign) => {\n      const { id, created_at, updated_at, ...rest } = campaign;\n      const { data, error } = await supabase\n        .from('campaigns')\n        .insert({ ...rest, name: `${rest.name} (c\u00f3pia)`, status: 'draft' as CampaignStatus })\n        .select()\n        .single();\n      if (error) throw error;\n      return data;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),\n  });\n\n  return {\n    campaigns: campaignsQuery.data ?? [],\n    isLoading: campaignsQuery.isLoading,\n    error: campaignsQuery.error,\n    createCampaign,\n    updateCampaign,\n    deleteCampaign,\n    duplicateCampaign,\n  };\n}",
+  "new_string": "  const duplicateCampaign = useMutation({\n    mutationFn: async (campaign: Campaign) => {\n      const { id, created_at, updated_at, ...rest } = campaign;\n      const { data, error } = await supabase\n        .from('campaigns')\n        .insert({ ...rest, name: `${rest.name} (c\u00f3pia)`, status: 'draft' as CampaignStatus })\n        .select()\n        .single();\n      if (error) throw error;\n      return data;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),\n  });\n\n  // FR-MH-005 \u2014 create a campaign AND its ordered multichannel steps in one flow (wizard composer).\n  const createCampaignWithSteps = useMutation({\n    mutationFn: async ({ campaign, steps }: {\n      campaign: Omit<CampaignInsert, 'user_id'>;\n      steps: { channel: string; action: string }[];\n    }) => {\n      const { data: created, error } = await supabase\n        .from('campaigns')\n        .insert({ ...campaign, user_id: user!.id })\n        .select()\n        .single();\n      if (error) throw error;\n      if (steps.length > 0) {\n        const rows = steps.map((s, i) => ({\n          campaign_id: created.id, user_id: user!.id, position: i, channel: s.channel, action: s.action,\n        }));\n        const { error: stepsErr } = await supabase.from('campaign_steps').insert(rows);\n        if (stepsErr) throw stepsErr;\n      }\n      return created as Campaign;\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),\n  });\n\n  return {\n    campaigns: campaignsQuery.data ?? [],\n    isLoading: campaignsQuery.isLoading,\n    error: campaignsQuery.error,\n    createCampaign,\n    createCampaignWithSteps,\n    updateCampaign,\n    deleteCampaign,\n    duplicateCampaign,\n  };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCampaigns.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:53:48)*
+
+
+## 🤖 Claude *(14:53:48)*
+
+Now evolving `CampaignWizard` — add the `intent` field + a new "Passos" step (multichannel composer) + persist steps on submit. Making the edits:
+
+## 🤖 Claude *(14:53:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "import { useCampaigns, CAMPAIGN_TEMPLATES } from '@/hooks/useCampaigns';\nimport { toast } from '@/hooks/use-toast';",
+  "new_string": "import { useCampaigns, CAMPAIGN_TEMPLATES } from '@/hooks/useCampaigns';\nimport CampaignStepsEditor from '@/components/marketing/CampaignStepsEditor';\nimport { toast } from '@/hooks/use-toast';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:18)*
+
+
+## 🤖 Claude *(14:59:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "import CampaignStepsEditor from '@/components/marketing/CampaignStepsEditor';",
+  "new_string": "import CampaignStepsEditor, { type EditorStep } from '@/components/marketing/CampaignStepsEditor';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "const STEPS = ['Objetivo', 'P\u00fablico-Alvo', 'Canais', 'Or\u00e7amento', 'Cronograma'];\n\ninterface WizardData {\n  name: string;\n  description: string;\n  objective: string;\n  target_audience: { age_range: string; location: string; interests: string[] };\n  platforms: SocialPlatform[];\n  budget_cents: number;\n  starts_at: Date | undefined;\n  ends_at: Date | undefined;\n}\n\nconst initialData: WizardData = {\n  name: '',\n  description: '',\n  objective: '',\n  target_audience: { age_range: '18-45', location: '', interests: [] },\n  platforms: [],\n  budget_cents: 0,\n  starts_at: undefined,\n  ends_at: undefined,\n};",
+  "new_string": "const STEPS = ['Objetivo', 'P\u00fablico-Alvo', 'Canais', 'Passos', 'Or\u00e7amento', 'Cronograma'];\n\ninterface WizardData {\n  name: string;\n  description: string;\n  objective: string;\n  intent: string;\n  target_audience: { age_range: string; location: string; interests: string[] };\n  platforms: SocialPlatform[];\n  steps: EditorStep[];\n  budget_cents: number;\n  starts_at: Date | undefined;\n  ends_at: Date | undefined;\n}\n\nconst initialData: WizardData = {\n  name: '',\n  description: '',\n  objective: '',\n  intent: '',\n  target_audience: { age_range: '18-45', location: '', interests: [] },\n  platforms: [],\n  steps: [],\n  budget_cents: 0,\n  starts_at: undefined,\n  ends_at: undefined,\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "  const navigate = useNavigate();\n  const { createCampaign } = useCampaigns();",
+  "new_string": "  const navigate = useNavigate();\n  const { createCampaignWithSteps } = useCampaigns();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "  const handleSubmit = async () => {\n    setSaving(true);\n    try {\n      await createCampaign.mutateAsync({\n        name: data.name,\n        description: data.description || null,\n        objective: data.objective || null,\n        target_audience: data.target_audience,\n        platforms: data.platforms,\n        budget_cents: data.budget_cents,\n        starts_at: data.starts_at?.toISOString() ?? null,\n        ends_at: data.ends_at?.toISOString() ?? null,\n        status: 'draft',\n      });\n      toast({ title: 'Campanha criada com sucesso!' });\n      navigate('/dashboard/campaigns');\n    } catch {\n      toast({ title: 'Erro ao criar campanha', variant: 'destructive' });\n    } finally {\n      setSaving(false);\n    }\n  };",
+  "new_string": "  const handleSubmit = async () => {\n    setSaving(true);\n    try {\n      const channels = [...new Set(data.steps.map((s) => s.channel))];\n      const created = await createCampaignWithSteps.mutateAsync({\n        campaign: {\n          name: data.name,\n          description: data.description || null,\n          objective: data.objective || null,\n          intent: data.intent || null,\n          channels,\n          target_audience: data.target_audience,\n          platforms: data.platforms,\n          budget_cents: data.budget_cents,\n          starts_at: data.starts_at?.toISOString() ?? null,\n          ends_at: data.ends_at?.toISOString() ?? null,\n          status: 'draft',\n        },\n        steps: data.steps,\n      });\n      toast({ title: 'Campanha criada com sucesso!' });\n      navigate(`/dashboard/campaigns/${created.id}`);\n    } catch {\n      toast({ title: 'Erro ao criar campanha', variant: 'destructive' });\n    } finally {\n      setSaving(false);\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:44)*
+
+
+## 🤖 Claude *(14:59:44)*
+
+Now the `intent` field in step 0, the new "Passos" step, and renumbering Orçamento/Cronograma:
+
+## 🤖 Claude *(14:59:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "                  <div className=\"space-y-2\">\n                    <Label>Objetivo</Label>\n                    <Input\n                      value={data.objective}\n                      onChange={(e) => setData((d) => ({ ...d, objective: e.target.value }))}\n                      placeholder=\"Ex: awareness, engajamento, vendas\"\n                    />\n                  </div>\n                </>\n              )}",
+  "new_string": "                  <div className=\"space-y-2\">\n                    <Label>Objetivo</Label>\n                    <Input\n                      value={data.objective}\n                      onChange={(e) => setData((d) => ({ ...d, objective: e.target.value }))}\n                      placeholder=\"Ex: awareness, engajamento, vendas\"\n                    />\n                  </div>\n                  <div className=\"space-y-2\">\n                    <Label>Inten\u00e7\u00e3o da campanha</Label>\n                    <Textarea\n                      value={data.intent}\n                      onChange={(e) => setData((d) => ({ ...d, intent: e.target.value }))}\n                      placeholder=\"O que esta campanha deve comunicar? Vira o tema do conte\u00fado gerado em cada passo.\"\n                      rows={2}\n                    />\n                  </div>\n                </>\n              )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:00:01)*
+
+
+## 🤖 Claude *(15:00:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx",
+  "old_string": "              {step === 3 && (\n                <>\n                  <div className=\"space-y-2\">\n                    <Label>Or\u00e7amento total (R$)</Label>",
+  "new_string": "              {step === 3 && (\n                <>\n                  <p className=\"text-sm text-muted-foreground\">\n                    Componha os passos multicanal. Cada passo dispara o pipeline de conte\u00fado (orchestrate-content) ao rodar a campanha.\n                  </p>\n                  <CampaignStepsEditor\n                    steps={data.steps}\n                    onAdd={(channel, action) => setData((d) => ({ ...d, steps: [...d.steps, { channel, action }] }))}\n                    onRemove={(_s, idx) => setData((d) => ({ ...d, steps: d.steps.filter((_, i) => i !== idx) }))}\n                  />\n                </>\n              )}\n\n              {step === 4 && (\n                <>\n                  <div className=\"space-y-2\">\n                    <Label>Or\u00e7amento total (R$)</Label>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CampaignWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
