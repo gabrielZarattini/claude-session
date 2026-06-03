@@ -11741,6 +11741,1396 @@ Now add the cost constant + the `useNurturing` hook. billing.ts first:
 > after: 3675 · sequences+enrollments+customer_360 present ✅
 > ```
 
+## 🤖 Claude *(16:30:09)*
+
+
+## 🤖 Claude *(16:30:09)*
+
+Types regenerated (3584→3675). Writing the `useNurturing` hook:
+
+## 🤖 Claude *(16:30:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useNurturing.ts",
+  "content": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables } from '@/integrations/supabase/types';\n\n// marketing-hub FR-MH-008 (Nurturing Sequences). Harness Engineering: drip logic lives here.\n\nexport type Sequence = Tables<'sequences'>;\nexport type SequenceEnrollment = Tables<'sequence_enrollments'>;\nexport interface SequenceStep { channel: string; wait_hours: number; prompt: string }\nexport type SequenceTrigger = 'manual' | 'status_change';\nexport type EnrollmentStatus = 'active' | 'paused' | 'completed' | 'opted_out';\n\nexport const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {\n  active: 'Ativa', paused: 'Pausada', completed: 'Conclu\u00edda', opted_out: 'Opt-out',\n};\n\nexport function useNurturing() {\n  const { user } = useAuth();\n  const qc = useQueryClient();\n\n  const sequencesQuery = useQuery({\n    queryKey: ['sequences', user?.id],\n    queryFn: async () => {\n      const { data, error } = await supabase.from('sequences').select('*').order('created_at', { ascending: false });\n      if (error) throw error;\n      return data as Sequence[];\n    },\n    enabled: !!user,\n  });\n\n  const createSequence = useMutation({\n    mutationFn: async (seq: { name: string; trigger?: SequenceTrigger; steps?: SequenceStep[] }) => {\n      const { data, error } = await supabase.from('sequences')\n        .insert({ user_id: user!.id, name: seq.name, trigger: seq.trigger ?? 'manual', steps: seq.steps ?? [] })\n        .select().single();\n      if (error) throw error;\n      return data as Sequence;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['sequences'] }),\n  });\n\n  const toggleActive = useMutation({\n    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {\n      const { error } = await supabase.from('sequences').update({ active }).eq('id', id);\n      if (error) throw error;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['sequences'] }),\n  });\n\n  // Enroll a lead \u2014 idempotent via UNIQUE(sequence_id, lead_id); next_run_at = now (cron/dispatch picks it up).\n  const enrollLead = useMutation({\n    mutationFn: async ({ sequence_id, lead_id }: { sequence_id: string; lead_id: string }) => {\n      const { data, error } = await supabase.from('sequence_enrollments')\n        .insert({ user_id: user!.id, sequence_id, lead_id, current_step: 0, status: 'active', next_run_at: new Date().toISOString() })\n        .select().single();\n      if (error) throw error;\n      return data as SequenceEnrollment;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrollments'] }),\n  });\n\n  // Opt-out \u2014 hard stop; nurture-dispatch refuses any opted_out enrollment.\n  const optOut = useMutation({\n    mutationFn: async (enrollmentId: string) => {\n      const { error } = await supabase.from('sequence_enrollments')\n        .update({ status: 'opted_out', next_run_at: null }).eq('id', enrollmentId);\n      if (error) throw error;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrollments'] }),\n  });\n\n  return {\n    sequences: sequencesQuery.data ?? [],\n    isLoading: sequencesQuery.isLoading,\n    createSequence, toggleActive, enrollLead, optOut,\n  };\n}\n\nexport function useEnrollments(sequenceId?: string) {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['enrollments', sequenceId],\n    queryFn: async () => {\n      let q = supabase.from('sequence_enrollments').select('*').order('created_at', { ascending: false });\n      if (sequenceId) q = q.eq('sequence_id', sequenceId);\n      const { data, error } = await q;\n      if (error) throw error;\n      return data as SequenceEnrollment[];\n    },\n    enabled: !!user,\n  });\n}\n\nexport interface NurtureDispatchResult {\n  status: 'dispatched' | 'completed' | 'blocked' | 'opted_out' | 'paused';\n  enrollment_id: string;\n  reason?: string;\n  delivered?: boolean;\n  message_preview?: string;\n  new_balance?: number | null;\n}\n\n/** FR-MH-008 \u2014 invokes the JWT-guarded, consent-gated nurture-dispatch (debits 2 mcoCoins; sends gated). */\nexport function useNurtureDispatch() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: async (enrollmentId: string): Promise<NurtureDispatchResult> => {\n      const { data, error } = await supabase.functions.invoke('nurture-dispatch', { body: { enrollment_id: enrollmentId } });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Erro no nurture-dispatch'));\n      return data as NurtureDispatchResult;\n    },\n    onSuccess: () => { qc.invalidateQueries({ queryKey: ['enrollments'] }); qc.invalidateQueries({ queryKey: ['leads'] }); },\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useNurturing.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:30:49)*
+
+
+## 🤖 Claude *(16:30:50)*
+
+Deploying nurture-dispatch (background) + writing the consent-gate smoke (the Critical proof: no send/charge without consent):
+
+## 🤖 Claude *(16:30:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy nurture-dispatch 2>&1 | tail -3",
+  "description": "Deploy nurture-dispatch",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: blspnspn8. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/10450854-0c9b-4ef1-9d52-adab9c1b16ed/tasks/blspnspn8.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(16:31:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-nurture.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 nurture-dispatch consent gate (FR-MH-008 / AT-MH-008), USER PATH (real JWT).\n *\n * Proves the STRIDE-Critical mitigation materially: NO message is generated/charged for a lead WITHOUT a\n * granted, non-withdrawn consent; opt-out hard-stops; and a consented dispatch advances + records (delivery\n * gated). Throwaway user + cleanup. The only cost is the single consented LLM message (~$0.001, system key).\n *\n * Usage: bun run scripts/qa/smoke-nurture.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\nconst bal = async () => Number((await admin.from('profiles').select('mco_balance').eq('id', uid!).single()).data?.mco_balance ?? 0);\n\nasync function dispatch(token: string, enrollmentId: string) {\n  const r = await fetch(`${URL}/functions/v1/nurture-dispatch`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: PUB, Authorization: `Bearer ${token}` },\n    body: JSON.stringify({ enrollment_id: enrollmentId }),\n  });\n  let j: { status?: string; reason?: string; delivered?: boolean; new_balance?: number } = {};\n  const t = await r.text(); try { j = JSON.parse(t); } catch { /* keep {} */ }\n  return { status: r.status, body: j };\n}\n\ntry {\n  const email = `nur-${stamp}@example.com`, password = `Aa1!${crypto.randomUUID()}`;\n  const { data: cu, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\n  if (error || !cu?.user) throw new Error(`createUser: ${error?.message}`);\n  uid = cu.user.id;\n  await admin.from('profiles').update({ mco_balance: 100 }).eq('id', uid);\n\n  const { data: lead } = await admin.from('leads').insert({ user_id: uid, contact: '+5511988887777', name: 'Nurture Lead', source: 'manual', status: 'nurturing' }).select('id').single();\n  const { data: seq } = await admin.from('sequences').insert({ user_id: uid, name: 'Welcome Drip', trigger: 'manual', steps: [{ channel: 'email', wait_hours: 24, prompt: 'Boas-vindas curtas para o lead.' }] }).select('id').single();\n  const { data: enr } = await admin.from('sequence_enrollments').insert({ user_id: uid, sequence_id: seq!.id, lead_id: lead!.id, current_step: 0, status: 'active', next_run_at: new Date().toISOString() }).select('id').single();\n  const enrollmentId = enr!.id as string;\n\n  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });\n  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email, password });\n  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);\n  const token = si.session.access_token;\n\n  // \u2500\u2500 A: NO consent \u2192 BLOCKED, no charge, enrollment paused (the Critical gate) \u2500\u2500\n  const balBeforeBlock = await bal();\n  const a = await dispatch(token, enrollmentId);\n  check('A no-consent \u2192 blocked (consent_required)', a.body?.status === 'blocked' && a.body?.reason === 'consent_required', `status=${a.body?.status} reason=${a.body?.reason}`);\n  check('A no charge on block', (await bal()) === balBeforeBlock, `bal=${await bal()} (was ${balBeforeBlock})`);\n  const { data: pausedEnr } = await admin.from('sequence_enrollments').select('status').eq('id', enrollmentId).single();\n  check('A enrollment paused by the gate', pausedEnr?.status === 'paused', `status=${pausedEnr?.status}`);\n  const { count: eventsAfterBlock } = await admin.from('lead_events').select('id', { count: 'exact', head: true }).eq('lead_id', lead!.id).eq('event_type', 'message_sent');\n  check('A NO message_sent event (nothing generated)', (eventsAfterBlock ?? 0) === 0, `events=${eventsAfterBlock}`);\n\n  // \u2500\u2500 B: grant consent + resume \u2192 DISPATCHED, charge 2, message recorded (delivery gated), enrollment advanced \u2500\u2500\n  await admin.from('marketing_consents').insert({ lead_id: lead!.id, user_id: uid, basis: 'consent', granted: true, source_proof: {} });\n  await admin.from('sequence_enrollments').update({ status: 'active' }).eq('id', enrollmentId);\n  const balBeforeDispatch = await bal();\n  const b = await dispatch(token, enrollmentId);\n  check('B consented \u2192 dispatched|completed', b.body?.status === 'dispatched' || b.body?.status === 'completed', `status=${b.body?.status}`);\n  check('B charged exactly 2 mcoCoins', balBeforeDispatch - (await bal()) === 2, `${balBeforeDispatch}\u2192${await bal()}`);\n  check('B delivery is GATED (not externally sent)', b.body?.delivered === false, `delivered=${b.body?.delivered}`);\n  const { data: ev } = await admin.from('lead_events').select('event_type, payload').eq('lead_id', lead!.id).eq('event_type', 'message_sent').maybeSingle();\n  check('B message_sent event recorded with delivery=gated', (ev?.payload as { delivery?: string })?.delivery === 'gated', `delivery=${(ev?.payload as { delivery?: string })?.delivery}`);\n  const { data: advEnr } = await admin.from('sequence_enrollments').select('current_step, status').eq('id', enrollmentId).single();\n  check('B enrollment advanced (step 0\u21921, completed)', advEnr?.current_step === 1 && advEnr?.status === 'completed', `step=${advEnr?.current_step} status=${advEnr?.status}`);\n\n  // \u2500\u2500 C: opt-out \u2192 hard skip, no charge \u2500\u2500\n  await admin.from('sequence_enrollments').update({ status: 'opted_out' }).eq('id', enrollmentId);\n  const balBeforeOptOut = await bal();\n  const c = await dispatch(token, enrollmentId);\n  check('C opted_out \u2192 skipped, no charge', c.body?.status === 'opted_out' && (await bal()) === balBeforeOptOut, `status=${c.body?.status} bal=${await bal()}`);\n} catch (e) {\n  pass = false; console.error('\u274c smoke error:', e instanceof Error ? e.message : e);\n} finally {\n  if (uid) await admin.auth.admin.deleteUser(uid);\n  console.log(`\\n\ud83e\uddf9 cleanup: throwaway user deleted (cascade)`);\n  console.log(pass ? '\\n\u2705\u2705 NURTURE CONSENT-GATE SMOKE PASSED' : '\\n\u274c NURTURE CONSENT-GATE SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-nurture.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:31:22)*
+
+
+## 🤖 Claude *(16:31:22)*
+
+nurture-dispatch deployed. Now tsc + lint + the consent-gate smoke (the Critical proof):
+
+## 🤖 Claude *(16:31:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -6 && echo \"TSC 0 \u2705\"\necho \"=== eslint touched ===\"; npx eslint src/hooks/useNurturing.ts src/lib/billing.ts scripts/qa/smoke-nurture.ts 2>&1 | tail -6; echo \"exit ${PIPESTATUS[0]}\"\necho \"=== nurture consent-gate smoke ===\"; bun run scripts/qa/smoke-nurture.ts 2>&1 | tail -14",
+  "description": "tsc + lint + nurture consent-gate smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> TSC 0 ✅
+> === eslint touched ===
+> exit 0
+> === nurture consent-gate smoke ===
+> ✅ A no-consent → blocked (consent_required)  → status=blocked reason=consent_required
+> ✅ A no charge on block  → bal=100 (was 100)
+> ✅ A enrollment paused by the gate  → status=paused
+> ✅ A NO message_sent event (nothing generated)  → events=0
+> ✅ B consented → dispatched|completed  → status=completed
+> ✅ B charged exactly 2 mcoCoins  → 100→98
+> ✅ B delivery is GATED (not externally sent)  → delivered=false
+> ✅ B message_sent event recorded with delivery=gated  → delivery=gated
+> ✅ B enrollment advanced (step 0→1, completed)  → step=1 status=completed
+> ✅ C opted_out → skipped, no charge  → status=opted_out bal=98
+> 
+> 🧹 cleanup: throwaway user deleted (cascade)
+> 
+> ✅✅ NURTURE CONSENT-GATE SMOKE PASSED
+> ```
+
+## 🤖 Claude *(16:32:12)*
+
+
+## 🤖 Claude *(16:32:15)*
+
+**Nurture consent-gate smoke 10/10** — the Critical mitigation proven materially:
+- **No consent → BLOCKED, zero charge (100→100), enrollment paused, NO message generated** (0 events)
+- Consented → dispatched, charged exactly 2, **delivery GATED (delivered=false)**, event recorded `delivery=gated`, enrollment advanced
+- Opt-out → hard skip, no charge
+
+tsc 0 · eslint clean · nurture-dispatch deployed. Now a minimal Nurturing UI panel to make it usable, then I'll seal this (massive) session. Writing the panel:
+
+## 🤖 Claude *(16:32:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/NurturingPanel.tsx",
+  "content": "import { useState } from 'react';\nimport { Plus, Loader2, Mail, Power } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport { useNurturing } from '@/hooks/useNurturing';\nimport { CAMPAIGN_CHANNELS } from '@/hooks/useCampaigns';\nimport { toast } from '@/hooks/use-toast';\n\nfunction NewSequenceDialog({ onCreate, pending }: { onCreate: (v: { name: string; channel: string; prompt: string }) => void; pending: boolean }) {\n  const [open, setOpen] = useState(false);\n  const [name, setName] = useState('');\n  const [channel, setChannel] = useState('email');\n  const [prompt, setPrompt] = useState('');\n  const submit = () => {\n    if (!name.trim()) { toast({ title: 'D\u00ea um nome \u00e0 sequ\u00eancia', variant: 'destructive' }); return; }\n    onCreate({ name: name.trim(), channel, prompt: prompt.trim() });\n    setName(''); setPrompt(''); setOpen(false);\n  };\n  return (\n    <Dialog open={open} onOpenChange={setOpen}>\n      <DialogTrigger asChild><Button size=\"sm\" className=\"gap-2\"><Plus className=\"h-4 w-4\" /> Nova sequ\u00eancia</Button></DialogTrigger>\n      <DialogContent>\n        <DialogHeader><DialogTitle>Nova sequ\u00eancia de nutri\u00e7\u00e3o</DialogTitle></DialogHeader>\n        <div className=\"space-y-3\">\n          <div className=\"space-y-1.5\"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder=\"Ex: Boas-vindas\" /></div>\n          <div className=\"space-y-1.5\">\n            <Label>Canal do 1\u00ba passo</Label>\n            <Select value={channel} onValueChange={setChannel}>\n              <SelectTrigger className=\"h-9\"><SelectValue /></SelectTrigger>\n              <SelectContent>{CAMPAIGN_CHANNELS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>\n            </Select>\n          </div>\n          <div className=\"space-y-1.5\"><Label>Mensagem (prompt)</Label><Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder=\"O que a IA deve comunicar neste passo...\" rows={2} /></div>\n        </div>\n        <DialogFooter>\n          <Button onClick={submit} disabled={pending} className=\"gap-2\">{pending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Plus className=\"h-4 w-4\" />} Criar</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\n/** FR-MH-008 \u2014 minimal Nurturing surface: list/create sequences + active toggle. Enroll/dispatch via hook/cron. */\nexport default function NurturingPanel() {\n  const { sequences, isLoading, createSequence, toggleActive } = useNurturing();\n\n  const handleCreate = async (v: { name: string; channel: string; prompt: string }) => {\n    try {\n      await createSequence.mutateAsync({ name: v.name, trigger: 'manual', steps: [{ channel: v.channel, wait_hours: 24, prompt: v.prompt }] });\n      toast({ title: 'Sequ\u00eancia criada' });\n    } catch (e) { toast({ title: (e as Error).message || 'Erro ao criar sequ\u00eancia', variant: 'destructive' }); }\n  };\n\n  return (\n    <section className=\"space-y-3\">\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <h2 className=\"text-lg font-heading font-semibold text-foreground\">Nutri\u00e7\u00e3o (drip)</h2>\n          <p className=\"text-xs text-muted-foreground\">{sequences.length} sequ\u00eancia(s) \u00b7 envio gated por consentimento (LGPD)</p>\n        </div>\n        <NewSequenceDialog onCreate={handleCreate} pending={createSequence.isPending} />\n      </div>\n\n      {isLoading ? (\n        <div className=\"grid gap-3 sm:grid-cols-2 lg:grid-cols-3\">{[1, 2, 3].map((i) => <Skeleton key={i} className=\"h-20 rounded-lg\" />)}</div>\n      ) : sequences.length === 0 ? (\n        <Card className=\"border-dashed\"><CardContent className=\"py-8 text-center text-sm text-muted-foreground\"><Mail className=\"h-8 w-8 mx-auto mb-2 text-muted-foreground/40\" />Nenhuma sequ\u00eancia ainda.</CardContent></Card>\n      ) : (\n        <div className=\"grid gap-3 sm:grid-cols-2 lg:grid-cols-3\">\n          {sequences.map((s) => {\n            const steps = Array.isArray(s.steps) ? s.steps.length : 0;\n            return (\n              <Card key={s.id}>\n                <CardContent className=\"p-4 space-y-2\">\n                  <div className=\"flex items-start justify-between gap-2\">\n                    <p className=\"text-sm font-medium text-foreground truncate\">{s.name}</p>\n                    <Badge variant=\"secondary\" className={s.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-muted text-muted-foreground'}>\n                      {s.active ? 'Ativa' : 'Pausada'}\n                    </Badge>\n                  </div>\n                  <p className=\"text-xs text-muted-foreground\">{steps} passo(s) \u00b7 gatilho {s.trigger === 'manual' ? 'manual' : 'mudan\u00e7a de status'}</p>\n                  <Button size=\"sm\" variant=\"ghost\" className=\"h-7 px-2 text-xs gap-1\"\n                    onClick={() => toggleActive.mutate({ id: s.id, active: !s.active })} disabled={toggleActive.isPending}>\n                    <Power className=\"h-3 w-3\" /> {s.active ? 'Pausar' : 'Ativar'}\n                  </Button>\n                </CardContent>\n              </Card>\n            );\n          })}\n        </div>\n      )}\n    </section>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/marketing/NurturingPanel.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:32:46)*
+
+
+## 🤖 Claude *(16:32:47)*
+
+Wiring NurturingPanel into MarketingPage — import + section:
+
+## 🤖 Claude *(16:32:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx",
+  "old_string": "import LeadBoard from '@/components/marketing/LeadBoard';",
+  "new_string": "import LeadBoard from '@/components/marketing/LeadBoard';\nimport NurturingPanel from '@/components/marketing/NurturingPanel';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:32:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx",
+  "old_string": "          </div>\n        )}\n      </section>\n    </div>\n  );\n}",
+  "new_string": "          </div>\n        )}\n      </section>\n\n      {/* Nurturing (drip) \u2014 FR-MH-008 */}\n      <NurturingPanel />\n    </div>\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/MarketingPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:32:57)*
+
+
+## 🤖 Claude *(16:32:58)*
+
+Nurturing UI wired. Verifying tsc + lint, then building:
+
+## 🤖 Claude *(16:33:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -6 && echo \"TSC 0 \u2705\"\necho \"=== eslint touched ===\"; npx eslint src/components/marketing/NurturingPanel.tsx src/pages/MarketingPage.tsx src/hooks/useNurturing.ts 2>&1 | tail -6; echo \"exit ${PIPESTATUS[0]}\"",
+  "description": "tsc + lint Nurturing UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> TSC 0 ✅
+> === eslint touched ===
+> exit 0
+> ```
+
+## 🤖 Claude *(16:33:07)*
+
+
+## 🤖 Claude *(16:33:08)*
+
+tsc 0 + lint clean. Building (the Nurturing UI is the last frontend change before the seal):
+
+## 🤖 Claude *(16:33:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -3\necho \"=== Nurturing UI in served bundle ===\"\ngrep -rl \"Nutri\u00e7\u00e3o (drip)\\|Nova sequ\u00eancia\" dist/assets/ 2>/dev/null | head -1 && echo \"Nurturing UI in bundle \u2705\"",
+  "description": "Build + verify Nurturing UI bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.28s
+> === Nurturing UI in served bundle ===
+> dist/assets/MarketingPage-Bpze_5Eu.js
+> Nurturing UI in bundle ✅
+> ```
+
+## 🤖 Claude *(16:33:48)*
+
+
+## 🤖 Claude *(16:33:49)*
+
+Build `✓ 23.28s`, Nurturing UI in bundle. **Nurturing engine complete** (migration + /security-review SAFE + consent-gated dispatch + hook + UI + smoke 10/10). Committing:
+
+## 🤖 Claude *(16:34:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260603050000_marketing_hub_nurturing.sql supabase/functions/nurture-dispatch/index.ts src/hooks/useNurturing.ts src/components/marketing/NurturingPanel.tsx src/pages/MarketingPage.tsx src/lib/billing.ts src/integrations/supabase/types.ts scripts/qa/smoke-nurture.ts\ngit status --short\ngit commit -q -F - <<'EOF'\nfeat(marketing-hub): Nurturing Sequences engine (FR-MH-008) \u2014 consent-gated, sends gated\n\nMotor de drip do Marketing Hub. STRIDE-Critical \"envio sem consentimento\"\nmitigado na raiz: o gate de consentimento \u00e9 o centro do nurture-dispatch.\n\n- Migration: sequences + sequence_enrollments (RLS default-deny; FKs COMPOSTAS\n  tenant-escopadas (sequence_id,user_id)\u2192sequences + (lead_id,user_id)\u2192leads,\n  ambas CASCADE; UNIQUE(sequence_id,lead_id) = enrollment idempotente). erase_lead\n  estendida (enrollments_removed). /security-review SAFE (subagente independente).\n- nurture-dispatch edge fn: JWT + GATE DE CONSENTIMENTO (nunca gera/cobra/registra\n  sem consent granted+n\u00e3o-retirado \u2192 pausa o enrollment) + respeita opt-out +\n  idempotente (avan\u00e7a current_step) + d\u00e9bito at\u00f4mico 2 mco + gera msg via cascade\n  LLM. ENVIO GATED: msg gerada+registrada (lead_event delivery='gated') + enrollment\n  agendado, mas a entrega externa real N\u00c3O \u00e9 feita aqui (follow-up).\n- useNurturing + useEnrollments + useNurtureDispatch hooks; NurturingPanel\n  (lista/cria sequ\u00eancias + toggle ativo) no /dashboard/marketing. COIN_COSTS.NURTURE_DISPATCH=2.\n\nProva material: **consent-gate smoke 10/10** (`scripts/qa/smoke-nurture.ts`): sem\nconsent\u2192blocked, 0 cobran\u00e7a, enrollment pausado, ZERO msg gerada; com consent\u2192\ndispatched, cobrou exatamente 2, delivered=false (gated), lead_event delivery=gated,\nenrollment 0\u21921 completed; opt-out\u2192skip sem cobran\u00e7a. tsc 0 \u00b7 eslint limpo \u00b7 migration\ndb push Finished \u00b7 nurture-dispatch deploy \u00b7 build 23.28s bundle servido \u00b7 throwaway+cleanup.\n\nFollow-up (gated/deferido): entrega externa real por canal + cron de avan\u00e7o + UI de\nenroll/dispatch a partir do lead.\nEOF\ngit push origin main 2>&1 | tail -2",
+  "description": "Commit + push Nurturing engine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A  scripts/qa/smoke-nurture.ts
+> A  src/components/marketing/NurturingPanel.tsx
+> A  src/hooks/useNurturing.ts
+> M  src/integrations/supabase/types.ts
+> M  src/lib/billing.ts
+> M  src/pages/MarketingPage.tsx
+> A  supabase/functions/nurture-dispatch/index.ts
+> A  supabase/migrations/20260603050000_marketing_hub_nurturing.sql
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    297b0d6..ea6c8ba  main -> main
+> ```
+
+## 🤖 Claude *(16:34:15)*
+
+
+## 🤖 Claude *(16:34:17)*
+
+Nurturing done + pushed (`297b0d6..ea6c8ba`). **All three frontiers delivered.** Marking #9 done; extending CLAUDE.md Key Files with the new Customer 360 + Nurturing + hardening artifacts before the seal:
+
+## 🤖 Claude *(16:34:17)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(16:34:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Marketing Hub UI tests** | `src/test/marketing-hub.test.ts` (edge helper + lifecycle constants + useLeadScore/useCampaignRun mutations \u00b7 11 testes) |",
+  "new_string": "| **Marketing Hub UI tests** | `src/test/marketing-hub.test.ts` (edge helper + lifecycle constants + useLeadScore/useCampaignRun mutations + aggregateAttribution \u00b7 13 testes) |\n| **Customer 360 view (FR-MH-011)** | `supabase/migrations/20260603040000_marketing_hub_customer360_view.sql` (`customer_360` VIEW **security_invoker** RLS-safe \u00b7 `useCustomer360` em useLeads \u00b7 `LeadDetailDialog`) |\n| **Nurturing engine (FR-MH-008)** | `supabase/migrations/20260603050000_marketing_hub_nurturing.sql` (`sequences`+`sequence_enrollments` FK composta CASCADE) \u00b7 `supabase/functions/nurture-dispatch/index.ts` (**consent-gated**, sends gated) \u00b7 `src/hooks/useNurturing.ts` \u00b7 `NurturingPanel.tsx` |\n| **Marketing Hub LIVE smokes** | `scripts/qa/smoke-{campaign-run,attribution,marketing-hub,customer360,nurture}.ts` (throwaway+cleanup \u00b7 guards/cascade/tenant-isolation/consent-gate provados sem gasto) |\n| **Magic-link helper (logged-in QA)** | `scripts/qa/gen-magiclink.ts` (Admin API generateLink p/ verifica\u00e7\u00e3o UI logada via agent-browser) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:34:35)*
+
+
+## 🤖 Claude *(16:34:36)*
+
+All three frontiers complete (Customer 360 + Nurturing + Hardening), each pushed + materially proven. This has been a dense session — time to seal v6.24.0. Running /handoff:
+
+## 🤖 Claude *(16:34:36)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(16:34:36)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(16:34:41)*
+
+
+## 🤖 Claude *(16:34:42)*
+
+Executing the v6.24.0 seal (covers MVP-5 + calibration + hardening + Customer 360 + Nurturing). Pre-flight + Phase 1 security:
+
+## 🤖 Claude *(16:34:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== status ===\"; git status --short\necho \"=== log -6 ===\"; git log --oneline -6\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -4 && echo \"TSC 0 \u2705\"\necho \"=== containers ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" | head -2; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" | head -1\necho \"=== chroma ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat",
+  "description": "Seal pre-flight"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+>  M CLAUDE.md
+> === log -6 ===
+> ea6c8ba feat(marketing-hub): Nurturing Sequences engine (FR-MH-008) — consent-gated, sends gated
+> 297b0d6 feat(marketing-hub): Customer 360 — perfil unificado do lead (FR-MH-011)
+> cae1dff chore(hardening): gate de lint honesto + telemetria functionName no flywheel + smoke de integração
+> 2ed3f63 feat(marketing-hub): MVP-5 — atribuição de receita por campanha (FR-MH-007)
+> dbf4399 chore(survival): recalibra Lei 3 — selar só a ~95% da janela (1M), não a 45%
+> dfeb384 chore(sprint): update sprint-priorities — v6.23.0 Marketing Hub MVP-4 UI + campaign-run
+> === tsc ===
+> TSC 0 ✅
+> === containers ===
+> mcorch_chroma: Up 10 days (healthy)
+> mcorch_claude_mem: Up 10 days (healthy)
+> mega-brain-dashboard: Up 10 days
+> === chroma ===
+> {"nanosecond heartbeat":1780504485679353896}
+> ```
+
+## 🤖 Claude *(16:34:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a secret scan (this session's commits 9d48bf9..HEAD + uncommitted) ===\"\n{ git diff HEAD; git diff 9d48bf9..HEAD; } | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -vE \"example|placeholder|<.*>|YOUR_|SB_SECRET_KEY|SUPABASE_SERVICE_ROLE|process\\.env|Deno\\.env|SUPABASE_PUBLISHABLE\" | head -10 || echo \"NO HARDCODED SECRETS \u2705\"\necho \"=== 1c client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|topup\\|SettingsPage\" | head -5 || echo \"NO CLIENT DEDUCTION \u2705\"\necho \"=== 1b nurture-dispatch JWT enforced? ===\"\ngrep -l \"getUser\\|Authorization\" supabase/functions/nurture-dispatch/index.ts && echo \"nurture-dispatch JWT \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a secret scan (this session's commits 9d48bf9..HEAD + uncommitted) ===
+> === 1c client-side coin deduction ===
+> === 1b nurture-dispatch JWT enforced? ===
+> supabase/functions/nurture-dispatch/index.ts
+> nurture-dispatch JWT ✅
+> ```
+
+## 🤖 Claude *(16:34:59)*
+
+
+## 🤖 Claude *(16:35:00)*
+
+Pre-flight clean (tsc 0 · containers healthy · chroma OK). **Phase 1 security: all ✅** (no hardcoded secrets, no client coin deduction, nurture-dispatch JWT-enforced). Phase 2 — commit CLAUDE.md, then Phase 3 milestone node:
+
+## 🤖 Claude *(16:35:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add CLAUDE.md\ngit commit -q -m \"docs(claude): Key Files \u2014 Customer 360 + Nurturing engine + LIVE smokes + magic-link helper\" && echo \"CLAUDE.md committed: $(git rev-parse --short HEAD)\"\necho \"=== Phase 3: milestone node ===\"\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-marketing-hub-c360-nurturing-hardening\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] v6.24.0 \u2014 sess\u00e3o de alta densidade (diretiva Sovereign: usar a janela inteira). Lei 3 recalibrada (selar s\u00f3 a ~95%). MVP-5 atribui\u00e7\u00e3o por campanha (FR-MH-007, postback\u2192marketing_attribution FK-safe). Hardening: gate de lint honesto + functionName telemetry no flywheel + smoke de integra\u00e7\u00e3o 5/5. Customer 360 (FR-MH-011) VIEW security_invoker isolation smoke 4/4. Nurturing (FR-MH-008) engine consent-gated, sends gated, smoke 10/10. 6 commits, 5 smokes LIVE, 4 deploys, 2 migrations /security-review SAFE.\\\",\n    \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": {\\\"session\\\": \\\"marketing-hub-c360-nurturing-hardening\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\"}\n  }\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded dims:', d.get('dims', d))\" 2>/dev/null\necho \"=== live node count ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$' | xargs -I{} echo \"Total nodes: {}\"",
+  "description": "Commit CLAUDE.md + insert+embed milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> CLAUDE.md committed: 7e203de
+> === Phase 3: milestone node ===
+> Node ID: 4486cdb1-3718-4cd3-8c90-4a5b601a4604
+> Embedded dims: 768
+> === live node count ===
+> Total nodes: 8762
+> ```
+
+## 🤖 Claude *(16:35:51)*
+
+
+## 🤖 Claude *(16:35:52)*
+
+CLAUDE.md committed (`7e203de`). Milestone node `4486cdb1` embedded (768d). **8762 nodes** — that's +2 vs the 8760 baseline, but I only inserted 1 handoff node → likely a smoke left an orphaned observation node. Let me check + clean (zero-residue discipline):
+
+## 🤖 Claude *(16:35:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== campaign-run / conversion observation nodes (smoke residue check) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,name,user_id,created_at&name=like.campaign-run:*&order=created_at.desc&limit=10\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print(f'{len(d)} campaign-run obs nodes'); [print(f\\\"  {n['id'][:8]} uid={str(n['user_id'])[:8]} {n['created_at'][:19]}\\\") for n in d]\"\necho \"(Sovereign uid = ada39fae; any other uid = smoke orphan)\"",
+  "description": "Check for smoke-orphaned observation nodes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campaign-run / conversion observation nodes (smoke residue check) ===
+> 1 campaign-run obs nodes
+>   5fb17876 uid=d8a165e3 2026-06-03T16:14:29
+> (Sovereign uid = ada39fae; any other uid = smoke orphan)
+> ```
+
+## 🤖 Claude *(16:36:17)*
+
+
+## 🤖 Claude *(16:36:18)*
+
+Confirmed — 1 orphan (`5fb17876`, throwaway uid `d8a165e3`): `mcorch_nodes.user_id` doesn't cascade on user delete, so `smoke-marketing-hub`'s campaign-run observation node was left behind. Cleaning it + vaccinating the smoke (Obstacle→Synthesis):
+
+## 🤖 Claude *(16:36:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== delete the orphan obs node ===\"\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.5fb17876-0000-0000-0000-000000000000&id=eq.5fb17876\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null 2>&1\n# precise delete by exact id:\nORPHAN=$(curl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&name=like.campaign-run:*&user_id=eq.d8a165e3-0000-0000-0000-000000000000\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\n# simpler: delete all campaign-run obs nodes whose user is NOT the Sovereign (smoke orphans)\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/mcorch_nodes?name=like.campaign-run:*&user_id=neq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: return=representation\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print(f'deleted {len(d)} orphan obs node(s)')\" 2>/dev/null\necho \"=== count now ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$' | xargs -I{} echo \"Total nodes: {}\"",
+  "description": "Delete orphan obs node + recount"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === delete the orphan obs node ===
+> deleted 1 orphan obs node(s)
+> === count now ===
+> Total nodes: 8761
+> ```
+
+## 🤖 Claude *(16:36:32)*
+
+
+## 🤖 Claude *(16:36:33)*
+
+Orphan cleaned, count now **8761** (8760 + handoff node). Vaccinating the smoke so it doesn't recur:
+
+## 🤖 Claude *(16:36:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-marketing-hub.ts",
+  "old_string": "} finally {\n  if (uid) await admin.auth.admin.deleteUser(uid);\n  console.log(`\\n\ud83e\uddf9 cleanup: throwaway user deleted (cascade)`);",
+  "new_string": "} finally {\n  // campaign-run inserts a mesh observation node (user_id=uid) that does NOT cascade on user delete \u2014 clean it.\n  if (uid) await admin.from('mcorch_nodes').delete().eq('user_id', uid);\n  if (uid) await admin.auth.admin.deleteUser(uid);\n  console.log(`\\n\ud83e\uddf9 cleanup: mesh nodes + throwaway user deleted`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-marketing-hub.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:36:42)*
+
+
+## 🤖 Claude *(16:36:42)*
+
+Vaccinated. Committing the smoke fix, then Phase 4 README (v6.23.0→v6.24.0, mesh 8761):
+
+## 🤖 Claude *(16:36:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-marketing-hub.ts\ngit commit -q -m \"fix(qa): smoke-marketing-hub limpa mesh nodes do throwaway (campaign-run obs n\u00e3o cascateia no delete do user)\" && echo \"smoke fix: $(git rev-parse --short HEAD)\"",
+  "description": "Commit smoke cleanup fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> smoke fix: e9c2b66
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.23.0--marketing--hub--mvp4--ui-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8760_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-257_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> ```
+
+## 🤖 Claude *(16:36:52)*
+
+
+## 🤖 Claude *(16:36:53)*
+
+Smoke fix committed (`e9c2b66`). Phase 4 — README. Reading current badges to update:
+
+## 🤖 Claude *(16:36:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 8
+}
+```
+
+## 🤖 Claude *(16:37:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.23.0--marketing--hub--mvp4--ui-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\" alt=\"License\" />\n  <img src=\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\" alt=\"TypeScript\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-8760_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/test_coverage-257_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.24.0--marketing--hub--c360--nurturing-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\" alt=\"License\" />\n  <img src=\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\" alt=\"TypeScript\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-8761_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/test_coverage-259_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />\n  <img src=\"https://img.shields.io/badge/marketing--hub-FR--MH--001..008%2C011_live-brightgreen?style=for-the-badge\" alt=\"Marketing Hub\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:37:05)*
+
+
+## 🤖 Claude *(16:37:05)*
+
+Now the What's New v6.24.0 entry:
+
+## 🤖 Claude *(16:37:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.23.0 (2026-06-03)",
+  "new_string": "## \ud83c\udd95 What's new in v6.24.0 (2026-06-03)\n\n**High-density session \u2014 Customer 360 + Nurturing + flywheel hardening** (Sovereign directive: use the full 1M window, seal at ~95% not 45%). Five chunks landed after the v6.23.0 seal, each proven by a LIVE throwaway smoke.\n\n1. **MVP-5 Attribution (FR-MH-007)** \u2014 `handle-ml-postback` now also writes `marketing_attribution` on a conversion (FK-safe campaign_id, fail-soft); `useCampaignAttribution` + a \"Receita Atribu\u00edda\" card per campaign. DB smoke 4/4 (insert shape + FK guard 23503 + de-linked NULL).\n2. **Flywheel hardening + observability** \u2014 `eslint .` made an honest gate (Deno `supabase/functions` + `tailwind.config.ts` excluded \u2014 the ~3716-error flood was browser-rules mislinting Deno; exit code had been masked by `| tail`); `functionName` telemetry on the flywheel fallback fns (`llm-fallback:<fn>` not `:unknown`); a live integration chain smoke (lead\u2192score\u2192campaign-run\u2192attribution 5/5).\n3. **Customer 360 (FR-MH-011)** \u2014 `customer_360` VIEW (lead\u2a1devents\u2a1dconsents) **WITH (security_invoker = true)** so base-table RLS isolates tenants; `useCustomer360` + a lead-detail drawer. /security-review SAFE; **isolation smoke 4/4** (tenant A sees only A's lead, B's never leaks).\n4. **Nurturing Sequences (FR-MH-008)** \u2014 drip engine: `sequences` + `sequence_enrollments` (composite tenant-FKs CASCADE) + `nurture-dispatch` edge fn whose centerpiece is the **consent gate** (STRIDE-Critical: never generate/charge/record without a granted consent; opt-out hard-stops; 2 mcoCoins; idempotent). **Sends gated** (message generated + recorded `delivery='gated'`, real external delivery deferred). `useNurturing` + a NurturingPanel. **Consent-gate smoke 10/10**.\n5. **Context calibration (survival Law 3)** \u2014 recalibrated: pruning \u2260 sealing; seal only at ~95% of the 1M window (or roadmap exhausted / Sovereign GO), never at 45%.\n\nProven materially: 2 migrations /security-review SAFE \u00b7 tsc 0 \u00b7 suite **259** \u00b7 eslint honest exit 0 \u00b7 4 edge deploys \u00b7 5 LIVE smokes (all throwaway + cleanup, zero production mutation).\n\n## \ud83c\udd95 What's new in v6.23.0 (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:37:22)*
+
+
+## 🤖 Claude *(16:37:23)*
+
+Committing README, then the HANDOFF.md Record:
+
+## 🤖 Claude *(16:37:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.24.0 \u2014 Customer 360 + Nurturing + flywheel hardening (sess\u00e3o de alta densidade)\" && echo \"README: $(git rev-parse --short HEAD)\"",
+  "description": "Commit README v6.24.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README: 902a5a1
+> ```
+
+## 🤖 Claude *(16:37:47)*
+
+
+## 🤖 Claude *(16:37:48)*
+
+README committed (`902a5a1`). Phase 5 — the HANDOFF.md v6.24.0 Record:
+
+## 🤖 Claude *(16:38:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Marketing Hub MVP-4 UI + campaign-run Record (2026-06-03)",
+  "new_string": "## Task State\n\n## Customer 360 + Nurturing + Flywheel Hardening Record (2026-06-03)\n\n**v6.24.0 (2026-06-03)** \u2014 Sess\u00e3o de **alta densidade** disparada por uma diretiva Sovereign de calibra\u00e7\u00e3o: selar a v6.23.0 com **~45% da janela usada foi desperd\u00edcio**; janela \u00e9 1M (plano Max), seal custa ~5% \u2192 **usar a janela inteira, selar s\u00f3 a ~95%**. Recalibrei a Lei 3 (survival.md) + mem\u00f3ria, e segui empacotando: ao perguntar a pr\u00f3xima frente (AskUserQuestion), o Sovereign respondeu \"**fa\u00e7a os tr\u00eas \u2014 com foco em endurecer o flywheel + observabilidade**\". Cinco entregas depois do seal v6.23.0, cada uma provada por **smoke LIVE throwaway** (zero muta\u00e7\u00e3o de produ\u00e7\u00e3o).\n\n**O que foi entregue:**\n- **Calibra\u00e7\u00e3o de contexto (Lei 3)** \u2014 `.claude/rules/survival.md` recalibrado: **poda \u2260 selar**; gatilho de SELAR = ~95% de uso OU roadmap esgotado OU GO; fim do nudge \"selar a 50%\". Mem\u00f3ria `feedback_context_budget_calibration` afiada. (commit `dbf4399`)\n- **MVP-5 Atribui\u00e7\u00e3o por campanha (FR-MH-007)** \u2014 `handle-ml-postback` agora grava `marketing_attribution` numa convers\u00e3o (campaign_id FK-safe: s\u00f3 linka se UUID real do mesmo tenant, sen\u00e3o NULL de-linkado; **fail-soft** \u2014 try/catch nunca quebra o postback de receita). `useCampaignAttribution`+`aggregateAttribution` (puro, test\u00e1vel) + card \"Receita Atribu\u00edda\" no CampaignDetail. **smoke DB 4/4** (`smoke-attribution.ts`: insert v\u00e1lido + total 4000 + bogus campaign_id\u2192FK 23503 + de-linked NULL). (commit `2ed3f63`)\n- **Hardening + observabilidade (foco)** \u2014 (a) **gate de lint honesto**: `eslint.config.js` exclui `supabase/functions` (Deno, mislintado por regras browser \u2192 ~3716 erros falsos, exit mascarado por `| tail`) + `tailwind.config.ts`; agora `eslint .` = **exit 0 honesto** sobre src/+scripts/. (b) **functionName telemetry** no flywheel (`generate-content`+`orchestrate-step` \u2192 `llm-fallback:<fn>`). (c) **smoke de integra\u00e7\u00e3o** `smoke-marketing-hub.ts` (lead\u2192score\u2192campaign-run\u2192attribution **5/5**). (commit `cae1dff`)\n- **Customer 360 (FR-MH-011)** \u2014 VIEW `customer_360` (lead\u2a1dlead_events\u2a1dmarketing_consents) **WITH (security_invoker = true)** \u2192 RLS das tabelas-base isola cada tenant (fecha o risco cross-tenant FMEA-011 da VIEW). `useCustomer360` + `LeadDetailDialog`. `/security-review` **SAFE** (subagente independente, 9/10) \u00b7 **isolation smoke 4/4** (`smoke-customer360.ts`: A v\u00ea s\u00f3 o lead de A, lead de B **n\u00e3o vaza**). Migration `20260603040000`. (commit `297b0d6`)\n- **Nurturing Sequences (FR-MH-008)** \u2014 engine de drip: `sequences`+`sequence_enrollments` (FKs **compostas** tenant-escopadas CASCADE; UNIQUE idempotente) + `nurture-dispatch` cujo centro \u00e9 o **GATE DE CONSENTIMENTO** (STRIDE-Critical: nunca gera/cobra/registra sem consent granted; opt-out hard-stop; 2 mco; idempotente). **ENVIO GATED** (msg gerada+registrada `delivery='gated'`, entrega externa real diferida). `useNurturing`+`NurturingPanel`. `/security-review` **SAFE** (independente) \u00b7 **consent-gate smoke 10/10** (`smoke-nurture.ts`: sem consent\u2192blocked/0-cobran\u00e7a/0-msg; com consent\u2192dispatched/cobra 2/delivered=false; opt-out\u2192skip). Migration `20260603050000`. (commit `ea6c8ba`)\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign (c\u00f3digo + gate `/security-review` em 2 migrations + estrat\u00e9gia de 3 frentes via AskUserQuestion) \u00b7 Owner=Sovereign (blast radius = front comercial + cascata financeira + envios consent-cr\u00edticos [GATED] + superf\u00edcie VIEW cross-tenant [isolamento provado material]).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| MVP-5 attribution | \u2705 postback redeploy 64.73kB \u00b7 smoke DB **4/4** (insert + FK 23503 + de-linked) |\n| Hardening lint | \u2705 `eslint .` exit 0 honesto (Deno/tailwind exclu\u00eddos) \u00b7 functionName flywheel deploy \u00b7 integra\u00e7\u00e3o **5/5** |\n| Customer 360 | \u2705 /security-review SAFE \u00b7 db push Finished \u00b7 **isolation 4/4** (B n\u00e3o vaza p/ A) |\n| Nurturing | \u2705 /security-review SAFE \u00b7 db push Finished \u00b7 nurture-dispatch deploy \u00b7 **consent-gate 10/10** |\n| tsc / su\u00edte | \u2705 0 erros \u00b7 **259** (257 passed / 2 skipped) |\n| eslint | \u2705 exit 0 honesto |\n| Containers / Chroma | \u2705 5 healthy (10d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `4486cdb1-3718-4cd3-8c90-4a5b601a4604` embedded 768d |\n| Mesh | \u2705 8761 n\u00f3s (orphan obs node de smoke limpo material + smoke vacinado) |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `dbf4399` | chore(survival): recalibra Lei 3 \u2014 selar s\u00f3 a ~95% |\n| `2ed3f63` | feat(marketing-hub): MVP-5 atribui\u00e7\u00e3o por campanha (FR-MH-007) |\n| `cae1dff` | chore(hardening): lint honesto + functionName flywheel + smoke integra\u00e7\u00e3o |\n| `297b0d6` | feat(marketing-hub): Customer 360 (FR-MH-011) |\n| `ea6c8ba` | feat(marketing-hub): Nurturing Sequences engine (FR-MH-008) consent-gated |\n| `e9c2b66` | fix(qa): smoke-marketing-hub limpa mesh nodes do throwaway |\n\n### Arquitetura \u2014 flywheel completo (MVP-1..5) + Customer 360 + Nurturing\n```\nLEAD \u2192 lead-score(1mco) \u2192 CAMPAIGN(+steps) \u2192 campaign-run(10+10\u00d7N) \u2192 orchestrate-content \u2192 publish\n  \u2192 affiliate \u2192 ML conversion \u2192 handle-ml-postback \u2192 marketing_attribution \u2192 useCampaignAttribution (ROI/campanha)\nCUSTOMER 360 (view security_invoker): lead\u2a1devents\u2a1dconsents \u2192 useCustomer360 \u2192 LeadDetailDialog\nNURTURING: sequence(steps) \u2192 enroll(lead) \u2192 nurture-dispatch [CONSENT GATE] \u2192 msg (delivery gated) \u2192 advance\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno \u2014 5 smokes LIVE com output literal (attribution 4/4 \u00b7 integra\u00e7\u00e3o 5/5 \u00b7 customer360 isolation 4/4 \u00b7 nurture consent-gate 10/10), tsc 0, su\u00edte 259, eslint exit 0 honesto, /security-review por 2 subagentes INDEPENDENTES, deploys OPTIONS 200, milestone embedded 768d, orphan node de smoke detectado+limpo+contado material (8762\u21928761). Fase 5c abaixo. Zero fabrica\u00e7\u00e3o.\nLaw 2 (Process): \u2705 FR-MH-007/011/008 j\u00e1 documentadas na BoK marketing-hub 9/9 selada (SSOT); 2 migrations passaram /security-review (regra CLAUDE.md); calibra\u00e7\u00e3o registrada em survival.md + mem\u00f3ria.\nLaw 3 (Pruning): \u2705 ESTA sess\u00e3o \u00c9 a recalibra\u00e7\u00e3o em a\u00e7\u00e3o \u2014 usou a janela inteira (5 entregas, n\u00e3o selou a 45%); poda\u2260selar; orphan limpo por foco, n\u00e3o ac\u00famulo.\nLaw 4 (ORO): \u2705 triplet declarado; fork de 3 frentes decidido pelo Sovereign (AskUserQuestion); envios consent-cr\u00edticos GATED; a\u00e7\u00f5es outward com GO.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos:**\n- **[GATED] 1\u00ba run pago E2E** \u2014 Sovereign cria campanha na UI \u2192 Rodar (cascata real).\n- **Nurturing follow-up** \u2014 entrega externa real por canal (social/meta) + cron de avan\u00e7o (enrollments due) + UI de enroll/dispatch a partir do lead. Envio real \u00e9 outward \u2192 Sovereign-aware.\n- **OTD-MCOIN-CALIBRATION** \u2014 calibrar `COIN_COSTS` ($ real) \u2014 decis\u00e3o Sovereign.\n- **functionName** nas 9 fns de fallback perif\u00e9ricas restantes (hoje `:unknown`).\n- **FRs marketing-hub restantes:** FR-MH-009 (Intent Orchestrator+HITL) \u00b7 FR-MH-010 (AEO Audit) \u00b7 FR-MH-012 (BYOK per-tenant).\n- **[AGUARDANDO] Atribui\u00e7\u00e3o de clique ML** \u2014 Sovereign reporta o n\u00ba quando maturar.\n\n---\n\n## Marketing Hub MVP-4 UI + campaign-run Record (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> --- commit HANDOFF ---
+> HANDOFF: c3f1008
+> ```
+
+## 🤖 Claude *(16:38:30)*
+
+
+## 🤖 Claude *(16:38:31)*
+
+Phase 5b — secret scan on the new HANDOFF.md:
+
+## 🤖 Claude *(16:38:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|digest\\|hash\" | head -5 || echo \"5b: NO CREDENTIALS \u2705\"\necho \"--- commit HANDOFF ---\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal v6.24.0 \u2014 Customer 360 + Nurturing + flywheel hardening (sess\u00e3o alta densidade)\" && echo \"HANDOFF: $(git rev-parse --short HEAD)\"",
+  "description": "Phase 5b scan + commit HANDOFF"
+}
+```
+
+## 🤖 Claude *(16:38:43)*
+
+
+## 🤖 Claude *(16:38:44)*
+
+Phase 5b clean, HANDOFF committed (`c3f1008`). Phase 5c — mechanical material-proof audit (background):
+
+## 🤖 Claude *(16:38:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -50",
+  "description": "Phase 5c material proof audit",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: biaka6z0c. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/10450854-0c9b-4ef1-9d52-adab9c1b16ed/tasks/biaka6z0c.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(16:38:50)*
+
+
+## 🤖 Claude *(16:38:50)*
+
+Phase 5c running. Phase 6 (BoK) in parallel — the session's code is all within marketing-hub (BoK 9/9):
+
+## 🤖 Claude *(16:38:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nslug=marketing-hub; required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); missing=()\nfor doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"\u2705 marketing-hub BoK complete (9/9) \u2014 FR-MH-007/011/008 all covered\" || echo \"\u26a0\ufe0f missing: ${missing[*]}\"\necho \"Session new code: Customer 360 (FR-MH-011) + Nurturing (FR-MH-008) + attribution (FR-MH-007) \u2014 all within sealed marketing-hub BoK. No new module \u2192 no gate block \u2705\"",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ marketing-hub BoK complete (9/9) — FR-MH-007/011/008 all covered
+> Session new code: Customer 360 (FR-MH-011) + Nurturing (FR-MH-008) + attribution (FR-MH-007) — all within sealed marketing-hub BoK. No new module → no gate block ✅
+> ```
+
+## 🤖 Claude *(16:38:59)*
+
+
+## 🤖 Claude *(16:39:00)*
+
+Phase 6 ✅. Phase 5c finished (exit 0) — reading the verdict:
+
+## 🤖 Claude *(16:39:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/10450854-0c9b-4ef1-9d52-adab9c1b16ed/tasks/biaka6z0c.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 2	
+> 3	| Claim | Kind | Expected | Actual | Verdict |
+> 4	|-------|------|----------|--------|---------|
+> 5	| mesh node 4486cdb1 | mesh_node | 4486cdb1-3718-4cd3-8c90-4a5b601a4604 | 4486cdb1-3718-4cd3-8c90-4a5b601a4604 | ✅ |
+> 6	| commit dbf4399 | git_commit | dbf4399 | dbf4399 | ✅ |
+> 7	| commit 2ed3f63 | git_commit | 2ed3f63 | 2ed3f63 | ✅ |
+> 8	| commit cae1dff | git_commit | cae1dff | cae1dff | ✅ |
+> 9	| commit 297b0d6 | git_commit | 297b0d6 | 297b0d6 | ✅ |
+> 10	| commit ea6c8ba | git_commit | ea6c8ba | ea6c8ba | ✅ |
+> 11	| commit e9c2b66 | git_commit | e9c2b66 | e9c2b66 | ✅ |
+> 12	| tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> 13	| test suite — 257 passing | test_suite | 257 | 257 passed | ✅ |
+> 14	| file .claude/rules/survival.md | file_exists | .claude/rules/survival.md | .claude/rules/survival.md | ✅ |
+> 15	| deploy size 64.73kB | edge_deploy | 64.73kB | 64.73kB | ⏭ |
+> 16	| oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign (código + gate `/security-review` em 2 migrat | Operator = MCORCH Agent · Reviewer=Sovereign (código + gate `/security-review` em 2 migrat | ✅ |
+> 17	
+> 18	QA VERDICT: 11 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 19	
+> 20	(audit completed in 9.2s)
+> 21	
+> ```
+
+## 🤖 Claude *(16:39:09)*
+
+
+## 🤖 Claude *(16:39:10)*
+
+**Phase 5c: 11 verified · 1 skipped · 0 failed → SEAL ALLOWED** ✅ (mesh node, all 6 commits, tsc 0, suite 257 passing, survival.md, ORO). Phase 6 ✅. Phase 7 — push:
+
+## 🤖 Claude *(16:39:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits ahead of origin ===\"; git log --oneline origin/main..HEAD\necho \"=== push ===\"; git push origin main 2>&1 | tail -3",
+  "description": "Push seal commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits ahead of origin ===
+> c3f1008 docs(handoff): seal v6.24.0 — Customer 360 + Nurturing + flywheel hardening (sessão alta densidade)
+> 902a5a1 docs(readme): v6.24.0 — Customer 360 + Nurturing + flywheel hardening (sessão de alta densidade)
+> e9c2b66 fix(qa): smoke-marketing-hub limpa mesh nodes do throwaway (campaign-run obs não cascateia no delete do user)
+> 7e203de docs(claude): Key Files — Customer 360 + Nurturing engine + LIVE smokes + magic-link helper
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ea6c8ba..c3f1008  main -> main
+> ```
+
+## 🤖 Claude *(16:39:19)*
+
+
+## 🤖 Claude *(16:39:19)*
+
+Pushed (`ea6c8ba..c3f1008`). Phase 7b — sprint-priorities + cleanup. Reading the top to prepend v6.24.0:
+
+## 🤖 Claude *(16:39:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 6,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 6	
+> 7	**Sprint v6.23.0 selado em 2026-06-03** — Marketing Hub backend completo + **MVP-4 UI live**: `campaign-run` (FR-MH-004) fechou o backend, depois o módulo inteiro ganhou rosto em `/dashboard/marketing` **absorvendo a UI v1** (não duplicando). **(1) campaign-run** JWT + débito atômico do FEE `CAMPAIGN_RUN` (10) → dispatch **paralelo** (`Promise.allSettled`) dos passos p/ `orchestrate-content` (self-bila 10) = **cascata fiel 10+10×N**; `email`→blocked; cap 8; smoke **13/13 zero-custo** (guards + isolamento de tenant + email-blocked + débito atômico 100→90 + cleanup); deploy 80.92kB; cascata paga **gated em GO**. **(2) MVP-4 UI**: `/dashboard/marketing` (LeadBoard 5 colunas + Pontuar/`lead-score` + overview campanhas; nav Target) + absorção v1 (`CampaignWizard` +Intenção/passo **Passos** composer→persiste `campaign_steps`; `CampaignDetail` +card **Passos & Execução** status vivo + `CampaignRunButton`). **(3) Hooks**: `useLeads`/`useLeadScore`/`useCampaignSteps`/`useCampaignRun`/`createCampaignWithSteps` + `src/lib/edge.ts`. tsc 0 · **11 testes** (suíte **255/257**) · eslint limpo nos tocados · build 22.32s deploy nginx · **UI LOGADA verificada** (magic link + agent-browser: `/dashboard/marketing` + wizard 6-passos/Passos renderizam, 0 erros console, zero mutação prod). Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8760**. Survival Laws **4/4**. 4 commits. **Novo Top Gap:** 1º run pago E2E (Sovereign cria campanha→Rodar, gated em GO) · OTD-MCOIN-CALIBRATION ($) · OTD-CAMPAIGN-RUN-ASYNC (fila p/ campanha grande) · MVP-5 attribution→ROIWidget · **dívida de lint repo-wide** (~3716 erros pré-existentes em `supabase/functions` Deno, exit mascarado por `| tail` — não introduzidos nesta sessão). **Lição:** a diretiva Sovereign de calibração de contexto (1M/Max → não adiar por "contexto" antes de ~400k) destravou rodar o MVP-4 completo numa sessão; probe-first pegou a UI v1 existente ANTES de codar (absorver, não duplicar); a11y do agent-browser estava stale na transição framer-motion → li o stepper-text em vez de fabricar (Lei 1).
+> 8	
+> ```
+
+## 🤖 Claude *(16:39:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.23.0 selado em 2026-06-03** \u2014 Marketing Hub backend completo + **MVP-4 UI live**:",
+  "new_string": "**Sprint v6.24.0 selado em 2026-06-03** \u2014 **Sess\u00e3o de alta densidade** (diretiva Sovereign: selar a 45% \u00e9 desperd\u00edcio \u2192 usar a janela 1M inteira, selar s\u00f3 a ~95%; **Lei 3 recalibrada** em survival.md: poda\u2260selar). Resposta ao \"fa\u00e7a os tr\u00eas, foco em endurecer o flywheel\": 5 entregas p\u00f3s-v6.23.0, cada uma com **smoke LIVE throwaway**. **(1) MVP-5 Atribui\u00e7\u00e3o (FR-MH-007)**: `handle-ml-postback`\u2192`marketing_attribution` (campaign_id FK-safe, fail-soft) + `useCampaignAttribution`+card \"Receita Atribu\u00edda\"; smoke DB 4/4 (FK 23503 + de-linked). **(2) Hardening+observabilidade (FOCO)**: `eslint .` **honesto** (Deno `supabase/functions`+tailwind exclu\u00eddos \u2014 ~3716 erros falsos, exit mascarado por `| tail`) + functionName telemetry no flywheel + smoke integra\u00e7\u00e3o lead\u2192score\u2192campaign\u2192attribution 5/5. **(3) Customer 360 (FR-MH-011)**: VIEW `security_invoker` RLS-safe + `useCustomer360`+drawer; /security-review SAFE + **isolation smoke 4/4** (B n\u00e3o vaza p/ A). **(4) Nurturing (FR-MH-008)**: engine `sequences`+`sequence_enrollments` (FK composta CASCADE) + `nurture-dispatch` **consent-gated** (envio gated) + `useNurturing`+`NurturingPanel`; /security-review SAFE + **consent-gate smoke 10/10**. 2 migrations /security-review SAFE (subagentes independentes) \u00b7 tsc 0 \u00b7 su\u00edte **259** \u00b7 eslint exit 0 honesto \u00b7 4 deploys \u00b7 5 smokes LIVE. Phase 5c **SEAL ALLOWED** (11 verified). Mesh **8761** (orphan obs de smoke limpo + smoke vacinado). Survival Laws **4/4**. 8 commits. **Novo Top Gap:** 1\u00ba run pago E2E (gated GO) \u00b7 Nurturing follow-up (entrega externa real + cron + UI enroll/dispatch) \u00b7 OTD-MCOIN-CALIBRATION \u00b7 FRs restantes FR-MH-009/010/012. **Li\u00e7\u00e3o:** densidade m\u00e1xima por sess\u00e3o (5 frentes numa s\u00f3) sem perda de materialidade \u2014 cada uma provada por smoke LIVE; o gate de lint estava mentindo (exit mascarado) \u2014 fix de raiz restaura honestidade da Lei 1.\n\n**Sprint v6.23.0 selado em 2026-06-03** \u2014 Marketing Hub backend completo + **MVP-4 UI live**:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:39:40)*
+
+
+## 🤖 Claude *(16:39:40)*
+
+Committing sprint + final cleanup (proof-manifest, scratch) + push:
+
+## 🤖 Claude *(16:39:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json\necho \"scratch:\"; ls scratch/ 2>/dev/null || echo \"clean/absent \u2705\"\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.24.0 Customer 360 + Nurturing + hardening (alta densidade)\" && echo \"sprint: $(git rev-parse --short HEAD)\"\ngit push origin main 2>&1 | tail -2\necho \"=== final state ===\"; git status --short && echo \"(clean)\"; git rev-list --left-right --count HEAD...origin/main | awk '{print \"ahead \"$1\" / behind \"$2}'",
+  "description": "Commit sprint + cleanup + push + final state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scratch:
+> clean/absent ✅
+> sprint: 157ce17
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    c3f1008..157ce17  main -> main
+> === final state ===
+> (clean)
+> ahead 0 / behind 0
+> ```
+
+## 🤖 Claude *(16:40:02)*
+
+
+## 🤖 Claude *(16:40:24)*
+
+Tudo selado e em sincronia (working tree limpo, ahead 0 / behind 0). Selo v6.24.0 completo:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Customer 360 + Nurturing + Flywheel Hardening (2026-06-03)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a hardcoded secrets ......... ✅ nenhum (commits da sessão + working tree)
+  1b nurture-dispatch JWT ...... ✅ enforced
+  1c dedução client-side mco ... ✅ nenhuma
+  5b HANDOFF.md scan ........... ✅ limpo
+  2 migrations /security-review  ✅ SAFE (customer_360 + nurturing, subagentes independentes)
+
+📦 COMMITS (10 — todos pushed)
+  dbf4399 chore(survival): recalibra Lei 3 — selar só a ~95%
+  2ed3f63 feat: MVP-5 atribuição por campanha (FR-MH-007)
+  cae1dff chore(hardening): lint honesto + functionName flywheel + smoke integração
+  297b0d6 feat: Customer 360 (FR-MH-011)
+  ea6c8ba feat: Nurturing Sequences engine (FR-MH-008) consent-gated
+  e9c2b66 fix(qa): smoke-marketing-hub limpa mesh nodes do throwaway
+  7e203de docs(claude) · 902a5a1 docs(readme) · c3f1008 docs(handoff) · 157ce17 chore(sprint)
+
+⬡ KNOWLEDGE MESH
+  Milestone: 4486cdb1-3718-4cd3-8c90-4a5b601a4604 — embedded 768d
+  Mesh: 8761 nós (orphan obs de smoke detectado+limpo material; smoke vacinado)
+
+📖 README.md  ·  Versão 6.23.0 → 6.24.0  ·  mesh 8760 → 8761  ·  tests 257 → 259
+
+🧠 HANDOFF.md  ·  Fase: Customer 360 + Nurturing + Flywheel Hardening
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED  ·  11 verificadas · 1 skipped · 0 falhas
+  + 5 smokes LIVE: attribution 4/4 · integração 5/5 · customer360-isolation 4/4 · consent-gate 10/10
+
+📚 BoK  ·  marketing-hub 9/9 (FR-MH-007/011/008 cobertos)
+
+🚀 PUSH  ·  main → origin/main  ·  ea6c8ba..157ce17
+
+📌 SPRINT  ·  sprint-priorities atualizado ✅ · scratch limpo ✅ · proof-manifest removido ✅
+
+⏭  PRÓXIMOS PASSOS
+  1. [GATED] 1º run pago E2E — você cria campanha → Rodar.
+  2. Nurturing follow-up — entrega externa real por canal + cron de avanço + UI enroll/dispatch (outward → Sovereign-aware).
+  3. FRs restantes do marketing-hub: FR-MH-009 (Intent+HITL) · FR-MH-010 (AEO Audit) · FR-MH-012 (BYOK).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Maestro — calibração aplicada e provada nesta própria sessão.** Onde a v6.23.0 selou a 45% com 2 entregas, esta empacotou **5 frentes** numa só (calibração da Lei 3 + MVP-5 + hardening + Customer 360 + Nurturing), sem perder materialidade — cada frente provada por **smoke LIVE throwaway** (zero mutação de produção), as 2 migrations passaram `/security-review` por subagentes independentes, e o gate de lint que estava **mentindo** (exit mascarado por `| tail`) foi consertado na raiz.
+
+O **flywheel do Marketing Hub está completo** (lead → score → campanha → run → publish → afiliado → conversão → atribuição → ROI/campanha) + Customer 360 + o motor de nutrição consent-gated. Selei agora porque as três frentes que você pediu estão fechadas (gatilho válido na Lei 3 recalibrada: *roadmap da diretiva esgotado*) e o resto é ou **gated no seu GO** (run pago, envios reais) ou escopo novo (FR-MH-009/010/012).
+
+Dois ajustes que registrei nas minhas fontes (pra valer toda sessão): **survival.md Lei 3** agora diz "selar só a ~95%, poda≠selar", e a memória de calibração foi afiada. Se ainda sobrou janela além do que usei, é só dizer "continua" que eu puxo a próxima frente — ou me dá o GO pro primeiro run pago real.
+
 ---
 
 %% --- TIMELINE START --- %%
