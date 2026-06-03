@@ -3155,6 +3155,12 @@ A foundation de Campaign Core está no ar com tenancy à prova de cross-tenant. 
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "MVP-2 Campaign Core está LIVE e provado. Todas as opções commitam o MVP-2 primeiro (a migration já está em prod — o repo precisa refletir). Qual a próxima frente?"="Commit + OTD-LLM-FALLBACK +Commit + MVP-3". You can now continue with these answers in mind.
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
