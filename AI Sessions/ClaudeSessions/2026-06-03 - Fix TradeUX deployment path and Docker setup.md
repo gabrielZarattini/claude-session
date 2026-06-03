@@ -9617,5 +9617,5 @@ Sessão selada — zero estado órfão. O `HANDOFF.md` registra como **primeira 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]
-> * **Próxima Sessão**: [[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]
+> * **Próxima Sessão**: [[2026-06-03 - Monitor affiliate product updates and test results]]
 %% --- TIMELINE END --- %%
