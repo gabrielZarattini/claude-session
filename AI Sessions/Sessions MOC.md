@@ -10,9 +10,9 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 266
+> * **Total de Sessões Registradas**: 267
 > * **Sessões do Claude**: 235
-> * **Sessões do Gemini**: 31
+> * **Sessões do Gemini**: 32
 
 ---
 
@@ -55,6 +55,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-03*
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` - *2026-06-03*
@@ -66,8 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - Monitor affiliate product updates and test results]]` - *2026-06-03*
 *   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-03*
 *   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` - *2026-06-03*
-*   `[[2026-06-03 - Address alerts timezone issue and next steps]]` - *2026-06-03*
-*   *... e mais 230 sessões nessa categoria.*
+*   *... e mais 231 sessões nessa categoria.*
 
 ---
 
@@ -255,6 +255,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ad97749e62e3c968c]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-ab2442dbe61168fc5]]` (ClaudeSessions)
