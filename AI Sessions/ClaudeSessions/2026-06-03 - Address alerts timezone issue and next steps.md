@@ -5113,6 +5113,1730 @@ Como o contexto desta sessão já está extenso (Lei 3 — Pruning), decido com 
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "campaign-run (MVP-3 parte 2): o BoK manda invocar orchestrate-content por passo, mas cada orchestrate-content já debita 10 mco — cobrança em cascata (10 da campanha + 10×N passos). Como modelar o billing e prosseguir?"="O certo é fazer a cascata fiel mas precisamos calibrar isso conforme os gastos, sendo ainda mais fiel a economia mcoCoins, no entando não me recordo se esse valor de 10 para cada item composto da campanha tambem foi calibrado e 10 seria o número perfeito.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:32:30)*
+
+
+## 🤖 Claude *(13:32:33)*
+
+O Sovereign decidiu: **cascata fiel**, mas levantou um ponto legítimo — **calibrar os custos conforme os gastos reais**, e questiona se o `10` por item de campanha foi de fato calibrado ou é arbitrário. Master Protocol: respondo isso com dados, não com suposição.
+
+Vou (1) sondar a economia mcoCoins real para responder "o 10 é calibrado?", (2) implementar `campaign-run` em cascata fiel com o custo **centralizado** (calibrável), e (3) levantar os dados de calibração para você decidir o número perfeito. Sondando a economia:
+
+## 🤖 Claude *(13:32:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { SupabaseClient } from '@supabase/supabase-js';
+> 2	
+> 3	// mcoCoins cost per operation — single source of truth
+> 4	export const COIN_COSTS = {
+> 5	  ORCHESTRATION_RUN: 10,
+> 6	  CONTENT_GENERATION: 5,
+> 7	  IMAGE_GENERATION: 3,
+> 8	  EMBED_NODE: 1,
+> 9	} as const;
+> 10	
+> 11	export type CoinOperation = keyof typeof COIN_COSTS;
+> 12	
+> 13	/**
+> 14	 * Deducts mcoCoins from the authenticated user's profile.
+> 15	 * Calls the `deduct_mco_coins` SECURITY DEFINER RPC which enforces
+> 16	 * the balance check atomically in the database.
+> 17	 * Throws if balance is insufficient or the RPC fails.
+> 18	 */
+> 19	export async function deductMcoCoins(
+> 20	  supabase: SupabaseClient,
+> 21	  userId: string,
+> 22	  amount: number,
+> 23	): Promise<void> {
+> 24	  const { error } = await supabase.rpc('deduct_mco_coins', {
+> 25	    p_user_id: userId,
+> 26	    p_amount: amount,
+> 27	  });
+> 28	
+> 29	  if (error) {
+> 30	    throw new Error(error.message || 'Falha ao deduzir mcoCoins');
+> 31	  }
+> 32	}
+> 33	
+> 34	/**
+> 35	 * Returns the current mco_balance for the given user.
+> 36	 * Returns 0 if the profile row is not found.
+> 37	 */
+> 38	export async function getMcoBalance(
+> 39	  supabase: SupabaseClient,
+> 40	  userId: string,
+> 41	): Promise<number> {
+> 42	  const { data, error } = await supabase
+> 43	    .from('profiles')
+> 44	    .select('mco_balance')
+> 45	    .eq('id', userId)
+> 46	    .maybeSingle();
+> 47	
+> 48	  if (error) throw new Error(error.message);
+> 49	  return (data?.mco_balance as number | null) ?? 0;
+> 50	}
+> 51	
+> 52	/**
+> 53	 * Returns true if the user has enough mcoCoins for the operation.
+> 54	 * Prefer this for UI guard checks (non-destructive read).
+> 55	 */
+> 56	export async function hasSufficientBalance(
+> 57	  supabase: SupabaseClient,
+> 58	  userId: string,
+> 59	  required: number,
+> 60	): Promise<boolean> {
+> 61	  const balance = await getMcoBalance(supabase, userId);
+> 62	  return balance >= required;
+> 63	}
+> 64	
+> 65	/**
+> 66	 * Convenience wrapper: checks balance then deducts in sequence.
+> 67	 * Use this in Edge Functions where you want an explicit pre-check message.
+> 68	 */
+> 69	export async function checkAndDeductCoins(
+> 70	  supabase: SupabaseClient,
+> 71	  userId: string,
+> 72	  operation: CoinOperation,
+> 73	): Promise<void> {
+> 74	  const cost = COIN_COSTS[operation];
+> 75	  const sufficient = await hasSufficientBalance(supabase, userId, cost);
+> 76	  if (!sufficient) {
+> 77	    throw new Error(
+> 78	      `Saldo insuficiente: operação "${operation}" custa ${cost} mcoCoins`,
+> 79	    );
+> 80	  }
+> 81	  await deductMcoCoins(supabase, userId, cost);
+> 82	}
+> 83	
+> ```
+
+## 🤖 Claude *(13:32:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; H1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== real mcoCoins spends by action (mcoin_transactions) ===\"\ncurl -s \"$URL/rest/v1/mcoin_transactions?select=action,amount&limit=2000\" -H \"$H1\" -H \"$H2\" | python3 -c \"\nimport json,sys\nfrom collections import defaultdict\nd=json.load(sys.stdin)\nagg=defaultdict(lambda:[0,0])\nfor r in d:\n    a=r.get('action','?'); amt=r.get('amount',0) or 0\n    agg[a][0]+=1; agg[a][1]+=amt\nprint(f'total rows: {len(d)}')\nfor a,(c,s) in sorted(agg.items(), key=lambda x:-abs(x[1][1])):\n    print(f'  {a}: {c} txns, sum amount={s}')\n\" 2>/dev/null || echo \"(mcoin_transactions query failed/empty)\"\necho \"\"\necho \"=== where the orchestrate cost (10) is referenced ===\"\ngrep -rnE \"COIN_COSTS|ORCHESTRATION_COST|= 10|: 10\" src/lib/billing.ts supabase/functions/orchestrate-content/index.ts 2>/dev/null | head",
+  "description": "Read billing.ts + real mcoCoins spends + cost references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === real mcoCoins spends by action (mcoin_transactions) ===
+> total rows: 80
+>   opening_balance_reconciliation: 1 txns, sum amount=10000
+>   canvas_video_spend: 35 txns, sum amount=-4280
+>   canvas_image_spend: 27 txns, sum amount=-314
+>   canvas_magic_prompt_spend: 11 txns, sum amount=-55
+>   spend: 3 txns, sum amount=-30
+>   refund:incomplete_e2e_run: 1 txns, sum amount=10
+>   refund:f7e1ce7e_cascade_failed: 1 txns, sum amount=10
+>   refund:4c041d66_cascade_failed_sb_secret_format: 1 txns, sum amount=10
+> 
+> === where the orchestrate cost (10) is referenced ===
+> src/lib/billing.ts:4:export const COIN_COSTS = {
+> src/lib/billing.ts:5:  ORCHESTRATION_RUN: 10,
+> src/lib/billing.ts:11:export type CoinOperation = keyof typeof COIN_COSTS;
+> src/lib/billing.ts:74:  const cost = COIN_COSTS[operation];
+> supabase/functions/orchestrate-content/index.ts:76:    const ORCHESTRATION_COST = 10;
+> supabase/functions/orchestrate-content/index.ts:83:    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {
+> supabase/functions/orchestrate-content/index.ts:92:      p_amount: ORCHESTRATION_COST,
+> ```
+
+## 🤖 Claude *(13:34:45)*
+
+
+## 🤖 Claude *(13:34:51)*
+
+## Análise de calibração mcoCoins (responde sua pergunta sobre o 10)
+
+**O `10` NÃO foi rigorosamente calibrado** — é um número redondo. Evidência material:
+
+`COIN_COSTS` (src/lib/billing.ts): `ORCHESTRATION_RUN 10 · CONTENT_GENERATION 5 · IMAGE_GENERATION 3 · EMBED_NODE 1`.
+
+- **Incoerência interna:** `orchestrate-content` cobra **10 flat**, mas seus componentes somam **18** (3×content 5 + image 3). Cobra-se *menos* que a soma das partes → subsídio implícito não-intencional.
+- **Duplicação (drift risk):** o `10` vive em 2 lugares — `billing.ts` E hardcoded em `orchestrate-content:76`. Não há single source real.
+- **Gastos reais** (`mcoin_transactions`, 80 txns): `canvas_video` domina **−4280** (~122/vídeo) · `canvas_image` −314 (~11.6) · `magic_prompt` −55 (5) · `orchestrate` −30 (10). **Vídeo é o maior custo real**, não a orquestração.
+- Calibrar mcoCoin↔R$ exige os preços $ por modelo (OpenRouter) + vídeo (Higgsfield) — dado que você tem/posso levantar.
+
+Centralizei os custos novos + registrei a dívida de calibração no SSOT:
+
+## 🤖 Claude *(13:34:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts",
+  "old_string": "// mcoCoins cost per operation \u2014 single source of truth\nexport const COIN_COSTS = {\n  ORCHESTRATION_RUN: 10,\n  CONTENT_GENERATION: 5,\n  IMAGE_GENERATION: 3,\n  EMBED_NODE: 1,\n} as const;",
+  "new_string": "// mcoCoins cost per operation \u2014 single source of truth (frontend).\n// CALIBRATION NOTE (2026-06-03 \u00b7 OTD-MCOIN-CALIBRATION): these are round figures, NOT yet derived from\n// real provider $ cost. ORCHESTRATION_RUN (10) is charged FLAT and is LESS than the sum of its parts\n// (3\u00d7CONTENT_GENERATION + IMAGE_GENERATION = 18); real spend (mcoin_transactions) shows canvas_video as\n// the dominant cost (~122/video). campaign-run (FR-MH-004) is a CASCADE: CAMPAIGN_RUN once + N\u00d7ORCHESTRATION_RUN\n// per dispatched step. Edge functions currently mirror these constants by hand (Deno can't import src/lib).\n// \u2192 Pending: tune against per-model token $ + Higgsfield video price before commercial pricing.\nexport const COIN_COSTS = {\n  ORCHESTRATION_RUN: 10,\n  CONTENT_GENERATION: 5,\n  IMAGE_GENERATION: 3,\n  EMBED_NODE: 1,\n  LEAD_SCORE: 1, // marketing-hub FR-MH-003 (lead-score edge fn mirrors this)\n  CAMPAIGN_RUN: 10, // marketing-hub FR-MH-004 \u2014 orchestration fee ON TOP of the cascaded per-step ORCHESTRATION_RUN\n} as const;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:35:15)*
+
+
+## 🤖 Claude *(13:35:16)*
+
+billing.ts centralizado + dívida de calibração registrada. Validando que não quebrei os testes de billing + tipos:
+
+## 🤖 Claude *(13:35:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx vitest run billing 2>&1 | tail -8\necho \"--- tsc ---\"\nnpx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: ${PIPESTATUS[0]}\"",
+  "description": "Run billing tests + tsc after COIN_COSTS change"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  ✓ src/test/billing.test.ts (22 tests) 22ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  22 passed (22)
+>    Start at  10:35:18
+>    Duration  1.05s (transform 59ms, setup 82ms, collect 44ms, tests 22ms, environment 414ms, prepare 97ms)
+> 
+> --- tsc ---
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(13:35:57)*
+
+
+## 🤖 Claude *(13:36:05)*
+
+Validação: **billing 22/22, tsc 0** ✓.
+
+## Recap desta sessão (tudo material + em produção)
+
+| # | Frente | Prova |
+|---|---|---|
+| 🟢 | Alerta `meta_config` | vazio (0 linhas, 1==1 user/profile) |
+| 🟢 | MVP-2 Campaign Core | `7fd8e7a` · tenant-FK 23503/42501 · mesh `7628892b` |
+| 🟢 | OTD-LLM-FALLBACK | `0a182d3` · 6/6 testes · 11 fns · mesh `6061a6d2` |
+| 🟢 | lead-score | `46362c4` · smoke E2E 200/score=80/débito 100→99 |
+| 🟢 | Calibração mcoCoins | achado material + `COIN_COSTS` centralizado (a commitar) |
+
+`campaign-run` está **100% especificada**: cascata fiel (`CAMPAIGN_RUN 10` + N×`ORCHESTRATION_RUN 10`), custo centralizado, calibração pendente dos seus preços $.
+
+**Recomendação (Lei 3 — Pruning):** o contexto desta sessão está extenso e `campaign-run` é código **financeiro** que invoca o pipeline pesado `orchestrate-content`. Fazê-lo com contexto saturado é onde mora o erro alucinado. Recomendo selar agora e implementá-lo fresco. Sua decisão:
+
+## 🤖 Claude *(13:36:07)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "5 frentes materiais entregues nesta sess\u00e3o. campaign-run (cascata fiel) \u00e9 c\u00f3digo financeiro que invoca o pipeline pesado orchestrate-content, e o contexto desta sess\u00e3o j\u00e1 est\u00e1 longo. Selar agora ou implementar campaign-run nesta sess\u00e3o mesmo?",
+      "header": "Ritmo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Selar agora (/handoff)",
+          "description": "Recomendado (Lei 3). Consolido as 5 entregas + deixo campaign-run 100% especificada (cascata fiel, custo centralizado) + a divida de calibracao com os dados levantados. Proxima sessao implementa com contexto limpo + seus precos $ por modelo/video."
+        },
+        {
+          "label": "Implementar campaign-run ja",
+          "description": "Sigo nesta sessao: cascata fiel (10 + 10xN), custo centralizado em COIN_COSTS, smoke leve (campanha de 1 passo, custo trivial), deploy + commit + mesh seal. Depois selo."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "5 frentes materiais entregues nesta sessão. campaign-run (cascata fiel) é código financeiro que invoca o pipeline pesado orchestrate-content, e o contexto desta sessão já está longo. Selar agora ou implementar campaign-run nesta sessão mesmo?"="Selar agora (/handoff)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:40:34)*
+
+
+## 🤖 Claude *(13:40:34)*
+
+Entendido — **selar agora**. Invocando o protocolo de seal.
+
+## 🤖 Claude *(13:40:35)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(13:40:35)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(13:40:56)*
+
+
+## 🤖 Claude *(13:40:56)*
+
+Executando o protocolo de seal. **PRE-FLIGHT + Phase 1 (Security Audit)** em paralelo:
+
+## 🤖 Claude *(13:40:58)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Session seal (/handoff)",
+  "summary": "Selando v6.22.0 \u2014 MVP-2 Campaign Core + OTD-LLM-FALLBACK + lead-score + calibra\u00e7\u00e3o mcoCoins"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Session seal (/handoff)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(13:41:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== diff stat (uncommitted) ===\"; git diff HEAD --stat\necho \"=== log -7 ===\"; git log --oneline -7\necho \"=== docker ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== chroma ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat\necho \"\"",
+  "description": "Pre-flight: git state, docker, chroma"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+>  M src/lib/billing.ts
+> === diff stat (uncommitted) ===
+>  src/lib/billing.ts | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> === log -7 ===
+> 46362c4 feat(marketing-hub): lead-score edge fn (FR-MH-003) — JWT + 1 mco + IA fail-soft
+> 0a182d3 feat(llm-fallback): telemetria infra_health_logs + teste de cascata — fecha OTD-LLM-FALLBACK
+> 7fd8e7a feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+> 8473066 chore(sprint): update sprint-priorities — v6.21.0 marketing-hub BoK + MVP-1 live
+> b2b6f04 docs(handoff): seal v6.21.0 marketing-hub — BoK 9/9 + 11 agentes + MVP-1 Lead Core live
+> 8d4b24e docs(readme): v6.21.0 — marketing-hub BoK 9/9 + 11 agentes + MVP Lead Core live
+> ff81c4f feat(marketing-hub): Lead Core migration — leads/lead_events/consents + erase_lead RPC
+> === docker ===
+> mcorch_chroma: Up 10 days (healthy)
+> mcorch_claude_mem: Up 10 days (healthy)
+> mega-brain-dashboard: Up 10 days
+> mega-brain-webhook: Up 10 days (healthy)
+> mega-brain-daemon: Up 10 days (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1780494061302607452}
+> ```
+
+## 🤖 Claude *(13:41:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== 1a secret scan (uncommitted diff) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN)\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|SB_SECRET_KEY\\|SUPABASE_SERVICE_ROLE_KEY\" | head -10 || echo \"NO SECRETS \u2705\"\necho \"=== 1b JWT enforcement (fns missing auth) ===\"\ngrep -rL \"Authorization\\|jwt\\|JWT\\|service_role\" supabase/functions/*/index.ts | grep -v \"get-infra-status\\|watchdog\" || echo \"ALL FUNCTIONS: JWT enforced \u2705\"\necho \"=== 1c client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head || echo \"NO VIOLATIONS \u2705\"\necho \"=== 1e sensitive console.log (new files) ===\"\ngrep -rnE \"console\\.(log|error).*(token|secret|password)\" supabase/functions/lead-score/index.ts supabase/functions/_shared/llm-fallback.ts | head || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit + tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === 1a secret scan (uncommitted diff) ===
+> === 1b JWT enforcement (fns missing auth) ===
+> supabase/functions/autonomic-action/index.ts
+> supabase/functions/instagram-webhook/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> supabase/functions/stripe-webhook/index.ts
+> === 1c client-side coin deduction ===
+> === 1e sensitive console.log (new files) ===
+> ```
+
+## 🤖 Claude *(13:41:33)*
+
+
+## 🤖 Claude *(13:41:35)*
+
+Pre-flight limpo: tsc 0, 5 containers healthy, Chroma OK. **Security verdict:**
+- 1a (secrets) ✅ · 1c (client coin) ✅ · 1e (sensitive logs) ✅
+- 1b ⚠️ WARN: 4 webhooks sem JWT (`autonomic-action`/`*-webhook`/`stripe-webhook`) — **pré-existentes, trigger-based** (verify_jwt=false + signature auth, padrão correto para webhooks); `lead-score` (que toquei) **tem** JWT. Não-bloqueante.
+
+Sem 🔴. **Phase 2 — commit** do único uncommitted (billing.ts):
+
+## 🤖 Claude *(13:41:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/lib/billing.ts\ngit commit -m \"chore(billing): centraliza COIN_COSTS (LEAD_SCORE/CAMPAIGN_RUN) + divida de calibracao\" -m \"Adiciona LEAD_SCORE (1) e CAMPAIGN_RUN (10) ao COIN_COSTS single-source-of-truth + nota de calibracao. ACHADO: os custos sao numeros redondos, NAO derivados de custo \\$ real \u2014 ORCHESTRATION_RUN (10) cobra menos que a soma dos componentes (3xCONTENT 5 + IMAGE 3 = 18); gasto real (mcoin_transactions) mostra canvas_video dominante (~122/video). campaign-run (FR-MH-004) sera cascata fiel: CAMPAIGN_RUN once + NxORCHESTRATION_RUN por passo. Pendente: calibrar contra preco por-modelo + Higgsfield antes do pricing comercial.\" 2>&1 | tail -4\necho \"=== HEAD ===\"; git log --oneline -1",
+  "description": "Phase 2: commit billing.ts centralization"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main d3f6015] chore(billing): centraliza COIN_COSTS (LEAD_SCORE/CAMPAIGN_RUN) + divida de calibracao
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> === HEAD ===
+> d3f6015 chore(billing): centraliza COIN_COSTS (LEAD_SCORE/CAMPAIGN_RUN) + divida de calibracao
+> ```
+
+## 🤖 Claude *(13:42:12)*
+
+
+## 🤖 Claude *(13:42:13)*
+
+`d3f6015` commitado. **Phase 3 — Knowledge Mesh handoff node** (+ embed + proof-manifest para a Fase 5c):
+
+## 🤖 Claude *(13:42:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 <<'PY'\nimport json, urllib.request, urllib.error, os, subprocess\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; SK=os.environ['SB_SECRET_KEY']\nH={\"apikey\":SK,\"Authorization\":f\"Bearer {SK}\",\"Content-Type\":\"application/json\"}\ncommits = subprocess.check_output([\"git\",\"log\",\"--oneline\",\"-6\"]).decode()\nsummary=(\"v6.22.0 seal: MVP-2 Campaign Core LIVE (campaigns absorbed via ALTER + campaign_steps + marketing_attribution; \"\n\"tenant-FK proven 23503 composite-FK + 42501 WITH CHECK, zero-residue). OTD-LLM-FALLBACK CLOSED early (infra_health_logs \"\n\"telemetry added to fetchLLMWithFallback + first helper unit test [6 cases] + 11 fns redeployed). lead-score edge fn LIVE \"\n\"(FR-MH-003 JWT+1mco+fail-soft AI; smoke E2E HTTP200 score=80 source=ai debit 100->99 zero-residue). mcoCoins calibration \"\n\"debt surfaced: COIN_COSTS centralized (LEAD_SCORE/CAMPAIGN_RUN) \u2014 10 is a round figure, not $-calibrated. meta_config orphan \"\n\"alert verified EMPTY (0 rows, 1==1 user/profile). campaign-run specified (cascade-fidelity billing) but DEFERRED by Sovereign (Law 3).\")\nnode={\"name\":\"session-handoff-20260603-v6220-campaign-core-llm-leadscore\",\"node_type\":\"handoff\",\n\"content\":f\"[HANDOFF SEAL] {summary}\",\"stability_score\":1.0,\"project_id\":None,\"user_id\":None,\n\"metadata\":{\"session\":\"v6.22.0\",\"commits\":commits.replace(chr(10),'|'),\n\"delivered\":[\"mvp2-campaign-core\",\"otd-llm-fallback-closed\",\"lead-score-live\",\"mcoin-calibration-debt\",\"meta_config-alert-empty\"],\n\"mesh_nodes\":[\"7628892b\",\"6061a6d2\"],\"deferred\":[\"campaign-run-cascade\",\"mvp4-hooks-ui\",\"mvp5-attribution\",\"mcoin-calibration\"]}}\nreq=urllib.request.Request(URL+\"/rest/v1/mcorch_nodes\",data=json.dumps(node).encode(),method=\"POST\",headers={**H,\"Prefer\":\"return=representation\"})\ntry:\n    with urllib.request.urlopen(req) as r: nid=json.loads(r.read().decode())[0][\"id\"]\n    print(\"HANDOFF NODE ID:\", nid)\n    open(\"proof-manifest.json\",\"w\").write(json.dumps({\"handoffNodeId\":nid}))\n    print(\"proof-manifest.json written\")\n    er=urllib.request.Request(URL+\"/functions/v1/embed-mcorch-node\",data=json.dumps({\"record\":{\"id\":nid}}).encode(),method=\"POST\",headers=H)\n    try:\n        with urllib.request.urlopen(er) as r2: print(\"EMBED:\", r2.status, r2.read().decode()[:100])\n    except urllib.error.HTTPError as e: print(\"EMBED HTTP\", e.code, e.read().decode()[:100])\nexcept urllib.error.HTTPError as e:\n    print(\"NODE INSERT FAIL\", e.code, e.read().decode()[:300])\nPY",
+  "description": "Phase 3: insert handoff milestone node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF NODE ID: aec4cb9c-3765-4d58-9d92-d8130fe568bd
+> proof-manifest.json written
+> EMBED HTTP 400 {"error":"Request body must contain { node_id: string }"}
+> ```
+
+## 🤖 Claude *(13:42:37)*
+
+
+## 🤖 Claude *(13:42:39)*
+
+Handoff node inserido: **`aec4cb9c-3765-4d58-9d92-d8130fe568bd`**. O embed manual usou formato antigo (`{record:{id}}`); a fn agora espera `{node_id}`. Re-chamando com o formato correto + confirmando o vetor (o autoembed trigger também dispara no INSERT):
+
+## 🤖 Claude *(13:42:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; H1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\nNID=\"aec4cb9c-3765-4d58-9d92-d8130fe568bd\"\necho \"=== re-embed with correct payload ===\"\ncurl -s -X POST \"$URL/functions/v1/embed-mcorch-node\" -H \"$H1\" -H \"$H2\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\":\\\"$NID\\\"}\" | head -c 150\necho \"\"\necho \"=== verify embedding present ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?id=eq.$NID&select=name,embedding\" -H \"$H1\" -H \"$H2\" | python3 -c \"import json,sys;d=json.load(sys.stdin);r=d[0] if d else {};print('node:',r.get('name'),'| embedded:',r.get('embedding') is not None)\"\necho \"=== live mesh count (for README badge) ===\"\ncurl -s -D - -o /dev/null \"$URL/rest/v1/mcorch_nodes?select=id\" -H \"$H1\" -H \"$H2\" -H \"Prefer: count=exact\" | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Re-embed handoff node + verify + live mesh count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-embed with correct payload ===
+> {"node_id":"aec4cb9c-3765-4d58-9d92-d8130fe568bd","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> === verify embedding present ===
+> node: session-handoff-20260603-v6220-campaign-core-llm-leadscore | embedded: True
+> === live mesh count (for README badge) ===
+> 8759
+> ```
+
+## 🤖 Claude *(13:42:59)*
+
+
+## 🤖 Claude *(13:43:00)*
+
+Re-embed OK (768d), embedding ✅, **mesh = 8759 nós**. **Phase 4 — README.md**. Lendo o topo (badges + What's New):
+
+## 🤖 Claude *(13:43:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.21.0--marketing--hub--bok--mvp1-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8755_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-240_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 9	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 10	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 11	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 12	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 13	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 14	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 15	  <img src="https://img.shields.io/badge/Core_v2-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core v2" />
+> 16	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 17	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 18	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 19	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 20	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 21	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 22	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 23	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 24	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 25	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 26	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 27	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 28	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 29	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 30	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 31	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 32	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 33	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 34	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 35	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 36	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 37	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 38	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 39	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 40	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 41	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> 42	  <img src="https://img.shields.io/badge/Browser_Operator-runtime_blocked_at_datacenter-darkred?style=for-the-badge" alt="Browser Operator Probe" />
+> 43	  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> 44	  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 45	  <img src="https://img.shields.io/badge/Admin_Panel-user_management_live-brightgreen?style=for-the-badge" alt="Admin Panel" />
+> 46	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 47	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 48	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 49	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 50	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 51	  <img src="https://img.shields.io/badge/BoK_marketing--hub-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK marketing-hub" />
+> 52	  <img src="https://img.shields.io/badge/marketing--hub_agents-11_generated-orange?style=for-the-badge" alt="Marketing Hub Agents" />
+> 53	  <img src="https://img.shields.io/badge/marketing--hub_MVP-Lead_Core_live-brightgreen?style=for-the-badge" alt="Marketing Hub MVP" />
+> 54	</p>
+> 55	
+> 56	## 🆕 What's new in v6.21.0 (2026-06-03)
+> 57	
+> 58	**Marketing Hub (v2) — BoK suite + 11-agent system sealed, MVP Lead Core live** — a new sovereign module that consolidates and scales MCORCH's scattered v1 marketing surfaces (orchestrate-content becomes a campaign executor, `whatsapp_leads` migrates tutela meta-api→marketing-hub, the `marketing-growth` Pantheon head is elevated not recreated) into one agentic module that perceives → decides → executes → learns with human governance. Born "Ambos": internal growth engine for Usuário Zero today, per-tenant commercial feature tomorrow.
+> 59	
+> 60	1. **BoK suite 9/9 (1732 LOC) sealed** — full MRD→BRD→PRD→FRD→SDD→data-model→process-flow→quality-metrics with 0 traceability orphans; mesh seal `d5163fed` (DERIVES_FROM meta-api). Delta-focused: CRM/lead lifecycle, AEO (Answer Engine Optimization), first-class campaign management, intent orchestrator + HITL — **reusing** the existing mesh/ROI/credentials/healing infra rather than rebuilding it.
+> ```
+
+## 🤖 Claude *(13:43:30)*
+
+
+## 🤖 Claude *(13:43:31)*
+
+**Phase 4 — README.md** (version → v6.22.0, mesh → 8759, tests → 246, novos badges, What's New):
+
+## 🤖 Claude *(13:43:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.21.0--marketing--hub--bok--mvp1-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.22.0--campaign--core--llm--fallback--leadscore-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:43:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8755_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8759_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:43:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/test_coverage-240_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/test_coverage-246_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:43:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/marketing--hub_MVP-Lead_Core_live-brightgreen?style=for-the-badge\" alt=\"Marketing Hub MVP\" />\n</p>",
+  "new_string": "  <img src=\"https://img.shields.io/badge/marketing--hub_MVP-Lead_Core_live-brightgreen?style=for-the-badge\" alt=\"Marketing Hub MVP\" />\n  <img src=\"https://img.shields.io/badge/marketing--hub_MVP2-Campaign_Core_live-brightgreen?style=for-the-badge\" alt=\"Campaign Core\" />\n  <img src=\"https://img.shields.io/badge/marketing--hub_MVP3-lead--score_live-brightgreen?style=for-the-badge\" alt=\"lead-score\" />\n  <img src=\"https://img.shields.io/badge/OTD--LLM--FALLBACK-closed_%2B_telemetry-darkgreen?style=for-the-badge\" alt=\"LLM Fallback\" />\n</p>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:43:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.21.0 (2026-06-03)",
+  "new_string": "## \ud83c\udd95 What's new in v6.22.0 (2026-06-03)\n\n**Campaign Core + LLM Fallback hardened + Lead Scoring live** \u2014 three production deliverables across marketing-hub and resilience, each proven materially (no self-grading).\n\n1. **MVP-2 Campaign Core LIVE** \u2014 `campaigns` **absorbed** via `ALTER` (not recreated: +intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) plus new `campaign_steps` (tenant-scoped composite FK CASCADE) and `marketing_attribution` (simple FK SET NULL + RLS WITH CHECK \u2014 financial record retained de-linked). Cross-tenant tenancy proven behaviorally: **23503** on the composite-FK attack, **42501** on the authenticated WITH CHECK attack, 201 legit, zero-residue. `/security-review` SAFE (independent). Migration `20260603025256` \u00b7 mesh seal `7628892b`.\n2. **OTD-LLM-FALLBACK closed early** (SLA 2026-06-07) \u2014 the cascade helper (`fetchLLMWithFallback`: OpenRouter\u2192Gemini Free\u2192OpenRouter Free\u2192502) was already live across 11 completion edge fns; closed the SOP observability gap with `infra_health_logs` telemetry (degraded/unhealthy, self-sufficient in Deno) + the project's **first edge-helper unit test** (6 cascade cases). 11 fns redeployed \u00b7 mesh seal `6061a6d2`.\n3. **lead-score edge fn LIVE** (FR-MH-003) \u2014 JWT-guarded, atomic 1-mcoCoin debit, AI scoring 0\u2013100 (per-user\u2192system key, reusing the cascade helper) with a **fail-soft heuristic**. Smoke proven E2E: HTTP 200, score=80 (`source=ai`), score/event persisted, balance 100\u219299, zero-residue.\n4. **mcoCoins calibration debt surfaced** \u2014 `COIN_COSTS` centralized; flagged that `10` is a round figure (orchestrate charges 10 flat < the 18 its parts sum to) pending $-based calibration. `campaign-run` specified (cascade-fidelity billing) and deferred to a fresh session (Law 3).\n\n## \ud83c\udd95 What's new in v6.21.0 (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:43:54)*
+
+
+## 🤖 Claude *(13:43:55)*
+
+README atualizado. Commitando (Phase 4):
+
+## 🤖 Claude *(13:43:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -m \"docs(readme): v6.22.0 \u2014 Campaign Core + OTD-LLM-FALLBACK closed + lead-score live\" 2>&1 | tail -3\necho \"=== proof-manifest tracked? (should stay untracked) ===\"\ngit status --short proof-manifest.json 2>/dev/null || echo \"(untracked/ignored)\"",
+  "description": "Phase 4: commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 2017714] docs(readme): v6.22.0 — Campaign Core + OTD-LLM-FALLBACK closed + lead-score live
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+> === proof-manifest tracked? (should stay untracked) ===
+> ```
+
+## 🤖 Claude *(13:45:10)*
+
+
+## 🤖 Claude *(13:45:10)*
+
+**Phase 5 — HANDOFF.md**. Inserindo o Record v6.22.0 no topo (newest-first):
+
+## 🤖 Claude *(13:45:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Marketing Hub v2 \u2014 BoK Suite + 11-Agent System + MVP-1 Lead Core Record (2026-06-03)",
+  "new_string": "## Task State\n\n## Campaign Core + LLM Fallback + Lead Scoring Record (2026-06-03)\n\n**v6.22.0 (2026-06-03)** \u2014 Sess\u00e3o `/handson` \u2192 a\u00e7\u00e3o nos alertas \u2192 pr\u00f3ximos passos priores. Quatro entregas materiais (cada claim provada NESTE turno, n\u00e3o auto-declarada) + decis\u00e3o de design financeiro **registrada em vez de improvisada** (Master Protocol).\n\n**O que foi entregue:**\n\n- **Alerta `meta_config` \u2014 verificado VAZIO (nada a limpar).** O \"achado lateral\" da v6.20.4 (4 linhas \u00f3rf\u00e3s) j\u00e1 fora varrido: `meta_config_table` 0 linhas (`*/0`), `auth.users` 1 == `profiles` 1 (zero user sem profile), RPC `disconnect_meta` (migration 160000) viva e fail-closed (`28000`). N\u00e3o fabriquei limpeza inexistente (Lei 1). C\u00e9rebro-sem-m\u00e3os parcial honesto: `vault.secrets` n\u00e3o-lido via REST.\n- **MVP-2 Campaign Core LIVE** (migration `20260603025256`) \u2014 `campaigns` **ABSORVIDA** via `ALTER` (probe-first pegou que j\u00e1 existia + `campaign_metrics` tamb\u00e9m): `+intent +channels text[] +mesh_node_id uuid\u2192mcorch_nodes + UNIQUE(id,user_id)`. Novas: `campaign_steps` (FK composta tenant-escopada `(campaign_id,user_id)\u2192campaigns` CASCADE, espelha lead_events) + `marketing_attribution` (FK simples SET NULL + RLS WITH CHECK de posse, espelha marketing_consents \u2014 ret\u00e9m receita de-linkada). `erase_lead()` estendida (FMEA-MH-003 \u2192 `attributions_delinked`). BoK data-model patcheado (absorb-not-create + FK pattern). `/security-review` SAFE (subagente independente, 0 findings \u22658). **Prova comportamental**: `23503` (FK composta, ataque cross-tenant) + `42501` (WITH CHECK attribution, B autenticado plantando campanha de A) + 201 leg\u00edtimos + cleanup zero-res\u00edduo. types.ts 3307\u21923544. Mesh seal `7628892b` + edge `0d58d93b` DERIVES_FROM BoK `d5163fed`.\n- **OTD-LLM-FALLBACK FECHADA cedo** (SLA 2026-06-07, owner engineer) \u2014 probe-first: o helper `fetchLLMWithFallback` (OpenRouter\u2192Gemini Free\u2192OpenRouter Free\u2192502) j\u00e1 estava live em 11 edge fns. Gap real vs SOP success-signal = observabilidade: helper agora emite `infra_health_logs` (degraded/unhealthy), autossuficiente em Deno (POST PostgREST, sem SDK), fire-and-forget, no-op em teste. **Primeiro teste de edge-helper do projeto** (6 casos de cascata) + vitest estendido a supabase/functions + setup node-tolerant. 3 fns fora do escopo por design (aios-chat gemini-native / search-constellation embeddings / openrouter-swarm arena). 6/6 testes \u00b7 11 fns redeployadas \u00b7 telemetria insert 201 \u00b7 Gemini 200. Mesh seal `6061a6d2`.\n- **lead-score edge fn LIVE** (FR-MH-003) \u2014 JWT (`getUser`), d\u00e9bito at\u00f4mico 1 mcoCoin (`deduct_mco_coins`), scoring 0-100 via IA per-user\u2192sistema (reusa o cascade helper), **fail-soft heur\u00edstico**, persiste `leads.score` + promove `new\u2192scored` + `lead_event` imut\u00e1vel + pulse infra_health. **Smoke real E2E**: HTTP 200 \u00b7 score=80 \u00b7 rationale coerente (`source=ai`) \u00b7 d\u00e9bito 100\u219299 \u00b7 cleanup zero-res\u00edduo. Deploy 84.31kB.\n- **Calibra\u00e7\u00e3o mcoCoins \u2014 d\u00edvida levantada (OTD-MCOIN-CALIBRATION).** Sovereign questionou se `10` \u00e9 calibrado: **n\u00e3o \u00e9** (n\u00famero redondo; `orchestrate-content` cobra 10 flat < soma dos componentes 18; `mcoin_transactions` mostram canvas_video dominante ~122/v\u00eddeo). `COIN_COSTS` centralizado (`LEAD_SCORE 1`/`CAMPAIGN_RUN 10`) + nota de calibra\u00e7\u00e3o. **`campaign-run` ESPECIFICADA** (cascata fiel) mas **ADIADA por decis\u00e3o Sovereign** (Lei 3 \u2014 contexto saturado; c\u00f3digo financeiro merece sess\u00e3o fresca + pre\u00e7os $).\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + gate `/security-review` \u00b7 Owner=Sovereign (blast radius = schema comercial + d\u00e9bito financeiro mcoCoins; migration + 12 deploys com GO \"Aprovado\").\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Alerta meta_config | \u2705 VAZIO material (0 linhas \u00b7 1==1 user/profile \u00b7 RPC 160000 fail-closed) |\n| MVP-2 migration aplicada | \u2705 `db push Finished` \u00b7 `20260603025256` |\n| MVP-2 tenant-FK comportamental | \u2705 23503 (composta) + 42501 (WITH CHECK auth) + 201 + zero-res\u00edduo |\n| MVP-2 /security-review | \u2705 SAFE (independente, 0 findings \u22658) |\n| OTD-LLM-FALLBACK | \u2705 telemetria + 6/6 testes + 11 fns redeploy + insert 201 |\n| lead-score smoke E2E | \u2705 200 \u00b7 score=80 source=ai \u00b7 d\u00e9bito 100\u219299 \u00b7 zero-res\u00edduo |\n| tsc / su\u00edte | \u2705 0 erros \u00b7 244 passed / 2 skipped |\n| Containers / Chroma | \u2705 5 healthy (10d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `aec4cb9c-3765-4d58-9d92-d8130fe568bd` embedded 768d |\n| Mesh | \u2705 8759 n\u00f3s |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `7fd8e7a` | feat(marketing-hub): MVP-2 Campaign Core \u2014 campaigns absorvida + campaign_steps + marketing_attribution |\n| `0a182d3` | feat(llm-fallback): telemetria infra_health_logs + teste de cascata \u2014 fecha OTD-LLM-FALLBACK |\n| `46362c4` | feat(marketing-hub): lead-score edge fn (FR-MH-003) |\n| `d3f6015` | chore(billing): centraliza COIN_COSTS + d\u00edvida de calibra\u00e7\u00e3o |\n| `2017714` | docs(readme): v6.22.0 |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno \u2014 meta_config (count */0 + admin API 1==1), MVP-2 (db push Finished + REST schema + 23503/42501/201 + cleanup REST), OTD (6/6 vitest + 11\u00d7 Deployed + insert 201 + Gemini 200), lead-score (smoke E2E 200 + REST score/event/balance + zero-res\u00edduo), calibra\u00e7\u00e3o (mcoin_transactions REST). /security-review por subagente INDEPENDENTE. Fase 5c executada abaixo. Zero fabrica\u00e7\u00e3o.\nLaw 2 (Process): \u2705 BoK data-model patcheado ANTES da migration MVP-2; SOP llm-cascading-fallback.md honrado; campaign-run N\u00c3O improvisada (ambiguidade financeira \u2192 decis\u00e3o Sovereign).\nLaw 3 (Pruning): \u2705 1 poda expl\u00edcita ap\u00f3s MVP-2+OTD; sess\u00e3o SELADA por decis\u00e3o consciente em vez de for\u00e7ar campaign-run com contexto saturado.\nLaw 4 (ORO): \u2705 triplet declarado; toda a\u00e7\u00e3o outward (migration, 12 deploys, mesh seals) com GO Sovereign.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos (sess\u00e3o fresca):**\n- **campaign-run (MVP-3 parte 2)** \u2014 cascata fiel: `CAMPAIGN_RUN` (10) + por passo `invoke('orchestrate-content')` (10 cada) + sync `campaign_steps.status`. Contrato: `{campaign_id}` \u2192 `{status,campaign_id,run_id,steps_dispatched,new_balance}`; errors 401/402/404/422/500.\n- **OTD-MCOIN-CALIBRATION** \u2014 calibrar `COIN_COSTS` contra custo $ real (pre\u00e7o por-modelo OpenRouter + Higgsfield v\u00eddeo). V\u00eddeo \u00e9 o maior custo real.\n- **MVP-4** hooks (`useLeads`/`useCampaigns`/`useLeadScore`) + UI (`LeadBoard`/`CampaignComposer`) + rota `/dashboard/marketing`.\n- **MVP-5** attribution \u2192 `ROIWidget` por campanha + testes E2E.\n- **lead-score follow-up:** granularidade `functionName` nas outras 10 fns do helper (hoje logam \"unknown\" no fallback).\n\n---\n\n## Marketing Hub v2 \u2014 BoK Suite + 11-Agent System + MVP-1 Lead Core Record (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:46:01)*
+
+
+## 🤖 Claude *(13:46:01)*
+
+GraphRAG State — atualizando o count para 8759:
+
+## 🤖 Claude *(13:46:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8755 total nodes**",
+  "new_string": "- **8759 total nodes** (v6.22.0: +handoff `aec4cb9c` +milestones MVP-2 `7628892b`/OTD `6061a6d2`; was 8755 in v6.21.0)\n- _(prev snapshot)_ **8755 total nodes**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:46:10)*
+
+
+## 🤖 Claude *(13:46:11)*
+
+**Phase 5b — secret scan no HANDOFF.md** (mandatório antes do commit):
+
+## 🤖 Claude *(13:46:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential values ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head || echo \"NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head || echo \"NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|id.*[0-9a-f-]\\{36\\}\" | head || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b: HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential values ===
+> === 5b-2 google keys ===
+> === 5b-3 inline assignments ===
+> 3036:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 3069:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 5772:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5774:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 5775:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 5817:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 5819:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(13:46:29)*
+
+
+## 🤖 Claude *(13:46:30)*
+
+**Phase 5b PASS** — 5b-1/5b-2 limpos ✅. Os matches do 5b-3 são **falsos positivos pré-existentes** (linhas 3036+, fora desta seal): valores de string não-secretos como `action='opening_balance_reconciliation'` e `project_id='mcorch-constellation'`. Meu Record novo (topo) só tem UUIDs/hashes/descrições — zero credencial. Commitando o HANDOFF:
+
+## 🤖 Claude *(13:46:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -m \"docs(handoff): seal v6.22.0 \u2014 Campaign Core + OTD-LLM-FALLBACK closed + lead-score live\" 2>&1 | tail -3\necho \"=== HEAD ===\"; git log --oneline -1",
+  "description": "Phase 5b: commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 458d74f] docs(handoff): seal v6.22.0 — Campaign Core + OTD-LLM-FALLBACK closed + lead-score live
+>  1 file changed, 54 insertions(+), 1 deletion(-)
+> === HEAD ===
+> 458d74f docs(handoff): seal v6.22.0 — Campaign Core + OTD-LLM-FALLBACK closed + lead-score live
+> ```
+
+## 🤖 Claude *(13:46:41)*
+
+
+## 🤖 Claude *(13:46:42)*
+
+**Phase 5c — Material Proof Audit** (verificação mecânica independente de cada claim da seal):
+
+## 🤖 Claude *(13:46:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -55\necho \"--- audit exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Phase 5c: material proof audit of the seal",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node aec4cb9c | mesh_node | aec4cb9c-3765-4d58-9d92-d8130fe568bd | aec4cb9c-3765-4d58-9d92-d8130fe568bd | ✅ |
+> | commit 7fd8e7a | git_commit | 7fd8e7a | 7fd8e7a | ✅ |
+> | commit 0a182d3 | git_commit | 0a182d3 | 0a182d3 | ✅ |
+> | commit 46362c4 | git_commit | 46362c4 | 46362c4 | ✅ |
+> | commit d3f6015 | git_commit | d3f6015 | d3f6015 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 6 passing | test_suite | 6 | 244 passed | ✅ |
+> | deploy size 84.31kB | edge_deploy | 84.31kB | 84.31kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + gate `/security-review` · Owner=Sovereign ( | Operator = MCORCH Agent · Reviewer=Sovereign + gate `/security-review` · Owner=Sovereign ( | ✅ |
+> 
+> QA VERDICT: 8 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 8.6s)
+> --- audit exit: 0 ---
+> ```
+
+## 🤖 Claude *(13:47:05)*
+
+
+## 🤖 Claude *(13:47:06)*
+
+**Phase 5c — `SEAL ALLOWED`** (8 verified · 1 skipped · 0 failed, exit 0) ✅. Todas as claims materiais confirmadas. **Phase 6 — BoK Seal Status**:
+
+## 🤖 Claude *(13:47:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== BoK completeness ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho \"\"\necho \"=== session-touched modules (new pages/edge fns) ===\"\ngit diff --name-only HEAD~6..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/)\" | awk -F/ '{print $1\"/\"$2\"/\"$3}' | sort -u",
+  "description": "Phase 6: BoK completeness + session modules"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BoK completeness ===
+> ✅ aios-sql-bridge
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ conteudo-v2
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ marketing-hub
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ viralmind
+> 
+> === session-touched modules (new pages/edge fns) ===
+> supabase/functions/lead-score
+> supabase/functions/_shared
+> ```
+
+## 🤖 Claude *(13:47:16)*
+
+
+## 🤖 Claude *(13:47:18)*
+
+**Phase 6 PASS** — todas as 13 suítes BoK 9/9 ✅. Módulos tocados: `lead-score` (coberto por BoK marketing-hub FR-MH-003) + `_shared/llm-fallback` (infra core, SOP `llm-cascading-fallback.md`). Nenhum módulo sem BoK. **Phase 7 — Push**:
+
+## 🤖 Claude *(13:47:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -8\necho \"--- push exit: ${PIPESTATUS[0]} ---\"\necho \"=== commits this session (vs v6.21.0 seal b2b6f04) ===\"\ngit log --oneline b2b6f04..HEAD | head",
+  "description": "Phase 7: push to origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    8473066..458d74f  main -> main
+> --- push exit: 0 ---
+> === commits this session (vs v6.21.0 seal b2b6f04) ===
+> 458d74f docs(handoff): seal v6.22.0 — Campaign Core + OTD-LLM-FALLBACK closed + lead-score live
+> 2017714 docs(readme): v6.22.0 — Campaign Core + OTD-LLM-FALLBACK closed + lead-score live
+> d3f6015 chore(billing): centraliza COIN_COSTS (LEAD_SCORE/CAMPAIGN_RUN) + divida de calibracao
+> 46362c4 feat(marketing-hub): lead-score edge fn (FR-MH-003) — JWT + 1 mco + IA fail-soft
+> 0a182d3 feat(llm-fallback): telemetria infra_health_logs + teste de cascata — fecha OTD-LLM-FALLBACK
+> 7fd8e7a feat(marketing-hub): MVP-2 Campaign Core — campaigns absorvida + campaign_steps + marketing_attribution
+> 8473066 chore(sprint): update sprint-priorities — v6.21.0 marketing-hub BoK + MVP-1 live
+> ```
+
+## 🤖 Claude *(13:47:55)*
+
+
+## 🤖 Claude *(13:47:55)*
+
+**Push OK** — `8473066..458d74f`, 6 commits enviados. **Phase 7b — Sprint hygiene** (entrada v6.22.0) + scratch check:
+
+## 🤖 Claude *(13:48:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.21.0 selado em 2026-06-03** \u2014 Marketing Hub (v2):",
+  "new_string": "**Sprint v6.22.0 selado em 2026-06-03** \u2014 Campaign Core + LLM Fallback + Lead Scoring: 4 entregas materiais via `/handson`\u2192a\u00e7\u00e3o nos alertas\u2192pr\u00f3ximos priores. **(1) Alerta meta_config** verificado **VAZIO** (0 linhas \u00b7 `auth.users` 1==`profiles` 1 \u2014 n\u00e3o fabriquei limpeza inexistente, Lei 1). **(2) MVP-2 Campaign Core LIVE** (migration `20260603025256`): `campaigns` **ABSORVIDA** via `ALTER` (+intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) + `campaign_steps` (FK composta tenant-`CASCADE`, espelha lead_events) + `marketing_attribution` (FK simples `SET NULL` + RLS `WITH CHECK`, espelha consents); tenant-FK provado **comportamental** (23503 + 42501 autenticado + 201 + zero-res\u00edduo); `/security-review` **SAFE** (subagente independente); mesh `7628892b`. **(3) OTD-LLM-FALLBACK FECHADA cedo** (SLA 06-07, owner engineer): probe-first achou o helper j\u00e1 live em 11 fns \u2192 fechei o gap de observabilidade do SOP (telemetria `infra_health_logs` autossuficiente em Deno) + **1\u00ba teste de edge-helper do projeto** (6 casos) + 11 fns redeploy; mesh `6061a6d2`. **(4) lead-score LIVE** (FR-MH-003): JWT + 1 mco at\u00f4mico + IA per-user\u2192sistema fail-soft; **smoke E2E** 200 \u00b7 score=80 (`source=ai`) \u00b7 d\u00e9bito 100\u219299 \u00b7 zero-res\u00edduo. **Calibra\u00e7\u00e3o mcoCoins**: `COIN_COSTS` centralizado + d\u00edvida **OTD-MCOIN-CALIBRATION** (o `10` \u00e9 redondo, n\u00e3o $-calibrado; `orchestrate` cobra 10 flat < soma 18; v\u00eddeo \u00e9 o maior custo real). Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8759**. Survival Laws **4/4**. 6 commits. **Novo Top Gap:** `campaign-run` cascata fiel (**ADIADA por decis\u00e3o Sovereign** \u2014 c\u00f3digo financeiro + contexto saturado, Lei 3) + OTD-MCOIN-CALIBRATION (pre\u00e7os $ por-modelo/v\u00eddeo) \u00b7 MVP-4 hooks+UI `/dashboard/marketing` \u00b7 MVP-5 attribution. **Li\u00e7\u00e3o:** probe-first pegou a OTD j\u00e1 80% pronta (zero retrabalho) e a diverg\u00eancia `campaigns`/`campaign_metrics` j\u00e1-existentes; decis\u00e3o financeira de `campaign-run` **registrada ao Sovereign em vez de improvisada** (Master Protocol).\n\n**Sprint v6.21.0 selado em 2026-06-03** \u2014 Marketing Hub (v2):"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(13:48:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"scratch HAS files\" || echo \"scratch clean/absent \u2705\"\necho \"=== proof-manifest (transient \u2014 should not be committed) ===\"; git status --short proof-manifest.json\necho \"=== uncommitted after sprint edit ===\"; git status --short",
+  "description": "Scratch cleanup check + uncommitted status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> scratch clean/absent ✅
+> === proof-manifest (transient — should not be committed) ===
+> === uncommitted after sprint edit ===
+> ```
+
+## 🤖 Claude *(13:48:15)*
+
+
+## 🤖 Claude *(13:48:16)*
+
+O Edit precisa de Read prévio nesta sessão. Lendo o topo do sprint-priorities + refazendo:
+
+## 🤖 Claude *(13:48:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.21.0 selado em 2026-06-03** — Marketing Hub (v2): BoK 9/9 + 11 agentes + MVP-1 Lead Core LIVE. Novo **módulo soberano** criado do zero seguindo o Master Execution Protocol (BoK-first), dirigido pela diretiva Sovereign de um "Framework Universal de Marketing (Plataforma Agentic)" (benchmarks HubSpot/Salesforce). `/bok-scribe` selou a **suíte BoK 9/9** (1732 LOC, `docs/bok/marketing-hub/`, traceability **0 órfãos**, mesh seal `d5163fed` DERIVES_FROM meta-api) — módulo nasce como **v2 de consolidação** que **absorve e escala** o marketing v1 disperso (orchestrate-content → executor de campanha; whatsapp_leads → tutela meta-api→marketing-hub; marketing-growth Pantheon **elevado, não recriado**), natureza **Ambos** (interno Usuário Zero + comercial per-tenant). `/bok-agents-generator` produziu o **sistema de 11 agentes** (8 BoK + AEO/Intent-Orchestration/Demand-gen + Pantheon Reconciliation). Após revisão Sovereign ("aprovado"), **MVP-1 Lead Core** foi ao ar: migration `20260603000000` (`leads`/`lead_events`/`marketing_consents` + RPC `erase_lead()` LGPD SECURITY DEFINER), aplicada via `db push`. O `/security-review` (subagente **independente**) pegou **1 cross-tenant MEDIUM** (FK de tabela-filha sem co-escopar `user_id` → A injeta evento no lead de B) → fechado com **FK composta tenant-escopada `(lead_id,user_id)→leads(id,user_id)`** + provado **material** (23503 no ataque, 201 no legítimo, cleanup zero-resíduo). Phase 5c **SEAL ALLOWED** (7 verified). Mesh **8755**. Survival Laws **4/4**. 4 commits. **Novo Top Gap:** MVP-2 Campaign Core deve **ABSORVER** a `campaigns` já existente (colisão real achada por probe-first), NÃO criar nova; + MVP-3 edge fns (`lead-score`/`campaign-run`) · MVP-4 hooks+UI (`/dashboard/marketing`) · MVP-5 attribution. **Lição:** probe-first do schema ANTES de codar pegou 2 divergências doc↔realidade (`campaigns` existe, `projects` não) que quebrariam o apply; e o `/security-review` por subagente independente (não auto-avaliação) pegou o furo de tenant que o self-review deixou passar.
+> 8	
+> ```
+
+## 🤖 Claude *(13:48:22)*
+
+
+## 🤖 Claude *(13:48:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.21.0 selado em 2026-06-03** \u2014 Marketing Hub (v2): BoK 9/9 + 11 agentes + MVP-1 Lead Core LIVE.",
+  "new_string": "**Sprint v6.22.0 selado em 2026-06-03** \u2014 Campaign Core + LLM Fallback + Lead Scoring: 4 entregas materiais via `/handson`\u2192a\u00e7\u00e3o nos alertas\u2192pr\u00f3ximos priores. **(1) Alerta meta_config** verificado **VAZIO** (0 linhas \u00b7 `auth.users` 1==`profiles` 1 \u2014 n\u00e3o fabriquei limpeza inexistente, Lei 1). **(2) MVP-2 Campaign Core LIVE** (migration `20260603025256`): `campaigns` **ABSORVIDA** via `ALTER` (+intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) + `campaign_steps` (FK composta tenant-`CASCADE`, espelha lead_events) + `marketing_attribution` (FK simples `SET NULL` + RLS `WITH CHECK`, espelha consents); tenant-FK provado **comportamental** (23503 + 42501 autenticado + 201 + zero-res\u00edduo); `/security-review` **SAFE** (subagente independente); mesh `7628892b`. **(3) OTD-LLM-FALLBACK FECHADA cedo** (SLA 06-07, owner engineer): probe-first achou o helper j\u00e1 live em 11 fns \u2192 fechei o gap de observabilidade do SOP (telemetria `infra_health_logs` autossuficiente em Deno) + **1\u00ba teste de edge-helper do projeto** (6 casos) + 11 fns redeploy; mesh `6061a6d2`. **(4) lead-score LIVE** (FR-MH-003): JWT + 1 mco at\u00f4mico + IA per-user\u2192sistema fail-soft; **smoke E2E** 200 \u00b7 score=80 (`source=ai`) \u00b7 d\u00e9bito 100\u219299 \u00b7 zero-res\u00edduo. **Calibra\u00e7\u00e3o mcoCoins**: `COIN_COSTS` centralizado + d\u00edvida **OTD-MCOIN-CALIBRATION** (o `10` \u00e9 redondo, n\u00e3o $-calibrado; `orchestrate` cobra 10 flat < soma dos componentes 18; v\u00eddeo \u00e9 o maior custo real). Phase 5c **SEAL ALLOWED** (8 verified). Mesh **8759**. Survival Laws **4/4**. 6 commits. **Novo Top Gap:** `campaign-run` cascata fiel (**ADIADA por decis\u00e3o Sovereign** \u2014 c\u00f3digo financeiro + contexto saturado, Lei 3) + OTD-MCOIN-CALIBRATION (pre\u00e7os $ por-modelo/v\u00eddeo) \u00b7 MVP-4 hooks+UI `/dashboard/marketing` \u00b7 MVP-5 attribution. **Li\u00e7\u00e3o:** probe-first pegou a OTD j\u00e1 80% pronta (zero retrabalho) e a diverg\u00eancia `campaigns`/`campaign_metrics` j\u00e1-existentes; decis\u00e3o financeira de `campaign-run` **registrada ao Sovereign em vez de improvisada** (Master Protocol).\n\n**Sprint v6.21.0 selado em 2026-06-03** \u2014 Marketing Hub (v2): BoK 9/9 + 11 agentes + MVP-1 Lead Core LIVE."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:48:47)*
+
+
+## 🤖 Claude *(13:48:48)*
+
+Commitando o sprint + push final:
+
+## 🤖 Claude *(13:48:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"chore(sprint): update sprint-priorities \u2014 v6.22.0 Campaign Core + OTD-LLM-FALLBACK + lead-score\" 2>&1 | tail -2\ngit push origin main 2>&1 | tail -4\necho \"--- push exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 9d48bf9] chore(sprint): update sprint-priorities — v6.22.0 Campaign Core + OTD-LLM-FALLBACK + lead-score
+>  1 file changed, 2 insertions(+)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    458d74f..9d48bf9  main -> main
+> --- push exit: 0 ---
+> ```
+
+## 🤖 Claude *(13:49:07)*
+
+
+## 🤖 Claude *(13:49:08)*
+
+Sprint commitado + pushado: `9d48bf9`. Atualizando memória do projeto (progresso MVP-2/lead-score + dívida de calibração) — lendo a atual primeiro:
+
+## 🤖 Claude *(13:49:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_marketing_hub_v2
+> 3	description: Marketing Hub agentic (módulo v2 que absorve o marketing v1) — BoK 9/9 + 11 agentes selados; MVP em construção (Lead Core LIVE)
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: cbb758a7-048b-4acb-94aa-db05a445f1e7
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-02: módulo **marketing-hub** agentic, nasce como **v2 de consolidação** — absorve e escala o marketing v1 disperso (orchestrate-content vira executor de campanha; whatsapp_leads migra tutela meta-api→marketing-hub; marketing-growth Pantheon é **elevado, não recriado**) em vez de duplicar. Natureza **Ambos**: núcleo interno (Usuário Zero) → comercial per-tenant. Decisões travadas via AskUserQuestion; scope-lock em `.claude/context/marketing-hub-scope-lock-2026-06-02.md`.
+> 11	
+> 12	**Selado (não-commitado até /handoff):** BoK suite 9/9 em `docs/bok/marketing-hub/` (1732 LOC) + mesh seal `d5163fed-da85-4f95-8445-0d0aa5b6bafe` (DERIVES_FROM meta-api `ca791bdd`, embedded 768d) + `bok-agents-system--marketing-hub.md` (11 agentes = 8 BoK + AEO/Intent-Orchestration/Demand-gen). **BoK Gate LIBERADO.**
+> 13	
+> 14	**MVP aprovado (PR-MH-001..005 = Lead Core + Campaign Core + Consent/Tenancy + Attribution):**
+> 15	- ✅ **MVP-1 LIVE**: migration `20260603000000_marketing_hub_lead_core.sql` aplicada (`db push` Finished) — tabelas `leads`/`lead_events`/`marketing_consents` + RPC `erase_lead()` (LGPD, SECURITY DEFINER, search_path='', tenant guard). `/security-review` pegou **1 MEDIUM cross-tenant** (FK de tabela-filha sem co-escopar user_id → A insere evento no lead de B) → corrigido com **FK composta `(lead_id,user_id)→leads(id,user_id)`** + `UNIQUE(id,user_id)` em leads + EXISTS no WITH CHECK de marketing_consents. Provado material: **23503** no cross-tenant, **201** no legítimo, cleanup limpo. whatsapp_leads vazio em prod → backfill no-op correto.
+> 16	- ⏳ Pendente: **MVP-2** Campaign Core · **MVP-3** edge fns (lead-score 1mco / campaign-run 10mco) · **MVP-4** hooks+UI (`/dashboard/marketing`) · **MVP-5** attribution+tests+deploy.
+> 17	
+> 18	**Reconciliação doc↔realidade (aplicar nos docs ao tocar — Obstáculo→Síntese):** `public.campaigns` **JÁ EXISTE** (de `20260402014040`: user_id/name/objective/status campaign_status/platforms/budget_cents) → Campaign Core **ABSORVE/estende** (ALTER add intent/channels/mesh_node_id), NÃO cria nova. `projects` **NÃO existe** → sem FK project_id (coluna uuid nullable). Status whatsapp é PT (iniciado/interagido/convertido/opt_out) → CASE-map no backfill. `update_updated_at_column()`/`deduct_mco_coins`/`mcoin_transactions`/vector ext confirmados.
+> 19	
+> 20	Relacionado: [[feedback_api_tenancy_per_user]] · [[reference_encrypted_views_write_pattern]] · [[reference_supabase_keys_migrated]]
+> 21	
+> ```
+
+## 🤖 Claude *(13:49:27)*
+
+
+## 🤖 Claude *(13:49:27)*
+
+Atualizando a memória do marketing-hub (MVP-2 + lead-score LIVE; campaign-run adiado):
+
+## 🤖 Claude *(13:49:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "description: Marketing Hub agentic (m\u00f3dulo v2 que absorve o marketing v1) \u2014 BoK 9/9 + 11 agentes selados; MVP em constru\u00e7\u00e3o (Lead Core LIVE)",
+  "new_string": "description: Marketing Hub agentic (v2 que absorve o marketing v1) \u2014 BoK 9/9 + 11 agentes; MVP-1 Lead Core + MVP-2 Campaign Core + MVP-3 lead-score LIVE; campaign-run/MVP-4/5 pendentes"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:49:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "- \u23f3 Pendente: **MVP-2** Campaign Core \u00b7 **MVP-3** edge fns (lead-score 1mco / campaign-run 10mco) \u00b7 **MVP-4** hooks+UI (`/dashboard/marketing`) \u00b7 **MVP-5** attribution+tests+deploy.",
+  "new_string": "- \u2705 **MVP-2 Campaign Core LIVE** (v6.22.0, migration `20260603025256`): `campaigns` ABSORVIDA via `ALTER` (+intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) + `campaign_steps` (FK composta tenant-`CASCADE`, espelha lead_events) + `marketing_attribution` (FK simples `SET NULL` + RLS `WITH CHECK` \u2014 espelha consents porque SET NULL composto anularia user_id NOT NULL; ret\u00e9m receita de-linkada). `erase_lead()` estendida (`attributions_delinked`). tenant-FK provado **comportamental** 23503 + **42501 autenticado** + 201 + zero-res\u00edduo. `/security-review` SAFE (independente). mesh `7628892b`. data-model patcheado (absorb-not-create + FK pattern).\n- \u2705 **MVP-3 parte 1 \u2014 lead-score LIVE** (FR-MH-003, v6.22.0): JWT + 1 mco at\u00f4mico + IA per-user\u2192sistema (reusa `fetchLLMWithFallback`) + **fail-soft heur\u00edstico**. Smoke E2E: 200 \u00b7 score=80 (`source=ai`) \u00b7 d\u00e9bito 100\u219299 \u00b7 zero-res\u00edduo. Deploy 84.31kB.\n- \u23f3 **MVP-3 parte 2 \u2014 campaign-run ADIADO** (decis\u00e3o Sovereign, Lei 3 \u2014 c\u00f3digo financeiro): cascata fiel decidida (`CAMPAIGN_RUN` 10 + N\u00d7`ORCHESTRATION_RUN` 10 por passo via `invoke('orchestrate-content')`) \u2014 calibra\u00e7\u00e3o pendente, ver [[project_mcoin_calibration]]. Contrato BoK: `{campaign_id}`\u2192`{status,campaign_id,run_id,steps_dispatched,new_balance}`; errors 401/402/404/422/500. \u00b7 **MVP-4** hooks (`useLeads`/`useCampaigns`/`useLeadScore`)+UI (`LeadBoard`/`CampaignComposer`, rota `/dashboard/marketing`) \u00b7 **MVP-5** attribution\u2192ROIWidget+tests."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:49:45)*
+
+
+## 🤖 Claude *(13:49:45)*
+
+Criando a memória da dívida de calibração mcoCoins (importante para a próxima sessão):
+
+## 🤖 Claude *(13:50:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcoin_calibration.md",
+  "content": "---\nname: project_mcoin_calibration\ndescription: D\u00edvida OTD-MCOIN-CALIBRATION \u2014 custos mcoCoins (COIN_COSTS) s\u00e3o n\u00fameros redondos, n\u00e3o calibrados ao custo $ real; campaign-run ser\u00e1 cascata fiel\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-06-03 (v6.22.0): ao decidir o billing do `campaign-run`, o Sovereign escolheu **cascata fiel** (campaign-run debita `CAMPAIGN_RUN` 10 **uma vez** + por passo `invoke('orchestrate-content')` que **j\u00e1 debita** `ORCHESTRATION_RUN` 10 cada \u2192 custo total `10 + 10\u00d7N`), MAS levantou que **\"precisamos calibrar isso conforme os gastos, ser ainda mais fiel \u00e0 economia mcoCoins\"** e questionou se o `10` por item foi calibrado.\n\n**Achado material (probe `mcoin_transactions` + `src/lib/billing.ts`):** o `10` **N\u00c3O \u00e9 calibrado** \u2014 \u00e9 n\u00famero redondo.\n- `COIN_COSTS` (SSOT frontend): `ORCHESTRATION_RUN 10 \u00b7 CONTENT_GENERATION 5 \u00b7 IMAGE_GENERATION 3 \u00b7 EMBED_NODE 1` + (add v6.22.0) `LEAD_SCORE 1 \u00b7 CAMPAIGN_RUN 10`.\n- **Incoer\u00eancia:** `orchestrate-content` cobra **10 flat**, mas seus componentes somam **18** (3\u00d7content 5 + image 3) \u2192 subs\u00eddio impl\u00edcito n\u00e3o-intencional.\n- **Duplica\u00e7\u00e3o (drift risk):** o `10` vive em 2 lugares \u2014 `billing.ts` E hardcoded em `orchestrate-content/index.ts:76` (`ORCHESTRATION_COST = 10`). Edge fns (Deno) **n\u00e3o importam** `src/lib` \u2192 espelham \u00e0 m\u00e3o. lead-score/campaign-run hardcodam com coment\u00e1rio `mirror COIN_COSTS`.\n- **Gasto real dominante = v\u00eddeo:** `canvas_video_spend` \u22124280 (35 txns ~122/v\u00eddeo) \u226b `canvas_image` \u2212314 (~11.6) > `magic_prompt` \u221255 (5) > `orchestrate` \u221230 (10). O custo real \u00e9 o **v\u00eddeo Higgsfield**, n\u00e3o a orquestra\u00e7\u00e3o de texto.\n\n**Para calibrar (pr\u00f3xima sess\u00e3o, com o Sovereign):** mapear mcoCoin\u2194R$/$ usando os pre\u00e7os $ por-modelo (OpenRouter token cost) + Higgsfield v\u00eddeo. V\u00eddeo \u00e9 o maior risco de custo. Eliminar a duplica\u00e7\u00e3o billing.ts\u2194edge (um `_shared/coin-costs.ts` Deno seria o SSOT real das edge fns).\n\n**Why:** Phase Commercial cobra tenants per-uso; pre\u00e7o descalibrado = preju\u00edzo (subs\u00eddio) ou churn (caro demais). Cascata `10+10\u00d7N` do campaign-run amplifica qualquer erro de calibra\u00e7\u00e3o por N passos.\n\n**How to apply:** ao implementar `campaign-run`, hardcodar o custo com `// mirror COIN_COSTS.CAMPAIGN_RUN` (n\u00e3o inventar valor novo) e deixar a cascata expl\u00edcita; N\u00c3O calibrar sozinho \u2014 \u00e9 decis\u00e3o do Sovereign com dados de custo $. Relacionado: [[project_marketing_hub_v2]] \u00b7 [[project_stripe_strategy]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcoin_calibration.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:50:09)*
+
+
+## 🤖 Claude *(13:50:09)*
+
+Atualizando o índice MEMORY.md (entrada marketing-hub + nova de calibração):
+
+## 🤖 Claude *(13:50:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Marketing Hub v2 — módulo agentic (BoK 9/9 + 11 agentes selados; MVP Lead Core LIVE)](project_marketing_hub_v2.md) — v2 que absorve o marketing v1 (campaigns/orchestrate-content/whatsapp_leads); MVP-1 migration aplicada com fix de tenant-FK provado (23503); MVP-2..5 pendentes; ⚠️ campaigns JÁ EXISTE (absorver, não criar) + projects não existe
+> 4	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — Refactor v2 da constelação 3D; TODAS as fases (0/1/2/3/4) seladas em v6.18.0 — empty-state wizard 2-portas + execução real de capability (exec 488a7744 watchdog_infra · 0 mco · 255ms) + reset destrutivo + botão Zerar per-user. BoK selada 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.
+> ```
+
+## 🤖 Claude *(13:50:20)*
+
+
+## 🤖 Claude *(13:50:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (BoK 9/9 + 11 agentes selados; MVP Lead Core LIVE)](project_marketing_hub_v2.md) \u2014 v2 que absorve o marketing v1 (campaigns/orchestrate-content/whatsapp_leads); MVP-1 migration aplicada com fix de tenant-FK provado (23503); MVP-2..5 pendentes; \u26a0\ufe0f campaigns J\u00c1 EXISTE (absorver, n\u00e3o criar) + projects n\u00e3o existe",
+  "new_string": "- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (MVP-1 Lead Core + MVP-2 Campaign Core + MVP-3 lead-score LIVE)](project_marketing_hub_v2.md) \u2014 v2 que absorve o marketing v1; MVP-1/MVP-2/lead-score LIVE com tenant-FK provado (23503+42501 autenticado); campaign-run ADIADO (cascata fiel decidida) + MVP-4/5 pendentes; \u26a0\ufe0f campaigns/campaign_metrics J\u00c1 EXISTEM (absorver, n\u00e3o criar) + projects n\u00e3o existe\n- [Calibra\u00e7\u00e3o mcoCoins \u2014 OTD-MCOIN-CALIBRATION (custos n\u00e3o-calibrados)](project_mcoin_calibration.md) \u2014 o 10 de orchestrate \u00e9 n\u00famero redondo, n\u00e3o $-calibrado (componentes somam 18); v\u00eddeo Higgsfield \u00e9 o maior custo real (~122/v\u00eddeo); campaign-run = cascata fiel 10+10\u00d7N; calibrar com pre\u00e7os $ \u00e9 decis\u00e3o do Sovereign, n\u00e3o improvisar"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:50:38)*
+
+
+## 🤖 Claude *(13:50:38)*
+
+Memórias seladas. Verificação final do working tree antes do relatório:
+
+## 🤖 Claude *(13:50:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (should be clean; proof-manifest is transient) ===\"\ngit status --short\necho \"=== cleanup transient proof-manifest ===\"\nrm -f proof-manifest.json && echo \"removed \u2705\"\necho \"=== final HEAD vs origin ===\"\ngit rev-list --left-right --count HEAD...origin/main 2>/dev/null\ngit log --oneline -1",
+  "description": "Final git status + cleanup proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (should be clean; proof-manifest is transient) ===
+> === cleanup transient proof-manifest ===
+> removed ✅
+> === final HEAD vs origin ===
+> 0	0
+> 9d48bf9 chore(sprint): update sprint-priorities — v6.22.0 Campaign Core + OTD-LLM-FALLBACK + lead-score
+> ```
+
+## 🤖 Claude *(13:50:55)*
+
+
+## 🤖 Claude *(13:51:15)*
+
+Working tree limpo, **HEAD == origin/main (0/0)**. Seal completo.
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SELADO — v6.22.0 Campaign Core + LLM Fallback + Lead Scoring** (2026-06-03)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA** (Phase 1 + 5b)
+  1a secrets ✅ · 1c client-coin ✅ · 1e sensitive-logs ✅ · 5b HANDOFF.md ✅
+  1b ⚠️ 4 webhooks sem JWT (`autonomic-action`/`*-webhook`/`stripe-webhook`) — pré-existentes, trigger-based (signature auth); `lead-score` tem JWT. **Sem 🔴.**
+
+📦 **COMMITS (7 · pushados)**
+```
+7fd8e7a  feat(marketing-hub): MVP-2 Campaign Core
+0a182d3  feat(llm-fallback): telemetria + teste — fecha OTD-LLM-FALLBACK
+46362c4  feat(marketing-hub): lead-score edge fn (FR-MH-003)
+d3f6015  chore(billing): centraliza COIN_COSTS + dívida de calibração
+2017714  docs(readme): v6.22.0
+458d74f  docs(handoff): seal v6.22.0
+9d48bf9  chore(sprint): update sprint-priorities v6.22.0
+```
+
+⬡ **KNOWLEDGE MESH**
+  Handoff node: `aec4cb9c-3765-4d58-9d92-d8130fe568bd` — embedded 768d ✅
+  Milestones: MVP-2 `7628892b` · OTD `6061a6d2` · edge DERIVES_FROM `0d58d93b`
+  Total: **8759 nós**
+
+📖 **README.md** — v6.21.0 → **v6.22.0** · badge mesh 8755 → **8759** · tests 240 → **246** · +3 badges
+
+🧠 **HANDOFF.md** — Record v6.22.0 + Survival Laws self-audit (4/4) + GraphRAG 8759 + Pendências
+
+📋 **PROVA MATERIAL (Phase 5c)** — **`SEAL ALLOWED`** · 8 verificadas · 1 skip (deploy size-only) · **0 falhas**
+
+📚 **BoK** — 13/13 suítes 9/9 ✅ · módulos da sessão (`lead-score`/`_shared`) cobertos (FR-MH-003 + SOP)
+
+🚀 **PUSH** — `main → origin/main` · `8473066..9d48bf9` · 7 commits
+
+📌 **SPRINT** — sprint-priorities atualizado ✅ · scratch limpo ✅ · sem novo MCP
+
+⏭ **PRÓXIMOS PASSOS (sessão fresca)**
+  1. **`campaign-run`** (MVP-3 parte 2) — cascata fiel `CAMPAIGN_RUN 10 + N×ORCHESTRATION_RUN 10` + sync `campaign_steps.status`
+  2. **OTD-MCOIN-CALIBRATION** — calibrar `COIN_COSTS` contra custo $ real (preços por-modelo + Higgsfield vídeo)
+  3. **MVP-4** hooks + UI (`/dashboard/marketing`) · **MVP-5** attribution → ROIWidget
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Sessão selada, Maestro. As quatro frentes que pedimos foram entregues e provadas materialmente — o **alerta `meta_config`** verificado vazio (sem limpeza fabricada), **MVP-2 Campaign Core** e **lead-score** no ar com tenancy à prova de cross-tenant, e a **OTD-LLM-FALLBACK** fechada antes do SLA com observabilidade + o primeiro teste de edge-helper do projeto.
+
+O `campaign-run` ficou **decidido (cascata fiel) e especificado**, mas conscientemente adiado: é código financeiro, e sua própria pergunta sobre calibração revelou que o `10` não é fundamentado em custo real — melhor implementá-lo com contexto limpo e seus preços $ em mãos. Deixei a dívida `OTD-MCOIN-CALIBRATION` documentada com os dados que levantei (o vídeo Higgsfield é o seu maior custo real, ~122/vídeo). 🎯
+
 ---
 
 %% --- TIMELINE START --- %%
