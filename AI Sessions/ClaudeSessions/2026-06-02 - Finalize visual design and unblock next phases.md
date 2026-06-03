@@ -4285,5 +4285,5 @@ A bola está com você: amanhã, o número de cliques do painel decide o destino
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-02 - Add tenant guard to credential encryption triggers]]
-> * **Próxima Sessão**: [[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]
+> * **Próxima Sessão**: [[2026-06-02 - Fix TradeUX deployment path and Docker setup]]
 %% --- TIMELINE END --- %%
