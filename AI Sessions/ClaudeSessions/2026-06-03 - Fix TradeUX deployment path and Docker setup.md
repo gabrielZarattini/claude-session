@@ -1588,6 +1588,352 @@ So the right split is: **prep everything now, deploy the moment #9 merges.** Let
 > === if these two SHAs differ, master moved (maybe #9 landed) ===
 > ```
 
+## 🤖 Claude *(00:30:19)*
+
+
+## 🤖 Claude *(00:30:22)*
+
+`.env` is written (chmod 600, owned by `gcrux-tradeux`) with the CloudPanel-correct, testnet-first, BYOK config. And confirmed: **remote `master` is still `590a802` — #9 hasn't merged yet** (expected, it's a draft in CI).
+
+**Your panel first-login** (change it after logging in):
+- Email: `gabrielcall@gmail.com`
+- Password: `2QyLiZAkFe2uUuTxOEhn`
+
+While #9 finishes CI, let me use the wait productively and verify the deploy will actually work end-to-end — specifically that the **frontend container's nginx proxies `/api` and upgrades `/ws`** (critical behind CloudPanel), and that the backend entrypoint runs migrate+seed.
+
+## 🤖 Claude *(00:30:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/nginx.conf"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	server {
+> 2	    listen 80;
+> 3	    server_name _;
+> 4	
+> 5	    root /usr/share/nginx/html;
+> 6	    index index.html;
+> 7	
+> 8	    # Reverse proxy to the TradeUX backend REST API.
+> 9	    # /api/login -> backend /login  (the /api prefix is stripped)
+> 10	    location /api/ {
+> 11	        proxy_pass http://backend:3001/;
+> 12	        proxy_http_version 1.1;
+> 13	        proxy_set_header Host $host;
+> 14	        proxy_set_header X-Real-IP $remote_addr;
+> 15	        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+> 16	        proxy_set_header X-Forwarded-Proto $scheme;
+> 17	    }
+> 18	
+> 19	    # Backend WebSocket (live data / toasts). Token travels in the query string.
+> 20	    location /ws {
+> 21	        proxy_pass http://backend:3001;
+> 22	        proxy_http_version 1.1;
+> 23	        proxy_set_header Upgrade $http_upgrade;
+> 24	        proxy_set_header Connection "upgrade";
+> 25	        proxy_set_header Host $host;
+> 26	        proxy_set_header Origin $http_origin;
+> 27	        proxy_read_timeout 86400s;
+> 28	    }
+> 29	
+> 30	    # Single Page App fallback
+> 31	    location / {
+> 32	        try_files $uri $uri/ /index.html;
+> 33	    }
+> 34	}
+> 35	
+> ```
+
+## 🤖 Claude *(00:30:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/Dockerfile"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX frontend — build with Node 22, serve static with nginx
+> 2	FROM node:22-alpine AS build
+> 3	
+> 4	WORKDIR /app
+> 5	
+> 6	COPY package*.json ./
+> 7	RUN npm install
+> 8	
+> 9	COPY . .
+> 10	
+> 11	# Build-time configuration. O Vite injeta os REACT_APP_* (lidos via process.env
+> 12	# no vite.config.js) no bundle em tempo de build.
+> 13	ARG REACT_APP_API_URL
+> 14	ARG REACT_APP_WS_URL
+> 15	ARG REACT_APP_BWS_URL
+> 16	ENV REACT_APP_API_URL=$REACT_APP_API_URL
+> 17	ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
+> 18	ENV REACT_APP_BWS_URL=$REACT_APP_BWS_URL
+> 19	
+> 20	RUN npm run build
+> 21	
+> 22	# --- runtime ---
+> 23	FROM nginx:alpine
+> 24	COPY nginx.conf /etc/nginx/conf.d/default.conf
+> 25	COPY --from=build /app/build /usr/share/nginx/html
+> 26	EXPOSE 80
+> 27	CMD ["nginx", "-g", "daemon off;"]
+> 28	
+> ```
+
+## 🤖 Claude *(00:30:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/Dockerfile"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX backend — Node 22
+> 2	FROM node:22-alpine
+> 3	
+> 4	WORKDIR /app
+> 5	
+> 6	# Install production deps (sequelize-cli is a dependency so migrate/seed run offline)
+> 7	COPY package*.json ./
+> 8	RUN npm install --omit=dev
+> 9	
+> 10	COPY . .
+> 11	
+> 12	COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> 13	RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> 14	
+> 15	EXPOSE 3001
+> 16	
+> 17	# Entrypoint runs DB migrations + seeds (idempotent), then starts the server
+> 18	ENTRYPOINT ["docker-entrypoint.sh"]
+> 19	CMD ["npm", "start"]
+> 20	
+> ```
+
+## 🤖 Claude *(00:30:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/docker-entrypoint.sh"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/bin/sh
+> 2	set -e
+> 3	
+> 4	echo "[TradeUX] Applying database migrations..."
+> 5	npx sequelize-cli db:migrate
+> 6	
+> 7	echo "[TradeUX] Applying seeds (idempotent)..."
+> 8	npx sequelize-cli db:seed:all
+> 9	
+> 10	echo "[TradeUX] Starting backend..."
+> 11	exec "$@"
+> 12	
+> ```
+
+## 🤖 Claude *(00:32:07)*
+
+
+## 🤖 Claude *(00:32:11)*
+
+The architecture checks out end-to-end:
+
+- **frontend nginx** proxies `/api/` → `backend:3001/` (strips the `/api` prefix) and **upgrades `/ws`** (`Upgrade`/`Connection: upgrade`) → backend WebSocket. ✓
+- **frontend Dockerfile** bakes `REACT_APP_*` at build time (confirms the testnet/domain URLs must be right *before* build — they are). ✓
+- **backend entrypoint** runs `db:migrate` + `db:seed:all` on boot — and that seed step is exactly what #9 fixes for blank keys. ✓
+
+Everything is consistent; the deploy will work once #9 is on `master`. Let me record two server-specific gotchas to memory (so a future session doesn't repeat the htdocs mistake or trip on the git auth), then I'll give you the status and the one-shot deploy plan.
+
+## 🤖 Claude *(00:32:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> File does not exist. Note: your current working directory is /home/gcrux-tradeux/tradeux.
+> ```
+
+## 🤖 Claude *(00:32:30)*
+
+
+## 🤖 Claude *(00:32:31)*
+
+MEMORY.md doesn't exist yet — I'll create it along with the two memory files.
+
+## 🤖 Claude *(00:32:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-deploy-topology.md",
+  "content": "---\nname: tradeux-deploy-topology\ndescription: Where/how TradeUX is deployed on this server (repo at ~/tradeux, Docker, port 8090) \u2014 htdocs is intentionally empty\nmetadata:\n  type: project\n---\n\nTradeUX does NOT run from `htdocs`. It is a Docker stack (containers: `db` MySQL + `backend` Node/Express + `frontend` nginx) cloned at **`/home/gcrux-tradeux/tradeux`** (owned by `gcrux-tradeux`), brought up with `./setup.sh`. `htdocs/tradeux.gcrux.com/` is intentionally empty \u2014 do work in `~/tradeux`, not htdocs.\n\nServing chain: CloudPanel nginx (TLS) \u2192 reverse-proxy to `127.0.0.1:8090` \u2192 `frontend` container nginx (`/api/`\u2192`backend:3001`, `/ws`\u2192backend WebSocket) \u2192 `db`. So `.env` must set `WEB_BIND=127.0.0.1`, `WEB_PORT=8090`, and the build-time `REACT_APP_API_URL=https://tradeux.gcrux.com/api` + `REACT_APP_WS_URL=wss://tradeux.gcrux.com/ws`. A 502 on the live site means nothing is listening on 8090 (stack is down), not a proxy fault \u2014 the CloudPanel proxy is already correctly configured. CloudPanel's own vhost must also pass the WebSocket `Upgrade` headers for `/ws` to work. Deploy is testnet-first with BYOK Binance keys (entered in the panel, not `.env`). See [[github-ssh-key-on-ubuntu]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-deploy-topology.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:32:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/github-ssh-key-on-ubuntu.md",
+  "content": "---\nname: github-ssh-key-on-ubuntu\ndescription: Only GitHub credential on this server is ubuntu's SSH key; site user gcrux-tradeux has none \u2014 affects git pulls\nmetadata:\n  type: reference\n---\n\nThe TradeUX repo (`gabrielZarattini/tradeux`) is **private**. The only credential on this box that can pull it is **`ubuntu`'s SSH key** at `/home/ubuntu/.ssh/id_ed25519` (authenticates to GitHub as `gabrielZarattini`). The site user **`gcrux-tradeux` has no SSH key or git creds** (`~/.ssh` holds only empty `authorized_keys` + `config`).\n\nGotcha: the clone at `/home/gcrux-tradeux/tradeux` is owned by `gcrux-tradeux`, but only `ubuntu`'s key can reach GitHub, and `ubuntu` lacks write perms inside the gcrux-owned tree. To pull, run git as root with ubuntu's key, then chown back:\n`sudo env GIT_SSH_COMMAND='ssh -i /home/ubuntu/.ssh/id_ed25519' git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' pull --ff-only` then `sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux`. Cleaner long-term fix: add a dedicated deploy key for `gcrux-tradeux`.\n\nNote: the Bash shell here runs as **`ubuntu`** (uid 1001), not gcrux-tradeux. Use `sudo -n -u gcrux-tradeux ...` to act as the site user (passwordless sudo works; gcrux-tradeux is in the `docker` group). Related: [[tradeux-deploy-topology]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/github-ssh-key-on-ubuntu.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:32:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "content": "# Memory Index\n\n- [TradeUX deploy topology](tradeux-deploy-topology.md) \u2014 app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)\n- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) \u2014 only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:13)*
+
+
+## 🤖 Claude *(00:33:25)*
+
+Estou pronto do meu lado — **falta só o #9 entrar no `master`.**
+
+## Estado atual
+- ✅ Repo clonado em `/home/gcrux-tradeux/tradeux` (dono `gcrux-tradeux`)
+- ✅ `.env` escrito (chmod 600) com a config certa pra CloudPanel: `WEB_BIND=127.0.0.1`, `WEB_PORT=8090`, URLs `https://tradeux.gcrux.com/api` + `wss://…/ws`, Binance em **testnet**, chaves **em branco (BYOK)**, segredos (JWT/AES/DB) gerados
+- ✅ Arquitetura conferida: o nginx do `frontend` faz `/api`→`backend:3001` e **upgrade do `/ws`**; o entrypoint roda `migrate`+`seed` no boot
+- ⏳ `master` ainda em `590a802` → o `setup.sh` do meu working tree **ainda exige as chaves**, e o seeder antigo quebraria com chave vazia. Por isso **não subo com chave em branco até o #9 estar no `master`** (que é exatamente o que ele conserta).
+
+## Deploy que vou rodar quando o #9 mergear (uma tacada)
+1. `git pull --ff-only` no `master` — *detalhe:* o repo é do `gcrux-tradeux`, mas a única chave de GitHub do servidor é a do `ubuntu`. Resolvo com pull via root usando essa chave + `chown` de volta (já registrei o macete na memória).
+2. Reconcilio `.env` ↔ novo `.env.example` do #9 (caso ele adicione algum campo).
+3. `./setup.sh` como `gcrux-tradeux` → build dos 3 containers; `frontend` publica em `127.0.0.1:8090`.
+4. Verifico: `docker compose ps` saudável, `8090` escutando, `curl 127.0.0.1:8090` = **200**, e confirmo que o **502 sumiu** no domínio.
+
+## Dois pontos pra você saber
+- **WebSocket no CloudPanel:** o nginx do container já faz upgrade do `/ws`, mas o **vhost do CloudPanel** (1º hop, TLS→8090) também precisa passar `Upgrade`/`Connection: upgrade`. Sem isso o REST funciona mas os dados ao vivo (`/ws`) não — vale conferir no painel.
+- **Híbrido testnet/mainnet:** o **backend** troca pelo painel (Settings → API/Stream URL) ✅. Mas o stream público de preços do **frontend** (`REACT_APP_BWS_URL`) é **assado no build** (= testnet agora); trocá-lo exige rebuild, ou um ajuste pra ler a URL em runtime. Se o toggle tem que ser 100% pela UI, esse é o pedaço que falta — bate com seu "deve ser opt-in no painel".
+
+**Login do painel** (1º acesso — troque depois): `gabrielcall@gmail.com` / `2QyLiZAkFe2uUuTxOEhn`
+
+Como prefere seguir? Me **avisa quando o #9 estiver no `master`** e eu disparo o deploy + verificação — ou, se quiser, eu **fico de olho no `master`** e subo sozinho assim que ele andar. Posso também já **baixar as imagens base** (`mysql:8.0`, `node:22-alpine`, `nginx:alpine`) pra o build sair mais rápido.
+
+## 👤 User *(00:33:47)*
+
+Regra perene para todas as próximas mensagens e sessões nesse workspace.: Think in English but report to the user in Brazilian Portuguese!
+
+## 🤖 Claude *(00:34:03)*
+
+
+## 🤖 Claude *(00:34:04)*
+
+Entendido — e essa é uma regra perene, então vou registrá-la na memória do workspace para valer em todas as próximas sessões (não só nesta).
+
+## 🤖 Claude *(00:34:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/respond-in-pt-br.md",
+  "content": "---\nname: respond-in-pt-br\ndescription: Always think/reason in English, but write every user-facing response in Brazilian Portuguese (pt-BR)\nmetadata:\n  type: feedback\n---\n\nStanding rule for this workspace, all sessions: **reason internally in English, but report to the user in Brazilian Portuguese (pt-BR).**\n\n**Why:** the user's explicit perennial instruction for this workspace.\n**How to apply:** keep private/internal reasoning in English; write all user-facing output (status updates, explanations, summaries, questions, commit/PR descriptions addressed to the user) in pt-BR. This also matches the repo convention that comments and docs are pt-BR. See [[tradeux-deploy-topology]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/respond-in-pt-br.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:34:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [TradeUX deploy topology]",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [TradeUX deploy topology]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:34:14)*
+
+
+## 🤖 Claude *(00:34:18)*
+
+Regra salva na memória do workspace (`respond-in-pt-br`) — vale a partir de agora e em todas as sessões futuras aqui: **raciocínio em inglês, resposta sempre em português.** Já venho fazendo assim e sigo nesse padrão.
+
+No mais, continuo no mesmo ponto: tudo pronto pro deploy, esperando só o **#9 entrar no `master`**. Quando você avisar (ou me mandar ficar de olho), eu puxo o `master`, rodo o `./setup.sh` e confirmo que o **502 sumiu** em `tradeux.gcrux.com`.
+
+## 👤 User *(00:36:53)*
+
+Não estou conseguindo ver na url https://tradeux.gcrux.com/
+
+## 👤 User *(00:37:03)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- TIMELINE START --- %%
