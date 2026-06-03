@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 254
-> * **Sessões do Claude**: 223
+> * **Total de Sessões Registradas**: 256
+> * **Sessões do Claude**: 225
 > * **Sessões do Gemini**: 31
 
 ---
@@ -55,6 +55,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-03*
+*   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` - *2026-06-03*
 *   `[[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` - *2026-06-02*
 *   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` - *2026-06-02*
@@ -65,9 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]` - *2026-06-02*
 *   `[[2026-06-02 - Fix TradeUX deployment path and Docker setup]]` - *2026-06-02*
 *   `[[2026-06-02 - Finalize visual design and unblock next phases]]` - *2026-06-02*
-*   `[[2026-06-02 - Add tenant guard to credential encryption triggers]]` - *2026-06-02*
-*   `[[2026-06-01 - agent-af11d6fa76341891b]]` - *2026-06-01*
-*   *... e mais 218 sessões nessa categoria.*
+*   *... e mais 220 sessões nessa categoria.*
 
 ---
 
@@ -255,6 +255,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-03 - Fix TradeUX deployment path and Docker setup]]` (ClaudeSessions)
+*   `[[2026-06-03 - Design agentic marketing framework for universal platforms]]` (ClaudeSessions)
 *   `[[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
 *   `[[2026-06-02 - agent-af037801ea2099be9]]` (ClaudeSessions)
 *   `[[2026-06-02 - agent-ae6ff81e6a9f99139]]` (ClaudeSessions)
