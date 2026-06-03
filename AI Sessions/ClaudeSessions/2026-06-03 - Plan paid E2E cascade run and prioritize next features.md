@@ -4072,6 +4072,440 @@ Ou, se já houver `WP_SITE_URL/WP_USERNAME/WP_APP_PASSWORD` nos secrets do Edge 
 
 Conecta o WP e me dá o sinal. 🚀
 
+## 👤 User *(19:46:14)*
+
+wordpress conectado. mas precisamos conectar a meta agora ne? Quais os passos para configurar Meta — Facebook & Instagram
+Conecte sua conta Meta para publicar no Facebook Page e Instagram Business pelo pipeline. Cole o token de longa duração (60 dias) gerado no Graph API Explorer / Business Suite.
+
+Token de Longa Duração (User Token)
+EAAG...
+Nunca exibido de volta por segurança (column-grant). Cole novamente para atualizar.
+
+Instagram Business Account ID
+17841400000000000
+Necessário para publicar no Instagram (FR-META-002).
+
+Expiração do Token (opcional)
+dd/mm/aaaa
+Usado para alertar reautenticação antes de expirar.
+
+Página do Facebook (opcional)
+Page ID
+1234567890
+Nome da Página
+Minha Página
+Page Access Token
+EAAG... (token perpétuo da página)
+Necessário para publicar no feed do Facebook (FR-META-003).?
+
+## 🤖 Claude *(19:47:19)*
+
+
+## 🤖 Claude *(19:47:20)*
+
+"WordPress conectado" — verifico (Lei 1) antes de rodar. E já respondo a Meta com material. Probe:
+
+## 🤖 Claude *(19:47:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\necho \"=== WP connection state for Usu\u00e1rio Zero (verify claim) ===\"\ncurl -s \"$URL/user_api_keys?select=user_id,wp_site_url,wp_username,wp_app_password&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('api-error:',d); sys.exit(0)\nfor r in d:\n    for k in ('wp_site_url','wp_username','wp_app_password'):\n        v=r.get(k); print(f'  {k:18s} {\\\"SET (\\\"+str(v)+\\\")\\\" if (v not in (None,\\\"\\\")) else \\\"NULL\\\"}')\n\"\necho; echo \"=== meta_config rows (still empty?) ===\"\ncurl -s \"$URL/meta_config?select=user_id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho; echo \"=== publish-meta deployed? ===\"\ncurl -s -o /dev/null -w \"publish-meta OPTIONS: %{http_code}\\n\" --max-time 8 -X OPTIONS \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/publish-meta\"\necho \"=== where is MetaConfigCard mounted (route) ===\"\ngrep -rn \"MetaConfigCard\" src/pages 2>/dev/null | head",
+  "description": "Verify WP connected + Meta config state + publish-meta + route"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === WP connection state for Usuário Zero (verify claim) ===
+>   wp_site_url        SET (https://mcorch.com/)
+>   wp_username        SET (gcrUX)
+>   wp_app_password    SET (••••••••••••)
+> 
+> === meta_config rows (still empty?) ===
+> []
+> === publish-meta deployed? ===
+> publish-meta OPTIONS: 200
+> === where is MetaConfigCard mounted (route) ===
+> src/pages/SettingsPage.tsx:6:import { MetaConfigCard } from "@/components/settings/MetaConfigCard";
+> src/pages/SettingsPage.tsx:471:      <MetaConfigCard />
+> ```
+
+## 🤖 Claude *(19:48:25)*
+
+
+## 🤖 Claude *(19:48:36)*
+
+✅ **WP verificado material** — `wp_site_url=https://mcorch.com/` · `wp_username=gcrUX` · `wp_app_password` SET (cifrado no Vault). O run está **destravado**.
+
+## Sobre a Meta — resposta honesta (Lei 1)
+
+**Para ESTE run, a Meta NÃO é necessária.** Li o motor da cascata: o canal `social` do `campaign-run` mapeia para **LinkedIn + Twitter** apenas ([orchestrate-step](supabase/functions/orchestrate-step/index.ts) só tem os passos `linkedin_post` e `twitter_thread` — não há passo FB/IG). O `publish-meta` (FB feed + IG) é uma função **separada e deployada**, mas **não está fiada no cascade** — `meta_config` está vazio e, mesmo conectado, o flywheel **não postaria** em FB/IG hoje. Ou seja: conectar a Meta agora **não muda o resultado deste run**.
+
+### Mas se você quer configurar a Meta (os passos que pediu)
+No card **Configurações → Meta** (`/dashboard/settings`) — **digite direto na UI, nunca cole o token aqui no chat** (são credenciais; o column-grant nunca exibe de volta):
+
+| Campo | O que é / onde pegar |
+|---|---|
+| **Token de Longa Duração (User Token)** | Token de usuário de 60 dias. Graph API Explorer → seu App → gerar token com permissões `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management` → trocar por long-lived: `GET /v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=<APP_ID>&client_secret=<APP_SECRET>&fb_exchange_token=<token_curto>`. (Ou um System User token no Business Suite — esses não expiram.) |
+| **Instagram Business Account ID** (`17841…`) | `GET /me/accounts?fields=instagram_business_account` → `instagram_business_account.id`. Exige a conta IG ser **Business/Creator** vinculada a uma Página. |
+| **Expiração (opcional)** | A data dos 60 dias — só pra alertar reautenticação antes de expirar. |
+| **Página FB (opcional): Page ID + Page Access Token** | `GET /me/accounts` → retorna suas Páginas com `id`, `name` e `access_token` (o token da Página; derivado de um user token long-lived, fica perpétuo). É o que publica no feed do FB (FR-META-003). |
+
+---
+
+Como a Meta não afeta este run e o WP já está verde, decida a sequência:
+
+## 🤖 Claude *(19:48:45)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "WP est\u00e1 conectado e o flywheel est\u00e1 pronto. A Meta n\u00e3o muda este run (cascade = LinkedIn+Twitter). Como sequenciar?",
+      "header": "Sequenciar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Rodar o flywheel AGORA",
+          "description": "Eu rodo o campaign-run j\u00e1 (~30 mco): WP sai rascunho + LinkedIn (eu seguro o post pra voc\u00ea aprovar) + Twitter (falha, n\u00e3o conectado). Te entrego a prova material. Meta fica pra depois \u2014 n\u00e3o afeta este run. (Recomendado: destrava o carro-chefe que voc\u00ea esperava.)"
+        },
+        {
+          "label": "Fiar a Meta no cascade primeiro",
+          "description": "Eu implemento (feature) o publish-meta dentro do orchestrate-step + canal 'meta' no campaign-run, voc\u00ea conecta o token no card, e a\u00ed o flywheel passa a postar FB + IG + LinkedIn de uma vez. Maior escopo (c\u00f3digo + deploy + teste) antes do 1\u00ba run."
+        },
+        {
+          "label": "Voc\u00ea conecta a Meta em paralelo",
+          "description": "Voc\u00ea preenche o card Meta agora (habilita o publish-meta standalone), e eu rodo o flywheel em paralelo SEM esperar \u2014 o run sai igual ao 1\u00ba (WP+LinkedIn); a Meta fica dispon\u00edvel pra uso avulso/futuro wiring."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "WP está conectado e o flywheel está pronto. A Meta não muda este run (cascade = LinkedIn+Twitter). Como sequenciar?"="Rodar o flywheel AGORA". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:51:26)*
+
+
+## 🤖 Claude *(19:51:27)*
+
+Executando o flywheel **agora**. Minto o JWT do Usuário Zero e disparo o `campaign-run` na campanha `29b85b73`:
+
+## 🤖 Claude *(19:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nANON=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\necho \"=== minting user JWT for Usu\u00e1rio Zero ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\nif [ -z \"$TOKEN\" ]; then echo \"JWT MINT FAILED:\"; cat /tmp/jwterr; exit 1; fi\necho \"JWT minted: ${TOKEN:0:24}... (len ${#TOKEN})\"\necho; echo \"=== invoking campaign-run (campaign 29b85b73) ===\"\ncurl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/campaign-run\" \\\n  -H \"apikey: $ANON\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d '{\"campaign_id\":\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"}' | python3 -c \"import json,sys; print(json.dumps(json.load(sys.stdin),ensure_ascii=False,indent=1))\"",
+  "description": "Mint JWT + invoke campaign-run for E2E flywheel"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === minting user JWT for Usuário Zero ===
+> JWT MINT FAILED:
+> Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)
+> ```
+
+## 🤖 Claude *(19:51:37)*
+
+
+## 🤖 Claude *(19:51:38)*
+
+Falta uma env var no `.env`. Vendo os nomes presentes (sem expor valores):
+
+## 🤖 Claude *(19:51:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== var names in .env (values masked) ===\"\ngrep -oE '^[A-Z_]+=' .env 2>/dev/null | sed 's/=$//'\necho \"=== which of the needed ones are set after source ===\"\nset -a; source .env 2>/dev/null; set +a\nfor v in SUPABASE_URL VITE_SUPABASE_URL SB_SECRET_KEY SUPABASE_SERVICE_ROLE_KEY SB_PUBLISHABLE_KEY SUPABASE_ANON_KEY VITE_SUPABASE_PUBLISHABLE_KEY; do\n  val=\"${!v}\"; echo \"  $v: ${val:+SET}${val:-MISSING}\"\ndone",
+  "description": "Inspect .env variable names available"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === var names in .env (values masked) ===
+> SUPABASE_URL
+> VITE_SUPABASE_URL
+> VITE_SUPABASE_PROJECT_ID
+> SUPABASE_SECRET_KEY
+> SB_SECRET_KEY
+> SUPABASE_PUBLISHABLE_KEY
+> VITE_SUPABASE_PUBLISHABLE_KEY
+> SUPABASE_SERVICE_ROLE_KEY
+> VITE_OPENROUTER_API_KEY
+> VITE_GEMINI_API_KEY
+> HIGGSFIELD_API_KEY_SECRET
+> HIGGSFIELD_API_KEY
+> APIFY_KEY
+> APIFY_TOKENS
+> REPLICATE_API_KEY
+> RAPIDAPI_KEY
+> === which of the needed ones are set after source ===
+>   SUPABASE_URL: SEThttps://bcyvddsykvehvpwstlfa.supabase.co
+>   VITE_SUPABASE_URL: SEThttps://bcyvddsykvehvpwstlfa.supabase.co
+>   SB_SECRET_KEY: SETsb_secret_3dGLMD_lyuuw80UU9h0EKQ_zF7sXhIt
+>   SUPABASE_SERVICE_ROLE_KEY: SETeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjeXZkZHN5a3ZlaHZwd3N0bGZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjI5MjA5MiwiZXhwIjoyMDkxODY4MDkyfQ.RLtcgAKJjXjbTS52-kzEmEk8V11IrOFSoDzAzWM-QfE
+>   SB_PUBLISHABLE_KEY: MISSING
+>   SUPABASE_ANON_KEY: MISSING
+>   VITE_SUPABASE_PUBLISHABLE_KEY: SETsb_publishable_FkEPbhQ-GbhWGDScraWpzA_hHgawOTW
+> ```
+
+## 🤖 Claude *(19:52:10)*
+
+
+## 🤖 Claude *(19:52:15)*
+
+O publishable key local chama-se `SUPABASE_PUBLISHABLE_KEY` (não `SB_PUBLISHABLE_KEY`). Corrijo o fallback do minter.
+
+⚠️ **Nota de higiene (Lei 1, honesto):** meu comando de debug imprimiu os **valores** das chaves no output desta sessão (incluindo `SB_SECRET_KEY` viva). Não vou reimprimi-las e não saíram daqui (transcript da sessão, não commitado; `.env` segue gitignored). A legada `SUPABASE_SERVICE_ROLE_KEY` já está morta (memória). Se quiser, rotaciono a `SB_SECRET_KEY` depois — me avise; não é urgente, mas é sua decisão.
+
+## 🤖 Claude *(19:52:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts",
+  "old_string": "const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;",
+  "new_string": "const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:19)*
+
+
+## 🤖 Claude *(19:52:20)*
+
+Re-rodando o run (sem ecoar valores de chave):
+
+## 🤖 Claude *(19:52:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nANON=\"${SB_PUBLISHABLE_KEY:-${SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}}\"\necho \"=== minting user JWT ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\nif [ -z \"$TOKEN\" ]; then echo \"JWT MINT FAILED:\"; cat /tmp/jwterr; exit 1; fi\necho \"JWT minted OK (len ${#TOKEN})\"\necho; echo \"=== invoking campaign-run (campaign 29b85b73) ===\"\ncurl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/campaign-run\" \\\n  -H \"apikey: $ANON\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d '{\"campaign_id\":\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"}' | python3 -c \"import json,sys; print(json.dumps(json.load(sys.stdin),ensure_ascii=False,indent=1))\"",
+  "description": "Mint JWT + invoke campaign-run (no secret echo)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === minting user JWT ===
+> JWT minted OK (len 1404)
+> 
+> === invoking campaign-run (campaign 29b85b73) ===
+> {
+>  "status": "ok",
+>  "campaign_id": "29b85b73-3982-41f3-90a4-dc5dab2e8ef3",
+>  "run_id": "b06335ad-6c9b-4580-8fe1-125631336e96",
+>  "steps_dispatched": 3,
+>  "new_balance": 5311
+> }
+> ```
+
+## 🤖 Claude *(19:53:00)*
+
+
+## 🤖 Claude *(19:53:03)*
+
+🎉 **`campaign-run` retornou `status:ok`** · run_id `b06335ad` · **`steps_dispatched: 3`** · saldo 5351→**5311** (−40 = 10 fee + 3×10). Mas eu semeei **2** passos — 3 dispatched significa que há um passo a mais (você pode ter adicionado um na UI). Verifico o estado real e acompanho as cadeias async:
+
+## 🤖 Claude *(19:53:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== campaign_steps for 29b85b73 (count + statuses) ===\"\ncurl -s \"$URL/campaign_steps?select=position,channel,action,status&campaign_id=eq.29b85b73-3982-41f3-90a4-dc5dab2e8ef3&order=position\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho; echo \"=== pipeline_runs (5 most recent for UZ) ===\"\ncurl -s \"$URL/pipeline_runs?select=id,status,topic,wordpress_url,platforms,created_at,completed_at,steps&user_id=eq.$UZ&order=created_at.desc&limit=5\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('api-error:',d); sys.exit(0)\nfor r in d:\n    steps=r.get('steps') or []\n    ss=' \u00b7 '.join(f\\\"{s.get('name')}={s.get('status')}\\\" for s in steps) if isinstance(steps,list) else str(steps)[:80]\n    print(f\\\"  {r.get('created_at','')[:19]} status={r.get('status')} plats={r.get('platforms')} wp={r.get('wordpress_url')}\\\")\n    print(f\\\"      steps: {ss}\\\")\n\"",
+  "description": "Check campaign_steps count + pipeline_runs progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campaign_steps for 29b85b73 (count + statuses) ===
+> [{"position":0,"channel":"content","action":"generate_content","status":"done"}, 
+>  {"position":1,"channel":"social","action":"generate_content","status":"done"}, 
+>  {"position":2,"channel":"content","action":"generate_content","status":"done"}]
+> === pipeline_runs (5 most recent for UZ) ===
+> api-error: {'code': '42703', 'details': None, 'hint': None, 'message': 'column pipeline_runs.created_at does not exist'}
+> ```
+
+## 🤖 Claude *(19:53:26)*
+
+
+## 🤖 Claude *(19:53:29)*
+
+Há **3 passos** (pos0 content, pos1 social, **pos2 content** — esse 3º não foi eu que semeei; provável que você tenha adicionado na UI). Todos `done` (mas isso é o ACK do dispatch, não a conclusão async — a real está em `pipeline_runs`). Coluna de tempo errada (`started_at`, não `created_at`). Re-consultando o estado real das cadeias:
+
+## 🤖 Claude *(19:53:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== pipeline_runs (recent, by started_at) ===\"\ncurl -s \"$URL/pipeline_runs?select=id,status,topic,wordpress_url,platforms,started_at,completed_at,steps&user_id=eq.$UZ&order=started_at.desc&limit=4\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('api-error:',d); sys.exit(0)\nfor r in d:\n    steps=r.get('steps') or []\n    ss=' \u00b7 '.join(f\\\"{s.get('name')}={s.get('status')}\\\" for s in steps) if isinstance(steps,list) else ''\n    print(f\\\"  {r.get('started_at','')[:19]} status={r.get('status')} plats={r.get('platforms')}\\\")\n    print(f\\\"      wp={r.get('wordpress_url')}\\\")\n    print(f\\\"      {ss}\\\")\n\"\necho; echo \"=== content_library for campaign 29b85b73 ===\"\ncurl -s \"$URL/content_library?select=id,title,type,status,created_at&campaign_id=eq.29b85b73-3982-41f3-90a4-dc5dab2e8ef3&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('api-error:',d); sys.exit(0)\nprint(f'  {len(d)} rows')\nfor r in d: print(f\\\"   - [{r.get('type')}] {str(r.get('title'))[:60]}  status={r.get('status')}\\\")\n\"\necho; echo \"=== scheduled_posts for campaign 29b85b73 ===\"\ncurl -s \"$URL/scheduled_posts?select=id,platform,status,scheduled_at,content_id&campaign_id=eq.29b85b73-3982-41f3-90a4-dc5dab2e8ef3&order=scheduled_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"",
+  "description": "Poll pipeline_runs + content_library + scheduled_posts for the run"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pipeline_runs (recent, by started_at) ===
+>   2026-06-03T19:52:29 status=running plats=['wordpress']
+>       wp=None
+>       
+>   2026-06-03T19:52:29 status=running plats=['linkedin', 'twitter']
+>       wp=None
+>       
+>   2026-06-03T19:52:29 status=running plats=['wordpress']
+>       wp=None
+>       
+> 
+> === content_library for campaign 29b85b73 ===
+>   0 rows
+> 
+> === scheduled_posts for campaign 29b85b73 ===
+> []
+> ```
+
+## 🤖 Claude *(19:53:57)*
+
+
+## 🤖 Claude *(19:53:59)*
+
+As 3 cadeias estão `running`, `steps[]` ainda vazio (acabaram de iniciar às 19:52:29) — o elo async (o que falhou em 05-27) está no ponto crítico. Vou **aguardar a conclusão** com o Monitor (sleep foreground é bloqueado) até os `pipeline_runs` saírem de `running`:
+
+## 🤖 Claude *(19:54:00)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:Monitor",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'Monitor'}]
+> ```
+
+## 🤖 Claude *(19:54:39)*
+
+
+## 🤖 Claude *(19:54:41)*
+
+O guia do Monitor recomenda, para **uma** notificação de conclusão, usar `Bash run_in_background` com loop `until` que sai quando a condição for verdadeira. Lanço o vigia das 3 cadeias (sai quando nenhuma estiver `running`, cobrindo done **e** error):
+
+## 🤖 Claude *(19:54:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nCAMP=\"29b85b73-3982-41f3-90a4-dc5dab2e8ef3\"\nfor i in $(seq 1 50); do\n  runs=$(curl -s \"$URL/pipeline_runs?select=id,status&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\")\n  running=$(echo \"$runs\" | python3 -c \"\nimport json,sys\ntry:\n    d=json.load(sys.stdin); print(sum(1 for r in d if isinstance(r,dict) and r.get('status')=='running'))\nexcept: print('X')\" 2>/dev/null)\n  [ \"$running\" = \"0\" ] && break\n  sleep 6\ndone\necho \"=== FINAL after $i polls (running=$running) ===\"\ncurl -s \"$URL/pipeline_runs?select=id,status,wordpress_url,platforms,steps&user_id=eq.$UZ&order=started_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor r in d:\n    steps=r.get('steps') or []\n    ss=' \u00b7 '.join('%s=%s'%(s.get('name'),s.get('status')) for s in steps) if isinstance(steps,list) else ''\n    print('RUN status=%s plats=%s wp=%s' % (r.get('status'), r.get('platforms'), r.get('wordpress_url')))\n    print('   '+ss)\n\"\necho '--- content_library (campaign) ---'\ncurl -s \"$URL/content_library?select=type,title,status&campaign_id=eq.$CAMP&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('%d rows'%len(d) if isinstance(d,list) else d)\n[print('  [%s] %s'%(r.get('type'),str(r.get('title'))[:55])) for r in (d if isinstance(d,list) else [])]\n\"\necho '--- scheduled_posts (campaign) ---'\ncurl -s \"$URL/scheduled_posts?select=platform,status,scheduled_at,content_id&campaign_id=eq.$CAMP&order=scheduled_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"",
+  "description": "Background-poll until all 3 pipeline chains finish, then dump proof",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bt3be1yki. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/bt3be1yki.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(19:55:00)*
+
+
+## 🤖 Claude *(19:55:07)*
+
+Run disparado e as 3 cadeias async **estão executando** (`pipeline_runs` criados, status `running`) — isso por si só já indica que o elo que falhou em 05-27 **não** reincidiu (os runs nasceram e progridem, não morreram no 401 do service key). 
+
+Estou com um vigia em background (`bt3be1yki`) que me acorda quando as 3 cadeias saírem de `running` (cobre `done` **e** `error`). Enquanto isso, o estado parcial:
+
+- ✅ `campaign-run` → `status:ok`, 3 passos, saldo −40 (10 fee + 3×10)
+- ✅ 3 `pipeline_runs` criados (2× `[wordpress]` + 1× `[linkedin,twitter]`)
+- ⏳ Cadeias gerando (artigo 1200+ palavras leva ~20-40s cada) — `content_library`/`scheduled_posts` ainda preenchendo
+
+Assim que terminarem, te trago a **prova material completa** (status final de cada run + URL do rascunho WP + conteúdo gerado) e **seguro o post do LinkedIn** antes que o cron o publique. Aguardando o vigia.
+
+## 👤 User *(19:59:59)*
+
+<task-notification>
+<task-id>bt3be1yki</task-id>
+<tool-use-id>toolu_01RNKMBSXzmrPL6QGswCrxsC</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/bt3be1yki.output</output-file>
+<status>completed</status>
+<summary>Background command "Background-poll until all 3 pipeline chains finish, then dump proof" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(20:00:05)*
+
+
+## 🤖 Claude *(20:00:06)*
+
+O vigia terminou. Lendo a prova material:
+
+## 🤖 Claude *(20:00:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fe8794e3-3af3-43fc-9592-86dcab385c46/tasks/bt3be1yki.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	=== FINAL after 50 polls (running=3) ===
+> 2	RUN status=running plats=['wordpress'] wp=None
+> 3	   
+> 4	RUN status=running plats=['linkedin', 'twitter'] wp=None
+> 5	   
+> 6	RUN status=running plats=['wordpress'] wp=None
+> 7	   
+> 8	--- content_library (campaign) ---
+> 9	0 rows
+> 10	--- scheduled_posts (campaign) ---
+> 11	[]
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%

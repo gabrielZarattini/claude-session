@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 281
-> * **Sessões do Claude**: 249
+> * **Total de Sessões Registradas**: 283
+> * **Sessões do Claude**: 251
 > * **Sessões do Gemini**: 32
 
 ---
@@ -67,7 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-a973de25d5615561b]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a89e99af2c1c13575]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-a74daadda992ceb7c]]` - *2026-06-03*
-*   *... e mais 245 sessões nessa categoria.*
+*   *... e mais 247 sessões nessa categoria.*
 
 ---
 
@@ -268,6 +268,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-a89e99af2c1c13575]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a74daadda992ceb7c]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a699963bfb2415c80]]` (ClaudeSessions)
+*   `[[2026-06-03 - agent-a62755e5c0cd5c6a0]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a4d2dc373cac6c367]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a40dea0a7de6beb63]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a3f0811fdfb9f1425]]` (ClaudeSessions)
@@ -276,6 +277,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-a0510ed362cec6fd6]]` (ClaudeSessions)
 *   `[[2026-06-03 - agent-a03cbfb16a38aa951]]` (ClaudeSessions)
 *   `[[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]` (ClaudeSessions)
+*   `[[2026-06-03 - Wire OCO orders into Beholder automation engine]]` (ClaudeSessions)
 *   `[[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]` (ClaudeSessions)
 *   `[[2026-06-03 - Plan paid E2E cascade run and prioritize next features]]` (ClaudeSessions)
 *   `[[2026-06-03 - Monitor affiliate product updates and test results]]` (ClaudeSessions)
