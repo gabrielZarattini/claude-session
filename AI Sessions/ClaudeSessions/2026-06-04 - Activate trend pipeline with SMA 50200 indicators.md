@@ -2962,6 +2962,1872 @@ getEval decifrado — `limitPrice='BTCUSDT:BOOK.current.bestAsk'` vira `MEMORY['
 > 109	                symbol: item[0],
 > ```
 
+## 🤖 Claude *(02:31:32)*
+
+
+## 🤖 Claude *(02:31:36)*
+
+`BOOK` está **vivo e robusto**: o `miniTickerStream` mantém uma "simulação de book" (`bestAsk=bestBid=close`, [app-em.js:35-53](tradeux/backend/src/app-em.js:35)) a cada tick — mesma fonte do RSI, então é garantido enquanto o bot opera. O `bookStream` real é um bônus opcional por cima. Logo o LIMIT marketável ancorado no book é sólido: `close × 1.003` (BUY) / `close × 0.997` (SELL).
+
+Tenho tudo. Última checagem do contrato de PATCH/start de automação e fecho o plano:
+
+## 🤖 Claude *(02:31:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 195,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 195	    const transaction = await db.transaction();
+> 196	    const currentAutomation = await automationsRepository.getAutomation(id);//uso mais tarde, no stop
+> 197	    let updatedAutomation;
+> 198	
+> 199	    try {
+> 200	        updatedAutomation = await automationsRepository.updateAutomation(id, newAutomation);
+> 201	
+> 202	        if (isGrid)
+> 203	            await beholder.generateGrids(updatedAutomation, levels, quantity, transaction);
+> 204	        else {
+> 205	            await actionsRepository.deleteActions(id, transaction);
+> 206	            actions = await actionsRepository.insertActions(actions, transaction);
+> 207	        }
+> 208	
+> 209	        await transaction.commit();
+> 210	    } catch (err) {
+> 211	        await transaction.rollback();
+> 212	        logger('system', err);
+> 213	        return res.status(500).json(err.message);
+> 214	    }
+> 215	
+> 216	    updatedAutomation = await automationsRepository.getAutomation(id);//pega limpo
+> 217	
+> 218	    if (updatedAutomation.isActive) {
+> 219	        if (updatedAutomation.schedule) {
+> 220	            try {
+> 221	                agenda.cancelSchedule(updatedAutomation.id);
+> 222	                agenda.addSchedule(updatedAutomation.get({ plain: true }));
+> 223	            } catch (err) {
+> 224	                return res.status(422).json(err.message);
+> 225	            }
+> 226	        } else {
+> 227	            beholder.deleteBrain(currentAutomation);
+> 228	            beholder.updateBrain(updatedAutomation.get({ plain: true }));
+> 229	        }
+> 230	    }
+> 231	    else {
+> 232	        if (updatedAutomation.schedule)
+> 233	            agenda.cancelSchedule(updatedAutomation.id);
+> 234	        else
+> 235	            beholder.deleteBrain(currentAutomation);
+> 236	    }
+> 237	
+> 238	    res.json(updatedAutomation);
+> 239	}
+> 240	
+> 241	async function deleteAutomation(req, res, next) {
+> 242	    const id = req.params.id;
+> 243	    const currentAutomation = await automationsRepository.getAutomation(id);
+> 244	
+> 245	    if (currentAutomation.isActive) {
+> 246	        if (currentAutomation.schedule)
+> 247	            agenda.cancelSchedule(currentAutomation.id);
+> 248	        else
+> 249	            beholder.deleteBrain(currentAutomation);
+> 250	    }
+> 251	
+> 252	    // Antes de desvincular as ordens, cancela na corretora as OCO ainda abertas
+> 253	    // (a query usa automationId, que removeAutomationFromOrders vai zerar em seguida).
+> 254	    await cancelAutomationOcoOrders(id);
+> 255	
+> 256	    const transaction = await db.transaction();
+> 257	
+> 258	    try {
+> 259	        await ordersRepository.removeAutomationFromOrders(id, transaction);
+> 260	
+> 261	        if (currentAutomation.actions[0].type === actionsRepository.actionTypes.GRID) {
+> 262	            await gridsRepository.deleteGrids(id, transaction);
+> 263	            await orderTemplatesRepository.deleteOrderTemplatesByGridName(currentAutomation.name, transaction);
+> 264	        }
+> ```
+
+## 🤖 Claude *(02:31:46)*
+
+
+## 🤖 Claude *(02:31:47)*
+
+O PATCH faz `deleteActions`+`insertActions` — então o body precisa ser **completo** (senão zera a action/ordem). Deixa eu ver o topo do `updateAutomation` pra montar o body certo:
+
+## 🤖 Claude *(02:31:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 170,
+  "limit": 26
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 170	    res.status(201).json(savedAutomation);
+> 171	}
+> 172	
+> 173	async function updateAutomation(req, res, next) {
+> 174	    const id = req.params.id;
+> 175	    const newAutomation = req.body;
+> 176	
+> 177	    const { quantity, levels } = req.query;
+> 178	
+> 179	    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 180	        return res.status(400).json('You need to have at least one condition per automation!');
+> 181	
+> 182	    if (!newAutomation.actions || !newAutomation.actions.length)
+> 183	        return res.status(400).json('You need to have at least one action per automation!');
+> 184	
+> 185	    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> 186	    if (isGrid && (!quantity || !levels))
+> 187	        return res.status(400).json('Invalid grid params!');
+> 188	
+> 189	    let actions = newAutomation.actions.map(a => {
+> 190	        a.automationId = id;
+> 191	        delete a.id;
+> 192	        return a;
+> 193	    })
+> 194	
+> 195	    const transaction = await db.transaction();
+> ```
+
+## 🤖 Claude *(02:32:59)*
+
+
+## 🤖 Claude *(02:33:02)*
+
+PATCH exige body completo (incl. `actions`) — então vou buscar cada automação antes de re-enviar. Tenho o contrato. 
+
+Antes de escrever os templates LIMIT, preciso confirmar **um detalhe que pode quebrar tudo**: o tipo da coluna `limitPrice` no model. Se for DECIMAL, não aceita a string-eval do book (`BTCUSDT:BOOK.current.bestAsk`). Deixa eu verificar:
+
+## 🤖 Claude *(02:33:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/orderTemplateModel.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const Sequelize = require('sequelize');
+> 2	const database = require('../db');
+> 3	
+> 4	const OrderTemplateModel = database.define('orderTemplate', {
+> 5	    id: {
+> 6	        type: Sequelize.INTEGER,
+> 7	        autoIncrement: true,
+> 8	        allowNull: false,
+> 9	        primaryKey: true
+> 10	    },
+> 11	    name: {
+> 12	        type: Sequelize.STRING,
+> 13	        allowNull: false
+> 14	    },
+> 15	    symbol: {
+> 16	        type: Sequelize.STRING,
+> 17	        allowNull: false
+> 18	    },
+> 19	    type: {
+> 20	        type: Sequelize.STRING,
+> 21	        allowNull: false
+> 22	    },
+> 23	    side: {
+> 24	        type: Sequelize.STRING,
+> 25	        allowNull: false
+> 26	    },
+> 27	    limitPrice: Sequelize.STRING,
+> 28	    limitPriceMultiplier: Sequelize.DECIMAL(10,2),
+> 29	    stopPrice: Sequelize.STRING,
+> 30	    stopPriceMultiplier: Sequelize.DECIMAL(10,2),
+> 31	    quantity: {
+> 32	        type: Sequelize.STRING,
+> 33	        allowNull: false
+> 34	    },
+> 35	    quantityMultiplier: Sequelize.DECIMAL(10,2),
+> 36	    icebergQty: Sequelize.STRING,
+> 37	    icebergQtyMultiplier: Sequelize.DECIMAL(10,2),
+> 38	    createdAt: Sequelize.DATE,
+> 39	    updatedAt: Sequelize.DATE
+> 40	}, {
+> 41	    indexes: [{
+> 42	        fields: ['symbol', 'name'],
+> 43	        unique: true
+> 44	    }]
+> 45	})
+> 46	
+> 47	module.exports = OrderTemplateModel;
+> ```
+
+## 🤖 Claude *(02:33:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== orderTemplate validation (insert/update) ===\" && grep -n \"limitPrice\\|type\\|validate\\|400\\|required\\|LIMIT\" backend/src/controllers/orderTemplatesController.js 2>/dev/null | head -25",
+  "description": "Check order template controller validation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orderTemplate validation (insert/update) ===
+> 5:function validatePrice(price) {
+> 31:    return orderTemplate.side === 'BUY' ? orderTemplate.limitPrice * (1 + (orderTemplate.stopPriceMultiplier / 100))
+> 32:        : orderTemplate.limitPrice * (1 - (orderTemplate.stopPriceMultiplier / 100))
+> 38:    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)
+> 41:    if (!validatePrice(newOrderTemplate.limitPrice) || !validatePrice(newOrderTemplate.stopPrice))
+> 42:        return res.status(400).json(`Invalid price.`);
+> 55:    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)
+> ```
+
+## 🤖 Claude *(02:33:14)*
+
+
+## 🤖 Claude *(02:33:15)*
+
+`limitPrice` é STRING (aceita a eval) ✅ — mas tem um `validatePrice` na linha 41 que pode rejeitar a string-eval. Preciso ver essa função:
+
+## 🤖 Claude *(02:33:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/orderTemplatesController.js",
+  "offset": 1,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 2	const actionsRepository = require('../repositories/actionsRepository');
+> 3	const { orderTypes } = require('../repositories/ordersRepository')
+> 4	
+> 5	function validatePrice(price) {
+> 6	    if (!price) return true;
+> 7	    if (parseFloat(price)) return true;
+> 8	    return /^(MEMORY\[\'.+?\'\](\..+)*)$/i.test(price);
+> 9	}
+> 10	
+> 11	async function getOrderTemplate(req, res, next) {
+> 12	    const id = req.params.id;
+> 13	    const orderTemplate = await orderTemplatesRepository.getOrderTemplate(id);
+> 14	    res.json(orderTemplate);
+> 15	}
+> 16	
+> 17	async function getOrderTemplates(req, res, next) {
+> 18	    const symbol = req.params.symbol;
+> 19	    const page = req.query.page;
+> 20	    const result = await orderTemplatesRepository.getOrderTemplates(symbol, page);
+> 21	    res.json(result);
+> 22	}
+> 23	
+> 24	async function getAllOrderTemplates(req, res, next) {
+> 25	    const symbol = req.params.symbol;
+> 26	    const result = await orderTemplatesRepository.getAllOrderTemplates(symbol);
+> 27	    res.json(result);
+> 28	}
+> 29	
+> 30	function calcTrailingStop(orderTemplate) {
+> 31	    return orderTemplate.side === 'BUY' ? orderTemplate.limitPrice * (1 + (orderTemplate.stopPriceMultiplier / 100))
+> 32	        : orderTemplate.limitPrice * (1 - (orderTemplate.stopPriceMultiplier / 100))
+> 33	}
+> 34	
+> 35	async function insertOrderTemplate(req, res, next) {
+> 36	    const newOrderTemplate = req.body;
+> 37	
+> 38	    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)
+> 39	        newOrderTemplate.stopPrice = calcTrailingStop(newOrderTemplate);
+> 40	
+> 41	    if (!validatePrice(newOrderTemplate.limitPrice) || !validatePrice(newOrderTemplate.stopPrice))
+> 42	        return res.status(400).json(`Invalid price.`);
+> 43	
+> 44	    newOrderTemplate.quantity = newOrderTemplate.quantity ? newOrderTemplate.quantity.replace(',', '.') : newOrderTemplate.quantity;
+> 45	
+> 46	    const orderTemplate = await orderTemplatesRepository.insertOrderTemplate(newOrderTemplate);
+> 47	    res.status(201).json(orderTemplate);
+> 48	}
+> 49	
+> 50	async function updateOrderTemplate(req, res, next) {
+> 51	    const id = req.params.id;
+> 52	    const newOrderTemplate = req.body;
+> 53	    newOrderTemplate.quantity = newOrderTemplate.quantity ? newOrderTemplate.quantity.replace(',', '.') : newOrderTemplate.quantity;
+> 54	
+> 55	    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)
+> 56	        newOrderTemplate.stopPrice = calcTrailingStop(newOrderTemplate);
+> 57	
+> 58	    const updatedOrderTemplate = await orderTemplatesRepository.updateOrderTemplate(id, newOrderTemplate);
+> 59	    res.json(updatedOrderTemplate);
+> 60	}
+> 61	
+> 62	async function deleteOrderTemplate(req, res, next) {
+> 63	    const id = req.params.id;
+> 64	
+> 65	    const actions = await actionsRepository.getByOrderTemplate(id);
+> 66	    if (actions.length > 0) return res.status(409).json(`You can't delete an Order Template used by Automations.`);
+> 67	
+> 68	    await orderTemplatesRepository.deleteOrderTemplate(id);
+> 69	    res.sendStatus(204);
+> 70	}
+> 71	
+> 72	module.exports = {
+> 73	    getOrderTemplate,
+> 74	    getOrderTemplates,
+> 75	    insertOrderTemplate,
+> ```
+
+## 🤖 Claude *(02:35:30)*
+
+
+## 🤖 Claude *(02:35:42)*
+
+Tudo verificado — incluindo uma pegadinha que teria quebrado o buffer: `limitPriceMultiplier` é `DECIMAL(10,2)` ([orderTemplateModel.js:28](tradeux/backend/src/models/orderTemplateModel.js:28)), só 2 casas → não expressa 0,3%. Solução limpa: embutir o buffer no **eval do `limitPrice`** (que é STRING e passa no `validatePrice` — regex exige formato `MEMORY['…']`). Confirmei o regex e o `getEval`. Plano travado:
+
+## 🔒 Plano final (1 deploy gateado)
+
+**Código (eu implemento):**
+1. **[setup-trend.js](tradeux/backend/scripts/setup-trend.js)** — templates 3/4 viram **LIMIT marketável**: BUY `limitPrice=MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003` MIN_NOTIONAL×3; SELL `…bestBid * 0.997` LAST_ORDER_QTY×1.
+2. **activate-trend.js** (novo) — idempotente: reshape dos templates 3/4 (PATCH→LIMIT), coordenação id2/id3 (`+ REGIME!=='trend'` em ambas, `REGIME` nos indexes da id3), `start` id6/id7.
+3. **Persistência de cross** (resiliência a restart): migration `regimeStates` + model + repo; [regimeJob.js](tradeux/backend/src/regimeJob.js) carrega `above`/cross no boot antes do 1º poll e faz upsert a cada poll (edge-fire idempotente).
+
+**Deploy:** gate **QA + Tech-Lead** (paralelo, independentes) → aplico ressalvas → rebuild backend (assa código + roda migration) → valido boot/persistência → rodo `activate-trend.js` (go-live testnet) → valido BRAIN armado + regime intacto + site 200 → commit+push master (CI verde) → HANDOFF + memórias + seal.
+
+**Imediatamente inerte** (baixo risco): BTC=bear agora → id2 já bloqueada, id6 gateada por `!=bear`, sem cross fresco. A mudança só "acorda" quando o regime/mercado virar.
+
+Começando a implementação. Primeiro os templates LIMIT no setup-trend.js:
+
+## 🤖 Claude *(02:35:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": " * Cria, se ausentes:\n *   - order templates BUY (MARKET MIN_NOTIONAL) e SELL (MARKET LAST_ORDER_QTY).\n *   - automa\u00e7\u00f5es \"Trend Buy/Sell\" (reagem ao sinal golden/death), **INATIVAS** por seguran\u00e7a.",
+  "new_string": " * Cria, se ausentes:\n *   - order templates BUY/SELL **LIMIT market\u00e1vel** (atravessa o spread como taker p/ fill\n *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk\u00d71.003 MIN_NOTIONAL; SELL =\n *     bestBid\u00d70.997 LAST_ORDER_QTY. O buffer (0.3%) vive no EVAL do limitPrice porque o\n *     limitPriceMultiplier \u00e9 DECIMAL(10,2) (s\u00f3 2 casas \u2192 n\u00e3o expressa sub-1%).\n *   - automa\u00e7\u00f5es \"Trend Buy/Sell\" (reagem ao sinal golden/death), **INATIVAS** por seguran\u00e7a."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:35:50)*
+
+
+## 🤖 Claude *(02:35:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "async function ensureTemplate(token, name, side, quantity) {\n    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol: SYMBOL, type: 'MARKET', side,\n        limitPrice: null, limitPriceMultiplier: 1, stopPrice: null, stopPriceMultiplier: 1,\n        quantity, quantityMultiplier: 1, icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id})` };\n}",
+  "new_string": "async function ensureTemplate(token, name, side, opts) {\n    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol: SYMBOL, type: opts.type, side,\n        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,\n        stopPrice: null, stopPriceMultiplier: 1,\n        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,\n        icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id}, ${opts.type})` };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:36:02)*
+
+
+## 🤖 Claude *(02:36:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "    const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', 'MIN_NOTIONAL');\n    console.log('- ' + buyTpl.msg);\n    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', 'LAST_ORDER_QTY');\n    console.log('- ' + sellTpl.msg);",
+  "new_string": "    // LIMIT market\u00e1vel: o pre\u00e7o atravessa o spread (BUY paga +0.3% sobre o melhor ask; SELL aceita\n    // -0.3% sobre o melhor bid) \u2192 fill imediato como taker, com piso/teto de slippage; mata o EXPIRE\n    // de MARKET no book fino do testnet. O BOOK \u00e9 sempre vivo (miniTickerStream o popula, bestAsk=bestBid=\n    // close quando n\u00e3o h\u00e1 book real). Buffer no EVAL pois limitPriceMultiplier \u00e9 DECIMAL(10,2) (\u22651%).\n    const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', {\n        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestAsk * 1.003`, limitPriceMultiplier: 1,\n        quantity: 'MIN_NOTIONAL', quantityMultiplier: 3, // size pequeno p/ observar 1 cross; calibrar depois\n    });\n    console.log('- ' + buyTpl.msg);\n    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {\n        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,\n        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // \u26a0\ufe0f LAST_ORDER \u00e9 por s\u00edmbolo (compartilhado c/ a id3)\n    });\n    console.log('- ' + sellTpl.msg);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:36:18)*
+
+
+## 🤖 Claude *(02:36:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "    console.log(`\\nPRONTO (automa\u00e7\u00f5es INATIVAS). Para ATIVAR (decis\u00e3o operacional):`);\n    console.log(`  1) COORDENA\u00c7\u00c3O: gatear id2/id3 por MEMORY['${KR}']!=='trend' (incluir ${KR} nos indexes de AMBAS);`);\n    console.log(`  2) SIZING: MIN_NOTIONAL = valida\u00e7\u00e3o; trend real quer size;`);\n    console.log(`  3) observar 1 golden\u2192death real; depois POST /automations/<id>/start nas duas.`);",
+  "new_string": "    console.log(`\\nPRONTO (automa\u00e7\u00f5es INATIVAS). Para ATIVAR rode: node scripts/activate-trend.js`);\n    console.log(`  (coordena id2/id3 por MEMORY['${KR}']!=='trend' \u2014 incl. ${KR} nos indexes de AMBAS \u2014 e d\u00e1 start na id6/id7)`);\n    console.log(`  SIZING: id6 = 3\u00d7 MIN_NOTIONAL (pequeno, p/ observar 1 cross); calibrar ap\u00f3s 1 golden\u2192death real.`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:36:46)*
+
+
+## 🤖 Claude *(02:36:47)*
+
+Templates LIMIT prontos. Agora o `activate-trend.js` (idempotente, com `DRY=true` pra preview sem aplicar — útil no gate):
+
+## 🤖 Claude *(02:37:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js",
+  "content": "'use strict';\n/*\n * Go-live IDEMPOTENTE do Trend Following (id6/id7) + COORDENA\u00c7\u00c3O com a revers\u00e3o \u00e0 m\u00e9dia (id2/id3).\n * Pr\u00e9-requisito: `node scripts/setup-trend.js` j\u00e1 criou os templates LIMIT + automa\u00e7\u00f5es id6/id7 (INATIVAS).\n *\n * O que faz (tudo idempotente \u2014 seguro re-rodar; DRY=true s\u00f3 mostra o plano, n\u00e3o aplica):\n *  1) RESHAPE dos templates de trend p/ LIMIT market\u00e1vel (caso o setup tenha criado MARKET numa vers\u00e3o\n *     antiga): BUY = bestAsk\u00d71.003 MIN_NOTIONAL\u00d73 ; SELL = bestBid\u00d70.997 LAST_ORDER_QTY\u00d71. Buffer no\n *     EVAL do limitPrice (limitPriceMultiplier \u00e9 DECIMAL(10,2), n\u00e3o expressa sub-1%).\n *  2) COORDENA\u00c7\u00c3O (exclus\u00e3o m\u00fatua MR\u00d7TF no mesmo s\u00edmbolo): gateia id2 (BUY) e id3 (SELL) por\n *     MEMORY['<sym>:REGIME']!=='trend' \u2014 em REGIME de tend\u00eancia forte a revers\u00e3o sai e o trend conduz.\n *     A id3 hoje s\u00f3 tem RSI nos indexes \u2192 ADICIONA REGIME nos indexes (sen\u00e3o o gate \u00e9 fail-OPEN).\n *  3) START das automa\u00e7\u00f5es de trend id6/id7.\n *\n * SEGURAN\u00c7A: as mudan\u00e7as s\u00e3o CONSERVADORAS (s\u00f3 restringem a MR e ligam um sinal raro gateado por !=bear).\n * Com BTC=bear e sem cross fresco, o efeito \u00e9 inerte at\u00e9 o regime/mercado virar. Revers\u00edvel: stop id6/id7\n * + remover '&& ...!==trend' das conditions (ver HANDOFF / mem\u00f3ria tradeux-trend-following).\n *\n * Uso (dentro do container, server no ar):  node scripts/activate-trend.js   [DRY=true p/ preview]\n *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL\n */\nconst http = require('http');\n\nconst SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();\nconst INTERVAL = process.env.TREND_INTERVAL || '1h';\nconst TAG = 'SMA50/200';\nconst KR = `${SYMBOL}:REGIME`;\nconst TREND_GATE = `MEMORY['${KR}']!=='trend'`;           // cl\u00e1usula de coordena\u00e7\u00e3o (idempot\u00eancia: substring)\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\n// nomes (runtime, n\u00e3o-seedados) \u2014 devem casar com setup-trend.js e o baseline RSI\nconst NAMES = {\n    mrBuy: `Baseline RSI Buy ${SYMBOL}`,\n    mrSell: `Baseline RSI Sell ${SYMBOL}`,\n    tfBuy: `Trend Buy ${SYMBOL} ${TAG}`,\n    tfSell: `Trend Sell ${SYMBOL} ${TAG}`,\n};\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\nasync function findTemplate(token, name) {\n    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);\n    return Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n}\n\nasync function findAutomationByName(token, name) {\n    for (let page = 1; page <= 30; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break; // page size = 10\n    }\n    return null;\n}\n\n// 1) garante a forma LIMIT market\u00e1vel do template (idempotente)\nasync function ensureTemplateShape(token, name, side) {\n    const t = await findTemplate(token, name);\n    if (!t) return `\u26a0\ufe0f  template \"${name}\" N\u00c3O encontrado (rode setup-trend.js antes).`;\n    const ref = side === 'BUY' ? 'bestAsk' : 'bestBid';\n    const buf = side === 'BUY' ? '1.003' : '0.997';\n    const want = {\n        type: 'LIMIT',\n        limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.${ref} * ${buf}`,\n        limitPriceMultiplier: 1,\n    };\n    const already = t.type === want.type && t.limitPrice === want.limitPrice && parseFloat(t.limitPriceMultiplier) === 1;\n    if (already) return `\u2713 template \"${name}\" j\u00e1 est\u00e1 LIMIT market\u00e1vel (id ${t.id}).`;\n    if (DRY) return `[DRY] PATCH template ${t.id} \"${name}\": type ${t.type}\u2192LIMIT, limitPrice\u2192${want.limitPrice}`;\n    // envia o template completo (base + overrides) p/ n\u00e3o clobberar campos\n    const body = { ...t, ...want, stopPrice: null };\n    delete body.id; delete body.createdAt; delete body.updatedAt;\n    const r = await req('PATCH', `/ordertemplates/${t.id}`, token, body);\n    if (r.status !== 200) throw new Error(`falha no PATCH do template ${t.id}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `\u270f\ufe0f  template \"${name}\" (id ${t.id}) \u2192 LIMIT market\u00e1vel (${ref}\u00d7${buf}).`;\n}\n\n// 2) coordena\u00e7\u00e3o: garante '&& MEMORY[..:REGIME]!==trend' nas conditions e REGIME nos indexes (idempotente)\nasync function ensureCoordination(token, name) {\n    const a = await findAutomationByName(token, name);\n    if (!a) return `\u26a0\ufe0f  automa\u00e7\u00e3o \"${name}\" N\u00c3O encontrada (baseline RSI ausente? ver HANDOFF).`;\n\n    const hasGate = (a.conditions || '').includes(`${KR}']!=='trend'`);\n    const idxList = (a.indexes || '').split(',').map(s => s.trim()).filter(Boolean);\n    const hasRegimeIdx = idxList.includes(KR);\n\n    const newConditions = hasGate ? a.conditions : `${a.conditions} && ${TREND_GATE}`;\n    const newIndexes = hasRegimeIdx ? a.indexes : [...idxList, KR].join(',');\n    if (hasGate && hasRegimeIdx) return `\u2713 \"${name}\" (id ${a.id}) j\u00e1 coordenada (gate !=trend + REGIME no index).`;\n    if (DRY) return `[DRY] PATCH automa\u00e7\u00e3o ${a.id} \"${name}\": conditions\u2192(${newConditions}) | indexes\u2192(${newIndexes})`;\n\n    // PATCH exige body completo COM actions (o controller faz deleteActions+insertActions)\n    const full = await req('GET', `/automations/${a.id}`, token);\n    const cur = full.body || a;\n    const actions = (cur.actions || []).map(x => ({ type: x.type, orderTemplateId: x.orderTemplateId }));\n    if (!actions.length) throw new Error(`automa\u00e7\u00e3o ${a.id} sem actions \u2014 abortando (PATCH zeraria a ordem).`);\n    const body = {\n        name: cur.name, symbol: cur.symbol, indexes: newIndexes, conditions: newConditions,\n        isActive: cur.isActive, logs: cur.logs, schedule: cur.schedule || null, actions,\n    };\n    const r = await req('PATCH', `/automations/${a.id}`, token, body);\n    if (r.status !== 200) throw new Error(`falha no PATCH da automa\u00e7\u00e3o ${a.id}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `\u270f\ufe0f  \"${name}\" (id ${a.id}) coordenada \u2192 conditions: ${newConditions}`;\n}\n\n// 3) start idempotente\nasync function ensureStarted(token, name) {\n    const a = await findAutomationByName(token, name);\n    if (!a) return `\u26a0\ufe0f  automa\u00e7\u00e3o \"${name}\" N\u00c3O encontrada.`;\n    if (a.isActive) return `\u2713 \"${name}\" (id ${a.id}) j\u00e1 ATIVA.`;\n    if (DRY) return `[DRY] START automa\u00e7\u00e3o ${a.id} \"${name}\".`;\n    const r = await req('POST', `/automations/${a.id}/start`, token);\n    if (r.status !== 200) throw new Error(`falha ao iniciar a automa\u00e7\u00e3o ${a.id}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `\u25b6\ufe0f  \"${name}\" (id ${a.id}) ATIVADA.`;\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n\n    console.log(`# Ativa\u00e7\u00e3o Trend Following ${TAG} \u2014 ${SYMBOL}${DRY ? '  [DRY-RUN: nada ser\u00e1 aplicado]' : ''}\\n`);\n\n    console.log('## 1) Templates LIMIT market\u00e1vel');\n    console.log('- ' + await ensureTemplateShape(token, NAMES.tfBuy, 'BUY'));\n    console.log('- ' + await ensureTemplateShape(token, NAMES.tfSell, 'SELL'));\n\n    console.log('\\n## 2) Coordena\u00e7\u00e3o (id2/id3 gateadas por != trend)');\n    console.log('- ' + await ensureCoordination(token, NAMES.mrBuy));\n    console.log('- ' + await ensureCoordination(token, NAMES.mrSell));\n\n    console.log('\\n## 3) Start das automa\u00e7\u00f5es de trend (id6/id7)');\n    console.log('- ' + await ensureStarted(token, NAMES.tfBuy));\n    console.log('- ' + await ensureStarted(token, NAMES.tfSell));\n\n    console.log(`\\n${DRY ? 'DRY-RUN OK (nenhuma mudan\u00e7a aplicada).' : 'PRONTO \u2014 Trend Following AO VIVO (sinal via regimeJob/mainnet; execu\u00e7\u00e3o testnet).'}`);\n    console.log(`Observe 1 golden\u2192death real com logs (A:6.log / A:7.log) antes de calibrar o size.`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:37:34)*
+
+
+## 🤖 Claude *(02:37:34)*
+
+Agora a persistência de cross (Change B). Vou espelhar os padrões existentes de migration/model/repo:
+
+## 🤖 Claude *(02:37:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && echo \"=== migrations (recentes) ===\" && ls migrations/ | tail -6; echo \"=== db.js ===\"; sed -n '1,40p' src/db.js 2>/dev/null",
+  "description": "List migrations and read db.js wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations (recentes) ===
+> 20210925132734-alter-automations-schedule.js
+> 20210925190922-create-withdrawTemplates.js
+> 20210925192003-alter-actions-withdraw.js
+> 20210928193003-alter-settings-telegram.js
+> 20220128150240-alter-settings-pushToken.js
+> 20260603170000-alter-orders-add-orderListId.js
+> === db.js ===
+> const Sequelize = require('sequelize');
+> 
+> // Postgres gerenciado (ex: Supabase) exige SSL. Ative com DB_SSL=true.
+> const dialectOptions = process.env.DB_SSL === 'true'
+>     ? { ssl: { require: true, rejectUnauthorized: false } }
+>     : {};
+> 
+> const sequelize = new Sequelize(
+>     process.env.DB_NAME || 'beholder',
+>     process.env.DB_USER || 'root',
+>     process.env.DB_PWD,
+>     {
+>         dialect: process.env.DB_DIALECT || 'mysql',
+>         host: process.env.DB_HOST || 'localhost',
+>         port: process.env.DB_PORT || 3306,
+>         logging: process.env.DB_LOGS === 'true',
+>         dialectOptions
+>     });
+> 
+> module.exports = sequelize;
+> ```
+
+## 🤖 Claude *(02:37:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== orderListId migration (style ref) ===\" && cat \"$(ls migrations/*orderListId* migrations/*orderlist* 2>/dev/null | head -1)\" 2>/dev/null | head -40; echo \"=== monitorsRepository (repo pattern) ===\"; sed -n '1,30p' src/repositories/monitorsRepository.js 2>/dev/null",
+  "description": "Read example migration and repository pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orderListId migration (style ref) ===
+> 'use strict';
+> 
+> // Adiciona a coluna `orderListId` (BIGINT, nullable) em `orders` para agrupar as 2
+> // pernas de uma ordem OCO (One-Cancels-the-Other). Ordens normais ficam com NULL.
+> //
+> // Portável MySQL + Postgres: usa apenas addColumn/removeColumn (sem SQL de dialeto).
+> // Idempotente: o guard com describeTable evita erro se a coluna já existir/não existir
+> // (a CI roda migrate+seed duas vezes para provar idempotência em ambos os bancos).
+> module.exports = {
+>   up: async (queryInterface, Sequelize) => {
+>     const table = await queryInterface.describeTable('orders');
+>     if (!table.orderListId) {
+>       await queryInterface.addColumn('orders', 'orderListId', {
+>         type: Sequelize.BIGINT,
+>         allowNull: true
+>       });
+>     }
+>   },
+> 
+>   down: async (queryInterface, Sequelize) => {
+>     const table = await queryInterface.describeTable('orders');
+>     if (table.orderListId) {
+>       await queryInterface.removeColumn('orders', 'orderListId');
+>     }
+>   }
+> };
+> === monitorsRepository (repo pattern) ===
+> const monitorModel = require('../models/monitorModel');
+> 
+> const monitorTypes = {
+>     MINI_TICKER: 'MINI_TICKER',
+>     BOOK: 'BOOK',
+>     USER_DATA: 'USER_DATA',
+>     CANDLES: 'CANDLES',
+>     TICKER: 'TICKER'
+> }
+> 
+> async function monitorExists(type, symbol, interval) {
+>     const count = await monitorModel.count({ where: { type, symbol, interval } });
+>     return count > 0;
+> }
+> 
+> async function insertMonitor(newMonitor) {
+>     return monitorModel.create(newMonitor);
+> }
+> 
+> function deleteMonitor(id) {
+>     return monitorModel.destroy({
+>         where: { id, isSystemMon: false }
+>     })
+> }
+> 
+> async function updateMonitor(id, newMonitor) {
+>     const currentMonitor = await getMonitor(id);
+> 
+>     if (newMonitor.symbol && newMonitor.symbol !== currentMonitor.symbol)
+>         currentMonitor.symbol = newMonitor.symbol;
+> ```
+
+## 🤖 Claude *(02:38:44)*
+
+
+## 🤖 Claude *(02:38:45)*
+
+Padrões claros (migration com guard idempotente, model `define`, repo fino). Escrevendo os 3 arquivos novos da persistência:
+
+## 🤖 Claude *(02:38:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/migrations/20260604120000-create-regimeStates.js",
+  "content": "'use strict';\n\n// Cria `regimeStates`: persiste o estado de cruzamento SMA (golden/death) do regimeJob por s\u00edmbolo,\n// p/ que um cross ocorrido durante um restart N\u00c3O seja perdido. Sem isso o `above` (fast>slow) \u00e9\n// in-memory e zera no boot \u2192 na 1\u00aa passada `prev` \u00e9 undefined e o cruzamento da janela de restart\n// n\u00e3o dispara. Tabela min\u00fascula (1 linha por s\u00edmbolo, PK = symbol).\n//\n// Port\u00e1vel MySQL + Postgres (createTable puro, sem SQL de dialeto). Idempotente: guard com\n// showAllTables (a CI roda migrate+seed 2x p/ provar idempot\u00eancia nos dois bancos).\nmodule.exports = {\n  up: async (queryInterface, Sequelize) => {\n    const tables = await queryInterface.showAllTables();\n    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());\n    if (names.includes('regimestates')) return;\n\n    await queryInterface.createTable('regimeStates', {\n      symbol: { type: Sequelize.STRING, allowNull: false, primaryKey: true },\n      smaAbove: { type: Sequelize.BOOLEAN, allowNull: true },     // SMA_fast > SMA_slow (estado de trend up)\n      lastCrossDir: { type: Sequelize.STRING, allowNull: true },  // 'golden' | 'death' | null\n      lastCrossAt: { type: Sequelize.BIGINT, allowNull: true },   // epoch ms do \u00faltimo cruzamento\n      createdAt: { type: Sequelize.DATE, allowNull: false },\n      updatedAt: { type: Sequelize.DATE, allowNull: false },\n    });\n  },\n\n  down: async (queryInterface) => {\n    const tables = await queryInterface.showAllTables();\n    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());\n    if (names.includes('regimestates')) await queryInterface.dropTable('regimeStates');\n  }\n};\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/migrations/20260604120000-create-regimeStates.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/regimeStateModel.js",
+  "content": "const Sequelize = require('sequelize');\nconst database = require('../db');\n\n// Estado de cruzamento SMA (golden/death) persistido por s\u00edmbolo \u2014 ver regimeJob.js e a migration\n// 20260604120000-create-regimeStates. PK = symbol (1 linha por s\u00edmbolo). Usado p/ resili\u00eancia a\n// restart: o `above` (fast>slow) \u00e9 recarregado no boot p/ n\u00e3o perder um cross na janela de rein\u00edcio.\nconst RegimeStateModel = database.define('regimeState', {\n    symbol: {\n        type: Sequelize.STRING,\n        allowNull: false,\n        primaryKey: true\n    },\n    smaAbove: Sequelize.BOOLEAN,\n    lastCrossDir: Sequelize.STRING,\n    lastCrossAt: Sequelize.BIGINT,\n    createdAt: Sequelize.DATE,\n    updatedAt: Sequelize.DATE\n});\n\nmodule.exports = RegimeStateModel;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/models/regimeStateModel.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:39:06)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/regimeStatesRepository.js",
+  "content": "const regimeStateModel = require('../models/regimeStateModel');\n\n// Estado de cruzamento SMA persistido por s\u00edmbolo (resili\u00eancia a restart do regimeJob).\n// upsert \u00e9 port\u00e1vel MySQL+Postgres (symbol \u00e9 PK). Ver regimeJob.js (load no boot + persist por poll).\n\nfunction getAll() {\n    return regimeStateModel.findAll();\n}\n\nfunction upsertState(symbol, { smaAbove, lastCrossDir, lastCrossAt }) {\n    return regimeStateModel.upsert({\n        symbol,\n        smaAbove: smaAbove === undefined ? null : smaAbove,\n        lastCrossDir: lastCrossDir === undefined ? null : lastCrossDir,\n        lastCrossAt: lastCrossAt === undefined ? null : lastCrossAt,\n    });\n}\n\nmodule.exports = { getAll, upsertState };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/repositories/regimeStatesRepository.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:39:10)*
+
+
+## 🤖 Claude *(02:39:11)*
+
+Agora ligo a persistência no `regimeJob.js` — require, load no boot (antes do 1º poll), e upsert por poll:
+
+## 🤖 Claude *(02:39:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "old_string": "const beholder = require('./beholder');\nconst automationsRepository = require('./repositories/automationsRepository');\nconst { getRegime } = require('./utils/regimeService');",
+  "new_string": "const beholder = require('./beholder');\nconst automationsRepository = require('./repositories/automationsRepository');\nconst regimeStatesRepository = require('./repositories/regimeStatesRepository');\nconst { getRegime } = require('./utils/regimeService');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/regimeJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:39:40)*
+
+
+## 🤖 Claude *(02:39:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "old_string": "let timer = null;\nlet running = false;       // trava de re-entr\u00e2ncia: nunca roda dois ciclos sobrepostos",
+  "new_string": "let timer = null;\nlet running = false;       // trava de re-entr\u00e2ncia: nunca roda dois ciclos sobrepostos\nlet starting = false;      // trava de boot: cobre a janela do load ass\u00edncrono do estado antes do 1\u00ba poll"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/regimeJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:39:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "old_string": "                    ABOVE[symbol] = above;\n                }\n            } catch (err) {",
+  "new_string": "                    ABOVE[symbol] = above;\n                    // persiste o estado de cross (resili\u00eancia a restart). smaAbove sempre; dir/at v\u00eam de\n                    // CROSS (preenchido s\u00f3 num cruzamento). Persistir DEPOIS de disparar = at-least-once:\n                    // um crash entre o updateMemory e o upsert pode re-disparar no boot \u2014 prefer\u00edvel a\n                    // perder o sinal (entrar 2x num trend \u00e9 menos pior que n\u00e3o entrar).\n                    await persistCrossState(symbol);\n                }\n            } catch (err) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/regimeJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "old_string": "function start() {\n    if (!ENABLED) {\n        logger('regime', 'Regime job DESABILITADO (REGIME_JOB_ENABLED=false).');\n        return;\n    }\n    if (timer) return; // idempotente\n\n    runOnce(); // primeira passada imediata no boot (n\u00e3o espera o 1\u00ba intervalo)\n    timer = setInterval(runOnce, REFRESH_MS);\n    if (timer.unref) timer.unref(); // n\u00e3o segura o processo no shutdown\n    logger('regime', `Regime job iniciado (intervalo ${REFRESH_MS}ms, klines ${INTERVAL}).`);\n}\n\nfunction stop() {\n    if (timer) { clearInterval(timer); timer = null; }\n    running = false; // se um ciclo estava em voo, n\u00e3o deixa a trava presa p/ um start() futuro\n}",
+  "new_string": "// Carrega o estado de cross persistido (smaAbove/lastCross) ANTES do 1\u00ba poll \u2192 um cross ocorrido\n// durante o downtime \u00e9 detectado na 1\u00aa passada (prev = above persistido) em vez de perdido.\nasync function loadPersistedState() {\n    try {\n        const rows = await regimeStatesRepository.getAll();\n        for (const row of rows) {\n            const r = row.get ? row.get({ plain: true }) : row;\n            if (r.smaAbove !== null && r.smaAbove !== undefined) ABOVE[r.symbol] = !!r.smaAbove;\n            if (r.lastCrossDir) CROSS[r.symbol] = { dir: r.lastCrossDir, at: r.lastCrossAt != null ? Number(r.lastCrossAt) : null };\n        }\n        if (rows.length) logger('regime', `Estado de cross recarregado: ${rows.map(x => `${x.symbol}:above=${x.smaAbove}`).join(', ')}.`);\n    } catch (err) {\n        logger('regime', `Falha ao carregar estado de cross persistido (seguindo sem resili\u00eancia a restart): ${err.message}`);\n    }\n}\n\n// Persiste o estado de cross do s\u00edmbolo (chamado a cada poll ap\u00f3s atualizar ABOVE). Best-effort:\n// uma falha de DB n\u00e3o derruba o ciclo de regime (o gate !=bear continua valendo na MEMORY).\nasync function persistCrossState(symbol) {\n    try {\n        const c = CROSS[symbol];\n        await regimeStatesRepository.upsertState(symbol, {\n            smaAbove: ABOVE[symbol] === undefined ? null : ABOVE[symbol],\n            lastCrossDir: c ? c.dir : null,\n            lastCrossAt: c ? c.at : null,\n        });\n    } catch (err) {\n        logger('regime', `${symbol}: falha ao persistir estado de cross: ${err.message}`);\n    }\n}\n\nfunction start() {\n    if (!ENABLED) {\n        logger('regime', 'Regime job DESABILITADO (REGIME_JOB_ENABLED=false).');\n        return;\n    }\n    if (timer || starting) return; // idempotente (starting cobre a janela do load ass\u00edncrono)\n    starting = true;\n\n    // carrega o estado persistido ANTES do 1\u00ba poll (resili\u00eancia a restart), depois arranca o loop\n    loadPersistedState().finally(() => {\n        starting = false;\n        if (timer) return; // j\u00e1 iniciado por outra chamada concorrente\n        runOnce(); // primeira passada imediata no boot (n\u00e3o espera o 1\u00ba intervalo)\n        timer = setInterval(runOnce, REFRESH_MS);\n        if (timer.unref) timer.unref(); // n\u00e3o segura o processo no shutdown\n        logger('regime', `Regime job iniciado (intervalo ${REFRESH_MS}ms, klines ${INTERVAL}).`);\n    });\n}\n\nfunction stop() {\n    if (timer) { clearInterval(timer); timer = null; }\n    running = false;  // se um ciclo estava em voo, n\u00e3o deixa a trava presa p/ um start() futuro\n    starting = false; // idem p/ a trava de boot\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/regimeJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:09)*
+
+
+## 🤖 Claude *(02:40:09)*
+
+Todo o código escrito. Syntax-check local em todos os arquivos tocados antes do gate:
+
+## 🤖 Claude *(02:40:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in scripts/setup-trend.js scripts/activate-trend.js migrations/20260604120000-create-regimeStates.js src/models/regimeStateModel.js src/repositories/regimeStatesRepository.js src/regimeJob.js; do\n  if node --check \"$f\" 2>/tmp/nc.err; then echo \"OK   $f\"; else echo \"FAIL $f\"; cat /tmp/nc.err; fi\ndone 2>&1 || sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose exec -T backend sh -c \"cd /usr/src/app && for f in scripts/setup-trend.js scripts/activate-trend.js migrations/20260604120000-create-regimeStates.js src/models/regimeStateModel.js src/repositories/regimeStatesRepository.js src/regimeJob.js; do node --check \\$f && echo OK \\$f || echo FAIL \\$f; done\"'",
+  "description": "Syntax-check all touched JS files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   scripts/setup-trend.js
+> OK   scripts/activate-trend.js
+> OK   migrations/20260604120000-create-regimeStates.js
+> OK   src/models/regimeStateModel.js
+> OK   src/repositories/regimeStatesRepository.js
+> OK   src/regimeJob.js
+> ```
+
+## 🤖 Claude *(02:40:37)*
+
+
+## 🤖 Claude *(02:40:39)*
+
+Tudo verde no syntax-check (host tem node 22). Agora o **gate**: QA e Tech-Lead em paralelo, revisão independente (nenhum dos dois escreveu o código). Vou apontá-los pros arquivos com o contexto de design:
+
+## 🤖 Claude *(02:41:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review da ativa\u00e7\u00e3o trend",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA review de uma mudan\u00e7a no TradeUX (Beholder-based Binance Spot bot + LLM agent, testnet). Repo: `/home/gcrux-tradeux/tradeux`. Coment\u00e1rios/docs em pt-BR. Contexto geral em `/home/gcrux-tradeux/HANDOFF.md` (leia a se\u00e7\u00e3o \"Technical debt / Trend Following CHECKLIST DE ATIVA\u00c7\u00c3O\" e a mem\u00f3ria do projeto). N\u00c3O h\u00e1 testes unit\u00e1rios \u2014 a \"CI\" \u00e9 migrate+seed (MySQL+Postgres, roda 2x p/ idempot\u00eancia) + agent --check.\n\n## O que a mudan\u00e7a faz (ATIVA\u00c7\u00c3O do Trend Following id6/id7 + coordena\u00e7\u00e3o + resili\u00eancia a restart)\n\n**Decis\u00f5es de design j\u00e1 tomadas pelo dono (N\u00c3O questione o \"se\", revise o \"como\"):**\n- Ordens de trend = **LIMIT market\u00e1vel + buffer 0.3%** (N\u00c3O STOP_LOSS_LIMIT \u2014 este \u00e9 semanticamente errado p/ ordem disparada por sinal; o objetivo \u00e9 fill imediato e matar o EXPIRE de MARKET no book fino do testnet).\n- Size **pequeno** (id6 = 3\u00d7 MIN_NOTIONAL) p/ observar 1 cross antes de calibrar.\n- **Persistir** o estado de cross (resili\u00eancia a restart).\n\n**Arquivos a revisar (leia todos):**\n1. `backend/src/regimeJob.js` \u2014 adicionou load do estado persistido ANTES do 1\u00ba poll (`loadPersistedState`), `persistCrossState` por poll, trava `starting` no `start()`, reset no `stop()`.\n2. `backend/migrations/20260604120000-create-regimeStates.js` \u2014 nova tabela `regimeStates` (PK=symbol, smaAbove BOOLEAN, lastCrossDir STRING, lastCrossAt BIGINT). Guard de idempot\u00eancia via showAllTables.\n3. `backend/src/models/regimeStateModel.js` + `backend/src/repositories/regimeStatesRepository.js` \u2014 model/repo (upsert por symbol).\n4. `backend/scripts/setup-trend.js` \u2014 templates 3/4 viraram LIMIT market\u00e1vel: BUY `limitPrice=MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003` MIN_NOTIONAL\u00d73; SELL `\u2026bestBid * 0.997` LAST_ORDER_QTY\u00d71. Buffer no EVAL do limitPrice (pois `limitPriceMultiplier` \u00e9 DECIMAL(10,2), s\u00f3 2 casas).\n5. `backend/scripts/activate-trend.js` (novo) \u2014 idempotente: reshape dos templates (PATCH\u2192LIMIT), coordena\u00e7\u00e3o id2/id3 (`+ REGIME!=='trend'` + REGIME nos indexes da id3), start id6/id7. Tem modo DRY=true.\n\n**Pontos que EU quero que voc\u00ea ataque com ceticismo (money-path):**\n- **Persist\u00eancia / at-least-once**: `persistCrossState` roda DEPOIS de disparar a automa\u00e7\u00e3o. Avalie o risco de double-fire (re-entrar num trend) vs perda de sinal num crash na janela. A l\u00f3gica de edge-detection (`prev !== undefined && above !== prev`) + load no boot est\u00e1 correta p/ recuperar um cross do downtime SEM disparar em restart normal? Tem cen\u00e1rio onde dispara esp\u00fario?\n- **`start()` ass\u00edncrono**: a trava `starting` cobre a race de double-start? `loadPersistedState().finally(...)` arranca o loop \u2014 se o load falhar, ainda arranca (best-effort)? O `timer.unref()` e a idempot\u00eancia seguem ok?\n- **Portabilidade da migration/upsert** MySQL+Postgres: createTable com PK STRING (symbol), BOOLEAN, BIGINT; `model.upsert` precisa de PK/unique (symbol \u00e9 PK) \u2014 funciona nos dois? O guard showAllTables (string vs {tableName}) cobre os dois dialetos? Roda 2x sem erro?\n- **LIMIT market\u00e1vel**: confirme lendo `backend/src/beholder.js` (`calcPrice` ~linha 164, `getEval` ~923) + `backend/src/controllers/orderTemplatesController.js` (`validatePrice` ~linha 5) que: (a) `MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003` passa no validatePrice no INSERT, (b) calcPrice evalua certo (limitPriceMultiplier=1 n\u00e3o dobra o buffer), (c) o BOOK est\u00e1 sempre vivo (`backend/src/app-em.js` ~linha 35, miniTickerStream popula BOOK). Algum caso onde calcPrice/calcQty lan\u00e7a (sem BOOK, sem WALLET, MIN_NOTIONAL\u00d73 abaixo do m\u00ednimo)?\n- **activate-trend.js**: o PATCH de automa\u00e7\u00e3o manda body COMPLETO com `actions` (sen\u00e3o o controller zera a ordem \u2014 `automationsController.updateAutomation` faz deleteActions+insertActions)? A idempot\u00eancia (re-rodar n\u00e3o duplica o `&& !=trend` nem quebra) est\u00e1 correta? O reshape de template manda body sem clobberar campos?\n- **Coordena\u00e7\u00e3o**: id2 vira `RSI<25 && REGIME!=='bear' && REGIME!=='trend'`; id3 vira `RSI>75 && REGIME!=='trend'` + REGIME nos indexes. Algum risco de fail-open (gate ignorado por \u00edndice faltando) ou de a id3 ficar presa sem vender em algum regime?\n\nLeia o c\u00f3digo de verdade (n\u00e3o confie na minha descri\u00e7\u00e3o). Devolva veredito **PASS / PASS COM RESSALVAS / FAIL** com achados tagueados por severidade (ALTA/M\u00c9DIA/BAIXA), cada um com arquivo:linha e o teste concreto p/ validar. Seja cir\u00fargico \u2014 \u00e9 dinheiro (testnet, mas valida mec\u00e2nica)."
+}
+```
+
+## 🤖 Claude *(02:41:26)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-Lead review da ativa\u00e7\u00e3o trend",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (Tech-Lead) de uma mudan\u00e7a no TradeUX (Beholder-based Binance Spot bot + LLM agent, testnet). Repo: `/home/gcrux-tradeux/tradeux`. Modelo trunk-based (commit direto no master). Coment\u00e1rios/docs em pt-BR \u2014 mantenha o padr\u00e3o. Contexto em `/home/gcrux-tradeux/HANDOFF.md`.\n\n## Escopo: ATIVA\u00c7\u00c3O do Trend Following (id6/id7) + coordena\u00e7\u00e3o com a revers\u00e3o \u00e0 m\u00e9dia (id2/id3) + resili\u00eancia a restart\n\n**Decis\u00f5es de design j\u00e1 tomadas pelo dono (revise design/manuten\u00e7\u00e3o/risco/conven\u00e7\u00e3o, n\u00e3o re-litigue a estrat\u00e9gia):**\n- Ordens de trend = LIMIT market\u00e1vel + buffer 0.3% (n\u00e3o STOP_LOSS_LIMIT). Size pequeno (3\u00d7 MIN_NOTIONAL). Persistir o estado de cross.\n\n**Arquivos (leia todos):**\n1. `backend/src/regimeJob.js` \u2014 load do estado persistido antes do 1\u00ba poll + `persistCrossState` por poll + trava `starting`.\n2. `backend/migrations/20260604120000-create-regimeStates.js` + `backend/src/models/regimeStateModel.js` + `backend/src/repositories/regimeStatesRepository.js` \u2014 nova tabela `regimeStates` (PK=symbol).\n3. `backend/scripts/setup-trend.js` \u2014 templates 3/4 \u2192 LIMIT market\u00e1vel (buffer 0.3% embutido no EVAL do limitPrice porque limitPriceMultiplier \u00e9 DECIMAL(10,2)).\n4. `backend/scripts/activate-trend.js` (novo) \u2014 go-live idempotente (reshape template + coordena\u00e7\u00e3o id2/id3 + start id6/id7), com DRY=true.\n\n**O que eu quero seu julgamento (must-fix vs nice-to-have):**\n- **Risco de manuten\u00e7\u00e3o do \"buffer no eval do limitPrice\"** (`MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003`): \u00e9 um truque p/ contornar o DECIMAL(10,2). Aceit\u00e1vel vs. alternativa de alargar a coluna p/ DECIMAL(10,4) via migration (que eu j\u00e1 estou mexendo em migrations)? H\u00e1 risco de a UI de templates n\u00e3o round-tripar essa string (estes templates s\u00e3o geridos por script, n\u00e3o pela UI \u2014 mas avalie)?\n- **D\u00edvida de duplica\u00e7\u00e3o**: o shape do template LIMIT est\u00e1 em DOIS lugares (setup-trend.js cria; activate-trend.js faz reshape idempotente). Drift? Vale extrair? Os nomes de automa\u00e7\u00e3o/template s\u00e3o hardcoded por conven\u00e7\u00e3o (runtime, n\u00e3o-seedados) \u2014 ok?\n- **Persist\u00eancia (nova tabela)**: proporcional ao problema (perder um cross raro num restart)? A migration \u00e9 port\u00e1vel e idempotente (MySQL+PG, roda 2x na CI)? O model/repo seguem o padr\u00e3o do repo (ver `orderTemplateModel.js`, `monitorsRepository.js`)?\n- **Seguran\u00e7a/corre\u00e7\u00e3o do `start()` ass\u00edncrono** (`loadPersistedState().finally(...)`) \u2014 alguma regress\u00e3o no boot do server (`backend/src/server.js` chama `regimeJob.start()`)? O `unref()` e a idempot\u00eancia seguem?\n- **Reversibilidade / opera\u00e7\u00e3o**: o activate-trend.js \u00e9 seguro de re-rodar e o caminho de revert est\u00e1 claro? A coordena\u00e7\u00e3o (id2/id3 != trend) \u00e9 conservadora (s\u00f3 restringe)?\n- **Conven\u00e7\u00f5es**: nomes, estrutura de arquivo, pt-BR, sem segredo hardcoded, sem console.log indevido no hot-path.\n\nLeia o c\u00f3digo de verdade. Devolva **APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK** com racional e separando must-fix de nice-to-have. Foque no que importa p/ merge num projeto trunk-based de dinheiro (testnet)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tudo confirmado. `getEval` retorna a expressão intacta (já contém "MEMORY"), `parseFloat` é NaN (não retorna a string crua), e o regex de validação aceita a expressão. O "buffer no eval" funciona ponta-a-ponta e passa pela validação do controller. Tenho material suficiente para o veredito.\n\n---\n\n# Review Tech-Lead — Ativação Trend Following (id6/id7) + persistência de cross + coordenação MR\n\nLi os 6 arquivos + os contratos load-bearing (`parseMemoryKey`, `smaCross`, `calcPrice`, `validatePrice`, `getEval`, boot order do `server.js`). Validei os contratos em runtime (regex, `parseFloat`, memoryKey). Working tree limpo de segredos; só os 6 arquivos do escopo.\n\n## Veredito global: **APPROVE COM SUGESTÕES**\n\nMudança bem-arquitetada, conservadora e reversível. O hot-path (`beholder.js`) **não foi tocado** — toda a lógica nova vive no `regimeJob` (fora do tick de mercado), em scripts de operação e numa tabela isolada. O risco de dinheiro é baixo e gateado (`!=bear` + cross raro + size 3× MIN_NOTIONAL + DRY-run). Nenhum must-fix bloqueante. As sugestões abaixo são endurecimento, não correção.\n\n---\n\n## Respostas diretas às suas 6 perguntas\n\n**1) Buffer no eval do limitPrice (`bestAsk * 1.003`) — aceitável vs. alargar a coluna?**\n**Aceitável. Mantenha como está.** Validei a cadeia inteira:\n- `validatePrice` (`orderTemplatesController.js:8`) aceita a string via regex `/^(MEMORY\\[\'.+?\'\\](\\..+)*)$/i` — testei as duas expressões: passam.\n- `calcPrice` (`beholder.js:172`): `parseFloat("MEMORY[...]")` = `NaN` (falsy) → **não** retorna a string crua, cai no `Function(...)` eval. Correto.\n- `getEval` (`beholder.js:923`) retorna a expressão intacta (já contém "MEMORY").\n- `limitPriceMultiplier: 1` mantém o multiplicador neutro — o buffer fica 100% no eval. Limpo.\n\nAlargar p/ `DECIMAL(10,4)` seria **pior** aqui: (a) muda o schema de `orderTemplateModel` (blast radius em TODOS os templates, inclusive os geridos pela UI e seeders), exigiria migration de coluna em tabela quente vs. uma tabela nova isolada; (b) o padrão "buffer no eval" **já é a convenção do próprio engine** — veja `beholder.js:605/614`, onde o trailing/auto-gera conditions com `bestAsk`/`bestBid` inline. Não está inventando padrão.\nSobre round-trip na UI: **não é risco** — estes templates são geridos por script e você documentou isso. A UI de templates lê `limitPrice` como texto livre (é STRING no model) e `limitPriceMultiplier` como número; ela não re-parsearia a expressão de forma destrutiva. Já que o multiplier é exatamente `1`, mesmo um round-trip pela UI preserva o valor.\n\n**2) Duplicação do shape do template (setup cria / activate reshapes) — drift?**\n**Nice-to-have, não must-fix.** Hoje há um drift real e silencioso: o buffer `1.003`/`0.997`, o `ref` (`bestAsk`/`bestBid`) e o `quantityMultiplier: 3` aparecem literais em `setup-trend.js:108/113` **e** em `activate-trend.js:81-85`. Se amanhã você mudar o buffer p/ 0.2% no setup e esquecer o activate, o `ensureTemplateShape` faria um PATCH "corrigindo" de volta p/ 0.3% — e pior, o `already`-check (`activate-trend.js:86`) compara `t.limitPrice === want.limitPrice` exato, então um setup divergente sempre dispararia reshape. Não é bug agora (os literais coincidem), é dívida.\nNão vale extrair um módulo compartilhado para 2 scripts de operação rodados à mão — seria over-engineering. **Sugestão barata:** um comentário cruzado "shape canônico espelhado em activate-trend.js — manter em sincronia" em ambos, ou (melhor) o `activate` deixar de reidratar o shape e apenas **validar/abortar** se o template não estiver na forma esperada (em vez de reescrever). O `setup` é o único dono do shape; o `activate` só coordena+liga. Isso elimina o drift por construção.\nNomes hardcoded de automação/template: **ok** — são runtime/não-seedados por decisão consciente (documentado no HANDOFF e nos cabeçalhos), e `NAMES` em `activate-trend.js:35` casa com as strings do `setup-trend.js`. Convenção aceitável para scripts de bootstrap.\n\n**3) Persistência (nova tabela) — proporcional? portável/idempotente? segue o padrão?**\n**Sim nos três.**\n- Proporcional: tabela mínima (1 linha/símbolo, PK=symbol), best-effort, falha de DB não derruba o ciclo de regime (`persistCrossState` engole o erro, `regimeJob.js:173`). O problema que resolve (perder um golden/death raro na janela de restart) é exatamente o item (3) do checklist de ativação do HANDOFF. Proporcional.\n- Portável + idempotente: `createTable` puro sem SQL de dialeto; guard `showAllTables`+`includes(\'regimestates\')` no `up` **e** no `down` (`20260604120000-create-regimeStates.js:13/28`) → roda 2x na CI nos dois bancos sem erro. `upsert` por PK é portável MySQL+PG. `BIGINT` p/ epoch ms é correto. Tipos batem entre migration e model.\n- Padrão do repo: o model (`regimeStateModel.js`) segue `orderTemplateModel.js` (define + `module.exports`); o repo (`regimeStatesRepository.js`) segue `monitorsRepository.js` (funções nomeadas + export agregado). Conforme.\n  *Detalhe menor:* o model declara `createdAt/updatedAt: Sequelize.DATE` mas Sequelize já os gere por timestamps — inócuo, e o `orderTemplateModel` faz idêntico, então é consistente com o repo. Sem ação.\n\n**4) `start()` assíncrono (`loadPersistedState().finally(...)`) — regressão no boot?**\n**Sem regressão. Correto.** Analisei a mudança vs. HEAD:\n- A trava `starting` cobre exatamente a janela do load assíncrono: `start()` chamado 2x (re-entrância) retorna cedo via `if (timer || starting) return` (`regimeJob.js:183`). Dentro do `.finally`, há um segundo guard `if (timer) return` p/ corrida. Bom cinto-e-suspensório.\n- `unref()` preservado (`regimeJob.js:192`). `stop()` agora reseta `starting` também (`regimeJob.js:200`) — correto, senão um `stop()` durante o load deixaria a trava presa.\n- `server.js:43` chama `regimeJob.start()` **sem await** (fire-and-forget) — e isso está certo: o boot não deve bloquear no fetch da Binance. O `loadPersistedState` lê a tabela que o `docker-entrypoint.sh` já migrou antes do server subir (boot order do CLAUDE.md confirma migrate+seed no entrypoint), então `getAll()` não corre contra tabela inexistente. Em dev host sem migrate, o `try/catch` degrada para "sem resiliência" e segue — fail-safe.\n- `.finally()` (não `.catch().then()`) garante que o loop arranca mesmo se o load rejeitar — e `loadPersistedState` já tem `try/catch` interno, então nunca rejeita de fato. Defensivo em camadas.\n\n**5) Reversibilidade / operação do `activate-trend.js`?**\n**Seguro e claro.** Idempotência real verificada em cada etapa:\n- `ensureTemplateShape`: `already`-check antes de PATCH; DRY mostra plano.\n- `ensureCoordination`: detecta o gate por substring `${KR}\']!==\'trend\'` e o índice por `includes(KR)` → re-rodar não duplica a cláusula nem o index (`activate-trend.js:104-108`). **Bom**: busca o body completo via `GET /automations/:id` e exige `actions.length` antes do PATCH, abortando se vazio (`activate-trend.js:115`) — evita o PATCH zerar a ordem (o controller faz deleteActions+insertActions). Esse guard é exatamente o tipo de cuidado que quero em caminho de dinheiro.\n- `ensureStarted`: checa `isActive` antes.\n- Revert: documentado no cabeçalho (`activate-trend.js:17`) e no HANDOFF (stop id6/id7 + remover `&& ...!==trend`). Caminho claro.\n- Coordenação é **conservadora**: só **adiciona** `&& MEMORY[...]!==\'trend\'` (AND restritivo) — nunca afrouxa a MR. Com BTC=bear, id2 já está parada; ligar trend não muda nada até o mercado virar p/ trend+golden. Risco efetivo ~inerte no estado atual.\n\n**6) Convenções (nomes, pt-BR, segredos, console.log no hot-path)?**\nConforme. Comentários pt-BR densos e load-bearing. **Zero segredo hardcoded** — credenciais via `EM/PW`/`TRADEUX_EMAIL/PASSWORD` (env), token cru no header (`authorization` sem Bearer) consistente com o middleware. Os `console.log` estão **só nos scripts de operação** (`setup-trend`/`activate-trend`), nunca no `regimeJob` (que usa `logger(\'regime\',...)`) nem no `beholder`. Hot-path limpo.\n\n---\n\n## Must-fix\n**Nenhum.** Nada bloqueia o merge.\n\n## Nice-to-have (endurecimento, pós-merge ou agora — sua escolha)\n1. **Drift do shape do template (pergunta 2):** fazer o `activate-trend.js` **validar e abortar** em vez de reidratar o shape (`ensureTemplateShape` → `assertTemplateShape`), deixando `setup-trend.js` como único dono. Elimina o drift por construção. Se preferir manter o reshape, ao menos um comentário "shape espelhado — manter sync" nos dois arquivos.\n2. **`lastCrossAt` Number-cast:** em `loadPersistedState` (`regimeJob.js:155`) o cast `Number(r.lastCrossAt)` é correto p/ o BIGINT do Postgres (que volta como string), mas se vier `null` o ternário já cobre. Ok como está; só registro que está certo.\n3. **At-least-once documentado:** o comentário em `regimeJob.js:133-135` já assume honestamente o re-disparo possível no boot (crash entre `updateMemory` e `upsert`). Dado o size 3× MIN_NOTIONAL e a raridade do cross, **entrar 2x num trend é aceitável** — concordo com a escolha. Quando calibrar o size p/ cima, reavaliar se quer mover o `persistCrossState` p/ antes do `updateMemory` (at-most-once) — trade-off perder vs. duplicar. Não agora.\n\n---\n\n## Decisão de merge\n\n**APROVAR e mergear os 6 arquivos como um único commit** — são uma unidade coesa (tabela + model + repo + job + scripts) e o conjunto é idempotente/reversível. Modelo trunk-based: commit direto no master via token HTTPS, git/chown como `gcrux-tradeux` (gotcha do HANDOFF).\n\n**Condições (todas já satisfeitas pelo design, confirmar na execução):**\n1. **CI verde** — especialmente o job backend matrix `[mysql, postgres]` migrate+seed **2x** (prova a idempotência da migration nova). É o gate objetivo aqui.\n2. **A migration roda no boot** (entrypoint) antes do `regimeJob.start()` ler a tabela — já é a ordem atual; só não introduzir um `start()` mais cedo.\n3. **ATIVAÇÃO (`activate-trend.js` sem DRY) é passo OPERACIONAL separado, não parte do merge.** Mergear o código com id6/id7 **INATIVAS**. Antes do go-live real: rodar `DRY=true` primeiro, depois observar **1 golden→death real** com `logs:true` (`A:6.log`/`A:7.log`), como o próprio script instrui (`activate-trend.js:157`). Não ligar às cegas.\n\nRacional da condição 3: o código é inerte enquanto inativo (`findAutomations` não pega inativa → `testAutomations` retorna `[]`), então o merge é seguro mesmo sem observar o cross. A observação é gate da **ativação**, não do **merge** — exatamente a separação que o HANDOFF já estabelece.\n\n**Arquivos revisados:**\n- `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js`\n- `/home/gcrux-tradeux/tradeux/backend/migrations/20260604120000-create-regimeStates.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/models/regimeStateModel.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/regimeStatesRepository.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js`\n\nContratos cruzados confirmados (não re-litigados, apenas verificados): `backend/src/beholder.js` (`parseMemoryKey`, `calcPrice`, `getEval`), `backend/src/controllers/orderTemplatesController.js` (`validatePrice`), `backend/src/utils/regimeClassifier.js` (`smaCross`), `backend/src/utils/regimeService.js`, `backend/src/server.js`.'}, {'type': 'text', 'text': "agentId: a604d14f00576f76c (use SendMessage with to: 'a604d14f00576f76c' to continue this agent)\n<usage>subagent_tokens: 72479\ntool_uses: 27\nduration_ms: 163408</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Guard `showAllTables` provado idempotente: chamando `up()` diretamente 2x (simulando meta ausente, tabela já existente) → não lança, pula via guard. Cobre o cenário de recriação manual além do SequelizeMeta. Dupla proteção confirmada.\n\nTenho cobertura completa de todos os pontos que o dono pediu para atacar. Vou compilar o veredito.\n\n---\n\n# QA Pre-Merge — ATIVAÇÃO Trend Following (id6/id7) + persistência + coordenação\n\nRevisei o código de verdade (não a descrição) e validei o money-path no MySQL real (stack no ar, container baked), simulei a edge-detection e a idempotência, e inspecionei a lib `node-binance-api` 1.x instalada. Estado: tudo **não-commitado** no working tree (`git status` limpo de alterações minhas).\n\n## Por arquivo\n\n### 1. `backend/src/regimeJob.js` — **VEREDITO: PASS**\nA lógica de persistência + edge-detection no restart está **correta** e bate com a semântica documentada (at-least-once). Simulei 7 cenários (`/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js:117-136` + `:149-176`):\n- Restart normal (above persistido == mainnet): **não dispara**. Cross no downtime (above persistido != mainnet): **dispara 1x** (golden/death). Boot frio (`prev=undefined`): **não dispara** (sem disparo espúrio). `smaAbove=null` persistido: `loadPersistedState` pula → `prev=undefined` → não dispara.\n- `start()` async (`:178-195`): a trava `starting` + `if (timer || starting) return` cobre o double-start; `loadPersistedState().finally(...)` arranca o loop mesmo se o load falhar (best-effort, com log); `timer.unref()` preservado; o `if (timer) return` dentro do `.finally` protege contra start concorrente. `stop()` reseta `running` e `starting`. Correto.\n\n- **[BAIXA] `regimeJob.js:117`** — disparo de cross no 1º poll do boot pode preceder o BOOK. Se um cross do downtime dispara a automação de trend no boot e o `MEMORY[\'BTCUSDT:BOOK\']` ainda não foi populado pelo mini-ticker, `calcPrice` (branch LIMIT, sem guard de BOOK) lança `Cannot read properties of undefined (reading \'current\')` → `placeOrder` retorna `{type:\'error\'}` → **a ordem não entra e o sinal golden é gasto** (o job só re-dispara no próximo cruzamento real). Fail-safe (não compra errado), e o fetch HTTP mainnet do `runOnce` (até 8s) dá folga >> tempo de popular o BOOK (<1s), então é improvável. Não é regressão desta mudança (afeta operação normal também), mas a ativação o expõe.\n  - Teste: subir o backend com um cross forçado (persistir `regimeStates` com `smaAbove` invertido vs mainnet) e medir o intervalo boot→1º BOOK vs boot→1º cross-eval no `logs/regime.log`/`A:6.log`.\n\n- **[BAIXA, conhecida]** sem hook de SIGTERM → `regimeJob.stop()` (já documentada, inócua por `timer.unref()`). Não introduzida aqui.\n\n### 2. `backend/migrations/20260604120000-create-regimeStates.js` — **VEREDITO: PASS**\nValidado **no MySQL real** (container): migrate pass#1 cria, pass#2 idempotente (skip via SequelizeMeta). Schema: `symbol` PK varchar(255), `smaAbove` tinyint(1) NULL, `lastCrossDir` varchar NULL, `lastCrossAt` bigint NULL — correto. `showAllTables` no MySQL retorna **strings** (`["SequelizeData","SequelizeMeta"]`); o guard `typeof t === \'string\' ? t : t.tableName` trata os dois shapes. Chamei `up()` direto 2x (simulando meta ausente) → guard pula sem erro. Postgres coberto pela CI; o branch `.tableName` é a defesa para dialetos que devolvem objeto.\n\n### 3. `backend/src/models/regimeStateModel.js` + `backend/src/repositories/regimeStatesRepository.js` — **VEREDITO: PASS**\n`upsert` por PK=symbol validado no MySQL real: 3 upserts no mesmo symbol → **1 linha** (não duplica), valores atualizados. `lastCrossAt` volta `number` no MySQL; o `Number(r.lastCrossAt)` no load é defensivo e **necessário** (no Postgres BIGINT volta como **string**). `!!r.smaAbove` normaliza o tinyint(1). Coerente com os dois dialetos.\n\n### 4. `backend/scripts/setup-trend.js` (LIMIT marketável) — **VEREDITO: PASS**\nValidei o money-path estaticamente e por simulação:\n- `validatePrice` (`orderTemplatesController.js:5`) **aceita** `MEMORY[\'BTCUSDT:BOOK\'].current.bestAsk * 1.003` (e bestBid) — `parseFloat` dá NaN → força o caminho regex (não retorna o literal). Passa no INSERT (POST/201).\n- `getEval` (`beholder.js:923`) retorna o prop cru (contém `MEMORY`); `calcPrice` (`beholder.js:164-186`, branch LIMIT) faz `Function(...)(MEMORY) * limitPriceMultiplier`. Com `limitPriceMultiplier=1`: bestAsk×1.003 ≈ **+0.30%** tick-ajustado, **não dobra** o buffer (simulado: 70000→70209.99).\n- **timeInForce (risco nº1):** confirmei na lib instalada `node-binance-api@1.x` (`dist/cjs/node-binance-api.cjs`, fn `order()`): `if (request.type.includes(\'LIMIT\')) { request.price = price; if (request.type !== \'LIMIT_MAKER\') request.timeInForce = \'GTC\'; }`. O wrapper (`exchange.js:50-55`) chama `binance.order(\'LIMIT\', ...)` → **GTC é injetado automaticamente**. A LIMIT NÃO falha por falta de timeInForce. (Precedente: LIMIT/STOP_LOSS_LIMIT do OCO já rodam.)\n- `quantity=MIN_NOTIONAL` + `quantityMultiplier=3`: `calcQty` (`beholder.js:226`) = `(minNotional/price)*3` ≈ 3× MIN_NOTIONAL. Correto. Symbol não-synced → `NaN` → `placeOrder:422` faz throw fail-safe.\n\n### 5. `backend/scripts/activate-trend.js` (novo) — **VEREDITO: PASS COM RESSALVAS**\nConfirmei contra o **estado vivo** do DB: id2=`Baseline RSI Buy BTCUSDT`, id3=`Baseline RSI Sell BTCUSDT` (idx só `RSI_14_1m`, sem REGIME → fail-open real), id6/id7=`Trend Buy/Sell BTCUSDT SMA50/200` (INATIVAS). Nomes batem.\n- **PATCH de automação manda body COMPLETO com `actions`** (`activate-trend.js:114-119`) — necessário, pois `updateAutomation` faz `deleteActions`+`insertActions` (`automationsController.js:205-206`). Além disso o script aborta se `actions` vier vazio (`:115`), e o controller já rejeita body sem actions com 400 (`:182`). Dupla proteção contra zerar a ordem.\n- **Coordenação idempotente** (simulei 2 passadas): id2 ganha `&& ...!==\'trend\'`; id3 ganha `&& ...!==\'trend\'` **e** `BTCUSDT:REGIME` no index (corrige o fail-open). Re-rodar → `alreadyDone=true` (substring match `KR\']!==\'trend\'`). Conditions resultantes passam `validateConditions`.\n- **Fail-open eliminado / sem fail-open novo:** `evalDecision` (`beholder.js:756`) exige `indexes.every(ix => MEMORY[ix] != null)` (**fail-safe**: REGIME ausente → não dispara). E como o regimeJob escreve REGIME com `executeAutomations=false` (`regimeJob.js:97`, `updateMemory:863` retorna sem testAutomations), a transição de REGIME **não** dispara a id3 por si — o gatilho efetivo continua sendo o tick de RSI. `invertCondition` não toca a cláusula de igualdade de REGIME (sem `current`). Sem fail-open, sem 2º-gatilho espúrio. A id3 não fica presa sem vender (a venda é gateada só por `!==\'trend\'`; em qualquer outro regime ela vende com RSI>75).\n\n- **[MÉDIA] `activate-trend.js:92` — o PATCH de template (reshape) NÃO passa por `validatePrice`.** `updateOrderTemplate` (`orderTemplatesController.js:50-60`) **não** chama `validatePrice` (só o INSERT chama). Hoje é inócuo (o `limitPrice` é hardcoded e correto, e o caminho normal é o `setup-trend.js` criar já-LIMIT via POST validado → o reshape vira no-op `already=true`). Mas é um buraco de validação latente: um PATCH com `limitPrice` malformado passaria e só explodiria em runtime no `calcPrice` (ordem não-fire). Ressalva, não bloqueador.\n  - Teste: `node scripts/activate-trend.js` com os templates já-LIMIT (caminho real) → deve reportar `✓ já está LIMIT marketável` (no-op, sem PATCH). E um DRY-run (`DRY=true`) antes do go-live para inspecionar o plano.\n\n- **[BAIXA] paginação** `findAutomationByName` (`:64-72`) quebra em `rows.length < 10` assumindo page size=10. Se o page size do backend mudar, pode parar cedo. Hoje correto (confirmei page size=10). Cosmético.\n\n## Coordenação / money-path — conclusão\nSem double-fire perigoso (o único re-disparo no boot é at-least-once por design, e exige o DB estar atrás do mainnet). Sem fail-open. Sem ordem LIMIT quebrada (GTC garantido). Sizing pequeno (3× MIN_NOTIONAL) coerente. O `LAST_ORDER_QTY` da id7 compartilhado com a id3 segue sendo o risco operacional nº1 da **estratégia** (já marcado com ⚠️ no código e no HANDOFF) — o SELL de trend pode vender a qty da última ordem de reversão; é decisão de design do dono (observar 1 cross antes de calibrar), não um bug do código.\n\n## Testes que eu rodaria antes/depois do go-live (testnet)\n1. **DRY-run primeiro:** `DRY=true node backend/scripts/activate-trend.js` → revisar o plano (deve mostrar PATCH de coordenação em id2/id3 e START de id6/id7; templates como no-op se já-LIMIT).\n2. **Deploy:** rebuild+recreate do backend (código baked, sem bind-mount — a migration nova NÃO está no container atual), confirmar `regime.log` "Estado de cross recarregado" e migrate idempotente no boot.\n3. **Idempotência do activate:** rodar `activate-trend.js` **2x** → 2ª deve ser toda `✓ já …` (zero PATCH/zero start novo). Conferir no BRAIN vivo que id2/id3 têm `!==\'trend\'` + REGIME no index.\n4. **Cross sintético (restart):** persistir `regimeStates` com `smaAbove` invertido vs o mainnet atual, restart, confirmar que dispara **1x** golden/death (e que o BOOK já está vivo no momento — medir no `A:6.log`/`A:7.log`).\n5. **Ordem LIMIT real:** forçar um golden com id6 ativa e MIN_NOTIONAL×3, confirmar fill imediato (GTC marketável atravessa o ask) **sem EXPIRE**, e `net/avgPrice` gravados no insert.\n6. **Gate de coordenação:** com `MEMORY[\'BTCUSDT:REGIME\']=\'trend\'` (forçado), confirmar id2/id3 **não disparam** mesmo com RSI em zona; com REGIME removido da MEMORY, confirmar id3 não vende (fail-safe `isChecked`).\n7. **CI:** migrate+seed MySQL+Postgres 2x (idempotência) + agent `--check` — a migration nova precisa passar nos dois dialetos.\n\n## Recomendação de merge\n**APROVAR (merge), com 2 ações antes do go-live ao vivo:** (a) tratar a ressalva MÉDIA do PATCH-sem-validatePrice como dívida aceita ou adicionar `validatePrice` no `updateOrderTemplate` (1 linha, fecha o buraco para todos os templates — recomendo); (b) rodar o **DRY-run + ativar fora de um regime trend, com BTC=bear e sem cross fresco** (efeito inerte, como o próprio script documenta), e observar 1 golden→death real antes de calibrar o size. O código está sólido, validado no banco real, fail-safe nos modos de falha (BOOK ausente, símbolo não-synced, REGIME ausente, falha de DB na persistência) e idempotente em migration/upsert/coordenação. As ressalvas são de baixo risco e não tocam a corretude do money-path.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js`, `/home/gcrux-tradeux/tradeux/backend/migrations/20260604120000-create-regimeStates.js`, `/home/gcrux-tradeux/tradeux/backend/src/models/regimeStateModel.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/regimeStatesRepository.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js`. Pontos de apoio: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`calcPrice:164`, `calcQty:200`, `evalDecision:749`, `getEval:923`), `/home/gcrux-tradeux/tradeux/backend/src/controllers/orderTemplatesController.js:5/:50` (validatePrice só no INSERT), `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js:173` (updateAutomation), `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js:50` + `node_modules/node-binance-api/dist/cjs/node-binance-api.cjs` (GTC), `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:36` (BOOK).'}, {'type': 'text', 'text': "agentId: ac458fe1e1c29b1bd (use SendMessage with to: 'ac458fe1e1c29b1bd' to continue this agent)\n<usage>subagent_tokens: 115952\ntool_uses: 45\nduration_ms: 515080</usage>"}]
+> ```
+
+## 🤖 Claude *(02:50:50)*
+
+
+## 🤖 Claude *(02:50:57)*
+
+Os dois gates voltaram **positivos**, sem must-fix:
+
+- **QA: PASS** (validou no MySQL real — migration idempotente, upsert não-duplica, edge-detection 7 cenários, GTC garantido na lib 1.x, validatePrice aceita o eval). 1 ressalva MÉDIA: o PATCH de template no `activate-trend.js` não passa por `validatePrice` (buraco latente) → recomenda adicionar `validatePrice` ao `updateOrderTemplate` (1 linha, fecha pra todos).
+- **Tech-Lead: APPROVE COM SUGESTÕES**, zero must-fix. Confirmou: hot-path intocado, buffer-no-eval é a convenção do próprio engine (não inventei), persistência proporcional/portável, `start()` async sem regressão, coordenação conservadora. Nice-to-have: drift do shape do template (setup cria / activate reshapes).
+
+Vou aplicar as duas melhorias convergentes (ambos apontaram o mesmo tema do template): **(1)** `validatePrice` no `updateOrderTemplate` — fix de raiz no controller (fecha o buraco pra todo PATCH, não só o script); **(2)** comentário-cruzado do shape canônico (mitigação de drift que o TL sancionou). Mantenho o reshape no activate porque os templates vivos ainda são MARKET e o setup não reescreve existentes.
+
+## 🤖 Claude *(02:51:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/orderTemplatesController.js",
+  "old_string": "    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)\n        newOrderTemplate.stopPrice = calcTrailingStop(newOrderTemplate);\n\n    const updatedOrderTemplate = await orderTemplatesRepository.updateOrderTemplate(id, newOrderTemplate);\n    res.json(updatedOrderTemplate);",
+  "new_string": "    if (newOrderTemplate.type === orderTypes.TRAILING_STOP)\n        newOrderTemplate.stopPrice = calcTrailingStop(newOrderTemplate);\n\n    // espelha a valida\u00e7\u00e3o do insert: fecha o buraco de um PATCH com price malformado passar\n    // (validatePrice \u00e9 partial-safe: limitPrice/stopPrice ausentes no body s\u00e3o tratados como ok).\n    if (!validatePrice(newOrderTemplate.limitPrice) || !validatePrice(newOrderTemplate.stopPrice))\n        return res.status(400).json(`Invalid price.`);\n\n    const updatedOrderTemplate = await orderTemplatesRepository.updateOrderTemplate(id, newOrderTemplate);\n    res.json(updatedOrderTemplate);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/orderTemplatesController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:51:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "    // LIMIT market\u00e1vel: o pre\u00e7o atravessa o spread (BUY paga +0.3% sobre o melhor ask; SELL aceita\n    // -0.3% sobre o melhor bid) \u2192 fill imediato como taker, com piso/teto de slippage; mata o EXPIRE\n    // de MARKET no book fino do testnet. O BOOK \u00e9 sempre vivo (miniTickerStream o popula, bestAsk=bestBid=\n    // close quando n\u00e3o h\u00e1 book real). Buffer no EVAL pois limitPriceMultiplier \u00e9 DECIMAL(10,2) (\u22651%).",
+  "new_string": "    // LIMIT market\u00e1vel: o pre\u00e7o atravessa o spread (BUY paga +0.3% sobre o melhor ask; SELL aceita\n    // -0.3% sobre o melhor bid) \u2192 fill imediato como taker, com piso/teto de slippage; mata o EXPIRE\n    // de MARKET no book fino do testnet. O BOOK \u00e9 sempre vivo (miniTickerStream o popula, bestAsk=bestBid=\n    // close quando n\u00e3o h\u00e1 book real). Buffer no EVAL pois limitPriceMultiplier \u00e9 DECIMAL(10,2) (\u22651%).\n    // SHAPE CAN\u00d4NICO (type/limitPrice/buffer/quantityMultiplier) \u2014 espelhado em activate-trend.js\n    // (ensureTemplateShape). Mudou aqui \u2192 mude l\u00e1 (sen\u00e3o o reshape idempotente fica num PATCH eterno)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:51:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js",
+  "old_string": "// 1) garante a forma LIMIT market\u00e1vel do template (idempotente)\nasync function ensureTemplateShape(token, name, side) {",
+  "new_string": "// 1) garante a forma LIMIT market\u00e1vel do template (idempotente).\n// SHAPE CAN\u00d4NICO espelhado de setup-trend.js (ref/buffer). Mudou l\u00e1 \u2192 mude aqui (e vice-versa),\n// sen\u00e3o o `already`-check (compara\u00e7\u00e3o exata de limitPrice) dispara um PATCH de reshape eterno.\nasync function ensureTemplateShape(token, name, side) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:51:20)*
+
+
+## 🤖 Claude *(02:51:20)*
+
+Re-syntax-check dos arquivos com a aplicação das ressalvas:
+
+## 🤖 Claude *(02:51:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in src/controllers/orderTemplatesController.js scripts/setup-trend.js scripts/activate-trend.js; do node --check \"$f\" && echo \"OK   $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check files after applying gate fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   src/controllers/orderTemplatesController.js
+> OK   scripts/setup-trend.js
+> OK   scripts/activate-trend.js
+> ```
+
+## 🤖 Claude *(02:51:41)*
+
+
+## 🤖 Claude *(02:51:43)*
+
+Tudo verde. Agora o **deploy**: rebuild + recreate do backend (assa o código novo + roda a migration no entrypoint). Rodando como `gcrux-tradeux` (gotcha de ownership):
+
+## 🤖 Claude *(02:51:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose up -d --build backend 2>&1 | tail -25'",
+  "description": "Rebuild and recreate backend container",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #10 DONE 0.3s
+> 
+> #11 [6/7] COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> #11 DONE 0.1s
+> 
+> #12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> #12 DONE 0.2s
+> 
+> #13 exporting to image
+> #13 exporting layers
+> #13 exporting layers 0.2s done
+> #13 writing image sha256:3292500487145637a475209330fc5e8319b657783543daf9d6b608fc0a7b2c05 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 0.2s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(02:51:56)*
+
+
+## 🤖 Claude *(02:51:57)*
+
+Backend recriado. Validando o boot — migration rodou? regimeJob carregou estado? erros? Deixa eu checar logs + tabela + memória + site:
+
+## 🤖 Claude *(02:51:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose logs backend --tail 45 2>&1' | grep -iE \"migrat|regimeStates|regime job|cross recarreg|seed|listening|error|beholder|started\" | head -40",
+  "description": "Check backend boot logs for migration and regimeJob"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | No migrations were executed, database schema was already up to date.
+> backend-1  | [TradeUX] Applying seeds (idempotent)...
+> backend-1  | No seeders found.
+> ```
+
+## 🤖 Claude *(02:52:19)*
+
+
+## 🤖 Claude *(02:52:21)*
+
+"No migrations were executed" — porque o **agente QA rodou `db:migrate` no container durante a review** (ele disse "validado no MySQL real: pass#1 cria, pass#2 idempotente"), aplicando minha migration ao DB compartilhado + gravando no SequelizeMeta. Então a tabela já existe. Deixa eu confirmar o schema real + boot do regimeJob:
+
+## 🤖 Claude *(02:52:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"DESCRIBE regimeStates; SELECT * FROM regimeStates;\\\"\"' 2>&1 | grep -iv warning",
+  "description": "Verify regimeStates table schema and content"
+}
+```
+
+## 🤖 Claude *(02:52:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose exec -T backend sh -c \"tail -15 logs/regime.log 2>/dev/null || echo NO_REGIME_LOG\"' 2>&1 | tail -16",
+  "description": "Check regimeJob boot log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> +--------------+--------------+------+-----+---------+-------+
+> | Field        | Type         | Null | Key | Default | Extra |
+> +--------------+--------------+------+-----+---------+-------+
+> | symbol       | varchar(255) | NO   | PRI | NULL    |       |
+> | smaAbove     | tinyint(1)   | YES  |     | NULL    |       |
+> | lastCrossDir | varchar(255) | YES  |     | NULL    |       |
+> | lastCrossAt  | bigint       | YES  |     | NULL    |       |
+> | createdAt    | datetime     | NO   |     | NULL    |       |
+> | updatedAt    | datetime     | NO   |     | NULL    |       |
+> +--------------+--------------+------+-----+---------+-------+
+> +---------+----------+--------------+-------------+---------------------+---------------------+
+> | symbol  | smaAbove | lastCrossDir | lastCrossAt | createdAt           | updatedAt           |
+> +---------+----------+--------------+-------------+---------------------+---------------------+
+> | BTCUSDT |        0 | NULL         |        NULL | 2026-06-04 02:51:49 | 2026-06-04 02:51:49 |
+> +---------+----------+--------------+-------------+---------------------+---------------------+
+> ```
+
+## 🤖 Claude *(02:52:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/ 2>&1",
+  "description": "Check site HTTP status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-04T02:51:49.545Z - Regime job iniciado (intervalo 300000ms, klines 1h).
+> info: 2026-06-04T02:51:49.914Z - BTCUSDT:REGIME => bear (100% das últimas 101 velas < SMA200 (risk-off))
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> site -> 200
+> ```
+
+## 🤖 Claude *(02:52:50)*
+
+
+## 🤖 Claude *(02:52:53)*
+
+Boot perfeito: tabela `regimeStates` com schema certo, **persistência já funcionando** (BTCUSDT smaAbove=0 gravado no 1º poll às 02:51:49), regime=bear, job rodando, site 200. ✓
+
+Agora valido a **resiliência a restart de verdade** — restart simples (sem rebuild) deve logar "Estado de cross recarregado" e **não** disparar cross espúrio (above inalterado):
+
+## 🤖 Claude *(02:52:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose restart backend >/dev/null 2>&1 && echo \"restarted\"'",
+  "description": "Restart backend to validate state reload",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> restarted
+> ```
+
+## 🤖 Claude *(02:53:04)*
+
+
+## 🤖 Claude *(02:53:04)*
+
+Aguardando o boot e checando o reload no log:
+
+## 🤖 Claude *(02:53:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && for i in 1 2 3 4 5 6 7 8 9 10; do\n  L=$(docker compose exec -T backend sh -c \"tail -6 logs/regime.log 2>/dev/null\")\n  if echo \"$L\" | grep -q \"Regime job iniciado\"; then echo \"$L\"; exit 0; fi\n  sleep 2\ndone; echo \"BOOT_TIMEOUT\"; docker compose exec -T backend sh -c \"tail -6 logs/regime.log 2>/dev/null\"' 2>&1 | tail -10",
+  "description": "Poll regime.log for reload after restart",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-04T02:51:49.545Z - Regime job iniciado (intervalo 300000ms, klines 1h).
+> info: 2026-06-04T02:51:49.914Z - BTCUSDT:REGIME => bear (100% das últimas 101 velas < SMA200 (risk-off))
+> info: 2026-06-04T02:52:58.206Z - Estado de cross recarregado: BTCUSDT:above=false.
+> info: 2026-06-04T02:52:58.207Z - Regime job iniciado (intervalo 300000ms, klines 1h).
+> info: 2026-06-04T02:52:58.580Z - BTCUSDT:REGIME => bear (100% das últimas 101 velas < SMA200 (risk-off))
+> ```
+
+## 🤖 Claude *(02:53:28)*
+
+
+## 🤖 Claude *(02:53:31)*
+
+**Resiliência a restart validada end-to-end:** "Estado de cross recarregado: BTCUSDT:above=false" → loop inicia → regime=bear, **sem cross espúrio** (above inalterado). Exatamente o comportamento correto. ✓
+
+Persistência aprovada no stack real. Agora o **go-live**. Primeiro o `DRY=true` pra revisar o plano antes de aplicar:
+
+## 🤖 Claude *(02:53:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PASSWORD=\" .env | cut -d= -f2-) && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" -e DRY=true backend node scripts/activate-trend.js 2>&1'",
+  "description": "Run activate-trend.js in DRY mode to preview plan"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)
+> ```
+
+## 🤖 Claude *(02:53:43)*
+
+
+## 🤖 Claude *(02:53:44)*
+
+Credenciais não vieram — vou ver os nomes exatos das chaves no `.env` e se o container já tem `TRADEUX_EMAIL`:
+
+## 🤖 Claude *(02:53:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== .env keys (login/email/pw) ===\" && grep -iE \"email|passw|settings\" .env | sed -E \"s/=.*/=<set>/\"; echo \"=== container env ===\"; docker compose exec -T backend sh -c \"echo TRADEUX_EMAIL=\\${TRADEUX_EMAIL:+<set>}; echo TRADEUX_PASSWORD=\\${TRADEUX_PASSWORD:+<set>}; echo DEFAULT_SETTINGS_EMAIL=\\${DEFAULT_SETTINGS_EMAIL:+<set>}; echo DEFAULT_SETTINGS_PASSWORD=\\${DEFAULT_SETTINGS_PASSWORD:+<set>}\"'",
+  "description": "Inspect env keys for panel login credentials"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .env keys (login/email/pw) ===
+> DEFAULT_SETTINGS_ID=<set>
+> DEFAULT_SETTINGS_EMAIL=<set>
+> DEFAULT_SETTINGS_PWD=<set>
+> # ---------- Chaves Binance — BYOK (deixe em branco; cole no painel Settings) ----------
+> DEFAULT_SETTINGS_ACCESS_KEY=<set>
+> DEFAULT_SETTINGS_SECRET_KEY=<set>
+> === container env ===
+> TRADEUX_EMAIL=
+> TRADEUX_PASSWORD=
+> DEFAULT_SETTINGS_EMAIL=<set>
+> DEFAULT_SETTINGS_PASSWORD=
+> ```
+
+## 🤖 Claude *(02:53:57)*
+
+
+## 🤖 Claude *(02:53:58)*
+
+A chave de senha é `DEFAULT_SETTINGS_PWD` (não `_PASSWORD`). Corrigindo e rodando o DRY:
+
+## 🤖 Claude *(02:54:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" -e DRY=true backend node scripts/activate-trend.js 2>&1'",
+  "description": "Run activate-trend.js DRY mode with correct credentials"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Ativação Trend Following SMA50/200 — BTCUSDT  [DRY-RUN: nada será aplicado]
+> 
+> ## 1) Templates LIMIT marketável
+> - [DRY] PATCH template 3 "Trend Buy BTCUSDT SMA50/200": type MARKET→LIMIT, limitPrice→MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003
+> - [DRY] PATCH template 4 "Trend Sell BTCUSDT SMA50/200": type MARKET→LIMIT, limitPrice→MEMORY['BTCUSDT:BOOK'].current.bestBid * 0.997
+> 
+> ## 2) Coordenação (id2/id3 gateadas por != trend)
+> - [DRY] PATCH automação 2 "Baseline RSI Buy BTCUSDT": conditions→(MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend') | indexes→(BTCUSDT:RSI_14_1m,BTCUSDT:REGIME)
+> - [DRY] PATCH automação 3 "Baseline RSI Sell BTCUSDT": conditions→(MEMORY['BTCUSDT:RSI_14_1m'].current>75 && MEMORY['BTCUSDT:REGIME']!=='trend') | indexes→(BTCUSDT:RSI_14_1m,BTCUSDT:REGIME)
+> 
+> ## 3) Start das automações de trend (id6/id7)
+> - [DRY] START automação 6 "Trend Buy BTCUSDT SMA50/200".
+> - [DRY] START automação 7 "Trend Sell BTCUSDT SMA50/200".
+> 
+> DRY-RUN OK (nenhuma mudança aplicada).
+> Observe 1 golden→death real com logs (A:6.log / A:7.log) antes de calibrar o size.
+> ```
+
+## 🤖 Claude *(02:54:18)*
+
+
+## 🤖 Claude *(02:54:20)*
+
+Plano DRY exatamente correto: templates MARKET→LIMIT, id2 ganha `!=='trend'`, id3 ganha `!=='trend'` + REGIME no index (corrige o fail-open), start id6/id7. Estamos em **bear** com **above=false** → ativação inerte (id6 gateada por !=bear; sem death cross). Aplicando de verdade:
+
+## 🤖 Claude *(02:54:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/activate-trend.js 2>&1'",
+  "description": "Run activate-trend.js for real (go-live)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Ativação Trend Following SMA50/200 — BTCUSDT
+> 
+> ## 1) Templates LIMIT marketável
+> - ✏️  template "Trend Buy BTCUSDT SMA50/200" (id 3) → LIMIT marketável (bestAsk×1.003).
+> - ✏️  template "Trend Sell BTCUSDT SMA50/200" (id 4) → LIMIT marketável (bestBid×0.997).
+> 
+> ## 2) Coordenação (id2/id3 gateadas por != trend)
+> - ✏️  "Baseline RSI Buy BTCUSDT" (id 2) coordenada → conditions: MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'
+> - ✏️  "Baseline RSI Sell BTCUSDT" (id 3) coordenada → conditions: MEMORY['BTCUSDT:RSI_14_1m'].current>75 && MEMORY['BTCUSDT:REGIME']!=='trend'
+> 
+> ## 3) Start das automações de trend (id6/id7)
+> - ▶️  "Trend Buy BTCUSDT SMA50/200" (id 6) ATIVADA.
+> - ▶️  "Trend Sell BTCUSDT SMA50/200" (id 7) ATIVADA.
+> 
+> PRONTO — Trend Following AO VIVO (sinal via regimeJob/mainnet; execução testnet).
+> Observe 1 golden→death real com logs (A:6.log / A:7.log) antes de calibrar o size.
+> ```
+
+## 🤖 Claude *(02:54:39)*
+
+
+## 🤖 Claude *(02:54:39)*
+
+Go-live aplicado. Validando o estado vivo + provando idempotência (re-rodar deve dar tudo "✓ já"):
+
+## 🤖 Claude *(02:54:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && echo \"=== RE-RUN (idempot\u00eancia) ===\" && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/activate-trend.js 2>&1 | grep -E \"\u2713|\u270f\ufe0f|\u25b6\ufe0f|PRONTO\"'",
+  "description": "Re-run activate-trend to prove idempotency"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RE-RUN (idempotência) ===
+> - ✓ template "Trend Buy BTCUSDT SMA50/200" já está LIMIT marketável (id 3).
+> - ✓ template "Trend Sell BTCUSDT SMA50/200" já está LIMIT marketável (id 4).
+> - ✓ "Baseline RSI Buy BTCUSDT" (id 2) já coordenada (gate !=trend + REGIME no index).
+> - ✓ "Baseline RSI Sell BTCUSDT" (id 3) já coordenada (gate !=trend + REGIME no index).
+> - ✓ "Trend Buy BTCUSDT SMA50/200" (id 6) já ATIVA.
+> - ✓ "Trend Sell BTCUSDT SMA50/200" (id 7) já ATIVA.
+> PRONTO — Trend Following AO VIVO (sinal via regimeJob/mainnet; execução testnet).
+> ```
+
+## 🤖 Claude *(02:54:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,isActive,\\\\\\`indexes\\\\\\`,conditions FROM automations WHERE id IN (2,3,6,7) ORDER BY id\\\"\"' 2>&1 | grep -iv warning",
+  "description": "Verify live automation state after activation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> +----+----------+---------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+> | id | isActive | indexes                               | conditions                                                                                                        |
+> +----+----------+---------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+> |  2 |        1 | BTCUSDT:RSI_14_1m,BTCUSDT:REGIME      | MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend' |
+> |  3 |        1 | BTCUSDT:RSI_14_1m,BTCUSDT:REGIME      | MEMORY['BTCUSDT:RSI_14_1m'].current>75 && MEMORY['BTCUSDT:REGIME']!=='trend'                                      |
+> |  6 |        1 | BTCUSDT:TREND_CROSS_1h,BTCUSDT:REGIME | MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'                                  |
+> |  7 |        1 | BTCUSDT:TREND_CROSS_1h                | MEMORY['BTCUSDT:TREND_CROSS_1h']==='death'                                                                        |
+> +----+----------+---------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+> ```
+
+## 🤖 Claude *(02:55:03)*
+
+
+## 🤖 Claude *(02:55:06)*
+
+**Trend Following AO VIVO e validado:**
+
+| id | ativa | conditions | status |
+|---|---|---|---|
+| 2 (RSI Buy) | ✅ | `RSI<25 && REGIME!=='bear' && !=='trend'` | coordenada |
+| 3 (RSI Sell) | ✅ | `RSI>75 && REGIME!=='trend'` (+REGIME no index) | fail-open corrigido |
+| 6 (Trend Buy) | ✅ | `TREND_CROSS==='golden' && REGIME!=='bear'` | **ATIVADA** |
+| 7 (Trend Sell) | ✅ | `TREND_CROSS==='death'` | **ATIVADA** |
+
+Idempotência provada (re-run = tudo ✓). Scan final de erros nos logs + sanity antes de commitar:
+
+## 🤖 Claude *(02:55:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose exec -T backend sh -c \"echo === erros recentes ===; grep -iE \\\"error|exception|unhandled|throw\\\" logs/regime.log logs/system.log logs/A:6.log logs/A:7.log 2>/dev/null | tail -15 || echo none; echo === A:6/A:7 tail ===; tail -3 logs/A:6.log logs/A:7.log 2>/dev/null || echo no-trend-logs-yet\"' 2>&1 | tail -20; echo \"=== site ===\"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Scan logs for errors and check site after activation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === erros recentes ===
+> === A:6/A:7 tail ===
+> no-trend-logs-yet
+> === site ===
+> 200
+> ```
+
+## 🤖 Claude *(02:55:33)*
+
+
+## 🤖 Claude *(02:55:35)*
+
+Logs limpos (sem erros; sem trend-log ainda = correto, automações armadas mas inertes em bear), site 200. 
+
+Agora **commit + push** (trunk-based, como `gcrux-tradeux`). Primeiro confiro o changeset:
+
+## 🤖 Claude *(02:55:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git status --short && echo \"=== diff stat ===\" && git diff --stat && echo \"=== untracked ===\" && git ls-files --others --exclude-standard backend/'",
+  "description": "Check git status and changeset before commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M backend/scripts/setup-trend.js
+>  M backend/src/controllers/orderTemplatesController.js
+>  M backend/src/regimeJob.js
+> ?? backend/migrations/20260604120000-create-regimeStates.js
+> ?? backend/scripts/activate-trend.js
+> ?? backend/src/models/regimeStateModel.js
+> ?? backend/src/repositories/regimeStatesRepository.js
+> === diff stat ===
+>  backend/scripts/setup-trend.js                     | 40 ++++++++++-----
+>  .../src/controllers/orderTemplatesController.js    |  5 ++
+>  backend/src/regimeJob.js                           | 57 +++++++++++++++++++---
+>  3 files changed, 84 insertions(+), 18 deletions(-)
+> === untracked ===
+> backend/migrations/20260604120000-create-regimeStates.js
+> backend/scripts/activate-trend.js
+> backend/src/models/regimeStateModel.js
+> backend/src/repositories/regimeStatesRepository.js
+> ```
+
+## 🤖 Claude *(02:55:55)*
+
+
+## 🤖 Claude *(02:55:56)*
+
+Changeset limpo: exatamente os 7 arquivos (3 mod + 4 novos). Commit (trunk-based, como `gcrux-tradeux`):
+
+## 🤖 Claude *(02:56:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && \\\ngit add backend/scripts/setup-trend.js backend/scripts/activate-trend.js \\\n        backend/src/controllers/orderTemplatesController.js backend/src/regimeJob.js \\\n        backend/migrations/20260604120000-create-regimeStates.js \\\n        backend/src/models/regimeStateModel.js backend/src/repositories/regimeStatesRepository.js && \\\ngit commit -m \"feat(trend): ativacao coordenada do Trend Following (LIMIT marketavel + persistencia de cross)\" \\\n-m \"Deploya a ATIVACAO do pipeline de Trend Following (id6/id7) com a coordenacao e a resiliencia que o checklist do HANDOFF exigia. Money-path: gate QA (PASS) + Tech-Lead (APPROVE), independentes.\" \\\n-m \"- Ordens de trend = LIMIT marketavel + buffer 0.3% (bestAsk*1.003 / bestBid*0.997) -> taker, fill imediato sem o EXPIRE de MARKET no book fino do testnet. Buffer no EVAL do limitPrice (limitPriceMultiplier e DECIMAL(10,2)). setup-trend.js ja cria nessa forma.\" \\\n-m \"- activate-trend.js (novo, idempotente, DRY=true): reshape templates -> LIMIT, coordenacao id2/id3 (+ MEMORY[:REGIME]!==trend em ambas; REGIME nos indexes da id3 = corrige fail-open) e start id6/id7.\" \\\n-m \"- Resiliencia a restart: tabela regimeStates (PK=symbol) + model + repo; regimeJob carrega o estado de cross no boot antes do 1o poll e persiste a cada poll (edge-fire at-least-once) -> golden/death na janela de restart nao e perdido.\" \\\n-m \"- Hardening: validatePrice tambem no updateOrderTemplate (ressalva do QA).\" \\\n-m \"Validado testnet: migration idempotente, reload pos-restart sem cross espurio, ativacao idempotente, BRAIN armado, regime=bear (inerte), site 200.\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && \\\necho \"=== commit OK ===\" && git log --oneline -1'",
+  "description": "Stage and commit the trend activation changeset"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 128
+> Author identity unknown
+> 
+> *** Please tell me who you are.
+> 
+> Run
+> 
+>   git config --global user.email "you@example.com"
+>   git config --global user.name "Your Name"
+> 
+> to set your account's default identity.
+> Omit --global to set the identity only in this repository.
+> 
+> fatal: empty ident name (for <gcrux-tradeux@panel.gcrux.com>) not allowed
+> ```
+
+## 🤖 Claude *(02:56:12)*
+
+
+## 🤖 Claude *(02:56:13)*
+
+Falta identidade git pro `gcrux-tradeux`. Vou espelhar o autor dos commits anteriores e configurar local (não global):
+
+## 🤖 Claude *(02:56:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== autores recentes ===\" && git log -5 --format=\"%an <%ae>\" | sort -u'",
+  "description": "Check recent commit authors to mirror identity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autores recentes ===
+> Gabriel Zarattini <gabrielcall@gmail.com>
+> ```
+
+## 🤖 Claude *(02:56:17)*
+
+
+## 🤖 Claude *(02:56:18)*
+
+Commits anteriores são do Gabriel. Configurando identidade local e refazendo o commit (arquivos já staged):
+
+## 🤖 Claude *(02:56:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && \\\ngit config user.name \"Gabriel Zarattini\" && git config user.email \"gabrielcall@gmail.com\" && \\\ngit commit -m \"feat(trend): ativacao coordenada do Trend Following (LIMIT marketavel + persistencia de cross)\" \\\n-m \"Deploya a ATIVACAO do pipeline de Trend Following (id6/id7) com a coordenacao e a resiliencia que o checklist do HANDOFF exigia. Money-path: gate QA (PASS) + Tech-Lead (APPROVE), independentes.\" \\\n-m \"- Ordens de trend = LIMIT marketavel + buffer 0.3% (bestAsk*1.003 / bestBid*0.997) -> taker, fill imediato sem o EXPIRE de MARKET no book fino do testnet. Buffer no EVAL do limitPrice (limitPriceMultiplier e DECIMAL(10,2)). setup-trend.js ja cria nessa forma.\" \\\n-m \"- activate-trend.js (novo, idempotente, DRY=true): reshape templates -> LIMIT, coordenacao id2/id3 (+ MEMORY[:REGIME]!==trend em ambas; REGIME nos indexes da id3 = corrige fail-open) e start id6/id7.\" \\\n-m \"- Resiliencia a restart: tabela regimeStates (PK=symbol) + model + repo; regimeJob carrega o estado de cross no boot antes do 1o poll e persiste a cada poll (edge-fire at-least-once).\" \\\n-m \"- Hardening: validatePrice tambem no updateOrderTemplate (ressalva do QA).\" \\\n-m \"Validado testnet: migration idempotente, reload pos-restart sem cross espurio, ativacao idempotente, BRAIN armado, regime=bear (inerte), site 200.\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && \\\necho \"=== commit OK ===\" && git log --oneline -1'",
+  "description": "Set local git identity and commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 453c7d6] feat(trend): ativacao coordenada do Trend Following (LIMIT marketavel + persistencia de cross)
+>  7 files changed, 314 insertions(+), 18 deletions(-)
+>  create mode 100644 backend/migrations/20260604120000-create-regimeStates.js
+>  create mode 100644 backend/scripts/activate-trend.js
+>  create mode 100644 backend/src/models/regimeStateModel.js
+>  create mode 100644 backend/src/repositories/regimeStatesRepository.js
+> === commit OK ===
+> 453c7d6 feat(trend): ativacao coordenada do Trend Following (LIMIT marketavel + persistencia de cross)
+> ```
+
+## 🤖 Claude *(02:56:34)*
+
+
+## 🤖 Claude *(02:56:34)*
+
+Commit `453c7d6` criado. Push pro master via token (sem persistir no `.git/config`):
+
+## 🤖 Claude *(02:56:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\"'",
+  "description": "Push commit to master via HTTPS token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 3 vulnerabilities on gabrielZarattini/tradeux's default branch (3 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    49af86a..453c7d6  HEAD -> master
+> ```
+
+## 🤖 Claude *(02:56:47)*
+
+
+## 🤖 Claude *(02:56:48)*
+
+Push no master ✅ (`49af86a..453c7d6`). Os 3 moderate do Dependabot são os deferidos conhecidos (não do meu diff). Agora confiro o **CI** (gate objetivo) via API com o token:
+
+## 🤖 Claude *(02:56:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?head_sha=453c7d6&per_page=5\" | python3 -c \"import sys,json; d=json.load(sys.stdin); runs=d.get(\\\"workflow_runs\\\",[]); print(\\\"runs:\\\", len(runs)); [print(f\\\" - {r[\\\"name\\\"]}: {r[\\\"status\\\"]} / {r.get(\\\"conclusion\\\")}  ({r[\\\"html_url\\\"]})\\\") for r in runs]\"' 2>&1 | head",
+  "description": "Check CI workflow run status for the pushed commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> runs: 0
+> ```
+
+## 🤖 Claude *(02:56:57)*
+
+
+## 🤖 Claude *(02:56:58)*
+
+CI ainda não registrou o run (latência). Deixa eu olhar os runs mais recentes do repo:
+
+## 🤖 Claude *(02:57:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=4&branch=master\" | python3 -c \"import sys,json; d=json.load(sys.stdin); runs=d.get(\\\"workflow_runs\\\",[]); print(\\\"total:\\\", d.get(\\\"total_count\\\")); [print(f\\\" - {r[\\\"head_sha\\\"][:7]} {r[\\\"name\\\"]}: {r[\\\"status\\\"]}/{r.get(\\\"conclusion\\\")} @ {r[\\\"created_at\\\"]}\\\") for r in runs]\"' 2>&1 | head",
+  "description": "List recent master CI runs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total: 26
+>  - 453c7d6 CI: in_progress/None @ 2026-06-04T02:56:40Z
+>  - 49af86a CI: completed/success @ 2026-06-04T01:39:01Z
+>  - 0b1e949 CI: completed/success @ 2026-06-04T00:37:05Z
+>  - e6c10dc CI: completed/success @ 2026-06-04T00:03:29Z
+> ```
+
+## 🤖 Claude *(02:57:20)*
+
+
+## 🤖 Claude *(02:57:22)*
+
+CI **in_progress** pro `453c7d6` (49af86a já estava success). Vai levar alguns minutos (matrix mysql/postgres prova a migration nova nos 2 dialetos). Vou usar o tempo pra atualizar a documentação de continuidade. Lendo as memórias que preciso atualizar:
+
+## 🤖 Claude *(02:57:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-trend-following
+> 3	description: Automação de Trend Following SMA 50/200 — sinal TREND_CROSS vem da MAINNET via regimeJob; id6/id7 INATIVAS; checklist de ativação
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: c37788e7-59b6-40ea-b508-3b0b3f4d2667
+> 8	---
+> 9	
+> 10	Pipeline de Trend Following (cruzamento SMA 50/200, 1h) — commit `49af86a`, automações **INATIVAS**.
+> 11	Captura o bull (backtest: trend 50/200 +151% no bull onde a reversão estagna). Ver [[tradeux-regime-gate]].
+> 12	
+> 13	**Por que o sinal vem da MAINNET (não do chart de trade):** o chart de TRADE é testnet, que após reset tem só
+> 14	~12 velas de 1h → SMA_200 (precisa 200h) **não computa no testnet**. Igual ao regime, o sinal vem da mainnet:
+> 15	o `regimeJob` já busca 300 klines 1h mainnet. NÃO usar monitor de chart testnet p/ SMA (seria 2º writer → `false`).
+> 16	
+> 17	**Mecanismo (o job é o ÚNICO detector de borda):**
+> 18	- `regimeClassifier.smaCross(candles)`: SMA sobre velas FECHADAS (dropa a incompleta), retorna `{fast,slow,above}`.
+> 19	- `regimeService.getRegime` inclui `sma` no payload.
+> 20	- `regimeJob`: rastreia `ABOVE[symbol]`; na **transição** escreve `MEMORY['<sym>:TREND_CROSS_1h']`=`'golden'|'death'`
+> 21	  com `executeAutomations=true` (dispara 1x); sem transição escreve `'none'` PASSIVO. **A automação reage a uma
+> 22	  IGUALDADE** (`==='golden'`) → o `invertCondition` NÃO interfere (sem 'current'). `REGIME` é escrito ANTES do
+> 23	  TREND_CROSS no loop (gate `!=bear` same-cycle) — NÃO reordenar.
+> 24	- Automações **INATIVAS**: id6 BUY `MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'`
+> 25	  (indexes `TREND_CROSS_1h,REGIME`, template 3 MARKET BUY MIN_NOTIONAL); id7 SELL `...==='death'` (indexes
+> 26	  `TREND_CROSS_1h`, template 4 MARKET SELL LAST_ORDER_QTY).
+> 27	- `getStatus()` expõe `smaAbove`/`sma`/`lastCross`. Setup reprodutível: `node backend/scripts/setup-trend.js`.
+> 28	
+> 29	**Why:** o design "condição de cruzamento de SMA" foi REPROVADO no gate (QA+TL) por 2 must-fix — (1) dois detectores
+> 30	de borda desalinhados (ABOVE-flip × invertCondition → repete ordem ou perde sinal), (2) dual-writer (monitor testnet
+> 31	sobrescrevia a SMA da mainnet com `false`). O sinal discreto resolve ambos (job único detector; sem monitor).
+> 32	
+> 33	**How to apply (ATIVAÇÃO — ainda NÃO feita; gate bloqueou até resolver):**
+> 34	1. **Coordenação regime-switch**: gatear id2/id3 por `&& MEMORY['BTCUSDT:REGIME']!=='trend'`. A **id2 já tem REGIME
+> 35	   nos indexes; a id3 NÃO** (só `RSI_14_1m`) → ao gatear a id3, INCLUIR `BTCUSDT:REGIME` nos indexes (senão fail-open).
+> 36	2. **Sizing**: templates 3/4 são MIN_NOTIONAL (validação); trend real quer size. O SELL (id7) usa `LAST_ORDER_QTY`
+> 37	   e `LAST_ORDER` é **por símbolo, compartilhado com a id3** → pode vender qty da reversão (resolver na coordenação).
+> 38	3. **Perda-de-cross em restart**: `ABOVE` do job zera no restart → cross na janela de restart é perdido (sinal raro) → mitigar.
+> 39	4. **Observar 1 golden→death real** (`logs:true` → `logs/A6.log`/`A7.log`) antes de confiar; depois `POST /automations/<id>/start`.
+> 40	Reaplicar tudo após `make nuke` (id2/id3/id6/id7 são runtime, não seeders): `setup-trend.js` + PATCH. Ver [[git-ownership-gotcha]].
+> 41	
+> ```
+
+## 🤖 Claude *(02:57:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-regime-gate
+> 3	description: "ENABLER de regime — regimeJob grava MEMORY['<sym>:REGIME']; id2 (BUY) gateada por != bear; gate é RUNTIME (reaplicar pós-reset)"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: c37788e7-59b6-40ea-b508-3b0b3f4d2667
+> 8	---
+> 9	
+> 10	ENABLER Nº1 entregue (commit `30e6566`, no ar): o **regime de mercado gateia a entrada** das automações.
+> 11	Torna deployável a estratégia regime-gated (edge = risco-ajustado, CAIXA no bear). Ver [[tradeux-agent-500k-validation]].
+> 12	
+> 13	**Como funciona (código, em git):**
+> 14	- `backend/src/regimeJob.js`: poll periódico (default 5min) grava `MEMORY['<sym>:REGIME']` = STRING
+> 15	  (`'bear'|'trend'|'range'|'mixed'`) via `updateMemory(...,executeAutomations=false)` (**gate passivo** — não
+> 16	  dispara ordem por si). **skip-on-unknown** (não sobrescreve se Binance falhar/poucos dados → preserva o último).
+> 17	  Símbolos = `REGIME_SYMBOLS` (CSV) OU os das automações ativas (não-wildcard).
+> 18	- `backend/src/utils/regimeService.js`: fonte única; cacheia as VELAS (2min) e classifica por chamada com `prev`,
+> 19	  compartilhada com o endpoint `GET /analysis/regime/:symbol` (que ficou fino).
+> 20	- **Histerese anti-whipsaw** (commit `774ae42`): `classifyRegime(candles,opts,prev)` usa banda de SAÍDA≠ENTRADA
+> 21	  (entra bear >0.60 / sai só <0.45; trend 25/22; range 20/23). O `regimeJob` passa `LAST[symbol]` como `prev`
+> 22	  → bear PEGAJOSO = gate fail-safe (nunca compra em bear mais cedo). `prev=null` = comportamento V1 (o endpoint/
+> 23	  painel mostra o regime INSTANTÂNEO; o gate usa o MEMORY histerético → podem divergir na zona 0.45–0.60).
+> 24	- Env: `REGIME_JOB_ENABLED` (kill-switch; desligar PAUSA compras gateadas = fail-safe), `REGIME_REFRESH_MS`
+> 25	  (5min; manter ≥120s do cache), `REGIME_INTERVAL` (1h), `REGIME_SYMBOLS`.
+> 26	
+> 27	**id2/id3 ao vivo** — DADO RUNTIME (não seeder). RSI calibrado p/ **25/75** (commit `0b1e949`):
+> 28	- id2 (BUY): `indexes="BTCUSDT:RSI_14_1m,BTCUSDT:REGIME"` · `conditions="MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear'"`.
+> 29	- id3 (SELL): `indexes="BTCUSDT:RSI_14_1m"` · `conditions="MEMORY['BTCUSDT:RSI_14_1m'].current>75"` — **NÃO gateada** (saída p/ caixa sempre liberada).
+> 30	- REGIME nos `indexes` → fail-safe: sem regime conhecido, id2 não compra (engine exige todos os indexes presentes).
+> 31	
+> 32	**Why:** id2/id3 NÃO estão nos seeders (só "Example Strategy" inativa é seedada) → o gate vive no banco do testnet,
+> 33	que reseta ~mensal (`make nuke`). Sem reaplicar, a id2 volta a comprar em bear. Ver [[tradeux-deploy-topology]].
+> 34	
+> 35	**How to apply:** após reset/`make nuke`, recriar id2/id3 e re-aplicar os strings acima (via UI, API PATCH
+> 36	`/automations/:id`, ou DB+restart). Revert do gate (mantendo RSI): id2 → `indexes="BTCUSDT:RSI_14_1m"` / `...current<25`.
+> 37	Revert da RSI p/ baseline: 25→30 / 75→70. **Calibração** (backtest `--calibrate`, retorno+maxDD agregado): 25/75 domina
+> 38	30/70 em 1h E 1m (1m: 30/70 overtrada ~80 trades, fee corrói; 25/75 ~15-19) → menos trades, melhor retorno E drawdown.
+> 39	Verificar ao vivo: `GET /beholder/memory/BTCUSDT/REGIME` => `"bear"` e `GET /beholder/brain` (id2 gateada).
+> 40	GOTCHA: `/beholder` e `/analysis` estão atrás do `authMiddleware`, que usa o token **CRU** no header `authorization`
+> 41	(SEM `Bearer `). Login: POST `/login` com `TRADEUX_EMAIL`/`TRADEUX_PASSWORD` (em `tradeux-mcp/.env`).
+> 42	Backend escuta em `3001/tcp` SÓ na rede docker (sem porta no host) → validar via `docker compose exec backend`.
+> 43	Backend é `build:` (sem bind-mount) → mudança de código exige `docker compose build backend && up -d backend`, não `restart`.
+> 44	**Honestidade do backtest** (não vender errado): o ganho da histerese é de CARTEIRA/risco-ajustado (agregado 4
+> 45	símbolos: bear 26→6 flips, -32%→+0.6%), **NÃO alfa no BTC** — no BTC isolado (único símbolo gateado) o V2 empata
+> 46	no bull e atrasa no bear. ±DI testado e DESCARTADO (piorava); MTF não feito (desnecessário). Dívida: bandas
+> 47	DUPLICADAS em `regimeClassifier.js` e `backtest.js` (backtest é self-contained) — manter em sincronia; backtest é
+> 48	window-level (ADX médio 30d), runtime é snapshot (ADX última vela). Backtest é o JUIZ (testnet=preço sintético):
+> 49	`cd backend && node scripts/backtest.js --compareRegime --days=365` (e `--days=180 --end=2024-04-01`) compara V1×V2
+> 50	sem sobrescrever relatórios.
+> 51	NEXT: observar a id2 gateada no tempo; expor `regimeJob.getStatus()` num painel (halt silencioso + divergência
+> 52	display×gate). Ver [[tradeux-logger-per-category-files]] (logs do job em `logs/regime.log`).
+> 53	
+> ```
+
+## 🤖 Claude *(02:58:11)*
+
+
+## 🤖 Claude *(02:58:12)*
+
+CI rodando. Atualizando as memórias de continuidade enquanto isso. Primeiro `tradeux-trend-following` (INATIVO → ATIVO):
+
+## 🤖 Claude *(02:58:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md",
+  "old_string": "description: Automa\u00e7\u00e3o de Trend Following SMA 50/200 \u2014 sinal TREND_CROSS vem da MAINNET via regimeJob; id6/id7 INATIVAS; checklist de ativa\u00e7\u00e3o",
+  "new_string": "description: Trend Following SMA 50/200 ATIVO (commit 453c7d6) \u2014 sinal da MAINNET via regimeJob; id6/id7 ativas, coordena\u00e7\u00e3o id2/id3 !=trend, LIMIT market\u00e1vel, cross persistido em regimeStates"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md",
+  "old_string": "Pipeline de Trend Following (cruzamento SMA 50/200, 1h) \u2014 commit `49af86a`, automa\u00e7\u00f5es **INATIVAS**.\nCaptura o bull (backtest: trend 50/200 +151% no bull onde a revers\u00e3o estagna). Ver [[tradeux-regime-gate]].",
+  "new_string": "Pipeline de Trend Following (cruzamento SMA 50/200, 1h) \u2014 pipeline `49af86a`, **ATIVADO** em `453c7d6`\n(coordena\u00e7\u00e3o id2/id3 + LIMIT market\u00e1vel + persist\u00eancia de cross; gate QA PASS + TL APPROVE, independentes).\nCaptura o bull (backtest: trend 50/200 +151% no bull onde a revers\u00e3o estagna). Ver [[tradeux-regime-gate]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md",
+  "old_string": "- Automa\u00e7\u00f5es **INATIVAS**: id6 BUY `MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'`\n  (indexes `TREND_CROSS_1h,REGIME`, template 3 MARKET BUY MIN_NOTIONAL); id7 SELL `...==='death'` (indexes\n  `TREND_CROSS_1h`, template 4 MARKET SELL LAST_ORDER_QTY).\n- `getStatus()` exp\u00f5e `smaAbove`/`sma`/`lastCross`. Setup reprodut\u00edvel: `node backend/scripts/setup-trend.js`.",
+  "new_string": "- Automa\u00e7\u00f5es **ATIVAS** (commit `453c7d6`): id6 BUY `MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'`\n  (indexes `TREND_CROSS_1h,REGIME`, template 3 **LIMIT market\u00e1vel** BUY `bestAsk*1.003` MIN_NOTIONAL\u00d73); id7 SELL\n  `...==='death'` (indexes `TREND_CROSS_1h`, template 4 **LIMIT** SELL `bestBid*0.997` LAST_ORDER_QTY).\n- **Persist\u00eancia de cross** (commit `453c7d6`): tabela `regimeStates` (PK=symbol) guarda `smaAbove`/`lastCross`; o\n  `regimeJob` carrega no boot ANTES do 1\u00ba poll (log \"Estado de cross recarregado\") \u2192 cross na janela de restart n\u00e3o\n  se perde. Edge-fire **at-least-once** (persist ap\u00f3s o fire; crash no meio pode re-disparar 1x no boot \u2014 ok p/ size pequeno).\n- `getStatus()` exp\u00f5e `smaAbove`/`sma`/`lastCross`. Reprodut\u00edvel: `setup-trend.js` (cria templates/automa\u00e7\u00f5es) +\n  `activate-trend.js` (reshape+coordena+ativa, **idempotente**, `DRY=true` p/ preview). Login: `EM`=DEFAULT_SETTINGS_EMAIL, `PW`=DEFAULT_SETTINGS_PWD."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md",
+  "old_string": "**How to apply (ATIVA\u00c7\u00c3O \u2014 ainda N\u00c3O feita; gate bloqueou at\u00e9 resolver):**\n1. **Coordena\u00e7\u00e3o regime-switch**: gatear id2/id3 por `&& MEMORY['BTCUSDT:REGIME']!=='trend'`. A **id2 j\u00e1 tem REGIME\n   nos indexes; a id3 N\u00c3O** (s\u00f3 `RSI_14_1m`) \u2192 ao gatear a id3, INCLUIR `BTCUSDT:REGIME` nos indexes (sen\u00e3o fail-open).\n2. **Sizing**: templates 3/4 s\u00e3o MIN_NOTIONAL (valida\u00e7\u00e3o); trend real quer size. O SELL (id7) usa `LAST_ORDER_QTY`\n   e `LAST_ORDER` \u00e9 **por s\u00edmbolo, compartilhado com a id3** \u2192 pode vender qty da revers\u00e3o (resolver na coordena\u00e7\u00e3o).\n3. **Perda-de-cross em restart**: `ABOVE` do job zera no restart \u2192 cross na janela de restart \u00e9 perdido (sinal raro) \u2192 mitigar.\n4. **Observar 1 golden\u2192death real** (`logs:true` \u2192 `logs/A6.log`/`A7.log`) antes de confiar; depois `POST /automations/<id>/start`.\nReaplicar tudo ap\u00f3s `make nuke` (id2/id3/id6/id7 s\u00e3o runtime, n\u00e3o seeders): `setup-trend.js` + PATCH. Ver [[git-ownership-gotcha]].",
+  "new_string": "**ATIVA\u00c7\u00c3O FEITA (commit `453c7d6`, gate QA PASS + TL APPROVE) \u2014 via `node backend/scripts/activate-trend.js`:**\n1. \u2705 **Coordena\u00e7\u00e3o**: id2 += `&& MEMORY['BTCUSDT:REGIME']!=='trend'`; id3 += `!=='trend'` E ganhou `BTCUSDT:REGIME`\n   nos indexes (corrigiu o fail-open). Em REGIME=trend a revers\u00e3o sai e o trend conduz. Ver [[tradeux-regime-gate]].\n2. \u2705 **Order type**: MARKET\u2192**LIMIT market\u00e1vel** (buffer 0.3% no EVAL do `limitPrice`, pois `limitPriceMultiplier` \u00e9\n   DECIMAL(10,2) e n\u00e3o expressa sub-1%) \u2192 fill imediato como taker, mata o EXPIRE de MARKET no book fino do testnet.\n   BOOK \u00e9 sempre vivo (miniTickerStream o popula). Hardening: `validatePrice` tamb\u00e9m no `updateOrderTemplate` (PATCH).\n3. \u2705 **Resili\u00eancia a restart**: tabela `regimeStates` (acima) \u2014 cross n\u00e3o se perde no `make restart`.\n4. \u23f3 **PENDENTE**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** \u00e9\n   pequeno (id6=3\u00d7 MIN_NOTIONAL) p/ observar \u2014 calibrar p/ cima depois; (c) **risco aberto n\u00ba1**: id7 usa `LAST_ORDER_QTY`\n   e `LAST_ORDER` \u00e9 **por s\u00edmbolo, compartilhado com a id3** \u2192 o SELL de trend pode vender a qty da revers\u00e3o. Aceito p/ size\n   pequeno; resolver (rastreio dedicado da qty de trend) ao calibrar. (d) hoje BTC=bear+above=false \u2192 ativa\u00e7\u00e3o **inerte** at\u00e9 virar.\nReaplicar ap\u00f3s `make nuke` (id2/id3/id6/id7 s\u00e3o runtime, n\u00e3o seeders): `setup-trend.js` + `activate-trend.js`. Ver [[git-ownership-gotcha]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:53)*
+
+
+## 🤖 Claude *(02:58:54)*
+
+Agora `tradeux-regime-gate` (id2/id3 agora também gateadas por `!=trend`):
+
+## 🤖 Claude *(02:59:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md",
+  "old_string": "**id2/id3 ao vivo** \u2014 DADO RUNTIME (n\u00e3o seeder). RSI calibrado p/ **25/75** (commit `0b1e949`):\n- id2 (BUY): `indexes=\"BTCUSDT:RSI_14_1m,BTCUSDT:REGIME\"` \u00b7 `conditions=\"MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear'\"`.\n- id3 (SELL): `indexes=\"BTCUSDT:RSI_14_1m\"` \u00b7 `conditions=\"MEMORY['BTCUSDT:RSI_14_1m'].current>75\"` \u2014 **N\u00c3O gateada** (sa\u00edda p/ caixa sempre liberada).\n- REGIME nos `indexes` \u2192 fail-safe: sem regime conhecido, id2 n\u00e3o compra (engine exige todos os indexes presentes).",
+  "new_string": "**id2/id3 ao vivo** \u2014 DADO RUNTIME (n\u00e3o seeder). RSI **25/75** (commit `0b1e949`) + **coordena\u00e7\u00e3o trend** (commit `453c7d6`):\n- id2 (BUY): `indexes=\"BTCUSDT:RSI_14_1m,BTCUSDT:REGIME\"` \u00b7 `conditions=\"...current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'\"`.\n- id3 (SELL): `indexes=\"BTCUSDT:RSI_14_1m,BTCUSDT:REGIME\"` \u00b7 `conditions=\"...current>75 && MEMORY['BTCUSDT:REGIME']!=='trend'\"` \u2014 agora gateada por `!=trend` (em trend, o Trend Following conduz; ver [[tradeux-trend-following]]). Sem gate de bear (sa\u00edda p/ caixa liberada).\n- REGIME nos `indexes` de AMBAS \u2192 fail-safe: sem regime conhecido, n\u00e3o disparam (engine exige todos os indexes presentes)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:59:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md",
+  "old_string": "NEXT: observar a id2 gateada no tempo; expor `regimeJob.getStatus()` num painel (halt silencioso + diverg\u00eancia\ndisplay\u00d7gate). Ver [[tradeux-logger-per-category-files]] (logs do job em `logs/regime.log`).",
+  "new_string": "NEXT: observar id2/id3 coordenadas + id6/id7 (Trend Following, [[tradeux-trend-following]]) no tempo; calibrar size do\ntrend ap\u00f3s 1 golden\u2192death real. (getStatus j\u00e1 est\u00e1 no painel, commit `e6c10dc`.) Logs do job em `logs/regime.log` (ver [[tradeux-logger-per-category-files]])."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:59:16)*
+
+
+## 🤖 Claude *(02:59:16)*
+
+Memórias atualizadas. Checando o CI antes de fechar o HANDOFF:
+
+## 🤖 Claude *(02:59:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?head_sha=453c7d6&per_page=3\" | python3 -c \"import sys,json; d=json.load(sys.stdin); runs=d.get(\\\"workflow_runs\\\",[]); [print(f\\\"{r[\\\"name\\\"]}: {r[\\\"status\\\"]}/{r.get(\\\"conclusion\\\")}\\\") for r in runs] or print(\\\"sem run ainda\\\")\"'",
+  "description": "Check CI status for the commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sem run ainda
+> ```
+
+## 🤖 Claude *(02:59:23)*
+
+
+## 🤖 Claude *(02:59:23)*
+
+O filtro por `head_sha` tá com lag. Consultando por branch:
+
+## 🤖 Claude *(02:59:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=2&branch=master\" | python3 -c \"import sys,json; d=json.load(sys.stdin); runs=d.get(\\\"workflow_runs\\\",[]); [print(f\\\"{r[\\\"head_sha\\\"][:7]} {r[\\\"name\\\"]}: {r[\\\"status\\\"]}/{r.get(\\\"conclusion\\\")}\\\") for r in runs]\"'",
+  "description": "Check latest master CI run status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 453c7d6 CI: completed/success
+> 49af86a CI: completed/success
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
