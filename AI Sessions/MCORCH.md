@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 31
-> * **Total de Sessões**: 302
+> * **Total de Sessões**: 304
 
 ---
 
@@ -58,6 +58,8 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` (ClaudeSessions) - *2026-06-04*
+*   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` (ClaudeSessions) - *2026-06-04*
+*   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` (GeminiSessions) - *2026-06-04*
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions) - *2026-06-04*

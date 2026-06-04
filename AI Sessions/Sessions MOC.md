@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 306
-> * **Sessões do Claude**: 273
+> * **Total de Sessões Registradas**: 308
+> * **Sessões do Claude**: 275
 > * **Sessões do Gemini**: 33
 
 ---
@@ -63,15 +63,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` - *2026-06-04*
+*   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` - *2026-06-04*
+*   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` - *2026-06-04*
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` - *2026-06-04*
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` - *2026-06-04*
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` - *2026-06-04*
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-03*
 *   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` - *2026-06-03*
 *   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` - *2026-06-03*
-*   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-aee9ed2070f3f1ca9]]` - *2026-06-03*
-*   *... e mais 270 sessões nessa categoria.*
+*   *... e mais 272 sessões nessa categoria.*
 
 ---
 
@@ -263,6 +263,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` (ClaudeSessions)
+*   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` (ClaudeSessions)
+*   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` (ClaudeSessions)
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` (GeminiSessions)
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions)
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions)
