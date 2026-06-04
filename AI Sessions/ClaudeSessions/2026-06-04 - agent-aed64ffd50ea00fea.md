@@ -133,6 +133,6 @@ The SSRN/ScienceDirect paper is real. The WebSearch confirms the claim's three c
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-04 - agent-aed4aab74db74557b]]
-> * **Próxima Sessão**: [[2026-06-04 - agent-af7011175fc5d99e0]]
+> * **Sessão Anterior**: [[2026-06-04 - agent-aed62acbbab72d747]]
+> * **Próxima Sessão**: [[2026-06-04 - agent-aedc67b551c29a125]]
 %% --- TIMELINE END --- %%
