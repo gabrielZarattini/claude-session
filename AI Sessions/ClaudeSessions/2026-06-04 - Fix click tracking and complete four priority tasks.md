@@ -8000,6 +8000,2321 @@ Sobre os **próximos restantes**: os de maior valor — **domínio Resend verifi
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual o próximo foco que eu construo? (os de maior valor — domínio Resend + domínio branded — dependem de você no CloudPanel/DNS)"="Faça todos os .: Auto-monetizar no pipeline orchestrate-content passa a embutir links de afiliado RASTREÁVEIS automaticamente no conteúdo gerado (artigo/posts), fechando o flywheel ponta-a-ponta. Hoje é manual (botão Monetizar / link-forge). Maior leverage, 100% nas minhas mãos. ! muda comportamento: todo conteúdo gerado vira monetizado automaticamente (você perde o passo de revisão manual antes de monetizar). matt_tool na atribuição adiciona o param per-user matt_tool (você tem 43641843) aos links, casando o formato oficial da ML. Baixo esforço. ! efeito real na atribuição é NÃO-verificável daqui (ML é opaco/sem docs) - pode não mudar nada além de casar o formato. campaign-run assíncrono fila p/ campanhas grandes (OTD-CAMPAIGN-RUN-ASYNC). Hoje campaign-run já retorna rápido p/ campanhas pequenas (cada orchestrate-content kick é rápido), então isso é prep de ESCALA comercial (>8 passos), não urgência atual.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:41:37)*
+
+
+## 🤖 Claude *(16:41:39)*
+
+O Sovereign disse **"faça todos os"** — os 3. Probe-first cada um, build, smoke, sem parar (mesmo padrão dos 4 pontos). Ordem: (1) auto-monetização no pipeline [maior valor] → (2) matt_tool → (3) campaign-run assíncrono.
+
+Começo por (1): leio o `orchestrate-step` pra achar onde injetar a monetização (geração de conteúdo + persistência).
+
+## 🤖 Claude *(16:41:41)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Fa\u00e7a todos \u2014 auto-monetiza\u00e7\u00e3o + matt_tool + async",
+  "summary": "Os 3 pr\u00f3ximos: auto-monetizar no pipeline orchestrate, matt_tool per-user, campaign-run ass\u00edncrono"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Faça todos — auto-monetização + matt_tool + async". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(16:41:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const corsHeaders = {
+> 2	  "Access-Control-Allow-Origin": "*",
+> 3	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 4	  "Access-Control-Allow-Headers":
+> 5	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 6	};
+> 7	
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 9	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 10	
+> 11	// Content length/structure validation
+> 12	const CONTENT_MIN_LENGTH: Record<string, number> = { article: 500, linkedin: 50, twitter_thread: 30 };
+> 13	function validateContent(type: string, content: string): { valid: boolean; reason: string } {
+> 14	  const trimmed = content.trim();
+> 15	  if (!trimmed) return { valid: false, reason: "empty_content" };
+> 16	  const min = CONTENT_MIN_LENGTH[type] ?? 30;
+> 17	  if (trimmed.length < min) return { valid: false, reason: `too_short:${trimmed.length}/<${min}` };
+> 18	  return { valid: true, reason: "ok" };
+> 19	}
+> 20	
+> 21	function utmTag(platform: string, utmCampaign: string, topic: string, baseUrl?: string) {
+> 22	  const params = `utm_source=${platform}&utm_medium=social&utm_campaign=${utmCampaign}&utm_term=${encodeURIComponent(topic.slice(0, 50))}`;
+> 23	  return baseUrl ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${params}` : params;
+> 24	}
+> 25	
+> 26	function getNextStep(currentStep: string, platforms: string[]): string | null {
+> 27	  const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 28	  const currentIdx = stepsOrder.indexOf(currentStep);
+> 29	  
+> 30	  for (let i = currentIdx + 1; i < stepsOrder.length; i++) {
+> 31	    const candidate = stepsOrder[i];
+> 32	    if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 33	      if (platforms.includes("wordpress")) return candidate;
+> 34	    } else if (candidate === "linkedin_post") {
+> 35	      if (platforms.includes("linkedin")) return candidate;
+> 36	    } else if (candidate === "twitter_thread") {
+> 37	      if (platforms.includes("twitter")) return candidate;
+> 38	    } else if (candidate === "knowledge_mesh") {
+> 39	      return candidate; // Always run the final mesh step
+> 40	    }
+> 41	  }
+> 42	  return null;
+> 43	}
+> 44	
+> 45	Deno.serve(async (req) => {
+> 46	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 47	
+> 48	  try {
+> 49	    const authHeader = req.headers.get("Authorization");
+> 50	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 51	    if (authHeader !== `Bearer ${serviceKey}`) {
+> 52	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 53	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 54	      });
+> 55	    }
+> 56	
+> 57	    const { run_id, step } = await req.json();
+> 58	    if (!run_id || !step) {
+> 59	      return new Response(JSON.stringify({ error: "run_id and step are required" }), {
+> 60	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 61	      });
+> 62	    }
+> 63	
+> 64	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 65	    const admin = createClient(supabaseUrl, serviceKey);
+> 66	
+> 67	    // Fetch the run row
+> 68	    const { data: run, error: runErr } = await admin
+> 69	      .from("pipeline_runs")
+> 70	      .select("*")
+> 71	      .eq("id", run_id)
+> 72	      .single();
+> 73	
+> 74	    if (runErr || !run) {
+> 75	      return new Response(JSON.stringify({ error: "Pipeline run not found" }), {
+> 76	        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 77	      });
+> 78	    }
+> 79	
+> 80	    const steps = run.steps || [];
+> 81	    const addStep = async (name: string, status: string, input?: any, output?: any) => {
+> 82	      const stepObj = {
+> 83	        name,
+> 84	        status,
+> 85	        input: input ?? null,
+> 86	        output: output ?? null,
+> 87	        timestamp: new Date().toISOString(),
+> 88	      };
+> 89	      const idx = steps.findIndex((s: any) => s.name === name);
+> 90	      if (idx !== -1) {
+> 91	        steps[idx] = stepObj;
+> 92	      } else {
+> 93	        steps.push(stepObj);
+> 94	      }
+> 95	      await admin.from("pipeline_runs").update({ steps }).eq("id", run_id);
+> 96	    };
+> 97	
+> 98	    const metadata = run.metadata || {};
+> 99	    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 100	
+> 101	    // Load user API keys to resolve correct preferred AI models and keys
+> 102	    const { data: userKeys } = await admin
+> 103	      .from("decrypted_user_api_keys")
+> 104	      .select("*")
+> 105	      .eq("user_id", run.user_id)
+> 106	      .maybeSingle();
+> 107	
+> 108	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 109	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 110	    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 111	    const prefModel = userKeys?.pref_ai_model ?? null;
+> 112	    const prefRequiresOR = prefModel && (prefModel.includes("/") || prefModel.startsWith("gemini-"));
+> 113	    const aiKey = prefRequiresOR ? (openRouterKey || groqKey) : (groqKey || openRouterKey);
+> 114	    const isGroq = !prefRequiresOR && !!groqKey && aiKey === groqKey;
+> 115	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 116	    const orPrefModel = prefModel?.startsWith("gemini-") ? `google/${prefModel}` : prefModel;
+> 117	    const selectedModel = orPrefModel ?? (isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct");
+> 118	
+> 119	    console.log(`[orchestrate-step] Executing step "${step}" for run ${run_id}`);
+> 120	
+> 121	    if (step === "article_generation") {
+> 122	      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 123	      try {
+> 124	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 125	        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 126	          method: "POST",
+> 127	          headers: { 
+> 128	            Authorization: `Bearer ${aiKey}`, 
+> 129	            "Content-Type": "application/json",
+> 130	            "HTTP-Referer": "https://mcorch.com",
+> 131	            "X-Title": "GCRUX Constellation"
+> 132	          },
+> 133	          body: JSON.stringify({
+> 134	            model: selectedModel,
+> 135	            messages: [
+> 136	              { role: "system", content: `Você é um especialista em marketing digital e SEO. Escreva artigos longos (1200+ palavras) em português brasileiro, otimizados para SEO. Inclua meta description e tags sugeridas. Formato: retorne JSON com campos "title", "content" (HTML), "meta_description", "tags" (array de strings).` },
+> 137	              { role: "user", content: `Escreva um artigo completo sobre: "${topic}". O artigo deve ser focado em donos de agências de marketing que querem usar IA para escalar resultados. Inclua dados, exemplos práticos e um CTA forte. URL do site: https://${site_url}` },
+> 138	            ],
+> 139	            tools: [{
+> 140	              type: "function",
+> 141	              function: {
+> 142	                name: "write_article",
+> 143	                description: "Generate a full SEO article",
+> 144	                parameters: {
+> 145	                  type: "object",
+> 146	                  properties: {
+> 147	                    title: { type: "string" },
+> 148	                    content: { type: "string", description: "Full HTML article body" },
+> 149	                    meta_description: { type: "string" },
+> 150	                    tags: { type: "array", items: { type: "string" } },
+> 151	                  },
+> 152	                  required: ["title", "content", "meta_description", "tags"],
+> 153	                },
+> 154	              },
+> 155	            }],
+> 156	            tool_choice: { type: "function", function: { name: "write_article" } },
+> 157	          }),
+> 158	        }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 159	
+> 160	        if (!articleRes.ok) {
+> 161	          throw new Error(`AI error: ${articleRes.status}`);
+> 162	        }
+> 163	
+> 164	        const articleData = await articleRes.json();
+> 165	        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);
+> 166	        const articleTitle = args.title ?? "";
+> 167	        const articleContent = args.content ?? "";
+> 168	
+> 169	        const articleValidation = validateContent("article", articleContent);
+> 170	        if (!articleValidation.valid) {
+> 171	          console.error(`[FMEA-008] article validation failed: ${articleValidation.reason}`, { topic, length: articleContent.length });
+> 172	          await addStep("article_generation", "error", { topic }, { error: `content_validation_failed:${articleValidation.reason}` });
+> 173	        } else {
+> 174	          await admin.from("content_library").insert({
+> 175	            user_id: run.user_id,
+> 176	            campaign_id: campaign_id || null,
+> 177	            type: "text",
+> 178	            title: articleTitle,
+> 179	            body: articleContent,
+> 180	            tags: args.tags,
+> 181	            status: "approved",
+> 182	            metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic) },
+> 183	          });
+> 184	
+> 185	          // Save generated article to metadata
+> 186	          const updatedMetadata = {
+> 187	            ...metadata,
+> 188	            articleTitle,
+> 189	            articleContent,
+> 190	            articleTags: args.tags,
+> 191	            meta_description: args.meta_description,
+> 192	          };
+> 193	          await admin.from("pipeline_runs").update({ metadata: updatedMetadata }).eq("id", run_id);
+> 194	
+> 195	          await addStep("article_generation", "done",
+> 196	            { topic, model: selectedModel },
+> 197	            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleContent.split(" ").length }
+> 198	          );
+> 199	        }
+> 200	      } catch (e: any) {
+> 201	        await addStep("article_generation", "error", { topic }, { error: e.message || "Unknown" });
+> 202	      }
+> 203	
+> 204	    } else if (step === "wordpress_publish") {
+> 205	      const { articleTitle, articleContent } = metadata;
+> 206	      if (!articleContent) {
+> 207	        await addStep("wordpress_publish", "error", { title: articleTitle }, { error: "No article content available from previous step" });
+> 208	      } else {
+> 209	        await addStep("wordpress_publish", "in_progress",
+> 210	          { title: articleTitle, tags: "marketing-ia,orquestracao,roi", status: wp_status }
+> 211	        );
+> 212	        try {
+> 213	          const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 214	            method: "POST",
+> 215	            headers: { 
+> 216	              Authorization: `Bearer ${serviceKey}`, 
+> 217	              "Content-Type": "application/json" 
+> 218	            },
+> 219	            body: JSON.stringify({
+> 220	              user_id: run.user_id,
+> 221	              title: articleTitle,
+> 222	              content: articleContent,
+> 223	              tags: "marketing-ia,orquestracao,roi",
+> 224	              status: wp_status,
+> 225	            }),
+> 226	          });
+> 227	          const wpData = await wpRes.json();
+> 228	          if (wpRes.ok && wpData.post_url) {
+> 229	            const wpPostUrl = wpData.post_url;
+> 230	            const wpPostId = (typeof wpData.post_id === "number" ? wpData.post_id : null);
+> 231	            
+> 232	            const updatedMetadata = {
+> 233	              ...metadata,
+> 234	              wpPostUrl,
+> 235	              wpPostId,
+> 236	            };
+> 237	            await admin.from("pipeline_runs").update({ 
+> 238	              metadata: updatedMetadata,
+> 239	              wordpress_url: wpPostUrl
+> 240	            }).eq("id", run_id);
+> 241	
+> 242	            await addStep("wordpress_publish", "done",
+> 243	              { title: articleTitle, status: wp_status },
+> 244	              { post_url: wpPostUrl, post_id: wpPostId, status: wpData.status, slug: wpData.slug }
+> 245	            );
+> 246	          } else {
+> 247	            await addStep("wordpress_publish", "error", { title: articleTitle }, { error: wpData.error || "Failed" });
+> 248	          }
+> 249	        } catch (e: any) {
+> 250	          await addStep("wordpress_publish", "error", { title: articleTitle }, { error: e.message || "Unknown" });
+> 251	        }
+> 252	      }
+> 253	
+> 254	    } else if (step === "linkedin_post") {
+> 255	      const { wpPostUrl } = metadata;
+> 256	      const articleLink = wpPostUrl ? utmTag("linkedin", utmCampaign, topic, wpPostUrl) : `https://${site_url}`;
+> 257	
+> 258	      await addStep("linkedin_post", "in_progress", { topic, article_link: articleLink, model: selectedModel });
+> 259	      try {
+> 260	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 261	        const liRes = await fetchLLMWithFallback(aiEndpoint, {
+> 262	          method: "POST",
+> 263	          headers: { 
+> 264	            Authorization: `Bearer ${aiKey}`, 
+> 265	            "Content-Type": "application/json",
+> 266	            "HTTP-Referer": "https://mcorch.com",
+> 267	            "X-Title": "GCRUX Constellation"
+> 268	          },
+> 269	          body: JSON.stringify({
+> 270	            model: selectedModel,
+> 271	            messages: [
+> 272	              { role: "system", content: "Você é um especialista em LinkedIn B2B. Crie posts de autoridade com storytelling, emojis moderados, e CTA. Formato: retorne JSON com 'post_text'." },
+> 273	              { role: "user", content: `Crie um post LinkedIn sobre: "${topic}". Link do artigo: ${articleLink}. Foque em donos de agências e ROI com IA.` },
+> 274	            ],
+> 275	            tools: [{
+> 276	              type: "function",
+> 277	              function: {
+> 278	                name: "linkedin_post",
+> 279	                description: "Generate LinkedIn post",
+> 280	                parameters: { type: "object", properties: { post_text: { type: "string" } }, required: ["post_text"] },
+> 281	              },
+> 282	            }],
+> 283	            tool_choice: { type: "function", function: { name: "linkedin_post" } },
+> 284	          }),
+> 285	        }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 286	
+> 287	        if (!liRes.ok) throw new Error(`AI error: ${liRes.status}`);
+> 288	        const liData = await liRes.json();
+> 289	        const liArgs = JSON.parse(liData.choices[0].message.tool_calls[0].function.arguments);
+> 290	        const liText: string = liArgs.post_text ?? "";
+> 291	
+> 292	        const liValidation = validateContent("linkedin", liText);
+> 293	        if (!liValidation.valid) {
+> 294	          console.error(`[FMEA-008] linkedin post validation failed: ${liValidation.reason}`, { topic, length: liText.length });
+> 295	          await addStep("linkedin_post", "error", { topic }, { error: `content_validation_failed:${liValidation.reason}` });
+> 296	        } else {
+> 297	          await admin.from("content_library").insert({
+> 298	            user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 299	            title: `LinkedIn: ${topic}`, body: liText, status: "approved",
+> 300	            metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin", utmCampaign, topic) },
+> 301	          });
+> 302	
+> 303	          const { data: liContent } = await admin.from("content_library")
+> 304	            .select("id").eq("user_id", run.user_id).order("created_at", { ascending: false }).limit(1).single();
+> 305	
+> 306	          if (liContent) {
+> 307	            await admin.from("scheduled_posts").insert({
+> 308	              user_id: run.user_id, campaign_id: campaign_id || null,
+> 309	              platform: "linkedin", content_id: liContent.id,
+> 310	              scheduled_at: new Date(Date.now() + 3600000).toISOString(),
+> 311	              status: "queued",
+> 312	              metadata: { utm: utmTag("linkedin", utmCampaign, topic), orchestrated: true },
+> 313	            });
+> 314	          }
+> 315	
+> 316	          await addStep("linkedin_post", "done",
+> 317	            { topic, article_link: articleLink },
+> 318	            { preview: liText.substring(0, 300), char_count: liText.length, scheduled_at: new Date(Date.now() + 3600000).toISOString() }
+> 319	          );
+> 320	        }
+> 321	      } catch (e: any) {
+> 322	        await addStep("linkedin_post", "error", { topic }, { error: e.message || "Unknown" });
+> 323	      }
+> 324	
+> 325	    } else if (step === "twitter_thread") {
+> 326	      const { wpPostUrl } = metadata;
+> 327	      const xLink = wpPostUrl ? utmTag("twitter", utmCampaign, topic, wpPostUrl) : `https://${site_url}`;
+> 328	      await addStep("twitter_thread", "in_progress", { topic, article_link: xLink, model: selectedModel });
+> 329	      try {
+> 330	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 331	        const xRes = await fetchLLMWithFallback(aiEndpoint, {
+> 332	          method: "POST",
+> 333	          headers: { 
+> 334	            Authorization: `Bearer ${aiKey}`, 
+> 335	            "Content-Type": "application/json",
+> 336	            "HTTP-Referer": "https://mcorch.com",
+> 337	            "X-Title": "GCRUX Constellation"
+> 338	          },
+> 339	          body: JSON.stringify({
+> 340	            model: selectedModel,
+> 341	            messages: [
+> 342	              { role: "system", content: "Você é um especialista em X/Twitter. Crie threads virais de 5 tweets. Cada tweet deve ter max 280 chars. Formato: retorne JSON com 'tweets' (array de strings)." },
+> 343	              { role: "user", content: `Crie uma thread de 5 tweets sobre: "${topic}". Link do artigo (último tweet): ${xLink}. Foco em marketing com IA e ROI.` },
+> 344	            ],
+> 345	            tools: [{
+> 346	              type: "function",
+> 347	              function: {
+> 348	                name: "twitter_thread",
+> 349	                description: "Generate Twitter thread",
+> 350	                parameters: {
+> 351	                  type: "object",
+> 352	                  properties: { tweets: { type: "array", items: { type: "string" } } },
+> 353	                  required: ["tweets"],
+> 354	                },
+> 355	              },
+> 356	            }],
+> 357	            tool_choice: { type: "function", function: { name: "twitter_thread" } },
+> 358	          }),
+> 359	        }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 360	
+> 361	        if (!xRes.ok) throw new Error(`AI error: ${xRes.status}`);
+> 362	        const xData = await xRes.json();
+> 363	        const xArgs = JSON.parse(xData.choices[0].message.tool_calls[0].function.arguments);
+> 364	        const tweets: string[] = Array.isArray(xArgs.tweets) ? xArgs.tweets : [];
+> 365	
+> 366	        const threadText = tweets.map((t: string, i: number) => `${i + 1}/5 ${t}`).join("\n\n");
+> 367	        const xValidation = validateContent("twitter_thread", threadText);
+> 368	        const tweetCountInvalid = tweets.length < 3;
+> 369	
+> 370	        if (tweetCountInvalid || !xValidation.valid) {
+> 371	          const reason = tweetCountInvalid ? `insufficient_tweets:${tweets.length}` : xValidation.reason;
+> 372	          console.error(`[FMEA-008] twitter thread validation failed: ${reason}`, { topic });
+> 373	          await addStep("twitter_thread", "error", { topic }, { error: `content_validation_failed:${reason}` });
+> 374	        } else {
+> 375	          await admin.from("content_library").insert({
+> 376	            user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 377	            title: `Thread X: ${topic}`, body: threadText, status: "approved",
+> 378	            metadata: { source: "orchestration", platform: "twitter", tweets, utm: utmTag("twitter", utmCampaign, topic) },
+> 379	          });
+> 380	
+> 381	          const { data: xContent } = await admin.from("content_library")
+> 382	            .select("id").eq("user_id", run.user_id).order("created_at", { ascending: false }).limit(1).single();
+> 383	
+> 384	          if (xContent) {
+> 385	            await admin.from("scheduled_posts").insert({
+> 386	              user_id: run.user_id, campaign_id: campaign_id || null,
+> 387	              platform: "twitter", content_id: xContent.id,
+> 388	              scheduled_at: new Date(Date.now() + 7200000).toISOString(),
+> 389	              status: "queued",
+> 390	              metadata: { utm: utmTag("twitter", utmCampaign, topic), orchestrated: true, thread: tweets },
+> 391	            });
+> 392	          }
+> 393	
+> 394	          await addStep("twitter_thread", "done",
+> 395	            { topic, article_link: xLink },
+> 396	            { tweet_count: tweets.length, tweets, scheduled_at: new Date(Date.now() + 7200000).toISOString() }
+> 397	          );
+> 398	        }
+> 399	      } catch (e: any) {
+> 400	        await addStep("twitter_thread", "error", { topic }, { error: e.message || "Unknown" });
+> 401	      }
+> 402	
+> 403	    } else if (step === "knowledge_mesh") {
+> 404	      // Step 5: Knowledge Mesh — observation + content_mesh_asset (OE-661 wire)
+> 405	      try {
+> 406	        const { wpPostUrl, wpPostId, articleContent } = metadata;
+> 407	        const observationInsert = admin.from("mcorch_nodes").insert({
+> 408	          user_id: run.user_id,
+> 409	          node_type: "observation",
+> 410	          name: `Orchestration: ${topic.substring(0, 60)}`,
+> 411	          content: `Conteúdo orquestrado para "${topic}" via ${platforms.join(", ")}. WordPress: ${wpPostUrl || "n/a"}.`,
+> 412	          metadata: {
+> 413	            media_type: "content_bundle",
+> 414	            provider: "mcorch_orchestrator",
+> 415	            cost_mco: 10,
+> 416	            roi_potential: "high",
+> 417	            platforms,
+> 418	            campaign_id: campaign_id || null,
+> 419	            wordpress_url: wpPostUrl || null,
+> 420	          },
+> 421	          revenue_impact: 0,
+> 422	          stability_score: 1.0,
+> 423	        }).select("id").single();
+> 424	
+> 425	        // Amendment B: asset insert only if wordpress_url exists
+> 426	        const assetInsert = (!wpPostUrl || wpPostUrl.trim() === "")
+> 427	          ? Promise.reject(new Error("no_wordpress_url"))
+> 428	          : admin.from("mcorch_nodes").insert({
+> 429	              user_id: run.user_id,
+> 430	              node_type: "content_mesh_asset",
+> 431	              name: `content:${campaign_id || "ad-hoc"}:${topic.substring(0, 50)}`,
+> 432	              content: articleContent || "",
+> 433	              metadata: {
+> 434	                media_type: "article",
+> 435	                source: "orchestration",
+> 436	                platforms,
+> 437	                campaign_id: campaign_id || null,
+> 438	                wordpress_url: wpPostUrl,
+> 439	                wordpress_post_id: wpPostId,
+> 440	                utm_base: utmTag("wordpress", utmCampaign, topic),
+> 441	                orchestration_run_id: run_id,
+> 442	              },
+> 443	              project_id: "mcorch-affiliate",
+> 444	              revenue_impact: 0,
+> 445	              stability_score: 1.0,
+> 446	            }).select("id").single();
+> 447	
+> 448	        // Amendment A: run in parallel
+> 449	        const [obsResult, assetResult] = await Promise.allSettled([observationInsert, assetInsert]);
+> 450	
+> 451	        const obsOk = obsResult.status === "fulfilled";
+> 452	        await addStep("knowledge_mesh", obsOk ? "done" : "error",
+> 453	          { topic: topic.substring(0, 60), platforms },
+> 454	          obsOk
+> 455	            ? { wordpress_url: wpPostUrl || null, node_type: "observation", obs_id: (obsResult.value as any).data?.id ?? null }
+> 456	            : { error: ((obsResult as PromiseRejectedResult).reason instanceof Error ? ((obsResult as PromiseRejectedResult).reason as Error).message : "unknown") }
+> 457	        );
+> 458	
+> 459	        const assetOk = assetResult.status === "fulfilled";
+> 460	        const assetReason = !assetOk
+> 461	          ? (((assetResult as PromiseRejectedResult).reason instanceof Error) ? ((assetResult as PromiseRejectedResult).reason as Error).message : "unknown")
+> 462	          : null;
+> 463	        const assetStatus = assetOk ? "done" : (assetReason === "no_wordpress_url" ? "skipped" : "error");
+> 464	        await addStep("content_mesh_asset", assetStatus,
+> 465	          { topic: topic.substring(0, 60), campaign_id: campaign_id || null },
+> 466	          assetOk
+> 467	            ? { asset_id: (assetResult.value as any).data?.id ?? null, wordpress_url: wpPostUrl, project_id: "mcorch-affiliate" }
+> 468	            : { reason: assetReason }
+> 469	        );
+> 470	
+> 471	        // Also track usage at this final step
+> 472	        await admin.from("usage_tracking").insert({
+> 473	          user_id: run.user_id,
+> 474	          resource_type: "orchestration",
+> 475	          quantity: platforms.length,
+> 476	          credits_consumed: platforms.length * 5,
+> 477	          metadata: { topic, platforms, campaign_id },
+> 478	        });
+> 479	
+> 480	      } catch (e: any) {
+> 481	        console.warn("[orchestrate-step] mesh emission outer catch:", e);
+> 482	        await addStep("knowledge_mesh", "error", { topic }, { error: e.message || "Unknown" });
+> 483	      }
+> 484	    }
+> 485	
+> 486	    // Determine the next step
+> 487	    const nextStep = getNextStep(step, platforms);
+> 488	    if (nextStep) {
+> 489	      console.log(`[orchestrate-step] Scheduling next step "${nextStep}" for run ${run_id}`);
+> 490	      // Invoke async_orchestrate_step RPC to trigger next step asynchronously via pg_net
+> 491	      await admin.rpc("async_orchestrate_step", {
+> 492	        p_supabase_url: supabaseUrl,
+> 493	        p_service_key: serviceKey,
+> 494	        p_run_id: run_id,
+> 495	        p_step: nextStep,
+> 496	      });
+> 497	    } else {
+> 498	      console.log(`[orchestrate-step] Finalizing run ${run_id}`);
+> 499	      // Refresh steps array before final check
+> 500	      const { data: finalRun } = await admin
+> 501	        .from("pipeline_runs")
+> 502	        .select("steps, metadata")
+> 503	        .eq("id", run_id)
+> 504	        .single();
+> 505	      
+> 506	      const finalSteps = finalRun?.steps || steps;
+> 507	      const hasErrors = finalSteps.some((s: any) => s.status === "error");
+> 508	      
+> 509	      await admin.from("pipeline_runs").update({
+> 510	        status: hasErrors ? "error" : "done",
+> 511	        steps: finalSteps,
+> 512	        completed_at: new Date().toISOString(),
+> 513	      }).eq("id", run_id);
+> 514	    }
+> 515	
+> 516	    return new Response(JSON.stringify({ success: true }), {
+> 517	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 518	    });
+> 519	
+> 520	  } catch (e: any) {
+> 521	    console.error("orchestrate-step error:", e);
+> 522	    return new Response(
+> 523	      JSON.stringify({ error: e.message || "Unknown error" }),
+> 524	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 525	    );
+> 526	  }
+> 527	});
+> 528	
+> ```
+
+## 🤖 Claude *(16:42:39)*
+
+
+## 🤖 Claude *(16:42:42)*
+
+Entendi o `orchestrate-step`. O ponto de injeção da **auto-monetização** é o `article_generation` (após gerar `articleContent`, antes de persistir) — monetizo o artigo (superfície de produtos; posts linkam pro artigo). Reusa a infra de click-tracking via `link_id`.
+
+Probe rápido antes de construir os 3: tipo de `affiliate_config` (tabela vs view — pro matt_tool), onde o `affiliate_tag` é configurado na UI, e a estrutura do `campaign-run` (pro async).
+
+## 🤖 Claude *(16:42:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== affiliate_config: table ou view? ===\"\ngrep -rn \"affiliate_config\" supabase/migrations/ | grep -iE \"create table|create view|create or replace view|alter table\" | head\necho \"\"\necho \"=== onde affiliate_tag \u00e9 setado na UI ===\"\ngrep -rln \"affiliate_tag\\|useAffiliateConfig\\|matt_word\" src/ | head\necho \"\"\necho \"=== campaign-run: estrutura do dispatch ===\"\ngrep -n \"Promise.allSettled\\|MAX_PARALLEL\\|EdgeRuntime\\|waitUntil\\|for (\\|orchestrate-content\\|return json\\|dispatched\" supabase/functions/campaign-run/index.ts | head -20\necho \"\"; wc -l supabase/functions/campaign-run/index.ts",
+  "description": "Probe affiliate_config type + UI + campaign-run"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === affiliate_config: table ou view? ===
+> supabase/migrations/20260530183000_affiliate_tag_per_user.sql:16:ALTER TABLE public.affiliate_config
+> supabase/migrations/20260415201855_59f77a3a-3611-478f-9e5f-a6f85690f270.sql:5:CREATE TABLE public.affiliate_config (
+> supabase/migrations/20260415201855_59f77a3a-3611-478f-9e5f-a6f85690f270.sql:22:ALTER TABLE public.affiliate_config ENABLE ROW LEVEL SECURITY;
+> 
+> === onde affiliate_tag é setado na UI ===
+> src/integrations/supabase/types.ts
+> src/pages/AffiliatesPage.tsx
+> src/pages/AffiliateProductsPage.tsx
+> src/lib/affiliate.test.ts
+> src/hooks/useAffiliateConfig.ts
+> src/lib/affiliate.ts
+> src/hooks/useMetaConfig.ts
+> 
+> === campaign-run: estrutura do dispatch ===
+> 4:// orchestrate-content (which SELF-BILLS its own ORCHESTRATION_RUN=10), forwarding the caller's JWT so the whole cascade
+> 5:// bills the SAME tenant under RLS. Faithful cascade cost = 10 (fee) + 10×N (dispatched steps). Syncs each
+> 8:// DISPATCH IS PARALLEL (Promise.allSettled): each orchestrate-content runs in its OWN edge instance, so the wall-clock
+> 12:// async queue + per-step webhook callback. Bounded here by MAX_PARALLEL_STEPS (rest left idle for a follow-up run).
+> 23:const STEP_TIMEOUT_MS = 120_000; // per orchestrate-content dispatch (it generates content + image + publishes).
+> 24:const MAX_PARALLEL_STEPS = 8;    // safety bound on simultaneous heavy dispatches; extras left idle (reported in mesh).
+> 34:// channel -> orchestrate-content platform names. 'email' is nurture-dispatch territory (SDD §3), not servable here.
+> 38:    case "affiliate": return ["wordpress"]; // affiliate links attach to the WP article (orchestrate-content step 5).
+> 40:    default: return []; // email / unknown -> not dispatchable via orchestrate-content.
+> 56:    if (!authHeader) return json({ error: "Missing authorization" }, 401);
+> 60:    if (authError || !user) return json({ error: "Unauthorized" }, 401);
+> 63:    if (!campaign_id || typeof campaign_id !== "string") return json({ error: "campaign_id é obrigatório" }, 422);
+> 70:    if (!campaign) return json({ error: "Campanha não encontrada" }, 404);
+> 78:    if (!steps || steps.length === 0) return json({ error: "Campanha não tem passos para executar" }, 422);
+> 80:    // mcoCoins gatekeeper: the orchestration FEE (10) only — each dispatched step self-bills its own 10 (cascade).
+> 82:    if ((bal?.mco_balance ?? 0) < CAMPAIGN_RUN_COST) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 84:    if (deductErr) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 87:    const topic = campaign.intent?.trim() || campaign.name; // orchestrate-content requires a topic; name is NOT NULL.
+> 93:    // Non-servable channels (email/unknown): block up front — never dispatched, never charged.
+> 95:    for (const s of blocked) {
+> 
+> 162 supabase/functions/campaign-run/index.ts
+> ```
+
+## 🤖 Claude *(16:42:57)*
+
+
+## 🤖 Claude *(16:42:59)*
+
+- **affiliate_config é TABELA** → posso `ALTER ADD COLUMN matt_tool`. ✅
+- UI do affiliate_tag: `AffiliatesPage.tsx` + `useAffiliateConfig.ts`.
+- campaign-run: linha 12 já marca "async queue" como follow-up (OTD-CAMPAIGN-RUN-ASYNC); hoje `Promise.allSettled` espera tudo no request.
+
+Leio campaign-run (completo), useAffiliateConfig e a seção de config do AffiliatesPage pra desenhar os 3.
+
+## 🤖 Claude *(16:43:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// campaign-run — marketing-hub FR-MH-004 (BoK SSOT: docs/bok/marketing-hub/04-frd.md §"POST /functions/v1/campaign-run"
+> 2	// + 05-sdd.md §"POST /functions/v1/campaign-run"). JWT-guarded · debits CAMPAIGN_RUN (10 mcoCoins) atomically as the
+> 3	// orchestration FEE (deduct_mco_coins RPC) AFTER ownership check · then dispatches each ordered campaign_step to
+> 4	// orchestrate-content (which SELF-BILLS its own ORCHESTRATION_RUN=10), forwarding the caller's JWT so the whole cascade
+> 5	// bills the SAME tenant under RLS. Faithful cascade cost = 10 (fee) + 10×N (dispatched steps). Syncs each
+> 6	// campaign_steps.status (idle→running→done|error|blocked) + inserts a campaign-level mesh observation + an infra pulse.
+> 7	//
+> 8	// DISPATCH IS PARALLEL (Promise.allSettled): each orchestrate-content runs in its OWN edge instance, so the wall-clock
+> 9	// is ~the slowest single step, not the sum — sequential awaits would blow the edge time budget for N>1 heavy steps.
+> 10	// CALIBRATION (OTD-MCOIN-CALIBRATION): the 10/10 figures are round, not $-calibrated — see src/lib/billing.ts.
+> 11	// SCALING CEILING (OTD-CAMPAIGN-RUN-ASYNC): synchronous fan-out is an MVP simplification; a large campaign needs an
+> 12	// async queue + per-step webhook callback. Bounded here by MAX_PARALLEL_STEPS (rest left idle for a follow-up run).
+> 13	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 14	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 15	
+> 16	const corsHeaders = {
+> 17	  "Access-Control-Allow-Origin": "*",
+> 18	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 19	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 20	};
+> 21	
+> 22	const CAMPAIGN_RUN_COST = 10; // mirrors COIN_COSTS.CAMPAIGN_RUN — the orchestration fee (Deno can't import src/lib).
+> 23	const STEP_TIMEOUT_MS = 120_000; // per orchestrate-content dispatch (it generates content + image + publishes).
+> 24	const MAX_PARALLEL_STEPS = 8;    // safety bound on simultaneous heavy dispatches; extras left idle (reported in mesh).
+> 25	
+> 26	interface StepRow {
+> 27	  id: string;
+> 28	  position: number;
+> 29	  channel: string;
+> 30	  action: string;
+> 31	  status: string;
+> 32	}
+> 33	
+> 34	// channel -> orchestrate-content platform names. 'email' is nurture-dispatch territory (SDD §3), not servable here.
+> 35	function channelToPlatforms(channel: string): string[] {
+> 36	  switch (channel) {
+> 37	    case "content": return ["wordpress"];
+> 38	    case "affiliate": return ["wordpress"]; // affiliate links attach to the WP article (orchestrate-content step 5).
+> 39	    case "social": return ["linkedin", "twitter"];
+> 40	    default: return []; // email / unknown -> not dispatchable via orchestrate-content.
+> 41	  }
+> 42	}
+> 43	
+> 44	serve(async (req) => {
+> 45	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 46	  const json = (body: unknown, status = 200) =>
+> 47	    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 48	
+> 49	  const url = Deno.env.get("SUPABASE_URL")!;
+> 50	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 51	  const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 52	  const admin = createClient(url, serviceKey);
+> 53	
+> 54	  try {
+> 55	    const authHeader = req.headers.get("Authorization");
+> 56	    if (!authHeader) return json({ error: "Missing authorization" }, 401);
+> 57	
+> 58	    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 59	    const { data: { user }, error: authError } = await userClient.auth.getUser();
+> 60	    if (authError || !user) return json({ error: "Unauthorized" }, 401);
+> 61	
+> 62	    const { campaign_id } = await req.json().catch(() => ({}));
+> 63	    if (!campaign_id || typeof campaign_id !== "string") return json({ error: "campaign_id é obrigatório" }, 422);
+> 64	
+> 65	    // existence + ownership (tenant-scoped); 404 also covers another tenant's campaign.
+> 66	    const { data: campaign } = await admin
+> 67	      .from("campaigns")
+> 68	      .select("id, user_id, name, intent, status, mesh_node_id")
+> 69	      .eq("id", campaign_id).eq("user_id", user.id).maybeSingle();
+> 70	    if (!campaign) return json({ error: "Campanha não encontrada" }, 404);
+> 71	
+> 72	    // ordered steps (ascending position) — a campaign with no steps is a validation failure.
+> 73	    const { data: steps } = await admin
+> 74	      .from("campaign_steps")
+> 75	      .select("id, position, channel, action, status")
+> 76	      .eq("campaign_id", campaign_id).eq("user_id", user.id)
+> 77	      .order("position", { ascending: true });
+> 78	    if (!steps || steps.length === 0) return json({ error: "Campanha não tem passos para executar" }, 422);
+> 79	
+> 80	    // mcoCoins gatekeeper: the orchestration FEE (10) only — each dispatched step self-bills its own 10 (cascade).
+> 81	    const { data: bal } = await admin.from("profiles").select("mco_balance").eq("id", user.id).maybeSingle();
+> 82	    if ((bal?.mco_balance ?? 0) < CAMPAIGN_RUN_COST) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 83	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", { p_user_id: user.id, p_amount: CAMPAIGN_RUN_COST });
+> 84	    if (deductErr) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 85	
+> 86	    const run_id = crypto.randomUUID();
+> 87	    const topic = campaign.intent?.trim() || campaign.name; // orchestrate-content requires a topic; name is NOT NULL.
+> 88	
+> 89	    // running a draft makes the campaign active (best-effort; not in the response contract).
+> 90	    await admin.from("campaigns").update({ status: "active" }).eq("id", campaign_id).eq("user_id", user.id);
+> 91	
+> 92	    const rows = steps as StepRow[];
+> 93	    // Non-servable channels (email/unknown): block up front — never dispatched, never charged.
+> 94	    const blocked = rows.filter((s) => channelToPlatforms(s.channel).length === 0);
+> 95	    for (const s of blocked) {
+> 96	      await admin.from("campaign_steps").update({ status: "blocked" }).eq("id", s.id).eq("user_id", user.id);
+> 97	    }
+> 98	    const dispatchable = rows.filter((s) => channelToPlatforms(s.channel).length > 0).slice(0, MAX_PARALLEL_STEPS);
+> 99	    const cappedOut = rows.filter((s) => channelToPlatforms(s.channel).length > 0).length - dispatchable.length;
+> 100	
+> 101	    const orchestrateUrl = `${url}/functions/v1/orchestrate-content`;
+> 102	    const results = await Promise.allSettled(
+> 103	      dispatchable.map(async (step) => {
+> 104	        await admin.from("campaign_steps").update({ status: "running" }).eq("id", step.id).eq("user_id", user.id);
+> 105	        const platforms = channelToPlatforms(step.channel);
+> 106	        const ctrl = new AbortController();
+> 107	        const to = setTimeout(() => ctrl.abort(), STEP_TIMEOUT_MS);
+> 108	        try {
+> 109	          const resp = await fetch(orchestrateUrl, {
+> 110	            method: "POST",
+> 111	            headers: { "Content-Type": "application/json", Authorization: authHeader },
+> 112	            body: JSON.stringify({ topic, campaign_id, platforms, wp_status: "draft" }),
+> 113	            signal: ctrl.signal,
+> 114	          });
+> 115	          const ok = resp.ok;
+> 116	          await admin.from("campaign_steps").update({ status: ok ? "done" : "error" }).eq("id", step.id).eq("user_id", user.id);
+> 117	          return ok;
+> 118	        } catch (_) {
+> 119	          await admin.from("campaign_steps").update({ status: "error" }).eq("id", step.id).eq("user_id", user.id);
+> 120	          return false;
+> 121	        } finally {
+> 122	          clearTimeout(to);
+> 123	        }
+> 124	      }),
+> 125	    );
+> 126	    const stepsDispatched = results.filter((r) => r.status === "fulfilled" && r.value === true).length;
+> 127	    const degraded = stepsDispatched < dispatchable.length || cappedOut > 0;
+> 128	
+> 129	    // Knowledge mesh mandate: every orchestration run inserts an observation node. Fail-soft — must not break the run.
+> 130	    try {
+> 131	      const { data: obsNode } = await admin.from("mcorch_nodes").insert({
+> 132	        name: `campaign-run:${campaign_id}:${run_id}`,
+> 133	        node_type: "observation",
+> 134	        content:
+> 135	          `Campaign "${campaign.name}" run ${run_id}: ${stepsDispatched}/${dispatchable.length} steps dispatched to ` +
+> 136	          `orchestrate-content${blocked.length ? `, ${blocked.length} blocked (non-servable channel)` : ""}` +
+> 137	          `${cappedOut > 0 ? `, ${cappedOut} left idle (parallel cap)` : ""}.`,
+> 138	        stability_score: 1.0,
+> 139	        metadata: {
+> 140	          event: "campaign_run", campaign_id, run_id,
+> 141	          steps_total: rows.length, steps_dispatched: stepsDispatched,
+> 142	          steps_blocked: blocked.length, steps_capped: cappedOut,
+> 143	        },
+> 144	        user_id: user.id,
+> 145	      }).select("id").single();
+> 146	      if (obsNode && campaign.mesh_node_id) {
+> 147	        await admin.from("mcorch_edges").insert({
+> 148	          source_id: obsNode.id, target_id: campaign.mesh_node_id, relation_type: "observes", weight: 1.0,
+> 149	        });
+> 150	      }
+> 151	    } catch (_) { /* fail-soft */ }
+> 152	
+> 153	    admin.from("infra_health_logs").insert({ service: "campaign-run", status: degraded ? "degraded" : "healthy" })
+> 154	      .then(() => {}, () => {});
+> 155	
+> 156	    const { data: newBal } = await admin.from("profiles").select("mco_balance").eq("id", user.id).maybeSingle();
+> 157	    return json({ status: "ok", campaign_id, run_id, steps_dispatched: stepsDispatched, new_balance: newBal?.mco_balance ?? null });
+> 158	  } catch (err) {
+> 159	    admin.from("infra_health_logs").insert({ service: "campaign-run", status: "unhealthy" }).then(() => {}, () => {});
+> 160	    return json({ error: "Erro interno ao executar campanha", detail: String((err as Error)?.message ?? err) }, 500);
+> 161	  }
+> 162	});
+> 163	
+> ```
+
+## 🤖 Claude *(16:43:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import { isMlShortLink, readShortlinks } from '@/lib/affiliate';
+> 5	
+> 6	export interface AffiliateConfig {
+> 7	  id: string;
+> 8	  user_id: string;
+> 9	  platform: string;
+> 10	  app_id: string | null;
+> 11	  /**
+> 12	   * Mercado Livre affiliate attribution tag (e.g. `caga6077534`) — the `matt_word` value.
+> 13	   * This is NOT the OAuth `app_id`; it is generated in the seller's affiliate panel (per OTD-ML-001).
+> 14	   */
+> 15	  affiliate_tag: string | null;
+> 16	  client_secret: string | null;
+> 17	  redirect_uri: string | null;
+> 18	  access_token: string | null;
+> 19	  refresh_token: string | null;
+> 20	  token_expires_at: string | null;
+> 21	  is_active: boolean;
+> 22	  metadata: Record<string, unknown>;
+> 23	  created_at: string;
+> 24	  updated_at: string;
+> 25	}
+> 26	
+> 27	export function useAffiliateConfig() {
+> 28	  const { user } = useAuth();
+> 29	  const queryClient = useQueryClient();
+> 30	
+> 31	  const { data: config, isLoading } = useQuery({
+> 32	    queryKey: ['affiliate_config', user?.id],
+> 33	    queryFn: async () => {
+> 34	      const { data, error } = await (supabase as any)
+> 35	        .from('affiliate_config')
+> 36	        .select('*')
+> 37	        .eq('user_id', user!.id)
+> 38	        .eq('platform', 'mercadolivre')
+> 39	        .maybeSingle();
+> 40	      if (error) throw error;
+> 41	      return data as AffiliateConfig | null;
+> 42	    },
+> 43	    enabled: !!user?.id,
+> 44	  });
+> 45	
+> 46	  const upsertConfig = useMutation({
+> 47	    mutationFn: async (values: { app_id: string; client_secret: string; redirect_uri: string }) => {
+> 48	      if (config?.id) {
+> 49	        const { error } = await (supabase as any)
+> 50	          .from('affiliate_config')
+> 51	          .update({
+> 52	            app_id: values.app_id,
+> 53	            client_secret: values.client_secret,
+> 54	            redirect_uri: values.redirect_uri,
+> 55	          })
+> 56	          .eq('id', config.id);
+> 57	        if (error) throw error;
+> 58	      } else {
+> 59	        const { error } = await (supabase as any)
+> 60	          .from('affiliate_config')
+> 61	          .insert({
+> 62	            user_id: user!.id,
+> 63	            platform: 'mercadolivre',
+> 64	            app_id: values.app_id,
+> 65	            client_secret: values.client_secret,
+> 66	            redirect_uri: values.redirect_uri,
+> 67	          });
+> 68	        if (error) throw error;
+> 69	      }
+> 70	    },
+> 71	    onSuccess: () => {
+> 72	      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });
+> 73	    },
+> 74	  });
+> 75	
+> 76	  /**
+> 77	   * Save (or clear) the definitive per-user `meli.la` short link for a given ML product, stored in
+> 78	   * `affiliate_config.metadata.shortlinks[<external_id>]`. Per-user by design — a short link embeds
+> 79	   * the owner's account/channel, so it MUST NOT live in the shared `vm_affiliate_products` catalog.
+> 80	   * Pass `shortUrl = null` to remove the override (falls back to best-effort `matt_word`).
+> 81	   */
+> 82	  const setProductShortlink = useMutation({
+> 83	    mutationFn: async ({ externalId, shortUrl }: { externalId: string; shortUrl: string | null }) => {
+> 84	      if (!config?.id) {
+> 85	        throw new Error('Configure suas credenciais ML em /dashboard/affiliates primeiro.');
+> 86	      }
+> 87	      const trimmed = shortUrl?.trim() || null;
+> 88	      if (trimmed && !isMlShortLink(trimmed)) {
+> 89	        throw new Error('Link inválido — cole um short link meli.la ou mercadolivre.com/sec/ do painel ML.');
+> 90	      }
+> 91	      const shortlinks = readShortlinks(config.metadata);
+> 92	      if (trimmed) shortlinks[externalId] = trimmed;
+> 93	      else delete shortlinks[externalId];
+> 94	      const metadata = { ...(config.metadata ?? {}), shortlinks };
+> 95	      const { error } = await (supabase as any)
+> 96	        .from('affiliate_config')
+> 97	        .update({ metadata })
+> 98	        .eq('id', config.id);
+> 99	      if (error) throw error;
+> 100	    },
+> 101	    onSuccess: () => {
+> 102	      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });
+> 103	    },
+> 104	  });
+> 105	
+> 106	  return { config, isLoading, upsertConfig, setProductShortlink };
+> 107	}
+> 108	
+> ```
+
+## 🤖 Claude *(16:44:33)*
+
+
+## 🤖 Claude *(16:44:37)*
+
+Tudo mapeado para os 3. Plano:
+- **(1) auto-monetize:** novo `_shared/affiliate.ts` (catálogo + `monetizeContent` que cria `affiliate_links` + embute redirect rastreável) injetado no `article_generation` do orchestrate-step.
+- **(2) matt_tool:** coluna em `affiliate_config` + threading em `buildMlProductUrl`/`buildMattWordUrl` (Deno + front) + UI Settings.
+- **(3) async:** campaign-run usa `EdgeRuntime.waitUntil` p/ campanhas grandes (>8 passos), mantendo o síncrono p/ pequenas (sem quebrar contrato/smoke).
+
+Começo pela migration (matt_tool) + o módulo `_shared/affiliate.ts`.
+
+## 🤖 Claude *(16:44:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260604150000_affiliate_matt_tool.sql",
+  "content": "-- Per-user ML affiliate matt_tool tracking id (OTD-ML-001 family). The official ML affiliate link carries BOTH\n-- matt_word (the account tag) AND matt_tool (the tool/channel id, e.g. 43641843) \u2014 we already store matt_word in\n-- affiliate_config.affiliate_tag; this adds the optional matt_tool so it can ride the same links, matching the\n-- official format. affiliate_config is a base table (RLS auth.uid()=user_id); the new column inherits that RLS.\n-- (Honest caveat: whether matt_tool changes ML commission attribution is unverifiable from outside ML \u2014 there is no\n-- public API/docs, OTD-ML-001 \u2014 but it is the Sovereign's real per-user value and is additive.)\n\nalter table public.affiliate_config add column if not exists matt_tool text;\n\ncomment on column public.affiliate_config.matt_tool is\n  'Optional per-user ML affiliate matt_tool tracking id (from the affiliate panel). Rides matt_word product links when present. OTD-ML-001.';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260604150000_affiliate_matt_tool.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:45:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "content": "// Shared affiliate monetization for the orchestrate pipeline (Deno). Auto-embeds OUR click-tracking redirect\n// (?link_id=...) into generated content for catalog products, so auto-monetized content is click-counted\n// (OTD-ML-CLICKS) and attributes per-owner via matt_word [+ matt_tool]. Catalog mirrors scripts/link-forge.ts.\n// SOP: docs/processes/ml-affiliate-attribution.md.\n\nexport interface AffiliateProduct {\n  key: string;\n  mlb: string;\n  display: string;\n  pattern: RegExp;\n}\n\n// Phase 1 High-Ticket / Smart Home catalog \u2014 kept in sync with scripts/link-forge.ts PRODUCTS. Returns fresh\n// RegExp instances each call (global-flag lastIndex is stateful \u2014 never share a single instance across scans).\nexport function affiliateProducts(): AffiliateProduct[] {\n  return [\n    { key: \"roborock_s8\", mlb: \"MLB27834876\", display: \"Roborock S8 Pro Ultra\", pattern: /roborock\\s+s8[a-z0-9 ]*(?:pro\\s+ultra)?/gi },\n    { key: \"samsung_neo_qled_8k\", mlb: \"MLB36263268\", display: \"Samsung Neo QLED 8K\", pattern: /(?:neo\\s+qled\\s+8k|samsung\\s+8k)/gi },\n    { key: \"family_hub\", mlb: \"MLB37674259\", display: \"Geladeira Samsung Family Hub\", pattern: /family\\s+hub/gi },\n  ];\n}\n\nconst ML_PRODUCT_BASE = \"https://www.mercadolivre.com.br\";\n\n/** Build the REAL ML product URL with per-owner attribution: matt_word (+ optional matt_tool) + utm. */\nexport function buildMlProductUrl(mlb: string, affiliateTag: string, mattTool?: string | null): string {\n  const numeric = mlb.replace(/^MLB-?/i, \"\");\n  const u = new URL(`${ML_PRODUCT_BASE}/MLB-${numeric}`);\n  u.searchParams.set(\"matt_word\", affiliateTag);\n  if (mattTool && mattTool.trim()) u.searchParams.set(\"matt_tool\", mattTool.trim());\n  u.searchParams.set(\"utm_source\", \"gcrux_orchestrator\");\n  u.searchParams.set(\"utm_medium\", \"content_mesh\");\n  u.searchParams.set(\"utm_campaign\", \"highticket_smarthome_q3\");\n  return u.toString();\n}\n\ninterface MinimalAdmin {\n  from(table: string): {\n    insert(row: Record<string, unknown>): { select(cols: string): { single(): Promise<{ data: { id?: string } | null }> } };\n  };\n}\n\n/**\n * Auto-monetize generated content: for each catalog product mentioned, create an affiliate_links row (real ML\n * matt_word URL stored in short_url) and replace the FIRST mention with an HTML anchor to OUR tracked redirect\n * (?link_id=...), so the click is counted (OTD-ML-CLICKS) and attributed to the owner. Per-owner, FAIL-OPEN: no\n * affiliate_tag \u2192 content unchanged (the pipeline never breaks because monetization is unavailable). Returns the\n * rewritten content + how many distinct products were linked.\n */\nexport async function monetizeContent(\n  admin: MinimalAdmin,\n  supabaseUrl: string,\n  content: string,\n  ownerId: string,\n  affiliateTag: string | null,\n  opts: { campaignId?: string | null; mattTool?: string | null } = {},\n): Promise<{ content: string; linked: number }> {\n  if (!content || !affiliateTag) return { content, linked: 0 };\n  let out = content;\n  let linked = 0;\n  for (const p of affiliateProducts()) {\n    p.pattern.lastIndex = 0;\n    if (!p.pattern.test(out)) continue;\n    const mlUrl = buildMlProductUrl(p.mlb, affiliateTag, opts.mattTool);\n    let target = mlUrl; // fail-open default: the direct ML url if the ledger row can't be created.\n    try {\n      const { data: link } = await admin.from(\"affiliate_links\").insert({\n        user_id: ownerId, original_url: mlUrl, short_url: mlUrl, platform: \"mercadolivre\",\n        product_id: p.mlb, content_id: null, campaign_id: null,\n        metadata: { source: \"auto-monetize\", display: p.display, campaign: opts.campaignId ?? null, matt_tool: opts.mattTool ?? null },\n      }).select(\"id\").single();\n      if (link?.id) target = `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;\n    } catch (_) { /* fail-open */ }\n    p.pattern.lastIndex = 0;\n    let replaced = false;\n    out = out.replace(p.pattern, (m) => {\n      if (replaced) return m; // link only the first mention to avoid spamming the article with N identical links.\n      replaced = true;\n      return `<a href=\"${target}\">${m}</a>`;\n    });\n    linked++;\n  }\n  return { content: out, linked };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:45:26)*
+
+
+## 🤖 Claude *(16:45:27)*
+
+Injeto a monetização no `orchestrate-step` (import + no `article_generation`, resolve affiliate_config + monetiza antes de persistir; o corpo monetizado flui pro WP + content_mesh_asset).
+
+## 🤖 Claude *(16:45:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "import { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";",
+  "new_string": "import { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\nimport { monetizeContent } from \"../_shared/affiliate.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:45:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "        } else {\n          await admin.from(\"content_library\").insert({\n            user_id: run.user_id,\n            campaign_id: campaign_id || null,\n            type: \"text\",\n            title: articleTitle,\n            body: articleContent,\n            tags: args.tags,\n            status: \"approved\",\n            metadata: { source: \"orchestration\", meta_description: args.meta_description, utm: utmTag(\"wordpress\", utmCampaign, topic) },\n          });\n\n          // Save generated article to metadata\n          const updatedMetadata = {\n            ...metadata,\n            articleTitle,\n            articleContent,\n            articleTags: args.tags,\n            meta_description: args.meta_description,\n          };\n          await admin.from(\"pipeline_runs\").update({ metadata: updatedMetadata }).eq(\"id\", run_id);\n\n          await addStep(\"article_generation\", \"done\",\n            { topic, model: selectedModel },\n            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleContent.split(\" \").length }\n          );\n        }",
+  "new_string": "        } else {\n          // AUTO-MONETIZE (OTD-ML-CLICKS): embed per-owner click-tracked affiliate links for catalog products\n          // mentioned in the article. Fail-open (no affiliate_tag \u2192 content unchanged). Kill-switch AUTO_MONETIZE_ENABLED.\n          let articleBody = articleContent;\n          let monetizeLinked = 0;\n          if ((Deno.env.get(\"AUTO_MONETIZE_ENABLED\") ?? \"true\").toLowerCase() !== \"false\") {\n            try {\n              const { data: aff } = await admin.from(\"affiliate_config\")\n                .select(\"affiliate_tag, matt_tool\").eq(\"user_id\", run.user_id).eq(\"platform\", \"mercadolivre\").eq(\"is_active\", true).maybeSingle();\n              if (aff?.affiliate_tag) {\n                const m = await monetizeContent(admin as any, supabaseUrl, articleContent, run.user_id, aff.affiliate_tag, { campaignId: campaign_id || null, mattTool: aff.matt_tool });\n                articleBody = m.content;\n                monetizeLinked = m.linked;\n              }\n            } catch (e: any) { console.warn(\"[orchestrate-step] auto-monetize skipped:\", e?.message); }\n          }\n\n          await admin.from(\"content_library\").insert({\n            user_id: run.user_id,\n            campaign_id: campaign_id || null,\n            type: \"text\",\n            title: articleTitle,\n            body: articleBody,\n            tags: args.tags,\n            status: \"approved\",\n            metadata: { source: \"orchestration\", meta_description: args.meta_description, utm: utmTag(\"wordpress\", utmCampaign, topic), affiliate_links: monetizeLinked },\n          });\n\n          // Save generated article to metadata (the MONETIZED body flows to WordPress + content_mesh_asset).\n          const updatedMetadata = {\n            ...metadata,\n            articleTitle,\n            articleContent: articleBody,\n            articleTags: args.tags,\n            meta_description: args.meta_description,\n          };\n          await admin.from(\"pipeline_runs\").update({ metadata: updatedMetadata }).eq(\"id\", run_id);\n\n          await addStep(\"article_generation\", \"done\",\n            { topic, model: selectedModel },\n            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(\" \").length, affiliate_links: monetizeLinked }\n          );\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:06)*
+
+
+## 🤖 Claude *(16:46:07)*
+
+Ponto 2 — threading do `matt_tool` no `process-affiliate-link` (buildMattWordUrl + resolução do config GET+POST).
+
+## 🤖 Claude *(16:46:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "  affiliateTag: string;\n  contentId?: string | null;\n  utm?: { source: string; medium: string; campaign: string };\n}): string | null {",
+  "new_string": "  affiliateTag: string;\n  mattTool?: string | null;\n  contentId?: string | null;\n  utm?: { source: string; medium: string; campaign: string };\n}): string | null {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "  u.searchParams.set(\"matt_word\", tag);\n  u.searchParams.set(\"utm_source\", utm.source);",
+  "new_string": "  u.searchParams.set(\"matt_word\", tag);\n  if (opts.mattTool && opts.mattTool.trim()) u.searchParams.set(\"matt_tool\", opts.mattTool.trim());\n  u.searchParams.set(\"utm_source\", utm.source);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "  let affiliateTag: string | null = null;\n  let metadata: any = null;\n  let ownerId: string | null = null;",
+  "new_string": "  let affiliateTag: string | null = null;\n  let metadata: any = null;\n  let ownerId: string | null = null;\n  let mattTool: string | null = null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "        .from(\"affiliate_config\")\n        .select(\"affiliate_tag, metadata\")\n        .eq(\"user_id\", node.user_id)\n        .eq(\"platform\", \"mercadolivre\")\n        .eq(\"is_active\", true)\n        .maybeSingle();\n      affiliateTag = (config?.affiliate_tag as string | null) ?? null;\n      metadata = config?.metadata ?? null;",
+  "new_string": "        .from(\"affiliate_config\")\n        .select(\"affiliate_tag, metadata, matt_tool\")\n        .eq(\"user_id\", node.user_id)\n        .eq(\"platform\", \"mercadolivre\")\n        .eq(\"is_active\", true)\n        .maybeSingle();\n      affiliateTag = (config?.affiliate_tag as string | null) ?? null;\n      metadata = config?.metadata ?? null;\n      mattTool = (config?.matt_tool as string | null) ?? null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "    const target = buildMattWordUrl({\n      productUrl,\n      externalId: productId,\n      affiliateTag,\n      contentId: contentVariantId,\n    });",
+  "new_string": "    const target = buildMattWordUrl({\n      productUrl,\n      externalId: productId,\n      affiliateTag,\n      mattTool,\n      contentId: contentVariantId,\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts",
+  "old_string": "      .select(\"affiliate_tag, metadata\")\n      .eq(\"user_id\", user.id)\n      .eq(\"platform\", \"mercadolivre\")\n      .eq(\"is_active\", true)\n      .maybeSingle();\n\n    // Per-user resolution ONLY \u2014 no global ML_AFFILIATE_ID fallback (API Tenancy Model).\n    // Attribution is the affiliate TAG (matt_word) or the owner's stored meli.la \u2014 NEVER the app_id.\n    const affiliateTag: string | null = (config?.affiliate_tag as string | null) ?? null;\n    const configMetadata: any = config?.metadata ?? null;",
+  "new_string": "      .select(\"affiliate_tag, metadata, matt_tool\")\n      .eq(\"user_id\", user.id)\n      .eq(\"platform\", \"mercadolivre\")\n      .eq(\"is_active\", true)\n      .maybeSingle();\n\n    // Per-user resolution ONLY \u2014 no global ML_AFFILIATE_ID fallback (API Tenancy Model).\n    // Attribution is the affiliate TAG (matt_word) or the owner's stored meli.la \u2014 NEVER the app_id.\n    const affiliateTag: string | null = (config?.affiliate_tag as string | null) ?? null;\n    const configMetadata: any = config?.metadata ?? null;\n    const mattTool: string | null = (config?.matt_tool as string | null) ?? null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:44)*
+
+
+## 🤖 Claude *(16:46:45)*
+
+Frontend matt_tool — `src/lib/affiliate.ts` (4 edits) + leio o AffiliatesPage pra ver onde o `affiliate_tag` é editado (adicionar matt_tool junto).
+
+## 🤖 Claude *(16:46:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts",
+  "old_string": "  /** Per-user affiliate tag (e.g. caga6077534) \u2014 the `matt_word` attribution value. */\n  affiliateTag: string;\n  /** Optional tracker carried in utm_content. */\n  contentId?: string | null;",
+  "new_string": "  /** Per-user affiliate tag (e.g. caga6077534) \u2014 the `matt_word` attribution value. */\n  affiliateTag: string;\n  /** Optional per-user ML `matt_tool` id (e.g. 43641843) \u2014 rides the link when present. */\n  mattTool?: string | null;\n  /** Optional tracker carried in utm_content. */\n  contentId?: string | null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts",
+  "old_string": "  u.searchParams.set(\"matt_word\", tag);\n  u.searchParams.set(\"utm_source\", utm.source);",
+  "new_string": "  u.searchParams.set(\"matt_word\", tag);\n  if (opts.mattTool && opts.mattTool.trim()) u.searchParams.set(\"matt_tool\", opts.mattTool.trim());\n  u.searchParams.set(\"utm_source\", utm.source);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts",
+  "old_string": "export interface AffiliateAttributionConfig {\n  affiliateTag?: string | null;\n  /** Per-user definitive short links keyed by ML external id (MLB...). */\n  shortlinks?: Record<string, string> | null;\n}",
+  "new_string": "export interface AffiliateAttributionConfig {\n  affiliateTag?: string | null;\n  /** Optional per-user ML `matt_tool` id \u2014 rides best-effort matt_word links. */\n  mattTool?: string | null;\n  /** Per-user definitive short links keyed by ML external id (MLB...). */\n  shortlinks?: Record<string, string> | null;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === AffiliatesPage: affiliate_tag editing ===
+> 1:import { useState, useEffect } from 'react';
+> 7:import { Label } from '@/components/ui/label';
+> 14:  const { config, isLoading, upsertConfig } = useAffiliateConfig();
+> 16:  const [appId, setAppId] = useState('');
+> 17:  const [clientSecret, setClientSecret] = useState('');
+> 18:  const [redirectUri, setRedirectUri] = useState('');
+> 22:      setAppId(config.app_id ?? '');
+> 34:      await upsertConfig.mutateAsync({ app_id: appId, client_secret: clientSecret, redirect_uri: redirectUri });
+> 81:                <Label htmlFor="ml-app-id">App ID</Label>
+> 82:                <Input
+> 95:                <Label htmlFor="ml-client-secret">Client Secret</Label>
+> 96:                <Input
+> 110:                <Label htmlFor="ml-redirect-uri">Redirect URI</Label>
+> 111:                <Input
+> 134:              <Button onClick={handleSave} disabled={upsertConfig.isPending}>
+> 135:                {upsertConfig.isPending ? (
+> 
+> 148 src/pages/AffiliatesPage.tsx
+> ```
+
+## 🤖 Claude *(16:46:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts",
+  "old_string": "  const url = buildMattWordUrl({\n    productUrl: product.productUrl,\n    externalId: ext,\n    affiliateTag: tag,\n    contentId: product.contentId,\n  });",
+  "new_string": "  const url = buildMattWordUrl({\n    productUrl: product.productUrl,\n    externalId: ext,\n    affiliateTag: tag,\n    mattTool: config?.mattTool,\n    contentId: product.contentId,\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== AffiliatesPage: affiliate_tag editing ===\"\ngrep -n \"affiliate_tag\\|matt_word\\|upsertConfig\\|app_id\\|<Input\\|Label\\|setTag\\|useState\" src/pages/AffiliatesPage.tsx | head -40\necho \"\"; wc -l src/pages/AffiliatesPage.tsx",
+  "description": "AffiliatesPage affiliate_tag editing"
+}
+```
+
+## 🤖 Claude *(16:47:29)*
+
+
+## 🤖 Claude *(16:47:29)*
+
+AffiliatesPage só edita OAuth (app_id/secret/redirect). O `affiliate_tag` não tem UI hoje. Vou adicionar uma seção "Atribuição ML" com `affiliate_tag` (matt_word) + `matt_tool`. Leio a página pra editar o form + hook.
+
+## 🤖 Claude *(16:47:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx",
+  "offset": 14,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 14	  const { config, isLoading, upsertConfig } = useAffiliateConfig();
+> 15	
+> 16	  const [appId, setAppId] = useState('');
+> 17	  const [clientSecret, setClientSecret] = useState('');
+> 18	  const [redirectUri, setRedirectUri] = useState('');
+> 19	
+> 20	  useEffect(() => {
+> 21	    if (config) {
+> 22	      setAppId(config.app_id ?? '');
+> 23	      setClientSecret(config.client_secret ?? '');
+> 24	      setRedirectUri(config.redirect_uri ?? '');
+> 25	    }
+> 26	  }, [config]);
+> 27	
+> 28	  const handleSave = async () => {
+> 29	    if (!appId.trim()) {
+> 30	      toast.error('App ID é obrigatório');
+> 31	      return;
+> 32	    }
+> 33	    try {
+> 34	      await upsertConfig.mutateAsync({ app_id: appId, client_secret: clientSecret, redirect_uri: redirectUri });
+> 35	      toast.success('Credenciais salvas com sucesso!');
+> 36	    } catch (e: any) {
+> 37	      toast.error(e.message || 'Erro ao salvar');
+> 38	    }
+> 39	  };
+> 40	
+> 41	  if (isLoading) {
+> 42	    return (
+> 43	      <div className="flex items-center justify-center py-20">
+> 44	        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+> 45	      </div>
+> 46	    );
+> 47	  }
+> 48	
+> 49	  return (
+> 50	    <>
+> 51	      <Helmet>
+> 52	        <title>Afiliados | Magic Constellation</title>
+> 53	      </Helmet>
+> 54	      <div className="space-y-6 max-w-2xl mx-auto">
+> 55	        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+> 56	          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+> 57	            <ShoppingBag className="h-6 w-6 text-primary" />
+> 58	            Monetização — Afiliados
+> 59	          </h1>
+> 60	          <p className="text-muted-foreground text-sm mt-1">
+> 61	            Configure suas credenciais do Mercado Livre para monetização automática
+> 62	          </p>
+> 63	        </motion.div>
+> ```
+
+## 🤖 Claude *(16:47:37)*
+
+
+## 🤖 Claude *(16:47:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx",
+  "offset": 104,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	                  value={clientSecret}
+> 105	                  onChange={(e) => setClientSecret(e.target.value)}
+> 106	                />
+> 107	              </div>
+> 108	
+> 109	              <div className="space-y-2">
+> 110	                <Label htmlFor="ml-redirect-uri">Redirect URI</Label>
+> 111	                <Input
+> 112	                  id="ml-redirect-uri"
+> 113	                  name="ml-redirect-uri"
+> 114	                  autoComplete="off"
+> 115	                  data-lpignore="true"
+> 116	                  data-1p-ignore="true"
+> 117	                  placeholder="https://seu-dominio.com/callback"
+> 118	                  value={redirectUri}
+> 119	                  onChange={(e) => setRedirectUri(e.target.value)}
+> 120	                />
+> 121	              </div>
+> 122	            </form>
+> 123	
+> 124	            <div className="flex items-center justify-between pt-2">
+> 125	              <a
+> 126	                href="https://developers.mercadolivre.com.br/pt_br/registre-o-seu-aplicativo"
+> 127	                target="_blank"
+> 128	                rel="noopener noreferrer"
+> 129	                className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+> 130	              >
+> 131	                <ExternalLink className="h-3 w-3" />
+> 132	                Como obter credenciais
+> 133	              </a>
+> 134	              <Button onClick={handleSave} disabled={upsertConfig.isPending}>
+> 135	                {upsertConfig.isPending ? (
+> 136	                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+> 137	                ) : (
+> 138	                  <Save className="h-4 w-4 mr-2" />
+> 139	                )}
+> 140	                Salvar Credenciais
+> 141	              </Button>
+> 142	            </div>
+> 143	          </CardContent>
+> ```
+
+## 🤖 Claude *(16:48:10)*
+
+
+## 🤖 Claude *(16:48:10)*
+
+Aplico os edits do hook (`useAffiliateConfig`) + AffiliatesPage (estado + form com `affiliate_tag` e `matt_tool`).
+
+## 🤖 Claude *(16:48:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts",
+  "old_string": "  affiliate_tag: string | null;\n  client_secret: string | null;",
+  "new_string": "  affiliate_tag: string | null;\n  /** Optional per-user ML `matt_tool` id (e.g. 43641843) \u2014 rides matt_word links when present. */\n  matt_tool: string | null;\n  client_secret: string | null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:48:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts",
+  "old_string": "  const upsertConfig = useMutation({\n    mutationFn: async (values: { app_id: string; client_secret: string; redirect_uri: string }) => {\n      if (config?.id) {\n        const { error } = await (supabase as any)\n          .from('affiliate_config')\n          .update({\n            app_id: values.app_id,\n            client_secret: values.client_secret,\n            redirect_uri: values.redirect_uri,\n          })\n          .eq('id', config.id);\n        if (error) throw error;\n      } else {\n        const { error } = await (supabase as any)\n          .from('affiliate_config')\n          .insert({\n            user_id: user!.id,\n            platform: 'mercadolivre',\n            app_id: values.app_id,\n            client_secret: values.client_secret,\n            redirect_uri: values.redirect_uri,\n          });\n        if (error) throw error;\n      }\n    },\n    onSuccess: () => {\n      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });\n    },\n  });",
+  "new_string": "  const upsertConfig = useMutation({\n    mutationFn: async (values: { app_id?: string; client_secret?: string; redirect_uri?: string; affiliate_tag?: string | null; matt_tool?: string | null }) => {\n      const row: Record<string, unknown> = {};\n      if (values.app_id !== undefined) row.app_id = values.app_id;\n      if (values.client_secret !== undefined) row.client_secret = values.client_secret;\n      if (values.redirect_uri !== undefined) row.redirect_uri = values.redirect_uri;\n      if (values.affiliate_tag !== undefined) row.affiliate_tag = values.affiliate_tag?.trim() || null;\n      if (values.matt_tool !== undefined) row.matt_tool = values.matt_tool?.trim() || null;\n      if (config?.id) {\n        const { error } = await (supabase as any).from('affiliate_config').update(row).eq('id', config.id);\n        if (error) throw error;\n      } else {\n        const { error } = await (supabase as any).from('affiliate_config').insert({ user_id: user!.id, platform: 'mercadolivre', ...row });\n        if (error) throw error;\n      }\n    },\n    onSuccess: () => {\n      queryClient.invalidateQueries({ queryKey: ['affiliate_config', user?.id] });\n    },\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAffiliateConfig.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:48:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx",
+  "old_string": "  const [appId, setAppId] = useState('');\n  const [clientSecret, setClientSecret] = useState('');\n  const [redirectUri, setRedirectUri] = useState('');\n\n  useEffect(() => {\n    if (config) {\n      setAppId(config.app_id ?? '');\n      setClientSecret(config.client_secret ?? '');\n      setRedirectUri(config.redirect_uri ?? '');\n    }\n  }, [config]);\n\n  const handleSave = async () => {\n    if (!appId.trim()) {\n      toast.error('App ID \u00e9 obrigat\u00f3rio');\n      return;\n    }\n    try {\n      await upsertConfig.mutateAsync({ app_id: appId, client_secret: clientSecret, redirect_uri: redirectUri });\n      toast.success('Credenciais salvas com sucesso!');\n    } catch (e: any) {\n      toast.error(e.message || 'Erro ao salvar');\n    }\n  };",
+  "new_string": "  const [appId, setAppId] = useState('');\n  const [clientSecret, setClientSecret] = useState('');\n  const [redirectUri, setRedirectUri] = useState('');\n  const [affiliateTag, setAffiliateTag] = useState('');\n  const [mattTool, setMattTool] = useState('');\n\n  useEffect(() => {\n    if (config) {\n      setAppId(config.app_id ?? '');\n      setClientSecret(config.client_secret ?? '');\n      setRedirectUri(config.redirect_uri ?? '');\n      setAffiliateTag(config.affiliate_tag ?? '');\n      setMattTool(config.matt_tool ?? '');\n    }\n  }, [config]);\n\n  const handleSave = async () => {\n    if (!appId.trim()) {\n      toast.error('App ID \u00e9 obrigat\u00f3rio');\n      return;\n    }\n    try {\n      await upsertConfig.mutateAsync({ app_id: appId, client_secret: clientSecret, redirect_uri: redirectUri, affiliate_tag: affiliateTag, matt_tool: mattTool });\n      toast.success('Credenciais salvas com sucesso!');\n    } catch (e: any) {\n      toast.error(e.message || 'Erro ao salvar');\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:48:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx",
+  "old_string": "                  value={redirectUri}\n                  onChange={(e) => setRedirectUri(e.target.value)}\n                />\n              </div>\n            </form>",
+  "new_string": "                  value={redirectUri}\n                  onChange={(e) => setRedirectUri(e.target.value)}\n                />\n              </div>\n\n              <div className=\"space-y-2\">\n                <Label htmlFor=\"ml-affiliate-tag\">Tag de afiliado (matt_word)</Label>\n                <Input\n                  id=\"ml-affiliate-tag\"\n                  name=\"ml-affiliate-tag\"\n                  autoComplete=\"off\"\n                  data-lpignore=\"true\"\n                  data-1p-ignore=\"true\"\n                  placeholder=\"ex.: caga6077534\"\n                  value={affiliateTag}\n                  onChange={(e) => setAffiliateTag(e.target.value)}\n                />\n                <p className=\"text-xs text-muted-foreground\">Gerada no painel de afiliados ML \u2014 \u00e9 o que atribui suas comiss\u00f5es (N\u00c3O \u00e9 o App ID).</p>\n              </div>\n\n              <div className=\"space-y-2\">\n                <Label htmlFor=\"ml-matt-tool\">matt_tool (opcional)</Label>\n                <Input\n                  id=\"ml-matt-tool\"\n                  name=\"ml-matt-tool\"\n                  autoComplete=\"off\"\n                  data-lpignore=\"true\"\n                  data-1p-ignore=\"true\"\n                  placeholder=\"ex.: 43641843\"\n                  value={mattTool}\n                  onChange={(e) => setMattTool(e.target.value)}\n                />\n                <p className=\"text-xs text-muted-foreground\">Id da ferramenta/canal do painel ML \u2014 acompanha o matt_word nos links quando preenchido.</p>\n              </div>\n            </form>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliatesPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:18)*
+
+
+## 🤖 Claude *(16:49:20)*
+
+Pontos 1+2 código completo. Agora ponto 3 — campaign-run assíncrono via `EdgeRuntime.waitUntil` p/ campanhas grandes (>8 passos), mantendo síncrono p/ pequenas (sem quebrar o contrato/smoke).
+
+## 🤖 Claude *(16:49:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts",
+  "old_string": "    const dispatchable = rows.filter((s) => channelToPlatforms(s.channel).length > 0).slice(0, MAX_PARALLEL_STEPS);\n    const cappedOut = rows.filter((s) => channelToPlatforms(s.channel).length > 0).length - dispatchable.length;\n\n    const orchestrateUrl = `${url}/functions/v1/orchestrate-content`;\n    const results = await Promise.allSettled(\n      dispatchable.map(async (step) => {\n        await admin.from(\"campaign_steps\").update({ status: \"running\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n        const platforms = channelToPlatforms(step.channel);\n        const ctrl = new AbortController();\n        const to = setTimeout(() => ctrl.abort(), STEP_TIMEOUT_MS);\n        try {\n          const resp = await fetch(orchestrateUrl, {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\", Authorization: authHeader },\n            body: JSON.stringify({ topic, campaign_id, platforms, wp_status: \"draft\" }),\n            signal: ctrl.signal,\n          });\n          const ok = resp.ok;\n          await admin.from(\"campaign_steps\").update({ status: ok ? \"done\" : \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n          return ok;\n        } catch (_) {\n          await admin.from(\"campaign_steps\").update({ status: \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n          return false;\n        } finally {\n          clearTimeout(to);\n        }\n      }),\n    );\n    const stepsDispatched = results.filter((r) => r.status === \"fulfilled\" && r.value === true).length;\n    const degraded = stepsDispatched < dispatchable.length || cappedOut > 0;\n\n    // Knowledge mesh mandate: every orchestration run inserts an observation node. Fail-soft \u2014 must not break the run.\n    try {\n      const { data: obsNode } = await admin.from(\"mcorch_nodes\").insert({\n        name: `campaign-run:${campaign_id}:${run_id}`,\n        node_type: \"observation\",\n        content:\n          `Campaign \"${campaign.name}\" run ${run_id}: ${stepsDispatched}/${dispatchable.length} steps dispatched to ` +\n          `orchestrate-content${blocked.length ? `, ${blocked.length} blocked (non-servable channel)` : \"\"}` +\n          `${cappedOut > 0 ? `, ${cappedOut} left idle (parallel cap)` : \"\"}.`,\n        stability_score: 1.0,\n        metadata: {\n          event: \"campaign_run\", campaign_id, run_id,\n          steps_total: rows.length, steps_dispatched: stepsDispatched,\n          steps_blocked: blocked.length, steps_capped: cappedOut,\n        },\n        user_id: user.id,\n      }).select(\"id\").single();\n      if (obsNode && campaign.mesh_node_id) {\n        await admin.from(\"mcorch_edges\").insert({\n          source_id: obsNode.id, target_id: campaign.mesh_node_id, relation_type: \"observes\", weight: 1.0,\n        });\n      }\n    } catch (_) { /* fail-soft */ }\n\n    admin.from(\"infra_health_logs\").insert({ service: \"campaign-run\", status: degraded ? \"degraded\" : \"healthy\" })\n      .then(() => {}, () => {});\n\n    const { data: newBal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    return json({ status: \"ok\", campaign_id, run_id, steps_dispatched: stepsDispatched, new_balance: newBal?.mco_balance ?? null });",
+  "new_string": "    const allDispatchable = rows.filter((s) => channelToPlatforms(s.channel).length > 0);\n    const orchestrateUrl = `${url}/functions/v1/orchestrate-content`;\n\n    // Dispatch one step \u2192 orchestrate-content (self-bills the same tenant via the forwarded JWT). Syncs step status.\n    const dispatchStep = async (step: StepRow): Promise<boolean> => {\n      await admin.from(\"campaign_steps\").update({ status: \"running\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n      const platforms = channelToPlatforms(step.channel);\n      const ctrl = new AbortController();\n      const to = setTimeout(() => ctrl.abort(), STEP_TIMEOUT_MS);\n      try {\n        const resp = await fetch(orchestrateUrl, {\n          method: \"POST\",\n          headers: { \"Content-Type\": \"application/json\", Authorization: authHeader },\n          body: JSON.stringify({ topic, campaign_id, platforms, wp_status: \"draft\" }),\n          signal: ctrl.signal,\n        });\n        const ok = resp.ok;\n        await admin.from(\"campaign_steps\").update({ status: ok ? \"done\" : \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n        return ok;\n      } catch (_) {\n        await admin.from(\"campaign_steps\").update({ status: \"error\" }).eq(\"id\", step.id).eq(\"user_id\", user.id);\n        return false;\n      } finally {\n        clearTimeout(to);\n      }\n    };\n\n    // Bounded-concurrency batches \u2014 a LARGE campaign now processes ALL servable steps (no longer leaves the tail idle),\n    // MAX_PARALLEL_STEPS at a time, so simultaneous heavy dispatches stay bounded.\n    const runBatches = async (list: StepRow[]): Promise<number> => {\n      let dispatched = 0;\n      for (let i = 0; i < list.length; i += MAX_PARALLEL_STEPS) {\n        const res = await Promise.allSettled(list.slice(i, i + MAX_PARALLEL_STEPS).map(dispatchStep));\n        dispatched += res.filter((r) => r.status === \"fulfilled\" && r.value === true).length;\n      }\n      return dispatched;\n    };\n\n    // Knowledge mesh mandate: every orchestration run inserts an observation node. Fail-soft \u2014 never breaks the run.\n    const meshObs = async (dispatched: number | null, total: number) => {\n      try {\n        const { data: obsNode } = await admin.from(\"mcorch_nodes\").insert({\n          name: `campaign-run:${campaign_id}:${run_id}`,\n          node_type: \"observation\",\n          content:\n            `Campaign \"${campaign.name}\" run ${run_id}: ` +\n            `${dispatched === null ? `${total} steps queued (async)` : `${dispatched}/${total} steps dispatched`} to ` +\n            `orchestrate-content${blocked.length ? `, ${blocked.length} blocked (non-servable channel)` : \"\"}.`,\n          stability_score: 1.0,\n          metadata: {\n            event: \"campaign_run\", campaign_id, run_id, steps_total: rows.length,\n            steps_dispatched: dispatched, steps_queued: total, steps_blocked: blocked.length, async: dispatched === null,\n          },\n          user_id: user.id,\n        }).select(\"id\").single();\n        if (obsNode && campaign.mesh_node_id) {\n          await admin.from(\"mcorch_edges\").insert({\n            source_id: obsNode.id, target_id: campaign.mesh_node_id, relation_type: \"observes\", weight: 1.0,\n          });\n        }\n      } catch (_) { /* fail-soft */ }\n    };\n\n    // ASYNC (OTD-CAMPAIGN-RUN-ASYNC): a large campaign returns immediately and dispatches ALL steps in the background\n    // (EdgeRuntime.waitUntil), so it neither blows the edge time budget nor leaves the tail idle for a follow-up run.\n    const ER = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;\n    if (allDispatchable.length > MAX_PARALLEL_STEPS && ER && typeof ER.waitUntil === \"function\") {\n      for (const s of allDispatchable) {\n        await admin.from(\"campaign_steps\").update({ status: \"running\" }).eq(\"id\", s.id).eq(\"user_id\", user.id);\n      }\n      await meshObs(null, allDispatchable.length);\n      admin.from(\"infra_health_logs\").insert({ service: \"campaign-run\", status: \"healthy\" }).then(() => {}, () => {});\n      ER.waitUntil(runBatches(allDispatchable));\n      const { data: newBal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n      return json({ status: \"ok\", campaign_id, run_id, steps_queued: allDispatchable.length, async: true, new_balance: newBal?.mco_balance ?? null });\n    }\n\n    // SYNCHRONOUS (small campaign, \u2264 MAX_PARALLEL_STEPS): await all dispatches and return the completed count.\n    const stepsDispatched = await runBatches(allDispatchable);\n    const degraded = stepsDispatched < allDispatchable.length;\n    await meshObs(stepsDispatched, allDispatchable.length);\n    admin.from(\"infra_health_logs\").insert({ service: \"campaign-run\", status: degraded ? \"degraded\" : \"healthy\" })\n      .then(() => {}, () => {});\n\n    const { data: newBal } = await admin.from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).maybeSingle();\n    return json({ status: \"ok\", campaign_id, run_id, steps_dispatched: stepsDispatched, new_balance: newBal?.mco_balance ?? null });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/campaign-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:50:00)*
+
+
+## 🤖 Claude *(16:50:01)*
+
+Os 3 pontos — código completo. Aplico a migration (matt_tool) + tsc (o hook usa `as any` p/ supabase, então deve passar sem regen).
+
+## 🤖 Claude *(16:50:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase db push 2>&1 | grep -iE \"applying|finished|error\" | head\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -12; echo \"exit ${PIPESTATUS[0]}\"",
+  "description": "Apply matt_tool migration + tsc",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Applying migration 20260604150000_affiliate_matt_tool.sql...
+> Finished supabase db push.
+> === tsc ===
+> exit 0
+> ```
+
+## 🤖 Claude *(16:50:16)*
+
+
+## 🤖 Claude *(16:50:17)*
+
+Migration aplicada + tsc 0. Deploy das 3 edge functions (orchestrate-step, process-affiliate-link, campaign-run).
+
+## 🤖 Claude *(16:50:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor fn in orchestrate-step process-affiliate-link campaign-run; do\n  echo \"=== $fn ===\"\n  npx supabase functions deploy $fn 2>&1 | grep -iE \"deployed|script size|error|bundl\" | head -4\ndone",
+  "description": "Deploy 3 edge functions",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orchestrate-step ===
+> Bundling Function: orchestrate-step
+> Deploying Function: orchestrate-step (script size: 121.9kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> === process-affiliate-link ===
+> Bundling Function: process-affiliate-link
+> Deploying Function: process-affiliate-link (script size: 85.07kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: process-affiliate-link
+> === campaign-run ===
+> Bundling Function: campaign-run
+> Deploying Function: campaign-run (script size: 81.72kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: campaign-run
+> ```
+
+## 🤖 Claude *(16:50:42)*
+
+
+## 🤖 Claude *(16:50:45)*
+
+3 deploys OK (bundle = sintaxe válida, incluindo o import `_shared/affiliate.ts`). Agora os smokes. Primeiro estendo o smoke-affiliate-click pra provar o **matt_tool** no link, e checo se o Usuário Zero tem affiliate_config (pra prova de integração da auto-monetização).
+
+## 🤖 Claude *(16:50:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-affiliate-click.ts",
+  "old_string": "  const tag = `caga_test_${stamp}`;\n  const { error: cfgErr } = await admin.from('affiliate_config')\n    .insert({ user_id: uid, platform: 'mercadolivre', is_active: true, affiliate_tag: tag });\n  check('seed affiliate_config (tag, active)', !cfgErr, cfgErr?.message ?? tag);",
+  "new_string": "  const tag = `caga_test_${stamp}`;\n  const mattTool = `tool_${stamp}`;\n  const { error: cfgErr } = await admin.from('affiliate_config')\n    .insert({ user_id: uid, platform: 'mercadolivre', is_active: true, affiliate_tag: tag, matt_tool: mattTool });\n  check('seed affiliate_config (tag + matt_tool, active)', !cfgErr, cfgErr?.message ?? `${tag}/${mattTool}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-affiliate-click.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:50:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-affiliate-click.ts",
+  "old_string": "  check('G1 Location NOT supabase/panel', !!c1.location && !/supabase\\.co|panel\\.gcrux/.test(c1.location), c1.location?.slice(0, 60) ?? 'none');",
+  "new_string": "  check('G1 Location NOT supabase/panel', !!c1.location && !/supabase\\.co|panel\\.gcrux/.test(c1.location), c1.location?.slice(0, 60) ?? 'none');\n  check('G1b matt_tool rides the matt_word link', !!c1.location && c1.location.includes(`matt_tool=${mattTool}`), c1.location?.includes('matt_tool=') ? 'present' : 'MISSING');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-affiliate-click.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:50:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\necho \"=== Usu\u00e1rio Zero affiliate_config? (p/ prova de auto-monetiza\u00e7\u00e3o) ===\"\nbun -e '\nimport { createClient } from \"@supabase/supabase-js\";\nconst a = createClient(process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY);\nconst uid = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data } = await a.from(\"affiliate_config\").select(\"affiliate_tag, matt_tool, is_active\").eq(\"user_id\", uid).eq(\"platform\",\"mercadolivre\").maybeSingle();\nconsole.log(\"Usu\u00e1rio Zero affiliate_config:\", JSON.stringify(data));\n'",
+  "description": "matt_tool smoke edit + check Usu\u00e1rio Zero affiliate config",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Usuário Zero affiliate_config? (p/ prova de auto-monetização) ===
+> Usuário Zero affiliate_config: {"affiliate_tag":"caga6077534","matt_tool":null,"is_active":true}
+> ```
+
+## 🤖 Claude *(16:51:11)*
+
+
+## 🤖 Claude *(16:51:13)*
+
+Usuário Zero TEM affiliate_config (tag `caga6077534`, matt_tool null) — então re-rodar o e2e (intent sobre Roborock) provará a auto-monetização. matt_tool fica null (o Sovereign seta via a UI nova; o smoke prova que rida quando presente). Rodo o smoke-affiliate-click (agora com G1b matt_tool).
+
+## 🤖 Claude *(16:51:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nbun run scripts/qa/smoke-affiliate-click.ts 2>&1 | tail -16",
+  "description": "Run smoke with matt_tool G1b",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G2 affiliate_links.clicks = 1 (created by tracker)  → clicks=1 source=redirect-tracker
+> ✅ G3 second GET → 302  → status=302
+> ✅ G3 affiliate_links.clicks = 2 (atomic increment)  → clicks=2
+> ✅ G3 exactly ONE ledger row (UPDATE-first, no fork)  → rows=1
+> ✅ G4 bogus node → 302 (fail-soft to settings)  → status=302 loc=https://login.mcorch.com/dashboard/settings?no_con
+> ✅ G4 no NULL-owner ledger row created  → null-owner rows=0
+> ✅ G5 by-link GET → 302 to the stored ML short_url  → status=302 loc=https://www.mercadolivre.com.br/p/MLB27834876?matt
+> ✅ G5 by-link clicks 0→1  → clicks=1
+> ✅ G6 by-link clicks 1→2 (atomic, same row)  → clicks=2
+> ✅ G7 bogus link_id → 302 settings (fail-soft)  → status=302 loc=https://login.mcorch.com/dashboard/setti
+> ✅ G8 POST monetize → tracked affiliate_url (link_id) + ml_url real  → status=200 affiliate_url=https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/proces
+> ✅ G9 planted non-ML short_url → 302 settings (open-redirect blocked)  → loc=https://login.mcorch.com/dashboard/settings?no_con
+> 
+> 🧹 cleanup: 1 throwaway user(s) + config + nodes + links deleted
+> 
+> ✅✅ AFFILIATE CLICK-LEDGER SMOKE PASSED
+> ```
+
+## 🤖 Claude *(16:51:47)*
+
+
+## 🤖 Claude *(16:51:49)*
+
+Smoke 9/9 + G1b (matt_tool rida o link) ✅ — **ponto 2 provado**. Agora a prova de integração da **auto-monetização** (ponto 1): adiciono ao e2e-intent-paid uma checagem do conteúdo gerado (artigo sobre Roborock → deve carregar link rastreável) e re-rodo.
+
+## 🤖 Claude *(16:51:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts",
+  "old_string": "check('pipeline_run created + progressed', !!runId && (runStatus === 'done' || runStatus === 'running' || runStatus === 'error'), `run_id=${runId} status=${runStatus}`);\nif (wpUrl) console.log(`   \ud83d\udcdd WordPress draft: ${wpUrl}`);\n\n// 6. billing: refund did NOT fire on the happy path \u2192 debited exactly 10.",
+  "new_string": "check('pipeline_run created + progressed', !!runId && (runStatus === 'done' || runStatus === 'running' || runStatus === 'error'), `run_id=${runId} status=${runStatus}`);\nif (wpUrl) console.log(`   \ud83d\udcdd WordPress draft: ${wpUrl}`);\n\n// 5b. AUTO-MONETIZE proof (OTD-ML-CLICKS): Usu\u00e1rio Zero has an affiliate_tag, so the generated article should carry\n//     a click-tracked affiliate link (?link_id=) for the catalog product it mentions (the intent is about Roborock).\nif (runId && runStatus === 'done') {\n  const { data: asset } = await admin.from('mcorch_nodes')\n    .select('content').eq('node_type', 'content_mesh_asset').contains('metadata', { orchestration_run_id: runId }).maybeSingle();\n  const body = String(asset?.content ?? '');\n  const mentionsProduct = /roborock|neo\\s*qled|family\\s*hub/i.test(body);\n  const hasTracked = /process-affiliate-link\\?link_id=/.test(body);\n  if (mentionsProduct) {\n    check('5b auto-monetize: article mentions a catalog product \u2192 carries a tracked affiliate link', hasTracked, hasTracked ? 'tracked link present in article' : 'product mentioned but NO tracked link');\n  } else {\n    console.log('   \u23ed 5b auto-monetize skipped \u2014 generated article did not mention a catalog product (AI variance).');\n  }\n}\n\n// 6. billing: refund did NOT fire on the happy path \u2192 debited exactly 10."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:51:59)*
+
+
+## 🤖 Claude *(16:52:00)*
+
+Re-rodo o e2e pago (~10 mco) — prova de integração da auto-monetização (artigo Roborock → link rastreável).
+
+## 🤖 Claude *(16:52:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nRUN_PAID_E2E=1 bun run scripts/qa/e2e-intent-paid.ts 2>&1 | tail -20",
+  "description": "Run paid E2E with auto-monetize check",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ minted Usuário Zero JWT  → ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> 💰 balance before: 5271
+> ✅ intent-orchestrate → 200 (plan created)  → status=200 plan_status=auto_approved
+>    tasks: [{"action":"escrever","channel":"content","impact":"low","rationale":"criar conteúdo de blog em rascunho sobre o aspirador robô Roborock S8 Pro Ultra para casa inteligente"}]
+>    aggregated platforms: ["wordpress"] → wordpress-only=true
+> ✅ plan ready  → b68c27d6-6770-4187-8c21-3d7d1d89e8f3 (auto_approved)
+>    ↳ plan auto_approved (low-impact) — executes without HITL (correct policy behavior).
+> ✅ intent-execute execute → executed  → status=200 executed
+>    outward_dispatch: dispatched [{"target":"orchestrate-content","http_status":200,"ok":true,"detail":"cee55b11-05de-405c-b83d-7e110fcff60d"}]
+> ✅ outward → orchestrate-content (dispatched, 200)  → outward=dispatched target=orchestrate-content http=200
+> ✅ pipeline_run created + progressed  → run_id=cee55b11-05de-405c-b83d-7e110fcff60d status=done
+> ✅ 5b auto-monetize: article mentions a catalog product → carries a tracked affiliate link  → tracked link present in article
+> 
+> 💰 balance after: 5261  (delta=10)
+> ✅ debited exactly 10 mco (orchestrate self-bill; refund did NOT fire on success)  → delta=10
+> ✅ HITL gate: high-impact plan approve → approved  → approved
+> ✅ HITL gate: reject after approve → rejected (terminal, no dispatch)  → rejected
+> 
+> ✅✅ PAID E2E PASSED — agentic outward chain LIVE (intent → policy → execute → orchestrate-content WP draft) + HITL gate proven
+> ```
+
+## 🤖 Claude *(16:52:46)*
+
+
+## 🤖 Claude *(16:52:48)*
+
+**Auto-monetização PROVADA E2E** (ponto 1): o artigo gerado sobre Roborock carrega um link rastreável (`?link_id=`) no `content_mesh_asset`. Run `cee55b11` done, delta 10. O flywheel agora produz conteúdo monetizado+rastreado automaticamente.
+
+Falta o ponto 3 (async). Leio o smoke-campaign-run pra reusar o setup e adicionar um caso de campanha grande (>8 passos → `async:true`).
+
+## 🤖 Claude *(16:52:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke test — campaign-run edge fn (marketing-hub FR-MH-004), USER PATH (real JWT).
+> 4	 *
+> 5	 * Proves the function's full skeleton at ZERO LLM cost: every guard path (401/422/404/no-steps/402) runs
+> 6	 * BEFORE the mcoCoins deduct and BEFORE any orchestrate-content dispatch, and an `email`-channel step is
+> 7	 * BLOCKED (never dispatched), so the happy structural path costs only the 10-coin fee on a THROWAWAY balance
+> 8	 * and fans out to NOTHING. The real paid cascade (a `social`/`content` step → real orchestrate-content spend)
+> 9	 * is intentionally NOT exercised here — it is gated on Sovereign GO.
+> 10	 *
+> 11	 * Creates two throwaway @example.com users, signs in user1 for a real access_token, asserts the gates, and
+> 12	 * CLEANS UP (deletes users → cascade removes profiles/campaigns/steps; mesh observation nodes deleted explicitly).
+> 13	 * No production data, no Sovereign balance, no LLM provider $ touched.
+> 14	 *
+> 15	 * Usage: bun run scripts/qa/smoke-campaign-run.ts
+> 16	 */
+> 17	import { createClient } from '@supabase/supabase-js';
+> 18	
+> 19	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 20	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 21	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 22	if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 23	
+> 24	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 25	const stamp = Date.now();
+> 26	let uid1: string | null = null;
+> 27	let uid2: string | null = null;
+> 28	let pass = true;
+> 29	const createdNodeNames: string[] = [];
+> 30	
+> 31	function check(label: string, ok: boolean, detail = '') {
+> 32	  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+> 33	  if (!ok) pass = false;
+> 34	}
+> 35	
+> 36	interface CrBody {
+> 37	  status?: string; error?: string; campaign_id?: string;
+> 38	  run_id?: string; steps_dispatched?: number; new_balance?: number;
+> 39	}
+> 40	async function call(token: string | null, body: unknown): Promise<{ status: number; body: CrBody }> {
+> 41	  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };
+> 42	  if (token) headers.Authorization = `Bearer ${token}`;
+> 43	  const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });
+> 44	  let j: CrBody; const t = await r.text();
+> 45	  try { j = JSON.parse(t) as CrBody; } catch { j = { error: t }; }
+> 46	  return { status: r.status, body: j };
+> 47	}
+> 48	
+> 49	async function mkUser(tag: string) {
+> 50	  const email = `cr-smoke-${tag}-${stamp}@example.com`;
+> 51	  const password = `Aa1!${crypto.randomUUID()}`;
+> 52	  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+> 53	  if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);
+> 54	  return { id: data.user.id, email, password };
+> 55	}
+> 56	
+> 57	async function mkCampaign(userId: string, name: string) {
+> 58	  const { data, error } = await admin.from('campaigns')
+> 59	    .insert({ user_id: userId, name, status: 'draft', channels: [] }).select('id').single();
+> 60	  if (error || !data) throw new Error(`insert campaign "${name}": ${error?.message}`);
+> 61	  return data.id as string;
+> 62	}
+> 63	
+> 64	async function addStep(campaignId: string, userId: string, channel: string) {
+> 65	  const { error } = await admin.from('campaign_steps')
+> 66	    .insert({ campaign_id: campaignId, user_id: userId, position: 0, channel, action: 'generate_content' });
+> 67	  if (error) throw new Error(`insert step (${channel}): ${error.message}`);
+> 68	}
+> 69	
+> 70	try {
+> 71	  const u1 = await mkUser('a'); uid1 = u1.id;
+> 72	  const u2 = await mkUser('b'); uid2 = u2.id;
+> 73	  console.log(`✅ throwaway users ${uid1} / ${uid2}`);
+> 74	
+> 75	  // campaigns
+> 76	  const cNoSteps = await mkCampaign(uid1, 'Smoke No-Steps');
+> 77	  const cEmail = await mkCampaign(uid1, 'Smoke Email-Only'); await addStep(cEmail, uid1, 'email');
+> 78	  const cSocial = await mkCampaign(uid1, 'Smoke Social');    await addStep(cSocial, uid1, 'social');
+> 79	  const cForeign = await mkCampaign(uid2, 'Smoke Foreign');  await addStep(cForeign, uid2, 'social');
+> 80	
+> 81	  // real user1 JWT
+> 82	  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });
+> 83	  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email: u1.email, password: u1.password });
+> 84	  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);
+> 85	  const token = si.session.access_token;
+> 86	  console.log(`✅ user1 JWT obtained\n`);
+> 87	
+> 88	  // ── A: no JWT → 401 (free) ──
+> 89	  const a = await call(null, { campaign_id: cEmail });
+> 90	  check('A no-JWT → 401', a.status === 401, `HTTP ${a.status}`);
+> 91	
+> 92	  // ── B: missing campaign_id → 422 (free) ──
+> 93	  const b = await call(token, {});
+> 94	  check('B missing campaign_id → 422', b.status === 422, `HTTP ${b.status} ${JSON.stringify(b.body?.error ?? '')}`);
+> 95	
+> 96	  // ── C: nonexistent campaign_id → 404 (free) ──
+> 97	  const c = await call(token, { campaign_id: crypto.randomUUID() });
+> 98	  check('C nonexistent id → 404', c.status === 404, `HTTP ${c.status}`);
+> 99	
+> 100	  // ── D: foreign campaign (owned by user2) → 404 — TENANT ISOLATION (free) ──
+> 101	  const d = await call(token, { campaign_id: cForeign });
+> 102	  check('D foreign campaign → 404 (tenant isolation)', d.status === 404, `HTTP ${d.status}`);
+> 103	
+> 104	  // ── E: campaign with no steps → 422 (free) ──
+> 105	  const e = await call(token, { campaign_id: cNoSteps });
+> 106	  check('E no-steps → 422', e.status === 422, `HTTP ${e.status} ${JSON.stringify(e.body?.error ?? '')}`);
+> 107	
+> 108	  // ── F: email-only step → 200, dispatched=0, step BLOCKED, fee debited (100→90), mesh node, campaign active ──
+> 109	  await admin.from('profiles').update({ mco_balance: 100 }).eq('id', uid1);
+> 110	  const f = await call(token, { campaign_id: cEmail });
+> 111	  const fOk = f.status === 200 && f.body?.status === 'ok' && f.body?.steps_dispatched === 0 && Number(f.body?.new_balance) === 90;
+> 112	  check('F email-only → 200 dispatched=0 balance 100→90', fOk,
+> 113	    `HTTP ${f.status} dispatched=${f.body?.steps_dispatched} new_balance=${f.body?.new_balance} run_id=${f.body?.run_id}`);
+> 114	  if (f.body?.run_id) createdNodeNames.push(`campaign-run:${cEmail}:${f.body.run_id}`);
+> 115	  // step status synced to 'blocked'
+> 116	  const { data: stepRows } = await admin.from('campaign_steps').select('status').eq('campaign_id', cEmail);
+> 117	  check('F step synced → blocked', stepRows?.[0]?.status === 'blocked', `status=${stepRows?.[0]?.status}`);
+> 118	  // campaign promoted draft → active
+> 119	  const { data: campRow } = await admin.from('campaigns').select('status').eq('id', cEmail).single();
+> 120	  check('F campaign → active', campRow?.status === 'active', `status=${campRow?.status}`);
+> 121	  // mesh observation node landed (knowledge mesh mandate)
+> 122	  if (f.body?.run_id) {
+> 123	    const { data: node } = await admin.from('mcorch_nodes').select('id, node_type, metadata')
+> 124	      .eq('name', `campaign-run:${cEmail}:${f.body.run_id}`).maybeSingle();
+> 125	    check('F mesh observation node inserted',
+> 126	      node?.node_type === 'observation' && (node?.metadata as { event?: string } | null)?.event === 'campaign_run',
+> 127	      `node=${node?.id ?? 'MISSING'}`);
+> 128	  }
+> 129	  // DB balance matches the response (atomic deduct, no client-side math)
+> 130	  const { data: balRow } = await admin.from('profiles').select('mco_balance').eq('id', uid1).single();
+> 131	  check('F DB balance = 90 (atomic)', Number(balRow?.mco_balance) === 90, `db=${balRow?.mco_balance}`);
+> 132	
+> 133	  // ── G: insufficient balance (5 < 10) on a dispatchable campaign → 402, balance UNCHANGED (no deduct, free) ──
+> 134	  await admin.from('profiles').update({ mco_balance: 5 }).eq('id', uid1);
+> 135	  const g = await call(token, { campaign_id: cSocial });
+> 136	  check('G insufficient balance → 402', g.status === 402, `HTTP ${g.status}`);
+> 137	  const { data: balG } = await admin.from('profiles').select('mco_balance').eq('id', uid1).single();
+> 138	  check('G balance unchanged = 5 (no deduct on 402)', Number(balG?.mco_balance) === 5, `db=${balG?.mco_balance}`);
+> 139	  // the social step must NOT have been dispatched (still idle)
+> 140	  const { data: socialStep } = await admin.from('campaign_steps').select('status').eq('campaign_id', cSocial);
+> 141	  check('G social step untouched → idle', socialStep?.[0]?.status === 'idle', `status=${socialStep?.[0]?.status}`);
+> 142	} catch (err) {
+> 143	  pass = false;
+> 144	  console.error('❌ smoke error:', err instanceof Error ? err.message : err);
+> 145	} finally {
+> 146	  // explicit mesh node cleanup (zero residue), then users (cascade removes profiles/campaigns/steps).
+> 147	  for (const name of createdNodeNames) await admin.from('mcorch_nodes').delete().eq('name', name);
+> 148	  if (uid1) await admin.auth.admin.deleteUser(uid1);
+> 149	  if (uid2) await admin.auth.admin.deleteUser(uid2);
+> 150	  console.log(`\n🧹 cleanup: ${createdNodeNames.length} mesh node(s) + 2 users deleted`);
+> 151	  console.log(pass ? '\n✅✅ CAMPAIGN-RUN SMOKE PASSED' : '\n❌ CAMPAIGN-RUN SMOKE FAILED');
+> 152	  process.exit(pass ? 0 : 1);
+> 153	}
+> 154	
+> ```
+
+## 🤖 Claude *(16:53:18)*
+
+
+## 🤖 Claude *(16:53:19)*
+
+smoke-campaign-run usa signInWithPassword + cria campanhas/passos. Adiciono um caso **H** (campanha grande de 9 passos → `async:true`).
+
+## 🤖 Claude *(16:53:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "old_string": "interface CrBody {\n  status?: string; error?: string; campaign_id?: string;\n  run_id?: string; steps_dispatched?: number; new_balance?: number;\n}",
+  "new_string": "interface CrBody {\n  status?: string; error?: string; campaign_id?: string;\n  run_id?: string; steps_dispatched?: number; steps_queued?: number; async?: boolean; new_balance?: number;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:53:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "old_string": "  check('G social step untouched \u2192 idle', socialStep?.[0]?.status === 'idle', `status=${socialStep?.[0]?.status}`);\n} catch (err) {",
+  "new_string": "  check('G social step untouched \u2192 idle', socialStep?.[0]?.status === 'idle', `status=${socialStep?.[0]?.status}`);\n\n  // \u2500\u2500 H: LARGE campaign (>8 dispatchable steps) \u2192 ASYNC (OTD-CAMPAIGN-RUN-ASYNC): returns immediately with\n  //    async:true + steps_queued, fee debited (10\u21920). Background dispatch self-bills at balance 0 (402, zero LLM). \u2500\u2500\n  const cLarge = await mkCampaign(uid1, 'Smoke Large Async');\n  for (let i = 0; i < 9; i++) await addStep(cLarge, uid1, 'content');\n  await admin.from('profiles').update({ mco_balance: 10 }).eq('id', uid1);\n  const h = await call(token, { campaign_id: cLarge });\n  const hOk = h.status === 200 && h.body?.async === true && Number(h.body?.steps_queued) === 9 && Number(h.body?.new_balance) === 0;\n  check('H large campaign (9 steps) \u2192 async:true steps_queued=9 fee debited 10\u21920', hOk,\n    `HTTP ${h.status} async=${h.body?.async} queued=${h.body?.steps_queued} balance=${h.body?.new_balance}`);\n  if (h.body?.run_id) createdNodeNames.push(`campaign-run:${cLarge}:${h.body.run_id}`);\n} catch (err) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:53:30)*
+
+
+## 🤖 Claude *(16:53:31)*
+
+Rodo o smoke-campaign-run (caso H async + sem regressão nos guards A-G).
+
+## 🤖 Claude *(16:53:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nbun run scripts/qa/smoke-campaign-run.ts 2>&1 | tail -20",
+  "description": "Run campaign-run smoke with async case H",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ user1 JWT obtained
+> 
+> ✅ A no-JWT → 401  → HTTP 401
+> ✅ B missing campaign_id → 422  → HTTP 422 "campaign_id é obrigatório"
+> ✅ C nonexistent id → 404  → HTTP 404
+> ✅ D foreign campaign → 404 (tenant isolation)  → HTTP 404
+> ✅ E no-steps → 422  → HTTP 422 "Campanha não tem passos para executar"
+> ✅ F email-only → 200 dispatched=0 balance 100→90  → HTTP 200 dispatched=0 new_balance=90 run_id=d11ee27b-7716-428f-aef0-ae5bfc704bd5
+> ✅ F step synced → blocked  → status=blocked
+> ✅ F campaign → active  → status=active
+> ✅ F mesh observation node inserted  → node=ea08ff46-fca5-4d8f-b4ce-fa2f5422a860
+> ✅ F DB balance = 90 (atomic)  → db=90
+> ✅ G insufficient balance → 402  → HTTP 402
+> ✅ G balance unchanged = 5 (no deduct on 402)  → db=5
+> ✅ G social step untouched → idle  → status=idle
+> ✅ H large campaign (9 steps) → async:true steps_queued=9 fee debited 10→0  → HTTP 200 async=true queued=9 balance=0
+> 
+> 🧹 cleanup: 2 mesh node(s) + 2 users deleted
+> 
+> ✅✅ CAMPAIGN-RUN SMOKE PASSED
+> ```
+
+## 🤖 Claude *(16:54:01)*
+
+
+## 🤖 Claude *(16:54:03)*
+
+**Ponto 3 PROVADO** — caso H: campanha de 9 passos → `async:true`, steps_queued=9, fee debitado 10→0. Sem regressão (A-G verdes). **Os 3 pontos provados materialmente.** Verifico tsc + drift, depois `/security-review`.
+
+## 🤖 Claude *(16:54:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"exit ${PIPESTATUS[0]}\"\necho \"=== drift audit ===\"; bash scripts/qa/audit-schema-drift.sh 2>&1 | tail -6\necho \"=== git status ===\"; git status --short | head -20",
+  "description": "tsc + drift + git status",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> exit 0
+> === drift audit ===
+> 
+> ──── ADVISORY · RLS coverage ────
+>   ✅ every public table has RLS enabled
+> 
+> ──── VERDICT ────
+>   ✅ NO deployed↔migration DRIFT detected
+> === git status ===
+>  M scripts/qa/e2e-intent-paid.ts
+>  M scripts/qa/smoke-affiliate-click.ts
+>  M scripts/qa/smoke-campaign-run.ts
+>  M src/hooks/useAffiliateConfig.ts
+>  M src/lib/affiliate.ts
+>  M src/pages/AffiliatesPage.tsx
+>  M supabase/functions/campaign-run/index.ts
+>  M supabase/functions/orchestrate-step/index.ts
+>  M supabase/functions/process-affiliate-link/index.ts
+> ?? supabase/functions/_shared/affiliate.ts
+> ?? supabase/migrations/20260604150000_affiliate_matt_tool.sql
+> ```
+
+## 🤖 Claude *(16:54:27)*
+
+
+## 🤖 Claude *(16:54:27)*
+
+tsc 0 · drift limpo. `/security-review` independente do novo diff (migration + auto-monetize + matt_tool + async).
+
+## 🤖 Claude *(16:54:48)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review auto-monetize + matt_tool + async",
+  "subagent_type": "general-purpose",
+  "prompt": "Senior security engineer \u2014 FOCUSED review of UNCOMMITTED changes in /home/gcrUX/htdocs/constellation-orchestra (Supabase + Deno edge functions + React). HEAD is the just-pushed v6.28.0+addendum. Only review what's uncommitted.\n\nGet the diff yourself:\n```\ncd /home/gcrUX/htdocs/constellation-orchestra\ngit diff HEAD -- supabase/functions/orchestrate-step/index.ts supabase/functions/process-affiliate-link/index.ts supabase/functions/campaign-run/index.ts src/lib/affiliate.ts src/hooks/useAffiliateConfig.ts src/pages/AffiliatesPage.tsx\ncat supabase/functions/_shared/affiliate.ts supabase/migrations/20260604150000_affiliate_matt_tool.sql\n```\n\nWHAT CHANGED (3 features):\n1. AUTO-MONETIZE: new `_shared/affiliate.ts` (monetizeContent) is called in orchestrate-step's article_generation. It scans the AI-generated article (HTML) for a fixed catalog of product names (regex), creates an affiliate_links row (service-role admin client), and replaces the first mention with `<a href=\"${target}\">${match}</a>` where target is OUR tracked redirect (?link_id=) or a built ML URL. The monetized HTML flows to content_library + WordPress + content_mesh_asset. Gated by AUTO_MONETIZE_ENABLED env (default on); fail-open if no affiliate_tag.\n2. matt_tool: new optional column on affiliate_config (migration \u2014 ALTER ADD COLUMN, inherits table RLS). buildMattWordUrl/buildMlProductUrl append `matt_tool` (a tracking id) to ML URLs when present. Resolved per-owner from affiliate_config in process-affiliate-link GET/POST + orchestrate-step. UI: AffiliatesPage adds affiliate_tag + matt_tool inputs; useAffiliateConfig.upsertConfig persists them.\n3. campaign-run ASYNC: large campaigns (>8 servable steps) return immediately and dispatch in the background via EdgeRuntime.waitUntil (bounded batches). Small campaigns unchanged (synchronous).\n\nOBJECTIVE: only HIGH-CONFIDENCE (\u22658/10), concretely exploitable vulns NEWLY introduced \u2014 SQLi, auth bypass, privilege escalation, SSRF (host/protocol), cross-tenant data access/leak, secret exposure, stored XSS that actually executes in a trusted context, open-redirect (host-controlling).\n\nCheck concretely:\n- monetizeContent inserts `<a href>` into article HTML using a `target` URL \u2014 can an attacker control `target` to inject a malicious href/script? (target = buildMlProductUrl output [ML domain, our own construction] or our supabase redirect URL \u2014 both built from server-controlled values + the owner's own affiliate_tag/matt_tool. The matched `${m}` is the product name from the AI's own content, re-inserted verbatim.) Is the content rendered by OUR React app anywhere (dangerouslySetInnerHTML), or only published to the tenant's WordPress? Does the affiliate_tag/matt_tool (tenant-controlled strings) flowing into a URL searchParams.set or into the href create an injection? (searchParams.set URL-encodes.)\n- matt_tool column: any RLS/privilege issue? It's tenant-owned config; resolved per-owner.\n- campaign-run async: EdgeRuntime.waitUntil dispatches forward the caller's JWT \u2014 same tenant. Any change to the auth/tenant model? Does returning before dispatch leak anything or allow double-spend? (Fee debited once before return; idempotency unchanged.)\n- The affiliate_links insert in monetizeContent uses ownerId = run.user_id (server-resolved). Cross-tenant?\n\nEXCLUDE: DoS/rate-limiting, cosmetic counter inflation, SSRF that only controls a path, theoretical races, markdown/docs, lack of hardening, client-side-only checks, log spoofing. Per-user using their own config/content is intended. Note: React auto-escapes; only flag XSS with a concrete execution sink (dangerouslySetInnerHTML / published-to-a-context-that-executes-AND-is-attacker-controlled).\n\nOutput a concise markdown report. Each finding: file:line, severity, concrete exploit path, fix, confidence 1-10 (report only \u22658). If none qualify, say so and explain why the main candidates (href injection in monetizeContent; tenant strings in URLs; async dispatch) are not exploitable."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The allowlist regexes are anchored with `^https://` and constrain host+path to ML/meli.la domains. A tenant-planted `short_url=https://evil/phish` fails both checks and falls through to the fail-closed settings redirect. The guard is sound, and the auto-monetize path writes a legitimate `buildMlProductUrl` output (ML domain) into `short_url` anyway.\n\nI have completed the focused review with concrete tracing of every candidate sink. Here is my report.\n\n---\n\n# Security Review — Uncommitted Changes (v6.28.0+addendum)\n\n**Scope:** auto-monetize (`_shared/affiliate.ts` + orchestrate-step), `matt_tool` column/plumbing, campaign-run async dispatch.\n\n**Verdict: No HIGH-CONFIDENCE (≥8/10) newly-introduced exploitable vulnerabilities found.**\n\nEvery primary candidate was traced to a concrete sink and found non-exploitable. Details below.\n\n---\n\n## Candidate 1 — `<a href>` injection / stored XSS in `monetizeContent`\n\n**Sink is real but pre-existing, and the new code cannot poison it.** `content_library.body` IS rendered raw via `dangerouslySetInnerHTML` at `src/pages/DashboardHome.tsx:677` (fed from `item.body` at lines 242/269). So there is a live DOM execution sink in our own React app. However:\n\n- **The sink predates this change.** `articleContent` is already full HTML — the AI is explicitly prompted to return `"content" (HTML)` / `"Full HTML article body"` (`orchestrate-step/index.ts:137,149`), and that HTML already flowed into `content_library.body` and onto the dashboard before this diff. The monetization change inserts one extra `<a>` into HTML that was already rendered raw. It does not open a new sink (excluded as pre-existing / not newly introduced).\n- **The injected `target` is not attacker-controllable into a dangerous href.** `target` is either `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}` (server env + DB-generated UUID) or `buildMlProductUrl(p.mlb, affiliateTag, mattTool)` where `p.mlb` is a hardcoded catalog constant and `affiliateTag`/`mattTool` go through `URL.searchParams.set()` (percent-encoded) on a fixed `https://www.mercadolivre.com.br` base (`_shared/affiliate.ts:26-34`). No `"`-breakout, no `javascript:`, no host control.\n- **The re-inserted anchor text `${m}`** is matched by restrictive regexes (`/roborock\\s+s8[a-z0-9 ]*.../`, fixed literals — `_shared/affiliate.ts:17-19`) whose character classes contain no `"`, `<`, or `>`. It cannot break the attribute or inject a tag, and it originates from the AI\'s own article, not from a request.\n\nConfidence this is NOT exploitable: 9/10.\n\n## Candidate 2 — `matt_tool` (tenant-controlled string) into URLs / open-redirect\n\nNot exploitable. `matt_tool` reaches a URL only via `searchParams.set("matt_tool", ...)` in `buildMlProductUrl` (`_shared/affiliate.ts:30`), `buildMattWordUrl` (`affiliate.ts:71`), and `process-affiliate-link/index.ts:108` — all percent-encoding, all on ML-domain bases. The GET 302 redirect path additionally has an explicit open-redirect guard (`process-affiliate-link/index.ts:170-182`): it only redirects to `short_url` if it matches `isMlShortLink()` or the `mercadolivre.com(.br)` host regex (anchored `^https://`), else fails closed to `/dashboard/settings`. A tenant-planted `short_url=https://evil/...` does not redirect. `matt_tool` cannot host-control or break out.\n\n## Candidate 3 — `matt_tool` migration RLS/privesc\n\nNot exploitable. `ALTER TABLE ... ADD COLUMN IF NOT EXISTS matt_tool text` on `affiliate_config`, a base table with `auth.uid()=user_id` RLS. New column inherits table RLS; no policy/grant change. Resolved per-owner everywhere (`.eq("user_id", run.user_id)` / `.eq("user_id", user.id)`). No issue.\n\n## Candidate 4 — campaign-run async auth/tenant model & double-spend\n\nNot exploitable. `user.id` is JWT-verified (`getUser()`, line 59); campaign + steps ownership re-checked with `.eq("user_id", user.id)` (404 covers cross-tenant, lines 69/76). The fee is debited **once** at line 83 *before* the branch split. The async branch forwards the **same caller `authHeader`** to `orchestrate-content` (`EdgeRuntime.waitUntil`), so background dispatch stays the same tenant; all step writes are `.eq("user_id", user.id)`. Returning early exposes only the caller\'s own `run_id` + `mco_balance`. No tenant-model change, no double-spend (per-step self-billing identical to the prior sync path).\n\n## Candidate 5 — `affiliate_links` insert ownerId cross-tenant\n\nNot exploitable. `ownerId = run.user_id` (`orchestrate-step/index.ts:184`), where `run` is fetched server-side by `run_id` under the service-role client (lines 69-72). The insert writes `user_id: ownerId` (`_shared/affiliate.ts:67-68`) — no client-supplied id. Single-tenant.\n\n---\n\n**Excluded per scope:** the honest "matt_tool attribution unverifiable from outside ML" caveat (correctness/business, not security); fail-open monetization (availability, not a vuln); the pre-existing `dangerouslySetInnerHTML` on AI HTML (not introduced by this change — though noted below).\n\n**Non-blocking note (pre-existing, out of scope, FYI only):** `src/pages/DashboardHome.tsx:677` renders AI-generated HTML from `content_library.body` via `dangerouslySetInnerHTML` with no sanitizer (no DOMPurify). This change doesn\'t introduce or worsen it (the field already carried raw AI HTML), but if a future path ever lets a less-trusted source write `content_library.body`, that sink becomes exploitable. Sanitizing on render would harden it. Flagging only because I traced it; not part of this diff\'s risk.\n\nKey files reviewed: `supabase/functions/_shared/affiliate.ts`, `supabase/functions/orchestrate-step/index.ts`, `supabase/functions/process-affiliate-link/index.ts`, `supabase/functions/campaign-run/index.ts`, `supabase/migrations/20260604150000_affiliate_matt_tool.sql`, `src/pages/DashboardHome.tsx`.'}, {'type': 'text', 'text': "agentId: ad7e2d676473a1a86 (use SendMessage with to: 'ad7e2d676473a1a86' to continue this agent)\n<usage>subagent_tokens: 77560\ntool_uses: 14\nduration_ms: 117976</usage>"}]
+> ```
+
+## 🤖 Claude *(16:57:13)*
+
+
+## 🤖 Claude *(16:57:16)*
+
+`/security-review`: **SAFE** — nenhuma vuln ≥8. Os 5 candidatos traçados + não-exploráveis (href injection: target server-controlled + texto regex-bounded; matt_tool: percent-encoded + guard de open-redirect; async: fee debitado 1×, mesmo tenant). O review sinalizou um gap **pré-existente** (fora do escopo): `DashboardHome.tsx:677` renderiza HTML da IA via `dangerouslySetInnerHTML` sem sanitizer. Vou registrar como tarefa separada e commitar os 3.
+
+## 🤖 Claude *(16:57:24)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Sanitize AI HTML in DashboardHome render",
+  "prompt": "In /home/gcrUX/htdocs/constellation-orchestra, src/pages/DashboardHome.tsx around line 677 renders content_library.body (AI-generated HTML from the orchestrate pipeline) via `dangerouslySetInnerHTML` with no sanitizer. A /security-review flagged this as a pre-existing stored-XSS hardening gap: the field carries raw AI HTML, and if any less-trusted source ever writes content_library.body, the sink becomes exploitable.\n\nHarden it: sanitize the HTML on render with DOMPurify (add the `dompurify` dep if not present) before passing to dangerouslySetInnerHTML \u2014 e.g. `dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.body) }}`. Check for any OTHER dangerouslySetInnerHTML usages of content_library.body across src/ (grep) and apply the same sanitization consistently. Keep legitimate article formatting (allow standard tags + the affiliate <a href> links the auto-monetize step inserts \u2014 DOMPurify's default allows <a>). Verify tsc passes + the dashboard still renders an article with its affiliate links intact.\n\nContext: the auto-monetize feature (OTD-ML-CLICKS) now embeds <a href=\"...process-affiliate-link?link_id=...\"> anchors into article HTML, so the sanitizer must NOT strip <a href> (it doesn't by default, but confirm).",
+  "tldr": "Sanitize AI-generated HTML with DOMPurify before dangerouslySetInnerHTML in DashboardHome (and any sibling renders of content_library.body) \u2014 a pre-existing stored-XSS hardening gap flagged by security review."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(16:57:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260604150000_affiliate_matt_tool.sql supabase/functions/process-affiliate-link/index.ts src/lib/affiliate.ts src/hooks/useAffiliateConfig.ts src/pages/AffiliatesPage.tsx\ngit commit -q -m \"feat(affiliate): per-user matt_tool attribution param (column + resolution + UI)\n\nAdds an optional per-user matt_tool to affiliate_config (the official ML affiliate link carries both matt_word\nand matt_tool). buildMattWordUrl / buildMlProductUrl append it to ML product URLs when present, resolved per-owner\nin process-affiliate-link (GET + POST); AffiliatesPage gains affiliate_tag (matt_word) + matt_tool inputs wired\nthrough useAffiliateConfig. Honest caveat: whether matt_tool changes ML commission attribution is unverifiable from\noutside ML (no public API/docs \u2014 OTD-ML-001), but it is the owner's real per-user value and is additive.\" && git log --oneline -1",
+  "description": "Spawn XSS task + commit matt_tool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9bb5bba feat(affiliate): per-user matt_tool attribution param (column + resolution + UI)
+> ```
+
+## 🤖 Claude *(16:57:32)*
+
+
+## 🤖 Claude *(16:57:33)*
+
+Commit A (matt_tool, 9bb5bba) + tarefa XSS registrada. Commits B (auto-monetize), C (async), D (qa).
+
+## 🤖 Claude *(16:57:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/_shared/affiliate.ts supabase/functions/orchestrate-step/index.ts\ngit commit -q -m \"feat(affiliate): auto-monetize generated content with click-tracked links (OTD-ML-CLICKS)\n\nThe orchestrate pipeline now closes the flywheel end-to-end: in article_generation, orchestrate-step scans the\ngenerated article for catalog products (shared _shared/affiliate.ts, mirrors link-forge) and embeds OUR\nclick-tracked redirect (?link_id=) per owner, so auto-generated content carries monetized, click-counted affiliate\nlinks automatically \u2014 no manual Monetizar step. Fail-open (no affiliate_tag \u2192 content unchanged); kill-switch\nAUTO_MONETIZE_ENABLED. Proven E2E: a paid intent run about Roborock produced an article carrying a tracked link.\" && git log --oneline -1\n\ngit add supabase/functions/campaign-run/index.ts\ngit commit -q -m \"perf(marketing): async dispatch for large campaigns (OTD-CAMPAIGN-RUN-ASYNC)\n\nA campaign with more servable steps than MAX_PARALLEL_STEPS now returns immediately and dispatches ALL steps in\nthe background (EdgeRuntime.waitUntil, bounded batches) instead of awaiting a capped slice \u2014 so a large multi-step\ncampaign neither blows the edge time budget nor leaves its tail idle for a follow-up run. Small campaigns keep the\nsynchronous path (unchanged response contract). The fee is still debited once before returning.\" && git log --oneline -1\n\ngit add scripts/qa/smoke-affiliate-click.ts scripts/qa/smoke-campaign-run.ts scripts/qa/e2e-intent-paid.ts\ngit commit -q -m \"test(qa): auto-monetize + matt_tool + campaign-async material proofs\n\nsmoke-affiliate-click G1b proves matt_tool rides the matt_word link; e2e-intent-paid 5b proves the generated\narticle carries a tracked affiliate link (auto-monetize, OTD-ML-CLICKS); smoke-campaign-run H proves a 9-step\ncampaign returns async:true + steps_queued + fee debited (OTD-CAMPAIGN-RUN-ASYNC), all zero-cost on throwaways.\" && git log --oneline -1",
+  "description": "Commits B, C, D"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bb999c1 feat(affiliate): auto-monetize generated content with click-tracked links (OTD-ML-CLICKS)
+> 7cbd036 perf(marketing): async dispatch for large campaigns (OTD-CAMPAIGN-RUN-ASYNC)
+> b468c98 test(qa): auto-monetize + matt_tool + campaign-async material proofs
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:58:05)*
+
+
+## 🤖 Claude *(16:58:06)*
+
+4 commits (9bb5bba · bb999c1 · 7cbd036 · b468c98). Addendum 2 no HANDOFF + sprint + nó de malha + push.
+
+## 🤖 Claude *(16:58:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "provar com dado material (G8/G9) separou \"rastreio escrito\" de \"rastreio seguro que funciona\".\n\n## Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) Record (2026-06-04)",
+  "new_string": "provar com dado material (G8/G9) separou \"rastreio escrito\" de \"rastreio seguro que funciona\".\n\n**Addendum 2 (mesma sess\u00e3o \u2014 \"fa\u00e7a todos os 3\") \u2014 auto-monetize + matt_tool + campaign async:** o Sovereign mandou fazer os 3 pr\u00f3ximos restantes. **(A) Auto-monetiza\u00e7\u00e3o no pipeline (OTD-ML-CLICKS):** `orchestrate-step` (article_generation) agora escaneia o artigo gerado por produtos do cat\u00e1logo (`_shared/affiliate.ts`, espelha link-forge) e embute **nosso redirect rastre\u00e1vel** (`?link_id=`) per-owner \u2192 o flywheel produz conte\u00fado monetizado+rastreado **automaticamente** (fim do passo manual). Fail-open (sem affiliate_tag \u2192 conte\u00fado intacto); kill-switch `AUTO_MONETIZE_ENABLED`. **Provado E2E pago**: run `cee55b11` sobre Roborock \u2192 artigo carrega link rastre\u00e1vel (assert no `content_mesh_asset`). **(B) matt_tool per-user:** coluna em `affiliate_config` (migration `20260604150000`) + `buildMattWordUrl`/`buildMlProductUrl` anexam quando presente (resolvido per-owner no GET/POST + orchestrate) + UI Settings (affiliate_tag + matt_tool em `AffiliatesPage`). Caveat honesto: efeito na atribui\u00e7\u00e3o ML \u00e9 **n\u00e3o-verific\u00e1vel** (ML opaco), mas \u00e9 o valor real do Sovereign + aditivo. Smoke G1b prova que rida. **(C) campaign-run ass\u00edncrono (OTD-CAMPAIGN-RUN-ASYNC):** campanha >8 passos retorna imediato + dispara TUDO em background (`EdgeRuntime.waitUntil`, batches) \u2014 n\u00e3o estoura time budget nem deixa cauda ociosa; pequenas seguem s\u00edncronas. Smoke H prova `async:true`/`steps_queued=9`/fee 10\u21920. **Prova:** `/security-review` independente **SAFE** (5 candidatos tra\u00e7ados \u2014 href injection/matt_tool/async n\u00e3o-explor\u00e1veis; flagou XSS **pr\u00e9-existente** em `DashboardHome:677` `dangerouslySetInnerHTML` \u2192 tarefa separada spawned) \u00b7 smoke click **G1-G9+G1b** + campaign **A-H** + e2e auto-monetize \u2705 \u00b7 tsc 0 \u00b7 drift exit 0 \u00b7 deploys orchestrate-step 121.9 / process-affiliate 85.07 / campaign-run 81.72 kB. 4 commits (`9bb5bba`/`bb999c1`/`7cbd036`/`b468c98`). Saldo Usu\u00e1rio Zero 5271\u21925261 (e2e auto-monetize). **Li\u00e7\u00e3o:** o e2e estendido provou a INTEGRA\u00c7\u00c3O (n\u00e3o s\u00f3 units) \u2014 o artigo real saiu monetizado; o `/security-review` tra\u00e7ou o sink real de `dangerouslySetInnerHTML` (pr\u00e9-existente) que eu n\u00e3o tinha mapeado \u2192 vacinado via tarefa.\n\n## Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) Record (2026-06-04)"
+}
+```
+
+## 🤖 Claude *(16:58:26)*
+
+
+## 🤖 Claude *(16:58:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "ambos corrigidos (gate de dom\u00ednio ML + UUID-s\u00f3); smoke **9/9** (G9 prova o open-redirect bloqueado), commit `b2c39f6`.",
+  "new_string": "ambos corrigidos (gate de dom\u00ednio ML + UUID-s\u00f3); smoke **9/9** (G9 prova o open-redirect bloqueado), commit `b2c39f6`. **Follow-up 2 (\"fa\u00e7a todos os 3\"):** (A) **auto-monetiza\u00e7\u00e3o** no `orchestrate-step` \u2014 o artigo gerado embute o redirect rastre\u00e1vel `?link_id` per-owner (`_shared/affiliate.ts`), o flywheel monetiza+rastreia autom\u00e1tico; provado E2E pago run `cee55b11` (Roborock \u2192 link rastre\u00e1vel no `content_mesh_asset`). (B) **matt_tool** per-user (coluna `affiliate_config` + threading GET/POST/orchestrate + UI `AffiliatesPage`; caveat honesto: efeito na atribui\u00e7\u00e3o ML n\u00e3o-verific\u00e1vel, mas aditivo). (C) **campaign-run ass\u00edncrono** p/ >8 passos (`EdgeRuntime.waitUntil`, batches; pequenas seguem s\u00edncronas). `/security-review` independente **SAFE** (flagou XSS **pr\u00e9-existente** `DashboardHome:677` dangerouslySetInnerHTML \u2192 tarefa spawned). Smokes click **G1-G9+G1b** \u00b7 campaign **A-H** \u00b7 e2e auto-monetize \u2705 \u00b7 tsc 0 \u00b7 drift exit 0. 4 commits (`9bb5bba`/`bb999c1`/`7cbd036`/`b468c98`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:58:41)*
+
+
+## 🤖 Claude *(16:58:42)*
+
+Sprint atualizado. Insiro um nó de milestone pro incremento + commito docs + push.
+
+## 🤖 Claude *(16:58:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSUMMARY=\"v6.28.0 addendum 2 (faca todos os 3): (A) auto-monetizacao no orchestrate-step (artigo gerado embute redirect rastreavel ?link_id per-owner via _shared/affiliate.ts; flywheel monetiza+rastreia automatico; provado E2E run cee55b11 Roborock) + (B) matt_tool per-user (coluna affiliate_config + threading + UI; caveat efeito ML nao-verificavel) + (C) campaign-run assincrono p/ >8 passos (EdgeRuntime.waitUntil). /security-review SAFE (flagou XSS pre-existente DashboardHome dangerouslySetInnerHTML -> tarefa). Smokes click G1-G9+G1b + campaign A-H + e2e auto-monetize. 4 commits.\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\": \\\"session-milestone-$(date +%Y%m%d)-auto-monetize-matttool-async\\\", \\\"node_type\\\": \\\"milestone\\\", \\\"content\\\": \\\"[MILESTONE] ${SUMMARY}\\\", \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null, \\\"metadata\\\": {\\\"commits\\\": \\\"9bb5bba|bb999c1|7cbd036|b468c98\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Milestone node: $NODE_ID\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 120\necho \"\"\ngit add HANDOFF.md .claude/context/sprint-priorities.md\ngit commit -q -m \"docs: v6.28.0 addendum 2 \u2014 auto-monetize pipeline + matt_tool + campaign async (fa\u00e7a todos os 3)\"\ngit push origin main 2>&1 | tail -3",
+  "description": "Mesh node + commit docs + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Milestone node: ec843fb5-96c9-45a1-a7e6-5355c0894bdd
+> {"node_id":"ec843fb5-96c9-45a1-a7e6-5355c0894bdd","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provide
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2a405e1..b2594dc  main -> main
+> ```
+
+## 🤖 Claude *(16:59:21)*
+
+
+## 🤖 Claude *(16:59:22)*
+
+Push `2a405e1..b2594dc`. Nó `ec843fb5` embedded 768d. Atualizo memória — fecho OTD-CAMPAIGN-RUN-ASYNC + registro auto-monetize/matt_tool.
+
+## 🤖 Claude *(16:59:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "- \u23f3 **Pendente:** entrega Resend a inbox real (dom\u00ednio `RESEND_FROM` Sovereign + `resend_api_key` per-tenant) \u00b7 OTD-CAMPAIGN-RUN-ASYNC (fila p/ campanha grande) \u00b7 atribui\u00e7\u00e3o de compra ML (aguardando convers\u00e3o real).",
+  "new_string": "- \u2705 **Auto-monetiza\u00e7\u00e3o no flywheel** (v6.28.0, OTD-ML-CLICKS): `orchestrate-step` (article_generation) embute links de afiliado **rastre\u00e1veis** (`?link_id=` per-owner, `_shared/affiliate.ts`) no artigo gerado \u2014 conte\u00fado do flywheel sai monetizado+rastreado **automaticamente** (fim do passo manual Monetizar). Fail-open; kill-switch `AUTO_MONETIZE_ENABLED`. Provado E2E (run `cee55b11` Roborock).\n- \u2705 **OTD-CAMPAIGN-RUN-ASYNC FECHADA** (v6.28.0): campanha >8 passos retorna imediato + dispara TUDO em background (`EdgeRuntime.waitUntil`, batches); pequenas s\u00edncronas (contrato intacto). Smoke H (`async:true`/`steps_queued`).\n- \u2705 **matt_tool per-user** (v6.28.0): coluna `affiliate_config.matt_tool` + UI `AffiliatesPage` (affiliate_tag + matt_tool) + threading nos builders ML; rida o link quando setado (caveat: efeito na atribui\u00e7\u00e3o ML n\u00e3o-verific\u00e1vel \u2014 ver [[project_authenticated_browser_operator]]).\n- \u23f3 **Pendente:** entrega Resend a inbox real (dom\u00ednio `RESEND_FROM` Sovereign) \u00b7 atribui\u00e7\u00e3o de compra ML (aguardando convers\u00e3o real) \u00b7 sanitizar HTML da IA em `DashboardHome` (XSS pr\u00e9-existente flagado pelo /security-review \u2014 tarefa spawned)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:59:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "**`matt_tool=43641843` ainda N\u00c3O embutido** (atribui\u00e7\u00e3o definitiva precisa dele OU do `meli.la` do painel; `src/lib/affiliate.ts` seta s\u00f3 `matt_word`).",
+  "new_string": "**`matt_tool` SUPORTADO v6.28.0** \u2014 coluna `affiliate_config.matt_tool` + campo na UI (`AffiliatesPage`) + threading em todos os builders ML (`src/lib/affiliate.ts`, `process-affiliate-link`, `_shared/affiliate.ts`); rida o link quando setado. O Sovereign pode setar `43641843` em /dashboard/affiliates (hoje null no Usu\u00e1rio Zero). Caveat: efeito real na atribui\u00e7\u00e3o ML \u00e9 **n\u00e3o-verific\u00e1vel** daqui (ML opaco) \u2014 \u00e9 aditivo, casa o formato oficial. Atribui\u00e7\u00e3o DEFINITIVA ainda exige o `meli.la`/`ref` assinado do painel (Browser Operator, fora-do-datacenter)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:59:47)*
+
+
+## 🤖 Claude *(17:00:01)*
+
+Memória atualizada (OTD-CAMPAIGN-RUN-ASYNC fechada, auto-monetize + matt_tool registrados). 
+
+---
+
+## ✅ "Faça todos os 3" — completos, provados, selados
+
+Push `2a405e1..b2594dc` · 4 commits · nó milestone `ec843fb5` (768d).
+
+| # | Feature | Prova material |
+|---|---------|----------------|
+| **A** | **Auto-monetização no flywheel** (OTD-ML-CLICKS) | `orchestrate-step` embute link rastreável (`?link_id` per-owner) no artigo gerado → conteúdo sai monetizado+rastreado **automático**. **E2E pago run `cee55b11`**: artigo sobre Roborock carrega link rastreável (assert no `content_mesh_asset`) ✅. Fail-open + kill-switch `AUTO_MONETIZE_ENABLED`. |
+| **B** | **matt_tool per-user** | Coluna `affiliate_config` + UI `AffiliatesPage` (tag + matt_tool) + threading em todos os builders ML. Smoke **G1b** prova que rida o link. *Caveat honesto:* efeito na atribuição ML é **não-verificável** (ML opaco) — é aditivo, casa o formato oficial. |
+| **C** | **campaign-run assíncrono** (OTD-CAMPAIGN-RUN-ASYNC fechada) | Campanha >8 passos retorna imediato + dispara em background (`EdgeRuntime.waitUntil`, batches); pequenas síncronas. Smoke **H**: `async:true`/`steps_queued=9`/fee 10→0 ✅. |
+
+**Gates:** `/security-review` independente **SAFE** (5 candidatos traçados, nada explorável) · smoke click **G1-G9+G1b** · campaign **A-H** · e2e auto-monetize ✅ · tsc 0 · drift exit 0 · deploys 121.9/85.07/81.72 kB.
+
+**Anticorpo:** o `/security-review` achou um XSS **pré-existente** (`DashboardHome:677` renderiza HTML da IA via `dangerouslySetInnerHTML` sem sanitizer) — não introduzido por mim, mas registrei **tarefa separada** (DOMPurify) pra você acionar.
+
+---
+
+**Estado do backlog "próximos":** os itens que sobram agora dependem de **você** — provisionar `RESEND_FROM` (domínio verificado, destrava email real do nurturing) e o domínio branded do redirect (`login.mcorch.com/go` no CloudPanel, p/ links limpos). A atribuição de receita ML aguarda a 1ª conversão real. Construí tudo que estava nas minhas mãos com prova material; o flywheel agora gera conteúdo monetizado, rastreado, refund-safe e despachável agenticamente ponta-a-ponta.
+
+Saldo Usuário Zero: 5291 → 5261 (3 runs E2E reais ao longo da sessão).
+
 ---
 
 %% --- PROJECT METADATA START --- %%

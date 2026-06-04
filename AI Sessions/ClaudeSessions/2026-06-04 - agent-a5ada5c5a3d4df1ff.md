@@ -722,6 +722,6 @@ Extending the guard to `BEFORE INSERT OR UPDATE` and blocking non-`service_role`
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-04 - agent-a4423b882f8bbd7af]]
+> * **Sessão Anterior**: [[2026-06-04 - agent-a453001108318c7ee]]
 > * **Próxima Sessão**: [[2026-06-04 - agent-a5eb48930a1c31a08]]
 %% --- TIMELINE END --- %%
