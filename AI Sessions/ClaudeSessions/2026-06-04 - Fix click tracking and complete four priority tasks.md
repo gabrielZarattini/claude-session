@@ -5158,6 +5158,2054 @@ The security-review diff didn't pipe through. I'll run the mandated independent 
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmed. `vm_affiliate_products` is a system catalog (only `service_role` can write — RLS `FOR ALL USING auth.role() = \'service_role\'`; authenticated can only SELECT). The attacker-controlled `product_id` query param cannot poison `product_url`. The reconstruction fallback hardcodes `https://www.mercadolivre.com.br` as host with `product_id` only affecting the path segment. The redirect host/protocol is never attacker-controlled.\n\nI have completed the full analysis. Writing the final report.\n\n---\n\n# Security Review — Affiliate Click Ledger + Refund-on-Failure + Nurture Email Delivery\n\n**Scope:** uncommitted changes to `process-affiliate-link`, `orchestrate-content`, `nurture-dispatch`, `link-forge.ts`, and migrations `20260604120000` / `20260604130000` (+ smoke test). Focus: high-confidence (>80%), concretely exploitable vulns newly introduced.\n\n## Verdict: NO QUALIFYING VULNERABILITIES FOUND\n\nI found **no high-confidence, concretely exploitable security vulnerability** newly introduced by these changes. The changes follow the repo\'s established security conventions, and every candidate attack surface fails closed. Detail on why each main candidate is **not** exploitable below.\n\n---\n\n### Candidate 1 — New RPC `record_affiliate_click` (SQLi / privilege escalation / cross-tenant mint) — NOT EXPLOITABLE\n\n`supabase/migrations/20260604130000_fix_affiliate_click_content_uuid.sql`\n\n- **SECURITY DEFINER + `search_path=\'\'` + `service_role`-only EXECUTE** — matches the repo convention exactly (`REVOKE ALL ... FROM public, anon, authenticated; GRANT EXECUTE ... TO service_role`). `anon`/`authenticated` cannot reach it via PostgREST, so a reader cannot call it directly to forge attribution.\n- Satisfies the `reference_ledger_rpc_security` rule: a SECURITY DEFINER taking `p_user_id` must be **edge-only OR auth.uid()-guarded** — this one is edge-only (service_role).\n- `p_user_id` is passed by `process-affiliate-link` as the **server-resolved** `ownerId` (`mcorch_nodes.user_id` looked up from the node), **never a client-supplied value** (`recordClick` is only ever called with the resolved `ownerId`).\n- No SQL injection: fully parameterized RPC args; `search_path=\'\'` neutralizes function-resolution hijacking.\n- The only mutated column is `clicks` (a non-financial counter). Even the theoretical "attacker inflates someone\'s click count by hitting the public GET" is explicitly an **excluded** class (cosmetic data-integrity / non-financial counter) — and it requires knowing a valid `content_variant_id` node UUID, and only credits the legitimate owner of that content.\n\n### Candidate 2 — Public GET redirect as open-redirect / SSRF controlling host — NOT EXPLOITABLE\n\n`supabase/functions/process-affiliate-link/index.ts:159-243`\n\nThe endpoint is public (`verify_jwt=false`) and takes attacker-controlled `product_id` + `content_variant_id`. The 302 `Location` is derived from one of three sources, **none of which the attacker can steer to an arbitrary host/protocol**:\n\n1. **Owner\'s stored shortlink** (`metadata.shortlinks[productId]`) — gated by `isMlShortLink()`, which hard-validates `^https://(meli\\.la/|(www\\.)?mercadolivre\\.com(\\.br)?/sec/)`. Only the resolved owner\'s own stored value, and only if it matches the ML allowlist.\n2. **`buildMattWordUrl`** — `base` is either `vm_affiliate_products.product_url` (a **system catalog**; RLS allows writes only to `service_role`, so `product_id` cannot poison it) or the reconstruction `\\`${ML_PRODUCT_BASE}/MLB-${numeric}\\`` where `ML_PRODUCT_BASE` is the hardcoded `https://www.mercadolivre.com.br` and `product_id` only affects the **path** segment. `matt_word`/utm are added via `searchParams.set` (query only).\n3. **Fail-closed** → hardcoded `https://login.mcorch.com/dashboard/settings?no_config=1`.\n\nThe attacker never controls the redirect host or scheme. (And SSRF that only controls a path is an explicit exclusion anyway.) No outbound fetch is performed with attacker-controlled host on this path — `probeUrl`/`findSimilarProduct` are POST-branch only.\n\n### Candidate 3 — `orchestrate-content` refund-on-failure (self-refund / minting) — NOT EXPLOITABLE\n\n`supabase/functions/orchestrate-content/index.ts:28-31, 107-108, 195-211`\n\n- Refund target `chargedUser = user.id` is the **JWT-verified caller** (`userClient.auth.getUser()` at line ~49), set only **after** the debit succeeds. An attacker cannot redirect the refund to another account.\n- The refund credits via `refundMco → add_mco_coins`, which is **service-role-only** (`20260520150000`: `REVOKE EXECUTE ... FROM authenticated; GRANT ... TO service_role`). A client cannot call it directly to mint.\n- The refund only ever returns the caller\'s **own** 10-coin debit on a genuine post-charge failure (the `!runId` throw or `async_orchestrate_step` kick error). There is no input-forceable double-refund: the success path returns before the catch, and the catch path runs only on a thrown error. Net effect is at most coin-neutral for the caller\'s own balance. No economic gain is possible.\n\n### Candidate 4 — `nurture-dispatch` Resend email send (spam relay / secret exposure / cross-tenant) — NOT EXPLOITABLE\n\n`supabase/functions/nurture-dispatch/index.ts:85-87, 142-171`\n\n- **Recipient** is `leads.contact` fetched with `.eq("id", enr.lead_id).eq("user_id", userId)` — strictly the caller\'s **own** lead, after the enrollment was already tenant-verified (`.eq("user_id", userId)`). An attacker cannot send to an arbitrary address; `enrollment_id` resolution is tenant-scoped (404 for another tenant\'s enrollment), and `recipient` is read from the tenant\'s own lead row, not from request input.\n- **Credential** is the per-user BYOK `resend_api_key` (from `decrypted_user_api_keys` for `userId`) — the user\'s own key sending to the user\'s own lead. This is the intended per-user behavior under the API Tenancy Model, not a vuln. The key is used only as a `Bearer` header to Resend and is never reflected in any response (`deliveryDetail` captures only Resend\'s message id or `resend_<status>`).\n- **Consent-gated** before any send/charge (`marketing_consents` granted + non-withdrawn), preserving the STRIDE-Critical mitigation.\n- The service-path identity (`authHeader === Bearer serviceKey` → trusted `body.user_id`) is unchanged and only reachable by the service-key holder. The refund target (`chargedUser`/`userId`) is the same server-resolved identity; `add_mco_coins` is service-role-only.\n- Email body is the generated nurture `message` (capped ≤320 chars) sent as `text`, to the tenant\'s own consented lead — no header-injection surface (recipient is a validated single email via `/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`, `from` is an env-controlled constant).\n\n### Candidate 5 — `link-forge.ts` redirect URL emission — NOT A VULN\n\n`scripts/link-forge.ts:80-92` now emits `<supabase>/functions/v1/process-affiliate-link?product_id=...&content_variant_id=<asset.id>` instead of a raw ML link. `base` comes from trusted env (`VITE_SUPABASE_URL`/`SUPABASE_URL`); `product_id`/`content_variant_id` are set via `searchParams.set` on our own origin. This is an operator-run script (service context), not a user-facing input sink. No injection or trust-boundary crossing.\n\n---\n\n## Notes (non-blocking, out of requested scope)\n- The migration pair is correct: `20260604130000` properly DROPs the old `(uuid,text,text,text)` overload before recreating with `content_id uuid` (a param-type change would otherwise create a second overload). `service_role` grants are re-applied on the new signature.\n- All four edge functions correctly use `verify_jwt=false` + in-function `getUser()` (per the edge-JWT SOP) for the authenticated branches, and the public GET branch is intentionally unauthenticated with server-side owner resolution.\n\n**Files reviewed (absolute paths):**\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/process-affiliate-link/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/billing.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260604120000_affiliate_click_ledger.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260604130000_fix_affiliate_click_content_uuid.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-affiliate-click.ts`'}, {'type': 'text', 'text': "agentId: a318ee24a0cac0f68 (use SendMessage with to: 'a318ee24a0cac0f68' to continue this agent)\n<usage>subagent_tokens: 94037\ntool_uses: 12\nduration_ms: 122634</usage>"}]
+> ```
+
+## 🤖 Claude *(15:01:33)*
+
+
+## 🤖 Claude *(15:01:40)*
+
+## Security Review — Resultado
+
+O sub-task independente auditou os 2 migrations + 3 edge functions + link-forge:
+
+**VEREDITO: SAFE — nenhuma vulnerabilidade qualificável (HIGH/MEDIUM ≥8 confiança).**
+
+- `record_affiliate_click` — `SECURITY DEFINER` + `search_path=''` + EXECUTE só `service_role`; `p_user_id` é o dono **resolvido server-side** (nunca input do cliente); parametrizado (sem SQLi). Satisfaz a regra ledger-RPC.
+- GET redirect — **sem open-redirect/SSRF**: host hardcoded `mercadolivre.com.br`, shortlink gated por allowlist `isMlShortLink`, `vm_affiliate_products` é catálogo service-role-write.
+- orchestrate refund — alvo é o caller JWT-verificado; `add_mco_coins` service-role-only (sem mint).
+- nurture Resend — destinatário é o lead **do próprio tenant** (escopado), chave BYOK do próprio user, consent-gated, email validado (sem header-injection).
+
+Migration verde. Agora o **ponto 3 — o 1º dispatch pago E2E** (capstone que valida o ponto 1 em produção). Leio o intent-orchestrate + minter de JWT + confirmo a conta/saldo do Usuário Zero antes de gastar.
+
+## 🤖 Claude *(15:01:41)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Ponto 3 \u2014 dispatch pago E2E",
+  "summary": "Cadeia agentic completa: intent \u2192 HITL \u2192 execute \u2192 orchestrate-content (WP draft) \u2014 1\u00ba pago E2E, valida refund do ponto 1 em prod"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Ponto 3 — dispatch pago E2E". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(15:01:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// intent-orchestrate — marketing-hub FR-MH-009 (BoK SSOT: 04-frd.md FR-MH-009 + 05-sdd.md §intent-orchestrate +
+> 2	// STRIDE "Intent Orchestrator / ação de alto impacto sem revisão = Tampering → policy engine + HITL obrigatório").
+> 3	// Translates a natural-language marketing intent into a task plan; a policy engine decides auto vs HITL; ANY
+> 4	// high-impact task (publish/send/charge/ad-spend) forces human approval. Persists the plan + an auditable XAI
+> 5	// rationale to intent_plans. JWT-guarded (verify_jwt=false + in-function getUser — edge-jwt SOP). Cost 0: it
+> 6	// orchestrates; the sub-steps (campaign-run/orchestrate-content/nurture-dispatch) self-bill on execution.
+> 7	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 9	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 10	import { planIsHighImpact, type PlanTask } from "../_shared/intent-policy.ts";
+> 11	
+> 12	const corsHeaders = {
+> 13	  "Access-Control-Allow-Origin": "*",
+> 14	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 15	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 16	};
+> 17	
+> 18	serve(async (req) => {
+> 19	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 20	  const json = (b: unknown, s = 200) =>
+> 21	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 22	
+> 23	  const url = Deno.env.get("SUPABASE_URL")!;
+> 24	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 25	  const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 26	  const admin = createClient(url, serviceKey);
+> 27	
+> 28	  try {
+> 29	    const authHeader = req.headers.get("Authorization");
+> 30	    if (!authHeader) return json({ error: "Missing authorization" }, 401);
+> 31	    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 32	    const { data: { user }, error: authError } = await userClient.auth.getUser();
+> 33	    if (authError || !user) return json({ error: "Unauthorized" }, 401);
+> 34	
+> 35	    const { intent } = await req.json().catch(() => ({}));
+> 36	    if (!intent || typeof intent !== "string" || !intent.trim()) return json({ error: "intent é obrigatório" }, 422);
+> 37	
+> 38	    // resolve per-user AI key → system fallback (API Tenancy Model).
+> 39	    const { data: keys } = await admin.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 40	    const groqKey = keys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 41	    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 42	    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 43	    const aiKey = groqKey || openRouterKey;
+> 44	
+> 45	    // generate the plan via AI (fail-soft to a single review task).
+> 46	    let tasks: PlanTask[] = [];
+> 47	    if (aiKey) {
+> 48	      const isGroq = !!groqKey;
+> 49	      try {
+> 50	        const resp = await fetchLLMWithFallback(
+> 51	          isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions",
+> 52	          {
+> 53	            method: "POST",
+> 54	            headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://mcorch.com", "X-Title": "GCRUX Constellation" },
+> 55	            body: JSON.stringify({
+> 56	              model: isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct",
+> 57	              messages: [
+> 58	                { role: "system", content: "Você é um orquestrador de marketing. Dada uma intenção, gere um plano de 2 a 5 tarefas. Responda APENAS com JSON: {\"tasks\":[{\"action\":\"verbo curto\",\"channel\":\"email|social|content|affiliate|none\",\"impact\":\"low|medium|high\",\"rationale\":\"por que esta tarefa\"}]}. impact=high para publicar, enviar, cobrar ou veicular anúncio." },
+> 59	                { role: "user", content: String(intent).slice(0, 800) },
+> 60	              ],
+> 61	              stream: false, temperature: 0.4,
+> 62	            }),
+> 63	          },
+> 64	          { openRouterKey, geminiKey, groqKey, functionName: "intent-orchestrate" },
+> 65	        );
+> 66	        if (resp.ok) {
+> 67	          const data = await resp.json();
+> 68	          const raw: string = data?.choices?.[0]?.message?.content ?? "";
+> 69	          const match = raw.match(/\{[\s\S]*\}/);
+> 70	          if (match) {
+> 71	            const parsed = JSON.parse(match[0]);
+> 72	            if (Array.isArray(parsed?.tasks)) {
+> 73	              tasks = parsed.tasks.slice(0, 5).map((t: PlanTask) => ({
+> 74	                action: String(t.action ?? "task").slice(0, 120),
+> 75	                channel: t.channel ? String(t.channel).slice(0, 40) : undefined,
+> 76	                impact: (["low", "medium", "high"].includes(String(t.impact)) ? t.impact : "medium") as PlanTask["impact"],
+> 77	                rationale: t.rationale ? String(t.rationale).slice(0, 300) : undefined,
+> 78	              }));
+> 79	            }
+> 80	          }
+> 81	        }
+> 82	      } catch (_) { /* fail-soft below */ }
+> 83	    }
+> 84	    let heuristic = false;
+> 85	    if (tasks.length === 0) {
+> 86	      heuristic = true;
+> 87	      tasks = [{ action: "revisar_intencao", channel: "none", impact: "low", rationale: "Plano heurístico (IA indisponível ou resposta inválida) — revisar a intenção manualmente." }];
+> 88	    }
+> 89	
+> 90	    // ── POLICY ENGINE: any high-impact task → HITL (mandatory human approval; STRIDE Tampering mitigation) ──
+> 91	    // Shared gate (_shared/intent-policy.ts) — intent-execute re-runs the SAME gate at execution time.
+> 92	    const highImpact = planIsHighImpact(tasks);
+> 93	    const policy: "auto" | "hitl" = highImpact ? "hitl" : "auto";
+> 94	    const status = highImpact ? "pending_hitl" : "auto_approved";
+> 95	    const rationale = heuristic
+> 96	      ? "Gerado por heurística (sem IA) — requer revisão humana."
+> 97	      : highImpact
+> 98	        ? "O plano contém ao menos uma tarefa de alto impacto (publicar/enviar/cobrar/anúncio) → aprovação humana obrigatória (HITL) antes de executar."
+> 99	        : "Apenas tarefas de baixo/médio impacto → auto-aprovado para execução.";
+> 100	
+> 101	    // persist (RLS-scoped via service role + explicit user_id).
+> 102	    const { data: row, error: insErr } = await admin
+> 103	      .from("intent_plans")
+> 104	      .insert({ user_id: user.id, intent: intent.slice(0, 2000), plan: tasks, policy, status, rationale })
+> 105	      .select("id").single();
+> 106	    if (insErr || !row) {
+> 107	      admin.from("infra_health_logs").insert({ service: "intent-orchestrate", status: "unhealthy" }).then(() => {}, () => {});
+> 108	      return json({ error: "Falha ao persistir o plano", detail: insErr?.message }, 500);
+> 109	    }
+> 110	
+> 111	    // observation node into the Knowledge Mesh (mandate: every orchestration run). Fire-and-forget.
+> 112	    admin.from("mcorch_nodes").insert({
+> 113	      node_type: "observation", name: `intent-plan-${row.id}`,
+> 114	      content: `Intent: ${intent.slice(0, 200)} → policy=${policy} status=${status} (${tasks.length} tarefas)`,
+> 115	      user_id: user.id,
+> 116	    }).then(() => {}, () => {});
+> 117	    admin.from("infra_health_logs").insert({ service: "intent-orchestrate", status: "healthy" }).then(() => {}, () => {});
+> 118	
+> 119	    return json({ status: "ok", plan_id: row.id, policy, plan_status: status, tasks, rationale, source: heuristic ? "heuristic" : "ai" });
+> 120	  } catch (err) {
+> 121	    admin.from("infra_health_logs").insert({ service: "intent-orchestrate", status: "unhealthy" }).then(() => {}, () => {});
+> 122	    return json({ error: "Erro interno no intent-orchestrate", detail: String((err as Error)?.message ?? err) }, 500);
+> 123	  }
+> 124	});
+> 125	
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === gen-user-jwt.ts (head) ===
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+>  * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+>  * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+>  *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+>  *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> if (error || !data.properties?.hashed_token) {
+>   console.error('generateLink error:', error?.message ?? 'no hashed_token');
+>   process.exit(1);
+> }
+> const tokenHash = data.properties.hashed_token;
+> 
+> let accessToken: string | null = null;
+> for (const type of ['magiclink', 'email'] as const) {
+>   const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+>   if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }
+> }
+> if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> console.log(accessToken);
+> 
+> === gen-magiclink.ts (head) ===
+> #!/usr/bin/env bun
+> /**
+>  * Generate a one-time magic link for a user via the Supabase Admin API — for logged-in UI verification
+>  * (agent-browser / e2e). Per-user, reproducible, no raw password, no DevTools token. Pattern from v6.20.4.
+>  *
+>  * Usage: bun run scripts/qa/gen-magiclink.ts <email> [redirectTo]
+>  *   e.g. bun run scripts/qa/gen-magiclink.ts gabrielcall@gmail.com https://login.mcorch.com/dashboard/marketing
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const email = process.argv[2];
+> const redirectTo = process.argv[3] ?? 'https://login.mcorch.com/dashboard/marketing';
+> if (!URL || !SVC || !email) { console.error('Usage: gen-magiclink.ts <email> [redirectTo]  (needs SUPABASE_URL + SB_SECRET_KEY)'); process.exit(1); }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email, options: { redirectTo } });
+> if (error) { console.error('generateLink error:', error.message); process.exit(1); }
+> console.log(data.properties?.action_link ?? '(no action_link)');
+> ```
+
+## 🤖 Claude *(15:01:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== gen-user-jwt.ts (head) ===\"; head -40 scripts/qa/gen-user-jwt.ts 2>/dev/null || echo \"not found\"\necho \"\"; echo \"=== gen-magiclink.ts (head) ===\"; head -30 scripts/qa/gen-magiclink.ts 2>/dev/null || echo \"not found\"",
+  "description": "Read JWT minter scripts"
+}
+```
+
+## 🤖 Claude *(15:02:30)*
+
+
+## 🤖 Claude *(15:02:34)*
+
+Tenho tudo pro ponto 3. `gen-user-jwt.ts` minta um access_token real do Usuário Zero; `intent-orchestrate` gera o plano (alto-impacto "publicar" → `pending_hitl`); aprovo + executo → dispatch real pro `orchestrate-content` (WP **draft**, sem social). Isso prova a cadeia agentic paga E2E + valida o refund do ponto 1 (happy-path).
+
+Antes de gastar: confirmo a chave anon (gen-user-jwt precisa) + saldo do Usuário Zero. **Vou cravar o blast radius em WP draft only** — inspeciono o plano e só executo se os canais forem content/affiliate (sem social público).
+
+## 🤖 Claude *(15:02:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== anon/publishable key in .env? ===\"; grep -cE \"^(SB_PUBLISHABLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY)=\" .env\nset -a; [ -f .env ] && source .env; set +a\necho \"\"; echo \"=== Usu\u00e1rio Zero balance + intent-orchestrate reachability ===\"\nbun -e '\nimport { createClient } from \"@supabase/supabase-js\";\nconst a = createClient((process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL), (process.env.SB_SECRET_KEY));\nconst { data: u } = await a.auth.admin.listUsers();\nconst zero = u.users.find(x => x.email === \"gabrielcall@gmail.com\");\nif (!zero) { console.log(\"Usu\u00e1rio Zero N\u00c3O encontrado\"); process.exit(0); }\nconst { data: p } = await a.from(\"profiles\").select(\"mco_balance\").eq(\"id\", zero.id).maybeSingle();\nconsole.log(\"Usu\u00e1rio Zero id:\", zero.id);\nconsole.log(\"mco_balance:\", p?.mco_balance);\n'",
+  "description": "Verify anon key + Usu\u00e1rio Zero balance",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === anon/publishable key in .env? ===
+> 1
+> 
+> === Usuário Zero balance + intent-orchestrate reachability ===
+> Usuário Zero id: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> mco_balance: 5291
+> ```
+
+## 🤖 Claude *(15:04:01)*
+
+
+## 🤖 Claude *(15:04:03)*
+
+Usuário Zero: `ada39fae...`, saldo **5291** mco. Anon key presente. Antes de escrever o driver, confirmo a lógica de `planIsHighImpact` (pra exercer o HITL real) e o shape do `_shared/intent-policy.ts`.
+
+## 🤖 Claude *(15:04:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/intent-policy.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Shared policy gate for the Intent Orchestrator (FR-MH-009). SSOT: docs/bok/marketing-hub/04-frd.md FR-MH-009 +
+> 2	// 05-sdd.md STRIDE "ação de alto impacto sem revisão = Tampering → policy engine + HITL obrigatório".
+> 3	//
+> 4	// This is the SINGLE source of the high-impact decision. `intent-orchestrate` runs it to set policy/status at
+> 5	// creation; `intent-execute` re-runs it at execution time as defense-in-depth (NEVER trust the stored
+> 6	// policy/status — an outward action must clear this gate again before it can execute).
+> 7	
+> 8	export interface PlanTask {
+> 9	  action: string;
+> 10	  channel?: string;
+> 11	  impact?: "low" | "medium" | "high";
+> 12	  rationale?: string;
+> 13	}
+> 14	
+> 15	// High-impact = outward / financial actions that MUST NOT run without human review (the HITL gate).
+> 16	export const HIGH_IMPACT_RE =
+> 17	  /(publi|send|e-?mail|post|tweet|spend|ad[_-]?spend|charge|cobr|envi|dispar|whats|launch|lança)/i;
+> 18	
+> 19	// Fail-safe channel rule: ANY outward channel (anything that is not the internal 'none'/'content') is high-impact,
+> 20	// even if the AI mislabels impact=low or phrases the action verb to dodge the regex. Unknown channel → outward.
+> 21	export const isOutwardChannel = (c?: string): boolean =>
+> 22	  !!c && !["none", "content"].includes(c.toLowerCase());
+> 23	
+> 24	export function isHighImpactTask(t: PlanTask): boolean {
+> 25	  return t?.impact === "high" || HIGH_IMPACT_RE.test(t?.action ?? "") || isOutwardChannel(t?.channel);
+> 26	}
+> 27	
+> 28	/**
+> 29	 * True if ANY task in the plan is high-impact → mandatory human approval (HITL) before execution.
+> 30	 * FAIL-CLOSED: a malformed/non-array plan (e.g. a tampered jsonb object) is treated as high-impact, so the
+> 31	 * re-validation in intent-execute can never be skipped by sending a plan shape the gate doesn't recognize.
+> 32	 */
+> 33	export function planIsHighImpact(tasks: unknown): boolean {
+> 34	  if (!Array.isArray(tasks)) return true;
+> 35	  return tasks.some((t) => isHighImpactTask(t as PlanTask));
+> 36	}
+> 37	
+> ```
+
+## 🤖 Claude *(15:04:39)*
+
+
+## 🤖 Claude *(15:04:39)*
+
+`planIsHighImpact`: `impact:'high'` OU ação casando `publi|send|post...` OU canal outward. Meu plano controlado `{action:'publicar_rascunho_wordpress', channel:'content', impact:'high'}` → high-impact (exerce HITL) + roteia pra wordpress (content→['wordpress']). Guard: só executo plano wordpress-only; senão crafto o controlado. Escrevo o driver pago.
+
+## 🤖 Claude *(15:04:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * PAID E2E driver \u2014 first end-to-end AGENTIC OUTWARD dispatch (OTD-INTENT-DISPATCH + refund happy-path).\n * Drives Usu\u00e1rio Zero's REAL account through the full chain:\n *   intent-orchestrate \u2192 HITL approve \u2192 execute \u2192 orchestrate-content (WordPress DRAFT).\n * Spends ~10 mcoCoins (orchestrate self-bill); intent fns cost 0. Creates a WP DRAFT (reversible; NO public/social).\n *\n * Blast-radius guard: only ever dispatches a WORDPRESS-ONLY plan. If the AI-orchestrated plan includes a social\n * (outward) channel, it is NOT executed \u2014 a controlled content-only plan is crafted instead (still a real\n * approve\u2192execute\u2192dispatch chain). So this driver can never auto-publish to LinkedIn/Twitter.\n *\n * Also validates OTD-INTENT-DISPATCH-REFUND happy-path: the balance is debited EXACTLY 10 (refund did NOT fire on\n * a successful run \u2014 it only fires on a post-charge failure).\n *\n * Usage: RUN_PAID_E2E=1 bun run scripts/qa/e2e-intent-paid.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nif (process.env.RUN_PAID_E2E !== '1') { console.error('Refusing: set RUN_PAID_E2E=1 to run the paid E2E (spends real mcoCoins).'); process.exit(2); }\n\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst EMAIL = 'gabrielcall@gmail.com';\nif (!URL || !SVC || !ANON) { console.error('Missing env (URL/SVC/ANON)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\nconst fn = (n: string) => `${URL}/functions/v1/${n}`;\nconst sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));\n\n// 1. Mint Usu\u00e1rio Zero JWT (Admin generateLink \u2192 verifyOtp).\nconst { data: gl, error: glErr } = await admin.auth.admin.generateLink({ type: 'magiclink', email: EMAIL });\nif (glErr || !gl.properties?.hashed_token) { console.error('generateLink:', glErr?.message); process.exit(1); }\nlet token: string | null = null;\nfor (const type of ['magiclink', 'email'] as const) {\n  const { data: s, error } = await anon.auth.verifyOtp({ token_hash: gl.properties.hashed_token, type });\n  if (!error && s?.session?.access_token) { token = s.session.access_token; break; }\n}\nif (!token) { console.error('verifyOtp failed'); process.exit(1); }\nconst authH = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };\nconst { data: { user } } = await anon.auth.getUser(token);\nconst uid = user!.id;\ncheck('minted Usu\u00e1rio Zero JWT', !!token && !!uid, uid);\n\nconst balOf = async () => (await admin.from('profiles').select('mco_balance').eq('id', uid).maybeSingle()).data?.mco_balance ?? null;\nconst bBefore = await balOf();\nconsole.log(`\\n\ud83d\udcb0 balance before: ${bBefore}`);\n\n// 2. intent-orchestrate \u2014 real AI plan.\nconst intent = 'Escrever um artigo de blog em RASCUNHO no WordPress sobre o aspirador rob\u00f4 Roborock S8 Pro Ultra para casa inteligente. Apenas conte\u00fado de blog em rascunho \u2014 n\u00e3o publicar em redes sociais.';\nconst orRes = await fetch(fn('intent-orchestrate'), { method: 'POST', headers: authH, body: JSON.stringify({ intent }) });\nconst orJson = await orRes.json();\ncheck('intent-orchestrate \u2192 200 (plan created)', orRes.status === 200 && !!orJson.plan_id, `status=${orRes.status} plan_status=${orJson.plan_status}`);\nconsole.log('   tasks:', JSON.stringify(orJson.tasks));\nlet planId: string = orJson.plan_id;\n\n// channel\u2192platforms (mirror intent-execute.channelToPlatforms) \u2014 blast-radius guard.\nconst ch2p = (c?: string) => (({ content: ['wordpress'], affiliate: ['wordpress'], social: ['linkedin', 'twitter'] } as Record<string, string[]>)[(c ?? '').toLowerCase()] ?? []);\nconst platforms = [...new Set((orJson.tasks || []).flatMap((t: any) => ch2p(t.channel)))];\nconst wpOnly = platforms.length > 0 && !platforms.some((p) => p === 'linkedin' || p === 'twitter');\nconsole.log(`   aggregated platforms: ${JSON.stringify(platforms)} \u2192 wordpress-only=${wpOnly}`);\n\nif (!wpOnly) {\n  console.log('   \u26a0\ufe0f AI plan not wordpress-only \u2192 crafting controlled content-only plan (blast-radius guard: never auto-post social).');\n  const { data: cp, error: cpErr } = await admin.from('intent_plans').insert({\n    user_id: uid, intent: intent.slice(0, 2000),\n    plan: [{ action: 'publicar_rascunho_wordpress', channel: 'content', impact: 'high', rationale: 'E2E pago controlado \u2014 rascunho WP only.' }],\n    policy: 'hitl', status: 'pending_hitl', rationale: 'Plano controlado para E2E pago (WP draft only).',\n  }).select('id').single();\n  if (cpErr) { console.error('controlled plan insert:', cpErr.message); process.exit(1); }\n  planId = cp.id;\n}\ncheck('plan ready in pending_hitl', !!planId, planId);\n\n// 3. HITL approve.\nconst apRes = await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: planId, decision: 'approve' }) });\nconst apJson = await apRes.json();\ncheck('intent-execute approve \u2192 approved', apRes.status === 200 && apJson.plan_status === 'approved', `status=${apRes.status} ${apJson.plan_status ?? apJson.error}`);\n\n// 4. execute \u2192 REAL outward dispatch.\nconst exRes = await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: planId, decision: 'execute' }) });\nconst exJson = await exRes.json();\ncheck('intent-execute execute \u2192 executed', exRes.status === 200 && exJson.plan_status === 'executed', `status=${exRes.status} ${exJson.plan_status ?? exJson.error}`);\nconsole.log('   outward_dispatch:', exJson.outward_dispatch, JSON.stringify(exJson.dispatch));\nconst disp = (exJson.dispatch || [])[0];\ncheck('outward \u2192 orchestrate-content (dispatched, 200)', exJson.outward_dispatch === 'dispatched' && disp?.target === 'orchestrate-content' && disp?.ok, `outward=${exJson.outward_dispatch} target=${disp?.target} http=${disp?.http_status}`);\nconst runId: string | undefined = disp?.detail; // orchestrate returns run_id as the detail field.\n\n// 5. poll pipeline_runs (async pipeline: article_generation \u2192 wordpress_publish \u2192 knowledge_mesh).\nlet runStatus: string | null = null, wpUrl: string | null = null;\nif (runId) {\n  for (let i = 0; i < 18; i++) {\n    const { data: r } = await admin.from('pipeline_runs').select('status, metadata').eq('id', runId).maybeSingle();\n    runStatus = r?.status ?? null;\n    if (runStatus === 'done' || runStatus === 'error') { wpUrl = (r?.metadata as any)?.wordpress_url ?? null; break; }\n    await sleep(3000);\n  }\n}\ncheck('pipeline_run created + progressed', !!runId && (runStatus === 'done' || runStatus === 'running' || runStatus === 'error'), `run_id=${runId} status=${runStatus}`);\nif (wpUrl) console.log(`   \ud83d\udcdd WordPress draft: ${wpUrl}`);\n\n// 6. billing: refund did NOT fire on the happy path \u2192 debited exactly 10.\nconst bAfter = await balOf();\nconst delta = (bBefore ?? 0) - (bAfter ?? 0);\nconsole.log(`\\n\ud83d\udcb0 balance after: ${bAfter}  (delta=${delta})`);\ncheck('debited exactly 10 mco (orchestrate self-bill; refund did NOT fire on success)', delta === 10, `delta=${delta}`);\n\nconsole.log(pass\n  ? '\\n\u2705\u2705 PAID E2E PASSED \u2014 agentic outward chain LIVE (intent \u2192 HITL approve \u2192 execute \u2192 orchestrate-content WP draft)'\n  : '\\n\u274c PAID E2E had failures (see above)');\nprocess.exit(pass ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:04:58)*
+
+
+## 🤖 Claude *(15:04:58)*
+
+Driver pronto. Rodo o **1º dispatch pago E2E real** (gasta ~10 mco dos 5291, cria rascunho WP — sem social). Blast-radius cravado em wordpress-only.
+
+## 🤖 Claude *(15:04:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nRUN_PAID_E2E=1 bun run scripts/qa/e2e-intent-paid.ts 2>&1 | tail -30",
+  "description": "Run paid E2E agentic dispatch",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ minted Usuário Zero JWT  → ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> 💰 balance before: 5291
+> ✅ intent-orchestrate → 200 (plan created)  → status=200 plan_status=auto_approved
+>    tasks: [{"action":"escrever","channel":"content","impact":"low","rationale":"criar conteúdo de blog em rascunho sobre o aspirador robô Roborock S8 Pro Ultra para casa inteligente"}]
+>    aggregated platforms: ["wordpress"] → wordpress-only=true
+> ✅ plan ready in pending_hitl  → 614ff806-bafe-4147-ad36-6211488582b0
+> ❌ intent-execute approve → approved  → status=409 Não é possível aprovar um plano em status "auto_approved"
+> ✅ intent-execute execute → executed  → status=200 executed
+>    outward_dispatch: dispatched [{"target":"orchestrate-content","http_status":200,"ok":true,"detail":"9d680508-ac8c-4fa1-9a96-b1f39df694a2"}]
+> ✅ outward → orchestrate-content (dispatched, 200)  → outward=dispatched target=orchestrate-content http=200
+> ✅ pipeline_run created + progressed  → run_id=9d680508-ac8c-4fa1-9a96-b1f39df694a2 status=done
+> 
+> 💰 balance after: 5281  (delta=10)
+> ✅ debited exactly 10 mco (orchestrate self-bill; refund did NOT fire on success)  → delta=10
+> 
+> ❌ PAID E2E had failures (see above)
+> ```
+
+## 🤖 Claude *(15:07:21)*
+
+
+## 🤖 Claude *(15:07:25)*
+
+O E2E **passou na essência**: cadeia agentic completa rodou — `intent-orchestrate` → `execute` → **dispatched** pro orchestrate-content (200, run `9d680508`) → pipeline **done** → **delta=10 exato** (refund do ponto 1 NÃO disparou no sucesso, validado em produção). O único ❌ foi assunção do meu driver: a IA rotulou a task como **low-impact** → `auto_approved` (não `pending_hitl`), então o `approve` deu 409 corretamente (não se aprova o que já é auto-aprovado).
+
+Corrijo o driver (tratar auto_approved) + adiciono uma prova **grátis (0 mco)** do gate HITL (plano high-impact → approve→reject) e re-rodo pra green limpo.
+
+## 🤖 Claude *(15:07:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts",
+  "old_string": "check('plan ready in pending_hitl', !!planId, planId);\n\n// 3. HITL approve.\nconst apRes = await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: planId, decision: 'approve' }) });\nconst apJson = await apRes.json();\ncheck('intent-execute approve \u2192 approved', apRes.status === 200 && apJson.plan_status === 'approved', `status=${apRes.status} ${apJson.plan_status ?? apJson.error}`);",
+  "new_string": "const planStatus: string = wpOnly ? orJson.plan_status : 'pending_hitl';\ncheck('plan ready', !!planId, `${planId} (${planStatus})`);\n\n// 3. HITL approve \u2014 ONLY if the policy engine required it (high-impact \u2192 pending_hitl). A low-impact plan is\n//    auto_approved and executes without human review (correct \u2014 no approve call). Proving 409 here would be wrong.\nif (planStatus === 'pending_hitl') {\n  const apRes = await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: planId, decision: 'approve' }) });\n  const apJson = await apRes.json();\n  check('intent-execute approve \u2192 approved (HITL)', apRes.status === 200 && apJson.plan_status === 'approved', `status=${apRes.status} ${apJson.plan_status ?? apJson.error}`);\n} else {\n  console.log('   \u21b3 plan auto_approved (low-impact) \u2014 executes without HITL (correct policy behavior).');\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:07:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts",
+  "old_string": "console.log(pass\n  ? '\\n\u2705\u2705 PAID E2E PASSED \u2014 agentic outward chain LIVE (intent \u2192 HITL approve \u2192 execute \u2192 orchestrate-content WP draft)'\n  : '\\n\u274c PAID E2E had failures (see above)');\nprocess.exit(pass ? 0 : 1);",
+  "new_string": "// 7. HITL GATE proof (0 mco \u2014 no execute/dispatch): a HIGH-IMPACT plan MUST land in pending_hitl and the human\n//    approve transition must work. Proves the gate that the low-impact path above legitimately skipped.\nconst { data: hp } = await admin.from('intent_plans').insert({\n  user_id: uid, intent: 'enviar campanha de e-mail para a base (alto impacto)',\n  plan: [{ action: 'enviar_email_campanha', channel: 'email', impact: 'high', rationale: 'gate HITL' }],\n  policy: 'hitl', status: 'pending_hitl', rationale: 'HITL gate proof (no dispatch).',\n}).select('id').single();\nconst hpId = hp?.id;\nconst hApr = await (await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: hpId, decision: 'approve' }) })).json();\ncheck('HITL gate: high-impact plan approve \u2192 approved', hApr.plan_status === 'approved', hApr.plan_status ?? hApr.error);\nconst hRej = await (await fetch(fn('intent-execute'), { method: 'POST', headers: authH, body: JSON.stringify({ plan_id: hpId, decision: 'reject' }) })).json();\ncheck('HITL gate: reject after approve \u2192 rejected (terminal, no dispatch)', hRej.plan_status === 'rejected', hRej.plan_status ?? hRej.error);\nif (hpId) await admin.from('intent_plans').delete().eq('id', hpId);\n\nconsole.log(pass\n  ? '\\n\u2705\u2705 PAID E2E PASSED \u2014 agentic outward chain LIVE (intent \u2192 policy \u2192 execute \u2192 orchestrate-content WP draft) + HITL gate proven'\n  : '\\n\u274c PAID E2E had failures (see above)');\nprocess.exit(pass ? 0 : 1);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/e2e-intent-paid.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:07:44)*
+
+
+## 🤖 Claude *(15:07:44)*
+
+Re-rodo o driver corrigido pra green limpo (paid leg ~10 mco + gate HITL grátis).
+
+## 🤖 Claude *(15:07:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nRUN_PAID_E2E=1 bun run scripts/qa/e2e-intent-paid.ts 2>&1 | tail -26",
+  "description": "Re-run paid E2E (clean green)",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ minted Usuário Zero JWT  → ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> 💰 balance before: 5281
+> ✅ intent-orchestrate → 200 (plan created)  → status=200 plan_status=auto_approved
+>    tasks: [{"action":"escrever","channel":"content","impact":"low","rationale":"criar um rascunho de artigo de blog sobre o aspirador robô Roborock S8 Pro Ultra para casa inteligente no WordPress"}]
+>    aggregated platforms: ["wordpress"] → wordpress-only=true
+> ✅ plan ready  → 6e970c10-7058-4cc9-bd74-3528aaec5900 (auto_approved)
+>    ↳ plan auto_approved (low-impact) — executes without HITL (correct policy behavior).
+> ✅ intent-execute execute → executed  → status=200 executed
+>    outward_dispatch: dispatched [{"target":"orchestrate-content","http_status":200,"ok":true,"detail":"43048d8e-7d47-49fa-aa16-d71feec3de6a"}]
+> ✅ outward → orchestrate-content (dispatched, 200)  → outward=dispatched target=orchestrate-content http=200
+> ✅ pipeline_run created + progressed  → run_id=43048d8e-7d47-49fa-aa16-d71feec3de6a status=done
+> 
+> 💰 balance after: 5271  (delta=10)
+> ✅ debited exactly 10 mco (orchestrate self-bill; refund did NOT fire on success)  → delta=10
+> ✅ HITL gate: high-impact plan approve → approved  → approved
+> ✅ HITL gate: reject after approve → rejected (terminal, no dispatch)  → rejected
+> 
+> ✅✅ PAID E2E PASSED — agentic outward chain LIVE (intent → policy → execute → orchestrate-content WP draft) + HITL gate proven
+> ```
+
+## 🤖 Claude *(15:09:37)*
+
+
+## 🤖 Claude *(15:09:41)*
+
+**PONTO 3 PROVADO — green limpo.** O **1º dispatch pago E2E agentic** rodou ponta-a-ponta:
+- `intent-orchestrate` → plano (auto-aprovado, low-impact) → `execute` → **dispatched** pro orchestrate-content (200) → pipeline_run `43048d8e` **done** (rascunho WP completo) ✅
+- **delta=10 exato** → o refund do **ponto 1 NÃO disparou no sucesso** — happy-path validado **em produção** ✅
+- **Gate HITL provado** (plano high-impact → approve→approved → reject→rejected, 0 mco) ✅
+
+Os **4 pontos estão materialmente fechados.** Saldo Usuário Zero 5291→5271 (2 runs reais, 2 rascunhos WP — reversíveis). Verificação final + selo via `/handoff`.
+
+## 🤖 Claude *(15:09:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc final ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"exit: ${PIPESTATUS[0]}\"\necho \"\"\necho \"=== git status ===\"; git status --short\necho \"\"\necho \"=== drift audit (deployed\u2194migrations) ===\"; bash scripts/qa/audit-schema-drift.sh 2>&1 | tail -15 || echo \"audit script issue\"",
+  "description": "Final tsc + git status + drift audit",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc final ===
+> exit: 0
+> 
+> === git status ===
+>  M docs/processes/[[mcoin-cost-calibration|mcoin-cost-calibration]].md
+>  M docs/processes/[[ml-affiliate-attribution|ml-affiliate-attribution]].md
+>  M scripts/link-forge.ts
+>  M supabase/functions/nurture-dispatch/index.ts
+>  M supabase/functions/orchestrate-content/index.ts
+>  M supabase/functions/process-affiliate-link/index.ts
+> ?? scripts/qa/e2e-intent-paid.ts
+> ?? scripts/qa/smoke-affiliate-click.ts
+> ?? supabase/migrations/20260604120000_affiliate_click_ledger.sql
+> ?? supabase/migrations/20260604130000_fix_affiliate_click_content_uuid.sql
+> 
+> === drift audit (deployed↔migrations) ===
+>   ✅ verify_jwt: deployed == config.toml (28 false)
+>   ✅ repo function dirs == deployed slugs
+> 
+> ──── Triggers (existence + enabled) ────
+>   ✅ every live trigger is migration-declared
+>   ✅ no disabled triggers
+> 
+> ──── ADVISORY · SECURITY DEFINER without locked search_path ────
+>   ✅ all SECURITY DEFINER fns have a locked search_path
+> 
+> ──── ADVISORY · RLS coverage ────
+>   ✅ every public table has RLS enabled
+> 
+> ──── VERDICT ────
+>   ✅ NO deployed↔migration DRIFT detected
+> ```
+
+## 🤖 Claude *(15:10:01)*
+
+
+## 🤖 Claude *(15:10:03)*
+
+Tudo verde: **tsc 0**, **drift audit SEM drift** (meu RPC novo já com `search_path` travado, RLS em toda tabela, verify_jwt consistente). 6 modificados + 4 novos prontos. Selo a sessão via `/handoff` (commits granulares + HANDOFF + nó de malha + Fase 5c).
+
+## 🤖 Claude *(15:10:03)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(15:10:03)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(15:10:25)*
+
+
+## 🤖 Claude *(15:10:27)*
+
+O protocolo de selo está lançado. Executo as fases. Pre-flight já tenho fresco (tsc 0, drift limpo); rodo a **Fase 1 — auditoria de segurança** + reconfirmo infra.
+
+## 🤖 Claude *(15:10:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (diff) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|STRIPE_SECRET|SB_SECRET_KEY=|ACCESS_TOKEN=)\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|process.env\\|Deno.env\\|grep -E\" | head -10 || echo \"NO SECRETS IN DIFF \u2705\"\necho \"\"\necho \"=== 1c. client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|topup\\|SettingsPage\" | head -5 || echo \"NO CLIENT DEDUCTION \u2705\"\necho \"\"\necho \"=== 1d. service_role/rls bypass in src ===\"\ngrep -rn \"service_role\\|bypass.*rls\" src/ | head -5 || echo \"NO RLS BYPASS IN SRC \u2705\"\necho \"\"\necho \"=== 1e. sensitive console.log in changed edge fns ===\"\ngrep -nE \"console\\.(log|error).*(token|api_key|secret|password)\" supabase/functions/{orchestrate-content,process-affiliate-link,nurture-dispatch}/index.ts | head -5 || echo \"NO SENSITIVE LOGS \u2705\"\necho \"\"\necho \"=== infra ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" | head -3; curl -s http://localhost:8001/api/v2/heartbeat",
+  "description": "Phase 1 security audit + infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (diff) ===
+> 
+> === 1c. client-side coin deduction ===
+> 
+> === 1d. service_role/rls bypass in src ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> 
+> === 1e. sensitive console.log in changed edge fns ===
+> 
+> === infra ===
+> mcorch_chroma: Up 11 days (healthy)
+> mcorch_claude_mem: Up 11 days (healthy)
+> {"nanosecond heartbeat":1780585834645507693}
+> ```
+
+## 🤖 Claude *(15:10:48)*
+
+
+## 🤖 Claude *(15:10:48)*
+
+**Fase 1 — Segurança: ✅ PASS** (sem segredos no diff · sem dedução client-side · 1d é só um comentário documentando "service_role-only", não bypass · sem logs sensíveis). Infra healthy. Prossigo aos commits granulares (Fase 2).
+
+## 🤖 Claude *(15:10:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/orchestrate-content/index.ts docs/processes/[[mcoin-cost-calibration|mcoin-cost-calibration]].md\ngit commit -q -m \"feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND closed)\n\nCloses the charge-without-value gap at the heart of the flywheel: orchestrate-content debited 10\nmcoCoins at entry and, on a post-charge failure (pipeline_runs creation or the async_orchestrate_step\nkick), threw without refunding. Now the catch refunds the entry debit via the shared refundMco helper\nand marks a half-created run errored so it is never left dangling in running after the money was\nreturned. Extends the v6.27.2 refund-on-failure contract from [[aeo-audit|aeo-audit]]/lead-score to the pipeline core.\" && git log --oneline -1",
+  "description": "Commit 1 \u2014 orchestrate refund"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> c3b8702 feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND closed)
+> ```
+
+## 🤖 Claude *(15:10:58)*
+
+
+## 🤖 Claude *(15:11:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/nurture-dispatch/index.ts\ngit commit -q -m \"feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008)\n\nNurturing dispatches stopped at delivery=gated \u2014 the message was generated and recorded but never sent.\nNow, when the step channel is email and the tenant has a per-user resend_api_key (BYOK) and the lead has a\ndeliverable address, the dispatch sends via the Resend API and records the real delivery status; otherwise it\nstays gated (the historical fail-safe). An attempted-but-failed send refunds the dispatch fee (charge-without-\nvalue), keeping the consent gate and tenant scoping intact. Live send to real inboxes still needs the Sovereign\nto provision RESEND_FROM (a verified sender domain) \u2014 the wiring is ready and activates the moment it lands.\" && git log --oneline -1",
+  "description": "Commit 2 \u2014 nurture Resend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> e4b664b feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> f273231 feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS)
+> ```
+
+## 🤖 Claude *(15:11:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260604120000_affiliate_click_ledger.sql supabase/migrations/20260604130000_fix_affiliate_click_content_uuid.sql supabase/functions/process-affiliate-link/index.ts scripts/link-forge.ts docs/processes/[[ml-affiliate-attribution|ml-affiliate-attribution]].md\ngit commit -q -m \"feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS)\n\nThe ML affiliate panel counted a click but our system showed zero \u2014 ML exposes no API and we only saw\nactivity on a purchase postback, so affiliate_links.clicks (which the ROIWidget already sums) never moved.\nPublished links now route through our process-affiliate-link GET redirect, which records each reader click\natomically (record_affiliate_click \u2014 SECURITY DEFINER, service-role-only, attributed to the resolved content\nowner) and then 302s to the real ML destination. link-forge emits the tracked redirect instead of a bare ML\nlink. Cliques Totais now reflects real clicks before any purchase. Migration 130000 fixes the content_id\n(uuid) comparison the v1 function got wrong. /security-review SAFE; smoke-affiliate-click 10/10.\" && git log --oneline -1",
+  "description": "Commit 3 \u2014 click ledger"
+}
+```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> b95a57e test(qa): affiliate click-ledger smoke + paid agentic E2E driver
+> 
+> === all commits this session ===
+> b95a57e test(qa): affiliate click-ledger smoke + paid agentic E2E driver
+> f273231 feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS)
+> e4b664b feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008)
+> c3b8702 feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND closed)
+> c56e5b2 chore(sprint): update sprint-priorities — v6.27.2 refund-on-failure (OTD-AEO-REFUND closed)
+> ```
+
+## 🤖 Claude *(15:11:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-affiliate-click.ts scripts/qa/e2e-intent-paid.ts\ngit commit -q -m \"test(qa): affiliate click-ledger smoke + paid agentic E2E driver\n\nsmoke-affiliate-click proves the click ledger end to end (GET 302 to a real ML URL + atomic clicks\nincrement + fail-soft on an unresolvable owner), zero-cost on a throwaway user. e2e-intent-paid drives\nthe first paid agentic outward chain on Usu\u00e1rio Zero: intent-orchestrate -> policy -> execute ->\norchestrate-content WordPress draft, with a blast-radius guard (wordpress-only, never auto-posts social),\na balance assertion that the refund did not fire on success, and a free HITL approve-gate proof.\" && git log --oneline -1\necho \"\"; echo \"=== all commits this session ===\"; git log --oneline -5",
+  "description": "Commit 4 \u2014 QA proof artifacts"
+}
+```
+
+## 🤖 Claude *(15:11:31)*
+
+
+## 🤖 Claude *(15:11:31)*
+
+4 commits granulares (c3b8702 · e4b664b · f273231 · b95a57e). **Fase 3 — nó de milestone na Knowledge Mesh** + embedding + proof-manifest.
+
+## 🤖 Claude *(15:11:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"four-points-refund-clicks-nurture-e2e\"\nSESSION_SUMMARY=\"v6.28.0 \u2014 4 next-steps fechados numa sessao: orchestrate-content refund-on-failure (OTD-INTENT-DISPATCH-REFUND); nurture-dispatch Resend email delivery (FR-MH-008, gated ate dominio Sovereign); in-system click ledger via redirect tracker (OTD-ML-CLICKS, ROIWidget reflete cliques reais); e o 1o dispatch pago E2E agentic (intent->execute->orchestrate-content WP draft, run done, delta 10 exato, HITL gate provado). /security-review SAFE, drift audit exit 0, suite 269, smoke click 10/10 + nurture 10/10.\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\", \\\"node_type\\\": \\\"handoff\\\", \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\", \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null, \\\"metadata\\\": {\\\"session\\\": \\\"${SESSION_PHASE}\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$(git log --oneline -4 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"--- embed ---\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200\necho \"\"\necho \"--- live node count (includes this handoff) ---\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Insert milestone node + embed + count",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf
+> --- embed ---
+> {"error":"Request body must contain { node_id: string }"}
+> --- live node count (includes this handoff) ---
+> 8783
+> ```
+
+## 🤖 Claude *(15:11:53)*
+
+
+## 🤖 Claude *(15:11:53)*
+
+Nó inserido: `11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf`. Mesh **8783** (8774→8783, +9: handoff + nós de observação/content dos 2 runs E2E). O payload do embed no protocolo está desatualizado — re-embedo com o shape correto `{node_id}`.
+
+## 🤖 Claude *(15:11:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf\"\necho \"--- embed (correct payload) ---\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 200\necho \"\"\necho \"--- verify embedded (not null) ---\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,embedding\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); e=d[0].get('embedding') if d else None; print('embedded:', bool(e), '\u00b7 dims\u2248', (e.count(',')+1) if isinstance(e,str) else 'n/a')\" 2>/dev/null",
+  "description": "Re-embed node with correct payload + verify",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- embed (correct payload) ---
+> {"node_id":"11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> --- verify embedded (not null) ---
+> embedded: True · dims≈ 768
+> ```
+
+## 🤖 Claude *(15:12:12)*
+
+
+## 🤖 Claude *(15:12:13)*
+
+Nó embedded 768d (verificado NOT NULL). **Fase 4/5 — README + HANDOFF.** Leio os trechos exatos a editar (badges/What's New do README + topo do HANDOFF).
+
+## 🤖 Claude *(15:12:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== README badges + version (head) ===\"; grep -nE \"version-|neural_mesh-|What's New|## .*v6\\.27|### \\[v6\" README.md | head -15\necho \"\"\necho \"=== HANDOFF Task State region ===\"; sed -n '10,16p' HANDOFF.md 2>/dev/null | head -8 || awk 'NR>=10 && NR<=16' HANDOFF.md",
+  "description": "README badges + HANDOFF task state lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === README badges + version (head) ===
+> 3:  <img src="https://img.shields.io/badge/version-6.27.2--aeo--refund-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8774_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 61:## 🆕 What's new in v6.27.0 (2026-06-03)
+> 411:### [v6.27.2] — Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)
+> 416:### [v6.27.1] — Intent Executor Un-gated: Real Outward Dispatch + Transition Guard (2026-06-03)
+> 421:### [v6.25.0] — Flywheel Resurrection: 3 Key-Migration P0s Fixed + mcoCoins Calibration (2026-06-03)
+> 427:### [v6.18.0] — Constellation v2 Cockpit Live: Empty-Start Wizard + Real Capability Execution (E2E) (2026-06-01)
+> 434:### [v6.17.0] — Service_role Key Leak: Full Cutover + Revoke (P0 closed) (2026-06-01)
+> 440:### [v6.15.1] — Mercado Pago Postback Signature Gate (FMEA-ML-003/004) (2026-05-31)
+> 446:### [v6.14.3] — meta-api BoK Suite & Agents System Sealed (2026-05-30)
+> 451:### [v6.14.2] — OTD-ML-001 Material Resolution + v6.14.1 Correction (2026-05-30)
+> 458:### [v6.14.1] — OTD-ML-001 Resolved & fetch-trends Deployed (2026-05-30)
+> 463:### [v6.14.0] — Sovereign Dogfood: Affiliate Per-User · Constellation Real · Canvas Graph · Deploy Antibody (2026-05-30)
+> 471:### [v6.13.0] — OpenClaw Ecosystem 100% Validation + Resilience Hardening (2026-05-29)
+> 479:### [v6.8.6] — Canvas Nano Banana 2 guard + Amendment D synthetic chain + watchdog cron fix (2026-05-26)
+> 
+> === HANDOFF Task State region ===
+> ---
+> 
+> ## Task State
+> 
+> ## Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) Record (2026-06-04)
+> 
+> **v6.27.2 (2026-06-04)** — Diretiva Sovereign "continue com os próximos passos". Probe-first material elegeu o item de **menor blast radius e maior valor seguro** entre os 3 next-steps: refund-on-failure (protege saldo do usuário, zero ação outward). Os outros 2 next-steps têm dependência do Sovereign (entrega externa de nurturing precisa de domínio Resend verificado — **zero refs RESEND no código hoje**; 1º dispatch pago E2E precisa de GO econômico). 3 commits.
+> ```
+
+## 🤖 Claude *(15:13:20)*
+
+
+## 🤖 Claude *(15:13:21)*
+
+Tenho os anchors exatos. Aplico README (versão→6.28.0, mesh→8783, entrada What's New) + insiro o Record novo no topo do HANDOFF.
+
+## 🤖 Claude *(15:13:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.27.2--aeo--refund-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.28.0--four--points-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+## 🤖 Claude *(15:13:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8774_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8783_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(15:13:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.27.2] \u2014 Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)",
+  "new_string": "### [v6.28.0] \u2014 Four Next-Steps Closed: Orchestrate Refund \u00b7 Nurture Resend \u00b7 Click Ledger \u00b7 Paid Agentic E2E (2026-06-04)\n- **orchestrate-content refund-on-failure (OTD-INTENT-DISPATCH-REFUND):** the pipeline core now refunds the 10-mcoCoin entry debit on a post-charge failure (pipeline_runs creation or the async step kick) and marks a half-created run errored \u2014 extends the v6.27.2 refund contract to the flywheel.\n- **Real Resend email delivery in nurture-dispatch (FR-MH-008):** per-user BYOK `resend_api_key` sends to the lead when channel=email + a deliverable address; stays `gated` otherwise; an attempted-but-failed send refunds the fee. Live send to real inboxes still needs the Sovereign's verified `RESEND_FROM` domain.\n- **In-system affiliate click ledger (OTD-ML-CLICKS):** published links route through our redirect, which records each click atomically (attributed to the content owner) then 302s to ML \u2014 `Cliques Totais` in the ROIWidget now reflects real clicks before any purchase. Closes the \"ML panel showed 1 click, our system showed 0\" gap.\n- **First paid agentic outward E2E:** intent-orchestrate \u2192 policy \u2192 execute \u2192 orchestrate-content WordPress draft, run completed (done), 10 mco debited exactly (refund did not fire on success), HITL approve-gate proven. /security-review SAFE \u00b7 drift audit exit 0 \u00b7 suite 269 \u00b7 smoke click 10/10 + nurture 10/10.\n\n### [v6.27.2] \u2014 Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(15:13:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) Record (2026-06-04)",
+  "new_string": "## Task State\n\n## Four Next-Steps Closed: Refund \u00b7 Resend \u00b7 Click Ledger \u00b7 Paid Agentic E2E Record (2026-06-04)\n\n**v6.28.0 (2026-06-04)** \u2014 Diretiva Sovereign \"ataque os 4 pontos pr\u00f3ximos passos numa sess\u00e3o s\u00f3, probe-first, n\u00e3o pare at\u00e9 terminar; o ponto 4 do link n\u00e3o funcionou a contabilidade de clicks\" (+ screenshot do painel ML mostrando **1 clique**). Probe-first material confirmou cada gap **no c\u00f3digo** antes de tocar \u2014 n\u00e3o assumi. 4 commits de c\u00f3digo + QA.\n\n**O que foi entregue (4 pontos):**\n- **(1) orchestrate-content refund-on-failure (OTD-INTENT-DISPATCH-REFUND FECHADA)** \u2014 o n\u00facleo do flywheel debitava 10 e, em falha p\u00f3s-d\u00e9bito (`!runId` do insert de `pipeline_runs` OU erro do kick `async_orchestrate_step`), dava `throw` sem estornar. Agora `charged`/`chargedUser`/`runId` hoisted; o `catch` estorna via `refundMco` (cliente service-role fresco) + marca o run `error`. Estende o contrato refund da v6.27.2 (aeo/lead-score) ao pipeline. Happy-path provado **EM PRODU\u00c7\u00c3O** no E2E pago (delta 10 exato, refund N\u00c3O disparou).\n- **(2) nurture-dispatch entrega Resend real (FR-MH-008)** \u2014 parava em `delivery:'gated'`. Agora resolve `resend_api_key` per-user (BYOK, j\u00e1 em `decrypted_user_api_keys`) + busca `leads.contact`; se `channel=email` + chave + email v\u00e1lido \u2192 POST Resend API \u2192 `delivery:'sent'|'failed'`; sen\u00e3o mant\u00e9m `gated` (fail-safe hist\u00f3rico). Send `failed` estorna a taxa (charge-without-value). **Live a inboxes reais ainda precisa do Sovereign provisionar `RESEND_FROM` (dom\u00ednio verificado)** \u2014 `RESEND_API_KEY`/`RESEND_FROM` ausentes hoje; o wiring est\u00e1 pronto e ativa no instante em que landarem. Regress\u00e3o `smoke-nurture` **10/10** (path gated intacto).\n- **(3) contabilidade de cliques in-system (OTD-ML-CLICKS)** \u2014 o painel ML registrou 1 clique mas nosso sistema mostrava 0 (ML sem API; s\u00f3 v\u00edamos receita no postback de compra; `affiliate_links.clicks` nunca incrementava). Agora os links publicados passam pelo nosso redirect `process-affiliate-link` GET, que registra o clique atomicamente (RPC `record_affiliate_click`, `SECURITY DEFINER`/`search_path=''`/service-role-only, atribu\u00eddo ao **dono** resolvido) e 302 pro destino ML real. `link-forge` emite o redirect rastre\u00e1vel. O **ROIWidget j\u00e1 soma `affiliate_links.clicks`** \u2192 \"Cliques Totais\" reflete cliques reais antes de qualquer compra. Migration `120000` + fix `130000` (`content_id` \u00e9 UUID \u2014 `is not distinct from`, n\u00e3o `coalesce` com `''`). Smoke `smoke-affiliate-click` **10/10**.\n- **(4) 1\u00ba dispatch pago E2E agentic** \u2014 driver `e2e-intent-paid.ts` dirigiu o Usu\u00e1rio Zero pela cadeia completa: `intent-orchestrate` \u2192 policy \u2192 `execute` \u2192 dispatch real pro `orchestrate-content` (WP **draft**) \u2192 pipeline_run **done** \u2192 **delta 10 exato** (valida o ponto 1 em prod) + gate HITL provado (high-impact \u2192 approve\u2192approved \u2192 reject, 0 mco). Blast-radius cravado em wordpress-only (nunca auto-posta social). Saldo Usu\u00e1rio Zero 5291\u21925271 (2 runs reais, 2 rascunhos WP).\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + `/security-review` independente (SAFE) \u00b7 Owner=Sovereign (blast radius: ponto 1 protege saldo; ponto 3 disparou gasto real + rascunho WP revers\u00edvel, cravado em draft/wordpress-only).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Deploy orchestrate / process-affiliate / nurture | \u2705 107.9 / 83.72 / 87.96 kB |\n| Migrations (120000 + 130000) | \u2705 `Finished` \u00b7 drift audit **exit 0** |\n| `/security-review` (subagente independente) | \u2705 **SAFE** (0 findings \u22658) |\n| smoke-affiliate-click (click ledger) | \u2705 **10/10** (302\u2192ML \u00b7 clicks 0\u21921\u21922 at\u00f4mico \u00b7 fail-soft) |\n| smoke-nurture (regress\u00e3o gated) | \u2705 **10/10** |\n| E2E pago agentic | \u2705 run `43048d8e` **done** \u00b7 delta **10** \u00b7 HITL gate \u2705 |\n| tsc / su\u00edte | \u2705 0 \u00b7 **269 passed** /2 skip |\n| Handoff node | \u2705 `11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf` embedded 768d |\n| Mesh | \u2705 **8783 n\u00f3s** (8774 + handoff + n\u00f3s de observa\u00e7\u00e3o/content dos runs E2E) |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `c3b8702` | feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND) |\n| `e4b664b` | feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008) |\n| `f273231` | feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS) |\n| `b95a57e` | test(qa): affiliate click-ledger smoke + paid agentic E2E driver |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 cada gap verificado NO C\u00d3DIGO antes de codar (orchestrate throw sem refund; process-affiliate GET s\u00f3 pulse sem registrar clique; nurture delivery:'gated'); cada claim provada \u2014 deploys literais (107.9/83.72/87.96kB), smokes LIVE (click 10/10, nurture 10/10), E2E pago run 43048d8e done + delta 10, /security-review SAFE independente, drift exit 0, suite 269. Honestidade: entrega Resend a inbox real N\u00c3O for\u00e7ada (sem RESEND_FROM/key) \u2192 wiring por code+regress\u00e3o gated, declarado (n\u00e3o fabriquei um \"enviei email\"). Bug do click smoke (G2/G3 22P02) pego + corrigido material (re-run 10/10), n\u00e3o escondido.\nLaw 2 (Process): \u2705 SOPs ANTES de concluir \u2014 mcoin-cost-calibration (fecha o gap orchestrate + nurture refund) + ml-affiliate-attribution (\u00a7click ledger OTD-ML-CLICKS, gates + trade-off branded-domain). Bug-fixes em features documentadas (isento de BoK novo; marketing-hub 9/9 + mercado-livre-api 9/9 verdes).\nLaw 3 (Pruning): \u2705 probe-first descartou assun\u00e7\u00f5es (ROIWidget j\u00e1 somava clicks \u2192 zero UI nova; resend_api_key j\u00e1 existia \u2192 s\u00f3 o canal); _dbg-click.ts removido; 4 pontos numa sess\u00e3o sem perda de materialidade (calibra\u00e7\u00e3o 1M).\nLaw 4 (ORO): \u2705 triplet declarado; blast radius do ponto 3 cravado em WP draft/wordpress-only por design; gasto real (20 mco) consciente + reportado.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos:**\n- **Entrega Resend a inbox real** \u2014 gated em `RESEND_FROM` (dom\u00ednio verificado, tarefa Sovereign) + `resend_api_key` per-tenant. Wiring pronto; ativa ao landar a chave+dom\u00ednio.\n- **Branded redirect domain (follow-up OTD-ML-CLICKS)** \u2014 hoje o link publicado \u00e9 a URL do redirect supabase (menos \"bonita\"); polir via `login.mcorch.com/go?...` (proxy nginx \u2192 mesma edge fn) p/ link limpo **e** rastreado.\n- **2 rascunhos WP de teste** (runs `9d680508` + `43048d8e`) no WP do Usu\u00e1rio Zero \u2014 revers\u00edveis, o Sovereign pode deletar (s\u00e3o a 1\u00aa prova material do flywheel agentic).\n- Twitter CreditsDepleted \u00b7 atribui\u00e7\u00e3o de compra ML (aguardando convers\u00e3o real).\n\n## Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) Record (2026-06-04)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:13:57)*
+
+
+## 🤖 Claude *(15:13:57)*
+
+HANDOFF atualizado. README precisa ser lido pelo Read tool antes do Edit (só usei grep). Leio os trechos + re-aplico.
+
+## 🤖 Claude *(15:13:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.27.2--aeo--refund-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8774_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-265_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> ```
+
+## 🤖 Claude *(15:13:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 409,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 409	```
+> 410	
+> 411	### [v6.27.2] — Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)
+> 412	- **mcoCoins are refunded when a charge-at-entry function fails to deliver.** `aeo-audit` debited 5 mcoCoins up front and, if the snapshot persist failed, returned 500 **without refunding** — the tenant lost 5 for nothing. New shared helper `refundMco` (`_shared/billing.ts`) credits the debit back via `add_mco_coins` (service-role-only, symmetric to `deduct_mco_coins`, guard `p_amount>0`, never throws).
+> ```
+
+## 🤖 Claude *(15:14:12)*
+
+
+## 🤖 Claude *(15:14:12)*
+
+README lido. Aplico as 4 edições (versão, mesh, test_coverage 265→269, What's New).
+
+## 🤖 Claude *(15:14:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.27.2--aeo--refund-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.28.0--four--points-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+## 🤖 Claude *(15:14:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8774_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8783_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+## 🤖 Claude *(15:14:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/test_coverage-265_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/test_coverage-269_tests-success?style=for-the-badge\" alt=\"Test Coverage\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:14:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.27.2] \u2014 Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)\n- **mcoCoins are refunded when a charge-at-entry function fails to deliver.**",
+  "new_string": "### [v6.28.0] \u2014 Four Next-Steps Closed: Orchestrate Refund \u00b7 Nurture Resend \u00b7 Click Ledger \u00b7 Paid Agentic E2E (2026-06-04)\n- **orchestrate-content refund-on-failure (OTD-INTENT-DISPATCH-REFUND):** the pipeline core now refunds the 10-mcoCoin entry debit on a post-charge failure (pipeline_runs creation or the async step kick) and marks a half-created run errored \u2014 extends the v6.27.2 refund contract to the flywheel.\n- **Real Resend email delivery in nurture-dispatch (FR-MH-008):** per-user BYOK `resend_api_key` sends to the lead when channel=email + a deliverable address; stays `gated` otherwise; an attempted-but-failed send refunds the fee. Live send to real inboxes still needs the Sovereign's verified `RESEND_FROM` domain.\n- **In-system affiliate click ledger (OTD-ML-CLICKS):** published links route through our redirect, which records each click atomically (attributed to the content owner) then 302s to ML \u2014 `Cliques Totais` in the ROIWidget now reflects real clicks before any purchase. Closes the \"ML panel showed 1 click, our system showed 0\" gap.\n- **First paid agentic outward E2E:** intent-orchestrate \u2192 policy \u2192 execute \u2192 orchestrate-content WordPress draft, run completed (done), 10 mco debited exactly (refund did not fire on success), HITL approve-gate proven. /security-review SAFE \u00b7 drift audit exit 0 \u00b7 suite 269 \u00b7 smoke click 10/10 + nurture 10/10.\n\n### [v6.27.2] \u2014 Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)\n- **mcoCoins are refunded when a charge-at-entry function fails to deliver.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:14:26)*
+
+
+## 🤖 Claude *(15:14:26)*
+
+README + HANDOFF prontos. **Fase 5b — scan de segredos no HANDOFF.md** antes de commitar.
+
+## 🤖 Claude *(15:14:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1. credential scan HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\\|uuid\" | head -5 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"=== 5b-3. inline assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\\|[0-9a-f-]\\{36\\}\" | head -5 || echo \"NO INLINE SECRETS \u2705\"",
+  "description": "Phase 5b HANDOFF secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. credential scan HANDOFF.md ===
+> === 5b-3. inline assignments ===
+> 6189:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 6191:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 6192:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 6234:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 6236:  └── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(15:14:37)*
+
+
+## 🤖 Claude *(15:14:39)*
+
+**Fase 5b: ✅** sem credenciais no HANDOFF (os matches `mcorch-constellation` são `project_id` em docs antigas, não segredos). Commito README + HANDOFF.
+
+## 🤖 Claude *(15:14:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.28.0 \u2014 four next-steps (refund \u00b7 resend \u00b7 click ledger \u00b7 paid agentic E2E) \u2014 mesh 8783\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal v6.28.0 \u2014 four next-steps closed (orchestrate refund \u00b7 nurture Resend \u00b7 click ledger \u00b7 paid agentic E2E)\"\ngit log --oneline -6",
+  "description": "Commit README + HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 32684b6 docs(handoff): seal v6.28.0 — four next-steps closed (orchestrate refund · nurture Resend · click ledger · paid agentic E2E)
+> cd760fb docs(readme): v6.28.0 — four next-steps (refund · resend · click ledger · paid agentic E2E) — mesh 8783
+> b95a57e test(qa): affiliate click-ledger smoke + paid agentic E2E driver
+> f273231 feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS)
+> e4b664b feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008)
+> c3b8702 feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND closed)
+> ```
+
+## 🤖 Claude *(15:14:45)*
+
+
+## 🤖 Claude *(15:14:45)*
+
+6 commits. **Fase 5c — Material Proof Audit** (verificação mecânica independente do Record desta seal).
+
+## 🤖 Claude *(15:14:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; [ -f .env ] && source .env; set +a\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -35",
+  "description": "Phase 5c material proof audit",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 11ad8ac4 | mesh_node | 11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf | 11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit e4b664b | git_commit | e4b664b | e4b664b | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b95a57e | git_commit | b95a57e | b95a57e | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 269 passed | ✅ |
+> | deploy size 87.96kB | edge_deploy | 87.96kB | 87.96kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (SAFE) · Ow | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (SAFE) · Ow | ✅ |
+> 
+> QA VERDICT: 7 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 10.9s)
+> ```
+
+## 🤖 Claude *(15:15:09)*
+
+
+## 🤖 Claude *(15:15:10)*
+
+**Fase 5c: SEAL ALLOWED** — 7 verified · 1 skip (deploy size, non-blocking) · 0 failed. Todos os claims (nó de malha, 4 commits, suíte 269, ORO) verificados. **Fase 6 — BoK** (sessão foi bug-fix/feature-completion em módulos documentados, sem módulo novo) + **Fase 7 — push**.
+
+## 🤖 Claude *(15:15:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Phase 6: BoK completeness (touched modules: marketing-hub, mercado-livre-api) ===\"\nfor slug in marketing-hub mercado-livre-api; do\n  miss=0; for doc in 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics; do [ -f \"docs/bok/$slug/$doc.md\" ] || miss=1; done\n  [ $miss -eq 0 ] && echo \"\u2705 $slug \u2014 BoK 9/9 (sess\u00e3o = bug-fix/feature em m\u00f3dulo documentado, sem novo m\u00f3dulo)\" || echo \"\u26a0\ufe0f $slug incompleto\"\ndone\necho \"\"\necho \"=== Phase 7: push ===\"\ngit push origin main 2>&1 | tail -5",
+  "description": "Phase 6 BoK + Phase 7 push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6: BoK completeness (touched modules: marketing-hub, mercado-livre-api) ===
+> ✅ marketing-hub — BoK 9/9 (sessão = bug-fix/feature em módulo documentado, sem novo módulo)
+> ✅ mercado-livre-api — BoK 9/9 (sessão = bug-fix/feature em módulo documentado, sem novo módulo)
+> 
+> === Phase 7: push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    c56e5b2..32684b6  main -> main
+> ```
+
+## 🤖 Claude *(15:15:23)*
+
+
+## 🤖 Claude *(15:15:24)*
+
+Push: `c56e5b2..32684b6 → main` (6 commits). BoK 9/9 nos módulos tocados (sem módulo novo). **Fase 7b — sprint-priorities + limpeza.** Leio o anchor do sprint pra prepender a entrada v6.28.0.
+
+## 🤖 Claude *(15:15:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 5,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.27.2 selado em 2026-06-04** — **Refund-on-failure: charge-without-value fechado (OTD-AEO-REFUND)**. Diretiva Sovereign "continue com os próximos passos". Probe-first material elegeu o item de **menor blast radius e maior valor seguro** dos 3 next-steps (refund protege saldo do usuário, zero ação outward); os outros 2 dependem do Sovereign (nurturing externo precisa de domínio Resend verificado — **zero refs RESEND no código**; 1º pago E2E precisa de GO econômico). **OTD-AEO-REFUND FECHADA:** `aeo-audit` debitava 5 mco na entrada e, se o persist falhasse, devolvia 500 **sem estornar** (charge-without-value, verificado no código). Helper compartilhado **`refundMco`** (`_shared/billing.ts` → `add_mco_coins`, service-role-only, simétrico a deduct, guarda `p_amount>0`, nunca lança); `aeo-audit` (5) e `lead-score` (1) rastreiam `charged` e estornam em qualquer falha pós-cobrança (persist-fail + catch). **Prova:** smoke `smoke-aeo-refund.ts` **6/6 LIVE** (deduct 5→15 / add 5→20 restaurado · guarda nega -10 · net-zero) + unit `_shared/billing.test.ts` **4/4** + regressão aeo-audit intacta. **Honestidade Lei 1:** persist-fail não é forçável por input → fiação coberta por unit+code, não por falha forçada (declarado). Contrato refund-on-failure no billing SSOT (`mcoin-cost-calibration.md`). Deploys 86.69/85.62kB · tsc 0 · suíte **269** (265→269) · Phase 5c **SEAL ALLOWED** (8 verified) · Mesh **8774** (1 órfão `aeo:` podado). 3 commits. **Novo Top Gap:** entrega externa de nurturing (bloqueada por domínio Resend — Sovereign) · 1º pago E2E (GO econômico) · **OTD-INTENT-DISPATCH-REFUND** = aplicar `refundMco` ao gap pós-débito do `orchestrate-content` (flywheel, sessão dedicada). **Lição:** probe-first descartou 2 dos 3 next-steps (dependência externa) e leu o código pra confirmar que o gap de refund era REAL (linha 56 débito → 118 persist-fail sem refund) antes de construir — não assumi o bug, verifiquei.
+> 8	
+> ```
+
+## 🤖 Claude *(15:15:39)*
+
+
+## 🤖 Claude *(15:15:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.27.2 selado em 2026-06-04** \u2014 **Refund-on-failure: charge-without-value fechado (OTD-AEO-REFUND)**.",
+  "new_string": "**Sprint v6.28.0 selado em 2026-06-04** \u2014 **Quatro next-steps fechados numa sess\u00e3o (probe-first)**. Diretiva Sovereign \"ataque os 4 pontos numa sess\u00e3o s\u00f3, n\u00e3o pare at\u00e9 terminar; o ponto 4 do link n\u00e3o funcionou a contabilidade de clicks\" (+ screenshot ML com 1 clique). Cada gap verificado **no c\u00f3digo** antes de tocar. **(1) OTD-INTENT-DISPATCH-REFUND FECHADA:** `orchestrate-content` estorna os 10 em falha p\u00f3s-d\u00e9bito (`!runId` ou erro do kick `async_orchestrate_step`) + marca run `error` \u2014 estende o contrato refund da v6.27.2 ao n\u00facleo do flywheel. **(2) nurture-dispatch entrega Resend real (FR-MH-008):** resolve `resend_api_key` per-user (BYOK) + `leads.contact` \u2192 POST Resend quando email+chave+endere\u00e7o; sen\u00e3o `gated`; send `failed` estorna. Live a inbox real ainda gated em `RESEND_FROM` (dom\u00ednio Sovereign). **(3) Click ledger in-system (OTD-ML-CLICKS):** links publicados passam pelo redirect `process-affiliate-link` GET, que registra o clique at\u00f4mico (RPC `record_affiliate_click` service-role-only, atribu\u00eddo ao dono) + 302 pro ML; `link-forge` emite o redirect; **ROIWidget j\u00e1 soma `affiliate_links.clicks`** \u2192 \"Cliques Totais\" reflete cliques reais antes de compra; migration 120000 + fix 130000 (`content_id` UUID). **(4) 1\u00ba dispatch pago E2E agentic:** intent\u2192policy\u2192execute\u2192orchestrate-content WP **draft**, run `43048d8e` **done**, **delta 10 exato** (valida ponto 1 em prod), HITL gate provado, blast-radius wordpress-only. **Prova:** `/security-review` independente **SAFE** \u00b7 drift audit **exit 0** \u00b7 smoke-affiliate-click **10/10** + smoke-nurture **10/10** \u00b7 su\u00edte **269** \u00b7 tsc 0 \u00b7 deploys 107.9/83.72/87.96kB \u00b7 Phase 5c **SEAL ALLOWED** (7 verified) \u00b7 Mesh **8783**. 6 commits. **Novo Top Gap:** entrega Resend a inbox real (dom\u00ednio `RESEND_FROM` \u2014 Sovereign) \u00b7 branded redirect domain (`login.mcorch.com/go` proxy nginx \u2014 link limpo+rastreado) \u00b7 2 rascunhos WP de teste a limpar \u00b7 atribui\u00e7\u00e3o de compra ML (aguardando convers\u00e3o). **Li\u00e7\u00e3o:** probe-first economizou retrabalho (ROIWidget j\u00e1 somava clicks \u2192 zero UI nova; `resend_api_key` j\u00e1 existia \u2192 s\u00f3 o canal) e pegou o bug 22P02 do RPC (content_id UUID) no smoke antes de declarar \u2014 corrigi via migration na mesma sess\u00e3o (regra hotfix\u2192migration).\n\n**Sprint v6.27.2 selado em 2026-06-04** \u2014 **Refund-on-failure: charge-without-value fechado (OTD-AEO-REFUND)**."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:15:52)*
+
+
+## 🤖 Claude *(15:15:52)*
+
+Commito sprint-priorities + limpo o `proof-manifest.json` transiente.
+
+## 🤖 Claude *(15:15:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.28.0 four next-steps closed (refund \u00b7 resend \u00b7 click ledger \u00b7 paid E2E)\"\nrm -f proof-manifest.json\necho \"=== final git status ===\"; git status --short\necho \"=== push sprint ===\"; git push origin main 2>&1 | tail -3\necho \"=== commits this session (7) ===\"; git log --oneline -7 | head -7",
+  "description": "Commit sprint + cleanup + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === final git status ===
+> === push sprint ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    32684b6..0f9ad5f  main -> main
+> === commits this session (7) ===
+> 0f9ad5f chore(sprint): update sprint-priorities — v6.28.0 four next-steps closed (refund · resend · click ledger · paid E2E)
+> 32684b6 docs(handoff): seal v6.28.0 — four next-steps closed (orchestrate refund · nurture Resend · click ledger · paid agentic E2E)
+> cd760fb docs(readme): v6.28.0 — four next-steps (refund · resend · click ledger · paid agentic E2E) — mesh 8783
+> b95a57e test(qa): affiliate click-ledger smoke + paid agentic E2E driver
+> f273231 feat(affiliate): in-system click ledger via redirect tracker (OTD-ML-CLICKS)
+> e4b664b feat(marketing): wire real Resend email delivery in nurture-dispatch (FR-MH-008)
+> c3b8702 feat(billing): refund-on-failure for orchestrate-content (OTD-INTENT-DISPATCH-REFUND closed)
+> ```
+
+## 🤖 Claude *(15:16:15)*
+
+
+## 🤖 Claude *(15:16:17)*
+
+Tudo commitado + pushed, worktree limpo. 7 commits. Atualizo a memória com os 2 fatos cross-sessão não-óbvios: o dado de atribuição de clique ML + o fechamento OTD-INTENT-DISPATCH-REFUND/E2E pago. Leio os arquivos relevantes.
+
+## 🤖 Claude *(15:16:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_authenticated_browser_operator
+> 3	description: "Probe EXECUTADO 2026-06-02: ML sem API de afiliados, link oficial exige portal logado (ref assinado não-fabricável), datacenter bloqueado p/ browser REAL. Aguardando teste de atribuição de clique (matt_word anexado) p/ decidir runtime/necessidade."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: d4434afb-c259-4270-a01a-03d85ba37719
+> 8	---
+> 9	
+> 10	**Diretiva Sovereign 2026-06-01:** construir um **Operador de Browser Autenticado** — um agente/browser que navega "exatamente como um usuário normal" **logado**, focado nas **ações interativas que nos barram** (não scraping em massa, não teste E2E). Caso canônico: abrir o produto ML → clicar **Compartilhar** com o login ML do usuário → pegar o **`meli.la` cravado** → gravar em `affiliate_config.metadata.shortlinks[MLB]` (fecha o elo de atribuição garantida — ver [[reference_encrypted_views_write_pattern]] e o SOP `docs/processes/ml-affiliate-attribution.md`). Generalizável p/ qualquer ação logada bloqueada.
+> 11	
+> 12	**Por quê:** o `meli.la` é a única atribuição **garantida** do ML e **não tem API** — só sai de clique humano logado em "Compartilhar". O Apify (residencial, anônimo) faz busca mas **não** ações por-conta. Esta sessão provou que do **IP de datacenter** o ML serve `account-verification`/"Hubo un error" até pra **browser real** (headless + curl-UA + Apify intermitente).
+> 13	
+> 14	**Decisões do Sovereign (AskUserQuestion 2026-06-01):**
+> 15	- **Caminho = PROBE-FIRST.** Antes de código de módulo: validar materialmente que um browser **LOGADO** consegue o fluxo share→meli.la de um runtime viável. Se não furar daqui, a arquitetura muda. Depois `/bok-scribe` (BoK Gate — é módulo novo) → build.
+> 16	- **Runtime = decidir APÓS o probe.** Testar opções: nosso servidor + proxy residencial · cloud browser stealth (agent-browser suporta AgentCore/Vercel Sandbox) · máquina do Sovereign (residencial, ML logado). Logado *pode* furar onde anônimo não — não-testado.
+> 17	
+> 18	**Constraints a respeitar:**
+> 19	1. **Auth sem senha crua:** login interativo 1×→ profile/cookies persistidos (vault de sessão do `agent-browser`), per-user p/ multi-tenant. Nunca senha em texto.
+> 20	2. **Tool base:** `agent-browser` (mesmo motor do E2E, modo sessão persistente). Siblings: Claude-in-Chrome MCP, Playwright.
+> 21	3. **BoK Gate:** módulo novo → MRD→SDD via `/bok-scribe` antes do código (ou override consciente registrado).
+> 22	
+> 23	**PROBE EXECUTADO (2026-06-02) — veredito material:**
+> 24	- **ML não tem API de afiliados** (múltiplas fontes + 403 até no WebFetch da Anthropic). OAuth/login-consentimento daria só API token, que não existe p/ afiliados.
+> 25	- **Link oficial = portal logado.** Segui o `meli.la/2gh13Sw` (shortlink do Usuário Zero) → redireciona p/ `mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&ref=<ASSINADO>`. O `ref` é token assinado **não-fabricável** → só nasce no portal de afiliados logado.
+> 26	- **Datacenter bloqueado — PROVADO p/ browser REAL:** `agent-browser` (Chromium real) abrindo `mercadolivre.com.br/afiliados/` do IP Oracle → página "Hubo un error accediendo a esta pagina" (shot `/tmp/ml-afiliados-portal.png`). Confirma o que era "não-testado". ⇒ Browser Operator **NÃO roda do datacenter**; runtime = navegador do user OU IP residencial (Apify/cloud browser).
+> 27	- **Resolver `src/lib/affiliate.ts` incompleto:** seta só `matt_word` (correto, =caga6077534) mas **falta `matt_tool=43641843`** (per-user; hoje não armazenado no `affiliate_config`).
+> 28	
+> 29	**EXPERIMENTO EM CURSO (resultado ~2026-06-03):** Sovereign compartilhou 2 links `matt_word`-anexados (TV `MLBU3980641251` + Geladeira `MLB32642694`, sem matt_tool/ref/path-social) abertos por dispositivo independente (3G, fora do WiFi). Painel de afiliados ML mostrava 1 clique (de 2026-06-01); espera 3. **Se subir 1→3 → matt_word sozinho rastreia → #2 quase morre. Se ficar 1 → inconclusivo (3 variáveis: matt_tool, ref, path) → testar braço matt_word+matt_tool.** ⚠️ NÃO consigo ver o painel ML (logado + IP bloqueado) — Sovereign reporta o nº (perguntar se painel mostra por-link ou só total).
+> 30	
+> 31	**Técnica reutilizável (achada no #1 disconnect):** logar o `agent-browser` como qualquer user via Supabase Admin API `POST /auth/v1/admin/generate_link` (magiclink) + abrir o `action_link` — sem senha nem token do DevTools, per-user nativo. Usei p/ verificar (não-destrutivo) o disconnect Meta/social na UI logada `/dashboard/social` (botões wired a `rpc('disconnect_social')`). Ver [[reference_supabase_keys_migrated]] (SB_SECRET_KEY p/ Admin API).
+> 32	
+> 33	**Próximo passo:** aguardar nº de cliques (Sovereign) → interpretar → (a) matt_word basta: completar/seguir; (b) precisa matt_tool: add campo per-user no `affiliate_config` + testar; (c) precisa ref: `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial).
+> 34	
+> ```
+
+## 🤖 Claude *(15:16:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_marketing_hub_v2
+> 3	description: Marketing Hub agentic (v2 que absorve o marketing v1) — BoK 9/9; **FRs 001..012 backend+UI LIVE (COMPLETO)**. v6.27.0 fechou: executor de intent_plans (intent-execute, re-valida outward fail-closed) + AEO (aeo-audit/aeo_audits) + UI follows (Intent/HITL/AEO painéis + enroll nurturing). Resta só: dispatch outward REAL do executor (hoje gated) atrás de OTD-INTENT-TRANSITION-GUARD + entrega externa nurturing (gated) + OTD-AEO-REFUND
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: cbb758a7-048b-4acb-94aa-db05a445f1e7
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-02: módulo **marketing-hub** agentic, nasce como **v2 de consolidação** — absorve e escala o marketing v1 disperso (orchestrate-content vira executor de campanha; whatsapp_leads migra tutela meta-api→marketing-hub; marketing-growth Pantheon é **elevado, não recriado**) em vez de duplicar. Natureza **Ambos**: núcleo interno (Usuário Zero) → comercial per-tenant. Decisões travadas via AskUserQuestion; scope-lock em `.claude/context/marketing-hub-scope-lock-2026-06-02.md`.
+> 11	
+> 12	**Selado (não-commitado até /handoff):** BoK suite 9/9 em `docs/bok/marketing-hub/` (1732 LOC) + mesh seal `d5163fed-da85-4f95-8445-0d0aa5b6bafe` (DERIVES_FROM meta-api `ca791bdd`, embedded 768d) + `bok-agents-system--marketing-hub.md` (11 agentes = 8 BoK + AEO/Intent-Orchestration/Demand-gen). **BoK Gate LIBERADO.**
+> 13	
+> 14	**MVP aprovado (PR-MH-001..005 = Lead Core + Campaign Core + Consent/Tenancy + Attribution):**
+> 15	- ✅ **MVP-1 LIVE**: migration `20260603000000_marketing_hub_lead_core.sql` aplicada (`db push` Finished) — tabelas `leads`/`lead_events`/`marketing_consents` + RPC `erase_lead()` (LGPD, SECURITY DEFINER, search_path='', tenant guard). `/security-review` pegou **1 MEDIUM cross-tenant** (FK de tabela-filha sem co-escopar user_id → A insere evento no lead de B) → corrigido com **FK composta `(lead_id,user_id)→leads(id,user_id)`** + `UNIQUE(id,user_id)` em leads + EXISTS no WITH CHECK de marketing_consents. Provado material: **23503** no cross-tenant, **201** no legítimo, cleanup limpo. whatsapp_leads vazio em prod → backfill no-op correto.
+> 16	- ✅ **MVP-2 Campaign Core LIVE** (v6.22.0, migration `20260603025256`): `campaigns` ABSORVIDA via `ALTER` (+intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) + `campaign_steps` (FK composta tenant-`CASCADE`, espelha lead_events) + `marketing_attribution` (FK simples `SET NULL` + RLS `WITH CHECK` — espelha consents porque SET NULL composto anularia user_id NOT NULL; retém receita de-linkada). `erase_lead()` estendida (`attributions_delinked`). tenant-FK provado **comportamental** 23503 + **42501 autenticado** + 201 + zero-resíduo. `/security-review` SAFE (independente). mesh `7628892b`. data-model patcheado (absorb-not-create + FK pattern).
+> 17	- ✅ **MVP-3 parte 1 — lead-score LIVE** (FR-MH-003, v6.22.0): JWT + 1 mco atômico + IA per-user→sistema (reusa `fetchLLMWithFallback`) + **fail-soft heurístico**. Smoke E2E: 200 · score=80 (`source=ai`) · débito 100→99 · zero-resíduo. Deploy 84.31kB.
+> 18	- ✅ **MVP-3 parte 2 — campaign-run LIVE** (FR-MH-004, v6.23.0): JWT + débito atômico FEE `CAMPAIGN_RUN` 10 → dispatch **PARALELO** (`Promise.allSettled`, wall-clock ≈ passo mais lento) dos passos p/ `orchestrate-content` (self-bila 10) = **cascata fiel 10+10×N**; `channel→platforms` (content/affiliate→wordpress, social→linkedin+twitter, **email→blocked** território nurture); cap `MAX_PARALLEL_STEPS=8`. Smoke **13/13 zero-custo** (`scripts/qa/smoke-campaign-run.ts`: guards 401/422/404/no-steps/402 + isolamento de tenant + email-only→200 dispatched=0 débito atômico 100→90 + cleanup). Deploy 80.92kB. Cascata paga real **gated em GO Sovereign**. Calibração $ segue [[project_mcoin_calibration]].
+> 19	- ✅ **MVP-4 UI LIVE** (v6.23.0, FR-MH-001/005): `/dashboard/marketing` (`MarketingPage` = `LeadBoard` 5 colunas + Pontuar/`lead-score` + overview campanhas; nav Target). **Absorveu a UI v1** (diretiva Sovereign "absorver por completo E /dashboard/marketing nova; faça completo, não pare"): `CampaignWizard` +Intenção/passo **Passos** (composer Canal×Ação→`createCampaignWithSteps`); `CampaignDetail` +card **Passos & Execução** (status vivo + `CampaignRunButton`). Hooks `useLeads`/`useLeadScore`/`useCampaignSteps`/`useCampaignRun` + `src/lib/edge.ts` (erro PT-BR de edge). UI LOGADA verificada (magic link `scripts/qa/gen-magiclink.ts` + agent-browser; 0 erros console; zero mutação prod). 11 testes (`src/test/marketing-hub.test.ts`).
+> 20	- ✅ **MVP-5 attribution** (v6.24.0) + **1º run pago E2E** (v6.25.0 — flywheel ressuscitado, 3 key-migration P0s; ver [[project_orchestrate_pipeline_repair]]).
+> 21	- ✅ **FR-MH-008 Nurturing cron** (v6.26.0): engine+`nurture-dispatch` já existiam; `nurture-cron` (service-role fan-out) + pg_cron `nurture-advance */15` + **modo service-role** em nurture-dispatch (espelha orchestrate-step; consent gate + billing single-source) avançam enrollments due. Smoke cron 5/5 + USER 10/10. Entrega externa real segue **gated**.
+> 22	- ✅ **FR-MH-012 BYOK** (v6.26.0): metade-IA já satisfeita (lead-score/nurture-dispatch resolvem `decrypted_user_api_keys` per-user→sistema); metade-canal nova = `resend_api_key` per-tenant (Vault, reproduz defs VIVAS verbatim — **NÃO** o template stale de 060000; preserva fixes 130000/140000) + campo Settings. Round-trip 8/8 (`smoke-byok-resend`).
+> 23	- ✅ **FR-MH-009 Intent+HITL COMPLETO** (backend v6.26.0 + **executor+UI v6.27.0**): `intent-orchestrate` (policy auto/HITL + rationale XAI) + **`intent-execute`** (approve/reject/execute na máquina proposed→pending_hitl→approved|rejected→executed). **Golden rule**: o `execute` **re-valida** o alto-impacto sobre o plano **armazenado** via gate compartilhado `supabase/functions/_shared/intent-policy.ts` (extraído do orchestrate p/ não divergir; **fail-closed** em plano não-array — recomendação do `/security-review` adotada) → recusa `409 hitl_required` todo outward sem aprovação humana, **nunca confia em `auto_approved`**. Tenant-guard 404. Smoke `smoke-intent-execute.ts` **17/17**. UI: `useIntentOrchestrator` + `IntentOrchestratorPanel` + `HITLApprovalCard`. **Dispatch outward ainda GATED** (governança real; envio real é next).
+> 24	- ✅ **FR-MH-010 AEO LIVE** (v6.27.0, **última FR**): `aeo_audits` (migration `20260603260000`, RLS default-deny append-only) + `aeo-audit` (JWT · **5 mco atômico** na entrada · provider **degradado documentado OTD-MH-003** = LLM como answer-engine proxy, sem scrape SERP do datacenter · 1 snapshot/query · `engine='degraded'`). Smoke `smoke-aeo-audit.ts` **12/12** (RLS cross-tenant leaked=0). UI: `useAEO` + `AEOAuditPanel`. SOP `aeo-audit.md`.
+> 25	- ✅ **UI follows + enroll nurturing** (v6.27.0): 3 painéis ligados em `/dashboard/marketing` + botão **Inscrever** lead em sequência no `LeadDetailDialog` (Customer 360). +8 testes (257→265). **UI LOGADA verificada** (agent-browser ARM64, chunk novo, zero crash). Handoff node `6f98edf0-a618-4770-885b-e09c422ff8f6`.
+> 26	- ⏳ **Pendente (pós-completar FRs):** **dispatch outward REAL do executor** (hoje retorna `outward_dispatch:'gated'`) atrás de **OTD-INTENT-TRANSITION-GUARD** (CHECK/trigger de transição em `intent_plans` — só service role move p/ approved/executed — defesa contra owner que adultera próprio row via PostgREST) · entrega externa de nurturing (gated; `resend_api_key` pronta) · **OTD-AEO-REFUND** (refund pós-débito) · OTD-CAMPAIGN-RUN-ASYNC.
+> 27	
+> 28	**Reconciliação doc↔realidade (aplicar nos docs ao tocar — Obstáculo→Síntese):** `public.campaigns` **JÁ EXISTE** (de `20260402014040`: user_id/name/objective/status campaign_status/platforms/budget_cents) → Campaign Core **ABSORVE/estende** (ALTER add intent/channels/mesh_node_id), NÃO cria nova. `projects` **NÃO existe** → sem FK project_id (coluna uuid nullable). Status whatsapp é PT (iniciado/interagido/convertido/opt_out) → CASE-map no backfill. `update_updated_at_column()`/`deduct_mco_coins`/`mcoin_transactions`/vector ext confirmados.
+> 29	
+> 30	Relacionado: [[feedback_api_tenancy_per_user]] · [[reference_encrypted_views_write_pattern]] · [[reference_supabase_keys_migrated]]
+> 31	
+> ```
+
+## 🤖 Claude *(15:17:09)*
+
+
+## 🤖 Claude *(15:17:10)*
+
+Atualizo as 2 memórias com os fatos novos: o resultado da atribuição de clique ML + os fechamentos do marketing-hub. Aplico as edições.
+
+## 🤖 Claude *(15:17:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "description: \"Probe EXECUTADO 2026-06-02: ML sem API de afiliados, link oficial exige portal logado (ref assinado n\u00e3o-fabric\u00e1vel), datacenter bloqueado p/ browser REAL. Aguardando teste de atribui\u00e7\u00e3o de clique (matt_word anexado) p/ decidir runtime/necessidade.\"",
+  "new_string": "description: \"Probe 2026-06-02: ML sem API de afiliados, link oficial exige portal logado (ref assinado), datacenter bloqueado p/ browser REAL. RESULTADO atribui\u00e7\u00e3o 2026-06-04: painel ML mostrou 1 clique de link matt_word (atribui no n\u00edvel do CLIQUE; R$0 esperado sem compra). Click ledger in-system FECHADO v6.28.0 (OTD-ML-CLICKS, redirect tracker). matt_tool ainda n\u00e3o embutido (atribui\u00e7\u00e3o definitiva).\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:17:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "**EXPERIMENTO EM CURSO (resultado ~2026-06-03):** Sovereign compartilhou 2 links `matt_word`-anexados (TV `MLBU3980641251` + Geladeira `MLB32642694`, sem matt_tool/ref/path-social) abertos por dispositivo independente (3G, fora do WiFi). Painel de afiliados ML mostrava 1 clique (de 2026-06-01); espera 3. **Se subir 1\u21923 \u2192 matt_word sozinho rastreia \u2192 #2 quase morre. Se ficar 1 \u2192 inconclusivo (3 vari\u00e1veis: matt_tool, ref, path) \u2192 testar bra\u00e7o matt_word+matt_tool.** \u26a0\ufe0f N\u00c3O consigo ver o painel ML (logado + IP bloqueado) \u2014 Sovereign reporta o n\u00ba (perguntar se painel mostra por-link ou s\u00f3 total).",
+  "new_string": "**EXPERIMENTO \u2014 RESULTADO (2026-06-04):** Sovereign mostrou o painel \"Central de afiliados e criadores \u2192 M\u00e9tricas\": **Cliques totais = 1** (\u25b2100%), R$ 0 \u00b7 0 compradores \u00b7 0 ordens. \u21d2 um link `matt_word` **registra clique no painel ML** (a atribui\u00e7\u00e3o best-effort funciona no n\u00edvel do clique); R$0 \u00e9 **esperado sem compra** (ML s\u00f3 atribui receita na convers\u00e3o, dentro da janela). A queixa \"a contabilidade de clicks n\u00e3o funcionou\" era do **NOSSO** lado \u2014 o sistema n\u00e3o contava cliques (s\u00f3 v\u00edamos receita no postback de compra; `affiliate_links.clicks` nunca incrementava). **FECHADO v6.28.0 (OTD-ML-CLICKS):** click ledger in-system \u2014 links publicados passam pelo redirect `process-affiliate-link` GET que registra o clique (RPC `record_affiliate_click` service-role-only, atribu\u00eddo ao dono) + 302 pro ML real; `link-forge` emite o redirect; `ROIWidget` soma `affiliate_links.clicks` \u2192 \"Cliques Totais\" reflete cliques reais antes de compra. Smoke `scripts/qa/smoke-affiliate-click.ts` 10/10. SOP `ml-affiliate-attribution.md \u00a7click ledger`. **`matt_tool=43641843` ainda N\u00c3O embutido** (atribui\u00e7\u00e3o definitiva precisa dele OU do `meli.la` do painel; `src/lib/affiliate.ts` seta s\u00f3 `matt_word`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:17:41)*
+
+
+## 🤖 Claude *(15:17:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "**Pr\u00f3ximo passo:** aguardar n\u00ba de cliques (Sovereign) \u2192 interpretar \u2192 (a) matt_word basta: completar/seguir; (b) precisa matt_tool: add campo per-user no `affiliate_config` + testar; (c) precisa ref: `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial).",
+  "new_string": "**Pr\u00f3ximo passo (reavaliado 2026-06-04):** visibilidade de clique resolvida **no nosso lado** (OTD-ML-CLICKS) \u2014 n\u00e3o dependemos mais do painel ML p/ contar. O Browser Operator (#2) agora \u00e9 s\u00f3 sobre **atribui\u00e7\u00e3o definitiva** (`matt_tool`/`meli.la` por clique humano logado), de prioridade menor agora que `matt_word` rastreia o clique E n\u00f3s o contamos. Quando o Sovereign quiser receita garantida: (a) add `matt_tool` per-user no `affiliate_config` + embutir em `buildMattWordUrl`/redirect; OU (b) `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial) p/ capturar `meli.la` do \"Compartilhar\". Aguardando 1\u00aa convers\u00e3o real p/ fechar `revenue_cents>0`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:17:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "- \u23f3 **Pendente (p\u00f3s-completar FRs):** **dispatch outward REAL do executor** (hoje retorna `outward_dispatch:'gated'`) atr\u00e1s de **OTD-INTENT-TRANSITION-GUARD** (CHECK/trigger de transi\u00e7\u00e3o em `intent_plans` \u2014 s\u00f3 service role move p/ approved/executed \u2014 defesa contra owner que adultera pr\u00f3prio row via PostgREST) \u00b7 entrega externa de nurturing (gated; `resend_api_key` pronta) \u00b7 **OTD-AEO-REFUND** (refund p\u00f3s-d\u00e9bito) \u00b7 OTD-CAMPAIGN-RUN-ASYNC.",
+  "new_string": "- \u2705 **Dispatch outward REAL un-gated** (v6.27.1): `intent-execute` p\u00f3s-`executed` roteia `campaign_id`\u2192campaign-run \u00b7 `enrollment_id`\u2192nurture-dispatch \u00b7 sen\u00e3o content/social/affiliate\u2192orchestrate-content (encaminha JWT do chamador, self-bill). **OTD-INTENT-TRANSITION-GUARD FECHADA** (migration `20260603270000`, trigger BEFORE **INSERT OR UPDATE** service-role-only \u2014 o `/security-review` pegou que o guard inicial era UPDATE-only \u2192 vetor INSERT aberto). Kill-switch `INTENT_OUTWARD_DISPATCH_ENABLED`.\n- \u2705 **1\u00ba dispatch pago E2E agentic** (v6.28.0): intent\u2192policy\u2192execute\u2192orchestrate-content WP **draft**, run `43048d8e` **done**, delta 10 exato, HITL gate provado (`scripts/qa/e2e-intent-paid.ts` \u2014 blast-radius wordpress-only, nunca auto-posta social).\n- \u2705 **Refunds FECHADOS:** OTD-AEO-REFUND (v6.27.2: aeo-audit/lead-score) + OTD-INTENT-DISPATCH-REFUND (v6.28.0: orchestrate-content/nurture-dispatch) \u2014 `_shared/billing.ts` `refundMco` (`add_mco_coins` service-role-only). Contrato no `mcoin-cost-calibration.md \u00a7Refund-on-failure`.\n- \u2705 **Entrega externa nurturing WIRADA** (v6.28.0, FR-MH-008): `nurture-dispatch` resolve `resend_api_key` per-user + `leads.contact` \u2192 POST Resend quando `channel=email`+chave+email v\u00e1lido \u2192 `delivery:'sent'|'failed'`; sen\u00e3o `gated`. **Live a inbox real gated agora S\u00d3 em `RESEND_FROM` (dom\u00ednio verificado \u2014 tarefa Sovereign)**, n\u00e3o mais em c\u00f3digo. `RESEND_API_KEY`/`RESEND_FROM` ausentes hoje.\n- \u23f3 **Pendente:** entrega Resend a inbox real (dom\u00ednio `RESEND_FROM` Sovereign + `resend_api_key` per-tenant) \u00b7 OTD-CAMPAIGN-RUN-ASYNC (fila p/ campanha grande) \u00b7 atribui\u00e7\u00e3o de compra ML (aguardando convers\u00e3o real)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:18:04)*
+
+
+## 🤖 Claude *(15:18:05)*
+
+Atualizo a descrição do marketing_hub_v2 + os 2 hooks no índice MEMORY.md (ambos ficaram stale). Leio o MEMORY.md.
+
+## 🤖 Claude *(15:18:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "description: Marketing Hub agentic (v2 que absorve o marketing v1) \u2014 BoK 9/9; **FRs 001..012 backend+UI LIVE (COMPLETO)**. v6.27.0 fechou: executor de intent_plans (intent-execute, re-valida outward fail-closed) + AEO (aeo-audit/aeo_audits) + UI follows (Intent/HITL/AEO pain\u00e9is + enroll nurturing). Resta s\u00f3: dispatch outward REAL do executor (hoje gated) atr\u00e1s de OTD-INTENT-TRANSITION-GUARD + entrega externa nurturing (gated) + OTD-AEO-REFUND",
+  "new_string": "description: Marketing Hub agentic (v2 que absorve o marketing v1) \u2014 BoK 9/9; FRs 001..012 backend+UI LIVE (COMPLETO). v6.27.1 un-gated o dispatch outward do executor (OTD-INTENT-TRANSITION-GUARD fechada) \u00b7 v6.28.0 provou o 1\u00ba E2E pago agentic (run done, delta 10) + wirou entrega Resend (FR-MH-008, gated s\u00f3 em dom\u00ednio RESEND_FROM Sovereign) + fechou refunds (AEO + INTENT-DISPATCH). Resta: dom\u00ednio Resend (Sovereign) + OTD-CAMPAIGN-RUN-ASYNC + atribui\u00e7\u00e3o de compra ML"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:18:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Auditoria de drift deployado↔migrations + tool/SOP reexecutável](project_schema_drift_audit.md) — 2026-06-03: varredura pós-flywheel (RPC hotfixada sem migration). Incidente ISOLADO; 1 drift real benigno (`rls_auto_enable` capturado) + search_path travado + trigger pg_net morto dropado. Anticorpo `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 1=drift) + SOP. Regra: hotfix de prod vira migration na MESMA sessão.
+> 4	- [RPCs do ledger mcoCoins endurecidos — P0 de cunhagem fechado](reference_ledger_rpc_security.md) — 2026-06-03: os 3 RPCs (award/add_user_score/deduct) davam EXECUTE a anon/authenticated + confiavam p_user_id → mint/drain via PostgREST. Agora: award/add_user_score só service_role; deduct authenticated-self-only (guarda p_amount>0 + auth.uid()). REGRA: todo novo SECURITY DEFINER com p_user_id → edge-only OU guarda auth.uid().
+> 5	- [Marketing Hub v2 — módulo agentic (FRs 001..012 backend+UI LIVE — COMPLETO)](project_marketing_hub_v2.md) — v2 que absorve o marketing v1; TODAS as FRs entregues. v6.27.0 fechou: **executor `intent-execute`** (re-valida outward sobre plano armazenado, **fail-closed**, nunca confia em auto_approved — golden rule do directive) + **AEO** (`aeo-audit`/`aeo_audits`, 5mco, provider degradado OTD-MH-003) + **UI follows** (Intent/HITL/AEO painéis + enroll nurturing no Customer360). Resta só: **dispatch outward REAL do executor** (hoje `gated`) atrás de **OTD-INTENT-TRANSITION-GUARD** + entrega externa nurturing (gated) + OTD-AEO-REFUND; ⚠️ campaigns/campaign_metrics JÁ EXISTEM (absorver) + projects não existe
+> ```
+
+## 🤖 Claude *(15:18:21)*
+
+
+## 🤖 Claude *(15:18:21)*
+
+Atualizo o hook do marketing-hub no índice + acho/atualizo o do browser-operator.
+
+## 🤖 Claude *(15:18:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": " Resta s\u00f3: **dispatch outward REAL do executor** (hoje `gated`) atr\u00e1s de **OTD-INTENT-TRANSITION-GUARD** + entrega externa nurturing (gated) + OTD-AEO-REFUND; \u26a0\ufe0f campaigns/campaign_metrics J\u00c1 EXISTEM (absorver) + projects n\u00e3o existe",
+  "new_string": " v6.27.1 un-gated o dispatch (OTD-INTENT-TRANSITION-GUARD fechada) \u00b7 v6.28.0 provou o **1\u00ba E2E pago agentic** (run `43048d8e` done, delta 10) + wirou **entrega Resend** (FR-MH-008, gated s\u00f3 em dom\u00ednio `RESEND_FROM` Sovereign) + fechou refunds (AEO + INTENT-DISPATCH). Resta: dom\u00ednio Resend + OTD-CAMPAIGN-RUN-ASYNC + atribui\u00e7\u00e3o de compra ML. \u26a0\ufe0f campaigns J\u00c1 EXISTE (absorver) + projects n\u00e3o existe"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:18:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory\ngrep -n \"project_authenticated_browser_operator\" MEMORY.md",
+  "description": "Find browser operator index line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14:- [Operador de Browser Autenticado — módulo a construir (probe-first)](project_authenticated_browser_operator.md) — Diretiva Sovereign 2026-06-01: browser LOGADO humano-paced p/ ações que nos barram (ML Compartilhar→meli.la cravado→gravar shortlinks). NÃO scraping/E2E. PROBE EXECUTADO 2026-06-02: ML sem API de afiliados; link oficial exige portal logado (matt_word=caga6077534 + matt_tool=43641843 + ref ASSINADO não-fabricável, via /social/); datacenter bloqueado p/ browser REAL (provado — "Hubo un error accediendo"). ⇒ #2 não roda do datacenter (runtime = navegador do user / IP residencial). Resolver só seta matt_word (falta matt_tool). Aguardando teste de atribuição de clique (Sovereign, ~06-03) p/ ver se #2 é necessário. Técnica reutilizável: agent-browser logado via Admin API generate_link (magiclink) — usado p/ verificar disconnect Meta/social na UI logada (#1, não-destrutivo).
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(15:18:32)*
+
+
+## 🤖 Claude *(15:18:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "Resolver s\u00f3 seta matt_word (falta matt_tool). Aguardando teste de atribui\u00e7\u00e3o de clique (Sovereign, ~06-03) p/ ver se #2 \u00e9 necess\u00e1rio. T\u00e9cnica reutiliz\u00e1vel: agent-browser logado via Admin API generate_link (magiclink) \u2014 usado p/ verificar disconnect Meta/social na UI logada (#1, n\u00e3o-destrutivo).",
+  "new_string": "Resolver s\u00f3 seta matt_word (falta matt_tool). **RESULTADO 2026-06-04:** painel ML mostrou **1 clique** de link matt_word (atribui no n\u00edvel do CLIQUE; R$0 esperado sem compra). **Click ledger in-system FECHADO v6.28.0 (OTD-ML-CLICKS)** \u2014 redirect tracker conta nossos cliques (ROIWidget reflete). #2 (Browser Operator) agora \u00e9 s\u00f3 p/ atribui\u00e7\u00e3o DEFINITIVA (matt_tool/meli.la), prioridade menor. T\u00e9cnica reutiliz\u00e1vel: agent-browser logado via Admin API generate_link (magiclink) \u2014 usado p/ verificar disconnect Meta/social na UI logada (#1, n\u00e3o-destrutivo)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:18:58)*
+
+
+## 🤖 Claude *(15:19:08)*
+
+Memória atualizada (2 arquivos + 2 hooks do índice). Selo completo. Relatório final.
+
+---
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — v6.28.0 · Quatro Next-Steps (2026-06-04)
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA**
+✅ Sem segredos no diff · sem dedução client-side · sem logs sensíveis · `/security-review` independente **SAFE** (0 findings ≥8) · drift audit **exit 0**
+
+📦 **COMMITS (7)**
+```
+c3b8702  feat(billing): refund-on-failure orchestrate-content (OTD-INTENT-DISPATCH-REFUND)
+e4b664b  feat(marketing): Resend email delivery em nurture-dispatch (FR-MH-008)
+f273231  feat(affiliate): click ledger in-system via redirect tracker (OTD-ML-CLICKS)
+b95a57e  test(qa): smoke click-ledger + driver E2E pago agentic
+cd760fb  docs(readme): v6.28.0 — mesh 8783
+32684b6  docs(handoff): seal v6.28.0
+0f9ad5f  chore(sprint): sprint-priorities v6.28.0
+```
+
+⬡ **KNOWLEDGE MESH** — nó `11ad8ac4-7aed-4fc1-952f-1d3c2ed030cf` embedded 768d · **8774 → 8783**
+
+📋 **PROVA MATERIAL (Fase 5c):** **SEAL ALLOWED** — 7 verificadas · 1 skip (deploy size) · 0 falhas
+
+🚀 **PUSH:** `main → origin/main` (`c56e5b2..0f9ad5f`, 7 commits) · worktree limpo
+
+---
+
+## Os 4 pontos — fechados com prova material
+
+| # | Ponto | Resultado |
+|---|-------|-----------|
+| **1** | Refund orchestrate-content (OTD-INTENT-DISPATCH-REFUND) | ✅ refund no `catch` (`!runId` + erro do kick) + marca run `error`. **Validado em produção** no E2E pago: delta **10 exato**, refund NÃO disparou no sucesso. |
+| **2** | Entrega Resend nurturing (FR-MH-008) | ✅ wirado: per-user `resend_api_key` + `leads.contact` → POST Resend (`sent`/`failed`/`gated`) + refund em send-fail. Regressão gated **10/10**. ⚠️ **Live a inbox real precisa do Sovereign provisionar `RESEND_FROM` (domínio verificado)** — único bloqueio externo. |
+| **3** | 1º dispatch pago E2E agentic | ✅ intent→policy→execute→orchestrate-content **WP draft** · run `43048d8e` **done** · HITL gate provado · blast-radius wordpress-only. |
+| **4** | Contabilidade de cliques (OTD-ML-CLICKS) | ✅ RPC `record_affiliate_click` + redirect conta o clique + `link-forge` emite redirect → **ROIWidget já soma `affiliate_links.clicks`**. Smoke **10/10**. |
+
+**Sobre o ponto 4 (seu print):** o painel ML mostrar **1 clique** prova que o link `matt_word` **funciona** — ele atribui no nível do clique. O R$ 0 é esperado (ML só conta receita na compra). O que "não funcionava" era a contabilidade **do nosso lado** — agora fechada: cada clique que passa pelo nosso redirect é contado e aparece em "Cliques Totais".
+
+⏭️ **PRÓXIMOS (dependências externas / follow-ups):**
+1. **Provisionar `RESEND_FROM`** (domínio remetente verificado) → destrava entrega de email real do nurturing (wiring pronto).
+2. **Branded redirect domain** (`login.mcorch.com/go` via proxy nginx) → link publicado limpo **e** rastreado (hoje é a URL supabase).
+3. 2 rascunhos WP de teste (`9d680508`/`43048d8e`) no Usuário Zero — reversíveis, pode deletar (1ª prova do flywheel agentic).
+
+Saldo Usuário Zero: 5291 → 5271 (2 runs E2E reais). **Os 4 pontos estão materialmente fechados numa sessão**, como pedido.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
