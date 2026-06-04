@@ -6339,6 +6339,249 @@ O id/nome estavam truncados no display (40 chars) — meus deletes não casaram.
 > 0 residue node(s) remaining (target 0)
 > ```
 
+## 🤖 Claude *(01:30:26)*
+
+
+## 🤖 Claude *(01:30:27)*
+
+Mesh limpa: **8771 nós** (8770 + handoff node; 5 órfãos de smoke removidos, 0 residual). Atualizo o badge do README + a linha Mesh no record + Fase 5c strict (proof-manifest):
+
+## 🤖 Claude *(01:30:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8770_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8771_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:30:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| Handoff node | \u2705 `6f98edf0-a618-4770-885b-e09c422ff8f6` embedded 768d |",
+  "new_string": "| Handoff node | \u2705 `6f98edf0-a618-4770-885b-e09c422ff8f6` embedded 768d |\n| Mesh | \u2705 **8771 n\u00f3s** (5 \u00f3rf\u00e3os de smoke `intent-exec-*`/`aeo:*` de throwaway users detectados + limpos \u2192 0 residual) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:30:50)*
+
+
+## 🤖 Claude *(01:30:51)*
+
+Fase 5b (secret scan no HANDOFF) + commit dos ajustes de contagem:
+
+## 🤖 Claude *(01:30:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== PHASE 5b \u2014 HANDOFF secret scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\\|fingerprint\" | head -10 && echo \"\u26a0\ufe0f MATCH FOUND\" || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"=== commit count updates ===\"\ngit add README.md HANDOFF.md\ngit commit -q -m \"docs(handoff): mesh count 8771 + limpeza de 5 \u00f3rf\u00e3os de smoke (v6.27.0)\" \\\n  -m \"Reconcilia a contagem da malha ap\u00f3s a higiene de seal: removidos 5 n\u00f3s observation residuais dos smokes (intent-exec-*/aeo:* de throwaway users deletados) \u2192 8771 n\u00f3s (8770 + handoff node 6f98edf0). Badge README + record HANDOFF atualizados.\"\necho \"committed\"; git log --oneline -3",
+  "description": "Phase 5b secret scan + commit count updates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PHASE 5b — HANDOFF secret scan ===
+> ⚠️ MATCH FOUND
+> === commit count updates ===
+> committed
+> 87ca046 docs(handoff): mesh count 8771 + limpeza de 5 órfãos de smoke (v6.27.0)
+> 1b5fa90 docs(handoff): seal v6.27.0 — marketing-hub UI follows + intent executor + AEO (FR-MH-009/010)
+> 492d852 docs(bok): patch marketing-hub SDD/data-model — intent-execute + engine degraded
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === actual matches (printed, no head masking) ===
+> ✅ ZERO real credential matches in HANDOFF.md
+> === also scan the count-commit diff for any token ===
+> (matches above)
+> ```
+
+## 🤖 Claude *(01:31:13)*
+
+
+## 🤖 Claude *(01:31:15)*
+
+O `⚠️ MATCH FOUND` é **falso alarme do one-liner** (`... | head` sempre sai 0, então o `&&` dispara mesmo sem match — nenhuma linha foi impressa). Mas já commitei o HANDOFF — preciso verificar **materialmente** se há credencial real antes de prosseguir (Lei 1):
+
+## 🤖 Claude *(01:31:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== actual matches (printed, no head masking) ===\"\nmatches=$(grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -vE \"example|placeholder|<.*>|digest|hash|fingerprint\")\nif [ -z \"$matches\" ]; then echo \"\u2705 ZERO real credential matches in HANDOFF.md\"; else echo \"\ud83d\udd34 REAL MATCHES:\"; echo \"$matches\"; fi\necho \"=== also scan the count-commit diff for any token ===\"\ngit show 87ca046 | grep -nE \"eyJ[a-zA-Z0-9._-]{40,}|AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}\" | head -5 && echo \"(matches above)\" || echo \"\u2705 count commit clean\"",
+  "description": "Materially verify no real credential in HANDOFF / commit"
+}
+```
+
+## 🤖 Claude *(01:31:33)*
+
+
+## 🤖 Claude *(01:31:35)*
+
+Confirmado material: **zero credenciais reais** no HANDOFF (o "(matches above)" é o mesmo artefato de `head` saindo 0 sem linha impressa). Fase 5b **PASS**. Agora **Fase 5c oficial** (re-run com proof-manifest → verificação strict do handoff node):
+
+## 🤖 Claude *(01:31:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -22",
+  "description": "Phase 5c material proof audit (with proof-manifest strict node check)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 6f98edf0 | mesh_node | 6f98edf0-a618-4770-885b-e09c422ff8f6 | 6f98edf0-a618-4770-885b-e09c422ff8f6 | ✅ |
+> | commit ee3a016 | git_commit | ee3a016 | ee3a016 | ✅ |
+> | commit fb0cbdf | git_commit | fb0cbdf | fb0cbdf | ✅ |
+> | commit 492d852 | git_commit | 492d852 | 492d852 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 265 passing | test_suite | 265 | 265 passed | ✅ |
+> | file supabase/functions/_shared/intent-policy.ts | file_exists | supabase/functions/_shared/intent-policy.ts | supabase/functions/_shared/intent-policy.ts | ✅ |
+> | deploy size 80.44kB | edge_deploy | 80.44kB | 80.44kB | ⏭ |
+> | deploy size 85.3kB | edge_deploy | 85.3kB | 85.3kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (migration  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (migration  | ✅ |
+> 
+> QA VERDICT: 8 verified · 2 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 11.5s)
+> ```
+
+## 🤖 Claude *(01:31:56)*
+
+
+## 🤖 Claude *(01:31:57)*
+
+**Fase 5c: SEAL ALLOWED** (8 verified · 0 failed) — handoff node `6f98edf0` agora verificado **strict** via proof-manifest. **Fase 7 — PUSH:**
+
+## 🤖 Claude *(01:31:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json\necho \"=== commits ahead of origin ===\"; git log --oneline origin/main..HEAD\necho \"=== PUSH ===\"; git push origin main 2>&1 | tail -8\necho \"=== post-push sync ===\"; git rev-list --left-right --count origin/main...HEAD 2>/dev/null && echo \"(0 0 = synced)\"",
+  "description": "Phase 7 \u2014 push origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits ahead of origin ===
+> 87ca046 docs(handoff): mesh count 8771 + limpeza de 5 órfãos de smoke (v6.27.0)
+> 1b5fa90 docs(handoff): seal v6.27.0 — marketing-hub UI follows + intent executor + AEO (FR-MH-009/010)
+> 492d852 docs(bok): patch marketing-hub SDD/data-model — intent-execute + engine degraded
+> fb0cbdf feat(marketing-hub): UI follows — Intent Orchestrator/HITL + AEO + enroll de nurturing
+> ee3a016 feat(marketing-hub): auditoria AEO — aeo-audit + tabela aeo_audits (FR-MH-010)
+> 0021189 feat(marketing-hub): executor de intent_plans com re-validação outward (FR-MH-009 HITL)
+> === PUSH ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    7bb15bc..87ca046  main -> main
+> === post-push sync ===
+> 0	0
+> (0 0 = synced)
+> ```
+
+## 🤖 Claude *(01:32:14)*
+
+
+## 🤖 Claude *(01:32:33)*
+
+**Push ✅** — `7bb15bc..87ca046 main -> main`, 6 commits, `origin/main` sincronizado (0/0). **Fase 7b:** sprint-priorities já atualizado+commitado, `scratch/` limpo, sem MCP novo.
+
+O `/handoff` oficial agora está **selado e publicado**.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — v6.27.0 Marketing-Hub UI + Intent Executor + AEO (2026-06-03)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secrets (diff da sessão)    ✅ zero
+  1c dedução coin client-side    ✅ nenhuma
+  1e logs sensíveis              ⚠️ 1 match pré-existente em test file (palavra "token" em mensagem, não valor)
+  5b secret scan no HANDOFF      ✅ zero credenciais reais (verificado sem máscara de head)
+
+📦 COMMITS (6 — push para origin/main)
+  0021189 — feat: executor de intent_plans + re-validação outward (FR-MH-009 HITL)
+  ee3a016 — feat: auditoria AEO — aeo-audit + aeo_audits (FR-MH-010)
+  fb0cbdf — feat: UI follows — Intent Orchestrator/HITL + AEO + enroll nurturing
+  492d852 — docs(bok): patch SDD/data-model — intent-execute + engine degraded
+  1b5fa90 — docs(handoff): seal v6.27.0
+  87ca046 — docs(handoff): mesh 8771 + limpeza de 5 órfãos de smoke
+
+⬡ KNOWLEDGE MESH
+  Handoff node: 6f98edf0-a618-4770-885b-e09c422ff8f6 — session-handoff-20260603-marketing-hub-ui-intent-aeo
+  Embedding: ✅ 768d · Higiene: 5 órfãos de smoke (intent-exec-*/aeo:*) limpos → 8771 nós (0 residual)
+
+📖 README.md
+  Versão: 6.26.0 → 6.27.0 · neural_mesh 8770 → 8771 · testes 259 → 265 · marketing-hub FR-MH 001..012
+  Seção: "What's new in v6.27.0"
+
+🧠 HANDOFF.md
+  Fase selada: Marketing-Hub UI Follows + Intent Executor + AEO (FR-MH-009/010)
+
+📋 PROVA MATERIAL (Fase 5c — mecânica, independente)
+  Veredito: SEAL ALLOWED · 8 verificadas · 2 skipped · 0 falhas
+  (mesh node 6f98edf0 strict · 3 commits · tsc 0 · 265 testes · _shared/intent-policy.ts · ORO)
+
+🚀 PUSH
+  main → origin/main · 6 commits · github.com:gabrielZarattini/constellation-orchestra
+
+📌 SPRINT / HIGIENE
+  sprint-priorities.md: ✅ v6.27.0 · scratch/: limpo ✅ · MCP: sem novidade ✅
+  BoK: 13/13 suites completas · marketing-hub 9/9 (módulos da sessão cobertos)
+
+⏭  PRÓXIMOS PASSOS
+  1. Dispatch outward REAL do executor (hoje gated) atrás de OTD-INTENT-TRANSITION-GUARD
+     (CHECK de transição: só service role move plano p/ approved/executed)
+  2. Entrega externa de nurturing (gated; resend_api_key per-tenant pronta)
+  3. OTD-AEO-REFUND (refund automático pós-débito em falha do aeo-audit)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+  Survival Laws Self-audit: 4/4 ✅
+═══════════════════════════════════════════════════════════
+```
+
+**Resumindo, Maestro:** o handoff oficial **não estava** selado quando você perguntou — eu tinha feito os passos manualmente mas sem a cerimônia `/handoff` nem o push. Agora **está**: protocolo v4 completo (segurança → Fase 5c `SEAL ALLOWED` → BoK 13/13 → push), os 6 commits no `origin/main`, malha em 8771 nós (limpa). O **Marketing Hub está 100% — FRs 001..012, backend + UI, em produção**. O único débito honesto que registrei é que o `execute` do Intent faz **governança real** (re-valida + transita) mas o **disparo outward continua gated** — ligá-lo de verdade é o próximo passo, atrás do guard de transição.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

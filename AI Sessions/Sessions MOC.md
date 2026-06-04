@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 308
-> * **Sessões do Claude**: 275
+> * **Total de Sessões Registradas**: 312
+> * **Sessões do Claude**: 279
 > * **Sessões do Gemini**: 33
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-04 - d2a8709e-0510-4409-91e4-942a7cea3139]]` - *2026-06-04*
 *   `[[2026-06-04 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` - *2026-06-04*
+*   `[[2026-06-04 - agent-ab7e79a55b13361f3]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` - *2026-06-04*
+*   `[[2026-06-04 - agent-a5eb48930a1c31a08]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` - *2026-06-04*
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` - *2026-06-04*
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` - *2026-06-04*
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` - *2026-06-04*
-*   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-03*
-*   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` - *2026-06-03*
-*   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` - *2026-06-03*
-*   *... e mais 272 sessões nessa categoria.*
+*   *... e mais 276 sessões nessa categoria.*
 
 ---
 
@@ -259,15 +259,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-04 - d2a8709e-0510-4409-91e4-942a7cea3139]]` (ClaudeSessions)
 *   `[[2026-06-04 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` (ClaudeSessions)
+*   `[[2026-06-04 - agent-ab7e79a55b13361f3]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` (ClaudeSessions)
+*   `[[2026-06-04 - agent-a5eb48930a1c31a08]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` (ClaudeSessions)
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` (GeminiSessions)
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions)
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions)
+*   `[[2026-06-04 - Activate trend pipeline with SMA 50200 indicators]]` (ClaudeSessions)
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
 *   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` (ClaudeSessions)
 *   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions)
