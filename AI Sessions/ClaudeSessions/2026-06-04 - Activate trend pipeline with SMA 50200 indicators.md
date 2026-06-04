@@ -8315,6 +8315,987 @@ Opções:
 
 Qual? (Se for "continue", pego a #1 — é o único código substancial que não depende de esperar o mercado.)
 
+## 👤 User *(20:00:57)*
+
+# Deep Search: Otimização de Retorno em Bear Market e Filtros de Capitulação Microestrutural para o TradeUX
+
+### Contexto Atual do Sistema
+O **TradeUX** é um bot de trading quantitativo operando em Node.js (Beholder 2.1 core) conectado via MCP a um agente cognitivo. 
+* **O que temos implementado e validado:** Um classificador de regime macro-histerético de 1h (Mainnet) que desativa compras em *bear market*; uma estratégia de reversão à média de 1m operando com RSI estrito em `25/75`; e um recém-criado **Oráculo de Fluxo Taker (Shadow)** que calcula o desequilíbrio líquido de ordens de agressão (`isBuyerMaker`) a partir de `aggTrades` da Mainnet em tempo real.
+* **Restrição Crítica:** O sistema opera estritamente no mercado **Binance Spot**. Portanto, estratégias tradicionais de shorting de futuros não se aplicam diretamente sem transição de infraestrutura.
+
+### Objetivo do Deep Search
+Desejamos mapear estratégias quantitativas e filtros microestruturais para extrair a máxima lucratividade (geração de Alpha) durante fases de **Bear Market e consolidações de baixa do Bitcoin**, aproveitando os dados de fluxo e desequilíbrio de ordens que o nosso Oráculo já coleta em segundo plano.
+
+Realize uma pesquisa aprofundada de mercado institucional e responda com foco nos seguintes tópicos:
+
+---
+
+## 1. Filtro de Capitulação de Fluxo (Sniper Mean Reversion nas Quedas)
+Em mercados de baixa, a estratégia de reversão à média clássica (`id2` com RSI < 25) corre o risco de pegar "facas caindo" se a pressão agressora for contínua.
+* **A mecânica preditiva:** Como utilizar o nosso indicador de desequilíbrio de fluxo (*Taker Imbalance*) para criar um gatilho de ativação cirúrgica? Detalhe a assinatura exata do fluxo que indica "exaustão de venda" (ex: picos massivos de volume vendedor seguidos por uma reversão abrupta no delta de agressão, antes da virada do preço).
+* **Regra de Execução:** Como formular matematicamente um filtro passivo para que a `id2` só compre o dip se o *Taker Imbalance* do Oráculo sinalizar exaustão dos vendedores, reduzindo ainda mais o drawdown em quedas livres.
+
+## 2. Viabilidade de Lucro Nominal via Spot Margin (Venda a Descoberto no Spot)
+Avalie o trade-off de estender o motor de execução do Beholder 2.1 para suportar a API de Margem Isolada (Spot Margin) da Binance para posições vendidas de curto prazo.
+* **Riscos e Taxas:** Quais são os gargalos de latência, taxas de juros de empréstimo por hora (Hourly Interest) e o risco de liquidação estrutural ao operar *Margin Shorts* de BTC/USDT em timeframes de 1m a 15m?
+* **Arquitetura Mínima:** Qual seria o impacto no código do gerenciador de ordens (`exchange.js`) para mudar o roteamento de uma ordem Spot comum para uma ordem de Margem (Borrow + Trade)? Vale o risco para o ambiente Beta?
+
+## 3. Otimização Financeira do Beta (Token Economics do Agente)
+No ambiente de testes/Beta atual, o loop do nosso `tradeux-agent` consome cerca de ~91.5k tokens por ciclo, sendo 99% correspondente a overhead de input da ferramenta `get_wallet` (dados inchados de saldos zerados da testnet).
+* **Estratégia Lean:** Como projetar uma otimização/limpeza estrutural nesses payloads para reduzir o custo operacional de tokens do agente em até 90%, garantindo que a lucratividade da operação não seja consumida por custos de API do modelo de linguagem durante a fase de validação?
+
+---
+
+### Entregáveis Esperados:
+* ** thresholds Sugeridos:** Parâmetros matemáticos baseados em dados históricos de mercado para o filtro de exaustão de fluxo.
+* **Análise de Risco de Margem:** Um parecer técnico recomendando ou desaconselhando o uso de Spot Margin no cenário do TradeUX.
+* **Roadmap de Redução de Bloat:** Passos práticos para desinchar os payloads do agente e economizar capital de desenvolvimento imediatamente.
+
+## 🤖 Claude *(20:02:38)*
+
+
+## 🤖 Claude *(20:02:45)*
+
+Isto é um pedido de **pesquisa** — e o `deep-research` (fan-out de buscas + verificação adversarial + síntese citada) é a ferramenta certa. Mas vou ser honesto no escopo:
+
+- **Tópicos 1 e 2** (assinatura de exaustão de fluxo + thresholds; viabilidade de Spot Margin short) são **genuinamente pesquisáveis** — conhecimento externo de microestrutura + mecânica/taxas da Binance. Vão pro deep-research.
+- **Tópico 3** (`get_wallet` bloat) **não é pesquisa de mercado** — é otimização interna deste código, e eu já sei a causa (445 faucet coins zerados no payload). Web-research só geraria platitude. Faço **direto do código** (é a tal "otimização nº1" que ofereci no turn anterior).
+
+⚠️ E um aviso alinhado à cultura do projeto: **qualquer threshold que a pesquisa retornar é PONTO DE PARTIDA pra backtest/observação, não evangelho** — vou pedir pro harness enquadrar assim (igual a RSI 25/75 foi calibrada por dado, não por um número da internet).
+
+Disparando o deep-research nos tópicos 1 e 2:
+
+## 🤖 Claude *(20:02:59)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "deep-research",
+  "args": "Pesquisa de microestrutura de mercado cripto para um bot Binance SPOT (beta/testnet, Node.js) que J\u00c1 coleta um \"Or\u00e1culo de Fluxo Taker\" (taker imbalance = (buyVol\u2212sellVol)/volume_total, calculado de aggTrades da mainnet via o campo isBuyerMaker; tamb\u00e9m d\u00e1 pra derivar CVD/cumulative delta) e roda uma estrat\u00e9gia de revers\u00e3o \u00e0 m\u00e9dia RSI 25/75 em candles de 1m, com um gate de regime macro de 1h que desativa compras em bear market. Restri\u00e7\u00e3o dura: SPOT-only (sem futures). Foco: extrair retorno em BEAR MARKET e quedas do BTC usando fluxo de ordens.\n\nT\u00d3PICO A \u2014 Filtro de capitula\u00e7\u00e3o/exaust\u00e3o de venda via order flow (para \"snipe\" de revers\u00e3o \u00e0 m\u00e9dia nas quedas, evitando pegar faca caindo): Qual \u00e9 a ASSINATURA microestrutural de exaust\u00e3o de vendedores / sell capitulation que costuma preceder uma revers\u00e3o de curto prazo? Investigue conceitos como: cl\u00edmax de volume taker-sell, diverg\u00eancia pre\u00e7o\u00d7CVD (delta cumulativo de agress\u00e3o), ABSOR\u00c7\u00c3O (grandes ordens de venda batendo sem o pre\u00e7o cair = bid soaking), queda/flip abrupto do taker sell-imbalance ap\u00f3s um pico, exhaustion/stopping volume. Como formular um FILTRO quantitativo para uma compra de revers\u00e3o s\u00f3 disparar quando o or\u00e1culo de fluxo sinalizar exaust\u00e3o? Quais THRESHOLDS concretos a literatura quantitativa e pr\u00e1ticas institucionais sugerem (ex.: percentis/ z-scores de taker-imbalance ou CVD, tamanhos de janela em 1m, magnitude de diverg\u00eancia, confirma\u00e7\u00e3o por flip de delta) \u2014 apresentados explicitamente como PONTOS DE PARTIDA para validar em backtest no pr\u00f3prio sistema, N\u00c3O como n\u00fameros garantidos.\n\nT\u00d3PICO B \u2014 Viabilidade de venda a descoberto via Binance Spot Margin (Isolated Margin) para shorts curtos (1m\u201315m) de BTC/USDT num bot beta: taxas de juros de empr\u00e9stimo atuais (hourly/daily interest do BTC), custo all-in incluindo fees e juros para holds curtos, lat\u00eancia e complexidade do fluxo borrow\u2192sell\u2192buyback\u2192repay, risco de liquida\u00e7\u00e3o na margem isolada (margin level, MMR), e os gatilhos operacionais. D\u00ea um PARECER t\u00e9cnico claro recomendando ou DESACONSELHANDO Spot Margin shorting para este caso (bot spot beta, testnet, sem infra de margem hoje), com o trade-off risco\u00d7retorno\u00d7complexidade.\n\nENTREG\u00c1VEIS: (A) thresholds sugeridos para o filtro de exaust\u00e3o de fluxo, com fontes; (B) parecer t\u00e9cnico de risco/viabilidade de Spot Margin. Priorize fontes confi\u00e1veis e recentes (2024\u20132026): documenta\u00e7\u00e3o oficial da Binance (taxas de margem, regras de liquida\u00e7\u00e3o), papers/artigos de microestrutura (order flow imbalance, CVD, VPIN, absorption), e an\u00e1lises quant reputadas. Seja honesto sobre o que \u00e9 evid\u00eancia forte vs. folclore de trading."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: deep-research
+> ```
+
+## 👤 User *(20:02:59)*
+
+Run the "deep-research" workflow.
+
+Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+
+When the user wants a deep, multi-source, fact-checked research report on any topic. BEFORE invoking, check if the question is specific enough to research directly — if underspecified (e.g., "what car to buy" without budget/use-case/region), ask 2-3 clarifying questions to narrow scope. Then pass the refined question as args, weaving the answers in.
+
+Phases:
+- Scope: Decompose question (from args) into 5 search angles
+- Search: 5 parallel WebSearch agents, one per angle
+- Fetch: URL-dedup, fetch top 15 sources, extract falsifiable claims
+- Verify: 3-vote adversarial verification per claim (need 2/3 refutes to kill)
+- Synthesize: Merge semantic dupes, rank by confidence, cite sources
+
+Invoke: Workflow({ name: "deep-research", args: "Pesquisa de microestrutura de mercado cripto para um bot Binance SPOT (beta/testnet, Node.js) que JÁ coleta um \"Oráculo de Fluxo Taker\" (taker imbalance = (buyVol−sellVol)/volume_total, calculado de aggTrades da mainnet via o campo isBuyerMaker; também dá pra derivar CVD/cumulative delta) e roda uma estratégia de reversão à média RSI 25/75 em candles de 1m, com um gate de regime macro de 1h que desativa compras em bear market. Restrição dura: SPOT-only (sem futures). Foco: extrair retorno em BEAR MARKET e quedas do BTC usando fluxo de ordens.\n\nTÓPICO A — Filtro de capitulação/exaustão de venda via order flow (para \"snipe\" de reversão à média nas quedas, evitando pegar faca caindo): Qual é a ASSINATURA microestrutural de exaustão de vendedores / sell capitulation que costuma preceder uma reversão de curto prazo? Investigue conceitos como: clímax de volume taker-sell, divergência preço×CVD (delta cumulativo de agressão), ABSORÇÃO (grandes ordens de venda batendo sem o preço cair = bid soaking), queda/flip abrupto do taker sell-imbalance após um pico, exhaustion/stopping volume. Como formular um FILTRO quantitativo para uma compra de reversão só disparar quando o oráculo de fluxo sinalizar exaustão? Quais THRESHOLDS concretos a literatura quantitativa e práticas institucionais sugerem (ex.: percentis/ z-scores de taker-imbalance ou CVD, tamanhos de janela em 1m, magnitude de divergência, confirmação por flip de delta) — apresentados explicitamente como PONTOS DE PARTIDA para validar em backtest no próprio sistema, NÃO como números garantidos.\n\nTÓPICO B — Viabilidade de venda a descoberto via Binance Spot Margin (Isolated Margin) para shorts curtos (1m–15m) de BTC/USDT num bot beta: taxas de juros de empréstimo atuais (hourly/daily interest do BTC), custo all-in incluindo fees e juros para holds curtos, latência e complexidade do fluxo borrow→sell→buyback→repay, risco de liquidação na margem isolada (margin level, MMR), e os gatilhos operacionais. Dê um PARECER técnico claro recomendando ou DESACONSELHANDO Spot Margin shorting para este caso (bot spot beta, testnet, sem infra de margem hoje), com o trade-off risco×retorno×complexidade.\n\nENTREGÁVEIS: (A) thresholds sugeridos para o filtro de exaustão de fluxo, com fontes; (B) parecer técnico de risco/viabilidade de Spot Margin. Priorize fontes confiáveis e recentes (2024–2026): documentação oficial da Binance (taxas de margem, regras de liquidação), papers/artigos de microestrutura (order flow imbalance, CVD, VPIN, absorption), e análises quant reputadas. Seja honesto sobre o que é evidência forte vs. folclore de trading." })
+
+## 🤖 Claude *(20:03:10)*
+
+
+## 🤖 Claude *(20:03:10)*
+
+O harness `deep-research` está pronto — ele instrui a rodar o Workflow (fan-out de buscas → fetch → verificação adversarial 3-votos → síntese citada). Disparando (roda em background; aviso quando concluir):
+
+## 🤖 Claude *(20:03:16)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "name": "deep-research",
+  "args": "Pesquisa de microestrutura de mercado cripto para um bot Binance SPOT (beta/testnet, Node.js) que J\u00c1 coleta um \"Or\u00e1culo de Fluxo Taker\" (taker imbalance = (buyVol\u2212sellVol)/volume_total, calculado de aggTrades da mainnet via o campo isBuyerMaker; tamb\u00e9m d\u00e1 pra derivar CVD/cumulative delta) e roda uma estrat\u00e9gia de revers\u00e3o \u00e0 m\u00e9dia RSI 25/75 em candles de 1m, com um gate de regime macro de 1h que desativa compras em bear market. Restri\u00e7\u00e3o dura: SPOT-only (sem futures). Foco: extrair retorno em BEAR MARKET e quedas do BTC usando fluxo de ordens.\n\nT\u00d3PICO A \u2014 Filtro de capitula\u00e7\u00e3o/exaust\u00e3o de venda via order flow (para \"snipe\" de revers\u00e3o \u00e0 m\u00e9dia nas quedas, evitando pegar faca caindo): Qual \u00e9 a ASSINATURA microestrutural de exaust\u00e3o de vendedores / sell capitulation que costuma preceder uma revers\u00e3o de curto prazo? Investigue conceitos como: cl\u00edmax de volume taker-sell, diverg\u00eancia pre\u00e7o\u00d7CVD (delta cumulativo de agress\u00e3o), ABSOR\u00c7\u00c3O (grandes ordens de venda batendo sem o pre\u00e7o cair = bid soaking), queda/flip abrupto do taker sell-imbalance ap\u00f3s um pico, exhaustion/stopping volume. Como formular um FILTRO quantitativo para uma compra de revers\u00e3o s\u00f3 disparar quando o or\u00e1culo de fluxo sinalizar exaust\u00e3o? Quais THRESHOLDS concretos a literatura quantitativa e pr\u00e1ticas institucionais sugerem (ex.: percentis/z-scores de taker-imbalance ou CVD, tamanhos de janela em 1m, magnitude de diverg\u00eancia, confirma\u00e7\u00e3o por flip de delta) \u2014 apresentados explicitamente como PONTOS DE PARTIDA para validar em backtest no pr\u00f3prio sistema, N\u00c3O como n\u00fameros garantidos.\n\nT\u00d3PICO B \u2014 Viabilidade de venda a descoberto via Binance Spot Margin (Isolated Margin) para shorts curtos (1m\u201315m) de BTC/USDT num bot beta: taxas de juros de empr\u00e9stimo atuais (hourly/daily interest do BTC), custo all-in incluindo fees e juros para holds curtos, lat\u00eancia e complexidade do fluxo borrow\u2192sell\u2192buyback\u2192repay, risco de liquida\u00e7\u00e3o na margem isolada (margin level, MMR), e os gatilhos operacionais. D\u00ea um PARECER t\u00e9cnico claro recomendando ou DESACONSELHANDO Spot Margin shorting para este caso (bot spot beta, testnet, sem infra de margem hoje), com o trade-off risco\u00d7retorno\u00d7complexidade.\n\nENTREG\u00c1VEIS: (A) thresholds sugeridos para o filtro de exaust\u00e3o de fluxo, com fontes; (B) parecer t\u00e9cnico de risco/viabilidade de Spot Margin. Priorize fontes confi\u00e1veis e recentes (2024\u20132026): documenta\u00e7\u00e3o oficial da Binance (taxas de margem, regras de liquida\u00e7\u00e3o), papers/artigos de microestrutura (order flow imbalance, CVD, VPIN, absorption), e an\u00e1lises quant reputadas. Seja honesto sobre o que \u00e9 evid\u00eancia forte vs. folclore de trading."
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wg71vjqm7
+> Summary: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js"} to iterate without resending the script.)
+> Run ID: wf_11262c79-69e
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js", resumeFromRunId: "wf_11262c79-69e"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(20:12:57)*
+
+
+## 🤖 Claude *(20:12:58)*
+
+Workflow rodando em background (aviso quando concluir). Enquanto isso, ataco o **tópico 3** (`get_wallet` bloat) — que é interno e desbloqueado. Investigando o caminho do wallet (MCP + backend):
+
+## 🤖 Claude *(20:12:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 62,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 62	);
+> 63	
+> 64	readTool(
+> 65	  "tradeux_get_wallet",
+> 66	  "Saldo da carteira na Binance, com estimativa em uma moeda fiduciária/quote.",
+> 67	  { fiat: z.string().default("USDT").describe("Moeda de referência, ex: USDT, BUSD") },
+> 68	  ({ fiat }) => api.get(`/exchange/balance/${fiat.toUpperCase()}`)
+> 69	);
+> 70	
+> 71	readTool(
+> 72	  "tradeux_get_wallet_full",
+> 73	  "Saldo completo da carteira, incluindo preço médio por moeda (a partir das ordens preenchidas).",
+> 74	  { fiat: z.string().default("USDT").describe("Moeda de referência, ex: USDT") },
+> 75	  ({ fiat }) => api.get(`/exchange/balance/full/${fiat.toUpperCase()}`)
+> 76	);
+> 77	
+> 78	readTool(
+> 79	  "tradeux_get_price",
+> 80	  "Preço atual de um símbolo via memória do Beholder (MINI_TICKER). Requer um monitor MINI_TICKER ativo para o símbolo.",
+> 81	  { symbol: z.string().describe("Par, ex: BTCUSDT") },
+> 82	  ({ symbol }) => api.get(`/beholder/memory/${symbol.toUpperCase()}/MINI_TICKER`)
+> 83	);
+> ```
+
+## 🤖 Claude *(20:13:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== rotas/controllers de wallet/balance ===\" && grep -rniE \"wallet|balance\" backend/src/routers/ backend/src/controllers/exchangeController.js 2>/dev/null | grep -iE \"router\\.|function |/wallet|/balance|exports\" | head -20",
+  "description": "Read MCP wallet tools and find backend balance endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas/controllers de wallet/balance ===
+> backend/src/routers/exchangeRouter.js:5:router.get('/balance/full/:fiat', exchangeController.getFullBalance);
+> backend/src/routers/exchangeRouter.js:7:router.get('/balance/:fiat', exchangeController.getBalance);
+> backend/src/controllers/exchangeController.js:7:async function loadBalance(settingsId, fiat) {
+> backend/src/controllers/exchangeController.js:32:async function getBalance(req, res, next) {
+> backend/src/controllers/exchangeController.js:46:async function getFullBalance(req, res, next) {
+> ```
+
+## 🤖 Claude *(20:13:05)*
+
+
+## 🤖 Claude *(20:13:05)*
+
+`get_wallet` → `GET /exchange/balance/:fiat` → `getBalance`. Lendo o controller pra ver o shape e onde podar os zerados:
+
+## 🤖 Claude *(20:13:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const settingsRepository = require('../repositories/settingsRepository');
+> 2	const ordersRepository = require('../repositories/ordersRepository');
+> 3	const withdrawTemplatesRepository = require('../repositories/withdrawTemplatesRepository');
+> 4	const symbolsRepository = require('../repositories/symbolsRepository');
+> 5	const beholder = require('../beholder');
+> 6	
+> 7	async function loadBalance(settingsId, fiat) {
+> 8	    const settings = await settingsRepository.getSettingsDecrypted(settingsId);
+> 9	    const exchange = require('../utils/exchange')(settings);
+> 10	    const info = await exchange.balance();
+> 11	
+> 12	    const coins = Object.entries(info).map(p => p[0]);
+> 13	    let total = 0;
+> 14	    await Promise.all(coins.map(async (coin) => {
+> 15	        let available = parseFloat(info[coin].available);
+> 16	
+> 17	        beholder.updateMemory(coin, `WALLET`, null, available);
+> 18	
+> 19	        if (available > 0) available = beholder.tryFiatConversion(coin, available, fiat);
+> 20	
+> 21	        let onOrder = parseFloat(info[coin].onOrder);
+> 22	        if (onOrder > 0) onOrder = beholder.tryFiatConversion(coin, onOrder, fiat);
+> 23	
+> 24	        info[coin].fiatEstimate = available + onOrder;
+> 25	        total += available + onOrder;
+> 26	    }))
+> 27	
+> 28	    info.fiatEstimate = "~" + fiat + " " + total.toFixed(2);
+> 29	    return info;
+> 30	}
+> 31	
+> 32	async function getBalance(req, res, next) {
+> 33	    const id = res.locals.token.id;
+> 34	    const fiat = req.params.fiat;
+> 35	
+> 36	    try {
+> 37	        const info = await loadBalance(id, fiat);
+> 38	        res.json(info);
+> 39	    }
+> 40	    catch (err) {
+> 41	        console.error(err.response ? err.response.data : err);
+> 42	        res.status(500).send(err.response ? err.response.data : err.message);
+> 43	    }
+> 44	}
+> 45	
+> 46	async function getFullBalance(req, res, next) {
+> 47	    const id = res.locals.token.id;
+> 48	    const fiat = req.params.fiat;
+> 49	
+> 50	    try {
+> 51	        const info = await loadBalance(id, fiat);
+> 52	
+> 53	        const averages = await ordersRepository.getAveragePrices();//BTCUSDT, BTCBNB, ETHBUSD
+> 54	        const symbols = await symbolsRepository.getManySymbols(averages.map(a => a.symbol));
+> 55	
+> 56	        let symbolsObj = {};
+> 57	        for(let i=0; i < symbols.length; i++){
+> 58	            const symbol = symbols[i];
+> 59	            symbolsObj[symbol.symbol] = { base: symbol.base, quote: symbol.quote };
+> 60	        }
+> 61	
+> 62	        const grouped = {};
+> 63	        for(let i=0; i < averages.length; i++){
+> 64	            const averageObj = averages[i];
+> 65	            const symbol = symbolsObj[averageObj.symbol];
+> 66	
+> 67	            if(symbol.quote !== fiat){
+> 68	                averageObj.avg = beholder.tryFiatConversion(symbol.quote, parseFloat(averageObj.avg), fiat);
+> 69	                averageObj.net = beholder.tryFiatConversion(symbol.quote, parseFloat(averageObj.net), fiat);
+> 70	            }
+> ```
+
+## 🤖 Claude *(20:13:57)*
+
+
+## 🤖 Claude *(20:13:59)*
+
+Achei o bloat: `loadBalance` ([exchangeController.js:7](tradeux/backend/src/controllers/exchangeController.js:7)) retorna o `info` **inteiro** da Binance — na testnet são ~445 faucet coins, cada uma `{available, onOrder, fiatEstimate}`, 99% zeradas. Lendo o fim do `getFullBalance` pra desenhar o trim sem quebrar o shape do `full`:
+
+## 🤖 Claude *(20:14:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "offset": 70,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 70	            }
+> 71	            averageObj.symbol = symbol.base;
+> 72	
+> 73	            if(!grouped[symbol.base]) grouped[symbol.base] = {net: 0, qty: 0};
+> 74	            grouped[symbol.base].net += averageObj.net;
+> 75	            grouped[symbol.base].qty += averageObj.qty;
+> 76	        }
+> 77	
+> 78	        const coins = [...new Set(averages.map(a => a.symbol))];
+> 79	        coins.map(coin => info[coin].avg = grouped[coin].net / grouped[coin].qty);
+> 80	
+> 81	        res.json(info);
+> 82	    }
+> 83	    catch (err) {
+> 84	        console.error(err.response ? err.response.data : err);
+> 85	        res.status(500).send(err.response ? err.response.data : err.message);
+> 86	    }
+> 87	}
+> 88	
+> 89	async function getCoins(req, res, next) {
+> 90	    const id = res.locals.token.id;
+> 91	    const settings = await settingsRepository.getSettingsDecrypted(id);
+> ```
+
+## 🤖 Claude *(20:14:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/api.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Cliente HTTP do TradeUX para o servidor MCP.
+> 2	// Faz login uma vez, guarda o JWT em memória e re-autentica automaticamente em 401.
+> 3	
+> 4	const BASE = (process.env.TRADEUX_API_URL || "http://localhost:3001").replace(/\/$/, "");
+> 5	const EMAIL = process.env.TRADEUX_EMAIL;
+> 6	const PASSWORD = process.env.TRADEUX_PASSWORD;
+> 7	
+> 8	let token = null;
+> 9	
+> 10	async function login() {
+> 11	  if (!EMAIL || !PASSWORD) {
+> 12	    throw new Error(
+> 13	      "Credenciais ausentes. Defina TRADEUX_EMAIL e TRADEUX_PASSWORD no ambiente do servidor MCP."
+> 14	    );
+> 15	  }
+> 16	  const res = await fetch(`${BASE}/login`, {
+> 17	    method: "POST",
+> 18	    headers: { "Content-Type": "application/json" },
+> 19	    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+> 20	  });
+> 21	  if (!res.ok) {
+> 22	    throw new Error(`Login falhou (${res.status}): ${await res.text()}`);
+> 23	  }
+> 24	  const data = await res.json();
+> 25	  token = data.token;
+> 26	  if (!token) throw new Error("Login não retornou token.");
+> 27	  return token;
+> 28	}
+> 29	
+> 30	async function request(method, path, { body, query } = {}, _retried = false) {
+> 31	  if (!token) await login();
+> 32	
+> 33	  let url = `${BASE}${path}`;
+> 34	  if (query) {
+> 35	    const clean = Object.fromEntries(
+> 36	      Object.entries(query).filter(([, v]) => v !== undefined && v !== null && v !== "")
+> 37	    );
+> 38	    const qs = new URLSearchParams(clean).toString();
+> 39	    if (qs) url += `?${qs}`;
+> 40	  }
+> 41	
+> 42	  const headers = { Authorization: token };
+> 43	  if (body !== undefined) headers["Content-Type"] = "application/json";
+> 44	
+> 45	  const res = await fetch(url, {
+> 46	    method,
+> 47	    headers,
+> 48	    body: body !== undefined ? JSON.stringify(body) : undefined,
+> 49	  });
+> 50	
+> 51	  // Token expirado/inválido -> tenta re-logar uma vez
+> 52	  if (res.status === 401 && !_retried) {
+> 53	    token = null;
+> 54	    return request(method, path, { body, query }, true);
+> 55	  }
+> 56	
+> 57	  const text = await res.text();
+> 58	  let data;
+> 59	  try {
+> 60	    data = text ? JSON.parse(text) : null;
+> 61	  } catch {
+> 62	    data = text;
+> 63	  }
+> 64	
+> 65	  if (!res.ok) {
+> 66	    const detail = typeof data === "string" ? data : JSON.stringify(data);
+> 67	    throw new Error(`${method} ${path} -> ${res.status}: ${detail}`);
+> 68	  }
+> 69	  return data;
+> 70	}
+> 71	
+> 72	export const api = {
+> 73	  baseUrl: BASE,
+> 74	  get: (path, query) => request("GET", path, { query }),
+> 75	  post: (path, body) => request("POST", path, { body }),
+> 76	  patch: (path, body) => request("PATCH", path, { body }),
+> 77	  del: (path) => request("DELETE", path),
+> 78	};
+> 79	
+> ```
+
+## 🤖 Claude *(20:14:40)*
+
+
+## 🤖 Claude *(20:14:42)*
+
+Entendi o bloat por completo: `getFullBalance` também retorna o mesmo mapa de ~445 coins (só adiciona `avg` nas que você tem). `api.get` devolve o objeto parseado. Logo o trim cirúrgico é no **MCP** (uma linha por handler) — afeta **só o agente** (consumidor dos tokens), zero risco pro backend/UI.
+
+Implementando `leanWallet` (mantém só saldo>0 + total):
+
+## 🤖 Claude *(20:14:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "const fail = (message) => ({ content: [{ type: \"text\", text: `Erro: ${message}` }], isError: true });",
+  "new_string": "const fail = (message) => ({ content: [{ type: \"text\", text: `Erro: ${message}` }], isError: true });\n\n// Enxuga o payload da carteira p/ o agente: mant\u00e9m s\u00f3 moedas com saldo (available OU onOrder > 0) + o\n// total `fiatEstimate`. Na testnet a carteira tem ~445 faucet coins ZERADAS \u2014 99% do input do get_wallet\n// (~91.5k tok/ciclo), in\u00f3cuas p/ decis\u00e3o. Reduz drasticamente os tokens sem perder info acion\u00e1vel (as\n// moedas que voc\u00ea de fato tem t\u00eam available>0 \u2192 preservadas, inclusive o `avg` do get_wallet_full).\nfunction leanWallet(info) {\n  if (!info || typeof info !== \"object\" || Array.isArray(info)) return info;\n  const out = {};\n  let omittedZeroBalances = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === \"fiatEstimate\") { out.fiatEstimate = v; continue; }\n    if (v && typeof v === \"object\" && (parseFloat(v.available) > 0 || parseFloat(v.onOrder) > 0)) out[k] = v;\n    else omittedZeroBalances++;\n  }\n  out._omittedZeroBalances = omittedZeroBalances; // moedas zeradas suprimidas (faucet da testnet)\n  return out;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:14:56)*
+
+
+## 🤖 Claude *(20:14:56)*
+
+Aplicando o trim nos dois handlers + descrições honestas:
+
+## 🤖 Claude *(20:14:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "readTool(\n  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance, com estimativa em uma moeda fiduci\u00e1ria/quote.\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT, BUSD\") },\n  ({ fiat }) => api.get(`/exchange/balance/${fiat.toUpperCase()}`)\n);\n\nreadTool(\n  \"tradeux_get_wallet_full\",\n  \"Saldo completo da carteira, incluindo pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas).\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT\") },\n  ({ fiat }) => api.get(`/exchange/balance/full/${fiat.toUpperCase()}`)\n);",
+  "new_string": "readTool(\n  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance (S\u00d3 moedas com saldo > 0; zerados omitidos via _omittedZeroBalances), com estimativa em uma moeda fiduci\u00e1ria/quote.\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT, BUSD\") },\n  async ({ fiat }) => leanWallet(await api.get(`/exchange/balance/${fiat.toUpperCase()}`))\n);\n\nreadTool(\n  \"tradeux_get_wallet_full\",\n  \"Saldo da carteira (S\u00d3 moedas com saldo > 0) incluindo pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas).\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT\") },\n  async ({ fiat }) => leanWallet(await api.get(`/exchange/balance/full/${fiat.toUpperCase()}`))\n);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:15:22)*
+
+
+## 🤖 Claude *(20:15:23)*
+
+Syntax-check do MCP (ESM) + valido que o agente/MCP ainda carrega (o `--check` é o teste de integração da CI):
+
+## 🤖 Claude *(20:15:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp && echo \"=== type? ===\" && grep '\"type\"' package.json; echo \"=== node --check ===\" && node --check src/index.js && echo \"SYNTAX OK\"; echo \"=== deps instaladas? ===\" && ls node_modules/@modelcontextprotocol >/dev/null 2>&1 && echo \"mcp deps OK\" || echo \"sem node_modules\"",
+  "description": "Syntax-check MCP index.js and check deps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === type? ===
+>   "type": "module",
+> === node --check ===
+> SYNTAX OK
+> === deps instaladas? ===
+> mcp deps OK
+> ```
+
+## 🤖 Claude *(20:15:42)*
+
+
+## 🤖 Claude *(20:15:43)*
+
+SYNTAX OK (ESM). Agora valido que o MCP carrega (`agent --check`, teste da CI) + **meço a redução real** do payload. Script de medição:
+
+## 🤖 Claude *(20:15:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/walletcheck.js",
+  "content": "const http = require('http');\nconst EM = process.env.EM, PW = process.env.PW;\nfunction req(method, path, token, body) {\n  return new Promise((resolve) => {\n    const data = body ? JSON.stringify(body) : null;\n    const headers = { 'Content-Type': 'application/json' };\n    if (token) headers['authorization'] = token;\n    if (data) headers['Content-Length'] = Buffer.byteLength(data);\n    const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n      let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d }));\n    });\n    r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n    if (data) r.write(data); r.end();\n  });\n}\n// mesma l\u00f3gica do leanWallet do MCP\nfunction leanWallet(info) {\n  if (!info || typeof info !== 'object' || Array.isArray(info)) return info;\n  const out = {}; let omitted = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === 'fiatEstimate') { out.fiatEstimate = v; continue; }\n    if (v && typeof v === 'object' && (parseFloat(v.available) > 0 || parseFloat(v.onOrder) > 0)) out[k] = v;\n    else omitted++;\n  }\n  out._omittedZeroBalances = omitted; return out;\n}\n(async () => {\n  const l = await req('POST', '/login', null, { email: EM, password: PW });\n  let token; try { token = JSON.parse(l.body).token; } catch {}\n  if (!token) { console.log('LOGIN_FAIL', l.status, String(l.body).slice(0,120)); process.exit(1); }\n  const r = await req('GET', '/exchange/balance/USDT', token);\n  if (r.status !== 200) { console.log('BALANCE_FAIL', r.status, String(r.body).slice(0,200)); process.exit(1); }\n  const full = JSON.parse(r.body);\n  const lean = leanWallet(full);\n  const fullStr = JSON.stringify(full), leanStr = JSON.stringify(lean);\n  const coins = Object.keys(full).filter(k => k !== 'fiatEstimate').length;\n  const kept = Object.keys(lean).filter(k => k !== 'fiatEstimate' && k !== '_omittedZeroBalances').length;\n  // ~4 chars/token (heur\u00edstica grosseira p/ ilustrar a ordem de grandeza)\n  console.log(`moedas no payload FULL : ${coins}`);\n  console.log(`moedas com saldo (LEAN): ${kept}  (omitidas: ${lean._omittedZeroBalances})`);\n  console.log(`chars  FULL : ${fullStr.length}  (~${Math.round(fullStr.length/4)} tokens aprox)`);\n  console.log(`chars  LEAN : ${leanStr.length}  (~${Math.round(leanStr.length/4)} tokens aprox)`);\n  console.log(`reducao    : ${(100*(1 - leanStr.length/fullStr.length)).toFixed(1)}%`);\n  console.log(`LEAN preview: ${leanStr.slice(0,300)}`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/walletcheck.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:15:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== agent --check (MCP carrega + tools registram) ===\" && (cd tradeux-agent && ls node_modules >/dev/null 2>&1 && timeout 60 node src/index.js --check 2>&1 | grep -iE \"tool|oracle|wallet|error|conectad|connect\" | head -20 || echo \"tradeux-agent sem node_modules (CI roda o --check)\")\necho \"\"\necho \"=== medi\u00e7\u00e3o da redu\u00e7\u00e3o do get_wallet ===\" \nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose cp /tmp/walletcheck.js backend:/tmp/walletcheck.js && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node /tmp/walletcheck.js; docker compose exec -T backend rm -f /tmp/walletcheck.js' 2>&1 | tail -10; rm -f /tmp/walletcheck.js",
+  "description": "Run agent --check and measure wallet payload reduction",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agent --check (MCP carrega + tools registram) ===
+> [tradeux-agent] Conectado. 28 ferramentas disponíveis.
+> [tradeux-agent]  - tradeux_get_wallet
+> [tradeux-agent]  - tradeux_get_wallet_full
+> [tradeux-agent]  - tradeux_get_oracle_state
+> 
+> === medição da redução do get_wallet ===
+>  tradeux-backend-1 Copying /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+>  tradeux-backend-1 Copied /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+> moedas no payload FULL : 445
+> moedas com saldo (LEAN): 445  (omitidas: 0)
+> chars  FULL : 38105  (~9526 tokens aprox)
+> chars  LEAN : 38130  (~9533 tokens aprox)
+> reducao    : -0.1%
+> LEAN preview: {"456":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":0},"这是测试币":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":0},"BNB":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":607.03},"BTC":{"available":"1.01879000","onOrder":"0.00000000","fiatEstim
+> ```
+
+## 🤖 Claude *(20:17:02)*
+
+
+## 🤖 Claude *(20:17:04)*
+
+**O dado refutou minha premissa** — e isso é exatamente o que a cultura do projeto exige medir. Os 445 coins **NÃO são saldos zerados**: o faucet da testnet credita **10000 de cada** token lixo (ex.: `"这是测试币"`, `"456"`). Filtrar por `available>0` mantém todos (−0.1%, inútil). 
+
+Mas eles têm **`fiatEstimate: 0`** (sem mercado → conversão falha), enquanto BTC/BNB/USDT têm valor real. Corrigindo o filtro p/ **valor fiduciário > 0**:
+
+## 🤖 Claude *(20:17:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "// Enxuga o payload da carteira p/ o agente: mant\u00e9m s\u00f3 moedas com saldo (available OU onOrder > 0) + o\n// total `fiatEstimate`. Na testnet a carteira tem ~445 faucet coins ZERADAS \u2014 99% do input do get_wallet\n// (~91.5k tok/ciclo), in\u00f3cuas p/ decis\u00e3o. Reduz drasticamente os tokens sem perder info acion\u00e1vel (as\n// moedas que voc\u00ea de fato tem t\u00eam available>0 \u2192 preservadas, inclusive o `avg` do get_wallet_full).\nfunction leanWallet(info) {\n  if (!info || typeof info !== \"object\" || Array.isArray(info)) return info;\n  const out = {};\n  let omittedZeroBalances = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === \"fiatEstimate\") { out.fiatEstimate = v; continue; }\n    if (v && typeof v === \"object\" && (parseFloat(v.available) > 0 || parseFloat(v.onOrder) > 0)) out[k] = v;\n    else omittedZeroBalances++;\n  }\n  out._omittedZeroBalances = omittedZeroBalances; // moedas zeradas suprimidas (faucet da testnet)\n  return out;\n}",
+  "new_string": "// Enxuga o payload da carteira p/ o agente: mant\u00e9m s\u00f3 moedas com VALOR FIDUCI\u00c1RIO real (fiatEstimate>0)\n// + o total. ARMADILHA MEDIDA (n\u00e3o assumir \"saldos zerados\"): o faucet da testnet credita 10000 de ~445\n// tokens LIXO sem mercado (ex.: \"\u8fd9\u662f\u6d4b\u8bd5\u5e01\",\"456\") \u2192 available>0 mas tryFiatConversion=0 \u2192 fiatEstimate=0.\n// Logo o filtro \u00e9 por VALOR, n\u00e3o por saldo. As moedas reais (BTC/BNB/USDT/ETH\u2026) t\u00eam fiatEstimate>0 \u2192\n// preservadas (inclusive o `avg` do get_wallet_full). Corta ~99% do input do get_wallet (~91.5k tok/ciclo).\nfunction leanWallet(info) {\n  if (!info || typeof info !== \"object\" || Array.isArray(info)) return info;\n  const out = {};\n  let omittedNoValue = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === \"fiatEstimate\") { out.fiatEstimate = v; continue; }\n    if (v && typeof v === \"object\" && parseFloat(v.fiatEstimate) > 0) out[k] = v;\n    else omittedNoValue++;\n  }\n  out._omittedNoFiatValue = omittedNoValue; // moedas sem valor fiduci\u00e1rio suprimidas (faucet lixo da testnet)\n  return out;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:22)*
+
+
+## 🤖 Claude *(20:17:22)*
+
+Corrigindo as descrições das tools (valor, não saldo):
+
+## 🤖 Claude *(20:17:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance (S\u00d3 moedas com saldo > 0; zerados omitidos via _omittedZeroBalances), com estimativa em uma moeda fiduci\u00e1ria/quote.\",",
+  "new_string": "  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance (S\u00d3 moedas com valor fiduci\u00e1rio > 0; lixo de faucet sem mercado omitido, contado em _omittedNoFiatValue), com estimativa em uma moeda fiduci\u00e1ria/quote.\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  \"tradeux_get_wallet_full\",\n  \"Saldo da carteira (S\u00d3 moedas com saldo > 0) incluindo pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas).\",",
+  "new_string": "  \"tradeux_get_wallet_full\",\n  \"Saldo da carteira (S\u00d3 moedas com valor fiduci\u00e1rio > 0) incluindo pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas).\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:40)*
+
+
+## 🤖 Claude *(20:17:40)*
+
+Re-medindo com o filtro corrigido (`fiatEstimate>0`) + re-syntax-check:
+
+## 🤖 Claude *(20:17:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/walletcheck.js",
+  "content": "const http = require('http');\nconst EM = process.env.EM, PW = process.env.PW;\nfunction req(method, path, token, body) {\n  return new Promise((resolve) => {\n    const data = body ? JSON.stringify(body) : null;\n    const headers = { 'Content-Type': 'application/json' };\n    if (token) headers['authorization'] = token;\n    if (data) headers['Content-Length'] = Buffer.byteLength(data);\n    const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n      let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d }));\n    });\n    r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n    if (data) r.write(data); r.end();\n  });\n}\nfunction leanWallet(info) {\n  if (!info || typeof info !== 'object' || Array.isArray(info)) return info;\n  const out = {}; let omitted = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === 'fiatEstimate') { out.fiatEstimate = v; continue; }\n    if (v && typeof v === 'object' && parseFloat(v.fiatEstimate) > 0) out[k] = v;\n    else omitted++;\n  }\n  out._omittedNoFiatValue = omitted; return out;\n}\n(async () => {\n  const l = await req('POST', '/login', null, { email: EM, password: PW });\n  let token; try { token = JSON.parse(l.body).token; } catch {}\n  if (!token) { console.log('LOGIN_FAIL', l.status, String(l.body).slice(0,120)); process.exit(1); }\n  const r = await req('GET', '/exchange/balance/USDT', token);\n  if (r.status !== 200) { console.log('BALANCE_FAIL', r.status); process.exit(1); }\n  const full = JSON.parse(r.body); const lean = leanWallet(full);\n  const fullStr = JSON.stringify(full), leanStr = JSON.stringify(lean);\n  const coins = Object.keys(full).filter(k => k !== 'fiatEstimate').length;\n  const kept = Object.keys(lean).filter(k => k !== 'fiatEstimate' && k !== '_omittedNoFiatValue').length;\n  console.log(`moedas FULL : ${coins}`);\n  console.log(`moedas LEAN : ${kept}  (omitidas sem valor: ${lean._omittedNoFiatValue})`);\n  console.log(`chars FULL  : ${fullStr.length}  (~${Math.round(fullStr.length/4)} tok aprox)`);\n  console.log(`chars LEAN  : ${leanStr.length}  (~${Math.round(leanStr.length/4)} tok aprox)`);\n  console.log(`reducao     : ${(100*(1 - leanStr.length/fullStr.length)).toFixed(1)}%`);\n  console.log(`LEAN        : ${leanStr}`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/walletcheck.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp && node --check src/index.js && echo \"MCP SYNTAX OK\"; echo \"\"\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose cp /tmp/walletcheck.js backend:/tmp/walletcheck.js && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node /tmp/walletcheck.js; docker compose exec -T backend rm -f /tmp/walletcheck.js' 2>&1 | tail -8; rm -f /tmp/walletcheck.js",
+  "description": "Re-measure wallet reduction with corrected fiatEstimate filter"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (36.6KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/tool-results/bjfbp1jkx.txt
+> 
+> Preview (first 2KB):
+> MCP SYNTAX OK
+> 
+>  tradeux-backend-1 Copying /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+>  tradeux-backend-1 Copied /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+> moedas FULL : 445
+> moedas LEAN : 431  (omitidas sem valor: 14)
+> chars FULL  : 38107  (~9527 tok aprox)
+> chars LEAN  : 37079  (~9270 tok aprox)
+> reducao     : 2.7%
+> LEAN        : {"BNB":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":607.03},"BTC":{"available":"1.01879000","onOrder":"0.00000000","fiatEstimate":65052.879373200005},"USDT":{"available":"10011.80482700","onOrder":"0.00000000","fiatEstimate":10011.804827},"ETH":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":1764},"LTC":{"available":"10.00000000","onOrder":"0.00000000","fiatEstimate":462.1},"TRX":{"available":"1504.00000000","onOrder":"0.00000000","fiatEstimate":499.1776},"XRP":{"available":"404.00000000","onOrder":"0.00000000","fiatEstimate":474.33639999999997},"KNC":{"available":"3697.00000000","onOrder":"0.00000000","fiatEstimate":478.7615},"LINK":{"available":"58.00000000","onOrder":"0.00000000","fiatEstimate":466.31999999999994},"ETC":{"available":"63.00000000","onOrder":"0.00000000","fiatEstimate":465.57},"ZEC":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":522.81},"DASH":{"available":"12.00000000","onOrder":"0.00000000","fiatEstimate":421.56000000000006},"NEO":{"available":"194.00000000","onOrder":"0.00000000","fiatEstimate":470.256},"ADX":{"available":"7889.00000000","onOrder":"0.00000000","fiatEstimate":478.0734},"ADA":{"available":"2312.00000000","onOrder":"0.00000000","fiatEstimate":428.4136},"XLM":{"available":"2185.00000000","onOrder":"0.00000000","fiatEstimate":456.0095},"ONT":{"available":"9891.00000000","onOrder":"0.00000000","fiatEstimate":486.34047},"QTUM":{"available":"602.00000000","onOrder":"0.00000000","fiatEstimate":467.152},"ZEN":{"available":"90.00000000","onOrder":"0.00000000","fiatEstimate":468.63},"THETA":{"available":"2687.00000000","onOrder":"0.0
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(20:18:51)*
+
+
+## 🤖 Claude *(20:18:56)*
+
+Outra surpresa do dado: o faucet da testnet tem **mercado** pra ~431 dos 445 tokens (LTC, TRX, XRP, ADA, XLM... todos ~$400-600), então `fiatEstimate>0` mantém quase todos (só 14 omitidos, 2.7%). O valor não separa — eles têm valor de faucet.
+
+A verdade: o agente (que negocia **BTCUSDT**) não precisa de 431 alts de faucet. O filtro certo é **relevância/top-N por valor**, não valor>0. Reescrevendo `leanWallet` p/ **top-N** (e deixo o `get_wallet_full` íntegro como escape-hatch):
+
+## 🤖 Claude *(20:19:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "// Enxuga o payload da carteira p/ o agente: mant\u00e9m s\u00f3 moedas com VALOR FIDUCI\u00c1RIO real (fiatEstimate>0)\n// + o total. ARMADILHA MEDIDA (n\u00e3o assumir \"saldos zerados\"): o faucet da testnet credita 10000 de ~445\n// tokens LIXO sem mercado (ex.: \"\u8fd9\u662f\u6d4b\u8bd5\u5e01\",\"456\") \u2192 available>0 mas tryFiatConversion=0 \u2192 fiatEstimate=0.\n// Logo o filtro \u00e9 por VALOR, n\u00e3o por saldo. As moedas reais (BTC/BNB/USDT/ETH\u2026) t\u00eam fiatEstimate>0 \u2192\n// preservadas (inclusive o `avg` do get_wallet_full). Corta ~99% do input do get_wallet (~91.5k tok/ciclo).\nfunction leanWallet(info) {\n  if (!info || typeof info !== \"object\" || Array.isArray(info)) return info;\n  const out = {};\n  let omittedNoValue = 0;\n  for (const [k, v] of Object.entries(info)) {\n    if (k === \"fiatEstimate\") { out.fiatEstimate = v; continue; }\n    if (v && typeof v === \"object\" && parseFloat(v.fiatEstimate) > 0) out[k] = v;\n    else omittedNoValue++;\n  }\n  out._omittedNoFiatValue = omittedNoValue; // moedas sem valor fiduci\u00e1rio suprimidas (faucet lixo da testnet)\n  return out;\n}",
+  "new_string": "// Enxuga o payload do get_wallet p/ o agente: mant\u00e9m s\u00f3 as TOP-N moedas por valor fiduci\u00e1rio + o fiat\n// pedido (poder de compra) + o total. ARMADILHA MEDIDA (n\u00e3o assumir!): a carteira de testnet tem ~445\n// moedas \u2014 e o faucet credita 10000 de CADA, com mercado de testnet pra ~431 delas \u2192 nem \"available>0\"\n// nem \"fiatEstimate>0\" filtram (quase todas passam). O sinal real \u00e9 RELEV\u00c2NCIA: o agente negocia BTCUSDT,\n// n\u00e3o 431 alts de faucet (~$500 cada). Top-N por valor sempre inclui o que importa (BTC/USDT/ETH/BNB no\n// topo) e corta a cauda longa \u2192 ~90%+ menos input (era ~91.5k tok/ciclo). get_wallet_full fica \u00cdNTEGRO\n// (escape-hatch). N via MCP_WALLET_TOP_N (default 10).\nconst WALLET_TOP_N = parseInt(process.env.MCP_WALLET_TOP_N || \"10\", 10) || 10;\nfunction leanWallet(info, fiat) {\n  if (!info || typeof info !== \"object\" || Array.isArray(info)) return info;\n  const coins = Object.entries(info).filter(([k]) => k !== \"fiatEstimate\");\n  coins.sort((a, b) => (parseFloat(b[1] && b[1].fiatEstimate) || 0) - (parseFloat(a[1] && a[1].fiatEstimate) || 0));\n  const keep = new Set(coins.slice(0, WALLET_TOP_N).map(([k]) => k));\n  if (fiat && info[fiat]) keep.add(fiat); // garante o fiat (poder de compra) mesmo fora do top-N\n  const out = {};\n  for (const [k, v] of coins) if (keep.has(k)) out[k] = v;\n  if (info.fiatEstimate !== undefined) out.fiatEstimate = info.fiatEstimate;\n  out._omittedCoins = coins.length - keep.size; // moedas de menor valor suprimidas (cauda de faucet)\n  return out;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:19:20)*
+
+
+## 🤖 Claude *(20:19:20)*
+
+Ajustando handlers — `get_wallet` passa o fiat ao trim; `get_wallet_full` volta a ser íntegro (escape-hatch):
+
+## 🤖 Claude *(20:19:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance (S\u00d3 moedas com valor fiduci\u00e1rio > 0; lixo de faucet sem mercado omitido, contado em _omittedNoFiatValue), com estimativa em uma moeda fiduci\u00e1ria/quote.\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT, BUSD\") },\n  async ({ fiat }) => leanWallet(await api.get(`/exchange/balance/${fiat.toUpperCase()}`))\n);\n\nreadTool(\n  \"tradeux_get_wallet_full\",\n  \"Saldo da carteira (S\u00d3 moedas com valor fiduci\u00e1rio > 0) incluindo pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas).\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT\") },\n  async ({ fiat }) => leanWallet(await api.get(`/exchange/balance/full/${fiat.toUpperCase()}`))\n);",
+  "new_string": "  \"tradeux_get_wallet\",\n  \"Saldo da carteira na Binance: TOP-N maiores posi\u00e7\u00f5es por valor + o fiat de refer\u00eancia + total (resto omitido, contado em _omittedCoins). Na testnet a carteira tem ~445 moedas de faucet \u2014 esta vers\u00e3o enxuta mostra s\u00f3 o que importa. Para o detalhe completo use tradeux_get_wallet_full.\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT, BUSD\") },\n  async ({ fiat }) => leanWallet(await api.get(`/exchange/balance/${fiat.toUpperCase()}`), fiat.toUpperCase())\n);\n\nreadTool(\n  \"tradeux_get_wallet_full\",\n  \"Saldo COMPLETO da carteira (TODAS as moedas) + pre\u00e7o m\u00e9dio por moeda (a partir das ordens preenchidas). PESADO: na testnet s\u00e3o ~445 moedas (~9k tokens). Use com parcim\u00f4nia; prefira tradeux_get_wallet.\",\n  { fiat: z.string().default(\"USDT\").describe(\"Moeda de refer\u00eancia, ex: USDT\") },\n  ({ fiat }) => api.get(`/exchange/balance/full/${fiat.toUpperCase()}`)\n);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:19:34)*
+
+
+## 🤖 Claude *(20:19:34)*
+
+Re-medindo com top-10 + re-syntax-check:
+
+## 🤖 Claude *(20:19:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/walletcheck.js",
+  "content": "const http = require('http');\nconst EM = process.env.EM, PW = process.env.PW;\nconst WALLET_TOP_N = 10;\nfunction req(method, path, token, body) {\n  return new Promise((resolve) => {\n    const data = body ? JSON.stringify(body) : null;\n    const headers = { 'Content-Type': 'application/json' };\n    if (token) headers['authorization'] = token;\n    if (data) headers['Content-Length'] = Buffer.byteLength(data);\n    const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n      let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d }));\n    });\n    r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n    if (data) r.write(data); r.end();\n  });\n}\nfunction leanWallet(info, fiat) {\n  if (!info || typeof info !== 'object' || Array.isArray(info)) return info;\n  const coins = Object.entries(info).filter(([k]) => k !== 'fiatEstimate');\n  coins.sort((a, b) => (parseFloat(b[1] && b[1].fiatEstimate) || 0) - (parseFloat(a[1] && a[1].fiatEstimate) || 0));\n  const keep = new Set(coins.slice(0, WALLET_TOP_N).map(([k]) => k));\n  if (fiat && info[fiat]) keep.add(fiat);\n  const out = {};\n  for (const [k, v] of coins) if (keep.has(k)) out[k] = v;\n  if (info.fiatEstimate !== undefined) out.fiatEstimate = info.fiatEstimate;\n  out._omittedCoins = coins.length - keep.size;\n  return out;\n}\n(async () => {\n  const l = await req('POST', '/login', null, { email: EM, password: PW });\n  let token; try { token = JSON.parse(l.body).token; } catch {}\n  if (!token) { console.log('LOGIN_FAIL', l.status); process.exit(1); }\n  const r = await req('GET', '/exchange/balance/USDT', token);\n  if (r.status !== 200) { console.log('BALANCE_FAIL', r.status); process.exit(1); }\n  const full = JSON.parse(r.body); const lean = leanWallet(full, 'USDT');\n  const fullStr = JSON.stringify(full), leanStr = JSON.stringify(lean);\n  const coins = Object.keys(full).filter(k => k !== 'fiatEstimate').length;\n  const kept = Object.keys(lean).filter(k => k !== 'fiatEstimate' && k !== '_omittedCoins').length;\n  console.log(`moedas FULL : ${coins}`);\n  console.log(`moedas LEAN : ${kept}  (omitidas: ${lean._omittedCoins})`);\n  console.log(`chars FULL  : ${fullStr.length}  (~${Math.round(fullStr.length/4)} tok aprox)`);\n  console.log(`chars LEAN  : ${leanStr.length}  (~${Math.round(leanStr.length/4)} tok aprox)`);\n  console.log(`reducao     : ${(100*(1 - leanStr.length/fullStr.length)).toFixed(1)}%`);\n  console.log(`LEAN        : ${leanStr}`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/walletcheck.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:19:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "node --check src/index.js && echo \"MCP SYNTAX OK\"; echo \"\"\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose cp /tmp/walletcheck.js backend:/tmp/walletcheck.js && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node /tmp/walletcheck.js; docker compose exec -T backend rm -f /tmp/walletcheck.js' 2>&1 | tail -8; rm -f /tmp/walletcheck.js",
+  "description": "Re-measure with top-N filter"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> MCP SYNTAX OK
+> 
+>  tradeux-backend-1 Copying /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+>  tradeux-backend-1 Copied /tmp/walletcheck.js to tradeux-backend-1:/tmp/walletcheck.js
+> moedas FULL : 445
+> moedas LEAN : 10  (omitidas: 435)
+> chars FULL  : 38110  (~9528 tok aprox)
+> chars LEAN  : 870  (~218 tok aprox)
+> reducao     : 97.7%
+> LEAN        : {"BTC":{"available":"1.01879000","onOrder":"0.00000000","fiatEstimate":64589.0242862},"WBTC":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":63791.53},"USDT":{"available":"10011.80482700","onOrder":"0.00000000","fiatEstimate":10011.804827},"USDC":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":10000},"USD":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":10000},"TUSD":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":9997},"FDUSD":{"available":"10000.00000000","onOrder":"0.00000000","fiatEstimate":9983},"PAXG":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":4475.02},"XAUT":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":4458.5},"YFI":{"available":"1.00000000","onOrder":"0.00000000","fiatEstimate":2059},"fiatEstimate":"~USDT 347254.39","_omittedCoins":435}
+> ```
+
+## 🤖 Claude *(20:20:12)*
+
+
+## 🤖 Claude *(20:20:13)*
+
+**97.7% de redução** validado no payload real: 445 → 10 moedas, ~9528 → ~218 tokens. Inclui BTC + USDT (par negociado + poder de compra) + maiores posições + total. `get_wallet_full` íntegro como escape-hatch. Excede o deliverable (≥90%).
+
+`agent --check` carregou 28 tools (incl. a wallet enxuta + o `tradeux_get_oracle_state`). É MCP-only (read, filtro puro, sem money-path) → gate proporcional = commit direto com auto-validação. Commitando:
+
+## 🤖 Claude *(20:20:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && sudo -n chown gcrux-tradeux:gcrux-tradeux tradeux-mcp/src/index.js\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git add tradeux-mcp/src/index.js && git status --short && \\\ngit commit -m \"perf(mcp): get_wallet enxuto (top-N por valor) - corta ~98% do input do agente\" \\\n-m \"O get_wallet custava ~9.5k tokens/chamada: a carteira de testnet tem ~445 moedas (faucet credita 10000 de cada). MEDI e a premissa caiu 2x: NAO sao saldos zerados (available=10000) NEM sem valor (testnet tem mercado p/ ~431). O sinal real e RELEVANCIA - o agente negocia BTCUSDT, nao 431 alts de faucet.\" \\\n-m \"leanWallet agora mantem as TOP-N (default 10, env MCP_WALLET_TOP_N) maiores posicoes por valor + o fiat pedido (poder de compra) + total; resto contado em _omittedCoins. get_wallet_full fica INTEGRO (escape-hatch).\" \\\n-m \"Medido no payload real do testnet: 445->10 moedas, ~9528->~218 tokens (-97.7%). agent --check carrega 28 tools. So MCP (read), sem money-path/backend/UI.\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && \\\necho \"=== OK ===\" && git log --oneline -1 && \\\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\" | grep -vE \"moderate|dependabot|vulnerab|security/dep|^remote: *$\"'",
+  "description": "Commit and push the get_wallet lean optimization"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> M  tradeux-mcp/src/index.js
+> ?? docs/
+> [master 6f97209] perf(mcp): get_wallet enxuto (top-N por valor) - corta ~98% do input do agente
+>  1 file changed, 24 insertions(+), 3 deletions(-)
+> === OK ===
+> 6f97209 perf(mcp): get_wallet enxuto (top-N por valor) - corta ~98% do input do agente
+> To https://github.com/gabrielZarattini/tradeux.git
+>    937172b..6f97209  HEAD -> master
+> ```
+
+## 🤖 Claude *(20:20:29)*
+
+
+## 🤖 Claude *(20:20:29)*
+
+Push OK (`937172b..6f97209`). Tópico 3 **entregue e medido** (−97.7%). Checando CI + atualizando a memória do bloat:
+
+## 🤖 Claude *(20:20:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && for i in $(seq 1 15); do\n  R=$(curl -s -H \"Authorization: Bearer $TOKEN\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=1&branch=master\" | python3 -c \"import sys,json;r=json.load(sys.stdin)[\\\"workflow_runs\\\"][0];print(r[\\\"head_sha\\\"][:7],r[\\\"status\\\"],r.get(\\\"conclusion\\\"))\")\n  echo \"$R\"; echo \"$R\" | grep -q completed && break; sleep 20\ndone'",
+  "description": "Poll CI for the get_wallet optimization commit",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 6f97209 in_progress None
+> 6f97209 in_progress None
+> 6f97209 in_progress None
+> 6f97209 completed success
+> ```
+
+## 🤖 Claude *(20:21:37)*
+
+
+## 🤖 Claude *(20:21:37)*
+
+CI verde pro `6f97209`. Atualizando a memória (`get_wallet` bloat resolvido):
+
+## 🤖 Claude *(20:21:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-agent-token-economics
+> 3	description: "Agent LLM token usage — journal location, the GET /api/agent/runs KPI endpoint, and the get_wallet token bloat (91.5k tok/cycle, 99% input)"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: reference
+> 7	  originSessionId: a9beda03-6192-4989-aed8-b75558abf414
+> 8	---
+> 9	
+> 10	The `tradeux-agent` LLM logs every cycle to a local JSONL journal: `tradeux-agent/journal/tradeux-agent.jsonl` (path via `TRADEUX_AGENT_JOURNAL`). Each record: `{ts, cycleId, provider, type (cycle_end|tool_call|cycle_aborted), rounds, toolCalls, summary, usage}`. The `usage` field carries REAL tokens (anthropic: `input_tokens`/`output_tokens`/cache_*; openrouter: `prompt_tokens`/`completion_tokens`/`total_tokens`).
+> 11	
+> 12	**KPI endpoint** (shipped 2026-06-03, commit `40b5a18`, Fase A): `GET /api/agent/runs` (auth) — reads the journal (mounted read-only into the backend at `/journal` via docker-compose) and returns aggregated KPIs: cycles, toolCalls, tokens (input/output/total + perCycleAvg), `estCostUSD` (PRICING map per model; free→$0), inputShare, topTools, recent runs. Controller: `backend/src/controllers/agentController.js`. ⚠️ Goes LIVE only after a backend rebuild — at seal time the build was blocked by the in-progress `node-binance-api` bump. Fase B (visual page in the panel "Intelligence" section) is pending.
+> 13	
+> 14	**The big finding:** the validation run (5 cycles) burned **366k tokens, ~91.5k/cycle, 99.2% INPUT** — almost entirely `tradeux_get_wallet` dumping ~445 junk testnet coins. On the free model (`nemotron:free`) = $0, but on a paid model (~Sonnet) that's ~$0.28/cycle of pure waste. **Trimming `get_wallet` (drop dust/zero balances) is the #1 agent-token optimization** — already in tech debt. See [[tradeux-agent-500k-validation]] and [[tradeux-orchestration-model]].
+> 15	
+> ```
+
+## 🤖 Claude *(20:21:43)*
+
+
+## 🤖 Claude *(20:21:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md",
+  "old_string": "description: \"Agent LLM token usage \u2014 journal location, the GET /api/agent/runs KPI endpoint, and the get_wallet token bloat (91.5k tok/cycle, 99% input)\"",
+  "new_string": "description: \"Agent LLM token usage \u2014 journal location, GET /api/agent/runs KPI endpoint; get_wallet bloat RESOLVIDO (commit 6f97209: top-N por valor, \u221297.7%)\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:21:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md",
+  "old_string": "On the free model (`nemotron:free`) = $0, but on a paid model (~Sonnet) that's ~$0.28/cycle of pure waste. **Trimming `get_wallet` (drop dust/zero balances) is the #1 agent-token optimization** \u2014 already in tech debt. See [[tradeux-agent-500k-validation]] and [[tradeux-orchestration-model]].",
+  "new_string": "On the free model (`nemotron:free`) = $0, but on a paid model (~Sonnet) that's ~$0.28/cycle of pure waste.\n\n**\u2705 RESOLVIDO (commit `6f97209`):** `leanWallet` no MCP (`tradeux-mcp/src/index.js`) \u2014 o `tradeux_get_wallet` agora retorna s\u00f3 as **TOP-N moedas por valor** (default 10, env `MCP_WALLET_TOP_N`) + o fiat pedido + total; resto contado em `_omittedCoins`. **ARMADILHA MEDIDA (n\u00e3o assumir!):** a premissa \"saldos zerados\" estava ERRADA \u2014 o faucet credita **10000 de cada** uma das ~445 moedas, e o testnet tem **mercado pra ~431** delas (logo nem `available>0` nem `fiatEstimate>0` filtram). O sinal certo \u00e9 **relev\u00e2ncia (top-N por valor)**, n\u00e3o saldo/valor. Medido no payload real: **445\u219210 moedas, ~9528\u2192~218 tokens (\u221297.7%)**. `tradeux_get_wallet_full` ficou \u00cdNTEGRO (escape-hatch p/ o detalhe completo). Validado: `agent --check` carrega 28 tools. See [[tradeux-agent-500k-validation]] and [[tradeux-orchestration-model]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:22:11)*
+
+
+## 🤖 Claude *(20:22:11)*
+
+Tópico 3 documentado. Registro no HANDOFF + reporto o estado (topics 1-2 ainda no harness):
+
+## 🤖 Claude *(20:22:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Blueprint completo fica como roadmap (n\u00e3o commitado) caso o dono queira o piv\u00f4 mainnet+futures no futuro.",
+  "new_string": "Blueprint completo fica como roadmap (n\u00e3o commitado) caso o dono queira o piv\u00f4 mainnet+futures no futuro.\n\n### Record \u2014 2026-06-04 (cont. \u2014 \"Deep Search\": get_wallet enxuto (t\u00f3pico 3) + deep-research em background (t\u00f3picos 1-2))\nDono mandou um \"Deep Search\" de 3 t\u00f3picos. Escopo honesto: **t\u00f3picos 1-2** (assinatura de exaust\u00e3o de fluxo + thresholds; viabilidade de Spot Margin short) s\u00e3o pesquis\u00e1veis \u2192 disparei o **harness `deep-research`** (workflow em background, fan-out + verifica\u00e7\u00e3o adversarial + s\u00edntese citada). **T\u00f3pico 3** (get_wallet bloat) N\u00c3O \u00e9 pesquisa \u2014 \u00e9 c\u00f3digo interno \u2192 resolvi direto (commit `6f97209`, CI verde). **`leanWallet` no MCP**: `tradeux_get_wallet` agora retorna s\u00f3 as TOP-N moedas por valor (default 10, env `MCP_WALLET_TOP_N`) + fiat + total. **Premissa caiu 2\u00d7 ao MEDIR** (cultura: o dado \u00e9 o juiz): N\u00c3O eram \"saldos zerados\" (faucet credita 10000 de cada) NEM \"sem valor\" (testnet tem mercado p/ ~431 das 445) \u2014 o sinal certo \u00e9 RELEV\u00c2NCIA. Medido: **445\u219210 moedas, ~9528\u2192~218 tok (\u221297.7%)**. `get_wallet_full` \u00edntegro (escape-hatch). S\u00f3 MCP (read), gate proporcional = direto + auto-validado (`agent --check` 28 tools). Mem\u00f3ria `tradeux-agent-token-economics` atualizada. **PENDENTE**: o relat\u00f3rio do deep-research (t\u00f3picos 1-2) \u2014 quando concluir, sintetizar com os thresholds (como pontos de partida p/ backtest, N\u00c3O evangelho) + o parecer de Spot Margin."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:22:31)*
+
+
+## 🤖 Claude *(20:22:35)*
+
+Tópico 3 fechado e documentado. Estado do "Deep Search":
+
+## ✅ Tópico 3 — `get_wallet` enxuto (ENTREGUE, commit [`6f97209`](https://github.com/gabrielZarattini/tradeux/commit/6f97209), CI verde)
+
+A parte interna eu resolvi direto (não é pesquisa de mercado). E aqui a **cultura "o dado é o juiz" pagou** — minha premissa caiu **duas vezes ao medir**:
+1. "Saldos zerados" (o que a memória dizia) → **errado**: o faucet credita **10000 de cada** uma das 445 moedas.
+2. "Sem valor fiduciário" → **errado**: o testnet tem **mercado pra ~431** delas (~$500 cada).
+
+O sinal certo era **relevância**: o agente negocia BTCUSDT, não 431 alts de faucet. `leanWallet` agora devolve as **TOP-N por valor** (default 10) + o fiat + total. **Medido no payload real: 445→10 moedas, ~9528→~218 tokens (−97.7%)** — excede o deliverable (≥90%). `get_wallet_full` ficou íntegro como escape-hatch. `agent --check` carrega as 28 tools.
+
+## ⏳ Tópicos 1 e 2 — deep-research rodando em background
+
+O harness `deep-research` está fazendo o fan-out de buscas → fetch → verificação adversarial (3 votos) → síntese citada, pros dois tópicos pesquisáveis:
+- **(1)** assinatura de exaustão/capitulação de fluxo + **thresholds sugeridos** (CVD/divergência/absorção) — que vou entregar **como pontos de partida pra backtest, não evangelho**.
+- **(2)** **parecer de viabilidade de Spot Margin short** (juros, liquidação, latência, complexidade) pro caso beta.
+
+Roda em background — **serei notificado quando concluir** e aí sintetizo o relatório final com os dois entregáveis (não vou ficar fazendo polling à toa). Você pode acompanhar ao vivo com `/workflows`.
+
+Quando o relatório chegar, te entrego: os thresholds do filtro de exaustão (com fontes + ressalva de calibração) e o parecer recomendando/desaconselhando o Spot Margin. Te aviso assim que sair.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
