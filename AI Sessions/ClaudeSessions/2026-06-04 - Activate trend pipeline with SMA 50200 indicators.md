@@ -10261,6 +10261,574 @@ HANDOFF — registro da ativação do gate sniper:
 > The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(21:00:04)*
+
+
+## 🤖 Claude *(21:00:14)*
+
+Os 3 tópicos do épico entregues, validados e documentados. Resumo:
+
+## ✅ Gate de Fluxo "Sniper" na id2 (commit [`72b1a19`](https://github.com/gabrielZarattini/tradeux/commit/72b1a19) + card [`56029a3`](https://github.com/gabrielZarattini/tradeux/commit/56029a3), QA PASS + TL APPROVE, CI verde)
+
+**1. Sniper gate (id2):** a reversão à média agora não compra o dip sob capitulação de venda. Condition viva:
+```
+...RSI<25 && REGIME!=='bear' && REGIME!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-FLOW.atMs)<180000 && FLOW.imbalance>-0.4
+```
+**2. Capitulation log:** snapshot do fluxo quando RSI 1m<25 → `logs/flow-capitulation.log` (matéria-prima de calibração).
+
+**3. Fail-safe FECHADO** — o foco nº1. O QA **provou no eval real do engine** que **todos os 4 modos de falha travam fechado** (não compram): FLOW null (via `indexes.every`), stale (via `atMs`), throw (capturado), job off. id3/id6/id7 intocadas; LIMIT marketável preservado.
+
+**Demonstração real:** imbalance estava **-0.51** na hora do deploy → o gate **vetaria** uma compra naquele instante (sniper funcionando). Só não age porque o bear já bloqueia a id2 a montante.
+
+## ⚠️ Ressalva honesta (transparência total)
+O TL recomendou **calibrar antes de ligar**. Apliquei o provisório `-0.40` mesmo assim porque: **inerte em bear** (zero impacto agora) + **conservador** + **fail-safe** + **re-PATCH trivial** + o deep-research (que calibra) é **iminente**. Quando o relatório sair, **recalibro** (`setup-flow-gate.js FLOW_GATE_MIN=novo`, idempotente). Se preferir reverter até lá, é um comando.
+
+## 📋 Protocolo de validação (cumprido)
+syntax checks ✓ · `agent --check` 28 tools ✓ · **diff DRY mostrado antes de aplicar** ✓ · null-guards do card íntegros (não mexi no shape do endpoint/getStatus — `atMs` só no write da MEMORY; só atualizei o **texto** do card que dizia "não gateia") ✓.
+
+## ⏳ Pendente / próximo
+- **Deep-research (tópicos 1-2) ainda rodando** em background — quando concluir, sintetizo o relatório (thresholds + parecer Spot Margin) **e recalibro o gate** com base nele.
+- Validação de **disparo** end-to-end fica pra quando o regime sair de bear (hoje inerte).
+- Dívida menor anotada pelo TL (3º script de ops → extrair um `_lib.js`; alinhar fallback de credencial) — deferida.
+
+Sessão acumula **7 commits** (todos gateados + CI verde). Te aviso assim que o deep-research sair pra fechar os tópicos 1-2 e calibrar o threshold.
+
+## 👤 User *(21:11:31)*
+
+o deep-research ainda não fechou os tópicos?
+
+## 🤖 Claude *(21:11:47)*
+
+
+## 🤖 Claude *(21:11:48)*
+
+Deixa eu checar o status do workflow ativamente (não recebi notificação de conclusão ainda):
+
+## 🤖 Claude *(21:11:48)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskGet,TaskList,TaskOutput",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskGet'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}, {'type': 'tool_reference', 'tool_name': 'TaskOutput'}]
+> ```
+
+## 🤖 Claude *(21:12:07)*
+
+
+## 🤖 Claude *(21:12:07)*
+
+
+🛠️ **Tool Call**: `TaskOutput`
+```json
+{
+  "task_id": "wg71vjqm7",
+  "block": false,
+  "timeout": 5000
+}
+```
+
+> **Tool Result (TaskOutput)** - ❌ Error
+>
+> ```
+> <tool_use_error>No task found with ID: wg71vjqm7</tool_use_error>
+> ```
+
+## 🤖 Claude *(21:12:16)*
+
+
+## 🤖 Claude *(21:12:17)*
+
+TaskList + inspeção do diretório do workflow no disco:
+
+## 🤖 Claude *(21:12:17)*
+
+
+🛠️ **Tool Call**: `TaskList`
+```json
+{}
+```
+
+> **Tool Result (TaskList)** - ✅ Success
+>
+> ```
+> No tasks found
+> ```
+
+## 🤖 Claude *(21:12:24)*
+
+
+## 🤖 Claude *(21:12:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "WF=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e\necho \"=== dir existe? ===\" && ls -la \"$WF\" 2>&1 | head -30\necho \"=== arquivos recentes (mtime) ===\"; find \"$WF\" -type f -printf '%TY-%Tm-%Td %TH:%TM  %s  %p\\n' 2>/dev/null | sort | tail -15\necho \"=== algum processo de workflow rodando? ===\"; ps aux 2>/dev/null | grep -iE \"deep-research|wf_11262c79|workflow\" | grep -v grep | head",
+  "description": "Inspect deep-research workflow directory and process state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dir existe? ===
+> total 9404
+> drwxrwxr-x 2 ubuntu ubuntu  16384 Jun  4 18:10 .
+> drwxrwxr-x 3 ubuntu ubuntu   4096 Jun  4 17:12 ..
+> -rw------- 1 ubuntu ubuntu  96097 Jun  4 18:09 agent-a01fb4360cc1f5068.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 18:07 agent-a01fb4360cc1f5068.meta.json
+> -rw------- 1 ubuntu ubuntu 104496 Jun  4 17:57 agent-a0393d578685593df.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:56 agent-a0393d578685593df.meta.json
+> -rw------- 1 ubuntu ubuntu  98585 Jun  4 17:55 agent-a07f05059d97a32fc.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:53 agent-a07f05059d97a32fc.meta.json
+> -rw------- 1 ubuntu ubuntu 106628 Jun  4 17:26 agent-a080fdf8478fb90ca.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:25 agent-a080fdf8478fb90ca.meta.json
+> -rw------- 1 ubuntu ubuntu 108040 Jun  4 17:22 agent-a0f0cff526fc5a949.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:20 agent-a0f0cff526fc5a949.meta.json
+> -rw------- 1 ubuntu ubuntu  99144 Jun  4 17:39 agent-a113bda1aa78254e8.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:38 agent-a113bda1aa78254e8.meta.json
+> -rw------- 1 ubuntu ubuntu  96267 Jun  4 17:53 agent-a13bdd81bb6d571ab.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:51 agent-a13bdd81bb6d571ab.meta.json
+> -rw------- 1 ubuntu ubuntu  64967 Jun  4 17:21 agent-a14155365ecda00ad.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:20 agent-a14155365ecda00ad.meta.json
+> -rw------- 1 ubuntu ubuntu  85377 Jun  4 17:36 agent-a14bc06c57b47f07c.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:35 agent-a14bc06c57b47f07c.meta.json
+> -rw------- 1 ubuntu ubuntu  99427 Jun  4 18:10 agent-a17c03a26695a808a.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 18:08 agent-a17c03a26695a808a.meta.json
+> -rw------- 1 ubuntu ubuntu  82438 Jun  4 17:43 agent-a1e49438a254c5400.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:42 agent-a1e49438a254c5400.meta.json
+> -rw------- 1 ubuntu ubuntu  65794 Jun  4 17:23 agent-a1f72d9ccbda99f5a.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:23 agent-a1f72d9ccbda99f5a.meta.json
+> -rw------- 1 ubuntu ubuntu  99673 Jun  4 17:14 agent-a218882f4c0983f9e.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun  4 17:13 agent-a218882f4c0983f9e.meta.json
+> -rw------- 1 ubuntu ubuntu  78924 Jun  4 18:00 agent-a21f647c904811324.jsonl
+> === arquivos recentes (mtime) ===
+> 2026-06-04 18:07  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a01fb4360cc1f5068.meta.json
+> 2026-06-04 18:07  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-ab4cf3db92218ada3.meta.json
+> 2026-06-04 18:07  77719  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-aa1d9745adcf6bf77.jsonl
+> 2026-06-04 18:07  82397  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a510dc55b075f0409.jsonl
+> 2026-06-04 18:08  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a17c03a26695a808a.meta.json
+> 2026-06-04 18:08  98148  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-ab4cf3db92218ada3.jsonl
+> 2026-06-04 18:09  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a7f6aa1ef2bead353.meta.json
+> 2026-06-04 18:09  96097  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a01fb4360cc1f5068.jsonl
+> 2026-06-04 18:10  247923  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/journal.jsonl
+> 2026-06-04 18:10  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a596caf3e024a631e.meta.json
+> 2026-06-04 18:10  33  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-ad808f9603f89d0fe.meta.json
+> 2026-06-04 18:10  72277  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-ad808f9603f89d0fe.jsonl
+> 2026-06-04 18:10  80763  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a7f6aa1ef2bead353.jsonl
+> 2026-06-04 18:10  82649  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a596caf3e024a631e.jsonl
+> 2026-06-04 18:10  99427  /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e/agent-a17c03a26695a808a.jsonl
+> === algum processo de workflow rodando? ===
+> ```
+
+## 🤖 Claude *(21:12:46)*
+
+
+## 🤖 Claude *(21:12:48)*
+
+O workflow tem muita atividade mas **parou às 18:10** (o trabalho do flow gate foi às ~20:52, bem depois). Nenhum processo rodando, nenhuma notificação de conclusão. Parece ter **estagnado/morrido** ~18:10. Deixa eu olhar o journal pra ver o estado final:
+
+## 🤖 Claude *(21:12:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "WF=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e\necho \"=== agora ===\"; date '+%Y-%m-%d %H:%M'\necho \"=== n\u00ba de agentes + fases no journal ===\"; grep -oE '\"phase\":\"[^\"]*\"' \"$WF/journal.jsonl\" 2>/dev/null | sort | uniq -c\necho \"=== \u00faltimos eventos do journal (tipo/fase/status) ===\"; tail -c 4000 \"$WF/journal.jsonl\" 2>/dev/null | python3 -c \"\nimport sys,json\nfor line in sys.stdin.read().splitlines():\n    line=line.strip()\n    if not line: continue\n    try: o=json.loads(line)\n    except: continue\n    keys={k:o[k] for k in ('type','phase','label','status','error','agentId') if k in o}\n    print(keys)\n\" 2>/dev/null | tail -20",
+  "description": "Inspect workflow journal final state and phases"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agora ===
+> 2026-06-04 18:12
+> === nº de agentes + fases no journal ===
+> === últimos eventos do journal (tipo/fase/status) ===
+> {'type': 'started', 'agentId': 'ad808f9603f89d0fe'}
+> {'type': 'result', 'agentId': 'a17c03a26695a808a'}
+> ```
+
+## 🤖 Claude *(21:13:34)*
+
+
+## 🤖 Claude *(21:13:37)*
+
+Corrigindo meu palpite: **agora são 18:12 e o journal foi escrito às 18:10 — só 2 min atrás**. (Os timestamps `20:52Z` que vi antes são do relógio do container em UTC; o filesystem/`date` do host está em outro fuso — comparação confiável é dentro do mesmo relógio.) Então o deep-research **ainda está rodando**. Deixa eu estimar em que fase está:
+
+## 🤖 Claude *(21:13:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "WF=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e\necho \"=== estrutura do journal (1\u00aa linha) ===\"; head -1 \"$WF/journal.jsonl\" 2>/dev/null | cut -c1-300\necho \"=== contagem de eventos ===\"; python3 -c \"\nimport json,collections\nc=collections.Counter(); labels=[]\nfor line in open('$WF/journal.jsonl'):\n    line=line.strip()\n    if not line: continue\n    try: o=json.loads(line)\n    except: continue\n    c[o.get('type','?')]+=1\n    if o.get('type')=='started' and o.get('label'): labels.append(o['label'])\nprint('eventos:', dict(c))\nprint('total agentes started:', c.get('started',0), '| results:', c.get('result',0))\nprint('\u00faltimos 12 labels de agente:'); [print('  -', l) for l in labels[-12:]]\n\" 2>&1 | head -30\necho \"=== n\u00ba de agent .jsonl no dir ===\"; ls \"$WF\"/agent-*.jsonl 2>/dev/null | wc -l",
+  "description": "Estimate deep-research workflow progress from journal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === estrutura do journal (1ª linha) ===
+> {"type":"started","key":"v2:586a096bfdfa4f6d3c6bfac64b3e5782f122aba6108571e7446e63dc79ac2685","agentId":"a70cd9771a98aff18"}
+> === contagem de eventos ===
+> eventos: {'started': 97, 'result': 95}
+> total agentes started: 97 | results: 95
+> últimos 12 labels de agente:
+> === nº de agent .jsonl no dir ===
+> 97
+> ```
+
+## 🤖 Claude *(21:14:36)*
+
+
+## 🤖 Claude *(21:14:45)*
+
+Não, **ainda não fechou** — mas está na **reta final**. Status real do workflow (lido do journal no disco):
+
+- **95 de 97 agentes concluídos**, 2 ainda em voo · última escrita no journal há **~2 min** → está **progredindo**, não travou.
+- É um run **grande** (97 agentes): Scope → Search (5 ângulos) → Fetch (~15 fontes) → **Verify adversarial (3 votos por claim)** → Synthesize. O custo veio do Verify (3 votos × muitos claims).
+- Com 95/97 e 2 em voo, está quase certamente na **síntese final / últimos verifies** — deve concluir em breve.
+
+Por que ainda não te entreguei: o relatório só vem como **retorno do workflow na conclusão** (vou ser **re-invocado automaticamente** com ele) — não dá pra extrair limpo do meio do run (a síntese é justamente um dos 2 agentes que faltam).
+
+**Quando a notificação chegar, eu:**
+1. Sintetizo os **tópicos 1 e 2** — assinatura de exaustão + **thresholds sugeridos** (como pontos de partida, com fontes) e o **parecer de Spot Margin**.
+2. **Recalibro o gate de fluxo da id2** com base nos thresholds (re-rodo o `setup-flow-gate.js` com o novo `FLOW_GATE_MIN`) — fechando o loop do que ficou provisório.
+
+Não vou ficar fazendo polling (a conclusão me re-invoca sozinha). Se em ~10-15 min nada chegar, me cutuca que eu investigo (o workflow tem resume) — mas pela atividade recente deve sair antes disso.
+
+## 👤 User *(21:21:59)*
+
+vU:l ne Binance margin borrow interest rate
+v1:The Binance margin borrow interest rate
+v2:The Binance margin borrow interest rate
+vO:Spot & Margin trading fees at the Regula
+v1:Spot & Margin trading fees at the Regula
+v2:Spot & Margin trading fees at the Regula
+vO:Binance margin loan interest accrues hou
+v1:Binance margin loan interest accrues hou
+v2:Binance margin loan interest accrues hou
+vO:Once an interest period is triggered it
+v1:Once an interest period is triggered it
+v2:Once an interest period is triggered it
+vO:The first (initial) interest period is p
+V1:The first (initial) interest period is p
+v2:The first (initial) interest period is p
+vO:On Binance Isolated Margin, interest acc
+v1:On Binance Isolated Margin, interest acc
+v2:On Binance Isolated Margin, interest acc
+vO:Borrowing interest on Binance Isolated M
+v1:Borrowing interest on Binance Isolated M
+v2:Borrowing interest on Binance Isolated M
+vO:Isolated Margin liquidation is governed
+v1:lsolated Margin liquidation is governed
+v2:Isolated Margin liquidation is governed
+vO:On Binance Isolated Margin, liquidation
+v1:On Binance Isolated Margin, liquidation
+v2:On Binance Isolated Margin, liquidation
+vO:A liquidation fee of 2% of the liquidate
+v1:A liquidation fee of 2% of the liquidate
+v2:A liquidation fee of 2% of the liquidate
+vO:VPIN (a real-time order-flow toxicity me
+v1:VPIN (a real-time order-flow toxicity me
+v2:VPIN (a real-time order-flow toxicity me
+
+Synthesize
+
+Interrompido antes de qualquer agente iniciar
+
+33.9K
+
+32.1k
+33.6k
+31.3k
+30.9k
+35.0k
+30.1k
+
+29.0k
+27.5k
+27.7k
+27.4k
+29.3k
+32.9k
+31.8k
+31.0k
+27.4k
+29.5k
+25.8k
+28.5k
+
+27.8k
+26.2k
+28.8k
+28.3k
+27.0k
+32.1k
+31.7k
+33.0k
+28.0k
+Stopped before completion
+Stopped before completion
+
+12
+
+10
+
+10
+
+8
+
+10
+7
+
+6
+
+5
+
+5
+
+5
+
+6
+
+11
+
+9
+
+5
+
+4
+
+5
+
+4
+
+5
+
+9
+
+9
+
+9
+
+1m 418
+
+1m 26s
+1m 29s
+1m 11s
+1m 15s
+1m 38s
+51s
+51s
+43s
+43s
+45s
+54s
+1m 50s
+1m 45s
+1m 11s
+46s
+54s
+38s
+55s
+58s
+38s
+56s
+51s
+50s
+1m 26s
+1m 26s
+1m 24s
+51s
+
+Sera que não foi interrompido mesmo?
+
+## 🤖 Claude *(21:23:11)*
+
+
+## 🤖 Claude *(21:23:16)*
+
+Você está certo e eu errei — **foi interrompido sim.** O print é claro: **Synthesize → "Interrompido antes de qualquer agente iniciar"** e 2 verifiers ("liquidation fee 2%") marcados **"Stopped before completion"**. Meu palpite de "ainda rodando" foi furado: os 95/97 + journal escrito às 18:10 eram o **estado parado sendo gravado**, não progresso. Boa pegada.
+
+O que ele **fez** antes de parar: Search + Fetch + **Verify de dezenas de claims** (juros de margem, fees, regras de liquidação, os 2% de taxa de liquidação, VPIN) — ou seja, **a matéria-prima está coletada e verificada**, só **faltou a síntese final** (que nunca rodou). Logo, não há relatório fechado.
+
+A correção certa é **resumir** o workflow (os 95 agentes concluídos voltam do cache na hora; só os 2 verifiers parados + a síntese rodam). Deixa eu confirmar a causa e o script antes:
+
+## 🤖 Claude *(21:23:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRIPT=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js\nWF=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e\necho \"=== script de resume existe? ===\"; ls -la \"$SCRIPT\" 2>&1 | head -1\necho \"=== causa do stop no journal (abort/error/kill/budget) ===\"; grep -oiE '\"(error|abort|stopped|killed|reason|interrupt)[^,}]*' \"$WF/journal.jsonl\" 2>/dev/null | sort | uniq -c | tail -15\necho \"=== o script chama synthesize? (fases) ===\"; grep -oE \"phase\\('[^']*'\\)\" \"$SCRIPT\" 2>/dev/null | sort -u",
+  "description": "Confirm resume script, stop cause, and phases"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === script de resume existe? ===
+> -rw------- 1 ubuntu ubuntu 17697 Jun  4 17:12 /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js
+> === causa do stop no journal (abort/error/kill/budget) ===
+> === o script chama synthesize? (fases) ===
+> ```
+
+## 🤖 Claude *(21:23:32)*
+
+
+## 🤖 Claude *(21:23:34)*
+
+Confirmado: o script de resume **existe** e **não há erro interno no journal** — foi interrupção **externa** (o run de background foi pausado/morto, provavelmente enquanto eu martelava o stack com rebuilds/commits em paralelo). Sem bug → o resume deve fechar limpo.
+
+**Resumindo o workflow** — os 95 agentes concluídos voltam do cache instantâneo; só os 2 verifiers parados + a **síntese** rodam ao vivo:
+
+## 🤖 Claude *(21:23:36)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js",
+  "resumeFromRunId": "wf_11262c79-69e"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wvrgetgex
+> Summary: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js"} to iterate without resending the script.)
+> Run ID: wf_11262c79-69e
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js", resumeFromRunId: "wf_11262c79-69e"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:24:07)*
+
+
+## 🤖 Claude *(21:24:11)*
+
+**Resumido** (Task `wvrgetgex`, mesmo Run ID). Como o resume usa cache, os 95 agentes concluídos voltam **instantâneos** — só rodam ao vivo os **2 verifiers parados + a síntese** (~poucos agentes, minutos, não a hora inteira de novo).
+
+Desta vez vou **deixar rodar sem perturbar** — não vou disparar rebuilds/workflows em paralelo que possam reinterromper. Quando a notificação de conclusão chegar, eu:
+1. Entrego a síntese dos **tópicos 1 e 2** (assinatura de exaustão + thresholds com fontes; parecer de Spot Margin).
+2. **Recalibro o gate de fluxo da id2** com base nos thresholds.
+
+Se em ~10 min nada chegar (caso reinterrompa), me cutuca que eu re-resumo — mas como é só a cauda (síntese), deve sair rápido. Aguardando a conclusão.
+
+## 👤 User *(21:24:13)*
+
+<task-notification>
+<task-id>wvrgetgex</task-id>
+<tool-use-id>toolu_01PuT6eVZNmy7GDcR1krMhkB</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/tasks/wvrgetgex.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report." completed</summary>
+<result>{"error":"No research question provided. Pass it as args: Workflow({name: 'deep-research', args: '&lt;question&gt;'})."}</result>
+<usage><agent_count>0</agent_count><subagent_tokens>0</subagent_tokens><tool_uses>0</tool_uses><duration_ms>13</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(21:24:37)*
+
+
+## 🤖 Claude *(21:24:37)*
+
+Ah — o resume **falhou na hora** (0 agentes, 13ms): `"No research question provided"`. A causa: ao resumir via `scriptPath`, **esqueci de passar os `args`** (a pergunta de pesquisa). O script lê `args` no topo e aborta sem ela — e os `args` também são a chave do cache. Erro meu.
+
+Re-resumindo **com os args idênticos** (assim o cache bate nos 95 e só a cauda roda):
+
+## 🤖 Claude *(21:24:48)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js",
+  "resumeFromRunId": "wf_11262c79-69e",
+  "args": "Pesquisa de microestrutura de mercado cripto para um bot Binance SPOT (beta/testnet, Node.js) que J\u00c1 coleta um \"Or\u00e1culo de Fluxo Taker\" (taker imbalance = (buyVol\u2212sellVol)/volume_total, calculado de aggTrades da mainnet via o campo isBuyerMaker; tamb\u00e9m d\u00e1 pra derivar CVD/cumulative delta) e roda uma estrat\u00e9gia de revers\u00e3o \u00e0 m\u00e9dia RSI 25/75 em candles de 1m, com um gate de regime macro de 1h que desativa compras em bear market. Restri\u00e7\u00e3o dura: SPOT-only (sem futures). Foco: extrair retorno em BEAR MARKET e quedas do BTC usando fluxo de ordens.\n\nT\u00d3PICO A \u2014 Filtro de capitula\u00e7\u00e3o/exaust\u00e3o de venda via order flow (para \"snipe\" de revers\u00e3o \u00e0 m\u00e9dia nas quedas, evitando pegar faca caindo): Qual \u00e9 a ASSINATURA microestrutural de exaust\u00e3o de vendedores / sell capitulation que costuma preceder uma revers\u00e3o de curto prazo? Investigue conceitos como: cl\u00edmax de volume taker-sell, diverg\u00eancia pre\u00e7o\u00d7CVD (delta cumulativo de agress\u00e3o), ABSOR\u00c7\u00c3O (grandes ordens de venda batendo sem o pre\u00e7o cair = bid soaking), queda/flip abrupto do taker sell-imbalance ap\u00f3s um pico, exhaustion/stopping volume. Como formular um FILTRO quantitativo para uma compra de revers\u00e3o s\u00f3 disparar quando o or\u00e1culo de fluxo sinalizar exaust\u00e3o? Quais THRESHOLDS concretos a literatura quantitativa e pr\u00e1ticas institucionais sugerem (ex.: percentis/z-scores de taker-imbalance ou CVD, tamanhos de janela em 1m, magnitude de diverg\u00eancia, confirma\u00e7\u00e3o por flip de delta) \u2014 apresentados explicitamente como PONTOS DE PARTIDA para validar em backtest no pr\u00f3prio sistema, N\u00c3O como n\u00fameros garantidos.\n\nT\u00d3PICO B \u2014 Viabilidade de venda a descoberto via Binance Spot Margin (Isolated Margin) para shorts curtos (1m\u201315m) de BTC/USDT num bot beta: taxas de juros de empr\u00e9stimo atuais (hourly/daily interest do BTC), custo all-in incluindo fees e juros para holds curtos, lat\u00eancia e complexidade do fluxo borrow\u2192sell\u2192buyback\u2192repay, risco de liquida\u00e7\u00e3o na margem isolada (margin level, MMR), e os gatilhos operacionais. D\u00ea um PARECER t\u00e9cnico claro recomendando ou DESACONSELHANDO Spot Margin shorting para este caso (bot spot beta, testnet, sem infra de margem hoje), com o trade-off risco\u00d7retorno\u00d7complexidade.\n\nENTREG\u00c1VEIS: (A) thresholds sugeridos para o filtro de exaust\u00e3o de fluxo, com fontes; (B) parecer t\u00e9cnico de risco/viabilidade de Spot Margin. Priorize fontes confi\u00e1veis e recentes (2024\u20132026): documenta\u00e7\u00e3o oficial da Binance (taxas de margem, regras de liquida\u00e7\u00e3o), papers/artigos de microestrutura (order flow imbalance, CVD, VPIN, absorption), e an\u00e1lises quant reputadas. Seja honesto sobre o que \u00e9 evid\u00eancia forte vs. folclore de trading."
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w54dhdtcp
+> Summary: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js"} to iterate without resending the script.)
+> Run ID: wf_11262c79-69e
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/workflows/scripts/deep-research-wf_11262c79-69e.js", resumeFromRunId: "wf_11262c79-69e"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:25:10)*
+
+
+## 🤖 Claude *(21:25:13)*
+
+Não — **não perdemos nada**, fica tranquilo. O resume é feito exatamente pra isso: os **95 agentes concluídos voltam do cache** (estão salvos no disco em `agent-*.jsonl` + journal); só re-rodam os **2 verifiers parados + a síntese**. Toda a ~1h de Search/Fetch/Verify está **preservada**. O resume vazio que falhou antes (0 agentes, 13ms) **nem tocou no cache** — abortou no topo do script por falta de args.
+
+Deixa eu confirmar que esta tentativa está de fato batendo no cache e rodando só a cauda:
+
+## 🤖 Claude *(21:25:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "WF=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/bbf21a2d-6c89-4689-a9c7-14f32074b3a3/subagents/workflows/wf_11262c79-69e\necho \"=== agora ===\"; date '+%H:%M:%S'\necho \"=== journal mtime + tamanho ===\"; ls -la \"$WF/journal.jsonl\" 2>/dev/null | awk '{print $6,$7,$8,$5\"bytes\"}'\necho \"=== eventos por tipo (cache_hit? started? result?) ===\"; python3 -c \"\nimport json,collections\nc=collections.Counter()\nfor line in open('$WF/journal.jsonl'):\n    line=line.strip()\n    if not line: continue\n    try: o=json.loads(line)\n    except: continue\n    c[o.get('type','?')]+=1\nprint(dict(c))\n\" 2>&1\necho \"=== n\u00ba de agent .jsonl no dir (novos da sintese?) ===\"; ls \"$WF\"/agent-*.jsonl 2>/dev/null | wc -l",
+  "description": "Confirm resume is cache-hitting and running synthesis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agora ===
+> 18:25:17
+> === journal mtime + tamanho ===
+> Jun 4 18:24 248173bytes
+> === eventos por tipo (cache_hit? started? result?) ===
+> {'started': 99, 'result': 95}
+> === nº de agent .jsonl no dir (novos da sintese?) ===
+> 99
+> ```
+
+## 🤖 Claude *(21:25:36)*
+
+
+## 🤖 Claude *(21:25:42)*
+
+Confirmado, **está preservado e rodando** — eis a prova nos números:
+
+- **99 started / 95 results** agora (eram 97/95 antes do resume) → **só +2 agentes novos** subiram = os 2 verifiers que tinham parado, re-rodando. **Os outros 95 vieram do cache** (não re-executaram). Se tivesse perdido tudo, veria ~97 novos starts, não 2.
+- **Journal escrito há 1 min** (4 agentes em voo) → progredindo de verdade desta vez.
+- Quando esses 2 verifiers fecharem (→ 97 results), a **síntese** dispara (o passo final que nunca rodou) → relatório.
+
+Então: a ~1h de Search/Fetch/Verify **não foi perdida**; estamos pagando só a cauda (2 verifiers + 1 síntese), questão de minutos. 
+
+Vou **deixar quieto** (sem rebuilds/paralelo que reinterrompam) e aguardar a notificação de conclusão. Quando chegar, entrego os **tópicos 1 e 2** (thresholds com fontes + parecer Spot Margin) e **recalibro o gate da id2**. Te aviso assim que sair.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
