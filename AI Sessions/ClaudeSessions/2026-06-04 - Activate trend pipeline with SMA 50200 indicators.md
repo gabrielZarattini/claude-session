@@ -7643,6 +7643,506 @@ Opções pra seguir (lean: a #1 ajuda a observação, que é o gargalo agora):
 
 Qual direção? (Se for "continue", pego a #1 — é o único código que destrava a calibração sem depender de evento de mercado.)
 
+## 👤 User *(18:27:42)*
+
+Ótimo entoa continue
+
+## 🤖 Claude *(18:28:02)*
+
+
+## 🤖 Claude *(18:28:04)*
+
+Beleza — #1: card de fluxo no painel `/intelligence` (observabilidade read-only, destrava a calibração). É frontend (React). Deixa eu achar o painel e o card do "Regime Gate" pra espelhar:
+
+## 🤖 Claude *(18:28:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend && echo \"=== arquivos do painel intelligence ===\" && grep -rliE \"intelligence|regime-status|regime gate|regimeGate|Market Regime\" src/ 2>/dev/null | head; echo \"=== refs a regime no front ===\"; grep -rniE \"regime-status|/analysis/regime|regimeStatus\" src/ 2>/dev/null | head",
+  "description": "Locate the Intelligence panel and regime card in frontend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do painel intelligence ===
+> src/routes.js
+> src/private/Intelligence/Intelligence.js
+> src/components/Menu/SideBar.js
+> src/services/IntelligenceService.js
+> === refs a regime no front ===
+> src/private/Intelligence/Intelligence.js:6:import { getRegime, getRegimeStatus, getAgentRuns } from '../../services/IntelligenceService';
+> src/private/Intelligence/Intelligence.js:31:        getRegimeStatus(token).then(setGate).catch(err => console.error(err));
+> src/services/IntelligenceService.js:17:export async function getRegimeStatus(token) {
+> src/services/IntelligenceService.js:19:    const url = `${ANALYSIS_URL}/regime-status`;
+> ```
+
+## 🤖 Claude *(18:28:10)*
+
+
+## 🤖 Claude *(18:28:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import axios from './BaseService';
+> 2	
+> 3	const ANALYSIS_URL = `${process.env.REACT_APP_API_URL}/analysis`;
+> 4	const AGENT_URL = `${process.env.REACT_APP_API_URL}/agent`;
+> 5	
+> 6	// Regime de mercado REAL (mainnet) do símbolo: bear/trend/range/mixed/unknown + strategy + signals.
+> 7	export async function getRegime(symbol, interval, token) {
+> 8	    const headers = { 'authorization': token };
+> 9	    const url = `${ANALYSIS_URL}/regime/${symbol}?interval=${interval || '1h'}`;
+> 10	    const response = await axios.get(url, { headers });
+> 11	    return response.data;
+> 12	}
+> 13	
+> 14	// Status do job de regime: por símbolo o regime do GATE (valor na MEMORY, histerético), idade da
+> 15	// última atualização e flag de stale; + config do job. Torna visível o halt silencioso e a
+> 16	// divergência entre o regime instantâneo (card acima) e a decisão do gate.
+> 17	export async function getRegimeStatus(token) {
+> 18	    const headers = { 'authorization': token };
+> 19	    const url = `${ANALYSIS_URL}/regime-status`;
+> 20	    const response = await axios.get(url, { headers });
+> 21	    return response.data;
+> 22	}
+> 23	
+> 24	// KPIs do agente LLM (a partir do journal): ciclos, tokens, custo, top tools, ciclos recentes.
+> 25	export async function getAgentRuns(limit, token) {
+> 26	    const headers = { 'authorization': token };
+> 27	    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;
+> 28	    const response = await axios.get(url, { headers });
+> 29	    return response.data;
+> 30	}
+> 31	
+> ```
+
+## 🤖 Claude *(18:28:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useEffect } from 'react';
+> 2	import Menu from '../../components/Menu/Menu';
+> 3	import Footer from '../../components/Footer/Footer';
+> 4	import Toast from '../../components/Toast/Toast';
+> 5	import InfoBlock from '../../components/InfoBlock/InfoBlock';
+> 6	import { getRegime, getRegimeStatus, getAgentRuns } from '../../services/IntelligenceService';
+> 7	
+> 8	const REGIME_BADGE = { bear: 'danger', trend: 'success', range: 'warning', mixed: 'info', unknown: 'secondary' };
+> 9	
+> 10	function Intelligence() {
+> 11	
+> 12	    const [symbol, setSymbol] = useState('BTCUSDT');
+> 13	    const [interval, setIntervalValue] = useState('1h');
+> 14	    const [regime, setRegime] = useState({});
+> 15	    const [gate, setGate] = useState({ symbols: {} });
+> 16	    const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+> 17	    const [notification, setNotification] = useState({});
+> 18	
+> 19	    function loadRegime() {
+> 20	        const token = localStorage.getItem('token');
+> 21	        getRegime(symbol, interval, token)
+> 22	            .then(setRegime)
+> 23	            .catch(err => {
+> 24	                const msg = err.response ? (err.response.data.error || err.response.data) : err.message;
+> 25	                setNotification({ type: 'error', text: msg });
+> 26	            });
+> 27	    }
+> 28	
+> 29	    function loadGate() {
+> 30	        const token = localStorage.getItem('token');
+> 31	        getRegimeStatus(token).then(setGate).catch(err => console.error(err));
+> 32	    }
+> 33	
+> 34	    function loadAgent() {
+> 35	        const token = localStorage.getItem('token');
+> 36	        getAgentRuns(50, token).then(setAgent).catch(err => console.error(err));
+> 37	    }
+> 38	
+> 39	    useEffect(() => {
+> 40	        loadRegime();
+> 41	        loadGate();
+> 42	        loadAgent();
+> 43	        // auto-refresh do status do gate (detecta "STALE"/halt sem refresh manual)
+> 44	        const id = setInterval(loadGate, 60000);
+> 45	        return () => clearInterval(id);
+> 46	        // eslint-disable-next-line react-hooks/exhaustive-deps
+> 47	    }, []);
+> 48	
+> 49	    function fmt(v) {
+> 50	        if (typeof v === 'boolean') return v ? 'sim' : 'não';
+> 51	        if (typeof v === 'number') return Math.abs(v) < 1 ? v.toFixed(3) : v.toLocaleString();
+> 52	        return String(v);
+> 53	    }
+> 54	
+> 55	    function fmtAge(ms) {
+> 56	        if (ms == null) return '—';
+> 57	        const s = Math.round(ms / 1000);
+> 58	        if (s < 90) return `há ${s}s`;
+> 59	        const m = Math.round(s / 60);
+> 60	        if (m < 90) return `há ${m}min`;
+> 61	        return `há ${Math.round(m / 60)}h`;
+> 62	    }
+> 63	
+> 64	    return (
+> 65	        <React.Fragment>
+> 66	            <Menu />
+> 67	            <main className="content">
+> 68	                <div className="py-4">
+> 69	                    <h2 className="h4">Intelligence</h2>
+> 70	                </div>
+> 71	
+> 72	                <div className="card border-0 shadow mb-4">
+> 73	                    <div className="card-header d-sm-flex justify-content-between align-items-center">
+> 74	                        <h5 className="mb-2 mb-sm-0">Market Regime <small className="text-muted">(mainnet — estado real do mercado)</small></h5>
+> 75	                        <div className="d-flex">
+> 76	                            <input className="form-control form-control-sm me-2" style={{ width: '130px' }} value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} placeholder="BTCUSDT" />
+> 77	                            <select className="form-select form-select-sm me-2" style={{ width: '90px' }} value={interval} onChange={e => setIntervalValue(e.target.value)}>
+> 78	                                <option value="15m">15m</option>
+> 79	                                <option value="1h">1h</option>
+> 80	                                <option value="4h">4h</option>
+> 81	                                <option value="1d">1d</option>
+> 82	                            </select>
+> 83	                            <button className="btn btn-sm btn-primary" onClick={() => { loadRegime(); loadGate(); }}>Analyze</button>
+> 84	                        </div>
+> 85	                    </div>
+> 86	                    <div className="card-body">
+> 87	                        <div className="d-flex flex-wrap align-items-center mb-3">
+> 88	                            <span className={`badge bg-${REGIME_BADGE[regime.regime] || 'secondary'} me-3 text-uppercase`} style={{ fontSize: '1rem' }}>{regime.regime || '—'}</span>
+> 89	                            <span className="me-3">strategy: <b>{regime.strategy || '—'}</b></span>
+> 90	                            <span className="text-muted small">{regime.reason}</span>
+> 91	                        </div>
+> 92	                        <div className="row">
+> 93	                            {regime.signals && Object.entries(regime.signals).map(([k, v]) => (
+> 94	                                <div className="col-md-2 col-4 mb-2" key={k}>
+> 95	                                    <div className="text-muted small">{k}</div>
+> 96	                                    <div className="fw-bold">{fmt(v)}</div>
+> 97	                                </div>
+> 98	                            ))}
+> 99	                        </div>
+> 100	                    </div>
+> 101	                </div>
+> 102	
+> 103	                <div className="card border-0 shadow mb-4">
+> 104	                    <div className="card-header d-sm-flex justify-content-between align-items-center">
+> 105	                        <h5 className="mb-2 mb-sm-0">Regime Gate <small className="text-muted">(decisão das automações — valor na MEMORY, histerético)</small></h5>
+> 106	                        <span className={`badge bg-${gate.enabled === false ? 'danger' : 'success'}`}>
+> 107	                            job {gate.enabled === false ? 'OFF' : 'ON'}{gate.interval ? ` · ${gate.interval}` : ''}{gate.running ? ' · rodando' : ''}
+> 108	                        </span>
+> 109	                    </div>
+> 110	                    <div className="card-body">
+> 111	                        {(!gate.symbols || Object.keys(gate.symbols).length === 0)
+> 112	                            ? <div className="alert alert-warning mb-0">
+> 113	                                {gate.enabled === false
+> 114	                                    ? 'Job de regime DESABILITADO (REGIME_JOB_ENABLED=false) — automações gateadas não compram (fail-safe).'
+> 115	                                    : 'Nenhum regime conhecido ainda (job no ar, sem dado da Binance) — automações gateadas em fail-safe (não compram).'}
+> 116	                            </div>
+> 117	                            : <div className="table-responsive">
+> 118	                                <table className="table table-sm mb-0 align-middle">
+> 119	                                    <thead><tr><th>símbolo</th><th>regime (gate)</th><th>atualizado</th><th>status</th></tr></thead>
+> 120	                                    <tbody>
+> 121	                                        {Object.entries(gate.symbols).map(([s, g]) => (
+> 122	                                            <tr key={s}>
+> 123	                                                <td className="fw-bold">{s}</td>
+> 124	                                                <td><span className={`badge bg-${REGIME_BADGE[g.regime] || 'secondary'} text-uppercase`}>{g.regime || '—'}</span></td>
+> 125	                                                <td className="small">{fmtAge(g.ageMs)}</td>
+> 126	                                                <td>{g.stale ? <span className="badge bg-warning text-dark">STALE</span> : <span className="text-muted small">ok</span>}</td>
+> 127	                                            </tr>
+> 128	                                        ))}
+> 129	                                    </tbody>
+> 130	                                </table>
+> 131	                            </div>}
+> 132	                        <div className="text-muted small mt-2">
+> 133	                            "Market Regime" (acima) é o regime <b>instantâneo</b> do mercado; este é a <b>decisão do gate</b> (histerética, banda anti-whipsaw) — podem divergir perto da fronteira. Automações de compra param em <b>bear</b>; venda nunca é gateada.
+> 134	                        </div>
+> 135	                    </div>
+> 136	                </div>
+> 137	
+> 138	                <h5 className="mb-3">Agent (LLM) — KPIs</h5>
+> 139	                {
+> 140	                    agent.available === false
+> 141	                        ? <div className="alert alert-warning">{agent.note || 'O agente ainda não rodou (journal ausente).'}</div>
+> 142	                        : <React.Fragment>
+> 143	                            <div className="row">
+> 144	                                <InfoBlock title="Cycles" value={agent.kpis.cycles} precision={0} background="primary">
+> 145	                                    <svg className="icon" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+> 146	                                </InfoBlock>
+> 147	                                <InfoBlock title="Tool Calls" value={agent.kpis.toolCalls} precision={0} background="secondary">
+> 148	                                    <svg className="icon" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+> 149	                                </InfoBlock>
+> 150	                                <InfoBlock title="Tokens (total)" value={agent.kpis.tokens && agent.kpis.tokens.total} precision={1} background="info">
+> 151	                                    <svg className="icon" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2v-2a2 2 0 00-2-2H5z" /></svg>
+> 152	                                </InfoBlock>
+> 153	                            </div>
+> 154	                            <div className="row mb-4">
+> 155	                                <div className="col-md-6 mb-3">
+> 156	                                    <div className="card border-0 shadow h-100"><div className="card-body">
+> 157	                                        <h6>Top Tools</h6>
+> 158	                                        <ul className="list-unstyled mb-0">
+> 159	                                            {(agent.kpis.topTools || []).slice(0, 8).map(t => (
+> 160	                                                <li key={t.name} className="d-flex justify-content-between border-bottom py-1"><span className="small">{t.name}</span><b>{t.count}</b></li>
+> 161	                                            ))}
+> 162	                                        </ul>
+> 163	                                    </div></div>
+> 164	                                </div>
+> 165	                                <div className="col-md-6 mb-3">
+> 166	                                    <div className="card border-0 shadow h-100"><div className="card-body">
+> 167	                                        <h6>Resumo</h6>
+> 168	                                        <div className="d-flex justify-content-between border-bottom py-1"><span>Tokens/ciclo (média)</span><b>{agent.kpis.tokens && (agent.kpis.tokens.perCycleAvg || 0).toLocaleString()}</b></div>
+> 169	                                        <div className="d-flex justify-content-between border-bottom py-1"><span>Custo estimado (USD)</span><b>${agent.kpis.estCostUSD}</b></div>
+> 170	                                        <div className="d-flex justify-content-between border-bottom py-1"><span>Input share</span><b>{agent.kpis.inputShare !== undefined ? (agent.kpis.inputShare * 100).toFixed(1) + '%' : '—'}</b></div>
+> 171	                                        <div className="d-flex justify-content-between py-1"><span>Records</span><b>{agent.kpis.records}</b></div>
+> 172	                                    </div></div>
+> 173	                                </div>
+> 174	                            </div>
+> 175	                            <div className="card border-0 shadow mb-4"><div className="card-body">
+> 176	                                <h6>Ciclos recentes</h6>
+> 177	                                <div className="table-responsive">
+> 178	                                    <table className="table table-sm">
+> 179	                                        <thead><tr><th>ts</th><th>type</th><th>model</th><th>resumo</th></tr></thead>
+> 180	                                        <tbody>
+> 181	                                            {(agent.runs || []).slice(0, 15).map((r, i) => (
+> 182	                                                <tr key={i}>
+> 183	                                                    <td className="small">{r.ts}</td>
+> 184	                                                    <td className="small">{r.type}</td>
+> 185	                                                    <td className="small">{r.model || r.provider}</td>
+> 186	                                                    <td className="small">{typeof r.summary === 'string' ? r.summary : JSON.stringify(r.summary)}</td>
+> 187	                                                </tr>
+> 188	                                            ))}
+> 189	                                        </tbody>
+> 190	                                    </table>
+> 191	                                </div>
+> 192	                            </div></div>
+> 193	                        </React.Fragment>
+> 194	                }
+> 195	                <Footer />
+> 196	            </main>
+> 197	            <Toast type={notification.type} text={notification.text} />
+> 198	        </React.Fragment>
+> 199	    );
+> 200	}
+> 201	
+> 202	export default Intelligence;
+> 203	
+> ```
+
+## 🤖 Claude *(18:28:39)*
+
+
+## 🤖 Claude *(18:28:40)*
+
+Painel mapeado. Vou espelhar o card "Regime Gate". Primeiro o service:
+
+## 🤖 Claude *(18:28:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js",
+  "old_string": "// KPIs do agente LLM (a partir do journal): ciclos, tokens, custo, top tools, ciclos recentes.\nexport async function getAgentRuns(limit, token) {",
+  "new_string": "// Status do flow job (Or\u00e1culo v1, SHADOW): por s\u00edmbolo o desequil\u00edbrio de agress\u00e3o do TAKER dos\n// aggTrades recentes da mainnet \u2014 imbalance \u2208 [-1,1] (<0 = taker vendendo) e toxicity (|imbalance|).\n// SHADOW: o sinal \u00e9 exposto mas ainda N\u00c3O gateia automa\u00e7\u00e3o (observando p/ calibrar o threshold).\nexport async function getFlowStatus(token) {\n    const headers = { 'authorization': token };\n    const url = `${ANALYSIS_URL}/flow-status`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}\n\n// KPIs do agente LLM (a partir do journal): ciclos, tokens, custo, top tools, ciclos recentes.\nexport async function getAgentRuns(limit, token) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:28:49)*
+
+
+## 🤖 Claude *(18:28:49)*
+
+Agora a página: import + state + load + refresh:
+
+## 🤖 Claude *(18:28:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "import { getRegime, getRegimeStatus, getAgentRuns } from '../../services/IntelligenceService';",
+  "new_string": "import { getRegime, getRegimeStatus, getFlowStatus, getAgentRuns } from '../../services/IntelligenceService';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:28:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "    const [gate, setGate] = useState({ symbols: {} });\n    const [agent, setAgent] = useState({ kpis: {}, runs: [] });",
+  "new_string": "    const [gate, setGate] = useState({ symbols: {} });\n    const [flow, setFlow] = useState({ symbols: {} });\n    const [agent, setAgent] = useState({ kpis: {}, runs: [] });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:28:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "    function loadGate() {\n        const token = localStorage.getItem('token');\n        getRegimeStatus(token).then(setGate).catch(err => console.error(err));\n    }",
+  "new_string": "    function loadGate() {\n        const token = localStorage.getItem('token');\n        getRegimeStatus(token).then(setGate).catch(err => console.error(err));\n    }\n\n    function loadFlow() {\n        const token = localStorage.getItem('token');\n        getFlowStatus(token).then(setFlow).catch(err => console.error(err));\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:29:06)*
+
+
+## 🤖 Claude *(18:29:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "        loadRegime();\n        loadGate();\n        loadAgent();\n        // auto-refresh do status do gate (detecta \"STALE\"/halt sem refresh manual)\n        const id = setInterval(loadGate, 60000);\n        return () => clearInterval(id);",
+  "new_string": "        loadRegime();\n        loadGate();\n        loadFlow();\n        loadAgent();\n        // auto-refresh do status do gate + fluxo (detecta \"STALE\"/halt e atualiza a toxicidade sem refresh manual)\n        const id = setInterval(() => { loadGate(); loadFlow(); }, 60000);\n        return () => clearInterval(id);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:29:15)*
+
+
+## 🤖 Claude *(18:29:15)*
+
+Helper de cor + o card (após o "Regime Gate", antes do Agent KPIs):
+
+## 🤖 Claude *(18:29:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "    function fmtAge(ms) {\n        if (ms == null) return '\u2014';\n        const s = Math.round(ms / 1000);\n        if (s < 90) return `h\u00e1 ${s}s`;\n        const m = Math.round(s / 60);\n        if (m < 90) return `h\u00e1 ${m}min`;\n        return `h\u00e1 ${Math.round(m / 60)}h`;\n    }",
+  "new_string": "    function fmtAge(ms) {\n        if (ms == null) return '\u2014';\n        const s = Math.round(ms / 1000);\n        if (s < 90) return `h\u00e1 ${s}s`;\n        const m = Math.round(s / 60);\n        if (m < 90) return `h\u00e1 ${m}min`;\n        return `h\u00e1 ${Math.round(m / 60)}h`;\n    }\n\n    // cor do imbalance: vermelho = taker vendendo (<0), verde = comprando (>0), neutro perto de 0\n    function flowBadge(imb) {\n        if (imb == null) return 'secondary';\n        return imb < -0.05 ? 'danger' : imb > 0.05 ? 'success' : 'secondary';\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:29:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "                <h5 className=\"mb-3\">Agent (LLM) \u2014 KPIs</h5>",
+  "new_string": "                <div className=\"card border-0 shadow mb-4\">\n                    <div className=\"card-header d-sm-flex justify-content-between align-items-center\">\n                        <h5 className=\"mb-2 mb-sm-0\">Taker Flow <small className=\"text-muted\">(Or\u00e1culo v1 \u2014 agress\u00e3o do taker, aggTrades mainnet)</small></h5>\n                        <span className={`badge bg-${flow.enabled === false ? 'danger' : 'info'}`}>\n                            job {flow.enabled === false ? 'OFF' : 'ON'}{flow.mode ? ` \u00b7 ${flow.mode}` : ''}{flow.running ? ' \u00b7 rodando' : ''}\n                        </span>\n                    </div>\n                    <div className=\"card-body\">\n                        {(!flow.symbols || Object.keys(flow.symbols).length === 0)\n                            ? <div className=\"alert alert-warning mb-0\">\n                                {flow.enabled === false\n                                    ? 'Flow job DESABILITADO (FLOW_JOB_ENABLED=false).'\n                                    : 'Sem fluxo conhecido ainda (job no ar, aguardando a 1\u00aa leitura de aggTrades da Binance).'}\n                            </div>\n                            : <div className=\"table-responsive\">\n                                <table className=\"table table-sm mb-0 align-middle\">\n                                    <thead><tr><th>s\u00edmbolo</th><th>imbalance</th><th>toxicity</th><th>trades / janela</th><th>atualizado</th></tr></thead>\n                                    <tbody>\n                                        {Object.entries(flow.symbols).map(([s, f]) => (\n                                            <tr key={s}>\n                                                <td className=\"fw-bold\">{s}</td>\n                                                <td>\n                                                    <span className={`badge bg-${flowBadge(f.imbalance)}`}>{f.imbalance != null ? f.imbalance.toFixed(3) : '\u2014'}</span>\n                                                    <span className=\"text-muted small ms-2\">{f.imbalance < -0.05 ? 'vendendo' : f.imbalance > 0.05 ? 'comprando' : 'neutro'}</span>\n                                                </td>\n                                                <td>{f.toxicity != null ? (f.toxicity >= 0.6 ? <span className=\"badge bg-warning text-dark\">{f.toxicity.toFixed(3)}</span> : <span>{f.toxicity.toFixed(3)}</span>) : '\u2014'}</td>\n                                                <td className=\"small\">{f.trades != null ? f.trades : '\u2014'} / {f.spanSec != null ? f.spanSec + 's' : '\u2014'}</td>\n                                                <td className=\"small\">{fmtAge(f.ageMs)}{f.unavailable ? <span className=\"badge bg-warning text-dark ms-1\">indisp.</span> : ''}</td>\n                                            </tr>\n                                        ))}\n                                    </tbody>\n                                </table>\n                            </div>}\n                        <div className=\"text-muted small mt-2\">\n                            <b>imbalance</b> \u2208 [\u22121,1] do fluxo agressor do taker (mainnet, via <code>isBuyerMaker</code>): <b>&lt;0 = vendendo</b> (sinal p/ n\u00e3o comprar o dip), &gt;0 = comprando. <b>toxicity</b> = |imbalance| (qu\u00e3o unilateral). <b>SHADOW</b>: o sinal \u00e9 exposto mas ainda <b>n\u00e3o gateia</b> a revers\u00e3o \u00e0 m\u00e9dia \u2014 observando p/ calibrar o threshold antes de ligar o gate.\n                        </div>\n                    </div>\n                </div>\n\n                <h5 className=\"mb-3\">Agent (LLM) \u2014 KPIs</h5>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:29:47)*
+
+
+## 🤖 Claude *(18:29:48)*
+
+Frontend editado. JSX não passa em `node --check`, então valido com o build real (que também é o gate da CI e o deploy). Build + recreate do frontend:
+
+## 🤖 Claude *(18:29:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose up -d --build frontend 2>&1 | tail -15'",
+  "description": "Build and deploy frontend with the flow card",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #26 naming to docker.io/library/tradeux-frontend done
+> #26 DONE 0.3s
+> 
+> #27 [frontend] resolving provenance for metadata file
+> #27 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Image tradeux-frontend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Running 
+>  Container tradeux-frontend-1 Recreate 
+>  Container tradeux-frontend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
