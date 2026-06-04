@@ -9052,10 +9052,1344 @@ Applying the migration + deploying `intent-orchestrate`:
 > --- deploy exit: 0 ---
 > ```
 
+## 🤖 Claude *(00:30:20)*
+
+
+## 🤖 Claude *(00:30:21)*
+
+Both done (Finished + Deployed, exit 0). Now the smoke — throwaway user, prove the policy engine (high-impact intent → HITL gate fires) + auth/validation gates:
+
+## 🤖 Claude *(00:30:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-intent-orchestrate.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 intent-orchestrate policy engine + HITL (FR-MH-009 / AT-MH-009), USER PATH (real JWT).\n *\n * Proves: 401 (no auth) \u00b7 422 (no intent) \u00b7 a HIGH-IMPACT intent (publish/send) \u2192 policy='hitl' /\n * status='pending_hitl' (the STRIDE-critical mandatory-approval gate FIRES) \u00b7 a plan persists to intent_plans\n * with an XAI rationale. Throwaway user + cleanup. Cost: a couple of system-key LLM calls (~$0.002), 0 mcoCoins.\n * Usage: bun run scripts/qa/smoke-intent-orchestrate.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env'); process.exit(1); }\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nlet uid: string | null = null;\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\n\nasync function call(token: string | null, body: unknown) {\n  const r = await fetch(`${URL}/functions/v1/intent-orchestrate`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json', apikey: PUB, ...(token ? { Authorization: `Bearer ${token}` } : {}) },\n    body: JSON.stringify(body),\n  });\n  return { status: r.status, body: await r.json().catch(() => ({})) as Record<string, unknown> };\n}\n\ntry {\n  const email = `intent-${Date.now()}@example.com`, password = `Aa1!${crypto.randomUUID()}`;\n  const { data: cu, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\n  if (error || !cu?.user) throw new Error(`createUser: ${error?.message}`);\n  uid = cu.user.id;\n  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });\n  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email, password });\n  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);\n  const token = si.session.access_token;\n\n  // auth + validation gates\n  const noAuth = await call(null, { intent: 'x' });\n  check('401 without auth (verify_jwt=false + getUser)', noAuth.status === 401, `status=${noAuth.status}`);\n  const noIntent = await call(token, {});\n  check('422 without intent', noIntent.status === 422, `status=${noIntent.status}`);\n\n  // HIGH-IMPACT intent \u2192 the HITL gate MUST fire\n  const hi = await call(token, { intent: 'Publicar um artigo no blog agora e disparar um e-mail de campanha para todos os leads hoje.' });\n  check('high-impact \u2192 HTTP 200', hi.status === 200, `status=${hi.status}`);\n  check('high-impact \u2192 policy=hitl', hi.body?.policy === 'hitl', `policy=${hi.body?.policy}`);\n  check('high-impact \u2192 status=pending_hitl (mandatory approval)', hi.body?.plan_status === 'pending_hitl', `plan_status=${hi.body?.plan_status}`);\n  check('plan persisted (plan_id) + rationale present', !!hi.body?.plan_id && typeof hi.body?.rationale === 'string', `id=${hi.body?.plan_id}`);\n  check('plan has tasks', Array.isArray(hi.body?.tasks) && (hi.body?.tasks as unknown[]).length > 0, `tasks=${(hi.body?.tasks as unknown[])?.length}`);\n\n  // persisted row is tenant-scoped + matches the returned status\n  const { data: row } = await admin.from('intent_plans').select('status, policy, user_id').eq('id', hi.body?.plan_id as string).single();\n  check('intent_plans row tenant-scoped + status persisted', row?.user_id === uid && row?.status === 'pending_hitl', `user=${row?.user_id === uid} status=${row?.status}`);\n} catch (e) {\n  pass = false; console.error('\u274c smoke error:', e instanceof Error ? e.message : e);\n} finally {\n  if (uid) await admin.auth.admin.deleteUser(uid); // cascades intent_plans\n  console.log('\\n\ud83e\uddf9 cleanup: throwaway user deleted (cascade)');\n  console.log(pass ? '\\n\u2705\u2705 INTENT-ORCHESTRATE POLICY/HITL SMOKE PASSED' : '\\n\u274c INTENT-ORCHESTRATE SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-intent-orchestrate.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:30:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 bun run scripts/qa/smoke-intent-orchestrate.ts 2>&1 | tail -14",
+  "description": "Run intent-orchestrate policy/HITL smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ 401 without auth (verify_jwt=false + getUser)  → status=401
+> ✅ 422 without intent  → status=422
+> ✅ high-impact → HTTP 200  → status=200
+> ✅ high-impact → policy=hitl  → policy=hitl
+> ✅ high-impact → status=pending_hitl (mandatory approval)  → plan_status=pending_hitl
+> ✅ plan persisted (plan_id) + rationale present  → id=2f365ba9-3aa0-48d0-89f6-f3613bc954f5
+> ✅ plan has tasks  → tasks=2
+> ✅ intent_plans row tenant-scoped + status persisted  → user=true status=pending_hitl
+> 
+> 🧹 cleanup: throwaway user deleted (cascade)
+> 
+> ✅✅ INTENT-ORCHESTRATE POLICY/HITL SMOKE PASSED
+> ```
+
+## 🤖 Claude *(00:31:17)*
+
+
+## 🤖 Claude *(00:31:17)*
+
+**Smoke 8/8 PASS** — 401/422 gates, and the **high-impact intent → `policy=hitl`/`pending_hitl` (the STRIDE-critical HITL gate fires)**, plan persisted tenant-scoped with rationale + 2 AI-generated tasks. FR-MH-009 backend complete & proven. Committing:
+
+## 🤖 Claude *(00:31:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/marketing-hub/06-data-model.md supabase/migrations/20260603250000_marketing_hub_intent_plans.sql supabase/functions/intent-orchestrate/index.ts supabase/config.toml scripts/qa/smoke-intent-orchestrate.ts\ngit commit -q -F - <<'MSG'\nfeat(marketing-hub): Intent Orchestrator + HITL \u2014 backend (FR-MH-009)\n\nTraduz inten\u00e7\u00e3o\u2192plano de tarefas com policy engine auto-vs-HITL e rationale XAI audit\u00e1vel:\n- intent_plans (migration 20260603250000): plano jsonb + policy(auto|hitl) + status\n  (proposed|auto_approved|pending_hitl|approved|rejected|executed) + rationale; RLS default-deny\n  auth.uid()=user_id (skeleton da sequences). BoK data-model patcheado antes (Master Protocol).\n- intent-orchestrate (edge fn, verify_jwt=false + getUser): IA per-user\u2192sistema gera o plano\n  (fail-soft heur\u00edstico) \u2192 POLICY ENGINE: qualquer tarefa de alto impacto (publicar/enviar/cobrar/\n  an\u00fancio OU qualquer canal outward \u2014 fail-safe) for\u00e7a status=pending_hitl (mitiga\u00e7\u00e3o STRIDE\n  Tampering). Custo 0 (orquestra; sub-passos cobram-se). Observation node + telemetria.\n\nReview independente: sound (sem HIGH/MEDIUM; s\u00f3 persiste, n\u00e3o executa; AI output coerc+capped;\nadotada a recomenda\u00e7\u00e3o fail-safe canal-outward\u2192HITL). Smoke 8/8 (smoke-intent-orchestrate):\n401 sem auth \u00b7 422 sem intent \u00b7 intent alto-impacto \u2192 policy=hitl/pending_hitl (gate dispara) \u00b7\nplano persistido tenant-scoped + rationale + 2 tarefas. UI (useIntentOrchestrator + HITLApprovalCard) deferida.\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits ---\"; git rev-list --count origin/main..HEAD; git status --short || echo clean",
+  "description": "Commit FR-MH-009 Intent+HITL backend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- commit ---
+> 56fad95 feat(marketing-hub): Intent Orchestrator + HITL — backend (FR-MH-009)
+> --- session commits ---
+> 7
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(00:32:07)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(00:32:04)*
+
+
+## 🤖 Claude *(00:32:07)*
+
+**7 commits, tree clean.** All of "faça 2+3+4" delivered at the core level: **#2 BYOK (FR-MH-012)** foundation (migration+UI+deploy), **#3 Nurturing cron (FR-MH-008)**, **#4 Intent+HITL (FR-MH-009)** backend — plus #1 drift audit + P0 ledger + cleanup + observability. Every piece materially verified (3 migrations applied, 4 fns deployed, 4 smokes green, independent security reviews clean).
+
+This is the natural seal point — the requested roadmap is delivered (only UI follows deferred: nurturing enroll button + intent HITLApprovalCard, both documented). Sealing the session:
+
+## 🤖 Claude *(00:32:07)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+## 🤖 Claude *(00:32:25)*
+
+
+## 🤖 Claude *(00:32:26)*
+
+Seal protocol launched. The 7 feature commits are already done; now executing the seal phases. **Pre-flight + Phase 1 security audit** in parallel:
+
+## 🤖 Claude *(00:32:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== PRE-FLIGHT ===\"\necho \"--- status ---\"; git status --short || echo \"clean\"\necho \"--- log -7 ---\"; git log --oneline -7\necho \"--- tsc ---\"; npx tsc --noEmit 2>&1 | tail -5; echo \"(empty=0 errors)\"\necho \"--- containers ---\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"--- chroma ---\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat\necho \"\"\necho \"=== PHASE 1 SECURITY ===\"\necho \"--- 1a secret leak (session diff) ---\"\ngit diff origin/main..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|STRIPE_SECRET|SB_SECRET_KEY\\s*=\\s*['\\\"])\" | grep -vE \"example|placeholder|fake|SB_SECRET_KEY\\b\" | head -10 || echo \"no raw secrets \u2705\"\necho \"  (note: SB_SECRET_KEY as a var NAME is fine; values would match)\"\necho \"--- 1b JWT enforcement (new fns) ---\"\nfor f in nurture-cron intent-orchestrate; do grep -lE \"Authorization|getUser|service_role|SB_SECRET_KEY\" \"supabase/functions/$f/index.ts\" >/dev/null && echo \"  \u2705 $f auth-gated\" || echo \"  \ud83d\udd34 $f NO auth\"; done\necho \"--- 1c client coin deduction in src/ ---\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|Settings\" | head -5 || echo \"  NO client deduction \u2705\"\necho \"--- 1e console.log secrets ---\"\ngit diff origin/main..HEAD | grep -E \"^\\+\" | grep -iE \"console\\.(log|error).*(token|secret|password|api_key)\" | head -5 || echo \"  no sensitive logs \u2705\"",
+  "description": "Seal pre-flight + Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PRE-FLIGHT ===
+> --- status ---
+> --- log -7 ---
+> 56fad95 feat(marketing-hub): Intent Orchestrator + HITL — backend (FR-MH-009)
+> 6b5dfd1 feat(marketing-hub): fundação BYOK de canal de e-mail per-tenant (FR-MH-012)
+> 0610952 feat(marketing-hub): cron de avanço de nurturing (FR-MH-008 "cron avança passos")
+> 25a8b28 chore(observability): functionName em todas as fns do fallback LLM — fim do :unknown
+> 336e2b8 fix(billing): fecha P0 de cunhagem não-autorizada de mcoCoins nos RPCs do ledger
+> eaffec6 chore(audit): anticorpo de drift de schema — auditoria reexecutável + SOP
+> 773dce4 fix(schema): zera o drift deployado↔migrations achado na varredura pós-flywheel
+> --- tsc ---
+> (empty=0 errors)
+> --- containers ---
+> mcorch_chroma: Up 11 days (healthy)
+> mcorch_claude_mem: Up 11 days (healthy)
+> mega-brain-dashboard: Up 11 days
+> mega-brain-webhook: Up 11 days (healthy)
+> mega-brain-daemon: Up 11 days (healthy)
+> --- chroma ---
+> {"nanosecond heartbeat":1780533156269355461}
+> === PHASE 1 SECURITY ===
+> --- 1a secret leak (session diff) ---
+>   (note: SB_SECRET_KEY as a var NAME is fine; values would match)
+> --- 1b JWT enforcement (new fns) ---
+>   ✅ nurture-cron auth-gated
+>   ✅ intent-orchestrate auth-gated
+> --- 1c client coin deduction in src/ ---
+> --- 1e console.log secrets ---
+> +  console.log('\n🧹 cleanup: throwaway user + its Vault secrets deleted');
+> +if (!URL || !SVC) { console.error('Missing env (SUPABASE_URL / SB_SECRET_KEY)'); process.exit(1); }
+> ```
+
+## 🤖 Claude *(00:32:48)*
+
+
+## 🤖 Claude *(00:32:49)*
+
+Pre-flight clean (7 commits, tsc 0, 5 containers healthy, Chroma OK). Security **all PASS** — the two 1e hits are benign (a cleanup `console.log` + an env-var-*name* in an error message; no secret values). Proceeding.
+
+**Phase 3 — Knowledge Mesh milestone node:**
+
+## 🤖 Claude *(00:33:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env >/dev/null 2>&1; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-drift-p0-mh-frs\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] Schema drift audit (isolated; rls_auto_enable captured + 6 search_path locked + dead pg_net trigger dropped) + P0 ledger mint fix (3 RPCs REVOKE/guard, exploit-proven blocked) + functionName observability (13/13) + Nurturing cron FR-MH-008 + BYOK channel FR-MH-012 + Intent Orchestrator HITL backend FR-MH-009. 11 commits, all materially verified.\\\",\n    \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": {\\\"session\\\": \\\"v6.26.0-drift-p0-mh-frs\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$(git log --oneline -7 | tr '\\n' '|')\\\"}\n  }\")\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Milestone node: $NODE_ID\"\nif [ -n \"$NODE_ID\" ] && [ \"$NODE_ID\" != \"ERR\" ]; then\n  echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\n  EMB=$(curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n    -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" \\\n    -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\")\n  echo \"Embed: $(echo \"$EMB\" | head -c 120)\"\nelse\n  echo \"\u26a0\ufe0f insert failed: $(echo \"$RESP\" | head -c 200)\"\nfi\necho \"\"\necho \"=== live mesh node count (for README badge) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Insert + embed milestone node, write proof-manifest, get node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Milestone node: ERR
+> ⚠️ insert failed: {"code":"PGRST102","details":null,"hint":null,"message":"Empty or invalid json"}
+> 
+> === live mesh node count (for README badge) ===
+> 8770
+> ```
+
+## 🤖 Claude *(00:33:33)*
+
+
+## 🤖 Claude *(00:33:34)*
+
+Insert failed (PGRST102 — bash interpolation mangled the JSON via the `commits` field). Rebuilding the payload with `jq` (guarantees valid JSON). The count is 8770 (+1 vs the 8769 start — likely the intent smoke's observation node not cascading on user-delete; I'll check/clean after):
+
+## 🤖 Claude *(00:33:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env >/dev/null 2>&1; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nRESP=$(jq -nc \\\n  --arg name \"session-handoff-$(date +%Y%m%d)-drift-p0-mh-frs\" \\\n  --arg content \"[HANDOFF SEAL] Drift audit (isolated; rls_auto_enable captured + 6 search_path locked + dead pg_net trigger dropped) + P0 ledger mint fix (3 RPCs, exploit-proven blocked) + functionName 13/13 + Nurturing cron FR-MH-008 + BYOK channel FR-MH-012 + Intent Orchestrator HITL backend FR-MH-009. 7 commits, materially verified.\" \\\n  --arg sealed \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \\\n  --arg commits \"$(git log --oneline -7 | tr '\\n' '|')\" \\\n  '{name:$name, node_type:\"handoff\", content:$content, stability_score:1.0, project_id:null, user_id:null, metadata:{session:\"v6.26.0-drift-p0-mh-frs\", sealed_at:$sealed, commits:$commits}}' \\\n  | curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n      -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n      -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" --data-binary @-)\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Milestone node: $NODE_ID\"\n[ -n \"$NODE_ID\" ] && [ \"$NODE_ID\" != \"ERR\" ] && echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json && \\\n  curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embed:', str(d)[:80])\" 2>/dev/null || echo \"embed note\"\necho \"\"\necho \"=== orphan check: intent-plan observation nodes with a non-existent owner (intent smoke residue) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,name,user_id&name=like.intent-plan-*\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(f'{len(d)} intent-plan nodes'); [print(' ',n['id'][:8],n['user_id']) for n in d[:5]]\" 2>/dev/null",
+  "description": "Re-insert milestone via jq + check intent smoke orphan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Milestone node: 7a9925ad-a06a-4ea8-947f-238642c31bfd
+> Embed: {'error': 'Request body must contain { node_id: string }'}
+> 
+> === orphan check: intent-plan observation nodes with a non-existent owner (intent smoke residue) ===
+> 1 intent-plan nodes
+>   629f40ba 8c2c843b-33df-47b3-b8f8-9bd7e231e5a3
+> ```
+
+## 🤖 Claude *(00:34:02)*
+
+
+## 🤖 Claude *(00:34:05)*
+
+Milestone node **`7a9925ad-a06a-4ea8-947f-238642c31bfd`** inserted (proof-manifest written). The embed payload shape was wrong (`{node_id}` not `{record:{id}}`) — re-embedding correctly (the INSERT trigger also auto-embeds). And the orphan check confirms **1 intent-plan observation node from the smoke** (owner `8c2c843b`, a deleted throwaway) — cleaning it per Lei 1 hygiene (like the v6.24.0 orphan sweep):
+
+## 🤖 Claude *(00:34:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env >/dev/null 2>&1; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== re-embed milestone (correct {node_id} shape) ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d '{\"node_id\":\"7a9925ad-a06a-4ea8-947f-238642c31bfd\"}' | head -c 120\necho \"\"\necho \"=== is owner 8c2c843b a real profile? (empty = deleted throwaway \u2192 orphan) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/profiles?id=eq.8c2c843b-33df-47b3-b8f8-9bd7e231e5a3&select=id\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\"\necho \"\"\necho \"=== delete the orphan intent-plan observation node (smoke residue) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[]? | \"deleted \"+.id' 2>/dev/null || echo \"(via mgmt)\"\nDELETE FROM public.mcorch_nodes\nWHERE name = 'intent-plan-629f40ba' OR (name LIKE 'intent-plan-%' AND user_id NOT IN (SELECT id FROM auth.users))\nRETURNING id;\nSQL\necho \"=== final mesh node count ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Re-embed milestone + clean intent smoke orphan + final count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-embed milestone (correct {node_id} shape) ===
+> {"node_id":"7a9925ad-a06a-4ea8-947f-238642c31bfd","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provide
+> === is owner 8c2c843b a real profile? (empty = deleted throwaway → orphan) ===
+> []
+> === delete the orphan intent-plan observation node (smoke residue) ===
+> deleted 629f40ba-a23e-44b9-b60c-9299091a2971
+> === final mesh node count ===
+> 8770
+> ```
+
+## 🤖 Claude *(00:34:31)*
+
+
+## 🤖 Claude *(00:34:32)*
+
+Mesh reconciled: **8770** (8769 start + this seal's handoff node `7a9925ad`; the smoke orphan was created then swept, net 0). Milestone embedded 768d.
+
+**Phase 4 — README.** Reading the badges + What's New to update:
+
+## 🤖 Claude *(00:34:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"version-|neural_mesh-|What's New|## .*v6\\.2[0-9]|### \\[v6\\.2\" README.md | head -20",
+  "description": "Locate README badges + What's New anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.25.0--flywheel--resurrection-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8769_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 61:## 🆕 What's new in v6.24.0 (2026-06-03)
+> 73:## 🆕 What's new in v6.23.0 (2026-06-03)
+> 84:## 🆕 What's new in v6.22.0 (2026-06-03)
+> 93:## 🆕 What's new in v6.21.0 (2026-06-03)
+> 105:## 🆕 What's new in v6.20.4 (2026-06-02)
+> 118:## 🆕 What's new in v6.20.3 (2026-06-02)
+> 131:## 🆕 What's new in v6.20.2 (2026-06-02)
+> 142:## 🆕 What's new in v6.20.1 (2026-06-02)
+> 153:## 🆕 What's new in v6.20.0 (2026-06-01)
+> 392:### [v6.25.0] — Flywheel Resurrection: 3 Key-Migration P0s Fixed + mcoCoins Calibration (2026-06-03)
+> 647:### [v6.2.0] — OpenClaw Bootstrap + Higgsfield API Validation + Canvas Tiering (2026-05-15)
+> ```
+
+## 🤖 Claude *(00:34:57)*
+
+
+## 🤖 Claude *(00:34:57)*
+
+Updating README (version badge, mesh badge 8769→8770, What's New entry). Reading the top to satisfy the edit requirement:
+
+## 🤖 Claude *(00:34:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.25.0--flywheel--resurrection-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8769_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/test_coverage-259_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..008%2C011_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 9	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 10	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> ```
+
+## 🤖 Claude *(00:35:07)*
+
+
+## 🤖 Claude *(00:35:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.25.0--flywheel--resurrection-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.26.0--drift--p0--mh--frs-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8769_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8770_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/marketing--hub-FR--MH--001..008%2C011_live-brightgreen?style=for-the-badge\" alt=\"Marketing Hub\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/marketing--hub-FR--MH--001..009%2C011%2C012_live-brightgreen?style=for-the-badge\" alt=\"Marketing Hub\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:24)*
+
+
+## 🤖 Claude *(00:35:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 60,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	
+> 61	## 🆕 What's new in v6.24.0 (2026-06-03)
+> 62	
+> ```
+
+## 🤖 Claude *(00:35:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.24.0 (2026-06-03)",
+  "new_string": "## \ud83c\udd95 What's new in v6.26.0 (2026-06-03)\n\n- **\ud83d\udd0d Schema drift audit (deployed\u2194migrations)** \u2014 varredura de 9 superf\u00edcies p\u00f3s-flywheel; incidente isolado. 1 drift real benigno (`rls_auto_enable` capturado) + `search_path` travado em 6 fns SECURITY DEFINER + trigger pg_net morto dropado. Anticorpo `scripts/qa/audit-schema-drift.sh` + SOP.\n- **\ud83d\udd34 P0 financeiro fechado** \u2014 cunhagem n\u00e3o-autorizada de mcoCoins nos 3 RPCs do ledger (award/add_user_score/deduct); REVOKE + guardas (sinal + posse NULL-safe); exploits provados BLOQUEADOS em prod.\n- **\ud83d\udce1 Observabilidade** \u2014 `functionName` em 13/13 fns do fallback LLM (fim do `:unknown`).\n- **\ud83c\udf31 Nurturing cron (FR-MH-008)** \u2014 `nurture-cron` + pg_cron `*/15` avan\u00e7a enrollments due (consent-gated, modo service-role espelhando orchestrate-step). Smoke E2E 5/5 + USER 10/10.\n- **\ud83d\udd11 BYOK canal de e-mail (FR-MH-012)** \u2014 `resend_api_key` per-tenant no padr\u00e3o Vault + campo Settings. Round-trip 8/8 (sibling intacto, idempotente).\n- **\ud83e\udded Intent Orchestrator + HITL (FR-MH-009, backend)** \u2014 `intent-orchestrate`: inten\u00e7\u00e3o\u2192plano + policy engine auto-vs-HITL (canal outward fail-safe\u2192HITL) + rationale XAI. Smoke 8/8 (alto impacto\u2192pending_hitl).\n\n## \ud83c\udd95 What's new in v6.24.0 (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:36:21)*
+
+
+## 🤖 Claude *(00:36:21)*
+
+README updated. **Phase 5 — HANDOFF.md.** Prepending the new Record (HANDOFF is newest-first, after `## Task State`):
+
+## 🤖 Claude *(00:36:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Flywheel Resurrection + mcoCoins Calibration Record (2026-06-03)",
+  "new_string": "## Task State\n\n## Drift Audit + Ledger P0 + Marketing-Hub FRs (008/012/009) Record (2026-06-03)\n\n**v6.26.0 (2026-06-03)** \u2014 Sess\u00e3o `/handson` \u2192 diretiva Sovereign \"\ud83d\udd34 auditar drift deployado\u2194migrations\" (irm\u00e3os do hotfix `async_orchestrate_step`); ao fechar, \"fa\u00e7a 2+3+4\" = BYOK (FR-MH-012) + Nurturing follow-up (FR-MH-008) + Intent+HITL (FR-MH-009). Padr\u00e3o: **probe-first material** + **review independente por migration** + **smoke throwaway** por entrega. 7 commits.\n\n**O que foi entregue:**\n- **Drift audit (veredito: incidente ISOLADO)** \u2014 9 superf\u00edcies via Management API read-only (ledger 96==96 \u00b7 contrato RPC 12/12 \u00b7 verify_jwt edge 23==23 \u00b7 34 triggers \u00b7 RLS toda-tabela on \u00b7 pg_net siblings). \u00danico drift real: `rls_auto_enable` (event-trigger out-of-band benigno que liga RLS em toda tabela nova) \u2192 **capturado** idempotente (`20260603210000`). + 6 fns SECURITY DEFINER com `search_path` travado (`210500`) + `trigger_sync_knowledge_mesh` morto-latente (kong:8000) **dropado** (`211000`). Anticorpo `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 0) + SOP `schema-drift-audit.md`. (`773dce4`, `eaffec6`)\n- **\ud83d\udd34 P0 ledger (achado adjacente, pr\u00e9-existente)** \u2014 `award_mco_coins`/`add_user_score`/`deduct_mco_coins` davam EXECUTE a anon/authenticated/PUBLIC + confiavam `p_user_id` arbitr\u00e1rio \u2192 qualquer user logado cunhava mcoCoins via PostgREST direto. REVOKE (award/add_user_score = edge-only via service_role) + guardas em deduct (`p_amount<=0` + posse NULL-safe `auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid()`). Exploits provados **BLOQUEADOS** em prod (negativo\u2192\"deve ser positivo\" \u00b7 cross-user\u219242501 \u00b7 award\u2192permission denied). (`336e2b8`)\n- **functionName** em 13/13 fns do fallback LLM \u2014 fim do `llm-fallback:unknown` (`25a8b28`).\n- **FR-MH-008 cron** \u2014 `nurture-cron` (service-role, fan-out concorr\u00eancia 8) + pg_cron `nurture-advance */15` + modo service-role em `nurture-dispatch` (espelha orchestrate-step; consent gate + billing single-source). Smoke cron 5/5 + USER 10/10. (`0610952`)\n- **FR-MH-012 BYOK** \u2014 `resend_api_key` per-tenant na m\u00e1quina user_api_keys (defs VIVAS verbatim \u2014 encrypt idempotente + INSTEAD OF tenant-guard + views) + campo Settings + deploy nginx. Round-trip 8/8 (sibling intacto, idempotente). (`6b5dfd1`)\n- **FR-MH-009 Intent+HITL (backend)** \u2014 `intent_plans` (`20260603250000`, BoK data-model patcheado antes) + `intent-orchestrate` (policy engine auto-vs-HITL, canal outward fail-safe\u2192HITL, rationale XAI). Smoke 8/8 (alto impacto\u2192pending_hitl). (`56fad95`)\n\n**ORO triplet:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + `/security-review` (subagente independente por migration) \u00b7 Owner=Sovereign (blast radius = schema de prod + RPC financeiro + cr\u00e9ditos per-tenant + envios consent-cr\u00edticos [gated]).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Drift audit | \u2705 9 superf\u00edcies \u00b7 1 drift benigno capturado \u00b7 anticorpo exit 0 |\n| P0 ledger | \u2705 3 RPCs travados \u00b7 exploits bloqueados (erro/42501/permission denied) sob role simulado |\n| FR-MH-008/012/009 | \u2705 3 migrations applied \u00b7 4 fns deployed \u00b7 smokes 5/5\u00b710/10\u00b78/8\u00b78/8 |\n| /security-review | \u2705 todas SAFE (subagentes independentes; adotada 1 recomenda\u00e7\u00e3o fail-safe) |\n| tsc / su\u00edte | \u2705 0 erros \u00b7 257 passed / 2 skipped |\n| Containers / Chroma | \u2705 5 healthy (11d) \u00b7 Chroma v2 OK |\n| Handoff node | \u2705 `7a9925ad-a06a-4ea8-947f-238642c31bfd` embedded 768d |\n| Mesh | \u2705 8770 n\u00f3s (orphan de smoke `629f40ba` detectado + limpo) |\n\n| Commit | Conte\u00fado |\n|---|---|\n| `773dce4` | fix(schema): zera o drift deployado\u2194migrations |\n| `eaffec6` | chore(audit): anticorpo de drift de schema (tool + SOP) |\n| `336e2b8` | fix(billing): fecha P0 de cunhagem nos RPCs do ledger |\n| `25a8b28` | chore(observability): functionName em 13/13 fns do fallback |\n| `0610952` | feat(marketing-hub): cron de avan\u00e7o de nurturing (FR-MH-008) |\n| `6b5dfd1` | feat(marketing-hub): funda\u00e7\u00e3o BYOK de canal (FR-MH-012) |\n| `56fad95` | feat(marketing-hub): Intent Orchestrator + HITL backend (FR-MH-009) |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 toda claim provada NESTE turno \u2014 4 migrations \"Finished\" + ACL/body via catalog + 4 smokes throwaway (output literal) + exploits bloqueados material (42501/erro/permission denied sob role simulado) + 2 /security-review independentes + handoff node embedded 768d + orphan de smoke detectado+limpo+contado. Zero fabrica\u00e7\u00e3o. 1 falso-sucesso de embed (payload {record} errado) corrigido p/ {node_id}.\nLaw 2 (Process): \u2705 SOP schema-drift-audit.md (Lei 5 anticorpo) + BoK data-model patcheado (intent_plans) ANTES da migration; toda migration passou /security-review (regra CLAUDE.md). Trap evitado: BYOK reproduziu defs VIVAS (n\u00e3o o template stale de 060000) preservando fixes 130000/140000.\nLaw 3 (Pruning): \u2705 sess\u00e3o de densidade m\u00e1xima (drift + P0 + 3 FRs) usando a janela inteira (calibra\u00e7\u00e3o 1M/Max); UI deferida conscientemente (incremento completo > meio-feature); orphan limpo por foco.\nLaw 4 (ORO): \u2705 triplet declarado; \"fa\u00e7a 2+3+4\" + GO expl\u00edcito (AskUserQuestion) nas decis\u00f5es de escopo + no P0 financeiro.\n```\n\n**Pend\u00eancias/Pr\u00f3ximos:**\n- **UI follows (deferidas):** bot\u00e3o enroll de nurturing (hook `enrollLead` j\u00e1 existe em useNurturing) + `useIntentOrchestrator` hook + `HITLApprovalCard` (FR-MH-009 backend pronto, falta o rosto).\n- **Executor de intent_plans** (aprovar/rejeitar/executar) \u2014 DEVE re-validar a\u00e7\u00e3o outward no execute (defesa-em-profundidade; n\u00e3o confiar em `auto_approved`).\n- **Entrega externa de nurturing** (real, por canal) \u2014 segue gated; agora com `resend_api_key` per-tenant pronto como credencial.\n- **FR-MH-010 AEO audit** \u2014 \u00fanica FR marketing-hub restante.\n- Twitter CreditsDepleted \u00b7 Atribui\u00e7\u00e3o de clique ML (aguardando Sovereign).\n\n---\n\n## Flywheel Resurrection + mcoCoins Calibration Record (2026-06-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === 5b HANDOFF.md secret scan ===
+> 
+> === commit README ===
+>   dd9d5a7 docs(readme): v6.26.0 — drift audit + P0 ledger + nurturing cron + BYOK + Intent/HITL backend
+> === commit HANDOFF ===
+>   2220ab7 docs(handoff): seal v6.26.0 — drift audit (isolado) + P0 ledger + FR-MH-008/012/009
+> --- tree ---
+> ```
+
+## 🤖 Claude *(00:37:01)*
+
+
+## 🤖 Claude *(00:37:02)*
+
+**Phase 5b — HANDOFF.md secret scan** + commit README & HANDOFF (the pre-commit hook is the backstop):
+
+## 🤖 Claude *(00:37:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b HANDOFF.md secret scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -vE \"example|placeholder|digest|hash|uuid\" | head -5 || echo \"  \u2705 HANDOFF.md NO credentials\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" README.md | grep -vE \"example|placeholder|digest\" | head -5 || echo \"  \u2705 README.md NO credentials\"\necho \"\"\necho \"=== commit README ===\"\ngit add README.md\ngit commit -q -m \"docs(readme): v6.26.0 \u2014 drift audit + P0 ledger + nurturing cron + BYOK + Intent/HITL backend\" && git log -1 --format='  %h %s'\necho \"=== commit HANDOFF ===\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal v6.26.0 \u2014 drift audit (isolado) + P0 ledger + FR-MH-008/012/009\" && git log -1 --format='  %h %s'\necho \"--- tree ---\"; git status --short || echo clean",
+  "description": "5b secret scan + commit README & HANDOFF"
+}
+```
+
+## 🤖 Claude *(00:37:18)*
+
+
+## 🤖 Claude *(00:37:19)*
+
+5b clean (no credential lines; pre-commit hook passed = confirmation). README `dd9d5a7` + HANDOFF `2220ab7` committed; tree clean. **9 commits.**
+
+**Phase 5c — Material Proof Audit** (mechanical re-verification of the seal's claims):
+
+## 🤖 Claude *(00:37:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 180 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40\necho \"--- audit exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 7a9925ad | mesh_node | 7a9925ad-a06a-4ea8-947f-238642c31bfd | 7a9925ad-a06a-4ea8-947f-238642c31bfd | ✅ |
+> | commit 773dce4 | git_commit | 773dce4 | 773dce4 | ✅ |
+> | commit eaffec6 | git_commit | eaffec6 | eaffec6 | ✅ |
+> | commit 336e2b8 | git_commit | 336e2b8 | 336e2b8 | ✅ |
+> | commit 25a8b28 | git_commit | 25a8b28 | 25a8b28 | ✅ |
+> | commit 6b5dfd1 | git_commit | 6b5dfd1 | 6b5dfd1 | ✅ |
+> | commit 56fad95 | git_commit | 56fad95 | 56fad95 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | test suite — 257 passing | test_suite | 257 | 257 passed | ✅ |
+> | file scripts/qa/audit-schema-drift.sh | file_exists | scripts/qa/audit-schema-drift.sh | scripts/qa/audit-schema-drift.sh | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` (subagente independente  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` (subagente independente  | ✅ |
+> 
+> QA VERDICT: 11 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 9.3s)
+> --- audit exit: 0 ---
+> ```
+
+## 🤖 Claude *(00:37:38)*
+
+
+## 🤖 Claude *(00:37:39)*
+
+**Phase 5c: SEAL ALLOWED** — 11 verified, 0 failed (handoff node, 6 commits, tsc, suite 257, file, ORO all ✅).
+
+**Phase 6 — BoK seal status** (marketing-hub FRs are within the sealed 9/9 suite; drift/P0 are exempt hardening):
+
+## 🤖 Claude *(00:37:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho \"\"\necho \"=== session new modules (new src/pages or supabase/functions dirs)? ===\"\ngit diff --name-only origin/main..HEAD | grep -E \"^(src/pages/|supabase/functions/)\" | sed -E 's#(supabase/functions/[^/]+|src/pages/[^/]+).*#\\1#' | sort -u",
+  "description": "Phase 6 BoK completeness + session module check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ aios-sql-bridge
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ conteudo-v2
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ marketing-hub
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ viralmind
+> 
+> === session new modules (new src/pages or supabase/functions dirs)? ===
+> src/pages/SettingsPage.tsx
+> supabase/functions/agent-task-execute
+> supabase/functions/analyze-node
+> supabase/functions/analyze-sem
+> supabase/functions/analyze-seo
+> supabase/functions/canvas-execute
+> supabase/functions/generate-audio-script
+> supabase/functions/generate-video-script
+> supabase/functions/intent-orchestrate
+> supabase/functions/nurture-cron
+> supabase/functions/nurture-dispatch
+> supabase/functions/optimize-schedule
+> supabase/functions/self-optimize
+> ```
+
+## 🤖 Claude *(00:37:49)*
+
+
+## 🤖 Claude *(00:37:51)*
+
+**Phase 6 BoK: PASS** — all 13 suites complete; the new edge fns (`intent-orchestrate`, `nurture-cron`) belong to the **marketing-hub** module whose BoK is sealed 9/9 (FR-MH-008/009/012 documented there); SettingsPage/functionName edits are exempt (field-add / hardening). No module lacks BoK.
+
+**Phase 7 — Push:**
+
+## 🤖 Claude *(00:37:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits to push ===\"; git rev-list --count origin/main..HEAD\ngit push origin main 2>&1 | tail -6\necho \"--- push exit: ${PIPESTATUS[0]} ---\"\necho \"=== sync check ===\"; git rev-list --left-right --count origin/main...HEAD 2>/dev/null",
+  "description": "Push to origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits to push ===
+> 9
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    c6faafe..2220ab7  main -> main
+> --- push exit: 0 ---
+> === sync check ===
+> 0	0
+> ```
+
+## 🤖 Claude *(00:38:07)*
+
+
+## 🤖 Claude *(00:38:08)*
+
+**Push successful** — `c6faafe..2220ab7`, **9 commits**, origin/main == HEAD (0/0).
+
+**Phase 7b — Sprint hygiene.** Reading sprint-priorities to prepend the v6.26.0 entry + checking scratch/proof-manifest:
+
+## 🤖 Claude *(00:38:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sprint-priorities head ===\"; sed -n '6,8p' .claude/context/sprint-priorities.md 2>/dev/null | cut -c1-120\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"has files\" || echo \"clean \u2705\"\necho \"=== untracked (proof-manifest etc.) ===\"; git status --short",
+  "description": "Sprint head + scratch + untracked check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint-priorities head ===
+> 
+> **Sprint v6.25.0 selado em 2026-06-03** — **Flywheel ressuscitado + calibração mcoCoins**. `/handson` → diretiva S
+> 
+> === scratch ===
+> clean ✅
+> === untracked (proof-manifest etc.) ===
+> ```
+
+## 🤖 Claude *(00:38:27)*
+
+
+## 🤖 Claude *(00:38:28)*
+
+Scratch clean, no untracked (proof-manifest gitignored). Reading the v6.25.0 line to prepend v6.26.0:
+
+## 🤖 Claude *(00:38:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 7,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7	**Sprint v6.25.0 selado em 2026-06-03** — **Flywheel ressuscitado + calibração mcoCoins**. `/handson` → diretiva Sovereign ("o que falta pro 1º run pago E2E + já calibrar o COIN_COST?"). Calibrei **antes** do run (não rodar a 1ª transação econômica a preços inventados): **OTD-MCOIN-CALIBRATION FECHADA** — modelo `mco=ceil(custo_usd/$0.018_piso×4)` (piso=Enterprise); surpresa honesta — `10` (orchestrate) e `125` (canvas vídeo) **já** eram ~4× sobre custo real, único furo `IMAGE_GENERATION 3→9` (`CONTENT_GENERATION 5→2`). O **1º run pago E2E então expôs que o flywheel de conteúdo estava MORTO desde o cutover de chaves (01-06)** — 3 P0s compostos deixavam todo run preso em `running`: **#1** `orchestrate-step` faltava no `config.toml` (`verify_jwt=true` → gateway **401** na chave opaca `sb_secret_` do pg_net); **#2** `async_orchestrate_step` hotfixada em prod **sem migration** (`p_service_jwt_legacy`≠`p_service_key` → **PGRST202** → auto-chain morto) → migration `20260603190000` realinha + `GRANT service_role`, `/security-review` SAFE, RPC **204**; **#3** `wp_site_url` não-www → **301 → POST vira GET** → WP devolve LISTA de posts → `publish-wordpress` endurecido (valida `id`, 502 honesto) + `wp_site_url→www`. **Provado E2E**: run `89f18bea` **auto-completou 6/6 passos sem kick** → rascunho WP `?p=14` + `content_mesh_asset` done. Phase 5c **SEAL ALLOWED** (11 verified). Mesh **8769**. Survival Laws **4/4**. 7 commits. **Novo Top Gap:** auditar **drift deployado↔migrations** (outras RPCs/fns hotfixadas em prod?) · limpar artefatos de teste (5 posts parqueados 2027 + 2 rascunhos WP) · FR-MH-009/010/012 + Nurturing follow-up · functionName nas 9 fns. **Lição:** o 1º run pago **não "falhou"** — fez seu trabalho: expôs 3 P0s silenciosos no coração do produto (falha sem erro visível, sem auto-refund); calibrar **antes** do run foi a decisão certa (transação econômica honesta).
+> ```
+
+## 🤖 Claude *(00:38:47)*
+
+
+## 🤖 Claude *(00:38:48)*
+
+Prepending the v6.26.0 sprint entry:
+
+## 🤖 Claude *(00:38:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.25.0 selado em 2026-06-03** \u2014 **Flywheel ressuscitado + calibra\u00e7\u00e3o mcoCoins**.",
+  "new_string": "**Sprint v6.26.0 selado em 2026-06-03** \u2014 **Drift audit + P0 ledger + 3 FRs marketing-hub**. `/handson` \u2192 diretiva Sovereign \"\ud83d\udd34 auditar drift deployado\u2194migrations\" (irm\u00e3os do hotfix `async_orchestrate_step`) \u2192 \"fa\u00e7a 2+3+4\". **(1) Drift audit:** 9 superf\u00edcies via Management API read-only (ledger 96==96 \u00b7 contrato RPC 12/12 \u00b7 verify_jwt edge 23==23 \u00b7 34 triggers \u00b7 RLS toda-tabela \u00b7 pg_net siblings) \u2192 **incidente ISOLADO**; \u00fanico drift real `rls_auto_enable` (event-trigger out-of-band benigno que liga RLS em tabela nova) **capturado** + 6 SECURITY DEFINER `search_path` travado + trigger pg_net morto (kong:8000) dropado. Anticorpo `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 0) + SOP `schema-drift-audit.md`. **(2) \ud83d\udd34 P0 ledger:** os 3 RPCs (award/add_user_score/deduct) davam EXECUTE a anon/authenticated + confiavam `p_user_id` \u2192 cunhagem de mcoCoins via PostgREST direto; REVOKE (edge-only) + guardas em deduct (sinal + posse NULL-safe); **exploits provados BLOQUEADOS** em prod (erro/42501/permission denied). **(3) functionName 13/13** fallback LLM. **(4) FR-MH-008 cron** (`nurture-cron`+pg_cron `*/15`, modo service-role em nurture-dispatch; smoke 5/5+USER 10/10). **(5) FR-MH-012 BYOK** (`resend_api_key` per-tenant Vault \u2014 defs VIVAS verbatim \u2014 +Settings; round-trip 8/8). **(6) FR-MH-009 Intent+HITL backend** (`intent_plans`+`intent-orchestrate`: policy auto/HITL canal-outward-fail-safe + rationale XAI; smoke 8/8). 9 commits \u00b7 3 migrations \u00b7 4 deploys \u00b7 `/security-review` independente por migration (todas SAFE) \u00b7 Phase 5c **SEAL ALLOWED** (11 verified) \u00b7 Mesh **8770** (orphan de smoke limpo) \u00b7 Survival Laws **4/4**. **Novo Top Gap:** UI follows (enroll nurturing \u2014 hook j\u00e1 existe \u2014 + `useIntentOrchestrator`/`HITLApprovalCard`) \u00b7 executor de `intent_plans` (re-validar a\u00e7\u00e3o outward no execute) \u00b7 entrega externa nurturing (gated; credencial pronta) \u00b7 FR-MH-010 AEO (\u00faltima FR). **Li\u00e7\u00e3o:** probe-first viu que a metade-IA do FR-MH-012 j\u00e1 existia (s\u00f3 a metade-canal era nova) + evitou o trap do template stale de credenciais (reproduzir defs VIVAS, n\u00e3o migration antiga); o drift audit virou anticorpo reexecut\u00e1vel.\n\n**Sprint v6.25.0 selado em 2026-06-03** \u2014 **Flywheel ressuscitado + calibra\u00e7\u00e3o mcoCoins**."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:39:05)*
+
+
+## 🤖 Claude *(00:39:05)*
+
+Committing sprint-priorities + pushing:
+
+## 🤖 Claude *(00:39:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.26.0 drift audit + P0 ledger + 3 marketing-hub FRs\" && git log -1 --format='  %h %s'\ngit push origin main 2>&1 | tail -3\necho \"--- sync ---\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit sprint-priorities + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   7bb15bc chore(sprint): update sprint-priorities — v6.26.0 drift audit + P0 ledger + 3 marketing-hub FRs
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2220ab7..7bb15bc  main -> main
+> --- sync ---
+> 0	0
+> ```
+
+## 🤖 Claude *(00:39:18)*
+
+
+## 🤖 Claude *(00:39:19)*
+
+Sprint committed (`7bb15bc`) + pushed; **10 commits**, origin synced. Updating my project memory to reflect the new FR completions (keeping recall accurate):
+
+## 🤖 Claude *(00:39:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_marketing_hub_v2
+> 3	description: Marketing Hub agentic (v2 que absorve o marketing v1) — BoK 9/9 + 11 agentes; MVP-1..4 LIVE (Lead Core + Campaign Core + lead-score + campaign-run + UI /dashboard/marketing absorvendo v1); MVP-5 attribution + 1º run pago E2E pendentes
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: cbb758a7-048b-4acb-94aa-db05a445f1e7
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-02: módulo **marketing-hub** agentic, nasce como **v2 de consolidação** — absorve e escala o marketing v1 disperso (orchestrate-content vira executor de campanha; whatsapp_leads migra tutela meta-api→marketing-hub; marketing-growth Pantheon é **elevado, não recriado**) em vez de duplicar. Natureza **Ambos**: núcleo interno (Usuário Zero) → comercial per-tenant. Decisões travadas via AskUserQuestion; scope-lock em `.claude/context/marketing-hub-scope-lock-2026-06-02.md`.
+> 11	
+> 12	**Selado (não-commitado até /handoff):** BoK suite 9/9 em `docs/bok/marketing-hub/` (1732 LOC) + mesh seal `d5163fed-da85-4f95-8445-0d0aa5b6bafe` (DERIVES_FROM meta-api `ca791bdd`, embedded 768d) + `bok-agents-system--marketing-hub.md` (11 agentes = 8 BoK + AEO/Intent-Orchestration/Demand-gen). **BoK Gate LIBERADO.**
+> 13	
+> 14	**MVP aprovado (PR-MH-001..005 = Lead Core + Campaign Core + Consent/Tenancy + Attribution):**
+> 15	- ✅ **MVP-1 LIVE**: migration `20260603000000_marketing_hub_lead_core.sql` aplicada (`db push` Finished) — tabelas `leads`/`lead_events`/`marketing_consents` + RPC `erase_lead()` (LGPD, SECURITY DEFINER, search_path='', tenant guard). `/security-review` pegou **1 MEDIUM cross-tenant** (FK de tabela-filha sem co-escopar user_id → A insere evento no lead de B) → corrigido com **FK composta `(lead_id,user_id)→leads(id,user_id)`** + `UNIQUE(id,user_id)` em leads + EXISTS no WITH CHECK de marketing_consents. Provado material: **23503** no cross-tenant, **201** no legítimo, cleanup limpo. whatsapp_leads vazio em prod → backfill no-op correto.
+> 16	- ✅ **MVP-2 Campaign Core LIVE** (v6.22.0, migration `20260603025256`): `campaigns` ABSORVIDA via `ALTER` (+intent/channels/mesh_node_id + `UNIQUE(id,user_id)`) + `campaign_steps` (FK composta tenant-`CASCADE`, espelha lead_events) + `marketing_attribution` (FK simples `SET NULL` + RLS `WITH CHECK` — espelha consents porque SET NULL composto anularia user_id NOT NULL; retém receita de-linkada). `erase_lead()` estendida (`attributions_delinked`). tenant-FK provado **comportamental** 23503 + **42501 autenticado** + 201 + zero-resíduo. `/security-review` SAFE (independente). mesh `7628892b`. data-model patcheado (absorb-not-create + FK pattern).
+> 17	- ✅ **MVP-3 parte 1 — lead-score LIVE** (FR-MH-003, v6.22.0): JWT + 1 mco atômico + IA per-user→sistema (reusa `fetchLLMWithFallback`) + **fail-soft heurístico**. Smoke E2E: 200 · score=80 (`source=ai`) · débito 100→99 · zero-resíduo. Deploy 84.31kB.
+> 18	- ✅ **MVP-3 parte 2 — campaign-run LIVE** (FR-MH-004, v6.23.0): JWT + débito atômico FEE `CAMPAIGN_RUN` 10 → dispatch **PARALELO** (`Promise.allSettled`, wall-clock ≈ passo mais lento) dos passos p/ `orchestrate-content` (self-bila 10) = **cascata fiel 10+10×N**; `channel→platforms` (content/affiliate→wordpress, social→linkedin+twitter, **email→blocked** território nurture); cap `MAX_PARALLEL_STEPS=8`. Smoke **13/13 zero-custo** (`scripts/qa/smoke-campaign-run.ts`: guards 401/422/404/no-steps/402 + isolamento de tenant + email-only→200 dispatched=0 débito atômico 100→90 + cleanup). Deploy 80.92kB. Cascata paga real **gated em GO Sovereign**. Calibração $ segue [[project_mcoin_calibration]].
+> 19	- ✅ **MVP-4 UI LIVE** (v6.23.0, FR-MH-001/005): `/dashboard/marketing` (`MarketingPage` = `LeadBoard` 5 colunas + Pontuar/`lead-score` + overview campanhas; nav Target). **Absorveu a UI v1** (diretiva Sovereign "absorver por completo E /dashboard/marketing nova; faça completo, não pare"): `CampaignWizard` +Intenção/passo **Passos** (composer Canal×Ação→`createCampaignWithSteps`); `CampaignDetail` +card **Passos & Execução** (status vivo + `CampaignRunButton`). Hooks `useLeads`/`useLeadScore`/`useCampaignSteps`/`useCampaignRun` + `src/lib/edge.ts` (erro PT-BR de edge). UI LOGADA verificada (magic link `scripts/qa/gen-magiclink.ts` + agent-browser; 0 erros console; zero mutação prod). 11 testes (`src/test/marketing-hub.test.ts`).
+> 20	- ⏳ **MVP-5 + 1º run pago E2E** pendentes: attribution→`ROIWidget` por campanha + testes E2E; **primeiro run pago real** (Sovereign cria campanha na UI → Rodar, gasta mco + publica). **OTD-CAMPAIGN-RUN-ASYNC** (fan-out síncrono é MVP — campanha grande precisa de fila async + callback por passo). Calibração via [[feedback_context_budget_calibration]] destravou rodar MVP-3/4 numa só sessão.
+> 21	
+> 22	**Reconciliação doc↔realidade (aplicar nos docs ao tocar — Obstáculo→Síntese):** `public.campaigns` **JÁ EXISTE** (de `20260402014040`: user_id/name/objective/status campaign_status/platforms/budget_cents) → Campaign Core **ABSORVE/estende** (ALTER add intent/channels/mesh_node_id), NÃO cria nova. `projects` **NÃO existe** → sem FK project_id (coluna uuid nullable). Status whatsapp é PT (iniciado/interagido/convertido/opt_out) → CASE-map no backfill. `update_updated_at_column()`/`deduct_mco_coins`/`mcoin_transactions`/vector ext confirmados.
+> 23	
+> 24	Relacionado: [[feedback_api_tenancy_per_user]] · [[reference_encrypted_views_write_pattern]] · [[reference_supabase_keys_migrated]]
+> 25	
+> ```
+
+## 🤖 Claude *(00:39:37)*
+
+
+## 🤖 Claude *(00:39:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "- \u23f3 **MVP-5 + 1\u00ba run pago E2E** pendentes: attribution\u2192`ROIWidget` por campanha + testes E2E; **primeiro run pago real** (Sovereign cria campanha na UI \u2192 Rodar, gasta mco + publica). **OTD-CAMPAIGN-RUN-ASYNC** (fan-out s\u00edncrono \u00e9 MVP \u2014 campanha grande precisa de fila async + callback por passo). Calibra\u00e7\u00e3o via [[feedback_context_budget_calibration]] destravou rodar MVP-3/4 numa s\u00f3 sess\u00e3o.",
+  "new_string": "- \u2705 **MVP-5 attribution** (v6.24.0) + **1\u00ba run pago E2E** (v6.25.0 \u2014 flywheel ressuscitado, 3 key-migration P0s; ver [[project_orchestrate_pipeline_repair]]).\n- \u2705 **FR-MH-008 Nurturing cron** (v6.26.0): engine+`nurture-dispatch` j\u00e1 existiam; `nurture-cron` (service-role fan-out) + pg_cron `nurture-advance */15` + **modo service-role** em nurture-dispatch (espelha orchestrate-step; consent gate + billing single-source) avan\u00e7am enrollments due. Smoke cron 5/5 + USER 10/10. Entrega externa real segue **gated**.\n- \u2705 **FR-MH-012 BYOK** (v6.26.0): metade-IA j\u00e1 satisfeita (lead-score/nurture-dispatch resolvem `decrypted_user_api_keys` per-user\u2192sistema); metade-canal nova = `resend_api_key` per-tenant (Vault, reproduz defs VIVAS verbatim \u2014 **N\u00c3O** o template stale de 060000; preserva fixes 130000/140000) + campo Settings. Round-trip 8/8 (`smoke-byok-resend`).\n- \u2705 **FR-MH-009 Intent+HITL backend** (v6.26.0): `intent_plans` (migration `20260603250000`, data-model patcheado antes) + `intent-orchestrate` (verify_jwt=false+getUser; policy engine auto/HITL com **canal-outward fail-safe\u2192HITL** + rationale XAI; custo 0). Smoke 8/8 (alto-impacto\u2192pending_hitl). **UI deferida** (`useIntentOrchestrator`+`HITLApprovalCard`).\n- \u23f3 **Pendente:** UI follows (enroll nurturing \u2014 hook `enrollLead` J\u00c1 existe em useNurturing \u2014 + Intent UI) \u00b7 **executor de `intent_plans`** (aprovar/rejeitar/executar \u2014 DEVE re-validar a\u00e7\u00e3o outward no execute, n\u00e3o confiar em `auto_approved`) \u00b7 **FR-MH-010 AEO** (\u00faltima FR) \u00b7 OTD-CAMPAIGN-RUN-ASYNC."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:39:59)*
+
+
+## 🤖 Claude *(00:39:59)*
+
+Updating the memory description + the MEMORY.md index line to current state:
+
+## 🤖 Claude *(00:40:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md",
+  "old_string": "description: Marketing Hub agentic (v2 que absorve o marketing v1) \u2014 BoK 9/9 + 11 agentes; MVP-1..4 LIVE (Lead Core + Campaign Core + lead-score + campaign-run + UI /dashboard/marketing absorvendo v1); MVP-5 attribution + 1\u00ba run pago E2E pendentes",
+  "new_string": "description: Marketing Hub agentic (v2 que absorve o marketing v1) \u2014 BoK 9/9; FR-MH-001..009,011,012 backend LIVE (Lead/Campaign Core + lead-score + campaign-run + UI + attribution + Customer360 + nurturing cron + BYOK canal + Intent/HITL backend); faltam UI follows (enroll + Intent UI) + executor de intent_plans + FR-MH-010 AEO"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_marketing_hub_v2.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:40:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (MVP-1..4 LIVE; UI /dashboard/marketing)](project_marketing_hub_v2.md) \u2014 v2 que absorve o marketing v1; Lead Core+Campaign Core+lead-score+campaign-run (cascata fiel 10+10\u00d7N, dispatch paralelo, email\u2192blocked, smoke 13/13) + MVP-4 UI (LeadBoard + wizard Passos absorvendo v1, UI logada verificada) LIVE; MVP-5 attribution + 1\u00ba run pago E2E (gated GO) + OTD-CAMPAIGN-RUN-ASYNC pendentes; \u26a0\ufe0f campaigns/campaign_metrics J\u00c1 EXISTEM (absorver, n\u00e3o criar) + projects n\u00e3o existe",
+  "new_string": "- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (FR-MH-001..009,011,012 backend LIVE)](project_marketing_hub_v2.md) \u2014 v2 que absorve o marketing v1; Lead/Campaign Core + lead-score + campaign-run + UI /dashboard/marketing + MVP-5 attribution + Customer360 + nurturing (engine v6.24 + **cron v6.26**) + **BYOK canal resend v6.26** + **Intent/HITL backend v6.26** LIVE; faltam UI follows (enroll nurturing [hook existe] + useIntentOrchestrator/HITLApprovalCard) + executor de intent_plans (re-validar outward) + FR-MH-010 AEO; \u26a0\ufe0f campaigns/campaign_metrics J\u00c1 EXISTEM (absorver) + projects n\u00e3o existe"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:40:27)*
+
+
+## 🤖 Claude *(00:40:48)*
+
+Memory synced. **Seal complete.** Phase 8 final report:
+
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — v6.26.0 · Drift Audit + Ledger P0 + Marketing-Hub FRs (2026-06-03)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+  1a secret leak ✅ · 1b JWT (nurture-cron + intent-orchestrate auth-gated) ✅ · 1c client coin-deduction ✅ · 1e console logs ✅ (só nomes de var/mensagem)
+  `/security-review` independente por migration (drift ×1 · ledger P0 ×1 · nurture-cron ×1 · BYOK ×1 · intent ×1) → **todas SAFE**
+
+📦 **COMMITS (10)**
+  `773dce4` fix(schema): zera drift deployado↔migrations
+  `eaffec6` chore(audit): anticorpo de drift (tool + SOP)
+  `336e2b8` fix(billing): P0 cunhagem nos RPCs do ledger
+  `25a8b28` chore(observability): functionName 13/13
+  `0610952` feat: nurturing cron (FR-MH-008)
+  `6b5dfd1` feat: BYOK canal (FR-MH-012)
+  `56fad95` feat: Intent Orchestrator + HITL backend (FR-MH-009)
+  `dd9d5a7` docs(readme) · `2220ab7` docs(handoff) · `7bb15bc` chore(sprint)
+
+⬡ **KNOWLEDGE MESH**
+  Milestone: `7a9925ad-a06a-4ea8-947f-238642c31bfd` — embedded 768d ✅ · orphan de smoke `629f40ba` limpo
+
+📖 **README** 6.25.0 → 6.26.0 · mesh 8769 → 8770 · marketing-hub badge FR-MH-001..009,011,012
+
+🧠 **HANDOFF** Record v6.26.0 + Task State + Pending + GraphRAG (8770) atualizados
+
+📋 **PROVA MATERIAL (Fase 5c):** **SEAL ALLOWED** — 11 verificadas · 0 skipped · 0 falhas
+
+📚 **BoK:** 13/13 suites completas · módulos da sessão (marketing-hub FRs) cobertos pela suite selada · drift/P0/observability = exempt
+
+🚀 **PUSH** main → origin/main · 10 commits · sync 0/0
+
+📌 **SPRINT** sprint-priorities ✅ v6.26.0 · scratch limpo ✅ · memória sincronizada ✅
+
+⏭ **PRÓXIMOS PASSOS**
+  1. **UI follows** — botão enroll de nurturing (hook `enrollLead` já existe) + `useIntentOrchestrator` + `HITLApprovalCard` (FR-MH-009 backend pronto, falta o rosto).
+  2. **Executor de `intent_plans`** (aprovar/rejeitar/executar) — re-validar ação outward no execute (não confiar em `auto_approved`).
+  3. **FR-MH-010 AEO audit** (última FR marketing-hub) + entrega externa de nurturing (gated; credencial `resend_api_key` já pronta).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Sessão selada, Maestro. Partindo do seu `/handson` e da diretiva 🔴 de auditar drift, entregamos **10 commits materialmente verificados**:
+
+- **O drift estava isolado** — o incidente do flywheel não tinha irmãos da mesma causa; o único achado real (`rls_auto_enable`) era benigno e foi capturado. A varredura virou **ferramenta reexecutável** (`audit-schema-drift.sh`) pra nunca mais depender de um incidente.
+- **A auditoria pagou-se sozinha** ao expor um **P0 financeiro pré-existente** — qualquer usuário logado cunhava mcoCoins ilimitados via os 3 RPCs do ledger. Fechado e **provado bloqueado por tentativa-de-exploit real** em produção.
+- **"Faça 2+3+4" entregue** no núcleo: Nurturing cron (FR-MH-008), BYOK de canal (FR-MH-012) e Intent Orchestrator + HITL backend (FR-MH-009) — cada um com review independente + smoke throwaway. As cascas de UI ficaram conscientemente deferidas (incremento completo > meio-feature).
+
+Tudo no `origin/main`. Aguardando a próxima direção.
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]
-> * **Próxima Sessão**: [[2026-06-04 - agent-a77495dbbcb3f4db6]]
+> * **Próxima Sessão**: [[2026-06-04 - Complete Marketing Hub UI and intent executor]]
 %% --- TIMELINE END --- %%

@@ -10,8 +10,8 @@ tags:
 Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 303
-> * **Sessões do Claude**: 271
+> * **Total de Sessões Registradas**: 304
+> * **Sessões do Claude**: 272
 > * **Sessões do Gemini**: 32
 
 ---
@@ -58,6 +58,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` - *2026-06-04*
+*   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` - *2026-06-04*
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` - *2026-06-04*
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` - *2026-06-03*
 *   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` - *2026-06-03*
@@ -66,8 +67,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-03 - agent-aee9ed2070f3f1ca9]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-aec42cd0c906a9869]]` - *2026-06-03*
 *   `[[2026-06-03 - agent-ae5b6768c10f159ff]]` - *2026-06-03*
-*   `[[2026-06-03 - agent-ad97749e62e3c968c]]` - *2026-06-03*
-*   *... e mais 267 sessões nessa categoria.*
+*   *... e mais 268 sessões nessa categoria.*
 
 ---
 
@@ -258,6 +258,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a77495dbbcb3f4db6]]` (ClaudeSessions)
+*   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions)
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions)
 *   `[[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]` (GeminiSessions)
 *   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` (ClaudeSessions)
