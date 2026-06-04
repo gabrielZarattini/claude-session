@@ -1600,6 +1600,1368 @@ Antes de escrever código no money-path, preciso da tua direção no garfo real:
 > * **Redução de Latência de Parsing:** Na string de conexão ou no gerenciador de streams do WebSocket da Binance (`backend/src/services/exchange.js` ou equivalente), anexe o parâmetro de payload do protocolo:". You can now continue with these answers in mind.
 > ```
 
+## 🤖 Claude *(02:00:37)*
+
+
+## 🤖 Claude *(02:00:42)*
+
+Você escolheu a **Ativação correta** — e já incorporou minhas correções (manter `TREND_CROSS_1h` separado de `REGIME`, edge-trigger em vez de igualdade, `STOP_LOSS_LIMIT` em vez de Stop-Market). 👍
+
+Dois ajustes finais antes de eu desenhar o plano:
+- **Item 4 veio truncado** ("...anexe o parâmetro de payload do protocolo:") — é o `returnRateLimits=false` de novo, que eu já refutei (premissa falsa + risco de vazar socket no `terminate()`). Vou **deixar de fora**, salvo se você insistir com um motivo novo.
+- O caminho que você citou (`backend/src/services/exchange.js`) **não existe** — o arquivo real é [`backend/src/utils/exchange.js`](tradeux/backend/src/utils/exchange.js). Só pra alinhar referências.
+
+Agora vou levantar a evidência concreta que falta pra montar um plano preciso (sem chutar sizing/slippage/persistência). Leituras em paralelo:
+
+## 🤖 Claude *(02:00:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE da automação de Trend Following (cruzamento SMA fast/slow) no ecossistema
+> 4	 * Beholder — config pura, sem código novo no engine.
+> 5	 *
+> 6	 * COMO O SINAL CHEGA (importante): o chart de TRADE é o testnet, que após um reset tem poucas
+> 7	 * velas 1h (ex.: 12h) — NÃO dá p/ calcular SMA_200 (precisa 200h). Por isso o sinal de cruzamento
+> 8	 * vem da MAINNET, calculado pelo `regimeJob` (que já busca 300 klines 1h mainnet p/ o regime): o
+> 9	 * job detecta a transição golden/death e escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h']
+> 10	 * (='golden'|'death'|'none'), disparando a automação UMA vez no cruzamento. Execução = testnet
+> 11	 * (igual ao regime: sinal=mercado real, ordem=testnet). >>> Este script NÃO cria monitor de chart
+> 12	 * (seria um 2º writer das mesmas keys, com dados rasos do testnet). O job é o único writer. <<<
+> 13	 *
+> 14	 * Cria, se ausentes:
+> 15	 *   - order templates BUY (MARKET MIN_NOTIONAL) e SELL (MARKET LAST_ORDER_QTY).
+> 16	 *   - automações "Trend Buy/Sell" (reagem ao sinal golden/death), **INATIVAS** por segurança.
+> 17	 *
+> 18	 * Por que INATIVAS: a entrada/saída de trend compartilha carteira com a reversão (id2/id3). Antes
+> 19	 * de ativar, decidir a COORDENAÇÃO (gatear id2/id3 por REGIME!=='trend' — incluindo REGIME nos
+> 20	 * indexes de AMBAS, senão fail-open) e o SIZING (MIN_NOTIONAL é validação; trend real quer size),
+> 21	 * e observar 1 ciclo golden→death real. Ver HANDOFF.
+> 22	 *
+> 23	 * Reproduz o setup após `make nuke` (id2/id3 e este trend são DADO runtime, não seeders).
+> 24	 * Uso (dentro do container, server no ar): node scripts/setup-trend.js
+> 25	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL, TREND_INTERVAL
+> 26	 */
+> 27	const http = require('http');
+> 28	
+> 29	const SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();
+> 30	const INTERVAL = process.env.TREND_INTERVAL || '1h';
+> 31	const TAG = 'SMA50/200';                            // rótulo (períodos vivem no regimeClassifier)
+> 32	const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+> 33	const KR = `${SYMBOL}:REGIME`;
+> 34	const BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 35	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 36	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 37	
+> 38	function req(method, path, token, body) {
+> 39	    return new Promise((resolve) => {
+> 40	        const data = body ? JSON.stringify(body) : null;
+> 41	        const headers = { 'Content-Type': 'application/json' };
+> 42	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 43	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 44	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 45	            let d = ''; res.on('data', c => d += c);
+> 46	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 47	        });
+> 48	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 49	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 50	        if (data) r.write(data); r.end();
+> 51	    });
+> 52	}
+> 53	
+> 54	async function ensureTemplate(token, name, side, quantity) {
+> 55	    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+> 56	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 57	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 58	    const r = await req('POST', '/ordertemplates', token, {
+> 59	        name, symbol: SYMBOL, type: 'MARKET', side,
+> 60	        limitPrice: null, limitPriceMultiplier: 1, stopPrice: null, stopPriceMultiplier: 1,
+> 61	        quantity, quantityMultiplier: 1, icebergQty: null, icebergQtyMultiplier: 1,
+> 62	    });
+> 63	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 64	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id})` };
+> 65	}
+> 66	
+> 67	async function findAutomationByName(token, name) {
+> 68	    for (let page = 1; page <= 30; page++) {
+> 69	        const r = await req('GET', `/automations?page=${page}`, token);
+> 70	        const rows = r.body && r.body.rows;
+> 71	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 72	        const hit = rows.find(a => a.name === name);
+> 73	        if (hit) return hit;
+> 74	        if (rows.length < 10) break; // page size do backend = 10
+> 75	    }
+> 76	    return null;
+> 77	}
+> 78	
+> 79	async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+> 80	    const existing = await findAutomationByName(token, name);
+> 81	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 82	    const r = await req('POST', '/automations', token, {
+> 83	        name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 84	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 85	    });
+> 86	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 87	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 88	}
+> 89	
+> 90	(async () => {
+> 91	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 92	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 93	    const token = login.body && login.body.token;
+> 94	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 95	
+> 96	    console.log(`# Setup Trend Following ${TAG} — ${SYMBOL} ${INTERVAL} (sinal via regimeJob/mainnet)\n`);
+> 97	
+> 98	    const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', 'MIN_NOTIONAL');
+> 99	    console.log('- ' + buyTpl.msg);
+> 100	    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', 'LAST_ORDER_QTY');
+> 101	    console.log('- ' + sellTpl.msg);
+> 102	
+> 103	    // BUY = sinal golden (cruzamento p/ cima) + trava de segurança != bear.
+> 104	    const buyCond = `MEMORY['${KC}']==='golden' && MEMORY['${KR}']!=='bear'`;
+> 105	    console.log('- ' + await ensureAutomation(token, `Trend Buy ${SYMBOL} ${TAG}`, buyCond, `${KC},${KR}`, buyTpl.id));
+> 106	
+> 107	    // SELL = sinal death (cruzamento p/ baixo) — saída p/ caixa, sem gate.
+> 108	    const sellCond = `MEMORY['${KC}']==='death'`;
+> 109	    console.log('- ' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));
+> 110	
+> 111	    console.log(`\nPRONTO (automações INATIVAS). Para ATIVAR (decisão operacional):`);
+> 112	    console.log(`  1) COORDENAÇÃO: gatear id2/id3 por MEMORY['${KR}']!=='trend' (incluir ${KR} nos indexes de AMBAS);`);
+> 113	    console.log(`  2) SIZING: MIN_NOTIONAL = validação; trend real quer size;`);
+> 114	    console.log(`  3) observar 1 golden→death real; depois POST /automations/<id>/start nas duas.`);
+> 115	})();
+> 116	
+> ```
+
+## 🤖 Claude *(02:00:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== indexKeys (REGIME/TREND_CROSS) ===\" && grep -n \"REGIME\\|TREND_CROSS\\|indexKeys\" backend/src/utils/indexes.js | head -20",
+  "description": "Grep index keys for REGIME and TREND_CROSS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === indexKeys (REGIME/TREND_CROSS) ===
+> 3:const indexKeys = {
+> 76:    REGIME: 'REGIME',
+> 77:    TREND_CROSS: 'TREND_CROSS'
+> 82:        [indexKeys.RSI]: { params: 'period', name: 'RSI' },
+> 83:        [indexKeys.MACD]: { params: 'fast,slow,signal', name: 'MACD' },
+> 84:        [indexKeys.SMA]: { params: 'period', name: 'SMA' },
+> 85:        [indexKeys.EMA]: { params: 'period', name: 'EMA' },
+> 86:        [indexKeys.STOCH_RSI]: { params: 'd,k,rsi,stoch', name: 'Stochastic RSI' },
+> 87:        [indexKeys.BOLLINGER_BANDS]: { params: 'period,stdDev', name: 'Bollinger Bands (BB)' },
+> 88:        [indexKeys.ADL]: { params: 'none', name: 'ADL' },
+> 89:        [indexKeys.ADX]: { params: 'period', name: 'ADX' },
+> 90:        [indexKeys.ATR]: { params: 'period', name: 'ATR' },
+> 91:        [indexKeys.AWESOME_OSCILLATOR]: { params: 'fast,slow', name: 'Awesome Oscillator' },
+> 92:        [indexKeys.CCI]: { params: 'period', name: 'CCI' },
+> 93:        [indexKeys.FORCE_INDEX]: { params: 'period', name: 'Force Index' },
+> 94:        [indexKeys.KST]: { params: 'roc1,roc2,roc3,roc4,smaroc1,smaroc2,smaroc3,smaroc4,signal', name: 'KST' },
+> 95:        [indexKeys.MFI]: { params: 'period', name: 'MFI' },
+> 96:        [indexKeys.OBV]: { params: 'none', name: 'OBV' },
+> 97:        [indexKeys.PSAR]: { params: 'step,max', name: 'PSAR' },
+> 98:        [indexKeys.ROC]: { params: 'period', name: 'ROC' },
+> ```
+
+## 🤖 Claude *(02:00:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== automations update route + BRAIN reload ===\" && grep -rn \"BRAIN\\b\\|updateBrain\\|deleteBrain\\|reload\" backend/src/beholder.js backend/src/controllers/automationsController.js 2>/dev/null | grep -iv \"^.*//\" | head -25; echo \"--- automations router ---\"; grep -n \"patch\\|put\\|post\\|router\" backend/src/routers/automationsRouter.js 2>/dev/null | head",
+  "description": "Find automations update path and BRAIN reload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === automations update route + BRAIN reload ===
+> backend/src/controllers/automationsController.js:65:        beholder.updateBrain(automation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:82:        beholder.deleteBrain(automation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:167:            beholder.updateBrain(savedAutomation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:227:            beholder.deleteBrain(currentAutomation);
+> backend/src/controllers/automationsController.js:228:            beholder.updateBrain(updatedAutomation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:235:            beholder.deleteBrain(currentAutomation);
+> backend/src/controllers/automationsController.js:249:            beholder.deleteBrain(currentAutomation);
+> backend/src/beholder.js:14:let BRAIN = {};
+> backend/src/beholder.js:16:let LOCK_BRAIN = {};
+> backend/src/beholder.js:31:        BRAIN = {};
+> backend/src/beholder.js:36:                updateBrain(auto)
+> backend/src/beholder.js:47:        return automationId.some(id => LOCK_BRAIN[id] === true);
+> backend/src/beholder.js:48:    return LOCK_BRAIN[automationId] === true;
+> backend/src/beholder.js:53:        return automationId.map(id => LOCK_BRAIN[id] = value);
+> backend/src/beholder.js:54:    LOCK_BRAIN[automationId] = value;
+> backend/src/beholder.js:57:function updateBrainIndex(index, automationId) {
+> backend/src/beholder.js:64:function deleteBrainIndex(indexes, automationId) {
+> backend/src/beholder.js:76:function updateBrain(automation) {
+> backend/src/beholder.js:109:    BRAIN[automation.id] = automation;
+> backend/src/beholder.js:110:    automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
+> backend/src/beholder.js:113:function deleteBrain(automation) {
+> backend/src/beholder.js:116:        delete BRAIN[automation.id];
+> backend/src/beholder.js:117:        deleteBrainIndex(automation.indexes.split(','), automation.id);
+> backend/src/beholder.js:118:        if (automation.logs) logger('A:' + automation.id, `Automation removed from BRAIN #${automation.id}`);
+> backend/src/beholder.js:135:    return [...new Set(ids)].map(id => BRAIN[id]);
+> --- automations router ---
+> 2:const router = express.Router();
+> 5:router.get('/:id', automationsController.getAutomation);
+> 7:router.delete('/:id', automationsController.deleteAutomation);
+> 9:router.get('/', automationsController.getAutomations);
+> 11:router.patch('/:id', automationsController.updateAutomation);
+> 13:router.post('/', automationsController.insertAutomation);
+> 15:router.post('/:id/start', automationsController.startAutomation);
+> 17:router.post('/:id/stop', automationsController.stopAutomation);
+> 19:module.exports = router;
+> ```
+
+## 🤖 Claude *(02:01:36)*
+
+
+## 🤖 Claude *(02:01:37)*
+
+Agora a verdade-terra do banco vivo (id2/id3/id6/id7 + templates) e o caminho de execução de ordem (pra especificar o buffer de slippage no template). Em paralelo:
+
+## 🤖 Claude *(02:01:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,name,symbol,isActive,\\\\\\`indexes\\\\\\`,conditions FROM automations ORDER BY id\\\"\"' 2>&1 | head -60",
+  "description": "Query live automations from DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mysql: [Warning] Using a password on the command line interface can be insecure.
+> +----+------------------------------+---------+----------+---------------------------------------+----------------------------------------------------------------------------------+
+> | id | name                         | symbol  | isActive | indexes                               | conditions                                                                       |
+> +----+------------------------------+---------+----------+---------------------------------------+----------------------------------------------------------------------------------+
+> |  1 | Example Strategy             | BTCUSDT |        0 | BTCUSDT:RSI_1m                        |                                                                                  |
+> |  2 | Baseline RSI Buy BTCUSDT     | BTCUSDT |        1 | BTCUSDT:RSI_14_1m,BTCUSDT:REGIME      | MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear'      |
+> |  3 | Baseline RSI Sell BTCUSDT    | BTCUSDT |        1 | BTCUSDT:RSI_14_1m                     | MEMORY['BTCUSDT:RSI_14_1m'].current>75                                           |
+> |  6 | Trend Buy BTCUSDT SMA50/200  | BTCUSDT |        0 | BTCUSDT:TREND_CROSS_1h,BTCUSDT:REGIME | MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear' |
+> |  7 | Trend Sell BTCUSDT SMA50/200 | BTCUSDT |        0 | BTCUSDT:TREND_CROSS_1h                | MEMORY['BTCUSDT:TREND_CROSS_1h']==='death'                                       |
+> +----+------------------------------+---------+----------+---------------------------------------+----------------------------------------------------------------------------------+
+> ```
+
+## 🤖 Claude *(02:01:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,name,symbol,side,type,quantity,quantityMultiplier,limitPrice,limitPriceMultiplier,stopPrice,stopPriceMultiplier FROM ordertemplates ORDER BY id\\\"\"' 2>&1 | head -40",
+  "description": "Query live order templates from DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mysql: [Warning] Using a password on the command line interface can be insecure.
+> ERROR 1146 (42S02) at line 1: Table 'tradeux.ordertemplates' doesn't exist
+> ```
+
+## 🤖 Claude *(02:02:02)*
+
+
+## 🤖 Claude *(02:02:03)*
+
+id2/id3/id6/id7 confirmados. Faltou o nome da tabela de templates (Sequelize pluraliza diferente) e o cálculo de preço por multiplicador. Em paralelo:
+
+## 🤖 Claude *(02:02:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -N \\$MYSQL_DATABASE -e \\\"SHOW TABLES\\\"\"' 2>&1 | grep -iv warning | grep -i \"templ\\|order\\|monitor\"",
+  "description": "List order/template/monitor tables"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> monitors
+> orderTemplates
+> orders
+> withdrawTemplates
+> ```
+
+## 🤖 Claude *(02:02:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== multiplier price calc ===\" && grep -rn \"Multiplier\\|calcPrice\\|stopPrice\\|LAST_ORDER_QTY\\|MIN_NOTIONAL\" backend/src/controllers/ordersController.js backend/src/utils/orders.js backend/src/beholder.js 2>/dev/null | grep -i \"multipl\\|calc\\|notional\\|last_order\" | head -25",
+  "description": "Grep multiplier/price calc in order path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === multiplier price calc ===
+> backend/src/beholder.js:164:function calcPrice(orderTemplate, symbol, isStopPrice) {
+> backend/src/beholder.js:173:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> backend/src/beholder.js:177:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> backend/src/beholder.js:182:                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> backend/src/beholder.js:184:                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> backend/src/beholder.js:193:        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> backend/src/beholder.js:215:    const multiplier = orderTemplate.quantityMultiplier;
+> backend/src/beholder.js:225:    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> backend/src/beholder.js:228:    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> backend/src/beholder.js:253:    const multiplier = orderTemplate.quantityMultiplier;
+> backend/src/beholder.js:263:    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> backend/src/beholder.js:292:    // TP (perna LIMIT_MAKER, acima) = limitPrice × limitPriceMultiplier.
+> backend/src/beholder.js:293:    const tpPrice = calcPrice(orderTemplate, symbol, false);
+> backend/src/beholder.js:297:    // Gatilho do stop (belowStopPrice) = stopPrice × stopPriceMultiplier.
+> backend/src/beholder.js:298:    const stopTrigger = calcPrice(orderTemplate, symbol, true);
+> backend/src/beholder.js:407:    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> backend/src/beholder.js:409:        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> backend/src/beholder.js:412:        const price = calcPrice(orderTemplate, symbol, false);
+> backend/src/beholder.js:415:            throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+> backend/src/beholder.js:428:            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> backend/src/beholder.js:431:                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> backend/src/beholder.js:563:            limitPriceMultiplier: 1,
+> backend/src/beholder.js:565:            stopPriceMultiplier: 1,
+> backend/src/beholder.js:567:            quantityMultiplier: 1,
+> backend/src/beholder.js:569:            icebergQtyMultiplier: 1
+> ```
+
+## 🤖 Claude *(02:02:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== action executor (template->order) ===\" && grep -rln \"orderTemplate\\|placeOrder\\|doAction\\|calcOrder\" backend/src 2>/dev/null | grep -v node_modules",
+  "description": "Locate action executor and order calc files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === action executor (template->order) ===
+> backend/src/app.js
+> backend/src/repositories/orderTemplatesRepository.js
+> backend/src/models/orderTemplateModel.js
+> backend/src/routers/orderTemplatesRouter.js
+> backend/src/controllers/orderTemplatesController.js
+> backend/src/beholder.js
+> backend/src/repositories/actionsRepository.js
+> backend/src/repositories/gridsRepository.js
+> backend/src/models/actionModel.js
+> backend/src/models/gridModel.js
+> backend/src/routers/ordersRouter.js
+> backend/src/controllers/automationsController.js
+> backend/src/controllers/ordersController.js
+> ```
+
+## 🤖 Claude *(02:02:14)*
+
+
+## 🤖 Claude *(02:02:15)*
+
+Agora o coração do money-path — `calcPrice`/`calcQty`/placement no beholder.js (define como sizing e buffer de slippage realmente funcionam):
+
+## 🤖 Claude *(02:02:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 160,
+  "limit": 290
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 160	    if (automation.logs) logger('A:' + automation.id, `E-mail sent!`);
+> 161	    return { text: `E-mail sent from automation '${automation.name}'`, type: 'success' };
+> 162	}
+> 163	
+> 164	function calcPrice(orderTemplate, symbol, isStopPrice) {
+> 165	    const tickSize = parseFloat(symbol.tickSize);
+> 166	    let newPrice, factor;
+> 167	
+> 168	    // OCO usa preços explícitos (TP em limitPrice, stop em stopPrice), igual aos tipos LIMIT.
+> 169	    if (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === 'OCO') {
+> 170	        try {
+> 171	            if (!isStopPrice) {
+> 172	                if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;
+> 173	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 174	            }
+> 175	            else {
+> 176	                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 177	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 178	            }
+> 179	        }
+> 180	        catch (err) {
+> 181	            if (isStopPrice)
+> 182	                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 183	            else
+> 184	                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> 185	        }
+> 186	    }
+> 187	    else {
+> 188	        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 189	        if (!memory)
+> 190	            throw new Error(`Error trying to get market price. OTID: ${orderTemplate.id}, ${isStopPrice}. No Book.`);
+> 191	
+> 192	        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> 193	        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> 194	    }
+> 195	
+> 196	    factor = Math.floor(newPrice / tickSize);
+> 197	    return (factor * tickSize).toFixed(symbol.quotePrecision);
+> 198	}
+> 199	
+> 200	function calcQty(orderTemplate, price, symbol) {
+> 201	    let asset;
+> 202	
+> 203	    if (orderTemplate.side === 'BUY') {
+> 204	        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 205	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 206	    }
+> 207	    else {
+> 208	        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 209	        if (!asset) throw new Error(`There is no ${symbol.base} in your wallet to place a sell.`);
+> 210	    }
+> 211	
+> 212	    let qty = orderTemplate.quantity.replace(',', '.');
+> 213	    if (parseFloat(qty)) return qty;
+> 214	
+> 215	    const multiplier = orderTemplate.quantityMultiplier;
+> 216	    const stepSize = parseFloat(symbol.stepSize);
+> 217	
+> 218	    let newQty, factor;
+> 219	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 220	        if (orderTemplate.side === 'BUY')
+> 221	            newQty = (parseFloat(asset) / parseFloat(price)) * (multiplier > 1 ? 1 : multiplier);
+> 222	        else
+> 223	            newQty = parseFloat(asset) * (multiplier > 1 ? 1 : multiplier);
+> 224	    }
+> 225	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 226	        newQty = (parseFloat(symbol.minNotional) / parseFloat(price)) * (multiplier < 1 ? 1 : multiplier);
+> 227	    }
+> 228	    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 229	        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 230	        if (!lastOrder)
+> 231	            throw new Error(`There is no last order to use as qty reference for ${orderTemplate.symbol}.`);
+> 232	
+> 233	        newQty = parseFloat(lastOrder.quantity) * multiplier;
+> 234	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;
+> 235	    }
+> 236	
+> 237	    factor = Math.floor(newQty / stepSize);
+> 238	    return (factor * stepSize).toFixed(symbol.basePrecision);
+> 239	}
+> 240	
+> 241	function hasEnoughAssets(symbol, order, price) {
+> 242	    const qty = parseFloat(order.quantity);
+> 243	    if (order.side === 'BUY')
+> 244	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 245	    else
+> 246	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 247	}
+> 248	
+> 249	function calcQuoteQty(orderTemplate, symbol) {
+> 250	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> 251	        throw new Error(`Only MARKET orders can cal quote qty.`);
+> 252	
+> 253	    const multiplier = orderTemplate.quantityMultiplier;
+> 254	
+> 255	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 256	        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> 257	
+> 258	        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 259	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 260	
+> 261	        return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 262	    }
+> 263	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 264	        return (parseFloat(symbol.minNotional) * (multiplier < 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 265	    }
+> 266	
+> 267	    throw new Error(`Invalid order template quantity ${orderTemplate.quantity}`);
+> 268	}
+> 269	
+> 270	// OCO protetiva (One-Cancels-the-Other): TP via LIMIT_MAKER (perna "above") + SL via
+> 271	// STOP_LOSS_LIMIT (perna "below"). Quando uma perna executa, a Binance cancela a outra.
+> 272	// As 2 pernas são persistidas com o MESMO orderListId. Usa o endpoint novo
+> 273	// v3/orderList/oco (ver utils/exchange.oco). v1: só SELL protetivo (TP acima, SL abaixo).
+> 274	async function placeOco(settings, automation, orderTemplate, symbol) {
+> 275	    const side = orderTemplate.side.toUpperCase();
+> 276	    if (side !== 'SELL')
+> 277	        throw new Error(`OCO no momento só suporta SELL protetivo (TP+SL). Side recebido: ${side}`);
+> 278	
+> 279	    // Anti-empilhamento: a proteção é "uma OCO por vez". Se já há uma OCO aberta desta
+> 280	    // automação para o símbolo, não coloca outra — a automação re-arma sozinha quando a
+> 281	    // anterior resolver (TP/SL) ou for cancelada. Sem isso, uma automação sem índice (que
+> 282	    // dispara a cada tick) ou condições oscilando empilhariam OCOs e drenariam o saldo.
+> 283	    if (automation.id) {
+> 284	        const symbolUpper = orderTemplate.symbol.toUpperCase();
+> 285	        const open = await getOpenOcoOrders(automation.id);
+> 286	        if (open && open.some(o => o.symbol === symbolUpper)) {
+> 287	            if (automation.logs) logger('A:' + automation.id, `OCO já aberta para ${symbolUpper}; re-disparo ignorado.`);
+> 288	            return { type: 'success', text: `OCO already open for ${symbolUpper}, skipped.` };
+> 289	        }
+> 290	    }
+> 291	
+> 292	    // TP (perna LIMIT_MAKER, acima) = limitPrice × limitPriceMultiplier.
+> 293	    const tpPrice = calcPrice(orderTemplate, symbol, false);
+> 294	    if (!isFinite(tpPrice) || !parseFloat(tpPrice))
+> 295	        throw new Error(`Erro no preço de TP da OCO, OTID ${orderTemplate.id}: ${tpPrice}`);
+> 296	
+> 297	    // Gatilho do stop (belowStopPrice) = stopPrice × stopPriceMultiplier.
+> 298	    const stopTrigger = calcPrice(orderTemplate, symbol, true);
+> 299	    if (!isFinite(stopTrigger) || !parseFloat(stopTrigger))
+> 300	        throw new Error(`Erro no preço de stop da OCO, OTID ${orderTemplate.id}: ${stopTrigger}`);
+> 301	
+> 302	    // Preço-limite da perna de stop (belowPrice) = gatilho: para um SELL fica marketável
+> 303	    // (limite <= gatilho), garantindo a execução quando o stop dispara.
+> 304	    const stopLimit = stopTrigger;
+> 305	
+> 306	    const quantity = calcQty(orderTemplate, tpPrice, symbol);
+> 307	    if (!isFinite(quantity) || !parseFloat(quantity))
+> 308	        throw new Error(`Erro na quantidade da OCO, OTID ${orderTemplate.id}: ${quantity}`);
+> 309	
+> 310	    const order = { symbol: orderTemplate.symbol.toUpperCase(), side, quantity };
+> 311	    if (!hasEnoughAssets(symbol, order, tpPrice))
+> 312	        throw new Error(`Sem saldo suficiente para a OCO ${side} ${quantity} ${order.symbol}.`);
+> 313	
+> 314	    const options = {
+> 315	        aboveType: 'LIMIT_MAKER',
+> 316	        abovePrice: tpPrice,
+> 317	        belowType: 'STOP_LOSS_LIMIT',
+> 318	        belowPrice: stopLimit,
+> 319	        belowStopPrice: stopTrigger,
+> 320	        belowTimeInForce: 'GTC'
+> 321	    };
+> 322	
+> 323	    let result;
+> 324	    const exchange = require('./utils/exchange')(settings);
+> 325	    try {
+> 326	        result = await exchange.oco(side, order.symbol, quantity, options);
+> 327	    } catch (err) {
+> 328	        logger('A:' + automation.id, err.body ? err.body : err);
+> 329	        logger('A:' + automation.id, { order, options });
+> 330	        return { type: 'error', text: `OCO failed! ` + (err.body ? JSON.stringify(err.body) : err.message) };
+> 331	    }
+> 332	
+> 333	    const orderListId = result.orderListId;
+> 334	    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];
+> 335	
+> 336	    // A OCO já está VIVA na corretora. Se a resposta vier anômala (≠2 pernas), cancela a
+> 337	    // lista para não deixar ordem órfã não-rastreável e falha.
+> 338	    if (reports.length !== 2) {
+> 339	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 340	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 341	        return { type: 'error', text: `OCO retornou ${reports.length} pernas (esperado 2); lista #${orderListId} cancelada.` };
+> 342	    }
+> 343	
+> 344	    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder). Se a
+> 345	    // persistência falhar, a OCO ficaria viva mas órfã (fora do getOpenOcoOrders e do hook
+> 346	    // de cancelamento) → cancela na corretora e falha, mantendo DB e exchange coerentes.
+> 347	    try {
+> 348	        for (const r of reports) {
+> 349	            await insertOrder({
+> 350	                automationId: automation.id,
+> 351	                symbol: order.symbol,
+> 352	                quantity: r.origQty || quantity,
+> 353	                type: r.type,
+> 354	                side: r.side || side,
+> 355	                orderListId,
+> 356	                limitPrice: r.price && parseFloat(r.price) ? `${r.price}` : null,
+> 357	                stopPrice: r.stopPrice && parseFloat(r.stopPrice) ? `${r.stopPrice}` : null,
+> 358	                icebergQty: null,
+> 359	                orderId: r.orderId,
+> 360	                clientOrderId: r.clientOrderId,
+> 361	                transactTime: r.transactTime || result.transactionTime || Date.now(),
+> 362	                status: r.status || 'NEW'
+> 363	            });
+> 364	        }
+> 365	    } catch (err) {
+> 366	        logger('A:' + automation.id, err);
+> 367	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 368	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 369	        return { type: 'error', text: `Falha ao persistir a OCO #${orderListId}; lista cancelada na corretora.` };
+> 370	    }
+> 371	
+> 372	    if (automation.logs)
+> 373	        logger('A:' + automation.id, `OCO #${orderListId} ${side} ${order.symbol}: TP ${tpPrice} / STOP ${stopTrigger}->${stopLimit}, qty ${quantity}`);
+> 374	
+> 375	    return { type: 'success', text: `OCO ${side} ${order.symbol} placed (list #${orderListId})` };
+> 376	}
+> 377	
+> 378	async function placeOrder(settings, automation, action) {
+> 379	
+> 380	    if (!settings || !automation || !action)
+> 381	        throw new Error(`All parameters are required to place an order.`);
+> 382	
+> 383	    if (!action.orderTemplateId)
+> 384	        throw new Error(`There is no order template for '${automation.name}', action #${action.id}`);
+> 385	
+> 386	    const orderTemplate = action.orderTemplate ? { ...action.orderTemplate } : await orderTemplatesRepository.getOrderTemplate(action.orderTemplateId);
+> 387	    if (orderTemplate.type === 'TRAILING_STOP') {
+> 388	        orderTemplate.type = 'MARKET';
+> 389	        orderTemplate.limitPrice = null;
+> 390	        orderTemplate.stopPrice = null;
+> 391	    }
+> 392	
+> 393	    const symbol = await getSymbol(orderTemplate.symbol);
+> 394	
+> 395	    // OCO tem fluxo próprio (2 pernas + orderListId): desvia antes de montar a ordem simples.
+> 396	    if (orderTemplate.type.toUpperCase() === 'OCO')
+> 397	        return placeOco(settings, automation, orderTemplate, symbol);
+> 398	
+> 399	    const order = {
+> 400	        symbol: orderTemplate.symbol.toUpperCase(),
+> 401	        side: orderTemplate.side.toUpperCase(),
+> 402	        options: {
+> 403	            type: orderTemplate.type.toUpperCase()
+> 404	        }
+> 405	    }
+> 406	
+> 407	    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> 408	    if (order.options.type === 'MARKET'
+> 409	        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> 410	        order.options.quoteOrderQty = calcQuoteQty(orderTemplate, symbol);
+> 411	    } else {
+> 412	        const price = calcPrice(orderTemplate, symbol, false);
+> 413	
+> 414	        if (!isFinite(price) || !price)
+> 415	            throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+> 416	
+> 417	        if (LIMIT_TYPES.includes(order.options.type))
+> 418	            order.limitPrice = price;
+> 419	
+> 420	        const quantity = calcQty(orderTemplate, price, symbol, false);
+> 421	
+> 422	        if (!isFinite(quantity) || !quantity)
+> 423	            throw new Error(`Error in calcQty function, params: OTID ${orderTemplate.id}, $: ${price}, qty: ${quantity}`);
+> 424	
+> 425	        order.quantity = quantity;
+> 426	
+> 427	        if (STOP_TYPES.includes(order.options.type)) {
+> 428	            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> 429	
+> 430	            if (!isFinite(stopPrice) || !stopPrice)
+> 431	                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> 432	
+> 433	            order.options.stopPrice = stopPrice;
+> 434	        }
+> 435	
+> 436	        if (!hasEnoughAssets(symbol, order, price))
+> 437	            throw new Error(`You wanna ${order.side} ${order.quantity} ${order.symbol} but you haven't enough assets.`);
+> 438	    }
+> 439	
+> 440	    let result;
+> 441	    const exchange = require('./utils/exchange')(settings);
+> 442	
+> 443	    try {
+> 444	        if (order.side === 'BUY')
+> 445	            result = await exchange.buy(order.symbol, order.quantity, order.limitPrice, order.options);
+> 446	        else
+> 447	            result = await exchange.sell(order.symbol, order.quantity, order.limitPrice, order.options);
+> 448	    }
+> 449	    catch (err) {
+> ```
+
+## 🤖 Claude *(02:04:41)*
+
+
+## 🤖 Claude *(02:04:43)*
+
+Money-path mapeado por inteiro. Agora tenho a verdade-terra pra um plano preciso. Deixa eu registrar a virada de fase e te mostrar o que achei + os garfos reais.
+
+## 🤖 Claude *(02:04:45)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Ativa\u00e7\u00e3o Trend Following (id6/id7)",
+  "summary": "Gate da lista do dono: item 1 devolvido (dual-writer), 2 aceito; planejando ativa\u00e7\u00e3o com coordena\u00e7\u00e3o id2/id3 + sizing/order-type/restart"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Ativação Trend Following (id6/id7)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(02:04:47)*
+
+
+## 🤖 Claude *(02:05:00)*
+
+## 📐 Plano de ativação (preciso, file-level)
+
+**Verdade-terra do banco** (id2/id3 ativas, id6/id7 inativas, confirmado):
+
+| id | nome | ativa? | conditions atuais |
+|---|---|---|---|
+| 2 | RSI Buy | ✅ | `RSI_14_1m<25 && REGIME!=='bear'` |
+| 3 | RSI Sell | ✅ | `RSI_14_1m>75` |
+| 6 | Trend Buy | ⬜ | `TREND_CROSS_1h==='golden' && REGIME!=='bear'` |
+| 7 | Trend Sell | ⬜ | `TREND_CROSS_1h==='death'` |
+
+**Parte segura (faço já, é puramente restritiva — coordenação do checklist):**
+- **id2** → `...REGIME!=='bear' && REGIME!=='trend'` (indexes já têm REGIME)
+- **id3** → conditions `RSI>75 && REGIME!=='trend'` **+ indexes** `BTCUSDT:RSI_14_1m,BTCUSDT:REGIME` (senão fail-open)
+- Via `PATCH /automations/:id` — que faz `deleteBrain`+`updateBrain` atômico ([automationsController.js:227](tradeux/backend/src/controllers/automationsController.js:227)). Mesmo padrão das calibrações anteriores.
+
+**Parte com decisão (não vou chutar money-path):** descobri 3 coisas no [`beholder.js`](tradeux/backend/src/beholder.js:200) que **mudam o que eu construo**:
+
+1. **Sizing**: id6 = `MIN_NOTIONAL × quantityMultiplier` (mult=1 = tamanho de validação). id7 = `LAST_ORDER_QTY` — e o `LAST_ORDER` é **por símbolo, compartilhado com a id3** ([beholder.js:229](tradeux/backend/src/beholder.js:229)) → a id7 pode vender a qty da reversão, não da posição de trend. Risco real.
+2. **Order type**: o `STOP_LOSS_LIMIT` que você pediu é **semanticamente errado** pra ordem disparada por sinal — o stop espera o preço *cruzar um gatilho*, não "executa agora". O buffer de slippage entra como **multiplicador de preço** no template (`calcPrice` aplica `limitPriceMultiplier`/`stopPriceMultiplier` sobre o book — [beholder.js:193](tradeux/backend/src/beholder.js:193)).
+3. **Restart**: o `ABOVE` do job é in-memory ([regimeJob.js:46](tradeux/backend/src/regimeJob.js:46)) → zera no `make restart` e um cross nessa janela é perdido (1º poll tem `prev===undefined`, não dispara).
+
+Preciso da tua decisão em 3 pontos antes de escrever o código de produção:
+
+## 🤖 Claude *(02:05:16)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como as ordens de trend devem EXECUTAR? (id6 entra no golden / id7 sai no death). STOP_LOSS_LIMIT \u00e9 semanticamente errado p/ ordem disparada por sinal; o objetivo (fill garantido sob volatilidade + matar o EXPIRE de MARKET no book fino do testnet) \u00e9 melhor servido por:",
+      "header": "Tipo de ordem",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "LIMIT market\u00e1vel + buffer (Recomendado)",
+          "description": "id6 compra a bestAsk\u00d71.003 / id7 vende a bestBid\u00d70.997 (buffer 0.3%): atravessa o spread como TAKER (fill imediato) com piso/teto de slippage. Mata o EXPIRE de MARKET no book fino. Buffer = multiplicador de pre\u00e7o no template, sem c\u00f3digo novo no engine."
+        },
+        {
+          "label": "Manter MARKET",
+          "description": "Mais simples (templates 3/4 j\u00e1 s\u00e3o MARKET). Aceita que \u00e0s vezes EXPIRA no book fino do testnet (achado E2E conhecido). Sem buffer."
+        },
+        {
+          "label": "STOP protetivo na posi\u00e7\u00e3o (OCO-like)",
+          "description": "Al\u00e9m da sa\u00edda por death-cross, anexa um STOP_LOSS_LIMIT de prote\u00e7\u00e3o ap\u00f3s a entrada da id6 (estilo placeOco). Risk-management real (trend sem stop devolve muito), mas \u00e9 build novo no engine \u2014 vai a gate maior."
+        }
+      ]
+    },
+    {
+      "question": "Qual tamanho pras ordens de trend e como tratar o acoplamento da id7 (LAST_ORDER_QTY compartilhado com a id3)?",
+      "header": "Sizing",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Pequeno + observar 1 cross (Recomendado)",
+          "description": "id6 a ~3\u00d7 MIN_NOTIONAL; aceita o acoplamento da id7 por ora (size pequeno limita o estrago). Depois do 1\u00ba golden\u2192death real observado com logs, calibra p/ size maior + corrige o acoplamento. Segue o checklist (observar antes de confiar)."
+        },
+        {
+          "label": "Size real agora + corrigir acoplamento",
+          "description": "id6 com size de produ\u00e7\u00e3o (ex.: 10\u00d7 MIN_NOTIONAL ou qty fixa) e rastreamento DEDICADO da qty de trend (chave pr\u00f3pria escrita pela id6, lida pela id7) p/ a id7 nunca vender a posi\u00e7\u00e3o da revers\u00e3o. Build maior, vai a gate."
+        }
+      ]
+    },
+    {
+      "question": "Resili\u00eancia a restart do sinal de cross (o ABOVE do job zera no make restart \u2192 cross na janela de rein\u00edcio \u00e9 perdido)?",
+      "header": "Restart",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Persistir o estado de cross (Recomendado)",
+          "description": "Grava ABOVE/last-cross no DB (ou MEMORY) e recarrega no boot, com guarda de idempot\u00eancia p/ n\u00e3o disparar 2\u00d7. Sinal raro (50/200) deixa de ser perdido por rein\u00edcio. Mudan\u00e7a contida no regimeJob, vai a gate."
+        },
+        {
+          "label": "S\u00f3 observar por ora",
+          "description": "O checklist permite 'mitigar OU observar'; sinal \u00e9 raro; deixa como d\u00edvida documentada e revisita se incomodar. Zero c\u00f3digo novo no job agora \u2014 foco s\u00f3 na coordena\u00e7\u00e3o + ativa\u00e7\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como as ordens de trend devem EXECUTAR? (id6 entra no golden / id7 sai no death). STOP_LOSS_LIMIT é semanticamente errado p/ ordem disparada por sinal; o objetivo (fill garantido sob volatilidade + matar o EXPIRE de MARKET no book fino do testnet) é melhor servido por:"="LIMIT marketável + buffer (Recomendado)", "Qual tamanho pras ordens de trend e como tratar o acoplamento da id7 (LAST_ORDER_QTY compartilhado com a id3)?"="Pequeno + observar 1 cross (Recomendado)", "Resiliência a restart do sinal de cross (o ABOVE do job zera no make restart → cross na janela de reinício é perdido)?"="Persistir o estado de cross (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(02:27:16)*
+
+
+## 🤖 Claude *(02:27:18)*
+
+Decisões registradas: **LIMIT marketável + buffer 0.3%** · **size pequeno (~3× MIN_NOTIONAL), observar 1 cross** · **persistir o estado de cross**. 
+
+Antes de escrever código preciso confirmar 3 mecanismos exatos no engine (pra não errar o template do LIMIT marketável nem reinventar persistência). Última rodada de leitura:
+
+## 🤖 Claude *(02:27:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 1,
+  "limit": 160
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 2	const { actionTypes } = require('./repositories/actionsRepository');
+> 3	const orderTemplatesRepository = require('./repositories/orderTemplatesRepository');
+> 4	const automationsRepository = require('./repositories/automationsRepository');
+> 5	const withdrawTemplatesRepository = require('./repositories/withdrawTemplatesRepository');
+> 6	const gridsRepository = require('./repositories/gridsRepository');
+> 7	const { getSymbol } = require('./repositories/symbolsRepository');
+> 8	const { STOP_TYPES, LIMIT_TYPES, insertOrder, getOpenOcoOrders, calcFillFinancials } = require('./repositories/ordersRepository');
+> 9	const db = require('./db');
+> 10	const logger = require('./utils/logger');
+> 11	
+> 12	const MEMORY = {};
+> 13	
+> 14	let BRAIN = {};
+> 15	
+> 16	let LOCK_BRAIN = {};
+> 17	
+> 18	let BRAIN_INDEX = {};
+> 19	
+> 20	let LOCK_MEMORY = false;
+> 21	
+> 22	const LOGS = process.env.BEHOLDER_LOGS === 'true';
+> 23	const INTERVAL = parseInt(process.env.AUTOMATION_INTERVAL || 0);
+> 24	
+> 25	function init(automations) {
+> 26	
+> 27	    try {
+> 28	        setLocked(automations.map(a => a.id), true);
+> 29	        LOCK_MEMORY = true;
+> 30	
+> 31	        BRAIN = {};
+> 32	        BRAIN_INDEX = {};
+> 33	
+> 34	        automations.map(auto => {
+> 35	            if (auto.isActive && !auto.schedule)
+> 36	                updateBrain(auto)
+> 37	        });
+> 38	    } finally {
+> 39	        setLocked(automations.map(a => a.id), false);
+> 40	        LOCK_MEMORY = false;
+> 41	        logger('beholder', 'Beholder Brain has started!');
+> 42	    }
+> 43	}
+> 44	
+> 45	function isLocked(automationId) {
+> 46	    if (Array.isArray(automationId))
+> 47	        return automationId.some(id => LOCK_BRAIN[id] === true);
+> 48	    return LOCK_BRAIN[automationId] === true;
+> 49	}
+> 50	
+> 51	function setLocked(automationId, value) {
+> 52	    if (Array.isArray(automationId))
+> 53	        return automationId.map(id => LOCK_BRAIN[id] = value);
+> 54	    LOCK_BRAIN[automationId] = value;
+> 55	}
+> 56	
+> 57	function updateBrainIndex(index, automationId) {
+> 58	    if (!BRAIN_INDEX[index]) BRAIN_INDEX[index] = [];
+> 59	    BRAIN_INDEX[index].push(automationId);
+> 60	
+> 61	    if (index.startsWith('*')) BRAIN_INDEX.hasWildcard = true;
+> 62	}
+> 63	
+> 64	function deleteBrainIndex(indexes, automationId) {
+> 65	    if (typeof indexes === 'string') indexes = indexes.split(',');
+> 66	    indexes.forEach(ix => {
+> 67	        if (!BRAIN_INDEX[ix] || BRAIN_INDEX[ix].length === 0) return;
+> 68	        const pos = BRAIN_INDEX[ix].findIndex(id => id === automationId);
+> 69	        BRAIN_INDEX[ix].splice(pos, 1);
+> 70	    });
+> 71	
+> 72	    if (BRAIN_INDEX.hasWildcard)
+> 73	        BRAIN_INDEX.hasWildcard = Object.entries(BRAIN_INDEX).some(p => p[0].startsWith('*'));
+> 74	}
+> 75	
+> 76	function updateBrain(automation) {
+> 77	    if (!automation.isActive || !automation.conditions) return;
+> 78	
+> 79	    const actions = automation.actions ? automation.actions.map(a => {
+> 80	        a = a.toJSON ? a.toJSON() : a;
+> 81	        delete a.createdAt;
+> 82	        delete a.updatedAt;
+> 83	        //delete a.orderTemplate;
+> 84	        return a;
+> 85	    }) : [];
+> 86	
+> 87	    const grids = automation.grids ? automation.grids.map(g => {
+> 88	        g = g.toJSON ? g.toJSON() : g;
+> 89	        delete g.createdAt;
+> 90	        delete g.updatedAt;
+> 91	        delete g.automationId;
+> 92	        if (g.orderTemplate) {
+> 93	            delete g.orderTemplate.createdAt;
+> 94	            delete g.orderTemplate.updatedAt;
+> 95	            delete g.orderTemplate.name;
+> 96	        }
+> 97	        return g;
+> 98	    }) : [];
+> 99	
+> 100	    if (automation.toJSON)
+> 101	        automation = automation.toJSON();
+> 102	
+> 103	    delete automation.createdAt;
+> 104	    delete automation.updatedAt;
+> 105	
+> 106	    automation.actions = actions;
+> 107	    automation.grids = grids;
+> 108	
+> 109	    BRAIN[automation.id] = automation;
+> 110	    automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
+> 111	}
+> 112	
+> 113	function deleteBrain(automation) {
+> 114	    try {
+> 115	        setLocked(automation.id, true);
+> 116	        delete BRAIN[automation.id];
+> 117	        deleteBrainIndex(automation.indexes.split(','), automation.id);
+> 118	        if (automation.logs) logger('A:' + automation.id, `Automation removed from BRAIN #${automation.id}`);
+> 119	    }
+> 120	    finally {
+> 121	        setLocked(automation.id, false);
+> 122	    }
+> 123	}
+> 124	
+> 125	function findAutomations(indexKey) {
+> 126	    let ids = [];
+> 127	    if (BRAIN_INDEX.hasWildcard) {
+> 128	        const props = Object.entries(BRAIN_INDEX).filter(p => indexKey.endsWith(p[0].replace('*', '')));
+> 129	        ids = props.map(p => p[1]).flat();
+> 130	    }
+> 131	    else
+> 132	        ids = BRAIN_INDEX[indexKey];
+> 133	
+> 134	    if (!ids) return [];
+> 135	    return [...new Set(ids)].map(id => BRAIN[id]);
+> 136	}
+> 137	
+> 138	function invertCondition(memoryKey, conditions) {
+> 139	    const conds = conditions.split(' && ');
+> 140	    const condToInvert = conds.find(c => c.indexOf(memoryKey) !== -1 && c.indexOf('current') !== -1);
+> 141	    if (!condToInvert) return false;
+> 142	
+> 143	    if (condToInvert.indexOf('>=') != -1) return condToInvert.replace('>=', '<').replace(/current/g, 'previous');
+> 144	    if (condToInvert.indexOf('<=') != -1) return condToInvert.replace('<=', '>').replace(/current/g, 'previous');
+> 145	    if (condToInvert.indexOf('>') != -1) return condToInvert.replace('>', '<').replace(/current/g, 'previous');
+> 146	    if (condToInvert.indexOf('<') != -1) return condToInvert.replace('<', '>').replace(/current/g, 'previous');
+> 147	    if (condToInvert.indexOf('!') != -1) return condToInvert.replace('!', '=').replace(/current/g, 'previous');
+> 148	    if (condToInvert.indexOf('==') != -1) return condToInvert.replace('==', '!==').replace(/current/g, 'previous');
+> 149	    return false;
+> 150	}
+> 151	
+> 152	async function sendSms(settings, automation) {
+> 153	    await require('./utils/sms')(settings, automation.name + ' has fired!');
+> 154	    if (automation.logs) logger('A:' + automation.id, `SMS sent!`);
+> 155	    return { text: `SMS sent from automation '${automation.name}'`, type: 'success' };
+> 156	}
+> 157	
+> 158	async function sendEmail(settings, automation) {
+> 159	    await require('./utils/email')(settings, automation.name + ' has fired!');
+> 160	    if (automation.logs) logger('A:' + automation.id, `E-mail sent!`);
+> ```
+
+## 🤖 Claude *(02:27:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,name,side,type,quantity,quantityMultiplier,limitPrice,limitPriceMultiplier,stopPrice,stopPriceMultiplier FROM orderTemplates ORDER BY id\\\"\"' 2>&1 | grep -iv \"warning\"",
+  "description": "Query orderTemplates (correct camelCase table)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> +----+------------------------------+------+--------+----------------+--------------------+------------+----------------------+-----------+---------------------+
+> | id | name                         | side | type   | quantity       | quantityMultiplier | limitPrice | limitPriceMultiplier | stopPrice | stopPriceMultiplier |
+> +----+------------------------------+------+--------+----------------+--------------------+------------+----------------------+-----------+---------------------+
+> |  1 | Template Show                | BUY  | MARKET | MIN_NOTIONAL   |               1.00 | NULL       |                 1.00 | NULL      |                1.00 |
+> |  2 | Baseline SELL BTCUSDT        | SELL | MARKET | MIN_NOTIONAL   |               1.00 | NULL       |                 1.00 | NULL      |                1.00 |
+> |  3 | Trend Buy BTCUSDT SMA50/200  | BUY  | MARKET | MIN_NOTIONAL   |               1.00 | NULL       |                 1.00 | NULL      |                1.00 |
+> |  4 | Trend Sell BTCUSDT SMA50/200 | SELL | MARKET | LAST_ORDER_QTY |               1.00 | NULL       |                 1.00 | NULL      |                1.00 |
+> +----+------------------------------+------+--------+----------------+--------------------+------------+----------------------+-----------+---------------------+
+> ```
+
+## 🤖 Claude *(02:27:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== LIMIT_TYPES / STOP_TYPES / getEval ===\" && grep -n \"LIMIT_TYPES\\s*=\\|STOP_TYPES\\s*=\\|function getEval\\|MEMORY\\[\" backend/src/beholder.js | head; echo \"--- models (reusable persistence?) ---\"; ls backend/src/models/",
+  "description": "Find type constants, getEval, and models"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LIMIT_TYPES / STOP_TYPES / getEval ===
+> 188:        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 204:        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 208:        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 229:        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 244:        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 246:        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 258:        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 498:        const book = MEMORY[`${automation.symbol}:BOOK`];
+> 588:    const book = MEMORY[`${automation.symbol}:BOOK`];
+> 605:                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestAsk<${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestAsk>=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestAsk>${previousLevelStr}`,
+> --- models (reusable persistence?) ---
+> actionModel.js
+> automationModel.js
+> gridModel.js
+> monitorModel.js
+> orderModel.js
+> orderTemplateModel.js
+> settingsModel.js
+> symbolModel.js
+> withdrawTemplateModel.js
+> ```
+
+## 🤖 Claude *(02:28:09)*
+
+
+## 🤖 Claude *(02:28:11)*
+
+Quase lá. Faltam só `LIMIT_TYPES`/`STOP_TYPES` e o formato que o `getEval` espera no `limitPrice` (pra ancorar o LIMIT marketável no book corretamente):
+
+## 🤖 Claude *(02:28:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== LIMIT_TYPES / STOP_TYPES ===\" && grep -n \"LIMIT_TYPES\\|STOP_TYPES\" backend/src/repositories/ordersRepository.js | head; echo \"--- getEval def ---\"; grep -rn \"function getEval\\|getEval =\" backend/src/",
+  "description": "Find order type constants and getEval definition"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LIMIT_TYPES / STOP_TYPES ===
+> 201:const STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 203:const LIMIT_TYPES = [orderTypes.LIMIT, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 207:    STOP_TYPES,
+> 208:    LIMIT_TYPES,
+> --- getEval def ---
+> backend/src/beholder.js:923:function getEval(prop) {
+> ```
+
+## 🤖 Claude *(02:28:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== getEval body + any LIMIT template example in code ===\" && grep -rn \"getEval\\|bestAsk\\|bestBid\" backend/src/beholder.js | head -20",
+  "description": "Inspect getEval usage and book references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getEval body + any LIMIT template example in code ===
+> backend/src/beholder.js:173:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> backend/src/beholder.js:177:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> backend/src/beholder.js:192:        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> backend/src/beholder.js:591:    const currentPrice = parseFloat(book.current.bestAsk);
+> backend/src/beholder.js:605:                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestAsk<${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestAsk>=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestAsk>${previousLevelStr}`,
+> backend/src/beholder.js:614:                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestBid>${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestBid<=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestBid<${nextLevelStr}`,
+> backend/src/beholder.js:679:    const currentPrice = isBuy ? book.current.bestAsk : book.current.bestBid;
+> backend/src/beholder.js:680:    const previousPrice = isBuy ? book.previous.bestAsk : book.previous.bestBid;
+> backend/src/beholder.js:923:function getEval(prop) {
+> backend/src/beholder.js:940:            eval: getEval(prop[0]),
+> backend/src/beholder.js:958:    if (book) return parseFloat(baseQty) * book.current.bestBid;
+> backend/src/beholder.js:966:    if (book) return parseFloat(fiatQty) / book.current.bestBid;
+> backend/src/beholder.js:978:    if (book) return usd * book.current.bestBid;
+> backend/src/beholder.js:981:    if (book) return usd / book.current.bestBid;
+> ```
+
+## 🤖 Claude *(02:28:16)*
+
+
+## 🤖 Claude *(02:28:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 923,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 923	function getEval(prop) {
+> 924	    if (prop.indexOf('MEMORY') !== -1) return prop;
+> 925	    if (prop.indexOf('.') === -1) return `MEMORY['${prop}']`;
+> 926	
+> 927	    const propSplit = prop.split('.');
+> 928	    const memKey = propSplit[0];
+> 929	    const memProp = prop.replace(memKey, '');
+> 930	    return `MEMORY['${memKey}']${memProp}`;
+> 931	}
+> 932	
+> 933	function getMemoryIndexes() {
+> 934	    return Object.entries(flattenObject(MEMORY)).map(prop => {
+> 935	        if (prop[0].indexOf('previous') !== -1 || prop[0].indexOf(':') === -1) return false;
+> 936	        const propSplit = prop[0].split(':');
+> 937	        return {
+> 938	            symbol: propSplit[0],
+> 939	            variable: propSplit[1].replace('.current', ''),
+> 940	            eval: getEval(prop[0]),
+> 941	            example: prop[1]
+> 942	        }
+> 943	    })
+> 944	        .filter(ix => ix)
+> 945	        .sort((a, b) => {
+> 946	            if (a.variable < b.variable) return -1;
+> 947	            if (a.variable > b.variable) return 1;
+> 948	            return 0;
+> 949	        })
+> 950	}
+> 951	
+> 952	const DOLLAR_COINS = ['USD', 'USDT', 'USDC', 'BUSD'];
+> 953	
+> 954	function getStableConversion(baseAsset, quoteAsset, baseQty) {
+> 955	    if (DOLLAR_COINS.includes(baseAsset)) return baseQty;
+> 956	
+> 957	    const book = getMemory(baseAsset + quoteAsset, 'BOOK', null);
+> 958	    if (book) return parseFloat(baseQty) * book.current.bestBid;
+> 959	    return 0;
+> 960	}
+> 961	
+> 962	const FIAT_COINS = ['BRL', 'EUR', 'GBP'];
+> 963	
+> 964	function getFiatConversion(stableCoin, fiatCoin, fiatQty) {
+> 965	    const book = getMemory(stableCoin + fiatCoin, 'BOOK', null);
+> 966	    if (book) return parseFloat(fiatQty) / book.current.bestBid;
+> 967	    return 0;
+> ```
+
+## 🤖 Claude *(02:29:03)*
+
+
+## 🤖 Claude *(02:29:07)*
+
+getEval decifrado — `limitPrice='BTCUSDT:BOOK.current.bestAsk'` vira `MEMORY['BTCUSDT:BOOK'].current.bestAsk`. **Mas isso depende do `BOOK` estar vivo na MEMORY** — e o HANDOFF do bump node-binance marcou "BOOK inativo". Se o book não estiver populado, o LIMIT ancorado nele **quebra** (`undefined.current` → throw). Preciso verificar qual referência de preço está realmente viva antes de fechar o template. Deixa eu checar a MEMORY ao vivo:
+
+## 🤖 Claude *(02:29:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'grep -iE \"EMAIL|PASSWORD|PANEL|LOGIN\" .env 2>/dev/null | sed \"s/=.*/=<set>/\"' 2>&1 | head",
+  "description": "List panel login env keys (values masked)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # TradeUX .env — gerado para deploy CloudPanel (tradeux.gcrux.com), testnet-first, BYOK
+> # ---------- Acesso web (atras do proxy reverso do CloudPanel) ----------
+> # ---------- Frontend (assados no build; dominio HTTPS via CloudPanel/Cloudflare) ----------
+> # ---------- Conta padrao do painel (primeiro login) ----------
+> DEFAULT_SETTINGS_EMAIL=<set>
+> ```
+
+## 🤖 Claude *(02:29:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== app-em book subscription ===\" && grep -n \"bookTicker\\|BOOK\\|miniTicker\\|MINI_TICKER\\|subscribe\\|bookStream\" backend/src/app-em.js 2>/dev/null | head -20",
+  "description": "Check what streams app-em subscribes (BOOK vs MINI_TICKER)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === app-em book subscription ===
+> 17:    exchange.miniTickerStream(async (markets) => {
+> 29:                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 38:                const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 44:                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 65:    exchange.bookStream(async (order) => {
+> 84:            const currentMemory = beholder.getMemory(order.symbol, indexKeys.BOOK);
+> 90:            const results = await beholder.updateMemory(order.symbol, indexKeys.BOOK, null, newMemory);
+> 463:                case monitorTypes.MINI_TICKER:
+> 465:                case monitorTypes.BOOK:
+> ```
+
+## 🤖 Claude *(02:29:17)*
+
+
+## 🤖 Claude *(02:29:19)*
+
+`BOOK` é escrito por **dois** caminhos — o `miniTickerStream` (linha 38-44) além do `bookStream` (linha 90). Se o miniTicker popula o BOOK, ele está vivo (miniTicker com certeza está, senão o RSI não rodava). Deixa eu confirmar o que o BOOK contém:
+
+## 🤖 Claude *(02:29:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 15,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 15	function startMiniTickerMonitor(monitorId, broadcastLabel, logs) {
+> 16	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 17	    exchange.miniTickerStream(async (markets) => {
+> 18	        if (logs) logger('M:' + monitorId, markets);
+> 19	
+> 20	        try {
+> 21	            Object.entries(markets).map(async (mkt) => {
+> 22	
+> 23	                delete mkt[1].volume;
+> 24	                delete mkt[1].quoteVolume;
+> 25	                delete mkt[1].eventTime;
+> 26	                const converted = {};
+> 27	                Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 28	
+> 29	                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 30	                if (results) results.map(r => sendMessage({ notification: r }));
+> 31	            })
+> 32	
+> 33	            if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: markets });
+> 34	
+> 35	            //simulação de book
+> 36	            const books = Object.entries(markets).map(mkt => {
+> 37	                const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+> 38	                const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 39	
+> 40	                const newMemory = {};
+> 41	                newMemory.previous = currentMemory ? currentMemory.current : book;
+> 42	                newMemory.current = book;
+> 43	
+> 44	                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 45	                    .then(results => {
+> 46	                        if (results)
+> 47	                            results.map(r => sendMessage({ notification: r }));
+> 48	                    })
+> 49	
+> 50	                return book;
+> 51	            })
+> 52	            if (WSS) sendMessage({ book: books });
+> 53	            //fim da simulação de book
+> 54	
+> 55	        } catch (err) {
+> 56	            if (logs) logger('M:' + monitorId, err)
+> 57	        }
+> 58	    })
+> 59	    logger('M:' + monitorId, 'Mini Ticker Monitor has started!');
+> 60	}
+> 61	
+> 62	let book = [];
+> 63	function startBookMonitor(monitorId, broadcastLabel, logs) {
+> 64	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 65	    exchange.bookStream(async (order) => {
+> 66	        if (logs) logger('M:' + monitorId, order);
+> 67	
+> 68	        try {
+> 69	            if (book.length === 200) {
+> 70	                if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: book });
+> 71	                book = [];
+> 72	            }
+> 73	            else book.push({ ...order });
+> 74	
+> 75	            const orderCopy = { ...order };
+> 76	            delete orderCopy.symbol;
+> 77	            delete orderCopy.updateId;
+> 78	            delete orderCopy.bestAskQty;
+> 79	            delete orderCopy.bestBidQty;
+> 80	
+> 81	            const converted = {};
+> 82	            Object.entries(orderCopy).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 83	
+> 84	            const currentMemory = beholder.getMemory(order.symbol, indexKeys.BOOK);
+> 85	
+> 86	            const newMemory = {};
+> 87	            newMemory.previous = currentMemory ? currentMemory.current : converted;
+> 88	            newMemory.current = converted;
+> 89	
+> 90	            const results = await beholder.updateMemory(order.symbol, indexKeys.BOOK, null, newMemory);
+> 91	            if (results) results.map(r => sendMessage({ notification: r }));
+> 92	        } catch (err) {
+> 93	            if (logs) logger('M:' + monitorId, err);
+> 94	        }
+> 95	    })
+> 96	    logger('M:' + monitorId, 'Book Monitor has started!');
+> 97	}
+> 98	
+> 99	async function loadWallet() {
+> 100	    if (!exchange) throw new Error('Exchange Monitor not initialized yet.');
+> 101	
+> 102	    try {
+> 103	        const info = await exchange.balance();
+> 104	        const wallet = Object.entries(info).map(async (item) => {
+> 105	            const results = await beholder.updateMemory(item[0], indexKeys.WALLET, null, parseFloat(item[1].available));
+> 106	            if (results) results.map(r => sendMessage({ notification: r }));
+> 107	
+> 108	            return {
+> 109	                symbol: item[0],
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
