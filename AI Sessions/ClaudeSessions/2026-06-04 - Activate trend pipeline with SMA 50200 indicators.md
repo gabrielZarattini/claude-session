@@ -4828,6 +4828,255 @@ O filtro por `head_sha` tá com lag. Consultando por branch:
 > 49af86a CI: completed/success
 > ```
 
+## 🤖 Claude *(03:00:17)*
+
+
+## 🤖 Claude *(03:00:19)*
+
+**CI completed/success** pro `453c7d6` — a migration passou nos **dois dialetos** (MySQL+Postgres, matrix) provando portabilidade + idempotência. ✅
+
+Trabalho entregue e no ar. Atualizando o HANDOFF.md (fonte de verdade pro próximo agente):
+
+## 🤖 Claude *(03:00:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-03** \u00b7 Phase: **Validation (testnet)** \u00b7 Meta: **+3 BTC** (era 500k)",
+  "new_string": "> Updated: **2026-06-04** \u00b7 Phase: **Validation (testnet)** \u00b7 Meta: **+3 BTC** (era 500k)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "   em 1h E 1m). \u23f3 **NEXT**: (a) observar a id2 gateada+calibrada no testnet ao longo do tempo (n\u00e3o compra em bear;\n   25/75 = menos trades; deve comprar dips fundos quando o regime sair de bear); (b) **Trend Following (SMA 50/200) \u2014 pipeline PRONTO/INATIVO**\n   (commit `49af86a`): falta a **ATIVA\u00c7\u00c3O** (checklist em Technical debt: coordenar id2/id3 por `!=trend`, sizing,\n   observar 1 cross real); (c) opcional: hook de SIGTERM p/ stop().\n7. Sanity no `/handson`: stack up na 8090 (3 containers), baseline id2(gateada)/id3 armada, s\u00edmbolos synced,\n   `GET /beholder/memory/BTCUSDT/REGIME` => `\"bear\"`.",
+  "new_string": "   em 1h E 1m). \u2705 **Trend Following (SMA 50/200) ATIVADO** (commit `453c7d6`, gate QA PASS + TL APPROVE, CI verde):\n   id6/id7 ativas + coordena\u00e7\u00e3o id2/id3 `!=trend` + **LIMIT market\u00e1vel** (buffer 0.3%) + **persist\u00eancia de cross** (`regimeStates`).\n   \u23f3 **NEXT**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar o size (id6=3\u00d7 MIN_NOTIONAL);\n   (b) observar id2/id3 coordenadas ao longo do tempo; (c) risco aberto: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3\n   (resolver ao subir size); (d) opcional: hook de SIGTERM p/ stop().\n7. Sanity no `/handson`: stack up na 8090 (3 containers), id2/id3 (coordenadas `!=trend`) + id6/id7 (trend) **ATIVAS**, s\u00edmbolos\n   synced, `GET /beholder/memory/BTCUSDT/REGIME` => `\"bear\"`. Trend ATIVO mas **inerte** agora (bear + above=false \u2192 sem disparo)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "| **Trend Following (SMA 50/200)** \u2014 pipeline de sinal | \u2705 pipeline (commit `49af86a`; gate QA+TL REQUEST CHANGES \u2192 2 must-fix resolvidos \u2192 re-review PASS). Sinal vem da **MAINNET** (testnet s\u00f3 tem 12h de 1h): `regimeJob` detecta o cross e escreve `MEMORY['<sym>:TREND_CROSS_1h']='golden'/'death'/'none'` (dispara 1x). Automa\u00e7\u00f5es **id6 (BUY golden, gate !=bear) / id7 (SELL death) INATIVAS**, templates 3/4, `setup-trend.js` reprodut\u00edvel. \u23f3 **ATIVA\u00c7\u00c3O pendente** (ver Technical debt). |",
+  "new_string": "| **Trend Following (SMA 50/200)** \u2014 pipeline + ATIVA\u00c7\u00c3O | \u2705 pipeline (commit `49af86a`) + \u2705 **ATIVADO** (commit `453c7d6`; gate QA PASS + TL APPROVE; CI verde). Sinal da **MAINNET** (`regimeJob` detecta o cross \u2192 `MEMORY['<sym>:TREND_CROSS_1h']`, dispara 1x). **id6/id7 ATIVAS** + coordena\u00e7\u00e3o id2/id3 `!=trend` (REGIME nos indexes de ambas, fail-open corrigido) + templates 3/4 **LIMIT market\u00e1vel** (buffer 0.3% no eval) + **persist\u00eancia de cross** (`regimeStates`, resili\u00eancia a restart) + `validatePrice` no PATCH. Reprodut\u00edvel: `setup-trend.js`+`activate-trend.js`. \u23f3 Observar 1 cross real \u2192 calibrar size. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "- \u23f3 **Trend Following \u2014 CHECKLIST DE ATIVA\u00c7\u00c3O** (id6 BUY / id7 SELL est\u00e3o INATIVAS; pipeline no ar, commit `49af86a`):\n  o gate (QA+TL+re-review) liberou o c\u00f3digo mas **bloqueou a ATIVA\u00c7\u00c3O** at\u00e9: (1) **coordena\u00e7\u00e3o**: gatear id2/id3 por\n  `&& MEMORY['BTCUSDT:REGIME']!=='trend'` \u2014 a **id2 j\u00e1 tem REGIME nos indexes; a id3 N\u00c3O** (s\u00f3 `RSI_14_1m`) \u2192 ao gatear\n  a id3 incluir `BTCUSDT:REGIME` nos indexes (sen\u00e3o fail-open); (2) **sizing**: templates 3/4 est\u00e3o MIN_NOTIONAL (valida\u00e7\u00e3o) \u2014\n  trend real quer size; o SELL (id7) usa `LAST_ORDER_QTY` e `LAST_ORDER` \u00e9 **por s\u00edmbolo, compartilhado com a id3** (pode\n  vender qty da revers\u00e3o); (3) **perda-de-cross em restart**: o `ABOVE` do job zera no restart \u2192 um cross na janela de\n  restart \u00e9 perdido (sinal raro) \u2014 mitigar/observar; (4) **observar 1 golden\u2192death real** com `logs:true` (logs em `A:6.log`/`A:7.log`)\n  antes de confiar. Reaplicar tudo (id6/id7 + coordena\u00e7\u00e3o) ap\u00f3s `make nuke` via `node backend/scripts/setup-trend.js` + PATCH.",
+  "new_string": "- \u2705 **Trend Following \u2014 ATIVADO** (commit `453c7d6`, gate QA PASS + TL APPROVE, CI verde) via `node backend/scripts/activate-trend.js`:\n  (1) \u2705 **coordena\u00e7\u00e3o** id2/id3 `&& MEMORY['BTCUSDT:REGIME']!=='trend'` (REGIME nos indexes de AMBAS; id3 ganhou REGIME \u2192 **fail-open\n  corrigido**); (2) \u2705 **order type** MARKET\u2192**LIMIT market\u00e1vel** (buffer 0.3% no eval do `limitPrice` pois `limitPriceMultiplier` \u00e9\n  DECIMAL(10,2); + `validatePrice` no `updateOrderTemplate`); (3) \u2705 **resili\u00eancia a restart**: tabela `regimeStates` (PK=symbol,\n  carregada no boot ANTES do 1\u00ba poll \u2192 cross n\u00e3o se perde no `make restart`). \u23f3 **RESTA**: (a) observar **1 golden\u2192death real**\n  (`A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** id6=3\u00d7 MIN_NOTIONAL (pequeno p/ observar) \u2192 subir depois; (c) **risco\n  aberto n\u00ba1**: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3 (pode vender qty da revers\u00e3o) \u2014 aceito p/ size pequeno,\n  resolver (rastreio dedicado) ao calibrar; (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size\n  pequeno). Reaplicar ap\u00f3s `make nuke` (id2/id3/id6/id7 s\u00e3o runtime): `setup-trend.js` + `activate-trend.js`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:02)*
+
+
+## 🤖 Claude *(03:01:03)*
+
+Por fim, o novo registro de sessão no HANDOFF (append no fim, mais novo embaixo):
+
+## 🤖 Claude *(03:01:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "computa SMA mainnet (50=67.6k < 200=72.3k, above=false), TREND_CROSS='none', id6/id7 inativas c/ condi\u00e7\u00e3o de sinal correta,\nregime+RSI 25/75 intactos, **zero monitor/keys SMA residuais** (dual-writer confirmado limpo no DB). C\u00f3digo INERTE (inativa \u2192\n`findAutomations` n\u00e3o pega \u2192 testAutomations retorna []). NEXT = **ATIVA\u00c7\u00c3O** (checklist em Technical debt). Mem\u00f3ria\n`tradeux-regime-gate` + nova `tradeux-trend-following`.",
+  "new_string": "computa SMA mainnet (50=67.6k < 200=72.3k, above=false), TREND_CROSS='none', id6/id7 inativas c/ condi\u00e7\u00e3o de sinal correta,\nregime+RSI 25/75 intactos, **zero monitor/keys SMA residuais** (dual-writer confirmado limpo no DB). C\u00f3digo INERTE (inativa \u2192\n`findAutomations` n\u00e3o pega \u2192 testAutomations retorna []). NEXT = **ATIVA\u00c7\u00c3O** (checklist em Technical debt). Mem\u00f3ria\n`tradeux-regime-gate` + nova `tradeux-trend-following`.\n\n### Record \u2014 2026-06-04 (cont. \u2014 ATIVA\u00c7\u00c3O do Trend Following: coordena\u00e7\u00e3o + LIMIT market\u00e1vel + persist\u00eancia, NO AR)\n**Trend Following ATIVADO** (commit `453c7d6`, push master, **CI verde nos 2 dialetos**). O dono mandou uma lista de 4 frentes;\n**devolvi/corrigi como gate ANTES de codar** (verificando no c\u00f3digo, n\u00e3o adivinhando): (1) \u274c gravar `REGIME='trend'` no golden cross \u2014\n**reintroduziria o dual-writer + disparo repetido** que o redesign `49af86a` matou (REGIME \u00e9 do classifier ADX; o cross vive em\n`TREND_CROSS_1h` separado) \u2192 devolvido; (2) \u2705 gate id2/id3 `!=trend` \u2014 alinhado; (3) \u274c guardrail no MCP via `event.cancel_tool` \u2014\n**API inexistente** (writes j\u00e1 travados por `ALLOW_TRADING=false`; lugar certo = backend; equity do testnet \u00e9 ru\u00eddo) \u2192 reescrever;\n(4a) \u274c `Stop-Market` \u2014 **n\u00e3o existe no Binance SPOT** (\u00e9 futuros) \u2192 `STOP_LOSS_LIMIT`/LIMIT; (4b) \u274c `?returnRateLimits=false` no\nstream \u2014 **premissa falsa** (\u00e9 param da ws-API de ordens, n\u00e3o do market-data; risco de vazar socket no `terminate()` por-URL) \u2192 caiu.\nO dono escolheu a **ativa\u00e7\u00e3o correta**. **Decis\u00f5es** (via AskUserQuestion): LIMIT market\u00e1vel + buffer 0.3% \u00b7 size pequeno (3\u00d7 MIN_NOTIONAL,\nobservar 1 cross) \u00b7 persistir cross. **Entregue** (7 arquivos): (a) templates 3/4 MARKET\u2192**LIMIT market\u00e1vel** (`bestAsk*1.003`/`bestBid*0.997`;\nbuffer no EVAL do limitPrice pois `limitPriceMultiplier` \u00e9 DECIMAL(10,2)); (b) **`activate-trend.js`** (novo, idempotente, `DRY=true`):\nreshape templates + coordena\u00e7\u00e3o id2/id3 (`!=trend` em ambas, REGIME nos indexes da id3 = **fail-open corrigido**) + start id6/id7;\n(c) **persist\u00eancia de cross**: migration `regimeStates` (PK=symbol) + model + repo; `regimeJob` carrega no boot ANTES do 1\u00ba poll +\nupsert por poll (edge-fire at-least-once) \u2192 cross n\u00e3o se perde no restart; (d) hardening: `validatePrice` no `updateOrderTemplate` (ressalva QA).\n**Gate**: QA (**PASS**, validou no MySQL real: migration idempotente, upsert n\u00e3o-duplica, GTC garantido na lib 1.x, 7 cen\u00e1rios de edge) +\nTech-Lead (**APPROVE c/ sugest\u00f5es**, zero must-fix: hot-path intocado, buffer-no-eval \u00e9 conven\u00e7\u00e3o do engine, persist\u00eancia proporcional);\napliquei as 2 ressalvas convergentes (validatePrice + coment\u00e1rio-cruzado anti-drift). **Validado testnet**: rebuild+migration (j\u00e1 estava\naplicada pelo QA \u2192 SequelizeMeta), restart real \u2192 \"Estado de cross recarregado: above=false\" **sem cross esp\u00fario**, `activate-trend.js`\naplicado + **idempotente** (re-run = tudo \u2713), id2/id3/id6/id7 todas isActive=1 com as conditions certas, regime=bear (inerte), site 200.\nGOTCHA novo: identidade git do `gcrux-tradeux` n\u00e3o estava setada (`git config user.*` local = Gabriel). NEXT: **observar 1 golden\u2192death\nreal** antes de calibrar o size + resolver o `LAST_ORDER` compartilhado (id7\u00d7id3). Mem\u00f3rias `tradeux-trend-following` + `tradeux-regime-gate` atualizadas."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:37)*
+
+
+## 🤖 Claude *(03:01:38)*
+
+Tudo entregue e documentado. Sanity final do stack pra fechar com afirmação verificada:
+
+## 🤖 Claude *(03:01:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== stack ===\" && docker compose ps --format \"{{.Name}}  {{.Status}}\" && echo \"=== automa\u00e7\u00f5es ativas ===\" && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -N \\$MYSQL_DATABASE -e \\\"SELECT CONCAT(id,\\\\\\\":\\\\\\\",name,\\\\\\\" active=\\\\\\\",isActive) FROM automations WHERE id IN (2,3,6,7)\\\"\" 2>/dev/null'; echo \"=== site ===\"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Final stack and automation sanity check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === stack ===
+> tradeux-backend-1  Up 8 minutes
+> tradeux-db-1  Up 26 hours (healthy)
+> tradeux-frontend-1  Up 3 hours
+> === automações ativas ===
+> 2:Baseline RSI Buy BTCUSDT active=1
+> 3:Baseline RSI Sell BTCUSDT active=1
+> 6:Trend Buy BTCUSDT SMA50/200 active=1
+> 7:Trend Sell BTCUSDT SMA50/200 active=1
+> === site ===
+> 200
+> ```
+
+## 🤖 Claude *(03:01:47)*
+
+
+## 🤖 Claude *(03:02:02)*
+
+Pronto. **Trend Following ativado, validado e no ar.** Resumo do que rolou:
+
+## 🛡️ O gate veio primeiro (devolvi/corrigi 4 de 6 itens antes de codar)
+Sua lista misturava 1 parte boa com várias que teriam quebrado coisas. Verifiquei no código (não adivinhei) e **devolvi**:
+- ❌ `REGIME='trend'` no golden cross → reintroduziria o **dual-writer + disparo repetido** que o `49af86a` matou.
+- ❌ guardrail MCP via `event.cancel_tool` → **API inexistente** (writes já travados; equity do testnet é ruído).
+- ❌ `Stop-Market` → **não existe no Binance SPOT** (é futuros).
+- ❌ `?returnRateLimits=false` no stream → **premissa falsa** + risco de vazar socket no `terminate()`.
+
+## ✅ O que foi entregue (commit [`453c7d6`](https://github.com/gabrielZarattini/tradeux/commit/453c7d6), CI verde nos 2 dialetos)
+- **Coordenação** id2/id3 por `!=='trend'` (REGIME nos indexes de ambas → **fail-open da id3 corrigido**).
+- **id6/id7 ATIVADAS** com ordens **LIMIT marketável** (`bestAsk*1.003`/`bestBid*0.997`) — fill imediato como taker, mata o EXPIRE de MARKET no book fino do testnet. Buffer no eval porque `limitPriceMultiplier` é `DECIMAL(10,2)`.
+- **Persistência de cross** (`regimeStates`) — o cross não se perde mais num `make restart`.
+- **Hardening**: `validatePrice` no `updateOrderTemplate` (ressalva do QA).
+- **`activate-trend.js`** novo (idempotente, `DRY=true`) — go-live reproduzível pós-`make nuke`.
+
+## 🧪 Validação (stack real, não simulação)
+Gate **QA PASS** + **TL APPROVE** (independentes) · migration idempotente MySQL+PG · restart real → "estado recarregado, sem cross espúrio" · ativação idempotente (re-run = tudo ✓) · **4 automações isActive=1** · regime=bear · site 200.
+
+## ⏳ Próximo (documentado no HANDOFF + memórias)
+1. **Observar 1 golden→death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar — hoje está **inerte** (BTC=bear + above=false, sem disparo).
+2. Subir o size (id6 está em 3× MIN_NOTIONAL, pequeno de propósito).
+3. **Risco aberto nº1**: id7 usa `LAST_ORDER_QTY`, e `LAST_ORDER` é compartilhado com a id3 → o SELL de trend pode vender a qty da reversão. Aceito p/ size pequeno; resolver (rastreio dedicado) ao calibrar.
+
+Estado vivo: db 26h healthy · backend recriado há 8min (boot limpo) · frontend 3h · site 200. Aguardando direção pro próximo passo.
+
+## 👤 User *(13:53:13)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(13:53:13)*
+
+<command-name>/goal</command-name>
+            <command-message>goal</command-message>
+            <command-args></command-args>
+
+## 👤 User *(13:54:39)*
+
+ótimo então continue
+
+## 🤖 Claude *(13:58:48)*
+
+
+## 🤖 Claude *(13:58:52)*
+
+Beleza, sigo. O próximo passo *real* do trend (observar 1 cross) é uma espera — não dá pra forçar com segurança. Então vou fazer duas coisas produtivas e desbloqueadas: **(1)** verificar que a entrega está de fato *armada no engine* (não só `isActive=1` no banco) e que a persistência está ticando ao vivo, e **(2)** investigar a fundo o **risco aberto nº1** (acoplamento `LAST_ORDER` id7×id3) pra te trazer um design concreto.
+
+Começando: estado armado + onde `LAST_ORDER` é escrito (pra desenhar o fix):
+
+## 🤖 Claude *(13:58:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== onde LAST_ORDER \u00e9 escrito ===\" && grep -rn \"LAST_ORDER\" backend/src/ | grep -v node_modules",
+  "description": "Find all LAST_ORDER read/write sites"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde LAST_ORDER é escrito ===
+> backend/src/beholder.js:228:    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> backend/src/beholder.js:229:        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> backend/src/beholder.js:643:        else if (withdrawTemplate.amount === 'LAST_ORDER_QTY') {
+> backend/src/beholder.js:644:            const keys = searchMemory(new RegExp(`^((${withdrawTemplate.coin}.+|.+${withdrawTemplate.coin}):LAST_ORDER)$`));
+> backend/src/beholder.js:744:        || memoryKey.indexOf(':LAST_ORDER') !== -1
+> backend/src/controllers/exchangeController.js:112:        else if (withdrawTemplate.amount === 'LAST_ORDER_QTY') {
+> backend/src/controllers/exchangeController.js:113:            const keys = beholder.searchMemory(new RegExp(`^((${withdrawTemplate.coin}.+|.+${withdrawTemplate.coin}):LAST_ORDER)$`));
+> backend/src/app-em.js:189:                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> backend/src/app-em.js:230:                    const results = await beholder.updateMemory(symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> backend/src/app-em.js:482:        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> backend/src/utils/indexes.js:72:    LAST_ORDER: 'LAST_ORDER',
+> ```
+
+## 🤖 Claude *(13:58:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== regimeStates (persist\u00eancia ticando?) ===\" && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT symbol,smaAbove,updatedAt,TIMESTAMPDIFF(MINUTE,updatedAt,NOW()) AS min_atras FROM regimeStates\\\"\"' 2>&1 | grep -iv warning",
+  "description": "Check regimeStates persistence is updating per poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === regimeStates (persistência ticando?) ===
+> +---------+----------+---------------------+-----------+
+> | symbol  | smaAbove | updatedAt           | min_atras |
+> +---------+----------+---------------------+-----------+
+> | BTCUSDT |        0 | 2026-06-04 13:57:58 |         0 |
+> +---------+----------+---------------------+-----------+
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
