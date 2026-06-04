@@ -12836,6 +12836,11 @@ Stack       : ✅ up na 8090 (db/backend/frontend)
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]

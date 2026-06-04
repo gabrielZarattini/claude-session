@@ -483,7 +483,7 @@ After gathering all context, produce a structured brief in **Portuguese (Brasil)
 > 94	
 > 95	## Canvas Pipeline Refactor — C1 Foundation & Pipeline Automation Record (2026-05-28)
 > 96	
-> 97	**v6.11.0 SEALED (2026-05-28)** — composto fechando a preparação e automação do Canvas Pipeline (C1 Foundation): (1) **Handle ID Standardization** mapeando conexões semânticas entre todos os 5 tipos de nós do Canvas Studio; (2) **scripts/automate-pipeline-sprints.ts** implementado como coordenador de pipelines locais do OpenClaw com auto-merge no main; (3) **canvas-backfill-edge-handles.ts** preenchendo edges históricos em `vm_canvas_projects`; (4) **canvas-pipeline-architecture.md** SOP de fundação selado.
+> 97	**v6.11.0 SEALED (2026-05-28)** — composto fechando a preparação e automação do Canvas Pipeline (C1 Foundation): (1) **Handle ID Standardization** mapeando conexões semânticas entre todos os 5 tipos de nós do Canvas Studio; (2) **scripts/automate-pipeline-sprints.ts** implementado como coordenador de pipelines locais do OpenClaw com auto-merge no main; (3) **canvas-backfill-edge-handles.ts** preenchendo edges históricos em `vm_canvas_projects`; (4) **[[canvas-pipeline-architecture|canvas-pipeline-architecture]].md** SOP de fundação selado.
 > 98	
 > 99	**ORO triplet (Lei 4):** Operator = MCORCH Master Execution Agent (eu) + Pantheon lenses (engineer + scientist + guardian); Reviewer = Sovereign (Gabriel Zarattini); Owner = Sovereign — blast radius = integridade do Canvas Studio + histórico de projetos no banco de dados.
 > 100	
@@ -5676,7 +5676,7 @@ Agora tenho o quadro completo e material. Vou investigar os últimos 4 dias para
 > fa5927a 05-27 10:35 feat(cea): agent metering schema + agent-task-execute edge function
 > 2ba2fac 05-27 10:34 debug(db): pg_net + async_orchestrate_step diagnostic RPCs
 > 58e3828 05-27 10:34 feat(db): per-user higgsfield_api_key column on user_api_keys
-> 9c15d8b 05-27 10:34 feat(db): soft_reset_account RPC + SOP great-reset-sovereign
+> 9c15d8b 05-27 10:34 feat(db): soft_reset_account RPC + SOP [[great-reset-sovereign|great-reset-sovereign]]
 > ca48af9 05-26 21:09 docs: seal v6.9.0 in HANDOFF.md with Premortem v2 release notes
 > 100ab8e 05-26 21:07 test: add unit tests for QA bypass functionality
 > 51055c1 05-26 21:07 chore(scripts): update nightly light sleep, watchdog, link-forge and audit scripts
@@ -5901,21 +5901,21 @@ Agora vou criar a skill + SOP. Deixa eu ver a convenção dos skills/commands ex
 > -rw-rw-r--  1 ubuntu ubuntu  876 May 17 20:27 gateway-recovery.md
 > drwxrwxr-x  2 ubuntu ubuntu 4096 May 20 01:32 mcorch-qa-healing
 > ---processes SOPs---
-> agent-browser-install.md
-> canvas-daily-cap-handling.md
-> canvas-job-failure-recovery.md
-> canvas-node-consistency.md
-> canvas-pipeline-architecture.md
-> canvas-video-async-execution.md
-> constellation-economic-activation.md
-> great-reset-sovereign.md
-> handoff-material-proof-audit.md
-> mcoins-ledger-reconciliation.md
-> nightly-circadian-cycle.md
-> openclaw-bridge-recovery.md
-> orchestration-content-mesh-asset-emission.md
-> sql-bridge-admin-bootstrap.md
-> sql-bridge-emergency-readonly.md
+> [[agent-browser-install|agent-browser-install]].md
+> [[canvas-daily-cap-handling|canvas-daily-cap-handling]].md
+> [[canvas-job-failure-recovery|canvas-job-failure-recovery]].md
+> [[canvas-node-consistency|canvas-node-consistency]].md
+> [[canvas-pipeline-architecture|canvas-pipeline-architecture]].md
+> [[canvas-video-async-execution|canvas-video-async-execution]].md
+> [[constellation-economic-activation|constellation-economic-activation]].md
+> [[great-reset-sovereign|great-reset-sovereign]].md
+> [[handoff-material-proof-audit|handoff-material-proof-audit]].md
+> [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md
+> [[nightly-circadian-cycle|nightly-circadian-cycle]].md
+> [[openclaw-bridge-recovery|openclaw-bridge-recovery]].md
+> [[orchestration-content-mesh-asset-emission|orchestration-content-mesh-asset-emission]].md
+> [[sql-bridge-admin-bootstrap|sql-bridge-admin-bootstrap]].md
+> [[sql-bridge-emergency-readonly|sql-bridge-emergency-readonly]].md
 > ```
 
 ## 🤖 Claude *(22:35:30)*
@@ -5924,7 +5924,7 @@ Agora vou criar a skill + SOP. Deixa eu ver a convenção dos skills/commands ex
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "echo \"=== How an existing skill is structured (debug.md frontmatter) ===\"\nhead -20 /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/debug.md 2>/dev/null || find /home/gcrUX/htdocs/constellation-orchestra/.claude -name \"debug.md\" -exec head -20 {} \\; 2>/dev/null\necho\necho \"=== Existing SOP format (openclaw-bridge-recovery.md head) ===\"\nhead -40 /home/gcrUX/htdocs/constellation-orchestra/docs/processes/openclaw-bridge-recovery.md 2>/dev/null",
+  "command": "echo \"=== How an existing skill is structured (debug.md frontmatter) ===\"\nhead -20 /home/gcrUX/htdocs/constellation-orchestra/.claude/commands/debug.md 2>/dev/null || find /home/gcrUX/htdocs/constellation-orchestra/.claude -name \"debug.md\" -exec head -20 {} \\; 2>/dev/null\necho\necho \"=== Existing SOP format ([[openclaw-bridge-recovery|openclaw-bridge-recovery]].md head) ===\"\nhead -40 /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[openclaw-bridge-recovery|openclaw-bridge-recovery]].md 2>/dev/null",
   "description": "Read existing skill + SOP format for conventions"
 }
 ```
@@ -5954,7 +5954,7 @@ Agora vou criar a skill + SOP. Deixa eu ver a convenção dos skills/commands ex
 > ## Fase 2 — Edge Functions
 > 
 > 
-> === Existing SOP format (openclaw-bridge-recovery.md head) ===
+> === Existing SOP format ([[openclaw-bridge-recovery|openclaw-bridge-recovery]].md head) ===
 > # SOP — OpenClaw Bridge Recovery v1.0
 > 
 > **Versão:** v1 · **Selada:** 2026-05-19 · **Lei 2 (Processo Antecipado)** · Trigger: incident em Stage 2 (`nightly-bridge-refresh` falhando Step 3)
@@ -6340,7 +6340,7 @@ E o skill `gateway-recovery.md` existente JÁ mencionava systemd (step 4), mas a
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "echo \"=== mcorch-qa-healing skill structure (directory-based, invocable) ===\"\nls -la /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/mcorch-qa-healing/ 2>/dev/null\necho \"--- its SKILL.md frontmatter ---\"\nhead -8 /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/mcorch-qa-healing/SKILL.md 2>/dev/null\necho\necho \"=== e2e-user-zero-audit skill frontmatter ===\"\nhead -8 /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/e2e-user-zero-audit/SKILL.md 2>/dev/null\necho\necho \"=== nightly-circadian-cycle SOP head (related process doc) ===\"\nhead -25 /home/gcrUX/htdocs/constellation-orchestra/docs/processes/nightly-circadian-cycle.md 2>/dev/null",
+  "command": "echo \"=== mcorch-qa-healing skill structure (directory-based, invocable) ===\"\nls -la /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/mcorch-qa-healing/ 2>/dev/null\necho \"--- its SKILL.md frontmatter ---\"\nhead -8 /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/mcorch-qa-healing/SKILL.md 2>/dev/null\necho\necho \"=== e2e-user-zero-audit skill frontmatter ===\"\nhead -8 /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/e2e-user-zero-audit/SKILL.md 2>/dev/null\necho\necho \"=== [[nightly-circadian-cycle|nightly-circadian-cycle]] SOP head (related process doc) ===\"\nhead -25 /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[nightly-circadian-cycle|nightly-circadian-cycle]].md 2>/dev/null",
   "description": "Inspect directory-based skill structure + related circadian SOP"
 }
 ```
@@ -6373,7 +6373,7 @@ E o skill `gateway-recovery.md` existente JÁ mencionava systemd (step 4), mas a
 > 
 > Esta skill fornece instruções para auditar mecanicamente e visualmente a página do Canvas Studio utilizando automação do Playwright em Full HD (1920x1080).
 > 
-> === nightly-circadian-cycle SOP head (related process doc) ===
+> === [[nightly-circadian-cycle|nightly-circadian-cycle]] SOP head (related process doc) ===
 > # SOP — Nightly Circadian Cycle v1.0
 > 
 > **Versão:** v1 · **Selada:** 2026-05-17 · **Lei 2 (Processo Antecipado)** · **SSP-01 OE03**
@@ -6416,7 +6416,7 @@ Tenho todas as convenções. Vou criar (Lei 2: SOP primeiro, depois skill):
 🛠️ **Tool Call**: `Write`
 ```json
 {
-  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/openclaw-gateway-supervisor.md",
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md",
   "content": "# SOP \u2014 OpenClaw Gateway Supervisor (Single-Owner Lifecycle) v1.0\n\n**Vers\u00e3o:** v1 \u00b7 **Selada:** 2026-05-29 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 Trigger: qualquer opera\u00e7\u00e3o que reinicie / recarregue / diagnostique o OpenClaw Gateway (porta 18789), OU recarregar `openclaw.json` / `cron/jobs.json` (n\u00e3o fazem hot-reload).\n\n> **Esta SOP CORRIGE e SUPERSEDE a li\u00e7\u00e3o operacional selada em v6.8.1 (HANDOFF.md:817-859) que mandava usar `pm2 restart maestro`.** Aquela conclus\u00e3o estava certa para o setup de 2026-05-21, mas o upgrade do OpenClaw para v2026.5.14 migrou o supervisor para systemd. Ver \u00a7Hist\u00f3rico.\n\n## ORO triplet\n\n- **Operator:** MCORCH Master Execution Agent (eu) ou engineer agent; manual fallback \u00e9 Sovereign via shell direto.\n- **Reviewer:** Sovereign (Gabriel Zarattini) \u2014 confirma painel `claw.gcrux.com` responsivo + Telegram bot `@MCORCH_Clawbot` reconectado ap\u00f3s reload.\n- **Owner:** Sovereign \u2014 blast radius = disponibilidade do Gateway (cron circadiano, briefing Telegram, Control UI, agentes Pantheon) + custo de CPU desperdi\u00e7ado por crash-loop.\n\n## Contexto \u2014 O supervisor can\u00f4nico \u00e9 o systemd, N\u00c3O o PM2\n\nO OpenClaw Gateway (porta **18789**, `bind: loopback`) \u00e9 gerenciado por **UM \u00fanico supervisor can\u00f4nico**:\n\n```\nsystemd user service: openclaw-gateway.service\n  Arquivo:   ~/.config/systemd/user/openclaw-gateway.service\n  ExecStart: /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node \\\n             /home/ubuntu/openclaw/dist/index.js gateway --port 18789\n  Restart:   always (RestartSec=5)\n  Estado:    enabled + active\n```\n\n**Por que `dist/index.js` direto e N\u00c3O `openclaw.mjs`:** o wrapper `openclaw.mjs` tenta `import('./dist/warning-filter.js')` e `import('./dist/entry.js')` \u2014 nomes can\u00f4nicos sem hash. O bundler do build (`scripts/build-all.mjs` via Bun) emite artefatos **hasheados** (`warning-filter-BGICq60U.js`, etc.), ent\u00e3o o wrapper **quebra** com `Cannot find module './dist/warning-filter.js'`. O systemd contorna isso invocando `dist/index.js` diretamente, que \u00e9 o entry-point real (`package.json` \u2192 `\"main\": \"dist/index.js\"`).\n\n### \u26d4 Anti-pattern proibido \u2014 DOIS supervisores na mesma porta\n\nHistoricamente existiu tamb\u00e9m um app **PM2 `maestro`** rodando `bash -c \"bun run openclaw.mjs gateway\"`. Como o wrapper quebra, o maestro entra em **crash-loop infinito** (a cada `RestartSec`) tentando bindar a 18789 que o systemd j\u00e1 possui \u2192 `EADDRINUSE` \u2192 contador de restarts explode (chegou a **3.5 milh\u00f5es**). Custo: CPU desperdi\u00e7ada + confus\u00e3o de \"qual processo \u00e9 o gateway\".\n\n**Regra de ferro:** o Gateway tem **exatamente um** supervisor. Hoje = systemd. PM2 `maestro` foi **deletado** em 2026-05-29 (`pm2 delete maestro && pm2 save --force`). NUNCA recriar.\n\n## Pre-conditions\n\n- `systemctl --user status openclaw-gateway.service` retorna `enabled` + `active`.\n- `pm2 list` N\u00c3O cont\u00e9m `maestro` (e `~/.pm2/dump.pm2` est\u00e1 vazio \u2014 n\u00e3o ressuscita no reboot).\n- Node target real do `ExecStart` existe: `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node`.\n- Token do gateway lido de `openclaw.json` \u2192 `gateway.auth.token`.\n\n## Sequence A \u2014 Recarregar config (`openclaw.json` / `cron/jobs.json`)\n\n`openclaw.json` e `cron/jobs.json` s\u00e3o lidos **apenas no boot do gateway** \u2014 n\u00e3o h\u00e1 hot-reload. Ap\u00f3s editar:\n\n| # | Action | Output esperado | Verification gate |\n|---|--------|-----------------|-------------------|\n| 1 | Validar JSON: `python3 -c \"import json; json.load(open('/home/ubuntu/.openclaw/openclaw.json'))\"` | `(sem erro)` | Exit 0. JSON quebrado = gateway n\u00e3o sobe |\n| 2 | Backup: `cp <arquivo> <arquivo>.bak-$(date +%s)` | arquivo .bak criado | `ls -la` mostra o backup |\n| 3 | **Reload can\u00f4nico:** `systemctl --user restart openclaw-gateway.service` | retorna em ~1s | comando sai com 0 |\n| 4 | Aguardar ready: `sleep 8` | \u2014 | \u2014 |\n| 5 | Health: `curl -s -o /dev/null -w \"%{http_code}\" -H \"Authorization: Bearer <token>\" http://127.0.0.1:18789/healthz` | `200` | HTTP 200 |\n| 6 | Single-owner: ver \u00a7Sequence C (no-orphan check) | 1 node pid, ppid=systemd | exatamente 1 |\n| 7 | Config aplicada: `node /home/ubuntu/openclaw/openclaw.mjs models list \\| head` (CLI usa wrapper p/ subcomandos \u2014 OK, n\u00e3o \u00e9 o gateway) | tag `default` no modelo esperado | bate com a edi\u00e7\u00e3o |\n\n> **`systemctl --user restart` \u00e9 limpo e N\u00c3O desgarra \u00f3rf\u00e3o** \u2014 validado material em 2026-05-29 (1.0s, MainPID trocou, 1 listener, ppid=1264 systemd). \u00c9 o substituto seguro do antigo `pm2 restart maestro`.\n\n## Sequence B \u2014 Aplicar config via kill (quando systemctl n\u00e3o dispon\u00edvel no shell)\n\nComo `Restart=always`, matar o pid faz o systemd respawnar com a config nova:\n\n| # | Action | Verification gate |\n|---|--------|-------------------|\n| 1 | `MAIN=$(systemctl --user show openclaw-gateway.service -p MainPID --value)` | pid num\u00e9rico |\n| 2 | `kill $MAIN` | \u2014 |\n| 3 | `sleep 8` ent\u00e3o health (Seq A passo 5) | HTTP 200 com pid NOVO |\n| 4 | No-orphan check (\u00a7Sequence C) | 1 node pid systemd-owned |\n\n## Sequence C \u2014 No-orphan / single-owner check (sempre rodar p\u00f3s-reload)\n\nO grande risco hist\u00f3rico: um segundo processo segurando a 18789. Verifica\u00e7\u00e3o determin\u00edstica:\n\n```bash\n# 1. Exatamente 1 listener na 18789, e \u00e9 o MainPID do systemd:\nss -tlnp 2>/dev/null | grep 18789 | grep -oE \"pid=[0-9]+\" | sort -u\nsystemctl --user show openclaw-gateway.service -p MainPID --value\n\n# 2. Todo processo NODE rodando o gateway tem ppid=1264 (systemd --user):\n#    (filtrar comm=node evita self-match do pr\u00f3prio bash -c que cont\u00e9m a string)\nfor p in $(pgrep -f \"node.*dist/index.js gateway\"); do\n  [ \"$(ps -o comm= -p $p)\" = \"node\" ] && echo \"pid=$p ppid=$(ps -o ppid= -p $p | tr -d ' ')\"\ndone\n# Esperado: 1 linha, ppid=1264. Qualquer ppid\u22601264 = \u00d3RF\u00c3O \u2192 kill.\n```\n\n**Gate de sucesso:** count de node-gateway == 1, ppid == 1264, listener == MainPID.\n\n## Recovery path \u2014 Gateway down ou crash-loop\n\n| Sintoma | Causa prov\u00e1vel | Fix |\n|---------|----------------|-----|\n| `healthz` != 200, porta livre | service parado | `systemctl --user start openclaw-gateway.service` |\n| `EADDRINUSE` no log + restarts subindo | segundo supervisor (PM2 maestro ressuscitado) ou \u00f3rf\u00e3o | `pm2 delete maestro; pm2 save --force` + `kill <\u00f3rf\u00e3o n\u00e3o-systemd>` (\u00a7C) |\n| `Cannot find module './dist/warning-filter.js'` | algu\u00e9m rodando o wrapper `openclaw.mjs` como servi\u00e7o (errado) | N\u00e3o use o wrapper como servi\u00e7o. ExecStart deve ser `dist/index.js`. Defensivo: `ln -sf warning-filter-*.js dist/warning-filter.js` |\n| service falha ap\u00f3s upgrade Node/NVM | `ExecStart` aponta p/ bin\u00e1rio Node removido | atualizar path no `.service` \u2192 `daemon-reload` \u2192 `restart` |\n| `agentId is not allowed for sessions_spawn` | `allowAgents` restritivo | editar `agents.defaults.subagents.allowAgents` em `openclaw.json` + Seq A |\n\n**Nunca usar `openclaw gateway restart`** \u2014 em 2026-05-21 esse comando desgarrou um processo \u00f3rf\u00e3o (PPID 1) que roubou a 18789, criando o crash-loop original. Use `systemctl --user restart` (Seq A) ou kill+respawn (Seq B).\n\n## Success signal\n\n- `curl .../healthz` \u2192 **HTTP 200**\n- `ss ... 18789` \u2192 **exatamente 1** listener, == systemd MainPID, ppid 1264\n- `pm2 list` \u2192 **sem `maestro`**\n- Telegram bot reconecta (log `[telegram] starting provider (@MCORCH_Clawbot)`)\n- Cron `jobs-state.json` \u2192 pr\u00f3xima execu\u00e7\u00e3o agendada, `lastRunStatus` sem `skipped/error` por config\n\n## Hist\u00f3rico \u2014 por que a li\u00e7\u00e3o mudou\n\n| Data | Estado | Li\u00e7\u00e3o vigente |\n|------|--------|---------------|\n| 2026-05-21 | OpenClaw pr\u00e9-v2026.5.14; systemd `disabled/failed`; PM2 maestro era o supervisor de fato | \"use `pm2 restart maestro`\" (correta \u00e0 \u00e9poca) \u2014 selada em memory + HANDOFF v6.8.1 |\n| ~2026-05-22..28 | Upgrade p/ v2026.5.14 **re-habilitou** `openclaw-gateway.service`; passaram a existir 2 supervisores brigando | (n\u00e3o detectado \u2014 maestro crash-loopou de 716 \u2192 3.5M restarts) |\n| 2026-05-29 | PM2 maestro **deletado**; systemd \u00e9 supervisor \u00fanico | **\"use `systemctl --user restart openclaw-gateway.service`\"** (esta SOP) |\n\n## Findings adjacentes registrados (n\u00e3o-bloqueantes desta SOP)\n\n- **OTD-OCGW-001** \u2014 OpenClaw `memory-core` falha embeddings com `403 text-embedding-3-small project access revoked` (OpenAI key do OpenClaw, n\u00e3o a do mcorch que usa OpenRouter). `memory_search` degradado nas execu\u00e7\u00f5es de cron. SLA: pr\u00f3xima sess\u00e3o OpenClaw dedicada.\n- **OTD-OCGW-002** \u2014 build artifacts duplicados/hasheados em `dist/` (`task-registry.maintenance` 2 hashes, `status.summary` 2 hashes) sugerem build incremental sujo. Rebuild limpo (`bun run build` em `~/openclaw`) recomendado quando houver upgrade.\n"
 }
 ```
@@ -6424,7 +6424,7 @@ Tenho todas as convenções. Vou criar (Lei 2: SOP primeiro, depois skill):
 > **Tool Result (Write)** - ✅ Success
 >
 > ```
-> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/openclaw-gateway-supervisor.md (file state is current in your context — no need to Read it back)
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md (file state is current in your context — no need to Read it back)
 > ```
 
 ## 🤖 Claude *(22:38:25)*
@@ -6455,7 +6455,7 @@ Agora **2. o skill invocável** (diretório + SKILL.md):
 ```json
 {
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/openclaw-gateway-ops/SKILL.md",
-  "content": "---\nname: openclaw-gateway-ops\ndescription: Opera\u00e7\u00e3o segura do OpenClaw Gateway (porta 18789). O supervisor can\u00f4nico \u00e9 o systemd (openclaw-gateway.service), N\u00c3O o PM2. Use para recarregar openclaw.json/cron jobs.json, reiniciar o gateway, diagnosticar crash-loop ou conflito de supervisores. Previne o erro hist\u00f3rico de dois supervisores brigando pela porta. SOP completa em docs/processes/openclaw-gateway-supervisor.md.\n---\n\n# Skill: openclaw-gateway-ops \u2014 OpenClaw Gateway Single-Owner Ops\n\nOpera\u00e7\u00e3o do OpenClaw Gateway sem recriar o conflito hist\u00f3rico de supervisores.\nSOP autoritativa: `docs/processes/openclaw-gateway-supervisor.md`.\n\n## \u26a0\ufe0f Verdade fundamental (corrige mem\u00f3ria/HANDOFF antigos)\n\nO Gateway (porta **18789**) \u00e9 gerenciado por **systemd**, supervisor **\u00fanico**:\n\n```\n~/.config/systemd/user/openclaw-gateway.service\nExecStart: node /home/ubuntu/openclaw/dist/index.js gateway --port 18789  (Restart=always)\n```\n\n- \u2705 Reload de config = **`systemctl --user restart openclaw-gateway.service`**\n- \u274c **NUNCA** `pm2 restart maestro` (maestro foi DELETADO 2026-05-29 \u2014 wrapper quebrado, crash-loopava)\n- \u274c **NUNCA** `openclaw gateway restart` (desgarra \u00f3rf\u00e3o na 18789 \u2192 crash-loop)\n- \u2139\ufe0f `node openclaw.mjs <subcmd>` (ex: `models list`, `cron run`) \u00e9 OK \u2014 usa o wrapper s\u00f3 p/ subcomandos CLI, n\u00e3o para subir o servi\u00e7o.\n\n`openclaw.json` e `cron/jobs.json` **n\u00e3o t\u00eam hot-reload** \u2014 s\u00f3 s\u00e3o lidos no boot do gateway.\n\n## Fase 0 \u2014 Sempre: ler o token\n\n```bash\nTOKEN=$(python3 -c \"import json; d=json.load(open('/home/ubuntu/.openclaw/openclaw.json')); print(d['gateway']['auth']['token'])\")\n```\n\n## Fase 1 \u2014 Diagn\u00f3stico (read-only, rodar primeiro)\n\n```bash\n# Supervisor can\u00f4nico vivo?\nsystemctl --user is-active openclaw-gateway.service        # esperado: active\nsystemctl --user show openclaw-gateway.service -p MainPID --value\n\n# Health\ncurl -s -o /dev/null -w \"healthz %{http_code}\\n\" -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:18789/healthz\n\n# Conflito? PM2 maestro N\u00c3O deve existir\npm2 list 2>/dev/null | grep -c maestro    # esperado: 0\n\n# Single-owner: exatamente 1 node-gateway, ppid=1264 (systemd)\nfor p in $(pgrep -f \"node.*dist/index.js gateway\"); do\n  [ \"$(ps -o comm= -p $p)\" = \"node\" ] && echo \"pid=$p ppid=$(ps -o ppid= -p $p | tr -d ' ')\"\ndone   # esperado: 1 linha, ppid=1264\n```\n\n**Veredito:** active + healthz 200 + 0 maestro + 1 node-gateway ppid=1264 \u2192 **SAUD\u00c1VEL**.\nQualquer desvio \u2192 Fase 3 (recovery).\n\n## Fase 2 \u2014 Aplicar config nova (ap\u00f3s editar openclaw.json / jobs.json)\n\n```bash\n# 1. Validar JSON (quebrado = gateway n\u00e3o sobe)\npython3 -c \"import json; json.load(open('/home/ubuntu/.openclaw/openclaw.json'))\" && echo \"JSON ok\"\npython3 -c \"import json; json.load(open('/home/ubuntu/.openclaw/cron/jobs.json'))\" && echo \"JSON ok\"\n\n# 2. Backup\ncp /home/ubuntu/.openclaw/openclaw.json /home/ubuntu/.openclaw/openclaw.json.bak-$(date +%s)\n\n# 3. Reload can\u00f4nico\nsystemctl --user restart openclaw-gateway.service\nsleep 8\n\n# 4. Verificar (Fase 1 de novo) \u2192 healthz 200 + single-owner\n```\n\nValidar modelo default aplicado: `node /home/ubuntu/openclaw/openclaw.mjs models list | head`\n(o modelo desejado deve ter a tag `default`; o fallback `fallback#1`).\n\nValidar cron isolado exige `payload.kind=agentTurn` (n\u00e3o `systemEvent`):\n`node /home/ubuntu/openclaw/openclaw.mjs cron run <jobId>` \u2192 `{\"ok\":true,\"enqueued\":true}`.\n\n## Fase 3 \u2014 Recovery\n\n| Sintoma | Fix |\n|---------|-----|\n| healthz\u2260200, porta livre | `systemctl --user start openclaw-gateway.service` |\n| `EADDRINUSE` + restarts subindo | `pm2 delete maestro; pm2 save --force` + matar \u00f3rf\u00e3o n\u00e3o-systemd (Fase 1 mostra ppid\u22601264) |\n| `Cannot find module './dist/warning-filter.js'` | algu\u00e9m subiu o wrapper como servi\u00e7o \u2014 ExecStart deve ser `dist/index.js`. Defensivo: `ln -sf warning-filter-*.js /home/ubuntu/openclaw/dist/warning-filter.js` |\n| \u00f3rf\u00e3o segurando 18789 | `kill <pid \u00f3rf\u00e3o>` \u2192 systemd respawna (Restart=always) com config nova |\n| service falha p\u00f3s-upgrade Node | corrigir path Node no `.service` \u2192 `systemctl --user daemon-reload` \u2192 restart |\n\n## Materialidade (Lei 1)\n\nToda claim de \"gateway OK / config aplicada\" exige:\n- `healthz` HTTP 200 literal\n- `ss ... 18789` mostrando 1 listener == MainPID\n- `pm2 list` sem maestro\n- para modelo: linha do `models list` com tag `default`\n- para cron: `{\"ok\":true,\"enqueued\":true}` + `jobs-state.json` lastRunStatus=ok\n"
+  "content": "---\nname: openclaw-gateway-ops\ndescription: Opera\u00e7\u00e3o segura do OpenClaw Gateway (porta 18789). O supervisor can\u00f4nico \u00e9 o systemd (openclaw-gateway.service), N\u00c3O o PM2. Use para recarregar openclaw.json/cron jobs.json, reiniciar o gateway, diagnosticar crash-loop ou conflito de supervisores. Previne o erro hist\u00f3rico de dois supervisores brigando pela porta. SOP completa em docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md.\n---\n\n# Skill: openclaw-gateway-ops \u2014 OpenClaw Gateway Single-Owner Ops\n\nOpera\u00e7\u00e3o do OpenClaw Gateway sem recriar o conflito hist\u00f3rico de supervisores.\nSOP autoritativa: `docs/processes/openclaw-gateway-supervisor.md`.\n\n## \u26a0\ufe0f Verdade fundamental (corrige mem\u00f3ria/HANDOFF antigos)\n\nO Gateway (porta **18789**) \u00e9 gerenciado por **systemd**, supervisor **\u00fanico**:\n\n```\n~/.config/systemd/user/openclaw-gateway.service\nExecStart: node /home/ubuntu/openclaw/dist/index.js gateway --port 18789  (Restart=always)\n```\n\n- \u2705 Reload de config = **`systemctl --user restart openclaw-gateway.service`**\n- \u274c **NUNCA** `pm2 restart maestro` (maestro foi DELETADO 2026-05-29 \u2014 wrapper quebrado, crash-loopava)\n- \u274c **NUNCA** `openclaw gateway restart` (desgarra \u00f3rf\u00e3o na 18789 \u2192 crash-loop)\n- \u2139\ufe0f `node openclaw.mjs <subcmd>` (ex: `models list`, `cron run`) \u00e9 OK \u2014 usa o wrapper s\u00f3 p/ subcomandos CLI, n\u00e3o para subir o servi\u00e7o.\n\n`openclaw.json` e `cron/jobs.json` **n\u00e3o t\u00eam hot-reload** \u2014 s\u00f3 s\u00e3o lidos no boot do gateway.\n\n## Fase 0 \u2014 Sempre: ler o token\n\n```bash\nTOKEN=$(python3 -c \"import json; d=json.load(open('/home/ubuntu/.openclaw/openclaw.json')); print(d['gateway']['auth']['token'])\")\n```\n\n## Fase 1 \u2014 Diagn\u00f3stico (read-only, rodar primeiro)\n\n```bash\n# Supervisor can\u00f4nico vivo?\nsystemctl --user is-active openclaw-gateway.service        # esperado: active\nsystemctl --user show openclaw-gateway.service -p MainPID --value\n\n# Health\ncurl -s -o /dev/null -w \"healthz %{http_code}\\n\" -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:18789/healthz\n\n# Conflito? PM2 maestro N\u00c3O deve existir\npm2 list 2>/dev/null | grep -c maestro    # esperado: 0\n\n# Single-owner: exatamente 1 node-gateway, ppid=1264 (systemd)\nfor p in $(pgrep -f \"node.*dist/index.js gateway\"); do\n  [ \"$(ps -o comm= -p $p)\" = \"node\" ] && echo \"pid=$p ppid=$(ps -o ppid= -p $p | tr -d ' ')\"\ndone   # esperado: 1 linha, ppid=1264\n```\n\n**Veredito:** active + healthz 200 + 0 maestro + 1 node-gateway ppid=1264 \u2192 **SAUD\u00c1VEL**.\nQualquer desvio \u2192 Fase 3 (recovery).\n\n## Fase 2 \u2014 Aplicar config nova (ap\u00f3s editar openclaw.json / jobs.json)\n\n```bash\n# 1. Validar JSON (quebrado = gateway n\u00e3o sobe)\npython3 -c \"import json; json.load(open('/home/ubuntu/.openclaw/openclaw.json'))\" && echo \"JSON ok\"\npython3 -c \"import json; json.load(open('/home/ubuntu/.openclaw/cron/jobs.json'))\" && echo \"JSON ok\"\n\n# 2. Backup\ncp /home/ubuntu/.openclaw/openclaw.json /home/ubuntu/.openclaw/openclaw.json.bak-$(date +%s)\n\n# 3. Reload can\u00f4nico\nsystemctl --user restart openclaw-gateway.service\nsleep 8\n\n# 4. Verificar (Fase 1 de novo) \u2192 healthz 200 + single-owner\n```\n\nValidar modelo default aplicado: `node /home/ubuntu/openclaw/openclaw.mjs models list | head`\n(o modelo desejado deve ter a tag `default`; o fallback `fallback#1`).\n\nValidar cron isolado exige `payload.kind=agentTurn` (n\u00e3o `systemEvent`):\n`node /home/ubuntu/openclaw/openclaw.mjs cron run <jobId>` \u2192 `{\"ok\":true,\"enqueued\":true}`.\n\n## Fase 3 \u2014 Recovery\n\n| Sintoma | Fix |\n|---------|-----|\n| healthz\u2260200, porta livre | `systemctl --user start openclaw-gateway.service` |\n| `EADDRINUSE` + restarts subindo | `pm2 delete maestro; pm2 save --force` + matar \u00f3rf\u00e3o n\u00e3o-systemd (Fase 1 mostra ppid\u22601264) |\n| `Cannot find module './dist/warning-filter.js'` | algu\u00e9m subiu o wrapper como servi\u00e7o \u2014 ExecStart deve ser `dist/index.js`. Defensivo: `ln -sf warning-filter-*.js /home/ubuntu/openclaw/dist/warning-filter.js` |\n| \u00f3rf\u00e3o segurando 18789 | `kill <pid \u00f3rf\u00e3o>` \u2192 systemd respawna (Restart=always) com config nova |\n| service falha p\u00f3s-upgrade Node | corrigir path Node no `.service` \u2192 `systemctl --user daemon-reload` \u2192 restart |\n\n## Materialidade (Lei 1)\n\nToda claim de \"gateway OK / config aplicada\" exige:\n- `healthz` HTTP 200 literal\n- `ss ... 18789` mostrando 1 listener == MainPID\n- `pm2 list` sem maestro\n- para modelo: linha do `models list` com tag `default`\n- para cron: `{\"ok\":true,\"enqueued\":true}` + `jobs-state.json` lastRunStatus=ok\n"
 }
 ```
 
@@ -6914,7 +6914,7 @@ Os 3 mirrors circadianos agora **✓ ok com qwen/qwen3.7-max**. Mas notei que o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== git status completo (tracked + untracked) ===\"\ngit status --short --untracked-files=all 2>&1 | head -30\necho\necho \"=== Os arquivos novos/editados existem no disco? ===\"\nls -la docs/processes/openclaw-gateway-supervisor.md .claude/skills/openclaw-gateway-ops/SKILL.md .claude/skills/gateway-recovery.md 2>&1\necho\necho \"=== HANDOFF.md foi modificado? (git diff stat) ===\"\ngit diff --stat HANDOFF.md 2>&1\necho\necho \"=== .claude ou docs est\u00e3o no .gitignore? ===\"\ngit check-ignore docs/processes/openclaw-gateway-supervisor.md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1 || echo \"  (nenhum ignorado \u2014 devem aparecer no status)\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\necho \"=== git status completo (tracked + untracked) ===\"\ngit status --short --untracked-files=all 2>&1 | head -30\necho\necho \"=== Os arquivos novos/editados existem no disco? ===\"\nls -la docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md .claude/skills/openclaw-gateway-ops/SKILL.md .claude/skills/gateway-recovery.md 2>&1\necho\necho \"=== HANDOFF.md foi modificado? (git diff stat) ===\"\ngit diff --stat HANDOFF.md 2>&1\necho\necho \"=== .claude ou docs est\u00e3o no .gitignore? ===\"\ngit check-ignore docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1 || echo \"  (nenhum ignorado \u2014 devem aparecer no status)\"",
   "description": "Check full git status including untracked + whether docs/.claude gitignored"
 }
 ```
@@ -6928,7 +6928,7 @@ Os 3 mirrors circadianos agora **✓ ok com qwen/qwen3.7-max**. Mas notei que o 
 >  M src/pages/SocialAccountsPage.tsx
 > 
 > === Os arquivos novos/editados existem no disco? ===
-> ls: cannot access 'docs/processes/openclaw-gateway-supervisor.md': No such file or directory
+> ls: cannot access 'docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md': No such file or directory
 > ls: cannot access '.claude/skills/openclaw-gateway-ops/SKILL.md': No such file or directory
 > -rw-rw-r-- 1 ubuntu ubuntu 876 May 29 17:00 .claude/skills/gateway-recovery.md
 > 
@@ -6951,7 +6951,7 @@ Os 3 mirrors circadianos agora **✓ ok com qwen/qwen3.7-max**. Mas notei que o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "echo \"=== MAIN checkout state ===\"\ncd /home/gcrUX/htdocs/constellation-orchestra\necho \"branch: $(git branch --show-current)\"\necho \"--- git status (untracked all) ---\"\ngit status --short --untracked-files=all 2>&1 | head -20\necho\necho \"=== Os docs realmente existem no MAIN? ===\"\nls -la docs/processes/openclaw-gateway-supervisor.md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1\necho \"--- gateway-recovery.md no main (deve ter minha reescrita ~deprecated) ---\"\nhead -3 .claude/skills/gateway-recovery.md 2>&1\necho \"--- HANDOFF.md no main tem minha corre\u00e7\u00e3o? ---\"\ngrep -c \"CORRE\u00c7\u00c3O 2026-05-29\" HANDOFF.md 2>&1",
+  "command": "echo \"=== MAIN checkout state ===\"\ncd /home/gcrUX/htdocs/constellation-orchestra\necho \"branch: $(git branch --show-current)\"\necho \"--- git status (untracked all) ---\"\ngit status --short --untracked-files=all 2>&1 | head -20\necho\necho \"=== Os docs realmente existem no MAIN? ===\"\nls -la docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1\necho \"--- gateway-recovery.md no main (deve ter minha reescrita ~deprecated) ---\"\nhead -3 .claude/skills/gateway-recovery.md 2>&1\necho \"--- HANDOFF.md no main tem minha corre\u00e7\u00e3o? ---\"\ngrep -c \"CORRE\u00c7\u00c3O 2026-05-29\" HANDOFF.md 2>&1",
   "description": "Inspect main checkout branch + status + verify docs landed there"
 }
 ```
@@ -6965,11 +6965,11 @@ Os 3 mirrors circadianos agora **✓ ok com qwen/qwen3.7-max**. Mas notei que o 
 >  M .claude/skills/gateway-recovery.md
 >  M HANDOFF.md
 > ?? .claude/skills/openclaw-gateway-ops/SKILL.md
-> ?? docs/processes/openclaw-gateway-supervisor.md
+> ?? docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 > 
 > === Os docs realmente existem no MAIN? ===
 > -rw-rw-r-- 1 ubuntu ubuntu 4460 May 29 19:38 .claude/skills/openclaw-gateway-ops/SKILL.md
-> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:38 docs/processes/openclaw-gateway-supervisor.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:38 docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 > --- gateway-recovery.md no main (deve ter minha reescrita ~deprecated) ---
 > # Skill: Recuperação de Gateway (DEPRECADO — ver openclaw-gateway-ops)
 > 
@@ -6996,7 +6996,7 @@ Isso é tudo UM changeset lógico. Vou **consolidar tudo no worktree** (onde dev
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "set -e\nMAIN=/home/gcrUX/htdocs/constellation-orchestra\nWT=/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\n\necho \"=== STEP 1: Copiar os 4 docs MAIN \u2192 WORKTREE ===\"\nmkdir -p \"$WT/.claude/skills/openclaw-gateway-ops\" \"$WT/docs/processes\"\ncp \"$MAIN/docs/processes/openclaw-gateway-supervisor.md\" \"$WT/docs/processes/openclaw-gateway-supervisor.md\"\ncp \"$MAIN/.claude/skills/openclaw-gateway-ops/SKILL.md\"   \"$WT/.claude/skills/openclaw-gateway-ops/SKILL.md\"\ncp \"$MAIN/.claude/skills/gateway-recovery.md\"             \"$WT/.claude/skills/gateway-recovery.md\"\ncp \"$MAIN/HANDOFF.md\"                                      \"$WT/HANDOFF.md\"\necho \"  4 files copied to worktree\"\n\necho\necho \"=== STEP 2: Verificar conte\u00fado landou no worktree ===\"\nls -la \"$WT/docs/processes/openclaw-gateway-supervisor.md\" \"$WT/.claude/skills/openclaw-gateway-ops/SKILL.md\" 2>&1\necho \"  HANDOFF banner no worktree: $(grep -c 'CORRE\u00c7\u00c3O 2026-05-29' \"$WT/HANDOFF.md\")\"\necho \"  gateway-recovery deprecated no worktree: $(grep -c 'DEPRECADO' \"$WT/.claude/skills/gateway-recovery.md\")\"\n\necho\necho \"=== STEP 3: Restaurar MAIN working tree limpo ===\"\ncd \"$MAIN\"\ngit restore HANDOFF.md .claude/skills/gateway-recovery.md\nrm -f .claude/skills/openclaw-gateway-ops/SKILL.md docs/processes/openclaw-gateway-supervisor.md\nrmdir .claude/skills/openclaw-gateway-ops 2>/dev/null || true\necho \"  main restored\"\necho \"--- MAIN git status (deve estar limpo) ---\"\ngit status --short --untracked-files=all 2>&1 | head -10\necho \"  (vazio = main limpo \u2713)\"",
+  "command": "set -e\nMAIN=/home/gcrUX/htdocs/constellation-orchestra\nWT=/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\n\necho \"=== STEP 1: Copiar os 4 docs MAIN \u2192 WORKTREE ===\"\nmkdir -p \"$WT/.claude/skills/openclaw-gateway-ops\" \"$WT/docs/processes\"\ncp \"$MAIN/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md\" \"$WT/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md\"\ncp \"$MAIN/.claude/skills/openclaw-gateway-ops/SKILL.md\"   \"$WT/.claude/skills/openclaw-gateway-ops/SKILL.md\"\ncp \"$MAIN/.claude/skills/gateway-recovery.md\"             \"$WT/.claude/skills/gateway-recovery.md\"\ncp \"$MAIN/HANDOFF.md\"                                      \"$WT/HANDOFF.md\"\necho \"  4 files copied to worktree\"\n\necho\necho \"=== STEP 2: Verificar conte\u00fado landou no worktree ===\"\nls -la \"$WT/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md\" \"$WT/.claude/skills/openclaw-gateway-ops/SKILL.md\" 2>&1\necho \"  HANDOFF banner no worktree: $(grep -c 'CORRE\u00c7\u00c3O 2026-05-29' \"$WT/HANDOFF.md\")\"\necho \"  gateway-recovery deprecated no worktree: $(grep -c 'DEPRECADO' \"$WT/.claude/skills/gateway-recovery.md\")\"\n\necho\necho \"=== STEP 3: Restaurar MAIN working tree limpo ===\"\ncd \"$MAIN\"\ngit restore HANDOFF.md .claude/skills/gateway-recovery.md\nrm -f .claude/skills/openclaw-gateway-ops/SKILL.md docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md\nrmdir .claude/skills/openclaw-gateway-ops 2>/dev/null || true\necho \"  main restored\"\necho \"--- MAIN git status (deve estar limpo) ---\"\ngit status --short --untracked-files=all 2>&1 | head -10\necho \"  (vazio = main limpo \u2713)\"",
   "description": "Consolidate docs into worktree + restore main clean"
 }
 ```
@@ -7009,7 +7009,7 @@ Isso é tudo UM changeset lógico. Vou **consolidar tudo no worktree** (onde dev
 > 
 > === STEP 2: Verificar conteúdo landou no worktree ===
 > -rw-rw-r-- 1 ubuntu ubuntu 4460 May 29 19:44 /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/.claude/skills/openclaw-gateway-ops/SKILL.md
-> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:44 /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/docs/processes/openclaw-gateway-supervisor.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:44 /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 >   HANDOFF banner no worktree: 1
 >   gateway-recovery deprecated no worktree: 1
 > 
@@ -7049,7 +7049,7 @@ O `git restore` reverteu o `gateway-recovery.md` do MAIN ao original (esperado �
 >  M src/pages/SettingsPage.tsx
 >  M src/pages/SocialAccountsPage.tsx
 > ?? .claude/skills/openclaw-gateway-ops/SKILL.md
-> ?? docs/processes/openclaw-gateway-supervisor.md
+> ?? docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 > 
 > === Contagem: deve ser 7 mudanças (3 frontend + HANDOFF + gateway-recovery + 2 novos) ===
 >   Modified tracked: 5
@@ -7174,7 +7174,7 @@ Decisões: commit + merge + build/deploy, e você rotaciona o ML secret manualme
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\n\necho \"=== Commit 1: security leak fix (frontend) ===\"\ngit add src/pages/AffiliatesPage.tsx src/pages/SettingsPage.tsx src/pages/SocialAccountsPage.tsx\ngit commit -q -m \"fix(security): block browser credential autofill on API key forms\n\nChrome offered to save ML App ID + Client Secret as a login pair while\nnavigating away from the affiliate config \u2014 the App ID (text) + Client\nSecret (password) inputs had no autoComplete guard, so the browser\ntreated them as a username/password form.\n\nApply autoComplete=off/new-password + name + data-lpignore/data-1p-ignore\nacross all credential inputs (ML affiliate, WordPress, advanced API keys)\nand wrap the ML form in autoComplete=off. No change to save behavior.\" && echo \"  commit 1 \u2713\"\n\necho\necho \"=== Commit 2: openclaw-gateway-ops skill + SOP ===\"\ngit add docs/processes/openclaw-gateway-supervisor.md .claude/skills/openclaw-gateway-ops/SKILL.md .claude/skills/gateway-recovery.md\ngit commit -q -m \"docs(openclaw): single-owner gateway SOP + ops skill \u2014 systemd is canonical\n\nResolve the recurring gateway/maestro confusion. The OpenClaw Gateway\n(port 18789) is supervised by systemd (openclaw-gateway.service running\ndist/index.js), NOT PM2. The PM2 maestro app ran the broken openclaw.mjs\nwrapper and crash-looped fighting systemd for the port (3.5M restarts).\n\n- New SOP docs/processes/openclaw-gateway-supervisor.md (single-owner\n  lifecycle, reload via systemctl, no-orphan check, recovery paths)\n- New skill openclaw-gateway-ops (diagnose/reload/recovery)\n- Deprecate the stale gateway-recovery.md (pointed at PM2)\" && echo \"  commit 2 \u2713\"\n\necho\necho \"=== Commit 3: HANDOFF correction banner ===\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): correct v6.8.1 gateway lesson \u2014 systemd, not PM2\n\nThe v6.8.1 seal sealed 'always use pm2 restart maestro'. An OpenClaw\nupgrade to v2026.5.14 re-enabled the systemd service, making maestro a\nconflicting second supervisor. Add a correction banner pointing to the\nnew SOP + skill. Reload is now systemctl --user restart.\" && echo \"  commit 3 \u2713\"\n\necho\necho \"=== Log dos 3 commits ===\"\ngit log --oneline -3",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9\n\necho \"=== Commit 1: security leak fix (frontend) ===\"\ngit add src/pages/AffiliatesPage.tsx src/pages/SettingsPage.tsx src/pages/SocialAccountsPage.tsx\ngit commit -q -m \"fix(security): block browser credential autofill on API key forms\n\nChrome offered to save ML App ID + Client Secret as a login pair while\nnavigating away from the affiliate config \u2014 the App ID (text) + Client\nSecret (password) inputs had no autoComplete guard, so the browser\ntreated them as a username/password form.\n\nApply autoComplete=off/new-password + name + data-lpignore/data-1p-ignore\nacross all credential inputs (ML affiliate, WordPress, advanced API keys)\nand wrap the ML form in autoComplete=off. No change to save behavior.\" && echo \"  commit 1 \u2713\"\n\necho\necho \"=== Commit 2: openclaw-gateway-ops skill + SOP ===\"\ngit add docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md .claude/skills/openclaw-gateway-ops/SKILL.md .claude/skills/gateway-recovery.md\ngit commit -q -m \"docs(openclaw): single-owner gateway SOP + ops skill \u2014 systemd is canonical\n\nResolve the recurring gateway/maestro confusion. The OpenClaw Gateway\n(port 18789) is supervised by systemd (openclaw-gateway.service running\ndist/index.js), NOT PM2. The PM2 maestro app ran the broken openclaw.mjs\nwrapper and crash-looped fighting systemd for the port (3.5M restarts).\n\n- New SOP docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md (single-owner\n  lifecycle, reload via systemctl, no-orphan check, recovery paths)\n- New skill openclaw-gateway-ops (diagnose/reload/recovery)\n- Deprecate the stale gateway-recovery.md (pointed at PM2)\" && echo \"  commit 2 \u2713\"\n\necho\necho \"=== Commit 3: HANDOFF correction banner ===\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): correct v6.8.1 gateway lesson \u2014 systemd, not PM2\n\nThe v6.8.1 seal sealed 'always use pm2 restart maestro'. An OpenClaw\nupgrade to v2026.5.14 re-enabled the systemd service, making maestro a\nconflicting second supervisor. Add a correction banner pointing to the\nnew SOP + skill. Reload is now systemctl --user restart.\" && echo \"  commit 3 \u2713\"\n\necho\necho \"=== Log dos 3 commits ===\"\ngit log --oneline -3",
   "description": "Three granular commits on worktree branch"
 }
 ```
@@ -7210,7 +7210,7 @@ Decisões: commit + merge + build/deploy, e você rotaciona o ML secret manualme
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== main HEAD antes do merge ===\"\ngit log --oneline -1\necho \"main branch: $(git branch --show-current)\"\necho\necho \"=== Merge do branch do worktree \u2192 main ===\"\ngit merge claude/wizardly-allen-2a03a9 --no-edit 2>&1 | tail -10\necho\necho \"=== main HEAD ap\u00f3s merge ===\"\ngit log --oneline -4\necho\necho \"=== Confirmar os 7 arquivos no main p\u00f3s-merge ===\"\nls -la docs/processes/openclaw-gateway-supervisor.md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1 | head -3\ngrep -c \"CORRE\u00c7\u00c3O 2026-05-29\" HANDOFF.md\ngrep -c \"autoComplete\" src/pages/AffiliatesPage.tsx",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== main HEAD antes do merge ===\"\ngit log --oneline -1\necho \"main branch: $(git branch --show-current)\"\necho\necho \"=== Merge do branch do worktree \u2192 main ===\"\ngit merge claude/wizardly-allen-2a03a9 --no-edit 2>&1 | tail -10\necho\necho \"=== main HEAD ap\u00f3s merge ===\"\ngit log --oneline -4\necho\necho \"=== Confirmar os 7 arquivos no main p\u00f3s-merge ===\"\nls -la docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md .claude/skills/openclaw-gateway-ops/SKILL.md 2>&1 | head -3\ngrep -c \"CORRE\u00c7\u00c3O 2026-05-29\" HANDOFF.md\ngrep -c \"autoComplete\" src/pages/AffiliatesPage.tsx",
   "description": "Merge worktree branch into main"
 }
 ```
@@ -7226,13 +7226,13 @@ Decisões: commit + merge + build/deploy, e você rotaciona o ML secret manualme
 >  .claude/skills/gateway-recovery.md            |  27 +++---
 >  .claude/skills/openclaw-gateway-ops/SKILL.md  |  95 +++++++++++++++++++++
 >  HANDOFF.md                                    |   2 +
->  docs/processes/openclaw-gateway-supervisor.md | 118 ++++++++++++++++++++++++++
+>  docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md | 118 ++++++++++++++++++++++++++
 >  src/pages/AffiliatesPage.tsx                  |  71 ++++++++++------
 >  src/pages/SettingsPage.tsx                    |  22 +++--
 >  src/pages/SocialAccountsPage.tsx              |   7 +-
 >  7 files changed, 295 insertions(+), 47 deletions(-)
 >  create mode 100644 .claude/skills/openclaw-gateway-ops/SKILL.md
->  create mode 100644 docs/processes/openclaw-gateway-supervisor.md
+>  create mode 100644 docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 > 
 > === main HEAD após merge ===
 > 4c67802 docs(handoff): correct v6.8.1 gateway lesson — systemd, not PM2
@@ -7242,7 +7242,7 @@ Decisões: commit + merge + build/deploy, e você rotaciona o ML secret manualme
 > 
 > === Confirmar os 7 arquivos no main pós-merge ===
 > -rw-rw-r-- 1 ubuntu ubuntu 4460 May 29 19:57 .claude/skills/openclaw-gateway-ops/SKILL.md
-> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:57 docs/processes/openclaw-gateway-supervisor.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8662 May 29 19:57 docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md
 > 1
 > 5
 > Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9
@@ -8688,7 +8688,7 @@ Agora documentar isso pra nunca mais precisar redescobrir. Lendo skill + memory 
 > ```
 > 1	---
 > 2	name: openclaw-gateway-ops
-> 3	description: Operação segura do OpenClaw Gateway (porta 18789). O supervisor canônico é o systemd (openclaw-gateway.service), NÃO o PM2. Use para recarregar openclaw.json/cron jobs.json, reiniciar o gateway, diagnosticar crash-loop ou conflito de supervisores. Previne o erro histórico de dois supervisores brigando pela porta. SOP completa em docs/processes/openclaw-gateway-supervisor.md.
+> 3	description: Operação segura do OpenClaw Gateway (porta 18789). O supervisor canônico é o systemd (openclaw-gateway.service), NÃO o PM2. Use para recarregar openclaw.json/cron jobs.json, reiniciar o gateway, diagnosticar crash-loop ou conflito de supervisores. Previne o erro histórico de dois supervisores brigando pela porta. SOP completa em docs/processes/[[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md.
 > 4	---
 > 5	
 > 6	# Skill: openclaw-gateway-ops — OpenClaw Gateway Single-Owner Ops
@@ -10656,6 +10656,11 @@ Re-index voando (~10s cada — incremental): artisan, scientist, marketing-growt
 ```
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

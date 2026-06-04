@@ -320,7 +320,7 @@ Sync clean (`0 0` vs origin/main), TSC zero errors, all containers healthy, scra
 > 49	### Survival Laws Self-audit
 > 50	```
 > 51	Law 1 (Materiality): ✅ toda claim provada NESTE turno — meta_config (count */0 + admin API 1==1), MVP-2 (db push Finished + REST schema + 23503/42501/201 + cleanup REST), OTD (6/6 vitest + 11× Deployed + insert 201 + Gemini 200), lead-score (smoke E2E 200 + REST score/event/balance + zero-resíduo), calibração (mcoin_transactions REST). /security-review por subagente INDEPENDENTE. Fase 5c executada abaixo. Zero fabricação.
-> 52	Law 2 (Process): ✅ BoK data-model patcheado ANTES da migration MVP-2; SOP llm-cascading-fallback.md honrado; campaign-run NÃO improvisada (ambiguidade financeira → decisão Sovereign).
+> 52	Law 2 (Process): ✅ BoK data-model patcheado ANTES da migration MVP-2; SOP [[llm-cascading-fallback|llm-cascading-fallback]].md honrado; campaign-run NÃO improvisada (ambiguidade financeira → decisão Sovereign).
 > 53	Law 3 (Pruning): ✅ 1 poda explícita após MVP-2+OTD; sessão SELADA por decisão consciente em vez de forçar campaign-run com contexto saturado.
 > 54	Law 4 (ORO): ✅ triplet declarado; toda ação outward (migration, 12 deploys, mesh seals) com GO Sovereign.
 > 55	```
@@ -501,7 +501,7 @@ Sync clean (`0 0` vs origin/main), TSC zero errors, all containers healthy, scra
 > 212	### Survival Laws Self-audit
 > 213	```
 > 214	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API — gap original já-fechado (pg_get_functiondef + 5/5 comportamental), suíte RPC 5/5 rolled-back, preview→apply da limpeza (12→0 / 3 vivos), pós-apply (funções+grants+tracking), build+bundle servido com as RPCs. Zero fabricação. 1 armadilha divulgada (urllib→Cloudflare 1010 → troquei p/ curl). Fase 5c executada abaixo. NÃO criei migration redundante p/ o gap já fechado (seria fabricar trabalho).
-> 215	Law 2 (Process): ✅ SOP credential-disconnect-clear.md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
+> 215	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
 > 216	Law 3 (Pruning): investigação focada; outputs consumidos, referência por path/UUID/migration/commit.
 > 217	Law 4 (ORO): ✅ declarado no início da Parte B; "faça os dois" = autorização autônoma do Sovereign.
 > 218	```
@@ -560,7 +560,7 @@ Sync clean (`0 0` vs origin/main), TSC zero errors, all containers healthy, scra
 > 271	### Survival Laws Self-audit
 > 272	```
 > 273	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API, tudo rolled-back — 23505 reproduzido + before/after de re-save (user_api_keys + social_accounts) + lockdown do helper + injeção antes/depois (42501) + metadados pós-apply + cleanliness. Zero fabricação. Achado HIGH do /security-review REFUTADO com teste material (PK fail-closed + md5 da vítima inalterado), não com argumento. 1 armadilha de ambiente divulgada (`UID` readonly do bash → `$U`). Fase 5c executada abaixo.
-> 274	Law 2 (Process): ✅ SOP credential-disconnect-clear.md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
+> 274	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
 > 275	Law 3 (Pruning): investigação longa (probes C1-C4, V1-V2, before/after meta+social) — outputs consumidos, referência por path/UUID/migration.
 > 276	Law 4 (ORO): ✅ declarado no início; "analise tudo e faça" = autorização autônoma do Sovereign p/ resolver em-sessão + selar.
 > 277	```
@@ -616,7 +616,7 @@ Sync clean (`0 0` vs origin/main), TSC zero errors, all containers healthy, scra
 > 327	### Survival Laws Self-audit
 > 328	```
 > 329	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API — 400 42P10 real, connect/disconnect/guard com SELECT em decrypted_user_api_keys + vault.secrets, db push Finished, 2 /security-review SAFE, chunk servido com a string nova, node 7bf9bb0e embedded. Zero fabricação. O double-fire foi PROVADO (T1/T3/T4 + vault.create_secret = INSERT sem ON CONFLICT) antes de afirmar que existia. Fase 5c executada abaixo.
-> 330	Law 2 (Process): ✅ SOP credential-disconnect-clear.md antes do commit; dívida residual documentada + task spawned.
+> 330	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md antes do commit; dívida residual documentada + task spawned.
 > 331	Law 3 (Pruning): contexto longo de investigação (T1-T5) — outputs de exploração consumidos, referência por path/UUID.
 > 332	Law 4 (ORO): ✅ declarado no início; escopo profundo aprovado explicitamente pelo Sovereign via AskUserQuestion.
 > 333	```
@@ -674,7 +674,7 @@ Sync clean (`0 0` vs origin/main), TSC zero errors, all containers healthy, scra
 > 385	### Survival Laws Self-audit
 > 386	```
 > 387	Law 1 (Materiality): ✅ toda claim provada NESTE turno — 302s reais, db push exit 0, round-trips (sem imprimir segredo), suite 238/240, nginx 200, scrape matched. Quando o ML bloqueou tudo, disse "não dá" (probe ml-probe) em vez de fabricar. O 8K errado (4K→usado) foi corrigido materialmente 2×, não maquiado. Fase 5c executada (veredito mecânico abaixo).
-> 388	Law 2 (Process): ✅ 2 SOPs (ml-affiliate-attribution atualizada + affiliate-catalog-enrichment nova) antes/junto do código. Migration passou /security-review (regra CLAUDE.md). API Tenancy (per-user→sistema) honrada.
+> 388	Law 2 (Process): ✅ 2 SOPs ([[ml-affiliate-attribution|ml-affiliate-attribution]] atualizada + [[affiliate-catalog-enrichment|affiliate-catalog-enrichment]] nova) antes/junto do código. Migration passou /security-review (regra CLAUDE.md). API Tenancy (per-user→sistema) honrada.
 > 389	Law 3 (Pruning): ✅ checkpoint explícito antes do BYOK (item de maior blast radius isolado); probes (Firecrawl/ml-probe) extraídos a conclusão e deletados.
 > 390	Law 4 (ORO): ✅ triplet declarado; toda ação outward com GO Sovereign.
 > 391	```
@@ -13132,6 +13132,11 @@ O **flywheel do Marketing Hub está completo** (lead → score → campanha → 
 Dois ajustes que registrei nas minhas fontes (pra valer toda sessão): **survival.md Lei 3** agora diz "selar só a ~95%, poda≠selar", e a memória de calibração foi afiada. Se ainda sobrou janela além do que usei, é só dizer "continua" que eu puxo a próxima frente — ou me dá o GO pro primeiro run pago real.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

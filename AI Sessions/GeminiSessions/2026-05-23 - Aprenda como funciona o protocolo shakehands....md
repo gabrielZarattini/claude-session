@@ -7112,7 +7112,7 @@ I will view the `mcorch-qa-healing v1` record at line 206 to see if it is a dupl
 > 221: | Commit | Conteúdo |
 > 222: |--------|----------|
 > 223: | `6df03bb` | docs(bok): emit mcorch-qa-healing BoK suite 9/9 |
-> 224: | `1216715` | docs(process): SOP handoff-material-proof-audit |
+> 224: | `1216715` | docs(process): SOP [[handoff-material-proof-audit|handoff-material-proof-audit]] |
 > 225: | `a0f7ad8` | feat(qa): mcorch-qa-healing material-proof audit engine |
 > 226: | `4dd5b7b` | test(qa): vitest coverage for the audit engine |
 > 227: | `77f575f` | feat(handoff): wire Phase 5c material proof gate |
@@ -11397,6 +11397,11 @@ git push origin main # [main ea34ce7]
 2.  **Context Caching:** Prefere que verifiquemos a implementação do Context Caching no wrapper da API do Gemini?
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

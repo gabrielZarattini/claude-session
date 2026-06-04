@@ -1822,6 +1822,11 @@ Encontrei uma **classe distinta e provavelmente mais grave**: `check-video-statu
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-30 - Fix cross-tenant JWT impersonation vulnerability]]

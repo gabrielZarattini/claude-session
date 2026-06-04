@@ -104,7 +104,8 @@ def collect_notes():
     note_catalog = []
     directories = [
         ("ClaudeSessions", CLAUDE_DIR),
-        ("GeminiSessions", GEMINI_DIR)
+        ("GeminiSessions", GEMINI_DIR),
+        ("MCORCH Processes", os.path.join(VAULT_DIR, "MCORCH Processes"))
     ]
     
     for folder_name, path in directories:
@@ -162,6 +163,14 @@ def collect_notes():
             # Deduplicate and filter empty patterns
             patterns = list(set([p.strip() for p in patterns if p and len(p.strip()) >= 3]))
             
+            # Determine project (TradeUX vs MCORCH)
+            if folder_name == "MCORCH Processes":
+                project = "MCORCH"
+            elif "tradeux" in note_title.lower() or "[tradeux]" in note_title.lower():
+                project = "TradeUX"
+            else:
+                project = "MCORCH"
+            
             note_catalog.append({
                 "filename": file,
                 "note_title": note_title,
@@ -170,7 +179,8 @@ def collect_notes():
                 "date": date_str,
                 "meta": meta,
                 "is_generic": is_generic,
-                "patterns": patterns
+                "patterns": patterns,
+                "project": project
             })
             
     return note_catalog
@@ -179,6 +189,9 @@ def run_linking(note_catalog, dry_run=True):
     # Flatten patterns into a list of tuples: (pattern_str, note_title, note_file_path)
     pattern_list = []
     for note in note_catalog:
+        # Avoid semantic linking to the project hub pages themselves
+        if note["note_title"] in ["TradeUX", "MCORCH"]:
+            continue
         for pattern in note["patterns"]:
             pattern_list.append((pattern, note["note_title"], note["file_path"]))
             
@@ -218,6 +231,7 @@ def run_linking(note_catalog, dry_run=True):
     links_created_count = 0
     modified_files_count = 0
     timeline_re = re.compile(r'\n*%% --- TIMELINE START --- %%.*?%% --- TIMELINE END --- %%', re.DOTALL)
+    project_re = re.compile(r'\n*%% --- PROJECT METADATA START --- %%.*?%% --- PROJECT METADATA END --- %%', re.DOTALL)
     
     print(f"\n--- Running Auto-Linking (Dry-run: {dry_run}) ---")
     
@@ -225,6 +239,10 @@ def run_linking(note_catalog, dry_run=True):
         file_path = target_note["file_path"]
         note_title = target_note["note_title"]
         
+        # Don't add metadata/timeline blocks to the hubs themselves
+        if note_title in ["TradeUX", "MCORCH"]:
+            continue
+            
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -232,33 +250,52 @@ def run_linking(note_catalog, dry_run=True):
             print(f"Error reading {file_path}: {e}")
             continue
             
-        # Strip existing timeline block
-        stripped_content = timeline_re.sub('', content).strip()
+        # Strip existing timeline and project blocks
+        stripped_content = timeline_re.sub('', content)
+        stripped_content = project_re.sub('', stripped_content).strip()
         
         # Clean up any trailing horizontal rules (---) to prevent stacking
         while stripped_content.endswith("---"):
             stripped_content = stripped_content[:-3].strip()
         
-        # Build and append new timeline block
-        prev_title, next_title = timeline_map.get(file_path, (None, None))
+        # Build project metadata block
+        project_block = ""
+        project_name = target_note.get("project", "MCORCH")
+        lines = [
+            "%% --- PROJECT METADATA START --- %%",
+            "> [!meta] Informações do Projeto",
+            f"> * **Projeto**: [[{project_name}]]",
+            "%% --- PROJECT METADATA END --- %%"
+        ]
+        project_block = "\n".join(lines)
+        
+        # Build and append new timeline block (sessions only, not processes)
         timeline_block = ""
-        if prev_title or next_title:
-            lines = []
-            lines.append("%% --- TIMELINE START --- %%")
-            lines.append("> [!info] Linha do Tempo (Handoff)")
-            if prev_title:
-                lines.append(f"> * **Sessão Anterior**: [[{prev_title}]]")
-            if next_title:
-                lines.append(f"> * **Próxima Sessão**: [[{next_title}]]")
-            lines.append("%% --- TIMELINE END --- %%")
-            timeline_block = "\n".join(lines)
+        if target_note["folder"] in ["ClaudeSessions", "GeminiSessions"]:
+            prev_title, next_title = timeline_map.get(file_path, (None, None))
+            if prev_title or next_title:
+                lines = []
+                lines.append("%% --- TIMELINE START --- %%")
+                lines.append("> [!info] Linha do Tempo (Handoff)")
+                if prev_title:
+                    lines.append(f"> * **Sessão Anterior**: [[{prev_title}]]")
+                if next_title:
+                    lines.append(f"> * **Próxima Sessão**: [[{next_title}]]")
+                lines.append("%% --- TIMELINE END --- %%")
+                timeline_block = "\n".join(lines)
             
         updated_content = stripped_content
+        blocks = []
+        if project_block:
+            blocks.append(project_block)
         if timeline_block:
-            updated_content = stripped_content + "\n\n---\n\n" + timeline_block + "\n"
+            blocks.append(timeline_block)
             
-        # Check if timeline changed
-        timeline_changed = (updated_content != content)
+        if blocks:
+            updated_content = stripped_content + "\n\n---\n\n" + "\n\n".join(blocks) + "\n"
+            
+        # Check if blocks changed
+        blocks_changed = (updated_content != content)
             
         masked_content, placeholders = mask_text(updated_content)
         original_masked = masked_content
@@ -282,8 +319,8 @@ def run_linking(note_catalog, dry_run=True):
                 masked_content = wikilink_pattern.sub(mask_new_links, new_content)
                 links_created_count += count
                 
-        # Write back if either the semantic links changed or the timeline block changed/was added
-        has_changed = (masked_content != original_masked) or timeline_changed
+        # Write back if either the semantic links changed or the metadata blocks changed
+        has_changed = (masked_content != original_masked) or blocks_changed
         if has_changed:
             modified_files_count += 1
             final_content = unmask_text(masked_content, placeholders)
@@ -303,11 +340,126 @@ def run_linking(note_catalog, dry_run=True):
     print(f"- Files that will be/were modified: {modified_files_count}")
     print(f"- Total link edges created: {links_created_count}")
 
+def generate_project_hubs(note_catalog, dry_run=True):
+    print(f"\n--- Generating Project Hubs (Dry-run: {dry_run}) ---")
+    
+    tradeux_sessions = []
+    mcorch_sessions = []
+    mcorch_processes = []
+    
+    for note in note_catalog:
+        if note["note_title"] in ["TradeUX", "MCORCH"]:
+            continue
+            
+        if note["project"] == "TradeUX":
+            tradeux_sessions.append(note)
+        else:
+            if note["folder"] == "MCORCH Processes":
+                mcorch_processes.append(note)
+            else:
+                mcorch_sessions.append(note)
+                
+    # Sort chronological items descending by date
+    def get_session_sort_key(n):
+        return (1, n["date"], n["note_title"]) if n["date"] else (0, n["note_title"], "")
+        
+    tradeux_sessions.sort(key=get_session_sort_key, reverse=True)
+    mcorch_sessions.sort(key=get_session_sort_key, reverse=True)
+    
+    # Sort processes alphabetically
+    mcorch_processes.sort(key=lambda n: n["note_title"].lower())
+    
+    # Generate TradeUX Hub
+    tradeux_lines = [
+        "---",
+        "type: hub",
+        "tags:",
+        "  - project/tradeux",
+        "  - index",
+        "---",
+        "",
+        "# 📈 Projeto TradeUX",
+        "",
+        "Este é o núcleo central do projeto **TradeUX**, que reúne todas as sessões de desenvolvimento e transcrições relacionadas.",
+        "",
+        "> [!info] Métricas",
+        f"> * **Total de Sessões**: {len(tradeux_sessions)}",
+        "",
+        "---",
+        "",
+        "## 📂 Sessões do Projeto",
+        ""
+    ]
+    for note in tradeux_sessions:
+        tradeux_lines.append(f"*   `[[{note['note_title']}]]` ({note['folder']}) - *{note['date'] or 'Sem data'}*")
+        
+    tradeux_content = "\n".join(tradeux_lines) + "\n"
+    tradeux_path = os.path.join(VAULT_DIR, "TradeUX.md")
+    
+    # Generate MCORCH Hub
+    mcorch_lines = [
+        "---",
+        "type: hub",
+        "tags:",
+        "  - project/mcorch",
+        "  - index",
+        "---",
+        "",
+        "# 🌟 Projeto MCORCH (Constellation Orchestra)",
+        "",
+        "Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.",
+        "",
+        "> [!info] Métricas",
+        f"> * **Total de Processos**: {len(mcorch_processes)}",
+        f"> * **Total de Sessões**: {len(mcorch_sessions)}",
+        "",
+        "---",
+        "",
+        "## ⚙️ Processos do MCORCH",
+        "Especificações, fluxos de decisão e manuais de processos do ecossistema.",
+        ""
+    ]
+    for note in mcorch_processes:
+        mcorch_lines.append(f"*   `[[{note['note_title']}]]` - *Processo*")
+        
+    mcorch_lines.extend([
+        "",
+        "---",
+        "",
+        "## 📂 Sessões do Projeto",
+        ""
+    ])
+    for note in mcorch_sessions:
+        mcorch_lines.append(f"*   `[[{note['note_title']}]]` ({note['folder']}) - *{note['date'] or 'Sem data'}*")
+        
+    mcorch_content = "\n".join(mcorch_lines) + "\n"
+    mcorch_path = os.path.join(VAULT_DIR, "MCORCH.md")
+    
+    if not dry_run:
+        try:
+            with open(tradeux_path, "w", encoding="utf-8") as f:
+                f.write(tradeux_content)
+            print(f"TradeUX Hub written successfully to {tradeux_path}")
+        except Exception as e:
+            print(f"Error writing TradeUX Hub: {e}")
+            
+        try:
+            with open(mcorch_path, "w", encoding="utf-8") as f:
+                f.write(mcorch_content)
+            print(f"MCORCH Hub written successfully to {mcorch_path}")
+        except Exception as e:
+            print(f"Error writing MCORCH Hub: {e}")
+    else:
+        print(f"[Dry-Run] Would write TradeUX Hub containing {len(tradeux_sessions)} links to {tradeux_path}")
+        print(f"[Dry-Run] Would write MCORCH Hub containing {len(mcorch_sessions) + len(mcorch_processes)} links to {mcorch_path}")
+
 def generate_moc(note_catalog, dry_run=True):
     print(f"\n--- Generating Sessions MOC (Dry-run: {dry_run}) ---")
     
+    # Filter out process documents and the hub notes from the MOC lists
+    session_notes = [n for n in note_catalog if n["folder"] in ["ClaudeSessions", "GeminiSessions"] and n["note_title"] not in ["TradeUX", "MCORCH"]]
+    
     # Sort notes chronologically by date descending
-    # Notes without a valid date prefix will go to the end
     def get_sort_key(note):
         date_val = note["date"]
         title_val = note["note_title"]
@@ -315,7 +467,7 @@ def generate_moc(note_catalog, dry_run=True):
             return (1, date_val, title_val)
         return (0, "", title_val)
         
-    sorted_notes = sorted(note_catalog, key=get_sort_key, reverse=True)
+    sorted_notes = sorted(session_notes, key=get_sort_key, reverse=True)
     
     # Group notes by Year and Month
     chronological_groups = {}
@@ -386,10 +538,14 @@ def generate_moc(note_catalog, dry_run=True):
     moc_lines.append("")
     moc_lines.append("Este MOC atua como o diretório central do vault, organizando automaticamente todos os registros e transcrições de sessões de pair-programming com Claude e Gemini.")
     moc_lines.append("")
+    moc_lines.append("> [!info] Projetos & Hubs Principais")
+    moc_lines.append("> * `[[MCORCH]]` - Núcleo central do projeto **MCORCH (Constellation Orchestra)** e seus Processos.")
+    moc_lines.append("> * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.")
+    moc_lines.append("")
     moc_lines.append("> [!info] Métricas do Grafo")
-    moc_lines.append(f"> * **Total de Sessões Registradas**: {len(note_catalog)}")
-    moc_lines.append(f"> * **Sessões do Claude**: {len([n for n in note_catalog if n['folder'] == 'ClaudeSessions'])}")
-    moc_lines.append(f"> * **Sessões do Gemini**: {len([n for n in note_catalog if n['folder'] == 'GeminiSessions'])}")
+    moc_lines.append(f"> * **Total de Sessões Registradas**: {len(session_notes)}")
+    moc_lines.append(f"> * **Sessões do Claude**: {len([n for n in session_notes if n['folder'] == 'ClaudeSessions'])}")
+    moc_lines.append(f"> * **Sessões do Gemini**: {len([n for n in session_notes if n['folder'] == 'GeminiSessions'])}")
     moc_lines.append("")
     moc_lines.append("---")
     moc_lines.append("")
@@ -401,7 +557,6 @@ def generate_moc(note_catalog, dry_run=True):
             continue
         moc_lines.append(f"### {category}")
         for note in notes[:12]: # Limit to top 12 to avoid overwhelming MOC page size
-            folder_prefix = "ClaudeSessions" if note["folder"] == "ClaudeSessions" else "GeminiSessions"
             moc_lines.append(f"*   `[[{note['note_title']}]]` - *{note['date'] or 'Sem data'}*")
         if len(notes) > 12:
             moc_lines.append(f"*   *... e mais {len(notes) - 12} sessões nessa categoria.*")
@@ -431,7 +586,7 @@ def generate_moc(note_catalog, dry_run=True):
         except Exception as e:
             print(f"Error writing MOC file: {e}")
     else:
-        print(f"[Dry-Run] Would write MOC containing {len(note_catalog)} links to {MOC_PATH}")
+        print(f"[Dry-Run] Would write MOC containing {len(session_notes)} links to {MOC_PATH}")
 
 if __name__ == "__main__":
     dry_run = True
@@ -440,4 +595,5 @@ if __name__ == "__main__":
         
     notes = collect_notes()
     run_linking(notes, dry_run=dry_run)
+    generate_project_hubs(notes, dry_run=dry_run)
     generate_moc(notes, dry_run=dry_run)

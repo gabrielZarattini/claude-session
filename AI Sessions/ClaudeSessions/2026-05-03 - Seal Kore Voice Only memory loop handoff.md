@@ -3444,6 +3444,11 @@ Embedded ✅ 768 dims. **Phase 6 — Push**
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-03 - List configured agents in project]]

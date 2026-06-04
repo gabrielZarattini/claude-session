@@ -1541,6 +1541,11 @@ Este arquivo serve como um "manual de instruções" para o agente quando ele ini
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-26 - Você é especialista em UX UI...]]

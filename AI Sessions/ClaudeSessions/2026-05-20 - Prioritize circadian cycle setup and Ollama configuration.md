@@ -1006,7 +1006,7 @@ The Read tool isn't honoring `limit` on these large files. Falling back to `sed`
 > | Commit | Conteúdo |
 > |--------|----------|
 > | `6df03bb` | docs(bok): emit mcorch-qa-healing BoK suite 9/9 |
-> | `1216715` | docs(process): SOP handoff-material-proof-audit |
+> | `1216715` | docs(process): SOP [[handoff-material-proof-audit|handoff-material-proof-audit]] |
 > | `a0f7ad8` | feat(qa): mcorch-qa-healing material-proof audit engine |
 > | `4dd5b7b` | test(qa): vitest coverage for the audit engine |
 > | `77f575f` | feat(handoff): wire Phase 5c material proof gate |
@@ -10179,6 +10179,11 @@ Sessão selada, Sovereign. Os dois entregáveis — a suíte BoK `canvas-design`
 Um lembrete honesto: tudo foi deployado e verificado *materialmente* (migration aplicada, Edge Function no ar, build feito), mas a verificação de *runtime* — você logar como admin e exercitar as ações — é o seu passo de QA. Se algo na UI não se comportar, é só me chamar.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

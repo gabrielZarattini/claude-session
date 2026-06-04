@@ -3599,7 +3599,7 @@ Refactor concluído sem TS errors. Vou atualizar tasks e escrever os tests.
 > a89daec
 > docs: seal v6.10.0 — close audit gaps + README badges + CEA SOP
 > mcorch-qa-healing Phase 5c audit detected ausencia da SOP referenciada
-> no HANDOFF (constellation-economic-activation.md). Retroativa criada,
+> no HANDOFF ([[constellation-economic-activation|constellation-economic-activation]].md). Retroativa criada,
 > HANDOFF Survival Laws atualizado (Lei 2 + Lei 1 5c agora full ✅),
 > README com release notes v6.10.0 e 5 novos badges.
 > 
@@ -9196,6 +9196,11 @@ fd21a31 docs(claude): register _shared/auth + _shared/user-keys + 2 SOPs
 ```
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

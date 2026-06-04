@@ -549,7 +549,7 @@ Pre-flight is materially clean: worktree clean, HEAD == origin/main (0/0), **TSC
 > 232	### Survival Laws Self-audit
 > 233	```
 > 234	Law 1 (Materiality): ✅ toda claim provada NESTE turno — meta_config (count */0 + admin API 1==1), MVP-2 (db push Finished + REST schema + 23503/42501/201 + cleanup REST), OTD (6/6 vitest + 11× Deployed + insert 201 + Gemini 200), lead-score (smoke E2E 200 + REST score/event/balance + zero-resíduo), calibração (mcoin_transactions REST). /security-review por subagente INDEPENDENTE. Fase 5c executada abaixo. Zero fabricação.
-> 235	Law 2 (Process): ✅ BoK data-model patcheado ANTES da migration MVP-2; SOP llm-cascading-fallback.md honrado; campaign-run NÃO improvisada (ambiguidade financeira → decisão Sovereign).
+> 235	Law 2 (Process): ✅ BoK data-model patcheado ANTES da migration MVP-2; SOP [[llm-cascading-fallback|llm-cascading-fallback]].md honrado; campaign-run NÃO improvisada (ambiguidade financeira → decisão Sovereign).
 > 236	Law 3 (Pruning): ✅ 1 poda explícita após MVP-2+OTD; sessão SELADA por decisão consciente em vez de forçar campaign-run com contexto saturado.
 > 237	Law 4 (ORO): ✅ triplet declarado; toda ação outward (migration, 12 deploys, mesh seals) com GO Sovereign.
 > 238	```
@@ -712,7 +712,7 @@ Pre-flight is materially clean: worktree clean, HEAD == origin/main (0/0), **TSC
 > 395	### Survival Laws Self-audit
 > 396	```
 > 397	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API — gap original já-fechado (pg_get_functiondef + 5/5 comportamental), suíte RPC 5/5 rolled-back, preview→apply da limpeza (12→0 / 3 vivos), pós-apply (funções+grants+tracking), build+bundle servido com as RPCs. Zero fabricação. 1 armadilha divulgada (urllib→Cloudflare 1010 → troquei p/ curl). Fase 5c executada abaixo. NÃO criei migration redundante p/ o gap já fechado (seria fabricar trabalho).
-> 398	Law 2 (Process): ✅ SOP credential-disconnect-clear.md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
+> 398	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
 > 399	Law 3 (Pruning): investigação focada; outputs consumidos, referência por path/UUID/migration/commit.
 > 400	Law 4 (ORO): ✅ declarado no início da Parte B; "faça os dois" = autorização autônoma do Sovereign.
 > 401	```
@@ -771,7 +771,7 @@ Pre-flight is materially clean: worktree clean, HEAD == origin/main (0/0), **TSC
 > 454	### Survival Laws Self-audit
 > 455	```
 > 456	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API, tudo rolled-back — 23505 reproduzido + before/after de re-save (user_api_keys + social_accounts) + lockdown do helper + injeção antes/depois (42501) + metadados pós-apply + cleanliness. Zero fabricação. Achado HIGH do /security-review REFUTADO com teste material (PK fail-closed + md5 da vítima inalterado), não com argumento. 1 armadilha de ambiente divulgada (`UID` readonly do bash → `$U`). Fase 5c executada abaixo.
-> 457	Law 2 (Process): ✅ SOP credential-disconnect-clear.md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
+> 457	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
 > 458	Law 3 (Pruning): investigação longa (probes C1-C4, V1-V2, before/after meta+social) — outputs consumidos, referência por path/UUID/migration.
 > 459	Law 4 (ORO): ✅ declarado no início; "analise tudo e faça" = autorização autônoma do Sovereign p/ resolver em-sessão + selar.
 > 460	```
@@ -3542,7 +3542,7 @@ Updating the audit report with the remediation outcome (it currently reads as pr
 
 ## 🤖 Claude *(23:17:14)*
 
-Wiring the anticorpo into CLAUDE.md Key Files Reference (anchored next to the related orchestrate-async-pipeline SOP — same incident family):
+Wiring the anticorpo into CLAUDE.md Key Files Reference (anchored next to the related [[orchestrate-async-pipeline|orchestrate-async-pipeline]] SOP — same incident family):
 
 ## 🤖 Claude *(23:17:21)*
 
@@ -7143,6 +7143,11 @@ Running both smokes — USER path (regression on the refactored auth) + SERVICE/
 > ```
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

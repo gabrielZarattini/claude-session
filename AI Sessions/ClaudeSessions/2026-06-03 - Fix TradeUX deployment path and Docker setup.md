@@ -9614,6 +9614,11 @@ Sessão selada — zero estado órfão. O `HANDOFF.md` registra como **primeira 
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[TradeUX]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]

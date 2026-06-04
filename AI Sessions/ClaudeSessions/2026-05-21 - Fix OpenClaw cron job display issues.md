@@ -1132,7 +1132,7 @@ Newest seal is the **Admin Panel + canvas-design BoK** record (v6.7.0, 2026-05-2
 > 169	| Commit | Conteúdo |
 > 170	|--------|----------|
 > 171	| `6df03bb` | docs(bok): emit mcorch-qa-healing BoK suite 9/9 |
-> 172	| `1216715` | docs(process): SOP handoff-material-proof-audit |
+> 172	| `1216715` | docs(process): SOP [[handoff-material-proof-audit|handoff-material-proof-audit]] |
 > 173	| `a0f7ad8` | feat(qa): mcorch-qa-healing material-proof audit engine |
 > 174	| `4dd5b7b` | test(qa): vitest coverage for the audit engine |
 > 175	| `77f575f` | feat(handoff): wire Phase 5c material proof gate |
@@ -1741,7 +1741,7 @@ Key findings already. Alert 1 needs verification — checking the OpenClaw cron 
 > 37	  "timestamp_iso": "$(date -Is)",
 > 38	  "log_tail": $(tail -50 "$LOG" 2>/dev/null | jq -Rs . || echo '""'),
 > 39	  "severity": "P2",
-> 40	  "playbook_hint": "see docs/processes/nightly-circadian-cycle.md Recovery path"
+> 40	  "playbook_hint": "see docs/processes/[[nightly-circadian-cycle|nightly-circadian-cycle]].md Recovery path"
 > 41	}
 > 42	JSON
 > 43	  curl -sS -m 5 -X POST "$GATEWAY_URL" \
@@ -1886,7 +1886,7 @@ Key findings already. Alert 1 needs verification — checking the OpenClaw cron 
 > 36	  "timestamp_iso": "$(date -Is)",
 > 37	  "log_tail": $(tail -50 "$LOG" 2>/dev/null | jq -Rs . || echo '""'),
 > 38	  "severity": "P1",
-> 39	  "playbook_hint": "see docs/processes/nightly-circadian-cycle.md Recovery path"
+> 39	  "playbook_hint": "see docs/processes/[[nightly-circadian-cycle|nightly-circadian-cycle]].md Recovery path"
 > 40	}
 > 41	JSON
 > 42	  curl -sS -m 5 -X POST "$GATEWAY_URL" \
@@ -2033,7 +2033,7 @@ Key findings already. Alert 1 needs verification — checking the OpenClaw cron 
 > 34	  "timestamp_iso": "$(date -Is)",
 > 35	  "log_tail": $(tail -50 "$LOG" 2>/dev/null | jq -Rs . || echo '""'),
 > 36	  "severity": "P2",
-> 37	  "playbook_hint": "see docs/processes/nightly-circadian-cycle.md Recovery path"
+> 37	  "playbook_hint": "see docs/processes/[[nightly-circadian-cycle|nightly-circadian-cycle]].md Recovery path"
 > 38	}
 > 39	JSON
 > 40	  curl -sS -m 5 -X POST "$GATEWAY_URL" \
@@ -2192,8 +2192,8 @@ Key findings already. Alert 1 needs verification — checking the OpenClaw cron 
 > 458	
 > 459	| Commit | Conteúdo |
 > 460	|--------|----------|
-> 461	| `97cdf83` | docs(processes): nightly-circadian-cycle SOP — SSP-01 OE03 (Lei 2) |
-> 462	| `436b4e2` | docs(processes): canvas-daily-cap-handling SOP — SSP-01 OE04 (Lei 2) |
+> 461	| `97cdf83` | docs(processes): [[nightly-circadian-cycle|nightly-circadian-cycle]] SOP — SSP-01 OE03 (Lei 2) |
+> 462	| `436b4e2` | docs(processes): [[canvas-daily-cap-handling|canvas-daily-cap-handling]] SOP — SSP-01 OE04 (Lei 2) |
 > 463	| `ff03bfd` | feat(canvas): daily cap 100 mcoCoins/24h + action-tagged deduct — SSP-01 OE04 |
 > 464	| `23c916a` | feat(dashboard): low-balance toast + amber pill — SSP-01 OE04 |
 > 465	| `3bd9288` | feat(cron): nightly-stage1 light-sleep — SSP-01 OE03 |
@@ -8788,6 +8788,11 @@ Diretor — este segundo parecer é **sólido**, diferente do primeiro. Ele larg
 **Confirma o mínimo viável** — Gemini Flash como `primary` dos 7 — que eu executo agora (`openclaw.json` + `pm2 restart maestro`)? Os follow-ups encadeamos em seguida.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

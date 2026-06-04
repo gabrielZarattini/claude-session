@@ -158,6 +158,11 @@ Relatório de auditoria e diagnóstico concluído com sucesso. Identifiquei um e
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-04-25 - meu banco de dados dos wordpress...]]

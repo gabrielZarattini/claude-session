@@ -8747,6 +8747,11 @@ A interrupção aconteceu *depois* do push completar. Nada se perdeu — o `/han
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-08 - Deploy LGPD compliance and fix chunking alerts]]

@@ -1507,6 +1507,11 @@ Two things are genuinely yours to decide before I build — and I won't guess on
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[TradeUX]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-02 - Finalize visual design and unblock next phases]]

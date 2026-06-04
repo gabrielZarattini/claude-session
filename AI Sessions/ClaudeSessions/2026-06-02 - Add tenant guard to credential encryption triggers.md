@@ -3810,7 +3810,7 @@ Pre-flight limpo: working tree clean (tudo já commitado em `76bb9e3`/`610e1f3`)
 > 60	### Survival Laws Self-audit
 > 61	```
 > 62	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API, tudo rolled-back — 23505 reproduzido + before/after de re-save (user_api_keys + social_accounts) + lockdown do helper + injeção antes/depois (42501) + metadados pós-apply + cleanliness. Zero fabricação. Achado HIGH do /security-review REFUTADO com teste material (PK fail-closed + md5 da vítima inalterado), não com argumento. 1 armadilha de ambiente divulgada (`UID` readonly do bash → `$U`). Fase 5c executada abaixo.
-> 63	Law 2 (Process): ✅ SOP credential-disconnect-clear.md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
+> 63	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md atualizado (débito → Resolved + bloco de isolamento de tenant) antes do commit; CLAUDE.md Key Files. Bug fix em features documentadas → sem BoK gate.
 > 64	Law 3 (Pruning): investigação longa (probes C1-C4, V1-V2, before/after meta+social) — outputs consumidos, referência por path/UUID/migration.
 > 65	Law 4 (ORO): ✅ declarado no início; "analise tudo e faça" = autorização autônoma do Sovereign p/ resolver em-sessão + selar.
 > 66	```
@@ -5220,6 +5220,11 @@ Tudo pushado — 5 commits, `origin/main` sincronizado (behind 0 · ahead 0). **
 Tudo materialmente provado (Lei 1): suíte RPC 5/5 em `BEGIN…ROLLBACK`, apply atômico verificado em prod, build com o bundle servido contendo as RPCs, e a **Fase 5c retornou `SEAL ALLOWED`** (auditoria mecânica independente, 8 claims, 0 falhas). Remote sincronizado, infra 100% saudável.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

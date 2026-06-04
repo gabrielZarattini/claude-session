@@ -14846,6 +14846,11 @@ Sessão selada. **3 P0 fechadas, ledger canônico ativo, infraestrutura 4.2b pro
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-16 - Coding session initialization]]

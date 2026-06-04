@@ -8552,6 +8552,11 @@ Volta pro ponto exato antes da reconciliação git desta sessão.
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-08 - agent-ae7410c00bb860c8b]]

@@ -3797,6 +3797,11 @@ async function resolveAllManagedDreamingCronStatuses(context: {...}): Promise<Re
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-18 - agent-ae8a83dca2c283076]]

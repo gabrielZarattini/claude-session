@@ -7535,6 +7535,11 @@ E esta sessão aqui já passou pelo ritual completo (8 commits, nó `59f92fe0` e
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Fix tenant isolation in edge functions]]
