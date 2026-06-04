@@ -4285,6 +4285,2863 @@ Running the review — identification sub-task focused on the new ledger-securit
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmed. In `award-mco-coins`, `supabase` is the service_role client (line 11: `createClient(supabaseUrl, serviceRoleKey)`), so the `award_mco_coins` call works post-REVOKE. In `agent-task-execute`, `admin.rpc("deduct_mco_coins", ...)` uses the service_role client → exempt from the new guard, can deduct for arbitrary `user.id`. All legit paths preserved.\n\nI have everything needed to render the verdict. Let me synthesize the analysis.\n\n## Verdict\n\nThe fix is **sound**. I found **no HIGH-confidence newly-introduced exploitable vulnerability** in `supabase/migrations/20260603220000_secure_ledger_rpcs.sql`. The migration correctly closes the minting/drain vectors and preserves every legitimate path. I\'m noting one MEDIUM defense-in-depth inconsistency that is *not* independently exploitable in the current ACL configuration, for completeness.\n\n---\n\n### Analysis against each examined vector\n\n**1. Minting/drain vectors closed (no bypass).**\nPost-fix EXECUTE on `deduct_mco_coins(uuid,numeric,text,jsonb)` is held only by `authenticated` + `service_role` (revoked from PUBLIC, anon). Guard walk-through:\n- `authenticated` user → `auth.role()=\'authenticated\'`, `auth.uid()=<uuid non-null>`. Passing a victim\'s `p_user_id`: `\'authenticated\' <> \'service_role\'` = TRUE **AND** `victim <> self` = TRUE → 42501 (drain blocked). Own id → proceeds (legit self-spend).\n- Negative/zero `p_amount` → Guard 1 (`p_amount <= 0`) raises before any UPDATE, killing the `balance - (-1000)` mint.\n- `service_role` → `\'service_role\' <> \'service_role\'` = FALSE → AND short-circuits → exempt (needed for edge fns).\n- `anon` → REVOKED at PostgREST layer.\n\n`award_mco_coins` and `add_user_score` are fully revoked from PUBLIC/anon/authenticated (service_role only), killing the self-mint (`award`) and score-inflation→coins (`add_user_score`) vectors. Verified these are edge-only: `supabase/functions/award-mco-coins/index.ts:11` and `supabase/functions/autonomic-action/index.ts:16-18` both build **service_role** clients (`SB_SECRET_KEY`).\n\n**2. No missed grantee.** Original live ACL was PUBLIC + anon + authenticated + service_role for all three. The migration REVOKEs `FROM PUBLIC, anon, authenticated` (award/add_user_score) and `FROM PUBLIC, anon` (deduct) — covering every non-service_role grantee. No `GRANT ... TO PUBLIC` and no `ALTER DEFAULT PRIVILEGES` exist anywhere in the migration tree that would re-open a path. No custom Postgres roles are created (`grep CREATE ROLE` → none), so `authenticated`/`anon`/`service_role` are the only relevant grantees.\n\n**3. Signatures match the live overloads exactly.** History: the 2-arg `deduct_mco_coins(uuid,decimal)` was **dropped** in `20260525173500_drop_deduct_mco_coins_overload.sql`; only the 4-arg `(uuid, decimal, text, jsonb)` survives. The migration\'s `numeric` ≡ `decimal` (Postgres aliases), so `CREATE OR REPLACE` replaces the existing function **in place** (no new overload, no orphaned overload left with stale grants). `award_mco_coins(uuid,integer,text,jsonb)` and `add_user_score(uuid,integer)` REVOKE signatures match the live definitions in `20260603210500_harden_definer_search_path.sql`. The explicit `GRANT ... TO authenticated, service_role` after the `CREATE OR REPLACE` correctly re-establishes deduct\'s needed grants (CREATE OR REPLACE preserves grants anyway, but the explicit GRANT is harmless and correct).\n\n**4. Body is verbatim + only the two guards + search_path.** Diffed against the last functional version (`20260526201000_deduct_mco_coins_locking.sql`): the `FOR UPDATE` lock, `GREATEST(0, …)` clamp, `mco_balance >= p_amount` predicate, `NOT FOUND` check, and `-p_amount::integer` ledger insert are byte-identical. Only additions: Guard 1, Guard 2, and `SET search_path TO \'public\'` (which matches the existing `search_path = public` — functionally identical quoting). No behavioral change to the financial logic.\n\n**5. Legit flows preserved.** Client self-spend: `src/lib/billing.ts:41` calls `deduct_mco_coins` with the user\'s own JWT (`authenticated`) and own `userId` → passes Guard 2. Edge fns deducting for arbitrary users (`orchestrate-content`, `canvas-execute`, `campaign-run`, `nurture-dispatch`, `lead-score`, `design-job-enqueue`, `higgsfield-webhook`, `agent-task-execute`) all use an `admin` = service_role client → exempt. No legit path is broken, so no forced fallback to a less-safe path.\n\n**6. No SQL injection / privesc.** No dynamic SQL. `SET search_path TO \'public\'` is locked (the harden-migration standard), so an `authenticated` role cannot shadow `profiles`/`mcoin_transactions` via objects in another schema. SECURITY DEFINER was already present (unchanged).\n\n---\n\n### MEDIUM (informational — not independently exploitable here)\n\n**File:** `supabase/migrations/20260603220000_secure_ledger_rpcs.sql:50`\n**Category:** NULL-handling inconsistency / defense-in-depth weaker than the codebase standard\n**Description:** Guard 2 uses `auth.role() <> \'service_role\'` (plain `<>`), whereas every sibling tenant guard in this codebase uses the NULL-safe `auth.role() IS DISTINCT FROM \'service_role\'` (e.g. `20260602150000_meta_social_instead_of_tenant_guard.sql:43,79,117,131`). With `<>`, if `auth.role()` were ever NULL, `NULL <> \'service_role\'` = NULL → `NULL AND (…)` = NULL → the `IF` does not fire → guard bypassed.\n**Why it is NOT a HIGH/exploitable finding:** The only caller whose `auth.role()` can be NULL is an unauthenticated/roleless request, which PostgREST executes as the Postgres `anon` role — and `anon` has been **REVOKE**-d from `deduct`. To obtain the `authenticated` Postgres role (required for EXECUTE), the request\'s JWT must carry `role: authenticated`, which makes `auth.role()` return `\'authenticated\'` (non-NULL) and — for any GoTrue-issued token — a non-NULL `sub`/`auth.uid()`. So the NULL path is backstopped by the REVOKE; there is no role that simultaneously (a) holds EXECUTE, (b) yields NULL `auth.role()`, and (c) yields NULL `auth.uid()`. The migration author explicitly reasoned about the adjacent NULL-uid case in the header comment (lines 25-26).\n**Fix (hardening, low priority):** For consistency with the codebase\'s NULL-safe convention and to remove the implicit dependency on the anon REVOKE, change to:\n```sql\nIF auth.role() IS DISTINCT FROM \'service_role\' AND p_user_id IS DISTINCT FROM auth.uid() THEN\n```\nUsing `IS DISTINCT FROM` on the `p_user_id`/`auth.uid()` comparison too would additionally make a hypothetical NULL-`uid` authenticated token fail **closed** (NULL `uid` ≠ any real `p_user_id` → guard fires) instead of relying on token well-formedness.\n\n---\n\n### Files reviewed (all absolute)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603220000_secure_ledger_rpcs.sql` (target)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260526201000_deduct_mco_coins_locking.sql` (verbatim-body baseline)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260525173500_drop_deduct_mco_coins_overload.sql` (overload history — confirms no stray 2-arg)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603210500_harden_definer_search_path.sql` (live award/add_user_score signatures)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602150000_meta_social_instead_of_tenant_guard.sql` (codebase `auth.role()` convention)\n- `/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts`, plus edge call sites under `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/` (legit-path confirmation)\n\nNet: the fix is correct and safe to ship. The single MEDIUM is a hardening nit (align `<>` → `IS DISTINCT FROM` with the rest of the codebase); it does not open an exploitable hole given the accompanying REVOKE from anon.'}, {'type': 'text', 'text': "agentId: a9d89cdc5294a9935 (use SendMessage with to: 'a9d89cdc5294a9935' to continue this agent)\n<usage>subagent_tokens: 76434\ntool_uses: 19\nduration_ms: 147477</usage>"}]
+> ```
+
+## 🤖 Claude *(23:31:37)*
+
+
+## 🤖 Claude *(23:31:49)*
+
+# Security Review — `20260603220000_secure_ledger_rpcs.sql` (the P0 fix)
+
+**Verdict: ✅ Sound. No HIGH/MEDIUM exploitable vulnerability introduced.** No candidate reached the confidence ≥ 8 exploitable bar, so no false-positive sub-tasks were required. The migration correctly closes all three minting/drain vectors and preserves every legitimate path.
+
+## Verification
+- **Vectors closed:** `award_mco_coins` + `add_user_score` revoked from PUBLIC/anon/authenticated (service_role only; both are edge-only — `award-mco-coins` & `autonomic-action` build service_role clients). `deduct_mco_coins`: Guard 1 (`p_amount<=0`) kills the negative-amount mint before any UPDATE; Guard 2 blocks cross-tenant drain (`authenticated` self-only); `anon`/PUBLIC revoked. service_role short-circuits exempt.
+- **No missed grantee:** original ACL was PUBLIC+anon+authenticated+service_role; all non-service_role grantees revoked. No `GRANT TO PUBLIC` / `ALTER DEFAULT PRIVILEGES` / custom roles re-open a path.
+- **Signatures exact:** the 2-arg `deduct` overload was dropped in `20260525173500`; only the 4-arg survives (`numeric`≡`decimal`) → `CREATE OR REPLACE` replaces in place, no orphan overload with stale grants.
+- **Body verbatim:** diffed against `20260526201000` — `FOR UPDATE` lock, `GREATEST` clamp, `>=` predicate, `NOT FOUND`, ledger insert byte-identical; only the 2 guards + `search_path` added.
+- **Legit flows intact:** client self-spend (`billing.ts`, authenticated, own id) passes Guard 2; all edge fns deduct via service_role → exempt. No forced fallback.
+- No dynamic SQL; locked `search_path` blocks shadowing; SECURITY DEFINER unchanged.
+
+## Hardening recommendation (adopting — not an exploitable finding)
+`auth.role() <> 'service_role'` → **`auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid()`** to match the codebase's NULL-safe convention (`20260602150000_meta_social_instead_of_tenant_guard.sql`) and fail-closed on a hypothetical NULL role/uid. Not independently exploitable (anon is revoked; authenticated always carries non-null role+uid), but free and consistent — I'll apply it before shipping.
+
+---
+
+Review clean. Adopting the NULL-safe hardening (the codebase standard `IS DISTINCT FROM`) before apply — remediate, don't argue away:
+
+## 🤖 Claude *(23:31:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603220000_secure_ledger_rpcs.sql",
+  "old_string": "  -- Guard 2: a non-service_role caller may only deduct from its OWN profile (blocks cross-tenant drain).\n  IF auth.role() <> 'service_role' AND p_user_id <> auth.uid() THEN\n    RAISE EXCEPTION 'cannot deduct mcoCoins for another user' USING ERRCODE = '42501';\n  END IF;",
+  "new_string": "  -- Guard 2: a non-service_role caller may only deduct from its OWN profile (blocks cross-tenant drain).\n  -- NULL-safe `IS DISTINCT FROM` (codebase standard \u2014 see 20260602150000) so a NULL role/uid fails CLOSED.\n  IF auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid() THEN\n    RAISE EXCEPTION 'cannot deduct mcoCoins for another user' USING ERRCODE = '42501';\n  END IF;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603220000_secure_ledger_rpcs.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:55)*
+
+
+## 🤖 Claude *(23:31:55)*
+
+Applying the ledger-security migration:
+
+## 🤖 Claude *(23:31:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"y\" | timeout 150 npx supabase db push --linked 2>&1 | tail -12\necho \"--- exit: ${PIPESTATUS[1]} ---\"",
+  "description": "Apply ledger security migration to remote"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260603220000_secure_ledger_rpcs.sql
+> 
+>  [Y/n] y
+> Applying migration 20260603220000_secure_ledger_rpcs.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.104.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> --- exit: 0 ---
+> ```
+
+## 🤖 Claude *(23:32:44)*
+
+
+## 🤖 Claude *(23:32:45)*
+
+**Applied — exit 0.** Now the material verification gate. First the definitive proofs — post-fix ACLs (PostgREST enforces EXECUTE grants) + the deduct guards in the live body:
+
+## 🤖 Claude *(23:32:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ACL post-fix (anon/authenticated must be GONE from award+add_user_score; deduct keeps authenticated only) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[] | \"  \"+(.proname|.[0:20])+\"  \u2192  \"+.acl'\nSELECT p.proname, COALESCE(array_to_string(p.proacl::text[],' | '),'(default PUBLIC)') AS acl\nFROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\nWHERE n.nspname='public' AND p.proname IN ('award_mco_coins','add_user_score','deduct_mco_coins')\nORDER BY p.proname;\nSQL\necho \"\"\necho \"=== deduct_mco_coins live body \u2014 both guards present? ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] | \"  guard1_positive: \"+.g1+\"   guard2_tenant_isdistinct: \"+.g2'\nSELECT (prosrc ILIKE '%deve ser positivo%')::text AS g1,\n       (prosrc ILIKE '%IS DISTINCT FROM%' AND prosrc ILIKE '%another user%')::text AS g2\nFROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\nWHERE n.nspname='public' AND p.proname='deduct_mco_coins';\nSQL",
+  "description": "Post-fix ACL + deduct guard body verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ACL post-fix (anon/authenticated must be GONE from award+add_user_score; deduct keeps authenticated only) ===
+>   add_user_score  →  postgres=X/postgres | service_role=X/postgres
+>   award_mco_coins  →  postgres=X/postgres | service_role=X/postgres
+>   deduct_mco_coins  →  postgres=X/postgres | authenticated=X/postgres | service_role=X/postgres
+> 
+> === deduct_mco_coins live body — both guards present? ===
+>   guard1_positive: true   guard2_tenant_isdistinct: true
+> ```
+
+## 🤖 Claude *(23:33:39)*
+
+
+## 🤖 Claude *(23:33:42)*
+
+ACL is exactly right post-fix — `award_mco_coins` & `add_user_score` now **service_role only** (anon/authenticated/PUBLIC removed → unreachable via PostgREST), `deduct_mco_coins` keeps `authenticated` (legit client self-spend) but dropped anon/PUBLIC. Both deduct guards live. That's definitive (catalog = ground truth; PostgREST enforces EXECUTE grants).
+
+Behavioral bonus — simulating an `authenticated` caller to prove the guards actually fire at runtime (using non-existent UUIDs so no branch can mutate). First confirming the role-simulation works in one transaction:
+
+## 🤖 Claude *(23:33:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== role-sim probe (does SET LOCAL ROLE + jwt GUC persist across the statement body?) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] // .'\nSELECT set_config('request.jwt.claims','{\"sub\":\"11111111-1111-1111-1111-111111111111\",\"role\":\"authenticated\"}', true);\nSET LOCAL ROLE authenticated;\nSELECT auth.role() AS jwt_role, auth.uid()::text AS jwt_uid, current_user::text AS db_role;\nSQL",
+  "description": "Probe whether role simulation persists in one API call"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === role-sim probe (does SET LOCAL ROLE + jwt GUC persist across the statement body?) ===
+> {
+>   "jwt_role": "authenticated",
+>   "jwt_uid": "11111111-1111-1111-1111-111111111111",
+>   "db_role": "authenticated"
+> }
+> ```
+
+## 🤖 Claude *(23:33:52)*
+
+
+## 🤖 Claude *(23:33:53)*
+
+Role-simulation works (`db_role=authenticated`, jwt claims applied). Now the three blocked-path proofs under a simulated authenticated caller — all must error (non-existent UUIDs, so no branch can mutate):
+
+## 🤖 Claude *(23:34:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== A \u00b7 Guard 1 (negative amount = mint attempt) as authenticated \u2192 must be blocked ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.message // (.[0]|tostring) // \"NO ERROR (VULN!)\"' | sed 's/^/  \u2192 /'\nSELECT set_config('request.jwt.claims','{\"sub\":\"11111111-1111-1111-1111-111111111111\",\"role\":\"authenticated\"}', true);\nSET LOCAL ROLE authenticated;\nSELECT public.deduct_mco_coins('11111111-1111-1111-1111-111111111111'::uuid, -1000, 'exploit-negative-mint');\nSQL\necho \"\"\necho \"=== B \u00b7 Guard 2 (deduct from ANOTHER user = drain attempt) as authenticated \u2192 must be blocked ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.message // (.[0]|tostring) // \"NO ERROR (VULN!)\"' | sed 's/^/  \u2192 /'\nSELECT set_config('request.jwt.claims','{\"sub\":\"11111111-1111-1111-1111-111111111111\",\"role\":\"authenticated\"}', true);\nSET LOCAL ROLE authenticated;\nSELECT public.deduct_mco_coins('22222222-2222-2222-2222-222222222222'::uuid, 100, 'exploit-cross-tenant-drain');\nSQL\necho \"\"\necho \"=== C \u00b7 award_mco_coins (mint attempt) as authenticated \u2192 must be permission-denied ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.message // (.[0]|tostring) // \"NO ERROR (VULN!)\"' | sed 's/^/  \u2192 /'\nSELECT set_config('request.jwt.claims','{\"sub\":\"11111111-1111-1111-1111-111111111111\",\"role\":\"authenticated\"}', true);\nSET LOCAL ROLE authenticated;\nSELECT public.award_mco_coins('11111111-1111-1111-1111-111111111111'::uuid, 1000, 'exploit-self-mint');\nSQL",
+  "description": "Behavioral exploit-blocked proofs under simulated authenticated role"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A · Guard 1 (negative amount = mint attempt) as authenticated → must be blocked ===
+>   → Failed to run sql query: ERROR:  P0001: Valor de débito de mcoCoins deve ser positivo
+>   → CONTEXT:  PL/pgSQL function deduct_mco_coins(uuid,numeric,text,jsonb) line 5 at RAISE
+>   → 
+> 
+> === B · Guard 2 (deduct from ANOTHER user = drain attempt) as authenticated → must be blocked ===
+>   → Failed to run sql query: ERROR:  42501: cannot deduct mcoCoins for another user
+>   → CONTEXT:  PL/pgSQL function deduct_mco_coins(uuid,numeric,text,jsonb) line 11 at RAISE
+>   → 
+> 
+> === C · award_mco_coins (mint attempt) as authenticated → must be permission-denied ===
+>   → Failed to run sql query: ERROR:  42501: permission denied for function award_mco_coins
+>   →
+> ```
+
+## 🤖 Claude *(23:34:28)*
+
+
+## 🤖 Claude *(23:34:31)*
+
+**All three exploit paths now BLOCKED at runtime** — proven by actually attempting them under a simulated authenticated caller (non-existent UUIDs, zero mutation):
+
+| Exploit attempt | Result (live, as `authenticated`) |
+|---|---|
+| `deduct(self, **-1000**)` (negative-mint) | ❌ `P0001: Valor de débito de mcoCoins deve ser positivo` (Guard 1) |
+| `deduct(**other-user**, 100)` (drain) | ❌ `42501: cannot deduct mcoCoins for another user` (Guard 2) |
+| `award(self, 1000)` (self-mint) | ❌ `42501: permission denied for function award_mco_coins` (REVOKE) |
+
+The P0 is closed and verified by exploit-attempt, the strongest proof. Recording it in the audit report + committing:
+
+## 🤖 Claude *(23:34:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/drift-audit-2026-06-03.md",
+  "old_string": "**Bonus observation (recorded, no action needed):** `award_mco_coins` live body already carried an `IS NULL` guard\nabsent from its original migration `20260508100000` \u2014 a *prior* benign live-vs-migration micro-drift. This migration\ncodifies the live (safer) version, so it is now reconciled too.",
+  "new_string": "**Bonus observation (recorded, no action needed):** `award_mco_coins` live body already carried an `IS NULL` guard\nabsent from its original migration `20260508100000` \u2014 a *prior* benign live-vs-migration micro-drift. This migration\ncodifies the live (safer) version, so it is now reconciled too.\n\n---\n\n## \ud83d\udd34 Adjacent P0 discovered during the audit (NOT drift) \u2014 ledger RPC minting [FIXED 2026-06-03, Sovereign GO]\nWhile auditing SECURITY DEFINER functions, found the three mcoCoin ledger RPCs were `EXECUTE`-granted to\n`anon`/`authenticated`/PUBLIC and trusted a caller-supplied `p_user_id` with no `auth.uid()` check \u2014 directly callable\nover PostgREST (bypassing the edge functions + their caps), SECURITY DEFINER (bypassing RLS):\n\n| RPC | Attack | Live before |\n|---|---|---|\n| `award_mco_coins` | `({p_user_id: self, p_amount: 1000})` | mint 1000/call, unlimited |\n| `add_user_score` | `(self, big)` | self-inflate score \u2192 coins (100:1) |\n| `deduct_mco_coins` | `({p_amount: -1000})` \u2192 `balance-(-1000)` = mint; `({p_user_id: victim})` | mint via negative + drain others |\n\nPre-existing (not introduced by F1/F2/F3; `CREATE OR REPLACE` preserves ACL). Same exposure model the team's own\n`async_orchestrate_step` fix closed by REVOKE. **Fix** \u2014 migration `20260603220000_secure_ledger_rpcs.sql`\n(`/security-review` clean):\n- `REVOKE` `award_mco_coins` + `add_user_score` from `public/anon/authenticated` (edge-only \u2014 called via service_role); keep service_role.\n- `deduct_mco_coins`: keep `authenticated` (client self-spend) + guards \u2014 `p_amount<=0 \u2192 error`; `auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid() \u2192 42501`; `anon`/PUBLIC revoked.\n\n**Verified by exploit-attempt (live, simulated `authenticated`, non-existent UUIDs \u2192 zero mutation):**\nnegative-mint \u2192 `P0001 deve ser positivo` \u00b7 cross-tenant drain \u2192 `42501 another user` \u00b7 self-mint via award \u2192\n`42501 permission denied for function award_mco_coins`. ACL post-fix: award/add_user_score = service_role only;\ndeduct = authenticated + service_role."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/drift-audit-2026-06-03.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:34:47)*
+
+
+## 🤖 Claude *(23:34:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260603220000_secure_ledger_rpcs.sql .claude/context/drift-audit-2026-06-03.md\ngit commit -q -F - <<'MSG'\nfix(billing): fecha P0 de cunhagem n\u00e3o-autorizada de mcoCoins nos RPCs do ledger\n\nA auditoria de drift exp\u00f4s (achado adjacente, pr\u00e9-existente) que os 3 RPCs do ledger\ndavam EXECUTE a anon/authenticated/PUBLIC e confiavam num p_user_id arbitr\u00e1rio \u2014\nSECURITY DEFINER, alcan\u00e7\u00e1veis direto via PostgREST, pulando as edge functions e seus caps:\n- award_mco_coins(self, 1000) \u2192 cunhava 1000 mcoCoins por chamada, ilimitado;\n- add_user_score \u2192 auto-inflava score\u2192coins;\n- deduct_mco_coins(-1000) \u2192 cunhava por valor negativo; (v\u00edtima) \u2192 drenava saldo alheio.\n\nFix cir\u00fargico, caminhos leg\u00edtimos preservados:\n- REVOKE award_mco_coins + add_user_score de anon/authenticated/PUBLIC (edge-only,\n  via service_role); deduct revoga anon/PUBLIC e mant\u00e9m authenticated (cliente deduz de si).\n- deduct ganha guarda de sinal (p_amount<=0 \u2192 erro) + posse de tenant NULL-safe\n  (auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid()\n  \u2192 42501); service_role isento.\n\n/security-review limpo. Exploits provados BLOQUEADOS em prod sob role authenticated\nsimulado: negativo\u2192\"deve ser positivo\", cross-user\u219242501, award\u2192permission denied.\nACL p\u00f3s-fix: award/add_user_score = s\u00f3 service_role; deduct = authenticated + service_role.\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- tree ---\"; git status --short || echo clean\necho \"--- ahead of origin ---\"; git rev-list --count origin/main..HEAD 2>/dev/null",
+  "description": "Commit the ledger P0 security fix + doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- commit ---
+> 336e2b8 fix(billing): fecha P0 de cunhagem não-autorizada de mcoCoins nos RPCs do ledger
+> --- tree ---
+> --- ahead of origin ---
+> 3
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_schema_drift_audit.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:35:18)*
+
+
+## 🤖 Claude *(23:35:19)*
+
+Committed `336e2b8`; tree clean; 3 commits ahead of origin. The P0 is closed end-to-end. Let me persist the durable lessons to memory (the reusable tool + the ledger security model that future RPC work must follow):
+
+## 🤖 Claude *(23:35:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_schema_drift_audit.md",
+  "content": "---\nname: project_schema_drift_audit\ndescription: Auditoria de drift deployado\u2194migrations + tool reexecut\u00e1vel + SOP; nasceu do P0 do flywheel (RPC hotfixada sem migration)\nmetadata:\n  type: project\n---\n\n2026-06-03: varredura sist\u00eamica de drift deployado\u2194migrations (motivada pelo post-mortem da v6.25.0 \u2014 `async_orchestrate_step` foi hotfixada em prod **sem migration**, divergindo do version control \u2192 pg_net no-op \u2192 flywheel morto 2 dias). Canal material = Supabase **Management API `/database/query`** (read-only; token em `~/.supabase/access-token`, helper `/tmp/mq.sh`).\n\n**Veredito:** o incidente foi ISOLADO. 9 superf\u00edcies varridas, todas limpas exceto 1 drift real benigno. Achados:\n- **F1 (\u00fanico drift real, benigno):** `rls_auto_enable` (event-trigger `ensure_rls` que liga RLS em toda tabela nova) vivo em prod sem migration nenhuma \u2192 **capturado** verbatim (migration `20260603210000`, idempotente). Desej\u00e1vel (cumpre \"RLS by default\"), s\u00f3 faltava no version control.\n- **F2 (n\u00e3o-drift, d\u00e9bito):** 7 fun\u00e7\u00f5es SECURITY DEFINER sem `search_path` travado \u2192 6 travadas (migration `20260603210500`; `public` p/ data/financeiras, `''` p/ inspect_net_*); a 7\u00aa (trigger morto) dropada.\n- **F3 (n\u00e3o-drift):** `trigger_sync_knowledge_mesh` morto desde a origem (kong:8000 + bearer vazio, GUCs de prod n\u00e3o setadas) \u2192 **dropado** (migration `20260603211000`).\n\n**Anticorpo shipado (Lei 5):** `scripts/qa/audit-schema-drift.sh` (8 checagens: ledger \u00b7 fns/triggers out-of-band \u00b7 contrato RPC \u00b7 verify_jwt edge \u00b7 RLS/search_path advisory; exit 1=drift) + SOP `docs/processes/schema-drift-audit.md`. Rode ap\u00f3s QUALQUER hotfix de prod. Primeira corrida verde 2026-06-03 (96 migrations).\n\n**Regra de governan\u00e7a selada:** todo hotfix de prod vira migration na MESMA sess\u00e3o \u2014 foi a omiss\u00e3o disso (n\u00e3o o rename em si) que deixou o flywheel morto em sil\u00eancio.\n\nA varredura tamb\u00e9m exp\u00f4s um P0 financeiro adjacente \u2014 ver [[reference_ledger_rpc_security]]. Commits: `773dce4` (drift) \u00b7 `eaffec6` (anticorpo) \u00b7 `336e2b8` (P0 ledger). Relacionado: [[project_orchestrate_pipeline_repair]] (o incidente original), [[reference_supabase_keys_migrated]] (o cutover de chaves que causou o hotfix).\n"
+}
+```
+
+## 🤖 Claude *(23:35:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_ledger_rpc_security.md",
+  "content": "---\nname: reference_ledger_rpc_security\ndescription: RPCs do ledger mcoCoins endurecidos (P0 de cunhagem fechado 2026-06-03); regra p/ qualquer SECURITY DEFINER que receba p_user_id\nmetadata:\n  type: reference\n---\n\n**P0 fechado 2026-06-03** (migration `20260603220000_secure_ledger_rpcs.sql`): os 3 RPCs do ledger eram `SECURITY DEFINER` com `EXECUTE` p/ `anon`/`authenticated`/PUBLIC e confiavam num `p_user_id` arbitr\u00e1rio \u2192 qualquer user logado cunhava mcoCoins direto via PostgREST (pulando as edge fns + caps). Vetores: `award_mco_coins(self,1000)` mint ilimitado; `add_user_score` self-inflate; `deduct_mco_coins(-1000)` mint por valor negativo; `deduct(v\u00edtima)` drena saldo alheio.\n\n**Estado correto agora (n\u00e3o re-flagar):**\n- `award_mco_coins` + `add_user_score` = **edge-only** (chamadas por `award-mco-coins`/`autonomic-action` via service_role) \u2192 EXECUTE **s\u00f3 service_role** (anon/authenticated/PUBLIC revogados).\n- `deduct_mco_coins` = cliente chama leg\u00edtimo (`src/lib/billing.ts`, deduz de si) \u2192 EXECUTE **authenticated + service_role**; guardas internas: `p_amount<=0 \u2192 erro` + `auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid() \u2192 42501` (service_role isento; edge fns deduzem p/ qualquer user via service_role).\n\n**REGRA (API Tenancy / seguran\u00e7a):** todo NOVO RPC `SECURITY DEFINER` que receba `p_user_id` (ou qualquer id de tenant) DEVE ou (a) ser edge-only e REVOGAR EXECUTE de anon/authenticated, OU (b) impor posse via `auth.uid()` com exce\u00e7\u00e3o `auth.role() IS DISTINCT FROM 'service_role'` (padr\u00e3o NULL-safe do projeto \u2014 ver migration `20260602150000`). Nunca confiar num `p_user_id` vindo do cliente sem um desses gates. Prova de exploit-bloqueado: simular role authenticated via `set_config('request.jwt.claims',...)` + `SET LOCAL ROLE authenticated` no Management API.\n\nContexto: [[project_schema_drift_audit]] (como foi achado), [[feedback_api_tenancy_per_user]] (mandato per-user).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_ledger_rpc_security.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:35:56)*
+
+
+## 🤖 Claude *(23:35:56)*
+
+Adding the two pointers to the memory index:
+
+## 🤖 Claude *(23:35:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Marketing Hub v2 — módulo agentic (MVP-1..4 LIVE; UI /dashboard/marketing)](project_marketing_hub_v2.md) — v2 que absorve o marketing v1; Lead Core+Campaign Core+lead-score+campaign-run (cascata fiel 10+10×N, dispatch paralelo, email→blocked, smoke 13/13) + MVP-4 UI (LeadBoard + wizard Passos absorvendo v1, UI logada verificada) LIVE; MVP-5 attribution + 1º run pago E2E (gated GO) + OTD-CAMPAIGN-RUN-ASYNC pendentes; ⚠️ campaigns/campaign_metrics JÁ EXISTEM (absorver, não criar) + projects não existe
+> 4	- [Calibração de contexto — usar a janela INTEIRA, selar só a ~95%](feedback_context_budget_calibration.md) — Diretiva Sovereign 2026-06-03: janela 1M (Max), seal custa ~5%; empacotar cada sessão com roadmap e só finalizar com ≤5% de folga (≈95% usado). Selar a 45% é desperdício; poda≠selar; puxar próximo pendente em vez de selar. Recalibrou Lei 3 survival.md.
+> 5	- [Flywheel de conteúdo quebrado em 3 lugares pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) — 2026-06-03: o 1º run pago E2E expôs que o pipeline async estava morto desde 01-06 (runs presos em `running`). #1 orchestrate-step faltava `verify_jwt=false` no config.toml (gateway 401 na chave opaca); #2 RPC `async_orchestrate_step` com param drift `p_service_jwt_legacy`≠`p_service_key` (PGRST202, hotfix em prod sem migration); #3 wp_site_url não-www → 301 → POST vira GET. #1+#2 selados+verificados (auto-chain `done` sem kick), #3 = ação WP do Sovereign. Regra: pg_net→verify_jwt=false sempre; SOP orchestrate-async-pipeline.md
+> ```
+
+## 🤖 Claude *(23:36:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (MVP-1..4 LIVE; UI /dashboard/marketing)](project_marketing_hub_v2.md)",
+  "new_string": "# Memory Index\n\n- [Auditoria de drift deployado\u2194migrations + tool/SOP reexecut\u00e1vel](project_schema_drift_audit.md) \u2014 2026-06-03: varredura p\u00f3s-flywheel (RPC hotfixada sem migration). Incidente ISOLADO; 1 drift real benigno (`rls_auto_enable` capturado) + search_path travado + trigger pg_net morto dropado. Anticorpo `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 1=drift) + SOP. Regra: hotfix de prod vira migration na MESMA sess\u00e3o.\n- [RPCs do ledger mcoCoins endurecidos \u2014 P0 de cunhagem fechado](reference_ledger_rpc_security.md) \u2014 2026-06-03: os 3 RPCs (award/add_user_score/deduct) davam EXECUTE a anon/authenticated + confiavam p_user_id \u2192 mint/drain via PostgREST. Agora: award/add_user_score s\u00f3 service_role; deduct authenticated-self-only (guarda p_amount>0 + auth.uid()). REGRA: todo novo SECURITY DEFINER com p_user_id \u2192 edge-only OU guarda auth.uid().\n- [Marketing Hub v2 \u2014 m\u00f3dulo agentic (MVP-1..4 LIVE; UI /dashboard/marketing)](project_marketing_hub_v2.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:36:42)*
+
+
+## 🤖 Claude *(23:36:44)*
+
+Everything for #1 is committed, verified, and memorized. Before reporting, let me probe **#2** (test-artifact cleanup) read-only so I can present concrete options rather than a blind menu — the 5 `scheduled_posts` parked in 2027:
+
+## 🤖 Claude *(23:36:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scheduled_posts parked in the future (test residue) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  id=\"+(.id|.[0:8])+\" status=\"+(.status//\"-\")+\" when=\"+((.scheduled_for//.scheduled_at//\"-\")|tostring|.[0:16])+\" plat=\"+(.platform//\"-\")+\" campaign=\"+((.campaign_id//\"-\")|tostring|.[0:8])) else (.message//tostring) end'\nSELECT id, status, scheduled_for, platform, campaign_id\nFROM public.scheduled_posts\nWHERE scheduled_for > now()\nORDER BY scheduled_for;\nSQL\necho \"\"\necho \"=== total scheduled_posts + by status ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  \"+(.status//\"null\")+\": \"+(.n|tostring)) else (.message//tostring) end'\nSELECT status, count(*)::text AS n FROM public.scheduled_posts GROUP BY status ORDER BY status;\nSQL",
+  "description": "Probe scheduled_posts test residue (read-only)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scheduled_posts parked in the future (test residue) ===
+> Failed to run sql query: ERROR:  42703: column "scheduled_for" does not exist
+> LINE 1: SELECT id, status, scheduled_for, platform, campaign_id
+>                            ^
+> HINT:  Perhaps you meant to reference the column "scheduled_posts.scheduled_at".
+> 
+> 
+> === total scheduled_posts + by status ===
+>   queued: 5
+> ```
+
+## 🤖 Claude *(23:36:55)*
+
+
+## 🤖 Claude *(23:36:56)*
+
+Column is `scheduled_at`. Exactly 5 posts, all `queued` — matching the flagged residue. Pulling details:
+
+## 🤖 Claude *(23:36:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  id=\"+(.id|tostring|.[0:8])+\"  when=\"+((.scheduled_at//\"-\")|tostring|.[0:16])+\"  plat=\"+(.platform//\"-\")+\"  status=\"+(.status//\"-\")+\"  campaign=\"+((.campaign_id//\"none\")|tostring|.[0:8])) else (.message//tostring) end'\nSELECT id, scheduled_at, platform, status, campaign_id\nFROM public.scheduled_posts ORDER BY scheduled_at;\nSQL",
+  "description": "Show the 5 scheduled_posts details"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   id=78f07d1e  when=2027-06-03 00:00  plat=linkedin  status=queued  campaign=29b85b73
+>   id=bfdfd163  when=2027-06-03 00:00  plat=twitter  status=queued  campaign=29b85b73
+>   id=40d8f10b  when=2027-06-03 00:00  plat=linkedin  status=queued  campaign=none
+>   id=e57b0aff  when=2027-06-03 00:00  plat=linkedin  status=queued  campaign=none
+>   id=65f33e10  when=2027-06-03 00:00  plat=twitter  status=queued  campaign=none
+> ```
+
+## 🤖 Claude *(23:37:28)*
+
+
+## 🤖 Claude *(23:37:39)*
+
+Confirmed — 5 `queued` posts all parked at **2027-06-03** (one year out = test-parking so the auto-publish cron never fires them): 2 from campaign `29b85b73` + 3 adhoc, on LinkedIn/Twitter. Clear test residue from the flywheel-validation runs. "Releasing" them would publish *test content* outward (and Twitter is CreditsDepleted anyway) → deletion is the sane path.
+
+Here's where we stand — a major, fully-verified unit is closed, including a **P0 financial fix** that the drift audit surfaced as a bonus:
+
+## ✅ #1 Drift audit — COMPLETE (+ bonus P0)
+
+| Deliverable | Proof |
+|---|---|
+| **Audit** — 9 surfaces swept (Management API, read-only) | Incident was **isolated**; 1 benign drift + 2 adjacent debts |
+| **F1** capture `rls_auto_enable` | migration `…210000`; fn+event-trigger intact |
+| **F2** lock search_path ×6 (incl. `award_mco_coins`) | `…210500`; **zero** unlocked DEFINER fns remain |
+| **F3** drop dead pg_net trigger | `…211000`; fn+trigger gone |
+| **🔴 P0 bonus** — unauthorized mcoCoin minting in all 3 ledger RPCs | `…220000`; **exploits proven blocked live** (negative→error, cross-tenant→42501, award→permission denied) |
+| Anticorpo | `audit-schema-drift.sh` (8 checks, exit 0) + SOP |
+| Governance | `/security-review` ×2 clean · `db push` ×2 · 3 commits (`773dce4`,`eaffec6`,`336e2b8`) |
+
+The P0 alone was worth the sweep — any logged-in user could mint unlimited mcoCoins via direct PostgREST calls, now closed and verified by actual exploit-attempt.
+
+**Remaining from your priority list:** #2 cleanup (the 5 test posts above — I can delete with your GO — + 2 WP drafts `?p=13/?p=14` which need a WordPress-admin action) · #3 marketing-hub roadmap (FR-MH-009/010/012 · Nurturing follow-up · functionName).
+
+Per the context-budget directive there's still plenty of window. Where to next?
+
+## 🤖 Claude *(23:37:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Pr\u00f3ximo passo? (#1 drift + P0 fechados e commitados)",
+      "header": "Pr\u00f3ximo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Limpar os 5 posts de teste + seguir",
+          "description": "Apago os 5 scheduled_posts parqueados em 2027 (test residue, via Management API com seu GO). Os 2 rascunhos WP ?p=13/?p=14 ficam pra voc\u00ea apagar no WP admin (ou me passa que eu tento via WP API). Depois sigo pro #3."
+        },
+        {
+          "label": "#3 Marketing-hub roadmap",
+          "description": "Pulo a limpeza e ataco o roadmap: FR-MH-009 (Intent+HITL) / FR-MH-010 (AEO) / FR-MH-012 (BYOK) / Nurturing follow-up (entrega externa+cron) / functionName nas 9 fns. (Eu recomendo qual sub-item pelo valor/risco.)"
+        },
+        {
+          "label": "Selar a sess\u00e3o agora (/handoff)",
+          "description": "Fecho a sess\u00e3o com seal + milestone + push. Escolha se sentir que o drift+P0 j\u00e1 \u00e9 entrega suficiente pra esta sess\u00e3o (apesar de ainda haver janela)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Próximo passo? (#1 drift + P0 fechados e commitados)"="Limpar os 5 posts de teste + seguir". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:38:33)*
+
+
+## 🤖 Claude *(23:38:33)*
+
+GO to delete. Deleting the 5 test-parked posts surgically (`scheduled_at > now()` matches exactly those 5; `RETURNING` for material proof):
+
+## 🤖 Claude *(23:38:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== DELETE the 5 future-parked test posts (RETURNING proof) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then \"  deleted \"+(length|tostring)+\" rows:\", (.[]|\"    \"+(.id|tostring|.[0:8])+\"  \"+((.scheduled_at)|tostring|.[0:16])+\"  \"+.platform) else (.message//tostring) end'\nDELETE FROM public.scheduled_posts WHERE scheduled_at > now()\nRETURNING id, scheduled_at, platform;\nSQL\necho \"\"\necho \"=== verify: scheduled_posts remaining ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] | \"  total=\"+.total+\"  future=\"+.future'\nSELECT count(*)::text AS total, count(*) FILTER (WHERE scheduled_at > now())::text AS future\nFROM public.scheduled_posts;\nSQL",
+  "description": "Delete the 5 test scheduled_posts with proof"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DELETE the 5 future-parked test posts (RETURNING proof) ===
+>   deleted 5 rows:
+>     78f07d1e  2027-06-03 00:00  linkedin
+>     bfdfd163  2027-06-03 00:00  twitter
+>     40d8f10b  2027-06-03 00:00  linkedin
+>     e57b0aff  2027-06-03 00:00  linkedin
+>     65f33e10  2027-06-03 00:00  twitter
+> 
+> === verify: scheduled_posts remaining ===
+>   total=0  future=0
+> ```
+
+## 🤖 Claude *(23:39:38)*
+
+
+## 🤖 Claude *(23:39:42)*
+
+**#2 cleanup done** (the part I can action): 5 test posts deleted (exact 5 IDs, `RETURNING`-proven), **0 remaining**. The 2 WP drafts (`?p=13/?p=14`) are left for your WP-admin (or pass me the word and I'll attempt via the WP REST API).
+
+Now **#3**. My recommendation by value/risk: **`functionName` telemetry across the fallback fns** — it's bounded, low-risk, and *thematically the right follow-on*: this whole session was about making **silent failures visible**, and right now the LLM-fallback telemetry logs `:unknown` for ~9 functions, so a fallback storm can't be attributed to a function. The bigger FRs (009/010/012, Nurturing external delivery) are net-new features that deserve dedicated BoK-focused sessions. Let me scope the functionName work materially first:
+
+## 🤖 Claude *(23:39:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== the fallback helper + its functionName param ===\"\ngrep -rn \"functionName\\|function_name\" supabase/functions/_shared/ 2>/dev/null | head -20\necho \"\"\necho \"=== signature of fetchLLMWithFallback ===\"\ngrep -rn \"fetchLLMWithFallback\\|export async function fetchLLM\\|export function fetchLLM\" supabase/functions/_shared/*.ts 2>/dev/null | head\necho \"\"\necho \"=== all callers of the fallback helper + whether they pass functionName ===\"\ngrep -rln \"fetchLLMWithFallback\" supabase/functions/ 2>/dev/null | sort",
+  "description": "Scope the functionName telemetry gap across fallback callers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === the fallback helper + its functionName param ===
+> supabase/functions/_shared/llm-fallback.test.ts:76:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g", functionName: "unit-test" });
+> supabase/functions/_shared/llm-fallback.ts:8:  /** Optional caller name for granular fallback telemetry (service = `llm-fallback:<functionName>`). */
+> supabase/functions/_shared/llm-fallback.ts:9:  functionName?: string;
+> supabase/functions/_shared/llm-fallback.ts:20:async function logFallbackHealth(status: "degraded" | "unhealthy", functionName?: string): Promise<void> {
+> supabase/functions/_shared/llm-fallback.ts:30:      body: JSON.stringify({ service: `llm-fallback:${functionName ?? "unknown"}`, status }),
+> supabase/functions/_shared/llm-fallback.ts:141:        await logFallbackHealth("degraded", options.functionName);
+> supabase/functions/_shared/llm-fallback.ts:179:        await logFallbackHealth("degraded", options.functionName);
+> supabase/functions/_shared/llm-fallback.ts:192:  await logFallbackHealth("unhealthy", options.functionName);
+> 
+> === signature of fetchLLMWithFallback ===
+> supabase/functions/_shared/llm-fallback.ts:48:export async function fetchLLMWithFallback(
+> supabase/functions/_shared/llm-fallback.test.ts:6:import { fetchLLMWithFallback } from "./llm-fallback.ts";
+> supabase/functions/_shared/llm-fallback.test.ts:18:describe("fetchLLMWithFallback (OTD-LLM-FALLBACK cascade)", () => {
+> supabase/functions/_shared/llm-fallback.test.ts:28:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g" });
+> supabase/functions/_shared/llm-fallback.test.ts:38:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g" });
+> supabase/functions/_shared/llm-fallback.test.ts:51:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g" });
+> supabase/functions/_shared/llm-fallback.test.ts:60:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g" });
+> supabase/functions/_shared/llm-fallback.test.ts:67:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g" });
+> supabase/functions/_shared/llm-fallback.test.ts:76:    const res = await fetchLLMWithFallback(ENDPOINT, init(), { openRouterKey: "k", geminiKey: "g", functionName: "unit-test" });
+> 
+> === all callers of the fallback helper + whether they pass functionName ===
+> supabase/functions/agent-task-execute/index.ts
+> supabase/functions/analyze-node/index.ts
+> supabase/functions/analyze-sem/index.ts
+> supabase/functions/analyze-seo/index.ts
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/generate-audio-script/index.ts
+> supabase/functions/generate-content/index.ts
+> supabase/functions/generate-video-script/index.ts
+> supabase/functions/lead-score/index.ts
+> supabase/functions/nurture-dispatch/index.ts
+> supabase/functions/optimize-schedule/index.ts
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/self-optimize/index.ts
+> supabase/functions/_shared/llm-fallback.test.ts
+> supabase/functions/_shared/llm-fallback.ts
+> ```
+
+## 🤖 Claude *(23:39:50)*
+
+
+## 🤖 Claude *(23:39:50)*
+
+13 callers. Let me see which pass `functionName` and which still log `:unknown`:
+
+## 🤖 Claude *(23:39:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute generate-audio-script generate-content generate-video-script lead-score nurture-dispatch optimize-schedule orchestrate-step self-optimize; do\n  # find the fetchLLMWithFallback call + check if functionName appears within 6 lines after it\n  if grep -A6 \"fetchLLMWithFallback\" \"supabase/functions/$f/index.ts\" 2>/dev/null | grep -q \"functionName\"; then\n    printf \"  \u2705 %-24s passes functionName\\n\" \"$f\"\n  else\n    printf \"  \u274c %-24s MISSING (logs :unknown)\\n\" \"$f\"\n  fi\ndone",
+  "description": "Audit which fallback callers pass functionName"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   ❌ agent-task-execute       MISSING (logs :unknown)
+>   ❌ analyze-node             MISSING (logs :unknown)
+>   ❌ analyze-sem              MISSING (logs :unknown)
+>   ❌ analyze-seo              MISSING (logs :unknown)
+>   ❌ canvas-execute           MISSING (logs :unknown)
+>   ❌ generate-audio-script    MISSING (logs :unknown)
+>   ❌ generate-content         MISSING (logs :unknown)
+>   ❌ generate-video-script    MISSING (logs :unknown)
+>   ❌ lead-score               MISSING (logs :unknown)
+>   ❌ nurture-dispatch         MISSING (logs :unknown)
+>   ❌ optimize-schedule        MISSING (logs :unknown)
+>   ❌ orchestrate-step         MISSING (logs :unknown)
+>   ❌ self-optimize            MISSING (logs :unknown)
+> ```
+
+## 🤖 Claude *(23:40:03)*
+
+
+## 🤖 Claude *(23:40:04)*
+
+My `-A6` window is too narrow — the `functionName` sits in the 3rd-arg options object, often >6 lines after the call. Let me look at the actual pattern in the two the HANDOFF claims are done (`generate-content`, `orchestrate-step`) to calibrate detection:
+
+## 🤖 Claude *(23:40:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in generate-content orchestrate-step lead-score canvas-execute; do\n  echo \"\u2550\u2550\u2550\u2550 $f \u2550\u2550\u2550\u2550\"\n  grep -n -A14 \"fetchLLMWithFallback\" \"supabase/functions/$f/index.ts\" 2>/dev/null | grep -iE \"fetchLLMWithFallback|functionName|openRouterKey|geminiKey|\\}\\)\" | head -8\ndone",
+  "description": "Inspect actual call pattern in known-done + sample fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ generate-content ════
+> 3:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 13-  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 75:    const aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> ════ orchestrate-step ════
+> 9:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 125:        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 261:        const liRes = await fetchLLMWithFallback(aiEndpoint, {
+> 331:        const xRes = await fetchLLMWithFallback(aiEndpoint, {
+> ════ lead-score ════
+> 7:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 98:        const aiResp = await fetchLLMWithFallback(
+> ════ canvas-execute ════
+> 3:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 1153:  const resp = await fetchLLMWithFallback("https://openrouter.ai/api/v1/chat/completions", {
+> 1167-    }),
+> ```
+
+## 🤖 Claude *(23:40:13)*
+
+
+## 🤖 Claude *(23:40:14)*
+
+Let me read the actual options objects to see the real pattern (3rd arg) for the "done" ones vs the rest:
+
+## 🤖 Claude *(23:40:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-content/index.ts",
+  "offset": 75,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 75	    const aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 76	      method: "POST",
+> 77	      headers: {
+> 78	        Authorization: `Bearer ${aiKey}`,
+> 79	        "Content-Type": "application/json",
+> 80	        "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 81	        "X-Title": "GCRUX Constellation" // For OpenRouter
+> 82	      },
+> 83	      body: JSON.stringify({
+> 84	        model: selectedModel,
+> 85	        messages: [
+> 86	          { role: "system", content: systemPrompt },
+> 87	          { role: "user", content: prompt },
+> 88	        ],
+> 89	        stream: true,
+> 90	      }),
+> 91	    }, {
+> 92	      functionName: "generate-content",
+> 93	      openRouterKey,
+> 94	      geminiKey,
+> 95	      groqKey
+> 96	    });
+> 97	
+> 98	    if (!aiResponse.ok) {
+> 99	      if (aiResponse.status === 429) {
+> 100	        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+> 101	          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 102	        });
+> 103	      }
+> 104	      if (aiResponse.status === 402) {
+> ```
+
+## 🤖 Claude *(23:40:24)*
+
+
+## 🤖 Claude *(23:40:26)*
+
+`generate-content` *does* pass it (line 92) — my `-A6` window was just too narrow (false negatives all around). Let me redo detection robustly by comparing `functionName:` count vs call count per file:
+
+## 🤖 Claude *(23:40:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute generate-audio-script generate-content generate-video-script lead-score nurture-dispatch optimize-schedule orchestrate-step self-optimize; do\n  calls=$(grep -c \"await fetchLLMWithFallback\" \"supabase/functions/$f/index.ts\" 2>/dev/null)\n  named=$(grep -c \"functionName:\" \"supabase/functions/$f/index.ts\" 2>/dev/null)\n  if [ \"$calls\" -eq \"$named\" ] && [ \"$calls\" -gt 0 ]; then st=\"\u2705 done\"; elif [ \"$named\" -eq 0 ]; then st=\"\u274c MISSING\"; else st=\"\u26a0\ufe0f PARTIAL\"; fi\n  printf \"  %-24s calls=%s named=%s  %s\\n\" \"$f\" \"$calls\" \"$named\" \"$st\"\ndone",
+  "description": "Accurate functionName coverage per fallback caller"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   agent-task-execute       calls=1 named=0  ❌ MISSING
+>   analyze-node             calls=1 named=0  ❌ MISSING
+>   analyze-sem              calls=1 named=0  ❌ MISSING
+>   analyze-seo              calls=1 named=0  ❌ MISSING
+>   canvas-execute           calls=1 named=0  ❌ MISSING
+>   generate-audio-script    calls=1 named=0  ❌ MISSING
+>   generate-content         calls=1 named=1  ✅ done
+>   generate-video-script    calls=1 named=0  ❌ MISSING
+>   lead-score               calls=1 named=1  ✅ done
+>   nurture-dispatch         calls=1 named=1  ✅ done
+>   optimize-schedule        calls=1 named=0  ❌ MISSING
+>   orchestrate-step         calls=3 named=3  ✅ done
+>   self-optimize            calls=1 named=0  ❌ MISSING
+> ```
+
+## 🤖 Claude *(23:40:43)*
+
+
+## 🤖 Claude *(23:40:44)*
+
+Accurate now: **9 fns missing** `functionName` (matching the flagged count). Each needs `functionName: "<name>"` added to the 3rd-arg options object. Let me see each call's options shape to edit precisely:
+
+## 🤖 Claude *(23:40:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute generate-audio-script generate-video-script optimize-schedule self-optimize; do\n  echo \"\u2550\u2550\u2550\u2550 $f \u2550\u2550\u2550\u2550\"\n  grep -nE \"await fetchLLMWithFallback|openRouterKey|geminiKey|groqKey|openaiKey|replicateKey\" \"supabase/functions/$f/index.ts\" 2>/dev/null | head -8\ndone",
+  "description": "Locate 3rd-arg options anchors in the 9 fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ agent-task-execute ════
+> 162:    const groqKey = keys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 163:    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 164:    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 167:      provider === "groq" ? groqKey :
+> 168:      provider === "openrouter" ? openRouterKey :
+> 221:      llmResp = await fetchLLMWithFallback(endpoint, {
+> 226:        openRouterKey: openRouterKey || undefined,
+> 227:        geminiKey: geminiKey || undefined,
+> ════ analyze-node ════
+> 47:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 48:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 50:    if (!openRouterKey) {
+> 93:    const aiResponse = await fetchLLMWithFallback("https://openrouter.ai/api/v1/chat/completions", {
+> 96:        Authorization: `Bearer ${openRouterKey}`,
+> 111:      openRouterKey,
+> 112:      geminiKey,
+> ════ analyze-sem ════
+> 34:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 35:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 36:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 37:    const aiKey = groqKey || openRouterKey;
+> 53:    const isGroq = !!groqKey;
+> 57:    const response = await fetchLLMWithFallback(aiEndpoint, {
+> 133:      openRouterKey,
+> 134:      geminiKey,
+> ════ analyze-seo ════
+> 33:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 34:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 35:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 36:    const aiKey = groqKey || openRouterKey;
+> 45:    const isGroq = !!groqKey;
+> 49:    const response = await fetchLLMWithFallback(aiEndpoint, {
+> 104:      openRouterKey,
+> 105:      geminiKey,
+> ════ canvas-execute ════
+> 1125:  geminiKey: string,
+> 1153:  const resp = await fetchLLMWithFallback("https://openrouter.ai/api/v1/chat/completions", {
+> 1169:    openRouterKey: apiKey,
+> 1170:    geminiKey,
+> ════ generate-audio-script ════
+> 50:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 51:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 68:      activeKey = groqKey || openRouterKey || "";
+> 69:      const isGroq = !!groqKey;
+> 126:      aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 138:        openRouterKey: openRouterKey || undefined,
+> 139:        geminiKey: googleKey || undefined,
+> 140:        groqKey: groqKey || undefined,
+> ════ generate-video-script ════
+> 125:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 126:      if (!openRouterKey) {
+> 132:      activeKey = openRouterKey;
+> 137:      const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 138:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 139:      activeKey = groqKey || openRouterKey || "";
+> 140:      const isGroq = !!groqKey;
+> 210:      const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> ════ optimize-schedule ════
+> 53:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 54:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 55:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 56:    const aiKey = groqKey || openRouterKey;
+> 92:    const isGroq = !!groqKey;
+> 96:    const aiResponse = await fetchLLMWithFallback(
+> 115:        openRouterKey,
+> 116:        geminiKey,
+> ════ self-optimize ════
+> 52:    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 53:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 54:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 55:    const aiKey = groqKey || openRouterKey;
+> 79:    const isGroq = !!groqKey;
+> 83:    const aiRes = await fetchLLMWithFallback(endpoint, {
+> 156:      openRouterKey,
+> 157:      geminiKey,
+> ```
+
+## 🤖 Claude *(23:41:26)*
+
+
+## 🤖 Claude *(23:41:27)*
+
+9 fns confirmed missing (matches the flagged count). Each has an `openRouterKey` line in the 3rd-arg options object — I'll insert `functionName` there. Let me read the exact options block for each (parallel), finding `generate-video-script`'s call line too:
+
+## 🤖 Claude *(23:41:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== generate-video-script call site ===\"; grep -n \"await fetchLLMWithFallback\" supabase/functions/generate-video-script/index.ts\necho \"=== its options anchor ===\"; grep -nE \"openRouterKey|geminiKey|groqKey\" supabase/functions/generate-video-script/index.ts | sed -n '1,12p'",
+  "description": "Find generate-video-script call + options anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === generate-video-script call site ===
+> 214:      aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> === its options anchor ===
+> 125:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 126:      if (!openRouterKey) {
+> 132:      activeKey = openRouterKey;
+> 137:      const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 138:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 139:      activeKey = groqKey || openRouterKey || "";
+> 140:      const isGroq = !!groqKey;
+> 210:      const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 211:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 212:      const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 219:        openRouterKey: openRouterKey || undefined,
+> 220:        geminiKey: geminiKey || undefined,
+> ```
+
+## 🤖 Claude *(23:41:56)*
+
+
+## 🤖 Claude *(23:41:57)*
+
+All 9 anchors located. Reading the exact options blocks in parallel for precise, unique edits:
+
+## 🤖 Claude *(23:41:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts",
+  "offset": 221,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 221	      llmResp = await fetchLLMWithFallback(endpoint, {
+> 222	        method: "POST",
+> 223	        headers: fetchHeaders,
+> 224	        body: fetchBody,
+> 225	      }, {
+> 226	        openRouterKey: openRouterKey || undefined,
+> 227	        geminiKey: geminiKey || undefined,
+> 228	        groqKey: groqKey || undefined,
+> 229	      });
+> 230	    } catch (e) {
+> ```
+
+## 🤖 Claude *(23:41:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-node/index.ts",
+  "offset": 108,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 108	        temperature: 0.3,
+> 109	      }),
+> 110	    }, {
+> 111	      openRouterKey,
+> 112	      geminiKey,
+> 113	    });
+> 114	
+> 115	    if (!aiResponse.ok) {
+> 116	      const errText = await aiResponse.text();
+> ```
+
+## 🤖 Claude *(23:42:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-sem/index.ts",
+  "offset": 130,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 130	        tool_choice: { type: "function", function: { name: "sem_analysis" } },
+> 131	      }),
+> 132	    }, {
+> 133	      openRouterKey,
+> 134	      geminiKey,
+> 135	      groqKey
+> 136	    });
+> 137	
+> 138	    if (!response.ok) {
+> ```
+
+## 🤖 Claude *(23:42:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-seo/index.ts",
+  "offset": 101,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 101	        tool_choice: { type: "function", function: { name: "seo_analysis" } },
+> 102	      }),
+> 103	    }, {
+> 104	      openRouterKey,
+> 105	      geminiKey,
+> 106	      groqKey
+> 107	    });
+> 108	
+> 109	    if (!response.ok) {
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 153	        tool_choice: { type: "function", function: { name: "optimization_report" } },
+> 154	      }),
+> 155	    }, {
+> 156	      openRouterKey,
+> 157	      geminiKey,
+> 158	      groqKey
+> 159	    });
+> 160	
+> 161	    if (!aiRes.ok) {
+> ```
+
+## 🤖 Claude *(23:42:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 1166,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1166	      ],
+> 1167	    }),
+> 1168	  }, {
+> 1169	    openRouterKey: apiKey,
+> 1170	    geminiKey,
+> 1171	  });
+> 1172	
+> 1173	  if (!resp.ok) {
+> 1174	    const t = await resp.text();
+> ```
+
+## 🤖 Claude *(23:42:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts",
+  "offset": 135,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 135	          stream: true,
+> 136	        }),
+> 137	      }, {
+> 138	        openRouterKey: openRouterKey || undefined,
+> 139	        geminiKey: googleKey || undefined,
+> 140	        groqKey: groqKey || undefined,
+> 141	      });
+> 142	    }
+> 143	
+> ```
+
+## 🤖 Claude *(23:42:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts",
+  "offset": 214,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 214	      aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 215	        method: "POST",
+> 216	        headers,
+> 217	        body,
+> 218	      }, {
+> 219	        openRouterKey: openRouterKey || undefined,
+> 220	        geminiKey: geminiKey || undefined,
+> 221	        groqKey: groqKey || undefined,
+> 222	      });
+> 223	    }
+> ```
+
+## 🤖 Claude *(23:42:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/optimize-schedule/index.ts",
+  "offset": 96,
+  "limit": 24
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 96	    const aiResponse = await fetchLLMWithFallback(
+> 97	      endpoint,
+> 98	      {
+> 99	        method: "POST",
+> 100	        headers: {
+> 101	          Authorization: `Bearer ${aiKey}`,
+> 102	          "Content-Type": "application/json",
+> 103	          "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 104	          "X-Title": "GCRUX Constellation" // For OpenRouter
+> 105	        },
+> 106	        body: JSON.stringify({
+> 107	          model: selectedModel,
+> 108	          response_format: { type: "json_object" }, // Ensure JSON output for Groq/OpenRouter
+> 109	          messages: [
+> 110	            { role: "system", content: systemPrompt },
+> 111	            { role: "user", content: userPrompt },
+> 112	          ],
+> 113	        }),
+> 114	      }, {
+> 115	        openRouterKey,
+> 116	        geminiKey,
+> 117	        groqKey
+> 118	      }
+> 119	    );
+> ```
+
+## 🤖 Claude *(23:42:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-optimize/index.ts",
+  "offset": 153,
+  "limit": 9
+}
+```
+
+## 🤖 Claude *(23:42:29)*
+
+
+## 🤖 Claude *(23:42:30)*
+
+All 9 blocks captured. Applying the 9 edits in parallel (insert `functionName` as the first option key in each — unique anchor per file):
+
+## 🤖 Claude *(23:42:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts",
+  "old_string": "      }, {\n        openRouterKey: openRouterKey || undefined,",
+  "new_string": "      }, {\n        functionName: \"agent-task-execute\",\n        openRouterKey: openRouterKey || undefined,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/agent-task-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-node/index.ts",
+  "old_string": "    }, {\n      openRouterKey,\n      geminiKey,\n    });",
+  "new_string": "    }, {\n      functionName: \"analyze-node\",\n      openRouterKey,\n      geminiKey,\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-node/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-sem/index.ts",
+  "old_string": "    }, {\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });",
+  "new_string": "    }, {\n      functionName: \"analyze-sem\",\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-sem/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-seo/index.ts",
+  "old_string": "    }, {\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });",
+  "new_string": "    }, {\n      functionName: \"analyze-seo\",\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/analyze-seo/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  }, {\n    openRouterKey: apiKey,\n    geminiKey,\n  });",
+  "new_string": "  }, {\n    functionName: \"canvas-execute\",\n    openRouterKey: apiKey,\n    geminiKey,\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts",
+  "old_string": "      }, {\n        openRouterKey: openRouterKey || undefined,\n        geminiKey: googleKey || undefined,",
+  "new_string": "      }, {\n        functionName: \"generate-audio-script\",\n        openRouterKey: openRouterKey || undefined,\n        geminiKey: googleKey || undefined,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-audio-script/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts",
+  "old_string": "      }, {\n        openRouterKey: openRouterKey || undefined,\n        geminiKey: geminiKey || undefined,",
+  "new_string": "      }, {\n        functionName: \"generate-video-script\",\n        openRouterKey: openRouterKey || undefined,\n        geminiKey: geminiKey || undefined,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/optimize-schedule/index.ts",
+  "old_string": "      }, {\n        openRouterKey,\n        geminiKey,\n        groqKey\n      }",
+  "new_string": "      }, {\n        functionName: \"optimize-schedule\",\n        openRouterKey,\n        geminiKey,\n        groqKey\n      }"
+}
+```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-optimize/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/optimize-schedule/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/self-optimize/index.ts",
+  "old_string": "    }, {\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });",
+  "new_string": "    }, {\n      functionName: \"self-optimize\",\n      openRouterKey,\n      geminiKey,\n      groqKey\n    });"
+}
+```
+
+## 🤖 Claude *(23:42:47)*
+
+
+## 🤖 Claude *(23:42:48)*
+
+All 9 edited. Re-running the coverage check — all 13 should now be green:
+
+## 🤖 Claude *(23:42:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nmiss=0\nfor f in agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute generate-audio-script generate-content generate-video-script lead-score nurture-dispatch optimize-schedule orchestrate-step self-optimize; do\n  calls=$(grep -c \"await fetchLLMWithFallback\" \"supabase/functions/$f/index.ts\")\n  named=$(grep -c \"functionName:\" \"supabase/functions/$f/index.ts\")\n  [ \"$calls\" -eq \"$named\" ] && st=\"\u2705\" || { st=\"\u274c\"; miss=$((miss+1)); }\n  printf \"  %s %-22s calls=%s named=%s\\n\" \"$st\" \"$f\" \"$calls\" \"$named\"\ndone\necho \"--- missing: $miss (expect 0) ---\"\necho \"=== deno check on the 9 edited fns (syntax/type sanity) ===\"\nfor f in agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute generate-audio-script generate-video-script optimize-schedule self-optimize; do\n  out=$(deno check \"supabase/functions/$f/index.ts\" 2>&1 | grep -iE \"error\" | head -1)\n  [ -z \"$out\" ] && echo \"  \u2705 $f\" || echo \"  \u274c $f: $out\"\ndone 2>/dev/null || echo \"(deno not available \u2014 will rely on deploy-time check)\"",
+  "description": "Verify functionName coverage + deno type check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   ✅ agent-task-execute     calls=1 named=1
+>   ✅ analyze-node           calls=1 named=1
+>   ✅ analyze-sem            calls=1 named=1
+>   ✅ analyze-seo            calls=1 named=1
+>   ✅ canvas-execute         calls=1 named=1
+>   ✅ generate-audio-script  calls=1 named=1
+>   ✅ generate-content       calls=1 named=1
+>   ✅ generate-video-script  calls=1 named=1
+>   ✅ lead-score             calls=1 named=1
+>   ✅ nurture-dispatch       calls=1 named=1
+>   ✅ optimize-schedule      calls=1 named=1
+>   ✅ orchestrate-step       calls=3 named=3
+>   ✅ self-optimize          calls=1 named=1
+> --- missing: 0 (expect 0) ---
+> === deno check on the 9 edited fns (syntax/type sanity) ===
+>   ✅ agent-task-execute
+>   ✅ analyze-node
+>   ✅ analyze-sem
+>   ✅ analyze-seo
+>   ✅ canvas-execute
+>   ✅ generate-audio-script
+>   ✅ generate-video-script
+>   ✅ optimize-schedule
+>   ✅ self-optimize
+> ```
+
+## 🤖 Claude *(23:43:09)*
+
+
+## 🤖 Claude *(23:43:09)*
+
+All 13 green, **0 missing**, and `deno check` passes on all 9 (no type errors). Deploying the 9 edited functions (multi-slug, respects each one's `config.toml` verify_jwt):
+
+## 🤖 Claude *(23:43:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 540 npx supabase functions deploy \\\n  agent-task-execute analyze-node analyze-sem analyze-seo canvas-execute \\\n  generate-audio-script generate-video-script optimize-schedule self-optimize \\\n  2>&1 | grep -iE \"Deploying|Deployed|deployed successfully|error|bundl|Uploading\" | tail -40\necho \"--- deploy exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Deploy the 9 edited edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: analyze-node
+> Deploying Function: analyze-node (script size: 63.83kB)
+> Bundling Function: analyze-seo
+> Deploying Function: analyze-seo (script size: 83.32kB)
+> Bundling Function: generate-audio-script
+> Deploying Function: generate-audio-script (script size: 139.7kB)
+> Bundling Function: generate-video-script
+> Deploying Function: generate-video-script (script size: 162.3kB)
+> Bundling Function: agent-task-execute
+> Deploying Function: agent-task-execute (script size: 116.8kB)
+> Bundling Function: analyze-sem
+> Deploying Function: analyze-sem (script size: 83.68kB)
+> Bundling Function: canvas-execute
+> Deploying Function: canvas-execute (script size: 151kB)
+> Bundling Function: optimize-schedule
+> Deploying Function: optimize-schedule (script size: 64.35kB)
+> Bundling Function: self-optimize
+> Deploying Function: self-optimize (script size: 65.7kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: agent-task-execute, analyze-node, analyze-sem, analyze-seo, canvas-execute, generate-audio-script, generate-video-script, optimize-schedule, self-optimize
+> --- deploy exit: 0 ---
+> ```
+
+## 🤖 Claude *(23:43:56)*
+
+
+## 🤖 Claude *(23:43:57)*
+
+**All 9 deployed** — exit 0, "Deployed Functions ... agent-task-execute, analyze-node, analyze-sem, analyze-seo, canvas-execute, generate-audio-script, generate-video-script, optimize-schedule, self-optimize". Running the test suite to confirm zero regression (edits are purely additive, but verifying per Lei 1):
+
+## 🤖 Claude *(23:43:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 240 bun run test 2>&1 | grep -iE \"Test Files|Tests |passed|failed|\u2713 src|llm-fallback\" | tail -15\necho \"--- tsc ---\"\nnpx tsc --noEmit 2>&1 | tail -3; echo \"tsc done (empty above = 0 errors)\"",
+  "description": "Run test suite + tsc after functionName edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > does not fall back on a non-billing client error (e.g. 400 bad request)
+> [llm-fallback] Primary request failed with status 400 (no fallback triggered)
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting primary LLM request with model "anthropic/claude-3.5-sonnet"
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Primary request failed (status=402). Initiating cascade. Details: {}
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting Gemini Free fallback. Candidates: gemini-2.5-pro, gemini-1.5-pro
+> [llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 26ms
+>  Test Files  17 passed | 2 skipped (19)
+>       Tests  257 passed | 2 skipped (259)
+>    Duration  7.67s (transform 731ms, setup 1.59s, collect 2.56s, tests 1.66s, environment 9.24s, prepare 2.52s)
+> --- tsc ---
+> tsc done (empty above = 0 errors)
+> ```
+
+## 🤖 Claude *(23:44:30)*
+
+
+## 🤖 Claude *(23:44:31)*
+
+Suite green: **257 passed / 2 skipped**, llm-fallback tests pass, **tsc 0 errors**. No regression. Committing the observability completion:
+
+## 🤖 Claude *(23:44:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/agent-task-execute/index.ts supabase/functions/analyze-node/index.ts supabase/functions/analyze-sem/index.ts supabase/functions/analyze-seo/index.ts supabase/functions/canvas-execute/index.ts supabase/functions/generate-audio-script/index.ts supabase/functions/generate-video-script/index.ts supabase/functions/optimize-schedule/index.ts supabase/functions/self-optimize/index.ts\ngit commit -q -F - <<'MSG'\nchore(observability): functionName em todas as fns do fallback LLM \u2014 fim do :unknown\n\nFecha o gap de observabilidade da telemetria de fallback: 9 das 13 fns que usam\nfetchLLMWithFallback logavam `llm-fallback:unknown` em infra_health_logs. Agora as\n13/13 passam o functionName \u2192 uma tempestade de fallback fica atribu\u00edvel \u00e0 fn exata\n(mesmo esp\u00edrito do anticorpo de drift desta sess\u00e3o: tornar falha silenciosa vis\u00edvel).\n\n9 fns instrumentadas: agent-task-execute, analyze-node, analyze-sem, analyze-seo,\ncanvas-execute, generate-audio-script, generate-video-script, optimize-schedule,\nself-optimize. deno check ok \u00b7 su\u00edte 257/259 \u00b7 9 deploys ok (exit 0).\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits (ahead of origin) ---\"; git log origin/main..HEAD --format='  %h %s'\necho \"--- tree ---\"; git status --short || echo clean",
+  "description": "Commit functionName observability changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- commit ---
+> 25a8b28 chore(observability): functionName em todas as fns do fallback LLM — fim do :unknown
+> --- session commits (ahead of origin) ---
+>   25a8b28 chore(observability): functionName em todas as fns do fallback LLM — fim do :unknown
+>   336e2b8 fix(billing): fecha P0 de cunhagem não-autorizada de mcoCoins nos RPCs do ledger
+>   eaffec6 chore(audit): anticorpo de drift de schema — auditoria reexecutável + SOP
+>   773dce4 fix(schema): zera o drift deployado↔migrations achado na varredura pós-flywheel
+> --- tree ---
+> ```
+
+## 🤖 Claude *(23:45:12)*
+
+
+## 🤖 Claude *(23:45:20)*
+
+Four commits this session, tree clean. **All three of your priorities are addressed:**
+
+## Session scorecard
+
+| # | Priority | Outcome |
+|---|---|---|
+| **#1** | 🔴 Drift audit | ✅ **DONE** — 9 surfaces swept; isolated incident; F1/F2/F3 remediated + verified; reusable `audit-schema-drift.sh` + SOP |
+| **bonus** | P0 found mid-audit | ✅ **DONE** — unauthorized mcoCoin minting in 3 ledger RPCs, closed + **proven blocked by live exploit-attempt** |
+| **#2** | 🧹 Cleanup | ✅ 5 test posts deleted (proven 0 remaining); 2 WP drafts → your WP-admin (or say the word) |
+| **#3** | Roadmap | ✅ `functionName` observability (13/13 fns, 9 deployed); ⏳ FR-MH-009/010/012 + Nurturing follow-up = big net-new features |
+
+**Material proof everywhere:** 2× `/security-review` clean · 4 migrations `db push` · 9 fn deploys · suite 257/259 · tsc 0 · 4 granular commits (`773dce4`,`eaffec6`,`336e2b8`,`25a8b28`).
+
+We're at a clean checkpoint. The remaining roadmap items (FR-MH-009 Intent+HITL · FR-MH-010 AEO · FR-MH-012 BYOK · Nurturing external delivery) are each substantial **net-new features** that warrant a dedicated BoK-focused session rather than the tail of this one. You can see the window % on your side — per the budget directive I won't seal early on my own. Where to?
+
+## 🤖 Claude *(23:45:26)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "3 prioridades fechadas + P0 b\u00f4nus. Janela ainda tem espa\u00e7o (voc\u00ea v\u00ea o %). Pr\u00f3ximo?",
+      "header": "Seguir/selar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Selar a sess\u00e3o (/handoff)",
+          "description": "Fecho com seal + milestone node + push das 4 commits. Ponto coerente: drift + P0 + cleanup + observability \u00e9 uma entrega completa; os FRs restantes pedem sess\u00e3o dedicada com foco BoK."
+        },
+        {
+          "label": "FR-MH-012 BYOK per-tenant",
+          "description": "Come\u00e7o a maior feature alinhada ao tema de seguran\u00e7a/tenancy desta sess\u00e3o (chaves por tenant). Probe-first + BoK check antes de codar."
+        },
+        {
+          "label": "Nurturing follow-up",
+          "description": "Completo o engine de nurturing: cron de avan\u00e7o de enrollments due (parte segura) + UI de enroll/dispatch. Entrega externa real fica gated em GO (envio outward)."
+        },
+        {
+          "label": "FR-MH-009 Intent+HITL",
+          "description": "Come\u00e7o o Intent Orchestrator com human-in-the-loop (feature maior, net-new). Probe-first + BoK check antes de codar."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "3 prioridades fechadas + P0 bônus. Janela ainda tem espaço (você vê o %). Próximo?"="faça 2 + 3 + 4". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:47:01)*
+
+
+## 🤖 Claude *(23:47:03)*
+
+The Sovereign wants all three big FRs — **BYOK (#2) + Nurturing follow-up (#3) + Intent+HITL (#4)**. Packing the window per the budget directive. These are FRs *within* the already-sealed marketing-hub BoK (9/9), so the BoK gate is satisfied — but Master Protocol requires grounding in that SSOT (no invention). Probe-first to scope accurately and avoid rebuilding what exists.
+
+## 🤖 Claude *(23:47:05)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Marketing Hub FRs: BYOK + Nurturing + Intent/HITL",
+  "summary": "FR-MH-012 BYOK per-tenant, FR-MH-008 nurturing follow-up (cron+UI), FR-MH-009 Intent Orchestrator+HITL \u2014 probe-first grounded in the sealed marketing-hub BoK"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Marketing Hub FRs: BYOK + Nurturing + Intent/HITL". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(23:47:12)*
+
+
+## 🤖 Claude *(23:47:14)*
+
+**ORO triplet (this phase):** Operator=MCORCH Agent · Reviewer=Sovereign + `/security-review` (migrations) · Owner=Sovereign (blast radius = commercial front + per-tenant credentials + outward nurturing sends).
+
+Probing the BoK specs + current state for all three in parallel:
+
+## 🤖 Claude *(23:47:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== FRD: FR-MH-008 / 009 / 012 spec lines ===\"\ngrep -nE \"FR-MH-008|FR-MH-009|FR-MH-012\" docs/bok/marketing-hub/04-frd.md | head -40",
+  "description": "Locate the 3 FR specs in the marketing-hub FRD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FRD: FR-MH-008 / 009 / 012 spec lines ===
+> 34:| FR-MH-008 | Nurturing Sequences | Engine de drip: `sequences`+`sequence_enrollments`; passo dispara `nurture-dispatch` (gera msg, 2 mcoCoins); respeita opt-out; idempotente; cron avança passos | High | PR-MH-010 | EdgeFunction + Cron | AT-MH-008 |
+> 35:| FR-MH-009 | Intent Orchestrator + HITL | `intent-orchestrate`: traduz intenção→plano de tarefas; policy engine decide auto vs. HITL; aprovação humana persiste rationale (XAI) | High | PR-MH-011 | EdgeFunction + Hook | AT-MH-009 |
+> 38:| FR-MH-012 | BYOK per-tenant | Colunas/credenciais de marketing per-tenant no padrão Vault; resolve per-user→sistema | Medium | PR-MH-014 | DB + UI | AT-MH-012 |
+> 53:| NFR-MH-008 | Cost discipline | Toda ação AI-powered debita via RPC atômico; cap por ação | 0 dedução client-side | Material proof (mcoin_transactions) |
+> 54:| NFR-MH-009 | Observability | Cada path (success/degraded/error) emite `infra_health_logs` | 100% dos edge fns | Telemetry audit |
+> 137:| FR-MH-008 | ✅ Required | ✅ Required | — | Opt-out respeitado + idempotência |
+> 138:| FR-MH-009 | ✅ Required | ✅ Required | — | Policy engine auto vs HITL |
+> 141:| FR-MH-012 | ✅ Required | ✅ Required | — | BYOK resolve per-user→sistema |
+> 155:| PR-MH-002 | FR-MH-003 | NFR-MH-002, NFR-MH-008 |
+> 156:| PR-MH-003 | FR-MH-004, FR-MH-005 | NFR-MH-002, NFR-MH-008 |
+> 158:| PR-MH-005 | FR-MH-007 | NFR-MH-009 |
+> 159:| PR-MH-010 | FR-MH-008 | NFR-MH-007, NFR-MH-008 |
+> 160:| PR-MH-011 | FR-MH-009 | NFR-MH-005 |
+> 163:| PR-MH-014 | FR-MH-012 | NFR-MH-006 |
+> ```
+
+## 🤖 Claude *(23:47:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== existing nurturing surface ===\"\nls -la supabase/functions/nurture-dispatch/ src/hooks/useNurturing.ts src/components/marketing/NurturingPanel.tsx 2>/dev/null | awk '{print $NF, $5}'\necho \"--- sequences/enrollments migration ---\"; ls supabase/migrations/*nurtur* 2>/dev/null\necho \"--- nurture cron present? ---\"; grep -rln \"nurture\" supabase/migrations/ scripts/ 2>/dev/null | grep -iE \"cron|dispatch|schedule\" | head\necho \"\"\necho \"=== existing BYOK surface (per-user key infra) ===\"\necho \"--- user_api_keys columns referenced ---\"; grep -roE \"(groq|openrouter|gemini|google|replicate|openai|higgsfield|apify)_api_key|_token\" src/hooks/useUserApiKeys.ts 2>/dev/null | sort -u | head\necho \"--- is there a per-TENANT (vs per-user) key notion already? ---\"; grep -rliE \"per.tenant|tenant_api|byok\" src/ supabase/ docs/bok/marketing-hub/ 2>/dev/null | grep -v node_modules | head\necho \"\"\necho \"=== Intent Orchestrator / HITL existing? ===\"\ngrep -rliE \"intent.orchestrat|human.in.the.loop|HITL|approval_queue|intent_\" src/ supabase/functions/ 2>/dev/null | grep -v node_modules | head",
+  "description": "Map existing state of nurturing, BYOK, intent/HITL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === existing nurturing surface ===
+> src/components/marketing/NurturingPanel.tsx 5679
+> src/hooks/useNurturing.ts 4761
+>  
+> supabase/functions/nurture-dispatch/: 
+> 20 
+> . 4096
+> .. 4096
+> index.ts 9053
+> --- sequences/enrollments migration ---
+> supabase/migrations/20260603050000_marketing_hub_nurturing.sql
+> --- nurture cron present? ---
+> 
+> === existing BYOK surface (per-user key infra) ===
+> --- user_api_keys columns referenced ---
+> --- is there a per-TENANT (vs per-user) key notion already? ---
+> src/integrations/supabase/types.ts
+> src/pages/SettingsPage.tsx
+> src/test/meta.test.ts
+> src/lib/meta.ts
+> src/lib/agent-task-result.ts
+> src/components/graph/CrewWizard.tsx
+> src/components/settings/MetaConfigCard.tsx
+> src/hooks/useAgentCapabilities.ts
+> src/hooks/useAccessConfig.ts
+> src/hooks/useMetaConfig.ts
+> 
+> === Intent Orchestrator / HITL existing? ===
+> src/integrations/supabase/types.ts
+> supabase/functions/lead-score/index.ts
+> src/hooks/useLeads.ts
+> ```
+
+## 🤖 Claude *(23:48:23)*
+
+
+## 🤖 Claude *(23:48:27)*
+
+Probe results ground the scope (BoK is the SSOT):
+- **FR-MH-008** — engine + `nurture-dispatch` exist; the gap is literally *"cron avança passos"* + UI enroll (no nurture cron found). External send stays gated.
+- **FR-MH-012** — extensive per-user Vault BYOK exists; FR-MH-012 = *marketing-specific* per-tenant credentials (the channel key that real nurturing delivery will need) → `resolve per-user→sistema`.
+- **FR-MH-009** — net-new: `intent-orchestrate` edge fn + policy engine (auto vs HITL) + approval queue persisting rationale (XAI).
+
+**Honest scope call (Lei 1):** three net-new features at this session's materiality bar is genuinely 3 dedicated efforts. I'll execute them **sequentially with full rigor + incremental commits**, sealing whatever is complete when the window closes — nothing half-committed. Starting with the most self-contained: **Nurturing follow-up** (completes an existing engine). Reading the exact contracts first:
+
+## 🤖 Claude *(23:48:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603050000_marketing_hub_nurturing.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: marketing-hub Nurturing Sequences — drip engine data layer (FR-MH-008).
+> 2	-- BoK SSOT: docs/bok/marketing-hub/06-data-model.md (§"sequences / sequence_enrollments") + 04-frd.md FR-MH-008
+> 3	--           + 05-sdd.md (sequences/sequence_enrollments + nurture-dispatch). STRIDE-Critical: no send without consent.
+> 4	-- Tenant safety (MVP-1 lesson — cross-tenant child linkage): both FKs on sequence_enrollments are COMPOSITE +
+> 5	-- co-scope user_id (mirrors lead_events/campaign_steps), so an enrollment can only reference a sequence AND a
+> 6	-- lead owned by the SAME tenant. Both CASCADE: deleting a sequence OR erasing a lead removes its enrollments.
+> 7	
+> 8	-- ─────────────────────────────────────────────────────────────────────────────
+> 9	-- 1. sequences — drip definition (ordered steps in jsonb). Composite-unique for child FK targets.
+> 10	-- ─────────────────────────────────────────────────────────────────────────────
+> 11	CREATE TABLE IF NOT EXISTS public.sequences (
+> 12	  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+> 13	  user_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 14	  name       text NOT NULL,
+> 15	  trigger    text NOT NULL DEFAULT 'manual' CHECK (trigger IN ('status_change','manual')),
+> 16	  steps      jsonb NOT NULL DEFAULT '[]'::jsonb,  -- ordered drip steps: [{channel, wait_hours, prompt}]
+> 17	  active     boolean NOT NULL DEFAULT true,
+> 18	  created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 19	  updated_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 20	  CONSTRAINT uniq_sequences_id_user UNIQUE (id, user_id)
+> 21	);
+> 22	ALTER TABLE public.sequences ENABLE ROW LEVEL SECURITY;
+> 23	CREATE POLICY "sequences_select_own" ON public.sequences FOR SELECT USING (auth.uid() = user_id);
+> 24	CREATE POLICY "sequences_insert_own" ON public.sequences FOR INSERT WITH CHECK (auth.uid() = user_id);
+> 25	CREATE POLICY "sequences_update_own" ON public.sequences FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 26	CREATE POLICY "sequences_delete_own" ON public.sequences FOR DELETE USING (auth.uid() = user_id);
+> 27	CREATE INDEX IF NOT EXISTS idx_sequences_user ON public.sequences (user_id);
+> 28	CREATE TRIGGER tr_update_sequences_updated_at
+> 29	  BEFORE UPDATE ON public.sequences
+> 30	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 31	
+> 32	-- ─────────────────────────────────────────────────────────────────────────────
+> 33	-- 2. sequence_enrollments — a lead enrolled in a sequence. Both FKs composite + tenant-scoped CASCADE.
+> 34	-- ─────────────────────────────────────────────────────────────────────────────
+> 35	CREATE TABLE IF NOT EXISTS public.sequence_enrollments (
+> 36	  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+> 37	  sequence_id  uuid NOT NULL,
+> 38	  lead_id      uuid NOT NULL,
+> 39	  user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 40	  current_step smallint NOT NULL DEFAULT 0,
+> 41	  status       text NOT NULL DEFAULT 'active' CHECK (status IN ('active','paused','completed','opted_out')),
+> 42	  next_run_at  timestamptz,
+> 43	  created_at   timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 44	  updated_at   timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 45	  -- tenant-scoped composite FKs (close cross-tenant linkage; both CASCADE):
+> 46	  CONSTRAINT fk_enroll_sequence FOREIGN KEY (sequence_id, user_id)
+> 47	    REFERENCES public.sequences (id, user_id) ON DELETE CASCADE,
+> 48	  CONSTRAINT fk_enroll_lead FOREIGN KEY (lead_id, user_id)
+> 49	    REFERENCES public.leads (id, user_id) ON DELETE CASCADE,
+> 50	  CONSTRAINT uniq_enroll_seq_lead UNIQUE (sequence_id, lead_id)  -- idempotent enrollment (one per lead per seq)
+> 51	);
+> 52	ALTER TABLE public.sequence_enrollments ENABLE ROW LEVEL SECURITY;
+> 53	CREATE POLICY "enroll_select_own" ON public.sequence_enrollments FOR SELECT USING (auth.uid() = user_id);
+> 54	CREATE POLICY "enroll_insert_own" ON public.sequence_enrollments FOR INSERT WITH CHECK (auth.uid() = user_id);
+> 55	CREATE POLICY "enroll_update_own" ON public.sequence_enrollments FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 56	CREATE POLICY "enroll_delete_own" ON public.sequence_enrollments FOR DELETE USING (auth.uid() = user_id);
+> 57	CREATE INDEX IF NOT EXISTS idx_enroll_user ON public.sequence_enrollments (user_id);
+> 58	CREATE INDEX IF NOT EXISTS idx_enroll_sequence ON public.sequence_enrollments (sequence_id);
+> 59	CREATE INDEX IF NOT EXISTS idx_enroll_due ON public.sequence_enrollments (next_run_at) WHERE status = 'active';
+> 60	CREATE TRIGGER tr_update_enroll_updated_at
+> 61	  BEFORE UPDATE ON public.sequence_enrollments
+> 62	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 63	
+> 64	-- ─────────────────────────────────────────────────────────────────────────────
+> 65	-- 3. Extend erase_lead() (FMEA-MH-003 — erasure completeness) to report cascaded enrollments.
+> 66	--    sequence_enrollments.lead_id is composite FK ON DELETE CASCADE, so they vanish with the lead;
+> 67	--    this counts them for the erasure receipt (no semantic change).
+> 68	-- ─────────────────────────────────────────────────────────────────────────────
+> 69	CREATE OR REPLACE FUNCTION public.erase_lead(p_lead_id uuid)
+> 70	RETURNS jsonb
+> 71	LANGUAGE plpgsql
+> 72	SECURITY DEFINER
+> 73	SET search_path = ''
+> 74	AS $$
+> 75	DECLARE
+> 76	  v_uid       uuid := auth.uid();
+> 77	  v_owner     uuid;
+> 78	  v_events    integer := 0;
+> 79	  v_consents  integer := 0;
+> 80	  v_attr      integer := 0;
+> 81	  v_enroll    integer := 0;
+> 82	BEGIN
+> 83	  IF v_uid IS NULL THEN
+> 84	    RAISE EXCEPTION 'authentication required' USING errcode = '28000';
+> 85	  END IF;
+> 86	
+> 87	  SELECT user_id INTO v_owner FROM public.leads WHERE id = p_lead_id;
+> 88	  IF v_owner IS NULL THEN
+> 89	    RETURN jsonb_build_object('erased', false, 'reason', 'not_found');
+> 90	  END IF;
+> 91	  IF v_owner <> v_uid THEN
+> 92	    RAISE EXCEPTION 'cannot erase a lead owned by another tenant' USING errcode = '42501';
+> 93	  END IF;
+> 94	
+> 95	  DELETE FROM public.lead_events WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 96	  GET DIAGNOSTICS v_events = ROW_COUNT;
+> 97	
+> 98	  SELECT count(*) INTO v_attr
+> 99	    FROM public.marketing_attribution WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 100	
+> 101	  -- count enrollments about to be CASCADE-removed when the lead is deleted
+> 102	  SELECT count(*) INTO v_enroll
+> 103	    FROM public.sequence_enrollments WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 104	
+> 105	  UPDATE public.marketing_consents
+> 106	     SET granted = false, withdrawn_at = COALESCE(withdrawn_at, timezone('utc'::text, now()))
+> 107	   WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 108	  GET DIAGNOSTICS v_consents = ROW_COUNT;
+> 109	
+> 110	  DELETE FROM public.leads WHERE id = p_lead_id AND user_id = v_uid;  -- cascades sequence_enrollments
+> 111	
+> 112	  RETURN jsonb_build_object(
+> 113	    'erased', true,
+> 114	    'lead_id', p_lead_id,
+> 115	    'events_deleted', v_events,
+> 116	    'consents_withdrawn', v_consents,
+> 117	    'attributions_delinked', v_attr,
+> 118	    'enrollments_removed', v_enroll
+> 119	  );
+> 120	END;
+> 121	$$;
+> 122	
+> 123	REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM PUBLIC;
+> 124	REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM anon;
+> 125	GRANT EXECUTE ON FUNCTION public.erase_lead(uuid) TO authenticated;
+> 126	
+> ```
+
+## 🤖 Claude *(23:48:38)*
+
+
+## 🤖 Claude *(23:48:39)*
+
+Schema already anticipates the cron — there's `idx_enroll_due ON (next_run_at) WHERE status='active'`. So the cron finds `status='active' AND next_run_at <= now()` and dispatches each. Reading the `nurture-dispatch` contract + the existing cron→edge-fn pattern to mirror + the current UI:
+
+## 🤖 Claude *(23:48:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// nurture-dispatch — marketing-hub FR-MH-008 (BoK SSOT: docs/bok/marketing-hub/04-frd.md FR-MH-008 + 05-sdd.md
+> 2	// §nurture-dispatch + STRIDE row "Nurturing dispatch / Envio sem consentimento = Critical"). Dispatches the CURRENT
+> 3	// step of a sequence_enrollment: JWT-guarded · CONSENT-GATED (never generate/charge/record without a granted,
+> 4	// non-withdrawn consent — the Critical mitigation) · respects opt-out · idempotent (advances current_step) ·
+> 5	// debits 2 mcoCoins atomically · generates the message via the per-user→system LLM cascade.
+> 6	//
+> 7	// SENDS ARE GATED (Sovereign directive): the message is GENERATED, recorded as a lead_event, and the enrollment
+> 8	// advanced/scheduled — but the actual external channel delivery (social_credentials/meta_config) is NOT performed
+> 9	// here (metadata.delivery = 'gated'). Wiring real delivery is a follow-up behind explicit enablement + channel creds.
+> 10	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 11	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 12	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 18	};
+> 19	
+> 20	const DISPATCH_COST = 2; // mirrors COIN_COSTS.NURTURE_DISPATCH (Deno can't import src/lib).
+> 21	
+> 22	interface SeqStep { channel?: string; wait_hours?: number; prompt?: string }
+> 23	
+> 24	serve(async (req) => {
+> 25	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 26	  const json = (body: unknown, status = 200) =>
+> 27	    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 28	
+> 29	  const url = Deno.env.get("SUPABASE_URL")!;
+> 30	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 31	  const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 32	  const admin = createClient(url, serviceKey);
+> 33	
+> 34	  try {
+> 35	    const authHeader = req.headers.get("Authorization");
+> 36	    if (!authHeader) return json({ error: "Missing authorization" }, 401);
+> 37	    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 38	    const { data: { user }, error: authError } = await userClient.auth.getUser();
+> 39	    if (authError || !user) return json({ error: "Unauthorized" }, 401);
+> 40	
+> 41	    const { enrollment_id } = await req.json().catch(() => ({}));
+> 42	    if (!enrollment_id || typeof enrollment_id !== "string") return json({ error: "enrollment_id é obrigatório" }, 422);
+> 43	
+> 44	    // ownership (tenant-scoped); 404 also covers another tenant's enrollment.
+> 45	    const { data: enr } = await admin
+> 46	      .from("sequence_enrollments")
+> 47	      .select("id, user_id, sequence_id, lead_id, current_step, status")
+> 48	      .eq("id", enrollment_id).eq("user_id", user.id).maybeSingle();
+> 49	    if (!enr) return json({ error: "Inscrição não encontrada" }, 404);
+> 50	
+> 51	    // OPT-OUT: never dispatch to an opted-out (or completed) enrollment. No charge.
+> 52	    if (enr.status === "opted_out") return json({ status: "opted_out", skipped: true, enrollment_id });
+> 53	    if (enr.status === "completed") return json({ status: "completed", skipped: true, enrollment_id });
+> 54	
+> 55	    // ── CONSENT GATE (STRIDE-Critical) — NEVER generate/charge/record without a granted, non-withdrawn consent.
+> 56	    const { data: consent } = await admin
+> 57	      .from("marketing_consents")
+> 58	      .select("id")
+> 59	      .eq("lead_id", enr.lead_id).eq("user_id", user.id)
+> 60	      .eq("granted", true).is("withdrawn_at", null)
+> 61	      .maybeSingle();
+> 62	    if (!consent) {
+> 63	      // pause so the cron stops retrying a non-consented lead; operator resumes once consent is obtained.
+> 64	      await admin.from("sequence_enrollments").update({ status: "paused" }).eq("id", enrollment_id).eq("user_id", user.id);
+> 65	      admin.from("infra_health_logs").insert({ service: "nurture-dispatch", status: "degraded" }).then(() => {}, () => {});
+> 66	      return json({ status: "blocked", reason: "consent_required", enrollment_id });
+> 67	    }
+> 68	
+> 69	    // resolve the current step from the sequence definition.
+> 70	    const { data: seq } = await admin
+> 71	      .from("sequences").select("id, name, steps, active").eq("id", enr.sequence_id).eq("user_id", user.id).maybeSingle();
+> 72	    if (!seq) return json({ error: "Sequência não encontrada" }, 404);
+> 73	    const steps: SeqStep[] = Array.isArray(seq.steps) ? (seq.steps as SeqStep[]) : [];
+> 74	    if (!seq.active) return json({ status: "paused", reason: "sequence_inactive", enrollment_id });
+> 75	    if (enr.current_step >= steps.length) {
+> 76	      await admin.from("sequence_enrollments").update({ status: "completed", next_run_at: null }).eq("id", enrollment_id).eq("user_id", user.id);
+> 77	      return json({ status: "completed", enrollment_id });
+> 78	    }
+> 79	    const step = steps[enr.current_step] ?? {};
+> 80	
+> 81	    // mcoCoins gatekeeper — only AFTER the consent gate passed.
+> 82	    const { data: bal } = await admin.from("profiles").select("mco_balance").eq("id", user.id).maybeSingle();
+> 83	    if ((bal?.mco_balance ?? 0) < DISPATCH_COST) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 84	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", { p_user_id: user.id, p_amount: DISPATCH_COST });
+> 85	    if (deductErr) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 86	
+> 87	    // generate the message (per-user AI key → system fallback, shared cascade). Fail-soft to a template.
+> 88	    const { data: keys } = await admin.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 89	    const groqKey = keys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 90	    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 91	    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 92	    const aiKey = groqKey || openRouterKey;
+> 93	    let message = step.prompt ? `(${step.prompt})` : `Mensagem da sequência "${seq.name}" (passo ${enr.current_step + 1}).`;
+> 94	    if (aiKey && step.prompt) {
+> 95	      const isGroq = !!groqKey;
+> 96	      try {
+> 97	        const resp = await fetchLLMWithFallback(
+> 98	          isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions",
+> 99	          {
+> 100	            method: "POST",
+> 101	            headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://mcorch.com", "X-Title": "GCRUX Constellation" },
+> 102	            body: JSON.stringify({
+> 103	              model: isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct",
+> 104	              messages: [
+> 105	                { role: "system", content: "Você redige mensagens curtas e pessoais de nutrição (marketing). Responda só com a mensagem, em pt-BR, ≤ 320 caracteres." },
+> 106	                { role: "user", content: String(step.prompt).slice(0, 500) },
+> 107	              ],
+> 108	              stream: false, temperature: 0.6,
+> 109	            }),
+> 110	          },
+> 111	          { openRouterKey, geminiKey, groqKey, functionName: "nurture-dispatch" },
+> 112	        );
+> 113	        if (resp.ok) {
+> 114	          const data = await resp.json();
+> 115	          const c: string = data?.choices?.[0]?.message?.content ?? "";
+> 116	          if (c.trim()) message = c.trim().slice(0, 320);
+> 117	        }
+> 118	      } catch (_) { /* fail-soft: keep the template message */ }
+> 119	    }
+> 120	
+> 121	    // audit trail: record the drip touch. SENDS GATED → delivery = 'gated' (message prepared, not externally sent).
+> 122	    await admin.from("lead_events").insert({
+> 123	      lead_id: enr.lead_id, user_id: user.id, channel: step.channel ?? "email", event_type: "message_sent",
+> 124	      payload: { sequence_id: enr.sequence_id, enrollment_id, step: enr.current_step, message, delivery: "gated", source: aiKey && step.prompt ? "ai" : "template" },
+> 125	    });
+> 126	
+> 127	    // advance the enrollment (idempotent step progression).
+> 128	    const nextStep = enr.current_step + 1;
+> 129	    const done = nextStep >= steps.length;
+> 130	    const waitH = steps[nextStep]?.wait_hours ?? 24;
+> 131	    const nextRunAt = done ? null : new Date(Date.now() + waitH * 3600_000).toISOString();
+> 132	    await admin.from("sequence_enrollments")
+> 133	      .update({ current_step: nextStep, status: done ? "completed" : "active", next_run_at: nextRunAt })
+> 134	      .eq("id", enrollment_id).eq("user_id", user.id);
+> 135	
+> 136	    admin.from("infra_health_logs").insert({ service: "nurture-dispatch", status: "healthy" }).then(() => {}, () => {});
+> 137	    const { data: newBal } = await admin.from("profiles").select("mco_balance").eq("id", user.id).maybeSingle();
+> 138	    return json({
+> 139	      status: done ? "completed" : "dispatched",
+> 140	      enrollment_id, step: enr.current_step, delivered: false, delivery: "gated",
+> 141	      message_preview: message.slice(0, 80), new_balance: newBal?.mco_balance ?? null,
+> 142	    });
+> 143	  } catch (err) {
+> 144	    admin.from("infra_health_logs").insert({ service: "nurture-dispatch", status: "unhealthy" }).then(() => {}, () => {});
+> 145	    return json({ error: "Erro interno no nurture-dispatch", detail: String((err as Error)?.message ?? err) }, 500);
+> 146	  }
+> 147	});
+> 148	
+> ```
+
+## 🤖 Claude *(23:49:59)*
+
+
+## 🤖 Claude *(23:50:01)*
+
+`nurture-dispatch` is JWT-guarded and does the full consent-gate→bill→generate→advance per enrollment. The cron gap: a service-role driver that finds due enrollments (`active`, `next_run_at<=now()`) across tenants and fans out to it — mirroring the proven `orchestrate-content→orchestrate-step` service-role pattern (rather than duplicating the STRIDE-Critical consent/billing logic). Probing the exact wiring details:
+
+## 🤖 Claude *(23:50:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== config.toml: nurture-dispatch + orchestrate-step (verify_jwt pattern) ===\"\ngrep -nA1 \"functions.nurture-dispatch\\|functions.orchestrate-step\\|functions.auto-publish\" supabase/config.toml\necho \"\"\necho \"=== pg_cron available in prod? + existing cron jobs ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  \"+(.k)+\": \"+(.v)) else (.message//tostring) end'\nSELECT 'pg_cron_installed' AS k, (EXISTS(SELECT 1 FROM pg_extension WHERE extname='pg_cron'))::text AS v\nUNION ALL SELECT 'pg_net_installed', (EXISTS(SELECT 1 FROM pg_extension WHERE extname='pg_net'))::text;\nSQL\necho \"\"\necho \"=== existing pg_cron jobs (if pg_cron) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (if length==0 then \"  (none)\" else (.[]|\"  \"+.jobname+\" :: \"+.schedule) end) else (.message//tostring) end'\nSELECT jobname, schedule FROM cron.job ORDER BY jobname;\nSQL\necho \"\"\necho \"=== how does orchestrate-step self-check service-role? (pattern to mirror) ===\"\ngrep -nE \"SB_SECRET_KEY|verify|Bearer|service.role|=== |x-service\" supabase/functions/orchestrate-step/index.ts | head -8",
+  "description": "Probe verify_jwt config, pg_cron availability, service-role self-check pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === config.toml: nurture-dispatch + orchestrate-step (verify_jwt pattern) ===
+> 18:[functions.orchestrate-step]
+> 19-verify_jwt = false
+> 
+> === pg_cron available in prod? + existing cron jobs ===
+>   pg_cron_installed: true
+>   pg_net_installed: true
+> 
+> === existing pg_cron jobs (if pg_cron) ===
+>   mcorch-stability-decay :: 0 3 * * *
+> 
+> === how does orchestrate-step self-check service-role? (pattern to mirror) ===
+> 32:    if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 34:    } else if (candidate === "linkedin_post") {
+> 36:    } else if (candidate === "twitter_thread") {
+> 38:    } else if (candidate === "knowledge_mesh") {
+> 46:  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 50:    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 51:    if (authHeader !== `Bearer ${serviceKey}`) {
+> 89:      const idx = steps.findIndex((s: any) => s.name === name);
+> ```
+
+## 🤖 Claude *(23:51:14)*
+
+
+## 🤖 Claude *(23:51:17)*
+
+Strong findings: **pg_cron is installed** (already running `mcorch-stability-decay`) + pg_net available → I'll schedule the nurture cron in-DB (consistent with the existing job). And `orchestrate-step`'s service-role self-check (`authHeader !== Bearer ${serviceKey}`) is the pattern to mirror.
+
+Design: add a **service-role mode** to `nurture-dispatch` (so the cron can drive it without duplicating the STRIDE-Critical consent/billing logic) + a thin `nurture-cron` fan-out + a pg_cron schedule. Starting with the dual-mode auth in `nurture-dispatch`:
+
+## 🤖 Claude *(23:51:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts",
+  "old_string": "    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Missing authorization\" }, 401);\n    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authError } = await userClient.auth.getUser();\n    if (authError || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const { enrollment_id } = await req.json().catch(() => ({}));\n    if (!enrollment_id || typeof enrollment_id !== \"string\") return json({ error: \"enrollment_id \u00e9 obrigat\u00f3rio\" }, 422);",
+  "new_string": "    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Missing authorization\" }, 401);\n\n    const body = await req.json().catch(() => ({}));\n    const enrollment_id = body?.enrollment_id;\n    if (!enrollment_id || typeof enrollment_id !== \"string\") return json({ error: \"enrollment_id \u00e9 obrigat\u00f3rio\" }, 422);\n\n    // Two invocation modes (mirrors orchestrate-step). USER: a logged-in caller \u2014 the JWT is validated via getUser().\n    // SERVICE (nurture-cron): presents the SB_SECRET_KEY + an explicit user_id it resolved from the due enrollment.\n    // Only the service-key holder can take the service path, so its user_id is trusted (an attacker cannot forge it).\n    let userId: string;\n    if (authHeader === `Bearer ${serviceKey}` && typeof body?.user_id === \"string\") {\n      userId = body.user_id;\n    } else {\n      const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });\n      const { data: { user: authedUser }, error: authError } = await userClient.auth.getUser();\n      if (authError || !authedUser) return json({ error: \"Unauthorized\" }, 401);\n      userId = authedUser.id;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:51:28)*
+
+
+## 🤖 Claude *(23:51:28)*
+
+Now replacing the remaining `user.id` references with `userId` throughout (the new block uses `authedUser.id`, so it's untouched):
+
+## 🤖 Claude *(23:51:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts",
+  "old_string": "user.id",
+  "new_string": "userId"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:52:12)*
+
+
+## 🤖 Claude *(23:52:13)*
+
+Now the `nurture-cron` fan-out edge function (service-role, bounded concurrency, reuses `nurture-dispatch` so consent/billing logic stays single-sourced):
+
+## 🤖 Claude *(23:52:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-cron/index.ts",
+  "content": "// nurture-cron \u2014 marketing-hub FR-MH-008 (\"cron avan\u00e7a passos\"; BoK SSOT 04-frd.md FR-MH-008 + 05-sdd.md).\n// Service-role driver that advances DUE sequence_enrollments across ALL tenants by fanning out to nurture-dispatch\n// (which owns the STRIDE-Critical consent gate + atomic billing + message generation \u2014 deliberately NOT duplicated\n// here, single source of truth). Invoked by the `nurture-advance` pg_cron schedule (every 15 min).\n//\n// SECURITY: verify_jwt=false (config.toml) + self-check Authorization === `Bearer ${SB_SECRET_KEY}` (mirrors\n// orchestrate-step) \u2192 only the service key (pg_cron via Vault) can run it. No user data crosses tenants: each\n// enrollment carries its own user_id, forwarded to nurture-dispatch's trusted service path.\nimport { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nconst MAX_PER_RUN = 200; // cap per tick \u2014 no silent unbounded fan-out (logged if hit).\nconst CONCURRENCY = 8;    // wall-clock bound (mirrors campaign-run MAX_PARALLEL_STEPS).\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  // Only the service-role holder (pg_cron presenting the Vault key) may run the cron.\n  if (req.headers.get(\"Authorization\") !== `Bearer ${serviceKey}`) return json({ error: \"Forbidden\" }, 403);\n  const admin = createClient(url, serviceKey);\n\n  try {\n    // due = active enrollments whose next_run_at has passed (served by idx_enroll_due partial index).\n    const { data: due, error } = await admin\n      .from(\"sequence_enrollments\")\n      .select(\"id, user_id\")\n      .eq(\"status\", \"active\")\n      .not(\"next_run_at\", \"is\", null)\n      .lte(\"next_run_at\", new Date().toISOString())\n      .order(\"next_run_at\", { ascending: true })\n      .limit(MAX_PER_RUN);\n    if (error) throw error;\n    const list = (due ?? []) as Array<{ id: string; user_id: string }>;\n    if (list.length === 0) {\n      admin.from(\"infra_health_logs\").insert({ service: \"nurture-cron\", status: \"healthy\" }).then(() => {}, () => {});\n      return json({ status: \"ok\", due: 0, dispatched: 0, completed: 0, blocked: 0, errors: 0 });\n    }\n\n    const tally = { dispatched: 0, completed: 0, blocked: 0, errors: 0 };\n    const dispatchOne = async (e: { id: string; user_id: string }) => {\n      try {\n        const r = await fetch(`${url}/functions/v1/nurture-dispatch`, {\n          method: \"POST\",\n          headers: { Authorization: `Bearer ${serviceKey}`, \"Content-Type\": \"application/json\" },\n          body: JSON.stringify({ enrollment_id: e.id, user_id: e.user_id }),\n        });\n        const data = await r.json().catch(() => ({}));\n        switch (data?.status) {\n          case \"dispatched\": tally.dispatched++; break;\n          case \"completed\": tally.completed++; break;\n          case \"blocked\": case \"opted_out\": case \"paused\": tally.blocked++; break;\n          default: if (!r.ok) tally.errors++;\n        }\n      } catch (_) { tally.errors++; }\n    };\n\n    // bounded-concurrency fan-out (sum of batches; wall-clock \u2248 slowest batch).\n    for (let i = 0; i < list.length; i += CONCURRENCY) {\n      await Promise.allSettled(list.slice(i, i + CONCURRENCY).map(dispatchOne));\n    }\n\n    const capped = list.length >= MAX_PER_RUN;\n    admin.from(\"infra_health_logs\")\n      .insert({ service: \"nurture-cron\", status: tally.errors === 0 ? \"healthy\" : \"degraded\" })\n      .then(() => {}, () => {});\n    return json({ status: \"ok\", due: list.length, capped, ...tally });\n  } catch (err) {\n    admin.from(\"infra_health_logs\").insert({ service: \"nurture-cron\", status: \"unhealthy\" }).then(() => {}, () => {});\n    return json({ error: \"Erro interno no nurture-cron\", detail: String((err as Error)?.message ?? err) }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-cron/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:52:34)*
+
+
+## 🤖 Claude *(23:52:35)*
+
+Now adding both functions to `config.toml` as `verify_jwt=false` (the cron posts the service key, not a JWT — without this it's the exact 401 class as the flywheel bug). Reading the config first:
+
+## 🤖 Claude *(23:52:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 1,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	project_id = "bcyvddsykvehvpwstlfa"
+> 2	
+> 3	# Configuração de Bypass de JWT para Orquestração Soberana
+> 4	# key-migration 2026-06-01: service→service targets are called with the new sb_secret_ key (not a JWT),
+> 5	# so the gateway JWT check must be off; each function below enforces its own in-code auth gate.
+> 6	[functions.publish-social]
+> 7	verify_jwt = false
+> 8	[functions.refresh-social-token]
+> 9	verify_jwt = false
+> 10	[functions.embed-mcorch-node]
+> 11	verify_jwt = false
+> 12	[functions.self-optimize]
+> 13	verify_jwt = false
+> 14	[functions.self-heal]
+> 15	verify_jwt = false
+> 16	[functions.orchestrate-content]
+> 17	verify_jwt = false
+> 18	[functions.orchestrate-step]
+> 19	verify_jwt = false
+> 20	[functions.generate-content]
+> 21	verify_jwt = false
+> 22	[functions.generate-audio-script]
+> 23	verify_jwt = false
+> 24	[functions.generate-video-script]
+> 25	verify_jwt = false
+> 26	[functions.list-provider-models]
+> 27	verify_jwt = false
+> 28	[functions.generate-video]
+> 29	verify_jwt = false
+> 30	[functions.check-video-status]
+> ```
+
+## 🤖 Claude *(23:52:40)*
+
+
+## 🤖 Claude *(23:52:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.orchestrate-step]\nverify_jwt = false\n[functions.generate-content]\nverify_jwt = false",
+  "new_string": "[functions.orchestrate-step]\nverify_jwt = false\n[functions.nurture-dispatch]\nverify_jwt = false\n[functions.nurture-cron]\nverify_jwt = false\n[functions.generate-content]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:53:00)*
+
+
+## 🤖 Claude *(23:53:01)*
+
+Now the pg_cron schedule migration (mirrors `mcorch-stability-decay` + the embed trigger's Vault-key pattern; idempotent unschedule-guard):
+
+## 🤖 Claude *(23:53:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603230000_nurture_advance_cron.sql",
+  "content": "-- marketing-hub FR-MH-008 (\"cron avan\u00e7a passos\"): schedule the nurture advancer.\n-- BoK SSOT: docs/bok/marketing-hub/04-frd.md FR-MH-008 (\"cron avan\u00e7a passos\") + 05-sdd.md (EdgeFunction + Cron).\n--\n-- Every 15 min, pg_cron POSTs to the `nurture-cron` edge function (service-role), which finds DUE\n-- sequence_enrollments (status='active' AND next_run_at <= now()) and fans out to `nurture-dispatch` \u2014 the\n-- consent-gate + atomic billing + message generation live there (single source of truth; not duplicated).\n--\n-- Pattern mirrors the existing `mcorch-stability-decay` pg_cron job + the `mcorch_embed_on_insert` trigger's\n-- Vault-key read: the Bearer is the new `sb_secret_key` resolved from Vault at run time (never hardcoded; rotates\n-- with the key). `nurture-cron` self-checks `Authorization === Bearer <SB_SECRET_KEY>`, so only this job can run it.\n-- pg_cron + pg_net are already installed (verified). Idempotent: unschedule-if-exists then (re)schedule.\n\nDO $$\nBEGIN\n  PERFORM cron.unschedule('nurture-advance');\nEXCEPTION WHEN OTHERS THEN\n  NULL;  -- job did not exist yet (first apply / fresh env)\nEND $$;\n\nSELECT cron.schedule(\n  'nurture-advance',\n  '*/15 * * * *',\n  $cron$\n  SELECT net.http_post(\n    url := 'https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/nurture-cron',\n    headers := jsonb_build_object(\n      'Content-Type', 'application/json',\n      'Authorization', 'Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'sb_secret_key' LIMIT 1)\n    ),\n    body := '{}'::jsonb\n  );\n  $cron$\n);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603230000_nurture_advance_cron.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:53:15)*
+
+
+## 🤖 Claude *(23:53:15)*
+
+Built. Sanity-checking both functions (deno check) + confirming no dangling `user` refs in the refactored `nurture-dispatch`:
+
+## 🤖 Claude *(23:53:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== leftover bare 'user.' refs in nurture-dispatch (should be none; all \u2192 userId) ===\"\ngrep -nE \"\\buser\\.id\\b|\\bauthError\\b\" supabase/functions/nurture-dispatch/index.ts || echo \"  \u2705 clean (authError consumed in new block; no user.id)\"\necho \"=== userId usage count ===\"; grep -c \"userId\" supabase/functions/nurture-dispatch/index.ts\necho \"\"\necho \"=== deno check both fns ===\"\nfor f in nurture-dispatch nurture-cron; do\n  out=$(deno check \"supabase/functions/$f/index.ts\" 2>&1 | grep -iE \"error\" | head -2)\n  [ -z \"$out\" ] && echo \"  \u2705 $f\" || echo \"  \u274c $f: $out\"\ndone",
+  "description": "Verify nurture-dispatch refactor + deno check both fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === leftover bare 'user.' refs in nurture-dispatch (should be none; all → userId) ===
+> 50:      const { data: { user: authedUser }, error: authError } = await userClient.auth.getUser();
+> 51:      if (authError || !authedUser) return json({ error: "Unauthorized" }, 401);
+> === userId usage count ===
+> 14
+> 
+> === deno check both fns ===
+>   ✅ nurture-dispatch
+>   ✅ nurture-cron
+> ```
+
+## 🤖 Claude *(23:53:29)*
+
+
+## 🤖 Claude *(23:53:30)*
+
+Both functions clean (lines 50-51 are the intended new `authedUser` block; no leftover `user.id`; `userId` used 14×). The migration is new → CLAUDE.md mandates `/security-review` (and it also covers the `nurture-dispatch` service-role mode + the pg_cron Vault-key read):
+
+## 🤖 Claude *(23:53:30)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(23:53:30)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 4 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   supabase/config.toml
+	modified:   supabase/functions/nurture-dispatch/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	supabase/functions/nurture-cron/
+	supabase/migrations/20260603230000_nurture_advance_cron.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+.claude/context/drift-audit-2026-06-03.md
+CLAUDE.md
+docs/processes/schema-drift-audit.md
+scripts/qa/audit-schema-drift.sh
+supabase/functions/agent-task-execute/index.ts
+supabase/functions/analyze-node/index.ts
+supabase/functions/analyze-sem/index.ts
+supabase/functions/analyze-seo/index.ts
+supabase/functions/canvas-execute/index.ts
+supabase/functions/generate-audio-script/index.ts
+supabase/functions/generate-video-script/index.ts
+supabase/functions/optimize-schedule/index.ts
+supabase/functions/self-optimize/index.ts
+supabase/migrations/20260603210000_capture_rls_auto_enable.sql
+supabase/migrations/20260603210500_harden_definer_search_path.sql
+supabase/migrations/20260603211000_drop_dead_sync_knowledge_mesh_trigger.sql
+supabase/migrations/20260603220000_secure_ledger_rpcs.sql
+```
+
+COMMITS:
+
+```
+commit 25a8b28b098a8f96a4c37b0ddf7ae78c497e14bf
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 3 20:44:36 2026 -0300
+
+    chore(observability): functionName em todas as fns do fallback LLM — fim do :unknown
+    
+    Fecha o gap de observabilidade da telemetria de fallback: 9 das 13 fns que usam
+    fetchLLMWithFallback logavam `llm-fallback:unknown` em infra_health_logs. Agora as
+    13/13 passam o functionName → uma tempestade de fallback fica atribuível à fn exata
+    (mesmo espírito do anticorpo de drift desta sessão: tornar falha silenciosa visível).
+    
+    9 fns instrumentadas: agent-task-execute, analyze-node, analyze-sem, analyze-seo,
+    canvas-execute, generate-audio-script, generate-video-script, optimize-schedule,
+    self-optimize. deno check ok · suíte 257/259 · 9 deploys ok (exit 0).
+
+commit 336e2b8f4a8c2f2e5ef13666f1bae58ce3b2fe80
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 3 20:34:56 2026 -0300
+
+    fix(billing): fecha P0 de cunhagem não-autorizada de mcoCoins nos RPCs do ledger
+    
+    A auditoria de drift expôs (achado adjacente, pré-existente) que os 3 RPCs do ledger
+    davam EXECUTE a anon/authenticated/PUBLIC e confiavam num p_user_id arbitrário —
+    SECURITY DEFINER, alcançáveis direto via PostgREST, pulando as edge functions e seus caps:
+    - award_mco_coins(self, 1000) → cunhava 1000 mcoCoins por chamada, ilimitado;
+    - add_user_score → auto-inflava score→coins;
+    - deduct_mco_coins(-1000) → cunhava por valor negativo; (vítima) → drenava saldo alheio.
+    
+    Fix cirúrgico, caminhos legítimos preservados:
+    - REVOKE award_mco_coins + add_user_score de anon/authenticated/PUBLIC (edge-only,
+      via service_role); deduct revoga anon/PUBLIC e mantém authenticated (cliente deduz de si).
+    - deduct ganha guarda de sinal (p_amount<=0 → erro) + posse de tenant NULL-safe
+      (auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid()
+      → 42501); service_role isento.
+    
+    /security-review limpo. Exploits provados BLOQUEADOS em prod sob role authenticated
+    simulado: negativo→"deve ser positivo", cross-user→42501, award→permission denied.
+    ACL pós-fix: award/add_user_score = só service_role; deduct = authenticated + service_role.
+
+commit eaffec64a865bbb5751b1ac41101cc6a9385a208
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 3 20:18:49 2026 -0300
+
+    chore(audit): anticorpo de drift de schema — auditoria reexecutável + SOP
+    
+    Promove a metodologia da varredura a um gate reexecutável pra que drift nunca mais
+    dependa de um incidente pra aparecer (Lei 5 — Obstáculo→Síntese):
+    
+    - scripts/qa/audit-schema-drift.sh: 8 checagens (ledger · fns/triggers out-of-band ·
+      contrato RPC · verify_jwt edge · RLS/search_path advisory); exit 1 = drift. Primeira
+      corrida verde 2026-06-03.
+    - docs/processes/schema-drift-audit.md: SOP Lei 2 (Operator/Sequence/Gates/Recovery).
+    - relatório material da varredura + Key Files Reference.
+    
+    Regra de governança selada: todo hotfix de prod vira migration na MESMA sessão —
+    foi a omissão disso (não o rename em si) que deixou o flywheel morto 2 dias em silêncio.
+
+commit 773dce41499f1b0cb361adaad840c62ed618c4e5
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 3 20:18:49 2026 -0300
+
+    fix(schema): zera o drift deployado↔migrations achado na varredura pós-flywheel
+    
+    O post-mortem da v6.25.0 (async_orchestrate_step hotfixada em prod sem migration)
+    motivou varrer todas as superfícies por irmãos do mesmo defeito. A varredura achou
+    1 drift real (benigno) + 2 débitos adjacentes — todos remediados e verificados
+    materialmente em prod (re-auditoria exit 0):
+    
+    - F1 captura o event-trigger rls_auto_enable (ligava RLS em toda tabela nova, vivo
+      em prod sem migration nenhuma) — agora versionado e idempotente; reproduz a vida.
+    - F2 trava search_path em 6 funções SECURITY DEFINER (inclui o RPC financeiro
+      award_mco_coins) — corpos verbatim, comportamento preservado.
+    - F3 dropa o trigger pg_net morto (kong:8000 + bearer vazio, no-op desde a origem).
+    
+    /security-review SAFE (sem HIGH/MEDIUM) · supabase db push Finished.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (48KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd90bff2-59ea-4d8a-b987-808b97929c73/tool-results/bh98i5h3k.txt
+
+Preview (first 2KB):
+diff --git a/.claude/context/drift-audit-2026-06-03.md b/.claude/context/drift-audit-2026-06-03.md
+new file mode 100644
+index 0000000..a30a163
+--- /dev/null
++++ b/.claude/context/drift-audit-2026-06-03.md
+@@ -0,0 +1,128 @@
++# Schema Drift Audit — deployed ↔ migrations (2026-06-03)
++
++> **Trigger:** v6.25.0 post-mortem. The content flywheel was silently dead 01-06→03-06 partly because
++> `async_orchestrate_step` had been **hotfixed in prod without a migration** (param renamed
++> `p_service_key`→`p_service_jwt_legacy` → PGRST202 → pg_net no-op → every run stuck `running`).
++> Sovereign directive: *"varrer outras funções/RPCs por drift similar — o que as migrations dizem vs. o deployado."*
++>
++> **Operator:** MCORCH Agent · **Reviewer/Owner:** Sovereign · **Blast radius of the audit:** nil (read-only).
++> **Channel:** Supabase Management API `/database/query` (read-only) + `pg_*` catalogs. Token isolated in
++> `/tmp/mq.sh`, never echoed (key-hygiene). Project ref `bcyvddsykvehvpwstlfa`.
++
++---
++
++## Verdict
++
++**No surviving deployed↔migration DRIFT beyond ONE benign, beneficial out-of-band object** (`rls_auto_enable`).
++The `async_orchestrate_step` incident was **isolated** — no siblings of the same *cause* (out-of-band SQL edit
++diverging from version control) remain. Two **adjacent** findings (NOT drift) recorded as tech-debt OTDs.
++
++| Surface | Method | Result |
++|---|---|---|
++| Migration ledger parity | `schema_migrations` (prod) vs `migrations/*.sql` | ✅ **93 == 93, exact set** |
++| DB function existence | live `pg_proc` (ext-excluded) vs migration `CREATE FUNCTION` | ⚠️ 1 out-of-band: **`rls_auto_enable`** (benign) |
++| **RPC caller-contract (the async class)** | 12 `.rpc()` call-sites' arg-keys ⊆ live param-names | ✅ **CLEAN — all 12**, async fix confirmed live |
++| SECURITY DEFINER search_path | live `proconfig` vs migration | ⚠️ **7 latent gaps** (migration never set it → **not drift**) |
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(23:53:35)*
+
+
+## 🤖 Claude *(23:53:35)*
+
+Running the review — identification sub-task focused on the new nurturing cron changes (the prior commits were already reviewed):
+
+## 🤖 Claude *(23:53:55)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review nurture cron changes",
+  "subagent_type": "general-purpose",
+  "prompt": "Senior security engineer: focused review of NEW nurturing-cron changes on this branch (repo /home/gcrUX/htdocs/constellation-orchestra). The already-committed drift/ledger changes are out of scope (prior-reviewed). Review ONLY these uncommitted changes:\n\n1. supabase/functions/nurture-dispatch/index.ts  (MODIFIED \u2014 added a service-role invocation mode)\n2. supabase/functions/nurture-cron/index.ts        (NEW \u2014 service-role cron driver)\n3. supabase/migrations/20260603230000_nurture_advance_cron.sql  (NEW \u2014 pg_cron schedule)\n4. supabase/config.toml  (added nurture-dispatch + nurture-cron as verify_jwt=false)\n\nRead all four. Context: FR-MH-008 \"cron avan\u00e7a passos\". `nurture-dispatch` is STRIDE-Critical (consent-gated, debits 2 mcoCoins, generates a message, advances a sequence_enrollment). Previously it was verify_jwt=true (gateway-enforced JWT). The change makes it verify_jwt=false and adds an in-function dual auth: SERVICE mode (Authorization === `Bearer ${SB_SECRET_KEY}` AND body.user_id present \u2192 trust body.user_id) OR USER mode (validate JWT via userClient.auth.getUser()). `nurture-cron` (verify_jwt=false) self-checks `Authorization === Bearer ${SB_SECRET_KEY}` then finds due enrollments (status='active', next_run_at<=now()) across all tenants and POSTs each {enrollment_id, user_id} to nurture-dispatch with the service key. The pg_cron job posts to nurture-cron every 15 min with the Bearer read from vault.decrypted_secrets ('sb_secret_key').\n\nExamine specifically (high-confidence, >80% exploitability only):\n1. **Auth-bypass in nurture-dispatch's new dual mode**: with verify_jwt=false, can an UNAUTHENTICATED or non-service caller reach a privileged path? Trace: if authHeader !== `Bearer ${serviceKey}` OR body.user_id missing \u2192 it falls to USER mode and calls getUser() which must reject invalid/absent JWTs. Confirm an attacker cannot (a) reach service mode without the secret key, (b) bypass getUser() validation, (c) pass user_id to act on another tenant in USER mode (in USER mode user_id must come from getUser, NOT body). Verify the code ignores body.user_id in USER mode.\n2. **Does verify_jwt=false weaken the user-facing path?** getUser() validates the JWT regardless of gateway; confirm a forged/expired JWT \u2192 401. Compare with orchestrate-step (same pattern, supabase/functions/orchestrate-step/index.ts).\n3. **nurture-cron auth**: only the service key can run it (self-check). Confirm no path executes the fan-out without the key. Confirm it can't be tricked into cross-tenant dispatch (each enrollment's own user_id is forwarded).\n4. **pg_cron migration**: the Bearer is read from vault at runtime and sent to our own HTTPS edge fn. Is the service key exposed/logged anywhere? Is there SQL injection in the cron body (it's a static string with a subselect \u2014 no user input)? Compare to the existing mcorch_embed_on_insert trigger + mcorch-stability-decay cron (established patterns).\n5. Any way the consent gate / billing in nurture-dispatch is now bypassable via the service path? (service mode still runs the SAME consent gate + deduct \u2014 confirm the new code didn't skip them.)\n\nEXCLUDE: DoS, rate-limiting, secrets-on-disk, lack-of-hardening, theoretical races, markdown/docs findings. Supabase role semantics: service_role key \u2192 full access; verify_jwt=false means the gateway passes all requests so the function MUST self-authenticate. PostgREST/getUser validates JWTs in-function. If the changes are sound, say so explicitly. For each real finding: file:line, severity (HIGH/MEDIUM), category, exploit scenario, fix. Return markdown."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The frontend caller (`src/hooks/useNurturing.ts:110`) invokes nurture-dispatch via `supabase.functions.invoke` with `body: { enrollment_id }` ONLY — no `user_id` in the body, and `supabase.functions.invoke` automatically attaches the logged-in user\'s JWT. So the frontend takes the USER path cleanly. The only caller that supplies `user_id` is nurture-cron with the service key. No confused-deputy caller exists.\n\nI have completed a thorough trace of all four files against the established, security-reviewed reference patterns. Here is my verdict.\n\n---\n\n# Security Review: nurture-cron / nurture-dispatch changeset\n\n**Scope reviewed (4 files, uncommitted on `main`):**\n- `supabase/functions/nurture-dispatch/index.ts` (MODIFIED — dual-auth mode added)\n- `supabase/functions/nurture-cron/index.ts` (NEW — service-role cron driver)\n- `supabase/migrations/20260603230000_nurture_advance_cron.sql` (NEW — pg_cron schedule)\n- `supabase/config.toml` (added both fns as `verify_jwt = false`)\n\n**Verdict: SOUND. No HIGH or MEDIUM findings. Ship it.**\n\nEvery one of the five high-confidence concerns in the brief was traced to a concrete code path and resolves correctly. The changeset is a faithful application of two patterns already established and security-reviewed in this codebase: the `orchestrate-step` service-role gate and the `mcorch_embed_on_insert` Vault-key cron read. Details below, each anchored to file:line.\n\n---\n\n## 1. Auth-bypass in nurture-dispatch\'s dual mode — NOT exploitable\n\n`nurture-dispatch/index.ts:46-53`:\n```ts\nif (authHeader === `Bearer ${serviceKey}` && typeof body?.user_id === "string") {\n  userId = body.user_id;                 // SERVICE mode\n} else {\n  const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });\n  const { data: { user: authedUser }, error: authError } = await userClient.auth.getUser();\n  if (authError || !authedUser) return json({ error: "Unauthorized" }, 401);\n  userId = authedUser.id;                 // USER mode — identity from validated token\n}\n```\n\n- **(a) Cannot reach SERVICE mode without the secret key.** The first conjunct is an exact string compare against `SB_SECRET_KEY`. The service key is never exposed to the browser (confirmed: the only non-service caller, `useNurturing.ts:110`, sends no key and no `user_id`). An attacker without the key fails the `&&` and falls to USER mode.\n- **(b) Cannot bypass `getUser()`.** There is **no `atob`/blind-decode fallback** (verified by grep — the sole `body.user_id` reference in the file is inside the service branch). `getUser()` calls GoTrue, which validates the ES256 signature server-side. A forged or expired JWT → `authError`/null user → `401`. This is the exact path the codebase\'s own SOP (`docs/processes/edge-jwt-identity-verification.md:51`) blesses as layer 1, and is byte-identical to `lead-score:53` and `campaign-run:59`.\n- **(c) Cannot pass `user_id` to act on another tenant in USER mode.** In the else branch, `userId` is assigned **only** from `authedUser.id`. `body.user_id` is never read there — it is dead in USER mode. Every subsequent query (`enr`, `consent`, `seq`, balance, `deduct_mco_coins`, `lead_events` insert, enrollment update) is scoped `.eq("user_id", userId)`. An attacker supplying `{enrollment_id, user_id: "<victim>"}` with their own valid JWT operates strictly on their own tenant; the victim\'s enrollment returns `404` at line 60 ("404 also covers another tenant\'s enrollment").\n\nThe accompanying comment at lines 42-44 accurately describes the trust model.\n\n## 2. `verify_jwt=false` does NOT weaken the user-facing path\n\nThe gateway JWT check is intentionally off because the project runs ES256 session tokens against an HS256-configured gateway (documented at `edge-jwt-identity-verification.md:12`). Identity resolution is delegated to the function, and `getUser()` performs full signature validation regardless of the gateway. A forged/expired JWT → `401` (line 51). This matches the established pattern in `orchestrate-step:50-55` (service-only) and `lead-score`/`campaign-run` (user path). `config.toml:20-23` correctly lists both new functions alongside the other key-migration service→service targets.\n\n## 3. nurture-cron auth — fan-out gated on the service key; no cross-tenant leakage\n\n`nurture-cron/index.ts:29`:\n```ts\nif (req.headers.get("Authorization") !== `Bearer ${serviceKey}`) return json({ error: "Forbidden" }, 403);\n```\nThis self-check runs **before** any work (DB query, fan-out). No path reaches the dispatch loop without the key. The fan-out (lines 50-65) forwards **each enrollment\'s own `user_id`** — read from the row at line 35 (`.select("id, user_id")`) — to nurture-dispatch\'s service path. There is no global/shared user_id and no place where one tenant\'s id is applied to another\'s enrollment. The `MAX_PER_RUN=200` cap and bounded concurrency are operational hygiene, out of scope, but worth noting they exist.\n\n## 4. pg_cron migration — Vault read is sound; no key exposure; no injection\n\n`20260603230000_nurture_advance_cron.sql:24-31`:\n- **Key not logged/exposed.** The Bearer is read at runtime via `(SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = \'sb_secret_key\' LIMIT 1)` and passed only in the `Authorization` header of `net.http_post` to **our own HTTPS edge function** (`https://bcyvddsykvehvpwstlfa.supabase.co/...`). This is identical to the already-reviewed `mcorch_embed_on_insert` trigger (`20260601050000_embed_trigger_vault_key.sql:28-44`) — same secret name, same project host, same header injection. The key never lands in a log statement or a column.\n- **No SQL injection.** The cron body is a static literal `\'{}\'::jsonb`; the URL and header keys are constant strings built with `jsonb_build_object`. The only dynamic value is the Vault subselect (trusted, no user input). There is zero user-controlled input in the cron command string.\n- **Idempotent + safe re-apply.** `unschedule` wrapped in a `DO/EXCEPTION WHEN OTHERS` block (lines 13-18) then `cron.schedule` — mirrors the established convention.\n\nOne non-blocking operational note (NOT a vulnerability): the job is inert until the Sovereign has seeded `vault.create_secret(..., \'sb_secret_key\')` — same prerequisite already documented for the embed trigger. If the secret is absent, the subselect yields `NULL`, the header becomes `Bearer ` (empty), and nurture-cron returns `403` — fail-closed, correct.\n\n## 5. Consent gate + billing are NOT bypassable via the service path\n\nThe dual-auth branch (lines 45-53) only resolves *which* `userId` is used; control then falls through to the **single shared body** of the function for both modes. The service path executes the identical, in-order gates:\n- **Opt-out / completed short-circuit** — lines 63-64 (no charge).\n- **CONSENT GATE (STRIDE-Critical)** — lines 67-78: requires a `marketing_consents` row with `granted=true` AND `withdrawn_at IS NULL`, scoped to `user_id = userId`; on miss it pauses the enrollment and returns `blocked` **before** any deduction or generation.\n- **mcoCoins gatekeeper** — lines 93-96: balance pre-check then atomic `deduct_mco_coins` RPC, only *after* consent passes.\n\nThe cron reaching nurture-dispatch with the service key does **not** skip, reorder, or weaken any of these — it simply supplies a trusted `userId`. The Critical mitigation ("never generate/charge/record without granted, non-withdrawn consent") holds on both paths.\n\n---\n\n## Confirmation of faithful pattern reuse\n\n| Concern | Established reference | nurture changeset | Match |\n|---|---|---|---|\n| Service-role gate (trust `body.user_id`) | `orchestrate-step:50-55` | `nurture-dispatch:46`, `nurture-cron:29` | ✅ identical |\n| User JWT validation via `getUser()` | `lead-score:53`, `campaign-run:59` | `nurture-dispatch:49-52` | ✅ identical |\n| pg_cron Vault-key read + http_post | `mcorch_embed_on_insert` (`20260601050000`) | `20260603230000:24-31` | ✅ identical |\n| Tenant scoping on every query | `lead-score`, `campaign-run` | `nurture-dispatch` (all `.eq("user_id", userId)`) | ✅ consistent |\n\nNo `atob` anti-pattern (the exact vuln class the codebase\'s SOP warns about) is present. The frontend caller sends no `user_id`, so there is no confused-deputy surface. The changeset is consistent with the documented API Tenancy Model and the Edge JWT Identity Verification SOP.\n\n**Files of record (absolute paths):**\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-dispatch/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/nurture-cron/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603230000_nurture_advance_cron.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml`\n- Reference patterns: `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts:50`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601050000_embed_trigger_vault_key.sql`, `/home/gcrUX/htdocs/constellation-orchestra/docs/processes/edge-jwt-identity-verification.md`'}, {'type': 'text', 'text': "agentId: a6d36258d12855e76 (use SendMessage with to: 'a6d36258d12855e76' to continue this agent)\n<usage>subagent_tokens: 92614\ntool_uses: 15\nduration_ms: 126727</usage>"}]
+> ```
+
+## 🤖 Claude *(23:56:10)*
+
+
+## 🤖 Claude *(23:56:19)*
+
+# Security Review — nurture-cron / nurture-dispatch changeset
+
+**Verdict: ✅ SOUND. No HIGH or MEDIUM findings.** No candidate reached confidence ≥ 8; no false-positive sub-tasks required. The changeset faithfully reuses two already-reviewed patterns (the `orchestrate-step` service-role gate + the `mcorch_embed_on_insert` Vault-key cron read).
+
+## Files reviewed
+`nurture-dispatch/index.ts` (dual-auth) · `nurture-cron/index.ts` (new) · `20260603230000_nurture_advance_cron.sql` (pg_cron) · `config.toml` (verify_jwt=false ×2)
+
+## Evidence
+1. **Dual-auth bypass — none.** Service mode requires an exact `Bearer ${SB_SECRET_KEY}` match (never exposed to browser; the only non-service caller `useNurturing.ts:110` sends no key/user_id). USER mode derives `userId` **only** from `getUser()` — `body.user_id` is dead there (no `atob` fallback), and every query is `.eq("user_id", userId)`, so a victim's enrollment 404s.
+2. **`verify_jwt=false` doesn't weaken the user path** — `getUser()` validates ES256 signatures regardless of the gateway; forged/expired → 401. Matches `orchestrate-step`/`lead-score`/`campaign-run`.
+3. **nurture-cron** self-checks the service key *before* any work (403 otherwise); fan-out forwards each enrollment's **own** `user_id` — no cross-tenant leakage.
+4. **pg_cron migration** — Bearer read from Vault at runtime, sent only in the header to our own HTTPS edge fn (identical to the reviewed embed trigger); static body, no user input → no injection; fail-closed if the secret is absent (empty Bearer → 403).
+5. **Consent gate + billing not bypassable** — the dual-auth branch only resolves *which* `userId`; control falls through to the single shared body, so the service path runs the identical consent gate → balance check → atomic `deduct_mco_coins`, in order.
+
+**Cleared to ship.** Deploying the two functions + applying the cron migration:
+
+## 🤖 Claude *(23:56:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy nurture-dispatch + nurture-cron ===\"\ntimeout 200 npx supabase functions deploy nurture-dispatch nurture-cron 2>&1 | grep -iE \"Deploying|Deployed|script size|error\" | tail -8\necho \"--- deploy exit: ${PIPESTATUS[0]} ---\"\necho \"\"\necho \"=== apply pg_cron migration ===\"\necho \"y\" | timeout 150 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error\" | tail -6\necho \"--- push exit: ${PIPESTATUS[1]} ---\"",
+  "description": "Deploy nurture fns + apply pg_cron migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy nurture-dispatch + nurture-cron ===
+> Deploying Function: nurture-dispatch (script size: 85.39kB)
+> Deploying Function: nurture-cron (script size: 78.27kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: nurture-dispatch, nurture-cron
+> --- deploy exit: 0 ---
+> 
+> === apply pg_cron migration ===
+> Applying migration 20260603230000_nurture_advance_cron.sql...
+> Finished supabase db push.
+> --- push exit: 0 ---
+> ```
+
+## 🤖 Claude *(23:57:04)*
+
+
+## 🤖 Claude *(23:57:05)*
+
+Both deployed (exit 0) + cron migration applied (Finished). Verifying materially — first the catalog state (pg_cron job + current enrollment state, read-only) so I know whether calling the cron would mutate:
+
+## 🤖 Claude *(23:57:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== pg_cron job 'nurture-advance' scheduled? ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  \u2705 \"+.jobname+\" :: \"+.schedule+\" active=\"+(.active|tostring)) else (.message//tostring) end'\nSELECT jobname, schedule, active FROM cron.job WHERE jobname='nurture-advance';\nSQL\necho \"\"\necho \"=== current sequence_enrollments state (would the cron mutate?) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] | \"  total=\"+.total+\"  active=\"+.active+\"  due_now=\"+.due'\nSELECT count(*)::text AS total,\n       count(*) FILTER (WHERE status='active')::text AS active,\n       count(*) FILTER (WHERE status='active' AND next_run_at IS NOT NULL AND next_run_at <= now())::text AS due\nFROM public.sequence_enrollments;\nSQL\necho \"\"\necho \"=== nurture-cron auth gate: call WITHOUT service key \u2192 expect 403 ===\"\ncurl -s -o /dev/null -w \"  no-auth \u2192 HTTP %{http_code}\\n\" -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/nurture-cron\" -H \"Content-Type: application/json\" -d '{}'",
+  "description": "Verify pg_cron job + enrollment state + nurture-cron 403 gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pg_cron job 'nurture-advance' scheduled? ===
+>   ✅ nurture-advance :: */15 * * * * active=true
+> 
+> === current sequence_enrollments state (would the cron mutate?) ===
+>   total=0  active=0  due_now=0
+> 
+> === nurture-cron auth gate: call WITHOUT service key → expect 403 ===
+>   no-auth → HTTP 403
+> ```
+
+## 🤖 Claude *(23:57:38)*
+
+
+## 🤖 Claude *(23:57:39)*
+
+pg_cron job **active** (`*/15`), enrollments `due=0` (so a cron call is non-mutating), and the **403 gate works**. Calling `nurture-cron` with the service key (due:0 → non-mutating happy path) + checking the existing smoke harness to prove the full cron→dispatch→advance link:
+
+## 🤖 Claude *(23:57:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env >/dev/null 2>&1; set +a\necho \"=== nurture-cron WITH service key (due=0 \u2192 non-mutating happy path) ===\"\ncurl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/nurture-cron\" \\\n  -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{}' | head -c 300\necho \"\"\necho \"\"\necho \"=== smoke-nurture.ts \u2014 does it cover the cron path? run command? ===\"\nhead -30 scripts/qa/smoke-nurture.ts 2>/dev/null\necho \"...\"\ngrep -nE \"nurture-cron|nurture-dispatch|RUN_LIVE|next_run_at|cron\" scripts/qa/smoke-nurture.ts 2>/dev/null | head",
+  "description": "nurture-cron happy path + inspect smoke-nurture coverage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nurture-cron WITH service key (due=0 → non-mutating happy path) ===
+> {"status":"ok","due":0,"dispatched":0,"completed":0,"blocked":0,"errors":0}
+> 
+> === smoke-nurture.ts — does it cover the cron path? run command? ===
+> #!/usr/bin/env bun
+> /**
+>  * Smoke test — nurture-dispatch consent gate (FR-MH-008 / AT-MH-008), USER PATH (real JWT).
+>  *
+>  * Proves the STRIDE-Critical mitigation materially: NO message is generated/charged for a lead WITHOUT a
+>  * granted, non-withdrawn consent; opt-out hard-stops; and a consented dispatch advances + records (delivery
+>  * gated). Throwaway user + cleanup. The only cost is the single consented LLM message (~$0.001, system key).
+>  *
+>  * Usage: bun run scripts/qa/smoke-nurture.ts
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const stamp = Date.now();
+> let uid: string | null = null;
+> let pass = true;
+> const check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '✅' : '❌'} ${l}${d ? `  → ${d}` : ''}`); if (!ok) pass = false; };
+> const bal = async () => Number((await admin.from('profiles').select('mco_balance').eq('id', uid!).single()).data?.mco_balance ?? 0);
+> 
+> async function dispatch(token: string, enrollmentId: string) {
+>   const r = await fetch(`${URL}/functions/v1/nurture-dispatch`, {
+>     method: 'POST', headers: { 'Content-Type': 'application/json', apikey: PUB, Authorization: `Bearer ${token}` },
+>     body: JSON.stringify({ enrollment_id: enrollmentId }),
+>   });
+>   let j: { status?: string; reason?: string; delivered?: boolean; new_balance?: number } = {};
+> ...
+> 3: * Smoke test — nurture-dispatch consent gate (FR-MH-008 / AT-MH-008), USER PATH (real JWT).
+> 26:  const r = await fetch(`${URL}/functions/v1/nurture-dispatch`, {
+> 44:  const { data: enr } = await admin.from('sequence_enrollments').insert({ user_id: uid, sequence_id: seq!.id, lead_id: lead!.id, current_step: 0, status: 'active', next_run_at: new Date().toISOString() }).select('id').single();
+> ```
+
+## 🤖 Claude *(23:58:26)*
+
+
+## 🤖 Claude *(23:58:27)*
+
+`nurture-cron` runs end-to-end with the service key (`{"status":"ok","due":0,...}`) and 403s without it. `smoke-nurture.ts` covers the USER path but not the cron/SERVICE path. Since I refactored `nurture-dispatch`'s auth, I need both: (a) regression on the USER path, (b) E2E proof of "cron avança passos". Reading the smoke's setup/cleanup to model a tight cron smoke:
+
+## 🤖 Claude *(23:58:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-nurture.ts",
+  "offset": 36,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 36	  const email = `nur-${stamp}@example.com`, password = `Aa1!${crypto.randomUUID()}`;
+> 37	  const { data: cu, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+> 38	  if (error || !cu?.user) throw new Error(`createUser: ${error?.message}`);
+> 39	  uid = cu.user.id;
+> 40	  await admin.from('profiles').update({ mco_balance: 100 }).eq('id', uid);
+> 41	
+> 42	  const { data: lead } = await admin.from('leads').insert({ user_id: uid, contact: '+5511988887777', name: 'Nurture Lead', source: 'manual', status: 'nurturing' }).select('id').single();
+> 43	  const { data: seq } = await admin.from('sequences').insert({ user_id: uid, name: 'Welcome Drip', trigger: 'manual', steps: [{ channel: 'email', wait_hours: 24, prompt: 'Boas-vindas curtas para o lead.' }] }).select('id').single();
+> 44	  const { data: enr } = await admin.from('sequence_enrollments').insert({ user_id: uid, sequence_id: seq!.id, lead_id: lead!.id, current_step: 0, status: 'active', next_run_at: new Date().toISOString() }).select('id').single();
+> 45	  const enrollmentId = enr!.id as string;
+> 46	
+> 47	  const userClient = createClient(URL, PUB, { auth: { persistSession: false } });
+> 48	  const { data: si, error: siErr } = await userClient.auth.signInWithPassword({ email, password });
+> 49	  if (siErr || !si?.session) throw new Error(`signIn: ${siErr?.message}`);
+> 50	  const token = si.session.access_token;
+> 51	
+> 52	  // ── A: NO consent → BLOCKED, no charge, enrollment paused (the Critical gate) ──
+> 53	  const balBeforeBlock = await bal();
+> 54	  const a = await dispatch(token, enrollmentId);
+> 55	  check('A no-consent → blocked (consent_required)', a.body?.status === 'blocked' && a.body?.reason === 'consent_required', `status=${a.body?.status} reason=${a.body?.reason}`);
+> 56	  check('A no charge on block', (await bal()) === balBeforeBlock, `bal=${await bal()} (was ${balBeforeBlock})`);
+> 57	  const { data: pausedEnr } = await admin.from('sequence_enrollments').select('status').eq('id', enrollmentId).single();
+> 58	  check('A enrollment paused by the gate', pausedEnr?.status === 'paused', `status=${pausedEnr?.status}`);
+> 59	  const { count: eventsAfterBlock } = await admin.from('lead_events').select('id', { count: 'exact', head: true }).eq('lead_id', lead!.id).eq('event_type', 'message_sent');
+> 60	  check('A NO message_sent event (nothing generated)', (eventsAfterBlock ?? 0) === 0, `events=${eventsAfterBlock}`);
+> 61	
+> 62	  // ── B: grant consent + resume → DISPATCHED, charge 2, message recorded (delivery gated), enrollment advanced ──
+> 63	  await admin.from('marketing_consents').insert({ lead_id: lead!.id, user_id: uid, basis: 'consent', granted: true, source_proof: {} });
+> 64	  await admin.from('sequence_enrollments').update({ status: 'active' }).eq('id', enrollmentId);
+> 65	  const balBeforeDispatch = await bal();
+> 66	  const b = await dispatch(token, enrollmentId);
+> 67	  check('B consented → dispatched|completed', b.body?.status === 'dispatched' || b.body?.status === 'completed', `status=${b.body?.status}`);
+> 68	  check('B charged exactly 2 mcoCoins', balBeforeDispatch - (await bal()) === 2, `${balBeforeDispatch}→${await bal()}`);
+> 69	  check('B delivery is GATED (not externally sent)', b.body?.delivered === false, `delivered=${b.body?.delivered}`);
+> 70	  const { data: ev } = await admin.from('lead_events').select('event_type, payload').eq('lead_id', lead!.id).eq('event_type', 'message_sent').maybeSingle();
+> 71	  check('B message_sent event recorded with delivery=gated', (ev?.payload as { delivery?: string })?.delivery === 'gated', `delivery=${(ev?.payload as { delivery?: string })?.delivery}`);
+> 72	  const { data: advEnr } = await admin.from('sequence_enrollments').select('current_step, status').eq('id', enrollmentId).single();
+> 73	  check('B enrollment advanced (step 0→1, completed)', advEnr?.current_step === 1 && advEnr?.status === 'completed', `step=${advEnr?.current_step} status=${advEnr?.status}`);
+> 74	
+> 75	  // ── C: opt-out → hard skip, no charge ──
+> 76	  await admin.from('sequence_enrollments').update({ status: 'opted_out' }).eq('id', enrollmentId);
+> 77	  const balBeforeOptOut = await bal();
+> 78	  const c = await dispatch(token, enrollmentId);
+> 79	  check('C opted_out → skipped, no charge', c.body?.status === 'opted_out' && (await bal()) === balBeforeOptOut, `status=${c.body?.status} bal=${await bal()}`);
+> 80	} catch (e) {
+> 81	  pass = false; console.error('❌ smoke error:', e instanceof Error ? e.message : e);
+> 82	} finally {
+> 83	  if (uid) await admin.auth.admin.deleteUser(uid);
+> 84	  console.log(`\n🧹 cleanup: throwaway user deleted (cascade)`);
+> 85	  console.log(pass ? '\n✅✅ NURTURE CONSENT-GATE SMOKE PASSED' : '\n❌ NURTURE CONSENT-GATE SMOKE FAILED');
+> 86	  process.exit(pass ? 0 : 1);
+> 87	}
+> 88	
+> ```
+
+## 🤖 Claude *(23:59:02)*
+
+
+## 🤖 Claude *(23:59:02)*
+
+Now writing a focused cron smoke proving the SERVICE path E2E ("cron avança passos"), modeled on the existing harness:
+
+## 🤖 Claude *(23:59:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-nurture-cron.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 nurture-cron SERVICE path (FR-MH-008 \"cron avan\u00e7a passos\" / AT-MH-008).\n *\n * Proves the cron driver finds a DUE enrollment (status=active, next_run_at in the past) and advances it through\n * nurture-dispatch's service-role mode \u2014 with the consent gate + atomic billing intact on that path. Throwaway\n * user + cleanup. Cost: 1 consented LLM message (~$0.001, system key) + 2 mcoCoins on the throwaway profile.\n *\n * Usage: bun run scripts/qa/smoke-nurture-cron.ts   (requires .env: SUPABASE_URL + SB_SECRET_KEY)\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env (SUPABASE_URL / SB_SECRET_KEY)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\nconst bal = async () => Number((await admin.from('profiles').select('mco_balance').eq('id', uid!).single()).data?.mco_balance ?? 0);\n\ntry {\n  const email = `nurcron-${stamp}@example.com`, password = `Aa1!${crypto.randomUUID()}`;\n  const { data: cu, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\n  if (error || !cu?.user) throw new Error(`createUser: ${error?.message}`);\n  uid = cu.user.id;\n  await admin.from('profiles').update({ mco_balance: 100 }).eq('id', uid);\n\n  const { data: lead } = await admin.from('leads').insert({ user_id: uid, contact: '+5511977776666', name: 'Cron Lead', source: 'manual', status: 'nurturing' }).select('id').single();\n  const { data: seq } = await admin.from('sequences').insert({ user_id: uid, name: 'Cron Drip', trigger: 'manual', steps: [{ channel: 'email', wait_hours: 24, prompt: 'Mensagem de teste do avan\u00e7o por cron.' }] }).select('id').single();\n  // consent granted + enrollment DUE (next_run_at one hour in the past) \u2192 the cron must pick it up\n  await admin.from('marketing_consents').insert({ lead_id: lead!.id, user_id: uid, basis: 'consent', granted: true, source_proof: {} });\n  const past = new Date(Date.now() - 3600_000).toISOString();\n  const { data: enr } = await admin.from('sequence_enrollments').insert({ user_id: uid, sequence_id: seq!.id, lead_id: lead!.id, current_step: 0, status: 'active', next_run_at: past }).select('id').single();\n  const enrollmentId = enr!.id as string;\n  const balBefore = await bal();\n\n  // \u2500\u2500 drive nurture-cron with the service key (what the pg_cron schedule does every 15 min) \u2500\u2500\n  const r = await fetch(`${URL}/functions/v1/nurture-cron`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SVC}` }, body: '{}',\n  });\n  const body = await r.json().catch(() => ({})) as { due?: number; dispatched?: number; completed?: number };\n  check('cron HTTP 200', r.status === 200, `status=${r.status}`);\n  check('cron found \u22651 due + dispatched/completed \u22651', (body.due ?? 0) >= 1 && ((body.dispatched ?? 0) + (body.completed ?? 0)) >= 1, JSON.stringify(body));\n\n  // \u2500\u2500 assert the enrollment advanced via cron \u2192 service-mode dispatch (the FR: \"cron avan\u00e7a passos\") \u2500\u2500\n  const { data: adv } = await admin.from('sequence_enrollments').select('current_step, status').eq('id', enrollmentId).single();\n  check('enrollment advanced step 0\u21921', adv?.current_step === 1, `step=${adv?.current_step} status=${adv?.status}`);\n  check('billing intact on service path (charged exactly 2)', balBefore - (await bal()) === 2, `${balBefore}\u2192${await bal()}`);\n  const { data: ev } = await admin.from('lead_events').select('payload').eq('lead_id', lead!.id).eq('event_type', 'message_sent').maybeSingle();\n  check('consent path ran \u2014 message recorded delivery=gated', (ev?.payload as { delivery?: string })?.delivery === 'gated', `delivery=${(ev?.payload as { delivery?: string })?.delivery}`);\n} catch (e) {\n  pass = false; console.error('\u274c smoke error:', e instanceof Error ? e.message : e);\n} finally {\n  if (uid) await admin.auth.admin.deleteUser(uid);\n  console.log('\\n\ud83e\uddf9 cleanup: throwaway user deleted (cascade)');\n  console.log(pass ? '\\n\u2705\u2705 NURTURE-CRON SERVICE-PATH SMOKE PASSED' : '\\n\u274c NURTURE-CRON SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-nurture-cron.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:59:25)*
+
+
+## 🤖 Claude *(23:59:25)*
+
+Running both smokes — USER path (regression on the refactored auth) + SERVICE/cron path (the FR proof):
+
+## 🤖 Claude *(23:59:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 smoke-nurture.ts (USER path regression) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\ntimeout 120 bun run scripts/qa/smoke-nurture.ts 2>&1 | tail -16\necho \"\"\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 smoke-nurture-cron.ts (SERVICE/cron path \u2014 'cron avan\u00e7a passos') \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\ntimeout 120 bun run scripts/qa/smoke-nurture-cron.ts 2>&1 | tail -10",
+  "description": "Run USER-path + cron-path nurture smokes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════════ smoke-nurture.ts (USER path regression) ════════
+> ✅ A no-consent → blocked (consent_required)  → status=blocked reason=consent_required
+> ✅ A no charge on block  → bal=100 (was 100)
+> ✅ A enrollment paused by the gate  → status=paused
+> ✅ A NO message_sent event (nothing generated)  → events=0
+> ✅ B consented → dispatched|completed  → status=completed
+> ✅ B charged exactly 2 mcoCoins  → 100→98
+> ✅ B delivery is GATED (not externally sent)  → delivered=false
+> ✅ B message_sent event recorded with delivery=gated  → delivery=gated
+> ✅ B enrollment advanced (step 0→1, completed)  → step=1 status=completed
+> ✅ C opted_out → skipped, no charge  → status=opted_out bal=98
+> 
+> 🧹 cleanup: throwaway user deleted (cascade)
+> 
+> ✅✅ NURTURE CONSENT-GATE SMOKE PASSED
+> 
+> ════════ smoke-nurture-cron.ts (SERVICE/cron path — 'cron avança passos') ════════
+> ✅ cron HTTP 200  → status=200
+> ✅ cron found ≥1 due + dispatched/completed ≥1  → {"status":"ok","due":1,"capped":false,"dispatched":0,"completed":1,"blocked":0,"errors":0}
+> ✅ enrollment advanced step 0→1  → step=1 status=completed
+> ✅ billing intact on service path (charged exactly 2)  → 100→98
+> ✅ consent path ran — message recorded delivery=gated  → delivery=gated
+> 
+> 🧹 cleanup: throwaway user deleted (cascade)
+> 
+> ✅✅ NURTURE-CRON SERVICE-PATH SMOKE PASSED
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%

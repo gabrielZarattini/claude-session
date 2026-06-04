@@ -4270,6 +4270,6 @@ function classifyRegime(adx, realizedVol, atr) {
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-03 - agent-a699963bfb2415c80]]
+> * **Sessão Anterior**: [[2026-06-03 - agent-a6d36258d12855e76]]
 > * **Próxima Sessão**: [[2026-06-03 - agent-a89e99af2c1c13575]]
 %% --- TIMELINE END --- %%
