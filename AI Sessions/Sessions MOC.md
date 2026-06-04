@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 318
-> * **Sessões do Claude**: 285
+> * **Total de Sessões Registradas**: 320
+> * **Sessões do Claude**: 287
 > * **Sessões do Gemini**: 33
 
 ---
@@ -71,7 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - agent-a604d14f00576f76c]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a5eb48930a1c31a08]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-a5ada5c5a3d4df1ff]]` - *2026-06-04*
-*   *... e mais 282 sessões nessa categoria.*
+*   *... e mais 284 sessões nessa categoria.*
 
 ---
 
@@ -272,8 +272,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - agent-a5eb48930a1c31a08]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a5ada5c5a3d4df1ff]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a4423b882f8bbd7af]]` (ClaudeSessions)
+*   `[[2026-06-04 - agent-a318ee24a0cac0f68]]` (ClaudeSessions)
 *   `[[2026-06-04 - agent-a0a6b749e86c06fd2]]` (ClaudeSessions)
 *   `[[2026-06-04 - Lembra que fizemos um cronjob para...]]` (GeminiSessions)
+*   `[[2026-06-04 - Fix click tracking and complete four priority tasks]]` (ClaudeSessions)
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions)
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions)
 *   `[[2026-06-04 - Activate trend pipeline with SMA 50200 indicators]]` (ClaudeSessions)

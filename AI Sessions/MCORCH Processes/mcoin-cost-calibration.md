@@ -91,13 +91,13 @@ A OTD fechou validando-os; o único furo genuíno era `IMAGE_GENERATION` (3 → 
 
 | Padrão de cobrança | Refund? | Exemplo |
 |--------------------|---------|---------|
-| **Charge-at-entry** (debita antes do trabalho) | **SIM** — estorna em qualquer falha pós-cobrança | `aeo-audit` (5), `lead-score` (1) — `let charged` + `refundMco` no persist-fail + no `catch` |
+| **Charge-at-entry** (debita antes do trabalho) | **SIM** — estorna em qualquer falha pós-cobrança | `aeo-audit` (5), `lead-score` (1), `orchestrate-content` (10 — refund no `catch` que pega `!runId` + erro do kick `async_orchestrate_step`, e marca o run `error`), `nurture-dispatch` (2 — refund em envio Resend **failed** + no `catch`) — `let charged` + `refundMco` |
 | **Charge-on-success** (debita só ao concluir) | N/A — não cobra em falha | `higgsfield-webhook` (debita no sucesso do vídeo) |
 | **Fee + cascade self-bill** | fee não-estornável (custo da tentativa); sub-passos têm seu próprio gate | `campaign-run` (fee 10) → `orchestrate-content` (self-bill 10, guarda 402 pré-débito) |
 
 **Verificação:** primitivo provado por `scripts/qa/smoke-aeo-refund.ts` (deduct→add→balance restaurado; guarda rejeita negativo) + unit `_shared/billing.test.ts`. O gatilho de falha de persistência **não é forçável** por input (valores clampados/validados) → a fiação é coberta por unit + code review, não por falha forçada (honestidade Lei 1).
 
-**Gap aberto (follow-up):** `orchestrate-content` debita 10 e, se a criação de `pipeline_runs` falhar pós-débito, hoje não estorna (raro). Candidato a aplicar o mesmo `refundMco` numa sessão dedicada ao flywheel (risco maior — núcleo do pipeline).
+**Gap fechado (OTD-INTENT-DISPATCH-REFUND):** `orchestrate-content` agora estorna os 10 se a criação de `pipeline_runs` falhar OU se o kick do 1º passo (`async_orchestrate_step`) retornar erro pós-débito — `charged`/`chargedUser`/`runId` hoisted, refund no `catch` (cliente service-role fresco) + marca o run `error` para não deixar um "running" fantasma. `nurture-dispatch` aplica o mesmo a um envio Resend **failed** (touch não-entregue → net-zero; `gated` **não** é falha → sem refund). A falha pós-débito não é forçável por input nesses dois (insert/kick raramente falham) → fiação por unit (`_shared/billing.test.ts`) + code review, happy-path provado no E2E pago (Lei 1, mesma honestidade do [[aeo-audit|aeo-audit]]).
 
 ## Decisões abertas (pricing — Sovereign)
 

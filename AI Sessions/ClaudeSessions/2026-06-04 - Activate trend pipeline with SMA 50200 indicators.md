@@ -5736,6 +5736,524 @@ Tudo verde. Agora o **gate** dessa mudança de money-path (toca `calcQty` + hand
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho tudo. Confirmações finais:\n\n- `getMemory(symbol, indexKeys.TREND_QTY)` com `interval=undefined` → chave `BTCUSDT:TREND_QTY`. Bate exatamente com a leitura `MEMORY[\'BTCUSDT:TREND_QTY\']` na `calcQty`. Consistente.\n- `getMemory` retorna primitivo direto (TREND_QTY é número/string), não clona — ok.\n- `updateMemory(..., null, next, false)` → `executeAutomations=false`, não dispara automações no fill (correto, evita reentrância no hot path).\n- **Não há branch PARTIALLY_FILLED** no `processExecutionData` — o engine inteiro só persiste em FILLED. Então a premissa de partial-fill se aplica a TODO o sistema, não é regressão nova.\n- `regimeStates` (453c7d6) tem model + migration; TREND_QTY **não** tem — assimetria real de persistência confirmada.\n\nAnálise completa.\n\n---\n\n# VEREDITO: APPROVE COM SUGESTÕES\n\nMudança bem-escopada, reversível, isola o risco nº1 (id7 vendendo qty da id3 via `LAST_ORDER` compartilhado) trocando-o por um acumulador dedicado `TREND_QTY`. Lê bem, segue convenções (pt-BR, layering, sem segredo, sem `console.log` novo no hot-path), e o blast radius está contido por design: a `calcQty` **falha fechada** (`throw` se `TREND_QTY` ausente/≤0) e o `updateTrendPosition` é **best-effort** (try/catch, não derruba o fluxo da ordem). Para a fase de validação testnet com size pequeno (id6 = 3× MIN_NOTIONAL), é mergeável. As ressalvas abaixo são majoritariamente dívida consciente, mas **uma precisa virar guard antes do scale-up** e **uma é must-fix de robustez já**.\n\n## Racional por eixo\n\n**Design da atribuição via conditions-string** — Aceitável, com olhos abertos. Confirmei que `setup-trend.js` gera literalmente `MEMORY[\'BTCUSDT:TREND_CROSS_1h\']===\'golden\' && ...` e `...===\'death\'`, então `cond.indexOf(\'TREND_CROSS\')` + `indexOf("\'golden\'")`/`indexOf("\'death\'")` casam de fato. É o mesmo "vocabulário" que o resto do Beholder usa (conditions são strings avaliadas), então não introduz um paradigma novo — mas **acopla `app-em.js` ao texto exato que `setup-trend.js` emite**. Se alguém reescrever a condition (ex.: `MEMORY[...] == "golden"` com aspas duplas, ou extrair p/ outra var), o accounting silenciosamente para de somar e a id7 passa a falhar-fechado (não vende). Não é o ideal, mas é **fail-safe** (erra para "não vende a posição de trend", não para "vende qty errada") e o size pequeno limita o dano. A alternativa limpa (tag explícita no template/automação, ex. um campo `strategy:\'TREND\'`) é claramente superior em manutenibilidade — fica como nice-to-have para quando subir o size.\n\n**Hot path** — OK. `updateTrendPosition` roda **dentro do `setTimeout(3s)` do `processExecutionData`**, ou seja **fora do tick de mercado** (não está no caminho de `updateMemory`→`testAutomations` que avalia o BRAIN a cada tick). Latência irrelevante. `getBrain()` faz `{...BRAIN}` por chamada (shallow copy) — chamado 1× por fill, não por tick: custo desprezível. `getMemory` para primitivo retorna direto (não clona). `updateMemory(...,false)` não reentra em automações. Nada preocupante no hot-path.\n\n**Correção financeira** — Modelo "soma `q` FILLED no golden, zera no death, capa na carteira" é coerente para um trend-follower spot compounding. `order.quantity = executionData.q` é a qty **da ordem**; num FILLED total `q == z` (cumulative), então somar `q` está certo. O cap `if (newQty > asset) newQty = asset` protege contra vender mais que o saldo (fees corroem a base). Pontos de dessincronização — todos **aceitáveis p/ validação**, mas devem estar na cabeça do dono:\n- **Partial fill que nunca vira FILLED**: confirmei que o engine **inteiro** só persiste/contabiliza em FILLED (não há branch PARTIALLY_FILLED em lugar nenhum do `processExecutionData`). Logo, uma id6 BUY que preenche parcial e não completa **não soma** → TREND_QTY fica defasado para baixo → no death a id7 vende menos que o real (sobra dust de trend na carteira). Não é regressão nova, é limitação pré-existente do Beholder. Com LIMIT marketável atravessando o spread, o caso comum é fill único.\n- **Acúmulo em golden repetido**: se o `regimeJob` reescrever `golden` e a id6 disparar 2×, TREND_QTY **soma de novo** — é o comportamento de compounding desejado, mas combinado com o "at-least-once" do cross (já documentado no HANDOFF: crash entre fire e upsert pode re-disparar 1 cross no boot) pode inflar a posição. Bounded pelo saldo + cap, e o death zera tudo. Aceitável no size atual.\n- **Venda manual / id3 reversão**: vende base asset sem mexer em TREND_QTY → TREND_QTY superestima → no death o cap salva (vende só o que tem), mas pode tentar vender mais que a posição de trend real. Fail-safe pelo cap.\n\n**Persistência — esta é a fraqueza mais relevante.** TREND_QTY é só `MEMORY` (volátil). No `453c7d6` você fez exatamente o esforço oposto para o cross: criou `regimeStateModel` + migration `20260604120000-create-regimeStates.js` + carga no boot, justamente para não perder o cross num `make restart`. **TREND_QTY tem a mesma natureza e o oposto do tratamento**: um restart com posição de trend aberta (golden disparado, ainda não veio o death) **perde a referência de quanto vender** → no death seguinte a id7 dá `throw` (TREND_QTY=0) e **não liquida a posição** — fica comprado num death, que é o pior estado para um trend-follower (era para estar em caixa). Isso não é "vende errado" (o risco que você fechou), é "**não vende**". Para size pequeno na validação é dívida tolerável **se** estiver explicitamente aceita e logada; mas é inconsistente com a barra que o próprio `453c7d6` estabeleceu. Recomendo fortemente persistir (mesma tabela do regimeState ou uma coluna/linha análoga, carregada no boot). Classifico como **must-fix antes de subir o size**, nice-to-have agora.\n\n**Reversibilidade / convenções** — Scripts idempotentes (`ensureTemplate`/`ensureAutomation` retornam early se já existem; `ensureTemplateShape` só faz PATCH se `t.quantity !== \'TREND_QTY\'`). pt-BR consistente. Sem segredo nas linhas adicionadas. Sem `console.log` novo (o único em beholder.js é pré-existente e guardado por `if (LOGS)`). Reverter = `git checkout` dos 5 arquivos + um PATCH do template SELL de volta p/ `LAST_ORDER_QTY`. Limpo.\n\n## Must-fix\n1. **Robustez do parse de qty no golden** (`backend/src/app-em.js:169`): `next = cur + parseFloat(order.quantity)`. Se `order.quantity` vier `NaN` (ordem sem `q`, ou MARKET reshape onde `q` pode ser 0/ausente), `next` vira `NaN`, é gravado em `MEMORY[\'…:TREND_QTY\']`, e a **próxima** `calcQty` faz `parseFloat(NaN)`→`NaN`, cai no `!trendQty` → `throw` → id7 não vende. Pior: o `cur` já foi corrompido. Guard barato: pular o update se `!Number.isFinite(parseFloat(order.quantity))` (ou `> 0`). Hoje a id6 é LIMIT (q presente), mas o handler é genérico e isso é uma armadilha de 1 linha.\n\n## Nice-to-have\n1. **Acoplamento à conditions-string** — migrar para uma marca explícita (campo/flag de estratégia no template ou automação) antes do scale-up, eliminando o `indexOf("\'golden\'")`. Mais legível e à prova de reescrita de condition.\n2. **Persistência de TREND_QTY** — espelhar o padrão `regimeStates` (must-fix **antes de calibrar/subir o size**; aceitável como dívida agora desde que documentado no HANDOFF junto ao item "TREND_QTY é in-memory, perde no restart").\n3. **Comentar a assimetria com `regimeStates`** no código (`indexes.js` ou no comentário de `updateTrendPosition`): deixar explícito "volátil por ora, persistir ao subir size" para o próximo agente não assumir paridade com o cross.\n4. Idempotência: como `setup-trend.js` `ensureTemplate` retorna early se o template já existe, num ambiente que já tinha o SELL com `LAST_ORDER_QTY` é **só o `activate-trend.js` (PATCH)** que migra para `TREND_QTY` — o setup sozinho não corrige um template legado. Funciona porque o fluxo é setup→activate, mas vale uma linha no comentário do setup.\n\n## Decisão de merge\n- **APROVAR e mergear via PR** (não direto-a-master: toca money-path e `beholder.js`/`app-em.js`, então passa pelo gate trunk-based descrito — push como root c/ chave do `ubuntu` + chown back), **condicionado ao must-fix #1** (guard de `NaN`/`>0` no `updateTrendPosition`), que é 1 linha e não altera o design.\n- **CI verde obrigatório** antes do push: a mudança é portável (sem migration nova, sem schema), então os 3 jobs (frontend build, backend migrate/seed mysql+postgres, agent `--check`) devem passar sem ajuste — confirmar mesmo assim.\n- **Antes de calibrar/subir o size** (próximo marco do roadmap, id6 saindo de 3× MIN_NOTIONAL): tratar nice-to-have #2 (persistência de TREND_QTY) como **must-fix**, senão um restart com trend aberto deixa a id7 sem liquidar no death.\n- **Sem mudança no plano de runtime**: id6/id7 são runtime (não-seedadas) — reaplicar `setup-trend.js` + `activate-trend.js` após `make nuke`, já documentado no HANDOFF.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (linhas 159-177 `updateTrendPosition`, chamada na 215), `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (branch `TREND_QTY` linhas 236-245), `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js` (linha 78), `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js` (linhas 114-126), `/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js` (linhas 88-99). Referência do padrão de persistência a espelhar: `/home/gcrux-tradeux/tradeux/backend/src/models/regimeStateModel.js` + `/home/gcrux-tradeux/tradeux/backend/migrations/20260604120000-create-regimeStates.js`.'}, {'type': 'text', 'text': "agentId: adcae4d536fba9d29 (use SendMessage with to: 'adcae4d536fba9d29' to continue this agent)\n<usage>subagent_tokens: 49056\ntool_uses: 14\nduration_ms: 149503</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All five files parse. Let me confirm the double-count vector empirically by checking if `updateOrder` returns a truthy order even on a pure no-op (status already FILLED, quantity unchanged). It does — `currentOrder.save()` is called and `currentOrder` returned regardless (no early-return when nothing changed). So a duplicate FILLED executionReport → `updatedOrder` truthy + `status===FILLED` → `updateTrendPosition` re-runs. This is a real double-count path. Let me check the existing LAST_ORDER handling to see if this is a *new* risk or pre-existing engine behavior (i.e., does LAST_ORDER also get rewritten on duplicate — yes, but LAST_ORDER is idempotent/last-write-wins, whereas TREND_QTY accumulates, so the duplicate is newly harmful for the additive BUY case).\n\nI have enough to write the report. Let me verify the `getMemory` clone behavior one final time for a primitive number, and confirm `parseFloat` of a getMemory result works (it returns the number as-is, parseFloat(number) is fine).\n\nThe analysis is complete. Here is my report.\n\n---\n\n# QA Pre-Merge — Trend Following: `TREND_QTY` (id7 deixa de usar `LAST_ORDER_QTY`)\n\nRevisado o working tree (5 arquivos, não-commitado) sobre `453c7d6`. Sintaxe: os 5 arquivos passam `node --check`. Li o código real de `calcQty`, `updateTrendPosition`, `updateOrder`/`updateOrderByOrderId`, `regimeJob` e os scripts.\n\n## VEREDITO GLOBAL: **PASS COM RESSALVAS**\n\nA mudança faz o que promete: o id7 passa a vender `MEMORY[\'<sym>:TREND_QTY\']` (posição do trend) em vez de `LAST_ORDER_QTY` (compartilhado com a id3). A mecânica de `calcQty` tem **paridade exata** com o branch `LAST_ORDER_QTY`, o cap em carteira cobre fees, o `throw` em posição 0 é o comportamento correto (death sem posição não vende a MR — objetivo atingido). Há **1 achado MÉDIO real** (double-count em executionReport FILLED duplicado) e ressalvas de dessincronização/observação que são aceitáveis para o size atual mas precisam estar no radar antes de calibrar.\n\n---\n\n## Achados por severidade\n\n### MÉDIA — double-count de `TREND_QTY` em `executionReport` FILLED duplicado\n`backend/src/app-em.js:161-177` (`updateTrendPosition`) + `backend/src/repositories/ordersRepository.js:94-127` (`updateOrder`).\n\n`updateTrendPosition` é chamado com `updatedOrder.get({plain:true})` e age sempre que `status === FILLED`. Mas `updateOrder` tem guarda de transição **só para o status** (linha 97-100: só sai de NEW/PARTIALLY_FILLED), e **retorna `currentOrder` truthy mesmo num no-op** (sempre chama `save()` e retorna). Logo, um segundo `executionReport` FILLED para a mesma ordem (reconexão de stream / re-entrega do userData) entra como: row já FILLED → guarda de status não re-transiciona, mas `updateOrderByOrderId` devolve a ordem (FILLED) → `updateTrendPosition` vê `status===FILLED` e **re-soma `order.quantity`** no BUY golden → `TREND_QTY` infla. Não há dedup por `orderId` nem flag "já contabilizado".\n\n- **Por que importa:** é aditivo (BUY). O `LAST_ORDER` ao lado é last-write-wins (idempotente), então o duplicado é **inócuo lá e nocivo aqui**. Um `TREND_QTY` inflado faz o id7 (SELL) tentar vender mais do que comprou; o cap em `asset` (carteira) segura o estrago (não vende o que não tem), mas pode **varrer posição de outras fontes no mesmo base asset** (ex.: BTC parado da id2/MR) ao bater no cap. Em testnet com fills sintéticos, re-entregas são plausíveis num `make restart`/reconnect.\n- **Probabilidade:** baixa-média (depende de duplicação de stream), **impacto:** médio (vende qty errada/maior). Para o size atual (3× MIN_NOTIONAL) o cap limita o dano, mas a premissa "TREND_QTY = o que o trend comprou" quebra silenciosamente.\n- **Fix sugerido (barato):** dedup por ordem. Ou (a) só contabilizar quando a transição realmente ocorreu — fazer `updateOrder` sinalizar "mudou de não-terminal→FILLED agora" e `updateTrendPosition` só agir nesse caso; ou (b) guardar o último `orderId` contabilizado por símbolo/lado e ignorar repetição. Hoje o comentário em `app-em.js:159` ("Só atua em FILLED (aí order.quantity = qty cheia)") está correto sobre a qty, mas **não cobre a re-entrega**.\n\n### BAIXA — `TREND_QTY` pode dessincronizar da carteira real (fora do fluxo de ordem)\n`backend/src/beholder.js:236-245`. `TREND_QTY` é um contador lógico mantido só por `updateTrendPosition`. Qualquer evento que mexa na posição **sem passar por uma ordem de trend** o deixa stale:\n- **Venda manual / OCO protetiva / `make nuke` / reset de testnet** reduzem a carteira mas não tocam `TREND_QTY` → no próximo death o id7 pede `trendQty` mas o cap em `asset` corrige (vende o que tem). Fail-safe na direção certa (nunca vende mais que a carteira), mas o "zerar no death" pode deixar `TREND_QTY` positivo-fantasma se a venda foi parcial por falta de saldo.\n- **`TREND_QTY` é runtime puro (nunca seedado, nunca persistido)** — diferente do `regimeStates` que ganhou tabela. Num restart **com posição de trend aberta**, `TREND_QTY` volta a `undefined` → o próximo death **lança** (`There is no trend position`) e **não vende a posição** que está na carteira. Está documentado implicitamente, mas é uma assimetria com o esforço de persistência do cross. Aceitável para size pequeno; **antes de calibrar**, considerar persistir `TREND_QTY` (ou reconstruir do histórico de ordens de trend no boot).\n\n### BAIXA — drift de documentação (não afeta runtime)\n`backend/scripts/activate-trend.js:8` — o header ainda descreve `SELL = ... LAST_ORDER_QTY×1`, mas o código (linha 88) já força `TREND_QTY`. O `setup-trend.js` foi atualizado no header; o `activate-trend.js` não. Corrigir o comentário para não enganar o próximo operador.\n\n### BAIXA (informativo) — race read-modify-write é benigna, não é bug\n`backend/src/app-em.js:167-172`. Analisei o cenário de dois fills concorrentes: **não há lost update**. Entre o read (`getMemory`, síncrono, 167), o cálculo de `next` (síncrono, 169-171) e a escrita (`MEMORY[key]=value` dentro de `updateMemory`, síncrona **antes** do primeiro await — `beholder.js:869`), não há `await` que ceda o event-loop a outro callback. Read+compute+write é atômico por microtask. O `async/await` aqui é cosmético (`updateMemory(...,false)` retorna `false` síncrono após a escrita). Mesmo com 2 fills (improvável: 1 golden = 1 ordem id6), eles serializam. **Sem ação.** (Só ficaria frágil se alguém inserir um `await` entre o read e o write no futuro — vale um comentário.)\n\n---\n\n## O que confirmei OK (não-achados)\n\n- **Paridade `calcQty` TREND_QTY × LAST_ORDER_QTY** (`beholder.js:228-245`): mesma estrutura — lê `MEMORY[\'<sym>:...\']` por `orderTemplate.symbol`, `× multiplier`, cap em `asset` no SELL, `floor(newQty/stepSize)*stepSize` `.toFixed(basePrecision)`. O `throw` em ausência espelha o do LAST_ORDER. **Correto.**\n- **Cap cobre fees:** id6 compra X BTC, fee em BTC → carteira < X; no death `newQty = TREND_QTY(=X) > asset` → `newQty = asset`. Vende a carteira, não o X cheio. **Correto** (e o `hasEnoughAssets` em `beholder.js:446` é segunda trava).\n- **`throw` em TREND_QTY=0/ausente** = death sem posição **não vende nada** (em vez de cair no LAST_ORDER da MR). É exatamente o objetivo da política. **Correto.** (`!trendQty || trendQty<=0` também trata `NaN`/`undefined`.)\n- **`order.quantity` no FILLED:** `processExecutionData` faz `order.quantity = executionData.q` (qty **original** da ordem; em FILLED `q===z` cheio); persiste via `updateOrder` (linha 123-124); `updateTrendPosition` lê do **row do DB** (`updatedOrder`). Em PARTIALLY_FILLED o `status` não é FILLED → early-return (não conta parciais). **Correto** (modulo o double-count acima).\n- **`getBrain()[automationId]` desativada entre place e fill:** automação parada sai do BRAIN → `auto` undefined → `cond=\'\'` → `indexOf(\'TREND_CROSS\')===-1` → skip seguro. **Correto.**\n- **Match por substring reproduzível:** `setup-trend.js:121-126` gera BUY `...TREND_CROSS_1h\']===\'golden\' && ...REGIME\']!==\'bear\'` e SELL `...TREND_CROSS_1h\']===\'death\'`. Contêm `TREND_CROSS` + `\'golden\'`/`\'death\'`. O detector exige **as 3 coisas** (TREND_CROSS, lado, literal) → não confunde com nada da id2/id3 (RSI/REGIME). **Reprodutível e robusto** para as conditions geradas pelo setup. (Frágil só se alguém editar à mão a condition mudando as aspas/keyword — aceitável.)\n- **Best-effort:** todo o corpo está em try/catch (`app-em.js:162/174`); erro só loga em `system` e **não** quebra o `updateMemory(LAST_ORDER)` (já executou antes, linha 212) nem o broadcast. **Correto.**\n- **Single-writer de TREND_QTY:** grep confirma que só `updateTrendPosition` escreve; só `calcQty` lê. Nenhum monitor/seed/job toca a key. **Correto.**\n- **Reprodutibilidade dos scripts:** `setup-trend.js` cria o template SELL já com `TREND_QTY`; `activate-trend.js:88-99` faz PATCH idempotente (já-na-forma-alvo inclui `t.quantity===\'TREND_QTY\'` → não re-patcha). Passa por `validatePrice` no `updateOrderTemplate` (`orderTemplatesController.js:60`), que é partial-safe e **não valida `quantity` por enum** (só `.replace(\',\',\'.\')`), então `TREND_QTY` passa. **Correto e idempotente.**\n- **Integração (o objetivo):** id7 com `TREND_QTY` **não** lê mais `LAST_ORDER` → não vende a qty da id3. **Risco aberto nº1 do HANDOFF resolvido** na mecânica.\n\n---\n\n## Testes que eu rodaria\n\n1. **Estático (já feito):** `node --check` nos 5 arquivos — **passou**. CI (migrate+seed MySQL+PG + agent `--check`) não exercita money-path; não regride aqui (mudança não toca migração/seed/schema).\n2. **Unit-ish de `calcQty` (sem exchange)** — num REPL no container backend, `require(\'./src/beholder\')`, popular `MEMORY[\'BTCUSDT:TREND_QTY\']` e `MEMORY[\'BTC:WALLET\']`, e chamar `calcQty` com template SELL `quantity:\'TREND_QTY\'`:\n   - `TREND_QTY=0.01`, wallet=0.02 → retorna `0.01` floored ao stepSize.\n   - `TREND_QTY=0.02`, wallet=0.015 (fee comeu) → cap → `0.015` floored.\n   - `TREND_QTY` ausente/0 → **throw** "no trend position".\n   - Conferir `toFixed(basePrecision)` com símbolo **sincronizado** (senão stepSize/precision faltam — gotcha do projeto).\n3. **`updateTrendPosition` isolado** — stub `beholder.getBrain` p/ devolver `{6:{conditions:"...\'golden\'..."}}` e `{7:{conditions:"...\'death\'..."}}`:\n   - BUY golden FILLED qty 0.01 (TREND_QTY undefined) → vira 0.01; segundo BUY 0.01 → 0.02 (acúmulo OK).\n   - **Reproduzir o double-count:** chamar 2× com o **mesmo** order FILLED → confirma que vira 0.02 (bug). É o teste que prova o achado MÉDIO.\n   - SELL death FILLED → 0. SELL sem `\'death\'` na condition → no-op. Automação ausente no BRAIN → no-op.\n4. **End-to-end (só com cross real):** hoje BTC=bear, above=false → **inerte**. Quando o 1º golden disparar: observar `logs/A:6.log` (`TREND_QTY[...] 0 -> X`), depois death → `A:7.log` (`-> 0`) e a ordem SELL com a qty da posição (não da MR). **Isto fica para a observação do 1º cross** — não dá para forçar sem um cross na mainnet.\n5. **Restart com posição aberta (manual, testnet):** simular `TREND_QTY` setado, `make restart`, confirmar que sumiu (`getMemory` undefined) → death subsequente lança/não vende → valida o achado BAIXA de persistência.\n\n---\n\n## Recomendação de merge\n\n**APROVAR para deploy no testnet COM RESSALVAS** — a mudança entrega o objetivo (id7 vende a posição de trend, não a MR) e a mecânica de `calcQty` está correta e com paridade. Para o size atual (3× MIN_NOTIONAL) os riscos são contidos pelo cap em carteira.\n\nCondicionantes antes de **calibrar o size para cima** (não bloqueiam o testnet de observação agora):\n1. **(MÉDIO) Fechar o double-count** em executionReport FILLED duplicado — dedup por `orderId` ou só-contar-na-transição. É o único achado que corrompe o valor de `TREND_QTY` de forma aditiva.\n2. **(BAIXO) Decidir persistência de `TREND_QTY`** (ou reconstrução no boot) antes de subir size, alinhando com o que já se fez para `regimeStates`.\n3. **(BAIXO) Corrigir o header** de `activate-trend.js:8` (ainda diz `LAST_ORDER_QTY`).\n\nVerificável estaticamente: paridade de `calcQty`, cap/fees, throw, idempotência dos scripts, match de conditions, best-effort, single-writer (tudo confirmado). Fica para o **1º golden→death real** (BTC inerte hoje): o ciclo completo acumular→vender→zerar e a não-venda da posição da id3.\n\n**Arquivos relevantes:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:236-245` (branch TREND_QTY em `calcQty`)\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:161-177` e `:215` (`updateTrendPosition` + chamada no fill)\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js:94-127` (`updateOrder` — origem do double-count)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js:78` (`TREND_QTY` key)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js:114-126` e `/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js:88-99` (templates/conditions; header desatualizado em `:8`)\n- `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js:117-137` (único detector de cross; dispara id6/id7 1×)'}, {'type': 'text', 'text': "agentId: aeb417505087c8c3e (use SendMessage with to: 'aeb417505087c8c3e' to continue this agent)\n<usage>subagent_tokens: 93221\ntool_uses: 29\nduration_ms: 223980</usage>"}]
+> ```
+
+## 🤖 Claude *(14:33:19)*
+
+
+## 🤖 Claude *(14:33:25)*
+
+Os dois gates voltaram **positivos** (QA **PASS COM RESSALVAS**, TL **APPROVE COM SUGESTÕES**), convergindo em achados acionáveis. Vou aplicar os fixes que ambos pediram antes do deploy:
+
+1. **(TL must-fix)** guard de `NaN`/`>0` no acúmulo — qty inválida não corromperia `TREND_QTY`.
+2. **(QA MÉDIA)** dedup de `executionReport` FILLED re-entregue — o BUY é aditivo, um report duplicado somaria 2×.
+3. **(ambos, BAIXA)** corrigir header drift do `activate-trend.js` + comentar a assimetria de persistência (TREND_QTY é volátil, ao contrário do `regimeStates`).
+
+**Persistência do TREND_QTY**: ambos classificaram como "dívida aceitável agora (size pequeno), must-fix antes de escalar" — e estamos em **bear** (id6 gateada → nenhuma posição de trend abre até o regime virar), então há tempo. Vou **deferir com nota explícita**, não esticar o escopo agora.
+
+Aplicando os fixes:
+
+## 🤖 Claude *(14:33:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "// Trend Following \u2014 mant\u00e9m MEMORY['<sym>:TREND_QTY'] (posi\u00e7\u00e3o em base asset atribu\u00edda ao trend),\n// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automa\u00e7\u00e3o\n// (referenciam TREND_CROSS), lidas do BRAIN em mem\u00f3ria (sem ida ao banco). Golden BUY soma a qty\n// FILLED; death SELL zera. S\u00f3 atua em FILLED (a\u00ed order.quantity = qty cheia preenchida). Best-effort:\n// um erro aqui n\u00e3o quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : '';\n        if (cond.indexOf('TREND_CROSS') === -1) return; // n\u00e3o \u00e9 automa\u00e7\u00e3o de Trend Following\n        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;\n        let next;\n        if (order.side === 'BUY' && cond.indexOf(\"'golden'\") !== -1) next = cur + parseFloat(order.quantity);\n        else if (order.side === 'SELL' && cond.indexOf(\"'death'\") !== -1) next = 0; // vendeu a posi\u00e7\u00e3o de trend\n        else return;\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);\n        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);\n    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}",
+  "new_string": "// orderIds de fill de trend j\u00e1 contabilizados \u2014 dedup contra um executionReport FILLED RE-ENTREGUE\n// (reconex\u00e3o do userData stream): o BUY \u00e9 ADITIVO, ent\u00e3o um report duplicado somaria 2x e inflaria a\n// posi\u00e7\u00e3o. S\u00f3 recebe ordens de trend (raras, dirigidas por cross) \u2192 footprint desprez\u00edvel. Reseta no\n// restart, coerente com o TREND_QTY (que hoje tamb\u00e9m \u00e9 vol\u00e1til \u2014 ver nota de persist\u00eancia abaixo).\nconst countedTrendFills = new Set();\n\n// Trend Following \u2014 mant\u00e9m MEMORY['<sym>:TREND_QTY'] (posi\u00e7\u00e3o em base asset atribu\u00edda ao trend),\n// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automa\u00e7\u00e3o\n// (referenciam TREND_CROSS), lidas do BRAIN em mem\u00f3ria (sem ida ao banco). Golden BUY soma a qty\n// FILLED; death SELL zera. S\u00f3 atua em FILLED (a\u00ed order.quantity = qty cheia preenchida). Best-effort:\n// um erro aqui n\u00e3o quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).\n// PERSIST\u00caNCIA: TREND_QTY \u00e9 VOL\u00c1TIL (s\u00f3 MEMORY), ao contr\u00e1rio do cross (regimeStates). Aceit\u00e1vel p/ size\n// pequeno na valida\u00e7\u00e3o; ANTES DE ESCALAR O SIZE, persistir (sen\u00e3o um restart com posi\u00e7\u00e3o de trend aberta\n// perde a refer\u00eancia e o death seguinte n\u00e3o liquida). Ver HANDOFF / [[tradeux-trend-following]].\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        if (countedTrendFills.has(order.orderId)) return; // j\u00e1 contabilizado (report FILLED re-entregue)\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : '';\n        if (cond.indexOf('TREND_CROSS') === -1) return; // n\u00e3o \u00e9 automa\u00e7\u00e3o de Trend Following\n        const qty = parseFloat(order.quantity);\n        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;\n        let next;\n        if (order.side === 'BUY' && cond.indexOf(\"'golden'\") !== -1) {\n            if (!Number.isFinite(qty) || qty <= 0) return; // guard: qty inv\u00e1lida n\u00e3o corrompe TREND_QTY\n            next = cur + qty;\n        }\n        else if (order.side === 'SELL' && cond.indexOf(\"'death'\") !== -1) next = 0; // vendeu a posi\u00e7\u00e3o de trend\n        else return;\n        countedTrendFills.add(order.orderId);\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);\n        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);\n    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:33:50)*
+
+
+## 🤖 Claude *(14:33:50)*
+
+Header drift do activate-trend.js:
+
+## 🤖 Claude *(14:33:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js",
+  "old_string": " *  1) RESHAPE dos templates de trend p/ LIMIT market\u00e1vel (caso o setup tenha criado MARKET numa vers\u00e3o\n *     antiga): BUY = bestAsk\u00d71.003 MIN_NOTIONAL\u00d73 ; SELL = bestBid\u00d70.997 LAST_ORDER_QTY\u00d71. Buffer no\n *     EVAL do limitPrice (limitPriceMultiplier \u00e9 DECIMAL(10,2), n\u00e3o expressa sub-1%).",
+  "new_string": " *  1) RESHAPE dos templates de trend p/ LIMIT market\u00e1vel (caso o setup tenha criado MARKET/LAST_ORDER\n *     numa vers\u00e3o antiga): BUY = bestAsk\u00d71.003 MIN_NOTIONAL\u00d73 ; SELL = bestBid\u00d70.997 **TREND_QTY** (vende\n *     a posi\u00e7\u00e3o acumulada do trend). Buffer no EVAL do limitPrice (limitPriceMultiplier \u00e9 DECIMAL(10,2))."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:33:56)*
+
+
+## 🤖 Claude *(14:33:56)*
+
+Syntax-check dos arquivos com os fixes do gate:
+
+## 🤖 Claude *(14:33:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in backend/src/app-em.js backend/scripts/activate-trend.js; do node --check \"$f\" && echo \"OK   $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check files after gate fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   backend/src/app-em.js
+> OK   backend/scripts/activate-trend.js
+> ```
+
+## 🤖 Claude *(14:34:03)*
+
+
+## 🤖 Claude *(14:34:04)*
+
+Tudo verde. Deploy: rebuild backend (sem migration dessa vez — TREND_QTY é só MEMORY + calcQty + key):
+
+## 🤖 Claude *(14:34:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose up -d --build backend 2>&1 | tail -6'",
+  "description": "Rebuild and recreate backend with TREND_QTY code",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:34:15)*
+
+
+## 🤖 Claude *(14:34:15)*
+
+Aguardando boot limpo, depois rodo o `activate-trend` pra reshapear o template da id7 (LAST_ORDER_QTY → TREND_QTY):
+
+## 🤖 Claude *(14:34:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && for i in $(seq 1 12); do\n  if docker compose exec -T backend sh -c \"tail -4 logs/regime.log 2>/dev/null\" | grep -q \"Regime job iniciado\"; then\n    docker compose exec -T backend sh -c \"tail -4 logs/regime.log\"; exit 0; fi\n  sleep 2\ndone; echo TIMEOUT' 2>&1 | tail -6",
+  "description": "Poll for clean boot after rebuild",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-04T14:34:11.121Z - Estado de cross recarregado: BTCUSDT:above=false.
+> info: 2026-06-04T14:34:11.122Z - Regime job iniciado (intervalo 300000ms, klines 1h).
+> info: 2026-06-04T14:34:11.504Z - BTCUSDT:REGIME => bear (100% das últimas 101 velas < SMA200 (risk-off))
+> ```
+
+## 🤖 Claude *(14:34:24)*
+
+
+## 🤖 Claude *(14:34:24)*
+
+Boot limpo (estado recarregado, sem cross espúrio, bear). Rodando `activate-trend` — só o reshape da qty da id7 deve mudar (resto idempotente ✓):
+
+## 🤖 Claude *(14:34:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/activate-trend.js 2>&1 | grep -E \"\u2713|\u270f\ufe0f|\u25b6\ufe0f|PRONTO\"'",
+  "description": "Run activate-trend to reshape id7 to TREND_QTY"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - ✓ template "Trend Buy BTCUSDT SMA50/200" já está na forma alvo (id 3).
+> - ✏️  template "Trend Sell BTCUSDT SMA50/200" (id 4) → LIMIT marketável (qty TREND_QTY) (bestBid×0.997).
+> - ✓ "Baseline RSI Buy BTCUSDT" (id 2) já coordenada (gate !=trend + REGIME no index).
+> - ✓ "Baseline RSI Sell BTCUSDT" (id 3) já coordenada (gate !=trend + REGIME no index).
+> - ✓ "Trend Buy BTCUSDT SMA50/200" (id 6) já ATIVA.
+> - ✓ "Trend Sell BTCUSDT SMA50/200" (id 7) já ATIVA.
+> PRONTO — Trend Following AO VIVO (sinal via regimeJob/mainnet; execução testnet).
+> ```
+
+## 🤖 Claude *(14:34:34)*
+
+
+## 🤖 Claude *(14:34:34)*
+
+Só a qty da id7 mudou (resto ✓). Confirmando o template vivo + idempotência total no re-run + site:
+
+## 🤖 Claude *(14:34:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== template id4 (Trend Sell) ===\" && docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,name,side,type,quantity,limitPrice FROM orderTemplates WHERE id=4\\\"\" 2>/dev/null | grep -iv warning && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && echo \"=== re-run idempot\u00eancia ===\" && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/activate-trend.js 2>&1 | grep -cE \"\u2713\" | sed \"s/^/linhas \u2713: /\"'; echo \"=== site ===\"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify id7 template TREND_QTY, idempotency, site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === template id4 (Trend Sell) ===
+> +----+------------------------------+------+-------+-----------+------------------------------------------------+
+> | id | name                         | side | type  | quantity  | limitPrice                                     |
+> +----+------------------------------+------+-------+-----------+------------------------------------------------+
+> |  4 | Trend Sell BTCUSDT SMA50/200 | SELL | LIMIT | TREND_QTY | MEMORY['BTCUSDT:BOOK'].current.bestBid * 0.997 |
+> +----+------------------------------+------+-------+-----------+------------------------------------------------+
+> === re-run idempotência ===
+> linhas ✓: 6
+> === site ===
+> 200
+> ```
+
+## 🤖 Claude *(14:34:58)*
+
+
+## 🤖 Claude *(14:34:58)*
+
+`TREND_QTY` ao vivo: id4 com `quantity=TREND_QTY` + LIMIT marketável, re-run 6/6 idempotente, site 200. Risco nº1 resolvido na mecânica.
+
+Commit + push (gate QA+TL feito → trunk-based direto, como o `453c7d6`):
+
+## 🤖 Claude *(14:35:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git add backend/src/utils/indexes.js backend/src/beholder.js backend/src/app-em.js backend/scripts/setup-trend.js backend/scripts/activate-trend.js && git status --short && git commit -m \"fix(trend): id7 vende a posicao do trend (TREND_QTY) em vez de LAST_ORDER_QTY compartilhado\" \\\n-m \"Resolve o risco aberto no1 do Trend Following: o id7 (SELL na death) usava LAST_ORDER_QTY, e MEMORY[:LAST_ORDER] e por simbolo, compartilhado com a id3 (reversao) - podia vender a qty da reversao, nao da posicao de trend. Politica do dono: compounding (id6 acumula, id7 vende tudo e zera).\" \\\n-m \"- calcQty: novo tipo TREND_QTY (espelha LAST_ORDER_QTY; capa na carteira; throw se posicao 0 = death sem posicao nao vende a MR).\" \\\n-m \"- app-em.updateTrendPosition: no fill FILLED de automacao de trend (conditions via getBrain), golden BUY soma a qty, death SELL zera. Best-effort, fora do tick. Dedup por orderId (report FILLED re-entregue nao soma 2x) + guard de NaN/>0.\" \\\n-m \"- id7 template quantity LAST_ORDER_QTY -> TREND_QTY (setup + activate idempotente).\" \\\n-m \"Gate QA PASS + TL APPROVE (aplicados: dedup, guard NaN, header, nota de assimetria). Validado testnet: rebuild limpo, reshape id7->TREND_QTY, idempotente, site 200.\" \\\n-m \"DIVIDA aceita (size pequeno): TREND_QTY e volatil (nao persiste) - persistir ANTES de escalar o size. Hoje inerte (bear).\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && git log --oneline -1'",
+  "description": "Commit the TREND_QTY coupling fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> M  backend/scripts/activate-trend.js
+> M  backend/scripts/setup-trend.js
+> M  backend/src/app-em.js
+> M  backend/src/beholder.js
+> M  backend/src/utils/indexes.js
+> [master e5ef595] fix(trend): id7 vende a posicao do trend (TREND_QTY) em vez de LAST_ORDER_QTY compartilhado
+>  5 files changed, 66 insertions(+), 11 deletions(-)
+> e5ef595 fix(trend): id7 vende a posicao do trend (TREND_QTY) em vez de LAST_ORDER_QTY compartilhado
+> ```
+
+## 🤖 Claude *(14:35:08)*
+
+
+## 🤖 Claude *(14:35:08)*
+
+Commit `e5ef595`. Push:
+
+## 🤖 Claude *(14:35:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\" | grep -vE \"moderate|dependabot|vulnerab|security/dep|^remote: *$\"'",
+  "description": "Push the TREND_QTY fix to master"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To https://github.com/gabrielZarattini/tradeux.git
+>    453c7d6..e5ef595  HEAD -> master
+> ```
+
+## 🤖 Claude *(14:35:31)*
+
+
+## 🤖 Claude *(14:35:31)*
+
+Push OK (`453c7d6..e5ef595`). Atualizando docs e checando CI. Memória `tradeux-trend-following` (risco nº1 → resolvido + nova dívida de persistência):
+
+## 🤖 Claude *(14:35:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md",
+  "old_string": "4. \u23f3 **PENDENTE**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** \u00e9\n   pequeno (id6=3\u00d7 MIN_NOTIONAL) p/ observar \u2014 calibrar p/ cima depois; (c) **risco aberto n\u00ba1**: id7 usa `LAST_ORDER_QTY`\n   e `LAST_ORDER` \u00e9 **por s\u00edmbolo, compartilhado com a id3** \u2192 o SELL de trend pode vender a qty da revers\u00e3o. Aceito p/ size\n   pequeno; resolver (rastreio dedicado da qty de trend) ao calibrar. (d) hoje BTC=bear+above=false \u2192 ativa\u00e7\u00e3o **inerte** at\u00e9 virar.",
+  "new_string": "4. \u2705 **Risco n\u00ba1 RESOLVIDO** (commit `e5ef595`): id7 usa **`TREND_QTY`** (posi\u00e7\u00e3o acumulada do trend, N\u00c3O `LAST_ORDER`\n   que \u00e9 compartilhado c/ a id3). `app-em.updateTrendPosition` (no fill FILLED; conditions via `getBrain`): golden BUY soma\n   `order.quantity`, death SELL zera; dedup por `orderId` (report re-entregue n\u00e3o soma 2\u00d7) + guard NaN. `calcQty` tipo `TREND_QTY`\n   capa na carteira + **falha-fechado** se 0 (death sem posi\u00e7\u00e3o N\u00c3O vende a MR). Gate QA PASS + TL APPROVE.\n   \u23f3 **AINDA PENDENTE**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`); (b) **sizing** pequeno (id6=3\u00d7\n   MIN_NOTIONAL) \u2192 calibrar depois; (c) \u26a0\ufe0f **`TREND_QTY` \u00e9 VOL\u00c1TIL** (s\u00f3 MEMORY, n\u00e3o persiste como o cross em `regimeStates`) \u2192\n   **persistir ANTES de escalar o size** (restart com posi\u00e7\u00e3o de trend aberta = id7 d\u00e1 throw e N\u00c3O liquida no death). (d) hoje\n   BTC=bear+above=false \u2192 **inerte** at\u00e9 virar."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-trend-following.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:35:49)*
+
+
+## 🤖 Claude *(14:35:49)*
+
+HANDOFF — FIRST ACTION + checklist (risco nº1 resolvido) + novo registro de sessão:
+
+## 🤖 Claude *(14:35:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "   \u23f3 **NEXT**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar o size (id6=3\u00d7 MIN_NOTIONAL);\n   (b) observar id2/id3 coordenadas ao longo do tempo; (c) risco aberto: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3\n   (resolver ao subir size); (d) opcional: hook de SIGTERM p/ stop().",
+  "new_string": "   \u23f3 **NEXT**: (a) **observar 1 golden\u2192death real** (`logs/A:6.log`/`A:7.log`) antes de calibrar o size (id6=3\u00d7 MIN_NOTIONAL);\n   (b) observar id2/id3 coordenadas ao longo do tempo; (c) \u2705 **risco n\u00ba1 RESOLVIDO** (commit `e5ef595`: id7 usa `TREND_QTY`,\n   n\u00e3o mais `LAST_ORDER`) \u2014 \u26a0\ufe0f por\u00e9m `TREND_QTY` \u00e9 **vol\u00e1til** (n\u00e3o persiste) \u2192 **persistir ANTES de escalar o size**;\n   (d) opcional: hook de SIGTERM p/ stop()."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:36:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "  pequeno p/ observar) \u2192 subir depois; (c) **risco\n  aberto n\u00ba1**: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3 (pode vender qty da revers\u00e3o) \u2014 aceito p/ size pequeno,\n  resolver (rastreio dedicado) ao calibrar; (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size\n  pequeno). Reaplicar ap\u00f3s `make nuke` (id2/id3/id6/id7 s\u00e3o runtime): `setup-trend.js` + `activate-trend.js`.",
+  "new_string": "  pequeno p/ observar) \u2192 subir depois; (c) \u2705 **risco n\u00ba1\n  RESOLVIDO** (commit `e5ef595`): id7 usa **`TREND_QTY`** (posi\u00e7\u00e3o acumulada do trend via `app-em.updateTrendPosition` no fill;\n  golden soma, death zera; dedup por orderId + guard NaN; `calcQty` capa na carteira + falha-fechado se 0). \u26a0\ufe0f **`TREND_QTY` \u00e9\n  VOL\u00c1TIL** (s\u00f3 MEMORY, \u2260 `regimeStates`) \u2192 **persistir ANTES de escalar o size** (restart c/ posi\u00e7\u00e3o aberta = death n\u00e3o liquida);\n  (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size pequeno). Reaplicar ap\u00f3s `make nuke`\n  (id2/id3/id6/id7 s\u00e3o runtime): `setup-trend.js` + `activate-trend.js`."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String:   pequeno p/ observar) → subir depois; (c) **risco
+>   aberto nº1**: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3 (pode vender qty da reversão) — aceito p/ size pequeno,
+>   resolver (rastreio dedicado) ao calibrar; (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size
+>   pequeno). Reaplicar após `make nuke` (id2/id3/id6/id7 são runtime): `setup-trend.js` + `activate-trend.js`.
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:36:05)*
+
+
+## 🤖 Claude *(14:36:05)*
+
+Deixa eu reler o trecho exato do checklist no HANDOFF:
+
+## 🤖 Claude *(14:36:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"risco\" /home/gcrux-tradeux/HANDOFF.md | head",
+  "description": "Find risco lines in HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 25:   ±DI descartado por dados (piorava); MTF desnecessário (histerese já vence). Ganho é risco-ajustado de
+> 31:   (b) observar id2/id3 coordenadas ao longo do tempo; (c) ✅ **risco nº1 RESOLVIDO** (commit `e5ef595`: id7 usa `TREND_QTY`,
+> 97:    **risco-ajustado** (drawdown), não outperformance. HFT é matematicamente morto (fee+whipsaw).
+> 99:  risco-ajustado) — é o trabalho do agente. Rodar `backtest.js` em mais janelas/símbolos.
+> 141:  (`A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** id6=3× MIN_NOTIONAL (pequeno p/ observar) → subir depois; (c) **risco
+> 173:retorno bruto; o edge do trading ativo é risco-ajustado (drawdown), não outperformance; HFT é morto.**
+> 225:bear→tudo perde mas caixa corta −8% vs −40%); edge = risco-ajustado via **regime-gating**. Doc `~/STRATEGY-3BTC-assessment.md`.
+> 260:(bear pegajoso → **nunca** fail-open) e que o ganho é de **CARTEIRA/risco-ajustado, NÃO alfa no BTC** (no BTC isolado
+> 318:stream — **premissa falsa** (é param da ws-API de ordens, não do market-data; risco de vazar socket no `terminate()` por-URL) → caiu.
+> ```
+
+## 🤖 Claude *(14:36:09)*
+
+
+## 🤖 Claude *(14:36:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 135,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 135	  `REGIME_INTERVAL` (1h), `REGIME_SYMBOLS` (CSV).
+> 136	- ✅ **Trend Following — ATIVADO** (commit `453c7d6`, gate QA PASS + TL APPROVE, CI verde) via `node backend/scripts/activate-trend.js`:
+> 137	  (1) ✅ **coordenação** id2/id3 `&& MEMORY['BTCUSDT:REGIME']!=='trend'` (REGIME nos indexes de AMBAS; id3 ganhou REGIME → **fail-open
+> 138	  corrigido**); (2) ✅ **order type** MARKET→**LIMIT marketável** (buffer 0.3% no eval do `limitPrice` pois `limitPriceMultiplier` é
+> 139	  DECIMAL(10,2); + `validatePrice` no `updateOrderTemplate`); (3) ✅ **resiliência a restart**: tabela `regimeStates` (PK=symbol,
+> 140	  carregada no boot ANTES do 1º poll → cross não se perde no `make restart`). ⏳ **RESTA**: (a) observar **1 golden→death real**
+> 141	  (`A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** id6=3× MIN_NOTIONAL (pequeno p/ observar) → subir depois; (c) **risco
+> 142	  aberto nº1**: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3 (pode vender qty da reversão) — aceito p/ size pequeno,
+> 143	  resolver (rastreio dedicado) ao calibrar; (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size
+> 144	  pequeno). Reaplicar após `make nuke` (id2/id3/id6/id7 são runtime): `setup-trend.js` + `activate-trend.js`.
+> 145	
+> 146	## 🔑 Key paths & commands
+> ```
+
+## 🤖 Claude *(14:36:18)*
+
+
+## 🤖 Claude *(14:36:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "  (`A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** id6=3\u00d7 MIN_NOTIONAL (pequeno p/ observar) \u2192 subir depois; (c) **risco\n  aberto n\u00ba1**: id7 `LAST_ORDER_QTY` compartilha `LAST_ORDER` com a id3 (pode vender qty da revers\u00e3o) \u2014 aceito p/ size pequeno,\n  resolver (rastreio dedicado) ao calibrar; (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size\n  pequeno). Reaplicar ap\u00f3s `make nuke` (id2/id3/id6/id7 s\u00e3o runtime): `setup-trend.js` + `activate-trend.js`.",
+  "new_string": "  (`A:6.log`/`A:7.log`) antes de calibrar; (b) **sizing** id6=3\u00d7 MIN_NOTIONAL (pequeno p/ observar) \u2192 subir depois; (c) \u2705 **risco\n  n\u00ba1 RESOLVIDO** (commit `e5ef595`): id7 usa **`TREND_QTY`** (posi\u00e7\u00e3o acumulada via `app-em.updateTrendPosition` no fill: golden\n  soma, death zera; dedup por orderId + guard NaN; `calcQty` capa na carteira + falha-fechado se 0). \u26a0\ufe0f **`TREND_QTY` \u00e9 VOL\u00c1TIL**\n  (s\u00f3 MEMORY, \u2260 `regimeStates`) \u2192 **persistir ANTES de escalar o size** (restart c/ posi\u00e7\u00e3o aberta = id7 d\u00e1 throw, n\u00e3o liquida no\n  death); (d) at-least-once: crash entre fire e upsert pode re-disparar 1 cross no boot (ok p/ size pequeno). Reaplicar ap\u00f3s\n  `make nuke` (id2/id3/id6/id7 s\u00e3o runtime): `setup-trend.js` + `activate-trend.js`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:36:37)*
+
+
+## 🤖 Claude *(14:36:37)*
+
+Novo registro de sessão (fix do TREND_QTY):
+
+## 🤖 Claude *(14:36:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "GOTCHA novo: identidade git do `gcrux-tradeux` n\u00e3o estava setada (`git config user.*` local = Gabriel). NEXT: **observar 1 golden\u2192death\nreal** antes de calibrar o size + resolver o `LAST_ORDER` compartilhado (id7\u00d7id3). Mem\u00f3rias `tradeux-trend-following` + `tradeux-regime-gate` atualizadas.",
+  "new_string": "GOTCHA novo: identidade git do `gcrux-tradeux` n\u00e3o estava setada (`git config user.*` local = Gabriel). NEXT: **observar 1 golden\u2192death\nreal** antes de calibrar o size + resolver o `LAST_ORDER` compartilhado (id7\u00d7id3). Mem\u00f3rias `tradeux-trend-following` + `tradeux-regime-gate` atualizadas.\n\n### Record \u2014 2026-06-04 (cont. \u2014 fix do risco n\u00ba1: id7 vende TREND_QTY, n\u00e3o LAST_ORDER compartilhado)\n**Risco aberto n\u00ba1 RESOLVIDO** (commit `e5ef595`, push master, CI). Continua\u00e7\u00e3o do \"continue\" do dono. Verifiquei primeiro a entrega\nanterior AO VIVO (regimeStates persistindo a cada poll por ~11h, `updatedAt`=0min; pipeline armado/saud\u00e1vel). Depois ataquei o\nacoplamento `LAST_ORDER`: o id7 (SELL na death) usava `LAST_ORDER_QTY`, e `MEMORY[:LAST_ORDER]` \u00e9 **por s\u00edmbolo, compartilhado com a\nid3** \u2192 podia vender a qty da revers\u00e3o. **Dono escolheu** (AskUserQuestion) a pol\u00edtica **compounding** (id6 acumula, id7 vende tudo e\nzera). **Entregue** (5 arquivos): (a) `calcQty` novo tipo **`TREND_QTY`** (espelha LAST_ORDER_QTY, capa na carteira, **falha-fechado**\nse 0 \u2192 death sem posi\u00e7\u00e3o N\u00c3O vende a MR); (b) `app-em.updateTrendPosition` no fill FILLED (conditions via `getBrain`, sem DB): golden\nBUY soma `order.quantity`, death SELL zera; (c) id7 template qty `LAST_ORDER_QTY`\u2192`TREND_QTY` (setup + activate idempotente). **Gate**:\nQA **PASS c/ ressalvas** (achou double-count em report FILLED re-entregue \u2014 M\u00c9DIA) + TL **APPROVE c/ sugest\u00f5es** (must-fix: guard de\nNaN). **Apliquei os 2**: dedup por `orderId` (Set) + guard `Number.isFinite/>0`, + corrigi header drift + nota de assimetria. **Validado\ntestnet**: rebuild limpo, estado de cross recarregado sem disparo esp\u00fario, reshape id7\u2192TREND_QTY, re-run **6/6 idempotente**, site 200.\n**D\u00cdVIDA expl\u00edcita** (ambos os gates, aceita p/ size pequeno): `TREND_QTY` \u00e9 **vol\u00e1til** (s\u00f3 MEMORY, \u2260 regimeStates) \u2192 **persistir \u00e9\nmust-fix ANTES de escalar o size** (restart com posi\u00e7\u00e3o de trend aberta = id7 d\u00e1 throw e n\u00e3o liquida no death). Hoje **inerte** (bear \u2192\nid6 gateada \u2192 nenhuma posi\u00e7\u00e3o abre at\u00e9 virar), ent\u00e3o h\u00e1 tempo. NEXT inalterado: observar 1 cross real; persistir TREND_QTY ao subir size."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:36:49)*
+
+
+## 🤖 Claude *(14:36:49)*
+
+Docs atualizadas. Checando o CI do `e5ef595`:
+
+## 🤖 Claude *(14:36:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && curl -s -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=2&branch=master\" | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(f\\\"{r[\\\"head_sha\\\"][:7]} {r[\\\"name\\\"]}: {r[\\\"status\\\"]}/{r.get(\\\"conclusion\\\")}\\\") for r in d.get(\\\"workflow_runs\\\",[])]\"'",
+  "description": "Check CI status for e5ef595"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> e5ef595 CI: completed/success
+> 453c7d6 CI: completed/success
+> ```
+
+## 🤖 Claude *(14:37:38)*
+
+
+## 🤖 Claude *(14:37:53)*
+
+**CI verde** pro `e5ef595`. Risco nº1 resolvido, shipado e validado.
+
+## ✅ O que entreguei neste "continue"
+
+**1. Verifiquei a entrega anterior ao vivo** — não só `isActive=1`: a persistência (`regimeStates`) vinha gravando a cada poll por **~11h** (`updatedAt`=0min), pipeline armado e saudável.
+
+**2. Corrigi o risco aberto nº1** (commit [`e5ef595`](https://github.com/gabrielZarattini/tradeux/commit/e5ef595), gate QA PASS + TL APPROVE, CI verde):
+- id7 agora vende **`TREND_QTY`** (posição que o trend de fato comprou) em vez de `LAST_ORDER_QTY` (compartilhado com a id3) — política **compounding** que você escolheu.
+- `calcQty` novo tipo `TREND_QTY` (capa na carteira, **falha-fechado** se 0 → death sem posição **não** vende a reversão); acúmulo no fill (`golden` soma, `death` zera); **dedup por orderId** + **guard NaN** (ressalvas dos gates aplicadas).
+- Validado: rebuild limpo, reshape id7→TREND_QTY, re-run **6/6 idempotente**, site 200.
+
+## 🧭 Estado honesto / próximo passo
+
+Aqui chego num ponto onde **o próximo marco depende do mercado, não de código**: observar **1 golden→death real** pra ver o ciclo `acumula→vende→zera` funcionar. Hoje está **duplamente inerte** — BTC=`bear` (trava o id6) e `above=false` (sem golden) — então não dá pra forçar com segurança (seria fabricar regime + ordens reais).
+
+A única dívida de código que resta (`TREND_QTY` é volátil, não persiste) os **dois gates classificaram como "must-fix antes de escalar o size", não agora** — e a sabedoria de engenharia é a mesma: **observar o mecanismo 1× antes de empilhar mais máquina** (se o 1º cross revelar algo, o design pode mudar). Está tudo documentado no HANDOFF + memória.
+
+Então o trabalho substancial e desbloqueado **acabou** — o trend bot está **ativado, coordenado e endurecido**, esperando um cross. Opções pra seguir, na minha ordem de recomendação:
+
+1. **Deixar rodar e observar** (recomendado) — é o passo natural; o sistema captura o cross sozinho (logs `A:6/A:7`, persistência segura restart).
+2. **Persistir o `TREND_QTY` agora** (adiantar o must-fix) — fecha 100% do loop de robustez, mesmo padrão do `regimeStates`; vai a gate.
+3. **Pegar outro item do backlog** — ex.: o `get_wallet` bloat (otimização nº1 do agente LLM, ~91k tok/ciclo), ou achados E2E (leak de WS, `/api/symbols` 6-8×/página).
+
+Qual direção? (Se quiser que eu só siga, eu pego a #2 — é o único código desbloqueado que agrega sem depender do cross.)
+
 ---
 
 %% --- PROJECT METADATA START --- %%

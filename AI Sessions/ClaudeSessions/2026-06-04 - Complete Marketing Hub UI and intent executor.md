@@ -6592,5 +6592,5 @@ O `/handoff` oficial agora está **selado e publicado**.
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-04 - Audit database migrations and clean test artifacts]]
-> * **Próxima Sessão**: [[2026-06-04 - agent-a0a6b749e86c06fd2]]
+> * **Próxima Sessão**: [[2026-06-04 - Fix click tracking and complete four priority tasks]]
 %% --- TIMELINE END --- %%

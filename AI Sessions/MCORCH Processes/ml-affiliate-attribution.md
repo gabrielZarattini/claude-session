@@ -76,8 +76,29 @@ Resolução em camadas, **per-user e fail-closed**, compartilhada por frontend +
 **Gate (a) reforçado:** nenhum arquivo de código/script **emite** `panel.gcrux.com` (só comentários/anti-pattern
 e o trilho de auditoria README/BoK/HANDOFF o citam). `grep -c panel.gcrux.com scripts/link-forge.ts` = 0.
 
+## Contabilidade de cliques in-system (OTD-ML-CLICKS — v6.28.0)
+
+**Problema material (Sovereign 2026-06-04):** o painel "Central de afiliados e criadores → Métricas" da ML registrou **1 clique** num link `matt_word` nosso (prova de que a atribuição best-effort funciona no nível do clique), mas **nosso sistema mostrava 0** — a ML conta cliques porém **não expõe API** (OTD-ML-001), e nós só víamos atividade no *postback de compra* (`handle-ml-postback` → `revenue_cents`). O `ROIWidget` somava `affiliate_links.clicks`, coluna que **nunca era incrementada**.
+
+**Mecanismo (o redirect vira o contador):** os links publicados deixam de ser ML cru e passam a apontar para o **nosso redirect** `process-affiliate-link` (GET `?product_id=<MLB>&content_variant_id=<asset node id>`). No clique, a edge function:
+1. resolve o **dono** do conteúdo (`mcorch_nodes.user_id` do `content_variant_id`);
+2. registra o clique atomicamente via RPC **`record_affiliate_click(p_user_id, p_product_id, p_content_id, p_dest_url)`** (`SECURITY DEFINER` · `search_path=''` · **EXECUTE só `service_role`** · UPDATE-first/INSERT keyed por `(user_id, product_id, content_id)` — migration `20260604120000`);
+3. **302** para o destino real (meli.la definitivo do dono, senão `matt_word` sobre a URL do produto).
+
+`scripts/link-forge.ts:buildAffiliateUrl` emite a URL de redirect (não mais o link ML cru) — a tag é resolvida **server-side por dono** no clique (nunca embutida). O `ROIWidget` já soma `affiliate_links.clicks` → "Cliques Totais" passa a refletir cliques reais **antes** de qualquer compra.
+
+| Pergunta | Conteúdo |
+|----------|----------|
+| **Operator** | MCORCH Agent (publica via link-forge / monetize) · leitor humano (clica) |
+| **Sequence** | 1) conteúdo carrega a URL de redirect; 2) leitor clica → GET resolve dono + registra clique + 302; 3) `affiliate_links.clicks++`; 4) ROIWidget soma. |
+| **Verification gates** | (a) GET → **302** com `Location` em `mercadolivre.com`/`meli.la` (nunca supabase/painel); (b) `affiliate_links.clicks` **incrementa** N→N+1 por clique (prova: `scripts/qa/smoke-affiliate-click.ts`); (c) atribuído ao **dono** (per-user). |
+| **Recovery** | Sem dono resolvível → RPC no-op (fail-soft); sem config → 302 para settings. RPC nunca lança no caminho do leitor. |
+| **Success signal** | `affiliate_links.clicks > 0` para o tenant dono + "Cliques Totais" > 0 no ROIWidget, sem depender de compra. |
+
+**Trade-off conhecido (follow-up):** a URL publicada agora é a do redirect (`<supabase>/functions/v1/process-affiliate-link?...`) em vez do link ML cru — menos "bonita"/confiável num post social. Polimento futuro: servir o redirect por um domínio próprio de marca (`login.mcorch.com/go?...` via proxy nginx → mesma edge function) para link limpo **e** rastreado. O 302 leva instantaneamente ao produto ML real — atribuição/destino não mudam, só o host intermediário.
+
 ---
-_Ref: docs/bok/mercado-livre-api/ (OTD-ML-001/002) · commit eebea0a · seal 45bc299b · hybrid v6.20.0_
+_Ref: docs/bok/mercado-livre-api/ (OTD-ML-001/002/CLICKS) · commit eebea0a · seal 45bc299b · hybrid v6.20.0 · click-ledger v6.28.0_
 
 ---
 
