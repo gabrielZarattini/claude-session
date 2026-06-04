@@ -9296,6 +9296,971 @@ Roda em background — **serei notificado quando concluir** e aí sintetizo o re
 
 Quando o relatório chegar, te entrego: os thresholds do filtro de exaustão (com fontes + ressalva de calibração) e o parecer recomendando/desaconselhando o Spot Margin. Te aviso assim que sair.
 
+## 👤 User *(20:33:16)*
+
+# Épico: Ativação Tática do Oráculo de Fluxo (Sniper Mode) e Coleta de Métricas para Calibração
+
+Excelente sincronização no `/handson`. O baseline de infraestrutura está impecável: a dívida de input do agente foi resolvida com a refatoração do `leanWallet` (redução de 97.7% no payload), o motor de tendência (`id6/id7`) está configurado e isolado via `TREND_QTY`, e o **Oráculo de Fluxo V1 (Shadow)** já computa o desequilíbrio de agressão da Mainnet (`isBuyerMaker`) e renderiza perfeitamente no card do painel `/intelligence`.
+
+O objetivo desta sessão é transicionar o Oráculo de Fluxo de **Shadow Mode** para um **Filtro Tático Ativo (Passivo)** na ponta de compra (`id2`), transformando a reversão à média reativa em um modelo *Sniper* que evita pegar "facas caindo" em quedas livres (Bear Market/Capitulação).
+
+Comande suas capacidades de refatoração de alta precisão para implementar as seguintes tarefas no ecossistema:
+
+---
+
+### 1. Acoplamento do Filtro de Exaustão de Fluxo (Sniper Gate na `id2`)
+* **Contexto:** Não queremos chutar thresholds definitivos sem dados de backtest, mas precisamos criar a fiação estrutural para que a `id2` (BUY) consuma o estado do fluxo.
+* **Ação:** Aplique um PATCH síncrono no runtime de avaliação da `id2`. Insira um filtro passivo baseado nos dados de `MEMORY['<sym>:FLOW']` (alimentados pelo `flowService`).
+* **Regra Estrutural de Bloqueio:** A `id2` só deve autorizar o disparo de ordens se o RSI estiver sobrevendido (`<25`), o macro regime não for `bear`, o regime não for `trend`, **E** se o `Taker Imbalance` instantâneo não demonstrar um cenário de capitulação ou venda agressora descontrolada.
+* **Threshold de Partida:** Configure um parâmetro padrão defensivo (ex: barrar a compra se `imbalance < -0.40`). A automação deve aguardar o fluxo vendedor exaurir ou retornar para zonas de neutralidade (`imbalance > -0.05`) para disparar como um "Sniper" na mínima do movimento.
+
+### 2. Implementação do Log Analítico de Eventos de Fluxo (Data Gathering)
+* **Arquivo Alvo:** `backend/src/jobs/flowJob.js` (ou o loop de consolidação do fluxo).
+* **Ação:** Para validar estatisticamente os limites exatos do desequilíbrio de fluxo e do VPIN-lite sem causar overhead de I/O em disco, crie um mecanismo de log especializado.
+* **Mecânica:** Sempre que a `id2` registrar uma condição de gatilho técnico (RSI < 25), o sistema deve capturar um snapshot instantâneo do Oráculo (`imbalance`, `toxicity`, `buyVol`, `sellVol`) e gravar uma linha estruturada no arquivo local `logs/flow-capitulation.log`.
+* **Objetivo:** Isolar o comportamento do fluxo exatamente nos momentos de estresse de preço do par BTC/USDT. Esse log servirá de matéria-prima para alimentarmos o nosso harness de backtest (`backtest.js`) na próxima fase de calibração fina.
+
+### 3. Governança e Blindagem do Caminho do Dinheiro (Money-Path)
+* **Garantia de Fail-Safe:** Caso o `flowJob` fique *stale* ( Binance API fora do ar ou atraso na stream), a lógica de avaliação da `id2` deve falhar-fechada para proteção do capital. Se a idade do dado de fluxo (`ageMs`) for superior ao intervalo de tolerância ou se o estado for `null`, a ponta compradora assume risco máximo e trava preventivamente.
+* **Roteamento de Ordens:** Certifique-se de que os disparos da `id2` e `id3` permaneçam fiéis aos parâmetros consolidados na sessão anterior, operando estritamente com ordens LIMIT marketáveis cruzando o spread como TAKER com o multiplicador de buffer configurado.
+
+---
+
+### 📋 Protocolo de Validação
+1. Execute as checagens locais de sintaxe (`npm run check` / `agent --check`) para garantir a integridade do servidor MCP e das rotas Express.
+2. Certifique-se de que os null-guards criados no card do frontend React permaneçam íntegros com a nova estrutura de propriedades faturadas pelo backend.
+3. Apresente o diff limpo e estruturado das alterações antes de realizar o commit no branch principal.
+
+## 🤖 Claude *(20:35:41)*
+
+
+## 🤖 Claude *(20:35:43)*
+
+Esse é o passo que eu tinha documentado como NEXT — e está bem motivado. Mas tem nuances de money-path que eu preciso acertar (e uma ressalva honesta sobre o threshold). Antes de escrever, deixa eu confirmar **como o engine avalia a condition** (crítico pro fail-safe: `Date` disponível? throw = fail-closed? o null-check de indexes é real?):
+
+## 🤖 Claude *(20:35:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== eval de condition + indexes check ===\" && grep -n \"function evalDecision\\|function testAutomations\\|function isChecked\\|Function(\\|indexes.every\\|\\.every(\\|invertCondition\\|catch\" backend/src/beholder.js | head -30",
+  "description": "Locate condition eval and indexes null-check in beholder"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === eval de condition + indexes check ===
+> 138:function invertCondition(memoryKey, conditions) {
+> 173:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 177:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 180:        catch (err) {
+> 337:    } catch (err) {
+> 350:        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 375:    } catch (err) {
+> 378:        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 459:    catch (err) {
+> 501:        if (!Function("MEMORY", "return " + grid.conditions)(MEMORY)) continue;
+> 520:        } catch (err) {
+> 669:    } catch (err) {
+> 741:    } catch (err) {
+> 759:async function evalDecision(memoryKey, automation) {
+> 766:            const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
+> 769:            const invertedCondition = shouldntInvert(automation, memoryKey) ? '' : invertCondition(memoryKey, automation.conditions);
+> 774:            const isValid = evalCondition ? Function("MEMORY", "return " + evalCondition)(MEMORY) : true;
+> 801:    } catch (err) {
+> 807:async function testAutomations(memoryKey) {
+> ```
+
+## 🤖 Claude *(20:35:49)*
+
+
+## 🤖 Claude *(20:35:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 759,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 759	async function evalDecision(memoryKey, automation) {
+> 760	    if (!automation) return false;
+> 761	
+> 762	    try {
+> 763	        const indexes = automation.indexes ? automation.indexes.split(',') : [];
+> 764	
+> 765	        if (indexes.length) {
+> 766	            const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
+> 767	            if (!isChecked) return false;
+> 768	
+> 769	            const invertedCondition = shouldntInvert(automation, memoryKey) ? '' : invertCondition(memoryKey, automation.conditions);
+> 770	            const evalCondition = automation.conditions + (invertedCondition ? ' && ' + invertedCondition : '');
+> 771	
+> 772	            if (LOGS) logger('A:' + automation.id, `Beholder trying to evaluate:\n${evalCondition}\n at ${automation.name}`);
+> 773	
+> 774	            const isValid = evalCondition ? Function("MEMORY", "return " + evalCondition)(MEMORY) : true;
+> 775	            if (!isValid) return false;
+> 776	        }
+> 777	
+> 778	        if (!automation.actions || !automation.actions.length) {
+> 779	            if (LOGS || automation.logs) logger('A:' + automation.id, `No actions defined for automation ${automation.name}`);
+> 780	            return false;
+> 781	        }
+> 782	
+> 783	        if ((LOGS || automation.logs) && !['GRID', 'TRAILING'].includes(automation.actions[0].type))
+> 784	            logger('A:' + automation.id, `Beholder evaluated a condition at automation: ${automation.name} => ${automation.conditions}`);
+> 785	
+> 786	        const settings = await getDefaultSettings();
+> 787	        const results = [];
+> 788	
+> 789	        for (let i = 0; i < automation.actions.length; i++) {
+> 790	            const action = automation.actions[i];
+> 791	            const result = await doAction(settings, action, automation);
+> 792	            if (!result || result.type === 'error') break;
+> 793	
+> 794	            results.push(result);
+> 795	        }
+> 796	
+> 797	        if (automation.logs && results && results.length && results[0])
+> 798	            logger('A:' + automation.id, `Automation ${automation.name} finished execution at ${new Date()}\nResults: ${JSON.stringify(results)}`);
+> 799	
+> 800	        return results.flat();
+> 801	    } catch (err) {
+> 802	        if (automation.logs) logger('A:' + automation.id, err);
+> 803	        return { type: 'error', text: `Error at evalDecision for '${automation.name}': ${err}` };
+> 804	    }
+> 805	}
+> 806	
+> 807	async function testAutomations(memoryKey) {
+> 808	
+> 809	    const automations = findAutomations(memoryKey);
+> 810	
+> ```
+
+## 🤖 Claude *(20:43:02)*
+
+
+## 🤖 Claude *(20:43:09)*
+
+Confirmei o money-path. O eval ([beholder.js:759-804](tradeux/backend/src/beholder.js:759)) me dá tudo pro **fail-safe fechado**: `indexes.every(MEMORY[ix]!=null)` (linha 766 → FLOW null = não dispara), `Date` disponível no `Function(...)` (linha 774 → dá pra checar idade), e throw é **capturado** (linha 801 → não dispara). Então: FLOW nos indexes + null-guard + check de idade na condition = trava fechada em todos os modos de falha.
+
+⚠️ **Ressalva honesta antes de codar**: isto move o FLOW pro **money-path** com threshold **não-calibrado** (o deep-research que vai informar isso ainda está rodando). Mitigo: (a) é **inerte agora** (bear bloqueia a id2); (b) threshold **conservador + provisório + re-PATCH-ável**; (c) **fail-safe**; (d) **gate QA+TL**. E vou marcar claramente como provisório.
+
+Implementando. **1/3** — flowJob: `atMs` (base do fail-safe de stale) + log de capitulação:
+
+## 🤖 Claude *(20:43:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js",
+  "old_string": "                // gate PASSIVO (executeAutomations=false): a escrita n\u00e3o dispara ordem; \u00e9 lida quando o tick de RSI/pre\u00e7o dispara a automa\u00e7\u00e3o.\n                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at }, false);\n                LAST[symbol] = f; AT[symbol] = Date.now();\n\n                // SHADOW: loga os epis\u00f3dios unilaterais (os que um gate vetaria) p/ calibrar o threshold.\n                if (f.toxicity >= LOG_TOXICITY)\n                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);",
+  "new_string": "                // gate PASSIVO (executeAutomations=false): a escrita n\u00e3o dispara ordem; \u00e9 lida no tick da id2.\n                // atMs (epoch da ESCRITA) = base do fail-safe de STALE: a condition da id2 checa a idade do\n                // dado; se a Binance cair, o job pula (skip-on-unavailable) \u2192 atMs congela \u2192 o gate trava fechado.\n                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at, atMs: Date.now() }, false);\n                LAST[symbol] = f; AT[symbol] = Date.now();\n\n                // SHADOW: loga os epis\u00f3dios unilaterais (os que o gate vetaria) p/ calibrar o threshold.\n                if (f.toxicity >= LOG_TOXICITY)\n                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);\n\n                // CAPITULATION LOG (mat\u00e9ria-prima p/ calibrar o gate sniper): snapshot do fluxo nos momentos de\n                // gatilho t\u00e9cnico da id2 (RSI 1m < 25). Esparso (s\u00f3 em sobrevenda) \u2192 I/O baixo; vai p/\n                // logs/flow-capitulation.log. NOTA HONESTA: o RSI vem do chart de TRADE (testnet, pre\u00e7o sint\u00e9tico)\n                // e o FLOW da mainnet \u2014 \u00e9 o MESMO pareamento que a id2 opera ao vivo (sinal mainnet, exec testnet),\n                // ent\u00e3o calibra a MEC\u00c2NICA/distribui\u00e7\u00e3o do gate, N\u00c3O alfa real (p/ isso falta hist\u00f3rico de aggTrades\n                // no backtest.js \u2014 gap documentado no HANDOFF). Loga sem threshold (wouldBlock \u00e9 derivado offline).\n                try {\n                    const rsi = beholder.getMemory(symbol, 'RSI_14_1m');\n                    if (rsi && typeof rsi.current === 'number' && rsi.current < 25) {\n                        const regime = beholder.getMemory(symbol, indexKeys.REGIME) || null;\n                        logger('flow-capitulation', JSON.stringify({\n                            symbol, rsi: +rsi.current.toFixed(2), imbalance: f.imbalance, toxicity: f.toxicity,\n                            buyVol: f.buyVol, sellVol: f.sellVol, trades: f.trades, spanSec: f.spanSec, regime,\n                        }));\n                    }\n                } catch (e) { /* best-effort: o log de calibra\u00e7\u00e3o nunca derruba o job */ }"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String:                 // gate PASSIVO (executeAutomations=false): a escrita não dispara ordem; é lida quando o tick de RSI/preço dispara a automação.
+>                 await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at }, false);
+>                 LAST[symbol] = f; AT[symbol] = Date.now();
+> 
+>                 // SHADOW: loga os episódios unilaterais (os que um gate vetaria) p/ calibrar o threshold.
+>                 if (f.toxicity >= LOG_TOXICITY)
+>                     logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:43:26)*
+
+
+## 🤖 Claude *(20:43:26)*
+
+Deixa eu reler o trecho exato do flowJob:
+
+## 🤖 Claude *(20:43:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js",
+  "offset": 56,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 56	    running = true;
+> 57	    try {
+> 58	        const symbols = await resolveSymbols();
+> 59	        if (!symbols.length) return;
+> 60	
+> 61	        for (const symbol of symbols) {
+> 62	            try {
+> 63	                const f = await getFlow(symbol);
+> 64	                if (!f || f.unavailable) {
+> 65	                    // Não sobrescreve a MEMORY (preserva o último fluxo conhecido). Avisa 1x por episódio.
+> 66	                    if (!UNAVAIL.has(symbol)) { UNAVAIL.add(symbol); logger('flow', `${symbol}: fluxo indisponível (${f ? f.reason : 'sem resposta'}); MEMORY preservada.`); }
+> 67	                    continue;
+> 68	                }
+> 69	                if (UNAVAIL.delete(symbol)) logger('flow', `${symbol}: fluxo recuperado.`);
+> 70	
+> 71	                // gate PASSIVO (executeAutomations=false): a escrita não dispara ordem; é lida no tick quando ligarmos o gate.
+> 72	                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at }, false);
+> 73	                LAST[symbol] = f; AT[symbol] = Date.now();
+> 74	
+> 75	                // SHADOW: loga os episódios unilaterais (os que um gate vetaria) p/ calibrar o threshold.
+> 76	                if (f.toxicity >= LOG_TOXICITY)
+> 77	                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);
+> ```
+
+## 🤖 Claude *(20:43:39)*
+
+
+## 🤖 Claude *(20:43:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js",
+  "old_string": "                // gate PASSIVO (executeAutomations=false): a escrita n\u00e3o dispara ordem; \u00e9 lida no tick quando ligarmos o gate.\n                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at }, false);\n                LAST[symbol] = f; AT[symbol] = Date.now();\n\n                // SHADOW: loga os epis\u00f3dios unilaterais (os que um gate vetaria) p/ calibrar o threshold.\n                if (f.toxicity >= LOG_TOXICITY)\n                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);",
+  "new_string": "                // gate PASSIVO (executeAutomations=false): a escrita n\u00e3o dispara ordem; \u00e9 lida no tick da id2.\n                // atMs (epoch da ESCRITA) = base do fail-safe de STALE: a condition da id2 checa a idade do dado;\n                // se a Binance cair, o job pula (skip-on-unavailable) \u2192 atMs congela \u2192 o gate trava fechado.\n                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at, atMs: Date.now() }, false);\n                LAST[symbol] = f; AT[symbol] = Date.now();\n\n                // SHADOW: loga os epis\u00f3dios unilaterais (os que o gate vetaria) p/ calibrar o threshold.\n                if (f.toxicity >= LOG_TOXICITY)\n                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);\n\n                // CAPITULATION LOG (mat\u00e9ria-prima p/ calibrar o gate sniper): snapshot do fluxo nos momentos de\n                // gatilho t\u00e9cnico da id2 (RSI 1m < 25). Esparso (s\u00f3 em sobrevenda) \u2192 I/O baixo; vai p/\n                // logs/flow-capitulation.log. NOTA HONESTA: o RSI vem do chart de TRADE (testnet, pre\u00e7o sint\u00e9tico)\n                // e o FLOW da mainnet \u2014 \u00e9 o MESMO pareamento que a id2 opera ao vivo (sinal mainnet, exec testnet),\n                // ent\u00e3o calibra a MEC\u00c2NICA/distribui\u00e7\u00e3o, N\u00c3O alfa real (p/ isso falta hist\u00f3rico de aggTrades no\n                // backtest.js \u2014 gap no HANDOFF). Loga sem threshold (wouldBlock \u00e9 derivado offline).\n                try {\n                    const rsi = beholder.getMemory(symbol, 'RSI_14_1m');\n                    if (rsi && typeof rsi.current === 'number' && rsi.current < 25) {\n                        const regime = beholder.getMemory(symbol, indexKeys.REGIME) || null;\n                        logger('flow-capitulation', JSON.stringify({\n                            symbol, rsi: +rsi.current.toFixed(2), imbalance: f.imbalance, toxicity: f.toxicity,\n                            buyVol: f.buyVol, sellVol: f.sellVol, trades: f.trades, spanSec: f.spanSec, regime,\n                        }));\n                    }\n                } catch (e) { /* best-effort: o log de calibra\u00e7\u00e3o nunca derruba o job */ }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/flowJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:44:21)*
+
+
+## 🤖 Claude *(20:44:21)*
+
+**2/3** — `setup-flow-gate.js` (PATCH idempotente da id2: gate de fluxo + fail-safe de stale, threshold provisório re-tunável):
+
+## 🤖 Claude *(20:44:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js",
+  "content": "'use strict';\n/*\n * Gate de FLUXO (Sniper) na id2 (BUY de revers\u00e3o \u00e0 m\u00e9dia) \u2014 idempotente, re-tun\u00e1vel, com DRY.\n * Pr\u00e9-requisito: flowJob no ar gravando MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at,atMs} (commit f833032).\n *\n * O que faz: adiciona \u00e0 condition da id2 um filtro PASSIVO de fluxo do taker (mainnet) \u2014 s\u00f3 compra o dip\n * se o fluxo vendedor N\u00c3O estiver em capitula\u00e7\u00e3o. Transforma a revers\u00e3o reativa num \"sniper\" (espera o\n * fluxo vendedor exaurir/voltar \u00e0 neutralidade antes de comprar). Inclui FLOW nos indexes (fail-safe).\n *\n * FAIL-SAFE (trava FECHADA \u2014 protege capital): 3 camadas, todas validadas no engine (beholder.evalDecision):\n *   (1) FLOW nos `indexes` \u2192 se MEMORY['<sym>:FLOW'] for null/ausente (job off, boot, Binance fora) o\n *       `indexes.every(MEMORY[ix]!=null)` retorna false \u2192 id2 N\u00c3O dispara.\n *   (2) STALE: `(Date.now()-MEMORY['<sym>:FLOW'].atMs) < MAX_AGE` \u2014 se o dado envelhecer (job preserva o\n *       \u00faltimo em queda da Binance, atMs congela), o gate trava fechado.\n *   (3) null-guard `MEMORY['<sym>:FLOW'] && ...` na pr\u00f3pria condition (belt-and-suspenders); throw no eval\n *       \u00e9 capturado pelo engine = n\u00e3o dispara.\n *\n * \u26a0\ufe0f THRESHOLD PROVIS\u00d3RIO: o default (-0.40) \u00e9 um ponto de partida CONSERVADOR (barra a compra s\u00f3 sob venda\n * agressora forte, >~70% do volume taker vendendo), N\u00c3O calibrado. Recalibrar com o deep-research + o\n * logs/flow-capitulation.log. Re-rodar este script com novo FLOW_GATE_MIN ATUALIZA o gate (idempotente).\n *\n * Uso (no container, server no ar):  node scripts/setup-flow-gate.js   [DRY=true]\n *   env: EM/PW (ou TRADEUX_EMAIL/PASSWORD), PORT (3001), FLOW_SYMBOL (BTCUSDT),\n *        FLOW_GATE_MIN (-0.40 = piso do imbalance p/ permitir compra),\n *        FLOW_GATE_MAX_AGE_MS (180000 = idade m\u00e1x. do dado de fluxo p/ confiar; sen\u00e3o trava).\n */\nconst http = require('http');\n\nconst SYMBOL = (process.env.FLOW_SYMBOL || 'BTCUSDT').toUpperCase();\nconst KF = `${SYMBOL}:FLOW`;\nconst _min = parseFloat(process.env.FLOW_GATE_MIN || '-0.40');\nconst MIN = Number.isFinite(_min) ? _min : -0.40;\nconst _age = parseInt(process.env.FLOW_GATE_MAX_AGE_MS || '180000', 10);\nconst MAX_AGE = Number.isFinite(_age) && _age > 0 ? _age : 180000;\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst BASE = { host: process.env.FLOW_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\nconst MR_BUY = `Baseline RSI Buy ${SYMBOL}`; // id2 (runtime, n\u00e3o-seedada)\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\nasync function findAutomationByName(token, name) {\n    for (let page = 1; page <= 30; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break;\n    }\n    return null;\n}\n\n// clause do gate de fluxo (sempre o segmento FINAL da condition). Re-tun\u00e1vel: ao re-rodar, o segmento\n// antigo (do 1\u00ba \"&& MEMORY['<KF>']\" em diante) \u00e9 removido e o novo \u00e9 re-anexado.\nfunction buildConditions(cond) {\n    const marker = `&& MEMORY['${KF}']`;\n    let base = cond;\n    const mi = base.indexOf(marker);\n    if (mi !== -1) base = base.slice(0, mi);\n    base = base.replace(/&&\\s*$/, '').trim();\n    const gate = `MEMORY['${KF}'] && (Date.now()-MEMORY['${KF}'].atMs)<${MAX_AGE} && MEMORY['${KF}'].imbalance>${MIN}`;\n    return `${base} && ${gate}`;\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n\n    console.log(`# Gate de Fluxo (Sniper) na id2 \u2014 ${SYMBOL}  [imbalance>${MIN}, maxAge=${MAX_AGE}ms]${DRY ? '  [DRY-RUN]' : ''}\\n`);\n\n    const a = await findAutomationByName(token, MR_BUY);\n    if (!a) { console.error(`automa\u00e7\u00e3o \"${MR_BUY}\" (id2) N\u00c3O encontrada \u2014 rode o baseline RSI antes (ver HANDOFF).`); process.exit(1); }\n\n    const full = await req('GET', `/automations/${a.id}`, token);\n    const cur = full.body || a;\n    const idxList = (cur.indexes || '').split(',').map(s => s.trim()).filter(Boolean);\n    const newIndexes = idxList.includes(KF) ? cur.indexes : [...idxList, KF].join(',');\n    const newConditions = buildConditions(cur.conditions || '');\n\n    if (newConditions === cur.conditions && newIndexes === cur.indexes) {\n        console.log(`\u2713 id2 (id ${a.id}) j\u00e1 com o gate de fluxo id\u00eantico (imbalance>${MIN}). Nada a fazer.`);\n        return;\n    }\n    console.log(`conditions: ${cur.conditions}`);\n    console.log(`        ->  ${newConditions}`);\n    console.log(`indexes   : ${cur.indexes}  ->  ${newIndexes}`);\n    if (DRY) { console.log('\\n[DRY-RUN] nada aplicado.'); return; }\n\n    const actions = (cur.actions || []).map(x => ({ type: x.type, orderTemplateId: x.orderTemplateId }));\n    if (!actions.length) { console.error(`id2 sem actions \u2014 abortando (PATCH zeraria a ordem).`); process.exit(1); }\n    const r = await req('PATCH', `/automations/${a.id}`, token, {\n        name: cur.name, symbol: cur.symbol, indexes: newIndexes, conditions: newConditions,\n        isActive: cur.isActive, logs: cur.logs, schedule: cur.schedule || null, actions,\n    });\n    if (r.status !== 200) { console.error(`falha no PATCH da id2: ${r.status} ${JSON.stringify(r.body)}`); process.exit(1); }\n    console.log(`\\n\u270f\ufe0f  id2 (id ${a.id}) GATEADA por fluxo (sniper). Fail-safe: FLOW nos indexes + stale<${MAX_AGE}ms + null-guard.`);\n    console.log(`\u26a0\ufe0f  threshold PROVIS\u00d3RIO (imbalance>${MIN}) \u2014 recalibrar com deep-research + logs/flow-capitulation.log.`);\n    console.log(`Revert: remover o segmento \"&& MEMORY['${KF}']...\" da condition e tirar ${KF} dos indexes (ou re-rodar com outro FLOW_GATE_MIN).`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:44:39)*
+
+
+## 🤖 Claude *(20:44:39)*
+
+**3/3** escrito. Syntax-check dos dois:
+
+## 🤖 Claude *(20:44:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in backend/src/flowJob.js backend/scripts/setup-flow-gate.js; do node --check \"$f\" && echo \"OK   $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check flowJob and flow-gate script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   backend/src/flowJob.js
+> OK   backend/scripts/setup-flow-gate.js
+> ```
+
+## 🤖 Claude *(20:45:29)*
+
+
+## 🤖 Claude *(20:45:29)*
+
+Ambos OK. Isto **entra no money-path** (FLOW na decisão de compra da id2) — então gate QA+TL completo, focado no fail-safe:
+
+## 🤖 Claude *(20:45:30)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review flow gate on id2",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA de uma mudan\u00e7a MONEY-PATH no TradeUX (Beholder Binance Spot bot, testnet). Repo `/home/gcrux-tradeux/tradeux`. pt-BR. Builds on `6f97209`.\n\n## Contexto\nO Or\u00e1culo de Fluxo (MEMORY['<sym>:FLOW']={imbalance,toxicity,at}, do flowJob, shadow) vai sair do shadow e GATEAR a id2 (BUY de revers\u00e3o \u00e0 m\u00e9dia): s\u00f3 compra o dip se o fluxo vendedor do taker n\u00e3o estiver em capitula\u00e7\u00e3o. Isto MOVE o FLOW para o caminho de decis\u00e3o de compra (money-path) \u2014 da\u00ed o gate. Threshold \u00e9 PROVIS\u00d3RIO/conservador (decis\u00e3o consciente do dono; N\u00c3O re-litigar o n\u00famero, revisar a MEC\u00c2NICA e o FAIL-SAFE). Hoje \u00e9 INERTE (regime=bear bloqueia a id2 de qualquer jeito).\n\n## A mudan\u00e7a (leia o c\u00f3digo real)\n1. `backend/src/flowJob.js`: (a) adiciona `atMs` (epoch da escrita) ao objeto MEMORY['<sym>:FLOW'] \u2014 base do fail-safe de stale; (b) CAPITULATION LOG: a cada poll, l\u00ea `MEMORY['<sym>:RSI_14_1m']`; se `rsi.current<25`, grava snapshot JSON (imbalance/toxicity/buyVol/sellVol/rsi/regime) em `logs/flow-capitulation.log` (best-effort, esparso).\n2. `backend/scripts/setup-flow-gate.js` (novo): PATCH idempotente na id2 \u2014 adiciona \u00e0 condition o gate `&& MEMORY['<sym>:FLOW'] && (Date.now()-MEMORY['<sym>:FLOW'].atMs)<MAX_AGE && MEMORY['<sym>:FLOW'].imbalance>MIN` e inclui `<sym>:FLOW` nos indexes. DRY mode; re-tun\u00e1vel (FLOW_GATE_MIN default -0.40, FLOW_GATE_MAX_AGE_MS default 180000).\n\n## Ataque com ceticismo (\u00e9 dinheiro):\n- **FAIL-SAFE FECHADO (crux)**: confirme lendo `backend/src/beholder.js` `evalDecision` (~759-805): (a) `indexes.every(MEMORY[ix]!=null)` (~766) \u2192 com `<sym>:FLOW` nos indexes, FLOW null/ausente (job off / boot antes do 1\u00ba poll / Binance fora no boot) \u21d2 id2 N\u00c3O dispara? (b) STALE: a clause `(Date.now()-MEMORY['<sym>:FLOW'].atMs)<MAX_AGE` trava fechado quando o dado envelhece? confirme que o flowJob FAZ skip-on-unavailable (preserva, n\u00e3o reescreve \u2192 atMs congela). (c) um throw no eval (`Function(\"MEMORY\",...)` ~774) \u00e9 capturado (~801) \u21d2 n\u00e3o dispara? (d) `Date.now()` est\u00e1 dispon\u00edvel dentro do `Function(\"MEMORY\", \"return \"+cond)(MEMORY)`?\n- **N\u00e3o dispara esp\u00fario**: o flowJob escreve FLOW com `executeAutomations=false` (n\u00e3o chama testAutomations)? Logo o gatilho da id2 continua sendo o tick de RSI, n\u00e3o a escrita de FLOW? E o `invertCondition` (~138/769) s\u00f3 inverte a clause do RSI (que tem `.current`), N\u00c3O as clauses novas de FLOW (sem `.current`, e FLOW n\u00e3o \u00e9 o memoryKey-gatilho)? Confirme que adicionar as clauses de FLOW n\u00e3o quebra o edge-trigger do RSI.\n- **setup-flow-gate idempot\u00eancia**: re-rodar com o MESMO threshold = no-op? com OUTRO FLOW_GATE_MIN = atualiza (o strip do segmento final a partir do 1\u00ba `&& MEMORY['<KF>']` + re-append est\u00e1 correto, sem deixar lixo nem comer as clauses de RSI/REGIME)? O PATCH manda body completo COM actions (sen\u00e3o zera a ordem \u2014 `automationsController.updateAutomation`)? Preserva a coordena\u00e7\u00e3o `!=trend` da sess\u00e3o anterior?\n- **CAPITULATION LOG**: `beholder.getMemory(symbol,'RSI_14_1m')` retorna o objeto {current,...}? o guard `typeof rsi.current==='number'` cobre aus\u00eancia? \u00e9 best-effort (try/catch, n\u00e3o derruba o job)? esparso (s\u00f3 RSI<25)?\n- **atMs n\u00e3o quebra nada**: o card do painel (`/analysis/flow-status` \u2192 flowJob.getStatus) e o endpoint `/analysis/flow/:symbol` (flowService) N\u00c3O mudaram de shape (atMs s\u00f3 no write da MEMORY)? Confirme que os null-guards do card seguem \u00edntegros.\n- **id2/id3 templates intocados** (LIMIT market\u00e1vel da sess\u00e3o anterior preservado)?\n- **Regress\u00e3o**: valida\u00e7\u00e3o completa s\u00f3 d\u00e1 com regime != bear (inerte hoje). O que \u00e9 verific\u00e1vel agora vs. o que fica p/ quando o regime virar?\n\nLeia o c\u00f3digo de verdade. Veredito **PASS/PASS COM RESSALVAS/FAIL** com achados por severidade + arquivo:linha + teste concreto. O foco n\u00ba1 \u00e9 provar que TODOS os modos de falha (FLOW null, stale, throw, job off) travam FECHADO (n\u00e3o compram)."
+}
+```
+
+## 🤖 Claude *(20:45:46)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-Lead review flow gate on id2",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (Tech-Lead) de uma mudan\u00e7a MONEY-PATH no TradeUX (Beholder Binance Spot bot, testnet). Repo `/home/gcrux-tradeux/tradeux`. Trunk-based, pt-BR. Builds on `6f97209`.\n\n## Escopo\nTira o Or\u00e1culo de Fluxo do shadow e o usa como GATE PASSIVO na id2 (BUY de revers\u00e3o \u00e0 m\u00e9dia) \u2014 \"sniper\": s\u00f3 compra o dip se o fluxo vendedor do taker n\u00e3o estiver em capitula\u00e7\u00e3o. Move FLOW para o money-path (decis\u00e3o de compra). Threshold PROVIS\u00d3RIO/conservador (default imbalance>-0.40), pois o deep-research que vai calibr\u00e1-lo ainda roda. INERTE hoje (regime=bear j\u00e1 bloqueia a id2).\n\n## A mudan\u00e7a (leia o c\u00f3digo)\n1. `backend/src/flowJob.js`: + `atMs` no MEMORY['<sym>:FLOW'] (base do fail-safe de stale) + CAPITULATION LOG (snapshot do fluxo quando RSI<25 \u2192 logs/flow-capitulation.log, p/ calibrar).\n2. `backend/scripts/setup-flow-gate.js` (novo): PATCH idempotente/re-tun\u00e1vel na id2 (gate de fluxo + FLOW nos indexes), com DRY.\n\n## Seu julgamento (must-fix vs nice-to-have):\n- **Disciplina money-path**: aceit\u00e1vel gatear a id2 com threshold N\u00c3O-calibrado agora? Mitigantes: inerte em bear, conservador, fail-safe (3 camadas: FLOW nos indexes / stale-check via atMs / null-guard + throw capturado), re-PATCH-\u00e1vel, deep-research a caminho. \u00c9 a sequ\u00eancia certa (wiring agora + calibra\u00e7\u00e3o depois) ou deveria esperar o deep-research?\n- **Complexidade da condition**: p\u00f4r `Date.now()-MEMORY[...].atMs<MAX_AGE` numa string de condition de automa\u00e7\u00e3o (money-path) \u00e9 manuten\u00edvel/robusto, ou h\u00e1 jeito melhor de expressar o fail-safe de stale? (alternativa: o job nular o FLOW quando stale \u2014 mas ele preserva por design anti-flap; trade-off.)\n- **3\u00ba script de ops** (`setup-flow-gate.js`) somando a setup-trend/activate-trend: a duplica\u00e7\u00e3o dos helpers (req/login/findAutomation) \u00e9 aceit\u00e1vel (scripts self-contained, run-once) ou j\u00e1 pede um util compartilhado?\n- **Capitulation log**: o pareamento RSI-testnet \u00d7 FLOW-mainnet \u00e9 honesto p/ calibra\u00e7\u00e3o? (o coment\u00e1rio admite que calibra MEC\u00c2NICA, n\u00e3o alfa real, e que falta hist\u00f3rico de aggTrades no backtest.js). O log \u00e9 a mat\u00e9ria-prima certa ou \u00e9 parcialmente enganoso?\n- **Reversibilidade**: o revert do gate est\u00e1 claro? a id2 volta ao estado anterior (coordena\u00e7\u00e3o !=trend preservada)?\n- **Conven\u00e7\u00f5es**: pt-BR, sem segredo, sem console.log no hot-path do engine (os console.log s\u00e3o s\u00f3 no script de ops).\n\nLeia o c\u00f3digo. Veredito **APPROVE/APPROVE COM SUGEST\u00d5ES/REQUEST CHANGES/BLOCK**, must-fix vs nice-to-have. Foco: o fail-safe \u00e9 realmente fechado, e a disciplina de gatear-provis\u00f3rio-agora vs esperar-calibra\u00e7\u00e3o \u00e9 defens\u00e1vel."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tudo confirmado. Os matches do secret-scan no script são só nomes de variáveis de env (`PW = process.env.PW`), não segredos hardcoded — correto. O doc untracked é o blueprint de pesquisa (98 linhas, sem segredos), não faz parte desta mudança e não deve ser commitado junto. O `updateAutomation` aceita o payload do script (valida `conditions` + `actions`, faz delete+insert de actions em transação) — o script passa `actions` mapeadas de `cur.actions` com `type`+`orderTemplateId`, e aborta se vazio (guard contra zerar a ordem). Coerente.\n\nValidação completa. Tenho tudo para o veredito.\n\n---\n\n# VEREDITO: APPROVE COM SUGESTÕES\n\nMudança money-path bem disciplinada. Li o engine e validei o fail-safe num harness isolado: as 3 camadas fecham de verdade, o gate é re-tunável/reversível sem efeito colateral, e a id2 segue **inerte hoje** (regime=bear domina). A sequência *wiring-agora + calibração-depois* é defensável porque o que vai ao ar é estruturalmente fail-closed e literalmente não muda comportamento no estado atual. Os pontos abaixo são quase todos nice-to-have; **nenhum must-fix bloqueia o merge**.\n\n## O que validei (load-bearing)\n\n**Fail-safe é fechado — confirmado contra `beholder.js`:**\n- Camada 1 (`/home/gcrux-tradeux/tradeux/backend/src/beholder.js:766`): `indexes.every(MEMORY[ix] !== null && !== undefined)` → com `BTCUSDT:FLOW` nos indexes, FLOW ausente/null dá `return false` **antes** de avaliar a string. \n- Camada 2 (stale via `atMs`) e Camada 3 (null-guard + throw capturado no `catch` da linha 801→803, vira `type:\'error`, não dispara): no harness, `FLOW null → null`, `stale → false`, `capitulação fresca → false`, `neutral+fresco → true`, `neutral+fresco mas regime=bear → false`. Fecha como anunciado.\n- Bônus que não estava explícito: `invertCondition` (`beholder.js:138`) só inverte a clause que contém `current` → o double-check sempre pega o RSI, **nunca** toca a clause de FLOW (`imbalance>MIN` não tem `current`). Não há risco de o teste-invertido reabrir o gate.\n\n**Idempotência + reversibilidade — comprovadas:** `buildConditions` aplicado 2x == 1x; o slice no marker `&& MEMORY[\'BTCUSDT:FLOW\']` remove o segmento antigo e re-anexa o novo (re-rodar com outro `FLOW_GATE_MIN` atualiza sem duplicar). O **revert volta EXATAMENTE** à condition coordenada `...!==\'bear\' && !==\'trend\'` — a coordenação com o Trend Following é preservada. O PATCH passa pelo `updateAutomation` que valida `conditions`+`actions` e faz delete+insert de actions em transação; o script aborta se `cur.actions` vier vazio (guard anti-zera-ordem). Bom.\n\n**Convenções:** pt-BR ok; **zero `console.log` no `flowJob.js`** (os `console.*` são só no script de ops, correto); secret-scan limpo (os matches são nomes de env var, não valores); capitulation-log é esparso (só RSI<25) e best-effort (try/catch nunca derruba o job).\n\n## Disciplina money-path: a sequência está certa\nGatear com threshold não-calibrado é aceitável **neste caso específico** porque os mitigantes se compõem: inerte em bear + conservador (-0.40 ≈ só veta sob ~70% de venda taker) + fail-closed em 3 camadas + re-PATCH-ável + deep-research a caminho (o blueprint já está no working tree). Wiring agora **não** introduz risco de capital novo; calibrar antes de ligar seria over-engineering de processo. Aprovo a ordem.\n\n## Must-fix (antes do PASSAR A VALER, não do merge do código)\nNenhum no código que está sendo commitado. Uma condição **operacional**, porque isto é money-path:\n\n1. **Não ligar o gate sem o deep-research, e registrar o estado do gate no HANDOFF como o regime/RSI já estão.** O código (flowJob + script) pode mergear; mas rodar `setup-flow-gate.js` em prod só após calibrar o threshold. Hoje, com bear, ligar é inócuo — mas quando o regime sair de bear, um `-0.40` não-calibrado vira comportamento real. O próprio script já grita "PROVISÓRIO"; a disciplina é não executá-lo até a calibração.\n\n## Nice-to-have (não bloqueiam)\n1. **Fricção de credenciais do script** (`setup-flow-gate.js:37-38`): o fallback é `TRADEUX_EMAIL/PASSWORD`, mas o login do app é `DEFAULT_SETTINGS_EMAIL` (confirmado no env do container). Resultado: o operador **sempre** terá que passar `EM=...PW=...` na mão — o fallback nunca casa em prod. Não é bug (falha-fechado com msg clara), mas alinhar o fallback a `DEFAULT_SETTINGS_EMAIL/PWD` removeria uma pegadinha de ops. Os outros scripts (`setup-trend`) provavelmente sofrem do mesmo — vale um sweep.\n\n2. **Stale-check como string de condition** (`setup-flow-gate.js:77`): `(Date.now()-MEMORY[\'<sym>:FLOW\'].atMs)<MAX_AGE` numa string de automação é menos legível/testável que código. **Mas** a alternativa (job nular o FLOW quando stale) conflita com o design anti-flap (o job preserva o último em queda da Binance — `flowJob.js:64`). O trade-off atual é o certo: deixar a frescura ser decidida no ponto de consumo (a id2), não na escrita. Eu manteria. Só sugiro um comentário inline no PATCH explicando porque o stale vive na condition e não no job, para o próximo não "consertar".\n\n3. **3º script de ops com helpers duplicados** (`req`/`login`/`findAutomation` agora em `setup-flow-gate` + `setup-trend` + `activate-trend`): a 3ª cópia é o sinal clássico de "extrair util". Para scripts run-once self-contained ainda é tolerável, mas já passou do limiar — um `backend/scripts/_lib.js` (httpReq + login + findAutomationByName) seria barato e cortaria divergência (ex.: a paginação `page<=30 / rows.length<10` está copiada e pode driftar). Nice-to-have, faria numa limpeza dedicada.\n\n4. **Honestidade do capitulation-log:** o pareamento RSI-testnet × FLOW-mainnet calibra **mecânica/distribuição, não alfa** — e o comentário **admite isso explicitamente** (e aponta o gap: falta histórico de aggTrades no `backtest.js`). Isso é honestidade intelectual, não enganação: o log é matéria-prima válida para escolher o *ponto de corte da distribuição do imbalance*, desde que ninguém o leia como "edge comprovado". A ressalva no comentário é suficiente; eu só reforçaria no nome do arquivo/HANDOFF que o `wouldBlock` é derivado **offline** (já está no comentário, ok).\n\n5. **`docs/Engenharia Preditiva para Criptoativos.md` (untracked)** — é o blueprint, não faz parte desta mudança. **Não commitar junto** (escopo). Decida à parte se vai versionar o blueprint.\n\n## Decisão de merge\n- **Mergear** `backend/src/flowJob.js` + `backend/scripts/setup-flow-gate.js` (commit único, mensagem pt-BR no padrão `feat(oracle): ...`). \n- **NÃO** incluir `docs/...md` no commit. \n- **Condição operacional (não de código):** não executar `setup-flow-gate.js` em prod até a calibração; quando rodar, registrar o estado do gate da id2 no HANDOFF (como regime/RSI) por ser runtime/não-seedado — reaplicar após `make nuke`.\n- Nice-to-haves 1 e 3 (fallback de credencial + extrair `_lib.js`) num follow-up de limpeza de scripts, sem pressa.\n\nArquivos revisados: `/home/gcrux-tradeux/tradeux/backend/src/flowJob.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js`, `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (evalDecision:759, indexes-guard:766, invertCondition:138, catch:801), `/home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (updateAutomation).'}, {'type': 'text', 'text': "agentId: a932bdc7f9d8fac75 (use SendMessage with to: 'a932bdc7f9d8fac75' to continue this agent)\n<usage>subagent_tokens: 54746\ntool_uses: 25\nduration_ms: 182581</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Idempotência e re-tuning robustos (x3 estável, 1 bloco FLOW, RSI+REGIME+coordenação `!=trend` preservados). Tenho tudo para o veredito. Deixa eu fazer uma última checagem: a ressalva de que o gate hoje, mesmo aplicado, fica REDUNDANTE/inerte sob bear — e qual é a interação ENTRE o gate de regime já existente (`!=bear`) e o novo gate de FLOW quando o regime virar. E confirmar que o script só mexe na id2 (não na id3, que tem RSI mas é SELL/saída — e o flowService imbalance negativo NÃO deve atrapalhar saída). Já confirmei via DB que o script busca só "Baseline RSI Buy BTCUSDT". Fechado.\n\nCompilei a análise completa.\n\n---\n\n## QA Pre-merge — Gate de Fluxo (Sniper) na id2 — money-path (builds on `6f97209`)\n\nLi o código real: `flowJob.js` (diff), `setup-flow-gate.js` (novo), e o crux em `beholder.js` (`evalDecision` 759-805, `updateMemory` 860-876, `getMemory` 893-903, `invertCondition` 138-150), `app-em.js` (321-398), `automationsController.js` (173-238), `flowService.js`. Reproduzi o eval REAL do engine e o estado vivo (DB + flow.log).\n\n### VEREDITO: **PASS COM RESSALVAS**\n\nO fail-safe FECHADO é o ponto nº1 e está **provado nos 4 modos**. As ressalvas são todas BAIXA (operacionais/observabilidade), nenhuma bloqueia merge.\n\n---\n\n### Fail-safe FECHADO — PROVADO (foco nº1)\n\nRodei o eval REAL (com o `invertCondition` extraído de `beholder.js`, não simplificado) sobre a condition viva da id2 + gate do script. Resultado, no cenário em que a id2 *normalmente compraria* (RSI<25, regime!=bear):\n\n| Modo de falha | Resultado | Mecanismo |\n|---|---|---|\n| FLOW null (job off / Binance fora no boot) | **FECHA** | `indexes.every` (`beholder.js:766`) |\n| FLOW ausente (key nunca escrita) | **FECHA** | `indexes.every` (766) |\n| FLOW undefined | **FECHA** | `indexes.every` (766) |\n| FLOW stale (atMs antigo, Binance caiu) | **FECHA** | `(Date.now()-atMs)<MAX_AGE`=false |\n| FLOW sem atMs (objeto pré-migração) | **FECHA** | `NaN<MAX_AGE`=false |\n| Capitulação (imbalance -0.85) | **FECHA** | `imbalance>-0.40`=false |\n| atMs corrompido (string) | **FECHA** | aritmética→NaN→false |\n| Caminho feliz (imbalance neutro, fresco) | **DISPARA** | correto |\n| Inerte hoje (regime=bear) | **FECHA** | gate de regime pré-existente |\n\nSub-pontos do ataque, todos confirmados no código:\n\n- **(a) indexes.every** (`beholder.js:766`): `indexes.every(ix => MEMORY[ix]!==null && MEMORY[ix]!==undefined)`. Com `BTCUSDT:FLOW` nos indexes, FLOW null/ausente barra ANTES do eval. ✓\n- **(b) STALE trava fechado**: confirmado que o flowJob **faz skip-on-unavailable** (`flowJob.js:64-67` — `continue` sem reescrever a MEMORY → `atMs` congela). A clause de idade fecha. ✓\n- **(c) throw no eval é capturado**: `evalDecision` envolve o `Function(...)` em try/catch (`beholder.js:762/801`) e retorna `false`/objeto-erro → não dispara. ✓\n- **(d) Date.now() dentro do Function**: provado disponível — `Function("MEMORY","return "+cond)` cria a função no escopo **global**, onde `Date.now` existe. ✓\n\n### Não-disparo espúrio — CONFIRMADO\n\n- A escrita de FLOW usa `updateMemory(...,false)` → `beholder.js:873` retorna `false` ANTES de `testAutomations` (875). A escrita do oráculo **não dispara** a id2. ✓\n- O gatilho da id2 continua sendo o **tick de RSI**: o RSI é escrito com `executeAutomations=false` (`app-em.js:335`) mas `processChartData` chama explicitamente `testAutomations(memoryKey)` por indicador (`app-em.js:344-346`) a cada vela 1m. ✓\n- `invertCondition(\'BTCUSDT:RSI_14_1m\', ...)` inverte **só a clause do RSI** (a única com `.current`): produz `MEMORY[\'BTCUSDT:RSI_14_1m\'].previous>25`. NÃO toca FLOW (sem `.current`) nem REGIME. O `split(\' && \')` casa exatamente as clauses. O gate de FLOW entra por `&&` (AND) → só torna MAIS restritivo, nunca dispara sozinho. ✓\n\n### setup-flow-gate.js — idempotência/re-tuning CORRETOS\n\n- Mesmo threshold → **no-op** (`setup-flow-gate.js:98-101`, comparação exata de `conditions`+`indexes`). ✓\n- Outro `FLOW_GATE_MIN`/`MAX_AGE` → atualiza limpo: strip do segmento a partir do 1º `&& MEMORY[\'<KF>\']` (`buildConditions` 71-79) + re-append. Testei x3 idempotente, 1 bloco FLOW (sem duplicar/lixo), **RSI + REGIME + coordenação `!=trend` preservados**. ✓\n- PATCH manda body completo COM `actions` (`type`+`orderTemplateId`, linha 107) e **aborta se vazio** (108) — não zera a ordem. `updateAutomation` faz `deleteActions`+`insertActions` (`automationsController.js:205-206`) e recarrega o BRAIN atomicamente (`deleteBrain`+`updateBrain`, 227-228, com `include:all/nested`). ✓\n- `validateConditions` (regex, controller:13) **aceita** a nova condition (incl. `(Date.now()-MEMORY[...].atMs)<...`). Testado. ✓\n- Confirmado via DB que o script só casa `Baseline RSI Buy BTCUSDT` (id2) por nome — **id3/id6/id7 intocadas**.\n\n### CAPITULATION LOG — OK (best-effort, esparso)\n\n- `beholder.getMemory(symbol,\'RSI_14_1m\')` (2 args) → `indexKey=\'RSI_14_1m\'`, retorna shallow-copy do objeto `{current,...}` (`beholder.js:893-899`). ✓\n- Guard `rsi && typeof rsi.current===\'number\' && rsi.current<25` (`flowJob.js:89`) cobre ausência. ✓\n- try/catch isolado (87/96) → nunca derruba o job. Esparso (só RSI<25). ✓\n\n### atMs não quebra shape — CONFIRMADO\n\n- `flowService.getFlow` retorna `at` (ISO), **sem `atMs`** (`flowService.js:63-71`). O `atMs` é injetado SÓ no write da MEMORY (`flowJob.js:74`). `/analysis/flow/:symbol` → shape inalterado. ✓\n- `flowJob.getStatus()` deriva `at`/`ageMs` de `AT[s]` interno, independente de `atMs` (130-131) → card "Taker Flow" e `/analysis/flow-status` intactos. ✓\n\n### Estado vivo verificado\n\n- id2 viva (DB): `indexes=BTCUSDT:RSI_14_1m,BTCUSDT:REGIME` · `...current<25 && REGIME!==\'bear\' && REGIME!==\'trend\'` — exatamente a base dos testes.\n- **flow.log VIVO**: imbalance atual -0.69 a -0.85 (taker vendendo pesado AGORA) — cenário real que o gate vetaria.\n- **Container roda código VELHO** (`grep atMs src/flowJob.js`=0): a mudança é pré-merge no working tree, não deployada — correto.\n- Sintaxe OK (`node --check`) em ambos. `agent --check` PASS. **Nenhuma migration/seeder/model tocado** → CI (migrate+seed mysql+pg) não afetado.\n\n---\n\n### Achados por severidade\n\n- **BAIXA** — Gate é **inerte hoje** (regime=bear bloqueia a id2 a montante). Toda a validação de disparo é por harness/eval; o comportamento end-to-end ao vivo (incl. capitulation.log populado) **só é verificável quando o regime virar para range/mixed**. Aceito (decisão consciente; o fail-safe foi provado no eval real).\n- **BAIXA** — `flow-capitulation.log` só popula com RSI 1m<25 **no testnet** (preço sintético). É calibração de MECÂNICA/distribuição, não alfa — o próprio comentário (`flowJob.js:83-86`) reconhece o gap (falta histórico de aggTrades no `backtest.js`). Não é bug.\n- **BAIXA** — `at` (ISO) e `atMs` (epoch) coexistem no objeto FLOW da MEMORY (redundância leve). Inócuo; o card usa `AT[]` interno.\n- **OBS (não-achado)** — `docs/` untracked (blueprint do épico devolvido, owner `ubuntu`) **NÃO deve entrar no commit**. Commitar só `backend/src/flowJob.js` + `backend/scripts/setup-flow-gate.js`.\n- **OBS** — `FLOW_GATE_MIN=-0.40` é provisório/conservador por decisão do dono (não re-litigado). Borda `>` é **exclusiva** (imbalance=-0.40 exato → FECHA), o que é o lado seguro.\n\n### Testes que eu rodaria\n\n1. **Pré-deploy (já feito)**: eval real dos 9 cenários (acima) — todos os modos de falha FECHAM, caminho feliz dispara. ✓\n2. **Pós-deploy do código novo** (rebuild+recreate backend): confirmar `atMs` aparece em `GET /beholder/memory/BTCUSDT/FLOW` e `flow.log` continua; `/analysis/flow/:symbol` e `/analysis/flow-status` retornam 200 com shape inalterado.\n3. **Aplicar o script DRY primeiro** (`DRY=true node scripts/setup-flow-gate.js`): inspecionar o diff da condition no stdout antes de aplicar. Depois aplicar e confirmar no DB que id2 = `...!==\'trend\' && MEMORY[\'BTCUSDT:FLOW\'] && (Date.now()-...).atMs)<180000 && ...imbalance>-0.4` e indexes inclui `BTCUSDT:FLOW`; id3/id6/id7 inalteradas.\n4. **Idempotência ao vivo**: re-rodar o script → "já idêntico, nada a fazer". Re-rodar com `FLOW_GATE_MIN=-0.50` → atualiza só o número, preserva RSI/REGIME/`!=trend`.\n5. **Fail-safe vivo**: parar o flowJob (`FLOW_JOB_ENABLED=false` + restart) e confirmar `BTCUSDT:FLOW` ausente → com a id2 gateada, forçar um tick de RSI<25 (regime!=bear via override de teste) e verificar em `A:2.log` que NÃO dispara (indexes.every barra).\n6. **Validação real do disparo**: fica **pendente até o regime virar** para range/mixed (hoje bear bloqueia). Registrar no HANDOFF como o que falta observar.\n7. **Reaplicar pós-reset**: lembrar que id2/id3/id6/id7 são runtime — após `make nuke`, rodar `setup-trend.js` + `activate-trend.js` + `setup-flow-gate.js` na ordem (o gate de fluxo deve ser o último, pois faz strip+append sobre a condition já com `!=trend`).\n\n---\n\n### Recomendação de merge\n\n**APROVAR (merge).** O fail-safe trava FECHADO em todos os 4 modos (FLOW null, stale, throw, job off), provado no eval real do engine; a escrita do oráculo não dispara a id2 (`executeAutomations=false`); `invertCondition` não quebra o edge-trigger do RSI; o script é idempotente/re-tunável e preserva RSI+REGIME+coordenação `!=trend`+actions; shape dos endpoints/card intacto; zero impacto em migrate/seed; `agent --check` verde. \n\nCondições do merge: (1) commitar **apenas** os 2 arquivos (`flowJob.js` + `setup-flow-gate.js`) — **excluir `docs/`**; (2) aplicar o script com `DRY=true` antes do PATCH real; (3) registrar no HANDOFF que a validação end-to-end de **disparo** fica pendente até o regime sair de bear (gate inerte hoje), e que o threshold é provisório (recalibrar com `flow-capitulation.log` + deep-research).\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/flowJob.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (evalDecision 759-805, updateMemory 860-876, getMemory 893-903, invertCondition 138-150)\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (processChartData 321-347 — gatilho do RSI)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (updateAutomation 173-238)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js` (shape `at`, sem `atMs`)'}, {'type': 'text', 'text': "agentId: a4392738cd4888ffa (use SendMessage with to: 'a4392738cd4888ffa' to continue this agent)\n<usage>subagent_tokens: 88135\ntool_uses: 37\nduration_ms: 369239</usage>"}]
+> ```
+
+## 🤖 Claude *(20:52:29)*
+
+
+## 🤖 Claude *(20:52:34)*
+
+Os dois gates: **QA PASS** (fail-safe **provado fechado nos 4 modos** via eval real do engine — FLOW null/stale/throw/job-off todos travam; idempotência x3 ok) e **TL APPROVE**. Zero must-fix de código.
+
+**Ponto operacional do TL** (importante): o *código* mergeia, mas ele recomenda **não calibrar às cegas** — idealmente esperar o deep-research pro threshold real. Como é **inerte em bear** + **fail-safe** + **re-PATCH-ável** + o deep-research é **iminente (esta sessão)**, vou aplicar o **provisório conservador** (você pediu explicitamente o PATCH) e **recalibro assim que o relatório sair**. Transparência total: se preferir esperar, reverto num comando.
+
+Aplicando 1 nice-to-have do TL (comentário inline do porquê o stale vive na condition), depois deploy:
+
+## 🤖 Claude *(20:52:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js",
+  "old_string": "    base = base.replace(/&&\\s*$/, '').trim();\n    const gate = `MEMORY['${KF}'] && (Date.now()-MEMORY['${KF}'].atMs)<${MAX_AGE} && MEMORY['${KF}'].imbalance>${MIN}`;\n    return `${base} && ${gate}`;",
+  "new_string": "    base = base.replace(/&&\\s*$/, '').trim();\n    // O stale-check vive AQUI (no consumo, a condition da id2), N\u00c3O no job: o flowJob PRESERVA o \u00faltimo\n    // fluxo numa queda da Binance (anti-flap, igual o regimeJob) \u2192 quem decide \"velho demais p/ confiar\" \u00e9\n    // o ponto de decis\u00e3o. Date.now() est\u00e1 dispon\u00edvel no Function(MEMORY) do engine (escopo global).\n    const gate = `MEMORY['${KF}'] && (Date.now()-MEMORY['${KF}'].atMs)<${MAX_AGE} && MEMORY['${KF}'].imbalance>${MIN}`;\n    return `${base} && ${gate}`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:52:44)*
+
+
+## 🤖 Claude *(20:52:44)*
+
+Deploy — rebuild backend (flowJob `atMs` + capitulation log; sem migration):
+
+## 🤖 Claude *(20:52:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose up -d --build backend 2>&1 | tail -5'",
+  "description": "Rebuild backend with flowJob atMs and capitulation log",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(20:52:56)*
+
+
+## 🤖 Claude *(20:52:56)*
+
+Aguardando boot, depois rodo o gate em **DRY** (revisar o diff da condition antes de aplicar — recomendação do QA):
+
+## 🤖 Claude *(20:52:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && for i in $(seq 1 15); do\n  docker compose exec -T backend sh -c \"tail -3 logs/flow.log 2>/dev/null\" | grep -q \"Flow job iniciado\" && break; sleep 2\ndone\necho \"=== flow.log ===\"; docker compose exec -T backend sh -c \"tail -2 logs/flow.log\"\necho \"=== DRY-RUN do gate ===\"\nEM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-)\ndocker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" -e DRY=true backend node scripts/setup-flow-gate.js 2>&1' | tail -14",
+  "description": "Confirm boot and run flow-gate in DRY mode",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === flow.log ===
+> info: 2026-06-04T20:52:51.291Z - Flow job iniciado SHADOW (intervalo 30000ms; log de toxicidade >= 0.6). Ainda NÃO gateia automação.
+> === DRY-RUN do gate ===
+> # Gate de Fluxo (Sniper) na id2 — BTCUSDT  [imbalance>-0.4, maxAge=180000ms]  [DRY-RUN]
+> 
+> conditions: MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'
+>         ->  MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<180000 && MEMORY['BTCUSDT:FLOW'].imbalance>-0.4
+> indexes   : BTCUSDT:RSI_14_1m,BTCUSDT:REGIME  ->  BTCUSDT:RSI_14_1m,BTCUSDT:REGIME,BTCUSDT:FLOW
+> 
+> [DRY-RUN] nada aplicado.
+> ```
+
+## 🤖 Claude *(20:53:11)*
+
+
+## 🤖 Claude *(20:53:11)*
+
+Plano DRY exato (base preservada, gate de fluxo + fail-safe anexados, FLOW nos indexes). Aplicando de verdade + validando (id2 no DB, idempotência, FLOW com atMs):
+
+## 🤖 Claude *(20:53:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-)\necho \"=== APLICANDO ===\"; docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/setup-flow-gate.js 2>&1 | grep -E \"\u270f\ufe0f|\u26a0\ufe0f|\u2713|GATEADA\"\necho \"=== RE-RUN (idempot\u00eancia) ===\"; docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node scripts/setup-flow-gate.js 2>&1 | grep -E \"j\u00e1 com o gate|\u270f\ufe0f\"\necho \"=== id2/id3 no DB ===\"; docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD -t \\$MYSQL_DATABASE -e \\\"SELECT id,\\\\\\`indexes\\\\\\`,conditions FROM automations WHERE id IN (2,3)\\\"\" 2>/dev/null | grep -iv warning' | tail -14",
+  "description": "Apply flow gate and verify idempotency and DB state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === APLICANDO ===
+> ✏️  id2 (id 2) GATEADA por fluxo (sniper). Fail-safe: FLOW nos indexes + stale<180000ms + null-guard.
+> ⚠️  threshold PROVISÓRIO (imbalance>-0.4) — recalibrar com deep-research + logs/flow-capitulation.log.
+> === RE-RUN (idempotência) ===
+> ✓ id2 (id 2) já com o gate de fluxo idêntico (imbalance>-0.4). Nada a fazer.
+> === id2/id3 no DB ===
+> +----+-----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> | id | indexes                                       | conditions                                                                                                                                                                                                                              |
+> +----+-----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> |  2 | BTCUSDT:RSI_14_1m,BTCUSDT:REGIME,BTCUSDT:FLOW | MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<180000 && MEMORY['BTCUSDT:FLOW'].imbalance>-0.4 |
+> |  3 | BTCUSDT:RSI_14_1m,BTCUSDT:REGIME              | MEMORY['BTCUSDT:RSI_14_1m'].current>75 && MEMORY['BTCUSDT:REGIME']!=='trend'                                                                                                                                                            |
+> +----+-----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> ```
+
+## 🤖 Claude *(20:53:37)*
+
+
+## 🤖 Claude *(20:53:39)*
+
+Gate aplicado e validado: id2 com o sniper completo (RSI + !=bear + !=trend + FLOW + idade<180s + imbalance>-0.4), **id3 intocada**, idempotente. Confirmando que o `atMs` está vivo na MEMORY (o fail-safe de stale depende dele) + card intacto + site:
+
+## 🤖 Claude *(20:53:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/check2.js",
+  "content": "const http = require('http');\nconst EM = process.env.EM, PW = process.env.PW;\nfunction req(m, p, t, b) {\n  return new Promise((res) => {\n    const data = b ? JSON.stringify(b) : null;\n    const h = { 'Content-Type': 'application/json' };\n    if (t) h['authorization'] = t; if (data) h['Content-Length'] = Buffer.byteLength(data);\n    const r = http.request({ host: '127.0.0.1', port: 3001, method: m, path: p, headers: h, timeout: 12000 }, x => {\n      let d = ''; x.on('data', c => d += c); x.on('end', () => res({ s: x.statusCode, b: d }));\n    });\n    r.on('error', e => res({ s: 0, b: String(e.message) })); if (data) r.write(data); r.end();\n  });\n}\n(async () => {\n  const l = await req('POST', '/login', null, { email: EM, password: PW });\n  let t; try { t = JSON.parse(l.b).token; } catch {}\n  if (!t) { console.log('LOGIN_FAIL', l.s); process.exit(1); }\n  const mem = await req('GET', '/beholder/memory/BTCUSDT/FLOW', t);\n  console.log('MEMORY FLOW   ', mem.s, mem.b);\n  const fs = await req('GET', '/analysis/flow-status', t);\n  let fsj; try { fsj = JSON.parse(fs.b); } catch {}\n  console.log('flow-status   ', fs.s, fsj ? `mode=${fsj.mode} symbols=${Object.keys(fsj.symbols||{}).join(',')}` : fs.b.slice(0,80));\n  const fl = await req('GET', '/analysis/flow/BTCUSDT', t);\n  console.log('flow endpoint ', fl.s, (fl.b||'').slice(0,90));\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/check2.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:53:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && EM=$(grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-) && PW=$(grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-) && docker compose cp /tmp/check2.js backend:/tmp/check2.js && docker compose exec -T -e EM=\"$EM\" -e PW=\"$PW\" backend node /tmp/check2.js; docker compose exec -T backend sh -c \"rm -f /tmp/check2.js; echo; echo === flow-capitulation.log ===; tail -2 logs/flow-capitulation.log 2>/dev/null || echo (vazio - RSI nao esteve <25 ainda)\"' 2>&1 | tail -8; rm -f /tmp/check2.js; echo \"=== site ===\"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify atMs in MEMORY, endpoints, capitulation log, site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/check2.js to tradeux-backend-1:/tmp/check2.js
+>  tradeux-backend-1 Copied /tmp/check2.js to tradeux-backend-1:/tmp/check2.js
+> MEMORY FLOW    200 {"imbalance":-0.5091,"toxicity":0.5091,"at":"2026-06-04T20:53:51.840Z","atMs":1780606431840}
+> flow-status    200 mode=shadow symbols=BTCUSDT
+> flow endpoint  200 {"symbol":"BTCUSDT","source":"api.binance.com","cached":true,"imbalance":-0.5091,"toxicity
+> sh: syntax error: unexpected word (expecting ")")
+> === site ===
+> 200
+> ```
+
+## 🤖 Claude *(20:54:52)*
+
+
+## 🤖 Claude *(20:54:56)*
+
+**Validado e no ar:**
+- **`atMs` vivo na MEMORY**: `{imbalance:-0.5091, toxicity:0.5091, at:..., atMs:1780606431840}` ✓ — o fail-safe de stale tem o dado.
+- **Demonstração real**: imbalance=**-0.51 agora** (taker vendendo pesado) → está **abaixo do -0.40**, então o gate **vetaria** uma compra de reversão neste instante (sniper evitando a faca). Só não age porque o bear já bloqueia a id2 a montante.
+- id2 gateada, **id3 intocada**, idempotente, endpoints/card 200, site 200.
+
+Commit do backend (flowJob + script; **sem o blueprint** `docs/`):
+
+## 🤖 Claude *(20:55:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/flowJob.js backend/scripts/setup-flow-gate.js\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git add backend/src/flowJob.js backend/scripts/setup-flow-gate.js && git status --short && \\\ngit commit -m \"feat(oracle): gate de fluxo (sniper) na id2 + capitulation log p/ calibracao\" \\\n-m \"Tira o Oraculo de Fluxo do shadow e o usa como GATE PASSIVO na id2 (BUY reversao a media): so compra o dip se o fluxo vendedor do taker nao estiver em capitulacao (sniper, evita faca caindo). Move FLOW p/ o money-path. INERTE hoje (regime=bear bloqueia a id2).\" \\\n-m \"- flowJob: + atMs (epoch da escrita) no MEMORY[:FLOW] = base do fail-safe de stale; + CAPITULATION LOG (snapshot do fluxo quando RSI 1m<25 -> logs/flow-capitulation.log, materia-prima p/ calibrar).\" \\\n-m \"- setup-flow-gate.js (novo, idempotente, DRY, re-tunavel): PATCH na id2 com FLOW && (Date.now()-FLOW.atMs)<MAX_AGE && FLOW.imbalance>MIN + FLOW nos indexes.\" \\\n-m \"FAIL-SAFE FECHADO (provado no eval real, gate QA): FLOW nos indexes (null->nao dispara) + stale-check + null-guard (throw capturado). Todos os modos travam. id3/id6/id7 intocadas.\" \\\n-m \"Gate QA PASS + TL APPROVE. Aplicado: id2 gateada (imbalance>-0.4), idempotente, atMs vivo, endpoints/card 200. Threshold -0.40 PROVISORIO -> recalibrar com deep-research + flow-capitulation.log. Runtime/PATCH (reaplicar pos-nuke: setup-trend + activate-trend + setup-flow-gate).\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && \\\necho \"=== OK ===\" && git log --oneline -1 && \\\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\" | grep -vE \"moderate|dependabot|vulnerab|security/dep|^remote: *$\"'",
+  "description": "Commit and push the flow gate backend work"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A  backend/scripts/setup-flow-gate.js
+> M  backend/src/flowJob.js
+> ?? docs/
+> [master 72b1a19] feat(oracle): gate de fluxo (sniper) na id2 + capitulation log p/ calibracao
+>  2 files changed, 142 insertions(+), 3 deletions(-)
+>  create mode 100644 backend/scripts/setup-flow-gate.js
+> === OK ===
+> 72b1a19 feat(oracle): gate de fluxo (sniper) na id2 + capitulation log p/ calibracao
+> To https://github.com/gabrielZarattini/tradeux.git
+>    6f97209..72b1a19  HEAD -> master
+> ```
+
+## 🤖 Claude *(20:55:20)*
+
+
+## 🤖 Claude *(20:55:21)*
+
+Push OK (`6f97209..72b1a19`). O card do painel ainda diz **"não gateia"** — agora é falso (a id2 gateia). Honestidade: corrijo o texto (sem o número, pra sobreviver à recalibração). Lendo a nota atual:
+
+## 🤖 Claude *(20:55:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"SHADOW\\|n\u00e3o gateia\\|observando p\" frontend/src/private/Intelligence/Intelligence.js",
+  "description": "Find the card note text in Intelligence.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 185:                            <b>imbalance</b> ∈ [−1,1] do fluxo agressor do taker (mainnet, via <code>isBuyerMaker</code>): <b>&lt;0 = vendendo</b> (sinal p/ não comprar o dip), &gt;0 = comprando. <b>toxicity</b> = |imbalance| (quão unilateral). <b>SHADOW</b>: o sinal é exposto mas ainda <b>não gateia</b> a reversão à média — observando p/ calibrar o threshold antes de ligar o gate.
+> ```
+
+## 🤖 Claude *(20:55:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": " <b>toxicity</b> = |imbalance| (qu\u00e3o unilateral). <b>SHADOW</b>: o sinal \u00e9 exposto mas ainda <b>n\u00e3o gateia</b> a revers\u00e3o \u00e0 m\u00e9dia \u2014 observando p/ calibrar o threshold antes de ligar o gate.",
+  "new_string": " <b>toxicity</b> = |imbalance| (qu\u00e3o unilateral). <b>GATE ATIVO (provis\u00f3rio)</b> na id2: a revers\u00e3o \u00e0 m\u00e9dia <b>n\u00e3o compra o dip sob fluxo vendedor em capitula\u00e7\u00e3o</b> (sniper). Threshold em calibra\u00e7\u00e3o (deep-research + <code>logs/flow-capitulation.log</code>); fail-safe trava fechado se o fluxo ficar stale."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:55:34)*
+
+
+## 🤖 Claude *(20:55:34)*
+
+Rebuild do frontend (valida o JSX + deploya o texto corrigido):
+
+## 🤖 Claude *(20:55:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose up -d --build frontend 2>&1 | tail -4'",
+  "description": "Rebuild frontend with corrected card note",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(20:55:49)*
+
+
+## 🤖 Claude *(20:55:49)*
+
+Frontend recompilou. Commit do fix do card:
+
+## 🤖 Claude *(20:55:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux frontend/src/private/Intelligence/Intelligence.js\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git add frontend/src/private/Intelligence/Intelligence.js && \\\ngit commit -m \"fix(intelligence): card de fluxo reflete o gate ATIVO na id2 (nao mais shadow)\" \\\n-m \"A nota do card dizia \\\"nao gateia\\\" - agora a id2 e gateada por fluxo (commit 72b1a19). Texto atualizado (sem o numero do threshold, p/ sobreviver a recalibracao) + nota de fail-safe. Build vite OK, frontend recriado.\" \\\n-m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && \\\ngit log --oneline -1 && \\\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && git push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\" | grep -vE \"moderate|dependabot|vulnerab|security/dep|^remote: *$\"'",
+  "description": "Commit and push the card note fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 56029a3] fix(intelligence): card de fluxo reflete o gate ATIVO na id2 (nao mais shadow)
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 56029a3 fix(intelligence): card de fluxo reflete o gate ATIVO na id2 (nao mais shadow)
+> To https://github.com/gabrielZarattini/tradeux.git
+>    72b1a19..56029a3  HEAD -> master
+> ```
+
+## 🤖 Claude *(20:56:01)*
+
+
+## 🤖 Claude *(20:56:01)*
+
+Push OK. Checando CI + atualizando docs (memórias do fluxo/regime-gate + HANDOFF):
+
+## 🤖 Claude *(20:56:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-) && for i in $(seq 1 18); do\n  R=$(curl -s -H \"Authorization: Bearer $TOKEN\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=2&branch=master\" | python3 -c \"import sys,json;[print(r[\\\"head_sha\\\"][:7],r[\\\"status\\\"],r.get(\\\"conclusion\\\")) for r in json.load(sys.stdin)[\\\"workflow_runs\\\"][:2]]\")\n  echo \"$R\" | head -1; echo \"$R\" | head -1 | grep -q completed && break; sleep 20\ndone; echo \"--- ambos ---\"; curl -s -H \"Authorization: Bearer $TOKEN\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=2&branch=master\" | python3 -c \"import sys,json;[print(r[\\\"head_sha\\\"][:7],r[\\\"status\\\"],r.get(\\\"conclusion\\\")) for r in json.load(sys.stdin)[\\\"workflow_runs\\\"][:2]]\"'",
+  "description": "Poll CI for the latest commits",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 56029a3 in_progress None
+> 56029a3 in_progress None
+> 56029a3 in_progress None
+> 56029a3 in_progress None
+> 56029a3 completed success
+> --- ambos ---
+> 56029a3 completed success
+> 72b1a19 completed success
+> ```
+
+## 🤖 Claude *(20:57:38)*
+
+
+## 🤖 Claude *(20:57:38)*
+
+Ambos **CI verde**. Atualizando docs. Memória do oráculo (gate na id2 agora FEITO):
+
+## 🤖 Claude *(20:57:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "offset": 24,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 24	  líquido vendendo. Cache 20s, **never-throws** (`{unavailable:true}` se a Binance falhar).
+> 25	- `backend/src/flowJob.js`: poll (30s) grava `MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at}` via `updateMemory(...,false)` (gate
+> 26	  PASSIVO). **SHADOW**: loga episódios `|imbalance|>=FLOW_LOG_TOXICITY` (0.6) p/ calibrar. `getStatus()`. Env: `FLOW_JOB_ENABLED`
+> 27	  (kill-switch), `FLOW_REFRESH_MS` (30s), `FLOW_SYMBOLS` (CSV), `FLOW_LOG_TOXICITY`.
+> 28	- `GET /analysis/flow/:symbol` + `/analysis/flow-status` (read-only, atrás do authMiddleware, token CRU); MCP **`tradeux_get_oracle_state`**
+> 29	  (leitura, sempre disponível). `indexKeys.FLOW`. `server.js` chama `flowJob.start()` após o regimeJob.
+> 30	
+> 31	**Why SHADOW:** disciplina do projeto — o dado é o juiz. Igual o regime foi observado antes de gatear a id2 e a RSI foi calibrada por
+> 32	backtest, o threshold do fluxo deve sair da DISTRIBUIÇÃO OBSERVADA, não de chute. **NADA lê `:FLOW` ainda** (confirmado no gate).
+> 33	
+> ```
+
+## 🤖 Claude *(20:57:43)*
+
+
+## 🤖 Claude *(20:57:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "offset": 33,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 33	
+> 34	**How to apply (PRÓXIMO passo — gatear a id2, runtime/PATCH, NÃO feito):** após observar `logs/flow.log` (e/ou o endpoint) e
+> 35	calibrar, gatear a id2 (BUY): NÃO comprar o dip sob venda agressora extrema. Cuidado: **FLOW é OBJETO** (≠ REGIME que é string) →
+> 36	a condition precisa de **null-guard** senão `.toxicity` de `undefined` dá throw no boot antes do 1º poll:
+> 37	`... && MEMORY['BTCUSDT:FLOW'] && MEMORY['BTCUSDT:FLOW'].imbalance > -X` (threshold **assimétrico**: vetar compra sob fluxo vendedor,
+> 38	não sob comprador). Adicionar `BTCUSDT:FLOW` aos `indexes` da id2 (fail-safe). Runtime/não-seedado → reaplicar após `make nuke` (como id2/id3).
+> 39	Aí sim exigir novo gate QA (passa a haver leitura no caminho de decisão = money-path). Ver [[tradeux-trend-following]] (mesmo padrão de gate passivo).
+> 40	
+> 41	**Gotchas:** cache(20s)<poll(30s) → todo poll re-busca (intencional p/ 1-2 símbolos; alinhar TTL≥REFRESH se escalar). Janela = "últimos
+> 42	1000 trades" (segundos variáveis, `spanSec` exposto), não janela temporal fixa. `flowService`/`regimeService` têm `getJSON` duplicado
+> 43	(dívida deliberada, self-contained). **Card "Taker Flow" no painel `/intelligence`** (commit `937172b`): lê `/analysis/flow-status`,
+> 44	mostra imbalance(cor)/toxicity/trades-janela/idade por símbolo, auto-refresh 60s — instrumento p/ observar a distribuição e calibrar o
+> ```
+
+## 🤖 Claude *(20:58:06)*
+
+
+## 🤖 Claude *(20:58:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "**How to apply (PR\u00d3XIMO passo \u2014 gatear a id2, runtime/PATCH, N\u00c3O feito):** ap\u00f3s observar `logs/flow.log` (e/ou o endpoint) e\ncalibrar, gatear a id2 (BUY): N\u00c3O comprar o dip sob venda agressora extrema. Cuidado: **FLOW \u00e9 OBJETO** (\u2260 REGIME que \u00e9 string) \u2192\na condition precisa de **null-guard** sen\u00e3o `.toxicity` de `undefined` d\u00e1 throw no boot antes do 1\u00ba poll:\n`... && MEMORY['BTCUSDT:FLOW'] && MEMORY['BTCUSDT:FLOW'].imbalance > -X` (threshold **assim\u00e9trico**: vetar compra sob fluxo vendedor,\nn\u00e3o sob comprador). Adicionar `BTCUSDT:FLOW` aos `indexes` da id2 (fail-safe). Runtime/n\u00e3o-seedado \u2192 reaplicar ap\u00f3s `make nuke` (como id2/id3).\nA\u00ed sim exigir novo gate QA (passa a haver leitura no caminho de decis\u00e3o = money-path). Ver [[tradeux-trend-following]] (mesmo padr\u00e3o de gate passivo).",
+  "new_string": "**GATE NA id2 \u2014 FEITO** (commit `72b1a19`, gate QA PASS + TL APPROVE), via `node backend/scripts/setup-flow-gate.js`: a id2 (BUY)\nvirou \"sniper\" \u2014 s\u00f3 compra o dip se o fluxo N\u00c3O estiver em capitula\u00e7\u00e3o. Condition viva: `...current<25 && REGIME!=='bear' &&\nREGIME!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<180000 && MEMORY['BTCUSDT:FLOW'].imbalance>-0.4`;\nindexes += `BTCUSDT:FLOW`. **FAIL-SAFE FECHADO** (provado no eval real do engine): FLOW nos indexes (null\u2192n\u00e3o dispara) + stale-check via\n`atMs` (dado velho\u2192n\u00e3o dispara) + null-guard (throw capturado\u2192n\u00e3o dispara) \u2014 todos os modos travam fechado. \u26a0\ufe0f **threshold `-0.40`\nPROVIS\u00d3RIO/conservador, N\u00c3O calibrado** \u2192 **recalibrar** com o deep-research + `logs/flow-capitulation.log` (re-rodar `setup-flow-gate.js`\ncom `FLOW_GATE_MIN=novo` ATUALIZA idempotente; `FLOW_GATE_MAX_AGE_MS` ajusta a toler\u00e2ncia de stale). **INERTE hoje** (bear bloqueia a id2 a\nmontante; o disparo s\u00f3 \u00e9 observ\u00e1vel quando o regime sair de bear). Runtime/n\u00e3o-seedado \u2192 reaplicar p\u00f3s-`make nuke`: `setup-trend` +\n`activate-trend` + **`setup-flow-gate`** (nessa ordem \u2014 o gate de fluxo \u00e9 o \u00daLTIMO, faz strip+append sobre a condition j\u00e1 coordenada). Ver [[tradeux-regime-gate]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:58:25)*
+
+
+## 🤖 Claude *(20:58:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "- `backend/src/flowJob.js`: poll (30s) grava `MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at}` via `updateMemory(...,false)` (gate\n  PASSIVO). **SHADOW**: loga epis\u00f3dios `|imbalance|>=FLOW_LOG_TOXICITY` (0.6) p/ calibrar. `getStatus()`. Env: `FLOW_JOB_ENABLED`\n  (kill-switch), `FLOW_REFRESH_MS` (30s), `FLOW_SYMBOLS` (CSV), `FLOW_LOG_TOXICITY`.",
+  "new_string": "- `backend/src/flowJob.js`: poll (30s) grava `MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at,atMs}` via `updateMemory(...,false)` (gate\n  PASSIVO; `atMs`=epoch da escrita = base do fail-safe de stale do gate). Loga epis\u00f3dios `|imbalance|>=FLOW_LOG_TOXICITY` (0.6). **CAPITULATION\n  LOG** (commit `72b1a19`): quando `MEMORY['<sym>:RSI_14_1m'].current<25`, grava snapshot JSON (imbalance/toxicity/buyVol/sellVol/rsi/regime) em\n  `logs/flow-capitulation.log` \u2014 mat\u00e9ria-prima p/ calibrar o threshold (RSI-testnet \u00d7 FLOW-mainnet = calibra MEC\u00c2NICA, n\u00e3o alfa; falta hist\u00f3rico\n  de aggTrades no backtest.js). `getStatus()`. Env: `FLOW_JOB_ENABLED` (kill-switch), `FLOW_REFRESH_MS` (30s), `FLOW_SYMBOLS`, `FLOW_LOG_TOXICITY`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:58:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "**Why SHADOW:** disciplina do projeto \u2014 o dado \u00e9 o juiz. Igual o regime foi observado antes de gatear a id2 e a RSI foi calibrada por\nbacktest, o threshold do fluxo deve sair da DISTRIBUI\u00c7\u00c3O OBSERVADA, n\u00e3o de chute. **NADA l\u00ea `:FLOW` ainda** (confirmado no gate).",
+  "new_string": "**Disciplina (o dado \u00e9 o juiz):** o threshold do fluxo deve sair da DISTRIBUI\u00c7\u00c3O OBSERVADA, n\u00e3o de chute. A **id2 j\u00e1 L\u00ca `:FLOW`** (gate\nsniper, commit `72b1a19`) \u2014 mas o threshold `-0.40` \u00e9 **provis\u00f3rio** (a wiring foi feita agora, conservadora + fail-safe + inerte em bear;\na CALIBRA\u00c7\u00c3O vem do deep-research + `flow-capitulation.log`, e \u00e9 um re-PATCH trivial). Era a ressalva do TL: idealmente calibrar antes de ligar."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:58:52)*
+
+
+## 🤖 Claude *(20:58:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "description: Or\u00e1culo de fluxo do taker v1 (commit f833032) \u2014 aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']{imbalance,toxicity}; SHADOW (n\u00e3o gateia ainda); \u00e9pico HFT completo foi DEVOLVIDO",
+  "new_string": "description: Or\u00e1culo de fluxo do taker v1 (f833032) \u2014 aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']; GATE SNIPER ATIVO na id2 (72b1a19, threshold provis\u00f3rio -0.40, fail-safe); \u00e9pico HFT completo DEVOLVIDO"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: description: Oráculo de fluxo do taker v1 (commit f833032) — aggTrades mainnet → MEMORY['<sym>:FLOW']{imbalance,toxicity}; SHADOW (não gateia ainda); épico HFT completo foi DEVOLVIDO
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:58:58)*
+
+
+## 🤖 Claude *(20:58:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-flow-oracle
+> 3	description: "Oráculo de fluxo do taker v1 (commit f833032) — aggTrades mainnet → MEMORY['<sym>:FLOW']{imbalance,toxicity}; SHADOW (não gateia ainda); épico HFT completo foi DEVOLVIDO"
+> 4	metadata: 
+> ```
+
+## 🤖 Claude *(20:59:03)*
+
+
+## 🤖 Claude *(20:59:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "description: \"Or\u00e1culo de fluxo do taker v1 (commit f833032) \u2014 aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']{imbalance,toxicity}; SHADOW (n\u00e3o gateia ainda); \u00e9pico HFT completo foi DEVOLVIDO\"",
+  "new_string": "description: \"Or\u00e1culo de fluxo do taker v1 (f833032) \u2014 aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']; GATE SNIPER ATIVO na id2 (72b1a19, threshold provis\u00f3rio -0.40, fail-safe); \u00e9pico HFT DEVOLVIDO\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:59:10)*
+
+
+## 🤖 Claude *(20:59:11)*
+
+Memória regime-gate (id2 agora tem o gate de fluxo):
+
+## 🤖 Claude *(20:59:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md",
+  "offset": 27,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 27	**id2/id3 ao vivo** — DADO RUNTIME (não seeder). RSI **25/75** (commit `0b1e949`) + **coordenação trend** (commit `453c7d6`):
+> 28	- id2 (BUY): `indexes="BTCUSDT:RSI_14_1m,BTCUSDT:REGIME"` · `conditions="...current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'"`.
+> 29	- id3 (SELL): `indexes="BTCUSDT:RSI_14_1m,BTCUSDT:REGIME"` · `conditions="...current>75 && MEMORY['BTCUSDT:REGIME']!=='trend'"` — agora gateada por `!=trend` (em trend, o Trend Following conduz; ver [[tradeux-trend-following]]). Sem gate de bear (saída p/ caixa liberada).
+> 30	- REGIME nos `indexes` de AMBAS → fail-safe: sem regime conhecido, não disparam (engine exige todos os indexes presentes).
+> 31	
+> ```
+
+## 🤖 Claude *(20:59:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md",
+  "old_string": "**id2/id3 ao vivo** \u2014 DADO RUNTIME (n\u00e3o seeder). RSI **25/75** (commit `0b1e949`) + **coordena\u00e7\u00e3o trend** (commit `453c7d6`):\n- id2 (BUY): `indexes=\"BTCUSDT:RSI_14_1m,BTCUSDT:REGIME\"` \u00b7 `conditions=\"...current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'\"`.",
+  "new_string": "**id2/id3 ao vivo** \u2014 DADO RUNTIME (n\u00e3o seeder). RSI **25/75** (`0b1e949`) + **coordena\u00e7\u00e3o trend** (`453c7d6`) + **gate de fluxo sniper** na id2 (`72b1a19`):\n- id2 (BUY): `indexes=\"BTCUSDT:RSI_14_1m,BTCUSDT:REGIME,BTCUSDT:FLOW\"` \u00b7 `conditions=\"...current<25 && REGIME!=='bear' && REGIME!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<180000 && MEMORY['BTCUSDT:FLOW'].imbalance>-0.4\"` \u2014 sniper: n\u00e3o compra o dip sob venda agressora (ver [[tradeux-flow-oracle]]; threshold -0.40 PROVIS\u00d3RIO; reaplicar via `setup-flow-gate.js`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-regime-gate.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:59:34)*
+
+
+## 🤖 Claude *(20:59:34)*
+
+HANDOFF — registro da ativação do gate sniper:
+
+## 🤖 Claude *(20:59:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**PENDENTE**: o relat\u00f3rio do deep-research (t\u00f3picos 1-2) \u2014 quando concluir, sintetizar com os thresholds (como pontos de partida p/ backtest, N\u00c3O evangelho) + o parecer de Spot Margin.",
+  "new_string": "**PENDENTE**: o relat\u00f3rio do deep-research (t\u00f3picos 1-2) \u2014 quando concluir, sintetizar com os thresholds (como pontos de partida p/ backtest, N\u00c3O evangelho) + o parecer de Spot Margin.\n\n### Record \u2014 2026-06-04 (cont. \u2014 gate de fluxo SNIPER na id2 + capitulation log)\nTirei o Or\u00e1culo de Fluxo do shadow e o liguei como **gate sniper na id2** (commit `72b1a19` + card `56029a3`, gate QA PASS + TL APPROVE,\nCI verde). A id2 (BUY revers\u00e3o) agora **n\u00e3o compra o dip sob capitula\u00e7\u00e3o de venda** (`...&& MEMORY['BTCUSDT:FLOW'] && (Date.now()-FLOW.atMs)\n<180000 && FLOW.imbalance>-0.4`; +FLOW nos indexes). **Money-path** \u2192 gate completo: o QA **provou no eval real do engine** que os 4 modos de\nfalha travam FECHADO (FLOW null via indexes.every / stale via atMs / throw capturado / job off). Entreguei tb: `atMs` no MEMORY[:FLOW]\n(base do stale-check) + **capitulation log** (`logs/flow-capitulation.log`: snapshot do fluxo quando RSI<25, p/ calibrar) + `setup-flow-gate.js`\n(idempotente, DRY, re-tun\u00e1vel). Validado: id2 gateada, id3/id6/id7 intocadas, idempotente, atMs vivo, `imbalance=-0.51 AGORA` (o gate VETARIA\numa compra neste instante \u2014 s\u00f3 n\u00e3o age pq bear bloqueia a montante), endpoints/card 200. \u26a0\ufe0f **threshold -0.40 PROVIS\u00d3RIO** (ressalva do TL:\nidealmente calibrar antes; apliquei pq \u00e9 inerte em bear + conservador + fail-safe + re-PATCH-\u00e1vel + deep-research iminente). **INERTE hoje**\n(bear). **NEXT**: recalibrar o threshold quando o deep-research sair (re-rodar `setup-flow-gate.js` com `FLOW_GATE_MIN=novo`); valida\u00e7\u00e3o de\ndisparo end-to-end fica pendente at\u00e9 o regime sair de bear. Mem\u00f3rias `tradeux-flow-oracle` + `tradeux-regime-gate` atualizadas. Gate da id2 \u00e9\nruntime/PATCH (reaplicar p\u00f3s-`make nuke`: setup-trend \u2192 activate-trend \u2192 setup-flow-gate)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
