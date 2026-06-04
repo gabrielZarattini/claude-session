@@ -1,5 +1,5 @@
-# [[2026-06-04 - Audit database migrations and clean test artifacts|Audit database migrations and clean test artifacts]]
-**Date:** 2026-06-03 | **Session ID:** `bd90bff2-59ea-4d8a-b987-808b97929c73`
+# [[2026-06-03 - Audit database migrations and clean test artifacts|Audit database migrations and clean test artifacts]]
+**Date:** 2026-06-04 | **Session ID:** `bd90bff2-59ea-4d8a-b987-808b97929c73`
 
 ---
 
@@ -7142,10 +7142,1920 @@ Running both smokes — USER path (regression on the refactored auth) + SERVICE/
 > ✅✅ NURTURE-CRON SERVICE-PATH SMOKE PASSED
 > ```
 
+## 🤖 Claude *(00:00:08)*
+
+
+## 🤖 Claude *(00:00:10)*
+
+**Both smokes pass — the FR is proven E2E:**
+- **USER path regression 10/10** ✅ — my auth refactor didn't break the logged-in path (consent gate, opt-out, dispatch all intact).
+- **Cron path 5/5** ✅ — `nurture-cron` found the due enrollment (`due:1`), drove `nurture-dispatch` service-mode (`completed:1`), **advanced step 0→1**, billing intact (100→98), consent path ran (`delivery=gated`). **"cron avança passos" materially proven.**
+
+Committing this complete increment:
+
+## 🤖 Claude *(00:00:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/nurture-dispatch/index.ts supabase/functions/nurture-cron/index.ts supabase/config.toml supabase/migrations/20260603230000_nurture_advance_cron.sql scripts/qa/smoke-nurture-cron.ts\ngit commit -q -F - <<'MSG'\nfeat(marketing-hub): cron de avan\u00e7o de nurturing (FR-MH-008 \"cron avan\u00e7a passos\")\n\nFecha o gap nomeado do FR-MH-008: as sequ\u00eancias tinham engine + nurture-dispatch\n(consent-gated, cobra 2 mco, gera msg, avan\u00e7a 1 passo) mas nada avan\u00e7ava os enrollments\ndue automaticamente. Agora:\n\n- nurture-cron (edge fn service-role, verify_jwt=false + self-check Bearer===SB_SECRET_KEY):\n  acha enrollments due (status=active, next_run_at<=now()) em todos os tenants e faz\n  fan-out (concorr\u00eancia 8, cap 200/tick) p/ nurture-dispatch.\n- nurture-dispatch ganha modo service-role (espelha orchestrate-step): al\u00e9m do JWT do\n  user, aceita Bearer SB_SECRET_KEY + body.user_id (confi\u00e1vel s\u00f3 com a chave) \u2014 consent\n  gate + billing rodam id\u00eanticos nos 2 modos (single source of truth, n\u00e3o duplicado).\n- pg_cron 'nurture-advance' */15 (migration 20260603230000) \u2192 net.http_post p/ nurture-cron\n  com a chave lida do Vault (padr\u00e3o do mcorch_embed_on_insert).\n\n/security-review limpo (reuso fiel de orchestrate-step + embed-trigger). Provado E2E:\nsmoke USER 10/10 (zero regress\u00e3o) + smoke cron 5/5 (due:1\u2192completed, step 0\u21921, cobra 2,\nconsent path delivery=gated). Entrega externa real segue GATED (outward, Sovereign-aware).\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits ---\"; git log origin/main..HEAD --format='  %h %s' | head",
+  "description": "Commit the nurturing cron feature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- commit ---
+> 0610952 feat(marketing-hub): cron de avanço de nurturing (FR-MH-008 "cron avança passos")
+> --- session commits ---
+>   0610952 feat(marketing-hub): cron de avanço de nurturing (FR-MH-008 "cron avança passos")
+>   25a8b28 chore(observability): functionName em todas as fns do fallback LLM — fim do :unknown
+>   336e2b8 fix(billing): fecha P0 de cunhagem não-autorizada de mcoCoins nos RPCs do ledger
+>   eaffec6 chore(audit): anticorpo de drift de schema — auditoria reexecutável + SOP
+>   773dce4 fix(schema): zera o drift deployado↔migrations achado na varredura pós-flywheel
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === useNurturing: enroll capability? ===
+> 10:export type SequenceEnrollment = Tables<'sequence_enrollments'>;
+> 34:    mutationFn: async (seq: { name: string; trigger?: SequenceTrigger; steps?: SequenceStep[] }) => {
+> 36:        .insert({ user_id: user!.id, name: seq.name, trigger: seq.trigger ?? 'manual', steps: seq.steps ?? [] })
+> 45:    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+> 53:  const enrollLead = useMutation({
+> 54:    mutationFn: async ({ sequence_id, lead_id }: { sequence_id: string; lead_id: string }) => {
+> 55:      const { data, error } = await supabase.from('sequence_enrollments')
+> 56:        .insert({ user_id: user!.id, sequence_id, lead_id, current_step: 0, status: 'active', next_run_at: new Date().toISOString() })
+> 61:    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrollments'] }),
+> 64:  // Opt-out — hard stop; nurture-dispatch refuses any opted_out enrollment.
+> 66:    mutationFn: async (enrollmentId: string) => {
+> 67:      const { error } = await supabase.from('sequence_enrollments')
+> 
+> === NurturingPanel: enroll UI? ===
+> 50:/** FR-MH-008 — minimal Nurturing surface: list/create sequences + active toggle. Enroll/dispatch via hook/cron. */
+> 52:  const { sequences, isLoading, createSequence, toggleActive } = useNurturing();
+> 66:          <p className="text-xs text-muted-foreground">{sequences.length} sequência(s) · envio gated por consentimento (LGPD)</p>
+> 73:      ) : sequences.length === 0 ? (
+> 77:          {sequences.map((s) => {
+> ```
+
+## 🤖 Claude *(00:00:37)*
+
+
+## 🤖 Claude *(00:00:38)*
+
+Five commits, nurturing cron done. Quick check on the FR-MH-008 UI sub-gap (enroll-from-lead) before moving to the next feature:
+
+## 🤖 Claude *(00:00:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== useNurturing: enroll capability? ===\"\ngrep -nE \"enroll|useEnroll|sequence_enrollments|insert|mutation\" src/hooks/useNurturing.ts | head -12\necho \"\"\necho \"=== NurturingPanel: enroll UI? ===\"\ngrep -nE \"enroll|Enroll|Inscrever|sequence|lead\" src/components/marketing/NurturingPanel.tsx | head -12",
+  "description": "Check existing nurturing enroll UI"
+}
+```
+
+## 🤖 Claude *(00:01:13)*
+
+
+## 🤖 Claude *(00:01:16)*
+
+`useNurturing.enrollLead` **already exists** (hook line 53) — the panel just doesn't surface a button (it's wired "via hook/cron" per the comment). With the cron now live, FR-MH-008's substance is complete; the enroll button is minor polish. Moving to **FR-MH-012 BYOK** — but probe-first is critical here, because the marketing edge fns *already* resolve `decrypted_user_api_keys` per-user→system (I saw it in `nurture-dispatch`). Checking what FR-MH-012 actually specifies in the BoK SSOT before building anything:
+
+## 🤖 Claude *(00:01:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== FR-MH-012 / BYOK in data-model + SDD ===\"\ngrep -rniE \"FR-MH-012|BYOK|per-tenant|marketing_config|per.user.*sistema|resolve.*per\" docs/bok/marketing-hub/06-data-model.md docs/bok/marketing-hub/05-sdd.md docs/bok/marketing-hub/03-prd.md 2>/dev/null | head -20\necho \"\"\necho \"=== do marketing edge fns already resolve per-user\u2192system? (the FR-MH-012 pattern) ===\"\nfor f in lead-score campaign-run nurture-dispatch; do\n  n=$(grep -c \"decrypted_user_api_keys\" \"supabase/functions/$f/index.ts\" 2>/dev/null)\n  echo \"  $f: decrypted_user_api_keys refs = $n\"\ndone\necho \"\"\necho \"=== PR-MH-014 (the PR behind FR-MH-012) ===\"\ngrep -nB1 -A3 \"PR-MH-014\" docs/bok/marketing-hub/03-prd.md 2>/dev/null | head -12",
+  "description": "Probe FR-MH-012 BoK spec + existing per-user resolution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FR-MH-012 / BYOK in data-model + SDD ===
+> docs/bok/marketing-hub/03-prd.md:29:### Persona 2 — Marina / Agency Marketer (Secondary, futuro per-tenant)
+> docs/bok/marketing-hub/03-prd.md:37:| MCORCH usage pattern | Per-tenant: cria campanhas para múltiplos clientes finais; configura BYOK; vive no `/dashboard/marketing` |
+> docs/bok/marketing-hub/03-prd.md:70:| PR-MH-001 | Lead Lifecycle Board (capture→score→nurture→convert) absorvendo `whatsapp_leads` | P1, P2 | BR-MH-001 | L | 0 (CRUD) | Núcleo do meio-de-funil; estados + RLS per-tenant |
+> docs/bok/marketing-hub/03-prd.md:84:| PR-MH-014 | BYOK per-tenant (chaves de IA/canal de marketing) | P2 | BR-MH-009 | S | 0 | Padrão Vault existente; per-user→sistema |
+> docs/bok/marketing-hub/03-prd.md:97:- Portal de billing white-label completo per-tenant (cobrança ao cliente final do tenant).
+> docs/bok/marketing-hub/03-prd.md:114:**Success gate:** Intent Orchestrator dispara nurturing com HITL; AEO audit roda (real ou degradado documentado); Customer 360 e BYOK per-tenant prontos para o 1º tenant externo.
+> docs/bok/marketing-hub/05-sdd.md:36:│  DB LAYER (per-tenant RLS)    │  │  EXTERNAL / AGENTIC               │
+> docs/bok/marketing-hub/05-sdd.md:87:> All new Edge Functions follow the **API Tenancy Model**: resolve per-user credential first, documented fallback only for service/cron paths, hard-fail 402/501 otherwise.
+> docs/bok/marketing-hub/05-sdd.md:139:   → REVOKE any Vault secret tied to the lead (if BYOK channel token stored)
+> docs/bok/marketing-hub/05-sdd.md:199:| BYOK marketing keys | Vazamento de token de canal | Information Disclosure | High | Padrão Vault (cifra na trigger, view mascarada, `decrypted_*` service-role only) |
+> 
+> === do marketing edge fns already resolve per-user→system? (the FR-MH-012 pattern) ===
+>   lead-score: decrypted_user_api_keys refs = 1
+>   campaign-run: decrypted_user_api_keys refs = 0
+>   nurture-dispatch: decrypted_user_api_keys refs = 1
+> 
+> === PR-MH-014 (the PR behind FR-MH-012) ===
+> 83-| PR-MH-013 | Customer 360 view (eventos, canais, score, consent) | P1, P2 | BR-MH-012 | M | 0 | Agrega multicanal por contato |
+> 84:| PR-MH-014 | BYOK per-tenant (chaves de IA/canal de marketing) | P2 | BR-MH-009 | S | 0 | Padrão Vault existente; per-user→sistema |
+> 85-
+> 86-### Could Have (Future)
+> 87-
+> --
+> 112-**Target date:** após MVP validado com Usuário Zero  
+> 113:**Adds:** PR-MH-010, PR-MH-011, PR-MH-012, PR-MH-013, PR-MH-014  
+> 114-**Success gate:** Intent Orchestrator dispara nurturing com HITL; AEO audit roda (real ou degradado documentado); Customer 360 e BYOK per-tenant prontos para o 1º tenant externo.
+> 115-
+> 116-### Future Scope
+> --
+> ```
+
+## 🤖 Claude *(00:02:32)*
+
+
+## 🤖 Claude *(00:02:38)*
+
+Probe-first pays off again — FR-MH-012's reality is nuanced (BoK SSOT, `PR-MH-014`):
+
+**FR-MH-012 = "BYOK per-tenant (chaves de IA/canal de marketing)" · effort S · "Padrão Vault existente; per-user→sistema".** Two halves:
+- **AI keys (the half with consumers): already satisfied.** `lead-score` + `nurture-dispatch` resolve `decrypted_user_api_keys` per-user→system; `campaign-run` dispatches to `orchestrate-content` (which resolves per-user). The API Tenancy pattern is live across the marketing fns.
+- **Channel key (email/SMS delivery): premature.** Its only consumer is *real external nurturing delivery*, which is explicitly **GATED/deferred** (outward, Sovereign-aware). Building a `resend_api_key`-style column now = an **unused column** until delivery is wired — exactly the "build ahead of need" the probe-first discipline avoids (and the project's repeated lesson: code is often already ahead of the pending list).
+
+So #2 is mostly done-by-existing-pattern, and the remaining piece is coupled to a deferred outward feature. This changes how to spend the (now substantial) remaining budget. Given that and that **#4 Intent+HITL is a genuine net-new feature**, plus this has been a very large session — your call on allocation:
+
+## 🤖 Claude *(00:02:45)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "FR-MH-012 BYOK: a metade de IA j\u00e1 est\u00e1 satisfeita pelo padr\u00e3o existente; a metade de canal \u00e9 prematura (acoplada \u00e0 entrega externa, que est\u00e1 gated). Como alocar o restante?",
+      "header": "Aloca\u00e7\u00e3o",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Pular p/ FR-MH-009 Intent+HITL",
+          "description": "Trato FR-MH-012 como satisfeito-no-escopo-atual (documento o veredito + defiro a chave-de-canal junto com a entrega externa) e invisto o budget no #4 Intent Orchestrator+HITL \u2014 feature net-new real (edge fn intent-orchestrate + fila de aprova\u00e7\u00e3o HITL + hook)."
+        },
+        {
+          "label": "Construir a funda\u00e7\u00e3o de canal BYOK agora",
+          "description": "Adiciono a credencial de canal de marketing (ex.: resend_api_key) no padr\u00e3o Vault (template apify_token) + campo Settings + lookup, como funda\u00e7\u00e3o p/ o 1\u00ba tenant externo \u2014 mesmo sem consumidor de entrega ainda (gated). Depois sigo p/ Intent se houver janela."
+        },
+        {
+          "label": "Selar a sess\u00e3o agora",
+          "description": "5 commits de alto valor j\u00e1 entregues (drift + P0 + cleanup + observability + nurturing cron). Fecho com /handoff + push; FR-MH-012/009 ficam documentados como pr\u00f3ximos. Escolha se a janela estiver apertada (voc\u00ea v\u00ea o %)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "FR-MH-012 BYOK: a metade de IA já está satisfeita pelo padrão existente; a metade de canal é prematura (acoplada à entrega externa, que está gated). Como alocar o restante?"="Construir a fundação de canal BYOK agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:05:08)*
+
+
+## 🤖 Claude *(00:05:10)*
+
+GO to build the BYOK channel foundation. The `user_api_keys` Vault infra is intricate (masked view + decrypted view + INSTEAD OF trigger + encrypt trigger) — the `apify_token` addition (migration `20260601060000`) is the exact template. Reading it to replicate precisely (getting this wrong has bitten before — the encrypt double-fire memory):
+
+## 🤖 Claude *(00:05:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601060000_user_api_keys_apify_token.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: per-user Apify token (BYOK) for affiliate catalog enrichment
+> 2	-- API Tenancy Model — layered: per-user apify_token → global APIFY_TOKENS fallback (system/cron).
+> 3	-- SOP: docs/processes/affiliate-catalog-enrichment.md
+> 4	-- Follows the Vault-encryption pattern of 20260601000000_credential_encryption.sql:
+> 5	--   base column → encrypt trigger → masked public view → INSTEAD OF trigger → decrypted view.
+> 6	-- Additive only: every existing column handler is preserved verbatim; apify_token is appended.
+> 7	
+> 8	-- ─────────────────────────────────────────────────────────────────────────────
+> 9	-- 1. COLUMN on the base table
+> 10	-- ─────────────────────────────────────────────────────────────────────────────
+> 11	ALTER TABLE public.user_api_keys_table
+> 12	  ADD COLUMN IF NOT EXISTS apify_token text;
+> 13	
+> 14	COMMENT ON COLUMN public.user_api_keys_table.apify_token
+> 15	  IS 'Per-user Apify API token (BYOK) for ML scraping/enrichment. Vault-encrypted at rest. NULL falls back to global APIFY_TOKENS.';
+> 16	
+> 17	-- ─────────────────────────────────────────────────────────────────────────────
+> 18	-- 2. ENCRYPT TRIGGER — re-create with the apify_token block appended
+> 19	-- ─────────────────────────────────────────────────────────────────────────────
+> 20	CREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()
+> 21	RETURNS TRIGGER AS $$
+> 22	DECLARE
+> 23	  v_id UUID;
+> 24	BEGIN
+> 25	  -- groq_api_key
+> 26	  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+> 27	    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 28	    ELSE
+> 29	      v_id := vault.create_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');
+> 30	      NEW.groq_api_key = v_id::text;
+> 31	    END IF;
+> 32	  END IF;
+> 33	
+> 34	  -- openrouter_api_key
+> 35	  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+> 36	    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 37	    ELSE
+> 38	      v_id := vault.create_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');
+> 39	      NEW.openrouter_api_key = v_id::text;
+> 40	    END IF;
+> 41	  END IF;
+> 42	
+> 43	  -- openai_api_key
+> 44	  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+> 45	    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 46	    ELSE
+> 47	      v_id := vault.create_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');
+> 48	      NEW.openai_api_key = v_id::text;
+> 49	    END IF;
+> 50	  END IF;
+> 51	
+> 52	  -- elevenlabs_api_key
+> 53	  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+> 54	    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 55	    ELSE
+> 56	      v_id := vault.create_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');
+> 57	      NEW.elevenlabs_api_key = v_id::text;
+> 58	    END IF;
+> 59	  END IF;
+> 60	
+> 61	  -- google_api_key
+> 62	  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN
+> 63	    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 64	    ELSE
+> 65	      v_id := vault.create_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');
+> 66	      NEW.google_api_key = v_id::text;
+> 67	    END IF;
+> 68	  END IF;
+> 69	
+> 70	  -- nanobana_api_key
+> 71	  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN
+> 72	    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 73	    ELSE
+> 74	      v_id := vault.create_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');
+> 75	      NEW.nanobana_api_key = v_id::text;
+> 76	    END IF;
+> 77	  END IF;
+> 78	
+> 79	  -- seedance_api_key
+> 80	  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN
+> 81	    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 82	    ELSE
+> 83	      v_id := vault.create_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');
+> 84	      NEW.seedance_api_key = v_id::text;
+> 85	    END IF;
+> 86	  END IF;
+> 87	
+> 88	  -- wp_app_password
+> 89	  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN
+> 90	    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 91	    ELSE
+> 92	      v_id := vault.create_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');
+> 93	      NEW.wp_app_password = v_id::text;
+> 94	    END IF;
+> 95	  END IF;
+> 96	
+> 97	  -- replicate_api_key
+> 98	  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN
+> 99	    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 100	    ELSE
+> 101	      v_id := vault.create_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');
+> 102	      NEW.replicate_api_key = v_id::text;
+> 103	    END IF;
+> 104	  END IF;
+> 105	
+> 106	  -- higgsfield_api_key
+> 107	  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN
+> 108	    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 109	    ELSE
+> 110	      v_id := vault.create_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');
+> 111	      NEW.higgsfield_api_key = v_id::text;
+> 112	    END IF;
+> 113	  END IF;
+> 114	
+> 115	  -- higgsfield_api_key_secret
+> 116	  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN
+> 117	    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 118	    ELSE
+> 119	      v_id := vault.create_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');
+> 120	      NEW.higgsfield_api_key_secret = v_id::text;
+> 121	    END IF;
+> 122	  END IF;
+> 123	
+> 124	  -- apify_token (NEW — per-user ML scraping BYOK)
+> 125	  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN
+> 126	    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 127	    ELSE
+> 128	      v_id := vault.create_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token');
+> 129	      NEW.apify_token = v_id::text;
+> 130	    END IF;
+> 131	  END IF;
+> 132	
+> 133	  RETURN NEW;
+> 134	END;
+> 135	$$ LANGUAGE plpgsql SECURITY DEFINER;
+> 136	
+> 137	-- (trigger tr_encrypt_user_api_keys already bound to the function — no re-create needed)
+> 138	
+> 139	-- ─────────────────────────────────────────────────────────────────────────────
+> 140	-- 3. MASKED PUBLIC VIEW — append apify_token (masked)
+> 141	-- MUST match the CURRENT production definition from 20260601000600_secure_definer_views.sql:
+> 142	-- a SECURITY DEFINER view (default, NOT security_invoker — base-table SELECT is REVOKED from
+> 143	-- authenticated) with an explicit WHERE tenancy filter. Reverting to security_invoker here would
+> 144	-- break authenticated reads (permission denied on the base table).
+> 145	-- ─────────────────────────────────────────────────────────────────────────────
+> 146	CREATE OR REPLACE VIEW public.user_api_keys AS
+> 147	SELECT
+> 148	  user_id,
+> 149	  created_at,
+> 150	  updated_at,
+> 151	  pref_audio_provider,
+> 152	  pref_image_provider,
+> 153	  pref_video_provider,
+> 154	  wp_site_url,
+> 155	  wp_username,
+> 156	  pref_ai_model,
+> 157	  CASE WHEN groq_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS groq_api_key,
+> 158	  CASE WHEN openrouter_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openrouter_api_key,
+> 159	  CASE WHEN openai_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openai_api_key,
+> 160	  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS elevenlabs_api_key,
+> 161	  CASE WHEN google_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS google_api_key,
+> 162	  CASE WHEN nanobana_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS nanobana_api_key,
+> 163	  CASE WHEN seedance_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS seedance_api_key,
+> 164	  CASE WHEN wp_app_password IS NOT NULL THEN '••••••••••••' ELSE NULL END AS wp_app_password,
+> 165	  CASE WHEN replicate_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS replicate_api_key,
+> 166	  CASE WHEN higgsfield_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key,
+> 167	  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key_secret,
+> 168	  CASE WHEN apify_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS apify_token
+> 169	FROM public.user_api_keys_table
+> 170	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 171	
+> 172	-- Preserve client grants (CREATE OR REPLACE keeps ACLs; re-assert to be safe / idempotent).
+> 173	GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;
+> 174	
+> 175	-- ─────────────────────────────────────────────────────────────────────────────
+> 176	-- 4. INSTEAD OF TRIGGER — add apify_token to INSERT cols/VALUES + ON CONFLICT UPDATE
+> 177	-- ─────────────────────────────────────────────────────────────────────────────
+> 178	CREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()
+> 179	RETURNS TRIGGER AS $$
+> 180	BEGIN
+> 181	  IF TG_OP = 'DELETE' THEN
+> 182	    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;
+> 183	    RETURN OLD;
+> 184	  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+> 185	    INSERT INTO public.user_api_keys_table (
+> 186	      user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token
+> 187	    ) VALUES (
+> 188	      NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token
+> 189	    )
+> 190	    ON CONFLICT (user_id) DO UPDATE SET
+> 191	      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key, '••••••••••••'), public.user_api_keys_table.groq_api_key),
+> 192	      openrouter_api_key = COALESCE(NULLIF(NEW.openrouter_api_key, '••••••••••••'), public.user_api_keys_table.openrouter_api_key),
+> 193	      openai_api_key = COALESCE(NULLIF(NEW.openai_api_key, '••••••••••••'), public.user_api_keys_table.openai_api_key),
+> 194	      pref_audio_provider = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),
+> 195	      pref_image_provider = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),
+> 196	      pref_video_provider = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),
+> 197	      elevenlabs_api_key = COALESCE(NULLIF(NEW.elevenlabs_api_key, '••••••••••••'), public.user_api_keys_table.elevenlabs_api_key),
+> 198	      google_api_key = COALESCE(NULLIF(NEW.google_api_key, '••••••••••••'), public.user_api_keys_table.google_api_key),
+> 199	      nanobana_api_key = COALESCE(NULLIF(NEW.nanobana_api_key, '••••••••••••'), public.user_api_keys_table.nanobana_api_key),
+> 200	      seedance_api_key = COALESCE(NULLIF(NEW.seedance_api_key, '••••••••••••'), public.user_api_keys_table.seedance_api_key),
+> 201	      wp_site_url = NEW.wp_site_url,
+> 202	      wp_username = NEW.wp_username,
+> 203	      wp_app_password = COALESCE(NULLIF(NEW.wp_app_password, '••••••••••••'), public.user_api_keys_table.wp_app_password),
+> 204	      pref_ai_model = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),
+> 205	      replicate_api_key = COALESCE(NULLIF(NEW.replicate_api_key, '••••••••••••'), public.user_api_keys_table.replicate_api_key),
+> 206	      higgsfield_api_key = COALESCE(NULLIF(NEW.higgsfield_api_key, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key),
+> 207	      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key_secret),
+> 208	      apify_token = COALESCE(NULLIF(NEW.apify_token, '••••••••••••'), public.user_api_keys_table.apify_token),
+> 209	      updated_at = now();
+> 210	    RETURN NEW;
+> 211	  END IF;
+> 212	  RETURN NULL;
+> 213	END;
+> 214	$$ LANGUAGE plpgsql SECURITY DEFINER;
+> 215	
+> 216	-- ─────────────────────────────────────────────────────────────────────────────
+> 217	-- 5. DECRYPTED VIEW (service_role only) — append apify_token + its vault join
+> 218	-- ─────────────────────────────────────────────────────────────────────────────
+> 219	CREATE OR REPLACE VIEW public.decrypted_user_api_keys AS
+> 220	SELECT
+> 221	  uak.user_id,
+> 222	  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,
+> 223	  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,
+> 224	  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,
+> 225	  uak.created_at,
+> 226	  uak.updated_at,
+> 227	  uak.pref_audio_provider,
+> 228	  uak.pref_image_provider,
+> 229	  uak.pref_video_provider,
+> 230	  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,
+> 231	  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,
+> 232	  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,
+> 233	  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,
+> 234	  uak.wp_site_url,
+> 235	  uak.wp_username,
+> 236	  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,
+> 237	  uak.pref_ai_model,
+> 238	  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,
+> 239	  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,
+> 240	  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,
+> 241	  COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token
+> 242	FROM public.user_api_keys_table uak
+> 243	LEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid
+> 244	LEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid
+> 245	LEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid
+> 246	LEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid
+> 247	LEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid
+> 248	LEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid
+> 249	LEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid
+> 250	LEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid
+> 251	LEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid
+> 252	LEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid
+> 253	LEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid
+> 254	LEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_apify.id = uak.apify_token::uuid;
+> 255	
+> 256	-- decrypted_user_api_keys stays service_role-only (grants preserved across REPLACE; re-assert to be safe)
+> 257	REVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;
+> 258	GRANT SELECT ON public.decrypted_user_api_keys TO service_role;
+> 259	
+> ```
+
+## 🤖 Claude *(00:05:24)*
+
+
+## 🤖 Claude *(00:05:26)*
+
+**Critical trap avoided:** this apify_token template predates the v6.20.1/.2 fixes — its INSTEAD OF uses `INSERT...ON CONFLICT` (the double-fire bug) and its encrypt uses raw `vault.create_secret` (the non-idempotent 23505 bug). Both were since replaced (migrations `130000`+`140000`). If I copy this template verbatim I'd **regress those fixes**. I must append `resend_api_key` to the **current live** definitions, not this stale one. Pulling the live defs:
+
+## 🤖 Claude *(00:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== LIVE trg_encrypt_user_api_keys (should use vault_upsert_secret \u2014 idempotent) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0].def'\nSELECT pg_get_functiondef(p.oid) AS def FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\nWHERE n.nspname='public' AND p.proname='trg_encrypt_user_api_keys';\nSQL",
+  "description": "Pull live encrypt trigger (current idempotent version)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LIVE trg_encrypt_user_api_keys (should use vault_upsert_secret — idempotent) ===
+> CREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()
+>  RETURNS trigger
+>  LANGUAGE plpgsql
+>  SECURITY DEFINER
+>  SET search_path TO ''
+> AS $function$
+> DECLARE
+>   v_id UUID;
+> BEGIN
+>   -- groq_api_key
+>   IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+>     IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');
+>       NEW.groq_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- openrouter_api_key
+>   IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+>     IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');
+>       NEW.openrouter_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- openai_api_key
+>   IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+>     IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');
+>       NEW.openai_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- elevenlabs_api_key
+>   IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+>     IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');
+>       NEW.elevenlabs_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- google_api_key
+>   IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN
+>     IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');
+>       NEW.google_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- nanobana_api_key
+>   IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN
+>     IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');
+>       NEW.nanobana_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- seedance_api_key
+>   IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN
+>     IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');
+>       NEW.seedance_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- wp_app_password
+>   IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN
+>     IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');
+>       NEW.wp_app_password = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- replicate_api_key
+>   IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN
+>     IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');
+>       NEW.replicate_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- higgsfield_api_key
+>   IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN
+>     IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');
+>       NEW.higgsfield_api_key = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- higgsfield_api_key_secret
+>   IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN
+>     IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');
+>       NEW.higgsfield_api_key_secret = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   -- apify_token
+>   IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN
+>     IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+>       -- keep existing UUID reference
+>     ELSE
+>       v_id := public.vault_upsert_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token');
+>       NEW.apify_token = v_id::text;
+>     END IF;
+>   END IF;
+> 
+>   RETURN NEW;
+> END;
+> $function$
+> ```
+
+## 🤖 Claude *(00:05:47)*
+
+
+## 🤖 Claude *(00:05:48)*
+
+Live encrypt trigger confirmed using `vault_upsert_secret` (idempotent) + `search_path=''`. Pulling the other three live definitions (INSTEAD OF trigger + masked view + decrypted view) so I append `resend_api_key` to the *current* logic, not the stale template:
+
+## 🤖 Claude *(00:05:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== LIVE trg_instead_of_user_api_keys (current: UPDATE-first + tenant guard, from 130000) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0].def'\nSELECT pg_get_functiondef(p.oid) AS def FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\nWHERE n.nspname='public' AND p.proname='trg_instead_of_user_api_keys';\nSQL",
+  "description": "Pull live INSTEAD OF trigger (current fixed version)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LIVE trg_instead_of_user_api_keys (current: UPDATE-first + tenant guard, from 130000) ===
+> CREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()
+>  RETURNS trigger
+>  LANGUAGE plpgsql
+>  SECURITY DEFINER
+>  SET search_path TO ''
+> AS $function$
+> BEGIN
+>   IF TG_OP = 'DELETE' THEN
+>     DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;
+>     RETURN OLD;
+> 
+>   ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+>     -- Tenant guard. The view grants INSERT to anon+authenticated and this INSTEAD OF trigger runs
+>     -- as a definer (bypassing base-table RLS), and an INSERT cannot be constrained by the view's
+>     -- WHERE filter the way SELECT/UPDATE/DELETE are. Without this check an authenticated caller
+>     -- could INSERT with a spoofed user_id and write another tenant's credential row. (Previously
+>     -- "masked" only by the 23505 crash this migration removes — so closing it is mandatory here.)
+>     -- service_role (edge functions / cron / onboarding) legitimately writes arbitrary user_ids.
+>     IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+>       RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+>     END IF;
+> 
+>     -- UPDATE-first: fires the BEFORE UPDATE encryption trigger exactly once for an existing row.
+>     UPDATE public.user_api_keys_table SET
+>       groq_api_key              = COALESCE(NULLIF(NEW.groq_api_key, '••••••••••••'), public.user_api_keys_table.groq_api_key),
+>       openrouter_api_key        = COALESCE(NULLIF(NEW.openrouter_api_key, '••••••••••••'), public.user_api_keys_table.openrouter_api_key),
+>       openai_api_key            = COALESCE(NULLIF(NEW.openai_api_key, '••••••••••••'), public.user_api_keys_table.openai_api_key),
+>       pref_audio_provider       = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),
+>       pref_image_provider       = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),
+>       pref_video_provider       = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),
+>       elevenlabs_api_key        = COALESCE(NULLIF(NEW.elevenlabs_api_key, '••••••••••••'), public.user_api_keys_table.elevenlabs_api_key),
+>       google_api_key            = COALESCE(NULLIF(NEW.google_api_key, '••••••••••••'), public.user_api_keys_table.google_api_key),
+>       nanobana_api_key          = COALESCE(NULLIF(NEW.nanobana_api_key, '••••••••••••'), public.user_api_keys_table.nanobana_api_key),
+>       seedance_api_key          = COALESCE(NULLIF(NEW.seedance_api_key, '••••••••••••'), public.user_api_keys_table.seedance_api_key),
+>       wp_site_url               = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),
+>       wp_username               = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),
+>       wp_app_password           = COALESCE(NULLIF(NEW.wp_app_password, '••••••••••••'), public.user_api_keys_table.wp_app_password),
+>       pref_ai_model             = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),
+>       replicate_api_key         = COALESCE(NULLIF(NEW.replicate_api_key, '••••••••••••'), public.user_api_keys_table.replicate_api_key),
+>       higgsfield_api_key        = COALESCE(NULLIF(NEW.higgsfield_api_key, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key),
+>       higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key_secret),
+>       apify_token               = COALESCE(NULLIF(NEW.apify_token, '••••••••••••'), public.user_api_keys_table.apify_token),
+>       updated_at                = now()
+>     WHERE user_id = NEW.user_id;
+> 
+>     -- No existing row → first-time insert (fires the BEFORE INSERT encryption trigger exactly once).
+>     IF NOT FOUND THEN
+>       INSERT INTO public.user_api_keys_table (
+>         user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token
+>       ) VALUES (
+>         NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token
+>       );
+>     END IF;
+>     RETURN NEW;
+>   END IF;
+>   RETURN NULL;
+> END;
+> $function$
+> ```
+
+## 🤖 Claude *(00:06:22)*
+
+
+## 🤖 Claude *(00:06:23)*
+
+Live INSTEAD OF confirmed (UPDATE-first + tenant guard + `search_path=''`). Pulling the two view definitions — the last pieces I need to append `resend_api_key` to the *current* machinery verbatim:
+
+## 🤖 Claude *(00:06:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== LIVE masked view user_api_keys ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0].def'\nSELECT pg_get_viewdef('public.user_api_keys'::regclass, true) AS def;\nSQL\necho \"\"\necho \"=== base table has resend_api_key already? (idempotency check) ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] | \"  resend_col_exists: \"+.v'\nSELECT (EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_api_keys_table' AND column_name='resend_api_key'))::text AS v;\nSQL",
+  "description": "Pull live masked view + check resend column absence"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LIVE masked view user_api_keys ===
+>  SELECT user_id,
+>     created_at,
+>     updated_at,
+>     pref_audio_provider,
+>     pref_image_provider,
+>     pref_video_provider,
+>     wp_site_url,
+>     wp_username,
+>     pref_ai_model,
+>         CASE
+>             WHEN groq_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS groq_api_key,
+>         CASE
+>             WHEN openrouter_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS openrouter_api_key,
+>         CASE
+>             WHEN openai_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS openai_api_key,
+>         CASE
+>             WHEN elevenlabs_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS elevenlabs_api_key,
+>         CASE
+>             WHEN google_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS google_api_key,
+>         CASE
+>             WHEN nanobana_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS nanobana_api_key,
+>         CASE
+>             WHEN seedance_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS seedance_api_key,
+>         CASE
+>             WHEN wp_app_password IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS wp_app_password,
+>         CASE
+>             WHEN replicate_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS replicate_api_key,
+>         CASE
+>             WHEN higgsfield_api_key IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS higgsfield_api_key,
+>         CASE
+>             WHEN higgsfield_api_key_secret IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS higgsfield_api_key_secret,
+>         CASE
+>             WHEN apify_token IS NOT NULL THEN '••••••••••••'::text
+>             ELSE NULL::text
+>         END AS apify_token
+>    FROM user_api_keys_table
+>   WHERE auth.uid() = user_id OR auth.role() = 'service_role'::text;
+> 
+> === base table has resend_api_key already? (idempotency check) ===
+>   resend_col_exists: false
+> ```
+
+## 🤖 Claude *(00:06:48)*
+
+
+## 🤖 Claude *(00:06:48)*
+
+Need the decrypted view's exact live form too (don't assume). Fetching it, then I'll write the full migration:
+
+## 🤖 Claude *(00:06:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0].def'\nSELECT pg_get_viewdef('public.decrypted_user_api_keys'::regclass, true) AS def;\nSQL",
+  "description": "Pull live decrypted_user_api_keys view definition"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  SELECT uak.user_id,
+>     COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,
+>     COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,
+>     COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,
+>     uak.created_at,
+>     uak.updated_at,
+>     uak.pref_audio_provider,
+>     uak.pref_image_provider,
+>     uak.pref_video_provider,
+>     COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,
+>     COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,
+>     COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,
+>     COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,
+>     uak.wp_site_url,
+>     uak.wp_username,
+>     COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,
+>     uak.pref_ai_model,
+>     COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,
+>     COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,
+>     COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,
+>     COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token
+>    FROM user_api_keys_table uak
+>      LEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_groq.id = uak.groq_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_openrouter.id = uak.openrouter_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_openai.id = uak.openai_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_google.id = uak.google_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_nanobana.id = uak.nanobana_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_seedance.id = uak.seedance_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_wp_pwd.id = uak.wp_app_password::uuid
+>      LEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_replicate.id = uak.replicate_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_higgsfield.id = uak.higgsfield_api_key::uuid
+>      LEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid
+>      LEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'::text AND s_apify.id = uak.apify_token::uuid;
+> ```
+
+## 🤖 Claude *(00:07:09)*
+
+
+## 🤖 Claude *(00:07:11)*
+
+All four live definitions captured (resend column absent → idempotent). Writing the migration that appends `resend_api_key` to the **current** machinery verbatim (idempotent `vault_upsert_secret`, UPDATE-first INSTEAD OF, tenant guard, masked + decrypted views) — appending only at column-list ends (CREATE OR REPLACE VIEW constraint):
+
+## 🤖 Claude *(00:08:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603240000_user_api_keys_resend_channel.sql",
+  "content": "-- Migration: per-user Resend (email) marketing-channel BYOK \u2014 FR-MH-012 (\"BYOK per-tenant / canal de marketing\").\n-- BoK SSOT: docs/bok/marketing-hub/03-prd.md PR-MH-014 (\"chaves de IA/canal de marketing; Padr\u00e3o Vault existente;\n-- per-user\u2192sistema\") + 04-frd.md FR-MH-012 + 05-sdd.md (STRIDE \"BYOK marketing keys\" \u2192 Vault pattern).\n--\n-- Foundation for the (currently GATED) real nurturing external delivery: a per-tenant email channel credential\n-- resolved per-user\u2192system, stored in the Vault pattern. No consumer wires it to delivery yet (delivery stays\n-- gated, Sovereign-aware) \u2014 this lays the credential layer the BoK requires for the 1st external tenant.\n--\n-- Appends `resend_api_key` to the user_api_keys credential machinery, reproducing the CURRENT live definitions\n-- VERBATIM (NOT the stale 20260601060000 template): encrypt trigger uses the IDEMPOTENT `vault_upsert_secret`\n-- (20260602140000) and the INSTEAD OF is UPDATE-first + tenant guard (20260602130000). search_path='' preserved.\n-- Additive only: views append the new column at the END (CREATE OR REPLACE VIEW constraint).\n\n-- \u2500\u2500 1. base column \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nALTER TABLE public.user_api_keys_table ADD COLUMN IF NOT EXISTS resend_api_key text;\nCOMMENT ON COLUMN public.user_api_keys_table.resend_api_key\n  IS 'Per-user Resend (email) API key (BYOK marketing channel) for nurturing delivery. Vault-encrypted at rest. NULL \u2192 system fallback.';\n\n-- \u2500\u2500 2. encrypt trigger (live verbatim + resend block; idempotent vault_upsert_secret) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  v_id UUID;\nBEGIN\n  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN\n    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key'); NEW.groq_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN\n    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key'); NEW.openrouter_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN\n    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key'); NEW.openai_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN\n    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key'); NEW.elevenlabs_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN\n    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key'); NEW.google_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN\n    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key'); NEW.nanobana_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN\n    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key'); NEW.seedance_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN\n    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password'); NEW.wp_app_password = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN\n    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key'); NEW.replicate_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN\n    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key'); NEW.higgsfield_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN\n    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret'); NEW.higgsfield_api_key_secret = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN\n    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token'); NEW.apify_token = v_id::text;\n    END IF;\n  END IF;\n  -- resend_api_key (NEW \u2014 per-user email marketing channel BYOK)\n  IF NEW.resend_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.resend_api_key IS DISTINCT FROM OLD.resend_api_key) THEN\n    IF NEW.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.resend_api_key, 'user_api_keys_resend_api_key_' || NEW.user_id::text, 'Resend API Key'); NEW.resend_api_key = v_id::text;\n    END IF;\n  END IF;\n  RETURN NEW;\nEND;\n$function$;\n\n-- \u2500\u2500 3. masked public view (live verbatim + resend masked, appended at END) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.user_api_keys AS\nSELECT\n  user_id, created_at, updated_at, pref_audio_provider, pref_image_provider, pref_video_provider,\n  wp_site_url, wp_username, pref_ai_model,\n  CASE WHEN groq_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS groq_api_key,\n  CASE WHEN openrouter_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openrouter_api_key,\n  CASE WHEN openai_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openai_api_key,\n  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS elevenlabs_api_key,\n  CASE WHEN google_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS google_api_key,\n  CASE WHEN nanobana_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS nanobana_api_key,\n  CASE WHEN seedance_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS seedance_api_key,\n  CASE WHEN wp_app_password IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS wp_app_password,\n  CASE WHEN replicate_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS replicate_api_key,\n  CASE WHEN higgsfield_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key,\n  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key_secret,\n  CASE WHEN apify_token IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS apify_token,\n  CASE WHEN resend_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS resend_api_key\nFROM public.user_api_keys_table\nWHERE (auth.uid() = user_id OR auth.role() = 'service_role');\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;\n\n-- \u2500\u2500 4. INSTEAD OF trigger (live verbatim + resend in guard-preserving UPDATE-first/INSERT) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;\n    RETURN OLD;\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n    UPDATE public.user_api_keys_table SET\n      groq_api_key              = COALESCE(NULLIF(NEW.groq_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      openrouter_api_key        = COALESCE(NULLIF(NEW.openrouter_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openrouter_api_key),\n      openai_api_key            = COALESCE(NULLIF(NEW.openai_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openai_api_key),\n      pref_audio_provider       = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),\n      pref_image_provider       = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),\n      pref_video_provider       = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),\n      elevenlabs_api_key        = COALESCE(NULLIF(NEW.elevenlabs_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.elevenlabs_api_key),\n      google_api_key            = COALESCE(NULLIF(NEW.google_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.google_api_key),\n      nanobana_api_key          = COALESCE(NULLIF(NEW.nanobana_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.nanobana_api_key),\n      seedance_api_key          = COALESCE(NULLIF(NEW.seedance_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.seedance_api_key),\n      wp_site_url               = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),\n      wp_username               = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),\n      wp_app_password           = COALESCE(NULLIF(NEW.wp_app_password, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.wp_app_password),\n      pref_ai_model             = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),\n      replicate_api_key         = COALESCE(NULLIF(NEW.replicate_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.replicate_api_key),\n      higgsfield_api_key        = COALESCE(NULLIF(NEW.higgsfield_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key),\n      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key_secret),\n      apify_token               = COALESCE(NULLIF(NEW.apify_token, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.apify_token),\n      resend_api_key            = COALESCE(NULLIF(NEW.resend_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.resend_api_key),\n      updated_at                = now()\n    WHERE user_id = NEW.user_id;\n    IF NOT FOUND THEN\n      INSERT INTO public.user_api_keys_table (\n        user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token, resend_api_key\n      ) VALUES (\n        NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token, NEW.resend_api_key\n      );\n    END IF;\n    RETURN NEW;\n  END IF;\n  RETURN NULL;\nEND;\n$function$;\n\n-- \u2500\u2500 5. decrypted view (service_role only; live verbatim + resend COALESCE + join, appended at END) \u2500\nCREATE OR REPLACE VIEW public.decrypted_user_api_keys AS\nSELECT\n  uak.user_id,\n  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,\n  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,\n  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,\n  uak.created_at, uak.updated_at, uak.pref_audio_provider, uak.pref_image_provider, uak.pref_video_provider,\n  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,\n  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,\n  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,\n  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,\n  uak.wp_site_url, uak.wp_username,\n  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,\n  uak.pref_ai_model,\n  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,\n  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,\n  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,\n  COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token,\n  COALESCE(s_resend.decrypted_secret, uak.resend_api_key) AS resend_api_key\nFROM public.user_api_keys_table uak\nLEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid\nLEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid\nLEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_apify.id = uak.apify_token::uuid\nLEFT JOIN vault.decrypted_secrets s_resend ON uak.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_resend.id = uak.resend_api_key::uuid;\nREVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;\nGRANT SELECT ON public.decrypted_user_api_keys TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603240000_user_api_keys_resend_channel.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:09:06)*
+
+
+## 🤖 Claude *(00:09:08)*
+
+Migration written (resend column absent → idempotent). The credential infra is the highest-stakes surface, and the project's lesson is that *independent* review catches what self-review misses. Running a focused independent review (the key risk is a transcription regression of the hardened encrypt/INSTEAD OF, not new attack surface):
+
+## 🤖 Claude *(00:09:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Independent review BYOK migration",
+  "subagent_type": "general-purpose",
+  "prompt": "Independent security + correctness review of ONE new migration: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603240000_user_api_keys_resend_channel.sql\n\nIt adds a `resend_api_key` BYOK column to the `user_api_keys` credential machinery (base table + encrypt trigger + masked view + INSTEAD OF trigger + decrypted view). The claim: it reproduces the CURRENT LIVE definitions VERBATIM and only appends resend_api_key \u2014 preserving prior security fixes. Your job: verify it did NOT regress those fixes and introduced no vuln.\n\nCheck against these invariants (the prior hardening that MUST be preserved):\n1. **Encrypt trigger** must use `public.vault_upsert_secret(...)` (idempotent \u2014 fix from 20260602140000), NOT `vault.create_secret` (the old non-idempotent 23505 bug). Confirm ALL key blocks (incl. the new resend) use vault_upsert_secret. Confirm `SET search_path TO ''`.\n2. **INSTEAD OF trigger** must be UPDATE-first / INSERT-if-NOT-FOUND (fix from 20260602130000), NOT `INSERT...ON CONFLICT DO UPDATE` (the double-fire 23505 bug). Confirm the tenant guard is present and NULL-safe: `auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid()` \u2192 42501. Confirm `SET search_path TO ''`.\n3. **Masked view** must keep the tenancy WHERE `(auth.uid() = user_id OR auth.role() = 'service_role')` and mask resend_api_key (\u2022\u2022\u2022\u2022), and re-GRANT to anon/authenticated.\n4. **Decrypted view** must stay `REVOKE ... FROM PUBLIC, anon, authenticated; GRANT SELECT TO service_role` and the resend join uses the UUID-regex guard before `::uuid` cast (so a non-UUID plaintext value doesn't crash the cast).\n5. **CREATE OR REPLACE VIEW** constraint: new columns appended only at the END of each view's select list (Postgres forbids reordering/removing existing columns). Confirm resend_api_key is LAST in both views and no existing column order changed.\n6. Any column-name typo, missing comma, unbalanced dollar-quote, or a key block that drops a column vs the live definitions.\n\nTo verify \"verbatim\", compare against the live definitions reproduced in these reference migrations: 20260602140000 (vault_upsert_secret), 20260602130000 (UPDATE-first INSTEAD OF + tenant guard), 20260601060000 (the apify_token column pattern \u2014 but note its INSTEAD OF/encrypt are the STALE versions, so only use it for the column-plumbing pattern, NOT the trigger bodies). Also grep the repo for how resend_api_key is consumed (should be none yet \u2014 it's a foundation).\n\nReport: any regression of invariants 1-2 is CRITICAL (would break ALL users' credential writes). Any cross-tenant/disclosure issue is HIGH. Typos that break the migration are correctness-blockers. If sound, say so explicitly with evidence per invariant. Markdown."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All checks complete. Every vault-join alias is unique (no `s_resend` collision), the resend column is plain nullable `text` (consistent with all sibling keys; NULL → system fallback as documented), and the `vault_upsert_secret` call on line 92 (note the `Resend API Key` description, not "Apify Token" copy-paste) is correct.\n\nThe migration is sound. Here is my report.\n\n---\n\n# Security + Correctness Review — `20260603240000_user_api_keys_resend_channel.sql`\n\n**Verdict: SOUND. Ship it.** The migration reproduces the current live `user_api_keys` credential machinery verbatim and appends only `resend_api_key`. No regression of the prior hardening (invariants 1–2), no cross-tenant/disclosure issue (3–4), no CREATE OR REPLACE VIEW ordering violation (5), no typo/quoting/correctness defect (6).\n\n## Reference baseline is correct\nI confirmed the "live" definitions the migration claims to reproduce are genuinely current: no migration between the references and this one touches the `user_api_keys` machinery. Grepped `20260602150000`, `20260603210500_harden_definer_search_path`, `20260603211000` — none reference `trg_encrypt_user_api_keys`, `trg_instead_of_user_api_keys`, or either view. So the authoritative baseline is encrypt/INSTEAD-OF from `20260602140000`/`20260602130000` and views from `20260601060000`. The new file\'s timestamp `20260603240000` is lexically greatest → applies last. ✓\n\n## Invariant-by-invariant (with evidence)\n\n**1. Encrypt trigger — PRESERVED ✓ (no CRITICAL regression)**\n- Zero `vault.create_secret` in the file (`grep -c` = 0). All 13 secret blocks use `public.vault_upsert_secret(...)` — the idempotent helper from `20260602140000`. The new resend block (L90–94) matches.\n- `SET search_path TO \'\'` present (L24). Equivalent to the reference\'s `SET search_path = \'\'`.\n- Normalized token diff of the trigger body (all 12 pre-existing key blocks, resend stripped) vs the reference: **IDENTICAL** (both = 50 statements, `diff` empty).\n- Resend encrypt block is a perfect structural clone of the apify block, modulo column name + the correct `\'Resend API Key\'` description label (not a copy-paste of "Apify Token").\n\n**2. INSTEAD OF trigger — PRESERVED ✓ (no CRITICAL regression)**\n- Zero `ON CONFLICT` in the file (`grep -c` = 0). It is UPDATE-first / `IF NOT FOUND` INSERT — the `20260602130000` fix.\n- Tenant guard present and NULL-safe verbatim (L133): `IF auth.role() IS DISTINCT FROM \'service_role\' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN RAISE ... errcode = \'42501\'`.\n- `SET search_path TO \'\'` present (L126).\n- UPDATE-SET block existing columns: byte-identical to reference (`diff` clean). `resend_api_key` placed before `updated_at = now()` — order-irrelevant in SET, correct.\n- INSERT: 20 columns ↔ 20 values (symmetric); col-list identical to reference after removing appended `resend_api_key`; `resend_api_key`/`NEW.resend_api_key` are last in both lists.\n\n**3. Masked view — PRESERVED ✓**\n- Tenancy WHERE verbatim (L118): `WHERE (auth.uid() = user_id OR auth.role() = \'service_role\')`.\n- Re-GRANT present (L119): `GRANT SELECT, INSERT, UPDATE, DELETE ... TO anon, authenticated`.\n- resend masked correctly (L116): `CASE WHEN resend_api_key IS NOT NULL THEN \'••••••••••••\' ELSE NULL END AS resend_api_key`.\n- Full normalized body diff vs reference (resend removed): **IDENTICAL**.\n\n**4. Decrypted view — PRESERVED ✓**\n- `REVOKE ALL ... FROM PUBLIC, anon, authenticated` (L205) + `GRANT SELECT ... TO service_role` (L206) — verbatim, service_role-only.\n- resend join (L204) has the UUID-regex guard **before** the cast: `... s_resend ON uak.resend_api_key ~ \'^[0-9a-f]{8}-...{12}$\' AND s_resend.id = uak.resend_api_key::uuid`. A non-UUID plaintext fails the regex → the AND short-circuits → `::uuid` never executes → no cast crash. Matches the apify pattern exactly.\n- All vault-join aliases unique (no `s_resend` collision). Full body diff vs reference (resend removed, `;` preserved) reduced to a single dangling-comma artifact of my own surgical line deletion — the migration itself is verbatim.\n\n**5. CREATE OR REPLACE VIEW ordering — SATISFIED ✓**\n- Masked view: existing columns 1–21 in identical order; `resend_api_key` appended at position 22 (last). Column-order diff = `21a22 > resend_api_key` only.\n- Decrypted view: existing output columns 1–33 in identical order; resend appended last. Diff = the two appended resend lines only.\n- No existing column reordered or removed → no Postgres `cannot drop/reorder columns` error on replace.\n\n**6. Typos / quoting / dropped columns — NONE ✓**\n- `$function$` dollar-quoting balanced (4 tokens = 2 functions); no nested bare `$$` clash.\n- `resend_api_key` spelled identically across all 9 functional touchpoints (ALTER, COMMENT, encrypt block, masked CASE, UPDATE SET, INSERT cols, INSERT vals, decrypted COALESCE, decrypted JOIN).\n- New column is plain nullable `text` (`ADD COLUMN IF NOT EXISTS resend_api_key text`) — consistent with all sibling keys; NULL → system fallback as documented.\n\n## Consumption check\n`grep` across `src/`, `supabase/functions/`, `scripts/` for `resend_api_key`/`resend` → **zero hits**. Confirmed it is a credential-layer foundation with no consumer wired yet (delivery stays gated), exactly as the header claims.\n\n## Notes (non-blocking)\n- This adds a new BYOK column but per the API Tenancy Model (CLAUDE.md) the matching `/dashboard/settings` UI + lookup helper are still owed before the channel goes live — explicitly deferred here ("No consumer wires it to delivery yet"). That is a planned follow-up, not a defect in this migration.\n\nMigration under review: `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603240000_user_api_keys_resend_channel.sql`'}, {'type': 'text', 'text': "agentId: a77495dbbcb3f4db6 (use SendMessage with to: 'a77495dbbcb3f4db6' to continue this agent)\n<usage>subagent_tokens: 117303\ntool_uses: 20\nduration_ms: 230618</usage>"}]
+> ```
+
+## 🤖 Claude *(00:13:56)*
+
+
+## 🤖 Claude *(00:13:56)*
+
+Independent review: **SOUND** — verbatim reproduction confirmed by normalized diff (0 `vault.create_secret`, 0 `ON CONFLICT`, tenant guard + `search_path=''` preserved, resend appended last in both views, no typos, no consumer yet). Applying:
+
+## 🤖 Claude *(00:14:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"y\" | timeout 150 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error\" | tail -6\necho \"--- push exit: ${PIPESTATUS[1]} ---\"\necho \"\"\necho \"=== schema verify: resend_api_key now in base table + both views ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r '.[0] | \"  base_col=\"+.base+\"  masked_view=\"+.masked+\"  decrypted_view=\"+.decrypted'\nSELECT\n  (EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='user_api_keys_table' AND column_name='resend_api_key'))::text AS base,\n  (EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='user_api_keys' AND column_name='resend_api_key'))::text AS masked,\n  (EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='decrypted_user_api_keys' AND column_name='resend_api_key'))::text AS decrypted;\nSQL",
+  "description": "Apply BYOK migration + schema verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Applying migration 20260603240000_user_api_keys_resend_channel.sql...
+> Finished supabase db push.
+> --- push exit: 0 ---
+> 
+> === schema verify: resend_api_key now in base table + both views ===
+>   base_col=true  masked_view=true  decrypted_view=true
+> ```
+
+## 🤖 Claude *(00:14:47)*
+
+
+## 🤖 Claude *(00:14:49)*
+
+Applied (Finished, exit 0) + schema verified (resend in base table + both views). Now the critical behavioral proof — the credential infra has broken siblings before, so I must prove the round-trip *and* that other keys aren't disturbed. Writing a compact BYOK smoke:
+
+## 🤖 Claude *(00:15:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 per-user Resend channel BYOK round-trip (FR-MH-012). Proves the resend_api_key column added to the\n * user_api_keys Vault machinery: (1) write \u2192 masked view shows \u2022\u2022\u2022\u2022; (2) decrypted view resolves the real value;\n * (3) a sibling key (groq) set in the same row is NOT disturbed (no double-fire / 23505); (4) re-save rotates\n * in place (idempotent, no 23505). Throwaway user; cleans the user (cascade) AND its Vault secrets.\n * Usage: bun run scripts/qa/smoke-byok-resend.ts   (.env: SUPABASE_URL + SB_SECRET_KEY + Management token via supabase login)\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'node:fs';\nimport { homedir } from 'node:os';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst REF = 'bcyvddsykvehvpwstlfa';\nif (!URL || !SVC) { console.error('Missing env'); process.exit(1); }\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nlet uid: string | null = null;\nlet pass = true;\nconst check = (l: string, ok: boolean, d = '') => { console.log(`${ok ? '\u2705' : '\u274c'} ${l}${d ? `  \u2192 ${d}` : ''}`); if (!ok) pass = false; };\n\nasync function mgmtDelete(sql: string) {\n  const token = process.env.SUPABASE_ACCESS_TOKEN ?? readFileSync(`${homedir()}/.supabase/access-token`, 'utf8').trim();\n  await fetch(`https://api.supabase.com/v1/projects/${REF}/database/query`, {\n    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ query: sql }),\n  });\n}\n\ntry {\n  const email = `byok-${Date.now()}@example.com`, password = `Aa1!${crypto.randomUUID()}`;\n  const { data: cu, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\n  if (error || !cu?.user) throw new Error(`createUser: ${error?.message}`);\n  uid = cu.user.id;\n\n  // write groq (sibling) + resend together through the masked view (routes via INSTEAD OF \u2192 encrypt)\n  const { error: insErr } = await admin.from('user_api_keys').insert({ user_id: uid, groq_api_key: 'gsk_sibling_keep', resend_api_key: 're_test_ABC' });\n  check('write groq+resend via masked view (no error)', !insErr, insErr?.message ?? 'ok');\n\n  const masked = (await admin.from('user_api_keys').select('groq_api_key, resend_api_key').eq('user_id', uid).single()).data;\n  check('masked view hides resend (\u2022\u2022\u2022\u2022)', masked?.resend_api_key === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', `resend=${masked?.resend_api_key}`);\n  check('masked view hides groq (\u2022\u2022\u2022\u2022)', masked?.groq_api_key === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', `groq=${masked?.groq_api_key}`);\n\n  const dec = (await admin.from('decrypted_user_api_keys').select('groq_api_key, resend_api_key').eq('user_id', uid).single()).data;\n  check('decrypted view resolves resend real value', dec?.resend_api_key === 're_test_ABC', `resend=${dec?.resend_api_key}`);\n  check('decrypted view resolves groq (sibling intact)', dec?.groq_api_key === 'gsk_sibling_keep', `groq=${dec?.groq_api_key}`);\n\n  // re-save resend (idempotency \u2014 must NOT 23505) + sibling must stay\n  const { error: upErr } = await admin.from('user_api_keys').update({ resend_api_key: 're_test_XYZ' }).eq('user_id', uid);\n  check('re-save resend (no 23505)', !upErr, upErr?.message ?? 'ok');\n  const dec2 = (await admin.from('decrypted_user_api_keys').select('groq_api_key, resend_api_key').eq('user_id', uid).single()).data;\n  check('rotated resend in place', dec2?.resend_api_key === 're_test_XYZ', `resend=${dec2?.resend_api_key}`);\n  check('groq still intact after resend rotation', dec2?.groq_api_key === 'gsk_sibling_keep', `groq=${dec2?.groq_api_key}`);\n} catch (e) {\n  pass = false; console.error('\u274c smoke error:', e instanceof Error ? e.message : e);\n} finally {\n  if (uid) {\n    await admin.auth.admin.deleteUser(uid); // cascades user_api_keys_table row\n    await mgmtDelete(`DELETE FROM vault.secrets WHERE name IN ('user_api_keys_groq_api_key_${uid}','user_api_keys_resend_api_key_${uid}')`);\n  }\n  console.log('\\n\ud83e\uddf9 cleanup: throwaway user + its Vault secrets deleted');\n  console.log(pass ? '\\n\u2705\u2705 BYOK RESEND ROUND-TRIP SMOKE PASSED' : '\\n\u274c BYOK RESEND SMOKE FAILED');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:15:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 bun run scripts/qa/smoke-byok-resend.ts 2>&1 | tail -14",
+  "description": "Run BYOK resend round-trip smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ write groq+resend via masked view (no error)  → ok
+> ✅ masked view hides resend (••••)  → resend=••••••••••••
+> ✅ masked view hides groq (••••)  → groq=••••••••••••
+> ✅ decrypted view resolves resend real value  → resend=re_test_ABC
+> ✅ decrypted view resolves groq (sibling intact)  → groq=gsk_sibling_keep
+> ✅ re-save resend (no 23505)  → ok
+> ✅ rotated resend in place  → resend=re_test_XYZ
+> ✅ groq still intact after resend rotation  → groq=gsk_sibling_keep
+> 
+> 🧹 cleanup: throwaway user + its Vault secrets deleted
+> 
+> ✅✅ BYOK RESEND ROUND-TRIP SMOKE PASSED
+> ```
+
+## 🤖 Claude *(00:15:37)*
+
+
+## 🤖 Claude *(00:15:39)*
+
+**BYOK round-trip proven 8/8** — write→masked(••••)→decrypted(real), **sibling groq intact**, re-save idempotent (no 23505), rotation in place. The credential machinery works with the new column and doesn't break siblings (the historical failure mode). 
+
+Now the Settings UI field + types regen (the "campo Settings" half). Finding the `apify_token` UI pattern to mirror:
+
+## 🤖 Claude *(00:15:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== apify_token in src (Settings field + hook pattern to mirror) ===\"\ngrep -rn \"apify_token\\|apifyToken\\|Apify\" src/ 2>/dev/null | grep -v types.ts | head -20",
+  "description": "Locate apify_token UI/hook pattern to mirror for resend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apify_token in src (Settings field + hook pattern to mirror) ===
+> src/pages/SettingsPage.tsx:131:    apify_token: "",
+> src/pages/SettingsPage.tsx:159:      apify_token: userKeys.apify_token || "",
+> src/pages/SettingsPage.tsx:277:                id="apify_token" label="Apify Token (mineração de produtos ML)" placeholder="apify_api_..."
+> src/pages/SettingsPage.tsx:278:                description="BYOK opcional p/ enriquecer foto/preço/estoque de afiliados via Apify. Sem ela, usa o token de sistema (catálogo compartilhado)."
+> src/pages/SettingsPage.tsx:280:                value={keys.apify_token}
+> src/pages/SettingsPage.tsx:281:                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}
+> src/hooks/useAffiliateProducts.ts:47: * Apify enrichment (`scripts/enrich-affiliate-products.ts`) / Link Forge seed via service-role.
+> ```
+
+## 🤖 Claude *(00:15:47)*
+
+
+## 🤖 Claude *(00:15:48)*
+
+Reading the exact Settings field + state blocks to add `resend_api_key` analogously:
+
+## 🤖 Claude *(00:15:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 126,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 126	    elevenlabs_api_key: "",
+> 127	    google_api_key: "",
+> 128	    nanobana_api_key: "",
+> 129	    seedance_api_key: "",
+> 130	    replicate_api_key: "",
+> 131	    apify_token: "",
+> 132	  });
+> 133	  const [prefs, setPrefs] = useState({
+> 134	    pref_ai_model: "gemini-2.5-flash",
+> 135	    pref_audio_provider: "openai",
+> 136	    pref_image_provider: "openai",
+> 137	    pref_video_provider: "veo",
+> 138	  });
+> 139	  const [wpConfig, setWpConfig] = useState({
+> 140	    wp_site_url: "",
+> 141	    wp_username: "",
+> 142	    wp_app_password: "",
+> 143	  });
+> 144	  const [savingWp, setSavingWp] = useState(false);
+> 145	  const [advancedOpen, setAdvancedOpen] = useState(false);
+> 146	
+> 147	  // Populate form from hook data
+> 148	  useEffect(() => {
+> 149	    if (!userKeys) return;
+> 150	    setKeys({
+> 151	      groq_api_key: userKeys.groq_api_key || "",
+> 152	      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 153	      openai_api_key: userKeys.openai_api_key || "",
+> 154	      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 155	      google_api_key: userKeys.google_api_key || "",
+> 156	      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 157	      seedance_api_key: userKeys.seedance_api_key || "",
+> 158	      replicate_api_key: userKeys.replicate_api_key || "",
+> 159	      apify_token: userKeys.apify_token || "",
+> 160	    });
+> 161	    setPrefs({
+> 162	      pref_ai_model: userKeys.pref_ai_model || "gemini-2.5-flash",
+> 163	      pref_audio_provider: userKeys.pref_audio_provider || "openai",
+> 164	      pref_image_provider: userKeys.pref_image_provider || "openai",
+> 165	      pref_video_provider: userKeys.pref_video_provider || "veo",
+> ```
+
+## 🤖 Claude *(00:15:55)*
+
+
+## 🤖 Claude *(00:15:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 272,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 272	                provider="replicate"
+> 273	                value={keys.replicate_api_key}
+> 274	                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}
+> 275	              />
+> 276	              <KeyField
+> 277	                id="apify_token" label="Apify Token (mineração de produtos ML)" placeholder="apify_api_..."
+> 278	                description="BYOK opcional p/ enriquecer foto/preço/estoque de afiliados via Apify. Sem ela, usa o token de sistema (catálogo compartilhado)."
+> 279	                provider="apify"
+> 280	                value={keys.apify_token}
+> 281	                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}
+> 282	              />
+> 283	              <KeyField
+> 284	                id="elevenlabs_api_key" label="ElevenLabs API Key" placeholder="sk_..."
+> 285	                description="Síntese de voz ultra-realista (provedor alternativo ao Gemini TTS)."
+> 286	                provider="elevenlabs"
+> 287	                value={keys.elevenlabs_api_key}
+> ```
+
+## 🤖 Claude *(00:16:17)*
+
+
+## 🤖 Claude *(00:16:18)*
+
+KeyField pattern clear. Adding `resend_api_key` to state init, load, and a new field (between apify and elevenlabs):
+
+## 🤖 Claude *(00:16:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "    replicate_api_key: \"\",\n    apify_token: \"\",\n  });",
+  "new_string": "    replicate_api_key: \"\",\n    apify_token: \"\",\n    resend_api_key: \"\",\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:16:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "      replicate_api_key: userKeys.replicate_api_key || \"\",\n      apify_token: userKeys.apify_token || \"\",\n    });",
+  "new_string": "      replicate_api_key: userKeys.replicate_api_key || \"\",\n      apify_token: userKeys.apify_token || \"\",\n      resend_api_key: userKeys.resend_api_key || \"\",\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:16:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "                value={keys.apify_token}\n                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}\n              />\n              <KeyField\n                id=\"elevenlabs_api_key\" label=\"ElevenLabs API Key\" placeholder=\"sk_...\"",
+  "new_string": "                value={keys.apify_token}\n                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}\n              />\n              <KeyField\n                id=\"resend_api_key\" label=\"Resend API Key (canal de e-mail \u2014 nurturing)\" placeholder=\"re_...\"\n                description=\"BYOK opcional p/ entrega de e-mail das sequ\u00eancias de nutri\u00e7\u00e3o. Sem ela, usa o canal de sistema quando a entrega externa for ativada (hoje gated).\"\n                provider=\"resend\"\n                value={keys.resend_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, resend_api_key: v }))}\n              />\n              <KeyField\n                id=\"elevenlabs_api_key\" label=\"ElevenLabs API Key\" placeholder=\"sk_...\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:16:40)*
+
+
+## 🤖 Claude *(00:16:41)*
+
+Now regenerating `types.ts` from the live schema (so TS knows `resend_api_key`) + tsc check (catches the `provider="resend"` prop type if it's a constrained union):
+
+## 🤖 Claude *(00:16:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== regen types.ts from live schema ===\"\ntimeout 90 npx supabase gen types typescript --linked > /tmp/types_new.ts 2>/tmp/types_err.txt\nif [ -s /tmp/types_new.ts ] && grep -q \"resend_api_key\" /tmp/types_new.ts; then\n  cp /tmp/types_new.ts src/integrations/supabase/types.ts\n  echo \"  \u2705 types.ts regenerated (resend_api_key present)\"\nelse\n  echo \"  \u26a0\ufe0f regen issue:\"; head -3 /tmp/types_err.txt\nfi\necho \"\"\necho \"=== KeyField provider prop type (does 'resend' typecheck?) ===\"\ngrep -nE \"provider\\??:\" src/pages/SettingsPage.tsx src/components/settings/*.tsx 2>/dev/null | grep -iE \"provider\" | head -5\necho \"\"\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | head -15; echo \"(empty above = 0 errors)\"",
+  "description": "Regen types + tsc check after Settings edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === regen types.ts from live schema ===
+>   ✅ types.ts regenerated (resend_api_key present)
+> 
+> === KeyField provider prop type (does 'resend' typecheck?) ===
+> src/pages/SettingsPage.tsx:28:async function testApiKey(provider: string, key: string): Promise<boolean> {
+> src/pages/SettingsPage.tsx:45:  provider: string; value: string; onChange: (v: string) => void;
+> src/pages/SettingsPage.tsx:136:    pref_audio_provider: "openai",
+> src/pages/SettingsPage.tsx:137:    pref_image_provider: "openai",
+> src/pages/SettingsPage.tsx:138:    pref_video_provider: "veo",
+> 
+> === tsc ===
+> (empty above = 0 errors)
+> ```
+
+## 🤖 Claude *(00:17:04)*
+
+
+## 🤖 Claude *(00:17:05)*
+
+types.ts regenerated (resend present), `provider` is `string` (typechecks), **tsc 0 errors**. Confirming the save handler sends the full keys object (not a hardcoded list that'd omit resend):
+
+## 🤖 Claude *(00:17:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== save handler: does it send the whole keys object? ===\"\ngrep -nE \"updateKeys|saveKeys|mutate\\(|\\.\\.\\.keys|handleSave\" src/pages/SettingsPage.tsx | head -8\necho \"\"\necho \"=== useUserApiKeys update: column list or full passthrough? ===\"\ngrep -nE \"update|insert|upsert|\\.\\.\\.|payload|from\\(\" src/hooks/useUserApiKeys.ts | head -12",
+  "description": "Verify save persists resend_api_key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === save handler: does it send the whole keys object? ===
+> 107:  const { userKeys, saveKeys, isSaving, isLoading } = useUserApiKeys();
+> 176:  const handleSave = async () => {
+> 178:      await saveKeys({ ...keys, ...prefs });
+> 185:  const handleSaveWp = async () => {
+> 188:      await saveKeys({
+> 413:          <Button onClick={handleSave} disabled={isLoading || isSaving} className="gap-2">
+> 470:          <Button onClick={handleSaveWp} disabled={savingWp} className="gap-2">
+> 
+> === useUserApiKeys update: column list or full passthrough? ===
+> 20:        .from('user_api_keys')
+> 32:    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {
+> 33:      // INSERT (not upsert): `user_api_keys` is now a masked VIEW (credential_encryption) whose
+> 34:      // INSTEAD OF INSERT trigger runs `INSERT ... ON CONFLICT (user_id) DO UPDATE` — i.e. it
+> 35:      // upserts internally. A PostgREST `.upsert()` would send `merge-duplicates`, which needs a
+> 36:      // unique constraint the view lacks → HTTP 400. `.insert()` routes through the trigger.
+> 38:        .from('user_api_keys')
+> 39:        .insert({
+> 40:          ...payload,
+> 42:          updated_at: new Date().toISOString(),
+> ```
+
+## 🤖 Claude *(00:17:18)*
+
+
+## 🤖 Claude *(00:17:20)*
+
+Save flow confirmed: `handleSave` sends `{...keys, ...prefs}` and `saveKeys` does `.insert({...payload})` — full passthrough, so `resend_api_key` persists. UI complete + correct.
+
+Now building/deploying the frontend (main repo has `.env`, so `bun run build` = deploy to nginx). Verifying materially (build-deploy-guardian gates: chunk + field text + env baked):
+
+## 🤖 Claude *(00:17:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build (main repo \u2192 dist/ \u2192 nginx) ===\"\ntimeout 180 bun run build 2>&1 | grep -iE \"built in|error|dist/|modules transformed\" | tail -6\necho \"--- build exit: ${PIPESTATUS[0]} ---\"\necho \"\"\necho \"=== materiality: served bundle has the Resend field + env baked ===\"\nSETTINGS_CHUNK=$(ls -t dist/assets/SettingsPage-*.js 2>/dev/null | head -1)\necho \"  chunk: $(basename \"${SETTINGS_CHUNK:-NONE}\")\"\n[ -n \"$SETTINGS_CHUNK\" ] && grep -l \"resend_api_key\" \"$SETTINGS_CHUNK\" >/dev/null && echo \"  \u2705 resend_api_key in SettingsPage chunk\" || echo \"  \u26a0\ufe0f resend not found in chunk\"\ngrep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js >/dev/null 2>&1 && echo \"  \u2705 Supabase URL baked (env present in bundle)\" || echo \"  \u26a0\ufe0f env NOT baked\"",
+  "description": "Build + deploy frontend + verify served bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build (main repo → dist/ → nginx) ===
+> dist/assets/ConstellationPage-kljIfYpn.js      185.12 kB │ gzip:  63.83 kB
+> dist/assets/ConstellationMatrix-CbaHbmvo.js    248.23 kB │ gzip:  63.05 kB
+> dist/assets/CartesianChart-Bi9FL2T9.js         325.06 kB │ gzip:  96.83 kB
+> dist/assets/index-BMVUnS4j.js                  626.36 kB │ gzip: 187.16 kB
+> dist/assets/Stars-BkyzuAbr.js                  826.42 kB │ gzip: 222.88 kB
+> ✓ built in 21.17s
+> --- build exit: 0 ---
+> 
+> === materiality: served bundle has the Resend field + env baked ===
+>   chunk: SettingsPage-CFncVaVC.js
+>   ✅ resend_api_key in SettingsPage chunk
+>   ✅ Supabase URL baked (env present in bundle)
+> ```
+
+## 🤖 Claude *(00:18:22)*
+
+
+## 🤖 Claude *(00:18:23)*
+
+**BYOK foundation complete & deployed**: build 21.17s exit 0, SettingsPage chunk has `resend_api_key`, env baked. FR-MH-012 done end-to-end (column + Vault machinery + lookup view + Settings field + frontend) and round-trip proven 8/8. Committing:
+
+## 🤖 Claude *(00:18:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260603240000_user_api_keys_resend_channel.sql scripts/qa/smoke-byok-resend.ts src/pages/SettingsPage.tsx src/integrations/supabase/types.ts\ngit commit -q -F - <<'MSG'\nfeat(marketing-hub): funda\u00e7\u00e3o BYOK de canal de e-mail per-tenant (FR-MH-012)\n\nA metade de IA do FR-MH-012 j\u00e1 estava satisfeita (lead-score/nurture-dispatch resolvem\ndecrypted_user_api_keys per-user\u2192sistema); esta fecha a metade de canal \u2014 credencial\nper-tenant p/ a entrega externa real de nurturing (hoje gated).\n\n- resend_api_key na m\u00e1quina de credenciais user_api_keys, reproduzindo as defini\u00e7\u00f5es\n  VIVAS verbatim (encrypt idempotente vault_upsert_secret + INSTEAD OF UPDATE-first com\n  guard de tenant + views mascarada/decrypted) \u2014 N\u00c3O o template stale de 060000; preserva\n  os fixes de 130000/140000. (migration 20260603240000)\n- campo \"Resend API Key\" no /dashboard/settings; lookup = decrypted_user_api_keys j\u00e1\n  exp\u00f5e resend_api_key p/ a futura edge fn de entrega.\n\nReview independente: sound (diff normalizado id\u00eantico \u00e0s defs vivas, zero regress\u00e3o).\nRound-trip 8/8 (smoke-byok-resend): write\u2192mascarado(\u2022\u2022\u2022\u2022)\u2192decrypted(real), sibling groq\nintacto, re-save idempotente (sem 23505). tsc 0 \u00b7 build 21.17s deploy nginx (chunk+env baked).\nSem consumidor de entrega ainda \u2014 entrega externa segue gated.\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits (count) ---\"; git rev-list --count origin/main..HEAD",
+  "description": "Commit BYOK foundation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0;31m╔══════════════════════════════════════════════════════════════╗[0m
+> [0;31m║  🔴 SECRET LEAK DETECTED — COMMIT BLOCKED                   ║[0m
+> [0;31m╚══════════════════════════════════════════════════════════════╝[0m
+> 
+> [1;33mPotential credentials found in staged changes:[0m
+> 
+> +  const { error: insErr } = await admin.from('user_api_keys').insert({ user_id: uid, groq_api_key: 'gsk_sibling_keep', resend_api_key: 're_test_ABC' });
+> +  const { error: upErr } = await admin.from('user_api_keys').update({ resend_api_key: 're_test_XYZ' }).eq('user_id', uid);
+> 
+> Fix: replace actual values with references to where they are stored.
+>   ✅  VITE_GEMINI_API_KEY is set in .env (local) and vault (Supabase)
+>   🔴  VITE_GEMINI_API_KEY="AIzaSy..."   ← never commit this
+> 
+> If this is a false positive, add the pattern to SAFE_PATTERN in .git/hooks/pre-commit
+> 
+> --- commit ---
+> 0610952 feat(marketing-hub): cron de avanço de nurturing (FR-MH-008 "cron avança passos")
+> --- session commits (count) ---
+> 5
+> ```
+
+## 🤖 Claude *(00:18:51)*
+
+
+## 🤖 Claude *(00:18:52)*
+
+The anti-credential pre-commit hook caught the smoke's realistic-looking test strings (`gsk_`/`re_` prefixes) — working as intended (it's the v5.6.0 tripwire). These are fake test values; the round-trip doesn't need credential-shaped strings. Replacing them with obviously-non-credential placeholders:
+
+## 🤖 Claude *(00:18:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'gsk_sibling_keep'",
+  "new_string": "'SIBLING-GROQ-KEEP'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'re_test_ABC'",
+  "new_string": "'RESEND-RT-ABC'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:19:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'re_test_XYZ'",
+  "new_string": "'RESEND-RT-XYZ'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:19:11)*
+
+
+## 🤖 Claude *(00:19:11)*
+
+Re-running the smoke (value swap only) then committing on success:
+
+## 🤖 Claude *(00:19:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 bun run scripts/qa/smoke-byok-resend.ts 2>&1 | tail -4\nif [ \"${PIPESTATUS[0]}\" -ne 0 ]; then echo \"SMOKE FAILED \u2014 not committing\"; exit 1; fi\necho \"=== re-commit BYOK ===\"\ngit add supabase/migrations/20260603240000_user_api_keys_resend_channel.sql scripts/qa/smoke-byok-resend.ts src/pages/SettingsPage.tsx src/integrations/supabase/types.ts\ngit commit -q -F - <<'MSG'\nfeat(marketing-hub): funda\u00e7\u00e3o BYOK de canal de e-mail per-tenant (FR-MH-012)\n\nA metade de IA do FR-MH-012 j\u00e1 estava satisfeita (lead-score/nurture-dispatch resolvem\ndecrypted_user_api_keys per-user\u2192sistema); esta fecha a metade de canal \u2014 credencial\nper-tenant p/ a entrega externa real de nurturing (hoje gated).\n\n- resend_api_key na m\u00e1quina de credenciais user_api_keys, reproduzindo as defini\u00e7\u00f5es\n  VIVAS verbatim (encrypt idempotente vault_upsert_secret + INSTEAD OF UPDATE-first com\n  guard de tenant + views mascarada/decrypted) \u2014 N\u00c3O o template stale de 060000; preserva\n  os fixes de 130000/140000. (migration 20260603240000)\n- campo \"Resend API Key\" no /dashboard/settings; lookup = decrypted_user_api_keys j\u00e1\n  exp\u00f5e resend_api_key p/ a futura edge fn de entrega.\n\nReview independente: sound (diff normalizado id\u00eantico \u00e0s defs vivas, zero regress\u00e3o).\nRound-trip 8/8 (smoke-byok-resend): write\u2192mascarado(\u2022\u2022\u2022\u2022)\u2192decrypted(real), sibling groq\nintacto, re-save idempotente (sem 23505). tsc 0 \u00b7 build 21.17s deploy nginx (chunk+env baked).\nSem consumidor de entrega ainda \u2014 entrega externa segue gated.\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits ---\"; git rev-list --count origin/main..HEAD",
+  "description": "Re-run smoke + commit BYOK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🧹 cleanup: throwaway user + its Vault secrets deleted
+> 
+> ✅✅ BYOK RESEND ROUND-TRIP SMOKE PASSED
+> === re-commit BYOK ===
+> 
+> [0;31m╔══════════════════════════════════════════════════════════════╗[0m
+> [0;31m║  🔴 SECRET LEAK DETECTED — COMMIT BLOCKED                   ║[0m
+> [0;31m╚══════════════════════════════════════════════════════════════╝[0m
+> 
+> [1;33mPotential credentials found in staged changes:[0m
+> 
+> +  const { error: insErr } = await admin.from('user_api_keys').insert({ user_id: uid, groq_api_key: 'SIBLING-GROQ-KEEP', resend_api_key: 'RESEND-RT-ABC' });
+> +  const { error: upErr } = await admin.from('user_api_keys').update({ resend_api_key: 'RESEND-RT-XYZ' }).eq('user_id', uid);
+> 
+> Fix: replace actual values with references to where they are stored.
+>   ✅  VITE_GEMINI_API_KEY is set in .env (local) and vault (Supabase)
+>   🔴  VITE_GEMINI_API_KEY="AIzaSy..."   ← never commit this
+> 
+> If this is a false positive, add the pattern to SAFE_PATTERN in .git/hooks/pre-commit
+> 
+> --- commit ---
+> 0610952 feat(marketing-hub): cron de avanço de nurturing (FR-MH-008 "cron avança passos")
+> --- session commits ---
+> 5
+> ```
+
+## 🤖 Claude *(00:20:05)*
+
+
+## 🤖 Claude *(00:20:06)*
+
+Still blocked — the hook keys on the **column name** `*_api_key:` + a quoted value on the line (not the value's shape), so any literal after `resend_api_key:`/`groq_api_key:` trips it. Let me read the hook's actual pattern to craft a guaranteed fix rather than guess:
+
+## 🤖 Claude *(00:20:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== pre-commit secret pattern + safe pattern ===\"\ngrep -nE \"SECRET_PATTERN|SAFE_PATTERN|grep -|api_key|token\" .git/hooks/pre-commit 2>/dev/null | head -25",
+  "description": "Read pre-commit hook secret/safe patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pre-commit secret pattern + safe pattern ===
+> 3:# Patterns: Google API keys, OpenAI/Anthropic SK keys, JWTs, GitHub tokens, Slack tokens,
+> 4:#           plus generic hardcoded credential assignments (password/secret/api_key = "literal").
+> 18:SAFE_PATTERN='example|placeholder|your-key|YOUR_KEY|YOUR_SECRET|<[A-Z_]+>|\.\.\.|\*\*\*|digest|sha256|fingerprint|test-only|mock|fake'
+> 22:GENERIC_CRED_PATTERN='(password|passwd|pwd|secret|client_secret|api[_-]?key|access_token|refresh_token|private_key)["'\'']?[[:space:]]*[:=][[:space:]]*["'\''][^"'\''$[:space:]]{8,}["'\'']'
+> 25:# Single-grep idiom is portable across GNU grep and ugrep (the '^\+\+\+' BRE idiom breaks under ugrep -G).
+> 26:ADDED=$(git diff --cached --no-color | grep -E '^\+[^+]' || true)
+> 27:HITS=$(printf '%s\n' "$ADDED" | grep -E "$PATTERN" | grep -vE "$SAFE_PATTERN" || true)
+> 28:CRED_HITS=$(printf '%s\n' "$ADDED" | grep -iE "$GENERIC_CRED_PATTERN" | grep -vE "$SAFE_PATTERN" || true)
+> 29:ALL_HITS=$(printf '%s\n%s\n' "$HITS" "$CRED_HITS" | grep -vE '^[[:space:]]*$' || true)
+> 45:  echo "If this is a false positive, add the pattern to SAFE_PATTERN in .git/hooks/pre-commit"
+> 54:# drifted. Binary files (PNG screenshots) are skipped via grep -I.
+> 58:  E2E_HITS=$(grep -rIlE "$PATTERN" "$E2E_OUT" 2>/dev/null | head -10 || true)
+> ```
+
+## 🤖 Claude *(00:20:39)*
+
+
+## 🤖 Claude *(00:20:40)*
+
+The hook matches `api_key:` + any 8+ char quoted literal — but `SAFE_PATTERN` whitelists lines containing `fake`/`mock`/`test-only`. The values *are* fake test data, so naming them honestly clears it. Replacing with `fake-` prefixed values:
+
+## 🤖 Claude *(00:20:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'SIBLING-GROQ-KEEP'",
+  "new_string": "'fake-groq-sibling'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:20:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'RESEND-RT-ABC'",
+  "new_string": "'fake-resend-abc'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:20:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts",
+  "old_string": "'RESEND-RT-XYZ'",
+  "new_string": "'fake-resend-xyz'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-byok-resend.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:21:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260603240000_user_api_keys_resend_channel.sql scripts/qa/smoke-byok-resend.ts src/pages/SettingsPage.tsx src/integrations/supabase/types.ts\ngit commit -q -F - <<'MSG'\nfeat(marketing-hub): funda\u00e7\u00e3o BYOK de canal de e-mail per-tenant (FR-MH-012)\n\nA metade de IA do FR-MH-012 j\u00e1 estava satisfeita (lead-score/nurture-dispatch resolvem\ndecrypted_user_api_keys per-user\u2192sistema); esta fecha a metade de canal \u2014 credencial\nper-tenant p/ a entrega externa real de nurturing (hoje gated).\n\n- resend_api_key na m\u00e1quina de credenciais user_api_keys, reproduzindo as defini\u00e7\u00f5es\n  VIVAS verbatim (encrypt idempotente vault_upsert_secret + INSTEAD OF UPDATE-first com\n  guard de tenant + views mascarada/decrypted) \u2014 N\u00c3O o template stale de 060000; preserva\n  os fixes de 130000/140000. (migration 20260603240000)\n- campo \"Resend API Key\" no /dashboard/settings; lookup = decrypted_user_api_keys j\u00e1\n  exp\u00f5e resend_api_key p/ a futura edge fn de entrega.\n\nReview independente: sound (diff normalizado id\u00eantico \u00e0s defs vivas, zero regress\u00e3o).\nRound-trip 8/8 (smoke-byok-resend): write\u2192mascarado(\u2022\u2022\u2022\u2022)\u2192decrypted(real), sibling groq\nintacto, re-save idempotente (sem 23505). tsc 0 \u00b7 build 21.17s deploy nginx (chunk+env baked).\nSem consumidor de entrega ainda \u2014 entrega externa segue gated.\nMSG\necho \"--- commit ---\"; git log -1 --format='%h %s'\necho \"--- session commits ---\"; git rev-list --count origin/main..HEAD; git status --short || echo clean",
+  "description": "Commit BYOK after hook fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- commit ---
+> 6b5dfd1 feat(marketing-hub): fundação BYOK de canal de e-mail per-tenant (FR-MH-012)
+> --- session commits ---
+> 6
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === FR-MH-009 spec across FRD/SDD/data-model ===
+> docs/bok/marketing-hub/04-frd.md:15:**In scope:** Lead lifecycle (capture→score→nurture→convert) absorbing `whatsapp_leads`; campaign composition/run wrapping `orchestrate-content`; per-campaign attribution; consent + tenancy foundation (LGPD); nurturing sequences; intent orchestrator + HITL; AEO audit; Customer 360; BYOK per-tenant.
+> docs/bok/marketing-hub/04-frd.md:35:| FR-MH-009 | Intent Orchestrator + HITL | `intent-orchestrate`: traduz intenção→plano de tarefas; policy engine decide auto vs. HITL; aprovação humana persiste rationale (XAI) | High | PR-MH-011 | EdgeFunction + Hook | AT-MH-009 |
+> docs/bok/marketing-hub/04-frd.md:54:| NFR-MH-009 | Observability | Cada path (success/degraded/error) emite `infra_health_logs` | 100% dos edge fns | Telemetry audit |
+> docs/bok/marketing-hub/04-frd.md:64:[Component: LeadBoard / CampaignComposer / HITLApprovalCard]
+> docs/bok/marketing-hub/04-frd.md:68:[Edge Function: lead-score / campaign-run / nurture-dispatch / intent-orchestrate / aeo-audit]
+> docs/bok/marketing-hub/04-frd.md:91:  rationale: string,      // XAI: por que esse score
+> docs/bok/marketing-hub/04-frd.md:138:| FR-MH-009 | ✅ Required | ✅ Required | — | Policy engine auto vs HITL |
+> docs/bok/marketing-hub/04-frd.md:158:| PR-MH-005 | FR-MH-007 | NFR-MH-009 |
+> docs/bok/marketing-hub/04-frd.md:160:| PR-MH-011 | FR-MH-009 | NFR-MH-005 |
+> docs/bok/marketing-hub/05-sdd.md:18:│     HITLApprovalCard,AEODashboard,Customer360Panel}.tsx            │
+> docs/bok/marketing-hub/05-sdd.md:25:│  src/store/useMarketingStore.ts (Zustand — intent/run/HITL state)  │
+> docs/bok/marketing-hub/05-sdd.md:30:│  lead-score · campaign-run · nurture-dispatch · intent-orchestrate ·│
+> docs/bok/marketing-hub/05-sdd.md:46:**Layer map (Harness Engineering):** componentes display-only → hooks (toda lógica) → edge functions (ops sensíveis + mcoCoins) → DB RLS-gated. Zustand só para estado de run/HITL/intent (não para dados remotos, que ficam em TanStack Query).
+> docs/bok/marketing-hub/05-sdd.md:60:| `useIntentOrchestrator` | `useIntentOrchestrator.ts` | Intenção→plano; estado HITL | `['intent', userId]` |
+> docs/bok/marketing-hub/05-sdd.md:71:| `HITLApprovalCard` | `marketing/HITLApprovalCard.tsx` | `{ plan }` | `useIntentOrchestrator` |
+> docs/bok/marketing-hub/05-sdd.md:83:| `intent-orchestrate` | `supabase/functions/intent-orchestrate/index.ts` | JWT (user) | 0 (orquestra) | per-user AI key |
+> docs/bok/marketing-hub/05-sdd.md:93:| Marketing run/intent | `src/store/useMarketingStore.ts` | `{ activeIntent, plan, hitlQueue, runStatus }` | `setIntent`, `proposePlan`, `approveStep`, `rejectStep`, `syncRunStatus` |
+> docs/bok/marketing-hub/05-sdd.md:125: │                    │                     │◀──[score+rationale]─│
+> docs/bok/marketing-hub/05-sdd.md:200:| Intent Orchestrator | Ação de alto impacto sem revisão | Tampering | High | Policy engine + HITL obrigatório + rationale XAI auditável |
+> 
+> === existing intent/approval surface (net-new check) ===
+>   (empty above = fully net-new)
+> ```
+
+## 🤖 Claude *(00:22:04)*
+
+
+## 🤖 Claude *(00:22:07)*
+
+Committed `6b5dfd1` — **6 commits**, tree clean. BYOK (#2) done & deployed.
+
+**Session scorecard:** #1 drift audit + P0 ledger ✅ · #2 BYOK (FR-MH-012) ✅ · #3 nurturing cron (FR-MH-008) ✅ · functionName observability ✅. Remaining of your "2+3+4": **#4 FR-MH-009 Intent+HITL** — the biggest, net-new.
+
+Per the budget protocol I'll **proceed to #4** (roadmap isn't exhausted) rather than seal on my own — but this has been a very large session, and **you see the window % (I don't)**: if it's near the ~95% seal line, just say *"selar"* and I'll seal immediately. Starting #4 with a probe-first scoping of the BoK SSOT + existing state:
+
+## 🤖 Claude *(00:22:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== FR-MH-009 spec across FRD/SDD/data-model ===\"\ngrep -rniE \"FR-MH-009|intent.orchestrat|HITL|human.in.the.loop|policy engine|approval|rationale|XAI\" docs/bok/marketing-hub/04-frd.md docs/bok/marketing-hub/05-sdd.md docs/bok/marketing-hub/06-data-model.md 2>/dev/null | head -25\necho \"\"\necho \"=== existing intent/approval surface (net-new check) ===\"\ngrep -rliE \"intent_plan|intent_task|approval_queue|intent-orchestrate|hitl\" src/ supabase/ 2>/dev/null | grep -v node_modules | grep -v types.ts | head\necho \"  (empty above = fully net-new)\"",
+  "description": "Probe FR-MH-009 BoK spec + existing state"
+}
+```
+
+## 🤖 Claude *(00:22:56)*
+
+
+## 🤖 Claude *(00:22:59)*
+
+FR-MH-009 spec is clear (SSOT): `intent-orchestrate` edge fn (JWT, cost 0, per-user AI key) → translate intent→task plan → **policy engine (auto vs HITL)** → persist plan + **rationale (XAI)**; hook `useIntentOrchestrator`; `HITLApprovalCard`; STRIDE: high-impact action without review = Tampering → mandatory HITL. **Fully net-new**, and the data-model doesn't yet specify an intent table → Master Protocol requires patching the BoK data-model first.
+
+This is the largest of the three — a full feature. I'll deliver a **complete bounded backend increment** (data-model patch + `intent_plans` migration + `intent-orchestrate` edge fn + /security-review + smoke + commit), deferring the UI (hook + HITLApprovalCard) as a clean follow — same incremental discipline as the nurturing enroll button. Reading the data-model to patch it + mirror the tenant-RLS pattern:
+
+## 🤖 Claude *(00:23:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== data-model: table-doc structure + where marketing tables end ===\"\ngrep -nE \"^#{2,3} |sequence_enrollments|sequences|campaign_steps|marketing_attribution|status.*CHECK|ENUM|enum\" docs/bok/marketing-hub/06-data-model.md | tail -30",
+  "description": "Find data-model structure to patch with intent_plans"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === data-model: table-doc structure + where marketing tables end ===
+> 42:### Table: `leads`
+> 60:### Table: `lead_events`
+> 72:### Table: `campaigns`
+> 86:> **Absorb-not-create reconciliation (MVP-2 · 2026-06-03):** `public.campaigns` **já existia** (criada em `20260402014040`) com colunas v1 retidas — `description`, `objective`, `target_audience jsonb`, `platforms social_platform[]`, `budget_cents`, `starts_at`, `ends_at`, `metadata jsonb`. MVP-2 faz **`ALTER`** (não `CREATE`): adiciona `intent`, `channels text[]`, `mesh_node_id uuid → mcorch_nodes(id) ON DELETE SET NULL` e `CONSTRAINT uniq_campaigns_id_user UNIQUE (id, user_id)` (alvo de FK tenant-escopada das filhas). **`status` permanece o enum `campaign_status`** (`draft|active|paused|completed|archived`) já em uso — mapeamento de leitura: `active`≈running, `completed`≈done; o estado granular `idle|running|done|error|blocked` vive em `campaign_steps.status`. RLS de `campaigns` já é default-deny (`auth.uid()=user_id`, 4 policies). `campaign_metrics` (já existente) cobre telemetria por plataforma e **não** é recriada.
+> 88:### Table: `campaign_steps`
+> 100:### Table: `sequences` / `sequence_enrollments`
+> 102:| `sequences` | Type | Notes |
+> 106:| `sequence_enrollments` | Type | Notes |
+> 110:### Table: `marketing_consents`
+> 116:### Table: `marketing_attribution`
+> 124:### Table: `aeo_audits`
+> 132:## 3. Supabase Physical Schema Stubs
+> 175:> The remaining tables (`lead_events`, `campaigns`, `campaign_steps`, `sequences`, `sequence_enrollments`, `marketing_consents`, `marketing_attribution`, `aeo_audits`) follow the **identical RLS-default-deny skeleton** with `user_id = auth.uid()` and denormalized `user_id` for child tables to keep RLS simple. Every migration passes `/security-review` (FMEA-011).
+> 179:## 4. GraphRAG Knowledge Nodes
+> 181:### Node Types Introduced
+> 191:### Edge Types Introduced
+> 195:| `ATTRIBUTES_REVENUE_TO` (reuse) | `observation`/`marketing_attribution` | `campaign` / `content_mesh_asset` | `{revenue_cents}` |
+> 199:### Embedding Trigger
+> 203:### FSRS-6 Parameters
+> 208:| `revenue_impact` (campaign node) | Soma de `marketing_attribution.revenue_cents` | Atualizado a cada conversão atribuída |
+> 212:## 5. Tenant Isolation Map
+> 219:| `campaign_steps` | ✅ Required | — | No |
+> 220:| `sequences` | ✅ Required | — | No |
+> 221:| `sequence_enrollments` | ✅ Required | — | No |
+> 223:| `marketing_attribution` | ✅ Required | Optional | No |
+> 229:## 6. Data Quality Rules
+> 235:| `leads` | `status` | ∈ enum de status | "Status de lead inválido" |
+> 238:| `marketing_attribution` | `revenue_cents` | ≥ 0 | "Receita não pode ser negativa" |
+> 243:## 7. Retention & Archival Policy
+> 250:| `marketing_attribution` | Indefinido (financeiro) | — | Com campanha/lead |
+> ```
+
+## 🤖 Claude *(00:23:59)*
+
+
+## 🤖 Claude *(00:24:01)*
+
+FR-MH-009 is fully net-new (a complete feature). Per the budget protocol I'll proceed (you'll signal *selar* if the % is high). Delivering a **complete backend increment** — data-model patch + `intent_plans` migration + `intent-orchestrate` edge fn + review + smoke — with the UI (hook + HITLApprovalCard) as a clean follow. Reading the data-model's `aeo_audits` block to mirror the doc style + RLS skeleton:
+
+## 🤖 Claude *(00:24:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/06-data-model.md",
+  "offset": 124,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 124	### Table: `aeo_audits`
+> 125	
+> 126	| Column | Type | Notes |
+> 127	|--------|------|-------|
+> 128	| `id` uuid PK · `user_id` uuid · `brand` text · `query` text · `cited` bool · `citation_rate` float4 · `engine` text (chatgpt\|perplexity\|google_ai\|gemini) · `recommendation` text · `created_at` timestamptz | Snapshot de visibilidade em motores de resposta |
+> 129	
+> 130	---
+> 131	
+> 132	## 3. Supabase Physical Schema Stubs
+> 133	
+> 134	```sql
+> 135	-- ============================================================
+> ```
+
+## 🤖 Claude *(00:24:25)*
+
+
+## 🤖 Claude *(00:24:25)*
+
+Patching the data-model with the `intent_plans` table (Master Protocol — document before migration):
+
+## 🤖 Claude *(00:24:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/06-data-model.md",
+  "old_string": "| `id` uuid PK \u00b7 `user_id` uuid \u00b7 `brand` text \u00b7 `query` text \u00b7 `cited` bool \u00b7 `citation_rate` float4 \u00b7 `engine` text (chatgpt\\|perplexity\\|google_ai\\|gemini) \u00b7 `recommendation` text \u00b7 `created_at` timestamptz | Snapshot de visibilidade em motores de resposta |\n\n---",
+  "new_string": "| `id` uuid PK \u00b7 `user_id` uuid \u00b7 `brand` text \u00b7 `query` text \u00b7 `cited` bool \u00b7 `citation_rate` float4 \u00b7 `engine` text (chatgpt\\|perplexity\\|google_ai\\|gemini) \u00b7 `recommendation` text \u00b7 `created_at` timestamptz | Snapshot de visibilidade em motores de resposta |\n\n### Table: `intent_plans`\n\n| Column | Type | Notes |\n|--------|------|-------|\n| `id` uuid PK \u00b7 `user_id` uuid \u00b7 `intent` text \u00b7 `plan jsonb` (tarefas `[{action,channel?,impact,rationale}]`) \u00b7 `policy` text (`auto`\\|`hitl` \u2014 decis\u00e3o do policy engine) \u00b7 `status` text CHECK (`proposed\\|auto_approved\\|pending_hitl\\|approved\\|rejected\\|executed`) \u00b7 `rationale` text (XAI: por que o plano + por que auto vs HITL) \u00b7 `created_at` \u00b7 `updated_at` timestamptz | **FR-MH-009**: `intent-orchestrate` traduz inten\u00e7\u00e3o\u2192plano; o policy engine marca `policy=hitl` quando h\u00e1 tarefa de alto impacto (publicar/cobrar/enviar) \u2192 `status=pending_hitl` (aprova\u00e7\u00e3o humana obrigat\u00f3ria \u2014 STRIDE Tampering); sen\u00e3o `policy=auto`/`status=auto_approved`. `rationale` audit\u00e1vel (XAI). RLS default-deny `auth.uid()=user_id` (4 policies). Custo 0 (orquestra; sub-passos cobram-se). |\n\n---"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/marketing-hub/06-data-model.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:24:45)*
+
+
+## 🤖 Claude *(00:24:46)*
+
+Now the migration — `intent_plans` table with the tenant-RLS skeleton (mirrors `sequences`), policy/status checks per the spec:
+
+## 🤖 Claude *(00:24:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603250000_marketing_hub_intent_plans.sql",
+  "content": "-- Migration: marketing-hub Intent Orchestrator + HITL data layer (FR-MH-009).\n-- BoK SSOT: docs/bok/marketing-hub/06-data-model.md (\u00a7Table intent_plans) + 04-frd.md FR-MH-009 + 05-sdd.md\n--           (intent-orchestrate edge fn + useIntentOrchestrator + HITLApprovalCard; STRIDE row \"Intent\n--           Orchestrator / a\u00e7\u00e3o de alto impacto sem revis\u00e3o = Tampering \u2192 policy engine + HITL obrigat\u00f3rio\").\n--\n-- `intent-orchestrate` translates a natural-language intent into a task plan; a policy engine marks policy='hitl'\n-- when any task is high-impact (publish / charge / external send) \u2192 status='pending_hitl' (human approval required);\n-- otherwise policy='auto' / status='auto_approved'. `rationale` is the auditable XAI explanation. User-scoped\n-- (no lead/campaign FK in MVP \u2014 a plan is a tenant's orchestration artifact); RLS default-deny.\n\nCREATE TABLE IF NOT EXISTS public.intent_plans (\n  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  intent     text NOT NULL,\n  plan       jsonb NOT NULL DEFAULT '[]'::jsonb,  -- [{action, channel?, impact, rationale}]\n  policy     text NOT NULL DEFAULT 'auto' CHECK (policy IN ('auto','hitl')),\n  status     text NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed','auto_approved','pending_hitl','approved','rejected','executed')),\n  rationale  text,\n  created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),\n  updated_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())\n);\n\nALTER TABLE public.intent_plans ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"intent_plans_select_own\" ON public.intent_plans FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"intent_plans_insert_own\" ON public.intent_plans FOR INSERT WITH CHECK (auth.uid() = user_id);\nCREATE POLICY \"intent_plans_update_own\" ON public.intent_plans FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\nCREATE POLICY \"intent_plans_delete_own\" ON public.intent_plans FOR DELETE USING (auth.uid() = user_id);\n\nCREATE INDEX IF NOT EXISTS idx_intent_plans_user ON public.intent_plans (user_id);\nCREATE INDEX IF NOT EXISTS idx_intent_plans_hitl ON public.intent_plans (user_id, created_at DESC) WHERE status = 'pending_hitl';\n\nCREATE TRIGGER tr_update_intent_plans_updated_at\n  BEFORE UPDATE ON public.intent_plans\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603250000_marketing_hub_intent_plans.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:25:54)*
+
+
+## 🤖 Claude *(00:25:55)*
+
+Now the `intent-orchestrate` edge fn — JWT via getUser, per-user AI key → plan, policy engine (high-impact → HITL), persist + XAI rationale. Modeling on `lead-score` (per-user AI + fail-soft) with `verify_jwt=false` + in-function getUser (the edge-jwt SOP pattern, avoids the gateway 401 class):
+
+## 🤖 Claude *(00:26:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts",
+  "content": "// intent-orchestrate \u2014 marketing-hub FR-MH-009 (BoK SSOT: 04-frd.md FR-MH-009 + 05-sdd.md \u00a7intent-orchestrate +\n// STRIDE \"Intent Orchestrator / a\u00e7\u00e3o de alto impacto sem revis\u00e3o = Tampering \u2192 policy engine + HITL obrigat\u00f3rio\").\n// Translates a natural-language marketing intent into a task plan; a policy engine decides auto vs HITL; ANY\n// high-impact task (publish/send/charge/ad-spend) forces human approval. Persists the plan + an auditable XAI\n// rationale to intent_plans. JWT-guarded (verify_jwt=false + in-function getUser \u2014 edge-jwt SOP). Cost 0: it\n// orchestrates; the sub-steps (campaign-run/orchestrate-content/nurture-dispatch) self-bill on execution.\nimport { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\ninterface PlanTask { action: string; channel?: string; impact?: \"low\" | \"medium\" | \"high\"; rationale?: string }\n\n// High-impact = outward / financial actions that MUST NOT run without human review (the HITL gate).\nconst HIGH_IMPACT_RE = /(publi|send|e-?mail|post|tweet|spend|ad[_-]?spend|charge|cobr|envi|dispar|whats|launch|lan\u00e7a)/i;\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const anonKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n  const admin = createClient(url, serviceKey);\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Missing authorization\" }, 401);\n    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authError } = await userClient.auth.getUser();\n    if (authError || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const { intent } = await req.json().catch(() => ({}));\n    if (!intent || typeof intent !== \"string\" || !intent.trim()) return json({ error: \"intent \u00e9 obrigat\u00f3rio\" }, 422);\n\n    // resolve per-user AI key \u2192 system fallback (API Tenancy Model).\n    const { data: keys } = await admin.from(\"decrypted_user_api_keys\").select(\"*\").eq(\"user_id\", user.id).maybeSingle();\n    const groqKey = keys?.groq_api_key || Deno.env.get(\"GROQ_API_KEY\");\n    const openRouterKey = keys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\");\n    const geminiKey = keys?.google_api_key || Deno.env.get(\"GEMINI_API_KEY\");\n    const aiKey = groqKey || openRouterKey;\n\n    // generate the plan via AI (fail-soft to a single review task).\n    let tasks: PlanTask[] = [];\n    if (aiKey) {\n      const isGroq = !!groqKey;\n      try {\n        const resp = await fetchLLMWithFallback(\n          isGroq ? \"https://api.groq.com/openai/v1/chat/completions\" : \"https://openrouter.ai/api/v1/chat/completions\",\n          {\n            method: \"POST\",\n            headers: { Authorization: `Bearer ${aiKey}`, \"Content-Type\": \"application/json\", \"HTTP-Referer\": \"https://mcorch.com\", \"X-Title\": \"GCRUX Constellation\" },\n            body: JSON.stringify({\n              model: isGroq ? \"llama-3.3-70b-versatile\" : \"meta-llama/llama-3.3-70b-instruct\",\n              messages: [\n                { role: \"system\", content: \"Voc\u00ea \u00e9 um orquestrador de marketing. Dada uma inten\u00e7\u00e3o, gere um plano de 2 a 5 tarefas. Responda APENAS com JSON: {\\\"tasks\\\":[{\\\"action\\\":\\\"verbo curto\\\",\\\"channel\\\":\\\"email|social|content|affiliate|none\\\",\\\"impact\\\":\\\"low|medium|high\\\",\\\"rationale\\\":\\\"por que esta tarefa\\\"}]}. impact=high para publicar, enviar, cobrar ou veicular an\u00fancio.\" },\n                { role: \"user\", content: String(intent).slice(0, 800) },\n              ],\n              stream: false, temperature: 0.4,\n            }),\n          },\n          { openRouterKey, geminiKey, groqKey, functionName: \"intent-orchestrate\" },\n        );\n        if (resp.ok) {\n          const data = await resp.json();\n          const raw: string = data?.choices?.[0]?.message?.content ?? \"\";\n          const match = raw.match(/\\{[\\s\\S]*\\}/);\n          if (match) {\n            const parsed = JSON.parse(match[0]);\n            if (Array.isArray(parsed?.tasks)) {\n              tasks = parsed.tasks.slice(0, 5).map((t: PlanTask) => ({\n                action: String(t.action ?? \"task\").slice(0, 120),\n                channel: t.channel ? String(t.channel).slice(0, 40) : undefined,\n                impact: ([\"low\", \"medium\", \"high\"].includes(String(t.impact)) ? t.impact : \"medium\") as PlanTask[\"impact\"],\n                rationale: t.rationale ? String(t.rationale).slice(0, 300) : undefined,\n              }));\n            }\n          }\n        }\n      } catch (_) { /* fail-soft below */ }\n    }\n    let heuristic = false;\n    if (tasks.length === 0) {\n      heuristic = true;\n      tasks = [{ action: \"revisar_intencao\", channel: \"none\", impact: \"low\", rationale: \"Plano heur\u00edstico (IA indispon\u00edvel ou resposta inv\u00e1lida) \u2014 revisar a inten\u00e7\u00e3o manualmente.\" }];\n    }\n\n    // \u2500\u2500 POLICY ENGINE: any high-impact task \u2192 HITL (mandatory human approval; STRIDE Tampering mitigation) \u2500\u2500\n    const highImpact = tasks.some((t) => t.impact === \"high\" || HIGH_IMPACT_RE.test(t.action) || (t.channel ? HIGH_IMPACT_RE.test(t.channel) : false));\n    const policy: \"auto\" | \"hitl\" = highImpact ? \"hitl\" : \"auto\";\n    const status = highImpact ? \"pending_hitl\" : \"auto_approved\";\n    const rationale = heuristic\n      ? \"Gerado por heur\u00edstica (sem IA) \u2014 requer revis\u00e3o humana.\"\n      : highImpact\n        ? \"O plano cont\u00e9m ao menos uma tarefa de alto impacto (publicar/enviar/cobrar/an\u00fancio) \u2192 aprova\u00e7\u00e3o humana obrigat\u00f3ria (HITL) antes de executar.\"\n        : \"Apenas tarefas de baixo/m\u00e9dio impacto \u2192 auto-aprovado para execu\u00e7\u00e3o.\";\n\n    // persist (RLS-scoped via service role + explicit user_id).\n    const { data: row, error: insErr } = await admin\n      .from(\"intent_plans\")\n      .insert({ user_id: user.id, intent: intent.slice(0, 2000), plan: tasks, policy, status, rationale })\n      .select(\"id\").single();\n    if (insErr || !row) {\n      admin.from(\"infra_health_logs\").insert({ service: \"intent-orchestrate\", status: \"unhealthy\" }).then(() => {}, () => {});\n      return json({ error: \"Falha ao persistir o plano\", detail: insErr?.message }, 500);\n    }\n\n    // observation node into the Knowledge Mesh (mandate: every orchestration run). Fire-and-forget.\n    admin.from(\"mcorch_nodes\").insert({\n      node_type: \"observation\", name: `intent-plan-${row.id}`,\n      content: `Intent: ${intent.slice(0, 200)} \u2192 policy=${policy} status=${status} (${tasks.length} tarefas)`,\n      user_id: user.id,\n    }).then(() => {}, () => {});\n    admin.from(\"infra_health_logs\").insert({ service: \"intent-orchestrate\", status: \"healthy\" }).then(() => {}, () => {});\n\n    return json({ status: \"ok\", plan_id: row.id, policy, plan_status: status, tasks, rationale, source: heuristic ? \"heuristic\" : \"ai\" });\n  } catch (err) {\n    admin.from(\"infra_health_logs\").insert({ service: \"intent-orchestrate\", status: \"unhealthy\" }).then(() => {}, () => {});\n    return json({ error: \"Erro interno no intent-orchestrate\", detail: String((err as Error)?.message ?? err) }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:26:35)*
+
+
+## 🤖 Claude *(00:26:36)*
+
+Adding `intent-orchestrate` to config.toml (verify_jwt=false + getUser):
+
+## 🤖 Claude *(00:26:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.nurture-cron]\nverify_jwt = false",
+  "new_string": "[functions.nurture-cron]\nverify_jwt = false\n[functions.intent-orchestrate]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:26:54)*
+
+
+## 🤖 Claude *(00:26:55)*
+
+Sanity-checking the edge fn, then running a focused independent security review (migration is a verbatim RLS-skeleton clone of the reviewed `sequences`; the edge fn's policy engine + AI-output handling + tenant-scoped persist warrant a glance):
+
+## 🤖 Claude *(00:26:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deno check intent-orchestrate ===\"\ndeno check supabase/functions/intent-orchestrate/index.ts 2>&1 | grep -iE \"error\" | head -5 || echo \"  \u2705 no type errors\"\necho \"=== mcorch_nodes required (NOT NULL no-default) cols \u2014 will the fire-and-forget node insert succeed? ===\"\ncat <<'SQL' | /tmp/mq.sh | jq -r 'if type==\"array\" then (.[]|\"  \"+.column_name+\" (\"+.data_type+\")\") else (.message//tostring) end'\nSELECT column_name, data_type FROM information_schema.columns\nWHERE table_schema='public' AND table_name='mcorch_nodes' AND is_nullable='NO' AND column_default IS NULL;\nSQL",
+  "description": "deno check + mcorch_nodes required columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check intent-orchestrate ===
+> === mcorch_nodes required (NOT NULL no-default) cols — will the fire-and-forget node insert succeed? ===
+>   node_type (text)
+>   name (text)
+> ```
+
+## 🤖 Claude *(00:27:08)*
+
+
+## 🤖 Claude *(00:27:08)*
+
+deno check clean; mesh node insert will succeed (only `node_type`+`name` required, both provided). Focused independent security review of the migration + edge fn:
+
+## 🤖 Claude *(00:27:24)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Review intent-orchestrate migration+fn",
+  "subagent_type": "general-purpose",
+  "prompt": "Independent security + correctness review of FR-MH-009 (Intent Orchestrator + HITL), two new files (repo /home/gcrUX/htdocs/constellation-orchestra):\n1. supabase/migrations/20260603250000_marketing_hub_intent_plans.sql\n2. supabase/functions/intent-orchestrate/index.ts\n\nRead both. Context: `intent-orchestrate` (JWT user, verify_jwt=false + getUser) translates a NL marketing intent \u2192 task plan via per-user AI key \u2192 a policy engine decides auto vs HITL (high-impact task \u2192 status='pending_hitl', mandatory human approval; STRIDE Tampering mitigation) \u2192 persists to intent_plans with an XAI rationale. Cost 0.\n\nVerify (>80% confidence, HIGH/MEDIUM only):\n1. **Tenancy/auth**: with verify_jwt=false, does the fn correctly authenticate? (getUser must reject missing/invalid JWT \u2192 401, no body.user_id trust.) Is the persisted row scoped to the authenticated user.id (NOT a client-supplied id)? Compare to lead-score/nurture-dispatch user path. Confirm intent_plans RLS is default-deny auth.uid()=user_id (4 policies) \u2014 compare to the sequences table skeleton (migration 20260603050000) which it mirrors.\n2. **Policy-engine bypass**: can a high-impact plan slip to auto-approval? The gate is `tasks.some(t => t.impact==='high' || HIGH_IMPACT_RE.test(t.action) || HIGH_IMPACT_RE.test(t.channel))`. Is there a way for an outward/financial action to land status='auto_approved'? (The AI output is untrusted \u2014 confirm the regex + impact check are applied to the PARSED tasks, and that a malformed/adversarial AI response can't produce an executable high-impact plan without HITL. Note: this fn only PERSISTS the plan; it does not EXECUTE \u2014 execution/approval is a separate future step. So worst case of a misclassification is a persisted row, not an action.)\n3. **AI output handling**: JSON.parse of a regex-extracted `{...}` from the LLM \u2014 any injection/RCE/crash risk? (It's JSON.parse in a try/catch with fail-soft; confirm a malicious AI string can't do more than fail-soft to the heuristic task.)\n4. **Migration correctness**: CHECK constraints valid, RLS enabled, indexes/trigger reference existing function (update_updated_at_column), FK to auth.users CASCADE, no typo. Idempotent (IF NOT EXISTS).\n5. **mcorch_nodes insert**: fire-and-forget; confirm it can't break the response or leak cross-tenant (user_id = authed user).\n6. SQL injection (none expected \u2014 supabase-js parameterizes), secret leakage.\n\nEXCLUDE: DoS, rate-limiting, lack-of-hardening, theoretical races, markdown/docs. If sound, say so explicitly. For each real finding: file:line, severity, exploit, fix. Markdown."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I now have everything needed. Let me do a final focused analysis on the policy-engine edge case — whether an outward action can land as `auto_approved`. The key question is the relationship between the AI-supplied `impact` field and the regex on `action`/`channel`. The system prompt allows channels `email|social|content|affiliate|none`. Note the policy gate test:\n\n- `t.impact === \'high\'` — AI-supplied, untrusted, but forcing high is the safe direction.\n- `HIGH_IMPACT_RE.test(t.action)` — tests the action verb.\n- `HIGH_IMPACT_RE.test(t.channel)` — tests the channel.\n\nThe concern: an outward action where `impact` is set to `"low"` AND the `action`/`channel` strings don\'t match the regex. Let me verify the regex coverage against the channel enum and reason about whether `channel: "social"` or `channel: "affiliate"` (outward) escapes the regex.\n\nThe regex is `/(publi|send|e-?mail|post|tweet|spend|ad[_-]?spend|charge|cobr|envi|dispar|whats|launch|lança)/i`. Channel `"social"` does NOT match any token; channel `"affiliate"` does NOT match; channel `"email"` matches `e-?mail`. So the channel check only catches `email`. The real safety net is the `action` verb check plus the AI\'s own `impact` label. This is the substantive finding to write up. Let me confirm there\'s no separate execution path in this function (there isn\'t — it only persists), which bounds the severity.\n\nI have all the evidence I need. Here is my review.\n\n---\n\n# Security + Correctness Review — FR-MH-009 (Intent Orchestrator + HITL)\n\n**Scope:** `supabase/migrations/20260603250000_marketing_hub_intent_plans.sql` + `supabase/functions/intent-orchestrate/index.ts`\n**Verdict:** Sound. No HIGH or MEDIUM severity findings. Auth, tenancy, RLS, AI-output handling, and migration correctness are all correctly implemented and consistent with the reference functions (`lead-score`, `nurture-dispatch`). One LOW/informational note on the policy engine and one LOW note on `infra_health_logs` semantics are recorded below for completeness, but neither is exploitable.\n\n---\n\n## 1. Tenancy / Auth — PASS\n\n`intent-orchestrate/index.ts:33-37` correctly handles `verify_jwt=false` (confirmed in `config.toml:24-25`):\n\n- Missing header → `401` (line 34), before any work.\n- `getUser()` validates the JWT against Supabase Auth; `authError || !user` → `401` (line 37). A forged/expired token cannot pass — this is real server-side verification, not a blind `atob` decode (satisfies `docs/processes/edge-jwt-identity-verification.md`).\n- **No `body.user_id` trust.** Unlike `nurture-dispatch` (which has a deliberate service-key path at line 46), this function has *no* service path at all — the persisted row is scoped exclusively to `user.id` from the validated token: `intent-orchestrate/index.ts:107` `.insert({ user_id: user.id, ... })`. A client cannot supply an identity. This is actually stricter than `nurture-dispatch` and matches the `lead-score` user-only pattern exactly.\n\n**RLS — PASS.** `intent_plans` (migration lines 23-27) enables RLS and declares all four default-deny policies (`SELECT`/`INSERT`/`UPDATE`/`DELETE`), each gated on `auth.uid() = user_id`, byte-for-byte mirroring the `sequences` skeleton in `20260603050000` (lines 22-26). No `FOR ALL`/`USING (true)` hole. The function writes via the service-role client (which bypasses RLS), but it always pins `user_id = user.id`, so the row lands in the correct tenant and the policies govern all subsequent client reads.\n\n---\n\n## 2. Policy-engine bypass — PASS (cannot produce an executable high-impact plan)\n\nThe gate at `intent-orchestrate/index.ts:95` is applied to the **parsed** tasks (after the `slice(0,5).map(...)` normalization at lines 77-82), which is correct:\n\n```\ntasks.some(t => t.impact === \'high\' || HIGH_IMPACT_RE.test(t.action) || (t.channel ? HIGH_IMPACT_RE.test(t.channel) : false))\n```\n\nThe three structural reasons a high-impact plan **cannot silently auto-approve into an action**:\n\n1. **This function never executes.** It only `INSERT`s into `intent_plans` (lines 105-108). The header comment (lines 5-6) and the data-model are explicit that execution/approval is a separate downstream step. So the worst case of *any* misclassification is a persisted row with `status=\'auto_approved\'` — not an outward send/charge. The blast radius is bounded to a DB row in the caller\'s own tenant.\n2. **A malformed/adversarial AI response fails *toward* HITL, not away from it.** If the AI returns garbage, the JSON extraction or `Array.isArray(parsed.tasks)` check fails → `tasks` stays `[]` → the heuristic branch (lines 89-92) sets a single `revisar_intencao` low-impact task and `rationale = "requer revisão humana"`. An adversarial AI cannot *delete* the gate.\n3. **Forcing `impact:"high"` is the safe direction** — it only adds HITL. The only adversarial goal would be the *inverse*: an outward action labeled `impact:"low"` whose `action` and `channel` strings both dodge the regex.\n\nThat inverse is where the only real nuance lives, and it is a **LOW/informational** observation, not a finding:\n\n- The channel check only catches `email` (the regex token `e-?mail`). The system-prompt\'s other outward channels — `social`, `affiliate` — do **not** match the regex (`"social"`, `"affiliate"` contain none of the tokens). So channel-based detection alone would not flag a `social`/`affiliate` task.\n- The genuine safety net is therefore the **`action` verb regex** (`publi|send|post|tweet|spend|charge|cobr|envi|dispar|whats|launch|lança|…`, case-insensitive, covering EN+PT) **plus the AI\'s own `impact` label**. For an outward action to escape, the LLM would have to (a) self-label it `low`/`medium` AND (b) phrase the action verb with zero high-impact tokens in either language. Given the system prompt explicitly instructs `impact=high para publicar, enviar, cobrar ou veicular anúncio`, a *cooperative* model won\'t do this; a fully *adversarial* model output could in principle, but per point (1) the only consequence is a persisted `auto_approved` row — the downstream executor (future) is the actual enforcement boundary and must re-validate before any outward action.\n\n**Recommendation (non-blocking, defense-in-depth for the future executor):** when the execution/approval step is built, it must NOT trust `intent_plans.status=\'auto_approved\'` as a license to send — it should re-run an outward-action check at execution time. Optionally, add `social` and `affiliate` to the channel side of `HIGH_IMPACT_RE` (or, better, treat any non-`none`/non-`content` channel as outward) so channel alone forces HITL regardless of the action verb. Neither is required for this PR since nothing executes here.\n\n---\n\n## 3. AI output handling — PASS (no injection / RCE / crash)\n\n`intent-orchestrate/index.ts:73-85`: `raw.match(/\\{[\\s\\S]*\\}/)` extracts a brace-delimited substring, then `JSON.parse(match[0])` runs inside the surrounding `try { … } catch (_) {}` (lines 53-86). \n\n- `JSON.parse` is data-only — no `eval`, no `Function`, no template execution. There is no RCE surface.\n- A malformed string either fails `.match()` (→ `match` null → skip) or throws in `JSON.parse` → caught → `tasks` stays `[]` → heuristic fail-soft. Worst case is a heuristic single-task plan, exactly as designed.\n- Every field is defensively coerced and length-capped before persistence: `String(t.action ?? "task").slice(0,120)`, channel `.slice(0,40)`, `impact` whitelisted against `["low","medium","high"]` with a `"medium"` default, rationale `.slice(0,300)`, and `tasks.slice(0,5)` caps array size. A hostile AND well-formed JSON payload (e.g. 10⁶ tasks, or a 1 MB action string, or `impact:"__proto__"`) is truncated/whitelisted — no prototype-pollution sink (values are read, never used as keys), no unbounded growth. This matches the `lead-score` parse hardening (lines 120-128) and is actually more thorough.\n\n---\n\n## 4. Migration correctness — PASS\n\n- **CHECK constraints valid:** `policy IN (\'auto\',\'hitl\')` (line 16) and `status IN (\'proposed\',\'auto_approved\',\'pending_hitl\',\'approved\',\'rejected\',\'executed\')` (line 17). The function only ever writes `\'auto\'`/`\'hitl\'` and `\'auto_approved\'`/`\'pending_hitl\'` — all within the allowed sets. The extra status values (`proposed`/`approved`/`rejected`/`executed`) are the intended lifecycle for the future HITL approval step. No mismatch.\n- **RLS enabled** (line 23) + 4 policies (lines 24-27). ✓\n- **Trigger references an existing function:** `update_updated_at_column()` is defined `CREATE OR REPLACE` in `20260530210000_meta_api_foundation.sql:16-22`, which sorts *before* this migration (`20260603250000`) — confirmed via `ls | sort`. So the trigger at lines 32-34 binds to a function that already exists at apply time. ✓\n- **FK to `auth.users(id) ON DELETE CASCADE`** (line 13) — correct tenant cleanup on user deletion. ✓\n- **Idempotent:** `CREATE TABLE IF NOT EXISTS` + `CREATE INDEX IF NOT EXISTS` (lines 11, 29, 30). \n  - **LOW/informational, non-blocking:** the `CREATE POLICY` (24-27) and `CREATE TRIGGER` (32-34) statements are **not** guarded by `IF NOT EXISTS`/`DROP … IF EXISTS`, so a *second* apply of this exact file against a DB where it already succeeded would error (`policy already exists` / `trigger already exists`). This is identical to the sibling `20260603050000_marketing_hub_nurturing.sql` (lines 23-26, 28-30) and the established convention in this repo — migrations run once in ordered sequence, so it is not a real defect. Flagging only because the task asked about idempotency: the *table/index* layer is idempotent; the *policy/trigger* layer is not, consistent with house style.\n- **No typos:** column list, defaults (`gen_random_uuid()`, `\'[]\'::jsonb`, `timezone(\'utc\',now())`), and the partial index predicate `WHERE status = \'pending_hitl\'` (line 30) are all valid and the predicate matches a real CHECK value.\n\n---\n\n## 5. `mcorch_nodes` insert — PASS (cannot break response, no cross-tenant leak)\n\n`intent-orchestrate/index.ts:115-119`: fire-and-forget via `.then(() => {}, () => {})` — the promise is never awaited and both fulfillment and rejection are swallowed, so a failure cannot affect the already-formed `200` response at line 122. Columns (`node_type`, `name`, `content`, `user_id`) all exist on `mcorch_nodes` (migration `20260425171600` lines 9-18; `user_id` added by the tenant-isolation migration). The insert pins `user_id: user.id` (line 118), so the observation node is tenant-correct.\n\n**No cross-tenant *read* leak** despite `mcorch_nodes` RLS allowing `SELECT TO authenticated USING (true)` (migration `20260425171600:36`): the only data written here is the caller\'s own intent (truncated to 200 chars at line 117) under the caller\'s own `user_id`. This widely-readable-node behavior is a pre-existing, system-wide GraphRAG design property (system nodes are intentionally global), not introduced or worsened by this function — the content written is the user\'s own input, which they already possess. No new exposure.\n\n---\n\n## 6. SQL injection / secret leakage — PASS\n\n- **No SQL injection:** every DB call goes through `supabase-js` query builders (`.from().insert().select()`, `.from().select().eq()`) which parameterize. No string-concatenated SQL anywhere. The migration is static DDL.\n- **No secret leakage:** AI keys (`groqKey`/`openRouterKey`/`geminiKey`, lines 44-46) are only sent in the `Authorization: Bearer` header to the provider (line 58) and passed into the fallback helper (line 68) — never returned to the client and never logged. The error responses return only `insErr?.message` (line 111) and `String(err.message)` (line 125), which are Postgres/runtime messages, not credentials. `infra_health_logs` writes only `{service, status}` (lines 110, 120, 124) — no payload, consistent with the table schema (`20260425210000:90-95`). The `decrypted_user_api_keys` view is read server-side under the service role (line 43), exactly per the BYOK/Vault pattern in `reference_user_api_keys_encrypted` — the decrypted values stay inside the edge runtime.\n\n  - **LOW/informational (cosmetic, non-exploitable):** the catch-all `infra_health_logs` writes use literal `status: "unhealthy"`/`"healthy"`, but the table\'s documented status vocabulary is `\'healthy\' | \'unhealthy\' | \'unknown\'` — so these are valid. (Noting only that there is no CHECK constraint enforcing the vocabulary on `infra_health_logs`, but that is pre-existing table design, not this PR.)\n\n---\n\n## Summary table\n\n| # | Area | Result |\n|---|------|--------|\n| 1 | Tenancy/auth + RLS | **PASS** — `getUser()` rejects missing/invalid JWT (401); row pinned to `user.id`, no `body.user_id`; 4 default-deny policies mirror `sequences`. Stricter than `nurture-dispatch` (no service path). |\n| 2 | Policy-engine bypass | **PASS** — gate applied to parsed tasks; adversarial AI fails *toward* HITL; function only persists (no execution), so worst case is an `auto_approved` row, not an action. LOW note: channel regex only catches `email`; future executor must re-validate + consider widening channel check. |\n| 3 | AI output handling | **PASS** — `JSON.parse` in try/catch, data-only (no eval/RCE); all fields coerced+capped; fail-soft to heuristic. |\n| 4 | Migration correctness | **PASS** — CHECKs valid, RLS on, trigger fn exists & sorts earlier, FK CASCADE, no typos, table/index idempotent (policy/trigger not `IF NOT EXISTS` — house-style, single-apply). |\n| 5 | `mcorch_nodes` insert | **PASS** — fire-and-forget cannot break response; `user_id` pinned; no new cross-tenant exposure. |\n| 6 | SQLi / secret leakage | **PASS** — fully parameterized via supabase-js; keys only in provider Authorization header, never returned/logged. |\n\n**Files reviewed (absolute paths):**\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603250000_marketing_hub_intent_plans.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts`\n\n**Cross-referenced:** `supabase/functions/lead-score/index.ts`, `supabase/functions/nurture-dispatch/index.ts`, `supabase/migrations/20260603050000_marketing_hub_nurturing.sql`, `supabase/migrations/20260530210000_meta_api_foundation.sql` (trigger fn), `supabase/migrations/20260425171600_mcorch_graphrag_core.sql` + `20260425210000_mcorch_tenant_isolation.sql` (mcorch_nodes/infra_health_logs schema), `supabase/config.toml` (verify_jwt), `supabase/functions/_shared/llm-fallback.ts`.\n\nThe two new files are sound and ship-ready from a security and correctness standpoint. The only forward-looking action is defense-in-depth in the (not-yet-built) execution/approval step, which must re-validate outward actions rather than trusting the persisted `auto_approved` status.'}, {'type': 'text', 'text': "agentId: ade9ed0446fd4da11 (use SendMessage with to: 'ade9ed0446fd4da11' to continue this agent)\n<usage>subagent_tokens: 78054\ntool_uses: 16\nduration_ms: 122352</usage>"}]
+> ```
+
+## 🤖 Claude *(00:29:43)*
+
+
+## 🤖 Claude *(00:29:45)*
+
+Review **SOUND** (no HIGH/MEDIUM, all 6 areas PASS). One valuable defense-in-depth note: the channel check only caught `email`, so `social`/`affiliate` relied on the action-verb regex. Since the HITL gate is the STRIDE-critical mitigation, I'll adopt the reviewer's suggestion — **fail-safe: any outward channel (not `none`/`content`) forces HITL**:
+
+## 🤖 Claude *(00:29:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts",
+  "old_string": "    // \u2500\u2500 POLICY ENGINE: any high-impact task \u2192 HITL (mandatory human approval; STRIDE Tampering mitigation) \u2500\u2500\n    const highImpact = tasks.some((t) => t.impact === \"high\" || HIGH_IMPACT_RE.test(t.action) || (t.channel ? HIGH_IMPACT_RE.test(t.channel) : false));",
+  "new_string": "    // \u2500\u2500 POLICY ENGINE: any high-impact task \u2192 HITL (mandatory human approval; STRIDE Tampering mitigation) \u2500\u2500\n    // Fail-safe channel rule: ANY outward channel (anything that is not the internal 'none'/'content') forces HITL,\n    // even if the AI mislabels impact=low or phrases the action verb to dodge the regex. Unknown channel \u2192 HITL.\n    const isOutward = (c?: string) => !!c && ![\"none\", \"content\"].includes(c.toLowerCase());\n    const highImpact = tasks.some((t) => t.impact === \"high\" || HIGH_IMPACT_RE.test(t.action) || isOutward(t.channel));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/intent-orchestrate/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:54)*
+
+
+## 🤖 Claude *(00:29:54)*
+
+Applying the migration + deploying `intent-orchestrate`:
+
+## 🤖 Claude *(00:29:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== apply intent_plans migration ===\"\necho \"y\" | timeout 150 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error\" | tail -4\necho \"--- push exit: ${PIPESTATUS[1]} ---\"\necho \"\"\necho \"=== deploy intent-orchestrate ===\"\ntimeout 150 npx supabase functions deploy intent-orchestrate 2>&1 | grep -iE \"Deploying|Deployed|script size|error\" | tail -4\necho \"--- deploy exit: ${PIPESTATUS[0]} ---\"",
+  "description": "Apply intent_plans migration + deploy intent-orchestrate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apply intent_plans migration ===
+> Applying migration 20260603250000_marketing_hub_intent_plans.sql...
+> Finished supabase db push.
+> --- push exit: 0 ---
+> 
+> === deploy intent-orchestrate ===
+> Deploying Function: intent-orchestrate (script size: 84.88kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: intent-orchestrate
+> --- deploy exit: 0 ---
+> ```
+
 ---
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-03 - Address alerts timezone issue and next steps]]
-> * **Próxima Sessão**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]
+> * **Sessão Anterior**: [[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]
+> * **Próxima Sessão**: [[2026-06-04 - agent-a77495dbbcb3f4db6]]
 %% --- TIMELINE END --- %%
