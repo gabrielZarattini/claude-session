@@ -37,7 +37,7 @@ Quem executa hoje: o **tenant** (Usuário Zero / operador de marketing) no Marke
 
 - **402 (saldo):** Operator compra/recarrega mcoCoins; nada foi cobrado.
 - **IA indisponível:** fail-soft — a auditoria ainda persiste com recomendação heurística (`cited=false`, `citation_rate=0`) + `infra_health_logs status='degraded'`; o Operator re-roda quando a IA voltar (novo débito).
-- **Falha de persistência (500):** `infra_health_logs status='unhealthy'`; **o débito já ocorreu** → a recovery é re-rodar (custo assumido) OU o Sovereign credita manualmente (registro no handoff). _OTD-AEO-REFUND: avaliar refund automático em falha pós-débito (espelha o débito atômico do `lead-score`)._
+- **Falha de persistência (500):** `infra_health_logs status='unhealthy'` + **refund automático** dos 5 mcoCoins via `refundMco` (`add_mco_coins`) antes do 500 — a resposta traz `refunded: true|false`. ✅ **OTD-AEO-REFUND FECHADA (v6.27.2)**: o débito é estornado em qualquer falha pós-cobrança (persist-fail explícito + catch geral), provado pelo smoke `smoke-aeo-refund.ts` (primitivo deduct→add→restore) + unit `_shared/billing.test.ts`. Se o próprio refund falhar (`refunded:false`), o pulse `unhealthy` registra o débito preso para o Sovereign creditar manualmente (raro double-fault).
 
 ## Success signal (materialmente observável)
 

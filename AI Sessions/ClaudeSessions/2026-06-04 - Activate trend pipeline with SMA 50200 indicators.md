@@ -5077,6 +5077,665 @@ Começando: estado armado + onde `LAST_ORDER` é escrito (pra desenhar o fix):
 > +---------+----------+---------------------+-----------+
 > ```
 
+## 🤖 Claude *(14:00:55)*
+
+
+## 🤖 Claude *(14:01:03)*
+
+Dois achados concretos:
+
+**1. Persistência validada AO VIVO (não só no boot):** o `regimeStates` está sendo atualizado a cada poll — `updatedAt` = agora (0 min atrás), e a 1ª linha foi às 02:51 do boot. Ou seja, ~11h de polls de 5 min persistindo o `smaAbove` corretamente. O `regimeJob` está saudável e a resiliência a restart está mecânica e comprovadamente funcionando. Combinado com `isActive=1` + start 200 + CI verde + logs sem erro, a entrega está **armada e estável**.
+
+**2. Mapeei o acoplamento `LAST_ORDER` (risco nº1):** ele é escrito por **qualquer ordem** do símbolo no `executionReport` ([app-em.js:482](tradeux/backend/src/app-em.js:482)) e lido pela `calcQty` ([beholder.js:229](tradeux/backend/src/beholder.js:229)). Então o id7 (SELL na death) realmente venderia a qty da última ordem — que pode ser uma reversão da id3, não a posição de trend.
+
+Aqui bati num ponto que **não é meu pra decidir sozinho**: o fix depende da **política de posição** do trend (muda o *comportamento de trade*, não só o código). Bom: hoje está **duplamente inerte** (BTC=bear trava o id6; e sem um golden antes, não há death) — então dá pra fazer certo, sem pressa. Investiguei as 3 abordagens; preciso da tua escolha:
+
+## 🤖 Claude *(14:01:10)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Risco n\u00ba1: o id7 (SELL de trend na death) usa LAST_ORDER_QTY, compartilhado com a id3 \u2014 pode vender a qty da revers\u00e3o, n\u00e3o da posi\u00e7\u00e3o de trend. Qual pol\u00edtica de posi\u00e7\u00e3o o Trend Following deve usar (define como corrijo)?",
+      "header": "Posi\u00e7\u00e3o trend",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Vender o que o trend comprou (compounding) \u2014 Recomendado",
+          "description": "id6 acumula MEMORY['BTCUSDT:TREND_QTY'] nos fills de golden; id7 vende exatamente isso na death e zera. Comportamento cl\u00e1ssico de trend-following (compra no golden, segura, sai tudo na death; se vier outro golden antes, soma). Precisa de hook no executionReport (tagueado por automationId) + novo tipo de qty na calcQty. Money-path \u2192 vai a gate QA+TL."
+        },
+        {
+          "label": "Tamanho fixo por trade",
+          "description": "id6 compra um lote fixo (ex.: 0.001 BTC ou N\u00d7 MIN_NOTIONAL como n\u00famero), id7 vende o mesmo fixo. Mais simples, desacopla do LAST_ORDER na hora, mas N\u00c3O comp\u00f5e (sempre o mesmo lote, ignora quanto foi acumulado) e pode descasar da carteira real se houver fills parciais."
+        },
+        {
+          "label": "Sair flat na death (MAX_WALLET)",
+          "description": "id7 vende TODO o BTC da carteira na death (risk-off total). Simples e robusto p/ ir a caixa, mas dumpa tamb\u00e9m qualquer posi\u00e7\u00e3o da revers\u00e3o (id2) que exista \u2014 conflita com a estrat\u00e9gia MR quando elas coexistem fora de trend."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Risco nº1: o id7 (SELL de trend na death) usa LAST_ORDER_QTY, compartilhado com a id3 — pode vender a qty da reversão, não da posição de trend. Qual política de posição o Trend Following deve usar (define como corrijo)?"="Vender o que o trend comprou (compounding) — Recomendado". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:20:30)*
+
+
+## 🤖 Claude *(14:20:33)*
+
+Você escolheu **compounding** (id6 acumula `TREND_QTY`, id7 vende e zera) — o comportamento clássico de trend-follower. Esse é o design certo. Vou implementar com gate.
+
+Primeiro preciso entender o fluxo de fill (onde `LAST_ORDER`/net/avgPrice são escritos) pra achar o hook mínimo p/ manter `TREND_QTY`. Lendo o handler de executionReport:
+
+## 🤖 Claude *(14:20:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 440,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 440	
+> 441	async function sendMessage(json) {
+> 442	    try {
+> 443	        if (json.notification) {
+> 444	            const settings = await getDefaultSettings();
+> 445	            push.send(settings, json.notification.text, 'Beholder Notification', json.notification);
+> 446	        }
+> 447	    } catch (err) { }
+> 448	
+> 449	    return WSS.broadcast(json);
+> 450	}
+> 451	
+> 452	async function init(settings, wssInstance, beholderInstance) {
+> 453	    if (!settings || !beholderInstance) throw new Error(`You can't init the Exchange Monitor App without his settings. Check your database and/or startup code.`);
+> 454	
+> 455	    WSS = wssInstance;
+> 456	    beholder = beholderInstance;
+> 457	    exchange = require('./utils/exchange')(settings);
+> 458	
+> 459	    const monitors = await getActiveMonitors();
+> 460	    monitors.map(m => {
+> 461	        setTimeout(() => {
+> 462	            switch (m.type) {
+> 463	                case monitorTypes.MINI_TICKER:
+> 464	                    return startMiniTickerMonitor(m.id, m.broadcastLabel, m.logs);
+> 465	                case monitorTypes.BOOK:
+> 466	                    return startBookMonitor(m.id, m.broadcastLabel, m.logs);
+> 467	                case monitorTypes.USER_DATA: {
+> 468	                    if (!settings.accessKey || !settings.secretKey) return;
+> 469	                    return startUserDataMonitor(m.id, m.broadcastLabel, m.logs);
+> 470	                }
+> 471	                case monitorTypes.CANDLES:
+> 472	                    return startChartMonitor(m.id, m.symbol, m.interval, m.indexes ? m.indexes.split(',') : [], m.broadcastLabel, m.logs);
+> 473	                case monitorTypes.TICKER:
+> 474	                    return startTickerMonitor(m.id, m.symbol, m.broadcastLabel, m.logs);
+> 475	            }
+> 476	        }, 250)//Binance only permits 5 commands / second
+> 477	    })
+> 478	
+> 479	    const lastOrders = await ordersRepository.getLastFilledOrders();
+> 480	    await Promise.all(lastOrders.map(async (order) => {
+> 481	        const orderCopy = getLightOrder(order.get({ plain: true }));
+> 482	        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> 483	    }))
+> 484	
+> 485	    logger('system', 'App Exchange Monitor is running!');
+> 486	}
+> 487	
+> 488	module.exports = {
+> 489	    init,
+> 490	    startChartMonitor,
+> 491	    stopChartMonitor,
+> 492	    startTickerMonitor,
+> 493	    stopTickerMonitor,
+> 494	    sendMessage
+> ```
+
+## 🤖 Claude *(14:20:40)*
+
+
+## 🤖 Claude *(14:20:41)*
+
+O 482 é no boot (carrega LAST_ORDER inicial). Preciso do handler de fill ao vivo. Deixa eu achar o processamento de executionReport (linhas 189/230):
+
+## 🤖 Claude *(14:20:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 160,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 160	        symbol: executionData.s,
+> 161	        orderId: executionData.i,
+> 162	        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,
+> 163	        side: executionData.S,
+> 164	        type: executionData.o,
+> 165	        status: executionData.X,
+> 166	        isMaker: executionData.m,
+> 167	        transactTime: executionData.T
+> 168	    }
+> 169	
+> 170	    if (order.status === orderStatus.FILLED) {
+> 171	        const quoteAmount = parseFloat(executionData.Z);
+> 172	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 173	        order.commission = executionData.n;
+> 174	        order.quantity = executionData.q;
+> 175	        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 176	        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 177	    }
+> 178	
+> 179	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 180	
+> 181	    setTimeout(async () => {
+> 182	        try {
+> 183	            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 184	            if (updatedOrder) {
+> 185	
+> 186	                notifyOrderUpdate(order);
+> 187	
+> 188	                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));
+> 189	                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 190	                if (results) results.map(r => sendMessage({ notification: r }));
+> 191	                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });
+> 192	            }
+> 193	        } catch (err) {
+> 194	            logger('M:' + monitorId, err);
+> 195	        }
+> 196	    }, 3000)
+> 197	}
+> 198	
+> 199	// Trata o evento cru `listStatus` da OCO (data.e === 'listStatus'). Campos relevantes:
+> 200	// g=orderListId, s=symbol, l=listStatusType, L=listOrderStatus, O=[{s,i,c}] (pernas).
+> 201	// Quando uma perna executa, a Binance cancela a outra automaticamente; os executionReport
+> 202	// por-perna já atualizam cada ordem. Aqui só agimos quando a lista RESOLVE (ALL_DONE/REJECT)
+> 203	// e fazemos uma reconciliação de segurança: se alguma perna ainda estiver NEW na base,
+> 204	// busca o status real na corretora (autoritativo) e atualiza — cobre um executionReport
+> 205	// eventualmente perdido no stream. Idempotente: updateOrder só sai de NEW/PARTIALLY_FILLED.
+> 206	function processListStatusData(monitorId, data, broadcastLabel) {
+> 207	    const orderListId = data.g;
+> 208	    const symbol = data.s;
+> 209	    const listOrderStatus = data.L;
+> 210	
+> 211	    if (listOrderStatus !== 'ALL_DONE' && listOrderStatus !== 'REJECT') return;
+> 212	
+> 213	    setTimeout(async () => {
+> 214	        try {
+> 215	            const legs = Array.isArray(data.O) ? data.O : [];
+> 216	            await Promise.all(legs.map(async (leg) => {
+> 217	                const legOrderId = leg.i;
+> 218	                const legClientOrderId = leg.c;
+> 219	
+> 220	                const current = await ordersRepository.getOrder(legOrderId, legClientOrderId);
+> 221	                if (!current) return; // perna não persistida (ex.: OCO criada fora do TradeUX)
+> 222	                if (current.status !== orderStatus.NEW && current.status !== orderStatus.PARTIALLY_FILLED)
+> 223	                    return; // já terminal: o executionReport por-perna já tratou
+> 224	
+> 225	                const remote = await exchange.orderStatus(symbol, legOrderId);
+> 226	                const updated = await ordersRepository.updateOrderByOrderId(legOrderId, legClientOrderId, { status: remote.status });
+> 227	                if (updated) {
+> 228	                    notifyOrderUpdate(updated.get({ plain: true }));
+> 229	                    const orderCopy = getLightOrder(updated.get({ plain: true }));
+> 230	                    const results = await beholder.updateMemory(symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 231	                    if (results) results.map(r => sendMessage({ notification: r }));
+> 232	                }
+> 233	            }));
+> 234	
+> 235	            sendMessage({ notification: { text: `OCO list #${orderListId} resolved (${listOrderStatus}) on ${symbol}`, type: listOrderStatus === 'ALL_DONE' ? 'success' : 'error' } });
+> 236	            if (broadcastLabel) sendMessage({ [broadcastLabel]: { orderListId, symbol, listOrderStatus } });
+> 237	            logger('M:' + monitorId, `listStatus ${listOrderStatus} for OCO #${orderListId} (${symbol}) reconciled.`);
+> 238	        } catch (err) {
+> 239	            logger('M:' + monitorId, err);
+> 240	        }
+> 241	    }, OCO_RECONCILE_DELAY_MS);
+> 242	}
+> 243	
+> 244	async function processBalanceData(monitorId, broadcastLabel, logs, data) {
+> 245	    if (logs) logger('M:' + monitorId, data);
+> 246	
+> 247	    try {
+> 248	        const wallet = await loadWallet();
+> 249	        if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: wallet });
+> 250	    } catch (err) {
+> 251	        if (logs) logger('M:' + monitorId, err);
+> 252	    }
+> 253	}
+> 254	
+> 255	async function startUserDataMonitor(monitorId, broadcastLabel, logs) {
+> 256	    const [balanceBroadcast, executionBroadcast] = broadcastLabel ? broadcastLabel.split(',') : [null, null];
+> 257	
+> 258	    try {
+> 259	        await loadWallet();
+> ```
+
+## 🤖 Claude *(14:23:55)*
+
+
+## 🤖 Claude *(14:23:59)*
+
+Mapeei o handler de fill (`processExecutionData`, [app-em.js:170-196](tradeux/backend/src/app-em.js:170)) — quando uma ordem fica `FILLED`, ele tem o `updatedOrder` (com `automationId`) e escreve LAST_ORDER. É o hook certo p/ manter `TREND_QTY`.
+
+Design travado (compounding): novo tipo de qty `TREND_QTY` na `calcQty` + acúmulo no fill (golden soma, death zera), id7 passa a usar `TREND_QTY`. Confirmando os pontos de integração antes de escrever:
+
+## 🤖 Claude *(14:24:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== processExecutionData header ===\" && sed -n '145,159p' backend/src/app-em.js; echo \"=== getMemory (beholder, exportado?) ===\" && grep -n \"function getMemory\\|getMemory,\" backend/src/beholder.js | head; echo \"=== automationsRepository.getAutomation ===\" && grep -n \"function getAutomation\\b\\|getAutomation,\" backend/src/repositories/automationsRepository.js | head; echo \"=== app-em requires ===\" && sed -n '1,14p' backend/src/app-em.js",
+  "description": "Confirm integration points for trend qty hook"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === processExecutionData header ===
+>     let type = '';
+>     switch (order.status) {
+>         case 'FILLED': type = 'success'; break;
+>         case 'REJECTED':
+>         case 'CANCELED':
+>         case 'EXPIRED': type = 'error'; break;
+>         default: type = 'info'; break;
+>     }
+>     sendMessage({ notification: { text: `Order #${order.orderId} was updated as ${order.status}`, type } });
+> }
+> 
+> function processExecutionData(monitorId, executionData, broadcastLabel) {
+>     if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes
+> 
+>     const order = {
+> === getMemory (beholder, exportado?) ===
+> 883:function getMemory(symbol, index, interval) {
+> 933:function getMemoryIndexes() {
+> 1008:    getMemory,
+> === automationsRepository.getAutomation ===
+> 42:function getAutomation(id) {
+> 83:    getAutomation,
+> === app-em requires ===
+> const ordersRepository = require('./repositories/ordersRepository');
+> const { orderStatus } = require('./repositories/ordersRepository');
+> const { monitorTypes, getActiveMonitors } = require('./repositories/monitorsRepository');
+> const { execCalc, indexKeys } = require('./utils/indexes');
+> const logger = require('./utils/logger');
+> const push = require('./utils/push');
+> const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 
+> let WSS, beholder, exchange;
+> 
+> // Atraso da reconciliação de listStatus da OCO: > 3s do executionReport por-perna, para
+> // que o caminho primário (processExecutionData) atualize antes e evitemos REST à toa.
+> const OCO_RECONCILE_DELAY_MS = 4000;
+> ```
+
+## 🤖 Claude *(14:24:08)*
+
+
+## 🤖 Claude *(14:24:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 883,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 883	function getMemory(symbol, index, interval) {
+> 884	    if (symbol && index) {
+> 885	        const indexKey = interval ? `${index}_${interval}` : index;
+> 886	        const memoryKey = `${symbol}:${indexKey}`;
+> 887	
+> 888	        const result = MEMORY[memoryKey];
+> 889	        return typeof result === 'object' ? { ...result } : result;
+> 890	    }
+> 891	
+> 892	    return { ...MEMORY };
+> 893	}
+> 894	
+> 895	function getBrain() {
+> 896	    return { ...BRAIN };
+> 897	}
+> 898	
+> 899	function getBrainIndexes() {
+> 900	    return { ...BRAIN_INDEX };
+> 901	}
+> 902	
+> ```
+
+## 🤖 Claude *(14:24:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js",
+  "offset": 42,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 42	function getAutomation(id) {
+> 43	    return automationModel.findByPk(id, { include: [{ all: true, nested: true }] });
+> 44	}
+> 45	
+> 46	async function automationExists(name) {
+> 47	    const count = await automationModel.count({ where: { name } });
+> 48	    return count > 0;
+> 49	}
+> 50	
+> 51	function getAutomations(page = 1) {
+> 52	    return automationModel.findAndCountAll({
+> 53	        where: {},
+> 54	        order: [['isActive', 'DESC'], ['symbol', 'ASC'], ['name', 'ASC']],
+> 55	        limit: 10,
+> 56	        offset: 10 * (page - 1),
+> 57	        distinct: true,
+> 58	        include: [{ all: true, nested: true }]//inclui todas tabelas relacionadas
+> 59	    });
+> 60	}
+> 61	
+> 62	function insertAutomation(newAutomation, transaction) {
+> 63	    return automationModel.create(newAutomation, { transaction });
+> ```
+
+## 🤖 Claude *(14:25:14)*
+
+
+## 🤖 Claude *(14:25:17)*
+
+Pontos confirmados: `getMemory(symbol,index)` lê o escalar; **`getBrain()` é exportado** → pego as conditions da automação em memória (sem DB read no fill). Design final:
+- **`TREND_QTY`** (novo tipo de qty na `calcQty`): id7 vende a posição acumulada.
+- **Acúmulo no fill** (`getBrain()` p/ saber se é trend buy/sell pelas conditions): golden soma `order.quantity`, death zera.
+- id7 template: `LAST_ORDER_QTY` → `TREND_QTY`.
+
+Lendo o trecho de indexes.js pra adicionar a chave:
+
+## 🤖 Claude *(14:25:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "offset": 68,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 68	    //BEHOLDER INDICATORS
+> 69	    MINI_TICKER: 'MINI_TICKER',
+> 70	    BOOK: 'BOOK',
+> 71	    WALLET: 'WALLET',
+> 72	    LAST_ORDER: 'LAST_ORDER',
+> 73	    LAST_CANDLE: 'LAST_CANDLE',
+> 74	    PREVIOUS_CANDLE: 'PREVIOUS_CANDLE',
+> 75	    TICKER: 'TICKER',
+> 76	    REGIME: 'REGIME',
+> 77	    TREND_CROSS: 'TREND_CROSS'
+> 78	}
+> 79	
+> ```
+
+## 🤖 Claude *(14:25:23)*
+
+
+## 🤖 Claude *(14:25:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    REGIME: 'REGIME',\n    TREND_CROSS: 'TREND_CROSS'\n}",
+  "new_string": "    REGIME: 'REGIME',\n    TREND_CROSS: 'TREND_CROSS',\n    TREND_QTY: 'TREND_QTY' // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:33)*
+
+
+## 🤖 Claude *(14:25:33)*
+
+Agora o tipo `TREND_QTY` na `calcQty` (espelha o LAST_ORDER_QTY):
+
+## 🤖 Claude *(14:25:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "        newQty = parseFloat(lastOrder.quantity) * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;\n    }\n\n    factor = Math.floor(newQty / stepSize);",
+  "new_string": "        newQty = parseFloat(lastOrder.quantity) * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;\n    }\n    else if (orderTemplate.quantity === 'TREND_QTY') {\n        // Posi\u00e7\u00e3o acumulada pelo Trend Following (escrita no fill por app-em.updateTrendPosition):\n        // id6 (golden) soma; id7 (death) vende ESTA qty (n\u00e3o a LAST_ORDER, que \u00e9 compartilhada com a id3).\n        const trendQty = parseFloat(MEMORY[`${orderTemplate.symbol}:TREND_QTY`]);\n        if (!trendQty || trendQty <= 0)\n            throw new Error(`There is no trend position (TREND_QTY) to use as qty reference for ${orderTemplate.symbol}.`);\n\n        newQty = trendQty * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)\n    }\n\n    factor = Math.floor(newQty / stepSize);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:57)*
+
+
+## 🤖 Claude *(14:25:58)*
+
+Agora o hook no `app-em.js` — a chamada no fill + o helper `updateTrendPosition`:
+
+## 🤖 Claude *(14:26:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));\n                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);\n                if (results) results.map(r => sendMessage({ notification: r }));\n                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });",
+  "new_string": "                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));\n                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);\n                if (results) results.map(r => sendMessage({ notification: r }));\n\n                await updateTrendPosition(updatedOrder.get({ plain: true }));\n\n                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "function processExecutionData(monitorId, executionData, broadcastLabel) {\n    if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes",
+  "new_string": "// Trend Following \u2014 mant\u00e9m MEMORY['<sym>:TREND_QTY'] (posi\u00e7\u00e3o em base asset atribu\u00edda ao trend),\n// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automa\u00e7\u00e3o\n// (referenciam TREND_CROSS), lidas do BRAIN em mem\u00f3ria (sem ida ao banco). Golden BUY soma a qty\n// FILLED; death SELL zera. S\u00f3 atua em FILLED (a\u00ed order.quantity = qty cheia preenchida). Best-effort:\n// um erro aqui n\u00e3o quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : '';\n        if (cond.indexOf('TREND_CROSS') === -1) return; // n\u00e3o \u00e9 automa\u00e7\u00e3o de Trend Following\n        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;\n        let next;\n        if (order.side === 'BUY' && cond.indexOf(\"'golden'\") !== -1) next = cur + parseFloat(order.quantity);\n        else if (order.side === 'SELL' && cond.indexOf(\"'death'\") !== -1) next = 0; // vendeu a posi\u00e7\u00e3o de trend\n        else return;\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);\n        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);\n    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}\n\nfunction processExecutionData(monitorId, executionData, broadcastLabel) {\n    if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:20)*
+
+
+## 🤖 Claude *(14:26:20)*
+
+Agora os scripts. setup-trend.js (id7 → `TREND_QTY`):
+
+## 🤖 Claude *(14:26:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {\n        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,\n        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // \u26a0\ufe0f LAST_ORDER \u00e9 por s\u00edmbolo (compartilhado c/ a id3)\n    });",
+  "new_string": "    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {\n        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,\n        quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posi\u00e7\u00e3o acumulada pelo trend (id6 soma no fill; zera no death) \u2014 N\u00c3O LAST_ORDER\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": " *   - order templates BUY/SELL **LIMIT market\u00e1vel** (atravessa o spread como taker p/ fill\n *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk\u00d71.003 MIN_NOTIONAL; SELL =\n *     bestBid\u00d70.997 LAST_ORDER_QTY. O buffer (0.3%) vive no EVAL do limitPrice porque o\n *     limitPriceMultiplier \u00e9 DECIMAL(10,2) (s\u00f3 2 casas \u2192 n\u00e3o expressa sub-1%).",
+  "new_string": " *   - order templates BUY/SELL **LIMIT market\u00e1vel** (atravessa o spread como taker p/ fill\n *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk\u00d71.003 MIN_NOTIONAL; SELL =\n *     bestBid\u00d70.997 **TREND_QTY** (vende a posi\u00e7\u00e3o acumulada pelo trend, n\u00e3o LAST_ORDER). O buffer\n *     (0.3%) vive no EVAL do limitPrice porque o limitPriceMultiplier \u00e9 DECIMAL(10,2) (n\u00e3o expressa sub-1%)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:47)*
+
+
+## 🤖 Claude *(14:26:47)*
+
+activate-trend.js — `ensureTemplateShape` passa a garantir `quantity=TREND_QTY` no SELL:
+
+## 🤖 Claude *(14:26:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js",
+  "old_string": "    const want = {\n        type: 'LIMIT',\n        limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.${ref} * ${buf}`,\n        limitPriceMultiplier: 1,\n    };\n    const already = t.type === want.type && t.limitPrice === want.limitPrice && parseFloat(t.limitPriceMultiplier) === 1;\n    if (already) return `\u2713 template \"${name}\" j\u00e1 est\u00e1 LIMIT market\u00e1vel (id ${t.id}).`;\n    if (DRY) return `[DRY] PATCH template ${t.id} \"${name}\": type ${t.type}\u2192LIMIT, limitPrice\u2192${want.limitPrice}`;\n    // envia o template completo (base + overrides) p/ n\u00e3o clobberar campos\n    const body = { ...t, ...want, stopPrice: null };\n    delete body.id; delete body.createdAt; delete body.updatedAt;\n    const r = await req('PATCH', `/ordertemplates/${t.id}`, token, body);\n    if (r.status !== 200) throw new Error(`falha no PATCH do template ${t.id}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `\u270f\ufe0f  template \"${name}\" (id ${t.id}) \u2192 LIMIT market\u00e1vel (${ref}\u00d7${buf}).`;",
+  "new_string": "    const want = {\n        type: 'LIMIT',\n        limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.${ref} * ${buf}`,\n        limitPriceMultiplier: 1,\n    };\n    if (side === 'SELL') want.quantity = 'TREND_QTY'; // vende a posi\u00e7\u00e3o acumulada do trend (n\u00e3o LAST_ORDER)\n    const already = t.type === want.type && t.limitPrice === want.limitPrice\n        && parseFloat(t.limitPriceMultiplier) === 1\n        && (side !== 'SELL' || t.quantity === 'TREND_QTY');\n    if (already) return `\u2713 template \"${name}\" j\u00e1 est\u00e1 na forma alvo (id ${t.id}).`;\n    if (DRY) return `[DRY] PATCH template ${t.id} \"${name}\": type ${t.type}\u2192LIMIT, limitPrice\u2192${want.limitPrice}${want.quantity ? `, quantity ${t.quantity}\u2192${want.quantity}` : ''}`;\n    // envia o template completo (base + overrides) p/ n\u00e3o clobberar campos\n    const body = { ...t, ...want, stopPrice: null };\n    delete body.id; delete body.createdAt; delete body.updatedAt;\n    const r = await req('PATCH', `/ordertemplates/${t.id}`, token, body);\n    if (r.status !== 200) throw new Error(`falha no PATCH do template ${t.id}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `\u270f\ufe0f  template \"${name}\" (id ${t.id}) \u2192 LIMIT market\u00e1vel${want.quantity ? ` (qty ${want.quantity})` : ''} (${ref}\u00d7${buf}).`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:57)*
+
+
+## 🤖 Claude *(14:26:57)*
+
+Todos os 5 arquivos editados. Syntax-check:
+
+## 🤖 Claude *(14:26:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in backend/src/utils/indexes.js backend/src/beholder.js backend/src/app-em.js backend/scripts/setup-trend.js backend/scripts/activate-trend.js; do node --check \"$f\" && echo \"OK   $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check all files touched for TREND_QTY"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   backend/src/utils/indexes.js
+> OK   backend/src/beholder.js
+> OK   backend/src/app-em.js
+> OK   backend/scripts/setup-trend.js
+> OK   backend/scripts/activate-trend.js
+> ```
+
+## 🤖 Claude *(14:27:55)*
+
+
+## 🤖 Claude *(14:27:55)*
+
+Tudo verde. Agora o **gate** dessa mudança de money-path (toca `calcQty` + handler de fill). QA + TL em paralelo, independentes:
+
+## 🤖 Claude *(14:27:57)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review TREND_QTY tracking",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA de uma mudan\u00e7a money-path no TradeUX (Beholder Binance Spot bot, testnet). Repo `/home/gcrux-tradeux/tradeux`. pt-BR. Sem testes unit\u00e1rios (CI = migrate+seed MySQL+PG 2x + agent --check). Builds on top do commit `453c7d6` (Trend Following ativado).\n\n## Contexto\nO Trend Following (id6 BUY no golden cross / id7 SELL no death cross) estava com um **risco aberto**: o id7 usava `LAST_ORDER_QTY`, e `MEMORY['<sym>:LAST_ORDER']` \u00e9 **por s\u00edmbolo, compartilhado com a id3** (revers\u00e3o \u00e0 m\u00e9dia) \u2192 o SELL de trend podia vender a qty da revers\u00e3o, n\u00e3o da posi\u00e7\u00e3o de trend. O dono escolheu a pol\u00edtica **\"vender o que o trend comprou (compounding)\"**: id6 acumula a posi\u00e7\u00e3o, id7 vende e zera.\n\n## A mudan\u00e7a (revise lendo o c\u00f3digo real)\n1. `backend/src/utils/indexes.js` \u2014 novo `indexKeys.TREND_QTY = 'TREND_QTY'`.\n2. `backend/src/beholder.js` \u2014 novo branch na **`calcQty`** (logo ap\u00f3s o `LAST_ORDER_QTY`, ~linha 236): `quantity === 'TREND_QTY'` l\u00ea `MEMORY['<sym>:TREND_QTY']`, multiplica por `quantityMultiplier`, **capa em `asset`** (wallet base) p/ SELL, e **throw** se a posi\u00e7\u00e3o \u00e9 0/ausente.\n3. `backend/src/app-em.js` \u2014 novo `updateTrendPosition(order)` chamado no handler de fill `processExecutionData` (ap\u00f3s o update de LAST_ORDER, ~linha 191). S\u00f3 atua em `status===FILLED`; l\u00ea as conditions da automa\u00e7\u00e3o via **`beholder.getBrain()[order.automationId]`** (em mem\u00f3ria, sem DB); se conditions cont\u00e9m `TREND_CROSS`: BUY+`'golden'` \u2192 `TREND_QTY += order.quantity`; SELL+`'death'` \u2192 `TREND_QTY = 0`. Best-effort (try/catch).\n4. `backend/scripts/setup-trend.js` + `backend/scripts/activate-trend.js` \u2014 id7 template `quantity`: `LAST_ORDER_QTY` \u2192 **`TREND_QTY`** (activate faz reshape idempotente).\n\n## Ataque com ceticismo (money-path):\n- **`calcQty` TREND_QTY**: paridade com o `LAST_ORDER_QTY` (leia ambos, ~linha 200-248)? O cap em `asset` cobre fees (id6 compra X BTC, fee em BTC \u2192 wallet < X \u2192 id7 vende wallet, n\u00e3o X)? O `throw` quando TREND_QTY=0 \u00e9 o comportamento certo (death sem posi\u00e7\u00e3o = n\u00e3o vende nada, em vez de vender a MR)? stepSize flooring ok?\n- **`updateTrendPosition`**: (a) `order.quantity` no FILLED \u00e9 a qty CHEIA preenchida? (confirme lendo `processExecutionData` ~linha 170-177: `order.quantity = executionData.q`; q=original, z=filled \u2014 em FILLED s\u00e3o iguais?). (b) **Race read-modify-write**: dois fills concorrentes (setTimeout 3s cada) leem `cur`, somam, escrevem \u2192 lost update? Qu\u00e3o prov\u00e1vel (1 golden cross = 1 ordem id6)? (c) **Double-count**: um executionReport FILLED duplicado (reconex\u00e3o de stream) somaria 2x? H\u00e1 dedup? (d) `getBrain()[automationId]` \u2014 se a automa\u00e7\u00e3o foi desativada entre place e fill, n\u00e3o est\u00e1 no BRAIN \u2192 skip (seguro)? (e) o match por substring (`TREND_CROSS` + `'golden'`/`'death'`) \u00e9 robusto/reproduz\u00edvel (as conditions v\u00eam do setup-trend.js)? (f) best-effort: erro aqui n\u00e3o quebra o fluxo de ordem nem o LAST_ORDER?\n- **Integra\u00e7\u00e3o**: o id7 com TREND_QTY \u2014 confirme que N\u00c3O vende mais a posi\u00e7\u00e3o da id3 (o objetivo). Algum caminho onde TREND_QTY fica dessincronizado da carteira real (ex.: venda manual, OCO, make nuke)?\n- **Reprodutibilidade**: `setup-trend.js` cria o template SELL com TREND_QTY; `activate-trend.js` faz PATCH idempotente p/ TREND_QTY (e passa pelo `validatePrice` que agora roda no updateOrderTemplate?).\n- **Limita\u00e7\u00e3o de teste**: o fluxo completo (golden\u2192buy\u2192fill\u2192accumulate\u2192death\u2192sell) s\u00f3 d\u00e1 p/ validar com um cross real (hoje BTC=bear, inerte). O que \u00e9 verific\u00e1vel estaticamente vs. o que fica p/ a observa\u00e7\u00e3o do 1\u00ba cross?\n\nLeia o c\u00f3digo de verdade. Veredito **PASS / PASS COM RESSALVAS / FAIL** com achados por severidade (ALTA/M\u00c9DIA/BAIXA), arquivo:linha, e o teste concreto. \u00c9 dinheiro (testnet, valida mec\u00e2nica)."
+}
+```
+
+## 🤖 Claude *(14:28:12)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-Lead review TREND_QTY tracking",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (Tech-Lead) de uma mudan\u00e7a money-path no TradeUX (Beholder Binance Spot bot, testnet). Repo `/home/gcrux-tradeux/tradeux`. Trunk-based, pt-BR. Builds on commit `453c7d6`.\n\n## Escopo\nResolve o **risco aberto n\u00ba1** do Trend Following: o id7 (SELL no death cross) usava `LAST_ORDER_QTY`, compartilhado por s\u00edmbolo com a id3 (revers\u00e3o) \u2192 podia vender a qty errada. O dono escolheu **compounding**: id6 acumula a posi\u00e7\u00e3o de trend, id7 vende tudo e zera.\n\n## A mudan\u00e7a (leia o c\u00f3digo real)\n1. `backend/src/utils/indexes.js` \u2014 `indexKeys.TREND_QTY`.\n2. `backend/src/beholder.js` \u2014 branch `TREND_QTY` na `calcQty` (espelha o `LAST_ORDER_QTY`).\n3. `backend/src/app-em.js` \u2014 `updateTrendPosition(order)` no handler de fill `processExecutionData`: em FILLED, l\u00ea conditions via `beholder.getBrain()[automationId]`; golden BUY soma `order.quantity`, death SELL zera. Best-effort.\n4. `backend/scripts/setup-trend.js` + `activate-trend.js` \u2014 id7 template qty \u2192 `TREND_QTY`.\n\n## Seu julgamento (must-fix vs nice-to-have):\n- **Design da atribui\u00e7\u00e3o de posi\u00e7\u00e3o via conditions-string** (`getBrain()[id].conditions.indexOf('TREND_CROSS'/'golden'/'death')`): aceit\u00e1vel vs. alternativas (tag expl\u00edcita no template, accounting por DB query)? \u00c9 manuten\u00edvel e reproduz\u00edvel? Acopla a app-em ao formato das conditions do setup-trend \u2014 risco?\n- **Hot path**: `updateTrendPosition` entra no fluxo awaited de `processExecutionData` (ap\u00f3s 3s setTimeout, fora do tick de mercado). Lat\u00eancia/risco aceit\u00e1vel? `getBrain()` faz `{...BRAIN}` por chamada \u2014 ok?\n- **Corre\u00e7\u00e3o financeira**: o modelo \"soma qty FILLED no golden, zera no death, capa na carteira\" \u00e9 coerente p/ um trend follower spot? Onde pode dessincronizar (fees, partial fills, venda manual, restart \u2014 TREND_QTY \u00e9 in-memory, N\u00c3O persiste; perde no restart) e isso \u00e9 aceit\u00e1vel p/ a fase de valida\u00e7\u00e3o?\n- **Persist\u00eancia**: TREND_QTY \u00e9 s\u00f3 MEMORY (vol\u00e1til). No `453c7d6` adicionei `regimeStates` p/ o cross. O TREND_QTY deveria persistir tamb\u00e9m (sen\u00e3o um restart com posi\u00e7\u00e3o de trend aberta perde a refer\u00eancia de quanto vender)? Must-fix ou d\u00edvida aceit\u00e1vel agora (size pequeno)?\n- **Reversibilidade / conven\u00e7\u00f5es**: scripts idempotentes, pt-BR, sem segredo, sem console.log no hot-path do engine?\n\nLeia o c\u00f3digo. Veredito **APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK**, must-fix vs nice-to-have, foco no que importa p/ merge num projeto trunk-based de dinheiro (testnet)."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5086,6 +5745,6 @@ Começando: estado armado + onde `LAST_ORDER` é escrito (pra desenhar o fix):
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]
+> * **Sessão Anterior**: [[2026-06-04 - 5c8f1207-70ae-44d5-9745-3330ac5eab3a]]
 > * **Próxima Sessão**: [[2026-06-04 - Audit database migrations and clean test artifacts]]
 %% --- TIMELINE END --- %%

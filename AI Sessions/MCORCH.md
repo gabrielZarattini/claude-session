@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 31
-> * **Total de Sessões**: 311
+> * **Total de Sessões**: 314
 
 ---
 
@@ -56,7 +56,9 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-06-04 - d2a8709e-0510-4409-91e4-942a7cea3139]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions) - *2026-06-04*
+*   `[[2026-06-04 - agent-aeb417505087c8c3e]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-ade9ed0446fd4da11]]` (ClaudeSessions) - *2026-06-04*
+*   `[[2026-06-04 - agent-adcae4d536fba9d29]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-ac4a4dc30c82fd359]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-ac458fe1e1c29b1bd]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - agent-ab7e79a55b13361f3]]` (ClaudeSessions) - *2026-06-04*
@@ -70,6 +72,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-04 - Complete Marketing Hub UI and intent executor]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - Audit database migrations and clean test artifacts]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-04 - Activate trend pipeline with SMA 50200 indicators]]` (ClaudeSessions) - *2026-06-04*
+*   `[[2026-06-04 - 5c8f1207-70ae-44d5-9745-3330ac5eab3a]]` (ClaudeSessions) - *2026-06-04*
 *   `[[2026-06-03 - fe8794e3-3af3-43fc-9592-86dcab385c46]]` (ClaudeSessions) - *2026-06-03*
 *   `[[2026-06-03 - c37788e7-59b6-40ea-b508-3b0b3f4d2667]]` (ClaudeSessions) - *2026-06-03*
 *   `[[2026-06-03 - b43c292c-3446-43f6-b536-a0868bbbf729]]` (ClaudeSessions) - *2026-06-03*

@@ -85,6 +85,20 @@ A OTD fechou validando-os; o único furo genuíno era `IMAGE_GENERATION` (3 → 
 
 ---
 
+## Refund-on-failure (contrato de cobrança — v6.27.2)
+
+**Regra invariante:** toda edge function que **debita mcoCoins na entrada** (`deduct_mco_coins` antes de produzir valor) DEVE **estornar** a cobrança se depois falhar em entregar (bug "charge-without-value"). O estorno usa o helper compartilhado `refundMco` (`supabase/functions/_shared/billing.ts`) → RPC `add_mco_coins` (credit service-role-only, guarda `p_amount > 0`, simétrico ao `deduct_mco_coins`). Best-effort + logado, **nunca lança** (um refund falho não pode mascarar o erro original).
+
+| Padrão de cobrança | Refund? | Exemplo |
+|--------------------|---------|---------|
+| **Charge-at-entry** (debita antes do trabalho) | **SIM** — estorna em qualquer falha pós-cobrança | `aeo-audit` (5), `lead-score` (1) — `let charged` + `refundMco` no persist-fail + no `catch` |
+| **Charge-on-success** (debita só ao concluir) | N/A — não cobra em falha | `higgsfield-webhook` (debita no sucesso do vídeo) |
+| **Fee + cascade self-bill** | fee não-estornável (custo da tentativa); sub-passos têm seu próprio gate | `campaign-run` (fee 10) → `orchestrate-content` (self-bill 10, guarda 402 pré-débito) |
+
+**Verificação:** primitivo provado por `scripts/qa/smoke-aeo-refund.ts` (deduct→add→balance restaurado; guarda rejeita negativo) + unit `_shared/billing.test.ts`. O gatilho de falha de persistência **não é forçável** por input (valores clampados/validados) → a fiação é coberta por unit + code review, não por falha forçada (honestidade Lei 1).
+
+**Gap aberto (follow-up):** `orchestrate-content` debita 10 e, se a criação de `pipeline_runs` falhar pós-débito, hoje não estorna (raro). Candidato a aplicar o mesmo `refundMco` numa sessão dedicada ao flywheel (risco maior — núcleo do pipeline).
+
 ## Decisões abertas (pricing — Sovereign)
 
 - **Desconto de volume** (Enterprise a 1/3 do Starter) é o que comprime a margem para o piso de $0.018 — revisar se quiser
