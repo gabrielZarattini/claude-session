@@ -2664,4 +2664,5 @@ Para mais detalhes das alterações, você pode ler o artefato [walkthrough.md](
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - homegcrux-tradeux n estou conseguindo ver o...]]
+> * **Próxima Sessão**: [[2026-06-05 - handson]]
 %% --- TIMELINE END --- %%
