@@ -8022,6 +8022,11 @@ Embedding OK — 768 dims. Agora commitar docs e push final.
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-02 - Analyze handoff and audit recent commits for ecosystem evolution]]

@@ -18030,7 +18030,7 @@ I'm puzzled, the `infra_health_logs` lack failure entries for `higgsfield-webhoo
 > 10: #   - failed/nsfw/cancelled → PATCH row to status='failed' + error_message
 > 11: #   - still queued/in_progress, started_at > 60 min → PATCH status='timeout' (no deduct)
 > 12: #
-> 13: # SOP: docs/processes/canvas-video-async-execution.md § Recovery path
+> 13: # SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md § Recovery path
 > 14: # Pattern source: scripts/watchdog-mcorch.sh + scripts/auto-publish-cron.sh
 > 15: 
 > 16: set -uo pipefail
@@ -21083,7 +21083,7 @@ Okay, I've confirmed the initial directory path for the project: `/home/ubuntu/h
 > 805: // `higgsfield-webhook` finalizes atomically (download → upload → deduct → asset row).
 > 806: // Lei 1 trail: every gate inserts a row visible via REST (execution row, asset row,
 > 807: // ledger row, infra_health_logs pulse).
-> 808: // SOP: docs/processes/canvas-video-async-execution.md
+> 808: // SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md
 > 809: // Validation doc: .claude/context/higgsfield-api-validation-2026-05-15.md
 > 810: 
 > 811: interface SubmitVideoOpts {
@@ -26365,6 +26365,11 @@ Worktree limpa, nada a commitar ou a enviar ao remoto. HEAD já sincronizado com
 Sessão selada. Nenhum código foi alterado — apenas revisão de estado e inserção do nó de rastreabilidade no mesh. ✅
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

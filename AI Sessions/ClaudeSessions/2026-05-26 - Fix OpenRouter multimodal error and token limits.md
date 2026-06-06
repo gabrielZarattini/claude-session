@@ -4166,7 +4166,7 @@ A OTD-V660-001 original (`user=924cb32e drift=50`) está **auto-resolvida** — 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "test -f docs/processes/mcoins-ledger-reconciliation.md && wc -l docs/processes/mcoins-ledger-reconciliation.md && echo \"---\" && head -80 docs/processes/mcoins-ledger-reconciliation.md || echo \"SOP not found\"",
+  "command": "test -f docs/processes/[[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md && wc -l docs/processes/[[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md && echo \"---\" && head -80 docs/processes/[[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md || echo \"SOP not found\"",
   "description": "Read SOP canonical procedure"
 }
 ```
@@ -4174,7 +4174,7 @@ A OTD-V660-001 original (`user=924cb32e drift=50`) está **auto-resolvida** — 
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> 58 docs/processes/mcoins-ledger-reconciliation.md
+> 58 docs/processes/[[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md
 > ---
 > # SOP — mcoCoins Ledger Reconciliation
 > 
@@ -4249,7 +4249,7 @@ SOP é explícito — "aceitar drift porque é pouco" é anti-pattern. Vou execu
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "set -a; source .env; set +a\nSOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\necho \"=== Phase 2.3 \u2014 INSERT synthetic reconciliation transaction ===\"\nRESULT=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcoin_transactions\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" \\\n  -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"user_id\\\": \\\"${SOV}\\\",\n    \\\"action\\\": \\\"opening_balance_reconciliation\\\",\n    \\\"amount\\\": -0.01,\n    \\\"context\\\": {\n      \\\"source\\\": \\\"OTD-V660-001-and-penny-drift\\\",\n      \\\"directive\\\": \\\"Phase 2 Ledger Reconciliation (plan OE-661 + SOP mcoins-ledger-reconciliation v1)\\\",\n      \\\"reconciled_at\\\": \\\"2026-05-26\\\",\n      \\\"drift_before\\\": -0.01,\n      \\\"drift_after\\\": 0,\n      \\\"operator\\\": \\\"MCORCH Master Execution Agent\\\",\n      \\\"reviewer\\\": \\\"Sovereign\\\",\n      \\\"owner\\\": \\\"Sovereign\\\",\n      \\\"sop_ref\\\": \\\"docs/processes/mcoins-ledger-reconciliation.md\\\",\n      \\\"precedent_uuid\\\": \\\"4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a\\\",\n      \\\"note\\\": \\\"Target user 924cb32e from original OTD no longer exists (LGPD delete_account cascade). Penny drift on Sovereign account reconciled instead \u2014 origin: balance deducted without matching ledger row, likely pre-trg ledger trigger code path.\\\"\n    }\n  }\")\necho \"$RESULT\"\nTX_ID=$(echo \"$RESULT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else d.get('id',''))\")\necho \"\"\necho \"TX_ID: $TX_ID\"\necho \"\"\n\necho \"=== Step 2.4 verification \u2014 Re-compute drift (expected: 0) ===\"\nPROFILES=$(curl -s \"${SUPABASE_URL}/rest/v1/profiles?select=id,mco_balance\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\nTX=$(curl -s \"${SUPABASE_URL}/rest/v1/mcoin_transactions?select=user_id,amount\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\npython3 << PYEOF\nimport json\nfrom collections import defaultdict\nprofiles = json.loads('''$PROFILES''')\ntx = json.loads('''$TX''')\nledger = defaultdict(float)\nfor t in tx:\n    if t.get('user_id'):\n        ledger[t['user_id']] += float(t.get('amount', 0) or 0)\nfor p in profiles:\n    bal = float(p.get('mco_balance', 0) or 0)\n    led = ledger.get(p['id'], 0)\n    drift = bal - led\n    status = '\u2705 ZERO' if abs(drift) < 0.001 else f'\u26a0\ufe0f DRIFT={drift:+.4f}'\n    print(f\\\"user={p['id']} balance={bal:>8.2f} ledger_sum={led:>8.2f} drift={drift:>+8.4f}  {status}\\\")\nPYEOF",
+  "command": "set -a; source .env; set +a\nSOV=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\necho \"=== Phase 2.3 \u2014 INSERT synthetic reconciliation transaction ===\"\nRESULT=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcoin_transactions\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" \\\n  -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"user_id\\\": \\\"${SOV}\\\",\n    \\\"action\\\": \\\"opening_balance_reconciliation\\\",\n    \\\"amount\\\": -0.01,\n    \\\"context\\\": {\n      \\\"source\\\": \\\"OTD-V660-001-and-penny-drift\\\",\n      \\\"directive\\\": \\\"Phase 2 Ledger Reconciliation (plan OE-661 + SOP [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]] v1)\\\",\n      \\\"reconciled_at\\\": \\\"2026-05-26\\\",\n      \\\"drift_before\\\": -0.01,\n      \\\"drift_after\\\": 0,\n      \\\"operator\\\": \\\"MCORCH Master Execution Agent\\\",\n      \\\"reviewer\\\": \\\"Sovereign\\\",\n      \\\"owner\\\": \\\"Sovereign\\\",\n      \\\"sop_ref\\\": \\\"docs/processes/[[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]].md\\\",\n      \\\"precedent_uuid\\\": \\\"4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a\\\",\n      \\\"note\\\": \\\"Target user 924cb32e from original OTD no longer exists (LGPD delete_account cascade). Penny drift on Sovereign account reconciled instead \u2014 origin: balance deducted without matching ledger row, likely pre-trg ledger trigger code path.\\\"\n    }\n  }\")\necho \"$RESULT\"\nTX_ID=$(echo \"$RESULT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else d.get('id',''))\")\necho \"\"\necho \"TX_ID: $TX_ID\"\necho \"\"\n\necho \"=== Step 2.4 verification \u2014 Re-compute drift (expected: 0) ===\"\nPROFILES=$(curl -s \"${SUPABASE_URL}/rest/v1/profiles?select=id,mco_balance\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\nTX=$(curl -s \"${SUPABASE_URL}/rest/v1/mcoin_transactions?select=user_id,amount\" \\\n  -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\")\npython3 << PYEOF\nimport json\nfrom collections import defaultdict\nprofiles = json.loads('''$PROFILES''')\ntx = json.loads('''$TX''')\nledger = defaultdict(float)\nfor t in tx:\n    if t.get('user_id'):\n        ledger[t['user_id']] += float(t.get('amount', 0) or 0)\nfor p in profiles:\n    bal = float(p.get('mco_balance', 0) or 0)\n    led = ledger.get(p['id'], 0)\n    drift = bal - led\n    status = '\u2705 ZERO' if abs(drift) < 0.001 else f'\u26a0\ufe0f DRIFT={drift:+.4f}'\n    print(f\\\"user={p['id']} balance={bal:>8.2f} ledger_sum={led:>8.2f} drift={drift:>+8.4f}  {status}\\\")\nPYEOF",
   "description": "Phase 2.3 INSERT reconciliation tx + drift re-check"
 }
 ```
@@ -4365,7 +4365,7 @@ Material proof Phase 2 estabelecido. Tasks update e Phase 3 prep:
 ```json
 {
   "subject": "Phase 3 prep \u2014 Brief Sovereign for paid Canvas smoke + monitor gates",
-  "description": "Compose PT-BR briefing: Sovereign navigates /dashboard/canvas/<project>, adds ImageToVideo+GenerateImage upstream pair, selects dop-standard-5s, clicks Run (125 mcoCoins). I monitor via REST all 9 gates from canvas-video-async-execution.md SOP. Post-success: install watchdog cron + report.",
+  "description": "Compose PT-BR briefing: Sovereign navigates /dashboard/canvas/<project>, adds ImageToVideo+GenerateImage upstream pair, selects dop-standard-5s, clicks Run (125 mcoCoins). I monitor via REST all 9 gates from [[canvas-video-async-execution|canvas-video-async-execution]].md SOP. Post-success: install watchdog cron + report.",
   "activeForm": "Briefing Sovereign for Phase 3 paid click"
 }
 ```
@@ -4673,7 +4673,7 @@ Vou re-checar o queued video corrigindo a query:
 > #   - failed/nsfw/cancelled → PATCH row to status='failed' + error_message
 > #   - still queued/in_progress, started_at > 60 min → PATCH status='timeout' (no deduct)
 > #
-> # SOP: docs/processes/canvas-video-async-execution.md § Recovery path
+> # SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md § Recovery path
 > # Pattern source: scripts/watchdog-mcorch.sh + scripts/auto-publish-cron.sh
 > 
 > set -uo pipefail
@@ -6657,6 +6657,11 @@ scratch ✅ limpo · MCP OK · sprint-priorities sem mudanças necessárias. Pha
 - **Lei 4 (ORO):** ✓ Triplet declarado no início da sessão e no Record do HANDOFF.md.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

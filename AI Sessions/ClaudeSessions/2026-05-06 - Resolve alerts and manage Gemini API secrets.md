@@ -3058,6 +3058,11 @@ scratch/ está vazio (false positive do check). Atualizo sprint-priorities:
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-06 - Fix layout issues and synchronize mesh node data]]

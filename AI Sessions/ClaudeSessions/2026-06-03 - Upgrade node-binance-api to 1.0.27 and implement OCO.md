@@ -8789,6 +8789,11 @@ Stack       : ✅ 8090 up, backend rebuildado (1.x), id2/id3 armadas
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-03 - Plan paid E2E cascade run and prioritize next features]]

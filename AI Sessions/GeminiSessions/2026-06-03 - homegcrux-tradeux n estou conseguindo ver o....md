@@ -1566,7 +1566,13 @@ Agora você já conseguirá ver e editar o arquivo `.env` sem problemas.
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[TradeUX]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-02 - homegcrux-tradeux n estou conseguindo ver o...]]
+> * **Próxima Sessão**: [[2026-06-04 - Lembra que fizemos um cronjob para...]]
 %% --- TIMELINE END --- %%

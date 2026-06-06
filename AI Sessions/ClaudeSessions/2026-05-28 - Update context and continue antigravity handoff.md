@@ -1513,7 +1513,7 @@ Ran command: `source .env && curl -s "${SUPABASE_URL}/rest/v1/mcorch_nodes?selec
 Ran command: `source .env && curl -i -s -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" -H "Prefer: count=exact" "${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1"`
 Ran command: `source .env && curl -i -s -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" -H "Prefer: count=exact" "${SUPABASE_URL}/rest/v1/mcorch_edges?select=source_id&limit=1"`
 Ran command: `ls -la docs/processes/`
-Viewed canvas-pipeline-architecture.md:1-58
+Viewed [[canvas-pipeline-architecture|canvas-pipeline-architecture]].md:1-58
 Listed directory qa
 Ran command: `bun run scripts/qa/run-audit.ts HANDOFF.md`
 Viewed README.md:1-800
@@ -3056,6 +3056,11 @@ Entendido. Pausa registrada.
 Quando voltar, me chame com "retomar" ou "continuar" e eu pego daqui.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

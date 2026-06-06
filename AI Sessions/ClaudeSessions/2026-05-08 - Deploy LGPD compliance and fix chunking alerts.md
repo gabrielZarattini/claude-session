@@ -3606,6 +3606,11 @@ Tudo selado e pushed. **PHASE 7 — Relatório final.**
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-06 - agent-af7f025cee4eec3fc]]

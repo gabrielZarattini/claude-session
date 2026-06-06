@@ -5541,6 +5541,11 @@ Let me update the sprint-priorities to reflect the v5.6.1 seal and check off any
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-06 - Analyze repository state and apply pending work to main]]

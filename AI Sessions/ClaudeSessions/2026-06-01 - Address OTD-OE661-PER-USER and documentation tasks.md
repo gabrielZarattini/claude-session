@@ -338,7 +338,7 @@ I'll execute the ShakeHands `/handson` pick-up protocol. Starting with all pre-f
 > 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
 > 47	 
 > 48	### Law 2 (Process)
-> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP [[llm-cascading-fallback|llm-cascading-fallback]].md documentado e seguido
 > 50	 
 > 51	### Law 3 (Pruning)
 > 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
@@ -818,7 +818,7 @@ I'll execute the ShakeHands `/handson` pick-up protocol. Starting with all pre-f
 > 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
 > 47	 
 > 48	### Law 2 (Process)
-> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP [[llm-cascading-fallback|llm-cascading-fallback]].md documentado e seguido
 > 50	 
 > 51	### Law 3 (Pruning)
 > 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
@@ -1322,7 +1322,7 @@ I'll execute the ShakeHands `/handson` pick-up protocol. Starting with all pre-f
 > 46	- [x] Fase 5c (Material Proof Audit) executada — veredito mecânico: 7 verified · 0 failed → SEAL ALLOWED
 > 47	 
 > 48	### Law 2 (Process)
-> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP llm-cascading-fallback.md documentado e seguido
+> 49	- [x] Processo seguido: task.md e walkthrough.md criados e atualizados, SOP [[llm-cascading-fallback|llm-cascading-fallback]].md documentado e seguido
 > 50	 
 > 51	### Law 3 (Pruning)
 > 52	- [x] Poda activa: sem código excedente, contexto compactado automaticamente na retomada
@@ -6884,7 +6884,7 @@ screenshot 1920x1080) — ver `survival.md`. E re-rodar `/e2e-audit` se UI mudou
 | Upstream image collector | `src/lib/canvas-utils.ts` → `findUpstreamImages()` |
 
 
-ARGUMENTS: Fase 3 OE-661 — prep do paid smoke Higgsfield DoP. Preciso: (1) inspecionar o graph do projeto "Campanha Roborock S8 Pro Ultra" (id 0b86e7d0-5f56-4d28-8709-76bdc88c2bca, dono ada39fae) em vm_canvas_projects.graph; (2) confirmar que existe um SceneNode/video node pronto pra rodar dop-standard-5s (125 mcoCoins) com imagem upstream encadeada por referência+seed; (3) mapear o shape exato dos nós + Handle ids pra eu validar os 9 gates da SOP docs/processes/canvas-video-async-execution.md e entregar ao Sovereign o clique exato de Run + plano de monitoramento material (canvas-execute → deduct → vm_canvas_jobs → callback → video_url). Saldo do dono já verificado: 5351 mcoCoins.
+ARGUMENTS: Fase 3 OE-661 — prep do paid smoke Higgsfield DoP. Preciso: (1) inspecionar o graph do projeto "Campanha Roborock S8 Pro Ultra" (id 0b86e7d0-5f56-4d28-8709-76bdc88c2bca, dono ada39fae) em vm_canvas_projects.graph; (2) confirmar que existe um SceneNode/video node pronto pra rodar dop-standard-5s (125 mcoCoins) com imagem upstream encadeada por referência+seed; (3) mapear o shape exato dos nós + Handle ids pra eu validar os 9 gates da SOP docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md e entregar ao Sovereign o clique exato de Run + plano de monitoramento material (canvas-execute → deduct → vm_canvas_jobs → callback → video_url). Saldo do dono já verificado: 5351 mcoCoins.
 
 ## 🤖 Claude *(01:18:29)*
 
@@ -8753,6 +8753,11 @@ Maestro, sessão selada. O resumo honesto do que aconteceu:
 Tudo no origin agora é **material e verificado**. Pronto pro próximo passo quando quiser — recomendo a investigação da perda de dados do flywheel (item 2) antes de reconstruí-lo, pra não rebuildar sobre causa não-entendida.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

@@ -1848,7 +1848,7 @@ Plano lido. Vejo que **Phase 1 está ~85% shipped por v6.6.7** — falta apenas 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "ls -la docs/processes/orchestration-content-mesh-asset-emission.md 2>&1 && echo \"---\" && wc -l docs/processes/orchestration-content-mesh-asset-emission.md",
+  "command": "ls -la docs/processes/[[orchestration-content-mesh-asset-emission|orchestration-content-mesh-asset-emission]].md 2>&1 && echo \"---\" && wc -l docs/processes/[[orchestration-content-mesh-asset-emission|orchestration-content-mesh-asset-emission]].md",
   "description": "Verify SOP file exists"
 }
 ```
@@ -1856,9 +1856,9 @@ Plano lido. Vejo que **Phase 1 está ~85% shipped por v6.6.7** — falta apenas 
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> -rw-rw-r-- 1 ubuntu ubuntu 9735 May 19 09:49 docs/processes/orchestration-content-mesh-asset-emission.md
+> -rw-rw-r-- 1 ubuntu ubuntu 9735 May 19 09:49 docs/processes/[[orchestration-content-mesh-asset-emission|orchestration-content-mesh-asset-emission]].md
 > ---
-> 120 docs/processes/orchestration-content-mesh-asset-emission.md
+> 120 docs/processes/[[orchestration-content-mesh-asset-emission|orchestration-content-mesh-asset-emission]].md
 > ```
 
 ## 🤖 Claude *(17:17:05)*
@@ -6320,6 +6320,11 @@ COMMIT_RE casa pura-decimal 14 dígitos como hash. False positive em linha 37 (t
 **Lei 3 (Pruning) — poda final:** Plan OE-661 content já materializado em código + HANDOFF + mesh (não recarregar); orchestrate-content/index.ts source já mapeado (refs preservadas por linha); PipelineHistoryPanel.tsx + AgentNode.tsx mapeados para próximo sprint UX (não recarregar); handle-ml-postback source mapeado para próximo work (FAQ Phase 3+). Próxima sessão começa do brief `/handson` com contexto fresh.
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

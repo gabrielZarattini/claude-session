@@ -10348,6 +10348,11 @@ Quando quiser retomar, o caminho natural é exercitar as outras capabilities com
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]

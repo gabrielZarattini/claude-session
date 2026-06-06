@@ -28248,6 +28248,11 @@ Conforme você conversar, a intensidade sobe e o modo muda: **γ GAMA** (grade h
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-03 - AIOS Constelação MCORCH system updates]]

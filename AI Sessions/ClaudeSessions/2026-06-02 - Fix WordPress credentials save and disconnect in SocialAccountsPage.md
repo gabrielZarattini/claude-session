@@ -5516,6 +5516,11 @@ A única verificação que **não** executei foi o clique na UI logada (browser 
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-02 - Fix TradeUX deployment path and Docker setup]]

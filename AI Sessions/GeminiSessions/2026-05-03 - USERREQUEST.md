@@ -1837,6 +1837,11 @@ A `ConstellationMatrix` agora opera com **Code Intelligence** total e estabilida
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-02 - USERREQUEST]]

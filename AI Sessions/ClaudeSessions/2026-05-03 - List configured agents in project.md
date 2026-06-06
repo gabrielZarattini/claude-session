@@ -9180,6 +9180,11 @@ Ambos confirmados — conteúdo correto, salvos, e o handoff foi selado sem prej
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-03 - Fix constellation matrix rendering]]

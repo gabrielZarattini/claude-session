@@ -11445,6 +11445,11 @@ Scratch vazio (diretório existe mas sem arquivos). Tudo limpo.
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-05-03 - agent-aee7b770ebe40a65e]]

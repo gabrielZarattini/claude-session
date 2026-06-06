@@ -414,7 +414,7 @@ Containers healthy, Chroma alive, TS clean, worktree clean, all 12 BoK suites co
 > 60	### Survival Laws Self-audit
 > 61	```
 > 62	Law 1 (Materiality): ✅ toda claim provada NESTE turno via Management API — gap original já-fechado (pg_get_functiondef + 5/5 comportamental), suíte RPC 5/5 rolled-back, preview→apply da limpeza (12→0 / 3 vivos), pós-apply (funções+grants+tracking), build+bundle servido com as RPCs. Zero fabricação. 1 armadilha divulgada (urllib→Cloudflare 1010 → troquei p/ curl). Fase 5c executada abaixo. NÃO criei migration redundante p/ o gap já fechado (seria fabricar trabalho).
-> 63	Law 2 (Process): ✅ SOP credential-disconnect-clear.md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
+> 63	Law 2 (Process): ✅ SOP [[credential-disconnect-clear|credential-disconnect-clear]].md estendido (seção disconnect meta/social + equivalência LGPD) antes do commit; CLAUDE.md Key Files. Extensão de feature documentada (disconnect/clear) → sem BoK gate.
 > 64	Law 3 (Pruning): investigação focada; outputs consumidos, referência por path/UUID/migration/commit.
 > 65	Law 4 (ORO): ✅ declarado no início da Parte B; "faça os dois" = autorização autônoma do Sovereign.
 > 66	```
@@ -1111,7 +1111,7 @@ Boa — antes de responder "dá ou não dá de uma vez", deixa eu checar materia
 > **Tool Result (Unknown Tool)** - ✅ Success
 >
 > ```
-> === SOP agent-browser-install (head) ===
+> === SOP [[agent-browser-install|agent-browser-install]] (head) ===
 > # SOP — agent-browser CLI Install & Smoke Test
 > 
 > > **Survival Law 2 (Anticipated Process) anchor.** This SOP documents the human-equivalent procedure that the AI must mirror when (re)installing or verifying the [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) CLI on a MCORCH host. It is the prerequisite SOP behind any AI-driven E2E "Usuário Zero" run that uses agent-browser instead of (or alongside) the existing Playwright-based `scripts/qa/audit-canvas-ui.ts`.
@@ -1160,7 +1160,7 @@ Boa — antes de responder "dá ou não dá de uma vez", deixa eu checar materia
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "echo \"=== SOP agent-browser-install (head) ===\"; sed -n '1,40p' docs/processes/agent-browser-install.md 2>/dev/null || echo \"SOP ausente\"",
+  "command": "echo \"=== SOP [[agent-browser-install|agent-browser-install]] (head) ===\"; sed -n '1,40p' docs/processes/[[agent-browser-install|agent-browser-install]].md 2>/dev/null || echo \"SOP ausente\"",
   "description": "Read agent-browser install SOP head"
 }
 ```
@@ -4281,6 +4281,11 @@ Selado e limpo, Maestro. ✅
 A bola está com você: amanhã, o número de cliques do painel decide o destino do #2 numa tacada. Quando trouxer, retomo do ponto exato. 🧘
 
 ---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)

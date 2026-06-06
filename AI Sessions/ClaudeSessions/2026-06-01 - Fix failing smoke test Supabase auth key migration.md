@@ -655,6 +655,11 @@ A aritmética bate exatamente com o alvo: os **2 que falhavam em vermelho** (os 
 
 ---
 
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-01 - Fix affiliate redirect link to Mercado Livre product]]
