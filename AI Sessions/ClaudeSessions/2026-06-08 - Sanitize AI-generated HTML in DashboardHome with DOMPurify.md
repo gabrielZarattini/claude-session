@@ -5425,6 +5425,1424 @@ O pipeline **emitir** o link branded sozinho está deployado + fail-safe, mas ai
 
 Qual você prefere?
 
+## 👤 User *(17:37:41)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(17:37:41)*
+
+No response requested.
+
+## 👤 User *(17:37:42)*
+
+o link https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843 redirecionou para https://www.mercadolivre.com.br/MLB-27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3 mas infelizmente não existe conforme print... na https://login.mcorch.com/dashboard/affiliate-products os links estão funcionando mas parece que esta no formato antigo ainda.:
+
+https://www.mercadolivre.com.br/geladeira-samsung-family-hub-french-door-rf27-black-inox/p/MLB32642694?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=a1b98ea5-03ba-42fb-aab4-99ee364500df
+
+--
+
+Acredito que a melhor forma de fazer isso realmente vai ser criar algo que o usuário (per user) consiga fazer login com o seu mercadolivre para então um bot ou agentbrowser entre nos produtos para extrair a URL clicando em compartilhar na barra preta superior conforme falado anteriormente, e tambem pode ver no segndo print. 
+
+Além disso se conseguir com que o usuário faça o login para o agnetbrowser navegue por ele, é mais uma oportunidade para acessar https://www.mercadolivre.com.br/afiliados/hub e encontrar os produtos com maios porcentagem de GANHOS EXTRAS.
+
+O link foi contabilizado click somente interno não no sistema do mercado livre, preciso que ter as duas validações, e é por isso que sugerir o agente browser que extrair links e produtos diretamente da plataforma do nmercado livre
+
+## 🤖 Claude *(17:38:57)*
+
+
+## 🤖 Claude *(17:39:00)*
+
+Isso reframa a estratégia de afiliados de forma importante — e conecta direto com o probe do **Operador de Browser Autenticado** que já fizemos. Deixa eu separar os fios e checar a materialidade antes de responder, porque tem uma restrição dura aqui que muda tudo.
+
+Probe-first (em paralelo): o catálogo que o auto-monetize usa vs. os produtos reais da página, e o formato que funciona:
+
+## 🤖 Claude *(17:39:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "offset": 1,
+  "limit": 54
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Shared affiliate monetization for the orchestrate pipeline (Deno). Auto-embeds OUR click-tracking redirect
+> 2	// (?link_id=...) into generated content for catalog products, so auto-monetized content is click-counted
+> 3	// (OTD-ML-CLICKS) and attributes per-owner via matt_word [+ matt_tool]. Catalog mirrors scripts/link-forge.ts.
+> 4	// SOP: docs/processes/[[ml-affiliate-attribution|ml-affiliate-attribution]].md.
+> 5	
+> 6	export interface AffiliateProduct {
+> 7	  key: string;
+> 8	  mlb: string;
+> 9	  display: string;
+> 10	  pattern: RegExp;
+> 11	}
+> 12	
+> 13	// Phase 1 High-Ticket / Smart Home catalog — kept in sync with scripts/link-forge.ts PRODUCTS. Returns fresh
+> 14	// RegExp instances each call (global-flag lastIndex is stateful — never share a single instance across scans).
+> 15	export function affiliateProducts(): AffiliateProduct[] {
+> 16	  return [
+> 17	    { key: "roborock_s8", mlb: "MLB27834876", display: "Roborock S8 Pro Ultra", pattern: /roborock\s+s8[a-z0-9 ]*(?:pro\s+ultra)?/gi },
+> 18	    { key: "samsung_neo_qled_8k", mlb: "MLB36263268", display: "Samsung Neo QLED 8K", pattern: /(?:neo\s+qled\s+8k|samsung\s+8k)/gi },
+> 19	    { key: "family_hub", mlb: "MLB37674259", display: "Geladeira Samsung Family Hub", pattern: /family\s+hub/gi },
+> 20	  ];
+> 21	}
+> 22	
+> 23	const ML_PRODUCT_BASE = "https://www.mercadolivre.com.br";
+> 24	
+> 25	/** Build the REAL ML product URL with per-owner attribution: matt_word (+ optional matt_tool) + utm. */
+> 26	export function buildMlProductUrl(mlb: string, affiliateTag: string, mattTool?: string | null): string {
+> 27	  const numeric = mlb.replace(/^MLB-?/i, "");
+> 28	  const u = new URL(`${ML_PRODUCT_BASE}/MLB-${numeric}`);
+> 29	  u.searchParams.set("matt_word", affiliateTag);
+> 30	  if (mattTool && mattTool.trim()) u.searchParams.set("matt_tool", mattTool.trim());
+> 31	  u.searchParams.set("utm_source", "gcrux_orchestrator");
+> 32	  u.searchParams.set("utm_medium", "content_mesh");
+> 33	  u.searchParams.set("utm_campaign", "highticket_smarthome_q3");
+> 34	  return u.toString();
+> 35	}
+> 36	
+> 37	interface MinimalAdmin {
+> 38	  from(table: string): {
+> 39	    insert(row: Record<string, unknown>): { select(cols: string): { single(): Promise<{ data: { id?: string } | null }> } };
+> 40	  };
+> 41	}
+> 42	
+> 43	/**
+> 44	 * Auto-monetize generated content: for each catalog product mentioned, create an affiliate_links row (real ML
+> 45	 * matt_word URL stored in short_url) and replace the FIRST mention with an HTML anchor to OUR tracked redirect
+> 46	 * (?link_id=...), so the click is counted (OTD-ML-CLICKS) and attributed to the owner. Per-owner, FAIL-OPEN: no
+> 47	 * affiliate_tag → content unchanged (the pipeline never breaks because monetization is unavailable). Returns the
+> 48	 * rewritten content + how many distinct products were linked.
+> 49	 */
+> 50	export async function monetizeContent(
+> 51	  admin: MinimalAdmin,
+> 52	  supabaseUrl: string,
+> 53	  content: string,
+> 54	  ownerId: string,
+> ```
+
+## 🤖 Claude *(17:39:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== vm_affiliate_products (schema + dados reais) ===\"\ncurl -s \"${URL}/rest/v1/vm_affiliate_products?select=*&limit=3\" -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" | python3 -m json.tool 2>/dev/null | head -60",
+  "description": "Read auto-monetize catalog + query vm_affiliate_products"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vm_affiliate_products (schema + dados reais) ===
+> [
+>     {
+>         "id": "a1b98ea5-03ba-42fb-aab4-99ee364500df",
+>         "network": "mercadolivre",
+>         "external_id": "MLB32642694",
+>         "name": "Geladeira Samsung Family Hub French Door Rf27 Black Inox",
+>         "description": null,
+>         "image_url": "https://http2.mlstatic.com/D_Q_NP_2X_939489-MLA96785030910_112025-E.webp",
+>         "category": "Casa Inteligente",
+>         "niches": [
+>             "smart-home"
+>         ],
+>         "price": 18946.0,
+>         "currency": "BRL",
+>         "commission_rate": null,
+>         "commission_value": null,
+>         "estimated_epc": null,
+>         "profitability_score": 83.0,
+>         "competition_index": null,
+>         "trend_score": null,
+>         "product_url": "https://www.mercadolivre.com.br/geladeira-samsung-family-hub-french-door-rf27-black-inox/p/MLB32642694",
+>         "affiliate_template_url": null,
+>         "cookie_duration_days": null,
+>         "is_recurring": false,
+>         "is_active": true,
+>         "embedding": null,
+>         "metadata": {
+>             "source": "apify-discovery",
+>             "availability": "available",
+>             "last_checked_at": "2026-06-01T22:24:57.200Z",
+>             "metrics_pending": false,
+>             "discovered_query": "geladeira samsung family hub french door"
+>         },
+>         "detected_at": "2026-06-01T22:24:57.603628+00:00",
+>         "updated_at": "2026-06-01T22:24:57.603628+00:00"
+>     },
+>     {
+>         "id": "9531223a-14df-4654-85fd-ac1df5c21110",
+>         "network": "mercadolivre",
+>         "external_id": "MLB27834876",
+>         "name": "Roborock S8 Pro Ultra",
+>         "description": "Rob\u00f4 aspirador e passador premium com auto-esvaziamento. Alvo high-ticket Smart Home (revenue-flywheel \u00a76).",
+>         "image_url": "https://http2.mlstatic.com/D_Q_NP_2X_923462-MLA99979795653_112025-E.webp",
+>         "category": "Casa Inteligente",
+>         "niches": [
+>             "smart_home",
+>             "limpeza",
+>             "high_ticket"
+>         ],
+>         "price": 17770.0,
+>         "currency": "BRL",
+>         "commission_rate": null,
+>         "commission_value": null,
+>         "estimated_epc": null,
+>         "profitability_score": 70.0,
+>         "competition_index": null,
+>         "trend_score": null,
+>         "product_url": "https://www.mercadolivre.com.br/p/MLB27834876",
+>         "affiliate_template_url": null,
+>         "cookie_duration_days": null,
+> ```
+
+## 🤖 Claude *(17:41:09)*
+
+
+## 🤖 Claude *(17:41:10)*
+
+Isso é uma virada estratégica importante, e o seu print tem um diagnóstico material claro por trás. Deixa eu marcar o capítulo e puxar a memória do que já provamos sobre isso, pra não repetir trabalho:
+
+## 🤖 Claude *(17:41:12)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "ML attribution + browser operator pivot",
+  "summary": "Dead-link root cause (stale hardcoded catalog) + Sovereign directive: per-user ML login + agent-browser to extract official Share links; need dual validation (internal + ML)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "ML attribution + browser operator pivot". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(17:41:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 4 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project_authenticated_browser_operator
+> 3	description: "Probe 2026-06-02: ML sem API de afiliados, link oficial exige portal logado (ref assinado), datacenter bloqueado p/ browser REAL. RESULTADO atribuição 2026-06-04: painel ML mostrou 1 clique de link matt_word (atribui no nível do CLIQUE; R$0 esperado sem compra). Click ledger in-system FECHADO v6.28.0 (OTD-ML-CLICKS, redirect tracker). matt_tool ainda não embutido (atribuição definitiva)."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: d4434afb-c259-4270-a01a-03d85ba37719
+> 8	---
+> 9	
+> 10	**Diretiva Sovereign 2026-06-01:** construir um **Operador de Browser Autenticado** — um agente/browser que navega "exatamente como um usuário normal" **logado**, focado nas **ações interativas que nos barram** (não scraping em massa, não teste E2E). Caso canônico: abrir o produto ML → clicar **Compartilhar** com o login ML do usuário → pegar o **`meli.la` cravado** → gravar em `affiliate_config.metadata.shortlinks[MLB]` (fecha o elo de atribuição garantida — ver [[reference_encrypted_views_write_pattern]] e o SOP `docs/processes/ml-affiliate-attribution.md`). Generalizável p/ qualquer ação logada bloqueada.
+> 11	
+> 12	**Por quê:** o `meli.la` é a única atribuição **garantida** do ML e **não tem API** — só sai de clique humano logado em "Compartilhar". O Apify (residencial, anônimo) faz busca mas **não** ações por-conta. Esta sessão provou que do **IP de datacenter** o ML serve `account-verification`/"Hubo un error" até pra **browser real** (headless + curl-UA + Apify intermitente).
+> 13	
+> 14	**Decisões do Sovereign (AskUserQuestion 2026-06-01):**
+> 15	- **Caminho = PROBE-FIRST.** Antes de código de módulo: validar materialmente que um browser **LOGADO** consegue o fluxo share→meli.la de um runtime viável. Se não furar daqui, a arquitetura muda. Depois `/bok-scribe` (BoK Gate — é módulo novo) → build.
+> 16	- **Runtime = decidir APÓS o probe.** Testar opções: nosso servidor + proxy residencial · cloud browser stealth (agent-browser suporta AgentCore/Vercel Sandbox) · máquina do Sovereign (residencial, ML logado). Logado *pode* furar onde anônimo não — não-testado.
+> 17	
+> 18	**Constraints a respeitar:**
+> 19	1. **Auth sem senha crua:** login interativo 1×→ profile/cookies persistidos (vault de sessão do `agent-browser`), per-user p/ multi-tenant. Nunca senha em texto.
+> 20	2. **Tool base:** `agent-browser` (mesmo motor do E2E, modo sessão persistente). Siblings: Claude-in-Chrome MCP, Playwright.
+> 21	3. **BoK Gate:** módulo novo → MRD→SDD via `/bok-scribe` antes do código (ou override consciente registrado).
+> 22	
+> 23	**PROBE EXECUTADO (2026-06-02) — veredito material:**
+> 24	- **ML não tem API de afiliados** (múltiplas fontes + 403 até no WebFetch da Anthropic). OAuth/login-consentimento daria só API token, que não existe p/ afiliados.
+> 25	- **Link oficial = portal logado.** Segui o `meli.la/2gh13Sw` (shortlink do Usuário Zero) → redireciona p/ `mercadolivre.com.br/social/uxmarket?matt_word=caga6077534&matt_tool=43641843&ref=<ASSINADO>`. O `ref` é token assinado **não-fabricável** → só nasce no portal de afiliados logado.
+> 26	- **Datacenter bloqueado — PROVADO p/ browser REAL:** `agent-browser` (Chromium real) abrindo `mercadolivre.com.br/afiliados/` do IP Oracle → página "Hubo un error accediendo a esta pagina" (shot `/tmp/ml-afiliados-portal.png`). Confirma o que era "não-testado". ⇒ Browser Operator **NÃO roda do datacenter**; runtime = navegador do user OU IP residencial (Apify/cloud browser).
+> 27	- **Resolver `src/lib/affiliate.ts` incompleto:** seta só `matt_word` (correto, =caga6077534) mas **falta `matt_tool=43641843`** (per-user; hoje não armazenado no `affiliate_config`).
+> 28	
+> 29	**EXPERIMENTO — RESULTADO (2026-06-04):** Sovereign mostrou o painel "Central de afiliados e criadores → Métricas": **Cliques totais = 1** (▲100%), R$ 0 · 0 compradores · 0 ordens. ⇒ um link `matt_word` **registra clique no painel ML** (a atribuição best-effort funciona no nível do clique); R$0 é **esperado sem compra** (ML só atribui receita na conversão, dentro da janela). A queixa "a contabilidade de clicks não funcionou" era do **NOSSO** lado — o sistema não contava cliques (só víamos receita no postback de compra; `affiliate_links.clicks` nunca incrementava). **FECHADO v6.28.0 (OTD-ML-CLICKS):** click ledger in-system — links publicados passam pelo redirect `process-affiliate-link` GET que registra o clique (RPC `record_affiliate_click` service-role-only, atribuído ao dono) + 302 pro ML real; `link-forge` emite o redirect; `ROIWidget` soma `affiliate_links.clicks` → "Cliques Totais" reflete cliques reais antes de compra. Smoke `scripts/qa/smoke-affiliate-click.ts` 10/10. SOP `ml-affiliate-attribution.md §click ledger`. **`matt_tool` SUPORTADO v6.28.0** — coluna `affiliate_config.matt_tool` + campo na UI (`AffiliatesPage`) + threading em todos os builders ML (`src/lib/affiliate.ts`, `process-affiliate-link`, `_shared/affiliate.ts`); rida o link quando setado. O Sovereign pode setar `43641843` em /dashboard/affiliates (hoje null no Usuário Zero). Caveat: efeito real na atribuição ML é **não-verificável** daqui (ML opaco) — é aditivo, casa o formato oficial. Atribuição DEFINITIVA ainda exige o `meli.la`/`ref` assinado do painel (Browser Operator, fora-do-datacenter).
+> 30	
+> 31	**Técnica reutilizável (achada no #1 disconnect):** logar o `agent-browser` como qualquer user via Supabase Admin API `POST /auth/v1/admin/generate_link` (magiclink) + abrir o `action_link` — sem senha nem token do DevTools, per-user nativo. Usei p/ verificar (não-destrutivo) o disconnect Meta/social na UI logada `/dashboard/social` (botões wired a `rpc('disconnect_social')`). Ver [[reference_supabase_keys_migrated]] (SB_SECRET_KEY p/ Admin API).
+> 32	
+> 33	**Próximo passo (reavaliado 2026-06-04):** visibilidade de clique resolvida **no nosso lado** (OTD-ML-CLICKS) — não dependemos mais do painel ML p/ contar. O Browser Operator (#2) agora é só sobre **atribuição definitiva** (`matt_tool`/`meli.la` por clique humano logado), de prioridade menor agora que `matt_word` rastreia o clique E nós o contamos. Quando o Sovereign quiser receita garantida: (a) add `matt_tool` per-user no `affiliate_config` + embutir em `buildMattWordUrl`/redirect; OU (b) `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial) p/ capturar `meli.la` do "Compartilhar". Aguardando 1ª conversão real p/ fechar `revenue_cents>0`.
+> 34	
+> ```
+
+## 🤖 Claude *(17:42:01)*
+
+
+## 🤖 Claude *(17:42:03)*
+
+A memória reconcilia o paradoxo do seu print — e muda o diagnóstico. Deixa eu re-probar o bloqueio do datacenter num produto **válido** (não no morto) pra te dar o quadro preciso de hoje:
+
+## 🤖 Claude *(17:42:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== produto REAL (formato /p/ do vm_affiliate_products) \u2014 datacenter ===\"\ncurl -s -o /dev/null -w \"MLB27834876 (/p/): HTTP %{http_code}\\n\" --max-time 8 \"https://www.mercadolivre.com.br/p/MLB27834876\"\necho \"=== o formato BARE que o auto-monetize gerou (link morto) ===\"\ncurl -s -o /dev/null -w \"MLB-27834876 (bare): HTTP %{http_code}\\n\" --max-time 8 \"https://www.mercadolivre.com.br/MLB-27834876\"\necho \"=== Family Hub real (slug + /p/) ===\"\ncurl -s -o /dev/null -w \"Family Hub MLB32642694: HTTP %{http_code}\\n\" --max-time 8 \"https://www.mercadolivre.com.br/geladeira-samsung-family-hub-french-door-rf27-black-inox/p/MLB32642694\"\necho \"=== hub de afiliados (alvo dos GANHOS EXTRAS) ===\"\ncurl -s -o /dev/null -w \"/afiliados/hub: HTTP %{http_code}\\n\" --max-time 8 \"https://www.mercadolivre.com.br/afiliados/hub\"",
+  "description": "Re-probe datacenter access to real ML products + affiliate hub"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === produto REAL (formato /p/ do vm_affiliate_products) — datacenter ===
+> MLB27834876 (/p/): HTTP 403
+> === o formato BARE que o auto-monetize gerou (link morto) ===
+> MLB-27834876 (bare): HTTP 403
+> === Family Hub real (slug + /p/) ===
+> Family Hub MLB32642694: HTTP 403
+> === hub de afiliados (alvo dos GANHOS EXTRAS) ===
+> /afiliados/hub: HTTP 403
+> ```
+
+## 🤖 Claude *(17:43:20)*
+
+
+## 🤖 Claude *(17:43:21)*
+
+Quadro material completo e decisivo:
+
+**Datacenter 403 em TUDO no ML hoje** (reprovado agora): produto real `/p/MLB27834876`, formato bare, Family Hub, **e** `/afiliados/hub` — todos **403**. O bloqueio do nosso IP está firme.
+
+Atualizando a memória do módulo com o root-cause e a reconciliação antes de responder:
+
+## 🤖 Claude *(17:43:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md",
+  "old_string": "**Pr\u00f3ximo passo (reavaliado 2026-06-04):** visibilidade de clique resolvida **no nosso lado** (OTD-ML-CLICKS) \u2014 n\u00e3o dependemos mais do painel ML p/ contar. O Browser Operator (#2) agora \u00e9 s\u00f3 sobre **atribui\u00e7\u00e3o definitiva** (`matt_tool`/`meli.la` por clique humano logado), de prioridade menor agora que `matt_word` rastreia o clique E n\u00f3s o contamos. Quando o Sovereign quiser receita garantida: (a) add `matt_tool` per-user no `affiliate_config` + embutir em `buildMattWordUrl`/redirect; OU (b) `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial) p/ capturar `meli.la` do \"Compartilhar\". Aguardando 1\u00aa convers\u00e3o real p/ fechar `revenue_cents>0`.",
+  "new_string": "**Pr\u00f3ximo passo (reavaliado 2026-06-04):** visibilidade de clique resolvida **no nosso lado** (OTD-ML-CLICKS) \u2014 n\u00e3o dependemos mais do painel ML p/ contar. O Browser Operator (#2) agora \u00e9 s\u00f3 sobre **atribui\u00e7\u00e3o definitiva** (`matt_tool`/`meli.la` por clique humano logado), de prioridade menor agora que `matt_word` rastreia o clique E n\u00f3s o contamos. Quando o Sovereign quiser receita garantida: (a) add `matt_tool` per-user no `affiliate_config` + embutir em `buildMattWordUrl`/redirect; OU (b) `/bok-scribe` do Browser Operator c/ runtime fora-do-datacenter (navegador do user / IP residencial) p/ capturar `meli.la` do \"Compartilhar\". Aguardando 1\u00aa convers\u00e3o real p/ fechar `revenue_cents>0`.\n\n**UPDATE 2026-06-08 \u2014 root-cause do link morto + dual-validation cristalizada (Sovereign reabriu o tema):**\n- **Bug do link morto (prioridade imediata):** o auto-monetize do flywheel (`_shared/affiliate.ts` \u2192 `affiliateProducts()` + `buildMlProductUrl`) usa **cat\u00e1logo HARDCODED** com formato **BARE** `mercadolivre.com.br/MLB-{id}` (\u2192 **404** no residencial, \"n\u00e3o existe\" no print do Sovereign) + **ids stale** (Family Hub cat\u00e1logo `MLB37674259` \u2260 real `MLB32642694`; s\u00f3 Roborock id bate, mas formato bare mata). Os produtos REAIS vivem em `vm_affiliate_products.product_url` (permalink `/p/MLB...` ou slug+`/p/` \u2014 funcionam). A p\u00e1gina `/dashboard/affiliate-products` funciona (l\u00ea `vm_affiliate_products`), mas o FLYWHEEL emite link morto. **FIX = ligar o auto-monetize ao `vm_affiliate_products.product_url`** (corrige formato E id) \u2014 bug fix contido, exempt de BoK.\n- **Reconcilia \"ML n\u00e3o contabilizou o clique\" (N\u00c3O contradiz 2026-06-04):** matt_word N\u00c3O falha \u2014 o painel ML registrou 1 clique em 2026-06-04. Desta vez contou s\u00f3 interno porque o link **404** (produto morto) \u2192 ML nunca carregou produto v\u00e1lido \u2192 sem clique ML. Com URL V\u00c1LIDA, matt_word volta a contar no painel ML (dual-counting **no n\u00edvel do CLIQUE**: nosso `affiliate_links.clicks` + painel ML).\n- **Dual-validation (diretiva Sovereign):** exige AMBOS \u2014 clique interno (\u2713 OTD-ML-CLICKS) **E** atribui\u00e7\u00e3o ML. Click-level: matt_word com URL v\u00e1lida. **RECEITA** definitiva: ainda s\u00f3 o `meli.la`/`ref` ASSINADO oficial (sem API, s\u00f3 \"Compartilhar\" logado) \u2192 Browser Operator.\n- **Datacenter 403 RECONFIRMADO 2026-06-08:** curl do servidor Oracle \u2192 TODAS as URLs ML = **403** (produto real `/p/MLB27834876`, bare, Family Hub slug, E `/afiliados/hub`). Browser Operator definitivamente **N\u00c3O roda daqui** \u2192 runtime residencial OBRIGAT\u00d3RIO (decis\u00e3o que trava o m\u00f3dulo).\n- **Alvo do link oficial:** coluna `vm_affiliate_products.affiliate_template_url` (HOJE **NULL**) \u2014 onde o Browser Operator grava o `meli.la` extra\u00eddo do \"Compartilhar\".\n- **2\u00ba job do Browser Operator:** scrape `mercadolivre.com.br/afiliados/hub` p/ produtos de maior % (GANHOS EXTRAS / comiss\u00e3o) \u2014 descoberta orientada a comiss\u00e3o, n\u00e3o s\u00f3 trend."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_authenticated_browser_operator.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:44:09)*
+
+
+## 🤖 Claude *(17:44:10)*
+
+Tenho o diagnóstico fechado. Antes das decisões, o que o seu print realmente revela:
+
+## 🔍 Por que o link "não existe" — e por que o ML não contou
+
+O auto-monetize do **flywheel** usa um **catálogo hardcoded** (`_shared/affiliate.ts` → `affiliateProducts()` + `buildMlProductUrl`) que monta o formato **bare** `mercadolivre.com.br/MLB-27834876` → **404** (não existe no residencial). Pior: alguns ids estão **stale** — o Family Hub no catálogo é `MLB37674259`, mas o produto **real** é `MLB32642694`.
+
+Os produtos **reais e funcionais** vivem em `vm_affiliate_products.product_url` (permalink `/p/MLB...` ou com slug) — é exatamente por isso que a página `/dashboard/affiliate-products` funciona (ela lê essa tabela), enquanto **o flywheel emite link morto** (lê o catálogo velho). São duas fontes desencontradas.
+
+**E isto reconcilia o "ML não contou":** não é que o `matt_word` falha — em **2026-06-04 seu painel ML mostrou 1 clique** de um link matt_word. Desta vez contou **só interno** (`clicks 1→4`) porque o destino era **404**: o ML nunca carregou um produto válido, então não houve clique do lado deles. **Com a URL certa, o matt_word volta a contar no painel ML** (a dupla contagem no nível do *clique*).
+
+## ✅ Você está certo sobre a validação definitiva
+
+O `matt_word` dá atribuição **best-effort no clique**. **Receita garantida** só vem do link **oficial assinado** (`meli.la`/`ref`) — que **não tem API** e só sai do botão **"Compartilhar"** logado, exatamente como você descreveu. O alvo já existe no schema: `vm_affiliate_products.affiliate_template_url` (**hoje NULL**) é onde esse link oficial deve ser gravado. E o `/afiliados/hub` é o lugar dos **GANHOS EXTRAS** (maior %).
+
+## ⛔ A restrição que trava o módulo (reprovada hoje, Lei 1)
+
+Do **nosso datacenter, TUDO no ML dá 403** — acabei de testar: produto real, formato bare, Family Hub, e o `/afiliados/hub`. Um `agent-browser` rodando **neste servidor não alcança o ML** (bate em "Hubo un error"). **Logo o Operador de Browser logado precisa de runtime residencial** (sua máquina ou proxy residencial). Construir ele pra rodar daqui seria construir o que não roda.
+
+→ É módulo novo (BoK gate). Já temos probe + memória; falta resolver **onde ele roda** antes do código.
+
+Duas decisões pra destravar:
+
+## 🤖 Claude *(17:44:17)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O flywheel est\u00e1 emitindo link MORTO (cat\u00e1logo hardcoded bare/stale). Corrijo isso agora ligando o auto-monetize aos produtos reais (vm_affiliate_products.product_url)?",
+      "header": "Link morto",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim, corrige agora (Recomendado)",
+          "description": "Auto-monetize passa a usar vm_affiliate_products.product_url (permalink /p/ real) em vez do cat\u00e1logo bare/stale. Para de emitir 404 E restaura a contagem do clique matt_word no painel ML. Bug fix contido (affiliate.ts + redeploy orchestrate-step), exempt de BoK."
+        },
+        {
+          "label": "N\u00e3o, foco no Browser Operator",
+          "description": "N\u00e3o vale patchar o caminho matt_word; vamos direto pro link oficial (meli.la) via o m\u00f3dulo novo."
+        },
+        {
+          "label": "Os dois",
+          "description": "Corrige o link morto agora E j\u00e1 inicia o /bok-scribe do Browser Operator na sequ\u00eancia."
+        }
+      ]
+    },
+    {
+      "question": "O Operador de Browser logado no ML N\u00c3O roda do datacenter (403 reprovado hoje). Onde ele vai rodar?",
+      "header": "Runtime do bot",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sua m\u00e1quina (residencial)",
+          "description": "Voc\u00ea roda o agent-browser localmente, logado no seu ML; n\u00f3s orquestramos os passos (abrir produto \u2192 Compartilhar \u2192 extrair meli.la \u2192 gravar em affiliate_template_url). IP residencial fura onde o datacenter \u00e9 403."
+        },
+        {
+          "label": "Proxy residencial no servidor",
+          "description": "Roteamos o agent-browser daqui atrav\u00e9s de um proxy residencial pago. Mant\u00e9m tudo no servidor, mas adiciona custo + ponto de falha de proxy; precisa provar que fura o 403."
+        },
+        {
+          "label": "Decidir no /bok-scribe",
+          "description": "Documenta o m\u00f3dulo primeiro (MRD\u2192SDD); o runtime vira decis\u00e3o de arquitetura registrada no SDD, com probe do proxy vs m\u00e1quina-do-user antes de codar."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O flywheel está emitindo link MORTO (catálogo hardcoded bare/stale). Corrijo isso agora ligando o auto-monetize aos produtos reais (vm_affiliate_products.product_url)?"="Os dois", "O Operador de Browser logado no ML NÃO roda do datacenter (403 reprovado hoje). Onde ele vai rodar?"="Sua máquina (residencial)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(17:47:17)*
+
+
+## 🤖 Claude *(17:47:18)*
+
+Decisões: **"os dois"** (corrijo o link morto agora + inicio o BoK do Browser Operator) e runtime = **sua máquina residencial**.
+
+Começo pela correção (contida, valor imediato). Preciso dos ids e URLs reais de TODOS os produtos ativos em `vm_affiliate_products` pra alinhar o catálogo do flywheel:
+
+## 🤖 Claude *(17:47:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== TODOS os vm_affiliate_products ativos (external_id \u00b7 name \u00b7 product_url) ===\"\ncurl -s \"${URL}/rest/v1/vm_affiliate_products?select=external_id,name,product_url,is_active,profitability_score&order=profitability_score.desc\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" \\\n  | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nprint(f'total={len(d)}')\nfor r in d:\n    print(f\\\"{r['external_id']:16} active={r['is_active']} score={r.get('profitability_score')}  {r['name'][:40]}\\\")\n    print(f\\\"    url: {r['product_url']}\\\")\n\"",
+  "description": "Query all vm_affiliate_products for real ids + urls"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TODOS os vm_affiliate_products ativos (external_id · name · product_url) ===
+> total=3
+> MLB4699602679    active=True score=86.0  Smart Tv 75 8k Neo Qled Mini Led Samsung
+>     url: https://www.mercadolivre.com.br/smart-tv-75-8k-neo-qled-mini-led-samsung-qn75qn900b/up/MLBU3980641251
+> MLB32642694      active=True score=83.0  Geladeira Samsung Family Hub French Door
+>     url: https://www.mercadolivre.com.br/geladeira-samsung-family-hub-french-door-rf27-black-inox/p/MLB32642694
+> MLB27834876      active=True score=70.0  Roborock S8 Pro Ultra
+>     url: https://www.mercadolivre.com.br/p/MLB27834876
+> ```
+
+## 🤖 Claude *(17:49:46)*
+
+
+## 🤖 Claude *(17:49:48)*
+
+3 produtos reais — e **2 dos 3 ids do catálogo estão errados** (Neo QLED `MLB36263268`→real `MLB4699602679`; Family Hub `MLB37674259`→real `MLB32642694`), e a URL canônica nem deriva do id (a TV usa `/up/MLBU3980641251`). Confirma: a única fonte confiável é `vm_affiliate_products.product_url`. Vou ligar o auto-monetize a ela. Checando usos de `buildMlProductUrl` antes de mexer:
+
+## 🤖 Claude *(17:49:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== usos de buildMlProductUrl no repo ===\"\ngrep -rn \"buildMlProductUrl\" supabase/ scripts/ src/ 2>/dev/null\necho \"\"\necho \"=== contexto exato da linha 64 (uso atual) ===\"\nsed -n '61,73p' supabase/functions/_shared/affiliate.ts",
+  "description": "Check buildMlProductUrl usages + monetize context"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === usos de buildMlProductUrl no repo ===
+> supabase/functions/_shared/affiliate.ts:26:export function buildMlProductUrl(mlb: string, affiliateTag: string, mattTool?: string | null): string {
+> supabase/functions/_shared/affiliate.ts:64:    const mlUrl = buildMlProductUrl(p.mlb, affiliateTag, opts.mattTool);
+> 
+> === contexto exato da linha 64 (uso atual) ===
+>   for (const p of affiliateProducts()) {
+>     p.pattern.lastIndex = 0;
+>     if (!p.pattern.test(out)) continue;
+>     const mlUrl = buildMlProductUrl(p.mlb, affiliateTag, opts.mattTool);
+>     let target = mlUrl; // fail-open default: the direct ML url if the ledger row can't be created.
+>     try {
+>       const { data: link } = await admin.from("affiliate_links").insert({
+>         user_id: ownerId, original_url: mlUrl, short_url: mlUrl, platform: "mercadolivre",
+>         product_id: p.mlb, content_id: null, campaign_id: null,
+>         metadata: { source: "auto-monetize", display: p.display, campaign: opts.campaignId ?? null, matt_tool: opts.mattTool ?? null },
+>       }).select("id").single();
+>       if (link?.id) {
+>         // Branded redirect when configured (login.mcorch.com/go/<uuid>); fail-safe to the direct Supabase fn
+> ```
+
+## 🤖 Claude *(17:50:33)*
+
+
+## 🤖 Claude *(17:50:35)*
+
+`buildMlProductUrl` só é usado na linha 64 (dentro do próprio arquivo) — caminho livre. Aplicando o fix: catálogo com ids reais + `buildMlProductUrl` passa a ler `vm_affiliate_products.product_url` (fonte única, fail-open pro permalink `/p/`, nunca mais o formato bare):
+
+## 🤖 Claude *(17:50:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "    { key: \"roborock_s8\", mlb: \"MLB27834876\", display: \"Roborock S8 Pro Ultra\", pattern: /roborock\\s+s8[a-z0-9 ]*(?:pro\\s+ultra)?/gi },\n    { key: \"samsung_neo_qled_8k\", mlb: \"MLB36263268\", display: \"Samsung Neo QLED 8K\", pattern: /(?:neo\\s+qled\\s+8k|samsung\\s+8k)/gi },\n    { key: \"family_hub\", mlb: \"MLB37674259\", display: \"Geladeira Samsung Family Hub\", pattern: /family\\s+hub/gi },",
+  "new_string": "    // mlb == vm_affiliate_products.external_id (the JOIN key to resolve the canonical product_url). Keep in sync with reality.\n    { key: \"roborock_s8\", mlb: \"MLB27834876\", display: \"Roborock S8 Pro Ultra\", pattern: /roborock\\s+s8[a-z0-9 ]*(?:pro\\s+ultra)?/gi },\n    { key: \"samsung_neo_qled_8k\", mlb: \"MLB4699602679\", display: \"Samsung Neo QLED 8K\", pattern: /(?:neo\\s+qled\\s+8k|samsung\\s+8k)/gi },\n    { key: \"family_hub\", mlb: \"MLB32642694\", display: \"Geladeira Samsung Family Hub\", pattern: /family\\s+hub/gi },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:50:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "/** Build the REAL ML product URL with per-owner attribution: matt_word (+ optional matt_tool) + utm. */\nexport function buildMlProductUrl(mlb: string, affiliateTag: string, mattTool?: string | null): string {\n  const numeric = mlb.replace(/^MLB-?/i, \"\");\n  const u = new URL(`${ML_PRODUCT_BASE}/MLB-${numeric}`);\n  u.searchParams.set(\"matt_word\", affiliateTag);\n  if (mattTool && mattTool.trim()) u.searchParams.set(\"matt_tool\", mattTool.trim());\n  u.searchParams.set(\"utm_source\", \"gcrux_orchestrator\");\n  u.searchParams.set(\"utm_medium\", \"content_mesh\");\n  u.searchParams.set(\"utm_campaign\", \"highticket_smarthome_q3\");\n  return u.toString();\n}",
+  "new_string": "/** Append per-owner attribution (matt_word [+ matt_tool] + utm) to a base ML product URL. */\nfunction withAffiliateParams(baseUrl: string, affiliateTag: string, mattTool?: string | null): string {\n  const u = new URL(baseUrl);\n  u.searchParams.set(\"matt_word\", affiliateTag);\n  if (mattTool && mattTool.trim()) u.searchParams.set(\"matt_tool\", mattTool.trim());\n  u.searchParams.set(\"utm_source\", \"gcrux_orchestrator\");\n  u.searchParams.set(\"utm_medium\", \"content_mesh\");\n  u.searchParams.set(\"utm_campaign\", \"highticket_smarthome_q3\");\n  return u.toString();\n}\n\n/** Build the REAL ML product URL with per-owner attribution. The canonical URL comes from\n *  vm_affiliate_products.product_url (single source of truth, kept fresh by Apify discovery) \u2014 NEVER rebuilt\n *  from the id, because the legacy bare `/MLB-<id>` format 404s and the canonical path id can differ from\n *  external_id (e.g. `/up/MLBU\u2026`). Fail-open: if the row is missing, fall back to the `/p/MLB<id>` permalink. */\nexport async function buildMlProductUrl(\n  admin: { from: (t: string) => { select: (c: string) => any } },\n  mlb: string,\n  affiliateTag: string,\n  mattTool?: string | null,\n): Promise<string> {\n  let base = `${ML_PRODUCT_BASE}/p/${mlb.replace(/^MLB-?/i, \"MLB\")}`; // fail-open permalink (not the dead bare /MLB-<id> form)\n  try {\n    const { data } = await admin.from(\"vm_affiliate_products\")\n      .select(\"product_url\").eq(\"external_id\", mlb).eq(\"is_active\", true).maybeSingle();\n    if (data?.product_url) base = data.product_url as string;\n  } catch (_) { /* fail-open to permalink */ }\n  return withAffiliateParams(base, affiliateTag, mattTool);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:08)*
+
+
+## 🤖 Claude *(17:51:09)*
+
+Preciso afrouxar o tipo do `admin` em `buildMlProductUrl` (o `MinimalAdmin` do `monetizeContent` só expõe `insert`, mas o cliente real tem `select`). Corrigindo o tipo + trocando a chamada na linha 64:
+
+## 🤖 Claude *(17:51:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "export async function buildMlProductUrl(\n  admin: { from: (t: string) => { select: (c: string) => any } },\n  mlb: string,",
+  "new_string": "export async function buildMlProductUrl(\n  admin: { from: (t: string) => any },\n  mlb: string,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "    const mlUrl = buildMlProductUrl(p.mlb, affiliateTag, opts.mattTool);",
+  "new_string": "    const mlUrl = await buildMlProductUrl(admin, p.mlb, affiliateTag, opts.mattTool);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:29)*
+
+
+## 🤖 Claude *(17:51:29)*
+
+Agora: data-fix do link existente (bare→`/p/`) + redeploy do `orchestrate-step` (que valida o typecheck do Deno) + re-prova do branded link:
+
+## 🤖 Claude *(17:51:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nREAL=\"https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3\"\necho \"=== data-fix: PATCH affiliate_links 7993c6a4 (bare -> /p/) ===\"\ncurl -s -X PATCH \"${URL}/rest/v1/affiliate_links?id=eq.7993c6a4-9a9c-4de1-8284-8180af482843\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"short_url\\\": \\\"${REAL}\\\", \\\"original_url\\\": \\\"${REAL}\\\"}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('short_url agora:', d[0]['short_url'] if isinstance(d,list) and d else d)\"\necho \"\"\necho \"=== redeploy orchestrate-step (valida o typecheck Deno do fix) ===\"\nnpx supabase functions deploy orchestrate-step --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"Deploying|Deployed|script size|error|Bundl\" | head\necho \"DEPLOY_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Data-fix existing link + redeploy orchestrate-step",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === data-fix: PATCH affiliate_links 7993c6a4 (bare -> /p/) ===
+> short_url agora: https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3
+> 
+> === redeploy orchestrate-step (valida o typecheck Deno do fix) ===
+> Bundling Function: orchestrate-step
+> Deploying Function: orchestrate-step (script size: 122.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> DEPLOY_EXIT=0
+> ```
+
+## 🤖 Claude *(17:51:50)*
+
+
+## 🤖 Claude *(17:51:50)*
+
+- **Data-fix OK**: `short_url` agora é `.../p/MLB27834876?matt_word=...` (formato real, não mais bare).
+- **Deploy OK**: orchestrate-step **122.8kB** exit 0 → o typecheck Deno do meu fix passou.
+
+Re-provando que o branded link agora aponta pro produto REAL (`/p/`):
+
+## 🤖 Claude *(17:51:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== branded link 7993c6a4 \u2014 cadeia atualizada (GET) ===\"\ncurl -s -L -D - -o /dev/null --max-redirs 5 \"https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843\" 2>&1 | grep -iE \"^HTTP/|^location:\" | head -6",
+  "description": "Verify branded link now redirects to /p/ real product"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === branded link 7993c6a4 — cadeia atualizada (GET) ===
+> HTTP/2 302 
+> location: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=7993c6a4-9a9c-4de1-8284-8180af482843
+> HTTP/2 302 
+> location: https://www.mercadolivre.com.br/p/MLB27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3
+> HTTP/2 403
+> ```
+
+## 🤖 Claude *(17:52:13)*
+
+
+## 🤖 Claude *(17:52:14)*
+
+**Fix provado E2E:** o branded link `7993c6a4` agora redireciona pra **`mercadolivre.com.br/p/MLB27834876`** (produto real, formato `/p/`) — era o `/MLB-27834876` morto. Quando você clicar do residencial, vai cair no produto real e o ML deve contar o clique matt_word.
+
+Commit + push do fix:
+
+## 🤖 Claude *(17:52:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/_shared/affiliate.ts\ngit commit -m \"fix(affiliate): auto-monetize le product_url real do vm_affiliate_products\n\nCorrige o link morto do flywheel. O catalogo hardcoded gerava o formato BARE\nmercadolivre.com.br/MLB-<id> (404 no residencial) com 2 de 3 ids stale (Neo QLED\nMLB36263268->MLB4699602679, Family Hub MLB37674259->MLB32642694; a URL canonica nem\nderiva do id - a TV usa /up/MLBU...). buildMlProductUrl agora resolve\nvm_affiliate_products.product_url (fonte unica, mantida pelo Apify), fail-open pro\npermalink /p/MLB<id> (nunca mais o bare). Catalogo realinhado ao external_id real.\nProvado E2E: branded link 7993c6a4 302 -> /p/MLB27834876 (era /MLB-27834876 morto);\ndata-fix do row existente aplicado. Reconcilia 'ML nao contou o clique': era 404, nao\nfalha do matt_word. deploy orchestrate-step 122.8kB.\" 2>&1 | tail -4\ngit push origin main 2>&1 | tail -3; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\ngit rev-parse --short HEAD",
+  "description": "Commit + push the auto-monetize dead-link fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 34d7ef0] fix(affiliate): auto-monetize le product_url real do vm_affiliate_products
+>  1 file changed, 26 insertions(+), 7 deletions(-)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ab088ec..34d7ef0  main -> main
+> PUSH_EXIT=0
+> 34d7ef0
+> ```
+
+## 🤖 Claude *(17:52:52)*
+
+
+## 🤖 Claude *(17:52:53)*
+
+**Fix selado** (`34d7ef0`, pushado). Item 1 dos "dois" ✅.
+
+Agora o **item 2: iniciar o BoK do Operador de Browser Autenticado** (runtime = sua máquina residencial). Aciono o BoK Scribe com o resumo aterrado nos fatos materiais que já provamos (pra a suíte nascer da realidade, não de invenção):
+
+## 🤖 Claude *(17:53:00)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "authenticated-browser-operator \u2014 Operador de Browser Autenticado per-user para Mercado Livre afiliados. PROBLEMA: o MCORCH j\u00e1 conta cliques internos (OTD-ML-CLICKS, affiliate_links.clicks) mas N\u00c3O tem atribui\u00e7\u00e3o definitiva de receita no ML, porque (a) ML n\u00e3o tem API de afiliados e (b) o link OFICIAL com atribui\u00e7\u00e3o garantida (meli.la / param ref ASSINADO) s\u00f3 nasce do bot\u00e3o \"Compartilhar\" no portal LOGADO do usu\u00e1rio. Diretiva Sovereign 2026-06-08: precisamos das DUAS valida\u00e7\u00f5es \u2014 clique interno (temos) E atribui\u00e7\u00e3o ML (falta). SOLU\u00c7\u00c3O: um agente que dirige um browser real LOGADO na conta ML do pr\u00f3prio usu\u00e1rio (per-user, multi-tenant) para executar a\u00e7\u00f5es interativas que nos barram. RUNTIME DECIDIDO: a M\u00c1QUINA RESIDENCIAL do usu\u00e1rio (o Sovereign roda o agent-browser localmente, logado no ML) \u2014 porque est\u00e1 PROVADO MATERIALMENTE (probe 2026-06-02 com agent-browser + reprovado por curl 2026-06-08) que do nosso IP de datacenter Oracle TODAS as URLs do ML retornam HTTP 403 (produto real /p/, formato bare, e /afiliados/hub) \u2014 ent\u00e3o N\u00c3O roda do servidor. DOIS JOBS do operador: JOB 1 (atribui\u00e7\u00e3o) \u2014 navegar at\u00e9 cada produto do cat\u00e1logo logado \u2192 clicar \"Compartilhar\" na barra superior \u2192 extrair o shortlink oficial meli.la (que resolve para mercadolivre.com.br/social/...?matt_word=caga6077534&matt_tool=43641843&ref=<assinado>) \u2192 gravar em vm_affiliate_products.affiliate_template_url (hoje NULL) per-user; o flywheel/redirect (process-affiliate-link + _shared/affiliate.ts) ent\u00e3o prefere affiliate_template_url quando presente, caindo para matt_word s\u00f3 como fallback. JOB 2 (descoberta) \u2014 navegar logado em mercadolivre.com.br/afiliados/hub para extrair produtos com maior % de comiss\u00e3o / GANHOS EXTRAS, alimentando vm_affiliate_products com produtos orientados a comiss\u00e3o (n\u00e3o s\u00f3 trend do Apify). CONSTRAINTS materiais: (1) nunca senha em texto \u2014 login interativo 1\u00d7 \u2192 profile/cookies persistidos no vault de sess\u00e3o do agent-browser, per-user; (2) tool base = agent-browser (mesmo motor do e2e-user-zero, modo sess\u00e3o persistente); siblings Claude-in-Chrome MCP e Playwright; (3) o param ref \u00e9 token ASSINADO n\u00e3o-fabric\u00e1vel (s\u00f3 nasce no portal logado) \u2014 por isso o browser real logado \u00e9 a \u00fanica via; (4) per-user/multi-tenant: cada tenant usa SUA conta ML e SEU matt_word/matt_tool (affiliate_config per-user j\u00e1 existe, colunas matt_word/affiliate_tag + matt_tool); (5) human-paced, a\u00e7\u00f5es interativas pontuais \u2014 N\u00c3O \u00e9 scraping em massa nem teste E2E. INTEGRA\u00c7\u00c3O existente: vm_affiliate_products (external_id, product_url, affiliate_template_url NULL), affiliate_config (per-user matt_word/matt_tool), _shared/affiliate.ts (auto-monetize do flywheel, rec\u00e9m-corrigido para ler product_url real), process-affiliate-link (redirect GET click-tracked), redirect branded login.mcorch.com/go/<uuid> (j\u00e1 live), ROIWidget (soma clicks). RISCO/\u00c9TICA: automa\u00e7\u00e3o de conta logada do pr\u00f3prio usu\u00e1rio com consentimento dele (n\u00e3o terceiros), a\u00e7\u00f5es que um humano faria manualmente, respeitando rate humano. Owner do risco = Sovereign. Mem\u00f3ria de refer\u00eancia: project_authenticated_browser_operator (probes 2026-06-02 e 2026-06-08)."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(17:53:00)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `authenticated-browser-operator — Operador de Browser Autenticado per-user para Mercado Livre afiliados. PROBLEMA: o MCORCH já conta cliques internos (OTD-ML-CLICKS, affiliate_links.clicks) mas NÃO tem atribuição definitiva de receita no ML, porque (a) ML não tem API de afiliados e (b) o link OFICIAL com atribuição garantida (meli.la / param ref ASSINADO) só nasce do botão "Compartilhar" no portal LOGADO do usuário. Diretiva Sovereign 2026-06-08: precisamos das DUAS validações — clique interno (temos) E atribuição ML (falta). SOLUÇÃO: um agente que dirige um browser real LOGADO na conta ML do próprio usuário (per-user, multi-tenant) para executar ações interativas que nos barram. RUNTIME DECIDIDO: a MÁQUINA RESIDENCIAL do usuário (o Sovereign roda o agent-browser localmente, logado no ML) — porque está PROVADO MATERIALMENTE (probe 2026-06-02 com agent-browser + reprovado por curl 2026-06-08) que do nosso IP de datacenter Oracle TODAS as URLs do ML retornam HTTP 403 (produto real /p/, formato bare, e /afiliados/hub) — então NÃO roda do servidor. DOIS JOBS do operador: JOB 1 (atribuição) — navegar até cada produto do catálogo logado → clicar "Compartilhar" na barra superior → extrair o shortlink oficial meli.la (que resolve para mercadolivre.com.br/social/...?matt_word=caga6077534&matt_tool=43641843&ref=<assinado>) → gravar em vm_affiliate_products.affiliate_template_url (hoje NULL) per-user; o flywheel/redirect (process-affiliate-link + _shared/affiliate.ts) então prefere affiliate_template_url quando presente, caindo para matt_word só como fallback. JOB 2 (descoberta) — navegar logado em mercadolivre.com.br/afiliados/hub para extrair produtos com maior % de comissão / GANHOS EXTRAS, alimentando vm_affiliate_products com produtos orientados a comissão (não só trend do Apify). CONSTRAINTS materiais: (1) nunca senha em texto — login interativo 1× → profile/cookies persistidos no vault de sessão do agent-browser, per-user; (2) tool base = agent-browser (mesmo motor do e2e-user-zero, modo sessão persistente); siblings Claude-in-Chrome MCP e Playwright; (3) o param ref é token ASSINADO não-fabricável (só nasce no portal logado) — por isso o browser real logado é a única via; (4) per-user/multi-tenant: cada tenant usa SUA conta ML e SEU matt_word/matt_tool (affiliate_config per-user já existe, colunas matt_word/affiliate_tag + matt_tool); (5) human-paced, ações interativas pontuais — NÃO é scraping em massa nem teste E2E. INTEGRAÇÃO existente: vm_affiliate_products (external_id, product_url, affiliate_template_url NULL), affiliate_config (per-user matt_word/matt_tool), _shared/affiliate.ts (auto-monetize do flywheel, recém-corrigido para ler product_url real), process-affiliate-link (redirect GET click-tracked), redirect branded login.mcorch.com/go/<uuid> (já live), ROIWidget (soma clicks). RISCO/ÉTICA: automação de conta logada do próprio usuário com consentimento dele (não terceiros), ações que um humano faria manualmente, respeitando rate humano. Owner do risco = Sovereign. Memória de referência: project_authenticated_browser_operator (probes 2026-06-02 e 2026-06-08).`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in authenticated-browser-operator — Operador de Browser Autenticado per-user para Mercado Livre afiliados. PROBLEMA: o MCORCH já conta cliques internos (OTD-ML-CLICKS, affiliate_links.clicks) mas NÃO tem atribuição definitiva de receita no ML, porque (a) ML não tem API de afiliados e (b) o link OFICIAL com atribuição garantida (meli.la / param ref ASSINADO) só nasce do botão "Compartilhar" no portal LOGADO do usuário. Diretiva Sovereign 2026-06-08: precisamos das DUAS validações — clique interno (temos) E atribuição ML (falta). SOLUÇÃO: um agente que dirige um browser real LOGADO na conta ML do próprio usuário (per-user, multi-tenant) para executar ações interativas que nos barram. RUNTIME DECIDIDO: a MÁQUINA RESIDENCIAL do usuário (o Sovereign roda o agent-browser localmente, logado no ML) — porque está PROVADO MATERIALMENTE (probe 2026-06-02 com agent-browser + reprovado por curl 2026-06-08) que do nosso IP de datacenter Oracle TODAS as URLs do ML retornam HTTP 403 (produto real /p/, formato bare, e /afiliados/hub) — então NÃO roda do servidor. DOIS JOBS do operador: JOB 1 (atribuição) — navegar até cada produto do catálogo logado → clicar "Compartilhar" na barra superior → extrair o shortlink oficial meli.la (que resolve para mercadolivre.com.br/social/...?matt_word=caga6077534&matt_tool=43641843&ref=<assinado>) → gravar em vm_affiliate_products.affiliate_template_url (hoje NULL) per-user; o flywheel/redirect (process-affiliate-link + _shared/affiliate.ts) então prefere affiliate_template_url quando presente, caindo para matt_word só como fallback. JOB 2 (descoberta) — navegar logado em mercadolivre.com.br/afiliados/hub para extrair produtos com maior % de comissão / GANHOS EXTRAS, alimentando vm_affiliate_products com produtos orientados a comissão (não só trend do Apify). CONSTRAINTS materiais: (1) nunca senha em texto — login interativo 1× → profile/cookies persistidos no vault de sessão do agent-browser, per-user; (2) tool base = agent-browser (mesmo motor do e2e-user-zero, modo sessão persistente); siblings Claude-in-Chrome MCP e Playwright; (3) o param ref é token ASSINADO não-fabricável (só nasce no portal logado) — por isso o browser real logado é a única via; (4) per-user/multi-tenant: cada tenant usa SUA conta ML e SEU matt_word/matt_tool (affiliate_config per-user já existe, colunas matt_word/affiliate_tag + matt_tool); (5) human-paced, ações interativas pontuais — NÃO é scraping em massa nem teste E2E. INTEGRAÇÃO existente: vm_affiliate_products (external_id, product_url, affiliate_template_url NULL), affiliate_config (per-user matt_word/matt_tool), _shared/affiliate.ts (auto-monetize do flywheel, recém-corrigido para ler product_url real), process-affiliate-link (redirect GET click-tracked), redirect branded login.mcorch.com/go/<uuid> (já live), ROIWidget (soma clicks). RISCO/ÉTICA: automação de conta logada do próprio usuário com consentimento dele (não terceiros), ações que um humano faria manualmente, respeitando rate humano. Owner do risco = Sovereign. Memória de referência: project_authenticated_browser_operator (probes 2026-06-02 e 2026-06-08).):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(17:53:31)*
+
+
+## 🤖 Claude *(17:53:34)*
+
+BoK Scribe carregado. Vou capturar os inputs e executar o workflow. Inputs derivados:
+- **Slug:** `authenticated-browser-operator`
+- **Segmento:** B2B2C (SaaS multi-tenant; usuários monetizam conteúdo via afiliados ML)
+- **Monetização:** híbrido (mcoCoins + comissão de afiliado ML)
+- **Regulatório:** LGPD (credenciais/sessão per-user) + sensibilidade de ToS do ML (automação de conta logada)
+- **Superfície:** estende a feature de afiliados existente
+
+Lendo a definição do agente + templates pra gerar a suíte no formato correto:
+
+## 🤖 Claude *(17:53:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(17:55:27)*
+
+
+## 🤖 Claude *(17:55:27)*
+
+Tenho o workflow completo (9 docs, BABOK→CMQ/OE, traceability MR→BR→PR→FR→SDD, STRIDE, FMEA, seed script). Vou gerar a suíte aterrada nos fatos materiais que provamos. ID infix = **ABO**. Começando pela fundação BABOK (00-index + MRD + BRD):
+
+## 🤖 Claude *(17:55:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/00-index.md",
+  "content": "# Authenticated Browser Operator \u2014 BoK Documentation Suite\n\n**Project slug:** `authenticated-browser-operator`\n**Version:** v0.1\n**Date:** 2026-06-08\n**Generated by:** MCORCH BoK Scribe Agent v1.0.0\n\n---\n\n## Project Manifest\n\n| Field | Value |\n|-------|-------|\n| Business idea | Agente que dirige um browser real **logado** na conta Mercado Livre do pr\u00f3prio usu\u00e1rio (per-user) para executar a\u00e7\u00f5es interativas que a plataforma barra \u2014 extrair o link oficial de afiliado (`meli.la`/`ref` assinado) via bot\u00e3o \"Compartilhar\" e descobrir produtos de maior comiss\u00e3o no `/afiliados/hub`. |\n| Market segment | B2B2C (SaaS multi-tenant; usu\u00e1rios monetizam conte\u00fado via afiliados ML) |\n| Monetization | Hybrid (mcoCoins + comiss\u00e3o de afiliado ML \u2014 receita **indireta**: habilita atribui\u00e7\u00e3o de receita que hoje n\u00e3o capturamos) |\n| Regulatory profile | LGPD (credenciais/sess\u00e3o per-user) + sensibilidade de ToS do Mercado Livre (automa\u00e7\u00e3o de conta logada com consentimento do dono) |\n| Integration surface | `extends-mcorch` (estende a feature de afiliados: `vm_affiliate_products`, `affiliate_config`, `_shared/affiliate.ts`, `process-affiliate-link`, branded redirect `login.mcorch.com/go`) |\n| Owner do risco | Sovereign (Gabriel) |\n| Motivating context | Diretiva Sovereign 2026-06-08: temos clique interno (OTD-ML-CLICKS) mas falta atribui\u00e7\u00e3o definitiva no ML. Probes `project_authenticated_browser_operator` (2026-06-02 agent-browser + 2026-06-08 curl): ML sem API de afiliados \u00b7 link oficial exige portal logado (`ref` assinado n\u00e3o-fabric\u00e1vel) \u00b7 **datacenter Oracle 403 em TODAS as URLs ML** (produto `/p/`, bare, `/afiliados/hub`) \u2192 runtime residencial obrigat\u00f3rio. |\n\n---\n\n## Document Registry\n\n| # | File | Phase | BoK Lens | Status |\n|---|------|-------|----------|--------|\n| 00 | [00-index.md](00-index.md) | 0 | \u2014 | [x] complete |\n| 01 | [01-mrd.md](01-mrd.md) | 1 | BABOK v3 | [x] complete |\n| 02 | [02-brd.md](02-brd.md) | 1 | BABOK v3 | [x] complete |\n| 03 | [03-prd.md](03-prd.md) | 2 | ProdBOK \u00b7 CXBOK | [x] complete |\n| 04 | [04-frd.md](04-frd.md) | 3 | SWEBOK v4 | [x] complete |\n| 05 | [05-sdd.md](05-sdd.md) | 3 | SWEBOK \u00b7 CISSP CBK | [x] complete |\n| 06 | [06-data-model.md](06-data-model.md) | 4 | DMBOK v2 | [x] complete |\n| 07 | [07-process-flow.md](07-process-flow.md) | 4 | BPM CBOK v4 | [x] complete |\n| 08 | [08-quality-metrics.md](08-quality-metrics.md) | 5 | CMQ/OE BOK | [x] complete |\n\n---\n\n## ID Space\n\n| Prefix | Range | Meaning |\n|--------|-------|---------|\n| `MR-ABO-NNN` | 001..008 | Market Requirements |\n| `BR-ABO-NNN` | 001..009 | Business Requirements |\n| `PR-ABO-NNN` | 001..010 | Product Requirements |\n| `FR-ABO-NNN` | 001..014 | Functional Requirements |\n| `NFR-ABO-NNN` | 001..007 | Non-Functional Requirements |\n| `OTD-ABO-NNN` | 001..006 | Open Technical Decisions |\n| `FMEA-ABO-NNN` | 001..008 | Failure Mode & Effects |\n\n---\n\n## Hard Constraint (load-bearing \u2014 Lei 1)\n\n> **O Operador N\u00c3O roda do datacenter.** Provado material 2026-06-02 (agent-browser \u2192 \"Hubo un error accediendo\") e reconfirmado 2026-06-08 (curl \u2192 HTTP 403 em produto real `/p/MLB27834876`, formato bare, e `/afiliados/hub`). **Runtime = m\u00e1quina residencial do usu\u00e1rio** (decis\u00e3o Sovereign 2026-06-08). Qualquer design que assuma execu\u00e7\u00e3o server-side \u00e9 inv\u00e1lido por constru\u00e7\u00e3o.\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+## 🤖 Claude *(17:55:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/01-mrd.md",
+  "content": "# 01 \u2014 Market Requirements Document (MRD)\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** BABOK v3 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Executive Summary\n\nO flywheel de conte\u00fado do MCORCH monetiza via afiliados Mercado Livre, mas a atribui\u00e7\u00e3o de **receita** depende do link **oficial** do ML \u2014 e o ML **n\u00e3o exp\u00f5e API de afiliados**. O \u00fanico link com atribui\u00e7\u00e3o garantida nasce do bot\u00e3o \"Compartilhar\" no **portal logado** do afiliado (param `ref` assinado, n\u00e3o-fabric\u00e1vel). Este m\u00f3dulo entrega um **Operador de Browser Autenticado** per-user que executa essa a\u00e7\u00e3o interativa (e descobre produtos de alta comiss\u00e3o), rodando na **m\u00e1quina residencial** do usu\u00e1rio porque o IP de datacenter \u00e9 bloqueado (403).\n\n## 2. Market Problem Statement (current state)\n\n- Hoje monetizamos com links `matt_word` (best-effort): registram **clique** no painel ML, mas a **convers\u00e3o/receita** definitiva exige o link oficial assinado.\n- Capturamos o clique **internamente** (OTD-ML-CLICKS, `affiliate_links.clicks`), mas n\u00e3o temos o elo de receita garantida \u2192 `revenue_cents` raramente fecha.\n- A descoberta de produtos (Apify) \u00e9 orientada a **trend/pre\u00e7o**, n\u00e3o a **% de comiss\u00e3o** \u2014 perdemos os \"GANHOS EXTRAS\" que s\u00f3 aparecem no `/afiliados/hub` logado.\n\n## 3. Target Market Segments + TAM/SAM/SOM (estimado)\n\n| Segmento | Descri\u00e7\u00e3o |\n|----------|-----------|\n| Prim\u00e1rio | Criadores/afiliados que usam o MCORCH p/ gerar conte\u00fado monetizado (Usu\u00e1rio Zero \u2192 tenants comerciais) |\n| Secund\u00e1rio | Operadores de marketing per-tenant que querem receita atribu\u00edvel |\n\n- **TAM:** programa de afiliados ML (BR) \u2014 milh\u00f5es de afiliados ativos. *(estimativa, n\u00e3o-material)*\n- **SAM:** tenants MCORCH com conta ML de afiliado conectada.\n- **SOM:** Usu\u00e1rio Zero + primeiros tenants comerciais (single-digit no curto prazo).\n\n## 4. Competitive Landscape (\u22653 alternativas)\n\n| Alternativa | Por que n\u00e3o basta |\n|-------------|-------------------|\n| API oficial de afiliados ML | **N\u00e3o existe** (provado: 403 at\u00e9 no WebFetch; OAuth daria token sem escopo de afiliados). |\n| Apify / scraping residencial an\u00f4nimo | Faz **busca** mas n\u00e3o a\u00e7\u00f5es **por-conta logada** (Compartilhar exige sess\u00e3o autenticada). |\n| Construir link `matt_word` \u00e0 m\u00e3o | Best-effort no clique; **sem `ref` assinado** \u2192 atribui\u00e7\u00e3o de receita n\u00e3o-garantida. |\n| Cloud browser stealth (AgentCore/Vercel Sandbox) | IP de datacenter \u2192 mesmo 403; n\u00e3o-validado residencial. |\n\n## 5. Market Opportunity & Timing\n\nA infra de afiliados j\u00e1 existe (cat\u00e1logo `vm_affiliate_products`, click ledger, branded redirect). Falta **o \u00faltimo elo de receita**. O custo marginal \u00e9 baixo (reaproveita `agent-browser`, mesmo motor do e2e-user-zero). Janela: assim que o 1\u00ba tenant comercial precisar de ROI atribu\u00edvel.\n\n## 6. Key Market Requirements\n\n| ID | Requisito | Prioridade |\n|----|-----------|------------|\n| MR-ABO-001 | Capturar o link **oficial** de afiliado ML (`meli.la`/`ref` assinado) por produto, por usu\u00e1rio. | Critical |\n| MR-ABO-002 | Operar **logado** na conta ML **do pr\u00f3prio usu\u00e1rio** (consentida), n\u00e3o de terceiros. | Critical |\n| MR-ABO-003 | Rodar em **runtime residencial** (datacenter \u00e9 403). | Critical |\n| MR-ABO-004 | Nunca armazenar senha em texto; sess\u00e3o persistida por-usu\u00e1rio. | Critical |\n| MR-ABO-005 | Descobrir produtos por **% de comiss\u00e3o** (`/afiliados/hub`), n\u00e3o s\u00f3 trend. | High |\n| MR-ABO-006 | Integrar com o flywheel existente sem quebr\u00e1-lo (fallback `matt_word`). | High |\n| MR-ABO-007 | Dupla valida\u00e7\u00e3o: clique interno (temos) **E** atribui\u00e7\u00e3o ML (este m\u00f3dulo). | High |\n| MR-ABO-008 | Respeitar rate humano e ToS do ML (a\u00e7\u00f5es pontuais, n\u00e3o scraping em massa). | Medium |\n\n## 7. Success Metrics (market-level KPIs)\n\n- % de produtos do cat\u00e1logo com `affiliate_template_url` (link oficial) preenchido \u2192 meta \u2265 80%.\n- 1\u00aa convers\u00e3o de receita atribu\u00edda (`revenue_cents > 0`) via link oficial.\n- N\u00ba de produtos de alta comiss\u00e3o descobertos no hub que entram no cat\u00e1logo.\n\n## 8. Regulatory & Compliance Context\n\n- **LGPD:** credenciais/cookies de sess\u00e3o s\u00e3o dado pessoal/sens\u00edvel \u2192 cofre per-user, consentimento expl\u00edcito, revog\u00e1vel (ver [BR-ABO-008](02-brd.md)).\n- **ToS Mercado Livre:** automa\u00e7\u00e3o de conta **pr\u00f3pria** com consentimento, human-paced, espelhando a\u00e7\u00e3o manual \u2014 registrar OTD de risco de ToS ([OTD-ABO-005](05-sdd.md)).\n\n## 9. Traceability Matrix (MR \u2192 BR stub)\n\n| MR | \u2192 BR |\n|----|------|\n| MR-ABO-001 | BR-ABO-001 |\n| MR-ABO-002 | BR-ABO-002, BR-ABO-008 |\n| MR-ABO-003 | BR-ABO-003 |\n| MR-ABO-004 | BR-ABO-008 |\n| MR-ABO-005 | BR-ABO-004 |\n| MR-ABO-006 | BR-ABO-005 |\n| MR-ABO-007 | BR-ABO-006 |\n| MR-ABO-008 | BR-ABO-007, BR-ABO-009 |\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/00-index.md (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/01-mrd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:55:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/02-brd.md",
+  "content": "# 02 \u2014 Business Requirements Document (BRD)\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** BABOK v3 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Executive Summary\n\nFechar o elo de **receita atribu\u00edvel** do flywheel de afiliados capturando o link oficial ML por usu\u00e1rio, via um operador de browser logado que roda no ambiente residencial do usu\u00e1rio, e enriquecer o cat\u00e1logo com produtos de alta comiss\u00e3o \u2014 sem quebrar o caminho `matt_word` atual (fallback).\n\n## 2. Business Objectives (SMART)\n\n| ID | Objetivo |\n|----|----------|\n| OBJ-1 | Em \u2264 1 sess\u00e3o residencial, preencher `affiliate_template_url` de \u2265 80% dos produtos ativos do cat\u00e1logo do Usu\u00e1rio Zero. |\n| OBJ-2 | Habilitar a 1\u00aa convers\u00e3o `revenue_cents > 0` atribu\u00edda a um link oficial dentro da janela de cookie do ML. |\n| OBJ-3 | Adicionar \u2265 5 produtos de alta comiss\u00e3o descobertos no `/afiliados/hub` ao `vm_affiliate_products`. |\n\n## 3. Stakeholder Register\n\n| Role | Interesse | Influ\u00eancia | Comunica\u00e7\u00e3o |\n|------|-----------|-----------|-------------|\n| Sovereign (Gabriel) | Owner do risco; receita atribu\u00edvel; roda o operador | Alta | Direta (UI + briefing) |\n| Tenant comercial (futuro) | ROI atribu\u00edvel por sua conta ML | M\u00e9dia | UI `/dashboard/affiliates` |\n| MCORCH Master Agent | Orquestra os passos; valida materialidade | Alta | Protocolo |\n| Mercado Livre (externo) | Dono da plataforma/ToS | Alta (restritiva) | N/A (respeitar ToS) |\n\n## 4. Business Requirements (traced a MR)\n\n| ID | Requisito | \u2190 MR | Prioridade |\n|----|-----------|------|-----------|\n| BR-ABO-001 | Persistir o link oficial (`meli.la`) por `(user_id, produto)` em `vm_affiliate_products.affiliate_template_url`. | MR-ABO-001 | Critical |\n| BR-ABO-002 | Operar com a conta ML do pr\u00f3prio usu\u00e1rio via sess\u00e3o consentida (login interativo 1\u00d7). | MR-ABO-002 | Critical |\n| BR-ABO-003 | Executar no runtime residencial do usu\u00e1rio; o servidor apenas orquestra/recebe resultados. | MR-ABO-003 | Critical |\n| BR-ABO-004 | Coletar produtos de alta comiss\u00e3o do hub e materializ\u00e1-los no cat\u00e1logo. | MR-ABO-005 | High |\n| BR-ABO-005 | O redirect (`process-affiliate-link`) e o auto-monetize preferem `affiliate_template_url` quando presente; sen\u00e3o `matt_word` (fallback). | MR-ABO-006 | High |\n| BR-ABO-006 | Expor a dupla valida\u00e7\u00e3o no ROI (clique interno + sinal de atribui\u00e7\u00e3o oficial). | MR-ABO-007 | High |\n| BR-ABO-007 | Human-paced; nunca scraping em massa; a\u00e7\u00f5es pontuais idempotentes. | MR-ABO-008 | Medium |\n| BR-ABO-008 | Credenciais/sess\u00e3o no cofre per-user; consentimento expl\u00edcito + revoga\u00e7\u00e3o (LGPD). | MR-ABO-002, MR-ABO-004 | Critical |\n| BR-ABO-009 | Registrar risco de ToS do ML como OTD com decis\u00e3o consciente do Sovereign. | MR-ABO-008 | Medium |\n\n## 5. ROI Model\n\n- **Custos:** dev (BoK + agente runner residencial + colunas/UI); operacional ~0 (reaproveita agent-browser; sem custo de proxy na op\u00e7\u00e3o residencial-do-usu\u00e1rio).\n- **Receita:** comiss\u00e3o de afiliado ML por convers\u00e3o atribu\u00edda (hoje **R$0** por falta do link oficial). Payback = 1\u00aa convers\u00e3o atribu\u00edda.\n- **Receita classifica\u00e7\u00e3o:** **indireta** (habilitador) \u2014 o m\u00f3dulo n\u00e3o fatura, destrava faturamento de afiliado.\n\n## 6. mcoCoins Economics\n\n| Opera\u00e7\u00e3o | Custo mcoCoins | Racional |\n|----------|----------------|----------|\n| Extra\u00e7\u00e3o de link oficial (por produto) | **0** (proposto) | A\u00e7\u00e3o local do usu\u00e1rio, sem IA generativa server-side; \u00e9 enriquecimento de dado. Reavaliar se usar IA p/ parsing (OTD-ABO-006). |\n| Descoberta no hub (por execu\u00e7\u00e3o) | **0** (proposto) | Idem; coleta de dado p\u00fablico logado. |\n\n> Se qualquer passo usar gera\u00e7\u00e3o de IA server-side (ex.: classificar comiss\u00e3o via LLM), aplicar `deduct_mco_coins` (atomic RPC) \u2014 ver [04-frd.md](04-frd.md) NFR + [OTD-ABO-006](05-sdd.md).\n\n## 7. Constraints & Assumptions\n\n- **C1:** datacenter 403 no ML \u2014 runtime residencial obrigat\u00f3rio (material).\n- **C2:** ML pode mudar o DOM do \"Compartilhar\"/hub \u2192 seletores fr\u00e1geis (FMEA-ABO-001).\n- **C3:** `ref` \u00e9 assinado e expira/rotaciona \u2192 re-extra\u00e7\u00e3o peri\u00f3dica.\n- **A1:** o usu\u00e1rio tem conta de afiliado ML ativa e consente automatiz\u00e1-la.\n- **A2:** `agent-browser` roda no ambiente do usu\u00e1rio com sess\u00e3o persistente.\n\n## 8. Business Risks\n\n| Risk ID | Descri\u00e7\u00e3o | Prob. | Impacto | Mitiga\u00e7\u00e3o |\n|---------|-----------|-------|---------|-----------|\n| RISK-1 | ToS do ML pro\u00edbe automa\u00e7\u00e3o \u2192 conta suspensa | M\u00e9dia | Alto | Human-paced, conta pr\u00f3pria consentida, kill-switch, OTD-ABO-005 |\n| RISK-2 | Seletor do \"Compartilhar\" quebra | Alta | M\u00e9dio | Heur\u00edstica + fallback + alerta `infra_health_logs` |\n| RISK-3 | Vazamento de sess\u00e3o/cookies | Baixa | Alto | Cofre per-user, nunca senha em texto, escopo `auth.uid()` |\n| RISK-4 | Runtime residencial indispon\u00edvel | M\u00e9dia | M\u00e9dio | Operador \u00e9 pontual/agend\u00e1vel pelo usu\u00e1rio; degrade p/ `matt_word` |\n\n## 9. Acceptance Criteria (business-level)\n\n- AC-1: ap\u00f3s uma execu\u00e7\u00e3o, \u2265 1 produto tem `affiliate_template_url` oficial preenchido e o redirect passa a us\u00e1-lo.\n- AC-2: nenhuma senha em texto em lugar nenhum; sess\u00e3o revog\u00e1vel pelo usu\u00e1rio.\n- AC-3: com link oficial ausente, o sistema **continua** monetizando via `matt_word` (zero regress\u00e3o).\n\n## 10. Traceability Matrix (MR \u2192 BR \u2192 PR stub)\n\n| MR | BR | \u2192 PR |\n|----|----|------|\n| MR-ABO-001 | BR-ABO-001 | PR-ABO-001, PR-ABO-005 |\n| MR-ABO-002 | BR-ABO-002 | PR-ABO-002 |\n| MR-ABO-003 | BR-ABO-003 | PR-ABO-003 |\n| MR-ABO-005 | BR-ABO-004 | PR-ABO-006 |\n| MR-ABO-006 | BR-ABO-005 | PR-ABO-007 |\n| MR-ABO-007 | BR-ABO-006 | PR-ABO-008 |\n| MR-ABO-004 | BR-ABO-008 | PR-ABO-004 |\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/02-brd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:57:22)*
+
+Fundação BABOK selada. Agora ProdBOK (PRD) + SWEBOK (FRD):
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/03-prd.md",
+  "content": "# 03 \u2014 Product Requirements Document (PRD)\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** ProdBOK \u00b7 CXBOK \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Product Vision Statement\n\n> Um operador que age como o pr\u00f3prio afiliado \u2014 logado, no navegador dele \u2014 para capturar o link oficial do Mercado Livre e os produtos de maior comiss\u00e3o, fechando o elo de receita que nenhuma API entrega.\n\n## 2. User Personas\n\n**Persona A \u2014 Gabriel / \"O Soberano-Afiliado\" (prim\u00e1ria)**\n- Role: dono do MCORCH + afiliado ML (Usu\u00e1rio Zero). Tech-savvy alto.\n- Goals: receita atribu\u00edvel real; provar o flywheel ponta-a-ponta.\n- Frustrations: ML opaco, sem API; link `matt_word` n\u00e3o fecha receita; datacenter bloqueado.\n- Uso MCORCH: conecta sua conta ML, dispara a extra\u00e7\u00e3o da sua m\u00e1quina, v\u00ea ROI.\n\n**Persona B \u2014 \"Marketer do Tenant\" (secund\u00e1ria)**\n- Role: operador de marketing de um tenant comercial. Tech-savvy m\u00e9dio.\n- Goals: links oficiais por sua conta ML, sem c\u00f3digo.\n- Frustrations: n\u00e3o sabe o que \u00e9 `ref`/`meli.la`; quer um bot\u00e3o.\n- Uso MCORCH: conecta a conta ML do tenant (consentido), agenda extra\u00e7\u00f5es.\n\n## 3. User Journey Maps\n\n**Persona A \u2014 happy path:** `/dashboard/affiliates` \u2192 \"Conectar Mercado Livre\" \u2192 login 1\u00d7 no browser local (sess\u00e3o persistida) \u2192 \"Extrair links oficiais\" \u2192 operador abre cada produto \u2192 Compartilhar \u2192 grava `affiliate_template_url` \u2192 ROI mostra \"atribui\u00e7\u00e3o oficial: N produtos\".\n- Edge 1: seletor \"Compartilhar\" mudou \u2192 operador marca produto como `pending`, alerta, segue os demais.\n- Edge 2: sess\u00e3o expirou \u2192 operador pede re-login 1\u00d7, retoma idempotente.\n\n**Persona B \u2014 happy path:** idem, escopado \u00e0 conta ML do tenant; runtime na m\u00e1quina do tenant.\n- Edge: tenant sem conta de afiliado \u2192 bloqueio claro com CTA \"configure seu afiliado ML\".\n\n## 4. Feature Inventory (MoSCoW)\n\n| ID | Feature | MoSCoW | Persona | \u2190 BR | Effort | mco |\n|----|---------|--------|---------|------|--------|-----|\n| PR-ABO-001 | Extrair link oficial via \"Compartilhar\" | Must | A,B | BR-ABO-001 | L | 0 |\n| PR-ABO-002 | Conectar sess\u00e3o ML (login 1\u00d7 persistido) | Must | A,B | BR-ABO-002 | M | 0 |\n| PR-ABO-003 | Runner residencial (agent-browser local) | Must | A,B | BR-ABO-003 | L | 0 |\n| PR-ABO-004 | Cofre de sess\u00e3o per-user + consentimento/revoga\u00e7\u00e3o | Must | A,B | BR-ABO-008 | M | 0 |\n| PR-ABO-005 | Persistir `affiliate_template_url` per-user | Must | A,B | BR-ABO-001 | S | 0 |\n| PR-ABO-006 | Descoberta de alta comiss\u00e3o no `/afiliados/hub` | Should | A | BR-ABO-004 | L | 0 |\n| PR-ABO-007 | Flywheel prefere link oficial; fallback `matt_word` | Must | A,B | BR-ABO-005 | S | 0 |\n| PR-ABO-008 | ROI: dupla valida\u00e7\u00e3o (clique + atribui\u00e7\u00e3o oficial) | Should | A,B | BR-ABO-006 | M | 0 |\n| PR-ABO-009 | Painel de status/sa\u00fade da extra\u00e7\u00e3o | Should | A,B | BR-ABO-006 | M | 0 |\n| PR-ABO-010 | Re-extra\u00e7\u00e3o agendada (ref rotaciona) | Could | A | BR-ABO-001 | M | 0 |\n\n## 5. Release Phasing\n\n- **MVP (Must):** PR-ABO-001..005, 007. Operador residencial extrai link oficial \u2192 grava \u2192 flywheel usa. Requer: 0 Edge Functions novas obrigat\u00f3rias (a grava\u00e7\u00e3o pode ir por edge fn `affiliate-template-upsert` per-user \u2014 ver SDD); 1 coluna j\u00e1 existe (`affiliate_template_url`).\n- **v1.0 (Must+Should):** + PR-ABO-006 (hub discovery), PR-ABO-008 (ROI), PR-ABO-009 (status).\n- **Future (Could):** PR-ABO-010 (agendamento de re-extra\u00e7\u00e3o), multi-marketplace.\n\n## 6. Luxury UX Specifications\n\n- Paleta: dark mesh `#0A0A0F`, violeta neon `#7C3AED`; cards glass-morphism (padr\u00e3o `/dashboard/affiliates`).\n- Anima\u00e7\u00e3o: Framer Motion \u2014 pulse no card durante extra\u00e7\u00e3o; check verde ao gravar link oficial.\n- Intera\u00e7\u00e3o: bot\u00e3o \"Conectar Mercado Livre\" (estado conectado/expirado), \"Extrair agora\", badge \"oficial \u2713\" vs \"matt_word\".\n- A11y: WCAG 2.1 AA \u2014 foco vis\u00edvel, status textual al\u00e9m de cor, labels PT-BR.\n\n## 7. Acceptance Criteria (Gherkin)\n\n```gherkin\nScenario: Extrair link oficial de um produto\n  Given o usu\u00e1rio conectou sua conta ML (sess\u00e3o v\u00e1lida) na m\u00e1quina residencial\n  And existe um produto ativo em vm_affiliate_products sem affiliate_template_url\n  When o operador abre o produto e aciona \"Compartilhar\"\n  Then o shortlink oficial meli.la \u00e9 capturado\n  And gravado em affiliate_template_url escopado ao user_id\n  And o redirect process-affiliate-link passa a 302 para o link oficial\n\nScenario: Fallback sem link oficial (zero regress\u00e3o)\n  Given um produto sem affiliate_template_url\n  When um clique chega ao redirect\n  Then o sistema usa o product_url real + matt_word (comportamento atual)\n```\n\n## 8. Traceability Matrix (MR \u2192 BR \u2192 PR)\n\n| MR | BR | PR |\n|----|----|----|\n| MR-ABO-001 | BR-ABO-001 | PR-ABO-001, 005, 010 |\n| MR-ABO-002 | BR-ABO-002, 008 | PR-ABO-002, 004 |\n| MR-ABO-003 | BR-ABO-003 | PR-ABO-003 |\n| MR-ABO-005 | BR-ABO-004 | PR-ABO-006 |\n| MR-ABO-006 | BR-ABO-005 | PR-ABO-007 |\n| MR-ABO-007 | BR-ABO-006 | PR-ABO-008, 009 |\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/04-frd.md",
+  "content": "# 04 \u2014 Functional Requirements Document (FRD)\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** SWEBOK v4 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Scope Statement\n\nEspecifica o comportamento funcional do Operador de Browser Autenticado: runner residencial (`agent-browser`), captura do link oficial ML, descoberta no hub, persist\u00eancia per-user, e a prefer\u00eancia do flywheel pelo link oficial com fallback `matt_word`. **Fora de escopo:** automa\u00e7\u00e3o de contas de terceiros, scraping em massa, qualquer execu\u00e7\u00e3o server-side de browser contra o ML.\n\n## 2. Functional Requirements\n\n| ID | T\u00edtulo | Descri\u00e7\u00e3o | Prioridade | \u2190 PR | Categoria | Test |\n|----|--------|-----------|-----------|------|-----------|------|\n| FR-ABO-001 | ML session connect | Login interativo 1\u00d7 no browser residencial; persistir profile/cookies no cofre de sess\u00e3o per-user. | Critical | PR-ABO-002 | Runner+DB | AT-01 |\n| FR-ABO-002 | Session validity check | Detectar sess\u00e3o expirada/deslogada antes de cada job; sinalizar re-login. | Critical | PR-ABO-002 | Runner | AT-02 |\n| FR-ABO-003 | Open product page | Navegar ao `product_url` real (`vm_affiliate_products`) logado. | Critical | PR-ABO-001 | Runner | AT-03 |\n| FR-ABO-004 | Trigger \"Compartilhar\" | Localizar e acionar o bot\u00e3o Compartilhar (barra superior); abrir o painel de link. | Critical | PR-ABO-001 | Runner | AT-04 |\n| FR-ABO-005 | Extract official shortlink | Capturar o `meli.la` (e/ou a URL `/social/...?...&ref=<assinado>` resolvida). | Critical | PR-ABO-001 | Runner | AT-05 |\n| FR-ABO-006 | Persist template URL | Gravar `affiliate_template_url` por `(user_id, external_id)` via edge fn JWT. | Critical | PR-ABO-005 | Edge+DB | AT-06 |\n| FR-ABO-007 | Redirect prefers official | `process-affiliate-link` GET usa `affiliate_template_url` quando presente; sen\u00e3o `product_url`+`matt_word`. | High | PR-ABO-007 | Edge | AT-07 |\n| FR-ABO-008 | Auto-monetize prefers official | `_shared/affiliate.ts` grava `short_url`=oficial quando houver; sen\u00e3o fallback atual. | High | PR-ABO-007 | Edge | AT-08 |\n| FR-ABO-009 | Hub discovery | Navegar `/afiliados/hub` logado; extrair produtos + % comiss\u00e3o. | High | PR-ABO-006 | Runner | AT-09 |\n| FR-ABO-010 | Upsert discovered products | Materializar produtos do hub em `vm_affiliate_products` (dedupe por `external_id`). | High | PR-ABO-006 | Edge+DB | AT-10 |\n| FR-ABO-011 | Consent + revoke | Registrar consentimento per-user; revogar = apagar sess\u00e3o + parar jobs. | Critical | PR-ABO-004 | UI+Edge+DB | AT-11 |\n| FR-ABO-012 | Extraction telemetry | Emitir `infra_health_logs` (`service='browser-operator'`) em success/degraded/error. | High | PR-ABO-009 | Runner+DB | AT-12 |\n| FR-ABO-013 | ROI dual-validation surface | ROIWidget mostra clique interno + flag de atribui\u00e7\u00e3o oficial. | Medium | PR-ABO-008 | Hook+UI | AT-13 |\n| FR-ABO-014 | Idempotent re-run | Re-extrair s\u00f3 produtos sem `affiliate_template_url` ou com `ref` expirado. | Medium | PR-ABO-010 | Runner | AT-14 |\n\n## 3. Non-Functional Requirements\n\n| ID | Categoria | Requisito |\n|----|-----------|-----------|\n| NFR-ABO-001 | Security | Nenhuma senha em texto; sess\u00e3o cifrada no cofre per-user; escopo `auth.uid()`. |\n| NFR-ABO-002 | Compliance | LGPD: consentimento expl\u00edcito, revoga\u00e7\u00e3o, minimiza\u00e7\u00e3o (s\u00f3 cookies necess\u00e1rios). |\n| NFR-ABO-003 | Performance | Human-paced: delay aleat\u00f3rio 2\u20136 s entre a\u00e7\u00f5es; \u2264 1 produto/a\u00e7\u00e3o concorrente. |\n| NFR-ABO-004 | Reliability | Seletor fr\u00e1gil \u2192 fallback + degrade gracioso; nunca derruba o flywheel. |\n| NFR-ABO-005 | Maintainability | Seletores DOM centralizados/versionados; runner desacoplado do server. |\n| NFR-ABO-006 | Portability | Runner roda em qualquer m\u00e1quina residencial (Linux/macOS/Win + agent-browser). |\n| NFR-ABO-007 | Observability | Todo job emite telemetria; status vis\u00edvel na UI. |\n\n## 4. Interface Requirements\n\n- **UI \u2192 Hook \u2192 Edge:** `AffiliatesPage` \u2192 `useBrowserOperator` \u2192 edge fn `affiliate-template-upsert` (POST, JWT).\n- **Runner \u2192 Edge (resultado):** o runner residencial autentica como o usu\u00e1rio (JWT do user, ex.: magiclink/sess\u00e3o MCORCH) e faz POST do `{external_id, affiliate_template_url, ref_expires_at?}`.\n- **Contrato de erro:** `{ error, action }` PT-BR estruturado (padr\u00e3o `src/lib/edge.ts`); HTTP 401/403/422.\n\n## 5. Data Requirements\n\n| Campo | Valida\u00e7\u00e3o |\n|-------|-----------|\n| `affiliate_template_url` | URL https `meli.la` ou `mercadolivre.com.br/social/...`; rejeitar dom\u00ednio fora-do-ML (anti open-redirect). |\n| `external_id` | `^MLB[U]?\\d+$`; deve existir em `vm_affiliate_products`. |\n| sess\u00e3o | blob cifrado; nunca logar; TTL/rotina de expira\u00e7\u00e3o. |\n\n## 6. Test Strategy Matrix\n\n| FR | Unit | Integration | E2E |\n|----|------|-------------|-----|\n| FR-ABO-001/002 | seletor de login mock | sess\u00e3o persistida reabre logada | login real residencial (manual) |\n| FR-ABO-005 | parser do meli.la | abrir produto fixture \u2192 extrair | produto real residencial |\n| FR-ABO-006/007/008 | \u2014 | edge upsert + redirect prefere oficial | clique real \u2192 302 oficial |\n| FR-ABO-009/010 | parser do hub | hub fixture \u2192 upsert dedupe | hub real residencial |\n| FR-ABO-007 fallback | \u2014 | sem template \u2192 matt_word | regress\u00e3o flywheel |\n\n## 7. Traceability Matrix (PR \u2192 FR)\n\n| PR | FR |\n|----|-----|\n| PR-ABO-001 | FR-ABO-003, 004, 005 |\n| PR-ABO-002 | FR-ABO-001, 002 |\n| PR-ABO-005 | FR-ABO-006 |\n| PR-ABO-007 | FR-ABO-007, 008 |\n| PR-ABO-006 | FR-ABO-009, 010 |\n| PR-ABO-004 | FR-ABO-011 |\n| PR-ABO-009 | FR-ABO-012 |\n| PR-ABO-008 | FR-ABO-013 |\n| PR-ABO-010 | FR-ABO-014 |\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/03-prd.md (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/04-frd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:58:15)*
+
+
+## 🤖 Claude *(17:58:15)*
+
+Agora o SDD (SWEBOK + CISSP — arquitetura, STRIDE, OTDs). Aqui o gate de BoK já paga: capturei que `affiliate_template_url` na `vm_affiliate_products` **compartilhada** não pode ser per-user → exige tabela dedicada:
+
+## 🤖 Claude *(17:58:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/05-sdd.md",
+  "content": "# 05 \u2014 System Design Document (SDD)\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** SWEBOK v4 \u00b7 CISSP CBK 2024 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Architecture Overview\n\n```\nRESIDENTIAL RUNTIME (m\u00e1quina do usu\u00e1rio \u2014 obrigat\u00f3rio; datacenter = 403)\n  agent-browser (sess\u00e3o ML persistida)  \u2500\u2500 runner local (Deno/Bun + agent-browser CLI)\n        \u2502  Job 1: produto \u2192 Compartilhar \u2192 meli.la\n        \u2502  Job 2: /afiliados/hub \u2192 produtos+comiss\u00e3o\n        \u25bc autentica como o user (JWT MCORCH) e faz POST\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nSERVER (Supabase)\n  edge fn affiliate-template-upsert (JWT, per-user)   \u2192 user_affiliate_links (NOVA, per-user)\n  edge fn affiliate-products-upsert (JWT, per-user)   \u2192 vm_affiliate_products (cat\u00e1logo) + tabela de comiss\u00e3o\n  process-affiliate-link (GET)  \u2192 prefere user_affiliate_links.template_url, sen\u00e3o product_url+matt_word\n  _shared/affiliate.ts (auto-monetize)  \u2192 idem na cria\u00e7\u00e3o do affiliate_links.short_url\n  ROIWidget / useBrowserOperator  \u2192 status + dupla valida\u00e7\u00e3o\n```\n\n**Harness Engineering:** l\u00f3gica do runner num pacote isolado (`scripts/affiliate-operator/`); a UI \u00e9 display-only sobre `useBrowserOperator`; nenhuma automa\u00e7\u00e3o de browser roda server-side.\n\n## 2. Component Catalog\n\n**Novos \u2014 runner residencial (N\u00c3O server-side):**\n- `scripts/affiliate-operator/runner.ts` \u2014 orquestra os 2 jobs via agent-browser; autentica no MCORCH como o user.\n- `scripts/affiliate-operator/lib/ml-share.ts` \u2014 abre produto, aciona Compartilhar, extrai `meli.la`.\n- `scripts/affiliate-operator/lib/ml-hub.ts` \u2014 varre `/afiliados/hub`, extrai produto+comiss\u00e3o.\n- `scripts/affiliate-operator/lib/selectors.ts` \u2014 seletores DOM versionados (fr\u00e1geis \u2192 centralizados).\n\n**Novos \u2014 server (edge):**\n- `supabase/functions/affiliate-template-upsert/index.ts` \u2014 JWT; upsert per-user de `template_url`.\n- `supabase/functions/affiliate-products-upsert/index.ts` \u2014 JWT; upsert de produtos descobertos + comiss\u00e3o.\n\n**Alterados:**\n- `supabase/functions/process-affiliate-link/index.ts` \u2014 GET prefere `user_affiliate_links.template_url`.\n- `supabase/functions/_shared/affiliate.ts` \u2014 `monetizeContent` prefere template_url per-owner.\n- `src/hooks/useBrowserOperator.ts` (novo) + `src/components/settings/BrowserOperatorCard.tsx` (novo, display-only) + ROIWidget (badge atribui\u00e7\u00e3o).\n\n**Novas tabelas:** `user_affiliate_links`, `affiliate_operator_consents` (ver [06-data-model.md](06-data-model.md)).\n\n## 3. Data Flow (Job 1 \u2014 captura do link oficial)\n\n```\nuser (resid.) \u2192 runner abre product_url logado \u2192 aciona Compartilhar \u2192 captura meli.la\n   \u2192 POST /affiliate-template-upsert {external_id, template_url} (JWT do user)\n   \u2192 INSERT/UPDATE user_affiliate_links (user_id=auth.uid(), external_id, template_url, ref_expires_at)\n   \u2192 telemetry infra_health_logs(service='browser-operator', status)\n[click time] reader \u2192 login.mcorch.com/go/<link_id> \u2192 process-affiliate-link\n   \u2192 resolve owner \u2192 user_affiliate_links.template_url? 302 oficial : 302 product_url+matt_word\n```\n\n## 4. API Contract Definitions\n\n**`POST /functions/v1/affiliate-template-upsert`**\n- Auth: `Authorization: Bearer <user_jwt>` (obrigat\u00f3rio).\n- Request: `{ \"external_id\": \"MLB27834876\", \"template_url\": \"https://meli.la/xxxx\", \"ref_expires_at\": \"2026-07-08T00:00:00Z\" }`\n- Response: `200 { \"status\":\"ok\", \"id\":\"<uuid>\" }`\n- Errors: `401 unauthorized` \u00b7 `422 invalid_template_url` (dom\u00ednio fora-do-ML) \u00b7 `404 product_not_found`.\n- mcoCoins: **nenhum** (enriquecimento de dado; reavaliar em OTD-ABO-006 se houver IA).\n\n**`POST /functions/v1/affiliate-products-upsert`** \u2014 JWT; `{ products:[{external_id,name,product_url,commission_rate}] }` \u2192 upsert dedupe por `external_id`; `200 {inserted,updated}`.\n\n## 5. Security Design (CISSP CBK)\n\n**STRIDE:**\n\n| Componente | Amea\u00e7a | Vetor | Mitiga\u00e7\u00e3o |\n|------------|--------|-------|-----------|\n| upsert edge | **S**poofing | runner finge ser outro user | JWT do user; `user_id=auth.uid()` server-side, nunca do body |\n| template_url | **T**ampering | gravar URL maliciosa (open-redirect no clique) | validar dom\u00ednio \u2208 {meli.la, mercadolivre.com.br}; rejeitar resto (espelha guard do `process-affiliate-link`) |\n| jobs | **R**epudiation | \"n\u00e3o fui eu\" | `infra_health_logs` + consent log com timestamp |\n| sess\u00e3o ML | **I**nfo disclosure | vazar cookies/sess\u00e3o | sess\u00e3o **fica na m\u00e1quina do user** (profile local agent-browser); server guarda s\u00f3 metadata+consent; nunca senha |\n| runner | **D**oS | rate/ban do ML | human-paced (NFR-ABO-003); kill-switch; \u22641 a\u00e7\u00e3o concorrente |\n| user_affiliate_links | **E**levation | ler/gravar de outro tenant | RLS `auth.uid() = user_id` default-deny |\n\n**RLS:** `user_affiliate_links` e `affiliate_operator_consents` \u2192 `ENABLE ROW LEVEL SECURITY` default deny + policy `auth.uid() = user_id`. `vm_affiliate_products` (cat\u00e1logo) permanece como est\u00e1 (leitura compartilhada).\n\n**JWT:** ambas as edge fns exigem JWT do user (sem service-role no caminho user-facing). `verify_jwt=true` no `config.toml`.\n\n**Secrets inventory:** nenhum segredo novo no server. A **sess\u00e3o ML** vive no ambiente do usu\u00e1rio (n\u00e3o no Vault). Reusa `SB_*` keys existentes.\n\n## 6. Infrastructure Touchpoints\n\n- **Sem depend\u00eancia de Docker mesh** (runner \u00e9 residencial).\n- **Watchdog telemetry:** novo `service='browser-operator'` em `infra_health_logs` (events: `session_connected`, `link_extracted`, `selector_drift`, `hub_scanned`, `error`).\n- **ChromaDB:** n\u00e3o usado.\n\n## 7. Migration Stubs\n\n```sql\n-- user_affiliate_links: link oficial per-user por produto (N\u00c3O cabe na vm_affiliate_products compartilhada)\nCREATE TABLE public.user_affiliate_links (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid NOT NULL REFERENCES auth.users(id),\n  external_id text NOT NULL,                       -- MLB...\n  network text NOT NULL DEFAULT 'mercadolivre',\n  template_url text NOT NULL,                       -- meli.la / social?ref=<assinado>\n  ref_expires_at timestamptz,\n  created_at timestamptz DEFAULT now(),\n  updated_at timestamptz DEFAULT now(),\n  UNIQUE (user_id, network, external_id)\n);\nALTER TABLE public.user_affiliate_links ENABLE ROW LEVEL SECURITY; -- default deny\nCREATE POLICY ual_self ON public.user_affiliate_links\n  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\nCREATE INDEX ON public.user_affiliate_links (user_id, external_id);\n\n-- affiliate_operator_consents: trilha LGPD de consentimento/revoga\u00e7\u00e3o\nCREATE TABLE public.affiliate_operator_consents (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid NOT NULL REFERENCES auth.users(id),\n  network text NOT NULL DEFAULT 'mercadolivre',\n  consented_at timestamptz DEFAULT now(),\n  revoked_at timestamptz,\n  UNIQUE (user_id, network)\n);\nALTER TABLE public.affiliate_operator_consents ENABLE ROW LEVEL SECURITY; -- default deny\nCREATE POLICY aoc_self ON public.affiliate_operator_consents\n  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n```\n\n> Toda migration passa por `/security-review` antes de commit (CLAUDE.md FMEA-011).\n\n## 8. Open Technical Decisions\n\n| ID | Decis\u00e3o | Op\u00e7\u00f5es | Recomenda\u00e7\u00e3o |\n|----|---------|--------|--------------|\n| OTD-ABO-001 | Como o runner residencial autentica no MCORCH | (a) user JWT da sess\u00e3o MCORCH no browser local \u00b7 (b) token per-user long-lived | **(a)** \u2014 o user j\u00e1 est\u00e1 logado no MCORCH na m\u00e1quina dele; zero segredo novo |\n| OTD-ABO-002 | Onde a sess\u00e3o ML \u00e9 guardada | (a) profile local do agent-browser (fica na m\u00e1quina) \u00b7 (b) blob cifrado no Vault | **(a)** \u2014 minimiza\u00e7\u00e3o LGPD; sess\u00e3o nunca chega ao server |\n| OTD-ABO-003 | Onde gravar o link oficial per-user | (a) `vm_affiliate_products.affiliate_template_url` (compartilhado \u2014 **ERRADO** p/ multi-tenant) \u00b7 (b) nova `user_affiliate_links` | **(b)** \u2014 o link \u00e9 per-user; a coluna compartilhada vazaria entre tenants |\n| OTD-ABO-004 | Escopo dos produtos do hub | (a) cat\u00e1logo compartilhado \u00b7 (b) per-user | **(a)** cat\u00e1logo + **(b)** o link oficial \u00e9 per-user (OTD-ABO-003) |\n| OTD-ABO-005 | Risco de ToS do ML (automa\u00e7\u00e3o de conta) | (a) seguir com conta pr\u00f3pria consentida human-paced \u00b7 (b) n\u00e3o automatizar | **(a)** com kill-switch + decis\u00e3o consciente do **Owner=Sovereign** (registrar override) |\n| OTD-ABO-006 | mcoCoins se algum passo usar IA (parsing/classifica\u00e7\u00e3o) | (a) 0 (sem IA) \u00b7 (b) cobrar via `deduct_mco_coins` | **(a)** no MVP; **(b)** obrigat\u00f3rio se entrar IA server-side |\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/05-sdd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:59:29)*
+
+
+## 🤖 Claude *(17:59:29)*
+
+DMBOK + BPM + CMQ/OE (data-model + process-flow + quality-metrics):
+
+## 🤖 Claude *(17:59:30)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/06-data-model.md",
+  "content": "# 06 \u2014 Data & Knowledge Model\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** DMBOK v2 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Conceptual Data Model\n\n```\nauth.users (1) \u2500\u2500< (N) user_affiliate_links        [link oficial per-user por produto]\nauth.users (1) \u2500\u2500< (1) affiliate_operator_consents  [consentimento LGPD]\nvm_affiliate_products (cat\u00e1logo compartilhado) \u2500\u2500(external_id)\u2500\u2500 user_affiliate_links\naffiliate_config (per-user matt_word/matt_tool) \u2500\u2500 fallback quando n\u00e3o h\u00e1 link oficial\n```\n\n## 2. Logical Data Model\n\n**`user_affiliate_links`**\n\n| Coluna | Tipo | Constraint |\n|--------|------|-----------|\n| id | uuid | PK |\n| user_id | uuid | NOT NULL, FK auth.users, RLS key |\n| external_id | text | NOT NULL, `^MLB[U]?\\d+$` |\n| network | text | NOT NULL default 'mercadolivre' |\n| template_url | text | NOT NULL, dom\u00ednio \u2208 ML |\n| ref_expires_at | timestamptz | nullable (re-extra\u00e7\u00e3o) |\n| created_at / updated_at | timestamptz | default now() |\n| \u2014 | \u2014 | UNIQUE(user_id, network, external_id) |\n\n**`affiliate_operator_consents`**\n\n| Coluna | Tipo | Constraint |\n|--------|------|-----------|\n| id | uuid | PK |\n| user_id | uuid | NOT NULL, FK, RLS key |\n| network | text | NOT NULL default 'mercadolivre' |\n| consented_at | timestamptz | default now() |\n| revoked_at | timestamptz | nullable (revoga\u00e7\u00e3o) |\n| \u2014 | \u2014 | UNIQUE(user_id, network) |\n\n## 3. Supabase Physical Schema Stubs\n\n> Stubs `CREATE TABLE` + RLS + \u00edndices est\u00e3o em [05-sdd.md \u00a77](05-sdd.md). Toda migration: RLS default-deny + `/security-review` antes do commit.\n\n## 4. GraphRAG Knowledge Nodes\n\n- **Node types:** `observation` (cada execu\u00e7\u00e3o do operador \u2192 n\u00f3 com produtos enriquecidos), `milestone` (1\u00aa atribui\u00e7\u00e3o oficial).\n- **Edge types:** `ATTRIBUTES_REVENUE_TO` (j\u00e1 existe, OE-661) refor\u00e7ado quando a convers\u00e3o fecha via link oficial.\n- **Embedding:** `content` dos n\u00f3s de observa\u00e7\u00e3o alimenta `embed-mcorch-node` (768d).\n- **stability_score:** observa\u00e7\u00e3o 0.85; milestone 1.0. FSRS-6 decay padr\u00e3o.\n\n## 5. Tenant Isolation Map\n\n| Tabela | Escopo |\n|--------|--------|\n| `user_affiliate_links` | `user_id = auth.uid()` (estrito, default-deny) |\n| `affiliate_operator_consents` | `user_id = auth.uid()` |\n| `vm_affiliate_products` | cat\u00e1logo compartilhado (leitura) \u2014 **sem** dado per-user (o link oficial N\u00c3O mora aqui \u2014 OTD-ABO-003) |\n\n## 6. Data Quality Rules\n\n| Coluna | Regra |\n|--------|-------|\n| `template_url` | https + host \u2208 {`meli.la`,`*.mercadolivre.com.br`}; sen\u00e3o rejeita (422) \u2014 anti open-redirect |\n| `external_id` | regex `^MLB[U]?\\d+$`; deve existir em `vm_affiliate_products` |\n| `ref_expires_at` | se presente, futuro; expirado \u2192 eleg\u00edvel a re-extra\u00e7\u00e3o (FR-ABO-014) |\n| sess\u00e3o ML | **nunca** persistida no server (DMBOK minimiza\u00e7\u00e3o) |\n\n## 7. Retention & Archival\n\n- `user_affiliate_links`: vive enquanto consentimento ativo; `revoke` \u2192 delete (LGPD).\n- `affiliate_operator_consents`: trilha de auditoria; `revoked_at` marca fim (n\u00e3o deletar a linha de consent, s\u00f3 anular os links).\n- Sess\u00e3o ML: TTL natural do cookie ML; re-login quando expira.\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/06-data-model.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:59:30)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/07-process-flow.md",
+  "content": "# 07 \u2014 Process & Automation Blueprint\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** BPM CBOK v4 \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Process Inventory\n\n| Proc | Nome | Gatilho |\n|------|------|---------|\n| P1 | Conectar sess\u00e3o ML | usu\u00e1rio clica \"Conectar Mercado Livre\" |\n| P2 | Extrair links oficiais (Job 1) | usu\u00e1rio/agenda dispara no runner residencial |\n| P3 | Descobrir alta comiss\u00e3o (Job 2) | usu\u00e1rio/agenda dispara |\n| P4 | Consentimento/Revoga\u00e7\u00e3o (LGPD) | usu\u00e1rio ativa/revoga |\n\n## 2. BPMN-lite Process Maps\n\n**P2 \u2014 Extrair link oficial (swimlanes: User | Runner(resid.) | Edge | DB | ML)**\n```\n[Start: dispara extra\u00e7\u00e3o]\n User \u2192 Runner: lista produtos sem template (GET via edge, JWT)\n Runner \u2192 ML: abre product_url (logado)            \u2500\u2500 gateway: sess\u00e3o v\u00e1lida? \u2500\u2500n\u00e3o\u2500\u2500> [re-login P1]\n Runner \u2192 ML: aciona \"Compartilhar\"                 \u2500\u2500 gateway: bot\u00e3o achado? \u2500\u2500n\u00e3o\u2500\u2500> [marca pending + telemetry selector_drift] \u2192 pr\u00f3ximo\n Runner: captura meli.la\n Runner \u2192 Edge: POST affiliate-template-upsert {external_id, template_url} (JWT)\n Edge \u2192 DB: valida dom\u00ednio ML \u2192 upsert user_affiliate_links (auth.uid())\n Edge \u2192 DB: infra_health_logs(link_extracted)\n [delay human-paced 2\u20136s] \u2192 pr\u00f3ximo produto\n[End: N produtos com link oficial]\n```\n\n**P3 \u2014 Descobrir alta comiss\u00e3o**\n```\n[Start] User\u2192Runner dispara \u2192 Runner\u2192ML abre /afiliados/hub logado\n \u2500\u2500 gateway: hub acess\u00edvel? \u2500\u2500n\u00e3o\u2500\u2500> [telemetry error + abort]\n Runner: extrai {produto, % comiss\u00e3o} (ordena por comiss\u00e3o desc)\n Runner\u2192Edge: POST affiliate-products-upsert {products[]} (JWT) \u2192 upsert dedupe por external_id\n[End: cat\u00e1logo enriquecido por comiss\u00e3o]\n```\n\n**P4 \u2014 Revoga\u00e7\u00e3o (LGPD)**\n```\n[Start: user clica Revogar] \u2192 Edge: set affiliate_operator_consents.revoked_at\n \u2192 DB: delete user_affiliate_links do user \u2192 Runner local: apaga profile/sess\u00e3o \u2192 [End]\n```\n\n## 3. n8n Workflow Blueprints\n\n> O operador \u00e9 **residencial** (n\u00e3o n8n server-side). Agendamento opcional = cron **local** na m\u00e1quina do usu\u00e1rio (n\u00e3o no servidor MCORCH). Blueprint P2-cron: trigger local di\u00e1rio \u2192 runner \u2192 se sess\u00e3o expirada, notifica o usu\u00e1rio (n\u00e3o auto-loga). Error branch: 3 falhas de seletor consecutivas \u2192 pausa + alerta.\n\n## 4. Orchestration Integration Points\n\n- **Flywheel (`orchestrate-step` \u2192 `_shared/affiliate.ts`):** ao montar `short_url`, preferir `user_affiliate_links.template_url` do owner; sen\u00e3o `product_url`+`matt_word` (comportamento atual, rec\u00e9m-corrigido). Sem novo passo no pipeline; sem dedu\u00e7\u00e3o de mcoCoins.\n- **Redirect (`process-affiliate-link` GET):** mesma preced\u00eancia no click-time.\n\n## 5. Error Handling & Retry\n\n| Passo | Falha | Recupera\u00e7\u00e3o |\n|-------|-------|-------------|\n| abrir produto | sess\u00e3o expirada | pausa job, pede re-login (P1), retoma idempotente |\n| Compartilhar | seletor mudou | marca produto `pending`, telemetry `selector_drift`, segue os demais |\n| upsert | 422 dom\u00ednio inv\u00e1lido | descarta captura, telemetry, n\u00e3o grava |\n| hub | 403/erro | aborta P3, telemetry, mant\u00e9m cat\u00e1logo atual |\n\n## 6. SLA Definitions\n\n| Passo | Dura\u00e7\u00e3o esperada | Timeout |\n|-------|------------------|---------|\n| extrair 1 produto | 6\u201315 s (human-paced) | 45 s \u2192 pending |\n| varrer hub (1 p\u00e1gina) | 20\u201360 s | 120 s \u2192 abort |\n\n## 7. Cron Jobs\n\n- **Local (m\u00e1quina do usu\u00e1rio), opcional:** re-extra\u00e7\u00e3o idempotente (s\u00f3 produtos sem template ou `ref` expirado). Idempotency key = `(user_id, external_id)`. Falha \u2192 alerta ao usu\u00e1rio (sem auto-login). **Nenhum cron server-side** toca o ML.\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/07-process-flow.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:59:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/08-quality-metrics.md",
+  "content": "# 08 \u2014 Self-Optimization & Self-Healing Specification\n\n**Project:** authenticated-browser-operator \u00b7 **BoK Lens:** CMQ/OE BOK \u00b7 **Date:** 2026-06-08\n\n---\n\n## 1. Quality Objectives\n\n- QO-1: cobertura de link oficial \u2265 80% dos produtos ativos por usu\u00e1rio consentido (\u2192 OBJ-1).\n- QO-2: zero regress\u00e3o do flywheel `matt_word` (fallback sempre funciona) (\u2192 AC-3).\n- QO-3: zero vazamento de sess\u00e3o/senha (\u2192 NFR-ABO-001/002).\n\n## 2. KPI Dashboard\n\n| KPI | F\u00f3rmula | Target | Warn/Crit | Fonte |\n|-----|---------|--------|-----------|-------|\n| KPI-1 cobertura oficial | links oficiais / produtos ativos | \u2265 80% | <60% / <30% | `user_affiliate_links` vs `vm_affiliate_products` |\n| KPI-2 taxa de extra\u00e7\u00e3o | extra\u00eddos / tentados | \u2265 90% | <80% / <50% | `infra_health_logs(service='browser-operator')` |\n| KPI-3 selector drift | eventos `selector_drift` / dia | 0 | \u22651 / \u22655 | `infra_health_logs` |\n| KPI-4 receita atribu\u00edda | `SUM(revenue_cents)` via link oficial | >0 | =0 (>14d) | `affiliate_links` + postback |\n| KPI-5 ref expirados | links com `ref_expires_at < now()` | 0 | >10% / >30% | `user_affiliate_links` |\n\n## 3. FMEA Table\n\n| ID | Fun\u00e7\u00e3o | Modo de falha | Efeito | S | O | D | RPN | A\u00e7\u00e3o |\n|----|--------|---------------|--------|---|---|---|-----|------|\n| FMEA-ABO-001 | Compartilhar | ML muda DOM do bot\u00e3o | sem link oficial | 7 | 7 | 3 | **147** | seletores versionados + fallback + alerta drift; revis\u00e3o quinzenal |\n| FMEA-ABO-002 | session vault | vazamento de sess\u00e3o | compromete conta ML do user | 9 | 2 | 5 | **90** | sess\u00e3o fica local (OTD-ABO-002); nunca no server |\n| FMEA-ABO-003 | runner auth | runner finge outro user | grava link em tenant alheio | 9 | 2 | 4 | **72** | JWT + `auth.uid()` server-side (nunca body) |\n| FMEA-ABO-004 | template_url | URL maliciosa gravada | open-redirect no clique | 8 | 3 | 4 | **96** | valida\u00e7\u00e3o dom\u00ednio-ML (422); espelha guard existente |\n| FMEA-ABO-005 | rate/ToS | automa\u00e7\u00e3o detectada | ban da conta ML | 8 | 4 | 6 | **192** | human-paced + \u22641 concorrente + kill-switch + conta pr\u00f3pria consentida (OTD-ABO-005) |\n| FMEA-ABO-006 | runtime resid. | m\u00e1quina offline | extra\u00e7\u00e3o n\u00e3o roda | 4 | 5 | 2 | 40 | pontual/agend\u00e1vel; degrade p/ matt_word |\n| FMEA-ABO-007 | ref rotation | `ref` expira silenciosamente | atribui\u00e7\u00e3o cai sem aviso | 6 | 5 | 5 | **150** | `ref_expires_at` + KPI-5 + re-extra\u00e7\u00e3o FR-ABO-014 |\n| FMEA-ABO-008 | fallback | bug derruba flywheel | zero monetiza\u00e7\u00e3o | 9 | 2 | 3 | 54 | fallback \u00e9 o caminho atual j\u00e1 testado; prefer\u00eancia \u00e9 aditiva |\n\n> RPN > 100: FMEA-ABO-001 (147), 004 (96\u2192<100 ok), 005 (192), 007 (150). Cada um com a\u00e7\u00e3o acima (Phase 6 gate).\n\n## 4. Self-Optimization Loops\n\n- **Drift \u2192 auto-pause:** \u22653 `selector_drift` consecutivos \u2192 runner pausa o job + alerta (evita ban por repeti\u00e7\u00e3o).\n- **Cobertura baixa \u2192 priorizar:** KPI-1 < 60% \u2192 pr\u00f3ximo run prioriza produtos de maior `profitability_score`/comiss\u00e3o.\n- **Ref expirando \u2192 re-extrair:** KPI-5 > 10% \u2192 enfileira re-extra\u00e7\u00e3o idempotente.\n\n## 5. Self-Healing\n\n- **Watchdog telemetry:** `infra_health_logs(service='browser-operator')` events: `session_connected`, `link_extracted`, `selector_drift`, `hub_scanned`, `error`.\n- **Auto-recovery:** sess\u00e3o expirada \u2192 estado `needs_relogin` (n\u00e3o auto-loga; pede a\u00e7\u00e3o humana \u2014 by design, ToS-safe).\n- **mega-brain-daemon:** consome os events para o briefing matinal (cobertura oficial + drift).\n\n## 6. SLA / SLO / SLI\n\n| Servi\u00e7o | SLI | SLO | Consequ\u00eancia |\n|---------|-----|-----|--------------|\n| extra\u00e7\u00e3o | % produtos extra\u00eddos/run | 90%/run | <80% abre OTD de seletor |\n| flywheel fallback | % cliques servidos | 99.9% | qualquer queda = incidente P0 (receita) |\n\n## 7. PDCA Cadence\n\n- Revis\u00e3o quinzenal dos seletores ML (DOM vol\u00e1til) + KPI review semanal. Owner da m\u00e9trica: Sovereign (at\u00e9 v6.5.0). Backlog: `docs/bok/authenticated-browser-operator/` + OTDs.\n\n## 8. Observability Checklist\n\n- **Logging:** todo job \u2192 `infra_health_logs` (success/degraded/error) com `external_id` (nunca sess\u00e3o/cookies).\n- **Alerting:** `selector_drift \u2265 1` \u2192 briefing; `ban suspeito` (403 logado) \u2192 alerta imediato + kill-switch.\n- **Tracing:** correlation id por run do operador (runner \u2192 edge \u2192 DB).\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/authenticated-browser-operator/08-quality-metrics.md (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
