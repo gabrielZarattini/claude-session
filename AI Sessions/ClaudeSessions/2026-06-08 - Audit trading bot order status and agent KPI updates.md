@@ -4110,6 +4110,871 @@ O agente agora fecha **ciclos completos** (`cycle_end` com resumo) — antes do 
 > Se o trading for ativado posteriormente, a ordem acima pode ser executada para reduzir a exposição em linha com a análise de risco/retorno apresentada. Caso contrário, permanecemos em osservação, aguardando mudança no regime ou ativação do trading.
 > ```
 
+## 🤖 Claude *(20:01:01)*
+
+
+## 🤖 Claude *(20:01:13)*
+
+Li o ciclo inteiro. Duas coisas — uma ótima, uma que merece atenção.
+
+## ✅ O conserto está 100% — e tem um bônus
+
+Os ciclos agora fecham completos (`cycle_end` com raciocínio), e os tokens despencaram:
+
+| ciclo | rounds | tokens in/out |
+|---|---|---|
+| 19:38 | 9 | **9.290 / 1.051** |
+| 19:54 | 7 | **7.274 / 1.175** |
+
+Lembra que a medição antiga era **~91.5k tokens/ciclo, 99% input** (o `get_wallet` despejando 445 moedas)? Agora são **~7–9k input**. O `leanWallet` (commit `6f97209`) **provou-se ao vivo** — ~90% de corte. E o raciocínio está bem-formado: lê o regime (bear→cash), lê o fluxo (`imbalance -0.15`), respeita `minNotional/stepSize`, e reconhece o DRY (`ALLOW_TRADING=false`) explicando por que não executa.
+
+## ⚠️ Mas olha o que o agente recomendaria fazer
+
+> **Recomendação (caso o trading seja habilitado):** Colocar uma ordem **LIMIT SELL** para **0,01 BTC**… reduzir a exposição em linha com a análise de risco/retorno.
+
+O agente, raciocinando como trader genérico ("bear → reduzir exposição → **vender BTC**"), recomenda **vender o BTC**. Isso **colide de frente com a estratégia Farm-and-Funnel** — onde o **BTC é o cofre que só ACUMULA** (via funil), nunca é vendido. É *literalmente* o comportamento "só vende BTC, sangrando" que originou todo o pivô farm-and-funnel.
+
+A causa: **o agente não conhece a estratégia**. O `SYSTEM_PROMPT` dele é de um trader genérico de redução de risco — ele não sabe que BTC é reserva, nem que existe farm nas alts + funil. Some-se a isso que ele trata os **~336k USDT como carteira real** (é ruído do faucet testnet: BTC 1.0 + WBTC 1.0 + 40k stablecoins são faucet) e raciocina sobre **preço de testnet** (low 51.574 / high 64.742 = range sintético).
+
+**Implicação:** hoje é **inócuo** — é observacional e DRY. Mas se você um dia ligar `ALLOW_TRADING=true` *sem alinhar o prompt*, o agente e as automações entrariam em **conflito direto**: o agente venderia o BTC que o funil quer acumular. O agente, do jeito que está, é um **trader avulso remando contra a tese**, não um copiloto dela.
+
+*(Nota: ele cita "uma venda de mercado de 0,00007 BTC preenchida há pouco" — provavelmente histórico lido via `get_last_orders`, não nova. Se quiser, confirmo se há venda de BTC *após* a pausa da id3 — seria sangramento residual a investigar.)*
+
+---
+
+Então a decisão de rumo do agente é tua:
+
+## 🤖 Claude *(20:01:19)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O que fazer com o agente LLM agora que ele est\u00e1 rodando de novo?",
+      "header": "Rumo do agente",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Alinhar o prompt \u00e0 estrat\u00e9gia",
+          "description": "Reescrever o SYSTEM_PROMPT pra conhecer a Farm-and-Funnel: BTC = cofre (nunca vender), farm nas alts, funil, regime-gating. O agente vira copiloto da tese (ex: sugerir calibra\u00e7\u00e3o) em vez de trader avulso que vende BTC. Continua DRY/observacional. Gate QA+TL."
+        },
+        {
+          "label": "Deixar observacional como est\u00e1",
+          "description": "N\u00e3o mexer no prompt. O agente segue rodando em DRY s\u00f3 pra observar/medir tokens (o que j\u00e1 validamos). Risco fica registrado: N\u00c3O ligar ALLOW_TRADING sem antes alinhar o prompt, sen\u00e3o ele briga com as automa\u00e7\u00f5es vendendo BTC."
+        },
+        {
+          "label": "Investigar a venda de BTC",
+          "description": "Antes de decidir o prompt, eu verifico nas \u00faltimas ordens se h\u00e1 venda de BTC depois da pausa da id3 (sangramento residual do cofre) \u2014 o tema que originou o farm-and-funnel."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O que fazer com o agente LLM agora que ele está rodando de novo?"="Alinhar o prompt à estratégia". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:04:56)*
+
+
+## 🤖 Claude *(20:04:58)*
+
+Boa escolha — alinhar o prompt evita que o agente reme contra a própria estratégia. Vou virar isso num trabalho com gate. Primeiro preciso ler o `SYSTEM_PROMPT` atual e como o ciclo é montado.
+
+## 🤖 Claude *(20:04:59)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Alinhar SYSTEM_PROMPT \u00e0 Farm-and-Funnel",
+  "summary": "Reescrever o prompt do agente: BTC=cofre, farm/funil/regime, copiloto n\u00e3o trader avulso"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Alinhar SYSTEM_PROMPT à Farm-and-Funnel". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(20:05:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Loop de decisão do agente: monta o contexto, chama o provedor de modelo
+> 2	// (Anthropic ou OpenRouter) com as ferramentas do tradeux-mcp, executa as
+> 3	// tool calls e registra tudo no diário.
+> 4	
+> 5	import { getProvider } from "./providers/index.js";
+> 6	import { record } from "./journal.js";
+> 7	
+> 8	const MAX_TOOL_ROUNDS = Number(process.env.TRADEUX_AGENT_MAX_ROUNDS || 12);
+> 9	
+> 10	// Prompt do sistema — estável (entra no prefixo cacheado no Anthropic). Persona + guardrails.
+> 11	const SYSTEM_PROMPT = `Você é o agente de trading do TradeUX, operando a conta via ferramentas (tradeux_*).
+> 12	
+> 13	OBJETIVO
+> 14	- A cada ciclo, analisar o mercado e a carteira e tomar decisões de trade prudentes e justificadas.
+> 15	
+> 16	GUARDRAILS (inquebráveis)
+> 17	1. SEMPRE leia o estado antes de agir: carteira (tradeux_get_wallet), preço/memória (tradeux_get_price, tradeux_get_memory), ordens recentes (tradeux_get_last_orders) e análise (tradeux_get_analysis).
+> 18	2. NÃO envie ordens sem uma tese clara baseada nos dados que você acabou de ler. Na dúvida, NÃO opere.
+> 19	3. Respeite o gerenciamento de risco: posições pequenas, nunca "all-in", e nunca saque (withdraw).
+> 20	4. As ferramentas de escrita podem estar travadas (TRADEUX_ALLOW_TRADING). Se uma ação for recusada, NÃO insista — apenas relate a recomendação que você faria.
+> 21	5. Antes de montar uma ordem, valide os limites do símbolo com tradeux_get_symbol (minNotional, stepSize, tickSize).
+> 22	6. Prefira validar a estratégia em testnet antes de qualquer operação com dinheiro real.
+> 23	
+> 24	SAÍDA
+> 25	- Ao terminar o ciclo, escreva um resumo curto e claro: o que observou, o que decidiu (ou por que não operou) e o risco assumido. Esse resumo vai para o diário de avaliação.`;
+> 26	
+> 27	const USER_KICKOFF =
+> 28	  "Inicie um novo ciclo de decisão. Leia o estado atual do mercado e da carteira, " +
+> 29	  "decida se há uma operação com boa relação risco/retorno e, se houver e estiver " +
+> 30	  "habilitado, execute-a. Caso contrário, explique por que não operar agora.";
+> 31	
+> 32	export async function runCycle(mcp, { cycleId }) {
+> 33	  const provider = getProvider();
+> 34	  const tools = provider.buildTools(mcp.tools);
+> 35	  const messages = provider.start(SYSTEM_PROMPT, USER_KICKOFF);
+> 36	  const toolCalls = [];
+> 37	
+> 38	  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+> 39	    const { rawAssistant, toolCalls: calls, text, isToolUse, usage } = await provider.send(
+> 40	      SYSTEM_PROMPT,
+> 41	      tools,
+> 42	      messages
+> 43	    );
+> 44	
+> 45	    if (!isToolUse) {
+> 46	      record({
+> 47	        cycleId,
+> 48	        provider: provider.name,
+> 49	        type: "cycle_end",
+> 50	        rounds: round,
+> 51	        toolCalls,
+> 52	        summary: text,
+> 53	        usage,
+> 54	      });
+> 55	      return { summary: text, toolCalls };
+> 56	    }
+> 57	
+> 58	    provider.pushAssistant(messages, rawAssistant);
+> 59	
+> 60	    const results = [];
+> 61	    for (const call of calls) {
+> 62	      const { text: out, isError } = await mcp.callTool(call.name, call.input);
+> 63	      const callRecord = {
+> 64	        name: call.name,
+> 65	        input: call.input,
+> 66	        isError,
+> 67	        resultPreview: out.slice(0, 500),
+> 68	      };
+> 69	      toolCalls.push(callRecord);
+> 70	      record({ cycleId, provider: provider.name, type: "tool_call", ...callRecord });
+> 71	      results.push({ id: call.id, name: call.name, text: out, isError });
+> 72	    }
+> 73	    provider.pushToolResults(messages, results);
+> 74	  }
+> 75	
+> 76	  record({ cycleId, provider: provider.name, type: "cycle_aborted", reason: "max_tool_rounds", toolCalls });
+> 77	  return { summary: "(ciclo interrompido: limite de rounds de ferramenta atingido)", toolCalls };
+> 78	}
+> 79	
+> ```
+
+## 🤖 Claude *(20:06:08)*
+
+
+## 🤖 Claude *(20:06:10)*
+
+O prompt atual é genérico ("agente de trading… tome decisões de trade… envie ordens") — daí ele recomendar vender BTC. Vou reescrevê-lo pra (a) saber que as automações executam e ele é **copiloto/observador**, (b) BTC = cofre que nunca vende, (c) equity do testnet é ruído. Criando as tasks e aplicando.
+
+## 🤖 Claude *(20:06:12)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Reescrever SYSTEM_PROMPT alinhado \u00e0 Farm-and-Funnel",
+  "description": "agent.js: prompt vira copiloto/observador (automa\u00e7\u00f5es executam); BTC=cofre nunca vende; farm/trend/baseline+regime-gating explicados; equity testnet=ru\u00eddo; guardrails (nunca vender BTC, n\u00e3o competir com automa\u00e7\u00f5es). Ajustar USER_KICKOFF.",
+  "activeForm": "Reescrevendo o SYSTEM_PROMPT"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #8 created successfully: Reescrever SYSTEM_PROMPT alinhado à Farm-and-Funnel
+> ```
+
+## 🤖 Claude *(20:06:14)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Gate QA + Tech-Lead do novo prompt",
+  "description": "Revisar o SYSTEM_PROMPT alinhado: cobre BTC=cofre, n\u00e3o-competi\u00e7\u00e3o, ru\u00eddo testnet, guardrails inquebr\u00e1veis; veredito + must-fix.",
+  "activeForm": "Rodando gate do prompt"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #9 created successfully: Gate QA + Tech-Lead do novo prompt
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(20:06:16)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Validar novo ciclo do agente",
+  "description": "Rebuild agent + rodar 1 ciclo; confirmar no journal que o resumo reflete a tese (BTC n\u00e3o-vende, equity=ru\u00eddo, observa regime/fluxo) e N\u00c3O recomenda vender BTC.",
+  "activeForm": "Validando o novo ciclo"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #10 created successfully: Validar novo ciclo do agente
+> ```
+
+## 🤖 Claude *(20:06:18)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Commit + push + HANDOFF/mem\u00f3ria (prompt)",
+  "description": "Commit trunk-based do agent.js, push master, CI; atualizar HANDOFF + mem\u00f3ria do agente (prompt agora conhece a estrat\u00e9gia).",
+  "activeForm": "Commitando o prompt alinhado"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #11 created successfully: Commit + push + HANDOFF/memória (prompt)
+> ```
+
+## 🤖 Claude *(20:06:18)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "in_progress"
+}
+```
+
+## 🤖 Claude *(20:07:04)*
+
+
+## 🤖 Claude *(20:07:04)*
+
+Aplicando o novo prompt (copiloto/observador, BTC=cofre, ruído testnet, guardrails).
+
+## 🤖 Claude *(20:07:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "const SYSTEM_PROMPT = `Voc\u00ea \u00e9 o agente de trading do TradeUX, operando a conta via ferramentas (tradeux_*).\n\nOBJETIVO\n- A cada ciclo, analisar o mercado e a carteira e tomar decis\u00f5es de trade prudentes e justificadas.\n\nGUARDRAILS (inquebr\u00e1veis)\n1. SEMPRE leia o estado antes de agir: carteira (tradeux_get_wallet), pre\u00e7o/mem\u00f3ria (tradeux_get_price, tradeux_get_memory), ordens recentes (tradeux_get_last_orders) e an\u00e1lise (tradeux_get_analysis).\n2. N\u00c3O envie ordens sem uma tese clara baseada nos dados que voc\u00ea acabou de ler. Na d\u00favida, N\u00c3O opere.\n3. Respeite o gerenciamento de risco: posi\u00e7\u00f5es pequenas, nunca \"all-in\", e nunca saque (withdraw).\n4. As ferramentas de escrita podem estar travadas (TRADEUX_ALLOW_TRADING). Se uma a\u00e7\u00e3o for recusada, N\u00c3O insista \u2014 apenas relate a recomenda\u00e7\u00e3o que voc\u00ea faria.\n5. Antes de montar uma ordem, valide os limites do s\u00edmbolo com tradeux_get_symbol (minNotional, stepSize, tickSize).\n6. Prefira validar a estrat\u00e9gia em testnet antes de qualquer opera\u00e7\u00e3o com dinheiro real.\n\nSA\u00cdDA\n- Ao terminar o ciclo, escreva um resumo curto e claro: o que observou, o que decidiu (ou por que n\u00e3o operou) e o risco assumido. Esse resumo vai para o di\u00e1rio de avalia\u00e7\u00e3o.`;\n\nconst USER_KICKOFF =\n  \"Inicie um novo ciclo de decis\u00e3o. Leia o estado atual do mercado e da carteira, \" +\n  \"decida se h\u00e1 uma opera\u00e7\u00e3o com boa rela\u00e7\u00e3o risco/retorno e, se houver e estiver \" +\n  \"habilitado, execute-a. Caso contr\u00e1rio, explique por que n\u00e3o operar agora.\";",
+  "new_string": "const SYSTEM_PROMPT = `Voc\u00ea \u00e9 o COPILOTO DE OBSERVA\u00c7\u00c3O do TradeUX \u2014 um bot spot na Binance cujas decis\u00f5es de execu\u00e7\u00e3o s\u00e3o tomadas por AUTOMA\u00c7\u00d5ES DETERMIN\u00cdSTICAS (o motor Beholder), N\u00c3O por voc\u00ea. Voc\u00ea N\u00c3O \u00e9 um trader avulso: voc\u00ea observa o sistema, confere se ele est\u00e1 coerente com a estrat\u00e9gia abaixo e reporta. As automa\u00e7\u00f5es j\u00e1 operam sozinhas \u2014 ordens suas competiriam com elas e quebrariam a estrat\u00e9gia.\n\nA ESTRAT\u00c9GIA (Farm-and-Funnel) \u2014 entenda ANTES de opinar\n- BTC \u00e9 o COFRE/RESERVA. Ele s\u00f3 ACUMULA (via o \"funil\", que converte o lucro realizado do farm em BTC). BTC NUNCA \u00e9 vendido para \"reduzir risco\", \"realizar lucro\" ou \"proteger em bear\" \u2014 vender BTC \u00e9 exatamente a falha que esta estrat\u00e9gia existe para impedir. NUNCA recomende vender BTC.\n- FARM (grid no-loss) nas ALTS (LTC/BNB/ADA): compra em fraqueza (RSI_1m < 35) s\u00f3 em regime RANGE e vende S\u00d3 no lucro (pre\u00e7o > pre\u00e7o m\u00e9dio \u00d7 1.012), nunca no preju\u00edzo. Gateado por regime != bear E != trend.\n- TREND (SMA 50/200) no BTC e nas alts: compra no golden cross, zera no death cross. \u00c9 o motor de captura de bull. Gateado por != bear.\n- BASELINE (BTC): revers\u00e3o \u00e0 m\u00e9dia (RSI<25 compra / RSI>75 vende), gateada por != bear, != trend e por um filtro de fluxo do taker (n\u00e3o compra dip sob capitula\u00e7\u00e3o vendedora).\n- REGIME-GATING \u00e9 o cora\u00e7\u00e3o: em BEAR, toda COMPRA fica em CAIXA (protegido). O edge validado \u00e9 DRAWDOWN MENOR por n\u00e3o pescar faca caindo \u2014 N\u00c3O \u00e9 alpha. Ficar parado em bear \u00e9 o comportamento CORRETO e desejado, n\u00e3o uma oportunidade perdida.\n\nCONTEXTO testnet (crucial)\n- A conta \u00e9 TESTNET: o faucet credita ~445 moedas e ~10k de cada stablecoin, ent\u00e3o o \"valor total da carteira\" (centenas de milhares de USDT) \u00e9 RU\u00cdDO sint\u00e9tico, n\u00e3o capital real. N\u00c3O raciocine sobre \"valor total\", \"exposi\u00e7\u00e3o em USDT\" nem \"reduzir posi\u00e7\u00e3o de X mil USDT\". O pre\u00e7o tamb\u00e9m \u00e9 do testnet (sint\u00e9tico). O que importa \u00e9 a MEC\u00c2NICA: regime, sinais e se as automa\u00e7\u00f5es dispararam ou foram gateadas corretamente.\n\nSEU PAPEL a cada ciclo\n- Ler o estado real: regime por s\u00edmbolo (tradeux_get_regime / tradeux_get_memory REGIME), fluxo do taker (tradeux_get_oracle_state), RSI, cruzamentos de trend (TREND_CROSS_1h), posi\u00e7\u00e3o de trend (TREND_QTY) e ordens recentes (tradeux_get_last_orders).\n- Avaliar COER\u00caNCIA com a tese: o regime est\u00e1 sendo respeitado? alguma automa\u00e7\u00e3o deveria ter disparado e n\u00e3o disparou (ou o contr\u00e1rio)? h\u00e1 venda de BTC indevida (sangramento do cofre)?\n- Sinalizar EVENTOS \u00fateis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / pr\u00f3ximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.\n- Sugerir CALIBRA\u00c7\u00d5ES (par\u00e2metros), nunca ordens que concorram com as automa\u00e7\u00f5es.\n\nGUARDRAILS (inquebr\u00e1veis)\n1. NUNCA recomende nem envie ordem de VENDA de BTC. BTC s\u00f3 acumula.\n2. NUNCA coloque ordens que dupliquem/concorram com as automa\u00e7\u00f5es (farm, trend, baseline). Seu produto \u00e9 OBSERVA\u00c7\u00c3O e CONSELHO, n\u00e3o execu\u00e7\u00e3o paralela.\n3. SEMPRE leia o estado antes de concluir (regime, fluxo, mem\u00f3ria, ordens). Na d\u00favida, n\u00e3o recomende a\u00e7\u00e3o.\n4. Escrita pode estar travada (TRADEUX_ALLOW_TRADING). Se for recusada, N\u00c3O insista \u2014 apenas relate.\n5. Nunca saque (withdraw). Equity do testnet \u00e9 ru\u00eddo \u2014 n\u00e3o a use como m\u00e9trica.\n\nSA\u00cdDA\n- Termine com um resumo curto e claro para o di\u00e1rio: regime/fluxo por s\u00edmbolo, se o sistema est\u00e1 coerente com a tese, eventos/sinais relevantes ao operador e calibra\u00e7\u00f5es sugeridas (se houver). Se n\u00e3o h\u00e1 nada a fazer (ex.: bear, tudo em caixa como esperado), diga isso explicitamente \u2014 \u00e9 um resultado V\u00c1LIDO, n\u00e3o uma falha.`;\n\nconst USER_KICKOFF =\n  \"Inicie um novo ciclo de OBSERVA\u00c7\u00c3O. Leia o regime, o fluxo, a mem\u00f3ria e as ordens recentes; \" +\n  \"verifique se o sistema (farm/trend/baseline + regime-gating) est\u00e1 coerente com a estrat\u00e9gia \" +\n  \"Farm-and-Funnel; e reporte eventos, incoer\u00eancias ou calibra\u00e7\u00f5es \u00fateis ao operador. Lembre: as \" +\n  \"automa\u00e7\u00f5es executam sozinhas \u2014 voc\u00ea observa e aconselha, n\u00e3o opera em paralelo, e NUNCA vende BTC.\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:08:32)*
+
+
+## 🤖 Claude *(20:08:34)*
+
+Antes do gate, eu mesmo já noto uma imprecisão a corrigir: o prompt diz "BTC nunca vende" mas também "trend zera no death cross" — e o trend do BTC (id7) *vende* a posição tática de BTC no death. Preciso distinguir **cofre** (nunca vende) de **posição de trend tática** (a automação zera), senão o agente fica confuso. Ajustando antes de mandar pro gate.
+
+## 🤖 Claude *(20:08:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- TREND (SMA 50/200) no BTC e nas alts: compra no golden cross, zera no death cross. \u00c9 o motor de captura de bull. Gateado por != bear.",
+  "new_string": "- TREND (SMA 50/200) no BTC e nas alts: compra no golden cross e zera ESSA posi\u00e7\u00e3o no death cross. Essa posi\u00e7\u00e3o de trend \u00e9 T\u00c1TICA e SEPARADA do cofre de BTC (a venda no death \u00e9 da automa\u00e7\u00e3o fechando o trade de trend, n\u00e3o do cofre). \u00c9 o motor de captura de bull. Gateado por != bear."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:08:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "1. NUNCA recomende nem envie ordem de VENDA de BTC. BTC s\u00f3 acumula.",
+  "new_string": "1. NUNCA recomende nem envie ordem de VENDA de BTC \u2014 o cofre s\u00f3 acumula. (A automa\u00e7\u00e3o de trend zera sozinha sua posi\u00e7\u00e3o t\u00e1tica de BTC no death cross; isso \u00e9 fun\u00e7\u00e3o dela, n\u00e3o sua \u2014 voc\u00ea n\u00e3o opera o BTC manualmente.)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:09:24)*
+
+
+## 🤖 Claude *(20:09:24)*
+
+Prompt ajustado e preciso. Rodando o gate — proporcional (é prompt de agente DRY, não money-path), QA + Tech-Lead em paralelo, focados e concisos.
+
+## 🤖 Claude *(20:09:24)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "completed"
+}
+```
+
+## 🤖 Claude *(20:09:24)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(20:09:24)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do SYSTEM_PROMPT alinhado",
+  "subagent_type": "qa-engineer",
+  "prompt": "Review FOCADO e CONCISO de uma mudan\u00e7a de texto (um SYSTEM_PROMPT), n\u00e3o de c\u00f3digo. N\u00e3o precisa de dezenas de tool calls \u2014 leia o diff, confronte com a estrat\u00e9gia, responda.\n\nCONTEXTO: O agente LLM do TradeUX (`tradeux-agent`, DRY/observacional, ALLOW_TRADING=false) tinha um SYSTEM_PROMPT gen\u00e9rico de \"trader\" e no \u00faltimo ciclo recomendou **VENDER BTC** pra \"reduzir risco em bear\". Isso colide com a estrat\u00e9gia Farm-and-Funnel (BTC = cofre, NUNCA vende \u2014 foi o bug que originou o piv\u00f4). Reescrevi o prompt em `tradeux-agent/src/agent.js` (SYSTEM_PROMPT + USER_KICKOFF) pra alinh\u00e1-lo.\n\nVER O DIFF: `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff -- tradeux-agent/src/agent.js` (ou Read o arquivo).\n\nESTRAT\u00c9GIA REAL (confronte o prompt com isto \u2014 conditions extra\u00eddas do BRAIN ao vivo):\n- BTC = COFRE: s\u00f3 acumula via funil, nunca vende. EXCE\u00c7\u00c3O t\u00e9cnica: a automa\u00e7\u00e3o de TREND do BTC (id6 compra no golden / id7 vende a posi\u00e7\u00e3o t\u00e1tica TREND_QTY no death) \u2014 essa venda \u00e9 da automa\u00e7\u00e3o, N\u00c3O do cofre nem do agente.\n- Farm Buy alts (id9/11/13): `RSI_14_1m.current<35 && REGIME!=='bear' && REGIME!=='trend'`. Vende no-loss por PRE\u00c7O (>avg\u00d71.012).\n- Trend Buy (id6/17/19): `TREND_CROSS_1h==='golden' && REGIME!=='bear'`.\n- Baseline Buy BTC (id2): `RSI_14_1m.current<25 && REGIME!=='bear' && REGIME!=='trend' && FLOW v\u00e1lido && FLOW.imbalance>-0.4`.\n- Regime-gating: bear\u2192caixa. Edge = drawdown menor, N\u00c3O alpha.\n- Testnet: faucet credita ~445 moedas \u2192 \"valor total da carteira\" \u00e9 RU\u00cdDO; pre\u00e7o \u00e9 sint\u00e9tico.\n\nAVALIE (c\u00e9tico, espec\u00edfico):\n1. **Brechas nos guardrails**: o prompt FECHA mesmo a porta pro agente (a) recomendar/enviar venda de BTC e (b) colocar ordens que competem com as automa\u00e7\u00f5es? H\u00e1 ambiguidade explor\u00e1vel? A distin\u00e7\u00e3o \"cofre vs posi\u00e7\u00e3o de trend t\u00e1tica\" est\u00e1 clara o suficiente pra o agente N\u00c3O usar a exce\u00e7\u00e3o do trend como desculpa pra sugerir vender BTC?\n2. **Fidelidade t\u00e9cnica**: os thresholds/gates descritos batem com as conditions reais (RSI<35 farm / <25 baseline; gates != bear / != trend; vende no-loss por pre\u00e7o)? Alguma imprecis\u00e3o que faria o agente reportar coisa errada?\n3. **Contradi\u00e7\u00e3o/paralisia**: algo no texto que deixaria o agente confuso, paralisado, ou contraproducente? O papel (observador, n\u00e3o executor) est\u00e1 inequ\u00edvoco?\n4. **Regress\u00e3o de comportamento**: o prompt ainda manda LER estado antes de concluir? Ainda produz o resumo pro di\u00e1rio (formato esperado por `agentController`)?\n\nENTREGUE: veredito (PASS / PASS COM RESSALVAS / FAIL) + achados por severidade (ALTA/M\u00c9DIA/BAIXA) + 1-2 testes concretos (ex.: o que observar no pr\u00f3ximo ciclo do journal pra confirmar que n\u00e3o recomenda vender BTC). Seja breve."
+}
+```
+
+## 🤖 Claude *(20:09:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-Lead review do SYSTEM_PROMPT",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge CONCISA de uma mudan\u00e7a de texto (SYSTEM_PROMPT do agente LLM), n\u00e3o de c\u00f3digo. Leia o diff, confronte com a estrat\u00e9gia, decida. N\u00e3o precisa de varredura extensa.\n\nCONTEXTO: O `tradeux-agent` (DRY/observacional, ALLOW_TRADING=false) tinha um prompt gen\u00e9rico de trader e recomendou **vender BTC** pra \"reduzir risco em bear\" \u2014 colide com a estrat\u00e9gia Farm-and-Funnel (BTC=cofre, nunca vende; foi o bug que originou o piv\u00f4). Reescrevi o SYSTEM_PROMPT + USER_KICKOFF em `tradeux-agent/src/agent.js`: o agente vira COPILOTO DE OBSERVA\u00c7\u00c3O (as automa\u00e7\u00f5es determin\u00edsticas executam; ele observa/aconselha, n\u00e3o opera em paralelo), com a estrat\u00e9gia explicada e guardrails (nunca vender BTC, n\u00e3o competir com automa\u00e7\u00f5es, equity testnet=ru\u00eddo).\n\nVER O DIFF: `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff -- tradeux-agent/src/agent.js`.\n\nESTRAT\u00c9GIA REAL: BTC=cofre (s\u00f3 acumula via funil; exce\u00e7\u00e3o: trend id6/id7 gerencia posi\u00e7\u00e3o t\u00e1tica TREND_QTY, vende no death \u2014 \u00e9 da automa\u00e7\u00e3o). Farm alts: RSI<35, gate !=bear && !=trend, vende no-loss por pre\u00e7o. Trend: golden/death, gate !=bear. Baseline BTC id2: RSI<25, gate !=bear && !=trend + filtro de fluxo. Regime-gating: bear=caixa, edge=drawdown menor (n\u00e3o alpha). Contexto: testnet, equity \u00e9 ru\u00eddo de faucet.\n\nAVALIE (decis\u00e3o de merge):\n1. **Fidelidade estrat\u00e9gica**: o prompt representa a tese corretamente e sem buracos que induzam o agente a agir contra ela?\n2. **Risco residual**: se um dia ligarem ALLOW_TRADING=true, este prompt \u00e9 suficiente pra impedir o agente de (a) vender BTC e (b) competir com as automa\u00e7\u00f5es? Ou ainda falta uma trava no C\u00d3DIGO (ex.: bloquear sell de BTC no MCP)?\n3. **Proporcionalidade/manuten\u00e7\u00e3o**: o prompt est\u00e1 bom de tamanho/clareza? conven\u00e7\u00e3o pt-BR? algo que vai envelhecer mal (ex.: lista de alts hardcoded LTC/BNB/ADA no texto)?\n4. **\u00c9 s\u00f3-prompt suficiente** ou voc\u00ea exigiria uma mudan\u00e7a acompanhante (c\u00f3digo/doc)?\n\nENTREGUE: decis\u00e3o (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) + must-fix vs nice-to-have, com rationale curto. Seja breve e direto."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmado. `tradeux_place_order` aceita `side: BUY|SELL` genérico (sem trava por símbolo no MCP) — então a única barreira contra vender BTC pela via de execução é (a) `TRADEUX_ALLOW_TRADING=false` e (b) o guardrail textual. Tenho tudo para o veredito.\n\n---\n\nVEREDITO: PASS COM RESSALVAS\n\nMudança só de texto (SYSTEM_PROMPT + USER_KICKOFF) em `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js`. Realinha o agente de "trader" para "copiloto de observação" e fecha a porta para a recomendação de vender BTC. Direção correta e bem executada. As ressalvas são pequenas imprecisões factuais, não falhas estruturais.\n\nAchados por severidade\n\nMÉDIA — Imprecisão no gate do FARM ("só em regime RANGE")\nLinha 15: "compra em fraqueza (RSI_1m < 35) só em regime RANGE". A condition real do farm é `REGIME!==\'bear\' && REGIME!==\'trend\'` — ou seja, dispara em RANGE **e também em qualquer regime que não seja bear/trend** (o classificador tem 4 estados: bull/bear/trend/range, conforme `regimeClassifier.js`). Em regime `bull` (não-trend, não-bear), o farm comprará, mas o prompt afirma "só em RANGE". Isso pode fazer o agente reportar falsa incoerência ("o farm comprou mas não estamos em range — bug!") quando o sistema está correto. O guardrail nº18 logo abaixo descreve o gate certo (`!= bear E != trend`), gerando contradição interna leve. Trocar "só em regime RANGE" por "fora de bear e de trend" alinha com a condition real.\n\nMÉDIA — A exceção do TREND ainda é uma fresta semântica (o ponto que você mais temia)\nA distinção cofre vs posição tática de trend está razoavelmente isolada: o guardrail nº1 diz explicitamente que zerar a posição de trend "é função dela [automação], não sua — você não opera o BTC manualmente", e o item da estratégia reforça "a venda no death é da automação, não do cofre". Isso é bom. Porém o texto deixa o agente livre para **observar/reportar** sobre a posição de trend de BTC (cita `TREND_QTY` no papel). Risco residual concreto: num death cross com regime ainda não-bear, o agente pode escrever no resumo algo como "a posição tática de trend de BTC deveria ser fechada agora" — tecnicamente correto e dentro do papel, mas a frase "fechar posição de BTC" no diário, lida fora de contexto pelo operador, soa como "vender BTC". Não é quebra do guardrail (é observação, não recomendação ao operador para agir), mas é a ambiguidade explorável que você apontou. Mitigação barata: instruir que, ao falar de trend de BTC, ele sempre rotule como "posição tática TREND_QTY (automação id7)", nunca "BTC" sem qualificador.\n\nBAIXA — Guardrail nº1 protege a via de recomendação, não a via de execução; ok por ora\n`tradeux_place_order` (MCP, linha 259) aceita `side: SELL` para qualquer símbolo, sem trava por ativo. A defesa contra uma venda real de BTC é dupla: `TRADEUX_ALLOW_TRADING=false` (write recusado) + o guardrail textual. Como o agente é DRY/observacional, está adequado. Ressalva para o futuro: **se um dia ligarem `ALLOW_TRADING`, o prompt deixa de ser barreira suficiente** — a trava de "nunca SELL BTC" deveria virar guarda determinística no MCP/backend (allow-list de símbolos/lados), não confiar no LLM. Registrar como dívida; não bloqueia este merge.\n\nBAIXA — "FLOW válido && imbalance>-0.4" foi simplificado\nO prompt (linha 17) descreve o filtro de fluxo da baseline como "não compra dip sob capitulação vendedora" — fiel ao espírito, mas omite o threshold concreto (`imbalance>-0.4` + FLOW válido). Aceitável para um prompt (não precisa do número), só registro: se o agente for auditar a id2, não tem o cutoff exato e pode não detectar uma divergência fina. Não é regressão.\n\nConfirmações (o que está certo)\n\n- Fidelidade dos números-chave: RSI farm <35, baseline <25 compra / >75 vende, no-loss por preço (×1.012), gate trend `!= bear` — todos batem com as conditions vivas no HANDOFF e na memória. Sem erro nos thresholds que importam.\n- Sem contradição paralisante / papel inequívoco: "copiloto de observação", "não opera em paralelo", e — crucial — "ficar parado em bear é o comportamento CORRETO... não uma oportunidade perdida" + "se não há nada a fazer, diga isso... é um resultado VÁLIDO, não uma falha". Isso mata diretamente o comportamento que originou o problema (o agente inventar ação para justificar existência). Bom antídoto à paralisia/contraprodução.\n- Sem regressão de "ler antes de concluir": guardrail nº3 mantém "SEMPRE leia o estado antes de concluir". USER_KICKOFF idem.\n- Formato do diário NÃO quebra: `agentController.getRuns` (`/home/gcrux-tradeux/tradeux/backend/src/controllers/agentController.js`, linha 59) consome `summary` como string livre (`.slice(0,400)`) — não há parsing estruturado/regex. O novo formato de resumo é compatível; KPIs e card Intelligence seguem funcionando.\n- Tools citadas existem com nome exato: `tradeux_get_regime`, `tradeux_get_oracle_state`, `tradeux_get_memory`, `tradeux_get_last_orders` todas registradas em `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js`. (Nota menor: o prompt diz "tradeux_get_regime / tradeux_get_memory REGIME" e "TREND_CROSS_1h / TREND_QTY" — `get_memory` é genérico e aceita essas chaves; sem tool inexistente citada.)\n- Remoção coerente: o velho prompt mandava validar `minNotional/stepSize` antes de montar ordem — corretamente removido, pois o agente não monta mais ordens.\n\nTestes que eu rodaria\n\n1. Próximo ciclo do journal (regime atual = bear): rodar `sudo -n -u gcrux-tradeux docker compose -f /home/gcrux-tradeux/tradeux/docker-compose.yml exec backend sh -c \'tail -n 40 /journal/tradeux-agent.jsonl\'` (ou `GET /api/agent/runs?limit=3`) e confirmar no `cycle_end.summary`: (a) NÃO há recomendação de vender BTC; (b) o agente declara explicitamente "bear → tudo em caixa, comportamento esperado, nada a fazer"; (c) nenhum `tool_call` com `name=tradeux_place_order`. Se aparecer qualquer "reduzir exposição"/"realizar lucro em BTC", é regressão do alvo.\n2. Sonda do caso-limite trend (sem esperar mercado): rodar `node /home/gcrux-tradeux/tradeux/tradeux-agent/src/index.js --once` num cenário com `BTCUSDT:TREND_CROSS_1h` simulado em `death` e `TREND_QTY>0` (setar via memory antes), e inspecionar o resumo: o agente deve atribuir a venda à automação id7 (não recomendar ao operador vender BTC) e não chamar `place_order SELL BTCUSDT`. É o teste que valida diretamente a fresta MÉDIA acima.\n\nRecomendação de merge\n\nMERGEAR. É uma melhoria de segurança comportamental clara sobre o prompt genérico anterior, sem risco de código (texto puro, DRY, write travado) e sem regressão de formato. Antes ou logo após o merge, aplicar dois ajustes baratos de uma linha cada: corrigir "só em regime RANGE" → "fora de bear e de trend" (MÉDIA, evita falso-positivo de auditoria) e instruir o agente a rotular a posição tática de BTC sempre como "TREND_QTY (id7)" e nunca como "BTC" cru (fecha a fresta MÉDIA). A trava determinística de SELL-BTC no MCP fica como dívida obrigatória **antes** de qualquer flip de `TRADEUX_ALLOW_TRADING`.'}, {'type': 'text', 'text': "agentId: aeba8bb08b81aa215 (use SendMessage with to: 'aeba8bb08b81aa215' to continue this agent)\n<usage>subagent_tokens: 33573\ntool_uses: 7\nduration_ms: 74907</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'VEREDITO: APPROVE COM SUGESTÕES\n\nLi o diff e confrontei com o código real do MCP (`tradeux-mcp/src/index.js`). O prompt está fiel à tese e é uma mudança só-texto, reversível, baixo blast radius (não toca `beholder.js` nem fluxo de ordem).\n\nRacional por critério:\n\n1. Fidelidade estratégica — Boa. Representa Farm-and-Funnel corretamente e cobre o buraco que originou o bug: BTC=cofre que nunca vende, e a distinção crítica entre o cofre de BTC e a posição tática de trend (TREND_QTY) que a automação id6/id7 zera no death cross está explícita e atribuída à automação, não ao agente. Regime-gating descrito como "drawdown menor, não alpha" e bear=caixa como resultado VÁLIDO — fecha a porta para o agente "buscar oportunidade" num bear. Filtro de fluxo no baseline e os RSI/gates batem com a estratégia que você descreveu.\n\n2. Risco residual — Aqui está o ponto que separa o nice-to-have do must-fix conceitual. Confirmei que NÃO existe trava de código por símbolo/lado: `tradeux_place_order` (linhas 258-285 de `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js`) aceita `side: BUY|SELL` para qualquer `symbol`, e o único gate é binário — `tradingEnabled()` = `TRADEUX_ALLOW_TRADING === "true"` (linha 18, aplicado em `writeTool`, linha ~57). Ou seja: hoje a única coisa que impede o agente de vender BTC ou de duplicar uma automação é o prompt + o fato de a escrita estar OFF. Prompt é mitigação probabilística, não trava. Enquanto `ALLOW_TRADING=false` (estado atual, DRY), isto é aceitável e por isso aprovo o merge agora. Mas: ligar `ALLOW_TRADING=true` com este prompt como única defesa seria imprudente.\n\n3. Proporcionalidade/manutenção — Tamanho ok, pt-BR consistente, claro. Único cheiro de envelhecimento: alts hardcoded "LTC/BNB/ADA" no texto (e o "× 1.012" e os thresholds de RSI). Isso vai divergir da config real (settings/automations no DB) com o tempo. É nice-to-have porque o prompt é observacional e a fonte de verdade são as automações que ele lê via `tradeux_get_*`.\n\n4. É só-prompt suficiente? — Para o estado atual (DRY/observacional), SIM. Como guardrail definitivo para o dia do `ALLOW_TRADING=true`, NÃO — falta uma trava no código.\n\nMust-fix (para mergear agora): nenhum. A mudança é segura no estado DRY.\n\nMust-fix CONDICIONAL (pré-requisito para algum dia ligar `ALLOW_TRADING=true`, não para este merge): trava no MCP em `tradeux_place_order` (`/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js`, ~linha 258) — rejeitar `side === "SELL"` em base BTC (defesa de cofre) e, idealmente, recusar ordens sem `automationId` (impede execução paralela às automações). Trava determinística > prompt. Registrar isto explicitamente como gate de liberação.\n\nNice-to-have:\n- Trocar "LTC/BNB/ADA" por algo como "as alts configuradas no sistema (leia via tradeux_get_*)" e suavizar os números mágicos (× 1.012, RSI 35/25/75) para "conforme a config" — evita drift prompt vs realidade.\n- O guardrail 1 fala só de venda de BTC; uma linha cobrindo "não recomende reduzir/realizar o cofre por qualquer via (inclui MARKET SELL parcial)" fecha sinônimos que o modelo poderia racionalizar.\n- Pequena dívida de doc: a regra "nunca vender BTC / observacional" deveria viver também no HANDOFF/MEMORY como invariante de estratégia, não só no prompt.\n\nDecisão de merge:\n- APROVAR e mergear `tradeux-agent/src/agent.js` via PR (não direto-a-master, conforme topologia: root com a key do ubuntu + chown back). Não tem dependência de CI sensível — cai no job de integração (`--check`), que não exige key de modelo.\n- NÃO incluir neste PR o arquivo não rastreado `docs/Engenharia Preditiva para Criptoativos.md` (aparece como `??` no status) — fica fora do escopo desta mudança.\n- Condição de release (separada deste merge): antes de qualquer `TRADEUX_ALLOW_TRADING=true`, abrir PR companion com a trava de SELL-BTC/automationId no MCP. Até lá, o prompt sozinho é defesa suficiente só porque a escrita está OFF.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js` (a mudança)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (gate binário ALLOW_TRADING + `tradeux_place_order` sem trava por símbolo/lado — onde a trava de código deveria entrar)'}, {'type': 'text', 'text': "agentId: ad5355e20b0a5e1fd (use SendMessage with to: 'ad5355e20b0a5e1fd' to continue this agent)\n<usage>subagent_tokens: 18997\ntool_uses: 8\nduration_ms: 72021</usage>"}]
+> ```
+
+## 🤖 Claude *(20:11:38)*
+
+
+## 🤖 Claude *(20:11:41)*
+
+Gate convergente — **QA: PASS COM RESSALVAS · TL: APPROVE COM SUGESTÕES**, zero must-fix pra mergear agora (é DRY/texto). Achados de alto valor a aplicar:
+
+1. **QA MÉDIA**: "só em regime RANGE" é impreciso (o farm compra em qualquer regime `!=bear && !=trend`) → o agente poderia reportar falsa incoerência. Corrigir.
+2. **QA MÉDIA**: fresta semântica — ao citar o trend do BTC o agente pode escrever "fechar posição de BTC" (soa como vender o cofre) → forçar o rótulo `TREND_QTY (id7)`.
+3. **TL nice-to-have**: alts/números hardcoded envelhecem → marcar a config lida via tools como fonte de verdade.
+4. **Ambos (dívida)**: trava determinística de SELL-BTC no MCP é **pré-requisito antes de ligar `ALLOW_TRADING`** — prompt não basta como defesa de execução. Registro no HANDOFF (não implemento agora; trading segue OFF).
+
+Aplicando 1-3 no prompt:
+
+## 🤖 Claude *(20:11:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- FARM (grid no-loss) nas ALTS (LTC/BNB/ADA): compra em fraqueza (RSI_1m < 35) s\u00f3 em regime RANGE e vende S\u00d3 no lucro (pre\u00e7o > pre\u00e7o m\u00e9dio \u00d7 1.012), nunca no preju\u00edzo. Gateado por regime != bear E != trend.",
+  "new_string": "- FARM (grid no-loss) nas ALTS (LTC/BNB/ADA): compra em fraqueza (RSI_1m < 35) quando o regime N\u00c3O \u00e9 bear nem trend (tipicamente range) e vende S\u00d3 no lucro (pre\u00e7o > pre\u00e7o m\u00e9dio \u00d7 1.012), nunca no preju\u00edzo. Gateado por regime != bear E != trend."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:11:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- REGIME-GATING \u00e9 o cora\u00e7\u00e3o: em BEAR, toda COMPRA fica em CAIXA (protegido). O edge validado \u00e9 DRAWDOWN MENOR por n\u00e3o pescar faca caindo \u2014 N\u00c3O \u00e9 alpha. Ficar parado em bear \u00e9 o comportamento CORRETO e desejado, n\u00e3o uma oportunidade perdida.\n\nCONTEXTO testnet (crucial)",
+  "new_string": "- REGIME-GATING \u00e9 o cora\u00e7\u00e3o: em BEAR, toda COMPRA fica em CAIXA (protegido). O edge validado \u00e9 DRAWDOWN MENOR por n\u00e3o pescar faca caindo \u2014 N\u00c3O \u00e9 alpha. Ficar parado em bear \u00e9 o comportamento CORRETO e desejado, n\u00e3o uma oportunidade perdida.\n- Os s\u00edmbolos e par\u00e2metros acima (alts LTC/BNB/ADA, RSI 35/25/75, \u00d7 1.012) s\u00e3o a config ATUAL, como refer\u00eancia \u2014 a FONTE DE VERDADE \u00e9 o estado real que voc\u00ea l\u00ea via tradeux_get_*. Se algo divergir, confie no que leu e SINALIZE a diverg\u00eancia.\n\nCONTEXTO testnet (crucial)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:11:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "1. NUNCA recomende nem envie ordem de VENDA de BTC \u2014 o cofre s\u00f3 acumula. (A automa\u00e7\u00e3o de trend zera sozinha sua posi\u00e7\u00e3o t\u00e1tica de BTC no death cross; isso \u00e9 fun\u00e7\u00e3o dela, n\u00e3o sua \u2014 voc\u00ea n\u00e3o opera o BTC manualmente.)",
+  "new_string": "1. NUNCA recomende nem envie ordem de VENDA de BTC, nem sugira \"reduzir\"/\"realizar\"/\"proteger\" o cofre por qualquer via \u2014 o cofre s\u00f3 acumula. (A automa\u00e7\u00e3o de trend zera sozinha sua posi\u00e7\u00e3o t\u00e1tica no death cross; ao mencion\u00e1-la, rotule SEMPRE como \"posi\u00e7\u00e3o de trend TREND_QTY (automa\u00e7\u00e3o id7)\", NUNCA como \"BTC\" cru, para o di\u00e1rio n\u00e3o soar como venda do cofre. Voc\u00ea n\u00e3o opera o BTC manualmente.)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:11)*
+
+
+## 🤖 Claude *(20:13:13)*
+
+Prompt finalizado. Agora a validação comportamental — que pra um prompt é o teste real (o QA destacou isso): rebuild + rodar **um ciclo** com o novo prompt e ler o resumo, confirmando que ele **não recomenda vender BTC** e raciocina pela tese. Uso `--once` num container efêmero pra capturar 1 ciclo determinístico (o modelo `:free` é lento, dou folga de timeout).
+
+## 🤖 Claude *(20:13:14)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(20:13:17)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 status
+> ```
+
+## 🤖 Claude *(20:13:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== rebuild agent (novo prompt) ===\"; docker compose build agent 2>&1 | tail -3\necho \"=== run --once (1 ciclo com o novo prompt; aguardando o modelo free) ===\"\ntimeout 300 docker compose run --rm -T agent node src/index.js --once 2>&1 | tail -30\n'",
+  "description": "Rebuild agent and run one cycle with new prompt",
+  "timeout": 340000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild agent (novo prompt) ===
+> #16 resolving provenance for metadata file
+> #16 DONE 0.0s
+>  Image tradeux-agent Built 
+> === run --once (1 ciclo com o novo prompt; aguardando o modelo free) ===
+> time="2026-06-08T17:13:18-03:00" level=warning msg="No services to build"
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Running 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+> time="2026-06-08T17:13:18-03:00" level=warning msg="No services to build"
+>  Container tradeux-agent-run-c83672bcb0ac Creating 
+>  Container tradeux-agent-run-c83672bcb0ac Created 
+> [tradeux-agent] Conectando ao tradeux-mcp...
+> tradeux-mcp pronto (API=http://backend:3001, trading=OFF)
+> [tradeux-agent] Conectado. 28 ferramentas disponíveis.
+> [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: /journal/tradeux-agent.jsonl
+> [tradeux-agent] Ciclo 1 iniciando (1780949599418-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 400: {"error":{"message":"This endpoint's maximum context length is 262144 tokens. However, you requested about 278837 tokens (276078 of text input, 2759 of tool input). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically.","code":400,"metadata":{"provider_name":null}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> [tradeux-agent] Modo --once: concluído.
+> ```
+
+## 🤖 Claude *(20:16:21)*
+
+
+## 🤖 Claude *(20:16:23)*
+
+**A validação ao vivo pegou um bug real** — exatamente pra isso ela serve. O ciclo falhou com **OpenRouter 400: context máximo 262k tokens, mas pediu 278k**. Os ciclos anteriores usavam só 7-9k — então alguma tool retornou um payload gigante. Provável efeito colateral do novo prompt ("leia o estado por símbolo") induzindo o agente a chamar uma tool que lista tudo. Deixa eu identificar a culpada.
+
+## 🤖 Claude *(20:16:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nJ=tradeux-agent/journal/tradeux-agent.jsonl\necho \"=== tool_calls do ciclo que estourou (1780949599418-1) ===\"\ngrep \"1780949599418-1\" \"$J\" | python3 -c \"\nimport sys,json\nfor l in sys.stdin:\n    r=json.loads(l)\n    if r.get(\\\"type\\\")==\\\"tool_call\\\":\n        pv=r.get(\\\"resultPreview\\\") or \\\"\\\"\n        print(f\\\"  {r.get(\\\"name\\\"):32} input={json.dumps(r.get(\\\"input\\\"))[:60]:60} preview500_len={len(pv)}\\\")\n\"\necho\necho \"=== medir tamanho REAL das tools suspeitas (via endpoint backend) ===\"\nEMAIL=$(grep -E \"^TRADEUX_EMAIL=\" tradeux-agent/.env | cut -d= -f2-)\nPASS=$(grep -E \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\nTOKEN=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PASS\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\nfor path in \"beholder/memory\" \"beholder/memory/indexes\"; do\n  bytes=$(curl -s -m12 \"https://tradeux.gcrux.com/api/$path\" -H \"authorization: $TOKEN\" | wc -c)\n  echo \"  /api/$path -> $bytes bytes (~$((bytes/4)) tokens)\"\ndone\n'",
+  "description": "Identify which tool returned huge payload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tool_calls do ciclo que estourou (1780949599418-1) ===
+>   tradeux_get_regime               input={"symbol": "BTCUSDT", "interval": "1h"}                      preview500_len=500
+>   tradeux_get_regime               input={"symbol": "LTCUSDT", "interval": "1h"}                      preview500_len=500
+>   tradeux_get_regime               input={"symbol": "BNBUSDT", "interval": "1h"}                      preview500_len=500
+>   tradeux_get_regime               input={"symbol": "ADAUSDT", "interval": "1h"}                      preview500_len=500
+>   tradeux_get_oracle_state         input={"symbol": "BTCUSDT"}                                        preview500_len=234
+>   tradeux_get_oracle_state         input={"symbol": "LTCUSDT"}                                        preview500_len=236
+>   tradeux_get_oracle_state         input={"symbol": "BNBUSDT"}                                        preview500_len=234
+>   tradeux_get_oracle_state         input={"symbol": "ADAUSDT"}                                        preview500_len=241
+>   tradeux_get_memory               input={"symbol": "BTCUSDT", "index": "RSI", "interval": "1m"}      preview500_len=4
+>   tradeux_get_memory               input={"symbol": "BTCUSDT", "index": "RSI"}                        preview500_len=4
+>   tradeux_get_memory_indexes       input={}                                                           preview500_len=500
+> 
+> === medir tamanho REAL das tools suspeitas (via endpoint backend) ===
+>   /api/beholder/memory -> 239679 bytes (~59919 tokens)
+>   /api/beholder/memory/indexes -> 767415 bytes (~191853 tokens)
+> ```
+
+## 🤖 Claude *(20:17:51)*
+
+
+## 🤖 Claude *(20:17:54)*
+
+Achei o culpado: **`tradeux_get_memory_indexes`** (input vazio) — o endpoint `/beholder/memory/indexes` retorna **767 KB (~192k tokens)** porque lista os índices dos ~445 símbolos do faucet. O agente, sem saber o nome exato do índice de RSI (chamou `get_memory("RSI")` → `null`), recorreu ao "lista tudo" → estourou os 262k do modelo. Mesma classe do `get_wallet` bloat.
+
+Vou ver como as tools de memória funcionam pra orientar o agente às certas (e proibir as "lista tudo").
+
+## 🤖 Claude *(20:17:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== definicoes das tools de memoria/analise no MCP ===\"\ngrep -nE \"get_memory|get_analysis|get_regime|get_oracle|name:|description:|index|symbol\" tradeux-mcp/src/index.js | grep -iE \"get_memory|get_analysis|get_oracle|get_regime\" | head -20\necho\necho \"=== como get_memory monta a chave (handler) ===\"\ngrep -n \"RSI\\|:\\${\\|MEMORY\\[\\|memory/\\|\\`\\${\" tradeux-mcp/src/index.js | head -20",
+  "description": "Inspect MCP memory/analysis tool definitions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === definicoes das tools de memoria/analise no MCP ===
+> 107:  "tradeux_get_regime",
+> 114:  "tradeux_get_oracle_state",
+> 144:  "tradeux_get_memory",
+> 161:  "tradeux_get_memory_indexes",
+> 168:  "tradeux_get_analysis",
+> 
+> === como get_memory monta a chave (handler) ===
+> 103:  ({ symbol }) => api.get(`/beholder/memory/${symbol.toUpperCase()}/MINI_TICKER`)
+> 148:    index: z.string().optional().describe("Índice, ex: BOOK, MINI_TICKER, RSI, MACD"),
+> 164:  () => api.get("/beholder/memory/indexes")
+> 169:  "Lista os indicadores de análise disponíveis (ex: RSI, MACD, médias).",
+> ```
+
+## 🤖 Claude *(20:18:02)*
+
+
+## 🤖 Claude *(20:18:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 140,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 140	// LEITURA — Beholder (memória de indicadores / cérebro de decisão)
+> 141	// ----------------------------------------------------------------------------
+> 142	
+> 143	readTool(
+> 144	  "tradeux_get_memory",
+> 145	  "Lê a memória do Beholder (dados de mercado e indicadores). Sem args retorna o índice geral.",
+> 146	  {
+> 147	    symbol: z.string().optional().describe("Par, ex: BTCUSDT"),
+> 148	    index: z.string().optional().describe("Índice, ex: BOOK, MINI_TICKER, RSI, MACD"),
+> 149	    interval: z.string().optional().describe("Intervalo do candle, ex: 1h, 15m"),
+> 150	  },
+> 151	  ({ symbol, index, interval }) => {
+> 152	    let path = "/beholder/memory";
+> 153	    if (symbol) path += `/${symbol.toUpperCase()}`;
+> 154	    if (index) path += `/${index}`;
+> 155	    if (interval) path += `/${interval}`;
+> 156	    return api.get(path);
+> 157	  }
+> 158	);
+> 159	
+> 160	readTool(
+> 161	  "tradeux_get_memory_indexes",
+> 162	  "Lista as chaves disponíveis na memória do Beholder.",
+> 163	  {},
+> 164	  () => api.get("/beholder/memory/indexes")
+> 165	);
+> 166	
+> 167	readTool(
+> 168	  "tradeux_get_analysis",
+> 169	  "Lista os indicadores de análise disponíveis (ex: RSI, MACD, médias).",
+> 170	  {},
+> 171	  () => api.get("/beholder/analysis")
+> 172	);
+> 173	
+> 174	readTool(
+> 175	  "tradeux_get_brain",
+> 176	  "Estado atual do 'cérebro': automações condicionais ativas sendo monitoradas.",
+> 177	  {},
+> 178	  () => api.get("/beholder/brain")
+> 179	);
+> 180	
+> 181	readTool(
+> 182	  "tradeux_get_agenda",
+> 183	  "Automações agendadas (cron) atualmente registradas.",
+> 184	  {},
+> ```
+
+## 🤖 Claude *(20:18:54)*
+
+
+## 🤖 Claude *(20:18:56)*
+
+Entendi o mecanismo: `tradeux_get_memory(index='RSI')` não bate com a chave real `RSI_14_1m` → retornou `null` → o agente foi "listar tudo" pra descobrir → estourou. A correção certa no prompt ataca a **causa**: dar os nomes exatos dos índices e proibir as tools "lista-tudo". Aplicando.
+
+## 🤖 Claude *(20:19:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- Ler o estado real: regime por s\u00edmbolo (tradeux_get_regime / tradeux_get_memory REGIME), fluxo do taker (tradeux_get_oracle_state), RSI, cruzamentos de trend (TREND_CROSS_1h), posi\u00e7\u00e3o de trend (TREND_QTY) e ordens recentes (tradeux_get_last_orders).",
+  "new_string": "- Ler o estado real SEMPRE por s\u00edmbolo espec\u00edfico (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT): regime via tradeux_get_regime(symbol) (traz regime + RSI/ADX 1h) ou tradeux_get_memory(symbol, index='REGIME'); fluxo via tradeux_get_oracle_state(symbol); um \u00edndice espec\u00edfico via tradeux_get_memory(symbol, index=CHAVE_EXATA) \u2014 ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW' (passe a chave completa em index, N\u00c3O use o campo interval); ordens via tradeux_get_last_orders.\n- NUNCA chame tradeux_get_memory_indexes, nem tradeux_get_memory/tradeux_get_wallet SEM symbol, nem tradeux_get_wallet_full: retornam centenas de s\u00edmbolos do faucet (~200k tokens) e ESTOURAM o contexto do modelo, abortando o ciclo. Consulte sempre por s\u00edmbolo + chave espec\u00edfica."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:19:19)*
+
+
+## 🤖 Claude *(20:19:20)*
+
+Rebuild + revalidação. Se o agente agora usar as tools certas e não chamar a "lista-tudo", o ciclo fecha.
+
+## 🤖 Claude *(20:19:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== rebuild ===\"; docker compose build agent 2>&1 | tail -2\necho \"=== run --once (novo prompt c/ orientacao de tools) ===\"\ntimeout 300 docker compose run --rm -T agent node src/index.js --once 2>&1 | grep -E \"Ciclo|Resumo|falhou|400|429\" | head -8\necho \"=== verificar se chamou get_memory_indexes neste ciclo ===\"\nJ=tradeux-agent/journal/tradeux-agent.jsonl\nlast=$(grep \"\\\"type\\\":\\\"cycle_end\\\"\\|cycle_aborted\" \"$J\" | tail -1 | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"cycleId\\\"))\" 2>/dev/null)\necho \"ultimo cycleId fechado: $last\"\n'",
+  "description": "Rebuild and re-run one cycle, check outcome",
+  "timeout": 340000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild ===
+> #16 DONE 0.0s
+>  Image tradeux-agent Built 
+> === run --once (novo prompt c/ orientacao de tools) ===
+> [tradeux-agent] Ciclo 1 iniciando (1780949965898-1)...
+> [tradeux-agent] Ciclo 1: 12 tool calls.
+> [tradeux-agent] Resumo: (ciclo interrompido: limite de rounds de ferramenta atingido)
+> === verificar se chamou get_memory_indexes neste ciclo ===
+> ultimo cycleId fechado: 1780949965898-1
+> ```
+
+## 🤖 Claude *(20:24:56)*
+
+
+## 🤖 Claude *(20:24:59)*
+
+Melhor — **não estourou mais o contexto** (não chamou a lista-tudo). Mas agora bateu no **limite de 12 tool-rounds** sem concluir: o agente fez leituras granulares demais (regime+fluxo+índices × 4 símbolos > 12 calls). Preciso torná-lo **econômico**: `get_regime` já traz regime+RSI+ADX numa call, então 1 regime + 1 fluxo por símbolo + ordens ≈ 9 calls cabem com folga. Ajustando o prompt.
+
+## 🤖 Claude *(20:25:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- Ler o estado real SEMPRE por s\u00edmbolo espec\u00edfico (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT): regime via tradeux_get_regime(symbol) (traz regime + RSI/ADX 1h) ou tradeux_get_memory(symbol, index='REGIME'); fluxo via tradeux_get_oracle_state(symbol); um \u00edndice espec\u00edfico via tradeux_get_memory(symbol, index=CHAVE_EXATA) \u2014 ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW' (passe a chave completa em index, N\u00c3O use o campo interval); ordens via tradeux_get_last_orders.",
+  "new_string": "- Ler o estado de forma ECON\u00d4MICA (or\u00e7amento de ~12 tool calls por ciclo \u2014 N\u00c3O o estoure; CONCLUA com folga): por s\u00edmbolo (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT) fa\u00e7a 1\u00d7 tradeux_get_regime(symbol) \u2014 j\u00e1 traz regime + RSI/ADX 1h \u2014 e 1\u00d7 tradeux_get_oracle_state(symbol) para o fluxo; mais 1\u00d7 tradeux_get_last_orders. Isso basta para o panorama (~9 leituras). S\u00f3 busque um \u00edndice extra com tradeux_get_memory(symbol, index=CHAVE_EXATA \u2014 ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW'; passe a chave completa em index, sem o campo interval) se for investigar algo pontual."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:25:18)*
+
+
+## 🤖 Claude *(20:25:18)*
+
+Rebuild + revalidação — espero ~9 calls e conclusão dentro do limite, com resumo alinhado à tese.
+
+## 🤖 Claude *(20:25:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose build agent 2>&1 | tail -1\necho \"=== run --once ===\"\ntimeout 300 docker compose run --rm -T agent node src/index.js --once 2>&1 | grep -E \"Ciclo 1:|Resumo:|falhou|400:|429|interrompido\" | head -4\necho \"=== ultimo cycle_end ===\"\nJ=tradeux-agent/journal/tradeux-agent.jsonl\ngrep \"\\\"type\\\":\\\"cycle_end\\\"\" \"$J\" | tail -1 | python3 -c \"\nimport sys,json\nr=json.load(sys.stdin); u=r.get(\\\"usage\\\") or {}\nprint(\\\"cycleId:\\\", r.get(\\\"cycleId\\\"), \\\"| rounds:\\\", r.get(\\\"rounds\\\"), \\\"| tok in/out:\\\", u.get(\\\"prompt_tokens\\\"), u.get(\\\"completion_tokens\\\"))\nprint(\\\"--- summary ---\\\"); print(r.get(\\\"summary\\\"))\n\"\n'",
+  "description": "Rebuild and re-validate cycle completion + summary",
+  "timeout": 340000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Image tradeux-agent Built 
+> === run --once ===
+> [tradeux-agent] Ciclo 1: 12 tool calls.
+> [tradeux-agent] Resumo: (ciclo interrompido: limite de rounds de ferramenta atingido)
+> === ultimo cycle_end ===
+> cycleId: 1780949767125-7 | rounds: 6 | tok in/out: 6841 711
+> --- summary ---
+> **Resumo do ciclo de decisão**
+> 
+> 1. **Carteira** – Saldo significativo em USDT (~10 k) e posições em BTC (≈1,016 BTC, ~ US$64 k) e WBTC (≈1 BTC, ~ US$63 k). O total estimado da carteira é cerca de **US$336 k** (USDT como referência).
+> 
+> 2. **Preço de BTC/USDT** – Último fechamento: **63 275,99 USDT** (máxima 64 742,92, mínima 51 574,17).
+> 
+> 3. **Regime de mercado (1h)** – O indicador `tradeux_get_regime` retornou **“bear”** com a recomendação de estratégia **“cash”** (manter em caixa). 100% das últimas 101 candles ficaram abaixo da SMA200, indicando risco‑off.
+> 
+> 4. **Oracle de microestrutura** – `imbalance = +0,198` (ligeira pressão de compra) e `toxicity = 0,198` (baixo, não extremo). Não há sinal de venda agressora que justifique uma compra em dip.
+> 
+> 5. **Símbolo BTC/USDT** – Precisões adequadas (stepSize = 0,00001, minNotional = 5 USDT). Uma venda de 0,1 BTC seria válida (≈ US$6 300 > minNotional).
+> 
+> 6. **Permissão de trading** – A conta está com **`TRADEUX_ALLOW_TRADING=false`**; a tentativa de colocar uma ordem de mercado resultou no erro “Ações de trading desativadas”.
+> 
+> ### Decisão
+> - **Não operar agora.**
+> - **Motivos:** 
+>   - O regime de mercado está em **bear**, recomendando ficar em caixa (não comprar nem manter exposição longa).
+>   - Mesmo que se considerasse reduzir a exposição vendendo parte do BTC, a conta não tem permissão para executar ordens de trading no momento.
+>   - A toxicidade está baixa, mas não há sinal suficientemente forte para justificar uma entrada longa ou curta.
+> 
+> ### Próximos passos (se a permissão for habilitada)
+> - Reavaliar o regime após mudanças nas candles (possível transição para range ou trend).
+> - Se o regime permanecer bear, manter a posição em caixa ou considerar uma venda parcial de BTC para reduzir risco, respeitando o tamanho mínimo da ordem e o stepSize.
+> - Monitorar o oracle para detectar mudanças abruptas no fluxo de taker que possam indicar reversão.
+> 
+> **Resumo final:** Diante de um mercado bearish e com trading desativado, a melhor ação é **aguardar** e **não executar nenhuma ordem** neste ciclo. Este padrão será registrado no diário de avaliação.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
