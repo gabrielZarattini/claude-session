@@ -11490,5 +11490,5 @@ Não precisou do harness — a pesquisa já estava entregue. Sessão fechada com
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]
-> * **Próxima Sessão**: [[2026-06-08 - Audit trading bot order status and agent KPI updates]]
+> * **Próxima Sessão**: [[2026-06-08 - Add BTC sell guard to MCP place_order tool]]
 %% --- TIMELINE END --- %%

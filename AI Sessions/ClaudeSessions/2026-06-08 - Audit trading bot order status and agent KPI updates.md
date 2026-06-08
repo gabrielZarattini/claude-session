@@ -5433,6 +5433,6 @@ Quer que eu já ataque essa trava no MCP (e de quebra enxugue o `get_memory_inde
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]
+> * **Sessão Anterior**: [[2026-06-08 - Add BTC sell guard to MCP place_order tool]]
 > * **Próxima Sessão**: [[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]
 %% --- TIMELINE END --- %%

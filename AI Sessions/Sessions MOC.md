@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 522
-> * **Sessões do Claude**: 485
+> * **Total de Sessões Registradas**: 526
+> * **Sessões do Claude**: 489
 > * **Sessões do Gemini**: 37
 
 ---
@@ -62,16 +62,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-08 - handson]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-aeba8bb08b81aa215]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-ad5355e20b0a5e1fd]]` - *2026-06-08*
+*   `[[2026-06-08 - agent-ab93bfd85003bea65]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-a944a6f4e8e59b1ba]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-a2860a5bd64368767]]` - *2026-06-08*
+*   `[[2026-06-08 - agent-a23e1048c694022e8]]` - *2026-06-08*
+*   `[[2026-06-08 - agent-a0a17aa1b197bcb71]]` - *2026-06-08*
 *   `[[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]` - *2026-06-08*
 *   `[[2026-06-08 - Audit trading bot order status and agent KPI updates]]` - *2026-06-08*
+*   `[[2026-06-08 - Add BTC sell guard to MCP place_order tool]]` - *2026-06-08*
 *   `[[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]` - *2026-06-08*
-*   `[[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]` - *2026-06-08*
-*   `[[2026-06-07 - handson]]` - *2026-06-07*
-*   `[[2026-06-06 - handson]]` - *2026-06-06*
-*   `[[2026-06-05 - handson]]` - *2026-06-05*
-*   *... e mais 486 sessões nessa categoria.*
+*   *... e mais 490 sessões nessa categoria.*
 
 ---
 
@@ -265,10 +265,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-08 - handson]]` (GeminiSessions)
 *   `[[2026-06-08 - agent-aeba8bb08b81aa215]]` (ClaudeSessions)
 *   `[[2026-06-08 - agent-ad5355e20b0a5e1fd]]` (ClaudeSessions)
+*   `[[2026-06-08 - agent-ab93bfd85003bea65]]` (ClaudeSessions)
 *   `[[2026-06-08 - agent-a944a6f4e8e59b1ba]]` (ClaudeSessions)
 *   `[[2026-06-08 - agent-a2860a5bd64368767]]` (ClaudeSessions)
+*   `[[2026-06-08 - agent-a23e1048c694022e8]]` (ClaudeSessions)
+*   `[[2026-06-08 - agent-a0a17aa1b197bcb71]]` (ClaudeSessions)
 *   `[[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]` (ClaudeSessions)
 *   `[[2026-06-08 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions)
+*   `[[2026-06-08 - Add BTC sell guard to MCP place_order tool]]` (ClaudeSessions)
 *   `[[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]` (ClaudeSessions)
 *   `[[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]` (ClaudeSessions)
 *   `[[2026-06-07 - handson]]` (GeminiSessions)
