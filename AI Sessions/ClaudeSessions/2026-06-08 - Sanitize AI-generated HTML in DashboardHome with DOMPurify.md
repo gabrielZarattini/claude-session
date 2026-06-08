@@ -8205,5 +8205,6 @@ O maior aprendizado material: **seu teste real achou o que meu datacenter mascar
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]
+> * **Sessão Anterior**: [[2026-06-08 - Audit trading bot order status and agent KPI updates]]
+> * **Próxima Sessão**: [[2026-06-08 - agent-a2860a5bd64368767]]
 %% --- TIMELINE END --- %%
