@@ -5297,6 +5297,65 @@ Os 3 itens estão **feitos, selados e pushados**. Estado final: `## main...origi
 
 Posso encadear o follow-up do `link-forge` agora, ou paramos aqui pra você selar/seguir. A janela ainda comporta.
 
+## 👤 User *(16:33:10)*
+
+posso ja então testar os links para selar?
+
+## 🤖 Claude *(16:33:41)*
+
+
+## 🤖 Claude *(16:33:43)*
+
+Sim — os links já estão **ao vivo e prontos** pra você testar no seu navegador (e o seu IP residencial não leva o 403 que o datacenter leva, então você vai ver a página real do ML carregar). Deixa eu te montar links de teste reais com a linha de base de cliques, pra depois eu confirmar materialmente o incremento do seu clique:
+
+## 🤖 Claude *(16:33:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== affiliate_links reais (id \u00b7 clicks atuais \u00b7 destino) ===\"\ncurl -s \"${URL}/rest/v1/affiliate_links?select=id,clicks,short_url,created_at&order=created_at.desc&limit=6\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" \\\n  | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nfor r in d:\n    dest=str(r.get('short_url') or '')[:48]\n    print(f\\\"https://login.mcorch.com/go/{r['id']}\\\")\n    print(f\\\"   clicks_atuais={r.get('clicks')}  ->  {dest}\\\")\n    print()\n\"",
+  "description": "Build real branded test links with click baselines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === affiliate_links reais (id · clicks atuais · destino) ===
+> https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843
+>    clicks_atuais=1  ->  https://www.mercadolivre.com.br/MLB-27834876?mat
+> ```
+
+## 🤖 Claude *(16:34:21)*
+
+
+## 🤖 Claude *(16:34:31)*
+
+Material: a tabela `affiliate_links` tem **exatamente 1 link** hoje (os inserts ficaram quebrados por um tempo, conforme v6.28.0) — e é justamente o que já validei. Então o teste do seu lado é com este:
+
+## 🔗 Link branded pra você clicar (do seu navegador)
+
+**`https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843`**
+- **Baseline agora: `clicks = 1`** (do meu teste E2E do datacenter)
+- **Destino real:** produto ML `MLB-27834876` (com `matt_word=caga6077534`)
+
+### O que verificar
+1. **Clica o link acima** no navegador → deve te jogar (302→302, invisível) na **página real do produto no Mercado Livre** carregando normalmente (seu IP residencial não leva o 403 que meu datacenter levou).
+2. **Teste do open-redirect guard** (opcional): abre `https://login.mcorch.com/go/isto-nao-e-uuid` → deve abrir **o app/login normal** (SPA), **não** redirecionar pra lugar nenhum. Isso prova que só UUID válido vira redirect.
+
+### Depois de clicar, me diz "cliquei"
+Eu re-consulto `affiliate_links.clicks` e **confirmo materialmente** que seu clique real subiu de `1 → 2+` (prova de ponta-a-ponta: seu navegador → branded domain → ledger → ML). Aí o elo user-facing está selado pela sua própria mão (você é o Reviewer/Owner do ORO).
+
+---
+
+### Sobre o "emit" (o pipeline gerar links branded sozinho)
+Isso está **deployado + fail-safe** (`orchestrate-step` 122.2kB, `AFFILIATE_REDIRECT_BASE` setado), mas o único link da tabela é antigo (pré-mudança). Pra provar o **emit** material, um run real de `orchestrate-content` criaria um link novo já no formato `login.mcorch.com/go/<id>` dentro do artigo — **custa ~10 mcoCoins**. 
+
+Quer que eu:
+- **(a)** só aguarde seu clique no link acima pra fechar o teste user-facing (zero gasto), **ou**
+- **(b)** dispare um run pago de orchestrate agora pra você ver um link branded **recém-emitido** num artigo (prova o emit também)?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
