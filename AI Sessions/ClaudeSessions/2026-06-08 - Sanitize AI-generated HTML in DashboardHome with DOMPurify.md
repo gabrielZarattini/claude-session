@@ -3533,6 +3533,1770 @@ Olhando o roadmap, a fila genuinamente **autônoma** afinou — os top-gaps do s
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O antibody XSS está commitado (2522e71, não pushado) e a fila autônoma adjacente está fina. Como sigo?"="Push + selar incremento". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:01:44)*
+
+
+## 🤖 Claude *(16:01:44)*
+
+Direção: **push + selar o incremento**. Executando — pusho o código, insiro o nó de observação do antibody na malha (linkado ao handoff node via metadata), e embeddo:
+
+## 🤖 Claude *(16:01:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== push 2522e71 ===\"\ngit push origin main 2>&1 | tail -5; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; SUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== insert antibody observation node ===\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"antibody-eslint-no-danger-$(date +%Y%m%d)\\\",\n    \\\"node_type\\\": \\\"observation\\\",\n    \\\"content\\\": \\\"[ANTIBODY SSP-01] ESLint no-restricted-syntax guard (commit 2522e71) makes every dangerouslySetInnerHTML a justified eslint-disable exception \u2014 vaccinates against stored-XSS sink reincidence per CLAUDE.md Anticorpo Permanente. Proven both ways: planted raw sink caught by lint (no-restricted-syntax error); 2 legit sinks pass (DashboardHome DOMPurify-sanitized content_library.body + chart.tsx shadcn dev-controlled CSS). tsc exit 0. Dependency-free (eslint-plugin-react absent). Derives from handoff node e12ed58e.\\\",\n    \\\"stability_score\\\": 0.9, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": { \\\"session\\\": \\\"xss-hardening-content-library\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commit\\\": \\\"2522e71\\\", \\\"derives_from\\\": \\\"e12ed58e-36e5-4b76-af79-cccfa4805fdb\\\", \\\"eslint_rule\\\": \\\"no-restricted-syntax\\\" }\n  }\")\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if isinstance(d,list) else d; print(n.get('id','ERROR'))\" 2>/dev/null)\necho \"ANTIBODY_NODE_ID=$NODE_ID\"\necho \"=== embed ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embed:', json.dumps(d)[:200])\" 2>/dev/null || echo \"embed failed\"",
+  "description": "Push code + insert/embed antibody observation node",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push 2522e71 ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    c5b8c3b..2522e71  main -> main
+> PUSH_EXIT=0
+> === insert antibody observation node ===
+> ANTIBODY_NODE_ID=505fb670-d5c9-49a4-af12-fd9f1bcbe575
+> === embed ===
+> Embed: {"node_id": "505fb670-d5c9-49a4-af12-fd9f1bcbe575", "dims": 768, "chunks": 1, "model": "openai/text-embedding-3-small", "provider": "openrouter", "stitched": 1}
+> ```
+
+## 🤖 Claude *(16:02:31)*
+
+
+## 🤖 Claude *(16:02:33)*
+
+Push **OK** (`c5b8c3b..2522e71`) · antibody node `505fb670` embedded (768d, stitched 1). Agora atualizo o registro HANDOFF + README com a contagem **real ao vivo** (não incrementada de cabeça — Lei 1). Consultando o count:
+
+## 🤖 Claude *(16:02:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'",
+  "description": "Query live mesh node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 8849
+> ```
+
+## 🤖 Claude *(16:03:06)*
+
+
+## 🤖 Claude *(16:03:06)*
+
+Count ao vivo: **8849** (handoff node 8848 → +antibody node = 8849). Atualizando HANDOFF.md (4 edições) + README badge:
+
+## 🤖 Claude *(16:03:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| Commits desta selagem (docs) | `5d2b189` (readme) + handoff (este) |",
+  "new_string": "| Commits desta selagem | `5d2b189` (readme) + `c5b8c3b` (handoff) + `2522e71` (antibody eslint) |"
+}
+```
+
+## 🤖 Claude *(16:03:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| Handoff node | \u2705 `e12ed58e-36e5-4b76-af79-cccfa4805fdb` (embedded 768-dim) |\n| Mesh | \u2705 **8848 n\u00f3s** |",
+  "new_string": "| Handoff node | \u2705 `e12ed58e-36e5-4b76-af79-cccfa4805fdb` (embedded 768-dim) |\n| Antibody (anti-reincid\u00eancia) | \u2705 ESLint `no-restricted-syntax` (commit `2522e71` \u00b7 obs node `505fb670` embedded 768d) \u2014 sink novo cru pego no lint; 2 sinks leg\u00edtimos justificados; tsc 0 |\n| Mesh | \u2705 **8849 n\u00f3s** |"
+}
+```
+
+## 🤖 Claude *(16:03:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "Law 2 (Process): \u2705 Patch de hardening de seguran\u00e7a em feature documentada (content pipeline) \u2014 isento de BoK gate (single-file security patch escopado). Antibody opcional (regra ESLint react/no-danger contra reincid\u00eancia do sink) oferecido, pendente de GO do Sovereign.",
+  "new_string": "Law 2 (Process): \u2705 Patch de hardening de seguran\u00e7a em feature documentada (content pipeline) \u2014 isento de BoK gate (single-file security patch escopado). Anticorpo Permanente CUMPRIDO: guarda ESLint `no-restricted-syntax` (commit `2522e71`) contra reincid\u00eancia do sink \u2014 todo `dangerouslySetInnerHTML` futuro acusa no lint at\u00e9 ser sanitizado + justificado."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:03:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "**Pend\u00eancias/Pr\u00f3ximos:**\n- (Opcional, pendente GO) Antibody anti-reincid\u00eancia: regra ESLint `react/no-danger` com `eslint-disable` expl\u00edcito no sink leg\u00edtimo do shadcn `chart.tsx`, para que qualquer novo `dangerouslySetInnerHTML` futuro acuse no lint.\n- D\u00edvida pr\u00e9-existente (n\u00e3o-bloqueante, fora de escopo): 7 erros `@typescript-eslint/no-explicit-any` no data-layer de `DashboardHome.tsx` (id\u00eanticos pr\u00e9 e p\u00f3s minha mudan\u00e7a \u2014 provados via `git stash`).",
+  "new_string": "**Pend\u00eancias/Pr\u00f3ximos:**\n- \u2705 **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincid\u00eancia: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (n\u00e3o `react/no-danger` \u2014 `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exce\u00e7\u00e3o `eslint-disable-next-line` justificada; 2 sinks leg\u00edtimos marcados (DashboardHome DOMPurify \u00b7 chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.\n- D\u00edvida pr\u00e9-existente (n\u00e3o-bloqueante, fora de escopo): 7 erros `@typescript-eslint/no-explicit-any` no data-layer de `DashboardHome.tsx` (id\u00eanticos pr\u00e9 e p\u00f3s minha mudan\u00e7a \u2014 provados via `git stash`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:03:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8848_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8849_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:03:29)*
+
+
+## 🤖 Claude *(16:03:29)*
+
+**Phase 5b** (secret scan no HANDOFF) + commit + push do incremento — com gate nas varreduras de credencial real:
+
+## 🤖 Claude *(16:03:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b credential scan (HANDOFF.md) ===\"\nHITS=$(grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|whsec_[a-zA-Z0-9]{20,})\" HANDOFF.md | grep -v \"digest\\|hash\\|example\\|placeholder\")\nif [ -n \"$HITS\" ]; then echo \"\ud83d\udd34 BLOCK \u2014 credential found:\"; echo \"$HITS\"; exit 1; fi\necho \"NO CREDENTIALS \u2705\"\necho \"=== commit HANDOFF + README ===\"\ngit add HANDOFF.md README.md\ngit commit -m \"docs(handoff): fold xss antibody into seal record\n\nAntibody eslint no-restricted-syntax (commit 2522e71) dobrado no registro do\nseal de XSS: pendencia #1 marcada FEITA, tabela de verificacao + Self-audit Lei 2\natualizados, obs node 505fb670 referenciado. Mesh badge 8848->8849.\" 2>&1 | tail -5\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -4; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\necho \"=== final state ===\"; git status -sb | head -1; git --no-pager log --oneline -4",
+  "description": "5b scan + commit HANDOFF/README + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b credential scan (HANDOFF.md) ===
+> NO CREDENTIALS ✅
+> === commit HANDOFF + README ===
+> [main 97e980a] docs(handoff): fold xss antibody into seal record
+>  2 files changed, 6 insertions(+), 5 deletions(-)
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2522e71..97e980a  main -> main
+> PUSH_EXIT=0
+> === final state ===
+> ## main...origin/main
+> 97e980a docs(handoff): fold xss antibody into seal record
+> 2522e71 chore(security): antibody eslint contra reincidencia do sink stored-XSS
+> c5b8c3b docs(handoff): seal xss-hardening content_library.body sanitization
+> 5d2b189 docs(readme): neural mesh 8847->8848 - xss-hardening content_library seal
+> ```
+
+## 🤖 Claude *(16:03:56)*
+
+
+## 🤖 Claude *(16:04:01)*
+
+Incremento **selado e pushado**. Estado final:
+
+```
+═══════════════════════════════════════════════════════════
+  INCREMENTO SELADO — XSS Antibody (anti-reincidência) — 2026-06-08
+═══════════════════════════════════════════════════════════
+
+📦 COMMITS (pushados · origin espelha local)
+  97e980a — docs(handoff): fold xss antibody into seal record
+  2522e71 — chore(security): antibody eslint no-restricted-syntax
+  c5b8c3b — docs(handoff): seal xss-hardening (seal anterior)
+  5d2b189 — docs(readme): neural mesh badge
+
+🔐 5b SECRET SCAN   ✅ NO CREDENTIALS
+🚀 PUSH             ✅ 2522e71..97e980a · branch sincronizada (## main...origin/main)
+⬡ MESH             8849 nós — handoff e12ed58e + obs antibody 505fb670 (ambos embedded 768d)
+🧠 HANDOFF.md       registro do seal XSS dobrado: pendência #1 → FEITA · Self-audit Lei 2 atualizado
+📖 README           badge neural_mesh 8848 → 8849
+═══════════════════════════════════════════════════════════
+```
+
+**Task de stored-XSS fechada ponta-a-ponta** (e materialmente provada em cada elo):
+
+| Elo | Artefato | Prova |
+|---|---|---|
+| Detecção | `/security-review` (v6.28.0) | flag `DashboardHome:677` → task spawned |
+| Sanitização | `DOMPurify.sanitize` (`da9da4c`) | shipado em origin/main |
+| Dependência | `dompurify@3.4.8` (`e5a661a`) | em origin/main |
+| Regressão | 6 testes (`dashboard-html-sanitize.test.ts`) | 6/6 verdes |
+| **Vacina** | ESLint `no-restricted-syntax` (`2522e71`) | sink cru plantado → **pego**; justificados → passam |
+| Memória | mesh nodes `e12ed58e` + `505fb670` | embedded 768d |
+
+A diretiva `Obstacle → Synthesis` está cumprida: *se o mesmo erro reincidir, agora ele acusa no lint antes do merge*.
+
+**Fila restante** — os top-gaps do sprint v6.28.0 dependem de desbloqueio seu: domínio `RESEND_FROM` (entrega real de nurturing), creds WP (limpar 2 rascunhos de teste), DNS/nginx (`login.mcorch.com/go` branded redirect), conversão ML (atribuição de compra). 
+
+Aguardando direção: destrava um desses, aponta outro item, ou seguimos para a dívida de `any` do DashboardHome (autônoma)? A janela ainda está bem aberta — pela calibração de contexto, prefiro puxar o próximo a parar aqui.
+
+## 👤 User *(16:04:04)*
+
+esqueci de te avisar que trabalhei com o antigravity e por isso temos bastantes atualizações mas tudo foi selado e versiondado no git
+
+## 🤖 Claude *(16:04:32)*
+
+
+## 🤖 Claude *(16:04:35)*
+
+Entendido — e isso **fecha o mistério** que apareceu no meu `/handoff`: minhas edições de XSS de Jun-4 surgiram embrulhadas no commit `da9da4c` (AIOS Chat/Kanban), e o histórico tinha avançado para o v6.32.x (black hole) sem eu ter feito — **era o Antigravity**. Bom saber a procedência.
+
+Como "bastantes atualizações" entraram, o passo materialmente responsável (Lei 1 + lição do stale-worktree) é **re-sincronizar minha visão do repo antes de qualquer próximo passo** — não confiar no meu estado em cache. Fazendo `fetch` e checando divergência:
+
+## 🤖 Claude *(16:04:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== fetch ===\"; git fetch origin 2>&1 | tail -5\necho \"=== divergencia local vs origin/main ===\"; git status -sb | head -1\necho \"ahead/behind counts (left=ahead local, right=behind):\"; git rev-list --left-right --count HEAD...origin/main 2>/dev/null\necho \"=== HEAD local vs origin ===\"; echo \"local : $(git rev-parse --short HEAD)\"; echo \"origin: $(git rev-parse --short origin/main)\"\necho \"=== \u00faltimos 12 commits de origin/main ===\"; git --no-pager log --oneline -12 origin/main\necho \"=== working tree ===\"; git status --short || echo \"(clean)\"",
+  "description": "Fetch and check divergence with origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fetch ===
+> === divergencia local vs origin/main ===
+> ## main...origin/main
+> ahead/behind counts (left=ahead local, right=behind):
+> 0	0
+> === HEAD local vs origin ===
+> local : 97e980a
+> origin: 97e980a
+> === últimos 12 commits de origin/main ===
+> 97e980a docs(handoff): fold xss antibody into seal record
+> 2522e71 chore(security): antibody eslint contra reincidencia do sink stored-XSS
+> c5b8c3b docs(handoff): seal xss-hardening content_library.body sanitization
+> 5d2b189 docs(readme): neural mesh 8847->8848 - xss-hardening content_library seal
+> 0c6d8c6 docs(handoff): seal unified-black-hole — v6.32.6 session seal
+> 0468c80 docs(readme): v6.32.6 — unified-black-hole — update neural mesh count and add v6.32.6 What's New
+> c10af68 feat: unified relativistic black hole & cymatics canvas layout
+> 8f19449 design(core-v2): remove MeshDistortMaterial to make orbital rings rotation smooth and clean, matching Interstellar's Gargantua visual
+> 46c3341 design(core-v2): refactor accretion disk to implement general relativity gravitational lensing effect (horizontal foreground and vertical halo)
+> fa7fc90 design(core-v2): refactor Mega Brain to distorted event horizon and golden wireframe accretion disk
+> 930861e feat(agents): commit newly added gemini skills and update pre-commit hook safe patterns
+> 1092a4d docs: update HANDOFF.md with v6.32.5 session seal and update nodes count shield in README.md
+> === working tree ===
+> ```
+
+## 🤖 Claude *(16:05:09)*
+
+
+## 🤖 Claude *(16:05:12)*
+
+Re-sincronizado. Estado material:
+
+- **Local == origin/main == `97e980a`** · ahead/behind **0/0** · working tree **limpo**.
+- Não há commits novos do Antigravity pendentes — o trabalho dele **já é a base** sobre a qual minha sessão (XSS + antibody) está empilhada. As 4 linhas no topo são minhas; abaixo delas está toda a produção Antigravity (v6.32.x black hole, `agentic-workspace`, `da9da4c` AIOS Chat/Kanban onde meu sanitize entrou embrulhado). **Nada a fazer merge/pull** — já estou em cima de tudo.
+
+Como você reforçou "bastantes atualizações", faço uma confirmação material rápida de que (a) a árvore combinada compila e (b) a cobertura do antibody continua completa (nenhum sink novo escapou):
+
+## 🤖 Claude *(16:05:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== todos os sinks dangerouslySetInnerHTML na \u00e1rvore atual ===\"\ngrep -rn \"dangerouslySetInnerHTML\" src/\necho \"=== cada sink tem eslint-disable justificado logo acima? ===\"\ngrep -rn -B1 \"dangerouslySetInnerHTML={{\" src/ | grep -E \"eslint-disable-next-line no-restricted-syntax|dangerouslySetInnerHTML\" \necho \"=== tsc na \u00e1rvore Antigravity+minha ===\"\nnpx tsc --noEmit 2>&1 | tail -6; echo \"TSC_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Confirm sink coverage and tsc on the combined tree",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === todos os sinks dangerouslySetInnerHTML na árvore atual ===
+> src/pages/DashboardHome.tsx:681:                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content_html) }}
+> src/test/dashboard-html-sanitize.test.ts:8: * via `dangerouslySetInnerHTML`. The render now runs it through `DOMPurify.sanitize(...)` with
+> src/components/ui/chart.tsx:71:      dangerouslySetInnerHTML={{
+> === cada sink tem eslint-disable justificado logo acima? ===
+> src/pages/DashboardHome.tsx-680-                      // eslint-disable-next-line no-restricted-syntax -- HTML sanitized via DOMPurify (content_library.body stored-XSS sink); see src/test/dashboard-html-sanitize.test.ts
+> src/pages/DashboardHome.tsx:681:                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content_html) }}
+> src/components/ui/chart.tsx-70-      // eslint-disable-next-line no-restricted-syntax -- shadcn ChartStyle injects dev-controlled CSS custom properties (chart theme), not user content
+> src/components/ui/chart.tsx:71:      dangerouslySetInnerHTML={{
+> === tsc na árvore Antigravity+minha ===
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(16:05:37)*
+
+
+## 🤖 Claude *(16:05:42)*
+
+Tudo conferido materialmente — a árvore combinada (Antigravity + minha) está coerente:
+
+| Checagem | Resultado |
+|---|---|
+| Sync | local == origin == `97e980a` · 0/0 ahead/behind · tree limpo |
+| Sinks XSS na árvore | **2 reais** — `DashboardHome:681` (sanitizado DOMPurify) · `chart.tsx:71` (CSS shadcn) |
+| Cobertura do antibody | ✅ ambos com `eslint-disable-next-line no-restricted-syntax` justificado logo acima — **nenhum sink novo do Antigravity escapou** |
+| tsc na árvore combinada | ✅ exit 0 |
+
+**Conclusão:** nada a reconciliar. As atualizações do Antigravity já estavam seladas/versionadas e formam a base; minha sessão (sanitização + 6 testes + antibody eslint) está limpa em cima delas, e a vacina cobre 100% dos sinks atuais. O "mistério" do meu `/handoff` (commits `da9da4c`/black-hole que eu não fiz) agora tem nome: era você no Antigravity. ✅
+
+Uma observação honesta, não-bloqueante: o `.claude/context/sprint-priorities.md` está 1 ciclo atrás (último registro v6.28.0; os seals v6.32.x do Antigravity entraram em HANDOFF.md/README mas não no sprint-priorities). Se quiser, alinho ele numa tacada — mas só se fizer sentido pra você.
+
+Estou pronto e a janela segue aberta. Como seguimos?
+- **Dívida `any` do DashboardHome** (7 erros pré-existentes, autônomo) — limpa o lint do arquivo que endurecemos;
+- **Alinhar o sprint-priorities.md** com os seals v6.32.x + XSS;
+- **Destravar um top-gap do sprint** (Resend / WP / redirect domain / conversão ML);
+- ou outro alvo que você apontar.
+
+## 👤 User *(16:09:38)*
+
+faça os 3 Dívida any do DashboardHome (7 erros pré-existentes, autônomo) — limpa o lint do arquivo que endurecemos;
+Alinhar o sprint-priorities.md com os seals v6.32.x + XSS;
+Destravar um top-gap do sprint (Resend / WP / redirect domain / conversão ML);
+
+## 🤖 Claude *(16:10:51)*
+
+
+## 🤖 Claude *(16:10:53)*
+
+Vamos aos 3 — começo investigando em paralelo (item 1: localizar os `any` exatos; item 3: provar qual top-gap é destravável de forma autônoma daqui; item 2 já tenho material dos records). Probe-first antes de tocar:
+
+## 🤖 Claude *(16:10:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== item1: linhas EXATAS dos no-explicit-any em DashboardHome ===\"\nnpx eslint src/pages/DashboardHome.tsx 2>&1 | grep \"no-explicit-any\"\necho \"\"\necho \"=== item3 probe A: tenho acesso ao nginx? (sudo -n) ===\"\nsudo -n nginx -t 2>&1 | head -3 || echo \"sudo nginx indisponivel\"\necho \"--- config servindo login.mcorch.com ---\"\nls /etc/nginx/sites-enabled/ 2>/dev/null || echo \"sem acesso a /etc/nginx/sites-enabled\"\ngrep -rln \"login.mcorch.com\\|constellation-orchestra/dist\" /etc/nginx/ 2>/dev/null | head -3 || echo \"sem acesso de leitura ao /etc/nginx\"",
+  "description": "Probe item1 any-lines + item3 nginx feasibility",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === item1: linhas EXATAS dos no-explicit-any em DashboardHome ===
+>   182:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   183:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   245:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   267:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   272:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   324:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   347:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+> 
+> === item3 probe A: tenho acesso ao nginx? (sudo -n) ===
+> nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/custom-domain.conf:4
+> nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/custom-domain.conf:5
+> nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/n8n.gcrux.com.conf:10
+> --- config servindo login.mcorch.com ---
+> sem acesso a /etc/nginx/sites-enabled
+> ```
+
+## 🤖 Claude *(16:11:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== item3 probe B: shape do redirect process-affiliate-link (GET) ===\"\ngrep -nE \"Location|302|301|record_affiliate_click|short_url|redirect|matt_word|meli\\.la\" supabase/functions/process-affiliate-link/index.ts 2>/dev/null | head -20\necho \"\"\necho \"=== item3 probe C: Resend / RESEND_FROM no c\u00f3digo ===\"\ngrep -rnE \"RESEND_FROM|resend_api_key|api.resend.com\" supabase/functions/ 2>/dev/null | head -10\necho \"\"\necho \"=== item3 probe D: como link-forge emite o link hoje ===\"\ngrep -nE \"process-affiliate-link|redirect|login.mcorch|meli\\.la|short_url|/go/\" scripts/link-forge.ts supabase/functions/_shared/affiliate.ts 2>/dev/null | head -20",
+  "description": "Probe item3 redirect/resend/link-forge shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === item3 probe B: shape do redirect process-affiliate-link (GET) ===
+> 28: *  owner). In-system counterpart to ML's panel clicks (ML exposes no API). Never blocks/raises on the 302 path. */
+> 38:    .rpc("record_affiliate_click", { p_user_id: ownerId, p_product_id: productId, p_content_id: contentId, p_dest_url: dest })
+> 79: * Build a REAL Mercado Livre product URL carrying the affiliate tag via `matt_word` — the
+> 107:  u.searchParams.set("matt_word", tag);
+> 132:      redirect: "follow",
+> 156:/** GET branch: public 302 redirect for reader clicks on Link-Forge URLs.
+> 158: *  Resolves the CONTENT OWNER's affiliate attribution (per-user, fail-closed) and 302s to a REAL
+> 159: *  Mercado Livre destination: the owner's definitive meli.la short link if stored, else the product
+> 160: *  URL + matt_word=<tag>. NEVER routes through panel.gcrux.com (dead login wall, zero attribution),
+> 166:  // so increment its clicks by id and 302 to its stored real-ML short_url. Owner is the row's user_id.
+> 169:    const { data: link } = await adminClient.from("affiliate_links").select("short_url").eq("id", linkId).maybeSingle();
+> 170:    // OPEN-REDIRECT GUARD: short_url is a tenant-writable column (affiliate_links has a permissive INSERT RLS), so we
+> 171:    // must NEVER 302 to it verbatim — only to a destination we recognize as a real ML URL / short link (mirrors the
+> 172:    // shortlinkOverride + matt_word paths, which are both ML-domain-constrained). An attacker who plants
+> 173:    // short_url=https://evil/phish on a self-owned row gets fail-closed to settings, not an open redirect.
+> 174:    const dest = link?.short_url?.trim();
+> 177:      await adminClient.rpc("record_affiliate_click_by_link", { p_link_id: linkId }).then(() => {}, () => {});
+> 179:      return new Response(null, { status: 302, headers: { ...corsHeaders, Location: dest! } });
+> 182:    return new Response(null, { status: 302, headers: { ...corsHeaders, Location: "https://login.mcorch.com/dashboard/settings?no_config=1" } });
+> 225:    console.error("[affiliate] GET redirect config lookup error:", err);
+> 
+> === item3 probe C: Resend / RESEND_FROM no código ===
+> supabase/functions/nurture-dispatch/index.ts:143:    //    resend_api_key + a deliverable recipient + (for real recipients) a verified-domain RESEND_FROM. Otherwise
+> supabase/functions/nurture-dispatch/index.ts:147:    const resendKey = keys?.resend_api_key || Deno.env.get("RESEND_API_KEY");
+> supabase/functions/nurture-dispatch/index.ts:153:      const fromAddr = Deno.env.get("RESEND_FROM") || "MCORCH <onboarding@resend.dev>";
+> supabase/functions/nurture-dispatch/index.ts:155:        const r = await fetch("https://api.resend.com/emails", {
+> 
+> === item3 probe D: como link-forge emite o link hoje ===
+> supabase/functions/_shared/affiliate.ts:1:// Shared affiliate monetization for the orchestrate pipeline (Deno). Auto-embeds OUR click-tracking redirect
+> supabase/functions/_shared/affiliate.ts:45: * matt_word URL stored in short_url) and replace the FIRST mention with an HTML anchor to OUR tracked redirect
+> supabase/functions/_shared/affiliate.ts:68:        user_id: ownerId, original_url: mlUrl, short_url: mlUrl, platform: "mercadolivre",
+> supabase/functions/_shared/affiliate.ts:72:      if (link?.id) target = `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;
+> scripts/link-forge.ts:9: * per-user panel-generated `meli.la` short link. The legacy CloudPanel proxy
+> scripts/link-forge.ts:10: * redirect was a dead login-wall (302 → /login, zero attribution) and is removed.
+> scripts/link-forge.ts:80: * Build OUR click-tracking redirect URL for a product (process-affiliate-link GET). The redirect records the click
+> scripts/link-forge.ts:82: * content owner's definitive meli.la short link or a best-effort matt_word ML URL, resolved per-owner server-side at
+> scripts/link-forge.ts:88:  const u = new URL(`${base}/functions/v1/process-affiliate-link`);
+> ```
+
+## 🤖 Claude *(16:12:07)*
+
+
+## 🤖 Claude *(16:12:12)*
+
+Probe conclusivo:
+
+- **Item 1**: 7 `any` em DashboardHome — linhas 182, 183, 245, 267, 272, 324, 347.
+- **Item 3 veredito de viabilidade**: dos 4 top-gaps, só o **redirect domain** é destravável autonomamente removendo o bloqueador de fato — tenho `sudo nginx` (o `nginx -t` rodou, revelando `/etc/nginx/sites-enabled/custom-domain.conf` etc.); o redirect já funciona via Supabase (`process-affiliate-link?link_id=` → 302 ML com `record_affiliate_click`), falta só o alias branded `login.mcorch.com/go/<id>`. Os outros estão genuinamente travados em você: **Resend** = verificar domínio no seu Resend (código já pronto, `RESEND_FROM`); **WP drafts** = destrutivo na sua conta WP; **conversão ML** = evento externo. Então item 3 = **branded redirect**, com gates de materialidade (nginx -t antes do reload, additive-only).
+
+Começo pelo **item 1** (seguro). Lendo o data-layer de DashboardHome para tipar os `any`:
+
+## 🤖 Claude *(16:12:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "offset": 178,
+  "limit": 178
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 178	
+> 179	interface OptimizationHistoryItem {
+> 180	  id: string;
+> 181	  action_type: string;
+> 182	  action_details: any;
+> 183	  context: any;
+> 184	  applied: boolean;
+> 185	  created_at: string;
+> 186	}
+> 187	
+> 188	export default function DashboardHome() {
+> 189	  const { user } = useAuth();
+> 190	  const {
+> 191	    credits,
+> 192	    subscription,
+> 193	    totalPosts,
+> 194	    totalCampaigns,
+> 195	    socialAccounts,
+> 196	    recentNotifications,
+> 197	    recentActivity,
+> 198	    profile,
+> 199	    loading,
+> 200	  } = useDashboardData();
+> 201	
+> 202	  // Onboarding
+> 203	  const [showOnboarding, setShowOnboarding] = useState(false);
+> 204	  const [onboardingChecked, setOnboardingChecked] = useState(false);
+> 205	
+> 206	  useEffect(() => {
+> 207	    if (!user || onboardingChecked) return;
+> 208	    supabase.from('profiles').select('onboarding_completed').eq('id', user.id).single()
+> 209	      .then(({ data }) => {
+> 210	        if (data && !data.onboarding_completed) setShowOnboarding(true);
+> 211	        setOnboardingChecked(true);
+> 212	      });
+> 213	  }, [user, onboardingChecked]);
+> 214	
+> 215	  const now = new Date();
+> 216	  const { data: upcomingPosts } = useScheduledPosts({ from: startOfDay(now), to: endOfDay(addDays(now, 7)) });
+> 217	
+> 218	  const [optimizing, setOptimizing] = useState(false);
+> 219	  const [optResult, setOptResult] = useState<OptimizationResult | null>(null);
+> 220	  const [healing, setHealing] = useState(false);
+> 221	  const [healResult, setHealResult] = useState<HealingResult | null>(null);
+> 222	  const [optHistory, setOptHistory] = useState<OptimizationHistoryItem[]>([]);
+> 223	  const [contentItems, setContentItems] = useState<ContentLibraryItem[]>([]);
+> 224	  const [loadingContent, setLoadingContent] = useState(true);
+> 225	
+> 226	  // Fetch content library items and setup realtime
+> 227	  useEffect(() => {
+> 228	    if (!user) return;
+> 229	
+> 230	    const fetchContent = async () => {
+> 231	      setLoadingContent(true);
+> 232	      try {
+> 233	        const { data, error } = await supabase
+> 234	          .from('content_library')
+> 235	          .select('*')
+> 236	          .order('created_at', { ascending: false })
+> 237	          .limit(6);
+> 238	
+> 239	        if (error) throw error;
+> 240	
+> 241	        const mappedItems: ContentLibraryItem[] = (data || []).map(item => ({
+> 242	          id: item.id,
+> 243	          title: item.title || 'Sem título',
+> 244	          content_html: item.body || '',
+> 245	          category: (item.metadata as any)?.category || item.type || 'Geral',
+> 246	          image_url: item.media_url || item.thumbnail_url || '',
+> 247	          created_at: item.created_at
+> 248	        }));
+> 249	
+> 250	        setContentItems(mappedItems);
+> 251	      } catch (err) {
+> 252	        console.error('Erro ao carregar biblioteca:', err);
+> 253	      } finally {
+> 254	        setLoadingContent(false);
+> 255	      }
+> 256	    };
+> 257	
+> 258	    fetchContent();
+> 259	
+> 260	    // Supabase Realtime Subscription
+> 261	    const channel = supabase
+> 262	      .channel('public:content_library')
+> 263	      .on(
+> 264	        'postgres_changes',
+> 265	        { event: 'INSERT', schema: 'public', table: 'content_library' },
+> 266	        (payload) => {
+> 267	          const newItem = payload.new as any;
+> 268	          const mapped: ContentLibraryItem = {
+> 269	            id: newItem.id,
+> 270	            title: newItem.title || 'Novo Item',
+> 271	            content_html: newItem.body || '',
+> 272	            category: (newItem.metadata as any)?.category || newItem.type || 'Geral',
+> 273	            image_url: newItem.media_url || newItem.thumbnail_url || '',
+> 274	            created_at: newItem.created_at
+> 275	          };
+> 276	          
+> 277	          setContentItems(prev => [mapped, ...prev].slice(0, 10));
+> 278	          toast.success('Novo conteúdo injetado via n8n!');
+> 279	        }
+> 280	      )
+> 281	      .subscribe();
+> 282	
+> 283	    return () => {
+> 284	      supabase.removeChannel(channel);
+> 285	    };
+> 286	  }, [user]);
+> 287	
+> 288	  // Fetch optimization history
+> 289	  useEffect(() => {
+> 290	    if (!user) return;
+> 291	    supabase
+> 292	      .from('optimization_policy')
+> 293	      .select('id, action_type, action_details, context, applied, created_at')
+> 294	      .order('created_at', { ascending: false })
+> 295	      .limit(20)
+> 296	      .then(({ data }) => {
+> 297	        if (data) setOptHistory(data as OptimizationHistoryItem[]);
+> 298	      });
+> 299	  }, [user, optResult]); // refetch after new optimization
+> 300	
+> 301	  const planLabel = subscription?.plan
+> 302	    ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)
+> 303	    : 'Free';
+> 304	
+> 305	  const statusBadge: Record<string, string> = {
+> 306	    active: 'bg-status-active/20 text-green-400',
+> 307	    trialing: 'bg-status-waiting/20 text-amber-400',
+> 308	    past_due: 'bg-destructive/20 text-destructive',
+> 309	    canceled: 'bg-muted text-muted-foreground',
+> 310	  };
+> 311	
+> 312	  const runOptimization = async () => {
+> 313	    setOptimizing(true);
+> 314	    try {
+> 315	      const { data: { session } } = await supabase.auth.getSession();
+> 316	      const { data, error } = await supabase.functions.invoke('self-optimize', {
+> 317	        headers: {
+> 318	          'X-User-Token': session?.access_token || '',
+> 319	        }
+> 320	      });
+> 321	      if (error) throw error;
+> 322	      setOptResult(data as OptimizationResult);
+> 323	      toast.success('Análise concluída!');
+> 324	    } catch (e: any) {
+> 325	      toast.error(e.message || 'Erro ao otimizar');
+> 326	    } finally {
+> 327	      setOptimizing(false);
+> 328	    }
+> 329	  };
+> 330	
+> 331	  const runHealing = async () => {
+> 332	    setHealing(true);
+> 333	    try {
+> 334	      const { data: { session } } = await supabase.auth.getSession();
+> 335	      const { data, error } = await supabase.functions.invoke('self-heal', {
+> 336	        headers: {
+> 337	          'X-User-Token': session?.access_token || '',
+> 338	        }
+> 339	      });
+> 340	      if (error) throw error;
+> 341	      setHealResult(data as HealingResult);
+> 342	      if ((data as HealingResult).total_issues === 0) {
+> 343	        toast.success('Nenhum problema encontrado! Tudo funcionando.');
+> 344	      } else {
+> 345	        toast.success(`Diagnóstico concluído: ${(data as HealingResult).resolved} resolvidos, ${(data as HealingResult).needs_attention} pendentes`);
+> 346	      }
+> 347	    } catch (e: any) {
+> 348	      toast.error(e.message || 'Erro no diagnóstico');
+> 349	    } finally {
+> 350	      setHealing(false);
+> 351	    }
+> 352	  };
+> 353	
+> 354	  if (loading) {
+> 355	    return (
+> ```
+
+## 🤖 Claude *(16:12:45)*
+
+
+## 🤖 Claude *(16:12:47)*
+
+Entendi todos os 7 `any`. Antes de tipar a interface `OptimizationHistoryItem` (linhas 182-183), preciso ver como `optHistory`/`action_details`/`context` são consumidos no JSX (pra escolher entre `unknown` e um shape). Verificando o uso:
+
+## 🤖 Claude *(16:12:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== uso de optHistory / action_details / context no arquivo ===\"\ngrep -nE \"optHistory|action_details|\\.context|OptimizationHistoryItem\" src/pages/DashboardHome.tsx\necho \"\"\necho \"=== existe helper Tables<> / Json nos types supabase? ===\"\ngrep -nE \"export type Tables|export type Json|type Json =\" src/integrations/supabase/types.ts | head",
+  "description": "Check optHistory usage and supabase type helpers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === uso de optHistory / action_details / context no arquivo ===
+> 179:interface OptimizationHistoryItem {
+> 182:  action_details: any;
+> 222:  const [optHistory, setOptHistory] = useState<OptimizationHistoryItem[]>([]);
+> 293:      .select('id, action_type, action_details, context, applied, created_at')
+> 297:        if (data) setOptHistory(data as OptimizationHistoryItem[]);
+> 582:      {optHistory.length > 0 && (
+> 589:                <Badge variant="outline" className="ml-auto text-[10px]">{optHistory.length} registros</Badge>
+> 594:                {optHistory.map((item) => (
+> 598:                      <p className="font-medium text-foreground text-xs">{item.action_details?.title || item.action_type}</p>
+> 599:                      <p className="text-[11px] text-muted-foreground">{item.action_details?.description || ''}</p>
+> 
+> === existe helper Tables<> / Json nos types supabase? ===
+> 1:export type Json =
+> 3817:export type Tables<
+> 3846:export type TablesInsert<
+> 3871:export type TablesUpdate<
+> ```
+
+## 🤖 Claude *(16:13:48)*
+
+
+## 🤖 Claude *(16:13:50)*
+
+Mapeei os 7 `any` ao uso real:
+- `action_details` é lido como `.title`/`.description` (linhas 598-599) → tipo shape; `context` nunca é lido → `Record<string,unknown>`.
+- 2 casts `metadata as any` → shape `{ category?: string }`.
+- `payload.new as any` → `Tables<'content_library'>` (helper existe nos types).
+- 2 `catch (e: any)` → `catch (e)` + narrow `instanceof Error`.
+
+Aplicando as edições:
+
+## 🤖 Claude *(16:13:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "import DOMPurify from 'dompurify';",
+  "new_string": "import DOMPurify from 'dompurify';\nimport type { Tables } from '@/integrations/supabase/types';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:13:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "  action_details: any;\n  context: any;",
+  "new_string": "  action_details: { title?: string; description?: string } | null;\n  context: Record<string, unknown> | null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:13:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "          category: (item.metadata as any)?.category || item.type || 'Geral',",
+  "new_string": "          category: (item.metadata as { category?: string } | null)?.category || item.type || 'Geral',"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:13:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "          const newItem = payload.new as any;",
+  "new_string": "          const newItem = payload.new as Tables<'content_library'>;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:13:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "            category: (newItem.metadata as any)?.category || newItem.type || 'Geral',",
+  "new_string": "            category: (newItem.metadata as { category?: string } | null)?.category || newItem.type || 'Geral',"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:14:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "    } catch (e: any) {\n      toast.error(e.message || 'Erro ao otimizar');",
+  "new_string": "    } catch (e) {\n      toast.error(e instanceof Error ? e.message : 'Erro ao otimizar');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:14:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx",
+  "old_string": "    } catch (e: any) {\n      toast.error(e.message || 'Erro no diagn\u00f3stico');",
+  "new_string": "    } catch (e) {\n      toast.error(e instanceof Error ? e.message : 'Erro no diagn\u00f3stico');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/DashboardHome.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:14:07)*
+
+
+## 🤖 Claude *(16:14:07)*
+
+Verificando o item 1 — tsc + eslint no DashboardHome (esperado: 0 erros agora):
+
+## 🤖 Claude *(16:14:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"TSC_EXIT=${PIPESTATUS[0]}\"\necho \"=== eslint DashboardHome (esperado 0 problems) ===\"; npx eslint src/pages/DashboardHome.tsx 2>&1 | tail -8; echo \"ESLINT_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Verify item1 tsc + eslint clean",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> TSC_EXIT=0
+> === eslint DashboardHome (esperado 0 problems) ===
+> ESLINT_EXIT=0
+> ```
+
+## 🤖 Claude *(16:14:33)*
+
+
+## 🤖 Claude *(16:14:35)*
+
+**Item 1 ✅** — tsc exit 0 + **eslint DashboardHome.tsx exit 0** (os 7 `any` eliminados, zero erro novo; o arquivo endurecido agora tem lint limpo). Commit atômico:
+
+## 🤖 Claude *(16:14:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/pages/DashboardHome.tsx\ngit commit -m \"refactor(dashboard): elimina 7 no-explicit-any no data-layer de DashboardHome\n\nTipa action_details ({title?,description?}) + context (Record) na interface\nOptimizationHistoryItem; metadata casts viram shape {category?}; payload.new\nrealtime usa Tables<'content_library'>; catch (e:any) vira catch(e)+instanceof\nError narrow. Lint do arquivo endurecido (XSS) agora limpo; tsc 0.\" 2>&1 | tail -4\ngit rev-parse --short HEAD",
+  "description": "Commit item1 any-debt cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 3129369] refactor(dashboard): elimina 7 no-explicit-any no data-layer de DashboardHome
+>  1 file changed, 10 insertions(+), 9 deletions(-)
+> 3129369
+> ```
+
+> **Tool Result (Unknown Tool)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(16:15:51)*
+
+
+## 🤖 Claude *(16:15:53)*
+
+**Item 2** — alinhar sprint-priorities.md. Tenho material firsthand do XSS e os records do HANDOFF para o arco v6.32.x do Antigravity. Vou prepender 2 entradas honestas (a do Antigravity marcada como registrada a partir dos records, não reauditada — Lei 1). Anexando antes da entrada v6.28.0:
+
+## 🤖 Claude *(16:16:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.28.0 selado em 2026-06-04** \u2014 **Quatro next-steps fechados numa sess\u00e3o (probe-first)**.",
+  "new_string": "**Sprint \u2014 Stored-XSS Hardening + Antibody (2026-06-08)** \u2014 `/security-review` (v6.28.0) havia flagado stored-XSS em `DashboardHome` (`content_library.body` cru via `dangerouslySetInnerHTML`); fechado **ponta-a-ponta** nesta sess\u00e3o. Sanitiza\u00e7\u00e3o `DOMPurify.sanitize` (j\u00e1 shipada via Antigravity em `da9da4c`/`e5a661a`) + guarda de regress\u00e3o **6 testes** (`dashboard-html-sanitize.test.ts`: preserva `<a href>` de afiliado + tags de artigo, remove `<script>`/`onerror`/`javascript:`) + **antibody ESLint `no-restricted-syntax`** (`2522e71`, sem dep nova \u2014 `eslint-plugin-react` ausente) que faz todo `dangerouslySetInnerHTML` futuro acusar no lint at\u00e9 ser sanitizado+justificado (sink cru plantado \u2192 **pego** material; 2 sinks leg\u00edtimos justificados: DashboardHome DOMPurify \u00b7 chart.tsx CSS shadcn) + limpeza dos **7 `no-explicit-any`** do data-layer de DashboardHome (`3129369`). Handoff node `e12ed58e` + obs antibody `505fb670` (embedded 768d). tsc 0 \u00b7 su\u00edte verde \u00b7 mesh **8849**. **Anticorpo Permanente cumprido** \u2014 reincid\u00eancia do sink barrada no lint. **Top gaps restantes (herdados de v6.28.0, gated no Sovereign):** dom\u00ednio `RESEND_FROM` (entrega Resend real) \u00b7 branded redirect `login.mcorch.com/go` \u00b7 2 rascunhos WP de teste \u00b7 atribui\u00e7\u00e3o de compra ML.\n\n**Sprint v6.32.x \u2014 arco Core-v2 Black Hole (2026-06-07, via Antigravity)** \u2014 sess\u00f5es conduzidas no Antigravity, seladas e versionadas no git, registradas aqui retroativamente a partir dos records do HANDOFF.md (n\u00e3o reauditadas em detalhe \u2014 Lei 1): **v6.32.6** Unified Relativistic Black Hole & Cymatics (fus\u00e3o dos visualizadores num \u00fanico shader WebGL Schwarzschild \u2014 raymarching + disco de acre\u00e7\u00e3o + Doppler beaming + ondas de cymatics; layout 30/70; `CymaticsLayer` removido; 284 testes; handoff `ec6204a4`; mesh 8847); **v6.32.5** Model Selector Fix & Reacting Black Hole (fix case-collision dos hooks `useAiosTerminalChat`/`useAiosWorkspaceChat`; persist\u00eancia do modelo selecionado em `user_api_keys`; redesign MegaBrainVisualizer + CymaticsLayer; 260 testes; handoff `8627661a`; mesh 8839); **v6.32.2** Gemini 3.1 Live Mode (Live API \u2192 Gemini 3.1 Flash Live audio-only + Gemini Docs MCP + API Skills; handoff `5acba7aa`; mesh 8818). Os seals intermedi\u00e1rios (v6.29\u2013v6.32.4) existem em HANDOFF.md/README mas n\u00e3o foram back-filled aqui.\n\n**Sprint v6.28.0 selado em 2026-06-04** \u2014 **Quatro next-steps fechados numa sess\u00e3o (probe-first)**."
+}
+```
+
+## 🤖 Claude *(16:16:11)*
+
+
+## 🤖 Claude *(16:16:12)*
+
+O Edit exige re-leitura (a leitura anterior veio truncada). Relendo o topo do arquivo:
+
+## 🤖 Claude *(16:16:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.28.0 selado em 2026-06-04** — **Quatro next-steps fechados numa sessão (probe-first)**. Diretiva Sovereign "ataque os 4 pontos numa sessão só, não pare até terminar; o ponto 4 do link não funcionou a contabilidade de clicks" (+ screenshot ML com 1 clique). Cada gap verificado **no código** antes de tocar. **(1) OTD-INTENT-DISPATCH-REFUND FECHADA:** `orchestrate-content` estorna os 10 em falha pós-débito (`!runId` ou erro do kick `async_orchestrate_step`) + marca run `error` — estende o contrato refund da v6.27.2 ao núcleo do flywheel. **(2) nurture-dispatch entrega Resend real (FR-MH-008):** resolve `resend_api_key` per-user (BYOK) + `leads.contact` → POST Resend quando email+chave+endereço; senão `gated`; send `failed` estorna. Live a inbox real ainda gated em `RESEND_FROM` (domínio Sovereign). **(3) Click ledger in-system (OTD-ML-CLICKS):** links publicados passam pelo redirect `process-affiliate-link` GET, que registra o clique atômico (RPC `record_affiliate_click` service-role-only, atribuído ao dono) + 302 pro ML; `link-forge` emite o redirect; **ROIWidget já soma `affiliate_links.clicks`** → "Cliques Totais" reflete cliques reais antes de compra; migration 120000 + fix 130000 (`content_id` UUID). **(4) 1º dispatch pago E2E agentic:** intent→policy→execute→orchestrate-content WP **draft**, run `43048d8e` **done**, **delta 10 exato** (valida ponto 1 em prod), HITL gate provado, blast-radius wordpress-only. **Prova:** `/security-review` independente **SAFE** · drift audit **exit 0** · smoke-affiliate-click **10/10** + smoke-nurture **10/10** · suíte **269** · tsc 0 · deploys 107.9/83.72/87.96kB · Phase 5c **SEAL ALLOWED** (7 verified) · Mesh **8783**. 6 commits. **Novo Top Gap:** entrega Resend a inbox real (domínio `RESEND_FROM` — Sovereign) · branded redirect domain (`login.mcorch.com/go` proxy nginx — link limpo+rastreado) · 2 rascunhos WP de teste a limpar · atribuição de compra ML (aguardando conversão). **Lição:** probe-first economizou retrabalho (ROIWidget já somava clicks → zero UI nova; `resend_api_key` já existia → só o canal) e pegou o bug 22P02 do RPC (content_id UUID) no smoke antes de declarar — corrigi via migration na mesma sessão (regra hotfix→migration). **Follow-up (mesma sessão, "continue com os próximos"):** click ledger estendido ao caminho **interativo** de monetização — POST `process-affiliate-link` retorna redirect rastreável `?link_id` (migration `20260604140000` + RPC `record_affiliate_click_by_link`). O smoke estendido (G8) expôs um insert de `affiliate_links` quebrado há tempo (`campaign_id` UUID vs slug `"ai_orchestration"` → 22P02 silencioso, nenhuma linha de afiliado nunca persistida) + o `/security-review` independente pegou um **open-redirect** no branch novo (302 pro `short_url` tenant-writável) — ambos corrigidos (gate de domínio ML + UUID-só); smoke **9/9** (G9 prova o open-redirect bloqueado), commit `b2c39f6`. **Follow-up 2 ("faça todos os 3"):** (A) **auto-monetização** no `orchestrate-step` — o artigo gerado embute o redirect rastreável `?link_id` per-owner (`_shared/affiliate.ts`), o flywheel monetiza+rastreia automático; provado E2E pago run `cee55b11` (Roborock → link rastreável no `content_mesh_asset`). (B) **matt_tool** per-user (coluna `affiliate_config` + threading GET/POST/orchestrate + UI `AffiliatesPage`; caveat honesto: efeito na atribuição ML não-verificável, mas aditivo). (C) **campaign-run assíncrono** p/ >8 passos (`EdgeRuntime.waitUntil`, batches; pequenas seguem síncronas). `/security-review` independente **SAFE** (flagou XSS **pré-existente** `DashboardHome:677` dangerouslySetInnerHTML → tarefa spawned). Smokes click **G1-G9+G1b** · campaign **A-H** · e2e auto-monetize ✅ · tsc 0 · drift exit 0. 4 commits (`9bb5bba`/`bb999c1`/`7cbd036`/`b468c98`).
+> 8	
+> 9	**Sprint v6.27.2 selado em 2026-06-04** — **Refund-on-failure: charge-without-value fechado (OTD-AEO-REFUND)**. Diretiva Sovereign "continue com os próximos passos". Probe-first material elegeu o item de **menor blast radius e maior valor seguro** dos 3 next-steps (refund protege saldo do usuário, zero ação outward); os outros 2 dependem do Sovereign (nurturing externo precisa de domínio Resend verificado — **zero refs RESEND no código**; 1º pago E2E precisa de GO econômico). **OTD-AEO-REFUND FECHADA:** `aeo-audit` debitava 5 mco na entrada e, se o persist falhasse, devolvia 500 **sem estornar** (charge-without-value, verificado no código). Helper compartilhado **`refundMco`** (`_shared/billing.ts` → `add_mco_coins`, service-role-only, simétrico a deduct, guarda `p_amount>0`, nunca lança); `aeo-audit` (5) e `lead-score` (1) rastreiam `charged` e estornam em qualquer falha pós-cobrança (persist-fail + catch). **Prova:** smoke `smoke-aeo-refund.ts` **6/6 LIVE** (deduct 5→15 / add 5→20 restaurado · guarda nega -10 · net-zero) + unit `_shared/billing.test.ts` **4/4** + regressão [[aeo-audit|aeo-audit]] intacta. **Honestidade Lei 1:** persist-fail não é forçável por input → fiação coberta por unit+code, não por falha forçada (declarado). Contrato refund-on-failure no billing SSOT (`mcoin-cost-calibration.md`). Deploys 86.69/85.62kB · tsc 0 · suíte **269** (265→269) · Phase 5c **SEAL ALLOWED** (8 verified) · Mesh **8774** (1 órfão `aeo:` podado). 3 commits. **Novo Top Gap:** entrega externa de nurturing (bloqueada por domínio Resend — Sovereign) · 1º pago E2E (GO econômico) · **OTD-INTENT-DISPATCH-REFUND** = aplicar `refundMco` ao gap pós-débito do `orchestrate-content` (flywheel, sessão dedicada). **Lição:** probe-first descartou 2 dos 3 next-steps (dependência externa) e leu o código pra confirmar que o gap de refund era REAL (linha 56 débito → 118 persist-fail sem refund) antes de construir — não assumi o bug, verifiquei.
+> ```
+
+## 🤖 Claude *(16:16:29)*
+
+
+## 🤖 Claude *(16:16:29)*
+
+Agora posso editar. Anexando as 2 entradas:
+
+## 🤖 Claude *(16:16:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.28.0 selado em 2026-06-04** \u2014 **Quatro next-steps fechados numa sess\u00e3o (probe-first)**.",
+  "new_string": "**Sprint \u2014 Stored-XSS Hardening + Antibody (2026-06-08)** \u2014 `/security-review` (v6.28.0) havia flagado stored-XSS em `DashboardHome` (`content_library.body` cru via `dangerouslySetInnerHTML`); fechado **ponta-a-ponta** nesta sess\u00e3o. Sanitiza\u00e7\u00e3o `DOMPurify.sanitize` (j\u00e1 shipada via Antigravity em `da9da4c`/`e5a661a`) + guarda de regress\u00e3o **6 testes** (`dashboard-html-sanitize.test.ts`: preserva `<a href>` de afiliado + tags de artigo, remove `<script>`/`onerror`/`javascript:`) + **antibody ESLint `no-restricted-syntax`** (`2522e71`, sem dep nova \u2014 `eslint-plugin-react` ausente) que faz todo `dangerouslySetInnerHTML` futuro acusar no lint at\u00e9 ser sanitizado+justificado (sink cru plantado \u2192 **pego** material; 2 sinks leg\u00edtimos justificados: DashboardHome DOMPurify \u00b7 chart.tsx CSS shadcn) + limpeza dos **7 `no-explicit-any`** do data-layer de DashboardHome (`3129369`). Handoff node `e12ed58e` + obs antibody `505fb670` (embedded 768d). tsc 0 \u00b7 su\u00edte verde \u00b7 mesh **8849**. **Anticorpo Permanente cumprido** \u2014 reincid\u00eancia do sink barrada no lint. **Top gaps restantes (herdados de v6.28.0, gated no Sovereign):** dom\u00ednio `RESEND_FROM` (entrega Resend real) \u00b7 branded redirect `login.mcorch.com/go` \u00b7 2 rascunhos WP de teste \u00b7 atribui\u00e7\u00e3o de compra ML.\n\n**Sprint v6.32.x \u2014 arco Core-v2 Black Hole (2026-06-07, via Antigravity)** \u2014 sess\u00f5es conduzidas no Antigravity, seladas e versionadas no git, registradas aqui retroativamente a partir dos records do HANDOFF.md (n\u00e3o reauditadas em detalhe \u2014 Lei 1): **v6.32.6** Unified Relativistic Black Hole & Cymatics (fus\u00e3o dos visualizadores num \u00fanico shader WebGL Schwarzschild \u2014 raymarching + disco de acre\u00e7\u00e3o + Doppler beaming + ondas de cymatics; layout 30/70; `CymaticsLayer` removido; 284 testes; handoff `ec6204a4`; mesh 8847); **v6.32.5** Model Selector Fix & Reacting Black Hole (fix case-collision dos hooks `useAiosTerminalChat`/`useAiosWorkspaceChat`; persist\u00eancia do modelo selecionado em `user_api_keys`; redesign MegaBrainVisualizer + CymaticsLayer; 260 testes; handoff `8627661a`; mesh 8839); **v6.32.2** Gemini 3.1 Live Mode (Live API \u2192 Gemini 3.1 Flash Live audio-only + Gemini Docs MCP + API Skills; handoff `5acba7aa`; mesh 8818). Os seals intermedi\u00e1rios (v6.29\u2013v6.32.4) existem em HANDOFF.md/README mas n\u00e3o foram back-filled aqui.\n\n**Sprint v6.28.0 selado em 2026-06-04** \u2014 **Quatro next-steps fechados numa sess\u00e3o (probe-first)**."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:16:40)*
+
+
+## 🤖 Claude *(16:16:40)*
+
+**Item 2 ✅**. Commit:
+
+## 🤖 Claude *(16:16:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"docs(sprint): alinha sprint-priorities com seals v6.32.x + XSS hardening\n\nPrepende 2 entradas newest-first: (1) Stored-XSS Hardening + Antibody (2026-06-08,\nfirsthand) e (2) arco Core-v2 Black Hole v6.32.6/5/2 (Antigravity, registrado a\npartir dos records do HANDOFF.md, nao reauditado em detalhe - Lei 1). Nota honesta\ndo gap v6.29-v6.32.4 nao back-filled.\" 2>&1 | tail -4\ngit rev-parse --short HEAD",
+  "description": "Commit item2 sprint-priorities alignment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 13ac801] docs(sprint): alinha sprint-priorities com seals v6.32.x + XSS hardening
+>  1 file changed, 4 insertions(+)
+> 13ac801
+> ```
+
+## 🤖 Claude *(16:17:29)*
+
+
+## 🤖 Claude *(16:17:32)*
+
+**Item 3** — branded redirect `login.mcorch.com/go`. Esta é a parte com blast-radius (nginx de produção serve o login ao vivo), então vou com gates de materialidade rígidos: SOP primeiro (Lei 2), config additive-only constrita por regex de UUID, `nginx -t` antes do reload, prova por `curl`. Probe do server block que serve login.mcorch.com:
+
+## 🤖 Claude *(16:17:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivo(s) com login.mcorch.com ===\"\nsudo -n grep -rl \"login.mcorch.com\" /etc/nginx/ 2>/dev/null\necho \"\"\necho \"=== server block de login.mcorch.com (server_name + root + locations) ===\"\nCONF=$(sudo -n grep -rl \"login.mcorch.com\" /etc/nginx/ 2>/dev/null | head -1)\necho \"CONF=$CONF\"\nsudo -n grep -nE \"server_name|root |location |return |proxy_pass|listen \" \"$CONF\" 2>/dev/null | head -40",
+  "description": "Find and inspect the login.mcorch.com nginx server block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivo(s) com login.mcorch.com ===
+> /etc/nginx/sites-enabled/www.mcorch.com.conf
+> 
+> === server block de login.mcorch.com (server_name + root + locations) ===
+> CONF=/etc/nginx/sites-enabled/www.mcorch.com.conf
+> 3:  listen 80;
+> 4:  listen [::]:80;
+> 5:  listen 443 quic;
+> 6:  listen 443 ssl;
+> 7:  listen [::]:443 quic;
+> 8:  listen [::]:443 ssl;
+> 13:  server_name mcorch.com;
+> 14:  return 301 https://www.mcorch.com$request_uri;
+> 19:  listen 80;
+> 20:  listen [::]:80;
+> 21:  listen 443 quic;
+> 22:  listen 443 ssl;
+> 23:  listen [::]:443 quic;
+> 24:  listen [::]:443 ssl;
+> 29:  server_name login.mcorch.com;
+> 31:  root /home/gcrUX/htdocs/constellation-orchestra/dist;
+> 37:    # --- Servir a Landing Page de Alta Fidelidade diretamente no root / ---
+> 38:  location = / {
+> 39:    root /home/gcrUX/htdocs/constellation-orchestra/miv;
+> 43:  # --- MIV standalone app served from project root /miv/ ---
+> 44:  location /miv/ {
+> 50:  location / {
+> 54:  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 63:  listen 80;
+> 64:  listen [::]:80;
+> 65:  listen 443 quic;
+> 66:  listen 443 ssl;
+> 67:  listen [::]:443 quic;
+> 68:  listen [::]:443 ssl;
+> 73:  server_name www.mcorch.com www1.mcorch.com;
+> 74:  root /home/gcrUX/htdocs/www.mcorch.com;
+> 83:  location ~ /.well-known {
+> 90:  location ~/\.git {
+> 94:  location = /xmlrpc.php {
+> 98:  location ~/(wp-admin/|wp-login.php) {
+> 103:    proxy_pass http://127.0.0.1:8080;
+> 114:  location / {
+> 115:    proxy_pass http://127.0.0.1:8080;
+> 132:  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 148:  listen 8080;
+> ```
+
+## 🤖 Claude *(16:18:22)*
+
+
+## 🤖 Claude *(16:18:24)*
+
+Achei: login.mcorch.com está em `/etc/nginx/sites-enabled/www.mcorch.com.conf` (server block ~linha 19-60, root = `.../constellation-orchestra/dist`). Vou ver o bloco exato via sudo (o Read tool não acessa arquivo root-owned):
+
+## 🤖 Claude *(16:18:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n sed -n '17,61p' /etc/nginx/sites-enabled/www.mcorch.com.conf 2>/dev/null",
+  "description": "View the login.mcorch.com server block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # 2. BLOCO EXCLUSIVO PARA O SEU SAAS (login.mcorch.com)
+> server {
+>   listen 80;
+>   listen [::]:80;
+>   listen 443 quic;
+>   listen 443 ssl;
+>   listen [::]:443 quic;
+>   listen [::]:443 ssl;
+>   http2 on;
+>   http3 off;
+>   ssl_certificate_key /etc/nginx/ssl-certificates/www.mcorch.com.key;
+>   ssl_certificate /etc/nginx/ssl-certificates/www.mcorch.com.crt;
+>   server_name login.mcorch.com;
+>   
+>   root /home/gcrUX/htdocs/constellation-orchestra/dist;
+>   index index.html;
+> 
+>   access_log /home/gcrUX/logs/nginx/access.log main;
+>   error_log /home/gcrUX/logs/nginx/error.log;
+> 
+>     # --- Servir a Landing Page de Alta Fidelidade diretamente no root / ---
+>   location = / {
+>     root /home/gcrUX/htdocs/constellation-orchestra/miv;
+>     try_files /Landing.html =404;
+>   }
+> 
+>   # --- MIV standalone app served from project root /miv/ ---
+>   location /miv/ {
+>     alias /home/gcrUX/htdocs/constellation-orchestra/miv/;
+>     index index.html;
+>     try_files $uri $uri/ /miv/index.html;
+>   }
+> 
+>   location / {
+>     try_files $uri $uri/ /index.html;
+>   }
+> 
+>   location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+>     expires max;
+>     access_log off;
+>     try_files $uri =404;
+>   }
+> }
+> 
+> # 3. BLOCO DO WORDPRESS (www.mcorch.com)
+> ```
+
+## 🤖 Claude *(16:19:27)*
+
+
+## 🤖 Claude *(16:19:27)*
+
+Tenho o bloco exato. Item 3 com gates. Primeiro o **SOP (Lei 2)** + em paralelo pego um `link_id` real (pra prova E2E) e faço backup do conf:
+
+## 🤖 Claude *(16:19:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md",
+  "content": "# SOP \u2014 Branded Affiliate Redirect (`login.mcorch.com/go/<link_id>`)\n\n> **Lei 2 (Processo Antecipado).** Documenta o processo manual ANTES da automa\u00e7\u00e3o.\n> Fecha o top-gap \"branded redirect domain\" (sprint v6.28.0): links de afiliado publicados\n> devem sair com o dom\u00ednio confi\u00e1vel `login.mcorch.com` em vez da URL crua do Supabase.\n\n## Por qu\u00ea\nO click-ledger (OTD-ML-CLICKS) roteia cliques por `\u2026/functions/v1/process-affiliate-link?link_id=<uuid>`,\nque registra o clique (`record_affiliate_click*`) e 302 pro Mercado Livre. Publicar essa URL crua do\nSupabase em redes sociais parece spam/sketchy e reduz CTR. O alias branded resolve isso **sem mudar**\no ledger: `login.mcorch.com/go/<uuid>` \u2192 302 nginx \u2192 a mesma fun\u00e7\u00e3o \u2192 302 ML. O clique \u00e9 contado igual.\n\n## Operator\nQuem executa hoje: **Engenheiro de Infra (MCORCH Agent / Sovereign)** com `sudo nginx` no host que serve\n`login.mcorch.com` (nginx, `/etc/nginx/sites-enabled/www.mcorch.com.conf`, server block `server_name login.mcorch.com`).\n\n## Sequence (cada passo com crit\u00e9rio material)\n1. **Backup do conf** \u2014 `sudo cp www.mcorch.com.conf www.mcorch.com.conf.bak-<YYYYMMDD>`.\n   Sucesso: `ls` mostra o `.bak` com size == original.\n2. **Inserir a location** no server block de `login.mcorch.com`, ANTES da `location /` (regex tem preced\u00eancia):\n   ```nginx\n   # Branded affiliate redirect \u2014 UUID-constrained (no open redirect)\n   location ~ \"^/go/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$\" {\n     return 302 https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=$1;\n   }\n   ```\n   C\u00f3pia versionada no repo: `infra/nginx/affiliate-go.location.conf`.\n   Sucesso: `sudo grep -c \"location ~ \\\"^/go/\" <conf>` == 1.\n3. **Validar config** \u2014 `sudo nginx -t`. Crit\u00e9rio: `syntax is ok` + `test is successful`.\n   **Se falhar \u2192 restaurar o `.bak` e PARAR (n\u00e3o recarregar).**\n4. **Recarregar** \u2014 `sudo nginx -s reload` (graceful; conex\u00f5es em voo n\u00e3o caem).\n5. **Emitir o link branded** no pipeline \u2014 `_shared/affiliate.ts` e `scripts/link-forge.ts` montam o alvo via\n   `AFFILIATE_REDIRECT_BASE` (env). Setar o segredo: `npx supabase secrets set AFFILIATE_REDIRECT_BASE=https://login.mcorch.com/go`\n   e redeployar `orchestrate-content` + `orchestrate-step`. **Fail-safe:** se a env n\u00e3o estiver setada, o c\u00f3digo\n   cai pro alvo Supabase direto de antes (zero regress\u00e3o).\n\n## Verification gates (material)\n- **G1 (regex/302):** `curl -sI \"https://login.mcorch.com/go/<uuid-qualquer>\"` \u2192 `HTTP/.* 302` + header\n  `location: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=<uuid>`.\n- **G2 (open-redirect bloqueado):** `curl -sI \"https://login.mcorch.com/go/../etc\"` ou path n\u00e3o-UUID \u2192 **N\u00c3O** 302\n  pro destino (cai na SPA `location /`, 200 index.html). A regex s\u00f3 casa UUID exato.\n- **G3 (E2E ledger):** `curl -sIL \"https://login.mcorch.com/go/<link_id-REAL>\"` segue 302\u2192302 e termina em\n  `mercadolivre.com.br` (ou `meli.la`); `affiliate_links.clicks` do link incrementa.\n- **G4 (emit):** ap\u00f3s redeploy, o `content_mesh_asset`/artigo gerado embute `https://login.mcorch.com/go/<id>`\n  (n\u00e3o a URL Supabase). Verific\u00e1vel no pr\u00f3ximo run de `orchestrate-content`.\n\n## Recovery path\n- **nginx -t falha (passo 3):** `sudo cp www.mcorch.com.conf.bak-<data> www.mcorch.com.conf` \u2192 `sudo nginx -t` \u2192 reload. Site volta ao estado anterior.\n- **Reload quebrou o serve do login (G1 da SPA falha):** restaurar `.bak`, reload, confirmar `curl -sI https://login.mcorch.com/` == 200.\n- **Branded base ruim em produ\u00e7\u00e3o:** `npx supabase secrets unset AFFILIATE_REDIRECT_BASE` + redeploy \u2192 pipeline volta a emitir a URL Supabase direta (fail-safe), sem tocar nginx.\n\n## Success signal\n`curl -sIL https://login.mcorch.com/go/<link_id-real>` termina em dom\u00ednio Mercado Livre **E** o clique aparece em\n`affiliate_links.clicks`/`affiliate_clicks` \u2014 provando que o alias branded preserva o ledger fim-a-fim.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:19:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== backup do conf nginx ===\"\nsudo -n cp /etc/nginx/sites-enabled/www.mcorch.com.conf /etc/nginx/sites-enabled/www.mcorch.com.conf.bak-20260608 && echo \"backup OK\" || echo \"backup FALHOU\"\nsudo -n ls -la /etc/nginx/sites-enabled/www.mcorch.com.conf.bak-20260608 2>/dev/null\necho \"=== um link_id REAL de affiliate_links (pra prova E2E) ===\"\nset -a; source .env 2>/dev/null; set +a\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/affiliate_links?select=id,short_url,clicks&limit=3&order=created_at.desc\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(r.get('id'),'| clicks=',r.get('clicks'),'|',str(r.get('short_url'))[:50]) for r in d] if isinstance(d,list) else print(d)\"",
+  "description": "Write SOP, backup nginx conf, fetch a real link_id"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backup do conf nginx ===
+> backup OK
+> -rw-r--r-- 1 root root 5060 Jun  8 13:19 /etc/nginx/sites-enabled/www.mcorch.com.conf.bak-20260608
+> === um link_id REAL de affiliate_links (pra prova E2E) ===
+> 7993c6a4-9a9c-4de1-8284-8180af482843 | clicks= 0 | https://www.mercadolivre.com.br/MLB-27834876?matt_
+> ```
+
+## 🤖 Claude *(16:20:11)*
+
+
+## 🤖 Claude *(16:20:11)*
+
+SOP selado · backup OK · link_id real `7993c6a4-9a9c-4de1-8284-8180af482843` (clicks=0 — bom pra provar incremento). Gravando a cópia versionada do snippet + o script de inserção idempotente:
+
+## 🤖 Claude *(16:20:13)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/infra/nginx/affiliate-go.location.conf",
+  "content": "# Branded affiliate redirect for login.mcorch.com \u2014 versioned copy of the nginx location\n# applied to /etc/nginx/sites-enabled/www.mcorch.com.conf (server block: server_name login.mcorch.com).\n# SOP: docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md\n#\n#   login.mcorch.com/go/<link_id-uuid>  ->  302 click-tracked Supabase fn  ->  302 Mercado Livre\n#\n# UUID-constrained: no open redirect (non-UUID paths fall through to the SPA `location /`).\n# The Supabase function (process-affiliate-link GET) records the click (record_affiliate_click*)\n# and 302s to the owner's real ML destination. This alias only changes the PUBLISHED hostname.\nlocation ~ \"^/go/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$\" {\n  return 302 https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=$1;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/infra/nginx/affiliate-go.location.conf (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:20:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/insert_go.py",
+  "content": "#!/usr/bin/env python3\n# Idempotent insertion of the branded /go affiliate redirect into the login.mcorch.com nginx block.\np = \"/etc/nginx/sites-enabled/www.mcorch.com.conf\"\ns = open(p).read()\n\nif 'location ~ \"^/go/' in s:\n    print(\"ALREADY_PRESENT\")\n    raise SystemExit(0)\n\nanchor = \"  root /home/gcrUX/htdocs/constellation-orchestra/dist;\\n  index index.html;\\n\"\nn = s.count(anchor)\nif n != 1:\n    print(f\"ANCHOR_COUNT_{n}_ABORT\")\n    raise SystemExit(1)\n\nblock = (\n    \"\\n  # --- Branded affiliate redirect (login.mcorch.com/go/<link_id>) \u2014 OTD-ML-CLICKS ---\\n\"\n    \"  # UUID-constrained 302 to the click-tracked Supabase fn (records click, then 302s to Mercado Livre). No open redirect.\\n\"\n    \"  location ~ \\\"^/go/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$\\\" {\\n\"\n    \"    return 302 https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=$1;\\n\"\n    \"  }\\n\"\n)\ns = s.replace(anchor, anchor + block)\nopen(p, \"w\").write(s)\nprint(\"INSERTED\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/insert_go.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:20:24)*
+
+
+## 🤖 Claude *(16:20:24)*
+
+Inserindo a location (idempotente) + `nginx -t` com gate (reload só se passar; senão restaura o backup e para):
+
+## 🤖 Claude *(16:20:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== insert ===\"\nsudo -n python3 /tmp/insert_go.py\necho \"=== nginx -t ===\"\nsudo -n nginx -t 2>&1 | tail -4\nNGINX_T=${PIPESTATUS[0]}\necho \"NGINX_T_EXIT=$NGINX_T\"\nif [ \"$NGINX_T\" -eq 0 ]; then\n  echo \"=== PASS \u2192 reload ===\"\n  sudo -n nginx -s reload 2>&1 | tail -3\n  echo \"reload issued; confirmar location presente:\"\n  sudo -n grep -c 'location ~ \"\\^/go/' /etc/nginx/sites-enabled/www.mcorch.com.conf\nelse\n  echo \"=== FAIL \u2192 restaurando backup (N\u00c3O recarrego) ===\"\n  sudo -n cp /etc/nginx/sites-enabled/www.mcorch.com.conf.bak-20260608 /etc/nginx/sites-enabled/www.mcorch.com.conf\n  sudo -n nginx -t 2>&1 | tail -2\nfi",
+  "description": "Insert /go location, validate nginx, reload if valid else restore"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === insert ===
+> INSERTED
+> === nginx -t ===
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> NGINX_T_EXIT=0
+> === PASS → reload ===
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> reload issued; confirmar location presente:
+> 1
+> ```
+
+## 🤖 Claude *(16:21:00)*
+
+
+## 🤖 Claude *(16:21:02)*
+
+nginx -t **PASS** (exit 0; warnings de `ssl_stapling` são pré-existentes/benignos) · reload emitido · location presente (count=1). Agora as provas materiais por `curl` (G0 saúde da SPA, G1 302 branded, G2 sem open-redirect, G3 cadeia E2E):
+
+## 🤖 Claude *(16:21:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== G0: SPA do login ainda serve (n\u00e3o quebrei o site) ===\"\ncurl -sI https://login.mcorch.com/ | head -1\necho \"\"\necho \"=== G1: /go/<uuid> \u2192 302 pro process-affiliate-link ===\"\ncurl -sI \"https://login.mcorch.com/go/00000000-0000-0000-0000-000000000000\" | grep -iE \"^HTTP/|^location:\"\necho \"\"\necho \"=== G2: path n\u00e3o-UUID \u2192 SEM 302 pro supabase (cai na SPA = sem open-redirect) ===\"\ncurl -sI \"https://login.mcorch.com/go/etc-passwd-attempt\" | grep -iE \"^HTTP/|^location:\" | head -3\necho \"\"\necho \"=== G3: link real, segue a cadeia 302\u2192302 ===\"\ncurl -sIL --max-redirs 5 \"https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843\" 2>&1 | grep -iE \"^HTTP/|^location:\" | head -8",
+  "description": "curl gates G0-G3 for branded redirect"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G0: SPA do login ainda serve (não quebrei o site) ===
+> HTTP/2 200 
+> 
+> === G1: /go/<uuid> → 302 pro process-affiliate-link ===
+> HTTP/2 302 
+> location: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=00000000-0000-0000-0000-000000000000
+> 
+> === G2: path não-UUID → SEM 302 pro supabase (cai na SPA = sem open-redirect) ===
+> HTTP/2 200 
+> 
+> === G3: link real, segue a cadeia 302→302 ===
+> HTTP/2 302 
+> location: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=7993c6a4-9a9c-4de1-8284-8180af482843
+> HTTP/2 405
+> ```
+
+## 🤖 Claude *(16:21:28)*
+
+
+## 🤖 Claude *(16:21:28)*
+
+G3 deu **405** no 2º hop — porque `curl -I` usa **HEAD**, e o `process-affiliate-link` só trata GET (clique de browser é GET). Os hops nginx estão provados (G1+G3 1º hop = 302 correto). Refazendo G3 com **GET** (que também grava o clique) + checando o incremento:
+
+## 🤖 Claude *(16:21:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== clicks ANTES ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/affiliate_links?id=eq.7993c6a4-9a9c-4de1-8284-8180af482843&select=clicks\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\"\necho \"\"\necho \"=== G3 (GET, segue cadeia branded\u2192supabase\u2192ML) ===\"\ncurl -s -L -D - -o /dev/null --max-redirs 5 \"https://login.mcorch.com/go/7993c6a4-9a9c-4de1-8284-8180af482843\" 2>&1 | grep -iE \"^HTTP/|^location:\" | head -8\necho \"\"\necho \"=== clicks DEPOIS (esperado +1) ===\"\nsleep 1\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/affiliate_links?id=eq.7993c6a4-9a9c-4de1-8284-8180af482843&select=clicks\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\"",
+  "description": "G3 GET chain + click increment proof"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === clicks ANTES ===
+> [{"clicks":0}]
+> === G3 (GET, segue cadeia branded→supabase→ML) ===
+> HTTP/2 302 
+> location: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/process-affiliate-link?link_id=7993c6a4-9a9c-4de1-8284-8180af482843
+> HTTP/2 302 
+> location: https://www.mercadolivre.com.br/MLB-27834876?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3
+> HTTP/2 403 
+> 
+> === clicks DEPOIS (esperado +1) ===
+> [{"clicks":1}]
+> ```
+
+## 🤖 Claude *(16:22:04)*
+
+
+## 🤖 Claude *(16:22:08)*
+
+**Branded redirect PROVADO end-to-end** (Lei 1):
+
+| Gate | Resultado |
+|---|---|
+| G0 — SPA do login | ✅ **200** (site intacto, não quebrei) |
+| G1 — `/go/<uuid>` | ✅ **302** → `process-affiliate-link?link_id=…` |
+| G2 — path não-UUID | ✅ **200 SPA** (sem open-redirect) |
+| G3 — cadeia real (GET) | ✅ branded → 302 → fn → **302 → `mercadolivre.com.br/MLB-27834876?matt_word=caga6077534`** (ML 403 = nosso IP datacenter, irrelevante) |
+| Click ledger | ✅ **clicks 0 → 1** — o alias branded preserva o registro do clique |
+
+A infra está destravada. Agora a **Parte B** (pipeline emitir o link branded). Lendo os 2 pontos de emissão pra trocar por base via env fail-safe:
+
+## 🤖 Claude *(16:22:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "offset": 55,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 55	  affiliateTag: string | null,
+> 56	  opts: { campaignId?: string | null; mattTool?: string | null } = {},
+> 57	): Promise<{ content: string; linked: number }> {
+> 58	  if (!content || !affiliateTag) return { content, linked: 0 };
+> 59	  let out = content;
+> 60	  let linked = 0;
+> 61	  for (const p of affiliateProducts()) {
+> 62	    p.pattern.lastIndex = 0;
+> 63	    if (!p.pattern.test(out)) continue;
+> 64	    const mlUrl = buildMlProductUrl(p.mlb, affiliateTag, opts.mattTool);
+> 65	    let target = mlUrl; // fail-open default: the direct ML url if the ledger row can't be created.
+> 66	    try {
+> 67	      const { data: link } = await admin.from("affiliate_links").insert({
+> 68	        user_id: ownerId, original_url: mlUrl, short_url: mlUrl, platform: "mercadolivre",
+> 69	        product_id: p.mlb, content_id: null, campaign_id: null,
+> 70	        metadata: { source: "auto-monetize", display: p.display, campaign: opts.campaignId ?? null, matt_tool: opts.mattTool ?? null },
+> 71	      }).select("id").single();
+> 72	      if (link?.id) target = `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;
+> 73	    } catch (_) { /* fail-open */ }
+> 74	    p.pattern.lastIndex = 0;
+> 75	    let replaced = false;
+> 76	    out = out.replace(p.pattern, (m) => {
+> 77	      if (replaced) return m; // link only the first mention to avoid spamming the article with N identical links.
+> 78	      replaced = true;
+> 79	      return `<a href="${target}">${m}</a>`;
+> 80	    });
+> 81	    linked++;
+> 82	  }
+> 83	  return { content: out, linked };
+> 84	}
+> ```
+
+## 🤖 Claude *(16:22:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/link-forge.ts",
+  "offset": 78,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 78	
+> 79	/**
+> 80	 * Build OUR click-tracking redirect URL for a product (process-affiliate-link GET). The redirect records the click
+> 81	 * in affiliate_links.clicks (in-system click ledger — ML has no public link API, OTD-ML-001) and then 302s to the
+> 82	 * content owner's definitive meli.la short link or a best-effort matt_word ML URL, resolved per-owner server-side at
+> 83	 * click time. We no longer embed a bare ML link, so clicks become countable in our system before any purchase
+> 84	 * postback (OTD-ML-CLICKS · SOP docs/processes/[[ml-affiliate-attribution|ml-affiliate-attribution]].md).
+> 85	 */
+> 86	function buildAffiliateUrl(mlb: string, contentVariantId: string): string {
+> 87	  const base = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+> 88	  const u = new URL(`${base}/functions/v1/process-affiliate-link`);
+> 89	  u.searchParams.set("product_id", mlb);
+> 90	  u.searchParams.set("content_variant_id", contentVariantId);
+> 91	  return u.toString();
+> 92	}
+> 93	
+> 94	/** Ensure a product node exists in the mesh; return its id. */
+> 95	async function ensureProductNode(p: ProductMatch): Promise<string | null> {
+> 96	  const productName = `product:${p.mlb}`;
+> 97	  const { data: existing } = await supabase
+> 98	    .from("mcorch_nodes")
+> 99	    .select("id")
+> ```
+
+## 🤖 Claude *(16:22:38)*
+
+
+## 🤖 Claude *(16:22:38)*
+
+Importante: o `link-forge.ts` (linha 86-92) usa shape `?product_id=&content_variant_id=` (não `link_id`), que minha rota `/go/<uuid>` **não** cobre — então deixo ele como está (segue funcionando via URL Supabase direta) e foco no `affiliate.ts`, que é o caminho **auto-monetize do flywheel ativo** e emite `?link_id=<uuid>` (exatamente o que `/go/<uuid>` mapeia). Editando affiliate.ts (env fail-safe) + descobrindo quais funções o importam:
+
+## 🤖 Claude *(16:22:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "      if (link?.id) target = `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;",
+  "new_string": "      if (link?.id) {\n        // Branded redirect when configured (login.mcorch.com/go/<uuid>); fail-safe to the direct Supabase fn\n        // if AFFILIATE_REDIRECT_BASE is unset. SOP: docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md\n        const brandedBase = Deno.env.get(\"AFFILIATE_REDIRECT_BASE\")?.replace(/\\/+$/, \"\");\n        target = brandedBase\n          ? `${brandedBase}/${link.id}`\n          : `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:22:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== quais edge functions importam _shared/affiliate.ts ===\"\ngrep -rln \"_shared/affiliate\\|from \\\"../_shared/affiliate\\|affiliate.ts\" supabase/functions/*/index.ts 2>/dev/null\necho \"=== confirma a string de import ===\"\ngrep -rn \"affiliate\" supabase/functions/orchestrate-step/index.ts 2>/dev/null | grep -i \"import\\|monetiz\" | head",
+  "description": "Edit affiliate.ts + find importing functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quais edge functions importam _shared/affiliate.ts ===
+> supabase/functions/orchestrate-step/index.ts
+> supabase/functions/process-affiliate-link/index.ts
+> === confirma a string de import ===
+> supabase/functions/orchestrate-step/index.ts:10:import { monetizeContent } from "../_shared/affiliate.ts";
+> supabase/functions/orchestrate-step/index.ts:175:          // AUTO-MONETIZE (OTD-ML-CLICKS): embed per-owner click-tracked affiliate links for catalog products
+> supabase/functions/orchestrate-step/index.ts:176:          // mentioned in the article. Fail-open (no affiliate_tag → content unchanged). Kill-switch AUTO_MONETIZE_ENABLED.
+> supabase/functions/orchestrate-step/index.ts:184:                const m = await monetizeContent(admin as any, supabaseUrl, articleContent, run.user_id, aff.affiliate_tag, { campaignId: campaign_id || null, mattTool: aff.matt_tool });
+> supabase/functions/orchestrate-step/index.ts:199:            metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), affiliate_links: monetizeLinked },
+> supabase/functions/orchestrate-step/index.ts:214:            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(" ").length, affiliate_links: monetizeLinked }
+> ```
+
+## 🤖 Claude *(16:23:05)*
+
+
+## 🤖 Claude *(16:23:06)*
+
+Importers: **`orchestrate-step`** chama `monetizeContent` (linha 184 — o caminho que editei); `process-affiliate-link` importa o módulo mas não usa essa função (mudança inerte lá). Então redeployo `orchestrate-step`. Setando o secret + redeployando + verificando:
+
+## 🤖 Claude *(16:23:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== set secret AFFILIATE_REDIRECT_BASE ===\"\nnpx supabase secrets set AFFILIATE_REDIRECT_BASE=https://login.mcorch.com/go --project-ref bcyvddsykvehvpwstlfa 2>&1 | tail -6\necho \"SECRET_EXIT=${PIPESTATUS[0]}\"\necho \"\"\necho \"=== redeploy orchestrate-step ===\"\nnpx supabase functions deploy orchestrate-step --project-ref bcyvddsykvehvpwstlfa 2>&1 | tail -10\necho \"DEPLOY_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Set AFFILIATE_REDIRECT_BASE secret + redeploy orchestrate-step",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === set secret AFFILIATE_REDIRECT_BASE ===
+> Finished supabase secrets set.
+> A new version of Supabase CLI is available: v2.105.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> SECRET_EXIT=0
+> 
+> === redeploy orchestrate-step ===
+> Bundling Function: orchestrate-step
+> Deploying Function: orchestrate-step (script size: 122.2kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.105.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> DEPLOY_EXIT=0
+> ```
+
+## 🤖 Claude *(16:23:44)*
+
+
+## 🤖 Claude *(16:23:48)*
+
+**Item 3 destravado e wired:**
+- Secret `AFFILIATE_REDIRECT_BASE=https://login.mcorch.com/go` setado ✅
+- `orchestrate-step` redeployado (**122.2kB**, exit 0) — auto-monetize agora emite o link branded (fail-safe à URL Supabase se a env sumir).
+
+Honestidade Lei 1: a **infra** está provada E2E (clique registrado); o **emit** está deployado + fail-safe, mas não disparei um run pago de orchestrate só pra ver o link branded materializar no `content_mesh_asset` (evito gasto) — o formato emitido (`login.mcorch.com/go/<uuid>`) é exatamente o que provei funcionar.
+
+Commit do item 3 (+ limpo o script throwaway):
+
+## 🤖 Claude *(16:23:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f /tmp/insert_go.py\ngit add docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md infra/nginx/affiliate-go.location.conf supabase/functions/_shared/affiliate.ts\ngit commit -m \"feat(affiliate): branded redirect login.mcorch.com/go + emit via env\n\nDestrava o top-gap branded redirect domain: nginx /go/<uuid> (UUID-constrained,\nsem open-redirect) 302 -> process-affiliate-link -> ML preservando o click ledger\n(provado E2E material: clicks 0->1 via login.mcorch.com/go/<id-real>). orchestrate-step\n(auto-monetize) emite login.mcorch.com/go/<id> via AFFILIATE_REDIRECT_BASE, fail-safe\na URL Supabase direta se unset. SOP docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md +\nsnippet nginx versionado infra/nginx/. nginx -t verde, reload graceful, SPA login 200.\" 2>&1 | tail -4\ngit rev-parse --short HEAD",
+  "description": "Commit item3 branded redirect"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 2477126] feat(affiliate): branded redirect login.mcorch.com/go + emit via env
+>  3 files changed, 74 insertions(+), 1 deletion(-)
+>  create mode 100644 docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md
+>  create mode 100644 infra/nginx/affiliate-go.location.conf
+> 2477126
+> ```
+
+## 🤖 Claude *(16:23:58)*
+
+
+## 🤖 Claude *(16:23:58)*
+
+**Item 3 ✅** commit `2477126`. Os 3 itens estão feitos e commitados (3 commits à frente do origin). Rodando a suíte completa antes do push (item 1 tocou DashboardHome):
+
+## 🤖 Claude *(16:23:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run test 2>&1 | tail -8; echo \"SUITE_EXIT=${PIPESTATUS[0]}\"",
+  "description": "Full test suite before push",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 28ms
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+> 
+>  Test Files  21 passed | 2 skipped (23)
+>       Tests  284 passed | 2 skipped (286)
+>    Start at  13:23:59
+>    Duration  9.17s (transform 912ms, setup 2.06s, collect 3.23s, tests 1.94s, environment 11.22s, prepare 2.86s)
+> 
+> SUITE_EXIT=0
+> ```
+
+## 🤖 Claude *(16:24:34)*
+
+
+## 🤖 Claude *(16:24:34)*
+
+Suíte **284 passed | 2 skipped** (exit 0) — verde. Push dos 3 commits + nó de malha do incremento + contagem ao vivo:
+
+## 🤖 Claude *(16:24:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== push (3 commits) ===\"\ngit push origin main 2>&1 | tail -4; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY}\"; URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== mesh milestone node do incremento (3 itens) ===\"\nRESP=$(curl -s -X POST \"${URL}/rest/v1/mcorch_nodes\" -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\": \\\"session-increment-$(date +%Y%m%d)-any-sprint-branded-redirect\\\", \\\"node_type\\\": \\\"milestone\\\", \\\"content\\\": \\\"[INCREMENT] P\u00f3s-XSS, 3 itens aut\u00f4nomos: (1) eliminados 7 no-explicit-any no data-layer de DashboardHome (Tables<content_library>, shapes de metadata, catch instanceof Error) \u2014 lint do arquivo endurecido agora limpo (commit 3129369); (2) sprint-priorities.md alinhado com seals v6.32.x (Antigravity) + XSS (commit 13ac801); (3) DESTRAVADO o top-gap branded redirect domain \u2014 nginx login.mcorch.com/go/<uuid> UUID-constrained 302 -> process-affiliate-link -> ML, click ledger preservado (PROVADO E2E: clicks 0->1), orchestrate-step emite via AFFILIATE_REDIRECT_BASE fail-safe (commit 2477126, deploy 122.2kB, SOP [[branded-affiliate-redirect|branded-affiliate-redirect]].md). nginx -t verde, SPA login intacta. Su\u00edte 284 verde, tsc 0.\\\", \\\"stability_score\\\": 0.9, \\\"project_id\\\": null, \\\"user_id\\\": null, \\\"metadata\\\": {\\\"session\\\": \\\"xss-followups-3items\\\", \\\"commits\\\": \\\"3129369|13ac801|2477126\\\", \\\"derives_from\\\": \\\"e12ed58e-36e5-4b76-af79-cccfa4805fdb\\\", \\\"branded_redirect_proof\\\": \\\"clicks 0->1 via login.mcorch.com/go\\\"}}\")\nNID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if isinstance(d,list) else d; print(n.get('id','ERR'))\" 2>/dev/null)\necho \"NODE_ID=$NID\"\ncurl -s -X POST \"${URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embed:', json.dumps(d)[:150])\" 2>/dev/null || echo \"embed?\"\necho \"=== count ao vivo ===\"\ncurl -s \"${URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'",
+  "description": "Push + insert increment milestone node + count",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push (3 commits) ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    97e980a..2477126  main -> main
+> PUSH_EXIT=0
+> === mesh milestone node do incremento (3 itens) ===
+> NODE_ID=94797afb-f518-4256-b6e2-6d3e0f03c850
+> Embed: {"node_id": "94797afb-f518-4256-b6e2-6d3e0f03c850", "dims": 768, "chunks": 1, "model": "openai/text-embedding-3-small", "provider": "openrouter", "sti
+> === count ao vivo ===
+> 8850
+> ```
+
+## 🤖 Claude *(16:25:31)*
+
+
+## 🤖 Claude *(16:25:31)*
+
+Push **OK** (`97e980a..2477126`, 3 commits) · milestone node `94797afb` embedded · mesh **8850**. Registrando o incremento no HANDOFF + README badge:
+
+## 🤖 Claude *(16:25:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Stored-XSS Hardening: content_library.body Sanitization (2026-06-08)",
+  "new_string": "## Task State\n\n## Session Increment \u2014 any-debt + sprint align + branded redirect (2026-06-08)\n\nTr\u00eas itens aut\u00f4nomos p\u00f3s-selo XSS (diretiva Sovereign \"fa\u00e7a os 3\"), cada um provado materialmente:\n\n1. **D\u00edvida `any` (`3129369`)** \u2014 eliminados os 7 `@typescript-eslint/no-explicit-any` no data-layer de `DashboardHome.tsx` (`OptimizationHistoryItem` tipada \u00b7 casts de `metadata` viram shape `{category?}` \u00b7 `payload.new` realtime usa `Tables<'content_library'>` \u00b7 `catch (e:any)`\u2192`catch(e)`+`instanceof Error`). **eslint do arquivo: 7\u21920 problems** \u00b7 tsc 0.\n2. **Sprint align (`13ac801`)** \u2014 `sprint-priorities.md` prepended: XSS Hardening (firsthand) + arco v6.32.x Core-v2 Black Hole (Antigravity, dos records do HANDOFF \u2014 Lei 1).\n3. **Branded redirect (`2477126`) \u2014 TOP-GAP DESTRAVADO** \u2014 `login.mcorch.com/go/<uuid>` \u2192 nginx 302 (UUID-constrained, sem open-redirect) \u2192 `process-affiliate-link` \u2192 302 ML, click ledger preservado. `orchestrate-step` auto-monetize emite via `AFFILIATE_REDIRECT_BASE` (fail-safe \u00e0 URL Supabase). SOP `docs/processes/branded-affiliate-redirect.md` + snippet versionado `infra/nginx/affiliate-go.location.conf`.\n\n**ORO:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign \u00b7 Owner=Sovereign (item 3 toca nginx prod + flywheel de monetiza\u00e7\u00e3o).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Commits (pushados) | `3129369` (any) \u00b7 `13ac801` (sprint) \u00b7 `2477126` (branded redirect) |\n| eslint DashboardHome | \u2705 **0 problems** (era 7 `no-explicit-any`) |\n| tsc / Su\u00edte | \u2705 0 erros \u00b7 **284 passed** \\| 2 skipped |\n| Branded redirect \u2014 nginx | \u2705 `nginx -t` verde \u00b7 reload graceful \u00b7 **SPA login 200** (site intacto) |\n| Branded redirect \u2014 G0..G3 | \u2705 302 correto \u00b7 open-redirect bloqueado (n\u00e3o-UUID\u2192SPA) \u00b7 **click ledger 0\u21921 E2E** (link real `7993c6a4`) |\n| Deploy | \u2705 `orchestrate-step` **122.2kB** \u00b7 secret `AFFILIATE_REDIRECT_BASE` setado |\n| Milestone node | \u2705 `94797afb-f518-4256-b6e2-6d3e0f03c850` (embedded 768d) \u00b7 mesh **8850** |\n\n**Pend\u00eancias/Pr\u00f3ximos:** o shape do `link-forge.ts` (`?product_id=&content_variant_id=`) n\u00e3o \u00e9 coberto pela rota `/go/<uuid>` (precisa criar link row antes, ou rota query-preserving) \u2014 follow-up. Demais top-gaps seguem gated no Sovereign (dom\u00ednio Resend \u00b7 2 rascunhos WP \u00b7 convers\u00e3o ML).\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Tudo ancorado \u2014 eslint 0 / tsc 0 / su\u00edte 284; branded redirect provado E2E (clicks 0\u21921 MATERIAL, n\u00e3o fabricado); deploy 122.2kB literal; n\u00f3 94797afb embedded. nginx mudado com backup + nginx-t-gate + SPA-200-check (n\u00e3o quebrei o site ao vivo). Emit branded deployado + fail-safe, mas N\u00c3O rodei orchestrate pago s\u00f3 pra ver o link materializar (declarado, evita gasto).\nLaw 2 (Process): \u2705 SOP branded-affiliate-redirect.md escrita ANTES da mudan\u00e7a nginx/c\u00f3digo (Operator/Sequence/Verification/Recovery/Success). Itens 1-2 s\u00e3o refactor/docs (isentos de BoK/SOP).\nLaw 3 (Pruning): \u2705 Probe-first elegeu o \u00fanico top-gap destrav\u00e1vel autonomamente (redirect) e descartou os 3 gated no Sovereign \u2014 sem construir o que n\u00e3o roda.\nLaw 4 (ORO): \u2705 Triplet declarado; Owner=Sovereign expl\u00edcito por tocar nginx prod + flywheel.\n```\n\n---\n\n## Session Seal \u2014 Stored-XSS Hardening: content_library.body Sanitization (2026-06-08)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:25:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8849_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8850_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:25:47)*
+
+
+## 🤖 Claude *(16:25:47)*
+
+5b scan + commit do registro (HANDOFF + README) + push:
+
+## 🤖 Claude *(16:25:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nHITS=$(grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|whsec_[a-zA-Z0-9]{20,})\" HANDOFF.md | grep -v \"digest\\|hash\\|example\")\nif [ -n \"$HITS\" ]; then echo \"\ud83d\udd34 BLOCK:\"; echo \"$HITS\"; exit 1; fi\necho \"5b: NO CREDENTIALS \u2705\"\ngit add HANDOFF.md README.md\ngit commit -m \"docs(handoff): seal increment - any-debt + sprint align + branded redirect\n\nRegistra os 3 itens autonomos pos-XSS (commits 3129369/13ac801/2477126):\neslint DashboardHome 7->0, sprint-priorities alinhado com v6.32.x, e o top-gap\nbranded redirect login.mcorch.com/go DESTRAVADO+provado E2E (clicks 0->1).\nMilestone node 94797afb. Mesh badge 8849->8850.\" 2>&1 | tail -4\ngit push origin main 2>&1 | tail -3; echo \"PUSH_EXIT=${PIPESTATUS[0]}\"\necho \"=== estado final ===\"; git status -sb | head -1; git --no-pager log --oneline -6",
+  "description": "5b scan + commit HANDOFF/README + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5b: NO CREDENTIALS ✅
+> [main ab088ec] docs(handoff): seal increment - any-debt + sprint align + branded redirect
+>  2 files changed, 33 insertions(+), 1 deletion(-)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2477126..ab088ec  main -> main
+> PUSH_EXIT=0
+> === estado final ===
+> ## main...origin/main
+> ab088ec docs(handoff): seal increment - any-debt + sprint align + branded redirect
+> 2477126 feat(affiliate): branded redirect login.mcorch.com/go + emit via env
+> 13ac801 docs(sprint): alinha sprint-priorities com seals v6.32.x + XSS hardening
+> 3129369 refactor(dashboard): elimina 7 no-explicit-any no data-layer de DashboardHome
+> 97e980a docs(handoff): fold xss antibody into seal record
+> 2522e71 chore(security): antibody eslint contra reincidencia do sink stored-XSS
+> ```
+
+## 🤖 Claude *(16:26:09)*
+
+
+## 🤖 Claude *(16:26:14)*
+
+Os 3 itens estão **feitos, selados e pushados**. Estado final: `## main...origin/main` (sincronizado).
+
+```
+═══════════════════════════════════════════════════════════
+  3 ITENS ENTREGUES — any-debt · sprint align · branded redirect — 2026-06-08
+═══════════════════════════════════════════════════════════
+
+① DÍVIDA `any` (DashboardHome)            commit 3129369
+   • 7 `no-explicit-any` → 0 (eslint do arquivo endurecido agora limpo)
+   • OptimizationHistoryItem tipada · metadata {category?} · payload.new
+     Tables<'content_library'> · catch(e)+instanceof Error · tsc 0
+
+② ALINHAR sprint-priorities              commit 13ac801
+   • prepend: XSS Hardening (firsthand) + arco v6.32.x Black Hole (Antigravity,
+     dos records do HANDOFF — marcado "não reauditado em detalhe", Lei 1)
+
+③ BRANDED REDIRECT — TOP-GAP DESTRAVADO   commit 2477126
+   • nginx: login.mcorch.com/go/<uuid> → 302 → process-affiliate-link → 302 → ML
+     (UUID-constrained, sem open-redirect) · backup + nginx -t verde + reload graceful
+   • PROVA E2E material: clicks 0→1 (link real 7993c6a4) · SPA login intacta (200)
+   • orchestrate-step emite via AFFILIATE_REDIRECT_BASE (fail-safe) · deploy 122.2kB
+   • SOP docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md + snippet infra/nginx/
+
+🔐 5b scan ✅  ·  ⬡ mesh 8850 (node 94797afb)  ·  🧪 suíte 284 passed  ·  🔧 tsc 0
+🚀 push ✅ 97e980a..ab088ec (4 commits + seal) · origin espelha local
+═══════════════════════════════════════════════════════════
+```
+
+**Caveats honestos (Lei 1):**
+- Item ③ — o *emit* branded está deployado + fail-safe, mas **não rodei um orchestrate pago** só pra ver o link materializar no `content_mesh_asset` (evita gasto). A infra em si está provada E2E (clique registrado), e o formato emitido é exatamente o que provei funcionar.
+- O backup do nginx (`www.mcorch.com.conf.bak-20260608`) ficou no servidor; reverter é `cp` + reload.
+
+**Único follow-up autônomo restante:** o `link-forge.ts` usa shape `?product_id=&content_variant_id=` (não `link_id`), que a rota `/go/<uuid>` não cobre — branded-izá-lo exige criar a linha `affiliate_links` antes (pra ter o UUID) ou uma rota query-preserving. Os demais top-gaps seguem gated em você (domínio Resend · 2 rascunhos WP · conversão ML).
+
+Posso encadear o follow-up do `link-forge` agora, ou paramos aqui pra você selar/seguir. A janela ainda comporta.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
