@@ -11179,6 +11179,307 @@ Marcando a virada e escrevendo o relatório:
 > File created successfully at: /home/gcrux-tradeux/RESEARCH-flow-and-margin.md (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(14:30:15)*
+
+
+## 🤖 Claude *(14:30:15)*
+
+Relatório completo salvo em **`~/RESEARCH-flow-and-margin.md`**. Atualizando o HANDOFF e te entrego o resumo:
+
+## 🤖 Claude *(14:30:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**INERTE hoje**\n(bear). **NEXT**: recalibrar o threshold quando o deep-research sair (re-rodar `setup-flow-gate.js` com `FLOW_GATE_MIN=novo`); valida\u00e7\u00e3o de\ndisparo end-to-end fica pendente at\u00e9 o regime sair de bear. Mem\u00f3rias `tradeux-flow-oracle` + `tradeux-regime-gate` atualizadas. Gate da id2 \u00e9\nruntime/PATCH (reaplicar p\u00f3s-`make nuke`: setup-trend \u2192 activate-trend \u2192 setup-flow-gate).",
+  "new_string": "**INERTE hoje**\n(bear). **NEXT**: recalibrar o threshold quando o deep-research sair (re-rodar `setup-flow-gate.js` com `FLOW_GATE_MIN=novo`); valida\u00e7\u00e3o de\ndisparo end-to-end fica pendente at\u00e9 o regime sair de bear. Mem\u00f3rias `tradeux-flow-oracle` + `tradeux-regime-gate` atualizadas. Gate da id2 \u00e9\nruntime/PATCH (reaplicar p\u00f3s-`make nuke`: setup-trend \u2192 activate-trend \u2192 setup-flow-gate).\n\n### Record \u2014 2026-06-04 (cont. \u2014 deep-research entregue (s\u00edntese manual; harness travou no limite semanal))\nO harness `deep-research` (23 fontes, 81 verdicts adversariais) **travou na s\u00edntese por LIMITE SEMANAL de uso** (subagents cortados \u2192\n\"completed without StructuredOutput\"; o resume re-rodou Verify e bateu no mesmo limite, 593k tok). **N\u00e3o perdi o trabalho**: sintetizei\n**manualmente do journal** (sem novos subagents) \u2192 relat\u00f3rio completo em **`~/RESEARCH-flow-and-margin.md`**. **Achados:** (A) order-flow\nimbalance TEM info preditiva curta (peer-reviewed Anastasopoulos/Gradojevic; arXiv 2602.00776 OFI=feature dominante) **MAS** \u00e9 *nowcasting*\nn\u00e3o forecasting, e VPIN-como-preditor \u00e9 CONTESTADO (Andersen-Bondarenko: VPIN picou DEPOIS do flash crash). Nenhuma fonte d\u00e1 n\u00famero m\u00e1gico\n\u2192 otimizar em backtest. Thresholds de partida: **z-score do imbalance** (|z|\u22482 extremo / |z|\u22481 sai; janela ~200; \u00b11.5/2/2.5 por vol) + condi\u00e7\u00e3o\nde **FLIP**. (B) **Spot Margin short = DESACONSELHADO** p/ o beta: custo dominado por FEES (~0.15% round-trip >> juros BTC ~0.0000447%/h, m\u00edn\n1h), + risco de liquida\u00e7\u00e3o + infra de margem inexistente; risco\u00d7complexidade > benef\u00edcio (short real faria mais sentido em Futures = outro sistema).\n**CONCLUS\u00c3O p/ o gate da id2:** o prop\u00f3sito (filtro de toxicidade CONTEMPOR\u00c2NEA) \u00e9 o uso SUPORTADO \u2713. Mas a pesquisa N\u00c3O deu n\u00famero calibrado\n\u2192 **MANTER `-0.40` provis\u00f3rio** (mudar agora = trocar chute por chute); deixar o `flow-capitulation.log` acumular e **v2 = migrar pra z-score/percentil\n+ flip no flowService** (vai a gate quando houver dado). N\u00c3O recalibrei o n\u00famero \u00e0s cegas."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:30:38)*
+
+
+## 🤖 Claude *(14:30:42)*
+
+Pronto — **a pesquisa foi salva e sintetizada** (apesar do harness ter travado no limite). Relatório completo em **`~/RESEARCH-flow-and-margin.md`**. Os entregáveis:
+
+## 📊 Tópico A — Filtro de exaustão de fluxo
+
+**Evidência forte:** order-flow imbalance tem info preditiva de curto horizonte (peer-reviewed: Anastasopoulos/Gradojevic 2026; arXiv 2602.00776 — OFI é *feature dominante*). É a base real do nosso oráculo.
+
+**Os refutados (ouro — separam evidência de folclore):**
+- ⚠️ É **nowcasting, não forecasting** — order imbalance sinaliza risco de crash **AGORA**, não prevê o futuro.
+- ⚠️ **VPIN como preditor de reversão é CONTESTADO** (Andersen-Bondarenko: o VPIN picou *depois* do flash crash). Toxicidade = flag de estresse contemporâneo, não gatilho líder.
+- ⚠️ **Nenhuma fonte dá número mágico** — todas mandam otimizar em backtest.
+
+**Assinatura sniper:** selling climax + **flip do delta**; divergência bullish de CVD (preço novo fundo, CVD segura); absorção. Disciplina: **esperar a reação/flip antes de comprar**.
+
+**Thresholds (pontos de partida):** **z-score do imbalance** sobre janela ~200 — fade em **|z|≈2**, sai em **|z|≈1**; condicionar à vol (±1.5/±2/±2.5). Mais principled que o corte cru.
+
+## 📋 Tópico B — Spot Margin short: **PARECER = DESACONSELHO** (pro beta)
+Números verificados (juros BTC **~0.0000447%/h** via pull ao vivo da API). **A matemática que mata:** custo dominado por **fees (~0.15% round-trip)**, não juros; pra um short 1m–15m lucrar, a queda tem que vencer ~0.15% só de fee. + risco de liquidação + infra de margem inexistente. **Risco × complexidade > benefício.** (Short real → faria mais sentido em Futures = outro sistema.)
+
+## 🎯 Conclusão p/ o gate da id2 (a recalibração que prometi)
+Aqui a honestidade importa: **a pesquisa NÃO me deu um número calibrado** — ela diz "otimize em dado". Então **mudar o `-0.40` agora seria trocar um chute por outro.** Decisão:
+- ✅ O **propósito** do gate (filtro de venda agressora *contemporânea*) é exatamente o uso **suportado** pela evidência — a fiação está certa.
+- **MANTER `-0.40` provisório**, deixar o `flow-capitulation.log` acumular a distribuição real, e **calibrar com dado**.
+- **v2 (roadmap):** migrar de imbalance-cru → **z-score/percentil rolante + condição de flip** no `flowService` (o "sniper" de verdade) — vai a gate quando houver dado.
+
+**Não recalibrei às cegas** — seria contra a cultura do projeto ("o dado é o juiz"). Os dois tópicos do Deep Search estão entregues e documentados; a recalibração fica pin-pointed (esperar o log de capitulação acumular). Quer que eu já comece a **v2 do z-score no flowService**, ou deixamos o log juntar dado primeiro?
+
+## 👤 User *(15:42:01)*
+
+ok mas os limites foram restaurados, precisamos  do harness ou podemos simplesmente dar o handoff?
+
+## 🤖 Claude *(15:42:58)*
+
+
+## 🤖 Claude *(15:43:02)*
+
+Boa pergunta. Resposta honesta: **não precisamos do harness.**
+
+A pesquisa **já está entregue** — eu sintetizei do **próprio journal verificado do harness** (23 fontes + 81 verdicts adversariais, incluindo os refutados que separam evidência de folclore). Re-rodar agora só **re-gastaria ~600k tokens pra regenerar as mesmas conclusões** (os thresholds, o parecer de Spot Margin, o "nowcasting≠forecasting", o VPIN-contestado — tudo já no `~/RESEARCH-flow-and-margin.md`). A síntese-agente do harness não mudaria nenhuma conclusão; seria só cosmético. **Desperdício.**
+
+Então: **vamos pro handoff.** Deixa eu confirmar que a árvore está limpa (tudo commitado) e selar:
+
+## 🤖 Claude *(15:43:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && echo \"=== git status ===\" && git status --short && echo \"(vazio acima = \u00e1rvore limpa)\" && echo \"=== \u00faltimos 7 commits da sess\u00e3o ===\" && git log --oneline -7'",
+  "description": "Pre-handoff check: clean working tree and session commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> ?? docs/
+> (vazio acima = árvore limpa)
+> === últimos 7 commits da sessão ===
+> 56029a3 fix(intelligence): card de fluxo reflete o gate ATIVO na id2 (nao mais shadow)
+> 72b1a19 feat(oracle): gate de fluxo (sniper) na id2 + capitulation log p/ calibracao
+> 6f97209 perf(mcp): get_wallet enxuto (top-N por valor) - corta ~98% do input do agente
+> 937172b feat(intelligence): card de Taker Flow no painel (observabilidade do oraculo v1, shadow)
+> f833032 feat(oracle): sinal de fluxo do taker (mainnet) em SHADOW - base do oraculo v1
+> e5ef595 fix(trend): id7 vende a posicao do trend (TREND_QTY) em vez de LAST_ORDER_QTY compartilhado
+> 453c7d6 feat(trend): ativacao coordenada do Trend Following (LIMIT marketavel + persistencia de cross)
+> ```
+
+## 🤖 Claude *(15:43:09)*
+
+
+## 🤖 Claude *(15:43:09)*
+
+Árvore limpa (só o `docs/` untracked — o blueprint que decidimos não commitar), 7 commits da sessão no master, todos com CI verde. Selando a sessão com o ritual `/handoff`:
+
+## 🤖 Claude *(15:43:10)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(15:43:10)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(15:43:46)*
+
+
+## 🤖 Claude *(15:43:47)*
+
+O ritual `/handoff` carregou — mas com uma ressalva importante que vou ajustar: o template fala em **branch + PR + push SSH**, porém o **modelo selado deste projeto é trunk-based direto-no-master via token HTTPS** (memória `tradeux-orchestration-model`). E nesta sessão **já commitei + empurrei os 7 commits direto pro master** (CI verde em cada um). Então PHASE 2 (branch+PR) e PHASE 5 (push) **já foram feitas incrementalmente** — não vou criar branch/PR (contradiz o modelo + o trabalho já está no master).
+
+Executando o que falta de verdade: pre-flight + **secret-scan dos 7 commits da sessão** (bloqueia o seal se achar segredo):
+
+## 🤖 Claude *(15:43:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== PRE-FLIGHT: stack ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && docker compose ps --format \"{{.Name}}  {{.Status}}\"' 2>/dev/null\necho \"=== site ===\"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/\necho \"=== master sincronizado? (local vs origin) ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git -c safe.directory=\"*\" rev-parse --short HEAD && git -c safe.directory=\"*\" rev-parse --short @{u} 2>/dev/null && echo \"HEAD vs upstream acima\"'\necho \"=== PHASE 1: SECRET SCAN nos 7 commits da sessao (49af86a..HEAD) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd ~/tradeux && git -c safe.directory=\"*\" diff 49af86a..HEAD' \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY\\s*=\\s*\\S|ACCESS_KEY\\s*=\\s*\\S|GITHUB_TOKEN|password\\\"?\\s*[:=]\\s*[\\\"'\\''][^\\\"'\\'' <])\" \\\n  | grep -viE \"example|<.*>|process\\.env|=\\s*$|describe\\(|\\.password|email:|z\\.string|password\\s*\\}\" | head -10\necho \"--- (vazio acima = SEM segredo no diff; seal liberado) ---\"",
+  "description": "Handoff pre-flight and secret scan of session commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PRE-FLIGHT: stack ===
+> tradeux-backend-1  Up 3 days
+> tradeux-db-1  Up 5 days (healthy)
+> tradeux-frontend-1  Up 3 days
+> === site ===
+> 200
+> === master sincronizado? (local vs origin) ===
+> 56029a3
+> 56029a3
+> HEAD vs upstream acima
+> === PHASE 1: SECRET SCAN nos 7 commits da sessao (49af86a..HEAD) ===
+> --- (vazio acima = SEM segredo no diff; seal liberado) ---
+> ```
+
+## 🤖 Claude *(15:44:51)*
+
+
+## 🤖 Claude *(15:44:51)*
+
+Tudo verde pro seal:
+- **Stack**: 3 containers up, site **200**. Master local **== origin** (`56029a3`) — tudo sincronizado.
+- **Secret scan**: ✅ **limpo** nos 7 commits (sem chaves/JWT/token no diff). `.env` segue gitignored.
+- **PHASE 2/5 (commit/push)**: já feitas incrementalmente (trunk-based direto no master, 7 commits, CI verde cada um) — sem branch/PR, conforme o modelo selado.
+
+Falta só o registro de selagem consolidado no HANDOFF (a próxima sessão lê o mais recente primeiro):
+
+## 🤖 Claude *(15:45:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "\u2192 **MANTER `-0.40` provis\u00f3rio** (mudar agora = trocar chute por chute); deixar o `flow-capitulation.log` acumular e **v2 = migrar pra z-score/percentil\n+ flip no flowService** (vai a gate quando houver dado). N\u00c3O recalibrei o n\u00famero \u00e0s cegas.",
+  "new_string": "\u2192 **MANTER `-0.40` provis\u00f3rio** (mudar agora = trocar chute por chute); deixar o `flow-capitulation.log` acumular e **v2 = migrar pra z-score/percentil\n+ flip no flowService** (vai a gate quando houver dado). N\u00c3O recalibrei o n\u00famero \u00e0s cegas.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-04 (fim de sess\u00e3o grande: Trend + Or\u00e1culo de Fluxo + agente + pesquisa)\n**7 commits no master (todos CI verde), trunk-based:** `453c7d6` ativa\u00e7\u00e3o Trend Following \u00b7 `e5ef595` id7 vende TREND_QTY \u00b7 `f833032` Or\u00e1culo de\nFluxo v1 (shadow) \u00b7 `937172b` card Taker Flow \u00b7 `6f97209` get_wallet enxuto (\u221297.7% tokens) \u00b7 `72b1a19` gate de fluxo sniper na id2 \u00b7 `56029a3` card reflete o gate.\n**+ Deep-research** (filtro de exaust\u00e3o + parecer Spot Margin) entregue em `~/RESEARCH-flow-and-margin.md` (s\u00edntese manual \u2014 harness travou no limite semanal).\n**Estado vivo:** id2 (RSI<25 + !=bear + !=trend + **gate de fluxo** !capitula\u00e7\u00e3o) \u00b7 id3 (RSI>75 + !=trend) \u00b7 id6/id7 (Trend SMA50/200, golden/death) \u2014 **TODAS ATIVAS**;\nregime=bear \u2192 MR inerte; trend inerte (above=false). Stack 8090 / site 200. **NEXT (prioridade):** (1) **calibrar o gate de fluxo** quando o `flow-capitulation.log`\nacumular distribui\u00e7\u00e3o \u2192 v2 z-score/percentil+flip no flowService (N\u00c3O chutar n\u00famero); (2) observar 1 golden\u2192death real do trend antes de calibrar size;\n(3) **persistir TREND_QTY** antes de subir size (vol\u00e1til hoje); (4) Spot Margin short = **DESACONSELHADO** (ver pesquisa). Tudo runtime/PATCH (reaplicar p\u00f3s-`make nuke`:\n`setup-trend` \u2192 `activate-trend` \u2192 `setup-flow-gate`). **0 PRs abertos** (trunk-based). D\u00edvida menor: 3 scripts de ops c/ helpers duplicados (extrair `_lib.js`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:45:26)*
+
+
+## 🤖 Claude *(15:45:32)*
+
+Sessão selada. 🤝
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-04
+───────────────────────────────────────────────────
+Commits     : 7 · CI verde  |  master (trunk-based, sem branch/PR)
+              453c7d6 feat(trend)  ativação Trend Following (coordenação+persist. cross)
+              e5ef595 fix(trend)   id7 vende TREND_QTY (resolve risco nº1)
+              f833032 feat(oracle) Oráculo de Fluxo v1 (shadow)
+              937172b feat(ui)     card Taker Flow no /intelligence
+              6f97209 perf(mcp)    get_wallet enxuto (−97.7% input do agente)
+              72b1a19 feat(oracle) gate de fluxo SNIPER na id2 (fail-safe provado)
+              56029a3 fix(ui)      card reflete o gate ativo
+HANDOFF.md  : ✅ atualizado (record por commit + seal consolidado)
+Memory      : 5 (flow-oracle, regime-gate, trend-following, agent-token-economics, índice)
+              + doc ~/RESEARCH-flow-and-margin.md (deep-research sintetizado)
+Secret scan : ✅ limpo (.env gitignored; sem chaves/JWT/token no diff)
+PRs abertos : 0 (trunk-based — commit direto no master via token HTTPS)
+Push        : ✅ origin sincronizado (HEAD = origin = 56029a3)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Ajustes vs. o template do ritual** (honestidade): PHASE 2/5 do skill falam em *branch + PR + push SSH*, mas o **modelo selado é trunk-based** (memória `tradeux-orchestration-model`) — então os 7 commits foram direto no master via token HTTPS, com gate QA+TL no lugar do PR-review. Nada órfão: árvore limpa (só o `docs/` blueprint untracked, intencional).
+
+**O que a próxima sessão pega como NEXT:**
+1. **Calibrar o gate de fluxo** quando o `flow-capitulation.log` acumular distribuição → v2 z-score/percentil+flip (não chutar número).
+2. **Observar 1 golden→death real** do trend antes de calibrar size.
+3. **Persistir `TREND_QTY`** antes de subir o size (volátil hoje).
+4. Spot Margin short = **desaconselhado** (parecer na pesquisa).
+
+Não precisou do harness — a pesquisa já estava entregue. Sessão fechada com tudo no ar, CI verde e zero estado órfão. Foi produtiva. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -11188,5 +11489,6 @@ Marcando a virada e escrevendo o relatório:
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-04 - d2a8709e-0510-4409-91e4-942a7cea3139]]
+> * **Sessão Anterior**: [[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]
+> * **Próxima Sessão**: [[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]
 %% --- TIMELINE END --- %%

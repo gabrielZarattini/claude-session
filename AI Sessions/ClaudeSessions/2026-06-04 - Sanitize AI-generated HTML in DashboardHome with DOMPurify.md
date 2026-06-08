@@ -1,4 +1,4 @@
-# Sanitize AI-generated HTML in DashboardHome with DOMPurify
+# [[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify|Sanitize AI-generated HTML in DashboardHome with DOMPurify]]
 **Date:** 2026-06-04 | **Session ID:** `a5c74064-c02c-4534-8380-0219a737b4b6`
 
 ---

@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 515
-> * **Sessões do Claude**: 478
+> * **Total de Sessões Registradas**: 517
+> * **Sessões do Claude**: 480
 > * **Sessões do Gemini**: 37
 
 ---
@@ -60,7 +60,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-08 - handson]]` - *2026-06-08*
+*   `[[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]` - *2026-06-08*
 *   `[[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]` - *2026-06-08*
+*   `[[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]` - *2026-06-08*
 *   `[[2026-06-07 - handson]]` - *2026-06-07*
 *   `[[2026-06-06 - handson]]` - *2026-06-06*
 *   `[[2026-06-05 - handson]]` - *2026-06-05*
@@ -69,9 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-04 - agent-afdab1e43d576bbeb]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-afd0f32633835c2c5]]` - *2026-06-04*
 *   `[[2026-06-04 - agent-afbbb5f8394aca77b]]` - *2026-06-04*
-*   `[[2026-06-04 - agent-afab6f7baeffaff8f]]` - *2026-06-04*
-*   `[[2026-06-04 - agent-af7011175fc5d99e0]]` - *2026-06-04*
-*   *... e mais 479 sessões nessa categoria.*
+*   *... e mais 481 sessões nessa categoria.*
 
 ---
 
@@ -263,7 +263,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-08 - handson]]` (GeminiSessions)
+*   `[[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]` (ClaudeSessions)
 *   `[[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]` (ClaudeSessions)
+*   `[[2026-06-08 - 410f5676-07a2-443f-b17c-ed9ac8804900]]` (ClaudeSessions)
 *   `[[2026-06-07 - handson]]` (GeminiSessions)
 *   `[[2026-06-06 - handson]]` (GeminiSessions)
 *   `[[2026-06-05 - handson]]` (GeminiSessions)
