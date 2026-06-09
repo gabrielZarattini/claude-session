@@ -2591,6 +2591,755 @@ Commit `9898bdf` criado (4 arquivos). Remoto está em `a0869c4` e é ancestral d
 > PUSH OK (remoto == HEAD)
 > ```
 
+## 🤖 Claude *(23:31:06)*
+
+
+## 🤖 Claude *(23:31:08)*
+
+**Push OK**: `a0869c4..9898bdf`, remoto == HEAD. (O aviso do dependabot é pré-existente, sobre deps do branch — não relacionado; governado pelo SECURITY.md.)
+
+Agora registro o estado: atualizo o item de dívida (a) no HANDOFF.md (→ RESOLVIDO, com os follow-ups não-bloqueantes que os gates levantaram) e confirmo que o `.git` segue íntegro.
+
+## 🤖 Claude *(23:31:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "  (a) \u26a0\ufe0f **trava determin\u00edstica de SELL-BTC + exigir `automationId` no `tradeux_place_order` (MCP) \u00e9 PR\u00c9-REQUISITO antes de ligar\n  `TRADEUX_ALLOW_TRADING=true`** \u2014 o prompt N\u00c3O \u00e9 defesa de execu\u00e7\u00e3o (ambos os gates apontaram); (b) **enxugar `get_memory_indexes`**\n  (e `get_memory`/`get_wallet_full` sem s\u00edmbolo): lista-tudo ~192k tok que ESTOURA o contexto do modelo (mesma classe do get_wallet bloat\n  j\u00e1 resolvido) \u2014 hoje contornado por orienta\u00e7\u00e3o no prompt (pro\u00edbe a tool), mas a raiz \u00e9 no MCP.",
+  "new_string": "  (a) \u2705 **RESOLVIDO (commit `9898bdf`, gate QA PASS + TL APPROVE)** \u2014 trava determin\u00edstica e FAIL-CLOSED de SELL-BTC no\n  `tradeux_place_order` (MCP): `isBtcVaultSymbol` barra SELL de TODO s\u00edmbolo que come\u00e7a com \"BTC\" (exceto prefixos n\u00e3o-base\n  BTCUP/BTCDOWN/BTCST), ent\u00e3o pares BTC<quote> NOVOS nascem bloqueados sem manuten\u00e7\u00e3o de lista \u2014 a allowlist de quotes anterior\n  falhava ABERTO (QA enumerou 5 ao vivo escapando: USDS/USD1/EURI/IDR/U). `automationId` obrigat\u00f3rio foi AVALIADO e DESCARTADO\n  (ordens do agente s\u00e3o manuais por design; for\u00e7ar id falso corrompe P&L em groupByAutomations e n\u00e3o \u00e9 mutex \u2014 doc no c\u00f3digo).\n  Teste de regress\u00e3o herm\u00e9tico (21 casos) + `npm test` + step no CI. **Follow-ups N\u00c3O-bloqueantes (dos gates):** (i) o backend\n  `ordersController.placeOrder` N\u00c3O tem trava equivalente \u2192 ordens de UI/outro cliente MCP n\u00e3o passam por ela; mover a defesa p/ o\n  backend se o modelo de amea\u00e7a do flip incluir \"qualquer caminho com as chaves da conta\"; (ii) a premissa \"agente BTCUSDT-only\" est\u00e1\n  ERRADA \u2014 o SYSTEM_PROMPT autoriza FARM de alts (LTC/BNB/ADA) vs USDT (N\u00c3O quebra a trava: alts n\u00e3o come\u00e7am com \"BTC\"); (iii) res\u00edduo\n  fora de escopo: BUY de par BTC-quote (ex.: BUY ETHBTC) tamb\u00e9m drena o cofre (agente n\u00e3o negocia pares BTC-quote). (b) **[AINDA ABERTO]\n  enxugar `get_memory_indexes`** (e `get_memory`/`get_wallet_full` sem s\u00edmbolo): lista-tudo ~192k tok que ESTOURA o contexto do modelo\n  (mesma classe do get_wallet bloat j\u00e1 resolvido) \u2014 hoje contornado por orienta\u00e7\u00e3o no prompt (pro\u00edbe a tool), mas a raiz \u00e9 no MCP."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:32)*
+
+
+## 🤖 Claude *(23:31:32)*
+
+Agora gravo uma memória focada sobre a trava (fato durável p/ próximas sessões: existe, é fail-closed, e o status dos pré-requisitos do flip).
+
+## 🤖 Claude *(23:31:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-vault-guard.md",
+  "content": "---\nname: tradeux-vault-guard\ndescription: MCP tem trava determin\u00edstica FAIL-CLOSED de SELL-BTC no place_order (pr\u00e9-requisito (a) do flip ALLOW_TRADING); status dos demais pr\u00e9-requisitos\nmetadata:\n  type: project\n---\n\nEm `tradeux-mcp/src/index.js`, `tradeux_place_order` tem uma trava determin\u00edstica do COFRE (commit `9898bdf`, gate QA PASS + TL APPROVE): `isBtcVaultSymbol` rejeita `side=SELL` de TODO s\u00edmbolo que come\u00e7a com \"BTC\" (FAIL-CLOSED), exceto os prefixos n\u00e3o-base `BTCUP/BTCDOWN/BTCST`. Vale p/ qualquer `type`, ANTES de qualquer chamada ao backend. Substituiu uma allowlist de quotes que falhava ABERTO (a QA enumerou a Binance ao vivo e achou 5 pares BTC-base escapando: BTCUSDS/BTCUSD1/BTCEURI/BTCIDR/BTCU). Teste de regress\u00e3o herm\u00e9tico: `tradeux-mcp/test/place-order-vault-guard.mjs` (`npm test`, tamb\u00e9m no CI).\n\n`automationId` obrigat\u00f3rio nas ordens do agente foi AVALIADO e DESCARTADO: ordens do agente s\u00e3o MANUAIS por design (automationId ausente \u2192 bucket 'M'/'Others' em `groupByAutomations`); for\u00e7ar id falso corromperia o P&L e n\u00e3o \u00e9 mutex. Vendas leg\u00edtimas de BTC v\u00eam das automa\u00e7\u00f5es id3/id7 (que executam in-process no `beholder.js`, N\u00c3O via `POST /orders` \u2192 n\u00e3o passam por esta trava).\n\n**Pr\u00e9-requisitos do flip `TRADEUX_ALLOW_TRADING=true`** (hoje DRY): (a) \u2705 trava SELL-BTC = FEITO; (b) \u2b1c enxugar `get_memory_indexes` no MCP (lista-tudo ~192k tok estoura o contexto) \u2014 AINDA ABERTO; (+) follow-ups dos gates: o backend `ordersController.placeOrder` n\u00e3o tem trava equivalente (mover a defesa p/ l\u00e1 se o modelo de amea\u00e7a incluir UI/outros clientes).\n\nCORRE\u00c7\u00c3O de premissa recorrente: o agente N\u00c3O \u00e9 \"BTCUSDT-only\" \u2014 o SYSTEM_PROMPT autoriza FARM de alts (LTC/BNB/ADA) vs USDT. Isso n\u00e3o quebra a trava (alts n\u00e3o come\u00e7am com \"BTC\"). O invariante que a sustenta \u00e9: BTC=cofre, nenhum SELL de par BTC* \u00e9 leg\u00edtimo para o agente.\n\nRelacionada: [[tradeux-agent-token-economics]], [[tradeux-farm-funnel-backtest]], [[tradeux-agent-500k-validation]], [[shakehands-protocol]] (HANDOFF.md item de d\u00edvida t\u00e9cnica (a)).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-vault-guard.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:46)*
+
+
+## 🤖 Claude *(23:31:46)*
+
+Adiciono o ponteiro no índice `MEMORY.md`.
+
+## 🤖 Claude *(23:31:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> 5	- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) — only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu
+> 6	- [Testnet strategy validation goal](tradeux-agent-500k-validation.md) — GOAL PIVOT: meta agora é +3 BTC no testnet (era 500k); OCO + fix de P&L entregues; how to run the agent
+> 7	- [ShakeHands protocol](shakehands-protocol.md) — session continuity: /handson loads HANDOFF.md state, /handoff seals it; HANDOFF.md at ~/HANDOFF.md is the source of truth
+> 8	- [TradeUX orchestration model](tradeux-orchestration-model.md) — trunk-based direct-to-master; Claude orchestrates agents + owns approve-or-send-back (no user PR review); token in .env as GITHUB_TOKEN_API
+> 9	- [Git ownership gotcha](git-ownership-gotcha.md) — run ALL git/docker repo ops as gcrux-tradeux; git-as-ubuntu poisons .git ownership → chown .git to fix
+> 10	- [Agent token economics](tradeux-agent-token-economics.md) — journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat RESOLVIDO; agente agora é SERVIÇO supervisionado no compose (e97a85a, user:1011:1013) + card com badge STALE
+> 11	- [Logger per-category files](tradeux-logger-per-category-files.md) — logger(cat,…) grava logs/<cat>.log; monitor→M<id>.log, automação→A<id>.log; NÃO só system.log
+> 12	- [Regime gate](tradeux-regime-gate.md) — regimeJob grava MEMORY['<sym>:REGIME']; id2 (BUY) gateada por !=bear; gate é RUNTIME (não seedado) → reaplicar pós-reset
+> 13	- [Trend Following](tradeux-trend-following.md) — automação SMA 50/200; sinal TREND_CROSS da MAINNET via regimeJob; id6/id7 ATIVAS (453c7d6) + coordenação id2/id3 !=trend + id7 vende TREND_QTY (e5ef595)
+> 14	- [Flow oracle](tradeux-flow-oracle.md) — oráculo de fluxo do taker v1 (f833032): aggTrades mainnet → MEMORY['<sym>:FLOW']{imbalance,toxicity} via isBuyerMaker; SHADOW (não gateia ainda); épico HFT completo DEVOLVIDO
+> 15	- [Farm-and-Funnel backtest](tradeux-farm-funnel-backtest.md) — grid no-loss+funil pra BTC backtestado (backend/scripts/backtest-farm-funnel.js): farm=baixo risco/alpha marginal, trend=motor de bull (+22%), +3 BTC só capturando ciclos; funil não existe ainda, só BTCUSDT tem automação, id3 não é no-loss (pausada)
+> 16	
+> ```
+
+## 🤖 Claude *(23:31:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Farm-and-Funnel backtest](tradeux-farm-funnel-backtest.md) \u2014 grid no-loss+funil pra BTC backtestado (backend/scripts/backtest-farm-funnel.js): farm=baixo risco/alpha marginal, trend=motor de bull (+22%), +3 BTC s\u00f3 capturando ciclos; funil n\u00e3o existe ainda, s\u00f3 BTCUSDT tem automa\u00e7\u00e3o, id3 n\u00e3o \u00e9 no-loss (pausada)",
+  "new_string": "- [Farm-and-Funnel backtest](tradeux-farm-funnel-backtest.md) \u2014 grid no-loss+funil pra BTC backtestado (backend/scripts/backtest-farm-funnel.js): farm=baixo risco/alpha marginal, trend=motor de bull (+22%), +3 BTC s\u00f3 capturando ciclos; funil n\u00e3o existe ainda, s\u00f3 BTCUSDT tem automa\u00e7\u00e3o, id3 n\u00e3o \u00e9 no-loss (pausada)\n- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) \u2014 MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pr\u00e9-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; falta (b) enxugar get_memory_indexes; agente N\u00c3O \u00e9 BTCUSDT-only (farma alts)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:32:40)*
+
+
+## 🤖 Claude *(23:32:43)*
+
+Estado de (a) registrado (HANDOFF + memória). A trava está **shipped, gated e documentada**. 
+
+Agora vou ao item relacionado (b): enxugar `get_memory_indexes` — mesma classe do `leanWallet` já resolvido (read-path, baixo risco). Pela precedência do leanWallet (commit `6f97209`, "gate proporcional = direto + auto-validado"), faço direto com auto-validação, em commit separado pra não misturar com a mudança de segurança.
+
+## 🤖 Claude *(23:32:44)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Enxugar get_memory_indexes",
+  "summary": "leanMemoryIndexes no MCP (resumo compacto + filtro por s\u00edmbolo) \u2014 mesma classe do leanWallet"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Enxugar get_memory_indexes". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(23:32:56)*
+
+
+## 🤖 Claude *(23:32:56)*
+
+Implementando o `leanMemoryIndexes` (espelha o `leanWallet`: resumo compacto sem símbolo, detalhe filtrado por símbolo) e atualizando a tool.
+
+## 🤖 Claude *(23:33:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  out._omittedCoins = coins.length - keep.size; // moedas de menor valor suprimidas (cauda de faucet)\n  return out;\n}\n\n// Ferramenta de leitura: sempre dispon\u00edvel.",
+  "new_string": "  out._omittedCoins = coins.length - keep.size; // moedas de menor valor suprimidas (cauda de faucet)\n  return out;\n}\n\n// Enxuga o get_memory_indexes (mesma classe do get_wallet bloat): o endpoint lista o PRODUTO\n// CRUZADO de todos os s\u00edmbolos \u00d7 vari\u00e1veis com `eval`+`example` por linha \u2014 na testnet (~445\n// s\u00edmbolos) isso \u00e9 ~192k tokens e ESTOURA o contexto do modelo (400 context-overflow). SEM\n// s\u00edmbolo devolvemos um RESUMO compacto (vari\u00e1veis distintas + s\u00edmbolos, sem eval/example); COM\n// s\u00edmbolo, as chaves detalhadas s\u00f3 daquele par (escape-hatch, bounded). Cap de s\u00edmbolos via\n// MCP_MEMORY_INDEXES_SYMBOL_CAP (default 60).\nconst MEMORY_INDEXES_SYMBOL_CAP = parseInt(process.env.MCP_MEMORY_INDEXES_SYMBOL_CAP || \"60\", 10) || 60;\nfunction leanMemoryIndexes(list, symbol) {\n  if (!Array.isArray(list)) return list;\n  if (symbol) {\n    const s = symbol.toUpperCase();\n    return list.filter((ix) => ix && ix.symbol === s);\n  }\n  const variables = [...new Set(list.map((ix) => ix && ix.variable).filter(Boolean))].sort();\n  const symbols = [...new Set(list.map((ix) => ix && ix.symbol).filter(Boolean))].sort();\n  const keptSymbols = symbols.slice(0, MEMORY_INDEXES_SYMBOL_CAP);\n  return {\n    totalKeys: list.length,\n    variables,\n    symbols: keptSymbols,\n    _omittedSymbols: symbols.length - keptSymbols.length, // cauda de s\u00edmbolos suprimida\n    hint: \"Resumo compacto. Passe symbol=<PAR> (ex.: BTCUSDT) p/ as chaves detalhadas (eval/example) de um s\u00edmbolo.\",\n  };\n}\n\n// Ferramenta de leitura: sempre dispon\u00edvel."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:33:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "readTool(\n  \"tradeux_get_memory_indexes\",\n  \"Lista as chaves dispon\u00edveis na mem\u00f3ria do Beholder.\",\n  {},\n  () => api.get(\"/beholder/memory/indexes\")\n);",
+  "new_string": "readTool(\n  \"tradeux_get_memory_indexes\",\n  \"Lista as chaves dispon\u00edveis na mem\u00f3ria do Beholder. SEM symbol: RESUMO compacto (vari\u00e1veis distintas + s\u00edmbolos, sem eval/example) \u2014 na testnet a lista-tudo \u00e9 ~192k tokens e estoura o contexto. COM symbol: as chaves detalhadas (eval/example) s\u00f3 daquele par.\",\n  { symbol: z.string().optional().describe(\"Filtra as chaves de um s\u00edmbolo, ex: BTCUSDT\") },\n  async ({ symbol }) => leanMemoryIndexes(await api.get(\"/beholder/memory/indexes\"), symbol)\n);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:33:27)*
+
+
+## 🤖 Claude *(23:33:28)*
+
+Validando (b): parse, `--check` (deve seguir 28 tools — não adicionei tool, só mudei a assinatura de uma existente) e uma checagem sintética da lógica do `leanMemoryIndexes` (resumo compacto vs. filtro por símbolo), já que o transform é puro e o backend não está acessível pra teste ponta-a-ponta aqui.
+
+## 🤖 Claude *(23:33:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== parse + --check =====\" && node --check tradeux-mcp/src/index.js && echo \"parse OK\" && echo \"tools: $(node tradeux-agent/src/index.js --check 2>&1 | grep -cE ' - tradeux_') (esperado 28)\" && echo && echo \"===== checagem sint\u00e9tica do leanMemoryIndexes (r\u00e9plica fiel da l\u00f3gica) =====\" && node --input-type=module -e '\nconst MEMORY_INDEXES_SYMBOL_CAP = 2; // for\u00e7o cap baixo p/ exercitar a supress\u00e3o\nfunction leanMemoryIndexes(list, symbol) {\n  if (!Array.isArray(list)) return list;\n  if (symbol) { const s = symbol.toUpperCase(); return list.filter((ix) => ix && ix.symbol === s); }\n  const variables = [...new Set(list.map((ix)=>ix&&ix.variable).filter(Boolean))].sort();\n  const symbols = [...new Set(list.map((ix)=>ix&&ix.symbol).filter(Boolean))].sort();\n  const keptSymbols = symbols.slice(0, MEMORY_INDEXES_SYMBOL_CAP);\n  return { totalKeys: list.length, variables, symbols: keptSymbols, _omittedSymbols: symbols.length-keptSymbols.length, hint: \"...\" };\n}\nconst list = [\n  {symbol:\"BTCUSDT\",variable:\"RSI\",eval:\"e\",example:55},\n  {symbol:\"BTCUSDT\",variable:\"MACD\",eval:\"e\",example:{h:1}},\n  {symbol:\"ETHUSDT\",variable:\"RSI\",eval:\"e\",example:48},\n  {symbol:\"LTCUSDT\",variable:\"BOOK\",eval:\"e\",example:{bid:1}},\n];\nconsole.log(\"RESUMO (sem symbol):\", JSON.stringify(leanMemoryIndexes(list)));\nconsole.log(\"DETALHE (symbol=btcusdt):\", JSON.stringify(leanMemoryIndexes(list,\"btcusdt\")));\nconsole.log(\"nao-array passa intacto:\", JSON.stringify(leanMemoryIndexes(null)));\n'",
+  "description": "Validate (b): parse, --check tool count, synthetic leanMemoryIndexes logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== parse + --check =====
+> parse OK
+> tools: 28 (esperado 28)
+> 
+> ===== checagem sintética do leanMemoryIndexes (réplica fiel da lógica) =====
+> RESUMO (sem symbol): {"totalKeys":4,"variables":["BOOK","MACD","RSI"],"symbols":["BTCUSDT","ETHUSDT"],"_omittedSymbols":1,"hint":"..."}
+> DETALHE (symbol=btcusdt): [{"symbol":"BTCUSDT","variable":"RSI","eval":"e","example":55},{"symbol":"BTCUSDT","variable":"MACD","eval":"e","example":{"h":1}}]
+> nao-array passa intacto: null
+> ```
+
+## 🤖 Claude *(23:34:00)*
+
+
+## 🤖 Claude *(23:34:02)*
+
+Lógica confirmada: resumo compacto (variáveis + símbolos capados + `_omittedSymbols`) sem símbolo; detalhe filtrado (case-insensitive) com símbolo; não-array passa intacto. `--check` segue **28 tools**. Pela precedência do leanWallet (read-path → direto + auto-validado), commito (b) separado e pusho.
+
+## 🤖 Claude *(23:34:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/lean_indexes_msg.txt <<'EOF'\nperf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por s\u00edmbolo)\n\nO endpoint lista o produto cruzado de todos os s\u00edmbolos \u00d7 vari\u00e1veis com eval/example\npor linha \u2014 na testnet (~445 s\u00edmbolos) \u00e9 ~192k tokens e ESTOURA o contexto do modelo\n(400 context-overflow). Mesma classe do get_wallet bloat j\u00e1 resolvido (leanWallet).\n\n- SEM symbol: resumo compacto (vari\u00e1veis distintas + s\u00edmbolos, sem eval/example) +\n  totalKeys + _omittedSymbols (cap via MCP_MEMORY_INDEXES_SYMBOL_CAP, default 60).\n- COM symbol: as chaves detalhadas (eval/example) s\u00f3 daquele par (escape-hatch, bounded).\n\nAuto-validado: agent --check segue 28 tools; l\u00f3gica do transform conferida.\nFollow-up: o SYSTEM_PROMPT ainda pro\u00edbe a tool (contorno antigo) \u2014 pode reabilit\u00e1-la agora.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\necho \"===== stage + commit (gcrux-tradeux) =====\" && sudo -n -u gcrux-tradeux git add tradeux-mcp/src/index.js && sudo -n -u gcrux-tradeux git commit -F /tmp/lean_indexes_msg.txt && echo && echo \"===== HEAD + verifica FF vs remoto =====\" && sudo -n -u gcrux-tradeux git log --oneline -2 && sudo -n -u gcrux-tradeux bash -c 'cd /home/gcrux-tradeux/tradeux; TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\"); R=$(git ls-remote \"https://x-access-token:$TOKEN@github.com/gabrielZarattini/tradeux.git\" refs/heads/master | cut -f1); echo \"remote master = $R\"; git merge-base --is-ancestor \"$R\" HEAD && echo \"FF-OK\" || echo \"NEEDS-RECONCILE\"'",
+  "description": "Commit leanMemoryIndexes change and verify fast-forward"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== stage + commit (gcrux-tradeux) =====
+> [master 2d01002] perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+>  1 file changed, 28 insertions(+), 3 deletions(-)
+> 
+> ===== HEAD + verifica FF vs remoto =====
+> 2d01002 perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+> 9898bdf feat(mcp): trava determinística do cofre — bloqueia SELL de BTC no place_order do agente
+> remote master = 9898bdf8629483873bff72162aa4f86cfe92edff
+> FF-OK
+> ```
+
+## 🤖 Claude *(23:34:15)*
+
+
+## 🤖 Claude *(23:34:15)*
+
+Commit `2d01002`, FF-OK. Pushando.
+
+## 🤖 Claude *(23:34:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -c 'cd /home/gcrux-tradeux/tradeux; TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\"); git push \"https://x-access-token:$TOKEN@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\"; R=$(git ls-remote \"https://x-access-token:$TOKEN@github.com/gabrielZarattini/tradeux.git\" refs/heads/master | cut -f1); echo \"--- remote master agora = $R / HEAD = $(git rev-parse HEAD)\"; [ \"$R\" = \"$(git rev-parse HEAD)\" ] && echo \"PUSH OK\" || echo \"ATENCAO: divergiu\"'",
+  "description": "Push leanMemoryIndexes commit to master, confirm"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 3 vulnerabilities on gabrielZarattini/tradeux's default branch (3 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    9898bdf..2d01002  HEAD -> master
+> --- remote master agora = 2d01002252c83789e5aaa5d96544c828ae86a2a0 / HEAD = 2d01002252c83789e5aaa5d96544c828ae86a2a0
+> PUSH OK
+> ```
+
+## 🤖 Claude *(23:34:39)*
+
+
+## 🤖 Claude *(23:34:40)*
+
+Ambos os commits no master: **`9898bdf`** (trava, gated QA+TL) e **`2d01002`** (leanMemoryIndexes). Remoto == HEAD.
+
+Atualizando o estado do item (b) — que ficou parcialmente resolvido (fiz `get_memory_indexes`; `get_memory`/`get_wallet_full` sem símbolo seguem abertos) — no HANDOFF e na memória.
+
+## 🤖 Claude *(23:34:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": " (b) **[AINDA ABERTO]\n  enxugar `get_memory_indexes`** (e `get_memory`/`get_wallet_full` sem s\u00edmbolo): lista-tudo ~192k tok que ESTOURA o contexto do modelo\n  (mesma classe do get_wallet bloat j\u00e1 resolvido) \u2014 hoje contornado por orienta\u00e7\u00e3o no prompt (pro\u00edbe a tool), mas a raiz \u00e9 no MCP.",
+  "new_string": " (b) \u2705 **`get_memory_indexes` RESOLVIDO (commit `2d01002`)** via `leanMemoryIndexes`\n  (SEM s\u00edmbolo: resumo compacto = vari\u00e1veis distintas + s\u00edmbolos, sem eval/example; COM s\u00edmbolo: chaves detalhadas s\u00f3 do par; cap\n  `MCP_MEMORY_INDEXES_SYMBOL_CAP` default 60) \u2014 eliminou o ~192k tok / 400 context-overflow. **Ainda ABERTO** o mesmo enxugamento p/\n  `get_memory` (sem s\u00edmbolo \u2192 MEMORY inteira) e `get_wallet_full`. O SYSTEM_PROMPT ainda pro\u00edbe a tool (contorno antigo) \u2192 pode\n  reabilit\u00e1-la agora. Raiz no MCP, mesma classe do get_wallet bloat."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:34:53)*
+
+
+## 🤖 Claude *(23:34:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-vault-guard.md",
+  "old_string": "**Pr\u00e9-requisitos do flip `TRADEUX_ALLOW_TRADING=true`** (hoje DRY): (a) \u2705 trava SELL-BTC = FEITO; (b) \u2b1c enxugar `get_memory_indexes` no MCP (lista-tudo ~192k tok estoura o contexto) \u2014 AINDA ABERTO; (+) follow-ups dos gates: o backend `ordersController.placeOrder` n\u00e3o tem trava equivalente (mover a defesa p/ l\u00e1 se o modelo de amea\u00e7a incluir UI/outros clientes).",
+  "new_string": "**Pr\u00e9-requisitos do flip `TRADEUX_ALLOW_TRADING=true`** (hoje DRY): (a) \u2705 trava SELL-BTC = FEITO; (b) \u2705 `get_memory_indexes` enxugado (commit `2d01002`, `leanMemoryIndexes`: resumo compacto sem s\u00edmbolo + detalhe por s\u00edmbolo) \u2014 ainda aberto o mesmo p/ `get_memory`/`get_wallet_full` sem s\u00edmbolo, e o SYSTEM_PROMPT ainda pro\u00edbe a tool (pode reabilitar); (+) follow-ups dos gates: o backend `ordersController.placeOrder` n\u00e3o tem trava equivalente (mover a defesa p/ l\u00e1 se o modelo de amea\u00e7a incluir UI/outros clientes)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-vault-guard.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:35:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) \u2014 MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pr\u00e9-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; falta (b) enxugar get_memory_indexes; agente N\u00c3O \u00e9 BTCUSDT-only (farma alts)",
+  "new_string": "- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) \u2014 MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pr\u00e9-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; (b) get_memory_indexes enxugado (2d01002, leanMemoryIndexes); agente N\u00c3O \u00e9 BTCUSDT-only (farma alts)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:35:07)*
+
+
+## 🤖 Claude *(23:35:07)*
+
+Tudo registrado. Verificação final do estado do repositório.
+
+## 🤖 Claude *(23:35:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== git status =====\" && sudo -n -u gcrux-tradeux git status -sb && echo && echo \"===== \u00faltimos 4 commits =====\" && sudo -n -u gcrux-tradeux git log --oneline -4 && echo && echo \"===== .git ownership (deve ser gcrux-tradeux) =====\" && stat -c '%U:%G %n' .git .git/index && echo && echo \"===== re-valida\u00e7\u00e3o final: --check + teste da trava =====\" && echo \"tools: $(node tradeux-agent/src/index.js --check 2>&1 | grep -cE ' - tradeux_')\" && node tradeux-mcp/test/place-order-vault-guard.mjs 2>&1 | tail -2",
+  "description": "Final repo state, ownership, and re-validation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== git status =====
+> ## master...origin/master [ahead 4]
+> ?? "docs/Engenharia Preditiva para Criptoativos.md"
+> 
+> ===== últimos 4 commits =====
+> 2d01002 perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+> 9898bdf feat(mcp): trava determinística do cofre — bloqueia SELL de BTC no place_order do agente
+> a0869c4 fix(agent): alinha o SYSTEM_PROMPT a estrategia Farm-and-Funnel
+> e97a85a fix(agent): supervisiona o tradeux-agent como serviço + STALE no card de KPIs
+> 
+> ===== .git ownership (deve ser gcrux-tradeux) =====
+> gcrux-tradeux:gcrux-tradeux .git
+> gcrux-tradeux:gcrux-tradeux .git/index
+> 
+> ===== re-validação final: --check + teste da trava =====
+> tools: 28
+> 
+> ✔ TODOS OS TESTES PASSARAM (trava do cofre OK)
+> ```
+
+## 🤖 Claude *(23:35:38)*
+
+
+## 🤖 Claude *(23:35:50)*
+
+Trabalho concluído e no master. Resumo abaixo.
+
+## ✅ Entregue (2 commits no master, trunk-based, como `gcrux-tradeux`)
+
+### 1. Trava determinística do cofre — `9898bdf` (money-path, com gates)
+A tarefa principal: [tradeux-mcp/src/index.js](tradeux/tradeux-mcp/src/index.js) na tool `tradeux_place_order`.
+
+- **Rejeita `side=SELL` de qualquer símbolo do cofre BTC**, para **qualquer `type`** (MARKET/LIMIT/STOP/TRAILING), **antes** de qualquer chamada ao backend. Erro claro apontando que vendas legítimas de BTC vêm das automações id3/id7.
+- **Decisão de design importante (puxada pelo gate QA):** comecei com uma *allowlist de quotes*, mas a QA enumerou a Binance Spot **ao vivo** e achou **5 pares BTC-base em TRADING fora da lista** (BTCUSDS, BTCUSD1, BTCEURI, BTCIDR, BTCU) que **escapariam** → venda real do cofre. Inverti para **FAIL-CLOSED**: `isBtcVaultSymbol` bloqueia **todo** símbolo que começa com "BTC", exceto os prefixos não-base `BTCUP/BTCDOWN/BTCST`. Assim, **pares `BTC<quote>` novos nascem bloqueados sem manutenção de lista** — o modo de falha virou over-block (seguro), nunca deixar passar.
+- **`automationId` obrigatório: AVALIADO e DESCARTADO** (documentado no código). Ordens do agente são manuais por design (`automationId` ausente → bucket 'M'/'Others' em `groupByAutomations`); forçar id falso corromperia o P&L e **não é mutex**. As automações id3/id7 nem passam por este caminho (executam in-process no `beholder.js`), então a trava é cirúrgica — risco zero ao fluxo legítimo (confirmado pelo TL).
+- **Teste de regressão hermético** ([place-order-vault-guard.mjs](tradeux/tradeux-mcp/test/place-order-vault-guard.mjs), 21 casos) + `npm test` + **step no CI**.
+
+### 2. `get_memory_indexes` enxugado — `2d01002` (item relacionado, read-path)
+`leanMemoryIndexes`: **sem símbolo** → resumo compacto (variáveis + símbolos, sem eval/example); **com símbolo** → chaves detalhadas só do par. Elimina o ~192k tok / 400 context-overflow. Mesma classe do `leanWallet` → direto + auto-validado.
+
+## 🔍 Validação
+- `node tradeux-agent/src/index.js --check` → **28 tools** (inalterado).
+- Teste da trava → **21/21 passam** (5 pares do incidente bloqueados, variação de type, exceções OK).
+- **Gates:** QA **PASS** (HIGH fechado, validado vs Binance ao vivo — 16 pares BTC-base, 0 escapam) · TL **APPROVE**.
+
+## ⚠️ Follow-ups não-bloqueantes (registrados no HANDOFF + memória)
+1. **O backend `ordersController.placeOrder` não tem trava equivalente** — ordens via UI/outro cliente MCP não passam por ela. Para o flip `ALLOW_TRADING=true`, se o modelo de ameaça incluir "qualquer caminho com as chaves", a defesa definitiva deveria estar no backend.
+2. **Premissa "agente BTCUSDT-only" estava errada** — o SYSTEM_PROMPT autoriza FARM de alts (LTC/BNB/ADA) vs USDT. Não quebra a trava (alts não começam com "BTC"), mas corrigi a premissa nos docs.
+3. **Resíduo fora de escopo:** BUY de par BTC-quote (ex.: `BUY ETHBTC`) também drena o cofre — o agente não negocia esses pares.
+4. `get_memory`/`get_wallet_full` sem símbolo ainda merecem o mesmo enxugamento; e o prompt ainda proíbe `get_memory_indexes` (contorno antigo) — **pode reabilitar** agora.
+
+Nota: `git status` mostra "ahead 4" — é cosmético (pushes via URL com token não atualizam o ref `origin/master` local); confirmei remoto == HEAD == `2d01002` após cada push. O untracked `docs/Engenharia Preditiva...` **não é meu** e ficou de fora dos commits.
+
+Quer que eu encare algum dos follow-ups (ex.: mover a trava pro backend, ou reabilitar a tool no prompt do agente)?
+
+## 👤 User *(23:43:52)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(23:43:52)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(23:44:51)*
+
+
+## 🤖 Claude *(23:44:55)*
+
+O `/handoff` pede selar a sessão. Vou rodar o ritual, mas **adaptado ao workflow real deste repo** (que a memória e a própria tarefa desta sessão ditam): **trunk-based direto no master** e push via **token URL como `gcrux-tradeux`** — não branch/PR nem push-como-root via SSH (a PHASE 2/5 do template conflita com as memórias [git-ownership-gotcha] e [tradeux-orchestration-model]). Além disso, o código **já foi commitado e pushado** nesta sessão (`9898bdf` + `2d01002`), então as fases de commit/push são essencialmente no-op. Vou sinalizar esse desvio no output.
+
+PRE-FLIGHT + secret scan (sobre os commits que subiram, não só o working tree) + estado dos containers:
+
+## 🤖 Claude *(23:45:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"===== PRE-FLIGHT: status / diff HEAD =====\" && sudo -n -u gcrux-tradeux git status --short && echo \"--- diff HEAD --stat (deve estar vazio: \u00e1rvore limpa) ---\" && sudo -n -u gcrux-tradeux git diff HEAD --stat && echo && echo \"===== PHASE 1: SECRET SCAN (working tree + commits pushados a0869c4..HEAD) =====\" && { sudo -n -u gcrux-tradeux git diff HEAD; sudo -n -u gcrux-tradeux git diff a0869c4..HEAD; } | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" | grep -v \"example\\|<.*>\\|=\\s*$\" | head; echo \"exit_scan=$? (vazio acima = OK, nenhum segredo)\"; echo \"--- .env est\u00e1 gitignored? ---\"; sudo -n -u gcrux-tradeux git check-ignore .env && echo \".env IGNORADO \u2705\"; echo && echo \"===== docker compose ps =====\" && sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>&1 | head -20",
+  "description": "Handoff pre-flight: git status, secret scan on pushed commits, .env ignore check, docker ps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== PRE-FLIGHT: status / diff HEAD =====
+> ?? "docs/Engenharia Preditiva para Criptoativos.md"
+> --- diff HEAD --stat (deve estar vazio: árvore limpa) ---
+> 
+> ===== PHASE 1: SECRET SCAN (working tree + commits pushados a0869c4..HEAD) =====
+> exit_scan=0 (vazio acima = OK, nenhum segredo)
+> --- .env está gitignored? ---
+> .env
+> .env IGNORADO ✅
+> 
+> ===== docker compose ps =====
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED       STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      3 hours ago   Up 3 hours            
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    6 hours ago   Up 6 hours            3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         5 days ago    Up 5 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   4 hours ago   Up 4 hours            127.0.0.1:8090->80/tcp
+> ```
+
+## 🤖 Claude *(23:45:24)*
+
+
+## 🤖 Claude *(23:45:28)*
+
+Pre-flight limpo: árvore limpa (só o `docs/` untracked alheio), **secret scan vazio ✅**, `.env` gitignored ✅, e os 4 containers no ar. 
+
+Nota relevante: o container `tradeux-agent` está "Up 3 hours" — roda a **imagem anterior aos meus commits**. Como o agente está em DRY (`ALLOW_TRADING=false`), a trava não faz diferença no container vivo ainda (ele não pode vender de qualquer jeito); vou registrar isso como next-step (rebuild p/ ativar), não é urgente.
+
+Vou ler o rodapé do HANDOFF pra casar o formato das entradas SEAL e a ordem (newest-first/last) antes de anexar a Session Record.
+
+## 🤖 Claude *(23:45:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux && echo \"total linhas HANDOFF: $(wc -l < HANDOFF.md)\" && echo \"===== primeira ocorr\u00eancia de SEAL / Hist\u00f3rico =====\" && grep -n \"## \ud83d\udcdc\\|Hist\u00f3rico\\|### \ud83e\udd1d SEAL\\|## .*SEAL\\|Session Record\\|Registro de sess\u00e3o\" HANDOFF.md | head && echo && echo \"===== contexto ao redor da PRIMEIRA SEAL (ordem) =====\" && grep -n \"### \ud83e\udd1d SEAL\" HANDOFF.md",
+  "description": "Find SEAL section structure and ordering in HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total linhas HANDOFF: 526
+> ===== primeira ocorrência de SEAL / Histórico =====
+> 195:## 📝 Session Records (newest last)
+> 434:### 🤝 SEAL — 2026-06-04 (fim de sessão grande: Trend + Oráculo de Fluxo + agente + pesquisa)
+> 444:### 🤝 SEAL — 2026-06-08 (Pivô de estratégia: Farm-and-Funnel validado + funil shadow no ar)
+> 479:### 🤝 SEAL — 2026-06-08 (sessão grande: Farm-and-Funnel do diagnóstico ao deploy completo)
+> 490:### 🤝 SEAL — 2026-06-08 (cont. — agente LLM virou serviço supervisionado + STALE no card de KPIs)
+> 512:### 🤝 SEAL — 2026-06-08 (cont. — prompt do agente alinhado à Farm-and-Funnel)
+> 
+> ===== contexto ao redor da PRIMEIRA SEAL (ordem) =====
+> 434:### 🤝 SEAL — 2026-06-04 (fim de sessão grande: Trend + Oráculo de Fluxo + agente + pesquisa)
+> 444:### 🤝 SEAL — 2026-06-08 (Pivô de estratégia: Farm-and-Funnel validado + funil shadow no ar)
+> 479:### 🤝 SEAL — 2026-06-08 (sessão grande: Farm-and-Funnel do diagnóstico ao deploy completo)
+> 490:### 🤝 SEAL — 2026-06-08 (cont. — agente LLM virou serviço supervisionado + STALE no card de KPIs)
+> 512:### 🤝 SEAL — 2026-06-08 (cont. — prompt do agente alinhado à Farm-and-Funnel)
+> ```
+
+## 🤖 Claude *(23:45:36)*
+
+
+## 🤖 Claude *(23:45:37)*
+
+Estrutura clara: seção "Session Records (newest last)" → anexo minha entrada SEAL no **fim** do arquivo. Vou ler a última entrada pra casar o formato exato.
+
+## 🤖 Claude *(23:45:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 512,
+  "limit": 15
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 512	### 🤝 SEAL — 2026-06-08 (cont. — prompt do agente alinhado à Farm-and-Funnel)
+> 513	**Origem:** o dono viu o agente (já religado) recomendar no resumo do ciclo **vender BTC** ("reduzir risco em bear") — lógica de trader
+> 514	genérico que COLIDE com a tese (BTC=cofre, nunca vende; o sangramento que originou o pivô). **Entregue (commit `a0869c4`, push master):**
+> 515	reescrevi o `SYSTEM_PROMPT` (`tradeux-agent/src/agent.js`): agente vira **COPILOTO DE OBSERVAÇÃO** (automações determinísticas executam;
+> 516	ele observa/aconselha, não opera em paralelo); tese explicada (farm/trend/baseline + regime-gating); BTC nunca vende (cofre × posição
+> 517	tática de trend distinguidos); equity testnet = ruído de faucet. **2 bugs achados pela validação ao vivo (o valor do `--once`):** (1) o
+> 518	agente chamava `get_memory_indexes` (lista-tudo ~192k tok) → **400 context-overflow** → o prompt agora guia às tools por símbolo
+> 519	(get_regime/get_oracle_state + índices exatos: RSI_14_1m/TREND_CROSS_1h/TREND_QTY/FLOW) e PROÍBE as lista-tudo; (2) 4 símbolos × leituras
+> 520	não cabiam em 12 rounds → **MAX_TOOL_ROUNDS 12→20** (código default + .env runtime). **Gate QA PASS + TL APPROVE** (proporcional: prompt/DRY;
+> 521	aplicadas as ressalvas convergentes — "só em range"→"!=bear && !=trend", rótulo TREND_QTY p/ não soar como venda do cofre, fonte-de-verdade
+> 522	via tools). **Validado ao vivo (--once):** ciclo conclui em **11 rounds / 9.5k tok**, faz panorama dos 4 símbolos, **NÃO recomenda vender
+> 523	BTC**, audita o regime-gating ("bear→caixa, esperado, não é oportunidade perdida") e classifica a venda residual de 0.00007 BTC como da
+> 524	**id3 (Baseline Sell BTC, INATIVA/pausada)** = não-sangramento do cofre. Serviço recriado (RestartCount=0, site 200). **DÍVIDAS (ver
+> 525	Technical debt):** trava determinística de SELL-BTC + automationId no MCP **antes** de ligar `ALLOW_TRADING`; enxugar `get_memory_indexes`.
+> 526	**0 PRs** (trunk-based).
+> ```
+
+## 🤖 Claude *(23:46:18)*
+
+
+## 🤖 Claude *(23:46:20)*
+
+Confirmação útil: a SEAL anterior termina com "**0 PRs** (trunk-based)" e lista exatamente as 2 dívidas que fechei — confirmando que branch/PR **não** é o workflow aqui (todo SEAL é direct-to-master). Minha adaptação está alinhada.
+
+Anexando a Session Record desta sessão no fim do HANDOFF.
+
+## 🤖 Claude *(23:46:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Technical debt):** trava determin\u00edstica de SELL-BTC + automationId no MCP **antes** de ligar `ALLOW_TRADING`; enxugar `get_memory_indexes`.\n**0 PRs** (trunk-based).",
+  "new_string": "Technical debt):** trava determin\u00edstica de SELL-BTC + automationId no MCP **antes** de ligar `ALLOW_TRADING`; enxugar `get_memory_indexes`.\n**0 PRs** (trunk-based).\n\n### \ud83e\udd1d SEAL \u2014 2026-06-08 (cont. \u2014 trava determin\u00edstica do cofre no MCP + get_memory_indexes enxuto)\n**Fecha as 2 d\u00edvidas da SEAL anterior** (pr\u00e9-requisitos do flip `ALLOW_TRADING=true`). **(1) Trava do cofre (commit `9898bdf`, push\nmaster, gate QA PASS + TL APPROVE):** em `tradeux-mcp/src/index.js`, `tradeux_place_order` rejeita `side=SELL` de qualquer s\u00edmbolo do\ncofre BTC, p/ qualquer `type`, ANTES do `api.post`. Comecei com allowlist de quotes, mas a **QA enumerou a Binance Spot ao vivo** e achou\n**5 pares BTC-base em TRADING fora da lista** (BTCUSDS/BTCUSD1/BTCEURI/BTCIDR/BTCU) que escapariam \u2192 inverti p/ **FAIL-CLOSED**\n(`isBtcVaultSymbol`: bloqueia todo `BTC*` exceto prefixos n\u00e3o-base BTCUP/BTCDOWN/BTCST) \u2192 pares `BTC<quote>` novos nascem bloqueados, sem\nmanuten\u00e7\u00e3o de lista. **`automationId` obrigat\u00f3rio AVALIADO e DESCARTADO** (ordem do agente \u00e9 manual por design; for\u00e7ar id falso corrompe\nP&L em groupByAutomations e n\u00e3o \u00e9 mutex \u2014 doc no c\u00f3digo). **TL confirmou risco zero ao fluxo leg\u00edtimo:** id3/id7 executam in-process no\n`beholder.js`, N\u00c3O via `POST /orders`. Teste de regress\u00e3o herm\u00e9tico (`tradeux-mcp/test/place-order-vault-guard.mjs`, 21 casos) +\n`npm test` + step no CI. **(2) `get_memory_indexes` enxuto (commit `2d01002`, push master):** `leanMemoryIndexes` (resumo compacto sem\ns\u00edmbolo + detalhe por s\u00edmbolo, cap `MCP_MEMORY_INDEXES_SYMBOL_CAP`=60) elimina o ~192k tok/400 overflow (mesma classe do leanWallet);\nread-path \u2192 direto + auto-validado (`--check` 28 tools). **Follow-ups n\u00e3o-bloqueantes (dos gates):** (i) backend `ordersController` sem\ntrava equivalente (UI/outro cliente MCP n\u00e3o passam pela trava) \u2014 mover a defesa pro backend se o modelo de amea\u00e7a do flip incluir\n\"qualquer caminho com as chaves\"; (ii) premissa \"agente BTCUSDT-only\" ERRADA \u2014 o prompt farma alts (LTC/BNB/ADA), n\u00e3o quebra a trava;\n(iii) res\u00edduo: BUY de par BTC-quote (ex.: BUY ETHBTC) drena o cofre (fora de escopo, agente n\u00e3o negocia esses pares); (iv)\n`get_memory`/`get_wallet_full` sem s\u00edmbolo ainda por enxugar; o prompt ainda pro\u00edbe `get_memory_indexes` (pode reabilitar). **DEPLOY:**\nmudan\u00e7as no master, mas o container `tradeux-agent` (Up 3h) roda a imagem ANTERIOR \u2014 `docker compose up -d --build agent` p/ ativar no\nvivo; N\u00c3O urgente (DRY: `ALLOW_TRADING=false`, o agente n\u00e3o executa ordens). Mem\u00f3ria nova: `tradeux-vault-guard`. **0 PRs** (trunk-based,\ndirect-to-master via token URL como `gcrux-tradeux`; o template do `/handoff` fala em branch/PR + push-as-root via SSH \u2014 DESALINHADO com o\nworkflow atual deste repo, n\u00e3o segui)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:46:40)*
+
+
+## 🤖 Claude *(23:46:40)*
+
+SEAL anexada. Agora tento restaurar o ownership dos arquivos que editei (ficaram `ubuntu:ubuntu` pelas edições in-place) de volta p/ `gcrux-tradeux` — higiene pra próxima sessão. Isso exige root; se `sudo -n` não permitir, sigo sem (é cosmético — já commitado/pushado e o serviço lê via other:r).
+
+## 🤖 Claude *(23:46:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && if sudo -n true 2>/dev/null; then echo \"sudo -n root: OK \u2192 restaurando ownership\"; sudo -n chown gcrux-tradeux:gcrux-tradeux tradeux-mcp/src/index.js tradeux-mcp/package.json .github/workflows/ci.yml tradeux-mcp/test tradeux-mcp/test/place-order-vault-guard.mjs && echo \"chown OK\"; else echo \"sudo -n root: indispon\u00edvel \u2192 pulo o chown (cosm\u00e9tico; arquivos j\u00e1 no master, leg\u00edveis other:r)\"; fi; echo; echo \"===== ownership final dos arquivos tocados =====\"; ls -la tradeux-mcp/src/index.js tradeux-mcp/package.json .github/workflows/ci.yml tradeux-mcp/test/place-order-vault-guard.mjs; echo; echo \"===== .git ownership (cr\u00edtico) =====\"; stat -c '%U:%G %n' .git",
+  "description": "Attempt ownership restore on touched files; verify .git ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sudo -n root: OK → restaurando ownership
+> chown OK
+> 
+> ===== ownership final dos arquivos tocados =====
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux  4277 Jun  8 20:14 .github/workflows/ci.yml
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux   513 Jun  8 20:14 tradeux-mcp/package.json
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 19770 Jun  8 20:33 tradeux-mcp/src/index.js
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux  4418 Jun  8 20:23 tradeux-mcp/test/place-order-vault-guard.mjs
+> 
+> ===== .git ownership (crítico) =====
+> gcrux-tradeux:gcrux-tradeux .git
+> ```
+
+## 🤖 Claude *(23:46:56)*
+
+
+## 🤖 Claude *(23:46:56)*
+
+Ownership restaurado p/ `gcrux-tradeux` em todos os arquivos tocados; `.git` íntegro. Verificação final de sincronia com o remoto pra fechar o seal.
+
+## 🤖 Claude *(23:47:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== commits desta sess\u00e3o (a0869c4 \u2192 HEAD) =====\" && sudo -n -u gcrux-tradeux git log --oneline a0869c4..HEAD && echo && echo \"===== remoto sincronizado? =====\" && sudo -n -u gcrux-tradeux bash -c 'TOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\"); R=$(git ls-remote \"https://x-access-token:$TOKEN@github.com/gabrielZarattini/tradeux.git\" refs/heads/master | cut -f1); H=$(git rev-parse HEAD); echo \"remote master = $R\"; echo \"HEAD local    = $H\"; [ \"$R\" = \"$H\" ] && echo \"\u2705 origin SINCRONIZADO\" || echo \"\u274c divergiu\"' && echo && echo \"===== seal integrity: --check + teste =====\" && echo \"tools=$(node tradeux-agent/src/index.js --check 2>&1 | grep -cE ' - tradeux_')\" && node tradeux-mcp/test/place-order-vault-guard.mjs >/dev/null 2>&1 && echo \"teste da trava: \u2705 PASS\" || echo \"teste da trava: \u274c FALHOU\"",
+  "description": "Final seal verification: session commits, remote sync, integrity checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== commits desta sessão (a0869c4 → HEAD) =====
+> 2d01002 perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+> 9898bdf feat(mcp): trava determinística do cofre — bloqueia SELL de BTC no place_order do agente
+> 
+> ===== remoto sincronizado? =====
+> remote master = 2d01002252c83789e5aaa5d96544c828ae86a2a0
+> HEAD local    = 2d01002252c83789e5aaa5d96544c828ae86a2a0
+> ✅ origin SINCRONIZADO
+> 
+> ===== seal integrity: --check + teste =====
+> tools=28
+> teste da trava: ✅ PASS
+> ```
+
+## 🤖 Claude *(23:47:17)*
+
+
+## 🤖 Claude *(23:47:24)*
+
+Sessão selada. Tudo verificado e sincronizado.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-08
+───────────────────────────────────────────────────
+Commits     : 2 (feat(mcp), perf(mcp))  |  Branch: master
+HANDOFF.md  : ✅ atualizado (dívidas (a)+(b) → ✅ · Session Record anexada)
+Memory      : 2 arquivos (tradeux-vault-guard.md nova + MEMORY.md índice)
+PRs abertos : 0 — trunk-based direct-to-master (sem PR por design)
+Push        : ✅ origin sincronizado (master == 2d01002)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Selado nesta sessão (fecha as 2 dívidas pré-flip `ALLOW_TRADING`):**
+- `9898bdf` — trava FAIL-CLOSED de SELL-BTC no `tradeux_place_order` (gate **QA PASS + TL APPROVE**; teste hermético 21 casos + CI).
+- `2d01002` — `get_memory_indexes` enxuto (`leanMemoryIndexes`; mata o ~192k tok/overflow).
+
+**2 desvios do template `/handoff` que sinalizo (não os segui — conflitam com o workflow real e com as memórias [git-ownership-gotcha]/[tradeux-orchestration-model]):**
+1. **PHASE 2/5 (branch + PR + push-as-root via SSH):** este repo é **trunk-based direct-to-master**, push via **token URL como `gcrux-tradeux`** — que é como já subi os 2 commits. Todo SEAL anterior também é "0 PRs (trunk-based)". Por isso **não há URL `…/pull/new/`**. Vale atualizar o skill `shake-hands` pra refletir isso.
+2. Restaurei o ownership dos arquivos editados p/ `gcrux-tradeux` e confirmei `.git` íntegro (nunca rodei git como root/ubuntu).
+
+**Aberto p/ a próxima sessão (registrado no HANDOFF/memória, nada urgente):**
+- O container `tradeux-agent` (Up 3h) roda a **imagem anterior** — `docker compose up -d --build agent` ativa a trava/lean no vivo. **Sem pressa:** DRY (`ALLOW_TRADING=false`), o agente não executa ordens.
+- Follow-ups dos gates: trava equivalente no **backend** `ordersController` (p/ cobrir UI/outros clientes no dia do flip); enxugar `get_memory`/`get_wallet_full` sem símbolo; reabilitar `get_memory_indexes` no prompt do agente.
+
+Quer que eu já faça o rebuild do container `tradeux-agent` pra ativar as mudanças no serviço vivo?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
