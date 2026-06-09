@@ -1305,6 +1305,1429 @@ Conditions confirm the design exactly: every BUY is gated `!=='bear'`. Monitors 
 > -rw-r--r--    1 root     root            75 Jun  8 17:46 M4.log
 > ```
 
+## 🤖 Claude *(03:01:26)*
+
+
+## 🤖 Claude *(03:01:27)*
+
+The log mtimes alone are misleading (monitors only log on subscribe). But there's a decisive liveness signal here: **`flow-capitulation.log` is fresh (02:37) and 75 KB** — that file only writes when BTC's 1m RSI drops below 25. If it's firing, the RSI feed is alive *and* hitting the buy threshold. Let me confirm:
+
+## 🤖 Claude *(03:01:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"\ncd /app\necho \\\"=== flow-capitulation.log (\u00faltimas 6) \u2014 dispara quando BTC RSI_1m<25 ===\\\"\ntail -n 6 logs/flow-capitulation.log 2>/dev/null\necho \\\"\\\"\necho \\\"=== system.log (\u00faltimas 20) \u2014 erros / WS / eval ===\\\"\ntail -n 20 logs/system.log 2>/dev/null\n\"' 2>&1",
+  "description": "Tail capitulation log and system log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === flow-capitulation.log (últimas 6) — dispara quando BTC RSI_1m<25 ===
+> info: 2026-06-09T00:55:11.129Z - {"symbol":"LTCUSDT","rsi":1.39,"imbalance":-0.0984,"toxicity":0.0984,"buyVol":2667.597,"sellVol":3250.093,"trades":1000,"spanSec":1170,"regime":"bear"}
+> info: 2026-06-09T00:55:41.132Z - {"symbol":"LTCUSDT","rsi":1.39,"imbalance":-0.0896,"toxicity":0.0896,"buyVol":2663.233,"sellVol":3187.422,"trades":1000,"spanSec":1186,"regime":"bear"}
+> info: 2026-06-09T00:56:11.142Z - {"symbol":"LTCUSDT","rsi":1.39,"imbalance":-0.0514,"toxicity":0.0514,"buyVol":2700.006,"sellVol":2992.745,"trades":1000,"spanSec":1228,"regime":"bear"}
+> info: 2026-06-09T00:56:41.119Z - {"symbol":"LTCUSDT","rsi":1.39,"imbalance":-0.0098,"toxicity":0.0098,"buyVol":2770.933,"sellVol":2825.519,"trades":1000,"spanSec":1254,"regime":"bear"}
+> info: 2026-06-09T02:37:12.546Z - {"symbol":"ADAUSDT","rsi":24.94,"imbalance":0.0081,"toxicity":0.0081,"buyVol":1605416.6,"sellVol":1579508.7,"trades":1000,"spanSec":3401,"regime":"bear"}
+> info: 2026-06-09T02:37:42.300Z - {"symbol":"ADAUSDT","rsi":24.94,"imbalance":0.0263,"toxicity":0.0263,"buyVol":1656393.9,"sellVol":1571399.7,"trades":1000,"spanSec":3400,"regime":"bear"}
+> 
+> === system.log (últimas 20) — erros / WS / eval ===
+> info: 2026-06-09T00:51:18.524Z - jwt expired
+> info: 2026-06-09T01:22:49.771Z - jwt expired
+> info: 2026-06-09T01:59:05.244Z - jwt expired
+> info: 2026-06-09T02:29:58.203Z - jwt expired
+> info: 2026-06-09T02:35:05.556Z - app-ws.onConnection
+> info: 2026-06-09T02:35:05.743Z - app-ws.onConnection
+> info: 2026-06-09T02:35:20.525Z - app-ws.onConnection
+> info: 2026-06-09T02:35:33.261Z - app-ws.onConnection
+> info: 2026-06-09T02:36:33.955Z - app-ws.onConnection
+> info: 2026-06-09T02:36:42.412Z - app-ws.onConnection
+> info: 2026-06-09T02:36:42.527Z - app-ws.onConnection
+> info: 2026-06-09T02:37:39.486Z - app-ws.onConnection
+> info: 2026-06-09T02:39:54.634Z - app-ws.onConnection
+> info: 2026-06-09T02:40:19.603Z - app-ws.onConnection
+> info: 2026-06-09T02:40:26.380Z - app-ws.onConnection
+> info: 2026-06-09T02:55:15.162Z - app-ws.onConnection
+> info: 2026-06-09T02:55:19.842Z - app-ws.onConnection
+> info: 2026-06-09T02:56:35.006Z - app-ws.onConnection
+> info: 2026-06-09T02:56:39.710Z - app-ws.onConnection
+> info: 2026-06-09T02:56:39.814Z - app-ws.onConnection
+> ```
+
+## 🤖 Claude *(03:02:56)*
+
+
+## 🤖 Claude *(03:02:59)*
+
+This is the complete, ironclad diagnosis. The evidence is decisive:
+
+- **`flow-capitulation.log` is live and hitting the buy thresholds** — ADAUSDT RSI_1m **24.94** at 02:37, LTCUSDT RSI_1m **1.39** earlier. That file only writes when RSI is deeply oversold. So the testnet RSI feed is **alive and screaming "buy"** — yet no buy fires, because every buy gate requires `REGIME!=='bear'` and all 4 symbols are bear.
+- **`system.log` is clean** — no crashes, no Binance-WS errors. Just harmless `jwt expired` (browser/agent poll tokens) and the known frontend WS-reconnect churn.
+
+One last check — confirm the agent is in DRY so it isn't expected to place orders either:
+
+## 🤖 Claude *(03:03:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== root .env ===\"; sudo -n -u gcrux-tradeux grep -iE 'ALLOW_TRADING|DRY' .env 2>/dev/null || echo \"(ausente no .env raiz)\"\necho \"=== tradeux-agent/.env ===\"; sudo -n -u gcrux-tradeux grep -iE 'ALLOW_TRADING|DRY|MODEL' tradeux-agent/.env 2>/dev/null | sed -E 's/(KEY|TOKEN|SECRET)=.*/\\1=***/I'\necho \"=== container agent (env efetivo) ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -lc \"printenv | grep -iE \\\"ALLOW_TRADING|DRY\\\"\"' 2>/dev/null || echo \"(n/d)\"",
+  "description": "Confirm agent ALLOW_TRADING/DRY flag"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === root .env ===
+> (ausente no .env raiz)
+> === tradeux-agent/.env ===
+> # tradeux-agent — OpenRouter, testnet, DRY-RUN (ALLOW_TRADING=false)
+> OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
+> # Seguranca: comeca SEM executar ordens (dry-run). Liga so depois de validar.
+> TRADEUX_ALLOW_TRADING=false
+> === container agent (env efetivo) ===
+> TRADEUX_ALLOW_TRADING=false
+> ```
+
+## 🤖 Claude *(03:04:17)*
+
+
+## 🤖 Claude *(03:04:27)*
+
+Confirmado: `TRADEUX_ALLOW_TRADING=false` no container do agente. Tenho o quadro completo e auditado. Aqui está o veredito.
+
+## Veredito: não é bug — é o gate de *bear* funcionando como projetado
+
+Auditei o estado vivo (banco + logs, não confiei no HANDOFF) e cada elo fecha:
+
+1. **A única coisa que vendia era a id3** (Baseline Sell BTC), e ela está **pausada**. Das 93 ordens, as 12 mais recentes são **todas** `automationId=3`, SELL MARKET de BTC — a última às **2026-06-08 12:58**. Desde a pausa: zero ordens. (É exatamente o "só sell de BTC" que você notou — era a id3 drenando o cofre.)
+2. **As 15 automações ativas precisam de algo que o bear proíbe:**
+   - Compras (id2 do BTC + farm id9/11/13 das alts) → gate `REGIME!=='bear'` → **vetado** (os 4 símbolos = bear).
+   - Trend buy (id6 + alts) → precisa de `TREND_CROSS==='golden'`, **impossível** abaixo da SMA200.
+   - Vendas de farm/trend (id10/12/14…) → só vendem posição **aberta**, e nenhuma compra abriu posição.
+3. **O feed NÃO está morto — está vivo e até "gritando compra":** o `flow-capitulation.log` (só escreve com RSI_1m < 25) registrou agora há pouco **ADA RSI 24.94** e **LTC RSI 1.39**. O RSI testnet está sendo calculado e batendo o gatilho do farm (< 35). **O que segura a ordem é o gate de bear, não falta de sinal.**
+4. **system.log limpo** — sem crash, sem erro de WS Binance (só `jwt expired` inócuo + churn de reconexão do front, dívida já conhecida).
+5. **Agente em DRY** (`TRADEUX_ALLOW_TRADING=false`) — observador, nunca emite ordem.
+
+**Tradução:** o robô está em **caixa** porque a tese manda caixa em bear, e o mainnet está abaixo da SMA200 de 1h desde ~04/06. Zero ordens = a estratégia validada fazendo o que prometeu.
+
+## A verdade desconfortável (a tensão que sinalizei no handoff)
+
+É fiel à tese, **mas enquanto o mainnet for bear, o testnet não valida nada** — o gate é mainnet, a execução é testnet. E pelos nossos próprios backtests, o **farm sozinho é marginal** (+3 BTC = séculos); o motor dos +3 BTC é o **trend no bull**, que a gente **não consegue fabricar**. Ou seja: "esperar" pode ser semanas/meses parado, queimando ciclos do agente pra observar "tudo bear". Você está sentindo isso na pele — daí o "vi várias vezes".
+
+Mexer no gate é money-path/estratégia → a decisão é tua:
+
+## 🤖 Claude *(03:04:33)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O zero-ordens est\u00e1 PROVADO como correto-por-design (gate de bear), n\u00e3o um bug. Mas isso trava a valida\u00e7\u00e3o enquanto o mainnet for bear. Como seguir?",
+      "header": "Dire\u00e7\u00e3o",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Validar money-path agora",
+          "description": "Abrir uma JANELA de valida\u00e7\u00e3o no testnet: relaxar o gate !=bear s\u00f3 no farm das alts, com escopo apertado (size pequeno, cofre BTC intocado, time-boxed, revers\u00edvel, gate QA+TL) pra finalmente VER o loop buy \u2192 no-loss-sell \u2192 funil (Fase 4) executar \u2014 coisa que nunca rodou. Valida a MEC\u00c2NICA j\u00e1; n\u00e3o valida o alfa de +3 BTC (isso s\u00f3 no bull). RECOMENDADO: progresso real e seguro no testnet."
+        },
+        {
+          "label": "Refinar o classificador",
+          "description": "Hoje o mercado \u00e9 lateral fraco (ADX 20, RSI 44, s\u00f3 ~3,6% abaixo da SMA200), n\u00e3o queda \u2014 mas o classificador chama de 'bear'. Ensinar a separar 'lateral abaixo da SMA200' (farm LIGA) de 'queda forte' (caixa). Corre\u00e7\u00e3o fiel pra produ\u00e7\u00e3o, mas exige backtest (o dado \u00e9 o juiz) e mexe no sticky-bear deliberado. Mais trabalho, maior valor de longo prazo."
+        },
+        {
+          "label": "Manter disciplina e esperar",
+          "description": "Status quo: fiel \u00e0 tese validada (caixa em bear), zero risco. Aceitar que o sistema fica parado e n\u00e3o valida nada at\u00e9 o regime virar \u2014 possivelmente semanas/meses. O agente segue observando."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O zero-ordens está PROVADO como correto-por-design (gate de bear), não um bug. Mas isso trava a validação enquanto o mainnet for bear. Como seguir?"="O que você acha que seria legal arriscar aqui aproveitando que estamos trabalhando com testnet da binance? Aproite as mais ousadas tecnicas e se precisar faça um analise profunda  ou deep thinking para entender o padrão de oportunidades nas ultimas 4 hroas do grafico". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(03:12:25)*
+
+
+## 🤖 Claude *(03:12:29)*
+
+Perfeito — mandato pra ser ousado num sandbox sem dinheiro real. Antes de propor a aposta, vou fazer o que você pediu: **análise profunda das últimas 4h** dos 4 símbolos, **no feed que importa pra cada coisa** — testnet (onde o bot executa) E mainnet (onde o regime é calculado) — pra entender o padrão real de oportunidades. Vou medir o que decide qual técnica cabe: tendência vs. chop (efficiency ratio), volatilidade, dips de RSI e — o mais importante — **se os dips do testnet realmente revertem +1,2%** (se o farm no-loss lucraria ou só vira saco).
+
+Deixa eu escrever o analisador e rodar dentro do container (tem node + egress pra Binance):
+
+## 🤖 Claude *(03:12:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/analyze4h.js",
+  "content": "// Deep analysis \u2014 \u00faltimas 4h (240\u00d71m) \u2014 testnet (execu\u00e7\u00e3o) vs mainnet (regime)\nconst SYMS = ['BTCUSDT','LTCUSDT','BNBUSDT','ADAUSDT'];\nconst LIMIT = 240;\nconst SRC = {\n  testnet: 'https://testnet.binance.vision/api/v3/klines',\n  mainnet: 'https://data-api.binance.vision/api/v3/klines',\n};\n\nfunction rsi(c, period=14){\n  const out = new Array(c.length).fill(null);\n  if (c.length < period+1) return out;\n  let g=0,l=0;\n  for (let i=1;i<=period;i++){ const d=c[i]-c[i-1]; if(d>=0) g+=d; else l-=d; }\n  let aG=g/period, aL=l/period;\n  out[period] = aL===0?100:100-100/(1+aG/aL);\n  for (let i=period+1;i<c.length;i++){\n    const d=c[i]-c[i-1], gg=d>0?d:0, ll=d<0?-d:0;\n    aG=(aG*(period-1)+gg)/period; aL=(aL*(period-1)+ll)/period;\n    out[i]=aL===0?100:100-100/(1+aG/aL);\n  }\n  return out;\n}\n\nasync function fetchK(src, sym){\n  const url=`${SRC[src]}?symbol=${sym}&interval=1m&limit=${LIMIT}`;\n  const r=await fetch(url);\n  if(!r.ok) throw new Error(`HTTP ${r.status}`);\n  const j=await r.json();\n  return j.map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));\n}\n\nfunction fmt(x,d=2){ return x==null?'n/d':(typeof x==='number'?x.toFixed(d):x); }\n\nfunction analyze(K){\n  const c=K.map(x=>x.c);\n  const rs=rsi(c,14);\n  const first=c[0], last=c[c.length-1];\n  const ret=(last/first-1)*100;\n  const hi=Math.max(...K.map(x=>x.h)), lo=Math.min(...K.map(x=>x.l));\n  const rangePct=(hi/lo-1)*100;\n  // realized vol (stdev dos retornos 1m, em %)\n  const rr=[]; for(let i=1;i<c.length;i++) rr.push((c[i]/c[i-1]-1));\n  const mu=rr.reduce((a,b)=>a+b,0)/rr.length;\n  const vol=Math.sqrt(rr.reduce((a,b)=>a+(b-mu)**2,0)/rr.length)*100;\n  // Kaufman Efficiency Ratio: 0=chop puro, 1=tend\u00eancia pura\n  let pathSum=0; for(let i=1;i<c.length;i++) pathSum+=Math.abs(c[i]-c[i-1]);\n  const ER=pathSum>0?Math.abs(last-first)/pathSum:0;\n  // RSI stats\n  const rv=rs.filter(x=>x!=null);\n  const n35=rv.filter(x=>x<35).length, n25=rv.filter(x=>x<25).length;\n  // Sim do farm no-loss: entra no cruzamento RSI<thr, sai a +1.2% (high>=entry*1.012)\n  function sim(thr,tgt=0.012){\n    const E=[];\n    for(let i=15;i<rs.length;i++){\n      if(rs[i]!=null&&rs[i-1]!=null&&rs[i-1]>=thr&&rs[i]<thr){\n        const entry=c[i]; let xb=null;\n        for(let j=i+1;j<K.length;j++){ if(K[j].h>=entry*(1+tgt)){xb=j;break;} }\n        E.push({won:xb!=null,bars:xb!=null?xb-i:null,openRet:xb!=null?tgt*100:(last/entry-1)*100});\n      }\n    }\n    const W=E.filter(e=>e.won);\n    const bars=W.map(e=>e.bars).sort((a,b)=>a-b);\n    return {sig:E.length, won:W.length, winRate:E.length?W.length/E.length*100:null,\n      medBars:bars.length?bars[Math.floor(bars.length/2)]:null,\n      bags:E.length-W.length, worstBag:E.filter(e=>!e.won).reduce((m,e)=>Math.min(m,e.openRet),0)};\n  }\n  return {first,last,ret,hi,lo,rangePct,vol,ER,curRsi:rs[rs.length-1],\n    minRsi:Math.min(...rv),maxRsi:Math.max(...rv),n35,n25,farm35:sim(35),farm25:sim(25)};\n}\n\nfunction corr(a,b){ // pearson dos retornos por timestamp comum\n  const ma=new Map(a.map(x=>[x.t,x.c])), mb=new Map(b.map(x=>[x.t,x.c]));\n  const ts=[...ma.keys()].filter(t=>mb.has(t)).sort((x,y)=>x-y);\n  if(ts.length<10) return {n:ts.length, r:null};\n  const ra=[],rb=[];\n  for(let i=1;i<ts.length;i++){ ra.push(ma.get(ts[i])/ma.get(ts[i-1])-1); rb.push(mb.get(ts[i])/mb.get(ts[i-1])-1); }\n  const mA=ra.reduce((a,b)=>a+b,0)/ra.length, mB=rb.reduce((a,b)=>a+b,0)/rb.length;\n  let num=0,da=0,db=0;\n  for(let i=0;i<ra.length;i++){ num+=(ra[i]-mA)*(rb[i]-mB); da+=(ra[i]-mA)**2; db+=(rb[i]-mB)**2; }\n  return {n:ts.length, r:(da&&db)?num/Math.sqrt(da*db):null};\n}\n\n(async()=>{\n  const R={};\n  for(const sym of SYMS){\n    R[sym]={};\n    const raw={};\n    for(const src of ['testnet','mainnet']){\n      try{ const k=await fetchK(src,sym); raw[src]=k; R[sym][src]=analyze(k);\n           R[sym][src].t0=new Date(k[0].t).toISOString().slice(11,16);\n           R[sym][src].t1=new Date(k[k.length-1].t).toISOString().slice(11,16);\n      }catch(e){ R[sym][src]={error:e.message}; }\n    }\n    if(raw.testnet&&raw.mainnet) R[sym].corr=corr(raw.testnet,raw.mainnet);\n  }\n  // ===== relat\u00f3rio leg\u00edvel =====\n  const L=[];\n  L.push('================ \u00daLTIMAS 4H (240\u00d71m) ================');\n  for(const sym of SYMS){\n    L.push(`\\n### ${sym}`);\n    for(const src of ['testnet','mainnet']){\n      const a=R[sym][src];\n      if(!a||a.error){ L.push(`  ${src.padEnd(7)}: ERRO ${a&&a.error}`); continue; }\n      L.push(`  ${src.padEnd(7)} [${a.t0}->${a.t1}] last=${fmt(a.last,a.last<10?4:2)} ret4h=${fmt(a.ret)}% range=${fmt(a.rangePct)}% vol1m=${fmt(a.vol,3)}% ER=${fmt(a.ER,2)} RSI:cur=${fmt(a.curRsi,0)} min=${fmt(a.minRsi,0)} max=${fmt(a.maxRsi,0)}`);\n      L.push(`           dips<35=${a.n35} <25=${a.n25} | farm<35: sig=${a.farm35.sig} win=${fmt(a.farm35.winRate,0)}% medBars=${a.farm35.medBars} bags=${a.farm35.bags} worstBag=${fmt(a.farm35.worstBag)}% | farm<25: sig=${a.farm25.sig} win=${fmt(a.farm25.winRate,0)}% bags=${a.farm25.bags}`);\n    }\n    if(R[sym].corr) L.push(`  corr(testnet,mainnet) retornos 1m: r=${fmt(R[sym].corr.r,2)} (n=${R[sym].corr.n})`);\n  }\n  L.push('\\n=================== JSON ===================');\n  console.log(L.join('\\n'));\n  console.log(JSON.stringify(R));\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/analyze4h.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:13:00)*
+
+
+## 🤖 Claude *(03:13:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"cat > /tmp/analyze4h.js && cd /app && node /tmp/analyze4h.js\"' < /tmp/analyze4h.js 2>&1",
+  "description": "Run 4h deep analysis inside backend container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ================ ÚLTIMAS 4H (240×1m) ================
+> 
+> ### BTCUSDT
+>   testnet [23:13->03:12] last=62898.90 ret4h=-1.03% range=8.57% vol1m=0.075% ER=0.08 RSI:cur=64 min=21 max=71
+>            dips<35=30 <25=5 | farm<35: sig=8 win=75% medBars=115 bags=2 worstBag=-0.34% | farm<25: sig=1 win=0% bags=1
+>   mainnet [23:14->03:13] last=62898.00 ret4h=-1.08% range=1.88% vol1m=0.074% ER=0.08 RSI:cur=62 min=17 max=71
+>            dips<35=29 <25=8 | farm<35: sig=6 win=0% medBars=null bags=6 worstBag=-0.41% | farm<25: sig=0 win=n/d% bags=0
+>   corr(testnet,mainnet) retornos 1m: r=0.89 (n=239)
+> 
+> ### LTCUSDT
+>   testnet [23:14->03:13] last=42.61 ret4h=-1.75% range=2.72% vol1m=0.081% ER=0.42 RSI:cur=100 min=0 max=100
+>            dips<35=77 <25=77 | farm<35: sig=1 win=0% medBars=null bags=1 worstBag=-1.50% | farm<25: sig=1 win=0% bags=1
+>   mainnet [23:14->03:13] last=42.64 ret4h=-1.82% range=2.89% vol1m=0.093% ER=0.11 RSI:cur=61 min=16 max=70
+>            dips<35=47 <25=15 | farm<35: sig=11 win=0% medBars=null bags=11 worstBag=-1.32% | farm<25: sig=1 win=0% bags=1
+>   corr(testnet,mainnet) retornos 1m: r=0.27 (n=240)
+> 
+> ### BNBUSDT
+>   testnet [23:14->03:13] last=598.61 ret4h=-1.40% range=2.39% vol1m=0.078% ER=0.10 RSI:cur=61 min=16 max=68
+>            dips<35=48 <25=19 | farm<35: sig=7 win=0% medBars=null bags=7 worstBag=-0.60% | farm<25: sig=2 win=0% bags=2
+>   mainnet [23:14->03:13] last=598.61 ret4h=-1.41% range=2.43% vol1m=0.077% ER=0.10 RSI:cur=61 min=20 max=71
+>            dips<35=43 <25=15 | farm<35: sig=6 win=0% medBars=null bags=6 worstBag=-0.55% | farm<25: sig=4 win=0% bags=4
+>   corr(testnet,mainnet) retornos 1m: r=0.70 (n=240)
+> 
+> ### ADAUSDT
+>   testnet [23:14->03:13] last=0.1669 ret4h=-3.53% range=4.34% vol1m=0.140% ER=0.21 RSI:cur=50 min=4 max=72
+>            dips<35=81 <25=35 | farm<35: sig=9 win=0% medBars=null bags=9 worstBag=-2.51% | farm<25: sig=6 win=0% bags=6
+>   mainnet [23:14->03:13] last=0.1668 ret4h=-3.64% range=4.40% vol1m=0.139% ER=0.15 RSI:cur=45 min=21 max=69
+>            dips<35=39 <25=8 | farm<35: sig=7 win=0% medBars=null bags=7 worstBag=-2.11% | farm<25: sig=3 win=0% bags=3
+>   corr(testnet,mainnet) retornos 1m: r=0.15 (n=240)
+> 
+> =================== JSON ===================
+> {"BTCUSDT":{"testnet":{"first":63555.99,"last":62898.9,"ret":-1.0338757999049264,"hi":63838.68,"lo":58798.29,"rangePct":8.572341134410543,"vol":0.07458421816663657,"ER":0.07861235301084735,"curRsi":63.71587342873885,"minRsi":21.067975376387665,"maxRsi":71.00594567175739,"n35":30,"n25":5,"farm35":{"sig":8,"won":6,"winRate":75,"medBars":115,"bags":2,"worstBag":-0.33763790366933},"farm25":{"sig":1,"won":0,"winRate":0,"medBars":null,"bags":1,"worstBag":-0.3880341923656272},"t0":"23:13","t1":"03:12"},"mainnet":{"first":63587.81,"last":62898,"ret":-1.0848148410835257,"hi":63594,"lo":62423.07,"rangePct":1.8757968808647218,"vol":0.07392653023871144,"ER":0.08078866773243404,"curRsi":62.13752814132679,"minRsi":16.728379036744215,"maxRsi":70.73280030284525,"n35":29,"n25":8,"farm35":{"sig":6,"won":0,"winRate":0,"medBars":null,"bags":6,"worstBag":-0.41481950601646167},"farm25":{"sig":0,"won":0,"winRate":null,"medBars":null,"bags":0,"worstBag":0},"t0":"23:14","t1":"03:13"},"corr":{"n":239,"r":0.8944152347838041}},"LTCUSDT":{"testnet":{"first":43.37,"last":42.61,"ret":-1.752363384828215,"hi":43.37,"lo":42.22,"rangePct":2.723827569872106,"vol":0.08106865547446586,"ER":0.4175824175824197,"curRsi":99.9416684122441,"minRsi":0,"maxRsi":100,"n35":77,"n25":77,"farm35":{"sig":1,"won":0,"winRate":0,"medBars":null,"bags":1,"worstBag":-1.5025427646786826},"farm25":{"sig":1,"won":0,"winRate":0,"medBars":null,"bags":1,"worstBag":-1.5025427646786826},"t0":"23:14","t1":"03:13"},"mainnet":{"first":43.43,"last":42.64,"ret":-1.819019111213449,"hi":43.44,"lo":42.22,"rangePct":2.8896257697773597,"vol":0.09275916270285736,"ER":0.11111111111111177,"curRsi":61.43302678816759,"minRsi":15.540811965141643,"maxRsi":70.23900297392542,"n35":47,"n25":15,"farm35":{"sig":11,"won":0,"winRate":0,"medBars":null,"bags":11,"worstBag":-1.3191390881740372},"farm25":{"sig":1,"won":0,"winRate":0,"medBars":null,"bags":1,"worstBag":0},"t0":"23:14","t1":"03:13"},"corr":{"n":240,"r":0.2689487208699525}},"BNBUSDT":{"testnet":{"first":607.13,"last":598.61,"ret":-1.4033238350929733,"hi":607.26,"lo":593.11,"rangePct":2.385729459965269,"vol":0.07784899415080815,"ER":0.10203592814371319,"curRsi":61.064473464140676,"minRsi":15.893991930290454,"maxRsi":68.23479990663716,"n35":48,"n25":19,"farm35":{"sig":7,"won":0,"winRate":0,"medBars":null,"bags":7,"worstBag":-0.6044001660439946},"farm25":{"sig":2,"won":0,"winRate":0,"medBars":null,"bags":2,"worstBag":0},"t0":"23:14","t1":"03:13"},"mainnet":{"first":607.16,"last":598.61,"ret":-1.4081955333025808,"hi":607.54,"lo":593.1,"rangePct":2.434665317821616,"vol":0.07747185980690975,"ER":0.10304929492587596,"curRsi":61.19709269153701,"minRsi":19.759781386645628,"maxRsi":70.97866484014224,"n35":43,"n25":15,"farm35":{"sig":6,"won":0,"winRate":0,"medBars":null,"bags":6,"worstBag":-0.5482547224668011},"farm25":{"sig":4,"won":0,"winRate":0,"medBars":null,"bags":4,"worstBag":-0.5928459928924767},"t0":"23:14","t1":"03:13"},"corr":{"n":240,"r":0.6963043604083747}},"ADAUSDT":{"testnet":{"first":0.173,"last":0.1669,"ret":-3.5260115606936426,"hi":0.173,"lo":0.1658,"rangePct":4.34258142340167,"vol":0.14038167146733707,"ER":0.20962199312714666,"curRsi":49.67780299045162,"minRsi":3.7301022430036284,"maxRsi":72.47750728206665,"n35":81,"n25":35,"farm35":{"sig":9,"won":0,"winRate":0,"medBars":null,"bags":9,"worstBag":-2.511682242990654},"farm25":{"sig":6,"won":0,"winRate":0,"medBars":null,"bags":6,"worstBag":-2.111436950146639},"t0":"23:14","t1":"03:13"},"mainnet":{"first":0.1731,"last":0.1668,"ret":-3.6395147313691534,"hi":0.1732,"lo":0.1659,"rangePct":4.400241109101866,"vol":0.13934238959093875,"ER":0.15328467153284653,"curRsi":45.385387212629446,"minRsi":21.12886636577022,"maxRsi":68.58955049906989,"n35":39,"n25":8,"farm35":{"sig":7,"won":0,"winRate":0,"medBars":null,"bags":7,"worstBag":-2.1126760563380254},"farm25":{"sig":3,"won":0,"winRate":0,"medBars":null,"bags":3,"worstBag":-2.2274325908558046},"t0":"23:14","t1":"03:13"},"corr":{"n":240,"r":0.1534838712245015}}}
+> ```
+
+## 🤖 Claude *(03:16:14)*
+
+
+## 🤖 Claude *(03:16:38)*
+
+Análise rodou nos dois feeds (testnet = onde executa, mainnet = onde o regime é calculado), 240 velas de 1m cada (23:13→03:13). E o resultado **vira a pergunta de cabeça pra baixo** — de um jeito bom.
+
+## O que as últimas 4h dizem
+
+| símbolo | ret 4h | ER `chop↔trend` | corr testnet↔mainnet | farm dip&lt;35 (testnet) |
+|---|---|---|---|---|
+| **BTC** | −1,0% | **0,08** | **0,89** ✅ | **75% win**, 2 sacos (−0,34%) |
+| LTC | −1,8% | 0,42* | 0,27 ⚠️ | feed **quebrado** (RSI travado 0/100) |
+| BNB | −1,4% | 0,10 | 0,70 | 0% win, 7 sacos |
+| ADA | −3,5% | 0,21 | 0,15 ⚠️ | 0% win, 9 sacos (−2,5%) |
+
+*(ER: 0 = chop puro, 1 = tendência pura. Win = % dos dips que reverteram +1,2% na janela.)*
+
+**Quatro padrões, em ordem de importância:**
+
+1. **É uma queda CHOPPY e ampla** — tudo caindo 1–3,5%, ER 0,08–0,21 (oscila muito, anda pouco). Não há tendência → momentum/trend whipsalharia. **Mean-reversion comprando dip está pegando faca caindo: 0% win nas alts, pilha de sacos.** O dado fresco **re-valida o gate de bear** — ele está certo. *Flipar o gate hoje não produz validação, produz uma pilha de sacos.*
+
+2. **BTC testnet é o ÚNICO feed limpo** (corr 0,89 com mainnet, líquido). As alts testnet são **lixo sintético**: LTC com RSI travado em 0/100 (corr 0,27), ADA descolada (corr 0,15). Qualquer experimento sério tem que ser **no BTC, não nas alts**.
+
+3. **No feed limpo do BTC, a reversão à média FUNCIONA:** comprar dip (RSI&lt;35) e sair a +1,2% ganhou **75%** nas últimas 4h, com sacos minúsculos (−0,34%). O oposto das alts.
+
+4. **🎯 O achado de ouro:** o BTC testnet teve um **wick sintético pra 58.798** (−7% vs. o fundo do mainnet em 62.423), e os *closes* reverteram pro mainnet (corr 0,89). Traduzindo: **o testnet pinga wicks intrabar que descolam do preço justo e voltam.** Mainnet não faz isso. **Isso é dinheiro testnet-específico** — uma ordem limite parada na zona do wick enche barato e o revert paga.
+
+## O que eu arriscaria (e por quê)
+
+Não é "desligar o gate e deixar o farm baggar". O bold de verdade, ancorado no dado, é:
+
+> **Um "harvester de dislocação" no BTCUSDT testnet** — uma escada de **compras-limite fundas** (−3/−5/−7% abaixo do *fair-value do mainnet*), **desgateada do regime**, que enche nos wicks sintéticos e **vende só no lucro** (+1,2%) conforme reverte.
+
+Por que é a aposta certa, não só ousada:
+- **Cabe no regime medido** (chop, ER 0,08) — é exatamente o que grid/ladder colhe; momentum não.
+- **Usa o único feed confiável** (BTC, corr 0,89) e a técnica nativa do Beholder que **nunca ligamos** (grids).
+- **Explora um artefato real e repetível** (wick→revert), não uma aposta direcional.
+- **É o OPOSTO do sangramento da id3:** id3 vendia BTC sem trava de lucro; o harvester **só vende o que comprou mais barato, com lucro** — estruturalmente no-loss, **net-acumulador**. Trato o estoque dele como **bucket tático separado** (igual ao `TREND_QTY`), o **cofre principal não é tocado**.
+- **Risco real, contido:** se o testnet virar queda sustentada de verdade, as rungs fundas baggam — mas é testnet, escopo pequeno, reversível, e a gente *aprende a microestrutura* de qualquer jeito.
+
+Runner-up honesto: um **grid simétrico** puro no BTC (mesma família, colhe o chop nos dois lados). E o que eu **não** faria: ligar o farm das alts ungated — o dado mostra que baggaria.
+
+Construir isso é money-path → vai pelo gate QA+TL, escopo testnet apertado, e te mostro o plano antes de armar. Qual sabor?
+
+## 🤖 Claude *(03:16:47)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A an\u00e1lise das 4h diz: o gate de bear est\u00e1 certo (MR baggaria), mas o BTC testnet \u00e9 limpo e disloca do mainnet (wick\u2192revert). Qual aposta bold eu construo (testnet, escopo apertado, gate QA+TL)?",
+      "header": "Aposta",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Harvester de disloca\u00e7\u00e3o (Rec.)",
+          "description": "Escada de compras-limite fundas (\u22123/\u22125/\u22127% abaixo do fair-value do mainnet) no BTCUSDT testnet, desgateada do regime, enche nos wicks sint\u00e9ticos e vende s\u00f3 no lucro (+1,2%). Bucket t\u00e1tico separado, cofre intocado, net-acumulador, anti-bleed. Explora o artefato wick\u2192revert (testnet-espec\u00edfico)."
+        },
+        {
+          "label": "Grid sim\u00e9trico nativo no BTC",
+          "description": "Liga o grid NATIVO do Beholder (gridEval/generateGrids, nunca usado) no BTCUSDT testnet \u2014 buys e sells em banda em torno do mid, colhe o chop (ER 0,08) nos dois lados. Mais simples/sim\u00e9trico que o harvester; mesma fam\u00edlia."
+        },
+        {
+          "label": "S\u00f3 o relat\u00f3rio por enquanto",
+          "description": "N\u00e3o construir nada agora. Ficar com a an\u00e1lise das 4h + o diagn\u00f3stico, e voc\u00ea decide o pr\u00f3ximo passo depois (ou pede outra t\u00e9cnica)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A análise das 4h diz: o gate de bear está certo (MR baggaria), mas o BTC testnet é limpo e disloca do mainnet (wick→revert). Qual aposta bold eu construo (testnet, escopo apertado, gate QA+TL)?"="os dois.: 
+> 
+> Harvester de dislocação (Rec.)
+> 
+> Escada de compras-limite fundas (-3/-5/-7% abaixo do fair-value do mainnet) no BTCUSDT testnet, desgateada do regime, enche nos wicks sintéticos e vende
+> 
+> só no lucro (+1,2%). Bucket tático separado, cofre intocado, net-acumulador, anti-bleed. Explora o artefato wick->revert (testnet-específico).
+> 
+> 
+> 
+> Grid simetrico nativo no BTC
+> 
+> Liga o grid NATIVO do Beholder (gridEval/generateGrids, nunca usado) no BTCUSDT testnet - buys e sells em banda em torno do mid, colhe o chop (ER 0,08)
+> 
+> nos dois lados. Mais simples/simétrico que o harvester; mesma familia.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(03:20:18)*
+
+
+## 🤖 Claude *(03:20:20)*
+
+Fechado — **os dois**, com o grid nativo como base comum (o harvester é um grid assimétrico fundo; o simétrico é o grid em banda). Antes de escrever uma linha, preciso mapear três coisas no código com precisão: como o **grid nativo** realmente funciona (e se está wired ou dormente), como **automações colocam ordem + rastreiam posição** (pra clonar o padrão `TREND_QTY` num bucket tático), e como puxar o **fair-value do mainnet** pra ancorar as rungs. Vou disparar três exploradores em paralelo — é o modelo de orquestração do projeto.
+
+## 🤖 Claude *(03:20:21)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Build: harvester + grid (testnet)",
+  "summary": "Construir o harvester de disloca\u00e7\u00e3o e o grid sim\u00e9trico nativo no BTCUSDT testnet \u2014 mapear, desenhar, gate QA+TL, validar"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Build: harvester + grid (testnet)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(03:20:31)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "Explore",
+  "description": "Mapear grid nativo do Beholder",
+  "prompt": "Mapeie o sistema de GRID nativo de trading no backend Beholder em /home/gcrux-tradeux/tradeux/backend. Preciso saber EXATAMENTE como grids funcionam e se est\u00e3o wired (chamados em runtime) ou dormentes. Fa\u00e7a uma busca muito completa (medium-thorough).\n\nReporte com file_path:line e CITANDO o c\u00f3digo-chave de cada item:\n1. O model Sequelize `grids` (colunas) e a migration correspondente.\n2. Onde grids s\u00e3o gerados (procure `generateGrids`, `gridEval`, ou nomes similares) \u2014 caminho do arquivo + a l\u00f3gica central. Como os n\u00edveis (levels) s\u00e3o calculados (faixa lowerLimit/upperLimit, n\u00famero de grids, espa\u00e7amento)?\n3. Como um grid coloca e GERENCIA ordens: ele deixa ordens-limite RESTING em cada n\u00edvel? Como faz rebuy/resell quando uma perna enche? Onde no fluxo de ordem/execu\u00e7\u00e3o isso acontece (qual fun\u00e7\u00e3o, qual evento do userData/executionReport)?\n4. O controller/rotas de grid (endpoints REST pra criar/iniciar/parar um grid). Liste os endpoints e o arquivo.\n5. CR\u00cdTICO: o engine de grid \u00e9 realmente CHAMADO em runtime? Procure refer\u00eancias a grid em beholder.js, app-em.js, server.js, monitors. Est\u00e1 wired e funcional, ou \u00e9 c\u00f3digo morto/incompleto? Cite a evid\u00eancia.\n6. Qualquer l\u00f3gica de 'no-loss' ligada a grid ou a `MEMORY['<sym>:LAST_ORDER']`.\n\nSeja expl\u00edcito e honesto sobre se o grid nativo est\u00e1 FUNCIONAL ou precisa de wiring. Esse \u00e9 o ponto mais importante do relat\u00f3rio."
+}
+```
+
+## 🤖 Claude *(03:20:42)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "Explore",
+  "description": "Mapear order placement + TREND_QTY",
+  "prompt": "Mapeie como AUTOMA\u00c7\u00d5ES colocam ordens e rastreiam posi\u00e7\u00e3o no backend Beholder em /home/gcrux-tradeux/tradeux/backend. Quero CLONAR o padr\u00e3o de bucket t\u00e1tico do trend (TREND_QTY) pra um novo bucket. Busca medium-thorough.\n\nReporte com file_path:line e CITANDO o c\u00f3digo exato:\n1. O caminho IN-PROCESS de coloca\u00e7\u00e3o de ordem usado por automa\u00e7\u00f5es: como o engine de automa\u00e7\u00e3o (provavelmente beholder.js) avalia `conditions` e chama a coloca\u00e7\u00e3o de ordem na exchange (N\u00c3O o ordersController REST). Qual arquivo/fun\u00e7\u00e3o dispara a ordem quando uma automa\u00e7\u00e3o casa.\n2. Como funcionam `orderTemplates`: LIMIT vs MARKET, os campos limitPrice/limitPriceMultiplier/stopPrice, e a l\u00f3gica de \"LIMIT market\u00e1vel\" com buffer (mencionada como \"buffer 0.3% no EVAL do limitPrice porque limitPriceMultiplier \u00e9 DECIMAL(10,2)\"). Onde o limitPrice \u00e9 avaliado/calculado em runtime?\n3. O padr\u00e3o de rastreio de posi\u00e7\u00e3o do trend (CR\u00cdTICO \u2014 quero replicar):\n   - `app-em.updateTrendPosition` (ou fun\u00e7\u00e3o equivalente): como golden cross SOMA `order.quantity` e death ZERA; o dedup por orderId (Set); o guard Number.isFinite/>0.\n   - `MEMORY['<sym>:TREND_QTY']`: como \u00e9 lido/escrito.\n   - `calcQty` com o tipo `TREND_QTY`: como espelha a posi\u00e7\u00e3o, capa na carteira, e falha-fechado se 0. Qual arquivo/fun\u00e7\u00e3o.\n4. Como executionReport/fills atualizam orders e MEMORY: `calcFillFinancials` (net/avgPrice/commission no insert), e onde o fill FILLED \u00e9 processado.\n5. O map `indexKeys` (chaves de \u00edndice) e como o array `indexes` de uma automa\u00e7\u00e3o a torna fail-safe (gate fecha se a key faltar). Cite `indexes.every` ou equivalente.\n\nCite as fun\u00e7\u00f5es exatas e os arquivos. Esse mapa vai guiar a cria\u00e7\u00e3o de um novo bucket t\u00e1tico \"HARVEST_QTY\"."
+}
+```
+
+## 🤖 Claude *(03:20:54)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "Explore",
+  "description": "Mapear fair-value mainnet + scripts",
+  "prompt": "No backend Beholder em /home/gcrux-tradeux/tradeux/backend, mapeie a plumbing de MEMORY/mainnet e o padr\u00e3o de scripts de setup. Busca medium-thorough. Reporte com file_path:line e c\u00f3digo citado:\n\n1. regimeJob e regimeService: onde est\u00e3o, como buscam klines do MAINNET, e o que escrevem em MEMORY (REGIME, TREND_CROSS_1h, regimeStates). Qual o intervalo de poll e as envs (REGIME_REFRESH_MS etc.).\n2. CR\u00cdTICO p/ o que vou construir: o PRE\u00c7O ATUAL do MAINNET (last price / mark / fair-value) est\u00e1 armazenado em MEMORY em ALGUM lugar (alguma key tipo `<sym>:PRICE`, `:MARK`, `:FAIR`, `:MAINNET_PRICE`)? Procure bem. Se N\u00c3O existir, qual \u00e9 o job/servi\u00e7o existente mais limpo que eu poderia espelhar pra adicionar um poll que escreve `MEMORY['BTCUSDT:FAIR']` = pre\u00e7o mainnet a cada ~5-30s (modelo do flowJob/regimeJob)? Aponte o arquivo exato a clonar.\n3. O padr\u00e3o flowJob/flowService: como faz poll \u2192 escreve MEMORY passivamente (updateMemory com executeAutomations=false). Cite.\n4. Como MEMORY \u00e9 lida/escrita: a assinatura de `updateMemory` (em especial o flag executeAutomations), `getMemory`, e a estrutura do objeto MEMORY (chave 'SYMBOL:KEY'). Onde fica (provavelmente beholder.js).\n5. O padr\u00e3o de script idempotente-DRY de setup: LEIA backend/scripts/setup-trend.js, backend/scripts/setup-farm.js e backend/scripts/activate-trend.js e reporte: como criam monitors/automations/orderTemplates de forma idempotente (find-or-create), como respeitam um flag DRY, e como d\u00e3o PATCH em indexes+conditions atomicamente. Quero seguir o mesmo padr\u00e3o.\n6. A config de exchange testnet vs mainnet: como o backend fala com o TESTNET pra ordens e com o MAINNET pra dados (exchange.js \u2014 quais base URLs, como decide testnet). Cite.\n\nEsse mapa vai guiar: (a) um job que escreve o fair-value do mainnet em MEMORY, e (b) scripts idempotentes que montam um grid/escada de compras-limite no BTCUSDT testnet."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Excelente! Agora vou compilar o relatório final com as informações precisas:\n\n## MAPA COMPLETO: AUTOMAÇÕES, ORDER PLACEMENT E TREND_QTY\n\n### 1. CAMINHO IN-PROCESS DE COLOCAÇÃO DE ORDEM (Engine -> Exchange)\n\n**Fluxo:**\n1. **Disparador**: `beholder.testAutomations(memoryKey)` [/home/gcrux-tradeux/tradeux/backend/src/beholder.js:807-853]\n   - Chamado a cada tick de mercado via `app-em.js` (streams de candle, book, execution)\n   - Encontra automações no índice `BRAIN_INDEX` por memoryKey\n\n2. **Avaliação de condições**: `evalDecision(memoryKey, automation)` [/home/gcrux-tradeux/tradeux/backend/src/beholder.js:759-805]\n   - **Gate crítica (fail-safe)**: linhas 765-767\n     ```javascript\n     const indexes = automation.indexes ? automation.indexes.split(\',\') : [];\n     if (indexes.length) {\n         const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);\n         if (!isChecked) return false;  // FALHA FECHADA se algum índice está faltando\n     ```\n   - **Lógica de condição**: linha 774\n     ```javascript\n     const isValid = evalCondition ? Function("MEMORY", "return " + evalCondition)(MEMORY) : true;\n     if (!isValid) return false;\n     ```\n\n3. **Disparo de ação**: `doAction(settings, action, automation)` [/home/gcrux-tradeux/tradeux/backend/src/beholder.js:729-748]\n   - Roteia por `action.type` (ORDER, GRID, TRAILING, ALERT_*, WITHDRAW)\n   - Para ORDER: chama **`placeOrder(settings, automation, action)`**\n\n4. **Construção e envio da ordem**: `placeOrder()` [/home/gcrux-tradeux/tradeux/backend/src/beholder.js:388-491]\n   - Resolve o `orderTemplate` associado (linhas 396-401)\n   - Calcula preço: **`calcPrice(orderTemplate, symbol, isStopPrice)`** (linhas 422, 438)\n   - Calcula quantidade: **`calcQty(orderTemplate, price, symbol)`** (linha 430) \n   - Valida saldo: **`hasEnoughAssets(symbol, order, price)`** (linha 446)\n   - **Envia à exchange**: `exchange.buy()` ou `exchange.sell()` (linhas 455-457)\n   - **Persiste no BD**: `insertOrder()` com `calcFillFinancials()` (linhas 471-486)\n\n**Arquivo/Função crítica:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:388` → `placeOrder(settings, automation, action)`\n\n---\n\n### 2. LÓGICA DE ORDER TEMPLATES: LIMIT vs MARKET, BUFFER 0.3%\n\n**Estrutura do orderTemplate** (Migration: `/home/gcrux-tradeux/tradeux/backend/migrations/20210919213750-create-orderTemplates.js`):\n```\nlimitPrice: STRING          (preço explícito OU expressão MEMORY)\nlimitPriceMultiplier: DECIMAL(5,2)  (multiplicador: ≥1%)\nstopPrice: STRING           (stop explícito OU expressão MEMORY)\nstopPriceMultiplier: DECIMAL(5,2)   (multiplicador: ≥1%)\nquantity: STRING            (número, \'MAX_WALLET\', \'MIN_NOTIONAL\', \'LAST_ORDER_QTY\', \'TREND_QTY\')\nquantityMultiplier: DECIMAL(5,2)\n```\n\n**Cálculo de preço**: `calcPrice()` [/home/gcrux-tradeux/tradeux/backend/src/beholder.js:164-198]\n\nPara LIMIT/OCO (linhas 169-185):\n```javascript\nif (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === \'OCO\') {\n    if (!isStopPrice) {\n        if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;  // preço explícito\n        newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;\n    }\n    // ... stopPrice similar\n}\n```\n\n**Buffer LIMIT marketável 0.3%** (exemplo Trend Follow):\n- **BUY**: `limitPrice: "MEMORY[\'BTCUSDT:BOOK\'].current.bestAsk * 1.003"`\n  - Multiplicador = 1 (não afeta)\n  - Efeito: paga 0.3% acima do melhor ask (taker) → fill imediato\n- **SELL**: `limitPrice: "MEMORY[\'BTCUSDT:BOOK\'].current.bestBid * 0.997"`\n  - Multiplicador = 1\n  - Efeito: aceita 0.3% abaixo do melhor bid (taker) → fill imediato\n\n**Motivo do buffer em EVAL (não multiplicador)**:\n- `limitPriceMultiplier` é `DECIMAL(5,2)` (mínimo 0.01 = 1%)\n- 0.3% não cabe → vive na expressão MEMORY como `* 1.003`\n\n**Arquivo/Citação exata**:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:164` → `calcPrice(orderTemplate, symbol, isStopPrice)`\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:173` → `newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;`\n\n---\n\n### 3. PADRÃO DE RASTREIO DE POSIÇÃO: TREND_QTY (CRÍTICO)\n\n#### 3a. **updateTrendPosition()** — Escrita no fill\n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:170-192`\n\n```javascript\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        if (countedTrendFills.has(order.orderId)) return; // **DEDUP por orderId (Set)**\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : \'\';\n        if (cond.indexOf(\'TREND_CROSS\') === -1) return; // só automações com sinal TREND_CROSS\n        const qty = parseFloat(order.quantity);\n        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;\n        let next;\n        if (order.side === \'BUY\' && cond.indexOf("\'golden\'") !== -1) {\n            if (!Number.isFinite(qty) || qty <= 0) return; // **GUARD: Number.isFinite() + >0**\n            next = cur + qty;  // **SOMA no golden cross (id6)**\n        }\n        else if (order.side === \'SELL\' && cond.indexOf("\'death\'") !== -1) next = 0;  // **ZERA no death (id7)**\n        else return;\n        countedTrendFills.add(order.orderId);\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);\n        logger(\'A:\' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);\n    } catch (err) {\n        logger(\'system\', `updateTrendPosition: ${err.message}`);\n    }\n}\n```\n\n**Detalhe crítico:**\n- Linha 160: `const countedTrendFills = new Set();` — dedup em memória (reseta no restart)\n- Linha 173: `if (countedTrendFills.has(order.orderId)) return;` — previne double-conta se report FILLED for re-entregue\n- Linha 181-182: Guard `!Number.isFinite(qty) || qty <= 0` — falha fechado (ignora qty inválida, não corrompe)\n\n#### 3b. **Leitura em calcQty()**\n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:236-245`\n\n```javascript\nelse if (orderTemplate.quantity === \'TREND_QTY\') {\n    // Posição acumulada pelo Trend Following (escrita no fill por app-em.updateTrendPosition):\n    // id6 (golden) soma; id7 (death) vende ESTA qty (não a LAST_ORDER, que é compartilhada com a id3).\n    const trendQty = parseFloat(MEMORY[`${orderTemplate.symbol}:TREND_QTY`]);\n    if (!trendQty || trendQty <= 0)\n        throw new Error(`There is no trend position (TREND_QTY) to use as qty reference for ${orderTemplate.symbol}.`);\n\n    newQty = trendQty * multiplier;\n    if (orderTemplate.side === \'SELL\' && newQty > asset) newQty = asset; // **CAPA na carteira (fees)**\n}\n```\n\n**Falha-fechada:**\n- Linha 240: `if (!trendQty || trendQty <= 0) throw` — automação falha se TREND_QTY falta/é 0\n- Linha 244: SELL é capado no saldo disponível (proteção contra fees corromperem a venda)\n\n#### 3c. **Chave de memória**\n\n- **Padrão**: `MEMORY[\'<SYMBOL>:TREND_QTY\']`\n- **Exemplo**: `MEMORY[\'BTCUSDT:TREND_QTY\']`\n- **Tipo**: número float (quantidade acumulada em base asset)\n- **Escrita**: apenas `app-em.updateTrendPosition()` no fill\n- **Leitura**: `calcQty()` quando `orderTemplate.quantity === \'TREND_QTY\'`\n- **Persistência**: **VOLÁTIL** (MEMORY apenas, reseta no restart)\n  - Comentário: linhas 167-169 em app-em.js\n  - Aceito para size pequeno; antes de escalar, persistir em regimeStates\n\n---\n\n### 4. EXECUÇÃO DE FILLS E ATUALIZAÇÃO DE ORDERS\n\n#### 4a. **Fluxo de fill** (userData stream)\n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:194-238`\n\n```javascript\nfunction processExecutionData(monitorId, executionData, broadcastLabel) {\n    if (executionData.x === orderStatus.NEW) return;  // ignora NEW (pode vir de outras fontes)\n\n    const order = {\n        symbol: executionData.s,\n        orderId: executionData.i,\n        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,\n        side: executionData.S,\n        type: executionData.o,\n        status: executionData.X,\n        isMaker: executionData.m,\n        transactTime: executionData.T\n    }\n\n    if (order.status === orderStatus.FILLED) {\n        const quoteAmount = parseFloat(executionData.Z);\n        order.avgPrice = quoteAmount / parseFloat(executionData.z);\n        order.commission = executionData.n;\n        order.quantity = executionData.q;\n        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);\n        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;\n    }\n\n    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;\n\n    setTimeout(async () => {\n        const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);\n        if (updatedOrder) {\n            // ... broadcast\n            await updateTrendPosition(updatedOrder.get({ plain: true }));  // **CHAMA updateTrendPosition**\n        }\n    }, 3000)\n}\n```\n\n#### 4b. **calcFillFinancials()** — Financeiros no insert\n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js:184-199`\n\n```javascript\nfunction calcFillFinancials(result, symbol) {\n    if (!result) return {};\n    const executedQty = parseFloat(result.executedQty);\n    const cummQuote = parseFloat(result.cummulativeQuoteQty);\n    if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};\n\n    const out = { avgPrice: cummQuote / executedQty, net: cummQuote };\n    if (Array.isArray(result.fills) && result.fills.length) {\n        const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);\n        out.commission = `${commission}`;\n        out.isMaker = result.fills.every(f => f.isMaker === true);\n        const commAsset = result.fills[0].commissionAsset;\n        if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission;  // comissão no quote\n    }\n    return out;\n}\n```\n\n**Quando é chamado:**\n- Linha 485 em beholder.js: `...calcFillFinancials(result, order.symbol)` no insert de MARKET\n- Comentário: linha 484-485: "net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream"\n\n---\n\n### 5. ÍNDICES E GATE FAIL-SAFE (map indexKeys)\n\n#### 5a. **Definição de chaves** \n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js:3-80`\n\n```javascript\nconst indexKeys = {\n    MINI_TICKER: \'MINI_TICKER\',\n    BOOK: \'BOOK\',\n    WALLET: \'WALLET\',\n    LAST_ORDER: \'LAST_ORDER\',\n    LAST_CANDLE: \'LAST_CANDLE\',\n    PREVIOUS_CANDLE: \'PREVIOUS_CANDLE\',\n    TICKER: \'TICKER\',\n    REGIME: \'REGIME\',\n    TREND_CROSS: \'TREND_CROSS\',\n    TREND_QTY: \'TREND_QTY\',\n    FLOW: \'FLOW\',\n    RSI: \'RSI\',\n    // ... outros indicadores\n}\n```\n\n#### 5b. **Gate de fail-safe com indexes.every()**\n\nArquivo: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:763-767` (em `evalDecision()`)\n\n```javascript\nconst indexes = automation.indexes ? automation.indexes.split(\',\') : [];\n\nif (indexes.length) {\n    const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);\n    if (!isChecked) return false;\n```\n\n**Exemplo de setup** (setup-trend.js linhas 122-126):\n\n```javascript\nconst buyCond = `MEMORY[\'${KC}\']===\'golden\' && MEMORY[\'${KR}\']!==\'bear\'`;\nconsole.log(\'- \' + await ensureAutomation(token, `Trend Buy ${SYMBOL} ${TAG}`, buyCond, `${KC},${KR}`, buyTpl.id));\n//                                                                                        ^^^^^^  INDEXES\n\nconst sellCond = `MEMORY[\'${KC}\']===\'death\'`;\nconsole.log(\'- \' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));\n//                                                                                        ^^^^\n```\n\nOnde:\n- `KC = \'BTCUSDT:TREND_CROSS_1h\'` (sinal de cruzamento)\n- `KR = \'BTCUSDT:REGIME\'` (regime)\n\n**Comportamento:**\n- BUY (id6): espera AMBOS `TREND_CROSS_1h` E `REGIME` estarem em MEMORY\n- SELL (id7): espera apenas `TREND_CROSS_1h`\n- Se algum faltar: `isChecked = false` → automação não dispara (fail-safe)\n\n---\n\n## RESUMO PARA CLONAR EM HARVEST_QTY\n\nPara criar um novo bucket tático `HARVEST_QTY` espelhando o padrão TREND_QTY:\n\n1. **Adicionar indexKey** em `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js:78`:\n   ```javascript\n   HARVEST_QTY: \'HARVEST_QTY\',  // posição acumulada pela colheita\n   ```\n\n2. **Criar updateHarvestPosition()** em `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (após `updateTrendPosition`):\n   - Dedup com `new Set()` para evitar double-count\n   - Guard `Number.isFinite() && >0` \n   - Incrementar/zerar conforme o sinal (equivalente a `HARVEST_SIGNAL`)\n   - Chamar em `processExecutionData()` antes do retorno\n\n3. **Adicionar caso em calcQty()** `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:236-245`:\n   ```javascript\n   else if (orderTemplate.quantity === \'HARVEST_QTY\') {\n       const harvestQty = parseFloat(MEMORY[`${orderTemplate.symbol}:HARVEST_QTY`]);\n       if (!harvestQty || harvestQty <= 0)\n           throw new Error(`There is no harvest position for ${orderTemplate.symbol}.`);\n       newQty = harvestQty * multiplier;\n       if (orderTemplate.side === \'SELL\' && newQty > asset) newQty = asset;\n   }\n   ```\n\n4. **Setup script** (análogo a setup-trend.js):\n   - Criar orderTemplates com `quantity: \'HARVEST_QTY\'`\n   - Criar automações com `indexes: \'SYMBOL:HARVEST_SIGNAL,SYMBOL:REGIME,...\'`\n   - Condicional: `MEMORY[\'SYMBOL:HARVEST_SIGNAL\']===\'harvest\' && ...`\n\n5. **Persistência**: decidir se HARVEST_QTY será volátil (MEMORY) ou persistido (como TREND_QTY hoje — ver comentário linhas 167-169 em app-em.js)'}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfeito! Agora tenho tudo que preciso. Vou criar um mapa completo estruturado:\n\n---\n\n## MAPEAMENTO MEDIUM-THOROUGH: Backend TradeUX — MEMORY, Jobs e Setup Idempotente\n\n---\n\n### 1. **regimeJob e regimeService: Onde estão, como buscam klines do MAINNET, e o que escrevem em MEMORY**\n\n#### Localização\n- **Job executor**: `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js` (linhas 1-224)\n- **Serviço de regime**: `/home/gcrux-tradeux/tradeux/backend/src/utils/regimeService.js` (linhas 1-75)\n\n#### Como funciona\n**regimeJob** (linhas 71-145):\n- Roda em loop (`setInterval`) com intervalo `REGIME_REFRESH_MS` (default **300s = 5 min**, piso 30s)\n- Resolve símbolos a monitorar: `REGIME_SYMBOLS` (CSV env) OU símbolos das automações ATIVAS (não-wildcard)\n- Por símbolo: chama `getRegime(symbol, INTERVAL, LAST[symbol])` (últimmo regime = histórico anti-whipsaw)\n- **Escreve 3 chaves de MEMORY**:\n  1. `MEMORY[symbol:REGIME]` = string `\'bear\'|\'trend\'|\'range\'|\'mixed\'|\'unknown\'` (**linha 97**, `executeAutomations=false` — gate PASSIVO)\n  2. `MEMORY[symbol:TREND_CROSS_1h]` = string `\'golden\'|\'death\'|\'none\'` (transição SMA 50/200, **linha 125**, `executeAutomations=true` — **dispara automação UMA vez**)\n  3. Persiste estado no banco (`regimeStatesRepository.upsertState`) — **linha 168**\n\n**regimeService** (`getRegime`):\n- Busca **~300 velas 1h da MAINNET** (não testnet) via HTTPS puro:\n  - Hosts: `[\'api.binance.com\', \'data-api.binance.vision\']` (**linha 21**)\n  - Endpoint: `/api/v3/klines?symbol=<sym>&interval=1h&limit=300` (**linha 54**)\n  - TTL de cache: **120s** (2 min, linha 23) — evita martelar Binance enquanto velas 1h mudam devagar\n  - Mínimo de barras p/ classificar: **205** (SMA200 + 5, linha 25)\n- Nunca lança erro: retorna objeto com `regime: \'unknown\'` + motivo se falhar\n\n#### Env vars\n```bash\nREGIME_JOB_ENABLED     # default \'true\'   — liga/desliga o job (kill-switch)\nREGIME_REFRESH_MS      # default 300000   — intervalo do poll (300s = 5 min)\nREGIME_INTERVAL        # default \'1h\'     — timeframe das velas (fixo 1h pro trend)\nREGIME_SYMBOLS         # CSV, opcional    — força símbolos; senão usa das automações ativas\n```\n\n---\n\n### 2. **CRÍTICO: Preço atual MAINNET em MEMORY — Existe? Qual o padrão pra adicionar?**\n\n#### Resposta: NÃO existe key de `BTCUSDT:PRICE`, `BTCUSDT:MARK`, etc.\n\nMas o preço está **parcialmente lá** (indiretamente):\n\n| Onde está | Qual formato | Atualizado por | Frequência |\n|-----------|-------------|---|---|\n| `MEMORY[sym:MINI_TICKER]` | `{close, open, high, low, ...}` | Stream miniTickerStream (app-em.js) | ~1s (em tempo real) |\n| `MEMORY[sym:BOOK]` | `{current: {bestAsk, bestBid}, previous: {...}}` | Stream/Monitor (app-em.js) | ~100ms (order book real) |\n| `MEMORY[sym:BOOK].current.bestAsk` | **last ask** | Binance stream (testnet ou mainnet, conforme settings.apiUrl) |  |\n\n**PROBLEMA**: O `BOOK` (bestAsk/bestBid) vem do **testnet** (onde o backend está ligado), não da MAINNET. Veja:\n\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (linhas 16-27): `apiUrl` e `streamUrl` vêm de `settings.apiUrl` (default testnet.binance.vision)\n- `app-em.js` (linha 17): `miniTickerStream` e `bookStream` usam a exchange configurada (testnet)\n\n#### Padrão mais limpo a espelhar: **flowJob**\n\n**Arquivo**: `/home/gcrux-tradeux/tradeux/backend/src/flowJob.js` (linhas 1-139)\n\n**Por quê é o melhor modelo**:\n1. **Busca dados da MAINNET** via HTTPS puro (não troca canal com testnet) — ver `flowService.js` linha 51-54\n2. **Poll passivo** com intervalo env (`FLOW_REFRESH_MS`, default 30s)\n3. **Escreve MEMORY** com `executeAutomations=false` — **linha 75**:\n   ```javascript\n   await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance, toxicity, at, atMs }, false);\n   ```\n4. **Padrão robusto**: \n   - Re-entrância (`running` flag)\n   - Skip-on-unavailable (preserva MEMORY se indisponível)\n   - Logging de observabilidade\n   - Status endpoint\n\n#### Como criar um fairPriceJob similar:\n\n**Passos**:\n1. **Criar** `/home/gcrux-tradeux/tradeux/backend/src/fairPriceJob.js` — clone de flowJob (linhas 1-50, padrão geral)\n2. **Criar serviço** `/home/gcrux-tradeux/tradeux/backend/src/utils/fairPriceService.js` — clone de flowService + regimeService pattern\n   - Busca `lastPrice` da mainnet (ou `mark` se futures, ou best bid/ask)\n   - Cache 5-30s conforme env\n3. **Adicionar indexKey** em `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js`:\n   ```javascript\n   FAIR_PRICE: \'FAIR_PRICE\'  // ou MAINNET_PRICE\n   ```\n4. **Registrar job** em `/home/gcrux-tradeux/tradeux/backend/src/server.js` — junto com regimeJob.start()\n5. **Env** (no `.env`):\n   ```bash\n   FAIR_PRICE_JOB_ENABLED=true\n   FAIR_PRICE_REFRESH_MS=5000    # 5s ~ 30s conforme seu caso\n   FAIR_PRICE_SYMBOLS=BTCUSDT    # CSV ou empty (pega das automações ativas)\n   ```\n\n---\n\n### 3. **Padrão flowJob/flowService: poll → MEMORY passivo**\n\n#### Estrutura canônica (cite exato)\n\n**flowJob** (`/home/gcrux-tradeux/tradeux/backend/src/flowJob.js`):\n\n```javascript\n// Lines 27-31: Env parse (defensivo, piso/teto)\nconst ENABLED = (process.env.FLOW_JOB_ENABLED || \'true\') !== \'false\';\nconst _refresh = parseInt(process.env.FLOW_REFRESH_MS || \'30000\', 10);\nconst REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 5000 ? _refresh : 30000;\nconst LOG_TOXICITY = Number.isFinite(_tox) ? _tox : 0.6;\n\n// Lines 33-37: State (re-entrância + observabilidade)\nlet timer = null;\nlet running = false;       // trava\nconst LAST = {};           // último valor (observabilidade)\nconst AT = {};             // timestamp (ms) da atualização\n\n// Lines 40-53: Resolução de símbolos (mesmo padrão do regimeJob)\nasync function resolveSymbols() {\n    const fromEnv = (process.env.FLOW_SYMBOLS || \'\').split(\',\')...\n    if (fromEnv.length) return [...new Set(fromEnv)];\n    try {\n        const autos = await automationsRepository.getActiveAutomations();\n        const syms = (autos || []).map(a => ... (a.symbol) ...).filter(s => s && !s.startsWith(\'*\'));\n        return [...new Set(syms)];\n    } catch (err) { logger(\'flow\', ...); return []; }\n}\n\n// Lines 55-105: runOnce() — loop body\nasync function runOnce() {\n    if (running) return;     // re-entrância\n    running = true;\n    try {\n        const symbols = await resolveSymbols();\n        if (!symbols.length) return;\n        for (const symbol of symbols) {\n            try {\n                const f = await getFlow(symbol);  // chama serviço\n                if (!f || f.unavailable) {\n                    // Não sobrescreve MEMORY (preserva último conhecido)\n                    if (!UNAVAIL.has(symbol)) { UNAVAIL.add(symbol); logger(\'flow\', `${symbol}: indisponível`); }\n                    continue;\n                }\n                // *** ESCREVE MEMORY COM executeAutomations=false (PASSIVO) ***\n                await beholder.updateMemory(symbol, indexKeys.FLOW, null, \n                    { imbalance, toxicity, at, atMs: Date.now() }, false);  // LINE 75\n                LAST[symbol] = f; AT[symbol] = Date.now();\n            } catch (err) { logger(\'flow\', ...); }\n        }\n    } finally { running = false; }\n}\n\n// Lines 107-114: start() — lifecycle\nfunction start() {\n    if (!ENABLED) { logger(\'flow\', \'Flow job DESABILITADO...\'); return; }\n    if (timer) return;  // idempotente\n    runOnce();  // 1ª passada imediata\n    timer = setInterval(runOnce, REFRESH_MS);\n    if (timer.unref) timer.unref();  // não segura shutdown\n    logger(\'flow\', `Flow job iniciado (intervalo ${REFRESH_MS}ms).`);\n}\n\nfunction stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }\n```\n\n**Padrão-chave**:\n- `executeAutomations=false` → **gate PASSIVO** (lido no tick, não dispara)\n- Skip-on-unavailable → preserva valor anterior\n- `LAST[symbol]` + `AT[symbol]` → observabilidade\n- Status endpoint em `getStatus()` (linhas 122-136)\n\n---\n\n### 4. **MEMORY: assinatura de updateMemory, getMemory e estrutura**\n\n#### Localização: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (linhas 12, 860-903)\n\n#### Estrutura de MEMORY\n```javascript\n// Line 12: MEMORY é um objeto simples, global, em-memória\nconst MEMORY = {};\n\n// Keys: sempre STRING formato \'SYMBOL:INDEX[_INTERVAL]\'\n// Exemplo: \'BTCUSDT:REGIME\', \'BTCUSDT:RSI_14_1m\', \'BTCUSDT:FLOW\', \'BTCUSDT:BOOK\'\n```\n\n#### Assinatura de updateMemory (linhas 860-876)\n```javascript\nasync function updateMemory(symbol, index, interval, value, executeAutomations = true) {\n    // symbol: string \'BTCUSDT\'\n    // index: string (indexKey enum, ex. \'REGIME\', \'FLOW\', \'BOOK\')\n    // interval: null ou string \'1h\', \'1m\', etc.\n    // value: qualquer — número, string, objeto; será serializado em MEMORY\n    // executeAutomations: BOOLEANO (default true)\n    //   = true  → disparar automações após escrever (testAutomations(memoryKey))\n    //   = false → escrever PASSIVAMENTE, SEM disparar (gate lido no tick, não gatilho)\n    \n    if (value === undefined || value === null) return false;\n    if (value.toJSON) value = value.toJSON();\n    if (value.get) value = value.get({ plain: true });\n    \n    if (LOCK_MEMORY) return false;  // trava global\n    \n    const memoryKey = parseMemoryKey(symbol, index, interval);  // \'SYMBOL:INDEX\' ou \'SYMBOL:INDEX_INTERVAL\'\n    MEMORY[memoryKey] = value;  // escreve em MEMORY\n    \n    if (LOGS) logger(\'beholder\', `Beholder memory updated: ${memoryKey} => ${JSON.stringify(value)}, will exec autos? ${executeAutomations}`);\n    \n    if (!executeAutomations) return false;  // *** SALTA AUTOMAÇÕES ***\n    \n    return testAutomations(memoryKey);  // retorna resultado das automações que dispararam\n}\n```\n\n#### Assinatura de getMemory (linhas 893-903)\n```javascript\nfunction getMemory(symbol, index, interval) {\n    if (symbol && index) {\n        const indexKey = interval ? `${index}_${interval}` : index;\n        const memoryKey = `${symbol}:${indexKey}`;\n        const result = MEMORY[memoryKey];\n        return typeof result === \'object\' ? { ...result } : result;  // retorna cópia se objeto\n    }\n    return { ...MEMORY };  // sem args: retorna TODA a MEMORY\n}\n```\n\n#### parseMemoryKey (linhas 855-858)\n```javascript\nfunction parseMemoryKey(symbol, index, interval = null) {\n    const indexKey = interval ? `${index}_${interval}` : index;\n    return `${symbol}:${indexKey}`;  // \'BTCUSDT:REGIME\' ou \'BTCUSDT:FLOW_1m\'\n}\n```\n\n---\n\n### 5. **Padrão idempotente-DRY dos scripts de setup**\n\n#### 3 Scripts modelo\n\n##### A) **setup-trend.js** (`/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js`, linhas 1-132)\n\n**Padrão**:\n- `ensureTemplate()` (linhas 57-70): busca template PELO NOME; se existe → retorna seu ID; senão → POST cria\n- `ensureAutomation()` (linhas 84-93): busca automação PELO NOME (iteração por paginação); se existe → retorna; senão → POST cria\n- Pré-requisito: **templates e automações são INATIVAS** por segurança (linha 19, 88, 92)\n- **Não há DRY flag** (sempre aplica)\n\n**Idempotência**:\n- Busca por NOME (não ID) → rota pelas features (ex. "Trend Buy BTCUSDT SMA50/200")\n- POST retorna 201 (created) → ignora duplicatas pela busca ANTES\n\n##### B) **setup-farm.js** (`/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js`, linhas 1-155)\n\n**Padrão adicional** (DRY):\n```javascript\n// Line 37: DRY flag\nconst DRY = String(process.env.DRY || \'\').toLowerCase() === \'true\';\n\n// Em cada ensure*():\nif (DRY) return `[DRY] POST monitor ...`;  // LINE 60, 74, 101 — retorna STRING do que FARIA\n\n// Execution real só se (!DRY)\nconst r = await req(\'POST\', \'/monitors\', token, {...});  // LINE 61 (não entra se DRY=true)\n```\n\n**Criação idempotente de MONITOR** (linhas 58-68):\n```javascript\nasync function ensureMonitor(token, symbol) {\n    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL}...`;\n    const r = await req(\'POST\', \'/monitors\', token, {...});\n    if (r.status === 201) return `monitor criado (id ${r.body.id})`;\n    if (r.status === 409) return `monitor já existe`;  // *** BACKEND RETORNA 409 SE DUPLICADO ***\n    throw new Error(`falha: ${r.status}`);\n}\n```\n\n**Como a Binance não retorna 409**: o backend (controller) detecta duplicata (symbol+interval+type únicos):\n- Ver `/home/gcrux-tradeux/tradeux/backend/src/controllers/monitorsController.js` (não lido aqui, mas infere-se)\n\n##### C) **activate-trend.js** (`/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js`, linhas 1-164)\n\n**Padrão PATCH idempotente com reshaping**:\n\n```javascript\n// Line 78-99: ensureTemplateShape()\nasync function ensureTemplateShape(token, name, side) {\n    const t = await findTemplate(token, name);\n    if (!t) return `⚠️  template "${name}" NÃO encontrado`;\n    \n    const want = {  // SHAPE ALVO\n        type: \'LIMIT\',\n        limitPrice: `MEMORY[\'${SYMBOL}:BOOK\'].current.${ref} * ${buf}`,\n        limitPriceMultiplier: 1,\n    };\n    \n    // Check EXATO (idempotência: se já está na forma, não faz PATCH)\n    const already = t.type === want.type && t.limitPrice === want.limitPrice\n        && parseFloat(t.limitPriceMultiplier) === 1\n        && (side !== \'SELL\' || t.quantity === \'TREND_QTY\');\n    \n    if (already) return `✓ template já está na forma alvo`;\n    \n    if (DRY) return `[DRY] PATCH template...`;\n    \n    // PATCH: enviar template COMPLETO (não sobrescrever campos acidentalmente)\n    const body = { ...t, ...want, stopPrice: null };  // LINE 95\n    delete body.id; delete body.createdAt; delete body.updatedAt;\n    const r = await req(\'PATCH\', `/ordertemplates/${t.id}`, token, body);\n    ...\n}\n\n// Line 103-128: ensureCoordination() — PATCH atomicamente conditions + indexes\nasync function ensureCoordination(token, name) {\n    const a = await findAutomationByName(token, name);\n    if (!a) return `⚠️  automação não encontrada`;\n    \n    const hasGate = (a.conditions || \'\').includes(`${KR}\']!==\'trend\'`);  // check substring\n    const idxList = (a.indexes || \'\').split(\',\').map(s => s.trim()).filter(Boolean);\n    const hasRegimeIdx = idxList.includes(KR);\n    \n    // Já tem o que quer?\n    if (hasGate && hasRegimeIdx) return `✓ "${name}" já coordenada`;\n    \n    // Compute novos valores\n    const newConditions = hasGate ? a.conditions : `${a.conditions} && ${TREND_GATE}`;\n    const newIndexes = hasRegimeIdx ? a.indexes : [...idxList, KR].join(\',\');\n    \n    if (DRY) return `[DRY] PATCH automação...`;\n    \n    // PATCH: exige body COMPLETO COM actions (senão deleteActions+insertActions zera)\n    const full = await req(\'GET\', `/automations/${a.id}`, token);\n    const cur = full.body || a;\n    const actions = (cur.actions || []).map(x => ({type: x.type, orderTemplateId: x.orderTemplateId}));  // LINE 119\n    const body = {\n        name: cur.name, symbol: cur.symbol,\n        indexes: newIndexes, conditions: newConditions,  // *** PATCH ATOMIC ***\n        isActive: cur.isActive, logs: cur.logs, schedule: cur.schedule || null, actions,\n    };\n    const r = await req(\'PATCH\', `/automations/${a.id}`, token, body);  // LINE 125\n    ...\n}\n```\n\n**Padrão-chave**:\n- **Find-or-create**: busca pelo nome (caso-sensível); se não existe, POST cria\n- **DRY flag**: `DRY=true node scripts/setup-farm.js` → mostra plano, não aplica\n- **PATCH idempotente**: check exato (field-by-field); só PATCH se algo mudou\n- **Body completo**: ao PATCH, enviar `{...t, ...overrides}` (não sobrescrever campos acidentalmente)\n- **Index+condition atomic**: PATCH junto no mesmo request (line 125 activate-trend.js)\n\n---\n\n### 6. **Config exchange: testnet vs mainnet (quais base URLs, como decide)**\n\n#### Localização: `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (linhas 1-150)\n\n#### Decisão testnet vs mainnet\n```javascript\n// Lines 14-22: Detecta testnet pelo settings.apiUrl\nconst isTestnet = /testnet|binance\\.vision/i.test(settings.apiUrl || \'\');\n\nconst binance = new Binance().options({\n    APIKEY: settings.accessKey,\n    APISECRET: settings.secretKey,\n    recvWindow: 60000,\n    test: isTestnet,  // *** SETA NO BINANCE-API INTERNO ***\n    reconnect: true,\n    urls: {\n        base: settings.apiUrl.endsWith(\'/\') ? settings.apiUrl : settings.apiUrl + \'/\',\n        stream: settings.streamUrl.endsWith(\'/\') ? settings.streamUrl : settings.streamUrl + \'/\',\n    },\n    verbose: LOGS\n});\n```\n\n#### Base URLs (conforme ambiente)\n\n| Env | settings.apiUrl | settings.streamUrl | isTestnet | Uso |\n|-----|---|---|---|---|\n| **MAINNET** | `https://api.binance.com` | `wss://stream.binance.com:9443` | `false` | Ordens reais; dados reais |\n| **TESTNET** | `https://testnet.binance.vision` | `wss://stream.testnet.binance.vision` | `true` | Ordens sandbox; dados testnet |\n\n#### Jobs que SEMPRE usam MAINNET (ignoram settings.apiUrl)\n\n| Job | Fetch how |\n|-----|-----------|\n| **regimeJob** | `regimeService.getRegime()` → HTTPS direto a `api.binance.com` (hardcoded, linhas 21-54) |\n| **flowJob** | `flowService.getFlow()` → HTTPS direto a `api.binance.com` (hardcoded, linhas 29-54) |\n| **app-em.js (BOOK/MINI_TICKER)** | Usa `exchange.miniTickerStream()` → respects `settings.streamUrl` (testnet se config assim) |\n\n**Conclusão**: Sinal (regime, flow) = mainnet; Dados de execução (BOOK, orders) = testnet (conforme settings).\n\n---\n\n## RESUMO EXECUTIVO pra sua construção\n\nPra fazer um job de fair-price + scripts de setup de grid:\n\n### Fair-Price Job (novo)\n```\n/backend/src/fairPriceJob.js        — clone de flowJob (35-50 linhas úteis)\n/backend/src/utils/fairPriceService.js  — fetch mainnet lastPrice via HTTPS\nRegistrar em server.js: fairPriceJob.start() junto com regimeJob/flowJob\nEnv: FAIR_PRICE_JOB_ENABLED, FAIR_PRICE_REFRESH_MS (5-30s conforme caso)\nKey: MEMORY[\'BTCUSDT:FAIR_PRICE\'] = {lastPrice, at, atMs, source} (passivo, executeAutomations=false)\n```\n\n### Setup Grid Script (novo)\n```\n/backend/scripts/setup-grid.js      — espelhe setup-farm.js + activate-trend.js\nPadrão idempotente: ensureTemplate() + ensureAutomation() (find-by-name)\nDRY flag: DRY=true node scripts/setup-grid.js (preview)\nCriar: BUY/SELL LIMIT templates + automações (INATIVAS)\nPATCH atomic: ensureCoordination() se re-rodar\nEnv: GRID_SYMBOLS, GRID_INTERVAL, GRID_LEVELS, GRID_SIZE, DRY\n```\n\n---\n\nPronto! Você tem:\n- **Exatamente onde buscar** (arquivo:linha) pra cada componente\n- **Como MEMORY funciona** (updateMemory assinatura + executeAutomations flag)\n- **Padrão a clonar** (flowJob é o mais limpo)\n- **Setup idempotente** (find-by-name, DRY flag, PATCH atomic)\n- **Exchange decision logic** (testnet vs mainnet)'}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfeito! Tenho todo o mapeamento. Agora vou gerar um relatório completo e detalhado.\n\n## RELATÓRIO COMPLETO: MAPEAMENTO DO SISTEMA DE GRID NATIVO NO BEHOLDER\n\n---\n\n### 1. **MODEL SEQUELIZE E MIGRATION**\n\n**Migration:**\n- `/home/gcrux-tradeux/tradeux/backend/migrations/20210923213510-create-grids.js`\n  - Cria tabela `grids` com as colunas:\n    - `id` (INTEGER, autoIncrement, primaryKey)\n    - `automationId` (INTEGER, FK → automations.id)\n    - `orderTemplateId` (INTEGER, FK → orderTemplates.id)\n    - `conditions` (STRING, NOT NULL) — a lógica condicional que gateia o grid\n    - `createdAt`, `updatedAt` (DATE)\n\n**Model:**\n- `/home/gcrux-tradeux/tradeux/backend/src/models/gridModel.js`\n  - Define `GridModel` com as mesmas colunas\n  - Relação: `GridModel.belongsTo(OrderTemplateModel)`\n  - **Crítica:** NÃO há colunas para `lowerLimit`, `upperLimit`, `levels` no banco — **esses valores estão APENAS na automação.conditions** (vide §2)\n\n**Repository:**\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/gridsRepository.js`\n  - `insertGrids(grids, transaction)` — bulk create\n  - `deleteGrids(automationId, transaction)` — delete by automationId\n  - `getByAutomation(automationId)` — find all grids para uma automação\n  - `updateGrid(id, newGrid)` — atualiza orderTemplateId ou conditions\n\n---\n\n### 2. **GERAÇÃO DE GRIDS: `generateGrids()` E COMO NÍVEIS SÃO CALCULADOS**\n\n**Localização:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:532-634`\n\n**Lógica central (CÓDIGO-CHAVE):**\n\n```javascript\nasync function generateGrids(automation, levels, quantity, transaction) {\n    await gridsRepository.deleteGrids(automation.id, transaction);\n    \n    const symbol = await getSymbol(automation.symbol);\n    const tickSize = parseFloat(symbol.tickSize);\n    \n    // EXTRAI lowerLimit E upperLimit DOS CONDITIONS DA AUTOMAÇÃO\n    const conditionSplit = automation.conditions.split(\' && \');\n    const lowerLimit = parseFloat(conditionSplit[0].split(\'>\')[1]);\n    const upperLimit = parseFloat(conditionSplit[1].split(\'<\')[1]);\n    levels = parseInt(levels);\n    \n    // CALCULA ESPAÇAMENTO\n    const priceLevel = (upperLimit - lowerLimit) / levels;\n    const grids = [];\n```\n\n**Como funciona:**\n\n1. **Parse dos limites:** A automation.conditions é uma string como:\n   ```\n   "MEMORY[\'ETHUSDT:BOOK\'].current.bestAsk > 1900 && MEMORY[\'ETHUSDT:BOOK\'].current.bestAsk < 2200"\n   ```\n   Daí extrai `lowerLimit = 1900` e `upperLimit = 2200`\n\n2. **Espaçamento:** `priceLevel = (2200 - 1900) / levels = 300 / levels`\n   - Se `levels = 10`, então `priceLevel = 30` USDT entre cada grid\n\n3. **Geração de grids:** Para cada `i` de 1 até `levels`:\n   ```javascript\n   for (let i = 1; i <= levels; i++) {\n       const priceFactor = Math.floor((lowerLimit + (priceLevel * i)) / tickSize);\n       const targetPrice = priceFactor * tickSize;\n       \n       // Se preço ALVO < preço atual → COMPRA (grid de BUY)\n       if (targetPrice < currentPrice) {\n           const previousLevel = targetPrice - priceLevel;\n           grids.push({\n               automationId: automation.id,\n               conditions: `MEMORY[\'${automation.symbol}:BOOK\'].current.bestAsk<${targetPriceStr} && \n                           MEMORY[\'${automation.symbol}:BOOK\'].previous.bestAsk>=${targetPriceStr} && \n                           MEMORY[\'${automation.symbol}:BOOK\'].current.bestAsk>${previousLevelStr}`,\n               orderTemplateId: buyOrderTemplate.id\n           })\n       }\n       // Se preço ALVO > preço atual → VENDE (grid de SELL)\n       else {\n           const nextLevel = targetPrice + priceLevel;\n           grids.push({\n               automationId: automation.id,\n               conditions: `MEMORY[\'${automation.symbol}:BOOK\'].current.bestBid>${targetPriceStr} && \n                           MEMORY[\'${automation.symbol}:BOOK\'].previous.bestBid<=${targetPriceStr} && \n                           MEMORY[\'${automation.symbol}:BOOK\'].current.bestBid<${nextLevelStr}`,\n               orderTemplateId: sellOrderTemplate.id\n           })\n       }\n   }\n   \n   // REMOVE O GRID MAIS PRÓXIMO DO PREÇO ATUAL (para evitar ordens imediatas)\n   const nearestGrid = differences.findIndex(d => d === Math.min(...differences));\n   grids.splice(nearestGrid, 1);\n   \n   return gridsRepository.insertGrids(grids, transaction);\n   ```\n\n4. **OrderTemplates criados:** `generateGrids()` cria automaticamente 2 templates por grid:\n   - `<automation.name> BUY` (MARKET, BUY, qty=quantity)\n   - `<automation.name> SELL` (MARKET, SELL, qty=quantity)\n   - Esses templates são **reutilizados** pelos grids (cada grid aponta a um deles via `orderTemplateId`)\n\n---\n\n### 3. **COMO UM GRID COLOCA E GERENCIA ORDENS: O FLUXO COMPLETO**\n\n**Entrada no sistema:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:493-530` — função `gridEval()`\n\n**Fluxo passo a passo:**\n\n1. **Condition check:** A cada tick de mercado (BOOK update), o `beholder.updateMemory()` em `app-em.js:44` gateia a avaliação de automações. Quando a automation é tipo GRID, chama `gridEval()`\n\n2. **Avalia cada grid da automação:**\n   ```javascript\n   async function gridEval(settings, automation) {\n       automation.grids = automation.grids.sort((a, b) => a.id - b.id);\n       \n       for (let i = 0; i < automation.grids.length; i++) {\n           const grid = automation.grids[i];\n           \n           // AVALIA A CONDITION DO GRID (ex: preço caiu e passou por um nível)\n           if (!Function("MEMORY", "return " + grid.conditions)(MEMORY)) \n               continue;\n   ```\n\n3. **Condição casou → coloca ordem:**\n   ```javascript\n           // Pega o orderTemplate associado ao grid que casou\n           automation.actions[0].orderTemplateId = grid.orderTemplateId;\n           \n           // Busca o book (necessário para calcular preço/qty)\n           const book = MEMORY[`${automation.symbol}:BOOK`];\n           if (!book) return { type: \'error\', text: ... };\n           \n           // COLOCA A ORDEM via placeOrder()\n           const result = await placeOrder(settings, automation, automation.actions[0]);\n   ```\n\n4. **Após a ordem colocar:**\n   ```javascript\n           // REGENERA os grids: deleta todos e cria novos com +1 level\n           const transaction = await db.transaction();\n           try {\n               const orderTemplate = await orderTemplatesRepository.getOrderTemplate(grid.orderTemplateId);\n               await generateGrids(\n                   automation, \n                   automation.grids.length + 1,  // +1 level a cada ordem\n                   orderTemplate.quantity,        // qty constante\n                   transaction\n               );\n               await transaction.commit();\n           } catch (err) {\n               await transaction.rollback();\n               return { type: \'error\', text: ... };\n           }\n   ```\n\n**CRÍTICO — O que NÃO está implementado:**\n\n- **Ordens RESTING:** Os grids geram um `grid.conditions` que é **apenas textual** — **não criamuma ordem RESTING na corretora**. Cada grid é um padrão de condição avaliado em memória.\n- **Rebuy/Resell:** Não há lógica hardcoded de "refill". Quando uma ordem executa, apenas **regenera-se os níveis** com `generateGrids()`. A rejeição de uma leg anterior *não é automática* — uma nova ordre de BUY será colocada quando o preço cair novamente.\n- **No-loss nativo:** A documentação (`STRATEGY-farm-funnel.md:65-66`) diz que o no-loss **"reusa o grid nativo"** + `MEMORY[\'<sym>:LAST_ORDER\']` para custo — mas **essa lógica de "só vender com lucro" NÃO está codificada em `generateGrids()` ou `gridEval()`**. É uma **responsabilidade da ordem template** (verificar se há validação no `calcPrice()` ou `placeOrder()` — há refs a `avgPrice`, `net`, `commission` em `calcFillFinancials()` mas **não há gate de "lucro mínimo"** em nenhum lugar do código atual).\n\n---\n\n### 4. **CONTROLLER E ROTAS DE GRID (ENDPOINTS REST)**\n\n**Router:**\n- `/home/gcrux-tradeux/tradeux/backend/src/routers/automationsRouter.js`\n\n**Endpoints (não há rota exclusiva de "grid", mas grids são gerenciados via automações):**\n\n| Método | Endpoint | Descrição |\n|--------|----------|-----------|\n| POST | `/automations` | Cria uma automação. Se `actions[0].type === \'GRID\'`, requer query params `?quantity=X&levels=Y` e gera grids via `generateGrids()` |\n| GET | `/automations/:id` | Recupera uma automação com seus grids associados |\n| PATCH | `/automations/:id` | Atualiza uma automação. Se GRID, requer `?quantity=X&levels=Y` e regenera grids |\n| DELETE | `/automations/:id` | Remove a automação e **cascata deleta** grids + orderTemplates |\n| POST | `/automations/:id/start` | Ativa a automação → chama `beholder.updateBrain()` (registra a automation no BRAIN para ser avaliada) |\n| POST | `/automations/:id/stop` | Desativa → chama `beholder.deleteBrain()` |\n\n**Controller relevante:**\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`\n  - `insertAutomation()` (linhas 108-171): Valida `isGrid`, chama `beholder.generateGrids()`\n  - `updateAutomation()` (linhas 173-239): Regenera grids se isGrid\n  - `deleteAutomation()` (linhas 241-276): Cascata deleta grids + templates via `gridsRepository.deleteGrids()` + `orderTemplatesRepository.deleteOrderTemplatesByGridName()`\n  - `startAutomation()` (linhas 50-72): `beholder.updateBrain(automation)` — **WIRES o grid para avaliação em tempo real**\n  - `stopAutomation()` (linhas 74-94): `beholder.deleteBrain(automation)` — desativa\n\n---\n\n### 5. **CRÍTICO — O GRID ESTÁ WIRED E FUNCIONAL EM RUNTIME?**\n\n**Resposta: SIM, ESTÁ WIRED E FUNCIONAL. Evidência:**\n\n1. **gridEval() é registrado no doAction() switch:**\n   - `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:739`\n   - `case actionTypes.GRID: return gridEval(settings, automation);`\n\n2. **doAction() é chamado em evalDecision():**\n   - `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:789-791`\n   - ```javascript\n     for (let i = 0; i < automation.actions.length; i++) {\n         const action = automation.actions[i];\n         const result = await doAction(settings, action, automation);\n     ```\n\n3. **evalDecision() é chamado em testAutomations():**\n   - `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:807-853`\n   - `return evalDecision(memoryKey, auto);`\n\n4. **testAutomations() é chamado em updateMemory():**\n   - `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:860-876`\n   - ```javascript\n     async function updateMemory(symbol, index, interval, value, executeAutomations = true) {\n         ...\n         if (!executeAutomations) return false;\n         return testAutomations(memoryKey);\n     ```\n\n5. **updateMemory() é chamado em tempo real em app-em.js:**\n   - `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:44` — a cada BOOK tick\n   - ```javascript\n     beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)\n     ```\n\n6. **app-em.js é inicializado no server boot:**\n   - `/home/gcrux-tradeux/tradeux/backend/src/server.js:40`\n   - `appEm.init(settings, wss, beholder);`\n\n7. **startAutomation() via API ativa o grid no BRAIN:**\n   - `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js:65`\n   - `beholder.updateBrain(automation.get({ plain: true }));`\n\n**Fluxo completo em tempo real:**\n```\nserver.js boot\n  → appEm.init()\n    → subscribe Binance BOOK stream\n      → on each tick: app-em.js:44 beholder.updateMemory(\'ETHUSDT\', \'BOOK\', ...)\n        → beholder.js:875 testAutomations(memoryKey=\'ETHUSDT:BOOK\')\n          → findAutomations(\'ETHUSDT:BOOK\') [procura automações registradas no BRAIN para esse index]\n            → evalDecision(memoryKey, automation)\n              → automation.actions[0].type === \'GRID\'\n                → doAction(settings, action, automation)\n                  → gridEval(settings, automation)\n                    → loop pelos grids, checa conditions\n                      → placeOrder() quando um casou\n                        → generateGrids() regenera\n```\n\n**NÃO é código morto.** Está wired e funcional, mas com limitações (vide §3).\n\n---\n\n### 6. **LÓGICA DE "NO-LOSS" LIGADA A GRID OU MEMORY[\'<sym>:LAST_ORDER\']**\n\n**Status: PARCIALMENTE IMPLEMENTADO (design documentado, implementação INCOMPLETA)**\n\n**Documentação (intencional):**\n- `/home/gcrux-tradeux/tradeux/docs/STRATEGY-farm-funnel.md:65-66`\n  - "No-loss (regra do dono): vender só quando `preço × (1−fee) ≥ custo × (1+lucro_alvo)`. Reusa o **grid nativo do Beholder** (`gridEval`/`generateGrids`) + `MEMORY[\'<sym>:LAST_ORDER\']` pro custo."\n\n**Referências a LAST_ORDER no código:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:228-235`\n  - `calcQty()` suporta `LAST_ORDER_QTY` como quantity (multiplica qty da última ordem)\n  - Acessa `MEMORY[`${orderTemplate.symbol}:LAST_ORDER`]`\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:227, 271, 523`\n  - Escreve `LAST_ORDER` na memória quando uma ordem executa:\n    ```javascript\n    await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);\n    ```\n\n**O que NÃO está implementado:**\n- **Gate de lucro:** Não há validação em `gridEval()` ou `placeOrder()` que diga "só vender se `currentPrice × (1 − fee) ≥ lastOrderPrice × (1 + lucro_alvo)`"\n- **Custo-base:** `LAST_ORDER` é rastreado, mas o **custo médio** (avg fill price) não é persistido nem comparado nas conditions dos grids\n- **No-loss como automação:** O conceito está no design (`STRATEGY-farm-funnel.md`) mas a implementação esperada (Fase 2) ainda não está ativa no código\n\n**Conclusão:** A infraestrutura (`LAST_ORDER` em memória, grid conditions dinâmicas) existe, mas a **lógica de "só vender com lucro" não está hardcoded**. Seria necessário:\n1. Persistir `avgPrice` das ordens executadas (já coleta em `calcFillFinancials()`)\n2. Modificar `generateGrids()` ou `gridEval()` para comparar `currentPrice × (1 − fee) ≥ avgPrice × (1 + lucroAlvo)`\n3. Rejeitar ordens de SELL que não atendem o critério\n\n---\n\n## RESUMO EXECUTIVO\n\n| Aspecto | Status |\n|--------|--------|\n| **Model/Migration** | ✅ Completo: tabela `grids` com `id`, `automationId`, `orderTemplateId`, `conditions` |\n| **generateGrids()** | ✅ Funcional: calcula níveis via `(upperLimit − lowerLimit) / levels`, gera conditions dinâmicas, cria templates BUY/SELL |\n| **Colocação de ordens** | ✅ Funcional: `gridEval()` avalia conditions a cada tick, executa `placeOrder()` via `doAction()` |\n| **Gerenciamento** | ⚠️ Básico: regenera níveis (−1 grid, +1 level) após execução; NÃO persiste ordens RESTING na corretora |\n| **Endpoints** | ✅ Via automations API: POST/PATCH com `?levels=X&quantity=Y`, START/STOP wiring |\n| **Wiring em runtime** | ✅ **WIRED**: server.js → appEm → updateMemory → testAutomations → evalDecision → doAction → gridEval |\n| **No-loss** | ⚠️ **INCOMPLETO**: design existe, `LAST_ORDER` é rastreado, mas gate de lucro não está codificado |\n\n**Honestidade:** O grid nativo está **funcional e em produção**, mas **design incompleto** para o caso de uso "no-loss" full. É um skeleton robusto que precisa de enriquecimento da lógica de custo-base + validação de lucro.'}]
+> ```
+
+## 🤖 Claude *(03:25:45)*
+
+
+## 🤖 Claude *(03:25:54)*
+
+Mapa completo nas mãos — e ele é decisivo. Resumo do que aprendi:
+
+- **Grid nativo: wired e funcional**, mas avalia `MEMORY['BTCUSDT:BOOK']` (book do **testnet**), coloca ordem **MARKET** no cruzamento de nível, regenera níveis no fill, e **não tem trava de no-loss** (vende por nível, sem checar custo). Bom pro grid simétrico; não serve pro harvester (que precisa ancorar no **mainnet**, que o grid não suporta — `generateGrids` faz parse de números estáticos das conditions).
+- **Padrão `TREND_QTY` mapeado** (dedup por orderId, guard finito/>0, capa na carteira, fail-closed) — vou cloná-lo num bucket `HARVEST` que rastreia **qty + custo médio** (pro no-loss).
+- **Fair-value do mainnet NÃO está em MEMORY** — `flowJob` é o molde limpo pra um `fairPriceJob` que escreve `MEMORY['BTCUSDT:FAIR']` (passivo, mainnet via HTTPS).
+
+Antes de codar, preciso ler eu mesmo o código money-path crítico (não confio só no mapa pra coisa que mexe em ordem) e **verificar uma dependência que pode matar o grid nativo: o `BTCUSDT:BOOK` está vivo?** (o monitor BOOK estava inativo). Vou ler os trechos exatos:
+
+## 🤖 Claude *(03:25:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const ordersRepository = require('./repositories/ordersRepository');
+> 2	const { orderStatus } = require('./repositories/ordersRepository');
+> 3	const { monitorTypes, getActiveMonitors } = require('./repositories/monitorsRepository');
+> 4	const { execCalc, indexKeys } = require('./utils/indexes');
+> 5	const logger = require('./utils/logger');
+> 6	const push = require('./utils/push');
+> 7	const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 8	
+> 9	let WSS, beholder, exchange;
+> 10	
+> 11	// Atraso da reconciliação de listStatus da OCO: > 3s do executionReport por-perna, para
+> 12	// que o caminho primário (processExecutionData) atualize antes e evitemos REST à toa.
+> 13	const OCO_RECONCILE_DELAY_MS = 4000;
+> 14	
+> 15	function startMiniTickerMonitor(monitorId, broadcastLabel, logs) {
+> 16	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 17	    exchange.miniTickerStream(async (markets) => {
+> 18	        if (logs) logger('M:' + monitorId, markets);
+> 19	
+> 20	        try {
+> 21	            Object.entries(markets).map(async (mkt) => {
+> 22	
+> 23	                delete mkt[1].volume;
+> 24	                delete mkt[1].quoteVolume;
+> 25	                delete mkt[1].eventTime;
+> 26	                const converted = {};
+> 27	                Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 28	
+> 29	                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 30	                if (results) results.map(r => sendMessage({ notification: r }));
+> 31	            })
+> 32	
+> 33	            if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: markets });
+> 34	
+> 35	            //simulação de book
+> 36	            const books = Object.entries(markets).map(mkt => {
+> 37	                const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+> 38	                const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 39	
+> 40	                const newMemory = {};
+> 41	                newMemory.previous = currentMemory ? currentMemory.current : book;
+> 42	                newMemory.current = book;
+> 43	
+> 44	                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 45	                    .then(results => {
+> 46	                        if (results)
+> 47	                            results.map(r => sendMessage({ notification: r }));
+> 48	                    })
+> 49	
+> 50	                return book;
+> 51	            })
+> 52	            if (WSS) sendMessage({ book: books });
+> 53	            //fim da simulação de book
+> 54	
+> 55	        } catch (err) {
+> 56	            if (logs) logger('M:' + monitorId, err)
+> 57	        }
+> 58	    })
+> 59	    logger('M:' + monitorId, 'Mini Ticker Monitor has started!');
+> 60	}
+> 61	
+> 62	let book = [];
+> 63	function startBookMonitor(monitorId, broadcastLabel, logs) {
+> 64	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 65	    exchange.bookStream(async (order) => {
+> 66	        if (logs) logger('M:' + monitorId, order);
+> 67	
+> 68	        try {
+> 69	            if (book.length === 200) {
+> 70	                if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: book });
+> ```
+
+## 🤖 Claude *(03:25:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Flow Job — grava MEMORY['<sym>:FLOW'] (desequilíbrio de fluxo do TAKER da MAINNET) periodicamente.
+> 4	 *
+> 5	 * Computa e expõe o sinal (MEMORY + endpoint + MCP) e LOGA os episódios de fluxo unilateral. O JOB é
+> 6	 * passivo (escreve a MEMORY, não dispara), mas o sinal JÁ É CONSUMIDO: o `imbalance` gateia a id2
+> 7	 * ("não comprar o dip sob venda agressora AGORA" — uso de TIMING/nowcasting, que a evidência suporta).
+> 8	 * ⚠️ imbalance/toxicity são NOWCASTING, não forecast (deep-research, ~/RESEARCH-bear-capture.md): nunca
+> 9	 * usar como preditor de direção futura (VPIN/toxicidade como sinal forward foi refutado) — só timing.
+> 10	 *
+> 11	 * Escreve um OBJETO por símbolo:  MEMORY['<sym>:FLOW'] = { imbalance, toxicity, at }
+> 12	 * via updateMemory(...,executeAutomations=false) (gate PASSIVO quando ligado: lido no tick, não dispara).
+> 13	 * Sinal = MAINNET (estado real), execução = testnet — mesma arquitetura do regimeJob.
+> 14	 *
+> 15	 * Env:
+> 16	 *   FLOW_JOB_ENABLED (default 'true')   — liga/desliga o job
+> 17	 *   FLOW_REFRESH_MS  (default 30000)    — intervalo do poll (30s; piso 5s)
+> 18	 *   FLOW_SYMBOLS     (CSV, opcional)    — força a lista; senão usa os das automações ativas
+> 19	 *   FLOW_LOG_TOXICITY(default '0.6')    — loga quando |imbalance| >= isto (observação dos "quase-vetos")
+> 20	 */
+> 21	const beholder = require('./beholder');
+> 22	const automationsRepository = require('./repositories/automationsRepository');
+> 23	const { getFlow } = require('./utils/flowService');
+> 24	const { indexKeys } = require('./utils/indexes');
+> 25	const logger = require('./utils/logger');
+> 26	
+> 27	const ENABLED = (process.env.FLOW_JOB_ENABLED || 'true') !== 'false';
+> 28	const _refresh = parseInt(process.env.FLOW_REFRESH_MS || '30000', 10);
+> 29	const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 5000 ? _refresh : 30000;
+> 30	const _tox = parseFloat(process.env.FLOW_LOG_TOXICITY || '0.6');
+> 31	const LOG_TOXICITY = Number.isFinite(_tox) ? _tox : 0.6;
+> 32	
+> 33	let timer = null;
+> 34	let running = false;       // trava de re-entrância
+> 35	const LAST = {};           // último FLOW por símbolo (observabilidade)
+> 36	const AT = {};             // timestamp (ms) da última gravação por símbolo
+> 37	const UNAVAIL = new Set();  // símbolos indisponíveis já logados (loga 1x por episódio)
+> 38	
+> 39	// Mesma resolução de símbolos do regimeJob: FLOW_SYMBOLS (CSV) OU os das automações ATIVAS (não-wildcard).
+> 40	async function resolveSymbols() {
+> 41	    const fromEnv = (process.env.FLOW_SYMBOLS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 42	    if (fromEnv.length) return [...new Set(fromEnv)];
+> 43	    try {
+> 44	        const autos = await automationsRepository.getActiveAutomations();
+> 45	        const syms = (autos || [])
+> 46	            .map(a => String((a.get ? a.get('symbol') : a.symbol) || '').toUpperCase())
+> 47	            .filter(s => s && !s.startsWith('*'));
+> 48	        return [...new Set(syms)];
+> 49	    } catch (err) {
+> 50	        logger('flow', `Falha ao resolver símbolos das automações: ${err.message}`);
+> 51	        return [];
+> 52	    }
+> 53	}
+> 54	
+> 55	async function runOnce() {
+> 56	    if (running) return;
+> 57	    running = true;
+> 58	    try {
+> 59	        const symbols = await resolveSymbols();
+> 60	        if (!symbols.length) return;
+> 61	
+> 62	        for (const symbol of symbols) {
+> 63	            try {
+> 64	                const f = await getFlow(symbol);
+> 65	                if (!f || f.unavailable) {
+> 66	                    // Não sobrescreve a MEMORY (preserva o último fluxo conhecido). Avisa 1x por episódio.
+> 67	                    if (!UNAVAIL.has(symbol)) { UNAVAIL.add(symbol); logger('flow', `${symbol}: fluxo indisponível (${f ? f.reason : 'sem resposta'}); MEMORY preservada.`); }
+> 68	                    continue;
+> 69	                }
+> 70	                if (UNAVAIL.delete(symbol)) logger('flow', `${symbol}: fluxo recuperado.`);
+> 71	
+> 72	                // gate PASSIVO (executeAutomations=false): a escrita não dispara ordem; é lida no tick da id2.
+> 73	                // atMs (epoch da ESCRITA) = base do fail-safe de STALE: a condition da id2 checa a idade do dado;
+> 74	                // se a Binance cair, o job pula (skip-on-unavailable) → atMs congela → o gate trava fechado.
+> 75	                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at, atMs: Date.now() }, false);
+> 76	                LAST[symbol] = f; AT[symbol] = Date.now();
+> 77	
+> 78	                // SHADOW: loga os episódios unilaterais (os que o gate vetaria) p/ calibrar o threshold.
+> 79	                if (f.toxicity >= LOG_TOXICITY)
+> 80	                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);
+> 81	
+> 82	                // CAPITULATION LOG (matéria-prima p/ calibrar o gate sniper): snapshot do fluxo nos momentos de
+> 83	                // gatilho técnico da id2 (RSI 1m < 25). Esparso (só em sobrevenda) → I/O baixo; vai p/
+> 84	                // logs/flow-capitulation.log. NOTA HONESTA: o RSI vem do chart de TRADE (testnet, preço sintético)
+> 85	                // e o FLOW da mainnet — é o MESMO pareamento que a id2 opera ao vivo (sinal mainnet, exec testnet),
+> 86	                // então calibra a MECÂNICA/distribuição, NÃO alfa real (p/ isso falta histórico de aggTrades no
+> 87	                // backtest.js — gap no HANDOFF). Loga sem threshold (wouldBlock é derivado offline).
+> 88	                try {
+> 89	                    const rsi = beholder.getMemory(symbol, 'RSI_14_1m');
+> 90	                    if (rsi && typeof rsi.current === 'number' && rsi.current < 25) {
+> 91	                        const regime = beholder.getMemory(symbol, indexKeys.REGIME) || null;
+> 92	                        logger('flow-capitulation', JSON.stringify({
+> 93	                            symbol, rsi: +rsi.current.toFixed(2), imbalance: f.imbalance, toxicity: f.toxicity,
+> 94	                            buyVol: f.buyVol, sellVol: f.sellVol, trades: f.trades, spanSec: f.spanSec, regime,
+> 95	                        }));
+> 96	                    }
+> 97	                } catch (e) { /* best-effort: o log de calibração nunca derruba o job */ }
+> 98	            } catch (err) {
+> 99	                logger('flow', `${symbol}: erro ao atualizar fluxo: ${err.message}`);
+> 100	            }
+> 101	        }
+> 102	    } finally {
+> 103	        running = false;
+> 104	    }
+> 105	}
+> 106	
+> 107	function start() {
+> 108	    if (!ENABLED) { logger('flow', 'Flow job DESABILITADO (FLOW_JOB_ENABLED=false).'); return; }
+> 109	    if (timer) return; // idempotente
+> 110	    runOnce(); // primeira passada imediata no boot
+> 111	    timer = setInterval(runOnce, REFRESH_MS);
+> 112	    if (timer.unref) timer.unref(); // não segura o processo no shutdown
+> 113	    logger('flow', `Flow job iniciado SHADOW (intervalo ${REFRESH_MS}ms; log de toxicidade >= ${LOG_TOXICITY}). Ainda NÃO gateia automação.`);
+> 114	}
+> 115	
+> 116	function stop() {
+> 117	    if (timer) { clearInterval(timer); timer = null; }
+> 118	    running = false;
+> 119	}
+> 120	
+> 121	// Status p/ observabilidade (endpoint/MCP): por símbolo o último fluxo + idade da atualização.
+> 122	function getStatus() {
+> 123	    const now = Date.now();
+> 124	    const symbols = {};
+> 125	    for (const s of Object.keys(LAST)) {
+> 126	        const f = LAST[s];
+> 127	        symbols[s] = {
+> 128	            imbalance: f.imbalance, toxicity: f.toxicity,
+> 129	            buyVol: f.buyVol, sellVol: f.sellVol, trades: f.trades, spanSec: f.spanSec,
+> 130	            at: AT[s] ? new Date(AT[s]).toISOString() : null,
+> 131	            ageMs: AT[s] ? now - AT[s] : null,
+> 132	            unavailable: UNAVAIL.has(s),
+> 133	        };
+> 134	    }
+> 135	    return { enabled: ENABLED, refreshMs: REFRESH_MS, logToxicity: LOG_TOXICITY, mode: 'shadow', running, symbols };
+> 136	}
+> 137	
+> 138	module.exports = { start, stop, runOnce, getStatus };
+> 139	
+> ```
+
+## 🤖 Claude *(03:26:22)*
+
+
+## 🤖 Claude *(03:26:26)*
+
+**Decisive finding** in `app-em.js:35-53`: the `BOOK` is **simulado a partir do MINI_TICKER** — `bestAsk = bestBid = close` (último preço do testnet), atualizado a cada ~1s pelo monitor MINI_TICKER (id1, que está **ativo**). É por isso que o monitor BOOK (id2) está inativo — não é usado. Então:
+
+✅ **`MEMORY['BTCUSDT:BOOK']` está VIVO** (preço do testnet, sem spread) → **o grid nativo é viável.** Some isso ao `flowJob` ser um molde limpíssimo pro `fairPriceJob`, e a base está sólida.
+
+Deixa eu ler os últimos trechos money-path críticos (precificação/qty, o grid em si, o bucket no fill, e o padrão exato de script):
+
+## 🤖 Claude *(03:26:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Serviço de fluxo de ordens (taker flow) — fonte ÚNICA do desequilíbrio de agressão do mercado.
+> 4	 *
+> 5	 * Busca os aggTrades recentes da MAINNET (estado real, independente do testnet sintético) e mede
+> 6	 * a pressão líquida do TAKER usando o campo `m` (isBuyerMaker) — o ground-truth do agressor:
+> 7	 *   m === false  -> comprador é TAKER  -> COMPRA agressora  (acumula buyVol)
+> 8	 *   m === true   -> comprador é MAKER  -> VENDA agressora    (acumula sellVol)
+> 9	 *
+> 10	 * Métricas (sobre os últimos LIMIT aggTrades):
+> 11	 *   imbalance = (buyVol - sellVol) / (buyVol + sellVol)   ∈ [-1, 1]   (<0 = taker vendendo)
+> 12	 *   toxicity  = |imbalance|                                ∈ [0, 1]    (one-sidedness CONTEMPORÂNEA do fluxo)
+> 13	 *
+> 14	 * ⚠️ NOWCASTING, não forecasting (deep-research 2026-06-08, ~/RESEARCH-bear-capture.md): order-flow/OFI
+> 15	 * descreve o movimento IMEDIATO (~2 price changes / ~10s), NÃO prevê direção futura — e VPIN/toxicidade
+> 16	 * como preditor de jumps foi REFUTADO. Usar imbalance/toxicity SÓ como TIMING de execução (ex.: "não
+> 17	 * comprar o dip ENQUANTO o taker vende agressivo AGORA"), JAMAIS como forecast direcional autônomo.
+> 18	 *
+> 19	 * É um proxy de fluxo/toxicidade (NÃO o True VPIN bucketizado com CDF de 30d — ver docs/blueprint;
+> 20	 * isto é o v1 ancorado: 1 endpoint REST, sem futures/L2, real mesmo no spot). Consumido por:
+> 21	 *   - analysisController.getFlow   (GET /analysis/flow/:symbol — UI/observabilidade + MCP)
+> 22	 *   - flowJob                      (job periódico que grava MEMORY['<sym>:FLOW'] — SHADOW, sem gate ainda)
+> 23	 *
+> 24	 * NUNCA lança: sempre retorna objeto. `unavailable:true` se a Binance não responder (chamador preserva).
+> 25	 */
+> 26	const https = require('https');
+> 27	
+> 28	// Só mercado GLOBAL (mesma razão do regimeService: Binance.US tem preços/universo divergentes).
+> 29	const HOSTS = ['api.binance.com', 'data-api.binance.vision'];
+> 30	const CACHE = new Map();
+> 31	const TTL = 20e3;     // 20s (trades mudam rápido; o job poda ~30s, o endpoint compartilha o cache)
+> 32	const LIMIT = 1000;   // últimos N aggTrades (janela de fluxo; BTCUSDT ~dezenas de segundos)
+> 33	
+> 34	function getJSON(host, path) {
+> 35	    return new Promise((resolve, reject) => {
+> 36	        const req = https.get({ host, path, headers: { 'User-Agent': 'tradeux' }, timeout: 8000 }, r => {
+> 37	            let d = '';
+> 38	            r.on('data', c => d += c);
+> 39	            r.on('end', () => { try { resolve({ status: r.statusCode, body: JSON.parse(d) }); } catch (e) { resolve({ status: r.statusCode, body: null }); } });
+> 40	        });
+> 41	        req.on('error', reject);
+> 42	        req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+> 43	    });
+> 44	}
+> 45	
+> 46	async function getFlow(symbol) {
+> 47	    const cached = CACHE.get(symbol);
+> 48	    if (cached && Date.now() - cached.t < TTL) return { ...cached.data, cached: true };
+> 49	
+> 50	    let trades = null, used = null;
+> 51	    for (const host of HOSTS) {
+> 52	        const r = await getJSON(host, `/api/v3/aggTrades?symbol=${symbol}&limit=${LIMIT}`).catch(() => null);
+> 53	        if (r && r.status === 200 && Array.isArray(r.body) && r.body.length > 0) { trades = r.body; used = host; break; }
+> 54	    }
+> 55	    if (!trades)
+> 56	        return { symbol, source: null, unavailable: true, reason: 'aggTrades indisponiveis na Binance' };
+> 57	
+> 58	    let buyVol = 0, sellVol = 0;
+> 59	    for (const t of trades) {
+> 60	        const q = parseFloat(t.q);
+> 61	        if (!Number.isFinite(q)) continue;
+> 62	        if (t.m) sellVol += q; else buyVol += q; // m=true => venda agressora; m=false => compra agressora
+> 63	    }
+> 64	    const tot = buyVol + sellVol;
+> 65	    const imbalance = tot > 0 ? (buyVol - sellVol) / tot : 0;
+> 66	    const first = trades[0], last = trades[trades.length - 1];
+> 67	
+> 68	    const data = {
+> 69	        symbol, source: used, cached: false,
+> 70	        imbalance: +imbalance.toFixed(4),            // [-1,1]: <0 = taker líquido vendendo
+> 71	        toxicity: +Math.abs(imbalance).toFixed(4),   // [0,1]: quão unilateral está o fluxo
+> 72	        buyVol: +buyVol.toFixed(8), sellVol: +sellVol.toFixed(8),
+> 73	        trades: trades.length,
+> 74	        spanSec: (first && last && last.T && first.T) ? Math.round((last.T - first.T) / 1000) : 0,
+> 75	        at: new Date().toISOString(),
+> 76	    };
+> 77	    CACHE.set(symbol, { t: Date.now(), data });
+> 78	    return data;
+> 79	}
+> 80	
+> 81	module.exports = { getFlow, TTL, LIMIT };
+> 82	
+> ```
+
+## 🤖 Claude *(03:26:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 155,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 155	    return { text: `SMS sent from automation '${automation.name}'`, type: 'success' };
+> 156	}
+> 157	
+> 158	async function sendEmail(settings, automation) {
+> 159	    await require('./utils/email')(settings, automation.name + ' has fired!');
+> 160	    if (automation.logs) logger('A:' + automation.id, `E-mail sent!`);
+> 161	    return { text: `E-mail sent from automation '${automation.name}'`, type: 'success' };
+> 162	}
+> 163	
+> 164	function calcPrice(orderTemplate, symbol, isStopPrice) {
+> 165	    const tickSize = parseFloat(symbol.tickSize);
+> 166	    let newPrice, factor;
+> 167	
+> 168	    // OCO usa preços explícitos (TP em limitPrice, stop em stopPrice), igual aos tipos LIMIT.
+> 169	    if (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === 'OCO') {
+> 170	        try {
+> 171	            if (!isStopPrice) {
+> 172	                if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;
+> 173	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 174	            }
+> 175	            else {
+> 176	                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 177	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 178	            }
+> 179	        }
+> 180	        catch (err) {
+> 181	            if (isStopPrice)
+> 182	                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 183	            else
+> 184	                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> 185	        }
+> 186	    }
+> 187	    else {
+> 188	        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 189	        if (!memory)
+> 190	            throw new Error(`Error trying to get market price. OTID: ${orderTemplate.id}, ${isStopPrice}. No Book.`);
+> 191	
+> 192	        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> 193	        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> 194	    }
+> 195	
+> 196	    factor = Math.floor(newPrice / tickSize);
+> 197	    return (factor * tickSize).toFixed(symbol.quotePrecision);
+> 198	}
+> 199	
+> 200	function calcQty(orderTemplate, price, symbol) {
+> 201	    let asset;
+> 202	
+> 203	    if (orderTemplate.side === 'BUY') {
+> 204	        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 205	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 206	    }
+> 207	    else {
+> 208	        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 209	        if (!asset) throw new Error(`There is no ${symbol.base} in your wallet to place a sell.`);
+> 210	    }
+> 211	
+> 212	    let qty = orderTemplate.quantity.replace(',', '.');
+> 213	    if (parseFloat(qty)) return qty;
+> 214	
+> 215	    const multiplier = orderTemplate.quantityMultiplier;
+> 216	    const stepSize = parseFloat(symbol.stepSize);
+> 217	
+> 218	    let newQty, factor;
+> 219	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 220	        if (orderTemplate.side === 'BUY')
+> 221	            newQty = (parseFloat(asset) / parseFloat(price)) * (multiplier > 1 ? 1 : multiplier);
+> 222	        else
+> 223	            newQty = parseFloat(asset) * (multiplier > 1 ? 1 : multiplier);
+> 224	    }
+> 225	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 226	        newQty = (parseFloat(symbol.minNotional) / parseFloat(price)) * (multiplier < 1 ? 1 : multiplier);
+> 227	    }
+> 228	    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 229	        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 230	        if (!lastOrder)
+> 231	            throw new Error(`There is no last order to use as qty reference for ${orderTemplate.symbol}.`);
+> 232	
+> 233	        newQty = parseFloat(lastOrder.quantity) * multiplier;
+> 234	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;
+> 235	    }
+> 236	    else if (orderTemplate.quantity === 'TREND_QTY') {
+> 237	        // Posição acumulada pelo Trend Following (escrita no fill por app-em.updateTrendPosition):
+> 238	        // id6 (golden) soma; id7 (death) vende ESTA qty (não a LAST_ORDER, que é compartilhada com a id3).
+> 239	        const trendQty = parseFloat(MEMORY[`${orderTemplate.symbol}:TREND_QTY`]);
+> 240	        if (!trendQty || trendQty <= 0)
+> 241	            throw new Error(`There is no trend position (TREND_QTY) to use as qty reference for ${orderTemplate.symbol}.`);
+> 242	
+> 243	        newQty = trendQty * multiplier;
+> 244	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 245	    }
+> 246	
+> 247	    factor = Math.floor(newQty / stepSize);
+> 248	    return (factor * stepSize).toFixed(symbol.basePrecision);
+> 249	}
+> 250	
+> 251	function hasEnoughAssets(symbol, order, price) {
+> 252	    const qty = parseFloat(order.quantity);
+> 253	    if (order.side === 'BUY')
+> 254	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 255	    else
+> 256	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 257	}
+> 258	
+> 259	function calcQuoteQty(orderTemplate, symbol) {
+> 260	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> 261	        throw new Error(`Only MARKET orders can cal quote qty.`);
+> 262	
+> 263	    const multiplier = orderTemplate.quantityMultiplier;
+> 264	
+> 265	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 266	        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> 267	
+> 268	        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 269	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 270	
+> 271	        return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 272	    }
+> 273	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 274	        return (parseFloat(symbol.minNotional) * (multiplier < 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> ```
+
+## 🤖 Claude *(03:26:54)*
+
+
+## 🤖 Claude *(03:26:59)*
+
+`calcPrice`/`calcQty` confirmados: LIMIT aceita `limitPrice` como expressão MEMORY (ex. `bestAsk*1.003`) ou número fixo; `TREND_QTY` lê MEMORY, throw se ≤0, capa SELL na carteira. Vou clonar isso pra `HARVEST_QTY` + `HARVEST_COST` (escalares, espelho exato). Wallet (`USDT:WALLET`/`BTC:WALLET`) vem do USER_DATA (monitor ativo) → vivo.
+
+Últimas 3 leituras pra fechar o design — o grid em si, o bucket no fill, e o padrão exato de script:
+
+## 🤖 Claude *(03:26:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 488,
+  "limit": 160
+}
+```
+
+## 🤖 Claude *(03:26:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 155,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 488	    if (automation.logs) logger('A:' + automation.id, savedOrder.get({ plain: true }));
+> 489	
+> 490	    return { type: 'success', text: `Order ${order.side} ${order.symbol} ${result.status}` };
+> 491	}
+> 492	
+> 493	async function gridEval(settings, automation) {
+> 494	    automation.grids = automation.grids.sort((a, b) => a.id - b.id);
+> 495	
+> 496	    if (LOGS)
+> 497	        logger('A:' + automation.id, `Beholder is in the GRID zone at ${automation.name}`);
+> 498	
+> 499	    for (let i = 0; i < automation.grids.length; i++) {
+> 500	        const grid = automation.grids[i];
+> 501	        if (!Function("MEMORY", "return " + grid.conditions)(MEMORY)) continue;
+> 502	
+> 503	        if (automation.logs)
+> 504	            logger('A:' + automation.id, `Beholder evaluated a condition at ${automation.name} => ${grid.conditions}`);
+> 505	
+> 506	        automation.actions[0].orderTemplateId = grid.orderTemplateId;
+> 507	
+> 508	        const book = MEMORY[`${automation.symbol}:BOOK`];
+> 509	        if (!book) return { type: 'error', text: `No book info for ${automation.symbol}` };
+> 510	
+> 511	        const result = await placeOrder(settings, automation, automation.actions[0]);
+> 512	        if (automation.logs) await require('./utils/telegram')(settings, result.text);
+> 513	        if (result.type === 'error') return result;
+> 514	
+> 515	        const transaction = await db.transaction();
+> 516	        try {
+> 517	            const orderTemplate = await orderTemplatesRepository.getOrderTemplate(grid.orderTemplateId);
+> 518	            await generateGrids(automation, automation.grids.length + 1, orderTemplate.quantity, transaction);
+> 519	            await transaction.commit();
+> 520	        } catch (err) {
+> 521	            await transaction.rollback();
+> 522	            logger('A:' + automation.id, err);
+> 523	            return { type: 'error', text: `Beholder can't generate grids for ${automation.name}. ERR: ${err.message}` };
+> 524	        }
+> 525	
+> 526	        automation = await automationsRepository.getAutomation(automation.id);//pega limpo
+> 527	        updateBrain(automation);
+> 528	        return result;
+> 529	    }
+> 530	}
+> 531	
+> 532	async function generateGrids(automation, levels, quantity, transaction) {
+> 533	
+> 534	    await gridsRepository.deleteGrids(automation.id, transaction);
+> 535	
+> 536	    const symbol = await getSymbol(automation.symbol);
+> 537	    if (!symbol.tickSize) throw new Error(`Tick Size not found for this symbol`);
+> 538	
+> 539	    const tickSize = parseFloat(symbol.tickSize);
+> 540	
+> 541	    const conditionSplit = automation.conditions.split(' && ');
+> 542	    const lowerLimit = parseFloat(conditionSplit[0].split('>')[1]);
+> 543	    const upperLimit = parseFloat(conditionSplit[1].split('<')[1]);
+> 544	    levels = parseInt(levels);
+> 545	
+> 546	    const priceLevel = (upperLimit - lowerLimit) / levels;
+> 547	    const grids = [];
+> 548	
+> 549	    let buyOrderTemplate, sellOrderTemplate;
+> 550	    const orderTemplates = await orderTemplatesRepository.getOrderTemplatesByGridName(automation.name);
+> 551	
+> 552	    if (orderTemplates && orderTemplates.length) {
+> 553	        buyOrderTemplate = orderTemplates.find(ot => ot.side === 'BUY');
+> 554	        if (buyOrderTemplate && buyOrderTemplate.quantity !== quantity) {
+> 555	            buyOrderTemplate.quantity = quantity;
+> 556	            await orderTemplatesRepository.updateOrderTemplate(buyOrderTemplate.id, buyOrderTemplate);
+> 557	        }
+> 558	
+> 559	        sellOrderTemplate = orderTemplates.find(ot => ot.side === 'SELL');
+> 560	        if (sellOrderTemplate && sellOrderTemplate.quantity !== quantity) {
+> 561	            sellOrderTemplate.quantity = quantity;
+> 562	            await orderTemplatesRepository.updateOrderTemplate(sellOrderTemplate.id, sellOrderTemplate);
+> 563	        }
+> 564	    }
+> 565	
+> 566	    if (!buyOrderTemplate)
+> 567	        buyOrderTemplate = await orderTemplatesRepository.insertOrderTemplate({
+> 568	            name: automation.name + ' BUY',
+> 569	            symbol: automation.symbol,
+> 570	            type: 'MARKET',
+> 571	            side: 'BUY',
+> 572	            limitPrice: null,
+> 573	            limitPriceMultiplier: 1,
+> 574	            stopPrice: null,
+> 575	            stopPriceMultiplier: 1,
+> 576	            quantity,
+> 577	            quantityMultiplier: 1,
+> 578	            icebergQty: null,
+> 579	            icebergQtyMultiplier: 1
+> 580	        }, transaction)
+> 581	
+> 582	    if (!sellOrderTemplate)
+> 583	        sellOrderTemplate = await orderTemplatesRepository.insertOrderTemplate({
+> 584	            name: automation.name + ' SELL',
+> 585	            symbol: automation.symbol,
+> 586	            type: 'MARKET',
+> 587	            side: 'SELL',
+> 588	            limitPrice: null,
+> 589	            limitPriceMultiplier: 1,
+> 590	            stopPrice: null,
+> 591	            stopPriceMultiplier: 1,
+> 592	            quantity,
+> 593	            quantityMultiplier: 1,
+> 594	            icebergQty: null,
+> 595	            icebergQtyMultiplier: 1
+> 596	        }, transaction)
+> 597	
+> 598	    const book = MEMORY[`${automation.symbol}:BOOK`];
+> 599	    if (!book) throw new Error(`There is no book info for ${automation.symbol}`);
+> 600	
+> 601	    const currentPrice = parseFloat(book.current.bestAsk);
+> 602	    const differences = [];
+> 603	
+> 604	    for (let i = 1; i <= levels; i++) {
+> 605	        const priceFactor = Math.floor((lowerLimit + (priceLevel * i)) / tickSize);
+> 606	        const targetPrice = priceFactor * tickSize;
+> 607	        const targetPriceStr = targetPrice.toFixed(symbol.quotePrecision);
+> 608	        differences.push(Math.abs(currentPrice - targetPrice));
+> 609	
+> 610	        if (targetPrice < currentPrice) { //se está abaixo da cotação, compra
+> 611	            const previousLevel = targetPrice - priceLevel;
+> 612	            const previousLevelStr = previousLevel.toFixed(symbol.quotePrecision);
+> 613	            grids.push({
+> 614	                automationId: automation.id,
+> 615	                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestAsk<${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestAsk>=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestAsk>${previousLevelStr}`,
+> 616	                orderTemplateId: buyOrderTemplate.id
+> 617	            })
+> 618	        }
+> 619	        else {//se está acima da cotação, vende
+> 620	            const nextLevel = targetPrice + priceLevel;
+> 621	            const nextLevelStr = nextLevel.toFixed(symbol.quotePrecision);
+> 622	            grids.push({
+> 623	                automationId: automation.id,
+> 624	                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestBid>${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestBid<=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestBid<${nextLevelStr}`,
+> 625	                orderTemplateId: sellOrderTemplate.id
+> 626	            })
+> 627	        }
+> 628	    }
+> 629	
+> 630	    const nearestGrid = differences.findIndex(d => d === Math.min(...differences));
+> 631	    grids.splice(nearestGrid, 1);
+> 632	
+> 633	    return gridsRepository.insertGrids(grids, transaction);
+> 634	}
+> 635	
+> 636	async function withdrawCrypto(settings, automation, action) {
+> 637	    if (!settings || !automation || !action)
+> 638	        throw new Error(`All parameters are required to place an order.`);
+> 639	
+> 640	    if (!action.withdrawTemplateId)
+> 641	        throw new Error(`There is no withdraw template for '${automation.name}', action #${action.id}`);
+> 642	
+> 643	    const withdrawTemplate = await withdrawTemplatesRepository.getWithdrawTemplate(action.withdrawTemplateId);
+> 644	
+> 645	    let amount = parseFloat(withdrawTemplate.amount);
+> 646	    if (!amount) {
+> 647	        if (withdrawTemplate.amount === 'MAX_WALLET') {
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 155	
+> 156	// orderIds de fill de trend já contabilizados — dedup contra um executionReport FILLED RE-ENTREGUE
+> 157	// (reconexão do userData stream): o BUY é ADITIVO, então um report duplicado somaria 2x e inflaria a
+> 158	// posição. Só recebe ordens de trend (raras, dirigidas por cross) → footprint desprezível. Reseta no
+> 159	// restart, coerente com o TREND_QTY (que hoje também é volátil — ver nota de persistência abaixo).
+> 160	const countedTrendFills = new Set();
+> 161	
+> 162	// Trend Following — mantém MEMORY['<sym>:TREND_QTY'] (posição em base asset atribuída ao trend),
+> 163	// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automação
+> 164	// (referenciam TREND_CROSS), lidas do BRAIN em memória (sem ida ao banco). Golden BUY soma a qty
+> 165	// FILLED; death SELL zera. Só atua em FILLED (aí order.quantity = qty cheia preenchida). Best-effort:
+> 166	// um erro aqui não quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).
+> 167	// PERSISTÊNCIA: TREND_QTY é VOLÁTIL (só MEMORY), ao contrário do cross (regimeStates). Aceitável p/ size
+> 168	// pequeno na validação; ANTES DE ESCALAR O SIZE, persistir (senão um restart com posição de trend aberta
+> 169	// perde a referência e o death seguinte não liquida). Ver HANDOFF / [[tradeux-trend-following]].
+> 170	async function updateTrendPosition(order) {
+> 171	    try {
+> 172	        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;
+> 173	        if (countedTrendFills.has(order.orderId)) return; // já contabilizado (report FILLED re-entregue)
+> 174	        const auto = beholder.getBrain()[order.automationId];
+> 175	        const cond = auto && auto.conditions ? auto.conditions : '';
+> 176	        if (cond.indexOf('TREND_CROSS') === -1) return; // não é automação de Trend Following
+> 177	        const qty = parseFloat(order.quantity);
+> 178	        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;
+> 179	        let next;
+> 180	        if (order.side === 'BUY' && cond.indexOf("'golden'") !== -1) {
+> 181	            if (!Number.isFinite(qty) || qty <= 0) return; // guard: qty inválida não corrompe TREND_QTY
+> 182	            next = cur + qty;
+> 183	        }
+> 184	        else if (order.side === 'SELL' && cond.indexOf("'death'") !== -1) next = 0; // vendeu a posição de trend
+> 185	        else return;
+> 186	        countedTrendFills.add(order.orderId);
+> 187	        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);
+> 188	        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);
+> 189	    } catch (err) {
+> 190	        logger('system', `updateTrendPosition: ${err.message}`);
+> 191	    }
+> 192	}
+> 193	
+> 194	function processExecutionData(monitorId, executionData, broadcastLabel) {
+> 195	    if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes
+> 196	
+> 197	    const order = {
+> 198	        symbol: executionData.s,
+> 199	        orderId: executionData.i,
+> 200	        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,
+> 201	        side: executionData.S,
+> 202	        type: executionData.o,
+> 203	        status: executionData.X,
+> 204	        isMaker: executionData.m,
+> 205	        transactTime: executionData.T
+> 206	    }
+> 207	
+> 208	    if (order.status === orderStatus.FILLED) {
+> 209	        const quoteAmount = parseFloat(executionData.Z);
+> 210	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 211	        order.commission = executionData.n;
+> 212	        order.quantity = executionData.q;
+> 213	        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 214	        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 215	    }
+> 216	
+> 217	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 218	
+> 219	    setTimeout(async () => {
+> 220	        try {
+> 221	            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 222	            if (updatedOrder) {
+> 223	
+> 224	                notifyOrderUpdate(order);
+> 225	
+> 226	                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));
+> 227	                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 228	                if (results) results.map(r => sendMessage({ notification: r }));
+> 229	
+> 230	                await updateTrendPosition(updatedOrder.get({ plain: true }));
+> 231	
+> 232	                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });
+> 233	            }
+> 234	        } catch (err) {
+> 235	            logger('M:' + monitorId, err);
+> 236	        }
+> 237	    }, 3000)
+> 238	}
+> 239	
+> 240	// Trata o evento cru `listStatus` da OCO (data.e === 'listStatus'). Campos relevantes:
+> 241	// g=orderListId, s=symbol, l=listStatusType, L=listOrderStatus, O=[{s,i,c}] (pernas).
+> 242	// Quando uma perna executa, a Binance cancela a outra automaticamente; os executionReport
+> 243	// por-perna já atualizam cada ordem. Aqui só agimos quando a lista RESOLVE (ALL_DONE/REJECT)
+> 244	// e fazemos uma reconciliação de segurança: se alguma perna ainda estiver NEW na base,
+> 245	// busca o status real na corretora (autoritativo) e atualiza — cobre um executionReport
+> 246	// eventualmente perdido no stream. Idempotente: updateOrder só sai de NEW/PARTIALLY_FILLED.
+> 247	function processListStatusData(monitorId, data, broadcastLabel) {
+> 248	    const orderListId = data.g;
+> 249	    const symbol = data.s;
+> ```
+
+## 🤖 Claude *(03:26:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE do FARM no-loss das ALTS (Fase 2 da estratégia Farm-and-Funnel) — config pura,
+> 4	 * sem código novo no engine. Ver docs/STRATEGY-farm-funnel.md e memória tradeux-farm-funnel-backtest.
+> 5	 *
+> 6	 * A regra do dono ("vende só por mais caro que comprou"): a venda dispara pelo PREÇO (no-loss), não
+> 7	 * pelo RSI — vende a posição quando o bestBid supera o preço de compra (LAST_ORDER.avgPrice) + margem.
+> 8	 * A compra entra no dip (RSI baixo) só fora de bear/trend (mean-reversion vive em range). Fiel ao
+> 9	 * engine do backtest (compra RSI<lo; vende lote com lucro). 1 lote por vez no v1 (grid multi-nível = refino).
+> 10	 *
+> 11	 * Cria, por alt (se ausentes; INATIVAS por segurança):
+> 12	 *   - monitor CANDLES (RSI_14) ATIVO — alimenta MEMORY['<sym>:RSI_14_<interval>'] (gatilho da compra).
+> 13	 *     MINI_TICKER/BOOK já vêm do monitor system '*' (preço/bestBid de todas as alts, sem monitor próprio).
+> 14	 *   - templates LIMIT marketável: BUY = bestAsk×(1+buf) MIN_NOTIONAL ; SELL = bestBid×(1−buf) LAST_ORDER_QTY.
+> 15	 *   - automação "Farm Buy <sym>"  (RSI<lo + regime!=bear/trend + sem posição), INATIVA.
+> 16	 *   - automação "Farm Sell <sym>" no-loss (tem posição + bestBid > avgPrice×(1+lucro)), INATIVA.
+> 17	 *
+> 18	 * Por que INATIVAS: é money-path. Ativar (1 alt por vez, com gate) é um passo SEPARADO — garantir antes
+> 19	 * que o regimeJob computa o REGIME da alt (resolveSymbols pega símbolos de automações ATIVAS; até o 1º
+> 20	 * poll a compra fica fail-safe pelo guard de REGIME na condition) e o sizing. Ver §5 do doc.
+> 21	 *
+> 22	 * Reproduz o setup após `make nuke` (dado runtime, não seeders).
+> 23	 * Uso (dentro do container, server no ar):  node scripts/setup-farm.js   [DRY=true p/ preview]
+> 24	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),
+> 25	 *        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),
+> 26	 *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (1)
+> 27	 */
+> 28	const http = require('http');
+> 29	
+> 30	const SYMBOLS = (process.env.FARM_SYMBOLS || 'LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 31	const INTERVAL = process.env.FARM_INTERVAL || '1m';
+> 32	const RSI_KEY_SUFFIX = `RSI_14_${INTERVAL}`;
+> 33	const RSI_LO = parseFloat(process.env.FARM_RSI_LO || '35');
+> 34	const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 35	const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+> 36	const SIZE_MULT = parseFloat(process.env.FARM_SIZE_MULT || '1'); // MIN_NOTIONAL × isto (size pequeno p/ validar)
+> 37	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 38	const BASE = { host: process.env.FARM_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 39	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 40	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 41	
+> 42	function req(method, path, token, body) {
+> 43	    return new Promise((resolve) => {
+> 44	        const data = body ? JSON.stringify(body) : null;
+> 45	        const headers = { 'Content-Type': 'application/json' };
+> 46	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 47	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 48	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 49	            let d = ''; res.on('data', c => d += c);
+> 50	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 51	        });
+> 52	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 53	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 54	        if (data) r.write(data); r.end();
+> 55	    });
+> 56	}
+> 57	
+> 58	// monitor CANDLES (RSI) ATIVO — alimenta o RSI da alt. Idempotente: insertMonitor responde 409 se já existe.
+> 59	async function ensureMonitor(token, symbol) {
+> 60	    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL} RSI_14 (ativo)`;
+> 61	    const r = await req('POST', '/monitors', token, {
+> 62	        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',
+> 63	        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,
+> 64	    });
+> 65	    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (id ${r.body.id}, ATIVO → ${symbol}:${RSI_KEY_SUFFIX})`;
+> 66	    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} já existe`;
+> 67	    throw new Error(`falha ao criar monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);
+> 68	}
+> 69	
+> 70	async function ensureTemplate(token, symbol, name, side, opts) {
+> 71	    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);
+> 72	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 73	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 74	    if (DRY) return { id: 0, msg: `[DRY] POST template "${name}" (${opts.type} ${side} qty ${opts.quantity}×${opts.quantityMultiplier})` };
+> 75	    const r = await req('POST', '/ordertemplates', token, {
+> 76	        name, symbol, type: opts.type, side,
+> 77	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 78	        stopPrice: null, stopPriceMultiplier: 1,
+> 79	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 80	        icebergQty: null, icebergQtyMultiplier: 1,
+> 81	    });
+> 82	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 83	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 84	}
+> 85	
+> 86	async function findAutomationByName(token, name) {
+> 87	    for (let page = 1; page <= 40; page++) {
+> 88	        const r = await req('GET', `/automations?page=${page}`, token);
+> 89	        const rows = r.body && r.body.rows;
+> 90	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 91	        const hit = rows.find(a => a.name === name);
+> 92	        if (hit) return hit;
+> 93	        if (rows.length < 10) break; // page size do backend = 10
+> 94	    }
+> 95	    return null;
+> 96	}
+> 97	
+> 98	async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+> 99	    const existing = await findAutomationByName(token, name);
+> 100	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 101	    if (DRY) return `[DRY] POST automação "${name}" INATIVA\n      cond: ${conditions}\n      idx:  ${indexes}`;
+> 102	    const r = await req('POST', '/automations', token, {
+> 103	        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 104	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 105	    });
+> 106	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 107	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 108	}
+> 109	
+> 110	async function setupSymbol(token, symbol) {
+> 111	    const K = k => `${symbol}:${k}`;
+> 112	    console.log(`\n## ${symbol}`);
+> 113	    console.log('- ' + await ensureMonitor(token, symbol));
+> 114	
+> 115	    const buyTpl = await ensureTemplate(token, symbol, `Farm Buy ${symbol}`, 'BUY', {
+> 116	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 117	        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,
+> 118	    });
+> 119	    console.log('- ' + buyTpl.msg);
+> 120	    const sellTpl = await ensureTemplate(token, symbol, `Farm Sell ${symbol}`, 'SELL', {
+> 121	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 122	        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // vende o lote comprado (a última ordem foi a compra)
+> 123	    });
+> 124	    console.log('- ' + sellTpl.msg);
+> 125	
+> 126	    // COMPRA: dip (RSI<lo) fora de bear/trend. Condition regex-safe (validateConditions exige cada cláusula
+> 127	    // = MEMORY[...]OP valor, SEM espaços/||/guards soltos). O REGIME vai no INDEX → isChecked é o FAIL-SAFE
+> 128	    // (sem regime conhecido a automação NÃO avalia). invertCondition no RSI → dispara só na TRANSIÇÃO p/ baixo
+> 129	    // de lo (anti-empilhamento). v1 = 1 lote simples; sem trava de posição → pode haver DCA leve em re-cruzamentos
+> 130	    // (a venda realiza a última compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY é refino — §5 do doc).
+> 131	    const buyCond = `MEMORY['${K(RSI_KEY_SUFFIX)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;
+> 132	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')}`, buyTpl.id));
+> 133	
+> 134	    // VENDA no-loss: tem posição (última ordem = compra) E o bestBid já dá lucro sobre o preço de compra.
+> 135	    // Index = BOOK,LAST_ORDER → isChecked garante AMBOS presentes (sem guards soltos; até a 1ª compra não avalia).
+> 136	    // invertCondition no BOOK → realiza só na TRANSIÇÃO em que o bestBid cruza o alvo (anti-empilhamento), indep. do RSI.
+> 137	    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> 138	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Sell ${symbol}`, sellCond, `${K('BOOK')},${K('LAST_ORDER')}`, sellTpl.id));
+> 139	}
+> 140	
+> 141	(async () => {
+> 142	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 143	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 144	    const token = login.body && login.body.token;
+> 145	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 146	
+> 147	    console.log(`# Setup FARM no-loss — ${SYMBOLS.join(', ')} | RSI<${RSI_LO} compra · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+> 148	
+> 149	    for (const symbol of SYMBOLS) await setupSymbol(token, symbol);
+> 150	
+> 151	    console.log(`\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO — monitores ATIVOS, automações de farm INATIVAS.'}`);
+> 152	    console.log(`Para ATIVAR (1 alt por vez, com gate): garanta o REGIME da alt (REGIME_SYMBOLS ou automação ativa)`);
+> 153	    console.log(`e dê start nas automações "Farm Buy/Sell <sym>". A venda é no-loss (só realiza com lucro real).`);
+> 154	})();
+> 155	
+> ```
+
+## 🤖 Claude *(03:29:27)*
+
+
+## 🤖 Claude *(03:29:48)*
+
+Agora tenho **tudo** pra desenhar com segurança. Três achados que fecham o design:
+
+1. **`generateGrids` faz parse frágil das conditions** (`beholder.js:541-543`): a condition do grid TEM que ser `bestAsk>LOWER && bestAsk<UPPER` (2 cláusulas) — ele extrai a banda daí. Coloca **MARKET** no cruzamento de nível, com edge-trigger anti-empilhamento (`previous>=target`) embutido. Posso pré-criar templates LIMIT marketável com o nome certo pra ele reusar (evita o MARKET expirar no book fino do testnet).
+2. **No-loss do farm usa `LAST_ORDER.avgPrice`** (1 lote só). Pro harvester com **escada multi-rung**, isso não basta (LAST_ORDER só vê a última compra) → justifica o **bucket `HARVEST` (qty + custo médio ponderado)** que eu clonо do `TREND_QTY`.
+3. **Padrão de script idempotente-DRY** (`setup-farm.js`) é o molde exato: `req()`, login, `ensureMonitor/Template/Automation`, automações criadas **INATIVAS**.
+
+## Desenho final
+
+**A) Grid simétrico nativo (Fase A — sem código novo no engine):** automação `GRID` no BTCUSDT testnet, banda ±2,5% em torno do preço testnet atual, ~10 níveis, size minúsculo (~0,0002 BTC/nível ≈ $12). Colhe o chop (ER 0,08) nos dois lados. Exercita o grid nativo que nunca rodou.
+
+**B) Harvester de dislocação (Fase B — precisa de código):**
+- `fairPriceJob`/`fairPriceService` (clone do `flowJob`) → escreve `MEMORY['BTCUSDT:FAIR']` = preço **mainnet** (passivo).
+- Bucket `HARVEST_QTY`+`HARVEST_COST` (clone do `TREND_QTY`): `updateHarvestPosition` no fill (média ponderada nas compras, zera na venda) + caso `HARVEST_QTY` no `calcQty`.
+- 3 automações BUY (rungs −3/−5/−7% abaixo do FAIR, **desgateadas do regime**, edge-trigger) + 1 SELL no-loss (`bestBid > custo_médio×1,012`, vende o bucket).
+
+**Sobre vender BTC (tua sensibilidade):** ambos vendem BTC **do testnet**, mas só o que **compraram**, **com lucro** — `calcQty` capa a venda no bucket/carteira (`SELL > asset → asset`). É o **oposto da id3** (que vendia o cofre sem trava de lucro). O **principal do cofre não é tocado**; é synthetic faucet BTC; e você pediu pra ousar no testnet. Vou deixar isso explícito e pequeno.
+
+**Sequência:** Fase A agora (rápida, ganho visível — "tem ordem acontecendo"), valido e ativo; depois Fase B com código + **gate QA+TL** + validação. Size pequeno nos dois.
+
+Começando. Primeiro as credenciais de login que os scripts precisam:
+
+## 🤖 Claude *(03:29:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== root .env (chaves de login) ===\"\nsudo -n -u gcrux-tradeux grep -iE 'EMAIL|PASSWORD|PANEL|LOGIN|TRADEUX_EMAIL|TRADEUX_PASSWORD' .env 2>/dev/null | sed -E 's/(PASSWORD|PWD|PW)=.{0,3}.*/\\1=***redacted***/I'\necho \"=== tradeux-agent/.env ===\"\nsudo -n -u gcrux-tradeux grep -iE 'TRADEUX_EMAIL|TRADEUX_PASSWORD' tradeux-agent/.env 2>/dev/null | sed -E 's/(PASSWORD)=.{0,3}.*/\\1=***redacted***/I'\necho \"=== tradeux-mcp env no container agent ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -lc \"printenv | grep -iE \\\"TRADEUX_EMAIL|TRADEUX_API_URL\\\"\"' 2>/dev/null || echo \"(n/d)\"",
+  "description": "Find app login credentials for setup scripts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === root .env (chaves de login) ===
+> # TradeUX .env — gerado para deploy CloudPanel (tradeux.gcrux.com), testnet-first, BYOK
+> # ---------- Acesso web (atras do proxy reverso do CloudPanel) ----------
+> # ---------- Frontend (assados no build; dominio HTTPS via CloudPanel/Cloudflare) ----------
+> # ---------- Conta padrao do painel (primeiro login) ----------
+> DEFAULT_SETTINGS_EMAIL=gabrielcall@gmail.com
+> === tradeux-agent/.env ===
+> TRADEUX_EMAIL=gabrielcall@gmail.com
+> TRADEUX_PASSWORD=***redacted***
+> === tradeux-mcp env no container agent ===
+> TRADEUX_EMAIL=gabrielcall@gmail.com
+> TRADEUX_API_URL=http://backend:3001
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
