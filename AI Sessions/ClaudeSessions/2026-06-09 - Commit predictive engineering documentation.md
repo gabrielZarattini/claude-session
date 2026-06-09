@@ -3762,6 +3762,1171 @@ Código de A+B está **no master, gated e com CI rodando**. O próximo passo é 
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como proceder com o deploy ao vivo de A+B (reinicia o backend testnet + mexe na posição 0,00016)?"="Deploy completo + reseed". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:36:21)*
+
+
+## 🤖 Claude *(16:36:22)*
+
+GO recebido — **deploy completo + reseed**. Executando. Primeiro: credenciais do DB, a automação de venda viva (id + condição exata pra PATCH) e disparo do rebuild em background (parte lenta):
+
+## 🤖 Claude *(16:36:23)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(16:36:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngrep -E \"^DB_(HOST|NAME|USERNAME|USER|PASSWORD|DIALECT)=|^MYSQL_\" .env 2>/dev/null | sed -E 's/(PASSWORD=).*/\\1<set>/'",
+  "description": "Get DB connection vars from .env (redacted)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DB_NAME=tradeux
+> DB_USER=tradeux
+> DB_HOST=db
+> DB_DIALECT=mysql
+> ```
+
+## 🤖 Claude *(16:36:29)*
+
+
+## 🤖 Claude *(16:36:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngrep -iE \"^[A-Z_]*(PASS|PWD|PASSWORD)=\" .env 2>/dev/null | sed -E 's/=.*/=<set>/'",
+  "description": "Find DB password var name in .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DB_PWD=<set>
+> DB_ROOT_PWD=<set>
+> DEFAULT_SETTINGS_PWD=<set>
+> ```
+
+## 🤖 Claude *(16:36:41)*
+
+
+## 🤖 Claude *(16:36:42)*
+
+`DB_PWD` é a var. Vou disparar o rebuild em background (lento) e, em paralelo, consultar a automação de venda viva + confirmar que `harvestPositions` ainda não existe:
+
+## 🤖 Claude *(16:36:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose build backend 2>&1 | tail -20'",
+  "description": "Rebuild backend image (background)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bjiqf2h1i. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/39009b76-7c10-41e8-86ec-f02fe329ebe2/tasks/bjiqf2h1i.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(16:36:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; . ./.env 2>/dev/null; set +a\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"\nSELECT id, name, isActive, \\`indexes\\` FROM automations WHERE name=\\\"Harvest Sell BTCUSDT\\\";\nSELECT CONCAT(\\\"COND: \\\", conditions) FROM automations WHERE name=\\\"Harvest Sell BTCUSDT\\\";\nSELECT CONCAT(\\\"TABLE harvestPositions exists? \\\", COUNT(*)) FROM information_schema.tables WHERE table_schema=\\\"$DB_NAME\\\" AND table_name=\\\"harvestPositions\\\";\n\" 2>&1 | grep -v \"Using a password\"\n'",
+  "description": "Query live sell automation and check harvestPositions table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 25	Harvest Sell BTCUSDT	1	BTCUSDT:HARVEST,BTCUSDT:BOOK
+> COND: MEMORY['BTCUSDT:HARVEST'].qty>0 && MEMORY['BTCUSDT:BOOK'].current.bestBid>MEMORY['BTCUSDT:HARVEST'].cost*1.0120 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=MEMORY['BTCUSDT:HARVEST'].cost*1.0120
+> TABLE harvestPositions exists? 0
+> ```
+
+## 🤖 Claude *(16:37:00)*
+
+
+## 🤖 Claude *(16:37:02)*
+
+Automação de venda viva: **id=25**, isActive=1, indexes `BTCUSDT:HARVEST,BTCUSDT:BOOK`, condição atual = edge-trigger com fator **1.0120**. `harvestPositions` ainda não existe. Rebuild concluiu (exit 0). Deixa eu confirmar o build e subir o backend (boot1 = código novo + migration cria a tabela):
+
+## 🤖 Claude *(16:37:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -8 /tmp/claude-1001/-home-gcrux-tradeux/39009b76-7c10-41e8-86ec-f02fe329ebe2/tasks/bjiqf2h1i.output 2>/dev/null",
+  "description": "Check backend build output tail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #13 exporting layers 0.4s done
+> #13 writing image sha256:06cc09e74124636c0eb04d43423659b79cfdd6e7fe3de930c0d46fee4e4c3732 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 0.4s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built
+> ```
+
+## 🤖 Claude *(16:37:07)*
+
+
+## 🤖 Claude *(16:37:08)*
+
+Build OK. Subindo o backend novo (boot1 — entrypoint roda a migration e cria `harvestPositions`):
+
+## 🤖 Claude *(16:37:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose up -d backend 2>&1 | tail -5'",
+  "description": "Start new backend (boot1)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(16:37:18)*
+
+
+## 🤖 Claude *(16:37:18)*
+
+Backend recriado/iniciado. Aguardando o boot completo (migration + app) — poll dos logs até "running":
+
+## 🤖 Claude *(16:37:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 30); do\n  if docker compose logs backend 2>/dev/null | grep -q \"App Exchange Monitor is running\"; then\n    echo \"READY after ~$((i*2))s\"; break\n  fi\n  sleep 2\ndone\necho \"=== migration/table check ===\"\nset -a; . ./.env 2>/dev/null; set +a\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SELECT CONCAT(\\\"harvestPositions exists? \\\", COUNT(*)) FROM information_schema.tables WHERE table_schema=\\\"$DB_NAME\\\" AND table_name=\\\"harvestPositions\\\";\" 2>&1 | grep -v \"Using a password\"\necho \"=== boot tail (harvest/migration/error) ===\"\ndocker compose logs backend 2>/dev/null | grep -iE \"harvest|migrat|Exchange Monitor is running|unhandled|error\" | tail -15\n'",
+  "description": "Wait for backend boot1 and verify migration created table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migration/table check ===
+> harvestPositions exists? 1
+> === boot tail (harvest/migration/error) ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | == 20260609160000-create-harvestPositions: migrating =======
+> backend-1  | == 20260609160000-create-harvestPositions: migrated (0.057s)
+> ```
+
+## 🤖 Claude *(16:38:34)*
+
+
+## 🤖 Claude *(16:38:35)*
+
+Migration aplicada (`harvestPositions` criada em 0.057s). Mas o app não logou "running" em 60s — deixa eu ver o estado completo do boot:
+
+## 🤖 Claude *(16:38:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== container status ===\"; docker compose ps backend\necho \"=== last 25 backend log lines ===\"; docker compose logs --tail=25 backend 2>/dev/null\n'",
+  "description": "Check backend container status and recent logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === container status ===
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED              STATUS              PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   About a minute ago   Up About a minute   3001/tcp
+> === last 25 backend log lines ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | 
+> backend-1  | Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> backend-1  | 
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | == 20260609160000-create-harvestPositions: migrating =======
+> backend-1  | == 20260609160000-create-harvestPositions: migrated (0.057s)
+> backend-1  | 
+> backend-1  | [TradeUX] Applying seeds (idempotent)...
+> backend-1  | 
+> backend-1  | Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> backend-1  | 
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | No seeders found.
+> backend-1  | [TradeUX] Starting backend...
+> backend-1  | 
+> backend-1  | > backend@1.0.0 start
+> backend-1  | > node -r dotenv/config ./src/server
+> backend-1  |
+> ```
+
+## 🤖 Claude *(16:38:52)*
+
+
+## 🤖 Claude *(16:38:53)*
+
+O app loga em arquivos (`logs/<cat>.log`), não no stdout do docker — por isso o grep no `docker logs` não pegou o "running". Deixa eu confirmar o boot pelo `logs/system.log` (e que meu código novo não quebrou nada):
+
+## 🤖 Claude *(16:38:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== system.log tail (boot1) ===\"\ndocker compose exec -T backend sh -lc \"tail -20 logs/system.log 2>/dev/null\"\necho \"=== any error logs since boot? ===\"\ndocker compose exec -T backend sh -lc \"tail -8 logs/error.log 2>/dev/null; grep -il \\\"loadHarvestPositions\\|harvest\\\" logs/*.log 2>/dev/null\"\n'",
+  "description": "Check backend app boot via system.log"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === system.log tail (boot1) ===
+> info: 2026-06-03T18:53:37.380Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-03T19:18:45.958Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-09T16:37:13.765Z - Getting the default settings with ID 1...
+> info: 2026-06-09T16:37:13.835Z - Initializing the Beholder Brain...
+> info: 2026-06-09T16:37:13.862Z - Starting the Beholder Agenda...
+> info: 2026-06-09T16:37:13.863Z - Starting the server apps...
+> info: 2026-06-09T16:37:13.866Z - App Web Socket Server is running!
+> info: 2026-06-09T16:37:13.922Z - Starting the Regime Job...
+> info: 2026-06-09T16:37:13.923Z - Starting the Flow Job (shadow)...
+> info: 2026-06-09T16:37:13.925Z - Starting the Fair Price Job...
+> info: 2026-06-09T16:37:13.927Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-09T16:37:13.950Z - App is running at 3001
+> info: 2026-06-09T16:37:14.088Z - App Exchange Monitor is running!
+> info: 2026-06-09T16:37:15.699Z - app-ws.onConnection
+> info: 2026-06-09T16:37:15.806Z - app-ws.onConnection
+> info: 2026-06-09T16:37:16.145Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-09T16:37:32.160Z - app-ws.onConnection
+> info: 2026-06-09T16:37:32.243Z - app-ws.onConnection
+> info: 2026-06-09T16:37:38.852Z - app-ws.onConnection
+> info: 2026-06-09T16:37:43.959Z - app-ws.onConnection
+> === any error logs since boot? ===
+> ```
+
+## 🤖 Claude *(16:39:47)*
+
+
+## 🤖 Claude *(16:39:49)*
+
+Boot1 limpo (16:37:14 "App Exchange Monitor is running!", boot-load rodou com tabela vazia, zero erros, meu código novo carregou). Agora o PATCH da condição (id=25: edge→level) + reseed do bucket. Vou usar um arquivo SQL pra evitar inferno de aspas (a condição tem aspas simples):
+
+## 🤖 Claude *(16:39:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/harvest_deploy.sql",
+  "content": "-- A) PATCH da condi\u00e7\u00e3o da automa\u00e7\u00e3o de venda viva (id=25): edge-trigger -> LEVEL-trigger + trava\nUPDATE automations\nSET conditions = \"MEMORY['BTCUSDT:HARVEST'].qty>0 && MEMORY['BTCUSDT:BOOK'].current.bestBid>MEMORY['BTCUSDT:HARVEST'].cost*1.0120 && !MEMORY['BTCUSDT:HARVEST_SELLING']\"\nWHERE id=25 AND name='Harvest Sell BTCUSDT';\n\n-- B) Reseed do bucket vivo (preserva a 0,00016 BTC @ 58840.9 atrav\u00e9s do restart do deploy)\nINSERT INTO harvestPositions (symbol, qty, cost, atMs, createdAt, updatedAt)\nVALUES ('BTCUSDT', 0.00016, 58840.9, UNIX_TIMESTAMP()*1000, NOW(), NOW())\nON DUPLICATE KEY UPDATE qty=VALUES(qty), cost=VALUES(cost), atMs=VALUES(atMs), updatedAt=NOW();\n\n-- Verifica\u00e7\u00e3o dos writes\nSELECT id, conditions AS new_condition FROM automations WHERE id=25;\nSELECT symbol, qty, cost, atMs FROM harvestPositions WHERE symbol='BTCUSDT';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/harvest_deploy.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:39:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "chmod 644 /tmp/harvest_deploy.sql\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; . ./.env 2>/dev/null; set +a\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" < /tmp/harvest_deploy.sql 2>&1 | grep -v \"Using a password\"\n'",
+  "description": "Apply condition PATCH + bucket reseed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> id	new_condition
+> 25	MEMORY['BTCUSDT:HARVEST'].qty>0 && MEMORY['BTCUSDT:BOOK'].current.bestBid>MEMORY['BTCUSDT:HARVEST'].cost*1.0120 && !MEMORY['BTCUSDT:HARVEST_SELLING']
+> symbol	qty	cost	atMs
+> BTCUSDT	0.00016	58840.9	1781023198000
+> ```
+
+## 🤖 Claude *(16:40:09)*
+
+
+## 🤖 Claude *(16:40:11)*
+
+PATCH + reseed OK:
+- Condição id=25 agora é **level-trigger** (`...bestBid>cost*1.0120 && !HARVEST_SELLING`).
+- Bucket persistido: `BTCUSDT qty=0.00016 cost=58840.9`.
+
+Agora restart (boot2 — carrega a condição nova no BRAIN + boot-load restaura o bucket → venda armada):
+
+## 🤖 Claude *(16:40:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose restart backend 2>&1 | tail -3\necho \"=== aguardando boot2 ===\"\nfor i in $(seq 1 30); do\n  if docker compose exec -T backend sh -lc \"grep -q \\\"App Exchange Monitor is running\\\" logs/system.log 2>/dev/null && tail -40 logs/system.log | grep -q \\\"16:4\\\"\" 2>/dev/null; then :; fi\n  sleep 2\n  if docker compose exec -T backend sh -lc \"tail -3 logs/system.log 2>/dev/null | grep -q recarregados\" 2>/dev/null; then echo \"boot-load OK after ~$((i*2))s\"; break; fi\ndone\necho \"=== boot-load + recent system.log (boot2) ===\"\ndocker compose exec -T backend sh -lc \"tail -25 logs/system.log 2>/dev/null\"\n'",
+  "description": "Restart backend (boot2) and watch boot-load"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Restarting 
+>  Container tradeux-backend-1 Started 
+> === aguardando boot2 ===
+> boot-load OK after ~4s
+> === boot-load + recent system.log (boot2) ===
+> info: 2026-06-09T16:37:13.922Z - Starting the Regime Job...
+> info: 2026-06-09T16:37:13.923Z - Starting the Flow Job (shadow)...
+> info: 2026-06-09T16:37:13.925Z - Starting the Fair Price Job...
+> info: 2026-06-09T16:37:13.927Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-09T16:37:13.950Z - App is running at 3001
+> info: 2026-06-09T16:37:14.088Z - App Exchange Monitor is running!
+> info: 2026-06-09T16:37:15.699Z - app-ws.onConnection
+> info: 2026-06-09T16:37:15.806Z - app-ws.onConnection
+> info: 2026-06-09T16:37:16.145Z - userDataStream:subscribeEvent: "userData"
+> info: 2026-06-09T16:37:32.160Z - app-ws.onConnection
+> info: 2026-06-09T16:37:32.243Z - app-ws.onConnection
+> info: 2026-06-09T16:37:38.852Z - app-ws.onConnection
+> info: 2026-06-09T16:37:43.959Z - app-ws.onConnection
+> info: 2026-06-09T16:40:18.720Z - Getting the default settings with ID 1...
+> info: 2026-06-09T16:40:18.793Z - Initializing the Beholder Brain...
+> info: 2026-06-09T16:40:18.824Z - Starting the Beholder Agenda...
+> info: 2026-06-09T16:40:18.825Z - Starting the server apps...
+> info: 2026-06-09T16:40:18.828Z - App Web Socket Server is running!
+> info: 2026-06-09T16:40:18.887Z - Starting the Regime Job...
+> info: 2026-06-09T16:40:18.887Z - Starting the Flow Job (shadow)...
+> info: 2026-06-09T16:40:18.889Z - Starting the Fair Price Job...
+> info: 2026-06-09T16:40:18.891Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-09T16:40:18.919Z - App is running at 3001
+> info: 2026-06-09T16:40:19.056Z - Harvester buckets recarregados: BTCUSDT:qty=0.00016@58840.9.
+> info: 2026-06-09T16:40:19.056Z - App Exchange Monitor is running!
+> ```
+
+## 🤖 Claude *(16:40:31)*
+
+
+## 🤖 Claude *(16:40:32)*
+
+**B (persistência) PROVADO ao vivo:** boot-load restaurou `BTCUSDT:qty=0.00016@58840.9` da tabela após o restart (16:40:19). App saudável. A venda (id=25) está armada com level-trigger. Agora observo se a venda no-loss dispara (prova A). Deixa eu acompanhar a automação 25 + estado do bucket:
+
+## 🤖 Claude *(16:40:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; . ./.env 2>/dev/null; set +a\necho \"=== A25.log (venda) \u2014 \u00faltimas linhas ===\"\ndocker compose exec -T backend sh -lc \"tail -12 logs/A25.log 2>/dev/null || echo (sem A25.log ainda)\"\necho \"=== HARVEST refs em todos os logs (boot2+) ===\"\ndocker compose exec -T backend sh -lc \"grep -rh \\\"HARVEST\\\\|Harvest\\\" logs/*.log 2>/dev/null | tail -10\"\necho \"=== bucket persistido agora ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SELECT CONCAT(symbol, \\\" qty=\\\", qty, \\\" cost=\\\", cost) FROM harvestPositions WHERE symbol=\\\"BTCUSDT\\\";\" 2>&1 | grep -v \"Using a password\"\necho \"=== \u00faltimas ordens SELL da auto 25 ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SELECT CONCAT(orderId, \\\" \\\", side, \\\" \\\", quantity, \\\" @\\\", IFNULL(avgPrice,limitPrice), \\\" \\\", status, \\\" \\\", FROM_UNIXTIME(transactTime/1000)) FROM orders WHERE automationId=25 ORDER BY id DESC LIMIT 3;\" 2>&1 | grep -v \"Using a password\"\n'",
+  "description": "Check sell automation activity and bucket state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A25.log (venda) — últimas linhas ===
+> sh: syntax error: unexpected word (expecting ")")
+> === HARVEST refs em todos os logs (boot2+) ===
+> info: 2026-06-09T16:40:21.136Z - Beholder evaluated a condition at automation: Harvest Sell BTCUSDT => MEMORY['BTCUSDT:HARVEST'].qty>0 && MEMORY['BTCUSDT:BOOK'].current.bestBid>MEMORY['BTCUSDT:HARVEST'].cost*1.0120 && !MEMORY['BTCUSDT:HARVEST_SELLING']
+> info: 2026-06-09T16:40:21.428Z - Automation Harvest Sell BTCUSDT finished execution at Tue Jun 09 2026 16:40:21 GMT+0000 (Coordinated Universal Time)
+> info: 2026-06-09T16:40:24.444Z - HARVEST[BTCUSDT] qty 0.00016->0 cost 58840.9->0 (fill SELL)
+> info: 2026-06-09T16:40:19.056Z - Harvester buckets recarregados: BTCUSDT:qty=0.00016@58840.9.
+> === bucket persistido agora ===
+> BTCUSDT qty=0 cost=0
+> === últimas ordens SELL da auto 25 ===
+> 2550606 SELL 0.00016000 @60813.63000000 FILLED 2026-06-09 16:40:21.2790
+> ```
+
+## 🤖 Claude *(16:41:03)*
+
+
+## 🤖 Claude *(16:41:06)*
+
+🎉 **A (level-trigger) PROVADO end-to-end ao vivo** — exatamente o bug que foi corrigido:
+- 16:40:19 boot-load restaurou o bucket **já acima do alvo**;
+- 16:40:21 a automação avaliou a **condição nova** e disparou **imediatamente** (o edge-trigger antigo teria perdido — sem cruzamento fresco);
+- SELL `2550606`: `0,00016 BTC @ 60.813,63` **FILLED** → **no-loss +3,35%** (cost 58.840,9);
+- 16:40:24 bucket zerou (qty→0) e a **persistência** atualizou pra qty=0.
+
+Deixa eu confirmar o **anti-oversell** (exatamente 1 venda, trava liberada):
+
+## 🤖 Claude *(16:41:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; . ./.env 2>/dev/null; set +a\necho \"=== n\u00ba de ordens SELL da auto 25 (anti-oversell: deve ser 1) ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SELECT CONCAT(\\\"total SELL auto25 = \\\", COUNT(*)) FROM orders WHERE automationId=25 AND side=\\\"SELL\\\";\" 2>&1 | grep -v \"Using a password\"\necho \"=== A25.log (venda) tail ===\"\ndocker compose exec -T backend sh -lc \"tail -8 logs/A25.log 2>/dev/null\"\necho \"=== HARVEST_SELLING agora (deve estar AUSENTE/liberada) \u2014 via beholder memory grep ===\"\ndocker compose exec -T backend sh -lc \"grep -h HARVEST_SELLING logs/beholder.log 2>/dev/null | tail -4; echo \\\"(set no place + delete no fill se LOGS on)\\\"\"\n'",
+  "description": "Confirm anti-oversell: exactly one sell + lock cleared"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nº de ordens SELL da auto 25 (anti-oversell: deve ser 1) ===
+> total SELL auto25 = 1
+> === A25.log (venda) tail ===
+>   commission: '0',
+>   isMaker: false,
+>   updatedAt: 2026-06-09T16:40:21.416Z,
+>   createdAt: 2026-06-09T16:40:21.416Z
+> }
+> info: 2026-06-09T16:40:21.428Z - Automation Harvest Sell BTCUSDT finished execution at Tue Jun 09 2026 16:40:21 GMT+0000 (Coordinated Universal Time)
+> Results: [{"type":"success","text":"Order SELL BTCUSDT FILLED"}]
+> info: 2026-06-09T16:40:24.444Z - HARVEST[BTCUSDT] qty 0.00016->0 cost 58840.9->0 (fill SELL)
+> === HARVEST_SELLING agora (deve estar AUSENTE/liberada) — via beholder memory grep ===
+> (set no place + delete no fill se LOGS on)
+> ```
+
+## 🤖 Claude *(16:42:01)*
+
+
+## 🤖 Claude *(16:42:03)*
+
+**Anti-oversell confirmado: exatamente 1 venda** (total SELL auto25 = 1) — o level-trigger disparou uma vez, a trava barrou re-fire nos ticks seguintes, e o bucket zerou no fill. **A+B validados end-to-end ao vivo.** 🎯
+
+Deixa eu fazer o health-check final do stack e confirmar `vivo==master==origin`:
+
+## 🤖 Claude *(16:42:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== containers ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"' 2>/dev/null\necho \"=== site ===\"; curl -s -m6 -o /dev/null -w \"https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/\necho \"=== deployed == master == origin? ===\"; git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -1\necho \"=== automa\u00e7\u00f5es ativas (devem estar de volta, inertes/bear) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; set -a; . ./.env 2>/dev/null; set +a; docker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \"SELECT CONCAT(\\\"ativas=\\\", COUNT(*)) FROM automations WHERE isActive=1;\" 2>&1 | grep -v \"Using a password\"'",
+  "description": "Final stack health check and sync confirmation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up 14 hours
+> tradeux-backend-1    Up About a minute
+> tradeux-db-1         Up 6 days (healthy)
+> tradeux-frontend-1   Up About an hour
+> === site ===
+> https://tradeux.gcrux.com -> 200
+> === deployed == master == origin? ===
+> 9d83b72 feat(harvester): venda no-loss LEVEL-trigger + trava anti-oversell + persistencia do bucket
+> === automações ativas (devem estar de volta, inertes/bear) ===
+> ativas=19
+> ```
+
+## 🤖 Claude *(16:42:21)*
+
+
+## 🤖 Claude *(16:42:23)*
+
+**Deploy A+B completo e verificado.** Stack: 4 containers up, site 200, **vivo==master==origin==`9d83b72`**, 19 automações ativas de volta (inertes/bear). Marcando tarefas e atualizando memória, depois parto pro C:
+
+## 🤖 Claude *(16:42:23)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(16:42:24)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(16:42:28)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed",
+  "description": "DEPLOYADO+VERIFICADO ao vivo. boot1 migration criou harvestPositions; PATCH condi\u00e7\u00e3o id=25 (edge\u2192level); reseed 0,00016@58840.9; boot2 boot-load restaurou bucket (B provado). Venda no-loss disparou IMEDIATA no bucket j\u00e1-acima-do-alvo (A provado \u2014 bug v1 resolvido): SELL 2550606 0,00016@60813.63 FILLED +3,35%; bucket zerou+persistiu qty=0; exatamente 1 venda (anti-oversell ok). vivo==master==origin 9d83b72."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 description, status
+> ```
+
+## 🤖 Claude *(16:42:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-harvester-experiment
+> 3	description: "Harvester de dislocação (vault-safe, ATIVO id22-25) vs grid nativo (REJEITADO: drena cofre); bug do MIN_NOTIONAL×1 < $5"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 60395cbe-5bcd-4389-a706-1cc57b403b01
+> 8	---
+> 9	
+> 10	Experimento ousado no testnet (2026-06-09, commit `7aebc26`) pra colher o chop/dislocação do BTCUSDT. Análise das 4h: ER~0.08 = chop puro; o **testnet disloca ABAIXO do mainnet em wicks e REVERTE** (corr 0.89 nos closes) = alfa testnet-específico; BTC testnet é o único feed limpo (alts descoladas/RSI travado).
+> 11	
+> 12	**GRID nativo do Beholder = REJEITADO.** `gridEval`/`generateGrids` (setup-grid.js, id21) operou 26 ordens MAS **vende por nível DIRETO DA CARTEIRA, sem rastrear inventário** → 24 SELL vs 2 BUY → **drenou ~0.0044 BTC do cofre** (mesma sangria do pivô). id21 PARADO; script com aviso ⛔NÃO-ATIVAR. **Não usar o grid nativo p/ nada que toque o cofre.**
+> 13	
+> 14	**HARVESTER = o que sobrevive (vault-safe, VALIDADO ao vivo).** Vende **só o próprio bucket** `MEMORY['<sym>:HARVEST']={qty,cost}` (custo médio ponderado, OBJETO pq o `validateConditions` exige `.cost*1.012`; clone do [[tradeux-trend-following]] `TREND_QTY`), via `app-em.updateHarvestPosition`; `calcQty` ganhou `HARVEST_QTY`. `fairPriceJob` grava `MEMORY['<sym>:FAIR']`=preço mainnet (sentinel `{price:0}` após N falhas = fail-safe de staleness sem `Date.now()`). 3 rungs de compra-limite funda (−3/−5/−7% do FAIR, **desgateadas do regime**) + venda no-loss. id22/23/24+id25 ATIVAS.
+> 15	
+> 16	**Why:** o cofre de BTC nunca pode ser drenado (origem do pivô [[tradeux-farm-funnel-backtest]]); o harvester garante isso por construção (vende só o que comprou, com lucro); o grid nativo NÃO garante.
+> 17	
+> 18	**How to apply:** p/ qualquer estratégia que venda BTC, use o padrão do bucket (rastreia o que comprou) — NÃO o grid nativo. Reaplicar pós-`make nuke`: `setup-harvester.js` (cria inativo) → `scripts/automation-ctl.js ACTION=start IDS=22,23,24,25`.
+> 19	
+> 20	**LIVE (2026-06-09, observado disparando): a tese se provou — BUY side OK, SELL tem 2 limitações v1.** A rung −3% comprou 0,00016 BTC @ **58.840** quando o testnet wickou −4% abaixo do mainnet (FAIR 61.369) e reverteu +4,2% em ~1min (size ×2 passou no NOTIONAL). **Limitação 1 (SELL perde revert rápido):** a venda no-loss usa edge-trigger (`previous.bestBid<=alvo && current>alvo`), mas o bucket só popula **3s após o fill** (`processExecutionData` setTimeout) — nesse gap o preço já reverteu acima do alvo → sem cruzamento fresco → não vende; posição fica lucrativa-mas-pendente (realiza num cruzamento futuro). **Refino:** trocar o edge-trigger por trava "harvest-selling" (set no place, libera no FILLED) — pega revert rápido SEM oversell (NÃO remover o edge-trigger sem substituto: no gap de 3s venderia 2-3× o bucket). **Limitação 2 (bucket volátil):** um restart do backend (deploy paralelo) zerou a MEMORY → orfanou uma posição (BTC fica na carteira, não-rastreado) = a [[tradeux-trend-following]] mesma dívida de persistência, agora confirmada ao vivo → **persistir HARVEST antes de escalar size.**
+> 21	
+> 22	**🐛 Bug do MIN_NOTIONAL (validado ao vivo, -1013):** `MIN_NOTIONAL×1` arredonda pra baixo (`Math.floor` por `stepSize` no `calcQty`; notional no pior caso = `mult×minNotional − stepSize×preço`) e **FALHA o filtro NOTIONAL ($5)** ao disparar. Harvester usa `×2` (~$9). **O FARM (Farm Buy = auto id 9/11/13, otid 5/7/9) tinha o mesmo `MIN_NOTIONAL×1` → CORRIGIDO em 2026-06-09:** `FARM_SIZE_MULT` default 1→2 em `setup-farm.js` + `UPDATE orderTemplates SET quantityMultiplier=2 WHERE name LIKE 'Farm Buy%'` (3 vivos) + **reload da BRAIN** via stop/start das auto 9/11/13 (pq o template fica CACHEADO — ver [[tradeux-ordertemplate-brain-cache]]). Verificado ×2 (preços testnet ao vivo): **LTC $9.99 · BNB $9.45 · ADA $9.98** (todas >$5; com ×1 todas falhavam: $4.99/$4.72/$4.99). **ADA é a MAIS segura** (stepSize×preço=$0.016), não a mais arriscada — o risco mora em moeda cara/step grosso. Ver [[tradeux-settings-password-incident]] (outro achado da mesma sessão).
+> 23	
+> ```
+
+## 🤖 Claude *(16:42:42)*
+
+
+## 🤖 Claude *(16:42:42)*
+
+A+B fechados. Vou atualizar a memória do harvester (limitações v1 → RESOLVIDAS + validação ao vivo + follow-up do TL):
+
+## 🤖 Claude *(16:42:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md",
+  "old_string": "**Refino:** trocar o edge-trigger por trava \"harvest-selling\" (set no place, libera no FILLED) \u2014 pega revert r\u00e1pido SEM oversell (N\u00c3O remover o edge-trigger sem substituto: no gap de 3s venderia 2-3\u00d7 o bucket). **Limita\u00e7\u00e3o 2 (bucket vol\u00e1til):** um restart do backend (deploy paralelo) zerou a MEMORY \u2192 orfanou uma posi\u00e7\u00e3o (BTC fica na carteira, n\u00e3o-rastreado) = a [[tradeux-trend-following]] mesma d\u00edvida de persist\u00eancia, agora confirmada ao vivo \u2192 **persistir HARVEST antes de escalar size.**",
+  "new_string": "**Refino:** trocar o edge-trigger por trava \"harvest-selling\" (set no place, libera no FILLED) \u2014 pega revert r\u00e1pido SEM oversell (N\u00c3O remover o edge-trigger sem substituto: no gap de 3s venderia 2-3\u00d7 o bucket). **Limita\u00e7\u00e3o 2 (bucket vol\u00e1til):** um restart do backend (deploy paralelo) zerou a MEMORY \u2192 orfanou uma posi\u00e7\u00e3o (BTC fica na carteira, n\u00e3o-rastreado) = a [[tradeux-trend-following]] mesma d\u00edvida de persist\u00eancia, agora confirmada ao vivo \u2192 **persistir HARVEST antes de escalar size.**\n\n**\u2705 AMBAS as limita\u00e7\u00f5es v1 RESOLVIDAS + deployadas + VALIDADAS ao vivo (2026-06-09, commit `9d83b72`).** **A (SELL revert r\u00e1pido):** edge-trigger \u2192 **LEVEL-trigger** (`qty>0 && bestBid>cost*1.012 && !MEMORY['<sym>:HARVEST_SELLING']`) + trava `HARVEST_SELLING` (set em `beholder.placeOrder` LOGO ap\u00f3s `exchange.sell`=fail-closed, clear em `app-em.updateHarvestPosition` em QUALQUER terminal FILLED/CANCELED/REJECTED/EXPIRED); `beholder.shouldntInvert` desliga o double-check invertido s\u00f3 p/ esta automa\u00e7\u00e3o (casa o token `HARVEST_SELLING`). **B (persist\u00eancia):** tabela `harvestPositions` (espelha [[tradeux-regime-gate]] regimeStates) + upsert no fill + boot-load `app-em.loadHarvestPositions` (reconstr\u00f3i a trava p/ venda aberta ANTES de armar o bucket \u2192 fecha janela de oversell p\u00f3s-restart). **Valida\u00e7\u00e3o ao vivo:** reseed 0,00016@58840.9 \u2192 restart \u2192 boot-load restaurou o bucket \u2192 a venda disparou IMEDIATA no bucket j\u00e1-acima-do-alvo (o caso que o edge-trigger perdia) \u2192 SELL 0,00016@**60813.63 FILLED no-loss +3,35%**; **exatamente 1 venda** (anti-oversell ok); bucket zerou+persistiu. Gates QA PASS-c/ressalvas + TL APPROVE. **\u26a0\ufe0f Follow-up ANTES de escalar size:** reconciliar o bucket por `executedQty` no terminal N\u00c3O-FILLED da venda (partial\u2192cancel deixa o bucket superestimado \u2192 re-arma e venderia mais do cofre; `calcQty` capa na carteira, n\u00e3o no bucket). A 0,00015 canary segue \u00f3rf\u00e3 na carteira (custo 62635, n\u00e3o co-rastre\u00e1vel no bucket single-{qty,cost})."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:43:02)*
+
+
+## 🤖 Claude *(16:43:03)*
+
+Memória atualizada. Agora o **C** — o gatilho de saída do bear pras Fases 4-5. Preciso entender o que elas envolvem concretamente (é money-path: ligar compra de BTC ao vivo) antes de desenhar. Vou ler a estratégia + funnelJob (SHADOW atual) + regimeJob (detecção do bear):
+
+## 🤖 Claude *(16:43:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== STRATEGY-farm-funnel.md \u00a75 + fases (grep) ===\"; grep -n \"Fase 4\\|Fase 5\\|Fase 3\\|## \\|### \\|funil\\|SHADOW\\|ao vivo\\|calibra\" docs/STRATEGY-farm-funnel.md | head -40"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STRATEGY-farm-funnel.md §5 + fases (grep) ===
+> 7:## 1. Sumário executivo
+> 24:## 2. Arquitetura
+> 41:Coordenação por regime (já existe ao vivo via `regimeJob` → `MEMORY['<sym>:REGIME']`):
+> 44:## 3. Resultados do backtest (equity total agregado — net de fee, sem lookahead)
+> 63:## 4. Decisões de design
+> 76:## 5. Plano de implementação (faseado — cada fase com gate QA+TL antes de ativar; money-path)
+> 79:- **Fase 1 — Funil em SHADOW:** `funnelJob` calcula e loga o que escoaria pra BTC (sem comprar). Zero money-path.
+> 82:- **Fase 3 — Trend nas alts + switch:** estender id6/id7 (ou análogas) pras alts com o switch de regime macro.
+> 83:- **Fase 4 — Funil ao vivo:** ligar a compra de BTC com o lucro realizado (depois de observar o shadow).
+> 84:- **Fase 5 — Calibração:** timeframe 5m, seleção de alts, params, por evidência acumulada.
+> 88:## 6. Riscos e honestidade
+> 98:## 7. Reproduzir o backtest
+> ```
+
+## 🤖 Claude *(16:43:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/funnelJob.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Funnel Job — o "funil" da estratégia Farm-and-Funnel: escoa o LUCRO realizado das alts pra BTC
+> 4	 * (acumula a reserva de BTC = a meta). Ver docs/STRATEGY-farm-funnel.md e memória tradeux-farm-funnel-backtest.
+> 5	 *
+> 6	 * >>> SHADOW MODE (v1) <<<  OBSERVA e LOGA o que escoaria, mas NÃO compra BTC. Igual o flowJob começou
+> 7	 * shadow: primeiro a gente observa a mecânica e a distribuição (o dado é o juiz), só DEPOIS liga o
+> 8	 * money-path (Fase 4 do plano), com gate QA+TL. Aqui é zero money-path: só lê saldo e loga.
+> 9	 *
+> 10	 * O que mede por ciclo: saldo USDT livre (caixa de trabalho), reserva de BTC (o cofre) e — se um
+> 11	 * baseline de capital de trabalho for configurado — o EXCEDENTE de USDT que escoaria pra BTC ao preço
+> 12	 * atual. v1 = skimming por saldo (simples, honesto); v2 = rastrear lucro realizado por trade das
+> 13	 * automações de farm (mais fiel) quando as alts estiverem operando.
+> 14	 *
+> 15	 * Segurança: SHADOW (não envia ordem); kill-switch FUNNEL_JOB_ENABLED; skip-on-error (uma falha de
+> 16	 * rede/DB nunca derruba o job nem outros jobs); idempotente; timer.unref (não segura o shutdown).
+> 17	 *
+> 18	 * Env:
+> 19	 *   FUNNEL_JOB_ENABLED   (default 'true')     — liga/desliga o job
+> 20	 *   FUNNEL_REFRESH_MS    (default 3600000)    — intervalo do poll (1h; o funil é lento, piso 60s)
+> 21	 *   FUNNEL_BASELINE_USDT (default 0)          — capital de trabalho base; USDT acima disso = excedente a escoar
+> 22	 *                                               (0 = só observa, não calcula escoamento — até as alts farmarem)
+> 23	 *   FUNNEL_MIN_USDT      (default 10)         — só consideraria escoar excedentes >= isto (evita poeira)
+> 24	 *   FUNNEL_BTC_SYMBOL    (default 'BTCUSDT')  — par de destino (o cofre)
+> 25	 */
+> 26	const beholder = require('./beholder');
+> 27	const settingsRepository = require('./repositories/settingsRepository');
+> 28	const logger = require('./utils/logger');
+> 29	
+> 30	const ENABLED = (process.env.FUNNEL_JOB_ENABLED || 'true') !== 'false';
+> 31	const _refresh = parseInt(process.env.FUNNEL_REFRESH_MS || '3600000', 10);
+> 32	const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 60000 ? _refresh : 3600000;
+> 33	const _base = parseFloat(process.env.FUNNEL_BASELINE_USDT || '0');
+> 34	const BASELINE_USDT = Number.isFinite(_base) && _base > 0 ? _base : 0;
+> 35	const _min = parseFloat(process.env.FUNNEL_MIN_USDT || '10');
+> 36	const MIN_USDT = Number.isFinite(_min) && _min > 0 ? _min : 10;
+> 37	const BTC = (process.env.FUNNEL_BTC_SYMBOL || 'BTCUSDT').toUpperCase();
+> 38	const QUOTE = 'USDT';
+> 39	const BASE_ASSET = BTC.replace(/USDT$/, '') || 'BTC';
+> 40	
+> 41	let timer = null;
+> 42	let running = false;        // trava de re-entrância
+> 43	let LAST = null;            // último snapshot (observabilidade)
+> 44	let AT = null;              // timestamp (ms) do último snapshot
+> 45	let UNAVAIL = false;        // saldo indisponível já logado (loga 1x por episódio)
+> 46	
+> 47	// preço do BTC: lê o MINI_TICKER que o monitor de BTC já alimenta na MEMORY do engine (sem nova chamada
+> 48	// de rede). Defensivo: vários nomes de campo possíveis; null se ausente (o snapshot só omite o BTC-equiv).
+> 49	function btcPrice() {
+> 50	    try {
+> 51	        const mt = beholder.getMemory(BTC, 'MINI_TICKER');
+> 52	        const p = mt && (mt.close ?? mt.current ?? mt.c ?? mt.lastPrice);
+> 53	        const n = parseFloat(p);
+> 54	        return Number.isFinite(n) && n > 0 ? n : null;
+> 55	    } catch (e) { return null; }
+> 56	}
+> 57	
+> 58	async function runOnce() {
+> 59	    if (running) return;
+> 60	    running = true;
+> 61	    try {
+> 62	        // conta default → exchange autenticada (mesmo caminho do exchangeController/app-em)
+> 63	        const ds = await settingsRepository.getDefaultSettings();
+> 64	        if (!ds || !ds.id) { if (!UNAVAIL) { UNAVAIL = true; logger('funnel', 'sem settings default; funil ocioso.'); } return; }
+> 65	        const settings = await settingsRepository.getSettingsDecrypted(ds.id);
+> 66	        const exchange = require('./utils/exchange')(settings);
+> 67	        const bal = await exchange.balance();
+> 68	        if (!bal || !bal[QUOTE]) {
+> 69	            if (!UNAVAIL) { UNAVAIL = true; logger('funnel', 'saldo indisponível; MEMORY preservada (funil ocioso).'); }
+> 70	            return;
+> 71	        }
+> 72	        if (UNAVAIL) { UNAVAIL = false; logger('funnel', 'saldo recuperado.'); }
+> 73	
+> 74	        const usdtFree = parseFloat(bal[QUOTE].available) || 0;
+> 75	        const btcReserve = parseFloat((bal[BASE_ASSET] || {}).available) || 0;
+> 76	        const price = btcPrice();
+> 77	        const btcReserveUsd = price ? btcReserve * price : null;
+> 78	
+> 79	        // excedente a escoar (só se um baseline foi configurado; senão v1 apenas observa)
+> 80	        let excessUsdt = 0, btcWouldBuy = 0;
+> 81	        if (BASELINE_USDT > 0) {
+> 82	            excessUsdt = Math.max(0, usdtFree - BASELINE_USDT);
+> 83	            if (excessUsdt >= MIN_USDT && price) btcWouldBuy = excessUsdt / price;
+> 84	        }
+> 85	
+> 86	        LAST = { usdtFree, btcReserve, btcReserveUsd, price, baseline: BASELINE_USDT, excessUsdt, btcWouldBuy };
+> 87	        AT = Date.now();
+> 88	
+> 89	        // SHADOW: loga o estado (reserva crescendo + caixa) e, se houver excedente, o que escoaria.
+> 90	        const base = `USDT=${usdtFree.toFixed(2)} | reserva ${BASE_ASSET}=${btcReserve.toFixed(6)}${btcReserveUsd != null ? ` (~$${btcReserveUsd.toFixed(2)})` : ''}${price ? ` @ $${price.toFixed(2)}` : ' (preço n/d)'}`;
+> 91	        if (BASELINE_USDT > 0 && btcWouldBuy > 0)
+> 92	            logger('funnel', `[shadow] ${base} → escoaria $${excessUsdt.toFixed(2)} acima do baseline → +${btcWouldBuy.toFixed(6)} ${BASE_ASSET} (NÃO comprado: shadow).`);
+> 93	        else
+> 94	            logger('funnel', `[shadow] ${base}${BASELINE_USDT > 0 ? ` | sem excedente (baseline $${BASELINE_USDT})` : ' | observando (sem baseline)'}.`);
+> 95	    } catch (err) {
+> 96	        if (!UNAVAIL) { UNAVAIL = true; logger('funnel', `erro no ciclo do funil: ${err.message}`); }
+> 97	    } finally {
+> 98	        running = false;
+> 99	    }
+> 100	}
+> 101	
+> 102	function start() {
+> 103	    if (!ENABLED) { logger('funnel', 'Funnel job DESABILITADO (FUNNEL_JOB_ENABLED=false).'); return; }
+> 104	    if (timer) return; // idempotente
+> 105	    runOnce(); // primeira passada imediata no boot
+> 106	    timer = setInterval(runOnce, REFRESH_MS);
+> 107	    if (timer.unref) timer.unref();
+> 108	    logger('funnel', `Funnel job iniciado SHADOW (intervalo ${REFRESH_MS}ms; baseline $${BASELINE_USDT || '—'}). NÃO compra BTC ainda (observação).`);
+> 109	}
+> 110	
+> 111	function stop() {
+> 112	    if (timer) { clearInterval(timer); timer = null; }
+> 113	    running = false;
+> 114	}
+> 115	
+> 116	// Status p/ observabilidade (endpoint/painel futuro): último snapshot + idade.
+> 117	function getStatus() {
+> 118	    return {
+> 119	        enabled: ENABLED, refreshMs: REFRESH_MS, mode: 'shadow', baselineUsdt: BASELINE_USDT,
+> 120	        minUsdt: MIN_USDT, symbol: BTC, running,
+> 121	        at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null,
+> 122	        last: LAST,
+> 123	    };
+> 124	}
+> 125	
+> 126	module.exports = { start, stop, runOnce, getStatus };
+> 127	
+> ```
+
+## 🤖 Claude *(16:43:35)*
+
+
+## 🤖 Claude *(16:43:38)*
+
+Importante: a estratégia (doc §76) diz **"cada fase com gate QA+TL antes de ativar; money-path"**, e a Fase 4 é "ligar compra de BTC **depois de observar o shadow**". Ou seja, um gatilho que vai AO VIVO cego no instante que sai do bear contraria o design de segurança da própria estratégia. Deixa eu ler o regimeJob (detecção da transição + notificação) e o §5/§6 pra desenhar o C certo:
+
+## 🤖 Claude *(16:43:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/docs/STRATEGY-farm-funnel.md",
+  "offset": 76,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 76	## 5. Plano de implementação (faseado — cada fase com gate QA+TL antes de ativar; money-path)
+> 77	
+> 78	- **Fase 0 (feita):** pausar id3; validar a arquitetura por backtest; este doc.
+> 79	- **Fase 1 — Funil em SHADOW:** `funnelJob` calcula e loga o que escoaria pra BTC (sem comprar). Zero money-path.
+> 80	- **Fase 2 — Farm das alts (inativo→ativo):** `setup-farm.js` cria símbolos + templates + automações no-loss
+> 81	  (grid nativo) das alts selecionadas, INATIVAS; ativa com gate, capital pequeno, 1 alt por vez.
+> 82	- **Fase 3 — Trend nas alts + switch:** estender id6/id7 (ou análogas) pras alts com o switch de regime macro.
+> 83	- **Fase 4 — Funil ao vivo:** ligar a compra de BTC com o lucro realizado (depois de observar o shadow).
+> 84	- **Fase 5 — Calibração:** timeframe 5m, seleção de alts, params, por evidência acumulada.
+> 85	
+> 86	Tudo runtime/idempotente (reaplicar pós-`make nuke`), seguindo `setup-trend.js`/`activate-trend.js`.
+> 87	
+> 88	## 6. Riscos e honestidade
+> 89	
+> 90	- **Whipsaw do trend em lateral** (−5 a −10%/ano): inerente; mitigado pelo switch de regime, não eliminado.
+> 91	- **Inventário preso (no-loss)**: o "lucro" pode ser financiado por capital imobilizado num bear → o equity total
+> 92	  é o juiz, não o lucro realizado isolado.
+> 93	- **Testnet sintético**: o preço de execução do testnet **não** valida P&L. A validação de lucro é por **backtest
+> 94	  mainnet** (este doc) e, no futuro, operação real. O testnet valida só o *wiring* da lógica.
+> 95	- **A meta**: +3 BTC ≈ 3× o patrimônio atual (~$108k). Horizonte de ciclos (anos), dependente de capturar bulls.
+> 96	  Calibrar a ambição vs. risco com o dono à medida que os dados reais chegam.
+> 97	
+> 98	## 7. Reproduzir o backtest
+> 99	
+> 100	```bash
+> ```
+
+## 🤖 Claude *(16:43:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "offset": 100,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	                if (STALE.delete(symbol)) // saiu do estado stale (regime voltou a ser conhecido)
+> 101	                    logger('regime', `${symbol}: regime recuperado => ${r.regime}.`);
+> 102	
+> 103	                if (LAST[symbol] !== r.regime) {
+> 104	                    logger('regime', `${symbol}:REGIME => ${r.regime} (${r.reason})`);
+> 105	                    LAST[symbol] = r.regime;
+> 106	                }
+> 107	
+> 108	                // ---- Trend Following: sinal de cruzamento SMA 50/200 da MAINNET (golden/death) ----
+> 109	                // ORDEM IMPORTA: o REGIME é escrito ACIMA, ANTES deste bloco. A automação de trend
+> 110	                // gateia por REGIME!=='bear' no MESMO tick do TREND_CROSS, então o regime precisa já
+> 111	                // estar fresco na MEMORY quando o sinal dispara. NÃO reordene estas duas escritas.
+> 112	                // O JOB é o ÚNICO detector de borda: deriva a TRANSIÇÃO de `above` (fast>slow) e
+> 113	                // escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h'] = 'golden'|'death'|'none'.
+> 114	                // Só a transição é escrita com executeAutomations=true → dispara a automação de trend
+> 115	                // UMA vez; 'none' é passivo. A automação reage a uma IGUALDADE (==='golden'/'death'),
+> 116	                // SEM o double-check do invertCondition → sem repetição intra-hora nem perda de sinal.
+> 117	                if (r.sma) {
+> 118	                    const above = r.sma.above;
+> 119	                    SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };
+> 120	                    const prev = ABOVE[symbol];
+> 121	                    if (prev !== undefined && above !== prev) {
+> 122	                        const dir = above ? 'golden' : 'death';
+> 123	                        CROSS[symbol] = { dir, at: Date.now() };
+> 124	                        logger('regime', `${symbol}: SMA ${dir.toUpperCase()} cross (50/200) — disparando automação de trend`);
+> 125	                        const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+> 126	                        if (Array.isArray(results)) results.filter(Boolean).forEach(x => logger('regime', `${symbol}: trend => ${JSON.stringify(x)}`));
+> 127	                    } else {
+> 128	                        // sem cruzamento fresco: zera o sinal (passivo) p/ não deixar 'golden'/'death' velho na MEMORY
+> 129	                        await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, 'none', false);
+> 130	                    }
+> 131	                    ABOVE[symbol] = above;
+> 132	                    // persiste o estado de cross (resiliência a restart). smaAbove sempre; dir/at vêm de
+> 133	                    // CROSS (preenchido só num cruzamento). Persistir DEPOIS de disparar = at-least-once:
+> 134	                    // um crash entre o updateMemory e o upsert pode re-disparar no boot — preferível a
+> 135	                    // perder o sinal (entrar 2x num trend é menos pior que não entrar).
+> 136	                    await persistCrossState(symbol);
+> 137	                }
+> 138	            } catch (err) {
+> 139	                logger('regime', `${symbol}: erro ao atualizar regime: ${err.message}`);
+> 140	            }
+> 141	        }
+> 142	    } finally {
+> 143	        running = false;
+> 144	    }
+> 145	}
+> 146	
+> 147	// Carrega o estado de cross persistido (smaAbove/lastCross) ANTES do 1º poll → um cross ocorrido
+> 148	// durante o downtime é detectado na 1ª passada (prev = above persistido) em vez de perdido.
+> 149	async function loadPersistedState() {
+> 150	    try {
+> 151	        const rows = await regimeStatesRepository.getAll();
+> 152	        for (const row of rows) {
+> 153	            const r = row.get ? row.get({ plain: true }) : row;
+> 154	            if (r.smaAbove !== null && r.smaAbove !== undefined) ABOVE[r.symbol] = !!r.smaAbove;
+> 155	            if (r.lastCrossDir) CROSS[r.symbol] = { dir: r.lastCrossDir, at: r.lastCrossAt != null ? Number(r.lastCrossAt) : null };
+> 156	        }
+> 157	        if (rows.length) logger('regime', `Estado de cross recarregado: ${rows.map(x => `${x.symbol}:above=${x.smaAbove}`).join(', ')}.`);
+> 158	    } catch (err) {
+> 159	        logger('regime', `Falha ao carregar estado de cross persistido (seguindo sem resiliência a restart): ${err.message}`);
+> 160	    }
+> 161	}
+> 162	
+> 163	// Persiste o estado de cross do símbolo (chamado a cada poll após atualizar ABOVE). Best-effort:
+> 164	// uma falha de DB não derruba o ciclo de regime (o gate !=bear continua valendo na MEMORY).
+> 165	async function persistCrossState(symbol) {
+> 166	    try {
+> 167	        const c = CROSS[symbol];
+> 168	        await regimeStatesRepository.upsertState(symbol, {
+> 169	            smaAbove: ABOVE[symbol] === undefined ? null : ABOVE[symbol],
+> 170	            lastCrossDir: c ? c.dir : null,
+> 171	            lastCrossAt: c ? c.at : null,
+> 172	        });
+> 173	    } catch (err) {
+> 174	        logger('regime', `${symbol}: falha ao persistir estado de cross: ${err.message}`);
+> 175	    }
+> 176	}
+> 177	
+> 178	function start() {
+> 179	    if (!ENABLED) {
+> 180	        logger('regime', 'Regime job DESABILITADO (REGIME_JOB_ENABLED=false).');
+> 181	        return;
+> 182	    }
+> 183	    if (timer || starting) return; // idempotente (starting cobre a janela do load assíncrono)
+> 184	    starting = true;
+> 185	
+> 186	    // carrega o estado persistido ANTES do 1º poll (resiliência a restart), depois arranca o loop
+> 187	    loadPersistedState().finally(() => {
+> 188	        starting = false;
+> 189	        if (timer) return; // já iniciado por outra chamada concorrente
+> 190	        runOnce(); // primeira passada imediata no boot (não espera o 1º intervalo)
+> 191	        timer = setInterval(runOnce, REFRESH_MS);
+> 192	        if (timer.unref) timer.unref(); // não segura o processo no shutdown
+> 193	        logger('regime', `Regime job iniciado (intervalo ${REFRESH_MS}ms, klines ${INTERVAL}).`);
+> 194	    });
+> 195	}
+> 196	
+> 197	function stop() {
+> 198	    if (timer) { clearInterval(timer); timer = null; }
+> 199	    running = false;  // se um ciclo estava em voo, não deixa a trava presa p/ um start() futuro
+> ```
+
+## 🤖 Claude *(16:44:41)*
+
+
+## 🤖 Claude *(16:44:51)*
+
+Reli a estratégia e o código do funil. Encontrei uma tensão importante que preciso te trazer antes de construir o C — porque "auto-iniciar Fases 4-5 ao sair do bear" não é seguro/possível como um gatilho cego:
+
+**O que descobri:**
+1. **A Fase 3 (farm + trend) JÁ retoma sozinha ao sair do bear** — as automações são gateadas por `REGIME != bear` na própria condição (runtime). Quando o regime vira não-bear, elas avaliam `true` e começam a farmar no próximo tick. **Zero código novo necessário.**
+2. **A Fase 4 (funil ao vivo) NÃO é um "ligar":** o `funnelJob` só tem **SHADOW** — o código de *comprar BTC* não existe ainda (só observa e loga). E a estratégia (doc §5/§6) explicitamente exige: ligar a compra **"depois de observar o shadow"** + **"cada fase com gate QA+TL antes de ativar"** + calibrar o `FUNNEL_BASELINE_USDT` com **lucro real do farm** — que só existe *depois* que o bear levanta e o farm opera por um tempo.
+3. Logo, um gatilho que vai **ao vivo cego** no instante do bear-exit (a) compraria BTC sem calibração, (b) puularia o gate da estratégia, (c) dispararia código de compra que **não existe**.
+
+**Minha recomendação:** em vez do auto-go-live cego, o gatilho certo é um **NOTIFICADOR armado** na transição `bear→não-bear` (no `regimeJob`, que já detecta a borda): notifica (push/telegram/log) "regime saiu do bear — farm/trend retomando; janela de observação da Fase 4 aberta". Isso **tira o babysitting** (o sistema te avisa), confirma a retomada automática do farm/trend, e mantém a Fase 4 (money-path) gateada por dado + QA/TL — como a estratégia manda.
+
+## 🤖 Claude *(16:44:58)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O 'ponto C' (gatilho de sa\u00edda do bear): como construir, dado que a Fase 4 ao vivo n\u00e3o tem c\u00f3digo e exige calibra\u00e7\u00e3o+gate?",
+      "header": "Gatilho C",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Notificador armado (Recomendado)",
+          "description": "Gatilho no regimeJob: na transi\u00e7\u00e3o bear\u2192n\u00e3o-bear, notifica (push/telegram/log) que o regime levantou, o farm/trend retomam (j\u00e1 autom\u00e1tico) e a janela de observa\u00e7\u00e3o da Fase 4 abriu. Sem money-path cego. Tira o babysitting."
+        },
+        {
+          "label": "Notificador + pr\u00e9-armar funil shadow",
+          "description": "Al\u00e9m de notificar, seta um FUNNEL_BASELINE_USDT calibrado pro funil come\u00e7ar a CALCULAR o escoamento (ainda shadow, sem comprar) \u2014 prepara a Fase 4 com dado, sem money-path."
+        },
+        {
+          "label": "Construir a Fase 4 ao vivo agora",
+          "description": "Implementar o live-buy do funil (compra de BTC com lucro do farm) + gate QA/TL, pra o gatilho ligar de fato. Money-path grande e prematuro (sem dado de farm real ainda, mercado \u00e9 bear). N\u00e3o recomendo agora."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O 'ponto C' (gatilho de saída do bear): como construir, dado que a Fase 4 ao vivo não tem código e exige calibração+gate?"="Gostei da opção 1 notificador armado mas tambem achei legal fazer junto com o pre armar funil shadow e tambem acho necessário  construir a fase 4 mas ela depende da saida do bear para dados reais certo? Então tente deixar tudo armado para que com base nos dados das primeiras 4 horas da saida do bear sejam suficiente para escrever tudo que precisa da fase 4.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:50:42)*
+
+
+## 🤖 Claude *(16:50:45)*
+
+Entendido — síntese da tua resposta: **opção 1 + opção 2 juntas**, e **deixar a Fase 4 armada** pra que as primeiras ~4h de dados pós-bear bastem pra escrevê-la (ela depende de dado real, que só vem com o bear levantando — correto). Vou construir um **"armador da Fase 4"**: na transição bear→não-bear, notifica + pré-arma o funil shadow (baseline snapshot) + abre uma **janela densa de observação de 4h** que captura exatamente os dados que a Fase 4 vai precisar, com sumário no fim.
+
+Deixa eu ler o topo do `regimeJob` (classificação do regime + imports pra notificação) pra fazer o hook certo:
+
+## 🤖 Claude *(16:50:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "offset": 1,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Regime Job — grava o regime de mercado na MEMORY do Beholder periodicamente, para que as
+> 4	 * automações possam GATEAR a entrada (ex.: "não comprar em bear"). É o ENABLER que torna a
+> 5	 * estratégia regime-gated (a melhor risco-ajustada no backtest: caixa no bear) deployável ao vivo.
+> 6	 *
+> 7	 * Escreve uma STRING simples por símbolo:  MEMORY['<symbol>:REGIME'] = 'bear'|'trend'|'range'|'mixed'
+> 8	 * para que a condição da automação seja uma igualdade trivial:  MEMORY['<symbol>:REGIME']!=='bear'.
+> 9	 *
+> 10	 * Decisões de segurança (caminho de dinheiro):
+> 11	 *  - executeAutomations=false: a escrita do regime NÃO dispara ordens por si. O regime é um GATE
+> 12	 *    PASSIVO, lido quando o tick de preço/RSI dispara a automação — não um gatilho ativo (evita
+> 13	 *    comprar sobre um sinal de RSI velho na cadência do poll).
+> 14	 *  - skip-on-unknown: se a Binance não responder ou houver poucos dados, NÃO sobrescreve a MEMORY
+> 15	 *    (preserva o último regime conhecido e evita derrubar o gate por um soluço de rede). Combinado
+> 16	 *    com 'BTCUSDT:REGIME' nos `indexes` da automação, no 1º boot sem regime conhecido a automação
+> 17	 *    fica fail-safe (não compra até o regime ser conhecido).
+> 18	 *  - kill-switch REGIME_JOB_ENABLED=false: para o job (e, com REGIME nos indexes, pausa as compras
+> 19	 *    gateadas — fail-safe).
+> 20	 *
+> 21	 * Env:
+> 22	 *  REGIME_JOB_ENABLED  (default 'true')   — liga/desliga o job
+> 23	 *  REGIME_REFRESH_MS   (default 300000)   — intervalo do poll (5 min; regime de velas 1h muda devagar)
+> 24	 *  REGIME_INTERVAL     (default '1h')     — timeframe das velas usadas na classificação
+> 25	 *  REGIME_SYMBOLS      (CSV, opcional)    — força a lista de símbolos; senão usa os das automações ativas
+> 26	 */
+> 27	const beholder = require('./beholder');
+> 28	const automationsRepository = require('./repositories/automationsRepository');
+> 29	const regimeStatesRepository = require('./repositories/regimeStatesRepository');
+> 30	const { getRegime } = require('./utils/regimeService');
+> 31	const { indexKeys } = require('./utils/indexes');
+> 32	const logger = require('./utils/logger');
+> 33	
+> 34	const ENABLED = (process.env.REGIME_JOB_ENABLED || 'true') !== 'false';
+> 35	// parse defensivo: valor inválido/NaN cairia em setInterval(NaN) (loop quente). Piso de 30s
+> 36	// evita isso. Recomendado manter >= TTL do regimeService (~120s) p/ cada poll re-classificar
+> 37	// em vez de servir cache; regime de velas 1h muda devagar, default 5 min é folgado.
+> 38	const _refresh = parseInt(process.env.REGIME_REFRESH_MS || '300000', 10);
+> 39	const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 30000 ? _refresh : 300000;
+> 40	const INTERVAL = process.env.REGIME_INTERVAL || '1h';
+> 41	
+> 42	let timer = null;
+> 43	let running = false;       // trava de re-entrância: nunca roda dois ciclos sobrepostos
+> 44	let starting = false;      // trava de boot: cobre a janela do load assíncrono do estado antes do 1º poll
+> 45	const LAST = {};           // último regime gravado por símbolo (= valor do gate; também é o `prev`)
+> 46	const AT = {};             // timestamp (ms) da última gravação bem-sucedida por símbolo
+> 47	const STALE = new Set();   // símbolos em estado "stale" já logados (loga 1x por episódio)
+> 48	const ABOVE = {};          // último estado SMA_fast>SMA_slow por símbolo (detecta a transição do cross)
+> 49	const SMAVAL = {};         // últimos valores SMA fast/slow por símbolo (observabilidade)
+> 50	const CROSS = {};          // último cruzamento por símbolo: { dir: 'golden'|'death', at: ms }
+> 51	
+> 52	// Símbolos a monitorar: REGIME_SYMBOLS (CSV) se setado; senão os símbolos não-wildcard das
+> 53	// automações ATIVAS (assim novos símbolos entram sozinhos). Wildcard ('*...') é ignorado — não
+> 54	// dá p/ saber o símbolo concreto sem a memoryKey; use REGIME_SYMBOLS p/ esses casos.
+> 55	async function resolveSymbols() {
+> 56	    const fromEnv = (process.env.REGIME_SYMBOLS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 57	    if (fromEnv.length) return [...new Set(fromEnv)];
+> 58	
+> 59	    try {
+> 60	        const autos = await automationsRepository.getActiveAutomations();
+> 61	        const syms = (autos || [])
+> 62	            .map(a => String((a.get ? a.get('symbol') : a.symbol) || '').toUpperCase())
+> 63	            .filter(s => s && !s.startsWith('*'));
+> 64	        return [...new Set(syms)];
+> 65	    } catch (err) {
+> 66	        logger('regime', `Falha ao resolver símbolos das automações: ${err.message}`);
+> 67	        return [];
+> 68	    }
+> 69	}
+> 70	
+> 71	async function runOnce() {
+> 72	    if (running) return;
+> 73	    running = true;
+> 74	    try {
+> 75	        const symbols = await resolveSymbols();
+> 76	        if (!symbols.length) return;
+> 77	
+> 78	        for (const symbol of symbols) {
+> 79	            try {
+> 80	                // passa o último regime conhecido como prev → histerese (estado pegajoso anti-whipsaw)
+> 81	                const r = await getRegime(symbol, INTERVAL, LAST[symbol]);
+> 82	                if (!r || !r.regime || r.regime === 'unknown') {
+> 83	                    // Não sobrescreve a MEMORY (preserva o último regime). Mas se ANTES havia um
+> 84	                    // regime conhecido, o gate agora opera sobre dado VELHO → avisa o operador uma
+> 85	                    // vez (distingue "não comprou por bear" de "não comprou/comprou por gate stale").
+> 86	                    if (LAST[symbol] !== undefined && !STALE.has(symbol)) {
+> 87	                        STALE.add(symbol);
+> 88	                        logger('regime', `${symbol}: regime STALE — Binance indisponível/poucos dados (${r ? r.reason : 'sem resposta'}); gate operando sobre o último conhecido '${LAST[symbol]}'.`);
+> 89	                    } else if (LAST[symbol] === undefined) {
+> 90	                        logger('regime', `${symbol}: regime indefinido (${r ? r.reason : 'sem resposta'}); MEMORY preservada (sem regime conhecido ainda).`);
+> 91	                    }
+> 92	                    continue;
+> 93	                }
+> 94	
+> 95	                // executeAutomations=false → gate PASSIVO: a escrita do regime não dispara ordens
+> 96	                // por si; o regime é lido quando o tick de RSI/preço dispara a automação.
+> 97	                await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+> 98	                AT[symbol] = Date.now();
+> 99	
+> 100	                if (STALE.delete(symbol)) // saiu do estado stale (regime voltou a ser conhecido)
+> ```
+
+## 🤖 Claude *(16:53:07)*
+
+
+## 🤖 Claude *(16:53:09)*
+
+Agora tenho o hook exato: `regimeJob` já detecta a borda de regime (linha 103, com `LAST[symbol]` = regime anterior). Vou construir o **armador da Fase 4** combinando opção 1+2 + janela densa de 4h. Implementando no `funnelJob` (o dono da observação) — primeiro env + estado:
+
+## 🤖 Claude *(16:53:14)*
+
+API Error: The socket connection was closed unexpectedly. For more information, pass `verbose: true` in the second argument to fetch()
+
 ---
 
 %% --- PROJECT METADATA START --- %%
