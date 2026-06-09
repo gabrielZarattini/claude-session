@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 564
-> * **Sessões do Claude**: 527
+> * **Total de Sessões Registradas**: 595
+> * **Sessões do Claude**: 558
 > * **Sessões do Gemini**: 37
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` - *2026-06-09*
+*   `[[2026-06-09 - agent-af2650126ca0b97b4]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-af07364955855a6dd]]` - *2026-06-09*
+*   `[[2026-06-09 - agent-af02015236fac28c1]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-aeda3d013282b82b0]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-aec7c02af796b1539]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-ae95d663f6a035bdd]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-ae22df5ddfca02e9a]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-acf81b88080b89d0a]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-ac4261b94ee8259a2]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-ab8f534c05a21d333]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aae731be4f4ca983a]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aa5127a9222c23688]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aa3c16384a03fb6e8]]` - *2026-06-09*
-*   *... e mais 528 sessões nessa categoria.*
+*   `[[2026-06-09 - agent-ad7ab4edf3b3db105]]` - *2026-06-09*
+*   `[[2026-06-09 - agent-ad496a2cf1ff76f35]]` - *2026-06-09*
+*   `[[2026-06-09 - agent-ad3f2eb21c4de0656]]` - *2026-06-09*
+*   *... e mais 559 sessões nessa categoria.*
 
 ---
 
@@ -262,41 +262,72 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-af2650126ca0b97b4]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-af07364955855a6dd]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-af02015236fac28c1]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aeda3d013282b82b0]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aec7c02af796b1539]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-ae95d663f6a035bdd]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-ae22df5ddfca02e9a]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-ad7ab4edf3b3db105]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-ad496a2cf1ff76f35]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-ad3f2eb21c4de0656]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-acf81b88080b89d0a]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-ac58d94a012735d99]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-ac4261b94ee8259a2]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-abb259b6ea0761cbc]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-ab8f534c05a21d333]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-ab1e263baed06de3b]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aae731be4f4ca983a]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aa5127a9222c23688]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aa3c16384a03fb6e8]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-aa365fc1ae5a3bd36]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a9bcd5ab476e3b976]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a994d048804125f34]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a979a6a24b590bb28]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a96ba40b54137b5e7]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a91afb0fed6f9fb27]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a909d959696891aa8]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a8d502e0dbb87cb3d]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a86b5f56cac437b11]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a808f1d3df455bf3b]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a7ed313cb84626c23]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a7adb58469c995d64]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a7661675133ea2786]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a6fb62007f4017382]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a6ecdd37a82cb53e1]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a6dc7d16822d9a563]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a698cf04028360163]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a68ae97fcdd32bf83]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a663c40f44abd4d15]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a651d35f79bdfbf46]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a638f160bab2f95d6]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a5f8e802d4923588f]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a5e95167c0f2e6579]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a5e376acbcebe837d]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a546993d8e9c302b5]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a4f317c7834ca6110]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a4d449149038f36c3]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a4cc7631499063a2e]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a3de678e10ca0679f]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a3b7ac336c0193d00]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a3a71f450413dadc9]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a3a16c370b726b401]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a384e021cfcd994a8]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a365be22a77a5a354]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a34d1579df55fc783]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a32551b503483c5a5]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a2dbffc52c02e2725]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a2d561da974318a49]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a2a9b5418e56b7eb7]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a20ab4d8f8e4a5907]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a1cfc8b86c1e53c11]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a1c1032191278fce4]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a18c2bf66321baca0]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a085e96da6541c45f]]` (ClaudeSessions)
+*   `[[2026-06-09 - agent-a06674c9e4cef5f59]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a05afb7c39d4ebe45]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-a032f8ee1f180c630]]` (ClaudeSessions)
 *   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions)
