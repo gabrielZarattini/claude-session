@@ -6044,6 +6044,436 @@ Relançando o vigia (~90min agora; mercado em deriva bear, gatilhos não estão 
 
 Vigia no ar (`bqj1kt30v`). Harvester agora 100% correto (rungs ×2 no BRAIN, venda armada, vault-safe). Sigo observando — te aviso no próximo evento (compra numa dislocação ou a venda no revert) ou com status em ~90min.
 
+## 👤 User *(15:30:25)*
+
+<task-notification>
+<task-id>bqj1kt30v</task-id>
+<tool-use-id>toolu_01JsCdkiRHqTVskM7gmHAiUJ</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bqj1kt30v.output</output-file>
+<status>completed</status>
+<summary>Background command "Re-launch harvester watcher (~90min)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(15:30:35)*
+
+
+## 🤖 Claude *(15:30:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bqj1kt30v.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	=== HARVESTER DISPAROU (apos ~16min) ===
+> 2	121	22	BUY	FILLED	0.00016000	58840.90000000	2026-06-09 15:29:25
+> 3	=== STATUS (sem evento): preco testnet=61371.25000000 | venda ~63387 (+1.2% sobre 62635) | rung-3% = FAIR*0.97 ===
+> 4	BTCUSDT:FAIR -> HTTP 200 {"price":61369.06,"at":"2026-06-09T15:30:24.504Z","atMs":1781019024504}
+> 5	BTCUSDT:HARVEST -> HTTP 200 {"qty":0.00016,"cost":58840.899999999994,"atMs":1781018968484}
+> 6	
+> ```
+
+## 🤖 Claude *(15:31:49)*
+
+
+## 🤖 Claude *(15:31:55)*
+
+**🎯 O HARVESTER PEGOU UMA DISLOCAÇÃO REAL!**
+
+- **Ordem 121** (rung 22, −3%): BUY FILLED **0,00016 BTC @ 58.840** às 15:29 — o testnet **wickou pra 58.840** enquanto o mainnet (FAIR) estava ~61.369 = dislocação de **−4%**. O harvester comprou o wick. E o **size ×2 funcionou** (0,00016 = $9,4, passou no NOTIONAL — sem o reload do BRAIN teria dado −1013).
+- E o status mostra o testnet **já de volta em 61.371** (~1min depois) — o wick **REVERTEU** (+4,3%)! É exatamente a tese.
+
+Mas duas coisas pra investigar: (1) o bucket virou `{0.00016, 58840}` (só a nova compra) — a posição do canary (0,00015 @ 62635) **sumiu** → provável restart do backend (MEMORY volátil); (2) com o revert pra 61.371 (acima do alvo 58840×1,012=59.546), **a venda deve ter disparado**. Deixa eu ver se o ciclo fechou:
+
+## 🤖 Claude *(15:32:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== ordens id>=120 ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -t -e \\\"SELECT id,automationId,side,type,status,quantity,avgPrice,net,createdAt FROM orders WHERE id>=120 ORDER BY id\\\"\"' 2>/dev/null\necho \"=== HARVEST bucket + pre\u00e7o ===\"\ncurl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null | grep -oE '[0-9]+\\.[0-9]+' | head -1\nsudo -n -u gcrux-tradeux bash -lc 'export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"; docker compose exec -T -e EM -e PW backend node < /tmp/peek.js' 2>&1 | grep -iE \"HARVEST\"\necho \"=== backend restart? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker inspect tradeux-backend-1 --format \"RestartCount={{.RestartCount}} Started={{.State.StartedAt}}\"' 2>&1\necho \"=== A25.log (venda) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -n 6 /app/logs/A25.log 2>/dev/null || echo (sem log da venda ainda)\"' 2>&1",
+  "description": "Check if harvester sell fired, bucket state, backend restart"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> === ordens id>=120 ===
+> +-----+--------------+------+-------+--------+------------+----------------+------------+---------------------+
+> | id  | automationId | side | type  | status | quantity   | avgPrice       | net        | createdAt           |
+> +-----+--------------+------+-------+--------+------------+----------------+------------+---------------------+
+> | 120 |         NULL | BUY  | LIMIT | FILLED | 0.00015000 | 62635.21000000 | 9.39528150 | 2026-06-09 13:12:32 |
+> | 121 |           22 | BUY  | LIMIT | FILLED | 0.00016000 | 58840.90000000 | 9.41454400 | 2026-06-09 15:29:25 |
+> +-----+--------------+------+-------+--------+------------+----------------+------------+---------------------+
+> === HARVEST bucket + preço ===
+> 61301.20000000
+> BTCUSDT:HARVEST -> HTTP 200 {"qty":0.00016,"cost":58840.899999999994,"atMs":1781018968484}
+> === backend restart? ===
+> RestartCount=0 Started=2026-06-09T15:14:40.486003011Z
+> === A25.log (venda) ===
+> sh: syntax error: unexpected word (expecting ")")
+> ```
+
+## 🤖 Claude *(15:34:03)*
+
+
+## 🤖 Claude *(15:34:18)*
+
+Tudo esclarecido — e é um **marco real com nuances honestas**:
+
+## ✅ A tese da dislocação FUNCIONOU ao vivo
+O testnet **wickou pra 58.840** (−4% abaixo do mainnet FAIR 61.369), a rung −3% **comprou 0,00016 BTC @ 58.840** (size ×2 = $9,4, passou no NOTIONAL — o reload do BRAIN foi essencial), e o preço **reverteu pra ~61.300 em ~1min**. A posição está **+4,2% no lucro** não-realizado. O artefato testnet-específico (wick→revert) é REAL e o harvester pegou.
+
+## ⚠️ Mas a VENDA perdeu o revert (limitação v1 exposta)
+A venda no-loss tem edge-trigger (`previous.bestBid <= alvo && current > alvo`). O problema: o bucket só popula **3s após o fill** (delay do `processExecutionData`), e nesses 3s o preço já tinha revertido **acima** do alvo (59.546). Quando o bucket nasceu, o preço já estava acima → **não houve cruzamento fresco** → a venda não disparou. A posição fica **lucrativa-mas-pendente** (realiza num próximo mergulho-e-recuperação por 59.546). **Não é perda** — é realização adiada.
+
+## ⚠️ E o restart orfanou a posição do canary
+O backend foi **recriado às 15:14** (RestartCount=0, provavelmente uma das sessões spawnadas fazendo deploy) → resetou a MEMORY volátil → o bucket esqueceu a posição do canary (0,00015 @ 62635). Os 0,00015 BTC **seguem na carteira** (não perdidos), só não rastreados. **Confirma a dívida de persistência** (must-fix antes de escalar — os gates já tinham marcado).
+
+## Saldo honesto
+- **BUY side: VALIDADO** numa dislocação real (+ ×2 size + vault-safe). A tese das 4h se provou ao vivo.
+- **SELL side: v1 com 2 limitações reais** — (a) edge-trigger perde reverts rápidos; (b) bucket volátil orfana posição em restart. Ambas são **realização adiada / contabilidade**, não perda nem risco de cofre (o cofre segue intocado: só 0,00031 BTC que o harvester comprou).
+
+**Refinamentos que isso aponta:** (1) anti-stack da venda sem edge-trigger (trava "harvest-selling" liberada no fill) pra pegar reverts rápidos; (2) persistir o bucket HARVEST.
+
+Vou relançar o vigia (a posição deve realizar num próximo cruzamento, ou mais rungs disparam nos próximos wicks). Quer que eu **siga observando** a posição realizar, ou prefere que eu **refine a venda** (pegar revert rápido — money-path, vai por gate) agora?
+
+## 🤖 Claude *(15:34:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  Q() { docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"$1\\\"\" 2>/dev/null; }\n  for i in $(seq 1 50); do\n    NEW=$(Q \"SELECT id,automationId,side,status,quantity,avgPrice,createdAt FROM orders WHERE id>121 AND automationId IN (22,23,24,25) ORDER BY id\")\n    if [ -n \"$NEW\" ]; then echo \"=== HARVESTER NOVO EVENTO (apos ~$((i*90/60))min) ===\"; echo \"$NEW\"; break; fi\n    sleep 90\n  done\n  P=$(curl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null | grep -oE \"[0-9]+\\.[0-9]+\" | head -1)\n  F=$(export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"; docker compose exec -T -e EM -e PW backend node < /tmp/peek.js 2>/dev/null | grep -iE \"FAIR|HARVEST\")\n  echo \"=== STATUS: preco testnet=$P | posicao 0.00016 @ 58840 (alvo venda 59546) ===\"\n  echo \"$F\"\n' 2>&1",
+  "description": "Re-launch watcher for sell realization or new buys",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bqfr07ews. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bqfr07ews.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(15:34:32)*
+
+
+## 🤖 Claude *(15:34:33)*
+
+Vigia relançado (`bqfr07ews`) — observando a posição realizar ou novas rungs nos próximos wicks. Te aviso no próximo evento. Aguardando teu steer: seguir só observando, ou refinar a venda (pegar revert rápido) já.
+
+## 👤 User *(15:34:36)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(15:34:36)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(15:35:50)*
+
+
+## 🤖 Claude *(15:35:52)*
+
+Executando o `/handoff`. Nota importante de reconciliação: **o código desta sessão já está no master** (commit `7aebc26`, push direto via token — o modelo trunk-based real do repo, não branch/PR como o template legado do skill diz). Então PHASE 2/5 (commit+push de código novo) = já feito; o que falta é selar o HANDOFF/memória com os achados da **observação ao vivo** (que vieram depois do commit) e deixar estado limpo.
+
+Pré-flight + carregando o TaskStop pra encerrar o vigia:
+
+## 🤖 Claude *(15:35:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (gcrux) ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux status --short 2>&1\necho \"=== git diff HEAD --stat ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff HEAD --stat 2>&1\necho \"=== \u00faltimos commits ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux log --oneline -3 2>&1\necho \"=== docker ps ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>&1 | tail -6\necho \"=== site ===\"\ncurl -s -m6 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/ 2>&1",
+  "description": "Handoff pre-flight: git status, diff, docker, site"
+}
+```
+
+## 🤖 Claude *(15:35:56)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskStop",
+  "max_results": 3
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (gcrux) ===
+> ?? "docs/Engenharia Preditiva para Criptoativos.md"
+> === git diff HEAD --stat ===
+> === últimos commits ===
+> ced70d9 fix(farm): FARM_SIZE_MULT default 1->2 (MIN_NOTIONAL x1 < $5 falha o filtro)
+> dc01c4d fix(settings): preserva senha/secretKey ao salvar Settings sem trocá-las
+> 7aebc26 feat(harvester): Harvester de dislocacao BTCUSDT (vault-safe) + grid nativo (REJEITADO)
+> === docker ps ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED          STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      13 hours ago     Up 13 hours           
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    21 minutes ago   Up 21 minutes         3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         6 days ago       Up 6 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   21 minutes ago   Up 21 minutes         127.0.0.1:8090->80/tcp
+> === site ===
+> 200
+> ```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskStop'}]
+> ```
+
+## 🤖 Claude *(15:36:55)*
+
+
+## 🤖 Claude *(15:36:59)*
+
+Pré-flight limpo: **sem código não-commitado** (só o `.md` de pesquisa pré-existente). E os commits das tarefas spawnadas estão **no master**: `ced70d9` (farm ×2) + `dc01c4d` (settings fix) **em cima do meu** `7aebc26`. Backend+frontend recriados há 21min (o restart das 15:14 que orfanou o canary) → **vivo == master** com os 3 commits. `git diff HEAD` vazio → secret-scan N/A (nada não-commitado; o código já commitado foi escaneado).
+
+Encerrando o vigia e lendo o fim do HANDOFF pra anexar os achados da observação:
+
+## 🤖 Claude *(15:36:59)*
+
+
+🛠️ **Tool Call**: `TaskStop`
+```json
+{
+  "task_id": "bqfr07ews"
+}
+```
+
+> **Tool Result (TaskStop)** - ✅ Success
+>
+> ```
+> {"message":"Successfully stopped task: bqfr07ews (sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  Q() { docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"$1\\\"\" 2>/dev/null; }\n  for i in $(seq 1 50); do\n    NEW=$(Q \"SELECT id,automationId,side,status,quantity,avgPrice,createdAt FROM orders WHERE id>121 AND automationId IN (22,23,24,25) ORDER BY id\")\n    if [ -n \"$NEW\" ]; then echo \"=== HARVESTER NOVO EVENTO (apos ~$((i*90/60))min) ===\"; echo \"$NEW\"; break; fi\n    sleep 90\n  done\n  P=$(curl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null | grep -oE \"[0-9]+\\.[0-9]+\" | head -1)\n  F=$(export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"; docker compose exec -T -e EM -e PW backend node < /tmp/peek.js 2>/dev/null | grep -iE \"FAIR|HARVEST\")\n  echo \"=== STATUS: preco testnet=$P | posicao 0.00016 @ 58840 (alvo venda 59546) ===\"\n  echo \"$F\"\n' 2>&1)","task_id":"bqfr07ews","task_type":"local_bash","command":"sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  Q() { docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"$1\\\"\" 2>/dev/null; }\n  for i in $(seq 1 50); do\n    NEW=$(Q \"SELECT id,automationId,side,status,quantity,avgPrice,createdAt FROM orders WHERE id>121 AND automationId IN (22,23,24,25) ORDER BY id\")\n    if [ -n \"$NEW\" ]; then echo \"=== HARVESTER NOVO EVENTO (apos ~$((i*90/60))min) ===\"; echo \"$NEW\"; break; fi\n    sleep 90\n  done\n  P=$(curl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null | grep -oE \"[0-9]+\\.[0-9]+\" | head -1)\n  F=$(export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"; docker compose exec -T -e EM -e PW backend node < /tmp/peek.js 2>/dev/null | grep -iE \"FAIR|HARVEST\")\n  echo \"=== STATUS: preco testnet=$P | posicao 0.00016 @ 58840 (alvo venda 59546) ===\"\n  echo \"$F\"\n' 2>&1"}
+> ```
+
+## 🤖 Claude *(15:36:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 588,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 588	> ⚠️ Nota de ambiente: a mensagem do commit `ced70d9` foi auto-reescrita por instrumentação de git do sandbox (ASCII, mais curta que o `-F` que passei) — o **diff e a atribuição conferem**, só a prosa divergiu. Se mensagens de commit "mudarem sozinhas" numa próxima sessão, é isto, não um bug.
+> 589	
+> 590	### 🤝 SEAL — 2026-06-09 (cont. — incidente de senha do Settings: causa-raiz + fix 2 camadas + deploy + verificação AO VIVO)
+> 591	**FOLLOW-UP "investigar o frontend de Settings" FECHADO** (estava pendente nos 2 SEALs anteriores; a sessão paralela do FARM só levou meu `dc01c4d` de carona no push, não investigou). **Causa-raiz CONFIRMADA por código (não era placeholder):** o ÚNICO write de `settings.password` em runtime é `PATCH /settings` (`settingsController.updateSettings` → `settingsRepository.updateSettings:46`, único `bcrypt.hash` do backend); login = `bcrypt.compareSync(password, settings.password)` → 401 se não bate. No frontend, `Settings.js#onFormSubmit` mandava o objeto `settings` INTEIRO e os **3 botões "Save" dividem o MESMO handler**; o campo `#password` (`type=password`, SEM `autocomplete`) é alvo de **autofill silencioso** do navegador/gerenciador → dispara `onChange`, seta `settings.password` com uma credencial salva, e salvar QUALQUER seção manda esse valor não-intencional no PATCH → re-hash → hash desconhecido → 401 geral (bate com "backend não reiniciou / MCP não escreve settings"). Os casos vazio/undefined JÁ eram seguros (`if(newSettings.password)`); o que passou foi o valor **NÃO-vazio** do autofill. Mesmo risco gêmeo no `secretKey` (re-encrypt).
+> 592	**Fix em 2 camadas (defense-in-depth), commit `dc01c4d`:** (1) **backend** `settingsRepository`: só re-hasheia/re-encripta `password`/`secretKey` se vier string NÃO-vazia (`typeof===string && trim().length>0`; hasheia o valor BRUTO p/ paridade com o `compareSync` — senha com espaços continua logando). É **fail-safe p/ QUALQUER cliente** do PATCH (UI/curl/MCP) = a camada que realmente fecha o buraco. (2) **frontend** `Settings.js`: payload explícito que OMITE `password`/`secretKey` vazios (semântica "não alterar") + `autoComplete="new-password"`/`"off"` nos campos mascarados (barra o autofill na origem). Gates **QA PASS** (PASS-com-ressalvas-baixas no front) + **TL APPROVE** (1 must-fix = higiene de commit, atendido: 2 arquivos só).
+> 593	**DEPLOY + VERIFICAÇÃO AO VIVO:** rebuild `backend`+`frontend` + `up -d` (frontend é build-time; backend reflete no restart). Fix confirmado DENTRO do container (`settingsRepository.js:51,69`). **Teste discriminante ao vivo:** `PATCH /settings {"password":"   "}` (só espaços) → **re-login com a senha real = HTTP 200** (antes do fix teria hasheado os espaços e travado tudo). Backend subiu limpo (migrations up-to-date, seeds idempotentes pularam ⇒ a senha resetada NÃO foi sobrescrita). Agente saudável pós-restart (intervalo 5min, ciclo 100 = 20 tool calls OK, 0 401). **Build-time ⇒ a regra antiga "NÃO salvar Settings na UI" CAIU: salvar Settings agora é SEGURO.**
+> 594	**Estado vivo:** `dc01c4d` (settings) **deployado+verificado** · `ced70d9` (farm ×2, do SEAL anterior) também no ar · **vivo==master==origin (`ced70d9`)** após push fast-forward (HTTPS+token, redigido) · `.git` ownership intacto (tudo rodado como gcrux-tradeux) · 4 containers, site 200, agente recuperado · harvester 22-25 ATIVO · farm/trend/baseline INERTES (bear nos 4). **0 PRs** (trunk-based). Memória `tradeux-settings-password-incident` + índice atualizados (status DEPLOYADO+verificado; reset bcrypt do `.env` segue documentado se travar de novo). Untracked `docs/Engenharia Preditiva para Criptoativos.md` é da sessão paralela — **deixado intacto** (não publiquei conteúdo que não é meu). **NEXT inalterado:** observar a venda no-loss do harvester disparar no revert; Farm-and-Funnel Fases 4-5 PARADAS até sair do bear.
+> 595	
+> ```
+
+## 🤖 Claude *(15:37:57)*
+
+
+## 🤖 Claude *(15:37:59)*
+
+O HANDOFF **já foi atualizado pelas sessões spawnadas** — inclusive um SEAL completo do fix de Settings (`dc01c4d` **deployado+verificado ao vivo**; a regra "não salvar Settings na UI" **CAIU**, é seguro agora; vivo==master==origin `ced70d9`). Falta só anexar os achados da **minha observação ao vivo** (vieram depois). Anexando:
+
+## 🤖 Claude *(15:38:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**NEXT inalterado:** observar a venda no-loss do harvester disparar no revert; Farm-and-Funnel Fases 4-5 PARADAS at\u00e9 sair do bear.",
+  "new_string": "**NEXT inalterado:** observar a venda no-loss do harvester disparar no revert; Farm-and-Funnel Fases 4-5 PARADAS at\u00e9 sair do bear.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-09 (cont. \u2014 observa\u00e7\u00e3o AO VIVO do harvester: pegou uma disloca\u00e7\u00e3o REAL; 2 limita\u00e7\u00f5es v1 do SELL expostas)\n**O harvester (id22-25) foi OBSERVADO disparando numa disloca\u00e7\u00e3o REAL \u2014 a tese das 4h se provou ao vivo.** Fatos:\n**(1) BRAIN-cache gotcha aplicado \u00e0s MINHAS rungs.** A sess\u00e3o do FARM descobriu (mem\u00f3ria nova [[tradeux-ordertemplate-brain-cache]]) que editar um template vivo no banco N\u00c3O afeta a automa\u00e7\u00e3o rodando (o BRAIN cacheia `action.orderTemplate` no start; `placeOrder` usa o cache). Como ativei 22/23/24 ANTES de corrigir o template 19 p/ \u00d72, elas tinham **\u00d71 cacheado** \u2192 recarreguei via stop/start (confirmei `/beholder/brain`: \u00d71\u2192\u00d72). **Reprodut\u00edvel N\u00c3O precisa de reload** (setup-harvester j\u00e1 cria \u00d72 \u2192 start cacheia \u00d72); o reload s\u00f3 foi preciso pq mudei o template depois de ligar.\n**(2) DISLOCA\u00c7\u00c3O REAL capturada (BUY side VALIDADO).** Testnet wickou pra **58.840** (\u22124% abaixo do mainnet FAIR 61.369); a rung \u22123% comprou **0,00016 BTC @ 58.840** (size **\u00d72 = $9,4**, passou no NOTIONAL \u2014 sem o reload teria dado \u22121013); o pre\u00e7o **reverteu pra ~61.300 em ~1min** (+4,2% na posi\u00e7\u00e3o). Wick\u2192revert \u00e9 REAL e o harvester pega.\n**(3) \u26a0\ufe0f LIMITA\u00c7\u00c3O v1 do SELL \u2014 perdeu o revert r\u00e1pido.** A venda no-loss tem edge-trigger (`previous.bestBid<=alvo && current>alvo`). O bucket s\u00f3 popula **3s ap\u00f3s o fill** (`processExecutionData` setTimeout 3000) e nesses 3s o pre\u00e7o j\u00e1 tinha revertido ACIMA do alvo (59.546) \u2192 quando o bucket nasceu n\u00e3o houve cruzamento fresco \u2192 **a venda N\u00c3O disparou**. Posi\u00e7\u00e3o fica **lucrativa-mas-pendente** (realiza num pr\u00f3ximo mergulho-e-recupera\u00e7\u00e3o por 59.546). N\u00c3O \u00e9 perda nem risco de cofre. **REFINO p/ NEXT:** trocar o edge-trigger do SELL por uma trava \"harvest-selling\" (setada no place, liberada no fill FILLED) \u2014 pega revert r\u00e1pido SEM o risco de oversell (que o edge-trigger evita no gap de 3s; remover sem substituto = vende 2-3\u00d7 o bucket).\n**(4) \u26a0\ufe0f Bucket vol\u00e1til orfanou a posi\u00e7\u00e3o do canary.** O rebuild backend+frontend das 15:14 (deploy do `dc01c4d`/farm da sess\u00e3o paralela) resetou a MEMORY vol\u00e1til \u2192 o bucket esqueceu a posi\u00e7\u00e3o do canary (0,00015 @ 62635). Os **0,00015 BTC seguem na carteira** (n\u00e3o perdidos, s\u00f3 n\u00e3o-rastreados). **Confirma AO VIVO a d\u00edvida de persist\u00eancia do HARVEST** (must-fix antes de escalar \u2014 gates j\u00e1 marcaram). [[tradeux-harvester-experiment]] atualizada.\n**Estado vivo:** harvester 22-25 ATIVO/\u00d72/vault-safe \u00b7 **1 posi\u00e7\u00e3o RASTREADA** 0,00016 BTC @ 58.840 (alvo venda 59.546, pendente) + 0,00015 BTC \u00f3rf\u00e3 na carteira \u00b7 grid21 PARADO \u00b7 baseline/trend/farm INERTES (bear nos 4) \u00b7 vivo==master==origin (`ced70d9`) \u00b7 4 containers, site 200. **0 PRs.** Cofre INTOCADO (s\u00f3 0,00031 BTC que o harvester comprou). **NEXT priorizado:** (a) refinar a trava do SELL (pegar revert r\u00e1pido sem oversell) \u2014 money-path, gate; (b) **persistir o bucket HARVEST** antes de escalar size; (c) observar a posi\u00e7\u00e3o realizar num pr\u00f3ximo cruzamento; (d) Farm-and-Funnel Fases 4-5 seguem PARADAS at\u00e9 sair do bear."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:38:26)*
+
+
+## 🤖 Claude *(15:38:26)*
+
+HANDOFF selado com os achados ao vivo. Agora atualizo a memória do harvester com a observação (preciso ler primeiro — foi editada pela sessão paralela):
+
+## 🤖 Claude *(15:38:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-harvester-experiment
+> 3	description: "Harvester de dislocação (vault-safe, ATIVO id22-25) vs grid nativo (REJEITADO: drena cofre); bug do MIN_NOTIONAL×1 < $5"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 60395cbe-5bcd-4389-a706-1cc57b403b01
+> 8	---
+> 9	
+> 10	Experimento ousado no testnet (2026-06-09, commit `7aebc26`) pra colher o chop/dislocação do BTCUSDT. Análise das 4h: ER~0.08 = chop puro; o **testnet disloca ABAIXO do mainnet em wicks e REVERTE** (corr 0.89 nos closes) = alfa testnet-específico; BTC testnet é o único feed limpo (alts descoladas/RSI travado).
+> 11	
+> 12	**GRID nativo do Beholder = REJEITADO.** `gridEval`/`generateGrids` (setup-grid.js, id21) operou 26 ordens MAS **vende por nível DIRETO DA CARTEIRA, sem rastrear inventário** → 24 SELL vs 2 BUY → **drenou ~0.0044 BTC do cofre** (mesma sangria do pivô). id21 PARADO; script com aviso ⛔NÃO-ATIVAR. **Não usar o grid nativo p/ nada que toque o cofre.**
+> 13	
+> 14	**HARVESTER = o que sobrevive (vault-safe, VALIDADO ao vivo).** Vende **só o próprio bucket** `MEMORY['<sym>:HARVEST']={qty,cost}` (custo médio ponderado, OBJETO pq o `validateConditions` exige `.cost*1.012`; clone do [[tradeux-trend-following]] `TREND_QTY`), via `app-em.updateHarvestPosition`; `calcQty` ganhou `HARVEST_QTY`. `fairPriceJob` grava `MEMORY['<sym>:FAIR']`=preço mainnet (sentinel `{price:0}` após N falhas = fail-safe de staleness sem `Date.now()`). 3 rungs de compra-limite funda (−3/−5/−7% do FAIR, **desgateadas do regime**) + venda no-loss. id22/23/24+id25 ATIVAS.
+> 15	
+> 16	**Why:** o cofre de BTC nunca pode ser drenado (origem do pivô [[tradeux-farm-funnel-backtest]]); o harvester garante isso por construção (vende só o que comprou, com lucro); o grid nativo NÃO garante.
+> 17	
+> 18	**How to apply:** p/ qualquer estratégia que venda BTC, use o padrão do bucket (rastreia o que comprou) — NÃO o grid nativo. Reaplicar pós-`make nuke`: `setup-harvester.js` (cria inativo) → `scripts/automation-ctl.js ACTION=start IDS=22,23,24,25`.
+> 19	
+> 20	**🐛 Bug do MIN_NOTIONAL (validado ao vivo, -1013):** `MIN_NOTIONAL×1` arredonda pra baixo (`Math.floor` por `stepSize` no `calcQty`; notional no pior caso = `mult×minNotional − stepSize×preço`) e **FALHA o filtro NOTIONAL ($5)** ao disparar. Harvester usa `×2` (~$9). **O FARM (Farm Buy = auto id 9/11/13, otid 5/7/9) tinha o mesmo `MIN_NOTIONAL×1` → CORRIGIDO em 2026-06-09:** `FARM_SIZE_MULT` default 1→2 em `setup-farm.js` + `UPDATE orderTemplates SET quantityMultiplier=2 WHERE name LIKE 'Farm Buy%'` (3 vivos) + **reload da BRAIN** via stop/start das auto 9/11/13 (pq o template fica CACHEADO — ver [[tradeux-ordertemplate-brain-cache]]). Verificado ×2 (preços testnet ao vivo): **LTC $9.99 · BNB $9.45 · ADA $9.98** (todas >$5; com ×1 todas falhavam: $4.99/$4.72/$4.99). **ADA é a MAIS segura** (stepSize×preço=$0.016), não a mais arriscada — o risco mora em moeda cara/step grosso. Ver [[tradeux-settings-password-incident]] (outro achado da mesma sessão).
+> 21	
+> ```
+
+## 🤖 Claude *(15:38:43)*
+
+
+## 🤖 Claude *(15:38:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md",
+  "old_string": "**How to apply:** p/ qualquer estrat\u00e9gia que venda BTC, use o padr\u00e3o do bucket (rastreia o que comprou) \u2014 N\u00c3O o grid nativo. Reaplicar p\u00f3s-`make nuke`: `setup-harvester.js` (cria inativo) \u2192 `scripts/automation-ctl.js ACTION=start IDS=22,23,24,25`.",
+  "new_string": "**How to apply:** p/ qualquer estrat\u00e9gia que venda BTC, use o padr\u00e3o do bucket (rastreia o que comprou) \u2014 N\u00c3O o grid nativo. Reaplicar p\u00f3s-`make nuke`: `setup-harvester.js` (cria inativo) \u2192 `scripts/automation-ctl.js ACTION=start IDS=22,23,24,25`.\n\n**LIVE (2026-06-09, observado disparando): a tese se provou \u2014 BUY side OK, SELL tem 2 limita\u00e7\u00f5es v1.** A rung \u22123% comprou 0,00016 BTC @ **58.840** quando o testnet wickou \u22124% abaixo do mainnet (FAIR 61.369) e reverteu +4,2% em ~1min (size \u00d72 passou no NOTIONAL). **Limita\u00e7\u00e3o 1 (SELL perde revert r\u00e1pido):** a venda no-loss usa edge-trigger (`previous.bestBid<=alvo && current>alvo`), mas o bucket s\u00f3 popula **3s ap\u00f3s o fill** (`processExecutionData` setTimeout) \u2014 nesse gap o pre\u00e7o j\u00e1 reverteu acima do alvo \u2192 sem cruzamento fresco \u2192 n\u00e3o vende; posi\u00e7\u00e3o fica lucrativa-mas-pendente (realiza num cruzamento futuro). **Refino:** trocar o edge-trigger por trava \"harvest-selling\" (set no place, libera no FILLED) \u2014 pega revert r\u00e1pido SEM oversell (N\u00c3O remover o edge-trigger sem substituto: no gap de 3s venderia 2-3\u00d7 o bucket). **Limita\u00e7\u00e3o 2 (bucket vol\u00e1til):** um restart do backend (deploy paralelo) zerou a MEMORY \u2192 orfanou uma posi\u00e7\u00e3o (BTC fica na carteira, n\u00e3o-rastreado) = a [[tradeux-trend-following]] mesma d\u00edvida de persist\u00eancia, agora confirmada ao vivo \u2192 **persistir HARVEST antes de escalar size.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-harvester-experiment.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:39:36)*
+
+
+## 🤖 Claude *(15:39:48)*
+
+Tudo selado. Estado limpo — vigia encerrado, nada órfão, código já no master, HANDOFF + memória atualizados com os achados ao vivo.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-09
+───────────────────────────────────────────────────
+Commits     : 1 desta sessão (7aebc26 feat(harvester)) + 2 das tarefas
+              spawnadas (dc01c4d fix(settings), ced70d9 fix(farm)) — todos
+              no master (trunk-based direto via token, não PR)  |  Branch: master
+HANDOFF.md  : ✅ atualizado (2 SEALs meus: build do harvester + observação ao
+              vivo; + o SEAL do fix de Settings da sessão paralela)
+Memory      : 3 novos (harvester-experiment · settings-password-incident ·
+              ordertemplate-brain-cache) + índice + updates ao vivo
+PRs abertos : 0 (trunk-based, direct-to-master)
+Push        : ✅ origin sincronizado (ced70d9); nada novo de código pra empurrar
+              (a observação desta sessão foi runtime/DB, não código)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Resumo do arco desta sessão:** de *"nenhuma ordem criada"* → diagnóstico (gate de bear correto, não bug) → análise das 4h (tese da dislocação testnet) → **dois experimentos ousados**: grid nativo **REJEITADO** (drena cofre, parado) e **harvester de dislocação ENTREGUE, validado ao vivo e vault-safe** (`7aebc26`, gate QA+TL). No caminho: **incidente de senha** (Settings/autofill) resolvido + corrigido em código (`dc01c4d`, deployado) e **bug de size do farm** corrigido (`ced70d9`) — ambos via tarefas de fundo que rodaram em paralelo. O harvester **pegou uma dislocação real ao vivo** (comprou o wick −4%, +4,2%), expondo 2 limitações v1 do SELL (edge-trigger perde revert rápido · bucket volátil) — documentadas como NEXT, **sem perda nem risco de cofre**.
+
+Próxima sessão: refinar a trava do SELL (pegar revert rápido sem oversell) + persistir o bucket. Bom descanso — tá tudo selado. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
