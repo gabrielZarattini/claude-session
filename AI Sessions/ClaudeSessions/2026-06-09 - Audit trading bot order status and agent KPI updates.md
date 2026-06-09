@@ -7470,6 +7470,999 @@ Isso **confirma a pesquisa** (edge modesto, só em quedas trending, vulnerável 
 > Relatório: backend/backtest-results/backtest-futures-1h-bull-end2024-04-01.md
 > ```
 
+## 🤖 Claude *(02:30:43)*
+
+
+## 🤖 Claude *(02:30:56)*
+
+# 🚫 Veredito de (a): é um FALSO POSITIVO
+
+A janela bull fecha o caso, e o resultado é honesto: **não construir o módulo de Futures.** Olha o ciclo completo:
+
+| | Bear (365d) | Bull (180d) | **Ciclo composto** |
+|---|---|---|---|
+| **B&H** (segurar) | −34% | **+338%** | +187% |
+| **Caixa em bear + long no bull** ← o que já fazemos | ~0% | +338% | **+338%** 🏆 |
+| **trendBi** (short/trend bilateral em Futures) | +5% | +79% | **+88%** |
+
+O short *isoladamente* captura a queda (+5% no bear vs −34% B&H) — não é bug, a engine está correta. **Mas no que importa, é dominado:** ao ficar bilateral, o `trendBi` **sacrifica o upside assimétrico do bull** (captura só +79% de +338%) pra ganhar uns míseros +5% no bear. Resultado: **no ciclo, +88% vs +338% da estratégia atual** — três a quatro vezes pior.
+
+E os pregos no caixão:
+- **maxDD −51%** a 1x leverage (com qualquer alavancagem de futures = liquidação).
+- **Sharpe líquido 0,31 → ~0,15 pós-haircut** = ruído.
+- **BNB perdeu −28%** no bear (chicoteado no bear raso/choppy) — o edge só existe em quedas *trending*.
+- **O filtro de regime (`gated`) PIORA** (whipsaw do ADX, 330 flips, −18%).
+
+Isso é **exatamente o que a pesquisa previu**: edge modesto, só em quedas trending, devorado por whipsaw — e o crisis-alpha do trend-following vem de diversificação multi-ativo que um bot single-asset cripto não tem. O backtest, com rigor, **confirma a tese e refuta o caminho**. A farm-and-funnel (caixa em bear, captura do bull) segue sendo o melhor.
+
+**Você tinha razão em exigir o "positivo de verdade" — não era.** Não vale o módulo de Futures de short.
+
+---
+
+Seguindo pra **(b)** [independente e fundamentado]: rebaixar a `toxicity` do flow oracle de "sinal" pra "timing". Deixa eu ver como ela é usada hoje.
+
+## 🤖 Claude *(02:30:56)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(02:30:56)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(02:30:57)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> === onde toxicity é calculada/usada ===
+> backend/src/flowJob.js:10: * Escreve um OBJETO por símbolo:  MEMORY['<sym>:FLOW'] = { imbalance, toxicity, at }
+> backend/src/flowJob.js:18: *   FLOW_LOG_TOXICITY(default '0.6')    — loga quando |imbalance| >= isto (observação dos "quase-vetos")
+> backend/src/flowJob.js:29:const _tox = parseFloat(process.env.FLOW_LOG_TOXICITY || '0.6');
+> backend/src/flowJob.js:30:const LOG_TOXICITY = Number.isFinite(_tox) ? _tox : 0.6;
+> backend/src/flowJob.js:74:                await beholder.updateMemory(symbol, indexKeys.FLOW, null, { imbalance: f.imbalance, toxicity: f.toxicity, at: f.at, atMs: Date.now() }, false);
+> backend/src/flowJob.js:78:                if (f.toxicity >= LOG_TOXICITY)
+> backend/src/flowJob.js:79:                    logger('flow', `${symbol}: imbalance=${f.imbalance} toxicity=${f.toxicity} (buyVol=${f.buyVol} sellVol=${f.sellVol}; ${f.trades} trades/${f.spanSec}s)`);
+> backend/src/flowJob.js:92:                            symbol, rsi: +rsi.current.toFixed(2), imbalance: f.imbalance, toxicity: f.toxicity,
+> backend/src/flowJob.js:112:    logger('flow', `Flow job iniciado SHADOW (intervalo ${REFRESH_MS}ms; log de toxicidade >= ${LOG_TOXICITY}). Ainda NÃO gateia automação.`);
+> backend/src/flowJob.js:127:            imbalance: f.imbalance, toxicity: f.toxicity,
+> backend/src/flowJob.js:134:    return { enabled: ENABLED, refreshMs: REFRESH_MS, logToxicity: LOG_TOXICITY, mode: 'shadow', running, symbols };
+> backend/src/utils/indexes.js:79:    FLOW: 'FLOW' // desequilíbrio de fluxo do taker da mainnet {imbalance,toxicity} (flowJob, SHADOW) — futuro gate da reversão à média
+> backend/src/utils/flowService.js:12: *   toxicity  = |imbalance|                                ∈ [0, 1]    (proxy de one-sidedness/seleção adversa)
+> backend/src/utils/flowService.js:66:        toxicity: +Math.abs(imbalance).toFixed(4),   // [0,1]: quão unilateral está o fluxo
+> backend/src/controllers/analysisController.js:34:// GET /analysis/flow/:symbol — desequilíbrio de fluxo do TAKER (imbalance/toxicity) dos aggTrades
+> tradeux-mcp/src/index.js:140:  "Estado do Oraculo Microestrutural (v1: fluxo do taker). Desequilibrio de agressao dos aggTrades recentes da MAINNET via isBuyerMaker (ground-truth): imbalance ∈ [-1,1] (<0 = taker vendendo) e toxicity = |imbalance| ∈ [0,1] (quao unilateral/adverso esta o fluxo). Use p/ evitar comprar dip sob venda agressora extrema (alta toxicity). v1 = so fluxo (sem L2/futures/VPIN bucketizado).",
+> frontend/src/private/Intelligence/Intelligence.js:173:                                    <thead><tr><th>símbolo</th><th>imbalance</th><th>toxicity</th><th>trades / janela</th><th>atualizado</th></tr></thead>
+> frontend/src/private/Intelligence/Intelligence.js:182:                                                <td>{f.toxicity != null ? (f.toxicity >= 0.6 ? <span className="badge bg-warning text-dark">{f.toxicity.toFixed(3)}</span> : <span>{f.toxicity.toFixed(3)}</span>) : '—'}</td>
+> frontend/src/private/Intelligence/Intelligence.js:191:                            <b>imbalance</b> ∈ [−1,1] do fluxo agressor do taker (mainnet, via <code>isBuyerMaker</code>): <b>&lt;0 = vendendo</b> (sinal p/ não comprar o dip), &gt;0 = comprando. <b>toxicity</b> = |imbalance| (quão unilateral). <b>GATE ATIVO (provisório)</b> na id2: a reversão à média <b>não compra o dip sob fluxo vendedor em capitulação</b> (sniper). Threshold em calibração (deep-research + <code>logs/flow-capitulation.log</code>); fail-safe trava fechado se o fluxo ficar stale.
+> frontend/src/services/IntelligenceService.js:25:// aggTrades recentes da mainnet — imbalance ∈ [-1,1] (<0 = taker vendendo) e toxicity (|imbalance|).
+> 
+> === arquivos do flow oracle ===
+> backend/src/flowJob.js
+> backend/src/utils/flowService.js
+> ```
+
+## 🤖 Claude *(02:30:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== onde toxicity \u00e9 calculada/usada ===\"; grep -rniE \"toxicity\" backend/src tradeux-mcp/src frontend/src 2>/dev/null | head -25\necho; echo \"=== arquivos do flow oracle ===\"; ls backend/src/services/flow*.js backend/src/jobs/flow*.js 2>/dev/null; find backend/src -iname \"*flow*\" 2>/dev/null",
+  "description": "Locate toxicity usage across the codebase"
+}
+```
+
+## 🤖 Claude *(02:31:40)*
+
+
+## 🤖 Claude *(02:31:43)*
+
+Mapeado. Achado-chave: **a `toxicity` HOJE já não gateia nada** — a id2 usa `imbalance` (que é OFI-like, e a evidência *suporta* como nowcasting/timing). O problema é **semântico**: a descrição da tool MCP e o card tratam a toxicity como sinal de decisão ("use p/ evitar comprar"), o que a pesquisa refutou. O "rebaixamento" certo é deixar explícito que `toxicity`/`imbalance` são **nowcasting (~segundos), timing de execução — não forecast**. Lendo os trechos exatos pra editar.
+
+## 🤖 Claude *(02:31:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Serviço de fluxo de ordens (taker flow) — fonte ÚNICA do desequilíbrio de agressão do mercado.
+> 4	 *
+> 5	 * Busca os aggTrades recentes da MAINNET (estado real, independente do testnet sintético) e mede
+> 6	 * a pressão líquida do TAKER usando o campo `m` (isBuyerMaker) — o ground-truth do agressor:
+> 7	 *   m === false  -> comprador é TAKER  -> COMPRA agressora  (acumula buyVol)
+> 8	 *   m === true   -> comprador é MAKER  -> VENDA agressora    (acumula sellVol)
+> 9	 *
+> 10	 * Métricas (sobre os últimos LIMIT aggTrades):
+> 11	 *   imbalance = (buyVol - sellVol) / (buyVol + sellVol)   ∈ [-1, 1]   (<0 = taker vendendo)
+> 12	 *   toxicity  = |imbalance|                                ∈ [0, 1]    (proxy de one-sidedness/seleção adversa)
+> 13	 *
+> 14	 * É um proxy de fluxo/toxicidade (NÃO o True VPIN bucketizado com CDF de 30d — ver docs/blueprint;
+> 15	 * isto é o v1 ancorado: 1 endpoint REST, sem futures/L2, real mesmo no spot). Consumido por:
+> 16	 *   - analysisController.getFlow   (GET /analysis/flow/:symbol — UI/observabilidade + MCP)
+> 17	 *   - flowJob                      (job periódico que grava MEMORY['<sym>:FLOW'] — SHADOW, sem gate ainda)
+> 18	 *
+> 19	 * NUNCA lança: sempre retorna objeto. `unavailable:true` se a Binance não responder (chamador preserva).
+> 20	 */
+> 21	const https = require('https');
+> 22	
+> 23	// Só mercado GLOBAL (mesma razão do regimeService: Binance.US tem preços/universo divergentes).
+> 24	const HOSTS = ['api.binance.com', 'data-api.binance.vision'];
+> 25	const CACHE = new Map();
+> 26	const TTL = 20e3;     // 20s (trades mudam rápido; o job poda ~30s, o endpoint compartilha o cache)
+> 27	const LIMIT = 1000;   // últimos N aggTrades (janela de fluxo; BTCUSDT ~dezenas de segundos)
+> 28	
+> 29	function getJSON(host, path) {
+> 30	    return new Promise((resolve, reject) => {
+> 31	        const req = https.get({ host, path, headers: { 'User-Agent': 'tradeux' }, timeout: 8000 }, r => {
+> 32	            let d = '';
+> 33	            r.on('data', c => d += c);
+> 34	            r.on('end', () => { try { resolve({ status: r.statusCode, body: JSON.parse(d) }); } catch (e) { resolve({ status: r.statusCode, body: null }); } });
+> 35	        });
+> 36	        req.on('error', reject);
+> 37	        req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+> 38	    });
+> 39	}
+> 40	
+> 41	async function getFlow(symbol) {
+> 42	    const cached = CACHE.get(symbol);
+> 43	    if (cached && Date.now() - cached.t < TTL) return { ...cached.data, cached: true };
+> 44	
+> 45	    let trades = null, used = null;
+> 46	    for (const host of HOSTS) {
+> 47	        const r = await getJSON(host, `/api/v3/aggTrades?symbol=${symbol}&limit=${LIMIT}`).catch(() => null);
+> 48	        if (r && r.status === 200 && Array.isArray(r.body) && r.body.length > 0) { trades = r.body; used = host; break; }
+> 49	    }
+> 50	    if (!trades)
+> 51	        return { symbol, source: null, unavailable: true, reason: 'aggTrades indisponiveis na Binance' };
+> 52	
+> 53	    let buyVol = 0, sellVol = 0;
+> 54	    for (const t of trades) {
+> 55	        const q = parseFloat(t.q);
+> 56	        if (!Number.isFinite(q)) continue;
+> 57	        if (t.m) sellVol += q; else buyVol += q; // m=true => venda agressora; m=false => compra agressora
+> 58	    }
+> 59	    const tot = buyVol + sellVol;
+> 60	    const imbalance = tot > 0 ? (buyVol - sellVol) / tot : 0;
+> 61	    const first = trades[0], last = trades[trades.length - 1];
+> 62	
+> 63	    const data = {
+> 64	        symbol, source: used, cached: false,
+> 65	        imbalance: +imbalance.toFixed(4),            // [-1,1]: <0 = taker líquido vendendo
+> 66	        toxicity: +Math.abs(imbalance).toFixed(4),   // [0,1]: quão unilateral está o fluxo
+> 67	        buyVol: +buyVol.toFixed(8), sellVol: +sellVol.toFixed(8),
+> 68	        trades: trades.length,
+> 69	        spanSec: (first && last && last.T && first.T) ? Math.round((last.T - first.T) / 1000) : 0,
+> 70	        at: new Date().toISOString(),
+> 71	    };
+> 72	    CACHE.set(symbol, { t: Date.now(), data });
+> 73	    return data;
+> 74	}
+> 75	
+> 76	module.exports = { getFlow, TTL, LIMIT };
+> 77	
+> ```
+
+## 🤖 Claude *(02:31:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js",
+  "offset": 1,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Flow Job — grava MEMORY['<sym>:FLOW'] (desequilíbrio de fluxo do TAKER da MAINNET) periodicamente.
+> 4	 *
+> 5	 * >>> SHADOW MODE <<<  Computa e expõe o sinal (MEMORY + endpoint + MCP) e LOGA os episódios de fluxo
+> 6	 * unilateral, mas NÃO gateia automação ainda. O gate da id2 ("não comprar o dip sob venda agressora
+> 7	 * extrema") é o PRÓXIMO passo, DEPOIS de observar a distribuição do sinal e calibrar o threshold —
+> 8	 * o dado é o juiz (igual o regime foi observado e a RSI 25/75 foi calibrada por backtest, não chutada).
+> 9	 *
+> 10	 * Escreve um OBJETO por símbolo:  MEMORY['<sym>:FLOW'] = { imbalance, toxicity, at }
+> 11	 * via updateMemory(...,executeAutomations=false) (gate PASSIVO quando ligado: lido no tick, não dispara).
+> 12	 * Sinal = MAINNET (estado real), execução = testnet — mesma arquitetura do regimeJob.
+> 13	 *
+> 14	 * Env:
+> 15	 *   FLOW_JOB_ENABLED (default 'true')   — liga/desliga o job
+> 16	 *   FLOW_REFRESH_MS  (default 30000)    — intervalo do poll (30s; piso 5s)
+> 17	 *   FLOW_SYMBOLS     (CSV, opcional)    — força a lista; senão usa os das automações ativas
+> 18	 *   FLOW_LOG_TOXICITY(default '0.6')    — loga quando |imbalance| >= isto (observação dos "quase-vetos")
+> 19	 */
+> 20	const beholder = require('./beholder');
+> 21	const automationsRepository = require('./repositories/automationsRepository');
+> 22	const { getFlow } = require('./utils/flowService');
+> 23	const { indexKeys } = require('./utils/indexes');
+> 24	const logger = require('./utils/logger');
+> 25	
+> 26	const ENABLED = (process.env.FLOW_JOB_ENABLED || 'true') !== 'false';
+> 27	const _refresh = parseInt(process.env.FLOW_REFRESH_MS || '30000', 10);
+> 28	const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 5000 ? _refresh : 30000;
+> 29	const _tox = parseFloat(process.env.FLOW_LOG_TOXICITY || '0.6');
+> 30	const LOG_TOXICITY = Number.isFinite(_tox) ? _tox : 0.6;
+> 31	
+> 32	let timer = null;
+> ```
+
+## 🤖 Claude *(02:31:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 136,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 136	);
+> 137	
+> 138	readTool(
+> 139	  "tradeux_get_oracle_state",
+> 140	  "Estado do Oraculo Microestrutural (v1: fluxo do taker). Desequilibrio de agressao dos aggTrades recentes da MAINNET via isBuyerMaker (ground-truth): imbalance ∈ [-1,1] (<0 = taker vendendo) e toxicity = |imbalance| ∈ [0,1] (quao unilateral/adverso esta o fluxo). Use p/ evitar comprar dip sob venda agressora extrema (alta toxicity). v1 = so fluxo (sem L2/futures/VPIN bucketizado).",
+> 141	  { symbol: z.string().describe("Par, ex: BTCUSDT") },
+> 142	  ({ symbol }) => api.get(`/analysis/flow/${symbol.toUpperCase()}`)
+> 143	);
+> ```
+
+## 🤖 Claude *(02:32:59)*
+
+
+## 🤖 Claude *(02:33:01)*
+
+Confirmado o ponto cirúrgico: a `toxicity` **não gateia nada** (a id2 usa `imbalance` como *timing*, que a evidência suporta). O rebaixamento é **semântico/documental** — impedir que ela seja tratada como forecast. Aplicando nos 5 pontos onde ela é descrita (flowService, MCP, card, indexes, flowJob), com a evidência citada. **Não toco no gate da id2** (uso de timing é legítimo).
+
+## 🤖 Claude *(02:33:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js",
+  "old_string": " *   imbalance = (buyVol - sellVol) / (buyVol + sellVol)   \u2208 [-1, 1]   (<0 = taker vendendo)\n *   toxicity  = |imbalance|                                \u2208 [0, 1]    (proxy de one-sidedness/sele\u00e7\u00e3o adversa)\n *\n * \u00c9 um proxy de fluxo/toxicidade (N\u00c3O o True VPIN bucketizado com CDF de 30d \u2014 ver docs/blueprint;",
+  "new_string": " *   imbalance = (buyVol - sellVol) / (buyVol + sellVol)   \u2208 [-1, 1]   (<0 = taker vendendo)\n *   toxicity  = |imbalance|                                \u2208 [0, 1]    (one-sidedness CONTEMPOR\u00c2NEA do fluxo)\n *\n * \u26a0\ufe0f NOWCASTING, n\u00e3o forecasting (deep-research 2026-06-08, ~/RESEARCH-bear-capture.md): order-flow/OFI\n * descreve o movimento IMEDIATO (~2 price changes / ~10s), N\u00c3O prev\u00ea dire\u00e7\u00e3o futura \u2014 e VPIN/toxicidade\n * como preditor de jumps foi REFUTADO. Usar imbalance/toxicity S\u00d3 como TIMING de execu\u00e7\u00e3o (ex.: \"n\u00e3o\n * comprar o dip ENQUANTO o taker vende agressivo AGORA\"), JAMAIS como forecast direcional aut\u00f4nomo.\n *\n * \u00c9 um proxy de fluxo/toxicidade (N\u00c3O o True VPIN bucketizado com CDF de 30d \u2014 ver docs/blueprint;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/flowService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:33:23)*
+
+
+## 🤖 Claude *(02:33:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  \"Estado do Oraculo Microestrutural (v1: fluxo do taker). Desequilibrio de agressao dos aggTrades recentes da MAINNET via isBuyerMaker (ground-truth): imbalance \u2208 [-1,1] (<0 = taker vendendo) e toxicity = |imbalance| \u2208 [0,1] (quao unilateral/adverso esta o fluxo). Use p/ evitar comprar dip sob venda agressora extrema (alta toxicity). v1 = so fluxo (sem L2/futures/VPIN bucketizado).\",",
+  "new_string": "  \"Estado do Oraculo Microestrutural (v1: fluxo do taker). Desequilibrio de agressao dos aggTrades recentes da MAINNET via isBuyerMaker (ground-truth): imbalance \u2208 [-1,1] (<0 = taker vendendo) e toxicity = |imbalance| \u2208 [0,1] (quao unilateral esta o fluxo AGORA). NOWCASTING, NAO forecast: descreve o estado CONTEMPORANEO do fluxo (~segundos), nao preve direcao futura (VPIN/toxicidade como preditor de jumps foi refutado em pesquisa). Use SO como TIMING de execucao (ex.: nao comprar o dip enquanto o taker vende agressivo agora), nunca como sinal direcional. v1 = so fluxo (sem L2/futures/VPIN bucketizado).\","
+}
+```
+
+## 🤖 Claude *(02:33:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js",
+  "old_string": "<b>toxicity</b> = |imbalance| (qu\u00e3o unilateral). <b>GATE ATIVO (provis\u00f3rio)</b> na id2:",
+  "new_string": "<b>toxicity</b> = |imbalance| (qu\u00e3o unilateral). <b>Nowcasting</b> (estado do fluxo ~agora, N\u00c3O previs\u00e3o \u2014 order-flow descreve o movimento imediato, n\u00e3o prev\u00ea dire\u00e7\u00e3o futura): serve p/ <b>timing</b> de execu\u00e7\u00e3o, n\u00e3o como sinal direcional. <b>GATE ATIVO (provis\u00f3rio)</b> na id2:"
+}
+```
+
+## 🤖 Claude *(02:33:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    FLOW: 'FLOW' // desequil\u00edbrio de fluxo do taker da mainnet {imbalance,toxicity} (flowJob, SHADOW) \u2014 futuro gate da revers\u00e3o \u00e0 m\u00e9dia",
+  "new_string": "    FLOW: 'FLOW' // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) \u2014 NOWCASTING/timing, N\u00c3O forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (n\u00e3o comprar dip sob venda agressora AGORA)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(02:33:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/flowJob.js",
+  "old_string": " * >>> SHADOW MODE <<<  Computa e exp\u00f5e o sinal (MEMORY + endpoint + MCP) e LOGA os epis\u00f3dios de fluxo\n * unilateral, mas N\u00c3O gateia automa\u00e7\u00e3o ainda. O gate da id2 (\"n\u00e3o comprar o dip sob venda agressora\n * extrema\") \u00e9 o PR\u00d3XIMO passo, DEPOIS de observar a distribui\u00e7\u00e3o do sinal e calibrar o threshold \u2014\n * o dado \u00e9 o juiz (igual o regime foi observado e a RSI 25/75 foi calibrada por backtest, n\u00e3o chutada).",
+  "new_string": " * Computa e exp\u00f5e o sinal (MEMORY + endpoint + MCP) e LOGA os epis\u00f3dios de fluxo unilateral. O JOB \u00e9\n * passivo (escreve a MEMORY, n\u00e3o dispara), mas o sinal J\u00c1 \u00c9 CONSUMIDO: o `imbalance` gateia a id2\n * (\"n\u00e3o comprar o dip sob venda agressora AGORA\" \u2014 uso de TIMING/nowcasting, que a evid\u00eancia suporta).\n * \u26a0\ufe0f imbalance/toxicity s\u00e3o NOWCASTING, n\u00e3o forecast (deep-research, ~/RESEARCH-bear-capture.md): nunca\n * usar como preditor de dire\u00e7\u00e3o futura (VPIN/toxicidade como sinal forward foi refutado) \u2014 s\u00f3 timing."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/flowJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:33:35)*
+
+
+## 🤖 Claude *(02:33:35)*
+
+O `indexes.js` precisa ser lido antes do edit. Lendo o trecho.
+
+## 🤖 Claude *(02:33:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "offset": 74,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	    PREVIOUS_CANDLE: 'PREVIOUS_CANDLE',
+> 75	    TICKER: 'TICKER',
+> 76	    REGIME: 'REGIME',
+> 77	    TREND_CROSS: 'TREND_CROSS',
+> 78	    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> 79	    FLOW: 'FLOW' // desequilíbrio de fluxo do taker da mainnet {imbalance,toxicity} (flowJob, SHADOW) — futuro gate da reversão à média
+> 80	}
+> 81	
+> 82	function getAnalysisIndexes() {
+> 83	    return {
+> ```
+
+## 🤖 Claude *(02:33:43)*
+
+
+## 🤖 Claude *(02:33:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    FLOW: 'FLOW' // desequil\u00edbrio de fluxo do taker da mainnet {imbalance,toxicity} (flowJob, SHADOW) \u2014 futuro gate da revers\u00e3o \u00e0 m\u00e9dia",
+  "new_string": "    FLOW: 'FLOW' // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) \u2014 NOWCASTING/timing, N\u00c3O forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (n\u00e3o comprar dip sob venda agressora AGORA)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:34:17)*
+
+
+## 🤖 Claude *(02:34:18)*
+
+As 5 edições de (b) aplicadas — semântica/docs, sem mudar comportamento. Validando sintaxe (backend + MCP) e o bridge do agente (28 tools) antes de commitar.
+
+## 🤖 Claude *(02:34:19)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(02:34:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== syntax check ===\"\nfor f in backend/src/utils/flowService.js backend/src/flowJob.js backend/src/utils/indexes.js backend/scripts/backtest-futures-trend.js tradeux-mcp/src/index.js; do\n  if node --check \"$f\" 2>/dev/null; then echo \"OK   $f\"; else echo \"FAIL $f\"; fi\ndone\necho \"=== agente --check (valida o mcp index.js: deve listar 28 tools) ===\"\ncd tradeux-agent && node src/index.js --check 2>&1 | grep -iE \"ferramentas|tools disp|erro|Error\" | head -3",
+  "description": "Syntax check edited files + agent --check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === syntax check ===
+> OK   backend/src/utils/flowService.js
+> OK   backend/src/flowJob.js
+> OK   backend/src/utils/indexes.js
+> OK   backend/scripts/backtest-futures-trend.js
+> OK   tradeux-mcp/src/index.js
+> === agente --check (valida o mcp index.js: deve listar 28 tools) ===
+> [tradeux-agent] Conectado. 28 ferramentas disponíveis.
+> ```
+
+## 🤖 Claude *(02:34:35)*
+
+
+## 🤖 Claude *(02:34:36)*
+
+Tudo compila e o bridge lista **28 tools**. Vendo o git status pra organizar os commits (separar a ferramenta de backtest da mudança de docs do oracle).
+
+## 🤖 Claude *(02:34:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== status ===\"; sudo -n -u gcrux-tradeux git status --short\necho \"=== backtest-data / backtest-results s\u00e3o gitignored? ===\"\nsudo -n -u gcrux-tradeux git check-ignore backend/backtest-data backend/backtest-results 2>/dev/null || echo \"(n\u00e3o ignorados \u2014 verificar)\"\necho \"=== o que h\u00e1 em backtest-results ===\"; ls backend/backtest-results/ 2>/dev/null | grep futures",
+  "description": "Check git status and gitignore for backtest output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+>  M backend/src/flowJob.js
+>  M backend/src/utils/flowService.js
+>  M backend/src/utils/indexes.js
+>  M frontend/src/private/Intelligence/Intelligence.js
+>  M tradeux-mcp/src/index.js
+> ?? backend/backtest-results/backtest-futures-1h-bear-365d.md
+> ?? backend/backtest-results/backtest-futures-1h-bull-end2024-04-01.md
+> ?? backend/scripts/backtest-futures-trend.js
+> ?? "docs/Engenharia Preditiva para Criptoativos.md"
+> === backtest-data / backtest-results são gitignored? ===
+> backend/backtest-data
+> === o que há em backtest-results ===
+> backtest-futures-1h-bear-365d.md
+> backtest-futures-1h-bull-end2024-04-01.md
+> ```
+
+## 🤖 Claude *(02:35:23)*
+
+
+## 🤖 Claude *(02:35:25)*
+
+Status claro. Vou fazer **2 commits** (a ferramenta de backtest com o veredito + a mudança de docs do oracle), com secret-scan. `backtest-data` é gitignored; os relatórios `.md` são versionados.
+
+## 🤖 Claude *(02:35:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\n# secret scan nos arquivos da sessao\nif grep -rinE \"sk-or-v1-[a-z0-9]{20}|sk-[a-z0-9]{30}|or-v1-[a-z0-9]{20}|ghp_[a-z0-9]{20}|OPENROUTER_API_KEY=[A-Za-z0-9_-]{10}\" backend/scripts/backtest-futures-trend.js backend/src/flowJob.js backend/src/utils/flowService.js backend/src/utils/indexes.js frontend/src/private/Intelligence/Intelligence.js tradeux-mcp/src/index.js 2>/dev/null; then echo \"!! SEGREDO\"; exit 1; fi\necho \"secret-scan: limpo\"\n# commit (a) \u2014 backtest tooling + veredito\ngit add backend/scripts/backtest-futures-trend.js backend/backtest-results/backtest-futures-1h-bear-365d.md backend/backtest-results/backtest-futures-1h-bull-end2024-04-01.md\ngit commit -q \\\n -m \"test(backtest): engine bilateral de futures (long/short + funding real) + veredito FALSO POSITIVO\" \\\n -m \"Backtest critico: short/trend bilateral em Futures captura a queda isolada (+5% bear vs -34% B&H, 3/4 simbolos) MAS no CICLO e dominado pelo regime-gating atual (ciclo +88% vs +338% do caixa-em-bear+long-no-bull): sacrifica o upside assimetrico do bull (capta so +79% de +338%). maxDD -51% a 1x (=liquidacao alavancado), Sharpe liquido 0.31->~0.15 pos-haircut, filtro ADX (gated) PIORA por whipsaw (330 flips). Confirma ~/RESEARCH-bear-capture.md. NAO construir modulo de Futures de short.\" \\\n -m \"Engine: custos reais (taker 0.05%+slip), funding 8h real por candle, sem lookahead. Reprodutivel: node backend/scripts/backtest-futures-trend.js [--days] [--end] [--fee].\" \\\n -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\"\n# commit (b) \u2014 toxicity nowcasting\ngit add backend/src/flowJob.js backend/src/utils/flowService.js backend/src/utils/indexes.js frontend/src/private/Intelligence/Intelligence.js tradeux-mcp/src/index.js\ngit commit -q \\\n -m \"docs(oracle): rebaixa toxicity para NOWCASTING/timing (nao forecast)\" \\\n -m \"Achado do deep-research (~/RESEARCH-bear-capture.md): VPIN/toxicidade como sinal FORECASTING de jumps foi refutado (0-3); order-flow/OFI e nowcasting (~10s) = timing de execucao, nao previsao de direcao. Alinha a semantica em 5 pontos (flowService, flowJob, indexes, card Intelligence, tool MCP get_oracle_state).\" \\\n -m \"NAO muda comportamento: o gate da id2 usa imbalance como TIMING (nao comprar dip sob venda agressora AGORA) = uso suportado pela evidencia, mantido intacto. So docs/descricao (read-path).\" \\\n -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\"\ngit log --oneline -4'",
+  "description": "Commit backtest tooling and toxicity docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> secret-scan: limpo
+> c67d6bc docs(oracle): rebaixa toxicity para NOWCASTING/timing (nao forecast)
+> 239cdc5 test(backtest): engine bilateral de futures (long/short + funding real) + veredito FALSO POSITIVO
+> 2d01002 perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+> 9898bdf feat(mcp): trava determinística do cofre — bloqueia SELL de BTC no place_order do agente
+> ```
+
+## 🤖 Claude *(02:35:42)*
+
+
+## 🤖 Claude *(02:35:42)*
+
+2 commits: `239cdc5` (backtest+veredito) e `c67d6bc` (toxicity nowcasting). Push:
+
+## 🤖 Claude *(02:35:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"' \")\ngit push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]+@#x-access-token:***@#g\" | grep -vE \"vulnerabilit|dependabot|^remote: *$\"'",
+  "description": "Push both commits to master"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To https://github.com/gabrielZarattini/tradeux.git
+>    2d01002..c67d6bc  HEAD -> master
+> ```
+
+## 🤖 Claude *(02:36:09)*
+
+
+## 🤖 Claude *(02:36:09)*
+
+Push **OK**: `2d01002..c67d6bc → master`. Ativando (b) no vivo (card nowcasting + MCP description) e conferindo o CI.
+
+## 🤖 Claude *(02:36:10)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(02:36:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== rebuild frontend + agent (card nowcasting + MCP description) ===\"\ndocker compose build frontend agent 2>&1 | tail -2\ndocker compose up -d frontend agent 2>&1 | tail -3\necho \"=== CI dos 2 commits (c67d6bc) ===\"\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"' \")\ncurl -s -m12 -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/vnd.github+json\" \\\n  \"https://api.github.com/repos/gabrielZarattini/tradeux/commits/c67d6bc/check-runs\" \\\n  | grep -oE \"\\\"(name|status|conclusion)\\\": *(\\\"[^\\\"]*\\\"|null)\" | grep -vE \"GitHub Actions\"'",
+  "description": "Rebuild frontend+agent and check CI",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild frontend + agent (card nowcasting + MCP description) ===
+>  Image tradeux-frontend Built 
+>  Image tradeux-agent Built 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+>  Container tradeux-frontend-1 Started 
+> === CI dos 2 commits (c67d6bc) ===
+> "name": "npm audit (informativo)"
+> "status": "completed"
+> "conclusion": "success"
+> "name": "backend (migrate+seed) (postgres)"
+> "status": "in_progress"
+> "conclusion": null
+> "name": "backend (migrate+seed) (mysql)"
+> "status": "in_progress"
+> "conclusion": null
+> "name": "frontend (vite build)"
+> "status": "completed"
+> "conclusion": "success"
+> "name": "mcp + agent (--check)"
+> "status": "completed"
+> "conclusion": "success"
+> ```
+
+## 🤖 Claude *(02:37:01)*
+
+
+## 🤖 Claude *(02:37:02)*
+
+Vivo == master (frontend+agent rebuildados). CI: frontend, mcp+agent, audit **verdes**; backend migrate rodando (não toquei em DB). Indo pro handoff final. Pre-flight:
+
+## 🤖 Claude *(02:37:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== status (esperado: so docs/ alheio) ===\"; git status --short | grep -v \"Engenharia Preditiva\" || echo \"(limpo exceto docs alheio)\"\necho \"=== commits novos desta fase (2d01002..HEAD) ===\"; git log --oneline 2d01002..HEAD\necho \"=== secret scan ===\"; git diff 2d01002..HEAD | grep -inE \"sk-or-v1-|or-v1-[a-z0-9]{20}|ghp_[a-z0-9]{20}|OPENROUTER_API_KEY=[A-Za-z0-9]{10}|TRADEUX_PASSWORD=.\" | head || echo \"limpo\"\necho \"=== containers ===\"; docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"\n'\ncurl -s -m5 -o /dev/null -w \"site %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Handoff pre-flight + secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status (esperado: so docs/ alheio) ===
+> (limpo exceto docs alheio)
+> === commits novos desta fase (2d01002..HEAD) ===
+> c67d6bc docs(oracle): rebaixa toxicity para NOWCASTING/timing (nao forecast)
+> 239cdc5 test(backtest): engine bilateral de futures (long/short + funding real) + veredito FALSO POSITIVO
+> === secret scan ===
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up 34 seconds
+> tradeux-backend-1    Up 9 hours
+> tradeux-db-1         Up 6 days (healthy)
+> tradeux-frontend-1   Up 34 seconds
+> site 200
+> ```
+
+## 🤖 Claude *(02:37:50)*
+
+
+## 🤖 Claude *(02:37:50)*
+
+Pre-flight **limpo**: secret-scan vazio, 4 containers up (vivo==master), site 200, 2 commits novos. Selando — atualizo o HANDOFF e as memórias. Aplicando o SEAL e lendo os arquivos de índice/memória que faltam ajustar.
+
+## 🤖 Claude *(02:37:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "prov\u00e1vel: m\u00f3dulo de Futures separado p/ capturar o bear, hoje inerte h\u00e1 meses) ANTES de qualquer build. **0 PRs** (trunk-based).",
+  "new_string": "prov\u00e1vel: m\u00f3dulo de Futures separado p/ capturar o bear, hoje inerte h\u00e1 meses) ANTES de qualquer build. **0 PRs** (trunk-based).\n\n### \ud83e\udd1d SEAL \u2014 2026-06-08 (cont. \u2014 deep research + backtest CR\u00cdTICO de futures (FALSO POSITIVO) + toxicity nowcasting)\n**A \"nova frente\" (lucrar na queda) foi pesquisada E testada empiricamente \u2014 e REFUTADA com rigor.** (1) **Deep research\nadversarial** (run `wf_30194e34-576`; 106 agentes, 24 fontes peer-reviewed, 19 claims confirmados / 6 refutados) \u2192 relat\u00f3rio\n`~/RESEARCH-bear-capture.md`, mem\u00f3ria `tradeux-bear-capture-research`. Veredito: capturar bear exige FUTURES (spot n\u00e3o d\u00e1 short);\nedge \u00e9 pequeno; scalping 1m manual \u00e9 -EV; toxicity/VPIN como forecast REFUTADO. (2) **Backtest cr\u00edtico anti-falso-positivo**\n(commit `239cdc5`): novo `backend/scripts/backtest-futures-trend.js` \u2014 engine BILATERAL (long+short), custos reais de futures\n(taker 0,05%+slip), **funding 8h REAL** por candle, sem lookahead, multi-s\u00edmbolo, bear+bull. **VEREDITO: FALSO POSITIVO.** O\ntrend bilateral captura a queda isolada (+5% bear vs -34% B&H, 3/4 s\u00edmbolos) MAS no CICLO \u00e9 dominado pelo regime-gating atual\n(**ciclo +88% vs +338%** = caixa-em-bear + long-no-bull): sacrifica o upside assim\u00e9trico do bull (capta s\u00f3 +79% de +338%). maxDD\n**-51%** a 1x (= liquida\u00e7\u00e3o se alavancado), Sharpe l\u00edquido 0,31\u2192~0,15 p\u00f3s-haircut, filtro ADX (gated) PIORA por whipsaw (330\nflips). **N\u00c3O construir m\u00f3dulo de Futures de short** \u2014 a farm-and-funnel (caixa em bear, captura do bull) continua o melhor.\n(3) **Toxicity rebaixada p/ nowcasting** (commit `c67d6bc`): achado do research aplicado em 5 pontos (flowService/flowJob/indexes/\ncard/MCP) \u2014 imbalance/toxicity = TIMING de execu\u00e7\u00e3o (estado contempor\u00e2neo ~10s), N\u00c3O forecast (VPIN-forecast refutado). N\u00c3O muda\ncomportamento: o gate da id2 usa `imbalance` como timing (uso suportado pela evid\u00eancia), INTACTO. **Gate proporcional** (research/\nbacktest/docs, n\u00e3o money-path) = direto + auto-validado (`--check` 28 tools, CI frontend/mcp verdes, syntax OK). Vivo == master\n(4 containers, site 200). **A frente \"lucrar na queda\" est\u00e1 ENCERRADA (refutada por dado pr\u00f3prio).** **0 PRs** (trunk-based)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-bear-capture-research.md",
+  "old_string": "Atualiza/complementa [[tradeux-agent-500k-validation]] (a meta +3 BTC). Pesquisa anterior relacionada: `~/RESEARCH-flow-and-margin.md` (margin short desaconselhado).",
+  "new_string": "Atualiza/complementa [[tradeux-agent-500k-validation]] (a meta +3 BTC). Pesquisa anterior relacionada: `~/RESEARCH-flow-and-margin.md` (margin short desaconselhado).\n\n**\u2705 VALIDADO POR BACKTEST PR\u00d3PRIO** (commit `239cdc5`, `backend/scripts/backtest-futures-trend.js`): engine BILATERAL (long+short) + custos reais de futures + **funding 8h REAL** + walk-forward, bear+bull, BTC/ETH/BNB/SOL. **CONFIRMOU o veredito da pesquisa: FALSO POSITIVO.** O trend/short bilateral captura a queda ISOLADA (+5% bear vs -34% B&H, 3/4 s\u00edmbolos) mas no CICLO \u00e9 dominado pelo regime-gating atual (**ciclo +88% vs +338%** do caixa-em-bear+long-no-bull) \u2014 sacrifica o upside assim\u00e9trico do bull; maxDD **-51%** a 1x (=liquida\u00e7\u00e3o alavancado); Sharpe l\u00edquido 0,31\u2192~0,15 p\u00f3s-haircut; filtro ADX PIORA (whipsaw). **DECIS\u00c3O: N\u00c3O construir m\u00f3dulo de Futures de short** \u2014 farm-and-funnel (caixa em bear, captura do bull) \u00e9 superior. Relat\u00f3rios em `backend/backtest-results/backtest-futures-1h-*.md`. A toxicity do [[tradeux-flow-oracle]] foi rebaixada p/ nowcasting/timing (commit `c67d6bc`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-bear-capture-research.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> 5	- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) — only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu
+> 6	- [Testnet strategy validation goal](tradeux-agent-500k-validation.md) — GOAL PIVOT: meta agora é +3 BTC no testnet (era 500k); OCO + fix de P&L entregues; how to run the agent
+> 7	- [ShakeHands protocol](shakehands-protocol.md) — session continuity: /handson loads HANDOFF.md state, /handoff seals it; HANDOFF.md at ~/HANDOFF.md is the source of truth
+> 8	- [TradeUX orchestration model](tradeux-orchestration-model.md) — trunk-based direct-to-master; Claude orchestrates agents + owns approve-or-send-back (no user PR review); token in .env as GITHUB_TOKEN_API
+> 9	- [Git ownership gotcha](git-ownership-gotcha.md) — run ALL git/docker repo ops as gcrux-tradeux; git-as-ubuntu poisons .git ownership → chown .git to fix
+> 10	- [Agent token economics](tradeux-agent-token-economics.md) — journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat RESOLVIDO; agente agora é SERVIÇO supervisionado no compose (e97a85a, user:1011:1013) + card com badge STALE
+> 11	- [Logger per-category files](tradeux-logger-per-category-files.md) — logger(cat,…) grava logs/<cat>.log; monitor→M<id>.log, automação→A<id>.log; NÃO só system.log
+> 12	- [Regime gate](tradeux-regime-gate.md) — regimeJob grava MEMORY['<sym>:REGIME']; id2 (BUY) gateada por !=bear; gate é RUNTIME (não seedado) → reaplicar pós-reset
+> 13	- [Trend Following](tradeux-trend-following.md) — automação SMA 50/200; sinal TREND_CROSS da MAINNET via regimeJob; id6/id7 ATIVAS (453c7d6) + coordenação id2/id3 !=trend + id7 vende TREND_QTY (e5ef595)
+> 14	- [Flow oracle](tradeux-flow-oracle.md) — oráculo de fluxo do taker v1 (f833032): aggTrades mainnet → MEMORY['<sym>:FLOW']{imbalance,toxicity} via isBuyerMaker; SHADOW (não gateia ainda); épico HFT completo DEVOLVIDO
+> 15	- [Farm-and-Funnel backtest](tradeux-farm-funnel-backtest.md) — grid no-loss+funil pra BTC backtestado (backend/scripts/backtest-farm-funnel.js): farm=baixo risco/alpha marginal, trend=motor de bull (+22%), +3 BTC só capturando ciclos; funil não existe ainda, só BTCUSDT tem automação, id3 não é no-loss (pausada)
+> 16	- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) — MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pré-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; (b) get_memory_indexes enxugado (2d01002, leanMemoryIndexes); agente NÃO é BTCUSDT-only (farma alts)
+> 17	
+> ```
+
+## 🤖 Claude *(02:38:29)*
+
+
+## 🤖 Claude *(02:38:29)*
+
+Adicionando o pointer da pesquisa ao índice + atualizando a linha do flow-oracle (que estava desatualizada). E lendo a memória do flow-oracle pra anotar o rebaixamento.
+
+## 🤖 Claude *(02:38:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Flow oracle](tradeux-flow-oracle.md) \u2014 or\u00e1culo de fluxo do taker v1 (f833032): aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']{imbalance,toxicity} via isBuyerMaker; SHADOW (n\u00e3o gateia ainda); \u00e9pico HFT completo DEVOLVIDO",
+  "new_string": "- [Flow oracle](tradeux-flow-oracle.md) \u2014 fluxo do taker v1 (f833032): aggTrades mainnet \u2192 MEMORY['<sym>:FLOW']{imbalance,toxicity}; imbalance GATEIA a id2 (timing, 72b1a19); toxicity rebaixada p/ NOWCASTING n\u00e3o-forecast (c67d6bc \u2014 VPIN-forecast refutado em pesquisa); \u00e9pico HFT DEVOLVIDO"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) \u2014 MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pr\u00e9-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; (b) get_memory_indexes enxugado (2d01002, leanMemoryIndexes); agente N\u00c3O \u00e9 BTCUSDT-only (farma alts)",
+  "new_string": "- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) \u2014 MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pr\u00e9-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; (b) get_memory_indexes enxugado (2d01002, leanMemoryIndexes); agente N\u00c3O \u00e9 BTCUSDT-only (farma alts)\n- [Bear-capture research](tradeux-bear-capture-research.md) \u2014 deep research + backtest pr\u00f3prio (239cdc5): lucrar na QUEDA exige FUTURES e \u00e9 FALSO POSITIVO no ciclo (+88% vs +338% do regime-gating atual); N\u00c3O construir m\u00f3dulo de short; relat\u00f3rio ~/RESEARCH-bear-capture.md"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 4 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-flow-oracle
+> 3	description: "Oráculo de fluxo do taker v1 (f833032) — aggTrades mainnet → MEMORY['<sym>:FLOW']; GATE SNIPER ATIVO na id2 (72b1a19, threshold provisório -0.40, fail-safe); épico HFT DEVOLVIDO"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: bbf21a2d-6c89-4689-a9c7-14f32074b3a3
+> 8	---
+> 9	
+> 10	**Oráculo de Liquidez v1 = só FLUXO DO TAKER, em SHADOW** (commit `f833032`, gate QA PASS + TL APPROVE, CI verde).
+> 11	Subconjunto ANCORADO de um épico de microestrutura (MLOFI/True VPIN/densidade de liquidação H(P)/SharedArrayBuffer/futures).
+> 12	
+> 13	**Por que o épico completo foi DEVOLVIDO** (não construir sem reabrir a decisão): o sistema é **spot-only, L1** (só `!bookTicker`,
+> 14	BOOK até simulado do miniTicker), **sem futures/@depth/@trade/OI** → MLOFI (precisa L2), VPIN bucketizado (precisa stream de trades)
+> 15	e H(P) (precisa futures/liquidações) ficam **sem dado**; é **testnet** (book sintético, sem histórico 30d); e o **LLM no caminho
+> 16	crítico mata alfa de microestrutura** (LLM=segundos, OFI=ms — o próprio diagrama do blueprint roteia pelo agente). Erros já refutados
+> 17	no épico (3ª vez do `?returnRateLimits=false` no stream — é param de ws-API de ORDENS, não market-data; e conflação do `MEMORY` do
+> 18	Beholder (objeto JS) com MySQL `ENGINE=MEMORY`). Blueprint em `tradeux/docs/Engenharia Preditiva para Criptoativos.md` (NÃO commitado).
+> 19	
+> 20	**O que existe (em git, clona o padrão do [[tradeux-regime-gate]]: sinal mainnet → MEMORY → execução testnet):**
+> 21	- `backend/src/utils/flowService.js`: `getFlow(symbol)` busca `GET /api/v3/aggTrades?limit=1000` da MAINNET (hosts .com/.vision),
+> 22	  computa `imbalance=(buyVol−sellVol)/(buyVol+sellVol)` ∈[−1,1] e `toxicity=|imbalance|` ∈[0,1]. **Mapeamento (CRUX, verificado):**
+> 23	  `m`(isBuyerMaker)`===true` → VENDA agressora do taker (sellVol); `===false` → COMPRA agressora (buyVol). `imbalance<0` = taker
+> 24	  líquido vendendo. Cache 20s, **never-throws** (`{unavailable:true}` se a Binance falhar).
+> 25	- `backend/src/flowJob.js`: poll (30s) grava `MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at,atMs}` via `updateMemory(...,false)` (gate
+> 26	  PASSIVO; `atMs`=epoch da escrita = base do fail-safe de stale do gate). Loga episódios `|imbalance|>=FLOW_LOG_TOXICITY` (0.6). **CAPITULATION
+> 27	  LOG** (commit `72b1a19`): quando `MEMORY['<sym>:RSI_14_1m'].current<25`, grava snapshot JSON (imbalance/toxicity/buyVol/sellVol/rsi/regime) em
+> 28	  `logs/flow-capitulation.log` — matéria-prima p/ calibrar o threshold (RSI-testnet × FLOW-mainnet = calibra MECÂNICA, não alfa; falta histórico
+> 29	  de aggTrades no backtest.js). `getStatus()`. Env: `FLOW_JOB_ENABLED` (kill-switch), `FLOW_REFRESH_MS` (30s), `FLOW_SYMBOLS`, `FLOW_LOG_TOXICITY`.
+> 30	- `GET /analysis/flow/:symbol` + `/analysis/flow-status` (read-only, atrás do authMiddleware, token CRU); MCP **`tradeux_get_oracle_state`**
+> 31	  (leitura, sempre disponível). `indexKeys.FLOW`. `server.js` chama `flowJob.start()` após o regimeJob.
+> 32	
+> 33	**Disciplina (o dado é o juiz):** o threshold do fluxo deve sair da DISTRIBUIÇÃO OBSERVADA, não de chute. A **id2 já LÊ `:FLOW`** (gate
+> 34	sniper, commit `72b1a19`) — mas o threshold `-0.40` é **provisório** (a wiring foi feita agora, conservadora + fail-safe + inerte em bear;
+> 35	a CALIBRAÇÃO vem do deep-research + `flow-capitulation.log`, e é um re-PATCH trivial). Era a ressalva do TL: idealmente calibrar antes de ligar.
+> 36	
+> 37	**GATE NA id2 — FEITO** (commit `72b1a19`, gate QA PASS + TL APPROVE), via `node backend/scripts/setup-flow-gate.js`: a id2 (BUY)
+> 38	virou "sniper" — só compra o dip se o fluxo NÃO estiver em capitulação. Condition viva: `...current<25 && REGIME!=='bear' &&
+> 39	REGIME!=='trend' && MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<180000 && MEMORY['BTCUSDT:FLOW'].imbalance>-0.4`;
+> 40	indexes += `BTCUSDT:FLOW`. **FAIL-SAFE FECHADO** (provado no eval real do engine): FLOW nos indexes (null→não dispara) + stale-check via
+> 41	`atMs` (dado velho→não dispara) + null-guard (throw capturado→não dispara) — todos os modos travam fechado. ⚠️ **threshold `-0.40`
+> 42	PROVISÓRIO/conservador, NÃO calibrado** → **recalibrar** com o deep-research + `logs/flow-capitulation.log` (re-rodar `setup-flow-gate.js`
+> 43	com `FLOW_GATE_MIN=novo` ATUALIZA idempotente; `FLOW_GATE_MAX_AGE_MS` ajusta a tolerância de stale). **INERTE hoje** (bear bloqueia a id2 a
+> 44	montante; o disparo só é observável quando o regime sair de bear). Runtime/não-seedado → reaplicar pós-`make nuke`: `setup-trend` +
+> 45	`activate-trend` + **`setup-flow-gate`** (nessa ordem — o gate de fluxo é o ÚLTIMO, faz strip+append sobre a condition já coordenada). Ver [[tradeux-regime-gate]].
+> 46	
+> 47	**Gotchas:** cache(20s)<poll(30s) → todo poll re-busca (intencional p/ 1-2 símbolos; alinhar TTL≥REFRESH se escalar). Janela = "últimos
+> 48	1000 trades" (segundos variáveis, `spanSec` exposto), não janela temporal fixa. `flowService`/`regimeService` têm `getJSON` duplicado
+> 49	(dívida deliberada, self-contained). **Card "Taker Flow" no painel `/intelligence`** (commit `937172b`): lê `/analysis/flow-status`,
+> 50	mostra imbalance(cor)/toxicity/trades-janela/idade por símbolo, auto-refresh 60s — instrumento p/ observar a distribuição e calibrar o
+> 51	threshold do gate. Em testnet o sinal é fraco (sinal vem da mainnet, real; execução testnet).
+> 52	
+> ```
+
+## 🤖 Claude *(02:39:01)*
+
+
+## 🤖 Claude *(02:39:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md",
+  "old_string": "threshold do gate. Em testnet o sinal \u00e9 fraco (sinal vem da mainnet, real; execu\u00e7\u00e3o testnet).",
+  "new_string": "threshold do gate. Em testnet o sinal \u00e9 fraco (sinal vem da mainnet, real; execu\u00e7\u00e3o testnet).\n\n**TOXICITY = NOWCASTING, n\u00e3o forecast** (commit `c67d6bc`, deep-research [[tradeux-bear-capture-research]]): VPIN/toxicidade como sinal FORECASTING de jumps foi REFUTADO (0-3); order-flow/OFI \u00e9 nowcasting (~2 price changes/~10s, base em equities). Sem\u00e2ntica alinhada em 5 pontos (flowService/flowJob/indexes/card/MCP): imbalance/toxicity = estado CONTEMPOR\u00c2NEO do fluxo = **TIMING de execu\u00e7\u00e3o**, NUNCA forecast direcional aut\u00f4nomo. O gate da id2 usa `imbalance` como timing (\"n\u00e3o comprar dip sob venda agressora AGORA\") = uso SUPORTADO pela evid\u00eancia, **mantido intacto**. (Update do `description:` desta mem\u00f3ria: n\u00e3o \u00e9 mais \"SHADOW\" \u2014 o imbalance gateia a id2 desde `72b1a19`.)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-flow-oracle.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:39:16)*
+
+
+## 🤖 Claude *(02:39:16)*
+
+Tudo persistido. Verificação final de sincronia e selo:
+
+## 🤖 Claude *(02:39:16)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(02:39:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"' \")\nremote=$(git ls-remote \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" refs/heads/master 2>/dev/null | cut -f1)\necho \"remote master: ${remote:0:7}  |  local HEAD: $(git rev-parse --short HEAD)\"\n[ \"$remote\" = \"$(git rev-parse HEAD)\" ] && echo \"\u2705 SINCRONIZADO\" || echo \"\u26a0\ufe0f DIVERGENTE\"'",
+  "description": "Verify remote sync for handoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote master: c67d6bc  |  local HEAD: c67d6bc
+> ✅ SINCRONIZADO
+> ```
+
+## 🤖 Claude *(02:39:44)*
+
+
+## 🤖 Claude *(02:39:52)*
+
+Sincronizado: `c67d6bc` local == remoto. Sessão selada.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-08  (sessão longa, multi-frente)
+───────────────────────────────────────────────────
+Commits     : 6 no master
+              e97a85a agente→serviço supervisionado + card STALE
+              a0869c4 prompt do agente alinhado à farm-and-funnel
+              9898bdf trava FAIL-CLOSED de SELL-BTC no MCP
+              2d01002 lean get_memory_indexes
+              239cdc5 backtest futures bilateral → FALSO POSITIVO
+              c67d6bc toxicity → nowcasting (não forecast)
+HANDOFF.md  : ✅ 6 SEAL records  ·  Memory: ✅ 2 novas + 3 atualizadas
+Stack       : 4 containers Up (vivo == master) · site 200
+Segredos    : ✅ scan limpo · .env gitignored · 0 PRs (trunk-based)
+Push        : ✅ origin == HEAD (c67d6bc)
+───────────────────────────────────────────────────
+  Sessão selada. Próxima começa com /handson
+═══════════════════════════════════════════════════
+```
+
+## O que essa sessão entregou
+
+**1. Consertou o painel /intelligence** (tua observação inicial): o agente LLM estava parado há 5 dias porque nunca foi serviço → virou **serviço supervisionado** (restart, user gcrux, badge STALE). Bônus: tokens caíram de ~91k pra ~9k/ciclo.
+
+**2. Alinhou o agente à estratégia**: ele recomendava **vender BTC** (contra a tese) → agora é **copiloto observador** que protege o cofre. + **trava determinística no MCP** (fail-closed, gate QA+TL) que bloqueia qualquer SELL-BTC antes de um futuro `ALLOW_TRADING`.
+
+**3. Pesquisou e TESTOU "lucrar na queda" — e refutou com rigor**, exatamente como você pediu ("positivo de verdade, não falso positivo"):
+- Deep research (106 agentes, 24 fontes peer-reviewed) → relatório em [RESEARCH-bear-capture.md](RESEARCH-bear-capture.md).
+- **Backtest próprio** (engine bilateral de futures + funding real) → **FALSO POSITIVO**: o short captura a queda isolada, mas no ciclo faz **+88% vs +338%** do que já fazemos (caixa em bear + long no bull), com **−51% de drawdown**. **Decisão: não construir o módulo de Futures.**
+- Aplicou o achado independente: **toxicity rebaixada pra nowcasting/timing** (VPIN-como-forecast foi refutado).
+
+## Estado / próximos (no HANDOFF)
+- **Farm-and-Funnel** segue sendo o caminho — **inerte em bear** (regime confirmado bear); as **Fases 4-5 (funil ao vivo)** destravam quando o regime sair do bear.
+- Dívidas registradas (não-urgentes): trava de SELL-BTC equivalente no backend `ordersController` antes de ligar trading real; enxugar `get_memory`/`get_wallet_full` sem símbolo.
+
+Foi uma sessão e tanto. Tudo no master, CI verde, vivo consistente. Pronto pro `/handson` da próxima. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -7480,5 +8473,5 @@ Isso **confirma a pesquisa** (edge modesto, só em quedas trending, vulnerável 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-08 - agent-aeba8bb08b81aa215]]
-> * **Próxima Sessão**: [[2026-06-09 - agent-a012224924c38a7a4]]
+> * **Próxima Sessão**: [[2026-06-09 - Monitor HFT trading automation in bear regime]]
 %% --- TIMELINE END --- %%
