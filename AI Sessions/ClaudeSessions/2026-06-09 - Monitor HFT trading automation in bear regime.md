@@ -5906,6 +5906,144 @@ O vigia terminou — deixa eu ver o que ele capturou:
 
 Vigia relançado (`bouhxe7pu`, ~60min). Te aviso quando uma rung de compra ou a venda disparar — ou com um status se o mercado seguir de lado. Observando.
 
+## 👤 User *(15:12:00)*
+
+<task-notification>
+<task-id>bouhxe7pu</task-id>
+<tool-use-id>toolu_01E3LidnyheTBQ1ySb72B8Tz</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bouhxe7pu.output</output-file>
+<status>completed</status>
+<summary>Background command "Re-launch harvester watcher (~60min)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(15:13:39)*
+
+
+## 🤖 Claude *(15:13:43)*
+
+O vigia terminou — e enquanto isso **as duas tarefas de fundo que criei foram concluídas** (farm fix + Settings fix), e a do farm descobriu um gotcha que **afeta o MEU harvester**: editar um template vivo no banco **NÃO** atinge a automação rodando — o BRAIN **cacheia** o `orderTemplate` no start. Como ativei as rungs 22/23/24 **antes** de corrigir o template 19 pra ×2, elas têm o **×1 cacheado** → falhariam no NOTIONAL ao disparar. Preciso recarregar o BRAIN delas (stop/start).
+
+Deixa eu ver o status do vigia e aplicar o reload:
+
+## 🤖 Claude *(15:13:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bouhxe7pu.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	=== STATUS (sem evento em ~60min): preco testnet=61646.43000000 | venda ~63387 | rung-3% = FAIR*0.97 ===
+> 2	BTCUSDT:FAIR -> HTTP 200 {"price":61652.6,"at":"2026-06-09T15:11:52.390Z","atMs":1781017912390}
+> 3	BTCUSDT:HARVEST -> HTTP 200 {"qty":0.00015,"cost":62635.21,"atMs":1781010755443}
+> 4	
+> ```
+
+## 🤖 Claude *(15:14:11)*
+
+
+## 🤖 Claude *(15:14:13)*
+
+Vigia (60min): mercado **caindo junto** (FAIR 62408→61652, testnet 62097→61646) — sem dislocação testnet-específica, então as rungs não dispararam; a posição @62635 está mais subaquática (−1,6%) mas é no-loss hold (esperado). Nenhum evento.
+
+Agora o **fix do BRAIN-cache nas rungs 22/23/24** (recarregar pra pegar o template ×2). Vou escrever um inspetor do BRAIN, recarregar e confirmar:
+
+## 🤖 Claude *(15:14:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/brain.js",
+  "content": "const http = require('http');\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 12000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        if (data) r.write(data); r.end();\n    });\n}\n(async () => {\n    const l = await req('POST', '/login', null, { email: process.env.EM, password: process.env.PW });\n    const token = l.body && l.body.token;\n    if (!token) { console.log('LOGIN_FAIL', l.status); process.exit(1); }\n    const r = await req('GET', '/beholder/brain', token);\n    const b = r.body || {};\n    for (const id of [22, 23, 24, 25]) {\n        const a = b[id] || b[String(id)];\n        if (!a) { console.log(`${id}: NAO no BRAIN`); continue; }\n        const acts = a.actions || [];\n        if (!acts.length) { console.log(`${id} \"${a.name}\": sem actions`); continue; }\n        acts.forEach(ac => {\n            const ot = ac.orderTemplate;\n            console.log(`${id} \"${a.name}\" -> ` + (ot ? `tpl#${ot.id} \"${ot.name}\" qty=${ot.quantity} mult=${ot.quantityMultiplier}` : `(SEM orderTemplate cacheado; orderTemplateId=${ac.orderTemplateId})`));\n        });\n    }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/brain.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:14:31)*
+
+
+## 🤖 Claude *(15:14:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"\n  echo \"=== BRAIN ANTES (rungs do harvester) ===\"\n  docker compose exec -T -e EM -e PW backend node < /tmp/brain.js\n  echo \"=== reload: stop + start 22,23,24 ===\"\n  docker compose exec -T -e ACTION=stop -e IDS=22,23,24 -e EM -e PW backend node < /home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js\n  docker compose exec -T -e ACTION=start -e IDS=22,23,24 -e EM -e PW backend node < /home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js\n  echo \"=== BRAIN DEPOIS ===\"\n  docker compose exec -T -e EM -e PW backend node < /tmp/brain.js\n' 2>&1",
+  "description": "Inspect BRAIN, reload harvester rungs, verify x2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BRAIN ANTES (rungs do harvester) ===
+> 22 "Harvest Buy BTCUSDT -3pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=1.00
+> 23 "Harvest Buy BTCUSDT -5pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=1.00
+> 24 "Harvest Buy BTCUSDT -7pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=1.00
+> 25 "Harvest Sell BTCUSDT" -> tpl#20 "Harvest Sell BTCUSDT" qty=HARVEST_QTY mult=1.00
+> === reload: stop + start 22,23,24 ===
+> stop #22 -> HTTP 200 | isActive=false name="Harvest Buy BTCUSDT -3pct"
+> stop #23 -> HTTP 200 | isActive=false name="Harvest Buy BTCUSDT -5pct"
+> stop #24 -> HTTP 200 | isActive=false name="Harvest Buy BTCUSDT -7pct"
+> start #22 -> HTTP 200 | isActive=true name="Harvest Buy BTCUSDT -3pct"
+> start #23 -> HTTP 200 | isActive=true name="Harvest Buy BTCUSDT -5pct"
+> start #24 -> HTTP 200 | isActive=true name="Harvest Buy BTCUSDT -7pct"
+> === BRAIN DEPOIS ===
+> 22 "Harvest Buy BTCUSDT -3pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=2.00
+> 23 "Harvest Buy BTCUSDT -5pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=2.00
+> 24 "Harvest Buy BTCUSDT -7pct" -> tpl#19 "Harvest Buy BTCUSDT" qty=MIN_NOTIONAL mult=2.00
+> 25 "Harvest Sell BTCUSDT" -> tpl#20 "Harvest Sell BTCUSDT" qty=HARVEST_QTY mult=1.00
+> ```
+
+## 🤖 Claude *(15:15:12)*
+
+
+## 🤖 Claude *(15:15:17)*
+
+**Fix confirmado ao vivo:**
+- ANTES: rungs 22/23/24 com `mult=1.00` cacheado no BRAIN (×1 — falhariam no NOTIONAL).
+- DEPOIS do stop/start: `mult=2.00` (×2 ~$9). ✅ Corrigido.
+
+Bom catch da tarefa de fundo — sem isso, a primeira rung que disparasse numa dislocação real teria dado `-1013`. (A venda 25 usa `HARVEST_QTY`, não afetada.) E as duas tarefas spawnadas foram concluídas: **farm fix** (×2 + reload) e **Settings fix** (`dc01c4d`, 2 camadas — pendente rebuild do frontend; até lá segue valendo "não salvar Settings na UI").
+
+Relançando o vigia (~90min agora; mercado em deriva bear, gatilhos não estão próximos):
+
+## 🤖 Claude *(15:15:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  Q() { docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"$1\\\"\" 2>/dev/null; }\n  for i in $(seq 1 60); do\n    NEW=$(Q \"SELECT id,automationId,side,status,quantity,avgPrice,createdAt FROM orders WHERE id>120 AND automationId IN (22,23,24,25) ORDER BY id\")\n    if [ -n \"$NEW\" ]; then echo \"=== HARVESTER DISPAROU (apos ~$((i*90/60))min) ===\"; echo \"$NEW\"; break; fi\n    sleep 90\n  done\n  P=$(curl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null | grep -oE \"[0-9]+\\.[0-9]+\" | head -1)\n  F=$(export EM=\"gabrielcall@gmail.com\"; export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2- | tr -d \"\\r\\n\")\"; docker compose exec -T -e EM -e PW backend node < /tmp/peek.js 2>/dev/null | grep -iE \"FAIR|HARVEST\")\n  echo \"=== STATUS (sem evento): preco testnet=$P | venda ~63387 (+1.2% sobre 62635) | rung-3% = FAIR*0.97 ===\"\n  echo \"$F\"\n' 2>&1",
+  "description": "Re-launch harvester watcher (~90min)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bqj1kt30v. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/bqj1kt30v.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(15:15:28)*
+
+
+## 🤖 Claude *(15:15:30)*
+
+Vigia no ar (`bqj1kt30v`). Harvester agora 100% correto (rungs ×2 no BRAIN, venda armada, vault-safe). Sigo observando — te aviso no próximo evento (compra numa dislocação ou a venda no revert) ou com status em ~90min.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
