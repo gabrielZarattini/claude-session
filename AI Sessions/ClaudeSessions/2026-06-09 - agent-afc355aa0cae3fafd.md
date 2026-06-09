@@ -434,6 +434,6 @@ The medium (not high) confidence reflects two genuine findings from the adversar
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-09 - agent-af2650126ca0b97b4]]
+> * **Sessão Anterior**: [[2026-06-09 - agent-afab66831078556d1]]
 > * **Próxima Sessão**: [[2026-06-09 - agent-aff418d0d1a12c67f]]
 %% --- TIMELINE END --- %%
