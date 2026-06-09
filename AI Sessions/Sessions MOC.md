@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 648
-> * **Sessões do Claude**: 611
+> * **Total de Sessões Registradas**: 649
+> * **Sessões do Claude**: 612
 > * **Sessões do Gemini**: 37
 
 ---
@@ -71,7 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-09 - agent-aec7c02af796b1539]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-ae95d663f6a035bdd]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-ae760169102ebc990]]` - *2026-06-09*
-*   *... e mais 612 sessões nessa categoria.*
+*   *... e mais 613 sessões nessa categoria.*
 
 ---
 
@@ -382,6 +382,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-09 - Monitor HFT trading automation in bear regime]]` (ClaudeSessions)
 *   `[[2026-06-09 - Fix settings password overwrite bug preventing logins]]` (ClaudeSessions)
 *   `[[2026-06-09 - Fix farm buy order notional filter failures]]` (ClaudeSessions)
+*   `[[2026-06-09 - Fix ScrollArea import and test kanban workspace]]` (ClaudeSessions)
 *   `[[2026-06-09 - Commit predictive engineering documentation]]` (ClaudeSessions)
 *   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions)
 *   `[[2026-06-08 - handson]]` (GeminiSessions)

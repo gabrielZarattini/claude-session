@@ -2494,6 +2494,6 @@ Push        : ✅ origin/master == ced70d9 (confirmado por ls-remote; levou junt
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-09 - Commit predictive engineering documentation]]
+> * **Sessão Anterior**: [[2026-06-09 - Fix ScrollArea import and test kanban workspace]]
 > * **Próxima Sessão**: [[2026-06-09 - Fix settings password overwrite bug preventing logins]]
 %% --- TIMELINE END --- %%
