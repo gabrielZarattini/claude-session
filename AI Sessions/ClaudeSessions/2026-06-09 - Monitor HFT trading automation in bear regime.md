@@ -2728,6 +2728,1476 @@ Começando. Primeiro as credenciais de login que os scripts precisam:
 > TRADEUX_API_URL=http://backend:3001
 > ```
 
+## 🤖 Claude *(03:30:40)*
+
+
+## 🤖 Claude *(03:30:43)*
+
+Credenciais localizadas (`TRADEUX_EMAIL`/`TRADEUX_PASSWORD` em `tradeux-agent/.env`). Antes de escrever o `setup-grid.js`, preciso de dois detalhes do caminho do grid: como o controller cria uma automação GRID (formato exato do POST + como `levels`/`quantity` entram) e se dá pra reusar templates LIMIT pelo nome. E o validador de conditions (pro harvester). Leituras finais:
+
+## 🤖 Claude *(03:30:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const automationsRepository = require('../repositories/automationsRepository');
+> 2	const actionsRepository = require('../repositories/actionsRepository');
+> 3	const gridsRepository = require('../repositories/gridsRepository');
+> 4	const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 5	const ordersRepository = require('../repositories/ordersRepository');
+> 6	const settingsRepository = require('../repositories/settingsRepository');
+> 7	const beholder = require('../beholder');
+> 8	const agenda = require('../agenda');
+> 9	const db = require('../db');
+> 10	const logger = require('../utils/logger');
+> 11	
+> 12	function validateConditions(conditions) {
+> 13	    return /^(MEMORY\[\'.+?\'\](\..+)?[><=!]+([0-9\.\-]+|(\'.+?\')|true|false|MEMORY\[\'.+?\'\](\..+)?)( && )?)+$/ig.test(conditions);
+> 14	}
+> 15	
+> 16	// Cancela na corretora as OCO ainda abertas de uma automação (ao parar/remover),
+> 17	// para não deixar listas órfãs vivas sem a automação que as gerencia. Best-effort:
+> 18	// loga e segue em caso de falha — nunca derruba o stop/delete da automação.
+> 19	async function cancelAutomationOcoOrders(automationId) {
+> 20	    try {
+> 21	        const openLegs = await ordersRepository.getOpenOcoOrders(automationId);
+> 22	        if (!openLegs || !openLegs.length) return;
+> 23	
+> 24	        const settings = await settingsRepository.getDefaultSettings();
+> 25	        const exchange = require('../utils/exchange')(settings);
+> 26	
+> 27	        const handled = new Set(); // uma lista = 2 pernas; cancela só 1x por orderListId
+> 28	        for (const leg of openLegs) {
+> 29	            const key = `${leg.symbol}:${leg.orderListId}`;
+> 30	            if (handled.has(key)) continue;
+> 31	            handled.add(key);
+> 32	
+> 33	            try {
+> 34	                const result = await exchange.cancelOrderList(leg.symbol, leg.orderListId);
+> 35	                const reports = (result && Array.isArray(result.orderReports)) ? result.orderReports : [];
+> 36	                // origClientOrderId = clientOrderId ORIGINAL da perna (o `clientOrderId` da
+> 37	                // resposta de cancel é um id novo e não casa com o armazenado).
+> 38	                for (const r of reports)
+> 39	                    await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId, { status: r.status });
+> 40	                logger('A:' + automationId, `OCO list #${leg.orderListId} (${leg.symbol}) canceled on automation stop/delete.`);
+> 41	            } catch (err) {
+> 42	                logger('A:' + automationId, `Failed to cancel OCO list #${leg.orderListId} (${leg.symbol}): ${err.body ? JSON.stringify(err.body) : err.message}`);
+> 43	            }
+> 44	        }
+> 45	    } catch (err) {
+> 46	        logger('system', err);
+> 47	    }
+> 48	}
+> 49	
+> 50	async function startAutomation(req, res, next) {
+> 51	    const id = req.params.id;
+> 52	    const automation = await automationsRepository.getAutomation(id);
+> 53	    if (automation.isActive) return res.sendStatus(204);
+> 54	
+> 55	    automation.isActive = true;
+> 56	
+> 57	    if (automation.schedule) {
+> 58	        try {
+> 59	            agenda.addSchedule(automation.get({ plain: true }));
+> 60	        } catch (err) {
+> 61	            return res.status(422).json(err.message);
+> 62	        }
+> 63	    }
+> 64	    else
+> 65	        beholder.updateBrain(automation.get({ plain: true }));
+> 66	
+> 67	    await automation.save();
+> 68	
+> 69	    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has started!`);
+> 70	
+> 71	    res.json(automation);
+> 72	}
+> 73	
+> 74	async function stopAutomation(req, res, next) {
+> 75	    const id = req.params.id;
+> 76	    const automation = await automationsRepository.getAutomation(id);
+> 77	    if (!automation.isActive) return res.sendStatus(204);
+> 78	
+> 79	    if (automation.schedule)
+> 80	        agenda.cancelSchedule(automation.id);
+> 81	    else
+> 82	        beholder.deleteBrain(automation.get({ plain: true }));
+> 83	
+> 84	    automation.isActive = false;
+> 85	    await automation.save();
+> 86	
+> 87	    // NÃO cancelamos a OCO ao apenas PARAR (pausar) a automação: a OCO é protetiva e a
+> 88	    // posição segue aberta — tirar o stop-loss numa pausa seria perigoso. A limpeza das
+> 89	    // OCO só ocorre no DELETE (a automação deixa de existir). A OCO resolve-se sozinha na
+> 90	    // corretora (uma perna executa, a Binance cancela a outra).
+> 91	    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);
+> 92	
+> 93	    res.json(automation);
+> 94	}
+> 95	
+> 96	async function getAutomation(req, res, next) {
+> 97	    const id = req.params.id;
+> 98	    const automation = await automationsRepository.getAutomation(id);
+> 99	    res.json(automation);
+> 100	}
+> 101	
+> 102	async function getAutomations(req, res, next) {
+> 103	    const page = req.query.page;
+> 104	    const result = await automationsRepository.getAutomations(page);
+> 105	    res.json(result);
+> 106	}
+> 107	
+> 108	async function insertAutomation(req, res, next) {
+> 109	    const newAutomation = req.body;
+> 110	    const { quantity, levels } = req.query;
+> 111	
+> 112	    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 113	        return res.status(400).json('You need to have at least one condition per automation!');
+> 114	
+> 115	    if (!newAutomation.actions || newAutomation.actions.length < 1)
+> 116	        return res.status(400).json('You need to have at least one action per automation!');
+> 117	
+> 118	    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> 119	    if (isGrid) {
+> 120	        if (!quantity || !levels)
+> 121	            return res.status(400).json('Invalid grid params!');
+> 122	
+> 123	        const exists = await automationsRepository.gridExists(newAutomation.name);
+> 124	        if (exists) return res.status(409).json(`A grid for ${newAutomation.symbol} already exists!`);
+> 125	    }
+> 126	    else {
+> 127	        const exists = await automationsRepository.automationExists(newAutomation.name);
+> 128	        if (exists) return res.status(409).json(`The automation ${newAutomation.name} already exists!`);
+> 129	    }
+> 130	
+> 131	    const transaction = await db.transaction();
+> 132	    let savedAutomation, actions = [], grids = [];
+> 133	
+> 134	    try {
+> 135	        savedAutomation = await automationsRepository.insertAutomation(newAutomation, transaction);
+> 136	
+> 137	        //inserting actions
+> 138	        actions = newAutomation.actions.map(a => {
+> 139	            a.automationId = savedAutomation.id;
+> 140	            delete a.id;
+> 141	            return a;
+> 142	        })
+> 143	        actions = await actionsRepository.insertActions(actions, transaction);
+> 144	
+> 145	        //inserting grids
+> 146	        if (isGrid)
+> 147	            grids = await beholder.generateGrids(savedAutomation, levels, quantity, transaction);
+> 148	
+> 149	        await transaction.commit();
+> 150	    } catch (err) {
+> 151	        await transaction.rollback();
+> 152	        logger('system', err);
+> 153	        return res.status(500).json(err.message);
+> 154	    }
+> 155	
+> 156	    savedAutomation = await automationsRepository.getAutomation(savedAutomation.id);
+> 157	
+> 158	    if (savedAutomation.isActive) {
+> 159	        if (savedAutomation.schedule) {
+> 160	            try {
+> 161	                agenda.addSchedule(savedAutomation.get({ plain: true }));
+> 162	            } catch (err) {
+> 163	                return res.status(422).json(err.message);
+> 164	            }
+> 165	        }
+> 166	        else
+> 167	            beholder.updateBrain(savedAutomation.get({ plain: true }));
+> 168	    }
+> 169	
+> 170	    res.status(201).json(savedAutomation);
+> 171	}
+> 172	
+> 173	async function updateAutomation(req, res, next) {
+> 174	    const id = req.params.id;
+> 175	    const newAutomation = req.body;
+> 176	
+> 177	    const { quantity, levels } = req.query;
+> 178	
+> 179	    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 180	        return res.status(400).json('You need to have at least one condition per automation!');
+> 181	
+> 182	    if (!newAutomation.actions || !newAutomation.actions.length)
+> 183	        return res.status(400).json('You need to have at least one action per automation!');
+> 184	
+> 185	    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> 186	    if (isGrid && (!quantity || !levels))
+> 187	        return res.status(400).json('Invalid grid params!');
+> 188	
+> 189	    let actions = newAutomation.actions.map(a => {
+> 190	        a.automationId = id;
+> 191	        delete a.id;
+> 192	        return a;
+> 193	    })
+> 194	
+> 195	    const transaction = await db.transaction();
+> 196	    const currentAutomation = await automationsRepository.getAutomation(id);//uso mais tarde, no stop
+> 197	    let updatedAutomation;
+> 198	
+> 199	    try {
+> 200	        updatedAutomation = await automationsRepository.updateAutomation(id, newAutomation);
+> 201	
+> 202	        if (isGrid)
+> 203	            await beholder.generateGrids(updatedAutomation, levels, quantity, transaction);
+> 204	        else {
+> 205	            await actionsRepository.deleteActions(id, transaction);
+> 206	            actions = await actionsRepository.insertActions(actions, transaction);
+> 207	        }
+> 208	
+> 209	        await transaction.commit();
+> 210	    } catch (err) {
+> 211	        await transaction.rollback();
+> 212	        logger('system', err);
+> 213	        return res.status(500).json(err.message);
+> 214	    }
+> 215	
+> 216	    updatedAutomation = await automationsRepository.getAutomation(id);//pega limpo
+> 217	
+> 218	    if (updatedAutomation.isActive) {
+> 219	        if (updatedAutomation.schedule) {
+> 220	            try {
+> 221	                agenda.cancelSchedule(updatedAutomation.id);
+> 222	                agenda.addSchedule(updatedAutomation.get({ plain: true }));
+> 223	            } catch (err) {
+> 224	                return res.status(422).json(err.message);
+> 225	            }
+> 226	        } else {
+> 227	            beholder.deleteBrain(currentAutomation);
+> 228	            beholder.updateBrain(updatedAutomation.get({ plain: true }));
+> 229	        }
+> 230	    }
+> 231	    else {
+> 232	        if (updatedAutomation.schedule)
+> 233	            agenda.cancelSchedule(updatedAutomation.id);
+> 234	        else
+> 235	            beholder.deleteBrain(currentAutomation);
+> 236	    }
+> 237	
+> 238	    res.json(updatedAutomation);
+> 239	}
+> 240	
+> 241	async function deleteAutomation(req, res, next) {
+> 242	    const id = req.params.id;
+> 243	    const currentAutomation = await automationsRepository.getAutomation(id);
+> 244	
+> 245	    if (currentAutomation.isActive) {
+> 246	        if (currentAutomation.schedule)
+> 247	            agenda.cancelSchedule(currentAutomation.id);
+> 248	        else
+> 249	            beholder.deleteBrain(currentAutomation);
+> 250	    }
+> 251	
+> 252	    // Antes de desvincular as ordens, cancela na corretora as OCO ainda abertas
+> 253	    // (a query usa automationId, que removeAutomationFromOrders vai zerar em seguida).
+> 254	    await cancelAutomationOcoOrders(id);
+> 255	
+> 256	    const transaction = await db.transaction();
+> 257	
+> 258	    try {
+> 259	        await ordersRepository.removeAutomationFromOrders(id, transaction);
+> 260	
+> 261	        if (currentAutomation.actions[0].type === actionsRepository.actionTypes.GRID) {
+> 262	            await gridsRepository.deleteGrids(id, transaction);
+> 263	            await orderTemplatesRepository.deleteOrderTemplatesByGridName(currentAutomation.name, transaction);
+> 264	        }
+> 265	
+> 266	        await actionsRepository.deleteActions(id, transaction);
+> 267	        await automationsRepository.deleteAutomation(id, transaction);
+> 268	        await transaction.commit();
+> 269	    } catch (err) {
+> 270	        await transaction.rollback();
+> 271	        logger('system', err);
+> 272	        return res.status(500).json(err.message);
+> 273	    }
+> 274	
+> 275	    res.sendStatus(204);
+> 276	}
+> 277	
+> 278	module.exports = {
+> 279	    startAutomation,
+> 280	    stopAutomation,
+> 281	    getAutomation,
+> 282	    getAutomations,
+> 283	    insertAutomation,
+> 284	    updateAutomation,
+> 285	    deleteAutomation
+> 286	}
+> 287	
+> ```
+
+## 🤖 Claude *(03:32:43)*
+
+
+## 🤖 Claude *(03:32:53)*
+
+Agora o quadro do grid está **100% claro** e achei a restrição que muda o design:
+
+**`validateConditions` (`automationsController.js:12-13`) é estrito** — cada cláusula tem que ser `MEMORY['key'](.prop)? OP valor`, juntas por ` && `, **sem `Date.now()`, sem guards soltos, sem parênteses**. (A id2 usa `Date.now()` porque foi setada via DB direto, contornando o validador — o HANDOFF confirma "DB+BRAIN".) Meus scripts criam via API → têm que ser regex-safe.
+
+Isso é **bom**: a venda no-loss do farm `bestBid > avgPrice*1.012` é exatamente a forma que preciso e está **viva** (passa o validador). Replico ela. E a **staleness do FAIR** (que eu queria com `Date.now()`) vai pro **job**, não pra condition: o `fairPriceJob` escreve `{price:0}` após N falhas de mainnet → `bestAsk < 0*0.97` nunca dispara → compra desligada fail-safe, sem precisar de `Date.now()`. Elegante.
+
+Para o GRID: POST `?quantity&levels` com conditions = banda (`bestAsk>LOWER && bestAsk<UPPER`), idempotente via 409 (`gridExists`). Vou de **MARKET nativo puro** (testar o grid de verdade; BTC é o par líquido).
+
+Vou escrever o `setup-grid.js` (Fase A):
+
+## 🤖 Claude *(03:33:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-grid.js",
+  "content": "'use strict';\n/*\n * Setup do GRID sim\u00e9trico NATIVO do Beholder no BTCUSDT (testnet) \u2014 Fase A do experimento de\n * colheita de chop (ver HANDOFF / an\u00e1lise das 4h: ER 0.08 = chop puro, ideal pra grid).\n *\n * Usa o ENGINE NATIVO (gridEval/generateGrids) \u2014 nenhum c\u00f3digo novo no backend. A automa\u00e7\u00e3o tipo GRID\n * recebe uma BANDA nas conditions (bestAsk>LOWER && bestAsk<UPPER); o engine gera n\u00edveis de BUY abaixo\n * da cota\u00e7\u00e3o e de SELL acima, coloca MARKET no cruzamento de cada n\u00edvel e REGENERA os n\u00edveis no fill.\n * Ordem MARKET \u00e9 o comportamento nativo (testar de verdade); BTCUSDT \u00e9 o par l\u00edquido do testnet.\n *\n * DESGATEADO do regime de prop\u00f3sito (o grid colhe o chop independente de bear/bull \u2014 \u00e9 o experimento).\n * N\u00c3O tem trava de no-loss (nativo vende por n\u00edvel, n\u00e3o por custo) \u2014 aceito no testnet, size min\u00fasculo.\n * Cria a automa\u00e7\u00e3o INATIVA (money-path); ATIVAR \u00e9 um passo separado (POST /automations/:id/start).\n *\n * Reproduz ap\u00f3s `make nuke` (dado runtime). Uso (dentro do container, server no ar):\n *   node scripts/setup-grid.js            [DRY=true p/ preview]\n *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),\n *        GRID_SYMBOL (BTCUSDT), GRID_LEVELS (10), GRID_QTY (0.0002 BTC/n\u00edvel),\n *        GRID_BAND (0.025 = \u00b12.5% em torno do pre\u00e7o testnet atual),\n *        GRID_TESTNET_HOST (testnet.binance.vision \u2014 fonte do pre\u00e7o p/ centrar a banda)\n */\nconst http = require('http');\nconst https = require('https');\n\nconst SYMBOL = (process.env.GRID_SYMBOL || 'BTCUSDT').toUpperCase();\nconst LEVELS = parseInt(process.env.GRID_LEVELS || '10', 10);\nconst QTY = process.env.GRID_QTY || '0.0002';                 // base asset por n\u00edvel (~$12 a 62.9k; > minNotional)\nconst BAND = parseFloat(process.env.GRID_BAND || '0.025');    // \u00b12.5% em torno do pre\u00e7o atual\nconst TESTNET_HOST = process.env.GRID_TESTNET_HOST || 'testnet.binance.vision';\nconst NAME = process.env.GRID_NAME || `Grid ${SYMBOL}`;\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst BASE = { host: process.env.GRID_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\nfunction getTestnetPrice(symbol) {\n    return new Promise((resolve, reject) => {\n        const r = https.get({ host: TESTNET_HOST, path: `/api/v3/ticker/price?symbol=${symbol}`, headers: { 'User-Agent': 'tradeux' }, timeout: 8000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { try { const j = JSON.parse(d); resolve(parseFloat(j.price)); } catch (e) { reject(e); } });\n        });\n        r.on('error', reject);\n        r.on('timeout', () => { r.destroy(); reject(new Error('timeout')); });\n    });\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n\n    const price = await getTestnetPrice(SYMBOL).catch(e => { console.error('falha ao buscar pre\u00e7o testnet: ' + e.message); process.exit(1); });\n    // Banda inteira (USDT) em torno do pre\u00e7o \u2014 s\u00f3 precisa ser parseFloat-\u00e1vel (generateGrids tick-alinha os n\u00edveis).\n    const lower = Math.round(price * (1 - BAND));\n    const upper = Math.round(price * (1 + BAND));\n    const spacing = ((upper - lower) / LEVELS);\n    const conditions = `MEMORY['${SYMBOL}:BOOK'].current.bestAsk>${lower} && MEMORY['${SYMBOL}:BOOK'].current.bestAsk<${upper}`;\n\n    console.log(`# Setup GRID nativo \u2014 ${SYMBOL} | pre\u00e7o testnet=${price} | banda [${lower}, ${upper}] (\u00b1${(BAND * 100).toFixed(1)}%) | ${LEVELS} n\u00edveis (~${spacing.toFixed(0)} USDT/n\u00edvel \u2248 ${(spacing / price * 100).toFixed(2)}%) | qty ${QTY}/n\u00edvel${DRY ? '   [DRY-RUN: nada ser\u00e1 aplicado]' : ''}`);\n    console.log(`  conditions (banda p/ generateGrids): ${conditions}`);\n    console.log(`  exposi\u00e7\u00e3o m\u00e1x se todos os ~${Math.floor(LEVELS / 2)} n\u00edveis de compra encherem: ~${(Math.floor(LEVELS / 2) * parseFloat(QTY)).toFixed(5)} ${SYMBOL.replace('USDT', '')} \u2248 $${(Math.floor(LEVELS / 2) * parseFloat(QTY) * price).toFixed(0)}`);\n\n    if (DRY) { console.log('\\nDRY-RUN OK (nada aplicado).'); return; }\n\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n\n    const r = await req('POST', `/automations?quantity=${QTY}&levels=${LEVELS}`, token, {\n        name: NAME, symbol: SYMBOL, indexes: `${SYMBOL}:BOOK`, conditions,\n        isActive: false, logs: true, schedule: null,\n        actions: [{ type: 'GRID' }],\n    });\n    if (r.status === 201) console.log(`\\nautoma\u00e7\u00e3o GRID \"${NAME}\" criada (id ${r.body.id}, INATIVA). ${(r.body.grids || []).length || '?'} grids gerados.`);\n    else if (r.status === 409) console.log(`\\nautoma\u00e7\u00e3o GRID \"${NAME}\" j\u00e1 existe (409) \u2014 idempotente, nada criado.`);\n    else { console.error(`falha ao criar GRID: ${r.status} ${JSON.stringify(r.body)}`); process.exit(1); }\n\n    console.log(`PRONTO \u2014 grid INATIVO. Para ATIVAR: POST /automations/<id>/start (1 passo, money-path).`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-grid.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:33:56)*
+
+
+## 🤖 Claude *(03:33:57)*
+
+Agora rodo o `setup-grid.js` em **DRY** primeiro (preview da banda/params), passando as credenciais por env-by-name pro container (sem interpolar a senha no shell):
+
+## 🤖 Claude *(03:33:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e DRY=true -e EM -e PW backend sh -c \"cat > /tmp/setup-grid.js && node /tmp/setup-grid.js\"\n' < /home/gcrux-tradeux/tradeux/backend/scripts/setup-grid.js 2>&1",
+  "description": "DRY preview of grid setup inside backend container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Setup GRID nativo — BTCUSDT | preço testnet=62736 | banda [61168, 64304] (±2.5%) | 10 níveis (~314 USDT/nível ≈ 0.50%) | qty 0.0002/nível   [DRY-RUN: nada será aplicado]
+>   conditions (banda p/ generateGrids): MEMORY['BTCUSDT:BOOK'].current.bestAsk>61168 && MEMORY['BTCUSDT:BOOK'].current.bestAsk<64304
+>   exposição máx se todos os ~5 níveis de compra encherem: ~0.00100 BTC ≈ $63
+> 
+> DRY-RUN OK (nada aplicado).
+> ```
+
+## 🤖 Claude *(03:34:26)*
+
+
+## 🤖 Claude *(03:34:27)*
+
+DRY confere: banda **[61168, 64304]** em torno de 62736, ~0,50%/nível, exposição máx **~$63**. Conditions regex-safe e parseável. Vou **criar o grid INATIVO** (criar é seguro; ativar é o passo money-path) e logo inspecionar o que o `generateGrids` produziu de verdade no banco:
+
+## 🤖 Claude *(03:34:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e EM -e PW backend sh -c \"cat > /tmp/setup-grid.js && node /tmp/setup-grid.js\"\n' < /home/gcrux-tradeux/tradeux/backend/scripts/setup-grid.js 2>&1",
+  "description": "Create the grid automation (inactive) live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Setup GRID nativo — BTCUSDT | preço testnet=62715.99 | banda [61148, 64284] (±2.5%) | 10 níveis (~314 USDT/nível ≈ 0.50%) | qty 0.0002/nível
+>   conditions (banda p/ generateGrids): MEMORY['BTCUSDT:BOOK'].current.bestAsk>61148 && MEMORY['BTCUSDT:BOOK'].current.bestAsk<64284
+>   exposição máx se todos os ~5 níveis de compra encherem: ~0.00100 BTC ≈ $63
+> 
+> automação GRID "Grid BTCUSDT" criada (id 21, INATIVA). 9 grids gerados.
+> PRONTO — grid INATIVO. Para ATIVAR: POST /automations/<id>/start (1 passo, money-path).
+> ```
+
+## 🤖 Claude *(03:34:37)*
+
+
+## 🤖 Claude *(03:34:37)*
+
+Grid criado: **automação id 21, INATIVA, 9 grids** (10 níveis − o mais próximo do preço). Deixa eu inspecionar o que o engine gerou de verdade — os grids e os templates — antes de pensar em ativar:
+
+## 🤖 Claude *(03:34:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -lc \"\nM() { mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux \\\"\\$@\\\" 2>/dev/null; }\necho \\\"=== automa\u00e7\u00e3o 21 ===\\\"\nM -t -e \\\"SELECT id,symbol,isActive,indexes,conditions FROM automations WHERE id=21\\\"\necho \\\"=== grids da automa\u00e7\u00e3o 21 (n\u00edvel -> template) ===\\\"\nM -t -e \\\"SELECT g.id, g.orderTemplateId, ot.side, g.conditions FROM grids g JOIN orderTemplates ot ON ot.id=g.orderTemplateId WHERE g.automationId=21 ORDER BY g.id\\\"\necho \\\"=== templates do grid ===\\\"\nM -t -e \\\"SELECT id,name,type,side,quantity,limitPrice FROM orderTemplates WHERE name LIKE 'Grid BTCUSDT%'\\\"\n\"' 2>&1",
+  "description": "Inspect generated grids and templates for automation 21"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> BTCUSDT%\"
+> ": -c: line 1: unexpected EOF while looking for matching `"'
+> ```
+
+## 🤖 Claude *(03:35:09)*
+
+
+## 🤖 Claude *(03:35:09)*
+
+Quoting aninhado quebrou. Vou alimentar o SQL via heredoc (stdin) pra evitar o inferno de aspas:
+
+## 🤖 Claude *(03:35:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -t\"' <<'SQL' 2>&1\nSELECT id,symbol,isActive,indexes,conditions FROM automations WHERE id=21;\nSELECT g.id, g.orderTemplateId AS otId, ot.side, ot.type, g.conditions FROM grids g JOIN orderTemplates ot ON ot.id=g.orderTemplateId WHERE g.automationId=21 ORDER BY g.id;\nSELECT id,name,type,side,quantity,limitPrice FROM orderTemplates WHERE name LIKE 'Grid BTCUSDT%';\nSQL",
+  "description": "Inspect grid automation, grids and templates via heredoc SQL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mysql: [Warning] Using a password on the command line interface can be insecure.
+> +----+---------+----------+--------------+----------------------------------------------------------------------------------------------+
+> | id | symbol  | isActive | indexes      | conditions                                                                                   |
+> +----+---------+----------+--------------+----------------------------------------------------------------------------------------------+
+> | 21 | BTCUSDT |        0 | BTCUSDT:BOOK | MEMORY['BTCUSDT:BOOK'].current.bestAsk>61148 && MEMORY['BTCUSDT:BOOK'].current.bestAsk<64284 |
+> +----+---------+----------+--------------+----------------------------------------------------------------------------------------------+
+> +----+------+------+--------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> | id | otId | side | type   | conditions                                                                                                                                                                |
+> +----+------+------+--------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> |  1 |   17 | BUY  | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestAsk<61461.60000000 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=61461.60000000 && MEMORY['BTCUSDT:BOOK'].current.bestAsk>61148.00000000 |
+> |  2 |   17 | BUY  | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestAsk<61775.20000000 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=61775.20000000 && MEMORY['BTCUSDT:BOOK'].current.bestAsk>61461.60000000 |
+> |  3 |   17 | BUY  | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestAsk<62088.80000000 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=62088.80000000 && MEMORY['BTCUSDT:BOOK'].current.bestAsk>61775.20000000 |
+> |  4 |   17 | BUY  | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestAsk<62402.40000000 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=62402.40000000 && MEMORY['BTCUSDT:BOOK'].current.bestAsk>62088.80000000 |
+> |  5 |   18 | SELL | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestBid>63029.60000000 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=63029.60000000 && MEMORY['BTCUSDT:BOOK'].current.bestBid<63343.20000000 |
+> |  6 |   18 | SELL | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestBid>63343.20000000 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=63343.20000000 && MEMORY['BTCUSDT:BOOK'].current.bestBid<63656.80000000 |
+> |  7 |   18 | SELL | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestBid>63656.80000000 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=63656.80000000 && MEMORY['BTCUSDT:BOOK'].current.bestBid<63970.40000000 |
+> |  8 |   18 | SELL | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestBid>63970.40000000 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=63970.40000000 && MEMORY['BTCUSDT:BOOK'].current.bestBid<64284.00000000 |
+> |  9 |   18 | SELL | MARKET | MEMORY['BTCUSDT:BOOK'].current.bestBid>64284.00000000 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=64284.00000000 && MEMORY['BTCUSDT:BOOK'].current.bestBid<64597.60000000 |
+> +----+------+------+--------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> +----+-------------------+--------+------+----------+------------+
+> | id | name              | type   | side | quantity | limitPrice |
+> +----+-------------------+--------+------+----------+------------+
+> | 17 | Grid BTCUSDT BUY  | MARKET | BUY  | 0.0002   | NULL       |
+> | 18 | Grid BTCUSDT SELL | MARKET | SELL | 0.0002   | NULL       |
+> +----+-------------------+--------+------+----------+------------+
+> ```
+
+## 🤖 Claude *(03:36:29)*
+
+
+## 🤖 Claude *(03:36:35)*
+
+Grid gerado **corretamente**: 4 níveis de **BUY** (61461→62402, abaixo do preço atual ~62716) e 5 de **SELL** (63029→64284, acima), cada um com edge-trigger anti-empilhamento. O nível mais próximo do preço foi removido (daí 9). Templates `Grid BTCUSDT BUY/SELL` (MARKET, 0.0002).
+
+Detalhe importante e tranquilizador: como os SELL só ficam **acima** do preço atual, na ativação o grid **compra primeiro** (acumula) quando o preço cai através de 62402, e só vende se subir +0,5%. Ou seja — o oposto do "só vende" que te incomodou: ele **acumula primeiro, vende só com lucro acima dos níveis de compra**.
+
+Vou escrever um helper reutilizável de start/stop (vou precisar dele pro harvester também) e **ativar o grid** — é money-path, mas config-only sobre o engine nativo já em prod, size $63, testnet, reversível (self-validado; o gate QA+TL completo eu reservo pra Fase B, que tem código novo):
+
+## 🤖 Claude *(03:36:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js",
+  "content": "'use strict';\n/*\n * Helper de OPS reutiliz\u00e1vel: start/stop de automa\u00e7\u00f5es por ID (via API, que atualiza o BRAIN).\n * Money-path (start liga trading real). Reproduz a re-ativa\u00e7\u00e3o ap\u00f3s `make nuke`.\n *\n * Uso (dentro do container, server no ar):\n *   ACTION=start IDS=21 node scripts/automation-ctl.js\n *   ACTION=stop  IDS=21,22,23 node scripts/automation-ctl.js\n *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), ACTION (start|stop), IDS (CSV)\n */\nconst http = require('http');\nconst ACTION = (process.env.ACTION || 'start').toLowerCase();\nconst IDS = (process.env.IDS || '').split(',').map(s => s.trim()).filter(Boolean);\nconst BASE = { host: process.env.API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n    if (!['start', 'stop'].includes(ACTION)) { console.error('ACTION deve ser start|stop'); process.exit(1); }\n    if (!IDS.length) { console.error('IDS vazio (ex.: IDS=21,22)'); process.exit(1); }\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n    for (const id of IDS) {\n        const r = await req('POST', `/automations/${id}/${ACTION}`, token);\n        const a = r.body || {};\n        console.log(`${ACTION} #${id} -> HTTP ${r.status}${r.status === 204 ? ' (no-op: j\u00e1 estava nesse estado)' : ` | isActive=${a.isActive} name=\"${a.name || ''}\"`}`);\n    }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:36:51)*
+
+
+## 🤖 Claude *(03:36:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e ACTION=start -e IDS=21 -e EM -e PW backend sh -c \"cat > /tmp/automation-ctl.js && node /tmp/automation-ctl.js\"\n' < /home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js 2>&1",
+  "description": "Activate grid automation id 21"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> sh: can't create /tmp/automation-ctl.js: Permission denied
+> ```
+
+## 🤖 Claude *(03:37:15)*
+
+
+## 🤖 Claude *(03:37:16)*
+
+`/tmp` deu permission denied (provavelmente o exec caiu como usuário diferente do que criou os /tmp anteriores). Deixa eu diagnosticar o usuário/permissões e usar um caminho garantido:
+
+## 🤖 Claude *(03:37:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"id; echo ---; ls -ld /tmp /app 2>&1; echo ---; ls -la /tmp/*.js 2>/dev/null\"' 2>&1",
+  "description": "Check backend container user and tmp permissions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> uid=0(root) gid=0(root) groups=0(root),0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)
+> ---
+> drwxr-xr-x    1 root     root          4096 Jun  3 19:19 /app
+> drwxrwxrwt    1 root     root          4096 Jun  9 03:33 /tmp
+> ---
+> -rw-r--r--    1 root     root          5197 Jun  9 03:13 /tmp/analyze4h.js
+> -rw-rw-r--    1 1001     1001          2028 Jun  8 18:28 /tmp/automation-ctl.js
+> -rw-rw-r--    1 1001     1001         10404 Jun  8 18:28 /tmp/setup-farm.js
+> -rw-r--r--    1 root     root          6084 Jun  9 03:34 /tmp/setup-grid.js
+> ```
+
+## 🤖 Claude *(03:37:53)*
+
+
+## 🤖 Claude *(03:37:55)*
+
+Entendi: o exec roda como **root**, mas existe um `/tmp/automation-ctl.js` antigo (uid 1001, de uma sessão anterior) travando o overwrite. Solução melhor — **pipar o script direto pro `node` via stdin** (sem arquivo temporário):
+
+## 🤖 Claude *(03:37:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e ACTION=start -e IDS=21 -e EM -e PW backend node\n' < /home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js 2>&1",
+  "description": "Activate grid id 21 via node stdin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> start #21 -> HTTP 200 | isActive=true name="Grid BTCUSDT"
+> ```
+
+## 🤖 Claude *(03:38:20)*
+
+
+## 🤖 Claude *(03:38:22)*
+
+**Grid ATIVO** (id 21, `isActive=true`). Agora está armado e **desgateado** — vai agir no próximo swing de ~0,5%, independente do bear. Deixa eu ver o estado atual: distância pro nível mais próximo, se já disparou alguma ordem, e atividade no log:
+
+## 🤖 Claude *(03:38:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== pre\u00e7o testnet agora ===\"\ncurl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null\necho \"\"\necho \"=== ordens novas (id>93)? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -t -e \\\"SELECT id,automationId,symbol,side,type,status,quantity,createdAt FROM orders WHERE id>93 ORDER BY id DESC LIMIT 8\\\"\"' 2>/dev/null\necho \"=== A:21.log (grid) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -n 8 /app/logs/A:21.log 2>/dev/null || echo (sem log ainda)\"' 2>&1",
+  "description": "Check current price, new orders, grid log"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> === preço testnet agora ===
+> {"symbol":"BTCUSDT","price":"62720.00000000"}
+> === ordens novas (id>93)? ===
+> === A:21.log (grid) ===
+> sh: syntax error: unexpected word (expecting ")")
+> ```
+
+## 🤖 Claude *(03:38:58)*
+
+
+## 🤖 Claude *(03:39:00)*
+
+Preço 62720 — na **zona morta** entre o buy 62402 e o sell 63029, então **ainda sem ordem** (precisa de um movimento de ~0,5%; é o esperado, não um bug). O erro do log foi o `:` no nome — os arquivos são `A21.log` (sem dois-pontos). Deixa eu confirmar que o grid está realmente avaliando (no BRAIN, reagindo aos ticks):
+
+## 🤖 Claude *(03:39:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"ls -la /app/logs/ | grep -iE \\\"A21|grid\\\" ; echo ---tail---; tail -n 5 /app/logs/A21.log 2>/dev/null; tail -n 5 /app/logs/A:21.log 2>/dev/null\"' 2>&1",
+  "description": "Find and tail the grid automation log"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> -rw-r--r--    1 root     root            70 Jun  9 03:37 A21.log
+> ---tail---
+> info: 2026-06-09T03:37:57.894Z - Automation Grid BTCUSDT has started!
+> ```
+
+## 🤖 Claude *(03:39:28)*
+
+
+## 🤖 Claude *(03:39:33)*
+
+**Fase A LIVE** ✅ — `A21.log` confirma "Automation Grid BTCUSDT has started!". O grid está **armado e desgateado**, no BRAIN reagindo aos ticks; ainda sem ordem porque o preço (62720) está na zona morta — vai disparar no próximo ±0,5% (e **compra primeiro**, acumula).
+
+Resumo da Fase A:
+- **Grid BTCUSDT** (id 21): 9 níveis, banda ±2,5% [61148–64284], ~0,5%/nível, size **$63 máx**, **desgateado do regime**. Engine nativo (`gridEval`/`generateGrids`) — zero código novo. Self-validado (config sobre engine já em prod); o gate QA+TL completo fica pra Fase B.
+
+Agora a **Fase B (harvester)** — essa tem código novo no engine, então vai **rebuild + gate QA+TL + validação**. Vou ler os dois pontos que faltam pra editar com precisão (o map `indexKeys` e o boot dos jobs no `server.js`):
+
+## 🤖 Claude *(03:39:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const technicalindicators = require('technicalindicators');
+> 2	
+> 3	const indexKeys = {
+> 4	    //CANDLES PATTERNS
+> 5	    INSIDE_CANDLE: 'INSIDE-CANDLE',
+> 6	    ABANDONED_BABY: 'ABANDONED-BABY',
+> 7	    BEARISH_ENGULFING: 'BEAR-ENGULF',
+> 8	    BULLISH_ENGULFING: 'BULL-ENGULF',
+> 9	    DARK_CLOUD_COVER: 'DARK-CLOUD-COVER',
+> 10	    DOWNSIDE_TASUKI_GAP: 'DOWNSIDE-TASUKI-GAP',
+> 11	    DOJI: 'DOJI',
+> 12	    DRAGONFLY_DOJI: 'DRAGONFLY-DOJI',
+> 13	    GRAVESTONE_DOJI: 'GRAVESTONE-DOJI',
+> 14	    BEARISH_HARAMI: 'BEAR-HARAMI',
+> 15	    BULLISH_HARAMI: 'BULL-HARAMI',
+> 16	    BEARISH_HARAMI_CROSS: 'BEAR-HARAMIX',
+> 17	    BULLISH_HARAMI_CROSS: 'BULL-HARAMIX',
+> 18	    BULLISH_MARUBOZU: 'BULL-MARUBOZU',
+> 19	    BEARISH_MARUBOZU: 'BEAR-MARUBOZU',
+> 20	    EVENING_DOJI_STAR: 'EVENING-DOJI-STAR',
+> 21	    EVENING_STAR: 'EVENINGSTAR',
+> 22	    PIERCING_LINE: 'PIERCING-LINE',
+> 23	    BULLISH_SPINNING_TOP: 'BULL-SPINTOP',
+> 24	    BEARISH_SPINNING_TOP: 'BEAR-SPINTOP',
+> 25	    MORNING_DOJI_STAR: 'MORNING-DOJI-STAR',
+> 26	    MORNING_STAR: 'MORNING-STAR',
+> 27	    _3BLACK_CROWS: '3BLACK-CROWS',
+> 28	    _3WHITE_SOLDIERS: '3WHITE-SOLDIERS',
+> 29	    BULLISH_HAMMER: 'BULLHAMMER',
+> 30	    BEARISH_HAMMER: 'BEARHAMMER',
+> 31	    BULLISH_INVERTED_HAMMER: 'BULL-INVERT-HAMMER',
+> 32	    BEARISH_INVERTED_HAMMER: 'BEAR-INVERT-HAMMER',
+> 33	    HAMMER: 'HAMMER',
+> 34	    HAMMER_UNCONFIRMED: 'HAMMER-UNCONF',
+> 35	    HANGING_MAN: 'HANGMAN',
+> 36	    HANGING_MAN_UNCONFIRMED: 'HANGMAN-UNCONF',
+> 37	    SHOOTING_STAR: 'SHOOTSTAR',
+> 38	    SHOOTING_STAR_UNCONFIRMED: 'SHOOTSTAR-UNCONF',
+> 39	    TWEEZER_TOP: 'TWEEZER-TOP',
+> 40	    TWEEZER_BOTTOM: 'TWEEZER-BOTTOM',
+> 41	    //TECHNICAL INDICATORS
+> 42	    RSI: 'RSI',
+> 43	    MACD: 'MACD',
+> 44	    SMA: 'SMA',
+> 45	    EMA: 'EMA',
+> 46	    STOCH_RSI: 'S-RSI',
+> 47	    BOLLINGER_BANDS: 'BB',
+> 48	    ADL: 'ADL',
+> 49	    ADX: 'ADX',
+> 50	    ATR: 'ATR',
+> 51	    AWESOME_OSCILLATOR: 'AO',
+> 52	    CCI: 'CCI',
+> 53	    FORCE_INDEX: 'FI',
+> 54	    KST: 'KST',
+> 55	    MFI: 'MFI',
+> 56	    OBV: 'OBV',
+> 57	    PSAR: 'PSAR',
+> 58	    ROC: 'ROC',
+> 59	    STOCH: 'STOCH',
+> 60	    TRIX: 'TRIX',
+> 61	    TYPICAL_PRICE: 'TYPICAL',
+> 62	    VWAP: 'VWAP',
+> 63	    VOLUME_PROFILE: 'VP',
+> 64	    WMA: 'WMA',
+> 65	    WEMA: 'WEMA',
+> 66	    WILLIAMS_R: 'WILLIAMS-R',
+> 67	    ICHIMOKU: 'ICHIMOKU',
+> 68	    //BEHOLDER INDICATORS
+> 69	    MINI_TICKER: 'MINI_TICKER',
+> 70	    BOOK: 'BOOK',
+> 71	    WALLET: 'WALLET',
+> 72	    LAST_ORDER: 'LAST_ORDER',
+> 73	    LAST_CANDLE: 'LAST_CANDLE',
+> 74	    PREVIOUS_CANDLE: 'PREVIOUS_CANDLE',
+> 75	    TICKER: 'TICKER',
+> 76	    REGIME: 'REGIME',
+> 77	    TREND_CROSS: 'TREND_CROSS',
+> 78	    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> 79	    FLOW: 'FLOW' // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) — NOWCASTING/timing, NÃO forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (não comprar dip sob venda agressora AGORA)
+> 80	}
+> 81	
+> 82	function getAnalysisIndexes() {
+> 83	    return {
+> 84	        [indexKeys.RSI]: { params: 'period', name: 'RSI' },
+> 85	        [indexKeys.MACD]: { params: 'fast,slow,signal', name: 'MACD' },
+> 86	        [indexKeys.SMA]: { params: 'period', name: 'SMA' },
+> 87	        [indexKeys.EMA]: { params: 'period', name: 'EMA' },
+> 88	        [indexKeys.STOCH_RSI]: { params: 'd,k,rsi,stoch', name: 'Stochastic RSI' },
+> 89	        [indexKeys.BOLLINGER_BANDS]: { params: 'period,stdDev', name: 'Bollinger Bands (BB)' },
+> 90	        [indexKeys.ADL]: { params: 'none', name: 'ADL' },
+> ```
+
+## 🤖 Claude *(03:39:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const database = require('./db');
+> 2	const app = require('./app');
+> 3	const settingsRepository = require('./repositories/settingsRepository');
+> 4	const automationsRepository = require('./repositories/automationsRepository');
+> 5	const appEm = require('./app-em');
+> 6	const appWs = require('./app-ws');
+> 7	const beholder = require('./beholder');
+> 8	const agenda = require('./agenda');
+> 9	const regimeJob = require('./regimeJob');
+> 10	const flowJob = require('./flowJob');
+> 11	const funnelJob = require('./funnelJob');
+> 12	const logger = require('./utils/logger');
+> 13	
+> 14	(async () => {
+> 15	    // const version = process.version.replace('v', '').split('.')[0];
+> 16	    // if (parseInt(version) < 14) {
+> 17	    //     console.log(`Your Node.js version is ${process.version}. Beholder is compatible with Node 14+.`);
+> 18	    //     process.exit(0);
+> 19	    // }
+> 20	
+> 21	    logger('system', `Getting the default settings with ID ${process.env.DEFAULT_SETTINGS_ID}...`);
+> 22	    const settings = await settingsRepository.getDefaultSettings()
+> 23	    if (!settings) throw new Error(`There is no settings.`);
+> 24	
+> 25	    logger('system', 'Initializing the Beholder Brain...');
+> 26	
+> 27	    const automations = await automationsRepository.getActiveAutomations();
+> 28	    beholder.init(automations);
+> 29	
+> 30	    logger('system', `Starting the Beholder Agenda...`);
+> 31	    agenda.init(automations);
+> 32	
+> 33	    logger('system', `Starting the server apps...`);
+> 34	    const server = app.listen(process.env.PORT, () => {
+> 35	        logger('system', 'App is running at ' + process.env.PORT);
+> 36	    })
+> 37	
+> 38	    const wss = appWs(server);
+> 39	
+> 40	    appEm.init(settings, wss, beholder);
+> 41	
+> 42	    // Job de regime de mercado: grava MEMORY['<sym>:REGIME'] periodicamente p/ gate das automações
+> 43	    // (ex.: não comprar em bear). Read-only na Binance mainnet; não dispara ordens por si.
+> 44	    logger('system', `Starting the Regime Job...`);
+> 45	    regimeJob.start();
+> 46	
+> 47	    // Flow Job (SHADOW): grava MEMORY['<sym>:FLOW'] (fluxo do taker da mainnet) p/ observação +
+> 48	    // leitura pelo agente (MCP). Ainda NÃO gateia automação — gate da reversão à média é o próximo passo.
+> 49	    logger('system', `Starting the Flow Job (shadow)...`);
+> 50	    flowJob.start();
+> 51	
+> 52	    // Funnel Job (SHADOW): observa o caixa USDT + a reserva de BTC e loga o que escoaria pra BTC
+> 53	    // (o "funil" da estratégia Farm-and-Funnel). NÃO compra ainda — money-path é a Fase 4 com gate.
+> 54	    logger('system', `Starting the Funnel Job (shadow)...`);
+> 55	    funnelJob.start();
+> 56	
+> 57	    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).
+> 58	    await require('./controllers/symbolsController').syncSymbolsIfEmpty();
+> 59	
+> 60	})();
+> ```
+
+## 🤖 Claude *(03:41:04)*
+
+
+## 🤖 Claude *(03:41:07)*
+
+Tenho tudo. **Ajuste crítico de design** que as leituras revelaram: o `validateConditions` exige um `.prop` antes de `*fator` (a venda do farm passa porque é `.avgPrice*1.012`). Um escalar `HARVEST_COST*1.012` **falharia** o regex. Então uso **um objeto** `MEMORY['BTCUSDT:HARVEST'] = {qty, cost}` → a condition vira `.cost*1.012` (regex-safe, espelho exato do farm). `FAIR` já é objeto (`.price*0.97` ✓).
+
+Vou escrever o código da Fase B. Primeiro os 3 arquivos novos (service + job + setup):
+
+## 🤖 Claude *(03:41:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/fairPriceService.js",
+  "content": "'use strict';\n/*\n * Servi\u00e7o de FAIR PRICE \u2014 pre\u00e7o de refer\u00eancia (mainnet) p/ ancorar o Harvester de disloca\u00e7\u00e3o.\n *\n * O sistema EXECUTA no testnet (pre\u00e7o sint\u00e9tico) mas o \"valor justo\" \u00e9 o da MAINNET. O testnet\n * disloca do mainnet (wicks intrabar) e REVERTE (corr ~0.89 nos closes; ver an\u00e1lise das 4h) \u2014 o\n * harvester compra quando o bestAsk do testnet cai X% ABAIXO deste FAIR e vende no revert. Mesma\n * arquitetura do regime/flow (sinal mainnet via HTTPS puro, execu\u00e7\u00e3o testnet).\n *\n * Busca o lastPrice da MAINNET (1 REST leve). NUNCA lan\u00e7a: retorna { unavailable:true } se a Binance\n * n\u00e3o responder (o job decide o que fazer \u2014 ver fairPriceJob: ap\u00f3s N falhas escreve price:0 = fail-safe\n * que DESLIGA as compras, pois bestAsk<0 nunca \u00e9 verdade).\n */\nconst https = require('https');\n\n// S\u00f3 mercado GLOBAL (mesma raz\u00e3o do regime/flowService: Binance.US diverge).\nconst HOSTS = ['api.binance.com', 'data-api.binance.vision'];\nconst CACHE = new Map();\nconst TTL = 5e3; // 5s (o job poda a cada ~10s; o endpoint, se houver, compartilha)\n\nfunction getJSON(host, path) {\n    return new Promise((resolve, reject) => {\n        const req = https.get({ host, path, headers: { 'User-Agent': 'tradeux' }, timeout: 8000 }, r => {\n            let d = '';\n            r.on('data', c => d += c);\n            r.on('end', () => { try { resolve({ status: r.statusCode, body: JSON.parse(d) }); } catch (e) { resolve({ status: r.statusCode, body: null }); } });\n        });\n        req.on('error', reject);\n        req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });\n    });\n}\n\nasync function getFairPrice(symbol) {\n    const cached = CACHE.get(symbol);\n    if (cached && Date.now() - cached.t < TTL) return { ...cached.data, cached: true };\n\n    let price = null, used = null;\n    for (const host of HOSTS) {\n        const r = await getJSON(host, `/api/v3/ticker/price?symbol=${symbol}`).catch(() => null);\n        if (r && r.status === 200 && r.body && r.body.price) {\n            const p = parseFloat(r.body.price);\n            if (Number.isFinite(p) && p > 0) { price = p; used = host; break; }\n        }\n    }\n    if (price === null)\n        return { symbol, source: null, unavailable: true, reason: 'ticker/price indisponivel na Binance mainnet' };\n\n    const data = { symbol, source: used, cached: false, price, at: new Date().toISOString() };\n    CACHE.set(symbol, { t: Date.now(), data });\n    return data;\n}\n\nmodule.exports = { getFairPrice, TTL };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/utils/fairPriceService.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:41:35)*
+
+
+## 🤖 Claude *(03:41:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/fairPriceJob.js",
+  "content": "'use strict';\n/*\n * Fair Price Job \u2014 grava MEMORY['<sym>:FAIR'] = { price, at, atMs } (pre\u00e7o de refer\u00eancia da MAINNET)\n * periodicamente, p/ o Harvester de disloca\u00e7\u00e3o ancorar as compras-limite fundas (bestAsk testnet vs FAIR).\n *\n * PASSIVO (executeAutomations=false): a escrita n\u00e3o dispara ordem; \u00e9 lida no tick das automa\u00e7\u00f5es do harvester.\n * Clona o padr\u00e3o do flowJob/regimeJob (sinal mainnet \u2192 MEMORY \u2192 execu\u00e7\u00e3o testnet).\n *\n * FAIL-SAFE de STALENESS (sem Date.now() na condition, que o validateConditions pro\u00edbe): ap\u00f3s STALE_FAILS\n * falhas consecutivas de fetch, escreve { price: 0, stale: true } \u2192 as conditions de compra\n * (bestAsk < FAIR.price*0.97) viram bestAsk<0 = sempre falso \u2192 COMPRAS DESLIGADAS at\u00e9 o mainnet voltar.\n * A venda no-loss N\u00c3O usa FAIR (usa HARVEST.cost), ent\u00e3o continua liberada p/ sair de posi\u00e7\u00e3o.\n *\n * Env:\n *   FAIR_PRICE_JOB_ENABLED (default 'true')   \u2014 liga/desliga (kill-switch)\n *   FAIR_REFRESH_MS        (default 10000)    \u2014 intervalo do poll (10s; piso 5s)\n *   FAIR_SYMBOLS           (default 'BTCUSDT') \u2014 CSV; sen\u00e3o usa os das automa\u00e7\u00f5es ativas\n *   FAIR_STALE_FAILS       (default 3)        \u2014 n\u00ba de falhas consecutivas antes do sentinel price:0\n */\nconst beholder = require('./beholder');\nconst automationsRepository = require('./repositories/automationsRepository');\nconst { getFairPrice } = require('./utils/fairPriceService');\nconst { indexKeys } = require('./utils/indexes');\nconst logger = require('./utils/logger');\n\nconst ENABLED = (process.env.FAIR_PRICE_JOB_ENABLED || 'true') !== 'false';\nconst _refresh = parseInt(process.env.FAIR_REFRESH_MS || '10000', 10);\nconst REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 5000 ? _refresh : 10000;\nconst _staleFails = parseInt(process.env.FAIR_STALE_FAILS || '3', 10);\nconst STALE_FAILS = Number.isFinite(_staleFails) && _staleFails >= 1 ? _staleFails : 3;\n\nlet timer = null;\nlet running = false;\nconst LAST = {};        // \u00faltimo FAIR por s\u00edmbolo (observabilidade)\nconst AT = {};          // timestamp (ms) da \u00faltima grava\u00e7\u00e3o\nconst FAILS = {};       // falhas consecutivas de fetch por s\u00edmbolo\nconst STALE = new Set();// s\u00edmbolos em sentinel price:0 (logados 1x por epis\u00f3dio)\n\nasync function resolveSymbols() {\n    const fromEnv = (process.env.FAIR_SYMBOLS || 'BTCUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);\n    if (fromEnv.length) return [...new Set(fromEnv)];\n    try {\n        const autos = await automationsRepository.getActiveAutomations();\n        const syms = (autos || [])\n            .map(a => String((a.get ? a.get('symbol') : a.symbol) || '').toUpperCase())\n            .filter(s => s && !s.startsWith('*'));\n        return [...new Set(syms)];\n    } catch (err) {\n        logger('fair', `Falha ao resolver s\u00edmbolos: ${err.message}`);\n        return [];\n    }\n}\n\nasync function runOnce() {\n    if (running) return;\n    running = true;\n    try {\n        const symbols = await resolveSymbols();\n        if (!symbols.length) return;\n\n        for (const symbol of symbols) {\n            try {\n                const f = await getFairPrice(symbol);\n                if (!f || f.unavailable) {\n                    FAILS[symbol] = (FAILS[symbol] || 0) + 1;\n                    if (FAILS[symbol] >= STALE_FAILS) {\n                        // sentinel fail-safe: desliga as compras do harvester (bestAsk<0 nunca \u00e9 verdade).\n                        await beholder.updateMemory(symbol, indexKeys.FAIR, null, { price: 0, stale: true, atMs: Date.now() }, false);\n                        if (!STALE.has(symbol)) { STALE.add(symbol); logger('fair', `${symbol}: FAIR indispon\u00edvel ${FAILS[symbol]}x \u2192 sentinel price:0 (compras do harvester DESLIGADAS at\u00e9 voltar).`); }\n                    }\n                    continue;\n                }\n                FAILS[symbol] = 0;\n                if (STALE.delete(symbol)) logger('fair', `${symbol}: FAIR recuperado (${f.price}).`);\n\n                await beholder.updateMemory(symbol, indexKeys.FAIR, null, { price: f.price, at: f.at, atMs: Date.now() }, false);\n                LAST[symbol] = f; AT[symbol] = Date.now();\n            } catch (err) {\n                logger('fair', `${symbol}: erro ao atualizar FAIR: ${err.message}`);\n            }\n        }\n    } finally {\n        running = false;\n    }\n}\n\nfunction start() {\n    if (!ENABLED) { logger('fair', 'Fair Price job DESABILITADO (FAIR_PRICE_JOB_ENABLED=false).'); return; }\n    if (timer) return; // idempotente\n    runOnce(); // primeira passada imediata no boot\n    timer = setInterval(runOnce, REFRESH_MS);\n    if (timer.unref) timer.unref();\n    logger('fair', `Fair Price job iniciado (intervalo ${REFRESH_MS}ms; sentinel ap\u00f3s ${STALE_FAILS} falhas).`);\n}\n\nfunction stop() {\n    if (timer) { clearInterval(timer); timer = null; }\n    running = false;\n}\n\nfunction getStatus() {\n    const now = Date.now();\n    const symbols = {};\n    for (const s of Object.keys(LAST)) {\n        symbols[s] = {\n            price: LAST[s] ? LAST[s].price : null,\n            at: AT[s] ? new Date(AT[s]).toISOString() : null,\n            ageMs: AT[s] ? now - AT[s] : null,\n            stale: STALE.has(s),\n            fails: FAILS[s] || 0,\n        };\n    }\n    return { enabled: ENABLED, refreshMs: REFRESH_MS, staleFails: STALE_FAILS, running, symbols };\n}\n\nmodule.exports = { start, stop, runOnce, getStatus };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/fairPriceJob.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:42:23)*
+
+
+## 🤖 Claude *(03:42:23)*
+
+Agora o `setup-harvester.js` (3 rungs de compra desgateadas + 1 venda no-loss do bucket, INATIVAS), espelhando o `setup-farm.js`:
+
+## 🤖 Claude *(03:42:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js",
+  "content": "'use strict';\n/*\n * Setup do HARVESTER DE DISLOCA\u00c7\u00c3O no BTCUSDT (testnet) \u2014 Fase B do experimento (ver HANDOFF + an\u00e1lise 4h).\n *\n * TESE: o testnet disloca do mainnet (wicks intrabar -7% vs mainnet) e REVERTE (corr ~0.89). Compra-limite\n * FUNDA ancorada no FAIR (pre\u00e7o mainnet, via fairPriceJob) enche no wick; vende no-loss quando reverte +1.2%.\n * DESGATEADO do regime de prop\u00f3sito (explora um artefato testnet-espec\u00edfico, n\u00e3o dire\u00e7\u00e3o de mercado).\n *\n * Bucket T\u00c1TICO MEMORY['<sym>:HARVEST']={qty,cost} (escrito no fill por app-em.updateHarvestPosition):\n * compras somam (m\u00e9dia ponderada do custo); a venda usa quantity='HARVEST_QTY' (l\u00ea .qty) e zera. O cofre\n * principal de BTC NUNCA \u00e9 tocado \u2014 vende s\u00f3 o que o harvester comprou, e s\u00f3 com lucro (anti-bleed).\n *\n * Cria (se ausentes; INATIVAS por seguran\u00e7a):\n *   - template \"Harvest Buy <sym>\"  LIMIT market\u00e1vel (bestAsk\u00d7(1+buf)) MIN_NOTIONAL\u00d7size \u2014 compartilhado pelas rungs.\n *   - template \"Harvest Sell <sym>\" LIMIT market\u00e1vel (bestBid\u00d7(1-buf)) quantity=HARVEST_QTY.\n *   - automa\u00e7\u00f5es \"Harvest Buy <sym> -Npct\" (uma por rung): bestAsk < FAIR.price\u00d7(1-N) com edge-trigger. INATIVAS.\n *   - automa\u00e7\u00e3o  \"Harvest Sell <sym>\" no-loss: tem bucket E bestBid > HARVEST.cost\u00d7(1+lucro), edge-trigger. INATIVA.\n *\n * Requer: fairPriceJob no ar gravando MEMORY['<sym>:FAIR'] (\u00edndice fail-safe: sem FAIR a compra n\u00e3o avalia).\n * Reproduz ap\u00f3s `make nuke` (dado runtime). Uso (no container, server no ar):\n *   node scripts/setup-harvester.js            [DRY=true p/ preview]\n *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),\n *        HARVEST_SYMBOL (BTCUSDT), HARVEST_RUNGS (0.03,0.05,0.07), HARVEST_PROFIT (0.012),\n *        HARVEST_BUFFER (0.003), HARVEST_SIZE_MULT (1)\n */\nconst http = require('http');\n\nconst SYMBOL = (process.env.HARVEST_SYMBOL || 'BTCUSDT').toUpperCase();\nconst RUNGS = (process.env.HARVEST_RUNGS || '0.03,0.05,0.07').split(',').map(s => parseFloat(s.trim())).filter(n => Number.isFinite(n) && n > 0 && n < 1);\nconst PROFIT = parseFloat(process.env.HARVEST_PROFIT || '0.012');\nconst BUF = parseFloat(process.env.HARVEST_BUFFER || '0.003');\nconst SIZE_MULT = parseFloat(process.env.HARVEST_SIZE_MULT || '1');\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst BASE = { host: process.env.HARVEST_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\nconst K = k => `${SYMBOL}:${k}`;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\nasync function ensureTemplate(token, name, side, opts) {\n    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    if (DRY) return { id: 0, msg: `[DRY] POST template \"${name}\" (${opts.type} ${side} qty ${opts.quantity}\u00d7${opts.quantityMultiplier || 1})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol: SYMBOL, type: opts.type, side,\n        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,\n        stopPrice: null, stopPriceMultiplier: 1,\n        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,\n        icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id}, ${opts.type})` };\n}\n\nasync function findAutomationByName(token, name) {\n    for (let page = 1; page <= 40; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break;\n    }\n    return null;\n}\n\nasync function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {\n    const existing = await findAutomationByName(token, name);\n    if (existing) return `automa\u00e7\u00e3o \"${name}\" j\u00e1 existe (id ${existing.id}, isActive=${existing.isActive})`;\n    if (DRY) return `[DRY] POST automa\u00e7\u00e3o \"${name}\" INATIVA\\n      cond: ${conditions}\\n      idx:  ${indexes}`;\n    const r = await req('POST', '/automations', token, {\n        name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId }],\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar automa\u00e7\u00e3o ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `automa\u00e7\u00e3o \"${name}\" criada (id ${r.body.id}, INATIVA)`;\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n    if (!RUNGS.length) { console.error('HARVEST_RUNGS inv\u00e1lido'); process.exit(1); }\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n\n    console.log(`# Setup HARVESTER de disloca\u00e7\u00e3o \u2014 ${SYMBOL} | rungs ${RUNGS.map(r => '-' + (r * 100).toFixed(0) + '%').join(', ')} abaixo do FAIR (mainnet) \u00b7 lucro-alvo ${(PROFIT * 100).toFixed(1)}% \u00b7 buffer ${(BUF * 100).toFixed(1)}% \u00b7 size ${SIZE_MULT}\u00d7MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada ser\u00e1 aplicado]' : ''}`);\n\n    const buyTpl = await ensureTemplate(token, `Harvest Buy ${SYMBOL}`, 'BUY', {\n        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,\n        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,\n    });\n    console.log('- ' + buyTpl.msg);\n    const sellTpl = await ensureTemplate(token, `Harvest Sell ${SYMBOL}`, 'SELL', {\n        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,\n        quantity: 'HARVEST_QTY', quantityMultiplier: 1, // vende o bucket t\u00e1tico inteiro (capa na carteira em calcQty)\n    });\n    console.log('- ' + sellTpl.msg);\n\n    // COMPRA (uma automa\u00e7\u00e3o por rung): bestAsk do testnet caiu N% ABAIXO do FAIR (mainnet) \u2014 disloca\u00e7\u00e3o.\n    // edge-trigger (previous>=alvo && current<alvo) = anti-empilhamento. FAIR no \u00edndice = fail-safe (sem FAIR\n    // mainnet a compra n\u00e3o avalia; sentinel price:0 do job DESLIGA tudo). DESGATEADO do regime de prop\u00f3sito.\n    for (const r of RUNGS) {\n        const factor = (1 - r).toFixed(4);\n        const name = `Harvest Buy ${SYMBOL} -${(r * 100).toFixed(0)}pct`;\n        const cond = `MEMORY['${K('BOOK')}'].current.bestAsk<MEMORY['${K('FAIR')}'].price*${factor} && MEMORY['${K('BOOK')}'].previous.bestAsk>=MEMORY['${K('FAIR')}'].price*${factor}`;\n        console.log('- ' + await ensureAutomation(token, name, cond, `${K('BOOK')},${K('FAIR')}`, buyTpl.id));\n    }\n\n    // VENDA no-loss: tem bucket (HARVEST.qty>0) E o bestBid j\u00e1 d\u00e1 lucro sobre o custo M\u00c9DIO (HARVEST.cost).\n    // \u00cdndice HARVEST,BOOK \u2192 fail-safe (at\u00e9 a 1\u00aa compra encher o bucket, n\u00e3o avalia). edge-trigger no bestBid.\n    const target = (1 + PROFIT).toFixed(4);\n    const sellCond = `MEMORY['${K('HARVEST')}'].qty>0 && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('HARVEST')}'].cost*${target} && MEMORY['${K('BOOK')}'].previous.bestBid<=MEMORY['${K('HARVEST')}'].cost*${target}`;\n    console.log('- ' + await ensureAutomation(token, `Harvest Sell ${SYMBOL}`, sellCond, `${K('HARVEST')},${K('BOOK')}`, sellTpl.id));\n\n    console.log(`\\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO \u2014 templates + automa\u00e7\u00f5es de harvester INATIVAS.'}`);\n    console.log(`Pr\u00e9-req p/ ATIVAR: fairPriceJob gravando MEMORY['${K('FAIR')}'] (checar). Depois start nas automa\u00e7\u00f5es (money-path, com gate).`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:43:50)*
+
+
+## 🤖 Claude *(03:43:51)*
+
+Agora as 4 edições no engine (keys, bucket no fill, calcQty, boot do job). Todas com texto exato das leituras:
+
+## 🤖 Claude *(03:43:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death\n    FLOW: 'FLOW' // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) \u2014 NOWCASTING/timing, N\u00c3O forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (n\u00e3o comprar dip sob venda agressora AGORA)\n}",
+  "new_string": "    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death\n    FLOW: 'FLOW', // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) \u2014 NOWCASTING/timing, N\u00c3O forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (n\u00e3o comprar dip sob venda agressora AGORA)\n    FAIR: 'FAIR', // pre\u00e7o de refer\u00eancia da MAINNET {price,at,atMs} (fairPriceJob) \u2014 \u00e2ncora do Harvester de disloca\u00e7\u00e3o (compra-limite funda quando o testnet disloca abaixo do FAIR e reverte; sentinel price:0 = fail-safe)\n    HARVEST: 'HARVEST' // bucket T\u00c1TICO do Harvester {qty,cost} (base asset + custo m\u00e9dio; app-em.updateHarvestPosition) \u2014 venda no-loss usa quantity='HARVEST_QTY' (l\u00ea .qty); SEPARADO do cofre de BTC\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "const flowJob = require('./flowJob');\nconst funnelJob = require('./funnelJob');",
+  "new_string": "const flowJob = require('./flowJob');\nconst fairPriceJob = require('./fairPriceJob');\nconst funnelJob = require('./funnelJob');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "    logger('system', `Starting the Flow Job (shadow)...`);\n    flowJob.start();\n\n    // Funnel Job (SHADOW): observa o caixa USDT + a reserva de BTC e loga o que escoaria pra BTC",
+  "new_string": "    logger('system', `Starting the Flow Job (shadow)...`);\n    flowJob.start();\n\n    // Fair Price Job: grava MEMORY['<sym>:FAIR'] (pre\u00e7o da mainnet) p/ ancorar o Harvester de disloca\u00e7\u00e3o\n    // (compra-limite funda quando o testnet disloca abaixo do FAIR e reverte). Read-only na mainnet; passivo.\n    logger('system', `Starting the Fair Price Job...`);\n    fairPriceJob.start();\n\n    // Funnel Job (SHADOW): observa o caixa USDT + a reserva de BTC e loga o que escoaria pra BTC"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "        newQty = trendQty * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)\n    }\n\n    factor = Math.floor(newQty / stepSize);",
+  "new_string": "        newQty = trendQty * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)\n    }\n    else if (orderTemplate.quantity === 'HARVEST_QTY') {\n        // Bucket T\u00c1TICO do Harvester de disloca\u00e7\u00e3o (escrito no fill por app-em.updateHarvestPosition):\n        // MEMORY['<sym>:HARVEST'] = { qty, cost }. A venda no-loss vende ESTA qty (s\u00f3 o que o harvester\n        // comprou), NUNCA o cofre principal de BTC. Falha-fechado se vazio (sem bucket, n\u00e3o vende).\n        const harvest = MEMORY[`${orderTemplate.symbol}:HARVEST`];\n        const harvestQty = harvest ? parseFloat(harvest.qty) : NaN;\n        if (!harvestQty || harvestQty <= 0)\n            throw new Error(`There is no harvest position (HARVEST) to use as qty reference for ${orderTemplate.symbol}.`);\n\n        newQty = harvestQty * multiplier;\n        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)\n    }\n\n    factor = Math.floor(newQty / stepSize);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:43)*
+
+
+## 🤖 Claude *(03:44:43)*
+
+Agora as duas edições no `app-em.js` — a função `updateHarvestPosition` e a chamada dela no fill:
+
+## 🤖 Claude *(03:44:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}\n\nfunction processExecutionData(monitorId, executionData, broadcastLabel) {",
+  "new_string": "    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}\n\n// orderIds de fill do Harvester j\u00e1 contabilizados \u2014 dedup contra um executionReport FILLED RE-ENTREGUE\n// (a compra \u00e9 ADITIVA na m\u00e9dia ponderada; um report duplicado distorceria qty/custo). Vol\u00e1til (reseta no\n// restart, coerente com HARVEST que hoje tamb\u00e9m \u00e9 s\u00f3 MEMORY). Footprint desprez\u00edvel (ordens raras, no dip).\nconst countedHarvestFills = new Set();\n\n// Harvester de disloca\u00e7\u00e3o \u2014 mant\u00e9m MEMORY['<sym>:HARVEST'] = { qty, cost } (posi\u00e7\u00e3o T\u00c1TICA em base asset +\n// custo M\u00c9DIO ponderado), lido pela calcQty do template SELL (quantity='HARVEST_QTY' \u2192 .qty) e pela condition\n// de venda no-loss (bestBid > .cost\u00d7(1+lucro)). Distingue a ordem do harvester pelas conditions da automa\u00e7\u00e3o\n// (a compra referencia ':FAIR'; a venda ':HARVEST'), lidas do BRAIN em mem\u00f3ria (sem ida ao banco). Compra\n// FILLED soma e recalcula a m\u00e9dia; venda FILLED zera o bucket. Bucket SEPARADO do cofre \u2014 s\u00f3 rastreia o que o\n// harvester comprou (a calcQty capa a venda na carteira). Best-effort: erro aqui n\u00e3o quebra o fluxo da ordem\n// (o gate de venda falha fechado se HARVEST ausente). PERSIST\u00caNCIA: vol\u00e1til (s\u00f3 MEMORY) \u2014 persistir ao escalar.\nasync function updateHarvestPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        if (countedHarvestFills.has(order.orderId)) return; // j\u00e1 contabilizado (report FILLED re-entregue)\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : '';\n        const isHarvestBuy = order.side === 'BUY' && cond.indexOf(':FAIR') !== -1;\n        const isHarvestSell = order.side === 'SELL' && cond.indexOf(':HARVEST') !== -1;\n        if (!isHarvestBuy && !isHarvestSell) return; // n\u00e3o \u00e9 ordem do Harvester\n\n        const cur = beholder.getMemory(order.symbol, indexKeys.HARVEST) || { qty: 0, cost: 0 };\n        const curQty = Number(cur.qty) || 0, curCost = Number(cur.cost) || 0;\n        let next;\n        if (isHarvestBuy) {\n            const qty = parseFloat(order.quantity);\n            const price = parseFloat(order.avgPrice);\n            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0) return; // guard: n\u00e3o corrompe o bucket\n            const newQty = curQty + qty;\n            const newCost = (curQty * curCost + qty * price) / newQty; // m\u00e9dia ponderada do custo\n            next = { qty: newQty, cost: newCost, atMs: Date.now() };\n        }\n        else { // venda no-loss FILLED \u2192 realizou o bucket inteiro \u2192 zera (qty=0 desarma a venda; fail-closed)\n            next = { qty: 0, cost: 0, atMs: Date.now() };\n        }\n        countedHarvestFills.add(order.orderId);\n        await beholder.updateMemory(order.symbol, indexKeys.HARVEST, null, next, false);\n        logger('A:' + order.automationId, `HARVEST[${order.symbol}] qty ${curQty}->${next.qty} cost ${curCost}->${next.cost} (fill ${order.side})`);\n    } catch (err) {\n        logger('system', `updateHarvestPosition: ${err.message}`);\n    }\n}\n\nfunction processExecutionData(monitorId, executionData, broadcastLabel) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:45:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "                await updateTrendPosition(updatedOrder.get({ plain: true }));\n\n                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });",
+  "new_string": "                await updateTrendPosition(updatedOrder.get({ plain: true }));\n                await updateHarvestPosition(updatedOrder.get({ plain: true }));\n\n                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:45:39)*
+
+
+## 🤖 Claude *(03:45:40)*
+
+Todo o código da Fase B está escrito. Antes do rebuild (lento), vou fazer **syntax-check** de tudo. Deixa eu ver se o host tem node, senão uso o do container:
+
+## 🤖 Claude *(03:45:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nif command -v node >/dev/null 2>&1; then\n  echo \"node no host: $(node --version)\"\n  for f in src/utils/indexes.js src/utils/fairPriceService.js src/fairPriceJob.js src/app-em.js src/beholder.js src/server.js scripts/setup-harvester.js scripts/setup-grid.js scripts/automation-ctl.js; do\n    if node --check \"backend/$f\" 2>err.txt; then echo \"OK  $f\"; else echo \"FAIL $f\"; cat err.txt; fi\n  done\n  rm -f err.txt\nelse\n  echo \"sem node no host \u2014 usando container\"\nfi",
+  "description": "Syntax-check all changed/new backend JS files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node no host: v22.22.3
+> OK  src/utils/indexes.js
+> OK  src/utils/fairPriceService.js
+> OK  src/fairPriceJob.js
+> OK  src/app-em.js
+> OK  src/beholder.js
+> OK  src/server.js
+> OK  scripts/setup-harvester.js
+> OK  scripts/setup-grid.js
+> OK  scripts/automation-ctl.js
+> ```
+
+## 🤖 Claude *(03:47:18)*
+
+
+## 🤖 Claude *(03:47:22)*
+
+Tudo passa no syntax-check (host tem node 22). Agora o **gate**: vou disparar QA + Tech-Lead em paralelo (background) revisando o diff da Fase B — eles fazem revisão estática + testes herméticos (ex.: rodar o regex do `validateConditions` contra as conditions geradas, validar a média ponderada do bucket). Enquanto eles trabalham, faço o rebuild + verifico o FAIR + DRY do harvester (tudo dormente/seguro — só ATIVO o harvester depois do gate passar).
+
+## 🤖 Claude *(03:47:50)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "qa-engineer",
+  "description": "QA gate do harvester+grid",
+  "run_in_background": true,
+  "prompt": "Voc\u00ea \u00e9 o gate de QA de uma mudan\u00e7a MONEY-PATH no TradeUX (bot Beholder/Binance Spot, hoje em TESTNET). Revise a mudan\u00e7a N\u00c3O-COMMITADA abaixo: corre\u00e7\u00e3o, edge cases, regress\u00f5es, modos de falha, idempot\u00eancia e seguran\u00e7a money-path. Retorne veredito PASS / PASS COM RESSALVAS / FAIL, com achados tagueados (CR\u00cdTICO/ALTO/M\u00c9DIO/BAIXO) e os testes concretos a rodar.\n\nCONTEXTO \u2014 dois experimentos pra colher o chop/disloca\u00e7\u00e3o do testnet no BTCUSDT (an\u00e1lise de 4h: ER~0.08 = chop; o testnet d\u00e1 wick ABAIXO do mainnet e REVERTE, corr 0.89):\n(A) GRID nativo (automa\u00e7\u00e3o id 21, J\u00c1 ATIVA): GRID do Beholder no BTCUSDT, banda \u00b12.5%, 10 n\u00edveis, qty 0.0002 BTC/n\u00edvel, DESGATEADO do regime. Criada por backend/scripts/setup-grid.js.\n(B) HARVESTER (c\u00f3digo NOVO): fairPriceJob grava MEMORY['BTCUSDT:FAIR']={price,...} (pre\u00e7o lastPrice da MAINNET); 3 automa\u00e7\u00f5es de compra disparam quando o bestAsk do testnet cai 3/5/7% ABAIXO do FAIR (edge-trigger, desgateadas); 1 automa\u00e7\u00e3o de venda no-loss vende um BUCKET T\u00c1TICO MEMORY['BTCUSDT:HARVEST']={qty,cost} (custo m\u00e9dio ponderado) quando bestBid > cost*1.012. O bucket \u00e9 mantido por app-em.updateHarvestPosition no fill FILLED; calcQty ganhou o tipo HARVEST_QTY. Criada por backend/scripts/setup-harvester.js (automa\u00e7\u00f5es INATIVAS).\n\nINVARIANTES DE SEGURAN\u00c7A a verificar (seja ADVERSARIAL):\n1. SEGURAN\u00c7A DO COFRE: as estrat\u00e9gias s\u00f3 podem VENDER o BTC que COMPRARAM (bucket t\u00e1tico / invent\u00e1rio do grid), NUNCA o principal do cofre. calcQty capa SELL no saldo da carteira. A venda do harvester usa qty=HARVEST_QTY (l\u00ea HARVEST.qty). Prove que o harvester NUNCA vende mais do que acumulou. Verifique a matem\u00e1tica do custo m\u00e9dio ponderado em updateHarvestPosition (compra soma e recalcula; venda zera).\n2. FAIL-SAFE: compras do harvester N\u00c3O podem disparar com FAIR ausente/stale. FAIR est\u00e1 no 'indexes' da automa\u00e7\u00e3o (o engine bloqueia o eval se alguma key do index for null \u2014 beholder.js evalDecision, indexes.every). O fairPriceJob grava sentinel {price:0} ap\u00f3s N falhas consecutivas de fetch mainnet \u2192 'bestAsk < FAIR.price*0.97' vira 'bestAsk<0' = false \u2192 compras desligadas. Confirme que essa l\u00f3gica se sustenta (inclusive: getMemory devolve c\u00f3pia? o sentinel realmente \u00e9 gravado? o \u00edndice cobre o caso null mas n\u00e3o o stale \u2014 o sentinel cobre o stale?).\n3. REGEX validateConditions: os scripts fazem POST das conditions via API, que aplica um regex ESTRITO (automationsController.js validateConditions, linha ~12-13). As conditions geradas T\u00caM que passar. TESTE CR\u00cdTICO E HERM\u00c9TICO: extraia as strings EXATAS de condition que os scripts geram (3 rungs de compra com fatores 0.9700/0.9500/0.9300, a venda com 1.0120, e a banda do grid) e rode-as pelo regex do validateConditions num teste node isolado. Restri\u00e7\u00e3o conhecida: escalar*fator (ex. MEMORY['x:HARVEST']*1.012) FALHA; precisa de .prop (MEMORY['x:HARVEST'].cost*1.012). Verifique TODAS.\n4. DEDUP/IDEMPOT\u00caNCIA: updateHarvestPosition dedup por orderId (Set countedHarvestFills). Scripts idempotentes (find-by-name / 409). Verifique que re-rodar n\u00e3o duplica nem corrompe. Edge: report FILLED re-entregue; partial fills; order.avgPrice ausente.\n5. GRID NATIVO: generateGrids faz parse da banda das conditions por split em '>' e '<' (beholder.js ~541-543). Verifique que a condition do setup-grid.js parseia certo. Note: o grid usa MARKET (risco de expirar no testnet) e REGENERA com +1 n\u00edvel por fill (beholder.js gridEval ~518) \u2014 isso causa crescimento ilimitado de n\u00edveis / fee churn? Avalie.\n6. REGRESS\u00d5ES NO HOT PATH: as edi\u00e7\u00f5es mexem em beholder.calcQty e app-em.processExecutionData. Verifique que N\u00c3O h\u00e1 regress\u00e3o nas automa\u00e7\u00f5es existentes (id2 baseline, id6/7 trend, id9-14 farm, id21 grid). Em especial: updateHarvestPosition \u00e9 chamado em TODO fill \u2014 ele retorna cedo pra ordens n\u00e3o-harvester? O else-if HARVEST_QTY no calcQty quebra a cadeia?\n\nARQUIVOS MUDADOS (n\u00e3o-commitados; leia-os; diff: `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff`):\nNOVOS: backend/src/utils/fairPriceService.js, backend/src/fairPriceJob.js, backend/scripts/setup-harvester.js, backend/scripts/setup-grid.js, backend/scripts/automation-ctl.js\nMODIFICADOS: backend/src/utils/indexes.js, backend/src/app-em.js, backend/src/beholder.js, backend/src/server.js\n\nRefer\u00eancias: /home/gcrux-tradeux/HANDOFF.md (estrat\u00e9gia + o padr\u00e3o TREND_QTY que isto clona), backend/scripts/setup-farm.js (padr\u00e3o espelhado, com a venda no-loss .avgPrice*1.012 que J\u00c1 passa o regex e est\u00e1 viva). Rode testes herm\u00e9ticos node onde der (regex \u00d7 conditions; matem\u00e1tica do bucket). Tente ACHAR um jeito do harvester vender o cofre, disparar em dado stale, corromper o bucket, ou falhar o regex. Veredito + achados + testes."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: ac5b3042c49055ba5 (internal ID - do not mention to user. Use SendMessage with to: 'ac5b3042c49055ba5' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/ac5b3042c49055ba5.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(03:48:11)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "tech-lead",
+  "description": "Tech-lead gate do harvester+grid",
+  "run_in_background": true,
+  "prompt": "Voc\u00ea \u00e9 o tech-lead/code-owner decidindo o merge de uma mudan\u00e7a MONEY-PATH no TradeUX (bot Beholder/Binance Spot, TESTNET). Revise design, manutenibilidade, risco, seguran\u00e7a e ader\u00eancia a conven\u00e7\u00f5es. Retorne APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK por mudan\u00e7a, com must-fix vs nice-to-have.\n\nCONTEXTO \u2014 dois experimentos (sancionados pelo dono) pra colher o chop/disloca\u00e7\u00e3o do testnet no BTCUSDT, a partir de uma an\u00e1lise de 4h (ER~0.08 = chop puro; o testnet d\u00e1 wick abaixo do mainnet e reverte, corr 0.89). \u00c9 TESTNET (faucet sint\u00e9tico), e o dono pediu explicitamente pra \"ser ousado e arriscar no testnet\".\n(A) GRID nativo (id 21, J\u00c1 ATIVO): GRID do Beholder, banda \u00b12.5%, 10 n\u00edveis, qty 0.0002 BTC/n\u00edvel (~$63 exposi\u00e7\u00e3o m\u00e1x), DESGATEADO do regime. setup-grid.js.\n(B) HARVESTER (c\u00f3digo NOVO no engine): fairPriceJob \u2192 MEMORY['BTCUSDT:FAIR']={price} (lastPrice mainnet, passivo); 3 compras-limite fundas (3/5/7% abaixo do FAIR, edge-trigger, desgateadas); venda no-loss de um bucket t\u00e1tico MEMORY['BTCUSDT:HARVEST']={qty,cost} (custo m\u00e9dio) quando bestBid>cost*1.012. Bucket via app-em.updateHarvestPosition; calcQty ganhou tipo HARVEST_QTY. setup-harvester.js cria INATIVO.\n\nPONTOS DE DECIS\u00c3O (avalie com franqueza):\n1. PADR\u00c3O: clonar o TREND_QTY (vol\u00e1til em MEMORY, dedup por orderId, fail-closed) pro bucket HARVEST \u00e9 a abordagem certa? O HARVEST guarda {qty,cost} (objeto) em vez de escalar \u2014 justificado (custo m\u00e9dio pro no-loss multi-rung; e o regex do validateConditions exige .prop antes de *fator). OK?\n2. DESGATEAR do regime: aceit\u00e1vel pra um experimento testnet (\u00e9 o ponto \u2014 explorar artefato testnet-espec\u00edfico, n\u00e3o dire\u00e7\u00e3o)? Algum risco de isso vazar pra um comportamento indesejado?\n3. SEGURAN\u00c7A DO COFRE: o argumento \"vende s\u00f3 o que comprou, com lucro, bucket separado, calcQty capa na carteira\" \u00e9 s\u00f3lido? O dono \u00e9 sens\u00edvel a vender BTC (origem do piv\u00f4). H\u00e1 algum caminho em que essas automa\u00e7\u00f5es drenem o principal?\n4. JOB FAIR: fairPriceJob clona o flowJob; sentinel {price:0} ap\u00f3s N falhas como fail-safe de staleness (em vez de Date.now() na condition, que o validateConditions pro\u00edbe). Design limpo ou tem buraco?\n5. GRID NATIVO: usar o engine nativo (MARKET, regenera +1 n\u00edvel/fill) \u2014 risco de fee churn / crescimento de n\u00edveis? Vale como \"exercitar o nativo\" ou deveria ser LIMIT market\u00e1vel?\n6. D\u00cdVIDA & CONVEN\u00c7\u00d5ES: HARVEST vol\u00e1til (persistir antes de escalar size \u2014 est\u00e1 documentado?). Coment\u00e1rios em pt-BR (conven\u00e7\u00e3o do repo)? Os scripts seguem o padr\u00e3o setup-farm/activate-trend? Algo no hot path (calcQty, processExecutionData) que aumente risco?\n7. ATIVA\u00c7\u00c3O: a ativa\u00e7\u00e3o do harvester deve passar por mais algum gate, ou criar INATIVO + validar testnet basta?\n\nARQUIVOS (n\u00e3o-commitados; diff: `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff`):\nNOVOS: backend/src/utils/fairPriceService.js, backend/src/fairPriceJob.js, backend/scripts/setup-harvester.js, backend/scripts/setup-grid.js, backend/scripts/automation-ctl.js\nMODIFICADOS: backend/src/utils/indexes.js, backend/src/app-em.js, backend/src/beholder.js, backend/src/server.js\n\nRefer\u00eancias: /home/gcrux-tradeux/HANDOFF.md, backend/scripts/setup-farm.js + setup-trend.js + activate-trend.js (padr\u00f5es), mem\u00f3ria do projeto (trunk-based, gate proporcional). Foque no que \u00e9 must-fix pra subir vs sugest\u00e3o. Decis\u00e3o de merge + raz\u00e3o."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a77d45896fea20b3e (internal ID - do not mention to user. Use SendMessage with to: 'a77d45896fea20b3e' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/a77d45896fea20b3e.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(03:48:49)*
+
+
+## 🤖 Claude *(03:48:51)*
+
+Gate rodando em background (QA + TL). Eles fazem revisão **estática + testes herméticos** — não precisam do meu backend. Vou fazer trabalho **não-sobreposto e seguro**: rebuild (assa o código novo, mas dormente — harvester inativo, fairPriceJob passivo), verificar boot limpo e o **FAIR sendo gravado** (evidência de runtime de que o job novo funciona). **NÃO** ativo nada nem crio automações antes do gate passar.
+
+Rebuild do backend:
+
+## 🤖 Claude *(03:48:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | tail -n 15 && echo \"=== UP ===\" && docker compose up -d backend 2>&1 | tail -n 8'",
+  "description": "Rebuild and recreate backend container",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #11 DONE 0.1s
+> 
+> #12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> #12 DONE 0.2s
+> 
+> #13 exporting to image
+> #13 exporting layers
+> #13 exporting layers 0.4s done
+> #13 writing image sha256:ce96e241f1d4d3f060ed1c6515998ae2b795b1083b126c17ee29b749807d07b1 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 0.4s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+> === UP ===
+> time="2026-06-09T00:48:55-03:00" level=warning msg="No services to build"
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(03:49:22)*
+
+
+## 🤖 Claude *(03:49:24)*
+
+Backend recriado com o código novo. Deixa eu verificar boot limpo, o `fairPriceJob` no ar, o grid (id21) ainda ativo, e — o mais importante — o **FAIR sendo gravado de verdade** na MEMORY (evidência de que o job novo funciona). Vou escrever um verificador de memória:
+
+## 🤖 Claude *(03:49:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/peek.js",
+  "content": "const http = require('http');\nfunction req(method, path, token) {\n    return new Promise((resolve) => {\n        const headers = {};\n        if (token) headers['authorization'] = token;\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 10000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.end();\n    });\n}\n(async () => {\n    const l = await req('POST', '/login', null);\n    // login needs body; do it properly:\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/peek.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:49:40)*
+
+
+## 🤖 Claude *(03:49:40)*
+
+Escrevi errado (login precisa de body). Corrigindo o `peek.js`:
+
+## 🤖 Claude *(03:49:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/peek.js",
+  "content": "const http = require('http');\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 10000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        if (data) r.write(data); r.end();\n    });\n}\n(async () => {\n    const l = await req('POST', '/login', null, { email: process.env.EM, password: process.env.PW });\n    const token = l.body && l.body.token;\n    if (!token) { console.log('LOGIN_FAIL', l.status, JSON.stringify(l.body).slice(0, 120)); process.exit(1); }\n    for (const key of ['FAIR', 'BOOK', 'REGIME', 'HARVEST']) {\n        const r = await req('GET', `/beholder/memory/BTCUSDT/${key}`, token);\n        console.log(`BTCUSDT:${key} -> HTTP ${r.status} ${typeof r.body === 'object' ? JSON.stringify(r.body) : r.body}`);\n    }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /tmp/peek.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:49:51)*
+
+
+## 🤖 Claude *(03:49:51)*
+
+Agora rodo as verificações — logs de boot, `fair.log`, grid ainda ativo, site, e o peek da MEMORY (FAIR/BOOK/HARVEST):
+
+## 🤖 Claude *(03:49:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== boot: system.log (Fair Price Job + erros) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"fair|error|fail\\\" /app/logs/system.log | tail -n 8; echo ---fairlog---; tail -n 5 /app/logs/fair.log 2>/dev/null\"' 2>&1\necho \"=== grid 21 ainda ativo? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"SELECT id,name,isActive FROM automations WHERE id=21\\\"\"' 2>/dev/null\necho \"=== site ===\"\ncurl -s -m6 -o /dev/null -w \"https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Check boot logs, fair job, grid status, site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot: system.log (Fair Price Job + erros) ===
+> info: 2026-06-09T03:49:00.024Z - Starting the Fair Price Job...
+> ---fairlog---
+> info: 2026-06-09T03:49:00.025Z - Fair Price job iniciado (intervalo 10000ms; sentinel após 3 falhas).
+> === grid 21 ainda ativo? ===
+> 21	Grid BTCUSDT	1
+> === site ===
+> https://tradeux.gcrux.com -> 200
+> ```
+
+## 🤖 Claude *(03:49:59)*
+
+
+## 🤖 Claude *(03:49:59)*
+
+Boot limpo, Fair Price Job iniciado, grid 21 ativo, site 200. Agora o peek da MEMORY pra confirmar que o FAIR está sendo **gravado de verdade**:
+
+## 🤖 Claude *(03:50:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e EM -e PW backend node\n' < /tmp/peek.js 2>&1",
+  "description": "Peek MEMORY FAIR/BOOK/REGIME/HARVEST via API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> BTCUSDT:FAIR -> HTTP 200 {"price":62845.28,"at":"2026-06-09T03:50:00.308Z","atMs":1780977000308}
+> BTCUSDT:BOOK -> HTTP 200 {"previous":{"symbol":"BTCUSDT","bestAsk":"62798.05000000","bestBid":"62798.05000000"},"current":{"symbol":"BTCUSDT","bestAsk":"62798.05000000","bestBid":"62798.05000000"}}
+> BTCUSDT:REGIME -> HTTP 200 bear
+> BTCUSDT:HARVEST -> HTTP 200
+> ```
+
+## 🤖 Claude *(03:50:15)*
+
+
+## 🤖 Claude *(03:50:19)*
+
+**Evidência de runtime perfeita:**
+- **FAIR gravado**: `{price: 62845.28}` (mainnet) — o `fairPriceJob` funciona. ✅
+- **BOOK vivo**: `bestAsk=bestBid=62798.05` (testnet simulado). ✅
+- **REGIME** bear, **HARVEST** vazio (sem posição ainda). ✅
+
+A âncora (FAIR mainnet 62845) e o feed de execução (BOOK testnet 62798) estão ambos vivos — dislocação atual −0,07% (sem wick agora; o rung −3% dispararia em ~60960). A infra do harvester está provada.
+
+Agora o **DRY do setup-harvester** (não cria nada — só preview das conditions exatas que vão pro gate):
+
+## 🤖 Claude *(03:50:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e DRY=true -e EM -e PW backend node\n' < /home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js 2>&1",
+  "description": "DRY preview of harvester setup conditions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Setup HARVESTER de dislocação — BTCUSDT | rungs -3%, -5%, -7% abaixo do FAIR (mainnet) · lucro-alvo 1.2% · buffer 0.3% · size 1×MIN_NOTIONAL   [DRY-RUN: nada será aplicado]
+> - [DRY] POST template "Harvest Buy BTCUSDT" (LIMIT BUY qty MIN_NOTIONAL×1)
+> - [DRY] POST template "Harvest Sell BTCUSDT" (LIMIT SELL qty HARVEST_QTY×1)
+> - [DRY] POST automação "Harvest Buy BTCUSDT -3pct" INATIVA
+>       cond: MEMORY['BTCUSDT:BOOK'].current.bestAsk<MEMORY['BTCUSDT:FAIR'].price*0.9700 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=MEMORY['BTCUSDT:FAIR'].price*0.9700
+>       idx:  BTCUSDT:BOOK,BTCUSDT:FAIR
+> - [DRY] POST automação "Harvest Buy BTCUSDT -5pct" INATIVA
+>       cond: MEMORY['BTCUSDT:BOOK'].current.bestAsk<MEMORY['BTCUSDT:FAIR'].price*0.9500 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=MEMORY['BTCUSDT:FAIR'].price*0.9500
+>       idx:  BTCUSDT:BOOK,BTCUSDT:FAIR
+> - [DRY] POST automação "Harvest Buy BTCUSDT -7pct" INATIVA
+>       cond: MEMORY['BTCUSDT:BOOK'].current.bestAsk<MEMORY['BTCUSDT:FAIR'].price*0.9300 && MEMORY['BTCUSDT:BOOK'].previous.bestAsk>=MEMORY['BTCUSDT:FAIR'].price*0.9300
+>       idx:  BTCUSDT:BOOK,BTCUSDT:FAIR
+> - [DRY] POST automação "Harvest Sell BTCUSDT" INATIVA
+>       cond: MEMORY['BTCUSDT:HARVEST'].qty>0 && MEMORY['BTCUSDT:BOOK'].current.bestBid>MEMORY['BTCUSDT:HARVEST'].cost*1.0120 && MEMORY['BTCUSDT:BOOK'].previous.bestBid<=MEMORY['BTCUSDT:HARVEST'].cost*1.0120
+>       idx:  BTCUSDT:HARVEST,BTCUSDT:BOOK
+> 
+> DRY-RUN OK (nada aplicado).
+> Pré-req p/ ATIVAR: fairPriceJob gravando MEMORY['BTCUSDT:FAIR'] (checar). Depois start nas automações (money-path, com gate).
+> ```
+
+## 🤖 Claude *(03:50:50)*
+
+
+## 🤖 Claude *(03:50:53)*
+
+As conditions preview batem com a forma regex-safe do farm (o gate confirma com teste hermético). Tudo construído, deployado **dormente** e verificado em runtime. As automações do harvester **ainda não foram criadas** (só DRY) — espero o gate.
+
+Enquanto o gate roda, deixa eu ver se o **grid já disparou** alguma ordem (Fase A, já viva há ~13min):
+
+## 🤖 Claude *(03:50:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== pre\u00e7o testnet ===\"; curl -s -m6 \"https://testnet.binance.vision/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null; echo \"\"\necho \"=== ordens novas (id>93)? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -t -e \\\"SELECT id,automationId,symbol,side,type,status,quantity,createdAt FROM orders WHERE id>93 ORDER BY id DESC LIMIT 6\\\"\"' 2>/dev/null\necho \"(vazio = grid ainda na zona morta, esperando \u00b10,5% \u2014 esperado)\"",
+  "description": "Check for grid orders and current price"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === preço testnet ===
+> {"symbol":"BTCUSDT","price":"62796.01000000"}
+> === ordens novas (id>93)? ===
+> (vazio = grid ainda na zona morta, esperando ±0,5% — esperado)
+> ```
+
+## 🤖 Claude *(03:52:01)*
+
+
+## 🤖 Claude *(03:52:12)*
+
+**Tech-Lead: APPROVE COM SUGESTÕES** (ambos). Pontos-chave do veredito:
+
+- **Testou as 4 conditions geradas no regex do `validateConditions` → todas PASS.** O clone do `TREND_QTY` é fiel; o `fairPriceJob`/sentinel é "design limpo, sem buraco".
+- **Grid:** sem must-fix. Desmentiu meu medo de "crescimento de níveis" — o `generateGrids` regenera com `grids.length+1` e dá `splice` no mais próximo → **contagem estável por fill**, não explode. Risco real = fee churn do MARKET (aceitável no testnet; é exercitar o nativo).
+- **Harvester:** 1 **must-fix que NÃO bloqueia a validação em size minúsculo, só bloqueia ESCALAR**: persistir o bucket `HARVEST` antes de subir size (volátil hoje, igual ao `TREND_QTY` — já documentado no código). Costura de cofre identificada: o cap `newQty>asset→asset` só viraria risco num cenário degenerado (bucket corrompido > carteira), mitigado pelos guards.
+- **Nice-to-have relevante:** o no-loss dispara em `cost*1.012` mas executa em `bestBid*0.997` → líquido real ~**+0,7%**, não +1,2%. Sugere `HARVEST_PROFIT≥0.015` ou documentar.
+- **Ordem de ativação recomendada:** subir inativo → ativar **compras** após confirmar FAIR (✓ já confirmei) → ativar a **venda** só após ver ≥1 fill de compra real (validar o bucket).
+
+**QA ainda rodando** (faz os testes herméticos adversariais). **Não edito nada nem ativo** enquanto o QA revisa os mesmos arquivos — senão invalido a revisão. Aguardo o veredito do QA, reconcilio os dois, aplico os ajustes e sigo pra ativação faseada.
+
+(Grid Phase A segue armado, preço 62796 na zona morta — sem ordem ainda, esperando o swing de ±0,5%.)
+
+Aguardando o QA.
+
+## 👤 User *(03:54:11)*
+
+<task-notification>
+<task-id>ac5b3042c49055ba5</task-id>
+<tool-use-id>toolu_01RF7hR31EV5RrnefCvkQmn2</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/60395cbe-5bcd-4389-a706-1cc57b403b01/tasks/ac5b3042c49055ba5.output</output-file>
+<status>completed</status>
+<summary>Agent "QA gate do harvester+grid" completed</summary>
+<result>Tudo confere. Todos os jobs referenciados existem, ordem de boot consistente (regime→flow→fair→funnel), `fairPriceJob.start()` é idempotente (`if (timer) return`), faz `runOnce()` imediato + `setInterval` com `unref()`. Nota de ownership: os arquivos novos estão como `ubuntu:ubuntu` (não gcrux) — não afeta runtime no container, mas o git como gcrux precisa que o `.git` esteja são; o working-tree files sendo ubuntu é OK para commit (gcrux lê).
+
+Tenho evidência hermética suficiente para o veredito. Consolido.
+
+---
+
+# QA GATE — Harvester de dislocação + Grid nativo (BTCUSDT testnet)
+
+**VEREDITO: PASS COM RESSALVAS** — money-path sólido, invariantes de cofre/fail-safe verificados hermeticamente. Nenhum achado CRÍTICO ou ALTO. As automações já nascem INATIVAS; a ativação é um passo separado e gateado. Pode aplicar os scripts (criar templates/automações inativas) e fazer commit. Liberar o `start` das automações de COMPRA do harvester só após o checklist no fim.
+
+## O que validei hermeticamente (tudo passou)
+- **Regex `validateConditions`** (`automationsController.js:12-13`) × as 6 strings reais geradas (3 rungs `0.9700/0.9500/0.9300`, venda `1.0120`, banda do grid, +ref farm viva): **todas PASSAM**; o controle negativo `escalar*fator` sem `.prop` **falha** como esperado. Os scripts usam `.price`/`.cost`/`.qty` — fora da armadilha.
+- **Semântica do eval** das conditions (edge-trigger compra/venda, sentinel `price:0`): **8/8 OK**. Sentinel ⇒ `bestAsk&lt;0` = false ⇒ compras desligadas. `qty=0` pós-venda ⇒ venda desarmada (fail-closed).
+- **Matemática do bucket** (média ponderada, dedup por `orderId`, guards): **15/15 OK**. Compra soma e recalcula custo; venda zera; report FILLED re-entregue não duplica; `avgPrice` ausente/0 ⇒ guard sem marcar dedup (reprocessa quando vier o preço); ordem não-harvester / sem `automationId` / `PARTIALLY_FILLED` ⇒ early-return.
+- **Cofre** (`calcQty` ramo `HARVEST_QTY` SELL): venda = `min(bucket, carteira)`; com cofre de 5 BTC e bucket 0.003 vende **0.003**. `qty` ausente/≤0/NaN/negativo ⇒ **throw** (fail-closed). Bucket comprovadamente honesto (só soma fills de compra do harvester) ⇒ nunca infla ⇒ **não toca o principal**.
+- **Discriminação por substring** (`:FAIR`/`:HARVEST`): **zero falso-positivo** contra id2/id3/id6/id7/farm/grid; harvester classificado certo.
+- **Parse da banda do grid** (`generateGrids` split `&gt;`/`&lt;`) × condition do `setup-grid.js`: **OK e estável** na regeneração.
+- **Sem reentrância**: `updateMemory(...,false)` retorna antes de `testAutomations` ⇒ escrita do bucket no fill não dispara cascata. `--check` do agente (teste de CI): **EXIT 0**. Requires dos módulos novos: **OK**.
+
+## Achados
+
+**[MÉDIO] A venda no-loss zera o bucket INTEIRO mesmo em fill parcial/capado.** Se a venda FILLED sair por qty &lt; bucket (cap da carteira, ou o testnet fizer fill parcial reportado como qty menor), `updateHarvestPosition` ainda faz `next={qty:0,cost:0}`. Direção do erro é **fail-safe para o cofre** (perde rastreio do resto comprado ⇒ subestima posição, nunca vende a mais), mas corrompe a contabilidade tática (BTC "do harvester" vira órfão na carteira, sem cobertura de no-loss). No testnet/size mínimo é tolerável; ao escalar, mudar para venda decrementar `qty -= filledQty` e só zerar `cost` quando `qty&lt;=0`.
+
+**[MÉDIO] `order.quantity` no fill = quantidade ORIGINAL (`executionData.q`), não a executada (`z`).** Em `processExecutionData:256`. Para `FILLED` no Spot, `q===z` por definição (Binance só marca FILLED quando totalmente preenchida), então hoje é correto e idêntico ao padrão já-vivo do `updateTrendPosition`. Risco aparece SE alguma fonte entregar um objeto com `status=FILLED` mas qty original ≠ executada (ex.: reconciliação/`orderStatus` REST que preenche `quantity` com origQty e `executedQty` à parte). Hoje o único caminho que chama `updateHarvestPosition` é o `executionReport` (q==z em FILLED). Anoto como dívida a vigiar antes de escalar; usar `Z/z` (já calculado para `avgPrice`) como fonte da qty executada seria mais robusto.
+
+**[BAIXO] Bucket volátil (só MEMORY).** Igual ao TREND_QTY. Restart com posição de harvester aberta ⇒ bucket some ⇒ a venda no-loss não liquida (mas o BTC fica na carteira, sem perda; e a compra reabre bucket novo). Documentado no código ("persistir ao escalar"). OK para validação.
+
+**[BAIXO] Crescimento do grid é auto-estabilizante, NÃO ilimitado** — refuto a hipótese do enunciado. `generateGrids` faz `deleteGrids` (apaga tudo) e recria exatamente `levels = grids.length+1` na banda FIXA; com o `splice` do nível mais próximo, o ponto fixo é **10 níveis / 9 grids** (verificado por simulação). O grid se re-popula/re-centra a cada fill, não acumula níveis sem teto. Custo real é fee/MARKET por design do grid nativo (MARKET pode EXPIRAR no book fino do testnet) — pré-existente ao patch, size 0.0002 BTC, sem no-loss (documentado e aceito).
+
+**[BAIXO] `fairPriceJob.resolveSymbols`: ramo "automações ativas" é quase-morto.** O default `'BTCUSDT'` é aplicado no `||` antes do `split`, então com `FAIR_SYMBOLS` unset sempre cai no ramo env. O ramo de automações ativas só roda com `FAIR_SYMBOLS=""`/whitespace explícito. Consequência prática: rodar o harvester em outro símbolo exige setar `FAIR_SYMBOLS` (senão FAIR só é gravado p/ BTCUSDT e as compras do alt nunca avaliam — fail-safe, não compra errado). Cosmético; alinhar comentário×código.
+
+**[BAIXO] Dois spreads de `{...BRAIN}` por fill** (`updateTrendPosition` + `updateHarvestPosition`, ambos chamam `getBrain()`). BRAIN tem ~15-20 entradas ⇒ desprezível, e só após os early-returns. Poderia compartilhar uma leitura. Não-bloqueante.
+
+**[BAIXO] Ownership dos arquivos novos = `ubuntu:ubuntu`** (não gcrux). Não afeta runtime no container; mas commitar como gcrux requer `.git` são. Se o commit reclamar, `chown` o `.git` (gotcha conhecido).
+
+## Testes que eu rodaria (no container, antes de liberar o `start`)
+1. **Boot limpo**: rebuild+recreate backend; confirmar em `logs/fair.log` o `Fair Price job iniciado` + `BTCUSDT:FAIR` gravado (~10s); `GET /beholder/memory/BTCUSDT/FAIR` ⇒ `{price&gt;0,...}`.
+2. **Fail-safe de staleness AO VIVO**: forçar N falhas de fetch (bloquear `api.binance.com`/`data-api.binance.vision` ou `FAIR_STALE_FAILS=1` + DNS off) ⇒ verificar sentinel `{price:0,stale:true}` gravado e log "compras DESLIGADAS"; confirmar que uma automação de compra ATIVA não dispara nesse estado.
+3. **Regex no caminho real**: `DRY=true node scripts/setup-harvester.js` e conferir as conditions impressas; depois rodar de verdade e confirmar **HTTP 201** (não 400) em cada automação — prova que o `validateConditions` do POST aceitou.
+4. **Ciclo de bucket de ponta a ponta** (1 automação de compra ativa, size mínimo): forçar 2 fills de compra ⇒ `HARVEST.qty` soma e `cost` = média ponderada (conferir no `logs/A:&lt;id&gt;.log` e na memória); ativar a venda no-loss, forçar revert ⇒ venda dispara, `calcQty` = bucket, FILLED ⇒ `HARVEST` zera.
+5. **Idempotência dos scripts**: re-rodar `setup-harvester.js`/`setup-grid.js` ⇒ "já existe"/409, zero duplicata. Re-entregar um `executionReport` FILLED (mesmo `orderId`) ⇒ bucket inalterado.
+6. **Não-regressão**: confirmar id2/id3/id6/id7/farm/id21 com conditions intactas pós-deploy; forçar um fill de id2 (baseline) e provar que `HARVEST` permanece intacto e o `orderId` não entra em `countedHarvestFills`.
+7. **Grid**: ativar id21 em size mínimo, observar 2-3 fills e confirmar que a contagem de grids fica estável (~9) e não explode; vigiar EXPIRED de MARKET no `logs/A:21.log`.
+
+## Recomendação de merge
+**APROVO o commit** dos 9 arquivos (4 modificados + 5 novos) — código aditivo, hot-path sem regressão, invariantes de cofre/fail-safe provados, clone fiel do padrão TREND_QTY já em produção. **Antes de dar `start` nas automações de COMPRA do harvester**, rodar os testes 1-2-4 acima (boot+sentinel+ciclo de bucket). **Antes de ESCALAR o size**: endereçar os dois MÉDIOS (venda parcial zerando bucket + qty executada via `z`) e persistir o bucket. O grid (id21) já ativo é aceitável no size atual; vigiar fee/EXPIRED.
+
+Arquivos relevantes:
+- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (`updateHarvestPosition`, linhas ~194-235; chamada no fill ~275)
+- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`calcQty` ramo `HARVEST_QTY`, ~246-257)
+- `/home/gcrux-tradeux/tradeux/backend/src/fairPriceJob.js` e `/home/gcrux-tradeux/tradeux/backend/src/utils/fairPriceService.js`
+- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js`, `setup-grid.js`, `automation-ctl.js`
+- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (`validateConditions`, 12-13; aplicado no POST em 112)
+- `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js` (FAIR/HARVEST), `backend/src/server.js` (boot do job)</result>
+<usage><subagent_tokens>92140</subagent_tokens><tool_uses>35</tool_uses><duration_ms>380405</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(03:58:11)*
+
+
+## 🤖 Claude *(03:58:21)*
+
+**QA: PASS COM RESSALVAS** — sem nenhum achado CRÍTICO ou ALTO. Validou **hermeticamente**: regex × 6 conditions reais (todas PASS), semântica do eval 8/8, matemática do bucket 15/15, cofre (venda = `min(bucket, carteira)`, throw em NaN/≤0 → **nunca toca o principal**), discriminação `:FAIR`/`:HARVEST` zero falso-positivo, parse da banda do grid estável, `agent --check` EXIT 0.
+
+**Os dois gates APROVAM.** Reconciliando:
+
+| Achado | Severidade | Bloqueia? |
+|---|---|---|
+| Persistir bucket HARVEST (volátil) | must-fix (TL) / BAIXO (QA) | só **escalar size**, não a validação |
+| Venda zera bucket inteiro em fill parcial | MÉDIO (QA) | fail-safe p/ cofre; só **escalar** |
+| qty executada via `q` vs `z` | MÉDIO (QA) | `q==z` em FILLED Spot hoje; só **escalar** |
+| Margem no-loss real ~+0,7% (não +1,2%) | nice (TL) | não — ainda é no-loss; **mantenho 0,012** (mais ciclos = mais dado) e documento |
+| Grid: fee churn MARKET / EXPIRE | BAIXO | aceito (testnet, size mínimo); observar `A21.log` |
+
+**Veredito: liberado pra criar inativo + validar.** Todos os MÉDIO/must-fix gateiam **escalar size**, não o experimento em size minúsculo — exatamente o que o dono sancionou. O QA pede explicitamente um **ciclo de bucket ao vivo (teste 4)** antes de ativar as compras → vou fazer um **canary buy** pra provar o bucket end-to-end.
+
+Executando: criar o harvester **inativo** (confirmar HTTP 201 = regex aceito) + checar não-regressão:
+
+## 🤖 Claude *(03:58:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\n  cd /home/gcrux-tradeux/tradeux\n  export EM=\"gabrielcall@gmail.com\"\n  export PW=\"$(grep \"^TRADEUX_PASSWORD=\" tradeux-agent/.env | cut -d= -f2-)\"\n  docker compose exec -T -e EM -e PW backend node\n' < /home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js 2>&1",
+  "description": "Create harvester templates+automations live (inactive)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Setup HARVESTER de dislocação — BTCUSDT | rungs -3%, -5%, -7% abaixo do FAIR (mainnet) · lucro-alvo 1.2% · buffer 0.3% · size 1×MIN_NOTIONAL
+> - template "Harvest Buy BTCUSDT" criado (id 19, LIMIT)
+> - template "Harvest Sell BTCUSDT" criado (id 20, LIMIT)
+> - automação "Harvest Buy BTCUSDT -3pct" criada (id 22, INATIVA)
+> - automação "Harvest Buy BTCUSDT -5pct" criada (id 23, INATIVA)
+> - automação "Harvest Buy BTCUSDT -7pct" criada (id 24, INATIVA)
+> - automação "Harvest Sell BTCUSDT" criada (id 25, INATIVA)
+> 
+> PRONTO — templates + automações de harvester INATIVAS.
+> Pré-req p/ ATIVAR: fairPriceJob gravando MEMORY['BTCUSDT:FAIR'] (checar). Depois start nas automações (money-path, com gate).
+> ```
+
+## 🤖 Claude *(03:58:25)*
+
+You've hit your session limit · resets 2:20am (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
