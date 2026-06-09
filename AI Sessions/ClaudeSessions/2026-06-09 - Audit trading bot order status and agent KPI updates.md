@@ -1,5 +1,5 @@
 # [[2026-06-08 - Audit trading bot order status and agent KPI updates|Audit trading bot order status and agent KPI updates]]
-**Date:** 2026-06-09 | **Session ID:** `31c03b50-f4f8-47d2-a117-ed578d7ffa1d`
+**Date:** 2026-06-09 | **Session ID:** `b08cbdad-798a-433c-ac4f-8107a28a249b`
 
 ---
 
@@ -989,14 +989,6 @@ Boa — duas coisas distintas. Vou responder a primeira agora (já tenho o conte
 }
 ```
 
-> **Tool Result (Unknown Tool)** - ✅ Success
->
-> ```
-> frontend/src/private/Intelligence/Intelligence.js
-> frontend/src/services/IntelligenceService.js
-> ---
-> ```
-
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
@@ -1014,6 +1006,14 @@ Boa — duas coisas distintas. Vou responder a primeira agora (já tenho o conte
   "description": "Locate the Agent KPIs card in frontend"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> frontend/src/private/Intelligence/Intelligence.js
+> frontend/src/services/IntelligenceService.js
+> ---
+> ```
 
 ## 🤖 Claude *(19:07:07)*
 
@@ -1682,7 +1682,17 @@ Primeiro, mapear a cadeia agente→mcp→backend com precisão (paths de spawn, 
 > 51	
 > ```
 
-> **Tool Result (Unknown Tool)** - ✅ Success
+## 🤖 Claude *(19:16:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/README.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
 >
 > ```
 > 1	# tradeux-agent (Marco C — scaffold)
@@ -1768,16 +1778,6 @@ Primeiro, mapear a cadeia agente→mcp→backend com precisão (paths de spawn, 
 > 81	
 > ```
 
-## 🤖 Claude *(19:16:29)*
-
-
-🛠️ **Tool Call**: `Read`
-```json
-{
-  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/README.md"
-}
-```
-
 ## 🤖 Claude *(19:17:27)*
 
 
@@ -1860,32 +1860,6 @@ Faltam alguns detalhes pra escrever o Dockerfile/serviço corretos. Criando as t
 >
 > ```
 > Task #4 created successfully: Card Intelligence: idade + STALE + auto-refresh
-> ```
-
-> **Tool Result (Unknown Tool)** - ✅ Success
->
-> ```
-> 1	{
-> 2	  "name": "tradeux-mcp",
-> 3	  "version": "0.1.0",
-> 4	  "description": "Servidor MCP que expõe a API do TradeUX como ferramentas (wallet, preços, indicadores, ordens, automações).",
-> 5	  "type": "module",
-> 6	  "bin": {
-> 7	    "tradeux-mcp": "src/index.js"
-> 8	  },
-> 9	  "main": "src/index.js",
-> 10	  "scripts": {
-> 11	    "start": "node src/index.js"
-> 12	  },
-> 13	  "engines": {
-> 14	    "node": ">=18"
-> 15	  },
-> 16	  "dependencies": {
-> 17	    "@modelcontextprotocol/sdk": "^1.12.0",
-> 18	    "zod": "^3.23.8"
-> 19	  }
-> 20	}
-> 21	
 > ```
 
 ## 🤖 Claude *(19:17:39)*
@@ -2062,6 +2036,32 @@ Faltam alguns detalhes pra escrever o Dockerfile/serviço corretos. Criando as t
   "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json"
 }
 ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "name": "tradeux-mcp",
+> 3	  "version": "0.1.0",
+> 4	  "description": "Servidor MCP que expõe a API do TradeUX como ferramentas (wallet, preços, indicadores, ordens, automações).",
+> 5	  "type": "module",
+> 6	  "bin": {
+> 7	    "tradeux-mcp": "src/index.js"
+> 8	  },
+> 9	  "main": "src/index.js",
+> 10	  "scripts": {
+> 11	    "start": "node src/index.js"
+> 12	  },
+> 13	  "engines": {
+> 14	    "node": ">=18"
+> 15	  },
+> 16	  "dependencies": {
+> 17	    "@modelcontextprotocol/sdk": "^1.12.0",
+> 18	    "zod": "^3.23.8"
+> 19	  }
+> 20	}
+> 21	
+> ```
 
 ## 🤖 Claude *(19:18:15)*
 
@@ -2705,12 +2705,6 @@ Serviço no compose + observabilidade no card. Marcando progresso e aplicando os
 }
 ```
 
-> **Tool Result (Unknown Tool)** - ✅ Success
->
-> ```
-> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
-> ```
-
 > **Tool Result (Edit)** - ✅ Success
 >
 > ```
@@ -2729,6 +2723,12 @@ Serviço no compose + observabilidade no card. Marcando progresso e aplicando os
   "new_string": "                <div className=\"d-sm-flex justify-content-between align-items-center mb-3\">\n                    <h5 className=\"mb-0\">Agent (LLM) \u2014 KPIs</h5>\n                    {agentLastMs != null && (\n                        <span className={`badge bg-${agentStale ? 'warning text-dark' : 'success'}`}>\n                            \u00faltimo ciclo {fmtAge(agentLastMs)}{agentStale ? ' \u00b7 STALE (agente parado?)' : ''}\n                        </span>\n                    )}\n                </div>\n                {\n                    agent.available === false\n                        ? <div className=\"alert alert-warning\">{agent.note || 'O agente ainda n\u00e3o rodou (journal ausente).'}</div>"
 }
 ```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Intelligence/Intelligence.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
 
 ## 🤖 Claude *(19:25:15)*
 
@@ -2771,18 +2771,6 @@ Implementação completa nos 4 arquivos. Agora valido o build de verdade (em bac
 }
 ```
 
-> **Tool Result (TaskUpdate)** - ✅ Success
->
-> ```
-> Updated task #4 status
-> ```
-
-> **Tool Result (TaskUpdate)** - ✅ Success
->
-> ```
-> Updated task #5 status
-> ```
-
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
@@ -2812,6 +2800,18 @@ Implementação completa nos 4 arquivos. Agora valido o build de verdade (em bac
   "prompt": "Decis\u00e3o de merge (code owner) de uma mudan\u00e7a de infra no TradeUX (bot Binance Spot/Beholder; monorepo; deploy Docker compose na porta 8090; modelo trunk-based, commit direto no master).\n\nCONTEXTO\nO agente LLM (`tradeux-agent`, DRY-RUN: ALLOW_TRADING=false, modelo OpenRouter nemotron `:free`) parou h\u00e1 ~5 dias e os KPIs do card \"Agent (LLM)\" em `/intelligence` congelaram. Causa: o agente nunca foi servi\u00e7o supervisionado (sem container/restart) \u2014 era um CLI rodado \u00e0 m\u00e3o. A estrat\u00e9gia que opera hoje \u00e9 a determin\u00edstica (Farm-and-Funnel, jobs no backend); o agente \u00e9 OBSERVACIONAL. O dono escolheu o conserto definitivo: virar servi\u00e7o supervisionado + observabilidade no card.\n\nMUDAN\u00c7A (n\u00e3o-commitada em `/home/gcrux-tradeux/tradeux`):\n1. NOVO `tradeux-agent/Dockerfile` (node:22-alpine; empacota agent + mcp lado a lado pois o agente spawna o mcp por stdio em `../../tradeux-mcp/src/index.js`; `npm install --omit=dev` em cada; CMD npm start).\n2. NOVO `.dockerignore` (raiz; contexto enxuto: re-inclui s\u00f3 tradeux-agent+tradeux-mcp).\n3. `docker-compose.yml`: servi\u00e7o `agent` (build context raiz, restart:unless-stopped, env_file tradeux-agent/.env, environment TRADEUX_AGENT_JOURNAL=/journal/tradeux-agent.jsonl, volume ./tradeux-agent/journal:/journal RW, depends_on backend, mem 256M, rede tradeux). Backend j\u00e1 monta o mesmo journal :ro.\n4. `frontend/.../Intelligence.js`: badge de idade do \u00faltimo ciclo + STALE no card do agente; `loadAgent()` no auto-refresh de 60s.\n\nCOMO VER (git como gcrux-tradeux p/ n\u00e3o poluir ownership):\n- `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff -- docker-compose.yml frontend/src/private/Intelligence/Intelligence.js`\n- Read nos arquivos novos (Dockerfile, .dockerignore).\n\nAVALIE (design, manuten\u00e7\u00e3o, risco, seguran\u00e7a, conven\u00e7\u00e3o):\n- A abordagem (servi\u00e7o no compose principal vs. profile opcional/compose separado) \u00e9 a certa para um componente OBSERVACIONAL/DRY que pode ficar dando 429 no modelo free? `restart: unless-stopped` \u00e9 apropriado, ou um agente que loga erros 429 a cada ciclo deveria ter backoff/profile/kill-switch? H\u00e1 risco do agente ruidoso poluir logs/recursos em prod?\n- Empacotar mcp+agent num Dockerfile com contexto=raiz + .dockerignore na raiz: aceit\u00e1vel e manuten\u00edvel? Surpresas para quem rodar `docker compose build` ou `./setup.sh`/`make up` (o servi\u00e7o novo passa a subir junto \u2014 \u00e9 desejado)?\n- Seguran\u00e7a: segredos fora da imagem; superf\u00edcie do container; o agente precisa de sa\u00edda p/ internet (OpenRouter) \u2014 ok na rede bridge.\n- Conven\u00e7\u00e3o do repo (coment\u00e1rios pt-BR, estilo do backend/Dockerfile, mem limits coerentes com db=512/backend=384/frontend=128).\n- A observabilidade no frontend \u00e9 proporcional e correta (threshold fixo de 15min vs. derivar do intervalo real)? Vale s\u00f3-frontend ou o backend deveria marcar stale?\n- Impacto no `setup.sh`/CI/`make` \u2014 algo precisa acompanhar (doc, .env.example, README)?\n\nENTREGUE: decis\u00e3o por mudan\u00e7a \u2014 APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK \u2014 separando must-fix de nice-to-have, com rationale curto. Foque no que muda a decis\u00e3o de merge; n\u00e3o reescreva o que est\u00e1 bom."
 }
 ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
 
 > **Tool Result (Agent)** - ✅ Success
 >
@@ -3599,12 +3599,6 @@ Atualizando a memória + o índice.
 > The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-token-economics.md has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
-> **Tool Result (Unknown Tool)** - ❌ Error
->
-> ```
-> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
-> ```
-
 ## 🤖 Claude *(19:43:51)*
 
 
@@ -3617,6 +3611,12 @@ Atualizando a memória + o índice.
   "new_string": "- [Agent token economics](tradeux-agent-token-economics.md) \u2014 journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat RESOLVIDO; agente agora \u00e9 SERVI\u00c7O supervisionado no compose (e97a85a, user:1011:1013) + card com badge STALE"
 }
 ```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
 
 ## 🤖 Claude *(19:43:56)*
 
@@ -4341,12 +4341,6 @@ O prompt atual é genérico ("agente de trading… tome decisões de trade… en
 > Task #9 created successfully: Gate QA + Tech-Lead do novo prompt
 > ```
 
-> **Tool Result (Unknown Tool)** - ✅ Success
->
-> ```
-> Updated task #8 status
-> ```
-
 ## 🤖 Claude *(20:06:16)*
 
 
@@ -4393,6 +4387,12 @@ O prompt atual é genérico ("agente de trading… tome decisões de trade… en
   "status": "in_progress"
 }
 ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
 
 ## 🤖 Claude *(20:07:04)*
 
@@ -4497,12 +4497,6 @@ Prompt ajustado e preciso. Rodando o gate — proporcional (é prompt de agente 
 > **Tool Result (TaskUpdate)** - ✅ Success
 >
 > ```
-> Updated task #8 status
-> ```
-
-> **Tool Result (TaskUpdate)** - ✅ Success
->
-> ```
 > Updated task #9 status
 > ```
 
@@ -4529,6 +4523,12 @@ Prompt ajustado e preciso. Rodando o gate — proporcional (é prompt de agente 
   "prompt": "Decis\u00e3o de merge CONCISA de uma mudan\u00e7a de texto (SYSTEM_PROMPT do agente LLM), n\u00e3o de c\u00f3digo. Leia o diff, confronte com a estrat\u00e9gia, decida. N\u00e3o precisa de varredura extensa.\n\nCONTEXTO: O `tradeux-agent` (DRY/observacional, ALLOW_TRADING=false) tinha um prompt gen\u00e9rico de trader e recomendou **vender BTC** pra \"reduzir risco em bear\" \u2014 colide com a estrat\u00e9gia Farm-and-Funnel (BTC=cofre, nunca vende; foi o bug que originou o piv\u00f4). Reescrevi o SYSTEM_PROMPT + USER_KICKOFF em `tradeux-agent/src/agent.js`: o agente vira COPILOTO DE OBSERVA\u00c7\u00c3O (as automa\u00e7\u00f5es determin\u00edsticas executam; ele observa/aconselha, n\u00e3o opera em paralelo), com a estrat\u00e9gia explicada e guardrails (nunca vender BTC, n\u00e3o competir com automa\u00e7\u00f5es, equity testnet=ru\u00eddo).\n\nVER O DIFF: `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux diff -- tradeux-agent/src/agent.js`.\n\nESTRAT\u00c9GIA REAL: BTC=cofre (s\u00f3 acumula via funil; exce\u00e7\u00e3o: trend id6/id7 gerencia posi\u00e7\u00e3o t\u00e1tica TREND_QTY, vende no death \u2014 \u00e9 da automa\u00e7\u00e3o). Farm alts: RSI<35, gate !=bear && !=trend, vende no-loss por pre\u00e7o. Trend: golden/death, gate !=bear. Baseline BTC id2: RSI<25, gate !=bear && !=trend + filtro de fluxo. Regime-gating: bear=caixa, edge=drawdown menor (n\u00e3o alpha). Contexto: testnet, equity \u00e9 ru\u00eddo de faucet.\n\nAVALIE (decis\u00e3o de merge):\n1. **Fidelidade estrat\u00e9gica**: o prompt representa a tese corretamente e sem buracos que induzam o agente a agir contra ela?\n2. **Risco residual**: se um dia ligarem ALLOW_TRADING=true, este prompt \u00e9 suficiente pra impedir o agente de (a) vender BTC e (b) competir com as automa\u00e7\u00f5es? Ou ainda falta uma trava no C\u00d3DIGO (ex.: bloquear sell de BTC no MCP)?\n3. **Proporcionalidade/manuten\u00e7\u00e3o**: o prompt est\u00e1 bom de tamanho/clareza? conven\u00e7\u00e3o pt-BR? algo que vai envelhecer mal (ex.: lista de alts hardcoded LTC/BNB/ADA no texto)?\n4. **\u00c9 s\u00f3-prompt suficiente** ou voc\u00ea exigiria uma mudan\u00e7a acompanhante (c\u00f3digo/doc)?\n\nENTREGUE: decis\u00e3o (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) + must-fix vs nice-to-have, com rationale curto. Seja breve e direto."
 }
 ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
 
 > **Tool Result (Agent)** - ✅ Success
 >
@@ -5424,114 +5424,9 @@ Pronto — prompt alinhado, no ar, CI verde. O contraste prova o conserto:
 
 Quer que eu já ataque essa trava no MCP (e de quebra enxugue o `get_memory_indexes` na raiz, igual fizemos com o `get_wallet`), ou seguimos esperando o regime virar pras Fases 4-5?
 
-## 👤 User *(00:05:07)*
+## 👤 User *(00:16:44)*
 
-ok vou só esperar o final de.:
-
-----
-No TradeUX (/home/gcrux-tradeux/tradeux), o agente LLM (tradeux-agent) é um copiloto observacional que hoje roda em DRY (TRADEUX_ALLOW_TRADING=false). Antes de QUALQUER flip para ALLOW_TRADING=true, é PRÉ-REQUISITO de segurança adicionar uma trava determinística no MCP — porque a estratégia Farm-and-Funnel trata BTC como COFRE que NUNCA vende (vender BTC foi o bug que originou o pivô) e o SYSTEM_PROMPT sozinho NÃO é defesa de execução confiável (ambos os gates QA+TL apontaram isso ao revisar o commit a0869c4).
-
-Tarefa — em tradeux-mcp/src/index.js, na tool tradeux_place_order (~linha 258, hoje aceita side BUY|SELL para qualquer símbolo, gate único = tradingEnabled()):
-1. Rejeitar side === 'SELL' quando o ativo-base é BTC (ex.: BTCUSDT e qualquer BTC<quote>) com erro claro — protege o cofre. Vendas legítimas de BTC vêm das automações do backend (id3/id7), não do agente.
-2. (Defesa contra execução paralela às automações) avaliar exigir um marcador de origem/automationId nas ordens do agente, ou documentar por que não se aplica.
-
-Validar: node tradeux-agent/src/index.js --check (deve listar 28 tools) + teste de que place_order side=SELL symbol=BTCUSDT é rejeitado. É money-path/segurança → rodar gate QA + Tech-Lead antes de subir. Commit trunk-based direto no master: git/docker SEMPRE como sudo -n -u gcrux-tradeux; push via https://x-access-token:$GITHUB_TOKEN_API@github.com/gabrielZarattini/tradeux.git HEAD:master (token no .env, não persistir no .git/config).
-
-Referências: HANDOFF.md (Technical debt, item "Agente — prompt alinhado à Farm-and-Funnel") e a memória tradeux-agent-token-economics. Relacionada: enxugar get_memory_indexes no MCP (lista-tudo ~192k tokens que estoura o contexto do modelo; hoje contornado por orientação no prompt) — mesma classe do get_wallet bloat já resolvido (leanWallet).
-
-Vou começar explorando a estrutura relevante do projeto para entender o código antes de mudar qualquer coisa no money-path. Deixa eu ler o arquivo do MCP, localizar o HANDOFF.md e o entrypoint do agente em paralelo.
-
-Executado
-Explore repo structure, MCP/agent dirs, locate HANDOFF.md
-Repo em /home/gcrux-tradeux/tradeux. Vou ler o MCP completo (é o alvo central), o entrypoint do agente (--check) e o mcpClient.js em paralelo.
-
-
-Leu 3 arquivos
-Já tenho o panorama do MCP. Confirmando a contagem de tools atual (20 read + 8 write = 28), então minha mudança no handler do place_order não deve alterar esse número — é justamente o regression guard do --check.
-
-Antes de escrever código, preciso entender três coisas no backend: (a) o que o endpoint /symbols/{symbol} e o model expõem (tem base/quote?), (b) como o POST /orders trata automationId e se há marcador de origem, (c) o que /beholder/memory/indexes retorna. Vou explorar em paralelo.
-
-Executado
-Locate backend symbol/order/beholder files and indexes route
-Vou ler o model de símbolo, o controller de ordens (POST /orders) + seu router, e o getMemoryIndexes do beholder para entender os três pontos.
-
-
-Leu 4 arquivos
-Importante: o symbolModel tem campos base/quote (autoritativo), e o placeOrder do backend trata automationId como opcional — ou seja, ordens do agente já são "manuais" (automationId null, agrupadas como 'M'/'Others' nos relatórios). Isso já me dá a resposta da parte 2.
-
-Agora preciso ver o mcpClient.js (é o que o --check usa e me servirá pro teste de integração), o getMemoryIndexes do beholder (item relacionado), confirmar node_modules e ler a seção relevante do HANDOFF.
-
-
-Leu um arquivo, executado um comando
-mcpClient.js expõe callTool(name,input) → {text,isError} — perfeito pro teste de integração (sem precisar do backend, já que a trava do cofre lança ANTES do api.post). Vou ler o getMemoryIndexes do beholder e a seção de dívida técnica do HANDOFF.
-
-
-Leu um arquivo, executado um comando
-Tenho o quadro completo. O HANDOFF (linhas 167–172) confirma que ESTE é exatamente o item de dívida técnica (a): trava SELL-BTC + automationId como pré-requisito do ALLOW_TRADING, mais (b) enxugar get_memory_indexes. Vou ler o bloco exato do HANDOFF pra editar depois, confirmar o estado do git (como gcrux-tradeux) e checar presença das chaves no .env sem imprimir o token.
-
-
-Leu um arquivo, executado um comando
-Notas importantes do estado: estou em master (ahead 2 é esperado — pushes via URL com token não atualizam o ref origin/master local), TRADEUX_ALLOW_TRADING não está setada (DRY confirmado), GITHUB_TOKEN_API presente. Há um arquivo docs/... untracked que não é meu — não vou tocá-lo.
-
-Preciso resolver a estratégia de edição por causa do "git ownership gotcha": o shell roda como ubuntu, mas os arquivos são de gcrux-tradeux. Vou checar se ubuntu consegue escrever (membro do grupo) ou se preciso gravar como gcrux-tradeux.
-
-Executado
-Check ubuntu group membership, file writability, git identity
-ubuntu está no grupo gcrux-tradeux (gid 1013) e o index.js é group-writable → edição in-place preserva o dono. Vou rodar todo git/docker como sudo -n -u gcrux-tradeux mesmo assim (respeitando o gotcha). Identidade git correta. O HANDOFF.md real (/home/gcrux-tradeux/HANDOFF.md) está fora do repo → não entra no commit.
-
-Vou ler o package.json do MCP e o CI antes de implementar.
-
-
-Leu um arquivo, executado um comando
-Tudo mapeado. Plano: trava SELL-BTC determinística no place_order + doc do porquê automationId obrigatório não se aplica + teste de regressão (hermético) + wire no CI; depois gate QA + Tech-Lead antes de commitar/pushar como gcrux-tradeux. O get_memory_indexes (item relacionado/secundário) fica como commit separado depois, pra não misturar refactor de read-path com a mudança de segurança.
-
-Implementando agora as edições no MCP.
-
-Trava do cofre no MCP
-Editado
-index.js
-+51
--2
-Edições no MCP feitas. Agora crio o teste de regressão (hermético — força creds vazias + API inalcançável pra nunca enviar ordem real) e leio o bloco exato do CI pra encaixar o step.
-
-Criado
-place-order-vault-guard.mjs
-+82
--0
-O arquivo ficou com um caractere corrompido na última linha. Vou corrigir.
-
-Editado
-place-order-vault-guard.mjs
-+1
--1
-Agora adiciono o script test no package.json do MCP e leio o bloco exato do job de integração do CI pra encaixar o step.
-
-
-Editado um arquivo, leu um arquivo
-Adiciono o step de regressão no job de integração do CI (logo após o --check). O env do step --check é escopado só a ele, e o teste ainda força credenciais vazias no MCP que sobe — então é hermético.
-
-Editado
-ci.yml
-+3
--0
-Edições completas. Agora valido: (1) --check deve listar 28 tools (regression guard de registro) e (2) o teste da trava deve passar.
-
-Executado
-Run agent --check (count tools) and the vault-guard regression test
-Ambas as validações passam: --check = 28 tools e o teste da trava cobre 10 casos (5 SELL-BTC rejeitados incl. case-insensitive e múltiplos quotes; 5 não-barrados corretamente: ETHUSDT, BUY BTCUSDT, ETHBTC, BTCUP, BTCDOWNUSDT).
-
-Agora confiro ownership dos arquivos tocados, faço stage só dos meus arquivos (sem o docs/ untracked) e gero o diff pros gates.
-
-Executado
-Check ownership, stage only my files as gcrux-tradeux, write staged diff for gates
-Validações verdes. Observação: as edições in-place fizeram o ownership dos 4 arquivos virar ubuntu:ubuntu (modo 0664 → gcrux-tradeux lê como "other", por isso o git add como gcrux funcionou). O .git foi manipulado só como gcrux-tradeux, então não há poison. Vou confirmar isso e disparar os gates QA + Tech-Lead em paralelo sobre o diff staged — é money-path, então quero revisão adversarial de verdade.
-
-
-Executado um comando
-.git íntegro (gcrux-tradeux) e parse OK nos dois arquivos. Disparando os dois gates em paralelo sobre o diff.
------
-
-Que é a sugestão sua mesmo que quando eu cliquei abriu uma nova sessão com isso acima.... ai sim quando terminar, podemos fazer o handoff aqui e vamos atacar uma nova frente. Quero um deepSearch de como aplicar com maestria e fundamento.:
+Sugestão sua mesmo que quando eu cliquei abriu uma nova sessão com isso acima.... ai sim quando terminar, podemos fazer o handoff aqui e vamos atacar uma nova frente. Quero um deepSearch de como aplicar com maestria e fundamento.:
 
 Visão geral criada por IA                     Para obter lucro em mercados em baixa (bear market) no gráfico de 1 minuto, a prática mais comum é o Scalping a descoberto (Short selling). Você não tenta adivinhar o fundo; em vez disso, opera a favor da tendência de queda, vendendo o ativo caro e recomprando mais barato logo em seguida.Fundamentos da Operação em BaixaVenda a descoberto: Você aluga o ativo do seu broker (ou usa contratos futuros, como minicontratos na B3 ou criptomoedas), vende e recompra depois embolsando a diferença.Ciclos curtos: O objetivo no timeframe de 1m não é surtir quedas longas, mas sim pegar impulsos rápidos (o chamado buy the dip, sell the rip ou, nesse caso, sell the pop, buy the drop).Passo a Passo para Operar no 1MConfirme a tendência macro: Nunca opere apenas o gráfico de 1m. Olhe o gráfico de 15m ou 1m para garantir que a tendência principal é de baixa.Espere o Pullback (Correção): Espere o preço dar uma "respirada" para cima. Em um bear market, o movimento de subida geralmente é fraco e não rompe o topo anterior.Padrões de reversão de baixa: Use candles de fraqueza, como a Estrela Cadente (pavio longo em cima) ou o Engolfo de Baixa (candle vermelho grande engolindo um pequeno verde).Entrada e Saída: Entre vendido (short) assim que o padrão se confirmar. Defina seu alvo (gain) em um nível de suporte próximo e seu stop loss logo acima da máxima da correção recente para proteger seu capital.Ferramentas e Indicadores ÚteisMédias Móveis Exponenciais (EMAs): Uma configuração comum para o 1m é usar as EMAs de 9 (rápida) e 21 (lenta) períodos. Em momentos de baixa, o preço tende a bater na média e ser rejeitado para baixo.VWAP: Ajuda a filtrar a tendência do dia; se o preço estiver operando abaixo da VWAP, priorize operações de venda.RSI (Índice de Força Relativa): Útil para identificar quando o preço está sobrecomprado no curto prazo antes de um novo movimento de queda.Gestão de Risco EstritaAlavancagem: Operar no 1m costuma exigir muita alavancagem. Gerencie o risco para perder pouco por operação.Relação Risco/Retorno: Busque operações onde você possa ganhar pelo menos o dobro ou o triplo do que está arriscando perder (1:2 ou 1:3).Para dicas de como identificar a rejeição de preço nas médias móveis e gatilhos de entrada exatos:NQ 1 Min Scalping/Bear Bull Flag Strategy Alive and WellZeffsTradingYouTube · 18 de jul. de 20247:50Se você quiser refinar suas operações, me diga:Qual mercado você prefere operar (ações, Forex ou criptomoedas)?Você já utiliza alguma corretora ou plataforma específica?Qual é o seu atual nível de experiência com análise técnica?[CANDLES CLASS] Bearish Engulfing Pattern12 de jul. de 2022 — o urso engolfando aqui né tempo gráfico sempre ali no gráfico de 15 minutos. ok então aqui ó o padrão em Golfo agora ele vai troca...10:09YouTube·Wall Street Invest10 fortes padrões de velas de baixa - LiteFinanceConteúdo traduzido — 26/02/2026 29/01/2025 - 10 Padrões Fortes de Candlestick de Baixa. 10 padrões de velas de baixa que todo trader precisa conhecer |LiteFinanceJa pensou SABER QUANDO o mercado vai PARAR de ...5 de jun. de 2026 — 🤯Ja pensou SABER QUANDO o mercado vai PARAR de CAIR ⬇️ ou SUBIR ⬆️ ❓🤔
 
@@ -5712,9 +5607,494 @@ Aberto p/ a próxima sessão (registrado no HANDOFF/memória, nada urgente):
 * Follow-ups dos gates: trava equivalente no backend `ordersController` (p/ cobrir UI/outros clientes no dia do flip); enxugar `get_memory`/`get_wallet_full` sem símbolo; reabilitar `get_memory_indexes` no prompt do agente.
 Quer que eu já faça o rebuild do container `tradeux-agent` pra ativar as mudanças no serviço vivo?
 
-## 👤 User *(00:07:13)*
+## 🤖 Claude *(00:20:04)*
 
-[Request interrupted by user]
+
+## 🤖 Claude *(00:20:06)*
+
+Recebido — a sessão da trava fechou limpa: **`9898bdf`** (trava FAIL-CLOSED de SELL-BTC, gate QA+TL) + **`2d01002`** (lean `memory_indexes`) no master. O achado da QA (5 pares BTC-base fora da allowlist → inversão pra fail-closed) foi exatamente a decisão certa.
+
+Antes de selar, uma higiene importante: **o container do agente ainda roda a imagem anterior a esses 2 commits** — a trava e o lean vivem no `tradeux-mcp`, que é empacotado dentro da imagem do agente. Vou rebuildar pra deixar o vivo == master, depois faço o `/handoff`.
+
+## 🤖 Claude *(00:20:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== rebuild+recreate agent (ativa trava + lean no container vivo) ===\"\ndocker compose build agent 2>&1 | tail -2\ndocker compose up -d agent 2>&1 | tail -3\ndocker inspect tradeux-agent-1 --format \"Status={{.State.Status}} RestartCount={{.RestartCount}} OOMKilled={{.State.OOMKilled}}\"'",
+  "description": "Rebuild agent to activate vault guard + lean in live container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild+recreate agent (ativa trava + lean no container vivo) ===
+> #16 DONE 0.0s
+>  Image tradeux-agent Built 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+> Status=running RestartCount=0 OOMKilled=false
+> ```
+
+## 🤖 Claude *(00:20:21)*
+
+
+## 🤖 Claude *(00:20:22)*
+
+Vivo == master agora (trava + lean + prompt no container). Selando a sessão com o ritual `/handoff`.
+
+## 🤖 Claude *(00:20:22)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(00:20:22)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(00:20:58)*
+
+
+## 🤖 Claude *(00:21:01)*
+
+O skill carregou. Como nesta sessão (e a spawnada já apontou), **PHASE 2/5 do template conflitam com o workflow real** — trunk-based direct-to-master, push via token como `gcrux-tradeux`, não branch/PR via SSH-root (memórias [[git-ownership-gotcha]] e [[tradeux-orchestration-model]]). E **todo o código desta sessão já está commitado e pushado** (`e97a85a`, `a0869c4`, `9898bdf`, `2d01002`), então commit/push são no-op. Executo o ritual adaptado: verifico, escaneio segredos sobre todos os commits da sessão, e selo.
+
+## 🤖 Claude *(00:21:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== git status (esperado: so o docs/ untracked alheio) ===\"; git status --short\necho \"=== ultimos 5 commits ===\"; git log --oneline -5\necho \"=== SECRET SCAN sobre TODOS os commits da sessao (985272f..HEAD) ===\"\nhits=$(git diff 985272f..HEAD | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{30,}|OPENROUTER_API_KEY=[A-Za-z0-9_-]{10}|GITHUB_TOKEN_API=[A-Za-z0-9_]{10}|BINANCE_[A-Z]*KEY=[A-Za-z0-9])\" | grep -vE \"example|<.*>|process\\.env|env_file\" | head)\nif [ -n \"$hits\" ]; then echo \"!! SEGREDO DETECTADO:\"; echo \"$hits\"; else echo \"LIMPO (nenhum segredo nos commits da sessao)\"; fi\necho \"=== .env gitignored? ===\"; git check-ignore .env tradeux-agent/.env && echo \"sim, ignorados\"\necho \"=== containers ===\"; docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"\n'\necho -n \"=== site === \"; curl -s -m5 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Handoff pre-flight + secret scan over session commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (esperado: so o docs/ untracked alheio) ===
+> ?? "docs/Engenharia Preditiva para Criptoativos.md"
+> === ultimos 5 commits ===
+> 2d01002 perf(mcp): enxuga get_memory_indexes (resumo compacto + filtro por símbolo)
+> 9898bdf feat(mcp): trava determinística do cofre — bloqueia SELL de BTC no place_order do agente
+> a0869c4 fix(agent): alinha o SYSTEM_PROMPT a estrategia Farm-and-Funnel
+> e97a85a fix(agent): supervisiona o tradeux-agent como serviço + STALE no card de KPIs
+> 985272f feat(farm): setup-farm das alts (grid no-loss, INATIVO) - Fase 2
+> === SECRET SCAN sobre TODOS os commits da sessao (985272f..HEAD) ===
+> LIMPO (nenhum segredo nos commits da sessao)
+> === .env gitignored? ===
+> .env
+> tradeux-agent/.env
+> sim, ignorados
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up 51 seconds
+> tradeux-backend-1    Up 7 hours
+> tradeux-db-1         Up 5 days (healthy)
+> tradeux-frontend-1   Up 5 hours
+> === site === 200
+> ```
+
+## 🤖 Claude *(00:21:38)*
+
+
+## 🤖 Claude *(00:21:40)*
+
+Pre-flight **limpo**: secret scan vazio, `.env` gitignored, 4 containers no ar (agent `Up 51s` = recém-rebuildado), site 200. Os 4 commits da sessão estão no master. O HANDOFF já foi atualizado incrementalmente (serviço, prompt, trava). Vou fechar a pendência que a spawnada deixou (rebuild do agente) e registrar a próxima frente. Lendo o fim do HANDOFF.
+
+## 🤖 Claude *(00:21:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 520,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 520	não cabiam em 12 rounds → **MAX_TOOL_ROUNDS 12→20** (código default + .env runtime). **Gate QA PASS + TL APPROVE** (proporcional: prompt/DRY;
+> 521	aplicadas as ressalvas convergentes — "só em range"→"!=bear && !=trend", rótulo TREND_QTY p/ não soar como venda do cofre, fonte-de-verdade
+> 522	via tools). **Validado ao vivo (--once):** ciclo conclui em **11 rounds / 9.5k tok**, faz panorama dos 4 símbolos, **NÃO recomenda vender
+> 523	BTC**, audita o regime-gating ("bear→caixa, esperado, não é oportunidade perdida") e classifica a venda residual de 0.00007 BTC como da
+> 524	**id3 (Baseline Sell BTC, INATIVA/pausada)** = não-sangramento do cofre. Serviço recriado (RestartCount=0, site 200). **DÍVIDAS (ver
+> 525	Technical debt):** trava determinística de SELL-BTC + automationId no MCP **antes** de ligar `ALLOW_TRADING`; enxugar `get_memory_indexes`.
+> 526	**0 PRs** (trunk-based).
+> 527	
+> 528	### 🤝 SEAL — 2026-06-08 (cont. — trava determinística do cofre no MCP + get_memory_indexes enxuto)
+> 529	**Fecha as 2 dívidas da SEAL anterior** (pré-requisitos do flip `ALLOW_TRADING=true`). **(1) Trava do cofre (commit `9898bdf`, push
+> 530	master, gate QA PASS + TL APPROVE):** em `tradeux-mcp/src/index.js`, `tradeux_place_order` rejeita `side=SELL` de qualquer símbolo do
+> 531	cofre BTC, p/ qualquer `type`, ANTES do `api.post`. Comecei com allowlist de quotes, mas a **QA enumerou a Binance Spot ao vivo** e achou
+> 532	**5 pares BTC-base em TRADING fora da lista** (BTCUSDS/BTCUSD1/BTCEURI/BTCIDR/BTCU) que escapariam → inverti p/ **FAIL-CLOSED**
+> 533	(`isBtcVaultSymbol`: bloqueia todo `BTC*` exceto prefixos não-base BTCUP/BTCDOWN/BTCST) → pares `BTC<quote>` novos nascem bloqueados, sem
+> 534	manutenção de lista. **`automationId` obrigatório AVALIADO e DESCARTADO** (ordem do agente é manual por design; forçar id falso corrompe
+> 535	P&L em groupByAutomations e não é mutex — doc no código). **TL confirmou risco zero ao fluxo legítimo:** id3/id7 executam in-process no
+> 536	`beholder.js`, NÃO via `POST /orders`. Teste de regressão hermético (`tradeux-mcp/test/place-order-vault-guard.mjs`, 21 casos) +
+> 537	`npm test` + step no CI. **(2) `get_memory_indexes` enxuto (commit `2d01002`, push master):** `leanMemoryIndexes` (resumo compacto sem
+> 538	símbolo + detalhe por símbolo, cap `MCP_MEMORY_INDEXES_SYMBOL_CAP`=60) elimina o ~192k tok/400 overflow (mesma classe do leanWallet);
+> 539	read-path → direto + auto-validado (`--check` 28 tools). **Follow-ups não-bloqueantes (dos gates):** (i) backend `ordersController` sem
+> 540	trava equivalente (UI/outro cliente MCP não passam pela trava) — mover a defesa pro backend se o modelo de ameaça do flip incluir
+> 541	"qualquer caminho com as chaves"; (ii) premissa "agente BTCUSDT-only" ERRADA — o prompt farma alts (LTC/BNB/ADA), não quebra a trava;
+> 542	(iii) resíduo: BUY de par BTC-quote (ex.: BUY ETHBTC) drena o cofre (fora de escopo, agente não negocia esses pares); (iv)
+> 543	`get_memory`/`get_wallet_full` sem símbolo ainda por enxugar; o prompt ainda proíbe `get_memory_indexes` (pode reabilitar). **DEPLOY:**
+> 544	mudanças no master, mas o container `tradeux-agent` (Up 3h) roda a imagem ANTERIOR — `docker compose up -d --build agent` p/ ativar no
+> 545	vivo; NÃO urgente (DRY: `ALLOW_TRADING=false`, o agente não executa ordens). Memória nova: `tradeux-vault-guard`. **0 PRs** (trunk-based,
+> 546	direct-to-master via token URL como `gcrux-tradeux`; o template do `/handoff` fala em branch/PR + push-as-root via SSH — DESALINHADO com o
+> 547	workflow atual deste repo, não segui).
+> 548	
+> ```
+
+## 🤖 Claude *(00:22:09)*
+
+
+## 🤖 Claude *(00:22:11)*
+
+HANDOFF completo (a SEAL da spawnada cobre trava+lean+follow-ups). Adiciono o fechamento desta continuação — rebuild feito (vivo == master) + planto a próxima frente com a tensão sinalizada pro próximo `/handson`.
+
+## 🤖 Claude *(00:22:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "direct-to-master via token URL como `gcrux-tradeux`; o template do `/handoff` fala em branch/PR + push-as-root via SSH \u2014 DESALINHADO com o\nworkflow atual deste repo, n\u00e3o segui).",
+  "new_string": "direct-to-master via token URL como `gcrux-tradeux`; o template do `/handoff` fala em branch/PR + push-as-root via SSH \u2014 DESALINHADO com o\nworkflow atual deste repo, n\u00e3o segui).\n\n### \ud83e\udd1d SEAL \u2014 2026-06-08 (cont. \u2014 rebuild do agente: vivo == master + pr\u00f3xima frente)\n**Fechei a pend\u00eancia de DEPLOY da SEAL anterior:** `docker compose build agent` + `up -d agent` \u2192 o container `tradeux-agent` agora roda a\nimagem com a **trava do cofre (`9898bdf`) + `leanMemoryIndexes` (`2d01002`) + prompt alinhado (`a0869c4`)** (RestartCount=0, site 200, 4\ncontainers no ar). **Vivo == master.** Estado consolidado da sess\u00e3o: agente \u00e9 **servi\u00e7o supervisionado** (`e97a85a`), **prompt = copiloto\nobservador** que n\u00e3o vende BTC (`a0869c4`), **MCP com trava FAIL-CLOSED de SELL-BTC** (`9898bdf`) e **`leanMemoryIndexes`** (`2d01002`); tudo\nDRY (`ALLOW_TRADING=false`). **\u26a1 PR\u00d3XIMA FRENTE (pedido do dono):** deep research \"lucrar na QUEDA no 1m\" (scalping/short em bear). \u26a0\ufe0f\n**TENS\u00c3O com a tese validada:** o sistema \u00e9 spot long-only + caixa em bear; HFT 1m foi medido \"morto\" (fee+whipsaw) no backtest; margin short\nj\u00e1 DESACONSELHADO (`~/RESEARCH-flow-and-margin.md`). Short real = **Futures** (sistema NOVO, n\u00e3o o spot atual). A pesquisa deve enquadrar\nONDE/SE isso se aplica (prov\u00e1vel: m\u00f3dulo de Futures separado p/ capturar o bear, hoje inerte h\u00e1 meses) ANTES de qualquer build. **0 PRs** (trunk-based)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:22:40)*
+
+
+## 🤖 Claude *(00:22:41)*
+
+HANDOFF selado. Verificação final de sincronia com o remoto (sem código novo pra pushar — confirmo que o master remoto == HEAD):
+
+## 🤖 Claude *(00:22:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"' \")\nremote=$(git ls-remote \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" refs/heads/master 2>/dev/null | cut -f1)\nlocal=$(git rev-parse HEAD)\necho \"remote master: ${remote:0:7}  |  local HEAD: ${local:0:7}\"\n[ \"$remote\" = \"$local\" ] && echo \"\u2705 SINCRONIZADO (nada a pushar)\" || echo \"\u26a0\ufe0f DIVERGENTE\"\n'",
+  "description": "Verify local HEAD matches remote master"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote master: 2d01002  |  local HEAD: 2d01002
+> ✅ SINCRONIZADO (nada a pushar)
+> ```
+
+## 🤖 Claude *(00:23:41)*
+
+
+## 🤖 Claude *(00:23:54)*
+
+Sincronizado: `2d01002` local == remoto. Sessão selada.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-08
+───────────────────────────────────────────────────
+Commits     : 4 no master (fix(agent)×2 · feat(mcp) · perf(mcp))
+HANDOFF.md  : ✅ 4 SEAL records (serviço · prompt · trava cofre · rebuild)
+Memory      : ✅ token-economics atualizada + tradeux-vault-guard nova
+Stack       : 4 containers Up (agent rebuildado → vivo == master) · site 200
+Segredos    : ✅ scan limpo · .env gitignored
+PRs abertos : 0 — trunk-based direct-to-master (sem PR por design)
+Push        : ✅ origin == HEAD (2d01002)
+───────────────────────────────────────────────────
+  Sessão selada. Próxima frente abaixo. 👇
+═══════════════════════════════════════════════════
+```
+
+---
+
+## Próxima frente — deep research: lucrar na queda
+
+Topo pesquisar isso a fundo. Mas pra entregar **maestria e fundamento** (não um apanhado raso de YouTube de "estrela cadente no 1m"), tenho o dever de te apontar a **tensão** antes de disparar — porque ela muda o que a pesquisa deve buscar:
+
+1. **O TradeUX é spot — e spot não tem "short".** Vender a descoberto exige **Margin** (que a nossa própria pesquisa anterior já **desaconselhou** — fees de ~0.15%/round-trip dominam) ou **Futures** (um sistema novo, separado do bot atual). "Lucrar na queda" automatizado = na prática, **construir um motor de Futures**.
+2. **O conteúdo que você colou é day-trade manual** (ler candle, padrão de reversão). O TradeUX é um **bot**. Padrões discricionários de 1m raramente sobrevivem à automação + custos — o próprio material tem "*7 ways to lose money in day trading*". Fundamento de verdade = separar o que tem **edge estatístico** (microestrutura, order-flow, mean-reversion com custo real) do **folclore de varejo**.
+3. **O projeto já tem munição relevante:** o backtest mediu HFT 1m como "morto" (fee+whipsaw) **no spot**; o Flow Oracle (microestrutura) já existe em shadow; e há `~/RESEARCH-flow-and-margin.md`. A pesquisa boa **constrói sobre isso** — inclusive a conta muda em Futures (fees ~0.02–0.05% « 0.1% do spot).
+
+Isso **não** é "não vamos pesquisar" — é o contrário: é o que separa um relatório acionável de um genérico. Mas o resultado depende de onde você quer mirar:
+
+## 🤖 Claude *(00:24:03)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual o alvo do deep research sobre \"lucrar na queda\"?",
+      "header": "Alvo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "M\u00f3dulo de Futures pro bot",
+          "description": "Pesquisar como o TradeUX poderia capturar o bear de forma AUTOMATIZADA via Binance Futures (short real): viabilidade, custos, design, gest\u00e3o de risco/liquida\u00e7\u00e3o. \u00c9 a \u00fanica via de um bot \"lucrar na queda\". Resultado = base pra decidir se/como construir."
+        },
+        {
+          "label": "Voc\u00ea operar manualmente",
+          "description": "Fundamento de scalping/short discricion\u00e1rio pra VOC\u00ca operar \u00e0 m\u00e3o (em paralelo ao bot): setups, leitura de price action, EMAs/VWAP/RSI, gest\u00e3o de risco. Resultado = guia de execu\u00e7\u00e3o manual, n\u00e3o c\u00f3digo."
+        },
+        {
+          "label": "Mapa conceitual amplo",
+          "description": "Levantar TODAS as vias de capturar mercado de baixa em cripto (short via futures, mean-reversion intraday, hedge, vol, etc.) com o fundamento de cada uma e o que tem edge real vs folclore \u2014 pra voc\u00ea decidir o caminho depois."
+        }
+      ]
+    },
+    {
+      "question": "Que tipo de estrat\u00e9gia priorizar na pesquisa?",
+      "header": "Estilo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Automatiz\u00e1vel + fundamentado",
+          "description": "Foco em regras objetivas que um bot executa, com base estat\u00edstica/acad\u00eamica e custos realistas (microestrutura, order-flow, mean-reversion). C\u00e9tico com folclore de candle."
+        },
+        {
+          "label": "Discricion\u00e1rio (price action)",
+          "description": "Foco nas t\u00e9cnicas manuais do material que voc\u00ea colou: padr\u00f5es de candle de baixa, rejei\u00e7\u00e3o em m\u00e9dias, VWAP, leitura de fluxo \u2014 como executar com disciplina."
+        },
+        {
+          "label": "Os dois lados",
+          "description": "Cobrir tanto o automatiz\u00e1vel/estat\u00edstico quanto o discricion\u00e1rio/price-action, comparando o que cada abordagem entrega em retorno risco-ajustado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual o alvo do deep research sobre "lucrar na queda"?"="Modulo de Futures pro bot
+> Pesquisar como o TradeUX poderia capturar o bear de forma AUTOMATIZADA via Binance Futures (short real): viabilidade, custos, design, gestão de
+> risco/liquidação. É a única via de um bot "lucrar na queda". Resultado = base pra decidir se/como construir.
+> 
+> Você operar manualmente
+> Fundamento de scalping/short discricionário pra VOCÊ operar à mão (em paralelo ao bot): setups, leitura de price action, EMAs/VWAP/RSI, gestão de risco.
+> Resultado = guia de execução manual, não código.
+> 
+> Mapa conceitual amplo
+> Levantar TODAS as vias de capturar mercado de baixa em cripto (short via futures, mean-reversion intraday, hedge, vol, etc.) com o fundamento de cada uma e
+> o que tem edge real vs folclore - pra você decidir o caminho depois.
+> 
+> Todos esses acima são caminhos possiveis mas a ideia é procurar por além dos indicativos e sim métodos validados do mercado, onde aplicado corretamente é possivel criar um novo dashboard de trader podendo até mesmo operar manualmente, mas o foco é automático.", "Que tipo de estratégia priorizar na pesquisa?"="Os dois lados". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:35:14)*
+
+
+## 🤖 Claude *(00:35:18)*
+
+Perfeito — captei: **métodos validados de mercado** (além dos indicadores de varejo), com foco **automático** (bot), cobrindo os dois lados, e que possam virar um **dashboard de trader**. Os 3 alvos entram como caminhos a avaliar.
+
+Escopo travado: vou pesquisar **métodos sistemáticos com edge comprovado para capturar retorno em bear de cripto** — short via Futures, estratégias market-neutral (funding/basis), order-flow/microestrutura, mean-reversion com custos reais — sempre com evidência, custos que matam ou não cada um, viabilidade de automação no TradeUX, e o que vira sinal de dashboard. Cético com folclore.
+
+Disparando o harness de deep research (fan-out de buscas → leitura de fontes → verificação adversarial → síntese citada).
+
+## 🤖 Claude *(00:35:19)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Deep research: capturar o bear (cripto)",
+  "summary": "M\u00e9todos validados de lucrar na queda \u2014 automatiz\u00e1vel (futures/microestrutura/funding), al\u00e9m de indicadores de varejo"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Deep research: capturar o bear (cripto)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(00:35:30)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "deep-research",
+  "args": "M\u00e9todos VALIDADOS (evid\u00eancia acad\u00eamica peer-reviewed, pr\u00e1tica institucional/quant, ou backtests robustos publicados) para capturar retorno de forma sistem\u00e1tica em MERCADO DE BAIXA (bear) de criptomoedas \u2014 foco em AUTOMA\u00c7\u00c3O por um bot, secundariamente opera\u00e7\u00e3o manual/dashboard. Ir AL\u00c9M dos indicadores de varejo (RSI/EMA/candlestick no 1m): o que realmente tem edge vs folclore.\n\nCONTEXTO DE APLICA\u00c7\u00c3O: TradeUX \u00e9 um bot de trading na Binance, hoje SPOT long-only com regime-gating (fica em CAIXA em bear, inerte h\u00e1 meses). Spot n\u00e3o tem venda a descoberto; capturar a queda automatizada exigiria Binance FUTURES (perp\u00e9tuos) ou Margin (j\u00e1 avaliado internamente como desaconselhado por fees ~0,15%/round-trip). J\u00e1 existe um 'flow oracle' de order-flow do taker (imbalance/toxicity via isBuyerMaker) em shadow. Backtest interno mediu HFT/1m como 'morto' no SPOT (fee 0,1% + whipsaw).\n\nCOBRIR, cada um com fundamento, custos realistas e viabilidade de automa\u00e7\u00e3o:\n1. SHORT direcional automatizado via Binance Futures (perp\u00e9tuos): estrutura de custos real (taker/maker ~0,02\u20130,05%, FUNDING RATE, slippage), risco de liquida\u00e7\u00e3o e sizing; e se/quando short sistem\u00e1tico em cripto tem expect\u00e2ncia positiva (trend-following/momentum em downtrend vs mean-reversion). Evid\u00eancia de time-series momentum em cripto.\n2. Estrat\u00e9gias MARKET-NEUTRAL / que lucram sem acertar dire\u00e7\u00e3o: funding-rate arbitrage e basis/cash-and-carry, delta-neutral, market-making \u2014 edge real, capacidade, custos e riscos.\n3. MICROESTRUTURA/order-flow como sinal preditivo de curto prazo (OFI, VPIN, order-book imbalance, toxicidade): o que a literatura suporta como nowcasting vs forecasting, horizontes v\u00e1lidos, e como vira sinal automatiz\u00e1vel.\n4. MEAN-REVERSION intraday e captura de pullback em downtrend ('sell the rip'): sob custos realistas, em qual timeframe sobrevive \u2014 o backtest do projeto mediu 1m 'morto' no spot com fee 0,1%; a conta muda em futures (fees menores)?\n5. GEST\u00c3O DE RISCO e sizing validados (Kelly fracionado, vol-targeting, stops, R:R) e por que a maioria do day-trade de varejo \u00e9 -EV (evid\u00eancia emp\u00edrica).\n6. Quais SINAIS/M\u00c9TRICAS desses m\u00e9todos fariam sentido num DASHBOARD de trader (autom\u00e1tico + apoio \u00e0 decis\u00e3o manual).\n\nPara CADA m\u00e9todo: a EVID\u00caNCIA (fontes cit\u00e1veis), o EDGE real vs folclore, os CUSTOS que o matam ou n\u00e3o, a VIABILIDADE de automa\u00e7\u00e3o numa stack como o TradeUX (bot Node + Binance API), e par\u00e2metros/thresholds como PONTO DE PARTIDA para backtest (n\u00e3o como evangelho). Seja c\u00e9tico, separe sinal de ru\u00eddo, e cite as fontes."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: deep-research
+> ```
+
+## 👤 User *(00:35:30)*
+
+Run the "deep-research" workflow.
+
+Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+
+When the user wants a deep, multi-source, fact-checked research report on any topic. BEFORE invoking, check if the question is specific enough to research directly — if underspecified (e.g., "what car to buy" without budget/use-case/region), ask 2-3 clarifying questions to narrow scope. Then pass the refined question as args, weaving the answers in.
+
+Phases:
+- Scope: Decompose question (from args) into 5 search angles
+- Search: 5 parallel WebSearch agents, one per angle
+- Fetch: URL-dedup, fetch top 15 sources, extract falsifiable claims
+- Verify: 3-vote adversarial verification per claim (need 2/3 refutes to kill)
+- Synthesize: Merge semantic dupes, rank by confidence, cite sources
+
+Invoke: Workflow({ name: "deep-research", args: "Métodos VALIDADOS (evidência acadêmica peer-reviewed, prática institucional/quant, ou backtests robustos publicados) para capturar retorno de forma sistemática em MERCADO DE BAIXA (bear) de criptomoedas — foco em AUTOMAÇÃO por um bot, secundariamente operação manual/dashboard. Ir ALÉM dos indicadores de varejo (RSI/EMA/candlestick no 1m): o que realmente tem edge vs folclore.\n\nCONTEXTO DE APLICAÇÃO: TradeUX é um bot de trading na Binance, hoje SPOT long-only com regime-gating (fica em CAIXA em bear, inerte há meses). Spot não tem venda a descoberto; capturar a queda automatizada exigiria Binance FUTURES (perpétuos) ou Margin (já avaliado internamente como desaconselhado por fees ~0,15%/round-trip). Já existe um 'flow oracle' de order-flow do taker (imbalance/toxicity via isBuyerMaker) em shadow. Backtest interno mediu HFT/1m como 'morto' no SPOT (fee 0,1% + whipsaw).\n\nCOBRIR, cada um com fundamento, custos realistas e viabilidade de automação:\n1. SHORT direcional automatizado via Binance Futures (perpétuos): estrutura de custos real (taker/maker ~0,02–0,05%, FUNDING RATE, slippage), risco de liquidação e sizing; e se/quando short sistemático em cripto tem expectância positiva (trend-following/momentum em downtrend vs mean-reversion). Evidência de time-series momentum em cripto.\n2. Estratégias MARKET-NEUTRAL / que lucram sem acertar direção: funding-rate arbitrage e basis/cash-and-carry, delta-neutral, market-making — edge real, capacidade, custos e riscos.\n3. MICROESTRUTURA/order-flow como sinal preditivo de curto prazo (OFI, VPIN, order-book imbalance, toxicidade): o que a literatura suporta como nowcasting vs forecasting, horizontes válidos, e como vira sinal automatizável.\n4. MEAN-REVERSION intraday e captura de pullback em downtrend ('sell the rip'): sob custos realistas, em qual timeframe sobrevive — o backtest do projeto mediu 1m 'morto' no spot com fee 0,1%; a conta muda em futures (fees menores)?\n5. GESTÃO DE RISCO e sizing validados (Kelly fracionado, vol-targeting, stops, R:R) e por que a maioria do day-trade de varejo é -EV (evidência empírica).\n6. Quais SINAIS/MÉTRICAS desses métodos fariam sentido num DASHBOARD de trader (automático + apoio à decisão manual).\n\nPara CADA método: a EVIDÊNCIA (fontes citáveis), o EDGE real vs folclore, os CUSTOS que o matam ou não, a VIABILIDADE de automação numa stack como o TradeUX (bot Node + Binance API), e parâmetros/thresholds como PONTO DE PARTIDA para backtest (não como evangelho). Seja cético, separe sinal de ruído, e cite as fontes." })
+
+## 🤖 Claude *(00:35:44)*
+
+
+## 🤖 Claude *(00:35:44)*
+
+O harness está pronto. Disparando o workflow de deep research em background (ele decompõe em 5 ângulos → busca paralela → fetch → verificação adversarial → síntese citada). Te aviso quando o relatório estiver pronto.
+
+## 🤖 Claude *(00:35:50)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "name": "deep-research",
+  "args": "M\u00e9todos VALIDADOS (evid\u00eancia acad\u00eamica peer-reviewed, pr\u00e1tica institucional/quant, ou backtests robustos publicados) para capturar retorno de forma sistem\u00e1tica em MERCADO DE BAIXA (bear) de criptomoedas \u2014 foco em AUTOMA\u00c7\u00c3O por um bot, secundariamente opera\u00e7\u00e3o manual/dashboard. Ir AL\u00c9M dos indicadores de varejo (RSI/EMA/candlestick no 1m): o que realmente tem edge vs folclore.\n\nCONTEXTO DE APLICA\u00c7\u00c3O: TradeUX \u00e9 um bot de trading na Binance, hoje SPOT long-only com regime-gating (fica em CAIXA em bear, inerte h\u00e1 meses). Spot n\u00e3o tem venda a descoberto; capturar a queda automatizada exigiria Binance FUTURES (perp\u00e9tuos) ou Margin (j\u00e1 avaliado internamente como desaconselhado por fees ~0,15%/round-trip). J\u00e1 existe um 'flow oracle' de order-flow do taker (imbalance/toxicity via isBuyerMaker) em shadow. Backtest interno mediu HFT/1m como 'morto' no SPOT (fee 0,1% + whipsaw).\n\nCOBRIR, cada um com fundamento, custos realistas e viabilidade de automa\u00e7\u00e3o:\n1. SHORT direcional automatizado via Binance Futures (perp\u00e9tuos): estrutura de custos real (taker/maker ~0,02\u20130,05%, FUNDING RATE, slippage), risco de liquida\u00e7\u00e3o e sizing; e se/quando short sistem\u00e1tico em cripto tem expect\u00e2ncia positiva (trend-following/momentum em downtrend vs mean-reversion). Evid\u00eancia de time-series momentum em cripto.\n2. Estrat\u00e9gias MARKET-NEUTRAL / que lucram sem acertar dire\u00e7\u00e3o: funding-rate arbitrage e basis/cash-and-carry, delta-neutral, market-making \u2014 edge real, capacidade, custos e riscos.\n3. MICROESTRUTURA/order-flow como sinal preditivo de curto prazo (OFI, VPIN, order-book imbalance, toxicidade): o que a literatura suporta como nowcasting vs forecasting, horizontes v\u00e1lidos, e como vira sinal automatiz\u00e1vel.\n4. MEAN-REVERSION intraday e captura de pullback em downtrend ('sell the rip'): sob custos realistas, em qual timeframe sobrevive \u2014 o backtest do projeto mediu 1m 'morto' no spot com fee 0,1%; a conta muda em futures (fees menores)?\n5. GEST\u00c3O DE RISCO e sizing validados (Kelly fracionado, vol-targeting, stops, R:R) e por que a maioria do day-trade de varejo \u00e9 -EV (evid\u00eancia emp\u00edrica).\n6. Quais SINAIS/M\u00c9TRICAS desses m\u00e9todos fariam sentido num DASHBOARD de trader (autom\u00e1tico + apoio \u00e0 decis\u00e3o manual).\n\nPara CADA m\u00e9todo: a EVID\u00caNCIA (fontes cit\u00e1veis), o EDGE real vs folclore, os CUSTOS que o matam ou n\u00e3o, a VIABILIDADE de automa\u00e7\u00e3o numa stack como o TradeUX (bot Node + Binance API), e par\u00e2metros/thresholds como PONTO DE PARTIDA para backtest (n\u00e3o como evangelho). Seja c\u00e9tico, separe sinal de ru\u00eddo, e cite as fontes."
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wme52i0ud
+> Summary: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/b08cbdad-798a-433c-ac4f-8107a28a249b/subagents/workflows/wf_30194e34-576
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/b08cbdad-798a-433c-ac4f-8107a28a249b/workflows/scripts/deep-research-wf_30194e34-576.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/b08cbdad-798a-433c-ac4f-8107a28a249b/workflows/scripts/deep-research-wf_30194e34-576.js"} to iterate without resending the script.)
+> Run ID: wf_30194e34-576
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/b08cbdad-798a-433c-ac4f-8107a28a249b/workflows/scripts/deep-research-wf_30194e34-576.js", resumeFromRunId: "wf_30194e34-576"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(00:36:03)*
+
+
+## 🤖 Claude *(00:36:09)*
+
+Workflow no ar — **Run ID `wf_30194e34-576`**, rodando em background.
+
+**O que ele vai fazer:** decompõe a pergunta em ~5 ângulos → dispara buscas web paralelas (uma por ângulo) → deduplica e busca as ~15 melhores fontes → extrai afirmações falsificáveis → **verificação adversarial** (3 votos por claim, precisa de 2/3 pra derrubar) → síntese citada rankeada por confiança.
+
+**Enquanto roda:**
+- Acompanhe ao vivo com **`/workflows`** se quiser ver os agentes trabalhando.
+- Eu sou notificado quando terminar — aí **sintetizo o relatório final** com a leitura aplicada ao TradeUX (o que tem edge real, o que os custos matam, e o que valeria virar módulo de Futures / dashboard / backtest).
+
+Não precisa fazer nada — pode deixar rodando. É uma pesquisa ampla (6 frentes, verificação adversarial), então deve levar alguns minutos.
+
+Um ajuste de expectativa honesto, já que houve precedente: numa rodada anterior o harness de deep-research **bateu no limite semanal de uso** no meio da síntese. Se isso acontecer de novo, eu **sintetizo manualmente do material já coletado** (foi o que fizemos antes, e o relatório saiu completo em `~/RESEARCH-flow-and-margin.md`) — você não perde o trabalho de qualquer jeito.
+
+Te aviso quando o relatório estiver pronto. 📡
 
 ---
 
@@ -5726,4 +6106,5 @@ Quer que eu já faça o rebuild do container `tradeux-agent` pra ativar as mudan
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-08 - agent-aeba8bb08b81aa215]]
+> * **Próxima Sessão**: [[2026-06-09 - agent-a032f8ee1f180c630]]
 %% --- TIMELINE END --- %%

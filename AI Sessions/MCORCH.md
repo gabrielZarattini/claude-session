@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 523
+> * **Total de Sessões**: 560
 
 ---
 
@@ -55,6 +55,43 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-af07364955855a6dd]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-aeda3d013282b82b0]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-aec7c02af796b1539]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-ae95d663f6a035bdd]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-ae22df5ddfca02e9a]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-acf81b88080b89d0a]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-ac4261b94ee8259a2]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-ab8f534c05a21d333]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-aae731be4f4ca983a]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-aa5127a9222c23688]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-aa3c16384a03fb6e8]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a9bcd5ab476e3b976]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a979a6a24b590bb28]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a909d959696891aa8]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a8d502e0dbb87cb3d]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a7ed313cb84626c23]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a7adb58469c995d64]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a7661675133ea2786]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a68ae97fcdd32bf83]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a663c40f44abd4d15]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a638f160bab2f95d6]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a5f8e802d4923588f]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a5e95167c0f2e6579]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a546993d8e9c302b5]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a4f317c7834ca6110]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a4cc7631499063a2e]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a3a16c370b726b401]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a34d1579df55fc783]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a32551b503483c5a5]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a2d561da974318a49]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a20ab4d8f8e4a5907]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a1cfc8b86c1e53c11]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a1c1032191278fce4]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a18c2bf66321baca0]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a05afb7c39d4ebe45]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a032f8ee1f180c630]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-08 - handson]]` (GeminiSessions) - *2026-06-08*
 *   `[[2026-06-08 - agent-aeba8bb08b81aa215]]` (ClaudeSessions) - *2026-06-08*
