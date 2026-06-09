@@ -8473,5 +8473,5 @@ Foi uma sessão e tanto. Tudo no master, CI verde, vivo consistente. Pronto pro 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-08 - agent-aeba8bb08b81aa215]]
-> * **Próxima Sessão**: [[2026-06-09 - Monitor HFT trading automation in bear regime]]
+> * **Próxima Sessão**: [[2026-06-09 - Fix farm buy order notional filter failures]]
 %% --- TIMELINE END --- %%

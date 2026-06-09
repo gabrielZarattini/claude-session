@@ -5915,6 +5915,6 @@ Vigia relançado (`bouhxe7pu`, ~60min). Te aviso quando uma rung de compra ou a 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-09 - Audit trading bot order status and agent KPI updates]]
+> * **Sessão Anterior**: [[2026-06-09 - Fix settings password overwrite bug preventing logins]]
 > * **Próxima Sessão**: [[2026-06-09 - agent-a012224924c38a7a4]]
 %% --- TIMELINE END --- %%
