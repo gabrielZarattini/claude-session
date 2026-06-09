@@ -5677,6 +5677,381 @@ HANDOFF.md commitado (`ea7704b`).
 > (audit completed in 11.9s)
 > ```
 
+## 🤖 Claude *(22:30:11)*
+
+
+## 🤖 Claude *(22:30:13)*
+
+**Phase 5c: ✅ SEAL ALLOWED** — 10 verificadas, 0 falhas. Meu handoff node `fd20b125` confirmado na malha; auditor rodou a suíte (**284 passed**) e validou commits via `git cat-file`. Gate mecânico independente passou.
+
+**Phase 6 — BoK Seal Status:**
+
+## 🤖 Claude *(22:30:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 6-1. BoK suites completeness ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete (9 docs)\" || echo \"\u26a0\ufe0f $slug \u2014 incomplete (missing: ${missing[*]})\"\ndone\necho \"=== 6-2. m\u00f3dulos novos tocados na sess\u00e3o (precisam de BoK?) ===\"\ngit diff --name-only HEAD~5..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/)\" | sort -u || echo \"(nenhuma p\u00e1gina/edge fn nova \u2014 s\u00f3 fix single-file + script QA + docs)\"",
+  "description": "Phase 6 BoK seal status check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 6-1. BoK suites completeness ===
+> ✅ agentic-workspace — BoK complete (9 docs)
+> ✅ aios-sql-bridge — BoK complete (9 docs)
+> ✅ authenticated-browser-operator — BoK complete (9 docs)
+> ✅ canvas-design — BoK complete (9 docs)
+> ✅ constellation-v2 — BoK complete (9 docs)
+> ✅ conteudo-v2 — BoK complete (9 docs)
+> ✅ e2e-user-zero — BoK complete (9 docs)
+> ✅ gamificacao-nodes — BoK complete (9 docs)
+> ✅ identity-fabric — BoK complete (9 docs)
+> ✅ marketing-hub — BoK complete (9 docs)
+> ✅ mcorch-constellation — BoK complete (9 docs)
+> ✅ mcorch-qa-healing — BoK complete (9 docs)
+> ✅ mercado-livre-api — BoK complete (9 docs)
+> ✅ meta-api — BoK complete (9 docs)
+> ✅ openclaw — BoK complete (9 docs)
+> ✅ post-engine — BoK complete (9 docs)
+> ⚠️ security — incomplete (missing: 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+> ✅ viral-daily-canvas — BoK complete (9 docs)
+> ✅ viralmind — BoK complete (9 docs)
+> === 6-2. módulos novos tocados na sessão (precisam de BoK?) ===
+> src/pages/KanbanPage.tsx
+> ```
+
+## 🤖 Claude *(22:30:30)*
+
+
+## 🤖 Claude *(22:30:32)*
+
+**Phase 6 verdict: ✅ proceed.** O único módulo tocado é `src/pages/KanbanPage.tsx` — página **existente** (fix de 1 import), coberta por `docs/bok/agentic-workspace/` (BoK completa) → isento de gate. O `⚠️ security incomplete` é a diretiva CISO **deferida** (só o blueprint-semente), registrada em Pending Actions — não é trabalho de módulo desta sessão, **não bloqueia**.
+
+**Phase 7 — Push:**
+
+## 🤖 Claude *(22:30:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits a enviar ===\"\ngit log --oneline origin/main..HEAD\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -8",
+  "description": "Push commits to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits a enviar ===
+> ea7704b docs(handoff): seal kanban-scrollarea-fix + E2E a prova de Cloudflare
+> e5b172b docs(readme): v6.33.1 — hotfix Kanban ScrollArea + E2E logado a prova de Cloudflare
+> 6b1571a docs(bok): adiciona blueprint de hardening de seguranca (diretiva CISO deferida)
+> 761ea6f chore(qa): gen-user-session — minter de sessao p/ E2E logado a prova de Cloudflare
+> e55ce70 fix(kanban): importa ScrollArea ausente no KanbanPage
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    055082c..ea7704b  main -> main
+> ```
+
+## 🤖 Claude *(22:30:43)*
+
+
+## 🤖 Claude *(22:30:44)*
+
+Push OK — **5 commits** `055082c..ea7704b` em origin/main.
+
+**Phase 7b — Sprint & Hygiene.** Verificando scratch, MCP e o topo do sprint-priorities:
+
+## 🤖 Claude *(22:30:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"scratch/ limpo \u2705\"\necho \"=== .mcp.json servers ===\"; cat .mcp.json 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"(sem .mcp.json)\"\necho \"=== sprint-priorities head ===\"; sed -n '1,8p' .claude/context/sprint-priorities.md",
+  "description": "Check scratch, MCP servers, sprint-priorities head"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> tem arquivos
+> === .mcp.json servers ===
+> servers: ['gitnexus', 'obsidian', 'playwright', 'gemini-api-docs-mcp']
+> === sprint-priorities head ===
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v6.33.0 — ML Attribution Fix + Browser Operator BoK (2026-06-08)** — o teste **real** do Sovereign no branded link expôs o flywheel emitindo link **MORTO**. **(1) Fix do auto-monetize** (`34d7ef0`): `_shared/affiliate.ts` `buildMlProductUrl` montava o formato BARE `mercadolivre.com.br/MLB-<id>` (404) com 2/3 ids stale → agora resolve `vm_affiliate_products.product_url` real (fonte única Apify), fail-open `/p/`; **reconcilia "ML não conta clique"** (era 404, não falha do matt_word — o painel ML já contara matt_word em produto VÁLIDO em 2026-06-04); provado E2E `7993c6a4` 302 → `/p/MLB27834876`; deploy `orchestrate-step` 122.8kB. **(2) BoK 9/9 do Operador de Browser Autenticado** (`/bok-scribe`, `24ba435`): suíte 756 LOC MR→SDD+STRIDE+FMEA; **gate pagou** — o link oficial é per-user → nova `user_affiliate_links` (não a `vm_affiliate_products.affiliate_template_url` COMPARTILHADA, que vazaria entre tenants — OTD-ABO-003); runtime residencial cravado (datacenter **403** reprovado em produto real `/p/`, bare e `/afiliados/hub`); mesh seal `31323fe3` + DERIVES_FROM edge `9ea18d26` → mercado-livre-api. tsc 0 · suíte **284** · Phase 5c **SEAL ALLOWED** (10) · mesh **8852** · handoff `630509e2`. **Top Gap:** **BUILD do Operador** (gate ABERTO; runtime residencial = Sovereign roda `agent-browser` logado no ML) · domínio Resend · conversão ML real. **Lição:** o teste por **mão do Sovereign** (clicks 0→4) achou o link morto que meu curl-403 do datacenter mascarava; o BoK-first pegou o vazamento cross-tenant **antes** do código.
+> ```
+
+## 🤖 Claude *(22:30:53)*
+
+
+## 🤖 Claude *(22:30:55)*
+
+`scratch/` agora tem arquivos (estava vazio antes) — vou ver o que apareceu. Nenhum MCP novo nesta sessão (gitnexus/obsidian/playwright/gemini-docs já existentes) → sem pendência de doc MCP.
+
+## 🤖 Claude *(22:30:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch contents ===\"; ls -la scratch/\necho \"=== git check: scratch \u00e9 tracked/ignored? ===\"; git check-ignore scratch/ 2>/dev/null && echo \"(ignored)\" || echo \"(not ignored)\"",
+  "description": "Inspect scratch directory contents"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch contents ===
+> total 8
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jun  7 14:41 .
+> drwx------ 29 ubuntu ubuntu 4096 Jun  9 19:29 ..
+> === git check: scratch é tracked/ignored? ===
+> scratch/
+> (ignored)
+> ```
+
+## 🤖 Claude *(22:31:08)*
+
+
+## 🤖 Claude *(22:31:08)*
+
+`scratch/` está vazio (o "tem arquivos" foi falso-positivo do `&&` — dir vazio retorna exit 0) e é git-ignored. ✅ Limpo. Prependo a entrada v6.33.1 no sprint-priorities:
+
+## 🤖 Claude *(22:31:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.33.0 \u2014 ML Attribution Fix + Browser Operator BoK (2026-06-08)**",
+  "new_string": "**Sprint v6.33.1 \u2014 Hotfix Kanban ScrollArea + E2E \u00e0 Prova de Cloudflare (2026-06-09)** \u2014 bug report do Sovereign no `/dashboard/kanban`: `ReferenceError: ScrollArea is not defined` ao criar coluna. **Causa:** `KanbanPage.tsx` usava `<ScrollArea>` (\u00e1rea scroll\u00e1vel de tarefas) sem importar \u2014 s\u00f3 quebrava *depois* da 1\u00aa coluna (empty-state n\u00e3o exercita o componente). **Fix de 1 linha** (`e55ce70`): import `@/components/ui/scroll-area`; deploy material (chunk novo `KanbanPage-CW7WBYjZ.js` \u2260 o do stack trace, import scroll-area + env baked); **confirmado em prod pelo print do Sovereign**. **E2E completo** via preview local do `dist` + sess\u00e3o injetada (CF Turnstile barra agent-browser do datacenter at\u00e9 no `login.mcorch.com`): CRUD + drag-drop bidirecional **provado pelo DB** (3\u00d7 PATCH 200 + SELECT, n\u00e3o pelo DOM). Helper `gen-user-session.ts` (`761ea6f`) p/ E2E logado \u00e0 prova de CF. **Incidente de concorr\u00eancia** (Sovereign mexendo em prod junto) resolvido sem perda de dado \u2014 board/coluna intactos, a \"diverg\u00eancia\" da 1\u00aa rodada era o Sovereign movendo o mesmo card. tsc 0 \u00b7 su\u00edte **284** \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8860** \u00b7 handoff `fd20b125`. **Li\u00e7\u00e3o:** E2E mut\u00e1vel vai em board descart\u00e1vel, nunca no dado real do Sovereign; DB-prod \u00e9 compartilhado. **Diretiva CISO de hardening DEFERIDA** (blueprint `6b1571a` commitado; 4 artefatos BoK de seguran\u00e7a p/ sess\u00e3o dedicada).\n\n**Sprint v6.33.0 \u2014 ML Attribution Fix + Browser Operator BoK (2026-06-08)**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(22:31:21)*
+
+
+## 🤖 Claude *(22:31:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.33.0 — ML Attribution Fix + Browser Operator BoK (2026-06-08)** — o teste **real** do Sovereign no branded link expôs o flywheel emitindo link **MORTO**. **(1) Fix do auto-monetize** (`34d7ef0`): `_shared/affiliate.ts` `buildMlProductUrl` montava o formato BARE `mercadolivre.com.br/MLB-<id>` (404) com 2/3 ids stale → agora resolve `vm_affiliate_products.product_url` real (fonte única Apify), fail-open `/p/`; **reconcilia "ML não conta clique"** (era 404, não falha do matt_word — o painel ML já contara matt_word em produto VÁLIDO em 2026-06-04); provado E2E `7993c6a4` 302 → `/p/MLB27834876`; deploy `orchestrate-step` 122.8kB. **(2) BoK 9/9 do Operador de Browser Autenticado** (`/bok-scribe`, `24ba435`): suíte 756 LOC MR→SDD+STRIDE+FMEA; **gate pagou** — o link oficial é per-user → nova `user_affiliate_links` (não a `vm_affiliate_products.affiliate_template_url` COMPARTILHADA, que vazaria entre tenants — OTD-ABO-003); runtime residencial cravado (datacenter **403** reprovado em produto real `/p/`, bare e `/afiliados/hub`); mesh seal `31323fe3` + DERIVES_FROM edge `9ea18d26` → mercado-livre-api. tsc 0 · suíte **284** · Phase 5c **SEAL ALLOWED** (10) · mesh **8852** · handoff `630509e2`. **Top Gap:** **BUILD do Operador** (gate ABERTO; runtime residencial = Sovereign roda `agent-browser` logado no ML) · domínio Resend · conversão ML real. **Lição:** o teste por **mão do Sovereign** (clicks 0→4) achou o link morto que meu curl-403 do datacenter mascarava; o BoK-first pegou o vazamento cross-tenant **antes** do código.
+> 8	
+> ```
+
+## 🤖 Claude *(22:31:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.33.0 \u2014 ML Attribution Fix + Browser Operator BoK (2026-06-08)** \u2014 o teste **real** do Sovereign no branded link exp\u00f4s o flywheel emitindo link **MORTO**.",
+  "new_string": "**Sprint v6.33.1 \u2014 Hotfix Kanban ScrollArea + E2E \u00e0 Prova de Cloudflare (2026-06-09)** \u2014 bug report do Sovereign no `/dashboard/kanban`: `ReferenceError: ScrollArea is not defined` ao criar coluna. **Causa:** `KanbanPage.tsx` usava `<ScrollArea>` (\u00e1rea scroll\u00e1vel de tarefas) sem importar \u2014 s\u00f3 quebrava *depois* da 1\u00aa coluna (empty-state n\u00e3o exercita o componente). **Fix de 1 linha** (`e55ce70`): import `@/components/ui/scroll-area`; deploy material (chunk novo `KanbanPage-CW7WBYjZ.js` \u2260 o do stack trace, import scroll-area + env baked); **confirmado em prod pelo print do Sovereign**. **E2E completo** via preview local do `dist` + sess\u00e3o injetada (CF Turnstile barra agent-browser do datacenter at\u00e9 no `login.mcorch.com`): CRUD + drag-drop bidirecional **provado pelo DB** (3\u00d7 PATCH 200 + SELECT, n\u00e3o pelo DOM). Helper `gen-user-session.ts` (`761ea6f`) p/ E2E logado \u00e0 prova de CF. **Incidente de concorr\u00eancia** (Sovereign mexendo em prod junto) resolvido sem perda de dado \u2014 board/coluna intactos, a \"diverg\u00eancia\" da 1\u00aa rodada era o Sovereign movendo o mesmo card. tsc 0 \u00b7 su\u00edte **284** \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8860** \u00b7 handoff `fd20b125`. **Li\u00e7\u00e3o:** E2E mut\u00e1vel vai em board descart\u00e1vel, nunca no dado real do Sovereign; DB-prod \u00e9 compartilhado. **Diretiva CISO de hardening DEFERIDA** (blueprint `6b1571a` commitado; 4 artefatos BoK de seguran\u00e7a p/ sess\u00e3o dedicada).\n\n**Sprint v6.33.0 \u2014 ML Attribution Fix + Browser Operator BoK (2026-06-08)** \u2014 o teste **real** do Sovereign no branded link exp\u00f4s o flywheel emitindo link **MORTO**."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:31:39)*
+
+
+## 🤖 Claude *(22:31:39)*
+
+Commitando o sprint update e enviando:
+
+## 🤖 Claude *(22:31:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): registra v6.33.1 hotfix Kanban ScrollArea + E2E + diretiva CISO deferida\" \ngit push origin main 2>&1 | tail -4\necho \"=== housekeeping: limpa tem\u043f\u043e\u0440\u00e1rios do E2E ===\"\nrm -f /tmp/kanban-01-loaded.png /tmp/kanban-02-task-created.png /tmp/kanban-03-moved-running.png /tmp/handoff-node-id.txt /tmp/kanban-e2e*.webm 2>/dev/null\necho \"limpo\"",
+  "description": "Commit and push sprint update, clean temp files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ea7704b..cf682b8  main -> main
+> === housekeeping: limpa temпорários do E2E ===
+> limpo
+> ```
+
+## 🤖 Claude *(22:31:53)*
+
+
+## 🤖 Claude *(22:31:54)*
+
+Sprint commitado e pushado (`cf682b8`). Verificando se o `proof-manifest.json` deve ser tracked (artefato transitório do audit):
+
+## 🤖 Claude *(22:31:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== proof-manifest.json \u00e9 gitignored? hist\u00f3rico? ===\"\ngit check-ignore proof-manifest.json && echo \"(ignored \u2014 n\u00e3o deveria estar tracked)\" || echo \"(not ignored)\"\ngit log --oneline -3 -- proof-manifest.json 2>/dev/null | head -3\necho \"=== est\u00e1 tracked agora? ===\"\ngit ls-files proof-manifest.json",
+  "description": "Check proof-manifest.json tracking status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === proof-manifest.json é gitignored? histórico? ===
+> (not ignored)
+> ea7704b docs(handoff): seal kanban-scrollarea-fix + E2E a prova de Cloudflare
+> 135d5f7 docs(handoff): seal ml-attribution + browser-operator BoK
+> c5b8c3b docs(handoff): seal xss-hardening content_library.body sanitization
+> === está tracked agora? ===
+> proof-manifest.json
+> ```
+
+## 🤖 Claude *(22:32:05)*
+
+
+## 🤖 Claude *(22:32:06)*
+
+Confirmado — `proof-manifest.json` é tracked por convenção (commitado nos seals anteriores 135d5f7/c5b8c3b). Sem drift. Verificação final do estado:
+
+## 🤖 Claude *(22:32:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== working tree limpo? ===\"; git status --short || echo \"limpo\"\necho \"=== HEAD == origin/main? ===\"; git log --oneline origin/main..HEAD | head -3 || true; [ -z \"$(git log --oneline origin/main..HEAD)\" ] && echo \"\u2705 sincronizado (nada pendente de push)\"\necho \"=== \u00faltimo commit ===\"; git log --oneline -1",
+  "description": "Final git state verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree limpo? ===
+> === HEAD == origin/main? ===
+> ✅ sincronizado (nada pendente de push)
+> === último commit ===
+> cf682b8 chore(sprint): registra v6.33.1 hotfix Kanban ScrollArea + E2E + diretiva CISO deferida
+> ```
+
+## 🤖 Claude *(22:32:29)*
+
+
+## 🤖 Claude *(22:32:36)*
+
+Tudo sincronizado, working tree limpo. Selo completo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Kanban ScrollArea Hotfix + E2E à Prova de Cloudflare (2026-06-09)
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA** (Phase 1 + 5b)
+- Secret leak scan (delta): ✅ PASS — sem credenciais hardcoded
+- `gen-user-session.ts`: ✅ lê `SB_SECRET_KEY` de `process.env` (nunca embutido)
+- Blueprint CISO: ✅ sem credenciais
+- Client-side coin deduction: ✅ nenhuma
+- HANDOFF.md secret scan (5b): ✅ PASS (hits do 5b-3 = slugs/UUIDs benignos em histórico)
+
+📦 **COMMITS (6 enviados · `055082c..cf682b8`)**
+- `e55ce70` — fix(kanban): importa ScrollArea ausente
+- `761ea6f` — chore(qa): gen-user-session (E2E à prova de Cloudflare)
+- `6b1571a` — docs(bok): blueprint de hardening de segurança (CISO deferida)
+- `e5b172b` — docs(readme): v6.33.1
+- `ea7704b` — docs(handoff): seal
+- `cf682b8` — chore(sprint): registra v6.33.1
+
+⬡ **KNOWLEDGE MESH**
+- Handoff node: `fd20b125-392d-42ea-95e3-14a036e6a647` — `session-handoff-20260609-kanban-scrollarea-fix-e2e`
+- Embedding: ✅ 768d (openai/text-embedding-3-small)
+- Total: 8852 → **8860** nós
+
+📖 **README.md**
+- Versão: 6.33.0 → **6.33.1**
+- Badge neural_mesh: 8852 → **8860** nós
+- Seção adicionada: What's new v6.33.1
+
+🧠 **HANDOFF.md**
+- Fase selada: Kanban ScrollArea Hotfix + E2E à Prova de Cloudflare
+- Seções: Task State (novo Record), GraphRAG State (8860), Pending Actions (🔐 diretiva CISO deferida)
+
+📋 **PROVA MATERIAL (Phase 5c)**
+- Veredito: **SEAL ALLOWED**
+- Claims: **10 verificadas · 0 skipped · 0 falhas** (handoff node `fd20b125` ✅ · suíte 284 passed ✅ · commits via git cat-file ✅)
+
+📚 **BoK SEAL STATUS (Phase 6)**
+- 18 suítes completas (9/9) · ⚠️ `security` incompleta = **diretiva CISO deferida** (só o blueprint-semente; não-bloqueante — zero módulo shipado contra ela)
+- Módulo tocado: `KanbanPage.tsx` (existente, coberto por `agentic-workspace` BoK) → fix single-file isento
+
+🚀 **PUSH** — main → origin/main · 6 commits · `github.com:gabrielZarattini/constellation-orchestra`
+
+📌 **SPRINT**
+- sprint-priorities.md: ✅ atualizado (v6.33.1)
+- scratch/ cleanup: ✅ limpo
+- MCP docs: ✅ ok (gitnexus/obsidian/playwright/gemini-docs — nenhum novo)
+
+⏭ **PRÓXIMOS PASSOS**
+1. **🔐 Suíte BoK de Segurança (diretiva CISO)** — reaplicar o `MCORCH CYBER-SENTINEL` numa sessão dedicada: gerar os 4 artefatos (`01-brd`/`02-srs`/`03-sdd`/`04-fmea`) production-ready a partir do blueprint `6b1571a`.
+2. **BUILD do Operador de Browser Autenticado** (gate ABERTO) — runner residencial + 2 edge fns + 2 migrations; requer você rodando `agent-browser` logado no ML.
+3. **`link-forge.ts` shape no `/go/<uuid>`** — follow-up menor, autônomo.
+
+```
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Maestro, sessão selada e espelhada no remoto. Resumo do que ficou: o **hotfix do Kanban está em produção e confirmado** (seu print), o E2E provou o workspace inteiro pelo banco, e a **diretiva de segurança CISO está preservada e deferida** com o blueprint commitado — pronta para uma sessão dedicada, que é o caminho certo dado o escopo (12 BRs + 15 FRs + configs de hardening reais + FMEA). É só me chamar com "executa a diretiva CYBER-SENTINEL" quando quiser que eu gere os 4 artefatos.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

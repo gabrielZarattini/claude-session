@@ -6483,6 +6483,6 @@ Próxima sessão: refinar a trava do SELL (pegar revert rápido sem oversell) + 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-09 - Fix settings password overwrite bug preventing logins]]
+> * **Sessão Anterior**: [[2026-06-09 - Generate security BoK documentation suite]]
 > * **Próxima Sessão**: [[2026-06-09 - agent-a012224924c38a7a4]]
 %% --- TIMELINE END --- %%

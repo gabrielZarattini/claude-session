@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 646
+> * **Total de Sessões**: 647
 
 ---
 
@@ -174,6 +174,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-09 - agent-a032f8ee1f180c630]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a012224924c38a7a4]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Monitor HFT trading automation in bear regime]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - Generate security BoK documentation suite]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Fix settings password overwrite bug preventing logins]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Fix farm buy order notional filter failures]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Fix ScrollArea import and test kanban workspace]]` (ClaudeSessions) - *2026-06-09*
