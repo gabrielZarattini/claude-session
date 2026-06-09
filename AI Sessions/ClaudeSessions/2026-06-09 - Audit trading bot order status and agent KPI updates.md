@@ -1,5 +1,5 @@
-# [[2026-06-09 - Audit trading bot order status and agent KPI updates|Audit trading bot order status and agent KPI updates]]
-**Date:** 2026-06-08 | **Session ID:** `31c03b50-f4f8-47d2-a117-ed578d7ffa1d`
+# [[2026-06-08 - Audit trading bot order status and agent KPI updates|Audit trading bot order status and agent KPI updates]]
+**Date:** 2026-06-09 | **Session ID:** `31c03b50-f4f8-47d2-a117-ed578d7ffa1d`
 
 ---
 
@@ -5424,6 +5424,298 @@ Pronto — prompt alinhado, no ar, CI verde. O contraste prova o conserto:
 
 Quer que eu já ataque essa trava no MCP (e de quebra enxugue o `get_memory_indexes` na raiz, igual fizemos com o `get_wallet`), ou seguimos esperando o regime virar pras Fases 4-5?
 
+## 👤 User *(00:05:07)*
+
+ok vou só esperar o final de.:
+
+----
+No TradeUX (/home/gcrux-tradeux/tradeux), o agente LLM (tradeux-agent) é um copiloto observacional que hoje roda em DRY (TRADEUX_ALLOW_TRADING=false). Antes de QUALQUER flip para ALLOW_TRADING=true, é PRÉ-REQUISITO de segurança adicionar uma trava determinística no MCP — porque a estratégia Farm-and-Funnel trata BTC como COFRE que NUNCA vende (vender BTC foi o bug que originou o pivô) e o SYSTEM_PROMPT sozinho NÃO é defesa de execução confiável (ambos os gates QA+TL apontaram isso ao revisar o commit a0869c4).
+
+Tarefa — em tradeux-mcp/src/index.js, na tool tradeux_place_order (~linha 258, hoje aceita side BUY|SELL para qualquer símbolo, gate único = tradingEnabled()):
+1. Rejeitar side === 'SELL' quando o ativo-base é BTC (ex.: BTCUSDT e qualquer BTC<quote>) com erro claro — protege o cofre. Vendas legítimas de BTC vêm das automações do backend (id3/id7), não do agente.
+2. (Defesa contra execução paralela às automações) avaliar exigir um marcador de origem/automationId nas ordens do agente, ou documentar por que não se aplica.
+
+Validar: node tradeux-agent/src/index.js --check (deve listar 28 tools) + teste de que place_order side=SELL symbol=BTCUSDT é rejeitado. É money-path/segurança → rodar gate QA + Tech-Lead antes de subir. Commit trunk-based direto no master: git/docker SEMPRE como sudo -n -u gcrux-tradeux; push via https://x-access-token:$GITHUB_TOKEN_API@github.com/gabrielZarattini/tradeux.git HEAD:master (token no .env, não persistir no .git/config).
+
+Referências: HANDOFF.md (Technical debt, item "Agente — prompt alinhado à Farm-and-Funnel") e a memória tradeux-agent-token-economics. Relacionada: enxugar get_memory_indexes no MCP (lista-tudo ~192k tokens que estoura o contexto do modelo; hoje contornado por orientação no prompt) — mesma classe do get_wallet bloat já resolvido (leanWallet).
+
+Vou começar explorando a estrutura relevante do projeto para entender o código antes de mudar qualquer coisa no money-path. Deixa eu ler o arquivo do MCP, localizar o HANDOFF.md e o entrypoint do agente em paralelo.
+
+Executado
+Explore repo structure, MCP/agent dirs, locate HANDOFF.md
+Repo em /home/gcrux-tradeux/tradeux. Vou ler o MCP completo (é o alvo central), o entrypoint do agente (--check) e o mcpClient.js em paralelo.
+
+
+Leu 3 arquivos
+Já tenho o panorama do MCP. Confirmando a contagem de tools atual (20 read + 8 write = 28), então minha mudança no handler do place_order não deve alterar esse número — é justamente o regression guard do --check.
+
+Antes de escrever código, preciso entender três coisas no backend: (a) o que o endpoint /symbols/{symbol} e o model expõem (tem base/quote?), (b) como o POST /orders trata automationId e se há marcador de origem, (c) o que /beholder/memory/indexes retorna. Vou explorar em paralelo.
+
+Executado
+Locate backend symbol/order/beholder files and indexes route
+Vou ler o model de símbolo, o controller de ordens (POST /orders) + seu router, e o getMemoryIndexes do beholder para entender os três pontos.
+
+
+Leu 4 arquivos
+Importante: o symbolModel tem campos base/quote (autoritativo), e o placeOrder do backend trata automationId como opcional — ou seja, ordens do agente já são "manuais" (automationId null, agrupadas como 'M'/'Others' nos relatórios). Isso já me dá a resposta da parte 2.
+
+Agora preciso ver o mcpClient.js (é o que o --check usa e me servirá pro teste de integração), o getMemoryIndexes do beholder (item relacionado), confirmar node_modules e ler a seção relevante do HANDOFF.
+
+
+Leu um arquivo, executado um comando
+mcpClient.js expõe callTool(name,input) → {text,isError} — perfeito pro teste de integração (sem precisar do backend, já que a trava do cofre lança ANTES do api.post). Vou ler o getMemoryIndexes do beholder e a seção de dívida técnica do HANDOFF.
+
+
+Leu um arquivo, executado um comando
+Tenho o quadro completo. O HANDOFF (linhas 167–172) confirma que ESTE é exatamente o item de dívida técnica (a): trava SELL-BTC + automationId como pré-requisito do ALLOW_TRADING, mais (b) enxugar get_memory_indexes. Vou ler o bloco exato do HANDOFF pra editar depois, confirmar o estado do git (como gcrux-tradeux) e checar presença das chaves no .env sem imprimir o token.
+
+
+Leu um arquivo, executado um comando
+Notas importantes do estado: estou em master (ahead 2 é esperado — pushes via URL com token não atualizam o ref origin/master local), TRADEUX_ALLOW_TRADING não está setada (DRY confirmado), GITHUB_TOKEN_API presente. Há um arquivo docs/... untracked que não é meu — não vou tocá-lo.
+
+Preciso resolver a estratégia de edição por causa do "git ownership gotcha": o shell roda como ubuntu, mas os arquivos são de gcrux-tradeux. Vou checar se ubuntu consegue escrever (membro do grupo) ou se preciso gravar como gcrux-tradeux.
+
+Executado
+Check ubuntu group membership, file writability, git identity
+ubuntu está no grupo gcrux-tradeux (gid 1013) e o index.js é group-writable → edição in-place preserva o dono. Vou rodar todo git/docker como sudo -n -u gcrux-tradeux mesmo assim (respeitando o gotcha). Identidade git correta. O HANDOFF.md real (/home/gcrux-tradeux/HANDOFF.md) está fora do repo → não entra no commit.
+
+Vou ler o package.json do MCP e o CI antes de implementar.
+
+
+Leu um arquivo, executado um comando
+Tudo mapeado. Plano: trava SELL-BTC determinística no place_order + doc do porquê automationId obrigatório não se aplica + teste de regressão (hermético) + wire no CI; depois gate QA + Tech-Lead antes de commitar/pushar como gcrux-tradeux. O get_memory_indexes (item relacionado/secundário) fica como commit separado depois, pra não misturar refactor de read-path com a mudança de segurança.
+
+Implementando agora as edições no MCP.
+
+Trava do cofre no MCP
+Editado
+index.js
++51
+-2
+Edições no MCP feitas. Agora crio o teste de regressão (hermético — força creds vazias + API inalcançável pra nunca enviar ordem real) e leio o bloco exato do CI pra encaixar o step.
+
+Criado
+place-order-vault-guard.mjs
++82
+-0
+O arquivo ficou com um caractere corrompido na última linha. Vou corrigir.
+
+Editado
+place-order-vault-guard.mjs
++1
+-1
+Agora adiciono o script test no package.json do MCP e leio o bloco exato do job de integração do CI pra encaixar o step.
+
+
+Editado um arquivo, leu um arquivo
+Adiciono o step de regressão no job de integração do CI (logo após o --check). O env do step --check é escopado só a ele, e o teste ainda força credenciais vazias no MCP que sobe — então é hermético.
+
+Editado
+ci.yml
++3
+-0
+Edições completas. Agora valido: (1) --check deve listar 28 tools (regression guard de registro) e (2) o teste da trava deve passar.
+
+Executado
+Run agent --check (count tools) and the vault-guard regression test
+Ambas as validações passam: --check = 28 tools e o teste da trava cobre 10 casos (5 SELL-BTC rejeitados incl. case-insensitive e múltiplos quotes; 5 não-barrados corretamente: ETHUSDT, BUY BTCUSDT, ETHBTC, BTCUP, BTCDOWNUSDT).
+
+Agora confiro ownership dos arquivos tocados, faço stage só dos meus arquivos (sem o docs/ untracked) e gero o diff pros gates.
+
+Executado
+Check ownership, stage only my files as gcrux-tradeux, write staged diff for gates
+Validações verdes. Observação: as edições in-place fizeram o ownership dos 4 arquivos virar ubuntu:ubuntu (modo 0664 → gcrux-tradeux lê como "other", por isso o git add como gcrux funcionou). O .git foi manipulado só como gcrux-tradeux, então não há poison. Vou confirmar isso e disparar os gates QA + Tech-Lead em paralelo sobre o diff staged — é money-path, então quero revisão adversarial de verdade.
+
+
+Executado um comando
+.git íntegro (gcrux-tradeux) e parse OK nos dois arquivos. Disparando os dois gates em paralelo sobre o diff.
+-----
+
+Que é a sugestão sua mesmo que quando eu cliquei abriu uma nova sessão com isso acima.... ai sim quando terminar, podemos fazer o handoff aqui e vamos atacar uma nova frente. Quero um deepSearch de como aplicar com maestria e fundamento.:
+
+Visão geral criada por IA                     Para obter lucro em mercados em baixa (bear market) no gráfico de 1 minuto, a prática mais comum é o Scalping a descoberto (Short selling). Você não tenta adivinhar o fundo; em vez disso, opera a favor da tendência de queda, vendendo o ativo caro e recomprando mais barato logo em seguida.Fundamentos da Operação em BaixaVenda a descoberto: Você aluga o ativo do seu broker (ou usa contratos futuros, como minicontratos na B3 ou criptomoedas), vende e recompra depois embolsando a diferença.Ciclos curtos: O objetivo no timeframe de 1m não é surtir quedas longas, mas sim pegar impulsos rápidos (o chamado buy the dip, sell the rip ou, nesse caso, sell the pop, buy the drop).Passo a Passo para Operar no 1MConfirme a tendência macro: Nunca opere apenas o gráfico de 1m. Olhe o gráfico de 15m ou 1m para garantir que a tendência principal é de baixa.Espere o Pullback (Correção): Espere o preço dar uma "respirada" para cima. Em um bear market, o movimento de subida geralmente é fraco e não rompe o topo anterior.Padrões de reversão de baixa: Use candles de fraqueza, como a Estrela Cadente (pavio longo em cima) ou o Engolfo de Baixa (candle vermelho grande engolindo um pequeno verde).Entrada e Saída: Entre vendido (short) assim que o padrão se confirmar. Defina seu alvo (gain) em um nível de suporte próximo e seu stop loss logo acima da máxima da correção recente para proteger seu capital.Ferramentas e Indicadores ÚteisMédias Móveis Exponenciais (EMAs): Uma configuração comum para o 1m é usar as EMAs de 9 (rápida) e 21 (lenta) períodos. Em momentos de baixa, o preço tende a bater na média e ser rejeitado para baixo.VWAP: Ajuda a filtrar a tendência do dia; se o preço estiver operando abaixo da VWAP, priorize operações de venda.RSI (Índice de Força Relativa): Útil para identificar quando o preço está sobrecomprado no curto prazo antes de um novo movimento de queda.Gestão de Risco EstritaAlavancagem: Operar no 1m costuma exigir muita alavancagem. Gerencie o risco para perder pouco por operação.Relação Risco/Retorno: Busque operações onde você possa ganhar pelo menos o dobro ou o triplo do que está arriscando perder (1:2 ou 1:3).Para dicas de como identificar a rejeição de preço nas médias móveis e gatilhos de entrada exatos:NQ 1 Min Scalping/Bear Bull Flag Strategy Alive and WellZeffsTradingYouTube · 18 de jul. de 20247:50Se você quiser refinar suas operações, me diga:Qual mercado você prefere operar (ações, Forex ou criptomoedas)?Você já utiliza alguma corretora ou plataforma específica?Qual é o seu atual nível de experiência com análise técnica?[CANDLES CLASS] Bearish Engulfing Pattern12 de jul. de 2022 — o urso engolfando aqui né tempo gráfico sempre ali no gráfico de 15 minutos. ok então aqui ó o padrão em Golfo agora ele vai troca...10:09YouTube·Wall Street Invest10 fortes padrões de velas de baixa - LiteFinanceConteúdo traduzido — 26/02/2026 29/01/2025 - 10 Padrões Fortes de Candlestick de Baixa. 10 padrões de velas de baixa que todo trader precisa conhecer |LiteFinanceJa pensou SABER QUANDO o mercado vai PARAR de ...5 de jun. de 2026 — 🤯Ja pensou SABER QUANDO o mercado vai PARAR de CAIR ⬇️ ou SUBIR ⬆️ ❓🤔
+
+VOLUME AT PRICE esta janela q vejo na minha plataforma me...1:42Instagram·Alison Correia7 ways to lose money in day trading (I did them all)14 de mai. de 2026 — as coisas para muita gente para alguns não tem gente que não aguenta nem assistir uma aula de 10 minutos até o fim vai virar. esta...2mYouTube·O Cara do MercadoNQ 1 Min Scalping/Bear Bull Flag Strategy Alive and Well18 de jul. de 2024 — so I again always really like to trail my stop loss under each new entry bar um and I really would just probably would have entere...7:50YouTube·ZeffsTradingone minute scalping Strategy: Rules, Setup, And Trading - Evest29 de mar. de 2026 — One-minute scalping focuses on capturing very small price movements in highly liquid markets using a 1-minute chart. Traders watch...EvestBest 1-Minute Scalping Strategies for Forex Traders1 de abr. de 2026 — Strategy 1: EMA Crossover Scalping * EMA 9 (fast line) — tracks immediate price momentum. * EMA 21 (slow line) — represents the sh...NYCServersMy Simplest 1 Minute Scalping Strategy (BACK TESTED ...20 de nov. de 2025 — it would be the strategy that I'm going to share with you in this video now in this video I'm going to show you guys a breakout st...14mYouTube·Mathew OdongMelhores indicadores de trading: Indicadores técnicos mais ... - AxiOs melhores indicadores técnicos para o day trading são o RSI, a variação percentual Williams e a MACD. Essas medições mostram nív...Axi1-Minute Scalping Strategy: Rules, Entries, Exits9 de jan. de 2026 — Scalping on the 1-minute chart has been one of my most reliable ways to capture quick moves in fast-moving markets. When a stock i...Warrior TradingEntenda os padrões de velas de 5 minutos e maximize sua ...19 de dez. de 2024 — 8. Quebra de Topo Plano: Indica uma continuação de baixa. Uma quebra abaixo do suporte sinaliza mais desvalorização—ideal para ven...BinanceCOMO GANHAR NA BAIXA E NA ALTA NO DAY TRADE7 de jun. de 2022 — você sabe como que você consegue ganhar na alta e na baixa em operações na bolsa de valores. no day trade em Forex em criptomoedas...27:13YouTube·Wall Street Invest   As respostas da IA podem conter erros. Para orientação jurídica, consulte um profissional. Saiba mais
+
+---
+
+E enquanto eu digitava copiava e colava tudo acima a outra sessão terminou.:
+
+Vou começar explorando a estrutura relevante do projeto para entender o código antes de mudar qualquer coisa no money-path. Deixa eu ler o arquivo do MCP, localizar o HANDOFF.md e o entrypoint do agente em paralelo.
+
+Repo em `/home/gcrux-tradeux/tradeux`. Vou ler o MCP completo (é o alvo central), o entrypoint do agente (`--check`) e o `mcpClient.js` em paralelo.
+
+Já tenho o panorama do MCP. Confirmando a contagem de tools atual (20 read + 8 write = **28**), então minha mudança no handler do `place_order` não deve alterar esse número — é justamente o regression guard do `--check`.
+
+Antes de escrever código, preciso entender três coisas no backend: (a) o que o endpoint `/symbols/{symbol}` e o model expõem (tem `base`/`quote`?), (b) como o POST `/orders` trata `automationId` e se há marcador de origem, (c) o que `/beholder/memory/indexes` retorna. Vou explorar em paralelo.
+
+Vou ler o model de símbolo, o controller de ordens (POST /orders) + seu router, e o `getMemoryIndexes` do beholder para entender os três pontos.
+
+Importante: o `symbolModel` tem campos `base`/`quote` (autoritativo), e o `placeOrder` do backend trata `automationId` como opcional — ou seja, ordens do agente já são "manuais" (automationId null, agrupadas como 'M'/'Others' nos relatórios). Isso já me dá a resposta da parte 2.
+
+Agora preciso ver o `mcpClient.js` (é o que o `--check` usa e me servirá pro teste de integração), o `getMemoryIndexes` do beholder (item relacionado), confirmar `node_modules` e ler a seção relevante do HANDOFF.
+
+`mcpClient.js` expõe `callTool(name,input) → {text,isError}` — perfeito pro teste de integração (sem precisar do backend, já que a trava do cofre lança ANTES do `api.post`). Vou ler o `getMemoryIndexes` do beholder e a seção de dívida técnica do HANDOFF.
+
+Tenho o quadro completo. O HANDOFF (linhas 167–172) confirma que ESTE é exatamente o item de dívida técnica (a): trava SELL-BTC + automationId como pré-requisito do `ALLOW_TRADING`, mais (b) enxugar `get_memory_indexes`. Vou ler o bloco exato do HANDOFF pra editar depois, confirmar o estado do git (como gcrux-tradeux) e checar presença das chaves no `.env` sem imprimir o token.
+
+Notas importantes do estado: estou em `master` (ahead 2 é esperado — pushes via URL com token não atualizam o ref `origin/master` local), `TRADEUX_ALLOW_TRADING` não está setada (DRY confirmado), `GITHUB_TOKEN_API` presente. Há um arquivo `docs/...` untracked que **não é meu** — não vou tocá-lo.
+
+Preciso resolver a estratégia de edição por causa do "git ownership gotcha": o shell roda como `ubuntu`, mas os arquivos são de `gcrux-tradeux`. Vou checar se `ubuntu` consegue escrever (membro do grupo) ou se preciso gravar como `gcrux-tradeux`.
+
+ubuntu está no grupo `gcrux-tradeux` (gid 1013) e o `index.js` é group-writable → edição in-place preserva o dono. Vou rodar **todo git/docker como `sudo -n -u gcrux-tradeux`** mesmo assim (respeitando o gotcha). Identidade git correta. O `HANDOFF.md` real (`/home/gcrux-tradeux/HANDOFF.md`) está fora do repo → não entra no commit.
+
+Vou ler o `package.json` do MCP e o CI antes de implementar.
+
+Tudo mapeado. Plano: trava SELL-BTC determinística no `place_order` + doc do porquê `automationId` obrigatório não se aplica + teste de regressão (hermético) + wire no CI; depois **gate QA + Tech-Lead** antes de commitar/pushar como `gcrux-tradeux`. O `get_memory_indexes` (item relacionado/secundário) fica como commit separado depois, pra não misturar refactor de read-path com a mudança de segurança.
+
+Implementando agora as edições no MCP.
+
+Edições no MCP feitas. Agora crio o teste de regressão (hermético — força creds vazias + API inalcançável pra nunca enviar ordem real) e leio o bloco exato do CI pra encaixar o step.
+
+O arquivo ficou com um caractere corrompido na última linha. Vou corrigir.
+
+Agora adiciono o script `test` no `package.json` do MCP e leio o bloco exato do job de integração do CI pra encaixar o step.
+
+Adiciono o step de regressão no job de integração do CI (logo após o `--check`). O env do step `--check` é escopado só a ele, e o teste ainda força credenciais vazias no MCP que sobe — então é hermético.
+
+Edições completas. Agora valido: (1) `--check` deve listar **28 tools** (regression guard de registro) e (2) o teste da trava deve passar.
+
+Ambas as validações passam: **`--check` = 28 tools** e o **teste da trava cobre 10 casos** (5 SELL-BTC rejeitados incl. case-insensitive e múltiplos quotes; 5 não-barrados corretamente: ETHUSDT, BUY BTCUSDT, ETHBTC, BTCUP, BTCDOWNUSDT).
+
+Agora confiro ownership dos arquivos tocados, faço stage só dos meus arquivos (sem o `docs/` untracked) e gero o diff pros gates.
+
+Validações verdes. Observação: as edições in-place fizeram o ownership dos 4 arquivos virar `ubuntu:ubuntu` (modo 0664 → `gcrux-tradeux` lê como "other", por isso o `git add` como gcrux funcionou). O `.git` foi manipulado só como gcrux-tradeux, então não há poison. Vou confirmar isso e disparar os **gates QA + Tech-Lead em paralelo** sobre o diff staged — é money-path, então quero revisão adversarial de verdade.
+
+`.git` íntegro (gcrux-tradeux) e parse OK nos dois arquivos. Disparando os dois gates em paralelo sobre o diff.
+
+Os dois gates trouxeram um achado convergente e correto. **TL: APPROVE COM SUGESTÕES** (e confirmou o fato crítico de segurança: as automações id3/id7 **não passam por este caminho** — executam in-process no `beholder.js`, então risco zero ao fluxo legítimo). **QA: PASS COM RESSALVAS** com um **HIGH real**: a QA consultou a Binance Spot ao vivo e achou **5 pares BTC-base em TRADING fora da minha lista de quotes** (BTCUSDS, BTCUSD1, BTCEURI, BTCIDR, BTCU) — todos passariam pela trava.
+
+Ambos apontam a mesma raiz: **allowlist de quotes falha ABERTO**. O conserto que os dois endossam é inverter para **fail-closed**. Vou corrigir agora (é barato e claramente certo) em vez de mergear uma trava com furo conhecido: trato **qualquer símbolo que começa com `BTC` como cofre por padrão**, com exceções explícitas só para tokens cujo ticker começa com BTC mas a base não é BTC (BTCUP/BTCDOWN/BTCST). Assim novos `BTC<quote>` nascem bloqueados, sem manutenção de lista.
+
+Agora atualizo o teste pra refletir a política fail-closed: incluo os **5 símbolos que a QA achou ao vivo** (BTCUSDS/BTCUSD1/BTCEURI/BTCIDR/BTCU) como BLOQUEADOS, adiciono variação de `type` (trava o caso TRAILING que a QA validou) e provo as exceções (BTCUPUSDT/BTCSTUSDT seguem não-barrados).
+
+Re-validando após o fix fail-closed.
+
+Todos os **21 casos** passam e `--check` segue **28 tools**. O furo HIGH (5 pares ao vivo) agora está fechado por construção (fail-closed). Re-stage dos arquivos e re-gero o diff; depois confirmo com o gate QA (que fez a enumeração ao vivo) que o HIGH está fechado.
+
+Fix verificado pelo teste (os 5 símbolos que a QA achou ao vivo agora são bloqueados). Como é money-path e a QA já tem o contexto da enumeração ao vivo da Binance carregado, vou pedir a ela uma confirmação direcionada de que o HIGH está fechado. Preciso localizar o mecanismo de continuação de subagente.
+
+O `send_message` disponível é para outras sessões (e exige confirmação do usuário), não para continuar meu subagente — e o `Agent` inicia contexto novo. Como isto é money-path e a QA levantou um furo concreto, vou rodar **uma re-verificação QA focada** do fix (vale o custo pelo risco). O TL já endossou explicitamente esta inversão fail-closed, então não preciso re-rodar o TL.
+
+Antes, minha própria checagem do único risco novo (over-block): o fix só bloqueia *mais* SELLs de `BTC*` — e o agente nunca vende nenhum par BTC* (BTC é o cofre; ele só opera BTCUSDT e só na compra/venda de USDT contra BTC… na verdade ele compra BTC). BUY, símbolos não-BTC, automações e painel: intocados. Sem quebra de fluxo legítimo. Mando a QA confirmar adversarialmente.
+
+Re-verificação QA: **PASS COM RESSALVAS, HIGH FECHADO** — confirmado contra a Binance ao vivo (16 pares BTC-base TRADING, **0 escapam**; exceção nunca engole o cofre; único over-block é BTCBBTC, deslistado/inócuo). Sem blockers. Junto com o **TL APPROVE**, estou liberado pra commitar.
+
+Aprendizados não-bloqueantes que vou registrar (não exigem mudança de código): (a) a premissa "BTCUSDT-only" estava desatualizada — o prompt do agente também faz FARM de alts (LTC/BNB/ADA) vs USDT; o invariante que sustenta a trava é "BTC=cofre, nenhum SELL de par BTC* é legítimo" (as alts não começam com BTC, então a trava não as toca); (b) o backend `ordersController` não tem trava equivalente — dívida pro dia do flip se o modelo de ameaça incluir UI/outros clientes.
+
+Vou escrever a mensagem de commit, commitar como `gcrux-tradeux` e verificar fast-forward contra o remoto (sem imprimir o token).
+
+O `/tmp/commitmsg.txt` já existe; vou criar a mensagem via heredoc num path novo e, na mesma chamada, commitar como `gcrux-tradeux` e verificar fast-forward contra o remoto (sem imprimir o token).
+
+Commit `9898bdf` criado (4 arquivos). Remoto está em `a0869c4` e é ancestral do meu HEAD → **fast-forward limpo** (o "ahead 2" era só o ref de tracking local desatualizado; o push enviará só este commit). Fazendo o push pra master, mascarando qualquer credencial na saída.
+
+**Push OK**: `a0869c4..9898bdf`, remoto == HEAD. (O aviso do dependabot é pré-existente, sobre deps do branch — não relacionado; governado pelo SECURITY.md.)
+
+Agora registro o estado: atualizo o item de dívida (a) no HANDOFF.md (→ RESOLVIDO, com os follow-ups não-bloqueantes que os gates levantaram) e confirmo que o `.git` segue íntegro.
+
+Agora gravo uma memória focada sobre a trava (fato durável p/ próximas sessões: existe, é fail-closed, e o status dos pré-requisitos do flip).
+
+Adiciono o ponteiro no índice `MEMORY.md`.
+
+Estado de (a) registrado (HANDOFF + memória). A trava está **shipped, gated e documentada**. 
+
+Agora vou ao item relacionado (b): enxugar `get_memory_indexes` — mesma classe do `leanWallet` já resolvido (read-path, baixo risco). Pela precedência do leanWallet (commit `6f97209`, "gate proporcional = direto + auto-validado"), faço direto com auto-validação, em commit separado pra não misturar com a mudança de segurança.
+
+Implementando o `leanMemoryIndexes` (espelha o `leanWallet`: resumo compacto sem símbolo, detalhe filtrado por símbolo) e atualizando a tool.
+
+Validando (b): parse, `--check` (deve seguir 28 tools — não adicionei tool, só mudei a assinatura de uma existente) e uma checagem sintética da lógica do `leanMemoryIndexes` (resumo compacto vs. filtro por símbolo), já que o transform é puro e o backend não está acessível pra teste ponta-a-ponta aqui.
+
+Lógica confirmada: resumo compacto (variáveis + símbolos capados + `_omittedSymbols`) sem símbolo; detalhe filtrado (case-insensitive) com símbolo; não-array passa intacto. `--check` segue **28 tools**. Pela precedência do leanWallet (read-path → direto + auto-validado), commito (b) separado e pusho.
+
+Commit `2d01002`, FF-OK. Pushando.
+
+Ambos os commits no master: **`9898bdf`** (trava, gated QA+TL) e **`2d01002`** (leanMemoryIndexes). Remoto == HEAD.
+
+Atualizando o estado do item (b) — que ficou parcialmente resolvido (fiz `get_memory_indexes`; `get_memory`/`get_wallet_full` sem símbolo seguem abertos) — no HANDOFF e na memória.
+
+Tudo registrado. Verificação final do estado do repositório.
+
+Trabalho concluído e no master. Resumo abaixo.
+
+## ✅ Entregue (2 commits no master, trunk-based, como `gcrux-tradeux`)
+
+### 1. Trava determinística do cofre — `9898bdf` (money-path, com gates)
+A tarefa principal: [tradeux-mcp/src/index.js](tradeux/tradeux-mcp/src/index.js) na tool `tradeux_place_order`.
+
+- **Rejeita `side=SELL` de qualquer símbolo do cofre BTC**, para **qualquer `type`** (MARKET/LIMIT/STOP/TRAILING), **antes** de qualquer chamada ao backend. Erro claro apontando que vendas legítimas de BTC vêm das automações id3/id7.
+- **Decisão de design importante (puxada pelo gate QA):** comecei com uma *allowlist de quotes*, mas a QA enumerou a Binance Spot **ao vivo** e achou **5 pares BTC-base em TRADING fora da lista** (BTCUSDS, BTCUSD1, BTCEURI, BTCIDR, BTCU) que **escapariam** → venda real do cofre. Inverti para **FAIL-CLOSED**: `isBtcVaultSymbol` bloqueia **todo** símbolo que começa com "BTC", exceto os prefixos não-base `BTCUP/BTCDOWN/BTCST`. Assim, **pares `BTC<quote>` novos nascem bloqueados sem manutenção de lista** — o modo de falha virou over-block (seguro), nunca deixar passar.
+- **`automationId` obrigatório: AVALIADO e DESCARTADO** (documentado no código). Ordens do agente são manuais por design (`automationId` ausente → bucket 'M'/'Others' em `groupByAutomations`); forçar id falso corromperia o P&L e **não é mutex**. As automações id3/id7 nem passam por este caminho (executam in-process no `beholder.js`), então a trava é cirúrgica — risco zero ao fluxo legítimo (confirmado pelo TL).
+- **Teste de regressão hermético** ([place-order-vault-guard.mjs](tradeux/tradeux-mcp/test/place-order-vault-guard.mjs), 21 casos) + `npm test` + **step no CI**.
+
+### 2. `get_memory_indexes` enxugado — `2d01002` (item relacionado, read-path)
+`leanMemoryIndexes`: **sem símbolo** → resumo compacto (variáveis + símbolos, sem eval/example); **com símbolo** → chaves detalhadas só do par. Elimina o ~192k tok / 400 context-overflow. Mesma classe do `leanWallet` → direto + auto-validado.
+
+## 🔍 Validação
+- `node tradeux-agent/src/index.js --check` → **28 tools** (inalterado).
+- Teste da trava → **21/21 passam** (5 pares do incidente bloqueados, variação de type, exceções OK).
+- **Gates:** QA **PASS** (HIGH fechado, validado vs Binance ao vivo — 16 pares BTC-base, 0 escapam) · TL **APPROVE**.
+
+## ⚠️ Follow-ups não-bloqueantes (registrados no HANDOFF + memória)
+1. **O backend `ordersController.placeOrder` não tem trava equivalente** — ordens via UI/outro cliente MCP não passam por ela. Para o flip `ALLOW_TRADING=true`, se o modelo de ameaça incluir "qualquer caminho com as chaves", a defesa definitiva deveria estar no backend.
+2. **Premissa "agente BTCUSDT-only" estava errada** — o SYSTEM_PROMPT autoriza FARM de alts (LTC/BNB/ADA) vs USDT. Não quebra a trava (alts não começam com "BTC"), mas corrigi a premissa nos docs.
+3. **Resíduo fora de escopo:** BUY de par BTC-quote (ex.: `BUY ETHBTC`) também drena o cofre — o agente não negocia esses pares.
+4. `get_memory`/`get_wallet_full` sem símbolo ainda merecem o mesmo enxugamento; e o prompt ainda proíbe `get_memory_indexes` (contorno antigo) — **pode reabilitar** agora.
+
+Nota: `git status` mostra "ahead 4" — é cosmético (pushes via URL com token não atualizam o ref `origin/master` local); confirmei remoto == HEAD == `2d01002` após cada push. O untracked `docs/Engenharia Preditiva...` **não é meu** e ficou de fora dos commits.
+
+___
+
+O `/handoff` pede selar a sessão. Vou rodar o ritual, mas adaptado ao workflow real deste repo (que a memória e a própria tarefa desta sessão ditam): trunk-based direto no master e push via token URL como `gcrux-tradeux` — não branch/PR nem push-como-root via SSH (a PHASE 2/5 do template conflita com as memórias [git-ownership-gotcha] e [tradeux-orchestration-model]). Além disso, o código já foi commitado e pushado nesta sessão (`9898bdf` + `2d01002`), então as fases de commit/push são essencialmente no-op. Vou sinalizar esse desvio no output.
+PRE-FLIGHT + secret scan (sobre os commits que subiram, não só o working tree) + estado dos containers:
+Pre-flight limpo: árvore limpa (só o `docs/` untracked alheio), secret scan vazio ✅, `.env` gitignored ✅, e os 4 containers no ar.
+Nota relevante: o container `tradeux-agent` está "Up 3 hours" — roda a imagem anterior aos meus commits. Como o agente está em DRY (`ALLOW_TRADING=false`), a trava não faz diferença no container vivo ainda (ele não pode vender de qualquer jeito); vou registrar isso como next-step (rebuild p/ ativar), não é urgente.
+Vou ler o rodapé do HANDOFF pra casar o formato das entradas SEAL e a ordem (newest-first/last) antes de anexar a Session Record.
+Estrutura clara: seção "Session Records (newest last)" → anexo minha entrada SEAL no fim do arquivo. Vou ler a última entrada pra casar o formato exato.
+Confirmação útil: a SEAL anterior termina com "0 PRs (trunk-based)" e lista exatamente as 2 dívidas que fechei — confirmando que branch/PR não é o workflow aqui (todo SEAL é direct-to-master). Minha adaptação está alinhada.
+Anexando a Session Record desta sessão no fim do HANDOFF.
+SEAL anexada. Agora tento restaurar o ownership dos arquivos que editei (ficaram `ubuntu:ubuntu` pelas edições in-place) de volta p/ `gcrux-tradeux` — higiene pra próxima sessão. Isso exige root; se `sudo -n` não permitir, sigo sem (é cosmético — já commitado/pushado e o serviço lê via other:r).
+Ownership restaurado p/ `gcrux-tradeux` em todos os arquivos tocados; `.git` íntegro. Verificação final de sincronia com o remoto pra fechar o seal.
+Sessão selada. Tudo verificado e sincronizado.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-08
+───────────────────────────────────────────────────
+Commits     : 2 (feat(mcp), perf(mcp))  |  Branch: master
+HANDOFF.md  : ✅ atualizado (dívidas (a)+(b) → ✅ · Session Record anexada)
+Memory      : 2 arquivos (tradeux-vault-guard.md nova + MEMORY.md índice)
+PRs abertos : 0 — trunk-based direct-to-master (sem PR por design)
+Push        : ✅ origin sincronizado (master == 2d01002)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+
+```
+
+Selado nesta sessão (fecha as 2 dívidas pré-flip `ALLOW_TRADING`):
+
+* `9898bdf` — trava FAIL-CLOSED de SELL-BTC no `tradeux_place_order` (gate QA PASS + TL APPROVE; teste hermético 21 casos + CI).
+* `2d01002` — `get_memory_indexes` enxuto (`leanMemoryIndexes`; mata o ~192k tok/overflow).
+2 desvios do template `/handoff` que sinalizo (não os segui — conflitam com o workflow real e com as memórias [git-ownership-gotcha]/[tradeux-orchestration-model]):
+
+1. PHASE 2/5 (branch + PR + push-as-root via SSH): este repo é trunk-based direct-to-master, push via token URL como `gcrux-tradeux` — que é como já subi os 2 commits. Todo SEAL anterior também é "0 PRs (trunk-based)". Por isso não há URL `…/pull/new/`. Vale atualizar o skill `shake-hands` pra refletir isso.
+2. Restaurei o ownership dos arquivos editados p/ `gcrux-tradeux` e confirmei `.git` íntegro (nunca rodei git como root/ubuntu).
+Aberto p/ a próxima sessão (registrado no HANDOFF/memória, nada urgente):
+
+* O container `tradeux-agent` (Up 3h) roda a imagem anterior — `docker compose up -d --build agent` ativa a trava/lean no vivo. Sem pressa: DRY (`ALLOW_TRADING=false`), o agente não executa ordens.
+* Follow-ups dos gates: trava equivalente no backend `ordersController` (p/ cobrir UI/outros clientes no dia do flip); enxugar `get_memory`/`get_wallet_full` sem símbolo; reabilitar `get_memory_indexes` no prompt do agente.
+Quer que eu já faça o rebuild do container `tradeux-agent` pra ativar as mudanças no serviço vivo?
+
+## 👤 User *(00:07:13)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5433,6 +5725,5 @@ Quer que eu já ataque essa trava no MCP (e de quebra enxugue o `get_memory_inde
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-08 - Add BTC sell guard to MCP place_order tool]]
-> * **Próxima Sessão**: [[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]
+> * **Sessão Anterior**: [[2026-06-08 - agent-aeba8bb08b81aa215]]
 %% --- TIMELINE END --- %%

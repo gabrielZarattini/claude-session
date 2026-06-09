@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 526
-> * **Sessões do Claude**: 489
+> * **Total de Sessões Registradas**: 527
+> * **Sessões do Claude**: 490
 > * **Sessões do Gemini**: 37
 
 ---
@@ -59,6 +59,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` - *2026-06-09*
 *   `[[2026-06-08 - handson]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-aeba8bb08b81aa215]]` - *2026-06-08*
 *   `[[2026-06-08 - agent-ad5355e20b0a5e1fd]]` - *2026-06-08*
@@ -70,8 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-08 - Sanitize AI-generated HTML in DashboardHome with DOMPurify]]` - *2026-06-08*
 *   `[[2026-06-08 - Audit trading bot order status and agent KPI updates]]` - *2026-06-08*
 *   `[[2026-06-08 - Add BTC sell guard to MCP place_order tool]]` - *2026-06-08*
-*   `[[2026-06-08 - Activate trend pipeline with SMA 50200 indicators]]` - *2026-06-08*
-*   *... e mais 490 sessões nessa categoria.*
+*   *... e mais 491 sessões nessa categoria.*
 
 ---
 
@@ -262,6 +262,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions)
 *   `[[2026-06-08 - handson]]` (GeminiSessions)
 *   `[[2026-06-08 - agent-aeba8bb08b81aa215]]` (ClaudeSessions)
 *   `[[2026-06-08 - agent-ad5355e20b0a5e1fd]]` (ClaudeSessions)
