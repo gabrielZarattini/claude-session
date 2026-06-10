@@ -1655,5 +1655,5 @@ Para CADA mudança (A e B): veredicto APPROVE / APPROVE COM SUGESTÕES / REQUEST
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-10 - agent-ab8803a5b1c4912fc]]
-> * **Próxima Sessão**: [[2026-06-10 - agent-ac73b79fbee6a7123]]
+> * **Próxima Sessão**: [[2026-06-10 - agent-abef51a13bcbf6de3]]
 %% --- TIMELINE END --- %%
