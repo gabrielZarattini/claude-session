@@ -8239,6 +8239,1530 @@ Live documentation URLs are in `shared/live-sources.md`.
 }
 ```
 
+> **Tool Result (TaskOutput)** - ✅ Success
+>
+> ```
+> <retrieval_status>success</retrieval_status>
+> 
+> <task_id>wr6vzsvto</task_id>
+> 
+> <task_type>local_workflow</task_type>
+> 
+> <status>completed</status>
+> 
+> <output>
+> [Truncated. Full output: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/240db21b-cd40-4765-a3f4-345f03d2fc33/tasks/wr6vzsvto.output]
+> 
+>  mode used by AIOSTerminal:517)"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-live-proxy/index.ts",
+>             "line": 61,
+>             "detail": "geminiKey = userKeys.google_api_key || Deno.env GEMINI_API_KEY (per-user→env fallback); usage attributed to model 'google/gemini-3.1-flash-live-preview' at line 176"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tts-speak/index.ts",
+>             "line": 10,
+>             "detail": "TTS_MODEL = 'gemini-2.5-flash-preview-tts' (invoked from AIOSTerminal:373); key resolution userKeys.google_api_key || GEMINI_API_KEY at line 76"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts",
+>             "line": 26,
+>             "detail": "Auto-heal: if pref_ai_model == 'gemini-3.1-flash-live-preview' (bad persisted value) it is reset to 'gemini-2.5-flash' (lines 26-40)"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+>             "line": 135,
+>             "detail": "Settings UI also persists pref_ai_model (default 'gemini-2.5-flash' at 135 and 164; Select control at 344-351) — second writer of the same DB column"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql",
+>             "line": 5,
+>             "detail": "ADD COLUMN pref_ai_model TEXT DEFAULT 'gemini-2.5-flash' — canonical DB default; column threaded through every encrypted-view trigger migration (20260601000000:397/504/522/602, 20260601000600:57, 20260601060000:156-237, 20260602130000:65-78, 20260603240000:103-185) and surfaced in src/integrations/supabase/types.ts:2512/3408/3534"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts",
+>             "line": 163,
+>             "detail": "Agentic-workspace gateway (adjacent, not Core v2): attributes usage to pseudo-model `openclaw/${targetAgent}` (lines 163/187/212/273); fired by pg_net trigger migration 20260606220000 on aios_messages INSERT"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useA2UI.ts",
+>             "line": 34,
+>             "detail": "DEMO_DATA AgentStatusCard demo payload model: 'claude-sonnet-4-6' (display-only demo string, no invocation)"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/src/components/core/ConversationTimeline.tsx",
+>             "line": 77,
+>             "detail": "Renders conv.model_used badge (display of aios_conversations.model_used column, lines 77-80)"
+>           },
+>           {
+>             "file": "/home/gcrUX/htdocs/constellation-orchestra/src/test/phase-zeta.test.tsx",
+>             "line": 138,
+>             "detail": "Test fixtures pass model_used: 'gemini-2.0-flash' to saveConversation (also lines 161, 186, 246, 276) — string assertions on model id, rename-neutral"
+>           }
+>         ],
+>         "risks": [
+>           "Lazy-import + chunk rename: App.tsx:37 React.lazy(() => import('./pages/CoreV2Page.tsx')) — renaming the page file changes the built chunk name (CoreV2Page-*.js); Cloudflare caches old index.html referencing the dead chunk → blank page until hard-refresh/cache purge (known project pattern, see CLAUDE.md deploy notes).",
+>           "Deep-link breakage: /dashboard/core-v2 is a public route and the EXISTING legacy redirect /dashboard/core already points at it (App.tsx:113, documented in README:802 as a compatibility contract). A rename must keep BOTH legacy paths redirecting (core → core-fable AND core-v2 → core-fable) or external/bookmarked links 404.",
+>           "Breadcrumb/nav lockstep: DashboardLayout.tsx:33 BREADCRUMB_MAP is keyed by the literal URL segment 'core-v2' and DashboardSidebar.tsx:95 hardcodes the url — if the route renames without these two, breadcrumb label silently disappears and the sidebar item dead-links.",
+>           "localStorage: ZERO risk — no localStorage usage in CoreV2Page, components/core/, components/core-v2/, or any useAios*/useAIOS*/useA2UI/useGeminiLive hook; model pref persists in DB (user_api_keys.pref_ai_model), which is name-decoupled from the module. (Canvas/orchestrator localStorage keys are unrelated modules.)",
+>           "DB: no table/column carries the core-v2 or megabrain name; aios_conversations, model_used, pref_ai_model are rename-neutral. Do NOT touch the encrypted-view trigger migrations while renaming — they list pref_ai_model in column manifests and are security-sensitive (INSTEAD OF double-fire history, migrations 20260602130000/140000).",
+>           "Test snapshots/imports: phase-zeta.test.tsx imports @/components/core/ConversationTimeline — safe if only components/core-v2/ + CoreV2Page are renamed, but breaks if the sibling components/core/ dir is also swept into the rename. agentic-workspace.test.ts is unaffected. No test references CoreV2/MegaBrain identifiers directly.",
+>           "False-positive traps for a mechanical find-replace: (1) 'Campaign Core v2' in CampaignDetail.tsx:223 and useCampaigns.ts:223 is Marketing Hub naming — renaming it would corrupt FR-MH-004/005 traceability; (2) mega-brain-daemon/webhook/dashboard are live Docker containers probed by scripts/audit-4cs.sh and the watchdog — renaming those strings breaks the 4Cs audit and self-heal docs; ~90 docs/bok hits are container refs, not module refs.",
+>           "BoK SSOT drift (MCORCH protocol): docs/bok/mcorch-constellation (MRD/BRD/PRD/SDD/process-flow) anchors BR-016/PR-012/MR-010 to 'CoreV2Page' — per the Closed-Loop Protocol the BoK suite is the Single Source of Truth, so the rename should update those refs (or log an OTD); note 05-sdd.md:135 already has a stale path (components/core/ instead of core-v2/).",
+>           "README: badge (line 17), feature table (line 1599), and redirect docs (801-804) are live branding to update; the v5.5.x changelog entries (818/842/853 etc.) are historical records that arguably should NOT be rewritten.",
+>           "Out-of-repo: mcorch_nodes knowledge-mesh content and OpenClaw memory exports likely contain 'Core v2' prose (e.g., README:683 references an 'AIOS Core v2' conversation node) — GraphRAG answers will keep using the old name until nodes are updated/superseded; not reachable by a code-only rename.",
+>           "E2E/configs: clean — no e2e/ dir, no core-v2 refs in scripts/qa/e2e-user-zero/flows/, vite.config.ts, or playwright.config.ts; no CSS classes carry the name (styling is inline Tailwind)."
+>         ]
+>       }
+>     ],
+>     "critic": {
+>       "summary": "Completeness critique of the 5-reader Core-v2 mapping, verified materially via grep/Read/ls/dist inspection and live Supabase REST queries (service key from main-repo .env). The readers' src/-level map (CoreV2Page.tsx, App.tsx routes 113-114, DashboardSidebar:95, DashboardLayout:33/45, components/core{,-v2}, useAios* hooks, aios-chat-stream) is accurate, but they MISSED five material clusters. (1) SECOND MODEL PICKER: src/pages/SettingsPage.tsx has a full 'Modelo de IA Preferido (AIOS + Pipeline)' Select (lines 135/164/344-365) writing the SAME user_api_keys.pref_ai_model, with hardcoded options incl. anthropic/claude-sonnet-4-5 — a default-model switch done only in CoreV2Page would be silently reverted by any Settings save. (2) THREE MORE pref_ai_model CONSUMERS server-side: supabase/functions/aios-chat (non-stream sibling, Gemini-only allowlist that COERCES unknown ids to gemini-2.5-flash — an Anthropic default would be silently downgraded), orchestrate-content:64-77 and orchestrate-step:112 (routing heuristic `includes(\"/\")||startsWith(\"gemini-\")` → a bare `claude-fable-5` id without vendor prefix falls into the Groq path and breaks), plus _shared/llm-fallback.ts whose HEAVY_MODEL_REGEX (/claude-3\\.5|claude-4|gpt-4|llama-3\\.1-405b/i) does NOT match claude-fable-5/claude-sonnet-4-5 and whose fallback ladder is Gemini-only (open sprint item OTD-LLM-FALLBACK SLA 2026-06-07). Also missed: DB column default `pref_ai_model TEXT DEFAULT 'gemini-2.5-flash'` (migration 20260505100000) and the 4 credential-encryption migrations threading pref_ai_model through INSTEAD OF triggers/views; aios-chat-gateway (OpenClaw `openclaw/<agent>` model namespace) and aios-live-proxy (voice is structurally Gemini-only WSS). (3) TESTS DO EXIST: src/test/phase-zeta.test.tsx imports ConversationTimeline from @/components/core/ and exercises useAIOSChat/useAIOSConversations — readers asserted no test impact. (4) ARCHIVED CorePage: .archive/pages/CorePage.tsx exists (11.5KB, imports ModelSelector+AIOSTerminal from @/components/core; NOT compiled — tsconfig.app.json include=[\"src\"] — but will confuse a grep-driven rename; HANDOFF v5.5.6 documents the prior Core→Core-v2 promotion that created it). (5) DB VALUES (data, not schema), proven by live REST: mcorch_nodes has 15 rows matching core-v2 (incl. ast_file nodes named with literal paths src/components/core-v2/*.tsx and a STALE CymaticsLayer.tsx node for a file deleted from src — proof AST nodes are not garbage-collected on rename), 61 rows matching 'mega brain', 15 rows matching '/dashboard/core' (incl. DashboardSidebar/mainItems ast nodes); agent_capabilities live row capability_key='core_aios', display_name='Core/AIOS', target_function='aios-chat' (seeded by scripts/seed-constellation-v2-capabilities.ts:48, shown in Constellation v2 cockpit); aios_conversations.model_used stores historical model ids; user_api_keys_table has exactly 1 row with pref_ai_model='google/gemini-2.5-pro-preview' (the Sovereign's real pref — it OVERRIDES any new default, so switching the default alone changes nothing for the only real user). Also missed: README.md core-v2/Mega Brain rows (802/804/1599/1731), BoK suite docs/bok/mcorch-constellation/* referencing Mega Brain + /dashboard/core (BoK = SSOT; per MCORCH Closed-Loop Protocol a rebrand is an architectural change requiring BoK update), docker-compose.yml:63 + .tasks/infra-stabilization.md + .claude/commands/hands{on,off}.md + .agents/workflows/* + CLAUDE.md:116 mega-brain-* refs (LIVE infra namespace — watchdog/audit-4cs docker targets — must NOT be renamed with the page), the nginx-served dist/assets/CoreV2Page-CaaSd1n1.js chunk, and the AIOSTerminal.tsx:1175 stale 'CorePage' comment. Confirmed-correct reader claims: no localStorage anywhere in the module tree, no e2e-user-zero flow hits, isCore substring match survives 'core-fable'.",
+>       "namingRefs": [
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/test/phase-zeta.test.tsx",
+>           "line": 14,
+>           "text": "import { ConversationTimeline } from \"@/components/core/ConversationTimeline\";",
+>           "kind": "test"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/test/phase-zeta.test.tsx",
+>           "line": 15,
+>           "text": "import { useAIOSConversations } from \"@/hooks/useAIOSConversations\"; (file also tests useAIOSChat auto-save and renders ConversationTimeline 4x)",
+>           "kind": "test"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.archive/pages/CorePage.tsx",
+>           "line": 2,
+>           "text": "import { AIOSTerminal, ModelSelector } from \"@/components/core/AIOSTerminal\"; — archived v1 page (11.5KB), excluded from tsconfig.app.json include:[\"src\"] so it does not compile, but matches grep-driven renames",
+>           "kind": "import"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.archive/pages/CorePage.tsx",
+>           "line": 101,
+>           "text": "Core — MCORCH Consciousness (archived HUD title)",
+>           "kind": "ui-string"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/components/core/AIOSTerminal.tsx",
+>           "line": 1175,
+>           "text": "// --- Model selector (exported, rendered in CorePage) --- (stale comment, one rename behind)",
+>           "kind": "comment"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+>           "line": 802,
+>           "text": "Rota /dashboard/core redireciona — links externos antigos continuam funcionais via <Navigate to=\"/dashboard/core-v2\" replace />",
+>           "kind": "route"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+>           "line": 804,
+>           "text": "DashboardLayout BREADCRUMB_MAP simplificado — entry core removida, 'core-v2': 'Core'",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+>           "line": 1599,
+>           "text": "| Core v2 — Mega Brain | /dashboard/core-v2 · MegaBrainVisualizer R3F · CymaticsLayer α/γ/Ω · Protocolo A2UI | ✅ Complete |",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+>           "line": 1731,
+>           "text": "docker ps --filter \"name=mega-brain\" — INFRA namespace (mega-brain-daemon/-webhook/-dashboard also at lines 963-966, 1079-1081); shares the 'Mega Brain' string but must NOT be renamed",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/docker-compose.yml",
+>           "line": 63,
+>           "text": "# loopback-only publish (host 8000 is mega-brain-webhook)",
+>           "kind": "comment"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.tasks/infra-stabilization.md",
+>           "line": 4,
+>           "text": "Fix the mega-brain-daemon and mysql services (also line 7) — live infra task doc",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handson.md",
+>           "line": 17,
+>           "text": "docker ps --filter \"name=mega-brain\" (also line 80 'mega-brain-*: <status resumido>') — session protocol checks live containers",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/commands/handoff.md",
+>           "line": 23,
+>           "text": "docker ps --filter \"name=mega-brain\" — seal protocol container check",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md",
+>           "line": 26,
+>           "text": "docker ps --filter \"name=mega-brain\" (also line 89)",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/master-architect.md",
+>           "line": 41,
+>           "text": "/infra stabilize: Trigger self-healing scripts for core daemons (mega-brain-daemon, mysql)",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+>           "line": 116,
+>           "text": "└── mega-brain-daemon → Autonomic Daemon (self-heal + watchdog) — infra branding in project instructions",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/scripts/audit-4cs.sh",
+>           "line": 32,
+>           "text": "docker inspect ... mega-brain-daemon (also line 74) — readers flagged this; confirmed live cron-adjacent script",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-conteudo-v2-bok-seal.ts",
+>           "line": 33,
+>           "text": "canvas-mcp Edge Function expõe Tools JSON-RPC ao mega-brain-daemon (AIOS) — mesh seed content",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-constellation-v2-capabilities.ts",
+>           "line": 48,
+>           "text": "{ capability_key: 'core_aios', department: 'tech', display_name: 'Core/AIOS', target_function: 'aios-chat', byok_provider: 'gemini' } — upserted seed; LIVE row verified in agent_capabilities via REST",
+>           "kind": "db-column"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md",
+>           "line": 1,
+>           "text": "BoK suite (01-mrd/02-brd/03-prd/04-frd/05-sdd) references 'Mega Brain' and '/dashboard/core' — BoK is the declared Single Source of Truth; a rebrand must update or re-scribe it (Closed-Loop Protocol)",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+>           "line": 5309,
+>           "text": "/dashboard/core → Navigate /dashboard/core-v2 (compat) · /dashboard/core-v2 → CoreV2Page (canônico) — plus ~20 more historical refs (241, 299, 3746, 5404, 5568-5628); HISTORICAL ledger, must NOT be find/replaced",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/Estrutura Arquitetural de Memória Rela.txt",
+>           "line": 209,
+>           "text": "mega-brain-daemon is UNHEALTHY ... (also 242, 250) — root-dir infra notes file",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+>           "line": 55,
+>           "text": "Sprint v5.5.6 — Core Promotion: CorePage v1 arquivada, Core v2 promovida para Core, /dashboard/core redireciona (also lines 75, 89 'AIOS Core v2')",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/architecture-decisions.md",
+>           "line": 50,
+>           "text": "Docker Sovereign Mesh com ... mega-brain-daemon (Watchdog + self-heal)",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/audit-log.md",
+>           "line": 62,
+>           "text": "| mega-brain-daemon (Docker) | running |",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/openclaw-self-heal-runbook.md",
+>           "line": 51,
+>           "text": "escalar para Chroma (mcorch_chroma) ou mega-brain",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/dist/assets/CoreV2Page-CaaSd1n1.js",
+>           "line": 0,
+>           "text": "Built lazy chunk currently served by nginx at login.mcorch.com (ls dist/assets verified) — rename changes chunk name; stale cached index.html → ChunkLoadError",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "supabase://mcorch_nodes (live DB rows)",
+>           "line": 0,
+>           "text": "15 rows ilike '%core-v2%' (handoff seals e.g. session-handoff-20260607-core-v2-black-hole + ast_file nodes named with literal paths src/components/core-v2/{MegaBrainVisualizer,A2UIRenderer,CymaticsLayer}.tsx — CymaticsLayer no longer exists in src, proving stale AST nodes persist), 61 rows ilike '%mega%brain%', 15 rows content ilike '%/dashboard/core%' (incl. DashboardSidebar_0de4 ast_function, mainItems_1dab ast_variable). Verified via REST with Prefer: count=exact",
+>           "kind": "other"
+>         },
+>         {
+>           "file": "supabase://agent_capabilities (live DB row)",
+>           "line": 0,
+>           "text": "[{\"capability_key\":\"core_aios\",\"display_name\":\"Core/AIOS\",\"target_function\":\"aios-chat\"}] — rendered in Constellation v2 cockpit; rebrand needs re-seed/UPDATE, not just code",
+>           "kind": "db-column"
+>         }
+>       ],
+>       "modelWiring": [
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+>           "line": 357,
+>           "detail": "MISSED second model picker: 'Modelo de IA Preferido (AIOS + Pipeline)' Select with hardcoded options gemini-2.5-flash (recomendado, line 357), gemini-2.5-pro, gemini-2.0-flash-001, google/gemini-2.5-pro-preview, anthropic/claude-sonnet-4-5 (line 361), openai/gpt-4o — writes the SAME user_api_keys.pref_ai_model (defaults at lines 135 and 164 fall back to 'gemini-2.5-flash'). A Fable default set only in CoreV2Page gets overwritten by any Settings save."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat/index.ts",
+>           "line": 81,
+>           "detail": "MISSED non-stream sibling edge fn: resolvedModel = requestedModel || userKeys.pref_ai_model || 'gemini-2.5-flash'; own SUPPORTED_GEMINI_MODELS copy (line 11) and coercion at line 82 silently downgrades ANY non-allowlisted id (e.g. a Claude id) to gemini-2.5-flash. This fn is the target_function of the live agent_capabilities row core_aios (Constellation v2 agent execs) — must be redeployed alongside aios-chat-stream on any default change."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+>           "line": 64,
+>           "detail": "MISSED: content pipeline reads pref_ai_model (line 64); routing heuristic line 65 prefRequiresOR = prefModel.includes('/') || prefModel.startsWith('gemini-'); line 76 maps gemini-* → google/gemini-* for OpenRouter; line 77 default llama-3.3-70b (Groq) when no pref. A bare 'claude-fable-5'-style id (no vendor '/') fails the heuristic → sent raw to Groq → breaks. Anthropic default must use 'anthropic/...' OpenRouter form."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+>           "line": 112,
+>           "detail": "MISSED: async step fn also reads userKeys.pref_ai_model — same pipeline-model coupling as orchestrate-content."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+>           "line": 12,
+>           "detail": "MISSED: cascading-fallback shared lib (open sprint debt OTD-LLM-FALLBACK SLA 2026-06-07). HEAVY_MODEL_REGEX /claude-3\\.5|claude-4|gpt-4|llama-3\\.1-405b/i does NOT match 'claude-fable-5' nor 'claude-sonnet-4-5'; fallback ladder is Gemini-only (gemini-2.5-pro/-1.5-pro heavy, gemini-2.5-flash/-1.5-flash light, lines 112-113) — switching default provider to Anthropic interacts directly with this debt. Companion test llm-fallback.test.ts:13 uses anthropic/claude-3.5-sonnet."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql",
+>           "line": 5,
+>           "detail": "MISSED DB-level default: ADD COLUMN pref_ai_model TEXT DEFAULT 'gemini-2.5-flash' — changing the platform default model requires a migration (ALTER COLUMN SET DEFAULT), not just code."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603240000_user_api_keys_resend_channel.sql",
+>           "line": 150,
+>           "detail": "MISSED plumbing: pref_ai_model is threaded through the user_api_keys VIEW + INSTEAD OF trigger column lists in 4 migrations (20260601000000, 20260601060000, 20260602130000, 20260603240000 — latest authoritative). COALESCE(NEW.pref_ai_model, old) means null can never clear the pref; bulk-migrating stored prefs needs an UPDATE/RPC per the [[credential-disconnect-clear|credential-disconnect-clear]] SOP."
+>         },
+>         {
+>           "file": "supabase://user_api_keys_table (live DB data)",
+>           "line": 0,
+>           "detail": "MISSED live pref values: exactly 1 row, pref_ai_model='google/gemini-2.5-pro-preview' (the Sovereign/Usuário Zero). Per-user pref OVERRIDES any new default in every resolution chain — switching the default to Claude Fable 5 changes nothing for the only real user unless this stored value is also migrated."
+>         },
+>         {
+>           "file": "supabase://aios_conversations.model_used (live DB data)",
+>           "line": 0,
+>           "detail": "MISSED: aios_conversations has a model_used column (types.ts:472) with historical values gemini-2.5-flash / google/gemini-2.5-flash / gemini-2.5-pro — Phase Zeta timeline data tied to model ids; restore/fork flows carry old ids."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useA2UI.ts",
+>           "line": 34,
+>           "detail": "MISSED in-module mock: A2UI demo AgentStatusCard hardcodes name 'Claude Sonnet 4.6' / model 'claude-sonnet-4-6' (lines 31-34) — visible UI strings inside the Core page's floating panels; natural place to rebrand to Fable."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts",
+>           "line": 163,
+>           "detail": "MISSED family member: trigger-driven (verify_jwt=false, config.toml:75) forwarder that routes thread messages to OpenClaw agents with synthetic model ids 'openclaw/<agent>' (lines 163, 187, 212) — separate model namespace sharing the aios-chat prefix; grep-renames of 'aios' family must skip it."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-live-proxy/index.ts",
+>           "line": 74,
+>           "detail": "MISSED: voice mode is structurally Gemini-only — WSS proxy to generativelanguage BidiGenerateContent using userKeys.google_api_key || env GEMINI_API_KEY (line 61); client connects at useGeminiLive.ts:211 via /functions/v1/aios-live-proxy?token=jwt. Claude Fable 5 cannot take over live/voice; also the useUserApiKeys auto-heal (rewrites live-only pref to gemini-2.5-flash) must not be allowed to clobber a future non-Gemini pref."
+>         },
+>         {
+>           "file": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/ContentLibraryPage.tsx",
+>           "line": 142,
+>           "detail": "MISSED adjacent model lists sharing the id space: ContentLibraryPage:142 and VideoEditorPage.tsx:72 both offer 'gemini-2.5-flash' options; AddAgentDialog.tsx:15-16 catalogs anthropic ['claude-3','claude-3-opus','claude-3-sonnet'] and google ['gemini-pro','gemini-2.5-flash']; useCrewStore.ts:79 seeds an Anthropic provider endpoint with model 'claude-3-opus'; analyze-node/index.ts:102 hardcodes 'anthropic/claude-sonnet-4-5' — three different Claude id generations already coexist in-tree (3-5-sonnet-20241022 in AIOSTerminal, sonnet-4-5 in Settings/analyze-node, sonnet-4-6 in useA2UI mock); a Fable migration should reconcile them."
+>         },
+>         {
+>           "file": "supabase://agent_capabilities core_aios (live DB row)",
+>           "line": 0,
+>           "detail": "MISSED: byok_provider='gemini' on the core_aios capability row — Constellation v2 BYOK gating for the Core/AIOS capability assumes Gemini keys; a provider switch to Anthropic/OpenRouter requires re-seeding this row (scripts/seed-constellation-v2-capabilities.ts upsert on capability_key)."
+>         }
+>       ],
+>       "risks": [
+>         "Settings-page revert loop (missed by all readers): SettingsPage.tsx maintains its own pref_ai_model picker with 'gemini-2.5-flash' fallbacks at lines 135/164 — if only CoreV2Page/edge defaults switch to Claude Fable 5, the first Settings save silently writes a Gemini pref back. Both pickers + both edge-fn fallbacks + the DB column DEFAULT must move in lockstep.",
+>         "Silent coercion false-success (Lei 1 hazard): both aios-chat and aios-chat-stream coerce any model id not in SUPPORTED_GEMINI_MODELS (and without '/') to gemini-2.5-flash. Setting default to a bare 'claude-fable-5' id would APPEAR to work in the UI while every request actually runs Gemini. An Anthropic default must be an OpenRouter 'anthropic/...' id AND requires user openrouter_api_key or env OPENROUTER_API_KEY (500 if neither, aios-chat-stream:100).",
+>         "Pipeline routing break: orchestrate-content:65-77 / orchestrate-step:112 read the same pref — a non-'/' non-'gemini-' pref id is sent raw to Groq. Because SettingsPage explicitly labels the pref 'AIOS + Pipeline', a Core-page-only model swap leaks into the paid content flywheel (10 mcoCoins/run).",
+>         "Stored per-user prefs override the new default: live DB has pref_ai_model='google/gemini-2.5-pro-preview' for the only real user — switching defaults changes nothing observable for Usuário Zero unless rows are migrated; and the INSTEAD OF COALESCE pattern means null writes cannot clear prefs (needs UPDATE/RPC per [[credential-disconnect-clear|credential-disconnect-clear]] SOP).",
+>         "Test breakage denied by readers actually exists: src/test/phase-zeta.test.tsx imports @/components/core/ConversationTimeline and exercises useAIOSChat/useAIOSConversations — renaming src/components/core/, hook files, or exported names breaks 14 Phase Zeta tests.",
+>         "Archived twin: .archive/pages/CorePage.tsx still imports ModelSelector/AIOSTerminal from @/components/core — not compiled (tsconfig include only src/), but any repo-wide grep-rename or 'find unused exports' pass will trip over it; HANDOFF v5.5.6 records this exact Core→Core-v2 promotion pattern, so the rename to Core-Fable is the SECOND rename of this surface (AIOSTerminal:1175 comment is already one rename stale).",
+>         "Knowledge Mesh data drift: 15 mcorch_nodes reference core-v2 (incl. ast_file nodes keyed by literal path src/components/core-v2/*.tsx) and 15 reference /dashboard/core; the stale CymaticsLayer.tsx node (file deleted from src, node still live) proves AST ingest does NOT garbage-collect on rename — renaming the dir duplicates nodes and the 02:30 OpenClaw bridge will distribute stale paths to 7 agents' memory overlays until refresh.",
+>         "agent_capabilities live row 'core_aios' (display_name 'Core/AIOS', target_function 'aios-chat', byok_provider 'gemini') is DB data shown in the Constellation v2 cockpit — a rebrand/model swap needs a re-seed/UPDATE (and possibly a capability-key migration), not just frontend edits.",
+>         "'Mega Brain' is TWO namespaces: the page branding (rename target) and the LIVE infra namespace mega-brain-daemon/-webhook/-dashboard checked by cron watchdog, scripts/audit-4cs.sh, /handson + /handoff protocols, docker-compose comment, and CLAUDE.md/README architecture diagrams. A blind 'Mega Brain'→'Fable' replace would break the session protocols' docker ps filters and the 4Cs audit.",
+>         "BoK Gate (MCORCH Closed-Loop Protocol): docs/bok/mcorch-constellation/{01-mrd..05-sdd} are the declared Single Source of Truth and reference Mega Brain + /dashboard/core — a rename+rebrand+default-model change is an architectural change that per CLAUDE.md requires the BoK suite updated (or /bok-scribe) BEFORE coding, otherwise Refusal Mode applies.",
+>         "Voice mode cannot follow the model switch: Gemini Live (useGeminiLive LIVE_MODEL + aios-live-proxy WSS + google_api_key resolution) has no Anthropic equivalent wired — Core-Fable would be a hybrid (Fable text / Gemini voice), and the useUserApiKeys auto-heal that rewrites prefs to 'gemini-2.5-flash' must be taught not to clobber a Fable pref.",
+>         "llm-fallback shared lib (OTD-LLM-FALLBACK, SLA 2026-06-07, owner engineer): HEAVY_MODEL_REGEX misses modern Claude ids and the cascade only falls back to Gemini — switching the platform default to Anthropic without updating this lib changes failure behavior for every edge fn using it.",
+>         "Deploy materiality: dist/assets/CoreV2Page-CaaSd1n1.js is the chunk nginx currently serves; the rename must be built in the MAIN repo (worktree dist is unserved/env-less per build-deploy-guardian SOP) and Cloudflare-cached index.html can reference the dead chunk (ChunkLoadError) until hard-refresh/cache purge.",
+>         "Historical ledgers must be exempt from the rename: HANDOFF.md (~20 refs), .claude/context/sprint-priorities.md, audit-log.md, and mesh handoff nodes (e.g. session-handoff-20260607-core-v2-black-hole) are immutable session history — find/replace there would falsify the audit trail (Lei 1)."
+>       ]
+>     }
+>   }
+> }
+> </output>
+> ```
+
+## 🤖 Claude *(02:08:15)*
+
+
+## 🤖 Claude *(02:08:15)*
+
+
+## 🤖 Claude *(02:08:17)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Rebrand Core-v2 \u2192 Core-Fable (frontend)",
+  "description": "Rename CoreV2Page.tsx\u2192CoreFablePage.tsx, components/core-v2/\u2192core-fable/, route core-fable + redirects (core, core-v2), sidebar/breadcrumb, UI strings, stale comment AIOSTerminal:1175",
+  "activeForm": "Renomeando m\u00f3dulo Core-v2 \u2192 Core-Fable"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Rebrand Core-v2 → Core-Fable (frontend)
+> ```
+
+## 🤖 Claude *(02:08:23)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Wire Claude Fable 5 como modelo flagship do Core",
+  "description": "anthropic/claude-fable-5 no cat\u00e1logo OPENROUTER_MODELS (AIOSTerminal), default do page quando sem pref, op\u00e7\u00e3o no SettingsPage picker, mock useA2UI rebrandado; verificar aios-chat (non-stream) roteia ids com \"/\" para OpenRouter como o sibling stream",
+  "activeForm": "Wirando Claude Fable 5 no Core"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Wire Claude Fable 5 como modelo flagship do Core
+> ```
+
+## 🤖 Claude *(02:08:23)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Doc-sync: BoK mcorch-constellation + README",
+  "description": "Atualizar refs CoreV2Page/core-v2 na BoK (05-sdd path stale) + README feature table/redirect docs; N\u00c3O tocar hist\u00f3rico (HANDOFF/changelog)",
+  "activeForm": "Sincronizando BoK e README"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Doc-sync: BoK mcorch-constellation + README
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Adversarial review + verificação material + deploy
+> ```
+
+## 🤖 Claude *(02:08:23)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Adversarial review + verifica\u00e7\u00e3o material + deploy",
+  "description": "Workflow de review adversarial do diff; tsc, su\u00edte, build no repo principal (=deploy nginx), redeploy edge fns se tocadas, prova material: chunk novo CoreFablePage-*.js + redirects funcionando + E2E preview local",
+  "activeForm": "Verificando e deployando Core-Fable"
+}
+```
+
+## 🤖 Claude *(02:08:29)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(02:08:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CoreV2Page.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+> 2	import { AIOSTerminal, ModelSelector } from "@/components/core/AIOSTerminal";
+> 3	import { ConversationTimeline } from "@/components/core/ConversationTimeline";
+> 4	import { MegaBrainVisualizer } from "@/components/core-v2/MegaBrainVisualizer";
+> 5	import { A2UIRenderer, A2UISpawnToolbar } from "@/components/core-v2/A2UIRenderer";
+> 6	import { useAIOSConversations } from "@/hooks/useAIOSConversations";
+> 7	import { useA2UI } from "@/hooks/useA2UI";
+> 8	import { useUserApiKeys } from "@/hooks/useUserApiKeys";
+> 9	import { Activity, BrainCircuit, History, Cpu, X } from "lucide-react";
+> 10	import type { AIOSMessage } from "@/hooks/useAiosTerminalChat";
+> 11	
+> 12	function MetricPill({ label, value, color }: { label: string; value: string; color: string }) {
+> 13	  return (
+> 14	    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-mono ${color}`}>
+> 15	      <span className="opacity-70">{label}</span>
+> 16	      <span className="font-bold">{value}</span>
+> 17	    </div>
+> 18	  );
+> 19	}
+> 20	
+> 21	function getEnvDefaultModel() {
+> 22	  return "gemini-2.5-flash";
+> 23	}
+> 24	
+> 25	export default function CoreV2Page() {
+> 26	  const [intensity, setIntensity] = useState(0);
+> 27	  const [isThinking, setIsThinking] = useState(false);
+> 28	  const [selectedModel, setSelectedModel] = useState(getEnvDefaultModel);
+> 29	  const [timelineOpen, setTimelineOpen] = useState(false);
+> 30	  const [restoredMessages, setRestoredMessages] = useState<AIOSMessage[] | null>(null);
+> 31	
+> 32	  const { userKeys, saveKeys } = useUserApiKeys();
+> 33	
+> 34	  // Load pref_ai_model from DB on mount; override env default if set
+> 35	  useEffect(() => {
+> 36	    if (userKeys?.pref_ai_model) {
+> 37	      setSelectedModel(userKeys.pref_ai_model);
+> 38	    }
+> 39	  }, [userKeys?.pref_ai_model]);
+> 40	
+> 41	  const { surfaces, closeSurface, moveSurface, spawnDemo, parseAgentMessage } = useA2UI();
+> 42	
+> 43	  const {
+> 44	    conversations,
+> 45	    totalConversations,
+> 46	    isLoading: timelineLoading,
+> 47	    hasNextPage,
+> 48	    isFetchingNextPage,
+> 49	    fetchNextPage,
+> 50	    forkConversation,
+> 51	    boostConversation,
+> 52	    deleteConversation,
+> 53	  } = useAIOSConversations();
+> 54	
+> 55	  const handleActivity = useCallback((level: number) => {
+> 56	    setIntensity((prev) => {
+> 57	      const alpha = level > prev ? 0.75 : 0.12;
+> 58	      return prev * (1 - alpha) + level * alpha;
+> 59	    });
+> 60	  }, []);
+> 61	
+> 62	  const handleRestore = useCallback((messages: AIOSMessage[]) => {
+> 63	    setRestoredMessages(messages);
+> 64	    setTimelineOpen(false);
+> 65	  }, []);
+> 66	
+> 67	  const handleFork = useCallback(
+> 68	    async (id: string) => {
+> 69	      const forked = await forkConversation(id);
+> 70	      if (forked) handleRestore(forked.messages);
+> 71	    },
+> 72	    [forkConversation, handleRestore],
+> 73	  );
+> 74	
+> 75	  const isActive = intensity > 0.08;
+> 76	  const brainPercent = useMemo(() => Math.round(intensity * 100), [intensity]);
+> 77	
+> 78	  return (
+> 79	    <div className="flex flex-col h-full bg-[#050508] overflow-hidden">
+> 80	      {/* ── HUD bar ── */}
+> 81	      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-violet-500/15 bg-black/80 backdrop-blur-md z-20">
+> 82	        <div className="flex items-center gap-3">
+> 83	          <div className="flex items-center gap-2">
+> 84	            <Cpu className="w-4 h-4 text-amber-400" />
+> 85	            <span className="font-mono text-xs font-bold text-white/90 tracking-wider uppercase">
+> 86	              Core v2 — Mega Brain
+> 87	            </span>
+> 88	          </div>
+> 89	          <div
+> 90	            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+> 91	              isActive
+> 92	                ? "bg-amber-400 shadow-[0_0_8px_#fbbf24] animate-pulse"
+> 93	                : "bg-violet-600"
+> 94	            }`}
+> 95	          />
+> 96	          {isActive && (
+> 97	            <span className="font-mono text-[9px] text-amber-300/60 uppercase tracking-widest">
+> 98	              Ressonância {brainPercent}%
+> 99	            </span>
+> 100	          )}
+> 101	        </div>
+> 102	
+> 103	        <div className="flex items-center gap-2">
+> 104	          <ModelSelector
+> 105	            value={selectedModel}
+> 106	            onChange={(model) => {
+> 107	              setSelectedModel(model);
+> 108	              saveKeys({ pref_ai_model: model });
+> 109	            }}
+> 110	          />
+> 111	
+> 112	          {/* A2UI spawn toolbar */}
+> 113	          <A2UISpawnToolbar onSpawn={spawnDemo} count={surfaces.size} />
+> 114	
+> 115	          {/* Timeline toggle */}
+> 116	          <button
+> 117	            onClick={() => setTimelineOpen((v) => !v)}
+> 118	            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
+> 119	              timelineOpen
+> 120	                ? "border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]"
+> 121	                : "border-violet-500/20 bg-violet-500/10 text-violet-400 hover:border-amber-500/30 hover:text-amber-400"
+> 122	            }`}
+> 123	            title="Histórico de sessões AIOS"
+> 124	          >
+> 125	            <History className="w-3 h-3" />
+> 126	            Memória
+> 127	            {totalConversations > 0 && (
+> 128	              <span className={`px-1 rounded text-[8px] ${timelineOpen ? "bg-amber-500/30" : "bg-violet-700/50"}`}>
+> 129	                {totalConversations}
+> 130	              </span>
+> 131	            )}
+> 132	          </button>
+> 133	
+> 134	          <MetricPill
+> 135	            label="AIOS"
+> 136	            value={isActive ? "ATIVO" : "IDLE"}
+> 137	            color={
+> 138	              isActive
+> 139	                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+> 140	                : "border-violet-500/20 bg-violet-500/10 text-violet-400"
+> 141	            }
+> 142	          />
+> 143	          <MetricPill
+> 144	            label="VAD"
+> 145	            value="READY"
+> 146	            color="border-violet-500/20 bg-violet-500/10 text-violet-400"
+> 147	          />
+> 148	          <MetricPill
+> 149	            label="MESH"
+> 150	            value="LIVE"
+> 151	            color="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+> 152	          />
+> 153	        </div>
+> 154	      </div>
+> 155	
+> 156	      {/* ── Main layout ── */}
+> 157	      <div className="flex flex-1 min-h-0 overflow-hidden">
+> 158	
+> 159	        {/* Timeline panel */}
+> 160	        {timelineOpen && (
+> 161	          <div className="flex-shrink-0 w-64 flex flex-col border-r border-amber-500/15 bg-black/60 backdrop-blur-sm overflow-hidden z-10">
+> 162	            <div className="flex items-center justify-between px-3 py-2 border-b border-amber-500/10">
+> 163	              <span className="font-mono text-[10px] text-amber-400/80 uppercase tracking-wider font-bold">
+> 164	                Memória Social
+> 165	              </span>
+> 166	              <button
+> 167	                onClick={() => setTimelineOpen(false)}
+> 168	                className="text-violet-400/40 hover:text-violet-300 transition-colors"
+> 169	              >
+> 170	                <X className="w-3.5 h-3.5" />
+> 171	              </button>
+> 172	            </div>
+> 173	            <div className="flex-1 min-h-0 p-2 overflow-hidden">
+> 174	              <ConversationTimeline
+> 175	                conversations={conversations}
+> 176	                isLoading={timelineLoading}
+> 177	                hasNextPage={hasNextPage}
+> 178	                isFetchingNextPage={isFetchingNextPage}
+> 179	                onFetchNext={fetchNextPage}
+> 180	                onFork={handleFork}
+> 181	                onBoost={boostConversation}
+> 182	                onRestore={handleRestore}
+> 183	                onDelete={deleteConversation}
+> 184	              />
+> 185	            </div>
+> 186	          </div>
+> 187	        )}
+> 188	
+> 189	        {/* Three-column area */}
+> 190	        <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden">
+> 191	
+> 192	          {/* Left — Chat (30%) */}
+> 193	          <div className="relative flex flex-col min-w-0 min-h-0 h-full border-r border-violet-500/10 overflow-hidden" style={{ width: "30%" }}>
+> 194	            <AIOSTerminal
+> 195	              onActivity={handleActivity}
+> 196	              onStreamingChange={setIsThinking}
+> 197	              selectedModel={selectedModel}
+> 198	              onModelChange={setSelectedModel}
+> 199	              initialMessages={restoredMessages ?? undefined}
+> 200	              onMessagesConsumed={() => setRestoredMessages(null)}
+> 201	              onMessage={parseAgentMessage}
+> 202	            />
+> 203	          </div>
+> 204	
+> 205	          {/* Right — Mega Brain & Cymatics Combined (70%) */}
+> 206	          <div className="relative flex flex-col min-w-0 min-h-0 h-full bg-black/98 overflow-hidden" style={{ width: "70%" }}>
+> 207	            {/* Combined Header */}
+> 208	            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-violet-500/10 bg-black/40 backdrop-blur-sm z-10">
+> 209	              <div className="flex items-center gap-4">
+> 210	                <div className="flex items-center gap-1.5">
+> 211	                  <BrainCircuit className="w-3.5 h-3.5 text-violet-400" />
+> 212	                  <span className="font-mono text-[10px] text-violet-400/80 tracking-wider uppercase font-bold">
+> 213	                    Mega Brain
+> 214	                  </span>
+> 215	                </div>
+> 216	                <div className="h-3 w-[1px] bg-violet-500/20" />
+> 217	                <div className="flex items-center gap-1.5">
+> 218	                  <Activity className="w-3.5 h-3.5 text-amber-400" />
+> 219	                  <span className="font-mono text-[10px] text-amber-400/80 tracking-wider uppercase font-bold">
+> 220	                    Cymatics
+> 221	                  </span>
+> 222	                </div>
+> 223	              </div>
+> 224	
+> 225	              {/* Dynamic telemetry levels & frequency modes */}
+> 226	              <div className="flex items-center gap-3">
+> 227	                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+> 228	                  intensity >= 0.7 
+> 229	                    ? 'text-fuchsia-300 border-fuchsia-500/40 bg-fuchsia-500/15'
+> 230	                    : intensity >= 0.3
+> 231	                      ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'
+> 232	                      : 'text-blue-300 border-blue-500/30 bg-blue-500/10'
+> 233	                }`}>
+> 234	                  {intensity >= 0.7 
+> 235	                    ? 'Ω ESCALAR'
+> 236	                    : intensity >= 0.3
+> 237	                      ? 'γ GAMA  40–500 Hz'
+> 238	                      : 'α ALFA  5–40 Hz'}
+> 239	                </span>
+> 240	
+> 241	                <div className="flex items-end gap-0.5">
+> 242	                  {Array.from({ length: 8 }).map((_, i) => (
+> 243	                    <div
+> 244	                      key={i}
+> 245	                      className="w-0.5 rounded-full transition-all duration-100"
+> 246	                      style={{
+> 247	                        height: `${5 + (i < Math.ceil(intensity * 8) ? intensity * 18 : 0)}px`,
+> 248	                        backgroundColor:
+> 249	                          i < Math.ceil(intensity * 8)
+> 250	                            ? `hsl(${35 + i * 8}, 85%, 55%)`
+> 251	                            : "rgba(124,58,237,0.15)",
+> 252	                      }}
+> 253	                    />
+> 254	                  ))}
+> 255	                </div>
+> 256	              </div>
+> 257	            </div>
+> 258	
+> 259	            {/* Combined Visualization Area */}
+> 260	            <div className="flex-1 relative bg-black/98">
+> 261	              <MegaBrainVisualizer intensity={intensity} isThinking={isThinking} />
+> 262	
+> 263	              {/* Bottom stats overlay */}
+> 264	              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-violet-500/20 backdrop-blur-sm pointer-events-none z-10">
+> 265	                <div
+> 266	                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+> 267	                    intensity > 0.5
+> 268	                      ? "bg-amber-400 animate-pulse"
+> 269	                      : intensity > 0.1
+> 270	                        ? "bg-cyan-400"
+> 271	                        : "bg-violet-600/60"
+> 272	                  }`}
+> 273	                />
+> 274	                <span className="font-mono text-[9px] text-amber-300/70 uppercase tracking-wider">
+> 275	                  {intensity > 0.08
+> 276	                    ? `Ressonância Singular: ${Math.round(intensity * 100)}%`
+> 277	                    : "Campo Gravitacional em Repouso"}
+> 278	                </span>
+> 279	              </div>
+> 280	
+> 281	              {/* A2UI floating panels */}
+> 282	              <div className="absolute inset-0 pointer-events-none" style={{ pointerEvents: "none" }}>
+> 283	                <div className="relative w-full h-full" style={{ pointerEvents: "all" }}>
+> 284	                  <A2UIRenderer surfaces={surfaces} onClose={closeSurface} onMove={moveSurface} />
+> 285	                </div>
+> 286	              </div>
+> 287	
+> 288	              {/* Gradient overlays */}
+> 289	              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
+> 290	            </div>
+> 291	          </div>
+> 292	        </div>
+> 293	      </div>
+> 294	    </div>
+> 295	  );
+> 296	}
+> 297	
+> ```
+
+## 🤖 Claude *(02:08:38)*
+
+
+## 🤖 Claude *(02:08:38)*
+
+Agora vou ler os pontos de toque restantes em paralelo para editar com precisão.
+
+## 🤖 Claude *(02:08:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 30,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+> 31	const OrchestrationPage = lazy(() => import("./pages/OrchestrationPage.tsx"));
+> 32	const MemoryPage = lazy(() => import("./pages/MemoryPage.tsx"));
+> 33	const MatrixPage = lazy(() => import("./pages/MatrixPage.tsx"));
+> 34	const AffiliatesPage = lazy(() => import("./pages/AffiliatesPage.tsx"));
+> 35	const AffiliateProductsPage = lazy(() => import("./pages/AffiliateProductsPage.tsx"));
+> 36	const ModelArenaPage = lazy(() => import("./pages/ModelArenaPage.tsx"));
+> 37	const CoreV2Page = lazy(() => import("./pages/CoreV2Page.tsx"));
+> 38	const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+> 39	const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
+> 40	const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+> 41	const BillingPage = lazy(() => import("./pages/BillingPage.tsx"));
+> 42	const OnboardingPage = lazy(() => import("./pages/onboarding/OnboardingPage.tsx"));
+> 43	const ViralMinerPage = lazy(() => import("./pages/ViralMinerPage.tsx"));
+> 44	const CanvasStudioPage = lazy(() => import("./pages/CanvasStudioPage.tsx"));
+> 45	const CanvasEditorPage = lazy(() => import("./pages/CanvasEditorPage.tsx"));
+> 46	const CanvasDesignPage = lazy(() => import("./pages/CanvasDesignPage.tsx"));
+> 47	const AgentEconomicsPage = lazy(() => import("./pages/AgentEconomicsPage.tsx"));
+> 48	const ChatPage = lazy(() => import("./pages/ChatPage.tsx"));
+> 49	const KanbanPage = lazy(() => import("./pages/KanbanPage.tsx"));
+> 50	
+> 51	const queryClient = new QueryClient();
+> 52	
+> 53	function PageLoader() {
+> 54	  return (
+> 55	    <div className="min-h-screen bg-background flex items-center justify-center">
+> 56	      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 57	    </div>
+> 58	  );
+> 59	}
+> 60	
+> 61	function ProtectedRoute({ children }: { children: React.ReactNode }) {
+> 62	  const { user, loading } = useAuth();
+> 63	  if (loading) return <PageLoader />;
+> 64	  if (!user) return <Navigate to="/auth" replace />;
+> 65	  return <>{children}</>;
+> 66	}
+> 67	
+> 68	function PublicRoute({ children }: { children: React.ReactNode }) {
+> 69	  const { user, loading } = useAuth();
+> 70	  if (loading) return <PageLoader />;
+> 71	  if (user) return <Navigate to="/dashboard" replace />;
+> 72	  return <>{children}</>;
+> 73	}
+> 74	
+> 75	const App = () => (
+> 76	  <QueryClientProvider client={queryClient}>
+> 77	    <HelmetProvider>
+> 78	      <TooltipProvider>
+> 79	        <Toaster />
+> 80	        <Sonner />
+> 81	        <BrowserRouter>
+> 82	          <Suspense fallback={<PageLoader />}>
+> 83	            <Routes>
+> 84	              <Route path="/" element={<Landing />} />
+> 85	              <Route
+> 86	                path="/dashboard"
+> 87	                element={
+> 88	                  <ProtectedRoute>
+> 89	                    <DashboardLayout />
+> 90	                  </ProtectedRoute>
+> 91	                }
+> 92	              >
+> 93	                <Route index element={<DashboardHome />} />
+> 94	                <Route path="constellation" element={<ConstellationPage />} />
+> 95	                <Route path="constellation/memory" element={<MemoryPage />} />
+> 96	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 97	                <Route path="marketing" element={<MarketingPage />} />
+> 98	                <Route path="campaigns" element={<CampaignsPage />} />
+> 99	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 100	                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> 101	                <Route path="content" element={<ContentLibraryPage />} />
+> 102	                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 103	                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> 104	                <Route path="calendar" element={<CalendarPage />} />
+> 105	                <Route path="social" element={<SocialAccountsPage />} />
+> 106	                <Route path="analytics" element={<AnalyticsPage />} />
+> 107	                <Route path="blog" element={<BlogEditorPage />} />
+> 108	                <Route path="admin" element={<AdminPage />} />
+> 109	                <Route path="orchestration" element={<OrchestrationPage />} />
+> 110	                <Route path="affiliates" element={<AffiliatesPage />} />
+> 111	                <Route path="affiliate-products" element={<AffiliateProductsPage />} />
+> 112	                <Route path="arena" element={<ModelArenaPage />} />
+> 113	                <Route path="core" element={<Navigate to="/dashboard/core-v2" replace />} />
+> 114	                <Route path="core-v2" element={<CoreV2Page />} />
+> 115	                <Route path="settings" element={<SettingsPage />} />
+> 116	                <Route path="billing" element={<BillingPage />} />
+> 117	                <Route path="miner" element={<ViralMinerPage />} />
+> 118	                <Route path="canvas" element={<CanvasStudioPage />} />
+> 119	                <Route path="canvas/design" element={<CanvasDesignPage />} />
+> 120	                <Route path="canvas/:id" element={<CanvasEditorPage />} />
+> 121	                <Route path="agent-economics" element={<AgentEconomicsPage />} />
+> 122	                <Route path="chat" element={<ChatPage />} />
+> 123	                <Route path="kanban" element={<KanbanPage />} />
+> 124	              </Route>
+> ```
+
+## 🤖 Claude *(02:08:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '85,105p' src/components/dashboard/DashboardSidebar.tsx; echo \"\u2550\u2550\u2550 LAYOUT \u2550\u2550\u2550\"; sed -n '20,55p' src/components/dashboard/DashboardLayout.tsx; echo \"\u2550\u2550\u2550 A2UI DEMO \u2550\u2550\u2550\"; sed -n '20,50p' src/hooks/useA2UI.ts; echo \"\u2550\u2550\u2550 USERAPIKEYS AUTOHEAL \u2550\u2550\u2550\"; sed -n '15,45p' src/hooks/useUserApiKeys.ts",
+  "description": "Read sidebar nav, layout breadcrumb, A2UI demo, useUserApiKeys auto-heal sections"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },
+>       { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },
+>       { title: 'Viral Miner', url: '/dashboard/miner', icon: TrendingUp },
+>       { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+>     ],
+>   },
+>   {
+>     title: 'Inteligência IA',
+>     icon: Bot,
+>     items: [
+>       { title: 'Core', url: '/dashboard/core-v2', icon: Brain },
+>       { title: 'Workspace Chat', url: '/dashboard/chat', icon: MessageSquare },
+>       { title: 'AI Arena', url: '/dashboard/arena', icon: Cpu },
+>       { title: 'Economia dos Agentes', url: '/dashboard/agent-economics', icon: LineChart },
+>     ],
+>   },
+> ];
+> 
+> const systemItems: NavLeaf[] = [
+>   { title: 'Redes Sociais', url: '/dashboard/social', icon: Users },
+>   { title: 'Assinatura', url: '/dashboard/billing', icon: CreditCard },
+> ═══ LAYOUT ═══
+>   campaigns: 'Campanhas',
+>   new: 'Nova',
+>   content: 'Conteúdo',
+>   calendar: 'Calendário',
+>   analytics: 'Analytics',
+>   social: 'Redes Sociais',
+>   blog: 'Blog',
+>   admin: 'Administração',
+>   'video-editor': 'Editor de Vídeo',
+>   notifications: 'Notificações',
+>   billing: 'Assinatura',
+>   settings: 'Configurações',
+>   arena: 'AI Arena',
+>   'core-v2': 'Core',
+>   miner: 'Viral Miner',
+>   canvas: 'Canvas Studio',
+>   chat: 'Workspace Chat',
+>   kanban: 'Workspace Kanban',
+> };
+> 
+> export function DashboardLayout() {
+>   const { user } = useAuth();
+>   const location = useLocation();
+>   const isConstellation = location.pathname.includes('/constellation');
+>   const isOrchestration = location.pathname.includes('/orchestration');
+>   const isCore = location.pathname.includes('/core');
+>   const isCanvas = location.pathname.includes('/canvas/');
+>   const isFullCanvas = isConstellation || isOrchestration || isCore || isCanvas;
+>   const [open, setOpen] = useState(!isConstellation && !isCore);
+>   const [mcoBalance, setMcoBalance] = useState<number | null>(null);
+> 
+>   useEffect(() => {
+>     if (!user) return;
+>     supabase
+>       .from('profiles')
+>       .select('mco_balance')
+> ═══ A2UI DEMO ═══
+> const DEMO_DATA: Record<A2UIComponentType, Record<string, unknown>> = {
+>   MetricsPanel: {
+>     title: 'AIOS Metrics',
+>     metrics: [
+>       { label: 'Tokens', value: '1.2K' },
+>       { label: 'TPS', value: '89' },
+>       { label: 'Latência', value: '210ms' },
+>       { label: 'mcoCoins', value: '340' },
+>     ],
+>   },
+>   AgentStatusCard: {
+>     name: 'Claude Sonnet 4.6',
+>     role: 'Orchestrator',
+>     status: 'active',
+>     model: 'claude-sonnet-4-6',
+>   },
+>   SystemAlert: {
+>     severity: 'info',
+>     title: 'Pipeline iniciado',
+>     message: 'Orquestração de conteúdo ativada. 10 mcoCoins debitados.',
+>   },
+>   TextBlock: {
+>     content:
+>       'Protocolo A2UI ativo. O agente conjura painéis via JSON declarativo. ' +
+>       'Frequência de ressonância: harmônico de Fibonacci.',
+>   },
+> };
+> 
+> export function useA2UI() {
+>   const [surfaces, setSurfaces] = useState<Map<string, A2UISurface>>(new Map());
+> 
+> ═══ USERAPIKEYS AUTOHEAL ═══
+> 
+>   const { data: userKeys, isLoading } = useQuery({
+>     queryKey: QUERY_KEY(user?.id),
+>     queryFn: async () => {
+>       const { data, error } = await supabase
+>         .from('user_api_keys')
+>         .select('*')
+>         .eq('user_id', user!.id)
+>         .maybeSingle();
+>       if (error) throw error;
+> 
+>       if (data && data.pref_ai_model === "gemini-3.1-flash-live-preview") {
+>         // Auto-heal: model 3.1 live is websocket only, fallback to 2.5-flash for text chat
+>         supabase
+>           .from('user_api_keys')
+>           .insert({
+>             user_id: user!.id,
+>             pref_ai_model: "gemini-2.5-flash",
+>             updated_at: new Date().toISOString(),
+>           })
+>           .then(({ error: err }) => {
+>             if (err) console.error("Failed to auto-heal pref_ai_model:", err);
+>           });
+>         return {
+>           ...data,
+>           pref_ai_model: "gemini-2.5-flash"
+>         } as UserApiKeysRow;
+>       }
+> 
+>       return data as UserApiKeysRow | null;
+>     },
+> ```
+
+## 🤖 Claude *(02:08:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"GEMINI_MODELS\\|OPENROUTER_MODELS\\|VAULT_MODELS\\|anthropic/\" src/components/core/AIOSTerminal.tsx | head -30; echo \"\u2550\u2550\u2550 SETTINGS MODELS \u2550\u2550\u2550\"; sed -n '340,370p' src/pages/SettingsPage.tsx",
+  "description": "Locate model catalogs in AIOSTerminal and Settings picker options"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 30:const GEMINI_MODELS: ModelOption[] = [
+> 37:const OPENROUTER_MODELS: ModelOption[] = [
+> 40:  { id: "anthropic/claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", provider: "openrouter" },
+> 48:const VAULT_MODELS: ModelOption[] = [
+> 1184:    return [...GEMINI_MODELS, ...OPENROUTER_MODELS, ...VAULT_MODELS];
+> ═══ SETTINGS MODELS ═══
+>               <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+>                 <Cpu className="h-5 w-5" /> Preferências de IA
+>               </h3>
+> 
+>               {/* pref_ai_model */}
+>               <div className="space-y-2">
+>                 <Label className="flex items-center gap-2">
+>                   <Cpu className="h-4 w-4" /> Modelo de IA Preferido (AIOS + Pipeline)
+>                 </Label>
+>                 <Select
+>                   value={prefs.pref_ai_model}
+>                   onValueChange={(v) => setPrefs((p) => ({ ...p, pref_ai_model: v }))}
+>                 >
+>                   <SelectTrigger>
+>                     <SelectValue placeholder="Selecione..." />
+>                   </SelectTrigger>
+>                   <SelectContent>
+>                     <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash (recomendado)</SelectItem>
+>                     <SelectItem value="gemini-2.5-pro">Gemini 2.5 Pro (mais capaz)</SelectItem>
+>                     <SelectItem value="gemini-2.0-flash-001">Gemini 2.0 Flash (estável)</SelectItem>
+>                     <SelectItem value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro via OpenRouter</SelectItem>
+>                     <SelectItem value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 via OpenRouter</SelectItem>
+>                     <SelectItem value="openai/gpt-4o">GPT-4o via OpenRouter</SelectItem>
+>                   </SelectContent>
+>                 </Select>
+>                 <p className="text-xs text-muted-foreground">
+>                   Modelo usado no AIOS Chat e no pipeline de geração de conteúdo. Salvo na sua conta.
+>                 </p>
+>               </div>
+> 
+>               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+> ```
+
+## 🤖 Claude *(02:08:51)*
+
+
+## 🤖 Claude *(02:08:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '25,55p' src/components/core/AIOSTerminal.tsx; echo \"\u2550\u2550\u2550 1170,1200 \u2550\u2550\u2550\"; sed -n '1170,1200p' src/components/core/AIOSTerminal.tsx",
+  "description": "Read AIOSTerminal model catalogs and ModelSelector section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   id: string;
+>   label: string;
+>   provider: "gemini" | "openrouter" | "vault";
+> }
+> 
+> const GEMINI_MODELS: ModelOption[] = [
+>   { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "gemini" },
+>   { id: "gemini-2.0-flash-001", label: "Gemini 2.0 Flash (stable)", provider: "gemini" },
+>   { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", provider: "gemini" },
+>   { id: "gemini-1.5-pro", label: "Gemini 1.5 Pro", provider: "gemini" },
+> ];
+> 
+> const OPENROUTER_MODELS: ModelOption[] = [
+>   { id: "google/gemini-2.0-flash-001", label: "Gemini 2.0 Flash", provider: "openrouter" },
+>   { id: "google/gemini-2.5-pro-preview", label: "Gemini 2.5 Pro", provider: "openrouter" },
+>   { id: "anthropic/claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", provider: "openrouter" },
+>   { id: "openai/gpt-4o", label: "GPT-4o", provider: "openrouter" },
+>   { id: "meta-llama/llama-3.3-70b-instruct:free", label: "Llama 3.3 70B ✦free", provider: "openrouter" },
+>   { id: "meta-llama/llama-3-8b-instruct:free", label: "Llama 3 8B ✦free", provider: "openrouter" },
+>   { id: "google/gemma-2-9b-it:free", label: "Gemma 2 9B ✦free", provider: "openrouter" },
+>   { id: "qwen/qwen-2.5-72b-instruct:free", label: "Qwen 2.5 72B ✦free", provider: "openrouter" },
+> ];
+> 
+> const VAULT_MODELS: ModelOption[] = [
+>   { id: "vault:gemini-2.5-flash", label: "Gemini 2.5 Flash (vault)", provider: "vault" },
+> ];
+> 
+> const PROVIDER_COLOR: Record<ModelOption["provider"], string> = {
+>   gemini: "text-cyan-400",
+>   openrouter: "text-fuchsia-400",
+>   vault: "text-violet-400",
+> ═══ 1170,1200 ═══
+>       </div>
+>     </div>
+>   );
+> }
+> 
+> // --- Model selector (exported, rendered in CorePage) ---
+> export function ModelSelector({
+>   value,
+>   onChange,
+> }: {
+>   value: string;
+>   onChange: (model: string) => void;
+> }) {
+>   const models = useMemo<ModelOption[]>(() => {
+>     return [...GEMINI_MODELS, ...OPENROUTER_MODELS, ...VAULT_MODELS];
+>   }, []);
+> 
+>   const current = models.find((m) => m.id === value) ?? models[0];
+> 
+>   return (
+>     <div className="relative flex items-center gap-1">
+>       <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${PROVIDER_COLOR[current.provider]}`}>
+>         {current.provider === "vault" ? "⚙ vault" : current.provider === "gemini" ? "◆ google" : "◈ openrouter"}
+>       </span>
+>       <div className="relative">
+>         <select
+>           value={value}
+>           onChange={(e) => onChange(e.target.value)}
+>           className="appearance-none font-mono text-[10px] text-violet-200 bg-violet-950/60 border border-violet-500/25 rounded px-2 pr-5 py-0.5 cursor-pointer focus:outline-none focus:border-cyan-500/50 transition-colors hover:border-violet-400/40"
+>         >
+>           {models.map((m) => (
+> ```
+
+## 🤖 Claude *(02:08:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1,130p' supabase/functions/aios-chat/index.ts",
+  "description": "Read aios-chat edge function model resolution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 
+> const corsHeaders = {
+>   "Access-Control-Allow-Origin": "*",
+>   "Access-Control-Allow-Methods": "POST, OPTIONS",
+>   "Access-Control-Allow-Headers":
+>     "authorization, x-client-info, apikey, content-type",
+> };
+> 
+> const SUPPORTED_GEMINI_MODELS = new Set([
+>   "gemini-2.5-flash",
+>   "gemini-2.5-pro",
+>   "gemini-2.0-flash-001",
+>   "gemini-2.0-flash",        // legacy alias — kept for rollback
+>   "gemini-2.0-flash-exp",
+>   "gemini-2.5-pro-preview-03-25",
+>   "gemini-1.5-pro",
+>   "gemini-1.5-flash",
+> ]);
+> 
+> interface ChatMessage {
+>   role: "user" | "assistant" | "system";
+>   content: string;
+> }
+> 
+> Deno.serve(async (req) => {
+>   if (req.method === "OPTIONS") {
+>     return new Response("ok", { headers: corsHeaders });
+>   }
+> 
+>   const respond = (body: unknown, status = 200) =>
+>     new Response(JSON.stringify(body), {
+>       status,
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+> 
+>   // Zero-Trust: require valid JWT
+>   const authHeader = req.headers.get("Authorization");
+>   if (!authHeader?.startsWith("Bearer ")) {
+>     return respond({ error: "Unauthorized" }, 401);
+>   }
+> 
+>   const supabase = createClient(
+>     Deno.env.get("SUPABASE_URL")!,
+>     (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+>     { global: { headers: { Authorization: authHeader } } }
+>   );
+> 
+>   const { data: { user }, error: userError } = await supabase.auth.getUser();
+>   if (userError || !user) {
+>     return respond({ error: "Unauthorized" }, 401);
+>   }
+> 
+>   // Resolve user-level overrides: key and model preference
+>   const admin = createClient(
+>     Deno.env.get("SUPABASE_URL")!,
+>     (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+>   );
+>   const { data: userKeys } = await admin
+>     .from("decrypted_user_api_keys")
+>     .select("google_api_key, pref_ai_model")
+>     .eq("user_id", user.id)
+>     .maybeSingle();
+> 
+>   // User key takes precedence over vault
+>   const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+>   if (!geminiKey) {
+>     return respond({ error: "GEMINI_API_KEY not configured" }, 500);
+>   }
+> 
+>   let messages: ChatMessage[];
+>   let systemPrompt: string | undefined;
+>   let geminiModel = "gemini-2.5-flash";
+> 
+>   try {
+>     const body = await req.json();
+>     messages = body.messages;
+>     systemPrompt = body.system;
+>     const requestedModel = typeof body.model === "string" ? body.model : null;
+>     // Priority: request body > user pref > default
+>     const resolvedModel = requestedModel || userKeys?.pref_ai_model || "gemini-2.5-flash";
+>     geminiModel = SUPPORTED_GEMINI_MODELS.has(resolvedModel) ? resolvedModel : "gemini-2.5-flash";
+> 
+>     if (!Array.isArray(messages) || messages.length === 0) {
+>       return respond({ error: "messages array is required" }, 400);
+>     }
+>   } catch {
+>     return respond({ error: "Invalid JSON body" }, 400);
+>   }
+> 
+>   const contents = messages
+>     .filter((m) => m.role !== "system")
+>     .map((m) => ({
+>       role: m.role === "assistant" ? "model" : "user",
+>       parts: [{ text: m.content }],
+>     }));
+> 
+>   const requestBody: Record<string, unknown> = { contents };
+> 
+>   if (systemPrompt) {
+>     requestBody.system_instruction = { parts: [{ text: systemPrompt }] };
+>   }
+> 
+>   requestBody.generationConfig = { maxOutputTokens: 2048 };
+> 
+>   const geminiUrl =
+>     `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+> 
+>   try {
+>     const res = await fetch(geminiUrl, {
+>       method: "POST",
+>       headers: { "Content-Type": "application/json" },
+>       body: JSON.stringify(requestBody),
+>     });
+> 
+>     if (!res.ok) {
+>       const errText = await res.text();
+>       return respond({ error: `Gemini API error: ${res.status}`, detail: errText }, res.status);
+>     }
+> 
+>     const json = await res.json();
+>     const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+> 
+>     return respond({ output: text });
+>   } catch (err) {
+>     const msg = err instanceof Error ? err.message : String(err);
+>     return respond({ error: msg }, 500);
+>   }
+> });
+> ```
+
+## 🤖 Claude *(02:09:10)*
+
+
+## 🤖 Claude *(02:09:10)*
+
+
+## 🤖 Claude *(02:09:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat supabase/functions/aios-chat-stream/index.ts | head -180",
+  "description": "Read aios-chat-stream model resolution and OpenRouter branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 
+> const corsHeaders = {
+>   "Access-Control-Allow-Origin": "*",
+>   "Access-Control-Allow-Methods": "POST, OPTIONS",
+>   "Access-Control-Allow-Headers":
+>     "authorization, x-client-info, apikey, content-type",
+> };
+> 
+> const SUPPORTED_GEMINI_MODELS = new Set([
+>   "gemini-2.5-flash",
+>   "gemini-2.5-pro",
+>   "gemini-2.0-flash-001",
+>   "gemini-2.0-flash",
+>   "gemini-2.0-flash-exp",
+>   "gemini-2.5-pro-preview-03-25",
+>   "gemini-1.5-pro",
+>   "gemini-1.5-flash",
+> ]);
+> 
+> interface ChatMessage {
+>   role: "user" | "assistant" | "system";
+>   content: string;
+> }
+> 
+> Deno.serve(async (req) => {
+>   if (req.method === "OPTIONS") {
+>     return new Response("ok", { headers: corsHeaders });
+>   }
+> 
+>   const respond = (body: unknown, status = 200) =>
+>     new Response(JSON.stringify(body), {
+>       status,
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+> 
+>   // Zero-Trust: require valid JWT
+>   const authHeader = req.headers.get("Authorization");
+>   if (!authHeader?.startsWith("Bearer ")) {
+>     return respond({ error: "Unauthorized" }, 401);
+>   }
+> 
+>   const supabase = createClient(
+>     Deno.env.get("SUPABASE_URL")!,
+>     (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+>     { global: { headers: { Authorization: authHeader } } }
+>   );
+> 
+>   const { data: { user }, error: userError } = await supabase.auth.getUser();
+>   if (userError || !user) {
+>     return respond({ error: "Unauthorized" }, 401);
+>   }
+> 
+>   // Resolve user-level overrides: key and model preference
+>   const admin = createClient(
+>     Deno.env.get("SUPABASE_URL")!,
+>     (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+>   );
+>   const { data: userKeys } = await admin
+>     .from("decrypted_user_api_keys")
+>     .select("google_api_key, openrouter_api_key, pref_ai_model")
+>     .eq("user_id", user.id)
+>     .maybeSingle();
+> 
+>   let messages: ChatMessage[];
+>   let systemPrompt: string | undefined;
+>   let activeModel = "gemini-2.5-flash";
+>   let isOpenRouter = false;
+>   let forceVault = false;
+> 
+>   try {
+>     const body = await req.json();
+>     messages = body.messages;
+>     systemPrompt = body.system;
+>     const requestedModel = typeof body.model === "string" ? body.model : null;
+>     let resolvedModel = requestedModel || userKeys?.pref_ai_model || "gemini-2.5-flash";
+> 
+>     if (resolvedModel.startsWith("vault:")) {
+>       forceVault = true;
+>       resolvedModel = resolvedModel.slice(6); // strip "vault:"
+>     }
+> 
+>     if (resolvedModel.includes("/")) {
+>       isOpenRouter = true;
+>       activeModel = resolvedModel;
+>     } else {
+>       activeModel = SUPPORTED_GEMINI_MODELS.has(resolvedModel) ? resolvedModel : "gemini-2.5-flash";
+>     }
+> 
+>     if (!Array.isArray(messages) || messages.length === 0) {
+>       return respond({ error: "messages array is required" }, 400);
+>     }
+>   } catch {
+>     return respond({ error: "Invalid JSON body" }, 400);
+>   }
+> 
+>   // Resolve API Key
+>   let apiKey = "";
+>   if (isOpenRouter) {
+>     apiKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "";
+>     if (!apiKey) {
+>       return respond({ error: "OPENROUTER_API_KEY not configured" }, 500);
+>     }
+>   } else {
+>     apiKey = (forceVault ? null : userKeys?.google_api_key) || Deno.env.get("GEMINI_API_KEY") || "";
+>     if (!apiKey) {
+>       return respond({ error: "GEMINI_API_KEY not configured" }, 500);
+>     }
+>   }
+> 
+>   // Use appropriate endpoint
+>   const endpoint = isOpenRouter 
+>     ? "https://openrouter.ai/api/v1/chat/completions" 
+>     : "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+> 
+>   const formattedMessages = [];
+>   if (systemPrompt) {
+>     formattedMessages.push({ role: "system", content: systemPrompt });
+>   }
+>   for (const msg of messages) {
+>     formattedMessages.push({ role: msg.role, content: msg.content });
+>   }
+> 
+>   try {
+>     const t0 = Date.now();
+>     const headers: Record<string, string> = {
+>       "Authorization": `Bearer ${apiKey}`,
+>       "Content-Type": "application/json",
+>     };
+>     if (isOpenRouter) {
+>       headers["HTTP-Referer"] = "https://constellation-orchestra";
+>       headers["X-Title"] = "Constellation Orchestra";
+>     }
+> 
+>     const res = await fetch(endpoint, {
+>       method: "POST",
+>       headers,
+>       body: JSON.stringify({
+>         model: activeModel,
+>         messages: formattedMessages,
+>         stream: true,
+>       }),
+>     });
+> 
+>     if (!res.ok) {
+>       const errText = await res.text();
+>       return respond({ error: `Gemini API error: ${res.status}`, detail: errText }, res.status);
+>     }
+> 
+>     const reader = res.body?.getReader();
+>     if (!reader) {
+>       return respond({ error: "Failed to read response stream" }, 500);
+>     }
+> 
+>     const stream = new ReadableStream({
+>       async start(controller) {
+>         const decoder = new TextDecoder();
+>         let accumulatedText = "";
+>         let completionTokens = 0;
+> 
+>         try {
+>           while (true) {
+>             const { done, value } = await reader.read();
+>             if (done) break;
+>             
+>             // Forward value to the client
+>             controller.enqueue(value);
+> 
+>             // Accumulate text for cost/billing log
+>             const chunkText = decoder.decode(value, { stream: true });
+>             for (const line of chunkText.split("\n")) {
+>               const trimmed = line.trim();
+>               if (!trimmed.startsWith("data: ")) continue;
+>               const jsonStr = trimmed.slice(6);
+>               if (jsonStr === "[DONE]") break;
+>               try {
+>                 const parsed = JSON.parse(jsonStr);
+>                 const delta = parsed.choices?.[0]?.delta?.content || "";
+>                 if (delta) {
+>                   accumulatedText += delta;
+> ```
+
+## 🤖 Claude *(02:09:57)*
+
+
+## 🤖 Claude *(02:09:57)*
+
+Padrão confirmado — o sibling stream já resolve `vault:`/`"/"` → OpenRouter. Agora executo o refactor completo.
+
+## 🤖 Claude *(02:09:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git mv src/pages/CoreV2Page.tsx src/pages/CoreFablePage.tsx && git mv src/components/core-v2 src/components/core-fable && echo \"RENAMED OK\" && grep -rln \"components/core-v2\\|components/core-fable\" src/ | sort",
+  "description": "Rename page file and core-v2 component directory via git mv"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RENAMED OK
+> src/pages/CoreFablePage.tsx
+> ```
+
+## 🤖 Claude *(02:10:00)*
+
+You've hit your session limit · resets 11:40pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
