@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 680
+> * **Total de Sessões**: 688
 
 ---
 
@@ -56,6 +56,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-aec0d863561a35a7c]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-adef832920811a0ff]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-acf1cf06440c50085]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-acf1b095574c71f85]]` (ClaudeSessions) - *2026-06-10*
@@ -76,16 +77,23 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-10 - agent-a7f42f2f5a21a3133]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a7498f7061dbc1d50]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a6b611d8a102695ef]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a67e3b49a4f87ecd3]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a67959a03dc4db397]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a6218c38f9df79f85]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a5cc421f778d815f9]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a53452ea0bfc2b8a2]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a4e315c90b4cec21d]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a40dc36d4509f5463]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a39a3eaf5f9a05d68]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a37ec624fbf5cec64]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a2feb50b6d5657a54]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a1bce56a00a207cd1]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a1621bfc02c38740d]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a071a0ee4386d69cd]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a01a722fbf80b27c5]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - Generate security BoK documentation suite]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - Build native MCP for vision and movement analysis]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - 7f56bfa3-b8ee-4915-b4c6-31b9694bde1b]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - 01011bef-690d-4105-a4da-14cdfdfea18a]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` (ClaudeSessions) - *2026-06-09*

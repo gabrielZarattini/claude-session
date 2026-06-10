@@ -6851,6 +6851,6 @@ Tudo selado e sincronizado. **Phase 8 — Relatório final do seal:**
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-10 - 7f56bfa3-b8ee-4915-b4c6-31b9694bde1b]]
+> * **Sessão Anterior**: [[2026-06-10 - Build native MCP for vision and movement analysis]]
 > * **Próxima Sessão**: [[2026-06-10 - Refactor Core-v2 to Core-Fable]]
 %% --- TIMELINE END --- %%
