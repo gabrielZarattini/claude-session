@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 652
-> * **Sessões do Claude**: 615
+> * **Total de Sessões Registradas**: 659
+> * **Sessões do Claude**: 622
 > * **Sessões do Gemini**: 37
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-10 - agent-af4b1636e0bff4513]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-a8e319b5830e30a05]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-a8758d5129a625779]]` - *2026-06-10*
+*   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` - *2026-06-10*
 *   `[[2026-06-10 - Generate security BoK documentation suite]]` - *2026-06-10*
 *   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` - *2026-06-09*
 *   `[[2026-06-09 - agent-afab66831078556d1]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-af3fdd48e644ea14d]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-af2b482e86218ebf4]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-af2650126ca0b97b4]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-af07364955855a6dd]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-af02015236fac28c1]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aeda3d013282b82b0]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aec7c02af796b1539]]` - *2026-06-09*
-*   *... e mais 616 sessões nessa categoria.*
+*   *... e mais 623 sessões nessa categoria.*
 
 ---
 
@@ -262,6 +262,13 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a8e319b5830e30a05]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a8758d5129a625779]]` (ClaudeSessions)
+*   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` (ClaudeSessions)
 *   `[[2026-06-10 - Generate security BoK documentation suite]]` (ClaudeSessions)
 *   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` (ClaudeSessions)
 *   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` (ClaudeSessions)
