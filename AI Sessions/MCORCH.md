@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 655
+> * **Total de Sessões**: 662
 
 ---
 
@@ -56,11 +56,18 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-acf1cf06440c50085]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-aa6631855d2bed2be]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a9c3be4c66a199bc2]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a96792372f569474e]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a8e319b5830e30a05]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-a8758d5129a625779]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a67959a03dc4db397]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a53452ea0bfc2b8a2]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a40dc36d4509f5463]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - Generate security BoK documentation suite]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` (ClaudeSessions) - *2026-06-09*

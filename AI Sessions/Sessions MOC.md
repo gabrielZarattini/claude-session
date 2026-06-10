@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 659
-> * **Sessões do Claude**: 622
+> * **Total de Sessões Registradas**: 666
+> * **Sessões do Claude**: 629
 > * **Sessões do Gemini**: 37
 
 ---
@@ -60,18 +60,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-acf1cf06440c50085]]` - *2026-06-10*
 *   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` - *2026-06-10*
 *   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` - *2026-06-10*
 *   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-aa6631855d2bed2be]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-a9c3be4c66a199bc2]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-a96792372f569474e]]` - *2026-06-10*
 *   `[[2026-06-10 - agent-a8e319b5830e30a05]]` - *2026-06-10*
 *   `[[2026-06-10 - agent-a8758d5129a625779]]` - *2026-06-10*
-*   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` - *2026-06-10*
-*   `[[2026-06-10 - Generate security BoK documentation suite]]` - *2026-06-10*
-*   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` - *2026-06-09*
-*   `[[2026-06-09 - agent-afab66831078556d1]]` - *2026-06-09*
-*   *... e mais 623 sessões nessa categoria.*
+*   `[[2026-06-10 - agent-a67959a03dc4db397]]` - *2026-06-10*
+*   `[[2026-06-10 - agent-a53452ea0bfc2b8a2]]` - *2026-06-10*
+*   *... e mais 630 sessões nessa categoria.*
 
 ---
 
@@ -263,11 +263,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-acf1cf06440c50085]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-aa6631855d2bed2be]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a9c3be4c66a199bc2]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a96792372f569474e]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-a8e319b5830e30a05]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-a8758d5129a625779]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a67959a03dc4db397]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a53452ea0bfc2b8a2]]` (ClaudeSessions)
+*   `[[2026-06-10 - agent-a40dc36d4509f5463]]` (ClaudeSessions)
 *   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` (ClaudeSessions)
 *   `[[2026-06-10 - Generate security BoK documentation suite]]` (ClaudeSessions)
 *   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` (ClaudeSessions)
