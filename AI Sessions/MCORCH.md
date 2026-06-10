@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 642
+> * **Total de Sessões**: 680
 
 ---
 
@@ -55,6 +55,40 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-adef832920811a0ff]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-acf1cf06440c50085]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-acf1b095574c71f85]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-ac73b79fbee6a7123]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-abd5ba8fbfd0cebae]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-ab8803a5b1c4912fc]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-ab6f830cbdb57885a]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-aabf95b6ac9d60b2a]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-aa9fd7926e599959c]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-aa6631855d2bed2be]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a9c3be4c66a199bc2]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a96792372f569474e]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a93669a6760210247]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a8ff3190ca9c41997]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a8e319b5830e30a05]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a8aa074ae8b4fac6d]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a8758d5129a625779]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a7f42f2f5a21a3133]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a7498f7061dbc1d50]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a6b611d8a102695ef]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a67959a03dc4db397]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a5cc421f778d815f9]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a53452ea0bfc2b8a2]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a4e315c90b4cec21d]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a40dc36d4509f5463]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a37ec624fbf5cec64]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a2feb50b6d5657a54]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - agent-a1bce56a00a207cd1]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - Refactor Core-v2 to Core-Fable]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - Generate security BoK documentation suite]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - 7f56bfa3-b8ee-4915-b4c6-31b9694bde1b]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-10 - 01011bef-690d-4105-a4da-14cdfdfea18a]]` (ClaudeSessions) - *2026-06-10*
+*   `[[2026-06-09 - c86b9f6f-c6f0-4d78-bee0-1bd38c82b585]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-aff418d0d1a12c67f]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-afc355aa0cae3fafd]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-afab66831078556d1]]` (ClaudeSessions) - *2026-06-09*
@@ -78,6 +112,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-09 - agent-ad496a2cf1ff76f35]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-ad3f2eb21c4de0656]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-acf81b88080b89d0a]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-acb78d279d0a63fcf]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-aca3f1163195a2930]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-ac5b3042c49055ba5]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-ac58d94a012735d99]]` (ClaudeSessions) - *2026-06-09*
@@ -109,6 +144,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-09 - agent-a909d959696891aa8]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a8e8d30ffd4421d91]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a8d502e0dbb87cb3d]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - agent-a8cab9e48ec8ca341]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a870eac2935b6eb0b]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a86b5f56cac437b11]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a84c21dddf935e0cd]]` (ClaudeSessions) - *2026-06-09*
@@ -171,8 +207,10 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-09 - agent-a032f8ee1f180c630]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - agent-a012224924c38a7a4]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Monitor HFT trading automation in bear regime]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - Generate security BoK documentation suite]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Fix settings password overwrite bug preventing logins]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Fix farm buy order notional filter failures]]` (ClaudeSessions) - *2026-06-09*
+*   `[[2026-06-09 - Fix ScrollArea import and test kanban workspace]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Commit predictive engineering documentation]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-09 - Audit trading bot order status and agent KPI updates]]` (ClaudeSessions) - *2026-06-09*
 *   `[[2026-06-08 - handson]]` (GeminiSessions) - *2026-06-08*

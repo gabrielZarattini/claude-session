@@ -2550,5 +2550,5 @@ Sessão selada. ✅
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-09 - Fix farm buy order notional filter failures]]
-> * **Próxima Sessão**: [[2026-06-09 - Monitor HFT trading automation in bear regime]]
+> * **Próxima Sessão**: [[2026-06-09 - Generate security BoK documentation suite]]
 %% --- TIMELINE END --- %%
