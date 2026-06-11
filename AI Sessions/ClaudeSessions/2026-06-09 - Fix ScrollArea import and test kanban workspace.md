@@ -4895,7 +4895,7 @@ Começando o PRE-FLIGHT em paralelo.
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== untracked security dir contents ===\"; ls -la docs/bok/security/ 2>/dev/null\necho \"=== blueprint head (what was dropped in) ===\"; head -30 docs/bok/security/00-deepsearch-blueprint.md 2>/dev/null || echo \"(no blueprint file)\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== untracked security dir contents ===\"; ls -la docs/bok/security/ 2>/dev/null\necho \"=== blueprint head (what was dropped in) ===\"; head -30 docs/bok/security/00-[[deepsearch-blueprint|deepsearch-blueprint]].md 2>/dev/null || echo \"(no blueprint file)\"",
   "description": "Inspect untracked security blueprint"
 }
 ```
@@ -4907,7 +4907,7 @@ Começando o PRE-FLIGHT em paralelo.
 > total 16
 > drwxrwxr-x  2 ubuntu ubuntu 4096 Jun  9 19:20 .
 > drwxrwxr-x 21 ubuntu ubuntu 4096 Jun  9 19:20 ..
-> -rw-rw-r--  1 ubuntu ubuntu 5005 Jun  9 19:21 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 5005 Jun  9 19:21 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > === blueprint head (what was dropped in) ===
 > 🧠 MCORCH CYBER-SENTINEL: PRODUCTION HARDENING & BOK ENGRAVING
 > SYSTEM DIRECTIVE: CORE ECOSYSTEM HARDENING FROM PHYSICAL REFERENCE
@@ -4985,7 +4985,7 @@ Estado claro: 2 commits não-pushados (`e55ce70` fix Kanban + `761ea6f` helper Q
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. Secret leak scan (delta n\u00e3o-pushado + untracked) ===\"\ngit diff origin/main..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|process.env\\|Deno.env\\|SB_SECRET_KEY\\b\" | head -20 || echo \"NO HARDCODED SECRETS in delta \u2705\"\necho \"=== gen-user-session.ts: secrets v\u00eam de env? ===\"\ngrep -nE \"SECRET|api_key|token\" scripts/qa/gen-user-session.ts | grep -iE \"process.env|=\" | head -5\necho \"=== blueprint untracked tem credencial real? ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" docs/bok/security/00-deepsearch-blueprint.md | head -5 || echo \"blueprint SEM credencial \u2705\"\necho \"=== 1c. client-side coin deduction? ===\"\ngit diff origin/main..HEAD | grep -iE \"mco_balance.*update|UPDATE.*mco_balance\" | head -5 || echo \"NO client coin deduction \u2705\"\necho \"=== README version atual ===\"\ngrep -oE \"version-[0-9]+\\.[0-9]+\\.[0-9]+\" README.md | head -1\ngrep -oE \"neural_mesh-[0-9]+_nodes|neural_mesh-[0-9]+\" README.md | head -1",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. Secret leak scan (delta n\u00e3o-pushado + untracked) ===\"\ngit diff origin/main..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|process.env\\|Deno.env\\|SB_SECRET_KEY\\b\" | head -20 || echo \"NO HARDCODED SECRETS in delta \u2705\"\necho \"=== gen-user-session.ts: secrets v\u00eam de env? ===\"\ngrep -nE \"SECRET|api_key|token\" scripts/qa/gen-user-session.ts | grep -iE \"process.env|=\" | head -5\necho \"=== blueprint untracked tem credencial real? ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" docs/bok/security/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -5 || echo \"blueprint SEM credencial \u2705\"\necho \"=== 1c. client-side coin deduction? ===\"\ngit diff origin/main..HEAD | grep -iE \"mco_balance.*update|UPDATE.*mco_balance\" | head -5 || echo \"NO client coin deduction \u2705\"\necho \"=== README version atual ===\"\ngrep -oE \"version-[0-9]+\\.[0-9]+\\.[0-9]+\" README.md | head -1\ngrep -oE \"neural_mesh-[0-9]+_nodes|neural_mesh-[0-9]+\" README.md | head -1",
   "description": "Phase 1 security audit on unpushed delta + README version"
 }
 ```
@@ -5021,7 +5021,7 @@ Estado claro: 2 commits não-pushados (`e55ce70` fix Kanban + `761ea6f` helper Q
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/security/00-deepsearch-blueprint.md\ngit commit -q -m \"docs(bok): adiciona blueprint de hardening de seguranca (diretiva CISO deferida)\n\nSemente da suite BoK de seguranca (docs/bok/security/) \u2014 patterns de\nhardening a aplicar: Lefthook scanner concorrente, Husky em monorepo\naninhado, Arcjet Edge anti-prompt-injection, drop de capabilities do kernel\nLinux e pooling PostgreSQL com SET LOCAL. A geracao dos 4 artefatos\n(01-brd/02-srs/03-sdd/04-fmea) fica para sessao dedicada \u2014 diretiva\ninterrompida pelo Sovereign em favor do seal desta sessao do Kanban.\" && git log --oneline -1",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/security/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\ngit commit -q -m \"docs(bok): adiciona blueprint de hardening de seguranca (diretiva CISO deferida)\n\nSemente da suite BoK de seguranca (docs/bok/security/) \u2014 patterns de\nhardening a aplicar: Lefthook scanner concorrente, Husky em monorepo\naninhado, Arcjet Edge anti-prompt-injection, drop de capabilities do kernel\nLinux e pooling PostgreSQL com SET LOCAL. A geracao dos 4 artefatos\n(01-brd/02-srs/03-sdd/04-fmea) fica para sessao dedicada \u2014 diretiva\ninterrompida pelo Sovereign em favor do seal desta sessao do Kanban.\" && git log --oneline -1",
   "description": "Commit the deferred security blueprint"
 }
 ```

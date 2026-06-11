@@ -879,7 +879,7 @@ Pre-flight base OK. Agora a cauda do HANDOFF.md (Pending Actions + GraphRAG Stat
 > drwx------ 29 ubuntu ubuntu 4096 Jun  9 22:38 ..
 > ---SPRINT-V634---
 > ---BOK-SECURITY---
-> 00-deepsearch-blueprint.md
+> 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > 01-brd-security.md
 > 02-srs-secure-spec.md
 > 03-sdd-hardening-architecture.md

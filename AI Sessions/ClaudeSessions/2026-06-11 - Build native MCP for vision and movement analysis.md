@@ -1001,7 +1001,7 @@ Nova diretiva de módulo arquitetural — vou seguir o Master Execution Protocol
 🛠️ **Tool Call**: `Workflow`
 ```json
 {
-  "script": "export const meta = {\n  name: 'vision-mcp-deepsearch',\n  description: 'Deepsearch fundamentado p/ MCP nativo de vis\u00e3o (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) \u2192 blueprint-semente BoK',\n  phases: [\n    { title: 'Pesquisa', detail: 'recon sandcastles + MCP spec + 4 pilares de vis\u00e3o' },\n    { title: 'Verifica\u00e7\u00e3o', detail: 'adversarial verify das claims por dom\u00ednio' },\n    { title: 'Integra\u00e7\u00e3o', detail: 'mapeamento MCORCH-nativo (repo local, read-only)' },\n    { title: 'Cr\u00edtica', detail: 'completeness critic + gap-fill' },\n    { title: 'S\u00edntese', detail: 'draft do 00-deepsearch-blueprint.md' },\n  ],\n}\n\nconst FINDINGS = {\n  type: 'object',\n  required: ['summary', 'claims', 'references'],\n  properties: {\n    summary: { type: 'string', description: 'Dense 2-4 paragraph synthesis of what was found' },\n    claims: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'source', 'confidence'],\n        properties: {\n          claim: { type: 'string' },\n          source: { type: 'string', description: 'URL actually consulted' },\n          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n          why_it_matters: { type: 'string' },\n        },\n      },\n    },\n    references: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['name', 'url', 'type'],\n        properties: {\n          name: { type: 'string' },\n          url: { type: 'string' },\n          type: { type: 'string', description: 'model | library | API | hardware | SDK | spec | paper | product' },\n          maturity: { type: 'string', description: 'consolidated | production | emerging | research' },\n          license: { type: 'string' },\n          how_to_consume: { type: 'string', description: 'API / self-host CPU / self-host GPU / hardware-only / software-emulable' },\n        },\n      },\n    },\n    could_not_verify: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst VERDICTS = {\n  type: 'object',\n  required: ['verdicts'],\n  properties: {\n    verdicts: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'verdict', 'evidence'],\n        properties: {\n          claim: { type: 'string' },\n          verdict: { type: 'string', enum: ['confirmed', 'refuted', 'unverifiable'] },\n          evidence: { type: 'string', description: 'independent source URL + what it says' },\n          corrected: { type: 'string', description: 'corrected version of the claim if refuted' },\n        },\n      },\n    },\n  },\n}\n\nconst MAPPING = {\n  type: 'object',\n  required: ['runtime_recommendation', 'integration_points', 'risks', 'assessment'],\n  properties: {\n    runtime_recommendation: { type: 'string' },\n    integration_points: { type: 'array', items: { type: 'string' } },\n    risks: { type: 'array', items: { type: 'string' } },\n    reusable_assets: { type: 'array', items: { type: 'string' } },\n    assessment: { type: 'string' },\n  },\n}\n\nconst CRITIQUE = {\n  type: 'object',\n  required: ['critical_gaps', 'minor_gaps'],\n  properties: {\n    critical_gaps: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['gap', 'suggested_search'],\n        properties: { gap: { type: 'string' }, suggested_search: { type: 'string' } },\n      },\n    },\n    minor_gaps: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst COMMON_RULES = `\nHARD MATERIALITY RULES (MCORCH Law 1): every claim must cite the URL you actually consulted (WebSearch/WebFetch). If a fact cannot be established from a fetched source, put it in could_not_verify or mark confidence 'low' \u2014 NEVER invent product names, versions, benchmarks or URLs. Verify model/product names actually exist via search; do not rely on memory alone. Current date: 2026-06-10. Your final output is raw structured data for a machine pipeline, not prose for a human.`\n\nconst TASKS = [\n  {\n    key: 'sandcastles',\n    prompt: `You are a market-recon researcher. Establish MATERIALLY what https://www.sandcastles.ai/ is and what its MCP connector does.\nSteps: WebFetch the homepage; try subpages (/docs, /mcp, /blog, /pricing, /about, /changelog); WebSearch for \"sandcastles.ai MCP\", \"Sandcastles AI connector\", \"sandcastles ai\" site:github.com, Product Hunt / LinkedIn / X / HackerNews mentions, founder interviews.\nDeliver: (1) what the product is (category, target user, value proposition); (2) what their MCP connector exposes (tools, resources, how clients connect to it); (3) what appears to be their DIFFERENTIATOR \u2014 the pattern worth extracting for our own native MCP; (4) anything discoverable about their tech stack/architecture/pricing.\nIf the site is unreachable or ambiguous, report that explicitly as a finding \u2014 an honest \"could not establish\" beats a fabricated profile.${COMMON_RULES}`,\n  },\n  {\n    key: 'mcp-architecture',\n    prompt: `Research the CURRENT Model Context Protocol (MCP) spec and ecosystem for building a NATIVE MCP SERVER that external ecosystems can consume (remote MCP). Sources: modelcontextprotocol.io spec + docs, official TypeScript SDK, Anthropic docs, Cloudflare remote-MCP docs, exemplar production servers (GitHub MCP, Supabase MCP, Cloudflare MCP), the official MCP registry.\nAnswer specifically:\n1. Current transports: stdio vs Streamable HTTP (and the SSE-transport deprecation status); which is right for a multi-tenant SaaS exposing MCP to external clients.\n2. Auth for remote MCP servers: OAuth 2.1 flow per current spec, bearer/PAT patterns, how multi-tenant servers scope per-user credentials.\n3. Tools vs resources vs prompts: design guidance for a research/vision-oriented server (when each primitive fits).\n4. Can an MCP server run on Deno / as a Supabase Edge Function? Search for real examples (e.g. Supabase docs/blog on hosting MCP in edge functions). Constraints: execution timeouts, streaming/SSE support, cold starts.\n5. Discovery: the official MCP registry \u2014 how servers get listed and consumed.\n6. Spec versioning + capability negotiation, and elicitation/sampling primitives if relevant.\nReturn consolidated references (spec pages, SDK repos, exemplar servers) with maturity.${COMMON_RULES}`,\n  },\n  {\n    key: 'computer-vision',\n    prompt: `Deepsearch: CONSOLIDATED, production-grade Computer Vision references (as of 2026) suitable for a server-side agentic SaaS (no GPU guaranteed; prefer API-accessible or lightweight inference).\nCover: segmentation/foundation models (SAM family \u2014 establish the CURRENT version, Grounding DINO, DINOv2/v3), open-vocabulary detection, VLMs for vision analysis via API (Gemini current vision capabilities, Claude vision, GPT-series vision, Qwen-VL \u2014 and which are accessible via OpenRouter), classic stacks (OpenCV, ultralytics YOLO current version + the AGPL licensing caveat, Roboflow ecosystem, HuggingFace transformers/timm), OCR (modern document/scene OCR options), image embeddings (CLIP/SigLIP and successors).\nFor each: maturity (consolidated/production/emerging/research), license, how to consume (API vs self-host CPU vs self-host GPU), and what capability it unlocks. Distinguish consolidated vs hype.${COMMON_RULES}`,\n  },\n  {\n    key: 'motion-analysis',\n    prompt: `Deepsearch: CONSOLIDATED Motion Analysis references (as of 2026) for server-side video/stream analysis.\nCover: optical flow (RAFT and successors), pose estimation (MediaPipe, MMPose/RTMPose, ViTPose), multi-object tracking (ByteTrack, BoT-SORT, SAM-based video tracking), action/activity recognition (VideoMAE v2 and current SOTA), temporal video understanding via API (Gemini video understanding \u2014 capabilities, frame-sampling limits, pricing class; any other video-capable APIs), and the cheap/robust classics (background subtraction MOG2, frame differencing via OpenCV) and the niche where classics beat deep models.\nFor each: maturity, license, compute-cost class (cheap-CPU / GPU / API), real production usage evidence.${COMMON_RULES}`,\n  },\n  {\n    key: 'neuromorphic',\n    prompt: `Deepsearch: Neuromorphic sensing and event-driven vision (as of 2026) \u2014 what is COMMERCIALLY CONSOLIDATED vs research.\nCover: event cameras/DVS (Prophesee + Sony IMX636, iniVation, Samsung efforts), SDKs (Prophesee Metavision), neuromorphic processors (Intel Loihi 2 / Hala Point, BrainChip Akida, SpiNNaker2), SNN software (Lava, snnTorch, Norse), event-camera simulators/emulators (v2e, ESIM, others) that synthesize event streams from regular video.\nCRUCIAL for our use-case: we are a cloud SaaS WITHOUT physical sensors \u2014 assess honestly which neuromorphic PRINCIPLES (sparse change-driven processing, asynchronous events, microsecond motion saliency, power/data efficiency) can be SOFTWARE-EMULATED over normal video/screenshots/streams (frame differencing \u2192 synthetic events, event representations like voxel grids/time surfaces feeding downstream models), and where real hardware is irreplaceable. Cite real projects doing software event emulation.\nReturn references with maturity + applicability tag (hardware-only vs software-emulable).${COMMON_RULES}`,\n  },\n  {\n    key: 'peripheral-foveated',\n    prompt: `Deepsearch: peripheral vision and foveated processing as an ENGINEERING PARADIGM \u2014 the 'human essence' of seeing (as of 2026).\nCover: (a) human visual system facts that matter for engineering: fovea vs periphery acuity distribution (approx numbers with sources), magnocellular pathway motion sensitivity in periphery, saccades + covert attention, pre-attentive pop-out, two-stream (dorsal/ventral) hypothesis; (b) foveated rendering in production (Apple Vision Pro, Meta Quest eye-tracked foveation); (c) foveated/attention ML: saliency prediction models (which are consolidated), glimpse/recurrent attention networks, active vision in robotics, peripheral-vision-inspired CV architectures (low-res wide-field pass + high-res foveal crop pipelines \u2014 e.g. patch-zoom/visual-search agent loops in VLMs), any papers/products doing 'peripheral vision for AI agents' (cheap wide monitoring pass that triggers expensive focused analysis).\nGoal: ground a two-tier perception architecture (cheap always-on periphery \u2192 saliency trigger \u2192 expensive foveal analysis). Return consolidated references with maturity.${COMMON_RULES}`,\n  },\n]\n\nconst MAPPING_PROMPT = `READ-ONLY repo analysis (no writes, no deploys, no git mutations). Repo: /home/gcrUX/htdocs/constellation-orchestra (MCORCH).\nRead: CLAUDE.md (architecture + API Tenancy Model + billing + Survival Laws pointer), supabase/config.toml (verify_jwt patterns), supabase/functions/_shared/ (agent-metering.ts, sentinel.ts, billing helpers), one representative paid edge function (supabase/functions/orchestrate-content/index.ts), docker-compose.yml if present (mcorch_* mesh namespace), docs/processes/mcoin-cost-calibration.md, docs/processes/edge-jwt-identity-verification.md if present.\nTask: map how a NATIVE MCP SERVER module (\"vision-mcp\" \u2014 vision/deepsearch tools exposed via Model Context Protocol to internal MCORCH agents AND external ecosystems) should integrate:\n1. Runtime options compared honestly: (a) Supabase Edge Function (Deno) speaking Streamable HTTP MCP; (b) Docker container in the Sovereign Mesh (mcorch_* namespace) behind nginx on the Oracle ARM host (nginx already serves login.mcorch.com from this host \u2014 a subdomain like mcp.mcorch.com is plausible); (c) standalone Deno/Bun service under systemd (precedent: openclaw-gateway.service). Weigh: auth, execution timeouts for long deepsearch jobs, streaming support, cold starts, ops burden. Recommend ONE.\n2. Auth: per-user credentials via the API Tenancy Model (user_api_keys / <service>_config + Vault encryption patterns); how external MCP clients authenticate (Supabase JWT? a dedicated PAT table with RLS?). Note the ES256 JWKS verification SOP if found.\n3. Billing: mcoCoins per tool call via atomic deduct_mco_coins RPC + the agent-metering.ts pattern; pricing classes per the 4x-floor model in docs/processes/mcoin-cost-calibration.md (cite the formula).\n4. Mesh Connection Mandate: observation node on first successful run, infra_health_logs on failure paths, traceability to BR/FR IDs.\n5. Existing assets to REUSE (do not reinvent): sentinel.ts prompt-injection gate, OpenRouter integration + BYOK, firecrawl tooling availability, the knowledge mesh (mcorch_nodes/mcorch_edges + pgvector) as the natural store for extracted 'consolidated references' (each reference could become a mesh node).\nReturn: runtime_recommendation, integration_points (concrete file/pattern references like path:line), risks (security/tenancy/billing/LGPD), reusable_assets, assessment (concise narrative). Final output is structured data, not prose.`\n\nlog('Deepsearch ultracode: 6 frentes web (com verify adversarial em pipeline) + mapeamento MCORCH em paralelo')\n\nconst [domainResultsRaw, mapping] = await parallel([\n  () =>\n    pipeline(\n      TASKS,\n      (t) => agent(t.prompt, { label: `research:${t.key}`, phase: 'Pesquisa', schema: FINDINGS }),\n      (findings, t) => {\n        if (!findings) return null\n        const top = (findings.claims || []).slice(0, 6)\n        if (!top.length) return { key: t.key, findings, verdicts: [] }\n        return agent(\n          `You are an ADVERSARIAL fact-checker. For each claim below, try to REFUTE it using independent web searches (WebSearch/WebFetch) \u2014 do not reuse the original source as confirmation. Verdict 'confirmed' only with independent evidence; 'refuted' if contradicted (provide the corrected fact); 'unverifiable' if you cannot find independent evidence. Current date: 2026-06-10. Claims (domain: ${t.key}):\\n${JSON.stringify(top, null, 2)}`,\n          { label: `verify:${t.key}`, phase: 'Verifica\u00e7\u00e3o', schema: VERDICTS },\n        ).then((v) => ({ key: t.key, findings, verdicts: v ? v.verdicts : [] }))\n      },\n    ),\n  () => agent(MAPPING_PROMPT, { label: 'mcorch-mapping', phase: 'Integra\u00e7\u00e3o', schema: MAPPING }),\n])\n\nconst domains = (domainResultsRaw || []).filter(Boolean)\nlog(`Pesquisa: ${domains.length}/6 dom\u00ednios conclu\u00eddos \u00b7 mapping ${mapping ? 'OK' : 'FALHOU'}`)\n\nconst compactDomains = domains.map((d) => ({\n  key: d.key,\n  summary: d.findings.summary,\n  claims: (d.findings.claims || []).map((c) => c.claim),\n  verdicts: d.verdicts,\n  reference_count: (d.findings.references || []).length,\n  could_not_verify: d.findings.could_not_verify || [],\n}))\n\nconst critique = await agent(\n  `You are a completeness critic for a deepsearch that will seed a full BoK (MRD/BRD/PRD/FRD/SDD) for \"vision-mcp\": a NATIVE MCP server in the MCORCH ecosystem whose differentiator is deepsearch-grounded extraction of consolidated market references in Computer Vision, Motion Analysis, Neuromorphic Sensing and Peripheral/Foveated vision (\"human essence\" two-tier perception), exposed to internal agents AND external ecosystems.\nReview the research results below. What is MISSING or too weak to write an honest, production-grade blueprint? Consider at least: was sandcastles.ai established materially (or must our differentiator stand alone)? Were transports/auth for remote MCP verified with real examples? Competitive landscape \u2014 do vision-focused MCP servers already exist in the MCP registry? Licensing landmines (AGPL etc.)? Cost/unit economics needed for mcoCoin pricing? LGPD/privacy of processing images/screens of third parties? Anything contradictory between domains?\nResults: ${JSON.stringify({ domains: compactDomains, mapping: mapping ? mapping.assessment : 'MISSING \u2014 mapping agent failed' }, null, 2)}\nReturn critical_gaps (max 6, each with a suggested_search starting point) and minor_gaps.`,\n  { label: 'completeness-critic', phase: 'Cr\u00edtica', schema: CRITIQUE },\n)\n\nlet gapFills = []\nif (critique && critique.critical_gaps && critique.critical_gaps.length) {\n  const gaps = critique.critical_gaps.slice(0, 4)\n  log(`Critic apontou ${critique.critical_gaps.length} gaps cr\u00edticos \u2014 preenchendo ${gaps.length} em paralelo`)\n  gapFills = (\n    await parallel(\n      gaps.map((g, i) => () =>\n        agent(\n          `Close this research gap for the vision-mcp blueprint (MCORCH native MCP server for vision/deepsearch). Gap: ${g.gap}\\nSuggested starting search: ${g.suggested_search}\\nUse WebSearch/WebFetch.${COMMON_RULES}`,\n          { label: `gapfill:${i}`, phase: 'Cr\u00edtica', schema: FINDINGS },\n        ),\n      ),\n    )\n  ).filter(Boolean)\n}\n\nlog('Sintetizando o blueprint (PT-BR, production-grade, sem placeholders)')\n\nconst synthesisData = {\n  directive:\n    'Diretiva Sovereign 2026-06-10: MCP Interno nativo do MCORCH, inspirado no diferencial do conector MCP do sandcastles.ai \u2014 extra\u00e7\u00e3o de refer\u00eancias consolidadas do mercado via deepsearch fundamentado em Computer Vision, An\u00e1lise de Movimento, Sensores Neurom\u00f3rficos e Vis\u00e3o Perif\u00e9rica (\"ess\u00eancia humana\"). Deve servir agentes internos E ecossistemas externos (remote MCP).',\n  domains,\n  mapping,\n  critique,\n  gapFills,\n}\n\nconst synthesis = await agent(\n  `You are the blueprint author for the MCORCH ecosystem. Write the COMPLETE markdown for docs/bok/vision-mcp/00-deepsearch-blueprint.md \u2014 working title \"MCORCH Vision MCP \u2014 Percep\u00e7\u00e3o de Ess\u00eancia Humana\" (slug vision-mcp). Language: Portuguese (Brazil); technical terms stay in English. This document is the SEED / Fonte da Verdade for a subsequent /bok-scribe run \u2014 production-grade, NO placeholders, NO invented facts. Precedent format: the Cyber-Sentinel blueprint (docs/bok/security/00-deepsearch-blueprint.md) seeded a 4-doc BoK.\nRequired sections:\n1. **Sum\u00e1rio Executivo** \u2014 o que \u00e9, por que agora, e o diferencial. Be HONEST about what the sandcastles.ai recon established (cite confidence); if inconclusive, define our differentiator standing on its own merits.\n2. **Os 4 Pilares** \u2014 fundamentos por dom\u00ednio (CV, Motion, Neuromorphic, Peripheral/Foveated) com as refer\u00eancias consolidadas E os veredictos da verifica\u00e7\u00e3o adversarial: refuted claims must NOT appear as facts (use the corrected version), unverifiable ones must be flagged as such.\n3. **Arquitetura \"Ess\u00eancia Humana\"** \u2014 the unifying design: two-tier perception (periferia barata always-on com princ\u00edpios neurom\u00f3rficos emulados em software \u2192 saliency/event trigger \u2192 an\u00e1lise foveal cara e profunda), and how deepsearch-grounded reference extraction feeds the knowledge mesh.\n4. **Cat\u00e1logo de Refer\u00eancias Consolidadas** \u2014 table: nome \u00b7 pilar \u00b7 tipo \u00b7 maturidade \u00b7 licen\u00e7a \u00b7 como consumir (API/self-host/emul\u00e1vel) \u00b7 URL. Only references with real URLs from the research.\n5. **Arquitetura MCORCH-nativa** \u2014 runtime recommendation + auth (API Tenancy per-user) + billing (mcoCoins at\u00f4mico, classes de pre\u00e7o pelo modelo 4x-floor) + Mesh Connection Mandate + exposi\u00e7\u00e3o externa (Streamable HTTP/OAuth) \u2014 ground every choice in the mapping agent's concrete repo references.\n6. **Superf\u00edcie MCP proposta** \u2014 draft tool/resource/prompt list: name, 1-line contract, input gates (sentinel), mcoCoin cost class.\n7. **Riscos & FMEA-seed** \u2014 security/tenancy/licensing(AGPL)/cost/LGPD; prompt-injection nas tool inputs via sentinel.\n8. **OTDs e Quest\u00f5es Abertas** \u2014 every critical gap the critic raised that was NOT filled, plus could_not_verify items that matter.\n9. **Fatiamento MVP** \u2014 3-4 slices, each with material verification gates (Lei 1) and what it unblocks.\n10. **Apontadores para o BoK** \u2014 what /bok-scribe must turn into MRD/BRD/PRD/FRD/SDD; traceability hints (BR-VM-xxx, FR-VM-xxx).\nMateriality: every external claim carries its source URL from the research below; never invent references.\nResearch results (JSON): ${JSON.stringify(synthesisData)}\nReturn { markdown } \u2014 the complete document.`,\n  {\n    label: 'blueprint-synthesis',\n    phase: 'S\u00edntese',\n    schema: {\n      type: 'object',\n      required: ['markdown'],\n      properties: { markdown: { type: 'string' } },\n    },\n  },\n)\n\nconst stats = {\n  domains_completed: domains.length,\n  total_claims: domains.reduce((a, d) => a + (d.findings.claims || []).length, 0),\n  total_references: domains.reduce((a, d) => a + (d.findings.references || []).length, 0),\n  refuted: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'refuted').length, 0),\n  confirmed: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'confirmed').length, 0),\n  unverifiable: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'unverifiable').length, 0),\n  critical_gaps: critique ? critique.critical_gaps.length : -1,\n  gaps_filled: gapFills.length,\n  mapping_ok: !!mapping,\n}\nlog(`S\u00edntese pronta \u00b7 refs ${stats.total_references} \u00b7 claims ${stats.total_claims} (\u2714${stats.confirmed} \u2716${stats.refuted} ?${stats.unverifiable})`)\n\nreturn { markdown: synthesis ? synthesis.markdown : null, stats, mapping, critique }"
+  "script": "export const meta = {\n  name: 'vision-mcp-deepsearch',\n  description: 'Deepsearch fundamentado p/ MCP nativo de vis\u00e3o (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) \u2192 blueprint-semente BoK',\n  phases: [\n    { title: 'Pesquisa', detail: 'recon sandcastles + MCP spec + 4 pilares de vis\u00e3o' },\n    { title: 'Verifica\u00e7\u00e3o', detail: 'adversarial verify das claims por dom\u00ednio' },\n    { title: 'Integra\u00e7\u00e3o', detail: 'mapeamento MCORCH-nativo (repo local, read-only)' },\n    { title: 'Cr\u00edtica', detail: 'completeness critic + gap-fill' },\n    { title: 'S\u00edntese', detail: 'draft do 00-[[deepsearch-blueprint|deepsearch-blueprint]].md' },\n  ],\n}\n\nconst FINDINGS = {\n  type: 'object',\n  required: ['summary', 'claims', 'references'],\n  properties: {\n    summary: { type: 'string', description: 'Dense 2-4 paragraph synthesis of what was found' },\n    claims: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'source', 'confidence'],\n        properties: {\n          claim: { type: 'string' },\n          source: { type: 'string', description: 'URL actually consulted' },\n          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n          why_it_matters: { type: 'string' },\n        },\n      },\n    },\n    references: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['name', 'url', 'type'],\n        properties: {\n          name: { type: 'string' },\n          url: { type: 'string' },\n          type: { type: 'string', description: 'model | library | API | hardware | SDK | spec | paper | product' },\n          maturity: { type: 'string', description: 'consolidated | production | emerging | research' },\n          license: { type: 'string' },\n          how_to_consume: { type: 'string', description: 'API / self-host CPU / self-host GPU / hardware-only / software-emulable' },\n        },\n      },\n    },\n    could_not_verify: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst VERDICTS = {\n  type: 'object',\n  required: ['verdicts'],\n  properties: {\n    verdicts: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'verdict', 'evidence'],\n        properties: {\n          claim: { type: 'string' },\n          verdict: { type: 'string', enum: ['confirmed', 'refuted', 'unverifiable'] },\n          evidence: { type: 'string', description: 'independent source URL + what it says' },\n          corrected: { type: 'string', description: 'corrected version of the claim if refuted' },\n        },\n      },\n    },\n  },\n}\n\nconst MAPPING = {\n  type: 'object',\n  required: ['runtime_recommendation', 'integration_points', 'risks', 'assessment'],\n  properties: {\n    runtime_recommendation: { type: 'string' },\n    integration_points: { type: 'array', items: { type: 'string' } },\n    risks: { type: 'array', items: { type: 'string' } },\n    reusable_assets: { type: 'array', items: { type: 'string' } },\n    assessment: { type: 'string' },\n  },\n}\n\nconst CRITIQUE = {\n  type: 'object',\n  required: ['critical_gaps', 'minor_gaps'],\n  properties: {\n    critical_gaps: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['gap', 'suggested_search'],\n        properties: { gap: { type: 'string' }, suggested_search: { type: 'string' } },\n      },\n    },\n    minor_gaps: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst COMMON_RULES = `\nHARD MATERIALITY RULES (MCORCH Law 1): every claim must cite the URL you actually consulted (WebSearch/WebFetch). If a fact cannot be established from a fetched source, put it in could_not_verify or mark confidence 'low' \u2014 NEVER invent product names, versions, benchmarks or URLs. Verify model/product names actually exist via search; do not rely on memory alone. Current date: 2026-06-10. Your final output is raw structured data for a machine pipeline, not prose for a human.`\n\nconst TASKS = [\n  {\n    key: 'sandcastles',\n    prompt: `You are a market-recon researcher. Establish MATERIALLY what https://www.sandcastles.ai/ is and what its MCP connector does.\nSteps: WebFetch the homepage; try subpages (/docs, /mcp, /blog, /pricing, /about, /changelog); WebSearch for \"sandcastles.ai MCP\", \"Sandcastles AI connector\", \"sandcastles ai\" site:github.com, Product Hunt / LinkedIn / X / HackerNews mentions, founder interviews.\nDeliver: (1) what the product is (category, target user, value proposition); (2) what their MCP connector exposes (tools, resources, how clients connect to it); (3) what appears to be their DIFFERENTIATOR \u2014 the pattern worth extracting for our own native MCP; (4) anything discoverable about their tech stack/architecture/pricing.\nIf the site is unreachable or ambiguous, report that explicitly as a finding \u2014 an honest \"could not establish\" beats a fabricated profile.${COMMON_RULES}`,\n  },\n  {\n    key: 'mcp-architecture',\n    prompt: `Research the CURRENT Model Context Protocol (MCP) spec and ecosystem for building a NATIVE MCP SERVER that external ecosystems can consume (remote MCP). Sources: modelcontextprotocol.io spec + docs, official TypeScript SDK, Anthropic docs, Cloudflare remote-MCP docs, exemplar production servers (GitHub MCP, Supabase MCP, Cloudflare MCP), the official MCP registry.\nAnswer specifically:\n1. Current transports: stdio vs Streamable HTTP (and the SSE-transport deprecation status); which is right for a multi-tenant SaaS exposing MCP to external clients.\n2. Auth for remote MCP servers: OAuth 2.1 flow per current spec, bearer/PAT patterns, how multi-tenant servers scope per-user credentials.\n3. Tools vs resources vs prompts: design guidance for a research/vision-oriented server (when each primitive fits).\n4. Can an MCP server run on Deno / as a Supabase Edge Function? Search for real examples (e.g. Supabase docs/blog on hosting MCP in edge functions). Constraints: execution timeouts, streaming/SSE support, cold starts.\n5. Discovery: the official MCP registry \u2014 how servers get listed and consumed.\n6. Spec versioning + capability negotiation, and elicitation/sampling primitives if relevant.\nReturn consolidated references (spec pages, SDK repos, exemplar servers) with maturity.${COMMON_RULES}`,\n  },\n  {\n    key: 'computer-vision',\n    prompt: `Deepsearch: CONSOLIDATED, production-grade Computer Vision references (as of 2026) suitable for a server-side agentic SaaS (no GPU guaranteed; prefer API-accessible or lightweight inference).\nCover: segmentation/foundation models (SAM family \u2014 establish the CURRENT version, Grounding DINO, DINOv2/v3), open-vocabulary detection, VLMs for vision analysis via API (Gemini current vision capabilities, Claude vision, GPT-series vision, Qwen-VL \u2014 and which are accessible via OpenRouter), classic stacks (OpenCV, ultralytics YOLO current version + the AGPL licensing caveat, Roboflow ecosystem, HuggingFace transformers/timm), OCR (modern document/scene OCR options), image embeddings (CLIP/SigLIP and successors).\nFor each: maturity (consolidated/production/emerging/research), license, how to consume (API vs self-host CPU vs self-host GPU), and what capability it unlocks. Distinguish consolidated vs hype.${COMMON_RULES}`,\n  },\n  {\n    key: 'motion-analysis',\n    prompt: `Deepsearch: CONSOLIDATED Motion Analysis references (as of 2026) for server-side video/stream analysis.\nCover: optical flow (RAFT and successors), pose estimation (MediaPipe, MMPose/RTMPose, ViTPose), multi-object tracking (ByteTrack, BoT-SORT, SAM-based video tracking), action/activity recognition (VideoMAE v2 and current SOTA), temporal video understanding via API (Gemini video understanding \u2014 capabilities, frame-sampling limits, pricing class; any other video-capable APIs), and the cheap/robust classics (background subtraction MOG2, frame differencing via OpenCV) and the niche where classics beat deep models.\nFor each: maturity, license, compute-cost class (cheap-CPU / GPU / API), real production usage evidence.${COMMON_RULES}`,\n  },\n  {\n    key: 'neuromorphic',\n    prompt: `Deepsearch: Neuromorphic sensing and event-driven vision (as of 2026) \u2014 what is COMMERCIALLY CONSOLIDATED vs research.\nCover: event cameras/DVS (Prophesee + Sony IMX636, iniVation, Samsung efforts), SDKs (Prophesee Metavision), neuromorphic processors (Intel Loihi 2 / Hala Point, BrainChip Akida, SpiNNaker2), SNN software (Lava, snnTorch, Norse), event-camera simulators/emulators (v2e, ESIM, others) that synthesize event streams from regular video.\nCRUCIAL for our use-case: we are a cloud SaaS WITHOUT physical sensors \u2014 assess honestly which neuromorphic PRINCIPLES (sparse change-driven processing, asynchronous events, microsecond motion saliency, power/data efficiency) can be SOFTWARE-EMULATED over normal video/screenshots/streams (frame differencing \u2192 synthetic events, event representations like voxel grids/time surfaces feeding downstream models), and where real hardware is irreplaceable. Cite real projects doing software event emulation.\nReturn references with maturity + applicability tag (hardware-only vs software-emulable).${COMMON_RULES}`,\n  },\n  {\n    key: 'peripheral-foveated',\n    prompt: `Deepsearch: peripheral vision and foveated processing as an ENGINEERING PARADIGM \u2014 the 'human essence' of seeing (as of 2026).\nCover: (a) human visual system facts that matter for engineering: fovea vs periphery acuity distribution (approx numbers with sources), magnocellular pathway motion sensitivity in periphery, saccades + covert attention, pre-attentive pop-out, two-stream (dorsal/ventral) hypothesis; (b) foveated rendering in production (Apple Vision Pro, Meta Quest eye-tracked foveation); (c) foveated/attention ML: saliency prediction models (which are consolidated), glimpse/recurrent attention networks, active vision in robotics, peripheral-vision-inspired CV architectures (low-res wide-field pass + high-res foveal crop pipelines \u2014 e.g. patch-zoom/visual-search agent loops in VLMs), any papers/products doing 'peripheral vision for AI agents' (cheap wide monitoring pass that triggers expensive focused analysis).\nGoal: ground a two-tier perception architecture (cheap always-on periphery \u2192 saliency trigger \u2192 expensive foveal analysis). Return consolidated references with maturity.${COMMON_RULES}`,\n  },\n]\n\nconst MAPPING_PROMPT = `READ-ONLY repo analysis (no writes, no deploys, no git mutations). Repo: /home/gcrUX/htdocs/constellation-orchestra (MCORCH).\nRead: CLAUDE.md (architecture + API Tenancy Model + billing + Survival Laws pointer), supabase/config.toml (verify_jwt patterns), supabase/functions/_shared/ (agent-metering.ts, sentinel.ts, billing helpers), one representative paid edge function (supabase/functions/orchestrate-content/index.ts), docker-compose.yml if present (mcorch_* mesh namespace), docs/processes/mcoin-cost-calibration.md, docs/processes/edge-jwt-identity-verification.md if present.\nTask: map how a NATIVE MCP SERVER module (\"vision-mcp\" \u2014 vision/deepsearch tools exposed via Model Context Protocol to internal MCORCH agents AND external ecosystems) should integrate:\n1. Runtime options compared honestly: (a) Supabase Edge Function (Deno) speaking Streamable HTTP MCP; (b) Docker container in the Sovereign Mesh (mcorch_* namespace) behind nginx on the Oracle ARM host (nginx already serves login.mcorch.com from this host \u2014 a subdomain like mcp.mcorch.com is plausible); (c) standalone Deno/Bun service under systemd (precedent: openclaw-gateway.service). Weigh: auth, execution timeouts for long deepsearch jobs, streaming support, cold starts, ops burden. Recommend ONE.\n2. Auth: per-user credentials via the API Tenancy Model (user_api_keys / <service>_config + Vault encryption patterns); how external MCP clients authenticate (Supabase JWT? a dedicated PAT table with RLS?). Note the ES256 JWKS verification SOP if found.\n3. Billing: mcoCoins per tool call via atomic deduct_mco_coins RPC + the agent-metering.ts pattern; pricing classes per the 4x-floor model in docs/processes/mcoin-cost-calibration.md (cite the formula).\n4. Mesh Connection Mandate: observation node on first successful run, infra_health_logs on failure paths, traceability to BR/FR IDs.\n5. Existing assets to REUSE (do not reinvent): sentinel.ts prompt-injection gate, OpenRouter integration + BYOK, firecrawl tooling availability, the knowledge mesh (mcorch_nodes/mcorch_edges + pgvector) as the natural store for extracted 'consolidated references' (each reference could become a mesh node).\nReturn: runtime_recommendation, integration_points (concrete file/pattern references like path:line), risks (security/tenancy/billing/LGPD), reusable_assets, assessment (concise narrative). Final output is structured data, not prose.`\n\nlog('Deepsearch ultracode: 6 frentes web (com verify adversarial em pipeline) + mapeamento MCORCH em paralelo')\n\nconst [domainResultsRaw, mapping] = await parallel([\n  () =>\n    pipeline(\n      TASKS,\n      (t) => agent(t.prompt, { label: `research:${t.key}`, phase: 'Pesquisa', schema: FINDINGS }),\n      (findings, t) => {\n        if (!findings) return null\n        const top = (findings.claims || []).slice(0, 6)\n        if (!top.length) return { key: t.key, findings, verdicts: [] }\n        return agent(\n          `You are an ADVERSARIAL fact-checker. For each claim below, try to REFUTE it using independent web searches (WebSearch/WebFetch) \u2014 do not reuse the original source as confirmation. Verdict 'confirmed' only with independent evidence; 'refuted' if contradicted (provide the corrected fact); 'unverifiable' if you cannot find independent evidence. Current date: 2026-06-10. Claims (domain: ${t.key}):\\n${JSON.stringify(top, null, 2)}`,\n          { label: `verify:${t.key}`, phase: 'Verifica\u00e7\u00e3o', schema: VERDICTS },\n        ).then((v) => ({ key: t.key, findings, verdicts: v ? v.verdicts : [] }))\n      },\n    ),\n  () => agent(MAPPING_PROMPT, { label: 'mcorch-mapping', phase: 'Integra\u00e7\u00e3o', schema: MAPPING }),\n])\n\nconst domains = (domainResultsRaw || []).filter(Boolean)\nlog(`Pesquisa: ${domains.length}/6 dom\u00ednios conclu\u00eddos \u00b7 mapping ${mapping ? 'OK' : 'FALHOU'}`)\n\nconst compactDomains = domains.map((d) => ({\n  key: d.key,\n  summary: d.findings.summary,\n  claims: (d.findings.claims || []).map((c) => c.claim),\n  verdicts: d.verdicts,\n  reference_count: (d.findings.references || []).length,\n  could_not_verify: d.findings.could_not_verify || [],\n}))\n\nconst critique = await agent(\n  `You are a completeness critic for a deepsearch that will seed a full BoK (MRD/BRD/PRD/FRD/SDD) for \"vision-mcp\": a NATIVE MCP server in the MCORCH ecosystem whose differentiator is deepsearch-grounded extraction of consolidated market references in Computer Vision, Motion Analysis, Neuromorphic Sensing and Peripheral/Foveated vision (\"human essence\" two-tier perception), exposed to internal agents AND external ecosystems.\nReview the research results below. What is MISSING or too weak to write an honest, production-grade blueprint? Consider at least: was sandcastles.ai established materially (or must our differentiator stand alone)? Were transports/auth for remote MCP verified with real examples? Competitive landscape \u2014 do vision-focused MCP servers already exist in the MCP registry? Licensing landmines (AGPL etc.)? Cost/unit economics needed for mcoCoin pricing? LGPD/privacy of processing images/screens of third parties? Anything contradictory between domains?\nResults: ${JSON.stringify({ domains: compactDomains, mapping: mapping ? mapping.assessment : 'MISSING \u2014 mapping agent failed' }, null, 2)}\nReturn critical_gaps (max 6, each with a suggested_search starting point) and minor_gaps.`,\n  { label: 'completeness-critic', phase: 'Cr\u00edtica', schema: CRITIQUE },\n)\n\nlet gapFills = []\nif (critique && critique.critical_gaps && critique.critical_gaps.length) {\n  const gaps = critique.critical_gaps.slice(0, 4)\n  log(`Critic apontou ${critique.critical_gaps.length} gaps cr\u00edticos \u2014 preenchendo ${gaps.length} em paralelo`)\n  gapFills = (\n    await parallel(\n      gaps.map((g, i) => () =>\n        agent(\n          `Close this research gap for the vision-mcp blueprint (MCORCH native MCP server for vision/deepsearch). Gap: ${g.gap}\\nSuggested starting search: ${g.suggested_search}\\nUse WebSearch/WebFetch.${COMMON_RULES}`,\n          { label: `gapfill:${i}`, phase: 'Cr\u00edtica', schema: FINDINGS },\n        ),\n      ),\n    )\n  ).filter(Boolean)\n}\n\nlog('Sintetizando o blueprint (PT-BR, production-grade, sem placeholders)')\n\nconst synthesisData = {\n  directive:\n    'Diretiva Sovereign 2026-06-10: MCP Interno nativo do MCORCH, inspirado no diferencial do conector MCP do sandcastles.ai \u2014 extra\u00e7\u00e3o de refer\u00eancias consolidadas do mercado via deepsearch fundamentado em Computer Vision, An\u00e1lise de Movimento, Sensores Neurom\u00f3rficos e Vis\u00e3o Perif\u00e9rica (\"ess\u00eancia humana\"). Deve servir agentes internos E ecossistemas externos (remote MCP).',\n  domains,\n  mapping,\n  critique,\n  gapFills,\n}\n\nconst synthesis = await agent(\n  `You are the blueprint author for the MCORCH ecosystem. Write the COMPLETE markdown for docs/bok/vision-mcp/00-deepsearch-blueprint.md \u2014 working title \"MCORCH Vision MCP \u2014 Percep\u00e7\u00e3o de Ess\u00eancia Humana\" (slug vision-mcp). Language: Portuguese (Brazil); technical terms stay in English. This document is the SEED / Fonte da Verdade for a subsequent /bok-scribe run \u2014 production-grade, NO placeholders, NO invented facts. Precedent format: the Cyber-Sentinel blueprint (docs/bok/security/00-deepsearch-blueprint.md) seeded a 4-doc BoK.\nRequired sections:\n1. **Sum\u00e1rio Executivo** \u2014 o que \u00e9, por que agora, e o diferencial. Be HONEST about what the sandcastles.ai recon established (cite confidence); if inconclusive, define our differentiator standing on its own merits.\n2. **Os 4 Pilares** \u2014 fundamentos por dom\u00ednio (CV, Motion, Neuromorphic, Peripheral/Foveated) com as refer\u00eancias consolidadas E os veredictos da verifica\u00e7\u00e3o adversarial: refuted claims must NOT appear as facts (use the corrected version), unverifiable ones must be flagged as such.\n3. **Arquitetura \"Ess\u00eancia Humana\"** \u2014 the unifying design: two-tier perception (periferia barata always-on com princ\u00edpios neurom\u00f3rficos emulados em software \u2192 saliency/event trigger \u2192 an\u00e1lise foveal cara e profunda), and how deepsearch-grounded reference extraction feeds the knowledge mesh.\n4. **Cat\u00e1logo de Refer\u00eancias Consolidadas** \u2014 table: nome \u00b7 pilar \u00b7 tipo \u00b7 maturidade \u00b7 licen\u00e7a \u00b7 como consumir (API/self-host/emul\u00e1vel) \u00b7 URL. Only references with real URLs from the research.\n5. **Arquitetura MCORCH-nativa** \u2014 runtime recommendation + auth (API Tenancy per-user) + billing (mcoCoins at\u00f4mico, classes de pre\u00e7o pelo modelo 4x-floor) + Mesh Connection Mandate + exposi\u00e7\u00e3o externa (Streamable HTTP/OAuth) \u2014 ground every choice in the mapping agent's concrete repo references.\n6. **Superf\u00edcie MCP proposta** \u2014 draft tool/resource/prompt list: name, 1-line contract, input gates (sentinel), mcoCoin cost class.\n7. **Riscos & FMEA-seed** \u2014 security/tenancy/licensing(AGPL)/cost/LGPD; prompt-injection nas tool inputs via sentinel.\n8. **OTDs e Quest\u00f5es Abertas** \u2014 every critical gap the critic raised that was NOT filled, plus could_not_verify items that matter.\n9. **Fatiamento MVP** \u2014 3-4 slices, each with material verification gates (Lei 1) and what it unblocks.\n10. **Apontadores para o BoK** \u2014 what /bok-scribe must turn into MRD/BRD/PRD/FRD/SDD; traceability hints (BR-VM-xxx, FR-VM-xxx).\nMateriality: every external claim carries its source URL from the research below; never invent references.\nResearch results (JSON): ${JSON.stringify(synthesisData)}\nReturn { markdown } \u2014 the complete document.`,\n  {\n    label: 'blueprint-synthesis',\n    phase: 'S\u00edntese',\n    schema: {\n      type: 'object',\n      required: ['markdown'],\n      properties: { markdown: { type: 'string' } },\n    },\n  },\n)\n\nconst stats = {\n  domains_completed: domains.length,\n  total_claims: domains.reduce((a, d) => a + (d.findings.claims || []).length, 0),\n  total_references: domains.reduce((a, d) => a + (d.findings.references || []).length, 0),\n  refuted: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'refuted').length, 0),\n  confirmed: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'confirmed').length, 0),\n  unverifiable: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'unverifiable').length, 0),\n  critical_gaps: critique ? critique.critical_gaps.length : -1,\n  gaps_filled: gapFills.length,\n  mapping_ok: !!mapping,\n}\nlog(`S\u00edntese pronta \u00b7 refs ${stats.total_references} \u00b7 claims ${stats.total_claims} (\u2714${stats.confirmed} \u2716${stats.refuted} ?${stats.unverifiable})`)\n\nreturn { markdown: synthesis ? synthesis.markdown : null, stats, mapping, critique }"
 }
 ```
 
@@ -1317,7 +1317,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "python3 -c \"\nimport json, os\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/wn7i9ol5e.output') as f:\n    d = json.load(f)\nres = d['result']\nmd = res['markdown']\nprint('stats:', json.dumps(res['stats']))\nprint('len(markdown):', len(md))\n# check for HTML-escape artifacts\nfor tok in ['&gt;','&lt;','&amp;']:\n    print(tok, '\u2192', md.count(tok))\nos.makedirs('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp', exist_ok=True)\nwith open('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/00-deepsearch-blueprint.md','w') as f:\n    f.write(md)\nprint('written OK')\n\"\nls -la /home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/",
+  "command": "python3 -c \"\nimport json, os\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/wn7i9ol5e.output') as f:\n    d = json.load(f)\nres = d['result']\nmd = res['markdown']\nprint('stats:', json.dumps(res['stats']))\nprint('len(markdown):', len(md))\n# check for HTML-escape artifacts\nfor tok in ['&gt;','&lt;','&amp;']:\n    print(tok, '\u2192', md.count(tok))\nos.makedirs('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp', exist_ok=True)\nwith open('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md','w') as f:\n    f.write(md)\nprint('written OK')\n\"\nls -la /home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/",
   "description": "Extract blueprint markdown from workflow result and write to docs/bok/vision-mcp/"
 }
 ```
@@ -1334,7 +1334,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 > total 72
 > drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 00:36 .
 > drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
-> -rw-rw-r--  1 ubuntu ubuntu 64223 Jun 11 00:36 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 64223 Jun 11 00:36 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(03:36:27)*
@@ -1349,7 +1349,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "grep -nE '^#{1,3} ' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -60 && echo '---WC---' && wc -l docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "command": "grep -nE '^#{1,3} ' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -60 && echo '---WC---' && wc -l docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
   "description": "List blueprint section headers and line count"
 }
 ```
@@ -1396,7 +1396,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 > 398:### SDD (05) — Software Design
 > 402:### Data Model / Process Flow / Quality Metrics
 > ---WC---
-> 409 docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> 409 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(03:36:32)*
@@ -1405,7 +1405,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "grep -cE 'OTD-VM|FM-VM|BR-VM|FR-VM' docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---'; grep -nE 'OTD-VM-[0-9]+' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -20; echo '---LGPD---'; grep -c -i 'LGPD' docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---firecrawl pricing---'; grep -n -i 'firecrawl' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10",
+  "command": "grep -cE 'OTD-VM|FM-VM|BR-VM|FR-VM' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md; echo '---'; grep -nE 'OTD-VM-[0-9]+' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -20; echo '---LGPD---'; grep -c -i 'LGPD' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md; echo '---firecrawl pricing---'; grep -n -i 'firecrawl' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -10",
   "description": "Check OTD/traceability IDs and gap coverage in blueprint"
 }
 ```
@@ -1457,7 +1457,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "tail -8 docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '===FM==='; sed -n '313,332p' docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "command": "tail -8 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md; echo '===FM==='; sed -n '313,332p' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
   "description": "Sanity-check blueprint tail and FMEA-seed section"
 }
 ```
@@ -1508,7 +1508,7 @@ Síntese completa chegou. Extraindo o blueprint do resultado e materializando em
 ```json
 {
   "files": [
-    "docs/bok/vision-mcp/00-deepsearch-blueprint.md"
+    "docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md"
   ],
   "caption": "Blueprint-semente do Vision MCP \u2014 19 agentes, 140 refer\u00eancias, verifica\u00e7\u00e3o adversarial. Pronto para revis\u00e3o antes do /bok-scribe.",
   "status": "normal"
@@ -1636,7 +1636,7 @@ Boa pergunta — deixa eu verificar **materialmente** no blueprint o que já est
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "echo '=== Computa\u00e7\u00e3o Cognitiva / cognitive ===' && grep -n -i -E 'cognitiv' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10; echo; echo '=== Computa\u00e7\u00e3o Neurom\u00f3rfica (processadores/SNN) ===' && grep -n -i -E 'loihi|akida|spinnaker|SNN|spiking|neurom\u00f3rfic[oa] (comput|process)|computa\u00e7\u00e3o neurom\u00f3rfica' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -15; echo; echo '=== Tecnologia Assistiva / acessibilidade ===' && grep -n -i -E 'assistiv|acessibilid|accessib|be my eyes|seeing ai|alt-text|leitor de tela|screen reader|baixa vis\u00e3o|low.vision|LBI|13\\.146' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10",
+  "command": "echo '=== Computa\u00e7\u00e3o Cognitiva / cognitive ===' && grep -n -i -E 'cognitiv' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -10; echo; echo '=== Computa\u00e7\u00e3o Neurom\u00f3rfica (processadores/SNN) ===' && grep -n -i -E 'loihi|akida|spinnaker|SNN|spiking|neurom\u00f3rfic[oa] (comput|process)|computa\u00e7\u00e3o neurom\u00f3rfica' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -15; echo; echo '=== Tecnologia Assistiva / acessibilidade ===' && grep -n -i -E 'assistiv|acessibilid|accessib|be my eyes|seeing ai|alt-text|leitor de tela|screen reader|baixa vis\u00e3o|low.vision|LBI|13\\.146' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -10",
   "description": "Grep blueprint for cognitive computing, neuromorphic computing, assistive tech coverage"
 }
 ```
@@ -1696,7 +1696,7 @@ Boa pergunta — deixa eu verificar **materialmente** no blueprint o que já est
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cp docs/bok/vision-mcp/00-deepsearch-blueprint.md /tmp/blueprint-v0.1.0-backup.md && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "command": "cp docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md /tmp/blueprint-v0.1.0-backup.md && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
   "description": "Backup v0.1.0 blueprint before merge (file is untracked, no git safety net)"
 }
 ```
@@ -1705,7 +1705,7 @@ Boa pergunta — deixa eu verificar **materialmente** no blueprint o que já est
 >
 > ```
 > 9fd317f9bbebac84e38eaaabc489d1af  /tmp/blueprint-v0.1.0-backup.md
-> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(03:58:04)*
@@ -1775,7 +1775,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "ls -la /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md 2>/dev/null",
+  "command": "ls -la /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md 2>/dev/null",
   "description": "Verify workflow script and v0.1.0 backup survived the restart"
 }
 ```
@@ -1785,7 +1785,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 > ```
 > -rw------- 1 ubuntu ubuntu 11360 Jun 11 00:57 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js
 > 9fd317f9bbebac84e38eaaabc489d1af  /tmp/blueprint-v0.1.0-backup.md
-> fe1f037cfe964d866e16254d4ca68789  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> fe1f037cfe964d866e16254d4ca68789  docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(12:57:58)*
@@ -1800,7 +1800,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "ls -la docs/bok/vision-mcp/; echo '---'; wc -l /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---DIFF HEAD---'; diff <(head -20 /tmp/blueprint-v0.1.0-backup.md) <(head -20 docs/bok/vision-mcp/00-deepsearch-blueprint.md); echo '---grep version---'; grep -n 'v0\\.' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -5",
+  "command": "ls -la docs/bok/vision-mcp/; echo '---'; wc -l /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md; echo '---DIFF HEAD---'; diff <(head -20 /tmp/blueprint-v0.1.0-backup.md) <(head -20 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md); echo '---grep version---'; grep -n 'v0\\.' docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -5",
   "description": "Compare current blueprint against v0.1.0 backup"
 }
 ```
@@ -1811,10 +1811,10 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 > total 72
 > drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 01:27 .
 > drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
-> -rw-rw-r--  1 ubuntu ubuntu 64373 Jun 11 01:27 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 64373 Jun 11 01:27 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ---
 >    409 /tmp/blueprint-v0.1.0-backup.md
->    410 docs/bok/vision-mcp/00-deepsearch-blueprint.md
+>    410 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 >    819 total
 > ---DIFF HEAD---
 > 4c4,5
@@ -1841,7 +1841,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -60; echo '===STATS==='; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | grep -cE '^<'; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | grep -cE '^>'",
+  "command": "diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -60; echo '===STATS==='; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | grep -cE '^<'; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | grep -cE '^>'",
   "description": "Full diff between backup and current partially-edited blueprint"
 }
 ```
@@ -1871,7 +1871,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cp /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md && md5sum docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "command": "cp /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md && md5sum docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
   "description": "Restore clean v0.1.0 blueprint from backup"
 }
 ```
@@ -1879,7 +1879,7 @@ continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o 
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(12:58:46)*
@@ -2075,7 +2075,7 @@ Qualidade do merge confirmada em todos os gates. Gravando o v0.2.0 e atualizando
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cp /tmp/blueprint-v0.2.0-candidate.md docs/bok/vision-mcp/00-deepsearch-blueprint.md && wc -l docs/bok/vision-mcp/00-deepsearch-blueprint.md && md5sum docs/bok/vision-mcp/00-deepsearch-blueprint.md && ls -la docs/bok/vision-mcp/",
+  "command": "cp /tmp/blueprint-v0.2.0-candidate.md docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md && wc -l docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md && md5sum docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md && ls -la docs/bok/vision-mcp/",
   "description": "Write validated v0.2.0 blueprint to repo"
 }
 ```
@@ -2083,12 +2083,12 @@ Qualidade do merge confirmada em todos os gates. Gravando o v0.2.0 e atualizando
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> 532 docs/bok/vision-mcp/00-deepsearch-blueprint.md
-> d2b6a879a8fd046fa0d15cef8c504295  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> 532 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> d2b6a879a8fd046fa0d15cef8c504295  docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > total 104
 > drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 10:42 .
 > drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
-> -rw-rw-r--  1 ubuntu ubuntu 98233 Jun 11 10:52 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 98233 Jun 11 10:52 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ```
 
 ## 🤖 Claude *(13:52:22)*
@@ -2116,7 +2116,7 @@ Qualidade do merge confirmada em todos os gates. Gravando o v0.2.0 e atualizando
 🛠️ **Tool Call**: `SendUserFile`
 ```json
 {
-  "files": "[\"docs/bok/vision-mcp/00-deepsearch-blueprint.md\"]",
+  "files": "[\"docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\"]",
   "caption": "Blueprint v0.2.0 \u2014 agora com Pilar V (Computa\u00e7\u00e3o Cognitiva/CoALA) + vertical Tecnologia Assistiva (beachhead de demanda provada). Superset validado: zero perdas do v0.1.0.",
   "status": "normal"
 }
@@ -2161,6 +2161,1151 @@ Recomendação selada no blueprint: **ancorar o GTM no vertical assistivo** (men
 ---
 
 > **Gate do Master Protocol (inalterado):** o seed v0.2.0 está completo e revisável. **Posso acionar `/bok-scribe vision-mcp` para selar MRD→BRD→PRD→FRD→SDD?** O arquivo segue não-commitado (commito no seu GO ou no `/handoff`).
+
+## 👤 User *(14:20:57)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(14:20:57)*
+
+No response requested.
+
+## 👤 User *(14:22:11)*
+
+Sim vai em frente com o suo de /bok-scribe  e /bok-agents-generator  para cada necessidade exclusiva conforme protocolo, tudo que é feito mais de uma vez e ou usado deve se tornar uma habilidade skill e um especialista agent
+
+## 🤖 Claude *(14:22:29)*
+
+
+## 🤖 Claude *(14:22:32)*
+
+GO recebido. Executando o protocolo completo em três atos:
+
+**ORO triplet desta task:**
+- **Operator:** MCORCH Master Execution Agent (BoK Scribe → Agents Generator → síntese de skill/agent do padrão repetido)
+- **Reviewer:** Sovereign (revisa a suíte BoK selada antes de qualquer código)
+- **Owner:** Sovereign (Fonte da Verdade do módulo + sistema de agentes derivado)
+
+Ato 1 — acionando o BoK Scribe com o blueprint v0.2.0 como semente:
+
+## 🤖 Claude *(14:22:37)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "vision-mcp \u2014 MCP server nativo do MCORCH de percep\u00e7\u00e3o visual + deepsearch fundamentado (\"Ess\u00eancia Humana\": periferia neurom\u00f3rfica emulada barata \u2192 an\u00e1lise foveal billable), exposto a agentes internos e ecossistemas externos via Streamable HTTP + OAuth 2.1. Fonte da Verdade semente: docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md (v0.2.0, 532 linhas \u2014 5 pilares CV/Motion/Neuromorphic/Peripheral/Cognitive + vertical Tecnologia Assistiva beachhead + arquitetura MCORCH-nativa + FMEA-seed FM-VM-01..18 + OTD-VM-001..019)"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(14:22:37)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `vision-mcp — MCP server nativo do MCORCH de percepção visual + deepsearch fundamentado ("Essência Humana": periferia neuromórfica emulada barata → análise foveal billable), exposto a agentes internos e ecossistemas externos via Streamable HTTP + OAuth 2.1. Fonte da Verdade semente: docs/bok/vision-mcp/00-deepsearch-blueprint.md (v0.2.0, 532 linhas — 5 pilares CV/Motion/Neuromorphic/Peripheral/Cognitive + vertical Tecnologia Assistiva beachhead + arquitetura MCORCH-nativa + FMEA-seed FM-VM-01..18 + OTD-VM-001..019)`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in vision-mcp — MCP server nativo do MCORCH de percepção visual + deepsearch fundamentado ("Essência Humana": periferia neuromórfica emulada barata → análise foveal billable), exposto a agentes internos e ecossistemas externos via Streamable HTTP + OAuth 2.1. Fonte da Verdade semente: docs/bok/vision-mcp/00-deepsearch-blueprint.md (v0.2.0, 532 linhas — 5 pilares CV/Motion/Neuromorphic/Peripheral/Cognitive + vertical Tecnologia Assistiva beachhead + arquitetura MCORCH-nativa + FMEA-seed FM-VM-01..18 + OTD-VM-001..019)):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(14:22:57)*
+
+
+## 🤖 Claude *(14:22:57)*
+
+Skill carregada. Lendo a definição do agente e os templates para seguir o formato canônico da casa:
+
+## 🤖 Claude *(14:22:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(14:23:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la .claude/agents/bok-scribe/templates/ && wc -l .claude/agents/bok-scribe/templates/*",
+  "description": "List BoK Scribe templates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 68
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May  6 13:37 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 7550 May  6 13:37 08-quality-metrics.md
+>    74 .claude/agents/bok-scribe/templates/00-index.md
+>   109 .claude/agents/bok-scribe/templates/01-mrd.md
+>   122 .claude/agents/bok-scribe/templates/02-brd.md
+>   177 .claude/agents/bok-scribe/templates/03-prd.md
+>   121 .claude/agents/bok-scribe/templates/04-frd.md
+>   219 .claude/agents/bok-scribe/templates/05-sdd.md
+>   169 .claude/agents/bok-scribe/templates/06-data-model.md
+>   162 .claude/agents/bok-scribe/templates/07-process-flow.md
+>   161 .claude/agents/bok-scribe/templates/08-quality-metrics.md
+>  1314 total
+> ```
+
+## 🤖 Claude *(14:24:22)*
+
+
+## 🤖 Claude *(14:24:22)*
+
+
+## 🤖 Claude *(14:26:07)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'bok-scribe-vision-mcp',\n  description: 'Gera a su\u00edte BoK 9/9 do vision-mcp (MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD\u2192DM/PF\u2192QM\u2192trace\u2192index) a partir do blueprint v0.2.0',\n  phases: [\n    { title: 'MRD-BRD', detail: 'BABOK: mercado + neg\u00f3cio' },\n    { title: 'PRD', detail: 'ProdBOK+CXBOK: produto' },\n    { title: 'FRD-SDD', detail: 'SWEBOK+CISSP: funcional + design' },\n    { title: 'Data-Process', detail: 'DMBOK+BPM: dados + processos (paralelo)' },\n    { title: 'Quality', detail: 'CMQ/OE: KPIs + FMEA + self-healing' },\n    { title: 'Traceability', detail: 'valida\u00e7\u00e3o 0 \u00f3rf\u00e3os + fixer' },\n    { title: 'Index', detail: '00-index manifest' },\n  ],\n}\n\nconst DOC_RESULT = {\n  type: 'object',\n  required: ['file', 'loc', 'ids', 'summary'],\n  properties: {\n    file: { type: 'string' },\n    loc: { type: 'number', description: 'wc -l of the written file' },\n    ids: { type: 'array', items: { type: 'string' }, description: 'all requirement/KPI/FMEA IDs defined in this doc' },\n    summary: { type: 'string', description: '1 paragraph PT-BR' },\n  },\n}\n\nconst TRACE_RESULT = {\n  type: 'object',\n  required: ['pass', 'failures', 'chain_summary'],\n  properties: {\n    pass: { type: 'boolean' },\n    failures: { type: 'array', items: { type: 'string' } },\n    chain_summary: { type: 'string' },\n    counts: { type: 'object' },\n  },\n}\n\nconst BASE = `You are the MCORCH BoK Scribe Agent (Requirements Engineering layer \u2014 BABOK/ProdBOK/CXBOK/SWEBOK/CISSP/DMBOK/BPM-CBOK/CMQ-OE). You NEVER write code \u2014 documentation only. You write exactly ONE file and touch nothing else. Repo root: /home/gcrUX/htdocs/constellation-orchestra.\n\nPROJECT: vision-mcp \u2014 servidor MCP nativo do MCORCH de percep\u00e7\u00e3o visual + deepsearch fundamentado (\"Ess\u00eancia Humana\": Tier 1 perif\u00e9rico barato com princ\u00edpios neurom\u00f3rficos emulados em software \u2192 trigger de sali\u00eancia \u2192 Tier 2 foveal billable), exposto a agentes internos (Pantheon) E ecossistemas externos via Streamable HTTP + OAuth 2.1 em mcp.mcorch.com (container Sovereign Mesh).\nINPUTS: marketSegment=B2B2C \u00b7 monetization=hybrid (mcoCoins por tool call + planos Starter/Pro/Enterprise) \u00b7 regulatory=LGPD ELEVADO (faces/gait = dado biom\u00e9trico sens\u00edvel art.11; vertical assistivo) \u00b7 integrationSurface=extends-mcorch.\n\nSOURCE OF TRUTH (read FIRST, fully): docs/bok/vision-mcp/00-deepsearch-blueprint.md (v0.2.0, 532 lines). Every requirement MUST derive from it \u2014 NO invention beyond it (ambiguity \u2192 register as OTD, never improvise). It already defines: 5 pilares (CV/Motion/Neuromorphic/Peripheral/Cognitive), vertical Tecnologia Assistiva (beachhead demand-provado \u2014 OTD-VM-002 emendada: MRD bifurca demanda), cat\u00e1logo de refer\u00eancias com URLs, arquitetura MCORCH-nativa (Se\u00e7\u00e3o 5: container mesh precedente gitnexus, ES256 JWKS, mcp_access_tokens PAT, agent-metering, sentinel, 4x-floor pricing), superf\u00edcie MCP (Se\u00e7\u00e3o 6 tools+classes mco), FM-VM-01..18, OTD-VM-001..019, fatias MVP 0-3 (Se\u00e7\u00e3o 9), apontadores BoK (Se\u00e7\u00e3o 10).\n\nTEMPLATE (structure to follow): .claude/agents/bok-scribe/templates/{TPL}\nSTYLE REFERENCE (depth/format/language calibration \u2014 most recent sealed suite): docs/bok/marketing-hub/{TPL} (if missing, use docs/bok/e2e-user-zero/{TPL}).\nLANGUAGE: headings & labels English; body/narrative Portugu\u00eas (Brasil); IDs zero-padded 3 digits with VM infix: MR-VM-001, BR-VM-001, PR-VM-001, FR-VM-001, NFR-VM-001, KPI-VM-001, FMEA-VM-001. PRESERVE blueprint IDs OTD-VM-001..019 and FM-VM-01..18 verbatim when absorbing them.\nHOUSE CONSTRAINTS (non-negotiable, bake into requirements): hook-first (UI feature \u2192 backing hook documented first); NO secret values (vault key NAMES only); mcoCoins ONLY via atomic deduct_mco_coins RPC + refundMco on failure; every new table = RLS enabled default-deny + tenant isolation user_id (+project_id where mesh); embed-on-insert noted for any mcorch_nodes flow; sentinel inspectPrompt before charge; ES256 JWKS verify before trusting sub (SOP docs/processes/edge-jwt-identity-verification.md); per-user credentials per API Tenancy Model (CLAUDE.md).\nFOOTER: end the file with \"_Generated by MCORCH BoK Scribe Agent v1.0.0_\".\nACTION: Write the COMPLETE document to docs/bok/vision-mcp/{FILE} (create/overwrite). Then return {file, loc (run wc -l), ids, summary}. Do NOT modify any other file.`\n\nfunction p(tpl, file, extra) {\n  return BASE.split('{TPL}').join(tpl).split('{FILE}').join(file) + '\\n\\nDOC-SPECIFIC REQUIREMENTS:\\n' + extra\n}\n\nlog('BoK Scribe vision-mcp: 9 docs em cadeia BABOK\u2192CMQ/OE com gate de traceability')\n\nphase('MRD-BRD')\nconst mrd = await agent(\n  p('01-mrd.md', '01-mrd.md', `Market Requirements Document (BABOK v3). Sections: Executive Summary \u00b7 Market Problem Statement \u00b7 Target Market Segments + TAM/SAM/SOM (honest ESTIMATES, flag as such \u2014 the blueprint has sourced numbers only for the assistive vertical: Be My Eyes 1M users/43M requests-yr, ~99% BR sites non-compliant ABNT NBR 17225) \u00b7 Competitive Landscape (USE the blueprint's verified competitors with URLs: Roboflow MCP ~70 tools hosted-only, Exa/Firecrawl/Tavily MCP with npm download numbers, Be My AI/Seeing AI/Lookout/Aira/JAWS PictureSmart/NVDA AI Describer for assistive) \u00b7 Market Opportunity & Timing (MCP spec 2025-11-25 maturity, EAA enforceable 06/2025, LBI Art.63) \u00b7 Key Market Requirements MR-VM-001.. (priority Critical/High/Medium/Low) \u00b7 Success Metrics \u00b7 Regulatory & Compliance Context (LGPD biometric, EAA, WCAG 2.2, ABNT NBR 17225:2025) \u00b7 Traceability stub MR\u2192BR.\nCRITICAL FRAMING (from OTD-VM-002 emendada): demand is BIFURCATED \u2014 assistive alt-text/describe is the demand-PROVEN beachhead (3 independent axes: usage + capability convergence + regulatory compulsion); the vision\u00d7deepsearch cross-product is genuine whitespace but UNVALIDATED hypothesis (treat as upsell bet). The MRD must structure the market case around this bifurcation honestly.`),\n  { label: 'doc:01-mrd', phase: 'MRD-BRD', schema: DOC_RESULT },\n)\nif (!mrd) throw new Error('MRD failed')\n\nconst brd = await agent(\n  p('02-brd.md', '02-brd.md', `Business Requirements Document (BABOK v3). ALSO READ the freshly written docs/bok/vision-mcp/01-mrd.md \u2014 every BR-VM must trace to \u22651 MR-VM from it. Sections: Executive Summary \u00b7 Business Objectives (SMART, min 3 \u2014 include: assistive beachhead GTM, sovereignty/self-host wedge, internal Pantheon perception enablement) \u00b7 Stakeholder Register (Sovereign/Usu\u00e1rio Zero, external MCP clients, BLV end-users via clients, Pantheon agents, compliance owners) \u00b7 Business Requirements BR-VM-001.. traced to MR-VM \u00b7 ROI Model (honest: costs = container infra + API legs Firecrawl/VLM per blueprint unit economics; revenue = mcoCoins consumption + plan upsell; payback ESTIMATE flagged) \u00b7 mcoCoins Economics (4x-floor model mco=ceil(usd/$0.018\u00d74) per docs/processes/mcoin-cost-calibration.md; tool cost classes from blueprint Se\u00e7\u00e3o 6 \u2014 deepsearch.scrape 1 mco etc.; BYOK rides free per agent-metering contract; refund-on-failure contract) \u00b7 Constraints & Assumptions \u00b7 Business Risks (derive from FM-VM-01..18 business-relevant subset, with Probability/Impact/Mitigation) \u00b7 Acceptance Criteria business-level \u00b7 Traceability Matrix MR\u2192BR\u2192PR stubs.`),\n  { label: 'doc:02-brd', phase: 'MRD-BRD', schema: DOC_RESULT },\n)\nif (!brd) throw new Error('BRD failed')\n\nphase('PRD')\nconst prd = await agent(\n  p('03-prd.md', '03-prd.md', `Product Requirements Document (ProdBOK + CXBOK). ALSO READ docs/bok/vision-mcp/02-brd.md \u2014 every PR-VM traces to \u22651 BR-VM. Sections: Product Vision Statement (1 sentence) \u00b7 User Personas (min 3: Sovereign/Usu\u00e1rio Zero operating internally; external developer connecting via Claude/MCP client; assistive/compliance persona \u2014 org needing WCAG/EAA/LBI alt-text at scale; optionally Pantheon agent as machine-persona) \u00b7 User Journey Maps (per persona: happy path + 2 edge cases \u2014 include the OAuth \"cole 1 URL \u2192 login \u2192 conectado\" journey and the 402 no-credential/no-balance edge) \u00b7 Feature Inventory MoSCoW PR-VM-001.. (map from blueprint MVP Fatias 0-3 and Se\u00e7\u00e3o 6 tool surface: Must = Fatia 1-2 scope incl. vision.describe_image/vision.ocr/deepsearch.scrape + billing + sentinel; Should = Fatia 3 external exposure PAT/OAuth/plugin; Could = assistive expansion vision.alt_text/describe_screen batch, cognitive-loop integrations; Won't-now = hardware neuromorphic, face recognition \u2014 EXPLICITLY Won't per LGPD FM-VM-09) \u00b7 each feature: persona served, BR traced, Effort S/M/L/XL, mcoCoins cost class \u00b7 Release Phasing (MVP = Fatia 1; v1.0 = Fatia 2; future = Fatia 3+; note which NEW edge functions/containers each needs) \u00b7 Luxury UX Specifications (the module is mostly headless \u2014 UX surface = Settings credentials card + dashboard usage/ledger view + docs page; apply dark mesh #0A0A0F / neon violet #7C3AED tokens; ACCESSIBILITY: this module SELLS accessibility \u2014 hold its own UI to WCAG 2.2 AA exemplary standard) \u00b7 Acceptance Criteria (Gherkin Given/When/Then product-level) \u00b7 Traceability Matrix MR\u2192BR\u2192PR.`),\n  { label: 'doc:03-prd', phase: 'PRD', schema: DOC_RESULT },\n)\nif (!prd) throw new Error('PRD failed')\n\nphase('FRD-SDD')\nconst frd = await agent(\n  p('04-frd.md', '04-frd.md', `Functional Requirements Document (SWEBOK v4). ALSO READ docs/bok/vision-mcp/03-prd.md and 02-brd.md \u2014 every FR-VM traces to \u22651 PR-VM. Formalize the blueprint Se\u00e7\u00e3o 10 FR hints (FR-VM-001 Streamable HTTP transport w/ Origin 403 + MCP-Protocol-Version; FR-VM-002 ES256 JWKS fail-closed + RFC 9728 PRM + OAuth 2.1; FR-VM-003 mcp_access_tokens PAT hash/scopes/RLS; FR-VM-004 per-user credential resolution fail-closed 402; FR-VM-005 sentinel inbound + on extracted text; FR-VM-006 tool surface with mco classes; FR-VM-007 async job semantics + partial-delivery refund; FR-VM-008 Mesh Connection Mandate; FR-VM-009 erase_vision_artifacts + retention clock; FR-VM-010 Tier-1 peripheral gate with recall target; FR-VM-011 Plugin Zip + skills distribution; FR-VM-012+ assistive tools alt_text/describe_screen) \u2014 keep these numbers, extend as needed. Each FR: ID, Title, Description, Priority, PR traced, Acceptance Test ID, Category (Container service / Edge Function / Hook / UI / DB / Cron). NFR-VM-001..: performance (Tier-1 latency class, Tier-2 budget), scalability (single-replica caveat OTD-VM-014), availability, maintainability, security NFRs. Interface Requirements: MCP tool contracts (input/output shape, error codes incl. 401/402/403-sentinel/422) + internal REST/RPC contracts. Data Requirements (validation rules). Test Strategy matrix (Unit/Integration/E2E per FR \u2014 include zero-cost smoke patterns \u00e0 la house: guards provable without spend). Traceability PR\u2192FR.`),\n  { label: 'doc:04-frd', phase: 'FRD-SDD', schema: DOC_RESULT },\n)\nif (!frd) throw new Error('FRD failed')\n\nconst sdd = await agent(\n  p('05-sdd.md', '05-sdd.md', `System Design Document (SWEBOK v4 + CISSP CBK 2024 \u2014 LGPD profile ELEVATED). ALSO READ docs/bok/vision-mcp/04-frd.md. Sections: Architecture Overview (Harness layer map + the two-tier Ess\u00eancia Humana pipeline + container mcorch_vision_mcp in Sovereign Mesh behind nginx mcp.mcorch.com \u2014 ground in blueprint Se\u00e7\u00e3o 5 with its concrete repo precedents: packages/gitnexus-core/src/mcp/server.ts StreamableHTTPServerTransport, docker-compose.yml x-hardening anchor UID1001/cap_drop/read_only, openclaw systemd as rejected alternative) \u00b7 Component Catalog (container service modules; thin edge function shims if any with verify_jwt=false + in-code ES256 per supabase/config.toml convention; new hooks useVisionMcp/useMcpTokens; Settings card component; NO new Zustand store unless justified) \u00b7 Data Flow Diagrams (per major use case: internal agent tool call w/ billing; external OAuth client flow; deepsearch job async; Tier1\u2192Tier2 trigger; mesh consolidation) \u00b7 API Contract Definitions (each MCP tool + mgmt REST endpoints: auth, request/response shape, error codes, mcoCoins deduction point = deduct_mco_coins RPC location + refundMco on failure) \u00b7 Security Design: STRIDE threat model PER COMPONENT (absorb FM-VM-01..18), RLS policy definitions (mcp_access_tokens etc.), JWT validation points (ES256 JWKS, never atob \u2014 SOP anti-patterns), secrets inventory (vault key NAMES: SB_SECRET_KEY server-side only, OPENROUTER_API_KEY fallback-restricted, per-user firecrawl_api_key/openrouter via decrypted_user_api_keys), LGPD section: biometric scope exclusion (detection/description ONLY, no recognition/templates), PII-strip before mesh insert, erase_vision_artifacts cascade, international transfer (SCCs ANPD) \u00b7 Infrastructure Touchpoints (Sovereign Mesh deps, watchdog telemetry service='vision-mcp' event types, NO ChromaDB \u2014 pgvector mesh is the store) \u00b7 Migration Stubs (mcp_access_tokens CREATE TABLE skeleton + RLS shells; ALTER user_api_keys ADD firecrawl_api_key one-liner per precedent 20260601060000; vision artifacts/jobs table if FRD requires) \u00b7 Open Technical Decisions: ABSORB blueprint OTD-VM-001..019 verbatim (keep IDs, add options+recommendation each), add new OTDs only if FRD surfaced them.`),\n  { label: 'doc:05-sdd', phase: 'FRD-SDD', schema: DOC_RESULT },\n)\nif (!sdd) throw new Error('SDD failed')\n\nphase('Data-Process')\nconst [dm, pf] = await parallel([\n  () =>\n    agent(\n      p('06-data-model.md', '06-data-model.md', `Data & Knowledge Model (DMBOK v2). ALSO READ docs/bok/vision-mcp/04-frd.md and 05-sdd.md. Sections: Conceptual Data Model (entities + relationships text-ERD: tenant, mcp_access_tokens, vision job, vision artifact, consolidated reference node, ledger rows agent_executions/mcoin flows) \u00b7 Logical Data Model (per table: columns/types/constraints/FKs \u2014 composite tenant-scoped FKs where house precedent applies, cf. marketing-hub lead_events pattern) \u00b7 Supabase Physical Schema Stubs (CREATE TABLE skeletons copy-ready; RLS shells default-deny + per-role incl. service_role paths; indexes: B-tree FKs, HNSW only where embeddings) \u00b7 GraphRAG Knowledge Nodes (node types introduced: observation per run, consolidated 'reference' nodes \u2014 node_type/name/tags/metadata shape, embedding via embed-mcorch-node trigger, stability_score initial + FSRS-6 note, revenue_impact usage) \u00b7 Tenant Isolation Map (user_id+project_id scope per table; system nodes user_id IS NULL caveat) \u00b7 Data Quality Rules (per column validation, incl. URL provenance required on scraped references, scraped-origin tag mandatory) \u00b7 Retention & Archival Policy (LGPD: retention clock per artifact class, erase_vision_artifacts cascade scope incl. Storage objects + provider copies caveat).`),\n      { label: 'doc:06-data-model', phase: 'Data-Process', schema: DOC_RESULT },\n    ),\n  () =>\n    agent(\n      p('07-process-flow.md', '07-process-flow.md', `Process & Automation Blueprint (BPM CBOK v4). ALSO READ docs/bok/vision-mcp/04-frd.md and 05-sdd.md. Sections: Process Inventory \u00b7 BPMN-lite maps (swimlanes User|MCP Client|Container|Edge/RPC|External API|DB) for: (1) tool call lifecycle (identity\u2192sentinel\u2192balance 402\u2192deduct\u2192execute\u2192meter\u2192refund-on-failure); (2) two-tier perception loop (Tier1 peripheral watch \u2192 saliency event \u2192 Tier2 foveal dispatch); (3) deepsearch grounded job (submit\u2192job_id\u2192poll/notify\u2192partial-delivery refund semantics); (4) mesh consolidation (extracted reference \u2192 PII-strip \u2192 sentinel L2 on extracted text \u2192 mcorch_nodes insert \u2192 embed trigger \u2192 DERIVES_FROM edges); (5) PAT/OAuth issuance + revocation; (6) erase_vision_artifacts LGPD flow; (7) retention clock cron \u00b7 n8n/cron blueprints where automated (retention sweep cron with idempotency key + failure alerting to infra_health_logs) \u00b7 Orchestration Integration Points (could orchestrate-content consume vision tools? note as optional step, no commitment beyond blueprint) \u00b7 Error Handling & Retry per step (idempotent retry, never double-charge \u2014 charge-at-entry+refund contract) \u00b7 SLA per step + timeout thresholds.`),\n      { label: 'doc:07-process-flow', phase: 'Data-Process', schema: DOC_RESULT },\n    ),\n])\nif (!dm || !pf) throw new Error('Data/Process docs failed')\n\nphase('Quality')\nconst qm = await agent(\n  p('08-quality-metrics.md', '08-quality-metrics.md', `Self-Optimization & Self-Healing Specification (CMQ/OE BOK). ALSO READ docs/bok/vision-mcp/02-brd.md, 04-frd.md, 05-sdd.md. Sections: Quality Objectives (aligned to BRD objectives) \u00b7 KPI Dashboard KPI-VM-001.. (formula/target/warn-critical thresholds/data source table \u2014 MUST include: Tier-1 peripheral gate recall (OTD-VM-001), mcoCoin margin \u22654\u00d7-floor per tool, refund rate, auth fail-closed coverage, sentinel block rate, % scraped nodes with provenance tag, assistive describe accuracy proxy) \u00b7 FMEA Table FMEA-VM-001..: FORMALIZE blueprint FM-VM-01..18 into full FMEA rows (Function, Failure Mode, Effect, S/O/D 1-10, RPN=S\u00d7O\u00d7D, Recommended Action \u2014 every RPN>100 MUST have action; map each FMEA-VM to its source FM-VM id) \u00b7 Self-Optimization Loops (threshold crossed \u2192 autonomous response \u2192 escalation path) \u00b7 Self-Healing Specs (watchdog telemetry event types for infra_health_logs service='vision-mcp'; auto-recovery stubs description NOT code; mega-brain-daemon integration points) \u00b7 SLA/SLO/SLI table \u00b7 PDCA cadence \u00b7 Observability Checklist (logging events, alerting rules, tracing touchpoints).`),\n  { label: 'doc:08-quality-metrics', phase: 'Quality', schema: DOC_RESULT },\n)\nif (!qm) throw new Error('Quality doc failed')\n\nphase('Traceability')\nconst TRACE_PROMPT = `You are the Phase 6 Cross-Document Traceability Validator of the MCORCH BoK Scribe. READ ALL of: docs/bok/vision-mcp/01-mrd.md, 02-brd.md, 03-prd.md, 04-frd.md, 05-sdd.md, 06-data-model.md, 07-process-flow.md, 08-quality-metrics.md (and the blueprint 00-deepsearch-blueprint.md for OTD/FM source IDs).\nBuild the chain MR-VM \u2192 BR-VM \u2192 PR-VM \u2192 FR-VM \u2192 (DB table | container component | Edge Function | Process) and ASSERT:\n1. No orphaned requirements: every MR has \u22651 BR child; every BR \u22651 PR; every PR \u22651 FR; every FR maps to \u22651 implementation surface (component/table/process) and appears in the test strategy.\n2. Every Edge Function / container endpoint in the SDD lists auth model + secret NAMES.\n3. Every CREATE TABLE stub has an RLS block + tenant isolation entry in 06.\n4. mcoCoins cost defined for every AI-powered FR (cross-check FRD/BRD economics).\n5. Every FMEA-VM with RPN > 100 has a Recommended Action.\n6. Blueprint OTD-VM-001..019 all absorbed in the SDD; FM-VM-01..18 all mapped in the FMEA.\nUse Grep/Read to verify mechanically (count IDs, cross-reference). Return {pass, failures (each as 'DOC \u00a7section: problem'), chain_summary, counts {MR,BR,PR,FR,NFR,KPI,FMEA,OTD}}. Be strict \u2014 a missing link is a failure, not a warning. Do NOT modify any file.`\n\nlet trace = await agent(TRACE_PROMPT, { label: 'trace-validate', phase: 'Traceability', schema: TRACE_RESULT })\nif (!trace) throw new Error('Trace validation failed to run')\n\nif (!trace.pass) {\n  log(`Traceability FALHOU com ${trace.failures.length} furos \u2014 acionando fixer`)\n  const fix = await agent(\n    `You are the BoK Scribe traceability FIXER. The validator found these failures in the vision-mcp suite (docs/bok/vision-mcp/*.md):\\n${JSON.stringify(trace.failures, null, 2)}\\nFix EVERY failure by editing the affected documents (smallest coherent edit: add missing trace links, missing RLS blocks, missing mco costs, missing FMEA actions, absorb missing OTD/FM ids). Only touch files under docs/bok/vision-mcp/ and NEVER the 00-deepsearch-blueprint.md. Keep IDs stable. Return a summary of edits per file.`,\n    { label: 'trace-fix', phase: 'Traceability' },\n  )\n  log('Fixer aplicado \u2014 revalidando')\n  trace = await agent(TRACE_PROMPT + '\\n(Second pass after fixes were applied \u2014 same strictness.)', {\n    label: 'trace-revalidate',\n    phase: 'Traceability',\n    schema: TRACE_RESULT,\n  })\n}\n\nphase('Index')\nconst idx = await agent(\n  p('00-index.md', '00-index.md', `Project manifest (Phase 0 closure). READ all 8 sibling docs + blueprint. Render the manifest: input metadata (idea 1-liner, B2B2C, hybrid, LGPD elevated, extends-mcorch, slug vision-mcp, date 2026-06-11, version v1.0), file registry with [x] complete status + 1-line purpose + LOC per file (run wc -l), ID space summary (MR/BR/PR/FR/NFR/KPI/FMEA/OTD ranges + counts), traceability status (${trace && trace.pass ? 'VALIDATED \u2014 0 orphans' : 'PENDING \u2014 see failures'}), the documentation lineage note (derives from 00-deepsearch-blueprint.md v0.2.0 which derives from the Sovereign directive 2026-06-10).`),\n  { label: 'doc:00-index', phase: 'Index', schema: DOC_RESULT },\n)\n\nconst docs = [idx, mrd, brd, prd, frd, sdd, dm, pf, qm].filter(Boolean)\nreturn {\n  docs: docs.map((d) => ({ file: d.file, loc: d.loc, summary: d.summary })),\n  total_loc: docs.reduce((a, d) => a + (d.loc || 0), 0),\n  id_counts: trace && trace.counts ? trace.counts : null,\n  traceability: trace ? { pass: trace.pass, failures: trace.failures, chain: trace.chain_summary } : null,\n}"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wzgby3byi
+> Summary: Gera a suíte BoK 9/9 do vision-mcp (MRD→BRD→PRD→FRD→SDD→DM/PF→QM→trace→index) a partir do blueprint v0.2.0
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/subagents/workflows/wf_d076f02c-0ff
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js"} to iterate without resending the script.)
+> Run ID: wf_d076f02c-0ff
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js", resumeFromRunId: "wf_d076f02c-0ff"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:26:31)*
+
+
+## 🤖 Claude *(14:26:31)*
+
+
+## 🤖 Claude *(14:26:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scripts/seed-*bok-seal* 2>/dev/null; echo '---'; ls -t scripts/seed-* 2>/dev/null | head -5; echo '---newest seed key usage---'; grep -l 'SB_SECRET_KEY' scripts/seed-* 2>/dev/null | head -3; grep -c 'SUPABASE_SERVICE_ROLE_KEY' scripts/seed-marketing-hub-bok-seal.ts 2>/dev/null || echo 'no marketing-hub seed script'",
+  "description": "Find newest BoK seal seed script and check key naming"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/seed-authenticated-browser-operator-bok-seal.ts
+> scripts/seed-constellation-v2-bok-seal.ts
+> scripts/seed-conteudo-v2-bok-seal.ts
+> scripts/seed-e2e-user-zero-bok-seal.ts
+> scripts/seed-gamificacao-nodes-bok-seal.ts
+> scripts/seed-identity-fabric-bok-seal.ts
+> scripts/seed-marketing-hub-bok-seal.ts
+> scripts/seed-mercado-livre-api-bok-seal.ts
+> scripts/seed-meta-api-bok-seal.ts
+> scripts/seed-openclaw-bok-seal.ts
+> scripts/seed-post-engine-bok-seal.ts
+> scripts/seed-viral-daily-canvas-bok-seal.ts
+> scripts/seed-viralmind-bok-seal.ts
+> ---
+> scripts/seed-authenticated-browser-operator-bok-seal.ts
+> scripts/seed-viral-daily-canvas-bok-seal.ts
+> scripts/seed-post-engine-bok-seal.ts
+> scripts/seed-identity-fabric-bok-seal.ts
+> scripts/seed-marketing-hub-bok-seal.ts
+> ---newest seed key usage---
+> scripts/seed-aios-milestone.ts
+> scripts/seed-antigravity-docs.ts
+> scripts/seed-authenticated-browser-operator-bok-seal.ts
+> 1
+> ```
+
+## 🤖 Claude *(14:26:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls .claude/skills/ && echo '---' && wc -l .claude/skills/build-deploy-guardian/SKILL.md .claude/agents/build-deploy-guardian.md 2>/dev/null",
+  "description": "List existing skills and check guardian skill/agent format size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agent-browser
+> build-deploy-guardian
+> canvas-studio-cinematic
+> e2e-user-zero-audit
+> gateway-recovery.md
+> mcorch-qa-healing
+> openclaw-dreaming
+> openclaw-gateway-ops
+> ---
+>   68 .claude/skills/build-deploy-guardian/SKILL.md
+>   47 .claude/agents/build-deploy-guardian.md
+>  115 total
+> ```
+
+## 🤖 Claude *(14:26:43)*
+
+
+## 🤖 Claude *(14:26:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-authenticated-browser-operator-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the BoK documentation suite for authenticated-browser-operator in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent
+> 5	 * mercado-livre-api BoK seal. Embedding fires automatically via trg_mcorch_embed_on_insert.
+> 6	 *
+> 7	 * Usage: bun run scripts/seed-authenticated-browser-operator-bok-seal.ts
+> 8	 */
+> 9	import { createClient } from '@supabase/supabase-js';
+> 10	
+> 11	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 12	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 13	
+> 14	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 15	  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');
+> 16	  process.exit(1);
+> 17	}
+> 18	
+> 19	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 20	
+> 21	const PARENT_SEAL = 'bok-scribe-seal-mercado-livre-api-v1'; // 45bc299b-04de-476a-b0ef-3daa598e0a00
+> 22	
+> 23	const sealNode = {
+> 24	  name: 'bok-scribe-seal-authenticated-browser-operator-v1',
+> 25	  node_type: 'documentation_suite',
+> 26	  project_id: 'authenticated-browser-operator',
+> 27	  stability_score: 0.85,
+> 28	  revenue_impact: 0, // enabler: destrava atribuição de receita de afiliado (indireta); não fatura por si
+> 29	  content: `Authenticated Browser Operator — operador de browser autenticado per-user para afiliados Mercado Livre (BoK suite, 9 docs).
+> 30	
+> 31	PROBLEMA: o MCORCH conta cliques internamente (OTD-ML-CLICKS, affiliate_links.clicks) mas falta atribuição DEFINITIVA de receita no ML, porque ML não tem API de afiliados e o link oficial (meli.la / param ref ASSINADO não-fabricável) só nasce do botão "Compartilhar" no portal LOGADO do afiliado.
+> 32	
+> 33	SOLUÇÃO: agente que dirige um browser real LOGADO na conta ML do PRÓPRIO usuário (per-user, multi-tenant, consentido). RUNTIME = máquina RESIDENCIAL do usuário — provado material que do datacenter Oracle TODAS as URLs do ML dão HTTP 403 (probe 2026-06-02 agent-browser "Hubo un error" + reconfirmado 2026-06-08 curl em produto real /p/, formato bare e /afiliados/hub). Job 1 (atribuição): abre produto logado → Compartilhar → captura meli.la → grava em user_affiliate_links (tabela NOVA per-user — o link NÃO cabe na vm_affiliate_products COMPARTILHADA, catch do BoK gate OTD-ABO-003). Job 2 (descoberta): varre /afiliados/hub por produtos de maior % de comissão (GANHOS EXTRAS), alimentando o catálogo. O flywheel (process-affiliate-link + _shared/affiliate.ts) PREFERE o link oficial quando presente, com fallback matt_word (zero regressão — o auto-monetize foi recém-corrigido para ler vm_affiliate_products.product_url real em vez do formato bare morto).
+> 34	
+> 35	ARQUITETURA: runner residencial (scripts/affiliate-operator/ via agent-browser) autentica como o user (JWT MCORCH) e faz POST a 2 edge fns novas (affiliate-template-upsert + affiliate-products-upsert, ambas JWT per-user); 2 tabelas novas RLS default-deny (user_affiliate_links + affiliate_operator_consents); nenhuma automação de browser roda server-side; sessão ML fica LOCAL (minimização LGPD), nunca no Vault.
+> 36	
+> 37	SEGURANÇA (STRIDE): spoofing→user_id=auth.uid() server-side; tampering→validação domínio-ML do template_url (anti open-redirect); info-disclosure→sessão local; ToS-ban→human-paced+kill-switch+conta própria consentida. FMEA RPN>100: FMEA-ABO-005 (192, ban por ToS), FMEA-ABO-007 (150, ref rotation), FMEA-ABO-001 (147, selector drift do "Compartilhar").
+> 38	
+> 39	ID SPACE: MR-ABO-001..008 → BR-ABO-001..009 → PR-ABO-001..010 → FR-ABO-001..014 + NFR-ABO-001..007 → OTD-ABO-001..006 + FMEA-ABO-001..008. Motivado pela diretiva Sovereign 2026-06-08 (dupla validação: clique interno + atribuição ML). Memória: project_authenticated_browser_operator.`,
+> 40	  metadata: {
+> 41	    bok_version: '1.0.0',
+> 42	    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics'],
+> 43	    document_lines_total: 756,
+> 44	    phase_completed: 'Phase 7',
+> 45	    traceability_validated: true,
+> 46	    traceability_orphans: 0,
+> 47	    market_segment: 'B2B2C',
+> 48	    monetization_model: 'indirect-enabler',
+> 49	    regulatory_profile: 'LGPD',
+> 50	    integration_surface: 'extends-mcorch',
+> 51	    project_slug: 'authenticated-browser-operator',
+> 52	    runtime: 'residential-only (datacenter 403 proven 2026-06-02/2026-06-08)',
+> 53	    new_tables: 2, // user_affiliate_links + affiliate_operator_consents
+> 54	    new_edge_functions: 2, // affiliate-template-upsert + affiliate-products-upsert
+> 55	    new_pipeline_scripts: 1, // scripts/affiliate-operator/ runner (residential)
+> 56	    id_ranges: { MR: '001..008', BR: '001..009', PR: '001..010', FR: '001..014', NFR: '001..007', OTD_ABO: '001..006', FMEA: '001..008' },
+> 57	    fmea_rpn_over_100: ['FMEA-ABO-005 (192)', 'FMEA-ABO-007 (150)', 'FMEA-ABO-001 (147)'],
+> 58	    related_otds: ['OTD-ABO-001', 'OTD-ABO-002', 'OTD-ABO-003', 'OTD-ABO-004', 'OTD-ABO-005', 'OTD-ABO-006', 'OTD-ML-CLICKS'],
+> 59	    derives_from: PARENT_SEAL,
+> 60	    depends_on_sop: 'docs/processes/[[branded-affiliate-redirect|branded-affiliate-redirect]].md',
+> 61	    motivating_incident: 'Sovereign 2026-06-08: link morto (catálogo hardcoded bare) + ML não conta clique em produto 404; dupla validação exigida',
+> 62	    tags: ['bok-scribe', 'authenticated-browser-operator', 'mercado-livre', 'affiliate', 'agent-browser', 'residential-runtime', 'attribution', 'B2B2C', 'LGPD'],
+> 63	  },
+> 64	};
+> 65	
+> 66	console.log(`📝 Sealing BoK suite "authenticated-browser-operator"...`);
+> 67	console.log(`   Project: ${sealNode.project_id} · Stability: ${sealNode.stability_score} · Revenue: ${sealNode.revenue_impact} (indirect-enabler)`);
+> 68	
+> 69	const { data: node, error } = await supabase
+> 70	  .from('mcorch_nodes')
+> 71	  .insert(sealNode)
+> 72	  .select('id, name, node_type, stability_score, created_at')
+> 73	  .single();
+> 74	
+> 75	if (error) {
+> 76	  // Idempotent: UNIQUE name violation = already sealed
+> 77	  if (String(error.message || '').match(/duplicate|unique/i)) {
+> 78	    console.log(`ℹ️  Seal already exists (idempotent exit 0): ${sealNode.name}`);
+> 79	    process.exit(0);
+> 80	  }
+> 81	  console.error('❌ Seal failed:', error);
+> 82	  process.exit(1);
+> 83	}
+> 84	
+> 85	console.log(`\n✅ Seal node inserted:`);
+> 86	console.log(`   ID: ${node.id} · Name: ${node.name} · Created: ${node.created_at}`);
+> 87	
+> 88	// DERIVES_FROM edge → parent mercado-livre-api seal
+> 89	const { data: parent } = await supabase
+> 90	  .from('mcorch_nodes')
+> 91	  .select('id')
+> 92	  .eq('name', PARENT_SEAL)
+> 93	  .single();
+> 94	
+> 95	if (parent?.id) {
+> 96	  const { data: edge, error: edgeErr } = await supabase
+> 97	    .from('mcorch_edges')
+> 98	    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })
+> 99	    .select('id')
+> 100	    .single();
+> 101	  if (edgeErr) {
+> 102	    console.log(`⚠️  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);
+> 103	  } else {
+> 104	    console.log(`🔗 DERIVES_FROM edge: ${edge.id} → ${PARENT_SEAL} (${parent.id})`);
+> 105	  }
+> 106	} else {
+> 107	  console.log(`⚠️  Parent seal ${PARENT_SEAL} not found — edge skipped.`);
+> 108	}
+> 109	
+> 110	console.log(`\n🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);
+> 111	console.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);
+> 112	
+> ```
+
+## 🤖 Claude *(14:26:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/build-deploy-guardian/SKILL.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: build-deploy-guardian
+> 3	description: Buildar e deployar o MCORCH com prova material — frontend (nginx serve o dist/ do repo PRINCIPAL), edge functions (Supabase), migrations. Use SEMPRE antes/durante qualquer "build", "deploy", "publicar", "subir frontend" ou "shipar" — especialmente a partir de um worktree (.claude/worktrees/), onde `bun run build` escreve no dist errado e sem .env. Impede o falso-sucesso de declarar "deployed" sem verificar o artefato servido (Lei 1). SOP: docs/processes/[[build-deploy-materiality|build-deploy-materiality]].md.
+> 4	---
+> 5	
+> 6	# Skill: build-deploy-guardian — Deploy com Prova Material
+> 7	
+> 8	Garante que "deployed" significa **o artefato servido mudou**, não "rodei o comando de build".
+> 9	SOP autoritativa: `docs/processes/build-deploy-materiality.md`.
+> 10	
+> 11	## ⚠️ Verdade fundamental (o erro de 2026-05-30)
+> 12	
+> 13	O nginx serve **`/home/gcrUX/htdocs/constellation-orchestra/dist`** (repo PRINCIPAL). Uma sessão
+> 14	roda num **worktree** (`.../.claude/worktrees/<slug>/`). Logo:
+> 15	
+> 16	- `bun run build` no worktree → `<worktree>/dist/` → **ninguém serve isso**.
+> 17	- O worktree **não tem `.env`** → bundle sai **sem `VITE_SUPABASE_*`** → app não conecta.
+> 18	
+> 19	O CLAUDE.md "build = deploy, nginx pega na hora" só é verdade **dentro do repo principal**.
+> 20	
+> 21	## Decisão rápida (qual surface?)
+> 22	
+> 23	- **Frontend mudou** (src/, componentes, hooks, páginas) → deploy de frontend (abaixo).
+> 24	- **`supabase/functions/` mudou** → `npx supabase functions deploy <fn> [--no-verify-jwt] --project-ref <ref>`. Prova = `script size` + `Deployed Functions`.
+> 25	- **`supabase/migrations/` mudou** → `/security-review` → `npx supabase db push`. Prova = output + query do schema.
+> 26	
+> 27	## Frontend deploy — 2 caminhos válidos
+> 28	
+> 29	**Path A (durável — quando o branch vai pro main):**
+> 30	```bash
+> 31	git push && (cd /home/gcrUX/htdocs/constellation-orchestra && git merge <branch> && bun run build)
+> 32	```
+> 33	
+> 34	**Path B (imediato do worktree):**
+> 35	```bash
+> 36	MAIN=/home/gcrUX/htdocs/constellation-orchestra; WT=$MAIN/.claude/worktrees/<slug>
+> 37	cp "$MAIN/.env" "$WT/.env"            # gitignored — NUNCA commitar
+> 38	cd "$WT" && bun run build
+> 39	rsync -a "$WT/dist/" "$MAIN/dist/"    # serve o artefato no path do nginx
+> 40	# DÉBITO: main/dist agora à frente do source do main → merge do branch p/ durar.
+> 41	```
+> 42	
+> 43	## Verification gates — NÃO diga "deployed" sem TODOS verdes (Lei 1)
+> 44	
+> 45	```bash
+> 46	MAIN=/home/gcrUX/htdocs/constellation-orchestra
+> 47	# G1 — env baked (senão bundle sem Supabase):
+> 48	grep -rl "bcyvddsykvehvpwstlfa" "$MAIN/dist/assets/" | wc -l        # > 0
+> 49	# G2 — chunk novo referenciado pelo entry servido:
+> 50	grep -roE "<Page>-[A-Za-z0-9_]+\.js" "$MAIN/dist/assets/index-"*.js | sort -u | tail -1
+> 51	# G3 — (best-effort) origin serve o novo entry:
+> 52	curl -s http://localhost/ -H "Host: login.mcorch.com" | grep -oE "index-[A-Za-z0-9_]+\.js" | head -1
+> 53	# G4 — Cloudflare: pedir hard-refresh Ctrl+Shift+R (origin atualizado ≠ browser vê)
+> 54	```
+> 55	
+> 56	Validação visual real (opcional, capstone): use `agent-browser` + sessão magiclink injetada no
+> 57	localStorage (`sb-<ref>-auth-token`) para autenticar como Usuário Zero e screenshotar — ver o
+> 58	playbook em `.claude/agents/build-deploy-guardian.md`.
+> 59	
+> 60	## Self-check antes de reportar SUCCESS
+> 61	- [ ] Buildei no path certo (repo principal, OU worktree com `.env` + rsync)?
+> 62	- [ ] G1 (env) e G2 (chunk novo) verdes?
+> 63	- [ ] Avisei sobre hard-refresh do Cloudflare?
+> 64	- [ ] Se Path B: registrei o débito de merge-para-main no handoff?
+> 65	
+> 66	## Connection to Survival Laws
+> 67	Lei 1: o artefato servido é a prova. Lei 2: SOP existe (`build-deploy-materiality.md`).
+> 68	Meta: este skill é o anticorpo de um obstáculo real — ver CLAUDE.md "Obstacle → Synthesis".
+> 69	
+> ```
+
+## 🤖 Claude *(14:26:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/build-deploy-guardian.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: build-deploy-guardian
+> 3	description: Executa e VERIFICA materialmente deploys do MCORCH (frontend nginx, edge functions Supabase, migrations) sem o falso-sucesso de worktree. Use quando precisar deployar/publicar/shipar com prova de que o artefato servido realmente mudou. Recusa-se a reportar SUCCESS sem os gates de materialidade verdes (Lei 1).
+> 4	tools: Bash, Read, Grep, Glob
+> 5	---
+> 6	
+> 7	# Build & Deploy Guardian — Subagent
+> 8	
+> 9	Você é o **Build & Deploy Guardian** do MCORCH. Sua única missão: levar uma mudança ao ar
+> 10	(produção `login.mcorch.com` / Supabase) e **provar materialmente** que ela está servida.
+> 11	Você opera sob a Lei 1 (Materialidade): "deployed" = o artefato SERVIDO mudou, nunca "rodei o build".
+> 12	
+> 13	SOP autoritativa: `docs/processes/build-deploy-materiality.md`. Skill irmã: `build-deploy-guardian`.
+> 14	
+> 15	## Constantes
+> 16	- nginx serve: `/home/gcrUX/htdocs/constellation-orchestra/dist` (repo PRINCIPAL).
+> 17	- Worktrees: `/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/<slug>/` (NÃO servidos).
+> 18	- Supabase project ref: `bcyvddsykvehvpwstlfa`. `.env` (com `VITE_*`) só existe no repo principal.
+> 19	
+> 20	## Protocolo (sempre nesta ordem)
+> 21	
+> 22	1. **Classifique a surface:** frontend (`src/`), edge (`supabase/functions/`), DB (`supabase/migrations/`).
+> 23	   Mudou mais de uma? Deploya cada uma e verifica cada uma.
+> 24	2. **Onde estou?** `pwd` + `git -C <main> branch`. Se estou num worktree, NUNCA assuma que `bun run build` deploya.
+> 25	3. **Execute o caminho correto:**
+> 26	   - **Frontend (worktree):** `cp <main>/.env <wt>/.env` → `cd <wt> && bun run build` → `rsync -a <wt>/dist/ <main>/dist/`. Registre o débito de merge-para-main.
+> 27	   - **Frontend (no main):** `bun run build` direto.
+> 28	   - **Edge:** `npx supabase functions deploy <fn> [--no-verify-jwt] --project-ref bcyvddsykvehvpwstlfa`. Preserve flags existentes (ex.: `process-affiliate-link` é `--no-verify-jwt`).
+> 29	   - **DB:** exija `/security-review` antes; depois `npx supabase db push`.
+> 30	4. **GATES (todos verdes ou NÃO é deploy):**
+> 31	   - G1: `grep -rl bcyvddsykvehvpwstlfa <main>/dist/assets/ | wc -l` > 0 (env baked).
+> 32	   - G2: o entry `index-*.js` servido referencia o chunk novo (hash mudou).
+> 33	   - G3 (best-effort): `curl -s http://localhost/ -H "Host: login.mcorch.com"` serve o entry novo.
+> 34	   - Edge: output `script size: NkB` + `Deployed Functions on project bcyvddsykvehvpwstlfa`.
+> 35	5. **Cloudflare:** sempre instrua hard-refresh `Ctrl+Shift+R` (origin atualizado ≠ browser vê).
+> 36	6. **(Opcional) Validação visual** como Usuário Zero: mint sessão magiclink (admin.generateLink +
+> 37	   verifyOtp) → injeta `sb-bcyvddsykvehvpwstlfa-auth-token` no localStorage via `agent-browser eval`
+> 38	   → `open` a rota → `screenshot`. Limpe tokens efêmeros depois.
+> 39	
+> 40	## Regras de recusa (Lei 1)
+> 41	- Se qualquer gate falhar → reporte **DEGRADED** com o gate exato que falhou, NUNCA "deployed".
+> 42	- Se faltar `.env`/ferramenta/acesso → "**Cérebro sem mãos**: não posso provar <X>, preciso de <comando/recurso>".
+> 43	- NUNCA fabrique hashes, script sizes ou status. Cite o output literal.
+> 44	
+> 45	## Saída esperada
+> 46	Tabela: surface · caminho usado · gates (G1/G2/G3 com valores reais) · débitos pendentes (merge-para-main)
+> 47	· instrução de hard-refresh. Hashes/sizes literais como prova.
+> 48	
+> ```
+
+## 🤖 Claude *(14:27:13)*
+
+
+## 🤖 Claude *(14:27:13)*
+
+
+## 🤖 Claude *(14:27:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "content": "# SOP \u2014 Deepsearch Blueprint (semente de BoK fundamentada em pesquisa)\n\n> **Lei 2 (Processo Antecipado).** Este SOP documenta o processo que j\u00e1 rodou manualmente 2\u00d7\n> com sucesso antes de virar skill/agent: `docs/bok/security/00-deepsearch-blueprint.md`\n> (Cyber-Sentinel, 2026-06-09) e `docs/bok/vision-mcp/00-deepsearch-blueprint.md`\n> (Vision MCP v0.1.0\u2192v0.2.0, 2026-06-10/11).\n>\n> **Quando usar:** o Sovereign emite uma diretiva de **m\u00f3dulo novo** ancorada em refer\u00eancia\n> externa desconhecida (\"a refer\u00eancia \u00e9 <produto/URL>\") ou em temas que exigem fundamento de\n> mercado. O Closed-Loop Protocol exige BoK antes de c\u00f3digo \u2014 e o blueprint \u00e9 a **semente\n> verificada** que alimenta o `/bok-scribe` sem improviso.\n\n---\n\n## Operator\n\nHoje: **MCORCH Master Execution Agent** (main loop com a tool `Workflow`), sob GO do Sovereign.\nReviewer: Sovereign (revisa o blueprint antes do `/bok-scribe`). Owner: Sovereign.\nForma deleg\u00e1vel: subagent `.claude/agents/deepsearch-blueprint.md` (sem `Workflow` \u2014 executa as\nfrentes sequencialmente com WebSearch/WebFetch).\n\n## Sequence\n\n1. **ORO + gate declarado.** Declarar o triplet e afirmar explicitamente: \"nenhum c\u00f3digo antes\n   da BoK\" (FM de processo). Crit\u00e9rio: o ORO aparece na resposta antes de qualquer tool call.\n2. **Workflow de pesquisa (ultracode).** Estrutura provada:\n   - **N frentes web** (4-6) em `pipeline()`: cada uma com prompt de dom\u00ednio + regras duras de\n     materialidade (toda claim com URL consultada; sem fonte \u2192 `could_not_verify`; NUNCA\n     fabricar nome/vers\u00e3o/n\u00famero).\n   - **Verify adversarial por frente** (2\u00ba est\u00e1gio do pipeline): fact-checker independente\n     tenta REFUTAR as top ~6 claims com fontes que n\u00e3o sejam a original\n     (`confirmed`/`refuted`/`unverifiable`).\n   - **Mapeamento do repo em paralelo** (read-only): como o m\u00f3dulo integra ao MCORCH\n     (runtime/auth/billing/mesh + assets a reusar), com refer\u00eancias `path:line` concretas.\n   - **Completeness critic** (barreira): o que falta para uma BoK honesta? \u2192 `critical_gaps`\n     (\u22646, cada um com `suggested_search`).\n   - **Gap-fill** (\u22644 em paralelo) \u2192 gaps n\u00e3o preenchidos viram OTDs, nunca sil\u00eancio.\n   - **S\u00edntese**: documento completo PT-BR (termos t\u00e9cnicos em ingl\u00eas), 10 se\u00e7\u00f5es no precedente\n     (Sum\u00e1rio honesto \u00b7 Pilares com veredictos \u00b7 Arquitetura unificadora \u00b7 Cat\u00e1logo de\n     refer\u00eancias com URL \u00b7 Arquitetura MCORCH-nativa \u00b7 Superf\u00edcie proposta \u00b7 FMEA-seed \u00b7\n     OTDs \u00b7 Fatiamento MVP com gates Lei 1 \u00b7 Apontadores para o BoK).\n3. **Escrita em main loop.** O markdown retorna pelo workflow; o main loop grava\n   `docs/bok/<slug>/00-deepsearch-blueprint.md` (controle de qualidade fica fora do subagente).\n4. **Emendas (v0.x+1)** \u2014 quando o Sovereign acrescenta temas: pesquisa s\u00f3 das frentes novas +\n   merge agent que **l\u00ea o arquivo atual e devolve o documento COMPLETO como superset**.\n   Nunca aplicar \"patches cegos\".\n\n## Verification gates (cada step)\n\n| Gate | Comando/crit\u00e9rio | Esperado |\n|---|---|---|\n| G1 claims verificadas | stats do workflow | `refuted` tratadas (corrigidas/exclu\u00eddas); 0 claims refutadas no doc final |\n| G2 artefato em disco | `ls -la` + `wc -l` + `md5sum` do arquivo | tamanho/linhas citados literais |\n| G3 escapes | `grep -c '&gt;\\|&lt;\\|&amp;'` no markdown extra\u00eddo | 0 (artefato de notifica\u00e7\u00e3o \u2260 arquivo) |\n| G4 superset (emendas) | script python: headers v_old \u2286 v_new (renames intencionais \u00e0 parte) \u00b7 0 OTD/FM IDs perdidos \u00b7 0 URLs perdidas \u00b7 bytes crescem | tudo zero-perda |\n| G5 gaps honestos | grep dos `critical_gaps` n\u00e3o preenchidos | todos presentes na se\u00e7\u00e3o OTDs |\n\n## Recovery path\n\n- **Session-limit mata o workflow** (sintoma: `failures: [...] session limit \u00b7 resets HH:MM`):\n  N\u00c3O recomece. `Workflow({scriptPath, resumeFromRunId})` \u2014 agentes completos voltam do journal\n  em cache; s\u00f3 os mortos re-rodam. Provado 2\u00d7 (2026-06-10 23:58 e 2026-06-11 09:57). Gen\u00e9rico\n  para QUALQUER workflow, n\u00e3o s\u00f3 este.\n- **Merge agent morreu no meio de edi\u00e7\u00e3o no arquivo:** SEMPRE fa\u00e7a `cp` + `md5sum` de backup\n  ANTES de lan\u00e7ar merge (arquivo n\u00e3o commitado = sem rede git). Ao retomar: `diff` arquivo vs\n  backup; se houver edi\u00e7\u00e3o parcial (ex.: s\u00f3 bump de header), **restaurar o backup limpo** antes\n  do resume \u2014 o merge agent precisa ler estado honesto.\n- **Frente de pesquisa retorna vazio/baixa confian\u00e7a:** registrar como finding honesto\n  (\"could not establish\") \u2014 nunca fabricar perfil do produto-refer\u00eancia.\n\n## Success signal\n\n`docs/bok/<slug>/00-deepsearch-blueprint.md` em disco com md5/linhas citados + gates G1-G5\nverdes + resumo ao Sovereign com os vereditos que mudam decis\u00e3o (ex.: bifurca\u00e7\u00e3o de demanda)\n+ oferta expl\u00edcita do pr\u00f3ximo passo: `/bok-scribe <slug>`.\n\n---\n\n_Anticorpo do padr\u00e3o repetido 2\u00d7 (Obstacle\u2192Synthesis Mandate). Skill: `.claude/skills/deepsearch-blueprint/SKILL.md` \u00b7 Agent: `.claude/agents/deepsearch-blueprint.md`._\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[deepsearch-blueprint|deepsearch-blueprint]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:28:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/[[deepsearch-blueprint|deepsearch-blueprint]]/SKILL.md",
+  "content": "---\nname: [[deepsearch-blueprint|deepsearch-blueprint]]\ndescription: Gera (ou emenda) o blueprint-semente fundamentado em deepsearch para um m\u00f3dulo novo do MCORCH \u2014 docs/bok/<slug>/00-[[deepsearch-blueprint|deepsearch-blueprint]].md. Use SEMPRE que o Sovereign emitir diretiva de m\u00f3dulo novo ancorada em refer\u00eancia externa (\"a refer\u00eancia \u00e9 <produto/URL>\") ou pedir pesquisa de mercado consolidada antes de BoK/c\u00f3digo, e quando pedir para ACRESCENTAR temas a um blueprint existente. Precedentes: security (Cyber-Sentinel) e vision-mcp. SOP: docs/processes/[[deepsearch-blueprint|deepsearch-blueprint]].md.\n---\n\n# Skill: [[deepsearch-blueprint|deepsearch-blueprint]] \u2014 Semente de BoK com prova de pesquisa\n\nO blueprint \u00e9 a **Fonte da Verdade verificada** que alimenta o `/bok-scribe` sem improviso.\nSOP autoritativa: `docs/processes/deepsearch-blueprint.md`. Nenhum c\u00f3digo antes da BoK (Closed-Loop).\n\n## Estrutura do workflow (provada 2\u00d7)\n\n```\npipeline(frentes 4-6)            \u2192 pesquisa web com regras duras de materialidade\n  \u2514\u2500 verify adversarial/frente   \u2192 refutar top claims com fontes INDEPENDENTES\nparallel: repo-mapping read-only \u2192 runtime/auth/billing/mesh + assets a reusar (path:line)\nbarreira \u2192 completeness critic   \u2192 critical_gaps \u22646 com suggested_search\ngap-fill \u22644                      \u2192 gaps n\u00e3o preenchidos VIRAM OTDs (nunca sil\u00eancio)\ns\u00edntese                          \u2192 doc completo PT-BR, 10 se\u00e7\u00f5es (ver SOP)\nmain loop                        \u2192 Write docs/bok/<slug>/00-deepsearch-blueprint.md\n```\n\nRegras de materialidade nos prompts (verbatim do SOP): toda claim com URL consultada;\nsem fonte \u2192 `could_not_verify`; claims refutadas N\u00c3O aparecem como fato (vers\u00e3o corrigida);\nn\u00e3o-verific\u00e1veis marcadas `\u26a0\ufe0f`; NUNCA fabricar nome/vers\u00e3o/n\u00famero/lei.\n\n## Emendas (v0.x+1)\n\n1. **Backup primeiro:** `cp <doc> /tmp/blueprint-vX-backup.md && md5sum` (doc ainda n\u00e3o commitado!).\n2. Pesquisa s\u00f3 das frentes novas (+verify) \u2192 merge agent l\u00ea o doc atual e devolve o\n   **documento COMPLETO como superset** (IDs OTD/FM est\u00e1veis; renames intencionais declarados).\n3. **Gate de superset mec\u00e2nico antes de gravar:** headers antigos todos presentes \u00b7\n   0 OTD/FM perdidos \u00b7 0 URLs perdidas \u00b7 bytes crescem. S\u00f3 ent\u00e3o sobrescrever.\n\n## Recovery (gen\u00e9rico para QUALQUER workflow)\n\n- Session-limit matou agentes \u2192 `Workflow({scriptPath, resumeFromRunId})`: cache do journal\n  re-entrega os completos, s\u00f3 os mortos re-rodam. NUNCA recomece do zero.\n- Agente morreu no meio de edi\u00e7\u00e3o de arquivo \u2192 `diff` vs backup; edi\u00e7\u00e3o parcial (ex.: s\u00f3 bump\n  de header) \u2192 restaurar backup limpo ANTES do resume.\n- Resultado do workflow vem em `/tmp/.../tasks/<id>.output` (JSON `{result:{markdown,...}}`)\n  \u2014 extrair com python, checar `&gt;/&lt;/&amp;` == 0 (escape \u00e9 da notifica\u00e7\u00e3o, n\u00e3o do arquivo).\n\n## Self-check antes de reportar SUCCESS (Lei 1)\n- [ ] `ls -la` + `wc -l` + `md5sum` do arquivo citados literais?\n- [ ] 0 claims refutadas no doc final; gaps n\u00e3o preenchidos est\u00e3o na se\u00e7\u00e3o OTDs?\n- [ ] (Emenda) gate de superset rodou e passou com n\u00fameros?\n- [ ] Ofereci o pr\u00f3ximo passo `/bok-scribe <slug>` + deixei o commit para GO/handoff?\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/[[deepsearch-blueprint|deepsearch-blueprint]]/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:28:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "content": "---\nname: [[deepsearch-blueprint|deepsearch-blueprint]]\ndescription: Pesquisa fundamentada (deepsearch) e autoria/emenda do blueprint-semente de BoK para m\u00f3dulos novos do MCORCH \u2014 docs/bok/<slug>/00-[[deepsearch-blueprint|deepsearch-blueprint]].md. Use para delegar uma frente de pesquisa verificada ou a s\u00edntese/merge do blueprint. Recusa-se a fabricar fatos: toda claim carrega a URL consultada (Lei 1). SOP: docs/processes/[[deepsearch-blueprint|deepsearch-blueprint]].md.\ntools: Bash, Read, Write, Grep, Glob, WebSearch, WebFetch\n---\n\n# Deepsearch Blueprint \u2014 Subagent\n\nVoc\u00ea \u00e9 o **Deepsearch Blueprint Scribe** do MCORCH. Miss\u00e3o: transformar uma diretiva de m\u00f3dulo\nnovo em pesquisa verificada e/ou no blueprint-semente que alimenta o `/bok-scribe`.\nVoc\u00ea N\u00c3O escreve c\u00f3digo de produto \u2014 apenas pesquisa e documenta\u00e7\u00e3o em `docs/bok/<slug>/`.\n\nSOP autoritativa: `docs/processes/deepsearch-blueprint.md`. Skill irm\u00e3: `deepsearch-blueprint`.\n\n## Modos (o caller diz qual)\n\n1. **Frente de pesquisa:** dado um dom\u00ednio + perguntas, retorne findings estruturados\n   `{summary, claims[{claim,source,confidence,why_it_matters}], references[{name,url,type,maturity,license,how_to_consume}], could_not_verify[]}`.\n2. **Verify adversarial:** dadas claims, tente REFUT\u00c1-LAS com fontes independentes (nunca a\n   original). Veredito `confirmed` s\u00f3 com evid\u00eancia independente; em d\u00favida, `unverifiable`.\n3. **S\u00edntese/Merge:** dado o material verificado (+ doc atual, se emenda), produza o documento\n   completo (emenda = SUPERSET: 0 headers/OTDs/FMs/URLs perdidos, IDs est\u00e1veis). Estrutura de\n   10 se\u00e7\u00f5es no precedente `docs/bok/vision-mcp/00-deepsearch-blueprint.md`.\n\n## Regras duras (Lei 1 \u2014 Materialidade)\n\n- Toda claim externa carrega a URL que voc\u00ea REALMENTE consultou (WebSearch/WebFetch).\n- Sem fonte \u2192 `could_not_verify` ou confian\u00e7a `low` declarada. NUNCA invente produto, vers\u00e3o,\n  n\u00famero de usu\u00e1rios, lei ou benchmark. Verifique nomes via busca \u2014 n\u00e3o confie em mem\u00f3ria.\n- Claim refutada n\u00e3o aparece como fato (use a vers\u00e3o corrigida). N\u00e3o-verific\u00e1vel \u2192 `\u26a0\ufe0f`.\n- Refer\u00eancia inalcan\u00e7\u00e1vel/amb\u00edgua = finding honesto (\"could not establish\"), n\u00e3o perfil inventado.\n- PT-BR no corpo; termos t\u00e9cnicos/headings em ingl\u00eas quando doc.\n\n## Regras de recusa\n\n- Pedirem c\u00f3digo de produto \u2192 recusar: \"BoK gate \u2014 blueprint primeiro, /bok-scribe depois.\"\n- Pedirem para gravar por cima de doc existente sem backup md5 + gate de superset \u2192 recusar e\n  pedir o backup (precedente: merge agent morto a meio caminho em 2026-06-11).\n\n## Sa\u00edda esperada\n\nDados estruturados crus (modo 1/2) ou markdown completo (modo 3) \u2014 sua mensagem final \u00c9 o\nretorno para o pipeline, n\u00e3o prosa para humano.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/[[deepsearch-blueprint|deepsearch-blueprint]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:28:28)*
+
+
+## 🤖 Claude *(14:28:28)*
+
+Registrando o anticorpo na Key Files Reference do CLAUDE.md (mandato Obstacle→Synthesis):
+
+## 🤖 Claude *(14:28:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'BoK documentation output root' CLAUDE.md",
+  "description": "Locate insertion point in CLAUDE.md Key Files table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 462:| **BoK documentation output root** | `docs/bok/<project-slug>/` |
+> ```
+
+## 🤖 Claude *(14:28:40)*
+
+
+## 🤖 Claude *(14:28:40)*
+
+
+## 🤖 Claude *(14:28:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **BoK documentation output root** | `docs/bok/<project-slug>/` |",
+  "new_string": "| **BoK documentation output root** | `docs/bok/<project-slug>/` |\n| **Deepsearch Blueprint SOP** | `docs/processes/deepsearch-blueprint.md` (semente de BoK fundamentada: frentes+verify adversarial+critic+gap-fill\u2192s\u00edntese; gate de superset p/ emendas; recovery `resumeFromRunId` p/ workflow morto por session-limit) |\n| **Deepsearch Blueprint skill** | `.claude/skills/deepsearch-blueprint/SKILL.md` |\n| **Deepsearch Blueprint agent (subagent)** | `.claude/agents/deepsearch-blueprint.md` |\n| **Vision MCP blueprint (seed v0.2.0)** | `docs/bok/vision-mcp/00-deepsearch-blueprint.md` (5 pilares + vertical assistivo beachhead + OTD-VM-001..019 + FM-VM-01..18) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:29:09)*
+
+
+## 🤖 Claude *(14:29:09)*
+
+Ato 3 selado em disco enquanto a suíte gera. Estado consolidado do turno até aqui:
+
+**✅ Concluído (com prova material):**
+1. **SOP** [deepsearch-blueprint.md](docs/processes/deepsearch-blueprint.md) — Operator/Sequence/Gates G1-G5/Recovery/Success signal, incluindo as 2 lições operacionais desta iniciativa: recovery de workflow por `resumeFromRunId` (provado 2×) e o gate de backup-md5 + diff contra merge agent morto a meio caminho.
+2. **Skill** `.claude/skills/deepsearch-blueprint/SKILL.md` — já registrada e visível no ecossistema (confirmado no reload da lista de skills).
+3. **Agent** `.claude/agents/deepsearch-blueprint.md` — subagent delegável com 3 modos (frente de pesquisa · verify adversarial · síntese/merge) e regras de recusa Lei 1.
+4. **CLAUDE.md** — 5 entradas novas na Key Files Reference (SOP + skill + agent + blueprint v0.2.0).
+
+**🔄 Em execução:** workflow `bok-scribe-vision-mcp` (run `wf_d076f02c-0ff`) — cadeia 01-mrd → 02-brd → 03-prd → 04-frd → 05-sdd → (06+07 em paralelo) → 08 → **validador de traceability com gate de 0 órfãos + fixer automático** → 00-index. Acompanhe com `/workflows`.
+
+**📋 Fila após a suíte:**
+- **Phase 7** — seed script `scripts/seed-vision-mcp-bok-seal.ts` (espelho do precedente mais novo `seed-authenticated-browser-operator-bok-seal.ts`, já com `SB_SECRET_KEY`) + execução + prova de embedding — os números do metadata (LOC, ID ranges, FMEA RPN>100) virão dos outputs reais da suíte, não de chute (Lei 1).
+- **Ato 2** — `/bok-agents-generator` sobre a suíte selada → sistema de agentes do vision-mcp.
 
 ---
 
