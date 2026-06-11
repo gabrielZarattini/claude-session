@@ -3307,6 +3307,25 @@ Ato 3 selado em disco enquanto a suíte gera. Estado consolidado do turno até a
 - **Phase 7** — seed script `scripts/seed-vision-mcp-bok-seal.ts` (espelho do precedente mais novo `seed-authenticated-browser-operator-bok-seal.ts`, já com `SB_SECRET_KEY`) + execução + prova de embedding — os números do metadata (LOC, ID ranges, FMEA RPN>100) virão dos outputs reais da suíte, não de chute (Lei 1).
 - **Ato 2** — `/bok-agents-generator` sobre a suíte selada → sistema de agentes do vision-mcp.
 
+## 👤 User *(14:52:15)*
+
+<task-notification>
+<task-id>wzgby3byi</task-id>
+<tool-use-id>toolu_01MDMmJq76xLjhoDzzf1scaa</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/tasks/wzgby3byi.output</output-file>
+<status>failed</status>
+<summary>Dynamic workflow "Gera a suíte BoK 9/9 do vision-mcp (MRD→BRD→PRD→FRD→SDD→DM/PF→QM→trace→index) a partir do blueprint v0.2.0" failed: Error: FRD failed
+    at &lt;anonymous&gt; (workflow.js:70:17)
+    at processTicksAndRejections (native)</summary>
+<recovery>Agent transcripts: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/subagents/workflows/wf_d076f02c-0ff</recovery>
+<failures>[doc:04-frd] failed: You've hit your session limit · resets 2:50pm (America/Sao_Paulo)</failures>
+<usage><agent_count>4</agent_count><subagent_tokens>630922</subagent_tokens><tool_uses>34</tool_uses><duration_ms>1567492</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(14:52:16)*
+
+You've hit your session limit · resets 2:50pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
