@@ -1,5 +1,5 @@
 # [[2026-06-10 - Build native MCP for vision and movement analysis|Build native MCP for vision and movement analysis]]
-**Date:** 2026-06-11 | **Session ID:** `01011bef-690d-4105-a4da-14cdfdfea18a`
+**Date:** 2026-06-11 | **Session ID:** `499ec34d-fd3b-4fa0-906d-3845085b7d3a`
 
 ---
 
@@ -193,12 +193,6 @@ Executando o ritual /handson — pre-flight em paralelo.
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> (Bash completed with no output)
-> ```
-
-> **Tool Result (Bash)** - ✅ Success
->
-> ```
 > mcorch_claude_mem: Up 3 hours (healthy)
 > mcorch_chroma: Up 3 hours (healthy)
 > ---
@@ -379,6 +373,12 @@ Executando o ritual /handson — pre-flight em paralelo.
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
 
 > **Tool Result (Read)** - ✅ Success
 >
@@ -1738,6 +1738,188 @@ Quando chegar, valido o merge materialmente (diff contra o backup: nenhum header
 ## 🤖 Claude *(04:27:13)*
 
 You've hit your session limit · resets 4:50am (America/Sao_Paulo)
+
+## 👤 User *(12:57:13)*
+
+continue foi interrompido pelo limite e o notebook reiniciou, tente recuperar o cache para não iniciar do zero
+
+## 🤖 Claude *(12:57:33)*
+
+
+## 🤖 Claude *(12:57:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "date '+%Y-%m-%d %H:%M %Z'",
+  "description": "Check current time vs 4:50am limit reset"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2026-06-11 09:57 -03
+> ```
+
+## 🤖 Claude *(12:57:43)*
+
+
+## 🤖 Claude *(12:57:43)*
+
+
+## 🤖 Claude *(12:57:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md 2>/dev/null",
+  "description": "Verify workflow script and v0.1.0 backup survived the restart"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw------- 1 ubuntu ubuntu 11360 Jun 11 00:57 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js
+> 9fd317f9bbebac84e38eaaabc489d1af  /tmp/blueprint-v0.1.0-backup.md
+> fe1f037cfe964d866e16254d4ca68789  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(12:57:58)*
+
+
+## 🤖 Claude *(12:57:58)*
+
+
+## 🤖 Claude *(12:58:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la docs/bok/vision-mcp/; echo '---'; wc -l /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---DIFF HEAD---'; diff <(head -20 /tmp/blueprint-v0.1.0-backup.md) <(head -20 docs/bok/vision-mcp/00-deepsearch-blueprint.md); echo '---grep version---'; grep -n 'v0\\.' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -5",
+  "description": "Compare current blueprint against v0.1.0 backup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 72
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 01:27 .
+> drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
+> -rw-rw-r--  1 ubuntu ubuntu 64373 Jun 11 01:27 00-deepsearch-blueprint.md
+> ---
+>    409 /tmp/blueprint-v0.1.0-backup.md
+>    410 docs/bok/vision-mcp/00-deepsearch-blueprint.md
+>    819 total
+> ---DIFF HEAD---
+> 4c4,5
+> < `docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.1.0 (2026-06-11)
+> ---
+> > `docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.2.0 (2026-06-11)
+> > *v0.2.0 — adiciona Pilar V Computação Cognitiva + vertical Tecnologia Assistiva; Computação Neuromórfica confirmada já coberta no Pilar III.*
+> 20d20
+> < A arquitetura de produto é desenhada sobre uma metáfora biológica defensável — a **"Essência Humana"**: uma periferia barata, always-on, inspirada em princípios neuromórficos emulados em software (detecção de mudança/saliência) que **dispara** uma análise foveal cara e profunda apenas quando há sinal — exatamente como a retina humana concentra ~5% de cones de alta acuidade em uma fóvea minúscula e usa ~95% de bastões para vigilância periférica de baixa resolução ([NCBI Webvision](https://www.ncbi.nlm.nih.gov/books/NBK554706/); [StatPearls Retina](https://www.ncbi.nlm.nih.gov/books/NBK545310/)).
+> ---grep version---
+> 4:`docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.2.0 (2026-06-11)
+> 5:*v0.2.0 — adiciona Pilar V Computação Cognitiva + vertical Tecnologia Assistiva; Computação Neuromórfica confirmada já coberta no Pilar III.*
+> ```
+
+## 🤖 Claude *(12:58:18)*
+
+
+## 🤖 Claude *(12:58:18)*
+
+
+## 🤖 Claude *(12:58:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -60; echo '===STATS==='; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | grep -cE '^<'; diff /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md | grep -cE '^>'",
+  "description": "Full diff between backup and current partially-edited blueprint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4c4,5
+> < `docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.1.0 (2026-06-11)
+> ---
+> > `docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.2.0 (2026-06-11)
+> > *v0.2.0 — adiciona Pilar V Computação Cognitiva + vertical Tecnologia Assistiva; Computação Neuromórfica confirmada já coberta no Pilar III.*
+> ===STATS===
+> 1
+> 2
+> ```
+
+## 🤖 Claude *(12:58:37)*
+
+
+## 🤖 Claude *(12:58:37)*
+
+
+## 🤖 Claude *(12:58:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cp /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md && md5sum docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "description": "Restore clean v0.1.0 blueprint from backup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(12:58:46)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js",
+  "resumeFromRunId": "wf_fc4228bc-7f7"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w03638n4i
+> Summary: Amplia o blueprint vision-mcp: Computação Cognitiva + Tecnologia Assistiva (deepsearch + verify + merge v0.2.0)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/subagents/workflows/wf_fc4228bc-7f7
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js"} to iterate without resending the script.)
+> Run ID: wf_fc4228bc-7f7
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js", resumeFromRunId: "wf_fc4228bc-7f7"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(12:59:03)*
+
+
+## 🤖 Claude *(12:59:03)*
+
+Recuperação executada — resumo do estado:
+
+1. **Cache recuperado:** a run `wf_fc4228bc-7f7` foi retomada do journal — a pesquisa das 2 frentes (54 claims · 54 referências · 12 confirmadas · 0 refutadas) **não re-roda**, só o agente de merge da síntese v0.2.0.
+2. **Integridade do blueprint garantida:** o agente anterior morreu no meio do trabalho tendo feito apenas o bump de versão no header (diff completo provou: zero conteúdo perdido). Restaurei o v0.1.0 limpo do backup (`md5 9fd317f9…` confirmado) antes do resume — o merge agora parte de um estado honesto.
+
+Já posso adiantar o **veredito da sua pergunta** com a pesquisa concluída: **Computação Neuromórfica já estava coberta** (Pilar III — incluindo dois achados operacionais fortes: a Intel arquivou o framework Lava em maio/2026, diretiva de não-adoção; e o Akida Cloud da BrainChip é o único processador neuromórfico consumível como API). **Computação Cognitiva e Tecnologia Assistiva estavam ausentes** e são as duas adições do v0.2.0 — a assistiva com potencial de emendar a OTD-VM-002 (validação de demanda) com evidência real.
+
+Quando o merge chegar, valido materialmente (superset do v0.1.0: nenhum header/OTD/FM/URL perdido) antes de gravar e te entregar o documento final.
 
 ---
 
