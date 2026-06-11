@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 32
-> * **Total de Sessões**: 713
+> * **Total de Sessões**: 716
 
 ---
 
@@ -61,12 +61,15 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-11 - agent-aca13cab2f9c2b8a5]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-aaf1555fa602f3314]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-aa82846c01b4608ce]]` (ClaudeSessions) - *2026-06-11*
+*   `[[2026-06-11 - agent-a9f7ecc4b8335ae30]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a7f1832746ce04d12]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a7652bda1d51bb332]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a666014fae5914db4]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a6210331af42f44de]]` (ClaudeSessions) - *2026-06-11*
+*   `[[2026-06-11 - agent-a2ab928344dae44c6]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a259f48344f35e379]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - agent-a2456de632139f3dd]]` (ClaudeSessions) - *2026-06-11*
+*   `[[2026-06-11 - agent-a04b9077b568bb736]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-11 - Build native MCP for vision and movement analysis]]` (ClaudeSessions) - *2026-06-11*
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions) - *2026-06-10*
 *   `[[2026-06-10 - agent-aec0d863561a35a7c]]` (ClaudeSessions) - *2026-06-10*
