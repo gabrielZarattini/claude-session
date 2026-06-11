@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 707
-> * **Sessões do Claude**: 670
+> * **Total de Sessões Registradas**: 715
+> * **Sessões do Claude**: 678
 > * **Sessões do Gemini**: 37
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-11 - agent-add70d0b40699bbdb]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-ad9d7d286610f6907]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-aca13cab2f9c2b8a5]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-aaf1555fa602f3314]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-aa82846c01b4608ce]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-a7f1832746ce04d12]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-a7652bda1d51bb332]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-a6210331af42f44de]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-a259f48344f35e379]]` - *2026-06-11*
+*   `[[2026-06-11 - agent-a2456de632139f3dd]]` - *2026-06-11*
 *   `[[2026-06-11 - Build native MCP for vision and movement analysis]]` - *2026-06-11*
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-aec0d863561a35a7c]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-ae9b33980aebbd3ac]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-ae8f9b8397c3dbe39]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-adef832920811a0ff]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-adafbeadf696330ad]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-acf1cf06440c50085]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-acf1b095574c71f85]]` - *2026-06-10*
-*   `[[2026-06-10 - agent-ac9facaf7dad72b43]]` - *2026-06-10*
-*   *... e mais 671 sessões nessa categoria.*
+*   *... e mais 679 sessões nessa categoria.*
 
 ---
 
@@ -262,8 +262,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-11 - agent-add70d0b40699bbdb]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-ad9d7d286610f6907]]` (ClaudeSessions)
 *   `[[2026-06-11 - agent-aca13cab2f9c2b8a5]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-aaf1555fa602f3314]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-aa82846c01b4608ce]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-a7f1832746ce04d12]]` (ClaudeSessions)
 *   `[[2026-06-11 - agent-a7652bda1d51bb332]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-a6210331af42f44de]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-a259f48344f35e379]]` (ClaudeSessions)
+*   `[[2026-06-11 - agent-a2456de632139f3dd]]` (ClaudeSessions)
 *   `[[2026-06-11 - Build native MCP for vision and movement analysis]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-af4b1636e0bff4513]]` (ClaudeSessions)
 *   `[[2026-06-10 - agent-aec0d863561a35a7c]]` (ClaudeSessions)

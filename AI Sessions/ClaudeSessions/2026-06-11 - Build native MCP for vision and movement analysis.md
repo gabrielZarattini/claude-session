@@ -1301,5 +1301,5 @@ Aguardando a síntese do blueprint — quando chegar, escrevo `docs/bok/vision-m
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-10 - agent-af4b1636e0bff4513]]
-> * **Próxima Sessão**: [[2026-06-11 - agent-a7652bda1d51bb332]]
+> * **Próxima Sessão**: [[2026-06-11 - agent-a2456de632139f3dd]]
 %% --- TIMELINE END --- %%
