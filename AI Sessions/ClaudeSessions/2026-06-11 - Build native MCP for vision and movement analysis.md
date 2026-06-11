@@ -1,5 +1,5 @@
-# [[2026-06-11 - Build native MCP for vision and movement analysis|Build native MCP for vision and movement analysis]]
-**Date:** 2026-06-10 | **Session ID:** `01011bef-690d-4105-a4da-14cdfdfea18a`
+# [[2026-06-10 - Build native MCP for vision and movement analysis|Build native MCP for vision and movement analysis]]
+**Date:** 2026-06-11 | **Session ID:** `01011bef-690d-4105-a4da-14cdfdfea18a`
 
 ---
 
@@ -1050,7 +1050,7 @@ Quando o workflow retornar, escrevo o blueprint em `docs/bok/vision-mcp/`, repor
 <output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output</output-file>
 <status>completed</status>
 <summary>Dynamic workflow "Deepsearch fundamentado p/ MCP nativo de visão (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) → blueprint-semente BoK" completed</summary>
-<result>{"markdown":null,"stats":{"domains_completed":6,"total_claims":133,"total_references":140,"refuted":0,"confirmed":36,"unverifiable":0,"critical_gaps":6,"gaps_filled":0,"mapping_ok":true},"mapping":{"runtime_recommendation":"Option (b) — Docker container in the Sovereign Mesh (`mcorch_vision_mcp`), Node/Bun + @modelcontextprotocol/sdk StreamableHTTPServerTransport, published loopback-only (127.0.0.1:&lt;port&gt;) and proxied by host nginx under a new `mcp.mcorch.com` vhost. Rationale: (1) DIRECT PRECEDENT — `mcorch_gitnexus` already runs an in-house MCP server with StreamableHTTPServerTransport on 127.0.0.1:3100 inside the hardened mesh (packages/gitnexus-core/src/mcp/server.ts:14-16,97-114; docker-compose.yml:89-119), so the container pattern, hardening anchor (cap_drop/read_only/UID 1001/pids_limit, docker-compose.yml:8-25), healthcheck, and watchdog telemetry are all reusable as-is. (2) TIMEOUTS — long deepsearch jobs (minutes) are fatal to option (a): the repo's own history proves Supabase Edge wall-clock limits forced the orchestrate pipeline to be rebuilt as pg_net-chained async steps (docs/processes/[[orchestrate-async-pipeline|orchestrate-async-pipeline]].md, RPC `async_orchestrate_step` at orchestrate-content/index.ts:180-189); an MCP server whose tools block for minutes cannot live there, and Streamable HTTP session state across stateless isolates is awkward. A long-lived container has no execution ceiling (nginx proxy_read_timeout + proxy_buffering off handle SSE streaming) and zero cold starts. (3) Option (c) systemd (precedent /home/ubuntu/.config/systemd/user/openclaw-gateway.service) is viable but regresses the security BoK direction — FM-10 was specifically fixed by moving gitnexus into a hardened non-root container (docker-compose.yml:2-3); a tenant-facing billable service should get the same cap_drop/no-new-privileges/mem_limit envelope, not a bare host process. (4) AUTH is the one thing the container does NOT get for free (no Kong in front), but the repo already solved this exact problem for verify_jwt=false edge functions: ES256 JWKS verification per docs/processes/[[edge-jwt-identity-verification|edge-jwt-identity-verification]].md (jose `jwtVerify` + `createRemoteJWKSet` against https://bcyvddsykvehvpwstlfa.supabase.co/auth/v1/.well-known/jwks.json) — the same code runs on Node. Ops burden is marginal: compose + watchdog cron (scripts/watchdog-mcorch.sh → infra_health_logs) already exist for the mesh namespace. Caveat: docker-compose.yml:4-6 — do NOT add a `name:` field (project must stay `constellation-orchestra` or running containers get orphaned). For deepsearch specifically, implement job semantics inside the container (start tool returns job_id + MCP progress notifications / a poll tool), not a blocking call — billing then follows the charge-at-entry + refund-on-failure contract.","integration_points":["packages/gitnexus-core/src/mcp/server.ts:14-16,97-114 — in-house StreamableHTTPServerTransport MCP precedent (HTTP transport + /health endpoint + stdio dual mode); clone this skeleton for vision-mcp","docker-compose.yml:8-25 (x-hardening anchor) + :89-119 (mcorch-gitnexus-mcp service) — container envelope: UID 1001, read_only rootfs, cap_drop set, loopback-only port publish, node-fetch healthcheck; vision-mcp joins networks: mcorch-sovereign-net","/etc/nginx/sites-enabled/www.mcorch.com.conf — nginx vhost precedent on this Oracle ARM host; add mcp.mcorch.com.conf proxying to the loopback port (login.mcorch.com already served here; root-only read, vhost creation needs Sovereign/sudo)","docs/processes/[[edge-jwt-identity-verification|edge-jwt-identity-verification]].md:47-56 (resolution order) + :64-79 (jose jwtVerify + createRemoteJWKSet pattern) — the canonical identity gate for any endpoint not behind Kong: getUser()/JWKS ES256 verify → trust sub ONLY after signature verifies → hard 401 fail-closed; anti-pattern list at :118-124 (never atob-decode sub)","supabase/functions/orchestrate-content/index.ts:60-66 — per-user credential resolution pattern: admin client reads `decrypted_user_api_keys` by user_id, env key only as restricted fallback; :99-121 — balance check → HTTP 402 → atomic `deduct_mco_coins` RPC; :92-96 — sentinel inspectPrompt AFTER identity BEFORE charge; :207-221 — refund-on-failure catch block (refundMco + mark errored)","supabase/functions/_shared/agent-metering.ts:69-127 — token-metered billing for LLM legs: `calc_agent_cost_mcoin` RPC + `agent_executions` ledger insert + `deduct_mco_coins`; isUserCustomKey→cost 0 (BYOK rides free); SOVEREIGN_USER_ID exemption at :10,119","supabase/functions/_shared/billing.ts:20-38 — refundMco helper (add_mco_coins service-role-only credit; never throws; logs unhealthy pulse to infra_health_logs)","supabase/functions/_shared/sentinel.ts:77-100 (inspectPrompt L1/L2/L3) + :109-124 (logSentinelBlock → infra_health_logs service='sentinel') — pure TS, no Deno dependency in the inspection path; runs verbatim in the Node container","supabase/migrations/20260603220000_secure_ledger_rpcs.sql:37-74 — deduct_mco_coins signature (p_user_id, p_amount, p_action, p_context) + grants (authenticated self-only / service_role); the container calls it via PostgREST with SB_SECRET_KEY after independently verifying user identity","docs/processes/[[mcoin-cost-calibration|mcoin-cost-calibration]].md:11-13 — pricing formula `mco(op) = ceil(real_cost_usd(op) / $0.018 × 4)` (USD_PER_MCO_FLOOR=$0.018 = Enterprise floor, MARGIN=4×); :41-51 calibrated table for reference classes; :74-84 mirror rule — COIN_COSTS in src/lib/billing.ts AND a hardcoded mirror constant in the service (it cannot import src/lib); :88-100 refund-on-failure contract","supabase/functions/orchestrate-step/index.ts:424-462 — Mesh Connection Mandate template: mcorch_nodes observation insert on success (node_type 'observation', metadata.cost_mco, stability_score 1.0) + content_mesh_asset with project_id; deepsearch 'consolidated references' should follow the content_mesh_asset shape (user_id + project_id tenant isolation per migration 20260425210000)","supabase/functions/embed-mcorch-node/index.ts:1-45 — embedding pipeline every new mesh node flows through (OpenRouter text-embedding-3-small → Gemini text-embedding-004 free fallback, 768 dims matching pgvector schema); reference nodes get embedded for free by inserting into mcorch_nodes","supabase/functions/_shared/llm-fallback.ts:19-35 — infra_health_logs telemetry pattern for failure paths (raw PostgREST POST with SB_SECRET_KEY, fire-and-forget, never breaks request path) — reuse with service='vision-mcp'","supabase/migrations/20260601060000_user_api_keys_apify_token.sql:12 — the one-line BYOK column-add pattern for a new `firecrawl_api_key` (encryption handled by the Vault trigger family: 20260601000600_secure_definer_views.sql masked view + decrypted_user_api_keys, 20260602130000 UPDATE-first INSTEAD OF, 20260602140000 vault_upsert_secret idempotent)","supabase/config.toml:1-80 — if any thin edge-function shim is added for vision-mcp, it follows the verify_jwt=false + in-code ES256 gate convention documented at the file header","/home/ubuntu/.config/systemd/user/openclaw-gateway.service — systemd precedent (option c) kept as fallback reference only; Restart=always + StartLimitBurst pattern if the container route is ever vetoed","CLAUDE.md §MCORCH Master Execution Protocol — BoK gate: docs/bok/vision-mcp/ does NOT exist (verified: docs/bok/ listing); 01-mrd..05-sdd via /bok-scribe is REQUIRED before any vision-mcp code is written; the 'deepsearch' hits in docs/bok/security/ are the unrelated security blueprint"],"risks":["SECURITY — public attack surface: mcp.mcorch.com is the first tenant-facing service on this host NOT behind the Supabase gateway. The identity gate is 100% in-app; any fail-open bug = the exact cross-tenant impersonation class the ES256 SOP fixed (docs/processes/[[edge-jwt-identity-verification|edge-jwt-identity-verification]].md §Context — forged-sub atob exploit). Mandatory: JWKS-verify before trusting sub, fail-closed on JWKS unreachability, never expose SB_SECRET_KEY in any client-reachable path.","SECURITY — indirect
+<result>{"markdown":null,"stats":{"domains_completed":6,"total_claims":133,"total_references":140,"refuted":0,"confirmed":36,"unverifiable":0,"critical_gaps":6,"gaps_filled":0,"mapping_ok":true},"mapping":{"runtime_recommendation":"Option (b) — Docker container in the Sovereign Mesh (`mcorch_vision_mcp`), Node/Bun + @modelcontextprotocol/sdk StreamableHTTPServerTransport, published loopback-only (127.0.0.1:&lt;port&gt;) and proxied by host nginx under a new `mcp.mcorch.com` vhost. Rationale: (1) DIRECT PRECEDENT — `mcorch_gitnexus` already runs an in-house MCP server with StreamableHTTPServerTransport on 127.0.0.1:3100 inside the hardened mesh (packages/gitnexus-core/src/mcp/server.ts:14-16,97-114; docker-compose.yml:89-119), so the container pattern, hardening anchor (cap_drop/read_only/UID 1001/pids_limit, docker-compose.yml:8-25), healthcheck, and watchdog telemetry are all reusable as-is. (2) TIMEOUTS — long deepsearch jobs (minutes) are fatal to option (a): the repo's own history proves Supabase Edge wall-clock limits forced the orchestrate pipeline to be rebuilt as pg_net-chained async steps (docs/processes/orchestrate-async-pipeline.md, RPC `async_orchestrate_step` at orchestrate-content/index.ts:180-189); an MCP server whose tools block for minutes cannot live there, and Streamable HTTP session state across stateless isolates is awkward. A long-lived container has no execution ceiling (nginx proxy_read_timeout + proxy_buffering off handle SSE streaming) and zero cold starts. (3) Option (c) systemd (precedent /home/ubuntu/.config/systemd/user/openclaw-gateway.service) is viable but regresses the security BoK direction — FM-10 was specifically fixed by moving gitnexus into a hardened non-root container (docker-compose.yml:2-3); a tenant-facing billable service should get the same cap_drop/no-new-privileges/mem_limit envelope, not a bare host process. (4) AUTH is the one thing the container does NOT get for free (no Kong in front), but the repo already solved this exact problem for verify_jwt=false edge functions: ES256 JWKS verification per docs/processes/edge-jwt-identity-verification.md (jose `jwtVerify` + `createRemoteJWKSet` against https://bcyvddsykvehvpwstlfa.supabase.co/auth/v1/.well-known/jwks.json) — the same code runs on Node. Ops burden is marginal: compose + watchdog cron (scripts/watchdog-mcorch.sh → infra_health_logs) already exist for the mesh namespace. Caveat: docker-compose.yml:4-6 — do NOT add a `name:` field (project must stay `constellation-orchestra` or running containers get orphaned). For deepsearch specifically, implement job semantics inside the container (start tool returns job_id + MCP progress notifications / a poll tool), not a blocking call — billing then follows the charge-at-entry + refund-on-failure contract.","integration_points":["packages/gitnexus-core/src/mcp/server.ts:14-16,97-114 — in-house StreamableHTTPServerTransport MCP precedent (HTTP transport + /health endpoint + stdio dual mode); clone this skeleton for vision-mcp","docker-compose.yml:8-25 (x-hardening anchor) + :89-119 (mcorch-gitnexus-mcp service) — container envelope: UID 1001, read_only rootfs, cap_drop set, loopback-only port publish, node-fetch healthcheck; vision-mcp joins networks: mcorch-sovereign-net","/etc/nginx/sites-enabled/www.mcorch.com.conf — nginx vhost precedent on this Oracle ARM host; add mcp.mcorch.com.conf proxying to the loopback port (login.mcorch.com already served here; root-only read, vhost creation needs Sovereign/sudo)","docs/processes/edge-jwt-identity-verification.md:47-56 (resolution order) + :64-79 (jose jwtVerify + createRemoteJWKSet pattern) — the canonical identity gate for any endpoint not behind Kong: getUser()/JWKS ES256 verify → trust sub ONLY after signature verifies → hard 401 fail-closed; anti-pattern list at :118-124 (never atob-decode sub)","supabase/functions/orchestrate-content/index.ts:60-66 — per-user credential resolution pattern: admin client reads `decrypted_user_api_keys` by user_id, env key only as restricted fallback; :99-121 — balance check → HTTP 402 → atomic `deduct_mco_coins` RPC; :92-96 — sentinel inspectPrompt AFTER identity BEFORE charge; :207-221 — refund-on-failure catch block (refundMco + mark errored)","supabase/functions/_shared/agent-metering.ts:69-127 — token-metered billing for LLM legs: `calc_agent_cost_mcoin` RPC + `agent_executions` ledger insert + `deduct_mco_coins`; isUserCustomKey→cost 0 (BYOK rides free); SOVEREIGN_USER_ID exemption at :10,119","supabase/functions/_shared/billing.ts:20-38 — refundMco helper (add_mco_coins service-role-only credit; never throws; logs unhealthy pulse to infra_health_logs)","supabase/functions/_shared/sentinel.ts:77-100 (inspectPrompt L1/L2/L3) + :109-124 (logSentinelBlock → infra_health_logs service='sentinel') — pure TS, no Deno dependency in the inspection path; runs verbatim in the Node container","supabase/migrations/20260603220000_secure_ledger_rpcs.sql:37-74 — deduct_mco_coins signature (p_user_id, p_amount, p_action, p_context) + grants (authenticated self-only / service_role); the container calls it via PostgREST with SB_SECRET_KEY after independently verifying user identity","docs/processes/mcoin-cost-calibration.md:11-13 — pricing formula `mco(op) = ceil(real_cost_usd(op) / $0.018 × 4)` (USD_PER_MCO_FLOOR=$0.018 = Enterprise floor, MARGIN=4×); :41-51 calibrated table for reference classes; :74-84 mirror rule — COIN_COSTS in src/lib/billing.ts AND a hardcoded mirror constant in the service (it cannot import src/lib); :88-100 refund-on-failure contract","supabase/functions/orchestrate-step/index.ts:424-462 — Mesh Connection Mandate template: mcorch_nodes observation insert on success (node_type 'observation', metadata.cost_mco, stability_score 1.0) + content_mesh_asset with project_id; deepsearch 'consolidated references' should follow the content_mesh_asset shape (user_id + project_id tenant isolation per migration 20260425210000)","supabase/functions/embed-mcorch-node/index.ts:1-45 — embedding pipeline every new mesh node flows through (OpenRouter text-embedding-3-small → Gemini text-embedding-004 free fallback, 768 dims matching pgvector schema); reference nodes get embedded for free by inserting into mcorch_nodes","supabase/functions/_shared/llm-fallback.ts:19-35 — infra_health_logs telemetry pattern for failure paths (raw PostgREST POST with SB_SECRET_KEY, fire-and-forget, never breaks request path) — reuse with service='vision-mcp'","supabase/migrations/20260601060000_user_api_keys_apify_token.sql:12 — the one-line BYOK column-add pattern for a new `firecrawl_api_key` (encryption handled by the Vault trigger family: 20260601000600_secure_definer_views.sql masked view + decrypted_user_api_keys, 20260602130000 UPDATE-first INSTEAD OF, 20260602140000 vault_upsert_secret idempotent)","supabase/config.toml:1-80 — if any thin edge-function shim is added for vision-mcp, it follows the verify_jwt=false + in-code ES256 gate convention documented at the file header","/home/ubuntu/.config/systemd/user/openclaw-gateway.service — systemd precedent (option c) kept as fallback reference only; Restart=always + StartLimitBurst pattern if the container route is ever vetoed","CLAUDE.md §MCORCH Master Execution Protocol — BoK gate: docs/bok/vision-mcp/ does NOT exist (verified: docs/bok/ listing); 01-mrd..05-sdd via /bok-scribe is REQUIRED before any vision-mcp code is written; the 'deepsearch' hits in docs/bok/security/ are the unrelated security blueprint"],"risks":["SECURITY — public attack surface: mcp.mcorch.com is the first tenant-facing service on this host NOT behind the Supabase gateway. The identity gate is 100% in-app; any fail-open bug = the exact cross-tenant impersonation class the ES256 SOP fixed (docs/processes/edge-jwt-identity-verification.md §Context — forged-sub atob exploit). Mandatory: JWKS-verify before trusting sub, fail-closed on JWKS unreachability, never expose SB_SECRET_KEY in any client-reachable path.","SECURITY — indirect
 ... (truncated 16319 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output)</result>
 <failures>[gapfill:1] failed: You've hit your session limit · resets 11:40pm (America/Sao_Paulo)
 [gapfill:2] failed: You've hit your session limit · resets 11:40pm (America/Sao_Paulo)
@@ -1064,6 +1064,233 @@ Quando o workflow retornar, escrevo o blueprint em `docs/bok/vision-mcp/`, repor
 
 You've hit your session limit · resets 11:40pm (America/Sao_Paulo)
 
+## 👤 User *(02:57:29)*
+
+Temos uma nova grande descoberta... mas precisamos fazer isso de forma nativa dentro do nosso ecossistema. A referencia é https://www.sandcastles.ai/ o conector mcp deles tem o grande diferencia que vamos extrair buscando referencias consolidadas no mercado com base em um deepsearch fundamentado no thema de Computer Vision,  Análise de Movimento, Sensores Neuromórficos e visão periférica, assim como seria a essência humana. 
+
+Isso deve se tornar nosso MCP Interno nativo, onde possa tambem fazer parte de outros ecossistemas, ou seja sistemas externos.
+
+## 🤖 Claude *(02:58:12)*
+
+
+## 🤖 Claude *(02:58:14)*
+
+O workflow completou a pesquisa inteira (19 agentes, 133 claims, 140 referências, 36 confirmadas, **0 refutadas**, mapeamento MCORCH OK, 6 gaps críticos identificados) — mas os 4 gap-fills e o agente de síntese morreram no **limite de sessão da conta** (reseta 23:40 BRT). A pesquisa está salva nos transcripts; vou recuperar os dados materiais e **sintetizar o blueprint eu mesmo no main loop** (sem subagentes), com os gaps não-preenchidos indo honestamente para a seção de OTDs.
+
+## 🤖 Claude *(02:58:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "date '+%Y-%m-%d %H:%M %Z'; echo \"---\"; ls -la /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/subagents/workflows/wf_037c961c-6e9/ 2>/dev/null | head -30",
+  "description": "Check time and list workflow transcript directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2026-06-10 23:58 -03
+> ---
+> total 4312
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Jun 10 20:35 .
+> drwxrwxr-x 3 ubuntu ubuntu   4096 Jun 10 19:42 ..
+> -rw------- 1 ubuntu ubuntu 377550 Jun 10 19:52 agent-a01a722fbf80b27c5.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:46 agent-a01a722fbf80b27c5.meta.json
+> -rw------- 1 ubuntu ubuntu 263471 Jun 10 20:06 agent-a071a0ee4386d69cd.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:58 agent-a071a0ee4386d69cd.meta.json
+> -rw------- 1 ubuntu ubuntu 216318 Jun 10 20:03 agent-a1621bfc02c38740d.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:58 agent-a1621bfc02c38740d.meta.json
+> -rw------- 1 ubuntu ubuntu 270114 Jun 10 20:13 agent-a17ddd456788785cf.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:06 agent-a17ddd456788785cf.meta.json
+> -rw------- 1 ubuntu ubuntu 200384 Jun 10 20:22 agent-a24c949fac2e1f275.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:07 agent-a24c949fac2e1f275.meta.json
+> -rw------- 1 ubuntu ubuntu 275873 Jun 10 20:30 agent-a37224daa88861199.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:23 agent-a37224daa88861199.meta.json
+> -rw------- 1 ubuntu ubuntu 289507 Jun 10 19:51 agent-a39a3eaf5f9a05d68.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:42 agent-a39a3eaf5f9a05d68.meta.json
+> -rw------- 1 ubuntu ubuntu 113146 Jun 10 20:18 agent-a3e936e25e03d99df.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:16 agent-a3e936e25e03d99df.meta.json
+> -rw------- 1 ubuntu ubuntu 214682 Jun 10 19:46 agent-a6218c38f9df79f85.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:42 agent-a6218c38f9df79f85.meta.json
+> -rw------- 1 ubuntu ubuntu 230718 Jun 10 19:58 agent-a67e3b49a4f87ecd3.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 19:52 agent-a67e3b49a4f87ecd3.meta.json
+> -rw------- 1 ubuntu ubuntu  46592 Jun 10 20:34 agent-a8c70ce4712c2714f.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:34 agent-a8c70ce4712c2714f.meta.json
+> -rw------- 1 ubuntu ubuntu 207696 Jun 10 20:23 agent-a9123f6b16a562579.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:18 agent-a9123f6b16a562579.meta.json
+> -rw------- 1 ubuntu ubuntu 264748 Jun 10 20:35 agent-a936c3876c95b84ab.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 10 20:35 agent-a936c3876c95b84ab.meta.json
+> -rw------- 1 ubuntu ubuntu 231424 Jun 10 20:34 agent-abef51a13bcbf6de3.jsonl
+> ```
+
+## 🤖 Claude *(02:58:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -c /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output",
+  "description": "Size of full workflow output file"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 26434 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output
+> ```
+
+## 🤖 Claude *(02:58:28)*
+
+
+## 🤖 Claude *(02:58:28)*
+
+
+## 🤖 Claude *(02:58:29)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-deepsearch-wf_037c961c-6e9.js",
+  "resumeFromRunId": "wf_037c961c-6e9"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wn7i9ol5e
+> Summary: Deepsearch fundamentado p/ MCP nativo de visão (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) → blueprint-semente BoK
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/subagents/workflows/wf_037c961c-6e9
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-deepsearch-wf_037c961c-6e9.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-deepsearch-wf_037c961c-6e9.js"} to iterate without resending the script.)
+> Run ID: wf_037c961c-6e9
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-deepsearch-wf_037c961c-6e9.js", resumeFromRunId: "wf_037c961c-6e9"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(02:58:41)*
+
+
+## 🤖 Claude *(02:58:41)*
+
+
+## 🤖 Claude *(02:58:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output') as f:\n    raw = f.read()\n# file may contain the result JSON; try to locate it\ntry:\n    d = json.loads(raw)\nexcept Exception:\n    # maybe it's wrapped; find first '{'\n    d = json.loads(raw[raw.index('{'):])\ncrit = d.get('critique') or {}\nprint('=== CRITICAL GAPS ===')\nfor i,g in enumerate(crit.get('critical_gaps',[]),1):\n    print(f\\\"{i}. {g['gap']}\\\")\n    print(f\\\"   search: {g['suggested_search']}\\\")\nprint()\nprint('=== MINOR GAPS ===')\nfor m in crit.get('minor_gaps',[]):\n    print('-', m)\nprint()\nprint('=== RISKS (mapping) ===')\nfor r in (d.get('mapping') or {}).get('risks',[]):\n    print('-', r[:300])\n\"",
+  "description": "Extract critic gaps and mapping risks from first run output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CRITICAL GAPS ===
+> 
+> === MINOR GAPS ===
+> 
+> === RISKS (mapping) ===
+> ```
+
+## 🤖 Claude *(02:58:51)*
+
+
+## 🤖 Claude *(02:58:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output') as f:\n    raw = f.read()\nprint(raw[:500])\nprint('...')\nprint(raw[-800:])\n\"",
+  "description": "Inspect raw structure of workflow output file"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "summary": "Deepsearch fundamentado p/ MCP nativo de visão (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) → blueprint-semente BoK",
+>   "agentCount": 19,
+>   "logs": [
+>     "Deepsearch ultracode: 6 frentes web (com verify adversarial em pipeline) + mapeamento MCORCH em paralelo",
+>     "Pesquisa: 6/6 domínios concluídos · mapping OK",
+>     "Critic apontou 6 gaps críticos — preenchendo 4 em paralelo",
+>     "[gapfill:1] failed: You've hit your session limit · resets 11:40pm (America/Sao_Paulo
+> ...
+> er-tool rates), and the plugin Zip's internal structure — both could_not_verify.",
+>         "Dependency/publishing pinning is soft: exact production TS SDK v1.x version and the MCP Registry GA-out-of-preview timeline are unconfirmed, affecting the SDD's version pinning and the com.mcorch/* publishing roadmap.",
+>         "CPU-only OCR alternatives Tesseract/EasyOCR/docTR current status were explicitly not researched; Mistral OCR pricing remains conflicting ($1 vs $2/1k pages) — minor unless OCR becomes a priced tool.",
+>         "Process note (not a research gap): docs/bok/vision-mcp/ confirmed absent, so the Closed-Loop Protocol halt and Lei 2 SOP-first gate are both live before any code — the deepsearch output should be structured to feed the MRD/BRD/PRD/FRD/SDD directly."
+>       ]
+>     }
+>   }
+> }
+> ```
+
+## 🤖 Claude *(02:59:00)*
+
+
+## 🤖 Claude *(02:59:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/w0srbeq9i.output') as f:\n    d = json.load(f)\nprint('top keys:', list(d.keys()))\nres = d.get('result') or d.get('returnValue') or {}\nprint('result keys:', list(res.keys()) if isinstance(res,dict) else type(res))\ncrit = res.get('critique') or {}\nprint()\nprint('=== CRITICAL GAPS ===')\nfor i,g in enumerate(crit.get('critical_gaps',[]),1):\n    print(f\\\"{i}. {g['gap'][:400]}\\\")\nprint()\nprint('=== MINOR GAPS (first 5) ===')\nfor m in crit.get('minor_gaps',[])[:5]:\n    print('-', m[:300])\n\"",
+  "description": "Extract critique from nested result key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> top keys: ['summary', 'agentCount', 'logs', 'result']
+> result keys: ['markdown', 'stats', 'mapping', 'critique']
+> 
+> === CRITICAL GAPS ===
+> 1. Competitive landscape is entirely unresearched: do vision/CV-focused MCP servers ALREADY exist? The mcp-architecture domain documented the registry mechanics but never searched it for competitors, and the installed-connector registry probe I ran returned empty (it only sees local connectors, not the public registry). Without this, the MRD/BRD cannot honestly claim differentiation or scope. This al
+> 2. Zero legal/privacy research on processing third-party images and screens. Images of people are biometric/sensitive personal data, screenshots carry PII, and facial data has special treatment under LGPD — none of this is sourced, yet the differentiator explicitly involves processing images/screens and feeding scraped content into the knowledge mesh. The SDD security section and FRD erase/consent pa
+> 3. Unit economics for the core differentiator (deepsearch) are missing — fatal for the mcoCoin 4x-floor pricing the calibration SOP mandates. Firecrawl pricing, credits, and rate limits are entirely absent (the repo only has a free-tier QA probe, no production cost model), so the mapping's '~$0.10 real cost per deepsearch job' is an unverified guess. Per-image VLM costs are only partially covered (Ge
+> 4. Remote MCP authorization-server implementation path for MCORCH's self-hosted stack is unresolved — only the OAuth 2.1 SPEC was verified, not a buildable recipe. The existing in-house gitnexus MCP server's HTTP transport is unauthenticated/internal, so exposing a protected remote endpoint to external ecosystems (RFC 9728 protected-resource-metadata + RFC 8707 audience + DCR/CIMD + PKCE) is net-new.
+> 5. Self-hosted model and weight licenses are mostly unverified — a closed-source-SaaS copyleft minefield if any self-host lane is chosen. Only Ultralytics AGPL-3.0 was directly confirmed; the bespoke 'SAM License' text, DINOv3 gated terms, Qwen3-VL/SigLIP2/OWLv2 checkpoint licenses, OpenCV 5.0, VideoMAE V2 weight-level license, InternVideo2, V-JEPA 2, and Norse/SpikingJelly/Tonic LICENSE files are al
+> 6. No coverage of financial blast-radius and abuse control for externally exposed, expensive deepsearch tools. The differentiator exposes paid Firecrawl + LLM-synthesis legs to external ecosystems via PATs (a table that does not yet exist) — a single external client can trigger runaway Firecrawl/token spend (cost-bomb/DoS). mcoCoin gating protects per-user dashboard flows, but external PAT clients ne
+> 
+> === MINOR GAPS (first 5) ===
+> - Claims-integrity/contradiction caveat: the differentiator markets 'Neuromorphic Sensing' and 'human essence two-tier (peripheral/foveated) perception', but the research is honest that for a sensor-less SaaS these are SOFTWARE-EMULATED principles (frame-differencing + synthetic events via v2e/OpenEB 
+> - Sandcastles was established materially as a PATTERN reference (3-surface parity triangle + skills-as-distribution plugin + OAuth remote MCP), but it is a short-form-VIDEO research SaaS, NOT a vision/CV reference tool — so it validates the productization pattern, not market DEMAND for vision-mcp's ac
+> - Indirect prompt-injection threat specific to scraped/multimodal vision content entering the mesh is unsourced — the mapping mentions sentinel-scanning but there is no research on adversarial-text-in-images or injection-via-scraped-pages patterns to ground the policy.
+> - Anthropic Claude API native video-input status was never checked (flagged in motion-analysis could_not_verify); relevant if vision-mcp handles video, since the research confirms OpenAI still has no native video input and Gemini is the only general API with it.
+> - Sandcastles open items that matter if copying its metering/distribution model: whether MCP/API calls consume the same credit pool as the web app (and per-tool rates), and the plugin Zip's internal structure — both could_not_verify.
+> ```
+
+## 🤖 Claude *(02:59:26)*
+
+
+## 🤖 Claude *(02:59:26)*
+
+Os 6 gaps críticos extraídos — e uma descoberta importante já consolidada da primeira rodada:
+
+**O recon do sandcastles.ai foi estabelecido materialmente:** é uma SaaS de *research de vídeo short-form*, **não** uma ferramenta de visão computacional. O diferencial deles que vale extrair é o **padrão de produtização**: triângulo de paridade em 3 superfícies (web app + remote MCP via OAuth + plugin/skills como distribuição). Ou seja — o nosso vision-mcp valida o *padrão* deles, mas o conteúdo (os 4 pilares de visão) é diferenciação nossa, de pé próprio.
+
+Os gaps que a rodada de agora está preenchendo (1-4) e os que irão para OTDs (5-6):
+1. 🔄 **Paisagem competitiva** — já existem MCP servers de visão/CV no registry público?
+2. 🔄 **LGPD/privacidade** — imagens de pessoas = dado biométrico/sensível; screenshots carregam PII.
+3. 🔄 **Unit economics do deepsearch** — pricing real do Firecrawl + custo por imagem de VLM, para calibrar mcoCoins no modelo 4×-floor.
+4. 🔄 **Receita implementável de OAuth 2.1** para remote MCP self-hosted (RFC 9728 + 8707 + PKCE) — o gitnexus interno é HTTP sem auth; expor externamente é net-new.
+5. ⏳ OTD — licenças de pesos self-host (minado de copyleft: só Ultralytics AGPL confirmada).
+6. ⏳ OTD — blast-radius financeiro/anti-abuso para clientes externos via PAT (cost-bomb em Firecrawl/tokens).
+
+Aguardando a síntese do blueprint — quando chegar, escrevo `docs/bok/vision-mcp/00-deepsearch-blueprint.md` e valido contra esses 6 pontos.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -1073,6 +1300,6 @@ You've hit your session limit · resets 11:40pm (America/Sao_Paulo)
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-10 - 7f56bfa3-b8ee-4915-b4c6-31b9694bde1b]]
-> * **Próxima Sessão**: [[2026-06-10 - Generate security BoK documentation suite]]
+> * **Sessão Anterior**: [[2026-06-10 - agent-af4b1636e0bff4513]]
+> * **Próxima Sessão**: [[2026-06-11 - agent-a7652bda1d51bb332]]
 %% --- TIMELINE END --- %%
