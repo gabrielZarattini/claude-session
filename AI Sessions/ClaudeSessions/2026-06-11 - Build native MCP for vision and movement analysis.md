@@ -1291,6 +1291,437 @@ Os gaps que a rodada de agora está preenchendo (1-4) e os que irão para OTDs (
 
 Aguardando a síntese do blueprint — quando chegar, escrevo `docs/bok/vision-mcp/00-deepsearch-blueprint.md` e valido contra esses 6 pontos.
 
+## 👤 User *(03:35:59)*
+
+<task-notification>
+<task-id>wn7i9ol5e</task-id>
+<tool-use-id>toolu_018LQBjSJArkEM2D4WXztSm9</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/wn7i9ol5e.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Deepsearch fundamentado p/ MCP nativo de visão (ref sandcastles.ai + CV/Motion/Neuromorphic/Peripheral) → blueprint-semente BoK" completed</summary>
+<result>{"markdown":"# 🧠 MCORCH Vision MCP — Percepção de Essência Humana\n\n**Blueprint DeepSearch · SEED / Fonte da Verdade para `/bok-scribe`**\n`docs/bok/vision-mcp/00-deepsearch-blueprint.md` · slug `vision-mcp` · v0.1.0 (2026-06-11)\n\n&gt; **Natureza deste documento.** Este é o artefato-semente (precedente: `docs/bok/security/00-deepsearch-blueprint.md`, que sedimentou a suíte Cyber-Sentinel de 4 docs). Ele NÃO é código nem especificação final — é a **Fonte da Verdade fundamentada em deepsearch** que destrava o **Closed-Loop Protocol** do MCORCH Master Execution Protocol (CLAUDE.md §1): com este blueprint consolidado e revisado, o Sovereign pode rodar `/bok-scribe vision-mcp` para gerar MRD → BRD → PRD → FRD → SDD. Nenhuma linha de código de `vision-mcp` deve ser escrita antes dessa suíte existir.\n&gt;\n&gt; **ORO triplet deste blueprint** — Operator: MCORCH Master Execution Agent (autoria do seed) · Reviewer: Sovereign (Gabriel) · Owner: Sovereign até v6.4.0 (blast radius = primeiro serviço tenant-facing fora do gateway Supabase + corpus de referências redistribuído).\n&gt;\n&gt; **Materialidade (Lei 1).** Toda afirmação externa carrega sua URL-fonte da pesquisa. Afirmações refutadas pela verificação adversarial NÃO aparecem como fato (usa-se a versão corrigida); afirmações não-verificáveis são marcadas como tal (`⚠️ não-verificado`). Referências de repositório foram materialmente confirmadas nesta sessão (`packages/gitnexus-core/src/mcp/server.ts`, `docker-compose.yml`, `docs/processes/mcoin-cost-calibration.md`, `docs/processes/edge-jwt-identity-verification.md`, `supabase/functions/_shared/sentinel.ts`, `supabase/migrations/20260603000000_marketing_hub_lead_core.sql`).\n\n---\n\n## 1. Sumário Executivo\n\n### O que é\n\nO **Vision MCP** é um servidor **Model Context Protocol nativo do MCORCH** que expõe uma camada de **percepção visual + deepsearch fundamentado** tanto para os agentes internos (Pantheon: engineer/scientist/artisan/marketing-growth) quanto para **ecossistemas externos** (Claude Desktop/Code, VS Code, ChatGPT/connector, Claude API), via um endpoint remoto **Streamable HTTP + OAuth 2.1**. Ele transforma imagem, vídeo, captura de tela e páginas web em (a) descrições/detecções/segmentações/OCR estruturados e (b) **referências de mercado consolidadas** extraídas por deepsearch e gravadas na Knowledge Mesh.\n\nA arquitetura de produto é desenhada sobre uma metáfora biológica defensável — a **\"Essência Humana\"**: uma periferia barata, always-on, inspirada em princípios neuromórficos emulados em software (detecção de mudança/saliência) que **dispara** uma análise foveal cara e profunda apenas quando há sinal — exatamente como a retina humana concentra ~5% de cones de alta acuidade em uma fóvea minúscula e usa ~95% de bastões para vigilância periférica de baixa resolução ([NCBI Webvision](https://www.ncbi.nlm.nih.gov/books/NBK554706/); [StatPearls Retina](https://www.ncbi.nlm.nih.gov/books/NBK545310/)).\n\n### Por que agora\n\n1. **A especificação MCP amadureceu.** A revisão corrente é **2025-11-25** (marcada \"Current\"), define exatamente dois transportes — stdio e **Streamable HTTP** (o antigo HTTP+SSE está deprecado) — e formaliza OAuth 2.1 com RFC 9728 Protected Resource Metadata para servidores remotos protegidos ([MCP Transports 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports); [MCP Authorization 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)). O Claude API MCP connector (`mcp-client-2025-11-20`) consome servidores remotos HTTPS com bearer token ([Claude MCP connector](https://platform.claude.com/docs/en/agents-and-tools/mcp-connector)).\n2. **O MCORCH já roda um servidor MCP in-house.** `mcorch_gitnexus` usa `StreamableHTTPServerTransport` em `127.0.0.1:3100` dentro do Sovereign Mesh hardened — confirmado materialmente em `packages/gitnexus-core/src/mcp/server.ts:16,97` e `docker-compose.yml:89-119`. O runtime recomendado é uma extensão de infraestrutura provada, não terreno novo.\n3. **Toda a cadeia de billing/tenancy/sentinel/mesh já existe** e é reutilizável (Seção 5).\n\n### O diferencial — sendo honesto sobre o que a recon do sandcastles.ai estabeleceu\n\nA recon do **sandcastles.ai** foi **materialmente verificada (alta confiança)** por probes diretos (curl, 2026-06-10/11), e **confirmada por re-probe adversarial independente**:\n\n- O MCP deles é **remoto, Streamable HTTP, OAuth-protegido** em `https://mcp.sandcastles.ai/`: `POST initialize` retorna `HTTP 401` com `WWW-Authenticate: Bearer ... resource_metadata=\"https://mcp.sandcastles.ai/.well-known/oauth-protected-resource\"` (RFC 9728), servido por \"Google Frontend\" ([probe + verdict confirmado](https://mcp.sandcastles.ai/)). O authorization server (`signin.sandcastles.ai`) anuncia DCR, PKCE S256, device-code e refresh tokens — o que faz \"cole 1 URL → login no browser → conectado\" funcionar com zero config ([metadata chain confirmada](https://signin.sandcastles.ai/.well-known/openid-configuration)).\n- O **diferencial de distribuição** (confirmado verbatim por render headless do doc oficial): eles não enviam só o servidor MCP — enviam um **\"Plugin Zip\" versionado** baixado de Settings → Connectors, que empacota o connector remoto (URL pré-preenchida) **+ um conjunto curado de Skills nomeadas** (slash-commands tipo `/analyze`, `/rules`) que envelopam as ferramentas cruas em workflows guiados ([setup doc confirmado](https://help.sandcastles.ai/mcp)). É um **triângulo de paridade de três superfícies** (UI web = REST API = MCP tools) + **skills-as-distribution**.\n\n**O que a recon NÃO estabeleceu (e portanto não é diferencial nosso):**\n\n- O provedor de auth é **inferido** como WorkOS AuthKit (path `/user_management/`, `client_id` ULID), **não declarado** — confiança média, citar como \"consistente com\", nunca como fato.\n- Receita ~$1.6M / 22.000 creators vem de **uma única fonte secundária (Medium)** — confiança baixa, usar como anedota no MRD, jamais como evidência de mercado ([Medium, não-verificado](https://anirudhchundawat.medium.com/how-1-6m-app-started-with-a-one-day-experiment-without-coding-a70ec0d31441)).\n- **Crucial:** sandcastles valida o **padrão de distribuição** (remote MCP + plugin + skills), **não o mercado de vision-deepsearch**. A varredura competitiva ao vivo do registry oficial (2026-06-11) provou que as duas metades do nosso \"diferencial\" já são servidas por incumbentes first-party:\n  - **Vision sobre MCP já está tomado:** `com.roboflow/roboflow-mcp` (v1.0.3, \"Roboflow Official\", hosted em `mcp.roboflow.com/mcp`) expõe ~70 ferramentas de CV e **já executa o mesmíssimo padrão \"remote MCP + Apps + Skills\"** ([registry probe](https://registry.modelcontextprotocol.io/v0/servers?search=roboflow&amp;limit=20); [llms.txt](https://mcp.roboflow.com/llms.txt)).\n  - **Deepsearch sobre MCP já está tomado:** `ai.exa/exa`, `io.github.firecrawl/firecrawl-mcp-server` (6.5k★, MIT, self-hostable) e `io.github.tavily-ai/tavily-mcp` têm demanda comprovada — npm downloads no último mês: firecrawl-mcp **376.976**, tavily-mcp **165.112**, exa-mcp-server **67.928** ([npm stats](https://api.npmjs.org/downloads/point/last-month/firecrawl-mcp)).\n\n**Logo, o diferencial defensável do Vision MCP se sustenta por mérito próprio em quatro eixos, não na cópia do sandcastles:**\n\n1. **O produto cruzado** — saída de visão **fundamentada/verificada por evidência de deepsearch** numa única superfície de ferramenta. Busca direta não encontrou nenhum servidor MCP combinando computer vision com agentes de deep-research (whitespace genuíno) — **mas ausência de competidor é também ausência de validação de demanda**: o MRD deve tratar isso como **hipótese a validar**, não mercado provado.\n2. **Soberania / self-host** vs o servidor hosted-only da Roboflow (cujo repo GitHub retorna 404 — provável closed-source) — deploy on-prem no Sovereign Mesh é uma cunha real.\n3. **Credencial per-tenant 
+... (truncated 81563 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/wn7i9ol5e.output)</result>
+<usage><agent_count>19</agent_count><subagent_tokens>1180281</subagent_tokens><tool_uses>197</tool_uses><duration_ms>2249533</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(03:36:15)*
+
+
+## 🤖 Claude *(03:36:16)*
+
+Síntese completa chegou. Extraindo o blueprint do resultado e materializando em `docs/bok/vision-mcp/`:
+
+## 🤖 Claude *(03:36:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json, os\nwith open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/tasks/wn7i9ol5e.output') as f:\n    d = json.load(f)\nres = d['result']\nmd = res['markdown']\nprint('stats:', json.dumps(res['stats']))\nprint('len(markdown):', len(md))\n# check for HTML-escape artifacts\nfor tok in ['&gt;','&lt;','&amp;']:\n    print(tok, '\u2192', md.count(tok))\nos.makedirs('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp', exist_ok=True)\nwith open('/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/00-deepsearch-blueprint.md','w') as f:\n    f.write(md)\nprint('written OK')\n\"\nls -la /home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/",
+  "description": "Extract blueprint markdown from workflow result and write to docs/bok/vision-mcp/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> stats: {"domains_completed": 6, "total_claims": 133, "total_references": 140, "refuted": 0, "confirmed": 36, "unverifiable": 0, "critical_gaps": 6, "gaps_filled": 4, "mapping_ok": true}
+> len(markdown): 61651
+> &gt; → 0
+> &lt; → 0
+> &amp; → 0
+> written OK
+> total 72
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 00:36 .
+> drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
+> -rw-rw-r--  1 ubuntu ubuntu 64223 Jun 11 00:36 00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(03:36:27)*
+
+
+## 🤖 Claude *(03:36:27)*
+
+
+## 🤖 Claude *(03:36:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE '^#{1,3} ' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -60 && echo '---WC---' && wc -l docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "description": "List blueprint section headers and line count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:# 🧠 MCORCH Vision MCP — Percepção de Essência Humana
+> 14:## 1. Sumário Executivo
+> 16:### O que é
+> 22:### Por que agora
+> 28:### O diferencial — sendo honesto sobre o que a recon do sandcastles.ai estabeleceu
+> 52:## 2. Os 4 Pilares
+> 56:### Pilar I — Computer Vision (CV)
+> 78:### Pilar II — Análise de Movimento (Motion)
+> 91:### Pilar III — Sensores Neuromórficos (Neuromorphic)
+> 105:### Pilar IV — Visão Periférica / Foveada (Peripheral/Foveated)
+> 118:## 3. Arquitetura "Essência Humana"
+> 120:### O design unificador: percepção em dois níveis
+> 162:### Como o deepsearch fundamentado alimenta a Knowledge Mesh
+> 168:## 4. Catálogo de Referências Consolidadas
+> 222:## 5. Arquitetura MCORCH-nativa
+> 226:### 5.1 Runtime recomendado — Container no Sovereign Mesh
+> 237:### 5.2 Auth — API Tenancy per-user (fail-closed)
+> 246:### 5.3 Billing — mcoCoins atômico (modelo 4×-floor)
+> 255:### 5.4 Mesh Connection Mandate
+> 259:### 5.5 Exposição externa — Streamable HTTP + OAuth 2.1
+> 270:## 6. Superfície MCP proposta
+> 274:### Tools (model-controlled — front-door para ecossistemas externos)
+> 291:### Resources (application-driven — progressive enhancement p/ hosts completos)
+> 301:### Prompts (user-controlled — workflows empacotados, estilo skills/slash)
+> 313:## 7. Riscos & FMEA-seed
+> 333:## 8. OTDs e Questões Abertas
+> 354:## 9. Fatiamento MVP
+> 358:### Fatia 0 — BoK Gate + SOP (pré-código, bloqueante)
+> 363:### Fatia 1 — Esqueleto MCP autenticado, read-only, internal-only
+> 368:### Fatia 2 — Tier 2 foveal billable + per-user creds + refund
+> 373:### Fatia 3 — Exposição externa: PAT + OAuth + Plugin + jobs async
+> 380:## 10. Apontadores para o BoK
+> 384:### MRD (01) — Market Requirements
+> 389:### BRD (02) — Business Requirements (`BR-VM-001..0xx`)
+> 392:### PRD (03) — Product Requirements
+> 395:### FRD (04) — Functional Requirements (`FR-VM-001..0xx`)
+> 398:### SDD (05) — Software Design
+> 402:### Data Model / Process Flow / Quality Metrics
+> ---WC---
+> 409 docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(03:36:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -cE 'OTD-VM|FM-VM|BR-VM|FR-VM' docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---'; grep -nE 'OTD-VM-[0-9]+' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -20; echo '---LGPD---'; grep -c -i 'LGPD' docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '---firecrawl pricing---'; grep -n -i 'firecrawl' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10",
+  "description": "Check OTD/traceability IDs and gap coverage in blueprint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 35
+> ---
+> 337:- **OTD-VM-001 — Validação de domínio da saliência (Tier 1).** DeepGaze IIE/III é treinado em imagens naturais; **sem evidência de transferência para screenshots/UIs/vídeo curto**; datasets de UI-saliency (UEyes/Imp1k/WebSaliency) nunca surgiram; se DeepGaze é SOTA em 2026 é não-verificado. **Maior buraco de risco técnico do diferencial.** Falta: alvo de recall + custo de falso-negativo do gate periférico. (Probe sugerido: UEyes CHI 2023, V*Bench, leaderboard MIT/Tübingen 2026.)
+> 338:- **OTD-VM-002 — Demanda do produto cruzado.** Nenhum competidor combina vision+deepsearch sobre MCP (whitespace), **mas zero evidência de demanda** foi coletada. O MRD deve tratar como hipótese a validar, não mercado provado.
+> 339:- **OTD-VM-003 — Long-running jobs sobre MCP para clients externos.** `tasks` é **experimental** em 2025-11-25; o Claude API connector consome só tools (sem tasks/elicitation/resources); **zero exemplos coletados** de como servidores remotos de produção entregam jobs de minutos (submit→job_id+poll, resource_link, SSE keep-alive, webhooks). Falta **matriz de capabilities por host** (Claude Desktop/Code, VS Code, ChatGPT, Claude API).
+> 340:- **OTD-VM-004 — Unit economics medido.** A calibração da Seção 6 é inicial; faltam: custo de inferência GPU por-tool medido (RTMPose/RF-DETR throughput não verificado independentemente); semântica de partial-delivery refund; tokenização exata de imagem GPT-5.x (estimada). SOP exige medição material antes do fix.
+> 341:- **OTD-VM-005 — DPAs/SCCs dos providers.** Opções zero-retention/no-training e prontidão de SCC ANPD dos DPAs de OpenAI/Google/OpenRouter para **inputs de imagem** não foram pesquisadas — auditar antes de o SDD nomear provider default.
+> 342:- **OTD-VM-006 — Licenças não-fetchadas que importam.** ⚠️ Texto da "SAM License" para distribuição comercial (field-of-use); termos exatos do gate HF de `facebook/sam3`/`dinov3`; ToS de leaderboards de benchmark quanto a redistribuição. Fetch dos LICENSE antes da tabela de dependências do SDD.
+> 343:- **OTD-VM-007 — Regulação biométrica ANPD 2026.** A tomada de subsídios fechou 02/07/2025; ANPD espera concluir regras em 2026; **nenhuma regra final publicada** verificada. Contribuições convergem: uso de biométrico para treinar IA exige consentimento específico + regras claras de deleção. Tratar o capítulo biométrico como alvo móvel com item de watch.
+> 344:- **OTD-VM-008 — Pose/gait sem identificação.** ANPD lista "modo de andar" como biométrico, mas **não há orientação** sobre se análise de movimento **não-identificadora** (ex: qualidade ergonômica) escapa do art. 11. Risco legal aberto pendente da regulação 2026.
+> 345:- **OTD-VM-009 — Notion/Medium ToS.** Cláusula exata de scraping da Notion não-fetchável (JS-rendered); a frase histórica de crawling da Medium **não confirmada** no texto vivo atual. Pinar wording na hora da implementação; não citar fontes scrapeadas via quotes secundários.
+> 346:- **OTD-VM-010 — Pin OpenCV & ARM64.** Decisão explícita 4.x-vs-5.0 (licença 5.0 não re-verificada); **faltam benchmarks aarch64** (ONNX/ncnn ARM) para o tier periférico no host Oracle ARM64 — todos os números CPU coletados são x86.
+> 347:- **OTD-VM-011 — Gemini 3.x segmentação.** A limitação "sem segmentation em Gemini 3 Pro/Flash" vem de snippet (a página apenas omite). Re-fetch antes de fixar a matriz de modelos.
+> 348:- **OTD-VM-012 — Sim-to-real screen-domain.** O argumento "gap se dissolve para SaaS de tela" é raciocínio, não evidência. Marcar como hipótese no SDD.
+> 349:- **OTD-VM-013 — Nginx vhost + Cloudflare SSE.** Criação de vhost exige root (sites-enabled root-only) + DNS Cloudflare; SSE por trás do Cloudflare precisa de buffering off + heartbeat (limite idle ~100s do free-tier em conexões longas de deepsearch).
+> 350:- **OTD-VM-014 — Sentinel L3 single-replica.** Token bucket per-process (`sentinel.ts:48-50`) nunca reseta no container long-lived (bom) mas é estado single-replica; scaling horizontal futuro precisa de rate limiter compartilhado antes de réplicas.
+> 386:- Diferenciais defensáveis: (i) produto cruzado vision+deepsearch (whitespace, **hipótese a validar** — OTD-VM-002), (ii) self-host soberano vs Roboflow hosted-only, (iii) credencial per-tenant + mcoCoins atômico, (iv) filosofia Essência Humana.
+> 396:- FR-VM-001 Transporte Streamable HTTP 2025-11-25 (Origin 403, MCP-Protocol-Version). FR-VM-002 Auth ES256 JWKS fail-closed + RFC 9728 PRM + OAuth 2.1. FR-VM-003 `mcp_access_tokens` (hash/scopes/RLS). FR-VM-004 Resolução de credencial per-user fail-closed (402 estruturado). FR-VM-005 Sentinel inbound + sobre texto extraído. FR-VM-006 Tools (Seção 6) com classes mcoCoin. FR-VM-007 Job semantics async + partial-delivery refund. FR-VM-008 Mesh Connection Mandate (observation node + content_mesh_asset + embed). FR-VM-009 `erase_vision_artifacts()` + retention clock. FR-VM-010 Tier-1 peripheral gate (alvo de recall — OTD-VM-001). FR-VM-011 Plugin Zip + skills distribution.
+> 399:- Runtime: container Sovereign Mesh (Seção 5.1), decisão pin OpenCV 4.x-vs-5.0 + benchmarks ARM64. Matriz de modelos (pista Apache default: SAM 2/RF-DETR/Qwen3-VL/OpenEB; SAM 3/DINOv3 só com propagação de licença documentada). Tabela de dependências com LICENSE fetchados (OTD-VM-006). Pipeline Essência Humana (Tier 1 emulação neuromórfica → trigger → Tier 2). Esquema `mcp_access_tokens`, `erase_vision_artifacts`, coluna `firecrawl_api_key`. Estratégia de version-pinning MCP + deprecation-watch (RC 2026-07-28 existe; registry em preview).
+> 400:- **FMEA (seed Seção 7 + OTDs Seção 8):** calcular RPN para FM-VM-01..13; promover OTD-VM-001..014 com SLA.
+> ---LGPD---
+> 6
+> ---firecrawl pricing---
+> 41:  - **Deepsearch sobre MCP já está tomado:** `ai.exa/exa`, `io.github.firecrawl/firecrawl-mcp-server` (6.5k★, MIT, self-hostable) e `io.github.tavily-ai/tavily-mcp` têm demanda comprovada — npm downloads no último mês: firecrawl-mcp **376.976**, tavily-mcp **165.112**, exa-mcp-server **67.928** ([npm stats](https://api.npmjs.org/downloads/point/last-month/firecrawl-mcp)).
+> 146:                          │  DEEPSEARCH GROUNDING (Firecrawl, per-user)            │
+> 215:| Firecrawl MCP (deepsearch) | (mercado) | product | consolidado | MIT | API / self-host CPU | https://github.com/firecrawl/firecrawl-mcp-server |
+> 242:- **Gap conhecido:** **não existe coluna `firecrawl_api_key`** em `user_api_keys` hoje (firecrawl só aparece em scripts QA com env key). Adicionar a coluna + UI Settings + fail-closed `firecrawl_not_configured` (padrão de 1 linha: migration `20260601060000_user_api_keys_apify_token.sql:12`; encryption pelo Vault trigger family).
+> 243:- **Anti-pattern proibido:** `Deno.env.get('FIRECRAWL_API_KEY')` em fluxo user-facing sem fallback per-user → exaustão de quota por um tenant, sem atribuição de receita, blast radius financeiro compartilhado.
+> 285:| `deepsearch.scrape` | Scrape de 1 URL pública (Firecrawl, logged-out) → markdown + provenance | inspect + robots.txt + login-wall block | **1** ($0.00083/página) |
+> 321:| FM-VM-05 | **Tenancy — firecrawl env key** | Shared `FIRECRAWL_API_KEY` em fluxo user-facing → exaustão de quota, sem atribuição de receita, blast radius compartilhado | Alta | Coluna `firecrawl_api_key` per-user + UI + 402 `firecrawl_not_configured` antes de exposição externa |
+> 369:- **Entrega:** `vision.describe_image` + `vision.ocr` + `deepsearch.scrape`; coluna `firecrawl_api_key` per-user + UI Settings; sentinel `inspectPrompt`; cobrança `deduct_mco_coins` + `refundMco`; `mesh.consolidate_reference` com PII-strip + provenance tag.
+> 370:- **Gate material:** run pago E2E com `agent_executions` ledger + delta de `mco_balance` por `SELECT`; `402` em saldo insuficiente (body literal); `402 firecrawl_not_configured` sem credencial; refund material em falha forçada (saldo restaurado por `SELECT`); `/security-review` SAFE na migration da coluna.
+> 385:- Categoria: content/perception-intelligence MCP; comps diretos **Roboflow MCP** (vision), **Exa/Firecrawl/Tavily MCP** (deepsearch) — posicionar contra eles, **não** reivindicar "vision sobre MCP" ou "deepsearch sobre MCP" como diferencial (ambos perdidos).
+> ```
+
+## 🤖 Claude *(03:36:50)*
+
+
+## 🤖 Claude *(03:36:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -8 docs/bok/vision-mcp/00-deepsearch-blueprint.md; echo '===FM==='; sed -n '313,332p' docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "description": "Sanity-check blueprint tail and FMEA-seed section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### Data Model / Process Flow / Quality Metrics
+> - Data model: `mcorch_nodes`/`mcorch_edges` (user+project), `mcp_access_tokens`, coluna `user_api_keys.firecrawl_api_key`, retention metadata em reference nodes.
+> - Process flow: o loop de dois níveis + grounding + consolidação na malha (Seção 3).
+> - Quality metrics (CMQ/OE): recall do gate periférico, margem mcoCoin por-tool ≥1× floor, taxa de refund, fail-closed coverage do auth, zero scraped-em-system-nodes.
+> 
+> ---
+> 
+> > **"MATE A POESIA. ENTREGUE ENGENHARIA."** — Selo do seed `vision-mcp` · próximo passo: `/bok-scribe vision-mcp` para sedimentar a Fonte da Verdade em MRD→BRD→PRD→FRD→SDD.
+> ===FM===
+> ## 7. Riscos & FMEA-seed
+> 
+> | # | Vetor | Modo de falha | Severidade | Mitigação (gate) |
+> |---|---|---|---|---|
+> | FM-VM-01 | **Security — superfície pública** | `mcp.mcorch.com` é o 1º serviço tenant-facing fora do gateway Supabase; bug fail-open = impersonação cross-tenant (a classe que o SOP ES256 corrigiu) | Crítica | JWKS-verify antes de confiar no `sub`; **fail-closed** se JWKS inalcançável; nunca expor `SB_SECRET_KEY` em path client-reachable |
+> | FM-VM-02 | **Prompt-injection (inbound)** | Args de tool hostis manipulam o agente | Alta | `_shared/sentinel.ts` `inspectPrompt` L1/L2/L3 nos args, antes de cobrar |
+> | FM-VM-03 | **Indirect prompt-injection (scraped)** | Conteúdo web hostil scrapeado vira nó da malha consumido por agentes internos (corpus Pantheon) — vetor de injeção **persistente** | Alta | Rodar sentinel L2 (`lexicalScore`/control-chars) sobre texto **extraído** antes do insert; tag de origem `scraped` no metadata p/ trust por proveniência |
+> | FM-VM-04 | **Image-borne injection** | Instruções do atacante renderizadas **dentro** da imagem/tela, lavadas via OCR/VLM para o loop do agente | Média-Alta | ⚠️ Não pesquisado a fundo — sentinel cobre texto; **estender SOP a outputs de vision-tool** (citar OWASP LLM01 / MCP tool-poisoning) |
+> | FM-VM-05 | **Tenancy — firecrawl env key** | Shared `FIRECRAWL_API_KEY` em fluxo user-facing → exaustão de quota, sem atribuição de receita, blast radius compartilhado | Alta | Coluna `firecrawl_api_key` per-user + UI + 402 `firecrawl_not_configured` antes de exposição externa |
+> | FM-VM-06 | **Billing — PAT leak** | Vazamento de PAT = dreno direto da carteira mcoCoins via tool calls billable | Crítica | `mcp_access_tokens` com hash SHA-256, scopes (sem gestão de credencial), `expires_at`/`revoked_at`, RLS default-deny, `/security-review` |
+> | FM-VM-07 | **Billing — job parcial** | Job de minutos que sucede parcialmente (5 de 12 páginas) tem semântica de refund ambígua | Média | Definir regra de **partial-delivery refund** no FRD antes do código; cobrança contra identidade verificada pelo container |
+> | FM-VM-08 | **Licensing — AGPL/bespoke** | Ultralytics AGPL servido em rede sem licença Enterprise = violação; SAM/DINOv3 propagam termos de redistribuição | Alta | SDD escolhe pista Apache (SAM 2, RF-DETR, Qwen3-VL, OpenEB); se SAM 3/DINOv3, importar atribuição + propagação + gated-distribution; fetch dos LICENSE files |
+> | FM-VM-09 | **LGPD — dado biométrico** | Faces/gait são **dado sensível** (LGPD art. 5º II); só consentimento específico-destacado (art. 11 I) ou lista fechada art. 11 II — **legítimo interesse NÃO se aplica**; ANPD lista "modo de andar" como biométrico | Crítica | Escopar vision **para detecção/descrição, NÃO geração de template/recognition/classificação** sem base art. 11 documentada; watch da regulação ANPD 2026 |
+> | FM-VM-10 | **LGPD — PII de terceiros / transferência internacional** | Screenshots/scraping capturam PII; envio a APIs US (OpenAI/Google/OpenRouter) é transferência internacional; **não há adequação p/ EUA** (só UE via Res. 32/2026) | Alta | PII-strip antes do insert; SCCs ANPD (Res. 19/2024) no DPA do provider, ou roteamento p/ território adequado, ou consentimento art. 33 VIII destacado |
+> | FM-VM-11 | **LGPD/IP — erasure & corpus** | Nós persistentes/embeddados/bridgeados p/ memória OpenClaw sem path de apagamento; precedente hiQ×LinkedIn alcançou o **corpus derivado** ($500k + deleção) | Alta | RPC `erase_vision_artifacts(content_ref)` espelhando `erase_lead()` (cascade: nó + edges + embedding + frames Storage + cópias provider); retention clock (art. 16); allowlist de fontes permissivas (Wikipedia/PLOS/Frontiers/SEC EDGAR/IPFS); honrar robots.txt + CDSM Art. 4 opt-out |
+> | FM-VM-12 | **Custo — cold start** | Inferência GPU sub-segundo a 1 mco só fecha com container **warm**; cold start (10–60s) estoura o budget | Média | Keep-warm ou batch semantics; medir $ real antes de fixar mco |
+> | FM-VM-13 | **Process — BoK gate** | Código escrito sem `docs/bok/vision-mcp/{01-mrd..05-sdd}` viola Closed-Loop Protocol; sem BR/FR IDs não há traceabilidade de mesh-mandate | Bloqueante | `/bok-scribe vision-mcp` antes de qualquer código; Lei 2 — SOP `docs/processes/vision-mcp-*.md` antes da automação |
+> 
+> ---
+> ```
+
+## 🤖 Claude *(03:37:07)*
+
+
+## 🤖 Claude *(03:37:07)*
+
+
+## 🤖 Claude *(03:37:09)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "docs/bok/vision-mcp/00-deepsearch-blueprint.md"
+  ],
+  "caption": "Blueprint-semente do Vision MCP \u2014 19 agentes, 140 refer\u00eancias, verifica\u00e7\u00e3o adversarial. Pronto para revis\u00e3o antes do /bok-scribe.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(03:37:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md",
+  "content": "---\nname: project_vision_mcp\ndescription: Vision MCP (slug vision-mcp) \u2014 MCP server nativo de vis\u00e3o+deepsearch; blueprint-semente selado 2026-06-11, BoK gate ABERTO (aguarda /bok-scribe)\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-06-10: MCP Interno nativo (ref. sandcastles.ai) com deepsearch fundamentado em Computer Vision, An\u00e1lise de Movimento, Sensores Neurom\u00f3rficos e Vis\u00e3o Perif\u00e9rica (\"ess\u00eancia humana\"), consum\u00edvel por agentes internos E ecossistemas externos.\n\n**Estado:** `docs/bok/vision-mcp/00-deepsearch-blueprint.md` escrito 2026-06-11 (workflow ultracode 19 agentes \u00b7 140 refs \u00b7 36 claims confirmadas/0 refutadas \u00b7 6 gaps cr\u00edticos \u2192 4 preenchidos + OTD-VM-001..014). **NENHUM c\u00f3digo antes do `/bok-scribe vision-mcp`** (FM-VM-13 bloqueante).\n\n**Achados n\u00e3o-\u00f3bvios:**\n- sandcastles.ai = SaaS de research de **v\u00eddeo short-form**, N\u00c3O ferramenta de CV. O que vale extrair \u00e9 o padr\u00e3o de produtiza\u00e7\u00e3o: remote MCP (Streamable HTTP + OAuth 2.1/RFC 9728) + Plugin Zip + skills-as-distribution + paridade 3 superf\u00edcies.\n- \"Vision sobre MCP\" j\u00e1 \u00e9 da Roboflow (com.roboflow/roboflow-mcp, ~70 tools, hosted-only) e \"deepsearch sobre MCP\" j\u00e1 \u00e9 de Exa/Firecrawl/Tavily (376k downloads/m\u00eas firecrawl-mcp). Diferencial nosso = o **produto cruzado** vision\u00d7deepsearch (whitespace, demanda N\u00c3O validada \u2014 OTD-VM-002) + self-host soberano + credencial per-tenant + arquitetura 2 tiers (periferia neurom\u00f3rfica emulada em software \u2192 trigger \u2192 an\u00e1lise foveal billable).\n- Runtime recomendado: container no Sovereign Mesh (precedente direto `mcorch_gitnexus` StreamableHTTPServerTransport 127.0.0.1:3100) atr\u00e1s de nginx `mcp.mcorch.com`; Edge Function descartada (timeout \u2014 mesma li\u00e7\u00e3o do orchestrate async). Auth ES256 JWKS (SOP [[edge-jwt-identity-verification|edge-jwt-identity-verification]]). Sentinel tamb\u00e9m sobre texto **scrapeado** (inje\u00e7\u00e3o indireta persistente na malha \u2014 FM-VM-03).\n- LGPD: faces/gait = dado biom\u00e9trico sens\u00edvel (art. 11; leg\u00edtimo interesse N\u00c3O aplica); regula\u00e7\u00e3o ANPD esperada em 2026; `erase_vision_artifacts()` espelhando `erase_lead()`.\n\nRelacionados: [[reference_supabase_keys_migrated]] \u00b7 [[project_marketing_hub_v2]]\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:37:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Core-Fable \u2014 rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md) \u2014 ex-Core-v2; regras do shader (capturado=preto, sem glow artificial) e do billing (chat localStorage \u2260 pref pipeline)",
+  "new_string": "# Memory Index\n\n- [Vision MCP \u2014 blueprint selado, BoK gate aberto](project_vision_mcp.md) \u2014 2026-06-11: MCP nativo vision\u00d7deepsearch (4 pilares \"ess\u00eancia humana\"); sandcastles=padr\u00e3o n\u00e3o conte\u00fado; Roboflow/Firecrawl j\u00e1 donos das metades; runtime=container mesh (precedente gitnexus); aguarda /bok-scribe vision-mcp\n- [Core-Fable \u2014 rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md) \u2014 ex-Core-v2; regras do shader (capturado=preto, sem glow artificial) e do billing (chat localStorage \u2260 pref pipeline)"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:37:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Core-Fable — rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md) — ex-Core-v2; regras do shader (capturado=preto, sem glow artificial) e do billing (chat localStorage ≠ pref pipeline)
+> 4	- [E2E de UI logada à prova de Cloudflare — preview local do dist + injeção de sessão](reference_loggedin_e2e_local_preview.md) — 2026-06-09: CF Turnstile bloqueia agent-browser do datacenter até no login.mcorch.com (não só portal ML); magic-link dá otp_expired no challenge. Receita: `vite preview` do dist + `scripts/qa/gen-user-session.ts` (generateLink→verifyOtp) injetado no localStorage `sb-<ref>-auth-token`. Drag HTML5 = DragEvent sintético via eval; provar persistência pelo DB (PATCH 200+SELECT), NUNCA pelo DOM (otimista/stale engana).
+> 5	- [Auditoria de drift deployado↔migrations + tool/SOP reexecutável](project_schema_drift_audit.md) — 2026-06-03: varredura pós-flywheel (RPC hotfixada sem migration). Incidente ISOLADO; 1 drift real benigno (`rls_auto_enable` capturado) + search_path travado + trigger pg_net morto dropado. Anticorpo `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 1=drift) + SOP. Regra: hotfix de prod vira migration na MESMA sessão.
+> ```
+
+## 🤖 Claude *(03:37:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Core-Fable \u2014 rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md)",
+  "new_string": "# Memory Index\n\n- [Vision MCP \u2014 blueprint selado, BoK gate aberto](project_vision_mcp.md) \u2014 2026-06-11: MCP nativo vision\u00d7deepsearch (4 pilares \"ess\u00eancia humana\"); sandcastles valida o padr\u00e3o (remote MCP+OAuth+plugin/skills), n\u00e3o o conte\u00fado; Roboflow/Firecrawl-Exa-Tavily j\u00e1 donos das metades isoladas; runtime=container Sovereign Mesh (precedente gitnexus); aguarda /bok-scribe vision-mcp\n- [Core-Fable \u2014 rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:16)*
+
+
+## 🤖 Claude *(03:38:16)*
+
+═══════════════════════════════════════════════════════════
+
+## ✅ Deepsearch selado — `docs/bok/vision-mcp/00-deepsearch-blueprint.md` (409 linhas, 10 seções)
+
+**Prova material:** workflow ultracode em 2 rodadas (a 1ª esbarrou no limite de sessão da conta às 23:40; retomada com cache — os 13 agentes de pesquisa não re-rodaram). Total: **19 agentes · 140 referências com URL · 133 claims (36 confirmadas por fact-checkers adversariais independentes, 0 refutadas) · 6 gaps críticos → 4 preenchidos com pesquisa viva + todos rastreados em OTD-VM-001..014**. Arquivo em disco: 64.223 bytes (`ls` verificado). Enviado para sua revisão acima.
+
+### Os 3 vereditos que mudam o jogo
+
+**1. O sandcastles.ai foi estabelecido materialmente — e não é o que parecia.** É uma SaaS de research de *vídeo short-form*, não de visão computacional. O diferencial real deles (confirmado por probe direto: `mcp.sandcastles.ai` responde 401 com RFC 9728, OAuth com PKCE/DCR) é o **padrão de produtização**: remote MCP "cole 1 URL → login → conectado" + Plugin Zip versionado com skills curadas (`/analyze`, `/rules`) + paridade web/API/MCP. **É esse padrão que extraímos** — o conteúdo dos 4 pilares é diferenciação nossa.
+
+**2. Reality check competitivo (gap que o critic forçou):** "vision sobre MCP" já é da **Roboflow** (servidor oficial, ~70 tools, hosted-only) e "deepsearch sobre MCP" já é de **Exa/Firecrawl/Tavily** (firecrawl-mcp: 377k downloads/mês). Nosso diferencial defensável é o **produto cruzado** — visão *fundamentada por evidência de deepsearch* numa única superfície (whitespace genuíno no registry, mas demanda **não validada** → OTD-VM-002, hipótese para o MRD) — mais self-host soberano, credencial per-tenant e a arquitetura "Essência Humana": **Tier 1 periférico** barato always-on (princípios neuromórficos emulados em software — eventos sintéticos via frame-differencing, honesto: sem hardware DVS) que **dispara o Tier 2 foveal** billable (VLM/SAM/OCR profundo).
+
+**3. Integração MCORCH-nativa já mapeada no repo:** container no Sovereign Mesh (`mcorch_vision_mcp`) — precedente direto do `mcorch_gitnexus`, que já roda `StreamableHTTPServerTransport` em `127.0.0.1:3100` — atrás de nginx `mcp.mcorch.com`. Edge Function foi **descartada** pela mesma lição do orchestrate async (timeout em jobs de minutos). Auth ES256 JWKS fail-closed (SOP existente), billing `deduct_mco_coins` + `refundMco` + classes 4×-floor por tool, sentinel nos args **e no texto scrapeado** (injeção indireta persistente na malha — FM-VM-03), Mesh Mandate com cada referência consolidada virando nó embedado.
+
+### O que está aberto (honestidade Lei 1)
+14 OTDs no blueprint — os mais pesados: saliência em screenshots/UI não tem evidência de transferência (OTD-VM-001, maior risco técnico), licenças de pesos self-host não-fetchadas (minado AGPL/gated — OTD-VM-006), regulação biométrica ANPD esperada para 2026 (OTD-VM-007), e anti-abuso financeiro para PATs externos (FM-VM-06, cost-bomb).
+
+---
+
+> **Gate do Master Protocol:** antes de codificar este módulo, preciso garantir que a família BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/vision-mcp/`. O blueprint-semente está pronto e revisável. **Posso acionar `/bok-scribe vision-mcp` agora para selar a Fonte da Verdade?**
+
+O blueprint está em disco mas **não commitado** (commito no seu GO ou no `/handoff`, junto com o fatiamento MVP de 4 slices que já está na Seção 9).
+
+## 👤 User *(03:54:55)*
+
+ótimo muito bom memso, mas acho que vale acrescentar.: Computação Cognitiva, Computação Neuromórfica, Tecnologia Assistiva ou ja temos isso no blueprint?
+
+## 🤖 Claude *(03:55:52)*
+
+Boa pergunta — deixa eu verificar **materialmente** no blueprint o que já está coberto antes de responder (Lei 1):
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo '=== Computa\u00e7\u00e3o Cognitiva / cognitive ===' && grep -n -i -E 'cognitiv' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10; echo; echo '=== Computa\u00e7\u00e3o Neurom\u00f3rfica (processadores/SNN) ===' && grep -n -i -E 'loihi|akida|spinnaker|SNN|spiking|neurom\u00f3rfic[oa] (comput|process)|computa\u00e7\u00e3o neurom\u00f3rfica' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -15; echo; echo '=== Tecnologia Assistiva / acessibilidade ===' && grep -n -i -E 'assistiv|acessibilid|accessib|be my eyes|seeing ai|alt-text|leitor de tela|screen reader|baixa vis\u00e3o|low.vision|LBI|13\\.146' docs/bok/vision-mcp/00-deepsearch-blueprint.md | head -10",
+  "description": "Grep blueprint for cognitive computing, neuromorphic computing, assistive tech coverage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Computação Cognitiva / cognitive ===
+> 
+> === Computação Neuromórfica (processadores/SNN) ===
+> 97:| **Intel arquivou TODO o framework Lava em 2026-05-13** — sem manutenção. Loihi 2/Hala Point é research-only (INRC). | ✅ Confirmado — **diretiva de engenharia: NÃO adotar Lava em 2026.** | [github.com/lava-nc/lava](https://github.com/lava-nc/lava) |
+> 98:| **BrainChip Akida Cloud** (ago/2025): inferência neuromórfica como serviço cloud (free tier + usage-based) — **o único processador neuromórfico consumível como API sem hardware**. | ✅ Confirmado. AKD1500 só atinge volume Q3'26. | [Akida Cloud](https://brainchip.com/brainchip-launches-akida-cloud-for-instant-access-to-latest-akida-neuromorphic-technology/) |
+> 99:| **Os PRINCÍPIOS neuromórficos são software-emuláveis** sobre vídeo/screenshots: **v2e** (MIT) converte vídeo em event streams DVS realistas; **rpg_vid2e/ESIM** (GPL-3.0) idem; **OpenEB/Metavision** (Apache-2.0) traz simulador Video-to-Event de primeira classe; **CARLA** tem sensor DVS embutido. Stack SNN completo é PyTorch puro: **snnTorch** (MIT), Norse, SpikingJelly, Tonic. | ✅ Confirmado — a própria Prophesee trata síntese frame→evento como ferramenta de produção. | [v2e](https://github.com/SensorsINI/v2e) · [OpenEB](https://github.com/prophesee-ai/openeb) · [snnTorch](https://github.com/jeshraghian/snntorch) |
+> 103:**Receita pragmática 2026 para SaaS sem sensor:** síntese de eventos estilo OpenEB/v2e (ou frame-differencing log-intensity barato) → representações voxel-grid/time-surface → modelos GPU convencionais ou SNNs snnTorch/SpikingJelly, com Akida Cloud opcional se inferência neuromórfica genuína for desejada.
+> 197:| BrainChip Akida Cloud | Neuromorphic | API | emergente | comercial (free+usage) | API | https://brainchip.com/brainchip-launches-akida-cloud-for-instant-access-to-latest-akida-neuromorphic-technology/ |
+> 201:| snnTorch | Neuromorphic | library | produção | MIT | self-host CPU/GPU | https://github.com/jeshraghian/snntorch |
+> 
+> === Tecnologia Assistiva / acessibilidade ===
+> ```
+
+## 🤖 Claude *(03:56:41)*
+
+
+## 🤖 Claude *(03:56:41)*
+
+
+## 🤖 Claude *(03:57:34)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'vision-mcp-amendment-cognitive-assistive',\n  description: 'Amplia o blueprint vision-mcp: Computa\u00e7\u00e3o Cognitiva + Tecnologia Assistiva (deepsearch + verify + merge v0.2.0)',\n  phases: [\n    { title: 'Pesquisa', detail: 'computa\u00e7\u00e3o cognitiva + tecnologia assistiva' },\n    { title: 'Verifica\u00e7\u00e3o', detail: 'adversarial verify das claims' },\n    { title: 'S\u00edntese', detail: 'blueprint v0.2.0 completo (merge sem perda)' },\n  ],\n}\n\nconst FINDINGS = {\n  type: 'object',\n  required: ['summary', 'claims', 'references'],\n  properties: {\n    summary: { type: 'string' },\n    claims: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'source', 'confidence'],\n        properties: {\n          claim: { type: 'string' },\n          source: { type: 'string' },\n          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n          why_it_matters: { type: 'string' },\n        },\n      },\n    },\n    references: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['name', 'url', 'type'],\n        properties: {\n          name: { type: 'string' },\n          url: { type: 'string' },\n          type: { type: 'string' },\n          maturity: { type: 'string' },\n          license: { type: 'string' },\n          how_to_consume: { type: 'string' },\n        },\n      },\n    },\n    could_not_verify: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst VERDICTS = {\n  type: 'object',\n  required: ['verdicts'],\n  properties: {\n    verdicts: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'verdict', 'evidence'],\n        properties: {\n          claim: { type: 'string' },\n          verdict: { type: 'string', enum: ['confirmed', 'refuted', 'unverifiable'] },\n          evidence: { type: 'string' },\n          corrected: { type: 'string' },\n        },\n      },\n    },\n  },\n}\n\nconst COMMON_RULES = `\nHARD MATERIALITY RULES (MCORCH Law 1): every claim must cite the URL you actually consulted (WebSearch/WebFetch). If a fact cannot be established from a fetched source, put it in could_not_verify or mark confidence 'low' \u2014 NEVER invent product names, versions, user counts, laws or URLs. Verify names/laws actually exist via search; do not rely on memory alone. Current date: 2026-06-11. Final output is raw structured data for a machine pipeline.`\n\nconst TASKS = [\n  {\n    key: 'cognitive-computing',\n    prompt: `Deepsearch: COGNITIVE COMPUTING as an engineering paradigm for agentic AI systems (as of 2026) \u2014 what is consolidated vs legacy-marketing vs research.\nCover:\n(a) The term's history and current standing: IBM Watson-era \"cognitive computing\" (is the term alive or deprecated in industry?), vs the modern reincarnation in AGENTIC architectures.\n(b) Classic cognitive architectures and their 2026 status: ACT-R, SOAR, Global Workspace Theory (GWT) \u2014 including any modern GWT-for-AI work; predictive processing / active inference (Friston, Verses AI / Genius platform \u2014 verify current status).\n(c) The modern consolidated bridge: cognitive architectures for LLM agents \u2014 the CoALA paper (Cognitive Architectures for Language Agents, Sumers/Yao et al.) and successors; memory taxonomies for agents (working memory = context window, episodic, semantic/long-term via vector+graph stores \u2014 note GraphRAG); perception\u2192attention\u2192memory\u2192reasoning\u2192action loops in production agent frameworks.\n(d) What of this is actionable for a perception layer (vision MCP server) inside an ecosystem that ALREADY has: a knowledge graph + pgvector memory (GraphRAG mesh), LLM agents, and a planned two-tier (peripheral/foveal) vision pipeline. Which cognitive-computing concepts give the architecture defensible grounding vs which are marketing fluff.\nReturn findings + references with maturity.${COMMON_RULES}`,\n  },\n  {\n    key: 'assistive-technology',\n    prompt: `Deepsearch: vision-based ASSISTIVE TECHNOLOGY (Tecnologia Assistiva) \u2014 market, products, standards, and law (as of 2026). This research has a dual goal: (1) DEMAND EVIDENCE for AI vision-description services; (2) a product/compliance vertical for a vision MCP server.\nCover:\n(a) Products proving demand: Be My Eyes / Be My AI (user numbers, the GPT-4V partnership and current model), Microsoft Seeing AI, Envision (glasses/app), OrCam, Aira, Google Lookout \u2014 current status, user counts where sourced, pricing.\n(b) Alt-text / image-description at scale: how platforms auto-generate alt text, WCAG 2.2 requirements for non-text content, the European Accessibility Act (EAA \u2014 enforcement since June 2025: who must comply), and BRAZIL specifically: LBI Lei 13.146/2015 (Lei Brasileira de Inclus\u00e3o) \u2014 what it requires for digital accessibility, eMAG/ABNT NBR 17225 (verify this norm exists \u2014 Brazilian digital accessibility norm 2025?), enforcement reality.\n(c) The technical surface: screen-description for screen-reader users, document/scene OCR for blind users, audio description of video, sign-language tech status (honest maturity).\n(d) Synthesize: does assistive tech VALIDATE demand for a vision+description MCP service (numbers/sources), and what specific MCP tools would serve it (alt_text generation, screen description, document reading)? Any ethical/safety duty-of-care specifics for users who depend on descriptions (wrong description = real-world harm \u2014 find sourced discussion, e.g. Be My AI disclaimers).\nReturn findings + references with maturity.${COMMON_RULES}`,\n  },\n]\n\nlog('Amendment deepsearch: 2 frentes novas (cognitiva + assistiva) com verify adversarial em pipeline')\n\nconst domainResults = await pipeline(\n  TASKS,\n  (t) => agent(t.prompt, { label: `research:${t.key}`, phase: 'Pesquisa', schema: FINDINGS }),\n  (findings, t) => {\n    if (!findings) return null\n    const top = (findings.claims || []).slice(0, 6)\n    if (!top.length) return { key: t.key, findings, verdicts: [] }\n    return agent(\n      `You are an ADVERSARIAL fact-checker. For each claim below, try to REFUTE it using independent web searches (WebSearch/WebFetch) \u2014 do not reuse the original source as confirmation. Verdict 'confirmed' only with independent evidence; 'refuted' if contradicted (provide corrected fact); 'unverifiable' otherwise. Current date: 2026-06-11. Claims (domain: ${t.key}):\\n${JSON.stringify(top, null, 2)}`,\n      { label: `verify:${t.key}`, phase: 'Verifica\u00e7\u00e3o', schema: VERDICTS },\n    ).then((v) => ({ key: t.key, findings, verdicts: v ? v.verdicts : [] }))\n  },\n)\n\nconst domains = (domainResults || []).filter(Boolean)\nlog(`Pesquisa conclu\u00edda: ${domains.length}/2 dom\u00ednios`)\n\nconst synthesis = await agent(\n  `You are the blueprint amendment author for the MCORCH ecosystem. FIRST: Read the file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/00-deepsearch-blueprint.md (the current v0.1.0 seed blueprint, ~409 lines, 10 sections, in PT-BR). THEN produce the COMPLETE updated document v0.2.0 integrating two new research domains. Directive from the Sovereign (2026-06-11): \"vale acrescentar: Computa\u00e7\u00e3o Cognitiva, Computa\u00e7\u00e3o Neurom\u00f3rfica, Tecnologia Assistiva\" \u2014 material grep showed Computa\u00e7\u00e3o Neurom\u00f3rfica (processors/SNN) is ALREADY covered inside Pilar III; Computa\u00e7\u00e3o Cognitiva and Tecnologia Assistiva are absent.\n\nINTEGRATION REQUIREMENTS:\n1. PRESERVE every existing section, table row, OTD, FM and URL of v0.1.0 \u2014 this is a merge, not a rewrite. Do not drop, renumber or paraphrase existing content except where an amendment explicitly extends it. Existing OTD-VM-001..014 and FM-VM-01..13 keep their IDs.\n2. Header: bump to v0.2.0 (2026-06-11) and add a 1-line changelog note under the version line (\"v0.2.0 \u2014 adiciona Pilar V Computa\u00e7\u00e3o Cognitiva + vertical Tecnologia Assistiva; Computa\u00e7\u00e3o Neurom\u00f3rfica confirmada j\u00e1 coberta no Pilar III\").\n3. Se\u00e7\u00e3o 2: add \"### Pilar V \u2014 Computa\u00e7\u00e3o Cognitiva\" following the same format as the other pillars (claims table with verdicts + receita pragm\u00e1tica). In Pilar III, adjust the heading to \"### Pilar III \u2014 Sensores & Computa\u00e7\u00e3o Neurom\u00f3rfica (Neuromorphic)\" and add one sentence noting the pillar covers sensing AND computing (processors/SNN/emulation) \u2014 nothing else changes there.\n4. Se\u00e7\u00e3o 3 (Arquitetura Ess\u00eancia Humana): extend with the cognitive-loop framing \u2014 the two-tier perception is the perception organ of a cognitive architecture MCORCH already mostly has: perception (vision-mcp) \u2192 attention (Tier 1 peripheral gate) \u2192 memory (Knowledge Mesh GraphRAG = semantic/long-term; context = working memory) \u2192 reasoning/action (Pantheon agents). Ground it in the CoALA-style references from the research (only if sourced).\n5. NEW section \"Tecnologia Assistiva \u2014 vertical de aplica\u00e7\u00e3o e evid\u00eancia de demanda\" (place it after Se\u00e7\u00e3o 4 catalog or as subsection of the executive summary's differentiator \u2014 author's choice, keep numbering coherent): demand evidence with sourced numbers, WCAG/EAA/LBI-13.146 + Brazilian norms regulatory angle, what MCP tools serve it, and the duty-of-care risk (wrong description = real-world harm for dependent users).\n6. Se\u00e7\u00e3o 4 catalog: append new rows (pilar \"Cognitive\" / \"Assistive\") \u2014 only references with real URLs from the research below.\n7. Se\u00e7\u00e3o 6 (Superf\u00edcie MCP): add assistive-oriented tools if justified (e.g. vision.alt_text, vision.describe_screen) with sentinel gates + mcoCoin class consistent with the existing 4x-floor classes.\n8. Se\u00e7\u00e3o 7: add FM-VM-14+ for new risks (at minimum the assistive duty-of-care/accuracy risk; cognitive-washing/marketing-fluff risk if research supports it).\n9. Se\u00e7\u00e3o 8: AMEND OTD-VM-002 (demand validation) with the assistive demand evidence if the research supports it (state clearly how it changes the hypothesis); add new OTDs for anything the new research left unverified (could_not_verify items that matter).\n10. Se\u00e7\u00e3o 10 (Apontadores BoK): extend MRD verticals (assistive) + SDD (cognitive loop) + FRD hints (FR-VM-012+ for new tools).\n11. Materiality: refuted claims must NOT appear as facts (use corrected version); unverifiable flagged \u26a0\ufe0f; every external claim carries its source URL; PT-BR with technical terms in English.\nResearch results (JSON): ${JSON.stringify(domains)}\nReturn { markdown } \u2014 the COMPLETE v0.2.0 document (it must be a superset of v0.1.0).`,\n  {\n    label: 'blueprint-v0.2.0-merge',\n    phase: 'S\u00edntese',\n    schema: {\n      type: 'object',\n      required: ['markdown'],\n      properties: { markdown: { type: 'string' } },\n    },\n  },\n)\n\nconst stats = {\n  domains_completed: domains.length,\n  total_claims: domains.reduce((a, d) => a + (d.findings.claims || []).length, 0),\n  total_references: domains.reduce((a, d) => a + (d.findings.references || []).length, 0),\n  refuted: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'refuted').length, 0),\n  confirmed: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'confirmed').length, 0),\n  unverifiable: domains.reduce((a, d) => a + (d.verdicts || []).filter((v) => v.verdict === 'unverifiable').length, 0),\n}\nlog(`S\u00edntese v0.2.0 pronta \u00b7 refs novas ${stats.total_references} \u00b7 claims ${stats.total_claims} (\u2714${stats.confirmed} \u2716${stats.refuted} ?${stats.unverifiable})`)\n\nreturn { markdown: synthesis ? synthesis.markdown : null, stats }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wbg690w90
+> Summary: Amplia o blueprint vision-mcp: Computação Cognitiva + Tecnologia Assistiva (deepsearch + verify + merge v0.2.0)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/subagents/workflows/wf_fc4228bc-7f7
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js"} to iterate without resending the script.)
+> Run ID: wf_fc4228bc-7f7
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01011bef-690d-4105-a4da-14cdfdfea18a/workflows/scripts/vision-mcp-amendment-cognitive-assistive-wf_fc4228bc-7f7.js", resumeFromRunId: "wf_fc4228bc-7f7"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(03:57:44)*
+
+
+## 🤖 Claude *(03:57:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cp docs/bok/vision-mcp/00-deepsearch-blueprint.md /tmp/blueprint-v0.1.0-backup.md && md5sum /tmp/blueprint-v0.1.0-backup.md docs/bok/vision-mcp/00-deepsearch-blueprint.md",
+  "description": "Backup v0.1.0 blueprint before merge (file is untracked, no git safety net)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9fd317f9bbebac84e38eaaabc489d1af  /tmp/blueprint-v0.1.0-backup.md
+> 9fd317f9bbebac84e38eaaabc489d1af  docs/bok/vision-mcp/00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(03:58:04)*
+
+Workflow `vision-mcp-amendment` rodando (run `wf_fc4228bc-7f7`) — e o v0.1.0 está com backup (`md5 9fd317f9…`, o arquivo ainda não foi commitado, então criei a rede de segurança antes do merge).
+
+**O desenho da extensão:**
+
+1. **Pesquisa "Computação Cognitiva"** — do termo IBM Watson-era ao renascimento agentic: ACT-R/SOAR/Global Workspace Theory, predictive processing/active inference (status atual do Verses AI), e a ponte consolidada **CoALA** (Cognitive Architectures for Language Agents) — com a pergunta-chave: o que disso dá fundamento defensável à arquitetura, e o que é marketing fluff (o verify adversarial vai separar).
+
+2. **Pesquisa "Tecnologia Assistiva"** — evidência de demanda com números sourçados (Be My AI/Seeing AI/Envision/OrCam), o ângulo regulatório triplo (**WCAG 2.2 + European Accessibility Act em vigor + LBI 13.146/2015** e a norma ABNT brasileira de acessibilidade digital, a verificar), as ferramentas MCP que esse vertical pediria (`vision.alt_text`, `vision.describe_screen`), e o risco de **duty-of-care** (descrição errada para quem depende dela = dano no mundo real → novo FM-VM).
+
+3. **Merge v0.2.0** — o agente de síntese lê o blueprint atual e devolve o documento completo como **superset** (regra dura: zero perda de conteúdo/IDs existentes), com: Pilar V novo, Pilar III renomeado para "Sensores **& Computação** Neuromórfica" (o conteúdo já estava lá), a Seção 3 ganhando o loop cognitivo (percepção→atenção→memória[=Mesh]→raciocínio[=Pantheon]), catálogo/tools/FMEA/OTDs estendidos e a **OTD-VM-002 emendada** com a evidência de demanda assistiva.
+
+Quando chegar, valido o merge materialmente (diff contra o backup: nenhum header/OTD/FM sumido) antes de gravar.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
