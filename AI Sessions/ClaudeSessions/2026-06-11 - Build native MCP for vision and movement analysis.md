@@ -3326,6 +3326,139 @@ Ato 3 selado em disco enquanto a suíte gera. Estado consolidado do turno até a
 
 You've hit your session limit · resets 2:50pm (America/Sao_Paulo)
 
+## 👤 User *(18:11:39)*
+
+continue
+
+## 🤖 Claude *(18:12:06)*
+
+
+## 🤖 Claude *(18:12:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "date '+%H:%M %Z'; echo '---'; ls -la docs/bok/vision-mcp/ && wc -l docs/bok/vision-mcp/*.md",
+  "description": "Check time vs 14:50 reset and which BoK docs landed on disk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 15:12 -03
+> ---
+> total 252
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 11 11:51 .
+> drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
+> -rw-rw-r--  1 ubuntu ubuntu 98233 Jun 11 10:52 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> -rw-rw-r--  1 ubuntu ubuntu 33673 Jun 11 11:31 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 34554 Jun 11 11:38 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 38286 Jun 11 11:45 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 36770 Jun 11 11:51 04-frd.md
+>    532 docs/bok/vision-mcp/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+>    208 docs/bok/vision-mcp/01-mrd.md
+>    229 docs/bok/vision-mcp/02-brd.md
+>    379 docs/bok/vision-mcp/03-prd.md
+>    318 docs/bok/vision-mcp/04-frd.md
+>   1666 total
+> ```
+
+## 🤖 Claude *(18:12:21)*
+
+
+## 🤖 Claude *(18:12:21)*
+
+
+## 🤖 Claude *(18:12:23)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js",
+  "resumeFromRunId": "wf_d076f02c-0ff"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wbhkc9xu4
+> Summary: Gera a suíte BoK 9/9 do vision-mcp (MRD→BRD→PRD→FRD→SDD→DM/PF→QM→trace→index) a partir do blueprint v0.2.0
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/subagents/workflows/wf_d076f02c-0ff
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js"} to iterate without resending the script.)
+> Run ID: wf_d076f02c-0ff
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/workflows/scripts/bok-scribe-vision-mcp-wf_d076f02c-0ff.js", resumeFromRunId: "wf_d076f02c-0ff"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:12:41)*
+
+
+## 🤖 Claude *(18:12:41)*
+
+
+## 🤖 Claude *(18:12:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null; curl -s \"${SUPABASE_URL:-$VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?name=in.(%22bok-scribe-seal-mcorch-constellation-v1%22,%22bok-scribe-seal-marketing-hub-v1%22)&select=id,name,created_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool",
+  "description": "Verify candidate parent BoK seal nodes exist in mesh"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [
+>     {
+>         "id": "d5163fed-da85-4f95-8445-0d0aa5b6bafe",
+>         "name": "bok-scribe-seal-marketing-hub-v1",
+>         "created_at": "2026-06-03T00:56:53.82819+00:00"
+>     },
+>     {
+>         "id": "78cb74e6-538c-4c9e-80a2-50268947dfca",
+>         "name": "bok-scribe-seal-mcorch-constellation-v1",
+>         "created_at": "2026-05-08T02:25:51.489636+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(18:12:59)*
+
+
+## 🤖 Claude *(18:13:00)*
+
+Pai confirmado na malha: `bok-scribe-seal-mcorch-constellation-v1` (`78cb74e6…`, verificado live via REST) — o vision-mcp é órgão de percepção da plataforma-núcleo, então a aresta DERIVES_FROM apontará para a suíte mcorch-constellation.
+
+**Estado:** workflow retomado do cache (MRD/BRD/PRD reaproveitados — só FRD em diante roda live: FRD → SDD → Data-Model + Process-Flow em paralelo → Quality-Metrics → validador de traceability com gate de 0 órfãos → 00-index). Na notificação de conclusão, sigo direto para: verificação material da suíte 9/9 → seed script Phase 7 com os números reais → execução + prova de embedding → **Ato 2** (`/bok-agents-generator`).
+
+## 👤 User *(18:24:18)*
+
+<task-notification>
+<task-id>wbhkc9xu4</task-id>
+<tool-use-id>toolu_01FPFkpoJv7YUcW34wTvDbR7</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/tasks/wbhkc9xu4.output</output-file>
+<status>failed</status>
+<summary>Dynamic workflow "Gera a suíte BoK 9/9 do vision-mcp (MRD→BRD→PRD→FRD→SDD→DM/PF→QM→trace→index) a partir do blueprint v0.2.0" failed: Error: Data/Process docs failed
+    at &lt;anonymous&gt; (workflow.js:91:23)
+    at processTicksAndRejections (native)</summary>
+<recovery>Agent transcripts: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/499ec34d-fd3b-4fa0-906d-3845085b7d3a/subagents/workflows/wf_d076f02c-0ff</recovery>
+<failures>[doc:07-process-flow] failed: You've hit your weekly limit · resets Jun 15, 11am (America/Sao_Paulo)
+[doc:06-data-model] failed: You've hit your weekly limit · resets Jun 15, 11am (America/Sao_Paulo)</failures>
+<usage><agent_count>7</agent_count><subagent_tokens>482405</subagent_tokens><tool_uses>27</tool_uses><duration_ms>714878</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:24:18)*
+
+You've hit your weekly limit · resets Jun 15, 11am (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
