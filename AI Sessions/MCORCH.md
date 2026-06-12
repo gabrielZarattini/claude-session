@@ -10,7 +10,7 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 33
+> * **Total de Processos**: 34
 > * **Total de Sessões**: 730
 
 ---
@@ -51,6 +51,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
+*   `[[webgl-canvas-stabilization]]` - *Processo*
 
 ---
 
