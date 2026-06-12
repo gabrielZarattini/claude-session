@@ -879,7 +879,7 @@ Pre-flight base OK. Agora a cauda do HANDOFF.md (Pending Actions + GraphRAG Stat
 > drwx------ 29 ubuntu ubuntu 4096 Jun  9 22:38 ..
 > ---SPRINT-V634---
 > ---BOK-SECURITY---
-> 00-deepsearch-blueprint.md
+> 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > 01-brd-security.md
 > 02-srs-secure-spec.md
 > 03-sdd-hardening-architecture.md
@@ -14169,5 +14169,5 @@ Selo completo. Gravando as lições duráveis na memória antes do relatório fi
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-10 - Generate security BoK documentation suite]]
-> * **Próxima Sessão**: [[2026-06-10 - agent-a1bce56a00a207cd1]]
+> * **Próxima Sessão**: [[2026-06-10 - agent-a01a722fbf80b27c5]]
 %% --- TIMELINE END --- %%

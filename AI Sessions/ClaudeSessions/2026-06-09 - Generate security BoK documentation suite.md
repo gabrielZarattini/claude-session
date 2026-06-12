@@ -1167,7 +1167,7 @@ Acknowledge this directive as the MCORCH Security Sentinel. Scan the repository 
 🛠️ **Tool Call**: `Read`
 ```json
 {
-  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/security/00-deepsearch-blueprint.md"
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/security/00-[[deepsearch-blueprint|deepsearch-blueprint]].md"
 }
 ```
 
@@ -1254,7 +1254,7 @@ Acknowledge this directive as the MCORCH Security Sentinel. Scan the repository 
 > total 16
 > drwxrwxr-x  2 ubuntu ubuntu 4096 Jun  9 19:20 .
 > drwxrwxr-x 21 ubuntu ubuntu 4096 Jun  9 19:20 ..
-> -rw-rw-r--  1 ubuntu ubuntu 5005 Jun  9 19:21 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 5005 Jun  9 19:21 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
 > ─── compose files ───
 > -rw-rw-r-- 1 ubuntu ubuntu 2220 May  1 23:51 docker-compose.yml
 > ./docker-compose.yml
