@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 741
-> * **Sessões do Claude**: 699
+> * **Total de Sessões Registradas**: 747
+> * **Sessões do Claude**: 705
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,17 +61,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` - *2026-06-15*
 *   `[[2026-06-15 - handson]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-afc30df474a782e50]]` - *2026-06-15*
 *   `[[2026-06-15 - agent-adad4e1a1800b25af]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-aa6fcb6816fb72334]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-a631d6100f2684559]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-a625ea1d0cb7de1f6]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-a4681bc7481acedff]]` - *2026-06-15*
+*   `[[2026-06-15 - agent-a442bd0529aee9096]]` - *2026-06-15*
 *   `[[2026-06-15 - agent-a19cc0f1ec60a31c7]]` - *2026-06-15*
 *   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` - *2026-06-15*
 *   `[[2026-06-14 - handson]]` - *2026-06-14*
-*   `[[2026-06-14 - USERREQUEST]]` - *2026-06-14*
-*   `[[2026-06-12 - handson]]` - *2026-06-12*
-*   `[[2026-06-11 - agent-aea91e7dbcd38b603]]` - *2026-06-11*
-*   `[[2026-06-11 - agent-ae0ae945d909f16e8]]` - *2026-06-11*
-*   `[[2026-06-11 - agent-add70d0b40699bbdb]]` - *2026-06-11*
-*   `[[2026-06-11 - agent-ad9d7d286610f6907]]` - *2026-06-11*
-*   *... e mais 705 sessões nessa categoria.*
+*   *... e mais 711 sessões nessa categoria.*
 
 ---
 
@@ -264,7 +264,13 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` (GeminiSessions)
 *   `[[2026-06-15 - handson]]` (GeminiSessions)
+*   `[[2026-06-15 - agent-afc30df474a782e50]]` (ClaudeSessions)
 *   `[[2026-06-15 - agent-adad4e1a1800b25af]]` (ClaudeSessions)
+*   `[[2026-06-15 - agent-aa6fcb6816fb72334]]` (ClaudeSessions)
+*   `[[2026-06-15 - agent-a631d6100f2684559]]` (ClaudeSessions)
+*   `[[2026-06-15 - agent-a625ea1d0cb7de1f6]]` (ClaudeSessions)
+*   `[[2026-06-15 - agent-a4681bc7481acedff]]` (ClaudeSessions)
+*   `[[2026-06-15 - agent-a442bd0529aee9096]]` (ClaudeSessions)
 *   `[[2026-06-15 - agent-a19cc0f1ec60a31c7]]` (ClaudeSessions)
 *   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` (ClaudeSessions)
 *   `[[2026-06-14 - handson]]` (GeminiSessions)
