@@ -1017,6 +1017,198 @@ You pasted the roadmap back — I read that as "proceed." Before I commit the se
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Por onde executo nesta sessão de vision-mcp? (janela 1M fresca — dá pra empacotar)"="deepsearch.run + menores". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(18:31:48)*
+
+
+## 🤖 Claude *(18:31:54)*
+
+O Sovereign escolheu **deepsearch.run async + menores**. Plano travado.
+
+**ORO triplet desta task:**
+- **Operator:** MCORCH Master Execution Agent
+- **Reviewer:** Sovereign + `/security-review` independente (subagente)
+- **Owner:** Sovereign — 1ª tool *assíncrona* que debita mcoCoins + chama providers pagos (Google/Gemini) com refund parcial; blast radius = saldo do tenant + container `mcorch_vision_mcp`
+
+BoK gate: **ABERTO** — `deepsearch.run` é a FR-VM-007 já documentada na suíte 9/9 selada. Sem improvisação além do documentado (Lei 2).
+
+Vou primeiro **escotear inline** a estrutura real (pacote + seções exatas da BoK + schema) para montar o work-list, depois disparo um Workflow de mapeamento/design fundamentado.
+
+## 🤖 Claude *(18:31:55)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Vision MCP: deepsearch.run async + menores",
+  "summary": "Construir a tool ass\u00edncrona deepsearch.run (FR-VM-007: job\u2192poll\u2192partial-refund) + ant\u00eddotos (OTD orphan-sub na BoK + migration infra_health_logs metadata jsonb)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Vision MCP: deepsearch.run async + menores". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(18:31:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== pkg tree ===\"; find packages/vision-mcp-core -type f -not -path '*/node_modules/*' -not -path '*/dist/*' | sort; echo \"\"; echo \"=== pkg package.json ===\"; cat packages/vision-mcp-core/package.json 2>/dev/null | head -60",
+  "description": "Vision MCP core package file tree + package.json"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pkg tree ===
+> packages/vision-mcp-core/bun.lock
+> packages/vision-mcp-core/Dockerfile
+> packages/vision-mcp-core/package.json
+> packages/vision-mcp-core/src/auth/credentials.ts
+> packages/vision-mcp-core/src/auth/identity.ts
+> packages/vision-mcp-core/src/infra/billing.ts
+> packages/vision-mcp-core/src/infra/telemetry.ts
+> packages/vision-mcp-core/src/mcp/server.ts
+> packages/vision-mcp-core/src/safety/duty-of-care.ts
+> packages/vision-mcp-core/src/safety/sentinel.ts
+> packages/vision-mcp-core/src/__tests__/fatia2.test.ts
+> packages/vision-mcp-core/src/__tests__/gates.test.ts
+> packages/vision-mcp-core/src/tools/analyze-video.ts
+> packages/vision-mcp-core/src/tools/consolidate-reference.ts
+> packages/vision-mcp-core/src/tools/deepsearch-scrape.ts
+> packages/vision-mcp-core/src/tools/describe-image.ts
+> packages/vision-mcp-core/src/tools/mesh-search.ts
+> packages/vision-mcp-core/tsconfig.json
+> packages/vision-mcp-core/vitest.config.ts
+> 
+> === pkg package.json ===
+> {
+>   "name": "vision-mcp-core",
+>   "version": "0.1.0",
+>   "private": true,
+>   "type": "module",
+>   "description": "MCORCH Vision MCP — Fatia 1 skeleton: Streamable HTTP MCP server with ES256 JWKS identity, Origin gate, sentinel, and mesh.search (internal, read-only).",
+>   "bin": {
+>     "vision-mcp": "dist/mcp/server.js"
+>   },
+>   "scripts": {
+>     "build": "tsc -p tsconfig.json",
+>     "start": "node dist/mcp/server.js",
+>     "dev": "bun run src/mcp/server.ts",
+>     "test": "vitest run"
+>   },
+>   "dependencies": {
+>     "@modelcontextprotocol/sdk": "^1.11.0",
+>     "jose": "^5.9.6",
+>     "zod": "^3.23.8"
+>   },
+>   "devDependencies": {
+>     "typescript": "^5.5.0",
+>     "vitest": "^2.0.0",
+>     "@types/node": "^22.0.0"
+>   }
+> }
+> ```
+
+## 🤖 Claude *(18:31:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== FRD FR-VM-007 + \u00a74.5 (deepsearch async) ===\"; grep -n -i \"FR-VM-007\\|deepsearch\\|partial.delivery\\|job_id\\|\u00a74.5\\|4\\.5\\|async\\|poll\" docs/bok/vision-mcp/04-frd.md | head -60",
+  "description": "Grep FRD for FR-VM-007 + async/poll/partial-refund refs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FRD FR-VM-007 + §4.5 (deepsearch async) ===
+> 7:**Source of Truth:** `docs/bok/vision-mcp/00-deepsearch-blueprint.md` (v0.2.0) + `01-mrd.md` (MR-VM-001..016) + `02-brd.md` (BR-VM-001..012) + `03-prd.md` (PR-VM-001..025) — todo FR-VM deste documento rastreia ≥1 PR-VM; IDs do blueprint (FM-VM-01..18, OTD-VM-001..019) preservados verbatim; ambiguidades viram OTD, nunca improvisação.  
+> 17:**In scope:** servidor MCP soberano de percepção visual + deepsearch fundamentado em container `mcorch_vision_mcp` (Sovereign Mesh, precedente gitnexus) — transporte Streamable HTTP 2025-11-25; identidade ES256 JWKS fail-closed + OAuth 2.1/RFC 9728 + PAT `mcp_access_tokens`; resolução de credencial per-user fail-closed (coluna `user_api_keys.firecrawl_api_key`); sentinel duplo (inbound + texto extraído); superfície de tools com classes mcoCoin (débito atômico + refund-on-failure + **regra de partial-delivery refund selada neste documento**, §4.5); Mesh Connection Mandate com dois regimes de persistência; erasure LGPD em cascata + retention clock; gate periférico Tier 1 com alvo de recall; distribuição Plugin Zip + skills + MCP Registry; expansão assistiva (`vision.alt_text`/`vision.describe_screen` + duty-of-care) e cognitiva (resources/prompts) gated.
+> 43:| FR-VM-006 | Tool surface billable (classes mcoCoin) | Registro de tools com classe mco por tool (BRD §6: describe_image 2, ocr 1/página, scrape 1, run 3, poll 0, mesh.search 0–1, consolidate_reference 1, alt_text/describe_screen 2, peripheral_scan 0–1, track 1, detect 2, segment 2/5, video 2/min). Débito **na entrada** via `deduct_mco_coins(p_user_id, p_amount, p_action, p_context)` (PostgREST + secret name `SB_SECRET_KEY`) contra `sub` verificado; saldo insuficiente → **402** antes de qualquer leg de provider. `refundMco` em TODA falha billable (credit service-role-only, nunca lança). Metering por leg em `agent_executions`; **BYOK anda de graça** (`isUserCustomKey → cost 0`); exempção `SOVEREIGN_USER_ID`. Classes espelhadas em `src/lib/billing.ts → COIN_COSTS` + constante hardcoded no serviço + asserção em `src/test/billing.test.ts`; fix de preço só após medição material do $ (OTD-VM-004) | Critical | PR-VM-008 | Container service + DB | AT-VM-006 |
+> 44:| FR-VM-007 | Async job semantics + partial-delivery refund | `deepsearch.run` → débito integral na entrada → retorna `job_id` imediato (p95 <2s) + progress notifications quando o host suporta; `deepsearch.poll(job_id)` custo 0 entrega estado/resultado (tools-only hosts — OTD-VM-003). Máquina de estados `queued→running→done|partial|failed`; jobs tenant-scoped (poll exige mesma identidade verificada); resultado disponível p/ poll ≥24h pós-terminal; nunca chamada bloqueante. **Regra de partial-delivery refund selada em §4.5** (FM-VM-07): 0 unidades entregues → refund integral; entrega parcial → cobrança proporcional arredondada A FAVOR do tenant, resultado com `partial:true` | Critical | PR-VM-013 | Container service | AT-VM-007 |
+> 53:| FR-VM-020 | `deepsearch.scrape` | Scrape de 1 URL pública via Firecrawl BYOK (fail-closed FR-VM-004), logged-out only. Gates: robots.txt honrado, login-wall block, allowlist de fontes permissivas, CDSM Art. 4 opt-out. Saída markdown + metadata de proveniência/licença. Classe 1 mco | Critical | PR-VM-006 | Container service | AT-VM-020 |
+> 54:| FR-VM-021 | `mesh.consolidate_reference` | Grava referência consolidada (saída de visão fundamentada por deepsearch) como nó `observation` + `content_mesh_asset` (template `orchestrate-step`): PII-strip antes do insert, tag `scraped` + proveniência/licença/`retention_until`, `metadata.cost_mco`, BR/FR ID de traceabilidade, embed-on-insert grátis via `embed-mcorch-node`. **NUNCA em system nodes** (`user_id IS NULL`). Edge ao nó do run instrumenta o gate do cruzado (KPI-VM-003). Classe 1 mco | Critical | PR-VM-010 | Container service + DB | AT-VM-021 |
+> 76:| FR-VM-022 | BYOK Settings card | Card Vision/Deepsearch em `/dashboard/settings` estendendo `useUserApiKeys` com `firecrawl_api_key`. `user_api_keys` é VIEW mascarada → write via `.insert` (NUNCA `.upsert`); null não limpa (clear via RPC); teste de chave server-side (cliente só vê máscara). Estados: conectado / não-configurado + CTA / erro com mensagem PT-BR acionável | Critical | PR-VM-007 | UI + Hook + DB | AT-VM-022 |
+> 104:| NFR-VM-003 | Performance (async) | `deepsearch.run` submit→`job_id`; SSE heartbeat anti-idle Cloudflare (~100s — OTD-VM-013); resultado poll-able pós-terminal | submit p95 < 2s; heartbeat ≤ 25s; retenção ≥ 24h | Teste de job >150s + curl do poll |
+> 108:| NFR-VM-007 | Security (identity) | 100% das requests com identidade verificada (ES256 JWKS ou PAT hash) ANTES de qualquer efeito; Origin 403; fail-closed se JWKS inalcançável; `SB_SECRET_KEY` jamais em path client-reachable; migrations (`mcp_access_tokens`, `firecrawl_api_key`, `erase_vision_artifacts`) passam `/security-review` | 100% / SAFE | `/security-review` + smoke 401/403 |
+> 170:#### `deepsearch.run` / `deepsearch.poll` (FR-VM-007 · 3 / 0 mco)
+> 172:**Output run:** `{ job_id: string, state: 'queued', planned_units: number, charged_mco: number }`  
+> 173:**Output poll:** `{ job_id, state: 'queued'|'running'|'done'|'partial'|'failed', delivered_units, planned_units, partial: boolean, failed_units?: string[], refunded_mco?: number, result?: {...} }`
+> 194:| 404 | `job_not_found` | `job_id` inexistente ou de outro tenant |
+> 199:### 4.5 Async Job & Partial-Delivery Refund Contract (sela FM-VM-07 / BR-VM-003 / BAC-VM-007)
+> 203:1. **Débito integral na entrada:** `deepsearch.run` debita a classe inteira (3 mco) via `deduct_mco_coins` antes do enqueue. Saldo insuficiente → 402, job não nasce.
+> 207:5. **Transparência:** resultado parcial entregue com `partial: true` + `failed_units[]` + `refunded_mco` explícito no payload do poll.
+> 208:6. **Idempotência:** refund por job é executado no máximo uma vez (guard por `job_id` no contexto do RPC); retries de poll nunca re-disparam refund.
+> 233:| `planned_units` (`deepsearch.run`) | `int` | NOT NULL (default 1) | 1 ≤ N ≤ cap do plano (valor selado no SDD) | "Número de unidades do job fora do limite" |
+> 234:| `job_id` | `uuid` | NOT NULL (`poll`) | UUID v4 existente e pertencente ao tenant | "Job não encontrado" |
+> 256:| FR-VM-007 | ✅ Required | ✅ Required | ✅ Required | Job >150s via poll; refund parcial bate §4.5 (floor a favor do tenant); idempotência |
+> 293:| PR-VM-002 | FR-VM-002 | NFR-VM-007 |
+> 298:| PR-VM-007 | FR-VM-004, FR-VM-022 | NFR-VM-006, NFR-VM-007 |
+> 300:| PR-VM-009 | FR-VM-005 | NFR-VM-007, NFR-VM-010 |
+> 302:| PR-VM-011 | FR-VM-001, FR-VM-002 | NFR-VM-003, NFR-VM-007, NFR-VM-013 |
+> 303:| PR-VM-012 | FR-VM-003 | NFR-VM-007 |
+> 304:| PR-VM-013 | FR-VM-007 | NFR-VM-003, NFR-VM-008 |
+> ```
+
+## 🤖 Claude *(18:33:08)*
+
+
+## 🤖 Claude *(18:33:09)*
+
+FRD §4.5 is the sealed async/refund contract. Now I'll fan out a grounded **mapping** workflow — 5 parallel readers over the BoK contract, the persistence/schema reality (live DB), the code wiring, the provider semantics, and the migration patterns — so the design rests on what's actually sealed and what's actually deployed, not assumptions.
+
+## 🤖 Claude *(18:34:07)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'vision-deepsearch-run-map',\n  description: 'Map the sealed contract + live schema + code wiring for building deepsearch.run async (FR-VM-007) + the two menores',\n  phases: [{ title: 'Map' }],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst MAP_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['summary', 'findings', 'open_questions'],\n  properties: {\n    summary: { type: 'string', description: '3-6 sentence synthesis of this subsystem as it pertains to building deepsearch.run async + menores' },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['topic', 'detail', 'source'],\n        properties: {\n          topic: { type: 'string' },\n          detail: { type: 'string', description: 'Concrete fact, signature, schema, or verbatim contract clause \u2014 be exact, quote where it matters' },\n          source: { type: 'string', description: 'file:line or live-query result that backs this (Lei 1 \u2014 material)' },\n        },\n      },\n    },\n    open_questions: {\n      type: 'array',\n      description: 'Ambiguities that are NOT resolved by the sealed BoK \u2014 candidate OTDs, never to be improvised',\n      items: { type: 'string' },\n    },\n  },\n}\n\nphase('Map')\n\nconst READERS = [\n  {\n    label: 'R1:async-contract',\n    prompt: `You are mapping the SEALED async-job + partial-refund contract for the MCORCH Vision MCP tool \\`deepsearch.run\\` / \\`deepsearch.poll\\` (FR-VM-007).\n\nRead these EXACTLY (do not skim):\n- ${REPO}/docs/bok/vision-mcp/04-frd.md \u2014 focus on: FR-VM-007 row (~line 44); the \\`deepsearch.run / deepsearch.poll\\` tool spec block (~lines 168-200) with its Output run/poll shapes + error codes table; \u00a74.5 \"Async Job & Partial-Delivery Refund Contract\" (~lines 199-210); the data dictionary rows for \\`planned_units\\` and \\`job_id\\` (~lines 230-235); NFR-VM-003 (performance/async, ~line 104) and AT-VM-007 acceptance test (~line 256).\n\nExtract VERBATIM where it matters:\n1. The exact \\`deepsearch.run\\` output shape and \\`deepsearch.poll\\` output shape (every field + type).\n2. The full state machine (queued\u2192running\u2192done|partial|failed) and any transition rules.\n3. The complete error-code table for these tools (status, code, when).\n4. The partial-delivery refund rule from \u00a74.5 \u2014 all 6 (or N) numbered clauses verbatim, especially: full-debit-on-entry, 0-units\u2192full refund, partial\u2192proportional rounded IN FAVOR of tenant, partial:true + failed_units + refunded_mco in payload, refund idempotency guard by job_id.\n5. \\`planned_units\\` validation bounds (and where the cap value is \"selado no SDD\").\n6. The mcoCoin classes: run=3, poll=0 \u2014 confirm from FR-VM-006 (~line 43) and BRD \u00a76.\n7. Retention requirement (\u226524h post-terminal) and the SSE heartbeat anti-idle requirement (OTD-VM-013, ~25s / ~100s Cloudflare).\n\nReturn the structured map. open_questions = anything the contract leaves genuinely undefined.`,\n  },\n  {\n    label: 'R2:schema-reality',\n    prompt: `You are mapping the PERSISTENCE & SCHEMA REALITY for building \\`deepsearch.run\\` async in the MCORCH Vision MCP, plus the \\`infra_health_logs metadata jsonb\\` menor.\n\n(A) Read the sealed design docs:\n- ${REPO}/docs/bok/vision-mcp/06-data-model.md \u2014 does it define a jobs table (e.g. \\`vision_jobs\\`, \\`deepsearch_jobs\\`)? What columns/constraints/RLS? Also note \\`mcp_access_tokens\\` and \\`erase_vision_artifacts\\` definitions if present (Fatia 3 scope markers).\n- ${REPO}/docs/bok/vision-mcp/05-sdd.md \u2014 find: (i) the SEALED \\`planned_units\\` cap value; (ii) the async architecture decision \u2014 is job state held IN-MEMORY in the container or in a DB table? SSE heartbeat design; retention; how poll resolves; any worker/queue design. Quote the relevant SDD passages.\n- ${REPO}/docs/bok/vision-mcp/07-process-flow.md \u2014 the deepsearch.run lifecycle / sequence if present.\n\n(B) Probe the LIVE deployed DB (Lei 1 \u2014 material). Supabase REST base: https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1 . The service key is in the repo .env as SB_SECRET_KEY (run \\`cd ${REPO} && set -a && . ./.env && set +a\\` then use \\`$SB_SECRET_KEY\\` as both apikey and Bearer). Determine MATERIALLY:\n  1. Does a vision_jobs / deepsearch_jobs table exist? (GET \\`/<table>?limit=1\\` \u2192 200 = exists, PGRST205/404 = absent). Try the names you found in 06-data-model.\n  2. \\`infra_health_logs\\` \u2014 does it currently have a \\`metadata\\` column? GET \\`/infra_health_logs?select=*&limit=1\\` and list the JSON keys of the returned row; if empty, say so and fall back to declared columns from the migration files in ${REPO}/supabase/migrations/ (grep for infra_health_logs CREATE TABLE / ALTER).\n  3. Confirm \\`deduct_mco_coins\\` and any \\`add_mco_coins\\`/refund RPC exist (the billing foundation already proven in Fatia 2).\n\nReturn the structured map. open_questions = schema decisions not yet sealed (e.g. \"is the job table deferred to Fatia 3 or built now?\").`,\n  },\n  {\n    label: 'R3:code-wiring',\n    prompt: `You are mapping the EXISTING CODE WIRING in packages/vision-mcp-core so a new tool \\`deepsearch.run\\`/\\`deepsearch.poll\\` follows the EXACT established pattern (no reinvention).\n\nRead fully:\n- ${REPO}/packages/vision-mcp-core/src/mcp/server.ts \u2014 how tools are registered (the McpServer fresh-per-request pattern from the Fatia 1 handshake fix); the HTTP gate order (Origin\u2192protocol\u2192ES256 JWKS\u2192ALS sub); how a tool handler receives the verified \\`sub\\`; the list of currently registered tools.\n- ${REPO}/packages/vision-mcp-core/src/tools/deepsearch-scrape.ts \u2014 the CLOSEST sibling. Map its full structure: sentinel call, resolveProviderKey, costFor, deductOnEntry, provider leg, refund-on-failure, telemetry. This is the template deepsearch.run must mirror.\n- ${REPO}/packages/vision-mcp-core/src/infra/billing.ts \u2014 exact signatures of deductOnEntry / refundMco / costFor (and any COIN class table / how 'deepsearch.run'=3, 'deepsearch.poll'=0 would be added).\n- ${REPO}/packages/vision-mcp-core/src/auth/credentials.ts \u2014 resolveProviderKey signature; which providers it supports today; does it already know 'google'/'gemini' (analyze-video uses Gemini \u2014 see tools/analyze-video.ts briefly)?\n- ${REPO}/packages/vision-mcp-core/src/infra/telemetry.ts \u2014 the telemetry helper signature + what fields it writes to infra_health_logs (relevant to the metadata jsonb menor).\n- ${REPO}/packages/vision-mcp-core/src/tools/analyze-video.ts \u2014 ONLY to extract how it calls Gemini (endpoint, auth, request shape) since deepsearch.run is the \"google/gemini\" research half.\n\nReturn the structured map with EXACT function signatures (copy them verbatim) and the canonical per-request tool pipeline. open_questions = wiring gaps a new async tool exposes (e.g. \"no job store exists in-process today\").`,\n  },\n  {\n    label: 'R4:provider-semantics',\n    prompt: `You are determining WHAT \\`deepsearch.run\\` actually DOES \u2014 the \"google/gemini grounded research half\" of the Vision MCP deepsearch surface (distinct from \\`deepsearch.scrape\\` which is Firecrawl single-URL). Be rigorous: report only what the sealed BoK specifies; flag everything underspecified as a candidate OTD (Lei 2 \u2014 never improvise).\n\nRead:\n- ${REPO}/docs/bok/vision-mcp/00-deepsearch-blueprint.md \u2014 the \"Cognitive\"/deepsearch pillar; what grounded research means here; any provider named (Gemini grounding / Google Search grounding / google CSE).\n- ${REPO}/docs/bok/vision-mcp/03-prd.md \u2014 PR-VM-013 (and neighbors) for the deepsearch.run product behavior.\n- ${REPO}/docs/bok/vision-mcp/01-mrd.md \u2014 the market/job-to-be-done for deepsearch.run.\n- ${REPO}/docs/bok/vision-mcp/04-frd.md \u2014 re-read FR-VM-007 + the tool spec for what a \"unit\" is (planned_units) and the result shape.\n- Cross-check how the EXISTING repo does grounded deep research: ${REPO}/docs/processes/deepsearch-blueprint.md and any deep-research skill, to see what \"units\" naturally map to (search fronts? sources? sub-queries?).\n\nDetermine, with sources:\n1. The provider + API for the grounded-research leg (Gemini with Google Search grounding? raw Google API? Is the key 'gemini_api_key' per-user \u2014 confirm it's a column in user_api_keys).\n2. What ONE \\`unit\\` is (so planned_units + partial-delivery has concrete meaning).\n3. The result payload contents (citations? synthesized report? per the FRD poll \\`result\\` field).\n4. How partial delivery physically happens (some units fail \u2192 partial).\n\nReturn the structured map. open_questions = every place the provider/unit/result is NOT pinned by the BoK (these become OTDs for the design, not guesses).`,\n  },\n  {\n    label: 'R5:migration-and-menores',\n    prompt: `You are mapping MIGRATION MECHANICS for this session: (a) a possible \\`vision_jobs\\` table for deepsearch.run, (b) the \\`infra_health_logs ADD metadata jsonb\\` menor, and (c) WHERE to register the OTD orphan-sub menor in the BoK.\n\nRead:\n- ${REPO}/supabase/migrations/ \u2014 find the Fatia 2 firecrawl_api_key Vault migration (grep \\`firecrawl_api_key\\`) and read it fully: it is the canonical recent pattern (RLS, search_path='', GRANT/REVOKE, encrypted-view triggers). Also find the canonical CREATE TABLE migration for a tenant-scoped table with RLS default-deny + the composite-FK tenant-scope pattern (e.g. the marketing-hub leads migration, or campaign_steps) to mirror for vision_jobs.\n- grep the migrations for \\`infra_health_logs\\` \u2014 find its CREATE TABLE and current columns; determine the exact ALTER to add \\`metadata jsonb\\` safely (nullable default '{}'::jsonb, or NULL). Check whether any RLS/grant must change.\n- ${REPO}/docs/processes/vision-mcp-cost-calibration.md \u2014 note the OTD-VM-004 SOP style.\n- ${REPO}/docs/bok/vision-mcp/02-brd.md AND 00-deepsearch-blueprint.md \u2014 find the OTD ledger (OTD-VM-001..020/022). Identify the EXACT file + section where a new \"OTD-VM-orphan-sub\" (residual LOW risk: a verified \\`sub\\` that no longer maps to a live profile) should be registered as an amendment, and what the existing OTD rows look like (format to mirror).\n- ${REPO}/CLAUDE.md \"Every new migration MUST pass /security-review before commit\" \u2014 note this gate.\n\nReturn the structured map: (1) exact ALTER for infra_health_logs metadata; (2) a vision_jobs CREATE TABLE skeleton matching the repo's RLS/tenant-scope conventions (columns from FR-VM-007 data dict: id uuid, user_id, state, planned_units, delivered_units, charged_mco, refunded_mco, partial bool, result jsonb, failed_units, timestamps, retention_until); (3) the exact BoK location + row format for the OTD orphan-sub amendment. open_questions = anything blocking a clean migration.`,\n  },\n]\n\nconst maps = await parallel(\n  READERS.map((r) => () => agent(r.prompt, { label: r.label, phase: 'Map', schema: MAP_SCHEMA }))\n)\n\nreturn READERS.map((r, i) => ({ reader: r.label, map: maps[i] }))\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wynxmg0hh
+> Summary: Map the sealed contract + live schema + code wiring for building deepsearch.run async (FR-VM-007) + the two menores
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/dfc038c3-0ab3-428f-80e3-e30dca27edaa/subagents/workflows/wf_3e45dc82-e96
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/dfc038c3-0ab3-428f-80e3-e30dca27edaa/workflows/scripts/vision-deepsearch-run-map-wf_3e45dc82-e96.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/dfc038c3-0ab3-428f-80e3-e30dca27edaa/workflows/scripts/vision-deepsearch-run-map-wf_3e45dc82-e96.js"} to iterate without resending the script.)
+> Run ID: wf_3e45dc82-e96
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/dfc038c3-0ab3-428f-80e3-e30dca27edaa/workflows/scripts/vision-deepsearch-run-map-wf_3e45dc82-e96.js", resumeFromRunId: "wf_3e45dc82-e96"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:34:16)*
+
+
+## 🤖 Claude *(18:34:23)*
+
+Workflow `wf_3e45dc82-e96` (5 readers) está rodando em background — vou ser reinvocado quando concluir. Ele mapeia, em paralelo e com prova material:
+
+1. **R1** — contrato selado (§4.5 refund parcial + state machine + shapes I/O + error codes)
+2. **R2** — realidade do schema (existe tabela de jobs? `infra_health_logs` já tem `metadata`? RPCs de billing) — query LIVE no DB
+3. **R3** — wiring do código existente (assinaturas exatas de `deductOnEntry`/`refundMco`/`resolveProviderKey` + o template `deepsearch.scrape`)
+4. **R4** — semântica do provider (o que `deepsearch.run` faz de fato: Gemini grounding? o que é uma "unit"? como a entrega parcial acontece) — flag de OTD para o que não estiver pinado
+5. **R5** — mecânica das migrations (ALTER do `metadata jsonb` + skeleton `vision_jobs` + onde registrar a OTD orphan-sub na BoK)
+
+Aguardando a síntese para travar o design antes de escrever qualquer linha (Lei 2 — sem improvisar além do que a BoK sela). Acompanhe em `/workflows`.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -1026,6 +1218,6 @@ You pasted the roadmap back — I read that as "proceed." Before I commit the se
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-15 - Build native MCP for vision and movement analysis]]
+> * **Sessão Anterior**: [[2026-06-15 - Build trading dashboard with AI strategy validation]]
 > * **Próxima Sessão**: [[2026-06-15 - agent-a0075c7d26db1bb8b]]
 %% --- TIMELINE END --- %%

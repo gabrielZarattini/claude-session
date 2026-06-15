@@ -12727,5 +12727,5 @@ Sessão selada. O Vision MCP saiu de blueprint para **serviço rodando**: gates 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-15 - 78499af7-71fd-4dbf-816c-c5996402727d]]
-> * **Próxima Sessão**: [[2026-06-15 - Plan deepsearch async job and OAuth implementation]]
+> * **Próxima Sessão**: [[2026-06-15 - Build trading dashboard with AI strategy validation]]
 %% --- TIMELINE END --- %%
