@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 35
-> * **Total de Sessões**: 758
+> * **Total de Sessões**: 770
 
 ---
 
@@ -60,25 +60,37 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-06-15 - handson]]` (GeminiSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-afc30df474a782e50]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-add630ffe42bb3c96]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-adad4e1a1800b25af]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-ad9ace340e054f9ce]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-ad0faa48cbd716a19]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-ac9ff8f2a36e044eb]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-ac8cf0c89be8c64f0]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-abc424ceaa29e5437]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-abbb39f05cfe295a3]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-ab52d46f36cfc097e]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-aa6fcb6816fb72334]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-aa41c62768fc6cc5c]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a99a6dd92d27ad320]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a95700bc1c50c29a9]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a8f75163d4fa1c086]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a8bc71b65c047b534]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a71716babff66aacf]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a63a22634e3d90f8d]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a631d6100f2684559]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a625ea1d0cb7de1f6]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a493b7a18b0dc4bd3]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a48b51387e030db9e]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a4681bc7481acedff]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a442bd0529aee9096]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a3eb68e78c038b50b]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a3c0434efa84e8a5f]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a3aa61c33820b992e]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a32ef32d26c00dd15]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a3288b8374d8d9b6d]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a31b1dc9edbc060fd]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a2de1272318f2b1c3]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a2bcf19976a1ccffe]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a19cc0f1ec60a31c7]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a0075c7d26db1bb8b]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` (ClaudeSessions) - *2026-06-15*
