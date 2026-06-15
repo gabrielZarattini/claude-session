@@ -61,8 +61,7 @@ adiantado** (porque vai gastar tempo/recurso buscando), sai e busca N fontes, e 
 | 1 | `PATCH vision_jobs state='running'` | linha em `running` |
 | 2 | Gemini grounded search (`google_search` tool, model `DEEPSEARCH_MODEL`=gemini-2.5-flash) | `groundingChunks[].web.{uri,title}` extraídos; dedupe por URL; `references.slice(0, planned)` |
 | 3 | `delivered = references.length` (cap em `planned`); terminal por `computeTerminal(charged, delivered, planned)` | `done` (d≥p) · `partial` (0<d<p) · `failed` (d=0 ou exceção do leg) |
-| 4 | **Refund ANTES do estado terminal** (§4.5.4): `retida = max(1, floor(charged×d/p))`; `refund = charged − retida`; floor **a favor do tenant**; BYOK/Sovereign (charged=0) → refund 0 | `add_mco_coins(sub, refund)` quando `refund>0` (nunca lança) |
-| 5 | `PATCH vision_jobs` → `state` terminal + `delivered_units` + `result.references` + (`refunded_mco`+`refunded_at` se houve refund) + `failed_units` se houve | invariante: `retida + refund == charged` |
+| 4+5 | **Finalize ATÔMICO** via `finalize_vision_job(job, state, delivered, refund, failed, {references})` (SECURITY DEFINER, service-role): num **único transaction** marca o estado terminal **E** credita o refund (`PERFORM add_mco_coins`) — guard `state IN (queued,running)` ⇒ só o **primeiro** finalizer vence (worker OU reconcile do poll OU sweep) ⇒ refund **no máximo 1×/job**, sem money-without-guard nem guard-without-money. `retida = max(1, floor(charged×d/p))`; `refund = charged − retida`; floor **a favor do tenant**; BYOK/Sovereign (charged=0) → refund 0. Invariante: `retida + refund == charged` | linha terminal com `refunded_mco`/`refunded_at` setados sse refund>0; saldo creditado atômico |
 | 6 | `logHealth` `deepsearch_run_terminal` (event+metadata persistidos pós-migration) | row em `infra_health_logs` com `event`+`metadata` |
 
 ### C. `deepsearch.poll(job_id)` (grátis — read-only)
@@ -95,14 +94,30 @@ Prova material: `scripts/qa/smoke-deepsearch-run.ts` (usuário throwaway, **cont
 - **Falha no INSERT do job (passo A5)** após o débito → `refund(sub, charged)` imediato + propaga erro; o tenant
   não fica cobrado por um job que não nasceu.
 - **Falha do leg Gemini (worker B2)** → tratado como `delivered=0` → `failed` → **refund integral** (charge-without-value
-  fechado). `add_mco_coins` nunca lança; falha de refund vai a `stderr [degraded]` para reconciliação manual.
-- **Job órfão em `running`** (container reiniciado no meio do worker) → **RISCO RESIDUAL conhecido**: o tenant
-  pagou e o job fica preso em `running` até reconciliação. Mitigação follow-up = sweep periódico
-  (`state='running' AND now() > created_at + interval`) → `failed` + refund integral idempotente (guard
-  `refunded_at`). Registrado como follow-up; o `expires_at` limita a janela de poll. **NÃO** colocar refund no
-  caminho do `poll` (poll é grátis e read-only por contrato §4.5.6).
+  fechado). Erro do provider vira código **opaco** (`["grounding_error"]`) na coluna lida pelo tenant; o detalhe
+  cru vai só pra `stderr [degraded]`.
+- **Job órfão em `running`/`queued`** (container reiniciado no meio do worker) → **AUTO-RECUPERADO**: o próximo
+  `deepsearch.poll` de um job não-terminal mais velho que `STALE_RECONCILE_MS` (10 min) chama `finalize_vision_job`
+  → `failed` + **refund integral** (idempotente pelo guard `state IN (queued,running)` do RPC; um poll concorrente
+  não dobra o refund). Como o tenant que rodou um job invariavelmente faz poll do resultado, isso fecha a
+  charge-without-value no uso real. **Resíduo restante (LOW):** job **nunca-pollado** (tenant abandonou o `job_id`)
+  fica órfão até um sweep. **Follow-up belt-and-suspenders:** cron/watchdog varrendo `state IN (queued,running)
+  AND updated_at < now()-interval` chamando o MESMO `finalize_vision_job` (idempotente). O `expires_at` (now()+7d)
+  limita a janela de poll.
+- **Falha do próprio `finalize_vision_job` (rede)** → job permanece não-terminal; o reconcile-on-poll posterior o
+  finaliza (resultado parcial eventualmente perdido em favor de refund integral — sempre a favor do tenant).
 - **`planned_units` > fontes disponíveis** → entrega `M < N` legítima vira `partial` (refund proporcional) —
   comportamento correto por contrato (cobra-se pelo entregue, floor a favor do tenant).
+- **Burst agregado na chave-plataforma (OTD-VM-025):** o bucket do sentinel é per-`sub`; o leg da chave-plataforma
+  (não-BYOK) passa por um **teto de concorrência global in-process** (`MAX_PLATFORM_CONCURRENCY`, env
+  `DEEPSEARCH_PLATFORM_CONCURRENCY`, default 4) p/ o burst agregado de N tenants não esgotar a quota Google da
+  chave compartilhada. BYOK bypassa (quota própria). Follow-up: cap diário per-tenant + rate-limiter compartilhado
+  (OTD-VM-014) no scale-out.
+- **`source_allowlist` (best-effort com Gemini grounding — OTD-VM-024):** com o motor Gemini, os `groundingChunks`
+  retornam URLs **de redirect** (`vertexaisearch...`), não o domínio-fonte cru → filtrar por hostname é inviável;
+  o `source_allowlist` é injetado como **dica de prompt** (priorização), não gate rígido. Cada entrada passa pelo
+  sentinel; URLs persistidas são validadas `http(s)`. Gate rígido por domínio volta com o motor Firecrawl da BoK
+  (a reconciliação da emenda OTD-VM-024).
 
 ---
 
