@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 35
-> * **Total de Sessões**: 770
+> * **Total de Processos**: 36
+> * **Total de Sessões**: 775
 
 ---
 
@@ -51,6 +51,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
+*   `[[vision-mcp-billing-credential-resolution]]` - *Processo*
 *   `[[vision-mcp-cost-calibration]]` - *Processo*
 *   `[[webgl-canvas-stabilization]]` - *Processo*
 
@@ -60,6 +61,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-06-15 - handson]]` (GeminiSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-afc30df474a782e50]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-ae2ce1ad986b95f26]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-add630ffe42bb3c96]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-adad4e1a1800b25af]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-ad9ace340e054f9ce]]` (ClaudeSessions) - *2026-06-15*
@@ -75,10 +77,13 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-15 - agent-a95700bc1c50c29a9]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a8f75163d4fa1c086]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a8bc71b65c047b534]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a8160dd998cfba963]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a71716babff66aacf]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a6fe67d86b90b4f15]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a63a22634e3d90f8d]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a631d6100f2684559]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a625ea1d0cb7de1f6]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a519184a1e14ce63f]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a493b7a18b0dc4bd3]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a48b51387e030db9e]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a4681bc7481acedff]]` (ClaudeSessions) - *2026-06-15*
@@ -91,6 +96,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-15 - agent-a31b1dc9edbc060fd]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a2de1272318f2b1c3]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a2bcf19976a1ccffe]]` (ClaudeSessions) - *2026-06-15*
+*   `[[2026-06-15 - agent-a2265eb56489372a9]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a19cc0f1ec60a31c7]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - agent-a0075c7d26db1bb8b]]` (ClaudeSessions) - *2026-06-15*
 *   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` (ClaudeSessions) - *2026-06-15*
