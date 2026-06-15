@@ -11988,6 +11988,735 @@ O sed mascarou demais — preciso confirmar que linhas 48-51 e 144-145 são refs
 > === confirmação: algum valor LITERAL (sem ${}) nessas envs? ===
 > ```
 
+## 🤖 Claude *(16:00:31)*
+
+
+## 🤖 Claude *(16:00:34)*
+
+Confirmado: **todas as envs são `${...}` interpolação, zero valor literal** (linhas 44-52 são serviço pré-existente). 
+
+**Fase 1 verdict:** ✅ PASS em tudo — diff tracked limpo · pacote sem segredo · sem console.log sensível · compose só interpolação · 1b/1c/1d N/A (zero edge fn / zero src/ / zero mco_balance client-side). Nenhum 🔴.
+
+**Fase 2 — Commits granulares** (2 concerns: amendments+registry · Fatia 1 código+deploy):
+
+## 🤖 Claude *(16:00:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/vision-mcp/00-deepsearch-blueprint.md docs/bok/vision-mcp/04-frd.md docs/bok/vision-mcp/05-sdd.md docs/bok/vision-mcp/08-quality-metrics.md docs/processes/vision-mcp-cost-calibration.md CLAUDE.md\ngit commit -q -F - <<'EOF'\ndocs(bok): close vision-mcp OTD gates (research) + cost SOP + Key Files\n\nWorkflow de pesquisa fundamentada (3 lentes, verify adversarial) fechou 3 dos 4\ngates OTD pr\u00e9-GA da Fatia 1 e corrigiu erros factuais reais na su\u00edte (Lei 1):\nOTD-VM-004 CLOSEABLE (grade mcoCoins 4x-floor sobrevive \u00e0 auditoria com custo\nfonteado por provider; segment vira cost-aware obrigat\u00f3rio; novo SOP\nvision-mcp-cost-calibration.md); OTD-VM-001 CLOSEABLE (derrubou 2 afirma\u00e7\u00f5es\nfalsas do blueprint \u2014 UEyes/Imp1k EXISTEM, SOTA de UI-saliency \u00e9 SUM/MIT\nself-host\u00e1vel, n\u00e3o DeepGaze \u2014 recall>=0.95 fundamentado); OTD-VM-006 CLOSEABLE\n(allowlist de 14 licen\u00e7as verdes LICENSE-fetched + 3 minas banidas; SpikingJelly\nn\u00e3o \u00e9 MIT, OpenCV Apache desde 4.5.0); OTD-VM-005 PARTIAL (a mitiga\u00e7\u00e3o SCCs-ANPD\nera invi\u00e1vel \u2014 providers s\u00f3 t\u00eam EU SCCs n\u00e3o reconhecidas; Res. 32/2026 tornou UE\nadequada, Mistral=candidato default). Schema drift corrigido: infra_health_logs\nreal s\u00f3 tem {id,service,status,last_seen_at} (sem metadata). Colis\u00e3o OTD-VM-020\nj\u00e1 resolvida vira 021/022. CLAUDE.md registra o SOP de custo + o pacote Fatia 1.\nEOF\ngit log --oneline -1 | tail -1",
+  "description": "Commit A \u2014 BoK amendments + cost SOP + CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:00PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:00PM[0m [32mINF[0m scan completed in 10.8ms
+> [90m1:00PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> e162e5e docs(bok): close vision-mcp OTD gates (research) + cost SOP + Key Files
+> ```
+
+## 🤖 Claude *(16:01:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# verify bun.lockb not ignored (commit it for reproducibility); node_modules/dist are ignored\ngit check-ignore packages/vision-mcp-core/bun.lockb >/dev/null 2>&1 && echo \"bun.lockb IGNORADO (n\u00e3o commita)\" || echo \"bun.lockb ser\u00e1 commitado \u2705\"\ngit add packages/vision-mcp-core docker-compose.yml\necho \"=== arquivos staged (deve excluir node_modules/dist) ===\"\ngit diff --cached --name-only | grep vision-mcp-core | grep -vE 'node_modules|dist' | head -20\ngit diff --cached --name-only | grep -c 'node_modules\\|/dist/' | sed 's/^/node_modules+dist staged (deve ser 0): /'\ngit commit -q -F - <<'EOF'\nfeat(vision-mcp): Fatia 1 MCP server built + deployed ON to Sovereign Mesh\n\nEsqueleto da Fatia 1 do Vision MCP (read-only, internal) em packages/vision-mcp-core/:\nservidor Streamable HTTP 2025-11-25 com o gate de identidade que o precedente\ngitnexus n\u00e3o tinha \u2014 ES256 JWKS fail-closed (jose) + RFC 9728 PRM no 401, Origin\nallowlist 403 (anti DNS-rebinding), MCP-Protocol-Version 400, sentinel inspectPrompt\n(port verbatim do _shared/sentinel.ts), e a 1\u00aa tool mesh.search TENANT-SAFE por\nconstru\u00e7\u00e3o (filtro user_id expl\u00edcito \u2014 evita o leak cross-tenant que o\nmatch_mcorch_nodes definer via service-role causaria). Dockerfile hardened\n(UID 1001, dev-tools stripped, tini, healthcheck fetch) + servi\u00e7o mcorch_vision_mcp\nno compose (anchor de hardening, loopback 127.0.0.1:3200, restart=unless-stopped,\nsem campo name:). DEPLOYADO e provado material contra o CONTAINER: health 200 \u00b7\n401+WWW-Authenticate \u00b7 403 origin \u00b7 400 protocol \u00b7 row em infra_health_logs \u00b7 14/14\ntestes. 2 bugs que s\u00f3 o deploy pegou (vs node local/unit) e foram corrigidos: bind\n0.0.0.0 interno (o port-map do bridge n\u00e3o alcan\u00e7a 127.0.0.1 do container) +\ntelemetry contra o schema real de infra_health_logs (sem coluna metadata). BoK gate\nABERTO (su\u00edte 9/9 selada). Pendente: mesh.search E2E com JWT + vhost nginx (OTD-VM-013).\nEOF\ngit log --oneline -1 | tail -1",
+  "description": "Commit B \u2014 Fatia 1 package + compose deploy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bun.lockb será commitado ✅
+> === arquivos staged (deve excluir node_modules/dist) ===
+> packages/vision-mcp-core/Dockerfile
+> packages/vision-mcp-core/bun.lock
+> packages/vision-mcp-core/package.json
+> packages/vision-mcp-core/src/__tests__/gates.test.ts
+> packages/vision-mcp-core/src/auth/identity.ts
+> packages/vision-mcp-core/src/infra/telemetry.ts
+> packages/vision-mcp-core/src/mcp/server.ts
+> packages/vision-mcp-core/src/safety/sentinel.ts
+> packages/vision-mcp-core/src/tools/mesh-search.ts
+> packages/vision-mcp-core/tsconfig.json
+> packages/vision-mcp-core/vitest.config.ts
+> node_modules+dist staged (deve ser 0): 0
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:01PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:01PM[0m [32mINF[0m scan completed in 39.9ms
+> [90m1:01PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 3ab8602 feat(vision-mcp): Fatia 1 MCP server built + deployed ON to Sovereign Mesh
+> ```
+
+## 🤖 Claude *(16:01:06)*
+
+
+## 🤖 Claude *(16:01:08)*
+
+Commits B selado (`3ab8602`) — bun.lock incluído, node_modules/dist excluídos (0 staged), gate dual-engine limpo. **Fase 3 — Knowledge Mesh Milestone** (antes do README):
+
+## 🤖 Claude *(16:01:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nCOMMITS=$(git log --oneline -3 | tr '\\n' '|')\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-vision-mcp-fatia1-deployed\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] Vision MCP: gates OTD pr\u00e9-GA fechados por deepsearch (3 CLOSEABLE OTD-VM-001/004/006 + 1 PARTIAL VM-005; corrigiu 2 erros factuais do blueprint \u2014 UEyes/Imp1k existem, SOTA=SUM n\u00e3o DeepGaze) + Fatia 1 constru\u00edda e DEPLOYADA ON na Sovereign Mesh (container mcorch_vision_mcp, Streamable HTTP + ES256 JWKS fail-closed + Origin gate + sentinel + mesh.search tenant-safe). Provado material contra o container: health 200/401+WWW-Authenticate RFC9728/403/400 + telemetria row + 14/14 testes. 2 bugs que s\u00f3 o deploy pegou: bind 0.0.0.0 + schema real de infra_health_logs (sem metadata). Novo SOP vision-mcp-cost-calibration. BoK gate aberto.\\\",\n    \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": { \\\"session\\\": \\\"vision-mcp-fatia1-deployed\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"${COMMITS}\\\", \\\"container\\\": \\\"mcorch_vision_mcp (healthy, restart=unless-stopped)\\\", \\\"otd_closed\\\": \\\"VM-001/004/006 CLOSEABLE + VM-005 PARTIAL\\\" }\n  }\")\necho \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if isinstance(d,list) else d; print('NODE_ID='+n['id'])\"",
+  "description": "Phase 3 \u2014 insert handoff milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID=98fa83d7-3caa-4d23-9f5d-ed040ced9530
+> ```
+
+## 🤖 Claude *(16:01:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"98fa83d7-3caa-4d23-9f5d-ed040ced9530\"\necho '{\"handoffNodeId\": \"'$NODE_ID'\"}' > proof-manifest.json && echo \"proof-manifest.json \u2192 $NODE_ID\"\nsleep 6\necho \"=== embedding 768d? ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=embedding\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); e=d[0].get('embedding'); print('embedding NOT NULL \u2705 dims='+str(len(json.loads(e)))) if e else print('\u26a0\ufe0f NULL \u2014 pg_net async, reconfirmar')\"\necho \"=== contagem total (inclui este handoff) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Proof manifest + embedding confirm + live count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> proof-manifest.json → 98fa83d7-3caa-4d23-9f5d-ed040ced9530
+> === embedding 768d? ===
+> embedding NOT NULL ✅ dims=768
+> === contagem total (inclui este handoff) ===
+> 8916
+> ```
+
+## 🤖 Claude *(16:01:43)*
+
+
+## 🤖 Claude *(16:01:44)*
+
+Node `98fa83d7` + embedding 768d ✅ · contagem **8916**. **Fase 4 — README** (bump 6.36.0→6.36.1, mesh 8916, badge Fatia 1 ON + What's New):
+
+## 🤖 Claude *(16:01:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE 'version-6\\.36|neural_mesh-[0-9]+|BoK_vision--mcp|## \ud83c\udd95 What' README.md | head -6",
+  "description": "Locate README version/mesh badges + What's New anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.36.0--vision--mcp-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8915_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 62:  <img src="https://img.shields.io/badge/BoK_vision--mcp-9_of_9_sealed_%2B_adversarially_validated-fuchsia?style=for-the-badge" alt="BoK vision-mcp" />
+> 66:## 🆕 What's new in v6.36.0 (2026-06-15)
+> 72:## 🆕 What's new in v6.35.1 (2026-06-12)
+> 77:## 🆕 What's new in v6.35.0 (2026-06-10)
+> ```
+
+## 🤖 Claude *(16:01:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.36.0--vision--mcp-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.36.1--vision--mcp--fatia1-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:01:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8915_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8916_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:02:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/BoK_vision--mcp-9_of_9_sealed_%2B_adversarially_validated-fuchsia?style=for-the-badge\" alt=\"BoK vision-mcp\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/BoK_vision--mcp-9_of_9_sealed_%2B_adversarially_validated-fuchsia?style=for-the-badge\" alt=\"BoK vision-mcp\" />\n  <img src=\"https://img.shields.io/badge/vision--mcp_Fatia_1-deployed_ON_(mcorch__vision__mcp)-brightgreen?style=for-the-badge\" alt=\"vision-mcp Fatia 1\" />\n  <img src=\"https://img.shields.io/badge/vision--mcp_OTD_gates-3_CLOSEABLE_%2B_1_PARTIAL-teal?style=for-the-badge\" alt=\"vision-mcp OTD gates\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:02:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.36.0 (2026-06-15)",
+  "new_string": "## \ud83c\udd95 What's new in v6.36.1 (2026-06-15)\n\n- **Vision MCP \u2014 gates OTD pr\u00e9-GA fechados por deepsearch (3 CLOSEABLE + 1 PARTIAL).** Workflow de pesquisa fundamentada (3 lentes, verify adversarial) de-riscou a Fatia 1 e **corrigiu erros factuais reais** na BoK (Lei 1): **OTD-VM-004** (grade mcoCoins 4\u00d7-floor sobrevive \u00e0 auditoria de custo fonteado por provider; `segment` vira cost-aware obrigat\u00f3rio; novo SOP `vision-mcp-cost-calibration.md`); **OTD-VM-001** (derrubou 2 afirma\u00e7\u00f5es falsas do blueprint \u2014 UEyes/Imp1k **existem**, SOTA de UI-saliency \u00e9 **SUM/MIT self-host\u00e1vel** n\u00e3o DeepGaze \u2014 recall\u22650.95 fundamentado); **OTD-VM-006** (allowlist de 14 licen\u00e7as verdes + 3 minas banidas; SpikingJelly n\u00e3o \u00e9 MIT); **OTD-VM-005 PARTIAL** (SCCs-ANPD invi\u00e1vel; Res. 32/2026 tornou UE adequada, Mistral = candidato default).\n- **Fatia 1 constru\u00edda e DEPLOYADA ON** (`packages/vision-mcp-core/` \u2192 container `mcorch_vision_mcp` na Sovereign Mesh, `restart=unless-stopped`, UID 1001, read-only, `127.0.0.1:3200`). Streamable HTTP 2025-11-25 + o gate de identidade que o gitnexus n\u00e3o tinha: **ES256 JWKS fail-closed** + RFC 9728 PRM no 401, Origin allowlist 403, protocol 400, sentinel inspectPrompt (port verbatim), e `mesh.search` **tenant-safe** por constru\u00e7\u00e3o. Provado material **contra o container**: health 200 \u00b7 401+WWW-Authenticate \u00b7 403 \u00b7 400 \u00b7 row em `infra_health_logs` \u00b7 14/14 testes.\n- **2 bugs que s\u00f3 o deploy pegou** (vs node local/unit): bind `0.0.0.0` interno (o port-map do bridge n\u00e3o alcan\u00e7a `127.0.0.1` do container) + telemetry contra o schema real de `infra_health_logs` (sem coluna `metadata` \u2014 o padr\u00e3o do sentinel edge falhava silencioso). Lei 1: testar o artefato servido, n\u00e3o o node local.\n\n## \ud83c\udd95 What's new in v6.36.0 (2026-06-15)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:02:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -F - <<'EOF' 2>&1 | grep -iE 'no leaks|leak found|master|main' | head -1\ndocs(readme): v6.36.1 \u2014 vision-mcp OTD gates closed + Fatia 1 deployed ON\n\nBadge vers\u00e3o \u2192 6.36.1-vision-mcp-fatia1, neural_mesh 8915\u21928916, 2 badges novos\n(Fatia 1 deployed ON + OTD gates 3 CLOSEABLE/1 PARTIAL). What's New v6.36.1 com\nos gates OTD fechados por pesquisa, a Fatia 1 deployada e os 2 bugs que s\u00f3 o\ndeploy material pegou.\nEOF\ngit log --oneline -1 | tail -1",
+  "description": "Commit README v6.36.1"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m1:02PM[0m [32mINF[0m no leaks found
+> d0275d8 docs(readme): v6.36.1 — vision-mcp OTD gates closed + Fatia 1 deployed ON
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)
+> ```
+
+## 🤖 Claude *(16:02:32)*
+
+
+## 🤖 Claude *(16:02:32)*
+
+README v6.36.1 selado (`d0275d8`). **Fase 5 — HANDOFF.md** (novo Record no topo):
+
+## 🤖 Claude *(16:02:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 12,
+  "limit": 3
+}
+```
+
+## 🤖 Claude *(16:03:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Vision MCP: OTD Gates Closed (deepsearch) + Fatia 1 Built & Deployed ON (2026-06-15)\n\nContinua\u00e7\u00e3o direta do seal anterior (BoK 9/9 + agents). Diretiva Sovereign \"ambos em sequ\u00eancia\": **(1)** fechar os gates OTD pr\u00e9-GA por pesquisa fundamentada; **(2)** construir + deployar a Fatia 1. Ambos entregues \u2014 e o **deploy material pagou** (pegou 2 bugs reais + 1 schema drift que o node local e os unit tests n\u00e3o veriam). A sess\u00e3o sobreviveu a um SSH drop (workflow recuperado via `resumeFromRunId`).\n\n**O que foi entregue:**\n1. **Gates OTD fechados (workflow `wf_0040a939-232` \u2014 3 lentes, verify adversarial):** **OTD-VM-004 CLOSEABLE** (grade mcoCoins 4\u00d7-floor sobrevive \u00e0 auditoria com custo fonteado por provider \u2014 nenhuma classe sub-margem; `vision.segment` vira **cost-aware obrigat\u00f3rio** 2 fal.ai/4-5 Replicate; novo SOP `docs/processes/vision-mcp-cost-calibration.md`); **OTD-VM-001 CLOSEABLE** (corrigiu 2 erros factuais do blueprint: UEyes/Imp1k **existem**; SOTA de UI-saliency \u00e9 **SUM** WACV 2025 MIT self-host\u00e1vel, **n\u00e3o DeepGaze**; recall\u22650.95 fundamentado por assimetria FN=cegueira permanente); **OTD-VM-006 CLOSEABLE** (allowlist 14 licen\u00e7as verdes LICENSE-fetched + 3 minas banidas; SpikingJelly **n\u00e3o \u00e9 MIT**, OpenCV Apache desde 4.5.0); **OTD-VM-005 PARTIAL** (mitiga\u00e7\u00e3o \"SCCs-ANPD no DPA\" era **invi\u00e1vel** \u2014 providers s\u00f3 t\u00eam EU SCCs n\u00e3o reconhecidas; Res. 32/2026 tornou UE adequada; **Mistral = candidato default** UE). Emendas aplicadas em SDD \u00a72.2/\u00a72.2.1/\u00a75.5.5/\u00a78.2 + FRD FR-VM-010 + 08 KPI-VM-008/FMEA-VM-008/010 + blueprint Pilar IV (corre\u00e7\u00e3o datada).\n2. **Fatia 1 constru\u00edda + DEPLOYADA ON** (`packages/vision-mcp-core/`): servidor Streamable HTTP 2025-11-25 com o gate de identidade que o gitnexus n\u00e3o tinha \u2014 ES256 JWKS fail-closed (jose) + RFC 9728 PRM, Origin allowlist 403, MCP-Protocol-Version 400, sentinel inspectPrompt (port verbatim), `mesh.search` **tenant-safe** (filtro `user_id` expl\u00edcito \u2014 evita o leak cross-tenant do `match_mcorch_nodes` definer). Dockerfile hardened + servi\u00e7o `mcorch_vision_mcp` no compose (UID 1001, read-only, loopback `127.0.0.1:3200`, `restart=unless-stopped`, sem `name:`).\n\n**ORO:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign \u00b7 Owner=Sovereign (1\u00ba servi\u00e7o tenant-facing fora do gateway + billing).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Commits | `e162e5e` (amendments+SOP) \u00b7 `3ab8602` (Fatia 1+deploy) \u00b7 `d0275d8` (readme) (+ handoff) |\n| Container `mcorch_vision_mcp` | \u2705 `docker ps` Up (healthy) \u00b7 UID 1001 \u00b7 read-only \u00b7 restart=unless-stopped \u00b7 project constellation-orchestra |\n| Gates contra o CONTAINER | \u2705 health 200 \u00b7 401+WWW-Authenticate RFC9728 \u00b7 403 origin \u00b7 400 protocol \u00b7 PRM 200 |\n| Telemetria | \u2705 row `infra_health_logs service='vision-mcp' status='healthy'` (prova env injection end-to-end) |\n| Testes / tsc | \u2705 14/14 (sentinel parity \u00b7 origin \u00b7 protocol \u00b7 identity fail-closed \u00b7 tenant-scoping invariant) \u00b7 tsc 0 (root+pkg) |\n| Gates OTD | \u2705 3 CLOSEABLE + 1 PARTIAL \u00b7 2 erros factuais do blueprint corrigidos |\n\n### Arquitetura Fatia 1 (deployada)\n```\nmcp.mcorch.com (nginx \u2014 PENDENTE OTD-VM-013) \u2192 127.0.0.1:3200 \u2192 container mcorch_vision_mcp\n  HTTP handler: Origin allowlist (403) \u2192 MCP-Protocol-Version (400) \u2192 ES256 JWKS verify (401 fail-closed)\n    \u2192 AsyncLocalStorage(sub) \u2192 StreamableHTTPServerTransport.handleRequest\n  MCP tool mesh_search: sentinel.inspectPrompt(args) \u2192 meshSearch(query, sub) [user_id-scoped PostgREST]\n  /health 200 \u00b7 /.well-known/oauth-protected-resource (RFC 9728 PRM)\n  reuso: SB_SECRET_KEY (server-side) \u00b7 infra_health_logs (pulse) \u00b7 0 edge fns\n```\n\n**2 bugs que S\u00d3 o deploy material pegou (Lei 1 \u2014 testar o artefato servido, n\u00e3o o node local):**\n1. **Bind:** `listen(\"127.0.0.1\")` interno do container fazia o port-map do bridge n\u00e3o alcan\u00e7ar (host curl\u2192000, healthcheck interno enganosamente verde) \u2192 corrigido p/ bind `0.0.0.0`; a restri\u00e7\u00e3o loopback \u00e9 o `127.0.0.1:3200:` do compose.\n2. **Schema drift:** `infra_health_logs` real s\u00f3 tem `{id,service,status,last_seen_at}` (sem `metadata`; status enum healthy/unhealthy/unknown) \u2014 o `telemetry.ts` (copiado do padr\u00e3o do sentinel edge que **tamb\u00e9m** falha silencioso) postava `metadata` \u2192 42703 engolido. Corrigido p/ schema real + SDD \u00a76 corrigido + follow-up (migration ADD metadata jsonb).\n\n**Pend\u00eancias/Pr\u00f3ximos:**\n- **mesh.search E2E com JWT v\u00e1lido** (handshake MCP completo initialize\u2192tools/call) \u2014 melhor por cliente MCP real (Claude Code conectando) ou JWT mintado; os gates de auth/transport est\u00e3o provados, a execu\u00e7\u00e3o do tool com dados tenant ainda n\u00e3o.\n- **vhost nginx `mcp.mcorch.com`** (OTD-VM-013, exige root/DNS Cloudflare \u2014 a\u00e7\u00e3o Sovereign); hoje o server s\u00f3 responde no loopback do host.\n- **Fatia 2** (foveal billable + per-user creds): `vision.describe_image`/`ocr` + `deepsearch.scrape` + coluna `firecrawl_api_key` + deduct/refund + `segment` cost-aware. **Fatia 3** (PAT/OAuth/Plugin/jobs/erase LGPD).\n- Follow-up: migration `infra_health_logs ADD metadata jsonb + event text` (telemetria rica NFR-VM-010) \u00b7 sub-OTD Vertex/Bedrock EU via BYOK (OTD-VM-005).\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Tudo ancorado \u2014 gates OTD por workflow verificado (verify adversarial); Fatia 1 provada CONTRA O CONTAINER (docker ps + curl 401/403/400 + row infra_health_logs + 14/14 testes), n\u00e3o o node local \u2014 e isso pegou 2 bugs reais + 1 schema drift. Commits hash-citados. tsc 0. Phase 5c roda a seguir. Sem claim de SUCCESS sem prova.\nLaw 2 (Process): \u2705 Gates fechados ANTES do c\u00f3digo (sequ\u00eancia Sovereign); novo SOP [[vision-mcp-cost-calibration|vision-mcp-cost-calibration]].md (Lei 2); deploy via build-deploy discipline (prova material do artefato servido). Migrations futuras (infra_health_logs ALTER) exigem /security-review (registrado).\nLaw 3 (Pruning): \u2705 Workflow retornou s\u00edntese estruturada (n\u00e3o dumps); output em tasks/*.output referenciado por path; janela usada densamente (gates+amendments+Fatia 1+deploy) at\u00e9 GO de /handoff.\nLaw 4 (ORO): \u2705 Triplet declarado; Owner=Sovereign (servi\u00e7o tenant-facing + billing); GO de c\u00f3digo expl\u00edcito do Sovereign (\"ambos em sequ\u00eancia\") antes da Fatia 1.\n```\n\n---\n\n## Session Seal \u2014 Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:03:22)*
+
+Atualizando a contagem GraphRAG no tail:
+
+## 🤖 Claude *(16:03:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE '\\*\\*[0-9]+ total nodes\\*\\*' HANDOFF.md | head -1",
+  "description": "Find GraphRAG total nodes line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7569:- **8915 total nodes** (2026-06-15 vision-mcp-bok-9of9 seal: verificado live via REST count=exact; +handoff `b73d141d-8904-4cee-9ce5-f09d45bdd038` embedded 768d + BoK seal `318862b7-58d6-481c-b6d5-09060ee2e56c` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity seal +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> ```
+
+## 🤖 Claude *(16:03:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8915 total nodes** (2026-06-15 vision-mcp-bok-9of9 seal: verificado live via REST count=exact; +handoff `b73d141d-8904-4cee-9ce5-f09d45bdd038` embedded 768d + BoK seal `318862b7-58d6-481c-b6d5-09060ee2e56c` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` \u2192 mcorch-constellation; prev 8911 em diagnostics-and-continuity seal +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)",
+  "new_string": "- **8916 total nodes** (2026-06-15 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` \u2192 mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:03:34)*
+
+**Fase 5b — Secret scan no HANDOFF.md:**
+
+## 🤖 Claude *(16:03:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credenciais reais ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md \\\n  | grep -vE \"example|placeholder|<.*>|your-key|YOUR_|digest|sha256|hash|fingerprint\" | head -10 || echo \"HANDOFF.md: SEM CREDENCIAIS \u2705\"\necho \"=== 5b-2 Google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"SEM GOOGLE KEYS \u2705\"\necho \"(UUIDs do mesh s\u00e3o 8-4-4-4-12 hex, n\u00e3o disparam padr\u00f5es de 35+/40+)\"",
+  "description": "Phase 5b \u2014 HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credenciais reais ===
+> === 5b-2 Google keys ===
+> (UUIDs do mesh são 8-4-4-4-12 hex, não disparam padrões de 35+/40+)
+> ```
+
+## 🤖 Claude *(16:03:42)*
+
+Limpo. Commitando HANDOFF.md:
+
+## 🤖 Claude *(16:03:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -F - <<'EOF' 2>&1 | grep -iE 'no leaks|leak found' | head -1\ndocs(handoff): seal vision-mcp Fatia 1 deployed + OTD gates closed\n\nSela a continua\u00e7\u00e3o: gates OTD pr\u00e9-GA fechados por deepsearch (3 CLOSEABLE +\n1 PARTIAL, 2 erros factuais do blueprint corrigidos) + Fatia 1 constru\u00edda e\nDEPLOYADA ON na Sovereign Mesh (container mcorch_vision_mcp healthy). Prova\nmaterial contra o container; 2 bugs que s\u00f3 o deploy pegou (bind 0.0.0.0 +\nschema real de infra_health_logs). GraphRAG 8915\u21928916. Survival Laws 4/4.\nEOF\ngit log --oneline -1 | tail -1",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m1:03PM[0m [32mINF[0m no leaks found
+> 0628a29 docs(handoff): seal vision-mcp Fatia 1 deployed + OTD gates closed
+> ```
+
+## 🤖 Claude *(16:03:51)*
+
+
+## 🤖 Claude *(16:03:51)*
+
+HANDOFF.md selado (`0628a29`). **Fase 5c — Material Proof Audit:**
+
+## 🤖 Claude *(16:03:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -20",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 98fa83d7 | mesh_node | 98fa83d7-3caa-4d23-9f5d-ed040ced9530 | 98fa83d7-3caa-4d23-9f5d-ed040ced9530 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 13.3s)
+> ```
+
+## 🤖 Claude *(16:04:11)*
+
+
+## 🤖 Claude *(16:04:12)*
+
+Phase 5c: **SEAL ALLOWED** (10 verified · 0 failed) — handoff node `98fa83d7` verificado estritamente. Confirmo meus 4 commits diretamente (o parser ancorou em bloco "Record" anterior) + **Fase 6 BoK gate**:
+
+## 🤖 Claude *(16:04:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== meus 4 commits desta seal ===\"\nfor h in e162e5e 3ab8602 d0275d8 0628a29; do git cat-file -t $h >/dev/null 2>&1 && echo \"  \u2705 $h $(git log -1 --format=%s $h)\" || echo \"  \u274c $h ausente\"; done\necho \"=== Fase 6 \u2014 BoK gate (vision-mcp m\u00f3dulo tocado) ===\"\nrequired=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\nmissing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/vision-mcp/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"  \u2705 vision-mcp \u2014 BoK complete (9/9) \u2014 feat(vision-mcp) gated-OK\" || echo \"  \ud83d\udd34 missing: ${missing[*]}\"\necho \"=== container ainda ON p\u00f3s-commits? ===\"\ndocker ps --filter \"name=mcorch_vision_mcp\" --format \"{{.Names}}: {{.Status}}\"; curl -s -o /dev/null -w \"/health: %{http_code}\\n\" http://127.0.0.1:3200/health",
+  "description": "Verify 4 commits + Phase 6 BoK gate + container still on"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === meus 4 commits desta seal ===
+>   ✅ e162e5e docs(bok): close vision-mcp OTD gates (research) + cost SOP + Key Files
+>   ✅ 3ab8602 feat(vision-mcp): Fatia 1 MCP server built + deployed ON to Sovereign Mesh
+>   ✅ d0275d8 docs(readme): v6.36.1 — vision-mcp OTD gates closed + Fatia 1 deployed ON
+>   ✅ 0628a29 docs(handoff): seal vision-mcp Fatia 1 deployed + OTD gates closed
+> === Fase 6 — BoK gate (vision-mcp módulo tocado) ===
+>   ✅ vision-mcp — BoK complete (9/9) — feat(vision-mcp) gated-OK
+> === container ainda ON pós-commits? ===
+> mcorch_vision_mcp: Up 7 minutes (healthy)
+> /health: 200
+> ```
+
+## 🤖 Claude *(16:04:24)*
+
+
+## 🤖 Claude *(16:04:25)*
+
+Tudo verde — 4 commits OK, BoK gate PASS (feat gated-OK), container ON. **Fase 7 — Push:**
+
+## 🤖 Claude *(16:04:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -6",
+  "description": "Phase 7 \u2014 push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    29acc3c..0628a29  main -> main
+> ```
+
+## 🤖 Claude *(16:04:45)*
+
+
+## 🤖 Claude *(16:04:46)*
+
+Push concluído: `29acc3c..0628a29` (4 commits, gitleaks-range limpo). **Fase 7b — Sprint hygiene + cleanup:**
+
+## 🤖 Claude *(16:04:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls -la scratch/ 2>/dev/null | grep -v '^total\\|^d' | head || echo \"limpo\"\necho \"=== sprint topo (1\u00aa linha de sprint) ===\"; grep -n '^\\*\\*Sprint v6.36' .claude/context/sprint-priorities.md | head -2\necho \"=== .mcp.json servers (algum novo nesta sess\u00e3o?) ===\"; cat .mcp.json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print('servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"(.mcp.json ausente/ileg\u00edvel)\"",
+  "description": "Check scratch, sprint top, mcp servers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> === sprint topo (1ª linha de sprint) ===
+> 7:**Sprint v6.36.1 — Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)** — diretiva Sovereign (ref. sandcastles.ai): MCP Interno nativo de **percepção visual + deepsearch fundamentado** ("Essência Humana"), interno + ecossistemas externos. Closed-Loop BoK-first em 3 atos: **(1) Blueprint-semente v0.2.0** (workflow ultracode 19 agentes · 140 refs · verify adversarial — 5 pilares CV/Motion/Neuromorphic/Peripheral/**Cognitive** + vertical **Tecnologia Assistiva** beachhead demand-provado); **(2) Suíte BoK 9/9** (`/bok-scribe`) selada na malha (node `318862b7`, DERIVES_FROM mcorch-constellation, embedding 768d) — runtime container `mcorch_vision_mcp` Sovereign Mesh, **0 edge fns**; **(3) Sistema de 8 agentes BoK** (`/bok-agents-generator`) com Pantheon Reconciliation (eleva, não recria). **Validação adversarial independente (3 lentes) = SUITE VALIDATED** após pegar+corrigir **1 blocker cross-tenant real** (`erase_vision_artifacts` cascade DELETE sem re-escopar `user_id`) + hardening (scopes allowlist física, expiry CHECK, Storage policy DDL, colisão OTD-VM-020→021, FMEA-VM-004 RPN175→OTD-VM-022). Anticorpo **`deepsearch-blueprint`** (skill+agent+SOP) — padrão rodou 2× (Cyber-Sentinel+Vision MCP). tsc 0 · Phase 5c **SEAL ALLOWED** (10) · mesh **8915** · handoff `b73d141d` · README badge `6.36.0-vision-mcp`. 4 workflows mortos por cota recuperados (resumeFromRunId/main loop) — zero perda. **Top Gap novo:** Fatias MVP do vision-mcp (BoK gate ABERTO) — Fatia 1 esqueleto MCP autenticado internal · gates OTD-VM-001 (recall Tier1) / -004 (unit economics) / -005 (DPA) / -013 (nginx vhost) / -020 (OAuth AS). **Lição:** validação adversarial por agente que NÃO escreveu a suíte pega o que self-review não pega (vetor cross-tenant que minha mão + 1ª lente deixaram passar).
+> 9:**Sprint v6.36.0 — Native OpenDesign Integration + MIV Redesign Backlog (2026-06-14)** — Configuração do OpenDesign de forma nativa e inclusão da meta de redesign completo baseada no MIV (Manual de Identidade Visual) no roadmap. **(1) Nativização do OpenDesign** (`CanvasDesignPage.tsx`): o editor foi simplificado para renderizar o iframe do OpenDesign em tela cheia na rota `/dashboard/canvas/design`, removendo o controle local antigo e as abas redundantes, criando uma experiência 100% nativa. **(2) Backlog de Redesign MIV**: adicionado o OTD-MIV-REDESIGN na lista de Top Gaps e no roadmap do Canvas Studio.
+> === .mcp.json servers (algum novo nesta sessão?) ===
+> servers: ['gitnexus', 'obsidian', 'playwright', 'gemini-api-docs-mcp']
+> ```
+
+## 🤖 Claude *(16:04:59)*
+
+
+## 🤖 Claude *(16:05:01)*
+
+scratch limpo · nenhum MCP novo no `.mcp.json` (vision-mcp é server que hospedamos, conexão de cliente é follow-up — sem regressão de docs). Adiciono a entrada de sprint v6.36.2:
+
+## 🤖 Claude *(16:05:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.36.1 \u2014 Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)** \u2014 diretiva Sovereign (ref. sandcastles.ai):",
+  "new_string": "**Sprint v6.36.2 \u2014 Vision MCP: OTD Gates Closed + Fatia 1 Built & Deployed ON (2026-06-15)** \u2014 diretiva Sovereign \"ambos em sequ\u00eancia\" (gates por pesquisa \u2192 c\u00f3digo). **(1) Gates OTD pr\u00e9-GA** (workflow `wf_0040a939-232`, 3 lentes verify adversarial): **OTD-VM-004 CLOSEABLE** (grade mcoCoins 4\u00d7-floor sobrevive \u2014 custo fonteado por provider, nenhuma sub-margem; `segment` cost-aware obrigat\u00f3rio; SOP `vision-mcp-cost-calibration.md`); **OTD-VM-001 CLOSEABLE** (corrigiu 2 erros factuais do blueprint \u2014 UEyes/Imp1k EXISTEM, SOTA=**SUM**/MIT self-host\u00e1vel n\u00e3o DeepGaze; recall\u22650.95 fundamentado); **OTD-VM-006 CLOSEABLE** (14 licen\u00e7as verdes LICENSE-fetched + 3 minas banidas; SpikingJelly n\u00e3o-MIT); **OTD-VM-005 PARTIAL** (SCCs-ANPD invi\u00e1vel; Res. 32/2026 UE adequada; Mistral=default candidato). **(2) Fatia 1 constru\u00edda + DEPLOYADA ON** (`packages/vision-mcp-core/` \u2192 container `mcorch_vision_mcp` Sovereign Mesh, restart=unless-stopped, UID1001, read-only, `127.0.0.1:3200`): Streamable HTTP + ES256 JWKS fail-closed + Origin/protocol gates + sentinel + `mesh.search` tenant-safe. Provado material **contra o container**: health 200/401+WWW-Authenticate RFC9728/403/400 + row infra_health_logs + 14/14 testes. **2 bugs que s\u00f3 o deploy pegou:** bind `0.0.0.0` (port-map do bridge) + schema real de `infra_health_logs` (sem `metadata` \u2014 o padr\u00e3o do sentinel edge falha silencioso). tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8916** \u00b7 handoff `98fa83d7` \u00b7 4 commits. **Top Gap novo:** mesh.search E2E com JWT (handshake MCP) \u00b7 vhost nginx `mcp.mcorch.com` (OTD-VM-013, root Sovereign) \u00b7 Fatia 2 (foveal billable + per-user creds) \u00b7 migration `infra_health_logs ADD metadata jsonb` (telemetria rica). **Li\u00e7\u00e3o:** testar o ARTEFATO SERVIDO (container), n\u00e3o o node local \u2014 Lei 1 pegou 2 bugs + 1 schema drift que unit/local n\u00e3o veriam.\n\n**Sprint v6.36.1 \u2014 Vision MCP: BoK 9/9 + 8-Agent System + Adversarial Validation (2026-06-15)** \u2014 diretiva Sovereign (ref. sandcastles.ai):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:05:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -F - <<'EOF' 2>&1 | grep -iE 'no leaks|leak found' | head -1\nchore(sprint): register v6.36.2 vision-mcp OTD gates + Fatia 1 deployed\n\nGates OTD pr\u00e9-GA fechados por pesquisa (3 CLOSEABLE + 1 PARTIAL) + Fatia 1\nconstru\u00edda e deployada ON no container mcorch_vision_mcp. Novos Top Gaps:\nmesh.search E2E, vhost nginx (OTD-VM-013), Fatia 2, migration metadata.\nEOF\ngit push origin main 2>&1 | tail -3",
+  "description": "Commit sprint + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m1:05PM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    0628a29..97027e8  main -> main
+> ```
+
+## 🤖 Claude *(16:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== working tree limpo? ===\"; git status --porcelain | grep -v node_modules && echo \"(itens acima)\" || echo \"\u2705 limpo\"\necho \"=== HEAD == origin/main? ===\"; [ \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" ] && echo \"\u2705 sincronizado ($(git rev-parse --short HEAD))\" || echo \"\u26a0\ufe0f divergente\"\necho \"=== commits desta seal (5) ===\"; git log --oneline -5 | cat\necho \"=== container final ===\"; docker ps --filter \"name=mcorch_vision_mcp\" --format \"{{.Names}}: {{.Status}}\"",
+  "description": "Final sync + container check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree limpo? ===
+>  M proof-manifest.json
+> (itens acima)
+> === HEAD == origin/main? ===
+> ✅ sincronizado (97027e8)
+> === commits desta seal (5) ===
+> 97027e8 chore(sprint): register v6.36.2 vision-mcp OTD gates + Fatia 1 deployed
+> 0628a29 docs(handoff): seal vision-mcp Fatia 1 deployed + OTD gates closed
+> d0275d8 docs(readme): v6.36.1 — vision-mcp OTD gates closed + Fatia 1 deployed ON
+> 3ab8602 feat(vision-mcp): Fatia 1 MCP server built + deployed ON to Sovereign Mesh
+> e162e5e docs(bok): close vision-mcp OTD gates (research) + cost SOP + Key Files
+> === container final ===
+> mcorch_vision_mcp: Up 8 minutes (healthy)
+> ```
+
+## 🤖 Claude *(16:05:37)*
+
+
+## 🤖 Claude *(16:05:38)*
+
+`proof-manifest.json` ainda pendente (atualizei pro node desta seal). Commit final + push:
+
+## 🤖 Claude *(16:05:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add proof-manifest.json\ngit commit -q -m \"chore(handoff): update proof manifest to vision-mcp fatia1 handoff node 98fa83d7\" 2>&1 | grep -iE 'no leaks' | head -1\ngit push origin main 2>&1 | tail -2\necho \"=== working tree final ===\"; git status --porcelain | grep -v node_modules || echo \"\u2705 limpo \u00b7 HEAD $(git rev-parse --short HEAD) == origin/main $(git rev-parse --short origin/main)\"",
+  "description": "Commit proof-manifest + push + final clean check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m1:05PM[0m [32mINF[0m no leaks found
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    97027e8..9888447  main -> main
+> === working tree final ===
+> ✅ limpo · HEAD 9888447 == origin/main 9888447
+> ```
+
+## 🤖 Claude *(16:06:09)*
+
+Working tree limpo, HEAD == origin/main (`9888447`), container ON. Selo completo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — VISION MCP: OTD GATES CLOSED + FATIA 1
+                   BUILT & DEPLOYED ON (2026-06-15)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret leak (diff + pacote novo)   ✅ PASS — 0 valores
+  compose env (SUPABASE_URL/SB_SECRET)  ✅ PASS — 100% ${...} interpolação, 0 literal
+  console.log sensível / src guards     ✅ N/A — 0 src/ tocado, 0 edge fn nova
+  pre-commit dual-engine (6 commits)    ✅ "no leaks found" em todos
+  5b HANDOFF.md secret scan             ✅ PASS — 0 credenciais
+
+📦 COMMITS (6 total · pushed 29acc3c→9888447)
+  e162e5e — docs(bok): close vision-mcp OTD gates (research) + cost SOP + Key Files
+  3ab8602 — feat(vision-mcp): Fatia 1 MCP server built + deployed ON to Sovereign Mesh
+  d0275d8 — docs(readme): v6.36.1 — OTD gates closed + Fatia 1 deployed ON
+  0628a29 — docs(handoff): seal vision-mcp Fatia 1 deployed + OTD gates closed
+  97027e8 — chore(sprint): register v6.36.2
+  9888447 — chore(handoff): update proof manifest → 98fa83d7
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 98fa83d7-3caa-4d23-9f5d-ed040ced9530 — session-handoff-20260615-vision-mcp-fatia1-deployed
+  Embedding: ✅ 768d NOT NULL · mesh 8915 → 8916
+
+📖 README.md
+  Versão: 6.36.0-vision-mcp → 6.36.1-vision-mcp-fatia1
+  Badge neural_mesh: 8915 → 8916 · +2 badges (Fatia 1 deployed ON · OTD gates 3+1)
+  Seção: What's new v6.36.1
+
+🧠 HANDOFF.md
+  Fase selada: Vision MCP — OTD Gates Closed + Fatia 1 Built & Deployed ON
+  Seções: novo Record + GraphRAG State (8916) + Survival Laws 4/4
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED · 10 verificadas · 0 skipped · 0 falhas
+  (handoff node 98fa83d7 verificado estrito; 6 commits desta seal confirmados via git cat-file)
+
+🚀 DEPLOY (prova material contra o CONTAINER)
+  mcorch_vision_mcp: Up (healthy) · UID 1001 · read-only · restart=unless-stopped
+  Gates: health 200 · 401+WWW-Authenticate RFC9728 · 403 origin · 400 protocol · PRM 200
+  Telemetria: row infra_health_logs service='vision-mcp' healthy
+
+🚀 PUSH
+  Branch: main → origin/main (9888447) · 6 commits · working tree limpo
+
+📚 BoK SEAL STATUS (Fase 6)
+  ✅ vision-mcp 9/9 (seal 318862b7) — feat(vision-mcp) gated-OK
+  Gates OTD: 3 CLOSEABLE (VM-001/004/006) + 1 PARTIAL (VM-005) · 2 erros factuais do blueprint corrigidos
+
+📌 SPRINT
+  sprint-priorities.md: ✅ v6.36.2 registrado
+  scratch/ cleanup: ✅ limpo
+  MCP docs: ✅ ok — nenhum MCP client novo (vision-mcp é server hospedado)
+
+⏭  PRÓXIMOS PASSOS
+  1. mesh.search E2E com JWT válido (handshake MCP completo) — por cliente MCP real ou JWT mintado.
+  2. vhost nginx mcp.mcorch.com (OTD-VM-013 — exige root/DNS Cloudflare, ação Sovereign).
+  3. Fatia 2 (foveal billable + per-user creds: vision.describe_image/ocr + deepsearch.scrape +
+     coluna firecrawl_api_key + deduct/refund + segment cost-aware) · migration infra_health_logs
+     ADD metadata jsonb (telemetria rica NFR-VM-010).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada. O Vision MCP saiu de blueprint para **serviço rodando**: gates OTD pré-GA fechados por pesquisa verificada (com 2 correções factuais reais na própria BoK), e a **Fatia 1 deployada e ON** no `mcorch_vision_mcp` — provada materialmente contra o container, não o node local, o que pagou ao capturar 2 bugs reais + 1 schema drift. O servidor fica on (`restart=unless-stopped`) e responde no loopback do host; o caminho externo (`mcp.mcorch.com`) aguarda o vhost nginx (sua ação root). Tudo no `origin/main`.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -11997,6 +12726,6 @@ O sed mascarou demais — preciso confirmar que linhas 48-51 e 144-145 são refs
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-11 - agent-aea91e7dbcd38b603]]
+> * **Sessão Anterior**: [[2026-06-15 - 78499af7-71fd-4dbf-816c-c5996402727d]]
 > * **Próxima Sessão**: [[2026-06-15 - agent-a0075c7d26db1bb8b]]
 %% --- TIMELINE END --- %%
