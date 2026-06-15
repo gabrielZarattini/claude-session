@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 34
-> * **Total de Sessões**: 732
+> * **Total de Sessões**: 733
 
 ---
 
@@ -57,6 +57,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-15 - handson]]` (GeminiSessions) - *2026-06-15*
 *   `[[2026-06-14 - handson]]` (GeminiSessions) - *2026-06-14*
 *   `[[2026-06-14 - USERREQUEST]]` (GeminiSessions) - *2026-06-14*
 *   `[[2026-06-12 - handson]]` (GeminiSessions) - *2026-06-12*

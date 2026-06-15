@@ -14,9 +14,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 736
+> * **Total de Sessões Registradas**: 737
 > * **Sessões do Claude**: 696
-> * **Sessões do Gemini**: 40
+> * **Sessões do Gemini**: 41
 
 ---
 
@@ -59,6 +59,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-15 - handson]]` - *2026-06-15*
 *   `[[2026-06-14 - handson]]` - *2026-06-14*
 *   `[[2026-06-14 - USERREQUEST]]` - *2026-06-14*
 *   `[[2026-06-12 - handson]]` - *2026-06-12*
@@ -70,8 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-11 - agent-ad509a13c3e9c7488]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-ad15cd99fe57ff51c]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-acac1986d033077bd]]` - *2026-06-11*
-*   `[[2026-06-11 - agent-acab8a129ebe9f461]]` - *2026-06-11*
-*   *... e mais 700 sessões nessa categoria.*
+*   *... e mais 701 sessões nessa categoria.*
 
 ---
 
@@ -262,6 +262,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-15 - handson]]` (GeminiSessions)
 *   `[[2026-06-14 - handson]]` (GeminiSessions)
 *   `[[2026-06-14 - USERREQUEST]]` (GeminiSessions)
 *   `[[2026-06-12 - handson]]` (GeminiSessions)
