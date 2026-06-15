@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 738
-> * **Sessões do Claude**: 696
+> * **Total de Sessões Registradas**: 739
+> * **Sessões do Claude**: 697
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,6 +61,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` - *2026-06-15*
 *   `[[2026-06-15 - handson]]` - *2026-06-15*
+*   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` - *2026-06-15*
 *   `[[2026-06-14 - handson]]` - *2026-06-14*
 *   `[[2026-06-14 - USERREQUEST]]` - *2026-06-14*
 *   `[[2026-06-12 - handson]]` - *2026-06-12*
@@ -70,8 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-11 - agent-ad9d7d286610f6907]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-ad66dbdfe8bc14d77]]` - *2026-06-11*
 *   `[[2026-06-11 - agent-ad509a13c3e9c7488]]` - *2026-06-11*
-*   `[[2026-06-11 - agent-ad15cd99fe57ff51c]]` - *2026-06-11*
-*   *... e mais 702 sessões nessa categoria.*
+*   *... e mais 703 sessões nessa categoria.*
 
 ---
 
@@ -264,6 +264,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` (GeminiSessions)
 *   `[[2026-06-15 - handson]]` (GeminiSessions)
+*   `[[2026-06-15 - Build native MCP for vision and movement analysis]]` (ClaudeSessions)
 *   `[[2026-06-14 - handson]]` (GeminiSessions)
 *   `[[2026-06-14 - USERREQUEST]]` (GeminiSessions)
 *   `[[2026-06-12 - handson]]` (GeminiSessions)
