@@ -4363,6 +4363,406 @@ Como seguir?
 > $74,925". You can now continue with these answers in mind.
 > ```
 
+## 🤖 Claude *(23:00:12)*
+
+
+## 🤖 Claude *(23:00:20)*
+
+Perfeito — entendi a referência inteira agora (você OCR'ou os painéis): a **probability lattice = tabuleiro de Galton** ("balls dropped / landed green / law of large numbers"), o **tail probability ridge**, o **microfish = grafo de relações / simulação Monte Carlo** que cospe um "predicted median fair $74.925", além do **leaderboard de realised** e animações/glow.
+
+Vou construir esses — mas com a virada honesta que é a nossa marca: **cada simulação é dirigida por dado real nosso e rotulada como tal**. E o melhor: os números honestos *reforçam* nossa tese em vez da do golpe:
+- O **Galton board** vai empilhar as velas de 1m reais → o **EV/trade sai NEGATIVO** depois da taxa (o vídeo mostra +$401k fabricado; o nosso mostra a verdade).
+- O **Monte Carlo "median fair"** vai ser um random-walk **sem drift** a partir da vol realizada → a "mediana prevista ≈ preço atual", explicitamente rotulado **"não é previsão"** — o contrário direto da mentira "Fable prevê o mercado".
+
+Animações + glow + candle ao vivo tick-a-tick também. Começo pelos componentes de simulação (arquivo novo pra manter organizado).
+
+## 🤖 Claude *(23:00:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js",
+  "content": "import React, { useState, useEffect, useRef } from 'react';\n\n/*\n * Simula\u00e7\u00f5es visuais do Cockpit (est\u00e9tica da refer\u00eancia viral, mec\u00e2nica honesta).\n * TUDO \u00e9 dirigido por dado REAL (retornos de 1m das klines da Binance) e rotulado como\n * simula\u00e7\u00e3o/visualiza\u00e7\u00e3o \u2014 nada de previs\u00e3o fabricada. Os n\u00fameros honestos (EV/trade negativo,\n * mediana \u2248 spot) REFOR\u00c7AM nossa tese de que scalping 1m n\u00e3o vence a taxa.\n */\n\n// ---- n\u00famero animado (count-up suave) ----\nexport function AnimatedNumber({ value, format, className }) {\n  const [disp, setDisp] = useState(value);\n  const ref = useRef({ to: isFinite(value) ? value : 0 });\n  useEffect(() => {\n    if (!isFinite(value)) { setDisp(value); return; }\n    const from = isFinite(ref.current.to) ? ref.current.to : value;\n    ref.current.to = value;\n    const start = performance.now();\n    let raf;\n    const tick = (now) => {\n      const t = Math.min(1, (now - start) / 650);\n      const e = 1 - Math.pow(1 - t, 3);\n      setDisp(from + (value - from) * e);\n      if (t < 1) raf = requestAnimationFrame(tick);\n    };\n    raf = requestAnimationFrame(tick);\n    return () => cancelAnimationFrame(raf);\n  }, [value]);\n  const out = (format && isFinite(disp)) ? format(disp) : (isFinite(disp) ? disp : '\u2014');\n  return <span className={className}>{out}</span>;\n}\n\n// ---- Galton board (probability lattice) \u2014 empilha as velas 1m REAIS ----\nexport function GaltonBoard({ counts, step, lim, fee, centersGreen }) {\n  const canvasRef = useRef(null);\n  const stateRef = useRef({ heap: null, balls: [], dropped: 0, green: 0, cleared: 0, raf: 0, lastSpawn: 0 });\n\n  useEffect(() => {\n    const canvas = canvasRef.current;\n    if (!canvas || !counts || !counts.length) return;\n    const ctx = canvas.getContext('2d');\n    const dpr = Math.min(2, window.devicePixelRatio || 1);\n    const cssW = canvas.clientWidth || 360, cssH = 230;\n    canvas.width = cssW * dpr; canvas.height = cssH * dpr; ctx.scale(dpr, dpr);\n\n    const BINS = counts.length;\n    const total = counts.reduce((a, b) => a + b, 0) || 1;\n    const cum = []; let acc = 0;\n    for (let i = 0; i < BINS; i++) { acc += counts[i] / total; cum.push(acc); }\n    const centerR = i => -lim + step * (i + 0.5);\n\n    const st = stateRef.current;\n    if (!st.heap || st.heap.length !== BINS) { st.heap = new Array(BINS).fill(0); st.dropped = 0; st.green = 0; st.cleared = 0; }\n    st.balls = [];\n\n    const padX = 8, floorY = cssH - 22, topY = 14;\n    const binW = (cssW - padX * 2) / BINS;\n    const binX = i => padX + binW * i + binW / 2;\n    const maxHeap = Math.max(...st.heap, 1);\n\n    function sampleBin() { const r = Math.random(); for (let i = 0; i < BINS; i++) if (r <= cum[i]) return i; return BINS - 1; }\n\n    function spawn() {\n      const target = sampleBin();\n      st.balls.push({ x: cssW / 2, y: topY, vy: 0.6, target, tx: binX(target) });\n    }\n\n    function frame(now) {\n      ctx.clearRect(0, 0, cssW, cssH);\n      // pegs\n      ctx.fillStyle = 'rgba(255,255,255,0.07)';\n      for (let row = 0; row < 7; row++) {\n        const ry = topY + 10 + row * ((floorY - topY - 16) / 7);\n        const n = row + 2;\n        for (let k = 0; k < n; k++) {\n          const rx = cssW / 2 + (k - (n - 1) / 2) * (binW * 1.1);\n          ctx.beginPath(); ctx.arc(rx, ry, 1.4, 0, 7); ctx.fill();\n        }\n      }\n      // heap (distribui\u00e7\u00e3o real)\n      const mh = Math.max(...st.heap, maxHeap, 1);\n      for (let i = 0; i < BINS; i++) {\n        const h = (st.heap[i] / mh) * (floorY - topY - 30);\n        if (h <= 0) continue;\n        const cr = centerR(i);\n        const infee = Math.abs(cr) < fee;\n        ctx.fillStyle = infee ? 'rgba(255,93,122,0.55)' : (cr >= 0 ? 'rgba(47,245,168,0.6)' : 'rgba(154,123,255,0.55)');\n        ctx.fillRect(binX(i) - binW / 2 + 0.6, floorY - h, binW - 1.2, h);\n      }\n      // floor line\n      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.moveTo(padX, floorY); ctx.lineTo(cssW - padX, floorY); ctx.stroke();\n      // balls\n      if (now - st.lastSpawn > 130 && st.balls.length < 28) { spawn(); st.lastSpawn = now; }\n      for (let b = st.balls.length - 1; b >= 0; b--) {\n        const ball = st.balls[b];\n        ball.vy = Math.min(2.6, ball.vy + 0.12);\n        ball.y += ball.vy;\n        ball.x += (ball.tx - ball.x) * 0.06 + (Math.random() - 0.5) * 1.4;\n        const cr = centerR(ball.target);\n        ctx.beginPath(); ctx.arc(ball.x, ball.y, 2.6, 0, 7);\n        ctx.fillStyle = cr >= 0 ? '#2ff5a8' : '#9a7bff';\n        ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 7; ctx.fill(); ctx.shadowBlur = 0;\n        if (ball.y >= floorY - (st.heap[ball.target] / mh) * (floorY - topY - 30) - 2) {\n          st.heap[ball.target]++; st.dropped++;\n          if (cr > 0) st.green++;\n          if (Math.abs(cr) >= fee) st.cleared++;\n          st.balls.splice(b, 1);\n        }\n      }\n      st.raf = requestAnimationFrame(frame);\n    }\n    st.raf = requestAnimationFrame(frame);\n    return () => cancelAnimationFrame(st.raf);\n  }, [counts, step, lim, fee]);\n\n  const st = stateRef.current;\n  const greenPct = st.dropped ? (st.green / st.dropped * 100) : 0;\n  const clearedPct = st.dropped ? (st.cleared / st.dropped * 100) : 0;\n\n  return (\n    <div>\n      <canvas ref={canvasRef} className=\"cx-galton\" />\n      <div className=\"cx-sim-stats\">\n        <div className=\"ss\"><span className=\"sl\">bolas</span><span className=\"sv cx-mono\">{st.dropped}</span></div>\n        <div className=\"ss\"><span className=\"sl\">subiu</span><span className=\"sv cx-mono cx-up\">{greenPct.toFixed(0)}%</span></div>\n        <div className=\"ss\"><span className=\"sl\">\u2265 break-even</span><span className=\"sv cx-mono cx-down\">{clearedPct.toFixed(0)}%</span></div>\n      </div>\n    </div>\n  );\n}\n\n// ---- Monte Carlo path fan (random-walk SEM drift da vol realizada) -> \"median fair\" honesto ----\nexport function PathFan({ sigmaPct, spot }) {\n  if (!isFinite(sigmaPct) || !isFinite(spot) || sigmaPct <= 0 || spot <= 0) {\n    return <div className=\"cx-empty\">sem vol realizada ainda</div>;\n  }\n  const K = 48, H = 60, W = 600, HT = 200, padR = 46;\n  const sig = sigmaPct / 100;\n  function gauss() { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }\n  const paths = [];\n  const endVals = [];\n  for (let k = 0; k < K; k++) {\n    const p = [spot]; let px = spot;\n    for (let i = 0; i < H; i++) { px = px * (1 + sig * gauss()); p.push(px); }\n    paths.push(p); endVals.push(px);\n  }\n  const all = paths.flat();\n  const min = Math.min(...all), max = Math.max(...all), span = max - min || 1;\n  const x = i => (i / H) * (W - padR);\n  const y = v => 8 + (HT - 16) * (1 - (v - min) / span);\n  const sortedEnds = [...endVals].sort((a, b) => a - b);\n  const p10 = sortedEnds[Math.floor(K * 0.1)], p90 = sortedEnds[Math.floor(K * 0.9)];\n  // mediana driftless \u2248 spot (linha reta), explicitamente\n  const medianLine = `M0,${y(spot).toFixed(1)} L${(W - padR).toFixed(1)},${y(spot).toFixed(1)}`;\n  return (\n    <div>\n      <svg className=\"cx-fan\" viewBox={`0 0 ${W} ${HT}`} preserveAspectRatio=\"none\" aria-label=\"Simula\u00e7\u00e3o de random walk sem drift a partir da volatilidade realizada\">\n        {paths.map((p, k) => (\n          <path key={k} d={p.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}\n            fill=\"none\" stroke={k % 2 ? 'rgba(56,182,255,0.13)' : 'rgba(154,123,255,0.13)'} strokeWidth=\"1\" />\n        ))}\n        <path d={medianLine} fill=\"none\" stroke=\"#2ff5a8\" strokeWidth=\"1.6\" strokeDasharray=\"5 4\" />\n        <line x1={W - padR} x2={W - padR} y1={y(p90)} y2={y(p10)} stroke=\"#38b6ff\" strokeWidth=\"2\" opacity=\"0.6\" />\n      </svg>\n      <div className=\"cx-sim-stats\">\n        <div className=\"ss\"><span className=\"sl\">mediana 60min</span><span className=\"sv cx-mono\">${spot.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>\n        <div className=\"ss\"><span className=\"sl\">faixa p10\u2013p90</span><span className=\"sv cx-mono\">${Math.round(p10).toLocaleString()}\u2013${Math.round(p90).toLocaleString()}</span></div>\n        <div className=\"ss\"><span className=\"sl\">\u03c3 1m</span><span className=\"sv cx-mono\">{sigmaPct.toFixed(3)}%</span></div>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:05)*
+
+
+## 🤖 Claude *(23:02:06)*
+
+Componentes de simulação prontos. Agora o CSS (glow/pulse + canvas) e os edits no Cockpit pra plugar os painéis novos (Galton + Monte Carlo), animação de números e candle ao vivo.
+
+## 🤖 Claude *(23:02:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css",
+  "old_string": "/* dark mini footer (substitui o footer branco do Volt) */",
+  "new_string": "/* ---- sims: galton / monte carlo fan ---- */\n.cockpit .cx-galton { width: 100%; height: 230px; display: block; }\n.cockpit .cx-fan { width: 100%; height: 200px; display: block; }\n.cockpit .cx-sim-stats { display: flex; gap: 20px; margin-top: 8px; flex-wrap: wrap; }\n.cockpit .cx-sim-stats .ss { display: flex; flex-direction: column; gap: 2px; }\n.cockpit .cx-sim-stats .sl { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cx-muted); }\n.cockpit .cx-sim-stats .sv { font-size: 1.05rem; font-weight: 700; }\n\n/* ---- glow / pulse ---- */\n@keyframes cx-glow { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }\n.cockpit .cx-panel.glow::before { animation: cx-glow 3.4s ease-in-out infinite; }\n@keyframes cx-textglow { 0%,100% { filter: drop-shadow(0 0 0 transparent); } 50% { filter: drop-shadow(0 0 7px rgba(47,245,168,0.5)); } }\n.cockpit .cx-brand b { animation: cx-textglow 4.2s ease-in-out infinite; }\n.cockpit .cx-hero-val { text-shadow: 0 0 18px rgba(47,245,168,0.18); }\n@keyframes cx-pulse { 0% { box-shadow: 0 0 0 0 rgba(47,245,168,0.45); } 70% { box-shadow: 0 0 0 5px rgba(47,245,168,0); } 100% { box-shadow: 0 0 0 0 rgba(47,245,168,0); } }\n.cockpit .cx-node .dot.on { animation: cx-pulse 2.6s ease-out infinite; }\n\n/* dark mini footer (substitui o footer branco do Volt) */"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns } from '../../services/IntelligenceService';\nimport './cockpit.css';",
+  "new_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns } from '../../services/IntelligenceService';\nimport { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';\nimport './cockpit.css';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:21)*
+
+
+## 🤖 Claude *(23:02:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "  const sorted = rets.map(r => Math.abs(r)).sort((a, b) => a - b);\n  return {\n    counts, maxc: Math.max(...counts, 1), step, BINS, LIM, n: rets.length,\n    clearFee: rets.filter(r => Math.abs(r) >= FEE_RT).length / rets.length * 100,\n    medAbs: sorted[Math.floor(sorted.length / 2)],\n  };",
+  "new_string": "  const sorted = rets.map(r => Math.abs(r)).sort((a, b) => a - b);\n  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;\n  const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / rets.length);\n  return {\n    counts, maxc: Math.max(...counts, 1), step, BINS, LIM, n: rets.length, mean, sd,\n    clearFee: rets.filter(r => Math.abs(r) >= FEE_RT).length / rets.length * 100,\n    medAbs: sorted[Math.floor(sorted.length / 2)],\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "  const wsLive = readyState === 1;\n  const cnd = buildCandles(klines);\n  const hist = buildHist(klines);\n  const btc = prices[KL_SYMBOL] != null ? prices[KL_SYMBOL] : (cnd ? cnd.last : null);",
+  "new_string": "  const wsLive = readyState === 1;\n  const hist = buildHist(klines);\n  const btcWs = prices[KL_SYMBOL];\n  const klive = (klines && btcWs != null && !isNaN(btcWs))\n    ? klines.map((k, i) => i === klines.length - 1 ? { ...k, c: btcWs, h: Math.max(k.h, btcWs), l: Math.min(k.l, btcWs) } : k)\n    : klines;\n  const cnd = buildCandles(klive);\n  const btc = (btcWs != null && !isNaN(btcWs)) ? btcWs : (cnd ? cnd.last : null);\n  const sigma = hist ? hist.sd : NaN;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "              <div className=\"cx-panel\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Equity &amp; P&amp;L (net de fee)</span><span className=\"cx-src\">/exchange/balance \u00b7 /orders/reports/{REPORT_QUOTE}</span></div>\n                <div className=\"cx-hero-val cx-mono\">{equity != null ? (String(equity).trim().startsWith('$') ? equity : fmtUsd(equity)) : '\u2014'}</div>",
+  "new_string": "              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Equity &amp; P&amp;L (net de fee)</span><span className=\"cx-src\">/exchange/balance \u00b7 /orders/reports/{REPORT_QUOTE}</span></div>\n                <div className=\"cx-hero-val cx-mono\">{equity != null ? <AnimatedNumber value={num(equity)} format={v => fmtUsd(v)} /> : '\u2014'}</div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "                  <span className=\"px cx-mono\">{btc != null ? fmtUsd(btc, 1) : '\u2014'}</span>",
+  "new_string": "                  <span className=\"px cx-mono\">{btc != null ? <AnimatedNumber value={btc} format={v => fmtUsd(v, 1)} /> : '\u2014'}</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "            {/* ROW 3 \u2014 lattice + trade bridges */}",
+  "new_string": "            {/* ROW 2b \u2014 probability lattice (Galton) + monte carlo median fair */}\n            <div className=\"cx-row-3\">\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Probability lattice (Galton)</span><span className=\"cx-src\">velas 1m reais \u2192 distribui\u00e7\u00e3o</span></div>\n                {hist ? <GaltonBoard counts={hist.counts} step={hist.step} lim={hist.LIM} fee={FEE_RT} />\n                      : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis \ud83d\udfe1' : 'carregando\u2026'}</div>}\n                <div className=\"cx-note\">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha \u00c9 a distribui\u00e7\u00e3o real. <b>\u2265 break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A \"lei dos grandes n\u00fameros\" aqui mostra o contr\u00e1rio do golpe: repeti\u00e7\u00e3o N\u00c3O cria edge quando o EV/trade j\u00e1 \u00e9 negativo.</div>\n              </div>\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Monte Carlo \u00b7 median fair</span><span className=\"cx-src\">random walk da \u03c3 realizada</span></div>\n                <PathFan sigmaPct={sigma} spot={btc} />\n                <div className=\"cx-note\"><b>N\u00c3O \u00e9 previs\u00e3o.</b> 48 caminhos de random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana \u2248 pre\u00e7o atual</b> \u2014 o oposto exato da promessa \"Fable prev\u00ea o mercado\". A faixa p10\u2013p90 \u00e9 s\u00f3 a incerteza da volatilidade.</div>\n              </div>\n            </div>\n\n            {/* ROW 3 \u2014 lattice + trade bridges */}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:03:02)*
+
+
+## 🤖 Claude *(23:03:02)*
+
+Edits aplicados. Rebuild + redeploy + screenshot.
+
+## 🤖 Claude *(23:03:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend 2>&1 | tail -8 && docker compose up -d frontend 2>&1 | tail -2'",
+  "description": "Rebuild and redeploy frontend with sims and animations",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #16 exporting layers 0.2s done
+> #16 writing image sha256:c4e31baf6c65de5af924cdd747c1fd7a39119362687bbc4886c137150cd65864 done
+> #16 naming to docker.io/library/tradeux-frontend done
+> #16 DONE 0.3s
+> 
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(23:03:25)*
+
+
+## 🤖 Claude *(23:03:26)*
+
+Buildou sem erro do Vite, no ar. Screenshot (deixo correr alguns segundos pro Galton empilhar).
+
+## 🤖 Claude *(23:03:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' \\\n  | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{let o;try{o=JSON.parse(s)}catch(e){process.exit(1)}console.log(o.token||o.accessToken||o.jwt||\"\")})')\n[ -z \"$TOKEN\" ] && { echo \"LOGIN FAILED\"; exit 1; }\necho \"login OK\"\nSHOT_TOKEN=\"$TOKEN\" SHOT_OUT=/tmp/cockpit3.png node /tmp/cockpit-shot.js\nls -lh /tmp/cockpit3.png",
+  "description": "Re-login and screenshot cockpit with sims/animations",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login OK
+> OK title="TradeUX" url=https://tradeux.gcrux.com/cockpit
+> -rw-rw-r-- 1 ubuntu ubuntu 708K Jun 15 20:03 /tmp/cockpit3.png
+> ```
+
+## 🤖 Claude *(23:03:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/cockpit3.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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ofzoANq+h/OgA2r6H86LAG1fQ/nRYA2r7/nRYA2r7/nRYBNq+/50WANq+9FgDaPeiwBtHvRYBpGDikB7rUjCgAoAKACgAoAKACgAoAKAOc8e/wDIrzf9dI//AEKmB5ev3apCJ98OFxEchCGJOct2NPQQvmQZ/wBVxxQA0PGGYlMgtkewoAVXiDnMeV35/D0oAY7Idu1cYXB9z60APDwhQPLOduCc9T6/59KAFMkOciH+LPPp6UARuVO3auMKAfc0AMpDCgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKAHr5ePmDZ9qYhcx/wB1vzoAa2zHyhs+9AEb9qTGT27RJcI08ZkiDZZAcEj60ETUnFqLsx7SweY22HCFyQCckDsPemhxTSV9xA8OVzHj17+v50DE8yLZjy+duAff/OaAAvETJ+7PzD5P9k0AJui2YEZ3bcZz1Pr/AJ9KAHCSHOTFxk8DjigA3wE8Rlevv9P8+9AB5kRX/V88f/XoAicguSowueBSGNoAKACgAoAKACgAoAKAHgpj5gSfY0xC5izwrfnRoAZix91vzo0Aa23jaCPrQMib71SwPdakYUAFABQAUAFABQAUAFABQBznj3/kV5v+ukf/AKFTA8vX7tUhDwrMcKuTjNMQpjkBwYz+VACBXOcIeODx0oAUxyDGYzycdKAEZXUZZMD1NADc+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAXrQMUAkkKM45oEKI5CMiMkfSgBrZViGXBHUGgBM+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAM+woAXrQMY/akwH96AEoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgBjfepMD3WpGFABQAUAFABQAUAFABQAUAc549/5Feb/rpH/wChUwPL1+7VIRYtIZ7i5EVt/rGB6kAAY5yTTESQx3k101urYmXIKswUkjqPc0XAfLYahbw+e8bBCA5IYHGen4/40AVPOkxjeexoARpHZQGbIFADKBhQAUAFABQAUAFABQAUAKO9AixZ2891c+VbKC5BPJAGPxoAWFbpzKkbEGJWd1LAEAfe+v0ouA+7068g8x54/u7d5DA4yOM4oApUDCgAoAKACgAoAKACgAoAKACgBR3oENftSYx/egAGMjPT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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(23:04:13)*
+
+
+## 🤖 Claude *(23:04:16)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/cockpit3.png"
+  ],
+  "status": "normal",
+  "caption": "Cockpit v3 \u2014 Probability lattice (Galton: bolas caindo = velas 1m reais), Monte Carlo median fair (random-walk SEM drift, mediana \u2248 $66.194 = pre\u00e7o atual, N\u00c3O previs\u00e3o), + glow pulsando e n\u00fameros contando. Screenshot \u00e9 est\u00e1tico; ao vivo as bolas caem, os n\u00fameros contam e o candle pulsa."
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(23:04:21)*
+
+
+## 🤖 Claude *(23:04:31)*
+
+Pronto — o cockpit agora tem o **teatro de probabilidade** da referência, mas honesto:
+
+- 🟢 **Probability lattice (Galton)** — bolas caindo = velas de 1m **reais**; a pilha **é** a distribuição real. A maioria cai na zona da taxa (vermelho). A "lei dos grandes números" aqui prova o contrário do golpe: repetir um EV/trade negativo só perde mais.
+- 🟢 **Monte Carlo · median fair** — leque de 48 random-walks **sem drift** da vol realizada. **Mediana ≈ $66.194 = preço atual**, rotulado **"NÃO é previsão"**. É a refutação visual direta do "Fable prevê o mercado" — sem edge, a melhor estimativa é o próprio spot.
+- ✨ **Animações + glow** ao vivo: números contando (count-up), brand/painéis com glow pulsante, **candle atualizando tick-a-tick** pelo WS, dots das bridges pulsando, bolas do Galton caindo continuamente. *(O screenshot é estático — abre o /cockpit pra ver o movimento.)*
+
+Sobrou ainda aquele **retângulo branco no canto inferior-esquerdo** (elemento do layout Volt fora do `.cockpit`) — não consegui matar de primeira, persigo se você quiser.
+
+Da referência ainda dá pra adicionar: o **grafo de relações (microfish)** com nós bull/bear/cluster, o **strike landscape**, e o **leaderboard de "realised"** (mas esse fica vazio com 0 ordens sob HALT — seria honestamente vazio).
+
+Como seguir?
+
+## 🤖 Claude *(23:04:38)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Abre o /cockpit pra ver as anima\u00e7\u00f5es ao vivo. Pr\u00f3ximo passo?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Aprovado \u2014 Fase 2",
+          "description": "Visual fechado. Sigo pro backend: fix fee-aware no-loss + bug do BNB (com QA/TL antes de deploy). O cockpit fica no ar pra acompanhar."
+        },
+        {
+          "label": "Mais 1-2 pain\u00e9is do v\u00eddeo",
+          "description": "Adicionar o grafo de rela\u00e7\u00f5es (microfish: n\u00f3s bull/bear/cluster, dirigido por correla\u00e7\u00e3o real entre s\u00edmbolos) e/ou o strike landscape. Mais 'teatro', sempre com dado real rotulado."
+        },
+        {
+          "label": "Polir o que tem",
+          "description": "Ca\u00e7ar o ret\u00e2ngulo branco, calibrar densidade/velocidade do Galton, ajustar cores/intensidade do neon, tunar as anima\u00e7\u00f5es. Sem painel novo."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Abre o /cockpit pra ver as animações ao vivo. Próximo passo?"="nao é apenas layout é para ser usado elido e reportado pelo brain se preciso crie mais agentes especificos especialistas para esse feature; mas os dados deve ser reais nada mockado, tudo puxando da maintest e do brain.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:23:06)*
+
+
+## 🤖 Claude *(23:23:11)*
+
+Entendi — e isso muda o nível do pedido. O cockpit **não é só layout**: tem que ser uma feature **lida e reportada pelo brain/agente**, com **100% dado real** (mainnet/testnet + brain), sem nada mockado. Isso vira uma camada de analytics no **backend** (a brain computa, o agente lê e reporta, o front consome) — não só cálculo no navegador.
+
+Como você autorizou agentes especialistas e isso toca o sistema (que está **CONGELADO em mainnet real**), vou fazer do jeito disciplinado: lanço um **workflow de especialistas** pra desenhar a feature **read-only** (deriva métricas, não cria ordem, não toca o HALT) ancorada no código real, com um **tech-lead** revisando segurança. Depois te apresento o plano file-by-file pra você dar o GO antes de eu mexer no backend.
+
+## 🤖 Claude *(23:23:54)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'cockpit-brain-feature-design',\n  description: 'Desenhar a feature Cockpit Intelligence (brain computa, agente l\u00ea/reporta, front consome) \u2014 read-only, dado real mainnet/testnet, com revis\u00e3o de seguran\u00e7a do tech-lead',\n  phases: [\n    { title: 'Especialistas' },\n    { title: 'Revis\u00e3o TL' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst DESIGN_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['area', 'approach', 'files', 'dataSources', 'memoryKeys', 'envHandling', 'safetyNotes', 'openQuestions'],\n  properties: {\n    area: { type: 'string' },\n    approach: { type: 'string', description: 'como construir, reusando os padr\u00f5es existentes (citar arquivos/linhas reais)' },\n    files: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['path', 'change'], properties: { path: { type: 'string' }, change: { type: 'string', enum: ['criar', 'editar'] } } } },\n    dataSources: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['metric', 'source'], properties: { metric: { type: 'string' }, source: { type: 'string', description: 'endpoint/MEMORY/kline REAL de onde vem \u2014 NADA mockado' } } } },\n    memoryKeys: { type: 'array', items: { type: 'string' } },\n    envHandling: { type: 'string', description: 'como respeita mainnet vs testnet (settings.useTestnet) na fonte de dados' },\n    safetyNotes: { type: 'array', items: { type: 'string' } },\n    openQuestions: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst SAFETY_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['readOnly', 'touchesMoneyPath', 'envAware', 'haltSafe', 'idempotent', 'mustFix', 'verdict'],\n  properties: {\n    readOnly: { type: 'boolean' },\n    touchesMoneyPath: { type: 'boolean', description: 'a feature chama buy/sell/oco/withdraw ou cria automa\u00e7\u00e3o que negocia? DEVE ser false' },\n    envAware: { type: 'boolean' },\n    haltSafe: { type: 'boolean', description: 'funciona/\u00e9 inerte corretamente com TRADING_HALT=true sem efeito colateral?' },\n    idempotent: { type: 'boolean' },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    verdict: { type: 'string', enum: ['APPROVE', 'APPROVE_COM_SUGESTOES', 'REQUEST_CHANGES', 'BLOCK'] },\n  },\n}\n\nphase('Especialistas')\nlog('5 especialistas desenhando a feature Cockpit Intelligence (read-only, dado real)...')\n\nconst specs = [\n  {\n    label: 'backend-cockpit-service',\n    prompt: `Repo ${REPO}. Desenhe um SERVI\u00c7O/JOB de backend \"cockpitJob\" (espelhando o padr\u00e3o de backend/src/flowJob.js + regimeJob.js + fairPriceJob.js) que computa, por s\u00edmbolo, m\u00e9tricas de analytics a partir de DADO REAL e grava na MEMORY do brain para o agente ler. Leia esses jobs + backend/src/utils/flowService.js (fetch de klines/aggTrades + env), backend/src/utils/indexes.js (cat\u00e1logo indexKeys \u2014 voc\u00ea vai ADICIONAR a chave COCKPIT), backend/src/beholder.js (updateMemory), e como settings.useTestnet/isTestnet seleciona mainnet vs testnet (grep useTestnet/isTestnet em utils/exchange.js e settings). M\u00e9tricas a computar (TODAS de klines 1m reais + MEMORY existente, nada mockado): distribui\u00e7\u00e3o de retornos 1m (mediana |move|, % moves \u2265 break-even fee ~0.20%, \u03c3 realizada), EV/trade net-de-fee, tail mass, snapshot de regime/flow, estado dos gates de compra (regime\u2260bear E fluxo n\u00e3o-capitula\u00e7\u00e3o) por s\u00edmbolo, e banda Monte Carlo driftless (p10/mediana/p90) p/ contexto. Defina: cad\u00eancia (env COCKPIT_REFRESH_MS), kill-switch (COCKPIT_JOB_ENABLED), a forma do objeto MEMORY['<sym>:COCKPIT'], e que a fonte de klines respeita mainnet/testnet. \u00c9 READ-ONLY (nunca chama buy/sell/oco). Cite file:line reais.`,\n  },\n  {\n    label: 'api-and-mcp',\n    prompt: `Repo ${REPO}. Desenhe (1) o ENDPOINT REST que exp\u00f5e o snapshot do cockpit para o frontend e (2) a TOOL MCP read-only que o agente LLM usa pra LER as m\u00e9tricas do cockpit. Leia backend/src/controllers/analysisController.js + backend/src/routers/analysisRouter.js (padr\u00e3o getRegimeStatus/getFlowStatus \u2014 voc\u00ea adiciona getCockpit lendo MEMORY['<sym>:COCKPIT']) e tradeux-mcp/src/index.js + tradeux-mcp/src/api.js (como ~25 tools tradeux_* s\u00e3o registradas e como api.js fala com o backend autenticado). Defina: rota (ex.: GET /analysis/cockpit), shape da resposta, e a tool MCP nova (ex.: tradeux_get_cockpit) \u2014 READ-ONLY (nunca place_order). Note a trava SELL-BTC fail-closed existente e confirme que a tool nova \u00e9 s\u00f3-leitura. Cite file:line.`,\n  },\n  {\n    label: 'agent-reporting',\n    prompt: `Repo ${REPO}. Desenhe como o AGENTE LLM (tradeux-agent) L\u00ca e REPORTA as m\u00e9tricas do cockpit \u2014 o pedido do dono \u00e9 \"usado, lido e reportado pelo brain\". Leia tradeux-agent/src/agent.js (SYSTEM_PROMPT, MAX_TOOL_ROUNDS, loop de tools), mcpClient.js (converte tools MCP), journal.js (registro/notify). Defina: como a tool tradeux_get_cockpit entra no toolset do agente, um acr\u00e9scimo M\u00cdNIMO ao SYSTEM_PROMPT instruindo o agente a consultar o cockpit e reportar (pt-BR, anti-spam, cap por ciclo como j\u00e1 existe), e como o report aparece no journal / POST /agent/notify (Telegram one-way). N\u00c3O dar nova autoridade de trade ao agente (ALLOW_TRADING segue como est\u00e1; sem novas tools de escrita). Cite file:line.`,\n  },\n  {\n    label: 'frontend-rewire',\n    prompt: `Repo ${REPO}. Desenhe a re-liga\u00e7\u00e3o do frontend para consumir o snapshot do BACKEND (single source of truth = brain) em vez de computar no navegador. Leia frontend/src/private/Cockpit/Cockpit.js + CockpitSims.js (hoje: tail/Galton/MonteCarlo derivam de klines client-side; regime/flow/agent j\u00e1 v\u00eam do backend) e frontend/src/services/IntelligenceService.js (padr\u00e3o de servi\u00e7o). Defina: novo m\u00e9todo getCockpit no servi\u00e7o (GET /analysis/cockpit), quais pain\u00e9is passam a usar o snapshot do backend (distribui\u00e7\u00e3o/tail/EV/\u03c3/bridges/monte-carlo band) mantendo o VISUAL atual, e o que pode continuar client-side s\u00f3 como render (ex.: o candle do TradingView/klines \u00e9 visual). Mant\u00e9m os selos de honestidade. Cite file:line.`,\n  },\n  {\n    label: 'env-and-data-truth',\n    prompt: `Repo ${REPO}. Foco: garantir que TUDO \u00e9 dado REAL de mainnet/testnet conforme o ambiente ativo \u2014 \"nada mockado, tudo puxando da maintest e do brain\". Investigue como o sistema sabe se est\u00e1 em mainnet ou testnet (settings.useTestnet, isTestnet em backend/src/utils/exchange.js, dual-env do Antigravity), de onde v\u00eam klines/aggTrades/pre\u00e7o hoje (flowService/regimeJob/fairPriceJob batem em qual host?), e o ledger de ordens (isTestnet nas reports). Liste, m\u00e9trica por m\u00e9trica do cockpit, qual a fonte real correta no ambiente atual (mainnet real, ~$148, congelado) e onde h\u00e1 risco de cruzar testnet\u2194mainnet (ex.: klines mainnet vs ordens testnet). Aponte o que precisa ser env-aware para n\u00e3o MENTIR. Cite file:line.`,\n  },\n]\n\nconst designs = await parallel(specs.map(s => () => agent(s.prompt, { label: s.label, phase: 'Especialistas', schema: DESIGN_SCHEMA })))\nconst ok = designs.filter(Boolean)\n\nphase('Revis\u00e3o TL')\nconst ctx = JSON.stringify({ designs: ok }, null, 1)\nconst safety = await agent(\n  `Voc\u00ea \u00e9 o tech-lead/code-owner do TradeUX. O sistema est\u00e1 em MAINNET REAL CONGELADO (TRADING_HALT=true, ~$148). Revise o DESIGN agregado da feature \"Cockpit Intelligence\" (analytics read-only que a brain computa, o agente l\u00ea/reporta, o front consome). Verifique RIGOROSAMENTE: \u00e9 100% read-only? toca buy/sell/oco/withdraw ou cria automa\u00e7\u00e3o que negocia (DEVE ser n\u00e3o)? \u00e9 env-aware (mainnet/testnet sem cruzar)? \u00e9 seguro com TRADING_HALT=true (inerte/sem efeito no money-path)? \u00e9 idempotente (job repet\u00edvel sem acumular estado)? N\u00e3o inventa dado (nada mockado)? Liste must-fix concretos antes de construir. Design:\\n${ctx}`,\n  { label: 'tech-lead-safety', phase: 'Revis\u00e3o TL', agentType: 'tech-lead', schema: SAFETY_SCHEMA }\n)\n\nreturn { designs: ok, safety }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: we8gxntg9
+> Summary: Desenhar a feature Cockpit Intelligence (brain computa, agente lê/reporta, front consome) — read-only, dado real mainnet/testnet, com revisão de segurança do tech-lead
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/subagents/workflows/wf_e174d115-e04
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-brain-feature-design-wf_e174d115-e04.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-brain-feature-design-wf_e174d115-e04.js"} to iterate without resending the script.)
+> Run ID: wf_e174d115-e04
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-brain-feature-design-wf_e174d115-e04.js", resumeFromRunId: "wf_e174d115-e04"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(23:24:05)*
+
+
+## 🤖 Claude *(23:24:06)*
+
+O workflow de design está rodando em background (5 especialistas + revisão do tech-lead). Enquanto isso, registro o que mudou de escopo na memória.
+
+## 🤖 Claude *(23:24:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "old_string": "**\u26a0\ufe0f GOLPE:** o \"v\u00eddeo viral do Fable 5 / Polymarket / $11k\u2192$300k / 205x / export-controlled\" que o dono viu no X \u00e9 **golpe de referral** (link `polymarket.com/profile/...?via=ace-cjyf`). Narrativa fabricada pra dirigir cadastro/dep\u00f3sito/copy-trade. Orientado: N\u00c3O clicar, N\u00c3O depositar, N\u00c3O copy-tradar. Mesma fantasia de edge-imposs\u00edvel que nossa pesquisa refuta.",
+  "new_string": "**\u26a0\ufe0f GOLPE:** o \"v\u00eddeo viral do Fable 5 / Polymarket / $11k\u2192$300k / 205x / export-controlled\" que o dono viu no X \u00e9 **golpe de referral** (link `polymarket.com/profile/...?via=ace-cjyf`). Narrativa fabricada pra dirigir cadastro/dep\u00f3sito/copy-trade. Orientado: N\u00c3O clicar, N\u00c3O depositar, N\u00c3O copy-tradar. Mesma fantasia de edge-imposs\u00edvel que nossa pesquisa refuta.\n\n**STATUS COCKPIT (2026-06-15):** Fase 1 do plano VIROU uma feature maior. Frontend **Cockpit v3 J\u00c1 NO AR** (`/cockpit`, item no SideBar): nova tela React escopada sob `.cockpit` (neon/glass, N\u00c3O mexe no Volt), buildada+deployada (s\u00f3 container frontend, backend/HALT intocados). Pain\u00e9is com dado REAL: equity/P&L (`/exchange/balance`+`/orders/reports`), candlestick 1m (klines Binance), tail de retornos vs fee, lattice Regime\u00d7Fluxo\u00d7Toxicity, trade bridges (gates de compra), Galton board (velas 1m reais \u2192 distribui\u00e7\u00e3o, EV/trade negativo honesto), Monte Carlo median-fair (random-walk SEM drift \u2192 mediana\u2248spot, rotulado \"N\u00c3O \u00e9 previs\u00e3o\" \u2014 refuta o golpe), KPIs do agente. Anima\u00e7\u00f5es: count-up, glow pulse, candle tick-a-tick WS. Selos de honestidade \ud83d\udfe2\ud83d\udfe1\u26aa, zero mock. Arquivos: `frontend/src/private/Cockpit/{Cockpit.js,CockpitSims.js,cockpit.css}` + rota em routes.js + item em SideBar.js. **Screenshot ao vivo:** Playwright headless como ubuntu (cache npx `~/.npm/_npx/*/node_modules/playwright`, chrome `~/.cache/ms-playwright/chromium-1226`), login via `tradeux-mcp/.env` (TRADEUX_EMAIL/PASSWORD, 600/gcrux-tradeux) \u2192 token \u2192 seed localStorage \u2192 /tmp/*.png; script `/tmp/cockpit-shot.js`.\n\n**PEDIDO ELEVADO (dono):** cockpit \"n\u00e3o \u00e9 s\u00f3 layout \u2014 \u00e9 pra ser USADO, LIDO e REPORTADO pelo brain; dados 100% reais (mainnet/testnet + brain), nada mockado; criar agentes especialistas\". \u2192 Vira camada de analytics read-only no BACKEND: `cockpitJob` (padr\u00e3o flowJob/regimeJob) computa m\u00e9tricas de klines reais + MEMORY \u2192 grava `MEMORY['<sym>:COCKPIT']`; endpoint `GET /analysis/cockpit`; tool MCP read-only `tradeux_get_cockpit`; agente L\u00ca e REPORTA (journal/Telegram); frontend consome o snapshot do backend. READ-ONLY (n\u00e3o toca buy/sell/oco/HALT), env-aware. Design via workflow `wf_e174d115-e04` (5 especialistas + tech-lead safety). PENDENTE: GO do dono pra mexer no backend (sistema congelado) + QA/TL antes de deploy backend."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:24:38)*
+
+Workflow de design no ar (5 especialistas + tech-lead). Te trago o spec file-by-file + o veredito de segurança assim que fechar.
+
+Enquanto roda, o enquadramento do que estou desenhando — pra você já ir validando a direção:
+
+**Cockpit Intelligence** (camada read-only, brain-integrada):
+- **`cockpitJob`** no backend (mesmo padrão do `flowJob`/`regimeJob`) computa, por símbolo, métricas de **klines reais** + MEMORY (distribuição de retornos 1m, σ realizada, % moves ≥ break-even, EV/trade net-de-fee, snapshot regime/fluxo, estado dos gates de compra, banda Monte Carlo driftless) → grava em **`MEMORY['<sym>:COCKPIT']`** (a brain passa a "segurar" isso, como FLOW/REGIME).
+- **`GET /analysis/cockpit`** expõe o snapshot → o **frontend consome do backend** (single source of truth = brain), em vez de calcular no navegador. Nada mockado.
+- **Tool MCP `tradeux_get_cockpit`** (read-only) → o **agente LÊ** as métricas e **REPORTA** (journal + Telegram), em pt-BR, anti-spam — atendendo "usado, lido e reportado pelo brain".
+- **Env-aware**: respeita `settings.useTestnet` na fonte de dados, sem cruzar testnet↔mainnet.
+- **Segurança**: 100% read-only — não chama `buy/sell/oco/withdraw`, não cria automação que negocia, não toca o `TRADING_HALT`. O tech-lead está auditando exatamente isso agora.
+
+Como é mudança no **backend de um sistema congelado com dinheiro real**, depois do spec eu te peço o **GO** antes de tocar no backend — e passa por **QA/TL** antes de qualquer deploy. O frontend que já está no ar (`/cockpit`) continua intocado nesse meio-tempo.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
