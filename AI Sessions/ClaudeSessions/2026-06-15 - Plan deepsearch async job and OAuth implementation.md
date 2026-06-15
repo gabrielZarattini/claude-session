@@ -4189,6 +4189,15 @@ Status do build até aqui:
 
 You've hit your session limit · resets 7pm (America/Sao_Paulo)
 
+## 👤 User *(22:00:02)*
+
+⚡ PRÓXIMOS PASSOS (do Pending do seal vision-mcp)
+
+1. `deepsearch.run` (FR-VM-007 — assíncrono) — a metade "google/gemini" do deepsearch; fiel à FRD é job_id→poll + partial-delivery refund (§4.5). Feature distinta e mais pesada, teed-up para sessão própria.
+2. Fatia 3 — PAT/OAuth 2.1 (RFC 9728 AS) · Plugin Zip · jobs assíncronos · erase LGPD (`erase_vision_artifacts`).
+3. vhost nginx `mcp.mcorch.com` (OTD-VM-013) — hoje só loopback `127.0.0.1:3200`; ação do Sovereign (root/DNS Cloudflare).
+4. Menores: registrar OTD orphan-sub (risco residual LOW) na emenda BoK da Fatia 2 · migration `infra_health_logs ADD metadata jsonb` (telemetria rica) · platform `FIRECRAWL_API_KEY` se quiser default cobrado p/ scrape.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

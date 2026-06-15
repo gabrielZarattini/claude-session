@@ -505,6 +505,514 @@ Te trago a síntese fundamentada — estratégia + dashboard + decisões — ass
 
 You've hit your session limit · resets 7pm (America/Sao_Paulo)
 
+## 👤 User *(21:33:39)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:33:40)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:58:34)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:58:34)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:58:50)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:58:50)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:59:05)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:59:06)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:59:54)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:59:55)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:59:56)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:59:57)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(21:59:58)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
+## 🤖 Claude *(21:59:58)*
+
+You've hit your session limit · resets 7pm (America/Sao_Paulo)
+
+## 👤 User *(22:00:15)*
+
+Preciso de um estratégia que seja feita nas velas de 1m, visando sempre lucros reais acima do custo total inclusas com taxas e juros. A ideia é usar o poder do brain / agent e processamento para validar estratégias de compra e venda visando lucros reais.
+
+Vi algo no X que fizeram com o novo modelo fable, parece que da certo mas precisamos sempre testar e observar conforme nossas regras e conhecimentos adquiridos anteriormente com os deepsearch que fizemos sobre absorvibilidade, probabilidade, determinística e principalmente fundamentada em analises.
+
+Pensei em mandar esse prompt para você mas prefiro que você analise e encaixe da melhor forma no nosso projeto e contexto.:
+
+Você é um expert full-stack developer especializado em dashboards de trading/crypto/Polymarket.
+
+Crie uma **Dashboard moderna, profissional e altamente visual** para o meu ecossistema de trade, inspirada no estilo do vídeo viral do @RoundtableSpace (dashboard futurista, dark mode, com muitas métricas em tempo real, cards brilhantes, gráficos animados, tabelas de trades ao vivo e PNL destacada).
+
+### Requisitos técnicos:
+- Use **React + TypeScript + Tailwind CSS** (ou Next.js 15 App Router se preferir).
+- Prefira **shadcn/ui + Radix** + **Recharts** ou **Tremor** + **Framer Motion** para animações suaves.
+- Tema: **Dark mode premium** (preto profundo, neon accents em verde/lima/roxo/azul como nos dashboards de trading profissionais).
+- Totalmente responsivo, mas otimizado para desktop/large screen.
+
+### Layout principal (similar ao vídeo):
+1. **Header**:
+   - Logo do meu ecossistema (coloque placeholder "MyTradeOS")
+   - Saldo total + PNL do dia (com % e seta de cor)
+   - Conexão com wallet (Polymarket / Binance / etc.) + status "AO VIVO"
+
+2. **Seção Hero / Overview** (topo grande):
+   - Cards grandes com: Equity Total, PNL Total (com % enorme), Win Rate, Total Trades, Profit Factor, Sharpe Ratio.
+   - Um grande gauge ou sparkline animado mostrando performance recente.
+
+3. **Live Trades Feed** (coluna central ou lateral rolando):
+   - Tabela em tempo real de trades abertos/fechados (Entry, Exit, Size, PNL em $ e %, Tempo).
+   - Destaque forte em trades verdes/vermelhos + animação de entrada de nova trade.
+
+4. **Gráficos**:
+   - Equity Curve (linha com área preenchida)
+   - Drawdown Chart
+   - Heatmap de performance por hora/dia da semana
+   - Gráfico de distribuição de PNL ou Probability Surface (se for Polymarket)
+
+5. **Sidebar direita**:
+   - Posições abertas atuais
+   - Top performing markets (ex: BTC Yes/No, eventos políticos, etc.)
+   - Alertas / Edge Detection (ex: "Oportunidade +205x detectada")
+
+6. **Footer / Stats extras**:
+   - Métricas de performance (Total Volume, Avg Hold Time, etc.)
+   - Botão "Exportar relatório" e "Pause Bot"
+
+### Estilo visual exigido:
+- Muito glassmorphism ou cards com bordas neon sutis
+- Animações fluidas (números contando, barras crescendo, trades "popando")
+- Tipografia moderna e bold para números grandes
+- Cores: Verde neon para profit, vermelho para loss, azul/roxo para info
+- Sensação de "ferramenta profissional de elite" (tipo trading terminal + Notion + TradingView juntos)
+
+Gere o código completo em um único Artifact (ou dividido em componentes principais). Comece criando o projeto com Next.js + Tailwind + shadcn se possível.
+
+Depois que eu aprovar o visual, vamos adicionar integração real com API (Polymarket, websocket, etc.).
+
+Quero que fique **o mais próximo possível do dashboard do vídeo viral**.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
