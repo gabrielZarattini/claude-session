@@ -6846,6 +6846,2668 @@ Commit 2 (`3a3d845`). Commits 3–4 (suprimindo o ruído do hook):
 > 8918
 > ```
 
+## 🤖 Claude *(03:00:30)*
+
+
+## 🤖 Claude *(03:00:32)*
+
+Nó inserido (`fc0b5efc`), contagem live **8918** (+1). O embed falhou por shape desatualizado no protocolo (espera `{node_id}`) — reenviando com a chave certa (o trigger de INSERT também auto-embeda):
+
+## 🤖 Claude *(03:00:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"fc0b5efc-9df8-4e03-8544-820caee4ee79\"\necho \"=== embed (correct shape) ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 200; echo \"\"\nsleep 2\necho \"=== verify embedded (embedding not null) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,name,embedding\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); r=d[0]; print('name:',r['name']); print('embedded:', 'YES' if r.get('embedding') else 'NO')\"",
+  "description": "Embed handoff node with correct payload + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embed (correct shape) ===
+> {"node_id":"fc0b5efc-9df8-4e03-8544-820caee4ee79","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> === verify embedded (embedding not null) ===
+> name: session-handoff-20260615-vision-deepsearch-run-async
+> embedded: YES
+> ```
+
+## 🤖 Claude *(03:00:51)*
+
+
+## 🤖 Claude *(03:00:52)*
+
+Embedded (768d) ✅. **FASE 4 — README.md** (contagem live = 8918, inclui o nó). Lendo o topo:
+
+## 🤖 Claude *(03:00:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; sed -n '1,40p' README.md 2>/dev/null | grep -nE \"badge|version-|neural_mesh|What's New|###|v6\\.3\" | head -30; echo \"---- first What's New entry ----\"; grep -n \"What's New\\|## What\\|### \\[v6\" README.md | head -6",
+  "description": "Locate README badges + What's New anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2:  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3:  <img src="https://img.shields.io/badge/version-6.37.0--vision--mcp--fatia2-blueviolet?style=for-the-badge" alt="Version" />
+> 4:  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5:  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8917_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7:  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 8:  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 9:  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 10:  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 11:  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 12:  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 13:  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 14:  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 15:  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 16:  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 17:  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 18:  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 19:  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 20:  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 21:  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 22:  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 23:  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 24:  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 25:  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 26:  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 27:  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 28:  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 29:  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 30:  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 31:  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> ---- first What's New entry ----
+> 492:### [v6.37.0] — Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)
+> 498:### [v6.29.0] — Agentic Workspace: Multi-Agent Threads Chat & Kanban Task Board (2026-06-06)
+> 505:### [v6.28.0] — Four Next-Steps Closed: Orchestrate Refund · Nurture Resend · Click Ledger · Paid Agentic E2E (2026-06-04)
+> 513:### [v6.27.2] — Refund-on-Failure: Charge-Without-Value Closed (OTD-AEO-REFUND) (2026-06-04)
+> 518:### [v6.27.1] — Intent Executor Un-gated: Real Outward Dispatch + Transition Guard (2026-06-03)
+> 523:### [v6.25.0] — Flywheel Resurrection: 3 Key-Migration P0s Fixed + mcoCoins Calibration (2026-06-03)
+> ```
+
+## 🤖 Claude *(03:01:01)*
+
+
+## 🤖 Claude *(03:01:02)*
+
+Atualizando badges (version 6.37→6.38, mesh 8917→8918) + entrada What's New.
+
+## 🤖 Claude *(03:01:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 490,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 490	```
+> 491	
+> 492	### [v6.37.0] — Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)
+> 493	- **`mesh.search` E2E closed (Fatia 1):** the deploy's curl gates never drove a full MCP session — an E2E with the real SDK client exposed that the server reused one stateless `StreamableHTTPServerTransport` (SDK forbids reuse → `notifications/initialized` 500), so **no MCP client could complete a handshake**. Fixed to fresh `McpServer`+transport per request. Proven 7/7 (handshake + tenant isolation + sentinel) + adversarial 6/6 (ES256 forgery ×3 + PostgREST injection ×7).
+> 494	- **Protocol-version interop fix:** the gate accepted only `2025-11-25`, 400-ing 3rd-party clients negotiating older-but-supported revs (found by the independent `/security-review` completeness lens). Broadened to `SUPPORTED_PROTOCOL_VERSIONS`; proven with a raw heterogeneous client (8/8, negotiating `2025-03-26`/`2025-06-18`).
+> 495	- **Fatia 2 — 4 billable tools** on a shared foundation (per-user BYOK→platform→402 credential resolution, deduct-on-entry + refund-on-failure, sentinel, assistive duty-of-care): **`vision.describe_image`** (VLM, 7/7), **`vision.analyze_video`** (Gemini video understanding — per-minute billing, 7/7), **`deepsearch.scrape`** (Firecrawl BYOK-only, 4/4), **`mesh.consolidate_reference`** (tenant-scoped write, 5/5). BYOK=free · Sovereign exempt · platform charges the sealed mcoCoin class.
+> 496	- **`firecrawl_api_key` Vault BYOK column** (migration, `/security-review` clean, applied + recorded) + Settings UI field (deployed). SSRF redirect-bypass in the video fetch fixed (`redirect:manual` + per-hop re-validation). 34/34 unit · tsc 0 · container healthy with 5 tools.
+> 497	
+> 498	### [v6.29.0] — Agentic Workspace: Multi-Agent Threads Chat & Kanban Task Board (2026-06-06)
+> ```
+
+## 🤖 Claude *(03:01:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.37.0--vision--mcp--fatia2-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.38.0--vision--mcp--deepsearch--run-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8917_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8918_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.37.0] \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)",
+  "new_string": "### [v6.38.0] \u2014 Vision MCP: `deepsearch.run`/`poll` async (FR-VM-007) \u2014 job\u2192poll\u2192partial-refund \u00a74.5 (2026-06-15)\n- **`deepsearch.run` (3 mco) + `deepsearch.poll` (free) LIVE** on the served container: run debits on entry, returns `job_id` immediately (never blocking), runs an in-process **Gemini Google-Search grounding** worker, and refunds proportionally per FRD \u00a74.5 (`retained = max(1, floor(3\u00d7delivered/planned))`, floor in the tenant's favor). Smoke **10/10** against `mcorch_vision_mcp` \u2014 partial-refund proven live (Gemini grounded 10\u201312 sources, balance \u0394 == retained).\n- **Engine deviation (OTD-VM-024):** the sealed BoK pins Firecrawl; per Sovereign cost directive the run uses the already-provisioned `google` key (BYOK\u2192platform\u2192402) \u2014 zero new Firecrawl spend. The job/refund/state contract stays 100% faithful to the BoK; BoK amendment is the tracked debt.\n- **Atomic money + self-heal:** `finalize_vision_job` RPC (service-role-only) commits terminal state + refund in one transaction (refund at most once per job); `poll` lazily reconciles orphaned jobs (worker died \u2192 failed + full refund, idempotent \u2014 proven). Closes the two `/security-review` HIGHs (charge-without-value + refund/guard atomicity).\n- **Hardening from adversarial review:** telemetry allowlist chokepoint (no per-tenant leak into the HUD-readable table), opaque provider errors, sentinel over `source_allowlist`, http(s)-only reference URLs, **global platform-key concurrency ceiling** (OTD-VM-025; BYOK bypasses). 2 migrations applied + recorded, independent `/security-review` **SAFE**, 46/46 unit \u00b7 tsc 0.\n\n### [v6.37.0] \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:36)*
+
+
+## 🤖 Claude *(03:01:37)*
+
+Commit do README (separado):
+
+## 🤖 Claude *(03:01:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.38.0 \u2014 Vision MCP deepsearch.run/poll async (FR-VM-007) + \u00a74.5 partial-refund\" >/dev/null 2>&1 && echo \"README \u2705 $(git rev-parse --short HEAD)\"",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README ✅ 79571c5
+> ```
+
+> **Tool Result (Unknown Tool)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:53)*
+
+
+## 🤖 Claude *(03:01:54)*
+
+**FASE 5 — HANDOFF.md.** Inserindo o novo Record no topo (após Task State) + atualizando GraphRAG State.
+
+## 🤖 Claude *(03:02:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Vision MCP `deepsearch.run`/`poll` async (FR-VM-007 \u00b7 job\u2192poll\u2192partial-refund \u00a74.5) (2026-06-15)\n\n`/handson` \u2192 o Sovereign puxou o item #1 do roadmap vision-mcp: **`deepsearch.run` ass\u00edncrono**. Closed-Loop respeitado \u2014 a BoK 9/9 est\u00e1 selada e a FR-VM-007 (+ \u00a74.5) \u00e9 a Fonte da Verdade; um **workflow de mapeamento** (5 readers) leu o contrato selado + o schema vivo + o wiring antes de qualquer c\u00f3digo.\n\n**Achado cr\u00edtico do mapeamento (Lei 2):** minha descri\u00e7\u00e3o (\"a metade google/gemini\") **contradizia a BoK** \u2014 a SDD sela **Firecrawl** como motor do `deepsearch.*` (`05-sdd.md:113,284-289,591`), n\u00e3o Gemini. Surfacei a discrep\u00e2ncia; o Sovereign decidiu (diretiva custom): *\"n\u00e3o quero pagar Firecrawl agora; usar as chaves j\u00e1 dispon\u00edveis\"*. \u21d2 motor do `deepsearch.run` = **Gemini Google-Search grounding** (chave `google` j\u00e1 provisionada no container: BYOK\u2192plataforma\u2192402), **desvio consciente registrado em OTD-VM-024** (d\u00e9bito de emenda BoK). O contrato job/refund/state-machine ficou **100% fiel \u00e0 BoK**; s\u00f3 o leg do provider diverge.\n\n**O que foi entregue:**\n1. **`deepsearch.run` (3 mco) + `deepsearch.poll` (gr\u00e1tis)** \u2014 `run` debita na entrada \u2192 `job_id` imediato (nunca bloqueante) \u2192 worker in-process (Gemini grounding) \u2192 refund parcial \u00a74.5 (`retida = max(1, floor(3\u00d7delivered/planned))`, floor a favor do tenant). `poll` tenant-bound, poll-able \u226524h, **self-heal de \u00f3rf\u00e3o** (worker morto \u2192 `failed`+refund integral, idempotente).\n2. **`vision_jobs`** (state machine, SELECT-own RLS, writes via service key) + **RPC at\u00f4mico `finalize_vision_job`** (SECURITY DEFINER, service-role-only) \u2014 terminal+refund commitam numa transa\u00e7\u00e3o, guard `state IN (queued,running)` \u21d2 refund **no m\u00e1ximo 1\u00d7/job**.\n3. **Menores:** migration `infra_health_logs` + `event`/`metadata` (telemetria rica) \u00b7 **OTD-VM-023** (orphan-sub) registrado.\n4. **Corre\u00e7\u00f5es de 2 reviews adversariais** (workflow 5-lentes + recupera\u00e7\u00e3o dos 3 verify mortos por session-limit): atomic finalize + reconcile (2 HIGH); allowlist de telemetria no chokepoint (side-channel cross-tenant); **teto de concorr\u00eancia global da chave-plataforma** (OTD-VM-025 \u2014 bucket era s\u00f3 per-sub); erro de provider opaco; sentinel no `source_allowlist`; URLs http(s)-only; CHECK `refunded_mco\u2264charged_mco`.\n\n**ORO:** Operator=MCORCH Agent \u00b7 Reviewer=Sovereign + `/security-review` independente (SAFE) \u00b7 Owner=Sovereign (1\u00aa tool **ass\u00edncrona** que debita mcoCoins + chama provider pago com refund parcial).\n\n| Verifica\u00e7\u00e3o | Resultado |\n|---|---|\n| Commits | `7302dad` (migrations) \u00b7 `3a3d845` (tool+wiring+telemetry+test) \u00b7 `adde770` (smoke) \u00b7 `a96be81` (SOP+OTDs+CLAUDE) \u00b7 `79571c5` (readme) (+ handoff) |\n| Migrations | \u2705 aplicadas via Management API + registradas no history; `vision_jobs`/`finalize_vision_job`(service_role-only proacl)/`infra_health_logs.event`+`metadata` verificados; PostgREST schema cache recarregado |\n| Container | \u2705 rebuild+deploy 2\u00d7 (image `b24360c8`), healthy, `/health` lista `deepsearch_run`+`deepsearch_poll` |\n| Smoke LIVE | \u2705 **10/10** contra o artefato servido \u2014 \u00a74.5 partial real, 402-before-job, tenant-bound 404, sentinel, **\u00f3rf\u00e3o self-heal + re-poll idempotente** |\n| Testes / tsc | \u2705 pkg **46/46** (+12 deepsearch.run) \u00b7 tsc 0 (root + pkg) |\n| Revis\u00e3o | \u2705 adversarial 5-lentes (2 HIGH + side-channel + platform-ceiling fechados) + `/security-review` independente **SAFE** (0 achados \u22658) |\n\n### Arquitetura `deepsearch.run`/`poll` (async)\n```\nrun:  [gate ES256/Origin/proto] \u2192 sentinel(query+allowlist) \u2192 resolveProviderKey('google')\n      \u2192 deductOnEntry(3) [402\u2192job n\u00e3o nasce] \u2192 INSERT vision_jobs(queued)\n      \u2192 void runJobWorker(...) (fire-and-forget; sobrevive res.close) \u2192 return {job_id, queued, charged}\nworker: PATCH running \u2192 [platform? acquirePlatformSlot] geminiGroundedSearch (google_search tool)\n      \u2192 computeTerminal(charged,delivered,planned) \u2192 finalize_vision_job RPC (terminal+refund AT\u00d4MICO, 1\u00d7/job)\npoll: UUID-validate \u2192 SELECT vision_jobs WHERE id+user_id (alheio/inexistente\u2192404)\n      \u2192 se n\u00e3o-terminal & stale(>10min): finalize(failed,full-refund) [self-heal idempotente] \u2192 estado/result\n```\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Cada claim ancorada em smoke 10/10 / query material contra o container+DB servidos (n\u00e3o local) \u2014 pegou o partial real (Gemini 10/12) e o self-heal de \u00f3rf\u00e3o. Migrations verificadas por proacl/columns. /security-review independente SAFE. Phase 5c a seguir.\nLaw 2 (Process): \u2705 Workflow de mapeamento ANTES do c\u00f3digo pegou a contradi\u00e7\u00e3o Firecrawl-vs-Gemini (n\u00e3o improvisei); SOP vision-mcp-deepsearch-async.md ANTES do c\u00f3digo; 2 migrations /security-review ANTES do commit. Desvio de engine = OTD-VM-024 (override consciente do Sovereign).\nLaw 3 (Pruning): \u2705 Janela usada densamente (map+review+build+2 reviews numa sess\u00e3o); workflows retornaram s\u00edntese, n\u00e3o dumps; recuperei os 3 findings \u00f3rf\u00e3os dos transcripts em vez de re-rodar tudo.\nLaw 4 (ORO): \u2705 Triplet declarado; Owner=Sovereign; GO expl\u00edcito do Sovereign p/ o escopo + a escolha de engine + o seal.\n```\n\n## Session Seal \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)"
+}
+```
+
+## 🤖 Claude *(03:02:34)*
+
+
+## 🤖 Claude *(03:02:35)*
+
+Atualizando a contagem GraphRAG State (8917→8918, +handoff `fc0b5efc`):
+
+## 🤖 Claude *(03:02:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8917 total nodes** (verificado live 2026-06-15 via REST count=exact, vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d;",
+  "new_string": "- **8918 total nodes** (verificado live 2026-06-15 via REST count=exact, vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:02:44)*
+
+
+## 🤖 Claude *(03:02:44)*
+
+**FASE 5b — secret scan no HANDOFF.md** (antes do commit):
+
+## 🤖 Claude *(03:02:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nn=$(grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|digest\\|sha256\\|hash\\|fingerprint\" | wc -l)\necho \"5b real-credentials in HANDOFF.md: $n \u2192 $([ \"$n\" -eq 0 ] && echo 'PASS \u2705 \u2014 clear to commit' || echo 'BLOCK \ud83d\udd34')\"\ng=$(grep -c \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md)\necho \"5b google-keys: $g \u2192 $([ \"$g\" -eq 0 ] && echo 'PASS \u2705' || echo 'BLOCK \ud83d\udd34')\"",
+  "description": "Phase 5b secret scan on HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5b real-credentials in HANDOFF.md: 0 → PASS ✅ — clear to commit
+> 5b google-keys: 0 → PASS ✅
+> ```
+
+## 🤖 Claude *(03:02:55)*
+
+
+## 🤖 Claude *(03:02:55)*
+
+5b **PASS**. Commit do HANDOFF.md:
+
+## 🤖 Claude *(03:02:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal Vision MCP deepsearch.run/poll async \u2014 job\u2192poll\u2192partial-refund \u00a74.5 + self-heal + platform ceiling\" >/dev/null 2>&1 && echo \"HANDOFF \u2705 $(git rev-parse --short HEAD)\"",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF ✅ ebe7915
+> ```
+
+## 🤖 Claude *(03:03:04)*
+
+
+## 🤖 Claude *(03:03:05)*
+
+**FASE 5c — auditoria de prova material** (veredito mecânico independente):
+
+## 🤖 Claude *(03:03:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env; set +a\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -50",
+  "description": "Phase 5c material proof audit",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node fc0b5efc | mesh_node | fc0b5efc-9df8-4e03-8544-820caee4ee79 | fc0b5efc-9df8-4e03-8544-820caee4ee79 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 11.7s)
+> ```
+
+## 🤖 Claude *(03:03:37)*
+
+
+## 🤖 Claude *(03:03:38)*
+
+**Phase 5c: `SEAL ALLOWED`** (10 verified · 0 failed) — meu handoff node `fc0b5efc` verificado ✅. **FASE 6 — BoK seal status:**
+
+## 🤖 Claude *(03:03:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nslug=vision-mcp; required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); missing=()\nfor doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"\u2705 vision-mcp \u2014 BoK complete (9/9) \u2014 deepsearch.run = FR-VM-007 (sealed); no new module without BoK\" || echo \"\u26a0\ufe0f vision-mcp missing: ${missing[*]}\"\necho \"--- session touched (only existing sealed module + migrations + docs) ---\"\ngit diff --name-only HEAD~6..HEAD | sed -E 's#/.*##' | sort -u\nset -a; . ./.env; set +a\necho \"--- vision-mcp mesh seal node ---\"\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&name=ilike.*vision-mcp*&select=name,stability_score\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import sys,json; [print('  \ud83c\udf10',n['name'],n['stability_score']) for n in json.load(sys.stdin)]\" 2>/dev/null || echo \"  (query skip)\"",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision-mcp — BoK complete (9/9) — deepsearch.run = FR-VM-007 (sealed); no new module without BoK
+> --- session touched (only existing sealed module + migrations + docs) ---
+> CLAUDE.md
+> docs
+> HANDOFF.md
+> packages
+> README.md
+> scripts
+> supabase
+> --- vision-mcp mesh seal node ---
+>   🌐 bok-scribe-seal-vision-mcp-v1 0.800558453693601
+> ```
+
+## 🤖 Claude *(03:03:52)*
+
+
+## 🤖 Claude *(03:03:52)*
+
+**FASE 6 PASS** (BoK 9/9, sem módulo novo sem BoK). **FASE 7 — PUSH:**
+
+## 🤖 Claude *(03:03:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== to push ===\"; git log --oneline origin/main..HEAD\necho \"=== push ===\"; git push origin main 2>&1 | tail -8",
+  "description": "Push commits to origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === to push ===
+> ebe7915 docs(handoff): seal Vision MCP deepsearch.run/poll async — job→poll→partial-refund §4.5 + self-heal + platform ceiling
+> 79571c5 docs(readme): v6.38.0 — Vision MCP deepsearch.run/poll async (FR-VM-007) + §4.5 partial-refund
+> a96be81 docs(vision-mcp): deepsearch async SOP (Lei 2) + OTD-VM-023/024/025 + Key Files
+> adde770 test(vision-mcp): deepsearch.run/poll live smoke (R1-R8)
+> 3a3d845 feat(vision-mcp): deepsearch.run/poll async grounded-research (FR-VM-007) + §4.5 partial-refund + self-heal + platform ceiling
+> 7302dad feat(db): vision_jobs async jobs + finalize RPC + infra_health_logs rich telemetry
+> === push ===
+> [90m12:03AM[0m [32mINF[0m scan completed in 39.3ms
+> [90m12:03AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ gitleaks-range (0.09 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    1a110fb..ebe7915  main -> main
+> ```
+
+## 🤖 Claude *(03:04:08)*
+
+
+## 🤖 Claude *(03:04:08)*
+
+**PUSH ✅** (6 commits, `1a110fb..ebe7915`, gitleaks-range limpo). **FASE 7b — sprint hygiene:**
+
+## 🤖 Claude *(03:04:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 4,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> ```
+
+## 🤖 Claude *(03:04:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 6,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>Warning: the file exists but is shorter than the provided offset (6). The file has 226 lines.</system-reminder>
+> ```
+
+## 🤖 Claude *(03:04:22)*
+
+
+## 🤖 Claude *(03:04:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 5,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.37.0 — Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)** — diretiva começou em "fechar a última ponta não-provada da Fatia 1 (mesh.search E2E com JWT)" e o Sovereign mandou seguir até a Fatia 2 inteira ("algo completo", "você escolhe a ordem"). **(1) mesh.search E2E fechado + bug crítico de Fatia 1:** o E2E com cliente MCP real pegou que o servidor reusava **um** `StreamableHTTPServerTransport` stateless (SDK proíbe reuso → `notifications/initialized` **500**, nenhum cliente completava handshake) → fix fresh-per-request; provado **7/7** + adversarial **6/6** (forja ES256 ×3 + injeção PostgREST ×7). **(2) Interop de protocolo** (achado pelo `/security-review` independente): gate aceitava só `2025-11-25`, 400-ando clientes 3rd-party → ampliado p/ `SUPPORTED_PROTOCOL_VERSIONS`; cliente cru heterogêneo **8/8** (`2025-03-26`/`2025-06-18`). **(3) Fatia 2 — fundação** (SOP Lei 2 + `infra/billing.ts` + `auth/credentials.ts` + `safety/duty-of-care.ts`: BYOK→plataforma→402 · deduct-on-entry+refund-on-failure · sentinel · duty-of-care) + **4 tools billable provados:** `vision.describe_image` (FR-VM-018, 7/7), `vision.analyze_video` (FR-VM-024 Gemini — **não Higgsfield** — cobrança/min, 7/7), `deepsearch.scrape` (FR-VM-007 Firecrawl BYOK-only, 4/4), `mesh.consolidate_reference` (FR-VM-021 escrita tenant-escopada, 5/5). **(4)** migration `firecrawl_api_key` Vault (`/security-review` limpo · aplicada+registrada) + UI Settings **deployada** + SSRF redirect-fix (achado do review). pkg **34/34** · tsc 0 · Phase 5c **SEAL ALLOWED** (10) · mesh **8917** · handoff `7a45d8ef` · 7 commits. **Top Gap novo:** `deepsearch.run` async (a metade "google/gemini" — FR-VM-007 job/poll) · Fatia 3 (PAT/OAuth/Plugin/jobs/erase LGPD) · vhost nginx OTD-VM-013 · OTD orphan-sub. **Lição:** o `/security-review` independente pagou de novo (achou o SSRF por redirect + o defeito de interop de protocolo que o cliente do mesmo-SDK mascarava); testar contra o ARTEFATO SERVIDO pegou o bug de handshake.
+> 8	
+> ```
+
+## 🤖 Claude *(03:04:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.37.0 \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)** \u2014 diretiva come\u00e7ou em",
+  "new_string": "**Sprint v6.38.0 \u2014 Vision MCP `deepsearch.run`/`poll` async (FR-VM-007 \u00b7 job\u2192poll\u2192partial-refund \u00a74.5) (2026-06-15)** \u2014 `/handson` \u2192 Sovereign puxou o item #1 do roadmap vision-mcp. Closed-Loop: workflow de **mapeamento (5 readers)** leu contrato selado + schema vivo + wiring ANTES do c\u00f3digo \u2014 e **pegou que minha premissa contradizia a BoK** (a SDD sela **Firecrawl**, n\u00e3o \"google/gemini\"). Surfaceei; Sovereign decidiu (custom): *\"n\u00e3o pagar Firecrawl agora; usar chaves j\u00e1 dispon\u00edveis\"* \u2192 motor = **Gemini Google-Search grounding** (chave `google` j\u00e1 provisionada; BYOK\u2192plataforma\u2192402), **desvio consciente OTD-VM-024** (d\u00e9bito de emenda BoK); contrato job/refund/state 100% fiel \u00e0 BoK. **Entregue:** `deepsearch.run` (3 mco, d\u00e9bito-na-entrada\u2192`job_id`\u2192worker in-process\u2192refund parcial \u00a74.5 floor-a-favor-do-tenant) + `deepsearch.poll` (gr\u00e1tis, tenant-bound, **self-heal de \u00f3rf\u00e3o**); `vision_jobs` (SELECT-own RLS) + **RPC at\u00f4mico `finalize_vision_job`** (service-role-only, terminal+refund 1\u00d7/job); menores (`infra_health_logs` event/metadata + OTD-VM-023 orphan-sub). **Reviews:** workflow adversarial 5-lentes (2 HIGH: charge-without-value + refund-atomicity \u2192 fechados com finalize+reconcile) + **recupera\u00e7\u00e3o dos 3 verify mortos por session-limit** dos transcripts (achado novo: sem teto GLOBAL da chave-plataforma \u2192 **OTD-VM-025** sem\u00e1foro; bucket era s\u00f3 per-sub) + allowlist de telemetria (side-channel cross-tenant) + erro de provider opaco + sentinel no `source_allowlist` + URLs http(s) + CHECK `refunded_mco\u2264charged_mco`. `/security-review` independente **SAFE** (0\u22658). pkg **46/46** \u00b7 tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8918** \u00b7 handoff `fc0b5efc` \u00b7 6 commits \u00b7 container `b24360c8` smoke **10/10** LIVE. **Top Gap novo:** Fatia 3 (PAT/OAuth/Plugin/jobs/erase LGPD) \u00b7 vhost nginx OTD-VM-013 (root Sovereign) \u00b7 cap di\u00e1rio per-tenant + rate-limiter compartilhado (OTD-VM-014/025) \u00b7 emenda BoK do engine (OTD-VM-024) \u00b7 per-plan `planned_units` (DD-VM-003). **Li\u00e7\u00e3o:** o workflow de mapeamento pr\u00e9-c\u00f3digo pegou a contradi\u00e7\u00e3o Firecrawl-vs-Gemini ANTES de eu codar a coisa errada (Lei 2); e recuperar findings \u00f3rf\u00e3os de transcript (em vez de re-rodar) achou 1 HIGH novo de custo que o /security-review (classe DoS exclu\u00edda) n\u00e3o pegaria.\n\n**Sprint v6.37.0 \u2014 Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)** \u2014 diretiva come\u00e7ou em"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:04:54)*
+
+
+## 🤖 Claude *(03:04:54)*
+
+Commit do sprint + proof-manifest + cleanup scratch, e push final:
+
+## 🤖 Claude *(03:04:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"(has files)\" || echo \"scratch clean \u2705\"\necho \"=== status ===\"; git status --short\ngit add .claude/context/sprint-priorities.md proof-manifest.json\ngit commit -q -m \"chore(sprint): register v6.38.0 vision-mcp deepsearch.run/poll async + proof manifest\" >/dev/null 2>&1 && echo \"SPRINT \u2705 $(git rev-parse --short HEAD)\"\ngit push origin main 2>&1 | tail -3",
+  "description": "Commit sprint + proof-manifest, push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> (has files)
+> === status ===
+>  M .claude/context/sprint-priorities.md
+>  M proof-manifest.json
+> SPRINT ✅ 57b9993
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ebe7915..57b9993  main -> main
+> ```
+
+## 🤖 Claude *(03:05:09)*
+
+
+## 🤖 Claude *(03:05:10)*
+
+Sprint (`57b9993`) pushed. Verificando se `scratch/` tem realmente arquivos (o `ls` de dir vazio dá exit 0 — pode ser falso positivo):
+
+## 🤖 Claude *(03:05:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== scratch contents ===\"; find scratch/ -type f 2>/dev/null | head; n=$(find scratch/ -type f 2>/dev/null | wc -l); echo \"scratch files: $n \u2192 $([ \"$n\" -eq 0 ] && echo 'clean \u2705 (empty dir)' || echo 'has files \u2014 review')\"; echo \"=== final tree ===\"; git status --short || echo \"working tree clean \u2705\"; echo \"=== origin sync ===\"; git rev-list --left-right --count HEAD...origin/main",
+  "description": "Verify scratch empty + working tree clean + origin sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch contents ===
+> scratch files: 0 → clean ✅ (empty dir)
+> === final tree ===
+> === origin sync ===
+> 0	0
+> ```
+
+## 🤖 Claude *(03:05:31)*
+
+
+## 🤖 Claude *(03:05:32)*
+
+`scratch/` vazio, working tree limpo, origin sincronizado (0/0). Selo completo. Atualizando a memória persistente do vision-mcp (deepsearch.run saiu de pendente → LIVE) para o próximo `/handson`:
+
+## 🤖 Claude *(03:05:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_vision_mcp
+> 3	description: "Vision MCP (slug vision-mcp) — MCP server nativo de visão+deepsearch; BoK 9/9 selada; Fatia 1+2 LIVE (4 tools billable provados); falta deepsearch.run async + Fatia 3 + vhost nginx"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 01011bef-690d-4105-a4da-14cdfdfea18a
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-10: MCP Interno nativo (ref. sandcastles.ai) com deepsearch fundamentado em Computer Vision, Análise de Movimento, Sensores Neuromórficos e Visão Periférica ("essência humana"), consumível por agentes internos E ecossistemas externos.
+> 11	
+> 12	**BoK suite 9/9 SELADA 2026-06-15** (node `318862b7-58d6-481c-b6d5-09060ee2e56c` · DERIVES_FROM `b4de794c` → mcorch-constellation `78cb74e6` · embedding 768d NOT NULL · seed `scripts/seed-vision-mcp-bok-seal.ts`). 2611 linhas (9 docs) + 532 blueprint. ID space: MR 16 · BR 12 · PR 23 · FR 26 · NFR 13 · DD 6 · OTD-VM 20 · FM-VM/FMEA 18 (12 RPN>100) · KPI 12 · QO 6 · PROC 9. Traceability 0 órfãos downstream. **Validação adversarial independente EXECUTADA e PASSADA 2026-06-15** (painel 3 lentes read-only — traceability/segurança-LGPD/qualidade): veredito **SUITE VALIDATED — 0 blockers**. A lente de segurança achou **1 blocker REAL** que minha escrita à mão + a 1ª passagem deixaram passar — `erase_vision_artifacts` cascade DELETE não re-escopava `user_id` (primitiva de deleção cross-tenant num módulo LGPD-elevado) → corrigido (guard `AND user_id=v_artifact.user_id` espelhando `erase_lead()`) → revalidação PASS. Hardening extra aplicado: scopes allowlist física no DB, expiry CHECK físico, Storage policy DDL, colisão OTD-VM-020 resolvida (sizing→OTD-VM-021), FMEA-VM-004 (RPN 175) promovida a OTD-VM-022. **OTD agora 001..022.** ⚠️ seed/node têm metadata point-in-time (open_otds=20, validação "pendente") — o estado vivo é este. **BoK gate ABERTO p/ código** (Fatias MVP, blueprint §9).
+> 13	
+> 14	**Gates OTD fechados 2026-06-15 (workflow `wf_0040a939-232`, 3 CLOSEABLE+1 PARTIAL):** OTD-VM-004 (grade mcoCoins 4×-floor sobrevive, fonteada; `segment` cost-aware obrigatório; SOP `vision-mcp-cost-calibration.md`) · OTD-VM-001 (corrigiu 2 erros factuais do blueprint: UEyes/Imp1k EXISTEM; SOTA=SUM MIT self-hostável, não DeepGaze; recall≥0.95 fundamentado) · OTD-VM-006 (14 licenças verdes + 3 minas banidas; SpikingJelly NÃO é MIT) · OTD-VM-005 PARTIAL (SCCs-ANPD inviável; Mistral=candidato default UE; Res.32/2026).
+> 15	
+> 16	**Fatia 1 CONSTRUÍDA + DEPLOYADA ON 2026-06-15:** `packages/vision-mcp-core/` (container `mcorch_vision_mcp` na Sovereign Mesh, restart=unless-stopped, UID 1001, read_only, `127.0.0.1:3200`). Provado material contra o CONTAINER: health 200 · 401+WWW-Authenticate RFC9728 · 403 origin · 400 protocol · telemetria row em infra_health_logs · 14/14 testes. **2 bugs reais que SÓ o deploy pegou (local node/unit não):** (1) `listen("127.0.0.1")` interno quebra o port-map do bridge → bind `0.0.0.0` (host-loopback é o `127.0.0.1:3200:` do compose); (2) `infra_health_logs` real só tem `{id,service,status,last_seen_at}` — sem `metadata` (o sentinel edge que copiei posta metadata e falha silencioso!) → telemetry posta só {service,status}, event vai pro stderr. SDD §6 corrigido + follow-up: migration ADD metadata jsonb. **Pendente:** mesh.search com JWT válido E2E (handshake MCP) · vhost nginx mcp.mcorch.com (OTD-VM-013, root). **Lição reforçada:** testar contra o ARTEFATO SERVIDO (container), não o node local — Lei 1 pegou 2 bugs + 1 schema drift. **Lição:** o painel adversarial independente PAGOU — pegou um vetor cross-tenant que self-review (até o meu + a 1ª lente de segurança) não pegou; rodar a validação por agente que NÃO escreveu a suíte é o que fecha a Lei 1 de verdade. Runtime selado: container `mcorch_vision_mcp` (Sovereign Mesh, `127.0.0.1:3200`, nginx `mcp.mcorch.com`); 4 tabelas + 1 RPC + 1 bucket + 2 cols BYOK; **0 edge fns**. ⚠️ **Lição de cota:** 3 workflows mortos por session/weekly-limit nesta iniciativa → escrevi 06/07/08/00-index no MAIN LOOP (workflow não é pré-requisito; `resumeFromRunId` recupera o cache, main loop fecha o resto; seed via Bash não consome cota LLM).
+> 17	
+> 18	**Fatia 2 LIVE 2026-06-15 (v6.37.0 — 4 tools billable provados contra o container/DB):** fundação compartilhada `packages/vision-mcp-core/src/{infra/billing.ts,auth/credentials.ts,safety/duty-of-care.ts}`: resolução **BYOK→plataforma→402** (lê `decrypted_user_api_keys` por sub via service-role) · **deduct-on-entry + refund-on-failure** (`deduct_mco_coins` 4-arg / `add_mco_coins`, service-role com sub verificado) · BYOK=grátis · `SOVEREIGN_USER_ID=ada39fae…`=isento · plataforma cobra classe selada. Tools: `vision.describe_image` (FR-VM-018, OpenRouter VLM, smoke 7/7), `vision.analyze_video` (FR-VM-024, **Gemini video understanding — NÃO Higgsfield** [Higgsfield gera, não descreve], cobrança/min, 7/7), `deepsearch.scrape` (FR-VM-007, Firecrawl **BYOK-only** — migration `20260615140000` add `firecrawl_api_key` ao Vault, `/security-review` limpo, 4/4), `mesh.consolidate_reference` (FR-VM-021, escrita tenant-escopada `user_id=sub`, 5/5). Plataforma keys no compose (de `.env`): `OPENROUTER_API_KEY`+`GEMINI_API_KEY` (firecrawl SEM platform key = BYOK-only). UI Settings (campo Firecrawl) deployada. **Falta:** `deepsearch.run` (a metade "google/gemini" — FR-VM-007 **async** job/poll+partial-refund) · Fatia 3 (PAT/OAuth/Plugin/jobs/erase LGPD) · vhost nginx OTD-VM-013 (root Sovereign) · OTD orphan-sub (LOW, token de user deletado vale ≤1h, doc no `auth/identity.ts`). **Lição:** o `/security-review` independente achou um SSRF por redirect (fetch de vídeo seguia 302→interno; fix `redirect:manual`+revalidação por hop) + o defeito de interop de protocolo (gate só aceitava latest → 400-ava clientes 3rd-party; o cliente do mesmo-SDK mascarava); cliente cru heterogêneo 8/8 provou o fix. SOPs: `docs/processes/vision-mcp-billing-credential-resolution.md` + `…cost-calibration.md`.
+> 19	
+> 20	**Estado:** `docs/bok/vision-mcp/00-deepsearch-blueprint.md` **v0.2.0** (2026-06-11, 532 linhas): v0.1.0 = workflow ultracode 19 agentes · 140 refs · 36 confirmadas/0 refutadas · OTD-VM-001..014; v0.2.0 (diretiva "acrescentar Cognitiva/Neuromórfica/Assistiva") = +Pilar V Computação Cognitiva (CoALA: a malha GraphRAG+Pantheon JÁ é a arquitetura cognitiva, vision-mcp = órgão de percepção) + Seção 4-A Tecnologia Assistiva + 33 URLs + OTD-VM-015..019 + FM-VM-14..18. **NENHUM código antes do `/bok-scribe vision-mcp`** (FM-VM-13 bloqueante).
+> 21	
+> 22	**Achado estratégico v0.2.0 (OTD-VM-002 emendada):** a hipótese bifurcou — **alt-text/descrição assistiva é beachhead demand-PROVADO** (Be My Eyes 1M usuários BLV/43M requests-ano; JAWS PictureSmart e NVDA já chamam OpenAI/Anthropic pra exata tool `describe_screen`; compulsão WCAG 2.2 + EAA 06/2025 + LBI Art. 63 + ABNT NBR 17225:2025 com ~99% dos sites BR não-conformes) enquanto o cruzado vision×deepsearch segue hipótese/upsell. Recomendação selada: ancorar GTM no vertical assistivo.
+> 23	
+> 24	**Lição operacional:** workflow morto por session-limit recupera com `resumeFromRunId` (cache do journal) — 2× nesta iniciativa; agente de merge que edita arquivo antes de morrer → sempre backup md5 + diff antes de regravar (o parcial só tinha bump de header, restaurado limpo).
+> 25	
+> 26	**Achados não-óbvios:**
+> 27	- sandcastles.ai = SaaS de research de **vídeo short-form**, NÃO ferramenta de CV. O que vale extrair é o padrão de produtização: remote MCP (Streamable HTTP + OAuth 2.1/RFC 9728) + Plugin Zip + skills-as-distribution + paridade 3 superfícies.
+> 28	- "Vision sobre MCP" já é da Roboflow (com.roboflow/roboflow-mcp, ~70 tools, hosted-only) e "deepsearch sobre MCP" já é de Exa/Firecrawl/Tavily (376k downloads/mês firecrawl-mcp). Diferencial nosso = o **produto cruzado** vision×deepsearch (whitespace, demanda NÃO validada — OTD-VM-002) + self-host soberano + credencial per-tenant + arquitetura 2 tiers (periferia neuromórfica emulada em software → trigger → análise foveal billable).
+> 29	- Runtime recomendado: container no Sovereign Mesh (precedente direto `mcorch_gitnexus` StreamableHTTPServerTransport 127.0.0.1:3100) atrás de nginx `mcp.mcorch.com`; Edge Function descartada (timeout — mesma lição do orchestrate async). Auth ES256 JWKS (SOP edge-jwt-identity-verification). Sentinel também sobre texto **scrapeado** (injeção indireta persistente na malha — FM-VM-03).
+> 30	- LGPD: faces/gait = dado biométrico sensível (art. 11; legítimo interesse NÃO aplica); regulação ANPD esperada em 2026; `erase_vision_artifacts()` espelhando `erase_lead()`.
+> 31	
+> 32	Relacionados: [[reference_supabase_keys_migrated]] · [[project_marketing_hub_v2]]
+> 33	
+> ```
+
+## 🤖 Claude *(03:05:40)*
+
+
+## 🤖 Claude *(03:05:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md",
+  "old_string": "description: \"Vision MCP (slug vision-mcp) \u2014 MCP server nativo de vis\u00e3o+deepsearch; BoK 9/9 selada; Fatia 1+2 LIVE (4 tools billable provados); falta deepsearch.run async + Fatia 3 + vhost nginx\"",
+  "new_string": "description: \"Vision MCP (slug vision-mcp) \u2014 MCP server nativo de vis\u00e3o+deepsearch; BoK 9/9 selada; Fatia 1+2 LIVE (4 tools) + deepsearch.run/poll async LIVE (v6.38.0, engine Gemini grounding OTD-VM-024); falta Fatia 3 + vhost nginx\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:06:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md",
+  "old_string": "**Estado:** `docs/bok/vision-mcp/00-deepsearch-blueprint.md` **v0.2.0**",
+  "new_string": "**Fatia 3 (parcial) \u2014 `deepsearch.run`/`poll` async LIVE 2026-06-15 (v6.38.0 \u00b7 handoff `fc0b5efc` \u00b7 mesh 8918 \u00b7 container `b24360c8` \u00b7 smoke 10/10 LIVE):** FR-VM-007 + \u00a74.5. `deepsearch.run` (3 mco) debita na entrada \u2192 `job_id` imediato (nunca bloqueante) \u2192 worker in-process \u2192 refund parcial `retida=max(1,floor(3\u00d7delivered/planned))` floor-a-favor-do-tenant; `deepsearch.poll` (gr\u00e1tis, tenant-bound, \u226524h). **\u26a0\ufe0f DESVIO de engine OTD-VM-024:** a BoK sela **Firecrawl** p/ deepsearch.* (SDD `05-sdd.md:113,284-289,591`), mas por diretiva Sovereign (\"n\u00e3o pagar Firecrawl agora; usar chaves j\u00e1 dispon\u00edveis\") o `deepsearch.run` usa **Gemini Google-Search grounding** (chave `google` j\u00e1 provisionada no container; `groundingChunks` \u2192 `result.references[{title,url,summary}]`; URLs s\u00e3o redirects vertexaisearch \u2192 `source_allowlist` vira best-effort, n\u00e3o gate r\u00edgido). Contrato job/refund/state 100% fiel \u00e0 BoK; **d\u00e9bito de emenda BoK aberto** (reconciliar engine). Arquivos: `packages/vision-mcp-core/src/tools/deepsearch-run.ts` (`computeTerminal` puro + worker + poll self-heal), migration `20260615160000_vision_mcp_jobs.sql` (`vision_jobs` SELECT-own RLS + **RPC at\u00f4mico `finalize_vision_job`** service-role-only: terminal+refund commitam 1 txn, guard `state IN (queued,running)` \u21d2 refund 1\u00d7/job \u2014 fecha charge-without-value + atomicidade), `20260615170000` (`infra_health_logs` event/metadata). **Self-heal de \u00f3rf\u00e3o:** worker morto \u2192 pr\u00f3ximo poll de job stale(>10min) chama finalize(failed,full-refund) idempotente (sem cron; res\u00edduo = job nunca-pollado \u2192 follow-up sweep). **OTDs novos:** VM-023 (orphan-sub LOW), VM-024 (engine deviation), VM-025 (teto de concorr\u00eancia GLOBAL da chave-plataforma \u2014 bucket sentinel \u00e9 s\u00f3 per-sub; sem\u00e1foro in-process, BYOK bypassa; cap di\u00e1rio per-tenant = follow-up). SOP `docs/processes/vision-mcp-deepsearch-async.md`. **Li\u00e7\u00e3o:** workflow de **mapeamento pr\u00e9-c\u00f3digo** pegou que minha premissa (\"metade google/gemini\") CONTRADIZIA a BoK (Firecrawl) antes de eu codar errado (Lei 2); e **recuperar os findings \u00f3rf\u00e3os** (3 verify mortos por session-limit) dos transcripts achou 1 HIGH novo de custo (teto global) que o `/security-review` (classe DoS exclu\u00edda) n\u00e3o pegaria. **Falta Fatia 3:** PAT/OAuth 2.1 (RFC 9728 AS) \u00b7 Plugin Zip \u00b7 jobs ass\u00edncronos gen\u00e9ricos \u00b7 erase LGPD `erase_vision_artifacts`.\n\n**Estado:** `docs/bok/vision-mcp/00-deepsearch-blueprint.md` **v0.2.0**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:06:16)*
+
+
+## 🤖 Claude *(03:06:17)*
+
+Atualizando a linha-índice no MEMORY.md:
+
+## 🤖 Claude *(03:06:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Vision MCP \u2014 Fatia 1+2 LIVE (4 tools billable provados)](project_vision_mcp.md) \u2014 v6.37.0 2026-06-15: MCP nativo vision\u00d7deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (describe_image/analyze_video-Gemini-N\u00c3O-Higgsfield/deepsearch.scrape-Firecrawl-BYOK/mesh.consolidate) sobre funda\u00e7\u00e3o per-user BYOK\u2192plataforma\u2192402 + deduct/refund. Bug que o E2E real pegou: transport stateless reusado\u2192handshake 500 (fix fresh-per-request); /security-review independente pegou SSRF redirect + interop de protocolo (gate s\u00f3 latest\u2192400 clientes 3rd-party, cliente cru 8/8 provou o fix). Falta: deepsearch.run async (metade google/gemini) + Fatia 3 (PAT/OAuth/erase LGPD) + vhost nginx OTD-VM-013 (root Sovereign). Migration firecrawl_api_key Vault aplicada.",
+  "new_string": "- [Vision MCP \u2014 Fatia 1+2 + deepsearch.run/poll async LIVE](project_vision_mcp.md) \u2014 v6.38.0 2026-06-15: MCP nativo vision\u00d7deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (4 tools billable) + **deepsearch.run/poll async** (FR-VM-007 job\u2192poll\u2192partial-refund \u00a74.5, `vision_jobs`+RPC at\u00f4mico `finalize_vision_job`, poll self-heal de \u00f3rf\u00e3o). **\u26a0\ufe0f engine = Gemini grounding (OTD-VM-024 \u2014 desvio consciente do Firecrawl selado, diretiva Sovereign \"usar chaves j\u00e1 dispon\u00edveis\"; d\u00e9bito de emenda BoK aberto).** Li\u00e7\u00f5es: workflow de mapeamento pr\u00e9-c\u00f3digo pega contradi\u00e7\u00e3o premissa-vs-BoK (Lei 2); recuperar findings \u00f3rf\u00e3os de transcript (verify morto por session-limit) achou HIGH novo de custo (teto global da chave-plataforma OTD-VM-025). Falta: Fatia 3 (PAT/OAuth/erase LGPD) + vhost nginx OTD-VM-013 (root Sovereign) + cap per-tenant + emenda BoK do engine."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:06:34)*
+
+
+## 🤖 Claude *(03:06:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Vision MCP — Fatia 1+2 LIVE (4 tools billable provados)](project_vision_mcp.md) — v6.37.0 2026-06-15: MCP nativo vision×deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (describe_image/analyze_video-Gemini-NÃO-Higgsfield/deepsearch.scrape-Firecrawl-BYOK/mesh.consolidate) sobre fundação per-user BYOK→plataforma→402 + deduct/refund. Bug que o E2E real pegou: transport stateless reusado→handshake 500 (fix fresh-per-request); /security-review independente pegou SSRF redirect + interop de protocolo (gate só latest→400 clientes 3rd-party, cliente cru 8/8 provou o fix). Falta: deepsearch.run async (metade google/gemini) + Fatia 3 (PAT/OAuth/erase LGPD) + vhost nginx OTD-VM-013 (root Sovereign). Migration firecrawl_api_key Vault aplicada.
+> ```
+
+## 🤖 Claude *(03:06:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Vision MCP \u2014 Fatia 1+2 LIVE (4 tools billable provados)](project_vision_mcp.md) \u2014 v6.37.0 2026-06-15: MCP nativo vision\u00d7deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (describe_image/analyze_video-Gemini-N\u00c3O-Higgsfield/deepsearch.scrape-Firecrawl-BYOK/mesh.consolidate) sobre funda\u00e7\u00e3o per-user BYOK\u2192plataforma\u2192402 + deduct/refund. Bug que o E2E real pegou: transport stateless reusado\u2192handshake 500 (fix fresh-per-request); /security-review independente pegou SSRF redirect + interop de protocolo (gate s\u00f3 latest\u2192400 clientes 3rd-party, cliente cru 8/8 provou o fix). Falta: deepsearch.run async (metade google/gemini) + Fatia 3 (PAT/OAuth/erase LGPD) + vhost nginx OTD-VM-013 (root Sovereign). Migration firecrawl_api_key Vault aplicada.",
+  "new_string": "- [Vision MCP \u2014 Fatia 1+2 + deepsearch.run/poll async LIVE](project_vision_mcp.md) \u2014 v6.38.0 2026-06-15: MCP nativo vision\u00d7deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (4 tools billable) + **deepsearch.run/poll async** (FR-VM-007 job\u2192poll\u2192partial-refund \u00a74.5, `vision_jobs`+RPC at\u00f4mico `finalize_vision_job` terminal+refund 1\u00d7/job, poll self-heal de \u00f3rf\u00e3o). **\u26a0\ufe0f engine = Gemini grounding (OTD-VM-024 \u2014 desvio consciente do Firecrawl selado na BoK; diretiva Sovereign \"usar chaves j\u00e1 dispon\u00edveis, n\u00e3o pagar Firecrawl\"; d\u00e9bito de emenda BoK aberto).** Li\u00e7\u00f5es: workflow de **mapeamento pr\u00e9-c\u00f3digo** pega contradi\u00e7\u00e3o premissa-vs-BoK antes de codar errado (Lei 2); **recuperar findings \u00f3rf\u00e3os** de transcript (verify morto por session-limit) achou HIGH novo de custo (teto GLOBAL da chave-plataforma OTD-VM-025; bucket sentinel \u00e9 s\u00f3 per-sub). Falta: Fatia 3 (PAT/OAuth/erase LGPD) + vhost nginx OTD-VM-013 (root Sovereign) + cap per-tenant + emenda BoK do engine."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:07:00)*
+
+
+## 🤖 Claude *(03:07:18)*
+
+Memória atualizada. **Selo completo.** Relatório final:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Vision MCP deepsearch.run/poll async (2026-06-15)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA (Fase 1 + 5b + 5c)
+  1a secret leak (staged) ........ ✅ PASS (0 key literals)
+  1c client mco_balance .......... ✅ PASS (0 — src/ intocado)
+  1e sensitive console.log ....... ✅ PASS
+  5b HANDOFF.md secret scan ...... ✅ PASS (0)
+  /security-review independente .. ✅ SAFE (0 achados ≥8)
+
+📦 COMMITS (7)
+  7302dad — feat(db): vision_jobs + finalize RPC + infra_health_logs telemetry
+  3a3d845 — feat(vision-mcp): deepsearch.run/poll async + §4.5 + self-heal + ceiling
+  adde770 — test(vision-mcp): deepsearch.run/poll live smoke (R1-R8)
+  a96be81 — docs(vision-mcp): SOP + OTD-VM-023/024/025 + Key Files
+  79571c5 — docs(readme): v6.38.0
+  ebe7915 — docs(handoff): seal deepsearch.run/poll async
+  57b9993 — chore(sprint): register v6.38.0 + proof manifest
+
+⬡ KNOWLEDGE MESH
+  Milestone node: fc0b5efc-9df8-4e03-8544-820caee4ee79
+    (session-handoff-20260615-vision-deepsearch-run-async)
+  Embedding: ✅ 768d (openai/text-embedding-3-small)
+
+📖 README.md
+  Versão: 6.37.0-vision-mcp-fatia2 → 6.38.0-vision-mcp-deepsearch-run
+  Badge neural_mesh: 8917 → 8918 nós
+  Seção: What's New [v6.38.0]
+
+🧠 HANDOFF.md
+  Fase selada: Vision MCP deepsearch.run/poll async
+  Atualizados: Task State + Record + Arquitetura + Survival self-audit + GraphRAG (8918)
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas (handoff node fc0b5efc ✅)
+
+📚 BoK (Fase 6)
+  ✅ vision-mcp 9/9 — deepsearch.run = FR-VM-007 (selada); 0 módulo novo sem BoK
+  🌐 seal node bok-scribe-seal-vision-mcp-v1 (0.80)
+
+🚀 PUSH
+  main → origin/main · 1a110fb..57b9993 · 7 commits · gitleaks-range limpo
+
+📌 SPRINT
+  sprint-priorities.md: ✅ entrada v6.38.0
+  scratch/: ✅ limpo (dir vazio)
+  MCP docs: ✅ sem MCP novo
+  Memória: ✅ project_vision_mcp.md + MEMORY.md atualizados
+
+⏭  PRÓXIMOS PASSOS
+  1. Fatia 3 — PAT/OAuth 2.1 (RFC 9728 AS) · Plugin Zip · jobs assíncronos genéricos · erase LGPD (erase_vision_artifacts)
+  2. vhost nginx mcp.mcorch.com (OTD-VM-013) — AÇÃO SUA (root/DNS Cloudflare); hoje só loopback 127.0.0.1:3200
+  3. Reconciliar emenda BoK do engine (OTD-VM-024 Gemini→Firecrawl) + cap diário per-tenant (OTD-VM-025) + per-plan planned_units (DD-VM-003)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada. `deepsearch.run`/`poll` async está **LIVE e provado** no container servido (smoke 10/10), com as duas reviews adversariais 100% fechadas — incluindo o HIGH de custo que só apareceu ao recuperar os findings órfãos dos transcripts. O único item do roadmap que depende de você é o **vhost nginx** (root/DNS); o resto é Fatia 3, sessão própria quando quiser.
+
+## 👤 User *(14:34:48)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(14:34:48)*
+
+No response requested.
+
+## 👤 User *(14:36:21)*
+
+otimo agora vamos para os ⏭  PRÓXIMOS PASSOS
+  1. Fatia 3 — PAT/OAuth 2.1 (RFC 9728 AS) · Plugin Zip · jobs assíncronos genéricos · erase LGPD (erase_vision_artifacts)
+  2. vhost nginx mcp.mcorch.com (OTD-VM-013) — AÇÃO SUA (root/DNS Cloudflare); hoje só loopback 127.0.0.1:3200
+  3. Reconciliar emenda BoK do engine (OTD-VM-024 Gemini→Firecrawl) + cap diário per-tenant (OTD-VM-025) + per-plan planned_units (DD-VM-003)
+
+## 🤖 Claude *(14:37:15)*
+
+
+## 🤖 Claude *(14:37:18)*
+
+Bora. Mas os 3 itens são bem diferentes em natureza e tamanho — **Fatia 3 sozinha são 4 features** (PAT, OAuth AS, Plugin Zip, erase LGPD), o item 2 depende de **root/DNS Cloudflare** (sua conta), e o item 3 é docs+código pequeno. "Os três numa sessão" não é realista sem violar foco/materialidade. Vou **escotear** o que é factível por mim (acesso nginx) + o que a BoK manda pra Fatia 3, e aí confirmo o ponto de partida com você.
+
+## 🤖 Claude *(14:37:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== nginx access (item 2) ===\"\nsudo -n true 2>&1 && echo \"sudo: NOPASSWD \u2705\" || echo \"sudo: needs password/denied\"\nls -la /etc/nginx/sites-available/ 2>/dev/null | grep -iE \"mcp|mcorch|login\" || echo \"(no /etc/nginx/sites-available or no match)\"\nls /etc/nginx/conf.d/ 2>/dev/null | head || echo \"(no conf.d)\"\nfind / -name \"*.conf\" -path \"*nginx*\" 2>/dev/null | grep -iE \"mcorch|mcp|login\" | head\necho \"--- does mcp.mcorch.com resolve / respond? ---\"\ncurl -s -o /dev/null -w \"mcp.mcorch.com HTTP=%{http_code}\\n\" -m 6 https://mcp.mcorch.com/health 2>&1 || echo \"(no response / DNS not set)\"\necho \"\"\necho \"=== Fatia 3 BoK scope ===\"\necho \"--- data-model: mcp_access_tokens + vision_artifacts + erase ---\"\ngrep -n \"mcp_access_tokens\\|vision_artifacts\\|erase_vision_artifacts\\|PAT\\|scopes\" docs/bok/vision-mcp/06-data-model.md | head -25",
+  "description": "Probe nginx access + Fatia 3 BoK scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nginx access (item 2) ===
+> sudo: NOPASSWD ✅
+> (no /etc/nginx/sites-available or no match)
+> /home/gcrUX/htdocs/constellation-orchestra/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/eager-brown-6ef0f1/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/dreamy-blackburn-2dd6e7/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/wizardly-allen-2a03a9/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/youthful-poincare-565e7c/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/gallant-blackwell-594b5a/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/beautiful-dijkstra-207b09/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/bold-visvesvaraya-4a95b9/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/stoic-bose-9b72f5/nginx/www.mcorch.com.conf
+> /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/suspicious-tereshkova-eb75cb/nginx/www.mcorch.com.conf
+> --- does mcp.mcorch.com resolve / respond? ---
+> mcp.mcorch.com HTTP=000
+> (no response / DNS not set)
+> 
+> === Fatia 3 BoK scope ===
+> --- data-model: mcp_access_tokens + vision_artifacts + erase ---
+> 19:| `tenant` (≡ `auth.users` + `profiles`) | Reference | reuse | Dono de credenciais, PATs, jobs, artefatos e nós de visão; carteira `mco_balance` | — |
+> 20:| `mcp_access_token` | Master | **new** | Credencial de acesso de client MCP externo (hash, scopes, expiry) | FR-VM-003 |
+> 33:auth.users (tenant) ──1:N──▶ mcp_access_tokens        (user_id, ON DELETE CASCADE)
+> 36:                   ──1:N──▶ vision_artifacts           (user_id; content_ref UNIQUE)
+> 40:vision_artifacts ──N:M──▶ mcorch_nodes                 (node_ids[] — alvo do cascade de erasure)
+> 55:### 2.1 `mcp_access_tokens` (FR-VM-003 · FM-VM-06)
+> 64:| `scopes` | text[] | NO | CHECK `scopes_allowed` (allowlist `<@`) | ⊆ {`vision:read`,`deepsearch:run`,`mesh:read`,`mesh:write`} enforçado no DB (allowlist subsume a antiga blocklist `credentials:*`/`billing:*`); ≥1 scope |
+> 89:### 2.3 `vision_artifacts` (FR-VM-009 · FM-VM-11)
+> 124:| 1 | `<ts>_vision_mcp_access_tokens.sql` | `mcp_access_tokens` + CHECK `scopes_no_privileged` | default-deny; SELECT/INSERT/UPDATE own; sem DELETE | `token_hash WHERE revoked_at IS NULL`, `user_id` |
+> 127:| 4 | `<ts>_vision_mcp_artifacts.sql` | `vision_artifacts` | default-deny; SELECT own | `retention_until`, `user_id` |
+> 128:| 5 | `<ts>_vision_mcp_erase_rpc.sql` | `erase_vision_artifacts(text)` SECURITY DEFINER `search_path=''` | EXECUTE revogado de PUBLIC/anon; GRANT authenticated/service_role | — |
+> 178:| `mcp_access_tokens` | `user_id = auth.uid()` | default-deny; container lê hash via service-role (único leitor) | — |
+> 180:| `vision_artifacts` | `user_id = auth.uid()` | SELECT own; DELETE só via `erase_vision_artifacts`/sweep | — |
+> 194:| `mcp_access_tokens.token_hash` | SHA-256 hex (64 chars); UNIQUE | NOT NULL | FR-VM-003 |
+> 195:| `mcp_access_tokens.scopes` | ⊆ vocabulário fechado; CHECK exclui `credentials:*`/`billing:*` | NOT NULL | FM-VM-06 |
+> 212:| Nó de visão / referência | default 90d; teto 365d (DD-VM-004); tenant pode encurtar, nunca exceder | sweep diário in-container (`jobs/retention-sweep.ts`) via `erase_vision_artifacts` | `erase_vision_artifacts(content_ref)` (FR-VM-009) |
+> 216:| `mcp_access_tokens` | até `expires_at`/`revoked_at` | revogação = UPDATE | CASCADE em delete da conta |
+> 218:**Cascade de erasure (prova material NFR-VM-009):** `SELECT count(*)` dos nós/edges/embeddings/objetos de Storage antes e depois de `erase_vision_artifacts` = **zero resíduo em ≤24h**. Precedente: `erase_lead()` do marketing-hub. **Limite honesto:** cópias já transmitidas a providers US dependem do DPA/SCC (OTD-VM-005) — o registro `provider_copies` existe justamente para tornar essa deleção solicitável e auditável.
+> 226:| `mcp_access_tokens` | FR-VM-003 | FM-VM-06 | DD-VM-002 |
+> 229:| `vision_artifacts` + `erase_vision_artifacts` | FR-VM-009 | FM-VM-11 | OTD-VM-007, DD-VM-004 |
+> ```
+
+## 🤖 Claude *(14:38:55)*
+
+
+## 🤖 Claude *(14:39:00)*
+
+Escoteado, e há um destravamento importante:
+
+- **Item 2 (nginx):** tenho **`sudo` NOPASSWD** → consigo escrever/recarregar a vhost. Mas `mcp.mcorch.com` **não resolve** (HTTP 000) e o cert TLS depende do DNS → a parte de **DNS Cloudflare é sua**. Posso entregar a config SSE-tuned (`proxy_pass :3200`, `proxy_buffering off`, heartbeat ≤25s OTD-VM-013) + o runbook exato de DNS/cert; ativação fica no seu passo.
+- **Item 1 (Fatia 3):** a BoK define bem o núcleo — `mcp_access_tokens` (FR-VM-003, SHA-256 + scopes allowlist) + `vision_artifacts`/`erase_vision_artifacts` (FR-VM-009, LGPD). **OAuth full AS já é PAT-first por OTD-VM-020** (não construo vendor AS agora); Plugin Zip é distribuição (deferível). Sem bloqueio de BoK gate.
+- **Item 3:** mais leve — caps + emenda BoK do engine.
+
+"Os três numa sessão" diluiria materialidade. Confirmo o ponto de partida:
+
+## 🤖 Claude *(14:39:12)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como sequencio? (Fatia 3 \u00e9 grande e ramifica; item 2 depende do seu DNS Cloudflare)",
+      "header": "Pr\u00f3ximo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fatia 3 core + vhost config",
+          "description": "RECOMENDADO. Construo o n\u00facleo de seguran\u00e7a/compliance da Fatia 3: mcp_access_tokens (PAT SHA-256 + scopes allowlist) + caminho de verifica\u00e7\u00e3o PAT no container (consumo externo por bearer, scope-gated) + vision_artifacts + erase_vision_artifacts (LGPD, zero-res\u00edduo) + sweep de reten\u00e7\u00e3o. E escrevo a vhost nginx SSE-tuned de mcp.mcorch.com + runbook DNS/cert pra voc\u00ea ativar (PAT s\u00f3 \u00e9 \u00fatil externamente com o vhost). OAuth full AS fica PAT-first (OTD-VM-020); Plugin Zip e item 3 depois."
+        },
+        {
+          "label": "S\u00f3 Fatia 3 core (sem nginx)",
+          "description": "Mesmo n\u00facleo da Fatia 3 (PAT + erase LGPD + sweep), mas sem tocar nginx agora \u2014 deixo o vhost/DNS pra quando voc\u00ea quiser expor externamente. Foco 100% no c\u00f3digo+migrations da Fatia 3."
+        },
+        {
+          "label": "Item 3 reconcilia\u00e7\u00e3o primeiro",
+          "description": "Mais leve, endurece o que j\u00e1 est\u00e1 LIVE sem feature nova: per-plan planned_units (DD-VM-003) + cap di\u00e1rio per-tenant (OTD-VM-025) + emenda BoK do engine Gemini\u2192Firecrawl (OTD-VM-024 via [[deepsearch-blueprint|deepsearch-blueprint]]). Fatia 3 fica pra sess\u00e3o dedicada."
+        },
+        {
+          "label": "Plugin Zip / distribui\u00e7\u00e3o",
+          "description": "Empacotar o Vision MCP como plugin distribu\u00edvel (Plugin Zip + skills + MCP Registry) \u2014 a face de distribui\u00e7\u00e3o da Fatia 3, para consumo por hosts externos. Menos urgente que PAT/erase mas \u00e9 o que torna o MCP instal\u00e1vel por terceiros."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como sequencio? (Fatia 3 é grande e ramifica; item 2 depende do seu DNS Cloudflare)"="Fatia 3 core + vhost config". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:42:32)*
+
+
+## 🤖 Claude *(14:42:37)*
+
+Travado: **Fatia 3 core (PAT + erase LGPD) + vhost nginx config**.
+
+**ORO desta task:**
+- **Operator:** MCORCH Agent
+- **Reviewer:** Sovereign + `/security-review` independente (PAT = credencial que gasta carteira — FM-VM-06; erase = LGPD-crítico)
+- **Owner:** Sovereign — vazamento de PAT = dreno de mcoCoins; erasure incompleta = risco LGPD. Alta aposta.
+
+BoK gate **ABERTO** (FR-VM-002/003/009 selados). Vou mapear o contrato exato da BoK + ler o gate atual antes de codar (Lei 2). Lendo data-model + `identity.ts` + os stubs DDL da SDD.
+
+## 🤖 Claude *(14:42:37)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Vision MCP Fatia 3: PAT + erase LGPD + nginx vhost",
+  "summary": "PAT (mcp_access_tokens + verify path) + LGPD erasure (vision_artifacts + erase_vision_artifacts + sweep) + nginx vhost config para mcp.mcorch.com"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Vision MCP Fatia 3: PAT + erase LGPD + nginx vhost". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(14:42:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/06-data-model.md",
+  "offset": 55,
+  "limit": 85
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 55	### 2.1 `mcp_access_tokens` (FR-VM-003 · FM-VM-06)
+> 56	
+> 57	| Column | Type | Null | Key / Constraint | Notes |
+> 58	|--------|------|------|------------------|-------|
+> 59	| `id` | uuid | NO | PK | `gen_random_uuid()` |
+> 60	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | tenant dono |
+> 61	| `token_hash` | char(64) | NO | UNIQUE | SHA-256 hex; **nunca** plaintext/Vault-reversível |
+> 62	| `token_prefix` | text | NO | — | exibição (`mcorch_pat_3f9a…`) |
+> 63	| `label` | text | YES | — | rótulo do usuário |
+> 64	| `scopes` | text[] | NO | CHECK `scopes_allowed` (allowlist `<@`) | ⊆ {`vision:read`,`deepsearch:run`,`mesh:read`,`mesh:write`} enforçado no DB (allowlist subsume a antiga blocklist `credentials:*`/`billing:*`); ≥1 scope |
+> 65	| `expires_at` | timestamptz | NO | CHECK `pat_expiry_ceiling` (`≤ created_at + 365d`, físico no DB) | default 90d na app (DD-VM-002) |
+> 66	| `revoked_at` | timestamptz | YES | — | revogação = UPDATE (sem DELETE exposto) |
+> 67	| `last_used_at` | timestamptz | YES | — | atualizado pelo container |
+> 68	| `created_at` | timestamptz | NO | DEFAULT now() | — |
+> 69	
+> 70	### 2.2 `vision_jobs` (FR-VM-007 · FM-VM-07 — sela §4.5 do FRD)
+> 71	
+> 72	| Column | Type | Null | Key / Constraint | Notes |
+> 73	|--------|------|------|------------------|-------|
+> 74	| `id` (= `job_id`) | uuid | NO | PK | retornado no `deepsearch.run` |
+> 75	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | poll exige mesma identidade (alheio → 404) |
+> 76	| `project_id` | uuid | YES | — | isolamento de malha |
+> 77	| `tool` | text | NO | — | `'deepsearch.run'` |
+> 78	| `state` | text | NO | CHECK ∈ {queued,running,done,partial,failed} | máquina de estados |
+> 79	| `planned_units` | int | NO | CHECK ≥1 | cap por plano app-side (DD-VM-003: 10/25/50) |
+> 80	| `delivered_units` | int | NO | DEFAULT 0 | base do refund proporcional |
+> 81	| `charged_mco` | int | NO | — | débito integral na entrada (3) |
+> 82	| `refunded_mco` | int | YES | — | valor estornado |
+> 83	| `refunded_at` | timestamptz | YES | — | **guard de idempotência** (refund 1×/job) |
+> 84	| `failed_units` | jsonb | YES | — | unidades não entregues (transparência) |
+> 85	| `result` | jsonb | YES | — | referências consolidadas |
+> 86	| `expires_at` | timestamptz | NO | — | terminal + 24h (retenção de poll, NFR-VM-003) |
+> 87	| `created_at`/`updated_at` | timestamptz | NO | DEFAULT now() | — |
+> 88	
+> 89	### 2.3 `vision_artifacts` (FR-VM-009 · FM-VM-11)
+> 90	
+> 91	| Column | Type | Null | Key / Constraint | Notes |
+> 92	|--------|------|------|------------------|-------|
+> 93	| `id` | uuid | NO | PK | — |
+> 94	| `content_ref` | text | NO | UNIQUE | chave do cascade de erasure |
+> 95	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | dono |
+> 96	| `project_id` | uuid | YES | — | — |
+> 97	| `node_ids` | uuid[] | NO | DEFAULT '{}' | nós `mcorch_nodes` derivados |
+> 98	| `storage_paths` | text[] | NO | DEFAULT '{}' | objetos no bucket `vision-artifacts` |
+> 99	| `provider_copies` | jsonb | NO | DEFAULT '[]' | registro de cópias enviadas a providers (FM-VM-11) |
+> 100	| `retention_until` | timestamptz | NO | > now(); ≤ teto DD-VM-004 | sweep diário expira vencidos |
+> 101	| `created_at` | timestamptz | NO | DEFAULT now() | — |
+> 102	
+> 103	### 2.4 `user_api_keys` extension (FR-VM-004/022 · FM-VM-05)
+> 104	
+> 105	VIEW Vault-mascarada (família de trigger da migration `20260601060000` — precedente verbatim). Duas colunas novas:
+> 106	
+> 107	| Column | Type | Null | Write rule | Lookup |
+> 108	|--------|------|------|-----------|--------|
+> 109	| `firecrawl_api_key` | text (Vault) | YES | `.insert` na VIEW (NUNCA `.upsert`); null não limpa (clear via RPC) | `decrypted_user_api_keys` (service-role only) |
+> 110	| `mistral_api_key` | text (Vault) | YES | idem | idem (`vision.ocr` direto — não está no OpenRouter) |
+> 111	
+> 112	### 2.5 Reuse — sem alteração de schema
+> 113	
+> 114	`agent_executions` (metering por leg, BYOK→cost 0), `mcorch_nodes`/`mcorch_edges` (malha, §3), `infra_health_logs` (telemetria, novos `service`/event types — §7 SDD, sem DDL), `profiles.mco_balance` (carteira via `deduct_mco_coins`/`refundMco`).
+> 115	
+> 116	---
+> 117	
+> 118	## 3. Supabase Physical Schema Stubs
+> 119	
+> 120	Os `CREATE TABLE`/RLS/índices/RPC físicos estão selados no **SDD §7 (Migration Stubs)** e **§5.2 (RLS Policies)** — autoridade única, copy-ready para os arquivos de migration. Resumo das 5 migrations (ordem de aplicação):
+> 121	
+> 122	| # | Migration file (stub) | Cria | RLS | Índices |
+> 123	|---|----------------------|------|-----|---------|
+> 124	| 1 | `<ts>_vision_mcp_access_tokens.sql` | `mcp_access_tokens` + CHECK `scopes_no_privileged` | default-deny; SELECT/INSERT/UPDATE own; sem DELETE | `token_hash WHERE revoked_at IS NULL`, `user_id` |
+> 125	| 2 | `<ts>_user_api_keys_vision_byok.sql` | colunas `firecrawl_api_key`/`mistral_api_key` + re-create da família trigger/VIEW | herdada (VIEW Vault) | — |
+> 126	| 3 | `<ts>_vision_mcp_jobs.sql` | `vision_jobs` | default-deny; SELECT own; writes service-role | `(user_id, state)` |
+> 127	| 4 | `<ts>_vision_mcp_artifacts.sql` | `vision_artifacts` | default-deny; SELECT own | `retention_until`, `user_id` |
+> 128	| 5 | `<ts>_vision_mcp_erase_rpc.sql` | `erase_vision_artifacts(text)` SECURITY DEFINER `search_path=''` | EXECUTE revogado de PUBLIC/anon; GRANT authenticated/service_role | — |
+> 129	
+> 130	**Gate house:** cada migration passa `/security-review` independente ANTES do commit (FMEA-011 + NFR-VM-007). Bucket `vision-artifacts` privado (config + policy de Storage).
+> 131	
+> 132	---
+> 133	
+> 134	## 4. GraphRAG Knowledge Nodes
+> 135	
+> 136	### 4.1 Node types introduzidos / tipados
+> 137	
+> 138	| node_type | Origem | Regime | stability_score inicial | revenue_impact |
+> 139	|-----------|--------|--------|------------------------|----------------|
+> ```
+
+## 🤖 Claude *(14:42:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// vision-mcp-core auth/identity.ts — FR-VM-002 (ES256 JWKS fail-closed) + FR-VM-001 (Origin gate).
+> 2	// SOP: docs/processes/[[edge-jwt-identity-verification|edge-jwt-identity-verification]].md. NUNCA atob cego no sub (anti-confused-deputy).
+> 3	// This is the gate the gitnexus MCP precedent did NOT have (it was internal/unauthenticated) — the
+> 4	// SDD §5.3 mandate for the first tenant-facing service outside the Supabase gateway.
+> 5	
+> 6	import { createRemoteJWKSet, jwtVerify } from "jose";
+> 7	import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
+> 8	
+> 9	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+> 10	
+> 11	// createRemoteJWKSet caches keys in-process and refetches on unknown kid; we build it lazily so the
+> 12	// module imports cleanly in tests where SUPABASE_URL may be unset.
+> 13	let _jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+> 14	function jwks() {
+> 15	  if (!SUPABASE_URL) throw new Error("SUPABASE_URL not configured");
+> 16	  if (!_jwks) {
+> 17	    _jwks = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+> 18	  }
+> 19	  return _jwks;
+> 20	}
+> 21	
+> 22	export interface Identity {
+> 23	  sub: string; // verified user id — the ONLY source of identity for any downstream effect
+> 24	}
+> 25	
+> 26	export type IdentityResult =
+> 27	  | { ok: true; identity: Identity }
+> 28	  | { ok: false; status: 401; code: string };
+> 29	
+> 30	const PRM_URL_PATH = "/.well-known/oauth-protected-resource";
+> 31	
+> 32	// RFC 9728 Protected Resource Metadata pointer for the 401 WWW-Authenticate challenge.
+> 33	export function wwwAuthenticate(publicBase: string): string {
+> 34	  return `Bearer resource_metadata="${publicBase.replace(/\/$/, "")}${PRM_URL_PATH}"`;
+> 35	}
+> 36	
+> 37	// FR-VM-002: verify the bearer JWT via ES256 JWKS BEFORE trusting `sub`. Fail-closed on ANY error
+> 38	// (missing/invalid/expired token, unreachable JWKS, wrong alg). Never decodes the payload blindly.
+> 39	//
+> 40	// RESIDUAL RISK (orphan-sub, LOW — accepted for Fatia 1, to be OTD-registered with the Fatia 2 BoK
+> 41	// amendment): this path verifies signature + exp only — there is NO user-existence / session-revocation
+> 42	// check. A token for a since-DELETED user therefore still authenticates for its remaining TTL (≤3600s).
+> 43	// Blast radius is bounded: a verified sub only ever reaches its OWN nodes + system nodes (never another
+> 44	// tenant's — proven by the mesh.search scope filter), and its rows are typically gone after deletion.
+> 45	// Adding a per-request getUser() check would cost a DB roundtrip on the hot path (conflicts with the
+> 46	// latency NFR); deferred unless a deprovisioned identity reaching the system-node corpus for ≤1h is
+> 47	// unacceptable for the assistive vertical.
+> 48	export async function verifyBearer(authHeader: string | undefined): Promise<IdentityResult> {
+> 49	  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+> 50	    return { ok: false, status: 401, code: "identity_unverified" };
+> 51	  }
+> 52	  const token = authHeader.slice("Bearer ".length).trim();
+> 53	  if (!token) return { ok: false, status: 401, code: "identity_unverified" };
+> 54	  try {
+> 55	    const { payload } = await jwtVerify(token, jwks(), { algorithms: ["ES256"] });
+> 56	    // Trim before the empty-check so a whitespace-only sub (which would build a malformed
+> 57	    // `user_id.eq.%20` scope) is rejected — defense-in-depth (unforgeable, but free).
+> 58	    const sub = typeof payload.sub === "string" ? payload.sub.trim() : "";
+> 59	    if (!sub) return { ok: false, status: 401, code: "identity_unverified" };
+> 60	    return { ok: true, identity: { sub } };
+> 61	  } catch {
+> 62	    // fail-closed: JWKS unreachable, bad signature, expired, alg mismatch — never process.
+> 63	    return { ok: false, status: 401, code: "identity_unverified" };
+> 64	  }
+> 65	}
+> 66	
+> 67	// FR-VM-001: Origin allowlist (anti DNS-rebinding). Requests with no Origin (server-to-server,
+> 68	// e.g. MCP clients / curl) are allowed; a PRESENT Origin must be in the allowlist.
+> 69	export function isOriginAllowed(origin: string | undefined, allowlist: string[]): boolean {
+> 70	  if (!origin) return true; // non-browser clients omit Origin
+> 71	  return allowlist.includes(origin);
+> 72	}
+> 73	
+> 74	export const PROTOCOL_VERSION = "2025-11-25"; // server's advertised LATEST (PRM / health / initialize result)
+> 75	
+> 76	export function isProtocolVersionOk(header: string | undefined): boolean {
+> 77	  // Absent header tolerated (it is negotiated at `initialize`, where the client sends none). A PRESENT
+> 78	  // header must be a version the MCP SDK ITSELF supports — NOT only the latest literal. A client that
+> 79	  // negotiates an older-but-supported rev (the SDK default negotiated version is 2025-03-26; 2025-06-18
+> 80	  // is widely deployed) completes `initialize` and then sends `MCP-Protocol-Version: <negotiated>` on
+> 81	  // every follow-up; pinning to a single version 400s those legitimate clients (FR-VM-001 interop).
+> 82	  if (!header) return true;
+> 83	  return (SUPPORTED_PROTOCOL_VERSIONS as readonly string[]).includes(header);
+> 84	}
+> 85	
+> ```
+
+## 🤖 Claude *(14:42:52)*
+
+
+## 🤖 Claude *(14:42:55)*
+
+Tenho o schema das tabelas + o `identity.ts`. Faltam: os stubs DDL exatos da SDD §7 (PAT/artifacts/erase + Storage), as policies RLS §5.2, e o design do caminho de verificação PAT + scope-gating + o RPC `erase_vision_artifacts` endurecido. Lendo.
+
+## 🤖 Claude *(14:42:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/05-sdd.md",
+  "offset": 618,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 618	| MCP Registry (preview) | `server.json` via `mcp-publisher`, namespace verificado `com.mcorch/*` (challenge DNS/HTTP) | Descoberta externa (FR-VM-011) |
+> 619	
+> 620	**MCP version-pinning & deprecation-watch (NFR-VM-013):** pin na revisão **2025-11-25** ("Current"); `MCP-Protocol-Version` negociado por request; checklist de release inclui: (a) diff contra a spec corrente, (b) status do RC 2026-07-28, (c) status do registry (preview — breaking changes esperadas), (d) lint de copy anti-FM-VM-15. SDK `@modelcontextprotocol/sdk` pinned por minor.
+> 621	
+> 622	---
+> 623	
+> 624	## 7. Migration Stubs
+> 625	
+> 626	> Ordem de aplicação = ordem abaixo. **Cada migration passa `/security-review` antes do commit** (mandato FMEA-011 + NFR-VM-007). Padrões herdados: RLS default-deny, `search_path=''` em SECURITY DEFINER, EXECUTE revogado por default.
+> 627	
+> 628	```sql
+> 629	-- Migration 1: <ts>_vision_mcp_access_tokens.sql  (FR-VM-003 · FM-VM-06)
+> 630	CREATE TABLE public.mcp_access_tokens (
+> 631	  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 632	  user_id       uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 633	  token_hash    char(64) NOT NULL UNIQUE,        -- SHA-256 hex; NUNCA plaintext/Vault-reversível
+> 634	  token_prefix  text NOT NULL,                   -- ex.: 'mcorch_pat_3f9a…' p/ exibição
+> 635	  label         text,
+> 636	  scopes        text[] NOT NULL,                 -- ⊆ vocabulário fechado (allowlist no DB, abaixo)
+> 637	  expires_at    timestamptz NOT NULL,            -- DD-VM-002; teto físico no CHECK abaixo (não só app-side)
+> 638	  revoked_at    timestamptz,
+> 639	  last_used_at  timestamptz,
+> 640	  created_at    timestamptz NOT NULL DEFAULT now(),
+> 641	  -- ALLOWLIST enforçada no DB (não blocklist) — scope fora do vocabulário fechado é rejeitado na escrita,
+> 642	  -- não dependendo só do tool-gate app-side. Subsume a antiga blocklist credentials:*/billing:* (FM-VM-06).
+> 643	  CONSTRAINT scopes_allowed CHECK (
+> 644	    scopes <@ ARRAY['vision:read','deepsearch:run','mesh:read','mesh:write']
+> 645	    AND array_length(scopes, 1) >= 1
+> 646	  ),
+> 647	  -- Teto de validade materializado no DB (DD-VM-002): default 90d na app, máximo 365d hard no schema.
+> 648	  CONSTRAINT pat_expiry_ceiling CHECK (expires_at <= created_at + interval '365 days')
+> 649	);
+> 650	ALTER TABLE public.mcp_access_tokens ENABLE ROW LEVEL SECURITY;
+> 651	-- (policies de §5.2 — default-deny; sem DELETE; revogação = UPDATE revoked_at)
+> 652	CREATE INDEX mcp_tokens_hash_idx ON public.mcp_access_tokens (token_hash) WHERE revoked_at IS NULL;
+> 653	CREATE INDEX mcp_tokens_user_idx ON public.mcp_access_tokens (user_id);
+> 654	```
+> 655	
+> 656	```sql
+> 657	-- Migration 2: <ts>_user_api_keys_vision_byok.sql  (FR-VM-004 · FM-VM-05)
+> 658	-- Segue VERBATIM o precedente aditivo 20260601060000_user_api_keys_apify_token.sql:
+> 659	--   base column → bloco no encrypt trigger → coluna mascarada na VIEW pública →
+> 660	--   INSTEAD OF trigger (cols/VALUES + COALESCE/NULLIF do mask) → decrypted view (vault join).
+> 661	ALTER TABLE public.user_api_keys_table
+> 662	  ADD COLUMN IF NOT EXISTS firecrawl_api_key text,
+> 663	  ADD COLUMN IF NOT EXISTS mistral_api_key  text;
+> 664	COMMENT ON COLUMN public.user_api_keys_table.firecrawl_api_key
+> 665	  IS 'Per-user Firecrawl key (BYOK) for vision-mcp deepsearch. Vault-encrypted. Ausente = 402 firecrawl_not_configured (fail-closed — sem fallback global user-facing).';
+> 666	COMMENT ON COLUMN public.user_api_keys_table.mistral_api_key
+> 667	  IS 'Per-user Mistral key (BYOK) for vision.ocr (Mistral OCR 3 direct — not on OpenRouter). Vault-encrypted.';
+> 668	-- (+ re-create de trg_encrypt_user_api_keys / user_api_keys VIEW / trg_instead_of_user_api_keys /
+> 669	--    decrypted_user_api_keys com os DOIS campos apensados — todos os handlers existentes preservados verbatim)
+> 670	```
+> 671	
+> 672	```sql
+> 673	-- Migration 3: <ts>_vision_mcp_jobs.sql  (FR-VM-007 · FM-VM-07)
+> 674	CREATE TABLE public.vision_jobs (
+> 675	  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,   -- = job_id do contrato
+> 676	  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 677	  project_id      uuid,
+> ```
+
+## 🤖 Claude *(14:42:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/05-sdd.md",
+  "offset": 697,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 697	```sql
+> 698	-- Migration 4: <ts>_vision_mcp_artifacts.sql  (FR-VM-009 · FM-VM-11)
+> 699	CREATE TABLE public.vision_artifacts (
+> 700	  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 701	  content_ref     text NOT NULL UNIQUE,                 -- chave do cascade de erasure
+> 702	  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 703	  project_id      uuid,
+> 704	  node_ids        uuid[] NOT NULL DEFAULT '{}',         -- nós mcorch_nodes derivados
+> 705	  storage_paths   text[] NOT NULL DEFAULT '{}',         -- objetos no bucket vision-artifacts
+> 706	  provider_copies jsonb NOT NULL DEFAULT '[]'::jsonb,   -- registro de cópias enviadas a providers (FM-VM-11)
+> 707	  retention_until timestamptz NOT NULL,                 -- > now(); ≤ teto DD-VM-004 (sweep diário)
+> 708	  created_at      timestamptz NOT NULL DEFAULT now()
+> 709	);
+> 710	ALTER TABLE public.vision_artifacts ENABLE ROW LEVEL SECURITY;
+> 711	-- (SELECT own apenas — §5.2)
+> 712	CREATE INDEX vision_artifacts_retention_idx ON public.vision_artifacts (retention_until);
+> 713	CREATE INDEX vision_artifacts_user_idx ON public.vision_artifacts (user_id);
+> 714	```
+> 715	
+> 716	```sql
+> 717	-- Migration 5: <ts>_vision_mcp_erase_rpc.sql  (FR-VM-009 — espelha erase_lead())
+> 718	CREATE OR REPLACE FUNCTION public.erase_vision_artifacts(p_content_ref text)
+> 719	RETURNS jsonb
+> 720	LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+> 721	AS $$
+> 722	DECLARE v_artifact public.vision_artifacts%ROWTYPE;
+> 723	BEGIN
+> 724	  SELECT * INTO v_artifact FROM public.vision_artifacts
+> 725	   WHERE content_ref = p_content_ref
+> 726	     AND (user_id = auth.uid() OR auth.role() = 'service_role');  -- auth.uid()-guard (regra ledger-RPC)
+> 727	  IF NOT FOUND THEN RAISE EXCEPTION 'artifact_not_found'; END IF;
+> 728	  -- Defense-in-depth tenant guard em CADA cascade DELETE (espelha erase_lead() linhas 154/163):
+> 729	  -- SECURITY DEFINER bypassa RLS, então re-escopar por user_id impede que um node_ids[] poisoned
+> 730	  -- vire primitiva de deleção cross-tenant na malha (NFR-VM-009 / QO-VM-005 — isolamento estrito).
+> 731	  DELETE FROM public.mcorch_edges  WHERE (source_id = ANY(v_artifact.node_ids) OR target_id = ANY(v_artifact.node_ids))
+> 732	                                     AND user_id = v_artifact.user_id;
+> 733	  DELETE FROM public.mcorch_nodes  WHERE id = ANY(v_artifact.node_ids)
+> 734	                                     AND user_id = v_artifact.user_id;          -- leva o embedding junto
+> 735	  DELETE FROM storage.objects      WHERE bucket_id = 'vision-artifacts' AND name = ANY(v_artifact.storage_paths);
+> 736	  DELETE FROM public.vision_artifacts WHERE id = v_artifact.id;
+> 737	  RETURN jsonb_build_object('erased', true, 'nodes', array_length(v_artifact.node_ids,1),
+> 738	                            'storage_objects', array_length(v_artifact.storage_paths,1),
+> 739	                            'provider_copies_registered', v_artifact.provider_copies);
+> 740	END $$;
+> 741	REVOKE EXECUTE ON FUNCTION public.erase_vision_artifacts(text) FROM PUBLIC, anon;
+> 742	GRANT  EXECUTE ON FUNCTION public.erase_vision_artifacts(text) TO authenticated, service_role;
+> 743	```
+> 744	
+> 745	---
+> 746	
+> 747	## 8. Open Technical Decisions
+> 748	
+> 749	### 8.1 Decisions sealed by this SDD (deferidas pelo FRD para cá)
+> 750	
+> 751	| ID | Decision | Sealed value | Rationale |
+> 752	|----|----------|--------------|-----------|
+> 753	| DD-VM-001 | Path do pacote + porta do serviço | `packages/vision-mcp-core/` · `127.0.0.1:3200` | Precedente `packages/gitnexus-core/` (:3100); loopback-only |
+> 754	| DD-VM-002 | Validade do PAT | Default 90 dias; máximo **365 dias** (CHECK + validação no hook) | Limita janela de dreno FM-VM-06 sem matar configs long-lived |
+> 755	| DD-VM-003 | Cap de `planned_units` por plano | Starter 10 · Pro 25 · Enterprise 50 (provisório — recalibra com OTD-VM-004) | Proporcional aos saldos 500/2000/10000 mco; enforced app-side no aceite do job |
+> 756	| DD-VM-004 | Retention clock (art. 16) | `retention_until` default **90 dias**; teto **365 dias**; sweep diário | Conservador até regulação ANPD 2026 (OTD-VM-007); tenant pode encurtar, nunca exceder o teto |
+> ```
+
+## 🤖 Claude *(14:43:23)*
+
+
+## 🤖 Claude *(14:43:25)*
+
+Stubs DDL completos (PAT/artifacts/erase já endurecido com guard `user_id`). Faltam as policies RLS §5.2 + o design do `auth/pat.ts` (hash/expiry/scopes) + o gate pipeline + o mapa scope↔tool. Lendo.
+
+## 🤖 Claude *(14:43:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/05-sdd.md",
+  "offset": 524,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 524	
+> 525	CREATE POLICY "mcp_tokens_select_own"
+> 526	  ON public.mcp_access_tokens FOR SELECT
+> 527	  USING (user_id = auth.uid());
+> 528	
+> 529	CREATE POLICY "mcp_tokens_insert_own"
+> 530	  ON public.mcp_access_tokens FOR INSERT
+> 531	  WITH CHECK (user_id = auth.uid());
+> 532	
+> 533	CREATE POLICY "mcp_tokens_update_own"   -- só para revogação (revoked_at)
+> 534	  ON public.mcp_access_tokens FOR UPDATE
+> 535	  USING (user_id = auth.uid())
+> 536	  WITH CHECK (user_id = auth.uid());
+> 537	-- Lookup do container roda via service-role (bypassa RLS) — o container é o ÚNICO leitor do hash.
+> 538	
+> 539	-- vision_jobs / vision_artifacts: SELECT próprio (usage/poll via dashboard); writes só service-role
+> 540	ALTER TABLE public.vision_jobs ENABLE ROW LEVEL SECURITY;
+> 541	CREATE POLICY "vision_jobs_select_own"
+> 542	  ON public.vision_jobs FOR SELECT
+> 543	  USING (user_id = auth.uid());
+> 544	-- (sem INSERT/UPDATE/DELETE policies para authenticated — default-deny; o container escreve via service key)
+> 545	
+> 546	ALTER TABLE public.vision_artifacts ENABLE ROW LEVEL SECURITY;
+> 547	CREATE POLICY "vision_artifacts_select_own"
+> 548	  ON public.vision_artifacts FOR SELECT
+> 549	  USING (user_id = auth.uid());
+> 550	-- DELETE só via erase_vision_artifacts (SECURITY DEFINER auth.uid()-scoped) ou retention sweep (service-role).
+> 551	
+> 552	-- Storage bucket vision-artifacts (privado; paridade de rigor com as tabelas — precedente bucket
+> 553	-- privado generated-videos). Frames/crops servidos APENAS por signed URL curto mediado pelo container
+> 554	-- (resource vision://artifacts/{content_ref}); cliente nunca lê o bucket direto.
+> 555	INSERT INTO storage.buckets (id, name, public) VALUES ('vision-artifacts', 'vision-artifacts', false)
+> 556	  ON CONFLICT (id) DO NOTHING;
+> 557	ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;  -- (já habilitado no projeto; idempotente)
+> 558	-- Default-deny p/ anon/authenticated no bucket: nenhuma policy authenticated → sem acesso direto.
+> 559	-- Escrita/leitura/expurgo ocorrem via service-role (container broker + cascade erase_vision_artifacts),
+> 560	-- que bypassa RLS. Owner lê só pelo signed URL emitido pelo container contra a linha de vision_artifacts.
+> 561	CREATE POLICY "vision_artifacts_storage_no_direct_anon"
+> 562	  ON storage.objects FOR SELECT
+> 563	  USING (bucket_id = 'vision-artifacts' AND auth.role() = 'service_role');
+> 564	```
+> 565	
+> 566	### 5.3 Identity Validation Points (ES256 JWKS + PAT — NUNCA `atob`)
+> 567	
+> 568	SOP de referência: `docs/processes/edge-jwt-identity-verification.md` (gates G1/G2 em `scripts/qa/test-es256-jwt-verification.ts`).
+> 569	
+> 570	```typescript
+> 571	// auth/jwks.ts — caminho JWT (Supabase user session)
+> 572	import { createRemoteJWKSet, jwtVerify } from 'jose'
+> 573	const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`))
+> 574	// fail-closed: QUALQUER erro (rede, kid desconhecido, alg != ES256, exp) → 401, nunca processa
+> 575	const { payload } = await jwtVerify(token, JWKS, { algorithms: ['ES256'] })
+> 576	const userId = payload.sub  // ÚNICA fonte de identidade para deduct_mco_coins (anti-confused-deputy)
+> 577	
+> 578	// auth/pat.ts — caminho PAT
+> 579	const hash = sha256hex(token)                       // lookup O(1) por token_hash
+> 580	// service-role SELECT: revoked_at IS NULL AND expires_at > now() — senão 401
+> 581	```
+> 582	
+> 583	**Anti-patterns proibidos (herdados do SOP):** `atob(token.split('.')[1])` cego para extrair `sub`; confiar em `user_id` vindo de body/header não-verificado; processar request com JWKS inalcançável ("fail-open"); aceitar bearer em query string; token passthrough para providers downstream (proibição explícita da spec MCP 2025-11-25).
+> 584	
+> 585	### 5.4 Secrets Inventory (NOMES apenas — valores jamais em doc/código/commit)
+> ```
+
+## 🤖 Claude *(14:43:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/05-sdd.md",
+  "offset": 146,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 146	
+> 147	### 2.1 Container Service Modules (`packages/vision-mcp-core/`)
+> 148	
+> 149	| Module | File (src/) | Responsibility | FR traced |
+> 150	|--------|-------------|----------------|-----------|
+> 151	| Transport | `mcp/server.ts` | Streamable HTTP 2025-11-25 (POST json/SSE, GET SSE), Origin allowlist → 403, `MCP-Protocol-Version` check, heartbeat ≤25s, `/health` | FR-VM-001 |
+> 152	| Identity | `auth/jwks.ts` | ES256 `jose.jwtVerify` + `createRemoteJWKSet` contra `…/auth/v1/.well-known/jwks.json`; fail-closed; 401 + `WWW-Authenticate resource_metadata` (RFC 9728) | FR-VM-002 |
+> 153	| PAT | `auth/pat.ts` | Lookup SHA-256 em `mcp_access_tokens` (O(1) por hash), checa `expires_at`/`revoked_at`/scopes, atualiza `last_used_at` | FR-VM-003 |
+> 154	| Credentials | `auth/credentials.ts` | Resolução per-user fail-closed via `decrypted_user_api_keys` (firecrawl/openrouter/google/mistral/openai); 402 `<service>_not_configured` | FR-VM-004 |
+> 155	| Sentinel | `safety/sentinel.ts` | Port TS-puro de `supabase/functions/_shared/sentinel.ts` — `inspectPrompt` L1/L2/L3 nos args (pós-identidade, pré-débito) + L2 sobre texto extraído pré-insert | FR-VM-005 |
+> 156	| Duty-of-care | `safety/assistive-gate.ts` | Recusas categóricas red-line (medicação/alérgeno/mobilidade/emergência), confidence/hedge, gancho de escalonamento humano; recusa não cobra | FR-VM-014 |
+> 157	| Billing | `billing/debit.ts` | `deduct_mco_coins` via PostgREST (402 propagado) + `refundMco` (nunca lança) + metering `agent_executions` + BYOK→custo 0 + exempção `SOVEREIGN_USER_ID`; constantes `VISION_COIN_COSTS` hardcoded (espelhamento triplo c/ `src/lib/billing.ts` + `src/test/billing.test.ts`) | FR-VM-006 |
+> 158	| Tool registry | `tools/registry.ts` | Registro declarativo tool→{classe mco, scope, gates, handler}; única fonte de verdade da superfície | FR-VM-006 |
+> 159	| Tier 1 | `tools/peripheral/` | `motion.peripheral_scan` — frame-diff/MOG2/event-synthesis/saliência (CPU, ARM64) | FR-VM-010 |
+> 160	| Tier 2 vision | `tools/foveal/` | `vision.describe_image`/`detect_objects`/`segment`/`ocr`/`analyze_video` | FR-VM-018/019/024 |
+> 161	| Motion | `tools/motion/` | `motion.track` (RTMPose/MediaPipe + ByteTrack/BoT-SORT; keep-warm contra FM-VM-12) | FR-VM-024 |
+> 162	| Deepsearch | `tools/deepsearch/` | `deepsearch.scrape` (robots/login-wall/allowlist) + `deepsearch.run`/`poll` (máquina de estados em `vision_jobs`) | FR-VM-020, FR-VM-007 |
+> 163	| Assistive | `tools/assistive/` | `vision.alt_text`/`describe_screen` (dual-backend BYOK, padrão JAWS/NVDA) | FR-VM-012/013 |
+> 164	| Mesh writer | `mesh/consolidate.ts` | `mesh.search` (RPC `match_mcorch_nodes`) + `mesh.consolidate_reference` (PII-strip → nó + provenance + regime + embed-on-insert + edge ao run) | FR-VM-017/021/008/015 |
+> 165	| Jobs engine | `jobs/engine.ts` | Fila in-process single-replica + persistência `vision_jobs`; partial-delivery refund §4.5 do FRD (idempotente por `job_id`) | FR-VM-007 |
+> 166	| Telemetry | `infra/telemetry.ts` | `infra_health_logs` fire-and-forget (`service='vision-mcp'`/`'sentinel'`) em todo path success/degraded/error/block/refusal | FR-VM-008, NFR-VM-010 |
+> 167	| Retention sweep | `jobs/retention-sweep.ts` | Job diário in-container: expira artefatos com `retention_until < now()` via `erase_vision_artifacts` | FR-VM-009 |
+> ```
+
+## 🤖 Claude *(14:44:10)*
+
+
+## 🤖 Claude *(14:44:16)*
+
+Contrato completo e copy-ready (DDL + RLS + Storage + erase já endurecido + design `auth/pat.ts`). Design travado:
+
+- **Auth dispatch:** `Bearer mcorch_pat_…` → `verifyPat` (SHA-256 lookup, `revoked_at IS NULL` + `expires_at>now()` + scopes); senão → JWT ES256 (interno = todos os scopes). `Identity` ganha `scopes[]`.
+- **Scope-gate por tool:** mesh_search→`mesh:read` · vision_*→`vision:read` · deepsearch_*→`deepsearch:run` · consolidate→`mesh:write` → 403 `scope_insufficient`.
+- **Erase LGPD:** `vision_artifacts` + `erase_vision_artifacts` (cascade nodes/edges/storage, guard `user_id`) + `retention-sweep` diário in-container.
+- **nginx:** vhost SSE-tuned + runbook DNS/cert (sua ação).
+- `mistral_api_key` (migration #2 da BoK) **deferido** com `vision.ocr` (fora de escopo); `firecrawl` já existe.
+
+**Lei 2 — SOP antes do código:**
+
+## 🤖 Claude *(14:45:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md",
+  "content": "# SOP \u2014 Vision MCP Fatia 3 core: PAT (external auth) + LGPD erasure + retention sweep\n\n> **Lei 2 (Processo Antecipado):** precede o c\u00f3digo de `auth/pat.ts`, o scope-gate do `mcp/server.ts`,\n> `jobs/retention-sweep.ts` e as 3 migrations. Descreve o processo humano equivalente antes de automatizar.\n>\n> **BoK SSOT:** `04-frd.md` FR-VM-002/003/009 \u00b7 `05-sdd.md` \u00a75.2 (RLS) \u00b7 \u00a75.3 (identity JWT+PAT) \u00b7 \u00a77 (migration\n> stubs 1/4/5) \u00b7 `06-data-model.md` \u00a72.1/\u00a72.3 + \u00a76 (retention/erasure). **OTD-VM-020:** acesso externo v1 =\n> **PAT-first** (OAuth 2.1 browser-flow completo gated no 1\u00ba tenant externo que exigir; PRM j\u00e1 publicado).\n\n---\n\n## ORO\n\n| Papel | Quem |\n|-------|------|\n| **Operator** | MCORCH Vision MCP container; manualmente, um admin que emite/revoga PATs e atende pedidos de erasure LGPD |\n| **Reviewer** | Sovereign + `/security-review` independente das 3 migrations (FM-VM-06 PAT-leak = dreno de carteira; LGPD) |\n| **Owner** | Sovereign \u2014 PAT \u00e9 credencial que gasta mcoCoins; erasure incompleta = risco LGPD |\n\n---\n\n## Parte A \u2014 PAT (Personal Access Token) external auth (FR-VM-003)\n\n### Operator \u2014 equivalente manual\nUm admin que emite uma chave de API escopada a um cliente externo (\"este cliente s\u00f3 pode rodar deepsearch e ler a\nmalha, por 90 dias\"), guarda s\u00f3 o **hash** (nunca o segredo), e revoga quando comprometida.\n\n### Sequence\n| # | Passo | Crit\u00e9rio material |\n|---|-------|-------------------|\n| 1 | **Emiss\u00e3o** (dashboard/edge \u2014 fora deste slice): gerar plaintext `mcorch_pat_<rand>`, `INSERT mcp_access_tokens(user_id=auth.uid(), token_hash=sha256hex(plaintext), token_prefix, scopes\u2286{vision:read,deepsearch:run,mesh:read,mesh:write}, expires_at\u2264created_at+365d)`. **Mostrar o plaintext ao usu\u00e1rio UMA vez**; o DB s\u00f3 guarda o hash | linha com `token_hash` char(64), scopes na allowlist (CHECK), expiry \u2264365d (CHECK) |\n| 2 | **Verifica\u00e7\u00e3o (container, este slice):** request com `Authorization: Bearer mcorch_pat_\u2026` \u2192 `verifyBearer` detecta o prefixo \u2192 `verifyPat`: `sha256hex(token)` \u2192 SELECT service-role `token_hash=eq.<hash> AND revoked_at IS NULL`; rejeita se ausente / `expires_at \u2264 now()` \u2192 **401 `identity_unverified`** | 401 sem PAT v\u00e1lido; identidade = `{sub=user_id, scopes}` do token |\n| 3 | **Scope-gate por tool:** cada tool exige um scope (mesh_search\u2192`mesh:read`, vision_*\u2192`vision:read`, deepsearch_*\u2192`deepsearch:run`, consolidate\u2192`mesh:write`). Scope ausente \u2192 **403 `scope_insufficient`** ANTES de custo/leg. JWT interno (sess\u00e3o Supabase) = todos os scopes (\u00e9 o pr\u00f3prio tenant) | 403 quando o PAT n\u00e3o tem o scope; 200 quando tem |\n| 4 | **`last_used_at`** atualizado fire-and-forget pelo container (auditoria; nunca bloqueia) | coluna avan\u00e7a |\n| 5 | **Revoga\u00e7\u00e3o:** `UPDATE revoked_at=now()` (RLS own; sem DELETE exposto) \u2192 pr\u00f3xima verifica\u00e7\u00e3o 401 | 401 p\u00f3s-revoga\u00e7\u00e3o |\n\n### Verification gates (PAT)\n- **G-PAT-1** sem token / token inv\u00e1lido \u2192 401. **G-PAT-2** PAT v\u00e1lido \u2192 tool roda; identidade = dono do PAT.\n- **G-PAT-3** PAT com scope X chamando tool que exige Y \u2192 403 `scope_insufficient`, zero custo.\n- **G-PAT-4** PAT revogado/expirado \u2192 401. **G-PAT-5** PAT \u00e9 **tenant-bound**: s\u00f3 alcan\u00e7a recursos do pr\u00f3prio `user_id` (mesh.search scope filter; vision_jobs/poll user_id).\n- **G-PAT-6** scope fora do vocabul\u00e1rio fechado \u2192 rejeitado na escrita pelo CHECK `scopes_allowed` (DB, n\u00e3o s\u00f3 app-gate \u2014 FM-VM-06).\n\n### Recovery path (PAT)\n- Lookup REST falha (rede) \u2192 **fail-closed 401** (nunca processa sem identidade verificada).\n- Vazamento de PAT: revoga\u00e7\u00e3o (`revoked_at`) corta imediato; scopes fechados (sem `credentials:*`/`billing:*`) limitam o blast a consumo de tools do pr\u00f3prio tenant; teto de validade 365d limita a janela.\n\n---\n\n## Parte B \u2014 LGPD erasure + retention (FR-VM-009)\n\n### Operator \u2014 equivalente manual\nUm DPO que, a pedido do titular (art. 18 LGPD), apaga TODO o rastro de um artefato de vis\u00e3o \u2014 a linha, os n\u00f3s\nde malha derivados + embeddings + edges, e os objetos no Storage \u2014 provando **zero res\u00edduo**, e que diariamente\nexpira artefatos cujo prazo de reten\u00e7\u00e3o venceu (art. 16).\n\n### Sequence\n| # | Passo | Crit\u00e9rio material |\n|---|-------|-------------------|\n| 1 | **Erasure sob demanda:** `erase_vision_artifacts(content_ref)` (SECURITY DEFINER, `search_path=''`, EXECUTE s\u00f3 authenticated/service_role) \u2014 guard `user_id=auth.uid() OR service_role`; cascade DELETE re-escopado por `user_id` em CADA passo (edges \u2192 nodes+embedding \u2192 storage.objects \u2192 a linha) | retorno `{erased:true, nodes, storage_objects}`; `SELECT count` de nodes/edges/objetos = **0** depois |\n| 2 | **Tenant-guard defense-in-depth:** SECURITY DEFINER bypassa RLS \u2192 re-escopar `user_id=v_artifact.user_id` em cada DELETE impede que um `node_ids[]` poisoned vire primitiva de dele\u00e7\u00e3o cross-tenant (NFR-VM-009) | ataque cross-tenant n\u00e3o apaga nada alheio |\n| 3 | **Retention sweep (di\u00e1rio, in-container):** `jobs/retention-sweep.ts` busca `vision_artifacts WHERE retention_until < now()` e chama `erase_vision_artifacts(content_ref)` por linha (service-role) | artefatos vencidos somem; telemetria `retention_sweep` em infra_health_logs |\n| 4 | **Retention clock:** `retention_until` default 90d, teto 365d (DD-VM-004); tenant pode encurtar, nunca exceder | CHECK/app-side |\n\n### Verification gates (erasure)\n- **G-ERA-1** `erase_vision_artifacts(ref)` do dono \u2192 cascade completo, `{erased:true}`, **zero res\u00edduo** (count nodes/edges/storage = 0).\n- **G-ERA-2** ref de outro tenant \u2192 `artifact_not_found` (n\u00e3o apaga nada alheio).\n- **G-ERA-3** EXECUTE revogado de PUBLIC/anon (s\u00f3 authenticated/service_role).\n- **G-ERA-4** sweep expira `retention_until<now()` e \u00e9 no-op quando vazio.\n\n### Recovery path (erasure)\n- **Limite honesto (FM-VM-11):** c\u00f3pias j\u00e1 transmitidas a providers US dependem do DPA/SCC (OTD-VM-005) \u2014 o\n  registro `provider_copies` existe p/ tornar essa dele\u00e7\u00e3o **solicit\u00e1vel e audit\u00e1vel**, retornado no payload.\n- Sweep falha numa linha \u2192 loga `degraded`, continua as demais (uma erasure ruim n\u00e3o trava o lote).\n\n### Success signal\nUm PAT v\u00e1lido roda s\u00f3 as tools dos seus scopes (403 nos demais), \u00e9 tenant-bound, e morre na revoga\u00e7\u00e3o/expiry;\n`erase_vision_artifacts` prova zero-res\u00edduo material; o sweep expira artefatos vencidos diariamente. Smoke\n`smoke-vision-pat-erase.ts` fecha verde contra o container servido.\n\n---\n\n## Parte C \u2014 nginx vhost `mcp.mcorch.com` (OTD-VM-013)\n\nA vhost SSE-tuned (`nginx/mcp.mcorch.com.conf`) faz `proxy_pass` p/ `127.0.0.1:3200` com `proxy_buffering off`\n+ timeouts longos (jobs de minutos) + heartbeat \u226425s sob o idle ~100s do Cloudflare. **Ativa\u00e7\u00e3o depende de a\u00e7\u00e3o\nSovereign** (root tem o agente, mas o DNS \u00e9 da conta Cloudflare): ver runbook no fim de `nginx/mcp.mcorch.com.conf`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:45:05)*
+
+
+## 🤖 Claude *(14:45:06)*
+
+SOP selado. **3 migrations** (copy-ready dos stubs SDD §7, RLS §5.2):
+
+## 🤖 Claude *(14:45:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615180000_vision_mcp_access_tokens.sql",
+  "content": "-- Migration: vision-mcp PAT \u2014 mcp_access_tokens (FR-VM-003 \u00b7 FM-VM-06). Fatia 3 core.\n-- BoK SSOT: docs/bok/vision-mcp/05-sdd.md \u00a77 (migration 1) + \u00a75.2 (RLS) + 06-data-model.md \u00a72.1.\n-- SOP: docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (Lei 2 \u2014 Parte A).\n--\n-- External MCP clients authenticate with a bearer PAT `mcorch_pat_<rand>`; the DB stores ONLY the SHA-256\n-- hash (never plaintext / never Vault-reversible). The container looks up the hash via the service key (sole\n-- reader). Scopes are a CLOSED vocabulary enforced at the DB by an ALLOWLIST CHECK (subsumes the old\n-- credentials:*/billing:* blocklist \u2014 a leaked PAT can never reach credential mgmt nor the wallet beyond tool\n-- consumption, FM-VM-06). Expiry has a physical 365d ceiling (DD-VM-002). Revocation = UPDATE revoked_at (no\n-- client DELETE). RLS: own SELECT/INSERT/UPDATE only. Passes /security-review before commit (FMEA-011/NFR-VM-007).\n\nCREATE TABLE IF NOT EXISTS public.mcp_access_tokens (\n  id            uuid        DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  token_hash    char(64)    NOT NULL UNIQUE,          -- SHA-256 hex; NUNCA plaintext\n  token_prefix  text        NOT NULL,                 -- ex.: 'mcorch_pat_3f9a\u2026' p/ exibi\u00e7\u00e3o\n  label         text,\n  scopes        text[]      NOT NULL,\n  expires_at    timestamptz NOT NULL,\n  revoked_at    timestamptz,\n  last_used_at  timestamptz,\n  created_at    timestamptz NOT NULL DEFAULT now(),\n  -- ALLOWLIST no DB (n\u00e3o blocklist): scope fora do vocabul\u00e1rio fechado \u00e9 rejeitado na escrita.\n  CONSTRAINT scopes_allowed CHECK (\n    scopes <@ ARRAY['vision:read','deepsearch:run','mesh:read','mesh:write']\n    AND array_length(scopes, 1) >= 1\n  ),\n  -- Teto de validade f\u00edsico no DB (DD-VM-002): default 90d na app, m\u00e1ximo 365d hard no schema.\n  CONSTRAINT pat_expiry_ceiling CHECK (expires_at <= created_at + interval '365 days')\n);\n\nALTER TABLE public.mcp_access_tokens ENABLE ROW LEVEL SECURITY;\n\n-- Own SELECT/INSERT/UPDATE only (revocation = UPDATE revoked_at). NO DELETE policy \u2192 client cannot delete.\n-- The container reads the hash via the service key (bypasses RLS) \u2014 it is the ONLY reader of token_hash.\nCREATE POLICY \"mcp_tokens_select_own\" ON public.mcp_access_tokens\n  FOR SELECT USING (user_id = auth.uid());\nCREATE POLICY \"mcp_tokens_insert_own\" ON public.mcp_access_tokens\n  FOR INSERT WITH CHECK (user_id = auth.uid());\nCREATE POLICY \"mcp_tokens_update_own\" ON public.mcp_access_tokens\n  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n\nCREATE INDEX IF NOT EXISTS mcp_tokens_hash_idx ON public.mcp_access_tokens (token_hash) WHERE revoked_at IS NULL;\nCREATE INDEX IF NOT EXISTS mcp_tokens_user_idx ON public.mcp_access_tokens (user_id);\n\nCOMMENT ON TABLE public.mcp_access_tokens IS\n  'Vision MCP external bearer PATs (FR-VM-003). SHA-256 hash only; closed-vocabulary scopes (DB allowlist CHECK); '\n  '365d expiry ceiling; revoke via UPDATE revoked_at. Container reads hash via service key (sole reader).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615180000_vision_mcp_access_tokens.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:45:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615190000_vision_mcp_artifacts.sql",
+  "content": "-- Migration: vision-mcp artifacts \u2014 vision_artifacts + private Storage bucket (FR-VM-009 \u00b7 FM-VM-11). Fatia 3.\n-- BoK SSOT: docs/bok/vision-mcp/05-sdd.md \u00a77 (migration 4) + \u00a75.2 (RLS + Storage) + 06-data-model.md \u00a72.3.\n-- SOP: docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (Lei 2 \u2014 Parte B).\n--\n-- Tracks a vision artifact (frame/crop/derived nodes) for the LGPD erasure cascade: content_ref is the erase\n-- key; node_ids[]/storage_paths[] are the cascade targets; provider_copies records copies sent to providers\n-- (makes their deletion requestable/auditable \u2014 FM-VM-11). retention_until drives the daily sweep (art. 16).\n-- RLS: SELECT-own only; writes + DELETE go through the service key (container broker / erase RPC / sweep).\n-- Storage bucket vision-artifacts is PRIVATE (default-deny for anon/authenticated; container brokers signed URLs).\n-- Passes /security-review before commit (FMEA-011 / NFR-VM-007).\n\nCREATE TABLE IF NOT EXISTS public.vision_artifacts (\n  id              uuid        DEFAULT gen_random_uuid() PRIMARY KEY,\n  content_ref     text        NOT NULL UNIQUE,                 -- chave do cascade de erasure\n  user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  project_id      uuid,\n  node_ids        uuid[]      NOT NULL DEFAULT '{}',           -- n\u00f3s mcorch_nodes derivados\n  storage_paths   text[]      NOT NULL DEFAULT '{}',           -- objetos no bucket vision-artifacts\n  provider_copies jsonb       NOT NULL DEFAULT '[]'::jsonb,    -- c\u00f3pias enviadas a providers (FM-VM-11)\n  retention_until timestamptz NOT NULL,                        -- > now(); \u2264 teto DD-VM-004 (sweep di\u00e1rio)\n  created_at      timestamptz NOT NULL DEFAULT now()\n);\n\nALTER TABLE public.vision_artifacts ENABLE ROW LEVEL SECURITY;\n\n-- SELECT-own only. DELETE only via erase_vision_artifacts (SECURITY DEFINER, auth.uid()-scoped) or the\n-- retention sweep (service-role) \u2014 no client write/delete policy \u2192 default-deny.\nCREATE POLICY \"vision_artifacts_select_own\" ON public.vision_artifacts\n  FOR SELECT USING (user_id = auth.uid());\n\nCREATE INDEX IF NOT EXISTS vision_artifacts_retention_idx ON public.vision_artifacts (retention_until);\nCREATE INDEX IF NOT EXISTS vision_artifacts_user_idx      ON public.vision_artifacts (user_id);\n\nCOMMENT ON TABLE public.vision_artifacts IS\n  'Vision MCP artifact ledger for the LGPD erasure cascade (FR-VM-009). content_ref = erase key; node_ids/'\n  'storage_paths = cascade targets; provider_copies = auditable provider-copy registry. SELECT-own RLS.';\n\n-- Private Storage bucket (parity with generated-videos). Container brokers short signed URLs; client never\n-- reads the bucket directly. Default-deny for anon/authenticated; only service_role SELECTs the objects.\nINSERT INTO storage.buckets (id, name, public) VALUES ('vision-artifacts', 'vision-artifacts', false)\n  ON CONFLICT (id) DO NOTHING;\nALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;  -- idempotente (j\u00e1 habilitado no projeto)\nDROP POLICY IF EXISTS \"vision_artifacts_storage_no_direct_anon\" ON storage.objects;\nCREATE POLICY \"vision_artifacts_storage_no_direct_anon\"\n  ON storage.objects FOR SELECT\n  USING (bucket_id = 'vision-artifacts' AND auth.role() = 'service_role');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615190000_vision_mcp_artifacts.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:45:45)*
+
+
+## 🤖 Claude *(14:45:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql",
+  "content": "-- Migration: vision-mcp LGPD erasure RPC \u2014 erase_vision_artifacts(text) (FR-VM-009). Fatia 3 core.\n-- BoK SSOT: docs/bok/vision-mcp/05-sdd.md \u00a77 (migration 5) \u2014 mirrors marketing-hub erase_lead().\n-- SOP: docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (Lei 2 \u2014 Parte B).\n--\n-- Cascade-erases ALL trace of a vision artifact: derived mesh edges \u2192 nodes (+embeddings) \u2192 Storage objects \u2192\n-- the artifact row. SECURITY DEFINER (bypasses RLS) + search_path='' + auth.uid()-guard (ledger-RPC rule).\n-- CRITICAL (adversarial-validation fix): EVERY cascade DELETE is re-scoped by user_id=v_artifact.user_id so a\n-- poisoned node_ids[] cannot become a cross-tenant deletion primitive in the mesh (NFR-VM-009 / QO-VM-005).\n-- EXECUTE revoked from PUBLIC/anon; granted to authenticated (own, via auth.uid() guard) + service_role (sweep).\n-- Passes /security-review before commit (FMEA-011 / NFR-VM-007).\n\nCREATE OR REPLACE FUNCTION public.erase_vision_artifacts(p_content_ref text)\nRETURNS jsonb\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_artifact public.vision_artifacts%ROWTYPE;\nBEGIN\n  SELECT * INTO v_artifact FROM public.vision_artifacts\n   WHERE content_ref = p_content_ref\n     AND (user_id = auth.uid() OR auth.role() = 'service_role');  -- auth.uid()-guard (ledger-RPC rule)\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'artifact_not_found' USING errcode = 'P0002';\n  END IF;\n\n  -- Defense-in-depth tenant guard on EVERY cascade DELETE (mirrors erase_lead()): SECURITY DEFINER bypasses\n  -- RLS, so re-scoping by user_id prevents a poisoned node_ids[] from deleting another tenant's mesh.\n  DELETE FROM public.mcorch_edges\n   WHERE (source_id = ANY(v_artifact.node_ids) OR target_id = ANY(v_artifact.node_ids))\n     AND user_id = v_artifact.user_id;\n  DELETE FROM public.mcorch_nodes\n   WHERE id = ANY(v_artifact.node_ids)\n     AND user_id = v_artifact.user_id;                           -- leva o embedding junto\n  DELETE FROM storage.objects\n   WHERE bucket_id = 'vision-artifacts' AND name = ANY(v_artifact.storage_paths);\n  DELETE FROM public.vision_artifacts WHERE id = v_artifact.id;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'nodes', COALESCE(array_length(v_artifact.node_ids, 1), 0),\n    'storage_objects', COALESCE(array_length(v_artifact.storage_paths, 1), 0),\n    'provider_copies_registered', v_artifact.provider_copies\n  );\nEND $$;\n\nREVOKE EXECUTE ON FUNCTION public.erase_vision_artifacts(text) FROM PUBLIC, anon;\nGRANT  EXECUTE ON FUNCTION public.erase_vision_artifacts(text) TO authenticated, service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:46:35)*
+
+
+## 🤖 Claude *(14:46:36)*
+
+Migrations escritas. ⚠️ Antes de aplicar, preciso confirmar que `mcorch_edges` tem as colunas `source_id`/`target_id`/`user_id` que o erase RPC referencia (Lei 1 — senão o apply/runtime quebra). Vou verificar na hora do apply. Agora o **código** — `auth/pat.ts`:
+
+## 🤖 Claude *(14:46:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/pat.ts",
+  "content": "// vision-mcp-core auth/pat.ts \u2014 FR-VM-003 (PAT bearer for external MCP clients). OTD-VM-020 PAT-first v1.\n// SOP: docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (Parte A).\n//\n// External clients send `Authorization: Bearer mcorch_pat_<rand>`. We hash the token (SHA-256) and look up\n// mcp_access_tokens via the service key (the sole reader of token_hash; bypasses RLS). Reject if absent /\n// revoked / expired \u2192 caller replies 401. The PAT's user_id IS the tenant; its scopes gate which tools it may\n// call. NEVER store/log the plaintext; NEVER trust a user_id from input \u2014 identity comes only from the row.\n\nimport { createHash } from \"node:crypto\";\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? \"\";\nconst SB_SECRET_KEY = process.env.SB_SECRET_KEY ?? \"\";\n\nexport const PAT_PREFIX = \"mcorch_pat_\";\n\nexport function sha256hex(s: string): string {\n  return createHash(\"sha256\").update(s).digest(\"hex\");\n}\n\nexport interface PatIdentity {\n  sub: string;\n  scopes: string[];\n}\n\n/**\n * Verify a PAT bearer. Returns the tenant identity + scopes, or null (caller \u2192 401). Fail-closed on any\n * transport/lookup error. Filters revoked (WHERE revoked_at IS NULL) at the DB and expiry in-process.\n */\nexport async function verifyPat(token: string): Promise<PatIdentity | null> {\n  const hash = sha256hex(token.trim());\n  if (hash.length !== 64) return null;\n  let res: Response;\n  try {\n    res = await fetch(\n      `${SUPABASE_URL}/rest/v1/mcp_access_tokens?token_hash=eq.${hash}&revoked_at=is.null&select=id,user_id,scopes,expires_at&limit=1`,\n      { headers: { apikey: SB_SECRET_KEY, Authorization: `Bearer ${SB_SECRET_KEY}` } },\n    );\n  } catch {\n    return null; // fail-closed: never authenticate without a verified row\n  }\n  if (!res.ok) return null;\n  const rows = (await res.json()) as Array<{ id: string; user_id: string; scopes: string[]; expires_at: string }>;\n  const row = rows?.[0];\n  if (!row || typeof row.user_id !== \"string\" || !row.user_id.trim()) return null;\n  const exp = Date.parse(row.expires_at);\n  if (!Number.isFinite(exp) || exp <= Date.now()) return null; // expired\n\n  // fire-and-forget last_used_at (audit; never blocks, never throws)\n  void fetch(`${SUPABASE_URL}/rest/v1/mcp_access_tokens?id=eq.${encodeURIComponent(row.id)}`, {\n    method: \"PATCH\",\n    headers: { apikey: SB_SECRET_KEY, Authorization: `Bearer ${SB_SECRET_KEY}`, \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ last_used_at: new Date().toISOString() }),\n  }).catch(() => {});\n\n  return { sub: row.user_id.trim(), scopes: Array.isArray(row.scopes) ? row.scopes : [] };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/pat.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:46:55)*
+
+
+## 🤖 Claude *(14:46:55)*
+
+`identity.ts` — `Identity.scopes` + dispatch PAT vs JWT:
+
+## 🤖 Claude *(14:46:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts",
+  "old_string": "import { createRemoteJWKSet, jwtVerify } from \"jose\";\nimport { SUPPORTED_PROTOCOL_VERSIONS } from \"@modelcontextprotocol/sdk/types.js\";\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? \"\";",
+  "new_string": "import { createRemoteJWKSet, jwtVerify } from \"jose\";\nimport { SUPPORTED_PROTOCOL_VERSIONS } from \"@modelcontextprotocol/sdk/types.js\";\nimport { PAT_PREFIX, verifyPat } from \"./pat.js\";\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? \"\";\n\n// Closed scope vocabulary (DD \u00a74.2). An internal Supabase JWT user IS the tenant operating on their OWN\n// resources \u2192 granted the full set; an external PAT carries only its sealed subset (FR-VM-003 / FM-VM-06).\nexport const ALL_SCOPES = [\"vision:read\", \"deepsearch:run\", \"mesh:read\", \"mesh:write\"] as const;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts",
+  "old_string": "export interface Identity {\n  sub: string; // verified user id \u2014 the ONLY source of identity for any downstream effect\n}",
+  "new_string": "export interface Identity {\n  sub: string; // verified user id \u2014 the ONLY source of identity for any downstream effect\n  scopes: string[]; // JWT (internal tenant) \u2192 ALL_SCOPES; PAT \u2192 its sealed subset (tool scope-gate)\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts",
+  "old_string": "  const token = authHeader.slice(\"Bearer \".length).trim();\n  if (!token) return { ok: false, status: 401, code: \"identity_unverified\" };\n  try {\n    const { payload } = await jwtVerify(token, jwks(), { algorithms: [\"ES256\"] });\n    // Trim before the empty-check so a whitespace-only sub (which would build a malformed\n    // `user_id.eq.%20` scope) is rejected \u2014 defense-in-depth (unforgeable, but free).\n    const sub = typeof payload.sub === \"string\" ? payload.sub.trim() : \"\";\n    if (!sub) return { ok: false, status: 401, code: \"identity_unverified\" };\n    return { ok: true, identity: { sub } };\n  } catch {\n    // fail-closed: JWKS unreachable, bad signature, expired, alg mismatch \u2014 never process.\n    return { ok: false, status: 401, code: \"identity_unverified\" };\n  }\n}",
+  "new_string": "  const token = authHeader.slice(\"Bearer \".length).trim();\n  if (!token) return { ok: false, status: 401, code: \"identity_unverified\" };\n\n  // FR-VM-003 \u2014 PAT path: an external client's `mcorch_pat_\u2026` bearer is hashed + looked up (scoped subset).\n  if (token.startsWith(PAT_PREFIX)) {\n    const pat = await verifyPat(token);\n    if (!pat) return { ok: false, status: 401, code: \"identity_unverified\" };\n    return { ok: true, identity: { sub: pat.sub, scopes: pat.scopes } };\n  }\n\n  // FR-VM-002 \u2014 JWT path: internal Supabase session = the tenant operating on its own resources \u2192 full scopes.\n  try {\n    const { payload } = await jwtVerify(token, jwks(), { algorithms: [\"ES256\"] });\n    // Trim before the empty-check so a whitespace-only sub (which would build a malformed\n    // `user_id.eq.%20` scope) is rejected \u2014 defense-in-depth (unforgeable, but free).\n    const sub = typeof payload.sub === \"string\" ? payload.sub.trim() : \"\";\n    if (!sub) return { ok: false, status: 401, code: \"identity_unverified\" };\n    return { ok: true, identity: { sub, scopes: [...ALL_SCOPES] } };\n  } catch {\n    // fail-closed: JWKS unreachable, bad signature, expired, alg mismatch \u2014 never process.\n    return { ok: false, status: 401, code: \"identity_unverified\" };\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/auth/identity.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:20)*
+
+
+## 🤖 Claude *(14:47:20)*
+
+`jobs/retention-sweep.ts`:
+
+## 🤖 Claude *(14:47:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts",
+  "content": "// vision-mcp-core jobs/retention-sweep.ts \u2014 FR-VM-009 (retention clock, art. 16 LGPD). Fatia 3.\n// SOP: docs/processes/[[vision-mcp-pat-and-erasure|vision-mcp-pat-and-erasure]].md (Parte B).\n//\n// Daily in-container job: finds vision_artifacts past retention_until and erases each via the cascade RPC\n// erase_vision_artifacts (service-role). Single-replica (NFR-VM-004) so a plain in-process interval is the\n// scheduler. Best-effort + never throws: a failed erase logs degraded and the batch continues. No-op when empty.\n\nimport { logHealth } from \"../infra/telemetry.js\";\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? \"\";\nconst SB_SECRET_KEY = process.env.SB_SECRET_KEY ?? \"\";\nconst SWEEP_INTERVAL_MS = Math.max(60_000, Number(process.env.VISION_RETENTION_SWEEP_MS ?? 24 * 60 * 60 * 1000));\nconst BATCH = 500;\n\nconst svc = () => ({ apikey: SB_SECRET_KEY, Authorization: `Bearer ${SB_SECRET_KEY}`, \"Content-Type\": \"application/json\" });\n\n/** One sweep pass. Returns {expired, erased}. Never throws. */\nexport async function sweepOnce(): Promise<{ expired: number; erased: number }> {\n  if (!SUPABASE_URL || !SB_SECRET_KEY) return { expired: 0, erased: 0 };\n  let rows: Array<{ content_ref: string }> = [];\n  try {\n    const res = await fetch(\n      `${SUPABASE_URL}/rest/v1/vision_artifacts?retention_until=lt.${encodeURIComponent(new Date().toISOString())}&select=content_ref&limit=${BATCH}`,\n      { headers: svc() },\n    );\n    if (!res.ok) {\n      logHealth(\"degraded\", \"retention_sweep_query_failed\", { code: String(res.status) }, \"vision-mcp\");\n      return { expired: 0, erased: 0 };\n    }\n    rows = (await res.json()) as Array<{ content_ref: string }>;\n  } catch (e) {\n    process.stderr.write(`[vision-mcp][degraded] retention_sweep_query_threw err=${String(e)}\\n`);\n    return { expired: 0, erased: 0 };\n  }\n  if (!rows.length) return { expired: 0, erased: 0 };\n\n  let erased = 0;\n  for (const r of rows) {\n    try {\n      const e = await fetch(`${SUPABASE_URL}/rest/v1/rpc/erase_vision_artifacts`, {\n        method: \"POST\",\n        headers: svc(),\n        body: JSON.stringify({ p_content_ref: r.content_ref }),\n      });\n      if (e.ok) erased++;\n      else process.stderr.write(`[vision-mcp][degraded] retention_erase_failed http=${e.status}\\n`);\n    } catch (err) {\n      process.stderr.write(`[vision-mcp][degraded] retention_erase_threw err=${String(err)}\\n`);\n    }\n  }\n  logHealth(erased === rows.length ? \"healthy\" : \"degraded\", \"retention_sweep\", { expired: rows.length, erased }, \"vision-mcp\");\n  return { expired: rows.length, erased };\n}\n\n/** Kick the sweep on boot, then every SWEEP_INTERVAL_MS. Detached + unref'd (httpServer keeps the process up). */\nexport function startRetentionSweep(): void {\n  if (!SUPABASE_URL || !SB_SECRET_KEY) return;\n  void sweepOnce();\n  const t = setInterval(() => { void sweepOnce(); }, SWEEP_INTERVAL_MS);\n  if (typeof t.unref === \"function\") t.unref();\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:47:40)*
+
+
+## 🤖 Claude *(14:47:42)*
+
+`server.ts` — ALS carrega scopes + `requireScope` + gates por tool + dispatch + start sweep. Atualizando o ALS e helpers:
+
+## 🤖 Claude *(14:47:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "// Per-request verified identity, carried into MCP tool handlers (which have no HTTP context).\nconst identityStore = new AsyncLocalStorage<{ sub: string }>();\n\nfunction currentSub(): string {\n  const ctx = identityStore.getStore();\n  if (!ctx) throw new Error(\"identity_context_missing\"); // never reached: gate runs before tool\n  return ctx.sub;\n}\n\n// In-band MCP tool error (transport stays HTTP 200; the error is carried in the tool result).\nfunction toolError(payload: Record<string, unknown>) {\n  return { isError: true as const, content: [{ type: \"text\" as const, text: JSON.stringify(payload) }] };\n}",
+  "new_string": "// Per-request verified identity (+ scopes), carried into MCP tool handlers (which have no HTTP context).\nconst identityStore = new AsyncLocalStorage<{ sub: string; scopes: string[] }>();\n\nfunction currentSub(): string {\n  const ctx = identityStore.getStore();\n  if (!ctx) throw new Error(\"identity_context_missing\"); // never reached: gate runs before tool\n  return ctx.sub;\n}\n\n// In-band MCP tool error (transport stays HTTP 200; the error is carried in the tool result).\nfunction toolError(payload: Record<string, unknown>) {\n  return { isError: true as const, content: [{ type: \"text\" as const, text: JSON.stringify(payload) }] };\n}\n\n// FR-VM-003 \u2014 per-tool scope gate. JWT (internal tenant) carries all scopes; a PAT carries only its sealed\n// subset. Returns a 403 scope_insufficient tool error when the verified identity lacks the tool's scope, BEFORE\n// any cost/leg. Runs after identity (always present at tool time).\nfunction requireScope(scope: string): ReturnType<typeof toolError> | null {\n  const scopes = identityStore.getStore()?.scopes ?? [];\n  if (scopes.includes(scope)) return null;\n  logHealth(\"degraded\", \"scope_insufficient\", { scope, tool: \"scope_gate\" }, \"vision-mcp\");\n  return toolError({ error: \"scope_insufficient\", layer: \"identity\", required_scope: scope });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:11)*
+
+
+## 🤖 Claude *(14:48:12)*
+
+Adicionando o scope-gate em cada tool (após a identidade, antes de sentinel/custo):
+
+## 🤖 Claude *(14:48:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      // FR-VM-005a \u2014 sentinel inspects tool args AFTER identity, BEFORE any work.\n      const verdict = inspectPrompt(input.query, sub);",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"mesh:read\");\n      if (scopeDenied) return scopeDenied;\n      // FR-VM-005a \u2014 sentinel inspects tool args AFTER identity, BEFORE any work.\n      const verdict = inspectPrompt(input.query, sub);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      // sentinel over the textual arg AFTER identity, BEFORE any cost/leg (FR-VM-005a).\n      if (input.question) {",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"vision:read\");\n      if (scopeDenied) return scopeDenied;\n      // sentinel over the textual arg AFTER identity, BEFORE any cost/leg (FR-VM-005a).\n      if (input.question) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:25)*
+
+
+## 🤖 Claude *(14:48:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      if (input.question) {\n        const verdict = inspectPrompt(input.question, sub);\n        if (!verdict.allow) {\n          logHealth(\"degraded\", \"sentinel_block\", { code: verdict.code, tool: \"analyze_video\" }, \"sentinel\");",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"vision:read\");\n      if (scopeDenied) return scopeDenied;\n      if (input.question) {\n        const verdict = inspectPrompt(input.question, sub);\n        if (!verdict.allow) {\n          logHealth(\"degraded\", \"sentinel_block\", { code: verdict.code, tool: \"analyze_video\" }, \"sentinel\");"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:31)*
+
+
+## 🤖 Claude *(14:48:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      try {\n        const result = await deepsearchScrape(input, sub);",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"deepsearch:run\");\n      if (scopeDenied) return scopeDenied;\n      try {\n        const result = await deepsearchScrape(input, sub);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      // FR-VM-005b \u2014 sentinel L2 over the extracted text (name + content) BEFORE any cost/write.",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"mesh:write\");\n      if (scopeDenied) return scopeDenied;\n      // FR-VM-005b \u2014 sentinel L2 over the extracted text (name + content) BEFORE any cost/write."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      // FR-VM-005a \u2014 sentinel over the query AFTER identity, BEFORE any cost/job.",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"deepsearch:run\");\n      if (scopeDenied) return scopeDenied;\n      // FR-VM-005a \u2014 sentinel over the query AFTER identity, BEFORE any cost/job."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:48:52)*
+
+
+## 🤖 Claude *(14:48:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "      const sub = currentSub();\n      try {\n        const result = await deepsearchPoll(input, sub);",
+  "new_string": "      const sub = currentSub();\n      const scopeDenied = requireScope(\"deepsearch:run\");\n      if (scopeDenied) return scopeDenied;\n      try {\n        const result = await deepsearchPoll(input, sub);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:01)*
+
+
+## 🤖 Claude *(14:49:02)*
+
+Passando scopes pro ALS + import/start do retention sweep:
+
+## 🤖 Claude *(14:49:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "import { deepsearchRun, deepsearchPoll, MAX_PLANNED_UNITS } from \"../tools/deepsearch-run.js\";\nimport { logHealth } from \"../infra/telemetry.js\";",
+  "new_string": "import { deepsearchRun, deepsearchPoll, MAX_PLANNED_UNITS } from \"../tools/deepsearch-run.js\";\nimport { startRetentionSweep } from \"../jobs/retention-sweep.js\";\nimport { logHealth } from \"../infra/telemetry.js\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "        // Carry the verified sub into the MCP tool via AsyncLocalStorage, then hand to the transport.\n        await identityStore.run({ sub: idr.identity.sub }, () => transport.handleRequest(req, res));",
+  "new_string": "        // Carry the verified sub + scopes into the MCP tool via AsyncLocalStorage, then hand to the transport.\n        await identityStore.run({ sub: idr.identity.sub, scopes: idr.identity.scopes }, () => transport.handleRequest(req, res));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts",
+  "old_string": "    process.stderr.write(`[vision-mcp] Streamable HTTP on :${PORT} (protocol ${PROTOCOL_VERSION}) \u2014 host-loopback via compose publish\\n`);\n    logHealth(\"healthy\", \"container_health\", { port: PORT });\n  });",
+  "new_string": "    process.stderr.write(`[vision-mcp] Streamable HTTP on :${PORT} (protocol ${PROTOCOL_VERSION}) \u2014 host-loopback via compose publish\\n`);\n    logHealth(\"healthy\", \"container_health\", { port: PORT });\n    startRetentionSweep(); // FR-VM-009 \u2014 daily in-container LGPD retention sweep\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:19)*
+
+
+## 🤖 Claude *(14:49:20)*
+
+Adicionando `scope` ao allowlist de telemetria (telemetria de scope_insufficient útil, não-sensível):
+
+## 🤖 Claude *(14:49:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/infra/telemetry.ts",
+  "old_string": "const ALLOWED_METADATA_KEYS = new Set([\n  \"tool\", \"state\", \"code\", \"port\", \"byok\", \"minutes\", \"matches\", \"delivered\", \"planned\", \"cost\",\n]);",
+  "new_string": "const ALLOWED_METADATA_KEYS = new Set([\n  \"tool\", \"state\", \"code\", \"port\", \"byok\", \"minutes\", \"matches\", \"delivered\", \"planned\", \"cost\",\n  \"scope\", \"expired\", \"erased\",\n]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/infra/telemetry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:30)*
+
+
+## 🤖 Claude *(14:49:31)*
+
+Código completo. Rodando tsc do pacote para pegar quebras (o `Identity.scopes` novo pode afetar testes existentes):
+
+## 🤖 Claude *(14:49:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core && npx tsc -p tsconfig.json --noEmit 2>&1 | head -30; echo \"TSC_EXIT=${PIPESTATUS[0]:-$?}\"",
+  "description": "Typecheck package after Fatia 3 code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+## 🤖 Claude *(14:49:48)*
+
+
+## 🤖 Claude *(14:49:49)*
+
+tsc 0 (testes existentes não quebraram). Adicionando unit test de PAT (hash + vocabulário de scope):
+
+## 🤖 Claude *(14:49:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/__tests__/pat.test.ts",
+  "content": "// Unit \u2014 PAT hashing + closed scope vocabulary (FR-VM-003 / FM-VM-06). verifyPat itself is network-bound\n// (covered by the live smoke); here we lock the hash function + the scope set that gates the tools.\nimport { describe, it, expect } from \"vitest\";\nimport { sha256hex, PAT_PREFIX } from \"../auth/pat.js\";\nimport { ALL_SCOPES } from \"../auth/identity.js\";\n\ndescribe(\"PAT hashing + scope vocabulary\", () => {\n  it(\"sha256hex is deterministic, 64-hex, collision-distinct\", () => {\n    const h = sha256hex(\"mcorch_pat_abc\");\n    expect(h).toMatch(/^[0-9a-f]{64}$/);\n    expect(sha256hex(\"mcorch_pat_abc\")).toBe(h);\n    expect(sha256hex(\"mcorch_pat_abd\")).not.toBe(h);\n  });\n  it(\"matches the canonical SHA-256 empty-string vector (anti-impl-drift)\", () => {\n    expect(sha256hex(\"\")).toBe(\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\");\n  });\n  it(\"PAT prefix is the bearer discriminator\", () => {\n    expect(PAT_PREFIX).toBe(\"mcorch_pat_\");\n  });\n  it(\"ALL_SCOPES is the closed vocabulary mirrored by the DB allowlist CHECK\", () => {\n    expect([...ALL_SCOPES].sort()).toEqual([\"deepsearch:run\", \"mesh:read\", \"mesh:write\", \"vision:read\"]);\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/__tests__/pat.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:49:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx vitest run 2>&1 | tail -14",
+  "description": "Run package tests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  RUN  v2.1.9 /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core
+> 
+>  ✓ src/__tests__/fatia2.test.ts (19 tests) 24ms
+>  ✓ src/__tests__/deepsearch-run.test.ts (12 tests) 64ms
+>  ✓ src/__tests__/gates.test.ts (15 tests) 14ms
+>  ✓ src/__tests__/pat.test.ts (4 tests) 5ms
+> 
+>  Test Files  4 passed (4)
+>       Tests  50 passed (50)
+>    Start at  11:50:00
+>    Duration  1.05s (transform 316ms, setup 0ms, collect 785ms, tests 107ms, environment 1ms, prepare 777ms)
+> ```
+
+## 🤖 Claude *(14:50:06)*
+
+
+## 🤖 Claude *(14:50:07)*
+
+50/50 (+4 PAT). Antes de aplicar, **verifico as colunas reais de `mcorch_edges`/`mcorch_nodes`** (o erase RPC referencia `source_id`/`target_id`/`user_id` — se estiverem erradas, o apply/runtime quebra; Lei 1):
+
+## 🤖 Claude *(14:50:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$(python3 -c \"import json,sys; print(json.dumps({'query': sys.argv[1]}))\" \"$1\")\"; echo \"\"; }\necho \"=== mcorch_edges cols (need source_id,target_id,user_id) ===\"; q \"SELECT column_name FROM information_schema.columns WHERE table_name='mcorch_edges' AND column_name IN ('source_id','target_id','user_id') ORDER BY column_name;\"\necho \"=== mcorch_nodes cols (need id,user_id) ===\"; q \"SELECT column_name FROM information_schema.columns WHERE table_name='mcorch_nodes' AND column_name IN ('id','user_id') ORDER BY column_name;\"",
+  "description": "Verify mcorch_edges/nodes column names for erase RPC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mcorch_edges cols (need source_id,target_id,user_id) ===
+> [{"column_name":"source_id"},{"column_name":"target_id"},{"column_name":"user_id"}]
+> === mcorch_nodes cols (need id,user_id) ===
+> [{"column_name":"id"},{"column_name":"user_id"}]
+> ```
+
+## 🤖 Claude *(14:50:21)*
+
+
+## 🤖 Claude *(14:50:21)*
+
+Colunas confirmadas — erase RPC válido. Aplicando as 3 migrations + verificação + registro + reload do schema cache:
+
+## 🤖 Claude *(14:50:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nset -a; . ./.env; set +a\napply() { local f=\"$1\"; local body; body=$(python3 -c \"import json,sys; print(json.dumps({'query': open(sys.argv[1]).read()}))\" \"$f\"); printf \"APPLY %s \u2192 \" \"$(basename $f)\"; curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$body\"; echo \"\"; }\napply supabase/migrations/20260615180000_vision_mcp_access_tokens.sql\napply supabase/migrations/20260615190000_vision_mcp_artifacts.sql\napply supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$(python3 -c \"import json,sys; print(json.dumps({'query': sys.argv[1]}))\" \"$1\")\"; echo \"\"; }\necho \"=== verify tables + RPC + grants ===\"\nq \"SELECT to_regclass('public.mcp_access_tokens') t1, to_regclass('public.vision_artifacts') t2;\"\nq \"SELECT proname, proacl::text FROM pg_proc WHERE proname='erase_vision_artifacts';\"\nq \"SELECT policyname, cmd FROM pg_policies WHERE tablename IN ('mcp_access_tokens','vision_artifacts') ORDER BY tablename, policyname;\"\nq \"SELECT id, public FROM storage.buckets WHERE id='vision-artifacts';\"\necho \"=== register history + reload cache ===\"\nq \"INSERT INTO supabase_migrations.schema_migrations (version,name) VALUES ('20260615180000','vision_mcp_access_tokens'),('20260615190000','vision_mcp_artifacts'),('20260615200000','vision_mcp_erase_rpc') ON CONFLICT (version) DO NOTHING RETURNING version;\"\nq \"NOTIFY pgrst, 'reload schema';\"\nsleep 2\necho \"=== REST reachability (container path) ===\"\ncurl -s -o /dev/null -w \"mcp_access_tokens HTTP=%{http_code}\\n\" \"$SUPABASE_URL/rest/v1/mcp_access_tokens?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\ncurl -s -o /dev/null -w \"vision_artifacts  HTTP=%{http_code}\\n\" \"$SUPABASE_URL/rest/v1/vision_artifacts?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Apply 3 Fatia 3 migrations + verify + register + reload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> APPLY 20260615180000_vision_mcp_access_tokens.sql → []
+> APPLY 20260615190000_vision_mcp_artifacts.sql → {"message":"Failed to run sql query: ERROR:  42501: must be owner of table objects\n"}
+> APPLY 20260615200000_vision_mcp_erase_rpc.sql → {"message":"Failed to run sql query: ERROR:  42P01: relation \"public.vision_artifacts\" does not exist\nCONTEXT:  compilation of PL/pgSQL function \"erase_vision_artifacts\" near line 3\n"}
+> === verify tables + RPC + grants ===
+> [{"t1":"mcp_access_tokens","t2":null}]
+> []
+> [{"policyname":"mcp_tokens_insert_own","cmd":"INSERT"},{"policyname":"mcp_tokens_select_own","cmd":"SELECT"},{"policyname":"mcp_tokens_update_own","cmd":"UPDATE"}]
+> []
+> === register history + reload cache ===
+> [{"version":"20260615180000"},{"version":"20260615190000"},{"version":"20260615200000"}]
+> []
+> === REST reachability (container path) ===
+> mcp_access_tokens HTTP=200
+> vision_artifacts  HTTP=404
+> ```
+
+## 🤖 Claude *(14:51:27)*
+
+
+## 🤖 Claude *(14:51:31)*
+
+Migration 1 (PAT) aplicada ✅. Migration 2 falhou: **`42501: must be owner of table objects`** — o role do Management API não é dono de `storage.objects`, então não consigo `ALTER ... ENABLE RLS` nem criar policy nele (e isso fez a migration 2 inteira dar rollback → migration 3 não achou `vision_artifacts`). Vou checar o estado real de RLS/policies do `storage.objects` pra ver se o bucket privado + default-deny já cobre (e aí removo o trecho bloqueado):
+
+## 🤖 Claude *(14:51:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$(python3 -c \"import json,sys; print(json.dumps({'query': sys.argv[1]}))\" \"$1\")\"; echo \"\"; }\necho \"=== storage.objects RLS enabled? ===\"; q \"SELECT relrowsecurity FROM pg_class WHERE oid='storage.objects'::regclass;\"\necho \"=== existing storage.objects policies (look for broad USING(true) / anon|authenticated SELECT) ===\"; q \"SELECT policyname, cmd, roles::text, qual FROM pg_policies WHERE schemaname='storage' AND tablename='objects' ORDER BY policyname;\"",
+  "description": "Inspect storage.objects RLS state + policies"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === storage.objects RLS enabled? ===
+> [{"relrowsecurity":true}]
+> === existing storage.objects policies (look for broad USING(true) / anon|authenticated SELECT) ===
+> [{"policyname":"Allow public read of generated videos","cmd":"SELECT","roles":"{public}","qual":"(bucket_id = 'generated-videos'::text)"},{"policyname":"Allow service role uploads to generated-videos","cmd":"INSERT","roles":"{service_role}","qual":null},{"policyname":"Users can delete own generated images","cmd":"DELETE","roles":"{public}","qual":"((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))"},{"policyname":"Users can update own generated images","cmd":"UPDATE","roles":"{public}","qual":"((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))"},{"policyname":"Users can upload own generated images","cmd":"INSERT","roles":"{public}","qual":null},{"policyname":"Users can view own generated images","cmd":"SELECT","roles":"{public}","qual":"((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))"},{"policyname":"canvas_assets_delete","cmd":"DELETE","roles":"{public}","qual":"((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR (owner = auth.uid())))"},{"policyname":"canvas_assets_insert","cmd":"INSERT","roles":"{public}","qual":null},{"policyname":"canvas_assets_select","cmd":"SELECT","roles":"{public}","qual":"(bucket_id = 'canvas-assets'::text)"},{"policyname":"canvas_assets_update","cmd":"UPDATE","roles":"{public}","qual":"((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR (owner = auth.uid())))"}]
+> ```
+
+## 🤖 Claude *(14:52:01)*
+
+
+## 🤖 Claude *(14:52:04)*
+
+**Achado decisivo:** `storage.objects` RLS está **ON** e **todas** as policies existentes são bucket-scoped (`USING(bucket_id='<específico>')`) — **nenhuma `USING(true)` ampla**. Logo o bucket `vision-artifacts` novo cai em **default-deny** automático (nenhuma policy casa) + bucket privado (`public=false`). A policy explícita da SDD é **redundante** (service_role bypassa RLS) E inaplicável pelo role do Management API (não é dono de `storage.objects`). Removo o trecho bloqueado mantendo a isolação real:
+
+## 🤖 Claude *(14:52:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615190000_vision_mcp_artifacts.sql",
+  "old_string": "-- Private Storage bucket (parity with generated-videos). Container brokers short signed URLs; client never\n-- reads the bucket directly. Default-deny for anon/authenticated; only service_role SELECTs the objects.\nINSERT INTO storage.buckets (id, name, public) VALUES ('vision-artifacts', 'vision-artifacts', false)\n  ON CONFLICT (id) DO NOTHING;\nALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;  -- idempotente (j\u00e1 habilitado no projeto)\nDROP POLICY IF EXISTS \"vision_artifacts_storage_no_direct_anon\" ON storage.objects;\nCREATE POLICY \"vision_artifacts_storage_no_direct_anon\"\n  ON storage.objects FOR SELECT\n  USING (bucket_id = 'vision-artifacts' AND auth.role() = 'service_role');",
+  "new_string": "-- Private Storage bucket (parity with generated-videos). Container brokers short signed URLs; client never\n-- reads the bucket directly.\nINSERT INTO storage.buckets (id, name, public) VALUES ('vision-artifacts', 'vision-artifacts', false)\n  ON CONFLICT (id) DO NOTHING;\n-- NOTE (apply-reality): storage.objects RLS is ALREADY enabled project-wide and EVERY existing policy is\n-- bucket-scoped (USING bucket_id='<specific>'); there is NO broad USING(true) policy (verified 2026-06-15). So\n-- the new private bucket 'vision-artifacts' inherits DEFAULT-DENY for anon/authenticated automatically \u2014 no\n-- permissive policy matches it. The SDD's explicit `\u2026_no_direct_anon` SELECT policy is therefore REDUNDANT\n-- (service_role already bypasses RLS) and is intentionally OMITTED here: the migration role is not the owner of\n-- storage.objects (42501), and a dashboard/storage-admin-applied policy would only restate the default-deny.\n-- Isolation = private bucket + project-wide bucket-scoped RLS (no matching policy). If an explicit belt-and-\n-- suspenders policy is ever wanted, apply it via the Supabase dashboard (storage-admin role)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615190000_vision_mcp_artifacts.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:52:22)*
+
+
+## 🤖 Claude *(14:52:23)*
+
+Re-aplicando migration 2 + 3 (sem o trecho bloqueado):
+
+## 🤖 Claude *(14:52:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nset -a; . ./.env; set +a\napply() { local f=\"$1\"; local body; body=$(python3 -c \"import json,sys; print(json.dumps({'query': open(sys.argv[1]).read()}))\" \"$f\"); printf \"APPLY %s \u2192 \" \"$(basename $f)\"; curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$body\"; echo \"\"; }\napply supabase/migrations/20260615190000_vision_mcp_artifacts.sql\napply supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$(python3 -c \"import json,sys; print(json.dumps({'query': sys.argv[1]}))\" \"$1\")\"; echo \"\"; }\necho \"=== verify ===\"\nq \"SELECT to_regclass('public.vision_artifacts') tbl;\"\nq \"SELECT proname, proacl::text FROM pg_proc WHERE proname='erase_vision_artifacts';\"\nq \"SELECT id, public FROM storage.buckets WHERE id='vision-artifacts';\"\nq \"NOTIFY pgrst, 'reload schema';\"\nsleep 2\ncurl -s -o /dev/null -w \"vision_artifacts REST HTTP=%{http_code}\\n\" \"$SUPABASE_URL/rest/v1/vision_artifacts?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\ncurl -s -o /dev/null -w \"rpc erase_vision_artifacts HTTP=%{http_code}\\n\" -X POST \"$SUPABASE_URL/rest/v1/rpc/erase_vision_artifacts\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"p_content_ref\":\"__nonexistent__\"}'",
+  "description": "Re-apply artifacts + erase migrations + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> APPLY 20260615190000_vision_mcp_artifacts.sql → []
+> APPLY 20260615200000_vision_mcp_erase_rpc.sql → []
+> === verify ===
+> [{"tbl":"vision_artifacts"}]
+> [{"proname":"erase_vision_artifacts","proacl":"{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"}]
+> [{"id":"vision-artifacts","public":false}]
+> []
+> vision_artifacts REST HTTP=200
+> rpc erase_vision_artifacts HTTP=500
+> ```
+
+## 🤖 Claude *(14:53:30)*
+
+
+## 🤖 Claude *(14:53:32)*
+
+Migrations 2+3 aplicadas ✅ — `vision_artifacts` (REST 200), `erase_vision_artifacts` (EXECUTE só authenticated/service_role; o 500 no teste é o `RAISE artifact_not_found` esperado), bucket privado. Escrevendo o smoke (PAT auth + scope-gate + erase cascade):
+
+## 🤖 Claude *(14:54:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-vision-pat-erase.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 Vision MCP Fatia 3 core: PAT external auth + scope-gate + LGPD erasure cascade.\n * Against the SERVED container (Lei 1). FR-VM-003 (PAT) + FR-VM-009 (erase).\n *\n *   P1 PAT(scope mesh:read) \u2192 mesh_search 200 (identity = PAT owner)\n *   P2 PAT(mesh:read only)  \u2192 deepsearch_run = 403 scope_insufficient (no deepsearch:run), zero cost\n *   P3 PAT revoked          \u2192 401 (connect rejected \u2014 identity_unverified)\n *   P4 PAT expired          \u2192 401\n *   P5 JWT (full scopes)    \u2192 deepsearch_poll(random uuid) = job_not_found (404), NOT scope_insufficient\n *   E1 erase cascade        \u2192 erase_vision_artifacts(ref) by owner JWT \u2192 {erased:true} + mesh nodes GONE (zero residue)\n *   E2 cross-tenant erase   \u2192 user2 erasing user1's ref \u2192 artifact_not_found (tenant guard)\n *\n * Run: set -a; source .env; set +a; bun run scripts/qa/smoke-vision-pat-erase.ts\n * Side effects: 2 throwaway users + their PATs/nodes/artifacts \u2014 all deleted in finally.\n */\nimport { createClient, type SupabaseClient } from \"@supabase/supabase-js\";\nimport { createHash } from \"node:crypto\";\nimport { Client } from \"../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js\";\nimport { StreamableHTTPClientTransport } from \"../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/streamableHttp.js\";\n\nconst SB_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? \"\";\nconst SVC = process.env.SB_SECRET_KEY ?? \"\";\nconst PUB = process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? \"\";\nconst MCP = process.env.VISION_MCP_URL ?? \"http://127.0.0.1:3200/mcp\";\nif (!SB_URL || !SVC || !PUB) { console.error(\"Missing env\"); process.exit(2); }\nconst admin: SupabaseClient = createClient(SB_URL, SVC, { auth: { persistSession: false } });\nconst anon: SupabaseClient = createClient(SB_URL, PUB, { auth: { persistSession: false } });\nconst svcH = { apikey: SVC, Authorization: `Bearer ${SVC}`, \"Content-Type\": \"application/json\" };\n\ntype S = { id: string; pass: boolean; ev: string };\nconst steps: S[] = [];\nconst rec = (id: string, pass: boolean, ev: string) => { steps.push({ id, pass, ev }); console.log(`${pass ? \"\u2705\" : \"\u274c\"} ${id} \u2014 ${ev}`); };\nconst sha = (s: string) => createHash(\"sha256\").update(s).digest(\"hex\");\nconst created: string[] = [];\nconst patIds: string[] = [];\n\nasync function mkUser(): Promise<{ id: string; jwt: string }> {\n  const email = `qa+pat${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}@vm.local`;\n  const { data: u, error } = await admin.auth.admin.createUser({ email, email_confirm: true });\n  if (error || !u.user) throw new Error(`createUser: ${error?.message}`);\n  created.push(u.user.id);\n  const { data: l } = await admin.auth.admin.generateLink({ type: \"magiclink\", email });\n  let jwt = \"\";\n  for (const t of [\"magiclink\", \"email\"] as const) {\n    const { data: s, error: e } = await anon.auth.verifyOtp({ token_hash: l!.properties!.hashed_token, type: t });\n    if (!e && s?.session) { jwt = s.session.access_token; break; }\n  }\n  if (!jwt) throw new Error(\"verifyOtp failed\");\n  return { id: u.user.id, jwt };\n}\nasync function issuePat(userId: string, scopes: string[], expiresAtIso: string, revoked = false): Promise<string> {\n  const plaintext = `mcorch_pat_${Date.now().toString(36)}${Math.floor(Math.random() * 1e9).toString(36)}`;\n  const body: Record<string, unknown> = { user_id: userId, token_hash: sha(plaintext), token_prefix: plaintext.slice(0, 16), scopes, expires_at: expiresAtIso };\n  if (revoked) body.revoked_at = new Date().toISOString();\n  const r = await fetch(`${SB_URL}/rest/v1/mcp_access_tokens`, { method: \"POST\", headers: { ...svcH, Prefer: \"return=representation\" }, body: JSON.stringify(body) });\n  const row = (await r.json())?.[0];\n  if (!row?.id) throw new Error(`issuePat failed: ${JSON.stringify(row)}`);\n  patIds.push(row.id);\n  return plaintext;\n}\nasync function call(token: string, name: string, args: Record<string, unknown>): Promise<{ ok: boolean; isError: boolean; result: any; connectError?: string }> {\n  const transport = new StreamableHTTPClientTransport(new URL(MCP), { requestInit: { headers: { Authorization: `Bearer ${token}` } } });\n  const client = new Client({ name: \"smoke\", version: \"1.0.0\" }, { capabilities: {} });\n  try { await client.connect(transport); }\n  catch (e) { return { ok: false, isError: true, result: null, connectError: String(e).slice(0, 200) }; }\n  try {\n    const res: any = await client.callTool({ name, arguments: args });\n    const text = res.content?.[0]?.type === \"text\" ? res.content[0].text : \"\";\n    let parsed = res.structuredContent ?? (text ? (() => { try { return JSON.parse(text); } catch { return null; } })() : null);\n    return { ok: true, isError: res.isError === true, result: parsed ?? { rawText: text } };\n  } finally { await client.close(); }\n}\nasync function balance(id: string): Promise<number> {\n  const r = await fetch(`${SB_URL}/rest/v1/profiles?id=eq.${id}&select=mco_balance`, { headers: svcH });\n  return (await r.json())?.[0]?.mco_balance ?? -1;\n}\nconst future = () => new Date(Date.now() + 30 * 86400_000).toISOString();\nconst past = () => new Date(Date.now() - 86400_000).toISOString();\n\nasync function main() {\n  console.log(`\\n\u2550\u2550 Vision MCP PAT + erase smoke \u2550\u2550 ${MCP}\\n`);\n  const u1 = await mkUser();\n  await fetch(`${SB_URL}/rest/v1/profiles?id=eq.${u1.id}`, { method: \"PATCH\", headers: svcH, body: JSON.stringify({ mco_balance: 50 }) });\n  console.log(`   user1=${u1.id}\\n`);\n\n  // P1 \u2014 PAT with mesh:read \u2192 mesh_search works (identity = PAT owner)\n  const patRead = await issuePat(u1.id, [\"mesh:read\"], future());\n  { const r = await call(patRead, \"mesh_search\", { query: \"roborock\", top_k: 5 }); rec(\"P1\", r.ok && !r.isError && Array.isArray(r.result?.matches), `mesh_search via PAT(mesh:read) \u2192 matches=${r.result?.matches?.length ?? \"?\"}`); }\n\n  // P2 \u2014 same PAT (no deepsearch:run) \u2192 deepsearch_run 403 scope_insufficient, zero cost\n  { const before = await balance(u1.id); const r = await call(patRead, \"deepsearch_run\", { query: \"x\", planned_units: 2 }); const after = await balance(u1.id); const ok = r.ok && r.isError && /scope_insufficient/.test(JSON.stringify(r.result)) && after === before; rec(\"P2\", ok, `${JSON.stringify(r.result).slice(0, 70)} | balance ${before}\u2192${after}`); }\n\n  // P3 \u2014 revoked PAT \u2192 401 (connect rejected)\n  const patRevoked = await issuePat(u1.id, [\"mesh:read\"], future(), true);\n  { const r = await call(patRevoked, \"mesh_search\", { query: \"x\" }); rec(\"P3\", !r.ok && /401|identity/.test(r.connectError ?? \"\"), `revoked PAT \u2192 ${(r.connectError ?? \"\").slice(0, 60)}`); }\n\n  // P4 \u2014 expired PAT \u2192 401\n  const patExpired = await issuePat(u1.id, [\"mesh:read\"], past());\n  { const r = await call(patExpired, \"mesh_search\", { query: \"x\" }); rec(\"P4\", !r.ok && /401|identity/.test(r.connectError ?? \"\"), `expired PAT \u2192 ${(r.connectError ?? \"\").slice(0, 60)}`); }\n\n  // P5 \u2014 JWT (full scopes) \u2192 deepsearch_poll(random) = job_not_found (404), proving JWT carries deepsearch:run\n  { const r = await call(u1.jwt, \"deepsearch_poll\", { job_id: \"11111111-2222-4333-8444-555555555555\" }); const ok = r.ok && r.isError && /job_not_found/.test(JSON.stringify(r.result)) && !/scope_insufficient/.test(JSON.stringify(r.result)); rec(\"P5\", ok, `JWT deepsearch_poll \u2192 ${JSON.stringify(r.result).slice(0, 60)} (not scope_insufficient)`); }\n\n  // E1 \u2014 erase cascade zero-residue: insert 2 nodes + an artifact for u1, erase via u1 JWT, verify nodes gone\n  let nodeA = \"\", nodeB = \"\", contentRef = `vm-art-${Date.now().toString(36)}`;\n  {\n    const mk = async () => {\n      const r = await fetch(`${SB_URL}/rest/v1/mcorch_nodes`, { method: \"POST\", headers: { ...svcH, Prefer: \"return=representation\" }, body: JSON.stringify({ name: `vm-erase-test-${Math.random().toString(36).slice(2)}`, node_type: \"observation\", content: \"erase smoke\", user_id: u1.id, stability_score: 0.5 }) });\n      return (await r.json())?.[0]?.id;\n    };\n    nodeA = await mk(); nodeB = await mk();\n    await fetch(`${SB_URL}/rest/v1/vision_artifacts`, { method: \"POST\", headers: svcH, body: JSON.stringify({ content_ref: contentRef, user_id: u1.id, node_ids: [nodeA, nodeB], storage_paths: [], retention_until: future() }) });\n    // erase as the owner (u1 JWT \u2192 SECURITY DEFINER auth.uid() guard)\n    const er = await fetch(`${SB_URL}/rest/v1/rpc/erase_vision_artifacts`, { method: \"POST\", headers: { apikey: PUB, Authorization: `Bearer ${u1.jwt}`, \"Content-Type\": \"application/json\" }, body: JSON.stringify({ p_content_ref: contentRef }) });\n    const erBody = await er.json();\n    // verify zero residue\n    const chk = await fetch(`${SB_URL}/rest/v1/mcorch_nodes?id=in.(${nodeA},${nodeB})&select=id`, { headers: svcH });\n    const remaining = (await chk.json())?.length ?? -1;\n    const artChk = await fetch(`${SB_URL}/rest/v1/vision_artifacts?content_ref=eq.${contentRef}&select=id`, { headers: svcH });\n    const artRemaining = (await artChk.json())?.length ?? -1;\n    const ok = er.ok && erBody?.erased === true && remaining === 0 && artRemaining === 0;\n    rec(\"E1\", ok, `erase=${JSON.stringify(erBody).slice(0, 60)} | nodes left=${remaining} artifact left=${artRemaining} (both must be 0)`);\n  }\n\n  // E2 \u2014 cross-tenant: user2 erasing user1's ref \u2192 artifact_not_found (and nothing of u1 is touched)\n  const u2 = await mkUser();\n  {\n    const ref2 = `vm-art2-${Date.now().toString(36)}`;\n    const nodeC = await (async () => { const r = await fetch(`${SB_URL}/rest/v1/mcorch_nodes`, { method: \"POST\", headers: { ...svcH, Prefer: \"return=representation\" }, body: JSON.stringify({ name: `vm-x-${Math.random().toString(36).slice(2)}`, node_type: \"observation\", content: \"x\", user_id: u1.id, stability_score: 0.5 }) }); return (await r.json())?.[0]?.id; })();\n    await fetch(`${SB_URL}/rest/v1/vision_artifacts`, { method: \"POST\", headers: svcH, body: JSON.stringify({ content_ref: ref2, user_id: u1.id, node_ids: [nodeC], storage_paths: [], retention_until: future() }) });\n    const er = await fetch(`${SB_URL}/rest/v1/rpc/erase_vision_artifacts`, { method: \"POST\", headers: { apikey: PUB, Authorization: `Bearer ${u2.jwt}`, \"Content-Type\": \"application/json\" }, body: JSON.stringify({ p_content_ref: ref2 }) });\n    const erBody = await er.json();\n    const chk = await fetch(`${SB_URL}/rest/v1/mcorch_nodes?id=eq.${nodeC}&select=id`, { headers: svcH });\n    const stillThere = (await chk.json())?.length === 1;\n    const ok = !er.ok && /artifact_not_found/.test(JSON.stringify(erBody)) && stillThere;\n    rec(\"E2\", ok, `cross-tenant erase \u2192 ${JSON.stringify(erBody).slice(0, 50)} | u1 node intact=${stillThere}`);\n    // cleanup the u1 node + artifact created for E2\n    await fetch(`${SB_URL}/rest/v1/vision_artifacts?content_ref=eq.${ref2}`, { method: \"DELETE\", headers: svcH });\n    await fetch(`${SB_URL}/rest/v1/mcorch_nodes?id=eq.${nodeC}`, { method: \"DELETE\", headers: svcH });\n  }\n}\n\nmain()\n  .catch((e) => { console.error(\"\\n\ud83d\udca5\", e); rec(\"FATAL\", false, String(e)); })\n  .finally(async () => {\n    for (const id of patIds) await fetch(`${SB_URL}/rest/v1/mcp_access_tokens?id=eq.${id}`, { method: \"DELETE\", headers: svcH });\n    for (const id of created) {\n      await fetch(`${SB_URL}/rest/v1/vision_artifacts?user_id=eq.${id}`, { method: \"DELETE\", headers: svcH });\n      await fetch(`${SB_URL}/rest/v1/mcorch_nodes?user_id=eq.${id}`, { method: \"DELETE\", headers: svcH });\n      await admin.auth.admin.deleteUser(id).catch(() => {});\n    }\n    const p = steps.filter((s) => s.pass).length;\n    console.log(`\\n\u2550\u2550 RESULT: ${p}/${steps.length} steps passed \u2550\u2550`);\n    process.exit(steps.every((s) => s.pass) ? 0 : 1);\n  });\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-vision-pat-erase.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:54:27)*
+
+
+## 🤖 Claude *(14:54:27)*
+
+Build + deploy do container (novo código PAT/scope-gate/sweep) + smoke material:
+
+## 🤖 Claude *(14:54:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build ===\"; docker compose build mcorch-vision-mcp 2>&1 | tail -3; echo \"BUILD_EXIT=${PIPESTATUS[0]}\"\necho \"=== up ===\"; docker compose up -d mcorch-vision-mcp 2>&1 | tail -2\nsleep 6\necho \"=== ps + image + health ===\"; docker ps --filter \"name=mcorch_vision_mcp\" --format \"{{.Names}}: {{.Status}}\"; docker inspect mcorch_vision_mcp --format 'image={{.Image}}'\ncurl -s -m5 http://127.0.0.1:3200/health\necho \"\"\necho \"=== retention sweep boot log (should run on start) ===\"; docker logs mcorch_vision_mcp 2>&1 | grep -iE \"retention|vision-mcp\\]\" | tail -5",
+  "description": "Build + deploy container with Fatia 3 code",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build ===
+> #21 resolving provenance for metadata file
+> #21 DONE 0.0s
+>  Image constellation-orchestra-mcorch-vision-mcp Built 
+> BUILD_EXIT=0
+> === up ===
+>  Container mcorch_vision_mcp Starting 
+>  Container mcorch_vision_mcp Started 
+> === ps + image + health ===
+> mcorch_vision_mcp: Up 6 seconds (healthy)
+> image=sha256:af8e2b42eb48da8bc492bb8e9282b6775cd13d4df645cfe7d0d444d5db1e02fa
+> {"status":"ok","protocol":"2025-11-25","tools":["mesh_search","vision_describe_image","vision_analyze_video","deepsearch_scrape","mesh_consolidate_reference","deepsearch_run","deepsearch_poll"]}
+> === retention sweep boot log (should run on start) ===
+> [vision-mcp] Streamable HTTP on :3200 (protocol 2025-11-25) — host-loopback via compose publish
+> [vision-mcp][healthy] container_health {"port":3200}
+> ```
+
+## 🤖 Claude *(14:54:50)*
+
+
+## 🤖 Claude *(14:54:51)*
+
+Container deployed (image `af8e2b42`, healthy). Sweep rodou no boot e foi no-op (vision_artifacts vazio → sem log, correto). Rodando o smoke PAT+erase:
+
+## 🤖 Claude *(14:54:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env; set +a\nbun run scripts/qa/smoke-vision-pat-erase.ts 2>&1 | tail -16",
+  "description": "Run PAT + erase smoke against deployed container",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ══ Vision MCP PAT + erase smoke ══ http://127.0.0.1:3200/mcp
+> 
+>    user1=8e2dfaee-6780-411d-982a-e6f1e99692d2
+> 
+> ✅ P1 — mesh_search via PAT(mesh:read) → matches=5
+> ✅ P2 — {"error":"scope_insufficient","layer":"identity","required_scope":"dee | balance 50→50
+> ✅ P3 — revoked PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P4 — expired PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P5 — JWT deepsearch_poll → {"error":"job_not_found","layer":"tool"} (not scope_insufficient)
+> ❌ E1 — erase={"code":"42501","details":null,"hint":"This prevents acciden | nodes left=2 artifact left=1 (both must be 0)
+> ✅ E2 — cross-tenant erase → {"code":"P0002","details":null,"hint":null,"messag | u1 node intact=true
+> 
+> ══ RESULT: 6/7 steps passed ══
+> ```
+
+## 🤖 Claude *(14:56:04)*
+
+
+## 🤖 Claude *(14:56:09)*
+
+6/7 — **PAT 100% (P1-P5 ✅), E2 cross-tenant ✅**. E1 falhou com **42501** no `DELETE FROM storage.objects`: o owner da função SECURITY DEFINER (role do Management API) **não tem privilégio** sobre `storage.objects` — mesma trava de ownership do storage no Supabase. 
+
+Isso é uma correção de realidade-de-apply legítima: no Supabase, objetos de Storage se deletam via **Storage API** (service-role), não por SQL cru numa função de schema `public` (é assim que o resto do projeto faz — canvas/generated-videos deletam via API). Corrijo o RPC: cascade DB (edges/nodes/row) + **retorna `storage_paths`** pro caller deletar via API; o sweep faz a remoção via Storage API.
+
+## 🤖 Claude *(14:56:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql",
+  "old_string": "  DELETE FROM public.mcorch_nodes\n   WHERE id = ANY(v_artifact.node_ids)\n     AND user_id = v_artifact.user_id;                           -- leva o embedding junto\n  DELETE FROM storage.objects\n   WHERE bucket_id = 'vision-artifacts' AND name = ANY(v_artifact.storage_paths);\n  DELETE FROM public.vision_artifacts WHERE id = v_artifact.id;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'nodes', COALESCE(array_length(v_artifact.node_ids, 1), 0),\n    'storage_objects', COALESCE(array_length(v_artifact.storage_paths, 1), 0),\n    'provider_copies_registered', v_artifact.provider_copies\n  );\nEND $$;",
+  "new_string": "  DELETE FROM public.mcorch_nodes\n   WHERE id = ANY(v_artifact.node_ids)\n     AND user_id = v_artifact.user_id;                           -- leva o embedding junto\n  -- Storage objects are NOT deleted here: storage.objects is owned by the Supabase storage-admin role, so a\n  -- public-schema SECURITY DEFINER function (owned by a non-storage-admin) gets 42501 on a raw DELETE \u2014 even\n  -- for 0 rows. Per the project's storage pattern (generated-videos/canvas-assets delete via the Storage API,\n  -- not SQL), we RETURN storage_paths so the CALLER (container erase-broker / retention-sweep, service-role)\n  -- removes them via the Storage API. The DB cascade (edges/nodes/+embedding/artifact row) IS atomic here.\n  DELETE FROM public.vision_artifacts WHERE id = v_artifact.id;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'nodes', COALESCE(array_length(v_artifact.node_ids, 1), 0),\n    'storage_objects', COALESCE(array_length(v_artifact.storage_paths, 1), 0),\n    'storage_paths', to_jsonb(v_artifact.storage_paths),   -- caller deletes these via the Storage API\n    'provider_copies_registered', v_artifact.provider_copies\n  );\nEND $$;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:56:23)*
+
+
+## 🤖 Claude *(14:56:24)*
+
+Re-aplicando o RPC corrigido + re-smoke:
+
+## 🤖 Claude *(14:56:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nbody=$(python3 -c \"import json,sys; print(json.dumps({'query': open(sys.argv[1]).read()}))\" supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql)\nprintf \"RE-APPLY erase RPC \u2192 \"; curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$body\"; echo \"\"\nset -a; . ./.env; set +a\necho \"=== re-run smoke ===\"\nbun run scripts/qa/smoke-vision-pat-erase.ts 2>&1 | tail -12",
+  "description": "Re-apply corrected erase RPC + re-run smoke",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RE-APPLY erase RPC → []
+> === re-run smoke ===
+> 
+>    user1=600d1f67-78dd-4ff5-9446-b9bc48ee2759
+> 
+> ✅ P1 — mesh_search via PAT(mesh:read) → matches=5
+> ✅ P2 — {"error":"scope_insufficient","layer":"identity","required_scope":"dee | balance 50→50
+> ✅ P3 — revoked PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P4 — expired PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P5 — JWT deepsearch_poll → {"error":"job_not_found","layer":"tool"} (not scope_insufficient)
+> ✅ E1 — erase={"nodes":2,"erased":true,"storage_paths":[],"storage_objects | nodes left=0 artifact left=0 (both must be 0)
+> ✅ E2 — cross-tenant erase → {"code":"P0002","details":null,"hint":null,"messag | u1 node intact=true
+> 
+> ══ RESULT: 7/7 steps passed ══
+> ```
+
+## 🤖 Claude *(14:56:58)*
+
+
+## 🤖 Claude *(14:57:00)*
+
+**7/7** ✅ — E1 zero-residue (nodes left=0, artifact left=0), E2 tenant-guard (P0002 + u1 node intacto), PAT 5/5. Completando o sweep com a remoção de Storage via API (pros paths retornados, quando houver):
+
+## 🤖 Claude *(14:57:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts",
+  "old_string": "  let erased = 0;\n  for (const r of rows) {\n    try {\n      const e = await fetch(`${SUPABASE_URL}/rest/v1/rpc/erase_vision_artifacts`, {\n        method: \"POST\",\n        headers: svc(),\n        body: JSON.stringify({ p_content_ref: r.content_ref }),\n      });\n      if (e.ok) erased++;\n      else process.stderr.write(`[vision-mcp][degraded] retention_erase_failed http=${e.status}\\n`);\n    } catch (err) {\n      process.stderr.write(`[vision-mcp][degraded] retention_erase_threw err=${String(err)}\\n`);\n    }\n  }",
+  "new_string": "  let erased = 0;\n  for (const r of rows) {\n    try {\n      const e = await fetch(`${SUPABASE_URL}/rest/v1/rpc/erase_vision_artifacts`, {\n        method: \"POST\",\n        headers: svc(),\n        body: JSON.stringify({ p_content_ref: r.content_ref }),\n      });\n      if (e.ok) {\n        erased++;\n        // RPC does the DB cascade; it returns storage_paths for us to remove via the Storage API (storage.objects\n        // is storage-admin-owned \u2014 not deletable by the RPC's SECURITY DEFINER owner). Mirrors the project pattern.\n        const body = (await e.json().catch(() => null)) as { storage_paths?: string[] } | null;\n        await removeStorageObjects(body?.storage_paths ?? []);\n      } else {\n        process.stderr.write(`[vision-mcp][degraded] retention_erase_failed http=${e.status}\\n`);\n      }\n    } catch (err) {\n      process.stderr.write(`[vision-mcp][degraded] retention_erase_threw err=${String(err)}\\n`);\n    }\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:57:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts",
+  "old_string": "const svc = () => ({ apikey: SB_SECRET_KEY, Authorization: `Bearer ${SB_SECRET_KEY}`, \"Content-Type\": \"application/json\" });",
+  "new_string": "const svc = () => ({ apikey: SB_SECRET_KEY, Authorization: `Bearer ${SB_SECRET_KEY}`, \"Content-Type\": \"application/json\" });\n\n/** Remove storage objects via the Storage API (service-role). storage.objects is storage-admin-owned, so the\n * erase RPC can't DELETE it in SQL \u2014 the caller removes the returned paths here. Best-effort; never throws. */\nasync function removeStorageObjects(paths: string[]): Promise<void> {\n  if (!Array.isArray(paths) || paths.length === 0) return;\n  try {\n    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/vision-artifacts`, {\n      method: \"DELETE\",\n      headers: svc(),\n      body: JSON.stringify({ prefixes: paths }),\n    });\n    if (!r.ok) process.stderr.write(`[vision-mcp][degraded] retention_storage_remove_failed http=${r.status}\\n`);\n  } catch (e) {\n    process.stderr.write(`[vision-mcp][degraded] retention_storage_remove_threw err=${String(e)}\\n`);\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/jobs/retention-sweep.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:57:20)*
+
+
+## 🤖 Claude *(14:57:21)*
+
+Sweep completo. Agora a **vhost nginx** — lendo a config existente pra espelhar o estilo:
+
+## 🤖 Claude *(14:57:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/www.mcorch.com.conf"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 1. REDIRECIONAMENTO DE NON-WWW
+> 2	server {
+> 3	  listen 80;
+> 4	  listen [::]:80;
+> 5	  listen 443 quic;
+> 6	  listen 443 ssl;
+> 7	  listen [::]:443 quic;
+> 8	  listen [::]:443 ssl;
+> 9	  http2 on;
+> 10	  http3 off;
+> 11	  ssl_certificate_key /etc/nginx/ssl-certificates/www.mcorch.com.key;
+> 12	  ssl_certificate /etc/nginx/ssl-certificates/www.mcorch.com.crt;
+> 13	  server_name mcorch.com;
+> 14	  return 301 https://www.mcorch.com$request_uri;
+> 15	}
+> 16	
+> 17	# 2. BLOCO EXCLUSIVO PARA O SEU SAAS (login.mcorch.com)
+> 18	server {
+> 19	  listen 80;
+> 20	  listen [::]:80;
+> 21	  listen 443 quic;
+> 22	  listen 443 ssl;
+> 23	  listen [::]:443 quic;
+> 24	  listen [::]:443 ssl;
+> 25	  http2 on;
+> 26	  http3 off;
+> 27	  ssl_certificate_key /etc/nginx/ssl-certificates/www.mcorch.com.key;
+> 28	  ssl_certificate /etc/nginx/ssl-certificates/www.mcorch.com.crt;
+> 29	  server_name login.mcorch.com;
+> 30	  
+> 31	  root /home/gcrUX/htdocs/constellation-orchestra/dist;
+> 32	  index index.html;
+> 33	
+> 34	  access_log /home/gcrUX/logs/nginx/access.log main;
+> 35	  error_log /home/gcrUX/logs/nginx/error.log;
+> 36	
+> 37	    # --- Servir a Landing Page de Alta Fidelidade diretamente no root / ---
+> 38	  location = / {
+> 39	    root /home/gcrUX/htdocs/constellation-orchestra/miv;
+> 40	    try_files /Landing.html =404;
+> 41	  }
+> 42	
+> 43	  # --- MIV standalone app served from project root /miv/ ---
+> 44	  location /miv/ {
+> 45	    alias /home/gcrUX/htdocs/constellation-orchestra/miv/;
+> 46	    index index.html;
+> 47	    try_files $uri $uri/ /miv/index.html;
+> 48	  }
+> 49	
+> 50	  location / {
+> 51	    try_files $uri $uri/ /index.html;
+> 52	  }
+> 53	
+> 54	  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 55	    expires max;
+> 56	    access_log off;
+> 57	    try_files $uri =404;
+> 58	  }
+> 59	}
+> 60	
+> 61	# 3. BLOCO DO WORDPRESS (www.mcorch.com)
+> 62	server {
+> 63	  listen 80;
+> 64	  listen [::]:80;
+> 65	  listen 443 quic;
+> 66	  listen 443 ssl;
+> 67	  listen [::]:443 quic;
+> 68	  listen [::]:443 ssl;
+> 69	  http2 on;
+> 70	  http3 off;
+> 71	  ssl_certificate_key /etc/nginx/ssl-certificates/www.mcorch.com.key;
+> 72	  ssl_certificate /etc/nginx/ssl-certificates/www.mcorch.com.crt;
+> 73	  server_name www.mcorch.com www1.mcorch.com;
+> 74	  root /home/gcrUX/htdocs/www.mcorch.com;
+> 75	
+> 76	  access_log /home/gcrUX/logs/nginx/access.log main;
+> 77	  error_log /home/gcrUX/logs/nginx/error.log;
+> 78	
+> 79	  if ($scheme != "https") {
+> 80	    rewrite ^ https://$host$request_uri permanent;
+> 81	  }
+> 82	
+> 83	  location ~ /.well-known {
+> 84	    auth_basic off;
+> 85	    allow all;
+> 86	  }
+> 87	
+> 88	  
+> 89	
+> 90	  location ~/\.git {
+> 91	    deny all;
+> 92	  }
+> 93	
+> 94	  location = /xmlrpc.php {
+> 95	    deny all;
+> 96	  }
+> 97	
+> 98	  location ~/(wp-admin/|wp-login.php) {
+> 99	    proxy_set_header X-Real-IP $remote_addr;
+> 100	    proxy_set_header X-Forwarded-For $remote_addr;
+> 101	    proxy_set_header X-Forwarded-Host $host;
+> 102	    proxy_set_header Host $host;
+> 103	    proxy_pass http://127.0.0.1:8080;
+> 104	    proxy_max_temp_file_size 0;
+> 105	    proxy_connect_timeout      7200;
+> 106	    proxy_send_timeout         7200;
+> 107	    proxy_read_timeout         7200;
+> 108	    proxy_buffer_size          128k;
+> 109	    proxy_buffers              4 256k;
+> 110	    proxy_busy_buffers_size    256k;
+> 111	    proxy_temp_file_write_size 256k;
+> 112	  }
+> 113	
+> 114	  location / {
+> 115	    proxy_pass http://127.0.0.1:8080;
+> 116	    proxy_set_header Host $host;
+> 117	    proxy_set_header X-Forwarded-Host $host;
+> 118	    proxy_set_header X-Real-IP $remote_addr;
+> 119	    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+> 120	    proxy_hide_header X-Varnish;
+> 121	    proxy_redirect off;
+> 122	    proxy_max_temp_file_size 0;
+> 123	    proxy_connect_timeout      720;
+> 124	    proxy_send_timeout         720;
+> 125	    proxy_read_timeout         720;
+> 126	    proxy_buffer_size          128k;
+> 127	    proxy_buffers              4 256k;
+> 128	    proxy_busy_buffers_size    256k;
+> 129	    proxy_temp_file_write_size 256k;
+> 130	  }
+> 131	
+> 132	  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 133	    rewrite ^/[_0-9a-zA-Z-]+(/wp-.*) $1 break;
+> 134	    rewrite ^/[_0-9a-zA-Z-]+(/.*\.php)$ $1 break;
+> 135	    add_header Access-Control-Allow-Origin "*";
+> 136	    add_header alt-svc 'h3=":443"; ma=86400';
+> 137	    expires max;
+> 138	    access_log off;
+> 139	  }
+> 140	
+> 141	  if (-f $request_filename) {
+> 142	    break;
+> 143	  }
+> 144	}
+> 145	
+> 146	# 4. BACKEND PHP (Porta 8080)
+> 147	server {
+> 148	  listen 8080;
+> 149	  listen [::]:8080;
+> 150	  server_name www.mcorch.com www1.mcorch.com;
+> 151	  root /home/gcrUX/htdocs/www.mcorch.com;
+> 152	
+> 153	  include /etc/nginx/global_settings;
+> 154	
+> 155	  # ---> A CORREÇÃO DO 403 ESTÁ AQUI <---
+> 156	  try_files $uri $uri/ /index.php?$args;
+> 157	  index index.php index.html;
+> 158	
+> 159	  location ~ \.php$ {
+> 160	    include fastcgi_params;
+> 161	    fastcgi_intercept_errors on;
+> 162	    fastcgi_index index.php;
+> 163	    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+> 164	    try_files $uri =404;
+> 165	    fastcgi_read_timeout 3600;
+> 166	    fastcgi_send_timeout 3600;
+> 167	    fastcgi_param HTTPS "on";
+> 168	    fastcgi_param SERVER_PORT 443;
+> 169	    fastcgi_pass 127.0.0.1:18001;
+> 170	    fastcgi_param PHP_VALUE "
+> 171	error_log=/home/gcrUX/logs/php/error.log;
+> 172	memory_limit=512M;
+> 173	max_execution_time=60;
+> 174	max_input_time=60;
+> 175	max_input_vars=10000;
+> 176	post_max_size=64M;
+> 177	upload_max_filesize=64M;
+> 178	date.timezone=UTC;
+> 179	display_errors=off;";
+> 180	  }
+> 181	
+> 182	  if (!-e $request_filename) {
+> 183	    rewrite /wp-admin$ https://$host$uri permanent;
+> 184	    rewrite ^/[_0-9a-zA-Z-]+(/wp-.*) $1 last;
+> 185	    rewrite ^/[_0-9a-zA-Z-]+(/.*\.php)$ $1 last;
+> 186	  }
+> 187	
+> 188	  if (-f $request_filename) {
+> 189	    break;
+> 190	  }
+> 191	}
+> 192	
+> ```
+
+## 🤖 Claude *(14:57:45)*
+
+
+## 🤖 Claude *(14:57:47)*
+
+CloudPanel-managed (vhosts via painel + cert por subdomínio). Vou entregar a config canônica SSE-tuned + runbook (ativação = seu DNS Cloudflare + cert/CloudPanel):
+
+## 🤖 Claude *(14:58:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/mcp.mcorch.com.conf",
+  "content": "# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Vision MCP \u2014 reverse proxy vhost for mcp.mcorch.com \u2192 loopback container :3200\n# OTD-VM-013 (SDD \u00a76 / NFR-VM-003). The container (mcorch_vision_mcp) listens only on\n# 127.0.0.1:3200 (compose publish); this vhost is the ONLY external path.\n#\n# SSE-tuned: Streamable HTTP MCP uses long-lived SSE streams (deepsearch.run jobs run minutes), so\n# proxy_buffering MUST be off, timeouts long, and the container emits a heartbeat \u226425s to stay under\n# Cloudflare's ~100s idle cap. Identity (ES256 JWT / PAT) + Origin allowlist are enforced INSIDE the\n# container \u2014 this vhost only transports; it must pass Authorization + Origin + Host through untouched.\n# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nserver {\n  listen 80;\n  listen [::]:80;\n  listen 443 quic;\n  listen 443 ssl;\n  listen [::]:443 quic;\n  listen [::]:443 ssl;\n  http2 on;\n  http3 off;\n\n  # \u26a0\ufe0f Provision a cert for THIS subdomain before enabling (see runbook below). The www.mcorch.com cert\n  # does NOT cover mcp.mcorch.com unless it is a wildcard (*.mcorch.com). Placeholder paths:\n  ssl_certificate_key /etc/nginx/ssl-certificates/mcp.mcorch.com.key;\n  ssl_certificate     /etc/nginx/ssl-certificates/mcp.mcorch.com.crt;\n\n  server_name mcp.mcorch.com;\n\n  access_log /home/gcrUX/logs/nginx/mcp-access.log main;\n  error_log  /home/gcrUX/logs/nginx/mcp-error.log;\n\n  # Force HTTPS.\n  if ($scheme != \"https\") {\n    rewrite ^ https://$host$request_uri permanent;\n  }\n\n  # MCP endpoint + health + RFC 9728 PRM \u2014 all served by the container.\n  location / {\n    proxy_pass http://127.0.0.1:3200;\n\n    proxy_http_version 1.1;\n    proxy_set_header Connection \"\";              # keepalive (no Upgrade) \u2014 Streamable HTTP SSE over HTTP/1.1\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    # Pass auth + origin through untouched \u2014 the container gates on these (FR-VM-001/002/003).\n    proxy_set_header Authorization     $http_authorization;\n    proxy_set_header Origin            $http_origin;\n\n    # SSE essentials: never buffer/cache the stream; allow minute-long jobs + long-lived streams.\n    proxy_buffering        off;\n    proxy_cache            off;\n    proxy_request_buffering off;\n    chunked_transfer_encoding on;\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n    proxy_connect_timeout  30s;\n  }\n}\n\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# RUNBOOK \u2014 activation (Sovereign action: DNS is the Cloudflare account; cert needs DNS first)\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# 1. DNS (Cloudflare): add an A record  mcp  \u2192  <server public IP>  (same IP as login.mcorch.com).\n#    SSE caveat: either set the record to \"DNS only\" (grey cloud) OR, if proxied (orange), confirm the\n#    container heartbeat (\u226425s) keeps the stream under CF's ~100s idle timeout. The Origin allowlist in the\n#    container is already ORIGIN_ALLOWLIST=https://mcp.mcorch.com (compose) \u2014 no change needed.\n# 2. Cert: easiest via CloudPanel \u2192 Add Site \u2192 Reverse Proxy \"mcp.mcorch.com\" \u2192 target http://127.0.0.1:3200,\n#    which provisions the Let's Encrypt cert + generates the vhost (then graft the SSE block above into it),\n#    OR manually:  certbot certonly --nginx -d mcp.mcorch.com   (requires DNS resolving first).\n# 3. Install + reload:  cp nginx/mcp.mcorch.com.conf /etc/nginx/sites-enabled/  (or the CloudPanel vhost path)\n#    then:  sudo nginx -t && sudo systemctl reload nginx\n# 4. Verify (material):\n#    curl -s https://mcp.mcorch.com/health                      # \u2192 {\"status\":\"ok\",\"tools\":[...7 tools]}\n#    curl -s -o /dev/null -w \"%{http_code}\\n\" https://mcp.mcorch.com/mcp      # \u2192 401 (no bearer) = gate live\n#    curl -s https://mcp.mcorch.com/.well-known/oauth-protected-resource      # \u2192 RFC 9728 PRM JSON\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/nginx/mcp.mcorch.com.conf (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:58:14)*
+
+
+## 🤖 Claude *(14:58:15)*
+
+Config + runbook entregues. tsc + testes (após sweep change) + rebuild/deploy final + re-smoke:
+
+## 🤖 Claude *(14:58:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core && echo \"=== tsc ===\" && npx tsc -p tsconfig.json --noEmit 2>&1 | tail -8 && echo \"TSC=${PIPESTATUS[0]:-$?}\" && echo \"=== vitest ===\" && npx vitest run 2>&1 | tail -8\ncd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== rebuild+deploy ===\"; docker compose build mcorch-vision-mcp 2>&1 | tail -2; docker compose up -d mcorch-vision-mcp 2>&1 | tail -1; sleep 6\ndocker inspect mcorch_vision_mcp --format 'image={{.Image}} status={{.State.Health.Status}}'\nset -a; . ./.env; set +a\necho \"=== re-smoke (served artifact) ===\"; bun run scripts/qa/smoke-vision-pat-erase.ts 2>&1 | tail -10",
+  "description": "tsc+tests, final rebuild/deploy, re-smoke",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> TSC=0
+> === vitest ===
+>  ✓ src/__tests__/gates.test.ts (15 tests) 12ms
+>  ✓ src/__tests__/pat.test.ts (4 tests) 5ms
+> 
+>  Test Files  4 passed (4)
+>       Tests  50 passed (50)
+>    Start at  11:58:22
+>    Duration  1.04s (transform 322ms, setup 0ms, collect 746ms, tests 81ms, environment 1ms, prepare 781ms)
+> 
+> === rebuild+deploy ===
+> #21 DONE 0.0s
+>  Image constellation-orchestra-mcorch-vision-mcp Built 
+>  Container mcorch_vision_mcp Started 
+> image=sha256:fda2784fcccbdc97e1b8be629910d2937aec397ec0f92ff7bd4b222f354f9303 status=healthy
+> === re-smoke (served artifact) ===
+> 
+> ✅ P1 — mesh_search via PAT(mesh:read) → matches=5
+> ✅ P2 — {"error":"scope_insufficient","layer":"identity","required_scope":"dee | balance 50→50
+> ✅ P3 — revoked PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P4 — expired PAT → Error: Streamable HTTP error: Error POSTing to endpoint: {"e
+> ✅ P5 — JWT deepsearch_poll → {"error":"job_not_found","layer":"tool"} (not scope_insufficient)
+> ✅ E1 — erase={"nodes":2,"erased":true,"storage_paths":[],"storage_objects | nodes left=0 artifact left=0 (both must be 0)
+> ✅ E2 — cross-tenant erase → {"code":"P0002","details":null,"hint":null,"messag | u1 node intact=true
+> 
+> ══ RESULT: 7/7 steps passed ══
+> ```
+
+## 🤖 Claude *(14:58:46)*
+
+
+## 🤖 Claude *(14:58:47)*
+
+Final: image `fda2784f` healthy · pkg **50/50** · smoke **7/7** LIVE. Agora o gate mandatório **`/security-review`** independente sobre as 3 migrations + o código PAT/scope/erase:
+
+## 🤖 Claude *(14:59:10)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review Fatia 3 PAT+erase",
+  "subagent_type": "general-purpose",
+  "prompt": "Senior security review of one feature's diff in the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra. Only flag HIGH-CONFIDENCE (>=8/10), concretely-exploitable vulnerabilities NEWLY introduced. Read the actual files.\n\nSCOPE (read fully):\n- supabase/migrations/20260615180000_vision_mcp_access_tokens.sql  (PAT table: SHA-256 hash, closed-scope allowlist CHECK, expiry ceiling, RLS own-only)\n- supabase/migrations/20260615190000_vision_mcp_artifacts.sql       (vision_artifacts SELECT-own RLS + private Storage bucket)\n- supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql       (erase_vision_artifacts SECURITY DEFINER cascade \u2014 auth.uid() guard + per-DELETE user_id re-scope)\n- packages/vision-mcp-core/src/auth/pat.ts        (verifyPat: hash lookup, revoked/expiry check)\n- packages/vision-mcp-core/src/auth/identity.ts   (verifyBearer dispatch PAT vs JWT; JWT \u2192 ALL_SCOPES)\n- packages/vision-mcp-core/src/mcp/server.ts       (requireScope per-tool gate; ALS carries scopes)\n- packages/vision-mcp-core/src/jobs/retention-sweep.ts (daily sweep \u2192 erase RPC + Storage API remove)\n\nCONTEXT: Vision MCP is a tenant-facing MCP container. Identity is a verified `sub` (NEVER from input) \u2014 either an ES256 Supabase JWT (internal tenant \u2192 full scopes) OR a PAT bearer `mcorch_pat_\u2026` (external \u2192 its sealed scope subset). The container talks to Supabase via the service key (bypasses RLS). PATs grant wallet-spending tool access (FM-VM-06: PAT leak = wallet drain). erase_vision_artifacts is LGPD-critical (must not become a cross-tenant deletion primitive).\n\nFOCUS especially on:\n1. **PAT privilege escalation / forgery:** Can a tenant mint a PAT with scopes beyond the allowlist, or for another user_id? Verify the DB CHECK `scopes_allowed` (allowlist <@) + RLS insert-own actually bind. Can verifyPat be tricked (hash collision is infeasible; but: does it accept a revoked/expired token? does it trust scopes from anywhere but the row? could a non-PAT JWT accidentally get full scopes it shouldn't, or vice-versa)?\n2. **Scope-gate bypass:** Can a PAT call a tool outside its scopes (requireScope reads ALS scopes \u2014 is it always set before the tool? could a missing/empty scopes array default-allow)? Is the JWT\u2192ALL_SCOPES grant correct (an internal tenant operating on its OWN resources)?\n3. **erase_vision_artifacts cross-tenant:** SECURITY DEFINER bypasses RLS. Verify EVERY cascade DELETE re-scopes by user_id=v_artifact.user_id so a poisoned node_ids[] can't delete another tenant's mesh. Verify the auth.uid() guard. Can a tenant erase another tenant's artifact (should be artifact_not_found)? EXECUTE grants correct (revoked from anon/PUBLIC)?\n4. **RLS:** mcp_access_tokens + vision_artifacts \u2014 can a tenant read another tenant's tokens (token_hash leak = impersonation!) or artifacts? Is there any write policy that lets a tenant forge a token row for another user?\n5. **PAT tenant-binding:** a PAT's sub reaches only its own resources (the tool handlers scope by sub) \u2014 confirm no path where a PAT escalates to another tenant.\n\nEXCLUSIONS (do NOT report): DoS/rate-limit/resource-exhaustion; secrets-at-rest; outdated deps; theoretical races; SSRF that only controls a path; prompt-injection of AI prompts; regex injection; log spoofing; findings in docs/markdown; lack-of-hardening; memory safety. Unit/test files out of scope. UUIDs unguessable. Env vars trusted.\n\nCompare against the established pattern: supabase/migrations/20260603000000_marketing_hub_lead_core.sql (erase_lead tenant guard) + the just-shipped 20260615160000_vision_mcp_jobs.sql (finalize_vision_job) + auth/credentials.ts (sub provenance).\n\nSELF-FILTER to confidence >=8. Output ONLY a markdown report per finding:\n# Vuln N: <CATEGORY>: `file:line`\n* Severity / Confidence / Description / Exploit Scenario / Recommendation\n\nIf no findings >=8, output exactly: \"## SECURITY REVIEW: SAFE \u2014 no findings at confidence >=8\" + a 3-4 sentence justification of what you verified (PAT allowlist+RLS, scope-gate, erase tenant guard + grants, token_hash isolation)."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
