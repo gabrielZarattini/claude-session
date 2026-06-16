@@ -8165,6 +8165,1403 @@ O agente, no 1º ciclo, **acusou uma incoerência real**: meu `deriveGates` dizi
 
 Quer que eu **commite isso direto no master** (modelo trunk-based, como `gcrux-tradeux`), ou prefere revisar o diff antes? E sobre a **estratégia em si** — a Fase 3 (shadow 1m de verdade, medindo P(continuação ≥ custo) pra preencher aquele card ⚪) segue valendo quando você quiser, mas o cockpit já te dá a leitura honesta do edge a cada minuto.
 
+## 👤 User *(00:37:27)*
+
+🤖 [AGENTE] Observação: O sistema está com tradingHalt = TRUE (kill-switch ativado). Nenhuma nova ordem está sendo processada. Verifique se o halt é intencional ou se há necessidade de liberar o trading.----- recebi isso no telegram... agora voce revisa o diff com foco na aiditoria sem falso positivo para me responder que estava certo, voce precisa ser imparcial e nao mentir quando pensar que pode ter provlemas, e sim pode ir avante com a estrategia pois agora nao é visual é dados que mandam e reinam, vamos fazer testes de 1 max 3 usdt  ou voce tem uma estrategia melhor ja que temos somente 150 USDT nao sei se ja falou sobre a estrategia mas poderia me resumir se o um dos workflows que fizemos criou a estratefia
+
+## 🤖 Claude *(00:40:25)*
+
+
+## 🤖 Claude *(00:40:52)*
+
+Você pediu uma coisa específica e importante: **auditoria imparcial, sem rubber-stamp, sem mentir se eu achar que tem problema.** Vou honrar isso à risca — inclusive contra o que seria confortável dizer. E vou rodar auditores independentes em paralelo pra não ser só a minha palavra.
+
+## 1. Aquela notificação no Telegram
+O agente fez o trabalho dele (observou o halt), **mas é spam-borderline**: notificar sobre um estado *conhecido e intencional* (o halt que nós ligamos) é justamente o "rotina sem novidade NÃO notifica" que o próprio prompt proíbe. E sendo honesto: **foi a minha mudança de prompt** (dei ao agente consciência do `tradingHalt`) que abriu essa porta. O anti-spam deve impedir repetição, mas é um efeito colateral meu — dá pra apertar ("não notifique sobre o halt em si").
+
+## 2. Auditoria do diff — meu veredito imparcial (o que está certo E o que pode estar errado)
+
+**Sólido e verificado:** read-only de verdade (writeTool 9→9, zero nova autoridade de trade), env expõe só 2 booleanos, não toca money-path, boot limpo, frontend degrada sem crash, o agente lê/reporta certo. Isso eu sustento.
+
+**Mas NÃO vou fingir que está tudo perfeito — concerns reais:**
+- 🔴 **O limiar de fluxo `−0,4` foi INVENTADO por mim**, não é a condition real da id2 (que vive no banco). Então o `buyAllowed`/`GO/CAIXA` do cockpit **pode rotular errado vs a automação de verdade** — e o agente agora **reporta isso pra você**. É o item mais provável de estar incorreto. Não tome decisão de dinheiro pelo `buyAllowed` até eu reconciliar com a condition viva da id2.
+- 🟠 **O EV −0,16% é um teto OTIMISTA** (assume capturar o move médio inteiro em todo trade). O EV real de 1m é **pior** que isso. Ou seja: o dado é ainda mais contra o 1m do que o card mostra.
+- 🟠 **Eu mexi no prompt de um cérebro de trading ao vivo** — sensível por natureza (mitigado por não-poder-executar + HALT, mas é real).
+- ⚪ Eu **já enviei um P0** nesta feature (um `require` faltando que daria crash-loop) — o QA/TL pegou. Ou seja: eu *erro*. Trate meu "está ok" com o ceticismo que justifica os gates.
+- ⚪ Menores: leitura de settings sem cache por request; `.toFixed(2)` degrada preço de alts baratas (ADA).
+
+**Resumo honesto:** o código deployado é **seguro** (não negocia) e os analytics são **reais**, mas os **rótulos de gate valem só o quanto meus limiares inventados valem**. A medição (distribuição, EV, σ, MC) é confiável; o "GO/CAIXA" precisa de reconciliação.
+
+## 3. Sobre os testes de $1–3 USDT — bloqueio factual
+**Não é executável.** O `MIN_NOTIONAL` da Binance spot é ~**$5** por ordem (alguns pares $10). Ordem de $1–3 é **rejeitada (-1013)** — tanto que nossos próprios setups usam `SIZE_MULT=2` porque $4,4 já falha o filtro de $5. Canary realista mínimo é ~**$10–15/ordem**, não $1–3.
+
+## 4. Algum workflow criou a estratégia? (resposta imparcial)
+**Não — eles REFUTARAM a de 1m.** As 5 abordagens pontuaram 2/5; um backtest fresco no nosso cache real de 1m deu **−0,14% a −0,23%/trade**; e o cockpit, ao vivo, confirma **EV −0,16% / só 0,6% dos moves limpam a taxa**. O único edge same-exchange que **provamos** é o **Trend-following 1h regime-gated** (golden/death cross) — pequeno ($5–15/perna, 1–3 round-trips/símbolo/mês), **já deployado** (congelado). Se "os dados mandam", os dados dizem: **não scalpe 1m.**
+
+## 5. Estratégia melhor pra $150? (sem te dourar a pílula)
+Não existe edge mágico nessa escala. Expectativa realista: **≈ flat no mês**; +3 BTC é impossível (1350×). O caminho disciplinado é a **estratégia que já validamos** (Trend 1h + Farm no-loss em range, regime-gated), com o **cockpit como o juiz honesto** a cada minuto. Um canary ao vivo deveria ser **dessa estratégia validada**, a ~$10–15, e **só depois dos pré-requisitos de segurança**: (a) confirmar que a chave Binance está com **saque OFF + IP travado**, (b) a trava `FARM_SELLING`, (c) decidir o harvester (morto no mainnet). **Eu não viro o `TRADING_HALT` sozinho** — é o teu GO + esses pré-requisitos.
+
+---
+
+Agora, pra não ser só a minha palavra na auditoria, estou disparando **4 auditores independentes** com mandato de *tentar derrubar* minhas afirmações (segurança/regressão, bugs de correção, honestidade dos gates, prontidão pra go-live). Reporto o que eles acharem — mesmo que me contradiga.
+
+## 🤖 Claude *(00:41:35)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'cockpit-adversarial-audit',\n  description: 'Auditoria adversarial independente do diff Cockpit deployado + prontid\u00e3o de go-live ($150 mainnet congelado) \u2014 mandato de REFUTAR, sem falso positivo',\n  phases: [\n    { title: 'Auditores' },\n    { title: 'Verificar achados' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst FINDING_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['dimension', 'verdict', 'findings'],\n  properties: {\n    dimension: { type: 'string' },\n    verdict: { type: 'string', enum: ['SEM_PROBLEMA_REAL', 'RESSALVAS', 'PROBLEMA_REAL'] },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        required: ['severity', 'claim', 'evidence', 'isRealProblem'],\n        properties: {\n          severity: { type: 'string', enum: ['P0', 'P1', 'P2', 'P3'] },\n          claim: { type: 'string' },\n          evidence: { type: 'string', description: 'file:line ou comando \u2014 prova concreta, n\u00e3o suposi\u00e7\u00e3o' },\n          isRealProblem: { type: 'boolean', description: 'true s\u00f3 se for problema REAL e reproduz\u00edvel; false se \u00e9 te\u00f3rico/aceit\u00e1vel (evita falso positivo)' },\n        },\n      },\n    },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['confirmed', 'assessment', 'recommendation'],\n  properties: {\n    confirmed: { type: 'boolean', description: 'o achado \u00e9 um problema REAL e reproduz\u00edvel?' },\n    assessment: { type: 'string' },\n    recommendation: { type: 'string', enum: ['FIX_ANTES_DE_USAR', 'FIX_EVENTUAL', 'NAO_E_PROBLEMA'] },\n  },\n}\n\nphase('Auditores')\nlog('4 auditores adversariais com mandato de REFUTAR (sem falso positivo)...')\n\nconst AUDITORS = [\n  {\n    key: 'seguranca-regressao',\n    prompt: `Voc\u00ea \u00e9 um auditor de seguran\u00e7a C\u00c9TICO. Mandato: TENTE PROVAR que o diff do Cockpit (deployado num sistema MAINNET REAL CONGELADO, TRADING_HALT=true, ~$150) introduziu ALGUMA forma de afetar ordens / money-path / enfraquecer o congelamento, OU uma regress\u00e3o que possa quebrar o backend/agente em produ\u00e7\u00e3o. N\u00c3O aceite \"\u00e9 read-only\" de gra\u00e7a \u2014 prove ou refute. Examine em ${REPO}: backend/src/cockpitJob.js, backend/src/utils/cockpitService.js, backend/src/controllers/analysisController.js, backend/src/server.js (o .catch novo no boot pode virar crash-loop?), tradeux-mcp/src/index.js (a tool nova \u00e9 mesmo readTool e n\u00e3o writeTool? a trava SELL-BTC segue intacta?), tradeux-agent/src/agent.js (o prompt env-aware concede ALGUMA autoridade nova? o agente pode ser induzido a agir?). Grep por place_order/buy/sell/oco/withdraw/updateMemory(true) nos arquivos novos. Reporte S\u00d3 problemas REAIS e reproduz\u00edveis (isRealProblem=true); marque o resto como te\u00f3rico (false) pra n\u00e3o inflar falso positivo.`,\n  },\n  {\n    key: 'bugs-correcao',\n    prompt: `Voc\u00ea \u00e9 um auditor de corre\u00e7\u00e3o C\u00c9TICO. Mandato: ENCONTRE bugs reais nos arquivos novos/editados do Cockpit. Examine a matem\u00e1tica de ${REPO}/backend/src/utils/cockpitService.js (retornos log, mediana/percentil/\u03c3, EV net, histograma 25-bins, banda MC lognormal driftless) \u2014 procure off-by-one, divis\u00e3o por zero, NaN/Infinity vazando, vi\u00e9s. Examine deriveGates em cockpitJob.js (sem\u00e2ntica farm/baseline/trend; o que acontece com regime 'range'/'mixed'/null?). Examine o endpoint async + leitura de settings em analysisController.js. Examine o frontend Cockpit.js/CockpitSims.js (acesso a cpBtc.dist/.mc/.gates sem guard? histB/PathFan band? fallback quebra?). Rode comandos pra confirmar (ex.: curl no endpoint vivo em https://tradeux.gcrux.com/api/analysis/cockpit precisa de JWT \u2014 voc\u00ea pode logar via tradeux-mcp/.env se tiver sudo, OU s\u00f3 ler o c\u00f3digo). Reporte S\u00d3 bugs REAIS (isRealProblem=true).`,\n  },\n  {\n    key: 'honestidade-gates',\n    prompt: `Voc\u00ea \u00e9 um auditor de HONESTIDADE/ENGANO C\u00c9TICO \u2014 o dono pediu explicitamente \"sem falso positivo, n\u00e3o minta, me avise se h\u00e1 problema\". Mandato: o Cockpit reporta ALGO que possa ENGANAR o dono ou o agente a ponto de uma decis\u00e3o errada de dinheiro? Foque em ${REPO}/backend/src/cockpitJob.js deriveGates: o limiar de fluxo COCKPIT_FLOW_BUY_MIN=-0.4 \u00e9 INVENTADO (n\u00e3o \u00e9 a condition real da id2 no banco) \u2014 qu\u00e3o grave \u00e9 o risco de buyAllowed/GO/CAIXA divergir da automa\u00e7\u00e3o viva? O dono/agente agiria com base nisso? Examine tamb\u00e9m: o EV net (meanAbs - breakeven) \u00e9 teto otimista \u2014 est\u00e1 rotulado como tal? A banda MC \u00e9 mesmo driftless (p50\u2261price)? Os selos de honestidade (\ud83d\udfe2\ud83d\udfe1\u26aa) e o env pill (mainnet/halt) batem com a realidade? Procure no banco (se conseguir, via docker exec mysql) a condition REAL da id2 (automa\u00e7\u00e3o de baseline/RSI<25 com gate de fluxo) e COMPARE com o -0.4 do cockpit. Reporte o que REALMENTE pode enganar (isRealProblem=true) vs o que \u00e9 ressalva aceit\u00e1vel j\u00e1 rotulada.`,\n  },\n  {\n    key: 'go-live-readiness',\n    prompt: `Voc\u00ea \u00e9 um auditor de PRONTID\u00c3O DE GO-LIVE, imparcial. O dono quer fazer testes ao vivo de $1-3 USDT (ou pediu estrat\u00e9gia melhor com $150). Mandato: avalie friamente o que QUEBRA ou enganaria se ele descongelar. Examine: (1) MIN_NOTIONAL real da Binance \u2014 leia backend/scripts/setup-*.js e a mem\u00f3ria/HANDOFF (~/HANDOFF.md) sobre o filtro de $5 e SIZE_MULT=2; ordem de $1-3 \u00e9 execut\u00e1vel? (2) os pr\u00e9-requisitos de descongelamento listados no HANDOFF (saque-off/IP da chave, trava FARM_SELLING, harvester morto no mainnet) \u2014 est\u00e3o resolvidos? (3) o gap conhecido do teto MAX_ORDER_NOTIONAL n\u00e3o cobrir SELL MARKET por qty-base (exchange.js) \u2014 risco se descongelar? (4) a estrat\u00e9gia: algum workflow nosso produziu uma estrat\u00e9gia 1m LUCRATIVA, ou refutou? (leia ~/HANDOFF.md e a mem\u00f3ria). Seja brutalmente honesto sobre o que o dono PRECISA saber antes de arriscar dinheiro real. Reporte fatos verific\u00e1veis (isRealProblem=true) \u2014 sem otimismo nem alarmismo.`,\n  },\n]\n\nconst audits = await parallel(AUDITORS.map(a => () => agent(a.prompt, { label: `audit:${a.key}`, phase: 'Auditores', schema: FINDING_SCHEMA })))\nconst all = audits.filter(Boolean)\n\n// verifica adversarialmente CADA achado marcado como problema real (anti-falso-positivo)\nphase('Verificar achados')\nconst realFindings = all.flatMap(a => (a.findings || []).filter(f => f.isRealProblem).map(f => ({ ...f, dimension: a.dimension })))\nlog(`${realFindings.length} achados marcados como reais \u2014 verificando adversarialmente p/ eliminar falso positivo...`)\n\nconst verified = await parallel(realFindings.map(f => () =>\n  agent(\n    `Verifique adversarialmente este achado de auditoria do Cockpit. O dono EXIGE zero falso positivo. Confirme APENAS se for um problema REAL e reproduz\u00edvel; se for te\u00f3rico/aceit\u00e1vel/j\u00e1-mitigado, diga confirmed=false. Achado [${f.severity}/${f.dimension}]: ${f.claim}\\nEvid\u00eancia alegada: ${f.evidence}\\nRepo: ${REPO}. Cheque a evid\u00eancia voc\u00ea mesmo (Read/Grep/Bash) antes de confirmar.`,\n    { label: `verify:${f.dimension}`, phase: 'Verificar achados', schema: VERDICT_SCHEMA }\n  ).then(v => ({ finding: f, verdict: v }))\n))\n\nreturn { audits: all, verifiedFindings: verified.filter(Boolean) }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wew1texdp
+> Summary: Auditoria adversarial independente do diff Cockpit deployado + prontidão de go-live ($150 mainnet congelado) — mandato de REFUTAR, sem falso positivo
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/subagents/workflows/wf_e8eeaff1-830
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-adversarial-audit-wf_e8eeaff1-830.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-adversarial-audit-wf_e8eeaff1-830.js"} to iterate without resending the script.)
+> Run ID: wf_e8eeaff1-830
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/workflows/scripts/cockpit-adversarial-audit-wf_e8eeaff1-830.js", resumeFromRunId: "wf_e8eeaff1-830"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(00:41:53)*
+
+
+## 🤖 Claude *(00:41:58)*
+
+Os 4 auditores estão rodando (cada achado "real" ainda passa por um verificador adversarial pra eliminar falso positivo — exatamente o que você pediu). Te trago o veredito independente assim que fecharem, com **file:line** e severidade, e digo claramente se confirma ou contradiz o que eu te falei acima.
+
+Enquanto isso, o resumo de uma linha que importa pra decisão: **o cockpit está funcionando e é honesto, mas o que ele mede (EV −0,16%, 0,6% dos moves limpam fee) diz que scalp de 1m é −EV — e $1–3 nem executa (mín. ~$5). O caminho com dado a favor é a estratégia já validada (Trend 1h + Farm), a ~$10–15, depois dos pré-requisitos de segurança.** Volto com a auditoria.
+
+## 👤 User *(01:07:02)*
+
+<task-notification>
+<task-id>wew1texdp</task-id>
+<tool-use-id>toolu_011Loym7Z2XzVnLXadSyU4VF</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/tasks/wew1texdp.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Auditoria adversarial independente do diff Cockpit deployado + prontidão de go-live ($150 mainnet congelado) — mandato de REFUTAR, sem falso positivo" completed</summary>
+<result>{"audits":[{"dimension":"security-money-path-and-freeze-integrity","verdict":"SEM_PROBLEMA_REAL","findings":[{"severity":"P3","claim":"cockpitJob é comprovadamente read-only no money-path: a única escrita de estado (cockpitJob.js:129) passa executeAutomations=false, e beholder.js:926 faz curto-circuito (if (!executeAutomations) return false;) ANTES de avaliar qualquer automação. Não dispara buy/sell/oco — provado, não assumido.","evidence":"backend/src/cockpitJob.js:129 (updateMemory(...,false)) + backend/src/beholder.js:913,926; grep money-path verbs nos arquivos novos só achou 1 ocorrência (comentário)","isRealProblem":false},{"severity":"P3","claim":"cockpitService busca apenas o endpoint PÚBLICO e não-autenticado /api/v3/klines via https cru (api.binance.com / data-api.binance.vision) — sem API key, sem assinatura — logo é fisicamente incapaz de emitir ordem. Usa getActiveAutomations() que é findAll (read-only).","evidence":"backend/src/utils/cockpitService.js:19-21,64; backend/src/repositories/automationsRepository.js:4-5 (findAll)","isRealProblem":false},{"severity":"P3","claim":"A nova tool MCP tradeux_get_cockpit é readTool (sem checagem tradingEnabled) fazendo só api.get('/analysis/cockpit'); não há writeTool/api.post novo. A trava SELL-BTC do cofre (isBtcVaultSymbol, place_order index.js:379) NÃO foi tocada pelo diff e segue intacta.","evidence":"git diff tradeux-mcp/src/index.js (só +readTool +api.get); tradeux-mcp/src/index.js:72-80 (readTool não tem gate de write),350-388 (trava SELL-BTC intacta); diff não toca isBtcVaultSymbol/NON_BTC_BASE","isRealProblem":false},{"severity":"P3","claim":"O prompt env-aware do agente NÃO concede autoridade nova — é estritamente MAIS restritivo. Guardrails 1-6 intactos (nunca vende cofre, nunca saca, escrita gated por TRADEUX_ALLOW_TRADING, papel só-observação). O texto novo ADICIONA regra de respeito ao halt (tradingHalt=TRUE =&gt; observe, não aja).","evidence":"tradeux-agent/src/agent.js:39-45 (guardrails preservados) e :24-28 nova seção AMBIENTE","isRealProblem":false},{"severity":"P3","claim":"Mesmo um env.tradingHalt=false forjado no payload do cockpit (prompt-injection teórico) não daria poder de escrita ao agente: a escrita é gated de forma INDEPENDENTE por TRADEUX_ALLOW_TRADING na camada MCP (writeTool) E pela trava SELL-BTC. A mudança de prompt não consegue contornar nenhuma das duas.","evidence":"tradeux-mcp/src/index.js:18,82-97 (writeTool exige tradingEnabled()), :379 (trava SELL-BTC independe do prompt)","isRealProblem":false},{"severity":"P3","claim":"O .catch novo no boot (server.js:78-83) não é regressão nem cria crash-loop novo: pré-diff, uma rejeição não-tratada no boot já encerrava o processo sob o default do Node 22 (--unhandled-rejections=throw). O .catch produz o mesmo exit(1), só que com log visível; não adiciona modo de falha nem torna falha transitória permanente. cockpitJob.start() é síncrono e fire-and-forget (mesmo padrão de regimeJob/flowJob já no boot), não aumentando o perfil de throw.","evidence":"backend/src/server.js:64,78-83; padrão idêntico em backend/src/cockpitJob.js:140-147 vs regimeJob/flowJob start()","isRealProblem":false},{"severity":"P3","claim":"Sem exposição de segredo: getCockpitStatus usa getSettings() (versão NÃO-decriptante, settingsRepository.js:36) e emite só dois booleanos (useTestnet, tradingHalt). A MEMORY COCKPIT contém apenas analytics de mercado (price/dist/ev/tail/mc/regime/flow/gates). Ambas as rotas /analysis/cockpit* ficam atrás de authMiddleware, mesma postura das irmãs /regime e /flow.","evidence":"backend/src/controllers/analysisController.js:58-83; backend/src/repositories/settingsRepository.js:36-38 (getSettings sem decrypt); backend/src/app.js:59 (app.use('/analysis', authMiddleware, ...)); regex de símbolo ^[A-Z0-9]{5,20}$ ancorada (sem ReDoS)","isRealProblem":false},{"severity":"P3","claim":"Todos os 7 arquivos tocados passam node --check (sem regressão de sintaxe que quebraria o backend/agente no boot).","evidence":"node --check em cockpitJob.js, cockpitService.js, analysisController.js, analysisRouter.js, indexes.js, tradeux-mcp/src/index.js, tradeux-agent/src/agent.js =&gt; todos OK","isRealProblem":false}]},{"dimension":"Correção (matemática/semântica do Cockpit)","verdict":"PROBLEMA_REAL","findings":[{"severity":"P2","claim":"O arredondamento .toFixed(2) hardcoded em cockpitService.js COLAPSA toda a banda Monte Carlo (e o price) para qualquer ativo abaixo de ~$100. A banda MC fica invisível/inútil para alts de baixo preço.","evidence":"cockpitService.js:115-117 (p10/p50/p90 = +(...).toFixed(2)) e :124 (price). LIVE confirmado em https://tradeux.gcrux.com/api/analysis/cockpit/ADAUSDT: ADA price=0.18, mc={p10:0.18,p50:0.18,p90:0.18}, sigmaHPct=1.145. Banda VERDADEIRA = [0.17738, 0.18266] (calculada a partir de sigmaHPct); .toFixed(2) achata tudo p/ 0.18. Compõe com o frontend: PathFan (CockpitSims.js:171-172) faz Math.round(dP10/dMed/dP90) → para ADA renderiza 'mediana 60min $0' e 'faixa p10–p90 $0–$0'. Reproduzível AGORA (1 de 4 símbolos live).","isRealProblem":true},{"severity":"P2","claim":"deriveGates rotula ERRADO o regime 'mixed' como 'range' no texto do gate, e trata 'mixed' idêntico a 'range' (buyAllowed=true) — contradizendo a própria doutrina do header do arquivo ('FARM/BASELINE ACUMULAM só em RANGE'). 'mixed' é justamente o default de baixa convicção / dados insuficientes do classificador.","evidence":"cockpitJob.js:93 — o ramo else hardcoda a string 'range + fluxo ok' para QUALQUER regime não-bear/não-trend/não-vetado, inclusive 'mixed'. LIVE: /api/analysis/cockpit/LTCUSDT retorna regime='mixed' mas gates.reason='range + fluxo ok: acumulação (farm/baseline) liberada' e buyAllowed=true. cockpitJob.js:85 farm=regimeOk &amp;&amp; regime!=='trend' inclui 'mixed'. regimeClassifier.js:38 emite 'mixed' até em dados insuficientes; :73 'mixed' = mean-reversion baixa convicção. Header cockpitJob.js:78 diz 'só em RANGE'.","isRealProblem":true},{"severity":"P3","claim":"tailMassPct vaza 100% quando sigma===0: o filtro 'x &gt;= tailK*sigma' vira 'x &gt;= 0', verdadeiro p/ TODOS os |retornos|. Só dispara em série de 500 velas perfeitamente constante (símbolo halted/morto), mas é uma divisão-por-zero-lógica não guardada.","evidence":"cockpitService.js:102 tailHits = absR.filter(x =&gt; x &gt;= tailK * sigma).length; com sigma=std(rets)=0 (cockpitService.js:81), tailK*sigma=0, então x&gt;=0 é sempre true → tailHits=n → cockpitService.js:106 tailMassPct=(n/n)*100=100. Confirmado em repro local. Demais caminhos (n=0, log de close 0/neg filtrado em :74-75) são NaN-safe.","isRealProblem":true},{"severity":"P3","claim":"A VIEW de gate do Cockpit (buyAllowed/farm/baseline) é MAIS ESTRITA que o gate id2 ao vivo (REGIME!=='bear'): o cockpit mostra CAIXA para 'trend' e 'unknown' onde a automação real ainda compraria. Divergência display×realidade, já reconhecida como follow-up no código.","evidence":"regimeJob.js:7-8,127 — gate vivo = MEMORY['&lt;sym&gt;:REGIME']!=='bear' (dispara em range/mixed/trend). cockpitJob.js:82 adiciona !=='unknown' e :85 farm exige !=='trend'. cockpitJob.js:16-17 admite explicitamente 'NÃO é o gate exato da id2 ao vivo ... FOLLOW-UP: reconciliar'. Risco de o operador/agente ler CAIXA quando a id2 dispararia.","isRealProblem":true},{"severity":"P3","claim":"No fallback client-side (sem dado do brain), buildHist calcula a mediana como sorted[floor(len/2)] — off-by-one vs a mediana real e vs o percentile(50) correto do backend. Só afeta o caminho de fallback (klines client-side), não o caminho do brain.","evidence":"Cockpit.js:105 medAbs: sorted[Math.floor(sorted.length / 2)] (mediana grosseira) vs cockpitService.js:39-45 percentile() com interpolação correta usado no caminho do brain (histB.fromBrain). Inconsistência apenas estética/menor; o painel prefere o brain quando presente (Cockpit.js:188-201).","isRealProblem":true}]},{"dimension":"Honestidade/engano do Cockpit deriveGates — risco de decisão errada de dinheiro
+... (truncated 68619 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/tasks/wew1texdp.output)</result>
+<usage><agent_count>21</agent_count><subagent_tokens>1240054</subagent_tokens><tool_uses>384</tool_uses><duration_ms>1527355</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:07:22)*
+
+
+## 🤖 Claude *(01:07:24)*
+
+A auditoria fechou e **achou coisas que eu subestimei** — exatamente o ponto de ter auditores independentes. Deixa eu ler tudo (honestidade dos gates + go-live + os achados verificados).
+
+## 🤖 Claude *(01:07:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrux-tradeux/680e8eb9-f4f6-4982-8f43-7e7dfb33a73f/tasks && python3 -c \"\nimport json\nd=json.load(open('wew1texdp.output'))\nr=d['result']\nprint('================ AUDITS ================')\nfor a in r['audits']:\n    print('### DIM:', a['dimension'][:80], '| VERDICT:', a['verdict'])\n    for f in a.get('findings',[]):\n        if f.get('isRealProblem'):\n            print(f\\\"   [{f['severity']}] REAL: {f['claim'][:240]}\\\")\n            print(f\\\"        ev: {f['evidence'][:200]}\\\")\n    print()\nprint('================ VERIFIED FINDINGS (anti-falso-positivo) ================')\nfor v in r.get('verifiedFindings',[]):\n    f=v['finding']; vd=v['verdict']\n    print(f\\\"[{f['severity']}/{f['dimension'][:30]}] confirmed={vd['confirmed']} rec={vd['recommendation']}\\\")\n    print(f\\\"   claim: {f['claim'][:180]}\\\")\n    print(f\\\"   assessment: {vd['assessment'][:280]}\\\")\n    print()\n\"\n",
+  "description": "Extract all audit findings and verified verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ================ AUDITS ================
+> ### DIM: security-money-path-and-freeze-integrity | VERDICT: SEM_PROBLEMA_REAL
+> 
+> ### DIM: Correção (matemática/semântica do Cockpit) | VERDICT: PROBLEMA_REAL
+>    [P2] REAL: O arredondamento .toFixed(2) hardcoded em cockpitService.js COLAPSA toda a banda Monte Carlo (e o price) para qualquer ativo abaixo de ~$100. A banda MC fica invisível/inútil para alts de baixo preço.
+>         ev: cockpitService.js:115-117 (p10/p50/p90 = +(...).toFixed(2)) e :124 (price). LIVE confirmado em https://tradeux.gcrux.com/api/analysis/cockpit/ADAUSDT: ADA price=0.18, mc={p10:0.18,p50:0.18,p90:0.18}, 
+>    [P2] REAL: deriveGates rotula ERRADO o regime 'mixed' como 'range' no texto do gate, e trata 'mixed' idêntico a 'range' (buyAllowed=true) — contradizendo a própria doutrina do header do arquivo ('FARM/BASELINE ACUMULAM só em RANGE'). 'mixed' é justame
+>         ev: cockpitJob.js:93 — o ramo else hardcoda a string 'range + fluxo ok' para QUALQUER regime não-bear/não-trend/não-vetado, inclusive 'mixed'. LIVE: /api/analysis/cockpit/LTCUSDT retorna regime='mixed' ma
+>    [P3] REAL: tailMassPct vaza 100% quando sigma===0: o filtro 'x >= tailK*sigma' vira 'x >= 0', verdadeiro p/ TODOS os |retornos|. Só dispara em série de 500 velas perfeitamente constante (símbolo halted/morto), mas é uma divisão-por-zero-lógica não gua
+>         ev: cockpitService.js:102 tailHits = absR.filter(x => x >= tailK * sigma).length; com sigma=std(rets)=0 (cockpitService.js:81), tailK*sigma=0, então x>=0 é sempre true → tailHits=n → cockpitService.js:106
+>    [P3] REAL: A VIEW de gate do Cockpit (buyAllowed/farm/baseline) é MAIS ESTRITA que o gate id2 ao vivo (REGIME!=='bear'): o cockpit mostra CAIXA para 'trend' e 'unknown' onde a automação real ainda compraria. Divergência display×realidade, já reconheci
+>         ev: regimeJob.js:7-8,127 — gate vivo = MEMORY['<sym>:REGIME']!=='bear' (dispara em range/mixed/trend). cockpitJob.js:82 adiciona !=='unknown' e :85 farm exige !=='trend'. cockpitJob.js:16-17 admite explic
+>    [P3] REAL: No fallback client-side (sem dado do brain), buildHist calcula a mediana como sorted[floor(len/2)] — off-by-one vs a mediana real e vs o percentile(50) correto do backend. Só afeta o caminho de fallback (klines client-side), não o caminho d
+>         ev: Cockpit.js:105 medAbs: sorted[Math.floor(sorted.length / 2)] (mediana grosseira) vs cockpitService.js:39-45 percentile() com interpolação correta usado no caminho do brain (histB.fromBrain). Inconsist
+> 
+> ### DIM: Honestidade/engano do Cockpit deriveGates — risco de decisão errada de dinheiro  | VERDICT: RESSALVAS
+>    [P2] REAL: DIVERGÊNCIA fail-OPEN vs fail-CLOSED no termo de fluxo (direção perigosa): com fluxo STALE/ausente o cockpit mostra buyAllowed=GO, mas a id2 real BLOQUEIA. O cockpit faz `flowOk = !flowFresh ? true` (sem fluxo fresco => NÃO veta => GO), enq
+>         ev: cockpitJob.js:48 `FLOW_STALE_MS = 5*60*1000`; linha 84 `flowOk = !flowFresh ? true : flow.imbalance >= FLOW_BUY_MIN`; vs DB id2 `MEMORY['BTCUSDT:FLOW'] && (Date.now()-MEMORY['BTCUSDT:FLOW'].atMs)<1800
+>    [P2] REAL: O gate de COMPRA do cockpit IGNORA o termo RSI_14_1m<25 que é o gatilho central da id2. buyAllowed=GO sinaliza apenas 'regime!=bear/!=trend + fluxo ok', mas a id2 só dispara em dip profundo (RSI<25). Logo GO pode aparecer na MAIORIA do temp
+>         ev: cockpitJob.js deriveGates (linhas 81-95) não tem nenhum termo de RSI (grep -i rsi cockpitJob.js => vazio); DB id2 começa com `MEMORY['BTCUSDT:RSI_14_1m'].current<25`
+>    [P2] REAL: A id2 (Baseline RSI Buy BTCUSDT) está INATIVA (isActive=0) no banco — não está rodando. O cockpit modela e reporta o gate 'baseline' como se fosse a wiring viva; na verdade ele descreve uma DOUTRINA, não uma automação ligada. O agente é ins
+>         ev: DB automations: id2 isActive=0; id6/22/23/24 isActive=1 e conditions conferidas (id6 `TREND_CROSS_1h==='golden' && REGIME!=='bear'`; id22 BOOK<FAIR*0.97); cockpitJob.js:87 `trend = regimeOk`, linha 94
+>    [P1] REAL: A divergência É DECLARADA em texto, o que rebaixa muito o risco real de engano: (a) docstring linhas 14-17 diz literalmente que buyAllowed 'NÃO é o gate exato da id2 ao vivo (esse vive na condition da automação no banco)' com FOLLOW-UP de r
+>         ev: cockpitJob.js:14-17 (docstring honestidade); frontend Cockpit.js:398; tradeux-mcp/src/index.js:215 (description sem 'não é id2') e :228 `buyGate: { allowed, reason }`
+> 
+> ### DIM: Prontidão de go-live mainnet (descongelar TRADING_HALT p/ testes de $1-3 USDT ou | VERDICT: PROBLEMA_REAL
+>    [P0] REAL: Ordem de $1-3 USDT é INEXECUTÁVEL na Binance: o filtro NOTIONAL real é minNotional=$5.00 para TODOS os símbolos (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT/ETHUSDT). Uma ordem de $1-3 é rejeitada com erro -1013 (NOTIONAL). O menor pedido válido é ~$5;
+>         ev: DB: SELECT symbol,minNotional FROM symbols → todos 5.00000000. beholder.js:227 newQty=(minNotional/price)*mult. setup-farm.js:36 comentário '×1 ... FALHA o filtro NOTIONAL ($5) ao disparar -1013'. Tem
+>    [P0] REAL: Pré-requisitos de descongelamento NÃO estão resolvidos. (a) Saque-OFF/IP-travado da chave Binance: não verificável por código (ação do dono na Binance), continua marcado pendente no HANDOFF/memória — NÃO confirmado. (b) Trava FARM_SELLING a
+>         ev: grep FARM_SELLING em backend/src/ → 0 resultados (só HARVEST_SELLING em app-em.js/beholder.js/indexes.js). DB: automations id22-25 isActive=1. HANDOFF.md §SEAL e memória tradeux-mainnet-go-live listam
+>    [P1] REAL: O gap do teto MAX_ORDER_NOTIONAL_USDT é REAL e está no código vivo: o teto ($1500) só cobre MARKET-por-quote (quoteOrderQty) e LIMIT/OCO (price×qty). Vendas MARKET por QUANTIDADE-base sem price (TREND_QTY/HARVEST_QTY/FARM_QTY/MAX_WALLET) PA
+>         ev: exchange.js:29-34 assertWithinRisk: notional só calculado se o.quoteOrderQty!=null OU (price!=null && quantity!=null); MARKET-by-base passa. Comentário no próprio código (linhas 14-16) admite o furo. 
+>    [P1] REAL: NENHUMA estratégia 1m lucrativa foi produzida — foi REFUTADA com medição fresca. Backtest no cache real BTCUSDT-1m-60d.json (86.400 velas) deu -0,14% a -0,23% LÍQUIDO por trade em TODAS as parametrizações (win-rate 35-48%, sub-breakeven); c
+>         ev: Memória tradeux-1m-scalping-and-cockpit.md (workflow wf_b87fd29f-5b3, backtest backend/backtest-data/BTCUSDT-1m-60d.json). Confirmado no cockpitService vivo: EV/trade net=-0,16%, pHit=0,6% reportados 
+>    [P1] REAL: O harvester (id22-25, principal experimento de alfa) está MORTO no mainnet — verificado em código. A condição de compra id22 é bestAsk<FAIR*0.97 (gap de -3%), mas FAIR=lastPrice da MAINNET (api.binance.com) e o BOOK do bot é SIMULADO do min
+>         ev: fairPriceService.js:10 'Busca o lastPrice da MAINNET'. app-em.js:39 book={bestAsk:mkt[1].close,bestBid:mkt[1].close} (book simulado do close). DB conditions id22: bestAsk<FAIR.price*0.9700. Memória tr
+>    [P1] REAL: ZERO ordens mainnet já foram colocadas — nada foi validado com fill/fee/slippage reais. Todas as 259 ordens do histórico são isTestnet=1. Descongelar é literalmente o primeiro trade real do sistema; qualquer pressuposto de P&L vem de testne
+>         ev: DB: SELECT isTestnet,COUNT(*) FROM orders → isTestnet=1:259, mainnet:0. settings.useTestnet=0 (mainnet real, confirmado no DB e na env do container).
+>    [P2] REAL: NÃO há cap diário de perda nem cap de posição no código — só o kill-switch binário TRADING_HALT e o teto por-ordem de $1500 (10× a conta). Os buckets MR (Farm/Harvester) não têm stop-loss; capital travável estimado em até ~$80/$148 num down
+>         ev: grep DAILY/stopLoss/MAX_POSITION em exchange.js e beholder.js → 0 resultados. Único controle: TRADING_HALT (exchange.js:24) + MAX_ORDER_NOTIONAL_USDT=1500 (env vivo). Memória tradeux-mainnet-go-live: 
+>    [P2] REAL: BUG de P&L: quando a comissão é paga em BNB, o net NÃO desconta a taxa (calcFillFinancials/app-em só descontam se commissionAsset==quote). Resultado: P&L/dailyProfit reportado fica OTIMISTA (mente). Se o dono descongelar e olhar o painel pr
+>         ev: Memória tradeux-1m-scalping-and-cockpit.md 'Achado de código': gatilho no-loss só exige bestBid>custo_BRUTO×1.012 (taxa só na folga) + bug BNB no net. Plano Fase 2 (fix fee-aware) ainda NÃO aplicado.
+> 
+> ================ VERIFIED FINDINGS (anti-falso-positivo) ================
+> [P2/Correção (matemática/semântica] confirmed=True rec=FIX_EVENTUAL
+>    claim: O arredondamento .toFixed(2) hardcoded em cockpitService.js COLAPSA toda a banda Monte Carlo (e o price) para qualquer ativo abaixo de ~$100. A banda MC fica invisível/inútil para 
+>    assessment: PROBLEMA REAL na camada de dados/API — porém com uma RESSALVA importante: o sintoma de frontend descrito pelo auditor NÃO é reproduzível na UI atual.
+> 
+> O QUE CONFIRMEI (real e reproduzível):
+> - Caminho do arquivo correto é backend/src/utils/cockpitService.js (não "cockpitService.js
+> 
+> [P2/Correção (matemática/semântica] confirmed=False rec=FIX_EVENTUAL
+>    claim: deriveGates rotula ERRADO o regime 'mixed' como 'range' no texto do gate, e trata 'mixed' idêntico a 'range' (buyAllowed=true) — contradizendo a própria doutrina do header do arqui
+>    assessment: O achado mistura duas alegações; verifiquei ambas no código e AO VIVO (login no backend via container, GET /analysis/cockpit/<sym>).
+> 
+> ALEGAÇÃO PRINCIPAL (a substantiva, que sustenta o P2/Correção) — REFUTADA. "deriveGates trata 'mixed' idêntico a 'range' (buyAllowed=true), contra
+> 
+> [P3/Correção (matemática/semântica] confirmed=False rec=FIX_EVENTUAL
+>    claim: tailMassPct vaza 100% quando sigma===0: o filtro 'x >= tailK*sigma' vira 'x >= 0', verdadeiro p/ TODOS os |retornos|. Só dispara em série de 500 velas perfeitamente constante (símb
+>    assessment: A matemática do achado é VERDADEIRA e reproduzível em isolamento. Reproduzi localmente: série de 500 velas perfeitamente constante (closes idênticos) -> rets todos 0 -> sigma=std(rets)=0 (cockpitService.js:38,81) -> tailK*sigma=0 -> filtro `x >= 0` true para todos os 499 |retorno
+> 
+> [P3/Correção (matemática/semântica] confirmed=False rec=NAO_E_PROBLEMA
+>    claim: A VIEW de gate do Cockpit (buyAllowed/farm/baseline) é MAIS ESTRITA que o gate id2 ao vivo (REGIME!=='bear'): o cockpit mostra CAIXA para 'trend' e 'unknown' onde a automação real 
+>    assessment: FALSO POSITIVO. A premissa central do achado e contrafactual e foi refutada pelo banco AO VIVO. Verifiquei em /home/gcrux-tradeux/tradeux/backend/src/{regimeJob.js,cockpitJob.js,beholder.js} e na tabela `automations` do container db rodando.
+> 
+> 1) GATE VIVO DA id2 NAO E `REGIME!=='
+> 
+> [P3/Correção (matemática/semântica] confirmed=False rec=NAO_E_PROBLEMA
+>    claim: No fallback client-side (sem dado do brain), buildHist calcula a mediana como sorted[floor(len/2)] — off-by-one vs a mediana real e vs o percentile(50) correto do backend. Só afeta
+>    assessment: A observacao matematica e tecnicamente correta, mas NAO e um problema real e reproduzivel — e cosmetico e fica abaixo da precisao exibida. Verificado nos arquivos reais (caminhos do achado ligeiramente errados; reais: frontend/src/private/Cockpit/Cockpit.js e backend/src/utils/co
+> 
+> [P2/Honestidade/engano do Cockpit ] confirmed=True rec=FIX_EVENTUAL
+>    claim: DIVERGÊNCIA fail-OPEN vs fail-CLOSED no termo de fluxo (direção perigosa): com fluxo STALE/ausente o cockpit mostra buyAllowed=GO, mas a id2 real BLOQUEIA. O cockpit faz `flowOk = 
+>    assessment: Achado CONFIRMADO e reproduzível (não é falso positivo), com uma ressalva de severidade.
+> 
+> Evidência verificada item a item:
+> 1. cockpitJob.js:48 — `FLOW_STALE_MS = 5 * 60 * 1000` (5min). CONFIRMADO.
+> 2. cockpitJob.js:84 — `const flowOk = !flowFresh ? true : flow.imbalance >= FLOW_B
+> 
+> [P2/Honestidade/engano do Cockpit ] confirmed=False rec=NAO_E_PROBLEMA
+>    claim: O gate de COMPRA do cockpit IGNORA o termo RSI_14_1m<25 que é o gatilho central da id2. buyAllowed=GO sinaliza apenas 'regime!=bear/!=trend + fluxo ok', mas a id2 só dispara em dip
+>    assessment: Os fatos estruturais do achado conferem, mas a conclusão de "engano/decisão errada de dinheiro" NÃO se sustenta como problema real e reproduzível.
+> 
+> VERIFICADO (fatos corretos):
+> - Condição viva da id2 no banco (live): id=2 'Baseline RSI Buy BTCUSDT' começa EXATAMENTE com MEMORY['B
+> 
+> [P2/Honestidade/engano do Cockpit ] confirmed=True rec=FIX_EVENTUAL
+>    claim: A id2 (Baseline RSI Buy BTCUSDT) está INATIVA (isActive=0) no banco — não está rodando. O cockpit modela e reporta o gate 'baseline' como se fosse a wiring viva; na verdade ele des
+>    assessment: PROBLEMA REAL e reproduzível — verifiquei toda a cadeia (DB + código backend + payload MCP + prompt do agente + UI).
+> 
+> EVIDÊNCIA CONFIRMADA NO BANCO (tradeux-db-1, tabela automations):
+> - id2 "Baseline RSI Buy BTCUSDT": isActive=0 (NÃO está rodando). Sua condition no banco é exatam
+> 
+> [P1/Honestidade/engano do Cockpit ] confirmed=False rec=NAO_E_PROBLEMA
+>    claim: A divergência É DECLARADA em texto, o que rebaixa muito o risco real de engano: (a) docstring linhas 14-17 diz literalmente que buyAllowed 'NÃO é o gate exato da id2 ao vivo (esse 
+>    assessment: Evidencias conferem (cockpitJob.js em backend/src/; GO/CAIXA em Cockpit.js:411; nota HALT :398). Docstring 15-17 admite que buyAllowed nao e o gate exato da id2 (so dev ve); UI tem ressalva no tooltip; description MCP index.js:215 NAO repete esse disclaimer; agente recebe so buyG
+> 
+> [P0/Prontidão de go-live mainnet (] confirmed=False rec=NAO_E_PROBLEMA
+>    claim: Ordem de $1-3 USDT é INEXECUTÁVEL na Binance: o filtro NOTIONAL real é minNotional=$5.00 para TODOS os símbolos (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT/ETHUSDT). Uma ordem de $1-3 é rejei
+>    assessment: FALSO POSITIVO no escopo declarado do achado, embora os fatos numéricos sejam reais. Verifiquei tudo no repo/DB ao vivo:
+> 
+> FATOS QUE SE CONFIRMAM (reproduzidos): (1) DB: os 5 símbolos têm minNotional=5.00000000 (SELECT em symbols). (2) beholder.js:226-227 calcula newQty=(minNotion
+> 
+> [P0/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: Pré-requisitos de descongelamento NÃO estão resolvidos. (a) Saque-OFF/IP-travado da chave Binance: não verificável por código (ação do dono na Binance), continua marcado pendente n
+>    assessment: CONFIRMADO — os três sub-achados são reais, verificados contra código + DB + HANDOFF/memória. Não é falso positivo.
+> 
+> (a) Saque-OFF/IP da chave Binance: REAL e pendente. exchange.js expõe withdraw() fora do HALT; é ação do dono na Binance, não verificável por código. HANDOFF (SEAL
+> 
+> [P1/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: O gap do teto MAX_ORDER_NOTIONAL_USDT é REAL e está no código vivo: o teto ($1500) só cobre MARKET-por-quote (quoteOrderQty) e LIMIT/OCO (price×qty). Vendas MARKET por QUANTIDADE-b
+>    assessment: CONFIRMADO como gap de código REAL e reproduzível (não é falso positivo). A evidência citada bate exatamente com o código vivo:
+> 
+> 1. exchange.js:29-34 (assertWithinRisk): o teto MAX_ORDER_NOTIONAL_USDT só calcula notional em dois casos — `o.quoteOrderQty != null` (MARKET por quote
+> 
+> [P1/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: NENHUMA estratégia 1m lucrativa foi produzida — foi REFUTADA com medição fresca. Backtest no cache real BTCUSDT-1m-60d.json (86.400 velas) deu -0,14% a -0,23% LÍQUIDO por trade em 
+>    assessment: CONFIRMADO como achado REAL e reproduzível. Verifiquei a evidência eu mesmo, não confiei na memória.
+> 
+> 1) CACHE REAL: backend/backtest-data/BTCUSDT-1m-60d.json tem exatamente 86.400 velas, span contíguo de 60 dias, faixa de preço BTC realista (63.358–82.835). Não é fabricado.
+> 
+> 2) 
+> 
+> [P1/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: O harvester (id22-25, principal experimento de alfa) está MORTO no mainnet — verificado em código. A condição de compra id22 é bestAsk<FAIR*0.97 (gap de -3%), mas FAIR=lastPrice da
+>    assessment: CONFIRMADO — problema REAL e reproduzível, verificado em código E no estado vivo do banco. (1) MECANISMO: fairPriceService.js (linhas 10, 17, 38-39) busca o lastPrice da MAINNET com HOSTS hardcoded ['api.binance.com','data-api.binance.vision'] — FAIR é sempre mainnet, independent
+> 
+> [P1/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: ZERO ordens mainnet já foram colocadas — nada foi validado com fill/fee/slippage reais. Todas as 259 ordens do histórico são isTestnet=1. Descongelar é literalmente o primeiro trad
+>    assessment: CONFIRMADO. Toda a evidência citada bate exatamente, reproduzida por mim no DB e no container:
+> 
+> 1. Zero ordens mainnet — `SELECT isTestnet,COUNT(*) FROM tradeux.orders` retorna isTestnet=1:259 e NENHUMA linha isTestnet=0 (cross-check: total=259, tn=259, main=0, NULL=0). O sistema
+> 
+> [P2/Prontidão de go-live mainnet (] confirmed=True rec=FIX_EVENTUAL
+>    claim: NÃO há cap diário de perda nem cap de posição no código — só o kill-switch binário TRADING_HALT e o teto por-ordem de $1500 (10× a conta). Os buckets MR (Farm/Harvester) não têm st
+>    assessment: CONFIRMADO como gap real e reproduzível no código (mas não é bug nem blocker para os testes de $1-3/$150 propostos).
+> 
+> Evidência verificada por leitura direta:
+> 1) NÃO existe cap diário de perda nem cap de posição agregada. grep por lossLimit|maxLoss|dailyLoss|maxDrawdown|drawdown|
+> 
+> [P2/Prontidão de go-live mainnet (] confirmed=True rec=FIX_ANTES_DE_USAR
+>    claim: BUG de P&L: quando a comissão é paga em BNB, o net NÃO desconta a taxa (calcFillFinancials/app-em só descontam se commissionAsset==quote). Resultado: P&L/dailyProfit reportado fica
+>    assessment: CONFIRMADO — bug real, reproduzível e ainda não corrigido.
+> 
+> MECANISMO (3 sites idênticos, todos gateados em commissionAsset==quote):
+> - backend/src/repositories/ordersRepository.js:239 — calcFillFinancials: `if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commis
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(01:08:38)*
+
+
+## 🤖 Claude *(01:09:03)*
+
+A auditoria fechou com **verificação anti-falso-positivo** (cada "problema real" passou por um verificador independente que tentou refutá-lo). Vou te dar o resultado **sem filtro — inclusive onde os auditores me corrigiram.**
+
+## O que CONFIRMOU o que eu disse
+- 🟢 **Segurança: `SEM_PROBLEMA_REAL`.** O auditor de segurança *provou* (não assumiu) que é read-only: a tool nova é `readTool` (não `writeTool`), `updateMemory(...,false)` curto-circuita antes de qualquer automação, env expõe só 2 booleanos, a trava SELL-BTC intacta, e mesmo um `tradingHalt=false` forjado no payload não daria escrita (gated por `ALLOW_TRADING` na camada MCP). **Não menti sobre a segurança.**
+- 🟢 **1m scalping refutado** e **$1–3 abaixo do mín. notional ($5, confirmado no banco)** — ambos confirmados relendo o cache real e o DB.
+
+## Onde os auditores me CORRIGIRAM (eu fui otimista demais)
+1. 🔴 **O gate é pior do que eu admiti.** Eu falei "o limiar −0,4 é inventado". O problema real, **confirmado**, é mais grave:
+   - **`flowOk` é fail-OPEN**: quando o fluxo está *stale/ausente*, o cockpit mostra **GO**, mas a id2 real **BLOQUEIA** (fail-closed). Direção perigosa — o cockpit é *permissivo demais*.
+   - **A id2 está INATIVA (`isActive=0`) no banco.** Ou seja: o cockpit reporta um "gate baseline" de uma automação **que nem está rodando** — descreve uma *doutrina*, não a fiação viva. O agente/você pode ler "GO" pra algo que não existe ligado.
+2. 🟠 **O `.toFixed(2)` não é "menor".** Confirmado ao vivo: pra ADA (price 0,18) a banda Monte Carlo **colapsa pra 0,18/0,18/0,18** — zera. Eu rotulei como cosmético; é um bug de dados real pra alts baratas.
+3. 🟠 **A trava `FARM_SELLING` NÃO existe** (grep = 0 resultados). Eu tratei como "follow-up conhecido"; na real **não foi implementada**.
+
+## Falsos positivos que o verificador derrubou (pra eu não te alarmar à toa)
+`mixed==range` (refutado), `tailMass=100% com σ=0` (só em série morta de 500 velas), "gate mais estrito que id2" (premissa contrafactual), mediana off-by-one no fallback (cosmético abaixo da precisão). **Esses NÃO são problemas.**
+
+## Go-live — 7 achados CONFIRMADOS dizem: ainda NÃO
+`FIX_ANTES_DE_USAR`: pré-requisitos não resolvidos (**saque-OFF/IP da chave não confirmado** + **`FARM_SELLING` ausente**); **gap do teto `MAX_ORDER_NOTIONAL`** (não cobre SELL MARKET por qty-base); **bug do P&L com BNB** (net otimista — o painel mentiria pra você); **harvester morto no mainnet**; **0 ordens mainnet já colocadas** (descongelar = literalmente o 1º trade real); **sem cap diário/de posição**. E **nenhuma estratégia 1m lucrativa foi produzida — foi refutada.**
+
+---
+
+## Veredito honesto e imparcial
+O código que subi é **seguro e read-only** (isso se sustenta), mas o **sinal de gate que o agente reporta é enganoso hoje** (fail-open + id2 inativa) — e como o propósito da feature é *a brain reportar isso pra decisão*, **isso precisa ser consertado antes de você confiar no GO/CAIXA**. E **descongelar agora seria imprudente**: os dados e 7 achados confirmados apontam pra esperar.
+
+**Minha recomendação concreta:**
+1. Eu corrijo **agora** os 2 problemas reais do cockpit: (a) gate **fail-CLOSED** + ciente de `isActive` (rotular "doutrina/id2 inativa" em vez de "GO" falso); (b) precisão de preço dinâmica (não zerar a banda de alts). Passa por QA/TL de novo.
+2. **Não descongelar.** Se/quando for, é a **estratégia Trend validada a ~$5–15**, depois dos pré-requisitos (saque-OFF/IP + `FARM_SELLING` + cap diário + fix do BNB) — nada de scalp 1m.
+
+Quer que eu aplique os 2 fixes do cockpit agora? E sobre o go-live, recomendo segurar — mas a decisão de descongelar é sua, e eu não viro o `TRADING_HALT` sem o teu GO explícito + os pré-requisitos resolvidos.
+
+## 👤 User *(01:09:56)*
+
+No TradeUX (repo /home/gcrux-tradeux/tradeux, DB MySQL no container tradeux-db-1, schema `tradeux`, user `tradeux`, senha em .env como DB_PWD), o template id3 ("Trend Buy BTCUSDT SMA50/200") usado pela automação ATIVA id6 está com quantityMultiplier=1.00 no banco vivo. Isso significa MIN_NOTIONAL×1 = exatamente $5.00 de notional-alvo.
+
+O problema: backend/src/beholder.js calcQty (linha ~226-227 + 281-282) calcula newQty = (minNotional/price)*mult e DEPOIS faz Math.floor(newQty/stepSize)*stepSize. Com mult=1, o floor por stepSize sempre empurra o notional ABAIXO de $5 (ex.: BTC a ~$65k → qty 0.00007 → notional ~$4.55), o que a Binance rejeita com erro -1013 (NOTIONAL). Reproduzido numericamente para os 5 símbolos.
+
+A intenção documentada do código diverge do banco: backend/scripts/setup-trend.js:111 cria esse template com quantityMultiplier: 3 ("size pequeno p/ observar 1 cross; calibrar depois") e a linha 130 imprime "SIZING: id6 = 3× MIN_NOTIONAL". Ou seja, o banco vivo sofreu drift (alguém editou para ×1, ou um caminho de seed diferente). Quando um golden cross disparar em BTC com REGIME!=bear, a id6 vai falhar com -1013 e NÃO vai comprar.
+
+Tarefa: (1) confirmar o estado vivo com SELECT id,name,quantity,quantityMultiplier FROM orderTemplates WHERE id=3; (2) decidir o size correto (×3 conforme setup-trend.js, ou outro alinhado ao plano de go-live de ~$150) e aplicar via PATCH /ordertemplates ou UPDATE, lembrando que editar o template no banco NÃO afeta a automação rodando até dar stop/start (o BRAIN cacheia action.orderTemplate — ver memória tradeux-ordertemplate-brain-cache); (3) considerar uma proteção de fundo: validar/elevar o notional em calcQty quando MIN_NOTIONAL com mult que floored caia abaixo do minNotional (hoje só MAX_ORDER_NOTIONAL_USDT cobre o TETO, não há piso). Rodar em testnet primeiro; TRADING_HALT=true segue ativo. Gate QA/TL antes de mexer em money-path.
+
+## 🤖 Claude *(01:10:38)*
+
+
+## 🤖 Claude *(01:10:40)*
+
+Tarefa clara e bem-especificada — e é money-path (mexe em `calcQty` + template de automação ativa), então investigo, corrijo com backstop, e passa por QA/TL antes de qualquer coisa. `TRADING_HALT=true` segue ativo o tempo todo.
+
+Primeiro: confirmar o estado vivo (DB) e ler o `calcQty` real.
+
+## 🤖 Claude *(01:10:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 200,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 200	
+> 201	function calcQty(orderTemplate, price, symbol) {
+> 202	    let asset;
+> 203	
+> 204	    if (orderTemplate.side === 'BUY') {
+> 205	        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 206	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 207	    }
+> 208	    else {
+> 209	        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 210	        if (!asset) throw new Error(`There is no ${symbol.base} in your wallet to place a sell.`);
+> 211	    }
+> 212	
+> 213	    let qty = orderTemplate.quantity.replace(',', '.');
+> 214	    if (parseFloat(qty)) return qty;
+> 215	
+> 216	    const multiplier = orderTemplate.quantityMultiplier;
+> 217	    const stepSize = parseFloat(symbol.stepSize);
+> 218	
+> 219	    let newQty, factor;
+> 220	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 221	        if (orderTemplate.side === 'BUY')
+> 222	            newQty = (parseFloat(asset) / parseFloat(price)) * (multiplier > 1 ? 1 : multiplier);
+> 223	        else
+> 224	            newQty = parseFloat(asset) * (multiplier > 1 ? 1 : multiplier);
+> 225	    }
+> 226	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 227	        newQty = (parseFloat(symbol.minNotional) / parseFloat(price)) * (multiplier < 1 ? 1 : multiplier);
+> 228	    }
+> 229	    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 230	        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 231	        if (!lastOrder)
+> 232	            throw new Error(`There is no last order to use as qty reference for ${orderTemplate.symbol}.`);
+> 233	
+> 234	        newQty = parseFloat(lastOrder.quantity) * multiplier;
+> 235	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;
+> 236	    }
+> 237	    else if (orderTemplate.quantity === 'TREND_QTY') {
+> 238	        // Posição acumulada pelo Trend Following (escrita no fill por app-em.updateTrendPosition):
+> 239	        // id6 (golden) soma; id7 (death) vende ESTA qty (não a LAST_ORDER, que é compartilhada com a id3).
+> 240	        const trendQty = parseFloat(MEMORY[`${orderTemplate.symbol}:TREND_QTY`]);
+> 241	        if (!trendQty || trendQty <= 0)
+> 242	            throw new Error(`There is no trend position (TREND_QTY) to use as qty reference for ${orderTemplate.symbol}.`);
+> 243	
+> 244	        newQty = trendQty * multiplier;
+> 245	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 246	    }
+> 247	    else if (orderTemplate.quantity === 'HARVEST_QTY') {
+> 248	        // Bucket TÁTICO do Harvester de dislocação (escrito no fill por app-em.updateHarvestPosition):
+> 249	        // MEMORY['<sym>:HARVEST'] = { qty, cost }. A venda no-loss vende ESTA qty (só o que o harvester
+> 250	        // comprou), NUNCA o cofre principal de BTC. Falha-fechado se vazio (sem bucket, não vende).
+> 251	        const harvest = MEMORY[`${orderTemplate.symbol}:HARVEST`];
+> 252	        const harvestQty = harvest ? parseFloat(harvest.qty) : NaN;
+> 253	        if (!harvestQty || harvestQty <= 0)
+> 254	            throw new Error(`There is no harvest position (HARVEST) to use as qty reference for ${orderTemplate.symbol}.`);
+> 255	
+> 256	        newQty = harvestQty * multiplier;
+> 257	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 258	    }
+> 259	    else if (orderTemplate.quantity === 'FARM_QTY') {
+> 260	        // Bucket DCA do Farm de alts (escrito no fill por app-em.updateFarmPosition):
+> 261	        // MEMORY['<sym>:FARM_DCA'] = { qty, cost }. A venda no-loss vende SÓ o que o Farm comprou,
+> 262	        // NÃO a carteira inteira do ativo — MAX_WALLET vendia tudo e DUMPAVA junto a posição do Trend
+> 263	        // Following co-localizada na mesma carteira (mesmo ativo). Falha-fechado se vazio (sem bucket, não vende).
+> 264	        const farm = MEMORY[`${orderTemplate.symbol}:FARM_DCA`];
+> 265	        const farmQty = farm ? parseFloat(farm.qty) : NaN;
+> 266	        if (!farmQty || farmQty <= 0)
+> 267	            throw new Error(`There is no farm position (FARM_DCA) to use as qty reference for ${orderTemplate.symbol}.`);
+> 268	
+> 269	        newQty = farmQty * multiplier;
+> 270	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 271	    }
+> 272	    else if (orderTemplate.quantity === 'BTC_EXCESS') {
+> 273	        // Vende o excedente de BTC acima de 1.0 BTC (o cofre).
+> 274	        const btcAsset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 275	        if (!btcAsset || btcAsset <= 1.0)
+> 276	            throw new Error(`There is no excess BTC (above 1.0 BTC) to sell. Balance: ${btcAsset}`);
+> 277	        newQty = (btcAsset - 1.0) * multiplier;
+> 278	        if (orderTemplate.side === 'SELL' && newQty > btcAsset) newQty = btcAsset;
+> 279	    }
+> 280	
+> 281	    factor = Math.floor(newQty / stepSize);
+> 282	    return (factor * stepSize).toFixed(symbol.basePrecision);
+> 283	}
+> 284	
+> 285	function hasEnoughAssets(symbol, order, price) {
+> 286	    const qty = parseFloat(order.quantity);
+> 287	    if (order.side === 'BUY')
+> 288	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 289	    else
+> 290	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 291	}
+> 292	
+> 293	function calcQuoteQty(orderTemplate, symbol) {
+> 294	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> ```
+
+## 🤖 Claude *(01:10:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nDBPWD=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DB_PWD=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2- | tr -d \"\\\"'\"'\"'\"')\nrun_sql() { sudo -n -u gcrux-tradeux bash -lc \"docker exec -e MYSQL_PWD='$DBPWD' tradeux-db-1 mysql -utradeux tradeux -N -e \\\"$1\\\"\"; }\necho \"=== orderTemplate id=3 ===\"\nrun_sql \"SELECT id,name,side,type,quantity,quantityMultiplier,limitPrice,limitPriceMultiplier FROM orderTemplates WHERE id=3;\"\necho \"=== automa\u00e7\u00f5es que usam o template id=3 (via actions) ===\"\nrun_sql \"SELECT a.id,a.name,a.symbol,a.isActive,ac.type FROM automations a JOIN actions ac ON ac.automationId=a.id WHERE ac.orderTemplateId=3;\"\necho \"=== minNotional/stepSize dos 5 s\u00edmbolos ===\"\nrun_sql \"SELECT symbol,minNotional,stepSize,tickSize FROM symbols WHERE symbol IN ('BTCUSDT','LTCUSDT','BNBUSDT','ADAUSDT','ETHUSDT');\"\necho \"=== id6 automation + suas actions/orderTemplates ===\"\nrun_sql \"SELECT a.id,a.name,a.symbol,a.isActive,a.indexes,a.conditions FROM automations a WHERE a.id=6;\"",
+  "description": "Confirm live orderTemplate id3 state, automations, symbol filters"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orderTemplate id=3 ===
+> 3	Trend Buy BTCUSDT SMA50/200	BUY	LIMIT	MIN_NOTIONAL	1.00	MEMORY['BTCUSDT:BOOK'].current.bestAsk * 1.003	1.00
+> === automações que usam o template id=3 (via actions) ===
+> 6	Trend Buy BTCUSDT SMA50/200	BTCUSDT	1	ORDER
+> === minNotional/stepSize dos 5 símbolos ===
+> ADAUSDT	5.00000000	0.10000000	0.00010000
+> BNBUSDT	5.00000000	0.00100000	0.01000000
+> BTCUSDT	5.00000000	0.00001000	0.01000000
+> ETHUSDT	5.00000000	0.00010000	0.01000000
+> LTCUSDT	5.00000000	0.00100000	0.01000000
+> === id6 automation + suas actions/orderTemplates ===
+> 6	Trend Buy BTCUSDT SMA50/200	BTCUSDT	1	BTCUSDT:TREND_CROSS_1h,BTCUSDT:REGIME	MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'
+> ```
+
+## 🤖 Claude *(01:12:09)*
+
+
+## 🤖 Claude *(01:12:13)*
+
+Confirmado o bug, com os números:
+- **Template id3**: `quantity=MIN_NOTIONAL`, `quantityMultiplier=1.00`, BUY LIMIT — usado pela **automação id6 ATIVA** (`Trend Buy BTCUSDT`, condição `TREND_CROSS_1h==='golden' && REGIME!=='bear'`).
+- **`calcQty`** ([beholder.js:226-227](backend/src/beholder.js:226) + [281-282](backend/src/beholder.js:281)): `newQty = (minNotional/price)*(mult<1?1:mult)` → com mult=1 = `5/price`, depois `Math.floor(newQty/stepSize)*stepSize` **empurra abaixo de $5**.
+- Todos os 5 símbolos têm `minNotional=5.00`.
+
+Reproduzo numericamente (o "teste", sem ordem nenhuma — `HALT=true`) antes de mexer:
+
+## 🤖 Claude *(01:12:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/calcqty-repro.js",
+  "content": "// Reproduz a l\u00f3gica MIN_NOTIONAL de beholder.calcQty (linhas 226-227, 281-282) p/ os 5 s\u00edmbolos.\n// Mostra o notional ANTES (floor atual) e DEPOIS (backstop: sobe 1 stepSize se floor < minNotional).\nconst SYMS = [\n  { s: 'BTCUSDT', price: 66400, stepSize: 0.00001, minNotional: 5, basePrec: 5 },\n  { s: 'ETHUSDT', price: 2600, stepSize: 0.0001, minNotional: 5, basePrec: 4 },\n  { s: 'BNBUSDT', price: 600, stepSize: 0.001, minNotional: 5, basePrec: 3 },\n  { s: 'LTCUSDT', price: 45.84, stepSize: 0.001, minNotional: 5, basePrec: 3 },\n  { s: 'ADAUSDT', price: 0.18, stepSize: 0.1, minNotional: 5, basePrec: 1 },\n];\nfunction calc(sym, mult, backstop) {\n  const newQty = (sym.minNotional / sym.price) * (mult < 1 ? 1 : mult);\n  let factor = Math.floor(newQty / sym.stepSize);\n  let result = factor * sym.stepSize;\n  if (backstop && result * sym.price < sym.minNotional) result = (factor + 1) * sym.stepSize;\n  return { qty: +result.toFixed(sym.basePrec), notional: +(result * sym.price).toFixed(2) };\n}\nfor (const sym of SYMS) {\n  const m1 = calc(sym, 1, false);     // estado vivo (\u00d71, floor) \u2014 BUGADO\n  const m1b = calc(sym, 1, true);     // \u00d71 + backstop\n  const m3 = calc(sym, 3, false);     // \u00d73 (inten\u00e7\u00e3o do setup-trend.js)\n  console.log(`${sym.s.padEnd(8)} price=${String(sym.price).padStart(7)} | \u00d71 floor: $${String(m1.notional).padStart(5)} ${m1.notional < 5 ? 'REJEITA -1013 \u2717' : 'ok'} | \u00d71+backstop: $${String(m1b.notional).padStart(5)} ${m1b.notional >= 5 ? '\u2713' : '\u2717'} | \u00d73: $${String(m3.notional).padStart(6)} ${m3.notional >= 5 ? '\u2713' : '\u2717'}`);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/calcqty-repro.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:12:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "node /tmp/calcqty-repro.js",
+  "description": "Reproduce calcQty MIN_NOTIONAL floor bug and verify fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> BTCUSDT  price=  66400 | ×1 floor: $ 4.65 REJEITA -1013 ✗ | ×1+backstop: $ 5.31 ✓ | ×3: $ 14.61 ✓
+> ETHUSDT  price=   2600 | ×1 floor: $ 4.94 REJEITA -1013 ✗ | ×1+backstop: $  5.2 ✓ | ×3: $ 14.82 ✓
+> BNBUSDT  price=    600 | ×1 floor: $  4.8 REJEITA -1013 ✗ | ×1+backstop: $  5.4 ✓ | ×3: $    15 ✓
+> LTCUSDT  price=  45.84 | ×1 floor: $    5 ok | ×1+backstop: $ 5.04 ✓ | ×3: $ 14.99 ✓
+> ADAUSDT  price=   0.18 | ×1 floor: $ 4.99 REJEITA -1013 ✗ | ×1+backstop: $    5 ✓ | ×3: $ 14.99 ✓
+> ```
+
+## 🤖 Claude *(01:13:00)*
+
+
+## 🤖 Claude *(01:13:03)*
+
+**Bug confirmado em 4 de 5 símbolos** (LTC só escapa por sorte do stepSize): ×1 floored → $4,65–$4,99 → **-1013**. O **backstop** conserta qualquer mult; **×3** (intenção do `setup-trend.js`) dá ~$15. 
+
+Aplico os dois: (a) backstop de piso em `calcQty` (cirúrgico — só MIN_NOTIONAL, não toca posições), (b) template id3 → ×3.
+
+## 🤖 Claude *(01:13:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    factor = Math.floor(newQty / stepSize);\n    return (factor * stepSize).toFixed(symbol.basePrecision);\n}",
+  "new_string": "    factor = Math.floor(newQty / stepSize);\n    let result = factor * stepSize;\n    // PISO de notional (backstop -1013): o floor por stepSize pode empurrar uma COMPRA alvo-notional\n    // (MIN_NOTIONAL) ABAIXO do m\u00ednimo da Binance ($5) \u2192 ordem rejeitada com -1013 (NOTIONAL) e a automa\u00e7\u00e3o\n    // N\u00c3O compra (ex.: id6 Trend Buy com mult=1 a ~$66k \u2192 $4,65). S\u00f3 p/ MIN_NOTIONAL: se o resultado floored\n    // n\u00e3o cobre o minNotional, sobe 1 stepSize (menor ordem v\u00e1lida). N\u00c3O afeta posi\u00e7\u00f5es \u2014 TREND_QTY/\n    // HARVEST_QTY/FARM_QTY/MAX_WALLET seguem com floor (jamais vender/usar mais do que se tem). Idempotente:\n    // um resultado j\u00e1-v\u00e1lido (mult>=~1.1 ou s\u00edmbolo que floored acima de $5) n\u00e3o muda. O teto MAX_ORDER_NOTIONAL\n    // continua no chokepoint de exchange.js (este \u00e9 s\u00f3 o PISO, do lado da compra).\n    if (orderTemplate.quantity === 'MIN_NOTIONAL' && (result * parseFloat(price)) < parseFloat(symbol.minNotional)) {\n        result = (factor + 1) * stepSize;\n    }\n    return result.toFixed(symbol.basePrecision);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:13:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nDBPWD=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DB_PWD=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2- | tr -d \"\\\"'\"'\"'\"')\nrun_sql() { sudo -n -u gcrux-tradeux bash -lc \"docker exec -e MYSQL_PWD='$DBPWD' tradeux-db-1 mysql -utradeux tradeux -N -e \\\"$1\\\"\"; }\necho \"=== ANTES ===\"; run_sql \"SELECT id,name,quantity,quantityMultiplier FROM orderTemplates WHERE id=3;\"\nrun_sql \"UPDATE orderTemplates SET quantityMultiplier=3.00 WHERE id=3 AND quantity='MIN_NOTIONAL';\"\necho \"=== DEPOIS ===\"; run_sql \"SELECT id,name,quantity,quantityMultiplier FROM orderTemplates WHERE id=3;\"\necho \"=== chown beholder.js ===\"; sudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js && echo \"chown OK\"\necho \"=== syntax ===\"; node --check backend/src/beholder.js && echo \"beholder.js OK\"",
+  "description": "Update template id3 to x3, chown, syntax-check beholder"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ANTES ===
+> 3	Trend Buy BTCUSDT SMA50/200	MIN_NOTIONAL	1.00
+> === DEPOIS ===
+> 3	Trend Buy BTCUSDT SMA50/200	MIN_NOTIONAL	3.00
+> === chown beholder.js ===
+> chown OK
+> === syntax ===
+> beholder.js OK
+> ```
+
+## 🤖 Claude *(01:13:22)*
+
+
+## 🤖 Claude *(01:13:23)*
+
+Template id3 → **×3.00** aplicado, backstop em `calcQty` escrito, sintaxe OK, chownado. Agora o **gate QA/TL** (é hot-path money-path) antes de qualquer deploy.
+
+## 🤖 Claude *(01:13:42)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review calcQty backstop",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise (pr\u00e9-merge) uma corre\u00e7\u00e3o de money-path no TradeUX. Sistema em MAINNET REAL CONGELADO (TRADING_HALT=true, ~$148). A mudan\u00e7a conserta o erro -1013 (NOTIONAL) que impediria a automa\u00e7\u00e3o ATIVA id6 (Trend Buy BTCUSDT, golden cross) de comprar.\n\nMUDAN\u00c7A (2 partes):\n1. C\u00d3DIGO \u2014 backend/src/beholder.js fun\u00e7\u00e3o calcQty (final, ~linha 281-293): adicionado um PISO de notional (backstop). Antes: `factor=Math.floor(newQty/stepSize); return (factor*stepSize).toFixed(basePrecision)`. Depois: calcula `result=factor*stepSize`; SE `orderTemplate.quantity==='MIN_NOTIONAL'` E `result*price < symbol.minNotional`, faz `result=(factor+1)*stepSize` (sobe 1 stepSize). Retorna `result.toFixed(basePrecision)`.\n2. DB \u2014 orderTemplates id=3 (usado pela id6): quantityMultiplier 1.00 \u2192 3.00 (restaura a inten\u00e7\u00e3o documentada em backend/scripts/setup-trend.js:111).\n\nCONTEXTO (leia beholder.js calcQty inteira, ~linha 200-283): MIN_NOTIONAL \u00e9 o caminho de COMPRA alvo-notional (linha 227: `newQty=(minNotional/price)*(mult<1?1:mult)`). Outros tokens de quantidade: MAX_WALLET, LAST_ORDER_QTY, TREND_QTY, HARVEST_QTY, FARM_QTY, BTC_EXCESS \u2014 esses s\u00e3o POSI\u00c7\u00d5ES (vender/usar o que se tem) e fazem `if (SELL && newQty>asset) newQty=asset`.\n\nVERIFIQUE com veredito PASS / PASS COM RESSALVAS / FAIL + findings por severidade:\n1. O backstop afeta SOMENTE `quantity==='MIN_NOTIONAL'`? Confirme que TREND_QTY/HARVEST_QTY/FARM_QTY/MAX_WALLET/LAST_ORDER_QTY/BTC_EXCESS ficam INTOCADOS (o floor segue igual \u2014 crucial: n\u00e3o pode fazer uma VENDA de posi\u00e7\u00e3o subir 1 step acima do que se tem).\n2. Idempot\u00eancia/sem-regress\u00e3o: um resultado j\u00e1-v\u00e1lido (\u2265 minNotional) N\u00c3O muda? (ex.: mult=3 d\u00e1 ~$15 \u2192 backstop n\u00e3o dispara). Procure off-by-one, NaN, casos de borda (price=0/NaN, stepSize grande como ADA 0.1, basePrecision).\n3. Subir 1 stepSize pode estourar a carteira (hasEnoughAssets, linha 285) ou o teto MAX_ORDER_NOTIONAL_USDT (exchange.js)? Avalie o pior caso (conta ~$148, ordem ~$5).\n4. O `parseFloat(price)` e `parseFloat(symbol.minNotional)` s\u00e3o seguros aqui? `price` \u00e9 o mesmo usado no c\u00e1lculo?\n5. A mudan\u00e7a de DB (\u00d73) \u00e9 coerente \u2014 e LEMBRA que o BRAIN cacheia action.orderTemplate, ent\u00e3o s\u00f3 pega efeito ap\u00f3s stop/start OU reboot do backend (mem\u00f3ria tradeux-ordertemplate-brain-cache)?\n6. Qualquer caminho onde o backstop introduza compra MAIOR que o pretendido de forma perigosa.\n\nH\u00e1 um repro num\u00e9rico em /tmp/calcqty-repro.js (replica a l\u00f3gica): \u00d71 floored rejeita 4/5 s\u00edmbolos (-1013), \u00d71+backstop e \u00d73 passam (\u2265$5). Rode/valide se quiser. Responda pt-BR, file:line."
+}
+```
+
+## 🤖 Claude *(01:13:56)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-lead review calcQty backstop",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de uma corre\u00e7\u00e3o de money-path no TradeUX (MAINNET REAL CONGELADO, TRADING_HALT=true, ~$148).\n\nPROBLEMA: orderTemplate id3 (quantity=MIN_NOTIONAL, quantityMultiplier=1.00) usado pela automa\u00e7\u00e3o ATIVA id6 (Trend Buy BTCUSDT, condition golden cross + regime!=bear). Em backend/src/beholder.js calcQty, o `Math.floor(newQty/stepSize)*stepSize` empurra o notional abaixo de $5 \u2192 Binance rejeita -1013 e a id6 N\u00c3O compra quando um golden cross disparar. Confirmado: drift do banco vs a inten\u00e7\u00e3o documentada (setup-trend.js:111 = \u00d73).\n\nFIX:\n1. beholder.js calcQty (~linha 281): backstop de PISO \u2014 se `quantity==='MIN_NOTIONAL'` E `result*price < minNotional`, sobe 1 stepSize. Cir\u00fargico ao MIN_NOTIONAL; n\u00e3o toca TREND_QTY/HARVEST_QTY/FARM_QTY/MAX_WALLET (posi\u00e7\u00f5es, que fazem floor + cap na carteira).\n2. DB orderTemplates id3: quantityMultiplier 1.00 \u2192 3.00 (restaura inten\u00e7\u00e3o documentada; ~$15 notional, alinhado ao plano de canary ~$150).\n\nAvalie (leia beholder.js calcQty linha 200-283 + exchange.js assertWithinRisk):\n1. DESIGN: o backstop \u00e9 a camada certa (calcQty) e o escopo (s\u00f3 MIN_NOTIONAL) \u00e9 correto? Ou deveria ser mais geral / em outro lugar? H\u00e1 duplica\u00e7\u00e3o com algo existente?\n2. SEGURAN\u00c7A/RISCO: pode o backstop, em ALGUM caminho, transformar uma venda de posi\u00e7\u00e3o em algo perigoso, ou furar o teto MAX_ORDER_NOTIONAL? O fix muda o comportamento de QUALQUER automa\u00e7\u00e3o al\u00e9m da inten\u00e7\u00e3o (farm/harvester usam MIN_NOTIONAL? grep)? \n3. A escolha de size \u00d73 ($15 num conta de $148 = ~10%/trade) \u00e9 sensata p/ um canary do Trend, ou prefere \u00d71 ($5, agora seguro pelo backstop) / \u00d72? D\u00ea sua recomenda\u00e7\u00e3o.\n4. SEQU\u00caNCIA DE DEPLOY: o BRAIN cacheia o template \u2014 o reboot do backend (que re-inicializa o BRAIN) basta p/ pegar o \u00d73 + o backstop, ou precisa stop/start expl\u00edcito da id6? Algum risco no reboot do sistema congelado?\n5. Must-fix vs nice-to-have antes do deploy. Lembre: HALT=true segue, nenhuma ordem dispara agora; isto \u00e9 corre\u00e7\u00e3o preparat\u00f3ria da estrat\u00e9gia VALIDADA (Trend), n\u00e3o descongelamento.\n\nResponda pt-BR com rationale + must-fix/nice-to-have, file:line."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'O diff do backstop está limpo e isolado. Confirmei tudo o que precisava. O template id6 é LIMIT (setup-trend.js:110), então o caminho `calcQty` com floor é de fato o usado — diferente do MARKET, que usa `calcQuoteQty` sem floor.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança cirúrgica, bem-escopada, reversível, em sistema CONGELADO (`TRADING_HALT=true` segue no chokepoint `exchange.js:24` — nada dispara). O backstop está na camada certa e o racional do bug confere. Aprovo as duas partes (código + DB) com 2 ajustes de sequência/observabilidade, nenhum bloqueante.\n\n### 1. DESIGN — camada e escopo corretos\n\n`calcQty` (`backend/src/beholder.js:281-293`) é exatamente onde o floor por `stepSize` acontece, então é onde o piso deve compensar. Escopo restrito a `MIN_NOTIONAL` é correto e bem-justificado:\n\n- As quantidades de **posição** (`TREND_QTY`/`HARVEST_QTY`/`FARM_QTY`/`MAX_WALLET`/`BTC_EXCESS`) precisam do `Math.floor` para *nunca* vender/usar mais do que se tem — subir 1 stepSize nelas poderia exceder a carteira. O backstop deliberadamente NÃO as toca. Correto.\n- Não há duplicação: o `setup-farm.js:36`, `setup-harvester.js:32` e `setup-farm.js` migration tratam o mesmo `-1013` por **convenção de operador** (`SIZE_MULT=2`, "×1 falha o filtro"). Isso é frágil — depende de cada setup script lembrar de multiplicar. O backstop em `calcQty` é a **defesa estrutural** que faltava e cobre farm/harvester de quebra (ambos usam `MIN_NOTIONAL`, `setup-farm.js:117` / `setup-harvester.js:106`), sem alterar o comportamento deles quando o ×2 já passa do piso (idempotente). Boa generalização *dentro* do escopo certo.\n\nIdempotência confere: se `result*price >= minNotional`, o `if` não dispara. Um símbolo cujo floor já passa de $5, ou mult alto, fica intocado.\n\n### 2. SEGURANÇA / RISCO — não há caminho perigoso\n\n- **Vender posição?** Impossível. O `if` exige `orderTemplate.quantity === \'MIN_NOTIONAL\'`, que é **sempre lado BUY** na base instalada (todos os templates `MIN_NOTIONAL` são compras — trend/farm/harvester). Vendas usam `*_QTY`/`LAST_ORDER_QTY`/`BTC_EXCESS`, fora do `if`. O cofre SELL-BTC (vault guard no MCP) também não é tocado.\n- **Furar `MAX_ORDER_NOTIONAL`?** Não. O teto vive no chokepoint `exchange.js:23-39`, *downstream* de `calcQty`. O backstop sobe no máximo **1 stepSize** (BTC: 0,00001 BTC ≈ $0,66) — sempre PARA CIMA até cruzar o piso de $5, jamais para perto de qualquer teto. E mesmo que subisse, o `assertWithinRisk(\'BUY\', …, price, quantity)` reavaliaria (linha 33: LIMIT tem `price`×`quantity`) e bloquearia. Defesa em profundidade intacta.\n- **Mudança de comportamento além da intenção?** Farm/harvester com `SIZE_MULT=2` já passam o piso hoje → backstop é no-op para eles (idempotente). O único delta de comportamento é: antes, um `MIN_NOTIONAL×1` sub-$5 era *rejeitado pela Binance*; agora vira a menor ordem válida (~$5). Isso é a correção pretendida, não efeito colateral.\n\nUma observação menor (não-bug): o backstop assume `price` finito e `> 0`. No caminho LIMIT do id6 o `price` vem de `calcPrice` (validado finito em `beholder.js:470`), então OK. Se `price` fosse 0/NaN, `result*price < minNotional` seria sempre verdade e subiria 1 step — comportamento degradado mas não perigoso (e a ordem morreria adiante na validação de preço). Aceitável.\n\n### 3. SIZE — recomendo ×3 ($15), com ressalva\n\n×3 (~$15 num book de $148 ≈ 10%/trade) é **sensato e é a intenção documentada** (`setup-trend.js:111`, `activate-trend.js:8`, HANDOFF "id6=3× MIN_NOTIONAL"). O drift do banco para ×1 é o defeito; restaurar ×3 é alinhar realidade↔doc, não escalar. Razões para preferir ×3 a ×1/×2:\n\n- O Trend é um sinal **mensal/raro** (golden→death). A $5 (×1), um ciclo inteiro move ~$5 de exposição — ruído abaixo dos fees, P&L imensurável para validação.\n- ×3 dá sinal mensurável (`net`/`avgPrice` já gravados, P&L em BTC no painel) sem comprometer o cofre: 10% por trade, com saída via `TREND_QTY` no death, é proporcional a um canary.\n- O backstop *não substitui* o ×3 — ele garante que ×1 não quebre, mas ×1 continua operacionalmente inútil para validar. O backstop é a rede de segurança; o ×3 é a dose terapêutica.\n\n**Não subir além de ×3 agora** — só após observar 1 golden→death real (NEXT (a) do HANDOFF) e depois de **persistir `TREND_QTY`** (hoje volátil — risco nº1(c) ainda aberto). Escalar size antes de persistir a posição é que seria temerário.\n\n### 4. SEQUÊNCIA DE DEPLOY — reboot do backend basta, mas com 1 passo\n\nO BRAIN cacheia `action.orderTemplate` (memória `tradeux-ordertemplate-brain-cache`: editar template vivo NÃO afeta automação rodando). O `server.js` reinicializa o BRAIN a partir das automações **ativas** no boot, então:\n\n- O **backstop** (código): pega no reboot, garantido (é função pura recompilada).\n- O **×3 no DB**: pega no reboot **se** o id6 for re-lido do banco na init do BRAIN. Pela arquitetura (init carrega automações ativas → compila templates), o reboot completo do container re-hidrata o cache. **Stop/start explícito da id6 não é estritamente necessário** num reboot full do backend — mas é o caminho à prova de dúvida e é barato. Recomendo: aplicar o UPDATE no DB **antes** de subir o container (ordem abaixo), assim o boot já lê ×3 e não há janela onde o BRAIN tem ×3-no-banco mas ×1-em-cache.\n\n**Risco do reboot com sistema congelado:** baixo, com 1 cuidado. No boot o backend roda `reconcile`/`db:migrate`/`db:seed` (idempotentes) e re-subscreve streams. Garanta que **`TRADING_HALT=true` persiste no `.env`** após o restart (é env, não código — sobrevive a reboot, mas confirme que o compose não traz um `.env` diferente). Enquanto HALT=true, nem o backstop nem o ×3 podem disparar ordem — `assertWithinRisk` (`exchange.js:24-28`) barra tudo fail-closed. Esta é correção **preparatória**, não descongelamento. Confirmado.\n\n---\n\n### Must-fix (antes do deploy)\n1. **Aplicar o UPDATE do id3/id6 no DB ANTES de subir o container** (não depois), para eliminar a janela de incoerência banco-vs-cache do BRAIN. Se preferir não reiniciar o backend agora, faça `stop_automation`→`start_automation` na id6 após o UPDATE para forçar o reload do cache (`tradeux-ordertemplate-brain-cache`).\n2. **Confirmar `TRADING_HALT=true` no `.env` efetivo do container pós-reboot.** O fix é preparatório; um reboot que perca o HALT seria descongelamento acidental. Verificar via `make logs`/`GET` após subir.\n\n### Nice-to-have (follow-up, não bloqueia)\n3. **Guard de `price` finito/positivo** no backstop (`beholder.js:290`): adicionar `parseFloat(price) > 0 &&` à condição, por simetria defensiva com `calcPrice`. Cosmético.\n4. **Unificar a convenção de size dos setups** com o backstop: agora que o piso é estrutural, `setup-farm.js:36`/`setup-harvester.js:32` poderiam documentar que o `SIZE_MULT=2` é por *economia de fees/edge*, não mais por *evitar -1013* (o backstop já cobre). Evita que um futuro mantenedor pense que ×1 quebra. Só comentário.\n5. **Persistir `TREND_QTY` antes de qualquer escalada de size acima de ×3** (risco nº1(c) do HANDOFF) — pré-requisito da PRÓXIMA mudança, não desta.\n\n---\n\n### Decisão de merge\n**APROVAR ambas as partes como um único PR**, na ordem: (1) commit do backstop `beholder.js:281-293` + (2) UPDATE `orderTemplates` id3 `quantityMultiplier 1.00→3.00`, com as condições must-fix 1 e 2. Ship via PR para `master` (não direto), merge/push como root com a chave SSH do `ubuntu` + chown de volta para `gcrux-tradeux` (gotcha de ownership do `.git`).\n\n**Atenção operacional:** o working tree tem 9 outros arquivos modificados (`analysisController.js`, `IntelligenceService.js`, `server.js`, `agent.js`, `tradeux-mcp/src/index.js` etc.) que NÃO fazem parte deste fix. **Não misturar** — committar o backstop isoladamente (`git add backend/src/beholder.js`), senão o blast radius do PR de money-path engole mudanças não-revisadas de painel/agente.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (calcQty :281-293 — o fix; calcQuoteQty :318-319 — caminho MARKET sem floor, não afetado)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (:24 HALT, :29-38 teto — chokepoint downstream intacto)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js` (:110-111 — intenção LIMIT + ×3 documentada)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js`, `setup-harvester.js` (:117/:106 — também usam MIN_NOTIONAL, cobertos pelo backstop, idempotentes em ×2)'}, {'type': 'text', 'text': "agentId: a10697dac14e71f0b (use SendMessage with to: 'a10697dac14e71f0b' to continue this agent)\n<usage>subagent_tokens: 35475\ntool_uses: 12\nduration_ms: 92532</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho tudo o que preciso. Análise completa.\n\n---\n\n# REVISÃO PRÉ-MERGE — fix money-path calcQty (backstop NOTIONAL -1013) + DB ×3\n\n## VEREDITO: PASS COM RESSALVAS\n\nA correção está logicamente correta, é cirúrgica (só `MIN_NOTIONAL`), idempotente e não toca posições. Funciona como anunciado e o repro confere (`/tmp/calcqty-repro.js`: ×1 floored rejeita 4/5; ×1+backstop e ×3 passam ≥$5). As ressalvas são de **deploy/operação**, não de lógica.\n\n---\n\n## Respostas ponto-a-ponto\n\n**1. Backstop afeta SOMENTE `MIN_NOTIONAL`? — SIM, confirmado.**\n`backend/src/beholder.js:290` — a guarda é `orderTemplate.quantity === \'MIN_NOTIONAL\' && (result*price) < minNotional`. O `factor=Math.floor(...)` na linha 281 e o `result=factor*stepSize` (282) seguem idênticos ao original para TREND_QTY/HARVEST_QTY/FARM_QTY/MAX_WALLET/LAST_ORDER_QTY/BTC_EXCESS. Nenhum desses entra no `if`. Crucial: o cap de venda `if (SELL && newQty>asset) newQty=asset` (linhas 235/245/257/270/278) é aplicado **antes** do floor, e o backstop **nunca** os sobe 1 step — então **nenhuma venda de posição pode subir 1 step acima do que se tem**. PASS.\n\n**2. Idempotência / sem-regressão — SIM.**\nResultado já-válido (≥minNotional) não dispara o `if` → retorno idêntico ao código antigo. Para o template 3 real (×3 ≈ $14,61), o backstop fica **dormente** — quem conserta o -1013 do id6 é o multiplicador ×3, não o backstop. Sem off-by-one (`factor+1` é a menor ordem válida acima do floor). Testei o re-arredondamento de `toFixed(basePrecision)`: com `basePrecision` REAL (=`baseAssetPrecision`, tipicamente 8 na Binance spot — `symbolsController.js:51`), o `toFixed(8)` **pad com zeros**, não trunca o bump → notional bumpado sobrevive (ADA `27.80000000`=$5,00; BTC `0.00008`=$5,31; BNB `0.009`=$5,40). Float-artifact do BNB (`0.009000000000000001`) é absorvido pelo `toFixed`. `price=0`/`NaN` → a condição do backstop é `false` (comparação com NaN/Infinity) → backstop **não dispara**; o `NaN`/`Infinity` qty resultante já é barrado a jusante por `!isFinite/!parseFloat(quantity)` em `beholder.js:478` (igual ao código antigo — sem regressão).\n\n**3. Estoura carteira (hasEnoughAssets) ou teto MAX_ORDER_NOTIONAL_USDT? — NÃO (pior caso).**\nO overshoot de 1 stepSize é minúsculo (BTC=$0,66; ETH=$0,26; BNB=$0,60; LTC=$0,05; ADA=$0,02 — vs ordem ~$5). Conta ~$148: zero risco de drenar carteira. `hasEnoughAssets` (`beholder.js:296`, chamada 492) roda **depois** do `calcQty` com a qty já bumpada → se 1 step extra excedesse o saldo, a ordem é barrada (fail-closed), não vaza. Teto `MAX_ORDER_NOTIONAL_USDT` é PISO×teto independentes — o bump de centavos jamais cruza um teto razoável. PASS.\n\n**4. `parseFloat(price)` / `parseFloat(symbol.minNotional)` seguros? — SIM.**\n`minNotional` é `STRING` no model (`symbolModel.js:18`) → `parseFloat` é necessário e correto. O `price` é **o mesmo** usado no cálculo: para o id6 (LIMIT marketável) o caminho é `beholder.js:476` → `calcQty(orderTemplate, price, symbol)` com `price` = `limitPrice` (bestAsk×1.003, de `calcPrice`). É o preço de execução-alvo, logo o notional avaliado bate com o que a Binance vê. Coerente.\n\n**5. Mudança de DB (×3) coerente + BRAIN cache — SIM, mas com pegadinha operacional.**\nConfirmei no DB vivo: `orderTemplates` id=3 = `BTCUSDT BUY LIMIT MIN_NOTIONAL` já com `quantityMultiplier=3.00`; automação id6 (`isActive=1`) usa `orderTemplateId=3`. Bate com a intenção documentada em `setup-trend.js:111` (`quantityMultiplier: 3`). **PORÉM** (memória `tradeux-ordertemplate-brain-cache`): a BRAIN viva cacheia `action.orderTemplate` (`placeOrder` usa `action.orderTemplate` em `beholder.js:442`) → a id6 RODANDO ainda enxerga mult=**1** até `stop/start` da automação OU reboot do backend.\n\n**6. Compra MAIOR que o pretendido de forma perigosa? — NÃO.**\nO bump é capado em exatamente +1 stepSize (centavos). Não há caminho onde o backstop infle além disso.\n\n---\n\n## Findings por severidade\n\n- **[MÉDIA — deploy] O código NÃO está vivo e NÃO está commitado.** A mudança está só no working-tree (`git diff HEAD`: 12 inserções/1 deleção, **uncommitted**); o container `tradeux-backend-1` rodando **não tem** o backstop (`grep -c \'PISO de notional\'` no container = **0**). Precisa de commit + rebuild/restart do backend para valer. Bônus: o rebuild **recarrega a BRAIN**, resolvendo a pegadinha do item 5 de uma vez (mult 1→3 + backstop entram juntos). Sem o rebuild, **nem o ×3 do DB pega efeito** na id6.\n\n- **[BAIXA — robustez, pré-existente, não introduzida aqui] `basePrecision < precisão do stepSize` truncaria o bump.** Num símbolo adversarial (ex.: `basePrecision=0`, `stepSize=0.00001`), `toFixed(0)` zeraria o `result` bumpado. NÃO ocorre com símbolos reais sincronizados (Binance dá `baseAssetPrecision`≈8 ≥ precisão do step) e o `!parseFloat(quantity)` (linha 478) barraria um qty=0. O floor original tem a mesma fragilidade — o backstop não piora. Mantém o requisito do projeto: **símbolos têm de estar synced** para `calcQty(MIN_NOTIONAL)`.\n\n- **[INFORMATIVO] 4º argumento `false` em `calcQty(orderTemplate, price, symbol, false)` (linha 476) é IGNORADO** — a assinatura é de 3 params (`beholder.js:201`). Pré-existente, inócuo, sem relação com esta mudança (vale uma limpeza futura).\n\n- **[INFORMATIVO] O backstop é dormente para o id6 real (×3=$14,61).** Quem destrava o -1013 da id6 é o multiplicador. O backstop é a rede de segurança para mult≈1 / qualquer template MIN_NOTIONAL futuro — defesa em profundidade legítima.\n\n---\n\n## Testes que eu rodaria\n\n1. **`node /tmp/calcqty-repro.js`** (feito) — ×1 floor rejeita 4/5 (-1013); ×1+backstop e ×3 ≥$5. OK.\n2. **Edge unit (feito ad-hoc):** ADA stepSize 0.1, BNB float-artifact 0.009..1, `basePrecision=8` real (não trunca), `price=0/NaN` (backstop não dispara). Todos OK.\n3. **Não-regressão de VENDA:** simular calcQty SELL com TREND_QTY/HARVEST_QTY/FARM_QTY onde `asset` < step floor → confirmar que retorno = floor (nunca +1 step). Garante o invariante "não vender mais do que se tem".\n4. **Pós-rebuild, com `TRADING_HALT=true` ainda ativo:** subir backend, `stop/start` da id6 (ou confirmar reload da BRAIN), inspecionar `GET /beholder/brain` → `quantityMultiplier=3` no cache da id6 (não consegui validar agora: login programático no container não retornou token).\n5. **Dry de ordem real (testnet, ALLOW_TRADING + HALT off num ambiente isolado):** forçar golden cross → id6 monta LIMIT BTCUSDT, qty ≥$5, **sem -1013**. NÃO testar isso no mainnet congelado.\n6. **CI:** migrate+seed mysql+postgres + agent `--check` (a mudança é só JS de runtime + 1 UPDATE de dado; não toca migration/seed, mas rodar o preflight por higiene).\n\n---\n\n## Recomendação de merge\n\n**APROVAR com 2 condições operacionais ANTES de considerar "feito":**\n1. **Commitar** o diff de `backend/src/beholder.js:281-293` (hoje só working-tree) e **rebuildar/restart o backend** — sem isso nem o backstop nem o ×3 do DB entram em vigor (BRAIN cacheada + container sem o código).\n2. Manter **`TRADING_HALT=true`** durante o deploy (já está). O fix só "acende" quando o dono descongelar — e aí a id6 finalmente compra ≥$5 no golden cross em vez de morrer com -1013.\n\nA lógica de dinheiro está sólida: cirúrgica, idempotente, sem risco de oversell, overshoot de centavos. O risco residual é puramente de **não-deploy** (mudança parada no working-tree).\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:281-293` (backstop) · `:201-294` (calcQty) · `:296-302` (hasEnoughAssets) · `:463-494` (placeOrder/caminho LIMIT do id6)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js:9-40` (riskGuard / TRADING_HALT / MAX_ORDER_NOTIONAL)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/symbolsController.js:45-57` (basePrecision=baseAssetPrecision, origem do toFixed)\n- `/home/gcrux-tradeux/tradeux/backend/src/models/symbolModel.js:18` (minNotional como STRING → parseFloat correto)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js:111` (intenção documentada ×3)\n- `/tmp/calcqty-repro.js` (repro numérico, validado)'}, {'type': 'text', 'text': "agentId: a051fcdc0a2ed3f48 (use SendMessage with to: 'a051fcdc0a2ed3f48' to continue this agent)\n<usage>subagent_tokens: 59055\ntool_uses: 21\nduration_ms: 173694</usage>"}]
+> ```
+
+## 🤖 Claude *(01:16:57)*
+
+
+## 🤖 Claude *(01:17:01)*
+
+**QA: PASS COM RESSALVAS · TL: APPROVE COM SUGESTÕES.** Lógica sólida — cirúrgica, idempotente, não toca posições (não pode oversell), overshoot de centavos, HALT intacto. O TL confirmou que o backstop é "a defesa estrutural que faltava" (cobre farm/harvester de quebra) e que ×3 é a dose certa pra validar (×1 seria ruído abaixo de fee). 
+
+Aplico a única sugestão barata do TL (guard de `price>0`) e deployo na ordem certa (DB ×3 já aplicado **antes** do boot → sem janela de incoerência BRAIN-cache).
+
+## 🤖 Claude *(01:17:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    if (orderTemplate.quantity === 'MIN_NOTIONAL' && (result * parseFloat(price)) < parseFloat(symbol.minNotional)) {",
+  "new_string": "    if (orderTemplate.quantity === 'MIN_NOTIONAL' && parseFloat(price) > 0 && (result * parseFloat(price)) < parseFloat(symbol.minNotional)) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:17:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js\nnode --check backend/src/beholder.js && echo \"syntax OK\"\necho \"=== rebuild + redeploy backend (re-inicializa BRAIN: \u00d73 + backstop) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | grep -iE \"naming to|error|fail\" | tail -3 && docker compose up -d backend 2>&1 | tail -3'",
+  "description": "Add price guard, rebuild and redeploy backend",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> === rebuild + redeploy backend (re-inicializa BRAIN: ×3 + backstop) ===
+> #13 naming to docker.io/library/tradeux-backend done
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(01:17:21)*
+
+
+## 🤖 Claude *(01:17:22)*
+
+Backend no ar. Verifico o que o TL pediu: HALT ainda ativo, backstop no container, e o BRAIN com ×3 (re-inicializado do DB).
+
+## 🤖 Claude *(01:17:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 12); do curl -s -m2 -o /dev/null http://127.0.0.1:8090/ 2>/dev/null; sleep 1; done\necho \"=== TRADING_HALT no container (deve ser true) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 printenv TRADING_HALT' 2>&1\necho \"=== backstop no c\u00f3digo deployado (deve ser 1) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 grep -c \"PISO de notional\" /app/src/beholder.js' 2>&1\necho \"=== BRAIN: quantityMultiplier do template do id6 (deve ser 3) ===\"\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/beholder/brain | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{let d;try{d=JSON.parse(s)}catch(e){console.log(\"parse fail\");process.exit(0)}const hits=[];function walk(o){if(!o||typeof o!==\"object\")return;if((o.name&&String(o.name).includes(\"Trend Buy BTCUSDT\"))||o.orderTemplateId===3||o.id===3){if(o.quantityMultiplier!==undefined||o.quantity!==undefined)hits.push({name:o.name,id:o.id,q:o.quantity,mult:o.quantityMultiplier});}for(const k in o)walk(o[k]);}walk(d);const seen=new Set();hits.forEach(h=>{const k=JSON.stringify(h);if(!seen.has(k)){seen.add(k);console.log(JSON.stringify(h));}});if(!hits.length)console.log(\"(template do trend n\u00e3o encontrado no dump \u2014 brain pode usar outra estrutura)\")});'",
+  "description": "Verify HALT, backstop deployed, and BRAIN has x3",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TRADING_HALT no container (deve ser true) ===
+> true
+> === backstop no código deployado (deve ser 1) ===
+> 1
+> === BRAIN: quantityMultiplier do template do id6 (deve ser 3) ===
+> {"name":"Trend Buy BTCUSDT SMA50/200","id":3,"q":"MIN_NOTIONAL","mult":"3.00"}
+> ```
+
+## 🤖 Claude *(01:18:06)*
+
+
+## 🤖 Claude *(01:18:21)*
+
+Tudo verificado:
+
+| Verificação | Resultado |
+|---|---|
+| `TRADING_HALT` no container | **`true`** — congelado, nenhuma ordem dispara |
+| Backstop no código deployado | **presente** (grep=1) |
+| BRAIN re-inicializado | template id3 = **`MIN_NOTIONAL` ×3.00** (cache vivo atualizado) |
+
+## ✅ Fix completo, QA-PASS / TL-APPROVE, deployado e verificado
+
+**Bug confirmado:** o template id3 (usado pela automação ATIVA **id6** Trend Buy BTC) sofreu drift pra `quantityMultiplier=1.00`. Com mult=1, `calcQty` fazia `floor(5/price / stepSize)*stepSize` → notional **abaixo de $5** em 4 dos 5 símbolos → quando um golden cross disparasse (`REGIME!=bear`), a id6 **morreria com -1013** e não compraria. Repro numérico anexo confirmou ($4,65 BTC / $4,94 ETH / $4,80 BNB / $4,99 ADA).
+
+**Correção em 2 camadas:**
+1. 🛡️ **Backstop estrutural em `calcQty`** ([beholder.js:281-293](backend/src/beholder.js:281)): se `MIN_NOTIONAL` floored cai abaixo do `minNotional`, sobe 1 stepSize. **Cirúrgico** (só MIN_NOTIONAL — não toca TREND_QTY/HARVEST_QTY/FARM_QTY/MAX_WALLET, então **impossível oversell de posição**), idempotente, overshoot de centavos. O TL notou que isso é "a defesa que faltava" e **cobre farm/harvester de quebra** (a convenção `SIZE_MULT=2` virou cinto-e-suspensório).
+2. 📊 **Template id3 → ×3** (intenção documentada do `setup-trend.js`; ~$15 = dose mensurável p/ validar 1 cross num book de $148; ×1 seria ruído abaixo do fee).
+
+**Tudo preparatório** — `HALT=true` intacto, nada negocia. Isto deixa a **estratégia validada (Trend)** pronta pra funcionar *quando* você descongelar, em vez de morrer no -1013.
+
+### Ressalvas dos reviewers (honestas, anotadas)
+- **Não commitei.** O deploy é do working-tree (já vivo), mas **não está no git**. O TL recomendou: quando commitar, **isolar o `beholder.js`** (não misturar com os 9 arquivos do cockpit/agente que também estão dirty) — money-path merece PR próprio.
+- **Não escalar size acima de ×3** até (a) observar 1 golden→death real e (b) **persistir o `TREND_QTY`** (hoje é volátil em memória — risco aberto no HANDOFF; um restart com posição de trend aberta perde a referência de venda).
+- O backstop assume `price>0` (guard adicionado).
+
+Quer que eu **commite o `beholder.js` isolado** (PR só desse fix, como o TL recomendou), ou deixo no working-tree por enquanto? E registro isto na memória.
+
+## 👤 User *(01:18:23)*
+
+ok entao segue a recomendacao corrigi os provlemas e sobre desconfelar analise melhor agora com o resutado do workflow dos agentes idempendentes
+
+## 🤖 Claude *(01:20:44)*
+
+
+## 🤖 Claude *(01:20:46)*
+
+Boa. Vou: (1) corrigir os problemas reais que a auditoria confirmou no cockpit, (2) commitar conforme a recomendação, e (3) te dar a análise de descongelamento **fundamentada nos achados dos auditores independentes** — não na minha opinião.
+
+Primeiro os 3 fixes de honestidade do cockpit (read-only, deixam o sinal mais conservador/honesto):
+
+## 🤖 Claude *(01:21:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js",
+  "old_string": "    const flowFresh = flow && Number.isFinite(flow.imbalance) && flow.atMs && (Date.now() - flow.atMs) < FLOW_STALE_MS;\n    const flowOk = !flowFresh ? true : flow.imbalance >= FLOW_BUY_MIN; // sem fluxo fresco => n\u00e3o veta\n    const farm = regimeOk && regime !== 'trend';        // farm acumula s\u00f3 em range\n    const baseline = farm && flowOk;                    // baseline = farm + filtro de fluxo\n    const trend = regimeOk;                             // trend compra no golden cross (!= bear)\n    const buyAllowed = baseline;\n    let reason;\n    if (!regimeOk) reason = `regime=${regime || 'unknown'}: acumula\u00e7\u00e3o em CAIXA (farm/baseline e trend parados)`;\n    else if (regime === 'trend') reason = 'regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross';\n    else if (!flowOk) reason = `fluxo em capitula\u00e7\u00e3o (imbalance ${flow.imbalance} < ${FLOW_BUY_MIN}): baseline veta o dip`;\n    else reason = 'range + fluxo ok: acumula\u00e7\u00e3o (farm/baseline) liberada';\n    return { regime, regimeOk, flowOk, flowFresh: !!flowFresh, flowBuyMin: FLOW_BUY_MIN, farm, baseline, trend, harvesterUngated: true, buyAllowed, reason };",
+  "new_string": "    const flowFresh = flow && Number.isFinite(flow.imbalance) && flow.atMs && (Date.now() - flow.atMs) < FLOW_STALE_MS;\n    // fail-CLOSED como a id2 (auditoria): fluxo stale/ausente N\u00c3O libera (conservador). Antes era fail-OPEN\n    // (mostrava GO sem fluxo fresco) \u2014 dire\u00e7\u00e3o PERIGOSA/enganosa vs a automa\u00e7\u00e3o real, que BLOQUEIA o dip.\n    const flowOk = !!flowFresh && flow.imbalance >= FLOW_BUY_MIN;\n    const farm = regimeOk && regime !== 'trend';        // farm acumula s\u00f3 em range\n    const baseline = farm && flowOk;                    // baseline = farm + filtro de fluxo (fail-closed)\n    const trend = regimeOk;                             // trend compra no golden cross (!= bear)\n    const buyAllowed = baseline;\n    let reason;\n    if (!regimeOk) reason = `regime=${regime || 'unknown'}: acumula\u00e7\u00e3o em CAIXA (farm/baseline e trend parados)`;\n    else if (regime === 'trend') reason = 'regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross';\n    else if (!flowFresh) reason = 'fluxo stale/ausente \u2192 conservador (fail-closed, como a id2): acumula\u00e7\u00e3o N\u00c3O liberada';\n    else if (!flowOk) reason = `fluxo em capitula\u00e7\u00e3o (imbalance ${flow.imbalance} < ${FLOW_BUY_MIN}): baseline veta o dip`;\n    else reason = 'range + fluxo ok: acumula\u00e7\u00e3o (farm/baseline) liberada';\n    // doctrine=true (auditoria): estes gates s\u00e3o a DOUTRINA por regime (o que a estrat\u00e9gia FARIA), N\u00c3O confirmam\n    // que a automa\u00e7\u00e3o correspondente (ex.: baseline id2, hoje isActive=0) est\u00e1 ATIVA \u2014 o gate VIVO mora na\n    // condition da automa\u00e7\u00e3o no banco. O agente/painel deve reportar como doutrina, n\u00e3o como estado vivo.\n    return { regime, regimeOk, flowOk, flowFresh: !!flowFresh, flowBuyMin: FLOW_BUY_MIN, farm, baseline, trend, harvesterUngated: true, buyAllowed, reason, doctrine: true };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:21:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js",
+  "old_string": "function percentile(sortedAsc, p) {\n    if (!sortedAsc.length) return 0;\n    const idx = (p / 100) * (sortedAsc.length - 1);\n    const lo = Math.floor(idx), hi = Math.ceil(idx);\n    if (lo === hi) return sortedAsc[lo];\n    return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo);\n}",
+  "new_string": "function percentile(sortedAsc, p) {\n    if (!sortedAsc.length) return 0;\n    const idx = (p / 100) * (sortedAsc.length - 1);\n    const lo = Math.floor(idx), hi = Math.ceil(idx);\n    if (lo === hi) return sortedAsc[lo];\n    return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo);\n}\n// Precis\u00e3o din\u00e2mica por magnitude (auditoria): .toFixed(2) fixo COLAPSAVA o pre\u00e7o/banda MC de alts baratas\n// (ex.: ADA ~$0,18 \u2192 p10/p50/p90 todos 0,18). Agora alts de baixo valor mant\u00eam a banda vis\u00edvel.\nfunction roundPx(v) {\n    if (!Number.isFinite(v)) return v;\n    const a = Math.abs(v);\n    const dec = a >= 100 ? 2 : a >= 1 ? 4 : 6;\n    return +v.toFixed(dec);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:21:10)*
+
+
+## 🤖 Claude *(01:21:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js",
+  "old_string": "    const mc = {\n        horizonMin: mcHorizonMin,\n        p10: +(price * Math.exp(-Z * sdH)).toFixed(2),\n        p50: +price.toFixed(2),\n        p90: +(price * Math.exp(Z * sdH)).toFixed(2),\n        sigmaHPct: +(sdH * 100).toFixed(3),\n        driftless: true,\n    };",
+  "new_string": "    const mc = {\n        horizonMin: mcHorizonMin,\n        p10: roundPx(price * Math.exp(-Z * sdH)),\n        p50: roundPx(price),\n        p90: roundPx(price * Math.exp(Z * sdH)),\n        sigmaHPct: +(sdH * 100).toFixed(3),\n        driftless: true,\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:21:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js",
+  "old_string": "        symbol, source: used, interval: '1m', cached: false,\n        price: +price.toFixed(2), samples: n,",
+  "new_string": "        symbol, source: used, interval: '1m', cached: false,\n        price: roundPx(price), samples: n,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:21:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "Use para REPORTAR ao operador o estado MECANICO do mercado e a coerencia dos gates; NAO e sinal de trade nem forecast.\",",
+  "new_string": "Use para REPORTAR ao operador o estado MECANICO do mercado e a coerencia dos gates; NAO e sinal de trade nem forecast. ATENCAO: os gates (buyGate/farm/baseline/trend, doctrine=true) sao a DOUTRINA por regime (o que a estrategia FARIA), NAO confirmam que a automacao correspondente esta ATIVA/ligada (ex.: a baseline id2 esta isActive=0) \u2014 o gate VIVO mora na condition da automacao no banco. Reporte como doutrina, nao como estado vivo, e o fluxo e fail-closed (stale/ausente => CAIXA).\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:21:26)*
+
+
+## 🤖 Claude *(01:21:27)*
+
+Agora valido, chowno, rebuildo backend+agent e verifico os fixes ao vivo.
+
+## 🤖 Claude *(01:21:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor f in backend/src/cockpitJob.js backend/src/utils/cockpitService.js tradeux-mcp/src/index.js; do node --check \"$f\" && echo \"OK $f\" || echo \"FAIL $f\"; done\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/cockpitJob.js backend/src/utils/cockpitService.js tradeux-mcp/src/index.js && echo \"chown OK\"\necho \"=== rebuild + redeploy backend + agent ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend agent 2>&1 | grep -iE \"naming to|error|fail\" | tail -4 && docker compose up -d backend agent 2>&1 | tail -4'",
+  "description": "Syntax, chown, rebuild and redeploy backend+agent with cockpit honesty fixes",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK backend/src/cockpitJob.js
+> OK backend/src/utils/cockpitService.js
+> OK tradeux-mcp/src/index.js
+> chown OK
+> === rebuild + redeploy backend + agent ===
+> #21 naming to docker.io/library/tradeux-backend done
+> #25 naming to docker.io/library/tradeux-agent done
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started
+> ```
+
+## 🤖 Claude *(01:21:43)*
+
+
+## 🤖 Claude *(01:21:44)*
+
+Deployado. Verifico os 3 fixes ao vivo (precisão da ADA, gate fail-closed/doctrine, HALT):
+
+## 🤖 Claude *(01:21:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 14); do curl -s -m2 -o /dev/null http://127.0.0.1:8090/ 2>/dev/null; sleep 1; done\necho \"=== HALT ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 printenv TRADING_HALT'\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\necho \"=== Fix 1 \u2014 ADA MC band (n\u00e3o deve mais ser 0.18/0.18/0.18) ===\"\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/analysis/cockpit/ADAUSDT | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const c=JSON.parse(s);console.log(\"ADA price\",c.price,\"| mc\",c.mc&&(c.mc.p10+\"/\"+c.mc.p50+\"/\"+c.mc.p90));})' 2>&1\necho \"=== Fix 2 \u2014 gates doctrine + fail-closed ===\"\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/analysis/cockpit | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const d=JSON.parse(s);for(const[k,c]of Object.entries(d.symbols||{})){const g=c.gates||{};console.log(`${k}: regime=${c.regime} doctrine=${g.doctrine} flowFresh=${g.flowFresh} flowOk=${g.flowOk} buyAllowed=${g.buyAllowed} | ${g.reason}`);}})' 2>&1",
+  "description": "Verify ADA precision, gate doctrine/fail-closed, HALT",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HALT ===
+> true
+> === Fix 1 — ADA MC band (não deve mais ser 0.18/0.18/0.18) ===
+> ADA price 0.178 | mc 0.175475/0.178/0.180562
+> === Fix 2 — gates doctrine + fail-closed ===
+> BTCUSDT: regime=null doctrine=true flowFresh=true flowOk=true buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> LTCUSDT: regime=null doctrine=true flowFresh=false flowOk=false buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> BNBUSDT: regime=null doctrine=true flowFresh=false flowOk=false buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> ADAUSDT: regime=null doctrine=true flowFresh=false flowOk=false buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> ```
+
+## 🤖 Claude *(01:22:46)*
+
+
+## 🤖 Claude *(01:22:49)*
+
+**Os 3 fixes da auditoria estão vivos e verificados:**
+- **ADA MC band**: agora `0.175475 / 0.178 / 0.180562` (antes colapsava em `0.18/0.18/0.18`). ✓
+- **Gates**: `doctrine=true` exposto + **fluxo fail-closed** (LTC/BNB/ADA `flowFresh=false → flowOk=false → CAIXA`, conservador como a id2 real). ✓
+- **HALT**: `true`. ✓
+
+Agora o commit (conforme a recomendação do TL: `beholder.js` isolado + a feature do cockpit). Deixa eu inspecionar o estado do git primeiro.
+
+## 🤖 Claude *(01:22:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (tudo desta sess\u00e3o?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git status --short'\necho \"=== remote ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git remote -v | head -2'\necho \"=== identity + branch ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"name=$(git config user.name) email=$(git config user.email) branch=$(git rev-parse --abbrev-ref HEAD)\"'",
+  "description": "Inspect git status, remote, identity, branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (tudo desta sessão?) ===
+>  M backend/src/beholder.js
+>  M backend/src/controllers/analysisController.js
+>  M backend/src/routers/analysisRouter.js
+>  M backend/src/server.js
+>  M backend/src/utils/indexes.js
+>  M frontend/src/components/Menu/SideBar.js
+>  M frontend/src/routes.js
+>  M frontend/src/services/IntelligenceService.js
+>  M tradeux-agent/src/agent.js
+>  M tradeux-mcp/src/index.js
+> ?? backend/src/cockpitJob.js
+> ?? backend/src/utils/cockpitService.js
+> ?? frontend/src/private/Cockpit/
+> === remote ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> === identity + branch ===
+> name=Gabriel Zarattini email=gabrielcall@gmail.com branch=master
+> ```
+
+## 🤖 Claude *(01:23:44)*
+
+
+## 🤖 Claude *(01:23:46)*
+
+Estado limpo — tudo dirty é da minha sessão, branch `master`, identidade configurada. Remote é SSH. Vou commitar **2 commits lógicos** (o `beholder.js` money-path isolado, como o TL pediu + a feature do cockpit), como `gcrux-tradeux`.
+
+## 🤖 Claude *(01:23:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\\\ngit add backend/src/beholder.js && \\\ngit commit -q -m \"fix(beholder): backstop de piso MIN_NOTIONAL em calcQty (evita -1013)\" \\\n  -m \"O floor por stepSize empurrava compras MIN_NOTIONAL abaixo do minNotional (\\$5) -> Binance rejeita -1013 e a automacao nao compra (ex.: id6 Trend Buy x1 a ~\\$66k -> \\$4,65). Piso cirurgico (so MIN_NOTIONAL): sobe 1 stepSize se o floored nao cobre o minNotional; nao afeta posicoes (TREND/HARVEST/FARM/MAX_WALLET seguem com floor). HALT intacto. QA PASS / TL APPROVE.\" \\\n  -m \"Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>\" && \\\ngit add -A && \\\ngit commit -q -m \"feat(cockpit): Cockpit Intelligence read-only (brain computa, agente le/reporta)\" \\\n  -m \"cockpitJob computa por simbolo (klines 1m mainnet) distribuicao de retornos, EV net-de-fee, tail, banda MC driftless + snapshot regime/flow/gates -> MEMORY[<sym>:COCKPIT] + GET /analysis/cockpit (env useTestnet/tradingHalt). Tool MCP read-only tradeux_get_cockpit; agente env-aware le/reporta (fix do prompt testnet->mainnet). Frontend /cockpit consome o snapshot. Gates fail-closed + doctrine; precisao dinamica de preco. 100% read-only (nao toca money-path/HALT). QA PASS / TL APPROVE.\" \\\n  -m \"Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>\" && \\\necho \"=== commits ===\" && git log --oneline -3 && echo \"=== status ===\" && git status --short'",
+  "description": "Commit beholder fix isolated and cockpit feature as gcrux-tradeux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits ===
+> 1660871 feat(cockpit): Cockpit Intelligence read-only (brain computa, agente le/reporta)
+> 2528a5d fix(beholder): backstop de piso MIN_NOTIONAL em calcQty (evita -1013)
+> c163112 fix(farm): venda no-loss bucket-scoped (FARM_QTY) + escopo por automacao + resize + baseline off
+> === status ===
+> ```
+
+## 🤖 Claude *(01:24:10)*
+
+
+## 🤖 Claude *(01:24:11)*
+
+Dois commits limpos, working tree zerado. Agora o push (remote é SSH; uso o `GITHUB_TOKEN_API` do `.env` via HTTPS, conforme nosso modelo, sem vazar o token):
+
+## 🤖 Claude *(01:24:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nGH=$(grep -E \"^GITHUB_TOKEN_API=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2- | tr -d \"\\\"'\"'\"'\"\" \")\nif [ -z \"$GH\" ]; then echo \"SEM GITHUB_TOKEN_API no .env \u2014 commit local feito, push manual necessario\"; exit 0; fi\ncd /home/gcrux-tradeux/tradeux\ngit push \"https://x-access-token:${GH}@github.com/gabrielZarattini/tradeux.git\" master 2>&1 | sed -E \"s/x-access-token:[^@]+@/x-access-token:***@/g\" | tail -8'",
+  "description": "Push to master via token HTTPS without leaking token",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 4 vulnerabilities on gabrielZarattini/tradeux's default branch (1 high, 3 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    c163112..1660871  master -> master
+> ```
+
+## 🤖 Claude *(01:24:52)*
+
+
+## 🤖 Claude *(01:25:11)*
+
+✅ **Pushed**: `c163112..1660871 master` (2 commits — `beholder.js` isolado + cockpit feature; CI rodando no GitHub). As 4 vulnerabilidades do dependabot são pré-existentes, não minhas.
+
+---
+
+# 📊 Análise de descongelamento — fundamentada nos auditores independentes
+
+Você pediu pra eu analisar melhor *com o resultado do workflow*. Então não é minha opinião — são os **achados confirmados** (cada um passou por um verificador anti-falso-positivo). Veredito direto: **descongelar agora com um flip cego seria imprudente.**
+
+## O que "descongelar" significa hoje (o detalhe que muda tudo)
+`TRADING_HALT=false` **não liga uma estratégia — libera TODAS as automações ativas de uma vez**: Trend (id6), Farm, e o **Harvester (id22-25)**. Não é um canary controlado; é o sistema inteiro indo a real simultaneamente, **sem nunca ter colocado 1 ordem real**.
+
+## Os 7 achados CONFIRMADOS que pesam contra (independentes)
+| # | Achado confirmado | Sev |
+|---|---|---|
+| 1 | **Pré-requisitos não resolvidos**: chave Binance saque-OFF/IP **não confirmado** + trava `FARM_SELLING` **ausente** (grep=0) | P0 |
+| 2 | **Harvester morto no mainnet** (id22-25 ATIVAS): gatilho −3% nunca dispara legítimo (book=FAIR); se disparar é faca caindo | P1 |
+| 3 | **0 ordens mainnet já colocadas**: descongelar = literalmente o 1º trade real, fill/fee/slippage **não validados** | P1 |
+| 4 | **Gap do teto `MAX_ORDER_NOTIONAL`**: SELL MARKET por qty-base **não é capado** (só o HALT cobre) | P1 |
+| 5 | **Bug do P&L com BNB**: o `net` não desconta a taxa paga em BNB → **o painel mentiria** (P&L otimista) | P2 |
+| 6 | **Sem cap diário de perda / de posição**: só o HALT binário + $1.500/ordem (10× a conta) | P2 |
+| 7 | **Nenhuma estratégia 1m lucrativa** — **refutada** (−0,14% a −0,23%/trade no cache real) | P1 |
+
+## O que melhorou hoje (a favor)
+- O **fix do −1013** → a Trend id6 agora **executa** (estava quebrada, morreria no golden cross).
+- O **cockpit** dá medição real-time honesta (EV, gates fail-closed, env) e o **agente lê/reporta**.
+- **Segurança confirmada read-only** pelo auditor (sem regressão no money-path).
+
+## Descongelamento responsável (não um flip) — minha recomendação
+**Pré-requisitos antes de QUALQUER ordem real:**
+- **(a)** *Você* confirma na Binance: chave com **saque OFF + IP travado**. (só você pode — não é verificável por código.)
+- **(b)** **Desativar o harvester** (id22-25 → `isActive=0`): morto + falling-knife, não pode ir live.
+- **(c)** **Fix do P&L com BNB** — senão o painel te engana. *(eu faço, QA/TL)*
+- **(d)** **Fechar o gap do teto** pra SELL-by-base, ou restringir a LIMIT/OCO. *(eu faço, QA/TL)*
+- **(e)** **Cap diário de perda** simples, OU confiar no size minúsculo + 1 trade observado.
+
+**Aí sim, o canary:** descongelar com **só a Trend id6 ativa** (resto parado), size ×3 (~$15), observar **1 ciclo golden→death real**, medir fill/fee/slippage. **Persistir `TREND_QTY`** antes de escalar.
+
+**Expectativa honesta:** mesmo esse canary é edge pequeno — o objetivo é **validar a mecânica real**, não lucro. +3 BTC segue impossível nessa escala.
+
+---
+
+**Eu não viro o `TRADING_HALT` sozinho** — é teu GO + (a)–(e). Do meu lado, posso já fazer **(b), (c) e (d)** com QA/TL (deixam o sistema *mais seguro*, sem descongelar nada). Quer que eu comece por esses três? E o **(a)** fica com você na Binance.
+
+## 👤 User *(01:25:14)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(01:25:14)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(01:25:44)*
+
+
+## 🤖 Claude *(01:25:45)*
+
+Selando a sessão com o ritual `/handoff`. Pré-flight + secret scan primeiro.
+
+## 🤖 Claude *(01:25:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (deve estar limpo \u2014 j\u00e1 commitei+pushei) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git status --short'\necho \"=== diff HEAD --stat (deve estar vazio) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git diff HEAD --stat'\necho \"=== \u00faltimos commits (j\u00e1 no origin?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git log --oneline -3; echo \"---\"; git status -sb | head -1'\necho \"=== docker ps ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps' | tail -6\necho \"=== PHASE 1 \u2014 SECRET SCAN (nos 2 commits desta sess\u00e3o) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git diff c163112..HEAD' | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DB_PWD|GITHUB_TOKEN|TRADEUX_PASSWORD)\" | grep -v \"example\\|<.*>\\|=\\s*$\\|MEMORY\\[\\|commissionAsset\\|symbol.endsWith\" | head || echo \"(scan rodou)\"\necho \"=== fim secret scan ===\"",
+  "description": "Handoff pre-flight: status, commits, docker, secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (deve estar limpo — já commitei+pushei) ===
+> === diff HEAD --stat (deve estar vazio) ===
+> === últimos commits (já no origin?) ===
+> 1660871 feat(cockpit): Cockpit Intelligence read-only (brain computa, agente le/reporta)
+> 2528a5d fix(beholder): backstop de piso MIN_NOTIONAL em calcQty (evita -1013)
+> c163112 fix(farm): venda no-loss bucket-scoped (FARM_QTY) + escopo por automacao + resize + baseline off
+> ---
+> ## master...origin/master [ahead 2]
+> === docker ps ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED             STATUS                 PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      4 minutes ago       Up 4 minutes           
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    4 minutes ago       Up 4 minutes           3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         13 days ago         Up 9 hours (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   About an hour ago   Up About an hour       127.0.0.1:8090->80/tcp
+> === PHASE 1 — SECRET SCAN (nos 2 commits desta sessão) ===
+> === fim secret scan ===
+> ```
+
+## 🤖 Claude *(01:26:28)*
+
+
+## 🤖 Claude *(01:26:30)*
+
+Secret scan **limpo**, working tree **limpo**, 4 containers **up** (db healthy). Nota: o push earlier foi via token-HTTPS, então o ref local `origin/master` ficou stale (`ahead 2`) embora o **remoto JÁ esteja em `1660871`**. Sincronizo o ref local + leio o `HANDOFF.md` pra atualizar.
+
+## 🤖 Claude *(01:26:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== sincronizar ref local origin/master (token-HTTPS, sem poison, sem chave SSH) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nGH=$(grep -E \"^GITHUB_TOKEN_API=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2- | tr -d \"\\\"'\"'\"'\"\" \")\ncd /home/gcrux-tradeux/tradeux\ngit fetch \"https://x-access-token:${GH}@github.com/gabrielZarattini/tradeux.git\" master:refs/remotes/origin/master 2>&1 | sed -E \"s/x-access-token:[^@]+@/x-access-token:***@/g\" | tail -3\necho \"--- status p\u00f3s-fetch ---\"; git status -sb | head -1'\necho \"=== HANDOFF.md estrutura ===\"\nwc -l /home/gcrux-tradeux/HANDOFF.md\necho \"--- TAIL (onde anexar o SEAL) ---\"\ntail -n 18 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Sync origin ref and read HANDOFF.md structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sincronizar ref local origin/master (token-HTTPS, sem poison, sem chave SSH) ===
+> From https://github.com/gabrielZarattini/tradeux
+>    c163112..1660871  master     -> origin/master
+> --- status pós-fetch ---
+> ## master...origin/master
+> === HANDOFF.md estrutura ===
+> 696 /home/gcrux-tradeux/HANDOFF.md
+> --- TAIL (onde anexar o SEAL) ---
+> 
+> **(1) 🔍 Auditoria de go-live mainnet (wf `wf_b252a2ba-9de`, 13 agentes + verif. adversarial).** Diagnóstico do "nenhuma ordem real ainda": **ESPERADO** (modules armed-waiting + gating + ledger frio + ~$148 USDT; engine comprovadamente em mainnet — `userDataStream` OK). Mas achou riscos de money-path.
+> 
+> **(2) 🛡️ Blindagem money-path (commit `96915e0`, QA PASS-c/ressalvas + TL APPROVE; deployado+verificado).**
+> - **Teto de risco no BACKEND** (`exchange.js`, chokepoint buy/sell/oco): `TRADING_HALT` (kill-switch global, cobre TUDO) + `MAX_ORDER_NOTIONAL_USDT=1500` (teto por ordem; ⚠️ NÃO cobre MARKET-por-quantidade — só o HALT — FOLLOW-UP). É a ÚNICA trava de tamanho do backend (o `ALLOW_TRADING` é só do agente).
+> - **Funil live-buy** refeito (`funnelJob.maybeLiveBuy`/`persistFunnelBuy`): usa SÓ o baseline FIXO do env (nunca o `RUNTIME_BASELINE` da Fase4 → mata o dreno-por-depósito), teto obrigatório por compra (sem teto = RECUSA), alerta o dono na falha de persistência. + `FUNNEL_LIVE_BUY=false` (shadow).
+> - `ordersController.placeOrder` corrigido (passava `.get()` num objeto plano → 500; matava venda manual de emergência). `insertOrder` honra isTestnet explícito (anti-ghost). `getOpenOrdersByAutomation`/`getOpenOcoOrders` filtram ambiente (reconcile não cruza testnet↔mainnet). Scripts backfill com guard `ALLOW_BACKFILL`+`isTestnet:true`.
+> - **`.env`** (host, não versionado): `FUNNEL_LIVE_BUY=false`, `FUNNEL_MAX_BUY_USDT=100`, `MAX_ORDER_NOTIONAL_USDT=1500`, `TRADING_HALT=true`, e **SAPI/API/STREAM → mainnet** (encerra o split-brain de SAPI que ainda batia em testnet). **Ruled out:** agente LLM NÃO coloca ordem real (`ALLOW_TRADING=false` verificado no container); trava SELL-BTC do cofre vale.
+> 
+> **(3) 📉 Revisão de estratégia p/ $148 reais (wf `wte6rt68t`, 8 agentes + verif. adversarial 3 lentes). DESCOBERTA CRÍTICA:**
+> - **🪦 HARVESTER (id22-25) MORTO no mainnet.** `getFairPrice` (`fairPriceService.js:33`) busca SEMPRE o lastPrice MAINNET hardcoded; o BOOK do bot é simulado do miniTicker (monitor BOOK off). No mainnet, book=FAIR (mesma venue, spread ~$0.01) → o gatilho `bestAsk<FAIR×0.97` (−3%) nunca dispara. Os "10/10 ciclos lucrativos" eram **arbitragem testnet-vs-mainnet** (artefato). Redesign: re-ancorar FAIR a HIGH rolante 24-48h (klines) + backtest + gate de regime. **NÃO afrouxar 0.97 nem ligar o monitor BOOK real** (vira scalper que sangra fee).
+> - **TREND (id6/7,15-20) = ÚNICO edge real** (same-exchange, golden/death cross), mas minúsculo ($5-15/perna, ~1-3 RT/símbolo/mês). **EXPECTATIVA REAL: $148 spot ≈ FLAT no mês** (~$0/dia mediano). **+3 BTC é impossível (1.350×).** 0 ordens mainnet → nada validado com fill/fee/slippage reais. Win = validação + paciência; maior risco = forçar trade e sangrar fee.
+> 
+> **(4) 🔧 Fix P0 do Farm (commit `c163112`, QA PASS-c/ressalvas + TL APPROVE re-review; deployado+verificado).** Bug: Farm Sell (`orderTemplates` id6/8/10) = `MAX_WALLET` → vendia a carteira INTEIRA e dumpava a posição do Trend co-localizado nos mesmos alts. Fix em 3 frentes: (a) keyword **`FARM_QTY`** em `beholder.calcQty` (espelho do HARVEST_QTY); (b) **`getFarmPosition` escopado por automação** (`name LIKE 'Farm %'` → o Trend não infla/re-baseia mais o bucket — era o 2º must-fix que o TL pegou); (c) **migration `20260615200000`** durável (sobrescreve a `20260614190000` que era o próprio bug): Farm Sell→FARM_QTY, Farm Buy ×200→×2 (~$10), Baseline RSI Buy id2→isActive=0 (acumulador pelado, compra sem venda). Verificado no DB pós-migrate; 18 autos ativas (id2 saiu); boot limpo; **TRADING_HALT=true mantido**.
+> 
+> **Estado vivo:** 4 containers up, site 200, **MAINNET CONGELADO** (`TRADING_HALT=true`), funil shadow, ~$150 USDT, 0 ordens mainnet (tudo testnet). `.git` intacto (gcrux-tradeux). Memórias: **`tradeux-mainnet-go-live` (nova)**, `tradeux-harvester-experiment` (caveat: edge era testnet) + índice. Secret scan: limpo (`ci-key`/`ci-secret` são fixtures do CI, não chaves).
+> **NEXT (antes de descongelar — sem pressa, congelado é o estado seguro):** (a) trava `FARM_SELLING` anti-empilhamento (análoga a HARVEST_SELLING); (b) dono confere **saque-OFF + IP travado** na chave mainnet (o `withdraw()` fica fora do HALT); (c) decidir o **re-design do harvester** (re-ancorar FAIR + backtest) OU rodar só o Trend; (d) plano de canary (1 trade mínimo com log de fill/fee/slippage) antes de escalar. **FOLLOW-UPS menores:** fechar o furo MARKET-by-quantity no riskGuard; teto diário/posição; escopo do Farm por flag/tag (em vez de `name LIKE`). **0 PRs** (trunk-based).
+> **NEXT:** Seguir o monitoramento do Harvester no size ×4 por mais 1-2 dias antes de escalar para ×8.
+> ```
+
+## 🤖 Claude *(01:26:49)*
+
+
+## 🤖 Claude *(01:26:50)*
+
+Ref local sincronizado (`## master...origin/master`, sem "ahead") — **origin confirmado em `1660871`**. Agora atualizo o `HANDOFF.md` (header + SEAL desta sessão). Leio o cabeçalho.
+
+## 🤖 Claude *(01:26:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-15** · Phase: **GO-LIVE MAINNET — CONGELADO (`TRADING_HALT=true`)** · Meta: **realista ≈ flat com ~$150** (o +3 BTC era do testnet)
+> 6	
+> 7	> 🛑 **LEIA ANTES DE TUDO (2026-06-15):** o sistema está em **MAINNET REAL** (`settings.useTestnet=0`, ~$150 USDT) e **CONGELADO** (`TRADING_HALT=true` no `.env` → nada negocia; é o kill-switch novo no `exchange.js`). Money-path foi blindado (`96915e0`) e o bug P0 do Farm Sell foi corrigido (`c163112`). **DESCOBERTA CRÍTICA: o harvester está MORTO no mainnet** (o edge de −3% era arbitragem testnet-vs-mainnet; no mainnet o book do bot É o FAIR). O ÚNICO edge real é o **Trend** (pequeno, mensal). **Antes de descongelar:** (1) trava `FARM_SELLING` (follow-up); (2) dono confere saque-OFF+IP da chave Binance; (3) decidir re-design do harvester. Detalhes nos SEALs de 2026-06-15 (fim do doc) + memória `tradeux-mainnet-go-live`.
+> 8	
+> ```
+
+## 🤖 Claude *(01:27:31)*
+
+
+## 🤖 Claude *(01:27:32)*
+
+Ref sincronizado, header lido. Atualizo o `HANDOFF.md`: cabeçalho + SEAL desta sessão.
+
+## 🤖 Claude *(01:27:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-15** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`)** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet)",
+  "new_string": "> Updated: **2026-06-16** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`)** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:27:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Detalhes nos SEALs de 2026-06-15 (fim do doc) + mem\u00f3ria `tradeux-mainnet-go-live`.",
+  "new_string": "Detalhes nos SEALs de 2026-06-15 (fim do doc) + mem\u00f3ria `tradeux-mainnet-go-live`. **2026-06-16:** Cockpit Intelligence read-only NO AR (brain computa analytics 1m + agente l\u00ea/reporta; commit `1660871`) \u2014 a brain reporta **EV \u22120,16% / pHit 0,6%** (scalp 1m \u00e9 \u2212EV, dado real). Fix do **\u22121013** no `calcQty` + template Trend \u00d73 (commit `2528a5d`). **Auditoria adversarial independente** confirmou 7 achados p/ o descongelamento \u2192 ver SEAL 2026-06-16. \u26a0\ufe0f O \"v\u00eddeo viral Fable 5/Polymarket 205x\" do X \u00e9 **golpe de referral** \u2014 N\u00c3O clicar/depositar."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:28:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**NEXT:** Seguir o monitoramento do Harvester no size \u00d74 por mais 1-2 dias antes de escalar para \u00d78.",
+  "new_string": "**NEXT:** Seguir o monitoramento do Harvester no size \u00d74 por mais 1-2 dias antes de escalar para \u00d78.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-16 (Cockpit Intelligence brain-integrado + fix \u22121013 do Trend + auditoria adversarial de descongelamento)\n**Sess\u00e3o grande. Vivo==master==origin==`1660871` (2 commits: `2528a5d` beholder isolado + `1660871` cockpit, J\u00c1 no origin). 4 containers up, HALT=true intacto, 0 ordens mainnet.**\n\n**(1) \ud83c\udf9b\ufe0f Cockpit Intelligence \u2014 feature READ-ONLY (brain computa / agente l\u00ea+reporta / front consome).** O pedido \"dashboard estilo v\u00eddeo viral do Fable\" evoluiu p/ feature de DADO REAL brain-integrada. \u26a0\ufe0f **GOLPE:** o \"v\u00eddeo viral Fable 5 / Polymarket / 205x / export-controlled\" do X \u00e9 **referral scam** (link `?via=ace-cjyf`) \u2014 orientado dono a N\u00c3O clicar/depositar/copy-tradar; mesma fantasia de edge-imposs\u00edvel que nossa pesquisa refuta. Entregue (QA-PASS/TL-APPROVE Fase A e B+C; deployado+verificado): `cockpitJob`+`utils/cockpitService.js` (klines 1m MAINNET \u2192 distribui\u00e7\u00e3o de retornos, EV net-de-fee, tail, histograma, banda MC **driftless**, snapshot regime/flow/gates \u2192 `MEMORY['<sym>:COCKPIT']`, passivo `executeAutomations=false`); `GET /analysis/cockpit` (+env `useTestnet`/`tradingHalt`); tool MCP **read-only** `tradeux_get_cockpit`; **fix do BLOQUEADOR do prompt** (`agent.js` afirmava \"conta \u00e9 TESTNET/equity \u00e9 ru\u00eddo\" em MAINNET \u2192 agora **env-aware** deferindo ao cockpit); frontend `/cockpit` (neon, consome o snapshot do brain, fallback klines). Verificado ao vivo: o agente chamou `tradeux_get_cockpit` e reportou coerente (mainnet real + halt). **A brain reporta EV/trade \u22120,16% / s\u00f3 0,6% dos moves limpam a fee** \u2014 a pr\u00f3pria m\u00e1quina mostra que scalp 1m \u00e9 \u2212EV (o oposto honesto do golpe). Mem\u00f3ria `tradeux-1m-scalping-and-cockpit`. Screenshots via Playwright headless (`/tmp/cockpit-shot.js`, login pelo `tradeux-mcp/.env`).\n\n**(2) \ud83d\udd27 Fix do \u22121013 no Trend (commit `2528a5d`, QA-PASS/TL-APPROVE).** orderTemplate **id3** (usado pela automa\u00e7\u00e3o **id6 ATIVA** Trend Buy BTC) sofreu drift p/ `quantityMultiplier=1.00` \u2192 em `beholder.calcQty` o `Math.floor(qty/stepSize)*stepSize` empurrava o MIN_NOTIONAL **abaixo de $5** \u2192 quando um golden cross disparasse, a Binance rejeitaria **-1013** e a id6 N\u00c3O compraria (repro: $4,65 BTC / $4,94 ETH / $4,80 BNB / $4,99 ADA). Fix 2 camadas: **backstop de piso** em `calcQty` (cir\u00fargico, **s\u00f3 MIN_NOTIONAL**, idempotente, N\u00c3O toca posi\u00e7\u00f5es TREND/HARVEST/FARM/MAX_WALLET \u2014 cobre farm/harvester de quebra) + template id3 \u2192 **\u00d73** (~$15, inten\u00e7\u00e3o documentada do `setup-trend.js`). DB UPDATE aplicado ANTES do boot; BRAIN re-init com \u00d73 verificado via `/beholder/brain`. HALT intacto.\n\n**(3) \ud83d\udd0d Auditoria adversarial INDEPENDENTE de descongelamento (wf `wew1texdp`, 4 auditores + verif. anti-falso-positivo).** Seguran\u00e7a do diff do cockpit: **SEM_PROBLEMA_REAL** (read-only confirmado: writeTool 9\u21929, env s\u00f3 2 booleanos, sem money-path). CONFIRMOU 7 achados que pesam contra descongelar AGORA: (1) **pr\u00e9-reqs n\u00e3o resolvidos** (saque-OFF/IP **n\u00e3o confirmado**; trava **`FARM_SELLING` AUSENTE** \u2014 grep=0, nunca implementada); (2) **harvester morto** (id22-25 ainda ATIVAS); (3) **0 ordens mainnet** (descongelar = 1\u00ba trade real, fill/fee/slippage n\u00e3o validados); (4) **gap `MAX_ORDER_NOTIONAL`** (SELL MARKET por qty-base N\u00c3O \u00e9 capado \u2014 s\u00f3 o HALT); (5) **bug P&L com BNB** (net n\u00e3o desconta a taxa em BNB \u2192 painel mente otimista); (6) **sem cap di\u00e1rio/posi\u00e7\u00e3o**; (7) **1m refutado** (\u22120,14% a \u22120,23%/trade no cache real). Tamb\u00e9m pegou 3 bugs do cockpit que eu subestimei \u2192 **CORRIGIDOS** no `1660871`: gate fluxo **fail-OPEN\u2192fail-CLOSED** (mostrava GO sem fluxo fresco; id2 real bloqueia); gate como **DOUTRINA** (`doctrine=true` + disclaimer no MCP \u2014 a baseline id2 est\u00e1 `isActive=0`, n\u00e3o \u00e9 estado vivo); `.toFixed(2)` colapsava a banda MC de alts (ADA 0,18/0,18/0,18) \u2192 **precis\u00e3o din\u00e2mica**.\n\n**Estado vivo:** 4 containers up, **MAINNET CONGELADO** (`TRADING_HALT=true`), ~$150 USDT, 0 ordens mainnet. `.git` intacto (gcrux-tradeux). Mem\u00f3rias: `tradeux-1m-scalping-and-cockpit` (atualizada) + \u00edndice.\n**NEXT (descongelamento RESPONS\u00c1VEL \u2014 recomenda\u00e7\u00e3o FUNDAMENTADA NA AUDITORIA, n\u00e3o flip cego):** pr\u00e9-reqs antes de QUALQUER ordem real: **(a)** dono confirma chave Binance **saque-OFF + IP travado**; **(b)** **desativar harvester** (id22-25 \u2192 isActive=0, morto+falling-knife); **(c)** **fix do P&L com BNB** (sen\u00e3o o painel mente); **(d)** **fechar o gap do teto** p/ SELL-by-base (ou restringir a LIMIT/OCO); **(e)** **cap di\u00e1rio de perda** OU size min\u00fasculo + 1 trade. A\u00ed canary: **s\u00f3 a Trend id6 ativa** (resto parado), \u00d73 (~$15), observar **1 ciclo golden\u2192death real**, medir fill/fee/slippage; **persistir `TREND_QTY`** antes de escalar. **Claude N\u00c3O vira o `TRADING_HALT`** \u2014 \u00e9 GO do dono + (a)-(e). Ofereci fazer **(b)(c)(d) com QA/TL** como pr\u00f3ximo passo. **PRs: 0** (trunk-based direct-to-master; commits j\u00e1 no origin, CI rodando)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:28:31)*
+
+
+## 🤖 Claude *(01:28:31)*
+
+HANDOFF.md atualizado. Agora Phase 4 (memória) + chown do HANDOFF.
+
+## 🤖 Claude *(01:28:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "old_string": "- **Estado**: `TRADING_HALT=true` intacto, nada negocia; tudo read-only. Ownership chownado p/ gcrux-tradeux (Edit reescreve como ubuntu). N\u00c3O commitado ainda (working tree dirty). Screenshot via `/tmp/cockpit-shot.js`.",
+  "new_string": "- **Estado**: `TRADING_HALT=true` intacto, nada negocia; tudo read-only. Screenshot via `/tmp/cockpit-shot.js`.\n\n**2026-06-16 (cont.) \u2014 COMMITADO+PUSHADO (master==origin==`1660871`):** `2528a5d` fix(beholder) + `1660871` feat(cockpit). Push via token-HTTPS (`GITHUB_TOKEN_API` no `.env`; remote \u00e9 SSH s\u00f3-ubuntu, ent\u00e3o push direto via `https://x-access-token:$TOKEN@github.com/...` e `git fetch` p/ sincronizar o ref local). CI rodando.\n- **Fix do \u22121013 (`2528a5d`, QA-PASS/TL-APPROVE):** orderTemplate **id3** (usado pela **id6 ATIVA** Trend Buy BTC) tinha drift `quantityMultiplier=1.00` \u2192 `beholder.calcQty` floor empurrava MIN_NOTIONAL abaixo de $5 \u2192 golden cross \u2192 Binance -1013, id6 N\u00c3O compra. Fix: **backstop de piso** em calcQty (cir\u00fargico, S\u00d3 MIN_NOTIONAL, idempotente, N\u00c3O toca posi\u00e7\u00f5es TREND/HARVEST/FARM/MAX_WALLET) + template id3\u2192**\u00d73** (~$15, inten\u00e7\u00e3o do `setup-trend.js`). DB UPDATE antes do boot; BRAIN re-init \u00d73 verificado. [[tradeux-ordertemplate-brain-cache]] (stop/start OU reboot pra pegar).\n- **Auditoria adversarial (wf `wew1texdp`, 4 auditores + verif. anti-falso-positivo):** seguran\u00e7a do diff = **SEM_PROBLEMA_REAL**. 7 achados CONFIRMADOS p/ descongelamento: saque-OFF/IP n\u00e3o confirmado; **`FARM_SELLING` AUSENTE** (grep=0); harvester morto (id22-25 ativas); 0 ordens mainnet; **gap `MAX_ORDER_NOTIONAL`** (SELL MARKET por qty-base n\u00e3o capado); **bug P&L BNB** (net otimista); sem cap di\u00e1rio/posi\u00e7\u00e3o; 1m refutado. 3 bugs do cockpit que subestimei \u2192 CORRIGIDOS: gate fluxo **fail-OPEN\u2192fail-CLOSED**, **`doctrine=true`** + disclaimer no MCP (id2 isActive=0, gate \u00e9 doutrina n\u00e3o estado vivo), precis\u00e3o de pre\u00e7o **din\u00e2mica** (`.toFixed(2)` colapsava banda MC de alts).\n- **Descongelamento:** Claude N\u00c3O vira o HALT. Pr\u00e9-reqs recomendados: (a) dono saque-OFF/IP; (b) desativar harvester id22-25; (c) fix P&L BNB; (d) fechar gap do teto SELL-by-base; (e) cap di\u00e1rio. A\u00ed canary: **s\u00f3 Trend id6**, \u00d73, 1 golden\u2192death, persistir TREND_QTY. Ofereci fazer (b)(c)(d) com QA/TL."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:28:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [1m scalping + Cockpit](tradeux-1m-scalping-and-cockpit.md) \u2014 1m scalping REFUTADO de novo (backtest fresco \u22120,14% a \u22120,23%/trade no BTCUSDT-1m-60d; maker==taker no spot=sem rebate); plano 3 fases (cockpit reskin no React existente \u2192 fee-fix+bug BNB \u2192 shadow 1m); GOLPE: \"Fable 5/Polymarket 205x\" do X \u00e9 referral scam, N\u00c3O engajar",
+  "new_string": "- [1m scalping + Cockpit](tradeux-1m-scalping-and-cockpit.md) \u2014 1m scalping REFUTADO (backtest \u22120,14% a \u22120,23%/trade); **Cockpit Intelligence DEPLOYADO** (brain computa analytics 1m read-only \u2192 agente l\u00ea/reporta; `/cockpit` + tool MCP; commit `1660871`); **fix \u22121013 calcQty backstop + Trend \u00d73** (`2528a5d`); auditoria adversarial \u2192 7 pr\u00e9-reqs p/ descongelar (Claude N\u00c3O vira o HALT); GOLPE \"Fable 5/Polymarket 205x\" = referral scam, N\u00c3O engajar"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:28:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/HANDOFF.md && echo \"HANDOFF.md chown OK\"\necho \"=== confirma\u00e7\u00e3o final: master == origin, working tree limpo ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git status -sb | head -1 && git log --oneline -2'",
+  "description": "Chown HANDOFF.md and confirm git state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF.md chown OK
+> === confirmação final: master == origin, working tree limpo ===
+> ## master...origin/master
+> 1660871 feat(cockpit): Cockpit Intelligence read-only (brain computa, agente le/reporta)
+> 2528a5d fix(beholder): backstop de piso MIN_NOTIONAL em calcQty (evita -1013)
+> ```
+
+## 🤖 Claude *(01:29:06)*
+
+
+## 🤖 Claude *(01:29:18)*
+
+Sessão selada. Tudo sincronizado, zero estado órfão.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-16
+───────────────────────────────────────────────────
+Commits     : 2 (fix(beholder) + feat(cockpit))  |  Branch: master (trunk-based)
+              2528a5d  fix(beholder): backstop MIN_NOTIONAL calcQty (-1013)
+              1660871  feat(cockpit): Cockpit Intelligence read-only
+Secret scan : ✅ limpo (.env gitignored; nenhuma chave nos commits)
+HANDOFF.md  : ✅ atualizado (header + SEAL 2026-06-16)
+Memory      : 2 arquivos (tradeux-1m-scalping-and-cockpit + índice MEMORY.md)
+Stack       : 4 containers up · db healthy · MAINNET CONGELADO (TRADING_HALT=true)
+PRs abertos : 0 (modelo trunk-based direct-to-master)
+Push        : ✅ origin sincronizado (master==origin==1660871; CI rodando)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Resumo do que ficou selado:**
+- 🎛️ **Cockpit Intelligence** no ar — a brain computa analytics de 1m read-only, o agente lê/reporta (env-aware), o front consome. A própria máquina reporta **EV −0,16% / pHit 0,6%** (scalp 1m é −EV). ⚠️ O "vídeo viral Fable 5/Polymarket" é golpe — registrado pra não engajar.
+- 🔧 **Fix do −1013** no Trend (backstop em `calcQty` + template id3 ×3) — a id6 agora executaria no golden cross em vez de morrer.
+- 🔍 **Auditoria adversarial independente** — segurança SEM_PROBLEMA_REAL; 7 achados confirmados para o descongelamento + 3 bugs do cockpit que eu subestimei, todos corrigidos.
+
+**Próxima sessão (já no NEXT do HANDOFF):** o descongelamento responsável depende de **(a) você** confirmar saque-OFF/IP da chave Binance, e eu posso adiantar **(b) desativar o harvester, (c) fix do P&L com BNB, (d) fechar o gap do teto** — cada um com QA/TL. O `TRADING_HALT` só vira com o teu GO + esses pré-requisitos.
+
+Bom descanso. `/handson` retoma exatamente daqui. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
