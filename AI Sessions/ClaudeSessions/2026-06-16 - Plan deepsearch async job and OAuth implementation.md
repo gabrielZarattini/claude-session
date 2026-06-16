@@ -10918,6 +10918,428 @@ Diagnóstico completo (material):
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como expor o mcp.mcorch.com? (é uma API máquina-a-máquina; o proxy laranja do CF desafia clientes MCP)"="Eu quero manter laranja pra proteger o ip do servidor. Ejntão posso adiciojnajr o certificado se phrecisar, é só emitihr um jnovo no paijnel do cloudflare certo? quais os passos tejnho que seguihr agorha? Ja exclui o CJNMAE". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:37:42)*
+
+
+## 🤖 Claude *(16:37:45)*
+
+Perfeito — **laranja pra esconder o IP é uma escolha válida e segura** (o container já tem auth ES256/PAT + Origin allowlist + sentinel + rate-limit próprios; o CF some por cima como proteção de borda).
+
+Respondendo sua pergunta direto: **sim** — pra laranja o cert certo é um **Cloudflare Origin Certificate** (SSL/TLS → Origin Server → Create Certificate). **Mas tem um caminho com menos trabalho pra você**: eu gero um cert self-signed na origem (o CF aceita em modo **Full**, porque ele não valida o cert da origem — só criptografa o hop CF↔origem). Assim você nem mexe em cert. Vou **preparar meu lado agora** (cert + vhost) pra ficar pronto:
+
+## 🤖 Claude *(16:37:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== gerar cert self-signed da origem (CF Full aceita; s\u00f3 criptografa o hop) ===\"\nsudo openssl req -x509 -newkey rsa:2048 -nodes \\\n  -keyout /etc/nginx/ssl-certificates/mcp.mcorch.com.key \\\n  -out /etc/nginx/ssl-certificates/mcp.mcorch.com.crt \\\n  -days 3650 -subj \"/CN=mcp.mcorch.com\" \\\n  -addext \"subjectAltName=DNS:mcp.mcorch.com\" 2>&1 | tail -2\nsudo chmod 600 /etc/nginx/ssl-certificates/mcp.mcorch.com.key\necho \"--- cert criado? ---\"; sudo ls -la /etc/nginx/ssl-certificates/mcp.mcorch.com.* 2>&1\necho \"=== instalar vhost (sites-enabled) ===\"\nsudo cp nginx/mcp.mcorch.com.conf /etc/nginx/sites-enabled/mcp.mcorch.com.conf\necho \"=== nginx -t ===\"; sudo nginx -t 2>&1 | tail -4",
+  "description": "Generate self-signed origin cert + install vhost + nginx -t"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gerar cert self-signed da origem (CF Full aceita; só criptografa o hop) ===
+> ..+.......+........+.+.....+.......+..+.......+...+..+.+........+.+......+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.............+.....+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+........+......+..........+.....+.+...+..+..................+.+..+.........+.+........+.+...+...+...+.........+..+...+...+.......+..+....+.....+..........+.....+.......+...+......+........+..........+........+...+.+...+...+........+........................+...+.......+...+...+..+....+......+.................+......+.......+.......................+.......+...+......+.....+...+...+............+......+.+...+.....+.+.....+.+.....+.+.....+....+..............+....+........+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> -----
+> --- cert criado? ---
+> ls: cannot access '/etc/nginx/ssl-certificates/mcp.mcorch.com.*': No such file or directory
+> === instalar vhost (sites-enabled) ===
+> === nginx -t ===
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> ```
+
+## 🤖 Claude *(16:38:10)*
+
+
+## 🤖 Claude *(16:38:12)*
+
+O cert não foi criado (provável: `-addext` não suportado nessa versão do openssl, e o `tail -2` engoliu o erro). Pro modo **Full** o SAN nem importa (CF não valida) — refaço limpo, com output completo:
+
+## 🤖 Claude *(16:38:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== openssl version ===\"; openssl version\necho \"=== gen cert (sem -addext; CN s\u00f3, suficiente p/ Full) ===\"\nsudo openssl req -x509 -newkey rsa:2048 -nodes \\\n  -keyout /etc/nginx/ssl-certificates/mcp.mcorch.com.key \\\n  -out /etc/nginx/ssl-certificates/mcp.mcorch.com.crt \\\n  -days 3650 -subj \"/CN=mcp.mcorch.com\" >/tmp/openssl.out 2>&1\necho \"openssl exit=$?\"; tail -3 /tmp/openssl.out\nsudo chmod 600 /etc/nginx/ssl-certificates/mcp.mcorch.com.key 2>&1\necho \"--- files? ---\"; sudo ls -la /etc/nginx/ssl-certificates/mcp.mcorch.com.* 2>&1\necho \"=== vhost em sites-enabled? ===\"; sudo ls -la /etc/nginx/sites-enabled/mcp.mcorch.com.conf 2>&1\necho \"=== nginx -t (deve falhar se cert ausente; deve passar agora) ===\"; sudo nginx -t 2>&1 | grep -iE \"mcp|successful|error|cannot\" | tail -4",
+  "description": "Regenerate self-signed cert (no -addext) + verify files + vhost + nginx -t"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === openssl version ===
+> OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)
+> === gen cert (sem -addext; CN só, suficiente p/ Full) ===
+> openssl exit=0
+> ............+.+..+...............+....+......+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.........+..+...+...............+...+.............+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+.........+..........+.....+...+...+....+...+.....+.......+...+.........+.....+.........+.........+......+....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> ...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*..+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*............+.......+......+......+...+.....+..........+..+...+.......+........+.+..........................+....+.........+..+......+...............+...............+....+...+............+......+...+..+...+....+........+.......+...+............+..+...+............+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> -----
+> --- files? ---
+> ls: cannot access '/etc/nginx/ssl-certificates/mcp.mcorch.com.*': No such file or directory
+> === vhost em sites-enabled? ===
+> -rw-r--r-- 1 root root 4932 Jun 16 13:37 /etc/nginx/sites-enabled/mcp.mcorch.com.conf
+> === nginx -t (deve falhar se cert ausente; deve passar agora) ===
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/mcp.mcorch.com.crt"
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> ```
+
+## 🤖 Claude *(16:38:45)*
+
+
+## 🤖 Claude *(16:38:47)*
+
+O `ls` falhou só por causa do glob expandido no MEU shell (sem permissão no dir) — mas o **nginx CARREGOU o `mcp.mcorch.com.crt`** (o warning de stapling cita ele) e o **`nginx -t` passou** (sem "cannot load certificate") → o cert existe. Vou recarregar e **testar a origem direto** (bypassando CF/DNS via `--resolve`) — isso prova o caminho nginx→container antes de envolver o CF:
+
+## 🤖 Claude *(16:38:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirmar cert (glob expandido como root) ===\"; sudo bash -c 'ls -la /etc/nginx/ssl-certificates/mcp.mcorch.com.*'\necho \"=== reload nginx ===\"; sudo systemctl reload nginx 2>&1 && echo \"reloaded \u2705\" || sudo nginx -s reload 2>&1\nsleep 1\necho \"=== TESTE DA ORIGEM (bypass CF/DNS via --resolve \u2192 nginx :443 \u2192 container :3200) ===\"\necho \"--- /health ---\"; curl -sk --resolve mcp.mcorch.com:443:127.0.0.1 https://mcp.mcorch.com/health -m 8 -w \"\\nHTTP=%{http_code}\\n\"\necho \"--- /mcp sem bearer (deve ser 401 = gate vivo) ---\"; curl -sk --resolve mcp.mcorch.com:443:127.0.0.1 https://mcp.mcorch.com/mcp -m 8 -o /dev/null -w \"HTTP=%{http_code}\\n\" -X POST -H \"Content-Type: application/json\" -d '{}'\necho \"--- PRM well-known ---\"; curl -sk --resolve mcp.mcorch.com:443:127.0.0.1 https://mcp.mcorch.com/.well-known/oauth-protected-resource -m 8 | head -c 200; echo \"\"",
+  "description": "Reload nginx + test origin vhost directly via --resolve"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirmar cert (glob expandido como root) ===
+> -rw-r--r-- 1 root root 1127 Jun 16 13:38 /etc/nginx/ssl-certificates/mcp.mcorch.com.crt
+> -rw------- 1 root root 1704 Jun 16 13:38 /etc/nginx/ssl-certificates/mcp.mcorch.com.key
+> === reload nginx ===
+> reloaded ✅
+> === TESTE DA ORIGEM (bypass CF/DNS via --resolve → nginx :443 → container :3200) ===
+> --- /health ---
+> {"status":"ok","protocol":"2025-11-25","tools":["mesh_search","vision_describe_image","vision_analyze_video","deepsearch_scrape","mesh_consolidate_reference","deepsearch_run","deepsearch_poll"]}
+> HTTP=200
+> --- /mcp sem bearer (deve ser 401 = gate vivo) ---
+> HTTP=401
+> --- PRM well-known ---
+> {"resource":"https://mcp.mcorch.com","authorization_servers":["https://bcyvddsykvehvpwstlfa.supabase.co"],"bearer_methods_supported":["header"]}
+> ```
+
+## 🤖 Claude *(16:39:33)*
+
+
+## 🤖 Claude *(16:39:48)*
+
+✅ **Meu lado (origem) está 100% pronto e PROVADO** — testei direto (bypassando CF/DNS via `--resolve`, batendo no nginx→container):
+
+```
+/health  → HTTP 200  {"status":"ok", ...7 tools}
+/mcp     → HTTP 401   (gate de identidade vivo através do proxy)
+/.well-known/oauth-protected-resource → PRM RFC 9728 correto
+```
+
+O vhost SSE-tuned + cert self-signed estão instalados e o nginx recarregado. Então **falta só o seu lado no Cloudflare** (3 passos, na ordem):
+
+### 🔶 Passos no Cloudflare (orange)
+
+1. **Re-adicionar o DNS** (você apagou o CNAME) — use um **A record** (mais limpo que CNAME pra orange):
+   - Type `A` · Name `mcp` · IPv4 **`137.131.243.179`** · Proxy status **Proxied (laranja)** · TTL Auto.
+
+2. **SSL/TLS → Overview → modo = `Full`**
+   - ⚠️ Meu cert da origem é **self-signed** → funciona em **Full**, mas **NÃO em "Full (strict)"**. Se seu modo já estiver em **Full (strict)** e você não quiser baixar o zone inteiro pra Full, é só aí que você emite o **Origin Certificate** que perguntou (SSL/TLS → Origin Server → Create Certificate, hostname `mcp.mcorch.com` ou `*.mcorch.com`) e **me avisa** — eu troco o self-signed pelo seu Origin Cert (funciona em strict). Se estiver em "Full" simples, **não precisa cert nenhum** — já funciona.
+
+3. **Desligar o challenge para `mcp.mcorch.com`** (CRÍTICO — senão o "Just a moment" mata os clientes MCP, que são programáticos):
+   - Security → WAF → **Custom rules** → Create rule: `Hostname equals mcp.mcorch.com` → Action **Skip** → marque "All managed rules" + (se existir) "Super Bot Fight Mode" → Deploy.
+   - (Atalho mais grosseiro: Security → Settings → **Bot Fight Mode = Off** — mas isso é no zone inteiro.)
+
+### Quando terminar
+Me diga **(a)** qual o modo SSL que ficou (Full ou Full-strict) e **(b)** que adicionou o A record + a regra de skip. Eu então **verifico ponta-a-ponta** (`curl https://mcp.mcorch.com/health` passando pelo CF de verdade → deve dar o JSON dos 7 tools, e `/mcp` → 401). Você também pode testar do seu navegador: `https://mcp.mcorch.com/health` deve mostrar o JSON.
+
+**Resumo:** seu CNAME→mcorch.com estava ok pra resolver, mas pra um endpoint MCP o decisivo é o **passo 3** (tirar o challenge) — sem ele, laranja bloqueia os clientes. O cert (passo 2) só vira trabalho seu se o zone estiver em Full-strict.
+
+## 👤 User *(16:49:44)*
+
+ja etava e manjtive full phro ssl. Pode verificar mas eu abhri aqui jno jnavegador https://mcp.mcorch.com/health.: {"status":"ok","protocol":"2025-11-25","tools":["mesh_search","vision_describe_image","vision_analyze_video","deepsearch_scrape","mesh_consolidate_reference","deepsearch_run","deepsearch_poll"]}
+
+## 🤖 Claude *(16:50:06)*
+
+
+## 🤖 Claude *(16:50:08)*
+
+Boa — funcionou no seu navegador (que passa o challenge via JS). Mas o teste decisivo de um **endpoint MCP** é se um **cliente programático** (curl/SDK, sem browser) passa pelo CF — foi exatamente isso que pegou "Just a moment" antes. Verificando material (Lei 1), do datacenter:
+
+## 🤖 Claude *(16:50:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== /health via CF real (cliente program\u00e1tico, datacenter) ===\"\ncurl -s -m 12 https://mcp.mcorch.com/health -w \"\\nHTTP=%{http_code} ip=%{remote_ip}\\n\" 2>&1 | head -c 400; echo \"\"\necho \"=== /mcp POST sem bearer (espera 401 = gate vivo atrav\u00e9s do CF) ===\"\ncurl -s -m 12 -o /dev/null -w \"HTTP=%{http_code}\\n\" -X POST https://mcp.mcorch.com/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1}' 2>&1\necho \"=== detectar challenge CF (procura 'Just a moment'/cf-mitigated) ===\"\ncurl -s -m 12 -D - https://mcp.mcorch.com/mcp -o /tmp/mcpbody -X POST -H \"Content-Type: application/json\" -d '{}' 2>&1 | grep -iE \"cf-mitigated|cf-ray|server:|HTTP/\" | head -6\ngrep -qi \"just a moment\\|challenge\" /tmp/mcpbody && echo \"\u26a0\ufe0f CHALLENGE ATIVO (clientes MCP bloqueados \u2014 falta o skip rule)\" || echo \"\u2705 SEM challenge no caminho program\u00e1tico\"",
+  "description": "Verify programmatic access through CF (challenge check)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /health via CF real (cliente programático, datacenter) ===
+> <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39
+> === /mcp POST sem bearer (espera 401 = gate vivo através do CF) ===
+> HTTP=403
+> === detectar challenge CF (procura 'Just a moment'/cf-mitigated) ===
+> HTTP/2 403 
+> cf-mitigated: challenge
+> server: cloudflare
+> cf-ray: a0cb4ffc8b1ba480-GRU
+> ⚠️ CHALLENGE ATIVO (clientes MCP bloqueados — falta o skip rule)
+> ```
+
+## 🤖 Claude *(16:50:58)*
+
+
+## 🤖 Claude *(16:51:11)*
+
+Verifiquei material — e o resultado é claro: **funciona no browser, mas o cliente programático ainda é bloqueado pelo CF.** Prova:
+
+```
+/health (curl) → "Just a moment..." (página de challenge do CF)
+/mcp POST     → HTTP 403 · header  cf-mitigated: challenge · server: cloudflare
+```
+
+O `cf-mitigated: challenge` é definitivo: o **Cloudflare está desafiando** todo cliente sem browser. Seu navegador resolve o JS do challenge — mas o connector do Claude API / SDK / curl **não executam JS**, então batem nesse 403 e nunca chegam na origem. **DNS + SSL Full + a origem estão perfeitos** (o `/health` no browser provou); falta só o **passo 3: desligar o challenge pra `mcp.mcorch.com`**.
+
+### 🔶 Como matar o challenge (escolha conforme seu plano CF)
+
+**A) Mais provável — Bot Fight Mode** (Security → **Bots**):
+- Se **Bot Fight Mode** estiver **ON** → é quase certo o culpado. No plano **Free** ele não tem exceção por host → **desligue** (afeta o zone, mas seus outros sites usam browser normal e não dependem de tráfego programático). No **Pro+** (Super Bot Fight Mode) dá pra criar exceção via WAF skip.
+
+**B) Per-host, sem mexer no zone (mais limpo) — Configuration Rule** (Rules → **Configuration Rules** → Create):
+- Quando `Hostname equals mcp.mcorch.com`
+- Então: **Security Level → Essentially Off** + **Browser Integrity Check → Off** (e **Bot Fight Mode → Off** se o toggle aparecer aqui).
+
+**C) Se houver "I'm Under Attack" mode** (Security → Settings / Security Level): baixe pra Medium, ou cubra com a Configuration Rule do (B).
+
+Recomendo começar pelo **(A)** — checar Security → Bots. É o gatilho típico desse "Just a moment" em API.
+
+**Quando aplicar, me avisa** — eu re-verifico em segundos (`curl /health` deve virar o JSON dos 7 tools + `/mcp` → 401, e aí faço um **handshake MCP real** com JWT pela URL pública pra fechar a prova ponta-a-ponta). É a última peça.
+
+## 👤 User *(16:52:29)*
+
+veja se é isso mesmo
+
+## 🤖 Claude *(16:52:59)*
+
+
+## 🤖 Claude *(16:53:05)*
+
+Sim, está **no caminho certo** ✅ — a expressão `(http.host eq "mcp.mcorch.com")`, a ação **Ignorar** (Skip), e os dois que você marcou (**Todas as regras gerenciadas** + **Todas as regras do modo Super Bot Fight**) cobrem o suspeito principal (você está no Pro+, então o "Just a moment" provavelmente é o Super Bot Fight). Ordem "Primeira" também ok.
+
+**Só recomendo marcar mais 2 caixas** pra garantir que NENHUM vetor de challenge sobre pro cliente programático (são per-host, não afetam seus outros sites):
+
+- ☑ **Verificação da integridade do navegador** (Browser Integrity Check) — esse é um gatilho clássico de "Just a moment" pra requests sem cabeçalhos de browser (exatamente os clientes MCP).
+- ☑ **Nível de segurança** (Security Level) — caso o nível esteja alto/under-attack.
+
+Deixe **Rate Limiting desmarcado** (queremos manter alguma proteção; o container já tem rate-limit próprio). 
+
+Resumo das caixas a marcar:
+```
+☑ Todas as regras gerenciadas          (já marcado)
+☑ Todas as regras do modo Super Bot Fight (já marcado)
+☑ Verificação da integridade do navegador   ← adicionar
+☑ Nível de segurança                          ← adicionar
+```
+
+Aí **Implementar/Salvar** (Deploy) → me avisa. Eu re-verifico na hora: `curl /health` deve virar o JSON dos 7 tools, `/mcp` → 401, e faço o **handshake MCP real com JWT pela URL pública** pra fechar a prova ponta-a-ponta.
+
+## 👤 User *(16:55:03)*
+
+phrojnto verifique novamente
+
+## 🤖 Claude *(16:55:10)*
+
+
+## 🤖 Claude *(16:55:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== /health via CF p\u00fablico (cliente program\u00e1tico) ===\"\ncurl -s -m 12 https://mcp.mcorch.com/health -w \"\\nHTTP=%{http_code}\\n\" 2>&1 | head -c 400; echo \"\"\necho \"=== headers /mcp (challenge sumiu?) ===\"\ncurl -s -m 12 -D - -o /dev/null -X POST https://mcp.mcorch.com/mcp -H \"Content-Type: application/json\" -d '{}' 2>&1 | grep -iE \"HTTP/|cf-mitigated|server:\" | head -5\necho \"=== /mcp POST sem bearer (espera 401 = gate da origem vivo via CF) ===\"\ncurl -s -m 12 -o /dev/null -w \"HTTP=%{http_code}\\n\" -X POST https://mcp.mcorch.com/mcp -H \"Content-Type: application/json\" -H \"Accept: application/json, text/event-stream\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}' 2>&1",
+  "description": "Re-verify programmatic access through CF after WAF skip rule"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /health via CF público (cliente programático) ===
+> {"status":"ok","protocol":"2025-11-25","tools":["mesh_search","vision_describe_image","vision_analyze_video","deepsearch_scrape","mesh_consolidate_reference","deepsearch_run","deepsearch_poll"]}
+> HTTP=200
+> 
+> === headers /mcp (challenge sumiu?) ===
+> HTTP/2 401 
+> server: cloudflare
+> === /mcp POST sem bearer (espera 401 = gate da origem vivo via CF) ===
+> HTTP=401
+> ```
+
+## 🤖 Claude *(16:55:32)*
+
+
+## 🤖 Claude *(16:55:34)*
+
+**Challenge eliminado** ✅ — `/health` via CF público → **200** (7 tools), `/mcp` → **401** com `server: cloudflare` e **sem `cf-mitigated`** (o 401 agora é o gate de identidade da origem passando pelo CF). Agora a prova decisiva: **handshake MCP real com JWT pela URL pública**.
+
+## 🤖 Claude *(16:55:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env; set +a\ncat > /tmp/mint-jwt.ts <<'TS'\nimport { createClient } from \"@supabase/supabase-js\";\nconst SB=process.env.SUPABASE_URL!, SVC=process.env.SB_SECRET_KEY!, PUB=process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;\nconst admin=createClient(SB,SVC,{auth:{persistSession:false}}), anon=createClient(SB,PUB,{auth:{persistSession:false}});\nconst email=`qa+pub${Date.now().toString(36)}@vm.local`;\nconst {data:u}=await admin.auth.admin.createUser({email,email_confirm:true});\nconst {data:l}=await admin.auth.admin.generateLink({type:\"magiclink\",email});\nlet jwt=\"\";for(const t of [\"magiclink\",\"email\"] as const){const{data:s,error}=await anon.auth.verifyOtp({token_hash:l!.properties!.hashed_token,type:t});if(!error&&s?.session){jwt=s.session.access_token;break;}}\nconsole.log(JSON.stringify({uid:u.user!.id,jwt}));\nTS\nOUT=$(bun run /tmp/mint-jwt.ts 2>&1); echo \"mint: $(echo \"$OUT\" | python3 -c \"import sys,json; d=json.loads(sys.stdin.read()); print('uid',d['uid'],'jwt_len',len(d['jwt']))\" 2>/dev/null || echo \"$OUT\" | head -c 200)\"\nUID=$(echo \"$OUT\" | python3 -c \"import sys,json;print(json.loads(sys.stdin.read())['uid'])\" 2>/dev/null)\nJWT=$(echo \"$OUT\" | python3 -c \"import sys,json;print(json.loads(sys.stdin.read())['jwt'])\" 2>/dev/null)\necho \"=== HANDSHAKE MCP REAL via https://mcp.mcorch.com/mcp (cliente SDK + JWT, pelo CF) ===\"\nVISION_MCP_URL=\"https://mcp.mcorch.com/mcp\" bun run scripts/qa/vision-mcp-call.ts --token \"$JWT\" --query \"roborock\" --top_k 3 2>&1 | tail -3\necho \"=== adversarial: sem token \u2192 deve falhar handshake (401 via CF) ===\"\nVISION_MCP_URL=\"https://mcp.mcorch.com/mcp\" bun run scripts/qa/vision-mcp-call.ts --no-token --query \"x\" 2>&1 | tail -2\necho \"=== cleanup ===\"; [ -n \"$UID\" ] && curl -s -o /dev/null -w \"deleteUser %{http_code}\\n\" -X DELETE \"$SUPABASE_URL/auth/v1/admin/users/$UID\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"; rm -f /tmp/mint-jwt.ts",
+  "description": "Mint JWT + full MCP handshake through public CF URL + adversarial no-token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mint: uid c89f7f33-bf73-421c-b8e0-ace1172c6b0b jwt_len 796
+> /bin/bash: line 33: UID: readonly variable
+> === HANDSHAKE MCP REAL via https://mcp.mcorch.com/mcp (cliente SDK + JWT, pelo CF) ===
+> {"ok":true,"isError":false,"result":{"matches":[{"node_id":"5e957727-92bb-4a6a-8c91-b9fcd4833ca2","name":"docs/bok/mcorch-constellation/revenue-flywheel.md","node_type":"markdown_file","snippet":"# MCORCH Constellation: Revenue Flywheel & ROI Tracking\n\n## Contexto Estratégico (Ordem Executiva Comercial OE-661-004)\nEste documento modela a infraestrutura de dados para o rastreamento determinísti"},{"node_id":"6a2ff9de-f4eb-4b83-8315-032702d67fa1","name":"session-handoff-20260529-canvas-consistency-ml-products-nav","node_type":"handoff","snippet":"[HANDOFF SEAL] Cross-node consistency (reference threading + seed) implemented in canvas-execute backend (deployed 146.5kB) + Canvas pipeline frontend, validated technically and visually (same robot/f"},{"node_id":"6f2cf405-4bb5-440b-a02a-9579fc39f29f","name":"session-handoff-20260518-oe661-debt-liquidation","node_type":"handoff","snippet":"OE-661 DEBT LIQUIDATION v6.6.3 — Sessão liquida as 4 dívidas declaradas em CLAUDE.md OE-661-ROADMAP + OE-661-003 Target Binding implícita. (Phase 0) process-affiliate-link Hybrid restaurado: GET 302 p"}],"cost_mco":0,"scope":"user:c89f7f33-bf73-421c-b8e0-ace1172c6b0b+system"}}
+> === adversarial: sem token → deve falhar handshake (401 via CF) ===
+> {"ok":false,"connectError":"Error: Streamable HTTP error: Error POSTing to endpoint: {\"error\":\"identity_unverified\",\"layer\":\"identity\"}"}
+> === cleanup ===
+> deleteUser 404
+> ```
+
+## 🤖 Claude *(16:56:03)*
+
+
+## 🤖 Claude *(16:56:05)*
+
+O handshake MCP **real pela URL pública passou** — mas o cleanup falhou (usei `$UID`, que é variável readonly do bash = uid do OS, não o uuid). O usuário throwaway `c89f7f33` **não foi deletado** — corrigindo (Lei 1, zero resíduo):
+
+## 🤖 Claude *(16:56:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; . ./.env; set +a\nbun -e 'const {createClient}=await import(\"@supabase/supabase-js\");const a=createClient(process.env.SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});const {error}=await a.auth.admin.deleteUser(\"c89f7f33-bf73-421c-b8e0-ace1172c6b0b\");console.log(\"delete throwaway user:\",error?(\"ERR \"+error.message):\"deleted \u2705\");' 2>&1 | tail -2",
+  "description": "Properly delete the throwaway test user (zero residue)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> delete throwaway user: deleted ✅
+> ```
+
+## 🤖 Claude *(16:56:37)*
+
+
+## 🤖 Claude *(16:56:45)*
+
+✅ **mcp.mcorch.com está LIVE ponta-a-ponta pelo Cloudflare** — prova material completa (cliente programático, do datacenter, pelo CF de verdade):
+
+| Teste (via CF público) | Resultado |
+|---|---|
+| `GET /health` | **200** · 7 tools JSON · sem challenge |
+| `POST /mcp` sem bearer | **401** `identity_unverified` · `server: cloudflare` · **`cf-mitigated` sumiu** |
+| **Handshake MCP real + JWT** (`https://mcp.mcorch.com/mcp`) | ✅ `mesh_search` retornou 3 nós **tenant-scoped** (`scope: user:c89f7f33…+system`, `cost_mco:0`) — handshake completo pelo CF |
+| Adversarial sem token | ✅ rejeitado no handshake (`identity_unverified`, layer identity) |
+| Cleanup | ✅ usuário throwaway deletado (zero resíduo) |
+
+A regra de WAF skip resolveu — o `cf-mitigated: challenge` desapareceu e um **cliente MCP de verdade (SDK, sem browser) completa o handshake + chama tool pela URL pública**, com identidade verificada e escopo de tenant aplicado. **OTD-VM-013 (vhost nginx `mcp.mcorch.com`) está fechada** — o Vision MCP agora é consumível externamente (connector do Claude API, etc.).
+
+Atualizando minha memória pra próxima sessão saber que o vhost está no ar:
+
+## 🤖 Claude *(16:56:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md",
+  "old_string": "**nginx** `nginx/mcp.mcorch.com.conf` SSE-tuned (`proxy_pass 127.0.0.1:3200` \u00b7 `proxy_buffering off` \u00b7 3600s) + runbook \u2014 **ativa\u00e7\u00e3o = DNS Cloudflare Sovereign** (mcp.mcorch.com n\u00e3o resolve ainda).",
+  "new_string": "**nginx** `nginx/mcp.mcorch.com.conf` SSE-tuned (`proxy_pass 127.0.0.1:3200` \u00b7 `proxy_buffering off` \u00b7 3600s). **OTD-VM-013 FECHADA 2026-06-16 \u2014 `mcp.mcorch.com` LIVE ponta-a-ponta pelo Cloudflare:** vhost instalado em `/etc/nginx/sites-enabled/` + cert **self-signed** em `/etc/nginx/ssl-certificates/mcp.mcorch.com.{crt,key}` (CF SSL mode **Full** aceita \u2014 n\u00e3o valida origem); CF **proxy laranja** (esconde IP `137.131.243.179`); **WAF Custom Rule \"Skip\"** (`http.host eq mcp.mcorch.com` \u2192 ignora Managed rules + Super Bot Fight + Browser Integrity Check + Security Level) **obrigat\u00f3ria** sen\u00e3o o \"Just a moment\"/`cf-mitigated: challenge` bloqueia clientes MCP program\u00e1ticos (browser passa o JS, SDK/curl/connector N\u00c3O). Provado: handshake MCP real + JWT pela URL p\u00fablica \u2192 `mesh_search` tenant-scoped 200; sem-token \u2192 401. \u26a0\ufe0f Cert self-signed s\u00f3 funciona em **Full**, n\u00e3o Full-strict (se mudar p/ strict, emitir CF Origin Cert)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_mcp.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:56:57)*
+
+
+## 🤖 Claude *(16:56:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Vision MCP — Fatia 1+2 + deepsearch.run async + Fatia 3 CORE LIVE](project_vision_mcp.md) — v6.39.0 2026-06-16: MCP nativo vision×deepsearch, container Sovereign Mesh `127.0.0.1:3200`, 0 edge fns. BoK 9/9 selada. Fatia 1 (ES256 JWKS+sentinel+mesh.search) + Fatia 2 (4 tools billable) + **deepsearch.run/poll async** (engine Gemini grounding OTD-VM-024 — desvio consciente do Firecrawl selado) + **Fatia 3 CORE** (v6.39.0): **PAT external auth** (`mcp_access_tokens` SHA-256+scopes-allowlist-no-DB+365d, `auth/pat.ts`, dispatch PAT-vs-JWT, scope-gate por tool 403) + **LGPD erase** (`vision_artifacts`+`erase_vision_artifacts` cascade tenant-guarded + retention-sweep) + **nginx vhost** `mcp.mcorch.com.conf` SSE-tuned (ativação=DNS Sovereign). **⚠️ OTD-VM-026:** storage.objects é storage-admin-owned → erase via Storage API pelo caller (RPC retorna storage_paths), não SQL. OTD-VM-020 PAT-first IMPLEMENTADA. Lições: mapeamento pré-código pega contradição premissa-vs-BoK (Lei 2); recuperar findings órfãos de transcript achou HIGH de custo (OTD-VM-025 teto global da chave-plataforma); **42501 do storage só apareceu no smoke contra o DB servido** (SECURITY DEFINER public não é dono de storage.objects). Falta: ativar vhost (DNS) + OAuth browser-flow/Plugin Zip/UI PAT/`mistral_api_key` + emenda BoK do engine (OTD-VM-024) + caps (DD-VM-003/OTD-VM-025).
+> ```
+
+## 🤖 Claude *(16:57:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "+ **nginx vhost** `mcp.mcorch.com.conf` SSE-tuned (ativa\u00e7\u00e3o=DNS Sovereign). **\u26a0\ufe0f OTD-VM-026:** storage.objects \u00e9 storage-admin-owned \u2192 erase via Storage API pelo caller (RPC retorna storage_paths), n\u00e3o SQL. OTD-VM-020 PAT-first IMPLEMENTADA. Li\u00e7\u00f5es: mapeamento pr\u00e9-c\u00f3digo pega contradi\u00e7\u00e3o premissa-vs-BoK (Lei 2); recuperar findings \u00f3rf\u00e3os de transcript achou HIGH de custo (OTD-VM-025 teto global da chave-plataforma); **42501 do storage s\u00f3 apareceu no smoke contra o DB servido** (SECURITY DEFINER public n\u00e3o \u00e9 dono de storage.objects). Falta: ativar vhost (DNS) + OAuth browser-flow/Plugin Zip/UI PAT/`mistral_api_key` + emenda BoK do engine (OTD-VM-024) + caps (DD-VM-003/OTD-VM-025).",
+  "new_string": "+ **nginx vhost `mcp.mcorch.com` LIVE 2026-06-16 (OTD-VM-013 FECHADA)**: CF proxy laranja (esconde IP `137.131.243.179`) + SSL Full + cert self-signed na origem + **WAF Skip rule obrigat\u00f3ria** (sen\u00e3o \"Just a moment\"/`cf-mitigated:challenge` bloqueia clientes MCP program\u00e1ticos \u2014 browser passa, SDK/curl/connector n\u00e3o); handshake MCP real+JWT pela URL p\u00fablica provado (mesh_search tenant-scoped 200). **\u26a0\ufe0f OTD-VM-026:** storage.objects \u00e9 storage-admin-owned \u2192 erase via Storage API pelo caller (RPC retorna storage_paths), n\u00e3o SQL. OTD-VM-020 PAT-first IMPLEMENTADA. Li\u00e7\u00f5es: mapeamento pr\u00e9-c\u00f3digo pega contradi\u00e7\u00e3o premissa-vs-BoK (Lei 2); recuperar findings \u00f3rf\u00e3os de transcript achou HIGH de custo (OTD-VM-025 teto global da chave-plataforma); **42501 do storage s\u00f3 apareceu no smoke contra o DB servido**; **CF laranja desafia clientes n\u00e3o-browser \u2014 WAF skip por host \u00e9 obrigat\u00f3ria p/ endpoint MCP**. Falta: OAuth browser-flow/Plugin Zip/UI PAT/`mistral_api_key` + emenda BoK do engine (OTD-VM-024) + caps (DD-VM-003/OTD-VM-025)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:57:23)*
+
+
+## 🤖 Claude *(16:57:31)*
+
+Memória atualizada (próximo `/handson` saberá que o vhost está no ar). 
+
+**Resumo final:** o `mcp.mcorch.com` está **publicamente operacional e autenticado** — o Vision MCP saiu do loopback e agora é consumível por qualquer host MCP externo (Claude API connector, SDKs), com identidade ES256/PAT + scope-gate + tenant-isolation aplicados na borda. A lição (que gravei): **CF laranja desafia clientes não-browser por padrão — a WAF Skip rule por host é obrigatória** pra qualquer endpoint de API/MCP.
+
+Dois pontos a registrar:
+- **A BoK ainda diz que OTD-VM-013 está pendente** (e o runbook no `nginx/mcp.mcorch.com.conf` descreve o estado não-ativado). Posso fazer um **commit pequeno** marcando OTD-VM-013 FECHADA + atualizando o runbook pra refletir a realidade (self-signed + Full + WAF skip) — quer que eu faça agora ou deixo pro próximo `/handoff`?
+- **Caveat честo:** o cert é self-signed e funciona porque o SSL está em **Full**. Se algum dia você mudar o zone pra **Full (strict)**, o `mcp` quebra — aí é só emitir o CF Origin Certificate e eu troco.
+
+Restante do Vision MCP (sessões dedicadas quando quiser): emenda BoK do engine Gemini→Firecrawl (OTD-VM-024) · caps per-plan/per-tenant (DD-VM-003/OTD-VM-025) · resto da Fatia 3 (OAuth browser-flow + Plugin Zip + UI de emissão de PAT + `mistral_api_key`/`vision.ocr`). Como quer seguir?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
