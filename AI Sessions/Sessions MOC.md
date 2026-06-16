@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 846
-> * **Sessões do Claude**: 804
+> * **Total de Sessões Registradas**: 861
+> * **Sessões do Claude**: 819
 > * **Sessões do Gemini**: 42
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-16 - agent-afe8189a8d120151e]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-ae580e30a2c34d075]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-ab7c58e5c0e72d09a]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-ab3341a95ef0b34e1]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-ab2f81197eb84687c]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-aae893e38c8c9d479]]` - *2026-06-16*
 *   `[[2026-06-16 - agent-a97e17e4ea37dba6f]]` - *2026-06-16*
-*   `[[2026-06-16 - agent-a2c102f6ea6aa723b]]` - *2026-06-16*
-*   `[[2026-06-16 - Build trading dashboard with AI strategy validation]]` - *2026-06-16*
-*   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` - *2026-06-15*
-*   `[[2026-06-15 - handson]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-afc30df474a782e50]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-afa68ee45d1266fe4]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-af8d0fd31032c9cca]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-af7f2461734138fd0]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-af736503972814d59]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-af45021943d410434]]` - *2026-06-15*
-*   `[[2026-06-15 - agent-af27d4613473d4a62]]` - *2026-06-15*
-*   *... e mais 810 sessões nessa categoria.*
+*   `[[2026-06-16 - agent-a95e8b455438e665d]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-a9030e2d257b03987]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-a81c8166185336f66]]` - *2026-06-16*
+*   `[[2026-06-16 - agent-a6189368820c86de6]]` - *2026-06-16*
+*   *... e mais 825 sessões nessa categoria.*
 
 ---
 
@@ -262,8 +262,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-16 - agent-afe8189a8d120151e]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-ae580e30a2c34d075]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-ab7c58e5c0e72d09a]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-ab3341a95ef0b34e1]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-ab2f81197eb84687c]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-aae893e38c8c9d479]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-a97e17e4ea37dba6f]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a95e8b455438e665d]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a9030e2d257b03987]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a81c8166185336f66]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a6189368820c86de6]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a5a07f08ed086f81e]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a50efe65eccce928a]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a327f08e1e5a34673]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-a2c102f6ea6aa723b]]` (ClaudeSessions)
+*   `[[2026-06-16 - agent-a04b67f29a2820d36]]` (ClaudeSessions)
 *   `[[2026-06-16 - Build trading dashboard with AI strategy validation]]` (ClaudeSessions)
 *   `[[2026-06-15 - ubuntu@panelhomegcrux-tradeuxtradeux$ handson]]` (GeminiSessions)
 *   `[[2026-06-15 - handson]]` (GeminiSessions)
