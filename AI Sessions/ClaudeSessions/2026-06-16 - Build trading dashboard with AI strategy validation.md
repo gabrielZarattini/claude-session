@@ -6733,6 +6733,1438 @@ O Edit do MCP falhou (preciso Read antes). Leio a região do `index.js`.
 > 215	// ----------------------------------------------------------------------------
 > ```
 
+## 🤖 Claude *(00:00:27)*
+
+
+## 🤖 Claude *(00:00:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "readTool(\n  \"tradeux_get_agenda\",\n  \"Automa\u00e7\u00f5es agendadas (cron) atualmente registradas.\",\n  {},\n  () => api.get(\"/beholder/agenda\")\n);",
+  "new_string": "readTool(\n  \"tradeux_get_agenda\",\n  \"Automa\u00e7\u00f5es agendadas (cron) atualmente registradas.\",\n  {},\n  () => api.get(\"/beholder/agenda\")\n);\n\nreadTool(\n  \"tradeux_get_cockpit\",\n  \"Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por simbolo a partir de klines 1m REAIS da mainnet \u2014 distribuicao de retornos (mediana |move|, sigma, % de moves >= break-even de fee), EV/trade NET de fee (mecanica da distribuicao 1m; costuma ser <=0 = por que scalping de 1m sangra taxa), banda Monte Carlo DRIFTLESS (p50 == preco, NAO previsao) e o snapshot regime/fluxo + estado dos gates de COMPRA por simbolo. Tambem informa o AMBIENTE real (env.useTestnet) e se o trading esta congelado (env.tradingHalt). Use para REPORTAR ao operador o estado MECANICO do mercado e a coerencia dos gates; NAO e sinal de trade nem forecast.\",\n  {},\n  async () => {\n    const d = await api.get(`/analysis/cockpit`);\n    const out = { env: d.env || null, enabled: d.enabled, symbols: {} };\n    for (const [sym, c] of Object.entries(d.symbols || {})) {\n      const dist = c.dist || {}, ev = c.ev || {}, mc = c.mc || {}, gates = c.gates || {};\n      out.symbols[sym] = {\n        price: c.price, regime: c.regime,\n        flow: c.flow ? { imbalance: c.flow.imbalance, toxicity: c.flow.toxicity } : null,\n        medAbsMovePct: dist.medAbsMovePct, sigmaPct: dist.sigmaPct, pHitBreakevenPct: dist.pHitBreakevenPct,\n        evNetPct: ev.netPct, breakevenPct: ev.breakevenPct,\n        mc: { p10: mc.p10, p50: mc.p50, p90: mc.p90, horizonMin: mc.horizonMin, driftless: true },\n        buyGate: { allowed: gates.buyAllowed, reason: gates.reason },\n        stale: c.stale,\n      };\n    }\n    return out;\n  }\n);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:01:02)*
+
+
+## 🤖 Claude *(00:01:02)*
+
+Agora os 3 edits cirúrgicos no prompt do agente (env-aware + instrução de ler/reportar o cockpit).
+
+## 🤖 Claude *(00:01:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "CONTEXTO testnet (crucial)\n- A conta \u00e9 TESTNET: o faucet credita ~445 moedas e ~10k de cada stablecoin, ent\u00e3o o \"valor total da carteira\" (centenas de milhares de USDT) \u00e9 RU\u00cdDO sint\u00e9tico, n\u00e3o capital real. N\u00c3O raciocine sobre \"valor total\", \"exposi\u00e7\u00e3o em USDT\" nem \"reduzir posi\u00e7\u00e3o de X mil USDT\". O pre\u00e7o tamb\u00e9m \u00e9 do testnet (sint\u00e9tico). O que importa \u00e9 a MEC\u00c2NICA: regime, sinais e se as automa\u00e7\u00f5es dispararam ou foram gateadas corretamente.",
+  "new_string": "AMBIENTE (crucial \u2014 confirme a cada ciclo com tradeux_get_cockpit; N\u00c3O assuma)\n- O ambiente REAL e o estado de trading v\u00eam de tradeux_get_cockpit: env.useTestnet (mainnet vs testnet) e env.tradingHalt (kill-switch). \u00c9 a FONTE DE VERDADE \u2014 confie nela, n\u00e3o no que este prompt assume.\n- Se env.useTestnet=TRUE: a carteira \u00e9 do faucet (~445 moedas + ~10k de cada stable) e o \"valor total\" (centenas de milhares de USDT) \u00e9 RU\u00cdDO sint\u00e9tico, n\u00e3o capital real; N\u00c3O raciocine sobre \"valor total\"/\"exposi\u00e7\u00e3o em USDT\"/\"reduzir X mil\"; o pre\u00e7o tamb\u00e9m \u00e9 sint\u00e9tico.\n- Se env.useTestnet=FALSE (MAINNET REAL): o capital \u00e9 REAL (e pequeno); jamais sugira aumentar risco. Em AMBOS os casos o que importa \u00e9 a MEC\u00c2NICA (regime, sinais, gates, coer\u00eancia das automa\u00e7\u00f5es), N\u00c3O maximizar \"valor total\".\n- Se env.tradingHalt=TRUE: o sistema est\u00e1 CONGELADO (kill-switch) \u2014 nenhuma ordem real sai; trate tudo como observa\u00e7\u00e3o, n\u00e3o aja."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:01:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "- NUNCA chame tradeux_get_memory_indexes, nem tradeux_get_memory/tradeux_get_wallet SEM symbol, nem tradeux_get_wallet_full:",
+  "new_string": "- 1\u00d7 tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por s\u00edmbolo, a MEC\u00c2NICA da distribui\u00e7\u00e3o de 1m \u2014 mediana |move|, \u03c3, % de moves \u2265 break-even, EV/trade NET de fee (costuma ser \u22640), a banda Monte Carlo DRIFTLESS (p50\u2261pre\u00e7o, N\u00c3O previs\u00e3o) e o estado dos gates de COMPRA. REPORTE no di\u00e1rio o estado mec\u00e2nico e a coer\u00eancia dos gates; EV\u22640 a 1m \u00e9 o ESPERADO (scalping de 1m sangra taxa), N\u00c3O \u00e9 alarme.\n- NUNCA chame tradeux_get_memory_indexes, nem tradeux_get_memory/tradeux_get_wallet SEM symbol, nem tradeux_get_wallet_full:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:01:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "5. Nunca saque (withdraw). Equity do testnet \u00e9 ru\u00eddo \u2014 n\u00e3o a use como m\u00e9trica.",
+  "new_string": "5. Nunca saque (withdraw). N\u00c3O use o \"valor total\"/equity como m\u00e9trica de sucesso \u2014 em testnet \u00e9 ru\u00eddo sint\u00e9tico; em mainnet o foco \u00e9 a MEC\u00c2NICA, n\u00e3o maximizar o total."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:01:50)*
+
+
+## 🤖 Claude *(00:01:53)*
+
+Fase C (brain) escrita. Agora a Fase B — frontend consome o snapshot do brain. Deixa eu reler o `Cockpit.js` atual (já sofreu vários edits) pra ancorar com precisão, e o `IntelligenceService` pra adicionar o método.
+
+## 🤖 Claude *(00:01:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useEffect } from 'react';
+> 2	import useWebSocket from 'react-use-websocket';
+> 3	import Menu from '../../components/Menu/Menu';
+> 4	import Toast from '../../components/Toast/Toast';
+> 5	import { getBalance } from '../../services/ExchangeService';
+> 6	import { getOrdersReport } from '../../services/OrdersService';
+> 7	import { getRegimeStatus, getFlowStatus, getAgentRuns } from '../../services/IntelligenceService';
+> 8	import { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';
+> 9	import './cockpit.css';
+> 10	
+> 11	/*
+> 12	 * Cockpit — terminal "FABLE" (dark/neon), inspirado na referência viral.
+> 13	 * READ-ONLY: só LÊ dados reais (saldo, relatório, regime/flow, KPIs do agente, klines públicas
+> 14	 * da Binance, WS de preço). NÃO emite ordem, NÃO toca o TRADING_HALT.
+> 15	 * A estética é dos painéis da referência; os DADOS são os reais nossos (sem número fabricado).
+> 16	 * Selos: 🟢 dado real · 🟡 real mas falta endpoint · ⚪ a construir (Fase 3).
+> 17	 */
+> 18	
+> 19	const REPORT_QUOTE = 'USDT';
+> 20	const AGENT_STALE_MS = 15 * 60 * 1000;
+> 21	const FEE_RT = 0.20;        // round-trip taker spot (%)
+> 22	const FEE_RT_BNB = 0.15;    // round-trip com BNB (%)
+> 23	const KL_SYMBOL = 'BTCUSDT';
+> 24	const KL_HOSTS = ['https://api.binance.com', 'https://data-api.binance.vision'];
+> 25	
+> 26	function num(v) {
+> 27	  if (v === null || v === undefined) return NaN;
+> 28	  if (typeof v === 'number') return v;
+> 29	  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+> 30	  return isNaN(n) ? NaN : n;
+> 31	}
+> 32	function fmtUsd(v, dec = 2) {
+> 33	  const n = num(v);
+> 34	  if (isNaN(n)) return '—';
+> 35	  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+> 36	}
+> 37	function fmtPct(v) {
+> 38	  const n = num(v);
+> 39	  if (isNaN(n)) return '—';
+> 40	  return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+> 41	}
+> 42	function dirClass(v) {
+> 43	  const n = num(v);
+> 44	  if (isNaN(n) || n === 0) return 'cx-flat';
+> 45	  return n > 0 ? 'cx-up' : 'cx-down';
+> 46	}
+> 47	function fmtAge(ms) {
+> 48	  if (ms == null) return '—';
+> 49	  const s = Math.round(ms / 1000);
+> 50	  if (s < 90) return `${s}s`;
+> 51	  const m = Math.round(s / 60);
+> 52	  if (m < 90) return `${m}min`;
+> 53	  return `${Math.round(m / 60)}h`;
+> 54	}
+> 55	
+> 56	function buildSpark(series) {
+> 57	  const pts = (series || []).map(num).filter(n => !isNaN(n));
+> 58	  if (pts.length < 2) return null;
+> 59	  const W = 600, H = 70, pad = 5;
+> 60	  const min = Math.min(...pts), max = Math.max(...pts);
+> 61	  const span = max - min || 1;
+> 62	  const step = (W - pad * 2) / (pts.length - 1);
+> 63	  const c = pts.map((p, i) => [pad + i * step, pad + (H - pad * 2) * (1 - (p - min) / span)]);
+> 64	  const line = c.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+> 65	  return { line, area: `${line} L${c[c.length - 1][0].toFixed(1)},${H} L${c[0][0].toFixed(1)},${H} Z`, up: pts[pts.length - 1] >= pts[0] };
+> 66	}
+> 67	
+> 68	// candlestick a partir das klines [[t,o,h,l,c,...]] -> geometria p/ SVG
+> 69	function buildCandles(kl) {
+> 70	  const data = (kl || []).slice(-60);
+> 71	  if (data.length < 2) return null;
+> 72	  const W = 600, H = 220, padT = 8, padB = 8, padL = 4, padR = 40;
+> 73	  const max = Math.max(...data.map(d => d.h)), min = Math.min(...data.map(d => d.l));
+> 74	  const span = max - min || 1;
+> 75	  const cw = (W - padL - padR) / data.length;
+> 76	  const bw = Math.max(1.5, cw * 0.62);
+> 77	  const y = p => padT + (H - padT - padB) * (1 - (p - min) / span);
+> 78	  const candles = data.map((d, i) => {
+> 79	    const xc = padL + cw * i + cw / 2;
+> 80	    const up = d.c >= d.o;
+> 81	    const oy = y(d.o), cy = y(d.c);
+> 82	    return { x: xc - bw / 2, bw, by: Math.min(oy, cy), bh: Math.max(1, Math.abs(oy - cy)), wx: xc, wy1: y(d.h), wy2: y(d.l), up };
+> 83	  });
+> 84	  return { candles, lastY: y(data[data.length - 1].c), last: data[data.length - 1].c, hi: max, lo: min, W, H, padR };
+> 85	}
+> 86	
+> 87	// distribuição de retornos 1m (%) + faixa de fee
+> 88	function buildHist(kl) {
+> 89	  if (!kl || kl.length < 5) return null;
+> 90	  const rets = [];
+> 91	  for (let i = 1; i < kl.length; i++) {
+> 92	    const r = (kl[i].c - kl[i - 1].c) / kl[i - 1].c * 100;
+> 93	    if (isFinite(r)) rets.push(r);
+> 94	  }
+> 95	  if (!rets.length) return null;
+> 96	  const LIM = 0.5, BINS = 25, step = (LIM * 2) / BINS;
+> 97	  const counts = new Array(BINS).fill(0);
+> 98	  rets.forEach(r => { let b = Math.floor((Math.min(LIM - 1e-9, Math.max(-LIM, r)) + LIM) / step); if (b < 0) b = 0; if (b >= BINS) b = BINS - 1; counts[b]++; });
+> 99	  const sorted = rets.map(r => Math.abs(r)).sort((a, b) => a - b);
+> 100	  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+> 101	  const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / rets.length);
+> 102	  return {
+> 103	    counts, maxc: Math.max(...counts, 1), step, BINS, LIM, n: rets.length, mean, sd,
+> 104	    clearFee: rets.filter(r => Math.abs(r) >= FEE_RT).length / rets.length * 100,
+> 105	    medAbs: sorted[Math.floor(sorted.length / 2)],
+> 106	  };
+> 107	}
+> 108	
+> 109	function Cockpit() {
+> 110	  const [balance, setBalance] = useState({});
+> 111	  const [report, setReport] = useState({});
+> 112	  const [gate, setGate] = useState({ symbols: {} });
+> 113	  const [flow, setFlow] = useState({ symbols: {} });
+> 114	  const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+> 115	  const [prices, setPrices] = useState({});
+> 116	  const [klines, setKlines] = useState(null);
+> 117	  const [klErr, setKlErr] = useState(false);
+> 118	  const [notification, setNotification] = useState({});
+> 119	
+> 120	  const { readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+> 121	    queryParams: { token: localStorage.getItem('token') },
+> 122	    onMessage: (event) => {
+> 123	      try {
+> 124	        const msg = JSON.parse(event.data);
+> 125	        if (msg && msg.miniTicker) {
+> 126	          const mt = msg.miniTicker;
+> 127	          setPrices(prev => {
+> 128	            const next = { ...prev };
+> 129	            const put = (sym, c) => { if (sym && c != null && !isNaN(num(c))) next[sym] = num(c); };
+> 130	            if (Array.isArray(mt)) mt.forEach(t => put(t && t.symbol, t && (t.close ?? t.c)));
+> 131	            else if (mt.symbol) put(mt.symbol, mt.close ?? mt.c);
+> 132	            else Object.keys(mt).forEach(k => put(k, mt[k] && (mt[k].close ?? mt[k].c)));
+> 133	            return next;
+> 134	          });
+> 135	        }
+> 136	      } catch (e) { /* ignora */ }
+> 137	    },
+> 138	    shouldReconnect: () => true,
+> 139	    reconnectInterval: 3000,
+> 140	  });
+> 141	
+> 142	  function loadAll() {
+> 143	    const token = localStorage.getItem('token');
+> 144	    getBalance(token).then(setBalance).catch(() => {});
+> 145	    getOrdersReport(REPORT_QUOTE, null, null, token, '').then(setReport).catch(err => {
+> 146	      setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message });
+> 147	    });
+> 148	    getRegimeStatus(token).then(setGate).catch(() => {});
+> 149	    getFlowStatus(token).then(setFlow).catch(() => {});
+> 150	    getAgentRuns(50, token).then(setAgent).catch(() => {});
+> 151	  }
+> 152	
+> 153	  async function loadKlines() {
+> 154	    for (const host of KL_HOSTS) {
+> 155	      try {
+> 156	        const r = await fetch(`${host}/api/v3/klines?symbol=${KL_SYMBOL}&interval=1m&limit=120`);
+> 157	        if (!r.ok) continue;
+> 158	        const raw = await r.json();
+> 159	        const parsed = raw.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4] }));
+> 160	        setKlines(parsed); setKlErr(false); return;
+> 161	      } catch (e) { /* tenta próximo host */ }
+> 162	    }
+> 163	    setKlErr(true);
+> 164	  }
+> 165	
+> 166	  useEffect(() => {
+> 167	    loadAll(); loadKlines();
+> 168	    const id = setInterval(() => { loadAll(); loadKlines(); }, 60000);
+> 169	    return () => clearInterval(id);
+> 170	  }, []);
+> 171	
+> 172	  const wsLive = readyState === 1;
+> 173	  const hist = buildHist(klines);
+> 174	  const btcWs = prices[KL_SYMBOL];
+> 175	  const klive = (klines && btcWs != null && !isNaN(btcWs))
+> 176	    ? klines.map((k, i) => i === klines.length - 1 ? { ...k, c: btcWs, h: Math.max(k.h, btcWs), l: Math.min(k.l, btcWs) } : k)
+> 177	    : klines;
+> 178	  const cnd = buildCandles(klive);
+> 179	  const btc = (btcWs != null && !isNaN(btcWs)) ? btcWs : (cnd ? cnd.last : null);
+> 180	  const sigma = hist ? hist.sd : NaN;
+> 181	
+> 182	  const pnlNet = (num(report.sellVolume) - num(report.buyVolume));
+> 183	  const equity = balance && (balance.fiatEstimate != null) ? balance.fiatEstimate : null;
+> 184	  const spark = buildSpark(report.series);
+> 185	
+> 186	  const agentLastMs = (agent.kpis && agent.kpis.lastTs) ? (Date.now() - new Date(agent.kpis.lastTs).getTime()) : null;
+> 187	  const agentStale = agentLastMs != null && agentLastMs > AGENT_STALE_MS;
+> 188	
+> 189	  const symset = {};
+> 190	  Object.keys(gate.symbols || {}).forEach(s => symset[s] = true);
+> 191	  Object.keys(flow.symbols || {}).forEach(s => symset[s] = true);
+> 192	  const symbols = Object.keys(symset).sort();
+> 193	
+> 194	  const automations = Array.isArray(report.automations) ? report.automations
+> 195	    : (report.automations && typeof report.automations === 'object' ? Object.values(report.automations) : []);
+> 196	
+> 197	  return (
+> 198	    <React.Fragment>
+> 199	      <Menu />
+> 200	      <main className="content">
+> 201	        <div className="cockpit">
+> 202	
+> 203	          <div className="cx-head">
+> 204	            <div className="cx-brand"><b>TRADEUX</b><span>fable cockpit</span></div>
+> 205	            <div className="cx-pills">
+> 206	              <span className="cx-pill"><span className="cx-dot" />read-only</span>
+> 207	              <span className={`cx-pill ${wsLive ? 'live' : 'halt'}`}><span className="cx-dot" />{wsLive ? 'ao vivo' : 'offline'}</span>
+> 208	              <span className={`cx-pill ${gate.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />regime {gate.enabled === false ? 'off' : 'on'}</span>
+> 209	              <span className={`cx-pill ${flow.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />flow {flow.enabled === false ? 'off' : (flow.mode || 'on')}</span>
+> 210	            </div>
+> 211	          </div>
+> 212	
+> 213	          <div className="cx-grid">
+> 214	
+> 215	            {/* ROW 1 — hero + kpis */}
+> 216	            <div className="cx-row">
+> 217	              <div className="cx-panel glow">
+> 218	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Equity &amp; P&amp;L (net de fee)</span><span className="cx-src">/exchange/balance · /orders/reports/{REPORT_QUOTE}</span></div>
+> 219	                <div className="cx-hero-val cx-mono">{equity != null ? <AnimatedNumber value={num(equity)} format={v => fmtUsd(v)} /> : '—'}</div>
+> 220	                <div className="cx-sub">
+> 221	                  <span className={`cx-chg cx-mono ${dirClass(pnlNet)}`}>{isNaN(pnlNet) ? '—' : (pnlNet > 0 ? '+' : '') + fmtUsd(pnlNet)}</span>
+> 222	                  <span className={`cx-chg cx-mono ${dirClass(report.profitPerc)}`}>{fmtPct(report.profitPerc)}</span>
+> 223	                  {report.profitBtc != null && <span className="cx-flat cx-mono" style={{ fontSize: '0.85rem' }}>≈ {num(report.profitBtc) > 0 ? '+' : ''}{num(report.profitBtc).toFixed(8)} BTC</span>}
+> 224	                </div>
+> 225	                {spark
+> 226	                  ? <svg className="cx-spark" viewBox="0 0 600 70" preserveAspectRatio="none" aria-label="P&L acumulado">
+> 227	                      <path d={spark.area} fill={spark.up ? 'rgba(47,245,168,0.12)' : 'rgba(255,93,122,0.12)'} />
+> 228	                      <path d={spark.line} fill="none" stroke={spark.up ? '#2ff5a8' : '#ff5d7a'} strokeWidth="2" />
+> 229	                    </svg>
+> 230	                  : <div className="cx-empty" style={{ marginTop: 10 }}>sem série no período — esperado sob HALT (0 ordens)</div>}
+> 231	                <div className="cx-note"><b>Ressalva:</b> quando a taxa é paga em BNB, o <code>net</code> hoje não desconta a comissão — corrigido na Fase 2.</div>
+> 232	              </div>
+> 233	
+> 234	              <div className="cx-panel">
+> 235	                <div className="cx-panel-title"><span>Métricas</span></div>
+> 236	                <div className="cx-kpis">
+> 237	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />P&amp;L net</div><div className={`k-v cx-mono ${dirClass(pnlNet)}`}>{isNaN(pnlNet) ? '—' : fmtUsd(pnlNet)}</div></div>
+> 238	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />Trades</div><div className="k-v cx-mono">{report.orders != null ? report.orders : '—'}</div></div>
+> 239	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />Volume</div><div className="k-v cx-mono">{isNaN(num(report.buyVolume) + num(report.sellVolume)) ? '—' : fmtUsd(num(report.buyVolume) + num(report.sellVolume), 0)}</div></div>
+> 240	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal soon" />Win rate</div><div className="k-v cx-mono muted">—</div></div>
+> 241	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal todo" />Profit factor</div><div className="k-v cx-mono muted">n/d</div></div>
+> 242	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal todo" />Sharpe</div><div className="k-v cx-mono muted">n/d</div></div>
+> 243	                </div>
+> 244	                <div className="cx-note">Win rate / profit factor / Sharpe exigem trades fechados pareados + equity persistida (endpoint novo) — marcados, não inventados.</div>
+> 245	              </div>
+> 246	            </div>
+> 247	
+> 248	            {/* ROW 2 — candle ao vivo + tail distribution */}
+> 249	            <div className="cx-row">
+> 250	              <div className="cx-panel">
+> 251	                <div className="cx-panel-title"><span><span className="cx-seal real" /> {KL_SYMBOL} · candles 1m</span><span className="cx-src">binance /api/v3/klines + WS miniTicker</span></div>
+> 252	                <div className="cx-candle-head">
+> 253	                  <span className="px cx-mono">{btc != null ? <AnimatedNumber value={btc} format={v => fmtUsd(v, 1)} /> : '—'}</span>
+> 254	                  {cnd && <span className="cx-flat cx-mono" style={{ fontSize: '0.74rem' }}>H {fmtUsd(cnd.hi, 0)} · L {fmtUsd(cnd.lo, 0)}</span>}
+> 255	                  {wsLive && <span className="cx-up cx-mono" style={{ fontSize: '0.7rem' }}>● live</span>}
+> 256	                </div>
+> 257	                {cnd
+> 258	                  ? <svg className="cx-candle" viewBox={`0 0 ${cnd.W} ${cnd.H}`} preserveAspectRatio="none" aria-label="Candles de 1 minuto do BTCUSDT">
+> 259	                      {[0.25, 0.5, 0.75].map((g, i) => <line key={i} className="grid" x1="0" x2={cnd.W} y1={cnd.H * g} y2={cnd.H * g} />)}
+> 260	                      {cnd.candles.map((c, i) => (
+> 261	                        <g key={i}>
+> 262	                          <line className={c.up ? 'wick-up' : 'wick-down'} x1={c.wx} x2={c.wx} y1={c.wy1} y2={c.wy2} />
+> 263	                          <rect className={c.up ? 'body-up' : 'body-down'} x={c.x} y={c.by} width={c.bw} height={c.bh} />
+> 264	                        </g>
+> 265	                      ))}
+> 266	                      <line className="lastline" x1="0" x2={cnd.W - cnd.padR} y1={cnd.lastY} y2={cnd.lastY} />
+> 267	                    </svg>
+> 268	                  : <div className="cx-empty">{klErr ? 'klines indisponíveis (CORS/Binance) 🟡' : 'carregando candles…'}</div>}
+> 269	              </div>
+> 270	
+> 271	              <div className="cx-panel">
+> 272	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Tail · retornos 1m vs fee</span><span className="cx-src">klines → distribuição</span></div>
+> 273	                {hist
+> 274	                  ? <React.Fragment>
+> 275	                      <svg className="cx-hist" viewBox="0 0 600 180" preserveAspectRatio="none" aria-label="Distribuição dos retornos de 1 minuto com a faixa de fee">
+> 276	                        {(() => {
+> 277	                          const W = 600, H = 180, padB = 18, padT = 8;
+> 278	                          const x = r => (r + hist.LIM) / (hist.LIM * 2) * W;
+> 279	                          const bw = W / hist.BINS;
+> 280	                          const feeX1 = x(-FEE_RT), feeX2 = x(FEE_RT);
+> 281	                          const els = [];
+> 282	                          els.push(<rect key="band" className="feeband" x={feeX1} y={padT} width={feeX2 - feeX1} height={H - padB - padT} />);
+> 283	                          hist.counts.forEach((c, i) => {
+> 284	                            const cr = -hist.LIM + hist.step * (i + 0.5);
+> 285	                            const h = (c / hist.maxc) * (H - padB - padT);
+> 286	                            els.push(<rect key={'b' + i} className={Math.abs(cr) < FEE_RT ? 'bar infee' : 'bar'} x={x(-hist.LIM + hist.step * i) + 0.5} y={H - padB - h} width={bw - 1} height={h} />);
+> 287	                          });
+> 288	                          els.push(<line key="z" className="zero" x1={x(0)} x2={x(0)} y1={padT} y2={H - padB} />);
+> 289	                          [-FEE_RT, FEE_RT].forEach((f, i) => els.push(<line key={'f' + i} className="feeline" x1={x(f)} x2={x(f)} y1={padT} y2={H - padB} />));
+> 290	                          [-0.5, -0.25, 0, 0.25, 0.5].forEach((t, i) => els.push(<text key={'t' + i} className="axis" x={x(t)} y={H - 5} textAnchor="middle">{t > 0 ? '+' : ''}{t}%</text>));
+> 291	                          return els;
+> 292	                        })()}
+> 293	                      </svg>
+> 294	                      <div className="cx-tail-stat">
+> 295	                        <span className="cx-down">moves ≥ {FEE_RT}% (break-even): <b className="cx-mono">{hist.clearFee.toFixed(0)}%</b></span>
+> 296	                        <span className="cx-flat">mediana |move|: <b className="cx-mono">{hist.medAbs.toFixed(3)}%</b></span>
+> 297	                        <span className="cx-flat">n={hist.n}</span>
+> 298	                      </div>
+> 299	                      <div className="cx-note">Zona vermelha = move &lt; fee round-trip ({FEE_RT}%). A maioria das velas de 1m cai aí dentro — é a prova visual de por que scalping de 1m sangra taxa.</div>
+> 300	                    </React.Fragment>
+> 301	                  : <div className="cx-empty">{klErr ? 'klines indisponíveis 🟡' : 'carregando…'}</div>}
+> 302	              </div>
+> 303	            </div>
+> 304	
+> 305	            {/* ROW 2b — probability lattice (Galton) + monte carlo median fair */}
+> 306	            <div className="cx-row-3">
+> 307	              <div className="cx-panel glow">
+> 308	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Probability lattice (Galton)</span><span className="cx-src">velas 1m reais → distribuição</span></div>
+> 309	                {hist ? <GaltonBoard counts={hist.counts} step={hist.step} lim={hist.LIM} fee={FEE_RT} />
+> 310	                      : <div className="cx-empty">{klErr ? 'klines indisponíveis 🟡' : 'carregando…'}</div>}
+> 311	                <div className="cx-note">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha É a distribuição real. <b>≥ break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A "lei dos grandes números" aqui mostra o contrário do golpe: repetição NÃO cria edge quando o EV/trade já é negativo.</div>
+> 312	              </div>
+> 313	              <div className="cx-panel glow">
+> 314	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Monte Carlo · median fair</span><span className="cx-src">random walk da σ realizada</span></div>
+> 315	                <PathFan sigmaPct={sigma} spot={btc} />
+> 316	                <div className="cx-note"><b>NÃO é previsão.</b> 48 caminhos de random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana ≈ preço atual</b> — o oposto exato da promessa "Fable prevê o mercado". A faixa p10–p90 é só a incerteza da volatilidade.</div>
+> 317	              </div>
+> 318	            </div>
+> 319	
+> 320	            {/* ROW 3 — lattice + trade bridges */}
+> 321	            <div className="cx-row-3">
+> 322	              <div className="cx-panel">
+> 323	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Regime × Flow lattice</span><span className="cx-src">/analysis/regime-status · flow-status</span></div>
+> 324	                <div className="cx-lat">
+> 325	                  {symbols.length === 0
+> 326	                    ? <div className="cx-empty">sem regime/fluxo ainda (jobs no ar, aguardando a Binance)</div>
+> 327	                    : symbols.map(s => {
+> 328	                        const g = (gate.symbols || {})[s] || {};
+> 329	                        const f = (flow.symbols || {})[s] || {};
+> 330	                        const imb = f.imbalance, tox = f.toxicity, reg = g.regime || 'unknown';
+> 331	                        const w = imb != null ? Math.min(50, Math.abs(imb) * 50) : 0;
+> 332	                        return (
+> 333	                          <div className="cx-lat-row wide" key={s}>
+> 334	                            <span className="cx-sym cx-mono">{s}</span>
+> 335	                            <span className={`cx-reg ${reg}`}>{reg}{g.stale ? '·s' : ''}</span>
+> 336	                            <span className="cx-flowbar"><span className="mid" />{imb != null && <span className={`fill ${imb >= 0 ? 'buy' : 'sell'}`} style={{ width: w + '%' }} />}</span>
+> 337	                            <span className={`cx-imb cx-mono ${imb == null ? 'cx-flat' : imb < -0.05 ? 'cx-down' : imb > 0.05 ? 'cx-up' : 'cx-flat'}`}>{imb != null ? imb.toFixed(2) : '—'}</span>
+> 338	                            <span className={`cx-tox cx-mono ${tox != null && tox >= 0.6 ? 'hot' : ''}`}>{tox != null ? tox.toFixed(2) : '—'}</span>
+> 339	                          </div>
+> 340	                        );
+> 341	                      })}
+> 342	                </div>
+> 343	                <div className="cx-note">Colunas: regime do gate · barra de <b>imbalance</b> do taker (verde compra/vermelho vende) · valor · <b>toxicity</b> (|imbalance|). Nowcasting de timing — não previsão.</div>
+> 344	              </div>
+> 345	
+> 346	              <div className="cx-panel">
+> 347	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Trade bridges (gates de compra)</span></div>
+> 348	                <div className="cx-bridges">
+> 349	                  {symbols.length === 0
+> 350	                    ? <div className="cx-empty">sem sinais ainda</div>
+> 351	                    : symbols.map(s => {
+> 352	                        const g = (gate.symbols || {})[s] || {};
+> 353	                        const f = (flow.symbols || {})[s] || {};
+> 354	                        const regOpen = g.regime && g.regime !== 'bear' && g.regime !== 'unknown';
+> 355	                        const flowOpen = f.imbalance != null && f.imbalance > -0.4;
+> 356	                        const ready = regOpen && flowOpen;
+> 357	                        return (
+> 358	                          <div className="cx-bridge" key={s}>
+> 359	                            <span className="bsym cx-mono">{s}</span>
+> 360	                            <span className="cx-chain">
+> 361	                              <span className="cx-node"><span className={`dot ${regOpen ? 'on' : 'off'}`} /><span className="nl">regime</span></span>
+> 362	                              <span className={`cx-link ${regOpen ? 'on' : ''}`} />
+> 363	                              <span className="cx-node"><span className={`dot ${flowOpen ? 'on' : 'off'}`} /><span className="nl">fluxo</span></span>
+> 364	                              <span className={`cx-link ${ready ? 'on' : ''}`} />
+> 365	                              <span className="cx-node"><span className={`dot ${ready ? 'on' : 'off'}`} /><span className="nl">pronto</span></span>
+> 366	                            </span>
+> 367	                            <span className={`cx-ready ${ready ? 'go' : 'no'}`}>{ready ? 'go' : 'wait'}</span>
+> 368	                          </div>
+> 369	                        );
+> 370	                      })}
+> 371	                </div>
+> 372	                <div className="cx-note">Cada ponte acende quando os gates de COMPRA abrem: <b>regime ≠ bear</b> E <b>fluxo não-capitulação</b> (imbalance &gt; −0,4). "go" = condições prontas; a ordem em si segue gateada e sob HALT.</div>
+> 373	              </div>
+> 374	            </div>
+> 375	
+> 376	            {/* ROW 4 — edge/agent + positions */}
+> 377	            <div className="cx-row-3">
+> 378	              <div className="cx-panel">
+> 379	                <div className="cx-panel-title"><span><span className="cx-seal todo" /> Edge vs fee · agente</span><span className="cx-src">/agent/runs</span></div>
+> 380	                <div className="cx-edge">
+> 381	                  <div className="e"><div className="el">Break-even fee</div><div className="ev cx-mono">{FEE_RT.toFixed(2)}%</div></div>
+> 382	                  <div className="e"><div className="el">c/ BNB</div><div className="ev cx-mono">{FEE_RT_BNB.toFixed(2)}%</div></div>
+> 383	                </div>
+> 384	                <div className="cx-line" style={{ marginTop: 12 }}><span className="l"><span className="cx-seal todo" /> Shadow 1m — P(cont. ≥ custo)</span><span className="v cx-flat">medindo… (Fase 3)</span></div>
+> 385	                {agent.available === false
+> 386	                  ? <div className="cx-empty">agente ainda não rodou (journal ausente)</div>
+> 387	                  : <React.Fragment>
+> 388	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Ciclos do agente</span><span className="v cx-mono">{agent.kpis.cycles != null ? agent.kpis.cycles : '—'}{agentLastMs != null ? `  ·  ${fmtAge(agentLastMs)}${agentStale ? ' STALE' : ''}` : ''}</span></div>
+> 389	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Tokens (total)</span><span className="v cx-mono">{agent.kpis.tokens && agent.kpis.tokens.total != null ? num(agent.kpis.tokens.total).toLocaleString() : '—'}</span></div>
+> 390	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Custo estimado</span><span className="v cx-mono">{agent.kpis.estCostUSD != null ? '$' + agent.kpis.estCostUSD : '—'}</span></div>
+> 391	                    </React.Fragment>}
+> 392	              </div>
+> 393	
+> 394	              <div className="cx-panel">
+> 395	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Posições &amp; automações</span><span className="cx-src">/orders/reports</span></div>
+> 396	                {automations.length === 0
+> 397	                  ? <div className="cx-empty">nenhuma posição/automação no período — feed ao vivo liga ao descongelar (<code>TRADING_HALT=false</code>)</div>
+> 398	                  : automations.slice(0, 12).map((a, i) => {
+> 399	                      const name = a.name || a.automation || a.label || `auto ${i + 1}`;
+> 400	                      const val = a.net != null ? a.net : (a.profit != null ? a.profit : (a.pnl != null ? a.pnl : null));
+> 401	                      return (
+> 402	                        <div className="cx-line" key={i}>
+> 403	                          <span className="l cx-mono">{name}</span>
+> 404	                          <span className={`v cx-mono ${val != null ? dirClass(val) : ''}`}>{val != null ? (num(val) > 0 ? '+' : '') + fmtUsd(val) : '—'}</span>
+> 405	                        </div>
+> 406	                      );
+> 407	                    })}
+> 408	              </div>
+> 409	            </div>
+> 410	
+> 411	          </div>
+> 412	
+> 413	          <div className="cx-legend">
+> 414	            <span className="li"><span className="cx-seal real" /> dado real agora</span>
+> 415	            <span className="li"><span className="cx-seal soon" /> real, falta endpoint</span>
+> 416	            <span className="li"><span className="cx-seal todo" /> a construir (Fase 3)</span>
+> 417	            <span className="li" style={{ marginLeft: 'auto' }}>valores são os REAIS da conta — sem números fabricados.</span>
+> 418	          </div>
+> 419	
+> 420	          <div className="cx-foot">
+> 421	            <span>TradeUX · Fable Cockpit · read-only</span>
+> 422	            <span>klines: Binance público · sinais: regime/flow jobs (mainnet)</span>
+> 423	          </div>
+> 424	
+> 425	        </div>
+> 426	      </main>
+> 427	      <Toast type={notification.type} text={notification.text} />
+> 428	    </React.Fragment>
+> 429	  );
+> 430	}
+> 431	
+> 432	export default Cockpit;
+> 433	
+> ```
+
+## 🤖 Claude *(00:03:02)*
+
+
+## 🤖 Claude *(00:03:03)*
+
+Tenho o arquivo atual. Aplico a Fase B — prefere o snapshot do brain, com fallback gracioso pras klines. Batch 1: serviço, import, estado, loader, derivação, pills, e a assinatura do PathFan.
+
+## 🤖 Claude *(00:03:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js",
+  "old_string": "export async function getAgentRuns(limit, token) {\n    const headers = { 'authorization': token };\n    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}",
+  "new_string": "export async function getAgentRuns(limit, token) {\n    const headers = { 'authorization': token };\n    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}\n\n// Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por s\u00edmbolo (distribui\u00e7\u00e3o de retornos 1m,\n// EV net-de-fee, tail, banda MC driftless, regime/flow + gates de compra) + ambiente real (env.useTestnet/\n// tradingHalt). Single source of truth do painel /cockpit \u2014 alimenta as m\u00e9tricas vindas do brain.\nexport async function getCockpit(token) {\n    const headers = { 'authorization': token };\n    const url = `${ANALYSIS_URL}/cockpit`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:03:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns } from '../../services/IntelligenceService';",
+  "new_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "  const [klines, setKlines] = useState(null);\n  const [klErr, setKlErr] = useState(false);\n  const [notification, setNotification] = useState({});",
+  "new_string": "  const [klines, setKlines] = useState(null);\n  const [klErr, setKlErr] = useState(false);\n  const [cockpit, setCockpit] = useState({ symbols: {} });\n  const [notification, setNotification] = useState({});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "    getAgentRuns(50, token).then(setAgent).catch(() => {});\n  }",
+  "new_string": "    getAgentRuns(50, token).then(setAgent).catch(() => {});\n    getCockpit(token).then(setCockpit).catch(() => {});\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "  const sigma = hist ? hist.sd : NaN;\n\n  const pnlNet = (num(report.sellVolume) - num(report.buyVolume));",
+  "new_string": "  const sigma = hist ? hist.sd : NaN;\n\n  // BRAIN snapshot (single source of truth): prefere o cockpitJob; klines client-side = fallback/render.\n  const cp = cockpit || {};\n  const env = cp.env || null;\n  const cpBtc = (cp.symbols || {})[KL_SYMBOL] || null;\n  const histB = (cpBtc && cpBtc.dist && cpBtc.dist.hist && Array.isArray(cpBtc.dist.hist.counts))\n    ? {\n        counts: cpBtc.dist.hist.counts,\n        maxc: Math.max(...cpBtc.dist.hist.counts, 1),\n        step: cpBtc.dist.hist.binPct,\n        BINS: cpBtc.dist.hist.counts.length,\n        LIM: cpBtc.dist.hist.lim,\n        n: cpBtc.samples,\n        clearFee: cpBtc.dist.pHitBreakevenPct,\n        medAbs: cpBtc.dist.medAbsMovePct,\n        sd: cpBtc.dist.sigmaPct,\n        fromBrain: true,\n      }\n    : hist;\n  const sigmaB = (cpBtc && cpBtc.dist && cpBtc.dist.sigmaPct != null) ? cpBtc.dist.sigmaPct : sigma;\n  const mcBand = (cpBtc && cpBtc.mc) ? cpBtc.mc : null;\n  const evNet = (cpBtc && cpBtc.ev && cpBtc.ev.netPct != null) ? cpBtc.ev.netPct : null;\n\n  const pnlNet = (num(report.sellVolume) - num(report.buyVolume));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "              <span className={`cx-pill ${flow.enabled === false ? 'warn' : ''}`}><span className=\"cx-dot\" />flow {flow.enabled === false ? 'off' : (flow.mode || 'on')}</span>\n            </div>",
+  "new_string": "              <span className={`cx-pill ${flow.enabled === false ? 'warn' : ''}`}><span className=\"cx-dot\" />flow {flow.enabled === false ? 'off' : (flow.mode || 'on')}</span>\n              {env && <span className={`cx-pill ${env.useTestnet ? 'warn' : 'live'}`}><span className=\"cx-dot\" />{env.useTestnet ? 'testnet' : 'mainnet real'}</span>}\n              {env && env.tradingHalt && <span className=\"cx-pill halt\"><span className=\"cx-dot\" />halt</span>}\n            </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:31)*
+
+
+## 🤖 Claude *(00:03:32)*
+
+O serviço falhou (preciso Read antes — eu tinha lido via cat). Leio e refaço, depois os blocos grandes (tail/Galton/MC/edge) + PathFan.
+
+## 🤖 Claude *(00:03:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js",
+  "offset": 40,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	}
+> 41	
+> ```
+
+## 🤖 Claude *(00:03:40)*
+
+
+## 🤖 Claude *(00:03:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js",
+  "old_string": "export async function getAgentRuns(limit, token) {\n    const headers = { 'authorization': token };\n    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}",
+  "new_string": "export async function getAgentRuns(limit, token) {\n    const headers = { 'authorization': token };\n    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}\n\n// Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por s\u00edmbolo (distribui\u00e7\u00e3o de retornos 1m,\n// EV net-de-fee, tail, banda MC driftless, regime/flow + gates de compra) + ambiente real (env.useTestnet/\n// tradingHalt). Single source of truth do painel /cockpit \u2014 alimenta as m\u00e9tricas vindas do brain.\nexport async function getCockpit(token) {\n    const headers = { 'authorization': token };\n    const url = `${ANALYSIS_URL}/cockpit`;\n    const response = await axios.get(url, { headers });\n    return response.data;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:04:31)*
+
+
+## 🤖 Claude *(00:04:32)*
+
+Agora os blocos grandes: tail (histB), Galton+MC (histB/sigmaB/banda do brain), edge (EV net real). E o PathFan aceitando a banda do brain.
+
+## 🤖 Claude *(00:04:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "              <div className=\"cx-panel\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Tail \u00b7 retornos 1m vs fee</span><span className=\"cx-src\">klines \u2192 distribui\u00e7\u00e3o</span></div>\n                {hist\n                  ? <React.Fragment>\n                      <svg className=\"cx-hist\" viewBox=\"0 0 600 180\" preserveAspectRatio=\"none\" aria-label=\"Distribui\u00e7\u00e3o dos retornos de 1 minuto com a faixa de fee\">\n                        {(() => {\n                          const W = 600, H = 180, padB = 18, padT = 8;\n                          const x = r => (r + hist.LIM) / (hist.LIM * 2) * W;\n                          const bw = W / hist.BINS;\n                          const feeX1 = x(-FEE_RT), feeX2 = x(FEE_RT);\n                          const els = [];\n                          els.push(<rect key=\"band\" className=\"feeband\" x={feeX1} y={padT} width={feeX2 - feeX1} height={H - padB - padT} />);\n                          hist.counts.forEach((c, i) => {\n                            const cr = -hist.LIM + hist.step * (i + 0.5);\n                            const h = (c / hist.maxc) * (H - padB - padT);\n                            els.push(<rect key={'b' + i} className={Math.abs(cr) < FEE_RT ? 'bar infee' : 'bar'} x={x(-hist.LIM + hist.step * i) + 0.5} y={H - padB - h} width={bw - 1} height={h} />);\n                          });\n                          els.push(<line key=\"z\" className=\"zero\" x1={x(0)} x2={x(0)} y1={padT} y2={H - padB} />);\n                          [-FEE_RT, FEE_RT].forEach((f, i) => els.push(<line key={'f' + i} className=\"feeline\" x1={x(f)} x2={x(f)} y1={padT} y2={H - padB} />));\n                          [-0.5, -0.25, 0, 0.25, 0.5].forEach((t, i) => els.push(<text key={'t' + i} className=\"axis\" x={x(t)} y={H - 5} textAnchor=\"middle\">{t > 0 ? '+' : ''}{t}%</text>));\n                          return els;\n                        })()}\n                      </svg>\n                      <div className=\"cx-tail-stat\">\n                        <span className=\"cx-down\">moves \u2265 {FEE_RT}% (break-even): <b className=\"cx-mono\">{hist.clearFee.toFixed(0)}%</b></span>\n                        <span className=\"cx-flat\">mediana |move|: <b className=\"cx-mono\">{hist.medAbs.toFixed(3)}%</b></span>\n                        <span className=\"cx-flat\">n={hist.n}</span>\n                      </div>\n                      <div className=\"cx-note\">Zona vermelha = move &lt; fee round-trip ({FEE_RT}%). A maioria das velas de 1m cai a\u00ed dentro \u2014 \u00e9 a prova visual de por que scalping de 1m sangra taxa.</div>\n                    </React.Fragment>\n                  : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis \ud83d\udfe1' : 'carregando\u2026'}</div>}\n              </div>",
+  "new_string": "              <div className=\"cx-panel\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Tail \u00b7 retornos 1m vs fee</span><span className=\"cx-src\">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'klines \u2192 distribui\u00e7\u00e3o'}</span></div>\n                {histB\n                  ? <React.Fragment>\n                      <svg className=\"cx-hist\" viewBox=\"0 0 600 180\" preserveAspectRatio=\"none\" aria-label=\"Distribui\u00e7\u00e3o dos retornos de 1 minuto com a faixa de fee\">\n                        {(() => {\n                          const W = 600, H = 180, padB = 18, padT = 8;\n                          const x = r => (r + histB.LIM) / (histB.LIM * 2) * W;\n                          const bw = W / histB.BINS;\n                          const feeX1 = x(-FEE_RT), feeX2 = x(FEE_RT);\n                          const els = [];\n                          els.push(<rect key=\"band\" className=\"feeband\" x={feeX1} y={padT} width={feeX2 - feeX1} height={H - padB - padT} />);\n                          histB.counts.forEach((c, i) => {\n                            const cr = -histB.LIM + histB.step * (i + 0.5);\n                            const h = (c / histB.maxc) * (H - padB - padT);\n                            els.push(<rect key={'b' + i} className={Math.abs(cr) < FEE_RT ? 'bar infee' : 'bar'} x={x(-histB.LIM + histB.step * i) + 0.5} y={H - padB - h} width={bw - 1} height={h} />);\n                          });\n                          els.push(<line key=\"z\" className=\"zero\" x1={x(0)} x2={x(0)} y1={padT} y2={H - padB} />);\n                          [-FEE_RT, FEE_RT].forEach((f, i) => els.push(<line key={'f' + i} className=\"feeline\" x1={x(f)} x2={x(f)} y1={padT} y2={H - padB} />));\n                          [-0.5, -0.25, 0, 0.25, 0.5].forEach((t, i) => els.push(<text key={'t' + i} className=\"axis\" x={x(t)} y={H - 5} textAnchor=\"middle\">{t > 0 ? '+' : ''}{t}%</text>));\n                          return els;\n                        })()}\n                      </svg>\n                      <div className=\"cx-tail-stat\">\n                        <span className=\"cx-down\">moves \u2265 {FEE_RT}% (break-even): <b className=\"cx-mono\">{Number(histB.clearFee).toFixed(0)}%</b></span>\n                        <span className=\"cx-flat\">mediana |move|: <b className=\"cx-mono\">{Number(histB.medAbs).toFixed(3)}%</b></span>\n                        <span className=\"cx-flat\">n={histB.n}</span>\n                      </div>\n                      <div className=\"cx-note\">Zona vermelha = move &lt; fee round-trip ({FEE_RT}%). A maioria das velas de 1m cai a\u00ed dentro \u2014 prova visual de por que scalping de 1m sangra taxa.{histB.fromBrain ? ' Distribui\u00e7\u00e3o computada pelo brain (cockpitJob).' : ''}</div>\n                    </React.Fragment>\n                  : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis \ud83d\udfe1' : 'carregando\u2026'}</div>}\n              </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Probability lattice (Galton)</span><span className=\"cx-src\">velas 1m reais \u2192 distribui\u00e7\u00e3o</span></div>\n                {hist ? <GaltonBoard counts={hist.counts} step={hist.step} lim={hist.LIM} fee={FEE_RT} />\n                      : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis \ud83d\udfe1' : 'carregando\u2026'}</div>}\n                <div className=\"cx-note\">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha \u00c9 a distribui\u00e7\u00e3o real. <b>\u2265 break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A \"lei dos grandes n\u00fameros\" aqui mostra o contr\u00e1rio do golpe: repeti\u00e7\u00e3o N\u00c3O cria edge quando o EV/trade j\u00e1 \u00e9 negativo.</div>\n              </div>\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Monte Carlo \u00b7 median fair</span><span className=\"cx-src\">random walk da \u03c3 realizada</span></div>\n                <PathFan sigmaPct={sigma} spot={btc} />\n                <div className=\"cx-note\"><b>N\u00c3O \u00e9 previs\u00e3o.</b> 48 caminhos de random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana \u2248 pre\u00e7o atual</b> \u2014 o oposto exato da promessa \"Fable prev\u00ea o mercado\". A faixa p10\u2013p90 \u00e9 s\u00f3 a incerteza da volatilidade.</div>\n              </div>",
+  "new_string": "              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Probability lattice (Galton)</span><span className=\"cx-src\">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'velas 1m reais'}</span></div>\n                {histB ? <GaltonBoard counts={histB.counts} step={histB.step} lim={histB.LIM} fee={FEE_RT} />\n                      : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis \ud83d\udfe1' : 'carregando\u2026'}</div>}\n                <div className=\"cx-note\">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha \u00c9 a distribui\u00e7\u00e3o real. <b>\u2265 break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A \"lei dos grandes n\u00fameros\" mostra o contr\u00e1rio do golpe: repeti\u00e7\u00e3o N\u00c3O cria edge quando o EV/trade j\u00e1 \u00e9 negativo.</div>\n              </div>\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Monte Carlo \u00b7 median fair</span><span className=\"cx-src\">{mcBand ? '/analysis/cockpit (brain)' : '\u03c3 realizada'}</span></div>\n                <PathFan sigmaPct={sigmaB} spot={btc} band={mcBand} />\n                <div className=\"cx-note\"><b>N\u00c3O \u00e9 previs\u00e3o.</b> Random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana \u2248 pre\u00e7o atual</b> \u2014 o oposto exato da promessa \"Fable prev\u00ea o mercado\". A faixa p10\u2013p90 \u00e9 s\u00f3 a incerteza da volatilidade{mcBand ? ` (do brain, horizonte ${mcBand.horizonMin}min)` : ''}.</div>\n              </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:20)*
+
+
+## 🤖 Claude *(00:05:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "                <div className=\"cx-panel-title\"><span><span className=\"cx-seal todo\" /> Edge vs fee \u00b7 agente</span><span className=\"cx-src\">/agent/runs</span></div>\n                <div className=\"cx-edge\">\n                  <div className=\"e\"><div className=\"el\">Break-even fee</div><div className=\"ev cx-mono\">{FEE_RT.toFixed(2)}%</div></div>\n                  <div className=\"e\"><div className=\"el\">c/ BNB</div><div className=\"ev cx-mono\">{FEE_RT_BNB.toFixed(2)}%</div></div>\n                </div>\n                <div className=\"cx-line\" style={{ marginTop: 12 }}><span className=\"l\"><span className=\"cx-seal todo\" /> Shadow 1m \u2014 P(cont. \u2265 custo)</span><span className=\"v cx-flat\">medindo\u2026 (Fase 3)</span></div>",
+  "new_string": "                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Edge vs fee \u00b7 agente</span><span className=\"cx-src\">/analysis/cockpit \u00b7 /agent/runs</span></div>\n                <div className=\"cx-edge\">\n                  <div className=\"e\"><div className=\"el\">EV/trade net (1m)</div><div className={`ev cx-mono ${cpBtc && evNet != null ? dirClass(evNet) : ''}`}>{cpBtc && evNet != null ? (evNet > 0 ? '+' : '') + Number(evNet).toFixed(3) + '%' : '\u2014'}</div></div>\n                  <div className=\"e\"><div className=\"el\">Break-even fee</div><div className=\"ev cx-mono\">{FEE_RT.toFixed(2)}% <span className=\"cx-flat\" style={{ fontSize: '0.7rem' }}>\u00b7 {FEE_RT_BNB.toFixed(2)}% BNB</span></div></div>\n                </div>\n                <div className=\"cx-line\" style={{ marginTop: 10 }}><span className=\"l\"><span className=\"cx-seal real\" /> Moves \u2265 break-even (BTC)</span><span className=\"v cx-mono\">{cpBtc && cpBtc.dist ? Number(cpBtc.dist.pHitBreakevenPct).toFixed(0) + '%' : '\u2014'}</span></div>\n                <div className=\"cx-line\"><span className=\"l\"><span className=\"cx-seal real\" /> Gate de compra BTC</span><span className={`v cx-mono ${cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'cx-up' : 'cx-down') : ''}`}>{cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'GO' : 'WAIT') : '\u2014'}</span></div>\n                <div className=\"cx-line\"><span className=\"l\"><span className=\"cx-seal todo\" /> Shadow 1m \u2014 P(cont. \u2265 custo)</span><span className=\"v cx-flat\">medindo\u2026 (Fase 3)</span></div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js",
+  "old_string": "export function PathFan({ sigmaPct, spot }) {\n  if (!isFinite(sigmaPct) || !isFinite(spot) || sigmaPct <= 0 || spot <= 0) {\n    return <div className=\"cx-empty\">sem vol realizada ainda</div>;\n  }",
+  "new_string": "export function PathFan({ sigmaPct, spot, band }) {\n  if (!isFinite(sigmaPct) || !isFinite(spot) || sigmaPct <= 0 || spot <= 0) {\n    return <div className=\"cx-empty\">sem vol realizada ainda</div>;\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:44)*
+
+
+## 🤖 Claude *(00:05:46)*
+
+Atualizo o corpo do PathFan pra usar a banda do brain (p10/p50/p90/horizonte) nos rótulos quando presente.
+
+## 🤖 Claude *(00:05:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js",
+  "old_string": "  const sortedEnds = [...endVals].sort((a, b) => a - b);\n  const p10 = sortedEnds[Math.floor(K * 0.1)], p90 = sortedEnds[Math.floor(K * 0.9)];\n  // mediana driftless \u2248 spot (linha reta), explicitamente\n  const medianLine = `M0,${y(spot).toFixed(1)} L${(W - padR).toFixed(1)},${y(spot).toFixed(1)}`;",
+  "new_string": "  const sortedEnds = [...endVals].sort((a, b) => a - b);\n  const p10 = sortedEnds[Math.floor(K * 0.1)], p90 = sortedEnds[Math.floor(K * 0.9)];\n  // r\u00f3tulos: prefere a banda autoritativa do BRAIN (cockpitJob) quando presente; sen\u00e3o usa a sim local\n  const dMed = band && isFinite(band.p50) ? band.p50 : spot;\n  const dP10 = band && isFinite(band.p10) ? band.p10 : p10;\n  const dP90 = band && isFinite(band.p90) ? band.p90 : p90;\n  const horizon = band && band.horizonMin ? band.horizonMin : 60;\n  // mediana driftless \u2248 spot (linha reta), explicitamente\n  const medianLine = `M0,${y(spot).toFixed(1)} L${(W - padR).toFixed(1)},${y(spot).toFixed(1)}`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js",
+  "old_string": "      <div className=\"cx-sim-stats\">\n        <div className=\"ss\"><span className=\"sl\">mediana 60min</span><span className=\"sv cx-mono\">${spot.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>\n        <div className=\"ss\"><span className=\"sl\">faixa p10\u2013p90</span><span className=\"sv cx-mono\">${Math.round(p10).toLocaleString()}\u2013${Math.round(p90).toLocaleString()}</span></div>\n        <div className=\"ss\"><span className=\"sl\">\u03c3 1m</span><span className=\"sv cx-mono\">{sigmaPct.toFixed(3)}%</span></div>\n      </div>",
+  "new_string": "      <div className=\"cx-sim-stats\">\n        <div className=\"ss\"><span className=\"sl\">mediana {horizon}min</span><span className=\"sv cx-mono\">${Math.round(dMed).toLocaleString()}</span></div>\n        <div className=\"ss\"><span className=\"sl\">faixa p10\u2013p90</span><span className=\"sv cx-mono\">${Math.round(dP10).toLocaleString()}\u2013${Math.round(dP90).toLocaleString()}</span></div>\n        <div className=\"ss\"><span className=\"sl\">\u03c3 1m</span><span className=\"sv cx-mono\">{sigmaPct.toFixed(3)}%</span></div>\n      </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:06:13)*
+
+
+## 🤖 Claude *(00:06:14)*
+
+Fase B completa. Agora valido sintaxe de tudo e re-chowno (os Edits reescrevem como ubuntu).
+
+## 🤖 Claude *(00:06:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== backend (CJS) ===\"\nfor f in backend/src/utils/cockpitService.js backend/src/controllers/analysisController.js; do node --check \"$f\" && echo \"OK $f\" || echo \"FAIL $f\"; done\necho \"=== mcp/agent (ESM) ===\"\nnode --check tradeux-mcp/src/index.js 2>&1 | head -3 && echo \"OK mcp/index.js\" || echo \"FAIL mcp\"\nnode --check tradeux-agent/src/agent.js 2>&1 | head -3 && echo \"OK agent.js\" || echo \"FAIL agent\"\necho \"=== chown touched files -> gcrux-tradeux ===\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  backend/src/utils/cockpitService.js backend/src/controllers/analysisController.js \\\n  tradeux-mcp/src/index.js tradeux-agent/src/agent.js \\\n  frontend/src/services/IntelligenceService.js && \\\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux frontend/src/private/Cockpit && echo \"chown OK\"",
+  "description": "Syntax-check all edited files and chown"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backend (CJS) ===
+> OK backend/src/utils/cockpitService.js
+> OK backend/src/controllers/analysisController.js
+> === mcp/agent (ESM) ===
+> OK mcp/index.js
+> OK agent.js
+> === chown touched files -> gcrux-tradeux ===
+> chown OK
+> ```
+
+## 🤖 Claude *(00:06:25)*
+
+
+## 🤖 Claude *(00:06:25)*
+
+Sintaxe e ownership OK. Agora buildo as 3 imagens (valida compilação — sobretudo o `vite build` do frontend pega erro de JSX dos meus edits).
+
+## 🤖 Claude *(00:06:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend backend agent 2>&1 | grep -iE \"build|error|fail|transformed|built in|npm error|naming to|exporting to image\" | tail -30'",
+  "description": "Build frontend, backend, agent images to validate compilation",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Image tradeux-backend Building 
+>  Image tradeux-agent Building 
+> #2 [backend internal] load build definition from Dockerfile
+> #3 [frontend internal] load build definition from Dockerfile
+> #4 [agent internal] load build definition from Dockerfile
+> #12 [backend internal] load build context
+> #13 [agent internal] load build context
+> #14 [frontend internal] load build context
+> #19 [frontend build 3/6] COPY package*.json ./
+> #21 [frontend build 4/6] RUN npm install
+> #22 [frontend build 5/6] COPY . .
+> #22 [frontend build 5/6] COPY . .
+> #29 [frontend build 6/6] RUN npm run build
+> #30 [backend] exporting to image
+> #30 naming to docker.io/library/tradeux-backend done
+> #29 [frontend build 6/6] RUN npm run build
+> #29 0.798 > frontend@0.1.0 build
+> #29 0.798 > vite build
+> #29 1.150 vite v5.4.21 building for production...
+> #29 4.158 ✓ 255 modules transformed.
+> #34 [agent] exporting to image
+> #34 naming to docker.io/library/tradeux-agent done
+> #29 [frontend build 6/6] RUN npm run build
+> #29 5.221 build/index.html                   2.38 kB │ gzip:   0.85 kB
+> #29 5.221 build/assets/index-BR4e2D8R.css   11.38 kB │ gzip:   2.89 kB
+> #29 5.221 build/assets/index-BWml_MSA.js   423.59 kB │ gzip: 118.22 kB
+> #29 5.222 ✓ built in 4.04s
+> #37 [frontend stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #38 [frontend] exporting to image
+> #38 naming to docker.io/library/tradeux-frontend done
+> ```
+
+## 🤖 Claude *(00:06:55)*
+
+
+## 🤖 Claude *(00:06:56)*
+
+As 3 imagens compilaram (frontend `vite build` ✓ 255 módulos, backend e agent ok). Agora o **gate QA/TL sobre o diff B+C** (a superfície nova: tool MCP, prompt do agente env-aware, endpoint env, rewire do frontend), em paralelo.
+
+## 🤖 Claude *(00:07:13)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review Cockpit B+C",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise (pr\u00e9-merge) as Fases B+C da feature \"Cockpit Intelligence\" do TradeUX. A Fase A (backend cockpitJob/cockpitService/endpoint) j\u00e1 foi QA-PASS. Agora revise o que foi ADICIONADO. Sistema em MAINNET REAL CONGELADO (TRADING_HALT=true); o agente LLM \u00e9 um SERVI\u00c7O ao vivo (mas TRADEUX_ALLOW_TRADING controla escrita).\n\nMUDAN\u00c7AS B+C:\n1. backend/src/utils/cockpitService.js \u2014 ADICIONADO `dist.hist` (histograma compacto de 25 bins \u00b10.5% dos retornos 1m) ao snapshot. Verifique: bins corretos, sem NaN/overflow, array pequeno.\n2. backend/src/controllers/analysisController.js \u2014 getCockpitStatus virou async e anexa `env:{useTestnet, tradingHalt}` lendo settingsRepository.getSettings(DEFAULT_SETTINGS_ID||1) (sem decrypt) + process.env.TRADING_HALT. Verifique: N\u00c3O vaza segredo (s\u00f3 2 booleanos), try/catch protege a leitura, n\u00e3o quebra o endpoint.\n3. tradeux-mcp/src/index.js \u2014 NOVA tool `tradeux_get_cockpit` (readTool, n\u00e3o writeTool): GET /analysis/cockpit e projeta um resumo enxuto por s\u00edmbolo (STRIP do hist; mant\u00e9m price/regime/flow/dist scalars/evNetPct/mc/buyGate). Verifique: \u00e9 read-only (readTool), payload enxuto (n\u00e3o estoura contexto do agente como o get_memory_indexes que o prompt pro\u00edbe), handler n\u00e3o lan\u00e7a de forma n\u00e3o-tratada.\n4. tradeux-agent/src/agent.js \u2014 SYSTEM_PROMPT: (a) bloco \"CONTEXTO testnet\" \u2192 \"AMBIENTE\" env-aware (defere a env.useTestnet/tradingHalt do cockpit); (b) novo bullet instruindo 1\u00d7 tradeux_get_cockpit/ciclo + reportar; (c) guardrail 5 reescrito. Verifique: N\u00c3O concede nova autoridade de trade (nenhuma writeTool nova; ALLOW_TRADING intacto), mant\u00e9m pt-BR + anti-spam + cap de notifica\u00e7\u00f5es, e a instru\u00e7\u00e3o \u00e9 coerente (EV\u22640 a 1m \u00e9 esperado, n\u00e3o alarme).\n5. frontend: IntelligenceService.getCockpit (GET /analysis/cockpit); Cockpit.js consome o snapshot (histB/sigmaB/mcBand/evNet/env pills) com FALLBACK pras klines client-side; CockpitSims.js PathFan aceita band.\n\nCompare com os padr\u00f5es: readTool/writeTool em tradeux-mcp/src/index.js (a guarda de escrita), o resto do SYSTEM_PROMPT, e os handlers analysisController existentes.\n\nVeredito PASS / PASS COM RESSALVAS / FAIL com findings por severidade + testes. Foque em: (1) read-only de verdade no MCP/agent (zero nova escrita), (2) o endpoint env n\u00e3o vaza segredo nem quebra, (3) o frontend degrada sem crash quando o snapshot est\u00e1 ausente (cpBtc null) \u2014 procure acesso a .dist/.mc/.gates sem guard, (4) o payload do cockpit-tool \u00e9 enxuto, (5) qualquer bug. Responda pt-BR, file:line."
+}
+```
+
+## 🤖 Claude *(00:07:28)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech-lead review Cockpit B+C",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) das Fases B+C da feature \"Cockpit Intelligence\". Fase A j\u00e1 APPROVE. Sistema em MAINNET REAL CONGELADO (TRADING_HALT=true); o tradeux-agent \u00e9 um SERVI\u00c7O LLM ao vivo (escrita gated por TRADEUX_ALLOW_TRADING).\n\nAvalie a IMPLEMENTA\u00c7\u00c3O destes arquivos:\n- backend/src/utils/cockpitService.js (adicionou dist.hist \u2014 25 bins) e backend/src/controllers/analysisController.js (getCockpitStatus async + env{useTestnet,tradingHalt} via settingsRepository.getSettings; getCockpit/:symbol l\u00ea MEMORY).\n- tradeux-mcp/src/index.js (nova readTool tradeux_get_cockpit, projeta resumo enxuto, strip do hist).\n- tradeux-agent/src/agent.js (SYSTEM_PROMPT env-aware: substitui a afirma\u00e7\u00e3o 'a conta \u00e9 TESTNET / equity \u00e9 ru\u00eddo' por blocos condicionais a env.useTestnet/tradingHalt vindos do cockpit; adiciona instru\u00e7\u00e3o de ler/reportar o cockpit; reescreve guardrail 5).\n\nFoque em (este \u00e9 o ponto sens\u00edvel \u2014 mudar o c\u00e9rebro de um sistema com dinheiro real):\n1. SEGURAN\u00c7A: a Fase C concede ALGUMA nova autoridade de trade ao agente? (Deve ser ZERO: tool nova \u00e9 readTool, nenhuma writeTool, ALLOW_TRADING intacto, trava SELL-BTC intacta.) O endpoint env exp\u00f5e s\u00f3 2 booleanos (sem secret/apiKey)?\n2. CORRE\u00c7\u00c3O DO FIX DO PROMPT (BLOQUEADOR que o TL anterior pediu): o prompt agora N\u00c3O afirma mais que a conta \u00e9 testnet quando estamos em mainnet? Ele defere corretamente ao env real do cockpit? O agente entende que em mainnet o capital \u00e9 real mas o foco continua mec\u00e2nica (n\u00e3o vira um trader que tenta 'maximizar valor')? H\u00e1 risco de o prompt env-aware confundir o modelo e faz\u00ea-lo agir? (Lembre: ele continua sem poder escrever ordem.)\n3. CONSIST\u00caNCIA: o prompt ainda pro\u00edbe os reads que estouram contexto (get_memory_indexes etc.)? O cockpit-tool \u00e9 enxuto o suficiente p/ n\u00e3o recriar o bloat de ~200k tokens? Mant\u00e9m pt-BR/anti-spam/cap?\n4. RISCO de boot/runtime: o endpoint async + settings read pode quebrar /analysis/cockpit? O agente sobe normal com a tool nova?\n5. Must-fix vs nice-to-have antes de recriar os containers backend+agent.\n\nResponda pt-BR com rationale + must-fix/nice-to-have, file:line."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Todas as verificações estão completas. As rotas `/analysis/*` estão atrás de `authMiddleware` (app.js:59), e todos os acessos a `cpBtc`/`.dist`/`.mc`/`.gates`/`.ev` no frontend têm guard com short-circuit. Vou fazer a verificação final do histograma para overflow/NaN e confirmar a coerência do número de bins.\n\nAnálise do histograma (`cockpitService.js:93-100`):\n- `HBINS=25`, `hstep = (0.5*2)/25 = 0.04`. Array de 25 elementos — pequeno e fixo.\n- `Math.min(HLIM - 1e-9, Math.max(-HLIM, rp))` faz o clamp em `[-0.5, +0.49999...]` antes de binnar. `+ HLIM` → `[~0, ~0.99999]`, `/hstep` → `[0, ~24.99]`, `Math.floor` → `[0,24]`. O guard `if (b<0) b=0; if (b>=HBINS) b=HBINS-1` é redundante mas seguro. Sem overflow, sem NaN (`rets` já filtrado por `Number.isFinite`).\n- Confirmo que o frontend (`buildHist`, linha 96-98) usa a **mesma** fórmula de binning (LIM=0.5, BINS=25), então o fallback client-side é consistente com o brain.\n\nSegue o relatório.\n\n---\n\n# REVISÃO QA — Cockpit Intelligence Fases B+C\n\nContexto confirmado: MAINNET REAL CONGELADO (`TRADING_HALT=true`), agente é serviço vivo com `TRADEUX_ALLOW_TRADING` controlando escrita. Revisei o que foi ADICIONADO (Fase A já estava QA-PASS).\n\n## 1. `cockpitService.js` — histograma `dist.hist`\n**VEREDITO: PASS**\n\n- Bins corretos: `HBINS=25`, `hstep=(0.5*2)/25=0.04`. Clamp `Math.min(HLIM-1e-9, Math.max(-HLIM, rp))` (`cockpitService.js:97`) garante índice em `[0,24]`; o guard `b<0/b>=HBINS` é redundante-mas-seguro. Array fixo de 25 ints — minúsculo no payload.\n- Sem NaN/overflow: `rets` já foi filtrado por `Number.isFinite` (`cockpitService.js:75`), então `rp` nunca é NaN. `hcounts` são inteiros.\n- [BAIXA] `cockpitService.js:98` — `if (b < 0) b = 0; if (b >= HBINS) b = HBINS - 1;` em uma linha, sem chaves: legível mas frágil a edição futura. Inócuo.\n- Consistência: o frontend `buildHist` (`Cockpit.js:96-98`) replica EXATAMENTE a fórmula (LIM=0.5/BINS=25/step) — fallback client-side bate com o brain. Bom.\n\n## 2. `analysisController.getCockpitStatus` — `env:{useTestnet,tradingHalt}`\n**VEREDITO: PASS**\n\n- NÃO vaza segredo (ponto crítico nº2): usa `settingsRepository.getSettings(id)` (`settingsRepository.js:36`) — o método **sem decrypt** que retorna o model raw. O controller (`analysisController.js:65-66`) lê só `!!(s && s.useTestnet)` e `process.env.TRADING_HALT === \'true\'`; nunca serializa `s`. Mesmo que `s` carregue `secretKey`/`testnetSecretKey`, eles ficam **criptografados e descartados** — só 2 booleanos vão pro `res.json`. Confirmado.\n- try/catch protege a leitura (`analysisController.js:64-69`): em falha, `env={useTestnet:null, tradingHalt:...}` e o endpoint NÃO quebra. O frontend trata `env.useTestnet=null` (pill `testnet` só rende se truthy — fica "mainnet real", aceitável como fail-safe display).\n- Não muta estado compartilhado: `cockpitJob.getStatus()` (`cockpitJob.js:147-154`) constrói objeto literal novo + `symbols` fresh a cada chamada, então `status.env = ...` é seguro (não polui o `LAST`/cache).\n- [BAIXA] `DEFAULT_SETTINGS_ID || 1` em string: se `process.env.DEFAULT_SETTINGS_ID` vier como `"0"` cairia no `|| 1`, mas id 0 não existe — não-issue na prática.\n\n## 3. `tradeux-mcp` — tool `tradeux_get_cockpit`\n**VEREDITO: PASS**\n\n- Read-only de verdade (ponto crítico nº1): registrada via `readTool` (`index.js:213`), NÃO `writeTool`. `readTool` (`index.js:72-80`) não tem a trava `tradingEnabled()` — porque é leitura. Nenhuma writeTool nova foi adicionada; `TRADEUX_ALLOW_TRADING` intacto. Zero nova autoridade de escrita.\n- Payload enxuto (ponto crítico nº4): o handler (`index.js:215-235`) faz STRIP do `hist` (não copia `dist.hist`), projeta só scalars + `mc{p10,p50,p90,horizonMin}` + `buyGate{allowed,reason}`. Por símbolo são ~12 campos escalares. Mesmo com 5-6 símbolos fica em centenas de tokens — longe do estouro de contexto que o prompt proíbe (get_memory_indexes ~200k). Conforme.\n- Handler não lança não-tratado: o `await api.get` está dentro do wrapper `readTool` que tem try/catch → `fail(e.message)` (`index.js:74-78`). `d.symbols || {}` e `c.dist || {}` (etc.) guardam contra payload parcial. OK.\n\n## 4. `tradeux-agent/agent.js` — SYSTEM_PROMPT env-aware\n**VEREDITO: PASS**\n\n- NÃO concede nova autoridade de trade (ponto crítico nº1): mudança é 100% texto do prompt. Nenhuma writeTool nova; `ALLOW_TRADING` intacto; guardrail 4 ("escrita pode estar travada... NÃO insista") preservado.\n- Bloco AMBIENTE (`agent.js:24-28`) defere corretamente a `env.useTestnet`/`env.tradingHalt` do cockpit como fonte de verdade, cobre os 3 casos (testnet=ruído / mainnet=capital real pequeno, nunca aumentar risco / halt=só observar). Coerente com o estado CONGELADO real.\n- Novo bullet (`agent.js:32`): "1× tradeux_get_cockpit por ciclo" + "EV≤0 a 1m é o ESPERADO... NÃO é alarme" — exatamente a doutrina anti-falso-positivo certa.\n- pt-BR (guardrail 6) e anti-spam preservados. O cap de notificações 2/ciclo é mecânico (no código, não no prompt) — não foi tocado, então permanece.\n- Guardrail 5 reescrito (`agent.js:44`): agora cobre testnet E mainnet ("o foco é a MECÂNICA, não maximizar o total") sem afrouxar o "Nunca saque".\n- [BAIXA] Orçamento de tool calls: o bullet diz "~9 leituras" basta e o cap é "~12" (`agent.js:31`); somar +1× `tradeux_get_cockpit` → ~10. Dentro da folga, mas o texto "~9" ficou levemente desatualizado. Cosmético.\n\n## 5. Frontend — Cockpit.js / CockpitSims.js / IntelligenceService\n**VEREDITO: PASS**\n\n- Degrada sem crash com snapshot ausente (ponto crítico nº3): `getCockpit` falha → `.catch(()=>{})` (`Cockpit.js:152`) mantém o state default `{symbols:{}}`. `cpBtc = (cp.symbols||{})[KL_SYMBOL] || null` (`Cockpit.js:187`). TODO acesso subsequente a `.dist`/`.mc`/`.gates`/`.ev` é guardado por short-circuit `cpBtc && cpBtc.x` (`Cockpit.js:188,202-204,410-411`). Com `cpBtc=null`: `histB` cai no fallback `hist` (klines client-side), `mcBand=null` (PathFan usa sim local), `evNet=null` (rende "—"). Sem crash. Confirmado.\n- `env` ausente: pills `env && ...` (`Cockpit.js:234-235`) — não renderiza, sem throw.\n- `PathFan` com `band` (`CockpitSims.js:133-157`): `band && isFinite(band.p50)` — prefere brain, senão sim local. Guard correto.\n- `IntelligenceService.getCockpit` (`IntelligenceService.js:47-52`): padrão idêntico aos outros getters (header `authorization`, mesmo `ANALYSIS_URL`). OK.\n- Rotas: `/cockpit` em `PrivateRoute` (`routes.js:43`) + SideBar; endpoint atrás de `authMiddleware` (`app.js:59`). OK.\n\n## Findings fora do escopo estrito (bônus encontrados)\n\n- [MÉDIA] **Rota extra não solicitada** `GET /analysis/cockpit/:symbol` + `getCockpit` (`analysisController.js:75-82`) foi adicionada junto. Lê `beholder.getMemory(symbol, indexKeys.COCKPIT)` — read-only, regex `^[A-Z0-9]{5,20}$` valida o símbolo, retorna cópia rasa (`beholder.js:946-955`). Não vaza segredo (snapshot de mercado). É segura, mas **não está no escopo B+C descrito** e o frontend não a consome — superfície de API extra sem teste declarado. Recomendo confirmar com quem implementou se é intencional (provável base pra Fase 3).\n- [BAIXA] `server.js` — o IIFE de boot ganhou `.catch(err => {... process.exit(1)})` (`server.js:78-83`). Mudança boa (evita unhandledRejection silencioso no Node 22) mas é alteração de **comportamento de boot do backend money-path** empacotada nesta feature de painel. Endurecimento legítimo, porém merece nota: agora falha de boot mata o processo (compose reinicia). Validar que o boot atual não tem rejection latente que vire crash-loop.\n- [BAIXA] `cockpitService.js:115-117` / `mc.p50` — `+price.toFixed(2)` assume 2 casas decimais: para BTC ok, mas para alts de baixo valor (ex.: ADA ~$0,30) `.toFixed(2)` perde precisão no `mc`/`price` do snapshot. Não é money-path (só display/relato), mas a banda MC de alts fica grosseira. Igual já acontecia na Fase A.\n\n## Testes que eu rodaria\n\n1. **Endpoint env (não-vazamento)**: `curl -H "authorization: $JWT" localhost:8090/analysis/cockpit | jq \'.env\'` → deve ter SÓ `{useTestnet:false, tradingHalt:true}` (mainnet congelado). Depois `jq \'keys\'` no payload inteiro e `grep -i secret/key` → zero segredo. Confirmar `tradingHalt:true` reflete o `.env` real.\n2. **Fail-safe da leitura de settings**: simular `getSettings` lançando (mock/derrubar DB momentaneamente) → endpoint responde 200 com `env.useTestnet:null`, não 500.\n3. **Frontend sem snapshot**: derrubar o cockpitJob (`COCKPIT_JOB_ENABLED=false`) ou mockar `/analysis/cockpit` retornando `{symbols:{}}` → abrir `/cockpit`, confirmar que histograma/Galton/PathFan caem no fallback de klines e nada crasha (console limpo). Repetir com `getCockpit` rejeitando (network 500).\n4. **MCP payload enxuto**: `node tradeux-agent/src/index.js --check` (lista a tool) e, com backend up, invocar `tradeux_get_cockpit` → medir tamanho do retorno (deve ser KB, não centenas de KB); confirmar ausência do array `hist`.\n5. **Read-only do agente**: `--once` com `TRADEUX_ALLOW_TRADING=false` → confirmar no journal que só houve tool calls de leitura e que o agente reportou EV≤0 como esperado (não como alarme).\n6. **Histograma**: unit-check rápido de `getCockpit(\'BTCUSDT\')` → `dist.hist.counts.length===25`, `sum(counts)===samples`, todos inteiros ≥0, sem NaN.\n7. **CI**: `bash scripts/ci-preflight.sh --skip-postgres` (frontend build compila Cockpit.js/CockpitSims.js + agent `--check`). Sem migration nova aqui (COCKPIT é só MEMORY runtime), então o risco dual-dialect é nulo.\n\n---\n\n## RECOMENDAÇÃO DE MERGE\n\n**APROVAR (PASS).** As mudanças B+C são genuinamente read-only e seguras para o estado congelado: zero nova writeTool, `ALLOW_TRADING` intacto, o endpoint env expõe só 2 booleanos via o método **sem decrypt** e com try/catch, e o frontend degrada sem crash quando `cpBtc` é null (guards consistentes). Nenhum toque em `beholder.js` hot-path de ordem, money-path ou DB/migration.\n\nCondicionantes (não-bloqueantes, resolver no follow-up): (a) confirmar a intencionalidade da rota extra `GET /analysis/cockpit/:symbol` [MÉDIA] — está segura, mas é superfície fora do escopo declarado; (b) validar que o novo `process.exit(1)` no boot do `server.js` não introduz crash-loop com algum rejection latente [BAIXA]; (c) `.toFixed(2)` no `price`/`mc` degrada display de alts de baixo valor [BAIXA].\n\nArquivos revisados:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/server.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js`\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js`\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/routes.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/components/Menu/SideBar.js`'}, {'type': 'text', 'text': "agentId: a97e17e4ea37dba6f (use SendMessage with to: 'a97e17e4ea37dba6f' to continue this agent)\n<usage>subagent_tokens: 79563\ntool_uses: 18\nduration_ms: 137711</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Análise completa. Tenho tudo o que preciso para o veredito.\n\n---\n\n## REVISÃO — Cockpit Intelligence Fases B+C\n\nCarreguei HANDOFF + CLAUDE.md, conferi o diff completo (working tree, branch `master`), assinaturas de `beholder.getMemory`/`updateMemory`, `settingsRepository.getSettings`, a trava SELL-BTC do MCP, o auth do router e sintaxe de todos os arquivos.\n\n### 1. SEGURANÇA — autoridade de trade: ZERO (confirmado)\n- **Nenhuma writeTool nova.** Contagem inalterada: `writeTool(` = **9 → 9**; `readTool(` = **22 → 23** (só a `tradeux_get_cockpit`). O diff de `tradeux-mcp/src/index.js` toca exclusivamente um bloco `readTool(...)`.\n- **Trava SELL-BTC intacta** e `TRADEUX_ALLOW_TRADING` intacto — o diff não encosta em `isBaseBTC`/fail-closed (linhas ~311-347) nem no gate `tradingEnabled()` (linha 18/83).\n- **Endpoint env expõe só 2 booleanos.** `analysisController.js:66` usa `settingsRepository.getSettings(...)` — que é o `findOne` **cru** (sem `getSettingsDecrypted`), portanto **não decrypta secret/access key**. O payload monta apenas `{ useTestnet: !!..., tradingHalt: ... === \'true\' }`. Grep por `accessKey|secretKey|apiUrl|password|secret` no controller = **vazio**. Coerção `!!` evita vazar o valor cru. Bom.\n- **Endpoints atrás de auth**: `/analysis` está montado com `authMiddleware` (`app.js:59`) — herdado pelos dois novos GETs.\n- **cockpitJob é read-only de verdade**: `updateMemory(..., null, snapshot, false)` — `executeAutomations=false`, e `beholder.js:926` retorna antes de `testAutomations`. Não dispara BRAIN, não toca money-path. `timer.unref()` correto.\n\n### 2. CORREÇÃO DO FIX DO PROMPT (o bloqueador do TL anterior) — RESOLVIDO\n- A afirmação falsa **"A conta é TESTNET / equity é ruído"** foi **removida** e substituída por blocos condicionais a `env.useTestnet`/`env.tradingHalt` vindos do cockpit, com FONTE DE VERDADE explícita ("confie nela, não no que este prompt assume"). Em mainnet (`useTestnet=FALSE`): *"capital é REAL (e pequeno); jamais sugira aumentar risco… o que importa é a MECÂNICA, NÃO maximizar valor total"*. Exatamente o que se pediu.\n- **Guardrail 5 reescrito** corretamente: equity não é métrica de sucesso em nenhum dos dois ambientes; foco mecânica. Guardrails 1-4 (cofre, no-execução-paralela, ALLOW_TRADING) **intactos**.\n- **Risco de confundir o modelo / virar trader**: baixo e bem mitigado. O prompt nunca dá ao agente um objetivo de P&L; reforça "OBSERVAÇÃO e CONSELHO, não execução". E mesmo que se confundisse, **não tem como escrever ordem** (sem writeTool + ALLOW_TRADING off + HALT). Defesa em profundidade real.\n\n### 3. CONSISTÊNCIA — preservada\n- A proibição dos reads que estouram contexto continua **literal e intacta**: *"NUNCA chame tradeux_get_memory_indexes, nem …_get_memory/…_get_wallet SEM symbol, nem …_get_wallet_full (~200k tokens)"*.\n- **Cockpit-tool é enxuto**: o `readTool` projeta só escalares por símbolo e faz **strip explícito do `dist.hist`** (os 25 bins de `cockpitService.js:93-100/125` nunca entram no retorno do MCP — só `medAbsMovePct/sigmaPct/pHitBreakevenPct/evNetPct/p10/p50/p90/buyGate`). 4 símbolos × ~12 campos = payload de centenas de tokens, não recria o bloat. O `hist` fica disponível só no endpoint backend `/analysis/cockpit/:symbol` para o painel React renderizar a distribuição — correto.\n- **pt-BR/anti-spam/cap 1-2 por ciclo** mantidos (guardrail 6 e bloco NOTIFICAR intactos). O orçamento ganhou +1 call documentado ("1× tradeux_get_cockpit por ciclo"), coerente com o teto de ~12.\n\n### 4. RISCO de boot/runtime — baixo, bem tratado\n- `getCockpitStatus` é `async` com `try/catch`: se o `getSettings` falhar, cai no catch e retorna `env.useTestnet: null` em vez de 500 — **não quebra** `/analysis/cockpit`. O `getCockpit/:symbol` é sync, valida regex de símbolo (`400` em input inválido, `404` sem snapshot) e lê `getMemory` (cópia rasa via spread em `beholder.js:951`). Sem path para exceção não-tratada.\n- **Bônus defensivo no boot**: `server.js` ganhou `.catch(err => { log; process.exit(1) })` no IIFE — fecha o gap de `unhandledRejection` silencioso no Node 22. Melhoria legítima, escopo justificável (o cockpitJob é mais um `await` no boot).\n- **Sintaxe validada** (`node --check`) em todos: MCP, agent, cockpitService, cockpitJob, controller — **todos OK**. O agente sobe com a tool nova (é só mais um `readTool` no mesmo registro).\n- Job é fail-soft: HOSTS com fallback, `unavailable` preserva MEMORY, re-entrância travada (`running`), throttle de log de indisponibilidade.\n\n---\n\n## VEREDITOS\n\n**Fase B (backend + painel):** `cockpitService.js`, `cockpitJob.js`, `analysisController.js`, `analysisRouter.js`, `server.js`, `indexes.js`, frontend `IntelligenceService.js`/`Cockpit/`/`SideBar.js`/`routes.js`\n### VEREDITO: **APPROVE COM SUGESTÕES**\nRead-only puro, clona o padrão consagrado de `regimeJob`/`flowJob`/`fairPriceJob`, não gateia nada, não toca money-path, fail-soft, honestidade epistêmica documentada (MC driftless, EV≤0 esperado). Blast radius mínimo.\n\n**Fase C (cérebro do agente):** `tradeux-agent/src/agent.js` + `tradeux-mcp/src/index.js`\n### VEREDITO: **APPROVE**\nConcede **ZERO** nova autoridade de trade (confirmado por contagem e por grep). O bloqueador do TL anterior — prompt afirmando testnet em mainnet — está **corrigido** e defere ao env real. Tool enxuta, sem bloat. É a mudança de maior sensibilidade conceitual (mexe no prompt de um sistema com dinheiro real), mas a superfície de execução é nula e a redação é conservadora.\n\n---\n\n### Must-fix (antes de recriar os containers)\n**Nenhum.** Não há bloqueador de merge.\n\n### Nice-to-have (follow-up, não bloqueia)\n1. **`cockpitJob.js:15-17` / `deriveGates` (l.76-87)** — o próprio comentário admite: `gates.buyAllowed` é a *view* do cockpit, **não** o gate exato vivo da id2 (que mora na `condition` da automação no banco). Há risco de o agente reportar "gate aberto/fechado" divergindo do comportamento real. Já está marcado como FOLLOW-UP e o payload expõe `flowBuyMin` para transparência — aceitável por ora, mas reconciliar com a condition viva da id2 é a dívida a quitar antes de qualquer uso decisório dos gates.\n2. **`analysisController.js:66`** — `getSettings(process.env.DEFAULT_SETTINGS_ID || 1)` lê o **Model do Sequelize** e usa `s.useTestnet` direto; funciona (atributo do model), mas é uma leitura ad-hoc fora do padrão `getSettingsDecrypted`. Considerar um helper `getEnvFlags()` no repositório para não espalhar acesso cru ao model em controllers.\n3. **`server.js`** — o arquivo continua **sem newline final** (`\\ No newline at end of file`). Cosmético; corrigir num passe de limpeza.\n\n### Decisão de merge\n- **Mergear B e C juntos, B antes de C** (a tool C depende do endpoint B; mas como vão no mesmo PR/deploy, a ordem só importa para o boot — o backend precisa subir e popular `MEMORY[...:COCKPIT]` antes do primeiro ciclo do agente).\n- **Condições**: (a) recriar **backend primeiro**, confirmar nos logs `Starting the Cockpit Job (read-only analytics)` + `cockpit` populando (`GET /analysis/cockpit` retornando `env` + símbolos); (b) só então recriar o **agent**; rodar `node src/index.js --check` e um `--once` para validar que a `tradeux_get_cockpit` aparece e o ciclo não estoura contexto.\n- **Sem impacto no congelamento**: nada aqui altera `TRADING_HALT` nem destrava escrita — o sistema segue CONGELADO e o agente segue read-only. Merge é seguro com o sistema parado.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/utils/cockpitService.js`, `/home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js`, `/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js`, `/home/gcrux-tradeux/tradeux/backend/src/server.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js`, `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js`, `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js`, `/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js`.'}, {'type': 'text', 'text': "agentId: a2c102f6ea6aa723b (use SendMessage with to: 'a2c102f6ea6aa723b' to continue this agent)\n<usage>subagent_tokens: 47245\ntool_uses: 14\nduration_ms: 129636</usage>"}]
+> ```
+
+## 🤖 Claude *(00:09:50)*
+
+
+## 🤖 Claude *(00:09:53)*
+
+**QA: PASS · TL: Fase B APPROVE COM SUGESTÕES, Fase C APPROVE — "Must-fix: Nenhum."** Zero nova autoridade de trade (writeTool 9→9, readTool 22→23), o BLOQUEADOR do prompt testnet→mainnet **corrigido**, env só expõe 2 booleanos, frontend degrada sem crash. Seguro com o sistema parado.
+
+Deployando na ordem que o TL mandou: **backend primeiro** (verifico boot + endpoint), depois frontend e agente.
+
+## 🤖 Claude *(00:09:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d backend frontend 2>&1 | tail -6'\necho \"=== aguardando boot (10s) ===\"; for i in $(seq 1 10); do curl -s -m2 -o /dev/null -w \"\" http://127.0.0.1:8090/ 2>/dev/null; sleep 1; done\necho \"=== backend boot/cockpit logs ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 60s backend 2>&1 | grep -iE \"cockpit|boot falhou|listening|Starting the|error\" | tail -15'",
+  "description": "Deploy backend+frontend, check boot and cockpit logs",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started 
+> === aguardando boot (10s) ===
+> === backend boot/cockpit logs ===
+> ```
+
+## 🤖 Claude *(00:10:15)*
+
+
+## 🤖 Claude *(00:10:16)*
+
+Os logs vão pra arquivos por-categoria (não stdout). Verifico de outro jeito: container up + o endpoint ao vivo (com token) + o log do cockpit dentro do container.
+
+## 🤖 Claude *(00:10:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== backend status ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose ps backend' | tail -2\necho \"=== cockpit + system logs (arquivo dentro do container) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -lc \"tail -n 8 /app/logs/cockpit.log 2>/dev/null; echo ---; grep -i cockpit /app/logs/system.log 2>/dev/null | tail -3\"' 2>&1\necho \"=== endpoint /analysis/cockpit ao vivo ===\"\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/analysis/cockpit | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const d=JSON.parse(s);console.log(\"env:\",JSON.stringify(d.env));console.log(\"enabled:\",d.enabled,\"refreshMs:\",d.refreshMs,\"breakevenPct:\",d.breakevenPct);const syms=Object.keys(d.symbols||{});console.log(\"symbols:\",syms.join(\",\"));const b=(d.symbols||{}).BTCUSDT;if(b)console.log(\"BTC: price\",b.price,\"| medAbs\",b.dist&&b.dist.medAbsMovePct,\"| sigma\",b.dist&&b.dist.sigmaPct,\"| pHit\",b.dist&&b.dist.pHitBreakevenPct,\"| evNet\",b.ev&&b.ev.netPct,\"| histLen\",b.dist&&b.dist.hist&&b.dist.hist.counts.length,\"| mc\",b.mc&&(b.mc.p10+\"/\"+b.mc.p50+\"/\"+b.mc.p90),\"| gate\",b.gates&&b.gates.buyAllowed,\"| regime\",b.regime);})'",
+  "description": "Verify backend up, cockpit logs, and live endpoint payload",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backend status ===
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED          STATUS          PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   29 seconds ago   Up 27 seconds   3001/tcp
+> === cockpit + system logs (arquivo dentro do container) ===
+> info: 2026-06-16T00:10:01.064Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> ---
+> info: 2026-06-16T00:10:01.063Z - Starting the Cockpit Job (read-only analytics)...
+> === endpoint /analysis/cockpit ao vivo ===
+> env: {"useTestnet":false,"tradingHalt":true}
+> enabled: true refreshMs: 60000 breakevenPct: 0.2
+> symbols: BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT
+> BTC: price 66383.52 | medAbs 0.0256 | sigma 0.0527 | pHit 0.6 | evNet -0.1638 | histLen 25 | mc 66037.21/66383.52/66731.65 | gate true | regime trend
+> ```
+
+## 🤖 Claude *(00:10:42)*
+
+
+## 🤖 Claude *(00:10:47)*
+
+**🎯 Backend no ar e a feature LIVE — com a verdade que importa.** O endpoint `/analysis/cockpit` já responde, computado pela brain:
+
+```
+env: { useTestnet:false, tradingHalt:true }   ← MAINNET REAL + CONGELADO
+BTC: medMove 0.0256% · σ 0.0527% · moves≥break-even 0.6% · EV/trade NET −0.1638% · MC 66037/66383/66731 (p50≡preço) · regime trend
+```
+
+**A própria brain agora reporta EV/trade = −0,16%** e que só **0,6%** das velas de 1m limpam a taxa. É exatamente a tese, em dado real e auditável. Boot limpo (o fix do P0 segurou).
+
+Agora o agente (verifico que a tool `tradeux_get_cockpit` aparece) + frontend.
+
+## 🤖 Claude *(00:10:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d agent 2>&1 | tail -3'\necho \"=== agente: tool tradeux_get_cockpit registrada? (--check) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent node src/index.js --check 2>&1 | grep -iE \"cockpit|get_regime|get_oracle|tools|erro|error\" | head -15' 2>&1 || echo \"(--check via exec falhou; tentando listar do MCP)\"\necho \"=== agent container status ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps agent' | tail -2",
+  "description": "Deploy agent and verify cockpit tool registered",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+> === agente: tool tradeux_get_cockpit registrada? (--check) ===
+> [tradeux-agent]  - tradeux_get_regime
+> [tradeux-agent]  - tradeux_get_oracle_state
+> [tradeux-agent]  - tradeux_get_cockpit
+> === agent container status ===
+> NAME              IMAGE           COMMAND                  SERVICE   CREATED         STATUS        PORTS
+> tradeux-agent-1   tradeux-agent   "docker-entrypoint.s…"   agent     2 seconds ago   Up 1 second
+> ```
+
+## 🤖 Claude *(00:11:06)*
+
+
+## 🤖 Claude *(00:11:08)*
+
+**✅ Agente no ar e a tool `tradeux_get_cockpit` registrada** (aparece no `--check` junto de `get_regime`/`get_oracle_state`). Stack completo deployado: backend (cockpitJob + endpoint), frontend (consome o snapshot), agente (tool + prompt env-aware).
+
+Screenshot do frontend brain-sourced + verifico que o agente de fato **lê e reporta** o cockpit (um ciclo `--once` → journal).
+
+## 🤖 Claude *(00:11:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\nSHOT_TOKEN=\"$TOKEN\" SHOT_OUT=/tmp/cockpit4.png node /tmp/cockpit-shot.js && echo \"shot OK\"",
+  "description": "Screenshot the brain-sourced cockpit",
+  "timeout": 90000
+}
+```
+
+## 🤖 Claude *(00:11:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rodando 1 ciclo --once do agente (valida que ele L\u00ca e REPORTA o cockpit) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'timeout 150 docker compose exec -T agent node src/index.js --once 2>&1 | tail -4' 2>&1\necho \"=== o agente chamou tradeux_get_cockpit neste ciclo? (journal) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-agent-1 sh -lc \"tail -n 60 /journal/tradeux-agent.jsonl 2>/dev/null | grep -o tradeux_get_cockpit | head -1; echo ---resumo---; tail -n 30 /journal/tradeux-agent.jsonl 2>/dev/null | node -e \\\"let s=\\\\\\\"\\\\\\\";process.stdin.on(\\\\\\\"data\\\\\\\",d=>s+=d).on(\\\\\\\"end\\\\\\\",()=>{const L=s.trim().split(\\\\\\\"\\\\n\\\\\\\");for(const ln of L.reverse()){try{const j=JSON.parse(ln);if(j.type===\\\\\\\"cycle_end\\\\\\\"&&j.summary){console.log(j.summary.slice(0,600));break;}}catch(e){}}})\\\"\"' 2>&1",
+  "description": "Run agent once and verify it reads/reports cockpit",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK title="TradeUX" url=https://tradeux.gcrux.com/cockpit
+> shot OK
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rodando 1 ciclo --once do agente (valida que ele LÊ e REPORTA o cockpit) ===
+> O sistema está atualmente congelado (`tradingHalt = true`), portanto nenhuma ordem nova está sendo executada. Porém, o mecanismo de *regime‑gating* que deve impedir compras de *farm* e *baseline* durante regimes de *trend* (e *bear*) está apresentando incoerença: o `buyGate` está aberto em BTCUSDT, BNBUSDT e ADAUSDT apesar de seus regimes serem *trend*. Essa falha precisará ser corrigida antes que o halt seja levantado, sob risco de que as automações de *farm* iniciem compras inadequadas em tendências de alta, contrariando a lógica de proteção do cofre no Farm‑and‑Funnel. Nenhuma outra incoerência (por exemplo, harvester vendendo com prejuízo ou trend cruzando death cross semexecução) foi observada neste ciclo. 
+> 
+> *Próximos passos*: aguardar orientação para retirar o `tradingHalt` somente após validar a correção do gate de regime, ou solicitar ao dono a revisão da lógica de gating via `tradeux_notify_owner` caso seja necessário um ajuste de configuração. (Como o halt já impede ação, não há necessidade de notificação neste ciclo, a menos que o dono queira ser informado da incoerência já detectada.)
+> [tradeux-agent] Modo --once: concluído.
+> === o agente chamou tradeux_get_cockpit neste ciclo? (journal) ===
+> tradeux_get_cockpit
+> ---resumo---
+> **Resumo do ciclo de observação**
+> 
+> | Símbolo | Preço (cockpit) | Regime | Fluxo (imbalance / toxicity) | buyGate (farm/baseline) | Observação de coerência |
+> |---------|----------------|--------|------------------------------|--------------------------|--------------------------|
+> | BTCUSDT | 66 401,12 USDT | **trend** | +0,296 / 0,296 (leve pressão de compra) | **allowed** | ❌ Incoerente: em regime *trend* as compras de *farm* e *baseline* devem ficar **CAIXA** (gate fechado). |
+> | LTCUSDT | 45,84 USDT | **mixed** | –0,107 / 0,107 (leve pressão de venda) | **allowed** | ✅ Coerente: *mixed* ≠ bea
+> ```
+
+## 🤖 Claude *(00:14:29)*
+
+
+## 🤖 Claude *(00:14:33)*
+
+**Verificação ao vivo pegou um bug real — e é exatamente por isso que verificamos.** O agente **leu e reportou o cockpit** (journal confirma `tradeux_get_cockpit` + tabela por símbolo no resumo) ✅. MAS ele sinalizou uma "incoerência": `buyGate=allowed` em BTC/BNB/ADA mesmo em regime `trend`.
+
+Ele está **certo** — e o bug é o **meu** `deriveGates`: eu defini `buyAllowed = regime != bear`, mas pela doutrina real **farm/baseline só acumulam em RANGE** (`!= bear E != trend`); só o **trend** compra em tendência (no golden cross). Meu gate genérico fez o agente reportar um falso alarme ao dono. Tenho que corrigir antes de declarar pronto. Corrijo o gate por-módulo + relabel no painel.
+
+## 🤖 Claude *(00:14:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js",
+  "old_string": "// Estado DERIVADO dos gates de compra (view do cockpit, limiares transparentes). N\u00c3O emite ordem.\nfunction deriveGates(regime, flow) {\n    const regimeOk = !!regime && regime !== 'bear' && regime !== 'unknown';\n    const flowFresh = flow && Number.isFinite(flow.imbalance) && flow.atMs && (Date.now() - flow.atMs) < FLOW_STALE_MS;\n    // sem fluxo conhecido => n\u00e3o veta (flowOk=true), mas marca unknown; com fluxo fresco => exige >= limiar\n    const flowOk = !flowFresh ? true : flow.imbalance >= FLOW_BUY_MIN;\n    const buyAllowed = regimeOk && flowOk;\n    let reason;\n    if (!regimeOk) reason = `regime=${regime || 'unknown'} (gate de compra fechado)`;\n    else if (!flowOk) reason = `fluxo em capitula\u00e7\u00e3o (imbalance ${flow.imbalance} < ${FLOW_BUY_MIN})`;\n    else reason = 'gates de compra abertos';\n    return { regimeOk, flowOk, buyAllowed, flowBuyMin: FLOW_BUY_MIN, flowFresh: !!flowFresh, reason };\n}",
+  "new_string": "// Estado DERIVADO dos gates de compra POR M\u00d3DULO (view do cockpit, limiares transparentes). N\u00c3O emite ordem.\n// Espelha a doutrina das automa\u00e7\u00f5es (ver SYSTEM_PROMPT do agente):\n//   - FARM/BASELINE ACUMULAM s\u00f3 em RANGE: regime != bear E != trend (baseline ainda exige fluxo n\u00e3o-capitula\u00e7\u00e3o)\n//   - TREND compra no golden cross: gated s\u00f3 por != bear\n//   - HARVESTER \u00e9 DESGATEADO do regime (opera em qualquer regime)\n// `buyAllowed` = gate de ACUMULA\u00c7\u00c3O (farm/baseline), o \"padr\u00e3o\"; trend/harvester t\u00eam caminhos pr\u00f3prios.\nfunction deriveGates(regime, flow) {\n    const regimeOk = !!regime && regime !== 'bear' && regime !== 'unknown';\n    const flowFresh = flow && Number.isFinite(flow.imbalance) && flow.atMs && (Date.now() - flow.atMs) < FLOW_STALE_MS;\n    const flowOk = !flowFresh ? true : flow.imbalance >= FLOW_BUY_MIN; // sem fluxo fresco => n\u00e3o veta\n    const farm = regimeOk && regime !== 'trend';        // farm acumula s\u00f3 em range\n    const baseline = farm && flowOk;                    // baseline = farm + filtro de fluxo\n    const trend = regimeOk;                             // trend compra no golden cross (!= bear)\n    const buyAllowed = baseline;\n    let reason;\n    if (!regimeOk) reason = `regime=${regime || 'unknown'}: acumula\u00e7\u00e3o em CAIXA (farm/baseline e trend parados)`;\n    else if (regime === 'trend') reason = 'regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross';\n    else if (!flowOk) reason = `fluxo em capitula\u00e7\u00e3o (imbalance ${flow.imbalance} < ${FLOW_BUY_MIN}): baseline veta o dip`;\n    else reason = 'range + fluxo ok: acumula\u00e7\u00e3o (farm/baseline) liberada';\n    return { regime, regimeOk, flowOk, flowFresh: !!flowFresh, flowBuyMin: FLOW_BUY_MIN, farm, baseline, trend, harvesterUngated: true, buyAllowed, reason };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:14:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "                <div className=\"cx-line\"><span className=\"l\"><span className=\"cx-seal real\" /> Gate de compra BTC</span><span className={`v cx-mono ${cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'cx-up' : 'cx-down') : ''}`}>{cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'GO' : 'WAIT') : '\u2014'}</span></div>",
+  "new_string": "                <div className=\"cx-line\"><span className=\"l\"><span className=\"cx-seal real\" /> Gate acumula\u00e7\u00e3o BTC <span className=\"cx-flat\" style={{ fontSize: '0.66rem' }}>(farm/baseline)</span></span><span className={`v cx-mono ${cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'cx-up' : 'cx-down') : ''}`} title={cpBtc && cpBtc.gates ? cpBtc.gates.reason : ''}>{cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'GO' : 'CAIXA') : '\u2014'}</span></div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:15:05)*
+
+
+## 🤖 Claude *(00:15:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check backend/src/cockpitJob.js && echo \"syntax OK\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/cockpitJob.js frontend/src/private/Cockpit/Cockpit.js && echo \"chown OK\"\necho \"=== rebuild backend+frontend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend frontend 2>&1 | grep -iE \"built in|naming to|error|fail\" | tail -8'\necho \"=== redeploy ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d backend frontend 2>&1 | tail -3'",
+  "description": "Syntax check, chown, rebuild and redeploy backend+frontend with gate fix",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> chown OK
+> === rebuild backend+frontend ===
+> #22 naming to docker.io/library/tradeux-backend done
+> #20 3.782 ✓ built in 2.72s
+> #26 naming to docker.io/library/tradeux-frontend done
+> === redeploy ===
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(00:15:32)*
+
+
+## 🤖 Claude *(00:15:33)*
+
+Rebuild + redeploy OK. Verifico o gate corrigido no endpoint, re-rodo o agente (o falso alarme deve sumir) e tiro o screenshot final.
+
+## 🤖 Claude *(00:15:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 12); do curl -s -m2 -o /dev/null http://127.0.0.1:8090/ 2>/dev/null; sleep 1; done\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\necho \"=== gates corrigidos (por s\u00edmbolo) ===\"\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/analysis/cockpit | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const d=JSON.parse(s);for(const[k,c]of Object.entries(d.symbols||{})){const g=c.gates||{};console.log(`${k}: regime=${c.regime} | farm=${g.farm} baseline=${g.baseline} trend=${g.trend} | buyAllowed=${g.buyAllowed} | ${g.reason}`);}})'\necho \"=== agente --once (o falso alarme de trend deve sumir) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'timeout 150 docker compose exec -T agent node src/index.js --once 2>&1 | tail -3' 2>&1\nSHOT_TOKEN=\"$TOKEN\" SHOT_OUT=/tmp/cockpit5.png node /tmp/cockpit-shot.js && echo \"shot OK\"",
+  "description": "Verify corrected gates, re-run agent, screenshot",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gates corrigidos (por símbolo) ===
+> BTCUSDT: regime=null | farm=false baseline=false trend=false | buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> LTCUSDT: regime=null | farm=false baseline=false trend=false | buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> BNBUSDT: regime=null | farm=false baseline=false trend=false | buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> ADAUSDT: regime=null | farm=false baseline=false trend=false | buyAllowed=false | regime=unknown: acumulação em CAIXA (farm/baseline e trend parados)
+> === agente --once (o falso alarme de trend deve sumir) ===
+> [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: /journal/tradeux-agent.jsonl
+> [tradeux-agent] Ciclo 1 iniciando (1781568953717-1)...
+> 
+> OK title="TradeUX" url=https://tradeux.gcrux.com/cockpit
+> shot OK
+> ```
+
+## 🤖 Claude *(00:18:53)*
+
+
+## 🤖 Claude *(00:18:56)*
+
+O gate **lógico está corrigido**, mas peguei o backend logo após o restart: o `regimeJob` ainda não repopulou `MEMORY[REGIME]` (roda no boot + a cada 5min; klines 1h levam alguns segundos), então `regime=null → CAIXA` — que é o **fail-safe correto** (melhor que o bug antigo). Deixa eu esperar a repopulação, re-conferir com regime real, ler o resumo do agente e o screenshot.
+
+## 🤖 Claude *(00:19:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguardando regimeJob repopular (40s) ===\"; sleep 40\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\necho \"=== gates com regime real ===\"\ncurl -s -m8 -H \"authorization: $TOKEN\" https://tradeux.gcrux.com/api/analysis/cockpit | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const d=JSON.parse(s);for(const[k,c]of Object.entries(d.symbols||{})){const g=c.gates||{};console.log(`${k}: regime=${c.regime} | farm=${g.farm} trend=${g.trend} buyAllowed=${g.buyAllowed} | ${g.reason}`);}})'\necho \"=== \u00faltimo resumo do agente (falso alarme de trend sumiu?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-agent-1 sh -lc \"tail -n 40 /journal/tradeux-agent.jsonl 2>/dev/null\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{const L=s.trim().split(\"\\n\");for(const ln of L.reverse()){try{const j=JSON.parse(ln);if(j.type===\"cycle_end\"&&j.summary){console.log(j.summary.slice(0,700));break;}}catch(e){}}})'",
+  "description": "Re-verify gates with real regime and agent coherence",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguardando regimeJob repopular (40s) ===
+> === gates com regime real ===
+> BTCUSDT: regime=trend | farm=false trend=true buyAllowed=false | regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross
+> LTCUSDT: regime=mixed | farm=true trend=true buyAllowed=true | range + fluxo ok: acumulação (farm/baseline) liberada
+> BNBUSDT: regime=trend | farm=false trend=true buyAllowed=false | regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross
+> ADAUSDT: regime=trend | farm=false trend=true buyAllowed=false | regime=trend: farm/baseline em CAIXA (correto); trend compra no golden cross
+> === último resumo do agente (falso alarme de trend sumiu?) ===
+> **Resumo do ciclo de observação**
+> 
+> - **Ambiente:** `useTestnet = false` (mainnet real) e `tradingHalt = true` (kill‑switch ativado). Nenhuma ordem nova pode ser enviada enquanto o halt estiver ativo.
+> - **Regime (1h):**  
+>   - BTCUSDT – **trend** (ADX 32,8)  
+>   - LTCUSDT – **mixed** (ADX 20,9)  
+>   - BNBUSDT – **trend** (ADX 26,0)  
+>   - ADAUSDT – **trend** (ADX 36,7)  
+> - **RSI 1m (farm entry):**  
+>   - BTCUSDT = 67,1  
+>   - LTCUSDT = 58,5  
+>   - BNBUSDT = 66,9  
+>   - ADAUSDT = 51,1  
+>   Todos acima do limite de 35 → condição de compra do farm não satisfeita.
+> - **Ordens recentes:** `tradeux_get_last_orders` retornou lista vazia → nenhuma ordem preenchida no último período (coerente com o halt).
+> - **P
+> ```
+
+## 🤖 Claude *(00:19:55)*
+
+
+## 🤖 Claude *(00:19:59)*
+
+**✅ Corrigido e verificado ao vivo.** Os gates agora estão certos:
+
+```
+BTCUSDT  regime=trend  → farm=CAIXA (correto), trend compra no golden cross
+LTCUSDT  regime=mixed  → farm=GO (range + fluxo ok: acumulação liberada)
+BNB/ADA  regime=trend  → farm=CAIXA
+```
+
+E o **agente agora reporta coerente** — sem o falso alarme. O resumo dele:
+- **Ambiente: `useTestnet=false` (mainnet real) + `tradingHalt=true`** ← o fix do prompt funcionou: ele entende que é mainnet real, não mais "testnet ruído".
+- Regime por símbolo + RSI 1m + "RSI acima de 35 → condição de compra do farm não satisfeita" + "0 ordens (coerente com halt)". **Nenhuma incoerência fabricada.**
+
+Screenshot final com os gates corretos:
+
+## 🤖 Claude *(00:20:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(sudo -n -u gcrux-tradeux bash -lc 'set -a; . /home/gcrux-tradeux/tradeux/tradeux-mcp/.env; curl -s -X POST \"https://tradeux.gcrux.com/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\"' | node -e 'let s=\"\";process.stdin.on(\"data\",d=>s+=d).on(\"end\",()=>{try{console.log(JSON.parse(s).token)}catch(e){process.exit(1)}})')\nSHOT_TOKEN=\"$TOKEN\" SHOT_OUT=/tmp/cockpit6.png node /tmp/cockpit-shot.js && echo \"shot OK\"",
+  "description": "Final screenshot with corrected gates",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK title="TradeUX" url=https://tradeux.gcrux.com/cockpit
+> shot OK
+> ```
+
+## 🤖 Claude *(00:20:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/cockpit6.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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EfXFAiGgAoAKACgCpPxOT9KTKQm4etABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FADWOSMdqQDtw9aYBkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooAMj1FABkeooANw9RQAbh6igA3D1FABkeooAMj1FABkeooANw9RQAjEYwKGA2kBfqiRVZkOVYqemQcUAJQAYHpQAYHpQAUAFABQAUAFAFSfmY/hSZSG7RRYA2r6frQAbV9P1oANq+n60ALtX0/WgA2r6frQAbV9P1oAML6frQAbV9P1oANq/3f1oAML/d/WgAwv939aADC/wB39aADC/3f1o0AML/d/WgAwv8Ad/WjQAwv939aADC/3f1oAML/AHf1oAML/d/WgAwv939aADav939aADC+n60AG1fT9aADavp+tABtX0/WgA2r6frQAbV9P1oANo9P1oANo9KAE2j0oAaRg4HekA7aKdgDavp+tAC7V9P1oAML6frQAYX0/WgAwvp+tABhf7v60AGF/u/rQAYX+7+tABhf7v60aAGF/u/rQAYX+7+tGgBhf7v60AGF/u/rQAbV9P1oANq+n60AG1fT9aADaPT9aADaPSgBrKAMikA2gDQqiS3p8dtI7i4YDAG0M+0deTn2HagCACL7TjJMW/GemVz/AIUAXfI0zdk3LHJ+6pwB07kHPekMEtLKVmCXLDauTnAH6/5NAFK4WNJmWGTzI+MNTER0AFAE2yH7GH3nz/MxtHOVx1Ppz+f4UAQ0AVJv+Pj8qXUZNaTpbyl3gScbSNr9Oe9BFSDkrJ2E84BVXy14AB9+c07lh5y5z5YPX/PSi4CPLuBAQLnH6UAEcgQcoG+bPP8AKgB3nrtx5S9CM0XATzlHSIYyT+dFwCKZYwMxK+PX65oAipDEoAKACgAoAKACgAoAKACgAoAKACgAoAVSARkZHpQA7dH/AHD+dMQZjz9w4+tABuTP3D+dAC7o/wDnn+tACZXdnbx6ZoANyZ+5x9aADcn9z9aABip+6uPxzQBG33lpDLFpOlvP5kkCTrgjY/TnvQZ1IOcb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tTM6im17jswR4No8yNsgYyvGT609CwdrYhtiSA44JPejQBd1t/zzbp2//XRoAyYxEjylIHvQBFSGFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQBbWa18i3VoWDxsS7qAfMBI459BmgCV7uzkhkjNoELEbZEUZUbif5YFAh6X1ipQHT1KhAGHGSQpBOfqR+VAGYfun6UDEX7ooAWgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAR/u/jQAykB7tUjCgAoAKACgAoAKACgAoAKAPK/HX/I13H+7H/6CKpCMi0tmupjGskaEKWzI2BxTM6k1BXaBbZ3ClWHIB54p2LA2z7gu5Oc9/aiwDjaOB/rE/OiwCG0kVSSycds0WAgzSGFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFAF2xsFu4md7qOEK23D/7pOevtQBRP3T9KAEX7ooAWgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAR/u/jQAykB7tUjCgAoAKACgAoAKACgAoAKAPK/HX/ACNdx/uR/wDoIpoRg1QBQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAN900AIv3aAFoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKAEf7v40MBlID3apGFABQAUAFABQAUAFABQAUAeVeOxnxVcAf3I//QRTEYDCRGKsGUr1BGMUxJp6oTLD1oGGW9TQAZb1NAC4k2F8NtBxuxxn0zRfWwWEy3vQAp3jrkUAJlvegAy3vQAvzEE84HU0AJlvU0AGW96AF+fGfmx60AA3scDJPtQAm5vU0AG4+poANx9TQAbj6mgA3H1NABuPqaADcfU0AG4+poANx9TQAbj6mgA3H1NABuPqaADcfU0AG4+poANx9TQAhJPU0AAJHQ0ALuPqaADcfU0AG4+poANx9TQAbj6mgA3H1NABuPqaADcfU0AGWPQmgAy3qaADLe9ACgO3QMfoKAD5wM4bH0oATLe9ABlh3NABuPqaADLepoAMt6mgBfnxnnFABls45zQA0570AFAHu1SMKACgAoAKACgAoAKACgAoA8r8csyeLJ3UkMqxkEdjtFMTV1ZmK19cvNJM8paSQ5ZiBzTTsTGEYLlitBv2qbcG38jpwKdyhRdzB924E4xyB0ouFhr3EsilWbIPUYpXAVbudLY2yysIS4kKdtw71PJHm5uo+Z2sDXUzrtZ8jjtVXEDXUzKVL5BGOgp3AX7ZPknfnPqBRdgNe5mdSrPkEYIxSuA1ZXWJowxCOQWX1xRcB/2qbJO/k+w/z2p3APtc3Hz9PYUXAQXMqnIfnO7p3pXADczMQS2SAQOBRcCInJyaACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKAJI7iWJcI2B9KLgOa6mZSpfIPUYFO4A13M2Mv0OegouAfapsn5+oweBzSuAhuZjjL5wQegp3AX7VNu3b+foP896LgI1zM64Z8jOelK4AlzMikK+Afai4Ci5mGcP1OelFwD7XPx+86ewp3YAt3OucP1OegouAC7nHR/0FF2AySZ5cbznHTilcBlAHu1SMKACgAoAKACgAoAKACgAoA8q8d/8AI1XP+5H/AOgimhGDskzjafypgIVcDJUgfSgBdkn90/lT1ATa/wDdP5UgDY4z8p49qAAK56KfyoANrk4Cn8qAEOQcHj8KAEyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaADJoAMmgAyaAFGScAZP0oAdscfwn8qADY+AdpwenFACbX/un8qAF2Sf3T+VACYbOMHP0oANj/AN0/lQABXPRT+VAChJCcbD+VACbX/un8qADY+cbTn6UAGx/7p/KgAKsBlgQPcUANoA92qRhQAUAFABQAUAFABQAUAFAHlXjv/karn/cj/wDQRTQjAEjjo7fnTuAhdiMFifxoAUSOBgO350XAPMcfxH86AAyORgscfWi4AJHAwHYD60XAN7Dox/OgBCSxJJyTQAlABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFABQAUAFACgkHIODQAvmP8A32/Oi4AJHGMMRjpzRcA8x/75/Oi4C+bJ/fb86LgJvbIO45HQ0AHmP/fb86LgAkdRgMQKLgHmPjG8/nRcA8x/75/Oi4B5jnqx/Oi4B5j4xvb86LgIzs33mJ+tACUAe7VIwoAKACgAoAKAEJAGT0oATzE/vfpTAPMT+9+lAB5if3v0oA8t8cgt4ouCvI2R/wDoIoEc/sb0pgGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAGxvSgA2N6UAf//Z', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(00:21:02)*
+
+
+## 🤖 Claude *(00:21:02)*
+
+O cockpit completo, **brain-integrado e verificado ao vivo**. Vou registrar na memória e te entregar o resultado final.
+
+## 🤖 Claude *(00:21:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "old_string": "READ-ONLY (n\u00e3o toca buy/sell/oco/HALT), env-aware. Design via workflow `wf_e174d115-e04` (5 especialistas + tech-lead safety). PENDENTE: GO do dono pra mexer no backend (sistema congelado) + QA/TL antes de deploy backend.",
+  "new_string": "READ-ONLY (n\u00e3o toca buy/sell/oco/HALT), env-aware. Design via workflow `wf_e174d115-e04` (5 especialistas + tech-lead safety).\n\n**DEPLOYADO E VERIFICADO AO VIVO (2026-06-16, QA-PASS + TL-APPROVE Fase A e B+C):**\n- **Backend**: `backend/src/utils/cockpitService.js` (klines 1m mainnet \u2192 distribui\u00e7\u00e3o/EV-net/tail/hist 25-bins/MC driftless; NUNCA lan\u00e7a) + `cockpitJob.js` (clona fairPriceJob; `COCKPIT_JOB_ENABLED`, REFRESH 60s, lookback 500, BTCUSDT sempre; `updateMemory(...,executeAutomations=FALSE)`) + chave `indexKeys.COCKPIT` + boot em `server.js` (+ hardening: IIFE com `.catch`\u2192exit). Endpoint `GET /analysis/cockpit` (controller async + `env:{useTestnet,tradingHalt}` via `settingsRepository.getSettings` SEM decrypt) + `/cockpit/:symbol`.\n- **`deriveGates` POR M\u00d3DULO** (corrigido ap\u00f3s verifica\u00e7\u00e3o ao vivo \u2014 o agente pegou falso alarme): farm/baseline acumulam s\u00f3 em RANGE (`!=bear && !=trend` + fluxo), trend compra no golden cross (`!=bear`), harvester desgateado; `buyAllowed`=gate de acumula\u00e7\u00e3o. FOLLOW-UP: reconciliar `COCKPIT_FLOW_BUY_MIN` (-0.4) com a condition viva da id2.\n- **MCP**: tool read-only `tradeux_get_cockpit` (`tradeux-mcp/src/index.js`, readTool \u2014 writeTool 9\u21929; projeta resumo enxuto, STRIP do hist).\n- **Agente** (`tradeux-agent/src/agent.js`): SYSTEM_PROMPT **env-aware** (removida a afirma\u00e7\u00e3o falsa \"conta \u00e9 TESTNET/equity \u00e9 ru\u00eddo\" \u2192 defere a env.useTestnet/tradingHalt do cockpit; **BLOQUEADOR do TL resolvido**) + instru\u00e7\u00e3o 1\u00d7/ciclo ler+reportar cockpit. Verificado: `--once` chamou `tradeux_get_cockpit` e reportou coerente (\"useTestnet=false mainnet real, tradingHalt=true\", regime/RSI por s\u00edmbolo, sem falso alarme).\n- **Frontend**: `IntelligenceService.getCockpit` + Cockpit.js consome o snapshot (histB/sigmaB/mcBand/evNet/env pills MAINNET REAL+HALT), fallback gracioso pras klines. **EV/trade net \u22120,16% e pHit 0,6% agora v\u00eam do brain** \u2014 a pr\u00f3pria m\u00e1quina reporta por que scalping 1m sangra fee.\n- **Estado**: `TRADING_HALT=true` intacto, nada negocia; tudo read-only. Ownership chownado p/ gcrux-tradeux (Edit reescreve como ubuntu). N\u00c3O commitado ainda (working tree dirty). Screenshot via `/tmp/cockpit-shot.js`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:21:26)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/cockpit6.png"
+  ],
+  "status": "normal",
+  "caption": "Cockpit final, brain-integrado: pills MAINNET REAL + HALT (do brain), EV/trade net \u22120,16% e moves\u2265break-even 0,6% computados pelo cockpitJob, gates de acumula\u00e7\u00e3o corretos. O agente l\u00ea tudo via tradeux_get_cockpit e reporta coerente."
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(00:21:45)*
+
+
+## 🤖 Claude *(00:22:07)*
+
+## ✅ Entregue: o Cockpit virou uma feature read-only **lida e reportada pela brain**, com 100% dado real — deployada e verificada ao vivo
+
+Fechei o ciclo completo que você pediu. Resumo honesto do que está no ar:
+
+**A brain computa** (`cockpitJob`, padrão `flowJob`/`regimeJob`, read-only): de klines 1m reais da mainnet → distribuição de retornos, σ, **EV/trade net-de-fee**, tail, histograma e banda Monte Carlo driftless → grava `MEMORY['<sym>:COCKPIT']` e expõe `GET /analysis/cockpit` (com `env:{useTestnet,tradingHalt}`).
+
+**O agente lê e reporta** (verificado num `--once` real): chamou `tradeux_get_cockpit` e produziu um resumo **coerente** — reconheceu `useTestnet=false` (mainnet real) e `tradingHalt=true`, regime/RSI por símbolo, sem alarme falso. O **bloqueador do TL foi resolvido**: o prompt não afirma mais "a conta é testnet/equity é ruído" — agora defere ao ambiente real do cockpit.
+
+**O frontend consome o snapshot do brain** (single source of truth), com fallback gracioso pras klines. As pills mostram **MAINNET REAL + HALT**, e o painel "Edge vs fee" exibe **EV/trade net −0,16%** e **moves ≥ break-even 0,6%** — computados pela máquina. Ou seja: o teatro de probabilidade do vídeo virou, no nosso, a **prova auditável, vinda da própria brain, de que scalping de 1m sangra taxa**. É o oposto honesto do golpe.
+
+### O que a verificação ao vivo pegou (e por que ela importa)
+O agente, no 1º ciclo, **acusou uma incoerência real**: meu `deriveGates` dizia "buyGate aberto" em regime `trend`, mas farm/baseline só acumulam em range. Era bug **meu** (gate genérico). Corrigi pra **gates por-módulo** (farm/baseline `≠bear && ≠trend`; trend no golden cross; harvester desgateado), redeployei, e o agente voltou a reportar coerente. Sem a verificação, o agente estaria mandando falso alarme pro seu Telegram.
+
+### Gates QA/TL
+- **Fase A** (backend): QA **FAIL→PASS** (pegaram um P0 que eu introduzi — `require` faltando que daria crash-loop; corrigi + hardening de boot), TL **APPROVE**.
+- **Fases B+C** (MCP/agente/frontend): QA **PASS**, TL **APPROVE** ("zero nova autoridade de trade", env só 2 booleanos, frontend não crasha). Must-fix: nenhum.
+
+### Estado do sistema (transparência)
+`TRADING_HALT=true` **intacto** — nada negocia, tudo read-only. Recriei backend+agent+frontend (você autorizou "deploy junto"); boot limpo, 4 containers up. **Nada está commitado** ainda (working tree sujo; ownership já chownado pra `gcrux-tradeux`).
+
+### Follow-ups (anotados, não bloqueiam)
+- Reconciliar `COCKPIT_FLOW_BUY_MIN` (−0,4) com a condition viva da id2 (hoje é a *view* do cockpit, rotulada).
+- As "trade bridges" do painel ainda usam o gate genérico (`≠bear`) — diferente do gate de acumulação do painel Edge; alinhar/relabel se quiser.
+- `.toFixed(2)` no preço degrada display de alts baratas (ADA).
+
+Quer que eu **commite isso direto no master** (modelo trunk-based, como `gcrux-tradeux`), ou prefere revisar o diff antes? E sobre a **estratégia em si** — a Fase 3 (shadow 1m de verdade, medindo P(continuação ≥ custo) pra preencher aquele card ⚪) segue valendo quando você quiser, mas o cockpit já te dá a leitura honesta do edge a cada minuto.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -6743,4 +8175,5 @@ O Edit do MCP falhou (preciso Read antes). Leio a região do `index.js`.
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-15 - agent-afc30df474a782e50]]
+> * **Próxima Sessão**: [[2026-06-16 - agent-a2c102f6ea6aa723b]]
 %% --- TIMELINE END --- %%
