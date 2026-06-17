@@ -7507,6 +7507,622 @@ Review em andamento em background (`wf_fb678be1-cc0`): QA + TL + cético de mone
 
 Aguardo o review fechar. Se vier limpo (ou só com nice-to-haves), commito+pusho os 3 e faço **um rebuild** deployando isso + o fix do cockpit (agente) + o (d) que já está no master. Se vier achado real, corrijo antes.
 
+## 👤 User *(18:30:28)*
+
+<task-notification>
+<task-id>wutb22p4p</task-id>
+<tool-use-id>toolu_0192Kf11csceesWzkdtFky4D</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/wutb22p4p.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "QA + TL + money-path skeptic review of the 3 unfreeze-blocker diffs, then adversarially verify blocking findings" completed</summary>
+<result>{"reviews":[{"verdict":"PASS COM RESSALVAS","summary":"node check passa; ver findings.","findings":[{"severity":"MEDIUM","issue":"Perma-SKIP do FARM_SELLING se insertOrder lancar apos exchange sell","fix":"liberar no catch ou TTL ou loadFarmSellingLocks"},{"severity":"MEDIUM","issue":"Trava inerte: setup-farm.js usa LAST_ORDER_QTY nao FARM_QTY","fix":"alinhar setup-farm.js ou documentar reaplicar apos reset"}]},{"verdict":"APPROVE COM SUGESTÕES","summary":"Revisei os 3 bloqueadores na IMPLEMENTAÇÃO REAL (working tree == /tmp/blockers.diff: 5 arquivos, +137/-33) contra o repo e o HANDOFF. Veredito por mudança:\n\n(1) TETO 300 — APPROVE. `.env` confirma MAX_ORDER_NOTIONAL_USDT=300 e TRADING_HALT=true; `.env` está gitignored (.gitignore:71-72); zero segredo no diff. O chokepoint em exchange.js (assertWithinRisk) já cobre MARKET-por-qty-base via refPrice(MINI_TICKER) — o gap (d) da auditoria foi fechado em e27339a, ANTES deste diff; aqui só entra a DOUTRINA de dimensionamento + caveat. O caveat BTC_EXCESS é HONESTO e bate com a realidade do código: calcQty tem a branch BTC_EXCESS (beholder.js:272) usada pela 'BTC Scalp Excess' id38, que está isActive=0 → teto fixo é seguro hoje, e o comentário avisa corretamente que reativar id38 exige tornar o teto symbol-aware. /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js\n\n(2) FARM_SELLING — APPROVE COM SUGESTÕES. Escopo v1 (skip-código BRAIN-independente por match de orderId, sem condition/migration) é DEFENSÁVEL e bem-justificado: a trava é setada pós-exchange.sell ANTES do insertOrder (fail-closed) e liberada em QUALQUER terminal por match de orderId em updateFarmPosition — não depende do BRAIN vivo, o que é objetivamente SUPERIOR ao HARVEST_SELLING (que perma-trava se a automação sair do BRAIN num stop/start). A assinatura `orderTemplate.quantity === 'FARM_QTY'` é REAL: a migration 20260615200000 (commit c163112) trocou os templates vivos 'Farm Sell LTC/BNB/ADA' MAX_WALLET→FARM_QTY — então o lock casa com o template vivo (o setup-farm.js ainda em LAST_ORDER_QTY é dívida divergente conhecida e foi corretamente DEIXADO intocado; a migration é a fonte de verdade). O gate \"não escalar size do Farm até loadFarmSellingLocks\" está documentado em 3 lugares (indexes.js, beholder.js, app-em.js). updateMemory(...,false)/deleteMemory não disparam automações → sem efeito colateral no hot-path.\n\n(3) TREND_QTY derive-from-orders — APPROVE. getTrendPosition é espelho EXATO de getFarmPosition (mesmo escopo isTestnet, name LIKE 'Trend %', id&gt;lastSell.id, guards Number.isFinite). Idempotente por construção: removeu o accumulator cur+qty e o countedTrendFills volátil → mata o double-count pós-restart de raiz (sólido, é a abordagem certa, mais simples que tabela nova). loadTrendPosition wired em init() (app-em.js:796) APÓS loadFarmPositions; o boot-ordering confere — server.js:43 NÃO awaita appEm.init, mas loadTrendPosition é awaited DENTRO de init antes de getActiveMonitors/userDataStream, e a segurança real vem da edge-detection do regimeJob (restart escreve 'none', não 'death'). Coerente com o padrão FARM/HARVEST.\n\nConvenções (pt-BR, naming, layering routers→controllers→repositories→models, comentários-doutrina densos) seguidas à risca. Tudo INERTE sob TRADING_HALT=true até o flip do dono. Nada BLOCKER; nenhum must-fix de código. As ressalvas abaixo são nice-to-have / dívida explícita já documentada.","findings":[{"severity":"MEDIUM","file":"/home/gcrux-tradeux/tradeux/backend/src/app-em.js","issue":"FARM_SELLING v1 SEM reconstrução-no-boot é uma escolha consciente e documentada, MAS o gate 'não escalar o size do Farm até loadFarmSellingLocks' é só um comentário — não há trava mecânica. Um restart com uma venda do Farm em voo perde a trava (volátil) e a venda pode re-disparar no próximo tick acima do alvo (calcQty capa na carteira, não no bucket → risco de oversell que vazaria a posição co-localizada do Trend nos mesmos alts). Hoje é inócuo (HALT + size pequeno), mas o risco materializa exatamente quando o size subir.","fix":"Pré-req de escalar o Farm: implementar loadFarmSellingLocks (espelho do reconcile-on-boot do HARVEST_SELLING em loadHarvestPositions — reconciliar contra a corretora as vendas do Farm que viraram terminais OFFLINE e rearmar a trava só p/ vendas DE FATO abertas). Aceitável manter como follow-up; só NÃO subir FARM_SIZE_MULT antes disso."},{"severity":"LOW","file":"/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js","issue":"getTrendPosition é cópia byte-a-byte de getFarmPosition (62 linhas duplicadas: mesma query de lastSell, mesmo whereClause, mesmo loop de média ponderada — só muda 'Farm %' p/ 'Trend %'). Manutenção: um fix de correção (ex.: tratar PARTIALLY_FILLED, ou paginação de buys) precisaria ser aplicado em 2 lugares e tende a divergir.","fix":"Nice-to-have: extrair getPositionByAutomationPrefix(symbol, prefix) e ter getFarmPosition/getTrendPosition como wrappers de 1 linha. Não bloqueia — a duplicação é literal e o espelho é intencional/auditável agora."},{"severity":"LOW","file":"/home/gcrux-tradeux/tradeux/backend/src/app-em.js","issue":"trendSymbols e farmSymbols são arrays hardcoded repetidos em 3 funções (updateTrendPosition, loadTrendPosition; e farmSymbols em updateFarmPosition, loadFarmPositions). BTCUSDT entra em trendSymbols mas não em farmSymbols. Se um novo símbolo de trend/farm for adicionado via script sem editar essas listas, o tracking de posição silenciosamente não atualiza para ele — divergência banco-vs-MEMORY difícil de notar.","fix":"Nice-to-have: derivar as listas de getActiveMonitors/automações por prefixo de nome (mesma fonte que getTrendPosition já consulta), OU centralizar num const único. Baixo risco hoje (conjunto estável e pequeno)."},{"severity":"LOW","file":"/home/gcrux-tradeux/tradeux/backend/src/app-em.js","issue":"Inconsistência cosmética de categoria de log: updateTrendPosition/loadTrendPosition logam em 'system' enquanto o caminho antigo logava em 'A:'+automationId (e o Harvester loga em 'A:'+id). Por MEMORY.md (logger-per-category), debug de automação de trend não aparecerá mais em A&lt;id&gt;.log. Funcional, só piora a observabilidade do módulo de trend.","fix":"Nice-to-have: como o recompute não tem mais automationId no escopo (derivado do banco), manter 'system' é aceitável; opcionalmente incluir o símbolo já basta p/ grep. Não acionável agora."},{"severity":"INFO","file":"/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js","issue":"getTrendPosition/getFarmPosition contam só status FILLED; uma venda do Trend/Farm que ficou PARTIALLY_FILLED e foi cancelada não rebaseia a janela (o lastSell exige FILLED). Para o Trend (death cross = MARKET/LIMIT marketável, fill ~total) e para o tamanho atual é desprezível, e o caminho HARVEST tem reconcile partial→cancel próprio. Apenas registrando como assimetria conhecida vs o Harvester, não um defeito no escopo v1.","fix":"Nenhuma ação. Se o size escalar e vendas parciais virarem comuns, considerar reconciliação partial análoga à do Harvester. Documentar no HANDOFF como dívida espelhada do FARM_SELLING."}]},{"verdict":"PASS COM RESSALVAS","summary":"Revisei os 3 bloqueadores na IMPLEMENTAÇÃO REAL (não só no diff), com lente de money-path cético. Veredito por bloqueador: (1) TETO 300 = PASS — chokepoint único em exchange.js cobre MARKET-por-quote, LIMIT/OCO e MARKET-por-qty (deriva preço do MINI_TICKER); o conjunto ATIVO (id6/7 Trend + Farm/Trend alts) negocia $5-15/ordem e as vendas FARM_QTY/TREND_QTY são capadas na carteira → 300 (~2× a conta) NÃO false-blocka nada; único pedido alto legítimo é BTC_EXCESS/id38 (isActive=0), corretamente caveateado. (2) FARM_SELLING = PASS COM RESSALVAS — a trava arma de fato em prod (migration 20260615200000 aponta os 3 Farm Sell p/ FARM_QTY, assinatura que o place detecta), libera por match de orderId em QUALQUER terminal SELL (BRAIN-independente, fail-closed no place antes do insert), e PARTIALLY_FILLED não está nos termina
+... (truncated 5798 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/wutb22p4p.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>331021</subagent_tokens><tool_uses>130</tool_uses><duration_ms>1096762</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:31:12)*
+
+
+## 🤖 Claude *(18:31:12)*
+
+O review fechou — vou ler o resultado completo (verify phase + cético), a notificação truncou:
+
+## 🤖 Claude *(18:31:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/wutb22p4p.output",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "QA + TL + money-path skeptic review of the 3 unfreeze-blocker diffs, then adversarially verify blocking findings",
+> 3	  "agentCount": 3,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "reviews": [
+> 7	      {
+> 8	        "verdict": "PASS COM RESSALVAS",
+> 9	        "summary": "node check passa; ver findings.",
+> 10	        "findings": [
+> 11	          {
+> 12	            "severity": "MEDIUM",
+> 13	            "issue": "Perma-SKIP do FARM_SELLING se insertOrder lancar apos exchange sell",
+> 14	            "fix": "liberar no catch ou TTL ou loadFarmSellingLocks"
+> 15	          },
+> 16	          {
+> 17	            "severity": "MEDIUM",
+> 18	            "issue": "Trava inerte: setup-farm.js usa LAST_ORDER_QTY nao FARM_QTY",
+> 19	            "fix": "alinhar setup-farm.js ou documentar reaplicar apos reset"
+> 20	          }
+> 21	        ]
+> 22	      },
+> 23	      {
+> 24	        "verdict": "APPROVE COM SUGESTÕES",
+> 25	        "summary": "Revisei os 3 bloqueadores na IMPLEMENTAÇÃO REAL (working tree == /tmp/blockers.diff: 5 arquivos, +137/-33) contra o repo e o HANDOFF. Veredito por mudança:\n\n(1) TETO 300 — APPROVE. `.env` confirma MAX_ORDER_NOTIONAL_USDT=300 e TRADING_HALT=true; `.env` está gitignored (.gitignore:71-72); zero segredo no diff. O chokepoint em exchange.js (assertWithinRisk) já cobre MARKET-por-qty-base via refPrice(MINI_TICKER) — o gap (d) da auditoria foi fechado em e27339a, ANTES deste diff; aqui só entra a DOUTRINA de dimensionamento + caveat. O caveat BTC_EXCESS é HONESTO e bate com a realidade do código: calcQty tem a branch BTC_EXCESS (beholder.js:272) usada pela 'BTC Scalp Excess' id38, que está isActive=0 → teto fixo é seguro hoje, e o comentário avisa corretamente que reativar id38 exige tornar o teto symbol-aware. /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js\n\n(2) FARM_SELLING — APPROVE COM SUGESTÕES. Escopo v1 (skip-código BRAIN-independente por match de orderId, sem condition/migration) é DEFENSÁVEL e bem-justificado: a trava é setada pós-exchange.sell ANTES do insertOrder (fail-closed) e liberada em QUALQUER terminal por match de orderId em updateFarmPosition — não depende do BRAIN vivo, o que é objetivamente SUPERIOR ao HARVEST_SELLING (que perma-trava se a automação sair do BRAIN num stop/start). A assinatura `orderTemplate.quantity === 'FARM_QTY'` é REAL: a migration 20260615200000 (commit c163112) trocou os templates vivos 'Farm Sell LTC/BNB/ADA' MAX_WALLET→FARM_QTY — então o lock casa com o template vivo (o setup-farm.js ainda em LAST_ORDER_QTY é dívida divergente conhecida e foi corretamente DEIXADO intocado; a migration é a fonte de verdade). O gate \"não escalar size do Farm até loadFarmSellingLocks\" está documentado em 3 lugares (indexes.js, beholder.js, app-em.js). updateMemory(...,false)/deleteMemory não disparam automações → sem efeito colateral no hot-path.\n\n(3) TREND_QTY derive-from-orders — APPROVE. getTrendPosition é espelho EXATO de getFarmPosition (mesmo escopo isTestnet, name LIKE 'Trend %', id>lastSell.id, guards Number.isFinite). Idempotente por construção: removeu o accumulator cur+qty e o countedTrendFills volátil → mata o double-count pós-restart de raiz (sólido, é a abordagem certa, mais simples que tabela nova). loadTrendPosition wired em init() (app-em.js:796) APÓS loadFarmPositions; o boot-ordering confere — server.js:43 NÃO awaita appEm.init, mas loadTrendPosition é awaited DENTRO de init antes de getActiveMonitors/userDataStream, e a segurança real vem da edge-detection do regimeJob (restart escreve 'none', não 'death'). Coerente com o padrão FARM/HARVEST.\n\nConvenções (pt-BR, naming, layering routers→controllers→repositories→models, comentários-doutrina densos) seguidas à risca. Tudo INERTE sob TRADING_HALT=true até o flip do dono. Nada BLOCKER; nenhum must-fix de código. As ressalvas abaixo são nice-to-have / dívida explícita já documentada.",
+> 26	        "findings": [
+> 27	          {
+> 28	            "severity": "MEDIUM",
+> 29	            "file": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+> 30	            "issue": "FARM_SELLING v1 SEM reconstrução-no-boot é uma escolha consciente e documentada, MAS o gate 'não escalar o size do Farm até loadFarmSellingLocks' é só um comentário — não há trava mecânica. Um restart com uma venda do Farm em voo perde a trava (volátil) e a venda pode re-disparar no próximo tick acima do alvo (calcQty capa na carteira, não no bucket → risco de oversell que vazaria a posição co-localizada do Trend nos mesmos alts). Hoje é inócuo (HALT + size pequeno), mas o risco materializa exatamente quando o size subir.",
+> 31	            "fix": "Pré-req de escalar o Farm: implementar loadFarmSellingLocks (espelho do reconcile-on-boot do HARVEST_SELLING em loadHarvestPositions — reconciliar contra a corretora as vendas do Farm que viraram terminais OFFLINE e rearmar a trava só p/ vendas DE FATO abertas). Aceitável manter como follow-up; só NÃO subir FARM_SIZE_MULT antes disso."
+> 32	          },
+> 33	          {
+> 34	            "severity": "LOW",
+> 35	            "file": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+> 36	            "issue": "getTrendPosition é cópia byte-a-byte de getFarmPosition (62 linhas duplicadas: mesma query de lastSell, mesmo whereClause, mesmo loop de média ponderada — só muda 'Farm %' p/ 'Trend %'). Manutenção: um fix de correção (ex.: tratar PARTIALLY_FILLED, ou paginação de buys) precisaria ser aplicado em 2 lugares e tende a divergir.",
+> 37	            "fix": "Nice-to-have: extrair getPositionByAutomationPrefix(symbol, prefix) e ter getFarmPosition/getTrendPosition como wrappers de 1 linha. Não bloqueia — a duplicação é literal e o espelho é intencional/auditável agora."
+> 38	          },
+> 39	          {
+> 40	            "severity": "LOW",
+> 41	            "file": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+> 42	            "issue": "trendSymbols e farmSymbols são arrays hardcoded repetidos em 3 funções (updateTrendPosition, loadTrendPosition; e farmSymbols em updateFarmPosition, loadFarmPositions). BTCUSDT entra em trendSymbols mas não em farmSymbols. Se um novo símbolo de trend/farm for adicionado via script sem editar essas listas, o tracking de posição silenciosamente não atualiza para ele — divergência banco-vs-MEMORY difícil de notar.",
+> 43	            "fix": "Nice-to-have: derivar as listas de getActiveMonitors/automações por prefixo de nome (mesma fonte que getTrendPosition já consulta), OU centralizar num const único. Baixo risco hoje (conjunto estável e pequeno)."
+> 44	          },
+> 45	          {
+> 46	            "severity": "LOW",
+> 47	            "file": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+> 48	            "issue": "Inconsistência cosmética de categoria de log: updateTrendPosition/loadTrendPosition logam em 'system' enquanto o caminho antigo logava em 'A:'+automationId (e o Harvester loga em 'A:'+id). Por MEMORY.md (logger-per-category), debug de automação de trend não aparecerá mais em A<id>.log. Funcional, só piora a observabilidade do módulo de trend.",
+> 49	            "fix": "Nice-to-have: como o recompute não tem mais automationId no escopo (derivado do banco), manter 'system' é aceitável; opcionalmente incluir o símbolo já basta p/ grep. Não acionável agora."
+> 50	          },
+> 51	          {
+> 52	            "severity": "INFO",
+> 53	            "file": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+> 54	            "issue": "getTrendPosition/getFarmPosition contam só status FILLED; uma venda do Trend/Farm que ficou PARTIALLY_FILLED e foi cancelada não rebaseia a janela (o lastSell exige FILLED). Para o Trend (death cross = MARKET/LIMIT marketável, fill ~total) e para o tamanho atual é desprezível, e o caminho HARVEST tem reconcile partial→cancel próprio. Apenas registrando como assimetria conhecida vs o Harvester, não um defeito no escopo v1.",
+> 55	            "fix": "Nenhuma ação. Se o size escalar e vendas parciais virarem comuns, considerar reconciliação partial análoga à do Harvester. Documentar no HANDOFF como dívida espelhada do FARM_SELLING."
+> 56	          }
+> 57	        ]
+> 58	      },
+> 59	      {
+> 60	        "verdict": "PASS COM RESSALVAS",
+> ```
+
+## 🤖 Claude *(18:31:17)*
+
+
+## 🤖 Claude *(18:31:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/wutb22p4p.output",
+  "offset": 60,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	        "verdict": "PASS COM RESSALVAS",
+> 61	        "summary": "Revisei os 3 bloqueadores na IMPLEMENTAÇÃO REAL (não só no diff), com lente de money-path cético. Veredito por bloqueador: (1) TETO 300 = PASS — chokepoint único em exchange.js cobre MARKET-por-quote, LIMIT/OCO e MARKET-por-qty (deriva preço do MINI_TICKER); o conjunto ATIVO (id6/7 Trend + Farm/Trend alts) negocia $5-15/ordem e as vendas FARM_QTY/TREND_QTY são capadas na carteira → 300 (~2× a conta) NÃO false-blocka nada; único pedido alto legítimo é BTC_EXCESS/id38 (isActive=0), corretamente caveateado. (2) FARM_SELLING = PASS COM RESSALVAS — a trava arma de fato em prod (migration 20260615200000 aponta os 3 Farm Sell p/ FARM_QTY, assinatura que o place detecta), libera por match de orderId em QUALQUER terminal SELL (BRAIN-independente, fail-closed no place antes do insert), e PARTIALLY_FILLED não está nos terminais → sem release prematuro. Release casa result.orderId↔executionData.i (mesmo orderId Binance). Riscos residuais reais mas BOUNDED e já cercados pelo gate 'não escalar size do Farm'. (3) TREND_QTY derive-from-orders = PASS — espelho EXATO de getFarmPosition, escopado por name LIKE 'Trend %' (sem colisão com 'Farm %' nem outras automações; enumerei os nomes), isTestnet consistente com o insert, idempotente (recompute mata o double-count pós-restart), boot-ordering sólido (regimeJob na 1ª passada escreve 'none' não 'death' pois ABOVE vem do estado persistido; USER_DATA só sobe após loadTrendPosition dentro do init). NENHUM caminho de vazamento do COFRE DE BTC e nenhum oversell ALÉM da carteira (calcQty sempre capa em asset). Os achados são co-mingling alt-wallet bounded e stuck-lock por stream-gap — todos sob o gate de size pequeno.",
+> 62	        "findings": [
+> 63	          {
+> 64	            "severity": "MEDIUM",
+> 65	            "issue": "Farm SELL NÃO tem reconciliação partial→cancel (o Harvester TEM). Se uma venda do Farm preenche PARCIALMENTE e depois CANCELA/EXPIRA (terminal não-FILLED), updateFarmPosition libera a trava (status terminal) mas NÃO recomputa o FARM_DCA — e getFarmPosition só soma BUYs FILLED, então a parcela já vendida nunca é subtraída do bucket. Resultado: FARM_DCA fica SUPERESTIMADO vs a carteira (que encolheu). No próximo tick, a venda re-dispara com FARM_QTY = bucket inflado; calcQty capa na CARTEIRA (não no bucket), então vende mais do que o Farm ainda detém naquele alt, dipando na posição co-localizada do Trend no MESMO alt. Bounded: nunca além da carteira, nunca o cofre de BTC; só remistura Farm/Trend em LTC/BNB/ADA. É exatamente o vetor que o updateHarvestPosition mata com a subtração do z cumulativo — o Farm não tem o equivalente.",
+> 66	            "file": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js (updateFarmPosition, linhas 278-304)",
+> 67	            "fix": "Antes de escalar o size do Farm, portar a reconciliação partial→cancel do updateHarvestPosition para o Farm (subtrair executionData.z do FARM_DCA em SELL terminal não-FILLED, com dedup por recon:<orderId>), OU manter o gate atual de size pequeno e documentar que a remistura alt-wallet é aceita em v1."
+> 68	          },
+> 69	          {
+> 70	            "severity": "MEDIUM",
+> 71	            "issue": "Stuck-lock por gap no userData stream (sem replay). A FARM_SELLING só é liberada por um executionReport terminal da venda chegando ao processExecutionData. Se o stream perder o report terminal (reconexão), a trava nunca solta e TODA venda no-loss do Farm naquele alt fica skipada (capital travado em posição lucrativa) até o próximo restart — e a v1 NÃO reconstrói a trava no boot. O HANDOFF já reconhece isso como gate ('não escalar o size do Farm até loadFarmSellingLocks'), mas com a trava INERTE antes (LAST_ORDER_QTY) este caminho não existia; agora existe.",
+> 72	            "file": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js (updateFarmPosition) + beholder.js placeOrder (linha 533)",
+> 73	            "fix": "Implementar loadFarmSellingLocks no boot (espelho do reconcile do HARVEST_SELLING em loadHarvestPositions: reconstruir a trava só p/ vendas Farm DE FATO abertas na corretora; soltar as que já viraram terminais com o backend OFF) ANTES de subir o size. Até lá, manter o size pequeno e monitorar logs/system.log por 'já em voo (FARM_SELLING)' repetido sem fill."
+> 74	          },
+> 75	          {
+> 76	            "severity": "LOW",
+> 77	            "issue": "Co-mingling Trend/Farm inerente: TREND_QTY e FARM_QTY são buckets lógicos sobre a MESMA carteira do alt (LTC/BNB/ADA). O calcQty capa a venda em MEMORY['<base>:WALLET'] (Farm+Trend somados). Se um bucket exceder o real (ex.: cenário partial-cancel acima, ou TREND_QTY recomputado correto mas wallet menor por fee/poeira), a venda pode tocar a parcela do outro bucket. Sempre BOUNDED na carteira (nunca além do que se tem, nunca o cofre BTC). É limitação arquitetural conhecida, não regressão deste diff.",
+> 78	            "file": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js (calcQty FARM_QTY/TREND_QTY, linhas 237-271)",
+> 79	            "fix": "Nenhuma ação obrigatória em v1. Para separar de verdade exigiria contabilidade por-bucket no cap (vender min(bucket, wallet−outroBucket)) — refino futuro, não bloqueante no size atual."
+> 80	          },
+> 81	          {
+> 82	            "severity": "LOW",
+> 83	            "issue": "Re-fire at-least-once de golden no boot (documentado no regimeJob): crash entre updateMemory(TREND_CROSS,'golden',execute=true) e o upsert do regimeStates pode re-disparar 1 Trend BUY no boot. NÃO causa oversell (getTrendPosition soma ambas as BUYs reais; a wallet também cresceu; o death vende a soma capada na carteira) — só dobra o size de entrada do trend uma vez. Consistente com a doutrina 'entrar 2x é menos pior que não entrar'.",
+> 84	            "file": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js (linhas 149-153)",
+> 85	            "fix": "Aceitável no size de validação. Se escalar, persistir o estado de cross ANTES do updateMemory disparador (at-most-once) ou idempotência por janela de cross."
+> 86	          },
+> 87	          {
+> 88	            "severity": "INFO",
+> 89	            "issue": "Validação positiva: (a) a derivação 'Trend %' NÃO captura ordens do Farm (prefixos distintos; enumerei todos os nomes de automação — só Trend Buy/Sell casam 'Trend %', só Farm Buy/Sell casam 'Farm %'); (b) o recompute do TREND_QTY NÃO dá qty maior que a real (soma de BUYs FILLED desde a última SELL FILLED, idêntico ao getFarmPosition já em prod; death zera corretamente porque a SELL é gravada FILLED na linha 503 ANTES do getTrendPosition rodar); (c) release por orderId casa (result.orderId == executionData.i, mesmo orderId Binance); (d) trava NÃO trava venda legítima por estado terminal errado (PARTIALLY_FILLED fora dos terminais → não solta cedo; FILLED/CANCELED/REJECTED/EXPIRED soltam); (e) boot: loadTrendPosition é await DENTRO do init e o USER_DATA monitor sobe depois, então nenhum death roda contra TREND_QTY não-carregado.",
+> 90	            "file": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js + app-em.js + regimeJob.js",
+> 91	            "fix": "Sem ação."
+> 92	          }
+> 93	        ]
+> 94	      }
+> 95	    ],
+> 96	    "blockersFound": 0,
+> 97	    "verified": []
+> 98	  }
+> 99	}
+> ```
+
+## 🤖 Claude *(18:32:06)*
+
+
+## 🤖 Claude *(18:32:12)*
+
+Review **limpo — zero BLOCKER, zero must-fix**. Os três aprovados:
+- **QA: PASS c/ ressalvas** · **TL: APPROVE c/ sugestões** · **Cético money-path: PASS c/ ressalvas** — e o cético validou positivamente o que mais importa: *nenhum caminho de vazamento do cofre de BTC, nenhum oversell além da carteira*, a derivação `'Trend %'` não pega ordens do Farm, e o release por orderId casa.
+
+Os achados MEDIUM/LOW convergem num tema só e **já documentado/gated**: o FARM_SELLING v1 não tem reconstrução-no-boot nem reconciliação partial→cancel (essa última é pré-existente do `getFarmPosition`, não regressão) — ambos **bounded** (só remistura alt-wallet, nunca o cofre) e cercados pelo gate "não escalar o size do Farm". Consistente com o v1 pragmático que tu escolheste. Nada a corrigir agora.
+
+Como combinamos ("se vier limpo, commito+pusho e rebuild"), sigo. Commit+push dos 3:
+
+## 🤖 Claude *(18:32:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -e\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-)\nSLUG=$(git -c safe.directory=\"*\" remote get-url origin | sed -E \"s#(git@github.com:|https://github.com/)##; s#\\.git\\$##\")\ngit -c safe.directory=\"*\" add backend/src/utils/exchange.js backend/src/utils/indexes.js backend/src/beholder.js backend/src/app-em.js backend/src/repositories/ordersRepository.js\ngit -c safe.directory=\"*\" -c user.email=\"gabrielcall@gmail.com\" -c user.name=\"gcrux-tradeux\" commit -F - <<\"MSG\"\nfeat(safety): 3 pre-reqs de descongelamento \u2014 FARM_SELLING, TREND_QTY persist, teto\n\nBloqueadores ALTA pro flip do TRADING_HALT (QA PASS + TL APPROVE + cetico money-path PASS;\ndesign+review via workflow adversarial em 2 fases). Tudo INERTE sob HALT.\n\n(1) Teto: MAX_ORDER_NOTIONAL_USDT 1500->300 no .env (~2x a conta ~$148; gitignored, aplicado\nno restart) + doutrina de dimensionamento no exchange.js. Caveat: tornar symbol-aware se\nreativar 'BTC Scalp Excess' id38 (hoje isActive=0 -> teto fixo seguro).\n\n(2) FARM_SELLING (anti-empilhamento da venda no-loss do Farm, v1): SKIP no place se ja em voo\n+ SET pos-exchange.sell {orderId} + RELEASE por match de orderId em qualquer estado terminal\n(app-em.updateFarmPosition) \u2014 BRAIN-independente (mata a perma-trava do stop/start; superior ao\nHARVEST_SELLING). Sem migration/condition/reload. Reconstrucao-no-boot DEFERIDA com gate\ndocumentado \"nao escalar size do Farm ate loadFarmSellingLocks\".\n\n(3) TREND_QTY persistencia via DERIVE-FROM-ORDERS (espelho de getFarmPosition): getTrendPosition\n(name LIKE 'Trend %') + updateTrendPosition recomputa (removido accumulator + countedTrendFills\nvolatil -> idempotente, mata o double-count pos-restart) + loadTrendPosition no boot. Sem\nmigration (a tabela orders ja e a persistencia). A posicao do golden nao orfana num restart.\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>\nMSG\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/${SLUG}.git\" HEAD:master 2>&1 | grep -viE \"x-access-token|vulnerabilit|dependabot|To find out|remote: *$\" || true\ngit -c safe.directory=\"*\" log --oneline -3\n'",
+  "description": "Commit e push dos 3 bloqueadores"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> grep: .env: Permission denied
+> Scalp: line 15: warning: here-document at line 7 delimited by end-of-file (wanted `MSG')
+> [master 06d0b5a] feat(safety): 3 pre-reqs de descongelamento — FARM_SELLING, TREND_QTY persist, teto
+>  5 files changed, 137 insertions(+), 33 deletions(-)
+> ```
+
+## 🤖 Claude *(18:33:14)*
+
+
+## 🤖 Claude *(18:33:17)*
+
+Dois problemas no comando: (1) o `.env` deu "Permission denied" pra gcrux-tradeux — provavelmente meu Edit no `.env` mudou o dono pro usuário do harness; e (2) a mensagem do commit tinha aspas simples (`'Trend %'`) que quebraram o `bash -lc '...'`. O commit local saiu (06d0b5a) mas o **push não** (token vazio). Deixa eu diagnosticar e corrigir:
+
+## 🤖 Claude *(18:33:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; echo \"=== dono/perm do .env ===\"; ls -l .env; echo \"=== quem sou eu / gcrux ===\"; id -un; echo \"=== commit local vs origin ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; git -c safe.directory=\"*\" log --oneline -1; echo \"origin/master:\"; git -c safe.directory=\"*\" log --oneline -1 origin/master 2>/dev/null'; echo \"=== msg do commit 06d0b5a (1as linhas) ===\"; sudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" -C /home/gcrux-tradeux/tradeux log -1 --format=\"%s%n%b\" 06d0b5a' 2>/dev/null | head -8",
+  "description": "Checar dono do .env, estado do commit e se push ocorreu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dono/perm do .env ===
+> -rw-rw---- 1 ubuntu ubuntu 2917 Jun 17 15:08 .env
+> === quem sou eu / gcrux ===
+> ubuntu
+> === commit local vs origin ===
+> 06d0b5a feat(safety): 3 pre-reqs de descongelamento — FARM_SELLING, TREND_QTY persist, teto
+> origin/master:
+> 0b1554d docs(agent): doutrina GATE != TRIGGER no SYSTEM_PROMPT (fecha a classe gate-aberto-mas-condicao)
+> === msg do commit 06d0b5a (1as linhas) ===
+> feat(safety): 3 pre-reqs de descongelamento — FARM_SELLING, TREND_QTY persist, teto
+> Bloqueadores ALTA pro flip do TRADING_HALT (QA PASS + TL APPROVE + cetico money-path PASS;
+> design+review via workflow adversarial em 2 fases). Tudo INERTE sob HALT.
+> 
+> (1) Teto: MAX_ORDER_NOTIONAL_USDT 1500->300 no .env (~2x a conta ~$148; gitignored, aplicado
+> no restart) + doutrina de dimensionamento no exchange.js. Caveat: tornar symbol-aware se
+> reativar BTC
+> ```
+
+## 🤖 Claude *(18:34:17)*
+
+
+## 🤖 Claude *(18:34:20)*
+
+Diagnóstico claro: meu Edit no `.env` mudou o dono pra **`ubuntu:ubuntu` (660)** → gcrux-tradeux não lê mais (e o `docker compose` como gcrux falharia ao ler `env_file`). E o **push não saiu** (token vazio). Vou: (1) consertar o dono do `.env`, (2) reescrever a msg do commit via arquivo (sem o problema das aspas), (3) pushar.
+
+Primeiro escrevo a mensagem limpa num arquivo e conserto o `.env`:
+
+## 🤖 Claude *(18:34:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/cmsg.txt",
+  "content": "feat(safety): 3 pre-reqs de descongelamento \u2014 FARM_SELLING, TREND_QTY persist, teto\n\nBloqueadores ALTA pro flip do TRADING_HALT (QA PASS + TL APPROVE + cetico money-path\nPASS; design+review via workflow adversarial em 2 fases). Tudo INERTE sob HALT.\n\n(1) Teto: MAX_ORDER_NOTIONAL_USDT 1500->300 no .env (~2x a conta ~148 USDT; gitignored,\naplicado no restart) + doutrina de dimensionamento no exchange.js. Caveat: tornar\nsymbol-aware se reativar a BTC Scalp Excess id38 (hoje isActive=0 -> teto fixo seguro).\n\n(2) FARM_SELLING (anti-empilhamento da venda no-loss do Farm, v1): SKIP no place se ja em\nvoo + SET pos-exchange.sell {orderId} + RELEASE por match de orderId em qualquer estado\nterminal (app-em.updateFarmPosition) \u2014 BRAIN-independente (mata a perma-trava do\nstop/start; superior ao HARVEST_SELLING). Sem migration/condition/reload. Reconstrucao-no-\nboot DEFERIDA com gate documentado: nao escalar size do Farm ate loadFarmSellingLocks.\n\n(3) TREND_QTY persistencia via DERIVE-FROM-ORDERS (espelho de getFarmPosition):\ngetTrendPosition (name LIKE Trend) + updateTrendPosition recomputa (removido accumulator +\ncountedTrendFills volatil -> idempotente, mata o double-count pos-restart) +\nloadTrendPosition no boot. Sem migration (a tabela orders ja e a persistencia). A posicao\ndo golden nao orfana num restart.\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/cmsg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:34:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null\necho \"=== chown .env de volta p/ gcrux-tradeux ===\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux .env && sudo -n chmod 600 .env && ls -l .env\necho \"=== gcrux l\u00ea o .env? (teto + token presentes) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -E \"^MAX_ORDER_NOTIONAL_USDT=\" /home/gcrux-tradeux/tradeux/.env && (grep -q \"^GITHUB_TOKEN_API=\" /home/gcrux-tradeux/tradeux/.env && echo \"GITHUB_TOKEN_API: presente\")'",
+  "description": "Corrigir dono do .env e confirmar leitura por gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === chown .env de volta p/ gcrux-tradeux ===
+> -rw------- 1 gcrux-tradeux gcrux-tradeux 2917 Jun 17 15:08 .env
+> === gcrux lê o .env? (teto + token presentes) ===
+> MAX_ORDER_NOTIONAL_USDT=300
+> GITHUB_TOKEN_API: presente
+> ```
+
+## 🤖 Claude *(18:34:41)*
+
+
+## 🤖 Claude *(18:34:43)*
+
+`.env` corrigido (`gcrux-tradeux:gcrux-tradeux 600`, legível, teto=300, token presente). Agora reescrevo a msg do commit via arquivo e pusho:
+
+## 🤖 Claude *(18:34:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -e\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2-)\nSLUG=$(git -c safe.directory=\"*\" remote get-url origin | sed -E \"s#(git@github.com:|https://github.com/)##; s#\\.git\\$##\")\ngit -c safe.directory=\"*\" -c user.email=\"gabrielcall@gmail.com\" -c user.name=\"gcrux-tradeux\" commit --amend -F /tmp/cmsg.txt\necho \"--- push ---\"\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/${SLUG}.git\" HEAD:master 2>&1 | grep -viE \"x-access-token|vulnerabilit|dependabot|To find out|security/dependabot|remote: *$\" || true\necho \"--- log ---\"\ngit -c safe.directory=\"*\" log --oneline -4\n'",
+  "description": "Amend da msg e push dos bloqueadores"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master baf0f4b] feat(safety): 3 pre-reqs de descongelamento — FARM_SELLING, TREND_QTY persist, teto
+>  Date: Wed Jun 17 15:32:22 2026 -0300
+>  5 files changed, 137 insertions(+), 33 deletions(-)
+> --- push ---
+> To https://github.com/gabrielZarattini/tradeux.git
+>    7ec6e75..baf0f4b  HEAD -> master
+> --- log ---
+> baf0f4b feat(safety): 3 pre-reqs de descongelamento — FARM_SELLING, TREND_QTY persist, teto
+> 7ec6e75 fix(cockpit): baseline=null p/ simbolos nao-flow-gated (mata gate-fantasma da alt)
+> e27339a fix(exchange): teto MAX_ORDER_NOTIONAL cobre MARKET-por-qty (deriva preco do MINI_TICKER)
+> 0b1554d docs(agent): doutrina GATE != TRIGGER no SYSTEM_PROMPT (fecha a classe gate-aberto-mas-condicao)
+> ```
+
+## 🤖 Claude *(18:35:12)*
+
+
+## 🤖 Claude *(18:35:14)*
+
+Push **OK**: `7ec6e75..baf0f4b HEAD → master` com a mensagem limpa. Toda a cadeia no origin.
+
+Antes de rebuildar: meu Edit provavelmente envenenou o dono dos **arquivos de código** também (como fez no `.env`). Code files são 644 (git/docker ainda leem), mas vou limpar pra evitar dor futura — checo e conserto o dono dos arquivos que editei:
+
+## 🤖 Claude *(18:35:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null\necho \"=== arquivos ubuntu-owned no repo (que eu editei) ===\"\nfind backend/src tradeux-mcp/src -user ubuntu -type f 2>/dev/null\necho \"=== chown de volta p/ gcrux-tradeux ===\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/utils/exchange.js backend/src/utils/indexes.js backend/src/beholder.js backend/src/app-em.js backend/src/repositories/ordersRepository.js backend/src/cockpitJob.js tradeux-mcp/src/index.js 2>&1 && echo \"chown OK\"\necho \"=== confirma: nenhum ubuntu-owned restante em backend/src tradeux-mcp/src ===\"\nfind backend/src tradeux-mcp/src -user ubuntu -type f 2>/dev/null | head; echo \"(vazio acima = limpo)\"",
+  "description": "Corrigir ownership dos arquivos de c\u00f3digo editados"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos ubuntu-owned no repo (que eu editei) ===
+> backend/src/app-em.js
+> backend/src/cockpitJob.js
+> backend/src/beholder.js
+> tradeux-mcp/src/index.js
+> backend/src/utils/exchange.js
+> backend/src/utils/indexes.js
+> backend/src/repositories/ordersRepository.js
+> === chown de volta p/ gcrux-tradeux ===
+> chown OK
+> === confirma: nenhum ubuntu-owned restante em backend/src tradeux-mcp/src ===
+> (vazio acima = limpo)
+> ```
+
+## 🤖 Claude *(18:35:28)*
+
+
+## 🤖 Claude *(18:35:30)*
+
+Todos os 7 arquivos estavam ubuntu-owned (envenenados pelos meus Edits) — chowned de volta pra gcrux-tradeux. Limpo.
+
+Agora **um rebuild** deployando tudo: os 3 bloqueadores + teto (no `.env`, pego no restart) no **backend**, e a nota do MCP no **agente**. Sob HALT, seguro. Disparo:
+
+## 🤖 Claude *(18:35:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; sudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend agent 2>&1 | tail -20'",
+  "description": "Rebuild backend + agent (deploy dos bloqueadores + teto + nota MCP)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b4meqbqyw. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/b4meqbqyw.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(18:35:45)*
+
+
+## 🤖 Claude *(18:35:47)*
+
+Rebuild em background. Enquanto builda, atualizo a memória — incluindo um **gotcha operacional novo e importante**: editar arquivos do repo (esp. `.env`) via as ferramentas do harness envenena o **dono do arquivo** (vira `ubuntu`), não só o `.git`. Leio a memória do gotcha pra estendê-la:
+
+## 🤖 Claude *(18:35:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/git-ownership-gotcha.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 13 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: git-ownership-gotcha
+> 3	description: On the TradeUX box run ALL git/docker repo ops as gcrux-tradeux — git-as-ubuntu poisons .git ownership and blocks commits
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: a9beda03-6192-4989-aed8-b75558abf414
+> 8	---
+> 9	
+> 10	The repo `/home/gcrux-tradeux/tradeux` is owned by `gcrux-tradeux`, but the interactive shell runs as `ubuntu`.
+> 11	
+> 12	Running git as `ubuntu` — even read-only `git -C ... -c safe.directory='*' log/branch/fetch` — creates `ubuntu`-owned files inside `.git` (e.g. `.git/config`, `.git/refs/remotes/origin/...`). After that, `gcrux-tradeux` can no longer write `.git/objects`, so the next commit fails with:
+> 13	`error: insufficient permission for adding an object to repository database .git/objects`.
+> 14	
+> 15	**Not just `git`:** `npm install` run as `ubuntu` inside the repo ALSO poisons `.git` (npm shells out to `git` to read `gitHead` for the lockfile). Confirmed 2026-06-03 during the node-binance-api bump — after `npm install`/`npm install --lockfile-version=3` as ubuntu, `.git` flipped to `ubuntu:ubuntu` and `git -C ... diff` started reporting `fatal: detected dubious ownership` / `Not a git repository`. Same fix (chown `.git` back). Since node/npm live under ubuntu's nvm and `gcrux-tradeux` can't exec them, the practical pattern is: run `npm install` as ubuntu, then `sudo -n chown -R gcrux-tradeux:gcrux-tradeux .../.git` and `chown` the regenerated `package-lock.json` before committing as gcrux.
+> 16	
+> 17	**Fix:** `sudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git` (only `ubuntu` has passwordless sudo; `gcrux-tradeux` does NOT — so chown must run from the ubuntu shell, not inside a `sudo -u gcrux-tradeux` script).
+> 18	
+> 19	**Rule:** do ALL git (commit/push/fetch) and any docker run that writes into the repo as `sudo -n -u gcrux-tradeux`. For containers that write outputs into the repo, pass `--user "$(id -u):$(id -g)"` (run as gcrux uid) so outputs are gcrux-owned and no chown is needed. Push over HTTPS with the token from `.env` (`GITHUB_TOKEN_API`) inline in the URL — never persist it in `.git/config`.
+> 20	
+> 21	See [[tradeux-orchestration-model]] and [[github-ssh-key-on-ubuntu]].
+> 22	
+> ```
+
+## 🤖 Claude *(18:35:57)*
+
+
+## 🤖 Claude *(18:35:58)*
+
+Rebuild fechou (exit 0). Atualizo a memória do gotcha com a lição nova do `.env`, depois verifico o deploy:
+
+## 🤖 Claude *(18:36:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/git-ownership-gotcha.md",
+  "old_string": "**Fix:** `sudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git` (only `ubuntu` has passwordless sudo; `gcrux-tradeux` does NOT \u2014 so chown must run from the ubuntu shell, not inside a `sudo -u gcrux-tradeux` script).",
+  "new_string": "**N\u00e3o s\u00f3 `.git` \u2014 as ferramentas Edit/Write do harness ENVENENAM o dono do ARQUIVO editado (2026-06-17).** Edit/Write rodam como `ubuntu` e fazem atomic-write (novo inode) \u2192 o arquivo vira `ubuntu:ubuntu`. C\u00f3digo (644) ainda \u00e9 lido por git/docker (world-readable), mas o **`.env` (600/660) vira ILEG\u00cdVEL pra gcrux-tradeux** \u2192 `grep ... .env` (token!) d\u00e1 \"Permission denied\" E o **`docker compose up` (como gcrux) falha ao ler `env_file: .env`**. Sintoma desta sess\u00e3o: editei `.env` (teto) via Edit \u2192 push falhou (TOKEN vazio) + rebuild teria quebrado. **Regra:** depois de Edit/Write em arquivos do repo, ANTES de qualquer git/docker como gcrux, rodar `sudo -n chown gcrux-tradeux:gcrux-tradeux <arquivos editados>` (e `chmod 600 .env`). Detectar com `find backend/src tradeux-mcp/src -user ubuntu -type f`.\n\n**Fix (.git):** `sudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git` (only `ubuntu` has passwordless sudo; `gcrux-tradeux` does NOT \u2014 so chown must run from the ubuntu shell, not inside a `sudo -u gcrux-tradeux` script)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/git-ownership-gotcha.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:36:21)*
+
+
+## 🤖 Claude *(18:36:22)*
+
+Memória atualizada. Agora verifico o deploy — backend/agente subiram limpos, HALT intacto, teto no `.env`, cockpit ainda coerente:
+
+## 🤖 Claude *(18:36:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null\necho \"=== build (tail) ===\"; tail -4 /tmp/claude-1001/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/tasks/b4meqbqyw.output 2>/dev/null\necho \"=== containers ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose ps backend agent --format \"table {{.Name}}\\t{{.Status}}\"'\necho \"=== backend boot: erros/loads (\u00faltimas linhas) ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose logs backend --since 3m 2>&1 | grep -iE \"error|throw|unhandled|carregado no boot|FARM_DCA|TREND_QTY|App is running|Beholder|fail\" | tail -15'",
+  "description": "Confirmar build, containers up e boot limpo do backend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build (tail) ===
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+> === containers ===
+> NAME                STATUS
+> tradeux-agent-1     Up 48 seconds
+> tradeux-backend-1   Up 48 seconds
+> === backend boot: erros/loads (últimas linhas) ===
+> ```
+
+## 🤖 Claude *(18:36:39)*
+
+
+## 🤖 Claude *(18:36:41)*
+
+Build OK, ambos Up 48s. (Logs do backend vão pra arquivos de categoria em produção, não stdout — por isso o grep veio vazio; o container saudável é o sinal.) Confirmo funcionalmente — login + cockpit (baseline ainda null nas alts) + env (HALT):
+
+## 🤖 Claude *(18:36:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; sudo -n -u gcrux-tradeux bash -lc 'EMAIL=$(grep \"^TRADEUX_EMAIL=\" tradeux-mcp/.env | cut -d= -f2-); PW=$(grep \"^TRADEUX_PASSWORD=\" tradeux-mcp/.env | cut -d= -f2-); docker compose cp /tmp/verify_cockpit.js backend:/tmp/verify_cockpit.js >/dev/null 2>&1 && docker compose exec -T -e LE=\"$EMAIL\" -e LP=\"$PW\" backend node /tmp/verify_cockpit.js'",
+  "description": "Verificar backend p\u00f3s-rebuild: login, baseline=null, HALT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login OK
+> 
+> BTCUSDT: regime=range flowGated=true | baseline=true farm=true buyAllowed=true
+>         reason: regime=range (mean-reversion: range/mixed) + fluxo ok: baseline BTC liberada
+> BNBUSDT: regime=range flowGated=false | baseline=null farm=true buyAllowed=true
+>         reason: regime=range (mean-reversion: range/mixed) + RSI: FARM liberado, SEM filtro de fluxo
+> LTCUSDT: regime=range flowGated=false | baseline=null farm=true buyAllowed=true
+>         reason: regime=range (mean-reversion: range/mixed) + RSI: FARM liberado, SEM filtro de fluxo
+> ADAUSDT: regime=trend flowGated=false | baseline=null farm=false buyAllowed=false
+>         reason: regime=trend: farm em CAIXA (correto); trend compra no golden cross
+> 
+> env: {"useTestnet":false,"tradingHalt":true}
+> ```
+
+## 🤖 Claude *(18:37:16)*
+
+
+## 🤖 Claude *(18:37:18)*
+
+Deploy **verificado e limpo**: login OK, **baseline=null** persiste nas alts (BTC mantém o real), `buyAllowed` inalterado, **`tradingHalt=true` intacto**, mainnet. Os 3 bloqueadores estão **live** (inertes sob HALT). Atualizo a memória do go-live:
+
+## 🤖 Claude *(18:37:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**FOLLOW-UP rastreado (antes de descongelar/escalar): trava `FARM_SELLING` anti-empilhamento (an\u00e1loga a HARVEST_SELLING).**",
+  "new_string": "**FOLLOW-UP `FARM_SELLING` \u2705 FEITO v1 (2026-06-17, commit `baf0f4b`, QA PASS+TL APPROVE+c\u00e9tico money-path PASS):** trava anti-empilhamento via SKIP no place + SET por orderId + RELEASE por **match de orderId** em qualquer terminal (app-em.updateFarmPosition) \u2014 **BRAIN-independente** (superior ao HARVEST_SELLING, que perma-trava no stop/start). Sem migration/condition/reload (skip de c\u00f3digo, n\u00e3o via condition). **Reconstru\u00e7\u00e3o-no-boot (loadFarmSellingLocks) + reconcilia\u00e7\u00e3o partial\u2192cancel do Farm DEFERIDAS** \u2014 gate documentado: N\u00c3O escalar `FARM_SIZE_MULT` at\u00e9 implement\u00e1-las (risco bounded: s\u00f3 remistura alt-wallet LTC/BNB/ADA, NUNCA o cofre de BTC, nunca oversell al\u00e9m da carteira)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:37:40)*
+
+
+## 🤖 Claude *(18:37:41)*
+
+Atualizo o índice (hook do go-live com os 3 bloqueadores) e o da Trend:
+
+## 🤖 Claude *(18:37:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "**Descongelamento EM CURSO (2026-06-17): (a) saque-OFF+IP da chave FEITO+verificado ($148,84 lido, IP 137.131.243.179); (b) harvester id22-25 DESATIVADO; (d) furo SELL-by-base do riskGuard FECHADO (`e27339a`); pendentes (c) P&L-BNB e (e) cap di\u00e1rio, depois GO do dono p/ flip.**",
+  "new_string": "**Descongelamento EM CURSO (2026-06-17): (a) saque-OFF+IP FEITO+verificado; (b) harvester id22-25 OFF; (d) furo SELL-by-base do riskGuard FECHADO (`e27339a`); BLOQUEADORES `baf0f4b` (QA+TL+c\u00e9tico, deployado): teto MAX_ORDER_NOTIONAL 1500\u2192300, trava FARM_SELLING v1 (BRAIN-independente; gate: n\u00e3o escalar size do Farm), TREND_QTY persistido via derive-from-orders. PENDENTES p/ flip: (e) cap di\u00e1rio \u22125% (+refactor do guard p/ kill-switch quente), (c) P&L-BNB (latente, acopla c/ BNB-fee), depois GO do dono.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:37:51)*
+
+
+## 🤖 Claude *(18:37:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "id6/id7 ATIVAS (453c7d6) + coordena\u00e7\u00e3o id2/id3 !=trend + id7 vende TREND_QTY (e5ef595)",
+  "new_string": "id6/id7 ATIVAS (453c7d6) + coordena\u00e7\u00e3o id2/id3 !=trend + id7 vende TREND_QTY (e5ef595); **TREND_QTY agora PERSISTIDO via derive-from-orders (`baf0f4b`, 2026-06-17: getTrendPosition espelha getFarmPosition, recompute idempotente, loadTrendPosition no boot) \u2192 posi\u00e7\u00e3o do golden n\u00e3o orfana num restart; sem tabela/migration**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:38:05)*
+
+
+## 🤖 Claude *(18:38:21)*
+
+## 1+2+3 entregues, deployados e verificados ✅
+
+Commit **`baf0f4b`** no master (QA PASS + TL APPROVE + cético money-path PASS, via 2 workflows adversariais: design→verify e review→verify). Tudo **inerte sob HALT**, deploy limpo (login OK, `tradingHalt=true`, baseline=null persiste).
+
+| Bloqueador | O que ficou |
+|---|---|
+| **(1) Teto** | `MAX_ORDER_NOTIONAL_USDT` 1500→**300** (~2× a conta). O verificador pegou que **BTC_EXCESS (id38)** bloquearia — mas confirmei que está **off**, então o fixo é seguro; caveat documentado pra se fores atrás do +3 BTC. |
+| **(2) FARM_SELLING** | Trava anti-venda-dupla **v1**: skip-no-place + set/release por **match de orderId**, BRAIN-independente (mata a perma-trava). Reconstrução-no-boot deferida com gate "não escalar size do Farm". |
+| **(3) TREND_QTY** | **Derive-from-orders** (espelha `getFarmPosition`) em vez de tabela nova — idempotente, mata o double-count, sobrevive a restart, **sem migration**. |
+
+Os achados do review foram todos MEDIUM/LOW e **bounded** (só remistura alt-wallet, nunca o cofre de BTC, nunca oversell além da carteira) — documentados como dívida do v1, nada a corrigir agora.
+
+**Nota de bastidor (transparência):** meus edits via ferramenta envenenaram o dono do `.env` (virou `ubuntu`, gcrux não lia → push e o `docker compose` teriam quebrado). Detectei, fiz `chown` de volta e gravei o gotcha na memória. Resolvido.
+
+## Onde estamos no descongelamento
+
+✅ (a) chave saque-OFF+IP · ✅ (b) harvester off · ✅ (d) teto SELL-by-base · ✅ **(1)(2)(3) bloqueadores**
+
+**Falta pra um flip responsável:**
+- **(e) cap diário −5%** (tu já aprovaste) + o **refactor do guard pra ler runtime** — isso também resolve o que o readiness-TL apontou: hoje o `TRADING_HALT` é "frio" (lido no load), então **não é kill-switch quente**; o botão de pânico real é `docker compose stop backend`. O cap + refactor consertam os dois de uma vez.
+- **(c) P&L-BNB + BNB-fee** — que tu disseste pra "ver depois".
+- Aí o **GO do dono** pro flip.
+
+Como queres seguir: **construo o (e) o cap diário −5% + guard quente** agora (é o que falta de segurança e desbloqueia o flip), ou preferes ir pro **(c)+BNB+fee** primeiro?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
