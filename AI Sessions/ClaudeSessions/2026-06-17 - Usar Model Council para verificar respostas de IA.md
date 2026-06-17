@@ -2498,6 +2498,932 @@ Se o build estiver limpo e a auditoria concluída, planeje a fusão das três p�
 
 Mapeie o repositório (`ls -R` se necessário) e inicie imediatamente pela Auditoria do Sistema de Clusters. Aguardo o veredicto de engenharia.
 
+## 🤖 Claude *(06:30:46)*
+
+
+## 🤖 Claude *(06:30:47)*
+
+Recebido, Maestro. Comando arquitetural de peso. Antes de tocar qualquer coisa, o enquadramento de governança
+
+## 👤 User *(06:30:47)*
+
+[Request interrupted by user]
+
+## 👤 User *(06:31:05)*
+
+Continue
+
+## 🤖 Claude *(06:31:15)*
+
+
+## 🤖 Claude *(06:31:16)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Core Sensorial Canvas \u2014 Cluster Audit",
+  "summary": "Auditoria material do sistema de clustering da Matrix (Louvain real vs mock) antes do refactor de unifica\u00e7\u00e3o Core/Matrix/Mem\u00f3ria"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ❌ Error
+>
+> ```
+> The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.
+> ```
+
+## 👤 User *(06:37:28)*
+
+[Request interrupted by user for tool use]
+
+## 🤖 Claude *(12:31:59)*
+
+No response requested.
+
+## 👤 User *(12:47:54)*
+
+Ótimo queria fazer o seguinte agora sem perder o que já temos mantendo de Back as três páginas em contexto.:
+🏛️ MCORCH ARCHITECTURAL COMMAND: UNIFIED CORE SENSORIAL CANVAS & CLUSTER AUDIT
+Context Blueprint: Phase Epsilon V9 Consolidation · Monorepo constellation-orchestra
+Target Identity: MCORCH Master Architect / Core SRE Engineer
+Mission: Audit the graph-clustering system and execute a deep architectural refactoring to unify the Core-Fable5 (CoreV2Page), Matrix (ConstellationMatrix WebGL), and Memória (Memory Mesh) into a single sovereign canvas ecosystem.
+
+1. FASE DE AUDITORIA: VERIFICAÇÃO MATERIAL DOS CLUSTERS (LEI 1)
+Antes de escrever qualquer linha de refatoração, execute um escaneamento completo no repositório (grep, find, inspeção de código) para rastrear a engenharia por trás das legendas de clustering da Matrix:
+	1.	Rastreamento Algorítmico: Verifique se o agrupamento visual por afinidade funcional (Louvain clustering) está sendo calculado de forma dinâmica em tempo de execução (client-side ou via Edge Function/banco) ou se os nós estão recebendo tags de cluster estáticas de um JSON mockado.
+	2.	Superfícies Alvo: Inspecione minuciosamente os arquivos src/hooks/useConstellationSigma.ts, src/components/graph/, src/pages/MatrixPage.tsx e esquemas de banco/migrations relacionados à tabela crew_module_ownership ou SQUAD_COLOR.
+	3.	Veredicto no Terminal: Retorne um sumário cirúrgico indicando:
+	•	Se o clustering é REAL/VIVO (onde o cálculo ocorre, dependências matemáticas usadas).
+	•	Se o clustering é MOCK (onde estão os placeholders estáticos que precisam ser limpos ou automatizados).
+
+2. METAFORA VISUAL DO CORE OFICIAL: O UNIVERSO UNIFICADO
+Se o build estiver limpo e a auditoria concluída, planeje a fusão das três páginas em uma interface tridimensional massiva dentro de src/pages/CorePage.tsx (ou CoreV2Page.tsx), eliminando rotas redundantes. O Canvas deve herdar o Unified Relativistic Black Hole & Cymatics Visualizer e hospedar as duas redes de dados compartilhando o mesmo espaço negro:
+A. Rede de Código (A Matrix AST)
+	•	Topologia: Grafo de Sintaxe Abstrata denso, cross-file bindings e call-graphs (~1801+ arestas).
+	•	Estética: Estrutura geométrica rígida e tática. Coloração baseada nos territórios das Squads (Content, Tech, Market, Ops) ou nos clusters reais validados pela auditoria. Nodes orbitando o disco de acreção em um plano equatorial coordenado.
+B. Rede de Pensamentos (A Memória GraphRAG)
+	•	Topologia: Nós de persistência cognitiva, logs de transações de mcoCoins, notas do Obsidian e handoffs semanticamente embeddados (mcorch_nodes/edges).
+	•	Estética: Formas orgânicas, nuvens de partículas fluidas ou anéis de frequências cognitivas (Ripples de Cymatics em tons Ciano/Alfa, Violeta/Gama, Ouro/Escalar).
+C. Sinapses Inter-Redes (Arestas de Acoplamento)
+	•	Renda linhas/arestas dinâmicas de baixa opacidade que conectam diretamente um nó de Memória (ex: um insight ou transação financeira de uma funcionalidade) ao nó correspondente de Matrix (o arquivo de código real Bun/TS ou Edge Function que executa aquela lógica).
+
+3. ESCOPO DO REFACTORING TÉCNICO & IMPLEMENTAÇÃO
+I. Frontend & Engine Gráfica (Three.js / React Three Fiber / Sigma.js)
+	•	Consolide os layouts em uma única árvore flex de alta performance com tempo de resposta <50ms.
+	•	Garanta a Regra Espacial 72/28 (ou 70/30 unificado): 70-72% de Canvas escuro imersivo dominado pelo buraco negro de Schwarzschild e visualização de grafos; 28-30% dedicado ao Terminal tático flutuante, métricas e telemetria de ressonância.
+	•	Implemente isolamento visual por toggles/filtros no painel lateral (Sidebar), permitindo ao Maestro focar apenas na Matrix, apenas na Memória, ou ativar a visão “Universo” onde as arestas de acoplamento inter-redes acendem.
+II. Camada de Dados & Hooks
+	•	Unifique os hooks de escuta e mutação (useConstellationSigma, useNodeIntelligence e useMcorchMemory) para alimentar o mesmo contexto global do visualizador, garantindo que interações em um nó de memória dêem “fly-to” automático na câmera em direção ao cluster de código associado.
+
+4. DIRETRIZES DE EXECUÇÃO (MATE A POESIA)
+	•	Harness Engineering: Não faça builds massivos quebrantes. Divida a tarefa em commits granulares. Se encontrar imports órfãos ou regressões de layout (absolute inset-0 escapando o flex layout), corrija seguindo o padrão de estabilização do DashboardLayout.
+	•	TypeScript & Qualidade: Semântica estrita, tipagem genérica impecável, zero erros em tempo de compilação.
+	•	Idioma: Pense e comente o código estritamente em Inglês, mas reporte os relatórios de progresso e o status da auditoria para mim em Português técnico Autorizativo e Sofisticado.
+Mapeie o repositório (ls -R se necessário) e inicie imediatamente pela Auditoria do Sistema de Clusters. Aguardo o veredicto de engenharia.
+
+## 🤖 Claude *(12:48:21)*
+
+Executando a Fase 1 — Auditoria Material dos Clusters. Varredura paralela das superfícies-alvo.
+
+**ORO desta task:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius arquitetural — 3 páginas de produção). Fase 1 (auditoria read-only) procede já sob a Lei 1; o veredito vem antes de qualquer linha de refactor.
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== A) LOUVAIN / COMMUNITY / GRAPH-MATH refs (src + packages) =====\"\ngrep -rniE \"louvain|communit|modularity|graphology|forceatlas|inferSquad\" src packages --include=*.ts --include=*.tsx 2>/dev/null | head -50\necho \"\"\necho \"===== B) graph-math / sigma deps in package.json =====\"\ngrep -iE \"louvain|graphology|sigma|d3-force|three|@react-three|forceatlas\" package.json",
+  "description": "Trace Louvain/community clustering engine + deps"
+}
+```
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== C) SQUAD_COLOR / SQUAD_META / inferSquad / crew_module_ownership refs =====\"\ngrep -rniE \"SQUAD_COLOR|SQUAD_META|inferSquad|crew_module_ownership\" src --include=*.ts --include=*.tsx 2>/dev/null | head -40\necho \"\"\necho \"===== D) src/components/graph/ contents =====\"\nls -la src/components/graph/ 2>/dev/null\necho \"\"\necho \"===== E) locate ConstellationMatrix / MatrixPage / Memory pages =====\"\nfind src -type f \\( -iname \"*ConstellationMatrix*\" -o -iname \"*MatrixPage*\" -o -iname \"*Memory*\" -o -iname \"*CoreV2*\" -o -iname \"*CorePage*\" -o -iname \"*CoreFable*\" \\) 2>/dev/null",
+  "description": "Trace squad coloring + locate target pages"
+}
+```
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== F) migrations mentioning crew_module_ownership / squad =====\"\ngrep -rliE \"crew_module_ownership|squad\" supabase/migrations 2>/dev/null | head\necho \"\"\necho \"===== G) crew_module_ownership schema (if any) =====\"\ngrep -rniE \"crew_module_ownership\" supabase/migrations 2>/dev/null | head -20",
+  "description": "Trace crew_module_ownership DB schema"
+}
+```
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== A) LOUVAIN / COMMUNITY / GRAPH-MATH refs (src + packages) =====
+> src/pages/MemoryPage.tsx:30:import { inferSquad } from '@/hooks/useCrewOverlay';
+> src/pages/MemoryPage.tsx:336:      const squad_label = agent ? inferSquad(agent.name, agent.role) : 'default';
+> src/components/orchestrator/ConstellationMatrix.tsx:3:import forceAtlas2 from 'graphology-layout-forceatlas2';
+> src/components/orchestrator/ConstellationMatrix.tsx:4:import { useConstellationSigma, NODE_KIND_COLOR, COMMUNITY_PALETTE } from '@/hooks/useConstellationSigma';
+> src/components/orchestrator/ConstellationMatrix.tsx:46:  community: number;
+> src/components/orchestrator/ConstellationMatrix.tsx:125:    communityCount,
+> src/components/orchestrator/ConstellationMatrix.tsx:209:  // ── ForceAtlas2 chunked (non-blocking) ───────────────────────────────────
+> src/components/orchestrator/ConstellationMatrix.tsx:217:      ...forceAtlas2.inferSettings(graph),
+> src/components/orchestrator/ConstellationMatrix.tsx:226:      forceAtlas2.assign(graph, { iterations: FA2_CHUNK, settings });
+> src/components/orchestrator/ConstellationMatrix.tsx:423:        community:   attrs.community ?? 0,
+> src/components/orchestrator/ConstellationMatrix.tsx:548:        {communityCount > 0 && (
+> src/components/orchestrator/ConstellationMatrix.tsx:553:            ◈ {communityCount} comunidades
+> src/components/orchestrator/ConstellationMatrix.tsx:623:            ForceAtlas2
+> src/components/orchestrator/ConstellationMatrix.tsx:750:          {/* Section: Louvain clusters (unclaimed nodes) */}
+> src/components/orchestrator/ConstellationMatrix.tsx:751:          {communityCount > 0 && (
+> src/components/orchestrator/ConstellationMatrix.tsx:753:              clusters louvain
+> src/components/orchestrator/ConstellationMatrix.tsx:756:          {communityCount > 0
+> src/components/orchestrator/ConstellationMatrix.tsx:757:            ? COMMUNITY_PALETTE.slice(0, Math.min(communityCount, 5)).map((color, i) => (
+> src/components/orchestrator/ConstellationMatrix.tsx:921:                  style={{ background: COMMUNITY_PALETTE[tooltip.community % COMMUNITY_PALETTE.length] }}
+> src/components/orchestrator/ConstellationMatrix.tsx:925:                {tooltip.community >= 0 && (
+> src/components/orchestrator/ConstellationMatrix.tsx:926:                  <span className="text-fuchsia-400 font-mono text-[10px]">c{tooltip.community}</span>
+> src/hooks/useCrewOverlay.ts:34:export function inferSquad(name: string, role: string): string {
+> src/hooks/useCrewOverlay.ts:64:      const squad = inferSquad(a.name ?? '', a.role ?? '');
+> src/hooks/useConstellationSigma.ts:4:import Graph from 'graphology';
+> src/hooks/useConstellationSigma.ts:5:import louvain from 'graphology-communities-louvain';
+> src/hooks/useConstellationSigma.ts:10:// Community palette — MCORCH Cyberpunk (12 slots, wraps if >12 communities)
+> src/hooks/useConstellationSigma.ts:11:export const COMMUNITY_PALETTE: string[] = [
+> src/hooks/useConstellationSigma.ts:153:  const { graph, communityCount, agentNodeIds, darkSpotCount, ownedNodeCount, orphanedAgents } = useMemo<{
+> src/hooks/useConstellationSigma.ts:155:    communityCount: number;
+> src/hooks/useConstellationSigma.ts:162:    if (allNodes.length === 0) return { graph: null, communityCount: 0, agentNodeIds: new Set(), darkSpotCount: 0, ownedNodeCount: 0, orphanedAgents: [] };
+> src/hooks/useConstellationSigma.ts:193:        color: NODE_KIND_COLOR.default, // placeholder — overwritten after Louvain
+> src/hooks/useConstellationSigma.ts:199:        community: 0,
+> src/hooks/useConstellationSigma.ts:222:    // Phase 3 — Louvain community detection
+> src/hooks/useConstellationSigma.ts:223:    let communities: Record<string, number> = {};
+> src/hooks/useConstellationSigma.ts:227:      communities = louvain(g, { resolution: 1.0 });
+> src/hooks/useConstellationSigma.ts:228:      commCount = new Set(Object.values(communities)).size;
+> src/hooks/useConstellationSigma.ts:230:      g.forEachNode((id) => { communities[id] = 0; });
+> src/hooks/useConstellationSigma.ts:233:    // Phase 4 — community-aware initial positioning
+> src/hooks/useConstellationSigma.ts:234:    const commIds = Array.from(new Set(Object.values(communities))).sort((a, b) => a - b);
+> src/hooks/useConstellationSigma.ts:241:    // Phase 5 — apply community color + position; owned nodes get squad color
+> src/hooks/useConstellationSigma.ts:244:      const comm = communities[nodeId] ?? 0;
+> src/hooks/useConstellationSigma.ts:247:      g.setNodeAttribute(nodeId, 'color', ownerColor ?? COMMUNITY_PALETTE[comm % COMMUNITY_PALETTE.length]);
+> src/hooks/useConstellationSigma.ts:248:      g.setNodeAttribute(nodeId, 'community', comm);
+> src/hooks/useConstellationSigma.ts:298:          community: -1,
+> src/hooks/useConstellationSigma.ts:340:    return { graph: g, communityCount: commCount, agentNodeIds, darkSpotCount: darkCount, ownedNodeCount: ownedCount, orphanedAgents };
+> src/hooks/useConstellationSigma.ts:366:    communityCount,
+> packages/vision-mcp-core/node_modules/vite/dist/node/index.d.ts:626:     * **Exercise caution as rewriting the Origin can leave the proxying open to [CSRF attacks](https://owasp.org/www-community/attacks/csrf).**
+> 
+> ===== B) graph-math / sigma deps in package.json =====
+>     "@react-three/drei": "^9.122.0",
+>     "@react-three/fiber": "^8.18",
+>     "@react-three/postprocessing": "2.19.1",
+>     "@types/three": "^0.183.1",
+>     "d3-force": "^3.0.0",
+>     "graphology": "^0.26.0",
+>     "graphology-communities-louvain": "^2.0.2",
+>     "graphology-layout-forceatlas2": "^0.10.1",
+>     "sigma": "^3.0.2",
+>     "three": "^0.170.0",
+>     "@types/d3-force": "^3.0.10",
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== C) SQUAD_COLOR / SQUAD_META / inferSquad / crew_module_ownership refs =====
+> src/integrations/supabase/types.ts:1141:      crew_module_ownership: {
+> src/integrations/supabase/types.ts:1168:            foreignKeyName: "crew_module_ownership_agent_id_fkey"
+> src/pages/MemoryPage.tsx:30:import { inferSquad } from '@/hooks/useCrewOverlay';
+> src/pages/MemoryPage.tsx:303:      .from('crew_module_ownership')
+> src/pages/MemoryPage.tsx:336:      const squad_label = agent ? inferSquad(agent.name, agent.role) : 'default';
+> src/pages/MemoryPage.tsx:337:      await (supabase as any).from('crew_module_ownership').upsert(
+> src/components/landing/LandingConstellation.tsx:7:const SQUAD_COLORS = ['#ec4899', '#3b82f6', '#22c55e', '#f59e0b'];
+> src/components/landing/LandingConstellation.tsx:23:      p.push({ pos: squadPos, color: SQUAD_COLORS[s], size: 0.3 });
+> src/components/landing/LandingConstellation.tsx:33:        p.push({ pos: new THREE.Vector3(x, y, z), color: SQUAD_COLORS[s], size: 0.15 });
+> src/components/orchestrator/ConstellationMatrix.tsx:6:import { useCrewOverlay, SQUAD_COLOR } from '@/hooks/useCrewOverlay';
+> src/components/orchestrator/ConstellationMatrix.tsx:806:                {Object.entries(SQUAD_COLOR)
+> src/components/orchestrator/ConstellationMatrix.tsx:948:                  style={{ borderColor: (SQUAD_COLOR[tooltip.ownerSquad] ?? '#ff00ff') + '40' }}
+> src/components/orchestrator/ConstellationMatrix.tsx:953:                      color:       SQUAD_COLOR[tooltip.ownerSquad] ?? '#ff00ff',
+> src/components/orchestrator/ConstellationMatrix.tsx:954:                      borderColor: (SQUAD_COLOR[tooltip.ownerSquad] ?? '#ff00ff') + '60',
+> src/components/orchestrator/ConstellationMatrix.tsx:955:                      background:  (SQUAD_COLOR[tooltip.ownerSquad] ?? '#ff00ff') + '18',
+> src/components/graph/CrewGraph.tsx:11:const SQUAD_META: Record<string, { name: string; color: string }> = {
+> src/components/graph/CrewGraph.tsx:123:            name={SQUAD_META[squadId]?.name || squadId}
+> src/components/graph/CrewGraph.tsx:124:            color={SQUAD_META[squadId]?.color || '#ffffff'}
+> src/components/graph/CrewGraph.tsx:138:              color={fromAgent.squad === toAgent.squad ? (SQUAD_META[fromAgent.squad || '']?.color || '#3b82f6') : '#ffffff'}
+> src/hooks/useCrewOverlay.ts:15:export const SQUAD_COLOR: Record<string, string> = {
+> src/hooks/useCrewOverlay.ts:34:export function inferSquad(name: string, role: string): string {
+> src/hooks/useCrewOverlay.ts:64:      const squad = inferSquad(a.name ?? '', a.role ?? '');
+> src/hooks/useCrewOverlay.ts:72:        color: SQUAD_COLOR[squad],
+> src/hooks/useConstellationSigma.ts:7:import { SQUAD_COLOR } from './useCrewOverlay';
+> src/hooks/useConstellationSigma.ts:128:        .from('crew_module_ownership')
+> src/hooks/useConstellationSigma.ts:167:      const color = SQUAD_COLOR[rec.squad_label] ?? SQUAD_COLOR.default;
+> 
+> ===== D) src/components/graph/ contents =====
+> total 44
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jun  1 11:44 .
+> drwxrwxr-x 18 ubuntu ubuntu 4096 Jun  9 23:09 ..
+> -rw-rw-r--  1 ubuntu ubuntu 3470 Apr 26 12:47 AgentEdge.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 5754 May 14 01:44 AgentNode.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 6639 Jun  1 11:44 CrewGraph.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 6124 Jun  1 11:36 CrewWizard.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 3158 Jun  1 11:35 EmptyConstellation.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 3044 Apr 26 12:46 SquadHull.tsx
+> 
+> ===== E) locate ConstellationMatrix / MatrixPage / Memory pages =====
+> src/pages/MemoryPage.tsx
+> src/pages/CoreFablePage.tsx
+> src/pages/MatrixPage.tsx
+> src/hooks/useMcorchMemory.ts
+> src/components/orchestrator/ConstellationMatrix.tsx
+> src/components/dashboard/MemoryGraphWidget.tsx
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useMemo } from 'react';
+> 4	import Graph from 'graphology';
+> 5	import louvain from 'graphology-communities-louvain';
+> 6	import type { CrewOverlayAgent } from './useCrewOverlay';
+> 7	import { SQUAD_COLOR } from './useCrewOverlay';
+> 8	import { useAuth } from '@/hooks/useAuth';
+> 9	
+> 10	// Community palette — MCORCH Cyberpunk (12 slots, wraps if >12 communities)
+> 11	export const COMMUNITY_PALETTE: string[] = [
+> 12	  '#22c55e',  // Matrix Green
+> 13	  '#06b6d4',  // Cyber Blue
+> 14	  '#a855f7',  // Neon Purple
+> 15	  '#f59e0b',  // Warning Amber
+> 16	  '#d946ef',  // Fuchsia
+> 17	  '#38bdf8',  // Electric Cyan
+> 18	  '#f43f5e',  // Hot Rose
+> 19	  '#10b981',  // Emerald
+> 20	  '#7c3aed',  // Dark Violet
+> 21	  '#facc15',  // Acid Yellow
+> 22	  '#fb923c',  // Neon Orange
+> 23	  '#e879f9',  // Magenta
+> 24	];
+> 25	
+> 26	// Kept for tooltip/legend kind-level info
+> 27	export const NODE_KIND_COLOR: Record<string, string> = {
+> 28	  file:          '#4c1d95',
+> 29	  function:      '#7c3aed',
+> 30	  arrow_function:'#06b6d4',
+> 31	  interface:     '#d946ef',
+> 32	  type_alias:    '#ec4899',
+> 33	  variable:      '#334155',
+> 34	  import:        '#1e293b',
+> 35	  milestone:     '#22c55e',
+> 36	  observation:   '#38bdf8',
+> 37	  decision:      '#f59e0b',
+> 38	  architecture:  '#a855f7',
+> 39	  requirement:   '#3b82f6',
+> 40	  system:        '#06b6d4',
+> 41	  'ui-ux':       '#ec4899',
+> 42	  bugfix_milestone:'#ef4444',
+> 43	  feature:       '#10b981',
+> 44	  crew_agent:    '#ff00ff',
+> 45	  default:       '#4f46e5',
+> 46	};
+> 47	
+> 48	const NODE_KIND_SIZE: Record<string, number> = {
+> 49	  file:          3,
+> 50	  function:      6,
+> 51	  arrow_function:5,
+> 52	  interface:     7,
+> 53	  type_alias:    5,
+> 54	  variable:      2,
+> 55	  import:        2,
+> 56	  milestone:     10,
+> 57	  observation:   8,
+> 58	  decision:      8,
+> 59	  architecture:  9,
+> 60	  requirement:   8,
+> 61	  system:        10,
+> 62	  'ui-ux':       7,
+> 63	  'bugfix_milestone': 10,
+> 64	  feature:       9,
+> 65	  crew_agent:    20,
+> 66	  default:       4,
+> 67	};
+> 68	
+> 69	interface UseConstellationSigmaOptions {
+> 70	  overlayAgents?: CrewOverlayAgent[];
+> 71	}
+> 72	
+> 73	const EMPTY_ARRAY: any[] = [];
+> 74	
+> 75	export function useConstellationSigma(options: UseConstellationSigmaOptions = {}) {
+> 76	  const { overlayAgents = EMPTY_ARRAY } = options;
+> 77	  const { user } = useAuth();
+> 78	
+> 79	  const fetchAll = async (table: string, columns: string, filters: (q: any) => any = (q) => q) => {
+> 80	    let allData: any[] = [];
+> 81	    let page = 0;
+> 82	    const pageSize = 1000;
+> 83	
+> 84	    while (true) {
+> 85	      let query = (supabase as any).from(table).select(columns);
+> 86	      query = filters(query);
+> 87	      query = query.range(page * pageSize, (page + 1) * pageSize - 1);
+> 88	
+> 89	      const { data, error } = await query;
+> 90	      if (error) throw error;
+> 91	      if (!data || data.length === 0) break;
+> 92	
+> 93	      allData = [...allData, ...data];
+> 94	      if (data.length < pageSize) break;
+> 95	      page++;
+> 96	    }
+> 97	    return allData;
+> 98	  };
+> 99	
+> 100	  // Explicit column selection — excludes embedding (vector 768d, ~3 KB/nó) to keep payload lean
+> 101	  const NODE_COLS = 'id,node_type,name,stability_score,metadata,user_id,project_id';
+> 102	  const EDGE_COLS = 'id,source_id,target_id,relation_type,weight';
+> 103	
+> 104	  const { data: astNodes, isLoading: astLoading } = useQuery({
+> 105	    queryKey: ['constellation_ast_nodes'],
+> 106	    queryFn: () => fetchAll('mcorch_nodes', NODE_COLS, (q) => q.eq('project_id', 'mcorch-constellation')),
+> 107	    staleTime: 5 * 60 * 1000,
+> 108	  });
+> 109	
+> 110	  const { data: astEdges, isLoading: edgesLoading } = useQuery({
+> 111	    queryKey: ['constellation_ast_edges'],
+> 112	    queryFn: () => fetchAll('mcorch_edges', EDGE_COLS, (q) => q.eq('project_id', 'mcorch-constellation')),
+> 113	    staleTime: 5 * 60 * 1000,
+> 114	  });
+> 115	
+> 116	  const { data: knowledgeNodes } = useQuery({
+> 117	    queryKey: ['constellation_knowledge_nodes'],
+> 118	    queryFn: () => fetchAll('mcorch_nodes', NODE_COLS, (q) => q.is('project_id', null).is('user_id', null)),
+> 119	    staleTime: 5 * 60 * 1000,
+> 120	  });
+> 121	
+> 122	  // Ownership query — module_path = mcorch_node.id UUID
+> 123	  const { data: ownershipData } = useQuery({
+> 124	    queryKey: ['constellation_ownership', user?.id],
+> 125	    queryFn: async () => {
+> 126	      if (!user?.id) return [];
+> 127	      const { data, error } = await (supabase as any)
+> 128	        .from('crew_module_ownership')
+> 129	        .select('module_path, squad_label')
+> 130	        .eq('user_id', user.id);
+> 131	      if (error) throw error;
+> 132	      return (data ?? []) as { module_path: string; squad_label: string }[];
+> 133	    },
+> 134	    staleTime: 30 * 1000,
+> 135	    enabled: !!user?.id,
+> 136	  });
+> 137	
+> 138	  // Lightweight count query for neural density
+> 139	  const { data: nullEmbeddingCount } = useQuery({
+> 140	    queryKey: ['constellation_null_embeddings'],
+> 141	    queryFn: async () => {
+> 142	      const { count, error } = await supabase
+> 143	        .from('mcorch_nodes')
+> 144	        .select('id', { count: 'exact', head: true })
+> 145	        .eq('project_id', 'mcorch-constellation')
+> 146	        .is('embedding', null);
+> 147	      if (error) throw error;
+> 148	      return count ?? 0;
+> 149	    },
+> 150	    staleTime: 60 * 1000,
+> 151	  });
+> 152	
+> 153	  const { graph, communityCount, agentNodeIds, darkSpotCount, ownedNodeCount, orphanedAgents } = useMemo<{
+> 154	    graph: Graph | null;
+> 155	    communityCount: number;
+> 156	    agentNodeIds: Set<string>;
+> 157	    darkSpotCount: number;
+> 158	    ownedNodeCount: number;
+> 159	    orphanedAgents: string[];
+> 160	  }>(() => {
+> 161	    const allNodes = [...(astNodes ?? []), ...(knowledgeNodes ?? [])];
+> 162	    if (allNodes.length === 0) return { graph: null, communityCount: 0, agentNodeIds: new Set(), darkSpotCount: 0, ownedNodeCount: 0, orphanedAgents: [] };
+> 163	
+> 164	    // Build ownership map: node UUID → squad color
+> 165	    const ownershipMap = new Map<string, string>();
+> 166	    for (const rec of ownershipData ?? []) {
+> 167	      const color = SQUAD_COLOR[rec.squad_label] ?? SQUAD_COLOR.default;
+> 168	      ownershipMap.set(rec.module_path, color);
+> 169	    }
+> 170	
+> 171	    // Pre-compute CALLS degree from astEdges (for tooltip counter)
+> 172	    const callsOutMap = new Map<string, number>();
+> 173	    const callsInMap = new Map<string, number>();
+> 174	    for (const edge of astEdges ?? []) {
+> 175	      if ((edge.relation_type ?? '').toLowerCase() === 'calls') {
+> 176	        callsOutMap.set(edge.source_id, (callsOutMap.get(edge.source_id) ?? 0) + 1);
+> 177	        callsInMap.set(edge.target_id, (callsInMap.get(edge.target_id) ?? 0) + 1);
+> 178	      }
+> 179	    }
+> 180	
+> 181	    const g = new Graph({ multi: false, allowSelfLoops: false });
+> 182	    const nodeSet = new Set<string>();
+> 183	
+> 184	    // Phase 1 — add nodes with random initial positions
+> 185	    for (const node of allNodes) {
+> 186	      if (nodeSet.has(node.id)) continue;
+> 187	
+> 188	      const baseSize = NODE_KIND_SIZE[node.node_type] ?? NODE_KIND_SIZE.default;
+> 189	      const stability = Math.max(0.1, Math.min(1, node.stability_score ?? 1));
+> 190	
+> 191	      g.addNode(node.id, {
+> 192	        label: node.name.length > 24 ? node.name.slice(0, 24) + '…' : node.name,
+> 193	        color: NODE_KIND_COLOR.default, // placeholder — overwritten after Louvain
+> 194	        size: baseSize * (0.6 + stability * 0.4),
+> 195	        x: Math.random() * 2000 - 1000,
+> 196	        y: Math.random() * 2000 - 1000,
+> 197	        kind: node.node_type,
+> 198	        stability,
+> 199	        community: 0,
+> 200	        isAgent: false,
+> 201	        callsOut: callsOutMap.get(node.id) ?? 0,
+> 202	        callsIn:  callsInMap.get(node.id) ?? 0,
+> 203	        metadata: node.metadata,
+> 204	      });
+> 205	      nodeSet.add(node.id);
+> 206	    }
+> 207	
+> 208	    // Phase 2 — add edges
+> 209	    for (const edge of astEdges ?? []) {
+> 210	      if (!nodeSet.has(edge.source_id) || !nodeSet.has(edge.target_id)) continue;
+> 211	      try {
+> 212	        g.addEdge(edge.source_id, edge.target_id, {
+> 213	          color: 'rgba(124, 58, 237, 0.18)',
+> 214	          size: 0.8,
+> 215	          kind: edge.relation_type,
+> 216	        });
+> 217	      } catch (_) {
+> 218	        // duplicate edge — skip
+> 219	      }
+> 220	    }
+> 221	
+> 222	    // Phase 3 — Louvain community detection
+> 223	    let communities: Record<string, number> = {};
+> 224	    let commCount = 1;
+> 225	
+> 226	    try {
+> 227	      communities = louvain(g, { resolution: 1.0 });
+> 228	      commCount = new Set(Object.values(communities)).size;
+> 229	    } catch {
+> 230	      g.forEachNode((id) => { communities[id] = 0; });
+> 231	    }
+> 232	
+> 233	    // Phase 4 — community-aware initial positioning
+> 234	    const commIds = Array.from(new Set(Object.values(communities))).sort((a, b) => a - b);
+> 235	    const centerMap = new Map<number, { x: number; y: number }>();
+> 236	    commIds.forEach((c, i) => {
+> 237	      const angle = (i / commCount) * 2 * Math.PI;
+> 238	      centerMap.set(c, { x: Math.cos(angle) * 800, y: Math.sin(angle) * 800 });
+> 239	    });
+> 240	
+> 241	    // Phase 5 — apply community color + position; owned nodes get squad color
+> 242	    let ownedCount = 0;
+> 243	    g.forEachNode((nodeId) => {
+> 244	      const comm = communities[nodeId] ?? 0;
+> 245	      const center = centerMap.get(comm) ?? { x: 0, y: 0 };
+> 246	      const ownerColor = ownershipMap.get(nodeId);
+> 247	      g.setNodeAttribute(nodeId, 'color', ownerColor ?? COMMUNITY_PALETTE[comm % COMMUNITY_PALETTE.length]);
+> 248	      g.setNodeAttribute(nodeId, 'community', comm);
+> 249	      g.setNodeAttribute(nodeId, 'isOwned', !!ownerColor);
+> 250	      g.setNodeAttribute(nodeId, 'ownerSquad', ownerColor ? (ownershipData?.find((r) => r.module_path === nodeId)?.squad_label ?? '') : '');
+> 251	      g.setNodeAttribute(nodeId, 'x', center.x + (Math.random() - 0.5) * 350);
+> 252	      g.setNodeAttribute(nodeId, 'y', center.y + (Math.random() - 0.5) * 350);
+> 253	      if (ownerColor) ownedCount++;
+> 254	    });
+> 255	
+> 256	    // Phase 6 — inject Crew Overlay agent nodes
+> 257	    const agentNodeIds = new Set<string>();
+> 258	    const coveredFileNodeIds = new Set<string>();
+> 259	
+> 260	    for (const agent of overlayAgents) {
+> 261	      const agentNodeId = `crew_agent__${agent.id}`;
+> 262	
+> 263	      // Find AST file nodes matching this agent's patterns
+> 264	      const matchedFileIds: string[] = [];
+> 265	      g.forEachNode((nodeId, attrs) => {
+> 266	        if (attrs.kind !== 'file') return;
+> 267	        const label = (attrs.label ?? '').toLowerCase();
+> 268	        const matches = agent.filePatterns.some((p) => label.includes(p.toLowerCase()));
+> 269	        if (matches) {
+> 270	          matchedFileIds.push(nodeId);
+> 271	          coveredFileNodeIds.add(nodeId);
+> 272	        }
+> 273	      });
+> 274	
+> 275	      // Compute centroid of matched file nodes to position agent nearby
+> 276	      let agentX = (Math.random() - 0.5) * 600;
+> 277	      let agentY = (Math.random() - 0.5) * 600;
+> 278	
+> 279	      if (matchedFileIds.length > 0) {
+> 280	        const top = matchedFileIds.slice(0, 6);
+> 281	        const cx = top.reduce((s, id) => s + (g.getNodeAttribute(id, 'x') ?? 0), 0) / top.length;
+> 282	        const cy = top.reduce((s, id) => s + (g.getNodeAttribute(id, 'y') ?? 0), 0) / top.length;
+> 283	        // Orbit the centroid at a slight offset
+> 284	        const orbitAngle = Math.random() * 2 * Math.PI;
+> 285	        agentX = cx + Math.cos(orbitAngle) * 120;
+> 286	        agentY = cy + Math.sin(orbitAngle) * 120;
+> 287	      }
+> 288	
+> 289	      if (!nodeSet.has(agentNodeId)) {
+> 290	        g.addNode(agentNodeId, {
+> 291	          label: agent.avatar + ' ' + (agent.name.length > 16 ? agent.name.slice(0, 16) + '…' : agent.name),
+> 292	          color: agent.color,
+> 293	          size: NODE_KIND_SIZE.crew_agent,
+> 294	          x: agentX,
+> 295	          y: agentY,
+> 296	          kind: 'crew_agent',
+> 297	          stability: 1,
+> 298	          community: -1,
+> 299	          isAgent: true,
+> 300	          agentRole: agent.role,
+> 301	          agentStatus: agent.status,
+> 302	          agentSquad: agent.squad,
+> 303	          agentAvatar: agent.avatar,
+> 304	          agentColor: agent.color,
+> 305	        });
+> 306	        nodeSet.add(agentNodeId);
+> 307	        agentNodeIds.add(agentNodeId);
+> 308	      }
+> 309	
+> 310	      // Connect agent to up to 4 matched file nodes with INHABITS edges
+> 311	      for (const fileId of matchedFileIds.slice(0, 4)) {
+> 312	        try {
+> 313	          g.addEdge(agentNodeId, fileId, {
+> 314	            color: agent.color + '60',
+> 315	            size: 1.8,
+> 316	            kind: 'INHABITS',
+> 317	          });
+> 318	        } catch (_) {
+> 319	          // duplicate — skip
+> 320	        }
+> 321	      }
+> 322	    }
+> 323	
+> 324	    // Count "dark spots" — file nodes with no agent coverage
+> 325	    let fileCount = 0;
+> 326	    let darkCount = 0;
+> 327	    g.forEachNode((_id, attrs) => {
+> 328	      if (attrs.kind === 'file') {
+> 329	        fileCount++;
+> 330	        if (!coveredFileNodeIds.has(_id)) darkCount++;
+> 331	      }
+> 332	    });
+> 333	
+> 334	    // Orphaned agents detection
+> 335	    const orphanedAgents = overlayAgents.filter(a => {
+> 336	      const agentId = `crew_agent__${a.id}`;
+> 337	      return g.hasNode(agentId) && g.degree(agentId) === 0;
+> 338	    }).map(a => a.name);
+> 339	
+> 340	    return { graph: g, communityCount: commCount, agentNodeIds, darkSpotCount: darkCount, ownedNodeCount: ownedCount, orphanedAgents };
+> 341	  }, [astNodes, astEdges, knowledgeNodes, overlayAgents, ownershipData]);
+> 342	
+> 343	  const totalAstNodes = astNodes?.length ?? 0;
+> 344	  const embeddedCount = totalAstNodes - (nullEmbeddingCount ?? totalAstNodes);
+> 345	  const neuralDensity = totalAstNodes > 0
+> 346	    ? Math.round((embeddedCount / totalAstNodes) * 100)
+> 347	    : 0;
+> 348	
+> 349	  // Monetization Scan
+> 350	  const monetizationStats = useMemo(() => {
+> 351	    const allNodes = [...(astNodes ?? []), ...(knowledgeNodes ?? [])];
+> 352	    const adsenseNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#adsense'));
+> 353	    const conversionNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#conversion'));
+> 354	    return {
+> 355	      adsenseCount: adsenseNodes.length,
+> 356	      conversionCount: conversionNodes.length,
+> 357	      isVerified: adsenseNodes.length > 0 && conversionNodes.length > 0
+> 358	    };
+> 359	  }, [astNodes, knowledgeNodes]);
+> 360	
+> 361	  return {
+> 362	    graph,
+> 363	    nodeCount: (astNodes?.length ?? 0) + (knowledgeNodes?.length ?? 0),
+> 364	    edgeCount: astEdges?.length ?? 0,
+> 365	    isLoading: astLoading || edgesLoading,
+> 366	    communityCount,
+> 367	    neuralDensity,
+> 368	    embeddedCount,
+> 369	    totalAstNodes,
+> 370	    agentNodeIds,
+> 371	    darkSpotCount,
+> 372	    ownedNodeCount,
+> 373	    orphanedAgents: graph ? (graph as any).orphanedAgents ?? [] : [],
+> 374	    monetizationStats,
+> 375	  };
+> 376	}
+> 377	
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== F) migrations mentioning crew_module_ownership / squad =====
+> supabase/migrations/20260426160000_crew_module_ownership.sql
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> supabase/migrations/20260606210000_pantheon_admin_crud.sql
+> supabase/migrations/20260425000000_enterprise_hierarchy.sql
+> supabase/migrations/20260606230000_pantheon_telemetry_setup.sql
+> 
+> ===== G) crew_module_ownership schema (if any) =====
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql:76:  --   * crew_module_ownership (if any — system-level assignments)
+> supabase/migrations/20260426160000_crew_module_ownership.sql:4:CREATE TABLE IF NOT EXISTS public.crew_module_ownership (
+> supabase/migrations/20260426160000_crew_module_ownership.sql:15:ALTER TABLE public.crew_module_ownership ENABLE ROW LEVEL SECURITY;
+> supabase/migrations/20260426160000_crew_module_ownership.sql:18:CREATE POLICY "crew_module_ownership_user_isolation"
+> supabase/migrations/20260426160000_crew_module_ownership.sql:19:  ON public.crew_module_ownership
+> supabase/migrations/20260426160000_crew_module_ownership.sql:25:CREATE INDEX IF NOT EXISTS crew_module_ownership_module_path_idx
+> supabase/migrations/20260426160000_crew_module_ownership.sql:26:  ON public.crew_module_ownership (module_path);
+> supabase/migrations/20260426160000_crew_module_ownership.sql:28:CREATE INDEX IF NOT EXISTS crew_module_ownership_agent_id_idx
+> supabase/migrations/20260426160000_crew_module_ownership.sql:29:  ON public.crew_module_ownership (agent_id);
+> supabase/migrations/20260426160000_crew_module_ownership.sql:31:CREATE INDEX IF NOT EXISTS crew_module_ownership_user_id_idx
+> supabase/migrations/20260426160000_crew_module_ownership.sql:32:  ON public.crew_module_ownership (user_id);
+> ```
+
+## 🤖 Claude *(12:48:46)*
+
+
+## 🤖 Claude *(12:48:47)*
+
+Núcleo auditado. Lendo os 3 arquivos que faltam para fechar o veredito: a heurística `inferSquad`+`SQUAD_COLOR`, o schema da tabela, e o wiring da página.
+
+## 🤖 Claude *(12:48:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCrewOverlay.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import { useMemo } from 'react';
+> 5	
+> 6	// Maps squad identity to file name patterns for INHABITS edges
+> 7	const SQUAD_PATTERNS: Record<string, string[]> = {
+> 8	  content:  ['Campaign', 'Content', 'Blog', 'Video', 'Calendar', 'Publish', 'Social', 'Landing', 'Editor', 'Wizard'],
+> 9	  tech:     ['hook', 'store', 'use', 'lib', 'integration', 'supabase', 'client', 'query', 'config', 'Hook'],
+> 10	  market:   ['Analytics', 'Affiliate', 'ROI', 'Revenue', 'Dashboard', 'Home', 'Metric'],
+> 11	  ops:      ['watchdog', 'deploy', 'rescue', 'backfill', 'seed', 'harness', 'script', 'function', 'Admin'],
+> 12	  default:  ['App', 'main', 'index', 'Auth', 'Settings', 'Onboarding', 'NotFound'],
+> 13	};
+> 14	
+> 15	export const SQUAD_COLOR: Record<string, string> = {
+> 16	  content: '#ec4899',
+> 17	  tech:    '#3b82f6',
+> 18	  market:  '#22c55e',
+> 19	  ops:     '#f59e0b',
+> 20	  default: '#ff00ff',
+> 21	};
+> 22	
+> 23	export interface CrewOverlayAgent {
+> 24	  id: string;
+> 25	  name: string;
+> 26	  role: string;
+> 27	  avatar: string;
+> 28	  status: string;
+> 29	  squad: string;
+> 30	  color: string;
+> 31	  filePatterns: string[];
+> 32	}
+> 33	
+> 34	export function inferSquad(name: string, role: string): string {
+> 35	  const s = (name + ' ' + role).toLowerCase();
+> 36	  if (s.includes('content') || s.includes('creative') || s.includes('blog') || s.includes('video')) return 'content';
+> 37	  if (s.includes('tech') || s.includes('engine') || s.includes('architect') || s.includes('engineer')) return 'tech';
+> 38	  if (s.includes('market') || s.includes('analyt') || s.includes('intelligence') || s.includes('growth')) return 'market';
+> 39	  if (s.includes('ops') || s.includes('operational') || s.includes('infra') || s.includes('devops')) return 'ops';
+> 40	  return 'default';
+> 41	}
+> 42	
+> 43	export function useCrewOverlay() {
+> 44	  const { user } = useAuth();
+> 45	
+> 46	  const { data: rawAgents = [], isLoading } = useQuery({
+> 47	    queryKey: ['crew_overlay_agents', user?.id],
+> 48	    queryFn: async () => {
+> 49	      if (!user?.id) return [];
+> 50	      const { data, error } = await supabase
+> 51	        .from('crew_agents')
+> 52	        .select('id, agent_key, name, role, avatar, status')
+> 53	        .eq('user_id', user.id)
+> 54	        .order('created_at');
+> 55	      if (error) throw error;
+> 56	      return data ?? [];
+> 57	    },
+> 58	    staleTime: 2 * 60 * 1000,
+> 59	    enabled: !!user?.id,
+> 60	  });
+> 61	
+> 62	  const overlayAgents = useMemo<CrewOverlayAgent[]>(() =>
+> 63	    rawAgents.map((a: any) => {
+> 64	      const squad = inferSquad(a.name ?? '', a.role ?? '');
+> 65	      return {
+> 66	        id: a.agent_key ?? a.id,
+> 67	        name: a.name ?? 'Agent',
+> 68	        role: a.role ?? 'specialist',
+> 69	        avatar: a.avatar ?? '🤖',
+> 70	        status: a.status ?? 'idle',
+> 71	        squad,
+> 72	        color: SQUAD_COLOR[squad],
+> 73	        filePatterns: SQUAD_PATTERNS[squad] ?? SQUAD_PATTERNS.default,
+> 74	      };
+> 75	    }),
+> 76	  [rawAgents]);
+> 77	
+> 78	  return { overlayAgents, agentCount: overlayAgents.length, isLoading };
+> 79	}
+> 80	
+> ```
+
+## 🤖 Claude *(12:48:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260426160000_crew_module_ownership.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Phase Epsilon V5b: Crew Module Ownership — maps crew agents to AST/knowledge nodes
+> 2	-- Enables "Assign Agent" UI in Memory Mesh + Ownership persistence in Constellation
+> 3	
+> 4	CREATE TABLE IF NOT EXISTS public.crew_module_ownership (
+> 5	  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 6	  agent_id     uuid NOT NULL REFERENCES public.crew_agents(id) ON DELETE CASCADE,
+> 7	  module_path  text NOT NULL,  -- UUID of mcorch_node (or AST path)
+> 8	  squad_label  text NOT NULL DEFAULT 'default'
+> 9	                  CHECK (squad_label IN ('content', 'tech', 'market', 'ops', 'default')),
+> 10	  user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 11	  created_at   timestamptz NOT NULL DEFAULT now(),
+> 12	  UNIQUE (agent_id, module_path)
+> 13	);
+> 14	
+> 15	ALTER TABLE public.crew_module_ownership ENABLE ROW LEVEL SECURITY;
+> 16	
+> 17	-- Users can only manage their own crew's ownership records
+> 18	CREATE POLICY "crew_module_ownership_user_isolation"
+> 19	  ON public.crew_module_ownership
+> 20	  FOR ALL
+> 21	  USING  (auth.uid() = user_id)
+> 22	  WITH CHECK (auth.uid() = user_id);
+> 23	
+> 24	-- Fast lookups by module or by agent
+> 25	CREATE INDEX IF NOT EXISTS crew_module_ownership_module_path_idx
+> 26	  ON public.crew_module_ownership (module_path);
+> 27	
+> 28	CREATE INDEX IF NOT EXISTS crew_module_ownership_agent_id_idx
+> 29	  ON public.crew_module_ownership (agent_id);
+> 30	
+> 31	CREATE INDEX IF NOT EXISTS crew_module_ownership_user_id_idx
+> 32	  ON public.crew_module_ownership (user_id);
+> 33	
+> ```
+
+## 🤖 Claude *(12:48:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/MatrixPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { ConstellationMatrix } from '@/components/orchestrator/ConstellationMatrix';
+> 2	import { MeshControlPanel } from '@/components/orchestrator/MeshControlPanel';
+> 3	import { useConstellationSigma } from '@/hooks/useConstellationSigma';
+> 4	
+> 5	function MatrixPageInner() {
+> 6	  const { neuralDensity, nodeCount, edgeCount } = useConstellationSigma();
+> 7	
+> 8	  return (
+> 9	    <div className="relative w-full h-full bg-[#050210] overflow-hidden">
+> 10	      <ConstellationMatrix className="w-full h-full" />
+> 11	      <MeshControlPanel neuralDensity={neuralDensity} nodeCount={nodeCount} edgeCount={edgeCount} />
+> 12	    </div>
+> 13	  );
+> 14	}
+> 15	
+> 16	export default function MatrixPage() {
+> 17	  return <MatrixPageInner />;
+> 18	}
+> 19	
+> ```
+
+## 🤖 Claude *(12:48:57)*
+
+
+## 🤖 Claude *(12:48:59)*
+
+Veredito quase fechado. Falta a prova material decisiva: a tabela `crew_module_ownership` tem linhas de verdade, ou o caminho existe mas está vazio (caso em que só o Louvain pinta)?
+
+## 🤖 Claude *(12:49:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a; bun -e '\nimport { createClient } from \"@supabase/supabase-js\";\nconst s = createClient(process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY);\nfor (const t of [\"crew_module_ownership\",\"crew_agents\"]) {\n  const { count, error } = await s.from(t).select(\"id\", { count: \"exact\", head: true });\n  console.log(t + \":\", error ? (\"ERR \"+error.message) : (count + \" rows\"));\n}\n// AST/knowledge nodes that feed the Matrix graph\nconst { count: ast } = await s.from(\"mcorch_nodes\").select(\"id\",{count:\"exact\",head:true}).eq(\"project_id\",\"mcorch-constellation\");\nconst { count: astEdges } = await s.from(\"mcorch_edges\").select(\"id\",{count:\"exact\",head:true}).eq(\"project_id\",\"mcorch-constellation\");\nconst { count: sysNodes } = await s.from(\"mcorch_nodes\").select(\"id\",{count:\"exact\",head:true}).is(\"project_id\",null).is(\"user_id\",null);\nconsole.log(\"matrix AST nodes (project=mcorch-constellation):\", ast);\nconsole.log(\"matrix AST edges (project=mcorch-constellation):\", astEdges);\nconsole.log(\"system knowledge nodes (project=null,user=null):\", sysNodes);\n'",
+  "description": "Material check: ownership rows + graph feed counts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> crew_module_ownership: 0 rows
+> crew_agents: 3846 rows
+> matrix AST nodes (project=mcorch-constellation): 8401
+> matrix AST edges (project=mcorch-constellation): 8816
+> system knowledge nodes (project=null,user=null): 159
+> ```
+
+## 🤖 Claude *(12:50:06)*
+
+
+## 🤖 Claude *(12:50:37)*
+
+# 🏛️ VEREDITO DE ENGENHARIA — Auditoria do Sistema de Clusters (Fase 1)
+
+Varredura material concluída. Build limpo (tsc 0, confirmado no `/handson`). Resultado **cirúrgico e contra-intuitivo**: há dois sistemas de coloração coexistindo, e eles têm status de verdade **opostos**.
+
+---
+
+## A) Louvain Clustering → ✅ **REAL / VIVO**
+
+Não é mock. É computação genuína de detecção de comunidades, **client-side, em runtime**, sobre o grafo vivo da malha.
+
+| Evidência | Material |
+|---|---|
+| **Dependência matemática** | `graphology-communities-louvain@^2.0.2` (+ `graphology@^0.26.0`, `graphology-layout-forceatlas2@^0.10.1`, `sigma@^3.0.2`) — todas reais no `package.json` |
+| **Onde calcula** | [`src/hooks/useConstellationSigma.ts:227`](src/hooks/useConstellationSigma.ts:227) — `communities = louvain(g, { resolution: 1.0 })`; contagem em `:228` `new Set(Object.values(communities)).size` |
+| **Input (vivo, paginado)** | `8401` nós AST (`project=mcorch-constellation`) + `159` nós de conhecimento system + `8816` arestas — buscados via TanStack Query (`fetchAll` 1000/página) |
+| **Pós-processamento** | Posicionamento polar por comunidade (Fase 4, `:233-239`) + cor via `COMMUNITY_PALETTE` wrap-12 (Fase 5, `:247`) + layout físico **ForceAtlas2 chunked não-bloqueante** (`ConstellationMatrix.tsx:209-226`) |
+| **Legenda** | `◈ N comunidades` / `clusters louvain` (`ConstellationMatrix.tsx:548,751-757`) reflete a contagem **calculada de verdade** |
+
+> ⚠️ Correção material ao blueprint: o grafo não tem "~1801 arestas" — tem **8816** (`project=mcorch-constellation`). A malha cresceu.
+
+---
+
+## B) Territórios de Squad (`SQUAD_COLOR`) → ⚠️ **REAL no código, MAS MORTO em produção + heurístico**
+
+Aqui está a descoberta. O caminho é legítimo, mas **não pinta nada hoje**.
+
+| Camada | Status |
+|---|---|
+| `SQUAD_COLOR` (paleta 5 cores) | Estático em [`useCrewOverlay.ts:15`](src/hooks/useCrewOverlay.ts:15) — correto (é paleta, não dado) |
+| Tabela de posse | **REAL**: `crew_module_ownership` (migration `20260426160000`, RLS per-user, FK + CHECK `squad_label`), lida viva em [`useConstellationSigma.ts:127-130`](src/hooks/useConstellationSigma.ts:127) |
+| **Linhas na tabela** | **`0 rows`** (verificado live) — `crew_agents` tem **3846**, mas **zero** posses atribuídas |
+| Consequência | `ownershipMap` sempre vazio → `ownerColor ?? COMMUNITY_PALETTE[...]` (`:247`) **sempre cai no Louvain**. O territory-coloring de Squad **está dormente**; a Matrix é, na prática, **Louvain-only** hoje |
+| Mecanismo de atribuição (quando usado) | `inferSquad(name, role)` em [`useCrewOverlay.ts:34`](src/hooks/useCrewOverlay.ts:34) = **heurística de string-match** (content/tech/market/ops), persistida via `MemoryPage.tsx:337` (fluxo "Assign Agent", Epsilon v5). **Não é afinidade funcional algorítmica — é keyword matching.** |
+
+**Tradução:** o que você vê de cluster na Matrix **é 100% Louvain real**. A legenda de Squads existe, mas **nenhum nó veste cor de squad** porque ninguém nunca rodou a atribuição → tabela vazia.
+
+---
+
+## C) Mocks cosméticos (fora do motor da Matrix — registrar para limpeza)
+
+- `LandingConstellation.tsx:7` → `SQUAD_COLORS` = 4 cores hardcoded + posições `Math.random()` → **mock decorativo puro** da landing page. Zero dado.
+- `CrewGraph.tsx:11` → `SQUAD_META` = record estático (nome+cor por squad) — mas é o **grafo 3D de Crew** (`/dashboard/constellation`, agentes ≠ AST). Estático por design; os agentes em si são reais (3846 rows).
+
+---
+
+## Implicação acionável (antes da fusão)
+
+A camada de Squad é um **trilho construído sem trem**. Antes de herdar isso no Canvas unificado, há uma decisão de design real:
+
+1. **Automatizar** — popular `crew_module_ownership` por um job que case AST↔squad (elevar `inferSquad` de heurística manual para pipeline), **ou**
+2. **Podar** — aposentar a legenda/territory-coloring dormente e assumir **Louvain como o esquema oficial** de cor da Rede de Código (mais honesto: é o que já funciona vivo).
+
+---
+
+## 🚦 Gate de governança (Fases 2-3)
+
+A auditoria (Fase 1) está **fechada e materializada**. As Fases 2-3 são **mudança arquitetural maior** (fundir 3 rotas de produção em um canvas, novas arestas de sinapse inter-rede, unificação de 3 hooks) — **não exenta** pelo Master Execution Protocol. A suíte BoK `mcorch-constellation` está selada (9/9), mas **não cobre** este Canvas Sensorial Unificado.
+
+Respeitando sua sequência ("planeje… aguardo o veredicto"), o veredito está acima. O próximo passo legítimo, sem violar o Closed-Loop:
+
+- **Posso produzir já o Plano da Fase 2** (a fusão detalhada: árvore flex 72/28, contexto global do visualizador, toggles Matrix/Memória/Universo, sinapses de acoplamento, estratégia de "manter as 3 páginas como backup") — **planejar é gate-free**.
+- **A implementação (Fase 3) exige sua decisão de gate:** (a) emenda BoK / `/bok-scribe mcorch-constellation-unified-canvas`, ou (b) **override consciente do Sovereign** (precedente viralmind — débito BoK selado no `/handoff`).
+
+Como quer proceder, Maestro — solto o Plano da Fase 2 agora, e você decide o gate da implementação?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
