@@ -4368,6 +4368,2232 @@ Manifesto pronto. Agora o **MRD** (BABOK — mercado, problema, requisitos de me
 > File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/01-mrd.md (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(20:59:15)*
+
+Agora o **BRD** (objetivos SMART, ROI, mcoCoins economics, riscos):
+
+## 🤖 Claude *(21:00:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md",
+  "content": "# BRD \u2014 Business Requirements Document\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** BABOK v3 (Requirements Analysis & Design Definition)  \n**Status:** Draft\n\n---\n\n## 1. Executive Summary\n\nO `viral-autopilot` converte a infraestrutura de gera\u00e7\u00e3o e de receita ML j\u00e1 existente no MCORCH em um **motor de receita aut\u00f4nomo e auto-melhor\u00e1vel**. O objetivo de neg\u00f3cio \u00e9 triplo: (1) **escalar volume** de conte\u00fado monetizado sem trabalho humano por post; (2) **aumentar a convers\u00e3o** ao tornar cada criativo product-aware e informado pelo desempenho passado; (3) **proteger a margem** com tetos de custo e atribui\u00e7\u00e3o de ROI por pe\u00e7a. O retorno \u00e9 direto \u2014 comiss\u00e3o de afiliado ML \u2014 mas protegido por um modelo de custo em mcoCoins que garante que o loop aut\u00f4nomo nunca opere no preju\u00edzo silencioso.\n\n---\n\n## 2. Business Objectives (SMART)\n\n| ID | Objective | Specific | Measurable | Achievable | Relevant | Time-bound |\n|----|-----------|----------|------------|------------|----------|------------|\n| BO-001 | Automatizar a gera\u00e7\u00e3o+publica\u00e7\u00e3o monetizada | Operador define 1 plano e o sistema produz/publica criativos product-aware sem a\u00e7\u00e3o por post | \u2265 90% dos posts via autopilot (sem toque manual) | Pipeline de texto j\u00e1 vivo; falta orquestrador | Escala receita sem escalar trabalho | MVP at\u00e9 2026-07-31 |\n| BO-002 | Fechar o loop de melhoria por desempenho | Cada ciclo l\u00ea o desempenho do anterior e ajusta os pr\u00f3ximos criativos | Lift de engajamento ciclo-a-ciclo \u2265 1.10\u00d7 ap\u00f3s 3 ciclos | `self-optimize` j\u00e1 existe (esqueleto); fechar 3 quebras | \u00c9 o diferencial do produto | v1.0 at\u00e9 2026-08-31 |\n| BO-003 | Garantir margem positiva e custo controlado | Todo ciclo respeita teto de mcoCoins e atribui ROI por criativo | 100% dos ciclos com `spend_mco \u2264 budget_cap`; ROI por pe\u00e7a vis\u00edvel | D\u00e9bito at\u00f4mico `deduct_mco_coins` j\u00e1 existe | Evita o autopilot virar buraco de carteira | MVP at\u00e9 2026-07-31 |\n| BO-004 | Monetizar todo formato gerado | Artigo + LinkedIn + X saem com link ML v\u00e1lido per-user | 100% dos criativos com `content_variant_id` + link rastre\u00e1vel | `monetizeContent` + `affiliate_config` j\u00e1 existem (s\u00f3 no artigo hoje) | Sem monetiza\u00e7\u00e3o universal n\u00e3o h\u00e1 atribui\u00e7\u00e3o nem receita | MVP at\u00e9 2026-07-31 |\n\n---\n\n## 3. Stakeholder Register\n\n| ID | Role | Interest | Influence | Communication Cadence | Contact |\n|----|------|----------|-----------|----------------------|---------|\n| SH-001 | Sovereign / Maestro | High | High | Continuous | Gabriel Zarattini |\n| SH-002 | Operador/Afiliado (Primary) \u2014 Usu\u00e1rio Zero | High | Medium | Por ciclo (dashboard) + NPS mensal | gabrielcall@gmail.com |\n| SH-003 | Mercado Livre / Mercado Pago | Medium | High | Via postback + ToS (ass\u00edncrono) | Plataforma externa |\n| SH-004 | Redes sociais (LinkedIn/X/Meta) | Medium | High | Via API + ToS/quotas | Plataformas externas |\n| SH-005 | MCORCH Master Execution Agent (Operator) | High | Medium | Por sess\u00e3o (handoff) | AIOS |\n\n---\n\n## 4. Business Requirements\n\n> Cada BR rastreia \u2265 1 MR. Custo mcoCoins definido para BR com gera\u00e7\u00e3o via IA.\n\n| ID | Requirement | MR Traced | Priority | mcoCoins Cost | Acceptance Criteria |\n|----|-------------|-----------|----------|---------------|---------------------|\n| BR-VA-001 | Gera\u00e7\u00e3o product-aware multi-formato: artigo+post+thread com copy de venda constru\u00edda em torno de um produto-alvo (id+nome+imagem ML), substituindo os prompts B2B hardcoded por framework de gancho viral | MR-VA-001 | Critical | herda `orchestrate-content` (10 mco/run + sub-steps) | Dado um produto-alvo, os 3 formatos mencionam o produto e cont\u00eam link ML v\u00e1lido |\n| BR-VA-002 | Plano de cad\u00eancia persistido (modo all-at-once vs lote-a-cada-N-dias, default 3) + cron por-tenant que dispara o ciclo sem a\u00e7\u00e3o humana | MR-VA-002 | Critical | 0 (orquestra\u00e7\u00e3o) | Plano com `interval_days=3` dispara automaticamente a cada 3 dias; modo all-at-once gera lote \u00fanico |\n| BR-VA-003 | Loop fechado: coletar desempenho do ciclo \u2192 analisar \u2192 reinjetar aprendizados (top hooks/produtos/hor\u00e1rios) na gera\u00e7\u00e3o do pr\u00f3ximo ciclo | MR-VA-003 | Critical | 5 mco/an\u00e1lise (LLM, herda `self-optimize`) | Ciclo N+1 recebe no prompt o resumo estruturado do desempenho do ciclo N |\n| BR-VA-004 | Monetiza\u00e7\u00e3o em TODO formato com `content_variant_id` por criativo, honrando o produto-alvo (corrigir param `affiliate_url` dropado) | MR-VA-004 | Critical | 0 (parte da gera\u00e7\u00e3o) | LinkedIn e Twitter, n\u00e3o s\u00f3 o artigo, saem com link ML rastre\u00e1vel + `content_variant_id` |\n| BR-VA-005 | M\u00e9tricas por criativo unificadas (cliques afiliado + engajamento org\u00e2nico + receita postback) + atribui\u00e7\u00e3o de ROI por pe\u00e7a | MR-VA-005 | High | 0 (ingest\u00e3o) | `creative_metrics` populada por \u2265 1 fonte real; ROIWidget mostra ROI por `content_variant_id` |\n| BR-VA-006 | Or\u00e7amento de ciclo (teto mcoCoins) + kill-switch que pausa o plano quando saldo < limiar, ANTES de qualquer deduct | MR-VA-006 | Critical | 0 (guarda) | Ciclo aborta sem cobrar quando `spend projetado > budget_cap` ou `saldo < min`; plano pausado + notifica\u00e7\u00e3o |\n| BR-VA-007 | Toda credencial externa (ML, redes, LLM) resolvida per-user via `auth.uid()`; sem chave global em fluxo user-facing | MR-VA-007 | High | 0 | Tenant A nunca usa credencial/quota de Tenant B; fail-closed quando n\u00e3o configurado |\n| BR-VA-008 | Sele\u00e7\u00e3o de produto por comiss\u00e3o+trend a partir do cat\u00e1logo (3 SKUs semente agora; caminho de auto-descoberta documentado) | MR-VA-008 | Medium | 0 (sele\u00e7\u00e3o) | Plano referencia produtos do cat\u00e1logo `vm_affiliate_products`; ranking por `commission_value`+`trend_score` dispon\u00edvel |\n\n---\n\n## 5. ROI Model\n\n### 5.1 Cost Estimates\n\n| Cost Item | Type | Monthly Estimate | Annual Estimate |\n|-----------|------|-----------------|----------------|\n| Infraestrutura (Supabase, Docker mesh, pg_cron) | OpEx | ~R$ 0 incremental (reusa stack existente) | ~R$ 0 incremental |\n| Chamadas LLM (texto, BYOK por tenant) | Variable | ~R$ 0\u201320/tenant (texto \u00e9 quase free; custo no tenant via BYOK) | \u2014 |\n| Gera\u00e7\u00e3o de imagem (DALL\u00b7E/Nano Banana) | Variable | ~$0.04/imagem \u00d7 volume do ciclo | escala com n\u00ba de criativos |\n| Desenvolvimento (inicial \u2014 MVP+v1.0) | CapEx | \u2014 | ~2\u20133 sprints de engenharia (interno) |\n\n### 5.2 Revenue Streams\n\n| Stream | Model | Monthly Potential | Notes |\n|--------|-------|-----------------|-------|\n| Comiss\u00e3o de afiliado ML | Transaction (revenue share) | vari\u00e1vel \u2014 fun\u00e7\u00e3o de volume \u00d7 CTR \u00d7 taxa de convers\u00e3o \u00d7 comiss\u00e3o | Receita direta; atribu\u00edda por `content_variant_id` via postback |\n| Consumo de mcoCoins | Subscription/consumption | 10 mco/run + 5 mco/an\u00e1lise \u00d7 ciclos | Receita indireta da plataforma; alinha custo ao uso |\n\n### 5.3 Payback Analysis\n\n| Metric | Value |\n|--------|-------|\n| Break-even (months) | Indeterminado at\u00e9 1\u00ba postback real de convers\u00e3o ML (OTD-VA-007 / OTD-ML-MP-PER-USER) \u2014 depende de CTR\u00d7convers\u00e3o observados |\n| 12-month ROI | A medir; meta \u00e9 receita ML atribu\u00edda > custo de mcoCoins do loop por tenant |\n| IRR (estimated) | N/A nesta fase (Usu\u00e1rio Zero pr\u00e9-Commercial) |\n\n> **Honestidade material (Lei 1):** o payback real s\u00f3 pode ser afirmado ap\u00f3s um postback de convers\u00e3o ML chegar em produ\u00e7\u00e3o. Hoje a receita atribu\u00edvel \u00e9 R$ 0 provados. O ROI Model \u00e9 proje\u00e7\u00e3o, n\u00e3o fato.\n\n---\n\n## 6. mcoCoins Economics\n\n| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |\n|-----------|-----------|-------------------|-----------------------|----------------------|\n| Ciclo de gera\u00e7\u00e3o (autopilot) | 10 mco/run (herda `orchestrate-content`) + sub-steps | Starter(500) / Pro(2000) / Ent(10k) | fun\u00e7\u00e3o de `interval_days` \u00d7 n\u00ba produtos \u00d7 redes | consumo de plano |\n| An\u00e1lise de ciclo (self-optimize) | 5 mco/an\u00e1lise | idem | 1 por ciclo por plano | consumo de plano |\n| Gera\u00e7\u00e3o de imagem | calibrar via SOP `mcoin-cost-calibration` (modelo 4\u00d7-floor) | idem | 1+ por criativo | consumo de plano |\n\n> **Teto obrigat\u00f3rio (BR-VA-006):** cada plano carrega `budget_cap_mco` por ciclo. O ciclo soma o custo projetado (10 + 5 + imagem \u00d7 n\u00ba criativos) e **aborta antes de deduzir** se exceder o teto ou se o saldo cair abaixo do m\u00ednimo. Espelha o modelo de caps do `vision-mcp` (per-plano + safety di\u00e1rio).\n\n---\n\n## 7. Constraints & Assumptions\n\n### Constraints\n- **API Tenancy per-user (UNBREAKABLE):** toda credencial externa resolvida via `auth.uid()`; env global s\u00f3 em cron/service-role sem JWT, nunca como caminho prim\u00e1rio user-facing.\n- **mcoCoins at\u00f4mico:** dedu\u00e7\u00e3o s\u00f3 via `deduct_mco_coins` RPC; nunca client-side; sempre depois do gate de teto.\n- **RLS default-deny** em toda nova tabela; multi-tenant `user_id (+ project_id)`.\n- **MVP = texto + imagem nas redes atuais** (WordPress/LinkedIn/Twitter-X). V\u00eddeo + TikTok/IG/YT s\u00e3o fase 2.\n- **Cyber-Sentinel gate** no t\u00f3pico e no conte\u00fado gerado antes de publicar (brand-safety + anti-prompt-injection).\n- Toda migration nova passa `/security-review` antes do commit.\n\n### Assumptions\n- O click ledger ML (`record_affiliate_click`) j\u00e1 conta cada clique que passa pelo nosso redirect (provado na auditoria).\n- LinkedIn publica hoje; Twitter depende de tier Basic; Meta/IG via `publish-meta` (dev mode).\n- O postback de convers\u00e3o ML (`handle-ml-postback`) \u00e9 infra pronta mas **n\u00e3o provado em produ\u00e7\u00e3o** \u2014 atribui\u00e7\u00e3o de receita real depende de fechar OTD-ML-MP-PER-USER.\n- Engajamento org\u00e2nico por post depende da disponibilidade de insights na API de cada rede (tier-dependente) \u2014 cliques de afiliado s\u00e3o o sinal sempre-dispon\u00edvel.\n\n---\n\n## 8. Business Risk Register\n\n| Risk ID | Description | Probability | Impact | RPN | Mitigation |\n|---------|-------------|-------------|--------|-----|------------|\n| BR-RISK-001 | Loop aut\u00f4nomo drena mcoCoins silenciosamente (cron \u00d7 produtos \u00d7 redes) | 4 | 5 | 20 | Teto por ciclo + kill-switch + safety di\u00e1rio (BR-VA-006 / FR-VA-007); notifica\u00e7\u00e3o saldo baixo |\n| BR-RISK-002 | \"Auto-melhoria teatral\": loop roda sem dado real e o LLM cai em recomenda\u00e7\u00f5es gen\u00e9ricas | 4 | 4 | 16 | Bloquear an\u00e1lise quando `creative_metrics` vazia; usar cliques de afiliado (sempre dispon\u00edvel) como sinal m\u00ednimo (OTD-VA-003) |\n| BR-RISK-003 | Postback ML nunca chega \u2192 receita atribu\u00edda = 0 mesmo com vendas | 3 | 5 | 15 | Fechar OTD-ML-MP-PER-USER; provar 1 postback real; ROI usa cliques como proxy enquanto isso |\n| BR-RISK-004 | Conte\u00fado aut\u00f4nomo viola ToS de rede/ML ou publica algo off-brand | 3 | 5 | 15 | Cyber-Sentinel gate pr\u00e9-publica\u00e7\u00e3o; disclosure de afiliado; rate/quota por tier; HITL opcional no plano |\n| BR-RISK-005 | Volume alto de conte\u00fado que n\u00e3o converte (custo sobe, comiss\u00e3o n\u00e3o vem) | 3 | 4 | 12 | ROI por criativo + kill-switch por margem; loop poda \u00e2ngulos de baixa convers\u00e3o |\n| BR-RISK-006 | Conte\u00fado s\u00f3 em texto em WP/LinkedIn/X (baixa viraliza\u00e7\u00e3o org\u00e2nica) | 4 | 3 | 12 | Imagem no MVP; v\u00eddeo+TikTok/IG/YT priorizados na fase 2 |\n\n> Probability & Impact: 1=Low, 5=High. RPN = Probability \u00d7 Impact.\n\n---\n\n## 9. Business Acceptance Criteria\n\n| ID | Criterion | Verification Method |\n|----|-----------|-------------------|\n| BAC-001 | Um plano de autopilot com `interval_days=3` dispara um ciclo automaticamente sem a\u00e7\u00e3o humana | SELECT em `autopilot_cycles` mostrando ciclos sequenciais com `started_at` espa\u00e7ados ~3d |\n| BAC-002 | Todo criativo gerado (artigo+LinkedIn+X) cont\u00e9m link ML v\u00e1lido com `content_variant_id` | SELECT `creative_metrics`/`affiliate_links` por `cycle_id`; 100% com link |\n| BAC-003 | Nenhum ciclo cobra mcoCoins acima do `budget_cap_mco`; ciclo aborta limpo quando excede | Smoke zero-cost: plano com cap baixo \u2192 ciclo aborta, saldo intacto |\n| BAC-004 | O ciclo N+1 recebe no prompt o resumo de desempenho do ciclo N | Log/trace do prompt do gerador contendo features do `optimization_policy` do ciclo anterior |\n| BAC-005 | ROI por criativo vis\u00edvel no dashboard (cliques + receita atribu\u00edda por pe\u00e7a) | UI `AutopilotPage` exibindo `creative_metrics` por `content_variant_id` |\n\n---\n\n## 10. Traceability Matrix\n\n| MR ID | BR ID | PR ID (stub) |\n|-------|-------|--------------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002 |\n| MR-VA-005 | BR-VA-005 | PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:00:30)*
+
+
+## 🤖 Claude *(21:00:31)*
+
+MRD+BRD selados (8 MR, 8 BR). Agora o **PRD** (personas, jornadas, MoSCoW com MVP=texto+imagem, Gherkin):
+
+## 🤖 Claude *(21:01:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md",
+  "content": "# PRD \u2014 Product Requirements Document\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** ProdBOK + CXBOK  \n**Status:** Draft\n\n---\n\n## 1. Product Vision Statement\n\n> Para **afiliados e criadores do Mercado Livre** que **n\u00e3o t\u00eam tempo nem equipe para produzir, agendar e otimizar conte\u00fado viral monetizado**, o **viral-autopilot** \u00e9 um **piloto-autom\u00e1tico de conte\u00fado** que **gera criativos product-aware, publica em cad\u00eancia configur\u00e1vel e melhora a cada ciclo lendo o desempenho real**. Diferente de **ferramentas de agendamento (que s\u00f3 publicam) ou geradores de IA (que s\u00f3 escrevem)**, nosso produto **fecha o loop gera\u00e7\u00e3o\u2192publica\u00e7\u00e3o\u2192atribui\u00e7\u00e3o\u2192re-gera\u00e7\u00e3o com receita de comiss\u00e3o ML rastre\u00e1vel por pe\u00e7a**.\n\n---\n\n## 2. User Personas\n\n### Persona 1 \u2014 Rafael, o Afiliado-Solo (Primary)\n\n| Attribute | Detail |\n|-----------|--------|\n| Role | Afiliado ML / criador de conte\u00fado que monetiza links (perfil do Usu\u00e1rio Zero) |\n| Goals | Escalar volume de conte\u00fado monetizado sem virar ref\u00e9m da produ\u00e7\u00e3o manual; saber o que converte |\n| Frustrations | Escrever copy \u00e0 m\u00e3o para cada produto/rede; colar links manualmente; n\u00e3o saber qual post deu venda |\n| Tech-savviness | 3 (confort\u00e1vel com ferramentas, n\u00e3o-programador) |\n| MCORCH usage pattern | Define plano(s) de autopilot, confere o dashboard de ROI por ciclo, ajusta produtos-alvo |\n| Quote | _\"Eu quero ligar isso numa sexta e na segunda ter conte\u00fado no ar, com link certo, e ver o que vendeu.\"_ |\n\n### Persona 2 \u2014 Marina, a Gestora de M\u00faltiplas Contas (Secondary)\n\n| Attribute | Detail |\n|-----------|--------|\n| Role | Gestora de PME/ag\u00eancia operando v\u00e1rias contas/produtos de afiliado |\n| Goals | Cad\u00eancia consistente em v\u00e1rias contas; relat\u00f3rio de ROI por produto/criativo para decidir investimento |\n| Frustrations | Gerenciar credenciais e calend\u00e1rio de N contas; sem vis\u00e3o consolidada de qual criativo performa |\n| Tech-savviness | 4 |\n| MCORCH usage pattern | V\u00e1rios planos (um por produto/conta), BYOK por tenant, foco no relat\u00f3rio ciclo-a-ciclo |\n| Quote | _\"Preciso de cad\u00eancia previs\u00edvel e um n\u00famero de ROI por pe\u00e7a que eu possa mostrar ao cliente.\"_ |\n\n---\n\n## 3. User Journey Maps\n\n### Journey: Ligar o Autopilot (Rafael, Happy Path)\n\n| Stage | Action | Touchpoint | Emotion | Opportunity |\n|-------|--------|-----------|---------|-------------|\n| Awareness | Descobre o Autopilot no dashboard | `AutopilotPage` (nav) | \ud83d\ude10 Neutral | Empty-state explicando o ciclo + custo |\n| Consideration | Cria um plano: escolhe produtos-alvo + redes + modo | Plan editor | \ud83e\udd14 Curious | Pr\u00e9-visualizar custo projetado por ciclo (mcoCoins) |\n| Activation | Salva o plano e dispara \"tudo de uma vez\" (ou ativa cad\u00eancia) | Run/Activate button | \ud83d\ude0a Excited | Confirmar teto de custo antes de disparar |\n| Value | V\u00ea criativos publicados e o primeiro ROI por pe\u00e7a | Cycle timeline + ROI cards | \ud83d\ude80 Delighted | Destacar o \"vencedor\" do ciclo |\n| Retention | Ciclo seguinte melhora sozinho; ajusta produtos | Auto-improve insight card | \u2764\ufe0f Loyal | Mostrar o lift ciclo-a-ciclo |\n\n#### Edge Case 1: Saldo insuficiente / teto estourado\n> No disparo, o custo projetado excede `budget_cap_mco` ou o saldo est\u00e1 abaixo do m\u00ednimo \u2192 ciclo **n\u00e3o inicia**, plano n\u00e3o cobra, toast PT-BR \"Saldo/teto insuficiente para este ciclo\" + plano marcado `paused`.\n\n#### Edge Case 2: M\u00e9tricas ainda n\u00e3o chegaram (ciclo 1)\n> No primeiro ciclo n\u00e3o h\u00e1 desempenho anterior \u2192 o analisador usa baseline (sem dado) e o gerador roda com framework viral padr\u00e3o + sinal de trends; o insight card sinaliza \"coletando desempenho \u2014 melhoria a partir do ciclo 2\".\n\n---\n\n## 4. Feature Inventory (MoSCoW)\n\n> Effort: S=hours, M=days, L=week, XL=sprint\n\n### Must Have (MVP \u2014 texto + imagem nas redes atuais)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-VA-001 | **Autopilot Plan** \u2014 criar/editar plano (produtos-alvo, redes, modo all-at-once vs cada-N-dias, teto) | P1, P2 | BR-VA-002, BR-VA-007, BR-VA-008 | L | 0 | Entidade `autopilot_plans` per-user; default `interval_days=3` |\n| PR-VA-002 | **Product-aware generation** \u2014 texto monetizado (artigo+LinkedIn+X) com copy de venda em torno do produto-alvo, link ML em todo formato | P1 | BR-VA-001, BR-VA-004 | L | herda 10 + sub-steps | Substitui prompts B2B; corrige `affiliate_url` dropado |\n| PR-VA-003 | **Cadence scheduler** \u2014 cron por-tenant que dispara o ciclo a cada N dias (auto-refill) | P1, P2 | BR-VA-002 | L | 0 | Generaliza primitiva nurture (`next_run_at` + pg_cron) |\n| PR-VA-004 | **Performance collector** \u2014 cliques afiliado + engajamento org\u00e2nico + receita \u2192 `creative_metrics` | P1, P2 | BR-VA-005, BR-VA-003 | L | 0 | Combo (Decis\u00e3o 3); cliques primeiro, org\u00e2nico best-effort |\n| PR-VA-005 | **Self-improvement feedback** \u2014 analisar lote anterior \u2192 injetar features no prompt do pr\u00f3ximo | P1 | BR-VA-003 | M | 5 (an\u00e1lise) | Fecha as 3 quebras do `self-optimize` |\n| PR-VA-006 | **Cost guardrail** \u2014 teto por ciclo + kill-switch + alerta de saldo baixo (antes do deduct) | P1, P2 | BR-VA-006 | M | 0 | `budget_cap_mco` no plano; espelha caps vision-mcp |\n| PR-VA-007 | **Autopilot dashboard** \u2014 timeline de ciclos + criativos + ROI por pe\u00e7a | P1, P2 | BR-VA-005 | M | 0 | Hook `useAutopilot`; reusa ROIWidget |\n| PR-VA-008 | **Image creative** \u2014 imagem por criativo, produto ML como refer\u00eancia, formato por plataforma | P1 | BR-VA-001 | M | ~img cost | MVP (Decis\u00e3o 2); plugar `generate-image` (hoje \u00f3rf\u00e3) ao ciclo |\n\n### Should Have (v1.0)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-VA-010 | **Auto product selection** \u2014 selecionar produto do cat\u00e1logo por `commission_value`+`trend_score` (al\u00e9m dos 3 semente) | P1, P2 | BR-VA-008 | M | 0 | OTD-VA-006: auto-score em v1.0 |\n| PR-VA-011 | **Trend-informed angle** \u2014 `fetch-trends`/`vm_trends` pautam o \u00e2ngulo viral | P1 | BR-VA-008 | M | 0 | Reconecta a ilha de trends ao gerador |\n| PR-VA-012 | **A/B variant generation** \u2014 N varia\u00e7\u00f5es por criativo por ciclo, escolhe vencedora pelo desempenho | P1 | BR-VA-003 | M | herda gera\u00e7\u00e3o | Acelera o aprendizado do loop |\n| PR-VA-013 | **HITL gate opcional** \u2014 aprova\u00e7\u00e3o humana antes de publicar (plano configura) | P2 | BR-VA-004 | S | 0 | Reusa policy-engine do `intent-execute` |\n\n### Could Have (Future / Fase 2)\n\n| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |\n|----|---------|---------|-----------|--------|-------------|-------|\n| PR-VA-020 | **Video creative 9:16** (TikTok/Reels/Shorts) | P1 | BR-VA-001 | XL | v\u00eddeo cost | Fase 2 (Decis\u00e3o 2); `generate-video` hoje \u00f3rf\u00e3 |\n| PR-VA-021 | **TikTok/Instagram/YouTube publishing** | P1 | BR-VA-001 | XL | 0 | Fase 2; OAuth + publish novos destinos |\n| PR-VA-022 | **Catalog auto-discovery cron** \u2014 produtiza `discover-affiliate-products.ts` (hoje CLI manual) | P2 | BR-VA-008 | L | 0 | Score por comiss\u00e3o/trend real, n\u00e3o s\u00f3 log10(pre\u00e7o) |\n\n### Won't Have (This Cycle)\n\n- Gest\u00e3o de an\u00fancios pagos (Meta Ads) dentro do autopilot \u2014 `sync-meta-ads` permanece separado.\n- Deduplica\u00e7\u00e3o de atribui\u00e7\u00e3o cross-network (multi-touch) \u2014 atribui\u00e7\u00e3o \u00e9 por clique/postback no MVP.\n- Outreach a influenciadores / parcerias.\n\n---\n\n## 5. Release Phasing\n\n### MVP Scope\n**Target date:** 2026-07-31  \n**Included:** PR-VA-001, PR-VA-002, PR-VA-003, PR-VA-004, PR-VA-005, PR-VA-006, PR-VA-007, PR-VA-008  \n**Success gate:** um plano dispara ciclos a cada 3 dias, gera texto+imagem monetizados em WP/LinkedIn/X, coleta cliques de afiliado, e o ciclo 2 demonstra reinje\u00e7\u00e3o do desempenho do ciclo 1 \u2014 tudo dentro do teto de custo (smoke zero-cost provando o kill-switch).\n\n### v1.0 Scope\n**Target date:** 2026-08-31  \n**Adds:** PR-VA-010, PR-VA-011, PR-VA-012, PR-VA-013  \n**Success gate:** sele\u00e7\u00e3o autom\u00e1tica de produto por comiss\u00e3o+trend + \u00e2ngulo informado por trends + A/B + HITL opcional; lift de engajamento ciclo-a-ciclo \u2265 1.10\u00d7 medido.\n\n### Future Scope\n**Items:** PR-VA-020, PR-VA-021, PR-VA-022  \n**Condition:** ap\u00f3s MVP validado e decis\u00e3o Sovereign de priorizar m\u00eddia viral (v\u00eddeo 9:16 + redes virais) \u2014 gate de esfor\u00e7o XL.\n\n---\n\n## 6. Luxury UX Specifications\n\n### 6.1 Color & Visual Identity\n\n| Token | Value | Usage |\n|-------|-------|-------|\n| `--bg-deep` | `#0A0A0F` | Canvas background da AutopilotPage |\n| `--accent-violet` | `#7C3AED` | CTA \"Ativar Autopilot\", estado ativo do plano |\n| `--accent-cyan` | `#06B6D4` | M\u00e9tricas de ROI, gr\u00e1ficos de lift ciclo-a-ciclo |\n| `--glass-surface` | `rgba(255,255,255,0.04)` | Cards de ciclo e de criativo |\n| `--border-subtle` | `rgba(255,255,255,0.08)` | Bordas de card |\n\n### 6.2 Animation Guidelines\n\n| Element | Library | Duration | Easing |\n|---------|---------|----------|--------|\n| Transi\u00e7\u00e3o de p\u00e1gina | Framer Motion | 300ms | `easeInOut` |\n| Entrada de card de ciclo | Framer Motion | 300ms | `easeOut` |\n| Pulse de status \"ciclo rodando\" | CSS keyframes | 2s | `ease-in-out infinite` |\n| Highlight do criativo \"vencedor\" | Framer Motion | 150ms | `easeOut` |\n\n### 6.3 Interaction Patterns\n\n- **Cards:** glass morphism \u2014 `backdrop-blur-sm`, borda sutil, sombra `0 4px 24px rgba(0,0,0,0.4)`.\n- **Bot\u00e3o \"Ativar Autopilot\":** gradiente no hover; confirma\u00e7\u00e3o de teto de custo (mcoCoins) antes do disparo.\n- **Loading:** skeleton shimmer nos cards de ciclo (nunca spinner em \u00e1rea de conte\u00fado).\n- **Toasts:** `sonner` \u2014 sucesso=violeta, erro=vermelho, info=ciano. Saldo/teto insuficiente = toast PT-BR expl\u00edcito.\n\n### 6.4 Accessibility (WCAG 2.1 AA)\n\n- Contraste \u2265 4.5:1 para texto sobre vidro.\n- Todos os controles do plano naveg\u00e1veis por teclado.\n- ARIA labels nos bot\u00f5es \u00edcone (ativar/pausar/editar plano).\n- Foco vis\u00edvel \u2265 2px.\n\n---\n\n## 7. Acceptance Criteria (Gherkin)\n\n```gherkin\nFeature: Viral Autopilot \u2014 ciclo aut\u00f4nomo monetizado e auto-melhor\u00e1vel\n\n  Scenario: Ativar plano com cad\u00eancia de 3 dias (PR-VA-001, PR-VA-003)\n    Given um operador autenticado com saldo de mcoCoins suficiente\n    And um plano com produtos-alvo [Roborock S8], redes [wordpress, linkedin, twitter], modo \"every_n_days\", interval_days 3\n    When o operador ativa o plano\n    Then o sistema agenda next_run_at para now\n    And o cron dispara o primeiro ciclo sem a\u00e7\u00e3o humana\n    And cria uma linha em autopilot_cycles com status \"running\"\n\n  Scenario: Gera\u00e7\u00e3o product-aware monetizada em todo formato (PR-VA-002, PR-VA-008)\n    Given um ciclo em execu\u00e7\u00e3o com produto-alvo \"Roborock S8\"\n    When o gerador produz artigo, post de LinkedIn, thread de X e imagem\n    Then cada formato menciona o produto e cont\u00e9m um link de afiliado ML v\u00e1lido com content_variant_id\n    And a imagem usa a image_url do produto como refer\u00eancia\n\n  Scenario: Kill-switch de custo antes do deduct (PR-VA-006)\n    Given um plano com budget_cap_mco 5 e custo de ciclo projetado 15\n    When o cron tenta disparar o ciclo\n    Then o ciclo aborta com status \"aborted_budget\"\n    And nenhum mcoCoin \u00e9 deduzido\n    And o plano \u00e9 marcado \"paused\" com notifica\u00e7\u00e3o PT-BR \"Teto de custo insuficiente para este ciclo\"\n\n  Scenario: Loop auto-melhor\u00e1vel realimenta o ciclo seguinte (PR-VA-004, PR-VA-005)\n    Given o ciclo 1 publicou criativos e o coletor gravou cliques de afiliado em creative_metrics\n    When o ciclo 2 \u00e9 disparado\n    Then o analisador produz um optimization_policy a partir do desempenho do ciclo 1\n    And o prompt de gera\u00e7\u00e3o do ciclo 2 inclui as features de melhor desempenho (top hook/produto/hor\u00e1rio)\n\n  Scenario: ROI por criativo vis\u00edvel (PR-VA-007)\n    Given criativos publicados com cliques e/ou receita atribu\u00edda\n    When o operador abre a AutopilotPage\n    Then v\u00ea, por content_variant_id, cliques, receita atribu\u00edda e o criativo vencedor do ciclo\n```\n\n---\n\n## 8. Traceability Matrix\n\n| MR ID | BR ID | PR ID |\n|-------|-------|-------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005, PR-VA-012 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002, PR-VA-013 |\n| MR-VA-005 | BR-VA-005 | PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011, PR-VA-022 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:01:45)*
+
+
+## 🤖 Claude *(21:01:47)*
+
+PRD selado (2 personas, MoSCoW, 5 cenários Gherkin). Agora o **FRD** — o documento mais crítico, com as FRs explícitas de R2 (cadência) e R3 (loop fechado) que hoje não existem em suite algum:
+
+## 🤖 Claude *(21:03:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "content": "# FRD \u2014 Functional Requirements Document\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** SWEBOK v4 (Software Requirements)  \n**Status:** Draft\n\n---\n\n## 1. Scope Statement\n\nEste documento especifica os requisitos funcionais e n\u00e3o-funcionais do `viral-autopilot`. Deriva do PRD `03-prd.md` e alimenta o SDD `05-sdd.md`.\n\n**In scope (MVP+v1.0):** entidade de plano de cad\u00eancia; cron de disparo recorrente por-tenant; gera\u00e7\u00e3o product-aware monetizada em todo formato (texto+imagem); coletor de desempenho unificado (cliques+org\u00e2nico+receita); analisador de ciclo + reinje\u00e7\u00e3o de aprendizado; guarda de custo (teto + kill-switch); dashboard de ROI por criativo; sele\u00e7\u00e3o de produto por comiss\u00e3o+trend; \u00e2ngulo informado por trends.\n\n**Out of scope (Fase 2 / Won't):** gera\u00e7\u00e3o de v\u00eddeo 9:16; publica\u00e7\u00e3o em TikTok/Instagram/YouTube; gest\u00e3o de an\u00fancios pagos; atribui\u00e7\u00e3o multi-touch cross-network; auto-descoberta de cat\u00e1logo (CLI manual permanece at\u00e9 PR-VA-022).\n\n---\n\n## 2. Functional Requirements\n\n> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron` | `Lib`\n\n| ID | Title | Description | Priority | PR Traced | Category | Test ID |\n|----|-------|-------------|----------|-----------|----------|---------|\n| FR-VA-001 | Autopilot plan entity | Tabela `autopilot_plans` (per-user RLS): mode (`all_at_once`\\|`every_n_days`), interval_days (default 3), target_product_ids[], platforms[], budget_cap_mco, is_active, next_run_at. CRUD via hook. | Critical | PR-VA-001 | DB | AT-VA-001 |\n| FR-VA-002 | Cycle dispatcher | Edge fn `autopilot-run` (JWT): valida plano, aplica gate de custo (FR-VA-007), seleciona produto(s), abre `autopilot_cycles`, e faz fan-out product-aware para `orchestrate-content` (1 dispatch por produto\u00d7rede). Reusa o padr\u00e3o de `campaign-run`. | Critical | PR-VA-002, PR-VA-001 | EdgeFunction | AT-VA-002 |\n| FR-VA-003 | Product-aware generation | Em `orchestrate-step`, o prompt recebe o produto-alvo (id+nome+imagem+pre\u00e7o+comiss\u00e3o) e usa framework de gancho viral de consumo (hook/valor/CTA) \u2014 substitui os system prompts B2B hardcoded (`:138`,`:290`). | Critical | PR-VA-002 | Lib/EdgeFunction | AT-VA-003 |\n| FR-VA-004 | Monetize all formats | `monetizeContent` (`_shared/affiliate.ts`) roda em artigo **+ LinkedIn + Twitter**, embutindo link ML per-user com `content_variant_id` por criativo (n\u00e3o s\u00f3 no artigo, n\u00e3o por regex de 3 SKUs). | Critical | PR-VA-002 | Lib | AT-VA-004 |\n| FR-VA-005 | Cadence cron | pg_cron `autopilot-cadence` (*/15) \u2192 fn `autopilot-cadence-cron` (service-role): encontra planos `is_active AND next_run_at <= now`, dispara `autopilot-run`, e re-agenda `next_run_at = now + interval_days` (auto-refill, ao contr\u00e1rio do drip finito do nurture). | Critical | PR-VA-003 | Cron | AT-VA-005 |\n| FR-VA-006 | Cycle ledger | Tabela `autopilot_cycles`: plan_id, cycle_number, status (`running`\\|`completed`\\|`aborted_budget`\\|`failed`), spend_mco, planned_units, analysis_node_id, started_at, completed_at. Idempot\u00eancia por (plan_id, cycle_number). | Critical | PR-VA-003, PR-VA-006 | DB | AT-VA-006 |\n| FR-VA-007 | Cost guardrail (kill-switch) | ANTES de qualquer `deduct_mco_coins`: soma custo projetado (10 + 5 + img \u00d7 n\u00ba criativos). Se `> budget_cap_mco` OU `saldo < min_balance` \u2192 aborta ciclo (`aborted_budget`), pausa o plano, notifica. Espelha caps do `vision-mcp`. | Critical | PR-VA-006 | EdgeFunction | AT-VA-007 |\n| FR-VA-008 | Engagement collector | Cron `autopilot-collect` \u2192 fn que, dado o `post_id` retornado por `publish-social`/`publish-meta`, busca insights reais (best-effort por API tier) e grava em `creative_metrics`. | High | PR-VA-004 | Cron/EdgeFunction | AT-VA-008 |\n| FR-VA-009 | Unified creative metrics | Tabela `creative_metrics` keyed por `content_variant_id`: affiliate_clicks, impressions, engagements, revenue_cents, source, collected_at. Unifica os 3 sinais (Decis\u00e3o 3). | High | PR-VA-004 | DB | AT-VA-009 |\n| FR-VA-010 | Cycle analyzer | Edge fn `autopilot-analyze` (service-role, 5 mco): l\u00ea `creative_metrics` do ciclo anterior do tenant; se vazio, usa baseline (N\u00c3O inventa); produz `optimization_policy` estruturado (top hook/produto/hor\u00e1rio/formato). Generaliza `self-optimize`, agora agendado. | High | PR-VA-005 | EdgeFunction | AT-VA-010 |\n| FR-VA-011 | Feedback injection | A gera\u00e7\u00e3o (`orchestrate-step`/`autopilot-run`) L\u00ca o `optimization_policy` mais recente do tenant e injeta as features no system prompt do pr\u00f3ximo ciclo. Fecha a quebra \"sa\u00edda sem consumo\". | Critical | PR-VA-005 | Lib/EdgeFunction | AT-VA-011 |\n| FR-VA-012 | Product selection by score | Sele\u00e7\u00e3o do produto-alvo do `vm_affiliate_products` por `commission_value`+`trend_score`+`profitability_score` (auto em v1.0). No MVP: 3 SKUs semente referenciados no plano. | High | PR-VA-010, PR-VA-001 | EdgeFunction | AT-VA-012 |\n| FR-VA-013 | Image creative (product-referenced) | Plugar `generate-image` (hoje \u00f3rf\u00e3) ao ciclo: usa `image_url` do produto ML como refer\u00eancia; formato por plataforma (quadrado MVP; 9:16 fase 2). Anexa asset a `scheduled_posts`. | Should (MVP) | PR-VA-008 | EdgeFunction | AT-VA-013 |\n| FR-VA-014 | Autopilot hook | `useAutopilot` (TanStack Query): CRUD de plano, status de ciclos, ROI por criativo. Toda l\u00f3gica de dados no hook (Harness Engineering). | High | PR-VA-001, PR-VA-007 | Hook | AT-VA-014 |\n| FR-VA-015 | Autopilot dashboard | `AutopilotPage` (display-only): editor de plano, timeline de ciclos, cards de criativo com ROI, criativo \"vencedor\", insight de lift ciclo-a-ciclo. | High | PR-VA-007 | UI | AT-VA-015 |\n| FR-VA-016 | Honor product/affiliate param | `orchestrate-content` passa a desestruturar e honrar o produto-alvo/`affiliate_url` (hoje dropado em `:79`), propagando ao `orchestrate-step`. | Medium | PR-VA-002 | EdgeFunction | AT-VA-016 |\n| FR-VA-017 | Revenue attribution per creative | `handle-ml-postback` credita `revenue_cents` na `affiliate_links` correta e o coletor (FR-VA-008) reflete em `creative_metrics` por `content_variant_id`. Depende de OTD-VA-007. | High | PR-VA-007 | EdgeFunction | AT-VA-017 |\n| FR-VA-018 | Trend-informed angle | `autopilot-run` l\u00ea `vm_trends` (de `fetch-trends`) para pautar o \u00e2ngulo viral do ciclo (reconecta a ilha de trends). | Should (v1.0) | PR-VA-011 | EdgeFunction | AT-VA-018 |\n\n---\n\n## 3. Non-Functional Requirements\n\n| ID | Category | Requirement | Target | Measurement |\n|----|----------|-------------|--------|-------------|\n| NFR-VA-001 | Performance | Dispatch do ciclo (fan-out) p95 | < 5min para N \u2264 8 criativos | Supabase logs + `autopilot_cycles.completed_at \u2212 started_at` |\n| NFR-VA-002 | Cost-safety | Gate de teto aplicado ANTES de qualquer deduct mcoCoins | 100% dos ciclos (zero deduct em ciclo abortado) | Smoke zero-cost; saldo intacto p\u00f3s-abort |\n| NFR-VA-003 | Idempotency | Re-fire do cron sobre o mesmo ciclo n\u00e3o dobra cobran\u00e7a nem post | 0 duplicatas | Idempot\u00eancia por (plan_id, cycle_number); guarda em `scheduled_posts` |\n| NFR-VA-004 | Tenancy | Toda credencial externa resolvida per-user (`auth.uid()`); zero chave global em path user-facing | 100% | Code review + grep de `Deno.env` em fluxo user-facing |\n| NFR-VA-005 | Security | Edge fns user-facing exigem JWT; crons usam service-role; RLS default-deny em toda tabela | 100% | `/security-review` |\n| NFR-VA-006 | Availability/Self-heal | Cron reconcilia janelas perdidas (catch-up) sem disparar ciclos duplicados | recupera em \u2264 1 tick (15min) | Teste de janela perdida |\n| NFR-VA-007 | Auditability | Todo post aut\u00f4nomo rastre\u00e1vel a `cycle_id`+`plan_id`+`product`+`content_variant_id` | 100% | SELECT join `scheduled_posts`\u2194`autopilot_cycles` |\n| NFR-VA-008 | Brand-safety | Cyber-Sentinel no t\u00f3pico e no conte\u00fado gerado antes de publicar; disclosure de afiliado | 100% dos criativos | Gate pr\u00e9-publica\u00e7\u00e3o + revis\u00e3o |\n\n---\n\n## 4. Interface Requirements\n\n### 4.1 UI \u2192 Hook \u2192 Edge Function Contract\n\n```\n[Component: AutopilotPage.tsx]\n  \u2193 calls\n[Hook: useAutopilot.ts]   (CRUD plano \u00b7 status ciclos \u00b7 ROI por criativo)\n  \u2193 calls (sensitive ops)\n[Edge Function: autopilot-run]   (gate custo \u2192 sele\u00e7\u00e3o produto \u2192 fan-out)\n  \u2193 dispatch (forward JWT, self-bill)\n[Edge Function: orchestrate-content \u2192 orchestrate-step]   (gera\u00e7\u00e3o product-aware + monetize)\n  \u2193 reads/writes\n[Tables: autopilot_plans \u00b7 autopilot_cycles \u00b7 creative_metrics \u00b7 scheduled_posts \u00b7 affiliate_links]\n```\n\n### 4.2 External API Contracts\n\n#### `POST /functions/v1/autopilot-run`\n\n**Auth:** Bearer JWT (user scope) \u2014 OU service-role quando chamado pelo cron (`X-Cron-Trigger`).  \n**Request:**\n```typescript\n{\n  plan_id: string,          // uuid do autopilot_plans (RLS-own)\n  mode_override?: \"all_at_once\" | \"every_n_days\",  // opcional; default = plano\n  dry_run?: boolean,        // se true, retorna custo projetado SEM deduzir nem publicar\n}\n```\n**Response (200):**\n```typescript\n{\n  status: \"ok\",\n  cycle_id: string,\n  cycle_number: number,\n  projected_cost_mco: number,\n  dispatched: { product_id: string, platform: string, run_id: string }[],\n}\n```\n**Error codes:**\n| Code | Condition |\n|------|-----------|\n| 401 | JWT ausente/inv\u00e1lido |\n| 402 | Saldo de mcoCoins insuficiente (`insufficient_balance`) |\n| 409 | Teto de custo do ciclo excedido (`aborted_budget`) \u2014 plano pausado |\n| 422 | Valida\u00e7\u00e3o: plano sem produtos/redes, `interval_days` inv\u00e1lido (campo+mensagem PT-BR) |\n| 500 | Erro interno (logado em `infra_health_logs`) |\n\n#### `POST /functions/v1/autopilot-analyze`\n\n**Auth:** service-role (chamado p\u00f3s-ciclo / pelo cron).  \n**Request:** `{ tenant_id: string, plan_id: string, previous_cycle_id: string }`  \n**Response (200):** `{ status: \"ok\", optimization_policy_id: string, has_real_data: boolean, top_features: {...} }`  \n> `has_real_data=false` quando `creative_metrics` do ciclo anterior est\u00e1 vazia \u2192 usa baseline, N\u00c3O inventa.\n\n---\n\n## 5. Data Requirements\n\n| Field | Type | Nullable | Validation Rule | Error Message (PT-BR) |\n|-------|------|----------|-----------------|----------------------|\n| `autopilot_plans.mode` | `text` | NOT NULL | \u2208 {`all_at_once`,`every_n_days`} | \"Modo de cad\u00eancia inv\u00e1lido.\" |\n| `autopilot_plans.interval_days` | `int` | NULL (req. se `every_n_days`) | 1 \u2264 n \u2264 30; default 3 | \"Intervalo deve ser entre 1 e 30 dias.\" |\n| `autopilot_plans.target_product_ids` | `text[]` | NOT NULL | tamanho \u2265 1; ids \u2208 `vm_affiliate_products` | \"Selecione ao menos um produto-alvo.\" |\n| `autopilot_plans.platforms` | `text[]` | NOT NULL | \u2286 {`wordpress`,`linkedin`,`twitter`} (MVP) | \"Selecione ao menos uma rede suportada.\" |\n| `autopilot_plans.budget_cap_mco` | `int` | NOT NULL | \u2265 custo m\u00ednimo de 1 criativo | \"Teto de custo abaixo do m\u00ednimo de um ciclo.\" |\n| `creative_metrics.content_variant_id` | `uuid` | NOT NULL | FK \u2192 criativo/`content_library` | \u2014 |\n| `creative_metrics.source` | `text` | NOT NULL | \u2208 {`affiliate_click`,`organic`,`postback`} | \u2014 |\n| `creative_metrics.revenue_cents` | `int` | NOT NULL DEFAULT 0 | \u2265 0 | \u2014 |\n\n---\n\n## 6. Test Strategy Matrix\n\n| FR ID | Unit Test | Integration Test | E2E Test | Notes |\n|-------|-----------|-----------------|----------|-------|\n| FR-VA-001 | \u2705 | \u2705 | \u2014 | RLS own-row; valida\u00e7\u00e3o de campos |\n| FR-VA-002 | \u2705 | \u2705 | \u2705 | fan-out + forward JWT (smoke zero-cost com `dry_run`) |\n| FR-VA-003 | \u2705 | \u2705 | \u2014 | prompt cont\u00e9m produto + framework viral |\n| FR-VA-004 | \u2705 | \u2705 | \u2705 | link ML + `content_variant_id` em TODO formato |\n| FR-VA-005 | \u2705 | \u2705 | \u2014 | auto-refill `next_run_at`; janela perdida (catch-up) |\n| FR-VA-006 | \u2705 | \u2705 | \u2014 | idempot\u00eancia (plan_id, cycle_number) |\n| FR-VA-007 | \u2705 | \u2705 | \u2705 | **kill-switch smoke zero-cost** (saldo intacto p\u00f3s-abort) |\n| FR-VA-008 | \u2705 | \u2705 | \u2014 | coletor best-effort por tier; cliques sempre |\n| FR-VA-009 | \u2705 | \u2014 | \u2014 | unicidade por `content_variant_id`+`source` |\n| FR-VA-010 | \u2705 | \u2705 | \u2014 | baseline quando vazio (`has_real_data=false`) |\n| FR-VA-011 | \u2705 | \u2705 | \u2705 | prova de reinje\u00e7\u00e3o: prompt ciclo N+1 cont\u00e9m features do ciclo N |\n| FR-VA-012 | \u2705 | \u2705 | \u2014 | ranking comiss\u00e3o+trend |\n| FR-VA-013 | \u2705 | \u2705 | \u2014 | imagem product-referenced anexada a `scheduled_posts` |\n| FR-VA-014 | \u2705 | \u2014 | \u2014 | hook CRUD + queries |\n| FR-VA-015 | \u2014 | \u2014 | \u2705 | E2E UI 1920\u00d71080 (gate Canvas/UI) |\n| FR-VA-016 | \u2705 | \u2705 | \u2014 | param honrado (regress\u00e3o do drop em `:79`) |\n| FR-VA-017 | \u2705 | \u2705 | \u2014 | atribui\u00e7\u00e3o por `content_variant_id` (gated em OTD-VA-007) |\n| FR-VA-018 | \u2705 | \u2705 | \u2014 | \u00e2ngulo l\u00ea `vm_trends` |\n\n**Test files location:**\n- Unit: `src/hooks/__tests__/useAutopilot.test.ts`\n- Integration / smokes: `scripts/qa/smoke-autopilot-run.ts`, `scripts/qa/smoke-autopilot-budget.ts` (zero-cost)\n- E2E: `e2e/viral-autopilot.spec.ts` + gate `/e2e-audit` 1920\u00d71080 para `AutopilotPage`\n\n---\n\n## 7. Traceability Matrix\n\n| PR ID | FR ID | NFR ID |\n|-------|-------|--------|\n| PR-VA-001 | FR-VA-001, FR-VA-014, FR-VA-016 | NFR-VA-004, NFR-VA-005 |\n| PR-VA-002 | FR-VA-002, FR-VA-003, FR-VA-004, FR-VA-016 | NFR-VA-001, NFR-VA-008 |\n| PR-VA-003 | FR-VA-005, FR-VA-006 | NFR-VA-003, NFR-VA-006 |\n| PR-VA-004 | FR-VA-008, FR-VA-009, FR-VA-017 | NFR-VA-007 |\n| PR-VA-005 | FR-VA-010, FR-VA-011 | NFR-VA-007 |\n| PR-VA-006 | FR-VA-007 | NFR-VA-002 |\n| PR-VA-007 | FR-VA-014, FR-VA-015, FR-VA-017 | NFR-VA-007 |\n| PR-VA-008 | FR-VA-013 | NFR-VA-008 |\n| PR-VA-010 | FR-VA-012 | \u2014 |\n| PR-VA-011 | FR-VA-018 | \u2014 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:03)*
+
+
+## 🤖 Claude *(21:03:04)*
+
+FRD selado (18 FR + 8 NFR). Agora o **SDD** (SWEBOK + CISSP — arquitetura, STRIDE, RLS, migration stubs, 7 OTDs):
+
+## 🤖 Claude *(21:04:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "content": "# SDD \u2014 System Design Document\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** SWEBOK v4 (Software Design) + CISSP CBK 2024 (Software Development Security)  \n**Status:** Draft\n\n---\n\n## 1. Architecture Overview\n\nO `viral-autopilot` \u00e9 o **orquestrador de ciclo** que costura pe\u00e7as j\u00e1 existentes do MCORCH num loop fechado. N\u00e3o reinventa gera\u00e7\u00e3o nem receita \u2014 adiciona a cabe\u00e7a que planeja, dispara, mede e aprende.\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  PRESENTATION LAYER (display-only)                            \u2502\n\u2502  src/pages/AutopilotPage.tsx                                  \u2502\n\u2502  src/components/autopilot/{PlanEditor,CycleTimeline,RoiCard}  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                        \u2502 calls\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  LOGIC LAYER (Harness Engineering)                            \u2502\n\u2502  src/hooks/useAutopilot.ts  (TanStack Query \u2014 plano/ciclo/ROI)\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                        \u2502 HTTP + JWT\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  EDGE LAYER (Deno / Supabase Functions)                       \u2502\n\u2502  autopilot-run \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   autopilot-analyze (5 mco)     \u2502\n\u2502  autopilot-cadence-cron \u25c0\u2500\u2500\u2500\u2524   autopilot-collect             \u2502\n\u2502  (service-role, pg_cron)    \u2502                                 \u2502\n\u2502      \u2502 fan-out (forward JWT) \u2502 reuse                          \u2502\n\u2502      \u25bc                       \u25bc                                 \u2502\n\u2502  orchestrate-content \u2192 orchestrate-step (product-aware gen)   \u2502\n\u2502  _shared/affiliate.ts (monetize ALL formats)                  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u2502 Supabase RLS                  \u2502 External APIs\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  DB LAYER                  \u2502  \u2502  EXTERNAL SERVICES              \u2502\n\u2502  autopilot_plans (new)     \u2502  \u2502  OpenRouter/Groq (LLM, BYOK)    \u2502\n\u2502  autopilot_cycles (new)    \u2502  \u2502  DALL\u00b7E/Nano Banana (image)     \u2502\n\u2502  creative_metrics (new)    \u2502  \u2502  LinkedIn/X/WordPress (publish) \u2502\n\u2502  scheduled_posts (reuse)   \u2502  \u2502  Mercado Livre/Pago (postback)  \u2502\n\u2502  affiliate_links (reuse)   \u2502  \u2502  Apify (fetch-trends, v1.0)     \u2502\n\u2502  optimization_policy(reuse)\u2502  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\u2502  vm_affiliate_products     \u2502\n\u2502  mcorch_nodes/_edges       \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n---\n\n## 2. Component Catalog\n\n### 2.1 New Custom Hooks (`src/hooks/`)\n\n| Hook | File | Responsibility | TanStack Query keys |\n|------|------|---------------|---------------------|\n| `useAutopilot` | `useAutopilot.ts` | CRUD de `autopilot_plans`; lista ciclos; ROI por criativo; activate/pause | `['autopilot-plans']`, `['autopilot-cycles', planId]`, `['creative-metrics', cycleId]` |\n\n### 2.2 New Display Components (`src/components/autopilot/`)\n\n| Component | File | Props | Hook consumed |\n|-----------|------|-------|--------------|\n| `AutopilotPage` | `src/pages/AutopilotPage.tsx` | \u2014 (route) | `useAutopilot` |\n| `PlanEditor` | `src/components/autopilot/PlanEditor.tsx` | `plan?, onSave` | `useAutopilot` |\n| `CycleTimeline` | `src/components/autopilot/CycleTimeline.tsx` | `planId` | `useAutopilot` |\n| `RoiCard` | `src/components/autopilot/RoiCard.tsx` | `creativeMetric` | \u2014 (display) |\n\n### 2.3 New Edge Functions (`supabase/functions/`)\n\n| Function | Path | Auth | mcoCoins | Secrets needed |\n|----------|------|------|----------|----------------|\n| `autopilot-run` | `supabase/functions/autopilot-run/index.ts` | JWT (user) OR service-role (cron) | gate s\u00f3; deduct ocorre nos sub-runs | \u2014 (resolve per-user) |\n| `autopilot-cadence-cron` | `supabase/functions/autopilot-cadence-cron/index.ts` | service-role (`verify_jwt=false`, pg_net) | 0 | `SB_SECRET_KEY` (service) |\n| `autopilot-analyze` | `supabase/functions/autopilot-analyze/index.ts` | service-role | 5 mco (an\u00e1lise) | LLM key (per-user\u2192sistema fallback) |\n| `autopilot-collect` | `supabase/functions/autopilot-collect/index.ts` | service-role (cron) | 0 | social/meta tokens per-user |\n\n> **Reuso (modificadas, n\u00e3o novas):** `orchestrate-content` (FR-VA-016 honra produto), `orchestrate-step` (FR-VA-003 product-aware + FR-VA-011 feedback inject), `_shared/affiliate.ts` (FR-VA-004 monetiza todo formato), `generate-image` (FR-VA-013 plugado ao ciclo).\n\n### 2.4 Zustand Store Slices (if applicable)\n\n| Slice | Store file | State shape | Actions |\n|-------|------------|-------------|---------|\n| \u2014 | \u2014 | Nenhum store novo; estado de servidor via TanStack Query (Harness). UI local m\u00ednima no editor. | \u2014 |\n\n### 2.5 New DB Objects\n\n| Object | Type | Purpose | Migration file |\n|--------|------|---------|---------------|\n| `autopilot_plans` | Table | Config de cad\u00eancia per-user (FR-VA-001) | `<ts>_viral_autopilot_plans.sql` |\n| `autopilot_cycles` | Table | Ledger de ciclo + spend + status (FR-VA-006) | `<ts>_viral_autopilot_cycles.sql` |\n| `creative_metrics` | Table | M\u00e9tricas unificadas por criativo (FR-VA-009) | `<ts>_viral_autopilot_creative_metrics.sql` |\n| `scheduled_posts.cycle_id` | Column | Liga post ao ciclo (NFR-VA-007 auditabilidade) | `<ts>_scheduled_posts_cycle_id.sql` |\n| `autopilot-cadence` | pg_cron | Disparo recorrente */15 (FR-VA-005) | dentro da migration de cron |\n| `autopilot-collect` | pg_cron | Coleta de m\u00e9tricas (FR-VA-008) | dentro da migration de cron |\n\n---\n\n## 3. Data Flow Diagrams\n\n### Use Case: Ciclo aut\u00f4nomo a cada N dias (FR-VA-005 \u2192 FR-VA-011)\n\n```\npg_cron        cadence-cron        autopilot-run        orchestrate-*        DB / External\n \u2502 (*/15)          \u2502                    \u2502                    \u2502                   \u2502\n \u2502\u2500\u2500[tick]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502                    \u2502                    \u2502                   \u2502\n \u2502                 \u2502\u2500\u2500[plans due?]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 SELECT is_active AND next_run_at<=now\n \u2502                 \u2502\u25c0\u2500\u2500[plan X]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502\u2500\u2500[POST X-Cron]\u2500\u2500\u2500\u2500\u25b6\u2502                    \u2502                   \u2502\n \u2502                 \u2502                    \u2502\u2500\u2500[cost gate]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 project cost vs budget_cap + balance\n \u2502                 \u2502                    \u2502  (abort if over \u2192 aborted_budget, pause)\u2502\n \u2502                 \u2502                    \u2502\u2500\u2500[read policy]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 optimization_policy (ciclo N-1)\n \u2502                 \u2502                    \u2502\u2500\u2500[select product]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 vm_affiliate_products (comm+trend)\n \u2502                 \u2502                    \u2502\u2500\u2500[open cycle]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 autopilot_cycles (running)\n \u2502                 \u2502                    \u2502\u2500\u2500[fan-out/product\u00d7rede]\u2500\u25b6\u2502              \u2502\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[gen product-aware + feedback]\u2500\u25b6 LLM (BYOK)\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[monetize all formats]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6 affiliate_links + content_variant_id\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[schedule]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6 scheduled_posts (cycle_id)\n \u2502                 \u2502\u25c0\u2500\u2500[re-arm next_run_at = now + interval]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502                    \u2502                    \u2502   (auto-publish cron drains scheduled_posts \u2192 publish-*)\n \u2502                 \u2502 (later) autopilot-collect: post_id \u2192 insights \u2192 creative_metrics\n \u2502                 \u2502 (post-cycle) autopilot-analyze: creative_metrics(N) \u2192 optimization_policy(N) [feeds cycle N+1]\n```\n\n---\n\n## 4. API Contract Definitions\n\n> Toda Edge Function user-facing valida JWT antes de qualquer l\u00f3gica. Crons usam service-role com `verify_jwt=false` (padr\u00e3o pg_net do projeto \u2014 ver SOP `orchestrate-async-pipeline`).\n\n### `POST /functions/v1/autopilot-run`\n\n```typescript\n// Request\ninterface AutopilotRunRequest {\n  plan_id: string\n  mode_override?: 'all_at_once' | 'every_n_days'\n  dry_run?: boolean   // true \u2192 retorna projected_cost_mco sem deduzir/publicar\n}\n\n// Response (HTTP 200)\ninterface AutopilotRunResponse {\n  status: 'ok'\n  cycle_id: string\n  cycle_number: number\n  projected_cost_mco: number\n  dispatched: { product_id: string; platform: string; run_id: string }[]\n}\n\n// Cost gate (FR-VA-007) \u2014 BEFORE any deduction:\n// \u2192 project = 10 (orchestrate) + 5 (analyze) + IMAGE_COST * creatives\n// \u2192 if project > plan.budget_cap_mco \u2192 409 aborted_budget + pause plan\n// \u2192 balance check via profiles.mco_balance; if < min_balance \u2192 402\n// mcoCoins deduction happens inside each orchestrate-content sub-run (self-bill), never here.\n```\n\n### `POST /functions/v1/autopilot-analyze`\n\n```typescript\ninterface AutopilotAnalyzeRequest { tenant_id: string; plan_id: string; previous_cycle_id: string }\ninterface AutopilotAnalyzeResponse {\n  status: 'ok'\n  optimization_policy_id: string\n  has_real_data: boolean        // false \u2192 baseline used, N\u00c3O fabrica recomenda\u00e7\u00e3o\n  top_features: { hook?: string; product_id?: string; best_hour?: number; format?: string }\n}\n// Deduct 5 mco (deduct_mco_coins) only when has_real_data OR explicitly configured; logged.\n```\n\n---\n\n## 5. Security Design\n\n### 5.1 Threat Model (STRIDE)\n\n| Component | Threat | Type | Severity | Mitigation |\n|-----------|--------|------|----------|------------|\n| `autopilot-run` | Acesso n\u00e3o autenticado / disparo por terceiro | Spoofing | High | JWT no path user; `X-Cron-Trigger` + service-role no path cron; valida `plan.user_id = auth.uid()` |\n| `autopilot-cadence-cron` | Falsifica\u00e7\u00e3o de trigger de cron (disparo for\u00e7ado) | Spoofing/Elevation | High | `verify_jwt=false` + service-role key; sem path p\u00fablico que dispare ciclo arbitr\u00e1rio; rate por plano via `next_run_at` |\n| `autopilot_plans`/`_cycles`/`creative_metrics` | Leitura/escrita cross-tenant | Information Disclosure | Critical | RLS `user_id = auth.uid()`; crons usam service-role com filtro expl\u00edcito por tenant |\n| Cost gate | Bypass do teto (disparo paralelo p/ exceder) | Tampering | Critical | Gate at\u00f4mico server-side ANTES do deduct; idempot\u00eancia (plan_id, cycle_number); lock otimista no ciclo |\n| Gerador product-aware | Prompt injection via nome/desc de produto ou trend | Tampering/Elevation | High | Cyber-Sentinel no input + no output; sanitiza\u00e7\u00e3o do produto antes do prompt |\n| `affiliate_links` | Inje\u00e7\u00e3o de link malicioso / open-redirect | Tampering | High | Guarda de dom\u00ednio ML j\u00e1 existente em `process-affiliate-link`; `content_variant_id` assinado por ciclo |\n| Conte\u00fado aut\u00f4nomo | Publica\u00e7\u00e3o off-brand / viola ToS | Repudiation/Reputation | High | Cyber-Sentinel gate pr\u00e9-publica\u00e7\u00e3o; HITL opcional (PR-VA-013); disclosure de afiliado |\n| `autopilot-collect` | Vazamento de PII de engajamento na tabela global-read | Information Disclosure | Medium | S\u00f3 agregados em `creative_metrics`; sem PII de terceiros; RLS own |\n\n### 5.2 RLS Policy Definitions\n\n```sql\n-- autopilot_plans RLS (espelhar em autopilot_cycles, creative_metrics)\nALTER TABLE public.autopilot_plans ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"autopilot_plans_select_own\"\n  ON public.autopilot_plans FOR SELECT\n  USING (user_id = auth.uid());\n\nCREATE POLICY \"autopilot_plans_insert_own\"\n  ON public.autopilot_plans FOR INSERT\n  WITH CHECK (user_id = auth.uid());\n\nCREATE POLICY \"autopilot_plans_update_own\"\n  ON public.autopilot_plans FOR UPDATE\n  USING (user_id = auth.uid())\n  WITH CHECK (user_id = auth.uid());\n\n-- DELETE bloqueado para authenticated (RESTRICTIVE); s\u00f3 service_role gerencia ciclos/spend.\n```\n\n### 5.3 JWT Validation Points\n\n```typescript\n// autopilot-run (user path):\nconst authHeader = req.headers.get('Authorization')\nif (!authHeader) return new Response('Unauthorized', { status: 401 })\nconst { data: { user }, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))\nif (error || !user) return new Response('Unauthorized', { status: 401 })\n// then: assert plan.user_id === user.id  (cross-tenant guard)\n\n// cron path: header X-Cron-Trigger + SB_SECRET_KEY (service-role client); verify_jwt=false in config.toml\n```\n\n### 5.4 Secrets Inventory\n\n| Secret Name | Used In | Vault Location | Rotation Policy |\n|-------------|---------|----------------|----------------|\n| `SB_SECRET_KEY` | crons (service-role) | Supabase Vault | per incident (legada `SUPABASE_SERVICE_ROLE_KEY` REVOGADA) |\n| LLM key (Groq/OpenRouter/Gemini) | `orchestrate-step`, `autopilot-analyze` | `user_api_keys` (per-user) \u2192 vault fallback | per-user controlado |\n| ML `affiliate_tag`/`matt_tool` | `_shared/affiliate.ts`, `process-affiliate-link` | `affiliate_config` (per-user) | per-user |\n| Social tokens (LinkedIn/X/Meta) | `publish-*`, `autopilot-collect` | `social_credentials`/`meta_config` (per-user) | OAuth refresh |\n| `MP_WEBHOOK_SECRET` | `handle-ml-postback` | Vault (global hoje \u2192 per-user em OTD-VA-007) | OTD-ML-MP-PER-USER |\n\n> \u26a0\ufe0f NUNCA commitar valores de segredo. S\u00f3 nomes de chave aparecem na documenta\u00e7\u00e3o. Usar `SB_SECRET_KEY` (legada revogada \u2014 ver `reference_supabase_keys_migrated`).\n\n---\n\n## 6. Infrastructure Touchpoints\n\n| Infrastructure | Usage | Impact |\n|----------------|-------|--------|\n| `pg_cron` | 2 novos jobs (`autopilot-cadence` */15, `autopilot-collect`) | Soma a `memory_decay_fsrs` + `nurture-advance`; preservar os existentes |\n| `mega-brain-daemon` | Consome eventos `viral_autopilot_*` de `infra_health_logs` p/ self-heal | Watchdog telemetry |\n| `infra_health_logs` | Novos `event`: `viral_autopilot_cycle_started/completed/aborted_budget/collect_failure/analyze_empty` | Telemetria allowlist (n\u00e3o vazar per-tenant na tabela global-read) |\n| `mcorch_nodes`/`_edges` | Observation node por ciclo + edge `OPTIMIZES_FROM` (ciclo N+1 \u2192 N) | GraphRAG mem\u00f3ria de campanhas |\n| ChromaDB (`mcorch_chroma`) | N\u00e3o usado diretamente nesta fase | \u2014 |\n\n---\n\n## 7. Migration Stubs\n\n```sql\n-- Migration: <ts>_viral_autopilot_plans.sql\nCREATE TABLE public.autopilot_plans (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id         uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,\n  project_id      uuid,                                  -- tenant scope opcional\n  name            text NOT NULL,\n  mode            text NOT NULL CHECK (mode IN ('all_at_once','every_n_days')),\n  interval_days   int CHECK (interval_days BETWEEN 1 AND 30),  -- req. se every_n_days\n  target_product_ids text[] NOT NULL CHECK (cardinality(target_product_ids) >= 1),\n  platforms       text[] NOT NULL CHECK (cardinality(platforms) >= 1),\n  budget_cap_mco  int NOT NULL CHECK (budget_cap_mco > 0),\n  min_balance_mco int NOT NULL DEFAULT 10,\n  is_active       boolean NOT NULL DEFAULT false,\n  next_run_at     timestamptz,\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.autopilot_plans ENABLE ROW LEVEL SECURITY;\n-- (RLS policies from \u00a75.2)\nCREATE INDEX autopilot_plans_user_idx ON public.autopilot_plans (user_id);\nCREATE INDEX autopilot_plans_due_idx  ON public.autopilot_plans (next_run_at) WHERE is_active;\n\n-- Migration: <ts>_viral_autopilot_cycles.sql\nCREATE TABLE public.autopilot_cycles (\n  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  plan_id         uuid REFERENCES public.autopilot_plans(id) ON DELETE CASCADE NOT NULL,\n  user_id         uuid NOT NULL,                         -- denormalized for RLS\n  cycle_number    int NOT NULL,\n  status          text NOT NULL DEFAULT 'running'\n                    CHECK (status IN ('running','completed','aborted_budget','failed')),\n  spend_mco       int NOT NULL DEFAULT 0,\n  planned_units   int NOT NULL DEFAULT 0,\n  analysis_node_id uuid,                                 -- mcorch_nodes observation\n  started_at      timestamptz NOT NULL DEFAULT now(),\n  completed_at    timestamptz,\n  UNIQUE (plan_id, cycle_number)                         -- idempot\u00eancia (NFR-VA-003)\n);\nALTER TABLE public.autopilot_cycles ENABLE ROW LEVEL SECURITY;\n-- SELECT own; INSERT/UPDATE service-role only.\n\n-- Migration: <ts>_viral_autopilot_creative_metrics.sql\nCREATE TABLE public.creative_metrics (\n  id                 uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id            uuid NOT NULL,\n  cycle_id           uuid REFERENCES public.autopilot_cycles(id) ON DELETE CASCADE,\n  content_variant_id uuid NOT NULL,\n  product_id         text,\n  platform           text,\n  source             text NOT NULL CHECK (source IN ('affiliate_click','organic','postback')),\n  impressions        int NOT NULL DEFAULT 0,\n  engagements        int NOT NULL DEFAULT 0,\n  affiliate_clicks   int NOT NULL DEFAULT 0,\n  revenue_cents      int NOT NULL DEFAULT 0,\n  collected_at       timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (content_variant_id, source)                    -- upsert idempotente por fonte\n);\nALTER TABLE public.creative_metrics ENABLE ROW LEVEL SECURITY;\n-- SELECT own; INSERT/UPDATE service-role only (coletor).\n\n-- Migration: <ts>_scheduled_posts_cycle_id.sql\nALTER TABLE public.scheduled_posts ADD COLUMN IF NOT EXISTS cycle_id uuid\n  REFERENCES public.autopilot_cycles(id) ON DELETE SET NULL;\nCREATE INDEX scheduled_posts_cycle_idx ON public.scheduled_posts (cycle_id);\n```\n\n> Nenhuma tabela aqui carrega `embedding` (n\u00e3o s\u00e3o n\u00f3s de conhecimento diretos). A mem\u00f3ria GraphRAG entra via `mcorch_nodes` observation por ciclo (ver `06-data-model.md` \u00a74). Toda migration passa `/security-review` antes do commit (FMEA-011).\n\n---\n\n## 8. Open Technical Decisions\n\n| ID | Description | Option A | Option B | Recommendation | Owner |\n|----|-------------|----------|----------|----------------|-------|\n| OTD-VA-001 | Tabela de m\u00e9tricas | Estender `campaign_metrics` (campaign-level) | Nova `creative_metrics` (por content_variant_id) | **B** \u2014 granularidade por criativo \u00e9 pr\u00e9-req de R3; ETL agrega p/ campaign_metrics | Sovereign |\n| OTD-VA-002 | Infra de cron | pg_cron (como `nurture-advance`) | OS crontab (como `auto-publish`) | **A** \u2014 pg_cron service-role, consistente com o cron de cad\u00eancia existente | Sovereign |\n| OTD-VA-003 | Fonte de engajamento org\u00e2nico | S\u00f3 cliques de afiliado (sempre dispon\u00edvel) | + insights de API por rede (tier-dependente) | **Ambos faseado** \u2014 cliques no MVP; org\u00e2nico best-effort gated por tier (Twitter Basic, LinkedIn, Meta) | Sovereign |\n| OTD-VA-004 | Unidade do teto de custo | Por ciclo (no plano) | Di\u00e1rio global por tenant | **Ambos** \u2014 cap por ciclo (plano) + safety di\u00e1rio global espelhando `vision-mcp` | Sovereign |\n| OTD-VA-005 | Reinje\u00e7\u00e3o de feedback | Texto cru do `optimization_policy` no prompt | Features estruturadas (top hook/produto/hor\u00e1rio/formato) | **B** \u2014 estruturado mant\u00e9m o prompt enxuto e audit\u00e1vel | Sovereign |\n| OTD-VA-006 | Autonomia de sele\u00e7\u00e3o de produto | Auto-score por comiss\u00e3o+trend | Shortlist curada pelo Sovereign | **Shortlist (3 SKUs) no MVP** (Decis\u00e3o 4); auto-score em v1.0 (PR-VA-010) | Decidido |\n| OTD-VA-007 | Secret de postback per-user (herdada `OTD-ML-MP-PER-USER`) | Manter secret global (Usu\u00e1rio Zero) | Per-user `meta`/MP config | **B antes de multi-tenant** \u2014 atribui\u00e7\u00e3o de receita por tenant exige secret per-user | Sovereign |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:04:40)*
+
+
+## 🤖 Claude *(21:04:42)*
+
+SDD selado (STRIDE 8 ameaças, 4 fns novas, 7 OTDs). Agora os 3 finais — **data-model**, **process-flow**, **quality-metrics**:
+
+## 🤖 Claude *(21:05:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "content": "# Data & Knowledge Model\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)  \n**Status:** Draft\n\n---\n\n## 1. Conceptual Data Model\n\n```\n[autopilot_plans] \u2500\u2500(1:N)\u2500\u2500\u25b6 [autopilot_cycles] \u2500\u2500(1:N)\u2500\u2500\u25b6 [creative_metrics]\n       \u2502                            \u2502                              \u2502\n       \u2502 (references)               \u2502 (cycle_id on)                \u2502 (content_variant_id)\n       \u25bc                            \u25bc                              \u25bc\n[vm_affiliate_products]      [scheduled_posts] \u2500\u2500(N:1)\u2500\u2500\u25b6 [content_library]\n       \u2502                            \u2502                              \u2502\n       \u2514\u2500\u2500(promotes)\u2500\u2500\u25b6 [affiliate_links] \u25c0\u2500\u2500(revenue)\u2500\u2500 [handle-ml-postback]\n                                    \u2502\n                                    \u2514\u2500\u2500(1:1 observation)\u2500\u2500\u25b6 [mcorch_nodes] \u2500\u2500OPTIMIZES_FROM\u2500\u2500\u25b6 [mcorch_nodes]\n```\n\n**Entities:**\n- **autopilot_plans:** configura\u00e7\u00e3o de cad\u00eancia per-user (modo, intervalo, produtos-alvo, redes, teto de custo). Fonte da verdade do \"o qu\u00ea e quando\".\n- **autopilot_cycles:** inst\u00e2ncia de execu\u00e7\u00e3o de um plano (ledger: status, spend, planned_units, ponteiro p/ an\u00e1lise). Idempotente por (plan_id, cycle_number).\n- **creative_metrics:** desempenho por criativo (`content_variant_id`), unificando cliques de afiliado + engajamento org\u00e2nico + receita de postback (Decis\u00e3o 3).\n- **vm_affiliate_products (reuse):** cat\u00e1logo ML com `commission_value`/`trend_score`/`profitability_score`/`image_url` \u2014 fonte do produto-alvo.\n- **scheduled_posts (reuse + `cycle_id`):** fila de publica\u00e7\u00e3o; agora rastre\u00e1vel ao ciclo.\n- **affiliate_links / optimization_policy / content_library / mcorch_nodes (reuse):** receita, pol\u00edtica de melhoria, conte\u00fado, mem\u00f3ria.\n\n---\n\n## 2. Logical Data Model\n\n### Table: `autopilot_plans`\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `user_id` | `uuid` | NOT NULL | \u2014 | `auth.users.id` | Tenant isolation |\n| `project_id` | `uuid` | NULL | \u2014 | \u2014 | Project scope opcional |\n| `name` | `text` | NOT NULL | \u2014 | \u2014 | Nome do plano |\n| `mode` | `text` | NOT NULL | \u2014 | \u2014 | `all_at_once` \\| `every_n_days` |\n| `interval_days` | `int` | NULL | `3` | \u2014 | Req. se `every_n_days`; 1\u201330 |\n| `target_product_ids` | `text[]` | NOT NULL | \u2014 | \u2192 `vm_affiliate_products.external_id` | \u2265 1 produto |\n| `platforms` | `text[]` | NOT NULL | \u2014 | \u2014 | \u2286 {wordpress,linkedin,twitter} (MVP) |\n| `budget_cap_mco` | `int` | NOT NULL | \u2014 | \u2014 | Teto de custo por ciclo |\n| `min_balance_mco` | `int` | NOT NULL | `10` | \u2014 | Piso de saldo p/ disparar |\n| `is_active` | `boolean` | NOT NULL | `false` | \u2014 | Cad\u00eancia ligada |\n| `next_run_at` | `timestamptz` | NULL | \u2014 | \u2014 | Pr\u00f3ximo disparo (cron) |\n| `created_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | Audit |\n| `updated_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | Audit |\n\n### Table: `autopilot_cycles`\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `plan_id` | `uuid` | NOT NULL | \u2014 | `autopilot_plans.id` | Plano pai |\n| `user_id` | `uuid` | NOT NULL | \u2014 | \u2014 | Denormalizado p/ RLS |\n| `cycle_number` | `int` | NOT NULL | \u2014 | \u2014 | Sequencial por plano |\n| `status` | `text` | NOT NULL | `running` | \u2014 | running\\|completed\\|aborted_budget\\|failed |\n| `spend_mco` | `int` | NOT NULL | `0` | \u2014 | mcoCoins gastos no ciclo |\n| `planned_units` | `int` | NOT NULL | `0` | \u2014 | n\u00ba criativos planejados |\n| `analysis_node_id` | `uuid` | NULL | \u2014 | `mcorch_nodes.id` | N\u00f3 de observa\u00e7\u00e3o do ciclo |\n| `started_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | \u2014 |\n| `completed_at` | `timestamptz` | NULL | \u2014 | \u2014 | \u2014 |\n| \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | **UNIQUE (plan_id, cycle_number)** |\n\n### Table: `creative_metrics`\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `user_id` | `uuid` | NOT NULL | \u2014 | \u2014 | Tenant isolation |\n| `cycle_id` | `uuid` | NULL | \u2014 | `autopilot_cycles.id` | Ciclo de origem |\n| `content_variant_id` | `uuid` | NOT NULL | \u2014 | \u2192 criativo/`content_library` | Criativo medido |\n| `product_id` | `text` | NULL | \u2014 | \u2192 `vm_affiliate_products` | Produto promovido |\n| `platform` | `text` | NULL | \u2014 | \u2014 | Rede |\n| `source` | `text` | NOT NULL | \u2014 | \u2014 | affiliate_click\\|organic\\|postback |\n| `impressions` | `int` | NOT NULL | `0` | \u2014 | \u2014 |\n| `engagements` | `int` | NOT NULL | `0` | \u2014 | likes/shares/comments |\n| `affiliate_clicks` | `int` | NOT NULL | `0` | \u2014 | do click ledger |\n| `revenue_cents` | `int` | NOT NULL | `0` | \u2014 | do postback |\n| `collected_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | \u2014 |\n| \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | **UNIQUE (content_variant_id, source)** |\n\n> Nenhuma das 3 tabelas carrega `embedding`/`stability_score` \u2014 n\u00e3o s\u00e3o n\u00f3s de conhecimento diretos. A mem\u00f3ria sem\u00e2ntica entra via `mcorch_nodes` (\u00a74).\n\n---\n\n## 3. Supabase Physical Schema Stubs\n\n```sql\n-- ============================================================\n-- MIGRATION: <ts>_viral_autopilot_schema.sql  (split em 4 arquivos \u2014 ver 05-sdd \u00a77)\n-- ============================================================\n-- autopilot_plans / autopilot_cycles / creative_metrics + ALTER scheduled_posts\n-- (stubs CREATE TABLE completos em 05-sdd.md \u00a77)\n\n-- RLS (default-deny \u2192 own-row)\nALTER TABLE public.autopilot_plans     ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.autopilot_cycles    ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.creative_metrics    ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"autopilot_plans: users read own\"    ON public.autopilot_plans  FOR SELECT USING (user_id = auth.uid());\nCREATE POLICY \"autopilot_plans: users write own\"   ON public.autopilot_plans  FOR INSERT WITH CHECK (user_id = auth.uid());\nCREATE POLICY \"autopilot_plans: users update own\"  ON public.autopilot_plans  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n\nCREATE POLICY \"autopilot_cycles: users read own\"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());\n-- INSERT/UPDATE de cycles e creative_metrics: service_role only (coletor/runner).\nCREATE POLICY \"creative_metrics: users read own\"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());\n\n-- \u00cdndices\nCREATE INDEX autopilot_plans_due_idx     ON public.autopilot_plans (next_run_at) WHERE is_active;\nCREATE INDEX autopilot_cycles_plan_idx   ON public.autopilot_cycles (plan_id);\nCREATE INDEX creative_metrics_cycle_idx  ON public.creative_metrics (cycle_id);\nCREATE INDEX creative_metrics_variant_idx ON public.creative_metrics (content_variant_id);\n\n-- Updated-at trigger (reusa update_updated_at_column existente)\nCREATE TRIGGER set_autopilot_plans_updated_at\n  BEFORE UPDATE ON public.autopilot_plans\n  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();\n```\n\n---\n\n## 4. GraphRAG Knowledge Nodes\n\n### Node Types Introduced\n\n| node_type | Title Pattern | Content Fields | Embedding Source |\n|-----------|--------------|----------------|-----------------|\n| `observation` (reuse) | `autopilot-cycle-<plan>-<n>-<date>` | resumo do ciclo: produto, redes, desempenho agregado, pol\u00edtica aplicada | `${title} ${content}` via `embed-mcorch-node` |\n\n> N\u00e3o introduz `node_type` novo \u2014 reusa `observation`. A novidade \u00e9 o **edge** que liga ciclos para a mem\u00f3ria de aprendizado ser naveg\u00e1vel.\n\n### Edge Types Introduced\n\n| Edge relationship | Source node_type | Target node_type | Metadata |\n|-------------------|-----------------|-----------------|----------|\n| `OPTIMIZES_FROM` (new) | `observation` (ciclo N+1) | `observation` (ciclo N) | `{ lift, applied_features }` \u2014 o ciclo N+1 derivou aprendizado do ciclo N |\n| `ATTRIBUTES_REVENUE_TO` (reuse) | `revenue` event | `content_mesh_asset`/criativo | `{ revenue_cents, order_id }` \u2014 atribui\u00e7\u00e3o por criativo |\n| `PROMOTES` (new, optional) | `observation` (ciclo) | product node | `{ product_id, commission_value }` |\n\n### Embedding Trigger\n\n```typescript\n// Ap\u00f3s fechar o ciclo (autopilot-run / autopilot-analyze), insere observation node:\nawait supabase.functions.invoke('embed-mcorch-node', {\n  body: { node_id: cycleNode.id, content: `${title} ${cycleSummary}` }\n})\n// O trigger trg_mcorch_embed_on_insert (pg_net) tamb\u00e9m dispara automaticamente.\n```\n\n### FSRS-6 Parameters\n\n| Field | Initial Value | Decay Rule |\n|-------|--------------|------------|\n| `stability_score` (no `mcorch_nodes` do ciclo) | `0.7` (observa\u00e7\u00e3o operacional relevante) | Decai por `decay_mcorch_stability()` (migration `20260425190000`) |\n| `revenue_impact` (no n\u00f3 do ciclo) | `SUM(creative_metrics.revenue_cents)/100` do ciclo | Atualizado quando postback credita receita atribu\u00edda ao ciclo |\n\n---\n\n## 5. Tenant Isolation Map\n\n| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |\n|-------|----------------|-------------------|-------------------------------|\n| `autopilot_plans` | \u2705 Required | Optional | No |\n| `autopilot_cycles` | \u2705 Required (denorm) | via plano | No |\n| `creative_metrics` | \u2705 Required | via ciclo | No |\n| `scheduled_posts` (reuse) | \u2705 Required (existente) | \u2014 | No |\n| `vm_affiliate_products` (reuse) | cat\u00e1logo compartilhado (read `USING(true)`) | \u2014 | Sim (shared) |\n| `mcorch_nodes` (reuse) | Optional | Optional | Sim (system nodes) |\n\n---\n\n## 6. Data Quality Rules\n\n| Table | Column | Rule | Violation Message (PT-BR) |\n|-------|--------|------|--------------------------|\n| `autopilot_plans` | `mode` | \u2208 {all_at_once, every_n_days} | \"Modo de cad\u00eancia inv\u00e1lido.\" |\n| `autopilot_plans` | `interval_days` | 1\u201330; obrigat\u00f3rio se `every_n_days` | \"Intervalo deve ser entre 1 e 30 dias.\" |\n| `autopilot_plans` | `target_product_ids` | cardinalidade \u2265 1; ids existem no cat\u00e1logo | \"Selecione ao menos um produto-alvo v\u00e1lido.\" |\n| `autopilot_plans` | `platforms` | \u2286 redes suportadas (MVP); \u2265 1 | \"Selecione ao menos uma rede suportada.\" |\n| `autopilot_plans` | `budget_cap_mco` | \u2265 custo m\u00ednimo de 1 ciclo | \"Teto de custo abaixo do m\u00ednimo de um ciclo.\" |\n| `autopilot_cycles` | `(plan_id, cycle_number)` | UNIQUE (idempot\u00eancia) | \"Ciclo j\u00e1 existente para este plano.\" |\n| `creative_metrics` | `(content_variant_id, source)` | UNIQUE (upsert por fonte) | \u2014 |\n| `creative_metrics` | `revenue_cents`/`affiliate_clicks` | \u2265 0 | \"M\u00e9trica n\u00e3o pode ser negativa.\" |\n\n---\n\n## 7. Retention & Archival Policy\n\n| Data | Retention Period | Archival Strategy | Deletion Trigger |\n|------|-----------------|-------------------|-----------------|\n| `autopilot_plans` | enquanto ativo + 1 ano | nenhum | CASCADE no delete do user (LGPD) |\n| `autopilot_cycles` | 18 meses | sum\u00e1rio agregado em `mcorch_nodes` (observation) | CASCADE no delete do plano |\n| `creative_metrics` | 18 meses | agregado por ciclo preservado no n\u00f3 | CASCADE no delete do ciclo |\n| `mcorch_nodes` (observation de ciclo) | Indefinido (mem\u00f3ria) | FSRS-6 decay de stability | LGPD erase por tenant |\n| `infra_health_logs` (eventos autopilot) | 90 dias | sem archival | Cron purge |\n\n> **LGPD:** o delete do tenant (`auth.users`) cascateia plans\u2192cycles\u2192creative_metrics. M\u00e9tricas guardam s\u00f3 agregados (sem PII de terceiros que engajaram).\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:06:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md",
+  "content": "# Process & Automation Blueprint\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)  \n**Status:** Draft\n\n---\n\n## 1. Process Inventory\n\n| Process ID | Name | Type | Trigger | Owner | SLA |\n|------------|------|------|---------|-------|-----|\n| PROC-VA-001 | Ciclo aut\u00f4nomo de cad\u00eancia | cron | pg_cron `autopilot-cadence` */15 \u2192 plano due | System | ciclo dispara em \u2264 15min ap\u00f3s `next_run_at` |\n| PROC-VA-002 | Disparo \"tudo de uma vez\" | human-in-loop | Operador clica \"Gerar agora\" na UI | User | resposta < 5min p95 (fan-out) |\n| PROC-VA-003 | Coleta de desempenho | cron | pg_cron `autopilot-collect` (hor\u00e1rio) | System | m\u00e9trica coletada \u2264 24h ap\u00f3s publica\u00e7\u00e3o |\n| PROC-VA-004 | Kill-switch de custo | event-driven | custo projetado > teto OU saldo < piso | System | aborta antes de qualquer deduct |\n| PROC-VA-005 | An\u00e1lise + reinje\u00e7\u00e3o de aprendizado | automated | p\u00f3s-ciclo (encadeado a PROC-VA-001) | System | `optimization_policy` pronto antes do pr\u00f3ximo ciclo |\n\n---\n\n## 2. BPMN-lite Process Maps\n\n### PROC-VA-001: Ciclo aut\u00f4nomo de cad\u00eancia\n\n```\nSTART (cron tick */15)\n   \u2502\n[autopilot-cadence-cron: SELECT plans is_active AND next_run_at<=now]\n   \u2502\n<Gateway: h\u00e1 plano due?>\n   \u2502 NO \u2500\u2500\u25b6 END (no-op)\n   \u2502 YES\n[autopilot-run(plan, X-Cron-Trigger)]\n   \u2502\n[Cost gate: projetar 10 + 5 + img\u00d7criativos]\n   \u2502\n<Gateway: custo \u2264 budget_cap AND saldo \u2265 min_balance?>\n   \u2502 NO \u2500\u2500\u25b6 [status=aborted_budget] \u2500\u2500\u25b6 [pause plan] \u2500\u2500\u25b6 [infra_health_logs: viral_autopilot_aborted_budget] \u2500\u2500\u25b6 [notify PT-BR] \u2500\u2500\u25b6 END\n   \u2502 YES\n[read optimization_policy (ciclo N-1)]  \u2192  [select product (comm+trend / seed)]  \u2192  [open autopilot_cycles (running)]\n   \u2502\n[fan-out por produto\u00d7rede \u2192 orchestrate-content (forward JWT, self-bill)]\n   \u2502\n   \u251c\u2500\u2500[orchestrate-step: gerar product-aware + injetar feedback]\n   \u251c\u2500\u2500[monetize ALL formats \u2192 affiliate_links + content_variant_id]\n   \u251c\u2500\u2500[generate-image product-referenced \u2192 asset]\n   \u2514\u2500\u2500[insert scheduled_posts (cycle_id)]\n   \u2502\n[re-arm: next_run_at = now + interval_days]   (auto-refill)\n   \u2502\n[Insert mcorch_node observation + edge OPTIMIZES_FROM \u2192 ciclo N-1]\n   \u2502\nEND  (auto-publish cron drena scheduled_posts \u2192 publish-*; PROC-VA-003 coleta depois)\n```\n\n**Swimlanes:**\n\n| Swimlane | Participant | Tasks |\n|----------|-------------|-------|\n| Scheduler | pg_cron + `autopilot-cadence-cron` | tick, encontrar planos due, re-armar next_run_at |\n| Edge Function | `autopilot-run` | cost gate, sele\u00e7\u00e3o de produto, abrir ciclo, fan-out |\n| Generation | `orchestrate-content`\u2192`orchestrate-step` + `_shared/affiliate.ts` + `generate-image` | gerar product-aware, monetizar, agendar |\n| External API | LLM (BYOK), DALL\u00b7E/Nano Banana, redes (via auto-publish) | gerar texto/imagem, publicar |\n| DB | Supabase | autopilot_cycles, scheduled_posts, affiliate_links, mcorch_nodes |\n\n---\n\n### PROC-VA-002: Disparo \"tudo de uma vez\" (HITL)\n\n```\n[User Action: clica \"Gerar agora\" (mode=all_at_once)]\n  \u2502\n  \u25bc\n[Hook: useAutopilot \u2192 invoke autopilot-run { plan_id, dry_run:true }]\n  \u2502\n  \u25bc\n[Edge Fn: autopilot-run]\n  \u251c\u2500\u2500 Validate JWT \u2500\u2500(fail)\u2500\u2500\u25b6 HTTP 401\n  \u251c\u2500\u2500 assert plan.user_id == auth.uid() \u2500\u2500(fail)\u2500\u2500\u25b6 HTTP 403\n  \u251c\u2500\u2500 Cost gate (proje\u00e7\u00e3o) \u2500\u2500(over)\u2500\u2500\u25b6 HTTP 409 \u2192 Toast: \"Teto de custo insuficiente para este ciclo\"\n  \u251c\u2500\u2500 return projected_cost_mco  (dry_run)\n  \u2502\n  \u25bc\n[UI mostra custo projetado + confirma\u00e7\u00e3o]\n  \u2502\n  \u25bc (usu\u00e1rio confirma)\n[invoke autopilot-run { plan_id, dry_run:false }]\n  \u251c\u2500\u2500 deduct ocorre nos sub-runs (self-bill via orchestrate-content)\n  \u251c\u2500\u2500 fan-out todos os criativos AGORA (Promise.allSettled)\n  \u251c\u2500\u2500 Embed observation node via embed-mcorch-node\n  \u2514\u2500\u2500 HTTP 200 \u2192 React Query invalida ['autopilot-cycles'] \u2192 UI refresh\n```\n\n---\n\n### PROC-VA-003: Coleta de desempenho\n\n```\nSTART (cron autopilot-collect, hor\u00e1rio)\n  \u2502\n[SELECT scheduled_posts status='published' AND cycle_id NOT NULL AND metrics_pending]\n  \u2502\n[para cada post: resolve post_id + plataforma]\n  \u2502\n<Gateway: API de insights dispon\u00edvel p/ a rede/tier?>\n  \u2502 NO  \u2500\u2500\u25b6 [registrar s\u00f3 affiliate_clicks do click ledger] (sinal sempre dispon\u00edvel)\n  \u2502 YES \u2500\u2500\u25b6 [fetch insights (likes/views/shares) best-effort]\n  \u2502\n[UPSERT creative_metrics (content_variant_id, source) \u2014 idempotente]\n  \u2502\n[merge revenue: handle-ml-postback j\u00e1 creditou affiliate_links \u2192 refletir revenue_cents]\n  \u2502\nEND  (alimenta PROC-VA-005)\n```\n\n---\n\n## 3. n8n Workflow Blueprints\n\n> O `viral-autopilot` usa **pg_cron + Edge Functions** como motor prim\u00e1rio (consistente com `nurture-advance`). n8n \u00e9 opcional como camada de notifica\u00e7\u00e3o/observa\u00e7\u00e3o externa.\n\n### Workflow: Autopilot Cycle Alert (opcional)\n\n**Trigger:** Supabase webhook em `infra_health_logs` (event `viral_autopilot_aborted_budget` ou `_collect_failure`)  \n**Idempotency key:** `infra_health_logs.id`\n\n```\n[Trigger: webhook infra_health_logs (autopilot event)]\n  \u2502\n  \u25bc\n[Node: Filter event_type IN (aborted_budget, collect_failure, analyze_empty)]\n  \u2502\n  \u251c\u2500\u2500 (aborted_budget) \u2500\u2500\u25b6 [Node: Telegram @claw_gcrux \"Plano <x> pausado \u2014 teto de custo\"]\n  \u2502\n  \u2514\u2500\u2500 (collect_failure) \u2500\u2500\u25b6 [Node: Set retry; (count>3) \u2192 infra_health_logs {n8n_alert}]\n```\n\n**Data Mapping:**\n\n| Input Field | Source | \u2192 | Output Field | Destination |\n|-------------|--------|---|--------------|-------------|\n| `event` | infra_health_logs row | \u2192 | message | Telegram body |\n| `metadata.plan_id` | infra_health_logs row | \u2192 | context | Telegram body |\n\n---\n\n## 4. Orchestration Integration Points\n\n> O `viral-autopilot` \u00e9 um **wrapper sobre `orchestrate-content`**, n\u00e3o um novo passo dentro dele. O ciclo dispara N execu\u00e7\u00f5es de `orchestrate-content` (uma por produto\u00d7rede), cada uma com `product_target` injetado.\n\n| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |\n|---------------|---------|----------|-------------|-----------------|\n| `product_target` injection | n/a (param) | entrada do orchestrate-content | `autopilot-run` passa `{ product_id, product_meta, feedback_features }` que hoje \u00e9 dropado (FR-VA-016) | \u2014 |\n| `monetize_all_formats` | dentro de orchestrate-step | ap\u00f3s cada formato (article/linkedin/twitter) | `_shared/affiliate.ts` embute link ML + content_variant_id (FR-VA-004) | 0 |\n| `feedback_inject` | dentro de orchestrate-step | antes da chamada LLM | injeta features do `optimization_policy` no system prompt (FR-VA-011) | 0 |\n\n**Integration code stub (dentro de `autopilot-run/index.ts`):**\n```typescript\n// Para cada produto-alvo \u00d7 rede do plano:\nfor (const product of selectedProducts) {\n  for (const platform of plan.platforms) {\n    await updateCycleStatus(cycleId, 'running')\n    const run = await supabase.functions.invoke('orchestrate-content', {\n      headers: { Authorization: userJwt },     // self-bill no tenant\n      body: {\n        topic: buildViralAngle(product, trends),   // FR-VA-018\n        product_target: { id: product.external_id, meta: product, feedback: policyFeatures }, // FR-VA-016\n        platforms: [platform],\n        cycle_id: cycleId,                          // NFR-VA-007 auditabilidade\n      },\n    })\n    if (!run.data?.ok) await logHealth('viral_autopilot_cycle_failed', { cycleId, platform })\n  }\n}\n```\n\n---\n\n## 5. Error Handling & Retry Strategy\n\n| Process | Step | Error Type | Max Retries | Backoff | Failure Action |\n|---------|------|-----------|-------------|---------|----------------|\n| PROC-VA-001 | cost gate | saldo/teto insuficiente | 0 | \u2014 | `aborted_budget` + pause plan + notify (sem cobrar) |\n| PROC-VA-001 | fan-out orchestrate-content | sub-run 5xx | 2 | Fixo 5s | marcar criativo failed; ciclo segue (Promise.allSettled) |\n| PROC-VA-001 | re-arm next_run_at | DB error | 3 | Exp (2s,4s,8s) | infra_health_logs; cron retenta no pr\u00f3ximo tick (idempotente por cycle_number) |\n| PROC-VA-003 | fetch insights | API tier/timeout | 1 | Fixo | fallback p/ s\u00f3 affiliate_clicks; log `collect_failure` |\n| PROC-VA-005 | analyze | LLM timeout / m\u00e9tricas vazias | 1 | \u2014 | se vazio: baseline (`has_real_data=false`), N\u00c3O inventa; log `analyze_empty` |\n| Qualquer | JWT validation | token inv\u00e1lido | 0 | \u2014 | HTTP 401 imediato |\n\n---\n\n## 6. SLA Definitions\n\n| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |\n|---------|------|------------------|-------------------|-------------------|\n| PROC-VA-001 | ciclo end-to-end (N\u22648 criativos) | < 5min | 15min | Sim \u2192 infra_health_logs `sla_breach` |\n| PROC-VA-001 | cost gate | < 1s | 5s | N\u00e3o |\n| PROC-VA-002 | autopilot-run (dry_run) | < 2s | 5s | Sim |\n| PROC-VA-003 | coleta por post | < 3s | 30s | N\u00e3o (best-effort) |\n| PROC-VA-005 | analyze | < 10s | 60s | Sim |\n\n---\n\n## 7. Cron Jobs\n\n| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |\n|----------|----------------|----------|-------------|-----------------|\n| `autopilot-cadence` | `*/15 * * * *` | `autopilot-cadence-cron` | re-arm de `next_run_at` + UNIQUE (plan_id, cycle_number) \u21d2 re-fire n\u00e3o duplica | `infra_health_logs` + Telegram (n8n opcional) |\n| `autopilot-collect` | `0 */6 * * *` (6/6h) | `autopilot-collect` | UPSERT (content_variant_id, source) | `infra_health_logs` `collect_failure` |\n\n> **Preservar crons existentes:** `memory_decay_fsrs`, `nurture-advance` (*/15), `watchdog-mcorch` (*/5), `auto-publish` (*/5), `audit-4cs`, `affiliate-enrich-cron` (6/6h). Os 2 novos jobs s\u00e3o adicionais.\n> **Idempot\u00eancia (NFR-VA-003):** re-rodar o cron sobre o mesmo `next_run_at`/ciclo produz o mesmo resultado \u2014 o ciclo j\u00e1 aberto (UNIQUE plan_id+cycle_number) bloqueia duplicata; janela perdida faz catch-up no pr\u00f3ximo tick sem dobrar.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:06:48)*
+
+
+## 🤖 Claude *(21:06:49)*
+
+Agora o último — **quality-metrics** (CMQ/OE — KPIs, FMEA com 4 RPN>100, self-heal kill-switch, PDCA):
+
+## 🤖 Claude *(21:07:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/08-quality-metrics.md",
+  "content": "# Quality & Self-Optimization Specification\n\n**Project:** viral-autopilot  \n**Version:** v0.1 | **Date:** 2026-06-17  \n**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)  \n**Status:** Draft\n\n---\n\n## 1. Quality Objectives\n\n| QO ID | Objective | Linked Business Objective | Target | Review Cadence |\n|-------|-----------|--------------------------|--------|---------------|\n| QO-001 | Autonomia sem interven\u00e7\u00e3o por post | BO-001 | \u2265 90% posts via autopilot | Weekly |\n| QO-002 | Loop de melhoria com dado real (n\u00e3o teatral) | BO-002 | \u2265 80% das an\u00e1lises com `has_real_data=true` ap\u00f3s ciclo 2 | Monthly |\n| QO-003 | Margem protegida: zero overspend | BO-003 | 100% ciclos com `spend_mco \u2264 budget_cap`; 0 deduct em ciclo abortado | Weekly |\n| QO-004 | Monetiza\u00e7\u00e3o universal | BO-004 | 100% criativos com link ML + `content_variant_id` | Weekly |\n\n---\n\n## 2. KPI Dashboard Definition\n\n> Data source: tabelas/views Supabase por KPI.\n\n| KPI ID | Name | Formula | Target | Warn Threshold | Critical Threshold | Data Source |\n|--------|------|---------|--------|---------------|-------------------|-------------|\n| KPI-VA-001 | Custo por ciclo | `SUM(spend_mco) per cycle` | \u2264 `budget_cap_mco` | > 80% do cap | > cap | `autopilot_cycles` |\n| KPI-VA-002 | Lift viral ciclo-a-ciclo | `avg_engagement(N+1) / avg_engagement(N)` | \u2265 1.10\u00d7 ap\u00f3s 3 ciclos | < 1.0\u00d7 | < 0.8\u00d7 (regress\u00e3o) | `creative_metrics` por `cycle_id` |\n| KPI-VA-003 | Receita ML atribu\u00edda por ciclo | `SUM(revenue_cents) per cycle / 100` | crescente MoM | estagnado 3 ciclos | 0 com cliques > 0 (postback morto) | `creative_metrics` + `affiliate_links` |\n| KPI-VA-004 | % criativos monetizados | `monetized_creatives / total_creatives` | 100% | < 100% | < 90% | `creative_metrics` \u2229 `affiliate_links` |\n| KPI-VA-005 | CTR de afiliado | `affiliate_clicks / impressions` | benchmark por produto | < baseline | 0 com impress\u00f5es > 0 | `creative_metrics` |\n| KPI-VA-006 | mcoCoins Burn Rate | `SUM(deductions) / active_plans` | < `budget_cap` m\u00e9dio | 80% | > cap | `profiles` + `mco_transactions` |\n| KPI-VA-007 | Edge Fn p95 Latency (`autopilot-run`) | `PERCENTILE_CONT(0.95)` | < 800ms (dry_run) | 1000ms | 2000ms | Supabase logs |\n| KPI-VA-008 | Cad\u00eancia cumprida | `cycles_on_time / cycles_due` | \u2265 98% | < 95% | < 90% | `autopilot_cycles` vs `next_run_at` |\n\n---\n\n## 3. FMEA Table\n\n> S, O, D: 1 (melhor) \u2192 10 (pior). RPN = S \u00d7 O \u00d7 D. RPN > 100 exige a\u00e7\u00e3o.\n\n| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |\n|----|---------|--------------|--------|---|---|---|-----|--------------------|\n| FMEA-VA-001 | Cost guardrail (FR-VA-007) | Bypass do teto / overspend aut\u00f4nomo (disparo paralelo, gate fraco) | Drena mcoCoins do tenant silenciosamente | 8 | 4 | 4 | **128** | Gate at\u00f4mico server-side ANTES do deduct + idempot\u00eancia (plan_id, cycle_number) + safety cap di\u00e1rio global (espelha vision-mcp); lock otimista no ciclo |\n| FMEA-VA-002 | Cycle analyzer (FR-VA-010) | \"Auto-melhoria teatral\": analisa `creative_metrics` vazia, LLM gera recomenda\u00e7\u00e3o gen\u00e9rica | Loop aparenta aprender mas n\u00e3o aprende; decis\u00f5es com base em ru\u00eddo | 6 | 6 | 5 | **180** | Bloquear deduct/aplica\u00e7\u00e3o quando vazio (`has_real_data=false`); usar `affiliate_clicks` (sempre dispon\u00edvel) como sinal m\u00ednimo; expor flag no dashboard |\n| FMEA-VA-003 | Cadence cron (FR-VA-005) | Re-fire do cron dobra post/cobran\u00e7a | Conte\u00fado duplicado nas redes + cobran\u00e7a dupla | 7 | 3 | 4 | 84 | UNIQUE (plan_id, cycle_number) + guarda em `scheduled_posts`; catch-up idempotente |\n| FMEA-VA-004 | Gera\u00e7\u00e3o aut\u00f4noma (FR-VA-003) | Conte\u00fado off-brand / viola ToS de rede ou ML publicado sem revis\u00e3o | Suspens\u00e3o de conta, dano de marca, queda de receita | 9 | 3 | 5 | **135** | Cyber-Sentinel gate pr\u00e9-publica\u00e7\u00e3o (input+output) + disclosure de afiliado + HITL opcional (PR-VA-013) |\n| FMEA-VA-005 | Product-aware prompt (FR-VA-003) | Prompt injection via nome/desc de produto ou texto de trend | Gera\u00e7\u00e3o desviada / vazamento de instru\u00e7\u00e3o | 8 | 3 | 5 | **120** | Sanitizar produto/trend antes do prompt; Cyber-Sentinel no input; validar output antes de publicar |\n| FMEA-VA-006 | Revenue attribution (FR-VA-017) | Postback ML nunca chega (secret global, OTD-ML-MP-PER-USER) | Receita atribu\u00edda = 0 mesmo com vendas; KPI-VA-003 cego | 6 | 5 | 3 | 90 | Fechar OTD-VA-007; provar 1 postback real; usar cliques de afiliado como proxy de ROI enquanto isso |\n| FMEA-VA-007 | mcoCoins deduction | RPC timeout \u2192 cobran\u00e7a dupla | Tenant cobrado em excesso | 9 | 2 | 3 | 54 | Idempotency key por sub-run; `deduct_mco_coins` at\u00f4mico |\n| FMEA-VA-008 | JWT validation (autopilot-run) | Header ausente/inv\u00e1lido | Acesso n\u00e3o autenticado | 10 | 2 | 1 | 20 | Hard fail no entrypoint; log `infra_health_logs` |\n| FMEA-VA-009 | embed-mcorch-node (observation) | Timeout de embedding | N\u00f3 de ciclo sem vetor (mem\u00f3ria n\u00e3o pesquis\u00e1vel) | 6 | 3 | 4 | 72 | Retry ass\u00edncrono; `scripts/backfill-embeddings.ts` |\n| FMEA-VA-010 | Credential resolution (NFR-VA-004) | Resolu\u00e7\u00e3o errada \u2192 tenant A usa credencial de B | Vazamento de credencial/quota cross-tenant | 9 | 2 | 4 | 72 | Resolu\u00e7\u00e3o per-user `auth.uid()` + RLS + teste de isolamento; fail-closed |\n| FMEA-VA-011 | Honor product param (FR-VA-016) | Regress\u00e3o do drop de `affiliate_url`/produto em `:79` | Conte\u00fado gerado n\u00e3o monetizado | 7 | 3 | 3 | 63 | Teste de integra\u00e7\u00e3o de regress\u00e3o; assert link presente em todo formato |\n| FMEA-VA-012 | Cadence availability (NFR-VA-006) | Cron caiu \u2192 janela perdida, plano trava | Cad\u00eancia interrompida silenciosamente | 4 | 3 | 4 | 48 | Reconcile-on-run (catch-up no pr\u00f3ximo tick); KPI-VA-008 alerta |\n\n**Itens com RPN > 100 (a\u00e7\u00e3o obrigat\u00f3ria):** FMEA-VA-002 (180), FMEA-VA-004 (135), FMEA-VA-001 (128), FMEA-VA-005 (120) \u2014 todos com a\u00e7\u00e3o recomendada acima.\n\n---\n\n## 4. Self-Optimization Loops\n\n| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |\n|---------|------------------|------------|--------------------|--------------------|\n| SOL-VA-001 | Ciclo N+1 disparado com `creative_metrics(N)` populada | `creative_metrics` | `autopilot-analyze` produz `optimization_policy`; gera\u00e7\u00e3o N+1 injeta top features (FR-VA-011) | \u2014 (\u00e9 o core loop) |\n| SOL-VA-002 | KPI-VA-002 lift < 0.8\u00d7 por 2 ciclos (regress\u00e3o) | `creative_metrics` | Reverter para baseline de prompt + sinalizar produto/\u00e2ngulo de baixa convers\u00e3o p/ poda | Alertar Sovereign |\n| SOL-VA-003 | KPI-VA-006 burn > 80% do cap | `mco_transactions` | Reduzir `planned_units` do pr\u00f3ximo ciclo (menos varia\u00e7\u00f5es) | Alertar se > cap |\n| SOL-VA-004 | Saldo < `min_balance_mco` | `profiles` | Pausar plano (kill-switch) + notifica\u00e7\u00e3o PT-BR; N\u00c3O disparar ciclo | \u2014 (sem auto-recarga) |\n| SOL-VA-005 | KPI-VA-005 CTR de um produto < baseline por 3 ciclos | `creative_metrics` | Despriorizar o produto na sele\u00e7\u00e3o (comm+trend) do pr\u00f3ximo ciclo | \u2014 |\n\n---\n\n## 5. Self-Healing Specifications\n\n### 5.1 Watchdog Telemetry Events\n\nNovos `event` em `infra_health_logs` (com `metadata` allowlist \u2014 n\u00e3o vazar per-tenant na tabela global-read):\n\n| Event Type | Trigger | Severity | Payload (allowlisted) |\n|------------|---------|----------|---------|\n| `viral_autopilot_cycle_started` | ciclo aberto | info | `{plan_id, cycle_number, planned_units}` |\n| `viral_autopilot_cycle_completed` | ciclo fechado | info | `{cycle_id, spend_mco, creatives}` |\n| `viral_autopilot_aborted_budget` | kill-switch disparado | warn | `{plan_id, projected_mco, budget_cap}` |\n| `viral_autopilot_collect_failure` | coletor falhou ap\u00f3s retry | warn | `{cycle_id, platform}` |\n| `viral_autopilot_analyze_empty` | an\u00e1lise sem dado real | warn | `{plan_id, cycle_id}` |\n| `viral_autopilot_cycle_failed` | sub-run de gera\u00e7\u00e3o 5xx | error | `{cycle_id, platform}` |\n\n### 5.2 Auto-Recovery Script Stubs\n\n```bash\n#!/bin/bash\n# scripts/self-heal-viral-autopilot.sh\n# Triggered by mega-brain-daemon when viral_autopilot_cycle_failed/analyze_empty detected\nLOG_TABLE=\"infra_health_logs\"\necho \"[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Self-heal viral-autopilot\"\n\n# 1. Reconcile stuck cycles: cycles 'running' > 30min \u2192 mark 'failed', N\u00c3O re-cobrar\n# 2. Re-arm planos com next_run_at no passado mas is_active (janela perdida)\n# 3. Re-disparar autopilot-collect para posts published sem creative_metrics h\u00e1 > 24h\n# (todas as a\u00e7\u00f5es idempotentes; service-role; logam recovery_ok em infra_health_logs)\necho \"[OK] Self-heal viral-autopilot complete\"\n```\n\n### 5.3 mega-brain-daemon Integration Points\n\n| Daemon Event | Condition | Action |\n|-------------|-----------|--------|\n| `health_check` | A cada 5 min (watchdog) | Checar ciclos `running` \u00f3rf\u00e3os (> 30min) e planos due n\u00e3o disparados |\n| `anomaly_detected` | `viral_autopilot_*` error rate > 5/h | Executar `self-heal-viral-autopilot.sh` |\n| `budget_anomaly` | `aborted_budget` > 3\u00d7 p/ o mesmo plano em 24h | Manter pausado + alertar Sovereign (plano mal-configurado) |\n| `recovery_confirmed` | Ciclo subsequente completa OK | Inserir `recovery_ok` em `infra_health_logs` |\n\n---\n\n## 6. SLA / SLO / SLI Definitions\n\n| Service | SLI (what we measure) | SLO (our target) | SLA (consequence) |\n|---------|----------------------|------------------|-------------------|\n| `autopilot-run` (dry_run) | p95 response latency | \u2264 800ms | Investigar se > 2s por > 1% das chamadas/m\u00eas |\n| Cad\u00eancia | % ciclos disparados em \u2264 15min do `next_run_at` | \u2265 98% | Self-heal + alerta se < 90% |\n| Cost guardrail | % ciclos com `spend \u2264 cap` e 0 deduct em abortados | 100% | Incident report obrigat\u00f3rio se violado (dinheiro do tenant) |\n| Coleta de m\u00e9tricas | % posts com \u2265 1 sinal em `creative_metrics` \u2264 24h | \u2265 95% (cliques sempre; org\u00e2nico best-effort) | Auto-retry; cair p/ s\u00f3 cliques |\n| Monetiza\u00e7\u00e3o | % criativos com link ML v\u00e1lido | 100% | Bloquear publica\u00e7\u00e3o de criativo sem link |\n\n---\n\n## 7. PDCA Improvement Cadence\n\n| Cycle | Phase | Activity | Owner | Frequency |\n|-------|-------|----------|-------|-----------|\n| viral-autopilot Quality | Plan | Revisar FMEA (RPN>100) + alvos de KPI | Sovereign | Quarterly |\n| viral-autopilot Quality | Do | Implementar top a\u00e7\u00e3o (ex.: fechar OTD-ML-MP-PER-USER) | Engineering | Per sprint |\n| viral-autopilot Quality | Check | Comparar KPI-VA-002 (lift) e KPI-VA-003 (receita) vs alvo; atualizar RPNs | AIOS | Monthly |\n| viral-autopilot Quality | Act | Fechar loop; podar produtos/\u00e2ngulos de baixa convers\u00e3o; atualizar este doc | Sovereign | Monthly |\n\n**Improvement backlog location:** `.claude/context/sprint-priorities.md`\n\n---\n\n## 8. Observability Checklist\n\n### 8.1 Logging Events\n\n| Event | Location | Level | Fields logged |\n|-------|----------|-------|--------------|\n| Entrada de fun\u00e7\u00e3o | `autopilot-run/index.ts` ~linha 10 | INFO | `{user_id, plan_id, request_id}` |\n| Cost gate decision | ap\u00f3s proje\u00e7\u00e3o | INFO | `{projected_mco, budget_cap, decision}` |\n| mcoCoins deduction (sub-run) | ap\u00f3s RPC | INFO | `{user_id, amount, new_balance, cycle_id}` |\n| Feedback inject | antes da chamada LLM | INFO | `{cycle_id, has_real_data, features_count}` |\n| Erro de l\u00f3gica | catch block | ERROR | `{cycle_id, error_message}` |\n| SLA breach | timeout guard | WARN | `{process_id, elapsed_ms}` |\n\n### 8.2 Alerting Rules\n\n| Condition | Channel | Escalation |\n|-----------|---------|------------|\n| `aborted_budget` para 1 plano | `infra_health_logs` + Telegram | Sovereign se > 3\u00d7 em 24h |\n| `analyze_empty` ap\u00f3s ciclo 2 | `infra_health_logs` | AIOS (loop teatral \u2014 FMEA-VA-002) |\n| KPI-VA-003 = 0 com cliques > 0 | scheduled check | Sovereign (postback morto \u2014 FMEA-VA-006) |\n| p95 `autopilot-run` > 2s | `infra_health_logs` | mega-brain-daemon self-heal |\n\n### 8.3 Distributed Tracing Touchpoints\n\n| Span | Start | End | Tags |\n|------|-------|-----|------|\n| `autopilot-run.total` | request recebido | response enviado | `user_id`, `plan_id`, `cycle_id`, `status` |\n| `autopilot-run.cost_gate` | antes da proje\u00e7\u00e3o | ap\u00f3s decis\u00e3o | `projected_mco`, `decision` |\n| `autopilot-run.fanout` | in\u00edcio fan-out | fim Promise.allSettled | `creatives`, `failures` |\n| `autopilot-analyze.total` | leitura de m\u00e9tricas | policy gravada | `cycle_id`, `has_real_data` |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/08-quality-metrics.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:08:12)*
+
+
+## 🤖 Claude *(21:08:14)*
+
+Os 9 documentos estão escritos. Agora a **Fase 6 — Validação de Rastreabilidade Adversarial** (Closed-Loop exige: zero requisito órfão, RLS em toda tabela, mcoCoins atômico, FMEA RPN>100 com ação, e — crucial — confirmar que a suíte de fato fecha os gaps R2/R3 que a auditoria provou inexistentes). Vou rodar um workflow de 4 críticos paralelos + síntese GO/NO-GO, lendo os arquivos reais.
+
+## 🤖 Claude *(21:09:01)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'viral-autopilot-bok-validation',\n  description: 'Phase 6 adversarial validation of the viral-autopilot BoK suite: traceability integrity, security/Harness constraints, R1-R4 gap-closure coverage, template/FMEA completeness \u2192 GO/NO-GO verdict with must-fix list',\n  phases: [\n    { title: 'Critique', detail: '4 parallel adversarial critics read the 9 docs' },\n    { title: 'Verdict', detail: 'synthesize GO/NO-GO + must-fix' },\n  ],\n}\n\nconst DIR = '/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot'\nconst BASE = `Voc\u00ea \u00e9 um cr\u00edtico ADVERSARIAL da su\u00edte BoK viral-autopilot em ${DIR} (9 docs: 00-index,01-mrd,02-brd,03-prd,04-frd,05-sdd,06-data-model,07-process-flow,08-quality-metrics). Leia os arquivos relevantes (Read/Grep) e CACE INCONSIST\u00caNCIAS \u2014 seu trabalho \u00e9 reprovar, n\u00e3o elogiar. Reporte findings com severidade e fix concreto (doc + se\u00e7\u00e3o). Default c\u00e9tico: se algo est\u00e1 amb\u00edguo ou falta, \u00e9 finding. N\u00e3o invente conte\u00fado; cite o que leu.`\n\nconst CRITIC_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    dimension: { type: 'string' },\n    verdict: { type: 'string', enum: ['pass', 'warn', 'fail'] },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          id: { type: 'string' },\n          severity: { type: 'string', enum: ['blocker', 'high', 'medium', 'low'] },\n          doc: { type: 'string' },\n          issue: { type: 'string' },\n          fix: { type: 'string' },\n        },\n        required: ['id', 'severity', 'doc', 'issue', 'fix'],\n      },\n    },\n    notes: { type: 'string' },\n  },\n  required: ['dimension', 'verdict', 'findings', 'notes'],\n}\n\nconst CRITICS = [\n  {\n    label: 'traceability',\n    prompt: `${BASE}\n\nDIMENS\u00c3O: Rastreabilidade. Construa a cadeia MR-VA-NNN \u2192 BR-VA-NNN \u2192 PR-VA-NNN \u2192 FR-VA-NNN \u2192 (tabela|edge fn|cron|processo). Assert:\n- Todo MR (8) rastreia \u22651 BR; todo BR (8) \u22651 PR; todo PR \u22651 FR; todo FR (18) \u22651 PR e \u22651 artefato no SDD/data-model/process-flow.\n- Sem ID \u00f3rf\u00e3o (aparece numa matriz mas nunca definido, ou definido mas nunca rastreado downstream).\n- As matrizes de rastreabilidade nos 4 docs (01,02,03,04) s\u00e3o MUTUAMENTE CONSISTENTES (ex.: PR-VA-008 image aparece como Must no PRD e tem FR? FR-VA-013 marcado 'Should (MVP)' \u2014 \u00e9 coerente com MVP=texto+imagem?).\n- Os 5 PROC do 07 cobrem todos os FR cr\u00edticos; os 2 crons existem no SDD e no process-flow.\nListe cada quebra de cadeia como finding.`,\n  },\n  {\n    label: 'security-harness',\n    prompt: `${BASE}\n\nDIMENS\u00c3O: Seguran\u00e7a + Harness Engineering (CISSP CBK + constraints CLAUDE.md/Survival). Assert sobre 05-sdd e 06-data-model:\n- Toda NOVA tabela (autopilot_plans, autopilot_cycles, creative_metrics) tem 'ENABLE ROW LEVEL SECURITY' + pol\u00edtica own-row (auth.uid()). Default-deny.\n- API Tenancy per-user: nenhuma credencial externa via env global em fluxo user-facing; resolu\u00e7\u00e3o por auth.uid(). Secrets s\u00f3 por NOME (nunca valor). Usa SB_SECRET_KEY (n\u00e3o a legada SUPABASE_SERVICE_ROLE_KEY revogada).\n- mcoCoins: dedu\u00e7\u00e3o s\u00f3 via deduct_mco_coins RPC, e o GATE de teto ocorre ANTES do deduct (FR-VA-007). Nunca client-side.\n- Toda edge fn user-facing valida JWT; crons usam service-role + verify_jwt=false (padr\u00e3o pg_net).\n- STRIDE cobre os componentes novos com \u22651 mitiga\u00e7\u00e3o por amea\u00e7a. Threat de prompt-injection (produto/trend) presente.\n- Migrations: nota de /security-review.\nCace qualquer tabela sem RLS, qualquer secret value, qualquer deduct sem gate, qualquer env global user-facing.`,\n  },\n  {\n    label: 'gap-closure',\n    prompt: `${BASE}\n\nDIMENS\u00c3O: Cobertura dos 4 requisitos Sovereign vs a auditoria material (a su\u00edte REALMENTE fecha os gaps?). Para CADA requisito, confirme que existe FR concreta (n\u00e3o s\u00f3 vis\u00e3o):\n- R1 (gera\u00e7\u00e3o auto p/ redes): FR de gera\u00e7\u00e3o product-aware + imagem no MVP? V\u00eddeo/TikTok corretamente diferidos p/ fase 2 (n\u00e3o no MVP)?\n- R2 (cad\u00eancia tudo-de-uma-vez OU a cada N dias): EXISTE FR de entidade de plano (autopilot_plans com mode+interval_days) + cron de auto-refill (FR-VA-005)? Isto fecha o gap 'recorr\u00eancia n\u00e3o existe' da auditoria?\n- R3 (loop auto-melhor\u00e1vel): as TR\u00caS quebras da auditoria est\u00e3o fechadas por FR? (a) campaign_metrics sem writer \u2192 coletor FR-VA-008 + creative_metrics FR-VA-009; (b) optimization_policy nunca lida por gerador \u2192 FR-VA-011 feedback inject; (c) self-optimize sem cron \u2192 FR-VA-005/010 agendado. H\u00e1 prote\u00e7\u00e3o contra 'auto-melhoria teatral' (m\u00e9tricas vazias)?\n- R4 (afiliado ML em todo formato): FR-VA-004 monetiza artigo+linkedin+twitter (n\u00e3o s\u00f3 artigo)? FR-VA-016 corrige o param dropado? Sele\u00e7\u00e3o por comiss\u00e3o+trend (FR-VA-012)?\nSe algum requisito ficou s\u00f3 como 'vis\u00e3o' sem FR acion\u00e1vel, \u00e9 BLOCKER.`,\n  },\n  {\n    label: 'completeness-fmea',\n    prompt: `${BASE}\n\nDIMENS\u00c3O: Completude de template + FMEA + contradi\u00e7\u00f5es internas. Assert:\n- Cada um dos 9 docs tem as se\u00e7\u00f5es obrigat\u00f3rias do seu template (ver .claude/agents/bok-scribe/templates/) e footer 'Generated by MCORCH BoK Scribe Agent v1.0.0'.\n- FMEA (08): todo item com RPN>100 tem a\u00e7\u00e3o recomendada; recompute alguns RPN (S\u00d7O\u00d7D) e cheque se batem com o valor escrito. O index afirma 4 itens RPN>100 \u2014 confirme a contagem.\n- mcoCoins cost definido para toda FR/opera\u00e7\u00e3o com IA (gera\u00e7\u00e3o 10, an\u00e1lise 5, imagem). NFRs presentes (8). Gherkin no PRD cobre os cen\u00e1rios-chave (cad\u00eancia, monetiza\u00e7\u00e3o, kill-switch, loop, ROI).\n- Contradi\u00e7\u00f5es entre docs (ex.: MVP date, contagem de FR/MR/BR, status de OTD, nomes de tabela/fn divergentes entre SDD e data-model/process-flow).\n- 00-index: traceability chain e phase log coerentes com o conte\u00fado real.\nListe se\u00e7\u00f5es faltantes, RPN incorretos, e contradi\u00e7\u00f5es como findings.`,\n  },\n]\n\nphase('Critique')\nlog('4 cr\u00edticos adversariais lendo os 9 docs da su\u00edte viral-autopilot...')\nconst critiques = (await parallel(\n  CRITICS.map((c) => () => agent(c.prompt, { label: `critic:${c.label}`, phase: 'Critique', schema: CRITIC_SCHEMA }))\n)).filter(Boolean)\n\nlog('Sintetizando veredito GO/NO-GO...')\nphase('Verdict')\n\nconst VERDICT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    overallVerdict: { type: 'string', enum: ['GO', 'GO_WITH_FIXES', 'NO_GO'] },\n    summary: { type: 'string' },\n    mustFix: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          severity: { type: 'string', enum: ['blocker', 'high'] },\n          doc: { type: 'string' },\n          issue: { type: 'string' },\n          fix: { type: 'string' },\n        },\n        required: ['severity', 'doc', 'issue', 'fix'],\n      },\n    },\n    niceToHave: { type: 'array', items: { type: 'string' } },\n    gapClosureVerdict: {\n      type: 'object', additionalProperties: false,\n      properties: {\n        R1: { type: 'string' }, R2: { type: 'string' }, R3: { type: 'string' }, R4: { type: 'string' },\n      },\n      required: ['R1', 'R2', 'R3', 'R4'],\n    },\n  },\n  required: ['overallVerdict', 'summary', 'mustFix', 'niceToHave', 'gapClosureVerdict'],\n}\n\nconst verdict = await agent(\n  `Voc\u00ea \u00e9 o validador-chefe da Fase 6 do BoK Scribe. Abaixo os 4 relat\u00f3rios de cr\u00edtica adversarial (JSON). Sintetize:\n1. overallVerdict: GO (zero blocker/high), GO_WITH_FIXES (high mas sem blocker), ou NO_GO (\u22651 blocker).\n2. mustFix: consolide TODOS os findings severity blocker+high (dedup), cada um com doc+issue+fix acion\u00e1vel.\n3. gapClosureVerdict: para R1/R2/R3/R4, uma frase dizendo se a su\u00edte fecha o gap da auditoria (com a FR que fecha).\n4. niceToHave: medium/low que valem corrigir mas n\u00e3o bloqueiam o seal.\n5. summary: 2-3 frases \u2014 a su\u00edte est\u00e1 pronta para seal/Phase 7?\n\nRELAT\u00d3RIOS:\n${JSON.stringify(critiques, null, 2)}`,\n  { label: 'verdict', phase: 'Verdict', schema: VERDICT_SCHEMA }\n)\n\nreturn { critiques, verdict }\n",
+  "description": "Adversarial validation of viral-autopilot BoK"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wql8i8sh7
+> Summary: Phase 6 adversarial validation of the viral-autopilot BoK suite: traceability integrity, security/Harness constraints, R1-R4 gap-closure coverage, template/FMEA completeness → GO/NO-GO verdict with must-fix list
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/subagents/workflows/wf_162126db-952
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js"} to iterate without resending the script.)
+> Run ID: wf_162126db-952
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js", resumeFromRunId: "wf_162126db-952"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:09:14)*
+
+
+## 🤖 Claude *(21:09:15)*
+
+Enquanto a validação roda, vou adiantar trabalho não-bloqueante: ler o script-precedente do seal e rascunhar o `seed-viral-autopilot-bok-seal.ts` (Fase 7), que só será executado após o veredito GO.
+
+## 🤖 Claude *(21:09:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-openclaw-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the BoK documentation suite for openclaw in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node with stability 0.85; embedding triggered
+> 5	 * automatically by trg_mcorch_embed_on_insert.
+> 6	 *
+> 7	 * Usage: bun run scripts/seed-openclaw-bok-seal.ts
+> 8	 */
+> 9	import { createClient } from '@supabase/supabase-js';
+> 10	
+> 11	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 12	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 13	
+> 14	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 15	  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+> 16	  process.exit(1);
+> 17	}
+> 18	
+> 19	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 20	
+> 21	const sealNode = {
+> 22	  name: 'bok-scribe-seal-openclaw-v1',
+> 23	  node_type: 'documentation_suite',
+> 24	  project_id: 'openclaw',
+> 25	  stability_score: 0.85,
+> 26	  revenue_impact: 0, // módulo é enabler horizontal de velocity para os outros 4 BoK; proxy via lift dos outros módulos (não direct revenue)
+> 27	  content: `OpenClaw — Pantheon Agency Runtime (BoK retroativa)
+> 28	
+> 29	BoK suite (9 docs) sealed 2026-05-19 sob MCORCH Master Execution Protocol. Esta seal quita o override consciente do BoK Gate registrado em Sprint v6.2.0 (2026-05-15) — Sovereign havia autorizado que a própria Agência OpenClaw quitaria a dívida assincronamente; com 4 sprints decorridos e a Agência operando em produção, esta seal materializa retroativamente o BoK que governa o módulo.
+> 30	
+> 31	VISÃO: Runtime de Pantheon Architecture com 7 agentes IA especializados (main router + engineer/scientist/artisan/marketing-growth L1 Heads + guardian Coordination + claw-master L2 Specialist) operando sob soberania física do Sovereign Gabriel Zarattini em /home/ubuntu/.openclaw/. Gateway local 127.0.0.1:18789 sob auth token (48-char hex), memória SQLite per-agente (FTS5 + vector embeddings), Memory Wiki em vault bridge mode, ciclo circadiano noturno (Stage 1 03:00 / Stage 2 05:00 / Stage 3 07:00 BRT espaçados 2h), e briefing diário ao Telegram chat 5835174772 às 07:30 BRT compondo 6 seções markdown ≤ 4000 chars (git delta + MEMORY promotions + BoK debt + revenue snippet + news pulse Perplexity Sonar + reflexão Paz e Vitalidade).
+> 32	
+> 33	ARQUITETURA: 1 config canônica (openclaw.json 180 LOC com schema strict v2026.5.14), 1 vault file-based (secrets.json chmod 600 com 6 SecretRef pointers), 7 agent dirs com 7-8 canonical files cada (SOUL/AGENTS/MEMORY/BOOTSTRAP/HEARTBEAT/IDENTITY/TOOLS/USER), 6 SQLite memory artifacts (main 626 MB + engineer 390 MB + scientist 232 MB + claw-master 90 MB + artisan 28 MB + marketing-growth 20 MB + guardian 20 MB), 1 OpenClaw daemon (gateway loopback), 1 Memory Wiki vault (~20 pages seed manual MCORCH-aware com pageType ∈ {synthesis, entity, concept, source, dashboard}). Pipeline scripts MCORCH: bridge-mesh-to-openclaw.ts (327 LOC two-tier hybrid; tier1 strategy + tier2 AST excluding ast_variable noise) + distribute-mesh-to-agents.ts (275 LOC shared base + overlay BoK-específica file copies) + nightly-stage{1,2,3}-*.sh (130/130/110 LOC) + compose-morning-briefing.ts (~250 LOC) + morning-briefing.sh (95 LOC) + news-impact-analyzer.ts (173 LOC) + watchdog-mcorch.sh (~150 LOC com Layer 2 escalation counter). Cron pipeline: 03:00/05:00/07:00 BRT (stages) + 03:00 OpenClaw native (Memory Dreaming Promotion) + */5min (watchdog) + 06:00 dia 16 (claw-master audit mensal).
+> 34	
+> 35	DRIFT RECONCILIADO (5 fechados em sprints anteriores · 8 ativos como OTDs): D-OC-001 (6 plain-text secrets → vault SecretRefs em v6.4.0), D-OC-002 (allowInsecureAuth=true → false em v6.4.0), D-OC-003 (perms 775 → 700 em v6.4.0), D-OC-004 (schema strict rejeitando agents.list[].enabled → jq surgical em v6.6.1), D-OC-005 (Memory Palace empty state → 20 wiki pages seed em v6.6.1). Drifts permanentes catalogados como OTDs: OTD-V660-002 (CLI memory index drift), OTD-OC-001 (main.sqlite 626 MB growth), OTD-OC-002 (SQLite schema opaco upstream), OTD-OC-005 (dynamic plugin loading aguardando upstream), OTD-CM-004/005/007 (rate limit + redact + showInSidebar pendentes). Registro autoritativo em 06-data-model.md §8 Drift Reconciliation Appendix.
+> 36	
+> 37	ECONOMIA: zero mcoCoins (módulo é infraestrutura, não tarifa operações). Custos diretos R$ 60-200/ano (orçamento OpenRouter Perplexity Sonar para Stage 3 news pulse). ROI direto não-quantificável; proxy material é velocity dos 5 outros módulos BoK (conteudo-v2 + viralmind + mcorch-constellation + gamificacao-nodes + este) — provavelmente 3-5× mais tempo Sovereign sem o squad.
+> 38	
+> 39	KPIs (10): KPI-OC-001 bridge runtime p95 ≤ 180s · KPI-OC-002 chunks indexed ≥ 9000 (atual 9185) · KPI-OC-003 briefing delivery rate ≥ 95%/30d · KPI-OC-004 SQLite growth ≤ 20MB/agent/dia · KPI-OC-005 watchdog escalation rate ≤ 1/sem · KPI-OC-006 Telegram quota usage ≤ 30% · KPI-OC-007 audit findings ≤ 1 P0 OR 3 P1 · KPI-OC-008 Dreaming runtime ≤ 30min · KPI-OC-009 wiki linter pass rate 100% · KPI-OC-010 secrets vault adherence 100%. FMEA-OC-001..010 com 5 RPN > 100: secrets regression (180), bridge fail stale overlay (150), daemon crash sem watchdog (126), Telegram quota silencia (125), audit scrape fail (105). Mitigations catalogadas em sprint backlog.
+> 40	
+> 41	OTDs ATIVAS (5 novas + 6 herdadas): OTD-OC-001..005 (main.sqlite vacuum cadence · SQLite schema opaque · multi-user expansion · briefing fallback · dynamic plugin loading). Herdadas: OTD-V660-002 (CLI drift) + OTD-CM-004 (rate limit) + OTD-CM-005 (redact) + OTD-CM-006 (multi-user heuristic — Decided 2026-05-19) + OTD-CM-007 (showInSidebar) + OTD-CM-008 (SOUL template — Decided 2026-05-16).
+> 42	
+> 43	DOCUMENTOS: docs/bok/openclaw/{00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics}.md totalizando ~1700 LOC novos.
+> 44	
+> 45	TRACEABILITY: 6 MR-OC → 14 BR-OC → 8 FR-OC + 8 NFR-OC → 10 PROC-OC → 10 KPI-OC validados em 02-brd §10.
+> 46	
+> 47	PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
+> 48	  metadata: {
+> 49	    bok_version: '1.0.0',
+> 50	    documents: [
+> 51	      '00-index',
+> 52	      '01-mrd',
+> 53	      '02-brd',
+> 54	      '03-prd',
+> 55	      '04-frd',
+> 56	      '05-sdd',
+> 57	      '06-data-model',
+> 58	      '07-process-flow',
+> 59	      '08-quality-metrics',
+> 60	    ],
+> 61	    phase_completed: 'Phase 7',
+> 62	    traceability_validated: true,
+> 63	    bok_gate: 'override-completion', // quita override consciente registrado em Sprint v6.2.0
+> 64	    drift_reconciled: 5, // D-OC-001..005 (todos fechados em v6.4.0 e v6.6.1)
+> 65	    drift_pending: 8, // D-OC-006..013 (catalogados como OTDs ativos)
+> 66	    market_segment: 'B2B2C-internal',
+> 67	    monetization_model: 'indirect-enabler',
+> 68	    regulatory_profile: 'LGPD',
+> 69	    integration_surface: 'extends-mcorch',
+> 70	    project_slug: 'openclaw',
+> 71	    feature_flag: 'pantheon-v6.3.1', // implícito
+> 72	    sprint_introduced: 'v6.2.0',
+> 73	    sprint_sealed: 'v6.6.5',
+> 74	    tags: ['bok-scribe', 'openclaw', 'pantheon', 'agency', 'memory-bridge', 'retroactive', 'infrastructure'],
+> 75	    new_tables: 0, // módulo é infraestrutura local; não introduz tabelas Supabase
+> 76	    new_edge_functions: 0,
+> 77	    new_rpcs: 0,
+> 78	    new_pipeline_scripts: 9, // bridge + distribute + 3 stages + bridge-refresh + compose + morning + news-analyzer
+> 79	    new_agents: 7, // main + 4 L1 + 1 Coord + 1 L2
+> 80	    id_ranges: {
+> 81	      MR: '001..006',
+> 82	      BR: '001..014',
+> 83	      BO: '001..006',
+> 84	      SH: '001..010',
+> 85	      FR: '1..8',
+> 86	      NFR: '001..008',
+> 87	      PR: '001..014',
+> 88	      PROC: '001..010',
+> 89	      KPI: '001..010',
+> 90	      FMEA: '001..010',
+> 91	      SOL: '001..006',
+> 92	      QO: '001..008',
+> 93	      BAC: '001..010',
+> 94	      OTD_OC: '001..005',
+> 95	    },
+> 96	    related_otds: [
+> 97	      'OTD-V631-001', // openclaw BoK SLA expandido — fechada por esta seal
+> 98	      'OTD-V660-002', // CLI drift permanent
+> 99	      'OTD-CM-001', 'OTD-CM-002', 'OTD-CM-003', // fechadas v6.4.0
+> 100	      'OTD-CM-004', 'OTD-CM-005', 'OTD-CM-006', 'OTD-CM-007', 'OTD-CM-008', // herdadas audit-v1
+> 101	      'OTD-OC-001', 'OTD-OC-002', 'OTD-OC-003', 'OTD-OC-004', 'OTD-OC-005', // novas
+> 102	    ],
+> 103	    fmea_rpn_over_100: ['FMEA-OC-001', 'FMEA-OC-002', 'FMEA-OC-003', 'FMEA-OC-004', 'FMEA-OC-010'],
+> 104	    derives_from: 'bok-scribe-seal-gamificacao-nodes-v1', // UUID 6e8546bc-d995-4cc5-ac88-06cecbece181
+> 105	    pantheon_agents: ['main', 'engineer', 'scientist', 'artisan', 'marketing-growth', 'guardian', 'claw-master'],
+> 106	    cron_pipeline: ['stage1-03:00', 'stage2-05:00', 'stage3-07:00', 'memory-dreaming-05:00', 'watchdog-5min', 'audit-monthly-day16'],
+> 107	  },
+> 108	};
+> 109	
+> 110	console.log(`📝 Sealing BoK suite "openclaw"...`);
+> 111	console.log(`   Project: ${sealNode.project_id}`);
+> 112	console.log(`   Stability: ${sealNode.stability_score}`);
+> 113	console.log(`   Revenue impact: ${sealNode.revenue_impact} (indirect-enabler — velocity proxy)`);
+> 114	console.log(`   BoK gate: ${sealNode.metadata.bok_gate}`);
+> 115	console.log(`   Drift reconciled: ${sealNode.metadata.drift_reconciled} (D-OC-001..005)`);
+> 116	console.log(`   Drift pending: ${sealNode.metadata.drift_pending} (OTDs ativos)`);
+> 117	
+> 118	const { data, error } = await supabase
+> 119	  .from('mcorch_nodes')
+> 120	  .insert(sealNode)
+> 121	  .select('id, name, node_type, stability_score, created_at')
+> 122	  .single();
+> 123	
+> 124	if (error) {
+> 125	  console.error('❌ Seal failed:', error);
+> 126	  process.exit(1);
+> 127	}
+> 128	
+> 129	console.log(`\n✅ Seal node inserted:`);
+> 130	console.log(`   ID:        ${data.id}`);
+> 131	console.log(`   Name:      ${data.name}`);
+> 132	console.log(`   Type:      ${data.node_type}`);
+> 133	console.log(`   Stability: ${data.stability_score}`);
+> 134	console.log(`   Created:   ${data.created_at}`);
+> 135	console.log(`\n🧠 Embedding will be generated automatically by trg_mcorch_embed_on_insert (assíncrono via pg_net).`);
+> 136	console.log(`   Confirm with: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${data.id}';`);
+> 137	
+> ```
+
+## 🤖 Claude *(21:09:25)*
+
+
+## 🤖 Claude *(21:09:27)*
+
+O precedente openclaw grava `derives_from` só em metadata. A definição da Fase 7 exige também inserir a aresta `DERIVES_FROM` em `mcorch_edges` e idempotência por nome. Vou checar o precedente mais recente (e2e-user-zero) para espelhar o padrão de edge + idempotência:
+
+## 🤖 Claude *(21:09:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scripts/seed-*bok-seal.ts 2>/dev/null; echo \"---most recent edge-insert pattern---\"; grep -l \"mcorch_edges\" scripts/seed-*bok-seal.ts 2>/dev/null",
+  "description": "Find seal scripts that insert edges"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/seed-authenticated-browser-operator-bok-seal.ts
+> scripts/seed-constellation-v2-bok-seal.ts
+> scripts/seed-conteudo-v2-bok-seal.ts
+> scripts/seed-e2e-user-zero-bok-seal.ts
+> scripts/seed-gamificacao-nodes-bok-seal.ts
+> scripts/seed-identity-fabric-bok-seal.ts
+> scripts/seed-marketing-hub-bok-seal.ts
+> scripts/seed-mercado-livre-api-bok-seal.ts
+> scripts/seed-meta-api-bok-seal.ts
+> scripts/seed-openclaw-bok-seal.ts
+> scripts/seed-post-engine-bok-seal.ts
+> scripts/seed-viral-daily-canvas-bok-seal.ts
+> scripts/seed-viralmind-bok-seal.ts
+> scripts/seed-vision-mcp-bok-seal.ts
+> ---most recent edge-insert pattern---
+> scripts/seed-authenticated-browser-operator-bok-seal.ts
+> scripts/seed-constellation-v2-bok-seal.ts
+> scripts/seed-identity-fabric-bok-seal.ts
+> scripts/seed-meta-api-bok-seal.ts
+> scripts/seed-marketing-hub-bok-seal.ts
+> scripts/seed-post-engine-bok-seal.ts
+> scripts/seed-vision-mcp-bok-seal.ts
+> scripts/seed-mercado-livre-api-bok-seal.ts
+> scripts/seed-viral-daily-canvas-bok-seal.ts
+> scripts/seed-e2e-user-zero-bok-seal.ts
+> ```
+
+## 🤖 Claude *(21:09:32)*
+
+
+## 🤖 Claude *(21:09:32)*
+
+`marketing-hub` é o parent topicamente mais próximo e insere arestas. Vou lê-lo para espelhar idempotência + edge-insert:
+
+## 🤖 Claude *(21:09:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-marketing-hub-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the BoK documentation suite for marketing-hub in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node with stability 0.85; embedding triggered
+> 5	 * automatically by trg_mcorch_embed_on_insert (pg_net).
+> 6	 *
+> 7	 * Inserts an explicit DERIVES_FROM edge to the parent seal (meta-api v1 —
+> 8	 * marketing-hub absorbs whatsapp_leads from the meta-api data model and shares
+> 9	 * the marketing/lead/distribution domain).
+> 10	 *
+> 11	 * Usage: bun run scripts/seed-marketing-hub-bok-seal.ts
+> 12	 */
+> 13	import { createClient } from '@supabase/supabase-js';
+> 14	
+> 15	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 16	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 17	
+> 18	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 19	  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');
+> 20	  process.exit(1);
+> 21	}
+> 22	
+> 23	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 24	
+> 25	const PARENT_SEAL_NAME = 'bok-scribe-seal-meta-api-v1';
+> 26	
+> 27	const sealNode = {
+> 28	  name: 'bok-scribe-seal-marketing-hub-v1',
+> 29	  node_type: 'documentation_suite',
+> 30	  project_id: 'marketing-hub',
+> 31	  stability_score: 0.85,
+> 32	  revenue_impact: 1000000, // direct-revenue enabler — módulo comercial per-tenant (assinatura + mcoCoins por ação + receita de afiliado atribuída); ancorado ao Million-BRL Roadmap, pricing deferido (OTD)
+> 33	  content: `marketing-hub — Marketing Hub agentic soberano do MCORCH (BoK v1)
+> 34	
+> 35	BoK suite (9 docs, 1732 LOC) sealed 2026-06-02 sob MCORCH Master Execution Protocol. Motivada por diretiva do Sovereign a partir de um "Framework Universal para Módulos de Marketing Inteligentes e Adaptáveis (Plataforma Agentic)" (benchmarks HubSpot Marketing Hub/Breeze/AEO + Salesforce Marketing Cloud/Agentforce/Data Cloud). Decisões de escopo travadas via AskUserQuestion: natureza Ambos (núcleo interno Usuário Zero + superfície comercial per-tenant); módulo soberano novo que ABSORVE e escala o v1 (nasce como consolidação v2); /bok-scribe primeiro, /bok-agents-generator depois com ≥8 agentes.
+> 36	
+> 37	VISÃO: módulo que percebe → decide → executa → aprende estratégias de growth com governança humana (HITL). Consolida as superfícies de marketing dispersas do MCORCH (orchestrate-content single-shot, marketing-growth Pantheon, whatsapp_leads, afiliados ML) numa única superfície /dashboard/marketing. REUTILIZA infra provada (mcorch_nodes/edges + pgvector HNSW 768d para Data Core/RAG; infra_health_logs + ROIWidget + affiliate_links.revenue_cents + ATTRIBUTES_REVENUE_TO para Observability/Attribution; edge functions + credenciais per-user para Connectivity; mcorch-qa-healing para Auto-cura) em vez de reconstruir.
+> 38	
+> 39	DELTA (foco do BoK): (1) camada CRM/Lead completa — capture→score→nurture→convert, absorvendo whatsapp_leads (tutela meta-api→marketing-hub, OTD-MH-001); (2) AEO (Answer Engine Optimization) — visibilidade da marca em motores de resposta de IA; (3) campaign management de 1ª classe (wrap multicanal sobre orchestrate-content); (4) buyer intent + data enrichment; (5) sequências de nurturing email/multicanal; (6) orquestrador event-driven por intenção (policy engine + HITL + arbitragem).
+> 40	
+> 41	ARQUITETURA: 9 tabelas novas (leads, lead_events, campaigns, campaign_steps, sequences, sequence_enrollments, marketing_consents, marketing_attribution, aeo_audits) + view customer_360 + 6 edge functions (lead-score, campaign-run, nurture-dispatch, intent-orchestrate, aeo-audit, erase-lead). CISSP CBK elevado por LGPD: STRIDE com PII de lead Critical, RLS default-deny por auth.uid(), erasure cascade via SECURITY DEFINER (espelha disconnect_*), consent gate hard pré-nurturing, BYOK per-tenant no padrão Vault.
+> 42	
+> 43	ID SPACE: MR-MH-001..012 · BR-MH-001..012 · BO-MH-001..005 · SH-MH-001..006 · PR-MH-001..023 · FR-MH-001..012 · NFR-MH-001..010 · PROC-MH-001..008 · KPI-MH-001..009 · FMEA-MH-001..009 · SOL-MH-001..005 · QO-MH-001..006 · BAC-MH-001..006 · OTD-MH-001..005.
+> 44	
+> 45	FMEA (9 entries, 3 RPN > 100): FMEA-MH-003 (RPN 135 — erasure cascade incompleta/PII residual; ação: erasure transacional + verificação zero-residue + retry crítico + teste E2E), FMEA-MH-005 (RPN 125 — provider AEO devolve citação alucinada; ação: probe-first Lei 1 + validação multi-engine + confidence + degradado documentado), FMEA-MH-002 (RPN 108 — nurturing sem consentimento/violação LGPD; ação: consent gate hard server-side + checagem por passo + teste de regressão).
+> 46	
+> 47	DOCUMENTOS: docs/bok/marketing-hub/{00-index 88, 01-mrd 143, 02-brd 169, 03-prd 216, 04-frd 167, 05-sdd 315, 06-data-model 255, 07-process-flow 204, 08-quality-metrics 175} — total 1732 LOC.
+> 48	
+> 49	TRACEABILITY: 100% de cobertura MR → BR → PR → FR (zero orphans). PRs de Future scope (PR-MH-020..023) intencionalmente não-decompostos em FR neste ciclo (documentado no FRD §1). Parent seal meta-api (whatsapp_leads absorption).
+> 50	
+> 51	BoK GATE: liberado APÓS este seal. Código de produção só inicia após /bok-agents-generator (≥8 agentes reconciliados com o Pantheon) + migrations com /security-review aprovadas. Scope-lock: .claude/context/marketing-hub-scope-lock-2026-06-02.md.`,
+> 52	  metadata: {
+> 53	    bok_version: '1.0.0',
+> 54	    documents: [
+> 55	      '00-index',
+> 56	      '01-mrd',
+> 57	      '02-brd',
+> 58	      '03-prd',
+> 59	      '04-frd',
+> 60	      '05-sdd',
+> 61	      '06-data-model',
+> 62	      '07-process-flow',
+> 63	      '08-quality-metrics',
+> 64	    ],
+> 65	    document_lines: {
+> 66	      '00-index': 88,
+> 67	      '01-mrd': 143,
+> 68	      '02-brd': 169,
+> 69	      '03-prd': 216,
+> 70	      '04-frd': 167,
+> 71	      '05-sdd': 315,
+> 72	      '06-data-model': 255,
+> 73	      '07-process-flow': 204,
+> 74	      '08-quality-metrics': 175,
+> 75	      total: 1732,
+> 76	    },
+> 77	    phase_completed: 'Phase 7',
+> 78	    traceability_validated: true,
+> 79	    traceability_orphans: 0,
+> 80	    bok_gate: 'fresh-completion',
+> 81	    drift_reconciled: 0,
+> 82	    drift_pending: 0,
+> 83	    market_segment: 'B2B2C',
+> 84	    monetization_model: 'hybrid',
+> 85	    regulatory_profile: 'LGPD+GDPR',
+> 86	    integration_surface: 'extends-mcorch',
+> 87	    project_slug: 'marketing-hub',
+> 88	    sprint_introduced: 'v6.21.0',
+> 89	    sprint_sealed: 'pending-handoff',
+> 90	    tags: ['bok-scribe', 'marketing-hub', 'B2B2C', 'agentic', 'crm', 'lead-scoring', 'nurturing', 'aeo', 'campaign-management', 'attribution', 'lgpd', 'gdpr', 'per-user-tenancy', 'v2-consolidation'],
+> 91	    modules: [
+> 92	      'Lead Core (capture→score→nurture→convert; absorve whatsapp_leads)',
+> 93	      'Campaign Core (multicanal sobre orchestrate-content)',
+> 94	      'AEO Engine (Answer Engine Optimization)',
+> 95	      'Intent Orchestrator + HITL policy engine',
+> 96	      'Nurturing Sequences (drip)',
+> 97	      'Attribution + Customer 360',
+> 98	    ],
+> 99	    new_tables: 9,
+> 100	    new_views: 1,
+> 101	    new_columns: 0,
+> 102	    new_edge_functions: 6,
+> 103	    extended_edge_functions: 1, // orchestrate-content reused as campaign executor
+> 104	    new_rpcs: 1, // erase_lead (SECURITY DEFINER); reuses deduct_mco_coins
+> 105	    new_migrations: 7,
+> 106	    id_ranges: {
+> 107	      MR: '001..012',
+> 108	      BR: '001..012',
+> 109	      BO: '001..005',
+> 110	      SH: '001..006',
+> 111	      PR: '001..023',
+> 112	      FR: '001..012',
+> 113	      NFR: '001..010',
+> 114	      PROC: '001..008',
+> 115	      KPI: '001..009',
+> 116	      FMEA: '001..009',
+> 117	      SOL: '001..005',
+> 118	      QO: '001..006',
+> 119	      BAC: '001..006',
+> 120	      OTD: '001..005',
+> 121	    },
+> 122	    fmea_rpn_over_100: ['FMEA-MH-002', 'FMEA-MH-003', 'FMEA-MH-005'],
+> 123	    fmea_rpn_top: {
+> 124	      'FMEA-MH-003': 135,
+> 125	      'FMEA-MH-005': 125,
+> 126	      'FMEA-MH-002': 108,
+> 127	    },
+> 128	    derives_from: PARENT_SEAL_NAME,
+> 129	    depends_on_sop: '.claude/context/marketing-hub-scope-lock-2026-06-02.md',
+> 130	    motivating_incident: 'Sovereign directive — Framework Universal de Marketing (Plataforma Agentic) → módulo marketing-hub v2',
+> 131	    revenue_impact_basis: 'commercial-marketing-module-per-tenant-monetization (Million-BRL Roadmap anchor; pricing deferred OTD)',
+> 132	    reuses: ['mcorch_nodes/edges', 'pgvector HNSW 768d', 'infra_health_logs', 'ROIWidget', 'affiliate_links.revenue_cents', 'ATTRIBUTES_REVENUE_TO', 'orchestrate-content', 'deduct_mco_coins RPC', 'mcorch-qa-healing', 'marketing-growth Pantheon'],
+> 133	    absorbs: ['whatsapp_leads (tutela meta-api→marketing-hub, OTD-MH-001)', 'orchestrate-content (single-shot → campaign executor)', 'marketing-growth Pantheon agent (elevated, not recreated)'],
+> 134	    related_otds: ['OTD-MH-001', 'OTD-MH-002', 'OTD-MH-003', 'OTD-MH-004', 'OTD-MH-005'],
+> 135	    next_step: '/bok-agents-generator marketing-hub (≥8 agents, reconciled with Pantheon)',
+> 136	    skips: ['White-label tenant billing portal', 'Native paid-ads buying (Google/Meta Ads spend)', 'Multimodal video-ad generation beyond Canvas Studio'],
+> 137	  },
+> 138	};
+> 139	
+> 140	console.log(`📝 Sealing BoK suite "marketing-hub"...`);
+> 141	console.log(`   Project: ${sealNode.project_id}`);
+> 142	console.log(`   Stability: ${sealNode.stability_score}`);
+> 143	console.log(`   Revenue impact: ${sealNode.revenue_impact} (${sealNode.metadata.monetization_model})`);
+> 144	console.log(`   BoK gate: ${sealNode.metadata.bok_gate}`);
+> 145	console.log(`   Parent (DERIVES_FROM): ${PARENT_SEAL_NAME}`);
+> 146	
+> 147	// Idempotency check: skip if already exists
+> 148	const { data: existing } = await supabase
+> 149	  .from('mcorch_nodes')
+> 150	  .select('id, name, created_at')
+> 151	  .eq('name', sealNode.name)
+> 152	  .maybeSingle();
+> 153	
+> 154	if (existing) {
+> 155	  console.log(`\n⚠️ Seal node already exists (idempotent skip):`);
+> 156	  console.log(`   ID:        ${existing.id}`);
+> 157	  console.log(`   Name:      ${existing.name}`);
+> 158	  console.log(`   Created:   ${existing.created_at}`);
+> 159	  console.log(`\nNo new INSERT performed.`);
+> 160	  process.exit(0);
+> 161	}
+> 162	
+> 163	// Step 1: INSERT documentation_suite node
+> 164	const { data: insertedNode, error: nodeError } = await supabase
+> 165	  .from('mcorch_nodes')
+> 166	  .insert(sealNode)
+> 167	  .select('id, name, node_type, stability_score, created_at')
+> 168	  .single();
+> 169	
+> 170	if (nodeError) {
+> 171	  console.error('❌ Seal node insert failed:', nodeError);
+> 172	  process.exit(1);
+> 173	}
+> 174	
+> 175	console.log(`\n✅ Seal node inserted:`);
+> 176	console.log(`   ID:        ${insertedNode.id}`);
+> 177	console.log(`   Name:      ${insertedNode.name}`);
+> 178	console.log(`   Type:      ${insertedNode.node_type}`);
+> 179	console.log(`   Stability: ${insertedNode.stability_score}`);
+> 180	console.log(`   Created:   ${insertedNode.created_at}`);
+> 181	
+> 182	// Step 2: Resolve parent seal UUID for DERIVES_FROM edge
+> 183	const { data: parent, error: parentError } = await supabase
+> 184	  .from('mcorch_nodes')
+> 185	  .select('id, name')
+> 186	  .eq('name', PARENT_SEAL_NAME)
+> 187	  .single();
+> 188	
+> 189	if (parentError || !parent) {
+> 190	  console.error(`\n❌ Parent seal lookup failed for ${PARENT_SEAL_NAME}:`, parentError);
+> 191	  console.error('   Skipping DERIVES_FROM edge insert. Manual cleanup may be required.');
+> 192	  process.exit(1);
+> 193	}
+> 194	
+> 195	console.log(`\n🔗 Parent seal resolved:`);
+> 196	console.log(`   ID:        ${parent.id}`);
+> 197	console.log(`   Name:      ${parent.name}`);
+> 198	
+> 199	// Step 3: INSERT DERIVES_FROM edge
+> 200	const { data: insertedEdge, error: edgeError } = await supabase
+> 201	  .from('mcorch_edges')
+> 202	  .insert({
+> 203	    source_id: insertedNode.id,
+> 204	    target_id: parent.id,
+> 205	    relation_type: 'DERIVES_FROM',
+> 206	    weight: 1.0,
+> 207	    project_id: 'marketing-hub',
+> 208	    metadata: {
+> 209	      lineage: 'bok-scribe-seal',
+> 210	      source_seal: insertedNode.name,
+> 211	      target_seal: parent.name,
+> 212	      sealed_at: insertedNode.created_at,
+> 213	    },
+> 214	  })
+> 215	  .select('id, source_id, target_id, relation_type, created_at')
+> 216	  .single();
+> 217	
+> 218	if (edgeError) {
+> 219	  console.error('❌ DERIVES_FROM edge insert failed:', edgeError);
+> 220	  process.exit(1);
+> 221	}
+> 222	
+> 223	console.log(`\n✅ DERIVES_FROM edge inserted:`);
+> 224	console.log(`   ID:        ${insertedEdge.id}`);
+> 225	console.log(`   Source:    ${insertedEdge.source_id} (${insertedNode.name})`);
+> 226	console.log(`   Target:    ${insertedEdge.target_id} (${parent.name})`);
+> 227	console.log(`   Relation:  ${insertedEdge.relation_type}`);
+> 228	console.log(`   Created:   ${insertedEdge.created_at}`);
+> 229	
+> 230	console.log(`\n🧠 Embedding will be generated automatically by trg_mcorch_embed_on_insert (assíncrono via pg_net).`);
+> 231	console.log(`   Confirm with: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${insertedNode.id}';`);
+> 232	console.log(`\n📊 Material proof summary for handoff:`);
+> 233	console.log(`   - documentation_suite node UUID: ${insertedNode.id}`);
+> 234	console.log(`   - DERIVES_FROM edge UUID:        ${insertedEdge.id}`);
+> 235	console.log(`   - Parent seal UUID:              ${parent.id}`);
+> 236	
+> ```
+
+## 🤖 Claude *(21:09:39)*
+
+
+## 🤖 Claude *(21:09:41)*
+
+Padrão perfeito para espelhar. Vou pegar as contagens de linhas dos 9 docs e autorar o seed script (parent = `marketing-hub`, domínio mais próximo — campaign-run executor + conteúdo/afiliado):
+
+## 🤖 Claude *(21:09:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l docs/bok/viral-autopilot/*.md | sort -k2",
+  "description": "Line counts of the 9 BoK docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    104 docs/bok/viral-autopilot/00-index.md
+>    133 docs/bok/viral-autopilot/01-mrd.md
+>    158 docs/bok/viral-autopilot/02-brd.md
+>    214 docs/bok/viral-autopilot/03-prd.md
+>    181 docs/bok/viral-autopilot/04-frd.md
+>    334 docs/bok/viral-autopilot/05-sdd.md
+>    208 docs/bok/viral-autopilot/06-data-model.md
+>    217 docs/bok/viral-autopilot/07-process-flow.md
+>    173 docs/bok/viral-autopilot/08-quality-metrics.md
+>   1722 total
+> ```
+
+## 🤖 Claude *(21:10:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the BoK documentation suite for viral-autopilot in the Knowledge Mesh.\n * Inserts a documentation_suite node with stability 0.85; embedding triggered\n * automatically by trg_mcorch_embed_on_insert (pg_net).\n *\n * Inserts an explicit DERIVES_FROM edge to the parent seal (marketing-hub v1 \u2014\n * viral-autopilot is the autonomous orchestrator built ON TOP of the marketing-hub\n * campaign executor / content + affiliate domain).\n *\n * Usage: bun run scripts/seed-viral-autopilot-bok-seal.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);\n\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');\n  process.exit(1);\n}\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst PARENT_SEAL_NAME = 'bok-scribe-seal-marketing-hub-v1';\n\nconst sealNode = {\n  name: 'bok-scribe-seal-viral-autopilot-v1',\n  node_type: 'documentation_suite',\n  project_id: 'viral-autopilot',\n  stability_score: 0.85,\n  revenue_impact: 1000000, // direct-revenue engine \u2014 motor aut\u00f4nomo de conte\u00fado viral monetizado por afiliado ML (Million-BRL Roadmap anchor); receita real gated em postback comprovado (FMEA-VA-006 / OTD-VA-007)\n  content: `viral-autopilot \u2014 Motor de conte\u00fado viral aut\u00f4nomo monetizado por afiliado ML (BoK v1)\n\nBoK suite (9 docs, 1722 LOC) sealed 2026-06-17 sob MCORCH Master Execution Protocol. Motivada pela diretiva do Sovereign de retomar o objetivo-n\u00facleo do produto (\"alimentar contas de redes sociais com conte\u00fado viral gerado automaticamente e agendado, podendo gerar tudo de uma vez OU a cada 3 dias mediante an\u00e1lise do que foi feito antes para melhorar os pr\u00f3ximos criativos, para conte\u00fados virais com comiss\u00e3o do Mercado Livre\"). Precedida de auditoria material de 7 agentes (2026-06-17) que provou, com prova path:linha, o estado real de cada requisito. Decis\u00f5es de escopo travadas via AskUserQuestion: BoK suite NOVO viral-autopilot (n\u00e3o emenda nem override); MVP = texto+imagem nas redes atuais (WP/LinkedIn/X), v\u00eddeo+TikTok/IG/YT fase 2; sinal R3 = combo (cliques afiliado + engajamento org\u00e2nico + receita postback); 3 SKUs semente (Roborock S8 / Samsung Neo QLED 8K / Family Hub).\n\nVIS\u00c3O: piloto-autom\u00e1tico de conte\u00fado que, a partir de um produto-alvo, gera criativos product-aware monetizados, publica em cad\u00eancia configur\u00e1vel (tudo-de-uma-vez OU a cada N dias, default 3) e \u2014 diferencial central \u2014 FECHA O LOOP: cada ciclo ingere o desempenho real do ciclo anterior e realimenta os pr\u00f3ximos criativos, dentro de um teto de custo em mcoCoins. \u00c9 o orquestrador de ciclo que costura pe\u00e7as j\u00e1 vivas do MCORCH (orchestrate-content/orchestrate-step, _shared/affiliate.ts, affiliate_config per-user, click ledger, handle-ml-postback) num loop fechado \u2014 n\u00e3o reinventa gera\u00e7\u00e3o nem receita.\n\nGAP FECHADO (vs auditoria): R1 (gera\u00e7\u00e3o auto) parcial\u2192FR de gera\u00e7\u00e3o product-aware (FR-VA-003) + imagem MVP (FR-VA-013); R2 (cad\u00eancia) AUSENTE\u2192entidade autopilot_plans (mode+interval_days) + cron auto-refill autopilot-cadence (FR-VA-001/005/006) \u2014 fecha \"recorr\u00eancia n\u00e3o existe\"; R3 (loop auto-melhor\u00e1vel) AUSENTE\u2192fecha as 3 quebras: coletor creative_metrics (FR-VA-008/009) resolve campaign_metrics sem writer, feedback-inject (FR-VA-011) resolve optimization_policy nunca lida, cron+analyze agendado (FR-VA-005/010) resolve self-optimize sem cron \u2014 com guarda anti \"auto-melhoria teatral\" (has_real_data=false \u2192 baseline, n\u00e3o inventa); R4 (afiliado ML) parcial\u2192monetize TODO formato com content_variant_id (FR-VA-004) + honra param dropado (FR-VA-016) + sele\u00e7\u00e3o comiss\u00e3o+trend (FR-VA-012).\n\nARQUITETURA: 3 tabelas novas (autopilot_plans, autopilot_cycles, creative_metrics) + ALTER scheduled_posts (+cycle_id) + 4 edge functions novas (autopilot-run, autopilot-cadence-cron, autopilot-analyze, autopilot-collect) + 4 edge functions modificadas (orchestrate-content honra produto, orchestrate-step product-aware+feedback-inject, _shared/affiliate.ts monetiza todo formato, generate-image plugado ao ciclo) + 2 pg_cron (autopilot-cadence */15 auto-refill, autopilot-collect 6/6h). CISSP CBK: STRIDE 8 amea\u00e7as com mitiga\u00e7\u00e3o (kill-switch at\u00f4mico antes do deduct, RLS own-row default-deny, Cyber-Sentinel anti-prompt-injection no produto/trend, guarda de dom\u00ednio ML no link); API Tenancy per-user (auth.uid()) obrigat\u00f3ria; SB_SECRET_KEY (legada revogada). Reusa primitiva de cad\u00eancia do nurturing (sequence_enrollments.next_run_at + pg_cron + fan-out service-role) generalizada para auto-refill de conte\u00fado.\n\nID SPACE: MR-VA-001..008 \u00b7 BR-VA-001..008 \u00b7 BO-001..004 \u00b7 SH-001..005 \u00b7 PR-VA-001..022 \u00b7 FR-VA-001..018 \u00b7 NFR-VA-001..008 \u00b7 PROC-VA-001..005 \u00b7 KPI-VA-001..008 \u00b7 FMEA-VA-001..012 \u00b7 SOL-VA-001..005 \u00b7 QO-001..004 \u00b7 BAC-001..005 \u00b7 OTD-VA-001..007.\n\nFMEA (12 entries, 4 RPN > 100): FMEA-VA-002 (RPN 180 \u2014 auto-melhoria teatral: analisa creative_metrics vazia; a\u00e7\u00e3o: bloquear quando vazio, cliques de afiliado como sinal m\u00ednimo, flag has_real_data), FMEA-VA-004 (RPN 135 \u2014 conte\u00fado aut\u00f4nomo off-brand/viola ToS; a\u00e7\u00e3o: Cyber-Sentinel gate pr\u00e9-publica\u00e7\u00e3o + disclosure afiliado + HITL opcional), FMEA-VA-001 (RPN 128 \u2014 overspend aut\u00f4nomo/bypass do teto; a\u00e7\u00e3o: gate at\u00f4mico antes do deduct + idempot\u00eancia + safety cap di\u00e1rio), FMEA-VA-005 (RPN 120 \u2014 prompt injection via nome de produto/trend; a\u00e7\u00e3o: sanitizar + Cyber-Sentinel input/output).\n\nDOCUMENTOS: docs/bok/viral-autopilot/{00-index 104, 01-mrd 133, 02-brd 158, 03-prd 214, 04-frd 181, 05-sdd 334, 06-data-model 208, 07-process-flow 217, 08-quality-metrics 173} \u2014 total 1722 LOC.\n\nTRACEABILITY: 100% MR \u2192 BR \u2192 PR \u2192 FR (zero orphans). PRs de Future/Fase-2 (PR-VA-020..022 v\u00eddeo/TikTok/auto-discovery) intencionalmente diferidos. Parent seal marketing-hub (viral-autopilot \u00e9 o orquestrador aut\u00f4nomo sobre o campaign executor + dom\u00ednio conte\u00fado/afiliado).\n\nBoK GATE: liberado AP\u00d3S este seal. C\u00f3digo de produ\u00e7\u00e3o s\u00f3 inicia depois das migrations com /security-review aprovado. Rota de implementa\u00e7\u00e3o (8 passos, do maior alavancagem): (1) este seal; (2) gera\u00e7\u00e3o product-aware + monetize todo formato; (3) reconectar fetch-trends/vm_affiliate_products \u00e0 pauta; (4) cad\u00eancia 3 dias (generalizar nurture); (5) coletor de engajamento; (6) fechar loop R3; (7) m\u00eddia viral (fase 2); (8) provar postback ML real (OTD-VA-007/OTD-ML-MP-PER-USER).`,\n  metadata: {\n    bok_version: '1.0.0',\n    documents: [\n      '00-index',\n      '01-mrd',\n      '02-brd',\n      '03-prd',\n      '04-frd',\n      '05-sdd',\n      '06-data-model',\n      '07-process-flow',\n      '08-quality-metrics',\n    ],\n    document_lines: {\n      '00-index': 104,\n      '01-mrd': 133,\n      '02-brd': 158,\n      '03-prd': 214,\n      '04-frd': 181,\n      '05-sdd': 334,\n      '06-data-model': 208,\n      '07-process-flow': 217,\n      '08-quality-metrics': 173,\n      total: 1722,\n    },\n    phase_completed: 'Phase 7',\n    traceability_validated: true,\n    traceability_orphans: 0,\n    bok_gate: 'fresh-completion',\n    drift_reconciled: 0,\n    drift_pending: 0,\n    market_segment: 'B2B2C',\n    monetization_model: 'hybrid',\n    regulatory_profile: 'LGPD',\n    integration_surface: 'extends-mcorch',\n    project_slug: 'viral-autopilot',\n    sprint_introduced: 'v6.42.0',\n    sprint_sealed: 'pending-handoff',\n    tags: ['bok-scribe', 'viral-autopilot', 'B2B2C', 'agentic', 'content-engine', 'scheduling', 'cadence', 'self-improving-loop', 'mercado-livre', 'affiliate', 'attribution', 'lgpd', 'per-user-tenancy', 'autonomous'],\n    modules: [\n      'Autopilot Plan (cad\u00eancia configur\u00e1vel per-user)',\n      'Product-aware Generation (texto+imagem monetizado)',\n      'Cadence Scheduler (cron auto-refill a cada N dias)',\n      'Performance Collector (cliques + org\u00e2nico + receita \u2192 creative_metrics)',\n      'Self-Improvement Feedback (analyze \u2192 optimization_policy \u2192 reinject)',\n      'Cost Guardrail (teto por ciclo + kill-switch)',\n    ],\n    new_tables: 3, // autopilot_plans, autopilot_cycles, creative_metrics\n    new_views: 0,\n    new_columns: 1, // scheduled_posts.cycle_id\n    new_edge_functions: 4, // autopilot-run, autopilot-cadence-cron, autopilot-analyze, autopilot-collect\n    extended_edge_functions: 4, // orchestrate-content, orchestrate-step, _shared/affiliate.ts, generate-image\n    new_rpcs: 0, // reuses deduct_mco_coins\n    new_crons: 2, // autopilot-cadence (*/15), autopilot-collect (6/6h)\n    new_migrations: 4,\n    requirements_closed: { R1: 'partial\u2192FR-VA-003/013', R2: 'absent\u2192FR-VA-001/005/006', R3: 'absent\u2192FR-VA-008/009/010/011', R4: 'partial\u2192FR-VA-004/012/016' },\n    id_ranges: {\n      MR: '001..008',\n      BR: '001..008',\n      BO: '001..004',\n      SH: '001..005',\n      PR: '001..022',\n      FR: '001..018',\n      NFR: '001..008',\n      PROC: '001..005',\n      KPI: '001..008',\n      FMEA: '001..012',\n      SOL: '001..005',\n      QO: '001..004',\n      BAC: '001..005',\n      OTD: '001..007',\n    },\n    fmea_rpn_over_100: ['FMEA-VA-001', 'FMEA-VA-002', 'FMEA-VA-004', 'FMEA-VA-005'],\n    fmea_rpn_top: {\n      'FMEA-VA-002': 180,\n      'FMEA-VA-004': 135,\n      'FMEA-VA-001': 128,\n      'FMEA-VA-005': 120,\n    },\n    derives_from: PARENT_SEAL_NAME,\n    motivating_incident: 'Sovereign directive \u2014 retomar objetivo-n\u00facleo (conte\u00fado viral aut\u00f4nomo + comiss\u00e3o ML); precedida de auditoria material de 7 agentes (2026-06-17)',\n    revenue_impact_basis: 'autonomous-viral-affiliate-content-engine (Million-BRL Roadmap anchor; receita real gated em postback ML comprovado \u2014 FMEA-VA-006/OTD-VA-007)',\n    reuses: ['orchestrate-content', 'orchestrate-step', '_shared/affiliate.ts', 'affiliate_config (per-user)', 'process-affiliate-link', 'handle-ml-postback', 'click ledger record_affiliate_click', 'vm_affiliate_products', 'fetch-trends/vm_trends', 'scheduled_posts + auto-publish', 'sequence_enrollments cadence primitive', 'self-optimize/optimization_policy', 'deduct_mco_coins RPC', 'ROIWidget', 'mcorch_nodes/edges', 'Cyber-Sentinel'],\n    references_suites: ['mercado-livre-api (FR-ML-001..012)', 'post-engine (FR-PE-001..004)', 'viral-daily-canvas (FR-VDC-001..004)', 'viralmind (FR-024..026)', 'marketing-hub (FR-MH-004)'],\n    related_otds: ['OTD-VA-001', 'OTD-VA-002', 'OTD-VA-003', 'OTD-VA-004', 'OTD-VA-005', 'OTD-VA-006', 'OTD-VA-007', 'OTD-ML-MP-PER-USER'],\n    sovereign_decisions: {\n      bok_gate: 'new-suite (not amend, not override)',\n      mvp_scope: 'text+image on current networks (WP/LinkedIn/X); video+TikTok/IG/YT = phase 2',\n      r3_signal: 'combo (affiliate clicks + organic engagement + ML postback revenue)',\n      products: '3 seed SKUs (Roborock S8, Samsung Neo QLED 8K, Family Hub); auto-discovery deferred to v1.0',\n    },\n    next_step: 'Implementa\u00e7\u00e3o fatia 1: gera\u00e7\u00e3o product-aware + monetize todo formato (FR-VA-003/004/016) com migrations /security-review',\n    skips: ['Video creative 9:16 (phase 2)', 'TikTok/Instagram/YouTube publishing (phase 2)', 'Paid ads management', 'Multi-touch cross-network attribution dedup', 'Catalog auto-discovery cron (PR-VA-022, v1.0)'],\n  },\n};\n\nconsole.log(`\ud83d\udcdd Sealing BoK suite \"viral-autopilot\"...`);\nconsole.log(`   Project: ${sealNode.project_id}`);\nconsole.log(`   Stability: ${sealNode.stability_score}`);\nconsole.log(`   Revenue impact: ${sealNode.revenue_impact} (${sealNode.metadata.monetization_model})`);\nconsole.log(`   BoK gate: ${sealNode.metadata.bok_gate}`);\nconsole.log(`   Parent (DERIVES_FROM): ${PARENT_SEAL_NAME}`);\n\n// Idempotency check: skip if already exists\nconst { data: existing } = await supabase\n  .from('mcorch_nodes')\n  .select('id, name, created_at')\n  .eq('name', sealNode.name)\n  .maybeSingle();\n\nif (existing) {\n  console.log(`\\n\u26a0\ufe0f Seal node already exists (idempotent skip):`);\n  console.log(`   ID:        ${existing.id}`);\n  console.log(`   Name:      ${existing.name}`);\n  console.log(`   Created:   ${existing.created_at}`);\n  console.log(`\\nNo new INSERT performed.`);\n  process.exit(0);\n}\n\n// Step 1: INSERT documentation_suite node\nconst { data: insertedNode, error: nodeError } = await supabase\n  .from('mcorch_nodes')\n  .insert(sealNode)\n  .select('id, name, node_type, stability_score, created_at')\n  .single();\n\nif (nodeError) {\n  console.error('\u274c Seal node insert failed:', nodeError);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Seal node inserted:`);\nconsole.log(`   ID:        ${insertedNode.id}`);\nconsole.log(`   Name:      ${insertedNode.name}`);\nconsole.log(`   Type:      ${insertedNode.node_type}`);\nconsole.log(`   Stability: ${insertedNode.stability_score}`);\nconsole.log(`   Created:   ${insertedNode.created_at}`);\n\n// Step 2: Resolve parent seal UUID for DERIVES_FROM edge\nconst { data: parent, error: parentError } = await supabase\n  .from('mcorch_nodes')\n  .select('id, name')\n  .eq('name', PARENT_SEAL_NAME)\n  .single();\n\nif (parentError || !parent) {\n  console.error(`\\n\u274c Parent seal lookup failed for ${PARENT_SEAL_NAME}:`, parentError);\n  console.error('   Skipping DERIVES_FROM edge insert. Manual cleanup may be required.');\n  process.exit(1);\n}\n\nconsole.log(`\\n\ud83d\udd17 Parent seal resolved:`);\nconsole.log(`   ID:        ${parent.id}`);\nconsole.log(`   Name:      ${parent.name}`);\n\n// Step 3: INSERT DERIVES_FROM edge\nconst { data: insertedEdge, error: edgeError } = await supabase\n  .from('mcorch_edges')\n  .insert({\n    source_id: insertedNode.id,\n    target_id: parent.id,\n    relation_type: 'DERIVES_FROM',\n    weight: 1.0,\n    project_id: 'viral-autopilot',\n    metadata: {\n      lineage: 'bok-scribe-seal',\n      source_seal: insertedNode.name,\n      target_seal: parent.name,\n      sealed_at: insertedNode.created_at,\n    },\n  })\n  .select('id, source_id, target_id, relation_type, created_at')\n  .single();\n\nif (edgeError) {\n  console.error('\u274c DERIVES_FROM edge insert failed:', edgeError);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 DERIVES_FROM edge inserted:`);\nconsole.log(`   ID:        ${insertedEdge.id}`);\nconsole.log(`   Source:    ${insertedEdge.source_id} (${insertedNode.name})`);\nconsole.log(`   Target:    ${insertedEdge.target_id} (${parent.name})`);\nconsole.log(`   Relation:  ${insertedEdge.relation_type}`);\nconsole.log(`   Created:   ${insertedEdge.created_at}`);\n\nconsole.log(`\\n\ud83e\udde0 Embedding will be generated automatically by trg_mcorch_embed_on_insert (ass\u00edncrono via pg_net).`);\nconsole.log(`   Confirm with: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${insertedNode.id}';`);\nconsole.log(`\\n\ud83d\udcca Material proof summary for handoff:`);\nconsole.log(`   - documentation_suite node UUID: ${insertedNode.id}`);\nconsole.log(`   - DERIVES_FROM edge UUID:        ${insertedEdge.id}`);\nconsole.log(`   - Parent seal UUID:              ${parent.id}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:10:58)*
+
+
+## 🤖 Claude *(21:11:03)*
+
+Seed script da Fase 7 pronto (espelha o padrão `marketing-hub`: idempotente + insere nó `documentation_suite` + aresta `DERIVES_FROM` → `marketing-hub`). **Não vou executá-lo até o veredito GO** da validação adversarial.
+
+Status atual:
+- ✅ **9 documentos BoK** autorados em `docs/bok/viral-autopilot/` (1722 LOC) — manifesto + MRD + BRD + PRD + FRD + SDD + data-model + process-flow + quality-metrics
+- ✅ **Seed script** `scripts/seed-viral-autopilot-bok-seal.ts` pronto (aguarda GO)
+- ⏳ **Validação adversarial** (4 críticos + síntese) rodando em background — `/workflows` para acompanhar
+
+Quando a validação retornar, aplico os must-fixes (se houver), executo o seal sob aprovação e fecho o BoK Gate. Aguardando a conclusão do workflow.
+
+## 👤 User *(21:18:21)*
+
+<task-notification>
+<task-id>wql8i8sh7</task-id>
+<tool-use-id>toolu_014KnFDvUG8z3yTim347BZSh</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/tasks/wql8i8sh7.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Phase 6 adversarial validation of the viral-autopilot BoK suite: traceability integrity, security/Harness constraints, R1-R4 gap-closure coverage, template/FMEA completeness → GO/NO-GO verdict with must-fix list" completed</summary>
+<result>{"critiques":[{"dimension":"Rastreabilidade (MR-VA → BR-VA → PR-VA → FR-VA → artefato)","verdict":"fail","findings":[{"id":"TRACE-01","severity":"high","doc":"03-prd.md §8 vs 02-brd.md §10 (matrizes MR→PR)","issue":"As matrizes MR→PR dos dois docs NÃO são mutuamente consistentes. BRD §10 mapeia MR-VA-003→{PR-VA-004,PR-VA-005}, MR-VA-004→{PR-VA-002}, MR-VA-008→{PR-VA-010,PR-VA-011}. O PRD §8 adiciona silenciosamente PR-VA-012 a MR-VA-003, PR-VA-013 a MR-VA-004 e PR-VA-022 a MR-VA-008. Mesma cadeia, três células divergentes — não dá pra saber qual matriz é a fonte da verdade.","fix":"Reconciliar as duas matrizes para serem idênticas. Como PR-VA-012/013/022 são features Should/Could que de fato rastreiam essas MRs (ver PRD §4 BR-Traced), atualizar a BRD §10 para incluí-las, OU anotar explicitamente que a BRD §10 lista só o escopo MVP e o PRD §8 o escopo completo."},{"id":"TRACE-02","severity":"high","doc":"00-index.md §'Traceability Chain (summary)'","issue":"O resumo de cadeia do índice contradiz as matrizes downstream. (a) Linha MR-VA-001 mostra 'BR-VA-001 ──▶ PR-VA-002 ──▶ FR-VA-003, FR-VA-013', omitindo PR-VA-008 que BRD §10 e PRD §8 listam para MR-VA-001. (b) Atribui FR-VA-013 a PR-VA-002, mas FR-VA-013 rastreia PR-VA-008 (FRD §2 e §7). O índice cria uma ligação PR-VA-002→FR-VA-013 que não existe em nenhuma outra matriz.","fix":"Corrigir a cadeia do índice: MR-VA-001 → BR-VA-001 → PR-VA-002, PR-VA-008 → (PR-VA-002→FR-VA-003) e (PR-VA-008→FR-VA-013). Tratar o índice como visão derivada e regenerá-lo das matrizes autoritativas, não escrevê-lo à mão."},{"id":"TRACE-03","severity":"high","doc":"04-frd.md (FR-VA-010) vs 05-sdd.md §2.5 + 07-process-flow.md §1/§7","issue":"O acionador do FR-VA-010 (autopilot-analyze) — motor do loop R3, o diferencial central do produto — é contraditório e sem artefato. A FRD diz 'Generaliza self-optimize, agora AGENDADO', implicando cron próprio. Mas SDD §2.5 e process-flow §7 declaram APENAS 2 crons (autopilot-cadence, autopilot-collect); não há cron de análise. Process-flow PROC-VA-005 tipa a análise como 'automated / pós-ciclo (encadeado a PROC-VA-001)', não agendada. SDD §3 também a desenha como '(post-cycle)' inline. FR crítico-de-valor sem trigger consistente nem artefato cron.","fix":"Decidir e cravar o acionador em UM lugar: ou (a) autopilot-analyze é chamado in-line ao fim de cada ciclo do autopilot-cadence-cron — então corrigir a FRD FR-VA-010 para remover 'agendado' e dizer 'encadeado pós-ciclo'; ou (b) é um 3º cron — então adicioná-lo a SDD §2.5, §6 e process-flow §7 (hoje a doc afirma '2 crons' em 3 lugares)."},{"id":"TRACE-04","severity":"medium","doc":"03-prd.md §4 (PR-VA-004) vs §8/02-brd.md §10 (matrizes MR-VA-005/BR-VA-005)","issue":"Inconsistência de rastreio de BR-VA-005. No PRD §4 o feature PR-VA-004 (Performance collector) declara BR-Traced='BR-VA-005, BR-VA-003'. Porém todas as matrizes MR→BR→PR mapeiam BR-VA-005 (MR-VA-005) SÓ para PR-VA-007 — PR-VA-004 não aparece sob MR-VA-005 em lugar nenhum. Ou PR-VA-004 rastreia BR-VA-005 (e a matriz MR-VA-005 deveria listá-lo) ou não rastreia (e o BR-Traced do feature está errado).","fix":"Decidir: se o coletor (PR-VA-004) serve BR-VA-005 (métricas por criativo), adicionar PR-VA-004 à célula MR-VA-005 nas matrizes BRD §10 e PRD §8. Caso contrário, remover BR-VA-005 do BR-Traced de PR-VA-004 em PRD §4 (deixando só BR-VA-003)."},{"id":"TRACE-05","severity":"medium","doc":"04-frd.md §2 (linha FR-VA-016) vs §7 (matriz PR→FR)","issue":"FR-VA-016 (honor product/affiliate param) tem PR-Traced inconsistente entre as duas tabelas do próprio FRD: a tabela §2 lista FR-VA-016 → 'PR-VA-002' (apenas); a matriz reversa §7 lista FR-VA-016 sob AMBOS PR-VA-001 e PR-VA-002. Um FR não pode rastrear 1 PR numa tabela e 2 na outra dentro do mesmo documento.","fix":"Alinhar: se FR-VA-016 atende tanto a entidade de plano (PR-VA-001) quanto a geração product-aware (PR-VA-002), atualizar a coluna PR Traced da §2 para 'PR-VA-001, PR-VA-002'. Senão, remover FR-VA-016 da linha PR-VA-001 em §7."},{"id":"TRACE-06","severity":"high","doc":"03-prd.md §8 vs 04-frd.md §7 (PR-VA-012, PR-VA-013)","issue":"IDs de PR órfãos a jusante. PR-VA-012 (A/B variant) e PR-VA-013 (HITL gate) são v1.0 'Should Have', aparecem na matriz PRD §8 (sob MR-VA-003 e MR-VA-004 respectivamente) e em PRD §4, MAS estão totalmente ausentes da matriz PR→FR da FRD §7 e nenhum FR os rastreia (grep confirma 0 ocorrências em 04-frd.md). A cadeia MR-VA-003→...→PR-VA-012 e MR-VA-004→...→PR-VA-013 termina em beco sem FR. Como o escopo v1.0 está In-scope na FRD §1, esses PRs deveriam ter FR.","fix":"Ou criar FRs para PR-VA-012 (ex.: FR de geração de N variantes + seleção por desempenho) e PR-VA-013 (FR de gate HITL reusando policy-engine do intent-execute) e adicioná-los à matriz §7; ou, se forem deferidos para além do v1.0 documentado, removê-los das células de rastreio MR-VA-003/004 do PRD §8 e marcá-los Future."},{"id":"TRACE-07","severity":"medium","doc":"03-prd.md §8 vs 04-frd.md §7 (PR-VA-022 e PR-VA-020/021)","issue":"Tratamento inconsistente dos PRs 'Could/Fase 2'. PR-VA-022 aparece na matriz autoritativa PRD §8 (célula MR-VA-008) porém sem nenhum FR em FRD §7 — cadeia que morre num PR sem artefato. Já PR-VA-020 e PR-VA-021 (mesma categoria Could) NÃO aparecem em PRD §8 nem em FRD §7, apesar de definidos em PRD §4 com BR-Traced=BR-VA-001. Logo, 3 PRs Fase-2 recebem tratamento de rastreio divergente entre si.","fix":"Uniformizar: ou os 3 PRs de Fase 2 (020/021/022) ficam fora de todas as matrizes de rastreio (são Could/Won't) com nota explícita, ou todos entram com FR-stubs Fase-2. Remover PR-VA-022 da célula MR-VA-008 do PRD §8 se a decisão for mantê-lo só como Future."},{"id":"TRACE-08","severity":"high","doc":"06-data-model.md §2/§3 + 04-frd.md §5 + 05-sdd.md §7","issue":"Chave de junção load-bearing 'content_variant_id' sem artefato de origem. FR-VA-004/009/017 (monetização, métricas, atribuição de receita) todos chaveiam em content_variant_id; FRD §5 e data-model §2 declaram 'FK → criativo/content_library'. Porém NENHUM doc define onde esse content_variant_id é criado: grep de 'ADD COLUMN'/'ALTER TABLE' mostra que só scheduled_posts.cycle_id é adicionado — content_library nunca recebe a coluna content_variant_id, e nenhuma tabela nova a produz. A cadeia FR-VA-004/009/017 → tabela tem o alvo da FK inexistente.","fix":"Documentar a origem de content_variant_id: ou ALTER TABLE content_library ADD COLUMN content_variant_id uuid (+ onde a geração o popula por criativo), ou definir que é o próprio id de content_library e renomear o FK accordingly. Adicionar o stub na SDD §7 e a coluna no data-model §2."},{"id":"TRACE-09","severity":"medium","doc":"04-frd.md §2 (FR-VA-013 'Should (MVP)') vs 03-prd.md §4/§5 e 00-index.md §Decisão 2","issue":"Contradição de prioridade na feature que DEFINE o MVP. Index/BRD/PRD afirmam em três lugares 'MVP = TEXTO + IMAGEM'. PR-VA-008 (Image creative), pai de FR-VA-013, está em 'Must Have (MVP)' no PRD §4 e incluído no escopo MVP do PRD §5. Mas o FR que o realiza, FR-VA-013, é marcado 'Should (MVP)' (e prioridade textual divergente das demais que usam Critical/High). Um FR 'Should' sob um PR 'Must' que é a metade 'imagem' do MVP é incoerente.","fix":"Elevar FR-VA-013 para 'High' ou 'Critical' (consistente com o PR Must PR-VA-008 e com 'MVP=texto+imagem'), ou rebaixar PR-VA-008 e o claim de MVP. Padronizar a coluna Priority do FRD (usar a mesma escala Critical/High/Medium das outras FRs, não 'Should (MVP)')."}],"notes":"Verifiquei as 4 matrizes (01 §9, 02 §10, 03 §8, 04 §7) + índice (00) + downstream (05 SDD, 06 data-model, 07 process-flow, 08 quality). Cobertura base OK: os 8 MR rastreiam BR 1:1; cada BR tem ≥1 PR; cada PR Must/Should tem PR-Traced; FR-VA-001..018 todos rastreiam ≥1 PR na tabela §2 e têm artefato (tabela/edge fn/cron) no SDD/data-model. Os 5 PROC do 07 cobrem os FRs críticos de geração/cadência/custo (FR-VA-002/005/007), MAS o FR crítico-de-valor FR-VA-010/011 (loop R3) tem tr
+... (truncated 46887 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/tasks/wql8i8sh7.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>601296</subagent_tokens><tool_uses>76</tool_uses><duration_ms>560395</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(21:18:26)*
+
+A validação adversarial encontrou inconsistências reais (não cosméticas). Vou ler o resultado completo — críticos de segurança/gap-closure/completude + o veredito final GO/NO-GO:
+
+## 🤖 Claude *(21:18:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/tasks/wql8i8sh7.output",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Phase 6 adversarial validation of the viral-autopilot BoK suite: traceability integrity, security/Harness constraints, R1-R4 gap-closure coverage, template/FMEA completeness → GO/NO-GO verdict with must-fix list",
+> 3	  "agentCount": 5,
+> 4	  "logs": [
+> 5	    "4 críticos adversariais lendo os 9 docs da suíte viral-autopilot...",
+> 6	    "Sintetizando veredito GO/NO-GO..."
+> 7	  ],
+> 8	  "result": {
+> 9	    "critiques": [
+> 10	      {
+> 11	        "dimension": "Rastreabilidade (MR-VA → BR-VA → PR-VA → FR-VA → artefato)",
+> 12	        "verdict": "fail",
+> 13	        "findings": [
+> 14	          {
+> 15	            "id": "TRACE-01",
+> 16	            "severity": "high",
+> 17	            "doc": "03-prd.md §8 vs 02-brd.md §10 (matrizes MR→PR)",
+> 18	            "issue": "As matrizes MR→PR dos dois docs NÃO são mutuamente consistentes. BRD §10 mapeia MR-VA-003→{PR-VA-004,PR-VA-005}, MR-VA-004→{PR-VA-002}, MR-VA-008→{PR-VA-010,PR-VA-011}. O PRD §8 adiciona silenciosamente PR-VA-012 a MR-VA-003, PR-VA-013 a MR-VA-004 e PR-VA-022 a MR-VA-008. Mesma cadeia, três células divergentes — não dá pra saber qual matriz é a fonte da verdade.",
+> 19	            "fix": "Reconciliar as duas matrizes para serem idênticas. Como PR-VA-012/013/022 são features Should/Could que de fato rastreiam essas MRs (ver PRD §4 BR-Traced), atualizar a BRD §10 para incluí-las, OU anotar explicitamente que a BRD §10 lista só o escopo MVP e o PRD §8 o escopo completo."
+> 20	          },
+> 21	          {
+> 22	            "id": "TRACE-02",
+> 23	            "severity": "high",
+> 24	            "doc": "00-index.md §'Traceability Chain (summary)'",
+> 25	            "issue": "O resumo de cadeia do índice contradiz as matrizes downstream. (a) Linha MR-VA-001 mostra 'BR-VA-001 ──▶ PR-VA-002 ──▶ FR-VA-003, FR-VA-013', omitindo PR-VA-008 que BRD §10 e PRD §8 listam para MR-VA-001. (b) Atribui FR-VA-013 a PR-VA-002, mas FR-VA-013 rastreia PR-VA-008 (FRD §2 e §7). O índice cria uma ligação PR-VA-002→FR-VA-013 que não existe em nenhuma outra matriz.",
+> 26	            "fix": "Corrigir a cadeia do índice: MR-VA-001 → BR-VA-001 → PR-VA-002, PR-VA-008 → (PR-VA-002→FR-VA-003) e (PR-VA-008→FR-VA-013). Tratar o índice como visão derivada e regenerá-lo das matrizes autoritativas, não escrevê-lo à mão."
+> 27	          },
+> 28	          {
+> 29	            "id": "TRACE-03",
+> 30	            "severity": "high",
+> 31	            "doc": "04-frd.md (FR-VA-010) vs 05-sdd.md §2.5 + 07-process-flow.md §1/§7",
+> 32	            "issue": "O acionador do FR-VA-010 (autopilot-analyze) — motor do loop R3, o diferencial central do produto — é contraditório e sem artefato. A FRD diz 'Generaliza self-optimize, agora AGENDADO', implicando cron próprio. Mas SDD §2.5 e process-flow §7 declaram APENAS 2 crons (autopilot-cadence, autopilot-collect); não há cron de análise. Process-flow PROC-VA-005 tipa a análise como 'automated / pós-ciclo (encadeado a PROC-VA-001)', não agendada. SDD §3 também a desenha como '(post-cycle)' inline. FR crítico-de-valor sem trigger consistente nem artefato cron.",
+> 33	            "fix": "Decidir e cravar o acionador em UM lugar: ou (a) autopilot-analyze é chamado in-line ao fim de cada ciclo do autopilot-cadence-cron — então corrigir a FRD FR-VA-010 para remover 'agendado' e dizer 'encadeado pós-ciclo'; ou (b) é um 3º cron — então adicioná-lo a SDD §2.5, §6 e process-flow §7 (hoje a doc afirma '2 crons' em 3 lugares)."
+> 34	          },
+> 35	          {
+> 36	            "id": "TRACE-04",
+> 37	            "severity": "medium",
+> 38	            "doc": "03-prd.md §4 (PR-VA-004) vs §8/02-brd.md §10 (matrizes MR-VA-005/BR-VA-005)",
+> 39	            "issue": "Inconsistência de rastreio de BR-VA-005. No PRD §4 o feature PR-VA-004 (Performance collector) declara BR-Traced='BR-VA-005, BR-VA-003'. Porém todas as matrizes MR→BR→PR mapeiam BR-VA-005 (MR-VA-005) SÓ para PR-VA-007 — PR-VA-004 não aparece sob MR-VA-005 em lugar nenhum. Ou PR-VA-004 rastreia BR-VA-005 (e a matriz MR-VA-005 deveria listá-lo) ou não rastreia (e o BR-Traced do feature está errado).",
+> 40	            "fix": "Decidir: se o coletor (PR-VA-004) serve BR-VA-005 (métricas por criativo), adicionar PR-VA-004 à célula MR-VA-005 nas matrizes BRD §10 e PRD §8. Caso contrário, remover BR-VA-005 do BR-Traced de PR-VA-004 em PRD §4 (deixando só BR-VA-003)."
+> 41	          },
+> 42	          {
+> 43	            "id": "TRACE-05",
+> 44	            "severity": "medium",
+> 45	            "doc": "04-frd.md §2 (linha FR-VA-016) vs §7 (matriz PR→FR)",
+> 46	            "issue": "FR-VA-016 (honor product/affiliate param) tem PR-Traced inconsistente entre as duas tabelas do próprio FRD: a tabela §2 lista FR-VA-016 → 'PR-VA-002' (apenas); a matriz reversa §7 lista FR-VA-016 sob AMBOS PR-VA-001 e PR-VA-002. Um FR não pode rastrear 1 PR numa tabela e 2 na outra dentro do mesmo documento.",
+> 47	            "fix": "Alinhar: se FR-VA-016 atende tanto a entidade de plano (PR-VA-001) quanto a geração product-aware (PR-VA-002), atualizar a coluna PR Traced da §2 para 'PR-VA-001, PR-VA-002'. Senão, remover FR-VA-016 da linha PR-VA-001 em §7."
+> 48	          },
+> 49	          {
+> 50	            "id": "TRACE-06",
+> 51	            "severity": "high",
+> 52	            "doc": "03-prd.md §8 vs 04-frd.md §7 (PR-VA-012, PR-VA-013)",
+> 53	            "issue": "IDs de PR órfãos a jusante. PR-VA-012 (A/B variant) e PR-VA-013 (HITL gate) são v1.0 'Should Have', aparecem na matriz PRD §8 (sob MR-VA-003 e MR-VA-004 respectivamente) e em PRD §4, MAS estão totalmente ausentes da matriz PR→FR da FRD §7 e nenhum FR os rastreia (grep confirma 0 ocorrências em 04-frd.md). A cadeia MR-VA-003→...→PR-VA-012 e MR-VA-004→...→PR-VA-013 termina em beco sem FR. Como o escopo v1.0 está In-scope na FRD §1, esses PRs deveriam ter FR.",
+> 54	            "fix": "Ou criar FRs para PR-VA-012 (ex.: FR de geração de N variantes + seleção por desempenho) e PR-VA-013 (FR de gate HITL reusando policy-engine do intent-execute) e adicioná-los à matriz §7; ou, se forem deferidos para além do v1.0 documentado, removê-los das células de rastreio MR-VA-003/004 do PRD §8 e marcá-los Future."
+> 55	          },
+> 56	          {
+> 57	            "id": "TRACE-07",
+> 58	            "severity": "medium",
+> 59	            "doc": "03-prd.md §8 vs 04-frd.md §7 (PR-VA-022 e PR-VA-020/021)",
+> 60	            "issue": "Tratamento inconsistente dos PRs 'Could/Fase 2'. PR-VA-022 aparece na matriz autoritativa PRD §8 (célula MR-VA-008) porém sem nenhum FR em FRD §7 — cadeia que morre num PR sem artefato. Já PR-VA-020 e PR-VA-021 (mesma categoria Could) NÃO aparecem em PRD §8 nem em FRD §7, apesar de definidos em PRD §4 com BR-Traced=BR-VA-001. Logo, 3 PRs Fase-2 recebem tratamento de rastreio divergente entre si.",
+> ```
+
+## 🤖 Claude *(21:18:30)*
+
+Vou ler os outros 3 críticos (segurança, gap-closure, completude) + o veredito final:
+
+## 🤖 Claude *(21:18:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/tasks/wql8i8sh7.output",
+  "offset": 62,
+  "limit": 260
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 62	          },
+> 63	          {
+> 64	            "id": "TRACE-08",
+> 65	            "severity": "high",
+> 66	            "doc": "06-data-model.md §2/§3 + 04-frd.md §5 + 05-sdd.md §7",
+> 67	            "issue": "Chave de junção load-bearing 'content_variant_id' sem artefato de origem. FR-VA-004/009/017 (monetização, métricas, atribuição de receita) todos chaveiam em content_variant_id; FRD §5 e data-model §2 declaram 'FK → criativo/content_library'. Porém NENHUM doc define onde esse content_variant_id é criado: grep de 'ADD COLUMN'/'ALTER TABLE' mostra que só scheduled_posts.cycle_id é adicionado — content_library nunca recebe a coluna content_variant_id, e nenhuma tabela nova a produz. A cadeia FR-VA-004/009/017 → tabela tem o alvo da FK inexistente.",
+> 68	            "fix": "Documentar a origem de content_variant_id: ou ALTER TABLE content_library ADD COLUMN content_variant_id uuid (+ onde a geração o popula por criativo), ou definir que é o próprio id de content_library e renomear o FK accordingly. Adicionar o stub na SDD §7 e a coluna no data-model §2."
+> 69	          },
+> 70	          {
+> 71	            "id": "TRACE-09",
+> 72	            "severity": "medium",
+> 73	            "doc": "04-frd.md §2 (FR-VA-013 'Should (MVP)') vs 03-prd.md §4/§5 e 00-index.md §Decisão 2",
+> 74	            "issue": "Contradição de prioridade na feature que DEFINE o MVP. Index/BRD/PRD afirmam em três lugares 'MVP = TEXTO + IMAGEM'. PR-VA-008 (Image creative), pai de FR-VA-013, está em 'Must Have (MVP)' no PRD §4 e incluído no escopo MVP do PRD §5. Mas o FR que o realiza, FR-VA-013, é marcado 'Should (MVP)' (e prioridade textual divergente das demais que usam Critical/High). Um FR 'Should' sob um PR 'Must' que é a metade 'imagem' do MVP é incoerente.",
+> 75	            "fix": "Elevar FR-VA-013 para 'High' ou 'Critical' (consistente com o PR Must PR-VA-008 e com 'MVP=texto+imagem'), ou rebaixar PR-VA-008 e o claim de MVP. Padronizar a coluna Priority do FRD (usar a mesma escala Critical/High/Medium das outras FRs, não 'Should (MVP)')."
+> 76	          }
+> 77	        ],
+> 78	        "notes": "Verifiquei as 4 matrizes (01 §9, 02 §10, 03 §8, 04 §7) + índice (00) + downstream (05 SDD, 06 data-model, 07 process-flow, 08 quality). Cobertura base OK: os 8 MR rastreiam BR 1:1; cada BR tem ≥1 PR; cada PR Must/Should tem PR-Traced; FR-VA-001..018 todos rastreiam ≥1 PR na tabela §2 e têm artefato (tabela/edge fn/cron) no SDD/data-model. Os 5 PROC do 07 cobrem os FRs críticos de geração/cadência/custo (FR-VA-002/005/007), MAS o FR crítico-de-valor FR-VA-010/011 (loop R3) tem trigger contraditório (TRACE-03). Os 2 crons (autopilot-cadence, autopilot-collect) são consistentes entre SDD §2.5/§6 e process §7 — porém só 2, o que colide com 'autopilot-analyze agendado' da FRD. PR-VA-009 não existe em lugar nenhum (numeração pula 008→010, intencional). Quebras de cadeia reais e acionáveis: 9 findings (4 high, 5 medium). Veredito FAIL por inconsistência mútua entre matrizes (TRACE-01/02/05), IDs órfãos downstream (TRACE-06) e FK sem origem (TRACE-08). Nada fabricado: cada finding cita doc+seção lida nesta sessão."
+> 79	      },
+> 80	      {
+> 81	        "dimension": "Segurança + Harness Engineering (CISSP CBK + CLAUDE.md/Survival constraints)",
+> 82	        "verdict": "fail",
+> 83	        "findings": [
+> 84	          {
+> 85	            "id": "SEC-VA-01",
+> 86	            "severity": "blocker",
+> 87	            "doc": "05-sdd.md §1 (diagrama, linha 31) + §2.3 (autopilot-run, linha 73) | 04-frd.md §4.1 (linha 72), §4.2 (linha 82), FR-VA-002 (linha 27) | 07-process-flow.md (linha 43)",
+> 88	            "issue": "Contradição de identidade no caminho autônomo (o produto inteiro). O cron path está documentado como service-role sem JWT de usuário ('X-Cron-Trigger + SB_SECRET_KEY', SDD:219; cadence-cron sem mco/sem JWT, SDD:74). Mas o fan-out para orchestrate-content é descrito como 'forward JWT, self-bill' em 4 lugares. Verifiquei orchestrate-content/index.ts:37-38: a função REJEITA com 401 Unauthorized qualquer request sem 'Bearer ' e deriva p_user_id de user.id do JWT verificado (:50,:113). No disparo por cron NÃO existe JWT de usuário para repassar — logo ou (a) o self-bill quebra (401) e o ciclo autônomo nunca cobra/roda, ou (b) alguém minta/forja um JWT de service-role, caso em que o deduct e a resolução per-user de credencial (auth.uid()) ficam sem dono verificável. Nenhum doc descreve como o cron obtém um token per-user (mint/impersonation/x-user-token). É um furo arquitetural E de segurança no núcleo do módulo.",
+> 89	            "fix": "Definir explicitamente no 05-sdd §4 o mecanismo de identidade do caminho cron: o cron NÃO repassa JWT — autopilot-cadence-cron/autopilot-run rodam service-role e DEVEM invocar orchestrate-content/orchestrate-step passando o user_id resolvido de autopilot_plans.user_id de forma server-trusted (ex.: header interno x-cron-user-id + asserção service-role, ou um RPC SECURITY DEFINER service-role-only que faça o deduct por p_user_id após o gate). Remover a frase 'forward JWT' das 4 ocorrências (SDD:31, FRD:72/139, process-flow:43) e substituir por 'service-role com user_id derivado do plano (server-trusted), nunca de body'. Atualizar orchestrate-content para aceitar o caminho cron service-role com user_id explícito, ou criar SOP docs/processes/autopilot-cron-identity.md (Lei 2) antes de qualquer código."
+> 90	          },
+> 91	          {
+> 92	            "id": "SEC-VA-02",
+> 93	            "severity": "blocker",
+> 94	            "doc": "05-sdd.md §4 (autopilot-analyze, linhas 157-167) + §2.3 (linha 75) | 04-frd.md §4.2 (linhas 110-115), FR-VA-010 (linha 35)",
+> 95	            "issue": "IDOR / cross-tenant deduct em autopilot-analyze. Contrato: Auth = service-role e Request = { tenant_id, plan_id, previous_cycle_id } — todos recebidos crus do body, sem JWT que vincule identidade. A função deduz 5 mco (deduct_mco_coins, SDD:167) e lê creative_metrics de outro tenant. Confronta o padrão seguro estabelecido no projeto: lead-score/index.ts:76 e campaign-run/index.ts:83 SEMPRE derivam p_user_id de user.id do JWT verificado, NUNCA de um tenant_id do body. Um chamador que alcance esta função (ou um bug no enfileiramento) pode passar tenant_id arbitrário → debita mcoCoins do tenant errado e vaza creative_metrics cross-tenant. Viola a regra do MEMORY 'todo novo SECURITY DEFINER/edge com p_user_id → edge-only OU guarda auth.uid()'.",
+> 96	            "fix": "No 05-sdd §4 e 04-frd §4.2: remover tenant_id do body de entrada. autopilot-analyze deve derivar o tenant a partir de previous_cycle_id (SELECT user_id FROM autopilot_cycles WHERE id = previous_cycle_id, sob service-role, e usar ESSE user_id como p_user_id no deduct e como filtro RLS). Documentar que a função é invocável APENAS pelo runner/cron interno (verify_jwt=false + asserção de header de cron), nunca exposta a chamada user-facing com tenant_id arbitrário. Acrescentar à STRIDE (§5.1) uma linha de 'autopilot-analyze | tenant_id forjado no body | Spoofing/Tampering | Critical | derivar tenant do previous_cycle_id, nunca do body'."
+> 97	          },
+> 98	          {
+> 99	            "id": "SEC-VA-03",
+> 100	            "severity": "high",
+> 101	            "doc": "05-sdd.md §2.3 (linha 75: autopilot-analyze Auth='service-role') + §4 (linha 129) + §5.3 (linha 219) | 06-data-model não toca config.toml",
+> 102	            "issue": "Mandato verify_jwt=false incompleto. CLAUDE.md/SOP orchestrate-async-pipeline exige que toda fn de cron/pg_net tenha verify_jwt=false no config.toml. O SDD só declara verify_jwt=false para autopilot-cadence-cron (§2.3 linha 74) e genericamente em §4 (linha 129). autopilot-analyze (service-role, §2.3:75) e autopilot-collect (service-role/cron, §2.3:76) NÃO têm a flag verify_jwt=false declarada. Se chamadas via service-role/pg_net sem essa flag, o gateway retorna 401 na chave service-role opaca (exatamente o modo de falha #1 registrado em project_orchestrate_pipeline_repair / OTD do config.toml). É o erro já vacinado pelo SOP, reincidindo no design.",
+> 103	            "fix": "No 05-sdd §2.3 e §5.3: declarar explicitamente verify_jwt=false no config.toml para autopilot-analyze E autopilot-collect (ambas service-role). Adicionar à tabela §2.5 / §7 a entrada de config.toml como artefato versionado: [functions.autopilot-analyze] verify_jwt=false, [functions.autopilot-collect] verify_jwt=false, [functions.autopilot-cadence-cron] verify_jwt=false. Referenciar o SOP orchestrate-async-pipeline.md no §4."
+> 104	          },
+> 105	          {
+> 106	            "id": "SEC-VA-04",
+> 107	            "severity": "high",
+> 108	            "doc": "05-sdd.md §5.1 STRIDE linha 181 + §4 (linhas 150-154) + §2.3 (linha 73) | 04-frd.md FR-VA-007 (linha 32), NFR-VA-002 (linha 52)",
+> 109	            "issue": "TOCTOU no gate de custo — gate e deduct moram em processos diferentes, sem mecanismo atômico descrito. O gate (FR-VA-007) roda em autopilot-run e apenas PROJETA custo (10+5+img); o deduct REAL acontece dentro de cada orchestrate-content sub-run (self-bill, SDD:154) e os 5 mco do analyze acontecem depois, em outra fn. Entre projetar e os sub-runs debitarem, nada garante atomicidade: a STRIDE (linha 181) promete 'Gate atômico server-side ANTES do deduct; lock otimista no ciclo', mas o deduct não está ANTES nem no mesmo escopo do gate — está distribuído em N+1 funções assíncronas. budget_cap_mco pode ser estourado por N sub-runs concorrentes que individualmente passam mas somam acima do teto, e o saldo pode ir negativo entre o check de saldo e os deducts. A promessa de §5.1/NFR-VA-002 ('zero deduct em ciclo abortado', 'gate atômico') não é realizável com a arquitetura projetada.",
+> 110	            "fix": "Reconciliar 05-sdd §4/§5.1 com a realidade do self-bill distribuído. Opções a documentar: (A) pré-reservar/pré-debitar o custo projetado total ANTES do fan-out via um deduct atômico único em autopilot-run (com estorno do não-usado ao fechar o ciclo — padrão refund do vision-mcp), tornando os sub-runs não-cobrados; OU (B) acrescentar spend_mco como contador transacional em autopilot_cycles incrementado dentro do MESMO RPC do deduct, com guarda 'spend_mco + amount <= budget_cap_mco' atômica (FOR UPDATE no ciclo). Atualizar a STRIDE para descrever o lock real (FOR UPDATE em autopilot_cycles) e remover 'self-bill, never here' (SDD:154) se a opção A for adotada. Hoje o §4 e o §5.1 se contradizem."
+> 111	          },
+> 112	          {
+> 113	            "id": "SEC-VA-05",
+> 114	            "severity": "medium",
+> 115	            "doc": "05-sdd.md §7 (linhas 273-309) + §5.2 | 06-data-model.md §3 (linhas 103-113)",
+> 116	            "issue": "Default-deny incompleto: autopilot_cycles e creative_metrics habilitam RLS mas NÃO declaram nenhuma política de INSERT/UPDATE — só comentário 'service-role only' (SDD:289,308; data-model:112). Com RLS habilitado e zero política de escrita, authenticated fica corretamente bloqueado (default-deny OK) e service-role faz bypass — isso de fato satisfaz o requisito. PORÉM a asserção do briefing 'política own-row default-deny' não está MATERIALIZADA em DDL: não há CREATE POLICY de escrita alguma, então a intenção 'service-role only' é implícita (vem do bypass), não explícita. Além disso o SDD §5.2 (linha 206) promete 'DELETE bloqueado para authenticated (RESTRICTIVE)' para autopilot_plans, mas NENHUMA migration stub (§7) nem o data-model §3 contém a policy RESTRICTIVE de DELETE prometida — o precedente do projeto (credits/optimization_policy/affiliate, migration 20260413183335 e 20260530183000) usa RESTRICTIVE explícito. A promessa de §5.2 não está refletida no DDL de §7.",
+> 117	            "fix": "No 05-sdd §7 e data-model §3: (1) materializar a policy RESTRICTIVE de DELETE prometida em §5.2 como DDL real para autopilot_plans (CREATE POLICY ... AS RESTRICTIVE FOR DELETE USING (false) ou via has_role), espelhando 20260413183335; (2) tornar explícito o default-deny de escrita em autopilot_cycles/creative_metrics com um comentário-âncora de que NÃO há policy de INSERT/UPDATE de propósito (só service-role bypassa) — ou, preferível para auditabilidade, uma policy RESTRICTIVE explícita. Acrescentar a nota de /security-review (já presente em SDD:316) ao bloco de data-model §3 também (hoje só o SDD a cita)."
+> 118	          },
+> 119	          {
+> 120	            "id": "SEC-VA-06",
+> 121	            "severity": "medium",
+> 122	            "doc": "05-sdd.md §5.1 STRIDE (linha 182) + §2 (FR-VA-003) | 04-frd.md FR-VA-003 (linha 28), NFR-VA-008 (linha 58)",
+> 123	            "issue": "Mitigação de prompt-injection presente porém não-acionável (placebo). A STRIDE (linha 182) cobre 'Prompt injection via nome/desc de produto ou trend' com mitigação 'Cyber-Sentinel no input + no output; sanitização do produto antes do prompt'. O ameaça está corretamente identificada (atende o requisito do briefing de 'threat de prompt-injection presente'), MAS: (a) 'Cyber-Sentinel' é referenciado como se fosse um componente pronto, sem citar a fn/lib/_shared concreta que o implementa nem o contrato (o que ele recebe, o que retorna, fail-open vs fail-closed); (b) o vetor real é mais amplo do que 'nome/desc de produto' — o trend vem de vm_trends/fetch-trends (texto externo não-confiável injetado no ângulo viral, FR-VA-018) e a reinjeção de feedback (FR-VA-011) injeta optimization_policy de ciclos anteriores no system prompt, criando um caminho de injeção persistente/auto-envenenamento (policy contaminada num ciclo propaga para todos os próximos). Nenhum doc descreve sanitização de trend nem do optimization_policy reinjetado, nem se o gate é fail-closed.",
+> 124	            "fix": "No 05-sdd §5.1 e §5: (1) nomear o componente concreto do Cyber-Sentinel (path da fn/_shared lib) e seu contrato fail-CLOSED (bloqueia publicação se o gate falhar/timeout); (2) ampliar a linha de STRIDE para cobrir explicitamente os 2 vetores extras — trend externo (vm_trends) e feedback reinjetado (optimization_policy) como fontes não-confiáveis que entram no system prompt; adicionar mitigação de sanitização/escape do optimization_policy estruturado (OTD-VA-005 escolheu features estruturadas — bom — mas precisa afirmar que os VALORES das features são tratados como dados, nunca como instrução); (3) registrar em NFR-VA-008 que o gate é fail-closed e auditado."
+> 125	          }
+> 126	        ],
+> 127	        "notes": "Reprovado (fail). Li 05-sdd, 06-data-model, 04-frd integralmente e validei materialmente contra o código (Lei 1): orchestrate-content/index.ts:37-50,113 (deriva user de JWT, 401 sem Bearer), lead-score:76 e campaign-run:83 (derivam p_user_id do JWT, nunca de body), process-affiliate-link:69,175 (guarda de domínio ML existe — claim de reuso GROUNDED), handle-ml-postback:100 (MP_WEBHOOK_SECRET de fato global hoje — OTD-VA-007 honesta), fetch-trends/vm_trends existem, deduct_mco_coins(uuid,decimal,text,jsonb) GRANT só authenticated, scheduled_posts já tem RLS own-row. POSITIVOS reais: secrets só por NOME (§5.4, nunca valor — atende), SB_SECRET_KEY usada e legada marcada REVOGADA (atende), as 3 tabelas têm ENABLE ROW LEVEL SECURITY + SELECT own (default-deny de leitura OK), STRIDE existe com ≥1 mitigação por linha incluindo prompt-injection, nota de /security-review presente (SDD:316). DEFEITOS que reprovam: (1 blocker) a identidade do caminho cron→orchestrate-content é internamente contraditória — 'forward JWT' afirmado em 4 docs mas o cron não tem JWT e orchestrate-content rejeita sem Bearer: o ciclo autônomo, que é o produto, não fecha como desenhado; (2 blocker) autopilot-analyze aceita tenant_id cru do body sob service-role e deduz 5 mco → IDOR/cross-tenant deduct, contraria o padrão seguro do próprio projeto; (3 high) verify_jwt=false não declarado para autopilot-analyze e autopilot-collect — reincidência do modo de falha já vacinado; (4 high) TOCTOU do gate de custo — gate projeta em autopilot-run mas deduct é distribuído em N+1 sub-runs assíncronos, contradizendo a promessa de 'gate atômico ANTES do deduct' (§5.1/NFR-VA-002). Os dois blockers precisam ser resolvidos no SDD (e provavelmente exigem SOP Lei 2 para a ponte de identidade do cron) antes de abrir o BoK gate para código. Não inventei conteúdo; cada finding cita doc+seção e, onde load-bearing, o path:linha do código verificado."
+> 128	      },
+> 129	      {
+> 130	        "dimension": "Cobertura dos 4 requisitos Sovereign (R1-R4) vs auditoria material — a suíte REALMENTE fecha os gaps?",
+> 131	        "verdict": "warn",
+> 132	        "findings": [
+> 133	          {
+> 134	            "id": "VA-COV-01",
+> 135	            "severity": "high",
+> 136	            "doc": "05-sdd.md §4 (linhas 150-154) + 04-frd.md FR-VA-007 + 02-brd.md §8 BR-RISK-001",
+> 137	            "issue": "INCOERÊNCIA NO CÁLCULO DO KILL-SWITCH (a defesa-mãe do R3/custo). A fórmula do gate é `project = 10 (orchestrate) + 5 (analyze) + IMAGE_COST * creatives`. Mas: (a) FR-VA-002 define fan-out de '1 dispatch por produto×rede' e CADA orchestrate-content SELF-BILLS 10 (confirmado em campaign-run/index.ts:4-5: 'cascade cost = 10 (fee) + 10×N'). Logo o termo dominante real é 10 × (produtos × plataformas), NÃO um '10' singular — a fórmula SUBCONTA o gasto exatamente no eixo que pode drenar a carteira (BR-RISK-001, RPN 20). (b) O IMAGE_COST é somado à parte, mas billing.ts:16 prova que ORCHESTRATION_RUN=10 é um bundle FLAT que JÁ inclui 3×CONTENT + 1×IMAGE — então imagem é dupla-contada OU o fan-out não usa orchestrate-content para imagem (ambíguo). Um gate que subconta o custo dominante NÃO protege a margem: um plano com 3 produtos × 3 redes = 9 runs = ~90 mco real, mas o gate projeta ~10+5+img. O kill-switch passaria ciclos que deveria abortar.",
+> 138	            "fix": "Em 05-sdd §4 e FR-VA-007, reescrever a fórmula do gate para refletir o fan-out real: `projected = ORCHESTRATION_RUN × (|target_product_ids| × |platforms|) + ANALYZE_COST`, e DECIDIR explicitamente se imagem é bundled no ORCHESTRATION_RUN (billing.ts:16) — se sim, remover o termo `+ IMAGE_COST × creatives`; se a imagem rodar fora do bundle, documentar isso e qual fn a cobra. Atualizar o exemplo Gherkin do PRD §7 (budget_cap 5 vs projetado 15) para um exemplo consistente com a fórmula corrigida."
+> 139	          },
+> 140	          {
+> 141	            "id": "VA-COV-02",
+> 142	            "severity": "medium",
+> 143	            "doc": "05-sdd.md §4 (linha 167) + 04-frd.md FR-VA-010 + 02-brd.md §8 BR-RISK-002",
+> 144	            "issue": "GUARDA ANTI-'AUTO-MELHORIA TEATRAL' DEPENDE DE COBRAR 5 mco MESMO QUANDO NÃO HÁ DADO. SDD §4:167 diz 'Deduct 5 mco only when has_real_data OR explicitly configured'. Mas FR-VA-010/FR-VA-011 colocam o autopilot-analyze AGENDADO por cron a cada ciclo (FR-VA-005/010). No ciclo 1 (e em qualquer ciclo cujo coletor falhou — evento `collect_failure` previsto em SDD §6) creative_metrics está vazia → has_real_data=false → baseline. A proteção contra teatro existe (bom), MAS a condição 'OR explicitly configured' é uma backdoor não-especificada: quem configura, com que default? Se default for cobrar, o tenant paga 5 mco/ciclo por uma análise que admite não ter dado — exatamente o custo silencioso que BR-RISK-002 quer evitar. A regra de billing condicional não está refletida na economia do BRD §6 (que lista '5 mco/análise · 1 por ciclo' sem o caveat has_real_data).",
+> 145	            "fix": "Especificar em FR-VA-010 o default de billing quando has_real_data=false (recomendado: 0 mco / skip do deduct, registrando evento `analyze_empty`) e definir o que 'explicitly configured' significa (flag no plano? default?). Reconciliar a tabela de economia em 02-brd §6 e 00-index para mostrar que análise sem dado não cobra."
+> 146	          },
+> 147	          {
+> 148	            "id": "VA-COV-03",
+> 149	            "severity": "medium",
+> 150	            "doc": "04-frd.md FR-VA-017 + 06-data-model.md §2 + 02-brd.md §9 BAC-002/BAC-005",
+> 151	            "issue": "FRACTURA NO CONTRATO DE `content_variant_id` ENTRE GERAÇÃO E ATRIBUIÇÃO — chave do R3 e R4. FR-VA-004 promete embutir link ML 'com content_variant_id por criativo'. creative_metrics.content_variant_id é NOT NULL FK→content_library. Mas FR-VA-017 (atribuição de receita) credita revenue_cents na `affiliate_links` correta — e affiliate_links HOJE grava `content_id: null` (provado em _shared/affiliate.ts:~80). Nenhum doc especifica COMO o content_variant_id é gerado/propagado da geração → affiliate_links → postback → creative_metrics. Sem esse fio, BAC-002 ('100% com content_variant_id') e BAC-005 (ROI por peça) não são verificáveis: o postback não tem como saber a qual criativo creditar. FR-VA-017 reconhece dependência de OTD-VA-007, mas o gap de PROPAGAÇÃO do id (não só do secret per-user) não tem FR dona.",
+> 152	            "fix": "Adicionar em FR-VA-004/FR-VA-016 a propagação explícita do content_variant_id (de onde nasce — content_library row id? — e como entra no affiliate_links.content_id e no link rastreável), e em FR-VA-017 o caminho postback→content_variant_id. Documentar em 06-data-model §2 a FK affiliate_links↔content_variant_id (hoje content_id é nullable e gravado null)."
+> 153	          },
+> 154	          {
+> 155	            "id": "VA-COV-04",
+> 156	            "severity": "low",
+> 157	            "doc": "04-frd.md FR-VA-012 + 06-data-model.md §2 (autopilot_plans.target_product_ids) vs 05-sdd.md §7 (CHECK constraint)",
+> 158	            "issue": "DRIFT DE CHAVE DO PRODUTO-ALVO. 06-data-model §2 diz target_product_ids text[] FK→`vm_affiliate_products.external_id`; mas FR-VA-001/05-sdd §7 só fazem CHECK(cardinality>=1) sem amarrar a coluna. FR-VA-012 seleciona por `commission_value+trend_score+profitability_score`, e o validation rule (FRD §5) exige 'ids ∈ vm_affiliate_products'. Não há especificação de QUAL coluna identifica o produto (external_id vs id vs mlb). monetizeContent hoje usa `p.mlb` (regex hardcoded), não um id de catálogo. Sem fixar a chave, FR-VA-012 (seleção por score) e o validador de plano podem referenciar colunas diferentes, e a transição do regex-de-3-SKUs (R4 atual) para catálogo (FR-VA-012) fica ambígua.",
+> 159	            "fix": "Fixar a chave canônica do produto em UM lugar (recomendado external_id ou mlb de vm_affiliate_products) e propagar consistentemente em FR-VA-001 (validação), FR-VA-012 (seleção), 06-data-model §2 (FK) e na ponte com o regex atual de _shared/affiliate.ts."
+> 160	          }
+> 161	        ],
+> 162	        "notes": "VEREDITO: WARN (não FAIL). Os 4 requisitos Sovereign TÊM FR acionável concreta — nenhum ficou só como 'visão', então não há BLOCKER por ausência de FR. Verifiquei contra o código que os gaps da auditoria são REAIS, não inventados:\n\nR1 (geração auto p/ redes): FECHADO. FR-VA-003 (geração product-aware substituindo prompts B2B hardcoded — confirmei orchestrate-content:10 NÃO desestrutura produto) + FR-VA-013 (imagem no MVP, plugando generate-image hoje órfã). Vídeo 9:16/TikTok/IG/YT corretamente DIFERIDOS p/ fase 2 (PR-VA-020/021, Could Have; FRD §1 'Out of scope'; BRD §7 Constraints). Diferimento limpo.\n\nR2 (cadência tudo-de-uma-vez OU a-cada-N-dias): FECHADO. FR-VA-001 cria autopilot_plans com mode∈{all_at_once,every_n_days}+interval_days (DDL completa em SDD §7 com CHECK 1-30) + FR-VA-005 cron autopilot-cadence */15 com auto-refill next_run_at=now+interval_days. Isto fecha o gap 'recorrência não existe' — confirmei que autopilot_plans NÃO existe em migrations (tabela genuinamente nova). NFR-VA-006 cobre catch-up de janela perdida.\n\nR3 (loop auto-melhorável): FECHADO nas 3 quebras, e confirmei cada quebra no código: (a) NÃO há writer de campaign_metrics em edge fns → coletor FR-VA-008 + creative_metrics FR-VA-009 (DDL completa SEM em migrations); (b) orchestrate-step/orchestrate-content NÃO leem optimization_policy (grep vazio) → FR-VA-011 feedback inject; (c) self-optimize ESCREVE optimization_policy mas NÃO tem cron (grep só achou referência no próprio seed da suíte) → FR-VA-005/010 agendado. Proteção anti-teatro EXISTE (has_real_data=false→baseline, FR-VA-010 + BR-RISK-002) — porém com furo de billing condicional não-especificado (finding VA-COV-02).\n\nR4 (afiliado ML em todo formato): FECHADO no escopo. Confirmei que monetizeContent roda HOJE só sobre articleContent (orchestrate-step:184) com content_id:null e regex hardcoded → FR-VA-004 (monetiza artigo+LinkedIn+Twitter com content_variant_id) + FR-VA-016 (honra param dropado — confirmei orchestrate-content:10 não recebe produto/affiliate_url) + FR-VA-012 (seleção comissão+trend). MAS o FIO do content_variant_id geração→atribuição não está especificado (finding VA-COV-03, high).\n\nPOR QUE WARN E NÃO PASS: a cobertura de FR existe, mas a INTEGRIDADE de duas mecânicas centrais está furada: o kill-switch (VA-COV-01, high) tem fórmula de custo que subconta o eixo de fan-out — a própria defesa contra o risco #1 (drenar carteira) está mal-especificada; e a atribuição por criativo (VA-COV-03, high) carece do fio do content_variant_id, deixando BAC-002/BAC-005 não-verificáveis. Ambos são corrigíveis em doc antes do código (não exigem re-arquitetura), por isso WARN e não FAIL. Caveat Lei 1: avaliei coerência interna dos docs + checagem dos pressupostos da auditoria contra o código atual; NÃO executei os smokes (não existem ainda — são especificação).\""
+> 163	      },
+> 164	      {
+> 165	        "dimension": "Template completeness + FMEA + internal contradictions (viral-autopilot BoK suite, 9 docs)",
+> 166	        "verdict": "warn",
+> 167	        "findings": [
+> 168	          {
+> 169	            "id": "VA-COST-IMG-UNDEFINED",
+> 170	            "severity": "high",
+> 171	            "doc": "02-brd.md §6 (linha 92), 03-prd.md PR-VA-008 (linha 77), 04-frd.md FR-VA-013 (linha 38), 05-sdd.md §4 (linha 151)",
+> 172	            "issue": "O custo em mcoCoins da geração de imagem NUNCA é fixado num número. BRD diz 'calibrar via SOP mcoin-cost-calibration', PRD diz '~img cost', FRD não dá número, e o SDD usa um placeholder abstrato IMAGE_COST. Mas o valor canônico JÁ EXISTE e está calibrado/fechado: src/lib/billing.ts linha 21 → IMAGE_GENERATION: 9 (OTD-MCOIN-CALIBRATION CLOSED 2026-06-03, DALL·E 3 1024² $0.04 → 4×-floor). A dimensão exige custo definido para toda operação com IA (geração 10, análise 5, imagem). Pior: não há OTD rastreando esse valor como em aberto, e o kill-switch (FR-VA-007) depende dele para computar o teto — logo o gate de custo é, hoje, incomputável.",
+> 173	            "fix": "Fixar o custo de imagem em 9 mco em BRD §6, PRD PR-VA-008, FR-VA-013 e na fórmula do SDD §4, citando src/lib/billing.ts:21 (IMAGE_GENERATION) como fonte da verdade. Se houver intenção de recalibrar, abrir um OTD-VA-008 explícito em 00-index/05-sdd §8 em vez de deixar TBD espalhado."
+> 174	          },
+> 175	          {
+> 176	            "id": "VA-COST-GATE-DOUBLECOUNT",
+> 177	            "severity": "high",
+> 178	            "doc": "05-sdd.md §4 (linha 151), 04-frd.md FR-VA-007 (linha 32), 02-brd.md §6 (linha 94)",
+> 179	            "issue": "A fórmula do teto de custo é internamente inconsistente com o modelo de fan-out que ela protege. Escrita como 'project = 10 (orchestrate) + 5 (analyze) + IMAGE_COST * creatives'. Dois erros: (1) DOUBLE-COUNT da imagem — em src/lib/billing.ts:16-19 ORCHESTRATION_RUN: 10 é um BUNDLE FLAT que já cobre 3×CONTENT_GENERATION + IMAGE_GENERATION; somar 'IMAGE_COST * creatives' por cima cobra a imagem duas vezes. (2) O '10' não é multiplicado pelo nº de runs: o fan-out (07-process-flow §4, linhas 161-175) invoca orchestrate-content uma vez por produto×rede (self-bill 10 cada), mas a projeção trata 10 como constante única de ciclo, enquanto trata só a imagem como por-criativo. O custo projetado fica sistematicamente subestimado em ciclos com N>1 runs → o kill-switch deixa passar gasto acima do teto real.",
+> 180	            "fix": "Reescrever a projeção como por-run × nº de runs do fan-out: projected = N_runs × ORCHESTRATION_RUN(10) + ANALYZE(5 por ciclo) (sem somar imagem separada, pois o bundle de 10 já a inclui). Se a imagem for cobrada FORA do bundle (gerada por generate-image plugada, FR-VA-013), então remover a imagem do bundle conceitual e documentar isso — mas não pode contar nos dois. Alinhar BRD §6, FR-VA-007 e SDD §4 com a mesma fórmula."
+> 181	          },
+> 182	          {
+> 183	            "id": "VA-COST-ANALYZE-5MCO-UNGROUNDED",
+> 184	            "severity": "medium",
+> 185	            "doc": "02-brd.md BR-VA-003/§6 (linhas 47,72,91), 03-prd.md PR-VA-005 (linha 74), 04-frd.md FR-VA-010 (linha 35), 05-sdd.md (linhas 75,167)",
+> 186	            "issue": "O custo '5 mco/análise' é apresentado como 'herda self-optimize', mas materialmente: (a) não existe constante 5 em src/lib/billing.ts (verificado — nenhum ':5'); (b) supabase/functions/self-optimize/index.ts NÃO deduz mcoCoins hoje (nenhuma chamada deduct_mco). Logo nada é 'herdado'. Pelo modelo de calibração 4×-floor, uma única chamada LLM de análise alinha-se a LEAD_SCORE:1 ou NURTURE_DISPATCH:2 — 5 mco parece super-precificado e não tem OTD nem entrada na SOP de calibração justificando. Viola Lei 2 (custo de op de IA novo sem fundamento na SOP).",
+> 187	            "fix": "Ou (a) calibrar o custo de análise pelo modelo 4×-floor (provavelmente 1-2 mco para uma chamada LLM) e citar a SOP docs/processes/mcoin-cost-calibration.md; ou (b) abrir OTD explícito fixando 5 mco com justificativa (ex.: análise multi-chamada). Em ambos os casos, parar de afirmar 'herda self-optimize', já que self-optimize não cobra nada."
+> 188	          },
+> 189	          {
+> 190	            "id": "VA-SDD-ANALYZE-DEDUCT-CONTRADICTION",
+> 191	            "severity": "low",
+> 192	            "doc": "05-sdd.md §4 (linha 167) vs 02-brd.md §6 (linha 91) / 04-frd.md FR-VA-010 (linha 35)",
+> 193	            "issue": "Contradição sobre QUANDO a análise cobra. O SDD §4 (comentário do contrato) diz: 'Deduct 5 mco only when has_real_data OR explicitly configured'. Já o BRD §6 e a economia tratam como flat '5 mco/análise · 1 por ciclo por plano' (incondicional), e a FR-VA-010 não menciona condicionalidade de cobrança. O comportamento de cobrança condicional ao has_real_data não está refletido nos docs de requisito.",
+> 194	            "fix": "Decidir a regra única (cobra sempre vs cobra só com dado real) e propagá-la para BRD §6, FR-VA-010 e SDD §4. Se a regra é 'só cobra com has_real_data', adicionar isso ao critério de aceite e ao ROI Model (afeta volume estimado)."
+> 195	          },
+> 196	          {
+> 197	            "id": "VA-INDEX-TRACE-DROP-PR008",
+> 198	            "severity": "low",
+> 199	            "doc": "00-index.md §Traceability Chain (linha 63)",
+> 200	            "issue": "Inconsistência interna de rastreabilidade. A cadeia do index para MR-VA-001 lista 'BR-VA-001 ──▶ PR-VA-002 ──▶ FR-VA-003, FR-VA-013'. Mas BRD §10 (linha 147) e PRD §8 (linha 203) traçam MR-VA-001 → BR-VA-001 → PR-VA-002, PR-VA-008; e FRD §7 (linha 175) traça FR-VA-013 sob PR-VA-008 (não PR-VA-002). O index omite o nó PR-VA-008 e ainda assim pendura FR-VA-013 (que pertence a PR-VA-008) diretamente sob PR-VA-002 — pulando um nó da cadeia.",
+> 201	            "fix": "Corrigir a linha 63 do index para 'MR-VA-001 ──▶ BR-VA-001 ──▶ PR-VA-002, PR-VA-008 ──▶ FR-VA-003, FR-VA-013', alinhando com BRD §10, PRD §8 e FRD §7."
+> 202	          },
+> 203	          {
+> 204	            "id": "VA-OTD-SCHEMA-INDEX-MISSING-OPTIONS",
+> 205	            "severity": "low",
+> 206	            "doc": "00-index.md §Open Technical Decisions (linhas 92-101)",
+> 207	            "issue": "Desvio menor de template/coerência de schema. O template do index (00-index.md template, linhas 68-70) define a tabela de OTD com colunas: OTD ID · Description · Options · Recommendation · Status. A tabela do index real omite a coluna 'Options' (tem só ID/Description/Recommendation/Status). Não quebra o conteúdo (os Options detalhados estão no SDD §8), mas é uma divergência de template na seção que o próprio template prescreve.",
+> 208	            "fix": "Adicionar a coluna 'Options' à tabela de OTD do index (resumo de A vs B) ou anotar explicitamente que Options vivem no SDD §8 para registrar a omissão consciente. Cosmético."
+> 209	          }
+> 210	        ],
+> 211	        "notes": "Cobertura material: li os 9 templates em .claude/agents/bok-scribe/templates/ e os 9 docs em docs/bok/viral-autopilot/, e validei contra o código-fonte real.\n\nPASSOU (sem finding): (1) Footer 'Generated by MCORCH BoK Scribe Agent v1.0.0' presente nos 9 docs (grep -c = 1 cada). (2) Todas as seções obrigatórias de cada template estão presentes nos respectivos docs (MRD §1-9, BRD §1-10, PRD §1-8, FRD §1-7, SDD §1-8, Data-Model §1-7, Process-Flow §1-7, Quality §1-8). (3) FMEA: recomputei TODOS os 12 RPN (S×O×D) e batem 100% com o escrito (128,180,84,135,120,90,54,20,72,72,63,48); a contagem RPN>100 = exatamente 4 (VA-002=180, VA-004=135, VA-001=128, VA-005=120), batendo com a afirmação do index 'Fase 5 · 12 FMEA (4 RPN>100)'; todos os 4 itens >100 têm ação recomendada concreta. (4) Contagens cruzadas consistentes: 8 MR / 8 BR / 18 FR / 8 NFR / 12 FMEA / 7 OTD — idênticas entre os docs e o index. (5) Datas consistentes (MVP 2026-07-31, v1.0 2026-08-31 em PRD e BRD). (6) Nomes de tabela/função consistentes entre SDD §2/§7, data-model §2/§3 e process-flow (autopilot_plans, autopilot_cycles, creative_metrics, scheduled_posts.cycle_id; autopilot-run, autopilot-cadence-cron, autopilot-analyze, autopilot-collect; 2 crons). (7) NFRs presentes (8). (8) Gherkin cobre os 5 cenários-chave: cadência (l.164), monetização (l.172), kill-switch (l.178), loop (l.185), ROI (l.191). (9) Afirmações materiais sobre o código-base verificadas VERDADEIRAS: orchestrate-step:138 e :290 = system prompts B2B 'donos de agências' (confirmado); orchestrate-content:79 = destructure que dropa affiliate_url/product_target (confirmado); _shared/affiliate.ts, handle-ml-postback, self-optimize, fetch-trends existem; vm_affiliate_products tem external_id/commission_value/trend_score/profitability_score/image_url (confirmado).\n\nDEFEITOS concentrados no MODELO DE CUSTO mcoCoins (3 findings — 2 high, 1 medium): custo de imagem nunca fixado apesar de valor canônico IMAGE_GENERATION:9 já existir em billing.ts; fórmula do kill-switch faz double-count da imagem e não multiplica o bundle de 10 pelo nº de runs do fan-out (gate subestima gasto → fura o teto); custo '5 mco/análise' sem base canônica (self-optimize não cobra nada hoje, não há constante 5 em billing.ts). Mais 3 findings menores (low) de contradição interna/template. Veredito WARN: a suíte é estruturalmente completa e materialmente fundamentada, mas o modelo de custo — núcleo do MR-VA-006/BR-VA-006 (proteção de margem) — tem erros aritméticos e valores indefinidos que precisam ser resolvidos ANTES de codar o cost-guardrail, sob pena de o kill-switch nascer incomputável/incorreto."
+> 212	      }
+> 213	    ],
+> 214	    "verdict": {
+> 215	      "overallVerdict": "NO_GO",
+> 216	      "summary": "A suíte BoK viral-autopilot está estruturalmente completa (9/9 docs, FMEA com 4 RPN>100 recomputados corretos, todos os 4 requisitos Sovereign têm FR acionável) e materialmente fundamentada no código — mas NÃO está pronta para seal/Phase 7. Dois BLOCKERS de segurança no núcleo do produto (caminho cron→orchestrate-content \"forward JWT\" sem JWT existir + IDOR cross-tenant via tenant_id cru do body em autopilot-analyze) tornam o ciclo autônomo inexequível como desenhado e violam o padrão seguro do próprio projeto. Soma-se um cluster de erros no modelo de custo mcoCoins (fórmula do kill-switch faz double-count da imagem e não multiplica o bundle de 10 pelo fan-out → gate de custo incomputável/subestimado) e inconsistências de rastreabilidade entre as 4 matrizes. Todos corrigíveis em doc (provável SOP Lei 2 para a ponte de identidade do cron) sem re-arquitetura, mas o BoK gate deve permanecer FECHADO até os 2 blockers e os high de custo/identidade serem resolvidos no SDD/FRD.",
+> 217	      "mustFix": [
+> 218	        {
+> 219	          "severity": "blocker",
+> 220	          "doc": "05-sdd.md §1 (l.31) + §2.3 (l.73) | 04-frd.md §4.1 (l.72), §4.2, FR-VA-002 (l.139) | 07-process-flow.md (l.43)",
+> 221	          "issue": "Contradição de identidade no caminho autônomo (o produto inteiro). O fan-out cron→orchestrate-content está documentado como 'forward JWT, self-bill' em 4 lugares (SDD:31, FRD:72/139), mas o cron roda service-role SEM JWT de usuário, e orchestrate-content/index.ts:37-50 REJEITA com 401 qualquer request sem 'Bearer ' e deriva p_user_id de user.id do JWT verificado. Logo: ou o self-bill quebra (401, ciclo nunca cobra/roda), ou se forja um JWT service-role e o deduct + resolução per-user (auth.uid()) ficam sem dono verificável. Verificado materialmente em orchestrate-content (401 sem Bearer) e billing.ts.",
+> 222	          "fix": "Cravar em 05-sdd §4 o mecanismo de identidade do cron: NÃO repassar JWT — autopilot-cadence-cron/autopilot-run rodam service-role e invocam orchestrate-content/orchestrate-step com user_id resolvido server-trusted de autopilot_plans.user_id (header interno x-cron-user-id + asserção service-role, OU RPC SECURITY DEFINER service-role-only que faça o deduct por p_user_id após o gate). Remover 'forward JWT' das 4 ocorrências e substituir por 'service-role com user_id derivado do plano (nunca do body)'. Atualizar orchestrate-content para aceitar o caminho cron, ou criar SOP docs/processes/autopilot-cron-identity.md (Lei 2) ANTES de qualquer código."
+> 223	        },
+> 224	        {
+> 225	          "severity": "blocker",
+> 226	          "doc": "05-sdd.md §4 (l.157-167) + §2.3 (l.75) | 04-frd.md §4.2 (l.110-115), FR-VA-010 (l.35)",
+> 227	          "issue": "IDOR / cross-tenant deduct em autopilot-analyze. Contrato: Auth=service-role, Request={tenant_id, plan_id, previous_cycle_id} — todos recebidos crus do body sem JWT vinculando identidade. A função deduz 5 mco e lê creative_metrics de outro tenant. Contraria o padrão seguro do projeto (lead-score:76, campaign-run:83 SEMPRE derivam p_user_id de user.id do JWT, nunca de tenant_id do body) e viola a regra MEMORY 'todo novo SECURITY DEFINER/edge com p_user_id → edge-only OU guarda auth.uid()'. Um chamador com tenant_id arbitrário debita mcoCoins do tenant errado e vaza creative_metrics cross-tenant.",
+> 228	          "fix": "Remover tenant_id do body de entrada em 05-sdd §4 e 04-frd §4.2. Derivar o tenant de previous_cycle_id (SELECT user_id FROM autopilot_cycles WHERE id=previous_cycle_id, sob service-role) e usar ESSE user_id como p_user_id no deduct e como filtro RLS. Documentar que a função é invocável APENAS pelo runner/cron interno (verify_jwt=false + asserção de header de cron). Adicionar linha à STRIDE §5.1: 'autopilot-analyze | tenant_id forjado no body | Spoofing/Tampering | Critical | derivar tenant do previous_cycle_id, nunca do body'."
+> 229	        },
+> 230	        {
+> 231	          "severity": "high",
+> 232	          "doc": "05-sdd.md §4 (l.151) + §4 fórmula do gate + 04-frd.md FR-VA-007 (l.32) + 02-brd.md §6 (l.94)",
+> 233	          "issue": "Fórmula do kill-switch (defesa-mãe do R3/custo, BR-RISK-001 RPN 20) internamente inconsistente com o fan-out que protege. Escrita 'project = 10 (orchestrate) + 5 (analyze) + IMAGE_COST × creatives'. Dois erros confirmados em billing.ts: (1) DOUBLE-COUNT da imagem — ORCHESTRATION_RUN:10 é BUNDLE FLAT que JÁ cobre 3×CONTENT + IMAGE_GENERATION; somar IMAGE_COST por cima cobra a imagem duas vezes; (2) o '10' não é multiplicado pelo nº de runs — o fan-out (FR-VA-002, campaign-run:4-5 'cascade = 10 fee + 10×N') invoca orchestrate-content uma vez por produto×rede (self-bill 10 cada). Plano 3 produtos × 3 redes ≈ 90 mco real, mas o gate projeta ~10+5+img → kill-switch deixa passar gasto acima do teto.",
+> 234	          "fix": "Reescrever em 05-sdd §4, FR-VA-007 e BRD §6 a mesma fórmula por-run: projected = N_runs × ORCHESTRATION_RUN(10) + ANALYZE(5/ciclo), SEM termo de imagem separado (o bundle de 10 já a inclui). Se a imagem rodar fora do bundle (generate-image plugada, FR-VA-013), removê-la conceitualmente do bundle e documentar qual fn a cobra — nunca contar nos dois. Corrigir o exemplo Gherkin do PRD §7."
+> 235	        },
+> 236	        {
+> 237	          "severity": "high",
+> 238	          "doc": "02-brd.md §6 (l.92), 03-prd.md PR-VA-008 (l.77), 04-frd.md FR-VA-013 (l.38), 05-sdd.md §4 (l.151)",
+> 239	          "issue": "O custo mcoCoins da geração de imagem nunca é fixado num número (BRD 'calibrar via SOP', PRD '~img cost', SDD placeholder abstrato IMAGE_COST), apesar do valor canônico JÁ EXISTIR e estar calibrado/fechado: src/lib/billing.ts:21 IMAGE_GENERATION:9 (OTD-MCOIN-CALIBRATION CLOSED 2026-06-03, DALL·E3 1024² $0.04 → 4×-floor — verificado nesta sessão). O kill-switch (FR-VA-007) depende desse valor para computar o teto → o gate de custo é hoje incomputável.",
+> 240	          "fix": "Fixar custo de imagem em 9 mco em BRD §6, PRD PR-VA-008, FR-VA-013 e na fórmula do SDD §4, citando src/lib/billing.ts:21 como fonte da verdade. Se houver intenção de recalibrar, abrir OTD-VA-008 explícito em 00-index/05-sdd §8 em vez de deixar TBD espalhado."
+> 241	        },
+> 242	        {
+> 243	          "severity": "high",
+> 244	          "doc": "05-sdd.md §2.3 (l.75-76) + §5.3 (l.219) + config.toml (não tocado em 06-data-model)",
+> 245	          "issue": "Mandato verify_jwt=false incompleto. O SOP orchestrate-async-pipeline (já vacinou esse modo de falha #1) exige verify_jwt=false no config.toml para toda fn cron/pg_net. SDD só declara a flag para autopilot-cadence-cron (§2.3 l.74). autopilot-analyze (service-role, l.75) e autopilot-collect (service-role/cron, l.76) NÃO têm a flag declarada — reincidência do erro já registrado (gateway 401 na chave service-role opaca). Verificado: §2.3 só lista verify_jwt=false na linha do cadence-cron.",
+> 246	          "fix": "Declarar explicitamente verify_jwt=false no config.toml para autopilot-analyze E autopilot-collect em 05-sdd §2.3 e §5.3, como artefato versionado ([functions.autopilot-analyze] verify_jwt=false; [functions.autopilot-collect] verify_jwt=false; [functions.autopilot-cadence-cron] verify_jwt=false). Referenciar o SOP orchestrate-async-pipeline.md no §4."
+> 247	        },
+> 248	        {
+> 249	          "severity": "high",
+> 250	          "doc": "05-sdd.md §5.1 STRIDE (l.181) + §4 (l.150-154) + §2.3 (l.73) | 04-frd.md FR-VA-007 (l.32), NFR-VA-002 (l.52)",
+> 251	          "issue": "TOCTOU no gate de custo — gate e deduct moram em processos diferentes sem atomicidade descrita. O gate (FR-VA-007) roda em autopilot-run e só PROJETA custo; o deduct REAL ocorre dentro de cada orchestrate-content sub-run (self-bill) e os 5 mco do analyze depois, em outra fn. A STRIDE promete 'gate atômico server-side ANTES do deduct; lock otimista no ciclo', mas o deduct está distribuído em N+1 funções assíncronas: budget_cap_mco pode ser estourado por N sub-runs concorrentes que individualmente passam mas somam acima do teto; saldo pode ir negativo. A promessa de §5.1/NFR-VA-002 ('zero deduct em ciclo abortado', 'gate atômico') não é realizável com a arquitetura projetada.",
+> 252	          "fix": "Reconciliar 05-sdd §4/§5.1: (A) pré-debitar o custo projetado total ANTES do fan-out via deduct atômico único em autopilot-run, com estorno do não-usado ao fechar o ciclo (padrão refund vision-mcp), tornando os sub-runs não-cobrados; OU (B) adicionar spend_mco como contador transacional em autopilot_cycles incrementado dentro do MESMO RPC do deduct, com guarda atômica 'spend_mco + amount <= budget_cap_mco' (FOR UPDATE no ciclo). Atualizar a STRIDE para o lock real e remover a contradição entre §4 (self-bill distribuído) e §5.1 (gate atômico)."
+> 253	        },
+> 254	        {
+> 255	          "severity": "high",
+> 256	          "doc": "04-frd.md (FR-VA-010) vs 05-sdd.md §2.5 + §3 + 07-process-flow.md §1/§7",
+> 257	          "issue": "Trigger do FR-VA-010 (autopilot-analyze, motor do loop R3) contraditório. FRD:35 diz 'Generaliza self-optimize, agora AGENDADO' (implica cron próprio), mas SDD §2.5/§6 e process-flow declaram APENAS 2 crons (cadence, collect); process-flow PROC-VA-005 tipa a análise como 'automated / pós-ciclo (encadeado a PROC-VA-001)' e SDD:122 a desenha '(post-cycle)' inline. Verificado: §2.5/§240 listam só 2 jobs pg_cron. FR crítico-de-valor sem trigger consistente nem artefato cron.",
+> 258	          "fix": "Cravar o acionador em UM lugar: (a) autopilot-analyze é chamado in-line ao fim de cada ciclo do autopilot-cadence-cron → corrigir FR-VA-010 para remover 'agendado' e dizer 'encadeado pós-ciclo'; OU (b) é um 3º cron → adicioná-lo a SDD §2.5, §6 e process-flow §7 (hoje afirma '2 crons' em 3 lugares)."
+> 259	        },
+> 260	        {
+> 261	          "severity": "high",
+> 262	          "doc": "06-data-model.md §2/§3 + 04-frd.md §5 + 05-sdd.md §7 (origem de content_variant_id)",
+> 263	          "issue": "Chave de junção load-bearing content_variant_id sem artefato de origem. FR-VA-004/009/017 (monetização, métricas, atribuição de receita — chave de R3/R4) todos chaveiam em content_variant_id (FRD §5 e data-model §2 declaram 'FK → content_library'), mas NENHUM doc define onde esse id é criado: as únicas ALTER TABLE adicionam scheduled_posts.cycle_id; content_library nunca recebe content_variant_id e nenhuma tabela nova o produz. Além disso affiliate_links hoje grava content_id:null (_shared/affiliate.ts), então o postback (FR-VA-017) não tem como saber a qual criativo creditar → BAC-002 ('100% com content_variant_id') e BAC-005 (ROI por peça) não-verificáveis.",
+> 264	          "fix": "Documentar a origem de content_variant_id: ALTER TABLE content_library ADD COLUMN content_variant_id uuid (+ onde a geração o popula por criativo) OU definir que é o próprio id de content_library e renomear o FK. Adicionar o stub na SDD §7 e a coluna no data-model §2. Especificar em FR-VA-004/016 a propagação geração→affiliate_links.content_id→link rastreável, e em FR-VA-017 o caminho postback→content_variant_id."
+> 265	        },
+> 266	        {
+> 267	          "severity": "high",
+> 268	          "doc": "03-prd.md §8 vs 02-brd.md §10 (matrizes MR→PR) e 00-index.md §Traceability",
+> 269	          "issue": "As matrizes de rastreabilidade não são mutuamente consistentes. (TRACE-01) BRD §10 mapeia MR-VA-003→{PR-004,005}, MR-VA-004→{PR-002}, MR-VA-008→{PR-010,011}; PRD §8 adiciona silenciosamente PR-012/013/022 a essas mesmas células — três células divergentes, sem fonte da verdade única. (TRACE-02/VA-INDEX) O resumo de cadeia do index (l.63) omite PR-VA-008 de MR-VA-001 e pendura FR-VA-013 sob PR-VA-002 quando FR-VA-013 rastreia PR-VA-008 (FRD §7). (TRACE-06) PR-VA-012 (A/B variant) e PR-VA-013 (HITL gate), v1.0 Should/In-scope, aparecem em PRD §8/§4 mas estão AUSENTES da matriz PR→FR da FRD §7 e nenhum FR os rastreia — cadeia morre em PR sem artefato.",
+> 270	          "fix": "Reconciliar BRD §10 e PRD §8 para serem idênticas (atualizar BRD §10 para incluir PR-012/013/022 OU anotar que BRD=MVP e PRD=escopo completo). Regenerar a cadeia do index a partir das matrizes autoritativas (não escrevê-la à mão): MR-VA-001 → BR-VA-001 → PR-VA-002, PR-VA-008 → (PR-002→FR-003) e (PR-008→FR-013). Criar FRs para PR-VA-012/013 e adicioná-los à matriz §7, OU marcá-los Future e removê-los das células MR-VA-003/004 do PRD §8."
+> 271	        }
+> 272	      ],
+> 273	      "niceToHave": [
+> 274	        "VA-COST-ANALYZE-5MCO-UNGROUNDED (medium): o custo '5 mco/análise' é apresentado como 'herda self-optimize', mas não existe constante :5 em billing.ts e self-optimize/index.ts NÃO deduz mcoCoins hoje — nada é herdado. Calibrar pelo modelo 4×-floor (provável 1-2 mco para 1 chamada LLM, alinhado a LEAD_SCORE:1/NURTURE_DISPATCH:2) citando a SOP mcoin-cost-calibration.md, OU abrir OTD explícito fixando 5 com justificativa; parar de afirmar 'herda self-optimize'.",
+> 275	        "VA-COV-02 / VA-SDD-ANALYZE-DEDUCT (medium): billing condicional da análise inconsistente — SDD §4:167 diz 'deduct 5 mco only when has_real_data OR explicitly configured', mas BRD §6 trata como flat '5 mco/análise · 1 por ciclo' incondicional e FR-VA-010 não menciona condicionalidade. Especificar o default quando has_real_data=false (recomendado: 0 mco / skip + evento analyze_empty) e o que 'explicitly configured' significa; reconciliar BRD §6 e 00-index.",
+> 276	        "SEC-VA-05 (medium): default-deny de escrita não materializado em DDL — autopilot_cycles/creative_metrics habilitam RLS mas só têm comentário 'service-role only' (sem CREATE POLICY de INSERT/UPDATE), e a policy RESTRICTIVE de DELETE prometida em SDD §5.2 para autopilot_plans não existe nos stubs §7/data-model §3. Materializar a RESTRICTIVE DELETE (espelhando migration 20260413183335) e tornar explícito o default-deny de escrita; replicar a nota de /security-review no data-model §3.",
+> 277	        "SEC-VA-06 (medium): mitigação de prompt-injection presente mas placebo — 'Cyber-Sentinel' referenciado sem fn/_shared concreta nem contrato fail-open/fail-closed, e o vetor real é mais amplo (trend externo de vm_trends FR-VA-018 + reinjeção de optimization_policy FR-VA-011, caminho de auto-envenenamento persistente). Nomear o componente concreto + contrato fail-CLOSED, ampliar a STRIDE para os 2 vetores extras, afirmar que valores de features estruturadas do optimization_policy são tratados como dados (nunca instrução), registrar fail-closed+auditado em NFR-VA-008.",
+> 278	        "TRACE-04 (medium): BR-VA-005 rastreado de forma inconsistente — PRD §4 PR-VA-004 declara BR-Traced='BR-VA-005, BR-VA-003' mas as matrizes mapeiam BR-VA-005 só para PR-VA-007. Decidir e alinhar (adicionar PR-004 à célula MR-VA-005 nas matrizes, ou remover BR-VA-005 do BR-Traced de PR-004).",
+> 279	        "TRACE-05 (medium): FR-VA-016 com PR-Traced divergente dentro do próprio FRD — §2 lista só PR-VA-002, §7 lista sob PR-VA-001 E PR-VA-002. Alinhar as duas tabelas.",
+> 280	        "TRACE-07 (medium): tratamento divergente dos 3 PRs Could/Fase-2 — PR-VA-022 aparece em PRD §8 sem FR; PR-VA-020/021 não aparecem em nenhuma matriz apesar de definidos em PRD §4. Uniformizar (todos fora das matrizes com nota, ou todos com FR-stub Fase-2).",
+> 281	        "VA-COV-04 (low): drift da chave do produto-alvo — data-model §2 diz target_product_ids FK→vm_affiliate_products.external_id mas SDD §7 só faz CHECK(cardinality>=1); monetizeContent hoje usa p.mlb. Fixar a chave canônica (external_id ou mlb) e propagar em FR-VA-001/012, data-model §2 e na ponte com o regex atual.",
+> 282	        "TRACE-09 / VA-PRIORITY (low): FR-VA-013 marcado 'Should (MVP)' sob PR-VA-008 'Must (MVP)' que é a metade 'imagem' do claim 'MVP=texto+imagem' — incoerente. Elevar para High/Critical e padronizar a coluna Priority do FRD (escala Critical/High/Medium, não 'Should (MVP)').",
+> 283	        "VA-OTD-SCHEMA (low/cosmético): a tabela de OTD do 00-index omite a coluna 'Options' prescrita pelo template (os Options vivem no SDD §8). Adicionar a coluna resumida ou anotar a omissão consciente."
+> 284	      ],
+> 285	      "gapClosureVerdict": {
+> 286	        "R1": "FECHADO — geração automática product-aware para redes coberta por FR-VA-003 (substitui prompts B2B hardcoded de orchestrate-step:138/290) + FR-VA-013 (imagem no MVP plugando generate-image); vídeo 9:16/TikTok/IG/YT corretamente diferidos à Fase 2 (PR-VA-020/021 Could Have, Out-of-scope FRD §1). Ressalva: FR-VA-013 precisa subir de prioridade (TRACE-09) por ser a metade 'imagem' do MVP.",
+> 287	        "R2": "FECHADO — cadência all_at_once OU every_n_days coberta por FR-VA-001 (cria autopilot_plans com mode + interval_days, CHECK 1-30) + FR-VA-005 (cron autopilot-cadence */15 com auto-refill next_run_at) + NFR-VA-006 (catch-up de janela perdida); autopilot_plans é tabela genuinamente nova (não existe em migrations). Único gap deste requisito é a identidade do cron→orchestrate (SEC-VA-01 blocker), não a recorrência em si.",
+> 288	        "R3": "COBERTO MAS NÃO ÍNTEGRO — as 3 quebras do loop auto-melhorável têm FR dona (coletor FR-VA-008/creative_metrics FR-VA-009; reinjeção de optimization_policy FR-VA-011; agendamento FR-VA-005/010), com anti-teatro real (has_real_data=false→baseline). Porém o trigger de FR-VA-010 é contraditório (TRACE-03 high), o billing condicional da análise é não-especificado (VA-COV-02) e o gate de custo que protege o loop está incomputável/com double-count (VA-COST-GATE high) — o gap está endereçado mas a mecânica central não fecha sem os fixes.",
+> 289	        "R4": "COBERTO MAS NÃO VERIFICÁVEL — afiliado ML em todo formato coberto por FR-VA-004 (monetiza artigo+LinkedIn+Twitter, substituindo monetizeContent que hoje só roda sobre articleContent) + FR-VA-016 (honra param product/affiliate dropado em orchestrate-content:79) + FR-VA-012 (seleção por comissão+trend). Mas o fio do content_variant_id geração→affiliate_links→postback→creative_metrics não está especificado e affiliate_links grava content_id:null hoje (TRACE-08/VA-COV-03 high) → BAC-002/BAC-005 (atribuição/ROI por peça) não-verificáveis até o fix."
+> 290	      }
+> 291	    }
+> 292	  }
+> 293	}
+> ```
+
+## 🤖 Claude *(21:20:18)*
+
+
+## 🤖 Claude *(21:20:32)*
+
+A validação retornou **NO_GO** — e fez seu trabalho: **2 blockers + 7 high**, todos verificados contra o código real (não cosméticos). Foi exatamente para isso que rodei a verificação adversarial. Resumo do que ela pegou:
+
+**🔴 Blockers (núcleo do produto):**
+1. **SEC-VA-01** — caminho cron→`orchestrate-content` diz "forward JWT", mas o cron não tem JWT e `orchestrate-content:37` rejeita sem `Bearer` (401). O ciclo autônomo não fecha como desenhado.
+2. **SEC-VA-02** — IDOR em `autopilot-analyze`: recebe `tenant_id` cru do body sob service-role e deduz mco → drena/vaza cross-tenant. Contraria o padrão do projeto (`lead-score:76`/`campaign-run:83` derivam do JWT).
+
+**🟠 High (7):** fórmula do kill-switch faz double-count da imagem e não multiplica o bundle de 10 pelo fan-out (gate incomputável); custo de imagem nunca fixado (canônico `billing.ts:21`=9); `verify_jwt=false` faltando p/ 2 fns; TOCTOU gate↔deduct; trigger do `autopilot-analyze` contraditório; `content_variant_id` sem origem; matrizes de rastreabilidade divergentes.
+
+Todos **corrigíveis em doc sem re-arquitetura**. Vou aplicar **blockers + high + os mediums/lows** (não deixo conteúdo sabidamente errado numa Fonte da Verdade). Decisões arquiteturais que vou cravar de forma consistente:
+
+- **Identidade do cron:** service-role com `user_id` derivado de `autopilot_plans.user_id` (server-trusted, nunca do body); `orchestrate-content` estendida p/ aceitar `x-autopilot-user-id` + service-role; **SOP `autopilot-cron-identity.md` como gate Lei 2 antes do código** (OTD-VA-008).
+- **Custo:** `projected = N_runs × 10 (bundle já inclui imagem, billing.ts:16-21) + 2 (analyze)`; **pré-débito atômico único antes do fan-out + refund do não-usado** (padrão vision-mcp) — resolve TOCTOU; análise = 2 mco (4×-floor, alinhado a NURTURE_DISPATCH), **0 quando `has_real_data=false`**.
+- **`content_variant_id` = `content_library.id`** do criativo; grava `affiliate_links.content_id` (hoje null) → fecha o fio atribuição.
+- **`autopilot-analyze` inline pós-ciclo** (2 crons, não 3); deriva tenant de `previous_cycle_id`.
+- **+2 FRs** (FR-VA-019 A/B, FR-VA-020 HITL) p/ PR-VA-012/013; matrizes reconciliadas.
+
+Aplicando as correções no FRD primeiro:
+
+## 🤖 Claude *(21:20:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "**In scope (MVP+v1.0):** entidade de plano de cad\u00eancia; cron de disparo recorrente por-tenant; gera\u00e7\u00e3o product-aware monetizada em todo formato (texto+imagem); coletor de desempenho unificado (cliques+org\u00e2nico+receita); analisador de ciclo + reinje\u00e7\u00e3o de aprendizado; guarda de custo (teto + kill-switch); dashboard de ROI por criativo; sele\u00e7\u00e3o de produto por comiss\u00e3o+trend; \u00e2ngulo informado por trends.\n\n**Out of scope (Fase 2 / Won't):** gera\u00e7\u00e3o de v\u00eddeo 9:16; publica\u00e7\u00e3o em TikTok/Instagram/YouTube; gest\u00e3o de an\u00fancios pagos; atribui\u00e7\u00e3o multi-touch cross-network; auto-descoberta de cat\u00e1logo (CLI manual permanece at\u00e9 PR-VA-022).",
+  "new_string": "**In scope (MVP+v1.0):** entidade de plano de cad\u00eancia; cron de disparo recorrente por-tenant; gera\u00e7\u00e3o product-aware monetizada em todo formato (texto+imagem); coletor de desempenho unificado (cliques+org\u00e2nico+receita); analisador de ciclo + reinje\u00e7\u00e3o de aprendizado; guarda de custo (teto + kill-switch); dashboard de ROI por criativo; sele\u00e7\u00e3o de produto por comiss\u00e3o+trend; \u00e2ngulo informado por trends; gera\u00e7\u00e3o A/B de variantes; gate HITL opcional.\n\n**Out of scope (Fase 2 / Won't):** gera\u00e7\u00e3o de v\u00eddeo 9:16; publica\u00e7\u00e3o em TikTok/Instagram/YouTube; gest\u00e3o de an\u00fancios pagos; atribui\u00e7\u00e3o multi-touch cross-network; auto-descoberta de cat\u00e1logo (CLI manual permanece).\n\n> **Nota de escopo de rastreabilidade:** os PRs de Fase 2 / Future (PR-VA-020 v\u00eddeo 9:16, PR-VA-021 TikTok/IG/YT, PR-VA-022 auto-discovery de cat\u00e1logo) s\u00e3o **intencionalmente N\u00c3O decompostos em FR neste ciclo** \u2014 n\u00e3o aparecem nas matrizes MR\u2192PR\u2192FR ativas (PRD \u00a78 / \u00a77 abaixo). Ser\u00e3o decompostos quando o Sovereign priorizar a Fase 2 (precedente: `marketing-hub` PR-MH-020..023)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:20:44)*
+
+
+## 🤖 Claude *(21:20:45)*
+
+Agora as linhas da tabela de FRs (FR-VA-004, 007, 010, 013, 016, 017) + 2 FRs novas:
+
+## 🤖 Claude *(21:20:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-004 | Monetize all formats | `monetizeContent` (`_shared/affiliate.ts`) roda em artigo **+ LinkedIn + Twitter**, embutindo link ML per-user com `content_variant_id` por criativo (n\u00e3o s\u00f3 no artigo, n\u00e3o por regex de 3 SKUs). | Critical | PR-VA-002 | Lib | AT-VA-004 |",
+  "new_string": "| FR-VA-004 | Monetize all formats | `monetizeContent` (`_shared/affiliate.ts`) roda em artigo **+ LinkedIn + Twitter**, embutindo link ML per-user por criativo (n\u00e3o s\u00f3 no artigo, n\u00e3o por regex de 3 SKUs). **`content_variant_id` = o `id` da linha de `content_library` daquele criativo**; grava `affiliate_links.content_id = content_variant_id` (hoje gravado `null`) e embute o `content_variant_id` no link rastre\u00e1vel \u2192 habilita atribui\u00e7\u00e3o por pe\u00e7a (FR-VA-017). | Critical | PR-VA-002 | Lib | AT-VA-004 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-007 | Cost guardrail (kill-switch) | ANTES de qualquer `deduct_mco_coins`: soma custo projetado (10 + 5 + img \u00d7 n\u00ba criativos). Se `> budget_cap_mco` OU `saldo < min_balance` \u2192 aborta ciclo (`aborted_budget`), pausa o plano, notifica. Espelha caps do `vision-mcp`. | Critical | PR-VA-006 | EdgeFunction | AT-VA-007 |",
+  "new_string": "| FR-VA-007 | Cost guardrail (kill-switch, at\u00f4mico) | Custo projetado do ciclo = **`N_runs \u00d7 ORCHESTRATION_RUN(10) + ANALYZE_COST(2)`**, onde `N_runs = |target_product_ids| \u00d7 |platforms|` (cada `orchestrate-content` \u00e9 um bundle flat de 10 que **j\u00e1 inclui a imagem** \u2014 `billing.ts:16-21`; **n\u00e3o** somar imagem \u00e0 parte). Se `projetado > budget_cap_mco` OU `saldo < min_balance` \u2192 aborta (`aborted_budget`), pausa o plano, notifica \u2014 **sem deduzir**. Atomicidade: `autopilot-run` faz **UM `deduct_mco_coins` do projetado ANTES do fan-out** (pr\u00e9-pago) e **estorna o n\u00e3o-usado** ao fechar o ciclo (padr\u00e3o refund `vision-mcp`); sub-runs rodam em modo prepaid (sem self-bill). Resolve TOCTOU. | Critical | PR-VA-006 | EdgeFunction | AT-VA-007 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-010 | Cycle analyzer | Edge fn `autopilot-analyze` (service-role, 5 mco): l\u00ea `creative_metrics` do ciclo anterior do tenant; se vazio, usa baseline (N\u00c3O inventa); produz `optimization_policy` estruturado (top hook/produto/hor\u00e1rio/formato). Generaliza `self-optimize`, agora agendado. | High | PR-VA-005 | EdgeFunction | AT-VA-010 |",
+  "new_string": "| FR-VA-010 | Cycle analyzer | Edge fn `autopilot-analyze` (service-role): deriva o tenant de `previous_cycle_id` (`SELECT user_id FROM autopilot_cycles` \u2014 **nunca do body**); l\u00ea `creative_metrics` do ciclo anterior; se vazio, usa baseline (`has_real_data=false`, N\u00c3O inventa) e **n\u00e3o cobra** (log `analyze_empty`); se h\u00e1 dado, produz `optimization_policy` estruturado (top hook/produto/hor\u00e1rio/formato) e cobra **2 mco** (`ANALYZE_COST`, 4\u00d7-floor \u2014 SOP `mcoin-cost-calibration`). **Encadeado p\u00f3s-ciclo pelo `autopilot-cadence-cron`** (inline, sem cron pr\u00f3prio). | High | PR-VA-005 | EdgeFunction | AT-VA-010 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-013 | Image creative (product-referenced) | Plugar `generate-image` (hoje \u00f3rf\u00e3) ao ciclo: usa `image_url` do produto ML como refer\u00eancia; formato por plataforma (quadrado MVP; 9:16 fase 2). Anexa asset a `scheduled_posts`. | Should (MVP) | PR-VA-008 | EdgeFunction | AT-VA-013 |",
+  "new_string": "| FR-VA-013 | Image creative (product-referenced) | Plugar `generate-image` (hoje \u00f3rf\u00e3) ao ciclo, **dentro do bundle `orchestrate-content` de 10 mco** (a imagem j\u00e1 \u00e9 coberta pelo bundle \u2014 `billing.ts:16-21`; n\u00e3o gera custo adicional). Usa `image_url` do produto ML como refer\u00eancia; formato por plataforma (quadrado MVP; 9:16 fase 2). Anexa asset a `scheduled_posts`. | High | PR-VA-008 | EdgeFunction | AT-VA-013 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-016 | Honor product/affiliate param | `orchestrate-content` passa a desestruturar e honrar o produto-alvo/`affiliate_url` (hoje dropado em `:79`), propagando ao `orchestrate-step`. | Medium | PR-VA-002 | EdgeFunction | AT-VA-016 |\n| FR-VA-017 | Revenue attribution per creative | `handle-ml-postback` credita `revenue_cents` na `affiliate_links` correta e o coletor (FR-VA-008) reflete em `creative_metrics` por `content_variant_id`. Depende de OTD-VA-007. | High | PR-VA-007 | EdgeFunction | AT-VA-017 |\n| FR-VA-018 | Trend-informed angle | `autopilot-run` l\u00ea `vm_trends` (de `fetch-trends`) para pautar o \u00e2ngulo viral do ciclo (reconecta a ilha de trends). | Should (v1.0) | PR-VA-011 | EdgeFunction | AT-VA-018 |",
+  "new_string": "| FR-VA-016 | Honor product/affiliate param + cron identity | `orchestrate-content` passa a (a) desestruturar e honrar o produto-alvo (hoje dropado em `:79`), propagando ao `orchestrate-step`; (b) **aceitar o caminho cron** \u2014 service-role + header `x-autopilot-user-id` (server-trusted) + `prepaid=true` (sub-run n\u00e3o cobra; j\u00e1 pr\u00e9-debitado em FR-VA-007). Sanitiza valores externos (produto/trend) antes do prompt. | Critical | PR-VA-001, PR-VA-002 | EdgeFunction | AT-VA-016 |\n| FR-VA-017 | Revenue attribution per creative | `handle-ml-postback` credita `revenue_cents` na `affiliate_links` cujo `content_id = content_variant_id` (FR-VA-004); o coletor (FR-VA-008) reflete em `creative_metrics` por `content_variant_id`. Caminho: postback \u2192 `order_id`/`click_id` \u2192 `affiliate_links.content_id` \u2192 criativo. Depende de OTD-VA-007 (secret per-user). | High | PR-VA-007 | EdgeFunction | AT-VA-017 |\n| FR-VA-018 | Trend-informed angle | `autopilot-run` l\u00ea `vm_trends` (de `fetch-trends`) para pautar o \u00e2ngulo viral do ciclo (reconecta a ilha de trends). Texto de trend \u00e9 **fonte n\u00e3o-confi\u00e1vel** \u2192 sanitizado antes do prompt (NFR-VA-008). | High | PR-VA-011 | EdgeFunction | AT-VA-018 |\n| FR-VA-019 | A/B variant generation | Gera N variantes por criativo por ciclo (config no plano); a vencedora \u00e9 escolhida pelo desempenho do ciclo anterior (`creative_metrics`) e promovida no pr\u00f3ximo. Reusa a gera\u00e7\u00e3o; sob o mesmo teto de custo (FR-VA-007). | Should (v1.0) | PR-VA-012 | EdgeFunction | AT-VA-019 |\n| FR-VA-020 | HITL approval gate (opcional) | Quando `plan.hitl_required=true`, criativos entram em estado `pending_review` antes de publicar; aprova\u00e7\u00e3o humana reusa o policy-engine do `intent-execute`. Default off (aut\u00f4nomo). | Should (v1.0) | PR-VA-013 | EdgeFunction | AT-VA-020 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:37)*
+
+
+## 🤖 Claude *(21:21:38)*
+
+Agora FRD §5 (origem do `content_variant_id`), §6 (testes das 2 FRs novas) e §7 (matriz reconciliada):
+
+## 🤖 Claude *(21:21:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| `creative_metrics.content_variant_id` | `uuid` | NOT NULL | FK \u2192 criativo/`content_library` | \u2014 |",
+  "new_string": "| `creative_metrics.content_variant_id` | `uuid` | NOT NULL | **= `content_library.id`** do criativo (FK \u2192 `content_library.id`); nasce na gera\u00e7\u00e3o (1 linha de `content_library` por criativo) e \u00e9 propagado a `affiliate_links.content_id` (FR-VA-004) e ao link rastre\u00e1vel | \u2014 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-017 | \u2705 | \u2705 | \u2014 | atribui\u00e7\u00e3o por `content_variant_id` (gated em OTD-VA-007) |\n| FR-VA-018 | \u2705 | \u2705 | \u2014 | \u00e2ngulo l\u00ea `vm_trends` |",
+  "new_string": "| FR-VA-017 | \u2705 | \u2705 | \u2014 | atribui\u00e7\u00e3o por `content_variant_id` (gated em OTD-VA-007) |\n| FR-VA-018 | \u2705 | \u2705 | \u2014 | \u00e2ngulo l\u00ea `vm_trends`; sanitiza\u00e7\u00e3o de fonte externa |\n| FR-VA-019 | \u2705 | \u2705 | \u2014 | N variantes; sele\u00e7\u00e3o por desempenho |\n| FR-VA-020 | \u2705 | \u2014 | \u2705 | gate HITL (E2E do fluxo de aprova\u00e7\u00e3o) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| PR ID | FR ID | NFR ID |\n|-------|-------|--------|\n| PR-VA-001 | FR-VA-001, FR-VA-014, FR-VA-016 | NFR-VA-004, NFR-VA-005 |\n| PR-VA-002 | FR-VA-002, FR-VA-003, FR-VA-004, FR-VA-016 | NFR-VA-001, NFR-VA-008 |\n| PR-VA-003 | FR-VA-005, FR-VA-006 | NFR-VA-003, NFR-VA-006 |\n| PR-VA-004 | FR-VA-008, FR-VA-009, FR-VA-017 | NFR-VA-007 |\n| PR-VA-005 | FR-VA-010, FR-VA-011 | NFR-VA-007 |\n| PR-VA-006 | FR-VA-007 | NFR-VA-002 |\n| PR-VA-007 | FR-VA-014, FR-VA-015, FR-VA-017 | NFR-VA-007 |\n| PR-VA-008 | FR-VA-013 | NFR-VA-008 |\n| PR-VA-010 | FR-VA-012 | \u2014 |\n| PR-VA-011 | FR-VA-018 | \u2014 |",
+  "new_string": "| PR ID | FR ID | NFR ID |\n|-------|-------|--------|\n| PR-VA-001 | FR-VA-001, FR-VA-014, FR-VA-016 | NFR-VA-004, NFR-VA-005 |\n| PR-VA-002 | FR-VA-002, FR-VA-003, FR-VA-004, FR-VA-016 | NFR-VA-001, NFR-VA-008 |\n| PR-VA-003 | FR-VA-005, FR-VA-006 | NFR-VA-003, NFR-VA-006 |\n| PR-VA-004 | FR-VA-008, FR-VA-009, FR-VA-017 | NFR-VA-007 |\n| PR-VA-005 | FR-VA-010, FR-VA-011 | NFR-VA-007 |\n| PR-VA-006 | FR-VA-007 | NFR-VA-002 |\n| PR-VA-007 | FR-VA-014, FR-VA-015, FR-VA-017 | NFR-VA-007 |\n| PR-VA-008 | FR-VA-013 | NFR-VA-008 |\n| PR-VA-010 | FR-VA-012 | \u2014 |\n| PR-VA-011 | FR-VA-018 | \u2014 |\n| PR-VA-012 | FR-VA-019 | \u2014 |\n| PR-VA-013 | FR-VA-020 | \u2014 |\n\n> Cobertura: 20 FR (FR-VA-001..020) \u00b7 8 NFR. PRs de Fase 2/Future (PR-VA-020/021/022) n\u00e3o decompostos neste ciclo (FRD \u00a71). Todo PR Must/Should rastreia \u22651 FR; todo FR rastreia \u22651 PR."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:22:08)*
+
+
+## 🤖 Claude *(21:22:09)*
+
+FRD reconciliado (20 FR, cadeia íntegra). Agora o SDD — os 2 blockers vivem aqui. §1 diagrama + §3 fluxo (remover "forward JWT", mostrar pré-débito):
+
+## 🤖 Claude *(21:22:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "\u2502  autopilot-run \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   autopilot-analyze (5 mco)     \u2502\n\u2502  autopilot-cadence-cron \u25c0\u2500\u2500\u2500\u2524   autopilot-collect             \u2502\n\u2502  (service-role, pg_cron)    \u2502                                 \u2502\n\u2502      \u2502 fan-out (forward JWT) \u2502 reuse                          \u2502\n\u2502      \u25bc                       \u25bc                                 \u2502\n\u2502  orchestrate-content \u2192 orchestrate-step (product-aware gen)   \u2502\n\u2502  _shared/affiliate.ts (monetize ALL formats)                  \u2502",
+  "new_string": "\u2502  autopilot-run \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   autopilot-analyze (2 mco)     \u2502\n\u2502  autopilot-cadence-cron \u25c0\u2500\u2500\u2500\u2524   autopilot-collect             \u2502\n\u2502  (service-role, pg_cron)    \u2502   (all service-role,            \u2502\n\u2502      \u2502 pre-debit + fan-out   \u2502    verify_jwt=false)           \u2502\n\u2502      \u2502 (service-role +        \u2502 reuse                          \u2502\n\u2502      \u2502  x-autopilot-user-id)  \u25bc                                \u2502\n\u2502      \u25bc                                                        \u2502\n\u2502  orchestrate-content \u2192 orchestrate-step (product-aware gen)   \u2502\n\u2502  _shared/affiliate.ts (monetize ALL formats, prepaid)         \u2502"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:22:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "| `autopilot-run` | `supabase/functions/autopilot-run/index.ts` | JWT (user) OR service-role (cron) | gate s\u00f3; deduct ocorre nos sub-runs | \u2014 (resolve per-user) |\n| `autopilot-cadence-cron` | `supabase/functions/autopilot-cadence-cron/index.ts` | service-role (`verify_jwt=false`, pg_net) | 0 | `SB_SECRET_KEY` (service) |\n| `autopilot-analyze` | `supabase/functions/autopilot-analyze/index.ts` | service-role | 5 mco (an\u00e1lise) | LLM key (per-user\u2192sistema fallback) |\n| `autopilot-collect` | `supabase/functions/autopilot-collect/index.ts` | service-role (cron) | 0 | social/meta tokens per-user |\n\n> **Reuso (modificadas, n\u00e3o novas):** `orchestrate-content` (FR-VA-016 honra produto), `orchestrate-step` (FR-VA-003 product-aware + FR-VA-011 feedback inject), `_shared/affiliate.ts` (FR-VA-004 monetiza todo formato), `generate-image` (FR-VA-013 plugado ao ciclo).",
+  "new_string": "| `autopilot-run` | `supabase/functions/autopilot-run/index.ts` | JWT (user, \"gerar agora\") OR service-role+`x-autopilot-user-id` (cron); `verify_jwt=false` | **pr\u00e9-d\u00e9bito at\u00f4mico \u00fanico** (gate antes do fan-out) | `SB_SECRET_KEY` |\n| `autopilot-cadence-cron` | `supabase/functions/autopilot-cadence-cron/index.ts` | service-role (`verify_jwt=false`, pg_net) | 0 | `SB_SECRET_KEY` (service) |\n| `autopilot-analyze` | `supabase/functions/autopilot-analyze/index.ts` | service-role (`verify_jwt=false`); tenant derivado de `previous_cycle_id`, **nunca do body** | 2 mco (s\u00f3 se `has_real_data`) | LLM key (per-user\u2192sistema fallback) |\n| `autopilot-collect` | `supabase/functions/autopilot-collect/index.ts` | service-role (`verify_jwt=false`, cron) | 0 | social/meta tokens per-user |\n\n> **config.toml (artefato versionado \u2014 mandato SOP `orchestrate-async-pipeline`):**\n> ```toml\n> [functions.autopilot-run]          verify_jwt = false\n> [functions.autopilot-cadence-cron] verify_jwt = false\n> [functions.autopilot-analyze]      verify_jwt = false\n> [functions.autopilot-collect]      verify_jwt = false\n> ```\n> Sem isso o gateway retorna 401 na chave service-role opaca (modo de falha #1 j\u00e1 vacinado \u2014 `project_orchestrate_pipeline_repair`).\n\n> **Reuso (modificadas, n\u00e3o novas):** `orchestrate-content` (FR-VA-016: honra produto **+ aceita caminho cron** service-role + `x-autopilot-user-id` + `prepaid=true`), `orchestrate-step` (FR-VA-003 product-aware + FR-VA-011 feedback inject), `_shared/affiliate.ts` (FR-VA-004 monetiza todo formato + grava `content_id`), `generate-image` (FR-VA-013 plugado ao ciclo, dentro do bundle)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:22:33)*
+
+
+## 🤖 Claude *(21:22:34)*
+
+§3 fluxo de dados (pré-débito atômico + identidade server-trusted + analyze inline):
+
+## 🤖 Claude *(21:22:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "pg_cron        cadence-cron        autopilot-run        orchestrate-*        DB / External\n \u2502 (*/15)          \u2502                    \u2502                    \u2502                   \u2502\n \u2502\u2500\u2500[tick]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502                    \u2502                    \u2502                   \u2502\n \u2502                 \u2502\u2500\u2500[plans due?]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 SELECT is_active AND next_run_at<=now\n \u2502                 \u2502\u25c0\u2500\u2500[plan X]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502\u2500\u2500[POST X-Cron]\u2500\u2500\u2500\u2500\u25b6\u2502                    \u2502                   \u2502\n \u2502                 \u2502                    \u2502\u2500\u2500[cost gate]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 project cost vs budget_cap + balance\n \u2502                 \u2502                    \u2502  (abort if over \u2192 aborted_budget, pause)\u2502\n \u2502                 \u2502                    \u2502\u2500\u2500[read policy]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 optimization_policy (ciclo N-1)\n \u2502                 \u2502                    \u2502\u2500\u2500[select product]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 vm_affiliate_products (comm+trend)\n \u2502                 \u2502                    \u2502\u2500\u2500[open cycle]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 autopilot_cycles (running)\n \u2502                 \u2502                    \u2502\u2500\u2500[fan-out/product\u00d7rede]\u2500\u25b6\u2502              \u2502\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[gen product-aware + feedback]\u2500\u25b6 LLM (BYOK)\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[monetize all formats]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6 affiliate_links + content_variant_id\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[schedule]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6 scheduled_posts (cycle_id)\n \u2502                 \u2502\u25c0\u2500\u2500[re-arm next_run_at = now + interval]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502                    \u2502                    \u2502   (auto-publish cron drains scheduled_posts \u2192 publish-*)\n \u2502                 \u2502 (later) autopilot-collect: post_id \u2192 insights \u2192 creative_metrics\n \u2502                 \u2502 (post-cycle) autopilot-analyze: creative_metrics(N) \u2192 optimization_policy(N) [feeds cycle N+1]",
+  "new_string": "pg_cron        cadence-cron        autopilot-run        orchestrate-*        DB / External\n \u2502 (*/15)          \u2502 (service-role)     \u2502 (service-role)     \u2502                   \u2502\n \u2502\u2500\u2500[tick]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502                    \u2502                    \u2502                   \u2502\n \u2502                 \u2502\u2500\u2500[plans due?]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 SELECT is_active AND next_run_at<=now\n \u2502                 \u2502\u25c0\u2500\u2500[plan X (+ user_id)]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502\u2500\u2500[invoke + x-autopilot-user-id=plan.user_id]\u2500\u25b6\u2502              \u2502  (server-trusted; NUNCA do body)\n \u2502                 \u2502                    \u2502\u2500\u2500[cost gate: N_runs\u00d710 + 2 vs cap+saldo]\u25b6\u2502 project; abort if over \u2192 aborted_budget, pause (sem deduct)\n \u2502                 \u2502                    \u2502\u2500\u2500[PRE-DEBIT at\u00f4mico do projetado]\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 deduct_mco_coins(plan.user_id, projected)  \u2190 UMA vez, ANTES do fan-out\n \u2502                 \u2502                    \u2502\u2500\u2500[read policy]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 optimization_policy (ciclo N-1)\n \u2502                 \u2502                    \u2502\u2500\u2500[select product]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 vm_affiliate_products (comm+trend)\n \u2502                 \u2502                    \u2502\u2500\u2500[open cycle]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 autopilot_cycles (running, spend_mco=projected)\n \u2502                 \u2502                    \u2502\u2500\u2500[fan-out/produto\u00d7rede: service-role + x-autopilot-user-id + prepaid=true]\u2500\u25b6\u2502\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[gen product-aware + feedback inject]\u2500\u25b6 LLM (BYOK por user_id)\n \u2502                 \u2502                    \u2502                    \u2502  (prepaid \u2192 N\u00c3O self-bill)\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[monetize all formats: content_id=content_variant_id]\u2500\u25b6 affiliate_links\n \u2502                 \u2502                    \u2502                    \u2502\u2500\u2500[schedule]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6 scheduled_posts (cycle_id)\n \u2502                 \u2502                    \u2502\u2500\u2500[refund do n\u00e3o-usado]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 deduct_mco_coins(user_id, -unused) (estorno; padr\u00e3o vision-mcp)\n \u2502                 \u2502                    \u2502\u2500\u2500[analyze INLINE p\u00f3s-ciclo]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6\u2502 autopilot-analyze: creative_metrics(N) \u2192 optimization_policy(N) [feeds N+1]\n \u2502                 \u2502\u25c0\u2500\u2500[re-arm next_run_at = now + interval]\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2502\n \u2502                 \u2502                    \u2502   (auto-publish cron drains scheduled_posts \u2192 publish-*)\n \u2502                 \u2502 (later, 6/6h) autopilot-collect: post_id \u2192 insights + cliques + receita \u2192 creative_metrics"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:22:54)*
+
+
+## 🤖 Claude *(21:22:55)*
+
+§4 contratos de API (gate com fórmula correta + pré-débito; analyze sem `tenant_id` no body):
+
+## 🤖 Claude *(21:23:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "// Cost gate (FR-VA-007) \u2014 BEFORE any deduction:\n// \u2192 project = 10 (orchestrate) + 5 (analyze) + IMAGE_COST * creatives\n// \u2192 if project > plan.budget_cap_mco \u2192 409 aborted_budget + pause plan\n// \u2192 balance check via profiles.mco_balance; if < min_balance \u2192 402\n// mcoCoins deduction happens inside each orchestrate-content sub-run (self-bill), never here.\n```\n\n### `POST /functions/v1/autopilot-analyze`\n\n```typescript\ninterface AutopilotAnalyzeRequest { tenant_id: string; plan_id: string; previous_cycle_id: string }\ninterface AutopilotAnalyzeResponse {\n  status: 'ok'\n  optimization_policy_id: string\n  has_real_data: boolean        // false \u2192 baseline used, N\u00c3O fabrica recomenda\u00e7\u00e3o\n  top_features: { hook?: string; product_id?: string; best_hour?: number; format?: string }\n}\n// Deduct 5 mco (deduct_mco_coins) only when has_real_data OR explicitly configured; logged.\n```",
+  "new_string": "// Identidade: caminho cron = service-role + header x-autopilot-user-id (= autopilot_plans.user_id,\n//   server-trusted, NUNCA do body); caminho \"gerar agora\" = JWT do user, asserir user.id === plan.user_id.\n// Cost gate (FR-VA-007) \u2014 at\u00f4mico, ANTES do fan-out:\n// \u2192 N_runs = |target_product_ids| \u00d7 |platforms|\n// \u2192 projected = N_runs * ORCHESTRATION_RUN(10) + ANALYZE_COST(2)   // imagem J\u00c1 no bundle de 10 (billing.ts:16-21)\n// \u2192 if projected > plan.budget_cap_mco \u2192 409 aborted_budget + pause plan (sem deduct)\n// \u2192 balance check; if mco_balance < projected OR < min_balance \u2192 402\n// \u2192 PRE-DEBIT: deduct_mco_coins(plan.user_id, projected) UMA vez aqui (n\u00e3o nos sub-runs).\n// \u2192 sub-runs invocados com prepaid=true (orchestrate-content N\u00c3O self-bills).\n// \u2192 ao fechar o ciclo: refund do n\u00e3o-usado = deduct_mco_coins(user_id, -(projected - actual)).\n```\n\n### `POST /functions/v1/autopilot-analyze`\n\n```typescript\n// Auth: service-role only (verify_jwt=false); invocada inline pelo autopilot-run p\u00f3s-ciclo.\ninterface AutopilotAnalyzeRequest { previous_cycle_id: string }   // tenant/plan DERIVADOS do ciclo\ninterface AutopilotAnalyzeResponse {\n  status: 'ok'\n  optimization_policy_id: string\n  has_real_data: boolean        // false \u2192 baseline used, N\u00c3O fabrica recomenda\u00e7\u00e3o, N\u00c3O cobra\n  top_features: { hook?: string; product_id?: string; best_hour?: number; format?: string }\n}\n// SEGURAN\u00c7A (anti-IDOR): tenant_id N\u00c3O vem do body. Derivar:\n//   const { user_id, plan_id } = SELECT user_id, plan_id FROM autopilot_cycles WHERE id = previous_cycle_id\n//   \u2192 usar ESSE user_id como p_user_id no deduct e como filtro de creative_metrics (RLS).\n// Deduct ANALYZE_COST(2 mco) via deduct_mco_coins(user_id, 2) SOMENTE quando has_real_data === true;\n//   has_real_data === false \u2192 0 mco + log infra_health_logs event 'viral_autopilot_analyze_empty'.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:23:14)*
+
+
+## 🤖 Claude *(21:23:15)*
+
+§5.1 STRIDE — adicionar IDOR de `autopilot-analyze`, ampliar prompt-injection (trend + reinjeção de policy = auto-envenenamento), nomear o Cyber-Sentinel:
+
+## 🤖 Claude *(21:23:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "| `autopilot-cadence-cron` | Falsifica\u00e7\u00e3o de trigger de cron (disparo for\u00e7ado) | Spoofing/Elevation | High | `verify_jwt=false` + service-role key; sem path p\u00fablico que dispare ciclo arbitr\u00e1rio; rate por plano via `next_run_at` |\n| `autopilot_plans`/`_cycles`/`creative_metrics` | Leitura/escrita cross-tenant | Information Disclosure | Critical | RLS `user_id = auth.uid()`; crons usam service-role com filtro expl\u00edcito por tenant |\n| Cost gate | Bypass do teto (disparo paralelo p/ exceder) | Tampering | Critical | Gate at\u00f4mico server-side ANTES do deduct; idempot\u00eancia (plan_id, cycle_number); lock otimista no ciclo |\n| Gerador product-aware | Prompt injection via nome/desc de produto ou trend | Tampering/Elevation | High | Cyber-Sentinel no input + no output; sanitiza\u00e7\u00e3o do produto antes do prompt |",
+  "new_string": "| `autopilot-cadence-cron` | Falsifica\u00e7\u00e3o de trigger de cron (disparo for\u00e7ado) | Spoofing/Elevation | High | `verify_jwt=false` + service-role key; sem path p\u00fablico que dispare ciclo arbitr\u00e1rio; rate por plano via `next_run_at` |\n| `autopilot-run` (caminho cron) | `user_id` forjado no body p/ gerar/cobrar como outro tenant | Spoofing/Elevation | Critical | `user_id` NUNCA do body \u2014 header `x-autopilot-user-id` s\u00f3 sob service-role assertion, derivado de `autopilot_plans.user_id`; caminho user-JWT assere `user.id === plan.user_id` |\n| `autopilot-analyze` | `tenant_id` forjado no body \u2192 deduct + leitura cross-tenant (IDOR) | Spoofing/Tampering | Critical | **N\u00c3O aceitar `tenant_id` no body**; derivar tenant de `previous_cycle_id` (`SELECT user_id FROM autopilot_cycles`); service-role only; padr\u00e3o `lead-score:76`/`campaign-run:83` |\n| `autopilot_plans`/`_cycles`/`creative_metrics` | Leitura/escrita cross-tenant | Information Disclosure | Critical | RLS `user_id = auth.uid()`; crons usam service-role com filtro expl\u00edcito por tenant derivado da linha |\n| Cost gate (FR-VA-007) | Bypass do teto / saldo negativo entre check e deduct (TOCTOU) | Tampering | Critical | **Pr\u00e9-d\u00e9bito at\u00f4mico \u00daNICO** de `N_runs\u00d710+2` em `autopilot-run` ANTES do fan-out (n\u00e3o distribu\u00eddo nos sub-runs) + refund do n\u00e3o-usado; `spend_mco` no ciclo; idempot\u00eancia (plan_id, cycle_number) |\n| Gerador product-aware | Prompt injection via 3 fontes n\u00e3o-confi\u00e1veis: (a) nome/desc de produto, (b) texto de trend (`vm_trends`/FR-VA-018), (c) **reinje\u00e7\u00e3o de `optimization_policy`** de ciclos anteriores (FR-VA-011) \u2192 auto-envenenamento persistente | Tampering/Elevation | High | Cyber-Sentinel **fail-CLOSED** (o mesmo gate de `orchestrate-content:92`) no input E no output antes de publicar; sanitiza\u00e7\u00e3o/escape das 3 fontes; valores das features estruturadas do `optimization_policy` tratados como **dados, nunca instru\u00e7\u00e3o** (OTD-VA-005) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:23:32)*
+
+
+## 🤖 Claude *(21:23:33)*
+
+§5.2 — materializar a policy RESTRICTIVE de DELETE + default-deny de escrita explícito:
+
+## 🤖 Claude *(21:23:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "CREATE POLICY \"autopilot_plans_update_own\"\n  ON public.autopilot_plans FOR UPDATE\n  USING (user_id = auth.uid())\n  WITH CHECK (user_id = auth.uid());\n\n-- DELETE bloqueado para authenticated (RESTRICTIVE); s\u00f3 service_role gerencia ciclos/spend.\n```",
+  "new_string": "CREATE POLICY \"autopilot_plans_update_own\"\n  ON public.autopilot_plans FOR UPDATE\n  USING (user_id = auth.uid())\n  WITH CHECK (user_id = auth.uid());\n\n-- DELETE bloqueado para authenticated via RESTRICTIVE (espelha migration 20260413183335):\nCREATE POLICY \"autopilot_plans_no_delete\"\n  ON public.autopilot_plans AS RESTRICTIVE FOR DELETE\n  USING (false);   -- s\u00f3 service_role (bypassa RLS) remove; LGPD cascade via auth.users delete\n\n-- autopilot_cycles + creative_metrics: RLS habilitado, SELECT own, e NENHUMA policy de\n-- INSERT/UPDATE/DELETE de prop\u00f3sito \u2192 default-deny total para authenticated; S\u00d3 service-role\n-- (runner/coletor, que bypassa RLS) escreve. O default-deny de escrita \u00e9 INTENCIONAL e expl\u00edcito.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:23:42)*
+
+
+## 🤖 Claude *(21:23:43)*
+
+§8 — adicionar OTD-VA-008 (identidade do cron + pré-débito + gate SOP Lei 2):
+
+## 🤖 Claude *(21:23:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "| OTD-VA-007 | Secret de postback per-user (herdada `OTD-ML-MP-PER-USER`) | Manter secret global (Usu\u00e1rio Zero) | Per-user `meta`/MP config | **B antes de multi-tenant** \u2014 atribui\u00e7\u00e3o de receita por tenant exige secret per-user | Sovereign |",
+  "new_string": "| OTD-VA-007 | Secret de postback per-user (herdada `OTD-ML-MP-PER-USER`) | Manter secret global (Usu\u00e1rio Zero) | Per-user `meta`/MP config | **B antes de multi-tenant** \u2014 atribui\u00e7\u00e3o de receita por tenant exige secret per-user | Sovereign |\n| OTD-VA-008 | Identidade do caminho cron\u2192`orchestrate-content` (o cron n\u00e3o tem JWT; a fn rejeita sem `Bearer`) | Repassar JWT (imposs\u00edvel \u2014 cron n\u00e3o tem) | Service-role + `x-autopilot-user-id` derivado de `autopilot_plans.user_id` + pr\u00e9-d\u00e9bito at\u00f4mico em `autopilot-run` (sub-runs `prepaid`) | **B** \u2014 server-trusted, nunca do body; resolve o blocker SEC-VA-01 + TOCTOU SEC-VA-04. **Gate Lei 2: exige SOP `docs/processes/autopilot-cron-identity.md` ANTES de qualquer c\u00f3digo** (Operator/Sequence/Verification/Recovery do mint server-trusted + pr\u00e9-d\u00e9bito/refund) | Sovereign |\n\n> **Gate Lei 2 (Processo Antecipado):** o caminho de identidade do cron (OTD-VA-008) e o pr\u00e9-d\u00e9bito/refund (FR-VA-007) introduzem automa\u00e7\u00e3o financeira nova \u2192 o SOP `docs/processes/autopilot-cron-identity.md` DEVE ser escrito e revisado **antes** de a fatia de cad\u00eancia/custo ganhar c\u00f3digo. Refer\u00eancia cruzada: SOP `orchestrate-async-pipeline.md` (mandato `verify_jwt=false`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:23:58)*
+
+
+## 🤖 Claude *(21:23:59)*
+
+Agora o **data-model** — `content_variant_id` = `content_library.id`, chave de produto canônica, coluna `hitl_required`, e RLS RESTRICTIVE:
+
+## 🤖 Claude *(21:24:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "old_string": "| `content_variant_id` | `uuid` | NOT NULL | \u2014 | \u2192 criativo/`content_library` | Criativo medido |\n| `product_id` | `text` | NULL | \u2014 | \u2192 `vm_affiliate_products` | Produto promovido |",
+  "new_string": "| `content_variant_id` | `uuid` | NOT NULL | \u2014 | \u2192 `content_library.id` | Criativo medido (= a linha de `content_library` daquele criativo; propagado a `affiliate_links.content_id`) |\n| `product_id` | `text` | NULL | \u2014 | \u2192 `vm_affiliate_products.external_id` | Produto promovido (chave can\u00f4nica `external_id`) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:24:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "old_string": "| `target_product_ids` | `text[]` | NOT NULL | \u2014 | \u2192 `vm_affiliate_products.external_id` | \u2265 1 produto |\n| `platforms` | `text[]` | NOT NULL | \u2014 | \u2014 | \u2286 {wordpress,linkedin,twitter} (MVP) |\n| `budget_cap_mco` | `int` | NOT NULL | \u2014 | \u2014 | Teto de custo por ciclo |\n| `min_balance_mco` | `int` | NOT NULL | `10` | \u2014 | Piso de saldo p/ disparar |\n| `is_active` | `boolean` | NOT NULL | `false` | \u2014 | Cad\u00eancia ligada |",
+  "new_string": "| `target_product_ids` | `text[]` | NOT NULL | \u2014 | \u2192 `vm_affiliate_products.external_id` | \u2265 1 produto (chave can\u00f4nica `external_id`) |\n| `platforms` | `text[]` | NOT NULL | \u2014 | \u2014 | \u2286 {wordpress,linkedin,twitter} (MVP) |\n| `budget_cap_mco` | `int` | NOT NULL | \u2014 | \u2014 | Teto de custo por ciclo (gate FR-VA-007) |\n| `min_balance_mco` | `int` | NOT NULL | `10` | \u2014 | Piso de saldo p/ disparar |\n| `hitl_required` | `boolean` | NOT NULL | `false` | \u2014 | Gate HITL opcional (FR-VA-020); default off = aut\u00f4nomo |\n| `ab_variants` | `int` | NOT NULL | `1` | \u2014 | N\u00ba de variantes A/B por criativo (FR-VA-019); 1 = sem A/B |\n| `is_active` | `boolean` | NOT NULL | `false` | \u2014 | Cad\u00eancia ligada |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:24:16)*
+
+
+## 🤖 Claude *(21:24:16)*
+
+Data-model §3 — RESTRICTIVE DELETE + default-deny de escrita explícito + nota /security-review:
+
+## 🤖 Claude *(21:24:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "old_string": "CREATE POLICY \"autopilot_cycles: users read own\"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());\n-- INSERT/UPDATE de cycles e creative_metrics: service_role only (runner/coletor).\nCREATE POLICY \"creative_metrics: users read own\"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());",
+  "new_string": "-- DELETE de planos bloqueado p/ authenticated via RESTRICTIVE (espelha migration 20260413183335):\nCREATE POLICY \"autopilot_plans: no client delete\" ON public.autopilot_plans AS RESTRICTIVE FOR DELETE USING (false);\n\nCREATE POLICY \"autopilot_cycles: users read own\"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());\nCREATE POLICY \"creative_metrics: users read own\"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());\n-- autopilot_cycles + creative_metrics: S\u00d3 SELECT own. NENHUMA policy de INSERT/UPDATE/DELETE de\n-- prop\u00f3sito \u2192 default-deny TOTAL de escrita para authenticated; s\u00f3 service-role (runner/coletor,\n-- que bypassa RLS) escreve. Default-deny INTENCIONAL e expl\u00edcito."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: CREATE POLICY "autopilot_cycles: users read own"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());
+> -- INSERT/UPDATE de cycles e creative_metrics: service_role only (runner/coletor).
+> CREATE POLICY "creative_metrics: users read own"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());</tool_use_error>
+> ```
+
+## 🤖 Claude *(21:24:25)*
+
+
+## 🤖 Claude *(21:24:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "offset": 80,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 80	| `content_variant_id` | `uuid` | NOT NULL | — | → `content_library.id` | Criativo medido (= a linha de `content_library` daquele criativo; propagado a `affiliate_links.content_id`) |
+> 81	| `product_id` | `text` | NULL | — | → `vm_affiliate_products.external_id` | Produto promovido (chave canônica `external_id`) |
+> 82	| `platform` | `text` | NULL | — | — | Rede |
+> 83	| `source` | `text` | NOT NULL | — | — | affiliate_click\|organic\|postback |
+> 84	| `impressions` | `int` | NOT NULL | `0` | — | — |
+> 85	| `engagements` | `int` | NOT NULL | `0` | — | likes/shares/comments |
+> 86	| `affiliate_clicks` | `int` | NOT NULL | `0` | — | do click ledger |
+> 87	| `revenue_cents` | `int` | NOT NULL | `0` | — | do postback |
+> 88	| `collected_at` | `timestamptz` | NOT NULL | `now()` | — | — |
+> 89	| — | — | — | — | — | **UNIQUE (content_variant_id, source)** |
+> 90	
+> 91	> Nenhuma das 3 tabelas carrega `embedding`/`stability_score` — não são nós de conhecimento diretos. A memória semântica entra via `mcorch_nodes` (§4).
+> 92	
+> 93	---
+> 94	
+> 95	## 3. Supabase Physical Schema Stubs
+> 96	
+> 97	```sql
+> 98	-- ============================================================
+> 99	-- MIGRATION: <ts>_viral_autopilot_schema.sql  (split em 4 arquivos — ver 05-sdd §7)
+> 100	-- ============================================================
+> 101	-- autopilot_plans / autopilot_cycles / creative_metrics + ALTER scheduled_posts
+> 102	-- (stubs CREATE TABLE completos em 05-sdd.md §7)
+> 103	
+> 104	-- RLS (default-deny → own-row)
+> 105	ALTER TABLE public.autopilot_plans     ENABLE ROW LEVEL SECURITY;
+> 106	ALTER TABLE public.autopilot_cycles    ENABLE ROW LEVEL SECURITY;
+> 107	ALTER TABLE public.creative_metrics    ENABLE ROW LEVEL SECURITY;
+> ```
+
+## 🤖 Claude *(21:24:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "offset": 108,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 108	
+> 109	CREATE POLICY "autopilot_plans: users read own"    ON public.autopilot_plans  FOR SELECT USING (user_id = auth.uid());
+> 110	CREATE POLICY "autopilot_plans: users write own"   ON public.autopilot_plans  FOR INSERT WITH CHECK (user_id = auth.uid());
+> 111	CREATE POLICY "autopilot_plans: users update own"  ON public.autopilot_plans  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+> 112	
+> 113	CREATE POLICY "autopilot_cycles: users read own"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());
+> 114	-- INSERT/UPDATE de cycles e creative_metrics: service_role only (coletor/runner).
+> 115	CREATE POLICY "creative_metrics: users read own"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());
+> 116	
+> 117	-- Índices
+> 118	CREATE INDEX autopilot_plans_due_idx     ON public.autopilot_plans (next_run_at) WHERE is_active;
+> 119	CREATE INDEX autopilot_cycles_plan_idx   ON public.autopilot_cycles (plan_id);
+> 120	CREATE INDEX creative_metrics_cycle_idx  ON public.creative_metrics (cycle_id);
+> 121	CREATE INDEX creative_metrics_variant_idx ON public.creative_metrics (content_variant_id);
+> 122	
+> 123	-- Updated-at trigger (reusa update_updated_at_column existente)
+> 124	CREATE TRIGGER set_autopilot_plans_updated_at
+> 125	  BEFORE UPDATE ON public.autopilot_plans
+> 126	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 127	```
+> 128	
+> 129	---
+> ```
+
+## 🤖 Claude *(21:24:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "old_string": "CREATE POLICY \"autopilot_plans: users update own\"  ON public.autopilot_plans  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n\nCREATE POLICY \"autopilot_cycles: users read own\"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());\n-- INSERT/UPDATE de cycles e creative_metrics: service_role only (coletor/runner).\nCREATE POLICY \"creative_metrics: users read own\"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());\n\n-- \u00cdndices",
+  "new_string": "CREATE POLICY \"autopilot_plans: users update own\"  ON public.autopilot_plans  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n-- DELETE bloqueado p/ authenticated via RESTRICTIVE (espelha 20260413183335); s\u00f3 service-role remove (LGPD cascade):\nCREATE POLICY \"autopilot_plans: no client delete\" ON public.autopilot_plans AS RESTRICTIVE FOR DELETE USING (false);\n\nCREATE POLICY \"autopilot_cycles: users read own\"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());\nCREATE POLICY \"creative_metrics: users read own\"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());\n-- autopilot_cycles + creative_metrics: S\u00d3 SELECT own. NENHUMA policy de INSERT/UPDATE/DELETE de\n-- PROP\u00d3SITO \u2192 default-deny TOTAL de escrita p/ authenticated; s\u00f3 service-role (runner/coletor, que\n-- bypassa RLS) escreve. Default-deny INTENCIONAL e expl\u00edcito (n\u00e3o esquecimento).\n-- \u26a0\ufe0f Toda esta migration passa /security-review antes do commit (FMEA-011 cross-tenant).\n\n-- \u00cdndices"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:24:45)*
+
+
+## 🤖 Claude *(21:24:45)*
+
+SDD §7 — colunas `hitl_required`/`ab_variants` + nota da chave canônica + RESTRICTIVE DELETE:
+
+## 🤖 Claude *(21:24:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "  target_product_ids text[] NOT NULL CHECK (cardinality(target_product_ids) >= 1),\n  platforms       text[] NOT NULL CHECK (cardinality(platforms) >= 1),\n  budget_cap_mco  int NOT NULL CHECK (budget_cap_mco > 0),\n  min_balance_mco int NOT NULL DEFAULT 10,\n  is_active       boolean NOT NULL DEFAULT false,\n  next_run_at     timestamptz,\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.autopilot_plans ENABLE ROW LEVEL SECURITY;\n-- (RLS policies from \u00a75.2)",
+  "new_string": "  target_product_ids text[] NOT NULL CHECK (cardinality(target_product_ids) >= 1),  -- chave can\u00f4nica: vm_affiliate_products.external_id\n  platforms       text[] NOT NULL CHECK (cardinality(platforms) >= 1),\n  budget_cap_mco  int NOT NULL CHECK (budget_cap_mco > 0),\n  min_balance_mco int NOT NULL DEFAULT 10,\n  hitl_required   boolean NOT NULL DEFAULT false,   -- gate HITL opcional (FR-VA-020)\n  ab_variants     int NOT NULL DEFAULT 1 CHECK (ab_variants BETWEEN 1 AND 5),  -- A/B (FR-VA-019)\n  is_active       boolean NOT NULL DEFAULT false,\n  next_run_at     timestamptz,\n  created_at      timestamptz NOT NULL DEFAULT now(),\n  updated_at      timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.autopilot_plans ENABLE ROW LEVEL SECURITY;\n-- (RLS policies from \u00a75.2, incl. RESTRICTIVE no-delete)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:24:57)*
+
+
+## 🤖 Claude *(21:24:58)*
+
+SDD §7 — nota sobre `content_variant_id` (= `content_library.id`) e `affiliate_links.content_id`:
+
+## 🤖 Claude *(21:25:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "> Nenhuma tabela aqui carrega `embedding` (n\u00e3o s\u00e3o n\u00f3s de conhecimento diretos). A mem\u00f3ria GraphRAG entra via `mcorch_nodes` observation por ciclo (ver `06-data-model.md` \u00a74). Toda migration passa `/security-review` antes do commit (FMEA-011).",
+  "new_string": "> **`content_variant_id` \u2014 origem (sem nova coluna em `content_library`):** \u00e9 o pr\u00f3prio `id` da linha de `content_library` gerada para cada criativo (1 linha por formato\u00d7produto\u00d7ciclo). A monetiza\u00e7\u00e3o (FR-VA-004) grava `affiliate_links.content_id = content_variant_id` (hoje gravado `null` em `_shared/affiliate.ts`) e embute o id no link rastre\u00e1vel; o postback (FR-VA-017) resolve `affiliate_links.content_id` \u2192 criativo; o coletor (FR-VA-008) usa o mesmo id em `creative_metrics.content_variant_id`. Fio \u00edntegro gera\u00e7\u00e3o\u2192atribui\u00e7\u00e3o. Nenhuma `ALTER TABLE content_library` \u00e9 necess\u00e1ria.\n>\n> Nenhuma tabela nova carrega `embedding` (n\u00e3o s\u00e3o n\u00f3s de conhecimento diretos). A mem\u00f3ria GraphRAG entra via `mcorch_nodes` observation por ciclo (ver `06-data-model.md` \u00a74). Toda migration passa `/security-review` antes do commit (FMEA-011)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:25:20)*
+
+
+## 🤖 Claude *(21:25:20)*
+
+Agora o **BRD** — §6 economia (analyze 5→2, imagem no bundle, fórmula do gate) e §10 matriz reconciliada:
+
+## 🤖 Claude *(21:25:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md",
+  "old_string": "| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |\n|-----------|-----------|-------------------|-----------------------|----------------------|\n| Ciclo de gera\u00e7\u00e3o (autopilot) | 10 mco/run (herda `orchestrate-content`) + sub-steps | Starter(500) / Pro(2000) / Ent(10k) | fun\u00e7\u00e3o de `interval_days` \u00d7 n\u00ba produtos \u00d7 redes | consumo de plano |\n| An\u00e1lise de ciclo (self-optimize) | 5 mco/an\u00e1lise | idem | 1 por ciclo por plano | consumo de plano |\n| Gera\u00e7\u00e3o de imagem | calibrar via SOP `mcoin-cost-calibration` (modelo 4\u00d7-floor) | idem | 1+ por criativo | consumo de plano |\n\n> **Teto obrigat\u00f3rio (BR-VA-006):** cada plano carrega `budget_cap_mco` por ciclo. O ciclo soma o custo projetado (10 + 5 + imagem \u00d7 n\u00ba criativos) e **aborta antes de deduzir** se exceder o teto ou se o saldo cair abaixo do m\u00ednimo. Espelha o modelo de caps do `vision-mcp` (per-plano + safety di\u00e1rio).",
+  "new_string": "> **Constantes can\u00f4nicas (`src/lib/billing.ts`, OTD-MCOIN-CALIBRATION fechada 2026-06-03, modelo 4\u00d7-floor):** `ORCHESTRATION_RUN = 10` \u00e9 um **bundle flat** que J\u00c1 inclui 3\u00d7`CONTENT_GENERATION` + 1\u00d7`IMAGE_GENERATION` (`billing.ts:16-21`). `IMAGE_GENERATION = 9` s\u00f3 vale para gera\u00e7\u00e3o **avulsa** (fora do bundle).\n\n| Operation | Coins/Run | Plan Tier Mapping | Monthly Volume (est.) | Monthly Revenue (est.) |\n|-----------|-----------|-------------------|-----------------------|----------------------|\n| `orchestrate-content` run (1 produto \u00d7 1 rede, texto **+ imagem inclusa**) | 10 mco (bundle flat `billing.ts:16`) | Starter(500) / Pro(2000) / Ent(10k) | `N_runs` = produtos \u00d7 redes, por ciclo | consumo de plano |\n| An\u00e1lise de ciclo (`autopilot-analyze`) | **2 mco** (1 chamada LLM, 4\u00d7-floor alinhado a `NURTURE_DISPATCH:2`); **0 quando `has_real_data=false`** | idem | 1 por ciclo por plano (s\u00f3 se h\u00e1 dado) | consumo de plano |\n| Gera\u00e7\u00e3o de imagem avulsa (se fora do bundle) | 9 mco (`IMAGE_GENERATION`, `billing.ts:21`) | idem | \u2014 (no MVP a imagem est\u00e1 no bundle de 10) | consumo de plano |\n\n> **Custo projetado de um ciclo = `N_runs \u00d7 10 + 2`** (`N_runs = produtos \u00d7 redes`; imagem j\u00e1 no bundle de 10 \u2014 **n\u00e3o** somar \u00e0 parte). **N\u00c3O afirmar \"herda self-optimize\"**: `self-optimize` n\u00e3o cobra mcoCoins hoje; o custo de 2 mco da an\u00e1lise \u00e9 uma opera\u00e7\u00e3o nova calibrada pela SOP `mcoin-cost-calibration`.\n>\n> **Teto obrigat\u00f3rio (BR-VA-006) \u2014 at\u00f4mico:** cada plano carrega `budget_cap_mco` por ciclo. `autopilot-run` projeta `N_runs \u00d7 10 + 2`, **aborta antes de deduzir** se `> budget_cap_mco` ou `saldo < min_balance`, e faz **UM pr\u00e9-d\u00e9bito at\u00f4mico do projetado ANTES do fan-out** (sub-runs em modo `prepaid`, n\u00e3o cobram), estornando o n\u00e3o-usado ao fechar o ciclo (padr\u00e3o refund `vision-mcp`). Resolve o TOCTOU. Espelha os caps do `vision-mcp` (per-plano + safety di\u00e1rio)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:25:39)*
+
+
+## 🤖 Claude *(21:25:40)*
+
+BRD §4 — corrigir custo da análise em BR-VA-003:
+
+## 🤖 Claude *(21:25:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md",
+  "old_string": "| BR-VA-003 | Loop fechado: coletar desempenho do ciclo \u2192 analisar \u2192 reinjetar aprendizados (top hooks/produtos/hor\u00e1rios) na gera\u00e7\u00e3o do pr\u00f3ximo ciclo | MR-VA-003 | Critical | 5 mco/an\u00e1lise (LLM, herda `self-optimize`) | Ciclo N+1 recebe no prompt o resumo estruturado do desempenho do ciclo N |",
+  "new_string": "| BR-VA-003 | Loop fechado: coletar desempenho do ciclo \u2192 analisar \u2192 reinjetar aprendizados (top hooks/produtos/hor\u00e1rios) na gera\u00e7\u00e3o do pr\u00f3ximo ciclo | MR-VA-003 | Critical | 2 mco/an\u00e1lise (1 chamada LLM, 4\u00d7-floor; **0 se sem dado real**) | Ciclo N+1 recebe no prompt o resumo estruturado do desempenho do ciclo N |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:01)*
+
+
+## 🤖 Claude *(21:26:02)*
+
+BRD §10 — matriz reconciliada (idêntica à PRD §8 que vou alinhar em seguida):
+
+## 🤖 Claude *(21:26:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md",
+  "old_string": "| MR ID | BR ID | PR ID (stub) |\n|-------|-------|--------------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002 |\n| MR-VA-005 | BR-VA-005 | PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011 |",
+  "new_string": "> Esta matriz \u00e9 **id\u00eantica** \u00e0 do PRD `03-prd.md` \u00a78 (fonte \u00fanica de verdade da cadeia MR\u2192BR\u2192PR). PRs de Fase 2/Future (PR-VA-020/021/022) **n\u00e3o** entram aqui \u2014 n\u00e3o s\u00e3o decompostos neste ciclo (FRD \u00a71).\n\n| MR ID | BR ID | PR ID |\n|-------|-------|--------------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005, PR-VA-012 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002, PR-VA-013 |\n| MR-VA-005 | BR-VA-005 | PR-VA-004, PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/02-brd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:16)*
+
+
+## 🤖 Claude *(21:26:17)*
+
+PRD §8 — alinhar à BRD §10 (MR-VA-005 +PR-VA-004; remover PR-VA-022 Future):
+
+## 🤖 Claude *(21:26:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md",
+  "old_string": "| MR ID | BR ID | PR ID |\n|-------|-------|-------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005, PR-VA-012 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002, PR-VA-013 |\n| MR-VA-005 | BR-VA-005 | PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011, PR-VA-022 |",
+  "new_string": "> Matriz **autoritativa** da cadeia MR\u2192BR\u2192PR (id\u00eantica \u00e0 BRD \u00a710). PRs de Fase 2/Future (PR-VA-020/021/022) n\u00e3o entram \u2014 n\u00e3o decompostos neste ciclo (FRD \u00a71).\n\n| MR ID | BR ID | PR ID |\n|-------|-------|-------|\n| MR-VA-001 | BR-VA-001 | PR-VA-002, PR-VA-008 |\n| MR-VA-002 | BR-VA-002 | PR-VA-001, PR-VA-003 |\n| MR-VA-003 | BR-VA-003 | PR-VA-004, PR-VA-005, PR-VA-012 |\n| MR-VA-004 | BR-VA-004 | PR-VA-002, PR-VA-013 |\n| MR-VA-005 | BR-VA-005 | PR-VA-004, PR-VA-007 |\n| MR-VA-006 | BR-VA-006 | PR-VA-006 |\n| MR-VA-007 | BR-VA-007 | PR-VA-001 |\n| MR-VA-008 | BR-VA-008 | PR-VA-010, PR-VA-011 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:28)*
+
+
+## 🤖 Claude *(21:26:28)*
+
+PRD §4 (custo análise 5→2) e §7 (Gherkin kill-switch com fórmula correta):
+
+## 🤖 Claude *(21:26:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md",
+  "old_string": "| PR-VA-005 | **Self-improvement feedback** \u2014 analisar lote anterior \u2192 injetar features no prompt do pr\u00f3ximo | P1 | BR-VA-003 | M | 5 (an\u00e1lise) | Fecha as 3 quebras do `self-optimize` |",
+  "new_string": "| PR-VA-005 | **Self-improvement feedback** \u2014 analisar lote anterior \u2192 injetar features no prompt do pr\u00f3ximo | P1 | BR-VA-003 | M | 2 (an\u00e1lise; 0 sem dado) | Fecha as 3 quebras do `self-optimize` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md",
+  "old_string": "  Scenario: Kill-switch de custo antes do deduct (PR-VA-006)\n    Given um plano com budget_cap_mco 5 e custo de ciclo projetado 15\n    When o cron tenta disparar o ciclo\n    Then o ciclo aborta com status \"aborted_budget\"\n    And nenhum mcoCoin \u00e9 deduzido\n    And o plano \u00e9 marcado \"paused\" com notifica\u00e7\u00e3o PT-BR \"Teto de custo insuficiente para este ciclo\"",
+  "new_string": "  Scenario: Kill-switch de custo antes do deduct (PR-VA-006)\n    Given um plano com budget_cap_mco 20, 3 produtos-alvo e 3 redes\n    And o custo projetado = N_runs(9) \u00d7 10 + 2 = 92 mcoCoins\n    When o cron tenta disparar o ciclo\n    Then o ciclo aborta com status \"aborted_budget\" (92 > 20)\n    And nenhum mcoCoin \u00e9 deduzido\n    And o plano \u00e9 marcado \"paused\" com notifica\u00e7\u00e3o PT-BR \"Teto de custo insuficiente para este ciclo\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/03-prd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:26:47)*
+
+
+## 🤖 Claude *(21:26:48)*
+
+Agora o **process-flow** — §1 (gate + identidade cron) e §4 (stub sem "forward JWT"):
+
+## 🤖 Claude *(21:27:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md",
+  "old_string": "[autopilot-run(plan, X-Cron-Trigger)]\n   \u2502\n[Cost gate: projetar 10 + 5 + img\u00d7criativos]\n   \u2502\n<Gateway: custo \u2264 budget_cap AND saldo \u2265 min_balance?>\n   \u2502 NO \u2500\u2500\u25b6 [status=aborted_budget] \u2500\u2500\u25b6 [pause plan] \u2500\u2500\u25b6 [infra_health_logs: viral_autopilot_aborted_budget] \u2500\u2500\u25b6 [notify PT-BR] \u2500\u2500\u25b6 END\n   \u2502 YES\n[read optimization_policy (ciclo N-1)]  \u2192  [select product (comm+trend / seed)]  \u2192  [open autopilot_cycles (running)]\n   \u2502\n[fan-out por produto\u00d7rede \u2192 orchestrate-content (forward JWT, self-bill)]\n   \u2502\n   \u251c\u2500\u2500[orchestrate-step: gerar product-aware + injetar feedback]\n   \u251c\u2500\u2500[monetize ALL formats \u2192 affiliate_links + content_variant_id]\n   \u251c\u2500\u2500[generate-image product-referenced \u2192 asset]\n   \u2514\u2500\u2500[insert scheduled_posts (cycle_id)]\n   \u2502\n[re-arm: next_run_at = now + interval_days]   (auto-refill)\n   \u2502\n[Insert mcorch_node observation + edge OPTIMIZES_FROM \u2192 ciclo N-1]\n   \u2502\nEND  (auto-publish cron drena scheduled_posts \u2192 publish-*; PROC-VA-003 coleta depois)",
+  "new_string": "[autopilot-run(plan, service-role, x-autopilot-user-id = plan.user_id)]\n   \u2502\n[Cost gate: projetar N_runs\u00d710 + 2]   (N_runs = produtos \u00d7 redes; imagem j\u00e1 no bundle de 10)\n   \u2502\n<Gateway: projetado \u2264 budget_cap AND saldo \u2265 projetado/min_balance?>\n   \u2502 NO \u2500\u2500\u25b6 [status=aborted_budget] \u2500\u2500\u25b6 [pause plan] \u2500\u2500\u25b6 [infra_health_logs: viral_autopilot_aborted_budget] \u2500\u2500\u25b6 [notify PT-BR] \u2500\u2500\u25b6 END (sem deduct)\n   \u2502 YES\n[PRE-DEBIT at\u00f4mico: deduct_mco_coins(plan.user_id, projetado)]   \u2190  UMA vez, ANTES do fan-out\n   \u2502\n[read optimization_policy (ciclo N-1)]  \u2192  [select product (comm+trend / seed)]  \u2192  [open autopilot_cycles (running, spend_mco=projetado)]\n   \u2502\n[fan-out por produto\u00d7rede \u2192 orchestrate-content (service-role + x-autopilot-user-id + prepaid=true)]\n   \u2502\n   \u251c\u2500\u2500[orchestrate-step: gerar product-aware + injetar feedback (prepaid \u2192 N\u00c3O self-bill)]\n   \u251c\u2500\u2500[monetize ALL formats \u2192 affiliate_links.content_id = content_variant_id]\n   \u251c\u2500\u2500[generate-image product-referenced \u2192 asset (dentro do bundle)]\n   \u2514\u2500\u2500[insert scheduled_posts (cycle_id)]\n   \u2502\n[refund do n\u00e3o-usado: deduct_mco_coins(user_id, -(projetado \u2212 actual))]\n   \u2502\n[autopilot-analyze INLINE: creative_metrics(N-1) \u2192 optimization_policy]  (2 mco se has_real_data; 0 sen\u00e3o)\n   \u2502\n[re-arm: next_run_at = now + interval_days]   (auto-refill)\n   \u2502\n[Insert mcorch_node observation + edge OPTIMIZES_FROM \u2192 ciclo N-1]\n   \u2502\nEND  (auto-publish cron drena scheduled_posts \u2192 publish-*; PROC-VA-003 coleta depois)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:27:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md",
+  "old_string": "**Integration code stub (dentro de `autopilot-run/index.ts`):**\n```typescript\n// Para cada produto-alvo \u00d7 rede do plano:\nfor (const product of selectedProducts) {\n  for (const platform of plan.platforms) {\n    await updateCycleStatus(cycleId, 'running')\n    const run = await supabase.functions.invoke('orchestrate-content', {\n      headers: { Authorization: userJwt },     // self-bill no tenant\n      body: {\n        topic: buildViralAngle(product, trends),   // FR-VA-018\n        product_target: { id: product.external_id, meta: product, feedback: policyFeatures }, // FR-VA-016\n        platforms: [platform],\n        cycle_id: cycleId,                          // NFR-VA-007 auditabilidade\n      },\n    })\n    if (!run.data?.ok) await logHealth('viral_autopilot_cycle_failed', { cycleId, platform })\n  }\n}\n```",
+  "new_string": "**Integration code stub (dentro de `autopilot-run/index.ts`, service-role):**\n```typescript\n// userId \u00e9 server-trusted: caminho cron = autopilot_plans.user_id; caminho \"gerar agora\" = auth.uid() (asserido == plan.user_id).\n// Pr\u00e9-d\u00e9bito at\u00f4mico do projetado J\u00c1 ocorreu antes deste loop (FR-VA-007); sub-runs s\u00e3o prepaid.\nfor (const product of selectedProducts) {\n  for (const platform of plan.platforms) {\n    await updateCycleStatus(cycleId, 'running')\n    const run = await supabase.functions.invoke('orchestrate-content', {\n      // SEM Authorization de user \u2014 caminho cron service-role:\n      headers: {\n        Authorization: `Bearer ${SB_SECRET_KEY}`,   // service-role\n        'x-autopilot-user-id': userId,               // server-trusted (NUNCA do body do cliente)\n      },\n      body: {\n        topic: buildViralAngle(sanitize(product), sanitize(trends)),  // FR-VA-018 + sanitiza\u00e7\u00e3o (NFR-VA-008)\n        product_target: { id: product.external_id, meta: product, feedback: policyFeatures }, // FR-VA-016\n        platforms: [platform],\n        cycle_id: cycleId,                            // NFR-VA-007 auditabilidade\n        prepaid: true,                                // FR-VA-007 \u2014 sub-run N\u00c3O self-bills (j\u00e1 pr\u00e9-debitado)\n      },\n    })\n    if (!run.data?.ok) await logHealth('viral_autopilot_cycle_failed', { cycleId, platform })\n  }\n}\n// Ao fim: actual = soma real; refund = projetado \u2212 actual via deduct_mco_coins(userId, -refund).\n```\n> \u26a0\ufe0f `orchestrate-content` deve ser estendida (FR-VA-016) p/ aceitar este caminho: service-role + `x-autopilot-user-id` + `prepaid`. **Gate Lei 2: SOP `docs/processes/autopilot-cron-identity.md` antes do c\u00f3digo** (OTD-VA-008)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/07-process-flow.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:27:25)*
+
+
+## 🤖 Claude *(21:27:25)*
+
+Agora o **00-index** — regenerar a cadeia de rastreabilidade (derivada das matrizes autoritativas) e atualizar a tabela de OTD:
+
+## 🤖 Claude *(21:27:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "old_string": "```\nMR-VA-001 (gera\u00e7\u00e3o auto) \u2500\u2500\u25b6 BR-VA-001 \u2500\u2500\u25b6 PR-VA-002 \u2500\u2500\u25b6 FR-VA-003, FR-VA-013 \u2500\u2500\u25b6 orchestrate-step (lib) | generate-image\nMR-VA-002 (cad\u00eancia)     \u2500\u2500\u25b6 BR-VA-002 \u2500\u2500\u25b6 PR-VA-001, PR-VA-003 \u2500\u2500\u25b6 FR-VA-001, FR-VA-005, FR-VA-006 \u2500\u2500\u25b6 autopilot_plans | autopilot-cadence-cron\nMR-VA-003 (loop melhoria)\u2500\u2500\u25b6 BR-VA-003 \u2500\u2500\u25b6 PR-VA-004, PR-VA-005 \u2500\u2500\u25b6 FR-VA-008..011 \u2500\u2500\u25b6 creative_metrics | cycle-analyzer | feedback-inject\nMR-VA-004 (afiliado ML)  \u2500\u2500\u25b6 BR-VA-004 \u2500\u2500\u25b6 PR-VA-002 \u2500\u2500\u25b6 FR-VA-004, FR-VA-016 \u2500\u2500\u25b6 _shared/affiliate.ts | process-affiliate-link\nMR-VA-005 (ROI/criativo) \u2500\u2500\u25b6 BR-VA-005 \u2500\u2500\u25b6 PR-VA-007 \u2500\u2500\u25b6 FR-VA-009, FR-VA-017 \u2500\u2500\u25b6 creative_metrics | handle-ml-postback\nMR-VA-006 (custo)        \u2500\u2500\u25b6 BR-VA-006 \u2500\u2500\u25b6 PR-VA-006 \u2500\u2500\u25b6 FR-VA-007 \u2500\u2500\u25b6 autopilot_cycles | deduct_mco_coins\nMR-VA-007 (multi-tenant) \u2500\u2500\u25b6 BR-VA-007 \u2500\u2500\u25b6 PR-VA-001 \u2500\u2500\u25b6 FR-VA-001, NFR-VA-004 \u2500\u2500\u25b6 affiliate_config (RLS auth.uid())\nMR-VA-008 (sinal viral)  \u2500\u2500\u25b6 BR-VA-008 \u2500\u2500\u25b6 PR-VA-010, PR-VA-011 \u2500\u2500\u25b6 FR-VA-012, FR-VA-018 \u2500\u2500\u25b6 vm_affiliate_products | fetch-trends\n```",
+  "new_string": "> Vis\u00e3o **derivada** das matrizes autoritativas (BRD \u00a710 = PRD \u00a78 = FRD \u00a77). Em caso de diverg\u00eancia, as matrizes dos docs prevalecem.\n\n```\nMR-VA-001 (gera\u00e7\u00e3o auto) \u2500\u25b6 BR-VA-001 \u2500\u25b6 PR-VA-002 \u2500\u25b6 FR-VA-003 \u2500\u25b6 orchestrate-step (product-aware)\n                                       \u2514\u25b6 PR-VA-008 \u2500\u25b6 FR-VA-013 \u2500\u25b6 generate-image (no bundle)\nMR-VA-002 (cad\u00eancia)     \u2500\u25b6 BR-VA-002 \u2500\u25b6 PR-VA-001, PR-VA-003 \u2500\u25b6 FR-VA-001, FR-VA-005, FR-VA-006 \u2500\u25b6 autopilot_plans | autopilot-cadence-cron\nMR-VA-003 (loop melhoria)\u2500\u25b6 BR-VA-003 \u2500\u25b6 PR-VA-004, PR-VA-005, PR-VA-012 \u2500\u25b6 FR-VA-008..011, FR-VA-019 \u2500\u25b6 creative_metrics | autopilot-analyze | feedback-inject\nMR-VA-004 (afiliado ML)  \u2500\u25b6 BR-VA-004 \u2500\u25b6 PR-VA-002, PR-VA-013 \u2500\u25b6 FR-VA-004, FR-VA-016, FR-VA-020 \u2500\u25b6 _shared/affiliate.ts | process-affiliate-link\nMR-VA-005 (ROI/criativo) \u2500\u25b6 BR-VA-005 \u2500\u25b6 PR-VA-004, PR-VA-007 \u2500\u25b6 FR-VA-009, FR-VA-017 \u2500\u25b6 creative_metrics | handle-ml-postback\nMR-VA-006 (custo)        \u2500\u25b6 BR-VA-006 \u2500\u25b6 PR-VA-006 \u2500\u25b6 FR-VA-007 \u2500\u25b6 autopilot_cycles | deduct_mco_coins (pr\u00e9-d\u00e9bito+refund)\nMR-VA-007 (multi-tenant) \u2500\u25b6 BR-VA-007 \u2500\u25b6 PR-VA-001 \u2500\u25b6 FR-VA-001, FR-VA-016 (+NFR-VA-004) \u2500\u25b6 affiliate_config (RLS auth.uid()) | x-autopilot-user-id\nMR-VA-008 (sinal viral)  \u2500\u25b6 BR-VA-008 \u2500\u25b6 PR-VA-010, PR-VA-011 \u2500\u25b6 FR-VA-012, FR-VA-018 \u2500\u25b6 vm_affiliate_products | fetch-trends\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:27:44)*
+
+
+## 🤖 Claude *(21:27:45)*
+
+00-index — tabela de OTD com coluna Options (template-conformant) + OTD-VA-008:
+
+## 🤖 Claude *(21:27:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "old_string": "| OTD ID | Description | Recommendation | Status |\n|--------|-------------|----------------|--------|\n| OTD-VA-001 | `campaign_metrics` (campaign-level) vs `creative_metrics` (por content_variant_id) | Nova `creative_metrics`; ETL agrega p/ campaign_metrics | Open |\n| OTD-VA-002 | Cron infra: pg_cron (nurture-advance) vs OS crontab (auto-publish) | pg_cron service-role por consist\u00eancia | Open |\n| OTD-VA-003 | Fonte de engajamento org\u00e2nico (LinkedIn/Twitter API tier) | Cliques de afiliado primeiro (j\u00e1 temos); org\u00e2nico best-effort gated por tier | Open |\n| OTD-VA-004 | Unidade do teto de custo: por ciclo vs di\u00e1rio | Cap por ciclo no plano + safety di\u00e1rio global (espelha vision-mcp) | Open |\n| OTD-VA-005 | Mecanismo de reinje\u00e7\u00e3o do feedback (texto cru vs features estruturadas) | Features estruturadas (top hooks/produtos/hor\u00e1rios) | Open |\n| OTD-VA-006 | Autonomia de sele\u00e7\u00e3o de produto (auto-score vs shortlist) | 3 SKUs semente agora (Decis\u00e3o 4); auto-score em v1.0 | Decided (seeds) |\n| OTD-VA-007 | `OTD-ML-MP-PER-USER` \u2014 secret de postback per-user | Fechar antes da atribui\u00e7\u00e3o de receita multi-tenant | Open (herdada) |",
+  "new_string": "| OTD ID | Description | Options (A / B) | Recommendation | Status |\n|--------|-------------|-----------------|----------------|--------|\n| OTD-VA-001 | Tabela de m\u00e9tricas | A: estender `campaign_metrics` (campaign-level) \u00b7 B: nova `creative_metrics` (por content_variant_id) | **B**; ETL agrega p/ campaign_metrics | Open |\n| OTD-VA-002 | Infra de cron | A: pg_cron (nurture-advance) \u00b7 B: OS crontab (auto-publish) | **A** pg_cron service-role | Open |\n| OTD-VA-003 | Fonte de engajamento org\u00e2nico | A: s\u00f3 cliques afiliado \u00b7 B: + insights de API por tier | **Ambos faseado**: cliques primeiro, org\u00e2nico best-effort | Open |\n| OTD-VA-004 | Unidade do teto de custo | A: por ciclo (plano) \u00b7 B: di\u00e1rio global | **Ambos**: cap por ciclo + safety di\u00e1rio (vision-mcp) | Open |\n| OTD-VA-005 | Reinje\u00e7\u00e3o do feedback | A: texto cru no prompt \u00b7 B: features estruturadas | **B** (top hooks/produtos/hor\u00e1rios; valores = dados, n\u00e3o instru\u00e7\u00e3o) | Open |\n| OTD-VA-006 | Autonomia de sele\u00e7\u00e3o de produto | A: auto-score comiss\u00e3o+trend \u00b7 B: shortlist curada | **3 SKUs semente** agora (Decis\u00e3o 4); auto-score v1.0 | Decided (seeds) |\n| OTD-VA-007 | `OTD-ML-MP-PER-USER` \u2014 secret de postback per-user | A: secret global (Usu\u00e1rio Zero) \u00b7 B: per-user | **B** antes de multi-tenant | Open (herdada) |\n| OTD-VA-008 | Identidade do caminho cron\u2192`orchestrate-content` | A: repassar JWT (imposs\u00edvel) \u00b7 B: service-role + `x-autopilot-user-id` server-trusted + pr\u00e9-d\u00e9bito | **B**; resolve blocker SEC-VA-01 + TOCTOU. **Gate Lei 2: SOP `autopilot-cron-identity.md` antes do c\u00f3digo** | Open |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:28:05)*
+
+
+## 🤖 Claude *(21:28:06)*
+
+00-index — atualizar phase log (20 FR, 8 OTD, validação adversarial NO_GO→fixes):
+
+## 🤖 Claude *(21:28:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "old_string": "| 3 | Technical Specification | 2026-06-17 | FRD (18 FR + 8 NFR) + SDD (STRIDE, 7 OTD) |\n| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 4 processos + 2 crons |\n| 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |\n| 6 | Traceability Validation | 2026-06-17 | Adversarial workflow \u2014 ver seal report |",
+  "new_string": "| 3 | Technical Specification | 2026-06-17 | FRD (20 FR + 8 NFR) + SDD (STRIDE 8, 8 OTD) |\n| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 5 processos + 2 crons |\n| 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |\n| 6 | Traceability Validation | 2026-06-17 | Workflow adversarial (4 cr\u00edticos): NO_GO inicial (2 blockers + 7 high) \u2192 todos corrigidos em doc \u2192 re-valida\u00e7\u00e3o |"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: | 3 | Technical Specification | 2026-06-17 | FRD (18 FR + 8 NFR) + SDD (STRIDE, 7 OTD) |
+> | 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 4 processos + 2 crons |
+> | 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |
+> | 6 | Traceability Validation | 2026-06-17 | Adversarial workflow — ver seal report |
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(21:28:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "offset": 73,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 73	MR-VA-008 (sinal viral)  ─▶ BR-VA-008 ─▶ PR-VA-010, PR-VA-011 ─▶ FR-VA-012, FR-VA-018 ─▶ vm_affiliate_products | fetch-trends
+> 74	```
+> 75	
+> 76	---
+> 77	
+> 78	## Phase Completion Log
+> 79	
+> 80	| Phase | Name | Completed | Notes |
+> 81	|-------|------|-----------|-------|
+> 82	| 0 | Project Bootstrap | 2026-06-17 | Slug `viral-autopilot`; inputs derived from Sovereign directive |
+> 83	| 1 | Market & Business Intelligence | 2026-06-17 | MRD + BRD — 8 MR, 8 BR, ROI model |
+> 84	| 2 | Product Definition | 2026-06-17 | PRD — 2 personas, MoSCoW (MVP=texto+imagem) |
+> 85	| 3 | Technical Specification | 2026-06-17 | FRD (18 FR + 8 NFR) + SDD (STRIDE, RLS, 7 OTD) |
+> 86	| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 4 processos + 2 crons |
+> ```
+
+## 🤖 Claude *(21:28:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "offset": 85,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 85	| 3 | Technical Specification | 2026-06-17 | FRD (18 FR + 8 NFR) + SDD (STRIDE, RLS, 7 OTD) |
+> 86	| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 4 processos + 2 crons |
+> 87	| 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |
+> 88	| 6 | Traceability Validation | 2026-06-17 | Adversarial workflow — ver seal report |
+> 89	| 7 | Knowledge Mesh Injection | [ ] | `scripts/seed-viral-autopilot-bok-seal.ts` (pendente exec sob aprovação) |
+> 90	
+> ```
+
+## 🤖 Claude *(21:28:20)*
+
+
+## 🤖 Claude *(21:28:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md",
+  "old_string": "| 3 | Technical Specification | 2026-06-17 | FRD (18 FR + 8 NFR) + SDD (STRIDE, RLS, 7 OTD) |\n| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 4 processos + 2 crons |\n| 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |\n| 6 | Traceability Validation | 2026-06-17 | Adversarial workflow \u2014 ver seal report |",
+  "new_string": "| 3 | Technical Specification | 2026-06-17 | FRD (20 FR + 8 NFR) + SDD (STRIDE 8, RLS, 8 OTD) |\n| 4 | Data & Process Engineering | 2026-06-17 | 3 novas tabelas + 5 processos + 2 crons |\n| 5 | Quality & Autonomic Engineering | 2026-06-17 | 12 FMEA (4 RPN>100), kill-switch self-heal |\n| 6 | Traceability Validation | 2026-06-17 | Workflow adversarial (4 cr\u00edticos): NO_GO inicial (2 blockers + 7 high) \u2192 todos corrigidos em doc \u2192 re-valida\u00e7\u00e3o |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:28:46)*
+
+
+## 🤖 Claude *(21:28:48)*
+
+Correções minor restantes (TRACE-04/05/09, chave canônica) já caíram nas edições das matrizes/data-model. Agora atualizo o seed script (ID ranges FR→020, OTD→008) e recomputo as contagens de linha pós-edição:
+
+## 🤖 Claude *(21:29:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "ID SPACE: MR-VA-001..008 \u00b7 BR-VA-001..008 \u00b7 BO-001..004 \u00b7 SH-001..005 \u00b7 PR-VA-001..022 \u00b7 FR-VA-001..018 \u00b7 NFR-VA-001..008 \u00b7 PROC-VA-001..005 \u00b7 KPI-VA-001..008 \u00b7 FMEA-VA-001..012 \u00b7 SOL-VA-001..005 \u00b7 QO-001..004 \u00b7 BAC-001..005 \u00b7 OTD-VA-001..007.",
+  "new_string": "ID SPACE: MR-VA-001..008 \u00b7 BR-VA-001..008 \u00b7 BO-001..004 \u00b7 SH-001..005 \u00b7 PR-VA-001..022 (020/021/022 Fase-2 n\u00e3o decompostos) \u00b7 FR-VA-001..020 \u00b7 NFR-VA-001..008 \u00b7 PROC-VA-001..005 \u00b7 KPI-VA-001..008 \u00b7 FMEA-VA-001..012 \u00b7 SOL-VA-001..005 \u00b7 QO-001..004 \u00b7 BAC-001..005 \u00b7 OTD-VA-001..008.\n\nVALIDA\u00c7\u00c3O FASE 6 (workflow adversarial, 4 cr\u00edticos): veredito inicial NO_GO (2 blockers + 7 high) \u2014 TODOS corrigidos em doc antes do seal. Blockers: SEC-VA-01 (identidade cron\u2192orchestrate-content: service-role + x-autopilot-user-id server-trusted, nunca forward-JWT \u2014 orchestrate-content:37 rejeita sem Bearer; OTD-VA-008 + gate SOP autopilot-cron-identity.md Lei 2) \u00b7 SEC-VA-02 (IDOR autopilot-analyze: tenant derivado de previous_cycle_id, nunca do body). Highs: f\u00f3rmula do kill-switch corrigida (N_runs\u00d710+2; imagem J\u00c1 no bundle billing.ts:16-21, sem double-count; pr\u00e9-d\u00e9bito at\u00f4mico \u00fanico + refund vision-mcp resolve TOCTOU) \u00b7 custo de imagem fixado (bundle de 10; avulso IMAGE_GENERATION:9 billing.ts:21) \u00b7 verify_jwt=false declarado p/ as 4 fns \u00b7 trigger de autopilot-analyze cravado inline p\u00f3s-ciclo (2 crons) \u00b7 content_variant_id = content_library.id com fio gera\u00e7\u00e3o\u2192affiliate_links.content_id\u2192postback\u2192creative_metrics \u00b7 matrizes BRD \u00a710 = PRD \u00a78 = FRD \u00a77 reconciliadas (+FR-VA-019 A/B, FR-VA-020 HITL p/ PR-VA-012/013). An\u00e1lise = 2 mco (4\u00d7-floor, n\u00e3o 'herda self-optimize' que n\u00e3o cobra) com 0 quando has_real_data=false."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:29:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "      MR: '001..008',\n      BR: '001..008',\n      BO: '001..004',\n      SH: '001..005',\n      PR: '001..022',\n      FR: '001..018',\n      NFR: '001..008',\n      PROC: '001..005',\n      KPI: '001..008',\n      FMEA: '001..012',\n      SOL: '001..005',\n      QO: '001..004',\n      BAC: '001..005',\n      OTD: '001..007',\n    },",
+  "new_string": "      MR: '001..008',\n      BR: '001..008',\n      BO: '001..004',\n      SH: '001..005',\n      PR: '001..022',\n      FR: '001..020',\n      NFR: '001..008',\n      PROC: '001..005',\n      KPI: '001..008',\n      FMEA: '001..012',\n      SOL: '001..005',\n      QO: '001..004',\n      BAC: '001..005',\n      OTD: '001..008',\n    },\n    phase6_validation: { initial_verdict: 'NO_GO', blockers: 2, highs: 7, all_resolved_in_doc: true, method: 'adversarial workflow 4 critics' },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:29:15)*
+
+
+## 🤖 Claude *(21:29:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "    related_otds: ['OTD-VA-001', 'OTD-VA-002', 'OTD-VA-003', 'OTD-VA-004', 'OTD-VA-005', 'OTD-VA-006', 'OTD-VA-007', 'OTD-ML-MP-PER-USER'],",
+  "new_string": "    related_otds: ['OTD-VA-001', 'OTD-VA-002', 'OTD-VA-003', 'OTD-VA-004', 'OTD-VA-005', 'OTD-VA-006', 'OTD-VA-007', 'OTD-VA-008', 'OTD-ML-MP-PER-USER'],\n    depends_on_sop: 'docs/processes/autopilot-cron-identity.md (a escrever \u2014 gate Lei 2 antes do c\u00f3digo da fatia cad\u00eancia/custo)',"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:29:29)*
+
+
+## 🤖 Claude *(21:29:31)*
+
+Todas as correções aplicadas (2 blockers + 7 high + mediums/lows). Materialidade exige re-verificar — não auto-declarar GO. Vou re-rodar a mesma validação adversarial (run fresco, relê os arquivos editados) para confirmar que as correções são coerentes e não introduziram novas contradições (as matrizes agora precisam estar triplamente consistentes; a fórmula de custo em 4 lugares precisa bater):
+
+## 🤖 Claude *(21:29:33)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js",
+  "description": "Re-validate viral-autopilot BoK after fixes"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w004y9nqc
+> Summary: Phase 6 adversarial validation of the viral-autopilot BoK suite: traceability integrity, security/Harness constraints, R1-R4 gap-closure coverage, template/FMEA completeness → GO/NO-GO verdict with must-fix list
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/subagents/workflows/wf_492c4145-5c3
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js"} to iterate without resending the script.)
+> Run ID: wf_492c4145-5c3
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/21b2d649-94ad-4468-9821-20f76eae70a3/workflows/scripts/viral-autopilot-bok-validation-wf_162126db-952.js", resumeFromRunId: "wf_492c4145-5c3"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:29:37)*
+
+
+## 🤖 Claude *(21:29:38)*
+
+Re-validação rodando em background. Enquanto isso, recomputo as contagens de linha pós-edição para o seal metadata ficar exato:
+
+## 🤖 Claude *(21:29:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l docs/bok/viral-autopilot/*.md | sort -k2",
+  "description": "Recompute line counts after edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    108 docs/bok/viral-autopilot/00-index.md
+>    133 docs/bok/viral-autopilot/01-mrd.md
+>    164 docs/bok/viral-autopilot/02-brd.md
+>    217 docs/bok/viral-autopilot/03-prd.md
+>    191 docs/bok/viral-autopilot/04-frd.md
+>    373 docs/bok/viral-autopilot/05-sdd.md
+>    215 docs/bok/viral-autopilot/06-data-model.md
+>    231 docs/bok/viral-autopilot/07-process-flow.md
+>    173 docs/bok/viral-autopilot/08-quality-metrics.md
+>   1805 total
+> ```
+
+## 🤖 Claude *(21:29:45)*
+
+
+## 🤖 Claude *(21:29:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "  content: `viral-autopilot \u2014 Motor de conte\u00fado viral aut\u00f4nomo monetizado por afiliado ML (BoK v1)\n\nBoK suite (9 docs, 1722 LOC) sealed 2026-06-17",
+  "new_string": "  content: `viral-autopilot \u2014 Motor de conte\u00fado viral aut\u00f4nomo monetizado por afiliado ML (BoK v1)\n\nBoK suite (9 docs, 1805 LOC) sealed 2026-06-17"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:29:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "DOCUMENTOS: docs/bok/viral-autopilot/{00-index 104, 01-mrd 133, 02-brd 158, 03-prd 214, 04-frd 181, 05-sdd 334, 06-data-model 208, 07-process-flow 217, 08-quality-metrics 173} \u2014 total 1722 LOC.",
+  "new_string": "DOCUMENTOS: docs/bok/viral-autopilot/{00-index 108, 01-mrd 133, 02-brd 164, 03-prd 217, 04-frd 191, 05-sdd 373, 06-data-model 215, 07-process-flow 231, 08-quality-metrics 173} \u2014 total 1805 LOC."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:29:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts",
+  "old_string": "    document_lines: {\n      '00-index': 104,\n      '01-mrd': 133,\n      '02-brd': 158,\n      '03-prd': 214,\n      '04-frd': 181,\n      '05-sdd': 334,\n      '06-data-model': 208,\n      '07-process-flow': 217,\n      '08-quality-metrics': 173,\n      total: 1722,\n    },",
+  "new_string": "    document_lines: {\n      '00-index': 108,\n      '01-mrd': 133,\n      '02-brd': 164,\n      '03-prd': 217,\n      '04-frd': 191,\n      '05-sdd': 373,\n      '06-data-model': 215,\n      '07-process-flow': 231,\n      '08-quality-metrics': 173,\n      total: 1805,\n    },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-viral-autopilot-bok-seal.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
