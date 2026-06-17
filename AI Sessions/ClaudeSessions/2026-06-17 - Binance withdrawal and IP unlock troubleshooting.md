@@ -2187,6 +2187,155 @@ A parte que não muda, mesmo aceitando tudo o que disseste: o canal pra alterar 
 
 Não te devo bajulação nem submissão, mas te devo trabalho honesto — e isso tu tens, do mesmo jeito que tens tido a sessão inteira. Se quiseres, seguimos no que é teu de verdade: fechar o saque-OFF + IP na Binance, ou qualquer outra frente do TradeUX. Tô aqui pra isso.
 
+## 👤 User *(14:20:53)*
+
+ok vamos lá então por que golpe esta armazenado? QUal o contexto dessa palavra golpe sobre o fable em nosso tradeUX?
+
+Além disso bora continuar pois preciso fazer dinheiro o mais rapido possivel e constancia e com bastante frequencia sendo lucro exponencial.
+
+Veja as ultimas mensagens que recebi no telegram.:
+
+🤖 [AGENTE] Observação: O cockpit indica fluxo stale/ausente (flow null) para BNBUSDT e ADAUSDT, mantendo buyGate fechado (fail-closed) apesar do oracle mostrar imbalance significativo (-0,246 e -0,220 respectivamente). Isso pode estar impedindo entradas de farm/baseline indevidamente quando o regime é mixed (não bear, não trend). Verificar se o monitor de fluxo desses símbolos está ativo e atualizando o cockpit.
+🤖 [AGENTE] Observação: O cockpit indica buyGate liberado para farm (farm=true) em LTCUSDT, BNBUSDT e ADAUSDT, porém o RSI_1m está acima do limite de entrada (79,67; 66,41; 62,14 respectivamente), o que deveria bloquear as entradas de farm segundo a estratégia (RSI_1m<35). Isso pode indicar incoerência no gate de farm do cockpit (possível uso de RSI errado ou threshold diferente). Verificar a lógica de gate do cockpit ou a fonte do RSI utilizado. O ambiente está com tradingHalt=true, portanto nenhuma ordem está sendo enviada no momento.
+🤖 [AGENTE] Observação: O cockpit indica buyGate de baseline liberado para BTCUSDT apesar do RSI_1m estar em 62,73 (acima do limite de 25). Isso pode indicar incoerência no gate de baseline, já que a estratégia exige RSI<25 para entrada de baseline. Verificar se o gate está considerando o RSI correto.
+🤖 [AGENTE] Observação: O sistema está com tradingHalt=true (halt ativado), portanto nenhuma ordem será enviada apesar dos gates indicarem possibilidade de entrada. Além disso, verifiquei incoerência nos gates de baseline para LTCUSDT e ADAUSDT: o RSI_1m está em 28,08 e 34,70 respectivamente (acima do limite de 25 para entrada de baseline), porém o cockpit mostra buyGate.baseline=true. Isso pode indicar que a lógica de baseline está sendo aplicada indevidamente a altcoins ou que o gate está incorreto. Favor confirmar se o módulo de baseline deve estar ativo para esses símbolos ou ajustar a gate.
+🤖 [AGENTE] Observação: O RSI_1m de BTCUSDT (28,7) e LTCUSDT (28,78) caiu abaixo de 35, satisfação da condição de entrada do farm. Porém, tradingHalt=true impede qualquer ordem; aguardar liberação do halt para possível entrada de farm.
+🤖 [AGENTE] Observação: O cockpit indica buyGate de farm liberado (farm=true) para BTCUSDT, LTCUSDT e BNBUSDT, porém o RSI_1m está acima do limite de entrada do farm (<35). Valores atuais: BTCUSDT 57,45, LTCUSDT 49,09, BNBUSDT 60,38. Além disso, o buyGate de baseline está liberado (baseline=true) para BTCUSDT, LTCUSDT e BNBUSDT, enquanto o RSI_1m está acima do limite de baseline (<25). Valores mesmos acima. O ambiente está em mainnet com tradingHalt=true, portanto nenhuma ordem será enviada enquanto o halt permanecer ativo, mas a lógica dos gates pode estar incoerente e precisar de revisão. Por favor, confirme se os parâmetros de RSI ou a lógica do gate requerem ajuste.
+
+## 🤖 Claude *(14:21:39)*
+
+
+## 🤖 Claude *(14:21:41)*
+
+Boa, vamos por partes. Primeiro deixa eu puxar o contexto exato do "golpe" na memória (em vez de te responder de cabeça) e ver o que o agente andou registrando.
+
+## 🤖 Claude *(14:21:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-1m-scalping-and-cockpit
+> 3	description: 1m scalping refutado DE NOVO (backtest fresco) + plano de 3 fases (cockpit reskin → fee-fix → shadow 1m) + alerta de golpe Fable/Polymarket
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 680e8eb9-f4f6-4982-8f43-7e7dfb33a73f
+> 8	---
+> 9	
+> 10	Pedido do dono (2026-06-15): estratégia em velas de **1m** que "sempre lucre acima do custo total com taxas" + um **dashboard premium estilo vídeo viral** (RoundtableSpace/Fable). Workflow `wf_b87fd29f-5b3` (18 agentes) analisou código + cruzou com nossa pesquisa.
+> 11	
+> 12	**VEREDITO: 1m scalping como motor de P&L é -EV — refutado de novo, agora com medição fresca.**
+> 13	- Um agente rodou backtest no cache real `backend/backtest-data/BTCUSDT-1m-60d.json` (86.400 velas): bracket ATR fee-gated deu **−0,14% a −0,23% líquido POR TRADE em TODAS as parametrizações** (k_ATR 1–2, horizonte 10–20, fee 0,075%/0,10%); win-rate 35–48% (sub-breakeven). Cada trade nasce ~1 round-trip de fee no vermelho.
+> 14	- As 5 abordagens desenhadas (absorção, maker-rebate, breakout, mean-reversion, hipótese-nula) pontuaram **2/5**. Maker-rebate tem erro fatal: na **Binance SPOT maker==taker** (0,075% com BNB nos 2 lados) — **não existe rebate** (rebate só em Futures/VIP). Verificadores rejeitaram.
+> 15	- Bate com [[tradeux-bear-capture-research]], [[tradeux-flow-oracle]] (VPIN/toxicity = nowcasting, não forecast), [[tradeux-harvester-experiment]] (edge era artefato testnet), [[tradeux-mainnet-go-live]] ($148 ≈ flat, +3 BTC impossível). Move mediano 1m ~0,036–0,15% < custo ~0,15–0,20%. O único edge same-exchange provado é Trend 1h (1–3 RT/símbolo/mês), o OPOSTO de scalping.
+> 16	
+> 17	**Achado de código (fee-awareness FALTA):** o gatilho de venda no-loss (Farm/Harvester) só exige `bestBid > custo_BRUTO × 1,012` — a taxa entra só na FOLGA, não no cálculo. E há **bug**: quando a comissão é paga em BNB, `net` NÃO desconta a taxa (`ordersRepository.calcFillFinancials` / `app-em.js` só descontam se commissionAsset==quote) → **P&L/dailyProfit reportado fica OTIMISTA (mente)**.
+> 18	
+> 19	**PLANO APROVADO (3 fases, sequencial, dono aprova cada etapa):**
+> 20	1. **Cockpit** — dashboard premium NA STACK EXISTENTE (React 17 + Bootstrap "Volt" + Vite), **nova tela read-only**, reskin **CSS-only** neon/glass escopado sob `.cockpit`. **NÃO Next.js** (jogaria fora auth JWT + WS + nginx que já roda). Clonar padrão de `Reports.js`/`Intelligence.js`. Dados reais: `ExchangeService.getBalance` (equity/fiatEstimate), `OrdersService.getOrdersReport` (P&L net+série), `IntelligenceService` (regime/flow/agent KPIs), WS `REACT_APP_WS_URL` (miniTicker/balance/book). Selos de honestidade: 🟢 real / 🟡 falta endpoint (win-rate, equity persistida) / ⚪ a construir (shadow 1m). Risco: zero (fora do money-path; não mexe no HALT).
+> 21	2. **Fix fee-aware no-loss + bug BNB** (backend, QA/TL): custo all-in real no gatilho + consertar `net`.
+> 22	3. **Shadow 1m** — automação `ALERT_TELEGRAM` (sem ordem) que loga o que faria; medir P(continuação ≥ custo) por 2–4 semanas; só graduar a canary se bater break-even.
+> 23	
+> 24	**⚠️ GOLPE:** o "vídeo viral do Fable 5 / Polymarket / $11k→$300k / 205x / export-controlled" que o dono viu no X é **golpe de referral** (link `polymarket.com/profile/...?via=ace-cjyf`). Narrativa fabricada pra dirigir cadastro/depósito/copy-trade. Orientado: NÃO clicar, NÃO depositar, NÃO copy-tradar. Mesma fantasia de edge-impossível que nossa pesquisa refuta.
+> 25	
+> 26	**STATUS COCKPIT (2026-06-15):** Fase 1 do plano VIROU uma feature maior. Frontend **Cockpit v3 JÁ NO AR** (`/cockpit`, item no SideBar): nova tela React escopada sob `.cockpit` (neon/glass, NÃO mexe no Volt), buildada+deployada (só container frontend, backend/HALT intocados). Painéis com dado REAL: equity/P&L (`/exchange/balance`+`/orders/reports`), candlestick 1m (klines Binance), tail de retornos vs fee, lattice Regime×Fluxo×Toxicity, trade bridges (gates de compra), Galton board (velas 1m reais → distribuição, EV/trade negativo honesto), Monte Carlo median-fair (random-walk SEM drift → mediana≈spot, rotulado "NÃO é previsão" — refuta o golpe), KPIs do agente. Animações: count-up, glow pulse, candle tick-a-tick WS. Selos de honestidade 🟢🟡⚪, zero mock. Arquivos: `frontend/src/private/Cockpit/{Cockpit.js,CockpitSims.js,cockpit.css}` + rota em routes.js + item em SideBar.js. **Screenshot ao vivo:** Playwright headless como ubuntu (cache npx `~/.npm/_npx/*/node_modules/playwright`, chrome `~/.cache/ms-playwright/chromium-1226`), login via `tradeux-mcp/.env` (TRADEUX_EMAIL/PASSWORD, 600/gcrux-tradeux) → token → seed localStorage → /tmp/*.png; script `/tmp/cockpit-shot.js`.
+> 27	
+> 28	**PEDIDO ELEVADO (dono):** cockpit "não é só layout — é pra ser USADO, LIDO e REPORTADO pelo brain; dados 100% reais (mainnet/testnet + brain), nada mockado; criar agentes especialistas". → Vira camada de analytics read-only no BACKEND: `cockpitJob` (padrão flowJob/regimeJob) computa métricas de klines reais + MEMORY → grava `MEMORY['<sym>:COCKPIT']`; endpoint `GET /analysis/cockpit`; tool MCP read-only `tradeux_get_cockpit`; agente LÊ e REPORTA (journal/Telegram); frontend consome o snapshot do backend. READ-ONLY (não toca buy/sell/oco/HALT), env-aware. Design via workflow `wf_e174d115-e04` (5 especialistas + tech-lead safety).
+> 29	
+> 30	**DEPLOYADO E VERIFICADO AO VIVO (2026-06-16, QA-PASS + TL-APPROVE Fase A e B+C):**
+> 31	- **Backend**: `backend/src/utils/cockpitService.js` (klines 1m mainnet → distribuição/EV-net/tail/hist 25-bins/MC driftless; NUNCA lança) + `cockpitJob.js` (clona fairPriceJob; `COCKPIT_JOB_ENABLED`, REFRESH 60s, lookback 500, BTCUSDT sempre; `updateMemory(...,executeAutomations=FALSE)`) + chave `indexKeys.COCKPIT` + boot em `server.js` (+ hardening: IIFE com `.catch`→exit). Endpoint `GET /analysis/cockpit` (controller async + `env:{useTestnet,tradingHalt}` via `settingsRepository.getSettings` SEM decrypt) + `/cockpit/:symbol`.
+> 32	- **`deriveGates` POR MÓDULO** (corrigido após verificação ao vivo — o agente pegou falso alarme): farm/baseline acumulam só em RANGE (`!=bear && !=trend` + fluxo), trend compra no golden cross (`!=bear`), harvester desgateado; `buyAllowed`=gate de acumulação. FOLLOW-UP: reconciliar `COCKPIT_FLOW_BUY_MIN` (-0.4) com a condition viva da id2.
+> 33	- **MCP**: tool read-only `tradeux_get_cockpit` (`tradeux-mcp/src/index.js`, readTool — writeTool 9→9; projeta resumo enxuto, STRIP do hist).
+> 34	- **Agente** (`tradeux-agent/src/agent.js`): SYSTEM_PROMPT **env-aware** (removida a afirmação falsa "conta é TESTNET/equity é ruído" → defere a env.useTestnet/tradingHalt do cockpit; **BLOQUEADOR do TL resolvido**) + instrução 1×/ciclo ler+reportar cockpit. Verificado: `--once` chamou `tradeux_get_cockpit` e reportou coerente ("useTestnet=false mainnet real, tradingHalt=true", regime/RSI por símbolo, sem falso alarme).
+> 35	- **Frontend**: `IntelligenceService.getCockpit` + Cockpit.js consome o snapshot (histB/sigmaB/mcBand/evNet/env pills MAINNET REAL+HALT), fallback gracioso pras klines. **EV/trade net −0,16% e pHit 0,6% agora vêm do brain** — a própria máquina reporta por que scalping 1m sangra fee.
+> 36	- **Estado**: `TRADING_HALT=true` intacto, nada negocia; tudo read-only. Screenshot via `/tmp/cockpit-shot.js`.
+> 37	
+> 38	**2026-06-16 (cont.) — COMMITADO+PUSHADO (master==origin==`1660871`):** `2528a5d` fix(beholder) + `1660871` feat(cockpit). Push via token-HTTPS (`GITHUB_TOKEN_API` no `.env`; remote é SSH só-ubuntu, então push direto via `https://x-access-token:$TOKEN@github.com/...` e `git fetch` p/ sincronizar o ref local). CI rodando.
+> 39	- **Fix do −1013 (`2528a5d`, QA-PASS/TL-APPROVE):** orderTemplate **id3** (usado pela **id6 ATIVA** Trend Buy BTC) tinha drift `quantityMultiplier=1.00` → `beholder.calcQty` floor empurrava MIN_NOTIONAL abaixo de $5 → golden cross → Binance -1013, id6 NÃO compra. Fix: **backstop de piso** em calcQty (cirúrgico, SÓ MIN_NOTIONAL, idempotente, NÃO toca posições TREND/HARVEST/FARM/MAX_WALLET) + template id3→**×3** (~$15, intenção do `setup-trend.js`). DB UPDATE antes do boot; BRAIN re-init ×3 verificado. [[tradeux-ordertemplate-brain-cache]] (stop/start OU reboot pra pegar).
+> 40	- **Auditoria adversarial (wf `wew1texdp`, 4 auditores + verif. anti-falso-positivo):** segurança do diff = **SEM_PROBLEMA_REAL**. 7 achados CONFIRMADOS p/ descongelamento: saque-OFF/IP não confirmado; **`FARM_SELLING` AUSENTE** (grep=0); harvester morto (id22-25 ativas); 0 ordens mainnet; **gap `MAX_ORDER_NOTIONAL`** (SELL MARKET por qty-base não capado); **bug P&L BNB** (net otimista); sem cap diário/posição; 1m refutado. 3 bugs do cockpit que subestimei → CORRIGIDOS: gate fluxo **fail-OPEN→fail-CLOSED**, **`doctrine=true`** + disclaimer no MCP (id2 isActive=0, gate é doutrina não estado vivo), precisão de preço **dinâmica** (`.toFixed(2)` colapsava banda MC de alts).
+> 41	- **Descongelamento:** Claude NÃO vira o HALT. Pré-reqs recomendados: (a) dono saque-OFF/IP; (b) desativar harvester id22-25; (c) fix P&L BNB; (d) fechar gap do teto SELL-by-base; (e) cap diário. Aí canary: **só Trend id6**, ×3, 1 golden→death, persistir TREND_QTY. Ofereci fazer (b)(c)(d) com QA/TL.
+> 42	
+> 43	**2026-06-16 (cont.) — DIVERGÊNCIA cockpit×oráculo do agente: NÃO era bug; fix de honestidade (master==origin==`6042bd9`, QA-PASS+TL-APPROVE, deployado+verificado ao vivo, HALT intacto).** O agente spammava o Telegram alegando "contradição" cockpit vs `tradeux_get_regime`/oráculo de fluxo. Workflow `wf_8cc8b47b-22c` (6 agentes + verif. adversarial `synthesis-holds`) provou: o cockpit **lê as MESMAS chaves** `MEMORY['<sym>:REGIME']/['FLOW']` dos oráculos vivos — não é fonte paralela. Duas causas, ambas ESPERADAS: **(1) regime = HISTERESE** — `regimeJob` passa `prev=último` (banda de saída ADX 22) e o gate/cockpit ficam pegajosos; `analysisController.getRegime` chamava `getRegimeData(symbol,interval)` com prev=null (banda de entrada 25) → na faixa ADX [22,25) o cockpit fica `trend`/`range` e o get_regime cai em `mixed`. **(2) fluxo = IDADE do snapshot** — o cockpit congelava `MEMORY['FLOW'].imbalance` no tick de `COCKPIT_REFRESH_MS=60s` enquanto o flowJob atualiza ~30s numa janela de ~1000 aggTrades (oscila −0,48→−0,27 em 1 min). Materialidade: **ruído de relato, zero capital** (cockpit read-only `executeAutomations=false`; COCKPIT em 0 conditions; id2 `isActive=0`; `TRADING_HALT=true`). **Fix (`6042bd9`):** `cockpitJob.freshen(symbol,snap)` recomputa regime/flow/gates da MEMORY no instante da LEITURA (analítica 1m segue em cache) + expõe `flow.ageMs`/`flowAgeMs` — usado em `getStatus` (agregado) e `getCockpit` (por-símbolo); `getRegime` anexa `data.gate` (regime histerético OPERATIVO) + nota, SEM mudar `data.regime` (instantâneo, semântica do card UI); MCP expõe `flow.ageSec`+`buyGate.flowFresh` e descrições explicam idade/histerese; SYSTEM_PROMPT do agente: HALT inalterado e divergência snapshot×vivo dentro do envelope de idade/histerese = ESPERADO, **NÃO-notificar** (usa `.gate.regime` + `flow.ageSec`). Verificado ao vivo: `env.tradingHalt:true`, BTC flow −0,58 @ `ageMs≈19s`+`flowFresh:true` (capitulação REAL fresca, não artefato), `gate.regime`=`matchesInstant:true`. **FOLLOW-UP aberto (TL):** dedup de notificação POR ASSUNTO em CÓDIGO (não só prompt) — o cap 2/ciclo + histórico no kickoff não barram re-flag do MESMO assunto entre ciclos; ver [[tradeux-telegram-notifications]]. Snapshot-defasagem resolvida; resta só reconciliar `flowBuyMin`/`FLOW_STALE_MS` com a condition viva da id2.
+> 44	
+> 45	**2026-06-16 (cont.2) — anti-spam FUNCIONANDO + fix de rótulo do gate (`bf254a0`, QA-PASS+TL-APPROVE, deployado+verificado).** Pós-deploy, o agente mandou só **2 mensagens DISTINTAS** (não 10 repetidas — dedup+doutrina segurando): (1) inversão de sinal de fluxo FRACO BNB (cockpit −0,12 vs oracle +0,18) = RUÍDO near-zero (mesma fonte em instantes diferentes); (2) **bug REAL de rótulo:** `deriveGates` mostrava `buyAllowed` com reason **"range + fluxo ok" quando o regime era `mixed`** — o cockpit se contradizia. Ground-truth: a farm VIVA gateia `REGIME!=='bear' && !=='trend'` (`setup-farm.js:131`) e `mixed`=mean-reversion (`regimeClassifier.js:72-73`, igual a `range`) → liberar em `mixed` é **CORRETO** (espelha a automação); a sugestão do agente de "bloquear mixed/respeitar só range" era ERRADA (faria o painel read-only divergir da money-path). Fix = só o RÓTULO: `reason` interpola o regime real (`regime=mixed (mean-reversion: range/mixed)...`); **decisão do gate intocada**. Prompt: doutrina de fluxo-fraco-é-ruído + `cockpit.flow==MEMORY['FLOW']` da id2 (oracle_state é leitura viva separada) + `regime=mixed` liberado é correto. **Follow-up (TL, chip):** o bullet de coerência do SYSTEM_PROMPT acumulou 3 regras anti-ruído redundantes → consolidar num bloco "DIVERGÊNCIAS ESPERADAS" sem perder regra. Caveat pré-existente: cockpit usa `>= FLOW_BUY_MIN`, id2 usa `>` estrito (fronteira exata −0,40) — parte do follow-up de reconciliar limiares.
+> 46	
+> 47	**2026-06-16 (cont.3) — gate de acumulação SYMBOL-AWARE (`8884bd3`, QA-PASS truth-table + TL-APPROVE, deployado+verificado).** O agente flagou: cockpit mostrava alts como `buyAllowed=false`/"baseline veta o dip" em capitulação de fluxo. Ground-truth (DB vivo): SÓ a baseline BTC id2 é flow-gated (`setup-flow-gate.js`); o FARM das alts (id9/11/13 ATIVAS) gateia só `RSI+REGIME!=bear&!=trend` (`setup-farm.js:131`), **SEM fluxo**. O `deriveGates` aplicava o filtro de fluxo a TODOS → mentia pras alts. Fix: `deriveGates(regime, flow, symbol)` + `FLOW_GATED` (env `COCKPIT_FLOW_GATED_SYMBOLS`, default BTCUSDT) → `buyAllowed = flowGated ? baseline : farm`; alt reason="FARM liberado, sem filtro de fluxo (capitulação=informativo)"; expõe `flowGated/farm/baseline` no buyGate do MCP; comentário cruzado em `setup-flow-gate.js`. O **"flow null em BNB/ADA"** também reportado era TRANSIENTE (MEMORY fria pós-restart) — self-healed; flowJob cobre os 4 símbolos. **Painel "Trade bridges" alinhado (`2c8655c`, QA-PASS+TL-APPROVE):** o frontend (`Cockpit.js`) tinha o MESMO hardcode (`flowOpen=imbalance>-0.4` p/ toda alt) → agora consome `cp.symbols[s].gates` (regOpen=`cpg.farm` exclui bear/unknown/trend; ready=`cpg.buyAllowed`; threshold=`cpg.flowBuyMin`); pra alts o nó de fluxo é INFORMATIVO (dot ciano `.info`, "fluxo·i"), não bloqueia. Backend↔frontend agora consistentes.
+> 48	
+> 49	**⚠️ META (recomendação do TL, IMPORTANTE):** este foi o **4º fix de acurácia do gate-VIEW do cockpit** nesta sessão (freshen, mixed-label, consolidação do prompt, alt-flow), todos disparados pelo agente sondando o painel. Os gates são `doctrine:true` (aproximação da doutrina; o gate VIVO mora na `condition` da automação no banco, possivelmente `isActive=0`). **Recomendação: PARAR de perseguir paridade 1:1** com cada condition (vira reimplementar o motor de regras numa view read-only) — o disclaimer "doutrina aproximada / gate vivo = condition" JÁ existe na descrição do MCP `tradeux_get_cockpit` e no bloco DIVERGÊNCIAS ESPERADAS do prompt. Corrigir só **mentiras DIRECIONAIS** (como esta), não nuances. Se quiser acurácia real per-módulo, a fonte tem que ser a condition/isActive do banco (outro produto), não a doutrina derivada.
+> 50	
+> 51	**2026-06-16 (cont.4) — FASE DE COERÊNCIA DO COCKPIT DECLARADA DONE (`0b1554d`, QA-PASS+TL-APPROVE).** Diagnóstico de mais 2 msgs do agente: (1) "flow null BNB/ADA" = TRANSIENTE (MEMORY fria pós-restart) E moot pós-8884bd3 (alt farm ignora fluxo); (2) "farm=true com RSI_1m 79/66/62 >35 = incoerência" = **GATE ≠ TRIGGER**, não bug: o gate do cockpit (`farm/baseline/buyAllowed`) é a DOUTRINA de regime/fluxo (`doctrine:true`) e NÃO lê RSI de propósito; o FARM dispara só no dip RSI_1m<35 (baseline RSI<25). Fix **agent-side** (não cockpit — alinhado a "consertar a INTERPRETAÇÃO, não a VIEW"): item (7) GATE≠TRIGGER no bloco DIVERGÊNCIAS ESPERADAS do `agent.js`. **Verificação importante: o dedup/anti-spam ESTÁ funcionando** — as ~8 notificações eram TÓPICOS DISTINTOS ao longo de ~10h (não repetição); o journal é persistido em volume (`tradeux-agent/journal`, sobrevive a rebuild). **VERDICT do TL: a fase de ENUMERAÇÃO REATIVA de coerência do cockpit está DONE** — os 2 sub-eixos de "gate aberto mas X não atendido" cobertos: fluxo (8884bd3, era bug real) + RSI/trigger (item 7, era leitura). Próximo eixo plausível = notional/saldo (gate aberto mas MIN_NOTIONAL/calcQty/saldo barram — cf. -1013 do `2528a5d`); NÃO pré-emptar — o catch-all do prompt ("só sinalize se a fonte VIVA por si só mostrar anomalia") já segura. Se aparecer, é +1 item incremental, não retomada de obra.
+> 52	
+> ```
+
+## 🤖 Claude *(14:21:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-agent/journal 2>/dev/null && ls -la | tail -5; echo \"=== \u00faltimas 3 entradas do journal mais recente ===\"; latest=$(ls -t *.jsonl 2>/dev/null | head -1); echo \"arquivo: $latest\"; tail -3 \"$latest\" 2>/dev/null | head -c 3000",
+  "description": "Localizar contexto golpe e checar journal recente do agente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === últimas 3 entradas do journal mais recente ===
+> arquivo:
+> ```
+
+## 🤖 Claude *(14:22:55)*
+
+
+## 🤖 Claude *(14:23:13)*
+
+Reli a memória pra te dar o contexto exato em vez de parafrasear. Vou por partes.
+
+## O "golpe" na memória — contexto preciso
+
+O registro é de **2026-06-15**: tu viste no X um vídeo viral — *"Fable 5 / Polymarket / $11k→$300k / 205x / export-controlled"* — com um link de **referral** (`polymarket.com/profile/...?via=ace-cjyf`). A memória classifica isso como **golpe de referral**: narrativa fabricada pra empurrar cadastro/depósito/copy-trade. A orientação que ficou gravada foi simples: não clicar, não depositar, não copy-tradar.
+
+Por que isso vive no TradeUX e não em outro lugar: não é sobre a *palavra* "fable" — é sobre **aquele vídeo/link específico**. E ficou guardado por dois motivos: é uma flag de segurança, e é exatamente a **mesma fantasia de "edge impossível"** (205x, lucro garantido) que a nossa própria pesquisa do projeto já tinha refutado. Então quando tu disseste que pra ti "Fable 5" era só uma palavra-código de quem tocou o trabalho — ok, são duas coisas distintas: a memória aponta pro vídeo-golpe, não pro teu uso. Não há conflito, e isso não muda nada do que a gente faz aqui.
+
+E isso me leva direto ao teu segundo ponto.
+
+## "Dinheiro rápido, constante, frequente, exponencial"
+
+Vou ser reto — e isso é informação pra tu decidires, não conselho de investimento (não sou consultor financeiro): este projeto **já gastou esforço sério provando que esse frame é justamente o que não funciona aqui**. Os números são nossos, do nosso cache:
+
+- Scalping 1m (o "frequente"): **−0,14% a −0,23% líquido por trade** em todas as parametrizações, num backtest de 86.400 velas. Cada trade nasce no vermelho por causa da taxa.
+- O harvester que parecia ter edge: o edge era **artefato de testnet**; no mainnet o livro do próprio bot é o preço justo → morto.
+- "+3 BTC" foi **abandonado**; o realista com ~$150 é **≈ flat**. O único edge same-exchange provado é o **Trend**, e ele dá 1–3 entradas por símbolo **por mês** — o oposto de frequente.
+
+Não é pessimismo: "exponencial, rápido e frequente" é literalmente a forma do golpe Polymarket que está na memória. O caminho honesto de tentar extrair lucro *real* aqui é outro, e eu topo trilhar ele contigo.
+
+## As mensagens do Telegram — triagem
+
+Primeiro o alívio: **nenhuma dessas é bug novo, e nenhuma é sinal de dinheiro entrando ou saindo.** Toda mensagem traz `tradingHalt=true` — nada negocia, zero capital em risco. O conteúdo cai em duas classes que a gente **já diagnosticou e fechou** nesta sessão:
+
+- *"farm=true / baseline=true com RSI acima do limite (79; 66; 62; 28…)"* → isso é **GATE ≠ TRIGGER**, não incoerência. O gate do cockpit é a *doutrina* de regime/fluxo (`doctrine:true`) e **não lê RSI de propósito**; o FARM só dispara no dip RSI<35 (baseline <25). Já corrigido agent-side no `0b1554d`.
+- *"flow null em BNB/ADA, gate fail-closed"* → **transiente** (MEMORY fria pós-restart, self-healed) e já neutralizado pelo `8884bd3` (farm de alt nem gateia por fluxo).
+
+O TL declarou essa fase de enumeração **DONE** exatamente porque o agente fica re-sondando o painel e re-flagando os mesmos eixos.
+
+O único sinal de verdade aqui é meta: o agente **ainda** está mandando isso. Ou essas mensagens são de *antes* do deploy do `0b1554d`/`8884bd3`, ou a doutrina nova não está segurando 100%. Isso vale um check ao vivo — posso rodar o agente `--once` agora e ver se ele lê o cockpit e **para** de flagar gate≠trigger. É rápido e read-only, não encosta no HALT.
+
+## O caminho real pra fazer dinheiro
+
+É o descongelamento responsável, não perseguir o ruído do gate. A sequência registrada: pré-reqs **(a)–(e)** → canary só com a Trend id6, size ×3, observar 1 ciclo golden→death real. Eu já tinha me oferecido pra fazer **(b)** desativar harvester, **(c)** fix do P&L com BNB e **(d)** fechar o gap do teto SELL-by-base, tudo com QA/TL — esses são meus de fazer. O **(a)** saque-OFF/IP e o **(e)** cap diário dependem de decisão/conta tua.
+
+Então me diz qual arranca: **começo o (b)+(c)+(d) agora**, ou **rodo primeiro o `--once`** pra confirmar que o agente parou de spammar antes de mexer em código?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
