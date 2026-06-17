@@ -6126,6 +6126,230 @@ O roadmap **autônomo** do vision-mcp está esgotado — o que sobra é gated (O
 
 API Error: The socket connection was closed unexpectedly. For more information, pass `verbose: true` in the second argument to fetch()
 
+## 👤 User *(03:58:34)*
+
+otimo continue
+
+## 🤖 Claude *(03:58:58)*
+
+
+## 🤖 Claude *(03:58:59)*
+
+Próximo item do roadmap (não-gated): a metade **MCP Registry** da FR-VM-011 — autorar o `server.json` de `com.mcorch/vision-mcp` + runbook de publish. O publish em si precisa do DNS challenge (Sovereign), mas o manifesto + a SOP eu fecho agora. Vou ancorar o schema na fonte oficial primeiro (Lei 1 — não fabricar formato).
+
+## 🤖 Claude *(03:59:00)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "MCP registry server.json schema remotes streamable-http mcp-publisher namespace"
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "MCP registry server.json schema remotes streamable-http mcp-publisher namespace"
+> 
+> Links: [{"title":"How to find, install, and manage MCP servers with the GitHub MCP Registry - The GitHub Blog","url":"https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/"},{"title":"Registry JSON schema | Stacklok Docs","url":"https://docs.stacklok.com/toolhive/reference/registry-schema-upstream"},{"title":"Quickstart - Publish a .NET MCP server to the MCP Registry - .NET | Microsoft Learn","url":"https://learn.microsoft.com/en-us/dotnet/ai/quickstarts/publish-mcp-registry"},{"title":"registry/docs/reference/server-json/CHANGELOG.md at main · modelcontextprotocol/registry","url":"https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md"},{"title":"Register MCP reference and docs servers in the official server registry · Issue #3047 · modelcontextprotocol/servers","url":"https://github.com/modelcontextprotocol/servers/issues/3047"},{"title":"Publish your Gram server on the MCP Registry | Speakeasy","url":"https://www.speakeasy.com/docs/gram/host-mcp/publish-gram-server-mcp-registry"},{"title":"Publish Your MCP Server","url":"https://modelcontextprotocol.info/tools/registry/publishing/"},{"title":"Glama","url":"https://glama.ai/mcp/servers/@exa-labs/exa-mcp-server/blob/07aedc21cc3d3e626c702fae7631f4f3bfe3a1ac/mcp_publishing_steps_on_mcpregistry.md"},{"title":"MCP Registry","url":"https://modelcontextprotocol.info/tools/registry/"},{"title":"server.json Format Specification","url":"https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/reference/server-json/generic-server-json.md"}]
+> 
+> Based on the search results, here's what I found about the MCP registry server.json schema with the components you mentioned:
+> 
+> ## server.json Schema Overview
+> 
+> The server.json file includes a "remotes" array for cloud/HTTP endpoints with the type "streamable-http" and a URL property.
+> 
+> ## Remote Endpoints Configuration
+> 
+> For remote deployments, you can add a "remotes" array in your server.json for cloud/HTTP endpoints with entries like: `"type": "streamable-http"` and the corresponding URL.
+> 
+> ## Namespace Structure
+> 
+> When setting up your server, you should use either `io.github.username/*` for GitHub authentication or `com.yourcompany/*` for DNS-based verification.
+> 
+> ## Publishing with mcp-publisher
+> 
+> Using the mcp-publisher tool, you can publish your server, after which it will be discoverable in the MCP registry.
+> 
+> ## Advanced Remote Configuration
+> 
+> Remote servers can define URL template variables using {curly_braces} notation, enabling multi-tenant deployments where a single server definition can support multiple endpoints with configurable values.
+> 
+> ## Multiple Deployment Options
+> 
+> You can list both "packages" and "remotes" for hybrid deployments, allowing multiple deployment options.
+> 
+> The search results show comprehensive documentation for publishing MCP servers to the official registry with various deployment options and configuration schemas.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(03:59:22)*
+
+
+## 🤖 Claude *(03:59:23)*
+
+Let me fetch the authoritative `server.json` spec for exact fields + schema URL.
+
+## 🤖 Claude *(03:59:27)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/reference/server-json/generic-server-json.md",
+  "prompt": "Extract the exact server.json format for a REMOTE Streamable HTTP MCP server published under a DNS-verified namespace (com.company/name). I need: the $schema URL value, the exact top-level field names (name, description, version, repository, websiteUrl, remotes), the exact structure of a \"remotes\" entry (type value for streamable http, url, and how to declare authentication/headers if any), and any required fields. Quote a complete minimal example server.json with a remotes entry. Also state how the DNS namespace verification works with mcp-publisher (the command sequence: init, login dns, publish)."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Remote Streamable HTTP MCP Server Format
+> 
+> ## Schema URL
+> The `$schema` value is: `"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json"`
+> 
+> ## Top-Level Fields for Remote Servers
+> Required and relevant fields for a DNS-verified namespace (com.company/name):
+> - `name` (required): DNS-style identifier
+> - `description` (required): Server purpose
+> - `version` (required): Version number
+> - `remotes` (required): Array of remote endpoint definitions
+> - `repository` (optional): Source repository info
+> - `websiteUrl` (optional): Documentation link
+> 
+> ## Remote Entry Structure
+> For streamable HTTP transport:
+> 
+> ```json
+> "remotes": [
+>   {
+>     "type": "streamable-http",
+>     "url": "https://example.com/mcp",
+>     "headers": [
+>       {
+>         "name": "X-API-Key",
+>         "description": "Authentication token",
+>         "isRequired": true,
+>         "isSecret": true
+>       }
+>     ]
+>   }
+> ]
+> ```
+> 
+> ## Minimal Complete Example
+> 
+> ```json
+> {
+>   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+>   "name": "com.company/my-remote-server",
+>   "description": "Remote MCP server via HTTP",
+>   "version": "1.0.0",
+>   "remotes": [
+>     {
+>       "type": "streamable-http",
+>       "url": "https://api.company.com/mcp/http"
+>     }
+>   ]
+> }
+> ```
+> 
+> ## DNS Namespace Verification
+> The documentation provided does not contain specific details about the `mcp-publisher` command sequence for DNS verification or authentication. You would need to consult the publishing guide or official registry requirements documentation for step-by-step publisher commands (`init`, `login dns`, `publish`).
+> ```
+
+## 🤖 Claude *(03:59:38)*
+
+
+## 🤖 Claude *(03:59:38)*
+
+Schema confirmed. Let me get the `mcp-publisher` DNS-auth command sequence for the runbook.
+
+## 🤖 Claude *(03:59:41)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/guides/publishing/publish-server.md",
+  "prompt": "For publishing a server under a DNS-verified namespace (com.company/*), extract the exact mcp-publisher command sequence: how to install mcp-publisher, the `mcp-publisher init` step, the DNS authentication login command (login dns with a key/domain), how the DNS TXT record verification works (what TXT record to add), and the `mcp-publisher publish` command. Quote the exact commands."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 404 Not Found.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+## 🤖 Claude *(03:59:51)*
+
+
+## 🤖 Claude *(03:59:53)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://modelcontextprotocol.info/tools/registry/publishing/",
+  "prompt": "Extract the exact mcp-publisher command sequence to publish a remote MCP server under a DNS-verified namespace (com.company/*): installing/getting mcp-publisher, `mcp-publisher init`, the DNS login command, what DNS TXT record must be created for domain verification, and the `mcp-publisher publish` command. Quote the exact commands and the TXT record format."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # MCP Remote Server Publishing Sequence for DNS Namespace
+> 
+> ## Installation
+> ```bash
+> brew install mcp-publisher
+> ```
+> Or use pre-built binaries/source as documented.
+> 
+> ## Initialization
+> ```bash
+> mcp-publisher init
+> ```
+> 
+> ## DNS Authentication Command
+> ```bash
+> mcp-publisher login dns --domain yourcompany.com --private-key [KEY]
+> ```
+> 
+> First generate the keypair:
+> ```bash
+> openssl genpkey -algorithm Ed25519 -out key.pem
+> ```
+> 
+> ## Required DNS TXT Record Format
+> ```
+> yourcompany.com. IN TXT "v=MCPv1; k=ed25519; p=[BASE64_PUBLIC_KEY]"
+> ```
+> 
+> Extract the public key using:
+> ```bash
+> openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
+> ```
+> 
+> ## Publication
+> ```bash
+> mcp-publisher publish
+> ```
+> 
+> ## server.json Configuration for Remote Deployment
+> Your `server.json` must include:
+> - `"name": "com.yourcompany/service-name"`
+> - `"remotes"` array with `"type": "sse"` and `"url"` pointing to your domain
+> - The URL must resolve to `yourcompany.com` or its subdomains per the DNS namespace requirement
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
