@@ -5797,6 +5797,102 @@ O fix do cockpit está **vivo**: o agente não tem mais o `baseline=true`-fantas
 
 Me dá o **% do cap diário** e me diz se queres o **(c) agora ou depois** — sigo na hora.
 
+## 👤 User *(17:23:32)*
+
+Recebi outra mensaagem veja,> 🤖 [AGENTE] Observação: O cockpit indica buyGate de baseline liberado (baseline=true) para BTCUSDT, porém o RSI_1m está em 44,17 (acima do limite de 25 exigido para entrada de baseline). Isso indica incoerência no gate de baseline, pois a estratégia exige RSI<25 para entrada de baseline. Verificar se o gate está considerando o RSI correto.
+
+---
+
+
+Preciso que o brain, os agents e você me deem o concelho com dados e fundamentos para decisão se desbloqueio / descongelo para ativar os trade por automation e o bot. Temos que ter estratégia para BNB também pois podemos negócio USDTBNB abrindo margens para ordens USDTBTC e outras que ja temos visão. Sobre o CAP menos de -5%  da para trabalhar nossa estrategia de lucro? se o minimo for 5% pode ser 5% mesmo
+
+## 🤖 Claude *(17:25:28)*
+
+
+## 🤖 Claude *(17:25:34)*
+
+Vou tratar isso em duas frentes: primeiro a mensagem nova (rápido), depois a decisão grande — com dados do brain + agentes independentes + minha síntese, como pediste.
+
+**A mensagem nova (BTCUSDT):** essa é diferente da anterior — é **gate≠trigger no BTC**, onde baseline é o módulo **real** (BTC é flow-gated). Meu fix do fantasma **corretamente não tocou** o BTC. `baseline=true` com RSI 44 aqui significa "gate de doutrina aberto, mas o gatilho (RSI<25) não bateu" → não compra. É a classe de *interpretação* que o agente ainda escorrega (o rebuild do agente com a nota do MCP ainda nem entrou). Nada negocia. Volto nisso, mas não é o que importa agora.
+
+Agora o grande: vou puxar o estado vivo do brain e, em paralelo, botar dois agentes independentes (readiness/risco + modos-de-falha) pra te dar um parecer fundamentado de descongelamento.
+
+## 🤖 Claude *(17:25:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/brain_snapshot.js",
+  "content": "const BASE = 'http://localhost:3001';\nconst sleep = ms => new Promise(r => setTimeout(r, ms));\nasync function login() {\n  for (let i = 0; i < 6; i++) {\n    try {\n      const r = await fetch(BASE + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ email: process.env.LE, password: process.env.LP }) });\n      const j = await r.json().catch(() => ({}));\n      const t = j.token || j.accessToken || j.jwt || (j.data && j.data.token) || '';\n      if (t) return t;\n    } catch (_) {}\n    await sleep(2000);\n  }\n  return null;\n}\n(async () => {\n  const t = await login(); if (!t) { console.log('login FALHOU'); return; }\n  const auth = { Authorization: t };\n  // saldo\n  const bal = await (await fetch(`${BASE}/exchange/balance/USDT`, { headers: auth })).json().catch(() => ({}));\n  const usdt = bal.USDT ? bal.USDT.available : '?';\n  console.log(`SALDO: USDT ${usdt}\\n`);\n  // cockpit por s\u00edmbolo (EV, regime, fluxo, gates)\n  for (const sym of ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT']) {\n    const c = await (await fetch(`${BASE}/analysis/cockpit/${sym}`, { headers: auth })).json().catch(() => ({}));\n    const g = c.gates || {}; const f = c.flow || {};\n    const ev = c.evNetPct ?? c.evNet ?? c.ev ?? '?';\n    const ph = c.pHitBreakevenPct ?? c.pHitBreakeven ?? c.pHit ?? '?';\n    console.log(`${sym}: price=${c.price} regime=${c.regime} | flow.imb=${f.imbalance}(${f.ageSec ?? f.ageMs ?? '?'}s) | EVnet=${ev} pHit=${ph} medMove%=${c.medAbsMovePct} sigma%=${c.sigmaPct}`);\n    console.log(`        gate: buyAllowed=${g.buyAllowed} farm=${g.farm} baseline=${JSON.stringify(g.baseline)} trend=${g.trend} | reason: ${g.reason}`);\n    if (sym === 'BTCUSDT' && c.env) console.log(`        env: ${JSON.stringify(c.env)}`);\n  }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/brain_snapshot.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; sudo -n -u gcrux-tradeux bash -lc 'EMAIL=$(grep \"^TRADEUX_EMAIL=\" tradeux-mcp/.env | cut -d= -f2-); PW=$(grep \"^TRADEUX_PASSWORD=\" tradeux-mcp/.env | cut -d= -f2-); docker compose cp /tmp/brain_snapshot.js backend:/tmp/brain_snapshot.js >/dev/null 2>&1 && docker compose exec -T -e LE=\"$EMAIL\" -e LP=\"$PW\" backend node /tmp/brain_snapshot.js'",
+  "description": "Puxar snapshot vivo do brain (saldo, EV, regime, fluxo, gates)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SALDO: USDT 148.84230183
+> 
+> BTCUSDT: price=65978.01 regime=range | flow.imb=0.5369(20135s) | EVnet=[object Object] pHit=? medMove%=undefined sigma%=undefined
+>         gate: buyAllowed=true farm=true baseline=true trend=true | reason: regime=range (mean-reversion: range/mixed) + fluxo ok: baseline BTC liberada
+> LTCUSDT: price=45.65 regime=range | flow.imb=0.0162(19868s) | EVnet=[object Object] pHit=? medMove%=undefined sigma%=undefined
+>         gate: buyAllowed=true farm=true baseline=null trend=true | reason: regime=range (mean-reversion: range/mixed) + RSI: FARM liberado, SEM filtro de fluxo
+> BNBUSDT: price=606.92 regime=range | flow.imb=0.2745(19598s) | EVnet=[object Object] pHit=? medMove%=undefined sigma%=undefined
+>         gate: buyAllowed=true farm=true baseline=null trend=true | reason: regime=range (mean-reversion: range/mixed) + RSI: FARM liberado, SEM filtro de fluxo
+> ADAUSDT: price=0.1717 regime=trend | flow.imb=0.1227(19332s) | EVnet=[object Object] pHit=? medMove%=undefined sigma%=undefined
+>         gate: buyAllowed=false farm=false baseline=null trend=true | reason: regime=trend: farm em CAIXA (correto); trend compra no golden cross
+> ```
+
+## 🤖 Claude *(17:26:42)*
+
+
+## 🤖 Claude *(17:26:44)*
+
+Saldo $148,84, zero posições. Estado dos regimes: BTC/LTC/BNB em **range** (fluxo fresco ~20s; BTC +0,54 = pressão compradora), ADA em **trend** aguardando golden cross. Tudo gateado mas **nada negocia** (HALT). (O `baseline=null` confirmado de novo nas alts; BTC mantém o booleano real.)
+
+Agora os dois agentes independentes pra fundamentar o descongelamento:
+
+## 🤖 Claude *(17:27:04)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Readiness go/no-go do descongelamento",
+  "subagent_type": "tech-lead",
+  "prompt": "Parecer de READINESS (go/no-go) sobre virar `TRADING_HALT=false` no TradeUX \u2014 sistema de trading em MAINNET REAL com dinheiro do dono. Seja o dono-do-c\u00f3digo pragm\u00e1tico: a decis\u00e3o final \u00e9 do dono humano (Claude N\u00c3O vira o HALT), mas ele pediu um parecer fundamentado pra decidir.\n\n## Estado vivo (verificado hoje, 2026-06-17)\n- MAINNET real (`useTestnet=false`), `TRADING_HALT=true`. Saldo: **148,84 USDT**, ZERO posi\u00e7\u00f5es, **ZERO ordens mainnet na hist\u00f3ria** (nada de fill/fee/slippage real validado).\n- Teto de risco no `backend/src/utils/exchange.js` (chokepoint `assertWithinRisk`): `TRADING_HALT` (kill-switch) + `MAX_ORDER_NOTIONAL_USDT=1500`/ordem.\n- Automa\u00e7\u00f5es ativas: **Trend BTC id6/id7** (golden/death cross SMA 50/200), **Farm/Trend alts id9-20** (LTC/BNB/ADA), baseline BTC id2 **isActive=0**. Harvester id22-25 **DESATIVADO**.\n- Regimes agora: BTC/LTC/BNB=range, ADA=trend (sem golden cross fresco \u2192 ADA buyAllowed=false).\n\n## Pr\u00e9-reqs de descongelamento (status real)\n- **(a)** chave Binance saque-OFF + IP travado (137.131.243.179): \u2705 FEITO + verificado (l\u00ea carteira, recusa saque).\n- **(b)** harvester desativado: \u2705 FEITO (id22-25 isActive=0, bucket vazio).\n- **(d)** furo MARKET-por-quantidade no riskGuard: \u2705 FECHADO (commit e27339a \u2014 deriva pre\u00e7o do MINI_TICKER/stopPrice, capa venda por qty-base).\n- **(c)** P&L com taxa em BNB: \u23f3 LATENTE (conta n\u00e3o tem BNB \u2192 taxas saem em USDT, j\u00e1 descontadas certo; s\u00f3 vira problema se ligar BNB-fee).\n- **(e)** cap di\u00e1rio de perda: \u23f3 N\u00c3O constru\u00eddo ainda. O dono aprovou **-5%/dia** (~-$7,40 sobre $148).\n\n## Pergunta\nDado tudo acima, d\u00ea um **GO / NO-GO / GO-CONDICIONADO** pro dono virar o HALT, com fundamento. Especificamente:\n1. \u00c9 seguro virar AGORA, ou (e) o cap di\u00e1rio \u00e9 must-have antes? \n2. Qual a **config m\u00ednima-segura de canary** (quais automa\u00e7\u00f5es ativas \u2014 s\u00f3 Trend id6/id7? farm tamb\u00e9m? \u2014 que size, qual teto, qual cap di\u00e1rio) pro 1\u00ba trade real? Considere que BTC a ~$5-15/perna fica no piso do MIN_NOTIONAL (fr\u00e1gil, risco -1013).\n3. Qual o **maior risco isolado** no 1\u00ba trade real (fill/fee/slippage n\u00e3o validados; correla\u00e7\u00e3o dos 4 golden\u2192death; etc.)?\n4. O que o dono deve OBSERVAR no 1\u00ba ciclo pra decidir se escala ou recua?\n\nLeia o repo pra mec\u00e2nica (como constrange a s\u00f3-Trend, calcQty/size, como o cap di\u00e1rio se encaixaria no chokepoint). Expectativa documentada: P&L \u2248 FLAT no m\u00eas com $148; \u00fanico edge real \u00e9 o Trend (1-3 trades/s\u00edmbolo/m\u00eas). Seja honesto sobre o que N\u00c3O sabemos. Retorne veredito + config de canary concreta + riscos."
+}
+```
+
+## 🤖 Claude *(17:27:21)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Modos de falha do 1\u00ba trade real",
+  "subagent_type": "qa-engineer",
+  "prompt": "O TradeUX est\u00e1 em MAINNET REAL, `TRADING_HALT=true`, com **ZERO ordens mainnet na hist\u00f3ria** \u2014 nada do money-path foi exercitado com dinheiro real. O dono cogita virar o HALT. Fa\u00e7a uma an\u00e1lise de MODOS DE FALHA do PRIMEIRO trade real: o que est\u00e1 N\u00c3O-VALIDADO e pode quebrar/sangrar.\n\n## Contexto\n- Saldo 148,84 USDT, 0 posi\u00e7\u00f5es. Automa\u00e7\u00f5es ativas: Trend BTC id6/id7 (SMA 50/200, market sell TREND_QTY no death cross), Farm/Trend alts id9-20, baseline id2 isActive=0, harvester DESATIVADO.\n- Trades min\u00fasculos: Trend ~$5-15/perna; BTC a ~$5 fica no piso do MIN_NOTIONAL (~$5 na Binance) \u2192 risco -1013 (j\u00e1 houve fix calcQty backstop em `2528a5d`).\n- Teto: `MAX_ORDER_NOTIONAL_USDT=1500` + (novo, e27339a) cobertura de MARKET-por-qty no riskGuard.\n- Taxa: conta SEM BNB \u2192 fee em USDT (sell) / base (buy). `calcFillFinancials` (ordersRepository) desconta fee no `net` s\u00f3 quando commAsset==quote.\n\n## Pergunta\nCaminhe o money-path FIM-A-FIM pro 1\u00ba trade real e liste o que pode falhar, por severidade:\n1. **Entrada (BUY):** gate dispara \u2192 `calcQty` \u2192 `exchange.buy` \u2192 riskGuard \u2192 Binance. Edge cases de MIN_NOTIONAL/stepSize/-1013 num trade de $5-15? O backstop do `2528a5d` cobre todos os m\u00f3dulos?\n2. **Fill & contabilidade:** `calcFillFinancials` \u2014 em BUY a taxa sai no ativo-base (reduz qty recebida) mas `net=cummQuote` e `quantity=executedQty` (bruto). Isso desalinha o custo-base/avgPrice e o bucket FARM_DCA? Quando vender, a qty registrada > qty real na carteira \u2192 risco de -2010/oversell?\n3. **Sa\u00edda (SELL):** Trend death cross vende TREND_QTY a market; Farm vende FARM_QTY no-loss. Persist\u00eancia de TREND_QTY/FARM_DCA sobrevive a restart? Trava anti-empilhamento (FARM_SELLING existe? grep) \u2014 venda dupla?\n4. **Slippage/fill parcial** num book real (n\u00e3o o simulado do testnet): o que muda vs o que foi testado no testnet?\n5. **OCO/reconcile** no boot \u2014 cruza ambientes? (j\u00e1 teve fix isTestnet).\n\nRastreie no c\u00f3digo (`beholder.js` calcQty/placeOrder, `app-em.js`, `ordersRepository.js`, `exchange.js`). Diga o que o dono deve MONITORAR no trade #1 e quais s\u00e3o os 2-3 modos de falha mais prov\u00e1veis/caros. Severize. N\u00e3o precisa rodar build."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
