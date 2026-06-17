@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 912
-> * **Sessões do Claude**: 870
+> * **Total de Sessões Registradas**: 913
+> * **Sessões do Claude**: 871
 > * **Sessões do Gemini**: 42
 
 ---
@@ -71,7 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a1a351de1820e4318]]` - *2026-06-17*
-*   *... e mais 876 sessões nessa categoria.*
+*   *... e mais 877 sessões nessa categoria.*
 
 ---
 
@@ -281,6 +281,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-17 - Usar Model Council para verificar respostas de IA]]` (ClaudeSessions)
 *   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` (ClaudeSessions)
 *   `[[2026-06-17 - Binance withdrawal and IP unlock troubleshooting]]` (ClaudeSessions)
+*   `[[2026-06-17 - 21b2d649-94ad-4468-9821-20f76eae70a3]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-afe8189a8d120151e]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-af2ee0644987e7b32]]` (ClaudeSessions)
