@@ -3803,6 +3803,1229 @@ Escolha registrada: **Emenda BoK** — o caminho disciplinado. Vou estender a su
 > 302:### Target Binding Requirement (OE-661-003)
 > ```
 
+## 🤖 Claude *(15:30:25)*
+
+
+## 🤖 Claude *(15:30:27)*
+
+Convenções mapeadas (PR-xxx até 034, FR-xxx até 042, NFR até 022). Preciso ver o formato exato das tabelas e a estrutura do SDD pra emendar idêntico ao estilo vivo.
+
+## 🤖 Claude *(15:30:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== SDD (05) headings =====\"; grep -nE \"^#{1,3} \" docs/bok/mcorch-constellation/05-sdd.md 2>/dev/null | head -60",
+  "description": "SDD section structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== SDD (05) headings =====
+> 1:# SDD — System Design Document
+> 10:## 1. Architecture Overview
+> 62:## 1.1 Architectural Decisions
+> 86:## 2. Component Catalog
+> 88:### 2.1 Custom Hooks (`src/hooks/` — 30 hooks)
+> 125:### 2.2 Display Components (`src/components/` — selected critical)
+> 145:### 2.3 Edge Functions (`supabase/functions/` — 39 functions)
+> 209:### 2.4 Zustand Store Slices
+> 216:### 2.5 DB Objects (high-level — full schema in `06-data-model.md`)
+> 243:## 3. Data Flow Diagrams
+> 245:### Use Case 1: Pipeline Orchestration (FR-001..FR-008)
+> 274:### Use Case 2: AIOS Conversation with Mesh Grounding + A2UI (FR-027..FR-030)
+> 298:### Use Case 3: Subscription Checkout (FR-033)
+> 320:## 4. API Contract Definitions
+> 324:### 4.1 `POST /functions/v1/orchestrate-content` — see §4.2 of FRD for full spec
+> 326:### 4.2 `POST /functions/v1/embed-mcorch-node`
+> 345:### 4.3 `POST /functions/v1/aios-chat`
+> 359:### 4.4 `POST /functions/v1/publish-social`
+> 376:### 4.5 Common Error Responses (canonical for all user-facing fns)
+> 387:## 5. Security Design
+> 389:### 5.1 Threat Model (STRIDE)
+> 409:### 5.2 RLS Policy Patterns (canonical examples — full set in `06-data-model.md §3`)
+> 453:### 5.3 JWT Validation Pattern (canonical)
+> 488:### 5.4 Secrets Inventory
+> 510:## 6. Infrastructure Touchpoints
+> 529:### 6.1 New telemetry events introduced by this BoK
+> 541:## 7. Migration Stubs
+> 590:## 8. Open Technical Decisions
+> 608:## Regra Mandatória: Target Binding (OE-661-003)
+> ```
+
+## 🤖 Claude *(15:30:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md",
+  "offset": 140,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 140	| PR-009 | Multi-bucket Knowledge Mesh retrieval for AIOS context | All | BR-013 | L (shipped) | 0 | `useKnowledgeMesh` + 7 priority buckets + `match_mcorch_nodes` RPC |
+> 141	| PR-010 | Visual Orchestrator Canvas with live node status | P1, P2 | BR-014 | XL (shipped) | 0 | `OrchestrationCanvas` (xyflow) + Zustand `useOrchestrationStore` |
+> 142	| PR-011 | Pipeline History with run-by-run audit | P1, P2 | BR-008 | M (shipped) | 0 | `pipeline_runs` table + `usePipelineHistory` |
+> 143	| PR-012 | AIOS Conversational Terminal (text mode) | All | BR-016 | XL (shipped) | (variable AI cost) | `CoreFablePage` + `AIOSTerminal` + `useAIOSChat` |
+> 144	| PR-013 | Gemini Live voice mode (low-latency conversation) | All | BR-016 | L (shipped) | (variable AI cost) | `useGeminiLive` + WebSocket |
+> 145	| PR-014 | A2UI dynamic surface spawning (agent-driven UI panels) | All | BR-016 | M (shipped 2026-05-07) | 0 | `useA2UI` + `parseAgentMessage` wired to `AIOSTerminal.onMessage` |
+> 146	| PR-015 | 3D Constellation Matrix visualization | P1, P2, P3 | BR-017 | XL (shipped) | 0 | `MatrixPage` + `ConstellationMatrix` (Sigma.js WebGL + ForceAtlas2 + Louvain clustering) |
+> 147	| PR-016 | Memory Graph (d3-force visualization) | All | BR-013 | M (shipped) | 0 | `MemoryPage` + `MemoryGraphWidget` |
+> 148	| PR-017 | Per-platform OAuth flows (LinkedIn + X + Instagram pending) | P1, P2 | BR-005 | L (shipped LinkedIn + X; IG deferred) | 0 | `social-auth-init` + `social-auth-callback` + `refresh-social-token` |
+> 149	| PR-018 | mcoCoins balance HUD + live deduction display | All | BR-001 | S (shipped) | 0 | `DashboardLayout` header |
+> 150	| PR-019 | RLS-enforced tenant isolation across all user data | All | BR-009 | L (shipped) | 0 | `20260425210000_mcorch_tenant_isolation.sql` |
+> 151	| PR-020 | Self-service account deletion with cascade | All | BR-010, BR-018 | M | 0 | **Doc-debt** — see [`08-quality-metrics.md`](./08-quality-metrics.md) |
+> 152	
+> 153	### Should Have (v1.0 — currently in development or near-term)
+> 154	
+> 155	| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 156	|----|---------|---------|-----------|--------|-------------|-------|
+> 157	| PR-021 | Self-healing watchdog with infra_health_logs telemetry | All | BR-015 | M (shipped) | 0 | `scripts/watchdog-mcorch.sh` cron `*/5 * * * *` |
+> 158	| PR-022 | Neural HUD (Mesh + Infra status visualization) | All | BR-015 | S (shipped) | 0 | `HUD.tsx` + `useInfraStatus` |
+> 159	| PR-023 | LGPD data export (full per-user dump) | All | BR-010 | M (pending) | 0 | Doc-debt — endpoint to be designed |
+> 160	| PR-024 | Multi-tenant project_id scoping for agencies | P2 | BR-001, BR-005 | L (partial; `project_id` column exists, agency UI pending) | 0 | Schema ready; UX layer pending |
+> 161	
+> 162	### Could Have (Future)
+> 163	
+> 164	| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 165	|----|---------|---------|-----------|--------|-------------|-------|
+> 166	| PR-030 | Hand tracking gesture control (MediaPipe) | P1 | — (UX experiment) | XL | 0 | Currently deferred per HANDOFF Pending Action |
+> 167	| PR-031 | Video pipeline (Veo + scene composition) | P1 | — (extension of BR-001) | XL (partial) | High (variable Veo cost) | `generate-video` + `rescue-video` exist; canvas integration partial (`VideoEditorPage`) |
+> 168	| PR-032 | Per-client white-label dashboards (agency tier) | P2 | — | XL | 0 | Theme tokens exist; full white-label deferred |
+> 169	| PR-033 | Native iOS/Android apps | All | — | XL | 0 | Currently web-only; mobile branch protocol exists for code sync |
+> 170	| PR-034 | AI Brain real-time analysis (Sonnet 4.5 via OpenRouter) | All | — (shipped) | M (shipped) | (variable) | `analyze-node` edge function — already live |
+> 171	
+> 172	### Won't Have (this cycle)
+> 173	
+> 174	- **Crypto/web3 monetization** — out of scope; Stripe + Pix is sufficient.
+> 175	- **Direct CMS integrations beyond WordPress** (Webflow, Ghost, etc.) — assess after 100 paying accounts.
+> 176	- **Multi-language UI** (Spanish, English) — Brazilian-Portuguese only until international expansion is funded.
+> 177	- **In-house LLM hosting** — economics don't justify until ≥ 1000 accounts.
+> 178	
+> 179	---
+> 180	
+> 181	## 5. Release Phasing
+> 182	
+> 183	### MVP Scope (Sealed v5.6.1, 2026-05-06)
+> 184	
+> 185	**Target date:** Sealed
+> 186	**Included:** PR-001 through PR-020
+> 187	**Success gate:** Usuário Zero (Sovereign) running production pipelines daily with sealed Phase Beta architecture; 122 vitest tests passing; 4Cs audit ≥ 95/100.
+> 188	
+> 189	### v1.0 Scope (Phase Commercial)
+> 190	
+> 191	**Target date:** 2026-Q3
+> 192	**Adds:** PR-021 (already shipped), PR-022 (already shipped), PR-023, PR-024
+> 193	**Success gate:** First external paying account converts AND runs ≥ 5 successful pipelines (BO-001).
+> 194	
+> 195	### Future Scope
+> 196	
+> 197	**Items:** PR-030+
+> 198	**Condition:** ≥ 100 paying accounts (BO-002 partial), capital available for expansion features.
+> 199	
+> 200	---
+> 201	
+> ```
+
+## 🤖 Claude *(15:30:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# FRD — Functional Requirements Document
+> 2	
+> 3	**Project:** mcorch-constellation
+> 4	**Version:** v1.0 | **Date:** 2026-05-07
+> 5	**BoK Applied:** SWEBOK v4 (Software Requirements)
+> 6	**Status:** Sealed (reverse-engineered from running system)
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Scope Statement
+> 11	
+> 12	This FRD specifies the functional and non-functional requirements for the running MCORCH Constellation platform as of Sprint v5.6.1 (sealed 2026-05-06).
+> 13	
+> 14	**In scope:**
+> 15	- All 30 hooks under `src/hooks/`
+> 16	- All 39 edge functions under `supabase/functions/`
+> 17	- All 30 migrations under `supabase/migrations/`
+> 18	- All cron jobs (4 active routines)
+> 19	- All Zustand stores (`useCrewStore`, `useOrchestrationStore`)
+> 20	- Full pipeline lifecycle from trigger to publish to mesh injection
+> 21	
+> 22	**Out of scope:**
+> 23	- Future PR-030+ features (hand tracking, native mobile, multi-language UI)
+> 24	- Internal-only build/deploy tooling (covered in `05-sdd.md` Infrastructure section)
+> 25	- Documentation tooling (covered in `00-index.md`)
+> 26	
+> 27	---
+> 28	
+> 29	## 2. Functional Requirements
+> 30	
+> 31	> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron` | `Store`
+> 32	
+> 33	### Core Orchestration
+> 34	
+> 35	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 36	|----|-------|-------------|----------|-----------|----------|---------|
+> 37	| FR-001 | Pipeline Trigger | When user submits topic + platforms in `OrchestrationCanvas`, invoke `useOrchestrationGraph.runPipeline(topic, platforms, affiliateUrl?, publishNow?)` which delegates to `orchestrate-content` edge fn | Critical | PR-001 | Hook + EdgeFunction | AT-001 (`useOrchestrationGraph.test.ts`) |
+> 38	| FR-002 | Empty Topic Validation | `runPipeline` must abort with toast error if topic.trim() is empty; no edge fn invocation | Critical | PR-001 | Hook | AT-002 |
+> 39	| FR-003 | mcoCoins Pre-deduction Gate | `orchestrate-content` must call `deduct_mco_coins` RPC for 10 coins before any AI work; on insufficient balance, return HTTP 402 with PT-BR error message | Critical | PR-001, BR-001 | EdgeFunction | AT-003 |
+> 40	| FR-004 | Atomic Coin Deduction | Coins must never be deducted client-side; all deductions route through SECURITY DEFINER RPC `deduct_mco_coins(p_user_id uuid, p_amount int)` | Critical | PR-001 | DB (RPC) | AT-004 (`billing.test.ts`) |
+> 41	| FR-005 | Live Status Updates | During pipeline run, each node transitions through `idle → pending → running → done/error/blocked` reflected in Zustand store and rendered in canvas | Critical | PR-010 | Store + UI | AT-005 |
+> 42	| FR-006 | Step-to-Node Mapping | Edge fn step results map to canvas nodes per `STEP_TO_NODE` table (`article_generation→agent-content`, `image_generation→agent-image`, `linkedin_post|twitter_thread→agent-social`, `wordpress_publish→publish-wordpress`) | Critical | PR-001, PR-010 | Hook | AT-006 |
+> 43	| FR-007 | Quality Gate Logic | `gate-audit` node status = `error` if any step had error; otherwise `done`. Selected publish nodes set to `blocked` when gate has error | Critical | PR-001 | Hook | AT-007 |
+> 44	| FR-008 | Pipeline Run Persistence | Every pipeline run (success or failure) must persist a row in `pipeline_runs` with full step-by-step status JSONB and run_id returned to client | Critical | PR-011 | DB + EdgeFunction | AT-008 |
+> 45	
+> 46	### Content Generation
+> 47	
+> 48	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 49	|----|-------|-------------|----------|-----------|----------|---------|
+> 50	| FR-009 | Long-Form Article Generation | `generate-content` invoked with format="article" produces ≥ 800 words PT-BR with structured sections (intro, body, CTA) | Critical | PR-002 | EdgeFunction | AT-009 |
+> 51	| FR-010 | LinkedIn Post Generation | `generate-content` with format="linkedin_post" produces 1300-1700 char post with appropriate hashtags and CTA | Critical | PR-002 | EdgeFunction | AT-010 |
+> 52	| FR-011 | X Thread Generation | `generate-content` with format="twitter_thread" produces 4-8 tweets each ≤ 280 chars with thread coherence | Critical | PR-002 | EdgeFunction | AT-011 |
+> 53	| FR-012 | Image Generation | `generate-image` invoked per article produces hero image stored in Supabase Storage (`generated-videos` bucket or image bucket); URL written to `content_library.image_url` | High | PR-003 | EdgeFunction | AT-012 |
+> 54	| FR-013 | PT-BR Default Language | All content-generating edge fns must default to PT-BR system prompts; English allowed only when explicitly requested via input parameter | Critical | PR-004 | EdgeFunction | AT-013 |
+> 55	| FR-014 | UTM Affiliate Injection | `process-affiliate-link` transforms ML affiliate URL adding `?utm_source={platform}&utm_medium=social&utm_campaign=magic_constellation_v1&utm_term={keyword}`; idempotent (re-run produces same URL) | Critical | PR-006 | EdgeFunction | AT-014 |
+> 56	
+> 57	### Publishing
+> 58	
+> 59	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 60	|----|-------|-------------|----------|-----------|----------|---------|
+> 61	| FR-015 | WordPress REST Publish | `publish-wordpress` reads user's `user_wordpress_config`, posts via WP REST API with `status='publish'` or `'draft'`; returns post URL | Critical | PR-005 | EdgeFunction | AT-015 |
+> 62	| FR-016 | LinkedIn Post Publish | `publish-social` with platform="linkedin" + valid OAuth token publishes via LinkedIn API v2 | Critical | PR-017 | EdgeFunction | AT-016 |
+> 63	| FR-017 | X (Twitter) Post Publish | `publish-social` with platform="twitter" + valid OAuth token; gracefully handle Free tier write quota exhaustion | High | PR-017 | EdgeFunction | AT-017 |
+> 64	| FR-018 | Token Refresh | `refresh-social-token` automatically refreshes expired LinkedIn/X OAuth tokens before publish attempts | High | PR-017 | EdgeFunction + Cron | AT-018 |
+> 65	| FR-019 | Auto-Publish Cron | `scripts/auto-publish-cron.sh` runs `*/5 * * * *`, finds `scheduled_posts` with `scheduled_for <= now()` and publishes them via `publish-social` | High | PR-005, PR-017 | Cron | AT-019 |
+> 66	
+> 67	### Knowledge Mesh
+> 68	
+> 69	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 70	|----|-------|-------------|----------|-----------|----------|---------|
+> ```
+
+## 🤖 Claude *(15:31:07)*
+
+
+## 🤖 Claude *(15:31:08)*
+
+Formatos capturados. Vou ler as caudas dos 3 arquivos para anexar a emenda com âncoras limpas (sem quebrar o meio dos docs selados).
+
+## 🤖 Claude *(15:31:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md",
+  "offset": 311,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 311	## 8. Traceability Matrix
+> 312	
+> 313	| MR ID | BR ID | PR ID |
+> 314	|-------|-------|-------|
+> 315	| MR-001 | BR-001, BR-002, BR-005, BR-008 | PR-001, PR-002, PR-003, PR-011, PR-018 |
+> 316	| MR-002 | BR-003 | PR-004 |
+> 317	| MR-003 | BR-006 | PR-005 |
+> 318	| MR-004 | BR-007 | PR-006 |
+> 319	| MR-005 | BR-009, BR-010, BR-018 | PR-019, PR-020, PR-023 |
+> 320	| MR-006 | BR-011 | PR-007 |
+> 321	| MR-007 | BR-012, BR-013 | PR-008, PR-009 |
+> 322	| MR-008 | BR-014 | PR-010, PR-011 |
+> 323	| MR-009 | BR-015 | PR-021, PR-022 |
+> 324	| MR-010 | BR-016 | PR-012, PR-013, PR-014 |
+> 325	| MR-011 | BR-017 | PR-015, PR-016 |
+> 326	| MR-012 | BR-018 | PR-020, PR-023 |
+> 327	
+> 328	---
+> 329	
+> 330	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(15:31:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md",
+  "offset": 296,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 296	| PR-022 | FR-042 | NFR-009 |
+> 297	
+> 298	---
+> 299	
+> 300	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 301	
+> 302	### Target Binding Requirement (OE-661-003)
+> 303	Todo nodo do tipo `observation` gerado DEVE possuir rastreabilidade material com o código-fonte (edge `observes` apontando para o `ast_file`, `markdown_file` ou `source_code` correspondente). Nodos isolados sem Target Binding serão categorizados como *unstable*.
+> ```
+
+## 🤖 Claude *(15:31:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/05-sdd.md",
+  "offset": 605,
+  "limit": 7
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 605	
+> 606	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 607	
+> 608	## Regra Mandatória: Target Binding (OE-661-003)
+> 609	Todo nodo do tipo `observation` DEVE conter no metadado o `file_path` ou `node_id` do artefato técnico relacionado. 
+> 610	- Sem o vínculo estrutural com o `source_code`, o nodo deve ser marcado como `unstable`.
+> 611	- O script de ingestão deve obrigatoriamente garantir essa aresta no momento da criação do nodo.
+> ```
+
+## 🤖 Claude *(15:32:32)*
+
+
+## 🤖 Claude *(15:32:34)*
+
+Âncoras limpas. Aplicando a Emenda A nos 3 docs da suíte (PRD/FRD/SDD), em inglês para casar o estilo selado. Batch 1 — linha PR-025, linha de rastreabilidade FRD, e a seção §9 do SDD.
+
+## 🤖 Claude *(15:32:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md",
+  "old_string": "| PR-024 | Multi-tenant project_id scoping for agencies | P2 | BR-001, BR-005 | L (partial; `project_id` column exists, agency UI pending) | 0 | Schema ready; UX layer pending |",
+  "new_string": "| PR-024 | Multi-tenant project_id scoping for agencies | P2 | BR-001, BR-005 | L (partial; `project_id` column exists, agency UI pending) | 0 | Schema ready; UX layer pending |\n| PR-025 | Unified Sensorial Canvas \u2014 fuse Matrix + Memory + Core-Fable into one R3F 3D canvas | All | BR-013, BR-016, BR-017 | XL (Phase Epsilon V9, in design) | 0 | Consolidates PR-012/PR-015/PR-016; legacy routes preserved as backup until parity (Amendment A) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:32:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md",
+  "old_string": "| PR-022 | FR-042 | NFR-009 |",
+  "new_string": "| PR-022 | FR-042 | NFR-009 |\n| PR-025 | FR-043..FR-049 | NFR-023, NFR-024 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:32:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/05-sdd.md",
+  "old_string": "- O script de ingest\u00e3o deve obrigatoriamente garantir essa aresta no momento da cria\u00e7\u00e3o do nodo.",
+  "new_string": "- O script de ingest\u00e3o deve obrigatoriamente garantir essa aresta no momento da cria\u00e7\u00e3o do nodo.\n\n---\n\n## 9. Unified Sensorial Canvas (Phase Epsilon V9 \u2014 Amendment, 2026-06-17)\n\n> Design for PR-025 / FR-043..FR-049. Conscious BoK amendment (Sovereign-elected gate). Work order: `.claude/context/unified-core-sensorial-canvas-plan.md`.\n\n### 9.1 Engine Reconciliation (the crux)\nThe Matrix renders in **Sigma.js 2D** (`ConstellationMatrix`); Core-Fable in **R3F/Three.js 3D** (`MegaBrainVisualizer`). A Sigma 2D graph does not compose into a Three 3D scene. Resolution:\n- **graphology stays the brain** \u2014 the graph model + `graphology-communities-louvain` + `graphology-layout-forceatlas2` are renderer-agnostic and are REUSED, not rewritten.\n- **The body migrates Sigma \u2192 R3F** \u2014 the Code Network is re-rendered natively in Three.js to share the black-hole scene.\n- **3D positioning** \u2014 FA2 yields 2D seeds; the Code Network projects onto an equatorial plane (x,z) with y-jitter by community/stability (\"nodes orbiting the accretion disk\"); the Memory Network uses a softer 3D cloud.\n- Sigma.js is retired **in the unified view only**; the legacy `MatrixPage` (Sigma) remains a backup until parity.\n\n### 9.2 Data & Hooks\n- New store `src/store/useUnifiedCanvasStore.ts` (Zustand): `codeGraph` (graphology), `memoryNodes/edges` (`McorchNode[]`/`McorchEdge[]`), `selection`, `cameraTarget`, `viewMode`, `synapseEdges`.\n- `useConstellationSigma` graph-build extracted into a pure renderer-agnostic selector, consumed by both the legacy Sigma page and the new R3F layer.\n- `useMcorchMemory` feeds the Memory Network; `useNodeIntelligence` runs on select.\n- **Synapses (Lei 1):** derived from existing cross-partition `mcorch_edges` ONLY; never fabricated. Embedding-similarity synapses deferred to `OTD-SYNAPSE-EMBEDDING`.\n\n### 9.3 Component additions\n- `src/pages/UnifiedCanvasPage.tsx` (route `/dashboard/universe`)\n- `src/components/universe/CodeNetworkLayer.tsx` (InstancedMesh, Louvain color)\n- `src/components/universe/MemoryNetworkLayer.tsx` (cymatics cloud)\n- `src/components/universe/SynapseLayer.tsx` (batched lines, universe-only)\n- reuses `src/components/core-fable/MegaBrainVisualizer.tsx` as shared background\n\n### 9.4 Performance (NFR-023)\n8.5k nodes + 8.8k edges \u2192 `InstancedMesh` (nodes) + batched `LineSegments`/BufferGeometry (edges); no per-element meshes. Louvain/FA2 compute stays memoized/chunked as in `useConstellationSigma`.\n\n### 9.5 No DB migration\nReuses existing tables (`mcorch_nodes`, `mcorch_edges`, `crew_agents`). No schema change.\n\n### 9.6 Open Technical Decisions (Amendment)\n- **OTD-SQUAD-OWNERSHIP-REVIVAL** \u2014 squad-territory coloring is dormant (`crew_module_ownership` = 0 rows) and heuristic (`inferSquad` keyword match). Retired in the unified canvas (Decision B); future revival must source ownership from REAL agent-execution telemetry, not filename heuristics.\n- **OTD-SYNAPSE-EMBEDDING** \u2014 enrich inter-network synapses via 768d cosine similarity beyond explicit edges.\n- **OTD-UCANVAS-PERF** \u2014 formal <50ms budget verification at 8.5k nodes in R3F (InstancedMesh + LOD).\n\n_Amendment \u00a79 sealed 2026-06-17 \u2014 Phase Epsilon V9 gate._"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:32:59)*
+
+
+## 🤖 Claude *(15:33:00)*
+
+Batch 2 — anexo as seções de Emenda A (produto no PRD, FRs no FRD).
+
+## 🤖 Claude *(15:33:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md",
+  "old_string": "_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "_Generated by MCORCH BoK Scribe Agent v1.0.0_\n\n---\n\n## Amendment A \u2014 Unified Sensorial Canvas (Phase Epsilon V9, 2026-06-17)\n\n> Architectural consolidation of three sealed surfaces \u2014 Core-Fable (PR-012), 3D Constellation Matrix (PR-015), and Memory Graph (PR-016) \u2014 into one sovereign 3D canvas. Authored under the Closed-Loop Protocol as a conscious BoK amendment (Sovereign-elected over full override). Plan: `.claude/context/unified-core-sensorial-canvas-plan.md`.\n\n### Product intent (PR-025)\nA single immersive black-space canvas inheriting the Unified Relativistic Black Hole & Cymatics Visualizer, hosting two coexisting data networks:\n- **Code Network** \u2014 the AST/call-graph (~8.5k nodes), colored by **real Louvain communities** (the audit-validated scheme; squad-territory coloring retired \u2014 see Decision B).\n- **Memory Network** \u2014 the GraphRAG knowledge nodes (handoffs, milestones, decisions, mcoCoin events) as an organic cymatics cloud.\n- **Inter-network synapses** \u2014 low-opacity edges from **real** `mcorch_edges` crossing the AST\u2194knowledge partition, lit only in Universe mode.\n\n### UX requirements\n- **72/28 spatial rule** \u2014 70-72% immersive dark canvas; 28-30% floating tactical terminal + resonance telemetry.\n- **Isolation toggles** (Sidebar) \u2014 Matrix-only \u00b7 Memory-only \u00b7 Universe (synapses lit).\n- **Fly-to** \u2014 selecting a memory node animates the camera toward its coupled code cluster.\n- **Non-destructive** \u2014 legacy routes (`constellation/matrix`, `constellation/memory`, `core-fable`) preserved as backup until parity; cutover gated by the 1920\u00d71080 E2E Canvas audit (Lei 1).\n\n### Decision B (audit outcome, Sovereign-delegated)\nLouvain is the **official** Code Network coloring. The dormant squad-territory coloring (`crew_module_ownership` = 0 rows; `inferSquad` keyword heuristic) is **not** carried into the unified canvas. Agent overlay (live via `crew_agents`) survives. Future real-signal ownership tracked as `OTD-SQUAD-OWNERSHIP-REVIVAL`.\n\n### Traceability\nPR-025 \u2192 FR-043..FR-049, NFR-023, NFR-024 (FRD Amendment A) \u2192 consolidates MR-007 (knowledge), MR-010 (AIOS/Core), MR-011 (Matrix). BR-013 \u00b7 BR-016 \u00b7 BR-017.\n\n_Amendment A sealed 2026-06-17 \u2014 Phase Epsilon V9 gate._"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/03-prd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:33:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md",
+  "old_string": "Nodos isolados sem Target Binding ser\u00e3o categorizados como *unstable*.",
+  "new_string": "Nodos isolados sem Target Binding ser\u00e3o categorizados como *unstable*.\n\n---\n\n## Amendment A \u2014 Unified Sensorial Canvas (Phase Epsilon V9, FR-043..FR-049)\n\n> Functional spec for PR-025. Engine reconciliation + data unification in SDD \u00a79. Plan: `.claude/context/unified-core-sensorial-canvas-plan.md`.\n\n| ID | Title | Description | Priority | PR Traced | Category | Test ID |\n|----|-------|-------------|----------|-----------|----------|---------|\n| FR-043 | Unified Canvas Route & Shell | New route `/dashboard/universe` renders `UnifiedCanvasPage` with the 72/28 flex shell (70-72% R3F canvas, 28-30% floating terminal). Legacy routes `constellation/matrix`, `constellation/memory`, `core-fable` remain routed (non-breaking) until parity | High | PR-025 | UI | AT-043 |\n| FR-044 | Code Network (R3F) | The graphology graph-build + Louvain compute from `useConstellationSigma` is extracted into a renderer-agnostic selector and rendered as an `InstancedMesh` on an equatorial plane around the black hole; node color = Louvain community (`COMMUNITY_PALETTE`) | High | PR-025 | Hook + UI | AT-044 |\n| FR-045 | Memory Network (R3F) | GraphRAG knowledge nodes (`useMcorchMemory`) render as an organic particle cloud with cymatics rings keyed by node_type (Cyan/Alpha, Violet/Gamma, Gold/Scalar) | High | PR-025 | Hook + UI | AT-045 |\n| FR-046 | Inter-Network Synapses | Edges connecting a memory node to its coupled code node render ONLY from real `mcorch_edges` crossing the AST\u2194knowledge partition (DERIVES_FROM/REQUIRES/observes); never fabricated. Lit only in Universe view | High | PR-025 | DB + UI | AT-046 |\n| FR-047 | View Modes & Isolation | Sidebar toggles set `viewMode \u2208 {matrix, memory, universe}`; matrix/memory isolate one network, universe lights synapses | Medium | PR-025 | Store + UI | AT-047 |\n| FR-048 | Unified Context + Fly-To | A single `useUnifiedCanvasStore` feeds both networks; node select triggers the `useNodeIntelligence` analysis panel and animates the camera (fly-to) toward the node's 3D position | High | PR-025 | Store + Hook | AT-048 |\n| FR-049 | Squad-Coloring Retirement | The dormant squad-territory coloring is not applied in the unified canvas; Louvain is the official Code Network scheme. Agent overlay (`crew_agents`) is retained (Decision B) | Medium | PR-025 | Hook | AT-049 |\n\n### Non-Functional (Amendment)\n\n| ID | Title | Requirement |\n|----|-------|-------------|\n| NFR-023 | Canvas Performance | The unified canvas must sustain interaction <50ms at ~8.5k nodes + ~8.8k edges; mandates `InstancedMesh` for nodes and batched `LineSegments`/BufferGeometry for edges (no per-element meshes) |\n| NFR-024 | Non-Breaking Cutover | Each implementation step must compile (tsc 0); legacy routes stay live until parity; cutover gated by the 1920\u00d71080 E2E Canvas audit (`scripts/qa/audit-canvas-ui.ts`) per Survival Law 1 |\n\n_Amendment A sealed 2026-06-17._"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/mcorch-constellation/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:33:50)*
+
+
+## 🤖 Claude *(15:33:50)*
+
+Emenda A aplicada nos 3 docs. Confirmação material de que os IDs novos estão na suíte:
+
+## 🤖 Claude *(15:33:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== PR-025 (PRD) =====\"; grep -nE \"PR-025\" docs/bok/mcorch-constellation/03-prd.md | head\necho \"===== FR-043..049 + NFR (FRD) =====\"; grep -cE \"FR-04[3-9]|NFR-02[34]\" docs/bok/mcorch-constellation/04-frd.md\ngrep -nE \"## Amendment A\" docs/bok/mcorch-constellation/04-frd.md\necho \"===== \u00a79 (SDD) =====\"; grep -nE \"^## 9\\. Unified|OTD-SQUAD-OWNERSHIP-REVIVAL|OTD-SYNAPSE-EMBEDDING|OTD-UCANVAS-PERF\" docs/bok/mcorch-constellation/05-sdd.md\necho \"===== git status (only docs touched, zero c\u00f3digo) =====\"; git status --short docs/ .claude/context/ scripts/",
+  "description": "Verify amendment IDs landed + confirm only docs changed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== PR-025 (PRD) =====
+> 161:| PR-025 | Unified Sensorial Canvas — fuse Matrix + Memory + Core-Fable into one R3F 3D canvas | All | BR-013, BR-016, BR-017 | XL (Phase Epsilon V9, in design) | 0 | Consolidates PR-012/PR-015/PR-016; legacy routes preserved as backup until parity (Amendment A) |
+> 339:### Product intent (PR-025)
+> 355:PR-025 → FR-043..FR-049, NFR-023, NFR-024 (FRD Amendment A) → consolidates MR-007 (knowledge), MR-010 (AIOS/Core), MR-011 (Matrix). BR-013 · BR-016 · BR-017.
+> ===== FR-043..049 + NFR (FRD) =====
+> 13
+> 308:## Amendment A — Unified Sensorial Canvas (Phase Epsilon V9, FR-043..FR-049)
+> ===== §9 (SDD) =====
+> 615:## 9. Unified Sensorial Canvas (Phase Epsilon V9 — Amendment, 2026-06-17)
+> 630:- **Synapses (Lei 1):** derived from existing cross-partition `mcorch_edges` ONLY; never fabricated. Embedding-similarity synapses deferred to `OTD-SYNAPSE-EMBEDDING`.
+> 646:- **OTD-SQUAD-OWNERSHIP-REVIVAL** — squad-territory coloring is dormant (`crew_module_ownership` = 0 rows) and heuristic (`inferSquad` keyword match). Retired in the unified canvas (Decision B); future revival must source ownership from REAL agent-execution telemetry, not filename heuristics.
+> 647:- **OTD-SYNAPSE-EMBEDDING** — enrich inter-network synapses via 768d cosine similarity beyond explicit edges.
+> 648:- **OTD-UCANVAS-PERF** — formal <50ms budget verification at 8.5k nodes in R3F (InstancedMesh + LOD).
+> ===== git status (only docs touched, zero código) =====
+>  M docs/bok/mcorch-constellation/03-prd.md
+>  M docs/bok/mcorch-constellation/04-frd.md
+>  M docs/bok/mcorch-constellation/05-sdd.md
+> ?? .claude/context/agi-asi-via4-design-checklist.md
+> ?? .claude/context/unified-core-sensorial-canvas-plan.md
+> ?? scripts/seed-agi-asi-reference-node.ts
+> ```
+
+## 🤖 Claude *(15:34:06)*
+
+
+## 🤖 Claude *(15:34:17)*
+
+## 🚦 Gate de governança — FECHADO (Emenda A selada)
+
+A suíte `mcorch-constellation` foi estendida com o Unified Sensorial Canvas, em inglês para casar o estilo selado. Prova material:
+
+| Doc | O que entrou |
+|---|---|
+| [03-prd.md](docs/bok/mcorch-constellation/03-prd.md) | **PR-025** (Should Have) + seção **Amendment A** (product intent · UX 72/28 · toggles · Decision B · traceability) |
+| [04-frd.md](docs/bok/mcorch-constellation/04-frd.md) | **FR-043..FR-049** + **NFR-023** (perf <50ms/InstancedMesh) + **NFR-024** (cutover não-quebrante + gate E2E) + linha de rastreabilidade PR-025 |
+| [05-sdd.md](docs/bok/mcorch-constellation/05-sdd.md) | **§9** — reconciliação de motores (graphology=cérebro, R3F=corpo) · contexto unificado · perf · **3 OTDs** (SQUAD-OWNERSHIP-REVIVAL · SYNAPSE-EMBEDDING · UCANVAS-PERF) |
+
+**Closed-Loop honrado:** `git status` confirma **zero código de produção tocado** — só os 3 docs da suíte + os 2 arquivos de contexto (plano + checklist) + o seed-script. Nenhuma linha de refactor escrita antes do BoK consolidado.
+
+**Decisão B** está agora documentada na Fonte da Verdade (Louvain oficial; squad-coloring podada; revival como OTD).
+
+---
+
+Pelo ORO, **você é o Reviewer** — a Emenda A está aí pra sua revisão antes de eu codar (cláusula "consolidated *and reviewed*" do Master Protocol). Assim que você der o aval, arranco a **Fase 3 pelo passo 3.1** — o scaffold **não-quebrante**:
+
+- nova rota `/dashboard/universe` → `UnifiedCanvasPage` (shell 72/28 vazio)
+- novo `useUnifiedCanvasStore` (Zustand)
+- **as 3 páginas legadas intactas e roteadas** (Matrix/Memória/Core-Fable preservadas como backup)
+- compila tsc 0, 1 commit granular, zero deleção
+
+Reviso a Emenda contigo ou solto o 3.1?
+
+## 👤 User *(15:51:54)*
+
+Pode revisar não precisa me explicar e pode avançar se estiver tudo ok na revisão
+
+## 🤖 Claude *(15:52:18)*
+
+
+## 🤖 Claude *(15:52:21)*
+
+Revisão (minha, delegada): PR-025 livre (PR-024→030 tinha gap), FR-043..049 acima do teto FR-042, NFR-023/024 acima de NFR-022, rastreabilidade fechada (PR-025→FR-043..049→NFR-023/024), Decision B + 3 OTDs registrados, **zero migration** (logo sem `/security-review`). Emenda **limpa e consistente**. Avanço pra Fase 3.1.
+
+Primeiro leio os padrões vivos (rotas do App, padrão de store Zustand, layout do Core-Fable) pra o scaffold casar com a casa.
+
+## 🤖 Claude *(15:52:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 28,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 28	const CalendarPage = lazy(() => import("./pages/CalendarPage.tsx"));
+> 29	const BlogEditorPage = lazy(() => import("./pages/BlogEditorPage.tsx"));
+> 30	const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+> 31	const OrchestrationPage = lazy(() => import("./pages/OrchestrationPage.tsx"));
+> 32	const MemoryPage = lazy(() => import("./pages/MemoryPage.tsx"));
+> 33	const MatrixPage = lazy(() => import("./pages/MatrixPage.tsx"));
+> 34	const AffiliatesPage = lazy(() => import("./pages/AffiliatesPage.tsx"));
+> 35	const AffiliateProductsPage = lazy(() => import("./pages/AffiliateProductsPage.tsx"));
+> 36	const ModelArenaPage = lazy(() => import("./pages/ModelArenaPage.tsx"));
+> 37	const CoreFablePage = lazy(() => import("./pages/CoreFablePage.tsx"));
+> 38	const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+> 39	const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
+> 40	const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx"));
+> 41	const BillingPage = lazy(() => import("./pages/BillingPage.tsx"));
+> 42	const OnboardingPage = lazy(() => import("./pages/onboarding/OnboardingPage.tsx"));
+> 43	const ViralMinerPage = lazy(() => import("./pages/ViralMinerPage.tsx"));
+> 44	const CanvasStudioPage = lazy(() => import("./pages/CanvasStudioPage.tsx"));
+> 45	const CanvasEditorPage = lazy(() => import("./pages/CanvasEditorPage.tsx"));
+> 46	const CanvasDesignPage = lazy(() => import("./pages/CanvasDesignPage.tsx"));
+> 47	const AgentEconomicsPage = lazy(() => import("./pages/AgentEconomicsPage.tsx"));
+> 48	const ChatPage = lazy(() => import("./pages/ChatPage.tsx"));
+> 49	const KanbanPage = lazy(() => import("./pages/KanbanPage.tsx"));
+> 50	
+> 51	const queryClient = new QueryClient();
+> 52	
+> 53	function PageLoader() {
+> 54	  return (
+> 55	    <div className="min-h-screen bg-background flex items-center justify-center">
+> 56	      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+> 57	    </div>
+> 58	  );
+> 59	}
+> 60	
+> 61	function ProtectedRoute({ children }: { children: React.ReactNode }) {
+> 62	  const { user, loading } = useAuth();
+> 63	  if (loading) return <PageLoader />;
+> 64	  if (!user) return <Navigate to="/auth" replace />;
+> 65	  return <>{children}</>;
+> 66	}
+> 67	
+> 68	function PublicRoute({ children }: { children: React.ReactNode }) {
+> 69	  const { user, loading } = useAuth();
+> 70	  if (loading) return <PageLoader />;
+> 71	  if (user) return <Navigate to="/dashboard" replace />;
+> 72	  return <>{children}</>;
+> 73	}
+> 74	
+> 75	const App = () => (
+> 76	  <QueryClientProvider client={queryClient}>
+> 77	    <HelmetProvider>
+> 78	      <TooltipProvider>
+> 79	        <Toaster />
+> 80	        <Sonner />
+> 81	        <BrowserRouter>
+> 82	          <Suspense fallback={<PageLoader />}>
+> 83	            <Routes>
+> 84	              <Route path="/" element={<Landing />} />
+> 85	              <Route
+> 86	                path="/dashboard"
+> 87	                element={
+> 88	                  <ProtectedRoute>
+> 89	                    <DashboardLayout />
+> 90	                  </ProtectedRoute>
+> 91	                }
+> 92	              >
+> 93	                <Route index element={<DashboardHome />} />
+> 94	                <Route path="constellation" element={<ConstellationPage />} />
+> 95	                <Route path="constellation/memory" element={<MemoryPage />} />
+> 96	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 97	                <Route path="marketing" element={<MarketingPage />} />
+> 98	                <Route path="campaigns" element={<CampaignsPage />} />
+> 99	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 100	                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> 101	                <Route path="content" element={<ContentLibraryPage />} />
+> 102	                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 103	                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> 104	                <Route path="calendar" element={<CalendarPage />} />
+> 105	                <Route path="social" element={<SocialAccountsPage />} />
+> 106	                <Route path="analytics" element={<AnalyticsPage />} />
+> 107	                <Route path="blog" element={<BlogEditorPage />} />
+> 108	                <Route path="admin" element={<AdminPage />} />
+> 109	                <Route path="orchestration" element={<OrchestrationPage />} />
+> 110	                <Route path="affiliates" element={<AffiliatesPage />} />
+> 111	                <Route path="affiliate-products" element={<AffiliateProductsPage />} />
+> 112	                <Route path="arena" element={<ModelArenaPage />} />
+> 113	                <Route path="core" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 114	                <Route path="core-v2" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 115	                <Route path="core-fable" element={<CoreFablePage />} />
+> 116	                <Route path="settings" element={<SettingsPage />} />
+> 117	                <Route path="billing" element={<BillingPage />} />
+> ```
+
+## 🤖 Claude *(15:52:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useOrchestrationStore.ts",
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { create } from 'zustand';
+> 2	import type { Node, Edge, Viewport } from '@xyflow/react';
+> 3	
+> 4	export type NodeStatus = 'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked';
+> 5	export type OrchestrationNodeType = 'trigger' | 'agent' | 'scene' | 'quality_gate' | 'publish';
+> 6	
+> 7	export interface OrchestrationNodeData extends Record<string, unknown> {
+> 8	  label: string;
+> 9	  nodeType: OrchestrationNodeType;
+> 10	  coinCost: number;
+> 11	  stabilityScore: number;
+> 12	  status: NodeStatus;
+> 13	  icon: string;
+> 14	  config: Record<string, unknown>;
+> 15	  stepName?: string;
+> 16	}
+> 17	
+> 18	export type OrchestrationNode = Node<OrchestrationNodeData>;
+> 19	export type OrchestrationEdge = Edge;
+> 20	
+> 21	interface OrchestrationState {
+> 22	  nodes: OrchestrationNode[];
+> 23	  edges: OrchestrationEdge[];
+> 24	  selectedNodeId: string | null;
+> 25	  isRunning: boolean;
+> 26	  viewport: Viewport;
+> 27	
+> 28	  setNodes: (nodes: OrchestrationNode[]) => void;
+> 29	  setEdges: (edges: OrchestrationEdge[]) => void;
+> 30	  updateNodeStatus: (id: string, status: NodeStatus) => void;
+> 31	  updateNodeData: (id: string, data: Partial<OrchestrationNodeData>) => void;
+> 32	  setSelectedNode: (id: string | null) => void;
+> 33	  setRunning: (running: boolean) => void;
+> 34	  setViewport: (viewport: Viewport) => void;
+> 35	  resetNodeStatuses: () => void;
+> 36	  seedDefaultPipeline: () => void;
+> 37	}
+> 38	
+> 39	const POSITIONS_KEY = 'orchestration_positions_v1';
+> 40	
+> 41	export function savePositions(nodes: OrchestrationNode[]) {
+> 42	  const map: Record<string, { x: number; y: number }> = {};
+> 43	  for (const n of nodes) map[n.id] = n.position;
+> 44	  try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(map)); } catch {}
+> 45	}
+> 46	
+> 47	function loadPositions(): Record<string, { x: number; y: number }> {
+> 48	  try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) || '{}'); } catch { return {}; }
+> 49	}
+> 50	
+> 51	function buildDefaultNodes(): OrchestrationNode[] {
+> 52	  const p = loadPositions();
+> 53	  return [
+> 54	    {
+> 55	      id: 'trigger-campaign',
+> ```
+
+## 🤖 Claude *(15:52:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CoreFablePage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useCallback, useRef, useMemo } from "react";
+> 2	import { AIOSTerminal, ModelSelector } from "@/components/core/AIOSTerminal";
+> 3	import { ConversationTimeline } from "@/components/core/ConversationTimeline";
+> 4	import { MegaBrainVisualizer, setVisualizerIntensity } from "@/components/core-fable/MegaBrainVisualizer";
+> 5	import { A2UIRenderer, A2UISpawnToolbar } from "@/components/core-fable/A2UIRenderer";
+> 6	import { useAIOSConversations } from "@/hooks/useAIOSConversations";
+> 7	import { useA2UI } from "@/hooks/useA2UI";
+> 8	import { Activity, BrainCircuit, History, Cpu, X } from "lucide-react";
+> 9	import type { AIOSMessage } from "@/hooks/useAiosTerminalChat";
+> 10	
+> 11	function MetricPill({ label, value, color }: { label: string; value: string; color: string }) {
+> 12	  return (
+> 13	    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-mono ${color}`}>
+> 14	      <span className="opacity-70">{label}</span>
+> 15	      <span className="font-bold">{value}</span>
+> 16	    </div>
+> 17	  );
+> 18	}
+> 19	
+> 20	// Chat model is Core-scoped (localStorage) — NOT user_api_keys.pref_ai_model,
+> 21	// which also drives the paid content pipeline (orchestrate-content/orchestrate-step):
+> 22	// persisting the chat selector there would silently re-model the 10-mcoCoin flywheel.
+> 23	const CHAT_MODEL_STORAGE_KEY = "core-fable-chat-model";
+> 24	
+> 25	function getInitialChatModel() {
+> 26	  if (typeof window !== "undefined") {
+> 27	    const stored = window.localStorage.getItem(CHAT_MODEL_STORAGE_KEY);
+> 28	    if (stored) return stored;
+> 29	  }
+> 30	  return "anthropic/claude-fable-5";
+> 31	}
+> 32	
+> 33	export default function CoreFablePage() {
+> 34	  const [intensity, setIntensity] = useState(0);
+> 35	  const [isThinking, setIsThinking] = useState(false);
+> 36	  const [selectedModel, setSelectedModel] = useState(getInitialChatModel);
+> 37	  const [timelineOpen, setTimelineOpen] = useState(false);
+> 38	  const [restoredMessages, setRestoredMessages] = useState<AIOSMessage[] | null>(null);
+> 39	
+> 40	  const { surfaces, closeSurface, moveSurface, spawnDemo, parseAgentMessage } = useA2UI();
+> 41	
+> 42	  const {
+> 43	    conversations,
+> 44	    totalConversations,
+> 45	    isLoading: timelineLoading,
+> 46	    hasNextPage,
+> 47	    isFetchingNextPage,
+> 48	    fetchNextPage,
+> 49	    forkConversation,
+> 50	    boostConversation,
+> 51	    deleteConversation,
+> 52	  } = useAIOSConversations();
+> 53	
+> 54	  const handleActivity = useCallback((level: number) => {
+> 55	    setVisualizerIntensity(level);
+> 56	    setIntensity((prev) => {
+> 57	      const alpha = level > prev ? 0.75 : 0.12;
+> 58	      return prev * (1 - alpha) + level * alpha;
+> 59	    });
+> 60	  }, []);
+> 61	
+> 62	  const handleMessagesConsumed = useCallback(() => {
+> 63	    setRestoredMessages(null);
+> 64	  }, []);
+> 65	
+> 66	  const handleModelChange = useCallback((model: string) => {
+> 67	    setSelectedModel(model);
+> 68	    window.localStorage.setItem(CHAT_MODEL_STORAGE_KEY, model);
+> 69	  }, []);
+> 70	
+> 71	  const handleRestore = useCallback((messages: AIOSMessage[]) => {
+> 72	    setRestoredMessages(messages);
+> 73	    setTimelineOpen(false);
+> 74	  }, []);
+> 75	
+> 76	  const handleFork = useCallback(
+> 77	    async (id: string) => {
+> 78	      const forked = await forkConversation(id);
+> 79	      if (forked) handleRestore(forked.messages);
+> 80	    },
+> 81	    [forkConversation, handleRestore],
+> 82	  );
+> 83	
+> 84	  const isActive = intensity > 0.08;
+> 85	  const brainPercent = useMemo(() => Math.round(intensity * 100), [intensity]);
+> 86	
+> 87	  return (
+> 88	    <div className="flex flex-col h-full bg-[#050508] overflow-hidden">
+> 89	      {/* ── HUD bar ── */}
+> 90	      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-violet-500/15 bg-[#050508] z-20">
+> 91	        <div className="flex items-center gap-3">
+> 92	          <div className="flex items-center gap-2">
+> 93	            <Cpu className="w-4 h-4 text-amber-400" />
+> 94	            <span className="font-mono text-xs font-bold text-white/90 tracking-wider uppercase">
+> 95	              Core Fable — Mega Brain
+> 96	            </span>
+> 97	          </div>
+> 98	          <div
+> 99	            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+> 100	              isActive
+> 101	                ? "bg-amber-400 shadow-[0_0_8px_#fbbf24] animate-pulse"
+> 102	                : "bg-violet-600"
+> 103	            }`}
+> 104	          />
+> 105	          {isActive && (
+> 106	            <span className="font-mono text-[9px] text-amber-300/60 uppercase tracking-widest">
+> 107	              Ressonância {brainPercent}%
+> 108	            </span>
+> 109	          )}
+> 110	        </div>
+> 111	
+> 112	        <div className="flex items-center gap-2">
+> 113	          <ModelSelector
+> 114	            value={selectedModel}
+> 115	            onChange={handleModelChange}
+> 116	          />
+> 117	
+> 118	          {/* A2UI spawn toolbar */}
+> 119	          <A2UISpawnToolbar onSpawn={spawnDemo} count={surfaces.size} />
+> 120	
+> 121	          {/* Timeline toggle */}
+> 122	          <button
+> 123	            onClick={() => setTimelineOpen((v) => !v)}
+> 124	            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
+> 125	              timelineOpen
+> 126	                ? "border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]"
+> 127	                : "border-violet-500/20 bg-violet-500/10 text-violet-400 hover:border-amber-500/30 hover:text-amber-400"
+> 128	            }`}
+> 129	            title="Histórico de sessões AIOS"
+> 130	          >
+> 131	            <History className="w-3 h-3" />
+> 132	            Memória
+> 133	            {totalConversations > 0 && (
+> 134	              <span className={`px-1 rounded text-[8px] ${timelineOpen ? "bg-amber-500/30" : "bg-violet-700/50"}`}>
+> 135	                {totalConversations}
+> 136	              </span>
+> 137	            )}
+> 138	          </button>
+> 139	
+> 140	          <MetricPill
+> 141	            label="AIOS"
+> 142	            value={isActive ? "ATIVO" : "IDLE"}
+> 143	            color={
+> 144	              isActive
+> 145	                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+> 146	                : "border-violet-500/20 bg-violet-500/10 text-violet-400"
+> 147	            }
+> 148	          />
+> 149	          <MetricPill
+> 150	            label="VAD"
+> 151	            value="READY"
+> 152	            color="border-violet-500/20 bg-violet-500/10 text-violet-400"
+> 153	          />
+> 154	          <MetricPill
+> 155	            label="MESH"
+> 156	            value="LIVE"
+> 157	            color="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+> 158	          />
+> 159	        </div>
+> 160	      </div>
+> 161	
+> 162	      {/* ── Main layout ── */}
+> 163	      <div className="flex flex-1 min-h-0 overflow-hidden">
+> 164	
+> 165	        {/* Timeline panel */}
+> 166	        {timelineOpen && (
+> 167	          <div className="flex-shrink-0 w-64 flex flex-col border-r border-amber-500/15 bg-[#050508] overflow-hidden z-10">
+> 168	            <div className="flex items-center justify-between px-3 py-2 border-b border-amber-500/10">
+> 169	              <span className="font-mono text-[10px] text-amber-400/80 uppercase tracking-wider font-bold">
+> 170	                Memória Social
+> 171	              </span>
+> 172	              <button
+> 173	                onClick={() => setTimelineOpen(false)}
+> 174	                className="text-violet-400/40 hover:text-violet-300 transition-colors"
+> 175	              >
+> 176	                <X className="w-3.5 h-3.5" />
+> 177	              </button>
+> 178	            </div>
+> 179	            <div className="flex-1 min-h-0 p-2 overflow-hidden">
+> 180	              <ConversationTimeline
+> 181	                conversations={conversations}
+> 182	                isLoading={timelineLoading}
+> 183	                hasNextPage={hasNextPage}
+> 184	                isFetchingNextPage={isFetchingNextPage}
+> 185	                onFetchNext={fetchNextPage}
+> 186	                onFork={handleFork}
+> 187	                onBoost={boostConversation}
+> 188	                onRestore={handleRestore}
+> 189	                onDelete={deleteConversation}
+> 190	              />
+> 191	            </div>
+> 192	          </div>
+> 193	        )}
+> 194	
+> 195	        {/* Three-column area */}
+> 196	        <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden">
+> 197	
+> 198	          {/* Left — Chat (30%) */}
+> 199	          <div className="relative flex flex-col min-w-0 min-h-0 h-full border-r border-violet-500/10 overflow-hidden" style={{ width: "30%" }}>
+> 200	            <AIOSTerminal
+> 201	              onActivity={handleActivity}
+> 202	              onStreamingChange={setIsThinking}
+> 203	              selectedModel={selectedModel}
+> 204	              onModelChange={handleModelChange}
+> 205	              initialMessages={restoredMessages ?? undefined}
+> 206	              onMessagesConsumed={handleMessagesConsumed}
+> 207	              onMessage={parseAgentMessage}
+> 208	            />
+> 209	          </div>
+> 210	
+> 211	          {/* Right — Mega Brain & Cymatics Combined (70%) */}
+> 212	          <div className="relative flex flex-col min-w-0 min-h-0 h-full bg-black/98 overflow-hidden" style={{ width: "70%" }}>
+> 213	            {/* Combined Header */}
+> 214	            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-violet-500/10 bg-[#050508] z-10">
+> 215	              <div className="flex items-center gap-4">
+> 216	                <div className="flex items-center gap-1.5">
+> 217	                  <BrainCircuit className="w-3.5 h-3.5 text-violet-400" />
+> 218	                  <span className="font-mono text-[10px] text-violet-400/80 tracking-wider uppercase font-bold">
+> 219	                    Mega Brain
+> 220	                  </span>
+> 221	                </div>
+> 222	                <div className="h-3 w-[1px] bg-violet-500/20" />
+> 223	                <div className="flex items-center gap-1.5">
+> 224	                  <Activity className="w-3.5 h-3.5 text-amber-400" />
+> 225	                  <span className="font-mono text-[10px] text-amber-400/80 tracking-wider uppercase font-bold">
+> 226	                    Cymatics
+> 227	                  </span>
+> 228	                </div>
+> 229	              </div>
+> 230	
+> 231	              {/* Dynamic telemetry levels & frequency modes */}
+> 232	              <div className="flex items-center gap-3">
+> 233	                <span className={`font-mono text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+> 234	                  intensity >= 0.7 
+> 235	                    ? 'text-fuchsia-300 border-fuchsia-500/40 bg-fuchsia-500/15'
+> 236	                    : intensity >= 0.3
+> 237	                      ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'
+> 238	                      : 'text-blue-300 border-blue-500/30 bg-blue-500/10'
+> 239	                }`}>
+> 240	                  {intensity >= 0.7 
+> 241	                    ? 'Ω ESCALAR'
+> 242	                    : intensity >= 0.3
+> 243	                      ? 'γ GAMA  40–500 Hz'
+> 244	                      : 'α ALFA  5–40 Hz'}
+> 245	                </span>
+> 246	
+> 247	                <div className="flex items-end gap-0.5">
+> 248	                  {Array.from({ length: 8 }).map((_, i) => (
+> 249	                    <div
+> 250	                      key={i}
+> 251	                      className="w-0.5 rounded-full transition-all duration-100"
+> 252	                      style={{
+> 253	                        height: `${5 + (i < Math.ceil(intensity * 8) ? intensity * 18 : 0)}px`,
+> 254	                        backgroundColor:
+> 255	                          i < Math.ceil(intensity * 8)
+> 256	                            ? `hsl(${35 + i * 8}, 85%, 55%)`
+> 257	                            : "rgba(124,58,237,0.15)",
+> 258	                      }}
+> 259	                    />
+> 260	                  ))}
+> 261	                </div>
+> 262	              </div>
+> 263	            </div>
+> 264	
+> 265	            {/* Combined Visualization Area */}
+> 266	            <div className="flex-1 relative bg-black/98">
+> 267	              <MegaBrainVisualizer isThinking={isThinking} />
+> 268	
+> 269	              {/* Bottom stats overlay */}
+> 270	              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/90 border border-violet-500/20 pointer-events-none z-10 shadow-[0_0_12px_rgba(124,58,237,0.15)]">
+> 271	                <div
+> 272	                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+> 273	                    intensity > 0.5
+> 274	                      ? "bg-amber-400 animate-pulse"
+> 275	                      : intensity > 0.1
+> 276	                        ? "bg-cyan-400"
+> 277	                        : "bg-violet-600/60"
+> 278	                  }`}
+> 279	                />
+> 280	                <span className="font-mono text-[9px] text-amber-300/70 uppercase tracking-wider">
+> 281	                  {intensity > 0.08
+> 282	                    ? `Ressonância Singular: ${Math.round(intensity * 100)}%`
+> 283	                    : "Campo Gravitacional em Repouso"}
+> 284	                </span>
+> 285	              </div>
+> 286	
+> 287	              {/* A2UI floating panels */}
+> 288	              <div className="absolute inset-0 pointer-events-none" style={{ pointerEvents: "none" }}>
+> 289	                <div className="relative w-full h-full" style={{ pointerEvents: "all" }}>
+> 290	                  <A2UIRenderer surfaces={surfaces} onClose={closeSurface} onMove={moveSurface} />
+> 291	                </div>
+> 292	              </div>
+> 293	
+> 294	              {/* Gradient overlays */}
+> 295	              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
+> 296	            </div>
+> 297	          </div>
+> 298	        </div>
+> 299	      </div>
+> 300	    </div>
+> 301	  );
+> 302	}
+> 303	
+> ```
+
+## 🤖 Claude *(15:53:12)*
+
+
+## 🤖 Claude *(15:53:14)*
+
+Padrões capturados (rotas lazy do App, store Zustand `create<State>`, layout flex estabilizado 30/70 do Core-Fable). Construindo o scaffold 3.1 — store + página shell 72/28 + rota, sem deletar nada.
+
+## 🤖 Claude *(15:53:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useUnifiedCanvasStore.ts",
+  "content": "import { create } from 'zustand';\n\n// Unified Sensorial Canvas global context (PR-025 / FR-043..FR-049).\n// Feeds both the Code Network (graphology/Louvain \u2192 R3F) and the Memory\n// Network (GraphRAG cloud), and coordinates view isolation + camera fly-to.\n// Synapses (inter-network coupling edges) are lit only in 'universe' view.\n\n/** Active view: isolate one network, or light the inter-network synapses. */\nexport type CanvasViewMode = 'matrix' | 'memory' | 'universe';\n\n/** Which network a selected node belongs to. */\nexport type CanvasNetwork = 'code' | 'memory';\n\n/** 3D world coordinate used for camera fly-to targeting. */\nexport type Vec3 = [number, number, number];\n\nexport interface CanvasSelection {\n  network: CanvasNetwork;\n  nodeId: string;\n}\n\ninterface UnifiedCanvasState {\n  /** Active view mode (drives network visibility + synapse lighting). */\n  viewMode: CanvasViewMode;\n  /** Currently selected node (drives the intelligence panel + fly-to). */\n  selection: CanvasSelection | null;\n  /** Camera fly-to target in world space; null = no pending move. */\n  cameraTarget: Vec3 | null;\n\n  setViewMode: (mode: CanvasViewMode) => void;\n  selectNode: (network: CanvasNetwork, nodeId: string) => void;\n  clearSelection: () => void;\n  setCameraTarget: (target: Vec3 | null) => void;\n}\n\nexport const useUnifiedCanvasStore = create<UnifiedCanvasState>((set) => ({\n  viewMode: 'universe',\n  selection: null,\n  cameraTarget: null,\n\n  setViewMode: (viewMode) => set({ viewMode }),\n  selectNode: (network, nodeId) => set({ selection: { network, nodeId } }),\n  clearSelection: () => set({ selection: null }),\n  setCameraTarget: (cameraTarget) => set({ cameraTarget }),\n}));\n\n/** Whether the Code Network is rendered in the given view mode. */\nexport const codeNetworkVisible = (mode: CanvasViewMode): boolean =>\n  mode === 'matrix' || mode === 'universe';\n\n/** Whether the Memory Network is rendered in the given view mode. */\nexport const memoryNetworkVisible = (mode: CanvasViewMode): boolean =>\n  mode === 'memory' || mode === 'universe';\n\n/** Inter-network synapses are lit only in Universe view. */\nexport const synapsesVisible = (mode: CanvasViewMode): boolean => mode === 'universe';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/store/useUnifiedCanvasStore.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:53:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "content": "import { Orbit, Boxes, BrainCircuit, Network, Cpu } from 'lucide-react';\nimport {\n  useUnifiedCanvasStore,\n  codeNetworkVisible,\n  memoryNetworkVisible,\n  synapsesVisible,\n  type CanvasViewMode,\n} from '@/store/useUnifiedCanvasStore';\n\n// Phase Epsilon V9 \u2014 Unified Sensorial Canvas (PR-025).\n// Phase 3.1 SCAFFOLD: 72/28 flex shell + view-mode toggles wired to the\n// unified store. The R3F networks (Code/Memory) + black-hole background mount\n// in phases 3.2\u20133.4; this step ships the non-breaking shell only, while the\n// legacy Matrix/Memory/Core-Fable routes remain live as backup.\n\nconst VIEW_OPTIONS: { mode: CanvasViewMode; label: string; icon: typeof Orbit }[] = [\n  { mode: 'matrix', label: 'Matrix', icon: Boxes },\n  { mode: 'memory', label: 'Mem\u00f3ria', icon: BrainCircuit },\n  { mode: 'universe', label: 'Universo', icon: Orbit },\n];\n\nfunction ViewToggle() {\n  const viewMode = useUnifiedCanvasStore((s) => s.viewMode);\n  const setViewMode = useUnifiedCanvasStore((s) => s.setViewMode);\n\n  return (\n    <div className=\"flex items-center gap-1 rounded-full border border-violet-500/20 bg-violet-500/5 p-0.5\">\n      {VIEW_OPTIONS.map(({ mode, label, icon: Icon }) => {\n        const active = viewMode === mode;\n        return (\n          <button\n            key={mode}\n            onClick={() => setViewMode(mode)}\n            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${\n              active\n                ? 'border border-amber-500/50 bg-amber-500/15 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]'\n                : 'border border-transparent text-violet-400/70 hover:text-amber-400'\n            }`}\n            title={`Vis\u00e3o: ${label}`}\n          >\n            <Icon className=\"w-3 h-3\" />\n            {label}\n          </button>\n        );\n      })}\n    </div>\n  );\n}\n\nfunction NetworkBadge({ on, label, color }: { on: boolean; label: string; color: string }) {\n  return (\n    <div\n      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-mono uppercase tracking-wider transition-opacity ${color} ${\n        on ? 'opacity-100' : 'opacity-30'\n      }`}\n    >\n      <span className={`w-1.5 h-1.5 rounded-full ${on ? 'animate-pulse' : ''}`} style={{ background: 'currentColor' }} />\n      {label}\n    </div>\n  );\n}\n\nexport default function UnifiedCanvasPage() {\n  const viewMode = useUnifiedCanvasStore((s) => s.viewMode);\n  const selection = useUnifiedCanvasStore((s) => s.selection);\n\n  const showCode = codeNetworkVisible(viewMode);\n  const showMemory = memoryNetworkVisible(viewMode);\n  const showSynapses = synapsesVisible(viewMode);\n\n  return (\n    <div className=\"flex flex-col h-full bg-[#050210] overflow-hidden\">\n      {/* \u2500\u2500 HUD bar \u2500\u2500 */}\n      <div className=\"flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-violet-500/15 bg-[#050210] z-20\">\n        <div className=\"flex items-center gap-2\">\n          <Cpu className=\"w-4 h-4 text-amber-400\" />\n          <span className=\"font-mono text-xs font-bold text-white/90 tracking-wider uppercase\">\n            Unified Sensorial Canvas\n          </span>\n          <span className=\"font-mono text-[9px] text-violet-400/50 uppercase tracking-widest\">\n            Epsilon V9 \u00b7 scaffold\n          </span>\n        </div>\n        <ViewToggle />\n      </div>\n\n      {/* \u2500\u2500 Main layout (72 / 28) \u2500\u2500 */}\n      <div className=\"flex flex-1 min-h-0 overflow-hidden\">\n        {/* Canvas \u2014 72% (R3F networks + black hole mount in phases 3.2\u20133.4) */}\n        <div\n          className=\"relative flex items-center justify-center min-w-0 min-h-0 h-full overflow-hidden\"\n          style={{ width: '72%' }}\n        >\n          {/* Event-horizon placeholder until the R3F scene lands */}\n          <div\n            className=\"absolute inset-0 pointer-events-none\"\n            style={{\n              background:\n                'radial-gradient(circle at 50% 50%, rgba(124,58,237,0.10) 0%, rgba(6,182,212,0.05) 35%, transparent 65%)',\n            }}\n          />\n          <div className=\"relative flex flex-col items-center gap-3 text-center\">\n            <Orbit className=\"w-10 h-10 text-violet-400/60 animate-pulse\" />\n            <div className=\"font-mono text-sm text-white/70 uppercase tracking-widest\">\n              {viewMode === 'matrix' ? 'Rede de C\u00f3digo' : viewMode === 'memory' ? 'Rede de Mem\u00f3ria' : 'Universo'}\n            </div>\n            <div className=\"font-mono text-[10px] text-violet-400/40 max-w-xs\">\n              Cena R3F (Black Hole + redes) monta nas Fases 3.2\u20133.4. P\u00e1ginas legadas preservadas como backup.\n            </div>\n            <div className=\"flex items-center gap-2 mt-1\">\n              <NetworkBadge on={showCode} label=\"C\u00f3digo\" color=\"border-emerald-500/30 bg-emerald-500/5 text-emerald-400\" />\n              <NetworkBadge on={showMemory} label=\"Mem\u00f3ria\" color=\"border-cyan-500/30 bg-cyan-500/5 text-cyan-400\" />\n              <NetworkBadge on={showSynapses} label=\"Sinapses\" color=\"border-fuchsia-500/30 bg-fuchsia-500/5 text-fuchsia-400\" />\n            </div>\n          </div>\n        </div>\n\n        {/* Tactical terminal \u2014 28% */}\n        <div\n          className=\"relative flex flex-col min-w-0 min-h-0 h-full border-l border-violet-500/10 bg-[#070414] overflow-hidden\"\n          style={{ width: '28%' }}\n        >\n          <div className=\"flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b border-violet-500/10\">\n            <Network className=\"w-3.5 h-3.5 text-amber-400\" />\n            <span className=\"font-mono text-[10px] text-amber-400/80 uppercase tracking-wider font-bold\">\n              Terminal T\u00e1tico\n            </span>\n          </div>\n\n          <div className=\"flex-1 min-h-0 overflow-auto p-3 space-y-4\">\n            <div>\n              <div className=\"font-mono text-[9px] text-violet-400/50 uppercase tracking-widest mb-1\">Vis\u00e3o ativa</div>\n              <div className=\"font-mono text-sm text-amber-300 uppercase\">{viewMode}</div>\n            </div>\n\n            <div>\n              <div className=\"font-mono text-[9px] text-violet-400/50 uppercase tracking-widest mb-1\">Sele\u00e7\u00e3o</div>\n              <div className=\"font-mono text-xs text-white/60\">\n                {selection ? `${selection.network} \u00b7 ${selection.nodeId.slice(0, 12)}\u2026` : 'nenhum n\u00f3 selecionado'}\n              </div>\n            </div>\n\n            <div>\n              <div className=\"font-mono text-[9px] text-violet-400/50 uppercase tracking-widest mb-1\">Telemetria de resson\u00e2ncia</div>\n              <div className=\"font-mono text-[10px] text-violet-400/40\">aguardando cena (Fase 3.4)</div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:53:52)*
+
+
+## 🤖 Claude *(15:53:54)*
+
+Scaffold escrito. Agora ligo a rota no App.tsx (import lazy + rota `universe`, legados intactos) e rodo o tsc como gate material.
+
+## 🤖 Claude *(15:53:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const KanbanPage = lazy(() => import(\"./pages/KanbanPage.tsx\"));",
+  "new_string": "const KanbanPage = lazy(() => import(\"./pages/KanbanPage.tsx\"));\nconst UnifiedCanvasPage = lazy(() => import(\"./pages/UnifiedCanvasPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:53:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"core-fable\" element={<CoreFablePage />} />",
+  "new_string": "                <Route path=\"core-fable\" element={<CoreFablePage />} />\n                <Route path=\"universe\" element={<UnifiedCanvasPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:54:01)*
+
+
+## 🤖 Claude *(15:54:01)*
+
+Gate material — `tsc --noEmit`:
+
+## 🤖 Claude *(15:54:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -20; echo \"exit=${PIPESTATUS[0]}\"",
+  "description": "TypeScript strict compile gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit=0
+> ```
+
+## 🤖 Claude *(15:55:00)*
+
+
+## 🤖 Claude *(15:55:00)*
+
+`tsc --noEmit` exit **0** — scaffold compila limpo. Fase 3.1 entregue. Estado do working tree:
+
+## 🤖 Claude *(15:55:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short; echo \"--- branch ---\"; git branch --show-current; echo \"--- novos arquivos (3.1) ---\"; ls -la src/pages/UnifiedCanvasPage.tsx src/store/useUnifiedCanvasStore.ts",
+  "description": "Working tree state + confirm 3.1 files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M docs/bok/mcorch-constellation/03-prd.md
+>  M docs/bok/mcorch-constellation/04-frd.md
+>  M docs/bok/mcorch-constellation/05-sdd.md
+>  M src/App.tsx
+> ?? .claude/context/agi-asi-via4-design-checklist.md
+> ?? .claude/context/unified-core-sensorial-canvas-plan.md
+> ?? scripts/seed-agi-asi-reference-node.ts
+> ?? src/pages/UnifiedCanvasPage.tsx
+> ?? src/store/useUnifiedCanvasStore.ts
+> --- branch ---
+> main
+> --- novos arquivos (3.1) ---
+> -rw-rw-r-- 1 ubuntu ubuntu 6767 Jun 17 12:53 src/pages/UnifiedCanvasPage.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 2199 Jun 17 12:53 src/store/useUnifiedCanvasStore.ts
+> ```
+
+## 🤖 Claude *(15:55:25)*
+
+
+## 🤖 Claude *(15:55:35)*
+
+## Fase 3.1 entregue — scaffold não-quebrante (tsc 0)
+
+| Artefato | Material |
+|---|---|
+| [src/store/useUnifiedCanvasStore.ts](src/store/useUnifiedCanvasStore.ts) | 2199 B — store Zustand (viewMode · selection · cameraTarget + helpers de visibilidade) |
+| [src/pages/UnifiedCanvasPage.tsx](src/pages/UnifiedCanvasPage.tsx) | 6767 B — shell **72/28** + toggles Matrix/Memória/Universo wired ao store |
+| [src/App.tsx](src/App.tsx) | rota `/dashboard/universe` + import lazy |
+| Build | **tsc --noEmit exit 0** |
+| Legados | `constellation/matrix` · `constellation/memory` · `core-fable` **intactos** (só adicionei linhas) |
+
+A casca já reage: trocar de visão acende/apaga os badges Código/Memória/Sinapses; a cena R3F entra nas Fases 3.2–3.4.
+
+**Logística de commit (preciso de 1 decisão):** estamos no `main`, e o working tree tem **3 frentes distintas** não-commitadas — (a) referência AGI→ASI (seed + checklist), (b) emenda BoK (gate), (c) scaffold 3.1. A regra de segurança pede **branch antes de commitar no main**. Sigo seu diretivo de *commits granulares* assim:
+
+- crio branch `feat/unified-sensorial-canvas`, commito em 3 commits limpos (AGI→ASI · emenda BoK · scaffold 3.1), e **continuo pra 3.2** (a parte pesada: extrair o selector graphology + `CodeNetworkLayer` em R3F com InstancedMesh);
+
+ou, se preferir, **acumulo sem commitar** e sigo direto pro 3.2.
+
+Qual cadência — **branch + commits granulares agora**, ou seguir acumulando? (Commito no estilo da casa: milestone, sem Co-Authored-By.)
+
+## 👤 User *(15:58:45)*
+
+pode comitar tudo direto na main não precisa denovas branch veja uqe são alterações que não impacta muito somente o scaffold 3.1 talvez seja mais importante mas verifique corretamente se não tem nenhum perigo de comitar tudo direto no main deixando tudo sincronizado e depois vai para o 3.2
+
+## 🤖 Claude *(15:59:40)*
+
+
+## 🤖 Claude *(15:59:42)*
+
+Boa — autorizado commit direto na `main`, override do branch-first registrado. Mas você pediu pra **verificar perigo primeiro** (Lei 1). Rodando as checagens de segurança antes de qualquer commit: segredos vazados, divergência com o remoto, e o que exatamente vai entrar.
+
+## 🤖 Claude *(15:59:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== 1) remoto + ahead/behind (risco de push n\u00e3o-fast-forward) =====\"\ngit remote -v | head -2\ngit status -sb | head -3\necho \"n\u00e3o-pushados ainda:\"; git log --oneline origin/main..HEAD 2>/dev/null | head\necho \"\"\necho \"===== 2) scan de SEGREDOS nos arquivos a commitar =====\"\nFILES=\"docs/bok/mcorch-constellation/03-prd.md docs/bok/mcorch-constellation/04-frd.md docs/bok/mcorch-constellation/05-sdd.md src/App.tsx .claude/context/agi-asi-via4-design-checklist.md .claude/context/unified-core-sensorial-canvas-plan.md scripts/seed-agi-asi-reference-node.ts src/pages/UnifiedCanvasPage.tsx src/store/useUnifiedCanvasStore.ts\"\ngrep -nEH \"sk_(live|test)|sk-[A-Za-z0-9]{20}|eyJ[A-Za-z0-9_-]{20}|sb_secret_[A-Za-z0-9]|sbp_[A-Za-z0-9]|whsec_|r8_[A-Za-z0-9]{20}|AIza[A-Za-z0-9_-]{30}\" $FILES 2>/dev/null && echo \"\u26a0\ufe0f POSS\u00cdVEL SEGREDO ACIMA\" || echo \"\u2705 nenhum padr\u00e3o de segredo encontrado\"\necho \"\"\necho \"===== 3) .env \u00e9 gitignored? (n\u00e3o pode entrar) =====\"\ngit check-ignore .env && echo \"\u2705 .env ignorado\" || echo \"\u26a0\ufe0f .env N\u00c3O ignorado\"\necho \"\"\necho \"===== 4) algum arquivo grande/indevido nos untracked? =====\"\ngit status --short | grep -E \"^\\?\\?\" | awk '{print $2}' | xargs -r ls -la 2>/dev/null",
+  "description": "Pre-commit danger checks: secrets, remote divergence, gitignore, file sizes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== 1) remoto + ahead/behind (risco de push não-fast-forward) =====
+> origin	git@github.com:gabrielZarattini/constellation-orchestra.git (fetch)
+> origin	git@github.com:gabrielZarattini/constellation-orchestra.git (push)
+> ## main...origin/main
+>  M docs/bok/mcorch-constellation/03-prd.md
+>  M docs/bok/mcorch-constellation/04-frd.md
+> não-pushados ainda:
+> 
+> ===== 2) scan de SEGREDOS nos arquivos a commitar =====
+> ✅ nenhum padrão de segredo encontrado
+> 
+> ===== 3) .env é gitignored? (não pode entrar) =====
+> .env
+> ✅ .env ignorado
+> 
+> ===== 4) algum arquivo grande/indevido nos untracked? =====
+> -rw-rw-r-- 1 ubuntu ubuntu 5158 Jun 17 03:11 .claude/context/agi-asi-via4-design-checklist.md
+> -rw-rw-r-- 1 ubuntu ubuntu 6658 Jun 17 12:29 .claude/context/unified-core-sensorial-canvas-plan.md
+> -rw-rw-r-- 1 ubuntu ubuntu 9592 Jun 17 03:08 scripts/seed-agi-asi-reference-node.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 6767 Jun 17 12:53 src/pages/UnifiedCanvasPage.tsx
+> -rw-rw-r-- 1 ubuntu ubuntu 2199 Jun 17 12:53 src/store/useUnifiedCanvasStore.ts
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
