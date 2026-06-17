@@ -8435,6 +8435,6 @@ Sessão fechada. 🤝
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-17 - 21b2d649-94ad-4468-9821-20f76eae70a3]]
+> * **Sessão Anterior**: [[2026-06-17 - Automatizar geração e agendamento de conteúdo para redes sociais]]
 > * **Próxima Sessão**: [[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]
 %% --- TIMELINE END --- %%

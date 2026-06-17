@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 913
-> * **Sessões do Claude**: 871
+> * **Total de Sessões Registradas**: 921
+> * **Sessões do Claude**: 879
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,17 +61,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-17 - agent-aff65e0ac55826d37]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-aff2acf5903681528]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-aece5f7bd665a6954]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-ae732c84f7956e55f]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-ad0c209a581d78aca]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-acd33ce41f767d7ab]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-ac71eb815829bc61b]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-ab8de175fa11529f4]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-ab0f700f16cf4bfe2]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-aa1d4a413cde4ecbc]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a9bb185aa3b1c4648]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a66d2f36aca6f4f59]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a5a3922b86c4d255c]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a1a351de1820e4318]]` - *2026-06-17*
-*   *... e mais 877 sessões nessa categoria.*
+*   `[[2026-06-17 - agent-a6accaca6a695387e]]` - *2026-06-17*
+*   *... e mais 885 sessões nessa categoria.*
 
 ---
 
@@ -264,23 +264,31 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-17 - agent-aff65e0ac55826d37]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-aff2acf5903681528]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-aece5f7bd665a6954]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-ae732c84f7956e55f]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-ad0c209a581d78aca]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-acd33ce41f767d7ab]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-ac71eb815829bc61b]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-ab8de175fa11529f4]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-ab0f700f16cf4bfe2]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-aa1d4a413cde4ecbc]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a9bb185aa3b1c4648]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a6accaca6a695387e]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a673e36725eca4ee5]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a66d2f36aca6f4f59]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a5a3922b86c4d255c]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a1a351de1820e4318]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a189be67710997cf2]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a0db0436293b85c64]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a0add95feb31e8680]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a0792fcaf7d69d604]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a0725c95f7eff0ea4]]` (ClaudeSessions)
 *   `[[2026-06-17 - Usar Model Council para verificar respostas de IA]]` (ClaudeSessions)
 *   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` (ClaudeSessions)
 *   `[[2026-06-17 - Binance withdrawal and IP unlock troubleshooting]]` (ClaudeSessions)
+*   `[[2026-06-17 - Automatizar geração e agendamento de conteúdo para redes sociais]]` (ClaudeSessions)
 *   `[[2026-06-17 - 21b2d649-94ad-4468-9821-20f76eae70a3]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-afe8189a8d120151e]]` (ClaudeSessions)
 *   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` (ClaudeSessions)
