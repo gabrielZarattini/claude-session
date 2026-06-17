@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 38
-> * **Total de Sessões**: 888
+> * **Total de Sessões**: 890
 
 ---
 
@@ -61,6 +61,8 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - Binance withdrawal and IP unlock troubleshooting]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-16 - agent-afe8189a8d120151e]]` (ClaudeSessions) - *2026-06-16*
 *   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` (ClaudeSessions) - *2026-06-16*
 *   `[[2026-06-16 - agent-af2ee0644987e7b32]]` (ClaudeSessions) - *2026-06-16*
