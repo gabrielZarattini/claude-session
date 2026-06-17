@@ -8435,5 +8435,5 @@ Pode encerrar tranquilo. Quando voltar, o `/handson` já pega tudo isto do HANDO
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-17 - Binance withdrawal and IP unlock troubleshooting]]
-> * **Próxima Sessão**: [[2026-06-17 - agent-ac71eb815829bc61b]]
+> * **Próxima Sessão**: [[2026-06-17 - Usar Model Council para verificar respostas de IA]]
 %% --- TIMELINE END --- %%
