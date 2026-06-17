@@ -5036,5 +5036,5 @@ Boa — autorizado commit direto na `main`, override do branch-first registrado.
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]
-> * **Próxima Sessão**: [[2026-06-17 - agent-ac71eb815829bc61b]]
+> * **Próxima Sessão**: [[2026-06-17 - agent-a0725c95f7eff0ea4]]
 %% --- TIMELINE END --- %%

@@ -3387,6 +3387,1366 @@ Posso **começar o (b)+(c)+(d) agora**? Eu faria nesta ordem:
 
 Dá o **GO** e eu arranco pelo (b). Ou, se preferires fechar o **(e)** (o cap diário — qual % de perda no dia tu aceitas antes de travar tudo?) antes pra a gente alinhar de uma vez, também rola.
 
+## 👤 User *(16:04:51)*
+
+GO
+
+## 🤖 Claude *(16:05:28)*
+
+
+## 🤖 Claude *(16:05:31)*
+
+GO recebido. Começo pelo **(b) desativar o harvester** — o mais urgente. Antes de tocar em qualquer coisa, levanto os fatos: confirmar as automações id22-25 ao vivo, o mecanismo correto de desativar (DB + BRAIN, durável) e como elas foram semeadas.
+
+## 🤖 Claude *(16:05:32)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Descongelamento: pr\u00e9-reqs (b)(c)(d)",
+  "summary": "Desativar harvester, fix P&L BNB, teto SELL-by-base \u2014 com QA/TL antes do master"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Descongelamento: pré-reqs (b)(c)(d)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(16:05:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== automationsRouter (rotas) ===\"; cat routers/automationsRouter.js 2>/dev/null | grep -n \"router\\.\" ; echo; echo \"=== como o controller para/desativa (isActive/BRAIN/stop) ===\"; grep -n \"isActive\\|stopAutomation\\|deleteBrain\\|beholder\\|updateBrain\\|startAutomation\" controllers/automationsController.js 2>/dev/null | head -30",
+  "description": "Mapear rotas e mecanismo de stop/deactivate de automa\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === automationsRouter (rotas) ===
+> 5:router.get('/:id', automationsController.getAutomation);
+> 7:router.delete('/:id', automationsController.deleteAutomation);
+> 9:router.get('/', automationsController.getAutomations);
+> 11:router.patch('/:id', automationsController.updateAutomation);
+> 13:router.post('/', automationsController.insertAutomation);
+> 15:router.post('/:id/start', automationsController.startAutomation);
+> 17:router.post('/:id/stop', automationsController.stopAutomation);
+> 
+> === como o controller para/desativa (isActive/BRAIN/stop) ===
+> 7:const beholder = require('../beholder');
+> 50:async function startAutomation(req, res, next) {
+> 53:    if (automation.isActive) return res.sendStatus(204);
+> 55:    automation.isActive = true;
+> 65:        beholder.updateBrain(automation.get({ plain: true }));
+> 74:async function stopAutomation(req, res, next) {
+> 77:    if (!automation.isActive) return res.sendStatus(204);
+> 82:        beholder.deleteBrain(automation.get({ plain: true }));
+> 84:    automation.isActive = false;
+> 147:            grids = await beholder.generateGrids(savedAutomation, levels, quantity, transaction);
+> 158:    if (savedAutomation.isActive) {
+> 167:            beholder.updateBrain(savedAutomation.get({ plain: true }));
+> 203:            await beholder.generateGrids(updatedAutomation, levels, quantity, transaction);
+> 218:    if (updatedAutomation.isActive) {
+> 227:            beholder.deleteBrain(currentAutomation);
+> 228:            beholder.updateBrain(updatedAutomation.get({ plain: true }));
+> 235:            beholder.deleteBrain(currentAutomation);
+> 245:    if (currentAutomation.isActive) {
+> 249:            beholder.deleteBrain(currentAutomation);
+> 279:    startAutomation,
+> 280:    stopAutomation,
+> ```
+
+## 🤖 Claude *(16:05:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; echo \"=== scripts de setup do harvester (durabilidade) ===\"; grep -rln \"harvest\\|HARVEST\" backend/scripts backend/src/seeders backend/seeders 2>/dev/null | head; echo \"--- procura ampla ---\"; find . -path ./node_modules -prune -o -iname \"*harvest*\" -print 2>/dev/null | grep -v node_modules | head",
+  "description": "Achar como o harvester foi semeado e se est\u00e1 no db:seed:all"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scripts de setup do harvester (durabilidade) ===
+> backend/scripts/setup-grid.js
+> backend/scripts/setup-farm.js
+> backend/scripts/setup-harvester.js
+> --- procura ampla ---
+> ./backend/migrations/20260609160000-create-harvestPositions.js
+> ./backend/scripts/setup-harvester.js
+> ./backend/src/repositories/harvestPositionsRepository.js
+> ./backend/src/models/harvestPositionModel.js
+> ```
+
+## 🤖 Claude *(16:06:16)*
+
+
+## 🤖 Claude *(16:06:20)*
+
+Mecanismo claro: `POST /automations/:id/stop` faz `isActive=false` no DB **e** `beholder.deleteBrain()` — durável (sobrevive reboot, que só carrega ativas) e limpa o BRAIN vivo. E o `setup-harvester.js` é **script manual** (não está no `db:seed:all` do entrypoint), então não há auto-revival no boot. Bom caminho.
+
+Antes de mexer, confirmo o estado vivo: as automações id22-25 e — crítico pra QA — se há **buckets/ordens de harvester órfãos** que a desativação deixaria pendurados.
+
+## 🤖 Claude *(16:06:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; echo \"=== chaves DB no .env ===\"; grep -E \"^DB_\" .env 2>/dev/null | sed -E \"s/(PASSWORD|PASS)=.*/\\1=<oculto>/\"; ",
+  "description": "Ver nomes das vari\u00e1veis DB no .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === chaves DB no .env ===
+> DB_NAME=tradeux
+> DB_USER=tradeux
+> DB_PWD=2e462b7cdff790fb6d6290a0f5a6b25b
+> DB_ROOT_PWD=c6a84c146bad3dcb878b251528481fc5
+> DB_HOST=db
+> DB_PORT=3306
+> DB_DIALECT=mysql
+> DB_LOGS=false
+> DB_SSL=false
+> ```
+
+## 🤖 Claude *(16:06:36)*
+
+
+## 🤖 Claude *(16:06:37)*
+
+DB creds na mão. Consulto as automações 22-25 e a tabela de buckets do harvester (read-only), lendo a senha do `.env` pra não expô-la no comando.
+
+## 🤖 Claude *(16:06:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; PW=$(grep \"^DB_PWD=\" .env | cut -d= -f2-); docker compose exec -T db mysql -utradeux -p\"$PW\" tradeux -e \"SELECT id,symbol,name,isActive FROM automations WHERE (id BETWEEN 22 AND 25) OR name LIKE \\\"%arvest%\\\" ORDER BY id; SELECT * FROM harvestPositions;\" 2>/dev/null'",
+  "description": "Confirmar automa\u00e7\u00f5es harvester e buckets abertos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> id	symbol	name	isActive
+> 22	BTCUSDT	Harvest Buy BTCUSDT -3pct	1
+> 23	BTCUSDT	Harvest Buy BTCUSDT -5pct	1
+> 24	BTCUSDT	Harvest Buy BTCUSDT -7pct	1
+> 25	BTCUSDT	Harvest Sell BTCUSDT	1
+> symbol	qty	cost	atMs	createdAt	updatedAt
+> BTCUSDT	0	0	1781488559482	2026-06-09 16:39:58	2026-06-15 01:55:59
+> ```
+
+## 🤖 Claude *(16:07:09)*
+
+
+## 🤖 Claude *(16:07:14)*
+
+Tudo limpo pra desativar:
+- **id22-25** = todas o harvester de BTCUSDT (-3/-5/-7pct buys + sell), todas `isActive=1`.
+- **Bucket vazio**: `harvestPositions` tem 1 linha BTCUSDT com **qty=0, cost=0** → nenhum holding órfão. E a carteira (checada antes) só tem USDT + pó, zero BTC. Então não há posição nem ordem de venda pendurada pra desativação deixar órfã.
+
+Vou fazer o (b) em duas camadas: o **stop ao vivo** (efeito imediato, durável no DB+BRAIN) e tornar o `setup-harvester.js` **default-OFF** (pra um futuro re-run não revivê-lo) — esse vira o diff revisável. Deixa eu ver como o script cria as automações:
+
+## 🤖 Claude *(16:07:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup do HARVESTER DE DISLOCAÇÃO no BTCUSDT (testnet) — Fase B do experimento (ver HANDOFF + análise 4h).
+> 4	 *
+> 5	 * TESE: o testnet disloca do mainnet (wicks intrabar -7% vs mainnet) e REVERTE (corr ~0.89). Compra-limite
+> 6	 * FUNDA ancorada no FAIR (preço mainnet, via fairPriceJob) enche no wick; vende no-loss quando reverte +1.2%.
+> 7	 * DESGATEADO do regime de propósito (explora um artefato testnet-específico, não direção de mercado).
+> 8	 *
+> 9	 * Bucket TÁTICO MEMORY['<sym>:HARVEST']={qty,cost} (escrito no fill por app-em.updateHarvestPosition):
+> 10	 * compras somam (média ponderada do custo); a venda usa quantity='HARVEST_QTY' (lê .qty) e zera. O cofre
+> 11	 * principal de BTC NUNCA é tocado — vende só o que o harvester comprou, e só com lucro (anti-bleed).
+> 12	 *
+> 13	 * Cria (se ausentes; INATIVAS por segurança):
+> 14	 *   - template "Harvest Buy <sym>"  LIMIT marketável (bestAsk×(1+buf)) MIN_NOTIONAL×size — compartilhado pelas rungs.
+> 15	 *   - template "Harvest Sell <sym>" LIMIT marketável (bestBid×(1-buf)) quantity=HARVEST_QTY.
+> 16	 *   - automações "Harvest Buy <sym> -Npct" (uma por rung): bestAsk < FAIR.price×(1-N) com edge-trigger. INATIVAS.
+> 17	 *   - automação  "Harvest Sell <sym>" no-loss: tem bucket E bestBid > HARVEST.cost×(1+lucro), edge-trigger. INATIVA.
+> 18	 *
+> 19	 * Requer: fairPriceJob no ar gravando MEMORY['<sym>:FAIR'] (índice fail-safe: sem FAIR a compra não avalia).
+> 20	 * Reproduz após `make nuke` (dado runtime). Uso (no container, server no ar):
+> 21	 *   node scripts/setup-harvester.js            [DRY=true p/ preview]
+> 22	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),
+> 23	 *        HARVEST_SYMBOL (BTCUSDT), HARVEST_RUNGS (0.03,0.05,0.07), HARVEST_PROFIT (0.012),
+> 24	 *        HARVEST_BUFFER (0.003), HARVEST_SIZE_MULT (2 = MIN_NOTIONAL×2 ~$9; ×1 falha o filtro NOTIONAL $5)
+> 25	 */
+> 26	const http = require('http');
+> 27	
+> 28	const SYMBOL = (process.env.HARVEST_SYMBOL || 'BTCUSDT').toUpperCase();
+> 29	const RUNGS = (process.env.HARVEST_RUNGS || '0.03,0.05,0.07').split(',').map(s => parseFloat(s.trim())).filter(n => Number.isFinite(n) && n > 0 && n < 1);
+> 30	const PROFIT = parseFloat(process.env.HARVEST_PROFIT || '0.012');
+> 31	const BUF = parseFloat(process.env.HARVEST_BUFFER || '0.003');
+> 32	const SIZE_MULT = parseFloat(process.env.HARVEST_SIZE_MULT || '2'); // MIN_NOTIONAL×2 (~$9 a 62k): ×1 dá ~$4,4 e FALHA o filtro NOTIONAL ($5) ao disparar (validado ao vivo: -1013)
+> 33	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 34	const BASE = { host: process.env.HARVEST_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 35	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 36	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 37	const K = k => `${SYMBOL}:${k}`;
+> 38	
+> 39	function req(method, path, token, body) {
+> 40	    return new Promise((resolve) => {
+> 41	        const data = body ? JSON.stringify(body) : null;
+> 42	        const headers = { 'Content-Type': 'application/json' };
+> 43	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 44	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 45	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 46	            let d = ''; res.on('data', c => d += c);
+> 47	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 48	        });
+> 49	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 50	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 51	        if (data) r.write(data); r.end();
+> 52	    });
+> 53	}
+> 54	
+> 55	async function ensureTemplate(token, name, side, opts) {
+> 56	    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+> 57	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 58	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 59	    if (DRY) return { id: 0, msg: `[DRY] POST template "${name}" (${opts.type} ${side} qty ${opts.quantity}×${opts.quantityMultiplier || 1})` };
+> 60	    const r = await req('POST', '/ordertemplates', token, {
+> 61	        name, symbol: SYMBOL, type: opts.type, side,
+> 62	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 63	        stopPrice: null, stopPriceMultiplier: 1,
+> 64	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 65	        icebergQty: null, icebergQtyMultiplier: 1,
+> 66	    });
+> 67	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 68	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 69	}
+> 70	
+> 71	async function findAutomationByName(token, name) {
+> 72	    for (let page = 1; page <= 40; page++) {
+> 73	        const r = await req('GET', `/automations?page=${page}`, token);
+> 74	        const rows = r.body && r.body.rows;
+> 75	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 76	        const hit = rows.find(a => a.name === name);
+> 77	        if (hit) return hit;
+> 78	        if (rows.length < 10) break;
+> 79	    }
+> 80	    return null;
+> 81	}
+> 82	
+> 83	async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+> 84	    const existing = await findAutomationByName(token, name);
+> 85	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 86	    if (DRY) return `[DRY] POST automação "${name}" INATIVA\n      cond: ${conditions}\n      idx:  ${indexes}`;
+> 87	    const r = await req('POST', '/automations', token, {
+> 88	        name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 89	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 90	    });
+> 91	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 92	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 93	}
+> 94	
+> 95	(async () => {
+> 96	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 97	    if (!RUNGS.length) { console.error('HARVEST_RUNGS inválido'); process.exit(1); }
+> 98	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 99	    const token = login.body && login.body.token;
+> 100	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 101	
+> 102	    console.log(`# Setup HARVESTER de dislocação — ${SYMBOL} | rungs ${RUNGS.map(r => '-' + (r * 100).toFixed(0) + '%').join(', ')} abaixo do FAIR (mainnet) · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+> 103	
+> 104	    const buyTpl = await ensureTemplate(token, `Harvest Buy ${SYMBOL}`, 'BUY', {
+> 105	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 106	        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,
+> 107	    });
+> 108	    console.log('- ' + buyTpl.msg);
+> 109	    const sellTpl = await ensureTemplate(token, `Harvest Sell ${SYMBOL}`, 'SELL', {
+> 110	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 111	        quantity: 'HARVEST_QTY', quantityMultiplier: 1, // vende o bucket tático inteiro (capa na carteira em calcQty)
+> 112	    });
+> 113	    console.log('- ' + sellTpl.msg);
+> 114	
+> 115	    // COMPRA (uma automação por rung): bestAsk do testnet caiu N% ABAIXO do FAIR (mainnet) — dislocação.
+> 116	    // edge-trigger (previous>=alvo && current<alvo) = anti-empilhamento. FAIR no índice = fail-safe (sem FAIR
+> 117	    // mainnet a compra não avalia; sentinel price:0 do job DESLIGA tudo). DESGATEADO do regime de propósito.
+> 118	    for (const r of RUNGS) {
+> 119	        const factor = (1 - r).toFixed(4);
+> 120	        const name = `Harvest Buy ${SYMBOL} -${(r * 100).toFixed(0)}pct`;
+> 121	        const cond = `MEMORY['${K('BOOK')}'].current.bestAsk<MEMORY['${K('FAIR')}'].price*${factor} && MEMORY['${K('BOOK')}'].previous.bestAsk>=MEMORY['${K('FAIR')}'].price*${factor}`;
+> 122	        console.log('- ' + await ensureAutomation(token, name, cond, `${K('BOOK')},${K('FAIR')}`, buyTpl.id));
+> 123	    }
+> 124	
+> 125	    // VENDA no-loss: tem bucket (HARVEST.qty>0) E o bestBid já dá lucro sobre o custo MÉDIO (HARVEST.cost) E
+> 126	    // não há venda em voo (!HARVEST_SELLING). Índice HARVEST,BOOK → fail-safe (até a 1ª compra encher o bucket,
+> 127	    // não avalia). LEVEL-trigger (NÃO edge): a venda dispara enquanto o bestBid estiver acima do alvo — pega o
+> 128	    // revert rápido mesmo quando o bucket nasce (3s após o fill) JÁ acima do alvo, caso onde o edge-trigger
+> 129	    // antigo nunca via cruzamento fresco. A trava HARVEST_SELLING (setada no place, liberada no estado terminal
+> 130	    // da ordem) faz o anti-empilhamento → 1 venda por bucket, sem oversell. O 'double check' invertido é
+> 131	    // desligado p/ esta automação em beholder.shouldntInvert (casa o token 'HARVEST_SELLING' na condição).
+> 132	    const target = (1 + PROFIT).toFixed(4);
+> 133	    const sellCond = `MEMORY['${K('HARVEST')}'].qty>0 && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('HARVEST')}'].cost*${target} && !MEMORY['${K('HARVEST_SELLING')}']`;
+> 134	    console.log('- ' + await ensureAutomation(token, `Harvest Sell ${SYMBOL}`, sellCond, `${K('HARVEST')},${K('BOOK')}`, sellTpl.id));
+> 135	
+> 136	    console.log(`\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO — templates + automações de harvester INATIVAS.'}`);
+> 137	    console.log(`Pré-req p/ ATIVAR: fairPriceJob gravando MEMORY['${K('FAIR')}'] (checar). Depois start nas automações (money-path, com gate).`);
+> 138	})();
+> 139	
+> ```
+
+## 🤖 Claude *(16:07:46)*
+
+
+## 🤖 Claude *(16:07:49)*
+
+Achado importante: o `setup-harvester.js` **já cria as automações `isActive: false`** (linha 88, "INATIVAS por segurança"). O estado ativo veio do *canary* runtime (start manual, ×4 desde 2026-06-10), não do script. Então **(b) não tem diff de código** — é puramente o stop runtime, e como o setup já é default-OFF, fica durável até contra `make nuke`. Mais simples do que eu esperava.
+
+Executo o stop nas 4 (endpoint próprio do app: `isActive=0` no DB + `deleteBrain`) e verifico:
+
+## 🤖 Claude *(16:07:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/harvester_off.js",
+  "content": "const BASE = 'http://localhost:3001';\nconst email = process.env.LE, password = process.env.LP;\nconst IDS = [22, 23, 24, 25];\n(async () => {\n  try {\n    const lr = await fetch(BASE + '/login', {\n      method: 'POST', headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ email, password }),\n    });\n    const lj = await lr.json().catch(() => ({}));\n    const token = lj.token || lj.accessToken || lj.jwt || (lj.data && lj.data.token) || '';\n    console.log('login', lr.status, 'token_len', token.length);\n    if (!token) return;\n    const auth = { Authorization: token, 'Content-Type': 'application/json' };\n\n    console.log('\\n[STOP harvester id22-25]');\n    for (const id of IDS) {\n      const r = await fetch(`${BASE}/automations/${id}/stop`, { method: 'POST', headers: auth });\n      console.log(`  POST /automations/${id}/stop -> http ${r.status}`);\n    }\n\n    console.log('\\n[VERIFICA isActive p\u00f3s-stop]');\n    for (const id of IDS) {\n      const r = await fetch(`${BASE}/automations/${id}`, { headers: auth });\n      const a = await r.json().catch(() => ({}));\n      console.log(`  id${id} \"${a.name}\" isActive=${a.isActive}`);\n    }\n\n    // BRAIN: confirma que nenhuma das automa\u00e7\u00f5es desativadas ainda reage\n    try {\n      const br = await (await fetch(`${BASE}/beholder/brain`, { headers: auth })).text();\n      const refs = IDS.filter(id => new RegExp(`\"automationId\":\\\\s*${id}\\\\b|AUTOMATION_${id}\\\\b|:${id}:`).test(br));\n      console.log('\\n[BRAIN] refs \u00e0s id22-25 remanescentes:', refs.length ? refs.join(',') : 'NENHUMA (limpo)');\n      console.log('  brain bytes:', br.length, '| cont\u00e9m \"Harvest\":', /Harvest/i.test(br));\n    } catch (e) { console.log('[BRAIN] endpoint indispon\u00edvel:', e.message); }\n  } catch (e) {\n    console.log('ERR', e.message);\n  }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/harvester_off.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:08:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "chmod 644 /tmp/harvester_off.js; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; EMAIL=$(grep \"^TRADEUX_EMAIL=\" tradeux-mcp/.env | cut -d= -f2-); PW=$(grep \"^TRADEUX_PASSWORD=\" tradeux-mcp/.env | cut -d= -f2-); docker compose cp /tmp/harvester_off.js backend:/tmp/harvester_off.js >/dev/null 2>&1 && docker compose exec -T -e LE=\"$EMAIL\" -e LP=\"$PW\" backend node /tmp/harvester_off.js'",
+  "description": "Desativar harvester id22-25 e verificar DB+BRAIN"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login 200 token_len 137
+> 
+> [STOP harvester id22-25]
+>   POST /automations/22/stop -> http 200
+>   POST /automations/23/stop -> http 200
+>   POST /automations/24/stop -> http 200
+>   POST /automations/25/stop -> http 200
+> 
+> [VERIFICA isActive pós-stop]
+>   id22 "Harvest Buy BTCUSDT -3pct" isActive=false
+>   id23 "Harvest Buy BTCUSDT -5pct" isActive=false
+>   id24 "Harvest Buy BTCUSDT -7pct" isActive=false
+>   id25 "Harvest Sell BTCUSDT" isActive=false
+> 
+> [BRAIN] refs às id22-25 remanescentes: 24
+>   brain bytes: 11359 | contém "Harvest": false
+> ```
+
+## 🤖 Claude *(16:08:29)*
+
+
+## 🤖 Claude *(16:08:31)*
+
+Os 4 stops deram 200, DB `isActive=false` nas quatro (durável), e o BRAIN **não contém "Harvest"** — nenhuma reação do harvester ativa. Só vou eliminar uma dúvida: meu regex marcou "24" como possível ref remanescente, quase certamente falso-positivo (o número 24 aparecendo em algum preço/índice). Confirmo de forma precisa:
+
+## 🤖 Claude *(16:08:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; EMAIL=$(grep \"^TRADEUX_EMAIL=\" tradeux-mcp/.env | cut -d= -f2-); PW=$(grep \"^TRADEUX_PASSWORD=\" tradeux-mcp/.env | cut -d= -f2-); docker compose exec -T -e LE=\"$EMAIL\" -e LP=\"$PW\" backend node -e '\"'\"'\nconst BASE=\"http://localhost:3001\";\n(async()=>{\n  const lj=await (await fetch(BASE+\"/login\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"},body:JSON.stringify({email:process.env.LE,password:process.env.LP})})).json();\n  const t=lj.token; const br=await (await fetch(BASE+\"/beholder/brain\",{headers:{Authorization:t}})).text();\n  // mostra todo contexto onde aparece \"automationId\" e onde aparece o literal 24 com vizinhan\u00e7a\n  const ids=[...br.matchAll(/\"automationId\"\\s*:\\s*(\\d+)/g)].map(m=>m[1]);\n  console.log(\"automationIds no BRAIN:\", ids.length?[...new Set(ids)].sort((a,b)=>a-b).join(\",\"):\"(nenhum campo automationId)\");\n  const m24=[...br.matchAll(/.{20}24.{20}/g)].slice(0,6).map(x=>x[0]);\n  console.log(\"amostras de contexto de \\\"24\\\":\"); m24.forEach(s=>console.log(\"   \u2026\"+s+\"\u2026\"));\n  console.log(\"harvester names presentes:\", /Harvest/i.test(br));\n})();\n'\"'\"''",
+  "description": "Confirmar com precis\u00e3o que id24 n\u00e3o est\u00e1 no BRAIN"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> automationIds no BRAIN: 6,7,9,10,11,12,13,14,15,16,17,18,19,20
+> amostras de contexto de "24":
+>    …dAt":"2026-06-08T18:24:11.000Z","updatedAt…
+>    …dAt":"2026-06-08T18:24:11.000Z","updatedAt…
+>    …ue,"actions":[{"id":24,"automationId":18,"…
+> harvester names presentes: false
+> ```
+
+## 🤖 Claude *(16:09:05)*
+
+
+## 🤖 Claude *(16:09:10)*
+
+**(b) DONE e verificado.** Confirmação definitiva:
+- **BRAIN agora reage só às automações 6,7,9–20** (Trend BTC + Farm/Trend alts) — **nenhuma das 22-25**. O "24" que meu regex pegou era um `action.id:24` da automação 18 e um timestamp `18:24:11` — falso-positivo, como suspeitei.
+- DB `isActive=false` nas 4 (durável no reboot), bucket vazio (qty=0), sem holdings de BTC → zero órfão.
+- `setup-harvester.js` já cria default-OFF → durável até contra `make nuke`.
+
+Como **(b) não teve diff de código** (toggle runtime pelo endpoint auditado do próprio app, verificado de ponta a ponta), não há o que mandar pra QA/TL — reservo o gate pesado pro **(c)** e **(d)**, que são diffs reais. A decisão de desligar já está fundamentada (harvester morto no mainnet, edge era artefato testnet, auditoria confirmou).
+
+Registro na memória e parto pro **(c) — fix do P&L com BNB**. Deixa eu abrir o código do bug:
+
+## 🤖 Claude *(16:09:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== calcFillFinancials (ordersRepository) ===\"; grep -rn \"calcFillFinancials\" . 2>/dev/null; echo; echo \"=== defini\u00e7\u00e3o completa ===\"; f=$(grep -rln \"function calcFillFinancials\\|calcFillFinancials =\" . 2>/dev/null | head -1); echo \"arquivo: $f\"",
+  "description": "Localizar a fun\u00e7\u00e3o de c\u00e1lculo financeiro do fill (bug BNB)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === calcFillFinancials (ordersRepository) ===
+> beholder.js:8:const { STOP_TYPES, LIMIT_TYPES, insertOrder, getOpenOcoOrders, calcFillFinancials } = require('./repositories/ordersRepository');
+> beholder.js:512:    // exchange.sell, ANTES do insertOrder) — se o insertOrder/calcFillFinancials der throw depois, a venda já
+> beholder.js:540:        ...calcFillFinancials(result, order.symbol)
+> repositories/ordersRepository.js:227:function calcFillFinancials(result, symbol) {
+> repositories/ordersRepository.js:322:    calcFillFinancials,
+> controllers/ordersController.js:146:        ...ordersRepository.calcFillFinancials(result, symbol)
+> funnelJob.js:189:            ...ordersRepository.calcFillFinancials(result, BTC)
+> app-em.js:388:                try { await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> app-em.js:411:                try { updated = await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> 
+> === definição completa ===
+> arquivo: repositories/ordersRepository.js
+> ```
+
+## 🤖 Claude *(16:09:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 218,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 218	        raw: true,
+> 219	        distinct: true
+> 220	    });
+> 221	}
+> 222	
+> 223	// Calcula os campos financeiros de uma ordem JÁ executada na resposta da corretora
+> 224	// (MARKET preenche na hora: executedQty/cummulativeQuoteQty/fills[]). Sem isto, net/avgPrice
+> 225	// ficariam só a cargo do executionReport (stream intermitente) e a maioria das MARKET ficava
+> 226	// com net/avgPrice NULOS → P&L, custo-base e AVG PRICE furados. Retorna {} se não executou.
+> 227	function calcFillFinancials(result, symbol) {
+> 228	    if (!result) return {};
+> 229	    const executedQty = parseFloat(result.executedQty);
+> 230	    const cummQuote = parseFloat(result.cummulativeQuoteQty);
+> 231	    if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};
+> 232	
+> 233	    const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+> 234	    if (Array.isArray(result.fills) && result.fills.length) {
+> 235	        const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+> 236	        out.commission = `${commission}`;
+> 237	        out.isMaker = result.fills.every(f => f.isMaker === true);
+> 238	        const commAsset = result.fills[0].commissionAsset;
+> 239	        if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission; // comissão no quote
+> 240	    }
+> 241	    return out;
+> 242	}
+> 243	
+> 244	async function getFarmPosition(symbol) {
+> 245	    const settings = await settingsRepository.getDefaultSettings();
+> 246	    const isTestnet = settings.useTestnet;
+> 247	
+> 248	    // Escopa o bucket DCA às automações do FARM deste símbolo. O Trend Following compra o MESMO ativo na
+> 249	    // MESMA carteira; sem este filtro o FARM_DCA somaria também os BUYs do Trend → a venda no-loss do Farm
+> 250	    // (FARM_QTY) venderia/dumparia a posição do Trend junto (bug P0). E a SELL do Trend (death cross) não
+> 251	    // deve re-basear a janela do Farm. Por isso lastSell e os buys são filtrados pelas automações 'Farm %'.
+> 252	    const farmAutos = await automationModel.findAll({
+> 253	        where: { symbol, name: { [Sequelize.Op.like]: 'Farm %' } },
+> 254	        attributes: ['id'],
+> 255	        raw: true
+> 256	    });
+> 257	    const farmIds = farmAutos.map(a => a.id);
+> 258	    if (!farmIds.length) return { qty: 0, cost: 0 };
+> 259	
+> 260	    const lastSell = await orderModel.findOne({
+> 261	        where: {
+> 262	            symbol,
+> 263	            side: 'SELL',
+> 264	            status: orderStatus.FILLED,
+> 265	            isTestnet,
+> 266	            automationId: { [Sequelize.Op.in]: farmIds }
+> 267	        },
+> 268	        order: [['id', 'DESC']]
+> 269	    });
+> 270	
+> 271	    const whereClause = {
+> 272	        symbol,
+> 273	        side: 'BUY',
+> 274	        status: orderStatus.FILLED,
+> 275	        isTestnet,
+> 276	        automationId: { [Sequelize.Op.in]: farmIds }
+> 277	    };
+> 278	    if (lastSell) {
+> 279	        whereClause.id = { [Sequelize.Op.gt]: lastSell.id };
+> 280	    }
+> 281	
+> 282	    const buys = await orderModel.findAll({
+> 283	        where: whereClause,
+> 284	        order: [['id', 'ASC']]
+> 285	    });
+> 286	
+> 287	    let totalQty = 0;
+> 288	    let totalCost = 0;
+> 289	    for (const buy of buys) {
+> 290	        const qty = parseFloat(buy.quantity);
+> 291	        const avgPrice = parseFloat(buy.avgPrice);
+> 292	        if (Number.isFinite(qty) && qty > 0 && Number.isFinite(avgPrice) && avgPrice > 0) {
+> 293	            totalQty += qty;
+> 294	            totalCost += qty * avgPrice;
+> 295	        }
+> 296	    }
+> 297	
+> 298	    const cost = totalQty > 0 ? (totalCost / totalQty) : 0;
+> 299	    return { qty: totalQty, cost };
+> 300	}
+> 301	
+> 302	const STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 303	
+> 304	const LIMIT_TYPES = [orderTypes.LIMIT, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 305	
+> 306	module.exports = {
+> 307	    orderStatus,
+> 308	    STOP_TYPES,
+> 309	    LIMIT_TYPES,
+> 310	    orderTypes,
+> 311	    insertOrder,
+> 312	    getOrders,
+> 313	    getOrder,
+> 314	    getOrderById,
+> 315	    updateOrderById,
+> 316	    getLastFilledOrders,
+> 317	    updateOrderByOrderId,
+> ```
+
+## 🤖 Claude *(16:10:19)*
+
+
+## 🤖 Claude *(16:10:24)*
+
+Bug do **(c)** localizado, linhas 233-239 de [ordersRepository.js](backend/src/repositories/ordersRepository.js:227):
+
+```js
+const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+...
+const commAsset = result.fills[0].commissionAsset;
+if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission; // comissão no quote
+```
+
+O `net` só desconta a comissão **quando ela é paga no quote** (ex.: USDT em BTCUSDT). Quando é paga em **BNB**, `commAsset='BNB'`, `symbol.endsWith('BNB')` é falso → `net` fica = `cummQuote` (bruto), sem descontar a taxa → P&L otimista. Confirmado.
+
+Antes de desenhar o fix, preciso entender (1) como `net`/`commission` alimentam o P&L reportado e (2) se há preço de BNB acessível na MEMORY pra converter a taxa pra quote. Investigo:
+
+## 🤖 Claude *(16:10:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== onde net/commission viram P&L (reports) ===\"; grep -rn \"net\\b\\|dailyProfit\\|\\.commission\\|getOrdersReport\\|profit\" repositories/ordersRepository.js controllers/ordersController.js 2>/dev/null | grep -iE \"net|profit|commission\" | head -25",
+  "description": "Ver como net/commission alimentam o P&L"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde net/commission viram P&L (reports) ===
+> repositories/ordersRepository.js:27:    // Honra isTestnet EXPLÍCITO quando o chamador já tem o settings em mãos (ex.: funnelJob, scripts)
+> repositories/ordersRepository.js:30:    if (newOrder.isTestnet === undefined || newOrder.isTestnet === null) {
+> repositories/ordersRepository.js:32:        newOrder.isTestnet = settings.useTestnet;
+> repositories/ordersRepository.js:39:        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 } },
+> repositories/ordersRepository.js:43:            [Sequelize.fn('sum', Sequelize.col('net')), 'net'],
+> repositories/ordersRepository.js:52:            net: parseFloat(r.net),
+> repositories/ordersRepository.js:54:            avg: parseFloat(r.net) / parseFloat(r.qty)
+> repositories/ordersRepository.js:59:async function getOrders(symbol, page = 1, isTestnet = null) {
+> repositories/ordersRepository.js:60:    if (isTestnet === null) {
+> repositories/ordersRepository.js:62:        isTestnet = settings.useTestnet;
+> repositories/ordersRepository.js:66:        where: { isTestnet },
+> repositories/ordersRepository.js:128:    if (newOrder.commission !== null && newOrder.commission !== undefined
+> repositories/ordersRepository.js:129:        && newOrder.commission !== currentOrder.commission)
+> repositories/ordersRepository.js:130:        currentOrder.commission = newOrder.commission;
+> repositories/ordersRepository.js:132:    if (newOrder.net !== null && newOrder.net !== undefined
+> repositories/ordersRepository.js:133:        && newOrder.net !== currentOrder.net)
+> repositories/ordersRepository.js:134:        currentOrder.net = newOrder.net;
+> repositories/ordersRepository.js:145:    const isTestnet = settings.useTestnet;
+> repositories/ordersRepository.js:148:        where: { status: orderStatus.FILLED, isTestnet },
+> repositories/ordersRepository.js:171:    // ATIVO, então só reconcilia OCOs do mesmo ambiente (não cruza testnet↔mainnet).
+> repositories/ordersRepository.js:178:            isTestnet: settings.useTestnet
+> repositories/ordersRepository.js:187:    // Filtra pelo ambiente ATIVO (isTestnet): no boot do reconcile não pode alimentar orderIds de
+> repositories/ordersRepository.js:195:            isTestnet: settings.useTestnet
+> repositories/ordersRepository.js:200:async function getReportOrders(quoteAsset, startDate, endDate, isTestnet = null) {
+> repositories/ordersRepository.js:201:    if (isTestnet === null) {
+> ```
+
+## 🤖 Claude *(16:10:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== modelo de ordem: campos net/commission/commissionAsset ===\"; grep -niE \"net|commission|avgPrice\" models/orderModel.js 2>/dev/null | head; echo; echo \"=== MEMORY tem mini ticker / pre\u00e7o de BNB? (chaves e getMemory) ===\"; grep -rn \"MINI_TICKER\\|getMemory\\|indexKeys\" beholder.js utils/indexes.js 2>/dev/null | grep -iE \"mini_ticker|getMemory|function getMemory\" | head",
+  "description": "Ver campos do modelo e disponibilidade de pre\u00e7o BNB na MEMORY"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === modelo de ordem: campos net/commission/commissionAsset ===
+> 44:    avgPrice: Sequelize.DECIMAL(18, 8),
+> 45:    commission: Sequelize.STRING,
+> 46:    net: Sequelize.DECIMAL(18, 8),
+> 53:    isTestnet: {
+> 
+> === MEMORY tem mini ticker / preço de BNB? (chaves e getMemory) ===
+> beholder.js:957:function getMemory(symbol, index, interval) {
+> beholder.js:1007:function getMemoryIndexes() {
+> beholder.js:1031:    const book = getMemory(baseAsset + quoteAsset, 'BOOK', null);
+> beholder.js:1039:    const book = getMemory(stableCoin + fiatCoin, 'BOOK', null);
+> beholder.js:1051:    let book = getMemory('USDT' + fiat, 'BOOK');
+> beholder.js:1054:    book = getMemory(fiat + 'USDT', 'BOOK');
+> beholder.js:1073:    return Object.entries(getMemory()).filter(prop => regex.test(prop[0])).map(prop => {
+> beholder.js:1082:    getMemory,
+> beholder.js:1086:    getMemoryIndexes,
+> utils/indexes.js:69:    MINI_TICKER: 'MINI_TICKER',
+> ```
+
+## 🤖 Claude *(16:11:41)*
+
+
+## 🤖 Claude *(16:11:44)*
+
+Descoberta importante antes de eu desenhar o (c): o modelo de ordem **nem persiste `commissionAsset`**, e o `net` é o campo que os reports somam direto. Mas tem um fato que muda a prioridade — deixa eu confirmar duas coisas: se a conta **usa BNB pra taxa** (a carteira só tinha USDT + pó, zero BNB) e se o beholder já tem um helper de conversão de preço pra USDT.
+
+## 🤖 Claude *(16:11:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 1025,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1025	
+> 1026	const DOLLAR_COINS = ['USD', 'USDT', 'USDC', 'BUSD'];
+> 1027	
+> 1028	function getStableConversion(baseAsset, quoteAsset, baseQty) {
+> 1029	    if (DOLLAR_COINS.includes(baseAsset)) return baseQty;
+> 1030	
+> 1031	    const book = getMemory(baseAsset + quoteAsset, 'BOOK', null);
+> 1032	    if (book) return parseFloat(baseQty) * book.current.bestBid;
+> 1033	    return 0;
+> 1034	}
+> 1035	
+> 1036	const FIAT_COINS = ['BRL', 'EUR', 'GBP'];
+> 1037	
+> 1038	function getFiatConversion(stableCoin, fiatCoin, fiatQty) {
+> 1039	    const book = getMemory(stableCoin + fiatCoin, 'BOOK', null);
+> 1040	    if (book) return parseFloat(fiatQty) / book.current.bestBid;
+> 1041	    return 0;
+> 1042	}
+> 1043	
+> 1044	function tryFiatConversion(baseAsset, baseQty, fiat) {
+> 1045	    if (fiat) fiat = fiat.toUpperCase();
+> 1046	    if (FIAT_COINS.includes(baseAsset) && baseAsset === fiat) return baseQty;
+> 1047	
+> 1048	    const usd = tryUSDConversion(baseAsset, baseQty);
+> 1049	    if (fiat === 'USD' || !fiat) return usd;
+> 1050	
+> 1051	    let book = getMemory('USDT' + fiat, 'BOOK');
+> 1052	    if (book) return usd * book.current.bestBid;
+> 1053	
+> 1054	    book = getMemory(fiat + 'USDT', 'BOOK');
+> 1055	    if (book) return usd / book.current.bestBid;
+> 1056	
+> 1057	    return usd;
+> 1058	}
+> 1059	
+> 1060	function tryUSDConversion(baseAsset, baseQty) {
+> 1061	    if (DOLLAR_COINS.includes(baseAsset)) return baseQty;
+> 1062	    if (FIAT_COINS.includes(baseAsset)) return getFiatConversion('USDT', baseAsset, baseQty);
+> 1063	
+> 1064	    for (let i = 0; i < DOLLAR_COINS.length; i++) {
+> 1065	        const converted = getStableConversion(baseAsset, DOLLAR_COINS[i], baseQty);
+> 1066	        if (converted > 0) return converted;
+> 1067	    }
+> 1068	
+> 1069	    return 0;
+> 1070	}
+> 1071	
+> 1072	function searchMemory(regex) {
+> 1073	    return Object.entries(getMemory()).filter(prop => regex.test(prop[0])).map(prop => {
+> 1074	        return {
+> 1075	            key: prop[0], value: prop[1]
+> 1076	        }
+> 1077	    });
+> 1078	}
+> 1079	
+> ```
+
+## 🤖 Claude *(16:13:07)*
+
+
+## 🤖 Claude *(16:13:19)*
+
+O beholder **já tem o conversor que eu precisaria** pro fix do (c): `tryUSDConversion(asset, qty)` (linhas 1060-1070) converte qualquer ativo pra USD via BOOK — então descontar uma taxa em BNB seria reusar isso. Mas a investigação me trouxe **dois achados que mudam a leitura do (c)**, e eu quero ser honesto contigo antes de gastar esforço:
+
+**1. O (c) está LATENTE nesta conta.** A taxa só sai em BNB se a conta **tiver saldo BNB** + "usar BNB pra taxa". A carteira tem só USDT + pó, **zero BNB** → hoje as taxas saem no quote (USDT) numa venda — e essas o código **já desconta certo** (`symbol.endsWith('USDT')` → `net = cummQuote - commission`). Ou seja: o painel **não está mentindo agora**; o bug só acorda se tu habilitares BNB-fee no futuro.
+
+**2. O fix é mais sutil que uma linha.** O campo `net` é usado em **dois sentidos**: como **receita** numa venda (deve descontar a taxa) e como **custo-base** numa compra (linhas 39-54, agrega `net` dos BUYs). A taxa numa compra não reduz o custo — ela *aumenta*. Um fix descuidado que faça `net = cummQuote - fee` pros dois lados **introduziria** um erro de P&L do lado da compra — exatamente o que a gente quer evitar. Então o (c) precisa de um desenho cuidadoso (ramificar por `side` + ativo da taxa), não um patch rápido.
+
+Diante disso, minha recomendação honesta é **inverter a ordem**: fazer o **(d)** agora (é uma trava de segurança concreta e autocontida — o teto de notional que não cobre SELL-MARKET-por-quantidade) e depois dar ao **(c)** um passo de design próprio, com QA/TL, já que ele está latente e é contábil-sensível.
+
+## 🤖 Claude *(16:13:24)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Achei que o (c) est\u00e1 latente (conta sem BNB) e \u00e9 cont\u00e1bil-sutil. Como prefere a ordem?",
+      "header": "Ordem (c)/(d)",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "(d) agora, (c) depois (Recomendado)",
+          "description": "Fa\u00e7o o teto de risco SELL-by-base (d) j\u00e1 \u2014 trava de seguran\u00e7a concreta e autocontida, alto valor pro descongelamento \u2014 com QA/TL. Depois desenho o (c) com cuidado (ramificar buy/sell + convers\u00e3o da taxa)."
+        },
+        {
+          "label": "(c) com calma agora, (d) depois",
+          "description": "Mantenho a ordem original: desenho o fix do (c) certo (buy/sell + BNB via tryUSDConversion), passo por QA/TL, e s\u00f3 ent\u00e3o vou pro (d). Mais lento, mas honra a sequ\u00eancia que tu pediu."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Achei que o (c) está latente (conta sem BNB) e é contábil-sutil. Como prefere a ordem?"="(d) agora, (c) depois (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:23:58)*
+
+
+## 🤖 Claude *(16:24:00)*
+
+Ordem confirmada: **(d) agora**. Vou ao `exchange.js` ver o chokepoint de risco (HALT + `MAX_ORDER_NOTIONAL_USDT`) e exatamente onde o cálculo de notional escapa no SELL-MARKET-por-quantidade.
+
+## 🤖 Claude *(16:24:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== risk guard / notional / HALT no exchange.js ===\"; grep -nE \"TRADING_HALT|MAX_ORDER_NOTIONAL|notional|riskGuard|quoteOrderQty|function (buy|sell|placeOrder|newOrder)|MINI_TICKER\" utils/exchange.js 2>/dev/null | head -40",
+  "description": "Localizar o risk guard e o c\u00e1lculo de notional no exchange.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === risk guard / notional / HALT no exchange.js ===
+> 11://   TRADING_HALT=true            → kill-switch: bloqueia QUALQUER ordem (parada de emergência) — cobre TUDO.
+> 12://   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre o que tem
+> 13://                                  notional CALCULÁVEL: MARKET por quote (quoteOrderQty, ex.: funil) e
+> 16://                                  coberta só pelo HALT. FOLLOW-UP: derivar preço do MINI_TICKER antes de
+> 17://                                  subir size. Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> 19:const TRADING_HALT = process.env.TRADING_HALT === 'true';
+> 20:const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> 21:const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> 24:    if (TRADING_HALT) {
+> 25:        const msg = `[riskGuard] TRADING_HALT ativo — ${action} ${symbol} BLOQUEADA (kill-switch).`;
+> 29:    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {
+> 31:        let notional = null;
+> 32:        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+> 33:        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> 34:        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+> 35:            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+> 82:    // quoteOrderQty). Cobre MARKET/LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER.
+> 83:    function buy(symbol, quantity, price, options) {
+> 92:    function sell(symbol, quantity, price, options) {
+> ```
+
+## 🤖 Claude *(16:24:06)*
+
+
+## 🤖 Claude *(16:24:07)*
+
+Deixa eu ler o `riskGuard` completo e como `buy`/`sell` o chamam, pra desenhar o fix certo:
+
+## 🤖 Claude *(16:24:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 1,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const BinanceApi = require('node-binance-api');
+> 2	// node-binance-api 1.x (fork ccxt): o build CJS exporta a classe Binance direto (require() já
+> 3	// é a classe; .default é undefined). O `|| BinanceApi` é só fallback defensivo p/ builds futuras.
+> 4	const Binance = BinanceApi.default || BinanceApi;
+> 5	const LOGS = process.env.BINANCE_LOGS === 'true';
+> 6	const SAPI_URL = process.env.BINANCE_SAPI_URL;
+> 7	const logger = require('./logger');
+> 8	
+> 9	// === Teto de risco global (chokepoint único: TODA ordem real — automação, funil ou manual — passa por
+> 10	// buy()/sell()/oco() aqui). Única trava de tamanho do BACKEND (o ALLOW_TRADING é só do agente LLM).
+> 11	//   TRADING_HALT=true            → kill-switch: bloqueia QUALQUER ordem (parada de emergência) — cobre TUDO.
+> 12	//   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre o que tem
+> 13	//                                  notional CALCULÁVEL: MARKET por quote (quoteOrderQty, ex.: funil) e
+> 14	//                                  LIMIT/OCO (price×qty). ⚠️ MARKET por QUANTIDADE-base sem price (ex.: venda
+> 15	//                                  MARKET de TREND_QTY/HARVEST_QTY/MAX_WALLET) PASSA sem avaliar o teto —
+> 16	//                                  coberta só pelo HALT. FOLLOW-UP: derivar preço do MINI_TICKER antes de
+> 17	//                                  subir size. Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> 18	// Inerte por padrão; ajustável por env SEM deploy de código (basta reiniciar). Fail-closed (lança). ===
+> 19	const TRADING_HALT = process.env.TRADING_HALT === 'true';
+> 20	const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> 21	const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> 22	
+> 23	function assertWithinRisk(action, symbol, quantity, price, options) {
+> 24	    if (TRADING_HALT) {
+> 25	        const msg = `[riskGuard] TRADING_HALT ativo — ${action} ${symbol} BLOQUEADA (kill-switch).`;
+> 26	        logger('system', msg);
+> 27	        throw new Error(msg);
+> 28	    }
+> 29	    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {
+> 30	        const o = options || {};
+> 31	        let notional = null;
+> 32	        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+> 33	        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> 34	        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+> 35	            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+> 36	            logger('system', msg);
+> 37	            throw new Error(msg);
+> 38	        }
+> 39	    }
+> 40	}
+> 41	
+> 42	module.exports = (settings) => {
+> 43	
+> 44	    if (!settings) throw new Error(`The settings object is required to connect on exchange!`);
+> 45	
+> 46	    // testnet x mainnet: na 1.x a WebSocket-API (userData) é roteada por Options.test,
+> 47	    // NÃO pelas urls. Sem isso o userData tentaria autenticar no ws-api MAINNET com chave
+> 48	    // testnet. Derivamos do apiUrl pra manter o BYOK funcionando nos dois ambientes.
+> 49	    const isTestnet = /testnet|binance\.vision/i.test(settings.apiUrl || '');
+> 50	
+> 51	    const binance = new Binance().options({
+> 52	        APIKEY: settings.accessKey,
+> 53	        APISECRET: settings.secretKey,
+> 54	        recvWindow: 60000,
+> 55	        test: isTestnet,
+> 56	        reconnect: true,
+> 57	        urls: {
+> 58	            base: settings.apiUrl.endsWith('/') ? settings.apiUrl : settings.apiUrl + '/',
+> 59	            stream: settings.streamUrl.endsWith('/') ? settings.streamUrl : settings.streamUrl + '/'
+> 60	        },
+> 61	        verbose: LOGS
+> 62	    });
+> 63	
+> 64	    // 1.x: websockets.terminate() indexa as subscriptions pela URL COMPLETA do socket, não
+> 65	    // pelo nome curto do endpoint. Guardamos a URL retornada por chart()/prevDay() por stream
+> 66	    // p/ conseguir fechá-lo depois (senão terminate vira no-op e o socket vaza/reconecta).
+> 67	    const chartStreams = {};
+> 68	    const tickerStreams = {};
+> 69	
+> 70	    function exchangeInfo() {
+> 71	        return binance.exchangeInfo();
+> 72	    }
+> 73	
+> 74	    async function balance() {
+> 75	        await binance.useServerTime();
+> 76	        return binance.balance();
+> 77	    }
+> 78	
+> 79	    // 1.x: buy()/sell() fixam type='LIMIT' posicional e o guard interno de stopPrice dispara
+> 80	    // ANTES de params sobrescrever o type -> ordens STOP via flags quebrariam. Por isso chamamos
+> 81	    // binance.order(type, side, ...) direto (e marketBuy/marketSell p/ MARKET, que tratam
+> 82	    // quoteOrderQty). Cobre MARKET/LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER.
+> 83	    function buy(symbol, quantity, price, options) {
+> 84	        options = options || {};
+> 85	        assertWithinRisk('BUY', symbol, quantity, price, options);
+> 86	        const type = options.type || 'MARKET';
+> 87	        if (type === 'MARKET')
+> 88	            return binance.marketBuy(symbol, quantity, options);
+> 89	        return binance.order(type, 'BUY', symbol, quantity, price, options);
+> 90	    }
+> 91	
+> 92	    function sell(symbol, quantity, price, options) {
+> 93	        options = options || {};
+> 94	        assertWithinRisk('SELL', symbol, quantity, price, options);
+> 95	        const type = options.type || 'MARKET';
+> 96	        if (type === 'MARKET')
+> 97	            return binance.marketSell(symbol, quantity, options);
+> 98	        return binance.order(type, 'SELL', symbol, quantity, price, options);
+> 99	    }
+> 100	
+> 101	    // OCO (destravado pelo bump p/ 1.x). ocoOrder usa o endpoint novo POST /api/v3/orderList/oco.
+> 102	    // `options` segue o schema novo, p.ex. p/ um SELL protetivo após o buy:
+> 103	    //   { aboveType:'LIMIT_MAKER', abovePrice, belowType:'STOP_LOSS_LIMIT',
+> 104	    //     belowPrice, belowStopPrice, belowTimeInForce:'GTC' }
+> 105	    function oco(side, symbol, quantity, options) {
+> 106	        options = options || {};
+> 107	        assertWithinRisk(`OCO-${side}`, symbol, quantity, options.abovePrice || options.belowPrice, options);
+> 108	        return binance.ocoOrder(side, symbol, quantity, options);
+> 109	    }
+> 110	
+> 111	    function cancel(symbol, orderId) {
+> 112	        return binance.cancel(symbol, orderId);
+> 113	    }
+> 114	
+> 115	    // Cancela uma OCO inteira (as 2 pernas) via DELETE /api/v3/orderList.
+> 116	    function cancelOrderList(symbol, orderListId) {
+> 117	        return binance.privateSpotRequest('v3/orderList', { symbol, orderListId }, 'DELETE');
+> 118	    }
+> 119	
+> 120	    function orderStatus(symbol, orderId) {
+> 121	        return binance.orderStatus(symbol, orderId);
+> 122	    }
+> 123	
+> 124	    async function orderTrade(symbol, orderId) {
+> 125	        const trades = await binance.trades(symbol);
+> 126	        return trades.find(t => t.orderId === orderId);
+> 127	    }
+> 128	
+> 129	    function withdraw(coin, amount, address, network, addressTag) {
+> 130	        try {
+> ```
+
+## 🤖 Claude *(16:24:54)*
+
+
+## 🤖 Claude *(16:24:56)*
+
+Estrutura clara. O furo: em `assertWithinRisk`, quando não há `quoteOrderQty` nem `price` (SELL/BUY MARKET por quantidade-base), `notional` fica `null` → o teto não avalia. O fix é derivar o preço do `MINI_TICKER` pra calcular `notional = preço × qty`.
+
+Antes de escrever, confirmo dois detalhes que o fix depende: o campo de preço no `MINI_TICKER` e que não há ciclo `beholder`↔`exchange`:
+
+## 🤖 Claude *(16:25:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== campo de pre\u00e7o do MINI_TICKER (como \u00e9 lido em outros lugares) ===\"; grep -rnE \"MINI_TICKER'\\]|MINI_TICKER\\\"\\]|miniTicker|\\.close\\b\" beholder.js app-em.js | grep -iE \"mini_ticker|miniticker|close\" | head -12; echo; echo \"=== beholder requer exchange? (risco de ciclo) ===\"; grep -nE \"require\\(.*exchange\" beholder.js || echo \"  beholder N\u00c3O requer exchange (sem ciclo no load)\"; echo; echo \"=== getMemory exportado? ===\"; grep -nE \"getMemory,\" beholder.js | tail -2",
+  "description": "Confirmar campo de pre\u00e7o MINI_TICKER e aus\u00eancia de ciclo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === campo de preço do MINI_TICKER (como é lido em outros lugares) ===
+> app-em.js:19:    exchange.miniTickerStream(async (markets) => {
+> app-em.js:39:                const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+> app-em.js:626:            close: ohlc.close[ohlc.close.length - 1],
+> app-em.js:634:            close: ohlc.close[ohlc.close.length - 2],
+> app-em.js:642:            close: ohlc.close[ohlc.close.length - 3],
+> app-em.js:718:    data.close = parseFloat(data.close);
+> 
+> === beholder requer exchange? (risco de ciclo) ===
+> 379:    const exchange = require('./utils/exchange')(settings);
+> 497:    const exchange = require('./utils/exchange')(settings);
+> 720:    const exchange = require('./utils/exchange')(settings);
+> 
+> === getMemory exportado? ===
+> 1082:    getMemory,
+> ```
+
+## 🤖 Claude *(16:25:16)*
+
+
+## 🤖 Claude *(16:25:18)*
+
+Confirmado: `MINI_TICKER` usa `.close` como preço (app-em.js:39, 718), e o ciclo `beholder→exchange` é **lazy** (linhas 379/497/720, dentro de funções) e `exchange` **não** requer beholder — então um `require('../beholder')` lazy no runtime é seguro. Só vou confirmar a forma exata do objeto MINI_TICKER guardado na MEMORY (pra garantir o `.close`):
+
+## 🤖 Claude *(16:25:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src 2>/dev/null; echo \"=== onde MINI_TICKER \u00e9 gravado na MEMORY ===\"; grep -nE \"MINI_TICKER\" app-em.js beholder.js utils/indexes.js | head; echo; echo \"=== contexto do processamento do miniTicker (app-em ~700-725) ===\"; sed -n '700,725p' app-em.js 2>/dev/null",
+  "description": "Confirmar a forma do objeto MINI_TICKER na MEMORY"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde MINI_TICKER é gravado na MEMORY ===
+> utils/indexes.js:69:    MINI_TICKER: 'MINI_TICKER',
+> app-em.js:31:                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> app-em.js:780:                case monitorTypes.MINI_TICKER:
+> 
+> === contexto do processamento do miniTicker (app-em ~700-725) ===
+>     delete data.openTime;
+>     delete data.closeTime;
+>     delete data.firstTradeId;
+>     delete data.lastTradeId;
+>     delete data.numTrades;
+>     delete data.closeQty;
+>     delete data.bestBidQty;
+>     delete data.bestAskQty;
+> 
+>     data.quoteVolume = parseFloat(data.quoteVolume);
+>     data.volume = parseFloat(data.volume);
+>     data.priceChange = parseFloat(data.priceChange);
+>     data.percentChange = parseFloat(data.percentChange);
+>     data.averagePrice = parseFloat(data.averagePrice);
+>     data.prevClose = parseFloat(data.prevClose);
+>     data.high = parseFloat(data.high);
+>     data.low = parseFloat(data.low);
+>     data.open = parseFloat(data.open);
+>     data.close = parseFloat(data.close);
+>     data.bestBid = parseFloat(data.bestBid);
+>     data.bestAsk = parseFloat(data.bestAsk);
+> 
+>     return data;
+> }
+> 
+> async function startTickerMonitor(monitorId, symbol, broadcastLabel, logs) {
+> ```
+
+## 🤖 Claude *(16:25:25)*
+
+
+## 🤖 Claude *(16:25:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 18,
+  "limit": 36
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	    if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+> 19	    exchange.miniTickerStream(async (markets) => {
+> 20	        if (logs) logger('M:' + monitorId, markets);
+> 21	
+> 22	        try {
+> 23	            Object.entries(markets).map(async (mkt) => {
+> 24	
+> 25	                delete mkt[1].volume;
+> 26	                delete mkt[1].quoteVolume;
+> 27	                delete mkt[1].eventTime;
+> 28	                const converted = {};
+> 29	                Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 30	
+> 31	                const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+> 32	                if (results) results.map(r => sendMessage({ notification: r }));
+> 33	            })
+> 34	
+> 35	            if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: markets });
+> 36	
+> 37	            //simulação de book
+> 38	            const books = Object.entries(markets).map(mkt => {
+> 39	                const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+> 40	                const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 41	
+> 42	                const newMemory = {};
+> 43	                newMemory.previous = currentMemory ? currentMemory.current : book;
+> 44	                newMemory.current = book;
+> 45	
+> 46	                beholder.updateMemory(mkt[0], indexKeys.BOOK, null, newMemory)
+> 47	                    .then(results => {
+> 48	                        if (results)
+> 49	                            results.map(r => sendMessage({ notification: r }));
+> 50	                    })
+> 51	
+> 52	                return book;
+> 53	            })
+> ```
+
+## 🤖 Claude *(16:25:59)*
+
+
+## 🤖 Claude *(16:26:00)*
+
+MINI_TICKER guarda o objeto com `.close` numérico (app-em.js:29-31). Última verificação antes de escrever: garantir que `getMemory(symbol,'MINI_TICKER')` (interval `undefined`) bate com a chave gravada com interval `null`:
+
+## 🤖 Claude *(16:26:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 957,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 957	function getMemory(symbol, index, interval) {
+> 958	    if (symbol && index) {
+> 959	        const indexKey = interval ? `${index}_${interval}` : index;
+> 960	        const memoryKey = `${symbol}:${indexKey}`;
+> 961	
+> 962	        const result = MEMORY[memoryKey];
+> 963	        return typeof result === 'object' ? { ...result } : result;
+> 964	    }
+> 965	
+> 966	    return { ...MEMORY };
+> 967	}
+> 968	
+> 969	function getBrain() {
+> 970	    return { ...BRAIN };
+> 971	}
+> 972	
+> 973	function getBrainIndexes() {
+> 974	    return { ...BRAIN_INDEX };
+> 975	}
+> 976	
+> ```
+
+## 🤖 Claude *(16:26:13)*
+
+
+## 🤖 Claude *(16:26:14)*
+
+Tudo verificado: `getMemory(symbol,'MINI_TICKER')` casa com a chave gravada (interval falsy → `${symbol}:MINI_TICKER`). Agora escrevo o fix — dois edits no [exchange.js](backend/src/utils/exchange.js): atualizar o comentário do contrato e fechar o furo no `assertWithinRisk` + helper `refPrice`.
+
+## 🤖 Claude *(16:26:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "//   MAX_ORDER_NOTIONAL_USDT=<n>  \u2192 teto de notional por ordem em USDT (0 = desligado). Cobre o que tem\n//                                  notional CALCUL\u00c1VEL: MARKET por quote (quoteOrderQty, ex.: funil) e\n//                                  LIMIT/OCO (price\u00d7qty). \u26a0\ufe0f MARKET por QUANTIDADE-base sem price (ex.: venda\n//                                  MARKET de TREND_QTY/HARVEST_QTY/MAX_WALLET) PASSA sem avaliar o teto \u2014\n//                                  coberta s\u00f3 pelo HALT. FOLLOW-UP: derivar pre\u00e7o do MINI_TICKER antes de\n//                                  subir size. S\u00f3 pares *USDT (notional em USDT); quote \u2260 USDT passa.",
+  "new_string": "//   MAX_ORDER_NOTIONAL_USDT=<n>  \u2192 teto de notional por ordem em USDT (0 = desligado). Cobre MARKET por\n//                                  quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price\u00d7qty) e \u2014 desde o fix\n//                                  do furo MARKET-por-quantidade \u2014 MARKET por QTY-base sem price (venda de\n//                                  TREND_QTY/HARVEST_QTY/MAX_WALLET): deriva o pre\u00e7o do MINI_TICKER p/ estimar\n//                                  o notional. Se o MINI_TICKER estiver frio (sem pre\u00e7o de refer\u00eancia), a\n//                                  ordem PASSA (logada) e fica coberta s\u00f3 pelo HALT \u2014 escolha deliberada p/\n//                                  N\u00c3O bloquear venda protetiva (ex.: death cross) por mem\u00f3ria fria.\n//                                  S\u00f3 pares *USDT (notional em USDT); quote \u2260 USDT passa."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:26:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "        let notional = null;\n        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)\n        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {\n            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} \u2014 BLOQUEADA.`;\n            logger('system', msg);\n            throw new Error(msg);\n        }\n    }\n}",
+  "new_string": "        let notional = null;\n        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)\n        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n        else if (quantity != null) {                                                    // MARKET por QTY-base sem price (venda TREND_QTY/HARVEST_QTY/MAX_WALLET)\n            const ref = refPrice(symbol);                                               // deriva o pre\u00e7o do MINI_TICKER p/ estimar o notional\n            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n        }\n        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {\n            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} \u2014 BLOQUEADA.`;\n            logger('system', msg);\n            throw new Error(msg);\n        }\n    }\n}\n\n// Pre\u00e7o de refer\u00eancia p/ estimar o notional de uma MARKET-por-quantidade (sem price): MINI_TICKER.close da\n// MEMORY do beholder. require LAZY de prop\u00f3sito \u2014 exchange \u00e9 boundary de baixo n\u00edvel e beholder \u00e9 a engine;\n// o require no corpo (n\u00e3o no topo) evita ciclo no load, e em runtime (na hora da ordem) o beholder j\u00e1 est\u00e1\n// inicializado. Read-only: s\u00f3 l\u00ea a mem\u00f3ria p/ avaliar o teto de risco, nunca escreve.\nfunction refPrice(symbol) {\n    try {\n        const beholder = require('../beholder');\n        const mt = beholder.getMemory(symbol, 'MINI_TICKER'); // chave === indexKeys.MINI_TICKER; interval falsy\n        const px = mt && parseFloat(mt.close);\n        return Number.isFinite(px) && px > 0 ? px : null;\n    } catch (_) {\n        return null;\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:26:57)*
+
+
+## 🤖 Claude *(16:26:58)*
+
+Fix escrito. Agora valido a sintaxe e gero o diff pra mandar pra QA e TL:
+
+## 🤖 Claude *(16:27:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; echo \"=== node --check (sintaxe) ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node --check src/utils/exchange.js && echo \"OK: sintaxe v\u00e1lida\"'; echo; echo \"=== git diff (exchange.js) ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" diff -- backend/src/utils/exchange.js'",
+  "description": "Checar sintaxe e gerar diff do fix (d)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check (sintaxe) ===
+> OK: sintaxe válida
+> 
+> === git diff (exchange.js) ===
+> diff --git a/backend/src/utils/exchange.js b/backend/src/utils/exchange.js
+> index 4f7fcae..b89859b 100644
+> --- a/backend/src/utils/exchange.js
+> +++ b/backend/src/utils/exchange.js
+> @@ -9,12 +9,14 @@ const logger = require('./logger');
+>  // === Teto de risco global (chokepoint único: TODA ordem real — automação, funil ou manual — passa por
+>  // buy()/sell()/oco() aqui). Única trava de tamanho do BACKEND (o ALLOW_TRADING é só do agente LLM).
+>  //   TRADING_HALT=true            → kill-switch: bloqueia QUALQUER ordem (parada de emergência) — cobre TUDO.
+> -//   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre o que tem
+> -//                                  notional CALCULÁVEL: MARKET por quote (quoteOrderQty, ex.: funil) e
+> -//                                  LIMIT/OCO (price×qty). ⚠️ MARKET por QUANTIDADE-base sem price (ex.: venda
+> -//                                  MARKET de TREND_QTY/HARVEST_QTY/MAX_WALLET) PASSA sem avaliar o teto —
+> -//                                  coberta só pelo HALT. FOLLOW-UP: derivar preço do MINI_TICKER antes de
+> -//                                  subir size. Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> +//   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre MARKET por
+> +//                                  quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price×qty) e — desde o fix
+> +//                                  do furo MARKET-por-quantidade — MARKET por QTY-base sem price (venda de
+> +//                                  TREND_QTY/HARVEST_QTY/MAX_WALLET): deriva o preço do MINI_TICKER p/ estimar
+> +//                                  o notional. Se o MINI_TICKER estiver frio (sem preço de referência), a
+> +//                                  ordem PASSA (logada) e fica coberta só pelo HALT — escolha deliberada p/
+> +//                                  NÃO bloquear venda protetiva (ex.: death cross) por memória fria.
+> +//                                  Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+>  // Inerte por padrão; ajustável por env SEM deploy de código (basta reiniciar). Fail-closed (lança). ===
+>  const TRADING_HALT = process.env.TRADING_HALT === 'true';
+>  const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> @@ -31,6 +33,11 @@ function assertWithinRisk(action, symbol, quantity, price, options) {
+>          let notional = null;
+>          if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+>          else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> +        else if (quantity != null) {                                                    // MARKET por QTY-base sem price (venda TREND_QTY/HARVEST_QTY/MAX_WALLET)
+> +            const ref = refPrice(symbol);                                               // deriva o preço do MINI_TICKER p/ estimar o notional
+> +            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);
+> +            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem preço de referência (MINI_TICKER frio) — teto NÃO avaliado (coberto só pelo HALT).`);
+> +        }
+>          if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+>              const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+>              logger('system', msg);
+> @@ -39,6 +46,21 @@ function assertWithinRisk(action, symbol, quantity, price, options) {
+>      }
+>  }
+>  
+> +// Preço de referência p/ estimar o notional de uma MARKET-por-quantidade (sem price): MINI_TICKER.close da
+> +// MEMORY do beholder. require LAZY de propósito — exchange é boundary de baixo nível e beholder é a engine;
+> +// o require no corpo (não no topo) evita ciclo no load, e em runtime (na hora da ordem) o beholder já está
+> +// inicializado. Read-only: só lê a memória p/ avaliar o teto de risco, nunca escreve.
+> +function refPrice(symbol) {
+> +    try {
+> +        const beholder = require('../beholder');
+> +        const mt = beholder.getMemory(symbol, 'MINI_TICKER'); // chave === indexKeys.MINI_TICKER; interval falsy
+> +        const px = mt && parseFloat(mt.close);
+> +        return Number.isFinite(px) && px > 0 ? px : null;
+> +    } catch (_) {
+> +        return null;
+> +    }
+> +}
+> +
+>  module.exports = (settings) => {
+>  
+>      if (!settings) throw new Error(`The settings object is required to connect on exchange!`);
+> ```
+
+## 🤖 Claude *(16:27:18)*
+
+
+## 🤖 Claude *(16:27:19)*
+
+Sintaxe OK, diff limpo e mínimo. Agora o gate: mando o diff pra **QA** e **TL** em paralelo, com todo o contexto pra um review de verdade.
+
+## 🤖 Claude *(16:27:42)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do fix (d)",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise um fix de backend N\u00c3O-COMMITADO no working tree do TradeUX. Veredito esperado: PASS / PASS COM RESSALVAS / FAIL, com achados por severidade e os testes concretos a rodar.\n\n## Contexto\nPr\u00e9-req de seguran\u00e7a pro descongelamento do bot (sistema em MAINNET REAL, `TRADING_HALT=true`, ~$148 USDT, 0 ordens mainnet). O `exchange.js` \u00e9 o chokepoint \u00fanico de risco: TODA ordem real (automa\u00e7\u00e3o/funil/manual) passa por `buy()/sell()/oco()` \u2192 `assertWithinRisk(...)`. Travas: `TRADING_HALT` (kill-switch, cobre tudo) e `MAX_ORDER_NOTIONAL_USDT` (teto de notional por ordem; em produ\u00e7\u00e3o est\u00e1 em 1500). \n\n**Bug que o fix fecha:** o teto s\u00f3 avaliava notional CALCUL\u00c1VEL \u2014 MARKET por quote (`quoteOrderQty`) e LIMIT/OCO (`price\u00d7qty`). Uma venda **MARKET por QUANTIDADE-base sem price** (ex.: venda de `TREND_QTY`/`HARVEST_QTY`/`MAX_WALLET` no death cross) passava SEM avaliar o teto \u2014 coberta s\u00f3 pelo HALT. O fix deriva o pre\u00e7o do `MINI_TICKER` da MEMORY do beholder pra estimar o notional.\n\n## Arquivo\n`/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` \u2014 leia o arquivo inteiro. O diff (uncommitted):\n\n```diff\n@@ assertWithinRisk @@\n         let notional = null;\n         if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote\n         else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n+        else if (quantity != null) {                                                    // MARKET por QTY-base sem price\n+            const ref = refPrice(symbol);\n+            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n+            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n+        }\n         if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) { ...throw... }\n\n+function refPrice(symbol) {\n+    try {\n+        const beholder = require('../beholder');\n+        const mt = beholder.getMemory(symbol, 'MINI_TICKER');\n+        const px = mt && parseFloat(mt.close);\n+        return Number.isFinite(px) && px > 0 ? px : null;\n+    } catch (_) { return null; }\n+}\n```\n\n## Decis\u00f5es de design a escrutinar\n1. **Fail-OPEN quando MINI_TICKER est\u00e1 frio** (sem pre\u00e7o \u2192 ordem PASSA, s\u00f3 logada). Escolha deliberada pra N\u00c3O bloquear uma venda protetiva (death cross) por mem\u00f3ria fria; HALT ainda cobre. Isso \u00e9 aceit\u00e1vel ou abre brecha explor\u00e1vel?\n2. **require LAZY** de `../beholder` dentro de `refPrice` (n\u00e3o no topo) pra evitar ciclo no load (exchange \u00e9 boundary; beholder \u00e9 engine; beholder j\u00e1 requer exchange lazy em 3 pontos). Correto?\n3. **Campo `MINI_TICKER.close`** \u2014 confirme que \u00e9 o pre\u00e7o atual e que `getMemory(symbol,'MINI_TICKER')` (interval undefined) casa com a chave gravada por `app-em.js:31` (`updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted)`). Veja `beholder.js:957 getMemory` e `app-em.js:19-31`.\n\n## Pontos a verificar (n\u00e3o exaustivo)\n- O novo branch `else if (quantity != null)` captura S\u00d3 o caso intencional (sem quoteOrderQty E sem price)? Pode misfire em alguma forma de ordem (ex.: STOP_LOSS_LIMIT que tem price; OCO que passa abovePrice/belowPrice como `price`)? Rastreie quem chama `assertWithinRisk` (buy/sell/oco) e com quais args.\n- H\u00e1 regress\u00e3o nos caminhos j\u00e1 cobertos (quote, LIMIT/OCO)?\n- `parseFloat(quantity)` quando quantity vem como string/qty \u2014 ok? E se quantity for null/0?\n- Risco de log-spam.\n- Determine os testes concretos (incl. como simular: env `MAX_ORDER_NOTIONAL_USDT`, stub de `beholder.getMemory`, market-by-qty acima/abaixo do teto, MINI_TICKER ausente).\n\nSeja cir\u00fargico. N\u00e3o rode build pesado; foque em leitura de c\u00f3digo + racioc\u00ednio. Retorne veredito + achados severizados + testes."
+}
+```
+
+## 🤖 Claude *(16:27:57)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review do fix (d)",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge sobre um fix de backend N\u00c3O-COMMITADO no working tree do TradeUX. Veredito: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK, com must-fix vs nice-to-have.\n\n## Contexto\nPr\u00e9-req de seguran\u00e7a pro descongelamento (MAINNET REAL, `TRADING_HALT=true`, ~$148 USDT, 0 ordens mainnet). Trunk-based direct-to-master. `exchange.js` \u00e9 o chokepoint \u00fanico de risco: toda ordem real passa por `buy()/sell()/oco()` \u2192 `assertWithinRisk`. O teto `MAX_ORDER_NOTIONAL_USDT` (prod=1500) **n\u00e3o cobria** MARKET por quantidade-base sem price (venda de `TREND_QTY`/`HARVEST_QTY`/`MAX_WALLET`) \u2014 s\u00f3 o HALT cobria. Este \u00e9 o follow-up explicitamente registrado (\"derivar pre\u00e7o do MINI_TICKER\") da auditoria de go-live.\n\n## Arquivo\n`/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` \u2014 leia inteiro. O fix adiciona, em `assertWithinRisk`, um branch pra MARKET-por-qty que deriva o pre\u00e7o via novo helper `refPrice(symbol)` (l\u00ea `MINI_TICKER.close` da MEMORY do beholder, require LAZY), e atualiza o coment\u00e1rio-contrato do teto. Diff:\n\n```diff\n+        else if (quantity != null) {                          // MARKET por QTY-base sem price\n+            const ref = refPrice(symbol);\n+            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n+            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n+        }\n...\n+function refPrice(symbol) {\n+    try {\n+        const beholder = require('../beholder');                 // require LAZY p/ evitar ciclo\n+        const mt = beholder.getMemory(symbol, 'MINI_TICKER');\n+        const px = mt && parseFloat(mt.close);\n+        return Number.isFinite(px) && px > 0 ? px : null;\n+    } catch (_) { return null; }\n+}\n```\n\n## Avalie especificamente\n1. **Invers\u00e3o arquitetural**: `exchange.js` (boundary de baixo n\u00edvel, fronteira da Binance) passando a depender de `beholder.js` (a engine). Mitigado por require lazy + read-only. Aceit\u00e1vel ou h\u00e1 um lugar/abordagem melhor (ex.: passar o pre\u00e7o de fora, um cache de pre\u00e7o dedicado)?\n2. **Fail-OPEN no MINI_TICKER frio** (ordem passa, logada, coberta s\u00f3 pelo HALT) vs fail-CLOSED. A escolha foi n\u00e3o-regressiva (n\u00e3o bloquear venda protetiva por mem\u00f3ria fria). Concorda com o trade-off de seguran\u00e7a, ou o teto deveria ser fail-closed nesse caso?\n3. **Conven\u00e7\u00f5es** (pt-BR nos coment\u00e1rios, estilo, naming), manutenibilidade, e se o coment\u00e1rio-contrato ficou honesto/preciso.\n4. **Seguran\u00e7a/risco**: o fix de fato fecha o furo pros caminhos reais (rastreie as vendas MARKET-por-qty: TREND_QTY/HARVEST_QTY/MAX_WALLET em beholder.js/app-em.js)? Algum caminho ainda escapa?\n\nLeia o necess\u00e1rio (callers, getMemory, app-em MINI_TICKER). Retorne veredito + must-fix vs nice-to-have com justificativa."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tudo confirmado. Análise completa. O `converted` no app-em (linha ~29) faz `parseFloat` em todos os campos do miniTicker, então `MEMORY[\'<sym>:MINI_TICKER\'].close` é número; `getMemory(symbol,\'MINI_TICKER\')` com `interval` falsy resolve a chave correta e retorna cópia do objeto. O `refPrice` faz `parseFloat(mt.close)` (idempotente sobre número) — bate.\n\nUm detalhe relevante que rastreei: o caminho manual de `ordersController.placeOrder` (UI/MCP) também chama `exchange.sell(symbol, quantity, limitPrice, options)` — uma MARKET SELL manual por qty sem `limitPrice` cai no mesmo branch novo e agora também ganha avaliação de teto. É um ganho colateral, não regressão.\n\n---\n\n# Review — fix do teto `MAX_ORDER_NOTIONAL_USDT` p/ MARKET-por-qty (`exchange.js`)\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança pequena (28+/6−, 1 arquivo), cirúrgica, no chokepoint correto, fecha um furo real registrado como follow-up da auditoria de go-live, e é reversível por `git checkout`. Aprovo para subir.\n\n## Racional — respondendo aos 4 pontos\n\n**1. Inversão arquitetural (`exchange.js` → `beholder.js`).** Aceitável como está. A dependência é read-only, lazy, e tolerante a falha (`try/catch` → `null`). O ciclo de `require` no load fica quebrado porque o `require(\'../beholder\')` está no corpo de `refPrice`, e em runtime (hora da ordem) o beholder já bootou — verifiquei a ordem de boot no `server.js`/CLAUDE.md, confere. O comentário-contrato documenta a escolha honestamente.\n   Há um lugar **mais limpo** (passar o preço de fora / cache de preço dedicado), mas é **nice-to-have**, não must-fix: o app-em já mantém `MINI_TICKER` na MEMORY como fonte canônica de preço; criar um segundo cache duplicaria estado e abriria divergência. Passar o preço por parâmetro do `sell()` obrigaria a tocar TODOS os callers (beholder.placeOrder + ordersController + funil) — blast radius MAIOR para um guard de risco, o oposto do que se quer. A inversão lazy+read-only é o trade-off certo aqui. Apenas **anotaria** que esta é a primeira aresta `utils → engine`; se virar padrão, aí sim extrair um `priceOracle`.\n\n**2. Fail-OPEN no MINI_TICKER frio.** Concordo com o trade-off. É **não-regressivo** (o comportamento anterior era passar SEM nem tentar avaliar) e estritamente melhor (agora avalia quando há preço; quando não há, loga). Fail-closed aqui bloquearia uma venda protetiva (death cross / corte de perda da id7, que corta POR DESENHO) só porque a memória está fria num restart — exatamente o cenário em que você MAIS quer que a venda passe. O HALT continua sendo o fail-closed de verdade. Defensável e bem comentado.\n\n**3. Convenções.** pt-BR nos comentários ✅, naming (`refPrice`) claro, estilo casa com o arquivo. O comentário-contrato ficou **honesto e preciso** — descreve cobertura, a derivação de preço, a condição frio→passa-logado, e mantém a ressalva "quote ≠ USDT passa". Sem reparos.\n\n**4. Segurança/risco — fecha o furo pros caminhos reais?** Sim, rastreado fim-a-fim:\n   - SELL MARKET por `TREND_QTY`/`HARVEST_QTY` → `beholder.placeOrder` entra no `else` (não é dynamic BUY), `order.limitPrice` fica `undefined` (só LIMIT_TYPES seta), chama `exchange.sell(symbol, qty, undefined, {type:\'MARKET\'})` → em `assertWithinRisk`: `quoteOrderQty` null, `price` undefined, cai no **branch novo**. Fechado. ✅\n   - `MAX_WALLET`: BUY vira `quoteOrderQty` (já coberto antes); SELL MAX_WALLET cai como qty-base (coberto agora). ✅\n   - Ganho colateral: MARKET SELL manual via `ordersController.placeOrder` (UI/MCP) também passa a ser avaliada. ✅\n   - Formato do dado: `app-em` faz `parseFloat` em todos os campos do miniTicker → `.close` é número; `getMemory(sym,\'MINI_TICKER\')` com interval falsy resolve a chave certa. Bate. ✅\n\n   **Caminho que ainda escapa (por design, documentado):** pares com quote ≠ USDT (`/USDT$/` guard) — o teto inteiro não se aplica, então alts vs BTC/BNB não têm teto de notional. Isso é pré-existente e está no contrato; não é regressão deste fix. Coberto pelo HALT.\n\n## Must-fix\n- **Nenhum.** A mudança é mergeável como está.\n\n## Nice-to-have (não bloqueiam)\n1. **Ruído de log no caminho frio.** O `logger(\'system\', …)` dispara a CADA ordem MARKET-por-qty com memória fria. Numa cascata (vários símbolos no boot pré-warm-up) isso spama o `system.log`. Considerar throttle/dedup por símbolo, ou rebaixar para log de categoria. Baixo.\n2. **`refPrice` poderia logar 1× a causa da exceção** (o `catch (_)` engole tudo). Se o `require(\'../beholder\')` algum dia quebrar, o teto silenciosamente não avalia e você não sabe por quê. Um `logger` no catch (com guard anti-spam) ajudaria observabilidade. Baixo.\n3. **Aresta arquitetural `utils → engine`:** se mais código de `utils/` precisar de preço, extrair um `priceOracle` lendo o MINI_TICKER, em vez de espalhar `require(\'../beholder\')` lazy. Roadmap, não agora.\n\n## Decisão de merge\n- **Subir AGORA** como pré-req de descongelamento. É um **endurecimento puro** do guard de risco no único chokepoint de dinheiro (`assertWithinRisk`), estritamente não-regressivo, e o HALT segue ativo cobrindo tudo — então o risco de subir é ~nulo (com `TRADING_HALT=true` o branch novo nem é alcançado; ele só passa a importar quando você virar o HALT, que é justamente quando você quer o teto cobrindo as vendas por qty).\n- **Condições:** (a) commit direto no master via token HTTPS, git/docker como `gcrux-tradeux` (gotcha de ownership do `.git`); (b) `npm test` + CI verde (integração agent `--check`) antes do push — não há teste unitário pra isso, mas o smoke não pode regredir; (c) ao virar o HALT, confirmar `MAX_ORDER_NOTIONAL_USDT=1500` no `.env` de prod (sem isso o teto inteiro fica inerte e o fix é no-op). \n- **Ordem:** isoladamente — é o único arquivo no working tree (`git status` mostra só `backend/src/utils/exchange.js` modificado), sem migration, sem dependência de outro patch.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (o fix), `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (callers `placeOrder`/`calcQty`/`getMemory`), `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (alimenta `MINI_TICKER` com `.close` numérico), `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` (caminho manual coberto colateralmente).'}, {'type': 'text', 'text': "agentId: a0add95feb31e8680 (use SendMessage with to: 'a0add95feb31e8680' to continue this agent)\n<usage>subagent_tokens: 53495\ntool_uses: 12\nduration_ms: 88601</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho a imagem completa do mapa de tipos. Análise crítica concluída. Confirmei o ponto mais importante: `STOP_LOSS` e `TAKE_PROFIT` (MARKET-stop, sem o sufixo LIMIT) estão em `STOP_TYPES` mas **NÃO** em `LIMIT_TYPES` — então no `placeOrder` do beholder eles têm `stopPrice` em options mas **`order.limitPrice` fica `undefined`** (linha 473: `limitPrice` só é setado se for LIMIT_TYPE). Isso é relevante para o novo branch. Deixo isso explícito no relatório.\n\n---\n\n# VEREDITO: PASS COM RESSALVAS\n\nFix correto na intenção e na execução do caminho-feliz: fecha o furo real (venda MARKET-por-qty-base sem price passando sem avaliar o teto). `getMemory(symbol,\'MINI_TICKER\')` casa com a chave gravada por `app-em.js:31` (`indexKeys.MINI_TICKER=\'MINI_TICKER\'`, `interval=null` → `getMemory` com `interval` falsy → `memoryKey=\'<sym>:MINI_TICKER\'`, confirmado em `beholder.js:957-965`). `MINI_TICKER.close` é o preço atual (`converted` em `app-em.js:28` é `parseFloat` de cada campo do miniTicker, inclui `close`). Lazy-require correto (beholder já requer exchange lazy; sem ciclo no load). Read-only. Caminhos `quoteOrderQty` e `price×qty` intactos.\n\n## Achados por severidade\n\n### [MÉDIA] STOP_LOSS / TAKE_PROFIT MARKET (sem sufixo LIMIT) caem no novo branch e são estimados com o preço SPOT, não o stopPrice\nEm `ordersRepository.js:302-304`: `STOP_TYPES` inclui `STOP_LOSS` e `TAKE_PROFIT` (MARKET-stop), mas `LIMIT_TYPES` **não**. Logo em `beholder.js:473`, para esses tipos `order.limitPrice` fica `undefined` (só `options.stopPrice` é setado, linha 483-486). Resultado: a chamada vira `exchange.sell(symbol, quantity, undefined, {type:\'STOP_LOSS\', stopPrice})` → `assertWithinRisk(price=undefined)` → cai exatamente no novo `else if (quantity != null)`.\n\nNão é regressão (antes esses tipos também não eram avaliados — eram o próprio furo) e o teto ainda é aplicado, então é uma melhoria. **Porém** o notional é estimado pelo `MINI_TICKER.close` (spot atual) em vez do `options.stopPrice`, que é o preço-alvo real de uma ordem STOP. Para o caso de uso documentado (death-cross sell), a diferença é pequena; mas como decisão de design o branch deveria preferir `options.stopPrice` quando presente. Risco baixo no contexto atual (não há template STOP_LOSS/TAKE_PROFIT-MARKET em produção pelo que vi nos call sites), mas é uma imprecisão silenciosa no chokepoint de risco. Sugestão: `const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol));`.\n\n### [BAIXA — design, aceitável] Fail-OPEN com MINI_TICKER frio é explorável APENAS sob condições estreitas\nA brecha exige: `TRADING_HALT=false` **E** `MAX_ORDER_NOTIONAL_USDT>0` **E** símbolo `*USDT` **E** MINI_TICKER ausente/sem `close` no momento exato da ordem. Em runtime normal o miniTicker é a stream mais quente do sistema (alimenta o BOOK simulado), então "frio" só ocorre em janela de boot/reconexão de WS — exatamente quando automações ainda não disparam. Para uma venda protetiva, fail-open é a escolha certa (não travar saída por memória fria). Aceito. Ressalva: o teto é por-ordem, não por-janela — um atacante/bug com controle do template ainda só fura UMA ordem por vez e o HALT continua sendo o backstop real. OK para o objetivo (descongelar), mas o teto **não** é uma trava forte contra qty-base enquanto depender de memória volátil; o HALT continua sendo a trava forte.\n\n### [BAIXA] Log-spam potencial no caminho frio\nCada tick que dispare uma venda MARKET-por-qty com MINI_TICKER frio loga uma linha em `system.log`. No hot path isso é por-ordem (não por-tick de mercado), então o volume é limitado pela frequência de ordens — baixo risco real. Mas em produção `NODE_ENV=production` o logger escreve só em arquivo (não stdout do docker — gotcha conhecido), então um burst passaria despercebido no `docker logs`. Sem ação obrigatória; só ciência.\n\n### [INFO] `parseFloat(quantity)` robusto para os tipos de entrada reais\n`calcQty` (`beholder.js:298`) retorna `result.toFixed(...)` → **string** ("0.00012300"); `parseFloat` lida bem. Caminho manual/agente: MCP aceita `z.union([number,string])` → também ok. Guard de `quantity != null` impede o branch quando qty ausente; e se `quantity` for `0`/`"0"`, `parseFloat→0`, `notional=ref*0=0`, `0 > teto` é false → passa (correto: ordem de qty 0 é problema de outra camada, não do teto). Sem NaN-leak para o `throw` (o `Number.isFinite(notional)` blinda).\n\n### [INFO] Caminho OCO inalterado e correto\n`oco()` em `exchange.js:129` passa `options.abovePrice || options.belowPrice` como `price` e `assertWithinRisk` então usa o branch `price!=null && quantity!=null` (price×qty). OCO **nunca** cai no novo branch (sempre tem abovePrice/belowPrice). Sem misfire. `funnelJob.js:163` (buy quoteOrderQty) idem — usa o branch quote. Confirmado: o novo branch captura **só** o caso intencional.\n\n## Testes que eu rodaria (unit, sem Binance real)\nStub `require(\'../beholder\').getMemory` e env, chamando `assertWithinRisk` direto (exporte-a ou teste via `sell()` com `binance.marketSell` mockado):\n\n1. **MARKET-por-qty ACIMA do teto, MINI_TICKER quente** → `MAX_ORDER_NOTIONAL_USDT=1500`, stub `getMemory→{close:\'66000\'}`, `sell(\'BTCUSDT\',\'0.03\',undefined,{type:\'MARKET\'})` (0.03×66000=1980) → **deve lançar** `[riskGuard] ... > teto`. (era o furo)\n2. **MARKET-por-qty ABAIXO do teto, quente** → mesma stub, qty `0.01` (660) → **passa**, sem throw, sem log de risco.\n3. **MARKET-por-qty, MINI_TICKER frio** (`getMemory→undefined`) → **passa** + loga "MINI_TICKER frio ... teto NÃO avaliado". Confirmar 1 log por chamada.\n4. **MINI_TICKER presente mas `close` inválido** (`{close:\'0\'}`, `{close:\'abc\'}`, `{}`) → `refPrice` retorna null → fail-open + log. (cobre `px>0` e `Number.isFinite`).\n5. **STOP_LOSS MARKET sem limitPrice** → `sell(\'BTCUSDT\',\'0.03\',undefined,{type:\'STOP_LOSS\',stopPrice:\'60000\'})` → hoje estima por `close` spot; documentar/decidir se deveria usar `stopPrice` (ver achado MÉDIA).\n6. **Regressão quote**: `funnelJob`-style `buy(\'BTCUSDT\',undefined,null,{type:\'MARKET\',quoteOrderQty:\'2000\'})` → lança (>1500); `\'1000\'` → passa.\n7. **Regressão LIMIT/OCO**: `sell(\'BTCUSDT\',\'0.03\',\'60000\',{type:\'LIMIT\'})` → lança; `oco(\'SELL\',\'BTCUSDT\',\'0.03\',{abovePrice:\'70000\',belowPrice:\'60000\'})` com qty grande → lança via price×qty.\n8. **Par não-USDT**: `sell(\'BTCBRL\',\'5\',undefined,{type:\'MARKET\'})` com teto>0 → **passa sem avaliar** (regex `/USDT$/i`), nenhum log de frio (branch inteiro guardado por `/USDT$/i`). Confirmar.\n9. **TRADING_HALT=true** sobrepõe tudo → qualquer ordem lança kill-switch antes de tocar o branch novo.\n10. **Ciclo de require**: smoke `node -e "require(\'./backend/src/utils/exchange\')"` sozinho (sem beholder pré-carregado) → não deve estourar; e via `server.js` boot real, disparar uma venda qty-base e ver o log do guard.\n\n## Recomendação de merge\n**MERGEAR** — fecha um furo real no chokepoint de risco, sem regressão nos caminhos cobertos, e é pré-req legítimo de segurança para o descongelamento. Antes de virar `TRADING_HALT=false`, eu exigiria: (a) decisão sobre o achado **MÉDIA** (usar `options.stopPrice` no branch quando presente — uma linha), e (b) rodar os testes 1–9 acima (são unit puros, sem Binance). Achados BAIXA/INFO não bloqueiam. O fix **melhora** a postura mas reforço: o teto por-qty depende de memória volátil (fail-open quando fria) — o **HALT continua sendo a trava forte e inegociável**, o `MAX_ORDER_NOTIONAL` é defesa-em-profundidade, não substituto.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (fix — `assertWithinRisk` linhas 25-47, `refPrice` 53-62)\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`getMemory:957`, `placeOrder:436+`, `calcQty:201`, sell call `:503`)\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (MINI_TICKER write `:31`)\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js` (`STOP_TYPES:302` / `LIMIT_TYPES:304` — base do achado MÉDIA)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` (`placeOrder` manual `:108-126`)\n- `/home/gcrux-tradeux/tradeux/backend/src/jobs/funnelJob.js` (`:163` — regressão quote)'}, {'type': 'text', 'text': "agentId: a0725c95f7eff0ea4 (use SendMessage with to: 'a0725c95f7eff0ea4' to continue this agent)\n<usage>subagent_tokens: 42067\ntool_uses: 14\nduration_ms: 119885</usage>"}]
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
