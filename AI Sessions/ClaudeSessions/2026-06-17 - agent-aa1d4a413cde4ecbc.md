@@ -1401,6 +1401,6 @@ O fix faz exatamente o que diz: torna `baseline` symbol-aware (`null`=n/a para a
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-17 - agent-a5a3922b86c4d255c]]
-> * **Próxima Sessão**: [[2026-06-17 - agent-ac71eb815829bc61b]]
+> * **Sessão Anterior**: [[2026-06-17 - agent-a9bb185aa3b1c4648]]
+> * **Próxima Sessão**: [[2026-06-17 - agent-ab0f700f16cf4bfe2]]
 %% --- TIMELINE END --- %%

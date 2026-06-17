@@ -6430,6 +6430,1083 @@ Tudo corrigível — o verificador já deu os fixes. Mas surgiu uma decisão de 
 > Your questions have been answered: "Escopo do FARM_SELLING (item 2) — como fechar o caso de restart-com-venda-em-voo?"="v1 pragmático (Recomendado)". You can now continue with these answers in mind.
 > ```
 
+## 🤖 Claude *(18:01:40)*
+
+
+## 🤖 Claude *(18:01:45)*
+
+Escopo definido: **v1 pragmático**. Plano final dos três (com os fixes do verificador incorporados):
+- **(1) teto:** `MAX_ORDER_NOTIONAL_USDT=300` + rationale corrigido (BTC_EXCESS off; revisitar se for atrás do +3 BTC).
+- **(2) FARM_SELLING v1:** trava + liberação por **match de orderId** (não depende do BRAIN vivo → mata a perma-trava) + defiro reconstrução-no-boot com gate "não escalar size". Não toco no `setup-farm.js` divergente.
+- **(3) TREND_QTY:** em vez de tabela nova (que trazia o double-count), **derivo da tabela de orders** espelhando `getFarmPosition` — idempotente por construção, sobrevive a restart, sem migration. Mais simples e mais correto.
+
+Leio os anchors exatos pra implementar com precisão:
+
+## 🤖 Claude *(18:01:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 155,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 155	    sendMessage({ notification: { text: `Order #${order.orderId} was updated as ${order.status}`, type } });
+> 156	}
+> 157	
+> 158	// orderIds de fill de trend já contabilizados — dedup contra um executionReport FILLED RE-ENTREGUE
+> 159	// (reconexão do userData stream): o BUY é ADITIVO, então um report duplicado somaria 2x e inflaria a
+> 160	// posição. Só recebe ordens de trend (raras, dirigidas por cross) → footprint desprezível. Reseta no
+> 161	// restart, coerente com o TREND_QTY (que hoje também é volátil — ver nota de persistência abaixo).
+> 162	const countedTrendFills = new Set();
+> 163	
+> 164	// Trend Following — mantém MEMORY['<sym>:TREND_QTY'] (posição em base asset atribuída ao trend),
+> 165	// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automação
+> 166	// (referenciam TREND_CROSS), lidas do BRAIN em memória (sem ida ao banco). Golden BUY soma a qty
+> 167	// FILLED; death SELL zera. Só atua em FILLED (aí order.quantity = qty cheia preenchida). Best-effort:
+> 168	// um erro aqui não quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).
+> 169	// PERSISTÊNCIA: TREND_QTY é VOLÁTIL (só MEMORY), ao contrário do cross (regimeStates). Aceitável p/ size
+> 170	// pequeno na validação; ANTES DE ESCALAR O SIZE, persistir (senão um restart com posição de trend aberta
+> 171	// perde a referência e o death seguinte não liquida). Ver HANDOFF / [[tradeux-trend-following]].
+> 172	async function updateTrendPosition(order) {
+> 173	    try {
+> 174	        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;
+> 175	        if (countedTrendFills.has(order.orderId)) return; // já contabilizado (report FILLED re-entregue)
+> 176	        const auto = beholder.getBrain()[order.automationId];
+> 177	        const cond = auto && auto.conditions ? auto.conditions : '';
+> 178	        if (cond.indexOf('TREND_CROSS') === -1) return; // não é automação de Trend Following
+> 179	        const qty = parseFloat(order.quantity);
+> 180	        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;
+> 181	        let next;
+> 182	        if (order.side === 'BUY' && cond.indexOf("'golden'") !== -1) {
+> 183	            if (!Number.isFinite(qty) || qty <= 0) return; // guard: qty inválida não corrompe TREND_QTY
+> 184	            next = cur + qty;
+> 185	        }
+> 186	        else if (order.side === 'SELL' && cond.indexOf("'death'") !== -1) next = 0; // vendeu a posição de trend
+> 187	        else return;
+> 188	        countedTrendFills.add(order.orderId);
+> 189	        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);
+> 190	        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);
+> 191	    } catch (err) {
+> 192	        logger('system', `updateTrendPosition: ${err.message}`);
+> 193	    }
+> 194	}
+> 195	
+> 196	// orderIds de fill do Harvester já contabilizados — dedup contra um executionReport RE-ENTREGUE
+> 197	// (a compra é ADITIVA na média ponderada; um report duplicado distorceria qty/custo). Também guarda
+> 198	// chaves `recon:<orderId>` das reconciliações partial→cancel (subtrair 2x corromperia o bucket).
+> 199	// Volátil (reseta no restart) — aceitável: um report re-entregue APÓS restart é raríssimo e o bucket
+> 200	// persistido (harvestPositions) já reflete o último estado gravado. Footprint desprezível.
+> 201	const countedHarvestFills = new Set();
+> 202	
+> 203	// Estados TERMINAIS de ordem do harvester (compartilhado entre o caminho vivo e o reconcile-on-boot).
+> 204	// EXPIRED/EXPIRED_IN_MATCH são literais (não existem no enum orderStatus); EXPIRED_IN_MATCH (STP da
+> ```
+
+## 🤖 Claude *(18:01:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 235,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 235	        // (calcQty capa na CARTEIRA, não no bucket → vazaria o cofre). Usa o `z` cumulativo do
+> 236	        // executionReport (streamExecutedQty) — a ordem persistida não guarda executedQty. Dedup
+> 237	        // próprio (reports terminais também podem ser RE-ENTREGUES; subtrair 2x corromperia o bucket).
+> 238	        if (isHarvestSell && order.status !== orderStatus.FILLED && HARVEST_TERMINAL_STATUSES.includes(order.status)) {
+> 239	            const executed = parseFloat(streamExecutedQty);
+> 240	            if (!Number.isFinite(executed) || executed <= 0) return; // cancel limpo (sem fill): bucket intacto
+> 241	            const reconKey = `recon:${order.orderId}`;
+> 242	            if (countedHarvestFills.has(reconKey)) return; // já reconciliado (report terminal re-entregue)
+> 243	            const bucket = beholder.getMemory(order.symbol, indexKeys.HARVEST);
+> 244	            if (!bucket) return; // sem bucket em memória, nada a reconciliar
+> 245	            const bQty = Number(bucket.qty) || 0, bCost = Number(bucket.cost) || 0;
+> 246	            const remaining = Number((bQty - executed).toFixed(8));
+> 247	            // <= poeira (ou negativo, se o bucket já estava menor) → zera: mesma semântica do FILLED
+> 248	            // (qty=0 desarma a venda; fail-closed). Custo médio NÃO muda numa venda parcial.
+> 249	            const next = remaining > 1e-8
+> 250	                ? { qty: remaining, cost: bCost, atMs: Date.now() }
+> 251	                : { qty: 0, cost: 0, atMs: Date.now() };
+> 252	            await beholder.updateMemory(order.symbol, indexKeys.HARVEST, null, next, false);
+> 253	            // Marca o dedup SÓ após o updateMemory bem-sucedido (gate QA): se falhar, a chave não é
+> 254	            // "queimada" e um report re-entregue reconcilia — perder a reconciliação superestima o
+> 255	            // bucket, que é exatamente a direção do oversell que este fix mata.
+> 256	            countedHarvestFills.add(reconKey);
+> 257	            try { await harvestPositionsRepository.upsertPosition(order.symbol, next); }
+> 258	            catch (e) { logger('system', `updateHarvestPosition persist: ${e.message}`); }
+> 259	            logger('A:' + order.automationId, `HARVEST[${order.symbol}] reconciliado pós-${order.status}: executedQty=${executed}, qty ${bQty}->${next.qty} (cost ${next.cost})`);
+> 260	            return;
+> 261	        }
+> 262	
+> 263	        if (order.status !== orderStatus.FILLED) return; // só o fill mexe no bucket/persistência
+> 264	        if (countedHarvestFills.has(order.orderId)) return; // já contabilizado (report FILLED re-entregue)
+> 265	
+> 266	        const cur = beholder.getMemory(order.symbol, indexKeys.HARVEST) || { qty: 0, cost: 0 };
+> 267	        const curQty = Number(cur.qty) || 0, curCost = Number(cur.cost) || 0;
+> 268	        let next;
+> 269	        if (isHarvestBuy) {
+> 270	            const qty = parseFloat(order.quantity);
+> 271	            const price = parseFloat(order.avgPrice);
+> 272	            if (!Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0) return; // guard: não corrompe o bucket
+> 273	            const newQty = curQty + qty;
+> 274	            const newCost = (curQty * curCost + qty * price) / newQty; // média ponderada do custo
+> 275	            next = { qty: newQty, cost: newCost, atMs: Date.now() };
+> 276	        }
+> 277	        else { // venda no-loss FILLED → realizou o bucket inteiro → zera (qty=0 desarma a venda; fail-closed)
+> 278	            next = { qty: 0, cost: 0, atMs: Date.now() };
+> 279	        }
+> 280	        countedHarvestFills.add(order.orderId);
+> 281	        await beholder.updateMemory(order.symbol, indexKeys.HARVEST, null, next, false);
+> 282	        // Persiste o bucket (resiliência a restart — sem isto a posição orfana no boot). Best-effort: falha de
+> 283	        // persistência não quebra o tracking em memória; o boot recarrega o último valor efetivamente gravado.
+> 284	        try { await harvestPositionsRepository.upsertPosition(order.symbol, next); }
+> 285	        catch (e) { logger('system', `updateHarvestPosition persist: ${e.message}`); }
+> 286	        logger('A:' + order.automationId, `HARVEST[${order.symbol}] qty ${curQty}->${next.qty} cost ${curCost}->${next.cost} (fill ${order.side})`);
+> 287	    } catch (err) {
+> 288	        logger('system', `updateHarvestPosition: ${err.message}`);
+> 289	    }
+> 290	}
+> 291	
+> 292	// Rastreamento do Preço Médio Ponderado (DCA) do Farm (LTC, BNB, ADA)
+> 293	async function updateFarmPosition(order) {
+> 294	    try {
+> 295	        if (!order || order.status !== orderStatus.FILLED) return;
+> 296	        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+> 297	        if (!farmSymbols.includes(order.symbol)) return;
+> 298	
+> 299	        const dca = await ordersRepository.getFarmPosition(order.symbol);
+> 300	        await beholder.updateMemory(order.symbol, indexKeys.FARM_DCA, null, dca, false);
+> 301	        logger('system', `FARM_DCA[${order.symbol}] atualizado: qty=${dca.qty}, cost=${dca.cost} (pós-fill de ${order.side})`);
+> 302	    } catch (err) {
+> 303	        logger('system', `updateFarmPosition: ${err.message}`);
+> 304	    }
+> 305	}
+> 306	
+> 307	async function loadFarmPositions() {
+> 308	    try {
+> 309	        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+> 310	        for (const symbol of farmSymbols) {
+> 311	            const dca = await ordersRepository.getFarmPosition(symbol);
+> 312	            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);
+> 313	            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);
+> 314	        }
+> 315	    } catch (err) {
+> 316	        logger('system', `loadFarmPositions: ${err.message}`);
+> 317	    }
+> 318	}
+> 319	
+> 320	// Boot-load do Harvester: recarrega os buckets persistidos p/ MEMORY (a posição sobrevive ao restart em vez de
+> 321	// orfanar), RECONCILIA contra a corretora as ordens do harvester que viraram TERMINAIS com o backend OFF
+> 322	// (o userData stream NÃO tem replay — sem isto o bucket recarrega errado), e RECONSTRÓI a trava HARVEST_SELLING
+> 323	// só p/ vendas ainda DE FATO abertas (senão bucket + trava ausente re-disparariam a venda no 1º tick acima do
+> 324	// alvo → oversell, já que calcQty capa na carteira e não no bucket). Best-effort: erro aqui não impede o boot.
+> 325	// Chamado por init() (exchange já inicializado). Dívida do TL fechada: pré-req p/ escalar o size.
+> 326	async function loadHarvestPositions() {
+> 327	    try {
+> 328	        const brain = beholder.getBrain();
+> 329	
+> 330	        // 0º) Buckets persistidos num mapa LOCAL primeiro — a reconciliação offline (1º/2º) ajusta o mapa
+> 331	        // ANTES de armar a MEMORY, e a trava continua sendo posta antes do bucket aparecer (invariante original).
+> 332	        const rows = await harvestPositionsRepository.getAll();
+> 333	        const buckets = {};
+> 334	        for (const r of rows)
+> ```
+
+## 🤖 Claude *(18:03:07)*
+
+
+## 🤖 Claude *(18:03:10)*
+
+Isso esclarece muito — o **`updateFarmPosition` já é derive-from-orders** (chama `getFarmPosition`), confirmando que meu approach do TREND_QTY (espelhar isso) é o caminho certo e idempotente. Vou ler o resto dos anchors: como o `processExecutionData` invoca esses updaters (e em quais status), o set do HARVEST_SELLING, o shouldntInvert, e o boot.
+
+## 🤖 Claude *(18:03:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 455,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 455	function processExecutionData(monitorId, executionData, broadcastLabel) {
+> 456	    if (executionData.x === orderStatus.NEW) return;//ignora as novas, pois podem ter vindo de outras fontes
+> 457	
+> 458	    const order = {
+> 459	        symbol: executionData.s,
+> 460	        orderId: executionData.i,
+> 461	        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,
+> 462	        side: executionData.S,
+> 463	        type: executionData.o,
+> 464	        status: executionData.X,
+> 465	        isMaker: executionData.m,
+> 466	        transactTime: executionData.T
+> 467	    }
+> 468	
+> 469	    if (order.status === orderStatus.FILLED) {
+> 470	        const quoteAmount = parseFloat(executionData.Z);
+> 471	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 472	        order.commission = executionData.n;
+> 473	        order.quantity = executionData.q;
+> 474	        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 475	        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 476	    }
+> 477	
+> 478	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 479	
+> 480	    setTimeout(async () => {
+> 481	        try {
+> 482	            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 483	            if (updatedOrder) {
+> 484	
+> 485	                notifyOrderUpdate(order);
+> 486	                // Telegram pro dono (pedido: notificar todas as ordens). Best-effort + dedup interno
+> 487	                // por orderId+status (reports re-entregues não duplicam; MARKET já notificada no insert
+> 488	                // não re-notifica aqui). Síncrona e não-lançante — não atrasa nem quebra o caminho quente.
+> 489	                telegramNotify.notifyOrder(updatedOrder.get({ plain: true }));
+> 490	
+> 491	                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));
+> 492	                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 493	                if (results) results.map(r => sendMessage({ notification: r }));
+> 494	
+> 495	                await updateTrendPosition(updatedOrder.get({ plain: true }));
+> 496	                // z = qty executada CUMULATIVA do executionReport (autoritativa p/ a reconciliação
+> 497	                // partial→cancel da venda do harvester; a ordem persistida não guarda executedQty).
+> 498	                await updateHarvestPosition(updatedOrder.get({ plain: true }), executionData.z);
+> 499	                await updateFarmPosition(updatedOrder.get({ plain: true }));
+> 500	
+> 501	                if (broadcastLabel) sendMessage({ [broadcastLabel]: order });
+> 502	            }
+> 503	        } catch (err) {
+> 504	            logger('M:' + monitorId, err);
+> 505	        }
+> 506	    }, 3000)
+> 507	}
+> 508	
+> 509	// Trata o evento cru `listStatus` da OCO (data.e === 'listStatus'). Campos relevantes:
+> ```
+
+## 🤖 Claude *(18:03:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 505,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 505	    catch (err) {
+> 506	        logger('A:' + automation.id, err.body ? err.body : err);
+> 507	        logger('A:' + automation.id, order);
+> 508	        return { type: 'error', text: `Order failed! ` + err.body ? err.body : err.message };
+> 509	    }
+> 510	
+> 511	    // Trava de venda do Harvester: marca HARVEST_SELLING ASSIM QUE a ordem é ACEITA pela corretora (logo após
+> 512	    // exchange.sell, ANTES do insertOrder) — se o insertOrder/calcFillFinancials der throw depois, a venda já
+> 513	    // está na corretora e a trava JÁ está posta → falha fail-closed (silencia a venda) em vez de re-disparar
+> 514	    // uma 2ª venda do MESMO bucket no próximo tick (oversell vazaria o reserve: calcQty capa na carteira, não no
+> 515	    // bucket). A venda no-loss é LEVEL-trigger (ver shouldntInvert); a trava é o anti-empilhamento. Liberada no
+> 516	    // estado terminal (app-em.updateHarvestPosition). Detecta pela qty='HARVEST_QTY' (assinatura única da venda).
+> 517	    if (order.side === 'SELL' && orderTemplate.quantity === 'HARVEST_QTY')
+> 518	        await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> 519	
+> 520	    let stopPrice;
+> 521	    if (action.orderTemplate && action.orderTemplate.type === 'TRAILING_STOP')
+> 522	        stopPrice = action.orderTemplate.stopPrice;
+> 523	    else if (STOP_TYPES.includes(order.type))
+> 524	        stopPrice = order.options.stopPrice;
+> 525	
+> 526	    const savedOrder = await insertOrder({
+> 527	        automationId: automation.id,
+> 528	        symbol: order.symbol,
+> 529	        quantity: order.quantity || result.executedQty,
+> 530	        type: order.options.type,
+> 531	        side: order.side,
+> 532	        limitPrice: LIMIT_TYPES.includes(order.options.type) ? order.limitPrice : null,
+> 533	        stopPrice,
+> 534	        icebergQty: null,
+> 535	        orderId: result.orderId,
+> 536	        clientOrderId: result.clientOrderId,
+> 537	        transactTime: result.transactTime,
+> 538	        status: result.status || 'NEW',
+> 539	        // net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream
+> 540	        ...calcFillFinancials(result, order.symbol)
+> 541	    })
+> 542	
+> 543	    // Telegram pro dono (pedido: notificar todas as novas ordens). Best-effort, não-lançante;
+> 544	    // dedup por orderId+status (a MARKET já-FILLED não re-notifica no executionReport do stream).
+> 545	    telegramNotify.notifyOrder(savedOrder.get({ plain: true }));
+> 546	
+> 547	    if (automation.logs) logger('A:' + automation.id, savedOrder.get({ plain: true }));
+> 548	
+> 549	    return { type: 'success', text: `Order ${order.side} ${order.symbol} ${result.status}` };
+> ```
+
+## 🤖 Claude *(18:03:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 803,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 803	            logger('A:' + automation.id, err);
+> 804	        }
+> 805	        return { text: `Error at ${automation.name}: ${err.message}`, type: 'error' };
+> 806	    }
+> 807	}
+> 808	
+> 809	function shouldntInvert(automation, memoryKey) {
+> 810	    //return true;//descomente para desabilitar 'double check' (teste de condição invertida)
+> 811	    return ['GRID', 'TRAILING'].includes(automation.actions[0].type)
+> 812	        || automation.schedule
+> 813	        // Venda no-loss do Harvester: LEVEL-trigger (dispara enquanto bestBid>alvo), NÃO edge. O 'double check'
+> 814	        // invertido re-adicionaria um previous.bestBid<alvo que perde o revert rápido (o bucket nasce 3s após o
+> 815	        // fill, já acima do alvo → nunca há cruzamento fresco). O anti-empilhamento vira a trava HARVEST_SELLING
+> 816	        // (setada no place, liberada no estado terminal) → 1 venda por bucket, sem oversell.
+> 817	        || (automation.conditions && automation.conditions.indexOf('HARVEST_SELLING') !== -1)
+> 818	        || memoryKey.indexOf(':LAST_ORDER') !== -1
+> 819	        || memoryKey.indexOf(':LAST_CANDLE') !== -1
+> 820	        || memoryKey.indexOf(':PREVIOUS_CANDLE') !== -1;
+> 821	}
+> 822	
+> 823	async function evalDecision(memoryKey, automation) {
+> 824	    if (!automation) return false;
+> 825	
+> 826	    try {
+> 827	        const indexes = automation.indexes ? automation.indexes.split(',') : [];
+> ```
+
+## 🤖 Claude *(18:03:52)*
+
+
+## 🤖 Claude *(18:03:55)*
+
+`processExecutionData` chama os três updaters em **todo estado terminal** (cada um filtra por status). E o HARVEST_SELLING usa exatamente o padrão que vou espelhar (set por `orderId` no place; LEVEL-trigger via shouldntInvert). Falta ver a **liberação** do HARVEST_SELLING (onde deleta) e os terminais, mais o boot e os imports. Último batch de leitura:
+
+## 🤖 Claude *(18:03:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 205,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 205	// Binance) é raríssimo, mas fora da lista cairia no braço "ainda aberta" e perma-travaria a venda.
+> 206	const HARVEST_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];
+> 207	
+> 208	// Harvester de dislocação — mantém MEMORY['<sym>:HARVEST'] = { qty, cost } (posição TÁTICA em base asset +
+> 209	// custo MÉDIO ponderado), lido pela calcQty do template SELL (quantity='HARVEST_QTY' → .qty) e pela condition
+> 210	// de venda no-loss (bestBid > .cost×(1+lucro)). Distingue a ordem do harvester pelas conditions da automação
+> 211	// (a compra referencia ':FAIR'; a venda ':HARVEST'), lidas do BRAIN em memória (sem ida ao banco). Compra
+> 212	// FILLED soma e recalcula a média; venda FILLED zera o bucket; venda terminal NÃO-FILLED com fill parcial
+> 213	// SUBTRAI o executado (reconciliação abaixo). Bucket SEPARADO do cofre — só rastreia o que o harvester
+> 214	// comprou (a calcQty capa a venda na carteira). Best-effort: erro aqui não quebra o fluxo da ordem (o gate
+> 215	// de venda falha fechado se HARVEST ausente). PERSISTÊNCIA: harvestPositions (upsert no fill; load no boot).
+> 216	async function updateHarvestPosition(order, streamExecutedQty) {
+> 217	    try {
+> 218	        if (!order || !order.automationId) return;
+> 219	        const auto = beholder.getBrain()[order.automationId];
+> 220	        const cond = auto && auto.conditions ? auto.conditions : '';
+> 221	        const isHarvestBuy = order.side === 'BUY' && cond.indexOf(':FAIR') !== -1;
+> 222	        const isHarvestSell = order.side === 'SELL' && cond.indexOf(':HARVEST') !== -1;
+> 223	        if (!isHarvestBuy && !isHarvestSell) return; // não é ordem do Harvester
+> 224	
+> 225	        // Trava de venda (HARVEST_SELLING): liberada em QUALQUER estado TERMINAL da venda do harvester.
+> 226	        // FILLED zera o bucket (abaixo); CANCELED/REJECTED/EXPIRED libera p/ retry no próximo tick acima do alvo.
+> 227	        // O delay de 3s do processExecutionData é benéfico aqui: o bucket zera e a trava some juntos (sem corrida
+> 228	        // entre desarmar a trava e o qty>0 ainda verdadeiro). Idempotente: deleteMemory em chave ausente é no-op.
+> 229	        if (isHarvestSell && HARVEST_TERMINAL_STATUSES.includes(order.status))
+> 230	            beholder.deleteMemory(order.symbol, indexKeys.HARVEST_SELLING);
+> 231	
+> 232	        // Reconciliação partial→cancel (dívida do TL, pré-req p/ escalar o size): venda do harvester
+> 233	        // que morreu NÃO-FILLED mas com fill PARCIAL já ENTREGOU parte do bucket — sem subtrair, o
+> 234	        // bucket fica SUPERESTIMADO e a próxima venda no-loss venderia mais do que o harvester possui
+> 235	        // (calcQty capa na CARTEIRA, não no bucket → vazaria o cofre). Usa o `z` cumulativo do
+> 236	        // executionReport (streamExecutedQty) — a ordem persistida não guarda executedQty. Dedup
+> ```
+
+## 🤖 Claude *(18:03:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 760,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 760	    return WSS.broadcast(json);
+> 761	}
+> 762	
+> 763	async function init(settings, wssInstance, beholderInstance) {
+> 764	    if (!settings || !beholderInstance) throw new Error(`You can't init the Exchange Monitor App without his settings. Check your database and/or startup code.`);
+> 765	
+> 766	    WSS = wssInstance;
+> 767	    beholder = beholderInstance;
+> 768	    exchange = require('./utils/exchange')(settings);
+> 769	
+> 770	    // Recarrega + RECONCILIA os buckets do Harvester ANTES de subir os monitores (gate TL): com o
+> 771	    // userData stream ainda fora do ar, a reconciliação de boot não corre contra fills ao vivo —
+> 772	    // o guard do passo 3 vira cinto, não a única defesa. Ver loadHarvestPositions.
+> 773	    await loadHarvestPositions();
+> 774	    await loadFarmPositions();
+> 775	
+> 776	    const monitors = await getActiveMonitors();
+> 777	    monitors.map(m => {
+> 778	        setTimeout(() => {
+> 779	            switch (m.type) {
+> 780	                case monitorTypes.MINI_TICKER:
+> 781	                    return startMiniTickerMonitor(m.id, m.broadcastLabel, m.logs);
+> 782	                case monitorTypes.BOOK:
+> 783	                    return startBookMonitor(m.id, m.broadcastLabel, m.logs);
+> 784	                case monitorTypes.USER_DATA: {
+> 785	                    if (!settings.accessKey || !settings.secretKey) return;
+> 786	                    return startUserDataMonitor(m.id, m.broadcastLabel, m.logs);
+> 787	                }
+> 788	                case monitorTypes.CANDLES:
+> 789	                    return startChartMonitor(m.id, m.symbol, m.interval, m.indexes ? m.indexes.split(',') : [], m.broadcastLabel, m.logs);
+> 790	                case monitorTypes.TICKER:
+> 791	                    return startTickerMonitor(m.id, m.symbol, m.broadcastLabel, m.logs);
+> 792	            }
+> 793	        }, 250)//Binance only permits 5 commands / second
+> 794	    })
+> 795	
+> 796	    const lastOrders = await ordersRepository.getLastFilledOrders();
+> 797	    await Promise.all(lastOrders.map(async (order) => {
+> 798	        const orderCopy = getLightOrder(order.get({ plain: true }));
+> 799	        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> ```
+
+## 🤖 Claude *(18:03:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "offset": 75,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 75	    TICKER: 'TICKER',
+> 76	    REGIME: 'REGIME',
+> 77	    TREND_CROSS: 'TREND_CROSS',
+> 78	    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> 79	    FLOW: 'FLOW', // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) — NOWCASTING/timing, NÃO forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (não comprar dip sob venda agressora AGORA)
+> 80	    FAIR: 'FAIR', // preço de referência da MAINNET {price,at,atMs} (fairPriceJob) — âncora do Harvester de dislocação (compra-limite funda quando o testnet disloca abaixo do FAIR e reverte; sentinel price:0 = fail-safe)
+> 81	    HARVEST: 'HARVEST', // bucket TÁTICO do Harvester {qty,cost} (base asset + custo médio; app-em.updateHarvestPosition) — venda no-loss usa quantity='HARVEST_QTY' (lê .qty); SEPARADO do cofre de BTC. PERSISTIDO (tabela harvestPositions, recarregado no boot por app-em.loadHarvestPositions)
+> 82	    HARVEST_SELLING: 'HARVEST_SELLING', // trava da venda no-loss do Harvester: setada no place (beholder.placeOrder), liberada no estado TERMINAL da venda (app-em.updateHarvestPosition). Troca o edge-trigger por LEVEL-trigger sem oversell. Ausência = destravado (vende quando há lucro). NÃO persistida (reseta no boot; reconstruída se houver venda aberta)
+> 83	    FARM_DCA: 'FARM_DCA', // preço médio ponderado (DCA) e quantidade de posições abertas no Farm {qty, cost}
+> 84	    COCKPIT: 'COCKPIT' // analytics READ-ONLY por símbolo (cockpitJob): distribuição de retornos 1m, EV net-de-fee, tail, banda MC driftless, snapshot regime/flow + estado dos gates de compra. NÃO gateia nada — o agente LÊ/REPORTA via MEMORY/MCP. Fonte = klines mainnet (mercado real), independe de useTestnet.
+> 85	}
+> 86	
+> 87	function getAnalysisIndexes() {
+> 88	    return {
+> 89	        [indexKeys.RSI]: { params: 'period', name: 'RSI' },
+> 90	        [indexKeys.MACD]: { params: 'fast,slow,signal', name: 'MACD' },
+> 91	        [indexKeys.SMA]: { params: 'period', name: 'SMA' },
+> 92	        [indexKeys.EMA]: { params: 'period', name: 'EMA' },
+> 93	        [indexKeys.STOCH_RSI]: { params: 'd,k,rsi,stoch', name: 'Stochastic RSI' },
+> 94	        [indexKeys.BOLLINGER_BANDS]: { params: 'period,stdDev', name: 'Bollinger Bands (BB)' },
+> ```
+
+## 🤖 Claude *(18:03:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "offset": 36,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 36	    logger('system', `Starting the server apps...`);
+> 37	    const server = app.listen(process.env.PORT, () => {
+> 38	        logger('system', 'App is running at ' + process.env.PORT);
+> 39	    })
+> 40	
+> 41	    const wss = appWs(server);
+> 42	
+> 43	    appEm.init(settings, wss, beholder);
+> 44	
+> 45	    // Job de regime de mercado: grava MEMORY['<sym>:REGIME'] periodicamente p/ gate das automações
+> 46	    // (ex.: não comprar em bear). Read-only na Binance mainnet; não dispara ordens por si.
+> 47	    logger('system', `Starting the Regime Job...`);
+> 48	    regimeJob.start();
+> 49	
+> 50	    // Flow Job (SHADOW): grava MEMORY['<sym>:FLOW'] (fluxo do taker da mainnet) p/ observação +
+> 51	    // leitura pelo agente (MCP). Ainda NÃO gateia automação — gate da reversão à média é o próximo passo.
+> 52	    logger('system', `Starting the Flow Job (shadow)...`);
+> 53	    flowJob.start();
+> 54	
+> 55	    // Fair Price Job: grava MEMORY['<sym>:FAIR'] (preço da mainnet) p/ ancorar o Harvester de dislocação
+> ```
+
+## 🤖 Claude *(18:06:17)*
+
+
+## 🤖 Claude *(18:06:20)*
+
+Tenho quase tudo. O HARVEST_SELLING libera no topo do `updateHarvestPosition` via `beholder.deleteMemory` + match BRAIN-dependente (que o verificador criticou) — pro FARM vou usar **match por orderId** (BRAIN-independente). Falta ver o início do `placeOrder` pra posicionar o skip anti-empilhamento. Última leitura:
+
+## 🤖 Claude *(18:06:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 455,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 455	    const order = {
+> 456	        symbol: orderTemplate.symbol.toUpperCase(),
+> 457	        side: orderTemplate.side.toUpperCase(),
+> 458	        options: {
+> 459	            type: orderTemplate.type.toUpperCase()
+> 460	        }
+> 461	    }
+> 462	
+> 463	    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> 464	    if (order.options.type === 'MARKET'
+> 465	        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> 466	        order.options.quoteOrderQty = calcQuoteQty(orderTemplate, symbol);
+> 467	    } else {
+> 468	        const price = calcPrice(orderTemplate, symbol, false);
+> 469	
+> 470	        if (!isFinite(price) || !price)
+> 471	            throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+> 472	
+> 473	        if (LIMIT_TYPES.includes(order.options.type))
+> 474	            order.limitPrice = price;
+> 475	
+> 476	        const quantity = calcQty(orderTemplate, price, symbol, false);
+> 477	
+> 478	        if (!isFinite(quantity) || !quantity)
+> 479	            throw new Error(`Error in calcQty function, params: OTID ${orderTemplate.id}, $: ${price}, qty: ${quantity}`);
+> 480	
+> 481	        order.quantity = quantity;
+> 482	
+> 483	        if (STOP_TYPES.includes(order.options.type)) {
+> 484	            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> 485	
+> 486	            if (!isFinite(stopPrice) || !stopPrice)
+> 487	                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> 488	
+> 489	            order.options.stopPrice = stopPrice;
+> 490	        }
+> 491	
+> 492	        if (!hasEnoughAssets(symbol, order, price))
+> 493	            throw new Error(`You wanna ${order.side} ${order.quantity} ${order.symbol} but you haven't enough assets.`);
+> 494	    }
+> 495	
+> 496	    let result;
+> 497	    const exchange = require('./utils/exchange')(settings);
+> 498	
+> 499	    try {
+> 500	        if (order.side === 'BUY')
+> 501	            result = await exchange.buy(order.symbol, order.quantity, order.limitPrice, order.options);
+> 502	        else
+> 503	            result = await exchange.sell(order.symbol, order.quantity, order.limitPrice, order.options);
+> 504	    }
+> ```
+
+## 🤖 Claude *(18:06:58)*
+
+
+## 🤖 Claude *(18:07:00)*
+
+Agora tenho o quadro completo. O `placeOrder` constrói a ordem em 455-461, depois calcula e chama `exchange.sell` — vou pôr o skip anti-empilhamento logo após a construção (BRAIN-independente, sem migration). Plano final do item 2: **skip no place + set por orderId + release por match de orderId** — puramente aditivo, sem mexer em condition/shouldntInvert/migration. Leio os 2 últimos anchors (.env do teto e exports do ordersRepository) e implemento tudo:
+
+## 🤖 Claude *(18:07:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/.env",
+  "offset": 58,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 58	# ---------- Funnel System ----------
+> 59	FUNNEL_LIVE_BUY=false
+> 60	FUNNEL_BASELINE_USDT=10000
+> 61	# --- Travas de risco (must-fix go-live mainnet 2026-06-15) ---
+> 62	# Teto por compra do funil (USDT). FUNNEL_LIVE_BUY exige isto > 0, senão a compra ao vivo é RECUSADA.
+> 63	FUNNEL_MAX_BUY_USDT=100
+> 64	# Teto de notional por ORDEM (USDT) p/ TODA ordem (automacao/funil/manual). 0 = desligado. Aumente ao crescer a conta.
+> 65	MAX_ORDER_NOTIONAL_USDT=1500
+> 66	# Kill-switch global: true bloqueia QUALQUER ordem real (parada de emergencia).
+> 67	TRADING_HALT=true
+> 68	
+> ```
+
+## 🤖 Claude *(18:07:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 300,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 300	}
+> 301	
+> 302	const STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 303	
+> 304	const LIMIT_TYPES = [orderTypes.LIMIT, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 305	
+> 306	module.exports = {
+> 307	    orderStatus,
+> 308	    STOP_TYPES,
+> 309	    LIMIT_TYPES,
+> 310	    orderTypes,
+> 311	    insertOrder,
+> 312	    getOrders,
+> 313	    getOrder,
+> 314	    getOrderById,
+> 315	    updateOrderById,
+> 316	    getLastFilledOrders,
+> 317	    updateOrderByOrderId,
+> 318	    getReportOrders,
+> 319	    removeAutomationFromOrders,
+> 320	    getOpenOcoOrders,
+> 321	    getOpenOrdersByAutomation,
+> 322	    calcFillFinancials,
+> 323	    getAveragePrices,
+> 324	    getFarmPosition
+> ```
+
+## 🤖 Claude *(18:08:32)*
+
+
+## 🤖 Claude *(18:08:33)*
+
+Tenho todos os anchors. Implemento os três. Começo pelo **item 1 (teto)** e pelo **getTrendPosition** (item 3):
+
+## 🤖 Claude *(18:08:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/.env",
+  "old_string": "# Teto de notional por ORDEM (USDT) p/ TODA ordem (automacao/funil/manual). 0 = desligado. Aumente ao crescer a conta.\nMAX_ORDER_NOTIONAL_USDT=1500",
+  "new_string": "# Teto de notional por ORDEM (USDT) p/ TODA ordem (automacao/funil/manual). 0=off. ~2x a conta (~$149): cobre a\n# maior venda legitima (posicao/bucket por simbolo, capado na carteira pelo calcQty) + margem de aporte; barra\n# runaway (bug/template/agente). Reajuste PROPORCIONALMENTE ao aportar. NOTA: se reativar 'BTC Scalp Excess'\n# (id38, hoje isActive=0; vende BTC>1.0 a MARKET p/ a meta +3 BTC), este teto fixo bloqueia vendas de excedente\n# de BTC (notional alto) -> tornar symbol-aware (isentar/segregar BTCUSDT SELL) ANTES de reativar.\nMAX_ORDER_NOTIONAL_USDT=300"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/.env has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:08:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "// Inerte por padr\u00e3o; ajust\u00e1vel por env SEM deploy de c\u00f3digo (basta reiniciar). Fail-closed (lan\u00e7a). ===",
+  "new_string": "//   DIMENSIONAMENTO: o teto deve ficar logo ACIMA do maior pedido LEG\u00cdTIMO (venda de posi\u00e7\u00e3o/bucket por s\u00edmbolo,\n//   capada na carteira pelo calcQty) e MUITO ABAIXO de um runaway. ~2\u00d7 o saldo total da conta \u00e9 a r\u00e9gua; reajuste\n//   ao aportar. \u26a0\ufe0f vendas de EXCEDENTE de BTC (BTC_EXCESS, meta +3 BTC) t\u00eam notional ALTO \u2192 se reativar a 'BTC\n//   Scalp Excess' (id38), tornar o teto symbol-aware (isentar/segregar BTCUSDT SELL): um teto fixo a MARKET\n//   bloquearia a colheita de BTC. Hoje id38 est\u00e1 isActive=0, ent\u00e3o o teto fixo \u00e9 seguro.\n// Inerte por padr\u00e3o; ajust\u00e1vel por env SEM deploy de c\u00f3digo (basta reiniciar). Fail-closed (lan\u00e7a). ==="
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:08:49)*
+
+
+## 🤖 Claude *(18:09:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "old_string": "const STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];",
+  "new_string": "// Posi\u00e7\u00e3o do Trend Following por s\u00edmbolo: soma as BUYs FILLED das automa\u00e7\u00f5es 'Trend %' desde a \u00faltima SELL\n// FILLED 'Trend %' (espelho EXATO de getFarmPosition, escopado por name LIKE 'Trend %'). Derivar do banco torna\n// TREND_QTY IDEMPOTENTE (sem accumulator vol\u00e1til \u2192 mata o double-count p\u00f3s-restart) e PERSISTENTE (o boot\n// recomputa via loadTrendPosition \u2192 a posi\u00e7\u00e3o do golden n\u00e3o orfana). cost = custo m\u00e9dio p/ rastreio (o death\n// vende a qty inteira; calcQty do SELL usa s\u00f3 a qty).\nasync function getTrendPosition(symbol) {\n    const settings = await settingsRepository.getDefaultSettings();\n    const isTestnet = settings.useTestnet;\n\n    const trendAutos = await automationModel.findAll({\n        where: { symbol, name: { [Sequelize.Op.like]: 'Trend %' } },\n        attributes: ['id'],\n        raw: true\n    });\n    const trendIds = trendAutos.map(a => a.id);\n    if (!trendIds.length) return { qty: 0, cost: 0 };\n\n    const lastSell = await orderModel.findOne({\n        where: {\n            symbol,\n            side: 'SELL',\n            status: orderStatus.FILLED,\n            isTestnet,\n            automationId: { [Sequelize.Op.in]: trendIds }\n        },\n        order: [['id', 'DESC']]\n    });\n\n    const whereClause = {\n        symbol,\n        side: 'BUY',\n        status: orderStatus.FILLED,\n        isTestnet,\n        automationId: { [Sequelize.Op.in]: trendIds }\n    };\n    if (lastSell) {\n        whereClause.id = { [Sequelize.Op.gt]: lastSell.id };\n    }\n\n    const buys = await orderModel.findAll({\n        where: whereClause,\n        order: [['id', 'ASC']]\n    });\n\n    let totalQty = 0;\n    let totalCost = 0;\n    for (const buy of buys) {\n        const qty = parseFloat(buy.quantity);\n        const avgPrice = parseFloat(buy.avgPrice);\n        if (Number.isFinite(qty) && qty > 0 && Number.isFinite(avgPrice) && avgPrice > 0) {\n            totalQty += qty;\n            totalCost += qty * avgPrice;\n        }\n    }\n\n    const cost = totalQty > 0 ? (totalCost / totalQty) : 0;\n    return { qty: totalQty, cost };\n}\n\nconst STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "old_string": "    calcFillFinancials,\n    getAveragePrices,\n    getFarmPosition",
+  "new_string": "    calcFillFinancials,\n    getAveragePrices,\n    getFarmPosition,\n    getTrendPosition"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:07)*
+
+
+## 🤖 Claude *(18:09:08)*
+
+Agora a chave `FARM_SELLING` no indexes.js (item 2):
+
+## 🤖 Claude *(18:09:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    FARM_DCA: 'FARM_DCA', // pre\u00e7o m\u00e9dio ponderado (DCA) e quantidade de posi\u00e7\u00f5es abertas no Farm {qty, cost}",
+  "new_string": "    FARM_DCA: 'FARM_DCA', // pre\u00e7o m\u00e9dio ponderado (DCA) e quantidade de posi\u00e7\u00f5es abertas no Farm {qty, cost}\n    FARM_SELLING: 'FARM_SELLING', // trava da venda no-loss do Farm de alts {orderId,at}: setada no place (beholder.placeOrder, qty='FARM_QTY'), liberada no estado TERMINAL por MATCH DE ORDERID (app-em.updateFarmPosition) \u2014 BRAIN-independente. Anti-empilhamento = SKIP no place se j\u00e1 em voo (N\u00c3O via condition, sem migration/reload). Aus\u00eancia = destravado. N\u00c3O persistida (v1: sem reconstru\u00e7\u00e3o-no-boot \u2192 n\u00e3o escalar o size do Farm at\u00e9 adicionar loadFarmSellingLocks)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:16)*
+
+
+## 🤖 Claude *(18:09:17)*
+
+Agora o `placeOrder` no beholder.js — o **skip anti-empilhamento** (após construir a ordem) e o **set da trava** (após o bloco HARVEST_SELLING):
+
+## 🤖 Claude *(18:09:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    const order = {\n        symbol: orderTemplate.symbol.toUpperCase(),\n        side: orderTemplate.side.toUpperCase(),\n        options: {\n            type: orderTemplate.type.toUpperCase()\n        }\n    }\n\n    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);",
+  "new_string": "    const order = {\n        symbol: orderTemplate.symbol.toUpperCase(),\n        side: orderTemplate.side.toUpperCase(),\n        options: {\n            type: orderTemplate.type.toUpperCase()\n        }\n    }\n\n    // Anti-empilhamento da venda do Farm (v1): se j\u00e1 h\u00e1 uma venda FARM_QTY EM VOO (FARM_SELLING setado p/ o\n    // s\u00edmbolo), N\u00c3O coloca outra do MESMO bucket \u2014 a venda pode re-disparar no MESMO n\u00edvel (oscila\u00e7\u00e3o do bestBid\n    // em torno do alvo no-loss) entre o place e o estado terminal. A trava (setada abaixo, liberada no terminal\n    // por match de orderId em app-em.updateFarmPosition) \u00e9 o mutex, BRAIN-independente \u2014 diferen\u00e7a vs\n    // HARVEST_SELLING (que usa a condition + migration/reload). calcQty capa na carteira, n\u00e3o no bucket, ent\u00e3o\n    // sem isto o re-fire venderia 2\u00d7 o lote e vazaria a posi\u00e7\u00e3o co-localizada do Trend.\n    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY' && getMemory(order.symbol, 'FARM_SELLING'))\n        return { type: 'info', text: `Venda do Farm ${order.symbol} j\u00e1 em voo (FARM_SELLING) \u2014 skip anti-empilhamento.` };\n\n    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    if (order.side === 'SELL' && orderTemplate.quantity === 'HARVEST_QTY')\n        await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);",
+  "new_string": "    if (order.side === 'SELL' && orderTemplate.quantity === 'HARVEST_QTY')\n        await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);\n\n    // Trava de venda do Farm (espelha HARVEST_SELLING): marca FARM_SELLING ASSIM QUE a ordem \u00e9 ACEITA pela\n    // corretora (logo ap\u00f3s exchange.sell, ANTES do insertOrder) \u2014 se o insert der throw depois, a venda j\u00e1 est\u00e1\n    // na corretora e a trava J\u00c1 est\u00e1 posta (fail-closed) \u2192 o skip acima barra um 2\u00ba place. Liberada no estado\n    // TERMINAL por match de orderId (app-em.updateFarmPosition). Detecta pela qty='FARM_QTY' (assinatura \u00fanica).\n    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY')\n        await updateMemory(order.symbol, 'FARM_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:38)*
+
+
+## 🤖 Claude *(18:09:38)*
+
+Agora o `app-em.js`. Primeiro o **release do FARM_SELLING** no `updateFarmPosition` (por match de orderId, antes do early-return de FILLED):
+
+## 🤖 Claude *(18:09:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "async function updateFarmPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED) return;\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        if (!farmSymbols.includes(order.symbol)) return;\n\n        const dca = await ordersRepository.getFarmPosition(order.symbol);\n        await beholder.updateMemory(order.symbol, indexKeys.FARM_DCA, null, dca, false);\n        logger('system', `FARM_DCA[${order.symbol}] atualizado: qty=${dca.qty}, cost=${dca.cost} (p\u00f3s-fill de ${order.side})`);\n    } catch (err) {\n        logger('system', `updateFarmPosition: ${err.message}`);\n    }\n}",
+  "new_string": "async function updateFarmPosition(order) {\n    try {\n        if (!order || !order.symbol) return;\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        if (!farmSymbols.includes(order.symbol)) return;\n\n        // Trava de venda (FARM_SELLING): liberada em QUALQUER estado TERMINAL da venda do Farm que a SETOU.\n        // Match por orderId (a trava guarda {orderId} posto no place) \u2014 N\u00c3O depende do BRAIN vivo (evita\n        // perma-trava se a automa\u00e7\u00e3o estiver fora do BRAIN num stop/start, ao contr\u00e1rio do HARVEST_SELLING que\n        // l\u00ea a condition). Idempotente (deleteMemory ausente = no-op). O delay de 3s do processExecutionData \u00e9\n        // ben\u00e9fico (o FARM_DCA recomputa e a trava some juntos). v1 SEM reconstru\u00e7\u00e3o-no-boot: uma venda em voo\n        // perdida num restart re-dispararia \u2192 gate \"n\u00e3o escalar o size do Farm at\u00e9 loadFarmSellingLocks\".\n        if (order.side === 'SELL' && HARVEST_TERMINAL_STATUSES.includes(order.status)) {\n            const lock = beholder.getMemory(order.symbol, indexKeys.FARM_SELLING);\n            if (lock && lock.orderId === order.orderId)\n                beholder.deleteMemory(order.symbol, indexKeys.FARM_SELLING);\n        }\n\n        if (order.status !== orderStatus.FILLED) return; // s\u00f3 o fill recomputa o FARM_DCA\n\n        const dca = await ordersRepository.getFarmPosition(order.symbol);\n        await beholder.updateMemory(order.symbol, indexKeys.FARM_DCA, null, dca, false);\n        logger('system', `FARM_DCA[${order.symbol}] atualizado: qty=${dca.qty}, cost=${dca.cost} (p\u00f3s-fill de ${order.side})`);\n    } catch (err) {\n        logger('system', `updateFarmPosition: ${err.message}`);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:09:52)*
+
+
+## 🤖 Claude *(18:09:53)*
+
+Agora o **item 3** — reescrevo `updateTrendPosition` pra derivar do banco (espelho do `updateFarmPosition`), removendo o accumulator e o `countedTrendFills`:
+
+## 🤖 Claude *(18:10:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "// orderIds de fill de trend j\u00e1 contabilizados \u2014 dedup contra um executionReport FILLED RE-ENTREGUE\n// (reconex\u00e3o do userData stream): o BUY \u00e9 ADITIVO, ent\u00e3o um report duplicado somaria 2x e inflaria a\n// posi\u00e7\u00e3o. S\u00f3 recebe ordens de trend (raras, dirigidas por cross) \u2192 footprint desprez\u00edvel. Reseta no\n// restart, coerente com o TREND_QTY (que hoje tamb\u00e9m \u00e9 vol\u00e1til \u2014 ver nota de persist\u00eancia abaixo).\nconst countedTrendFills = new Set();\n\n// Trend Following \u2014 mant\u00e9m MEMORY['<sym>:TREND_QTY'] (posi\u00e7\u00e3o em base asset atribu\u00edda ao trend),\n// lido pela calcQty do template SELL da id7. Distingue ordem de trend pelas conditions da automa\u00e7\u00e3o\n// (referenciam TREND_CROSS), lidas do BRAIN em mem\u00f3ria (sem ida ao banco). Golden BUY soma a qty\n// FILLED; death SELL zera. S\u00f3 atua em FILLED (a\u00ed order.quantity = qty cheia preenchida). Best-effort:\n// um erro aqui n\u00e3o quebra o fluxo da ordem (o gate de venda da id7 falha fechado se TREND_QTY ausente).\n// PERSIST\u00caNCIA: TREND_QTY \u00e9 VOL\u00c1TIL (s\u00f3 MEMORY), ao contr\u00e1rio do cross (regimeStates). Aceit\u00e1vel p/ size\n// pequeno na valida\u00e7\u00e3o; ANTES DE ESCALAR O SIZE, persistir (sen\u00e3o um restart com posi\u00e7\u00e3o de trend aberta\n// perde a refer\u00eancia e o death seguinte n\u00e3o liquida). Ver HANDOFF / [[tradeux-trend-following]].\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED || !order.automationId) return;\n        if (countedTrendFills.has(order.orderId)) return; // j\u00e1 contabilizado (report FILLED re-entregue)\n        const auto = beholder.getBrain()[order.automationId];\n        const cond = auto && auto.conditions ? auto.conditions : '';\n        if (cond.indexOf('TREND_CROSS') === -1) return; // n\u00e3o \u00e9 automa\u00e7\u00e3o de Trend Following\n        const qty = parseFloat(order.quantity);\n        const cur = parseFloat(beholder.getMemory(order.symbol, indexKeys.TREND_QTY)) || 0;\n        let next;\n        if (order.side === 'BUY' && cond.indexOf(\"'golden'\") !== -1) {\n            if (!Number.isFinite(qty) || qty <= 0) return; // guard: qty inv\u00e1lida n\u00e3o corrompe TREND_QTY\n            next = cur + qty;\n        }\n        else if (order.side === 'SELL' && cond.indexOf(\"'death'\") !== -1) next = 0; // vendeu a posi\u00e7\u00e3o de trend\n        else return;\n        countedTrendFills.add(order.orderId);\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, next, false);\n        logger('A:' + order.automationId, `TREND_QTY[${order.symbol}] ${cur} -> ${next} (fill ${order.side})`);\n    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}",
+  "new_string": "// Trend Following \u2014 mant\u00e9m MEMORY['<sym>:TREND_QTY'] (posi\u00e7\u00e3o em base asset atribu\u00edda ao trend), lido pela\n// calcQty do template SELL da id7 (death cross). DERIVA do banco de ordens (espelho EXATO de updateFarmPosition/\n// getFarmPosition): a cada fill de uma ordem de um s\u00edmbolo de trend, RECOMPUTA TREND_QTY = soma das BUYs FILLED\n// das automa\u00e7\u00f5es 'Trend %' desde a \u00faltima SELL FILLED 'Trend %'. IDEMPOTENTE por constru\u00e7\u00e3o (um report FILLED\n// re-entregue recomputa o MESMO valor \u2192 sem accumulator e sem dedup vol\u00e1til, o que MATA o double-count\n// p\u00f3s-restart que a persist\u00eancia ing\u00eanua trazia). PERSIST\u00caNCIA: a tabela de orders J\u00c1 \u00e9 a fonte de verdade;\n// loadTrendPosition recomputa no boot \u2192 a posi\u00e7\u00e3o do golden N\u00c3O orfana num restart (o death seguinte encontra\n// TREND_QTY e liquida). Best-effort: erro aqui n\u00e3o quebra o fluxo da ordem (o gate da id7 falha fechado se\n// TREND_QTY ausente). Recomputar em fill de FARM no mesmo s\u00edmbolo \u00e9 in\u00f3cuo (getTrendPosition ignora ordens n\u00e3o-Trend).\nasync function updateTrendPosition(order) {\n    try {\n        if (!order || order.status !== orderStatus.FILLED) return;\n        const trendSymbols = ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        if (!trendSymbols.includes(order.symbol)) return;\n\n        const pos = await ordersRepository.getTrendPosition(order.symbol);\n        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, pos.qty, false);\n        logger('system', `TREND_QTY[${order.symbol}] atualizado: qty=${pos.qty} (p\u00f3s-fill de ${order.side})`);\n    } catch (err) {\n        logger('system', `updateTrendPosition: ${err.message}`);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:10:18)*
+
+
+## 🤖 Claude *(18:10:19)*
+
+Agora a `loadTrendPosition` (boot-load, espelho da `loadFarmPositions`) e o wiring no `init()`:
+
+## 🤖 Claude *(18:10:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "async function loadFarmPositions() {\n    try {\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        for (const symbol of farmSymbols) {\n            const dca = await ordersRepository.getFarmPosition(symbol);\n            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);\n            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);\n        }\n    } catch (err) {\n        logger('system', `loadFarmPositions: ${err.message}`);\n    }\n}",
+  "new_string": "async function loadFarmPositions() {\n    try {\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        for (const symbol of farmSymbols) {\n            const dca = await ordersRepository.getFarmPosition(symbol);\n            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);\n            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);\n        }\n    } catch (err) {\n        logger('system', `loadFarmPositions: ${err.message}`);\n    }\n}\n\n// Boot-load da posi\u00e7\u00e3o do Trend: recomputa TREND_QTY do banco de ordens p/ MEMORY (espelho de loadFarmPositions).\n// Sem isto, um restart entre golden e death perde TREND_QTY (vol\u00e1til) e o death d\u00e1 throw na calcQty \u2192 posi\u00e7\u00e3o\n// \u00f3rf\u00e3. N\u00c3O precisa do reconcile-on-boot do Harvester (ordens de trend s\u00e3o por cross, n\u00e3o ficam LIMIT abertas) \u2014\n// derivar do banco J\u00c1 \u00e9 a fonte de verdade. A seguran\u00e7a contra disparo no boot vem da edge-detection do\n// regimeJob (um restart com posi\u00e7\u00e3o aberta escreve 'none', n\u00e3o 'death'), N\u00c3O da ordem init()\u00d7getActiveMonitors\n// (init() n\u00e3o \u00e9 awaited por server.js); como loadTrendPosition \u00e9 await DENTRO de init, conclui cedo no boot,\n// bem antes de qualquer death GENU\u00cdNO (REGIME_REFRESH_MS). Pula qty<=0 (TREND_QTY ausente = estado fresco).\nasync function loadTrendPosition() {\n    try {\n        const trendSymbols = ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        for (const symbol of trendSymbols) {\n            const pos = await ordersRepository.getTrendPosition(symbol);\n            if (pos.qty > 0) {\n                await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);\n                logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);\n            }\n        }\n    } catch (err) {\n        logger('system', `loadTrendPosition: ${err.message}`);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:10:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "    await loadHarvestPositions();\n    await loadFarmPositions();\n\n    const monitors = await getActiveMonitors();",
+  "new_string": "    await loadHarvestPositions();\n    await loadFarmPositions();\n    await loadTrendPosition();   // restaura TREND_QTY do banco (resili\u00eancia a restart \u2014 ver loadTrendPosition)\n\n    const monitors = await getActiveMonitors();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:10:40)*
+
+
+## 🤖 Claude *(18:10:40)*
+
+Todos os edits feitos. Valido a sintaxe dos 5 arquivos backend alterados:
+
+## 🤖 Claude *(18:10:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null\nfor f in backend/src/utils/exchange.js backend/src/utils/indexes.js backend/src/beholder.js backend/src/app-em.js backend/src/repositories/ordersRepository.js; do\n  node --check \"$f\" && echo \"OK $f\" || echo \"FALHOU $f\"\ndone\necho \"--- git diff stat ---\"\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" diff --stat'",
+  "description": "Validar sintaxe dos arquivos alterados e ver diff stat"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK backend/src/utils/exchange.js
+> OK backend/src/utils/indexes.js
+> OK backend/src/beholder.js
+> OK backend/src/app-em.js
+> OK backend/src/repositories/ordersRepository.js
+> --- git diff stat ---
+>  backend/src/app-em.js                        | 86 +++++++++++++++++-----------
+>  backend/src/beholder.js                      | 16 ++++++
+>  backend/src/repositories/ordersRepository.js | 62 +++++++++++++++++++-
+>  backend/src/utils/exchange.js                |  5 ++
+>  backend/src/utils/indexes.js                 |  1 +
+>  5 files changed, 137 insertions(+), 33 deletions(-)
+> ```
+
+## 🤖 Claude *(18:11:02)*
+
+
+## 🤖 Claude *(18:11:04)*
+
+Sintaxe OK nos 5 (a mudança do `.env` não aparece no git — `.env` é gitignored, aplicada no restart; correto). Gero o diff completo pra mandar pro **workflow de review (QA + TL + cético de money-path, depois verificação adversarial dos achados bloqueantes)**:
+
+## 🤖 Claude *(18:11:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux 2>/dev/null; sudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" diff' > /tmp/blockers.diff 2>&1; wc -l /tmp/blockers.diff; echo \"--- (salvo em /tmp/blockers.diff) ---\"",
+  "description": "Gerar diff completo dos bloqueadores"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 263 /tmp/blockers.diff
+> --- (salvo em /tmp/blockers.diff) ---
+> ```
+
+## 🤖 Claude *(18:11:29)*
+
+
+## 🤖 Claude *(18:11:31)*
+
+Diff de 263 linhas salvo. Disparo o **workflow de review** — QA + TL + um cético de money-path em paralelo, depois verificação adversarial dos achados bloqueantes:
+
+## 🤖 Claude *(18:12:11)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'review-unfreeze-blockers',\n  description: 'QA + TL + money-path skeptic review of the 3 unfreeze-blocker diffs, then adversarially verify blocking findings',\n  phases: [\n    { title: 'Review', detail: 'QA, TL e c\u00e9tico de money-path revisam o diff em paralelo' },\n    { title: 'Verify', detail: 'verifica\u00e7\u00e3o adversarial de cada achado HIGH/BLOCKER' },\n  ],\n}\n\nconst FINDINGS_SCHEMA = {\n  type: 'object', required: ['verdict', 'findings', 'summary'], additionalProperties: false,\n  properties: {\n    verdict: { type: 'string', description: 'veredito (PASS / PASS COM RESSALVAS / FAIL / APPROVE / APPROVE COM SUGESTOES / REQUEST CHANGES / BLOCK)' },\n    findings: {\n      type: 'array', items: {\n        type: 'object', required: ['severity', 'issue', 'fix'], additionalProperties: false,\n        properties: { severity: { type: 'string', enum: ['BLOCKER', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] }, issue: { type: 'string' }, fix: { type: 'string' }, file: { type: 'string' } },\n      },\n    },\n    summary: { type: 'string' },\n  },\n}\n\nconst VERIFY_SCHEMA = {\n  type: 'object', required: ['real', 'assessment', 'recommendedAction'], additionalProperties: false,\n  properties: {\n    real: { type: 'boolean', description: 'true se o achado \u00e9 genu\u00edno e DEVE ser corrigido; false se \u00e9 falso-positivo/j\u00e1-coberto' },\n    assessment: { type: 'string' },\n    recommendedAction: { type: 'string' },\n  },\n}\n\nconst CTX = `## Contexto\n3 bloqueadores do descongelamento do TradeUX (MAINNET REAL, dinheiro do dono, TRADING_HALT=true). O diff de c\u00f3digo est\u00e1 em /tmp/blockers.diff (LEIA-O) e os arquivos completos no repo /home/gcrux-tradeux/tradeux. J\u00e1 houve uma rodada de DESIGN + verifica\u00e7\u00e3o adversarial; a implementa\u00e7\u00e3o J\u00c1 incorporou aqueles fixes. Agora reveja a IMPLEMENTA\u00c7\u00c3O REAL.\n\n**(1) Teto** (em .env, N\u00c3O no git diff): MAX_ORDER_NOTIONAL_USDT 1500 -> 300 (~2x a conta de \\$148; BTC Scalp Excess id38 est\u00e1 isActive=0 -> teto fixo \u00e9 seguro; caveat documentado p/ se reativar). Coment\u00e1rio-doutrina em exchange.js.\n\n**(2) FARM_SELLING** (anti-empilhamento da venda do Farm, v1 pragm\u00e1tico): chave indexKeys.FARM_SELLING; SKIP no place se j\u00e1 em voo (beholder.js placeOrder, qty='FARM_QTY' + getMemory FARM_SELLING); SET p\u00f3s-exchange.sell {orderId,at}; RELEASE em app-em.updateFarmPosition por MATCH DE ORDERID em qualquer estado TERMINAL (HARVEST_TERMINAL_STATUSES) \u2014 BRAIN-independente (evita perma-trava do stop/start). DELIBERADAMENTE v1: SEM migration, SEM mudar a condition, SEM mudar shouldntInvert (farm sell segue edge-trigger; o skip \u00e9 o mutex), SEM reconstru\u00e7\u00e3o-no-boot (gate documentado: \"n\u00e3o escalar size do Farm at\u00e9 loadFarmSellingLocks\"). N\u00c3O tocou setup-farm.js (divergente, d\u00edvida separada).\n\n**(3) TREND_QTY persist\u00eancia** via DERIVE-FROM-ORDERS (n\u00e3o tabela nova): getTrendPosition em ordersRepository (espelho EXATO de getFarmPosition, name LIKE 'Trend %'); updateTrendPosition reescrito p/ RECOMPUTAR (removido o accumulator cur+qty E o countedTrendFills vol\u00e1til \u2192 idempotente, mata o double-count p\u00f3s-restart); loadTrendPosition no boot (recomputa, wired em init() ap\u00f3s loadFarmPositions). SEM migration (a tabela orders j\u00e1 \u00e9 a persist\u00eancia). Boot-ordering: a seguran\u00e7a vem da edge-detection do regimeJob (restart escreve 'none', n\u00e3o 'death'), documentado.`\n\nconst DIMS = [\n  { key: 'qa', type: 'qa-engineer', lens: `Revise CORRE\u00c7\u00c3O/edge-cases/regress\u00f5es. Foque: (a) ciclo de vida da trava FARM_SELLING \u2014 set/skip/release por orderId cobre TODOS os terminais (FILLED/CANCELED/REJECTED/EXPIRED/EXPIRED_IN_MATCH)? pode perma-SKIPpar uma venda leg\u00edtima (a trava nunca libera)? (b) o skip retorna {type:'info'} \u2014 o chamador (doAction/evalDecision) trata bem um retorno n\u00e3o-success? (c) TREND_QTY derive: getTrendPosition espelha getFarmPosition corretamente (escopo 'Trend %', side, isTestnet)? remover countedTrendFills quebra algo? recomputar em fill de FARM no mesmo s\u00edmbolo escreve valor errado? (d) loadTrendPosition pula qty<=0 \u2014 sem\u00e2ntica correta vs calcQty? (e) q-vs-z herdado (order.quantity vs executedQty) \u2014 mesma premissa do getFarmPosition, aceit\u00e1vel? Rode node --check mentalmente; aponte qualquer NaN/throw/oversell.` },\n  { key: 'tl', type: 'tech-lead', lens: `DECIS\u00c3O DE MERGE. Avalie: (a) o escopo v1 do FARM_SELLING (skip-c\u00f3digo BRAIN-independente em vez de condition+migration; reconstru\u00e7\u00e3o-no-boot DEFERIDA com gate \"n\u00e3o escalar size\") \u2014 \u00e9 uma escolha defens\u00e1vel e o gate est\u00e1 documentado? (b) o approach derive-from-orders do TREND_QTY (mais simples que tabela nova, idempotente) \u2014 s\u00f3lido e consistente com o padr\u00e3o FARM? (c) teto 300 + caveat symbol-aware do BTC_EXCESS \u2014 honesto? (d) conven\u00e7\u00f5es (pt-BR, naming), manuten\u00e7\u00e3o, must-fix vs nice-to-have. Tudo sob HALT (inerte at\u00e9 o flip).` },\n  { key: 'skeptic', type: 'qa-engineer', lens: `Voc\u00ea \u00e9 o C\u00c9TICO de money-path. Sua \u00daNICA miss\u00e3o: achar como estas mudan\u00e7as poderiam PERDER DINHEIRO, fazer OVERSELL, VAZAR o cofre, ou ORFANAR/N\u00c3O-LIQUIDAR uma posi\u00e7\u00e3o. Probe adversarialmente: a trava FARM_SELLING pode ficar presa e impedir uma venda no-loss leg\u00edtima (capital travado)? o release por orderId pode falhar (orderId n\u00e3o bate)? o recompute do TREND_QTY pode dar uma qty MAIOR que a real (\u2192 death vende demais, capa na carteira, vaza Trend/co-localizado)? a deriva\u00e7\u00e3o 'Trend %' captura ordens erradas (ex.: pega Farm)? o teto 300 false-blocka alguma venda do conjunto ATIVO (6,7,9-20)? Default: se h\u00e1 QUALQUER caminho de perda, \u00e9 finding HIGH+.` },\n]\n\nconst reviews = await parallel(DIMS.map(d => () => agent(\n  `${CTX}\\n\\n## Sua lente\\n${d.lens}\\n\\nLEIA /tmp/blockers.diff e os arquivos relevantes (app-em.js, beholder.js, ordersRepository.js, exchange.js, indexes.js). Retorne veredito + findings severizados + summary.`,\n  { label: `review:${d.key}`, phase: 'Review', agentType: d.type, schema: FINDINGS_SCHEMA }\n)))\n\nconst valid = reviews.filter(Boolean)\nconst blockers = valid.flatMap(r => (r.findings || []).filter(f => f.severity === 'BLOCKER' || f.severity === 'HIGH'))\n\nlet verified = []\nif (blockers.length) {\n  verified = await parallel(blockers.map(b => () => agent(\n    `Verifique ADVERSARIALMENTE se este achado de review \u00e9 REAL contra o c\u00f3digo vivo do TradeUX (/home/gcrux-tradeux/tradeux + /tmp/blockers.diff). Tente REFUT\u00c1-LO lendo o c\u00f3digo real. Default: se incerto, marque real=true (conservador, \u00e9 money-path).\\n\\nSEVERIDADE: ${b.severity}\\nARQUIVO: ${b.file || '?'}\\nACHADO: ${b.issue}\\nFIX PROPOSTO: ${b.fix}`,\n    { label: `verify:${(b.issue || '').slice(0, 40)}`, phase: 'Verify', schema: VERIFY_SCHEMA }\n  ).then(v => ({ finding: b, verdict: v }))))\n}\n\nreturn { reviews: valid, blockersFound: blockers.length, verified: verified.filter(Boolean) }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wutb22p4p
+> Summary: QA + TL + money-path skeptic review of the 3 unfreeze-blocker diffs, then adversarially verify blocking findings
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/subagents/workflows/wf_fb678be1-cc0
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/workflows/scripts/review-unfreeze-blockers-wf_fb678be1-cc0.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/workflows/scripts/review-unfreeze-blockers-wf_fb678be1-cc0.js"} to iterate without resending the script.)
+> Run ID: wf_fb678be1-cc0
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/ffaf623b-aacb-40b8-9160-28ef147ccb48/workflows/scripts/review-unfreeze-blockers-wf_fb678be1-cc0.js", resumeFromRunId: "wf_fb678be1-cc0"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:12:16)*
+
+
+## 🤖 Claude *(18:12:25)*
+
+Review em andamento em background (`wf_fb678be1-cc0`): QA + TL + cético de money-path em paralelo no diff real, depois verificação adversarial de qualquer achado HIGH/BLOCKER.
+
+**O que ficou implementado** (sintaxe OK, 5 arquivos + .env), já com os fixes da rodada de design-verify incorporados:
+
+- **(1) Teto:** `MAX_ORDER_NOTIONAL_USDT=300` no `.env` + doutrina no `exchange.js`. Rationale corrigido (BTC_EXCESS id38 está off → fixo é seguro; caveat documentado pra se reativar o +3 BTC).
+- **(2) FARM_SELLING (v1):** trava anti-empilhamento via **skip no place** + **set por orderId** + **release por match de orderId** (BRAIN-independente, sem migration/condition/reload — mata a perma-trava que o verificador apontou). Reconstrução-no-boot deferida com gate "não escalar size".
+- **(3) TREND_QTY:** em vez de tabela nova (que trazia double-count), **derivo do banco de orders** espelhando `getFarmPosition` — `getTrendPosition` + `updateTrendPosition` recomputa + `loadTrendPosition` no boot. Idempotente por construção, sobrevive a restart, **sem migration**. Removido o accumulator volátil.
+
+Aguardo o review fechar. Se vier limpo (ou só com nice-to-haves), commito+pusho os 3 e faço **um rebuild** deployando isso + o fix do cockpit (agente) + o (d) que já está no master. Se vier achado real, corrijo antes.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
