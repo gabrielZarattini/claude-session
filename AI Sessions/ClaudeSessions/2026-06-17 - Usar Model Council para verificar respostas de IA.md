@@ -3424,6 +3424,385 @@ Respeitando sua sequência ("planeje… aguardo o veredicto"), o veredito está 
 
 Como quer proceder, Maestro — solto o Plano da Fase 2 agora, e você decide o gate da implementação?
 
+## 👤 User *(15:18:04)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(15:18:04)*
+
+No response requested.
+
+## 👤 User *(15:24:35)*
+
+Ok vamos em frente corrija.:
+
+⚠️ Correção material ao blueprint: o grafo não tem "~1801 arestas" — tem 8816 (project=mcorch-constellation). A malha cresceu.
+
+---
+
+Depois pode ir para a parte B) mas realmente foge do meu conhecimento e poder de decisão então confio em você e no ecossistema que estamos construindo aplica o que você achar melhor (automatizar ou Podar) ja que conhece minhas intenções e objetivos.
+
+Verifique corretamente e crie o plano para a melhor decisão e ordem de trabalho para seguir com 🚦 Gate de governança (Fases 2-3)
+
+## 🤖 Claude *(15:26:09)*
+
+
+## 🤖 Claude *(15:26:12)*
+
+Recebido, Maestro. Confiança aceita com responsabilidade — vou **verificar materialmente** antes de decidir B e montar o plano. Primeiro corrijo o "1801" (se existir como artefato) e levanto a realidade dos motores gráficos, rotas e hooks, porque a fusão Matrix↔Core esconde a decisão arquitetural mais cara de todas.
+
+## 🤖 Claude *(15:26:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== 1) Onde vive o '1801' (artefato real?) =====\"\ngrep -rnE \"1801\" --include=*.md --include=*.ts --include=*.tsx --include=*.json . 2>/dev/null | grep -ivE \"node_modules|package-lock|bun.lock\" | head -20\necho \"(se vazio: '1801' veio s\u00f3 do prompt do comando, n\u00e3o de arquivo)\"\necho \"\"\necho \"===== 2) Visualizador Black Hole / Cymatics / Schwarzschild (R3F?) =====\"\ngrep -rlniE \"schwarzschild|accretion|black.?hole|cymatic|raymarch\" src --include=*.tsx --include=*.ts 2>/dev/null | head\necho \"\"\necho \"===== 3) Componentes core-fable =====\"\nls -la src/components/core-fable/ 2>/dev/null; ls -la src/components/core/ 2>/dev/null\necho \"\"\necho \"===== 4) ConstellationMatrix usa useCrewOverlay (overlay vivo)? =====\"\ngrep -nE \"useCrewOverlay|overlayAgents|useConstellationSigma\" src/components/orchestrator/ConstellationMatrix.tsx | head",
+  "description": "Verify 1801 source, visualizer engine, core components, overlay wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== 1) Onde vive o '1801' (artefato real?) =====
+> HANDOFF.md:4150:**CANVAS STUDIO PHASE 4.2c — ASYNC VIDEO PIPELINE LIVE v6.6.2 SHIPPED (2026-05-17).** Sessão entregou o backbone async de geração de vídeo Higgsfield no Canvas Studio destravado pelo OE04 (v6.6.0), mais 3 rounds de hotfixes nos providers de imagem que travavam a validação end-to-end do flywheel. (Round 1 — Wiring Phase 4.2c) `supabase/functions/canvas-execute/index.ts` ganhou branch dedicada para `body.node_type === 'image_to_video'`: tier gate conservador (apenas `dop-standard` aceito; outros tiers HTTP 400 com `unlocks_at: Phase 4.3`), INSERT em `vm_canvas_executions` com `status='queued'` (não-`running` como sync path), `submitHiggsfieldVideo()` constrói webhook URL `${SUPABASE_URL}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}` (64-hex unique idx) + POST ao `https://platform.higgsfield.ai/higgsfield-ai/dop/standard` com `?hf_webhook=<encoded>` + body `{image_url, prompt, duration, motion_strength}`, captura `request_id` → UPDATE `operation_id`, retorna 200 com `{execution_id, status: 'queued', webhook_token, operation_id}`. **Sem deduct no submit** — débito atômico só no webhook após upload-OK (`deduct_mco_coins` com `action='canvas_video_spend'`). `src/hooks/useCanvasJobsRealtime.ts` extendido com callback `onUpdate(row: CanvasExecutionRow)` que reconcilia Zustand store. `src/pages/CanvasEditorPage.tsx` monta o hook + reconcilia status (`success → output.videoUrl` · `failed/timeout/cancelled → status=failed` · `queued/running → status=running`), `isRunnable()` libera `imageToVideo` quando há upstream image resolvable via `findUpstreamImage()` (novo util em `src/lib/canvas-utils.ts`), Run-All BFS fire-and-forget para video (status='running' pós-mutate, Realtime finaliza). `ImageToVideoInspector` ganha Run button real (mirror do GenerateImageInspector pattern) + tier-gate UI (`ENABLED_VIDEO_MODELS = new Set(['dop-standard-5s'])`, outros disabled com tooltip "Aguardando validação tier — Phase 4.3"). SOP `docs/processes/canvas-video-async-execution.md` (~190 LOC, 7 seções espelhando `canvas-daily-cap-handling.md`) escrita ANTES do código (Lei 2). Watchdog cron `scripts/canvas-video-watchdog.sh` (~95 LOC) — bash + PostgREST + jq, query stale rows (`status IN ('queued','running') AND operation_id IS NOT NULL AND created_at < now()-10min`), poll Higgsfield `/requests/${operation_id}/status`, branches `completed`→manual webhook redeliver (idempotente via HTTP 409 do webhook) · `failed/nsfw/cancelled`→PATCH status='failed' · queued+started>60min→PATCH status='timeout' (sem refund, deduct nunca aconteceu) · log healthy/unhealthy pulse em `infra_health_logs`. Dry-run validado material: `[2026-05-17 21:54:35] 0 jobs to check` + health UUID `38c860f5-8d8d-4ae7-b54d-316f26678410`. (Round 2 — Bug 1 fix `assertExecuteSuccess`) Smoke test do Sovereign revelou bug crítico de Lei 1 Materialidade: inspector exibia toast `"Geração concluída — 15 💎 debitados"` quando backend tinha marcado `status='failed'` (saldo Sovereign confirmado intacto em 5533 — backend correto, frontend mentindo). Causa raiz: `canvas-execute` retorna HTTP 200 + `{status:'failed', error:<msg>, credits_charged:0}`, `mutateAsync` NÃO throw, frontend tratava qualquer 200 como sucesso. Novo util `src/lib/canvas-execute-result.ts` exporta `assertExecuteSuccess<T>(result)` que THROW em `result.error` set OU `result.status ∈ {failed,timeout,cancelled}`. Aplicado em 4 inspectors (GenerateImage, SceneCompose, StyleTransfer, ImageToVideo) + Run-All do CanvasEditorPage. Toast agora usa `result.credits_charged ?? cost` (zero quando falha). Também adicionei migration `20260518012541_canvas_assets_update_policy.sql` (UPDATE policy para `upload({upsert:true})` que vira `INSERT...ON CONFLICT DO UPDATE` no PG — precisa UPDATE policy mesmo em rows novos) + ocultei `openrouter-dall-e-3` do MODEL_GROUPS picker. (Round 3 — 4 bugs novos do Sovereign) Smoke test 2 do Sovereign revelou que **zero providers funcionavam** (Higgsfield ele queria adiar). **(Bug A — OpenAI)** `dall-e-3` E `gpt-image-1` retornaram HTTP 400 `Unknown parameter: 'response_format'` (execuções `b5c6bf74` e `c674e5fa`). Removido `response_format: "b64_json"` do request body do `generateOpenAI`; upload block agora detecta b64 vs URL e baixa URL server-side antes de upload pro `canvas-assets` (mirror `rescue-video:39-77` + `higgsfield-webhook:144-167` pattern). `storedKey` + `storedContentType` propagados pro `vm_canvas_assets` insert. **(Bug B — OpenRouter "sumiu")** `/v1/images/generations` retorna 404 HTML Next.js (endpoint deprecated). `generateOpenRouter` migrado para `/v1/chat/completions` com `modalities: ["image", "text"]`, parser extrai `choices[0].message.content[].image_url.url` (3 shapes suportados: text+image array, content string, message.images fallback). Catálogo `src/types/canvas.ts:176-200` ganha 2 entries OR funcionais — `openrouter-gemini-image` (`google/gemini-2.5-flash-image-preview`, 10 mcoCoins ≈ $0.039, eta 4-8s) + `openrouter-flux-pro` (`black-forest-labs/flux-1.1-pro`, 12 mcoCoins ≈ $0.04, eta 8-15s); `openrouter-dall-e-3` permanece como deprecated com banner amber apontando pros novos. `MODEL_GROUPS` no inspector restaurado com 2 models OR clicáveis. OTD-CV42C-001 registrada para Phase 4.3 backlog: picker dinâmico via OpenRouter `/v1/models` + filter por capability image (incluindo free tier — Sovereign quer essa UX). **(Bug C — Replicate "key not configured")** Coluna `replicate_api_key` NUNCA existia em `user_api_keys` (canvas-execute sempre lia `userKeys?.replicate_api_key` = undefined). Migration `20260518020028_user_api_keys_replicate.sql` adiciona a coluna. `src/integrations/supabase/types.ts` atualizado manualmente em 3 spots (Row/Insert/Update) para evitar regen full. `SettingsPage.tsx` ganha KeyField input (placeholder `r8_...`). Inspector ganha banner per-provider via `useUserApiKeys()` quando user key falta (openai/openrouter/replicate) com link `/dashboard/settings`. Sovereign aprovou Settings + vault fallback (backend já lia `Deno.env REPLICATE_API_KEY` como fallback — opcional rodar `npx supabase secrets set REPLICATE_API_KEY=...`). **(Bug D — Storage RLS 403 persistente)** Mesmo após Round 2 ter aplicado UPDATE policy, character upload continuava `400 — new row violates RLS` (erro é INSERT — UPDATE policy não ajudava). Investigação revelou: o DROP IF EXISTS do `db push` produziu NOTICE crítico `policy "Public read canvas assets" for relation "storage.objects" does not exist, skipping` — confirmando que migration original `20260514040200` **NUNCA aplicou todas as policies** no remoto (apenas INSERT/UPDATE/DELETE; SELECT silenciosamente puladaa). Hipótese válida confirmada: bucket criou mas algumas policies falharam silenciosamente. Migration `20260518020030_canvas_assets_rls_repair.sql` (idempotente) faz DROP IF EXISTS de 8 nomes possíveis + recria 4 policies (`canvas_assets_insert/update/delete/select`) com `TO public + auth.uid() IS NOT NULL` (defensivo contra publishable key `sb_publishable_*` que pode não resolver `TO authenticated` corretamente) + `owner = auth.uid()` fallback em UPDATE/DELETE. **Material proofs:** TS zero erros · 122/122 testes em 4.40s · build em 23.55s · `CanvasEditorPage` chunk 112.61 → 113.66 kB (gzip 33.03 kB) · `canvas-execute` script size 132.6 → **138.3 kB** (+5.7 kB) · 2 commits granulares (`6554cb4` canvas src 16 files +976/-110 · `76c99e3` 3 migrations +104) · 3 migrations aplicadas via `supabase db push` · milestone node `eb0b3ae0-9ec1-4328-ad31-1b079d3f294e` embedado (768 dims openai/text-embedding-3-small, 1 chunk) · saldo Sovereign **5533** intacto (zero cobrança em qualquer execução failed) · mesh total **8336 nodes** (+8 desde v6.6.1, inclui handoff seal). **Próximo deliverable:** (a) smoke test pago Sovereign — DoP Standard 5s = $0.56 — valida flywheel end-to-end (gates 4-9 da SOP); (b) cron install do watchdog (`crontab -e` adicionando linha `*/5 * * * * scripts/canvas-video-watchdog.sh`) após smoke test passar; (c) OTD-CV42C-001 dynamic OR model picker — spec separada Phase 4.3; (d) Pipeline node chaining (SceneCompose/StyleTransfer ainda não recebem upstream image — discussão tem como gate Higgsfield Soul Character Phase 4.5).
+> HANDOFF.md:7396:  → import/variable endpoints:  1801  ← não sincronizados (fora do scope)
+> .claude/context/sprint-priorities.md:105:**Sprint v6.6.2 selado em 2026-05-17** — Canvas Studio Phase 4.2c — Async Video Pipeline Live: três rounds em sessão única destravando todos os providers de imagem do Canvas + backbone async Higgsfield. **(Round 1)** Phase 4.2c wiring shipped — `canvas-execute` ganha branch dedicada `image_to_video` que submete ao endpoint `higgsfield-ai/dop/standard` com `?hf_webhook=<URL-encoded callback>` (per validation doc), persiste `vm_canvas_executions.operation_id` + `webhook_token` (64-hex unique), retorna `{status:'queued'}` em <2s; débito atômico só no webhook após upload-OK (`deduct_mco_coins` `action='canvas_video_spend'`). Hook `useCanvasJobsRealtime` extendido com callback `onUpdate(row)` que reconcilia Zustand store. `CanvasEditorPage` monta Realtime + Run-All BFS fire-and-forget para video. `ImageToVideoInspector` Run button real + tier-gate UI (apenas `dop-standard-5s` clicável; Lite/Turbo/Kling/Seedance disabled com tooltip "Aguardando validação tier — Phase 4.3"). SOP `docs/processes/canvas-video-async-execution.md` (~190 LOC) escrita ANTES do código (Lei 2). Watchdog cron `scripts/canvas-video-watchdog.sh` (~95 LOC, bash + PostgREST + jq) — poll Higgsfield a cada 5min, marca `timeout` em jobs travados >60min, idempotente via HTTP 409 do webhook. Dry-run validado material: `[2026-05-17 21:54:35] 0 jobs to check` + health UUID `38c860f5-8d8d-4ae7-b54d-316f26678410` em `infra_health_logs`. **(Round 2 — assertExecuteSuccess Lei 1)** Smoke test revelou inspector mentindo: toast `"Geração concluída — 15 💎 debitados"` quando backend marcava `status='failed'` (saldo Sovereign confirmou intacto em 5533 — frontend mentindo, backend correto). Causa raiz: `canvas-execute` retorna HTTP 200 + `error` field, `mutateAsync` não throw, frontend tratava qualquer 200 como sucesso. Novo util `src/lib/canvas-execute-result.ts` faz `assertExecuteSuccess<T>(result)` que THROW em `result.error` set OU `status ∈ {failed,timeout,cancelled}`. Aplicado em 4 inspectors + Run-All. Toast agora usa `result.credits_charged ?? cost` (zero quando falha). Migration `20260518012541_canvas_assets_update_policy.sql` adiciona UPDATE policy (necessária para `upload({upsert:true})` que vira `INSERT...ON CONFLICT DO UPDATE`). **(Round 3 — 4 bugs novos)** **(A)** OpenAI `dall-e-3` E `gpt-image-1` HTTP 400 `Unknown parameter: 'response_format'`. Removido o param fixo; upload block agora baixa URL provider→canvas-assets server-side (mirror `rescue-video:39-77` + `higgsfield-webhook:144-167`); `storedKey`/`storedContentType` propagados pro asset row. **(B)** OpenRouter `/v1/images/generations` retorna 404 HTML (endpoint deprecated). `generateOpenRouter` migrado para `/v1/chat/completions` com `modalities:["image","text"]` parseando `choices[0].message.content[].image_url.url` (+ fallback `message.images[]`). Catálogo `types/canvas.ts` ganha 2 entries OR funcionais (`openrouter-gemini-image` $0.039 + `openrouter-flux-pro` $0.04); `openrouter-dall-e-3` permanece deprecated com banner amber. `MODEL_GROUPS` restaurado. OTD-CV42C-001 registrada para Phase 4.3 (picker dinâmico via OR `/v1/models` com free tier). **(C)** Replicate "key not configured" — coluna `replicate_api_key` NUNCA existia em `user_api_keys`. Migration `20260518020028_user_api_keys_replicate.sql` adiciona. `types.ts` ganha campo manual em Row/Insert/Update (evita full regen). `SettingsPage` ganha KeyField. Inspector ganha banner per-provider (openai/openrouter/replicate) quando user key falta com link `/dashboard/settings`. **(D)** Storage RLS 403 persistente em character upload. Investigação revelou NOTICE crítico no `db push`: `policy "Public read canvas assets" does not exist, skipping` — confirma que migration original `20260514040200` aplicou apenas 3 de 4 policies no remoto. Migration `20260518020030_canvas_assets_rls_repair.sql` (idempotente, DROP IF EXISTS 8 nomes + recria 4 policies) usa `TO public + auth.uid() IS NOT NULL` (defensivo contra publishable key `sb_publishable_*` que pode não resolver `TO authenticated`) + `owner = auth.uid()` fallback em UPDATE/DELETE. **Material proofs:** TS zero erros · 122/122 testes em 4.40s · build em 23.55s · `CanvasEditorPage` chunk 113.66 kB · `canvas-execute` 138.3 kB · 4 commits granulares (`6554cb4` canvas src · `76c99e3` 3 migrations · `9615c69` readme · `0d7bc07` handoff) · push `cc828a0..0d7bc07` para origin/main · milestone node `eb0b3ae0-9ec1-4328-ad31-1b079d3f294e` embedado (768 dims) · saldo Sovereign **5533** intacto · mesh total **8336 nodes** (+8 desde v6.6.1). **Próximo deliverable:** (a) smoke test pago DoP Standard 5s ($0.56) — Sovereign valida gates 4-9 da SOP; (b) cron install do watchdog (`crontab -e` adicionando `*/5 * * * * scripts/canvas-video-watchdog.sh`) após smoke passar; (c) OTD-CV42C-001 dynamic OR model picker — Phase 4.3 spec dedicada.
+> (se vazio: '1801' veio só do prompt do comando, não de arquivo)
+> 
+> ===== 2) Visualizador Black Hole / Cymatics / Schwarzschild (R3F?) =====
+> src/pages/CoreFablePage.tsx
+> src/components/core-fable/MegaBrainVisualizer.tsx
+> 
+> ===== 3) Componentes core-fable =====
+> total 36
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 10 00:25 .
+> drwxrwxr-x 18 ubuntu ubuntu  4096 Jun  9 23:09 ..
+> -rw-rw-r--  1 ubuntu ubuntu  9880 Jun 12 00:15 A2UIRenderer.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 14314 Jun 12 00:34 MegaBrainVisualizer.tsx
+> total 112
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun  9 23:42 .
+> drwxrwxr-x 18 ubuntu ubuntu  4096 Jun  9 23:09 ..
+> -rw-rw-r--  1 ubuntu ubuntu 83726 Jun 12 00:44 AIOSTerminal.tsx
+> -rw-rw-r--  1 ubuntu ubuntu 10118 May  3 23:10 ConversationTimeline.tsx
+> -rw-rw-r--  1 ubuntu ubuntu  5743 May  1 18:38 VibrationalWaves.tsx
+> 
+> ===== 4) ConstellationMatrix usa useCrewOverlay (overlay vivo)? =====
+> 4:import { useConstellationSigma, NODE_KIND_COLOR, COMMUNITY_PALETTE } from '@/hooks/useConstellationSigma';
+> 6:import { useCrewOverlay, SQUAD_COLOR } from '@/hooks/useCrewOverlay';
+> 115:  const { overlayAgents, agentCount } = useCrewOverlay();
+> 116:  const activeAgents = showOverlay ? overlayAgents : EMPTY_ARRAY;
+> 118:  const sigmaOptions = useMemo(() => ({ overlayAgents: activeAgents }), [activeAgents]);
+> 132:  } = useConstellationSigma(sigmaOptions);
+> ```
+
+## 🤖 Claude *(15:26:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== 5) Rotas Core/Matrix/Memory no App.tsx =====\"\ngrep -nE \"Core|Matrix|Memory|lazy\\(|path=\" src/App.tsx 2>/dev/null | grep -iE \"core|matrix|memory\" | head -30\necho \"\"\necho \"===== 6) useMcorchMemory \u2014 assinatura/retorno =====\"\nsed -n '1,40p' src/hooks/useMcorchMemory.ts 2>/dev/null\necho \"...(return)...\"\ngrep -nE \"return \\{|export function|export const\" src/hooks/useMcorchMemory.ts 2>/dev/null | head\necho \"\"\necho \"===== 7) useNodeIntelligence \u2014 assinatura/retorno =====\"\ngrep -nE \"return \\{|export function|export const|invoke\\(|useQuery|useMutation\" src/hooks/useNodeIntelligence.ts 2>/dev/null | head",
+  "description": "Verify routes + memory/intelligence hook shapes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== 5) Rotas Core/Matrix/Memory no App.tsx =====
+> 32:const MemoryPage = lazy(() => import("./pages/MemoryPage.tsx"));
+> 33:const MatrixPage = lazy(() => import("./pages/MatrixPage.tsx"));
+> 37:const CoreFablePage = lazy(() => import("./pages/CoreFablePage.tsx"));
+> 95:                <Route path="constellation/memory" element={<MemoryPage />} />
+> 96:                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 113:                <Route path="core" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 114:                <Route path="core-v2" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 115:                <Route path="core-fable" element={<CoreFablePage />} />
+> 
+> ===== 6) useMcorchMemory — assinatura/retorno =====
+> import { useEffect } from 'react';
+> import { useQuery, useQueryClient } from '@tanstack/react-query';
+> import { supabase } from '@/integrations/supabase/client';
+> 
+> export interface McorchNode {
+>   id: string;
+>   node_type: string;
+>   name: string;
+>   content: string;
+>   metadata: any;
+>   stability_score: number;
+>   last_seen_at: string | null;
+>   created_at: string;
+> }
+> 
+> export interface McorchEdge {
+>   id: string;
+>   source_id: string;
+>   target_id: string;
+>   relation_type: string;
+>   weight: number;
+>   metadata: any;
+> }
+> 
+> export interface CreateNodePayload {
+>   node_type: string;
+>   name: string;
+>   content: string;
+>   metadata?: Record<string, unknown>;
+>   project_id?: string;
+> }
+> 
+> export interface CreateEdgePayload {
+>   source_id: string;
+>   target_id: string;
+>   relation_type: string;
+>   weight?: number;
+>   metadata?: Record<string, unknown>;
+>   project_id?: string;
+> }
+> ...(return)...
+> 73:export const useMcorchMemory = (projectId?: string) => {
+> 180:      return { success: false, amount: 0, error: `Invalid action: ${action}` };
+> 190:        return { success: false, amount: 0, error: fnError.message };
+> 193:      return { success: true, amount };
+> 196:      return { success: false, amount: 0, error: e.message };
+> 201:  return { nodes, edges, events, loading, error, createNode, updateNode, deleteNode, createEdge, deleteEdge, awardMcoCoins };
+> 
+> ===== 7) useNodeIntelligence — assinatura/retorno =====
+> 15:export function useNodeIntelligence(): NodeIntelligence {
+> 56:      const res = await supabase.functions.invoke('analyze-node', {
+> 80:  return {
+> ```
+
+## 🤖 Claude *(15:28:03)*
+
+
+## 🤖 Claude *(15:28:20)*
+
+Verificação material concluída. Três achados que mudam o plano — e o "1801" entre eles.
+
+**Correção do "1801" (material):** não existe artefato afirmando "1801 arestas da Matrix". O número vive em `HANDOFF.md:7396` — *"import/variable endpoints: 1801 ← não sincronizados (fora do scope)"* — métrica **de outra coisa** (endpoints de import não-sincronizados do gitnexus), que o blueprint do comando ecoou fora de contexto. **Não vou editar aquela linha** (ela está correta no contexto dela). O número vivo do grafo da Matrix é **8816 arestas + 8560 nós** (verificado), e é esse que entra no plano como canônico.
+
+Agora a **decisão B** (você delegou — eu assumo) e o plano. Antes, os dois achados que pesam:
+
+1. **A fusão esconde uma reconciliação de motores.** Matrix = **Sigma.js (2D WebGL)**; Core-Fable = **R3F/Three.js (3D)** (`MegaBrainVisualizer.tsx` — black hole Schwarzschild + cymatics). Eles **não compõem** — um grafo Sigma 2D não entra numa cena Three 3D. Fundir = **re-renderizar a rede de código nativamente em R3F**. Essa é a decisão mais cara, e é o eixo do refactor.
+2. **A squad coloring está morta** (0 linhas em `crew_module_ownership`) — confirmado. O overlay de agentes (`useCrewOverlay`, toggle em `ConstellationMatrix:115`) usa `crew_agents` (3846 linhas) e funciona; mas a *coloração por território de squad* nunca pinta.
+
+## Decisão B (minha chamada, fundamentada nas suas intenções)
+
+**PODAR rumo à honestidade: Louvain é o esquema oficial de cor da Rede de Código. A squad-coloring dormante não é carregada pro canvas novo. O conceito de posse (overlay/dark-spots) sobrevive onde está vivo; o caminho "automatizar" vira OTD para uma fonte de posse REAL no futuro.**
+
+Por quê (e não "automatizar"):
+- **Lei 1 (Materialidade):** levar uma legenda que pinta *nada* pro canvas-bandeira seria apresentar feature morta como viva.
+- **Lei 3 (Poda):** "trilho sem trem" não entra num refactor maior.
+- **Automatizar agora seria investir errado:** popular 8401 nós via `inferSquad`/`SQUAD_PATTERNS` é **keyword-matching de nome de arquivo** — heurística crua competindo com o Louvain, que é **modularidade real**. O próprio comando ofereceu *"squads OU os clusters reais validados pela auditoria"* — a auditoria validou Louvain. Escolho o real.
+- **Não destruo o conceito:** registro `OTD-SQUAD-OWNERSHIP-REVIVAL` para ressuscitar posse a partir de sinal REAL (telemetria de execução de agente), não de palpite de filename.
+
+Plano selado em arquivo:
+
+## 🤖 Claude *(15:28:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/unified-core-sensorial-canvas-plan.md",
+  "content": "# Plano \u2014 Unified Core Sensorial Canvas (Phase Epsilon V9 Consolidation)\n\n> Plano de trabalho para fundir **Core-Fable (CoreFablePage)** + **Matrix (ConstellationMatrix)** + **Mem\u00f3ria (MemoryPage)** em um canvas 3D soberano \u00fanico, herdando o *Unified Relativistic Black Hole & Cymatics Visualizer*.\n> Status: **PLANO** (Fase 1 auditoria fechada \u00b7 implementa\u00e7\u00e3o gated). Operator=MCORCH Agent \u00b7 Reviewer/Owner=Sovereign.\n> Criado 2026-06-17. Fonte da auditoria: n\u00f3 mesh `a576216e` n\u00e3o \u2014 ver auditoria de clusters desta sess\u00e3o.\n\n---\n\n## 0. Veredito da Auditoria (Fase 1 \u2014 fechada, material)\n\n| Sistema | Status | Prova |\n|---|---|---|\n| **Louvain clustering** | \u2705 REAL/VIVO | `useConstellationSigma.ts:227` `louvain(g,{resolution:1.0})`; deps `graphology-communities-louvain@2.0.2` + FA2 `0.10.1`; input **8560 n\u00f3s / 8816 arestas** vivos |\n| **Squad-territory coloring** | \u26a0\ufe0f MORTO + heur\u00edstico | `crew_module_ownership` = **0 linhas**; fallback sempre cai no Louvain (`:247`); atribui\u00e7\u00e3o = `inferSquad` keyword-match (`useCrewOverlay.ts:34`) |\n| **Mocks cosm\u00e9ticos** | fora do motor | `LandingConstellation:7` (decorativo) \u00b7 `CrewGraph:11 SQUAD_META` (crew 3D, p\u00e1gina diferente) |\n\n**N\u00famero can\u00f4nico do grafo:** 8816 arestas (n\u00e3o \"1801\" \u2014 esse era endpoints de import n\u00e3o-sincronizados, `HANDOFF.md:7396`).\n\n## Decis\u00e3o B (Sovereign delegou \u2192 Agent decidiu)\n**PODAR:** Louvain = esquema oficial de cor da Rede de C\u00f3digo. Squad-coloring dormante **n\u00e3o migra** pro canvas novo. Overlay de agente (`crew_agents`, vivo) sobrevive. `OTD-SQUAD-OWNERSHIP-REVIVAL` registra a futura posse a partir de sinal REAL (telemetria), n\u00e3o keyword.\n\n---\n\n## 1. Realidade dos motores (o eixo do refactor)\n\n| P\u00e1gina | Motor | Componente |\n|---|---|---|\n| Matrix | **Sigma.js 2D** (`sigma@3.0.2`) | `ConstellationMatrix.tsx` + `useConstellationSigma` (graphology+louvain) |\n| Core-Fable | **R3F/Three.js 3D** | `MegaBrainVisualizer.tsx` (Schwarzschild + cymatics raymarch) |\n| Mem\u00f3ria | React/DOM + d3 widget | `MemoryPage.tsx` + `MemoryGraphWidget` |\n\n**Sigma 2D n\u00e3o comp\u00f5e numa cena Three 3D.** Estrat\u00e9gia de reconcilia\u00e7\u00e3o:\n- **graphology permanece o C\u00c9REBRO** (modelo de grafo + `louvain` + `forceAtlas2` para seed de layout) \u2014 \u00e9 renderer-agn\u00f3stico.\n- **O CORPO migra de Sigma \u2192 R3F** (rede de c\u00f3digo renderizada nativamente em Three).\n- **Posi\u00e7\u00f5es 3D:** FA2 \u00e9 2D \u2192 projetar no **plano equatorial** (x,z) ao redor do buraco negro com jitter-y por comunidade/stability (\u2248 \"n\u00f3s orbitando o disco de acre\u00e7\u00e3o\"). Rede de Mem\u00f3ria = nuvem 3D mais org\u00e2nica.\n\n**Realidade de performance (Lei 1):** 8560 n\u00f3s + 8816 arestas em R3F **n\u00e3o** batem <50ms como meshes individuais. Obrigat\u00f3rio **InstancedMesh** (n\u00f3s) + `LineSegments`/BufferGeometry batched (arestas). Sigma fazia esse batching nativo; em R3F \u00e9 expl\u00edcito. Gate de perf no passo 3.7.\n\n---\n\n## 2. Arquitetura de dados (contexto unificado do visualizador)\n\nNovo store/contexto global `useUnifiedCanvas` (Zustand \u2014 padr\u00e3o do projeto) que hospeda:\n- `codeGraph` (graphology Graph \u2014 de `useConstellationSigma`, compute extra\u00eddo p/ selector renderer-agn\u00f3stico)\n- `memoryNodes`/`memoryEdges` (`McorchNode[]`/`McorchEdge[]` \u2014 de `useMcorchMemory`)\n- `selection` + `cameraTarget` (fly-to) + `viewMode` (`matrix` | `memory` | `universe`)\n- `synapseEdges` (acoplamento inter-rede)\n\nHooks a unificar: `useConstellationSigma` (c\u00f3digo) + `useMcorchMemory` (pensamento) + `useNodeIntelligence` (an\u00e1lise on-select).\n\n**Sinapses inter-rede (Lei 1 \u2014 sem fabricar):** as arestas Mem\u00f3ria\u2192C\u00f3digo **devem** vir de rela\u00e7\u00e3o REAL:\n- Fase A: arestas j\u00e1 existentes em `mcorch_edges` que cruzam a parti\u00e7\u00e3o AST\u2194knowledge (`DERIVES_FROM`/`REQUIRES`/`observes`).\n- Fase B (OTD): similaridade por embedding (768d cosine) como enriquecimento. **Nunca** linha decorativa sem lastro.\n\n---\n\n## 3. Ordem de Trabalho (commits granulares, n\u00e3o-quebrante)\n\n### Fase 2 \u2014 Plano & Gate (agora)\n- **2.0** \u2705 Auditoria de clusters (fechada, material).\n- **2.1** \u2705 Decis\u00e3o B (podar) registrada + `OTD-SQUAD-OWNERSHIP-REVIVAL`.\n- **2.2** \ud83d\udea6 **GATE (decis\u00e3o Sovereign):** emenda BoK em `docs/bok/mcorch-constellation/` (PRD/FRD/SDD: Unified Sensorial Canvas) **OU** override consciente (precedente viralmind, d\u00e9bito selado no `/handoff`).\n- **2.3** Este plano selado (n\u00f3 mesh + commit).\n\n### Fase 3 \u2014 Implementa\u00e7\u00e3o (p\u00f3s-gate \u00b7 1 commit por passo \u00b7 3 p\u00e1ginas legadas PRESERVADAS)\n- **3.1 Scaffold n\u00e3o-quebrante:** nova rota `/dashboard/universe` \u2192 `UnifiedCanvasPage` (vazia + shell 72/28). KEEP `constellation/matrix`, `constellation/memory`, `core-fable`. Novo `useUnifiedCanvas`. Zero dele\u00e7\u00e3o.\n- **3.2 Rede de C\u00f3digo em R3F:** extrair o build graphology+louvain de `useConstellationSigma` p/ selector puro; renderizar InstancedMesh no plano equatorial; cor = Louvain (`COMMUNITY_PALETTE`).\n- **3.3 Rede de Mem\u00f3ria em R3F:** n\u00f3s de conhecimento como nuvem org\u00e2nica + an\u00e9is cymatics por node_type (Ciano/Alfa \u00b7 Violeta/Gama \u00b7 Ouro/Escalar); feed `useMcorchMemory`.\n- **3.4 Herdar o Black Hole:** montar `MegaBrainVisualizer` como fundo compartilhado; as 2 redes dividem a cena negra.\n- **3.5 Sinapses:** arestas cross-partition REAIS (`mcorch_edges`) como linhas baixa-opacidade; acendem s\u00f3 em `universe`.\n- **3.6 Unificar hooks/intera\u00e7\u00e3o:** select \u2192 painel `useNodeIntelligence`; fly-to c\u00e2mera; toggles `matrix`/`memory`/`universe` no Sidebar.\n- **3.7 Layout 72/28 + estabiliza\u00e7\u00e3o + perf:** \u00e1rvore flex \u00fanica, terminal t\u00e1tico flutuante; instancing; verificar <50ms; corrigir `absolute inset-0` escapando flex (padr\u00e3o `DashboardLayout`).\n- **3.8 Executar a poda:** aposentar squad-coloring dormante no canvas novo; legado Matrix intacto como backup.\n- **3.9 Paridade + cutover:** ao atingir paridade, nav aponta pro `/universe`; rotas legadas acess\u00edveis como backup. **Gate E2E Lei 1:** `bun run scripts/qa/audit-canvas-ui.ts` (screenshot 1920\u00d71080) obrigat\u00f3rio p/ mudan\u00e7a de Canvas.\n- **3.10 Seal:** tsc 0 \u00b7 testes \u00b7 n\u00f3 mesh \u00b7 `/handoff` \u00b7 resolu\u00e7\u00e3o do d\u00e9bito BoK.\n\n---\n\n## 4. Riscos & Diretrizes\n- **Maior risco:** reescrita do renderer (Sigma\u2192R3F) + perf em 8.5k n\u00f3s \u2192 mitigado por InstancedMesh + extra\u00e7\u00e3o do compute (graphology reusado, n\u00e3o reescrito).\n- **N\u00e3o-quebrante:** cada passo compila (tsc 0) e as 3 p\u00e1ginas legadas seguem roteadas at\u00e9 a paridade (3.9).\n- **Idioma:** c\u00f3digo/coment\u00e1rios EN \u00b7 relat\u00f3rios PT-BR.\n- **OTDs abertas:** `OTD-SQUAD-OWNERSHIP-REVIVAL` (posse por sinal real) \u00b7 `OTD-SYNAPSE-EMBEDDING` (sinapses por similaridade 768d) \u00b7 `OTD-UCANVAS-PERF` (or\u00e7amento <50ms em 8.5k n\u00f3s).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/unified-core-sensorial-canvas-plan.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:29:12)*
+
+
+## 🤖 Claude *(15:29:21)*
+
+Plano selado em [`.claude/context/unified-core-sensorial-canvas-plan.md`](.claude/context/unified-core-sensorial-canvas-plan.md). Resumo executivo:
+
+**O eixo do refactor** não é layout — é **reconciliação de motores**: a Matrix vive em Sigma.js 2D, o Core-Fable em R3F/Three 3D, e eles não compõem. A estratégia honesta: **graphology permanece o cérebro** (modelo + Louvain + ForceAtlas2, renderer-agnóstico) e **o corpo migra de Sigma → R3F** — a rede de código re-renderizada nativamente em Three, orbitando o disco de acreção no plano equatorial. Com isso eu *reuso* o compute validado em vez de reescrevê-lo.
+
+**Duas verdades materiais que o plano embute:**
+- **Perf:** 8560 nós + 8816 arestas em R3F **não** batem <50ms como meshes soltos → `InstancedMesh` + linhas batched são obrigatórios (Sigma fazia isso nativo; em R3F é explícito). Gate de perf no passo 3.7.
+- **Sinapses sem fabricação:** as arestas Memória→Código saem de relação **real** em `mcorch_edges` (cross-partition), não de linha decorativa. Similaridade por embedding fica como OTD de enriquecimento.
+
+**Ordem de trabalho:** 1 commit por passo, não-quebrante, **as 3 páginas legadas preservadas como backup** até a paridade (passo 3.9), cutover só depois — fechando com o gate E2E Lei 1 (screenshot 1920×1080 obrigatório p/ Canvas).
+
+---
+
+Fiz todas as decisões de engenharia que me cabem. Resta **uma** que é genuinamente sua — o gate de governança (passo 2.2), porque é mudança arquitetural maior de um módulo já selado:
+
+## 🤖 Claude *(15:29:27)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como destravar o Gate de governan\u00e7a (passo 2.2) para a implementa\u00e7\u00e3o (Fase 3) do Unified Canvas?",
+      "header": "Gate BoK",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Emenda BoK (mcorch-constellation)",
+          "description": "Eu acrescento se\u00e7\u00f5es de Unified Sensorial Canvas ao PRD/FRD/SDD da su\u00edte j\u00e1 selada docs/bok/mcorch-constellation/ antes de codar. Proporcional (evolu\u00e7\u00e3o de m\u00f3dulo existente, n\u00e3o m\u00f3dulo novo) e respeita o Closed-Loop sem rodar /bok-scribe inteiro. (Recomendado.)"
+        },
+        {
+          "label": "Override consciente do Sovereign",
+          "description": "Via expressa: voc\u00ea autoriza pular o BoK agora; eu come\u00e7o a Fase 3 j\u00e1 e selo o d\u00e9bito BoK no /handoff (precedente viralmind). Mais r\u00e1pido, com d\u00e9bito documentado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como destravar o Gate de governança (passo 2.2) para a implementação (Fase 3) do Unified Canvas?"="Emenda BoK (mcorch-constellation)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(15:30:03)*
+
+
+## 🤖 Claude *(15:30:06)*
+
+Escolha registrada: **Emenda BoK** — o caminho disciplinado. Vou estender a suíte `mcorch-constellation` já selada (PRD/FRD/SDD) com o Unified Sensorial Canvas. Primeiro mapeio as convenções vivas da suíte (IDs, formato, máximos) pra emendar fiel, sem colidir nem duplicar.
+
+## 🤖 Claude *(15:30:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"===== suite files + sizes =====\"; ls -la docs/bok/mcorch-constellation/ 2>/dev/null; echo \"\"; wc -l docs/bok/mcorch-constellation/0[3-5]*.md 2>/dev/null\necho \"\"\necho \"===== PRD (03) section headings + max PR id =====\"; grep -nE \"^#{1,3} |PR-[0-9]|FR-[0-9]\" docs/bok/mcorch-constellation/03-prd.md 2>/dev/null | tail -40\necho \"\"\necho \"===== FRD (04) headings + FR ids (tail) =====\"; grep -nE \"^#{1,3} |FR-[0-9]|NFR-[0-9]\" docs/bok/mcorch-constellation/04-frd.md 2>/dev/null | tail -45",
+  "description": "Map BoK suite structure + max IDs for PRD/FRD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== suite files + sizes =====
+> total 308
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun  1 16:49 .
+> drwxrwxr-x 22 ubuntu ubuntu  4096 Jun 11 00:36 ..
+> -rw-rw-r--  1 ubuntu ubuntu 11131 Jun  9 23:44 00-index.md
+> -rw-rw-r--  1 ubuntu ubuntu 17462 Jun  9 23:44 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 24037 Jun  9 23:44 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 23689 Jun  9 23:44 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 22617 May 17 21:52 04-frd.md
+> -rw-rw-r--  1 ubuntu ubuntu 43813 Jun  9 23:44 05-sdd.md
+> -rw-rw-r--  1 ubuntu ubuntu 31936 May  7 23:07 06-data-model.md
+> -rw-rw-r--  1 ubuntu ubuntu 23380 Jun  9 23:44 07-process-flow.md
+> -rw-rw-r--  1 ubuntu ubuntu 27140 May  8 02:48 08-quality-metrics.md
+> -rw-rw-r--  1 ubuntu ubuntu 60397 May  8 02:58 bok-agents-system--mcorch-constellation.md
+> -rw-rw-r--  1 ubuntu ubuntu  3452 Jun  1 16:49 revenue-flywheel.md
+> -rw-rw-r--  1 ubuntu ubuntu  3342 May 31 16:08 roadmap-v1.md
+> 
+>   330 docs/bok/mcorch-constellation/03-prd.md
+>   303 docs/bok/mcorch-constellation/04-frd.md
+>   611 docs/bok/mcorch-constellation/05-sdd.md
+>  1244 total
+> 
+> ===== PRD (03) section headings + max PR id =====
+> 159:| PR-023 | LGPD data export (full per-user dump) | All | BR-010 | M (pending) | 0 | Doc-debt — endpoint to be designed |
+> 160:| PR-024 | Multi-tenant project_id scoping for agencies | P2 | BR-001, BR-005 | L (partial; `project_id` column exists, agency UI pending) | 0 | Schema ready; UX layer pending |
+> 162:### Could Have (Future)
+> 166:| PR-030 | Hand tracking gesture control (MediaPipe) | P1 | — (UX experiment) | XL | 0 | Currently deferred per HANDOFF Pending Action |
+> 167:| PR-031 | Video pipeline (Veo + scene composition) | P1 | — (extension of BR-001) | XL (partial) | High (variable Veo cost) | `generate-video` + `rescue-video` exist; canvas integration partial (`VideoEditorPage`) |
+> 168:| PR-032 | Per-client white-label dashboards (agency tier) | P2 | — | XL | 0 | Theme tokens exist; full white-label deferred |
+> 169:| PR-033 | Native iOS/Android apps | All | — | XL | 0 | Currently web-only; mobile branch protocol exists for code sync |
+> 170:| PR-034 | AI Brain real-time analysis (Sonnet 4.5 via OpenRouter) | All | — (shipped) | M (shipped) | (variable) | `analyze-node` edge function — already live |
+> 172:### Won't Have (this cycle)
+> 181:## 5. Release Phasing
+> 183:### MVP Scope (Sealed v5.6.1, 2026-05-06)
+> 186:**Included:** PR-001 through PR-020
+> 189:### v1.0 Scope (Phase Commercial)
+> 192:**Adds:** PR-021 (already shipped), PR-022 (already shipped), PR-023, PR-024
+> 195:### Future Scope
+> 197:**Items:** PR-030+
+> 202:## 6. Luxury UX Specifications
+> 204:### 6.1 Color & Visual Identity
+> 218:### 6.2 Animation Guidelines
+> 230:### 6.3 Interaction Patterns
+> 240:### 6.4 Accessibility (WCAG 2.1 AA)
+> 251:## 7. Acceptance Criteria (Gherkin)
+> 256:  Scenario: Successful pipeline run (PR-001, BR-001)
+> 273:  Scenario: Insufficient mcoCoins (PR-001, BR-001, BAC-002)
+> 283:  Scenario: AIOS recalls related past run (PR-008, PR-012, BR-013)
+> 291:  Scenario: Pro plan checkout (PR-007, BR-011)
+> 300:  Scenario: Edge function 5xx triggers auto-recovery (PR-021, BR-015)
+> 311:## 8. Traceability Matrix
+> 315:| MR-001 | BR-001, BR-002, BR-005, BR-008 | PR-001, PR-002, PR-003, PR-011, PR-018 |
+> 316:| MR-002 | BR-003 | PR-004 |
+> 317:| MR-003 | BR-006 | PR-005 |
+> 318:| MR-004 | BR-007 | PR-006 |
+> 319:| MR-005 | BR-009, BR-010, BR-018 | PR-019, PR-020, PR-023 |
+> 320:| MR-006 | BR-011 | PR-007 |
+> 321:| MR-007 | BR-012, BR-013 | PR-008, PR-009 |
+> 322:| MR-008 | BR-014 | PR-010, PR-011 |
+> 323:| MR-009 | BR-015 | PR-021, PR-022 |
+> 324:| MR-010 | BR-016 | PR-012, PR-013, PR-014 |
+> 325:| MR-011 | BR-017 | PR-015, PR-016 |
+> 326:| MR-012 | BR-018 | PR-020, PR-023 |
+> 
+> ===== FRD (04) headings + FR ids (tail) =====
+> 168:### 4.2 External API Contract — `orchestrate-content` (canonical example)
+> 210:> Same error-code pattern applies to all user-scoped edge functions per NFR-015.
+> 214:## 5. Data Requirements
+> 232:## 6. Test Strategy Matrix
+> 236:| FR-001 | ✅ `useOrchestrationGraph.test.ts` (21 tests) | ✅ End-to-end via running edge fn | — | Mocks supabase + sonner; uses real Zustand store |
+> 237:| FR-002 | ✅ Empty topic test | — | — | Covered |
+> 238:| FR-003 | — | ✅ `orchestrate-content` edge fn integration | — | mcoCoins gate is server-side; client-side test via mocked rejection |
+> 239:| FR-004 | ✅ `billing.test.ts` (22 tests) | — | — | RPC mocked; covers success, error, fallback message |
+> 240:| FR-005 | ✅ `useOrchestrationStore.test.ts` (29 tests) | — | — | Covers status transitions + reset |
+> 241:| FR-006 | ✅ Step-to-node mapping in graph tests | — | — | |
+> 242:| FR-007 | ✅ Quality gate logic tests | — | — | Both success and partial-error paths |
+> 243:| FR-008 | — | ✅ Pipeline run row inserted on every run | — | |
+> 244:| FR-009..014 | — | ✅ Edge fn integration on staging | — | |
+> 245:| FR-015..019 | — | ✅ Manual + cron-based integration | — | |
+> 246:| FR-020..022 | — | ✅ Mesh insert + embed cycle | — | |
+> 247:| FR-023..026 | ✅ `useKnowledgeMesh.test.ts` (19 tests) | — | — | Mock Supabase chain + realtime channel |
+> 248:| FR-027..028 | ✅ `phase-zeta.test.tsx` (14 tests) | — | — | Persistence, DERIVES_FROM edges |
+> 249:| FR-029..030 | — (manual validation 2026-05-07) | ✅ Manual on `/dashboard/core` | — | |
+> 250:| FR-031..032 | — | ✅ Manual on Gemini Live + TTS | — | |
+> 251:| FR-033..036 | ✅ `useSubscription.test.ts` (16 tests) | ✅ Stripe sandbox webhook delivery | — | |
+> 252:| FR-037..039 | — | ✅ Visual regression on canvas pages | — | Lovable agent playwright config exists |
+> 253:| FR-040..042 | — | ✅ Watchdog cron + HUD display | — | |
+> 272:## 7. Traceability Matrix
+> 276:| PR-001 | FR-001..FR-008 | NFR-003, NFR-015, NFR-020 |
+> 277:| PR-002 | FR-009..FR-011 | NFR-003, NFR-015 |
+> 278:| PR-003 | FR-012 | NFR-003, NFR-015 |
+> 279:| PR-004 | FR-013 | (cross-cutting) |
+> 280:| PR-005 | FR-015 | NFR-004, NFR-015 |
+> 281:| PR-006 | FR-014 | NFR-004 |
+> 282:| PR-007 | FR-033..FR-036 | NFR-015, NFR-020 |
+> 283:| PR-008 | FR-020..FR-022 | NFR-006 |
+> 284:| PR-009 | FR-023..FR-026 | NFR-006 |
+> 285:| PR-010 | FR-005..FR-007 | NFR-002 |
+> 286:| PR-011 | FR-008 | NFR-022 |
+> 287:| PR-012 | FR-027..FR-028, FR-032 | NFR-005, NFR-015 |
+> 288:| PR-013 | FR-031 | NFR-005 |
+> 289:| PR-014 | FR-029..FR-030 | NFR-002 |
+> 290:| PR-015 | FR-037..FR-038 | NFR-002, NFR-008 |
+> 291:| PR-016 | FR-039 | NFR-002 |
+> 292:| PR-017 | FR-016..FR-018 | NFR-015, NFR-019 |
+> 293:| PR-018 | FR-004 (display only) | — |
+> 294:| PR-019 | (cross-cutting all FRs reading user data) | NFR-017, NFR-021 |
+> 295:| PR-021 | FR-040..FR-041 | NFR-009, NFR-010 |
+> 296:| PR-022 | FR-042 | NFR-009 |
+> 302:### Target Binding Requirement (OE-661-003)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
