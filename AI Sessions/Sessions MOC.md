@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 903
-> * **Sessões do Claude**: 861
+> * **Total de Sessões Registradas**: 909
+> * **Sessões do Claude**: 867
 > * **Sessões do Gemini**: 42
 
 ---
@@ -59,19 +59,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-17 - agent-aff65e0ac55826d37]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-aff2acf5903681528]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-ae732c84f7956e55f]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-ac71eb815829bc61b]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-aa1d4a413cde4ecbc]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-a5a3922b86c4d255c]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` - *2026-06-17*
+*   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a1a351de1820e4318]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a189be67710997cf2]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-a0add95feb31e8680]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-a0725c95f7eff0ea4]]` - *2026-06-17*
-*   `[[2026-06-17 - Usar Model Council para verificar respostas de IA]]` - *2026-06-17*
-*   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` - *2026-06-17*
-*   `[[2026-06-17 - Binance withdrawal and IP unlock troubleshooting]]` - *2026-06-17*
-*   `[[2026-06-16 - agent-afe8189a8d120151e]]` - *2026-06-16*
-*   `[[2026-06-16 - agent-af5861ea9ef72bb42]]` - *2026-06-16*
-*   *... e mais 867 sessões nessa categoria.*
+*   `[[2026-06-17 - agent-a0792fcaf7d69d604]]` - *2026-06-17*
+*   *... e mais 873 sessões nessa categoria.*
 
 ---
 
@@ -262,12 +262,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-17 - agent-aff65e0ac55826d37]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-aff2acf5903681528]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-ae732c84f7956e55f]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-ac71eb815829bc61b]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-aa1d4a413cde4ecbc]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a5a3922b86c4d255c]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a1a351de1820e4318]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a189be67710997cf2]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a0add95feb31e8680]]` (ClaudeSessions)
+*   `[[2026-06-17 - agent-a0792fcaf7d69d604]]` (ClaudeSessions)
 *   `[[2026-06-17 - agent-a0725c95f7eff0ea4]]` (ClaudeSessions)
 *   `[[2026-06-17 - Usar Model Council para verificar respostas de IA]]` (ClaudeSessions)
 *   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` (ClaudeSessions)

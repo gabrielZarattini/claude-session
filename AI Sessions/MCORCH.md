@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 40
-> * **Total de Sessões**: 898
+> * **Total de Sessões**: 904
 
 ---
 
@@ -63,12 +63,18 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-17 - agent-aff65e0ac55826d37]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - agent-aff2acf5903681528]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - agent-ae732c84f7956e55f]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-ac71eb815829bc61b]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-aa1d4a413cde4ecbc]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - agent-a5a3922b86c4d255c]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-a4eb89cfabd5df68c]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - agent-a1e30db79cdbfeada]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-a1a351de1820e4318]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-a189be67710997cf2]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-a0add95feb31e8680]]` (ClaudeSessions) - *2026-06-17*
+*   `[[2026-06-17 - agent-a0792fcaf7d69d604]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - agent-a0725c95f7eff0ea4]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - Usar Model Council para verificar respostas de IA]]` (ClaudeSessions) - *2026-06-17*
 *   `[[2026-06-17 - Implement OAuth 2.1 browser-flow and vision-mcp roadmap tasks]]` (ClaudeSessions) - *2026-06-17*
