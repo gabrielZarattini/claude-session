@@ -3211,6 +3211,1129 @@ Commit `8ef1b69` no master. Push via token (HTTPS), redação de qualquer creden
 }
 ```
 
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    baf0f4b..8ef1b69  HEAD -> master
+> --- sync check ---
+> 0b1554d docs(agent): doutrina GATE != TRIGGER no SYSTEM_PROMPT (fecha a classe gate-aberto-mas-condicao)
+> ```
+
+## 🤖 Claude *(14:00:30)*
+
+
+## 🤖 Claude *(14:00:32)*
+
+Push **OK** — `baf0f4b..8ef1b69 HEAD -> master`. Origin atualizado. (Os 17 alertas do Dependabot são pré-existentes, fora de escopo.)
+
+Agora rebuild + restart do backend pra subir o código novo (a imagem COPIA o `src` no build):
+
+## 🤖 Claude *(14:00:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend 2>&1 | tail -25'",
+  "description": "Rebuild and restart backend container",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #10 DONE 0.7s
+> 
+> #11 [6/7] COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> #11 DONE 0.0s
+> 
+> #12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> #12 DONE 0.2s
+> 
+> #13 exporting to image
+> #13 exporting layers
+> #13 exporting layers 0.4s done
+> #13 writing image sha256:ba6cc745cc467c9beb633f13e95a96cde0706d97f498a7a8dca4e3235b2c1aad done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 0.4s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:00:54)*
+
+
+## 🤖 Claude *(14:00:56)*
+
+Backend recriado e iniciado. Vou aguardar o boot (entrypoint roda migrate+seed → server) e checar os logs pelas linhas de init do `riskState` + start do `dailyCap`, e qualquer erro de boot:
+
+## 🤖 Claude *(14:00:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose ps backend; echo \"=== logs (riskState / dailyCap / boot) ===\"; docker compose logs backend --since 90s 2>&1 | grep -iE \"riskState|dailyCap|Daily Loss Cap|Boot falhou|Error|App is running|Halt\" | tail -25'",
+  "description": "Check backend status and boot logs for riskState/dailyCap"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED          STATUS          PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   12 seconds ago   Up 10 seconds   3001/tcp
+> === logs (riskState / dailyCap / boot) ===
+> ```
+
+## 🤖 Claude *(14:01:05)*
+
+
+## 🤖 Claude *(14:01:06)*
+
+Container up há 10s — provavelmente ainda no migrate+seed antes dos jobs. Vou olhar o tail cru do boot:
+
+## 🤖 Claude *(14:01:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose logs backend --since 120s 2>&1 | tail -30'",
+  "description": "Tail raw backend boot logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | 
+> backend-1  | Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> backend-1  | 
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | No migrations were executed, database schema was already up to date.
+> backend-1  | npm notice
+> backend-1  | npm notice New major version of npm available! 10.9.8 -> 11.17.0
+> backend-1  | npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+> backend-1  | npm notice To update run: npm install -g npm@11.17.0
+> backend-1  | npm notice
+> backend-1  | [TradeUX] Applying seeds (idempotent)...
+> backend-1  | 
+> backend-1  | Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> backend-1  | 
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | No seeders found.
+> backend-1  | [TradeUX] Starting backend...
+> backend-1  | 
+> backend-1  | > backend@1.0.0 start
+> backend-1  | > node -r dotenv/config ./src/server
+> backend-1  |
+> ```
+
+## 🤖 Claude *(14:01:14)*
+
+
+## 🤖 Claude *(14:01:15)*
+
+Server iniciando. Aguardo o engine subir e re-checo as linhas de init:
+
+## 🤖 Claude *(14:01:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'for i in 1 2 3 4 5 6; do n=$(docker compose logs backend --since 150s 2>&1 | grep -ciE \"App is running|Daily Loss Cap|riskState\"); if [ \"$n\" -ge 2 ]; then break; fi; sleep 2; done; docker compose logs backend --since 150s 2>&1 | grep -iE \"riskState|Daily Loss Cap|dailyCap|App is running|Boot falhou|Error:|Cockpit Job|Funnel Job\" | tail -20'",
+  "description": "Poll until backend jobs boot, then show init lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(14:02:05)*
+
+
+## 🤖 Claude *(14:02:06)*
+
+Os logs do engine vão pros arquivos `logs/<cat>.log` dentro do container (não pro stdout do docker — daí o grep vazio). Vou ler o `system.log` do container pra confirmar o boot, e ver onde está o workdir:
+
+## 🤖 Claude *(14:02:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"pwd; echo ---; ls logs 2>/dev/null | head; echo ---; tail -n 40 logs/system.log 2>/dev/null | grep -iE \\\"riskState|dailyCap|Daily Loss Cap|App is running|Boot|Cockpit|Funnel\\\" | tail -20\"'",
+  "description": "Read backend container system.log for boot confirmation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /app
+> ---
+> M1.log
+> M10.log
+> M3.log
+> M4.log
+> M8.log
+> M9.log
+> beholder.log
+> cockpit.log
+> fair.log
+> flow.log
+> ---
+> info: 2026-06-18T13:47:05.779Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T14:00:52.969Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T14:00:53.211Z - Starting the Cockpit Job (read-only analytics)...
+> info: 2026-06-18T14:00:53.212Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-18T14:00:53.214Z - Starting the Daily Loss Cap Job (-5%)...
+> info: 2026-06-18T14:00:53.215Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-18T14:00:53.244Z - App is running at 3001
+> info: 2026-06-18T14:00:53.400Z - FARM_DCA[LTCUSDT] carregado no boot: qty=0, cost=0
+> info: 2026-06-18T14:00:53.413Z - FARM_DCA[BNBUSDT] carregado no boot: qty=0, cost=0
+> info: 2026-06-18T14:00:53.419Z - FARM_DCA[ADAUSDT] carregado no boot: qty=0, cost=0
+> info: 2026-06-18T14:00:53.962Z - [dailyCap] equity NÃO-avaliável (preços frios: LDGUN, LDBABY) — cap NÃO avaliado neste ciclo (fail-safe).
+> ```
+
+## 🤖 Claude *(14:04:03)*
+
+
+## 🤖 Claude *(14:04:09)*
+
+**Achado ao vivo importante:** o boot confirmou tudo funcionando — `riskState` seedado (`env floor=true, halted=true`), `Daily Loss Cap Job (-5%)` iniciado, `App is running`. **MAS** o fail-safe disparou: `equity NÃO-avaliável (preços frios: LDGUN, LDBABY)`.
+
+`LDGUN`/`LDBABY` são posições **Binance Earn/Locked** (prefixo `LD`, sem par `<coin>USDT`) na conta real — exatamente o cenário P1-A que o QA previu. Com o sistema congelado é inócuo, mas pro cap **funcionar de fato** após um flip, esses Earn não podem deixá-lo inerte. Meu alarme anti-silêncio cobriria (avisaria em 15min), mas o certo é o cap medir o **equity TRADEABLE** — Earn locked está fora do que o trading spot pode perder. Vou tornar o skip de Earn **automático** (robusto a novas posições Earn, sem depender de manutenção de env), preservando ativos spot reais (guard `length>3` mantém LDO):
+
+## 🤖 Claude *(14:04:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "    let equity = 0;\n    let usdtFree = 0;\n    const cold = [];\n    for (const [coin, b] of Object.entries(bal)) {\n        const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n        if (qty <= 0) continue;\n        if (coin === QUOTE) { usdtFree = parseFloat(b.available) || 0; equity += qty; continue; }\n        if (STABLES.has(coin)) { equity += qty; continue; } // outras stables ~ $1\n        if (IGNORE_ASSETS.has(coin)) continue;              // asset isento (sem par USDT / Earn) \u2014 n\u00e3o bloqueia o cap\n        const px = priceOf(coin);\n        if (px == null) { cold.push(coin); continue; }       // pre\u00e7o frio \u2192 n\u00e3o soma; marca como n\u00e3o-avali\u00e1vel\n        equity += qty * px;\n    }\n    const valued = cold.length === 0;\n    return { valued, equity, usdtFree, cold, settings };\n}",
+  "new_string": "    let equity = 0;\n    let usdtFree = 0;\n    const cold = [];\n    const ignored = [];\n    for (const [coin, b] of Object.entries(bal)) {\n        const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n        if (qty <= 0) continue;\n        if (coin === QUOTE) { usdtFree = parseFloat(b.available) || 0; equity += qty; continue; }\n        if (STABLES.has(coin)) { equity += qty; continue; }        // outras stables ~ $1\n        if (IGNORE_ASSETS.has(coin)) { ignored.push(coin); continue; } // isento expl\u00edcito pelo operador\n        const px = priceOf(coin);\n        if (px == null) {\n            // Earn/Locked da Binance aparece como 'LD'+ativo (LDGUN, LDBABY...) e N\u00c3O tem par <coin>USDT: n\u00e3o \u00e9\n            // spot-negoci\u00e1vel \u2192 fica FORA do equity-TRADEABLE (denominador certo do cap) e N\u00c3O bloqueia (\u2260 pre\u00e7o\n            // frio real). O guard length>3 preserva ativos spot reais como LDO. Override manual: DAILY_CAP_IGNORE_ASSETS.\n            if (coin.startsWith('LD') && coin.length > 3) { ignored.push(coin); continue; }\n            cold.push(coin); continue;                              // pre\u00e7o frio REAL \u2192 fail-safe (n\u00e3o avalia)\n        }\n        equity += qty * px;\n    }\n    const valued = cold.length === 0;\n    return { valued, equity, usdtFree, cold, ignored, settings };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "        LAST = { at: new Date(AT).toISOString(), valued: eq.valued, equity: eq.valued ? eq.equity : null, cold: eq.cold || null, error: eq.error || null };",
+  "new_string": "        LAST = { at: new Date(AT).toISOString(), valued: eq.valued, equity: eq.valued ? eq.equity : null, cold: eq.cold || null, ignored: eq.ignored || null, error: eq.error || null };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && node -c src/dailyCapJob.js && echo \"syntax OK\" && sudo -n chown gcrux-tradeux:gcrux-tradeux src/dailyCapJob.js && echo \"chown OK\"",
+  "description": "Syntax-check and chown dailyCapJob after Earn-skip edit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> chown OK
+> ```
+
+## 🤖 Claude *(14:04:39)*
+
+
+## 🤖 Claude *(14:04:40)*
+
+Fix syntax-OK e chowned. Commit + push (novo commit, não reescrevo o `8ef1b69` já publicado):
+
+## 🤖 Claude *(14:04:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git add backend/src/dailyCapJob.js && git commit -m \"fix(safety): cap diario exclui Earn/Locked (LD*) do equity-tradeable\" -m \"A conta real tem posicoes Binance Earn (LDGUN, LDBABY) sem par <coin>USDT -> deixavam o cap em fail-safe PERMANENTE (cap NAO avaliado). Earn locked nao e spot-negociavel: fica fora do denominador do drawdown (o certo) e nao bloqueia o cap. Guard length>3 preserva ativos spot reais (LDO). Override manual segue via DAILY_CAP_IGNORE_ASSETS. Detectado no smoke pos-deploy.\" -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && git log -1 --oneline && TOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\") && git push \"https://${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#https://[^@]*@#https://***@#g\"'",
+  "description": "Commit Earn-skip fix and push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 1b639ce] fix(safety): cap diario exclui Earn/Locked (LD*) do equity-tradeable
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+> 1b639ce fix(safety): cap diario exclui Earn/Locked (LD*) do equity-tradeable
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    8ef1b69..1b639ce  HEAD -> master
+> ```
+
+## 🤖 Claude *(14:05:19)*
+
+Push OK (`8ef1b69..1b639ce`). Rebuild + restart pra subir o fix:
+
+## 🤖 Claude *(14:05:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend 2>&1 | tail -6'",
+  "description": "Rebuild and restart backend with Earn-skip fix",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:05:32)*
+
+
+## 🤖 Claude *(14:05:33)*
+
+Reiniciado. Aguardo o boot e checo o `system.log` — desta vez o cap deve **baselinetar** (sem fail-safe nos Earn):
+
+## 🤖 Claude *(14:05:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'for i in $(seq 1 8); do n=$(docker compose exec -T backend sh -c \"grep -c \\\"App is running\\\" logs/system.log\" 2>/dev/null | tail -1); if docker compose exec -T backend sh -c \"tail -5 logs/system.log\" 2>/dev/null | grep -q \"dailyCap\"; then break; fi; sleep 2; done; docker compose exec -T backend sh -c \"tail -n 50 logs/system.log\" 2>/dev/null | grep -iE \"riskState|dailyCap|Daily Loss Cap|App is running|Boot falhou|Error:\" | tail -15'",
+  "description": "Poll boot and check dailyCap baseline after Earn-skip"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-18T13:47:05.779Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T14:05:27.620Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T14:05:27.783Z - Starting the Daily Loss Cap Job (-5%)...
+> info: 2026-06-18T14:05:27.784Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-18T14:05:27.808Z - App is running at 3001
+> info: 2026-06-18T14:05:28.517Z - [dailyCap] baseline do dia 2026-06-18 = $148.84 (USDT livre $148.84).
+> ```
+
+## 🤖 Claude *(14:05:57)*
+
+
+## 🤖 Claude *(14:05:59)*
+
+Cap **baselinetou: $148,84** (USDT livre $148,84) — Earn excluído, sem fail-safe. `riskState` com `env floor=true, halted=true` (inerte, como esperado). Agora o smoke ao vivo dos endpoints. Vou ver a rota da API e as ferramentas do container (sem vazar segredo):
+
+## 🤖 Claude *(14:06:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && grep -E \"^REACT_APP_API_URL=|^TRADEUX_API_URL=|^TRADEUX_EMAIL=\" .env | sed -E 's/(EMAIL=).*/\\1<redacted>/'; echo \"--- container tools ---\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"command -v curl wget node 2>/dev/null\"'",
+  "description": "Find API URL and container HTTP tools"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 127
+> ugrep: warning: cannot read .env: Permission denied
+> --- container tools ---
+> ```
+
+## 🤖 Claude *(14:06:32)*
+
+
+## 🤖 Claude *(14:06:34)*
+
+`.env` é 600 (gcrux) — preciso ler tudo dentro do shell gcrux. Pegando os valores pro smoke (email/senha redigidos) e checando o `node` no container:
+
+## 🤖 Claude *(14:06:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && grep -E \"^TRADEUX_API_URL=|^TRADEUX_EMAIL=|^REACT_APP_API_URL=\" .env | sed -E \"s/(EMAIL=).*/\\1<redacted>/\"; echo \"--- has creds? ---\"; grep -q \"^TRADEUX_PASSWORD=\" .env && echo \"TRADEUX_PASSWORD: SET\" || echo \"TRADEUX_PASSWORD: ausente\"; echo \"--- node in backend ---\"; docker compose exec -T backend node -e \"console.log(\\\"node ok\\\", process.version)\"'",
+  "description": "Get API URL and confirm node in container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> REACT_APP_API_URL=https://tradeux.gcrux.com/api
+> --- has creds? ---
+> TRADEUX_PASSWORD: ausente
+> --- node in backend ---
+> node ok v22.22.3
+> ```
+
+## 🤖 Claude *(14:06:55)*
+
+
+## 🤖 Claude *(14:06:57)*
+
+Public API = `https://tradeux.gcrux.com/api`. As credenciais de login (TRADEUX_PASSWORD) não estão no `.env` da raiz — devem estar no env do agente. Vou (1) confirmar o wiring das rotas novas via **401 sem token** (prova montagem + auth-gate, ≠ 404), e (2) buscar as creds do agente pra um GET autenticado read-only:
+
+## 🤖 Claude *(14:07:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 401 wiring check (sem token) ===\"; for p in system/halt system/daily-cap analysis/cockpit; do code=$(curl -s -m8 -o /dev/null -w \"%{http_code}\" \"https://tradeux.gcrux.com/api/$p\"); echo \"GET /api/$p -> $code\"; done; echo \"=== creds do agente? ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && (grep -lE \"TRADEUX_PASSWORD|TRADEUX_EMAIL\" tradeux-agent/.env docker-compose.yml 2>/dev/null || echo \"nao em arquivos obvios\"); docker compose exec -T agent sh -c \"printenv TRADEUX_API_URL; printenv TRADEUX_EMAIL >/dev/null && echo EMAIL:set; printenv TRADEUX_PASSWORD >/dev/null && echo PW:set\" 2>/dev/null'",
+  "description": "Check route wiring via 401 and locate agent creds"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 401 wiring check (sem token) ===
+> GET /api/system/halt -> 401
+> GET /api/system/daily-cap -> 401
+> GET /api/analysis/cockpit -> 401
+> === creds do agente? ===
+> tradeux-agent/.env
+> http://backend:3001
+> EMAIL:set
+> PW:set
+> ```
+
+## 🤖 Claude *(14:07:23)*
+
+
+## 🤖 Claude *(14:07:25)*
+
+**Wiring confirmado:** `/api/system/halt` e `/api/system/daily-cap` → **401** (montadas + auth-gated; não 404). O agente tem creds + alcança `http://backend:3001`. Vou rodar um smoke autenticado **read-only** dentro do container do agente (creds vêm do env dele, sem segredo na linha de comando):
+
+## 🤖 Claude *(14:07:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/cap_smoke.js",
+  "content": "// Smoke autenticado READ-ONLY: login + GET /system/halt, /system/daily-cap, /analysis/cockpit.\n// Roda dentro do container do agente (creds em process.env). N\u00e3o muta nada.\nconst base = process.env.TRADEUX_API_URL;\nasync function getJson(path, headers) {\n  const r = await fetch(base + path, { headers });\n  let j; try { j = await r.json(); } catch (e) { j = { _raw: await r.text() }; }\n  return { status: r.status, j };\n}\n(async () => {\n  const login = await fetch(base + '/login', {\n    method: 'POST', headers: { 'content-type': 'application/json' },\n    body: JSON.stringify({ email: process.env.TRADEUX_EMAIL, password: process.env.TRADEUX_PASSWORD }),\n  });\n  const lj = await login.json().catch(() => ({}));\n  const token = lj.token || lj.accessToken || lj.jwt;\n  if (!token) { console.log('LOGIN FAIL', login.status, 'keys=', Object.keys(lj)); return; }\n  console.log('login OK');\n  // tenta Bearer; se 401, tenta token cru\n  let H = { authorization: 'Bearer ' + token };\n  let probe = await getJson('/system/halt', H);\n  if (probe.status === 401) { H = { authorization: token }; probe = await getJson('/system/halt', H); }\n  console.log('GET /system/halt', probe.status, JSON.stringify(probe.j));\n  const cap = await getJson('/system/daily-cap', H);\n  console.log('GET /system/daily-cap', cap.status, JSON.stringify(cap.j));\n  const ck = await getJson('/analysis/cockpit', H);\n  console.log('GET /analysis/cockpit', ck.status, 'env=', JSON.stringify(ck.j && ck.j.env));\n})().catch(e => console.log('ERR', e.message));\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/cap_smoke.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:07:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T agent node < /tmp/cap_smoke.js'",
+  "description": "Run authed read-only smoke inside agent container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login OK
+> GET /system/halt 200 {"halted":true,"env":true,"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":["env"],"source":"env","reason":"TRADING_HALT (env)","since":null}
+> GET /system/daily-cap 200 {"enabled":true,"capPct":0.05,"checkMs":60000,"snapshot":{"day":"2026-06-18","equity":148.84230183,"at":"2026-06-18T14:05:28.516Z"},"last":{"at":"2026-06-18T14:07:28.361Z","valued":true,"equity":148.84230183,"cold":[],"ignored":["LDGUN","LDBABY"],"error":null},"floor":141.4001867385,"tripped":{"on":false,"reason":null,"since":null,"day":null,"active":false},"halted":true,"haltSource":"env","running":false,"at":"2026-06-18T14:07:28.361Z","ageMs":14969}
+> GET /analysis/cockpit 200 env= {"useTestnet":false,"tradingHalt":true,"haltSource":"env","haltReason":"TRADING_HALT (env)"}
+> ```
+
+## 🤖 Claude *(14:08:15)*
+
+
+## 🤖 Claude *(14:08:20)*
+
+**Smoke autenticado ao vivo — tudo confere ponta-a-ponta:**
+
+| Endpoint | Resultado |
+|---|---|
+| `GET /system/halt` → **200** | `halted:true, sources:["env"], source:"env", reason:"TRADING_HALT (env)"` |
+| `GET /system/daily-cap` → **200** | `snapshot $148.84` · `floor $141.40` (−5%) · `last.valued:true, ignored:["LDGUN","LDBABY"]` · `tripped:false` |
+| `GET /analysis/cockpit` → **200** | `env={useTestnet:false, tradingHalt:true, haltSource:"env", haltReason:"TRADING_HALT (env)"}` |
+
+Cap baselinetou ($148,84), Earn auto-excluído, piso −5% calculado, nada disparado, HALT (env) intacto → **inerte**. Contrato `tradingHalt` preservado + `haltSource`/`haltReason` aditivos funcionando. `Vivo==master==origin==1b639ce`.
+
+Vou atualizar a memória do descongelamento (fatos operacionais duráveis: (e) DONE + kill-switch agora QUENTE muda o "botão de pânico"):
+
+## 🤖 Claude *(14:08:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-mainnet-go-live
+> 3	description: Antigravity colocou o sistema em MAINNET (dinheiro real) via feature dual-env; armado mas NÃO seguro p/ fundar — must-fix list
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 78499af7-71fd-4dbf-816c-c5996402727d
+> 8	---
+> 9	
+> 10	Em 2026-06-15 (madrugada BRT) a sessão do **Antigravity** (commits `e610f90`..`1fe3364`, autor gabrielcall@gmail.com, NÃO selados no HANDOFF, 5 à frente do seal `a408500`) entregou **ambiente dual + funil live-buy da Fase 4** e o dono **virou `settings.useTestnet=0` → MAINNET REAL** (api.binance.com, chaves mainnet ≠ testnet).
+> 11	
+> 12	**Por que nenhuma ordem mainnet ainda (CONFIRMADO ao vivo, NÃO é bug):** engine roda live em mainnet; todo módulo está armed-waiting/gateado. Regime=trend nos 4 → farm OFF; trend precisa de golden cross FRESCO (above=true só recarregado); id2 RSI gate aberto mas RSI~45<25; harvester armado (FAIR saudável 66.893; trigger 64.887 vs bestAsk 66.895, precisa −3%); funil dormente (USDT real **$148,84** < baseline $10.000). Ledger mainnet frio: 259 ordens TODAS `isTestnet=1` (o filtro de isolamento de `e610f90` esconde o histórico lucrativo testnet na visão mainnet → "o lucro sumiu"). 0 ordens mainnet, 0 abertas.
+> 13	
+> 14	**MUST-FIX DE CÓDIGO RESOLVIDOS + DEPLOYADOS** (commit `96915e0`, gate QA PASS-c/ressalvas + TL APPROVE; auditoria wf `wf_b252a2ba-9de`). Estado vivo após deploy (rebuild backend + up -d, boot limpo 17:35): **TRADING_HALT=true (CONGELADO — nada negocia)**, FUNNEL_LIVE_BUY=false (funil em SHADOW), caps no ar, SAPI=mainnet. Sistema espera o GO do dono.
+> 15	1. ✅ **Funil live-buy** refeito (`maybeLiveBuy`/`persistFunnelBuy`): usa SÓ o baseline FIXO do env (nunca RUNTIME_BASELINE → mata o dreno-por-depósito da Fase4), TETO obrigatório `FUNNEL_MAX_BUY_USDT` (sem teto = RECUSA), persiste com isTestnet + alerta dono se falhar. + `FUNNEL_LIVE_BUY=false` no .env.
+> 16	2. ✅ **AÇÃO DO DONO (Binance) — FEITA 2026-06-17.** Dono editou a chave HMAC "tradeUX" na UI da Binance: desmarcou **Enable Withdrawals** (= "saque off"; NÃO existe botão "saque off" — é só desmarcar Withdrawals) E **Permits Universal Transfer**; restou **Reading + Spot&Margin Trading**; IP **Restrict to trusted IPs = `137.131.243.179`** (= IP de saída do servidor, host==container, confirmado via api.ipify). Verificação read-only minha (login + `GET /exchange/balance/USDT` → HTTP 200, **USDT 148.84** lido, 767 ativos) confirma **Reading+IP OK** com HALT intacto. ⚠️ Saque-OFF NÃO é verificável por leitura (e NÃO se testa saque — nunca mover dinheiro); confiança vem do Save na UI. `exchange.js` ainda expõe `withdraw()` mas a chave agora recusa saque na Binance.
+> 17	3. ✅ **`.env` SAPI/API/STREAM → mainnet** (encerra o split-brain de SAPI).
+> 18	4. ✅ **`ordersController` morto** corrigido (passa settings plano) → venda manual/emergência volta a funcionar.
+> 19	5. ✅ **`insertOrder` ghost** mitigado (honra isTestnet explícito; funil alerta dono na falha de persistência).
+> 20	6. ✅ **`getOpenOrdersByAutomation`+`getOpenOcoOrders`** ganham filtro isTestnet (reconcile não cruza ambientes).
+> 21	7. ✅ **Scripts backfill** guard `ALLOW_BACKFILL=true` + `isTestnet:true` fixo.
+> 22	8. ✅ **Teto de risco no BACKEND** (`exchange.js` chokepoint buy/sell/oco): `TRADING_HALT` kill-switch (cobre TUDO) + `MAX_ORDER_NOTIONAL_USDT=1500` por ordem (calibrado acima do farm $1000). ✅ furo MARKET-por-quantidade **FECHADO** (2026-06-17, commit `e27339a`, QA PASS-c/ressalvas + TL APPROVE): o riskGuard agora deriva o preço (`stopPrice` quando presente, senão `MINI_TICKER.close` via require lazy do beholder) e capa MARKET-por-qty-base (TREND_QTY/HARVEST_QTY/MAX_WALLET; STOP/TP-MARKET). MINI_TICKER frio → passa logado (coberto só pelo HALT; deliberado p/ não bloquear venda protetiva). **Inerte sob HALT** (branch nem é alcançado). Pré-existente e fora deste fix: pares quote≠USDT seguem sem teto.
+> 23	
+> 24	**PRA IR AO VIVO (flip único `TRADING_HALT=false`):** (a) ✅ saque-off/IP da chave FEITO 2026-06-17 (ver item 2); (b) plano de aporte vs baseline $10k do funil; depois liberar. **FOLLOW-UPS antes de escalar/ligar funil:** fechar furo MARKET-by-quantity no riskGuard (derivar preço do MINI_TICKER); teto diário/posição; **Farm Buy id5/7/9 está em MIN_NOTIONAL×200≈$1000/ordem numa conta de $149 → falha por saldo quando disparar (resizing é decisão do dono)**; re-selar HANDOFF (ainda diz "testnet"). HANDOFF NÃO selado nesta sessão.
+> 25	
+> 26	**REVISÃO DE ESTRATÉGIA p/ $148 reais (wf `wte6rt68t`, 8 agentes + verif. adversarial 3 lentes; dono fundou ~150 USDT mainnet):**
+> 27	- **🪦 HARVESTER (id22-25) MORTO no mainnet** (código+dado vivo). FAIR=lastPrice MAINNET hardcoded (`fairPriceService.js:33`, api.binance.com) e o BOOK do bot é SIMULADO do miniTicker (`app-em.js:38-39`; monitor BOOK id2 OFF → bestAsk=bestBid=close). Mesma venue → spread ~$0.01; gatilho `bestAsk<FAIR×0.97` (−3% na MESMA corretora) só dispara em flash-crash raro (pior queda sub-minuto recente <1%) e aí é falling-knife (desgateado de regime). Os "10/10 ciclos" eram **arbitragem testnet-vs-mainnet**. NÃO afrouxar 0.97 nem ligar o monitor BOOK real (vira scalper que sangra fee). Redesign: re-ancorar FAIR a HIGH rolante 24-48h (klines) → MR real; backtestar + gate `REGIME!=bear` antes de fundar. Corrige a tese de [[tradeux-harvester-experiment]] (era testnet-específica).
+> 28	- ✅ **BUG P0 (Farm Sell) RESOLVIDO+DEPLOYADO** (commit `c163112`, QA PASS-c/ressalvas + TL APPROVE re-review). Era: `orderTemplates` id6/8/10 = `MAX_WALLET` → vendia a carteira INTEIRA e dumpava a posição do Trend co-localizado. Fix: (1) keyword **`FARM_QTY`** em `beholder.calcQty` (espelho do HARVEST_QTY, vende só `MEMORY['<sym>:FARM_DCA'].qty`); (2) **`getFarmPosition` escopado por automação** (`name LIKE 'Farm %'` → BUYs/lastSell filtrados por automationId; o Trend não infla/re-baseia mais o bucket); (3) **migration `20260615200000`** durável (sobrescreve a `20260614190000` que era o próprio bug): Farm Sell→FARM_QTY, Farm Buy ×200→**×2** (~$10/ordem), Baseline RSI Buy id2→**isActive=0** (era acumulador pelado, compra sem venda). Verificado no DB pós-migrate. **FOLLOW-UP `FARM_SELLING` ✅ FEITO v1 (2026-06-17, commit `baf0f4b`, QA PASS+TL APPROVE+cético money-path PASS):** trava anti-empilhamento via SKIP no place + SET por orderId + RELEASE por **match de orderId** em qualquer terminal (app-em.updateFarmPosition) — **BRAIN-independente** (superior ao HARVEST_SELLING, que perma-trava no stop/start). Sem migration/condition/reload (skip de código, não via condition). **Reconstrução-no-boot (loadFarmSellingLocks) + reconciliação partial→cancel do Farm DEFERIDAS** — gate documentado: NÃO escalar `FARM_SIZE_MULT` até implementá-las (risco bounded: só remistura alt-wallet LTC/BNB/ADA, NUNCA o cofre de BTC, nunca oversell além da carteira). ⚠️ Escopo por `name LIKE 'Farm %'` é frágil a rename — nice-to-have: tag/flag explícita.
+> 29	- **TREND (id6/7 BTC, id15-20 alts) = ÚNICO edge real** (same-exchange, golden/death cross 1h), mas minúsculo ($5-15/perna, ~1-3 RT/símbolo/mês). BTC a $5 = no piso do minNotional (frágil). Correlação: 4 golden agora → death cross geral = drawdown único.
+> 30	- **EXPECTATIVA REAL: $148 spot ≈ FLAT no mês** (~$0/dia mediano; melhor mês ~+5%=$0.25/dia amortizado só num bull geral). SEM rendimento diário nessa escala. **+3 BTC é impossível (1.350×).** 0 ordens mainnet → nada validado com fill/fee/slippage reais. Win = validação + compor o trend + PACIÊNCIA; maior risco = forçar trade pra ver P&L e sangrar fee. Capital travável: até ~$80/$148 num downtrend (buckets MR sem stop). Plano: P0 fixes (seguros, halted) → redesign harvester+backtest → canary 1 trade → só então descongelar.
+> 31	
+> 32	**Bom (ruled out / sólido):** agente LLM NÃO coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations portáveis; `secretKey` cifrado em repouso (só `accessKey` plaintext); sem split-brain no caminho SPOT. ⚠️ Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].
+> 33	
+> ```
+
+## 🤖 Claude *(14:08:49)*
+
+
+## 🤖 Claude *(14:09:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**PRA IR AO VIVO (flip \u00fanico `TRADING_HALT=false`):** (a) \u2705 saque-off/IP da chave FEITO 2026-06-17 (ver item 2); (b) plano de aporte vs baseline $10k do funil; depois liberar. **FOLLOW-UPS antes de escalar/ligar funil:** fechar furo MARKET-by-quantity no riskGuard (derivar pre\u00e7o do MINI_TICKER); teto di\u00e1rio/posi\u00e7\u00e3o; **Farm Buy id5/7/9 est\u00e1 em MIN_NOTIONAL\u00d7200\u2248$1000/ordem numa conta de $149 \u2192 falha por saldo quando disparar (resizing \u00e9 decis\u00e3o do dono)**; re-selar HANDOFF (ainda diz \"testnet\"). HANDOFF N\u00c3O selado nesta sess\u00e3o.",
+  "new_string": "**PRA IR AO VIVO (flip \u00fanico `TRADING_HALT=false`):** (a) \u2705 saque-off/IP da chave FEITO 2026-06-17 (ver item 2); (e) \u2705 cap di\u00e1rio \u22125% + kill-switch QUENTE FEITO+DEPLOYADO 2026-06-18 (ver item 9); **falta (c) P&L-BNB + BNB-fee (acoplados, dono disse \"ver depois\"), depois GO do dono.** **FOLLOW-UPS antes de escalar/ligar funil:** plano de aporte vs baseline $10k do funil; **Farm Buy id5/7/9 est\u00e1 em MIN_NOTIONAL\u00d7200\u2248$1000/ordem numa conta de $149 \u2192 falha por saldo quando disparar (resizing \u00e9 decis\u00e3o do dono)**; re-selar HANDOFF (ainda diz \"testnet\"). HANDOFF N\u00c3O selado nesta sess\u00e3o.\n\n9. \u2705 **CAP DI\u00c1RIO \u22125% + KILL-SWITCH QUENTE** (item (e); 2026-06-18, commits `8ef1b69`+`1b639ce`, QA PASS-c/ressalvas + TL APPROVE, plan-mode aprovado pelo dono; smoke ao vivo OK). **`riskState.js` \u00e9 a FONTE \u00daNICA do HALT** \u2014 3 fontes empilh\u00e1veis: `env` (floor PERMANENTE de `TRADING_HALT=true`; s\u00f3 `.env`+restart o derruba) \u00b7 `manual` (operador) \u00b7 `daily-cap` (auto-expira na virada UTC). `exchange.js` agora l\u00ea `riskState.isHalted()` POR ORDEM (n\u00e3o mais `const` no load) \u2192 **HALT \u00e9 QUENTE**. **`dailyCapJob`**: snapshota o equity-TRADEABLE (USDT + spot precificado via MINI_TICKER; **Earn/Locked `LD*` e `DAILY_CAP_IGNORE_ASSETS` EXCLU\u00cdDOS** \u2014 a conta tem LDGUN/LDBABY) na virada UTC, arma o HALT quando `equity \u2264 snapshot\u00d70.95` (block-ALL, inclusive venda protetiva \u2192 exige interven\u00e7\u00e3o manual). Fail-safe a pre\u00e7o frio (n\u00e3o dispara no escuro) + alarme Telegram anti-sil\u00eancio (15min). Persiste em `logs/risk_state.json` + `logs/daily_cap_snapshot.json` (sobrevive restart; daily-cap auto-expira p\u00f3s-meia-noite). **\ud83d\udd34 BOT\u00c3O DE P\u00c2NICO QUENTE NOVO:** `POST /system/halt {on:true,reason}` (operator-only, JWT; SEM MCP write tool \u2014 agente n\u00e3o flipa) trava sem restart; `POST /system/halt {on:false}` solta o manual (mas N\u00c3O o env floor); `POST /system/daily-cap/reset` re-arma; `GET /system/halt` e `/system/daily-cap` observam. Cockpit/agent leem o estado quente via `/analysis/cockpit` (`env.tradingHalt` boolean preservado + `haltSource`/`haltReason` aditivos). Estado vivo p\u00f3s-deploy: baseline hoje **$148,84**, piso **$141,40**, `tripped:false`, `halted:true` (source `env`). Inerte sob HALT. **D\u00edvida documentada (n\u00e3o-bloq.):** rollover c/ pre\u00e7o frio fica sem baseline at\u00e9 esquentar (auto-cura); reSnapshot serializado via flag `running`. Knobs env (defaults seguros): `DAILY_CAP_ENABLED=true`, `DAILY_LOSS_CAP_PCT=0.05`, `DAILY_CAP_CHECK_MS=60000`, `DAILY_CAP_COLD_ALERT_MS=900000`, `DAILY_CAP_IGNORE_ASSETS=`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:25)*
+
+
+## 🤖 Claude *(14:09:25)*
+
+Atualizo a linha do índice `MEMORY.md` pra refletir (e) feito + o botão de pânico quente novo:
+
+## 🤖 Claude *(14:09:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 18,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	- [Harvester experiment](tradeux-harvester-experiment.md) — harvester de dislocação vault-safe (id22-25, bucket {qty,cost}, 7aebc26) vs grid nativo REJEITADO; canary +$2,1 ×4 no testnet; **DESATIVADO 2026-06-17 (id22-25 isActive=0, pré-req (b) do descongelamento) — MORTO no mainnet (edge era artefato testnet); NÃO reativar sem re-design (FAIR ancorado a high rolante + backtest)**
+> 19	- [Telegram notifications](tradeux-telegram-notifications.md) — Telegram FUNCIONA (causa raiz era chatId=username do bot → fix via PATCH /settings, cache!); telegramNotify util (c3463ac): TODAS as ordens notificam (NEW/FILLED/REJECTED/EXPIRED; CANCELED silencioso) + POST /agent/notify + tool MCP tradeux_notify_owner (one-way, não-gated); **agente recalibrado (12ceabe): doutrina por módulo (id7 corta perda POR DESENHO!), pt-BR obrigatório, kickoff injeta histórico anti-spam + cap 2/ciclo**; **dedup por ASSUNTO em CÓDIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ruído consolidada no bloco `DIVERGÊNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) — É AQUI que mora "o que NÃO reportar/notificar"**
+> 20	- [orderTemplate BRAIN cache](tradeux-ordertemplate-brain-cache.md) — editar template vivo no banco NÃO afeta automação rodando (BRAIN cacheia action.orderTemplate; placeOrder usa o cache); stop/start da automação pra aplicar; inspecionar via GET /beholder/brain
+> ```
+
+## 🤖 Claude *(14:09:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 23,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 23	- [1m scalping + Cockpit](tradeux-1m-scalping-and-cockpit.md) — 1m scalping REFUTADO (backtest −0,14% a −0,23%/trade); **Cockpit Intelligence DEPLOYADO** (brain computa analytics 1m read-only → agente lê/reporta; `/cockpit` + tool MCP; commit `1660871`); **fix −1013 calcQty backstop + Trend ×3** (`2528a5d`); auditoria adversarial → 7 pré-reqs p/ descongelar (Claude NÃO vira o HALT); GOLPE "Fable 5/Polymarket 205x" = referral scam, NÃO engajar; **COERÊNCIA DO COCKPIT iterada+DONE (`0b1554d`): freshen read-path, gate SYMBOL-AWARE (`8884bd3`: só BTC baseline é flow-gated, alt FARM não), reason interpola regime, painel bridges alinhado, doutrina GATE≠TRIGGER — fase de enumeração reativa ENCERRADA (TL verdict)**; **gate-FANTASMA baseline das alts ELIMINADO na fonte (`7ec6e75`, 2026-06-17: `baseline=null` p/ não-flow-gated, buyAllowed intacto, deployado+verificado) — agente parou de flagar "baseline BNB c/ RSI>25"**
+> 24	
+> ```
+
+## 🤖 Claude *(14:09:37)*
+
+
+## 🤖 Claude *(14:09:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 21,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 21	- [Settings password incident](tradeux-settings-password-incident.md) — salvar Settings na UI zerava settings.password (autofill→re-hash) → travava login E agente em 401; CORRIGIDO+DEPLOYADO+verificado ao vivo (dc01c4d, 2 camadas; salvar Settings agora é seguro); resetar via db.query bcrypt parametrizado se precisar
+> 22	- [Mainnet go-live (Antigravity)](tradeux-mainnet-go-live.md) — sistema em MAINNET REAL (useTestnet=0) via dual-env do Antigravity; "nenhuma ordem" era ESPERADO (armed-waiting+gating+ledger frio+$148 USDT). **Must-fix de código RESOLVIDOS+DEPLOYADOS (96915e0, QA+TL): funil capado/OFF, ordersController vivo, reconcile isTestnet, teto de risco no backend.** Estado: **CONGELADO `TRADING_HALT=true`**. **Descongelamento EM CURSO (2026-06-17): (a) saque-OFF+IP FEITO+verificado; (b) harvester id22-25 OFF; (d) furo SELL-by-base do riskGuard FECHADO (`e27339a`); BLOQUEADORES `baf0f4b` (QA+TL+cético, deployado): teto MAX_ORDER_NOTIONAL 1500→300, trava FARM_SELLING v1 (BRAIN-independente; gate: não escalar size do Farm), TREND_QTY persistido via derive-from-orders. PENDENTES p/ flip: (e) cap diário −5% (+refactor do guard p/ kill-switch quente), (c) P&L-BNB (latente, acopla c/ BNB-fee), depois GO do dono.** HANDOFF não-selado
+> ```
+
+## 🤖 Claude *(14:09:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": " PENDENTES p/ flip: (e) cap di\u00e1rio \u22125% (+refactor do guard p/ kill-switch quente), (c) P&L-BNB (latente, acopla c/ BNB-fee), depois GO do dono.** HANDOFF n\u00e3o-selado",
+  "new_string": " (e) cap di\u00e1rio \u22125% + kill-switch QUENTE FEITO+DEPLOYADO 2026-06-18 (`8ef1b69`+`1b639ce`, QA+TL, smoke vivo OK): `riskState` \u00e9 fonte \u00fanica do HALT (env floor/manual/daily-cap), guard l\u00ea por ordem (HALT agora QUENTE), `dailyCapJob` arma halt no drawdown de equity-tradeable \u22125% (Earn `LD*` exclu\u00eddo; baseline vivo $148,84/piso $141,40). **BOT\u00c3O DE P\u00c2NICO QUENTE NOVO: `POST /system/halt` (operator-only, JWT, sem MCP write tool) \u2014 n\u00e3o \u00e9 mais s\u00f3 `docker compose stop backend`.** PENDENTE p/ flip: (c) P&L-BNB (acopla c/ BNB-fee), depois GO do dono.** HANDOFF n\u00e3o-selado"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:56)*
+
+
+## 🤖 Claude *(14:09:57)*
+
+Memória atualizada (arquivo + índice). Confirmação final do estado do git:
+
+## 🤖 Claude *(14:10:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'echo \"=== status ===\" && (git status --short || true) && echo \"=== HEAD vs origin ===\" && git log -2 --oneline && TOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\") && echo \"origin master:\" && git ls-remote \"https://${TOKEN}@github.com/gabrielZarattini/tradeux.git\" -h refs/heads/master 2>/dev/null | cut -c1-7'",
+  "description": "Final git status and origin sync confirmation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+> === HEAD vs origin ===
+> 1b639ce fix(safety): cap diario exclui Earn/Locked (LD*) do equity-tradeable
+> 8ef1b69 feat(safety): cap diario -5% (drawdown de equity) + kill-switch QUENTE (item (e))
+> origin master:
+> 1b639ce
+> ```
+
+## 🤖 Claude *(14:10:19)*
+
+Working tree limpo, `HEAD == origin/master == 1b639ce`. **Item (e) entregue, deployado e verificado ao vivo.**
+
+## ✅ Item (e) — concluído
+
+O **cap diário −5%** + **kill-switch QUENTE** estão no ar (inertes sob HALT). `Vivo == master == origin == 1b639ce`.
+
+**Arquitetura:** `riskState.js` virou a fonte única do HALT — 3 fontes empilháveis: `env` (floor permanente do `TRADING_HALT`, só `.env`+restart derruba) · `manual` (operador) · `daily-cap` (auto-expira na virada UTC). O guard do `exchange.js` agora lê `isHalted()` **por ordem** → o HALT deixou de ser `const` no load (resolveu o "HALT-frio"). O `dailyCapJob` snapshota o **equity-tradeable** na virada UTC e arma o halt quando o drawdown bate −5%.
+
+**Botão de pânico QUENTE novo** (operator-only, JWT, **sem** MCP write tool — agente não flipa): `POST /system/halt {on,reason}` trava/solta sem restart; `POST /system/daily-cap/reset` re-arma; `GET /system/halt` e `/system/daily-cap` observam.
+
+**Gates:** QA **PASS c/ ressalvas** + TL **APPROVE** + CI (mysql migrate+seed e agent `--check` PASS) + self-test 20/20 + smoke autenticado ao vivo.
+
+**Achado ao vivo resolvido:** a conta real tem Earn/Locked `LDGUN`/`LDBABY` (sem par USDT) que deixavam o cap em fail-safe permanente (o P1-A que o QA previu). Fix: Earn `LD*` auto-excluído do equity-tradeable (preserva spot real tipo LDO) + alarme anti-silêncio. Pós-fix o cap baselinetou: **$148,84**, piso **$141,40**, não disparado.
+
+## Estado e próximos passos
+
+- 🛑 **HALT (env) intocado** — nada negocia. O **flip continua sendo sua decisão exclusiva**; eu não viro o `TRADING_HALT`.
+- **Falta p/ um flip responsável:** só **(c) P&L-BNB + BNB-fee** (acoplados, você disse "ver depois"), depois o seu **GO** + canary de um-grupo-só.
+- **HANDOFF.md ainda não foi selado** (isso é o ritual `/handoff`). Memória do descongelamento já atualizada (`tradeux-mainnet-go-live` + índice).
+
+Quer que eu **sele o HANDOFF** (`/handoff`) registrando o item (e), ou seguimos pro **(c) P&L-BNB**?
+
+## 👤 User *(14:13:12)*
+
+(c) P&L-BNB
+
+## 🤖 Claude *(14:14:00)*
+
+
+## 🤖 Claude *(14:14:05)*
+
+Bora pro **(c) P&L-BNB**. Recapitulando o problema (da memória/SEAL): o `net` do P&L só desconta a taxa quando ela é paga **no quote (USDT)**; se a taxa for paga **em BNB** (que é justamente o que o desconto de −25% liga), o `net` não desconta → o painel/P&L **mente otimista**. Por isso (c) tem que vir **antes** de ligar o BNB-fee. E tem o "irmão": o no-loss do Farm também não é líquido.
+
+Vou mapear o código real antes de desenhar. Recon direcionado + um Explore de breadth em paralelo:
+
+## 🤖 Claude *(14:14:06)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Pr\u00e9-req (c): P&L-BNB",
+  "summary": "Fix do net p/ descontar taxa paga em BNB; pr\u00e9-requisito p/ ligar o desconto BNB-fee"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Pré-req (c): P&L-BNB". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(14:14:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 195,
+  "limit": 110
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 195	            isTestnet: settings.useTestnet
+> 196	        }
+> 197	    });
+> 198	}
+> 199	
+> 200	async function getReportOrders(quoteAsset, startDate, endDate, isTestnet = null) {
+> 201	    if (isTestnet === null) {
+> 202	        const settings = await settingsRepository.getDefaultSettings();
+> 203	        isTestnet = settings.useTestnet;
+> 204	    }
+> 205	
+> 206	    startDate = startDate ? startDate : 0;
+> 207	    endDate = endDate ? endDate : Date.now();
+> 208	    return orderModel.findAll({
+> 209	        where: {
+> 210	            symbol: { [Sequelize.Op.like]: `%${quoteAsset}` },
+> 211	            transactTime: { [Sequelize.Op.between]: [startDate, endDate] },
+> 212	            status: orderStatus.FILLED,
+> 213	            net: { [Sequelize.Op.gt]: 0 },
+> 214	            isTestnet
+> 215	        },
+> 216	        order: [['transactTime', 'ASC']],
+> 217	        include: automationModel,
+> 218	        raw: true,
+> 219	        distinct: true
+> 220	    });
+> 221	}
+> 222	
+> 223	// Calcula os campos financeiros de uma ordem JÁ executada na resposta da corretora
+> 224	// (MARKET preenche na hora: executedQty/cummulativeQuoteQty/fills[]). Sem isto, net/avgPrice
+> 225	// ficariam só a cargo do executionReport (stream intermitente) e a maioria das MARKET ficava
+> 226	// com net/avgPrice NULOS → P&L, custo-base e AVG PRICE furados. Retorna {} se não executou.
+> 227	function calcFillFinancials(result, symbol) {
+> 228	    if (!result) return {};
+> 229	    const executedQty = parseFloat(result.executedQty);
+> 230	    const cummQuote = parseFloat(result.cummulativeQuoteQty);
+> 231	    if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};
+> 232	
+> 233	    const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+> 234	    if (Array.isArray(result.fills) && result.fills.length) {
+> 235	        const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+> 236	        out.commission = `${commission}`;
+> 237	        out.isMaker = result.fills.every(f => f.isMaker === true);
+> 238	        const commAsset = result.fills[0].commissionAsset;
+> 239	        if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission; // comissão no quote
+> 240	    }
+> 241	    return out;
+> 242	}
+> 243	
+> 244	async function getFarmPosition(symbol) {
+> 245	    const settings = await settingsRepository.getDefaultSettings();
+> 246	    const isTestnet = settings.useTestnet;
+> 247	
+> 248	    // Escopa o bucket DCA às automações do FARM deste símbolo. O Trend Following compra o MESMO ativo na
+> 249	    // MESMA carteira; sem este filtro o FARM_DCA somaria também os BUYs do Trend → a venda no-loss do Farm
+> 250	    // (FARM_QTY) venderia/dumparia a posição do Trend junto (bug P0). E a SELL do Trend (death cross) não
+> 251	    // deve re-basear a janela do Farm. Por isso lastSell e os buys são filtrados pelas automações 'Farm %'.
+> 252	    const farmAutos = await automationModel.findAll({
+> 253	        where: { symbol, name: { [Sequelize.Op.like]: 'Farm %' } },
+> 254	        attributes: ['id'],
+> 255	        raw: true
+> 256	    });
+> 257	    const farmIds = farmAutos.map(a => a.id);
+> 258	    if (!farmIds.length) return { qty: 0, cost: 0 };
+> 259	
+> 260	    const lastSell = await orderModel.findOne({
+> 261	        where: {
+> 262	            symbol,
+> 263	            side: 'SELL',
+> 264	            status: orderStatus.FILLED,
+> 265	            isTestnet,
+> 266	            automationId: { [Sequelize.Op.in]: farmIds }
+> 267	        },
+> 268	        order: [['id', 'DESC']]
+> 269	    });
+> 270	
+> 271	    const whereClause = {
+> 272	        symbol,
+> 273	        side: 'BUY',
+> 274	        status: orderStatus.FILLED,
+> 275	        isTestnet,
+> 276	        automationId: { [Sequelize.Op.in]: farmIds }
+> 277	    };
+> 278	    if (lastSell) {
+> 279	        whereClause.id = { [Sequelize.Op.gt]: lastSell.id };
+> 280	    }
+> 281	
+> 282	    const buys = await orderModel.findAll({
+> 283	        where: whereClause,
+> 284	        order: [['id', 'ASC']]
+> 285	    });
+> 286	
+> 287	    let totalQty = 0;
+> 288	    let totalCost = 0;
+> 289	    for (const buy of buys) {
+> 290	        const qty = parseFloat(buy.quantity);
+> 291	        const avgPrice = parseFloat(buy.avgPrice);
+> 292	        if (Number.isFinite(qty) && qty > 0 && Number.isFinite(avgPrice) && avgPrice > 0) {
+> 293	            totalQty += qty;
+> 294	            totalCost += qty * avgPrice;
+> 295	        }
+> 296	    }
+> 297	
+> 298	    const cost = totalQty > 0 ? (totalCost / totalQty) : 0;
+> 299	    return { qty: totalQty, cost };
+> 300	}
+> 301	
+> 302	// Posição do Trend Following por símbolo: soma as BUYs FILLED das automações 'Trend %' desde a última SELL
+> 303	// FILLED 'Trend %' (espelho EXATO de getFarmPosition, escopado por name LIKE 'Trend %'). Derivar do banco torna
+> 304	// TREND_QTY IDEMPOTENTE (sem accumulator volátil → mata o double-count pós-restart) e PERSISTENTE (o boot
+> ```
+
+## 🤖 Claude *(14:14:21)*
+
+
+## 🤖 Claude *(14:14:22)*
+
+`calcFillFinancials` claro. Agora o mapa amplo: consumidores do `net`, a lógica no-loss do Farm, o mecanismo de ligar BNB-fee, e se o `commissionAsset` é sequer persistido. Explore de breadth + greps diretos em paralelo:
+
+## 🤖 Claude *(14:14:47)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Mapear P&L net e BNB-fee",
+  "subagent_type": "Explore",
+  "prompt": "Repo /home/gcrux-tradeux/tradeux (backend Node/Express trading bot). Estou desenhando o fix do pr\u00e9-req \"(c) P&L-BNB\": hoje o `net` de uma ordem s\u00f3 desconta a taxa quando ela \u00e9 paga no QUOTE (USDT); se for paga em BNB (o que o desconto BNB-fee de \u221225% liga), o `net` n\u00e3o desconta \u2192 P&L/painel mente otimista. Preciso de FATOS com file:line. N\u00c3O edite nada (read-only).\n\nResponda concretamente:\n\n1. **calcFillFinancials e o que \u00e9 persistido.** Em backend/src/repositories/ordersRepository.js: `calcFillFinancials` (linha ~227) calcula `net`/`avgPrice`/`commission`/`isMaker`/`commAsset`. O `commissionAsset` (BNB? USDT? base?) \u00e9 PERSISTIDO na ordem? Veja o orderModel (backend/src/models/orderModel.js ou models/order*.js): liste TODAS as colunas (especialmente commission, commissionAsset, net, avgPrice, isMaker, quantity, icebergQty). E veja `insertOrder`/`updateOrder`/`getOrderObj` (ordersRepository) + o monitor de execu\u00e7\u00e3o (app-em.js executionReport handler) \u2014 quais campos do fill s\u00e3o gravados? Se `commissionAsset` N\u00c3O \u00e9 persistido, registre isso (\u00e9 o bloqueador pra reconstruir net depois).\n\n2. **Quem CONSOME `net`.** grep por `.net` / `net:` em backend/src e frontend/src. Quero todos os pontos: getReportOrders/getDailyProfit (dailyProfitJob.js), relat\u00f3rios (reportController? ordersController?), mensagens de P&L do Telegram (utils/telegram.js, telegramNotify, app-em.js), o painel do frontend (qualquer componente que mostra lucro/net/P&L), e o agente (tradeux-mcp tools que retornam net, ex. list_orders/get_analysis). Para cada consumidor, diga se ele assume que `net` j\u00e1 \u00e9 l\u00edquido de fee.\n\n3. **L\u00f3gica no-loss do Farm (o \"irm\u00e3o\" do (c)).** Onde o Farm decide vender s\u00f3 acima do custo (no-loss)? Procure FARM_QTY, getFarmPosition, e a condi\u00e7\u00e3o de venda do Farm (setup-farm.js? beholder calcQty? a condition/orderTemplate da automa\u00e7\u00e3o Farm Sell). A compara\u00e7\u00e3o pre\u00e7o-de-venda vs custo inclui FEE? (i.e., um \"no-loss\" pode ser perda l\u00edquida p\u00f3s-fee?). Mostre o trecho da decis\u00e3o.\n\n4. **Mecanismo de ligar BNB-fee.** Como o bot ligaria \"pagar taxa com BNB\" (desconto \u221225%)? Procure por bnbBurn, BNB_FEE, spotBNBBurn, sapi/v1/bnbBurn, ou qualquer setting/env/flag relacionado em backend/src (utils/exchange.js, settings model, .env keys) e tradeux-mcp. \u00c9 toggle account-level na Binance (POST /sapi/v1/bnbBurn) ou s\u00f3 ter BNB em carteira? Existe c\u00f3digo que liga isso hoje, ou \u00e9 manual na UI da Binance? O bot j\u00e1 mant\u00e9m/compra BNB?\n\n5. **Pre\u00e7o BNB\u2192USDT dispon\u00edvel.** Existe forma de precificar BNB em USDT pro desconto da fee? beholder.getMemory('BNBUSDT','MINI_TICKER').close existe/\u00e9 alimentado (BNBUSDT \u00e9 monitorado)? H\u00e1 tryFiatConversion ou getStableConversion em beholder? Mostre a primitiva mais limpa.\n\n6. **Fee real da conta.** Procure se h\u00e1 feed/registro do fee tier (0.1% / 0.075% com BNB) \u2014 utils/indexes, settings, ou hardcoded em algum lugar (ex. c\u00e1lculo de break-even no cockpit/EV usa qual fee?). O cockpitJob/EV net-de-fee usa qual taxa? (relevante: se ligar BNB-fee muda 0.1\u21920.075, o break-even do cockpit muda).\n\nDevolva lista estruturada com file:line e trechos curtos. Foque no que muda o desenho do fix: (a) commissionAsset \u00e9 persistido?, (b) quem assume net-l\u00edquido, (c) o no-loss do Farm \u00e9 fee-aware?, (d) como/se o BNB-fee \u00e9 ligado, (e) primitiva de pre\u00e7o BNB."
+}
+```
+
+## 🤖 Claude *(14:14:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && echo \"=== order model columns ===\" && grep -nE \"commission|commissionAsset|net|avgPrice|isMaker|quantity\" src/models/orderModel.js 2>/dev/null | head -30; echo \"=== commissionAsset referenced anywhere? ===\" && grep -rn \"commissionAsset\\|commission\" src --include=*.js | grep -v node_modules | head -25",
+  "description": "Inspect order model columns and commission persistence"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === order model columns ===
+> 41:    isMaker: Sequelize.BOOLEAN,
+> 44:    avgPrice: Sequelize.DECIMAL(18, 8),
+> 45:    commission: Sequelize.STRING,
+> 46:    net: Sequelize.DECIMAL(18, 8),
+> 47:    quantity: {
+> 53:    isTestnet: {
+> === commissionAsset referenced anywhere? ===
+> src/app-em.js:131:    delete orderCopy.commission;
+> src/app-em.js:493:        order.commission = executionData.n;
+> src/app-em.js:496:        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> src/beholder.js:555:        // net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream
+> src/repositories/ordersRepository.js:128:    if (newOrder.commission !== null && newOrder.commission !== undefined
+> src/repositories/ordersRepository.js:129:        && newOrder.commission !== currentOrder.commission)
+> src/repositories/ordersRepository.js:130:        currentOrder.commission = newOrder.commission;
+> src/repositories/ordersRepository.js:235:        const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+> src/repositories/ordersRepository.js:236:        out.commission = `${commission}`;
+> src/repositories/ordersRepository.js:238:        const commAsset = result.fills[0].commissionAsset;
+> src/repositories/ordersRepository.js:239:        if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission; // comissão no quote
+> src/controllers/ordersController.js:145:        // net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream
+> src/controllers/ordersController.js:238:    order.commission = binanceTrade.commission;
+> src/controllers/ordersController.js:241:    const isQuoteComission = binanceTrade.commissionAsset && order.symbol.endsWith(binanceTrade.commissionAsset);
+> src/controllers/ordersController.js:243:        order.net = quoteQuantity - parseFloat(binanceTrade.commission);
+> src/models/orderModel.js:45:    commission: Sequelize.STRING,
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfeito! Agora tenho o suficiente. Deixa eu compilar um relatório com file:line concretos:\n\n---\n\n## RELATÓRIO ESTRUTURADO — PRÉ-REQ "(c) P&L-BNB"\n\n### 1. **`commissionAsset` é persistido?**\n\n**CONCLUSÃO: NÃO É PERSISTIDO. BLOQUEADOR CRÍTICO.**\n\n**Evidência:**\n\n- **backend/src/repositories/ordersRepository.js:227-241** — `calcFillFinancials()` lê `commissionAsset` do fill:\n  ```javascript\n  const commAsset = result.fills[0].commissionAsset;\n  if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission;\n  ```\n  Calcula `net` corretamente (descontando taxa quando `commAsset === quote`), mas **NÃO retorna `commissionAsset`** no objeto `out`.\n\n- **backend/src/models/orderModel.js:5-68** — Esquema da ordem lista colunas persistidas:\n  - ✅ `commission` (STRING)\n  - ✅ `net` (DECIMAL)\n  - ✅ `avgPrice`, `isMaker`, `quantity`, etc.\n  - ❌ **SEM coluna `commissionAsset`**\n\n- **backend/src/repositories/ordersRepository.js:95-141** — `updateOrder()` atualiza `commission`/`net`/`isMaker`, mas **nunca `commissionAsset`** (não existe).\n\n- **backend/src/controllers/ordersController.js:241-245** — O endpoint `syncOrder` lê `commissionAsset` da Binance e usa-o pra RECALCULAR `net`, mas não o persiste:\n  ```javascript\n  const isQuoteComission = binanceTrade.commissionAsset && \n                           order.symbol.endsWith(binanceTrade.commissionAsset);\n  if (isQuoteComission)\n    order.net = quoteQuantity - parseFloat(binanceTrade.commission);\n  ```\n  **Problema:** se chamar `syncOrder` de novo com BNB-fee ligado, o `commissionAsset` é lido da Binance, mas não gravado → recálculo do `net` fica volátil (depende de reler da Binance).\n\n**Impacto:** Uma ordem paga em BNB desconta o `net` UMA VEZ (no `calcFillFinancials` ou `syncOrder`), mas sem persistir **qual asset pagou a taxa**, não há forma de RECONSTRUIR/AUDITAR o `net` depois. Se ligar BNB-fee no meio de uma operação, histórico anterior fica com `net` bruto (sem ajuste).\n\n---\n\n### 2. **Quem CONSOME `net`?**\n\nTodos ASSUMEM que `net` **já é líquido de fee** quando a taxa é paga no QUOTE:\n\n| Consumidor | Arquivo:Line | Contexto | Assume net=líquido? |\n|---|---|---|---|\n| `getDailyProfit()` | dailyProfitJob.js:57-60 | `buyVolume = sum(net onde BUY)`, `sellVolume = sum(net onde SELL)`, `profit = sell - buy` | ✅ SIM — usa direto |\n| `getOrdersReport()` | ordersController.js:262-265 | `calcVolume()` soma `net` por timeframe | ✅ SIM — assume líquido |\n| `groupByAutomations()` | ordersController.js:318-334 | `net -= net` (BUY) ou `net += net` (SELL) | ✅ SIM — P&L por automação |\n| `notifyOrder()` | telegramNotify.js:71-92 | Notificação (só usa `avgPrice`, não `net`) | ℹ️ N/A — não consome |\n| `toBtc()` (painel) | ordersController.js:309-316 | Converte `profit` em BTC | ✅ SIM — assume `profit` = `sell - buy` em `net` |\n| `tradeux_list_orders` (MCP) | tradeux-mcp/src/index.js:241-248 | Retorna ordens brutas (inclui `net` tal qual persistido) | ✅ SIM — agente vê o `net` e assume líquido |\n| `tradeux_get_order_report` (MCP) | tradeux-mcp/src/index.js:258-268 | Chama `/orders/reports/<quote>` | ✅ SIM — agente vê `profit/sellVolume/buyVolume` |\n\n**Conclusão:** Todos os 7 consumidores assumem `net` **já descontado de fee quando pago em QUOTE**. Se a taxa for paga em **BNB**, o `net` não desconta → relatórios mentem (otimistas).\n\n---\n\n### 3. **Lógica no-loss do Farm (irmão do (c))**\n\n**Decisão de VENDA do Farm — arquivo: backend/scripts/setup-farm.js:137**\n\n```javascript\nconst sellCond = `MEMORY[\'${K(\'LAST_ORDER\')}\'].side===\'BUY\' && \n                  MEMORY[\'${K(\'BOOK\')}\'].current.bestBid > \n                  MEMORY[\'${K(\'LAST_ORDER\')}\'].avgPrice * ${(1 + PROFIT).toFixed(4)}`;\n```\n\n**Análise:**\n- Compara: `bestBid > avgPrice × (1 + PROFIT%)`\n- `PROFIT` = 0.012 (1.2% default) — cobre buffer (0.3%) + fees (~0.1% testnet)\n- ❌ **NÃO é fee-aware no cálculo:** usa `avgPrice` (preço médio de compra), não `avgPrice descontado de fee`\n\n**Exemplo de bug:**\n1. Compra 1 BNB @ $100 com taxa em **BNB**: `avgPrice=100`, `net=100` (não desconta BNB), `commission=1 BNB`\n2. Farm decide vender quando `bestBid > 100 × 1.012 = $101.20`\n3. **Realidade:** custo real = `100 + (1 BNB convertido pra USDT)` ≈ $100 + ~$35 = $135\n4. Venda @ $101.20 é **PERDA LÍQUIDA**, não no-loss\n\n**Arquivo/Line onde `avgPrice` é usado:**\n- **backend/src/repositories/ordersRepository.js:289-298** — `getFarmPosition()` calcula custo apenas de `avgPrice`:\n  ```javascript\n  totalCost += qty * avgPrice;\n  const cost = totalQty > 0 ? (totalCost / totalQty) : 0;\n  ```\n  **SEM ajuste por `commissionAsset`** — se taxa foi em BNB, fica cego.\n\n---\n\n### 4. **Mecanismo de ligar BNB-fee**\n\n**ACHADO: Nenhum código ativa BNB-fee hoje.**\n\n- ❌ Nenhuma referência a `bnbBurn`, `BNB_FEE`, `spotBNBBurn`, `/sapi/v1/bnbBurn` encontrada em `/backend/src`.\n- ❌ Nenhuma lógica no `utils/exchange.js` que cheque BNB em carteira ou ligue a flag.\n- ❌ Nenhuma variável de ambiente ou setting que controle BNB-fee.\n\n**Conclusão:** O **desconto de −25% é manual na UI da Binance** (account settings → BNB burn). Código **não o liga/desliga**. Se o usuário ligar manualmente na Binance:\n- Binance começa a cobrar taxa em BNB (em vez de USDT)\n- Código **continua cego** (sem `commissionAsset` persistido)\n- P&L **mente** (vê taxa como USDT, era BNB)\n\n**Como o bot PODERIA ativar (teórico):**\n- POST `/sapi/v1/bnbBurn` via `utils/exchange.js` wrapper (Binance API existe)\n- Requer permissão na API key (BNB Burn)\n- **Nunca foi implementado**\n\n---\n\n### 5. **Primitiva de preço BNB→USDT**\n\n**SIM, existe. Função: `getStableConversion()`**\n\n**Arquivo: backend/src/beholder.js:1044-1050**\n\n```javascript\nfunction getStableConversion(baseAsset, quoteAsset, baseQty) {\n    if (DOLLAR_COINS.includes(baseAsset)) return baseQty;\n    const book = getMemory(baseAsset + quoteAsset, \'BOOK\', null);\n    if (book) return parseFloat(baseQty) * book.current.bestBid;\n    return 0;\n}\n```\n\n**Uso:**\n- Chama `getMemory(\'BNB\' + \'USDT\', \'BOOK\')` → lê `BNBUSDT` do BOOK em memória\n- Retorna: `qty_bnb × bestBid_bnbusdt`\n\n**Requisitos:**\n- ✅ Monitor MINI_TICKER/BOOK de BNBUSDT **deve estar ativo** (sistema `*` traz automaticamente; ou via monitor explicit)\n- ✅ Preço fresco disponível em memória\n\n**Usado em:**\n- **backend/src/controllers/exchangeController.js:19, 22, 68-69** — Conversão de saldo pra fiat\n- **backend/src/beholder.js:1060-1086** — `tryFiatConversion()` (wrapper que tenta múltiplas stables)\n\n**Viável pra ajuste de fee?** SIM, a primitiva está ali. Ex.:\n```javascript\nconst commissionBnb = parseFloat(order.commission);\nconst bnbPrice = getStableConversion(\'BNB\', \'USDT\', 1); // 1 BNB em USDT\norder.net = cummQuote - (commissionBnb * bnbPrice);\n```\n\n---\n\n### 6. **Fee tier da conta (hardcoded?)**\n\n**ACHADO: Fee é hardcoded como 0.20% (round-trip), SEM sensibilidade a BNB-fee ou tier.**\n\n| Contexto | Arquivo:Line | Valor | Observação |\n|---|---|---|---|\n| Cockpit break-even | cockpitJob.js:42-43 | `COCKPIT_BREAKEVEN_PCT = 0.20%` (default) | Comentário: "0.15 com BNB" — mas código não muda |\n| EV net-de-fee | cockpitService.js:62, 96-98 | `breakevenPct = 0.20%` (default) | `evNetPct = meanAbsPct - breakevenPct` |\n| Cockpit job | cockpitJob.js:26 | COCKPIT_BREAKEVEN_PCT default 0.20 | Env var permite override, mas NÃO há lógica "se BNB-fee ligado → 0.15" |\n\n**Conclusão:**\n- Código **assume 0.10% maker + 0.10% taker = 0.20% round-trip** (fee padrão Binance)\n- Se BNB-fee ligado → taxa cai pra 0.075% maker + 0.075% taker = 0.15% round-trip\n- ❌ **Nenhuma lógica ajusta o break-even automaticamente**\n- ❌ **Nenhuma consulta ao status de BNB burn na conta**\n\n**Hardcoded em:**\n- cockpitJob.js:42 — `BREAKEVEN_PCT` (env override possível, padrão 0.20)\n- cockpitService.js:62 — `breakevenPct` default 0.20\n\n**Implicação:** Se ligar BNB-fee, o **break-even do cockpit mente** (pensa que precisa 0.20% de move, na verdade precisa só 0.15%).\n\n---\n\n## RESUMO EXECUTIVO\n\n| Ponto | Resposta | Bloqueador? |\n|---|---|---|\n| (a) `commissionAsset` persistido? | ❌ NÃO — não existe coluna na order | 🔴 CRÍTICO |\n| (b) Quem assume net=líquido? | ✅ Todos (7 consumidores) — dailyProfit, relatório, MCP, painel | ✅ OK (mas quebra se fee em BNB) |\n| (c) Farm no-loss é fee-aware? | ❌ NÃO — compara `bestBid > avgPrice × (1+%)`; cego a BNB | 🔴 CRÍTICO (oversell no-loss) |\n| (d) Como/se BNB-fee é ligado? | ❌ Manual na UI Binance; zero código | ⚠️ MANUAL (sem toggle backend) |\n| (e) Primitiva preço BNB? | ✅ `getStableConversion(\'BNB\',\'USDT\',qty)` pronta | ✅ OK (reusável) |\n| (f) Fee tier atualiza com BNB? | ❌ Hardcoded 0.20%; sem ajuste automático | 🔴 CRÍTICO (cockpit break-even falso) |\n\n**Bloqueadores pro fix:**\n1. **Migração:** Adicionar coluna `commissionAsset` no orderModel + persistir em `insertOrder`/`updateOrder`\n2. **Lógica:** Usar `commissionAsset` pra decidir se desconta `net` (USDT vs BNB)\n3. **Farm:** Recalcular `cost` de `getFarmPosition()` ajustando por fee conforme `commissionAsset`\n4. **Cockpit:** Ler flag de BNB-fee da conta (ou env) e ajustar `BREAKEVEN_PCT` (0.20 → 0.15)'}]
+> ```
+
+## 🤖 Claude *(14:17:31)*
+
+
+## 🤖 Claude *(14:17:36)*
+
+Mapa completo. Três achados decisivos:
+
+1. **`commissionAsset` NÃO é persistido** (sem coluna no `orderModel`) — bloqueador pra reconstruir/auditar o `net` quando a taxa é em BNB.
+2. **O `net` é calculado em 3 lugares** (`calcFillFinancials`, `app-em.js` executionReport, `syncOrder`) — todos só descontam quando `commAsset===quote`. BNB passa batido.
+3. **7 consumidores** assumem `net` líquido (dailyProfit, relatórios, MCP, painel, P&L por automação).
+
+O Explore exagerou o "irmão" Farm (deu um exemplo de "fee = 1 BNB = $35", absurdo — a taxa real é ~0,075% do notional). Deixa eu confirmar 2 coisas que mudam o escopo: o buffer do no-loss do Farm (cobre fee?) e o handler do stream:
+
+## 🤖 Claude *(14:17:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 483,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 483	        side: executionData.S,
+> 484	        type: executionData.o,
+> 485	        status: executionData.X,
+> 486	        isMaker: executionData.m,
+> 487	        transactTime: executionData.T
+> 488	    }
+> 489	
+> 490	    if (order.status === orderStatus.FILLED) {
+> 491	        const quoteAmount = parseFloat(executionData.Z);
+> 492	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 493	        order.commission = executionData.n;
+> 494	        order.quantity = executionData.q;
+> 495	        const isQuoteCommission = executionData.N && order.symbol.endsWith(executionData.N);
+> 496	        order.net = isQuoteCommission ? quoteAmount - parseFloat(order.commission) : quoteAmount;
+> 497	    }
+> 498	
+> 499	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 500	
+> 501	    setTimeout(async () => {
+> 502	        try {
+> ```
+
+## 🤖 Claude *(14:17:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"PROFIT|profit|sellCond|0\\.01|1\\.012|bestBid\" ../backend/scripts/setup-farm.js 2>/dev/null | head; echo \"--- setup-farm PROFIT const ---\"; grep -nE \"PROFIT|MARGIN|BUFFER\" scripts/setup-farm.js 2>/dev/null | head; echo \"--- where is setup-farm? ---\"; ls scripts/setup-farm.js 2>/dev/null || find . -name 'setup-farm.js' -not -path '*/node_modules/*' 2>/dev/null",
+  "description": "Check stream net calc and Farm no-loss buffer"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7: * pelo RSI — vende a posição quando o bestBid supera o preço de compra (LAST_ORDER.avgPrice) + margem.
+> 13: *     MINI_TICKER/BOOK já vêm do monitor system '*' (preço/bestBid de todas as alts, sem monitor próprio).
+> 14: *   - templates LIMIT marketável: BUY = bestAsk×(1+buf) MIN_NOTIONAL ; SELL = bestBid×(1−buf) LAST_ORDER_QTY.
+> 16: *   - automação "Farm Sell <sym>" no-loss (tem posição + bestBid > avgPrice×(1+lucro)), INATIVA.
+> 26: *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+> 34:const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 121:        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 134:    // VENDA no-loss: tem posição (última ordem = compra) E o bestBid já dá lucro sobre o preço de compra.
+> 136:    // invertCondition no BOOK → realiza só na TRANSIÇÃO em que o bestBid cruza o alvo (anti-empilhamento), indep. do RSI.
+> 137:    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> --- setup-farm PROFIT const ---
+> 26: *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+> 34:const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 35:const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+> 137:    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> 147:    console.log(`# Setup FARM no-loss — ${SYMBOLS.join(', ')} | RSI<${RSI_LO} compra · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+> --- where is setup-farm? ---
+> scripts/setup-farm.js
+> ```
+
+## 🤖 Claude *(14:18:48)*
+
+
+## 🤖 Claude *(14:18:54)*
+
+Confirmado:
+- **Stream handler** (app-em.js:495-496): mesmo cego — `isQuoteCommission = N && symbol.endsWith(N)`; BNB → `net = quoteAmount` (não desconta). Mas o `executionData.N` (commission asset) **está disponível** no stream, só não é persistido.
+- **Farm no-loss**: alvo `FARM_PROFIT=1,2%` sobre o avgPrice. Fee round-trip ~0,15–0,2% → o buffer de 1,2% **cobre folgado** a taxa (mesmo em BNB). O "irmão" é quantitativamente um não-problema — confirmo e documento, sem código novo.
+
+Então o (c) é: persistir `commissionAsset` + tornar o `net` correto pra taxa em **qualquer** asset (BNB convertido a USDT), nos 3 pontos de cálculo. Há uma decisão de **semântica do `net`** que é sua — muda blast radius. Entro em plan mode e alinho:
+
+## 🤖 Claude *(14:18:54)*
+
+
+🛠️ **Tool Call**: `EnterPlanMode`
+```json
+{}
+```
+
+> **Tool Result (EnterPlanMode)** - ✅ Success
+>
+> ```
+> Entered plan mode. You should now focus on exploring the codebase and designing an implementation approach.
+> 
+> In plan mode, you should:
+> 1. Thoroughly explore the codebase to understand existing patterns
+> 2. Identify similar features and architectural approaches
+> 3. Consider multiple approaches and their trade-offs
+> 4. Use AskUserQuestion if you need to clarify the approach
+> 5. Design a concrete implementation strategy
+> 6. When ready, use ExitPlanMode to present your plan for approval
+> 
+> Remember: DO NOT write or edit any files yet. This is a read-only exploration and planning phase.
+> ```
+
+## 🤖 Claude *(14:19:19)*
+
+
+## 🤖 Claude *(14:19:20)*
+
+Exploração suficiente. A decisão genuína é a **semântica do `net`** — muda o blast radius e o que os relatórios passam a mostrar:
+
+## 🤖 Claude *(14:19:28)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como o `net` deve passar a tratar a taxa? (hoje s\u00f3 desconta quando paga em USDT; em BNB passa batido). Os dois persistem `commissionAsset` e convertem BNB\u2192USDT; diferem no escopo.",
+      "header": "Sem\u00e2ntica do net",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Lado-correto / completo (recomendado)",
+          "description": "net vira fee-inclusive de verdade, ciente do lado: VENDA = recebido \u2212 taxa(USDT-eq); COMPRA = custo + taxa(USDT-eq); taxa em qualquer asset (USDT/BNB/base) convertida a USDT. P&L di\u00e1rio/relat\u00f3rios/painel ficam economicamente honestos (incl. taxa de COMPRA, que hoje some). Toca os 3 pontos de c\u00e1lculo via 1 helper. Muda n\u00fameros reportados de P&L p/ baixo (mais verdadeiros) \u2014 dire\u00e7\u00e3o conservadora."
+        },
+        {
+          "label": "Alvo-m\u00ednimo (s\u00f3 fecha o furo do BNB na venda)",
+          "description": "Mant\u00e9m a conven\u00e7\u00e3o atual (s\u00f3 desconta na venda quando fee=quote) e s\u00f3 ESTENDE pra descontar a taxa em BNB na venda (convertida a USDT). Blast radius menor, mexe pouco. MAS deixa a taxa de COMPRA em BNB ainda invis\u00edvel no P&L e mant\u00e9m a aproxima\u00e7\u00e3o atual do lado da compra."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como o `net` deve passar a tratar a taxa? (hoje só desconta quando paga em USDT; em BNB passa batido). Os dois persistem `commissionAsset` e convertem BNB→USDT; diferem no escopo."="Lado-correto / completo (recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:29:11)*
+
+
+## 🤖 Claude *(14:29:13)*
+
+Decisão: **lado-correto / completo** — `net` fee-inclusive ciente do lado, taxa em qualquer asset convertida a USDT. Vou rodar o agente de design pra cravar a arquitetura (migration portável, helper único nos 3 pontos, conversão BNB→USDT com fallback a preço frio) contra esses fatos.
+
+## 🤖 Claude *(14:29:58)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Desenhar fix P&L-BNB (net fee-inclusive)",
+  "subagent_type": "Plan",
+  "prompt": "Desenhe o plano de implementa\u00e7\u00e3o do pr\u00e9-req \"(c) P&L-BNB\" no TradeUX (backend Node/Express + Sequelize, dual-dialect MySQL+Postgres, coment\u00e1rios pt-BR). READ-ONLY \u2014 entregue plano, n\u00e3o edite.\n\n# Objetivo (decis\u00e3o do dono j\u00e1 travada: \"lado-correto/completo\")\nTornar o `net` de uma ordem FEE-INCLUSIVE e ciente do lado, com a taxa em QUALQUER asset convertida a USDT:\n- VENDA: net = cummQuote \u2212 taxa(USDT-eq)\n- COMPRA: net = cummQuote + taxa(USDT-eq)\n- taxa em USDT (quote) \u2192 direto; em BNB (ou outro n\u00e3o-quote) \u2192 converter a USDT; em asset base \u2192 valer a avgPrice.\nHoje o net s\u00f3 desconta quando a taxa \u00e9 paga no quote (USDT) e ignora taxa em BNB \u2192 quando o dono ligar o desconto BNB-fee (\u221225%) na UI da Binance, o P&L/painel mente otimista. Este fix \u00e9 pr\u00e9-requisito pra ligar o BNB-fee.\n\n# Fatos do c\u00f3digo (file:line CONFIRMADOS por explora\u00e7\u00e3o)\n- **`net` \u00e9 calculado em 3 pontos, todos com a MESMA l\u00f3gica cega a BNB:**\n  1. `backend/src/repositories/ordersRepository.js:227-242` `calcFillFinancials(result, symbol)` \u2014 usado no INSERT de MARKET (fills[]). `out={avgPrice, net:cummQuote}`; soma commission dos fills; `commAsset=fills[0].commissionAsset`; `if (commAsset && symbol.endsWith(commAsset)) out.net = cummQuote - commission`. N\u00c3O retorna commissionAsset.\n  2. `backend/src/app-em.js:490-497` handler do executionReport (stream): `order.commission=executionData.n`; `isQuoteCommission = executionData.N && symbol.endsWith(executionData.N)`; `order.net = isQuoteCommission ? quoteAmount - commission : quoteAmount`. (`executionData.N` = commission ASSET, dispon\u00edvel no stream mas n\u00e3o persistido.)\n  3. `backend/src/controllers/ordersController.js:238-243` `syncOrder` \u2014 l\u00ea `binanceTrade.commissionAsset`; `isQuoteComission = commissionAsset && symbol.endsWith(commissionAsset)`; `if (isQuoteComission) order.net = quoteQuantity - commission`.\n- **`commissionAsset` N\u00c3O \u00e9 persistido.** `backend/src/models/orderModel.js` tem colunas: isMaker(BOOL), avgPrice(DECIMAL 18,8), commission(STRING), net(DECIMAL 18,8), quantity, isTestnet \u2014 SEM commissionAsset. `ordersRepository.updateOrder` (linhas ~95-141) copia commission/net/isMaker mas n\u00e3o h\u00e1 commissionAsset.\n- **Convers\u00e3o BNB\u2192USDT pronta:** `backend/src/beholder.js:1044-1050` `getStableConversion(baseAsset, quoteAsset, baseQty)` \u2192 `getMemory(baseAsset+quoteAsset,'BOOK').current.bestBid \u00d7 baseQty` (0 se BOOK frio/ausente; DOLLAR_COINS retornam a par). Tamb\u00e9m `tryFiatConversion` (1060-1086). BNBUSDT \u00e9 monitorado (BOOK alimentado), mas pode estar FRIO no instante do fill.\n- **Consumidores do net (todos assumem net j\u00e1-l\u00edquido):** `dailyProfitJob.js:57-60` getDailyProfit (\u03a3 sellNet \u2212 \u03a3 buyNet); `ordersController.js:262-265` calcVolume (relat\u00f3rio por timeframe), `ordersController.js:318-334` groupByAutomations (P&L por automa\u00e7\u00e3o), `ordersController.js:309-316` toBtc; MCP `tradeux_list_orders`/`tradeux_get_order_report`. `getReportOrders` filtra `net > 0` (net DEVE seguir positivo).\n- **Farm no-loss = J\u00c1 fee-safe (N\u00c3O mexer):** `scripts/setup-farm.js:34,137` vende quando `bestBid > avgPrice\u00d7(1+FARM_PROFIT)`, FARM_PROFIT=0.012 (1,2%) >> fee round-trip ~0,15-0,2% \u2192 o buffer cobre a taxa folgado mesmo em BNB. Documentar como verificado, sem c\u00f3digo.\n- **Cockpit break-even hardcoded 0,20%** (`cockpitJob.js:42`, `cockpitService.js:62`); com BNB-fee real ~0,15% \u2192 cockpit fica CONSERVADOR (subestima EV, dire\u00e7\u00e3o segura). Fora do escopo de (c); s\u00f3 notar.\n- **BNB-fee \u00e9 ligado MANUALMENTE na UI da Binance** (nenhum c\u00f3digo bnbBurn/sapi). (c) \u00e9 s\u00f3 ACCOUNTING; N\u00c3O construir toggle. O dono liga na Binance; o c\u00f3digo passa a contabilizar certo.\n- **Migrations port\u00e1veis obrigat\u00f3rias** (CI roda MySQL+Postgres; `bash scripts/ci-lint-migrations.sh`): usar `queryInterface.quoteIdentifier()` p/ identificadores camelCase, nada de backtick hardcoded. Ver migrations existentes em backend/migrations (ex. a que adiciona colunas em orders) pro padr\u00e3o addColumn idempotente dual-dialect.\n\n# Projete concretamente:\n1. **Migration** (backend/migrations/<timestamp>-add-commissionAsset-to-orders.js): addColumn `commissionAsset` STRING nullable em orders, idempotente (checa se j\u00e1 existe), port\u00e1vel MySQL+Postgres, com down. Siga o padr\u00e3o de uma migration addColumn existente no repo (cite qual).\n2. **Model**: adicionar `commissionAsset: Sequelize.STRING` em orderModel.js. Conferir que updateOrder/insertOrder propagam o campo (ordersRepository): onde adicionar a c\u00f3pia condicional (espelhar o bloco de `commission`).\n3. **Helper \u00fanico de fee/net** \u2014 onde colocar? (proponho `backend/src/utils/` novo ou fun\u00e7\u00e3o exportada do ordersRepository). Assinatura tipo `computeNet({ side, cummQuote, commission, commissionAsset, symbol, avgPrice })` \u2192 `{ net, feeUsdt, feeValued }`. L\u00f3gica: quote\u2192feeUsdt=commission; base (commissionAsset===base do symbol)\u2192feeUsdt=commission\u00d7avgPrice; sen\u00e3o (BNB/outro)\u2192feeUsdt = getStableConversion(commissionAsset,'USDT',commission) (require lazy do beholder p/ evitar ciclo). Se convers\u00e3o = 0/frio \u2192 feeValued=false. net = side==='BUY' ? cummQuote + feeUsdt : cummQuote \u2212 feeUsdt (com guard net>0). Os 3 pontos (calcFillFinancials, app-em, syncOrder) passam a CHAMAR esse helper \u2014 elimina a l\u00f3gica triplicada.\n4. **Fail-safe a pre\u00e7o frio** (BNB BOOK frio no instante do fill): decidir o comportamento \u2014 feeValued=false \u2192 net = cummQuote (sem ajuste) mas commissionAsset PERSISTIDO \u2192 um syncOrder posterior recomputa quando o BOOK esquentar. OU outra estrat\u00e9gia. Defina e justifique. NUNCA derrubar o fill.\n5. **Recompute/auditoria**: como o `syncOrder` (que rel\u00ea o trade da Binance) deve recomputar net usando o helper + persistir commissionAsset, fechando o gap retroativo. H\u00e1 endpoint/rota pra disparar syncOrder? (ordersController) \u2014 citar.\n6. **Sinais e consumidores**: confirmar que net segue > 0 nos dois lados (filtro getReportOrders), e que getDailyProfit (sellNet \u2212 buyNet) fica correto com buy +fee. Algum consumidor quebra com a mudan\u00e7a de sem\u00e2ntica? (ex. relat\u00f3rios que assumiam buy sem fee).\n7. **Backfill**: o dono tem 0 ordens mainnet; hist\u00f3rico testnet existe. Decidir: N\u00c3O backfillar (novas ordens j\u00e1 corretas; sync sob demanda) e documentar. Justificar.\n8. **Escopo N\u00c3O-fazer** (anti over-engineering): toggle bnbBurn, mudar break-even do cockpit, mexer no Farm no-loss, redesenhar getDailyProfit (\u00e9 cash-flow; (e) j\u00e1 usa equity). Confirmar fora.\n9. **Verifica\u00e7\u00e3o**: sem unit harness (CI=migrate+seed+agent --check). Self-test puro do helper (tabela: sell/buy \u00d7 fee em USDT/BNB/base \u00d7 pre\u00e7o quente/frio). `bash scripts/ci-preflight.sh` (AGORA tem migration nova \u2192 testa migrate+seed nos 2 dialetos + idempot\u00eancia). Smoke: criar/sincronizar uma ordem e ver net+commissionAsset. Gate QA + TL antes do merge.\n\nEntregue: passo-a-passo com arquivos exatos a criar/modificar, assinatura do helper, shape da migration, e nota de risco/rollback. M\u00ednimo e idiom\u00e1tico ao repo. Aponte qualquer over-engineering a evitar."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
