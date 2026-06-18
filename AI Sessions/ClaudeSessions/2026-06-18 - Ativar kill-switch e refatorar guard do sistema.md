@@ -5552,6 +5552,302 @@ Re-verifico (syntax + self-test incluindo o caso `side` ausente) e chown:
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O (c) P&L-BNB está com QA-PASS + TL-APPROVE. Pouso agora (commit no master → push → rebuild+restart do backend, que roda a migration) ou seguro?"="Pousar agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(15:06:28)*
+
+
+## 🤖 Claude *(15:06:29)*
+
+GO. Pousando (c): commit no master + push via token.
+
+## 🤖 Claude *(15:06:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"=== status ===\" && git status --short && git add backend/migrations/20260618170000-add-commissionAsset-to-orders.js backend/src/utils/feeCalc.js backend/src/models/orderModel.js backend/src/repositories/ordersRepository.js backend/src/app-em.js backend/src/controllers/ordersController.js && git commit -m \"feat(pnl): net fee-inclusive ciente do lado \u2014 taxa em BNB/qualquer asset -> USDT (item (c))\" -m \"Pre-req do desconto BNB-fee: hoje o net so descontava taxa paga no quote (USDT); taxa em BNB passava batido -> P&L/painel mentiam otimista. Helper unico computeNet (utils/feeCalc.js) unifica os 3 pontos de calculo (calcFillFinancials, app-em executionReport, syncOrder): VENDA net=cummQuote-taxa(USDT-eq), COMPRA net=+taxa; taxa em quote/base/BNB convertida a USDT (getStableConversion, lazy require). Persiste commissionAsset (migration + coluna) p/ auditar/recomputar via /orders/:id/sync. Fail-safe a preco frio + side ausente; guard net>0.\" -m \"QA-PASS + TL-APPROVE. Accounting puro (sem toggle bnbBurn; dono liga na UI Binance). HALT intocado.\" -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && git log -1 --oneline && TOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\") && git push \"https://${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#https://[^@]*@#https://***@#g\"'",
+  "description": "Commit and push (c) P&L-BNB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+>  M backend/src/app-em.js
+>  M backend/src/controllers/ordersController.js
+>  M backend/src/models/orderModel.js
+>  M backend/src/repositories/ordersRepository.js
+> ?? backend/migrations/20260618170000-add-commissionAsset-to-orders.js
+> ?? backend/src/utils/feeCalc.js
+> [master 854bab5] feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+>  6 files changed, 117 insertions(+), 8 deletions(-)
+>  create mode 100644 backend/migrations/20260618170000-add-commissionAsset-to-orders.js
+>  create mode 100644 backend/src/utils/feeCalc.js
+> 854bab5 feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    1b639ce..854bab5  HEAD -> master
+> ```
+
+## 🤖 Claude *(15:06:55)*
+
+
+## 🤖 Claude *(15:06:56)*
+
+Push OK (`1b639ce..854bab5`). Rebuild + restart (entrypoint roda a migration):
+
+## 🤖 Claude *(15:06:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend 2>&1 | tail -6'",
+  "description": "Rebuild and restart backend with (c)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(15:07:19)*
+
+
+## 🤖 Claude *(15:07:20)*
+
+Reiniciado. Verifico se a migration rodou (entrypoint) + a coluna existe + boot limpo:
+
+## 🤖 Claude *(15:07:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"=== migrate no boot ===\" && docker compose logs backend --since 120s 2>&1 | grep -iE \"commissionAsset|migrating|migrated|Applying database|Boot falhou|App is running\" | tail -12; echo \"=== coluna no banco ===\"; DBU=$(grep \"^DB_USERNAME=\\|^DB_USER=\" .env | head -1 | cut -d= -f2-); DBP=$(grep \"^DB_PASSWORD=\" .env | cut -d= -f2-); DBN=$(grep \"^DB_NAME=\\|^DB_DATABASE=\" .env | head -1 | cut -d= -f2-); docker compose exec -T db sh -c \"mysql -u\\\"$DBU\\\" -p\\\"$DBP\\\" -N -e \\\"SELECT COLUMN_NAME,IS_NULLABLE,DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='\\''$DBN'\\'' AND TABLE_NAME='\\''orders'\\'' AND COLUMN_NAME='\\''commissionAsset'\\'';\\\"\" 2>/dev/null || echo \"(query falhou \u2014 checar creds)\"'",
+  "description": "Verify migration ran and column exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrate no boot ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | == 20260618170000-add-commissionAsset-to-orders: migrating =======
+> backend-1  | == 20260618170000-add-commissionAsset-to-orders: migrated (0.061s)
+> === coluna no banco ===
+> (query falhou — checar creds)
+> ```
+
+## 🤖 Claude *(15:07:35)*
+
+
+## 🤖 Claude *(15:07:36)*
+
+Migration **rodou no boot**: `20260618170000-add-commissionAsset-to-orders: migrated (0.061s)`. A query falhou só por nome de var. Confirmo a coluna + boot limpo:
+
+## 🤖 Claude *(15:07:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && grep -E \"^DB_\" .env | sed -E \"s/(PASS|PASSWORD)=.*/\\1=<red>/\"'",
+  "description": "List DB_ env var names"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DB_NAME=tradeux
+> DB_USER=tradeux
+> DB_PWD=2e462b7cdff790fb6d6290a0f5a6b25b
+> DB_ROOT_PWD=c6a84c146bad3dcb878b251528481fc5
+> DB_HOST=db
+> DB_PORT=3306
+> DB_DIALECT=mysql
+> DB_LOGS=false
+> DB_SSL=false
+> ```
+
+## 🤖 Claude *(15:07:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"=== coluna commissionAsset ===\" && docker compose exec -T db mysql -utradeux -p2e462b7cdff790fb6d6290a0f5a6b25b -N -e \"SELECT COLUMN_NAME,IS_NULLABLE,DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=\\\"tradeux\\\" AND TABLE_NAME=\\\"orders\\\" AND COLUMN_NAME=\\\"commissionAsset\\\";\" 2>/dev/null; echo \"=== boot limpo ===\" && docker compose exec -T backend sh -c \"tail -n 40 logs/system.log\" 2>/dev/null | grep -iE \"App is running|riskState|dailyCap baseline|Boot falhou|Error:\" | tail -6'",
+  "description": "Confirm column exists and backend booted clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === coluna commissionAsset ===
+> commissionAsset	YES	varchar
+> === boot limpo ===
+> info: 2026-06-18T13:47:05.779Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T15:07:14.085Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T15:07:14.363Z - App is running at 3001
+> ```
+
+## 🤖 Claude *(15:08:03)*
+
+
+## 🤖 Claude *(15:08:04)*
+
+Confirmado: coluna **`commissionAsset` (varchar, nullable)** existe, e o backend **bootou limpo** — `riskState` env-floor=true/halted=true (o (e) intacto) + `App is running`, sem erro. Working tree:
+
+## 🤖 Claude *(15:08:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"status:\" && (git status --short || echo clean) && git log -1 --oneline && curl -s -m6 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/'",
+  "description": "Final git status + site check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> status:
+> 854bab5 feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+> site -> 200
+> ```
+
+## 🤖 Claude *(15:08:25)*
+
+
+## 🤖 Claude *(15:08:26)*
+
+`Vivo == master == origin == 854bab5`, working tree limpo, site 200. **(c) pousado e verificado.** Atualizo a memória — com (c), **todos os pré-reqs de código (a)–(e) estão feitos**:
+
+## 🤖 Claude *(15:08:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**PRA IR AO VIVO (flip \u00fanico `TRADING_HALT=false`):** (a) \u2705 saque-off/IP da chave FEITO 2026-06-17 (ver item 2); (e) \u2705 cap di\u00e1rio \u22125% + kill-switch QUENTE FEITO+DEPLOYADO 2026-06-18 (ver item 9); **falta (c) P&L-BNB + BNB-fee (acoplados, dono disse \"ver depois\"), depois GO do dono.** **FOLLOW-UPS antes de escalar/ligar funil:**",
+  "new_string": "**PRA IR AO VIVO (flip \u00fanico `TRADING_HALT=false`):** (a) \u2705 saque-off/IP FEITO 2026-06-17 (item 2); (e) \u2705 cap \u22125% + kill-switch QUENTE FEITO 2026-06-18 (item 9); (c) \u2705 P&L-BNB FEITO 2026-06-18 (item 10). **\ud83c\udfaf TODOS os pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS+DEPLOYADOS \u2192 falta s\u00f3 o GO DO DONO pro flip + canary de UM-GRUPO-S\u00d3.** BNB-fee agora SEGURO de ligar na UI Binance (P&L honesto p\u00f3s-(c)) \u2014 mas \u00e9 decis\u00e3o do dono. **FOLLOW-UPS antes de escalar/ligar funil:**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:08:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "Estado vivo p\u00f3s-deploy: baseline hoje **$148,84**, piso **$141,40**, `tripped:false`, `halted:true` (source `env`). Inerte sob HALT. **D\u00edvida documentada (n\u00e3o-bloq.):** rollover c/ pre\u00e7o frio fica sem baseline at\u00e9 esquentar (auto-cura); reSnapshot serializado via flag `running`. Knobs env (defaults seguros): `DAILY_CAP_ENABLED=true`, `DAILY_LOSS_CAP_PCT=0.05`, `DAILY_CAP_CHECK_MS=60000`, `DAILY_CAP_COLD_ALERT_MS=900000`, `DAILY_CAP_IGNORE_ASSETS=`.",
+  "new_string": "Estado vivo p\u00f3s-deploy: baseline hoje **$148,84**, piso **$141,40**, `tripped:false`, `halted:true` (source `env`). Inerte sob HALT. **D\u00edvida documentada (n\u00e3o-bloq.):** rollover c/ pre\u00e7o frio fica sem baseline at\u00e9 esquentar (auto-cura); reSnapshot serializado via flag `running`. Knobs env (defaults seguros): `DAILY_CAP_ENABLED=true`, `DAILY_LOSS_CAP_PCT=0.05`, `DAILY_CAP_CHECK_MS=60000`, `DAILY_CAP_COLD_ALERT_MS=900000`, `DAILY_CAP_IGNORE_ASSETS=`.\n\n10. \u2705 **P&L-BNB \u2014 net fee-inclusive ciente do lado** (item (c); 2026-06-18, commit `854bab5`, QA PASS-c/ressalvas + TL APPROVE, plan-mode aprovado; deploy+migration ao vivo OK). Hoje o `net` s\u00f3 descontava taxa paga no QUOTE (USDT); taxa em **BNB** (o que o desconto BNB-fee \u221225% liga) passava batido \u2192 P&L/painel mentiam OTIMISTA. Fix: **helper \u00fanico `backend/src/utils/feeCalc.js` `computeNet`** unifica os 3 pontos de c\u00e1lculo (`calcFillFinancials`, `app-em.processExecutionData`, `ordersController.syncOrder`): **VENDA `net=cummQuote\u2212taxa(USDT-eq)`, COMPRA `net=cummQuote+taxa(USDT-eq)`** (a taxa de COMPRA n\u00e3o some mais do P&L); taxa em quote\u2192direto, base\u2192\u00d7avgPrice, **BNB/outro\u2192`beholder.getStableConversion(...,'USDT',...)`** (require LAZY, sem ciclo). **Coluna nova `orders.commissionAsset`** (migration `20260618170000`, idempotente dual-dialect, rodou no boot) persiste o asset \u2192 recompute/auditoria via **`POST /orders/:id/sync`**. **Fail-safes:** pre\u00e7o BNB frio \u2192 `net=cummQuote` + commissionAsset persistido (recomputa no sync); `side` ausente \u2192 sem ajuste (n\u00e3o assume venda); guard `net>0`. Consumidores (getDailyProfit, relat\u00f3rios, getAveragePrices) ficam mais honestos (P&L p/ baixo), sem quebra. **N\u00c3O** constru\u00eddo (escopo): toggle bnbBurn (dono liga na UI Binance), backfill (0 ordens mainnet), break-even do cockpit (segue 0,20% conservador), Farm no-loss (buffer 1,2% >> fee \u2192 j\u00e1 fee-safe). \u26a0\ufe0f pr\u00e9-existente (QA P1, fora de escopo): em par N\u00c3O-USDT o `net` fica denominado no quote, n\u00e3o USDT \u2014 irrelevante hoje (s\u00f3 pares *USDT negociam)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:08:59)*
+
+
+## 🤖 Claude *(15:08:59)*
+
+Atualizo a linha do índice `MEMORY.md`:
+
+## 🤖 Claude *(15:09:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": " PENDENTE p/ flip: (c) P&L-BNB (acopla c/ BNB-fee), depois GO do dono.** HANDOFF n\u00e3o-selado",
+  "new_string": " (c) \u2705 P&L-BNB FEITO+DEPLOYADO 2026-06-18 (`854bab5`, QA+TL): `net` fee-inclusive ciente do lado (VENDA \u2212taxa/COMPRA +taxa, taxa BNB\u2192USDT) via helper \u00fanico `utils/feeCalc.computeNet` nos 3 pontos + coluna `orders.commissionAsset` (migration rodou ao vivo); fecha o furo da taxa-em-BNB invis\u00edvel no P&L. **\ud83c\udfaf TODOS os pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS \u2192 falta s\u00f3 o GO DO DONO pro flip `TRADING_HALT=false` + canary de um-grupo-s\u00f3; BNB-fee agora seguro de ligar na UI Binance.** HANDOFF n\u00e3o-selado"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:09:10)*
+
+
+## 🤖 Claude *(15:09:21)*
+
+## (c) P&L-BNB — pousado e verificado ✅
+
+`Vivo == master == origin == 854bab5`, site 200, backend bootou limpo.
+
+| Verificação ao vivo | Resultado |
+|---|---|
+| Migration no boot | ✅ `20260618170000-add-commissionAsset: migrated (0.061s)` |
+| Coluna no banco | ✅ `commissionAsset` varchar, nullable |
+| Boot limpo | ✅ `riskState env-floor=true/halted=true` (o (e) intacto) + `App is running` |
+| Gates | ✅ QA PASS-c/ressalvas + TL APPROVE; self-test 10/10; lint+MySQL migrate idempotente |
+
+O `net` agora é fee-inclusive ciente do lado (taxa em BNB convertida a USDT, persistida em `commissionAsset`, recomputável via `POST /orders/:id/sync`). Mudança puramente de **accounting** — inerte sob HALT; BNB-fee continua OFF até você ligar na Binance (agora seguro, P&L honesto).
+
+---
+
+## 🎯 Marco: todos os pré-reqs de **código** do descongelamento estão feitos
+
+| Pré-req | Estado |
+|---|---|
+| (a) saque-OFF + IP da chave | ✅ (você, 2026-06-17) |
+| (b) harvester desativado | ✅ |
+| (d) furo SELL-by-base do riskGuard | ✅ `e27339a` |
+| **(e) cap diário −5% + kill-switch quente** | ✅ `8ef1b69`+`1b639ce` (hoje) |
+| **(c) P&L-BNB** | ✅ `854bab5` (hoje) |
+
+**Falta só o que é seu, não meu:** o **GO pro flip** `TRADING_HALT=false` + **canary de um-grupo-só**. Expectativa realista segue **≈ flat** — o canary valida a *mecânica* (fill/fee/slippage reais, nunca exercitados; 0 ordens mainnet), não lucro rápido. Eu **não viro o HALT**.
+
+Memória do go-live atualizada (índice + arquivo). **HANDOFF.md ainda não selado** (ritual `/handoff`).
+
+Como esta sessão entregou dois itens grandes e fechou a fila de código, recomendo **selar o HANDOFF agora** (`/handoff`) pra cristalizar o estado pro próximo agente. Quer que eu sele? Ou prefere parar por aqui?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
