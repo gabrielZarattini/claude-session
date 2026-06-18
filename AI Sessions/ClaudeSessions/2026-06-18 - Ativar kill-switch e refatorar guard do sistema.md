@@ -5848,6 +5848,332 @@ Memória do go-live atualizada (índice + arquivo). **HANDOFF.md ainda não sela
 
 Como esta sessão entregou dois itens grandes e fechou a fila de código, recomendo **selar o HANDOFF agora** (`/handoff`) pra cristalizar o estado pro próximo agente. Quer que eu sele? Ou prefere parar por aqui?
 
+## 👤 User *(21:33:31)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(21:33:31)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(21:33:59)*
+
+
+## 🤖 Claude *(21:34:00)*
+
+Executando o ritual `/handoff`. Pré-flight + secret scan (escaneio os 3 commits desta sessão, já que o working tree está limpo):
+
+## 🤖 Claude *(21:34:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"=== status ===\" && (git status --short || echo \"(limpo)\") && echo \"=== diff HEAD --stat ===\" && (git diff HEAD --stat || echo \"(nada)\") && echo \"=== stack ===\" && docker compose ps --format \"table {{.Service}}\\t{{.Status}}\" && echo \"=== commits da sess\u00e3o (baf0f4b..HEAD) ===\" && git log --oneline baf0f4b..HEAD'",
+  "description": "Handoff pre-flight: status, diff, stack, session commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+> === diff HEAD --stat ===
+> === stack ===
+> SERVICE    STATUS
+> agent      Up 27 hours
+> backend    Up 6 hours
+> db         Up 3 days (healthy)
+> frontend   Up 47 hours
+> === commits da sessão (baf0f4b..HEAD) ===
+> 854bab5 feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+> 1b639ce fix(safety): cap diario exclui Earn/Locked (LD*) do equity-tradeable
+> 8ef1b69 feat(safety): cap diario -5% (drawdown de equity) + kill-switch QUENTE (item (e))
+> ```
+
+## 🤖 Claude *(21:34:09)*
+
+
+## 🤖 Claude *(21:34:10)*
+
+Working tree limpo, tudo já commitado+pushado (trunk-based, conforme o modelo do projeto — não há código órfão pra branch/PR). **Phase 1 — secret scan** dos 3 commits da sessão:
+
+## 🤖 Claude *(21:34:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git diff baf0f4b..854bab5 | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" | grep -v \"example\\|<.*>\\|=\\s*$\" | head; echo \"exit=$? (vazio acima = limpo)\"; echo \"=== .env gitignored? ===\"; git check-ignore .env && echo \"OK .env ignorado\" || echo \"ALERTA: .env NAO ignorado\"'",
+  "description": "Secret scan of session diff + confirm .env gitignored"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit=0 (vazio acima = limpo)
+> === .env gitignored? ===
+> .env
+> OK .env ignorado
+> ```
+
+## 🤖 Claude *(21:34:30)*
+
+
+## 🤖 Claude *(21:34:31)*
+
+Secret scan **limpo**, `.env` gitignored → seal não bloqueado. Phase 2: nada a commitar (os 3 commits já estão em origin/master via trunk-based — modelo do projeto; sem branch/PR). 
+
+**Phase 3 — HANDOFF.md.** Lendo o cabeçalho exato pra atualizar + vou anexar o Session Record:
+
+## 🤖 Claude *(21:34:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-17** · Phase: **GO-LIVE MAINNET — CONGELADO (`TRADING_HALT=true`) · descongelamento EM CURSO** · Meta: **realista ≈ flat com ~$150** (o +3 BTC era do testnet) · Vivo==master==origin==**`baf0f4b`**
+> 6	
+> 7	> 🛑 **LEIA ANTES DE TUDO (2026-06-15):** o sistema está em **MAINNET REAL** (`settings.useTestnet=0`, ~$150 USDT) e **CONGELADO** (`TRADING_HALT=true` no `.env` → nada negocia; é o kill-switch novo no `exchange.js`). Money-path foi blindado (`96915e0`) e o bug P0 do Farm Sell foi corrigido (`c163112`). **DESCOBERTA CRÍTICA: o harvester está MORTO no mainnet** (o edge de −3% era arbitragem testnet-vs-mainnet; no mainnet o book do bot É o FAIR). O ÚNICO edge real é o **Trend** (pequeno, mensal). **Antes de descongelar:** (1) trava `FARM_SELLING` (follow-up); (2) dono confere saque-OFF+IP da chave Binance; (3) decidir re-design do harvester. Detalhes nos SEALs de 2026-06-15 (fim do doc) + memória `tradeux-mainnet-go-live`. **2026-06-16:** Cockpit Intelligence read-only NO AR (brain computa analytics 1m + agente lê/reporta; commit `1660871`) — a brain reporta **EV −0,16% / pHit 0,6%** (scalp 1m é −EV, dado real). Fix do **−1013** no `calcQty` + template Trend ×3 (commit `2528a5d`). **Auditoria adversarial independente** confirmou 7 achados p/ o descongelamento → ver SEAL 2026-06-16. ⚠️ O "vídeo viral Fable 5/Polymarket 205x" do X é **golpe de referral** — NÃO clicar/depositar.
+> 8	
+> 9	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 10	0. 🏗️ **ARQUITETURA FARM-AND-FUNNEL COMPLETA E NO AR** (sessão 2026-06-08): **15 automações ativas** — Farm no-loss +
+> ```
+
+## 🤖 Claude *(21:34:40)*
+
+
+## 🤖 Claude *(21:34:41)*
+
+Atualizo o cabeçalho (linha 5) e leio o fim exato pra anexar o Session Record:
+
+## 🤖 Claude *(21:34:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-17** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 descongelamento EM CURSO** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`baf0f4b`**",
+  "new_string": "> Updated: **2026-06-18** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 \ud83c\udfaf TODOS pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS \u2192 falta s\u00f3 GO do dono pro flip + canary de um-grupo-s\u00f3** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`854bab5`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:34:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -n 4 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read exact tail of HANDOFF.md to append after"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> **Gotchas operacionais (DURÁVEIS):** (1) **`TRADING_HALT` e `MAX_ORDER_NOTIONAL` são lidos em `const` no LOAD do exchange.js → NÃO são kill-switch QUENTE.** Botão de pânico real = **`docker compose stop backend`**, não editar `.env`. O cap diário (e) precisa de refactor do guard p/ ler runtime — fecha os dois. (2) **Edit/Write do harness ENVENENA o dono do arquivo** (vira `ubuntu`); `.env` (600) ficou ilegível p/ gcrux → push + docker compose quebrariam. Detectei, `chown` de volta, gravei em `git-ownership-gotcha`. **SEMPRE `chown gcrux-tradeux` após editar arquivos do repo (esp. `.env`) antes de git/docker como gcrux.**
+> 
+> **⚡ NEXT (falta p/ um flip responsável):** **(e) cap diário −5%** (dono APROVOU o valor) **+ refactor do guard p/ kill-switch quente** (resolve o HALT-frio junto) — É O PRÓXIMO ITEM, é só desenhar/implementar com QA/TL; depois **(c) P&L-BNB + BNB-fee** (acoplados, dono disse "ver depois"); aí **GO do dono** pro flip + canary de um-grupo-só. **Claude NÃO vira o `TRADING_HALT`.** Memórias atualizadas: `tradeux-mainnet-go-live`, `tradeux-harvester-experiment`, `tradeux-1m-scalping-and-cockpit`, `tradeux-trend-following`, `git-ownership-gotcha` + índice.
+> ```
+
+## 🤖 Claude *(21:34:54)*
+
+
+## 🤖 Claude *(21:34:54)*
+
+Anexando o **Session Record (SEAL 2026-06-18)** ao fim do HANDOFF:
+
+## 🤖 Claude *(21:35:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "a\u00ed **GO do dono** pro flip + canary de um-grupo-s\u00f3. **Claude N\u00c3O vira o `TRADING_HALT`.** Mem\u00f3rias atualizadas: `tradeux-mainnet-go-live`, `tradeux-harvester-experiment`, `tradeux-1m-scalping-and-cockpit`, `tradeux-trend-following`, `git-ownership-gotcha` + \u00edndice.",
+  "new_string": "a\u00ed **GO do dono** pro flip + canary de um-grupo-s\u00f3. **Claude N\u00c3O vira o `TRADING_HALT`.** Mem\u00f3rias atualizadas: `tradeux-mainnet-go-live`, `tradeux-harvester-experiment`, `tradeux-1m-scalping-and-cockpit`, `tradeux-trend-following`, `git-ownership-gotcha` + \u00edndice.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-18 (Pr\u00e9-reqs (e) e (c) ENTREGUES+DEPLOYADOS \u2014 fecha a fila de C\u00d3DIGO do descongelamento)\n**Sess\u00e3o de descongelamento dirigida pelo dono (`/handson`\u2192`/handoff`). `Vivo==master==origin==854bab5`. 4 containers up, `TRADING_HALT=true` intocado, 0 ordens mainnet, ~$148,84 USDT. PRs: 0 (trunk-based direct-to-master, com GO expl\u00edcito do dono em cada pouso). Plan-mode + QA(qa-engineer)+TL(tech-lead) em cada item; secret-scan limpo.**\n\n**\ud83c\udfaf MARCO: TODOS os pr\u00e9-reqs de C\u00d3DIGO (a)-(e) do descongelamento est\u00e3o FEITOS+DEPLOYADOS. Falta S\u00d3 o GO do dono pro flip `TRADING_HALT=false` + canary de um-grupo-s\u00f3.**\n\n**(e) CAP DI\u00c1RIO \u22125% + KILL-SWITCH QUENTE** (`8ef1b69` + `1b639ce`; QA PASS-c/ressalvas + TL APPROVE):\n- **`riskState.js` = fonte \u00daNICA do HALT**, 3 fontes empilh\u00e1veis: `env` (floor permanente de `TRADING_HALT`, s\u00f3 `.env`+restart derruba) \u00b7 `manual` (operador) \u00b7 `daily-cap` (auto-expira na virada UTC). Persiste `logs/risk_state.json`, fail-closed.\n- **Guard do `exchange.js` l\u00ea `riskState.isHalted()` POR ORDEM** \u2192 o HALT deixou de ser `const` no load = **agora \u00e9 QUENTE** (resolve o \"HALT-frio\"). \ud83d\udd34 **GOTCHA ATUALIZADO: o bot\u00e3o de p\u00e2nico quente N\u00c3O \u00e9 mais s\u00f3 `docker compose stop backend`** \u2014 agora `POST /system/halt {on:true,reason}` (operator-only, JWT; SEM MCP write tool \u2014 agente n\u00e3o flipa) trava sem restart; `POST /system/halt {on:false}` solta o manual (N\u00c3O o env floor); `POST /system/daily-cap/reset` re-arma.\n- **`dailyCapJob`** snapshota o **equity-TRADEABLE** na virada UTC e arma o HALT quando o drawdown bate \u22125% (block-ALL, inclusive venda protetiva \u2192 exige interven\u00e7\u00e3o manual). Fail-safe a pre\u00e7o frio + alarme anti-sil\u00eancio (15min). **Earn/Locked `LD*` auto-exclu\u00eddo** (descoberto ao vivo: conta tem **LDGUN/LDBABY** \u2014 sem par USDT, deixavam o cap inerte). Knobs: `DAILY_CAP_ENABLED/DAILY_LOSS_CAP_PCT(0.05)/DAILY_CAP_CHECK_MS(60000)/DAILY_CAP_COLD_ALERT_MS/DAILY_CAP_IGNORE_ASSETS`. Vivo: baseline $148,84, piso $141,40, `tripped:false`.\n- Cockpit/agent leem o estado quente via `/analysis/cockpit` (`env.tradingHalt` boolean preservado + `haltSource`/`haltReason` aditivos).\n\n**(c) P&L-BNB \u2014 net fee-inclusive ciente do lado** (`854bab5`; QA PASS-c/ressalvas + TL APPROVE):\n- Helper \u00fanico **`utils/feeCalc.computeNet`** unifica os 3 pontos de c\u00e1lculo (`calcFillFinancials`, `app-em.processExecutionData`, `ordersController.syncOrder`): **VENDA `net=cummQuote\u2212taxa(USDT-eq)`, COMPRA `net=cummQuote+taxa(USDT-eq)`**; taxa em quote\u2192direto, base\u2192\u00d7avgPrice, **BNB/outro\u2192`getStableConversion`** (require LAZY, sem ciclo). Coluna nova **`orders.commissionAsset`** (migration `20260618170000`, idempotente dual-dialect, rodou no boot) \u2192 recompute/auditoria via `POST /orders/:id/sync`. Fail-safes: pre\u00e7o frio + `side` ausente \u2192 sem ajuste; guard `net>0`. Fecha o furo da taxa-em-BNB invis\u00edvel no P&L \u2192 **BNB-fee agora SEGURO de ligar na UI Binance** (decis\u00e3o do dono).\n\n**Gotchas/d\u00edvida (DUR\u00c1VEIS):** (1) Edit/Write do harness ENVENENA dono p/ `ubuntu` \u2192 `chown gcrux-tradeux` antes de git/docker (feito; repo limpo). (2) push via `GITHUB_TOKEN_API` (HTTPS) como gcrux \u2014 funciona sem a chave SSH do ubuntu e sem envenenar `.git`. (3) `ci-preflight.sh` rodado via `sudo bash -lc` d\u00e1 FAIL falso em frontend/postgres por **`npx` fora do PATH** do shell \u2014 os passos que importam (lint de migration, MySQL migrate+seed idempotente, agent `--check`) PASSARAM; portabilidade da migration garantida por lint + padr\u00e3o id\u00eantico \u00e0 `20260603170000`. (4) D\u00edvida n\u00e3o-bloqueante: cap rollover c/ pre\u00e7o frio fica sem baseline at\u00e9 esquentar (auto-cura); cockpit break-even segue 0,20% (conservador com BNB-fee real ~0,15%); em par N\u00c3O-USDT o `net` ficaria denominado no quote (irrelevante \u2014 s\u00f3 *USDT negocia).\n\n**\u26a1 NEXT:** acabou a fila de C\u00d3DIGO. O pr\u00f3ximo passo \u00e9 **decis\u00e3o/opera\u00e7\u00e3o do DONO**: (1) ligar (ou n\u00e3o) o BNB-fee na UI da Binance; (2) dar o **GO pro flip `TRADING_HALT=false`** e rodar um **canary de um-grupo-s\u00f3** (Farm alts id9-14 valida a mec\u00e2nica em horas; Trend id6/7 valida o edge mas pode ficar inerte) \u2014 N\u00c3O os dois. Expectativa REAL = **\u2248 flat** (canary valida fill/fee/slippage reais, nunca exercitados; 0 ordens mainnet \u2014 N\u00c3O lucro r\u00e1pido). **Claude N\u00c3O vira o `TRADING_HALT`.** Mem\u00f3rias atualizadas: `tradeux-mainnet-go-live` (itens 9-10 + readiness) + \u00edndice `MEMORY.md`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:35:46)*
+
+
+## 🤖 Claude *(21:35:49)*
+
+Phase 3 ✅. Phase 4 (memória) já feita nesta sessão (`tradeux-mainnet-go-live` itens 9-10 + índice). **Phase 5** — código já em origin (`854bab5`; HANDOFF.md e memória vivem fora do repo). Hygiene final de ownership (repo + HANDOFF.md, que o Edit do harness envenenou) + confirmação de sync:
+
+## 🤖 Claude *(21:35:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux && sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/HANDOFF.md && echo \"chown OK\" && sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && echo \"status: $(git status --short | wc -l) arquivo(s) sujo(s)\" && git log -1 --oneline && TOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"'\"'\"'\\r\") && echo \"origin master: $(git ls-remote https://${TOKEN}@github.com/gabrielZarattini/tradeux.git -h refs/heads/master 2>/dev/null | cut -c1-7)\"'; ls -l /home/gcrux-tradeux/HANDOFF.md | awk '{print $3\":\"$4}'",
+  "description": "Final ownership hygiene + confirm origin sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown OK
+> status: 0 arquivo(s) sujo(s)
+> 854bab5 feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+> origin master: 854bab5
+> gcrux-tradeux:gcrux-tradeux
+> ```
+
+## 🤖 Claude *(21:36:06)*
+
+
+## 🤖 Claude *(21:36:09)*
+
+Tudo selado — working tree limpo (0 sujo), `HEAD == origin == 854bab5`, HANDOFF.md e repo com dono `gcrux-tradeux`.
+
+Nota sobre Phase 2/5 (branch+PR): o modelo deste projeto é **trunk-based direct-to-master** (memória `tradeux-orchestration-model`; o próprio HANDOFF registra "PRs: 0"). Os 3 commits foram pra master com **GO explícito do dono em cada pouso**, cada um após QA+TL — então não há branch/PR a abrir; origin já está sincronizado.
+
+## 🤖 Claude *(21:36:09)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Handoff seal",
+  "summary": "Selagem da sess\u00e3o: (e) e (c) entregues, HANDOFF + mem\u00f3ria atualizados"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Handoff seal". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(21:36:21)*
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-18
+───────────────────────────────────────────────────
+Commits     : 3 (feat(safety)·fix(safety)·feat(pnl))  |  Branch: master (trunk-based)
+              8ef1b69 cap −5% + kill-switch QUENTE (e)
+              1b639ce cap exclui Earn/Locked LD* (fix do (e))
+              854bab5 P&L-BNB net fee-inclusive (c)
+HANDOFF.md  : ✅ atualizado (cabeçalho + SEAL 2026-06-18)
+Memory      : 2 arquivos (tradeux-mainnet-go-live itens 9-10 + índice MEMORY.md)
+PRs abertos : 0 (trunk-based direct-to-master; sem PR a mergear)
+Push        : ✅ origin sincronizado (master == 854bab5)
+Secret scan : ✅ limpo · .env gitignored
+Stack       : db healthy · backend up 6h · frontend up 47h · agent up 27h
+───────────────────────────────────────────────────
+  🎯 Marco: TODOS os pré-reqs de CÓDIGO (a)-(e) do
+     descongelamento FEITOS+DEPLOYADOS. Falta só o
+     GO do dono pro flip + canary de um-grupo-só.
+     Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Resumo da sessão:** entrou via `/handson`, atacou os dois últimos itens de código do descongelamento — **(e)** cap diário −5% + kill-switch QUENTE (com o achado ao vivo dos Earn `LDGUN`/`LDBABY` corrigido) e **(c)** P&L-BNB fee-inclusive — ambos com plan-mode + QA + TL + deploy verificado ao vivo, sem tocar o `TRADING_HALT`.
+
+Sessão selada. O que sobra é **decisão sua, não minha**: ligar (ou não) o BNB-fee na Binance e dar o GO pro flip com canary de um grupo só. Até a próxima — `/handson`. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
