@@ -11860,6 +11860,181 @@ Push OK — **3 commits enviados** (`776687f..0613899 main -> main`), gitleaks r
 > 0
 > ```
 
+## 🤖 Claude *(23:30:10)*
+
+
+## 🤖 Claude *(23:30:12)*
+
+`scratch/` limpo ✅ (falso positivo do `ls`). Adiciono nota de progresso ao sprint-priorities (o viral-autopilot é a fundação documentada do próprio Sprint Goal — distribuição social autônoma):
+
+## 🤖 Claude *(23:30:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; grep -n \"Sprint v6.41.0\\|^\\*\\*Sprint \" .claude/context/sprint-priorities.md | head -3",
+  "description": "Locate current sprint note line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 7:**Sprint v6.41.0 — Unified Sensorial Canvas (Phase Epsilon V9): AGI→ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** — `/handson` → conversa estratégica (Model Council; plugin `claude-code-setup`; paper *From AGI to ASI* DeepMind) → diretiva arquitetural **Unified Core Sensorial Canvas** (fundir Core-Fable + Matrix + Memória num canvas 3D R3F). Arco Closed-Loop: **(1) Fundamentação** — arXiv 2606.12683 (Legg/Hutter/Leibo) lido inteiro (57p) + selado como nó `architecture` `a576216e` (edge INFORMS→openclaw) + checklist Via 4 (`.claude/context/agi-asi-via4-design-checklist.md`); tese: o MCORCH é a Via 4 (group agent formation) instanciada na app layer. **(2) Auditoria de clusters (Lei 1)** — Louvain = REAL/VIVO (`useConstellationSigma.ts:227`, graphology client-side); squad-coloring = MORTO (`crew_module_ownership` 0 rows → fallback Louvain) + heurístico (`inferSquad`) → **Decisão B = PODAR** (Louvain oficial; OTD-SQUAD-OWNERSHIP-REVIVAL). **(3) Emenda BoK** (gate Sovereign-eleito sobre override) — `mcorch-constellation` +PR-025/FR-043..049/NFR-023-024/SDD §9 (reconciliação Sigma→R3F: graphology cérebro / R3F corpo). **(4) Fases 3.1-3.4** (R3F, commits granulares, 3 páginas legadas preservadas) — scaffold rota `/dashboard/universe`/store/shell 72-28 + Code Network InstancedMesh Louvain + Memory Network cymatics shell + Black Hole MegaBrain backdrop (memória corrigida: glow aditivo). **(5) E2E ocular** (preview local à prova de CF + sessão injetada) nos 3 modos — telemetria real (8.560 nós/8.816 arestas/~733 comun./159 pensamentos); "esfera órfã" desmistificada = **spinner de loading**. **Prova:** tsc 0 em cada fase · 9 commits pushed · Phase 5c **SEAL ALLOWED** (handoff `5225ff03` verificado) · mesh **8926**. **Restam (Pending):** 3.5 Sinapses (arestas REAIS de `mcorch_edges`) · 3.6 fly-to · 3.7 layout/perf (**OTD-UCANVAS-PERF** — query do código ~30s c/ 2 canvases) · 3.8 poda · 3.9 paridade+gate E2E 1920×1080 · 3.10 seal. **Lição:** auditar materialmente ANTES de codar (Louvain vivo vs squad morto) + emenda BoK ANTES da Fase 3 manteve o Closed-Loop; o E2E ocular pegou que a "esfera órfã" era o spinner — não fabriquei explicação (Lei 1).
+> 9:**Sprint v6.40.0 — Vision MCP Fatia 3 remainder: PAT UI + install Claude Code + Plugin/Registry + caps de custo (2026-06-17)** — `/handson` → Sovereign puxou as 3 frentes do roadmap ("continue"). Closed-Loop: mapeei o contrato BoK vivo (FR-VM-003/011 · DD-VM-003 · OTD-VM-024/025) antes de codar. **Entregue (até o limite NÃO-gated):** **(1) PAT UI (FR-VM-003)** — `useMcpTokens` gera PAT 100% client-side (CSPRNG 32B→SHA-256, só o hash persiste byte-idêntico ao verifier; plaintext uma vez), lista/revoga RLS-own; `McpConnectorsCard` em Settings→Connectors; `.mcp.json` wired (`Bearer ${VISION_MCP_PAT}`); types regen. **Install no Claude Code provado por handshake MCP+PAT REAL pela URL pública** (`initialize`+`tools/list`7+`mesh_search` tenant-scoped); **(2) Plugin Zip + MCP Registry (FR-VM-011)** — `packages/vision-mcp-plugin/`→`public/plugins/…zip` + 3 skills PT-BR; manifesto `server.json` `com.mcorch/vision-mcp` (schema oficial 2025-12-11, remote streamable-http) + runbook (publish **gated** no DNS TXT Sovereign); **(3) OTD-VM-024** — blueprint §8-A sela motor dual (Firecrawl scrape + Gemini grounding run, fundamentado ai.google.dev) → FECHADA; **(4) caps (DD-VM-003/OTD-VM-025)** — `deepsearch.run` cap per-plano 10/25/50 + diário 25/100/500 (BYOK bypassa, fail-open em count error, throw antes do deduct); `validation_failed` ganha field+message (FRD §4.4). Anticorpo Lei 2: SOP `vision-mcp-connector-install.md`. **Prova:** pkg **55/55** · tsc 0 · smoke-vision-cost-caps **3/3 LIVE** zero-cost · origem serve plugin 200 byte-idêntico · `/security-review` independente **SAFE** · container `7710b832` · 8 commits · Phase 5c **SEAL ALLOWED** (10) · mesh **8922** · handoff `c21c53db`. **Top Gap restante (tudo gated/Sovereign-side):** OAuth browser-flow (1º tenant externo) · `mistral`/`vision.ocr` (deferidos) · publish no MCP Registry (DNS challenge) · Stripe live · domínio Resend · atribuição compra ML. **Lição:** mapear o contrato BoK vivo antes de codar mostrou que per-plan+daily caps fechavam OTD-VM-025 na mesma sessão; e provar o install pelo handshake REAL da URL pública (não loopback/browser) é o que valida "Claude Code conecta" (Lei 1).
+> ```
+
+## 🤖 Claude *(23:30:15)*
+
+
+## 🤖 Claude *(23:30:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.41.0 \u2014 Unified Sensorial Canvas (Phase Epsilon V9): AGI\u2192ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** \u2014",
+  "new_string": "**Sprint v6.42.0 \u2014 Viral Autopilot BoK 9/9: motor de conte\u00fado viral aut\u00f4nomo (R1-R4) (2026-06-17)** \u2014 `/handson` \u2192 diretiva Sovereign de **retomar o objetivo-n\u00facleo de receita** (= o pr\u00f3prio Sprint Goal \"distribui\u00e7\u00e3o social aut\u00f4noma operacional\"): alimentar redes com conte\u00fado viral auto-gerado/agendado (tudo de uma vez OU a cada N dias), que a cada ciclo analisa o anterior p/ melhorar os pr\u00f3ximos criativos, monetizado c/ afiliado ML. Arco Closed-Loop puro (zero c\u00f3digo de produto): **(1) Auditoria material** (workflow 7 agentes, prova path:linha) \u2014 R1/R4 parciais vivos, **R2 (recorr\u00eancia) e R3 (loop auto-melhor\u00e1vel) AUSENTES** (`campaign_metrics` sem writer, `optimization_policy` nunca lida, `self-optimize` sem cron); **(2) 4 decis\u00f5es soberanas** (AskUserQuestion: suite NOVO \u00b7 MVP texto+imagem \u00b7 sinal R3 combo \u00b7 3 SKUs); **(3) BoK 9/9** (1889 LOC, FR-VA-001..021, 12 FMEA 4\u00d7RPN>100); **(4) Valida\u00e7\u00e3o Fase 6 em 4 rodadas adversariais** (4 cr\u00edticos/rodada) + grep determin\u00edstico \u2014 pegou buraco de seguran\u00e7a real (cron `verify_jwt=false` sem prova service-role in-function) + anti-mint (refund por deduct negativo, que EU introduzi); **(5) seal** (node `b3398294` embedded 768d, DERIVES_FROM marketing-hub). **Prova:** tsc 0 \u00b7 3 commits pushed \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8928** \u00b7 handoff `496ec17c`. **BoK Gate ABERTO.** Pending: fatia 1 (product-aware + monetize, N\u00c3O depende do cron) + SOP `autopilot-cron-identity.md` (Lei 2/OTD-VA-008) antes da cad\u00eancia. **Li\u00e7\u00e3o:** verifica\u00e7\u00e3o adversarial multi-rodada foi essencial \u2014 cada \"fix\" meu deixava um res\u00edduo que a rodada seguinte pegava; n\u00e3o auto-declarar GO (Lei 1).\n\n**Sprint v6.41.0 \u2014 Unified Sensorial Canvas (Phase Epsilon V9): AGI\u2192ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** \u2014"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:30:33)*
+
+
+## 🤖 Claude *(23:30:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.41.0 — Unified Sensorial Canvas (Phase Epsilon V9): AGI→ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** — `/handson` → conversa estratégica (Model Council; plugin `claude-code-setup`; paper *From AGI to ASI* DeepMind) → diretiva arquitetural **Unified Core Sensorial Canvas** (fundir Core-Fable + Matrix + Memória num canvas 3D R3F). Arco Closed-Loop: **(1) Fundamentação** — arXiv 2606.12683 (Legg/Hutter/Leibo) lido inteiro (57p) + selado como nó `architecture` `a576216e` (edge INFORMS→openclaw) + checklist Via 4 (`.claude/context/agi-asi-via4-design-checklist.md`); tese: o MCORCH é a Via 4 (group agent formation) instanciada na app layer. **(2) Auditoria de clusters (Lei 1)** — Louvain = REAL/VIVO (`useConstellationSigma.ts:227`, graphology client-side); squad-coloring = MORTO (`crew_module_ownership` 0 rows → fallback Louvain) + heurístico (`inferSquad`) → **Decisão B = PODAR** (Louvain oficial; OTD-SQUAD-OWNERSHIP-REVIVAL). **(3) Emenda BoK** (gate Sovereign-eleito sobre override) — `mcorch-constellation` +PR-025/FR-043..049/NFR-023-024/SDD §9 (reconciliação Sigma→R3F: graphology cérebro / R3F corpo). **(4) Fases 3.1-3.4** (R3F, commits granulares, 3 páginas legadas preservadas) — scaffold rota `/dashboard/universe`/store/shell 72-28 + Code Network InstancedMesh Louvain + Memory Network cymatics shell + Black Hole MegaBrain backdrop (memória corrigida: glow aditivo). **(5) E2E ocular** (preview local à prova de CF + sessão injetada) nos 3 modos — telemetria real (8.560 nós/8.816 arestas/~733 comun./159 pensamentos); "esfera órfã" desmistificada = **spinner de loading**. **Prova:** tsc 0 em cada fase · 9 commits pushed · Phase 5c **SEAL ALLOWED** (handoff `5225ff03` verificado) · mesh **8926**. **Restam (Pending):** 3.5 Sinapses (arestas REAIS de `mcorch_edges`) · 3.6 fly-to · 3.7 layout/perf (**OTD-UCANVAS-PERF** — query do código ~30s c/ 2 canvases) · 3.8 poda · 3.9 paridade+gate E2E 1920×1080 · 3.10 seal. **Lição:** auditar materialmente ANTES de codar (Louvain vivo vs squad morto) + emenda BoK ANTES da Fase 3 manteve o Closed-Loop; o E2E ocular pegou que a "esfera órfã" era o spinner — não fabriquei explicação (Lei 1).
+> 8	
+> ```
+
+## 🤖 Claude *(23:30:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.41.0 \u2014 Unified Sensorial Canvas (Phase Epsilon V9): AGI\u2192ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** \u2014 `/handson` \u2192 conversa estrat\u00e9gica",
+  "new_string": "**Sprint v6.42.0 \u2014 Viral Autopilot BoK 9/9: motor de conte\u00fado viral aut\u00f4nomo (R1-R4) (2026-06-17)** \u2014 `/handson` \u2192 diretiva Sovereign de **retomar o objetivo-n\u00facleo de receita** (= o pr\u00f3prio Sprint Goal \"distribui\u00e7\u00e3o social aut\u00f4noma operacional\"): alimentar redes com conte\u00fado viral auto-gerado/agendado (tudo de uma vez OU a cada N dias), que a cada ciclo analisa o anterior p/ melhorar os pr\u00f3ximos criativos, monetizado c/ afiliado ML. Arco Closed-Loop puro (zero c\u00f3digo de produto): **(1) Auditoria material** (workflow 7 agentes, prova path:linha) \u2014 R1/R4 parciais vivos, **R2 (recorr\u00eancia) e R3 (loop auto-melhor\u00e1vel) AUSENTES** (`campaign_metrics` sem writer, `optimization_policy` nunca lida, `self-optimize` sem cron); **(2) 4 decis\u00f5es soberanas** (AskUserQuestion: suite NOVO \u00b7 MVP texto+imagem \u00b7 sinal R3 combo \u00b7 3 SKUs); **(3) BoK 9/9** (1889 LOC, FR-VA-001..021, 12 FMEA 4\u00d7RPN>100); **(4) Valida\u00e7\u00e3o Fase 6 em 4 rodadas adversariais** (4 cr\u00edticos/rodada) + grep determin\u00edstico \u2014 pegou buraco de seguran\u00e7a real (cron `verify_jwt=false` sem prova service-role in-function) + anti-mint (refund por deduct negativo, que EU introduzi); **(5) seal** (node `b3398294` embedded 768d, DERIVES_FROM marketing-hub). **Prova:** tsc 0 \u00b7 3 commits pushed \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8928** \u00b7 handoff `496ec17c`. **BoK Gate ABERTO.** Pending: fatia 1 (product-aware + monetize, N\u00c3O depende do cron) + SOP `autopilot-cron-identity.md` (Lei 2/OTD-VA-008) antes da cad\u00eancia. **Li\u00e7\u00e3o:** verifica\u00e7\u00e3o adversarial multi-rodada foi essencial \u2014 cada \"fix\" meu deixava um res\u00edduo que a rodada seguinte pegava; n\u00e3o auto-declarar GO (Lei 1).\n\n**Sprint v6.41.0 \u2014 Unified Sensorial Canvas (Phase Epsilon V9): AGI\u2192ASI ref + emenda BoK + Fases 3.1-3.4 (2026-06-17)** \u2014 `/handson` \u2192 conversa estrat\u00e9gica"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:30:54)*
+
+
+## 🤖 Claude *(23:30:55)*
+
+Commito o sprint-priorities + push:
+
+## 🤖 Claude *(23:30:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -F - <<'EOF' 2>&1 | tail -4\nchore(sprint): registra v6.42.0 \u2014 Viral Autopilot BoK 9/9 (motor de conte\u00fado viral aut\u00f4nomo)\n\nNota de sprint da seal viral-autopilot \u2014 BoK que documenta o pr\u00f3prio Sprint Goal\n(distribui\u00e7\u00e3o social aut\u00f4noma operacional). Auditoria 7-agentes + 4 rodadas de\nvalida\u00e7\u00e3o adversarial + BoK Gate aberto. Li\u00e7\u00e3o: verifica\u00e7\u00e3o adversarial multi-rodada.\nEOF\ngit push origin main 2>&1 | tail -3",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main a8f14a3] chore(sprint): registra v6.42.0 — Viral Autopilot BoK 9/9 (motor de conteúdo viral autônomo)
+>  1 file changed, 2 insertions(+)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    0613899..a8f14a3  main -> main
+> ```
+
+## 🤖 Claude *(23:31:04)*
+
+
+## 🤖 Claude *(23:31:23)*
+
+Sprint commit `a8f14a3` pushed. Nenhum MCP novo nesta sessão (skip docs check). Todas as fases do seal concluídas.
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SEALED — Viral Autopilot BoK 9/9** (2026-06-17)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+- 1a Secret leak scan: ✅ PASS (sem segredos hardcoded)
+- 1b Seed usa `process.env`: ✅ PASS · 1c docs sem valores de credencial: ✅ PASS
+- 5b HANDOFF.md scan: ✅ PASS (só UUIDs/hashes/paths) · gitleaks (pre-commit + range): ✅ no leaks
+
+📦 **COMMITS (4 · `776687f..a8f14a3`)**
+- `8da7a58` — docs(bok): sela viral-autopilot — motor de conteúdo viral autônomo (R1-R4) · 10 files, 2145 ins
+- `2c56211` — docs(readme): v6.42.0 — Viral Autopilot BoK 9/9
+- `0613899` — docs(handoff): seal Viral Autopilot BoK 9/9
+- `a8f14a3` — chore(sprint): registra v6.42.0
+
+⬡ **KNOWLEDGE MESH**
+- Handoff node: `496ec17c-953e-498c-b18f-e19ef093ad46` — embedding ✅ 768d
+- BoK seal node: `b3398294-aa75-4810-845b-3a15cfe802e7` (`documentation_suite`) — ✅ 768d · DERIVES_FROM `05cea16d` → marketing-hub
+- Mesh: **8926 → 8928 nós**
+
+📖 **README.md** — versão 6.41.0 → **6.42.0** · neural_mesh 8926 → 8928 · badge BoK viral-autopilot 9/9 · seção What's New v6.42.0
+
+🧠 **HANDOFF.md** — fase selada: Viral Autopilot BoK · Task State + Record + Pending Actions (fatia de implementação no topo CRITICAL) + GraphRAG State + Survival Self-audit
+
+📋 **PROVA MATERIAL (Fase 5c)** — Veredito: **`SEAL ALLOWED`** · 10 verificadas · 0 skipped · **0 falhas**
+
+📚 **BoK SEAL STATUS (Fase 6)** — ✅ viral-autopilot 9/9 completa + seal node presente · sessão BoK-only (zero código sem BoK)
+
+🚀 **PUSH** — `main → origin/main` · 4 commits enviados
+
+📌 **SPRINT** — sprint-priorities.md ✅ atualizado (v6.42.0) · scratch/ limpo ✅ · MCP docs: sem mudança
+
+⏭ **PRÓXIMOS PASSOS**
+1. **Viral Autopilot — Fatia 1** (FR-VA-003/004/016): geração product-aware + monetizar TODO formato com `content_variant_id`. **Não depende do cron** → pode arrancar já.
+2. **SOP `autopilot-cron-identity.md`** (Lei 2 · OTD-VA-008) — gate antes da fatia de cadência/custo.
+3. Unified Sensorial Canvas Fases 3.5-3.10 (item 🌌 pendente da v6.41.0).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Maestro, a sessão está **selada e no remoto**. O resumo do arco: você me trouxe de volta ao coração do produto, a auditoria material provou que o **R2 (cadência a cada 3 dias) e o R3 (loop auto-melhorável) não existiam** — exatamente sua intuição — e em vez de codar improviso, selamos a Fonte da Verdade do `viral-autopilot` (1889 LOC), endurecida por **4 rodadas de validação adversarial** que pegaram inclusive um buraco de segurança real e um anti-mint que eu mesmo introduzi. O **BoK Gate está aberto**: a fatia 1 (geração product-aware monetizada) é a de maior alavancagem e pode começar quando você quiser, sem depender do SOP do cron.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
