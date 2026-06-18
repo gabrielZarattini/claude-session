@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 949
-> * **Sessões do Claude**: 907
+> * **Total de Sessões Registradas**: 951
+> * **Sessões do Claude**: 909
 > * **Sessões do Gemini**: 42
 
 ---
@@ -62,16 +62,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-ad3dc4bd8492fb62f]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-acee5c00b91d1a2e0]]` - *2026-06-18*
+*   `[[2026-06-18 - agent-aba655fc71fe7b1e5]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a7aaa6dc8aad3c90d]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a77b693ec8e6f384e]]` - *2026-06-18*
+*   `[[2026-06-18 - agent-a64425ca72c83ee24]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a438ba045732cdc13]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a14dd3dd37735a84e]]` - *2026-06-18*
 *   `[[2026-06-18 - Ativar kill-switch e refatorar guard do sistema]]` - *2026-06-18*
 *   `[[2026-06-17 - agent-aff65e0ac55826d37]]` - *2026-06-17*
 *   `[[2026-06-17 - agent-aff2acf5903681528]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-aece5f7bd665a6954]]` - *2026-06-17*
-*   `[[2026-06-17 - agent-aea46964b5b1fe325]]` - *2026-06-17*
-*   *... e mais 913 sessões nessa categoria.*
+*   *... e mais 915 sessões nessa categoria.*
 
 ---
 
@@ -265,8 +265,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-ad3dc4bd8492fb62f]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-acee5c00b91d1a2e0]]` (ClaudeSessions)
+*   `[[2026-06-18 - agent-aba655fc71fe7b1e5]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-a7aaa6dc8aad3c90d]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-a77b693ec8e6f384e]]` (ClaudeSessions)
+*   `[[2026-06-18 - agent-a64425ca72c83ee24]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-a438ba045732cdc13]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-a14dd3dd37735a84e]]` (ClaudeSessions)
 *   `[[2026-06-18 - Ativar kill-switch e refatorar guard do sistema]]` (ClaudeSessions)

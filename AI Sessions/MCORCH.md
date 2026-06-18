@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 40
-> * **Total de Sessões**: 944
+> * **Total de Sessões**: 946
 
 ---
 
@@ -66,8 +66,10 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-ad3dc4bd8492fb62f]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-acee5c00b91d1a2e0]]` (ClaudeSessions) - *2026-06-18*
+*   `[[2026-06-18 - agent-aba655fc71fe7b1e5]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-a7aaa6dc8aad3c90d]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-a77b693ec8e6f384e]]` (ClaudeSessions) - *2026-06-18*
+*   `[[2026-06-18 - agent-a64425ca72c83ee24]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-a438ba045732cdc13]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - agent-a14dd3dd37735a84e]]` (ClaudeSessions) - *2026-06-18*
 *   `[[2026-06-18 - Ativar kill-switch e refatorar guard do sistema]]` (ClaudeSessions) - *2026-06-18*
