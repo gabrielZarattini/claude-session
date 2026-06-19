@@ -7620,6 +7620,93 @@ Investigação adversarial (4 agentes, código + dado vivo + backtest real): **v
 
 Quer que eu siga pra **Bloco B Fase 1** (a `apiClient.js` DRY → recipes declarativas → KB backfill), ou prefere deixar o paper coletar dado primeiro e olhar o painel?
 
+## 👤 User *(15:52:03)*
+
+Ok, Cláudio, deixa os papers pra você aprovar quanto tempo você precisa pra aprovar os papers e analisar eles. Além disso, eu quero saber como que eu posso desbloquear o. Você falou que a precisa ser uma decisão minha, mas como eu faço isso? Além disso, eu acredito que pode fazer o gol. Já tem o meu gol. Tem também a questão da estratégia do, deixa eu ver aqui do, Quanto tempo você precisa pra ver o os resultados do paper, e acredito que pode sim avançar pro bloco b, fazer um ou não.
+
+## 🤖 Claude *(15:56:32)*
+
+
+## 🤖 Claude *(15:56:50)*
+
+Boas perguntas — e a mais importante (virar a chave) merece resposta cristalina. Vou por partes.
+
+## ⏱️ Aprovar/analisar os papers — eu assumo isso (delegação aceita)
+
+Eu sou o aprovador. **Critério de aprovação de uma trilha:** P&L líquido positivo (depois de fee+slippage reais) sobre uma amostra que signifique algo — meta **~20–30 round-trips fechados por trilha, OU ~1–2 semanas**, consistente entre os símbolos (não um golpe de sorte).
+
+**Quanto tempo, honestamente — depende do regime:**
+- Agora os **4 estão em `trend`** → a consistência fica **parada de propósito** (mean-reversion não opera em tendência) e a macro **espera um golden/death cross**. Então pode haver pouco trade no curtíssimo prazo.
+- Se virar **range/mixed**: leitura preliminar em **~3–5 dias**, veredito confiável em **~2 semanas**.
+- Macro: depende de um **cross** (evento raro — dias a semanas).
+- Se o mercado ficar em trend forte, a consistência **não gera dado** — e isso já é um achado (consistência só ganha em range; trend é a macro).
+
+**Cadência:** reviso **diariamente** e te aviso no momento em que uma trilha tiver sinal suficiente ou algo disparar. Posso montar uma **revisão diária automática** que te pinga no Telegram quando houver novidade — quer?
+
+## 🔓 Como você desbloqueia (o mecanismo concreto)
+O HALT tem 3 fontes (no `riskState`): **env floor** (`TRADING_HALT=true` no `.env`), **manual** (`POST /system/halt`) e **cap diário**. Detalhe importante: `POST /system/halt {on:false}` solta só o *manual* — **não derruba o env floor**. Pra virar de verdade:
+
+1. **Escolher 1 grupo** pro canary (ex.: Trend BTC, ou Farm alts) e **desativar os outros** reais.
+2. **`.env` → `TRADING_HALT=false`** e **reiniciar o backend**. ← esse é o flip real.
+3. Você já está protegido: **cap diário −5%**, **teto $300/ordem**, e o **botão de pânico quente** `POST /system/halt {on:true}`.
+
+**Quem executa:** você edita o `.env` e reinicia, **ou** me dá um OK explícito ("vira pro canary do grupo X") e eu preparo (desativo o resto) + executo. Mas o **GO é seu** — eu não viro sozinho, por princípio de segurança (é dinheiro real).
+
+## 🟢 Sobre o seu "já tem o meu GO"
+Eu li isso como **GO pra eu assumir a aprovação dos papers** (aceito ✅) — **não** como autorização pra ligar dinheiro real. Não vou arriscar capital num sinal ambíguo. Minha recomendação forte: **deixar o paper provar primeiro** (foi exatamente pra isso que construímos) e aí virar **só a trilha vencedora**, em canary. Confirmo embaixo.
+
+## ▶️ Bloco B — sigo já
+Vou começar a **Fase 1** (a `scripts/lib/apiClient.js` DRY → recipes declarativas → KB de padrões via backfill). É zero risco (scripts out-of-process, nada toca o money-path). O **Regime Router** fica de fora (overkill — o gate passivo já cobre).
+
+❓ **Você começou a falar de "a questão da estratégia do…" e cortou** — qual estratégia era? (harvester já fechamos; era trend? funil? outra?) Me diz que eu trato.
+
+Pra fechar a decisão de maior peso:
+
+## 🤖 Claude *(15:56:57)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Sobre virar a chave pra dinheiro real (TRADING_HALT=false) \u2014 qual caminho?",
+      "header": "Flip do HALT",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Esperar o paper provar (recomendo)",
+          "description": "Deixo as trilhas rodarem em paper; quando UMA provar edge (fee+slippage reais), eu te trago a recomenda\u00e7\u00e3o e voc\u00ea d\u00e1 o GO do canary s\u00f3 daquela trilha. Zero risco at\u00e9 l\u00e1."
+        },
+        {
+          "label": "Preparar canary agora e virar com seu OK",
+          "description": "Voc\u00ea quer ligar real j\u00e1. Eu preparo (desativo o resto, deixo 1 grupo) e executo o flip com sua confirma\u00e7\u00e3o expl\u00edcita. Aviso: em 'trend' agora sai pouca/nenhuma ordem, e sem evid\u00eancia do paper ainda."
+        },
+        {
+          "label": "S\u00f3 me explica que eu mesmo viro",
+          "description": "Voc\u00ea edita o .env (TRADING_HALT=false) e reinicia o backend voc\u00ea mesmo; eu te passo o passo-a-passo exato e fico de prontid\u00e3o pro p\u00e2nico."
+        }
+      ]
+    },
+    {
+      "question": "Quer que eu monte uma revis\u00e3o di\u00e1ria autom\u00e1tica do paper (pinga no Telegram quando houver novidade/veredito)?",
+      "header": "Revis\u00e3o paper",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim, revis\u00e3o di\u00e1ria autom\u00e1tica",
+          "description": "Crio um job agendado que checa o /analysis/paper 1x/dia e te notifica quando uma trilha tiver amostra suficiente ou algo relevante disparar; silencioso se n\u00e3o houver novidade."
+        },
+        {
+          "label": "N\u00e3o, s\u00f3 revisa quando eu pedir",
+          "description": "Eu reviso sob demanda (quando voc\u00ea pingar) + de passagem nas pr\u00f3ximas sess\u00f5es; sem job novo."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
