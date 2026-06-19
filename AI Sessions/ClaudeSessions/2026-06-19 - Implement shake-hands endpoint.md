@@ -8007,6 +8007,1920 @@ Criando o `paperReviewJob`:
 > The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(17:00:19)*
+
+
+## 🤖 Claude *(17:00:20)*
+
+Job criado e ligado no boot. Syntax-check, deploy e verifico (boot + sem spam, silencioso com ledger vazio).
+
+## 🤖 Claude *(17:00:23)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Job de revis\u00e3o di\u00e1ria do paper (Telegram)",
+  "description": "paperReviewJob.js: revis\u00e3o di\u00e1ria do ledger, notifica no marco de round-trips (candidata/fraca). Deploy + verificar boot sem spam.",
+  "activeForm": "Deployando o job de revis\u00e3o do paper"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #17 created successfully: Job de revisão diária do paper (Telegram)
+> ```
+
+## 🤖 Claude *(17:00:25)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Bloco B Fase 1 \u2014 apiClient.js DRY (pr\u00f3ximo turno)",
+  "description": "Extrair scripts/lib/apiClient.js (req/login/findAutomationByName) e refatorar setup-paper-trilhas/setup-farm/setup-trend com DRY-verify de cada (output id\u00eantico) antes de commitar \u2014 scripts de recovery, cuidado.",
+  "activeForm": "Planejando Bloco B Fase 1"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #18 created successfully: Bloco B Fase 1 — apiClient.js DRY (próximo turno)
+> ```
+
+## 🤖 Claude *(17:00:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in src/paperReviewJob.js src/server.js; do node --check \"$f\" && echo \"OK $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check paperReviewJob and server"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK src/paperReviewJob.js
+> OK src/server.js
+> ```
+
+## 🤖 Claude *(17:00:36)*
+
+
+## 🤖 Claude *(17:00:37)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "17",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #17 status
+> ```
+
+## 🤖 Claude *(17:00:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend' 2>&1 | tail -5",
+  "description": "Rebuild backend with paper review job",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(17:00:49)*
+
+
+## 🤖 Claude *(17:00:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 12); do docker compose exec -T backend sh -lc \"grep -q \\\"App is running\\\" logs/system.log\" 2>/dev/null && break; sleep 2; done\necho \"=== paper review job + erros + spam ===\"\ndocker compose exec -T backend sh -lc \"grep -iE \\\"Paper Review job|PAPER-REVIEW|paper-review\\] erro|riskState.*halted\\\" logs/system.log | tail -6\"\necho \"=== ordens reais (isolamento) + trilhas paper ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select (select count(*) from orders), (select count(*) from automations where name like '\"'\"'[PAPER]%'\"'\"' and isActive=1);\\\"\" 2>/dev/null\n'\ncurl -s -m6 -o /dev/null -w \"site %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify paper review job booted, no spam, isolation, HALT, site",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === paper review job + erros + spam ===
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T17:00:46.483Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T17:00:46.660Z - Starting the Paper Review Job...
+> info: 2026-06-19T17:00:46.661Z - Paper Review job iniciado (intervalo 86400000ms; veredito a partir de 15 round-trips). Read-only, notifica só em marco novo.
+> === ordens reais (isolamento) + trilhas paper ===
+> 259	16
+> site 200
+> ```
+
+## 🤖 Claude *(17:01:05)*
+
+
+## 🤖 Claude *(17:01:06)*
+
+Verificado: **Paper Review job no ar** (intervalo 24h, silencioso com ledger vazio, zero spam), HALT `true`, isolamento (259 reais / 16 paper ativas), site 200. Commit + push.
+
+## 🤖 Claude *(17:01:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/paperReviewJob.js backend/src/server.js && echo \"chown OK\"\ngrep -nE 'sk-[A-Za-z0-9]{20}|eyJ[A-Za-z0-9_-]{20}|SECRET_KEY|APISECRET' backend/src/paperReviewJob.js backend/src/server.js || echo \"secret-scan limpo\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add backend/src/paperReviewJob.js backend/src/server.js\ngit -c safe.directory=\"*\" commit -F - <<\"EOF\"\nfeat(backend): paperReviewJob \u2014 revisao diaria do Paper Engine + notify Telegram nos marcos\n\nJob PASSIVO/read-only (padrao cockpitJob/dailyCapJob): a cada 24h le paperService.summary()\ne notifica o dono (telegramNotify.notify, com dedup) quando uma trilha cruza um marco de\nround-trips fechados (5/15/30/60/120) com veredito preliminar \u2014 CANDIDATA (net+ apos\nfee+slippage), FRACA (net-) ou amostra inicial. Silencioso sem novidade; marco persistido em\nlogs/paper_review_state.json (sobrevive a restart). NAO toca money-path. Env: PAPER_REVIEW_ENABLED/\nPAPER_REVIEW_MS(24h)/PAPER_REVIEW_MIN_TRADES(15). Automatiza a \"aprovacao delegada\" dos papers.\n\nDeployado+verificado: job iniciado, silencioso (ledger vazio), HALT intacto, ordens reais 259->259.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit -c safe.directory=\"*\" log --oneline -1\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\r\\n\")\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed \"s|${TOKEN}|***|g\"'",
+  "description": "Commit and push the paper review job"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown OK
+> secret-scan limpo
+> [master 258c385] feat(backend): paperReviewJob — revisao diaria do Paper Engine + notify Telegram nos marcos
+>  2 files changed, 86 insertions(+)
+>  create mode 100644 backend/src/paperReviewJob.js
+> 258c385 feat(backend): paperReviewJob — revisao diaria do Paper Engine + notify Telegram nos marcos
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    faed249..258c385  HEAD -> master
+> ```
+
+## 🤖 Claude *(17:01:41)*
+
+
+## 🤖 Claude *(17:01:42)*
+
+Push OK: **master = `258c385`**. Atualizo o estado durável e reporto.
+
+## 🤖 Claude *(17:01:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "research sob HALT, ZERO risco; FREQU\u00caNCIA e HARVESTER refutados por backtest** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`faed249`**",
+  "new_string": "research sob HALT, ZERO risco; FREQU\u00caNCIA e HARVESTER refutados por backtest; **revis\u00e3o di\u00e1ria do paper notifica no Telegram** \u00b7 DONO decidiu: ESPERAR o paper provar antes do flip (sem dinheiro real)** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`258c385`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:01:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**Bloco C** depois. **Claude N\u00c3O vira o `TRADING_HALT`** (GO do dono + canary de um-grupo-s\u00f3).",
+  "new_string": "**Bloco C** depois. **Claude N\u00c3O vira o `TRADING_HALT`** (GO do dono + canary de um-grupo-s\u00f3).\n\n### \ud83e\udd1d SEAL \u2014 2026-06-19 (cont. \u2014 decis\u00f5es do dono + Paper Review Job di\u00e1rio)\n**`Vivo==master==origin==258c385`. 4 containers up, `TRADING_HALT=true` intacto, ordens reais 259\u2192259, 16 trilhas `[PAPER]` ativas.**\n- **Decis\u00f5es do dono (via AskUserQuestion):** (1) **flip = ESPERAR o paper provar** \u2014 sem dinheiro real at\u00e9 uma trilha aprovar. (2) **aprova\u00e7\u00e3o dos papers DELEGADA ao Claude** (crit\u00e9rio: net+ ap\u00f3s fee+slippage sobre ~15-30 round-trips/trilha OU ~1-2 semanas, consistente entre s\u00edmbolos).\n- **Mecanismo do flip (pedido do dono) \u2014 DOCUMENTADO:** `.env TRADING_HALT=false` + restart do backend derruba o **env floor** (\u00e9 o flip real); `POST /system/halt {on:false}` s\u00f3 solta o **manual** (N\u00c3O o env floor); canary = ligar **1 grupo** e desativar o resto; prote\u00e7\u00f5es vivas: cap di\u00e1rio \u22125%, teto $300/ordem, p\u00e2nico quente `POST /system/halt {on:true}`. **Claude executa s\u00f3 com GO expl\u00edcito do dono; n\u00e3o vira sozinho.**\n- **Paper Review Job ENTREGUE (`258c385`, deployado+verificado):** `paperReviewJob.js` passivo/read-only a cada 24h l\u00ea `paperService.summary()` e **notifica o dono no Telegram** (telegramNotify.notify+dedup; marco persistido em `logs/paper_review_state.json`) quando uma trilha cruza marco de round-trips (5/15/30/60/120) com veredito CANDIDATA/FRACA/amostra-inicial. Silencioso sem novidade. Env `PAPER_REVIEW_ENABLED/MS(24h)/MIN_TRADES(15)`. Verificado: job iniciado, silencioso (ledger vazio), HALT intacto.\n- \u23f1\ufe0f **Timing honesto:** hoje os 4 em `trend` \u2192 consist\u00eancia parada, macro esperando cross \u2192 poucos trades no curto prazo (leitura preliminar ~3-5 dias se virar range/mixed; veredito ~2 semanas).\n- \u2753 **PENDENTE:** o dono come\u00e7ou \"a quest\u00e3o da estrat\u00e9gia do\u2026\" e cortou \u2014 PERGUNTAR qual era.\n**\u26a1 NEXT:** **Bloco B Fase 1** = `scripts/lib/apiClient.js` DRY (refatorar setup-paper-trilhas/setup-farm/setup-trend com DRY-verify de CADA \u2014 scripts de recovery, cuidado) \u2192 recipes declarativas \u2192 KB backfill. Observar o paper (o job avisa). **Claude N\u00c3O vira o `TRADING_HALT`.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "old_string": "Harvester = REDESIGN_TO_PAPER (se explorar, vai pro Paper Engine \u2014 ver [[tradeux-harvester-experiment]]). Relacionados: [[tradeux-farm-funnel-backtest]] [[tradeux-regime-gate]] [[tradeux-trend-following]] [[tradeux-1m-scalping-and-cockpit]] [[tradeux-mainnet-go-live]].",
+  "new_string": "Harvester = REDESIGN_TO_PAPER (se explorar, vai pro Paper Engine \u2014 ver [[tradeux-harvester-experiment]]). Relacionados: [[tradeux-farm-funnel-backtest]] [[tradeux-regime-gate]] [[tradeux-trend-following]] [[tradeux-1m-scalping-and-cockpit]] [[tradeux-mainnet-go-live]].\n\n## Aprova\u00e7\u00e3o dos papers + flip (decis\u00f5es do dono 2026-06-19, commit `258c385`)\n- **Aprova\u00e7\u00e3o DELEGADA ao Claude.** Crit\u00e9rio: trilha = CANDIDATA quando net+ (ap\u00f3s fee+slippage reais) sobre ~15-30 round-trips fechados OU ~1-2 semanas, consistente entre s\u00edmbolos.\n- **`paperReviewJob.js`** (passivo, 24h): l\u00ea `paperService.summary()` e notifica o dono no Telegram (telegramNotify.notify+dedup; estado em `logs/paper_review_state.json`) nos marcos 5/15/30/60/120 round-trips (CANDIDATA/FRACA/amostra-inicial). Env `PAPER_REVIEW_*`. Silencioso sem novidade.\n- **Flip = ESPERAR o paper provar** (decis\u00e3o do dono). Mecanismo documentado: `.env TRADING_HALT=false`+restart derruba o env floor (flip real); `POST /system/halt {on:false}` s\u00f3 solta o manual; canary = 1 grupo, desativar o resto. Claude executa s\u00f3 com GO expl\u00edcito; **n\u00e3o vira sozinho**.\n- Timing: em `trend` (estado atual) a consist\u00eancia fica parada e a macro espera cross \u2192 poucos trades; leitura ~3-5 dias se virar range/mixed, veredito ~2 semanas."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "**Bloco B desenhado (Strategy Library 1\u00aa via `scripts/lib/apiClient.js` DRY; KB backfill; Regime Router = OVERKILL/manter gate passivo)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`",
+  "new_string": "**Bloco B desenhado (Strategy Library 1\u00aa via `scripts/lib/apiClient.js` DRY; KB backfill; Regime Router = OVERKILL/manter gate passivo)**; **`258c385`: aprova\u00e7\u00e3o dos papers DELEGADA ao Claude + `paperReviewJob` (24h, notifica Telegram nos marcos de round-trips); dono decidiu ESPERAR o paper provar antes do flip (mecanismo do flip documentado: `.env TRADING_HALT=false`+restart)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:14)*
+
+
+## 🤖 Claude *(17:02:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/HANDOFF.md && echo \"HANDOFF chown OK\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short | grep -v backtest-results || echo \"(\u00e1rvore limpa)\"",
+  "description": "Chown HANDOFF, confirm clean tree"
+}
+```
+
+## 🤖 Claude *(17:02:16)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "17",
+  "status": "completed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF chown OK
+> (árvore limpa)
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #17 status
+> ```
+
+## 🤖 Claude *(17:02:37)*
+
+Feito. Resumo do turno:
+
+## ✅ Entregue e no ar (master `258c385`, mainnet CONGELADO)
+
+**1. Revisão diária do paper — automática** (você pediu "sim")
+`paperReviewJob` (passivo, read-only, 24h) lê o ledger e **te pinga no Telegram** quando uma trilha cruza um marco de round-trips (5/15/30/60/120) com veredito: **CANDIDATA** (net+ após fee+slippage), **FRACA** (net−) ou amostra inicial. Silencioso quando não há novidade; com dedup; estado persistido. Verificado: job no ar, silencioso (ledger vazio), HALT intacto.
+
+**2. Sua pergunta — como desbloquear (o mecanismo concreto):**
+- O flip real = **`.env` → `TRADING_HALT=false` + reiniciar o backend** (derruba o "env floor").
+- `POST /system/halt {on:false}` solta só o *manual* — **não** o env floor.
+- Canary responsável = ligar **1 grupo** e desativar o resto. Proteções já ativas: cap diário −5%, teto $300/ordem, pânico quente `POST /system/halt {on:true}`.
+- **Quem executa:** você (edita o `.env` e reinicia) **ou** me dá um GO explícito e eu preparo+executo. O **GO é seu** — não viro sozinho.
+
+**3. Decisões que você travou:** flip = **esperar o paper provar** (sem dinheiro real até uma trilha aprovar) ✅; aprovação dos papers = **delegada a mim** (critério: net+ sobre ~15-30 round-trips ou ~1-2 semanas, consistente). ✅
+
+## ⏱️ Quanto tempo até eu aprovar
+Honesto: **depende do regime.** Hoje os 4 estão em `trend` → consistência parada, macro esperando cross → **poucos trades no curto prazo**. Se virar range/mixed: leitura preliminar **~3-5 dias**, veredito confiável **~2 semanas**. O job te avisa no momento em que uma trilha tiver amostra — você não precisa ficar olhando.
+
+## ⏭️ Bloco B
+Comecei o planejamento da **Fase 1** (a `scripts/lib/apiClient.js` DRY → recipes declarativas → KB de padrões). Como ela refatora **scripts de recovery de produção** (setup-farm/trend), vou fazê-la no próximo turno com **verificação DRY de cada script** (saída idêntica antes/depois) pra não arriscar o caminho de recuperação pós-`make nuke`. O **Regime Router** fica de fora (overkill — gate passivo já cobre).
+
+## ❓ Pendência sua
+Você começou **"a questão da estratégia do…"** e cortou. Qual estratégia era? (harvester já fechamos como morto/redesign-to-paper). Me diz que eu trato.
+
+Quer que eu **siga já com o Bloco B Fase 1** agora, ou prefere que eu pare por aqui e deixe o paper + a revisão diária rodarem?
+
+## 👤 User *(17:02:55)*
+
+Crie um botão em configurações para os destraves de HALT que tem 3 fontes
+
+## 🤖 Claude *(17:03:43)*
+
+
+## 🤖 Claude *(17:03:46)*
+
+Boa — um painel em Configurações pros 3 destraves do HALT. Antes de construir, deixa eu mapear o que já existe (os endpoints `/system/halt` e `/system/daily-cap/reset`, o shape do `riskState`, e a página de Settings do frontend). É controle do kill-switch → vai com gate QA/TL.
+
+## 🤖 Claude *(17:03:47)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Painel de destrave do HALT (Settings)",
+  "summary": "Bot\u00f5es em Configura\u00e7\u00f5es pras 3 fontes do HALT (env floor / manual / daily-cap)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Painel de destrave do HALT (Settings)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(17:03:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const riskState = require('../riskState');
+> 2	const dailyCapJob = require('../dailyCapJob');
+> 3	
+> 4	// === Superfície OPERATOR-ONLY do kill-switch quente + cap diário ===
+> 5	// Tudo aqui é gated pelo authMiddleware (JWT do dono). Doutrina: o agente LLM NÃO flipa o HALT — por isso
+> 6	// NÃO existe MCP write tool p/ estas rotas; o agente só LÊ o estado (via /analysis/cockpit → env.halt*).
+> 7	
+> 8	// GET /system/halt — estado quente do HALT (env floor + manual + daily-cap).
+> 9	function getHalt(req, res) {
+> 10	    res.json(riskState.getState());
+> 11	}
+> 12	
+> 13	// POST /system/halt { on:boolean, reason?:string } — liga/desliga o HALT MANUAL (quente, sem restart).
+> 14	// NÃO derruba o env floor: se TRADING_HALT=true no .env, `halted` segue true mesmo com {on:false}.
+> 15	function setHalt(req, res) {
+> 16	    const { on, reason } = req.body || {};
+> 17	    if (typeof on !== 'boolean') return res.status(400).json({ error: "campo 'on' (boolean) obrigatório" });
+> 18	    const changed = riskState.setHalt(on, reason || 'operador', 'manual');
+> 19	    res.json({ changed, ...riskState.getState() });
+> 20	}
+> 21	
+> 22	// POST /system/daily-cap/reset — limpa o HALT por daily-cap E re-baseline o equity do dia (p/ não
+> 23	// re-disparar contra um baseline velho). Não toca env/manual. Re-arma a proteção para o resto do dia.
+> 24	async function resetDailyCap(req, res) {
+> 25	    riskState.clearDailyCap();                       // cap limpo (sempre)
+> 26	    const snap = await dailyCapJob.reSnapshot();     // re-baseline pode falhar a preço frio
+> 27	    res.json({ reset: true, reSnapshotOk: snap.ok, reSnapshot: snap, state: riskState.getState() });
+> 28	}
+> 29	
+> 30	// GET /system/daily-cap — status do cap diário (baseline, piso, último equity, se disparou).
+> 31	function getDailyCap(req, res) {
+> 32	    res.json(dailyCapJob.getStatus());
+> 33	}
+> 34	
+> 35	module.exports = { getHalt, setHalt, resetDailyCap, getDailyCap };
+> 36	
+> ```
+
+## 🤖 Claude *(17:03:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/riskState.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// === riskState — FONTE ÚNICA DE VERDADE do kill-switch (HALT) ===
+> 4	//
+> 5	// Hoje o HALT do guard (utils/exchange.js) era um `const` lido no LOAD do módulo: mexer no .env não
+> 6	// tinha efeito sem `docker compose restart` (HALT "frio"). Este módulo torna o HALT QUENTE: o guard
+> 7	// passa a chamar isHalted() POR ORDEM, e o cap diário (-5%) consegue flipar o halt em runtime.
+> 8	//
+> 9	// Três fontes EMPILHÁVEIS (basta UMA ligada p/ travar tudo):
+> 10	//   env       → floor PERMANENTE derivado de process.env.TRADING_HALT no boot. NÃO é persistido nem
+> 11	//               limpável em runtime (o reset do operador NUNCA derruba o env; só `.env` + restart).
+> 12	//   manual    → kill-switch quente do operador (POST /system/halt). Persistido; sobrevive a restart.
+> 13	//   daily-cap → disparado pelo dailyCapJob quando o drawdown de equity bate o teto do dia. Persistido,
+> 14	//               porém AUTO-EXPIRA na virada de dia UTC (re-armado no novo dia).
+> 15	//
+> 16	// SEM dependência do app (só fs/path/logger) → exchange.js requer ESTE módulo top-level sem risco de ciclo.
+> 17	// Fail-closed por construção: se o load/persistência falhar, degrada p/ "env-only" (trava se env diz halt,
+> 18	// não derruba o require). E se isHalted() lançasse, o guard lança = ordem bloqueada (direção segura).
+> 19	
+> 20	const fs = require('fs');
+> 21	const path = require('path');
+> 22	const logger = require('./utils/logger');
+> 23	
+> 24	const STATE_FILE = path.resolve(__dirname, '..', 'logs', 'risk_state.json');
+> 25	
+> 26	// env floor: derivado UMA vez no load (mesma semântica do antigo const TRADING_HALT).
+> 27	const ENV_HALT = process.env.TRADING_HALT === 'true';
+> 28	
+> 29	// Estado mutável das fontes QUENTES (persistidas). env não entra aqui (não é persistido nem limpável).
+> 30	let manual = { on: false, reason: null, since: null };
+> 31	let dailyCap = { on: false, reason: null, since: null, day: null };
+> 32	
+> 33	// Chave de dia UTC YYYY-MM-DD (NÃO getUTCDate() — evita aliasing dia-do-mês na virada de mês).
+> 34	function dayKeyUTC(d) {
+> 35	    return (d || new Date()).toISOString().slice(0, 10);
+> 36	}
+> 37	
+> 38	function persist() {
+> 39	    try {
+> 40	        const dir = path.dirname(STATE_FILE);
+> 41	        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+> 42	        fs.writeFileSync(STATE_FILE, JSON.stringify({ manual, dailyCap }), 'utf8');
+> 43	    } catch (e) {
+> 44	        // Persistência é best-effort: o estado em memória continua válido nesta vida do processo.
+> 45	        logger('system', `[riskState] falha ao persistir ${STATE_FILE}: ${e.message}`);
+> 46	    }
+> 47	}
+> 48	
+> 49	// Carrega o estado quente do disco no boot. Re-arma `manual` como estava; re-arma `dailyCap` SÓ se for
+> 50	// do MESMO dia UTC (senão descarta = auto-expira um restart que cruzou a meia-noite). Fail-closed: JSON
+> 51	// corrompido vira warning e o processo segue só com o env floor.
+> 52	function loadFromDisk() {
+> 53	    try {
+> 54	        if (!fs.existsSync(STATE_FILE)) return;
+> 55	        const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+> 56	        if (raw && raw.manual && typeof raw.manual.on === 'boolean') manual = raw.manual;
+> 57	        if (raw && raw.dailyCap && typeof raw.dailyCap.on === 'boolean') {
+> 58	            if (raw.dailyCap.on && raw.dailyCap.day === dayKeyUTC()) dailyCap = raw.dailyCap;
+> 59	            else dailyCap = { on: false, reason: null, since: null, day: null }; // dia diferente → expira
+> 60	        }
+> 61	    } catch (e) {
+> 62	        logger('system', `[riskState] estado em disco ilegível (${e.message}) — degradando p/ env-only.`);
+> 63	        manual = { on: false, reason: null, since: null };
+> 64	        dailyCap = { on: false, reason: null, since: null, day: null };
+> 65	    }
+> 66	}
+> 67	
+> 68	// HALT efetivo: qualquer fonte ligada trava. dailyCap só conta no DIA em que foi armado.
+> 69	function isHalted() {
+> 70	    return ENV_HALT || manual.on || (dailyCap.on && dailyCap.day === dayKeyUTC());
+> 71	}
+> 72	
+> 73	// Estado completo p/ reporte (cockpit/agent/endpoint). `source`/`reason` resolvem por PRECEDÊNCIA
+> 74	// (env > manual > daily-cap) p/ rotular a causa dominante; `sources` lista TODAS as ativas.
+> 75	function getState() {
+> 76	    const today = dayKeyUTC();
+> 77	    const capActive = dailyCap.on && dailyCap.day === today;
+> 78	    const sources = [];
+> 79	    if (ENV_HALT) sources.push('env');
+> 80	    if (manual.on) sources.push('manual');
+> 81	    if (capActive) sources.push('daily-cap');
+> 82	
+> 83	    let source = null, reason = null, since = null;
+> 84	    if (ENV_HALT) { source = 'env'; reason = 'TRADING_HALT (env)'; since = null; }
+> 85	    else if (manual.on) { source = 'manual'; reason = manual.reason || 'operador'; since = manual.since; }
+> 86	    else if (capActive) { source = 'daily-cap'; reason = dailyCap.reason || 'daily-loss-cap'; since = dailyCap.since; }
+> 87	
+> 88	    return {
+> 89	        halted: isHalted(),
+> 90	        env: ENV_HALT,
+> 91	        manual: { ...manual },
+> 92	        dailyCap: { ...dailyCap, active: capActive },
+> 93	        sources, source, reason, since,
+> 94	    };
+> 95	}
+> 96	
+> 97	// Liga/desliga uma fonte QUENTE. source ∈ {'manual','daily-cap'}. Retorna `true` se MUDOU o estado
+> 98	// daquela fonte (idempotência: re-armar uma fonte já ligada retorna `false` → o chamador não re-notifica).
+> 99	// NUNCA toca o env floor.
+> 100	function setHalt(on, reason, source) {
+> 101	    on = !!on;
+> 102	    if (source === 'manual') {
+> 103	        if (manual.on === on) return false;
+> 104	        manual = on ? { on: true, reason: reason || 'operador', since: new Date().toISOString() }
+> 105	                    : { on: false, reason: null, since: null };
+> 106	        persist();
+> 107	        logger('system', `[riskState] manual HALT ${on ? 'LIGADO' : 'desligado'}${on && reason ? ` (${reason})` : ''}.`);
+> 108	        return true;
+> 109	    }
+> 110	    if (source === 'daily-cap') {
+> 111	        const today = dayKeyUTC();
+> 112	        if (on) {
+> 113	            if (dailyCap.on && dailyCap.day === today) return false; // já armado hoje → não re-notifica
+> 114	            dailyCap = { on: true, reason: reason || 'daily-loss-cap', since: new Date().toISOString(), day: today };
+> 115	            persist();
+> 116	            logger('system', `[riskState] daily-cap HALT ARMADO (${dailyCap.reason}).`);
+> 117	            return true;
+> 118	        }
+> 119	        return clearDailyCap();
+> 120	    }
+> 121	    throw new Error(`[riskState] setHalt: source inválida '${source}' (use 'manual' ou 'daily-cap').`);
+> 122	}
+> 123	
+> 124	// Zera SÓ a fonte daily-cap (usado no rollover de dia e no reset do operador). Nunca toca env/manual.
+> 125	function clearDailyCap() {
+> 126	    if (!dailyCap.on) return false;
+> 127	    dailyCap = { on: false, reason: null, since: null, day: null };
+> 128	    persist();
+> 129	    logger('system', `[riskState] daily-cap HALT limpo (re-armado p/ o dia).`);
+> 130	    return true;
+> 131	}
+> 132	
+> 133	// Dia em que o daily-cap está armado (null se não armado) — o dailyCapJob usa p/ saber se já disparou hoje.
+> 134	function getDailyCapDay() {
+> 135	    return dailyCap.on ? dailyCap.day : null;
+> 136	}
+> 137	
+> 138	// Seed no LOAD do módulo (try/catch já dentro de loadFromDisk; fail-closed).
+> 139	loadFromDisk();
+> 140	logger('system', `[riskState] inicializado — env floor=${ENV_HALT} · manual=${manual.on} · daily-cap=${dailyCap.on}${dailyCap.on ? ` (${dailyCap.day})` : ''} · halted=${isHalted()}.`);
+> 141	
+> 142	module.exports = { dayKeyUTC, isHalted, getState, setHalt, clearDailyCap, getDailyCapDay };
+> 143	
+> ```
+
+## 🤖 Claude *(17:04:01)*
+
+
+## 🤖 Claude *(17:04:04)*
+
+Backend já tem tudo: `GET/POST /system/halt` + `POST /system/daily-cap/reset` + `GET /system/daily-cap`, e `riskState.getState()` devolve as 3 fontes (`env`, `manual`, `dailyCap`). **Não preciso mexer no backend** — só construir o painel no frontend. O **env floor não é destravável em runtime** (por design: só `.env`+restart) → vai como display + instrução; manual e daily-cap têm botão. Vou confirmar as rotas e achar a página de Settings.
+
+## 🤖 Claude *(17:04:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== system router + mount + auth ===\"\ngrep -rn \"system\" backend/src/app.js | head\nls backend/src/routers/ | grep -i system && sed -n '1,40p' backend/src/routers/systemRouter.js 2>/dev/null\necho \"=== frontend Settings page ===\"\nfind frontend/src -iname \"*setting*\" -o -iname \"*config*\" 2>/dev/null | grep -iE \"setting|config\" | head\necho \"=== frontend services p/ system/halt? ===\"\ngrep -rln \"system/halt\\|daily-cap\\|SystemService\\|tradingHalt\" frontend/src 2>/dev/null | head",
+  "description": "Verify system router/mount and locate frontend Settings page"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === system router + mount + auth ===
+> backend/src/app.js:21:const systemRouter = require('./routers/systemRouter');
+> backend/src/app.js:64:app.use('/system', authMiddleware, systemRouter);
+> systemRouter.js
+> const express = require('express');
+> const router = express.Router();
+> const systemController = require('../controllers/systemController');
+> 
+> // /system — controle operacional do kill-switch quente + cap diário. OPERATOR-ONLY (montado atrás do
+> // authMiddleware no app.js). Sem MCP write tool: o agente LLM não flipa o HALT (doutrina).
+> 
+> router.get('/halt', systemController.getHalt);
+> 
+> router.post('/halt', systemController.setHalt);
+> 
+> router.get('/daily-cap', systemController.getDailyCap);
+> 
+> router.post('/daily-cap/reset', systemController.resetDailyCap);
+> 
+> module.exports = router;
+> === frontend Settings page ===
+> frontend/src/private/Settings
+> frontend/src/services/SettingsService.js
+> frontend/src/private/Settings/Settings.js
+> === frontend services p/ system/halt? ===
+> frontend/src/private/Cockpit/Cockpit.js
+> frontend/src/services/IntelligenceService.js
+> ```
+
+## 🤖 Claude *(17:04:19)*
+
+
+## 🤖 Claude *(17:04:20)*
+
+Rotas confirmadas (`/system/halt` GET/POST, `/system/daily-cap/reset` POST, sob auth). Sem backend novo. Vou ler a página de Settings pra encaixar o painel no padrão dela.
+
+## 🤖 Claude *(17:04:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useEffect, useRef } from 'react';
+> 2	import Menu from '../../components/Menu/Menu';
+> 3	import Footer from '../../components/Footer/Footer';
+> 4	import Toast from '../../components/Toast/Toast';
+> 5	import LogModal from '../../components/Logs/LogModal';
+> 6	
+> 7	import { getSettings, updateSettings } from '../../services/SettingsService';
+> 8	
+> 9	function Settings() {
+> 10	
+> 11	    const confirmPassword = useRef('');
+> 12	    const [settings, setSettings] = useState({});
+> 13	    const [notification, setNotification] = useState({});
+> 14	    const [activeTab, setActiveTab] = useState('mainnet');
+> 15	
+> 16	    useEffect(() => {
+> 17	        const token = localStorage.getItem("token");
+> 18	
+> 19	        getSettings(token)
+> 20	            .then(result => {
+> 21	                setSettings(result);
+> 22	                if (result.useTestnet) setActiveTab('testnet');
+> 23	            })
+> 24	            .catch(err => {
+> 25	                console.error(err.response ? err.response.data : err.message);
+> 26	                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });
+> 27	            })
+> 28	    }, []);
+> 29	
+> 30	    function onInputChange(event) {
+> 31	        setSettings(prevState => ({ ...prevState, [event.target.id]: event.target.value }));
+> 32	    }
+> 33	
+> 34	    function onFormSubmit(event) {
+> 35	        const newPassword = settings.password || '';
+> 36	        const confirm = confirmPassword.current.value || '';
+> 37	
+> 38	        // Valida a confirmação apenas se o usuário digitou uma senha nova
+> 39	        if ((newPassword.trim() || confirm.trim()) && newPassword !== confirm)
+> 40	            return setNotification({ type: 'error', text: `The fields New Password and Confirm Password must be equal.` });
+> 41	
+> 42	        // Monta o payload explicitamente e NUNCA envia password/secretKey vazios.
+> 43	        // Sem isso, um autofill do navegador (ou estado vazio) mandaria um valor
+> 44	        // não-intencional que o backend re-hasheia/re-encripta, derrubando o login
+> 45	        // de todos — incidente 2026-06-09. Campo omitido => backend preserva o atual.
+> 46	        const payload = { ...settings };
+> 47	        if (!newPassword.trim()) delete payload.password;
+> 48	        if (!(payload.secretKey || '').trim()) delete payload.secretKey;
+> 49	        if (!(payload.testnetSecretKey || '').trim()) delete payload.testnetSecretKey;
+> 50	
+> 51	        const token = localStorage.getItem("token");
+> 52	        updateSettings(payload, token)
+> 53	            .then(result => {
+> 54	                if (result)
+> 55	                    setNotification({ type: 'success', text: `Settings saved successfully!` });
+> 56	                else
+> 57	                    setNotification({ type: 'error', text: result });
+> 58	            })
+> 59	            .catch(err => {
+> 60	                console.error(err.response ? err.response.data : err.message);
+> 61	                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });
+> 62	            })
+> 63	    }
+> 64	
+> 65	    return (
+> 66	        <React.Fragment>
+> 67	            <Menu />
+> 68	            <main className="content">
+> 69	                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+> 70	                    <div className="d-block mb-4 mb-md-0">
+> 71	                        <h1 className="h4">Settings</h1>
+> 72	                    </div>
+> 73	                    <div className="btn-toolbar mb-2 mb-md-0">
+> 74	                        <div className="d-inline-flex align-items-center">
+> 75	                            <button id="btnLogs" className="btn btn-primary animate-up-2 me-2" data-bs-toggle="modal" data-bs-target="#modalLogs">
+> 76	                                <svg className="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2h-1.528A6 6 0 004 9.528V4z" /><path fillRule="evenodd" d="M8 10a4 4 0 00-3.446 6.032l-1.261 1.26a1 1 0 101.414 1.415l1.261-1.261A4 4 0 108 10zm-2 4a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" /></svg>
+> 77	                            </button>
+> 78	                        </div>
+> 79	                    </div>
+> 80	                </div>
+> 81	                <div className="row">
+> 82	                    <div className="col-12">
+> 83	                        <div className="card card-body border-0 shadow mb-4">
+> 84	                            <h2 className="h5 mb-4">Personal Settings</h2>
+> 85	                            <div className="row">
+> 86	                                <div className="col-md-6 mb-3">
+> 87	                                    <div className="form-group">
+> 88	                                        <label htmlFor="email">Email</label>
+> 89	                                        <input className="form-control" id="email" type="email" placeholder="name@company.com" defaultValue={settings.email} onChange={onInputChange} />
+> 90	                                    </div>
+> 91	                                </div>
+> 92	                                <div className="col-md-6 mb-3">
+> 93	                                    <div className="form-group">
+> 94	                                        <label htmlFor="phone">Cellphone</label>
+> 95	                                        <input className="form-control" id="phone" type="text" placeholder="+1 51 123456789" defaultValue={settings.phone} onChange={onInputChange} />
+> 96	                                    </div>
+> 97	                                </div>
+> 98	                            </div>
+> 99	                            <div className="row">
+> 100	                                <div className="col-md-6 mb-3">
+> 101	                                    <div>
+> 102	                                        <label htmlFor="password">New Password</label>
+> 103	                                        <input className="form-control" id="password" type="password" autoComplete="new-password" placeholder="Enter your new password" onChange={onInputChange} />
+> 104	                                    </div>
+> 105	                                </div>
+> 106	                                <div className="col-md-6 mb-3">
+> 107	                                    <div>
+> 108	                                        <label htmlFor="confirmPassword">Confirm Password</label>
+> 109	                                        <input ref={confirmPassword} className="form-control" id="confirmPassword" type="password" autoComplete="new-password" placeholder="Your new password again" />
+> 110	                                    </div>
+> 111	                                </div>
+> 112	                            </div>
+> 113	                            <div className="row">
+> 114	                                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap">
+> 115	                                    <div className="col-sm-3">
+> 116	                                        <button className="btn btn-gray-800 mt-2 animate-up-2" type="button" onClick={onFormSubmit}>Save</button>
+> 117	                                    </div>
+> 118	                                </div>
+> 119	                            </div>
+> 120	                        </div>
+> 121	                    </div>
+> 122	                </div>
+> 123	                <div className="row">
+> 124	                    <div className="col-12">
+> 125	                        <div className="card card-body border-0 shadow mb-4">
+> 126	                            <h2 className="h5 my-4">Alert Settings</h2>
+> 127	                            <div className="row">
+> 128	                                <div className="col-12 mb-3">
+> 129	                                    <div className="form-group">
+> 130	                                        <label htmlFor="sendGridKey">SendGrid Api Key</label>
+> 131	                                        <input className="form-control" id="sendGridKey" type="password" placeholder="Enter the SendGrid API Key" defaultValue={settings.sendGridKey} onChange={onInputChange} />
+> 132	                                    </div>
+> 133	                                </div>
+> 134	                            </div>
+> 135	                            <div className="row">
+> 136	                                <div className="col-md-6 mb-3">
+> 137	                                    <div className="form-group">
+> 138	                                        <label htmlFor="twilioPhone">Twilio Phone</label>
+> 139	                                        <input className="form-control" id="twilioPhone" type="text" placeholder="Enter the Twilio Phone Number" defaultValue={settings.twilioPhone} onChange={onInputChange} />
+> 140	                                    </div>
+> 141	                                </div>
+> 142	                            </div>
+> 143	                            <div className="row">
+> 144	                                <div className="col-md-6 mb-3">
+> 145	                                    <div className="form-group">
+> 146	                                        <label htmlFor="twilioSid">Twilio SID</label>
+> 147	                                        <input className="form-control" id="twilioSid" type="text" placeholder="Enter the Twilio SID" defaultValue={settings.twilioSid} onChange={onInputChange} />
+> 148	                                    </div>
+> 149	                                </div>
+> 150	                                <div className="col-md-6 mb-3">
+> 151	                                    <div className="form-group">
+> 152	                                        <label htmlFor="twilioToken">Twilio Token</label>
+> 153	                                        <input className="form-control" id="twilioToken" type="password" placeholder="Enter the Twilio Token" defaultValue={settings.twilioToken} onChange={onInputChange} />
+> 154	                                    </div>
+> 155	                                </div>
+> 156	                            </div>
+> 157	                            <div className="row">
+> 158	                                <div className="col-md-6 mb-3">
+> 159	                                    <div className="form-group">
+> 160	                                        <label htmlFor="telegramBot">Telegram Bot Token</label>
+> 161	                                        <input className="form-control" id="telegramBot" type="password" placeholder="Enter the Telegram Bot Token" defaultValue={settings.telegramBot} onChange={onInputChange} />
+> 162	                                    </div>
+> 163	                                </div>
+> 164	                                <div className="col-md-6 mb-3">
+> 165	                                    <div className="form-group">
+> 166	                                        <label htmlFor="telegramChat">Telegram Chat ID</label>
+> 167	                                        <input className="form-control" id="telegramChat" type="text" placeholder="Enter the Telegram Chat ID" defaultValue={settings.telegramChat} onChange={onInputChange} />
+> 168	                                    </div>
+> 169	                                </div>
+> 170	                            </div>
+> 171	                            <div className="row">
+> 172	                                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap">
+> 173	                                    <div className="col-sm-3">
+> 174	                                        <button className="btn btn-gray-800 mt-2 animate-up-2" type="button" onClick={onFormSubmit}>Save</button>
+> 175	                                    </div>
+> 176	                                </div>
+> 177	                            </div>
+> 178	                        </div>
+> 179	                    </div>
+> 180	                </div>
+> 181	                <div className="row">
+> 182	                    <div className="col-12">
+> 183	                        <div className="card card-body border-0 shadow mb-4">
+> 184	                            <h2 className="h5 my-4">Binance Settings</h2>
+> 185	                            <div className="row mb-4">
+> 186	                                <div className="col-12">
+> 187	                                    <div className="form-group">
+> 188	                                        <label htmlFor="useTestnet">Active Environment</label>
+> 189	                                        <select className="form-select" id="useTestnet" value={settings.useTestnet ? 'true' : 'false'} onChange={(e) => setSettings(prev => ({ ...prev, useTestnet: e.target.value === 'true' }))}>
+> 190	                                            <option value="false">Mainnet (Real Money)</option>
+> 191	                                            <option value="true">Testnet (Simulated)</option>
+> 192	                                        </select>
+> 193	                                    </div>
+> 194	                                </div>
+> 195	                            </div>
+> 196	
+> 197	                            <ul className="nav nav-tabs mb-3" role="tablist">
+> 198	                                <li className="nav-item">
+> 199	                                    <button className={`nav-link ${activeTab === 'mainnet' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('mainnet')}>Mainnet</button>
+> 200	                                </li>
+> 201	                                <li className="nav-item">
+> 202	                                    <button className={`nav-link ${activeTab === 'testnet' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('testnet')}>Testnet</button>
+> 203	                                </li>
+> 204	                            </ul>
+> 205	
+> 206	                            {activeTab === 'mainnet' ? (
+> 207	                                <React.Fragment>
+> 208	                                    <div className="row">
+> 209	                                        <div className="col-12 mb-3">
+> 210	                                            <div className="form-group">
+> 211	                                                <label htmlFor="apiUrl">API Url</label>
+> 212	                                                <input className="form-control" id="apiUrl" type="text" placeholder="Enter the API URL" defaultValue={settings.apiUrl || ''} onChange={onInputChange} />
+> 213	                                            </div>
+> 214	                                        </div>
+> 215	                                    </div>
+> 216	                                    <div className="row">
+> 217	                                        <div className="col-12 mb-3">
+> 218	                                            <div className="form-group">
+> 219	                                                <label htmlFor="streamUrl">Stream Url</label>
+> 220	                                                <input className="form-control" id="streamUrl" type="text" placeholder="Enter the Stream URL" defaultValue={settings.streamUrl || ''} onChange={onInputChange} />
+> 221	                                            </div>
+> 222	                                        </div>
+> 223	                                    </div>
+> 224	                                    <div className="row">
+> 225	                                        <div className="col-12 mb-3">
+> 226	                                            <div className="form-group">
+> 227	                                                <label htmlFor="accessKey">Access Key</label>
+> 228	                                                <input className="form-control" id="accessKey" type="text" placeholder="Enter the API Access Key" defaultValue={settings.accessKey || ''} onChange={onInputChange} />
+> 229	                                            </div>
+> 230	                                        </div>
+> 231	                                    </div>
+> 232	                                    <div className="row">
+> 233	                                        <div className="col-12 mb-3">
+> 234	                                            <div className="form-group">
+> 235	                                                <label htmlFor="secretKey">New Secret Key</label>
+> 236	                                                <input className="form-control" id="secretKey" type="password" autoComplete="off" placeholder="Enter your new API Secret Key" onChange={onInputChange} />
+> 237	                                            </div>
+> 238	                                        </div>
+> 239	                                    </div>
+> 240	                                </React.Fragment>
+> 241	                            ) : (
+> 242	                                <React.Fragment>
+> 243	                                    <div className="row">
+> 244	                                        <div className="col-12 mb-3">
+> 245	                                            <div className="form-group">
+> 246	                                                <label htmlFor="testnetApiUrl">API Url (Testnet)</label>
+> 247	                                                <input className="form-control" id="testnetApiUrl" type="text" placeholder="Enter the Testnet API URL" defaultValue={settings.testnetApiUrl || ''} onChange={onInputChange} />
+> 248	                                            </div>
+> 249	                                        </div>
+> 250	                                    </div>
+> 251	                                    <div className="row">
+> 252	                                        <div className="col-12 mb-3">
+> 253	                                            <div className="form-group">
+> 254	                                                <label htmlFor="testnetStreamUrl">Stream Url (Testnet)</label>
+> 255	                                                <input className="form-control" id="testnetStreamUrl" type="text" placeholder="Enter the Testnet Stream URL" defaultValue={settings.testnetStreamUrl || ''} onChange={onInputChange} />
+> 256	                                            </div>
+> 257	                                        </div>
+> 258	                                    </div>
+> 259	                                    <div className="row">
+> 260	                                        <div className="col-12 mb-3">
+> 261	                                            <div className="form-group">
+> 262	                                                <label htmlFor="testnetAccessKey">Access Key (Testnet)</label>
+> 263	                                                <input className="form-control" id="testnetAccessKey" type="text" placeholder="Enter the Testnet API Access Key" defaultValue={settings.testnetAccessKey || ''} onChange={onInputChange} />
+> 264	                                            </div>
+> 265	                                        </div>
+> 266	                                    </div>
+> 267	                                    <div className="row">
+> 268	                                        <div className="col-12 mb-3">
+> 269	                                            <div className="form-group">
+> 270	                                                <label htmlFor="testnetSecretKey">New Secret Key (Testnet)</label>
+> 271	                                                <input className="form-control" id="testnetSecretKey" type="password" autoComplete="off" placeholder="Enter your new Testnet API Secret Key" onChange={onInputChange} />
+> 272	                                            </div>
+> 273	                                        </div>
+> 274	                                    </div>
+> 275	                                </React.Fragment>
+> 276	                            )}
+> 277	
+> 278	                            <div className="row">
+> 279	                                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap">
+> 280	                                    <div className="col-sm-3">
+> 281	                                        <button className="btn btn-gray-800 mt-2 animate-up-2" type="button" onClick={onFormSubmit}>Save</button>
+> 282	                                    </div>
+> 283	                                </div>
+> 284	                            </div>
+> 285	                        </div>
+> 286	                    </div>
+> 287	                </div>
+> 288	                <Footer />
+> 289	            </main>
+> 290	            <Toast text={notification.text} type={notification.type} />
+> 291	            <LogModal file="system" />
+> 292	        </React.Fragment >
+> 293	    );
+> 294	}
+> 295	
+> 296	export default Settings;
+> 297	
+> ```
+
+## 🤖 Claude *(17:04:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/SettingsService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import axios from './BaseService';
+> 2	
+> 3	const SETTINGS_URL = `${process.env.REACT_APP_API_URL}/settings` || 'http://localhost:3001/settings';
+> 4	
+> 5	export async function getSettings(token) {
+> 6	    const headers = {
+> 7	        'authorization': token
+> 8	    }
+> 9	    const response = await axios.get(SETTINGS_URL, { headers });
+> 10	    return response.data;
+> 11	}
+> 12	
+> 13	export async function updateSettings(settings, token) {
+> 14	    const headers = { 'authorization': token };
+> 15	    const response = await axios.patch(SETTINGS_URL, settings, { headers });
+> 16	    return response.data;
+> 17	}
+> ```
+
+## 🤖 Claude *(17:05:37)*
+
+
+## 🤖 Claude *(17:05:37)*
+
+Entendi o padrão da página (Bootstrap, cards, Toast). Backend não muda — só crio o `SystemService` e um card no Settings com os 3 destraves. **env floor** = display + instrução (não destravável em runtime, por design); **manual** e **daily-cap** = botões. Com aviso claro de que, com o env floor ligado, soltar manual/cap **não libera trading**.
+
+## 🤖 Claude *(17:05:39)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Painel de destrave do HALT em Settings (3 fontes)",
+  "description": "SystemService.js (getHalt/setHalt/resetDailyCap) + card no Settings.js: env floor (display+instru\u00e7\u00e3o), manual (bot\u00e3o travar/soltar), daily-cap (bot\u00e3o re-armar) + aviso env-floor. Gate QA/TL, deploy frontend, verificar.",
+  "activeForm": "Construindo o painel de destrave do HALT"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #19 created successfully: Painel de destrave do HALT em Settings (3 fontes)
+> ```
+
+## 🤖 Claude *(17:05:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js",
+  "content": "import axios from './BaseService';\n\n// Superf\u00edcie OPERATOR-ONLY do kill-switch quente + cap di\u00e1rio (backend /system, atr\u00e1s do authMiddleware).\n// O agente LLM N\u00c3O tem write tool p/ isto \u2014 s\u00f3 o operador (este painel) flipa as fontes QUENTES do HALT.\nconst SYSTEM_URL = `${process.env.REACT_APP_API_URL}/system`;\n\n// Estado das 3 fontes do HALT: { halted, env, manual:{on,reason,since}, dailyCap:{on,active,...}, sources, source, reason }.\nexport async function getHalt(token) {\n    const response = await axios.get(`${SYSTEM_URL}/halt`, { headers: { authorization: token } });\n    return response.data;\n}\n\n// Liga/desliga a fonte MANUAL (quente, sem restart). N\u00c3O derruba o env floor (se TRADING_HALT=true no .env,\n// `halted` segue true mesmo com on=false). Retorna o estado completo p\u00f3s-mudan\u00e7a.\nexport async function setHalt(on, reason, token) {\n    const response = await axios.post(`${SYSTEM_URL}/halt`, { on, reason }, { headers: { authorization: token } });\n    return response.data;\n}\n\n// Limpa a fonte daily-cap e re-baseline o equity do dia (re-arma a prote\u00e7\u00e3o). Retorna { reset, reSnapshotOk, state }.\nexport async function resetDailyCap(token) {\n    const response = await axios.post(`${SYSTEM_URL}/daily-cap/reset`, {}, { headers: { authorization: token } });\n    return response.data;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "import { getSettings, updateSettings } from '../../services/SettingsService';",
+  "new_string": "import { getSettings, updateSettings } from '../../services/SettingsService';\nimport { getHalt, setHalt, resetDailyCap } from '../../services/SystemService';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "    const [activeTab, setActiveTab] = useState('mainnet');",
+  "new_string": "    const [activeTab, setActiveTab] = useState('mainnet');\n    const [halt, setHaltState] = useState(null);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "            .catch(err => {\n                console.error(err.response ? err.response.data : err.message);\n                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });\n            })\n    }, []);",
+  "new_string": "            .catch(err => {\n                console.error(err.response ? err.response.data : err.message);\n                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });\n            })\n\n        getHalt(token).then(setHaltState).catch(() => { });\n    }, []);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:05:57)*
+
+
+## 🤖 Claude *(17:05:58)*
+
+Agora as funções de handler e o card.
+
+## 🤖 Claude *(17:06:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "                console.error(err.response ? err.response.data : err.message);\n                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });\n            })\n    }\n\n    return (",
+  "new_string": "                console.error(err.response ? err.response.data : err.message);\n                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });\n            })\n    }\n\n    function loadHalt() {\n        const token = localStorage.getItem(\"token\");\n        getHalt(token).then(setHaltState).catch(() => { });\n    }\n\n    function onSetManual(on) {\n        const verb = on ? 'TRAVAR agora (p\u00e2nico)' : 'SOLTAR a trava manual';\n        if (!window.confirm(`Confirmar: ${verb} o kill-switch manual?`)) return;\n        const token = localStorage.getItem(\"token\");\n        setHalt(on, on ? 'p\u00e2nico via painel' : 'destrave via painel', token)\n            .then(res => { setHaltState(res); setNotification({ type: 'success', text: `Trava manual ${on ? 'LIGADA' : 'desligada'}.` }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    function onResetCap() {\n        if (!window.confirm('Re-armar o cap di\u00e1rio? (limpa o HALT por cap e re-baseline o equity do dia)')) return;\n        const token = localStorage.getItem(\"token\");\n        resetDailyCap(token)\n            .then(res => { if (res && res.state) setHaltState(res.state); setNotification({ type: 'success', text: `Cap di\u00e1rio re-armado.${res && res.reSnapshotOk === false ? ' (re-baseline pendente: pre\u00e7o frio)' : ''}` }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    return ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:06:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "                <Footer />\n            </main>",
+  "new_string": "                <div className=\"row\">\n                    <div className=\"col-12\">\n                        <div className=\"card card-body border-0 shadow mb-4\">\n                            <div className=\"d-flex justify-content-between align-items-center my-4\">\n                                <h2 className=\"h5 mb-0\">Kill-switch / HALT \u2014 3 fontes</h2>\n                                <button className=\"btn btn-sm btn-gray-800 animate-up-2\" type=\"button\" onClick={loadHalt}>Atualizar</button>\n                            </div>\n                            {!halt ? (\n                                <p className=\"text-muted mb-0\">Carregando estado do HALT\u2026</p>\n                            ) : (\n                                <React.Fragment>\n                                    <div className={`alert ${halt.halted ? 'alert-danger' : 'alert-success'}`} role=\"alert\">\n                                        Estado geral: <b>{halt.halted ? 'TRAVADO \u2014 nada negocia' : 'LIBERADO \u2014 trading permitido'}</b>\n                                        {halt.source ? ` \u00b7 fonte dominante: ${halt.source}${halt.reason ? ` (${halt.reason})` : ''}` : ''}\n                                    </div>\n\n                                    {/* 1. env floor \u2014 read-only por design */}\n                                    <div className=\"d-flex justify-content-between align-items-center border-bottom py-3\">\n                                        <div className=\"pe-3\">\n                                            <b>1. Env floor</b>{' '}\n                                            <span className={`badge ${halt.env ? 'bg-danger' : 'bg-success'}`}>{halt.env ? 'TRAVADO' : 'livre'}</span>\n                                            <div className=\"text-muted small mt-1\">Trava permanente (<code>TRADING_HALT</code> no <code>.env</code>). Por design, s\u00f3 \u00e9 destrav\u00e1vel editando o <code>.env</code> (<code>TRADING_HALT=false</code>) e <b>reiniciando o backend</b> \u2014 \u00e9 o piso de seguran\u00e7a do dinheiro real. N\u00e3o h\u00e1 bot\u00e3o aqui.</div>\n                                        </div>\n                                        <span className=\"badge bg-secondary\">s\u00f3 via .env + restart</span>\n                                    </div>\n\n                                    {/* 2. manual \u2014 kill-switch quente */}\n                                    <div className=\"d-flex justify-content-between align-items-center border-bottom py-3\">\n                                        <div className=\"pe-3\">\n                                            <b>2. Manual (operador)</b>{' '}\n                                            <span className={`badge ${halt.manual && halt.manual.on ? 'bg-danger' : 'bg-success'}`}>{halt.manual && halt.manual.on ? 'TRAVADO' : 'livre'}</span>\n                                            <div className=\"text-muted small mt-1\">Kill-switch quente (sem restart). {halt.manual && halt.manual.on && halt.manual.reason ? `Motivo: ${halt.manual.reason}.` : 'Bot\u00e3o de p\u00e2nico \u2014 trava tudo na hora.'}</div>\n                                        </div>\n                                        {halt.manual && halt.manual.on\n                                            ? <button className=\"btn btn-sm btn-outline-success\" type=\"button\" onClick={() => onSetManual(false)}>Soltar trava manual</button>\n                                            : <button className=\"btn btn-sm btn-danger\" type=\"button\" onClick={() => onSetManual(true)}>Travar agora (p\u00e2nico)</button>}\n                                    </div>\n\n                                    {/* 3. daily-cap \u2014 autom\u00e1tica */}\n                                    <div className=\"d-flex justify-content-between align-items-center py-3\">\n                                        <div className=\"pe-3\">\n                                            <b>3. Cap di\u00e1rio (\u22125%)</b>{' '}\n                                            <span className={`badge ${halt.dailyCap && halt.dailyCap.active ? 'bg-danger' : 'bg-success'}`}>{halt.dailyCap && halt.dailyCap.active ? 'DISPAROU' : 'armado / livre'}</span>\n                                            <div className=\"text-muted small mt-1\">Trava autom\u00e1tica no drawdown de \u22125% do equity no dia. {halt.dailyCap && halt.dailyCap.active ? `Disparou${halt.dailyCap.reason ? `: ${halt.dailyCap.reason}` : ''}.` : 'Re-arma sozinho na virada do dia UTC.'}</div>\n                                        </div>\n                                        <button className=\"btn btn-sm btn-outline-warning\" type=\"button\" onClick={onResetCap} disabled={!(halt.dailyCap && halt.dailyCap.active)}>Re-armar cap</button>\n                                    </div>\n\n                                    {halt.env && (\n                                        <div className=\"alert alert-warning mt-3 mb-0 small\" role=\"alert\">\n                                            \u26a0\ufe0f O <b>env floor</b> est\u00e1 TRAVADO \u2192 soltar a trava manual ou re-armar o cap aqui <b>N\u00c3O libera o trading</b>. Para ir ao vivo: <code>.env TRADING_HALT=false</code> + reiniciar o backend (decis\u00e3o do dono \u2014 canary de um grupo s\u00f3).\n                                        </div>\n                                    )}\n                                </React.Fragment>\n                            )}\n                        </div>\n                    </div>\n                </div>\n                <Footer />\n            </main>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:06:34)*
+
+
+## 🤖 Claude *(17:06:34)*
+
+Frontend pronto (SystemService + card no Settings). É superfície de controle do kill-switch → gate QA+TL antes de deployar.
+
+## 🤖 Claude *(17:06:35)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "19",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #19 status
+> ```
+
+## 🤖 Claude *(17:06:51)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate QA do painel HALT",
+  "subagent_type": "qa-engineer",
+  "prompt": "QA gate (PASS / PASS COM RESSALVAS / FAIL) de um painel de Settings (frontend) que controla o kill-switch (HALT) do TradeUX. Sistema em MAINNET CONGELADO. Leia os arquivos em /home/gcrux-tradeux/tradeux.\n\nDIFF (frontend-only, SEM mudan\u00e7a de backend \u2014 reusa endpoints j\u00e1 existentes e gated):\n- NOVO `frontend/src/services/SystemService.js`: getHalt(token) GET /system/halt; setHalt(on,reason,token) POST /system/halt; resetDailyCap(token) POST /system/daily-cap/reset. (axios via BaseService, header authorization=token.)\n- EDITADO `frontend/src/private/Settings/Settings.js`: novo card \"Kill-switch / HALT \u2014 3 fontes\" + handlers (loadHalt, onSetManual, onResetCap com window.confirm) + estado `halt` carregado no useEffect.\n\nCONTEXTO BACKEND (j\u00e1 existente, N\u00c3O mudou): `riskState.getState()` retorna {halted, env, manual:{on,reason,since}, dailyCap:{on,active,reason,...}, sources, source, reason}. As 3 fontes do HALT: **env** (TRADING_HALT no .env, N\u00c3O destrav\u00e1vel em runtime \u2014 s\u00f3 .env+restart), **manual** (POST /system/halt {on}), **daily-cap** (POST /system/daily-cap/reset). Rotas sob authMiddleware (operator-only). setHalt retorna {changed, ...getState()}; resetDailyCap retorna {reset, reSnapshotOk, state}.\n\nVERIFIQUE:\n1. O painel N\u00c3O cria capacidade nova de risco: ele s\u00f3 chama endpoints que J\u00c1 existiam (gated por JWT). O env floor \u00e9 corretamente READ-ONLY na UI (sem bot\u00e3o; s\u00f3 display + instru\u00e7\u00e3o .env+restart)?\n2. HONESTIDADE: quando env floor est\u00e1 TRAVADO, o painel deixa CLARO que soltar manual/cap N\u00c3O libera trading? (h\u00e1 o alerta condicional `halt.env`?)\n3. Os handlers consomem os campos certos do estado: setHalt retorna o getState completo (halt.manual.on etc.) e resetDailyCap retorna {state} (usa res.state)? Algum acesso a campo undefined (halt.manual / halt.dailyCap nulos) que quebre o render? (o render usa `halt.manual && halt.manual.on`?)\n4. window.confirm em ambas as a\u00e7\u00f5es sens\u00edveis (travar/soltar/reset)? Toast de sucesso/erro coerente?\n5. JSX balanceado / build n\u00e3o quebra? Reusa classes Bootstrap existentes (card/alert/badge/btn)?\n6. Edge: getHalt falha no boot \u2192 painel mostra \"Carregando\u2026\" sem crash? token ausente?\n\nEntregue verdict + achados por severidade + testes a rodar (incl. E2E: clicar travar/soltar e ver o estado refletir; com env floor up, confirmar que 'halted' segue true ap\u00f3s soltar manual)."
+}
+```
+
+## 🤖 Claude *(17:07:00)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate TL do painel HALT",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) como tech-lead do TradeUX. Frontend: painel em Settings pra controlar as 3 fontes do kill-switch (HALT). Sistema em MAINNET CONGELADO. Leia /home/gcrux-tradeux/tradeux.\n\nDIFF (frontend-only, reusa endpoints backend existentes e gated):\n- NOVO `frontend/src/services/SystemService.js` (getHalt/setHalt/resetDailyCap \u2192 /system/*).\n- EDITADO `frontend/src/private/Settings/Settings.js`: card \"Kill-switch / HALT \u2014 3 fontes\" (env floor = display-only + instru\u00e7\u00e3o .env+restart; manual = bot\u00e3o travar/soltar; daily-cap = bot\u00e3o re-armar) + handlers com window.confirm + alerta quando env floor est\u00e1 up (\"soltar manual/cap N\u00c3O libera trading\").\n\nAVALIE (code-owner):\n1. SEGURAN\u00c7A: o painel s\u00f3 exp\u00f5e endpoints que j\u00e1 existiam (operator-only, JWT) \u2014 N\u00c3O amplia a superf\u00edcie de ataque? O env floor (a trava de seguran\u00e7a real do dinheiro) continua intoc\u00e1vel por UI, certo? \u00c9 a decis\u00e3o de design correta (n\u00e3o dar bot\u00e3o de UI pro env floor)?\n2. UX/honestidade: com o dono tendo decidido \"esperar o paper provar antes do flip\", o painel deixa claro que esses bot\u00f5es N\u00c3O ligam dinheiro real enquanto o env floor est\u00e1 up? Risco de o dono clicar \"soltar manual\" e achar que foi ao vivo?\n3. CONVEN\u00c7\u00c3O: segue o padr\u00e3o do Settings.js (cards Bootstrap, Toast, SettingsService)? window.confirm \u00e9 guard suficiente p/ um painel operator-only, ou precisa de algo mais forte?\n4. must-fix vs nice-to-have + veredito.\n\nPragm\u00e1tico: frontend-only, reusa endpoints gated, sob HALT. Diga o que bloqueia (se algo)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Padrão de Toast/`setNotification`/erro idêntico ao usado pelos novos handlers. O painel novo segue o mesmo padrão de card Bootstrap, Toast e service do resto do Settings. Os erros novos têm tratamento ligeiramente mais defensivo (`err.response.data.error || err.response.data`), o que está alinhado ao contrato do backend (que retorna `{error: ...}` no 400).\n\nTenho contexto suficiente. O `git diff --check` rápido para whitespace e a verificação de que o build não está obviamente quebrado já são desnecessários dado o escopo — a mudança é JSX puro com padrões existentes. Eis o veredito.\n\n---\n\n## REVISÃO — Painel Kill-switch / HALT (3 fontes) no Settings\n\n**Escopo:** frontend-only — `frontend/src/services/SystemService.js` (novo) + `frontend/src/private/Settings/Settings.js` (card novo). Reusa `/system/halt` (GET/POST) e `/system/daily-cap/reset` já existentes, montados atrás de `authMiddleware` (`backend/src/app.js:64`). Sistema em MAINNET CONGELADO (`TRADING_HALT=true` = env floor up).\n\n### VEREDITO: APPROVE COM SUGESTÕES\n\n### Racional (respondendo aos 4 pontos)\n\n**1. Segurança — não amplia superfície, env floor intocável.** Confirmado nas fontes:\n- Os 3 endpoints já existiam e ficam atrás do mesmo JWT de toda rota autenticada (`app.use(\'/system\', authMiddleware, systemRouter)`). O painel **não cria** rota nova nem afrouxa guard — só consome o que já estava lá. Zero ampliação de superfície.\n- O env floor é **estruturalmente** inacessível por UI: `riskState.js:27` deriva `ENV_HALT` uma vez no load, `setHalt()` só aceita `source ∈ {\'manual\',\'daily-cap\'}` e o comentário em `riskState.js:99-100` é explícito ("NUNCA toca o env floor"). Não há endpoint que mexa no env — então não havia botão a dar. Decisão de design **correta**: a trava real do dinheiro só cai com `.env` + restart deliberado, fora da app. Mantém o agente LLM também de fora (sem MCP write tool — doutrina em `systemController.js:4-6`).\n\n**2. UX / honestidade — risco de falso "fui ao vivo" mitigado, mas não à prova de pressa.** O alerta condicional `{halt.env && (...)}` ("soltar manual/cap NÃO libera o trading") só aparece quando o env floor está up — que é exatamente o estado atual. O `alert` de estado geral também mostra a **fonte dominante** (`source`), e como a precedência em `riskState.js:84` é `env > manual > daily-cap`, com o floor up o painel sempre dirá "TRAVADO · fonte: env" mesmo após soltar a manual. Isso é honesto e correto: o operador vê que o estado geral **não** mudou. O `window.confirm` da trava manual diz "kill-switch manual", não "ir ao vivo", então não há promessa enganosa. Considero o risco coberto adequadamente para o estado congelado.\n\n**3. Convenção — segue o padrão.** Cards Bootstrap (`card card-body border-0 shadow`), `Toast` via `setNotification`, service dedicado espelhando `SettingsService`/`IntelligenceService`, comentários pt-BR. Aderência total. **`window.confirm` é guard suficiente** para um painel operator-only já atrás de JWT: a ação manual é reversível (botão soltar logo abaixo), o estado é re-lido após cada ação, e — crucialmente — sob env floor up **nenhum botão liga dinheiro**. Endurecer (modal de digitar palavra etc.) seria bikeshedding aqui; só reavaliar quando o flip do floor estiver na mesa.\n\n### Must-fix\nNenhum. Não bloqueia.\n\n### Nice-to-have (não-bloqueante)\n- **Refresh otimista pós-ação:** os handlers já fazem `setHaltState(res)` com o estado retornado pelo POST — ótimo. Só garanta que o backend devolve o `getState()` completo nessas respostas (confirmado: `setHalt` retorna `{changed, ...getState()}` e `resetDailyCap` retorna `{...state}`). OK como está.\n- **i18n menor:** o resto do Settings tem strings em inglês ("Settings saved successfully!") e o card novo em pt-BR. Inconsistência cosmética pré-existente no arquivo; não regredir, mas eventualmente padronizar.\n- **`err.response.data.error` pode quebrar** se um 500 vier sem corpo JSON — o `||` cobre o caso `error` ausente mas não `data` undefined. Risco baixo (rotas gated, payloads simples); o `.catch(() => {})` do `getHalt` no load já evita ruído. Deixar como está.\n\n### Decisão de merge / condições operacionais\n**APROVADO para merge.** Mudança pequena, frontend-only, reversível, sob HALT, reusando endpoints gated com contrato verificado campo-a-campo contra `riskState.getState()`. Sem blast radius em `beholder.js` nem money-path (não há caminho novo que ordene/mova dinheiro — o painel só liga/desliga travas, e a trava real continua no env).\n\nCondições de processo (não de código):\n1. **Ownership gotcha:** ambos os arquivos do working tree estão `ubuntu`-owned (`SystemService.js` e `Settings.js`). `chown gcrux-tradeux:gcrux-tradeux` antes do commit, e rodar git/push como `gcrux-tradeux`, senão `.git/objects` quebra.\n2. **CI:** garantir `vite build` verde (job frontend) — é só JSX, deve passar trivialmente.\n3. **Shipping:** via PR para master conforme o modelo (push com a chave do `ubuntu`, chown de volta).\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js` (contrato)\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js` (fonte da verdade do HALT)\n- `/home/gcrux-tradeux/tradeux/backend/src/app.js` (mount gated, linha 64)'}, {'type': 'text', 'text': "agentId: abac5de2d280c98f0 (use SendMessage with to: 'abac5de2d280c98f0' to continue this agent)\n<usage>subagent_tokens: 45996\ntool_uses: 13\nduration_ms: 91598</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Fragments balance 4/4 (the outer close has a trailing space). JSX structure is sound. I have everything I need.\n\n---\n\nVEREDITO: **PASS COM RESSALVAS**\n\nEscopo: painel frontend-only que controla o kill-switch (HALT) em MAINNET CONGELADO. Reusa endpoints `/system/*` já existentes e gated por `authMiddleware` (JWT, operator-only). Nenhuma mudança de backend. Confirmei o contrato do backend ponta a ponta.\n\n## Verificação dos 6 pontos\n\n1. **Não cria capacidade de risco nova — CONFIRMADO.** `SystemService.js` só chama `GET /system/halt`, `POST /system/halt`, `POST /system/daily-cap/reset`, todas montadas atrás de `authMiddleware` em `app.js:64`. Não há rota nova. **Env floor é READ-ONLY na UI — CONFIRMADO**: a seção "1. Env floor" (`Settings.js`) mostra só badge + texto "só via .env + restart", sem botão/handler. Coerente com `riskState.js` (env nunca é destravável em runtime; `module.exports` nem expõe setter de env).\n\n2. **Honestidade quando env floor travado — CONFIRMADO.** Existe o alerta condicional `{halt.env && (<div className="alert alert-warning"…>)}` (`Settings.js`) deixando explícito que soltar manual/cap NÃO libera trading, com a instrução `.env TRADING_HALT=false` + restart. Coerente com `riskState.isHalted()` que faz `ENV_HALT || manual.on || capActive` — soltar manual com env ligado mantém `halted:true`.\n\n3. **Campos consumidos corretamente — CONFIRMADO, sem acesso a undefined que quebre render.**\n   - `setHalt` retorna `{ changed, ...getState() }` → `onSetManual` faz `setHaltState(res)`: o spread garante que `res` é o getState completo (`halted, env, manual, dailyCap, sources, source, reason, since`). Correto.\n   - `resetDailyCap` retorna `{ reset, reSnapshotOk, reSnapshot, state }` → `onResetCap` usa `res.state` (com guarda `if (res && res.state)`) e `res.reSnapshotOk`. Correto, bate com `systemController.resetDailyCap`.\n   - Render usa guardas defensivas em todos os acessos aninhados: `halt.manual && halt.manual.on`, `halt.dailyCap && halt.dailyCap.active`. Como `getState()` SEMPRE retorna `manual:{...}` e `dailyCap:{...,active}` (nunca null), as guardas são redundantes mas seguras — zero risco de crash. `dailyCap.active` é o campo certo (computado no getState, não `dailyCap.on`).\n\n4. **window.confirm + toasts — CONFIRMADO.** `onSetManual` (travar E soltar) e `onResetCap` têm `window.confirm` com early-return. Toasts de sucesso/erro coerentes; extração de erro robusta: `err.response ? (err.response.data.error || err.response.data) : err.message` cobre o 400 `{error:...}` do controller e fallback de string.\n\n5. **JSX/build — CONFIRMADO.** Parens/braces/brackets balanceados; `<React.Fragment>` 4/4; `<div>` 90/90; `export default Settings`. Vite injeta `process.env.REACT_APP_API_URL` via `define` em `vite.config.js` (mesma convenção dos services existentes). Reusa classes Bootstrap existentes (card/alert/badge/btn/btn-outline-*). Não consegui rodar `vite build` (sem `node_modules` neste host) — validação foi por transform-equivalente + heurística estrutural, não compilação real (ver Testes).\n\n6. **Edge de boot — CONFIRMADO.** `getHalt` no `useEffect` tem `.catch(() => {})`; em falha o estado fica `null` → render mostra "Carregando estado do HALT…" sem crash. Token vem de `localStorage.getItem("token")` (chave correta, igual ao `Login.js`). Token ausente/expirado → backend 401 → o interceptor em `BaseService.js` redireciona pra `/` (login) — comportamento padrão do app.\n\n## Achados por severidade\n\n- **MÉDIA — propriedade dos arquivos (git-ownership gotcha):** `Settings.js` e `SystemService.js` estão como `ubuntu:ubuntu`, não `gcrux-tradeux`. Pela memória `git-ownership-gotcha`, escrever no repo como ubuntu envenena o `.git` e pode travar o commit posterior. **Antes de commitar**: `sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js` e rodar git como gcrux. Não é bug de runtime, mas bloqueia o fluxo de deploy se ignorado.\n\n- **BAIXA — "Re-armar cap" exige um re-baseline que pode falhar silencioso a frio:** o botão fica `disabled` quando `!dailyCap.active` (bom), mas quando dispara e o preço está frio, `reSnapshot()` retorna `{ok:false}`. A UI trata isso (`reSnapshotOk === false → " (re-baseline pendente: preço frio)"`) e o toast continua "sucesso". Importante: nesse caso o `clearDailyCap()` JÁ rodou no backend (cap limpo) mas o baseline não foi re-snapshot — o `dailyCapJob` pode re-disparar contra o baseline velho no próximo ciclo. É comportamento herdado do backend (não introduzido por este diff), e o texto avisa, mas o tom "Cap diário re-armado." pode dar falsa sensação de proteção totalmente re-armada. Cosmético/clareza.\n\n- **BAIXA — sem refresh automático/otimista:** o estado só atualiza no boot, no botão "Atualizar", e na resposta das ações. Se o daily-cap disparar enquanto a página está aberta, o operador não vê até clicar Atualizar. Aceitável para um painel operado manualmente; não bloqueia.\n\n- **INFO — guardas `halt.manual &&`/`halt.dailyCap &&` são redundantes** (getState nunca retorna esses campos null), mas defensivamente corretas — mantém o painel à prova de mudança futura no shape do backend. Sem ação.\n\n- **INFO — `setHalt(on, reason)` sem timeout/loading state:** clique duplo em "Travar agora" dispararia 2 POSTs; o segundo é idempotente no backend (`setHalt` retorna `changed:false` se já no estado) e inócuo. Sem ação.\n\n## Testes que eu rodaria\n\n- **Build real (bloqueante antes do merge):** `cd frontend && npm ci && npm run build` (espelha o CI job "frontend"). Não consegui rodar aqui (sem node_modules); a heurística passou, mas só o `vite build` prova compilação.\n- **E2E manual no painel (`/settings`, card "Kill-switch / HALT — 3 fontes"):**\n  1. Boot com backend up: card carrega as 3 fontes; badges coerentes com `GET /system/halt`.\n  2. **Travar manual:** confirm → POST → badge "2. Manual" vira TRAVADO, botão vira "Soltar trava manual", alerta geral vermelho. Toast sucesso.\n  3. **Soltar manual com env floor UP (cenário atual, `TRADING_HALT=true`):** confirm → POST `{on:false}` → manual vira "livre" MAS `halt.halted` SEGUE `true` e o alerta amarelo "env floor TRAVADO → NÃO libera trading" permanece. **Este é o teste crítico de honestidade** — validar que o estado geral não vira "LIBERADO".\n  4. **Re-armar cap:** botão só habilita com `dailyCap.active`; simular disparo (forçar `riskState` daily-cap on) → clicar → confirm → estado limpa; testar variante "preço frio" pra ver o sufixo "(re-baseline pendente)".\n  5. **Cancelar o confirm** em cada ação → nenhum POST enviado (checar Network).\n- **Falha de boot:** derrubar backend / token inválido → card mostra "Carregando…" (sem crash); com token expirado, o 401 redireciona pro login (interceptor).\n- **Backend sanity (curl com JWT):** `GET /system/halt` retorna o shape esperado; `POST /system/halt {on:true}` retorna `{changed, ...state}`; `POST /system/halt {}` (sem `on`) retorna 400 `{error}` → confirmar que o toast mostra `data.error`.\n\n## Recomendação de merge\n\n**MERGE liberado após (a) `chown` dos 2 arquivos para `gcrux-tradeux` e commit como gcrux, e (b) `npm run build` verde local/CI.** O diff é cirúrgico, read-only por design no env floor, honesto sobre o que cada ação faz, defensivo no render, e não amplia a superfície de risco — apenas expõe na UI o kill-switch quente que já existia via API gated. As ressalvas são herdadas do backend (re-baseline a frio) ou operacionais (ownership), nenhuma é regressão introduzida por este painel. Em MAINNET CONGELADO, este painel é puramente aditivo e a favor da segurança (botão de pânico quente acessível ao operador).\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/routers/systemRouter.js` (mount em `/home/gcrux-tradeux/tradeux/backend/src/app.js:64`)\n- `/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js` (`reSnapshot`/`getStatus`)\n- `/home/gcrux-tradeux/tradeux/frontend/src/services/BaseService.js` (interceptor 401)'}, {'type': 'text', 'text': "agentId: ae49083683932d480 (use SendMessage with to: 'ae49083683932d480' to continue this agent)\n<usage>subagent_tokens: 61218\ntool_uses: 19\nduration_ms: 142676</usage>"}]
+> ```
+
+## 🤖 Claude *(17:09:37)*
+
+
+## 🤖 Claude *(17:09:39)*
+
+Gates: **QA PASS COM RESSALVAS + TL APPROVE** — zero must-fix de código; só o `chown` (processo) e nice-to-haves. Deploy (rebuild frontend valida o JSX) + verifico.
+
+## 🤖 Claude *(17:09:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/verify-halt.js",
+  "content": "'use strict';\nconst http = require('http');\nconst EM = process.env.DEFAULT_SETTINGS_EMAIL, PW = process.env.DEFAULT_SETTINGS_PWD;\nfunction rq(method, path, token, body) {\n  return new Promise((resolve) => {\n    const d = body ? JSON.stringify(body) : null;\n    const h = { 'Content-Type': 'application/json' }; if (token) h.authorization = token; if (d) h['Content-Length'] = Buffer.byteLength(d);\n    const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers: h, timeout: 12000 }, res => { let b=''; res.on('data',c=>b+=c); res.on('end',()=>{let j;try{j=JSON.parse(b)}catch{j=b} resolve({status:res.statusCode,body:j})}); });\n    r.on('error',e=>resolve({status:0,body:String(e.message)})); if(d)r.write(d); r.end();\n  });\n}\n(async()=>{\n  const l = await rq('POST','/login',null,{email:EM,password:PW}); const t = l.body && l.body.token;\n  if(!t){console.log('LOGIN_FAIL',l.status);process.exit(1);}\n  const h = await rq('GET','/system/halt',t);\n  console.log('GET /system/halt ->', h.status, JSON.stringify(h.body));\n})();\n"
+}
+```
+
+## 🤖 Claude *(17:09:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux frontend/src/services/SystemService.js frontend/src/private/Settings/Settings.js && echo \"chown OK\"\necho \"=== rebuild frontend (vite build valida o JSX) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build frontend' 2>&1 | tail -6",
+  "description": "Chown frontend files and rebuild frontend",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/verify-halt.js (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown OK
+> === rebuild frontend (vite build valida o JSX) ===
+>  Container tradeux-frontend-1 Recreate 
+>  Container tradeux-frontend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(17:10:15)*
+
+
+## 🤖 Claude *(17:10:16)*
+
+Frontend buildou (JSX válido) e subiu. Verifico o endpoint que o painel consome + site.
+
+## 🤖 Claude *(17:10:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose cp /tmp/verify-halt.js backend:/tmp/verify-halt.js >/dev/null\ndocker compose exec -T backend node /tmp/verify-halt.js\n'\ncurl -s -m6 -o /dev/null -w \"site %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify GET /system/halt shape and site",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/verify-halt.js to tradeux-backend-1:/tmp/verify-halt.js
+>  tradeux-backend-1 Copied /tmp/verify-halt.js to tradeux-backend-1:/tmp/verify-halt.js
+> GET /system/halt -> 200 {"halted":true,"env":true,"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":["env"],"source":"env","reason":"TRADING_HALT (env)","since":null}
+> site 200
+> ```
+
+## 🤖 Claude *(17:10:28)*
+
+
+## 🤖 Claude *(17:10:30)*
+
+GET /system/halt → 200, shape correto (`halted:true, env:true, source:'env'`, manual livre, cap livre). O painel vai renderizar: env floor TRAVADO (read-only), manual com botão "Travar agora", cap desabilitado, + o aviso de env-floor. Site 200. Commit + push.
+
+## 🤖 Claude *(17:10:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nrm -f /tmp/verify-halt.js\ngrep -nE 'sk-[A-Za-z0-9]{20}|eyJ[A-Za-z0-9_-]{20}|SECRET_KEY|APISECRET' frontend/src/services/SystemService.js frontend/src/private/Settings/Settings.js || echo \"secret-scan limpo\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add frontend/src/services/SystemService.js frontend/src/private/Settings/Settings.js\ngit -c safe.directory=\"*\" commit -F - <<\"EOF\"\nfeat(frontend): painel de destrave do HALT (3 fontes) em Settings\n\nCard \"Kill-switch / HALT \u2014 3 fontes\" no Settings + SystemService.js (reusa os endpoints\n/system/* ja existentes e gated por JWT; ZERO backend novo):\n- env floor: DISPLAY-ONLY (badge + instrucao .env+restart) \u2014 por design nao e destravavel\n  em runtime (e o piso de seguranca do dinheiro real).\n- manual: botao Travar (panico) / Soltar trava manual -> POST /system/halt {on}.\n- daily-cap: botao Re-armar (disabled se nao disparou) -> POST /system/daily-cap/reset.\n- aviso condicional: com env floor up, soltar manual/cap NAO libera trading (honestidade).\n- window.confirm nas acoes; Toast; estado lido no boot + botao Atualizar.\n\nGate QA PASS-c/ressalvas + TL APPROVE-c/sugestoes (sem must-fix; nao amplia superficie \u2014\nso expoe na UI o kill-switch que ja existia via API gated). Deployado: build verde, GET\n/system/halt 200 (halted/env/manual/dailyCap), HALT intacto, site 200.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit -c safe.directory=\"*\" log --oneline -1\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\r\\n\")\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed \"s|${TOKEN}|***|g\"'",
+  "description": "Commit and push the HALT panel"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> secret-scan limpo
+> [master 137fb64] feat(frontend): painel de destrave do HALT (3 fontes) em Settings
+>  2 files changed, 108 insertions(+)
+>  create mode 100644 frontend/src/services/SystemService.js
+> 137fb64 feat(frontend): painel de destrave do HALT (3 fontes) em Settings
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    258c385..137fb64  HEAD -> master
+> ```
+
+## 🤖 Claude *(17:10:59)*
+
+
+## 🤖 Claude *(17:11:00)*
+
+Push OK: **master = `137fb64`**. Nota durável + chown.
+
+## 🤖 Claude *(17:11:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "DONO decidiu: ESPERAR o paper provar antes do flip (sem dinheiro real)** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`258c385`**",
+  "new_string": "DONO decidiu: ESPERAR o paper provar antes do flip (sem dinheiro real); **painel de destrave do HALT (3 fontes) em Settings**** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`137fb64`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:11:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Observar o paper (o job avisa). **Claude N\u00c3O vira o `TRADING_HALT`.**",
+  "new_string": "Observar o paper (o job avisa). **Claude N\u00c3O vira o `TRADING_HALT`.**\n\n### \ud83e\udd1d SEAL \u2014 2026-06-19 (cont. \u2014 painel de destrave do HALT em Settings)\n**`Vivo==master==origin==137fb64`. Frontend-only, gate QA PASS + TL APPROVE (sem must-fix), deployado (build verde, GET /system/halt 200, HALT intacto, site 200).**\n- **`frontend/src/services/SystemService.js` + card \"Kill-switch / HALT \u2014 3 fontes\" no `Settings.js`** \u2014 reusa os endpoints `/system/*` j\u00e1 existentes (operator-only/JWT; ZERO backend novo): **env floor** = DISPLAY-ONLY (badge + instru\u00e7\u00e3o `.env`+restart; n\u00e3o destrav\u00e1vel em runtime por design); **manual** = bot\u00e3o Travar(p\u00e2nico)/Soltar \u2192 `POST /system/halt {on}`; **daily-cap** = bot\u00e3o Re-armar (disabled se n\u00e3o disparou) \u2192 `POST /system/daily-cap/reset`. `window.confirm` nas a\u00e7\u00f5es; **aviso condicional** quando o env floor est\u00e1 up (\"soltar manual/cap N\u00c3O libera trading\"). \u00c9 a UI do bot\u00e3o de p\u00e2nico quente que antes s\u00f3 existia via API. N\u00e3o amplia superf\u00edcie de risco."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:11:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**BOT\u00c3O DE P\u00c2NICO QUENTE NOVO: `POST /system/halt`",
+  "new_string": "**PAINEL UI: card \"Kill-switch / HALT \u2014 3 fontes\" em Settings (`137fb64`, frontend `SystemService.js`+`Settings.js`): env floor display-only (.env+restart), manual e daily-cap com bot\u00e3o; reusa os endpoints gated, sem backend novo. BOT\u00c3O DE P\u00c2NICO QUENTE: `POST /system/halt`"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(17:11:19)*
+
+
+## 🤖 Claude *(17:11:20)*
+
+O update da memória mainnet-go-live exige Read prévio — pulo (o HANDOFF já registra; baixo valor re-ler um arquivo grande pra one-liner). Chown + fecho.
+
+## 🤖 Claude *(17:11:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/HANDOFF.md && echo \"HANDOFF chown OK\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short | grep -v backtest-results || echo \"(\u00e1rvore limpa)\"",
+  "description": "Chown HANDOFF, confirm clean tree"
+}
+```
+
+## 🤖 Claude *(17:11:23)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "19",
+  "status": "completed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF chown OK
+> (árvore limpa)
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #19 status
+> ```
+
+## 🤖 Claude *(17:11:41)*
+
+Pronto — painel no ar (master `137fb64`).
+
+## ✅ Painel "Kill-switch / HALT — 3 fontes" em Configurações
+
+Em **Settings**, um card novo mostra e controla as 3 fontes do HALT:
+
+| Fonte | Estado agora | Controle |
+|---|---|---|
+| **1. Env floor** (`TRADING_HALT` no `.env`) | 🔴 TRAVADO | **Só display** — destrava só com `.env TRADING_HALT=false` + restart (é o piso de segurança do dinheiro real, por design não tem botão) |
+| **2. Manual** (operador) | 🟢 livre | Botão **"Travar agora (pânico)"** / **"Soltar trava manual"** (quente, sem restart) |
+| **3. Cap diário −5%** | 🟢 armado | Botão **"Re-armar cap"** (habilita só se disparou) |
+
+Mais: estado geral (TRAVADO/LIBERADO + fonte dominante), `window.confirm` nas ações, Toast, botão "Atualizar", e um **aviso honesto**: enquanto o env floor está travado, soltar manual/cap **não libera o trading** (evita a falsa sensação de "fui ao vivo").
+
+**Detalhes técnicos:**
+- **Zero backend novo** — reusa os endpoints que já existiam (`/system/halt`, `/system/daily-cap/reset`), todos operator-only (JWT). O painel só expõe na UI o botão de pânico quente que antes só dava pra acionar via API.
+- **Gate:** QA PASS + TL APPROVE (sem must-fix; "não amplia superfície de risco").
+- **Verificado:** build do frontend verde, `GET /system/halt` → 200, HALT intacto, site 200.
+
+### Por que o env floor não virou botão
+Foi decisão deliberada (e o QA/TL concordaram): o env floor é a **única trava que realmente impede dinheiro real**. Dar um botão de UI pra ele seria transformar "ir ao vivo com dinheiro real" em um clique — exatamente o oposto da sua decisão de **esperar o paper provar**. Quando você decidir o canary, o flip continua sendo `.env` + restart (deliberado), com seu GO.
+
+Quer que eu siga agora pro **Bloco B Fase 1** (a `apiClient.js` DRY → recipes → KB), ou paro por aqui?
+
+## 👤 User *(17:12:20)*
+
+1. Env floor TRAVADO pode colocar um botão para mudar o .env + restart
+
+## 🤖 Claude *(17:14:51)*
+
+
+## 🤖 Claude *(17:15:03)*
+
+Posso colocar — mas tem um detalhe técnico importante que muda **como** isso funciona, e uma implicação de segurança que preciso que você decida com clareza.
+
+## ⚠️ O literal "editar .env + restart por um botão" não é seguro/viável
+O backend roda **dentro de um container isolado**: ele (a) não tem o `.env` do host no filesystem (o compose injeta as variáveis no boot, não monta o arquivo), e (b) **não pode se reiniciar sozinho** (sem acesso ao Docker, por segurança). Pra um botão fazer isso eu teria que **montar o `.env` (com seus segredos) gravável dentro do app** e **dar acesso ao Docker ao container** — duas brechas sérias. Não vou fazer isso.
+
+## ✅ O jeito certo (e melhor): floor PERSISTIDO, botão a quente
+Em vez de mexer no `.env`, eu transformo o floor num **flag persistido** que o botão liga/desliga **na hora, sem restart** e **sobrevive a reinício** (igual o manual/daily-cap já fazem em `risk_state.json`). Você ganha exatamente o que pediu: um botão **"LIGAR trading real / TRAVAR"** no Settings — só que sem o passo de SSH e sem downtime.
+
+**A implicação de segurança (preciso do seu OK consciente):**
+- Hoje o env floor é **"à prova de clique"** — só vira com `.env`+restart, deliberado e fora do app. Isso é o que impede um clique acidental (ou um login comprometido) de ligar dinheiro real.
+- Com o botão, **um clique (atrás do seu login) liga dinheiro real.** É menos seguro por definição.
+- Pra não perder a rede de proteção, eu adiciono junto: **confirmação forte** (digitar uma frase tipo `LIGAR REAL` pra confirmar) + um **override de emergência `TRADING_HALT_HARD` no `.env`** (trava absoluta, imune ao botão, pra quando você quiser travado de verdade) + o cap diário −5%, o teto $300/ordem e o pânico quente continuam valendo.
+- **Ter o botão ≠ ir ao vivo.** Você decidiu esperar o paper provar — o botão só elimina o passo manual de SSH **quando** você decidir clicar.
+
+Como é o kill-switch (mudança no núcleo do `riskState`), vai com gate QA/TL. Antes de eu construir, confirma o caminho:
+
+## 🤖 Claude *(17:15:10)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como implementar o bot\u00e3o pro env floor?",
+      "header": "Mecanismo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Floor persistido + bot\u00e3o a quente (recomendo)",
+          "description": "Troco o env floor por um flag persistido que o bot\u00e3o liga/desliga na hora (sem restart, sobrevive a reinicio). Botao 'LIGAR trading real / TRAVAR' no Settings, com confirma\u00e7\u00e3o forte (digitar frase) + override de emerg\u00eancia TRADING_HALT_HARD no .env. Gate QA/TL."
+        },
+        {
+          "label": "Manter env floor out-of-band (sem bot\u00e3o)",
+          "description": "Deixa como est\u00e1: o flip do floor s\u00f3 via .env + restart (deliberado, \u00e0 prova de clique). Mais seguro, menos pr\u00e1tico. O painel atual j\u00e1 mostra o estado e instrui."
+        },
+        {
+          "label": "Botao que prepara, mas eu confirmo no .env",
+          "description": "O bot\u00e3o s\u00f3 PREPARA o canary (desativa os outros grupos, deixa 1) e te mostra o comando exato do .env+restart pra voc\u00ea executar a m\u00e3o. Capacidade na UI sem o clique-liga-dinheiro."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como implementar o botão pro env floor?"="Floor persistido + botão a quente (recomendo)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(17:23:52)*
+
+
+## 🤖 Claude *(17:23:54)*
+
+Beleza — **floor persistido + botão a quente**, com confirmação forte e override de emergência. É mudança no núcleo do kill-switch, então vou com cuidado e gate. Primeiro confirmo todos os consumidores do `riskState` pra não quebrar nada.
+
+## 🤖 Claude *(17:23:55)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Floor persistido + bot\u00e3o go-live",
+  "summary": "Env floor vira piso persistido control\u00e1vel por UI (quente) + override TRADING_HALT_HARD"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Floor persistido + botão go-live". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(17:23:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== consumidores de riskState (todos) ===\"\ngrep -rn \"riskState\\.\\|require('./riskState')\\|require('../riskState')\" src | grep -vE \"riskState.js:\" \necho \"=== usos de getState().env (campo que vou trocar) ===\"\ngrep -rn \"\\.env\\b\" src/controllers/analysisController.js | grep -iE \"halt|riskState|st\\.env\" | head\necho \"=== dailyCapJob: chamadas a riskState ===\"\ngrep -nE \"riskState\\.\" src/dailyCapJob.js",
+  "description": "Find all riskState consumers to avoid breaking the shape change"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === consumidores de riskState (todos) ===
+> src/dailyCapJob.js:22:const riskState = require('./riskState');
+> src/dailyCapJob.js:125:        const today = riskState.dayKeyUTC();
+> src/dailyCapJob.js:132:            riskState.clearDailyCap();
+> src/dailyCapJob.js:172:            const tripped = riskState.setHalt(true, reason, 'daily-cap');
+> src/dailyCapJob.js:197:        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, at: new Date().toISOString() };
+> src/dailyCapJob.js:224:    const st = riskState.getState();
+> src/utils/exchange.js:8:const riskState = require('../riskState'); // fonte única do HALT (QUENTE); sem ciclo (riskState não requer o app)
+> src/utils/exchange.js:13://                                  lido por ordem via riskState.isHalted() (não mais um const no load). TRADING_HALT=true
+> src/utils/exchange.js:34:    if (riskState.isHalted()) {
+> src/utils/exchange.js:35:        const st = riskState.getState();
+> src/controllers/systemController.js:1:const riskState = require('../riskState');
+> src/controllers/systemController.js:10:    res.json(riskState.getState());
+> src/controllers/systemController.js:18:    const changed = riskState.setHalt(on, reason || 'operador', 'manual');
+> src/controllers/systemController.js:19:    res.json({ changed, ...riskState.getState() });
+> src/controllers/systemController.js:25:    riskState.clearDailyCap();                       // cap limpo (sempre)
+> src/controllers/systemController.js:27:    res.json({ reset: true, reSnapshotOk: snap.ok, reSnapshot: snap, state: riskState.getState() });
+> src/controllers/analysisController.js:9:const riskState = require('../riskState');
+> src/controllers/analysisController.js:83:    const st = riskState.getState();
+> === usos de getState().env (campo que vou trocar) ===
+> src/controllers/analysisController.js:80:    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> src/controllers/analysisController.js:86:        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> src/controllers/analysisController.js:88:        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> === dailyCapJob: chamadas a riskState ===
+> 125:        const today = riskState.dayKeyUTC();
+> 132:            riskState.clearDailyCap();
+> 172:            const tripped = riskState.setHalt(true, reason, 'daily-cap');
+> 197:        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, at: new Date().toISOString() };
+> 224:    const st = riskState.getState();
+> ```
+
+## 🤖 Claude *(17:24:12)*
+
+
+## 🤖 Claude *(17:24:13)*
+
+Consumidores mapeados: ninguém lê `getState().env` exceto o painel (que reescrevo). Deixa eu confirmar o que o `dailyCapJob` lê do `getState()` na linha 224 antes de mudar o shape.
+
+## 🤖 Claude *(17:24:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "offset": 218,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 218	function stop() {
+> 219	    if (timer) { clearInterval(timer); timer = null; }
+> 220	    running = false;
+> 221	}
+> 222	
+> 223	function getStatus() {
+> 224	    const st = riskState.getState();
+> 225	    return {
+> 226	        enabled: ENABLED, capPct: CAP_PCT, checkMs: CHECK_MS,
+> 227	        snapshot: SNAP, last: LAST,
+> 228	        floor: SNAP ? SNAP.equity * (1 - CAP_PCT) : null,
+> 229	        tripped: st.dailyCap, halted: st.halted, haltSource: st.source,
+> 230	        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null,
+> 231	    };
+> 232	}
+> 233	
+> 234	module.exports = { start, stop, checkCap, reSnapshot, getStatus };
+> 235	
+> ```
+
+## 🤖 Claude *(17:24:32)*
+
+
+## 🤖 Claude *(17:24:34)*
+
+Confirmado: `dailyCapJob.getStatus` lê `st.dailyCap/halted/source` (não `st.env`); ninguém quebra com a troca de shape. Vou reescrever o `riskState` (núcleo) com o **floor persistido** + **env-hard** absoluto.
+
+## 🤖 Claude *(17:25:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/riskState.js",
+  "content": "'use strict';\n\n// === riskState \u2014 FONTE \u00daNICA DE VERDADE do kill-switch (HALT) ===\n//\n// O guard (utils/exchange.js) chama isHalted() POR ORDEM (HALT QUENTE). Fontes EMPILH\u00c1VEIS (basta UMA p/ travar tudo):\n//   env-hard  \u2192 override ABSOLUTO derivado de process.env.TRADING_HALT_HARD no boot. N\u00c3O \u00e9 flip\u00e1vel em runtime\n//               (s\u00f3 `.env` + restart). \u00c9 a trava \"\u00e0 prova de clique\" \u2014 quando voc\u00ea quer o sistema travado de\n//               verdade, imune ao bot\u00e3o da UI. Default OFF.\n//   floor     \u2192 PISO OPERACIONAL de ir-ao-vivo, PERSISTIDO (risk_state.json), controlado pelo OPERADOR via UI\n//               (POST /system/floor), QUENTE (sem restart) e sobrevive a restart. SEED no 1\u00ba boot:\n//               process.env.TRADING_HALT (compat com o antigo \"env floor\"). Depois de persistido o OPERADOR \u00e9 a\n//               autoridade \u2014 o env TRADING_HALT vira s\u00f3 semente (use o bot\u00e3o TRAVAR, ou TRADING_HALT_HARD, p/ travar).\n//   manual    \u2192 kill-switch quente do operador / p\u00e2nico (POST /system/halt). Persistido; sobrevive a restart.\n//   daily-cap \u2192 disparado pelo dailyCapJob no drawdown de equity do dia. Persistido; AUTO-EXPIRA na virada UTC.\n//\n// SEM depend\u00eancia do app (s\u00f3 fs/path/logger) \u2192 exchange.js requer este m\u00f3dulo top-level sem ciclo. FAIL-CLOSED:\n// disco ileg\u00edvel \u2192 floor LIGADO (trava); isHalted() lan\u00e7ar \u2192 o guard lan\u00e7a = ordem bloqueada (dire\u00e7\u00e3o segura).\n//\n// \u26a0\ufe0f MUDAN\u00c7A DE POSTURA (2026-06-19): o \"env floor\" antigo (TRADING_HALT, OR permanente, s\u00f3 .env+restart) virou um\n// PISO PERSISTIDO control\u00e1vel pela UI (a quente). TRADING_HALT agora s\u00f3 SEMENTE o floor no 1\u00ba boot; pra travar\n// \"\u00e0 prova de clique\" use TRADING_HALT_HARD=true no .env. Bot\u00e3o de liberar (UI) \u00e9 bloqueado se env-hard estiver on.\n\nconst fs = require('fs');\nconst path = require('path');\nconst logger = require('./utils/logger');\n\nconst STATE_FILE = path.resolve(__dirname, '..', 'logs', 'risk_state.json');\n\n// env-hard: override absoluto (s\u00f3 .env+restart). env-seed: semente do floor no 1\u00ba boot (compat com o antigo env floor).\nconst ENV_HALT_HARD = process.env.TRADING_HALT_HARD === 'true';\nconst ENV_FLOOR_SEED = process.env.TRADING_HALT === 'true';\n\n// Estado mut\u00e1vel das fontes QUENTES (persistidas). env-hard N\u00c3O entra aqui (n\u00e3o \u00e9 persistido nem flip\u00e1vel).\nlet floor = { on: ENV_FLOOR_SEED, reason: ENV_FLOOR_SEED ? 'TRADING_HALT (semente env, 1\u00ba boot)' : null, since: null };\nlet manual = { on: false, reason: null, since: null };\nlet dailyCap = { on: false, reason: null, since: null, day: null };\n\n// Chave de dia UTC YYYY-MM-DD (N\u00c3O getUTCDate() \u2014 evita aliasing dia-do-m\u00eas na virada de m\u00eas).\nfunction dayKeyUTC(d) {\n    return (d || new Date()).toISOString().slice(0, 10);\n}\n\nfunction persist() {\n    try {\n        const dir = path.dirname(STATE_FILE);\n        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n        fs.writeFileSync(STATE_FILE, JSON.stringify({ floor, manual, dailyCap }), 'utf8');\n    } catch (e) {\n        logger('system', `[riskState] falha ao persistir ${STATE_FILE}: ${e.message}`);\n    }\n}\n\n// Carrega o estado quente do disco no boot. floor PERSISTIDO vence a semente do env (autoridade do operador ap\u00f3s o\n// 1\u00ba flip); ausente \u2192 mant\u00e9m a semente. manual re-arma como estava; dailyCap s\u00f3 se for do MESMO dia UTC.\nfunction loadFromDisk() {\n    try {\n        if (!fs.existsSync(STATE_FILE)) return;\n        const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));\n        if (raw && raw.floor && typeof raw.floor.on === 'boolean') floor = raw.floor;\n        if (raw && raw.manual && typeof raw.manual.on === 'boolean') manual = raw.manual;\n        if (raw && raw.dailyCap && typeof raw.dailyCap.on === 'boolean') {\n            if (raw.dailyCap.on && raw.dailyCap.day === dayKeyUTC()) dailyCap = raw.dailyCap;\n            else dailyCap = { on: false, reason: null, since: null, day: null }; // dia diferente \u2192 expira\n        }\n    } catch (e) {\n        // FAIL-CLOSED: disco ileg\u00edvel \u2192 trava pelo floor (n\u00e3o libera no escuro). manual/cap zerados.\n        logger('system', `[riskState] estado em disco ileg\u00edvel (${e.message}) \u2014 FAIL-CLOSED (floor LIGADO).`);\n        floor = { on: true, reason: 'fail-safe (estado em disco ileg\u00edvel)', since: null };\n        manual = { on: false, reason: null, since: null };\n        dailyCap = { on: false, reason: null, since: null, day: null };\n    }\n}\n\n// HALT efetivo: qualquer fonte ligada trava. dailyCap s\u00f3 conta no DIA em que foi armado.\nfunction isHalted() {\n    return ENV_HALT_HARD || floor.on || manual.on || (dailyCap.on && dailyCap.day === dayKeyUTC());\n}\n\n// Estado completo p/ reporte (cockpit/agent/endpoint/painel). `source`/`reason` resolvem por PRECED\u00caNCIA\n// (env-hard > floor > manual > daily-cap) p/ rotular a causa dominante; `sources` lista TODAS as ativas.\nfunction getState() {\n    const today = dayKeyUTC();\n    const capActive = dailyCap.on && dailyCap.day === today;\n    const sources = [];\n    if (ENV_HALT_HARD) sources.push('env-hard');\n    if (floor.on) sources.push('floor');\n    if (manual.on) sources.push('manual');\n    if (capActive) sources.push('daily-cap');\n\n    let source = null, reason = null, since = null;\n    if (ENV_HALT_HARD) { source = 'env-hard'; reason = 'TRADING_HALT_HARD (env, absoluto)'; since = null; }\n    else if (floor.on) { source = 'floor'; reason = floor.reason || 'piso operacional'; since = floor.since; }\n    else if (manual.on) { source = 'manual'; reason = manual.reason || 'operador'; since = manual.since; }\n    else if (capActive) { source = 'daily-cap'; reason = dailyCap.reason || 'daily-loss-cap'; since = dailyCap.since; }\n\n    return {\n        halted: isHalted(),\n        envHard: ENV_HALT_HARD,\n        floor: { ...floor },\n        manual: { ...manual },\n        dailyCap: { ...dailyCap, active: capActive },\n        sources, source, reason, since,\n    };\n}\n\n// Liga/desliga o PISO OPERACIONAL (persistido, quente). on=true TRAVA; on=false LIBERA (ir ao vivo c/ dinheiro\n// real). N\u00c3O toca env-hard nem manual/daily-cap. Retorna true se mudou. O bloqueio por env-hard \u00e9 responsabilidade\n// do chamador (systemController recusa liberar se envHard) \u2014 aqui setFloor(false) s\u00f3 mexe na fonte floor.\nfunction setFloor(on, reason) {\n    on = !!on;\n    if (floor.on === on) return false;\n    floor = on ? { on: true, reason: reason || 'operador', since: new Date().toISOString() }\n               : { on: false, reason: null, since: null };\n    persist();\n    logger('system', `[riskState] FLOOR ${on ? 'LIGADO (trava)' : 'DESLIGADO (trading liberado)'}${on && reason ? ` (${reason})` : ''}.`);\n    return true;\n}\n\n// Liga/desliga uma fonte QUENTE. source \u2208 {'manual','daily-cap'}. Retorna `true` se MUDOU. NUNCA toca floor/env.\nfunction setHalt(on, reason, source) {\n    on = !!on;\n    if (source === 'manual') {\n        if (manual.on === on) return false;\n        manual = on ? { on: true, reason: reason || 'operador', since: new Date().toISOString() }\n                    : { on: false, reason: null, since: null };\n        persist();\n        logger('system', `[riskState] manual HALT ${on ? 'LIGADO' : 'desligado'}${on && reason ? ` (${reason})` : ''}.`);\n        return true;\n    }\n    if (source === 'daily-cap') {\n        const today = dayKeyUTC();\n        if (on) {\n            if (dailyCap.on && dailyCap.day === today) return false; // j\u00e1 armado hoje \u2192 n\u00e3o re-notifica\n            dailyCap = { on: true, reason: reason || 'daily-loss-cap', since: new Date().toISOString(), day: today };\n            persist();\n            logger('system', `[riskState] daily-cap HALT ARMADO (${dailyCap.reason}).`);\n            return true;\n        }\n        return clearDailyCap();\n    }\n    throw new Error(`[riskState] setHalt: source inv\u00e1lida '${source}' (use 'manual' ou 'daily-cap').`);\n}\n\n// Zera S\u00d3 a fonte daily-cap (rollover de dia e reset do operador). Nunca toca floor/env/manual.\nfunction clearDailyCap() {\n    if (!dailyCap.on) return false;\n    dailyCap = { on: false, reason: null, since: null, day: null };\n    persist();\n    logger('system', `[riskState] daily-cap HALT limpo (re-armado p/ o dia).`);\n    return true;\n}\n\n// Dia em que o daily-cap est\u00e1 armado (null se n\u00e3o armado) \u2014 o dailyCapJob usa p/ saber se j\u00e1 disparou hoje.\nfunction getDailyCapDay() {\n    return dailyCap.on ? dailyCap.day : null;\n}\n\n// Seed no LOAD do m\u00f3dulo (try/catch j\u00e1 dentro de loadFromDisk; fail-closed).\nloadFromDisk();\nlogger('system', `[riskState] inicializado \u2014 env-hard=${ENV_HALT_HARD} \u00b7 floor=${floor.on} \u00b7 manual=${manual.on} \u00b7 daily-cap=${dailyCap.on}${dailyCap.on ? ` (${dailyCap.day})` : ''} \u00b7 halted=${isHalted()}.`);\n\nmodule.exports = { dayKeyUTC, isHalted, getState, setFloor, setHalt, clearDailyCap, getDailyCapDay };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/riskState.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:32)*
+
+
+## 🤖 Claude *(17:25:32)*
+
+`riskState` reescrito. Agora o endpoint `POST /system/floor` (com confirmação + bloqueio por env-hard) e a rota.
+
+## 🤖 Claude *(17:25:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js",
+  "old_string": "    const changed = riskState.setHalt(on, reason || 'operador', 'manual');\n    res.json({ changed, ...riskState.getState() });\n}\n\n// POST /system/daily-cap/reset \u2014 limpa o HALT por daily-cap E re-baseline o equity do dia (p/ n\u00e3o",
+  "new_string": "    const changed = riskState.setHalt(on, reason || 'operador', 'manual');\n    res.json({ changed, ...riskState.getState() });\n}\n\n// Frase de confirma\u00e7\u00e3o p/ LIBERAR trading real (defesa em profundidade al\u00e9m do window.prompt da UI).\nconst GO_LIVE_PHRASE = process.env.SYSTEM_FLOOR_PHRASE || 'LIGAR REAL';\n\n// POST /system/floor { on:boolean, reason?, confirm? } \u2014 liga/desliga o PISO OPERACIONAL (quente, persistido).\n// on=true TRAVA (sempre permitido); on=false LIBERA dinheiro real \u2192 exige confirm===GO_LIVE_PHRASE e \u00e9 RECUSADO\n// se TRADING_HALT_HARD (env-hard) estiver ativo. Sem MCP write tool: s\u00f3 o operador (UI/JWT) flipa o floor.\nfunction setFloor(req, res) {\n    const { on, reason, confirm } = req.body || {};\n    if (typeof on !== 'boolean') return res.status(400).json({ error: \"campo 'on' (boolean) obrigat\u00f3rio\" });\n    if (on === false) {\n        if (riskState.getState().envHard)\n            return res.status(409).json({ error: 'TRADING_HALT_HARD ativo no .env (override absoluto) \u2014 liberar pela UI est\u00e1 bloqueado. Remova do .env + restart.' });\n        if (String(confirm || '') !== GO_LIVE_PHRASE)\n            return res.status(400).json({ error: `confirma\u00e7\u00e3o obrigat\u00f3ria p/ liberar trading real: confirm deve ser exatamente '${GO_LIVE_PHRASE}'.` });\n    }\n    const changed = riskState.setFloor(on, reason || (on ? 'TRAVAR via painel' : 'LIGAR trading real via painel'));\n    res.json({ changed, ...riskState.getState() });\n}\n\n// POST /system/daily-cap/reset \u2014 limpa o HALT por daily-cap E re-baseline o equity do dia (p/ n\u00e3o"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js",
+  "old_string": "module.exports = { getHalt, setHalt, resetDailyCap, getDailyCap };",
+  "new_string": "module.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/systemRouter.js",
+  "old_string": "router.post('/halt', systemController.setHalt);",
+  "new_string": "router.post('/halt', systemController.setHalt);\n\nrouter.post('/floor', systemController.setFloor);"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(17:25:48)*
+
+
+## 🤖 Claude *(17:25:49)*
+
+O `systemRouter` precisa de Read prévio (vi via `sed`). Leio e adiciono a rota; depois frontend.
+
+## 🤖 Claude *(17:25:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/systemRouter.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const express = require('express');
+> 2	const router = express.Router();
+> 3	const systemController = require('../controllers/systemController');
+> 4	
+> 5	// /system — controle operacional do kill-switch quente + cap diário. OPERATOR-ONLY (montado atrás do
+> 6	// authMiddleware no app.js). Sem MCP write tool: o agente LLM não flipa o HALT (doutrina).
+> 7	
+> 8	router.get('/halt', systemController.getHalt);
+> 9	
+> 10	router.post('/halt', systemController.setHalt);
+> 11	
+> 12	router.get('/daily-cap', systemController.getDailyCap);
+> 13	
+> 14	router.post('/daily-cap/reset', systemController.resetDailyCap);
+> 15	
+> 16	module.exports = router;
+> 17	
+> ```
+
+## 🤖 Claude *(17:25:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/systemRouter.js",
+  "old_string": "router.post('/halt', systemController.setHalt);\n\nrouter.get('/daily-cap', systemController.getDailyCap);",
+  "new_string": "router.post('/halt', systemController.setHalt);\n\nrouter.post('/floor', systemController.setFloor);\n\nrouter.get('/daily-cap', systemController.getDailyCap);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/routers/systemRouter.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:26:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js",
+  "old_string": "// Limpa a fonte daily-cap e re-baseline o equity do dia (re-arma a prote\u00e7\u00e3o). Retorna { reset, reSnapshotOk, state }.\nexport async function resetDailyCap(token) {",
+  "new_string": "// Liga/desliga o PISO OPERACIONAL (quente, persistido). on=true TRAVA; on=false LIBERA dinheiro real (exige\n// confirm===frase e \u00e9 recusado se TRADING_HALT_HARD ativo no .env). Retorna { changed, ...getState() }.\nexport async function setFloor(on, reason, confirm, token) {\n    const response = await axios.post(`${SYSTEM_URL}/floor`, { on, reason, confirm }, { headers: { authorization: token } });\n    return response.data;\n}\n\n// Limpa a fonte daily-cap e re-baseline o equity do dia (re-arma a prote\u00e7\u00e3o). Retorna { reset, reSnapshotOk, state }.\nexport async function resetDailyCap(token) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:26:41)*
+
+
+## 🤖 Claude *(17:26:42)*
+
+`riskState` + endpoint + rota + service prontos. Agora o painel: troco a seção "Env floor" (display) pelo toggle do **floor** (LIGAR/TRAVAR) com confirmação forte.
+
+## 🤖 Claude *(17:26:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "import { getHalt, setHalt, resetDailyCap } from '../../services/SystemService';",
+  "new_string": "import { getHalt, setHalt, setFloor, resetDailyCap } from '../../services/SystemService';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:26:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "    function onResetCap() {\n        if (!window.confirm('Re-armar o cap di\u00e1rio? (limpa o HALT por cap e re-baseline o equity do dia)')) return;\n        const token = localStorage.getItem(\"token\");\n        resetDailyCap(token)\n            .then(res => { if (res && res.state) setHaltState(res.state); setNotification({ type: 'success', text: `Cap di\u00e1rio re-armado.${res && res.reSnapshotOk === false ? ' (re-baseline pendente: pre\u00e7o frio)' : ''}` }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    return (",
+  "new_string": "    function onResetCap() {\n        if (!window.confirm('Re-armar o cap di\u00e1rio? (limpa o HALT por cap e re-baseline o equity do dia)')) return;\n        const token = localStorage.getItem(\"token\");\n        resetDailyCap(token)\n            .then(res => { if (res && res.state) setHaltState(res.state); setNotification({ type: 'success', text: `Cap di\u00e1rio re-armado.${res && res.reSnapshotOk === false ? ' (re-baseline pendente: pre\u00e7o frio)' : ''}` }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    function onGoLive() {\n        const phrase = window.prompt('\u26a0\ufe0f Isto LIBERA TRADING COM DINHEIRO REAL (desliga o floor). Digite LIGAR REAL para confirmar:');\n        if (phrase === null) return;\n        const token = localStorage.getItem(\"token\");\n        setFloor(false, 'LIGAR trading real via painel', phrase, token)\n            .then(res => { setHaltState(res); setNotification(res.halted ? { type: 'error', text: `Floor liberado, mas o sistema SEGUE TRAVADO por: ${res.source}.` } : { type: 'success', text: 'TRADING REAL LIGADO (floor liberado).' }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    function onTravarFloor() {\n        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;\n        const token = localStorage.getItem(\"token\");\n        setFloor(true, 'TRAVAR via painel', null, token)\n            .then(res => { setHaltState(res); setNotification({ type: 'success', text: 'Floor TRAVADO (trading congelado).' }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    return ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:27:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "                                    {/* 1. env floor \u2014 read-only por design */}\n                                    <div className=\"d-flex justify-content-between align-items-center border-bottom py-3\">\n                                        <div className=\"pe-3\">\n                                            <b>1. Env floor</b>{' '}\n                                            <span className={`badge ${halt.env ? 'bg-danger' : 'bg-success'}`}>{halt.env ? 'TRAVADO' : 'livre'}</span>\n                                            <div className=\"text-muted small mt-1\">Trava permanente (<code>TRADING_HALT</code> no <code>.env</code>). Por design, s\u00f3 \u00e9 destrav\u00e1vel editando o <code>.env</code> (<code>TRADING_HALT=false</code>) e <b>reiniciando o backend</b> \u2014 \u00e9 o piso de seguran\u00e7a do dinheiro real. N\u00e3o h\u00e1 bot\u00e3o aqui.</div>\n                                        </div>\n                                        <span className=\"badge bg-secondary\">s\u00f3 via .env + restart</span>\n                                    </div>",
+  "new_string": "                                    {/* 1. Floor operacional \u2014 piso persistido de ir-ao-vivo, control\u00e1vel a quente */}\n                                    <div className=\"d-flex justify-content-between align-items-center border-bottom py-3\">\n                                        <div className=\"pe-3\">\n                                            <b>1. Floor operacional (ir-ao-vivo)</b>{' '}\n                                            <span className={`badge ${halt.floor && halt.floor.on ? 'bg-danger' : 'bg-success'}`}>{halt.floor && halt.floor.on ? 'TRAVADO' : 'LIBERADO'}</span>\n                                            <div className=\"text-muted small mt-1\">Piso persistido (quente, sobrevive a restart). <b>LIGAR</b> libera dinheiro real; <b>TRAVAR</b> congela. {halt.envHard ? <span className=\"text-danger\">Override absoluto <code>TRADING_HALT_HARD</code> ativo no .env \u2192 liberar pela UI est\u00e1 bloqueado.</span> : 'Semente do 1\u00ba boot vem de TRADING_HALT no .env; depois o operador \u00e9 a autoridade.'}</div>\n                                        </div>\n                                        {halt.floor && halt.floor.on\n                                            ? <button className=\"btn btn-sm btn-danger\" type=\"button\" onClick={onGoLive} disabled={halt.envHard}>LIGAR trading real</button>\n                                            : <button className=\"btn btn-sm btn-outline-danger\" type=\"button\" onClick={onTravarFloor}>TRAVAR (floor)</button>}\n                                    </div>\n                                    {halt.envHard && (\n                                        <div className=\"d-flex justify-content-between align-items-center border-bottom py-3\">\n                                            <div className=\"pe-3\">\n                                                <b>Override absoluto (env-hard)</b>{' '}\n                                                <span className=\"badge bg-danger\">ATIVO</span>\n                                                <div className=\"text-muted small mt-1\"><code>TRADING_HALT_HARD=true</code> no <code>.env</code> \u2014 trava \u00e0 prova de clique. S\u00f3 sai editando o <code>.env</code> + restart.</div>\n                                            </div>\n                                            <span className=\"badge bg-secondary\">s\u00f3 via .env + restart</span>\n                                        </div>\n                                    )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:27:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "                                    {halt.env && (\n                                        <div className=\"alert alert-warning mt-3 mb-0 small\" role=\"alert\">\n                                            \u26a0\ufe0f O <b>env floor</b> est\u00e1 TRAVADO \u2192 soltar a trava manual ou re-armar o cap aqui <b>N\u00c3O libera o trading</b>. Para ir ao vivo: <code>.env TRADING_HALT=false</code> + reiniciar o backend (decis\u00e3o do dono \u2014 canary de um grupo s\u00f3).\n                                        </div>\n                                    )}",
+  "new_string": "                                    {((halt.floor && halt.floor.on) || halt.envHard) && (\n                                        <div className=\"alert alert-warning mt-3 mb-0 small\" role=\"alert\">\n                                            \u26a0\ufe0f Travado pelo <b>{halt.envHard ? 'override absoluto (env-hard)' : 'floor operacional'}</b> \u2192 soltar a trava manual ou re-armar o cap <b>N\u00c3O libera o trading</b>. {halt.envHard ? 'Pra liberar: remova TRADING_HALT_HARD do .env + restart.' : 'Pra liberar: bot\u00e3o LIGAR trading real acima (canary de 1 grupo, decis\u00e3o do dono).'}\n                                        </div>\n                                    )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:27:40)*
+
+
+## 🤖 Claude *(17:27:40)*
+
+Tudo escrito (riskState + endpoint + rota + service + painel). Syntax-check do backend, depois gate QA/TL pesado (é o núcleo do kill-switch).
+
+## 🤖 Claude *(17:27:42)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Floor persistido + bot\u00e3o go-live (n\u00facleo riskState)",
+  "description": "riskState: env floor \u2192 floor persistido (seed TRADING_HALT) + TRADING_HALT_HARD absoluto; POST /system/floor (confirm+block envHard); painel toggle LIGAR/TRAVAR. Gate, deploy, verificar FREEZE preservado (sem ir ao vivo).",
+  "activeForm": "Implementando floor persistido + go-live"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #20 created successfully: Floor persistido + botão go-live (núcleo riskState)
+> ```
+
+## 🤖 Claude *(17:27:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in src/riskState.js src/controllers/systemController.js src/routers/systemRouter.js; do node --check \"$f\" && echo \"OK $f\" || echo \"FAIL $f\"; done",
+  "description": "Syntax-check riskState, systemController, systemRouter"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK src/riskState.js
+> OK src/controllers/systemController.js
+> OK src/routers/systemRouter.js
+> ```
+
+## 🤖 Claude *(17:27:52)*
+
+
+## 🤖 Claude *(17:27:53)*
+
+Syntax OK. Gate QA + TL em paralelo — é o núcleo do kill-switch, então com foco em **não ir ao vivo acidentalmente** (freeze preservado no deploy) e na nova postura de segurança.
+
+## 🤖 Claude *(17:27:54)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "20",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #20 status
+> ```
+
+## 🤖 Claude *(17:28:21)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate QA do floor persistido",
+  "subagent_type": "qa-engineer",
+  "prompt": "QA gate (PASS / PASS COM RESSALVAS / FAIL) de uma mudan\u00e7a no N\u00daCLEO do kill-switch (riskState) do TradeUX. Sistema em MAINNET, hoje CONGELADO por `TRADING_HALT=true` no .env. Leia os arquivos em /home/gcrux-tradeux/tradeux.\n\nOBJETIVO: o \"env floor\" (antes: TRADING_HALT como OR permanente, s\u00f3 destrav\u00e1vel via .env+restart) vira um **FLOOR PERSISTIDO** control\u00e1vel pela UI a quente (sem restart, sobrevive a restart), + um override absoluto novo `TRADING_HALT_HARD`.\n\nDIFF:\n- `backend/src/riskState.js` (REESCRITO): `ENV_FLOOR_SEED=TRADING_HALT==='true'` (semente do floor no 1\u00ba boot), `ENV_HALT_HARD=TRADING_HALT_HARD==='true'` (override absoluto). Estado `floor={on,reason,since}` persistido em logs/risk_state.json. `loadFromDisk`: floor PERSISTIDO vence a semente (ausente \u2192 mant\u00e9m semente); disco ileg\u00edvel \u2192 FAIL-CLOSED (floor.on=true). `isHalted()=ENV_HALT_HARD||floor.on||manual.on||dailyCap(hoje)`. `getState()` agora retorna `{halted, envHard, floor, manual, dailyCap:{...,active}, sources, source, reason, since}` (TROCOU `env` por `envHard`+`floor`; preced\u00eancia env-hard>floor>manual>daily-cap). Novo `setFloor(on,reason)` (persistido, quente). `setHalt`(manual/daily-cap)/`clearDailyCap`/`getDailyCapDay` inalterados. exports += setFloor.\n- `backend/src/controllers/systemController.js`: novo `setFloor` handler (POST /system/floor {on,reason,confirm}): on=false (LIBERAR) exige `confirm==='LIGAR REAL'` (env SYSTEM_FLOOR_PHRASE) E \u00e9 recusado (409) se `envHard`. on=true (TRAVAR) sempre permitido. exports += setFloor.\n- `backend/src/routers/systemRouter.js`: `POST /floor` (sob authMiddleware).\n- `frontend/src/services/SystemService.js`: `setFloor(on,reason,confirm,token)`.\n- `frontend/src/private/Settings/Settings.js`: se\u00e7\u00e3o \"1. Floor operacional\" vira toggle \u2014 bot\u00e3o \"LIGAR trading real\" (vermelho, window.prompt da frase, disabled se envHard) / \"TRAVAR (floor)\" (window.confirm); + se\u00e7\u00e3o env-hard display-only quando ativo; alerta atualizado.\n\nCONTEXTO: consumidores de riskState verificados \u2014 exchange.js usa isHalted()+getState().source/reason; analysisController(cockpit) usa st.halted/source/reason; dailyCapJob usa setHalt('daily-cap')/clearDailyCap/dayKeyUTC/getState().dailyCap/halted/source. NENHUM l\u00ea getState().env (o campo trocado).\n\nVERIFIQUE (CR\u00cdTICO):\n1. **FREEZE PRESERVADO NO DEPLOY (o mais importante):** hoje risk_state.json tem {manual,dailyCap} SEM floor, e .env TRADING_HALT=true. Ap\u00f3s o deploy, `loadFromDisk` n\u00e3o acha floor \u2192 mant\u00e9m a semente `ENV_FLOOR_SEED=true` \u2192 floor.on=true \u2192 `isHalted()`=true. Confirme que o sistema CONTINUA CONGELADO ap\u00f3s o deploy (n\u00e3o vai a vivo sozinho). Trace o caminho linha a linha.\n2. **N\u00e3o-ir-ao-vivo-acidental:** alguma ordem de inicializa\u00e7\u00e3o/persist\u00eancia que zere o floor? `setFloor` s\u00f3 \u00e9 chamado por endpoint. O 1\u00ba persist (qualquer setX) grava floor:true. Algum bug que persista floor:false no boot?\n3. **Confirm-gate + env-hard block** no setFloor handler: on=false sem confirm correto \u2192 400; com envHard \u2192 409; on=true sempre ok. Dire\u00e7\u00e3o segura.\n4. **FAIL-CLOSED:** disco ileg\u00edvel \u2192 floor.on=true (trava). Disco ausente (fresh) \u2192 early-return, floor fica na semente. Corretos?\n5. **Mudan\u00e7a de sem\u00e2ntica (footgun):** depois que o operador LIBERA (floor:false persistido), `TRADING_HALT=true` no .env vira NO-OP (s\u00f3 semente do 1\u00ba boot). Pra travar de novo: bot\u00e3o TRAVAR ou TRADING_HALT_HARD. Isso est\u00e1 claramente documentado (c\u00f3digo + painel)? Risco do dono achar que .env ainda trava?\n6. **Shape change**: getState() trocou `env`\u2192`envHard`+`floor`. Algum consumidor quebra? (cockpit env.tradingHalt=st.halted segue ok?) O painel consome halt.floor/halt.envHard?\n7. Frontend: window.prompt p/ a frase; disabled quando envHard; toast trata res.halted (floor liberado mas ainda travado por outra fonte). JSX/build ok?\n\n\u26a0\ufe0f Diga explicitamente nos TESTES: N\u00c3O executar um go-live real na verifica\u00e7\u00e3o (n\u00e3o enviar confirm='LIGAR REAL' com on:false) \u2014 isso LIGA dinheiro real; o dono decidiu esperar o paper. Teste s\u00f3 o gate (400 sem confirm), o freeze preservado, o shape, e TRAVAR idempotente.\n\nEntregue verdict + achados por severidade + os testes seguros a rodar."
+}
+```
+
+## 🤖 Claude *(17:28:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate TL do floor persistido",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) como tech-lead/code-owner de uma mudan\u00e7a no N\u00daCLEO do kill-switch (riskState) do TradeUX. Sistema em MAINNET CONGELADO (TRADING_HALT=true). Leia /home/gcrux-tradeux/tradeux.\n\nCONTEXTO/DECIS\u00c3O DO DONO: ele PEDIU um bot\u00e3o na UI pra destravar o env floor. O literal \"editar .env + restart por bot\u00e3o\" \u00e9 invi\u00e1vel/inseguro de dentro do container (sem acesso ao .env do host nem ao Docker). Solu\u00e7\u00e3o aprovada pelo dono: transformar o env floor num **FLOOR PERSISTIDO** control\u00e1vel a quente pela UI, mantendo um override absoluto `TRADING_HALT_HARD` no .env. O dono ENTENDE que isso reduz a postura (\"um clique atr\u00e1s do login liga dinheiro real\") e decidiu ESPERAR o paper provar antes de clicar \u2014 o bot\u00e3o \u00e9 capacidade, n\u00e3o a\u00e7\u00e3o imediata.\n\nDIFF: (idem ao que o QA recebe)\n- `riskState.js` reescrito: floor persistido (seed TRADING_HALT), TRADING_HALT_HARD absoluto, setFloor, getState shape `env`\u2192`envHard`+`floor`, isHalted=envHard||floor||manual||cap, FAIL-CLOSED no disco ileg\u00edvel.\n- `systemController.js`: POST /system/floor (confirm='LIGAR REAL' p/ liberar; 409 se envHard; TRAVAR sempre ok).\n- `systemRouter.js`: rota /floor (authMiddleware).\n- frontend `SystemService.setFloor` + painel toggle LIGAR/TRAVAR (window.prompt da frase) + display env-hard.\n\nAVALIE (code-owner):\n1. RISCO de design: a troca do \"env floor \u00e0 prova de clique\" por um \"floor clic\u00e1vel\" \u00e9 uma redu\u00e7\u00e3o de seguran\u00e7a real. As mitiga\u00e7\u00f5es (confirm phrase no backend+UI, TRADING_HALT_HARD absoluto, cap di\u00e1rio \u22125%, teto $300/ordem, FAIL-CLOSED, JWT operator-only, sem MCP write tool) s\u00e3o suficientes e bem-postas? Faltou alguma?\n2. FREEZE preservado no deploy (semente garante halted=true)? Risco de ir-ao-vivo-acidental no deploy/restart = nulo?\n3. SEM\u00c2NTICA: depois de liberar, TRADING_HALT no .env vira no-op (s\u00f3 semente). \u00c9 um footgun aceit\u00e1vel dado o TRADING_HALT_HARD? A documenta\u00e7\u00e3o (c\u00f3digo+painel) deixa claro? Recomendaria manter TRADING_HALT como OR-permanente tamb\u00e9m (defesa extra) ou a semente \u00e9 o design certo?\n4. CONVEN\u00c7\u00c3O/manuten\u00e7\u00e3o: shape change do getState() \u00e9 seguro p/ os consumidores? O endpoint/UI seguem o padr\u00e3o? must-fix vs nice-to-have.\n5. Veredito. \u00c9 o kill-switch \u2014 seja rigoroso, mas pragm\u00e1tico (o dono pediu, entende o trade-off, e o sistema segue congelado + protegido por camadas).\n\nDiga o que bloqueia (se algo) antes do merge."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
